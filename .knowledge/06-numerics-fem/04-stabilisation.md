@@ -23,7 +23,7 @@ advection–diffusion on a uniform mesh. It is a design rule, not a proof for th
 > Consequence: an unstabilised solve is a *different discretisation of the same PDE*. Per-cent-level
 > disagreement with the published currents is an implementation difference, not a bug. Provide a
 > matching stabilised mode before setting any tight cross-comparison tolerance.
-> → `09-comsol-reference-settings.md`.
+> → `.knowledge/09-comsol-reference-settings/index.md`.
 
 **Policy:** no stabilisation on the production mesh; SUPG available as a flag for coarse
 continuation meshes, off for the final solve (SUPG biases the current QoI and breaks Jacobian

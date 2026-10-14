@@ -1,0 +1,16 @@
+# ClyA-AS — geometry, fixed charge, and validation targets
+
+* [ClyA-AS — geometry, fixed charge, and validation targets (overview)](00-overview.md)
+* [1. Geometry pipeline, as executed](01-geometry-pipeline-as-executed.md)
+* [2. Model geometry and conventions](02-model-geometry-and-conventions.md)
+* [3. Fixed-charge pipeline](03-fixed-charge-pipeline.md)
+* [4. Mesh](04-mesh.md)
+* [5. Solver and sweeps](05-solver-and-sweeps.md)
+* [6. Validation targets](06-validation-targets.md)
+* [7. Stated limitations and caveats](07-stated-limitations-and-caveats.md)
+* [8. Gaps and ambiguities (questions for the author)](08-gaps-and-ambiguities-questions-for-the.md)
+* [Tier-1 test evidence: contours and charge deposition (WP45 item 20)](09-tier-1-test-evidence-contours-and.md)
+* [Tier-1 test evidence: the derived dielectric's transition (WP45 item 21)](10-tier-1-test-evidence-the-derived.md)
+* [Tier-1 test evidence: the VAL-05 harness and its closed forms (WP45 item 24)](11-tier-1-test-evidence-the-val-05-harness.md)
+* [Tier-2 test evidence: quadrature gates, the exclusion shell and the contour (WP45 item 25)](12-tier-2-test-evidence-quadrature-gates.md)
+* [Tier-3 test evidence: the charged-tube sweep, the table's margin and the ClyA-AS prediction (WP45 item 27)](13-tier-3-test-evidence-the-charged-tube.md)

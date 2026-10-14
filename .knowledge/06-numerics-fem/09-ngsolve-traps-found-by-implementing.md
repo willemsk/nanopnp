@@ -205,7 +205,7 @@ makes the operator and its gate one rule exactly. **[tested]**
 ### 8.1.1 Mesh-integral error on a sub-element-scale field converges in neither `h` nor order
 
 The finding that costs the most to rediscover, from ingesting the reference model's own 0.005 nm
-`rhoq_pore` table (`04-clya-geometry-and-charge.md` §3.2 carries the full tables). Integrating a
+`rhoq_pore` table (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#32-the-references-125-is-the-consumers-and-it-is-aliasing` carries the full tables). Integrating a
 `VoxelCoefficient` over the deployed mesh is *not* a discretisation error that refinement reduces:
 the table's radial structure alternates sign 49 times along its densest `z`, with extrema a median
 0.035 nm apart, an order below the finest element the reference mesh places. Pointwise quadrature of
@@ -274,7 +274,7 @@ worst [verified]. Stage 5 also gates the bound on every edge: the least distance
 polygon is the least of four endpoint distances (`chord_clearances`).
 
 The closing moves the surface outward where it fills a groove. On 2WCD at `a` = 0.25 nm, 8 % of the
-`wall` nodes lie beyond `a + 10⁻⁶` nm (`04` §2.2).
+`wall` nodes lie beyond `a + 10⁻⁶` nm (`.knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured`).
 
 **Netgen keeps every ring vertex and rounds each edge's segment count, so a shell's wall fails the
 gate in bands of wall target** **[tested]** (WP30 review, 2 October 2026, netgen 6.2.2606). Given
@@ -341,7 +341,7 @@ cases), 03 (four sweep members, warm-started across waves on two workers) and 07
 2WCD walk with and without the ion-exclusion shell. Every current, conductance, transport number,
 EOF rate and the deposited `q_mesh_e` agreed **exactly**, relative drift 0, and so did each deployed
 mesh's content hash. Process placement, worker count and the sweep's worker assignment do not
-enter the numbers. Across platforms the mesh itself differs (§8.1.2, `07` §5), which is why the
+enter the numbers. Across platforms the mesh itself differs (§8.1.2, `.knowledge/07-software-stack/05-gui-and-packaging.md`), which is why the
 golden is keyed per platform and asserts the mesh hash before any number.
 
 **Within one `<platform>-<machine>` key, NumPy's SIMD dispatch moves a PDB-derived mesh**

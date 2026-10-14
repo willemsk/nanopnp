@@ -49,7 +49,7 @@ frame).
   PROPKA takes 1.6 s, so the cost of PROPKA on the assembly is superlinear in its size. A nine-residue
   fragment takes 0.1 s. Plan for about a minute per frame of a ClyA ensemble, 50 minutes for 50 frames.
 - **Q_net.** 2WCD at pH 7.5 gives −60 e, −5 e on every chain, with no residue whose charge
-  differs between chains. ClyA-AS is −72 e (`04-clya-geometry-and-charge.md` §3). OPN-04 lists 27
+  differs between chains. ClyA-AS is −72 e (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`). OPN-04 lists 27
   mutations between the 2WCD sequence and ClyA-AS; whether they account for the −1 e per chain is
   not checked.
 - **States that CHARMM cannot hold.** `Biomolecule.apply_pka_values` logs a tuple warning and keeps

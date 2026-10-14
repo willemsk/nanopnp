@@ -25,7 +25,7 @@ title: 1. FEM backend — NGSolve/Netgen
    unsupported. Irrelevant for 2D axisymmetric v1 (direct solves; sweeps parallelise at job level);
    becomes real in 3D. Mitigations: ngsPETSc, or a DOLFINx backend for HPC only.
 2. **No MUMPS/PARDISO/HYPRE/MKL in the wheels** — `ngsolve.config` reports all False **[tested]**.
-   See `06-numerics-fem.md` §6.
+   See `.knowledge/06-numerics-fem/06-linear-solvers.md`.
 3. **2D boundary layers are immature.** Python API is
    `netgen.meshing.Mesh.BoundaryLayer2(domain, thicknesses, make_new_domain=True, boundaries=[])`
    (binding C++ `GenerateBoundaryLayer2`). The forum carries an unresolved Aug 2024 report of the

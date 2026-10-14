@@ -33,7 +33,7 @@ contributions (F_DEP = (p·∇)E) with no shape assumption; Stokes' law F_d = �
 first-order stand-in valid outside the pore. `conclusion.tex` (l. 180) makes it a finding: the
 5–30 atm pressure hotspots mean the pressure term is non-negligible, "*confirming the importance of
 using the full hydrodynamic stress tensor to calculate the force, rather than just the Stokes'
-drag*". T_H is the **same** tensor as in the momentum equation (`01-physics-epnpns.md §2.3`), so η
+drag*". T_H is the **same** tensor as in the momentum equation (`.knowledge/01-physics-epnpns/02-governing-equations.md#23-navierstokes-variable-density-and-viscosity`), so η
 is the corrected position-dependent viscosity — the integrand inherits the wall correction.
 
 **Sign, resolved [tested].** `T_H = p I − η[∇u + (∇u)ᵀ]` as printed above is the *negative* of the

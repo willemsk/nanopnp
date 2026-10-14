@@ -9,7 +9,7 @@ title: Tier 1 — Unit and property tests (seconds)
   deployed FE mesh**, not the source grid: `|∫ρ_fixed·2πr dr dz − Q_net|/|Q_net| < 10⁻³`. Also
   check per-z-slice cumulative charge against the PQR sorted by z — this catches Jacobian errors
   that cancel globally.
-- Every correction model reproduces its published check values (see `01-physics-epnpns.md` §8):
+- Every correction model reproduces its published check values (see `.knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md`):
   `f^w_D(0) = 0.0601`, `f^w_D(0.75) = 0.9910`, `η₀/η^w(0) = 0.3790`, `η₀/η^w(1.45) = 0.9876`,
   `η(5.3 M) = 1.752 × 10⁻³ Pa s`, `ϱ(5.3 M) = 1194 kg m⁻³`, `D_Na(5.3 M) = 8.13 × 10⁻¹⁰`,
   `D_Cl(5.3 M) = 1.071 × 10⁻⁹`. **[verified]**
@@ -22,7 +22,7 @@ title: Tier 1 — Unit and property tests (seconds)
 - Wall-distance field is C¹ after mollification.
 - Integration order ≥ 3 asserted on every form containing `1/r`; a unit test integrating a known
   `1/r`-weighted quantity on an axis-touching mesh (order 2 returns NaN — see
-  `06-numerics-fem.md` §2.2). **[verified]**
+  `.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`). **[verified]**
 - Packing fraction `Σ_j N_A a_j³ c_j < 1` enforced.
 - Case-file schema round-trips; mesh quality gates fire on known-bad input.
 

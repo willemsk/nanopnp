@@ -10,7 +10,7 @@ lipid chosen for stable, low-noise planar bilayers. Modelling parameters:
 
 | Property | Value | Where |
 |---|---|---|
-| Thickness | **2.8 nm** | ePNP-NS model (01 §2.4); consistent with FraC's 3.5 nm TMD helices spanning it |
+| Thickness | **2.8 nm** | ePNP-NS model (`.knowledge/01-physics-epnpns/02-governing-equations.md#24-domains-and-boundaries`); consistent with FraC's 3.5 nm TMD helices spanning it |
 | Relative permittivity | **3.2** (Gramse 2013) | ePNP-NS |
 | — in the APBS work | 2 | electrostatics.tex `tab:pdb2pqr_apbs_parameters` |
 | APBS slab thickness | 27 Å, with a conical hole | `draw_membrane2` |

@@ -84,13 +84,13 @@ alone would not notice both routes being scaled by the same wrong constant.
 > Maxwell/hydrodynamic stress integral and no computed force profile. The one published continuum
 > force computation, Angew. Chem. 2022 (PlyAB + haemoglobin), evaluates exactly this tensor
 > framework, but its simulation details sit in a Supporting Information that was not retrievable;
-> the main-text values are the regression targets of `05-analyte-and-forces.md` §10.6.
+> the main-text values are the regression targets of `.knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md#106-validation-targets-plyab-hb`.
 > Consequence: verify the analyte force first against **analytic** benchmarks
 > (Smoluchowski/Hückel electrophoretic mobility limits, Stokes drag on a sphere, Maxwell stress on
 > a sphere in a uniform field), then against those published targets.
 
 **Pore-averaged quantities.** The thesis's pore averages appear to omit the `2πr` Jacobian while
-being described as volume averages (flagged in `04-clya-geometry-and-charge.md`). Any regression
+being described as volume averages (flagged in `.knowledge/04-clya-geometry-and-charge/index.md`). Any regression
 target that is a pore average must state which convention it uses.
 
 ### 7.1.1 Measured: with the wall corrections on, route agreement *is* a mesh statement **[tested]** {#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement}

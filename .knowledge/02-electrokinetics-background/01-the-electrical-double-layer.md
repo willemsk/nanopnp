@@ -39,7 +39,7 @@ z:z salt): `sigma_s = sqrt(8*eps0*eps_r*kB*T*c0*N_A) * sinh(z*e*psi_0/(2*kB*T))`
 
 **Confinement.** In a ~1 nm-radius pore EDLs overlap even at 0.1 M [§`sec:np:edl`], causing concentration
 depletion/enrichment, surface conductance, permselectivity and pre-concentration. The interior is then not
-electroneutral anywhere — the regime where bulk-fitted electrolyte properties are least justified (01 §4) and
+electroneutral anywhere — the regime where bulk-fitted electrolyte properties are least justified (`.knowledge/01-physics-epnpns/04-rationale-worth-preserving.md`) and
 where every thin-EDL formula below fails.
 
 **Timescale separation.** EDL relaxation `tau ~ lambda_D*L/D` [`eq:nanopores_relaxation_time`] is 0.1–10 ns

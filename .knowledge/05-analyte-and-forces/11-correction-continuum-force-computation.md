@@ -138,7 +138,7 @@ onto the cryo-EM Cα's → MODELLER `automodel` → Flex-EM annealing → symmet
 2. **ε_r of Hb** and the Hb-surface BCs; **mesh strategy per z_Hb** (remesh vs ALE).
 3. **Barrier heights in kT**, BD parameters, EOF velocities, capture rates, open-pore conductance.
 4. **PlyAB-E1 mutation list and net charge.**
-5. Which corrections (`01-physics-epnpns.md`) were active, notably ε_r,f^c(⟨c⟩).
+5. Which corrections (`.knowledge/01-physics-epnpns/index.md`) were active, notably ε_r,f^c(⟨c⟩).
 6. Highest-value next target: the SI of the **companion paper** — Huang, Willems, Bartelds, Van
    Dorpe, Soskine, Maglia, *Nano Lett.* **20**, 3819–3827 (2020), "Electro-Osmotic Vortices Promote
    the Capture of Folded Proteins by PlyAB Nanopores", DOI `10.1021/acs.nanolett.0c00877`
