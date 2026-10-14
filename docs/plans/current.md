@@ -1,6 +1,6 @@
 # Current work
 
-Updated 14 October 2026 (WP46 delivered, awaiting `/wp-ship`). Navigation only; `SPECIFICATION.md` governs;
+Updated 14 October 2026 (WP46 delivered, awaiting `/wp-ship`; WP47 planned). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
@@ -22,8 +22,8 @@ records. *Recommendation:* keep it: many files record no box, and the deposited 
   merged ([loop](wp44-simplify-the-loop.md), [prose](wp45-prose-strip.md)); tags to `v0.5.0-alpha.11`
   are the author's step.
 - **WP46, the small fixes** ([plan](wp46-small-fixes.md)), is **delivered** (§8.2.9 I2; fifteen
-  `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge. Next: `/wp-ship`; then WP47–WP49
-  (OKF bundle, backfill, protocol); the author's sessions; fixes from WP50.
+  `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge. Next: `/wp-ship`; then WP47 (OKF bundle, [plan](wp47-okf-bundle.md), planned), WP48 and WP49
+  (backfill, protocol); the author's sessions; fixes from WP50.
 
 ## Not to be re-decided
 
@@ -64,7 +64,7 @@ records. *Recommendation:* keep it: many files record no box, and the deposited 
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | The small fixes as shipped | `wp46-small-fixes.md`; `CHANGELOG.md` `0.5.0-alpha.12`; `docs/project/review-items.md` |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
-| The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
+| The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `wp47-okf-bundle.md` |
 
 ## Handoff Rules
 
