@@ -48,7 +48,7 @@ None.
 - [ ] No test was skipped, `xfail`ed, or had its tolerance loosened to make this pass
 - [ ] `uv.lock` regenerated if `pyproject.toml` moved
 - [ ] Any switch away from the validated default is opt-in, default off, and recorded in the FR-25 manifest
-- [ ] Durable findings written into `.knowledge/`, marked **[tested]** or **[verified]** with their source
+- [ ] Durable findings written into `.knowledge/` as concepts, marked `[tested: <test>]` or `[verified]` with their source, and logged
 - [ ] `docs/plans/` updated — Outcome annotations where a prediction was wrong, and the work-package section of the phase plan
 
 <!-- Tiers 3 and 4 do not run in CI. If either was run locally, say so and give

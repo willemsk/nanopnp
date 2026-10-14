@@ -54,7 +54,7 @@ State every rule in the present tense; history lives in the log, `CHANGELOG.md`,
 | Record | Gets |
 |---|---|
 | `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances: normative changes only |
-| `.knowledge/<file>.md` | Durable findings marked **[tested]** or **[verified]**, with the source (see `.knowledge/index.md`) |
+| `.knowledge/<file>.md` | Durable findings as concepts, each claim marked `[tested: <test>]` or `[verified]` with its source, and a line in `.knowledge/log.md` (see `.knowledge/index.md`) |
 | `docs/plans/wp<n>-*.md` | The current Execution brief and concise `> **Outcome — <what changed>.**` annotations linking the evidence; measured numbers the plan requested |
 | `docs/project/review-findings.md` | A `REV-nn` row, with its section in `review-items.md`, for every item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12). A row the package resolves is set `fixed` |
 

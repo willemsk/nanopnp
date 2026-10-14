@@ -3822,7 +3822,9 @@ first commit, so that agents and people working on the codebase read from local,
 | Path | Content |
 |---|---|
 | `CLAUDE.md` | Agent instructions; points at the index; carries the maintenance rule |
-| `.knowledge/index.md` | Index, conventions, provenance, open questions |
+| `.knowledge/index.md` | The bundle's root index, declaring `okf_version` and listing the notes |
+| `.knowledge/00-orientation/index.md` | Traps, conventions, provenance, author rulings, open questions |
+| `.knowledge/log.md`, `.knowledge/pending.yaml` | The dated log of the notes; the claims no test yet backs, per concept |
 | `.knowledge/01-physics-epnpns/index.md` | Normative equations, corrections, parameters, errata |
 | `.knowledge/02-electrokinetics-background/index.md` | EDL, Poisson–Boltzmann, electro-osmosis, selectivity, rectification |
 | `.knowledge/03-nanopore-biology/index.md` | Biological nanopores, ClyA, electrophysiology, glossary |
@@ -3834,13 +3836,15 @@ first commit, so that agents and people working on the codebase read from local,
 | `.knowledge/09-comsol-reference-settings/index.md` | Reference mesh, solver and stabilisation settings |
 | `data/corrections/willems2020_nacl.yaml` | Fitted correction parameters, transcribed and verified |
 
-Claims verified by running code are marked `[tested]`, claims verified by arithmetic `[verified]`,
-and anything unverified says so. The maintenance rule, stated in `CLAUDE.md`: when something
-durable is learned, it is written here.
-
-NOTE (§8.2.6 F6): a Phase 4 package restructures this knowledge base as an
-Open Knowledge Format v0.2 bundle, one concept per `##` section, every `[tested]` claim naming its
-test. Until it merges, the table above is the layout, and every citation of it stays valid.
+The knowledge base is an Open Knowledge Format v0.2 bundle (VER-68; §8.2.6 F6, §8.2.7 G12): a
+directory per note, a concept per `##` section with a header (a `type` from a closed list, its
+`sources`, and who generated and verified it), an `index.md` per directory and a `log.md` of dated
+events. A claim verified by running code is marked `[tested: <test>]`, naming a test function under
+`tests/`, or `[tested: pending]` while none does; a claim verified by arithmetic or by reading a source
+is marked `[verified]`, with a footnote to a source of its concept. `.knowledge/pending.yaml` counts
+the claims no test backs, per concept, and its total may only fall: at most 358, the figure recorded
+at WP47's close (§8.2.7 G3). Anything unverified says so. The maintenance rule, stated in
+`CLAUDE.md`: when something durable is learned, it is written as a concept, with a line in the log.
 
 ---
 
