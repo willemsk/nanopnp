@@ -968,3 +968,11 @@ def test_ver56_the_declarations_are_readable_without_building() -> None:
     assert not models.declaration("pb").solids
     with pytest.raises(KeyError, match="registered models are"):
         models.declaration("no-such-model")
+
+
+# NUM-07
+def test_num07_at_order_changes_only_the_element_order() -> None:
+    raised = AXISYMMETRIC.at_order(3)
+    assert raised == replace(AXISYMMETRIC, element_order=3)
+    assert raised.symmetry == AXISYMMETRIC.symmetry
+    assert AXISYMMETRIC.element_order == 2

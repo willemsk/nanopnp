@@ -63,7 +63,7 @@ and gives each `review-items.md` section a *Resolved* line.
 
 - [x] 5. 80da6ff `structure/read.py`, `structure/stage.py`, `.knowledge/04-clya-geometry-and-charge.md` (D5); done when the refusal and frame-time tests pass and the 2WCD walk passes.
 - [x] 6. 58103bd `density/map.py`, `pipeline/case.py`, `modularity-layering.yaml` if the edge is new (D6, REV-40).
-- [ ] 7. `validation/geometry.py` (REV-59) and `examples/05-clya-reference/render_slurm.py` (REV-15).
+- [x] 7. 13d1cb3 `validation/geometry.py` (REV-59) and `examples/05-clya-reference/render_slurm.py` (REV-15).
 - [ ] 8. `charge/pqr.py`, `structure/ensemble.py` (REV-43); `numerics/measures.py` and its callers (REV-49); `validation/runs.py`, `cli/__init__.py` (REV-51).
 - [ ] 9. `tests/tier2/test_axis_weight_order.py` (REV-50).
 - [ ] 10. REV-24: the count, recorded in this plan's Outcomes and the row's ruling; the cache only if needed.

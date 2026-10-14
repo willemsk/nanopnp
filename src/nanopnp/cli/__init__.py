@@ -42,8 +42,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.artefact import SweepArtefact
-    from nanopnp.io.case import CaseDocument
-    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.io.store import Store
     from nanopnp.sweep.plan import SweepPlan
     from nanopnp.validation.comsol import Golden
@@ -839,16 +837,10 @@ def _store(args: argparse.Namespace) -> Store:
     return Store(args.store)
 
 
-def _resolved(case: CaseDocument) -> ResolvedCase:
-    from nanopnp.pipeline.case import resolve
-
-    return resolve(case)
-
-
 def _identity(run: ReopenedRun) -> str:
     from nanopnp.validation.comsol import case_identity
 
-    return case_identity(_resolved(run.case), recorded=run.upstream)
+    return case_identity(run.resolved, recorded=run.upstream)
 
 
 def _unit(field: str) -> str:

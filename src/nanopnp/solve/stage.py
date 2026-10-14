@@ -159,7 +159,7 @@ class SolveStage:
         check_cancelled(cancel, "loading the mesh")
         mesh = ingested.mesh
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-        measures = replace(AXISYMMETRIC, element_order=order)
+        measures = AXISYMMETRIC.at_order(order)
 
         if reads_distance(resolved):
             report(progress, LOAD_FRACTION / 2, "solving for the wall distance field")

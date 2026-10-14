@@ -35,6 +35,7 @@ class ReopenedRun:
 
     directory: Path
     case: CaseDocument
+    resolved: ResolvedCase
     solution: ModelSolution
     scales: Scales
     quantities: Mapping[str, Canonicalisable]
@@ -131,6 +132,7 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
     return ReopenedRun(
         directory=source,
         case=document,
+        resolved=resolved,
         solution=solution,
         scales=mesh_unit_scales(resolved.electrolyte, resolved.concentration_M),
         quantities=dict(quantities) if isinstance(quantities, dict) else {},

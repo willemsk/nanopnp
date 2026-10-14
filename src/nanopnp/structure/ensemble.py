@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import warnings
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -31,6 +31,19 @@ ORIENTATION_RULE = (
 
 class EnsembleFormatError(ValueError):
     """A stage-1 payload file is not an aligned ensemble this release reads."""
+
+
+def chain_characters(chains: Iterable[str]) -> dict[str, str]:
+    """Return the single PDB chain character each chain key is written as."""
+    ordered = list(dict.fromkeys(chains))
+    if all(len(chain) == 1 for chain in ordered):
+        return {chain: chain for chain in ordered}
+    if len(ordered) > len(CHAIN_CHARACTERS):
+        raise EnsembleFormatError(
+            f"{len(ordered)} chains do not fit the {len(CHAIN_CHARACTERS)} single-character chain "
+            "identifiers of a PDB or PQR file, and their keys are longer than one character"
+        )
+    return {chain: CHAIN_CHARACTERS[index] for index, chain in enumerate(ordered)}
 
 
 @dataclass(frozen=True)
@@ -120,7 +133,7 @@ class AlignedEnsemble:
 
         Raises
         ------
-        ValueError
+        EnsembleFormatError
             If the chain keys are longer than one character and there are too many chains for them.
         """
         import MDAnalysis as mda  # noqa: N813 - the alias the library documents
@@ -149,17 +162,9 @@ class AlignedEnsemble:
         universe.add_TopologyAttr("elements", self.element.tolist())
         # The PDB writer turns a multi-character chain into ``X``, merging chains; so give each
         # chain one character and carry the key in segid (first four characters kept).
+        letters = chain_characters(chains)
         single = all(len(chain) == 1 for chain in chains)
-        if single:
-            chain_ids = self.chain.tolist()
-        else:
-            if len(chains) > len(CHAIN_CHARACTERS):
-                raise ValueError(
-                    f"{len(chains)} chains do not fit the {len(CHAIN_CHARACTERS)} "
-                    "single-character chain identifiers of a PDB file, and their keys are "
-                    "longer than one character"
-                )
-            chain_ids = [CHAIN_CHARACTERS[segment_of[str(chain)]] for chain in self.chain]
+        chain_ids = [letters[str(chain)] for chain in self.chain]
         universe.add_TopologyAttr("chainIDs", chain_ids)
         universe.add_TopologyAttr("resnames", [str(self.resname[i]) for i in starts])
         universe.add_TopologyAttr("resids", [int(self.resid[i]) for i in starts])

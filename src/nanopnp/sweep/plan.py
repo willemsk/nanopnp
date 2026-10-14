@@ -620,7 +620,7 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
         if signature in checked:
             continue
         checked.add(signature)
-        measures = replace(AXISYMMETRIC, element_order=order)
+        measures = AXISYMMETRIC.at_order(order)
         distance = wall_distance_field(resolved, ingested.mesh, order=order)
         found = check_wall_distance(
             resolved, ingested.mesh, distance, coordinates=measures.coordinate_names

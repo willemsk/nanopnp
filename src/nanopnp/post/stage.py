@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -287,7 +287,7 @@ class QoIStage:
             charge_artefact=inputs.upstream.get("charge"),
         )
         order = int(prepared.resolved.model_options.get("order", AXISYMMETRIC.element_order))
-        measures = replace(AXISYMMETRIC, element_order=order)
+        measures = AXISYMMETRIC.at_order(order)
         mesh = solution.space.mesh
 
         report(progress, 0.4, "building the NUM-24 indicator")

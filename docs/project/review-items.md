@@ -427,7 +427,7 @@ they do nothing.
 
 **Measured.** `chain_characters` repeats the mapping inside `AlignedEnsemble.export`.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D6: `chain_characters` lives in `structure/ensemble.py` and `AlignedEnsemble.export` uses it; too many long-keyed chains raise `EnsembleFormatError` (exit 4) rather than `PQRError`.
 
 ### REV-44 — The Stern-layer test re-solves the drawn slab
 
@@ -478,7 +478,7 @@ can drift apart.
 
 **Measured.** The same `replace(AXISYMMETRIC, …)` is repeated at several call sites.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D6: `Measures.at_order(order)` replaces the six `replace(AXISYMMETRIC, element_order=…)` call sites.
 
 ### REV-50 — _inner_wall_nm re-implements innermost_crossings
 
@@ -494,7 +494,7 @@ can drift apart.
 
 **Measured.** A case is reopened and resolved where the resolved case is already at hand.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D6: `ReopenedRun` carries its `ResolvedCase`, and the CLI's identity reads it instead of resolving the case again.
 
 ### REV-52 — deviations and SolveReporting are off the stage protocol
 

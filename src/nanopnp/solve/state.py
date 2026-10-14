@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -654,7 +654,7 @@ def restore(
     ingested = deployed_mesh(resolved, mesh_artefact)
     mesh = ingested.mesh
     order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-    measures = replace(AXISYMMETRIC, element_order=order)
+    measures = AXISYMMETRIC.at_order(order)
 
     with np.load(path, allow_pickle=False) as archive:
         data = {name: archive[name] for name in archive.files}

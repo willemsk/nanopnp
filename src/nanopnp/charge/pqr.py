@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.structure.ensemble import CHAIN_CHARACTERS
+from nanopnp.structure.ensemble import chain_characters
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -18,7 +18,6 @@ __all__ = [
     "PATCH_RESIDUES",
     "PQRError",
     "PQRFrame",
-    "chain_characters",
     "check_same_residues",
     "format_pqr",
     "is_hydrogen",
@@ -85,19 +84,6 @@ def parent_residue(name: str) -> str:
 def is_hydrogen(atom: str) -> bool:
     """Return whether an atom name names a hydrogen."""
     return atom.lstrip("0123456789").startswith("H")
-
-
-def chain_characters(chains: Iterable[str]) -> dict[str, str]:
-    """Return the single PDB chain character each chain key is written as."""
-    ordered = list(dict.fromkeys(chains))
-    if all(len(chain) == 1 for chain in ordered):
-        return {chain: chain for chain in ordered}
-    if len(ordered) > len(CHAIN_CHARACTERS):
-        raise PQRError(
-            f"{len(ordered)} chains do not fit the {len(CHAIN_CHARACTERS)} single-character chain "
-            "identifiers of a PDB or PQR file, and their keys are longer than one character"
-        )
-    return {chain: CHAIN_CHARACTERS[index] for index, chain in enumerate(ordered)}
 
 
 @dataclass(frozen=True)

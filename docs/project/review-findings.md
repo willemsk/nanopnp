@@ -62,15 +62,15 @@ is a rolling register, and its header stays `open`.
 | REV-40 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [DensityMap.read accepts a file written in nm](review-items.md#rev-40-densitymapread-accepts-a-file-written-in-nm) |
 | REV-41 | interface | low | deferred | §8.2.9 I3 | [No prepare command, upto on reproduce, or region export](review-items.md#rev-41-no-prepare-command-upto-on-reproduce-or-region-export) |
 | REV-42 | interface | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [pnp carries inert flow keys](review-items.md#rev-42-pnp-carries-inert-flow-keys) |
-| REV-43 | process | low | accepted | §8.2.9 I2 | [chain_characters duplicates the export's mapping](review-items.md#rev-43-chain_characters-duplicates-the-exports-mapping) |
+| REV-43 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [chain_characters duplicates the export's mapping](review-items.md#rev-43-chain_characters-duplicates-the-exports-mapping) |
 | REV-44 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The Stern-layer test re-solves the drawn slab](review-items.md#rev-44-the-stern-layer-test-re-solves-the-drawn-slab) |
 | REV-45 | interface | low | deferred | §8.2.9 I3 | [The derived χ field has no export](review-items.md#rev-45-the-derived-field-has-no-export) |
 | REV-46 | verification | low | deferred | §8.2.9 I3 | [Example 07 is not run at default sizes or on the ensemble](review-items.md#rev-46-example-07-is-not-run-at-default-sizes-or-on-the-ensemble) |
 | REV-47 | process | low | accepted | §8.2.9 I3 | [The test-duration targets are missed](review-items.md#rev-47-the-test-duration-targets-are-missed) |
 | REV-48 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The 2WCD walk test copies its constants](review-items.md#rev-48-the-2wcd-walk-test-copies-its-constants) |
-| REV-49 | process | low | accepted | §8.2.9 I2 | [AXISYMMETRIC is replaced repeatedly](review-items.md#rev-49-axisymmetric-is-replaced-repeatedly) |
+| REV-49 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [AXISYMMETRIC is replaced repeatedly](review-items.md#rev-49-axisymmetric-is-replaced-repeatedly) |
 | REV-50 | process | low | accepted | §8.2.9 I2 | [_inner_wall_nm re-implements innermost_crossings](review-items.md#rev-50-_inner_wall_nm-re-implements-innermost_crossings) |
-| REV-51 | performance | low | accepted | §8.2.9 I2 | [A redundant reopen and resolve in WP34's walk](review-items.md#rev-51-a-redundant-reopen-and-resolve-in-wp34s-walk) |
+| REV-51 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A redundant reopen and resolve in WP34's walk](review-items.md#rev-51-a-redundant-reopen-and-resolve-in-wp34s-walk) |
 | REV-52 | interface | low | deferred | §8.2.9 I3 | [deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol) |
 | REV-53 | interface | low | declined | §8.2.9 I3 | [Some walk rules stay as case logic](review-items.md#rev-53-some-walk-rules-stay-as-case-logic) |
 | REV-54 | verification | low | fixed | [WP38](../plans/wp38-io-split.md) | [The MOD-12 check compared names, not modules](review-items.md#rev-54-the-mod-12-check-compared-names-not-modules) |
