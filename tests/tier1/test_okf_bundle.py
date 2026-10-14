@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -305,3 +306,16 @@ def test_ver68_the_bundle_conforms() -> None:
         files,
     )
     assert not found, "\n".join(str(finding) for finding in found)
+
+
+def test_ver68_every_heading_id_matches_the_docs_build() -> None:
+    markdown = pytest.importorskip("markdown")
+    root = okf.REPOSITORY / ".knowledge"
+    for path in sorted(root.rglob("*.md")):
+        parsed = okf.parse_concept(path)
+        if not isinstance(parsed, okf.Concept):
+            continue
+        converter = markdown.Markdown(extensions=["toc", "attr_list", "tables", "footnotes"])
+        html = converter.convert(parsed.body)
+        built = re.findall(r'<h[1-6] id="([^"]+)"', html)
+        assert [h.anchor for h in okf.headings(parsed.body)] == built, path

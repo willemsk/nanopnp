@@ -8,6 +8,9 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:tests/tier1/test_okf_bundle.py::test_ver68_every_heading_id_matches_the_docs_build
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 13. Documentation tooling: MkDocs, Material and Zensical
@@ -49,4 +52,9 @@ Python 3.12:
 - Setting `validation.nav.omitted_files`, `validation.links.not_found`, `anchors`,
   `absolute_links` and `unrecognized_links` to `warn` makes `--strict` fail on each of them. The
   MkDocs 1.6 defaults leave several at `info`, which strict mode ignores.
-
+- A page copied from the bundle keeps its YAML header, which MkDocs reads as page metadata (`title`
+  names the page). `not_in_nav` takes a directory, so the concept pages of the bundle need no
+  navigation entry beyond its index, and the `footnotes` extension renders a `[^id]` source label.
+- An `attr_list` heading id may begin with a digit, and the table-of-contents slug of all 241
+  headings of the bundle equals the one `nanopnp.validation.okf.slugify` computes, including the
+  `_1` suffix of a repeat **[tested: tests/tier1/test_okf_bundle.py::test_ver68_every_heading_id_matches_the_docs_build]**.

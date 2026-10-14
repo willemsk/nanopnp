@@ -4,6 +4,7 @@ Entries are the dated events the notes record, newest first; git holds every ear
 
 ## 2026-10-14
 * **Update**: The notes became a bundle of concepts, one idea each, with a header, a ledger of test-backed claims and this log (WP47).
+* **Update**: Recorded how the documentation build treats the bundle ([13. Documentation tooling: MkDocs, Material and Zensical](07-software-stack/13-documentation-tooling-mkdocs-material.md)).
 
 ## 2026-10-12
 * **Record**: ... ecorded reference mesh, and the largest relative drift against the golden recorded on 3.12 is 6.9 × 10⁻¹⁴ (example 01's eof_m3_s; every other walk at or below 2.7 × 10⁻¹⁵), 12 October 2026 (WP43, D12) ... ([8. Python version floor — the 3.10 target is not free](07-software-stack/08-python-version-floor-the-310-target-is.md))

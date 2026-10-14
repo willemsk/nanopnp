@@ -1,6 +1,6 @@
 # WP47 — The knowledge base as an OKF bundle
 
-**Status: planned, not started**, 14 October 2026. Inherits WP46 as delivered (the tree it is written
+**Status: delivered, 14 October 2026.** Inherits WP46 as delivered (the tree it is written
 against), WP45's prose rule (§8.2.11 L4) and the input note `okf-knowledge-bundle.md` (K1 to K11).
 
 The Phase 4 plan owns the phase ([phase plan](phase-4-polish-and-user-testing.md), *OKF bundle and
@@ -64,7 +64,13 @@ Opus only after Sonnet fails.
 
 - [ ] 7. `.knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
 - [x] b3d1dcb 8. `docs/scripts/generate.py`, `mkdocs.yml` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes.
-- [ ] 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `README.md`, `SPECIFICATION.md` §11: the new first read, the maintenance rule (a durable fact is a concept with a log line), the pending figure; done when VER-68 and the build pass.
+- [x] 58ca508 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `README.md`, `SPECIFICATION.md` §11: the new first read, the maintenance rule (a durable fact is a concept with a log line), the pending figure; done when VER-68 and the build pass.
+
+> **Outcome — what ran differently.** Scripts did the text moves, as planned; the headers were scripted and the
+> descriptions written by hand, with no Haiku workers. File names keep at most 40 characters of the
+> heading. The Files table stays as `00-orientation/01-files.md`. `[verified]` claims were classed only in
+> test-evidence concepts (REV-103). `test_ver68_every_heading_id_matches_the_docs_build` runs where
+> `markdown` is installed.
 
 *Compaction checkpoint: after item 9; then the push gate and `/wp-implement`'s PR.*
 

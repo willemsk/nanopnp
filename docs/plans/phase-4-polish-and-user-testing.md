@@ -19,9 +19,9 @@ WP43, the development loop ([wp43-development-loop.md](wp43-development-loop.md)
 `v0.5.0-alpha.9`; WP44, simplify the loop ([wp44-simplify-the-loop.md](wp44-simplify-the-loop.md)), to be
 tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-prose-strip.md)), to be tagged
 `v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
-`v0.5.0-alpha.12`.
-Planned: WP47, the OKF bundle ([plan](wp47-okf-bundle.md));
-WP48, its backfill; WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
+`v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
+`v0.5.0-alpha.13`.
+Planned: WP48, its backfill; WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
 which take their numbers then.
@@ -744,7 +744,17 @@ Opus. No new identifier.
 > `structure:`, the IF-05 and workspace-locality NOTEs, and VER-26, VER-29, VER-48, VER-49, VER-53
 > and VER-54, in the plan's commit.
 
-### OKF bundle and checks — Provisional
+### WP47 — The OKF bundle and its checks (§8.2.7 G12; VER-68)
+
+> **Delivered, 14 October 2026** ([plan](wp47-okf-bundle.md)). `.knowledge/` is a bundle of 121 concepts
+> in ten directories: a header on each (a closed list of 15 types, sources, `generated`, `verified`),
+> an `index.md` per directory, `log.md` and `pending.yaml`. VER-68 is `test_okf_bundle.py` over
+> `validation/okf.py`: each refusal on a constructed bundle, the real tree, every tracked address,
+> and the heading ids against the docs build. 72 claims name a test; 358 are pending, the ceiling
+> (311 `[tested: pending]`, 47 `[verified]` without a source). Live constraints: a durable fact is a
+> concept with a log line; a Markdown file that cites `.knowledge/` runs the tests (`prose-only.sh`);
+> a heading carrying a marker has an explicit id. REV-103 is open for WP48.
+
 
 It waits on the refactors (G5). F6 and the input note's K1 to K11 bind this package. It covers:
 
@@ -945,7 +955,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP44, simplify the loop | 1 | Plan-shape test; VER-73 and VER-74 withdrawn; VER-62 unchanged |
 | WP45, prose strip | 1, 2 | VER-75; syntax-tree equality; VER-45 |
 | WP46, small fixes | 1, 2 | Tests named by item; no new identifier |
-| WP47, OKF bundle | 1 | VER-68 (proposed), the F6 check |
+| WP47, OKF bundle | 1 | VER-68, the F6 check |
 | WP48, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
 | WP49, protocol | 1 or 2 | VER-69 (proposed) |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-63 kept green |
