@@ -4,8 +4,9 @@ Usage: ``uv run .claude/scripts/same_tree.py <ref> [paths...]``.
 
 Every changed ``.py`` file is compared with its version at ``<ref>``. The syntax trees, after
 deleting every bare string statement, ``pass`` and bare ``...``, must be equal, and the multiset
-of directive comments must be unchanged. A deleted or added file fails. Exit status is 1 on any
-difference, with the file named on standard output.
+of directive comments must be unchanged. A module that reads ``__doc__`` keeps its first line. A
+deleted, added or unparsable file fails. Exit status is 1 on any difference, with the file named
+on standard output.
 """
 
 from __future__ import annotations
@@ -60,14 +61,29 @@ def directives(source: str) -> Counter[str]:
     return found
 
 
+def _summary(tree: ast.Module) -> str:
+    return (ast.get_docstring(tree) or "").split("\n", 1)[0]
+
+
+def _reads_doc(tree: ast.Module) -> bool:
+    return any(isinstance(node, ast.Name) and node.id == "__doc__" for node in ast.walk(tree))
+
+
 def differences(before: str | None, after: str | None) -> str | None:
     """Return why two versions of a file differ beyond prose, or ``None``."""
     if before is None or after is None:
         return "file added" if before is None else "file deleted"
-    if normalised_tree(before) != normalised_tree(after):
-        return "syntax tree changed"
-    if directives(before) != directives(after):
-        return "directive comments changed"
+    try:
+        old, new = ast.parse(before), ast.parse(after)
+        if normalised_tree(before) != normalised_tree(after):
+            return "syntax tree changed"
+        if directives(before) != directives(after):
+            return "directive comments changed"
+    except (SyntaxError, tokenize.TokenError):
+        return "does not parse"
+    # A module that reads its own __doc__ runs its summary line, as an argparse description.
+    if (_reads_doc(old) or _reads_doc(new)) and _summary(old) != _summary(new):
+        return "module docstring's first line changed, and the module reads __doc__"
     return None
 
 

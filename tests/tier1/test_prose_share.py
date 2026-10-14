@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import ast
+import functools
 import io
+import itertools
 import tokenize
 from pathlib import Path
 
@@ -12,9 +14,9 @@ import pytest
 _ROOT = Path(__file__).resolve().parents[2]
 _DIRECTIVES = ("type:", "noqa", "pragma", "fmt:", "mypy:", "ruff:")
 
-# Measured at WP45's close (src 10.61 %, tests 2.14 %), plus 1 point (VER-75 b).
-CEILING_SRC = 0.1162
-CEILING_TESTS = 0.0314
+# Measured at WP45's close, every bare string counted (src 11.40 %, tests 2.35 %), plus 1 point.
+CEILING_SRC = 0.1240
+CEILING_TESTS = 0.0335
 
 
 def _is_private(name: str) -> bool:
@@ -25,22 +27,33 @@ def _is_directive(comment: str) -> bool:
     return comment.lstrip("# ").startswith(_DIRECTIVES)
 
 
-def _docstring_node(node: ast.AST) -> ast.Constant | None:
-    body = getattr(node, "body", None)
-    if not body:
-        return None
-    first = body[0]
+def _string(node: ast.AST) -> ast.Constant | None:
     if (
-        isinstance(first, ast.Expr)
-        and isinstance(first.value, ast.Constant)
-        and isinstance(first.value.value, str)
+        isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
     ):
-        return first.value
+        return node.value
     return None
 
 
-def _violations(path: Path, display: str, *, is_test: bool) -> list[str]:
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+def _docstring_node(node: ast.AST) -> ast.Constant | None:
+    body = getattr(node, "body", None)
+    return _string(body[0]) if body else None
+
+
+def _assigned_name(node: ast.stmt) -> str | None:
+    target = (
+        node.targets[0]
+        if isinstance(node, ast.Assign) and len(node.targets) == 1
+        else node.target
+        if isinstance(node, ast.AnnAssign)
+        else None
+    )
+    return target.id if isinstance(target, ast.Name) else None
+
+
+def _violations(tree: ast.Module, display: str, *, is_test: bool) -> list[str]:
     found: list[str] = []
     module_doc = _docstring_node(tree)
     if module_doc is not None:
@@ -49,35 +62,38 @@ def _violations(path: Path, display: str, *, is_test: bool) -> list[str]:
             found.append(f"{display}:{module_doc.lineno}: module docstring is not one line")
 
     def walk(node: ast.AST, public: bool, scope: str) -> None:
+        local = isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+        body = getattr(node, "body", None)
+        if not is_test and isinstance(body, list):
+            for before, statement in itertools.pairwise(body):
+                name, doc = _assigned_name(before), _string(statement)
+                if (
+                    name is not None
+                    and doc is not None
+                    and (local or not public or _is_private(name))
+                ):
+                    found.append(f"{display}:{doc.lineno}: docstring on non-public {scope}{name}")
         for child in ast.iter_child_nodes(node):
             if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
                 name = f"{scope}{child.name}"
-                child_public = (
-                    public
-                    and not _is_private(child.name)
-                    and not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-                    and not is_test
-                )
+                child_public = public and not local and not _is_private(child.name) and not is_test
                 doc = _docstring_node(child)
                 if doc is not None and not child_public:
                     found.append(f"{display}:{doc.lineno}: docstring on non-public {name}")
                 walk(child, child_public, f"{name}.")
             else:
-                walk(child, public, scope)
+                walk(child, public and not local, scope)
 
     walk(tree, True, "")
     return found
 
 
-def _prose_lines(path: Path) -> tuple[int, int]:
-    text = path.read_text(encoding="utf-8")
+def _prose_lines(text: str, tree: ast.Module) -> tuple[int, int]:
     prose: set[int] = set()
-    tree = ast.parse(text)
     for node in ast.walk(tree):
-        if isinstance(node, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            doc = _docstring_node(node)
-            if doc is not None and doc.end_lineno is not None:
-                prose.update(range(doc.lineno, doc.end_lineno + 1))
+        doc = _string(node) if isinstance(node, ast.stmt) else None
+        if doc is not None and doc.end_lineno is not None:
+            prose.update(range(doc.lineno, doc.end_lineno + 1))
     for tok in tokenize.generate_tokens(io.StringIO(text).readline):
         if tok.type == tokenize.COMMENT and not _is_directive(tok.string):
             prose.add(tok.start[0])
@@ -88,11 +104,19 @@ def _scan(root: Path, *, is_test: bool) -> tuple[list[str], float]:
     violations: list[str] = []
     prose = total = 0
     for path in sorted(root.rglob("*.py")):
-        violations += _violations(path, str(path.relative_to(root)), is_test=is_test)
-        p, t = _prose_lines(path)
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text)
+        violations += _violations(tree, str(path.relative_to(root)), is_test=is_test)
+        p, t = _prose_lines(text, tree)
         prose += p
         total += t
     return violations, prose / total if total else 0.0
+
+
+@functools.cache
+def _scan_tree(root: Path, is_test: bool) -> tuple[tuple[str, ...], float]:
+    violations, share = _scan(root, is_test=is_test)
+    return tuple(violations), share
 
 
 def _write(path: Path, text: str) -> None:
@@ -101,12 +125,12 @@ def _write(path: Path, text: str) -> None:
 
 
 def test_ver75_a_src_docstrings_only_on_public_names_and_modules_one_line() -> None:
-    violations, _ = _scan(_ROOT / "src" / "nanopnp", is_test=False)
+    violations, _ = _scan_tree(_ROOT / "src" / "nanopnp", False)
     assert not violations, "\n".join(violations)
 
 
 def test_ver75_a_tests_carry_no_function_or_class_docstring() -> None:
-    violations, _ = _scan(_ROOT / "tests", is_test=True)
+    violations, _ = _scan_tree(_ROOT / "tests", True)
     assert not violations, "\n".join(violations)
 
 
@@ -144,6 +168,31 @@ def test_ver75_a_two_line_module_docstring_fails(tmp_path: Path) -> None:
     assert violations == ["m.py:1: module docstring is not one line"]
 
 
+def test_ver75_a_private_constant_docstring_fails_naming_file_line_and_name(
+    tmp_path: Path,
+) -> None:
+    _write(tmp_path / "m.py", '"""Module."""\n\nPUBLIC = 1\n"""Doc."""\n_LIMIT = 2\n"""Doc."""\n')
+    violations, _ = _scan(tmp_path, is_test=False)
+    assert violations == ["m.py:6: docstring on non-public _LIMIT"]
+
+
+def test_ver75_a_function_nested_under_a_block_of_a_function_is_not_public(
+    tmp_path: Path,
+) -> None:
+    _write(
+        tmp_path / "m.py",
+        '"""Module."""\n\n\ndef run() -> None:\n    """Run."""\n    if True:\n'
+        '        def inner() -> None:\n            """Doc."""\n',
+    )
+    violations, _ = _scan(tmp_path, is_test=False)
+    assert violations == ["m.py:8: docstring on non-public run.inner"]
+
+
+def test_ver75_b_attribute_docstrings_count_in_the_share(tmp_path: Path) -> None:
+    _write(tmp_path / "m.py", 'X = 1\n"""What X is."""\n')
+    assert _scan(tmp_path, is_test=False)[1] == pytest.approx(0.5)
+
+
 def test_ver75_b_directive_comments_are_not_prose(tmp_path: Path) -> None:
     _write(
         tmp_path / "m.py",
@@ -171,8 +220,8 @@ def _check_share(share: float, ceiling: float, label: str) -> None:
 
 
 def test_ver75_b_src_prose_share_is_at_most_its_ceiling() -> None:
-    _check_share(_scan(_ROOT / "src" / "nanopnp", is_test=False)[1], CEILING_SRC, "src/nanopnp")
+    _check_share(_scan_tree(_ROOT / "src" / "nanopnp", False)[1], CEILING_SRC, "src/nanopnp")
 
 
 def test_ver75_b_tests_prose_share_is_at_most_its_ceiling() -> None:
-    _check_share(_scan(_ROOT / "tests", is_test=True)[1], CEILING_TESTS, "tests")
+    _check_share(_scan_tree(_ROOT / "tests", True)[1], CEILING_TESTS, "tests")

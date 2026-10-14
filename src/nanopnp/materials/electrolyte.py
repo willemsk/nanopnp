@@ -14,6 +14,7 @@ from nanopnp.materials.forms import NUMPY_OPS, MathOps, Numeric
 
 logger = logging.getLogger(__name__)
 
+# Each c_i is floored here before the driver average: SPECIFICATION.md PHY-01.
 CONCENTRATION_FLOOR_M = 1e-6
 
 MOLAR_PER_SI = 1e-3

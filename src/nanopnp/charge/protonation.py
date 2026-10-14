@@ -132,11 +132,11 @@ PDB2PQR a ``SOL`` it cannot parameterise or :func:`frame_pdb` a ``TIP3`` its
 columns cannot hold. ``TP3M`` is the name ``--ffout=CHARMM`` gives a water it keeps.
 """
 
+# The library loggers raised to WARNING during a call (D7); the versioned one is added.
 _LOGGERS: tuple[str, ...] = ("pdb2pqr", "propka")
-"""The library loggers raised to WARNING during a call (D7); the versioned one is added."""
 
+# The extra that carries PDB2PQR and PROPKA (``pyproject.toml``).
 _EXTRA = "structure"
-"""The extra that carries PDB2PQR and PROPKA (``pyproject.toml``)."""
 
 
 class ProtonationError(RuntimeError):
@@ -546,20 +546,18 @@ def _group_state(group_type: str, pka: float, ph: float) -> float | None:
 
 @dataclass(frozen=True)
 class _Reference:
+    # Every residue but water, in order: its key and its parent name.
     residues: dict[ResidueKey, str]
-    """Every residue but water, in order: its key and its parent name."""
+    # Indices of those residues' heavy atoms in the ensemble's atom table.
     heavy: np.ndarray
-    """Indices of those residues' heavy atoms in the ensemble's atom table."""
     heavy_residue: list[ResidueKey]
-    """Each heavy atom's residue."""
     heavy_name: list[str]
-    """Each heavy atom's name."""
+    # Indices of the heavy atoms of :data:`FLIPPABLE`, which are not held to the tolerance.
     flippable: np.ndarray
-    """Indices of the heavy atoms of :data:`FLIPPABLE`, which are not held to the tolerance."""
+    # Each residue's one C-alpha, as an ensemble atom index.
     calpha: dict[ResidueKey, int]
-    """Each residue's one C-alpha, as an ensemble atom index."""
+    # Heavy atoms by residue and element, in each residue holding :data:`FLIPPABLE` atoms.
     flippable_elements: Counter[tuple[ResidueKey, str]]
-    """Heavy atoms by residue and element, in each residue holding :data:`FLIPPABLE` atoms."""
 
     @property
     def flippable_residues(self) -> set[ResidueKey]:
@@ -656,12 +654,12 @@ def _kabsch(moving: np.ndarray, fixed: np.ndarray) -> tuple[np.ndarray, np.ndarr
 class _Registration:
     positions_A: np.ndarray
     moved: bool
+    # The largest distance from a compared heavy atom to its match.
     worst_A: float
-    """The largest distance from a compared heavy atom to its match."""
+    # The largest distance from a :data:`FLIPPABLE` atom to the nearest heavy atom.
     flipped_A: float
-    """The largest distance from a :data:`FLIPPABLE` atom to the nearest heavy atom."""
+    # How many :data:`FLIPPABLE` atoms lie farther than the tolerance from every heavy atom.
     flipped: int
-    """How many :data:`FLIPPABLE` atoms lie farther than the tolerance from every heavy atom."""
     added_heavy: int
     failure: str | None
 

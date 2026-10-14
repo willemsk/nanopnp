@@ -451,7 +451,6 @@ def relative_permittivity_field(
     solid_permittivities: Mapping[str, float],
     solid_fraction: Expression | None = None,
 ) -> Expression:
-    # eps_r,f^0 over the scale the fluid permittivity is divided by: 1 exactly.
     """Return the relative permittivity ``eps~_r`` over all of Omega.
 
     Parameters
@@ -461,6 +460,7 @@ def relative_permittivity_field(
     solid_fraction
         The supplied solid fraction, if any; it replaces the sharp split by a blend.
     """
+    # eps_r,f^0 over the scale the fluid permittivity is divided by: 1 exactly.
     ion_free = permittivity_0 / scale_permittivity
     fluid_mask = mesh.Materials(fluid).Mask()
     off_fluid = {

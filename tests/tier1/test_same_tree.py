@@ -118,3 +118,19 @@ def test_l5_added_file_fails(repo: Path) -> None:
 def test_l5_path_filter_limits_the_check(repo: Path) -> None:
     (repo / "mod.py").write_text(_BASE.replace("return 1", "return 2"), encoding="utf-8")
     assert same_tree.check(repo, "HEAD", ["other"]) == {}
+
+
+def test_l5_unparsable_file_fails_naming_it(repo: Path) -> None:
+    assert _failures(repo, _BASE.replace('    """Only a docstring."""', "")) == {
+        "mod.py": "does not parse"
+    }
+
+
+def test_l5_module_reading_its_doc_keeps_its_first_line(repo: Path) -> None:
+    reads = _BASE.replace("class C:", "DESCRIPTION = __doc__\n\n\nclass C:")
+    (repo / "mod.py").write_text(reads, encoding="utf-8")
+    _git(repo, "commit", "-qam", "reads")
+    assert _failures(repo, reads.replace('"""Module."""', '"""Module, now longer."""')) == {
+        "mod.py": "module docstring's first line changed, and the module reads __doc__"
+    }
+    assert _failures(repo, reads.replace('"""Module."""', '"""Module.\n\nMore."""')) == {}

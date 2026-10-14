@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
+# CODATA 2018, to VACUUM_PERMITTIVITY; e, k_B and N_A are exact in the 2019 SI.
 ELEMENTARY_CHARGE: Final = 1.602176634e-19
 
 BOLTZMANN: Final = 1.380649e-23
@@ -16,6 +17,7 @@ GAS_CONSTANT: Final = BOLTZMANN * AVOGADRO
 
 VACUUM_PERMITTIVITY: Final = 8.8541878128e-12
 
+# The source work's 25 ± 1 °C (.knowledge/01-physics-epnpns.md section 6).
 REFERENCE_TEMPERATURE_K: Final = 298.15
 
 

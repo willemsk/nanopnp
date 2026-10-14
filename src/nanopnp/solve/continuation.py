@@ -45,6 +45,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+# The bias ramp and the salt ladder's foot: SPECIFICATION.md NUM-18 stages 5 and 9.
 BIAS_ONSET_V = 0.05
 
 FINE_BIAS_STEP_V = 0.01

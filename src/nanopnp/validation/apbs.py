@@ -1059,6 +1059,7 @@ class Norms(BaseModel):
         ]
 
 
+# SPECIFICATION.md section 7.4, the VAL-06 row and its NOTE.
 TOLERANCE = Norms(max=0.03, rms=0.01, axis=0.015)
 
 

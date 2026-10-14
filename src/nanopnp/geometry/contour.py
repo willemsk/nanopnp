@@ -67,6 +67,7 @@ QUAD_SEGS = 8
 
 RESAMPLE_SPACINGS = 0.5
 
+# Taubin, SIGGRAPH 1995; the pass band: .knowledge/04-clya-geometry-and-charge.md section 1.3.
 TAUBIN_LAMBDA = 0.5
 
 TAUBIN_MU = -0.53

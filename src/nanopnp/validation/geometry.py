@@ -30,8 +30,10 @@ PLANE_SPACING_NM = 0.05
 
 TIP_BAND_NM = 0.1
 
+# The trans constriction in the model frame: .knowledge/04-clya-geometry-and-charge.md section 2.
 CONSTRICTION_WINDOW_NM = (-1.85, 1.6)
 
+# Measured 5.6553 nm on the 50-frame ensemble, residues 8-292 (SPECIFICATION.md section 8.2.4 D7).
 Z_MD_NM = 5.655
 
 Z_MD_TOLERANCE_NM = 0.01
@@ -40,6 +42,7 @@ REGISTRATION_RESIDUES = (8, 292)
 
 REGISTRATION_CHAINS = tuple("ABCDEFGHIJKL")
 
+# The binning the reference was made with: .knowledge/04-clya-geometry-and-charge.md section 1.2.
 PQR2GRID_HALF_EXTENT_NM = 15.0
 
 PQR2GRID_SPACING_NM = 0.05
@@ -93,6 +96,7 @@ class Tolerance(_Strict):
     rms_nm: float
 
 
+# SPECIFICATION.md section 7.4, the NOTE on VAL-05.
 TOLERANCES: Mapping[str, Tolerance] = {
     "ensemble": Tolerance(conductance_deviation=0.05, constriction_nm=0.1, rms_nm=0.1),
     "2wcd": Tolerance(conductance_deviation=0.10, constriction_nm=0.1, rms_nm=0.2),

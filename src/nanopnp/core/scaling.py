@@ -18,10 +18,13 @@ NM_PER_M: Final = 1e9
 
 MOL_PER_M3_PER_MOL_PER_L: Final = 1e3
 
+# D_0 (D_Na0, Mills 1989) and water's viscosity at 298.15 K: SPECIFICATION.md section 6.3.
 REFERENCE_DIFFUSIVITY_M2_S: Final = 1.334e-9
 
 REFERENCE_VISCOSITY_PA_S: Final = 0.890e-3
 
+# eps_r,f0 after Gavish 2016 (.knowledge/01-physics-epnpns.md section 3); the P0 of the
+# permittivity correction in willems2020_nacl.yaml, and physics.pb's alias.
 REFERENCE_PERMITTIVITY: Final = 78.15
 
 

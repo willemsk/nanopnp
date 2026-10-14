@@ -166,9 +166,9 @@ def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str,
 
 
 def atomic_write_bytes(target: Path, data: bytes) -> None:
+    """Write bytes to ``target`` atomically, through a same-directory temporary file."""
     # The temporary name carries the pid and a token: job-array workers on a shared filesystem
     # run on different hosts, where pids repeat.
-    """Write bytes to ``target`` atomically, through a same-directory temporary file."""
     temporary = target.with_name(f".{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
     try:
         temporary.write_bytes(data)
