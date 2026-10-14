@@ -19,6 +19,7 @@ from test_mms import BOUNDARIES, LENGTH_NM, MESH_SIZES_NM, RADIUS_NM, _model
 
 from nanopnp.cli import main
 from nanopnp.core.constants import AVOGADRO
+from nanopnp.geometry.contour import innermost_crossings
 from nanopnp.geometry.profile import load_profile
 from nanopnp.io.store import Store
 from nanopnp.io.vocabulary import (
@@ -120,17 +121,10 @@ def weight_order(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 def _inner_wall_nm() -> tuple[np.ndarray, np.ndarray]:
     profile = np.asarray(load_profile("clya_reference_profile").vertices, dtype=float)
-    edges = np.stack([profile, np.roll(profile, -1, axis=0)], axis=1)
     z_samples = np.linspace(PORE_Z_NM[0], PORE_Z_NM[1], 2_841)
-    radius = np.full_like(z_samples, np.nan)
-    for k, z in enumerate(z_samples):
-        crossings = []
-        for (r0, z0), (r1, z1) in edges:
-            if (z0 - z) * (z1 - z) <= 0.0 and z0 != z1:
-                crossings.append(r0 + (z - z0) * (r1 - r0) / (z1 - z0))
-        if crossings:
-            radius[k] = min(crossings)
-    return z_samples, radius
+    # The crossing rule is half-open, so the polygon's top plane is sampled just inside it.
+    planes = np.minimum(z_samples, PORE_Z_NM[1] - 1e-9)
+    return z_samples, innermost_crossings([profile], planes)
 
 
 def _pore_indicator(mesh: ngs.Mesh) -> ngs.GridFunction:
