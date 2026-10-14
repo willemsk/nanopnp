@@ -1,18 +1,4 @@
-"""VER-54: the optional Gmsh backend meshes stage 5's region through netgen's gates (WP23).
-
-On the coarse parallelogram region of ``test_mesh_generate.py`` at ``size_scale``
-20, so each mesh is a fraction of a second. The reference-scale meshes, and the
-solve on both backends' meshes, are Tier 2's (``tests/tier2/test_mesh_backends.py``).
-
-The area oracle is independent of both meshers: a mesh's straight edges cut each
-reservoir arc into chords, and a chord across an arc of angle ``theta`` removes
-``R^2 (theta - sin theta) / 2`` from the domain it bounds. The record's areas,
-measured by OCC when stage 5 assembled the region, less those segments, are each
-domain's triangle area.
-
-The tests that need ``gmsh`` take the ``gmsh_module`` fixture (D11); the refusals
-of a missing extra, the default path's imports and the lock file run everywhere.
-"""
+"""VER-54: the optional Gmsh backend meshes stage 5's region through netgen's gates."""
 
 from __future__ import annotations
 
@@ -89,7 +75,6 @@ PARALLELOGRAM = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
 
 
 def _write_profile(path: Path, points: list[tuple[float, float]]) -> Path:
-    """Write ``points`` as a profile document."""
     array = np.asarray(points, dtype=np.float64)
     profile = PoreProfile.model_validate(
         {
@@ -111,13 +96,11 @@ def _write_profile(path: Path, points: list[tuple[float, float]]) -> Path:
 
 
 def _case_text(root: Path, backend: str, profile: str = "profile.yaml") -> str:
-    """Return the coarse case over a synthetic profile, meshed by ``backend``."""
     return CASE.format(path=root / profile, backend=backend)
 
 
 @pytest.fixture(scope="module")
 def workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Return a directory holding the parallelogram, counter-clockwise and clockwise."""
     root = tmp_path_factory.mktemp("gmsh")
     _write_profile(root / "profile.yaml", PARALLELOGRAM)
     _write_profile(root / "clockwise.yaml", PARALLELOGRAM[::-1])
@@ -126,13 +109,11 @@ def workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 @pytest.fixture(scope="module")
 def region(workspace: Path):
-    """Return the stage-5 artefact of the parallelogram; the backend does not key it (D1)."""
     case = loads_case(_case_text(workspace, "netgen"))
     return RegionStage(workspace=workspace / "region").run(StageInputs(resolved=resolve(case)))
 
 
 def _chord_corrected_areas(record: RegionRecord, data: MeshData) -> dict[str, float]:
-    """Return the record's domain areas less the arc segments the mesh's chords cut off."""
     expected = dict(record.face_areas_nm2)
     radius = record.reservoir_radius_nm
     for boundary, domain in ARC_DOMAINS.items():
@@ -144,7 +125,6 @@ def _chord_corrected_areas(record: RegionRecord, data: MeshData) -> dict[str, fl
 
 
 def _triangle_areas(data: MeshData) -> dict[str, float]:
-    """Return each material's summed signed triangle area."""
     corners = data.vertices[data.triangles]
     signed = 0.5 * (
         (corners[:, 1, 0] - corners[:, 0, 0]) * (corners[:, 2, 1] - corners[:, 0, 1])
@@ -156,11 +136,11 @@ def _triangle_areas(data: MeshData) -> dict[str, float]:
     }
 
 
+# VER-10, VER-27
 @pytest.mark.parametrize("backend", ["netgen", "gmsh"])
 def test_ver54_the_same_region_passes_the_same_gates_on_both_backends(
     request: pytest.FixtureRequest, workspace: Path, region, backend: str
 ) -> None:
-    """VER-27, VER-10 and D9 on each backend, one vocabulary, the areas and vertices exact."""
     if backend == "gmsh":
         request.getfixturevalue("gmsh_module")
     case = loads_case(_case_text(workspace, backend))
@@ -191,7 +171,6 @@ def test_ver54_the_same_region_passes_the_same_gates_on_both_backends(
 
 
 def _read(path: Path) -> MeshData:
-    """Read a generated mesh back through the adapter."""
     from nanopnp.mesh.adapter import read
 
     return read(path, format="msh41")
@@ -200,12 +179,6 @@ def _read(path: Path) -> MeshData:
 def test_ver54_a_clockwise_profile_meshes_with_no_inverted_element(
     gmsh_module: ModuleType, workspace: Path
 ) -> None:
-    """D2: the graph orients every loop counter-clockwise, and that is load-bearing.
-
-    The profile listed clockwise meshes cleanly. Handing Gmsh the protein's loop
-    reversed inverts every protein triangle, which is the failure the orientation
-    rule exists to prevent.
-    """
     import dataclasses
 
     from nanopnp.mesh import gmsh_backend as backend
@@ -254,7 +227,6 @@ sys.stderr.write(json.dumps({"content_hash": mesh.summary["content_hash"], "key"
 def test_ver54_two_fresh_processes_give_one_mesh_and_write_nothing_to_stdout(
     gmsh_module: ModuleType, workspace: Path, tmp_path: Path
 ) -> None:
-    """D5, D6: one thread makes the mesh a function of the recipe; IF-02 keeps stdout empty."""
     case = tmp_path / "case.yaml"
     case.write_text(_case_text(workspace, "gmsh"), encoding="utf-8")
     found = []
@@ -273,10 +245,6 @@ def test_ver54_two_fresh_processes_give_one_mesh_and_write_nothing_to_stdout(
 def test_ver54_the_key_moves_with_the_backend_and_netgen_s_does_not_move(
     workspace: Path, region
 ) -> None:
-    """D8: the recipe names the backend and its own settings; netgen's is the one WP21 keyed.
-
-    Needs no ``gmsh``: a key is known without meshing.
-    """
     keys = {}
     for backend in ("netgen", "gmsh"):
         case = loads_case(_case_text(workspace, backend))
@@ -312,11 +280,6 @@ def test_ver54_the_key_moves_with_the_backend_and_netgen_s_does_not_move(
 def test_ver54_an_open_gmsh_session_keeps_its_model_and_its_options(
     gmsh_module: ModuleType, workspace: Path, region
 ) -> None:
-    """D6: in a session already open, the adapter works in its own model and restores options.
-
-    Every option the adapter sets is watched, and three are set away from both
-    Gmsh's default and the adapter's value first.
-    """
     from nanopnp.mesh import gmsh_backend as backend
 
     gmsh = gmsh_module
@@ -344,16 +307,15 @@ def test_ver54_an_open_gmsh_session_keeps_its_model_and_its_options(
 def test_ver54_the_adapter_writes_nothing_to_stdout_in_process(
     gmsh_module: ModuleType, workspace: Path, region, capfd: pytest.CaptureFixture[str]
 ) -> None:
-    """IF-02 reserves standard output; Gmsh's terminal is off before it can print (D6)."""
     resolved = resolve(loads_case(_case_text(workspace, "gmsh")))
     generate(read_region(region.payload["region"]), resolved, workspace / "quiet")
     assert capfd.readouterr().out == ""
 
 
+# QR-12
 def test_ver54_a_gmsh_failure_is_named_with_its_log_and_leaves_no_session(
     gmsh_module: ModuleType, workspace: Path, region, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """QR-12, D6: a mesher failure quotes Gmsh, classifies as a gate, and finalises the session."""
     from nanopnp.mesh import gmsh_backend as backend
 
     def refuse(dimension: int) -> None:
@@ -372,17 +334,15 @@ def test_ver54_a_gmsh_failure_is_named_with_its_log_and_leaves_no_session(
 
 
 class _Refuse:
-    """A meta-path finder that fails ``import gmsh`` as a bare container or a bare install does."""
-
     def __init__(self, error: Exception) -> None:
         self.error = error
 
     def find_spec(self, name: str, path: object, target: object = None) -> None:
-        """Raise for ``gmsh``; defer everything else."""
         if name == "gmsh" or name.startswith("gmsh."):
             raise self.error
 
 
+# CON-10
 @pytest.mark.parametrize(
     "error",
     [
@@ -394,7 +354,6 @@ class _Refuse:
 def test_ver54_a_missing_extra_is_refused_naming_it(
     workspace: Path, region, monkeypatch: pytest.MonkeyPatch, error: Exception
 ) -> None:
-    """CON-10, D9: the case resolves; stage 6 refuses it naming the extra and the error."""
     for name in ("gmsh", "nanopnp.mesh.gmsh_backend"):
         monkeypatch.delitem(sys.modules, name, raising=False)
     monkeypatch.setattr(sys, "meta_path", [_Refuse(error), *sys.meta_path])
@@ -415,10 +374,6 @@ def test_ver54_a_missing_extra_is_refused_naming_it(
 def test_ver54_an_import_error_of_another_module_is_not_blamed_on_gmsh(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """D9 names the extra only when it is ``gmsh`` that failed to import.
-
-    ``gmsh`` is stubbed, so the test means the same with and without the extra.
-    """
     monkeypatch.delitem(sys.modules, "nanopnp.mesh.gmsh_backend", raising=False)
     monkeypatch.setitem(sys.modules, "gmsh", ModuleType("gmsh"))
     monkeypatch.setitem(sys.modules, "nanopnp.mesh.adapter", None)
@@ -430,7 +385,6 @@ def test_ver54_an_import_error_of_another_module_is_not_blamed_on_gmsh(
 def test_ver54_borrowed_session_preserves_callers_log(
     gmsh_module: ModuleType, workspace: Path, region
 ) -> None:
-    """A borrowed session does not stop or clear the caller's logger (REV-36)."""
     gmsh_module.initialize(readConfigFiles=False, interruptible=False)
     try:
         gmsh_module.logger.start()
@@ -448,7 +402,6 @@ def test_ver54_borrowed_session_preserves_callers_log(
 def test_ver54_initialize_failure_gives_missing_extra_error(
     gmsh_module: ModuleType, workspace: Path, region, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A failure of gmsh.initialize raises MissingExtraError (REV-37)."""
     if gmsh_module.isInitialized():
         gmsh_module.finalize()
 
@@ -471,7 +424,6 @@ def test_ver54_initialize_failure_gives_missing_extra_error(
 
 
 def test_ver54_a_setup_failure_finalises_an_opened_session(gmsh_module: ModuleType) -> None:
-    """An option the installed Gmsh lacks still leaves no session open (REV-38, D11 c)."""
     from nanopnp.mesh import gmsh_backend as backend
 
     if gmsh_module.isInitialized():
@@ -487,7 +439,6 @@ def test_ver54_a_setup_failure_finalises_an_opened_session(gmsh_module: ModuleTy
 def test_ver54_a_borrowed_session_keeps_the_callers_model_on_a_setup_failure(
     gmsh_module: ModuleType, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A model that was never added is never removed: the caller's survives, its error first."""
     from nanopnp.mesh import gmsh_backend as backend
 
     gmsh_module.initialize(readConfigFiles=False, interruptible=False)
@@ -514,7 +465,6 @@ def test_ver54_a_borrowed_session_keeps_the_callers_model_on_a_setup_failure(
 def test_ver54_model_remove_failure_handled_in_failing_and_successful_mesh(
     gmsh_module: ModuleType, workspace: Path, region, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """model.remove failure is added as note on meshing error, or raised on success (REV-38)."""
     from nanopnp.mesh import gmsh_backend as backend
 
     def refuse(dimension: int) -> None:
@@ -557,14 +507,10 @@ print("gmsh" in sys.modules)
 """
 
 
+# CON-10
 def test_ver54_a_gmsh_case_resolves_and_keys_without_importing_gmsh(
     workspace: Path, tmp_path: Path
 ) -> None:
-    """CON-10: only meshing imports ``gmsh``; resolving, stage 5 and the key do not.
-
-    The netgen walk's own check is ``test_ver53_two_fresh_processes_give_one_mesh_and_neither_
-    imports_gmsh`` in ``test_mesh_generate.py``.
-    """
     case = tmp_path / "case.yaml"
     case.write_text(_case_text(workspace, "gmsh"), encoding="utf-8")
     completed = subprocess.run(
@@ -577,7 +523,6 @@ def test_ver54_a_gmsh_case_resolves_and_keys_without_importing_gmsh(
 
 
 def test_con12_the_lock_names_no_forbidden_mesher() -> None:
-    """CON-12: no Triangle, MeshPy, TetGen, nor the stale pygmsh and pygalmesh wrappers."""
     lock = tomllib.loads((REPOSITORY / "uv.lock").read_text(encoding="utf-8"))
     names = {package["name"].lower() for package in lock["package"]}
     assert "gmsh" in names

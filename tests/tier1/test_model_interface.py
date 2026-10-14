@@ -1,25 +1,4 @@
-"""VER-56: the physics-model interface is the only route to a model (FR-20, QR-14).
-
-Section 5.4.3's NOTE makes the declaration and the built model's own members the
-only things a layer outside ``physics/`` may read, so a model added as one class
-runs from a case file to stage 12 with no other edit. Four claims are tested here,
-each against something other than the code under test:
-
-- **The source walk.** No module outside ``physics/`` names a concrete model
-  class or compares with a registered model name; ``default_ladder`` is the one
-  exemption, because NUM-18 defines the ladder as a path through named models.
-  The detector is shown to fire on the code that *should* trip it, so it is not a
-  gate that can only pass.
-- **Refusals from the declaration.** Every refusal names the model, the key and
-  what is admitted, so a reader can act on it without reading the declaration.
-- **Nothing moved.** The stage-10 keys of the five pre-existing models,
-  and the model of every rung of both ladders, equal goldens recorded from
-  ``main`` at ``e58b2bf`` before any of this package's code existed (WP26 D5, D14).
-- **One class is enough.** A forwarding model defined *here*, subclassing no
-  shipped model and registered at run time, runs stages 10 to 12 and reproduces
-  ``pnp`` bit for bit; and the electrostatic models, run from case files, equal
-  direct API solves whose Debye length comes from an independent route.
-"""
+"""VER-56: the physics-model interface is the only route to a model (FR-20, QR-14)."""
 
 from __future__ import annotations
 
@@ -134,15 +113,11 @@ separately. Recorded from a worktree of ``e58b2bf`` and confirmed equal on this
 branch (WP26 Outcomes)."""
 
 
-# -- the source walk -----------------------------------------------------------
-
-
 def _registered_names() -> frozenset[str]:
     return frozenset(models.registered_models())
 
 
 def _lines_of(tree: ast.Module, relative: str, scopes: tuple[tuple[str, str], ...]) -> set[int]:
-    """Return the lines of every named function, class or assignment ``scopes`` exempts here."""
     wanted = {name for path, name in scopes if path == relative}
     lines: set[int] = set()
     for node in ast.walk(tree):
@@ -159,7 +134,6 @@ def _lines_of(tree: ast.Module, relative: str, scopes: tuple[tuple[str, str], ..
 
 
 def _docstrings(tree: ast.Module) -> set[int]:
-    """Return the ids of every bare string statement: docstrings, which dispatch nothing."""
     return {
         id(node.value)
         for node in ast.walk(tree)
@@ -168,7 +142,6 @@ def _docstrings(tree: ast.Module) -> set[int]:
 
 
 def _constants(node: ast.AST) -> Iterator[object]:
-    """Yield the constants one comparison operand holds, looking inside a literal collection."""
     if isinstance(node, ast.Constant):
         yield node.value
     elif isinstance(node, ast.Tuple | ast.List | ast.Set):
@@ -177,15 +150,6 @@ def _constants(node: ast.AST) -> Iterator[object]:
 
 
 def model_dispatch(source: str, relative: str, *, exempt: bool = True) -> list[str]:
-    """Return every place ``source`` names a model, its class, or compares with a model name.
-
-    Three rules. No identifier of :data:`MODEL_CLASSES`, anywhere. No comparison
-    or ``match`` against a registered model name. And no registered model name as
-    a string literal at all, docstrings aside -- stricter than the comparison
-    rule, because a name passed to ``create`` or kept in a table is dispatch one
-    step removed. :data:`LADDER` is exempt from all three and
-    :data:`DECLARED_DEFAULTS` from the third.
-    """
     tree = ast.parse(source)
     ladder = _lines_of(tree, relative, (LADDER,)) if exempt else set()
     defaults = _lines_of(tree, relative, DECLARED_DEFAULTS) if exempt else set()
@@ -227,7 +191,6 @@ def model_dispatch(source: str, relative: str, *, exempt: bool = True) -> list[s
 
 
 def test_ver56_no_layer_outside_physics_names_a_model_or_its_class() -> None:
-    """Section 5.4.3 NOTE: layers read declarations, never names or classes."""
     found: list[str] = []
     walked = 0
     for path in sorted(PACKAGE.rglob("*.py")):
@@ -241,12 +204,6 @@ def test_ver56_no_layer_outside_physics_names_a_model_or_its_class() -> None:
 
 
 def test_ver56_the_source_walk_fires_where_it_should() -> None:
-    """The detector is not a gate that can only pass.
-
-    It fires on the registry itself, on each shape of dispatch it claims to catch,
-    and on every exempt scope once the exemption is lifted -- which also shows
-    each exemption is not vacuous.
-    """
     registry = (PACKAGE / "physics" / "models.py").read_text(encoding="utf-8")
     assert model_dispatch(registry, "physics/models.py")
     for snippet in (
@@ -266,9 +223,6 @@ def test_ver56_the_source_walk_fires_where_it_should() -> None:
         assert not model_dispatch(source, relative), relative
 
 
-# -- refusals from the declaration ----------------------------------------------
-
-
 ELECTROSTATIC_PHYSICS = "{model: %s, flow: false, variable_density: false, inertia: false}"
 
 
@@ -282,7 +236,6 @@ def case_text(
     groups: str = "",
     name: str = "interface",
 ) -> str:
-    """Return a case over ``mesh`` with the given physics, strategy and outputs."""
     mapping = f", groups: {groups}" if groups else ""
     return f"""
 schema: nanopnp/case/v0.5
@@ -306,8 +259,8 @@ def _refusal(text: str) -> str:
     return str(raised.value)
 
 
+# PHY-21
 def test_ver56_an_unhonoured_switch_is_refused_naming_model_key_and_values() -> None:
-    """``pnp`` honours ``flow: false`` only (PHY-21), and says who honours ``true``."""
     message = _refusal(
         case_text(physics="{model: pnp, flow: true, solid_permittivities: {membrane: 3.2}}")
     )
@@ -316,8 +269,8 @@ def test_ver56_an_unhonoured_switch_is_refused_naming_model_key_and_values() -> 
     assert "epnp-ns, pnp-ns" in message
 
 
+# PHY-21
 def test_ver56_solids_beside_a_model_without_them_are_refused() -> None:
-    """``pb`` carries no solids; ``poisson`` does, and the message says so (PHY-21 NOTE)."""
     physics = "{model: pb, flow: false, variable_density: false, inertia: false, "
     message = _refusal(
         case_text(physics=physics + "solid_permittivities: {membrane: 3.2}}", outputs="[]")
@@ -333,7 +286,6 @@ def test_ver56_solids_beside_a_model_without_them_are_refused() -> None:
 def test_phy24_a_supplied_field_beside_poisson_boltzmann_is_refused(
     model: str, supplied: str
 ) -> None:
-    """Poisson-Boltzmann takes no fixed charge and no permittivity field (PHY-24)."""
     inputs = f"\n  {supplied}: {{path: field.yaml, format: field1}}"
     message = _refusal(
         case_text(physics=ELECTROSTATIC_PHYSICS % model, outputs="[]", inputs=inputs)
@@ -343,7 +295,6 @@ def test_phy24_a_supplied_field_beside_poisson_boltzmann_is_refused(
 
 
 def test_ver56_an_unadmitted_strategy_is_refused_naming_the_admitted_values() -> None:
-    """``pnp`` admits ``continuation: none`` only, as section 6.5 already forces."""
     message = _refusal(
         case_text(
             physics=(
@@ -376,14 +327,12 @@ def test_ver56_an_unadmitted_strategy_is_refused_naming_the_admitted_values() ->
 def test_ver56_an_undeclared_quantity_is_refused_when_the_case_is_resolved(
     physics: str, outputs: str, named: str, declared: str
 ) -> None:
-    """Section 5.3.1 NOTE on ``outputs:``: refused at resolve time, not at stage 11."""
     message = _refusal(case_text(physics=physics, outputs=outputs))
     assert named in message and declared in message
     assert f"'{physics.split(',')[0].split(': ')[1].rstrip('}')}'" in message
 
 
 def test_ver56_fields_is_admitted_for_every_model() -> None:
-    """``fields`` is the IF-07 export, not a quantity (section 5.3.1 NOTE)."""
     for model in ("pb", "pb-linear", "poisson"):
         resolved = resolve(
             loads_case(case_text(physics=ELECTROSTATIC_PHYSICS % model, outputs="[fields]"))
@@ -394,8 +343,6 @@ def test_ver56_fields_is_admitted_for_every_model() -> None:
 def test_ver56_a_builder_refusal_is_re_raised_naming_the_model(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """WP26 D10: resolve builds the model once, and a builder's own refusal is a case error."""
-
     def refuse(**_: object) -> PhysicsModel:
         raise ValueError("this configuration is refused for a reason of its own")
 
@@ -410,13 +357,12 @@ def test_ver56_a_builder_refusal_is_re_raised_naming_the_model(
 
 
 def _divalent() -> Electrolyte:
-    """Return the NaCl parameter file's electrolyte with the cation made divalent."""
     salt = Electrolyte.from_parameter_file("willems2020_nacl")
     return replace(salt, species=(replace(salt.species[0], valence=2), salt.species[1]))
 
 
+# PHY-21
 def test_fr19_poisson_boltzmann_refuses_a_salt_that_is_not_symmetric_monovalent() -> None:
-    """``lambda_D`` with unit valence and ``sinh`` are exact for a 1:1 salt only (PHY-21 NOTE)."""
     divalent = _divalent()
     for name in ("pb", "pb-linear"):
         with pytest.raises(ValueError, match=r"symmetric monovalent.*z = \+2"):
@@ -424,13 +370,8 @@ def test_fr19_poisson_boltzmann_refuses_a_salt_that_is_not_symmetric_monovalent(
     assert models.create("poisson", electrolyte=divalent).name == "poisson"
 
 
+# NUM-18
 def test_fr19_the_ladder_initialisers_state_their_own_debye_length_for_any_salt() -> None:
-    """NUM-18's stages 1 and 2 are initialisers with their own ``lambda_D``, not case models.
-
-    Built through the registry they must take every electrolyte the ladder
-    takes: the refusal is of the case's *default* ``lambda_D``, which a
-    stated one replaces.
-    """
     divalent = _divalent()
     stated = models.create("pb", electrolyte=divalent, debye_length_nm=0.5)
     assert isinstance(stated, models.ElectrostaticModel)
@@ -443,11 +384,6 @@ def test_fr19_the_ladder_initialisers_state_their_own_debye_length_for_any_salt(
 
 
 def test_ver56_a_declaration_cannot_admit_a_ladder_that_does_not_end_at_it() -> None:
-    """Section 6.5: the ladder ends at ``epnp-ns`` or ``pnp-ns``, so no other may admit it.
-
-    Refused at registration, and nothing is registered: case validation would
-    otherwise admit ``default_ladder`` and stage 10 refuse to build it.
-    """
     with pytest.raises(ValueError, match="ends at epnp-ns or pnp-ns"):
         models.register_model(
             "laddered", lambda **_: models.create("pnp-ns"), models.declaration("epnp-ns")
@@ -458,7 +394,6 @@ def test_ver56_a_declaration_cannot_admit_a_ladder_that_does_not_end_at_it() -> 
 def test_ver56_a_builder_must_build_the_model_it_is_registered_as(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The declaration is found by the built model's name, so ``create`` insists they agree."""
     monkeypatch.setitem(
         models._REGISTRY,
         "misnamed",
@@ -471,12 +406,8 @@ def test_ver56_a_builder_must_build_the_model_it_is_registered_as(
         models.create("misnamed")
 
 
+# PHY-21
 def test_ver56_a_model_without_solids_is_refused_a_generated_mesh() -> None:
-    """Every generated region carries a membrane and a protein (PHY-21 NOTE).
-
-    So the refusal is the case's, made when it is resolved, and not the stage-6
-    gate's after the mesh has been built.
-    """
     text = case_text(physics=ELECTROSTATIC_PHYSICS % "pb", outputs="[]").replace(
         "mesh: {path: absent.msh, format: msh41}", "profile: {path: absent.yaml}"
     )
@@ -485,7 +416,6 @@ def test_ver56_a_model_without_solids_is_refused_a_generated_mesh() -> None:
 
 
 def test_ver56_the_declared_switches_are_not_shared_between_declarations() -> None:
-    """A declaration copies its switches, so one mapping cannot move two models."""
     shared = {name: (False,) for name in models.SWITCHES}
     first = models.ModelDeclaration(options=(), switches=shared, solids=False)
     shared["flow"] = (False, True)
@@ -493,7 +423,6 @@ def test_ver56_the_declared_switches_are_not_shared_between_declarations() -> No
 
 
 def test_ver56_building_a_model_while_resolving_imports_no_backend() -> None:
-    """WP26 D10: resolve builds every model, and the CLI's import budget must survive it."""
     script = f"""
 import sys
 from nanopnp.pipeline.case import loads_case, resolve
@@ -510,11 +439,7 @@ print(sorted(name for name in ("ngsolve", "netgen") if name in sys.modules))
     assert completed.stdout.strip() == "[]", completed.stderr
 
 
-# -- nothing moved -------------------------------------------------------------
-
-
 def _quickstart_variants() -> dict[str, str]:
-    """Return the quick-start case as each of the five pre-existing models."""
     base = QUICKSTART.read_text(encoding="utf-8")
     corrections_block = (
         "  corrections:\n"
@@ -558,7 +483,6 @@ def _quickstart_variants() -> dict[str, str]:
 
 @pytest.mark.parametrize("model", sorted(SOLVE_HASHES))
 def test_ver56_the_stage_ten_key_of_each_model_is_the_one_main_recorded(model: str) -> None:
-    """WP26 D5: ``model_options`` is filtered by the declaration and did not move."""
     resolved = resolve(loads_case(_quickstart_variants()[model]))
     assert content_hash(SOLUTION_SCHEMA, resolved.solve_provenance) == SOLVE_HASHES[model]
 
@@ -566,7 +490,6 @@ def test_ver56_the_stage_ten_key_of_each_model_is_the_one_main_recorded(model: s
 def test_ver56_the_stage_ten_key_moves_with_the_algorithm_revision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """REV-71: a number-moving change bumps the revision, which re-keys every solve."""
     resolved = resolve(loads_case(_quickstart_variants()["epnp-ns"]))
     before = content_hash(SOLUTION_SCHEMA, resolved.solve_provenance)
     monkeypatch.setattr("nanopnp.io.resolved.SOLVE_ALGORITHM_REVISION", 2)
@@ -574,8 +497,8 @@ def test_ver56_the_stage_ten_key_moves_with_the_algorithm_revision(
     assert resolved.provenance["algorithm_revision"] == 2
 
 
+# NUM-16
 def test_ver56_the_stage_ten_key_moves_with_the_field_floor() -> None:
-    """REV-71: NUM-16's per-field floor decides when Newton stops, so it keys the solve."""
     resolved = resolve(loads_case(_quickstart_variants()["epnp-ns"]))
     looser = replace(resolved, newton=replace(resolved.newton, field_floor_ratio=1.0e-3))
     assert looser.solve_provenance["newton"]["field_floor_ratio"] == 1.0e-3
@@ -586,7 +509,6 @@ def test_ver56_the_stage_ten_key_moves_with_the_field_floor() -> None:
 
 @pytest.mark.parametrize("model", sorted(RUNG_HASHES))
 def test_ver56_every_ladder_rung_builds_the_model_main_built(model: str) -> None:
-    """WP26 D14: the rungs are built through ``create`` and are the rungs of ``main``."""
     resolved = resolve(loads_case(_quickstart_variants()[model]))
     mesh = CylindricalPoreGeometry().generate(maxh_nm=4.0)
     empty = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
@@ -602,42 +524,27 @@ def test_ver56_every_ladder_rung_builds_the_model_main_built(model: str) -> None
         for rung in rungs
     )
     assert found == RUNG_HASHES[model]
-    # The top rung is the case's own model (D14), at the case's concentration.
     assert rungs[-1].model.name == model
     assert rungs[-1].model.scales.concentration_M == pytest.approx(0.1, rel=1e-12)
 
 
-# -- one class is enough -------------------------------------------------------
-
-
 class ForwardingModel:
-    """``pnp``, reached through a class no shipped model shares.
-
-    It subclasses nothing, forwards every member it does not define to the model
-    it wraps, and answers to its own registered name, so every layer that reads it
-    reads it through the section 5.4.3 interface -- a ``getattr`` is all it offers.
-    """
-
     def __init__(self, inner: PhysicsModel) -> None:
         self._inner = inner
 
     @property
     def name(self) -> str:
-        """The registered name, which is how the declaration is found."""
         return FORWARDING
 
     @property
     def provenance(self) -> Mapping[str, Any]:
-        """The wrapped model's record, under this model's name."""
         return {**self._inner.provenance, "model": FORWARDING}
 
     def solve(self, mesh: Mesh, measures: Measures, **kwargs: Option) -> ModelSolution:
-        """Solve the wrapped model and hand back a solution that names this one."""
         solution = self._inner.solve(mesh, measures, **kwargs)
         return replace(solution, model=self)
 
     def __getattr__(self, attribute: str) -> Option:
-        """Forward every other member to the wrapped model."""
         return getattr(self._inner, attribute)
 
 
@@ -646,7 +553,6 @@ FORWARDING = "forwarding-pnp"
 
 @pytest.fixture
 def forwarding_model() -> Iterator[str]:
-    """Register :class:`ForwardingModel` for one test, with ``pnp``'s declaration."""
     models.register_model(
         FORWARDING,
         lambda **options: ForwardingModel(models.create("pnp", **options)),
@@ -660,7 +566,6 @@ def forwarding_model() -> Iterator[str]:
 
 @pytest.fixture(scope="module")
 def pore_mesh(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the quick-start pore, as ``nanopnp mesh cylinder`` writes it with its defaults."""
     generated = CylindricalPoreGeometry(
         pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
     ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
@@ -668,7 +573,6 @@ def pore_mesh(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 def _run(text: str, directory: Path) -> RunResult:
-    """Run a case file through stage 12 in its own store, and return the run."""
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / "case.yaml"
     path.write_text(text, encoding="utf-8")
@@ -676,21 +580,16 @@ def _run(text: str, directory: Path) -> RunResult:
 
 
 def _state(result: RunResult) -> dict[str, np.ndarray]:
-    """Return the stage-10 payload's arrays, by name."""
     import numpy as np
 
     with np.load(result.artefacts["solve"].payload["state"], allow_pickle=False) as archive:
         return {name: archive[name] for name in archive.files if name.startswith("field.")}
 
 
+# FR-20, QR-14
 def test_ver56_a_model_defined_as_one_class_runs_from_a_case_file_to_stage_twelve(
     forwarding_model: str, pore_mesh: Path, tmp_path: Path
 ) -> None:
-    """FR-20, QR-14: one class and a registration, and every layer serves it.
-
-    The state and the stage-11 summary equal ``pnp``'s on the same case bit for
-    bit, and the model stage 11 restores is the wrapper, not the model it wraps.
-    """
     import numpy as np
 
     physics = (
@@ -725,16 +624,10 @@ def test_ver56_a_model_defined_as_one_class_runs_from_a_case_file_to_stage_twelv
     assert type(restored.model) is ForwardingModel
 
 
+# VER-71
 def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
     pore_mesh: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """VER-56: whether ``d`` is read is asked of the built model, not of the case.
-
-    ``pnp-ns`` reads no corrections (VER-71), so the quick-start case as
-    ``pnp-ns`` with its corrections on is refused naming each correction key;
-    and with them left at ``none``, runs to stage 12 on the ladder and on a
-    single rung, stores no distance field and restores.
-    """
     import numpy as np
 
     quickstart = (
@@ -775,10 +668,6 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
 def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
     pore_mesh: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """VER-56: re-recorded models assemble bit-identical operators.
-
-    The four re-recorded models match before and after unread pruning.
-    """
     import netgen.occ as occ
     import ngsolve as ngs
     import numpy as np
@@ -793,7 +682,6 @@ def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
             )
         )
 
-    # Fluid mesh for electrostatic models
     face = occ.Rectangle(2.0, 8.0).Face()
     face.name = "electrolyte"
     for edge in face.edges:
@@ -821,12 +709,10 @@ def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
         for k, v in _quickstart_variants().items()
     }
 
-    # pnp-ns
     u_pnp_ns = yaml.safe_load(base_pore.replace("model: epnp-ns", "model: pnp-ns"))
     e_pnp_ns = yaml.safe_load(variants_pore["pnp-ns"])
     assert equal(fingerprint(u_pnp_ns), fingerprint(e_pnp_ns))
 
-    # pnp
     u_pnp = yaml.safe_load(
         base_pore.replace(
             "model: epnp-ns",
@@ -838,7 +724,6 @@ def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
     e_pnp = yaml.safe_load(variants_pore["pnp"])
     assert equal(fingerprint(u_pnp), fingerprint(e_pnp))
 
-    # pb
     pb_model_str = (
         "model: pb\n"
         "  flow: false\n"
@@ -857,7 +742,6 @@ def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
     e_pb["inputs"]["mesh"]["groups"] = {"wall": "interface"}
     assert equal(fingerprint(u_pb), fingerprint(e_pb))
 
-    # pb-linear
     pb_lin_model_str = (
         "model: pb-linear\n"
         "  flow: false\n"
@@ -877,16 +761,7 @@ def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
     assert equal(fingerprint(u_pb_lin), fingerprint(e_pb_lin))
 
 
-# -- the electrostatic models from case files ---------------------------------
-
-
 def _slab(path: Path, *, membrane: tuple[float, float] | None) -> Path:
-    """Write ``r in [0, 4]``, ``z in [0, 10]`` nm, with a membrane band if one is asked for.
-
-    ``cis`` at ``z = 10`` and ``trans`` at ``z = 0``, so the bias is applied across
-    the slab; the membrane, where present, spans the whole radius, so its faces
-    are seams of the glued faces and its rim is ``membrane_outer``.
-    """
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -963,7 +838,6 @@ def _direct(
     debye_length_nm: float | None = None,
     charged: bool = True,
 ) -> tuple[ResolvedCase, ModelSolution]:
-    """Solve the case's model through the API alone, on the mesh the case deploys."""
     resolved = resolve(loads_case(text))
     mesh = deployed_mesh(resolved, None).mesh
     model = models.create(
@@ -992,14 +866,8 @@ def _relative(case: np.ndarray, direct: np.ndarray) -> float:
     return float(np.max(np.abs(case - direct)) / np.max(np.abs(direct)))
 
 
+# VER-56
 def test_fr19_pb_linear_from_a_case_file_equals_the_api_solve(tmp_path: Path) -> None:
-    """VER-56: ``pb-linear`` runs on a solid-free slab, with the case's ``lambda_D``.
-
-    The API solve is handed ``lambda_D`` from :func:`~nanopnp.mesh.sizing.
-    case_debye_length_nm` -- the ionic strength read off the case document -- which
-    is a different route from the model's own scale set, so the two agreeing says
-    the model's default is the case's Debye length and not merely itself.
-    """
     import numpy as np
 
     mesh = _slab(tmp_path / "slab.msh", membrane=None)
@@ -1017,15 +885,10 @@ def test_fr19_pb_linear_from_a_case_file_equals_the_api_solve(tmp_path: Path) ->
     assert _relative(case_state, np.asarray(direct.state.vec.FV().NumPy())) < 1e-12
 
 
+# PHY-20
 def test_ver56_poisson_with_solids_and_a_supplied_charge_equals_the_api_solve(
     tmp_path: Path,
 ) -> None:
-    """VER-56, PHY-20: ``poisson`` carries a membrane and ``inputs.charge`` from a case file.
-
-    Equal to the API solve handed ``fields.charge.assemble(scales)`` to 1e-12, and
-    measurably different from the uncharged solve, so the agreement is about the
-    charge path and not about the bias alone.
-    """
     import numpy as np
 
     mesh = _slab(tmp_path / "slab.msh", membrane=(6.5, 8.0))
@@ -1050,7 +913,6 @@ def test_ver56_poisson_with_solids_and_a_supplied_charge_equals_the_api_solve(
 def test_ver56_the_mesh_gate_refuses_a_solid_under_a_model_without_solids(
     pore_mesh: Path,
 ) -> None:
-    """WP26 D12: the abort names the model and the domain, not a missing entry."""
     text = case_text(
         pore_mesh,
         physics=ELECTROSTATIC_PHYSICS % "pb",
@@ -1086,7 +948,6 @@ def test_ver56_the_mesh_gate_refuses_a_solid_under_a_model_without_solids(
 def test_ver56_the_mesh_asks_for_what_the_model_declares(
     physics: str, concentration: bool, no_slip: bool, sources: bool
 ) -> None:
-    """WP26 D12: essential sets from the built model, distance sources by declaration."""
     outputs = "[current]" if concentration else "[]"
     resolved = resolve(loads_case(case_text(physics=physics, outputs=outputs)))
     purposes = [requirement.purpose for requirement in required_names(resolved).boundaries]
@@ -1097,7 +958,6 @@ def test_ver56_the_mesh_asks_for_what_the_model_declares(
 
 
 def test_ver56_the_declarations_are_readable_without_building() -> None:
-    """D1: one declaration per name, and ``pnp`` differs from its class-mates in it."""
     for name in models.registered_models():
         declared = models.declaration(name)
         assert json.dumps(sorted(declared.switches)) == json.dumps(sorted(models.SWITCHES))

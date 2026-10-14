@@ -1,32 +1,4 @@
-"""VER-24 — the FR-25 provenance manifest and the validated-default diff it rests on.
-
-A manifest is only worth writing if a run can be reconstructed from it, and the
-way that claim fails is not by being false but by being *incomplete*: a switch
-nobody thought to enumerate is a switch the manifest never mentions, and the
-result reads as though it were produced by the validated model when it was not.
-
-So the load-bearing test here is not that a manifest can be built. It is
-:func:`test_ver24_every_switch_typed_field_of_the_schema_is_classified`, which
-refuses any bool-or-``Literal`` field of the schema that is in neither
-:data:`~nanopnp.io.defaults.SWITCH_PATHS` nor
-:data:`~nanopnp.io.defaults.CONFIGURATION_PATHS`. Adding a switch to the schema
-and forgetting the manifest then fails at Tier 1, in seconds, rather than in a
-comparison against COMSOL six months later.
-
-The schema itself is enumerated by :func:`~nanopnp.io.case_paths.case_fields`, not by a
-walk written here: a second walk over one schema is the one that drifts
-silently, and a field a local walk missed would be a field the manifest never
-classified *and* the desktop editor never offered. VER-43 froze the enumeration in
-``tests/tier1/test_case_fields.py``; what is left below is the classification.
-
-The second is
-:func:`test_fr25_the_model_and_the_case_agree_on_the_switches_they_share`.
-Section 5.4.1 forbids ``physics/`` from importing ``io/``, so
-:class:`~nanopnp.physics.models.CoupledModel` enumerates its own deviations and
-:func:`~nanopnp.io.defaults.deviations` enumerates the case's, independently.
-Two independent computations of the same fact are only worth having if something
-asserts they agree, and nothing else does.
-"""
+"""VER-24: the FR-25 provenance manifest and the validated-default diff it rests on."""
 
 from __future__ import annotations
 
@@ -89,23 +61,11 @@ numerics: {continuation: default_ladder}
 
 
 def _manifest(document: CaseDocument, **kwargs: object) -> manifest_module.Manifest:
-    """Build a manifest for ``document`` with nothing but the case supplied."""
     artefact = CaseArtefact(document)
     return build(document, case_text=MINIMAL, case_hash=artefact.hash, **kwargs)  # type: ignore[arg-type]
 
 
-# -- the enumeration that keeps the manifest honest ---------------------------
-
-
 def _is_switch(reference: FieldReference) -> bool:
-    """Return whether a field of the schema is switch-typed.
-
-    Switch-typed means ``bool``, carrying a ``Literal``, named ``model``, or a
-    ``str`` field governed by an installed registry via :func:`registry_options`.
-    Free-form strings and numbers are not detected here and are covered instead by
-    :func:`test_ver24_every_classified_path_still_names_a_field`, which walks the
-    two mappings in the other direction.
-    """
     annotation = reference.annotation
     literal = get_origin(annotation) is Literal or any(
         get_origin(argument) is Literal for argument in get_args(annotation)
@@ -120,11 +80,6 @@ def _is_switch(reference: FieldReference) -> bool:
 
 
 def test_ver24_backend_registry_paths_are_detected_as_switches() -> None:
-    """The three backend registry paths are recognised as switch-typed fields (D8).
-
-    Converting the mesher, solver and stabilisation fields to strings checked
-    against runtime registries must not cause VER-24's classifier to lose them.
-    """
     fields_by_path = {ref.path: ref for ref in case_fields()}
     backend_paths = (
         "numerics.mesh.backend",
@@ -136,14 +91,8 @@ def test_ver24_backend_registry_paths_are_detected_as_switches() -> None:
         assert _is_switch(fields_by_path[path]), f"{path} should be recognised as a switch"
 
 
+# FR-25
 def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
-    """No switch of the schema is in neither the deviation set nor the exempt set.
-
-    FR-25 asks for "every switch set away from the validated default". A switch
-    the enumeration has never heard of cannot appear in that list, and no other
-    test would notice: the run converges, the manifest validates, and the number
-    is attributed to the validated model.
-    """
     classified = set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)
     switches = {reference.path for reference in case_fields() if _is_switch(reference)}
     unclassified = switches - classified
@@ -155,52 +104,31 @@ def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
 
 
 def test_ver24_every_classified_path_still_names_a_field() -> None:
-    """Both mappings name real fields, so a rename cannot leave a dead path behind.
-
-    The other direction of the test above, and the one that covers the
-    ``str``-typed switches — ``electrolyte.parameters`` and
-    ``numerics.wall_distance.sources`` — that a type walk cannot recognise. It
-    is asked of the schema rather than of a document because four of the exempt
-    paths live under the optional ``structure:``, ``geometry:`` and ``charge:``
-    blocks, which a Phase-1 case does not carry at all.
-    """
     walked = {reference.path for reference in case_fields()}
     stale = (set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)) - walked
     assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v0.5"
 
 
 def test_ver24_every_switch_path_reads_off_the_validated_default() -> None:
-    """Every deviation path resolves on the validated default case itself.
-
-    :func:`~nanopnp.io.defaults.deviations` reads each path off both documents;
-    a path that named a block the default omits would raise mid-diff rather than
-    report a deviation.
-    """
     for path in SWITCH_PATHS:
         value_at(VALIDATED_DEFAULT_CASE, path)
 
 
 def test_ver24_the_two_classifications_are_disjoint() -> None:
-    """A path is a deviation or an exemption, never quietly both."""
     assert not set(SWITCH_PATHS) & set(CONFIGURATION_PATHS)
 
 
 def test_ver24_an_unknown_path_is_refused_by_name() -> None:
-    """A typo in a switch path fails loudly rather than reading as no deviation."""
     with pytest.raises(UnknownSwitchPathError, match=re.escape("physics.flowe")):
         value_at(VALIDATED_DEFAULT_CASE, "physics.flowe")
 
 
-# -- the diff itself ----------------------------------------------------------
-
-
+# PHY-22, PHY-23
 def test_ver24_the_validated_default_case_deviates_from_nothing() -> None:
-    """The validated default is the origin of the diff (PHY-22, PHY-23)."""
     assert deviations(VALIDATED_DEFAULT_CASE) == ()
 
 
 def test_ver24_a_disabled_correction_is_recorded_as_a_deviation() -> None:
-    """Turning the viscosity correction off names the path, the value and the default."""
     document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
     document.electrolyte.corrections.viscosity.model = "none"
     found = {deviation.path: deviation for deviation in deviations(document)}
@@ -210,12 +138,8 @@ def test_ver24_a_disabled_correction_is_recorded_as_a_deviation() -> None:
     assert recorded.validated == "willems2020_nacl"
 
 
+# FR-25, PHY-02
 def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
-    """PHY-02's saturation distance is a float switch; classified by hand, it must diff.
-
-    Below about 1 nm the ion wall function no longer reaches 1 inside the cap,
-    so a run at 0.3 nm is a different model and FR-25 has to say so.
-    """
     document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
     document.numerics.wall_distance.max_distance_nm = 0.3
     found = {deviation.path: deviation for deviation in deviations(document)}
@@ -224,6 +148,7 @@ def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
     assert recorded.validated == 3.0
 
 
+# QR-12
 @pytest.mark.parametrize(
     ("path", "value"),
     [
@@ -237,11 +162,6 @@ def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
 def test_ver24_resolve_refuses_an_operating_point_no_solve_could_use(
     path: str, value: float
 ) -> None:
-    """A NaN or non-positive value is refused at resolve time, naming its key.
-
-    Written so NaN fails: ``nan <= 0`` is False, and a sweep plan resolves every
-    point precisely so that an inadmissible one fails in seconds (QR-12).
-    """
     document = loads_case(MINIMAL)
     section, *middle, leaf = path.split(".")
     target = getattr(document, section)
@@ -253,26 +173,14 @@ def test_ver24_resolve_refuses_an_operating_point_no_solve_could_use(
 
 
 def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
-    """``CoupledModel``'s own record and the case's diff name the same switches.
-
-    Section 5.4.1 keeps ``physics/`` from importing ``io/``, so these are two
-    independent enumerations of the same set. They are only evidence of anything
-    if they are asserted equal on the overlap; a model that renamed one switch,
-    or a schema that moved one, would otherwise leave the manifest and the model
-    quietly disagreeing about what was run.
-    """
     document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
-    # The validated default carries a charge: block at its defaults so that every
-    # switch path reads off it; resolve() refuses the block in this release, and
-    # its absence reads as those same defaults.
+    # The validated default carries a charge: block so that every switch path reads off it;
+    # resolve() refuses it in this release, and its absence reads as the same defaults.
     document.charge = None
     document.physics.inertia = False
     document.physics.dielectric_gradient_forces = True
     document.electrolyte.corrections.steric.model = "none"
-    # The NUM-18 ladder builds every rung with a fixed set of physics options
-    # and would silently drop this deviation (pipeline/checks.py::_check_ladder_can_honour);
-    # this test is about the model and the case agreeing on what they name, which
-    # a single rung, resolved and built directly below, exercises just as well.
+    # The NUM-18 ladder drops this deviation (pipeline/checks.py), so one rung is built directly.
     document.numerics.continuation = "none"
 
     resolved = resolve(document)
@@ -293,11 +201,7 @@ def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None
     }
 
 
-# -- the eight groups ---------------------------------------------------------
-
-
 def test_ver24_the_manifest_carries_all_eight_groups_of_section_5_3_3() -> None:
-    """Every group of section 5.3.3 is present even when no stage produced it."""
     document = loads_case(MINIMAL)
     written = _manifest(document).document()
     for group in GROUPS:
@@ -306,13 +210,6 @@ def test_ver24_the_manifest_carries_all_eight_groups_of_section_5_3_3() -> None:
 
 
 def test_ver24_a_group_no_stage_produced_names_the_reason() -> None:
-    """A not-run group says *why* rather than being dropped or left empty.
-
-    An absent key and an empty object are both readable as "nothing to record".
-    A status and a reason are not, and this is the difference between a Phase-1
-    manifest that admits it had no charge pipeline and one that appears to have
-    run with zero charge everywhere.
-    """
     document = loads_case(MINIMAL)
     written = _manifest(document).document()
     for group in ("geometry_and_mesh", "charge", "materials"):
@@ -323,7 +220,6 @@ def test_ver24_a_group_no_stage_produced_names_the_reason() -> None:
 
 
 def test_ver24_the_solver_group_records_the_settings_and_the_run() -> None:
-    """The solver group carries what was asked for and what happened."""
     document = loads_case(MINIMAL)
     ladder = {"rungs": [], "iterations": 12, "minimum_damping_used": 0.5}
     written = _manifest(document, ladder=ladder).document()
@@ -335,12 +231,6 @@ def test_ver24_the_solver_group_records_the_settings_and_the_run() -> None:
 
 
 def test_ver24_stabilisation_is_recorded_with_the_number(tmp_path: Path) -> None:
-    """The mode the solve actually ran under is recorded beside the requested one.
-
-    Sections 6.4 and 7.4 make this load-bearing: the reference COMSOL model ran
-    stabilised and ours does not, so a number without its mode is not comparable
-    to it, and a number whose mode disagrees with the request is worse.
-    """
     document = loads_case(MINIMAL)
     written = _manifest(document, stabilisation="reference").document()
     block = written["stabilisation"]
@@ -350,14 +240,8 @@ def test_ver24_stabilisation_is_recorded_with_the_number(tmp_path: Path) -> None
     assert block["matches_requested"] is False
 
 
+# FR-25
 def test_ver24_a_stabilised_run_appears_under_deviations_without_being_told() -> None:
-    """``numerics.stabilisation`` is a diffable path, so a new value costs nothing.
-
-    ``supg`` and ``reference`` were added to the schema in this package and no
-    entry in ``io/defaults`` moved; the deviation appears because the path is
-    already classified as a switch and its validated default is ``none``
-    (FR-25, section 5.3.3).
-    """
     for mode in ("supg", "reference"):
         document = loads_case(
             MINIMAL.replace(
@@ -372,13 +256,8 @@ def test_ver24_a_stabilised_run_appears_under_deviations_without_being_told() ->
         assert "numerics.stabilisation" in paths
 
 
+# FR-25
 def test_num13_the_stabilisation_group_carries_the_mode_s_own_constants() -> None:
-    """The mode name is not the operator, so its tuning constants travel with it.
-
-    ``reference`` at ``C_cw = 1`` and at ``C_cw = 0.35`` are two discretisations
-    under one name, and a manifest recording only the name could not tell two such
-    runs apart (FR-25).
-    """
     from nanopnp.physics.stabilisation import create as create_stabilisation
 
     mode = create_stabilisation("reference")
@@ -397,12 +276,6 @@ def test_num13_the_stabilisation_group_carries_the_mode_s_own_constants() -> Non
 
 
 def test_num12_the_stabilisation_group_keeps_unmeasured_apart_from_zero() -> None:
-    """A contribution of zero and no measurement at all are different facts.
-
-    ``none`` contributes exactly zero, so collapsing "not measured" to zero would
-    make an unextracted run indistinguishable from an unstabilised one — the
-    reading section 7.4 depends on.
-    """
     document = loads_case(MINIMAL)
     unmeasured = _manifest(document).document()["stabilisation"]
     assert isinstance(unmeasured, dict)
@@ -428,7 +301,6 @@ def test_num12_the_stabilisation_group_keeps_unmeasured_apart_from_zero() -> Non
 
 
 def test_ver24_deviations_reach_the_manifest_by_path() -> None:
-    """The Deviations group carries the same paths the diff produced."""
     document = loads_case(MINIMAL)
     written = _manifest(document).document()
     block = written["deviations"]
@@ -441,17 +313,7 @@ def test_ver24_deviations_reach_the_manifest_by_path() -> None:
     assert "physics.model" in paths
 
 
-# -- the charge group, once stage 7 has something to say ----------------------
-
-
 def _ring_field() -> ChargeField:
-    """Return one Gaussian ring of known total charge, as a supplied field.
-
-    The width is 0.3 nm rather than the reference's 0.085 nm for the reason
-    ``tests/tier1/test_charge_fields.py`` records: a 0.085 nm Gaussian on the
-    0.15 nm mesh this file can afford fails the quadrature-agreement gate, and
-    correctly. What is under test here is the manifest, not the smearing.
-    """
     spec = FormSpec(
         name="gaussian_ring",
         parameters={
@@ -481,12 +343,6 @@ def _ring_field() -> ChargeField:
 
 
 def _solid_fraction_field() -> SolidFractionField:
-    """Return the smallest valid dielectric field: uniform ``chi`` on a 2x2 grid.
-
-    Nothing is interpolated from it. It exists so that the deviation below is
-    the one :meth:`~nanopnp.charge.stage.ResolvedFields.deviations` actually
-    produces rather than one this test wrote out by hand.
-    """
     spec = FormSpec(
         name="uniform",
         parameters={"value": 1.0},
@@ -507,20 +363,8 @@ def _solid_fraction_field() -> SolidFractionField:
     return SolidFractionField(document=document, grid=create_form(spec), source=Path(__file__))
 
 
+# PHY-19
 def test_ver24_the_charge_group_carries_the_conservation_report_it_was_gated_on() -> None:
-    """Stage 7's summary populates the group, PHY-19 report and all.
-
-    The group is otherwise :func:`~nanopnp.io.manifest.not_run`, and the two
-    readings are indistinguishable to anyone who does not already know whether
-    the run supplied a field: "no charge pipeline" and "a charge field whose
-    conservation was checked" must not both render as an absence.
-
-    Both legs are asserted present because they are different claims. The
-    producer leg says the grid carries the charge the *document* declares; the
-    consumer leg says the mesh integrates the charge the *grid* carries. A
-    manifest recording one and not the other would attribute a passing gate to a
-    check that was never run.
-    """
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -551,29 +395,21 @@ def test_ver24_the_charge_group_carries_the_conservation_report_it_was_gated_on(
     assert recorded["consumer"]["relative_error"] < recorded["consumer"]["tolerance"]
     assert recorded["quadrature_agreement"]["relative_error"] < 1.0
     assert recorded["per_plane"]["count"] == 2
-    # The interpolant is part of the number: the same grid read nearest-neighbour
-    # is a different field, and a reader reconstructing the run needs to know
-    # which one produced it.
+    # The interpolant is part of the number: nearest-neighbour is a different field, so a
+    # reconstructed run must name the one used.
     assert recorded["interpolation"] == "bilinear"
 
 
+# PHY-19
 def test_ver56_a_supplied_charge_field_is_keyed_by_the_rule_its_source_is_assembled_with() -> None:
-    """REV-71, PHY-19: the rule order is in the field artefact's parameters."""
     fields = ResolvedFields(charge=_ring_field(), conservation=None, eps_r=None, material_means=())
     keyed = fields.parameters()["charge"]
     assert isinstance(keyed, dict)
     assert keyed["quadrature_order"] == FIELD_QUADRATURE_ORDER
 
 
+# FR-25, PHY-20
 def test_ver24_a_stage_contributed_deviation_reaches_the_manifest_and_the_count() -> None:
-    """A departure no switch selects is recorded, and counted with the switches.
-
-    A smoothed dielectric field departs from PHY-20's per-domain constants and
-    no case-file key says so, which is exactly the departure FR-25 exists to
-    surface. It arrives by a second route, and ``count`` is the total precisely
-    so that a reader asking whether the run left the validated model does not
-    have to know there are two routes.
-    """
     fields = ResolvedFields(
         charge=None, conservation=None, eps_r=_solid_fraction_field(), material_means=()
     )
@@ -595,11 +431,7 @@ def test_ver24_a_stage_contributed_deviation_reaches_the_manifest_and_the_count(
     assert all("path" not in entry for entry in block["contributed"])
 
 
-# -- writing, reading and the environment -------------------------------------
-
-
 def test_ver24_the_manifest_round_trips_with_the_case_beside_it(tmp_path: Path) -> None:
-    """Written and read back, the manifest is unchanged and carries the case verbatim."""
     document = loads_case(MINIMAL)
     built = _manifest(document)
     written_path = built.write(tmp_path)
@@ -609,21 +441,12 @@ def test_ver24_the_manifest_round_trips_with_the_case_beside_it(tmp_path: Path) 
     case = restored["case"]
     assert isinstance(case, dict)
     assert case["text"] == MINIMAL
-    # The case beside the manifest re-validates, which is the half of FR-26 the
-    # hash cannot express: a manifest whose case no longer parses reconstructs
-    # nothing.
+    # The case beside the manifest re-validates; a manifest whose case no longer parses
+    # reconstructs nothing.
     assert loads_case(str(case["text"])).name == document.name
 
 
 def test_ver24_the_environment_group_names_versions_without_importing_ngsolve() -> None:
-    """``environment()`` reports NGSolve's version without importing NGSolve.
-
-    ``importlib.metadata`` reads distribution metadata off disk. That is why the
-    manifest can be assembled in the CLI and the sweep runner — which introspect
-    stages without ever assembling a form — at no import cost. Asserting it in a
-    subprocess is the only way to assert it at all: this test session has NGSolve
-    imported many times over.
-    """
     script = (
         "import sys, json;"
         "from nanopnp.io.manifest import environment;"

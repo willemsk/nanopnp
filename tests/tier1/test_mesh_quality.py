@@ -30,23 +30,15 @@ ROOT_THREE_HALF = np.sqrt(3.0) / 2.0
 
 
 def isoceles_sicn(height: float) -> float:
-    """SICN of an isoceles triangle on a unit base, in closed form.
-
-    A second route to the check values: specialising the general 2x2 expression
-    by hand for this family gives ``4 sqrt(3) h / (3 + 4 h^2)``, which shares no
-    arithmetic with the vectorised implementation beyond the definition itself.
-    """
     return 4.0 * np.sqrt(3.0) * height / (3.0 + 4.0 * height**2)
 
 
 def isoceles_gamma(height: float) -> float:
-    """Gamma of an isoceles triangle on a unit base: ``4h^2/((1+2b)(1/4+h^2))``."""
     leg = np.sqrt(0.25 + height**2)
     return 4.0 * height**2 / ((1.0 + 2.0 * leg) * (0.25 + height**2))
 
 
 def triangle_mesh(*corners: tuple[float, float]) -> MeshData:
-    """Return a one-element mesh on the three corners, in the order given."""
     return MeshData(
         vertices=np.array(corners, dtype=float),
         triangles=np.array([[0, 1, 2]]),
@@ -90,14 +82,12 @@ def triangle_mesh(*corners: tuple[float, float]) -> MeshData:
     ],
 )
 def test_ver10_sicn_and_gamma_check_values(label, corners, sicn, gamma) -> None:
-    """Both measures reproduce the six calibration triangles of the WP8 plan."""
     report = element_quality(triangle_mesh(*corners))
     assert report.sicn[0] == pytest.approx(sicn, abs=CHECK_TOL), label
     assert report.gamma[0] == pytest.approx(gamma, abs=CHECK_TOL), label
 
 
 def test_ver10_gamma_is_blind_to_inversion_and_sicn_is_not() -> None:
-    """The clockwise equilateral scores gamma +1: only SICN sees the winding."""
     clockwise = triangle_mesh((0.0, 0.0), (0.5, ROOT_THREE_HALF), (1.0, 0.0))
     report = element_quality(clockwise)
     assert report.gamma[0] == pytest.approx(1.0, abs=CHECK_TOL)
@@ -106,12 +96,6 @@ def test_ver10_gamma_is_blind_to_inversion_and_sicn_is_not() -> None:
 
 
 def test_ver10_the_two_measures_are_not_interchangeable() -> None:
-    """At SICN = 0.3 gamma is 0.1298, and at gamma = 0.3 SICN is 0.4687.
-
-    The arithmetic behind reading section 5.2.2's gate as a conjunction: the two
-    thresholds differ by a factor of 1.6208 in the height of an isoceles element on
-    a unit base, so gating either measure alone admits meshes the other rejects.
-    """
     height_at_sicn_floor = brentq(lambda h: isoceles_sicn(h) - QUALITY_FLOOR, 0.01, 0.5)
     height_at_gamma_floor = brentq(lambda h: isoceles_gamma(h) - QUALITY_FLOOR, 0.01, 0.6)
     assert height_at_sicn_floor == pytest.approx(0.1329661, abs=1e-6)
@@ -131,7 +115,6 @@ def test_ver10_the_two_measures_are_not_interchangeable() -> None:
 
 
 def test_qr12_a_sliver_aborts_naming_the_element_and_its_centroid() -> None:
-    """QR-12: the gate, the offending quantity and the location are all in the message."""
     sliver = triangle_mesh((1.0, 0.0), (2.0, 0.0), (1.5, 0.05))
     with pytest.raises(MeshQualityError) as raised:
         check_quality(sliver, where="the sliver fixture")
@@ -144,15 +127,14 @@ def test_qr12_a_sliver_aborts_naming_the_element_and_its_centroid() -> None:
 
 
 def test_qr12_an_inverted_element_aborts_under_its_own_name() -> None:
-    """Inversion is reported as inversion, not as a low quality number."""
     with pytest.raises(MeshQualityError) as raised:
         check_quality(triangle_mesh((0.0, 0.0), (0.5, ROOT_THREE_HALF), (1.0, 0.0)))
     assert raised.value.gate == "inverted element"
     assert "SICN <= 0" in raised.value.quantity
 
 
+# CON-04
 def test_qr12_a_negative_radius_aborts_naming_the_vertex() -> None:
-    """An (r, z) mesh crossing the axis integrates to negative volume (CON-04)."""
     with pytest.raises(MeshQualityError) as raised:
         check_radii(triangle_mesh((-0.5, 0.0), (1.0, 0.0), (0.5, 1.0)))
     assert raised.value.gate == "negative radius"
@@ -184,22 +166,6 @@ def test_qr12_a_negative_radius_aborts_naming_the_vertex() -> None:
 def test_ver10_phase_zero_geometries_clear_the_gate(
     geometry, options, elements, min_sicn, min_gamma
 ) -> None:
-    """Netgen's graded free meshing is already in the reference model's quality band.
-
-    The reference COMSOL mesh reports minimum element quality 0.6378 over 120,917
-    triangles (section 5.2.2); these are the same band at a fortieth of the size,
-    which is what makes the 0.3 gate unconditional rather than opt-in.
-
-    The figures above are the Linux measurement, and netgen's advancing front is
-    not bit-reproducible across platforms: this geometry and these options mesh to
-    8141 triangles here and 8147 on Windows, a drift of 0.07 per cent [tested].
-    VER-10 asks for the floor and for the gate to fire, not for the mesher to be
-    deterministic across compilers, so the count is compared within one per cent
-    and each measure is read as a lower bound -- a mesh better than the recorded
-    one is not a failure of a floor. Exactness belongs to the check values, which
-    are asserted on hand-built triangles against two closed forms and carry no
-    dependence on the platform at all.
-    """
     data = from_ngsolve(geometry.generate(**options))
     report = check_quality(data)
     assert report.element_count == pytest.approx(elements, rel=0.01)
@@ -210,15 +176,8 @@ def test_ver10_phase_zero_geometries_clear_the_gate(
     assert not report.inverted
 
 
+# CON-10
 def test_ver10_gmsh_agrees_on_the_magnitude_of_both_measures(gmsh_module: ModuleType) -> None:
-    """Optional calibration against the implementation that set the 0.3 threshold.
-
-    Skipped when gmsh does not import, through the ``gmsh_module`` fixture of
-    ``tests/conftest.py`` (WP23 D11), which also fails it where CI requires
-    gmsh. Magnitudes only: gmsh returns +1 for a
-    clockwise 2-D element in a discrete entity, so the sign is ours (CON-10 keeps
-    gmsh off every other path).
-    """
     gmsh = gmsh_module
     corners = [
         ((0.0, 0.0), (1.0, 0.0), (0.5, ROOT_THREE_HALF)),
@@ -250,14 +209,6 @@ def test_ver10_gmsh_agrees_on_the_magnitude_of_both_measures(gmsh_module: Module
 
 
 def test_ver10_generate_routes_every_built_mesh_through_the_gate(monkeypatch) -> None:
-    """The gate guards the meshes this package builds, not only imported ones.
-
-    A gate that only fires at ingestion leaves the geometry we generate
-    ourselves unwatched, and a badly chosen ``wall_h_nm`` is exactly how a
-    degenerate element gets built here. The four geometries above clear the
-    floor by a wide margin, so this asserts the wiring rather than the numbers:
-    the gate is reached by default and skipped only when asked.
-    """
     calls: list[str] = []
 
     def refuse(data, *, floor=0.3, where="this mesh") -> NoReturn:

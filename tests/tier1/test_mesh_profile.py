@@ -1,11 +1,4 @@
-"""Section 5.2.1: the pore profile fixture, and that it still is the delivered table.
-
-The fixture is derived data. What can go wrong is drift — the YAML edited and the
-CSV not, or the other way round — and a provenance block that describes a polygon
-other than the one beside it, which would justify the wrong element size with a
-number nobody re-measured. Both are checked here by re-deriving rather than by
-comparing a stored digest, so the test fails with the quantity that moved.
-"""
+"""Section 5.2.1: the pore profile fixture, and that it is still the delivered table."""
 
 from pathlib import Path
 
@@ -37,7 +30,6 @@ MEASURED_TOL = 1e-9
 
 
 def unit_square(**overrides: object) -> PoreProfile:
-    """Return a valid minimal profile, with fields replaced for the failure cases."""
     vertices = overrides.pop("vertices", [(1.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0)])
     points = np.asarray(vertices, dtype=float)
     # A loop too short to measure is one the polygon gate rejects before the
@@ -63,17 +55,7 @@ def unit_square(**overrides: object) -> PoreProfile:
     return PoreProfile(**fields)  # type: ignore[arg-type]
 
 
-# --- the shipped fixture ---------------------------------------------------
-
-
 def test_the_shipped_fixture_is_the_delivered_table_re_derived() -> None:
-    """`profile_from_csv` on the CSV in the tree reproduces the YAML beside it.
-
-    Field for field, vertices included: the fixture is derived data and this is
-    the only thing keeping it derived. The provenance that cannot be measured —
-    the source and the citation — is taken from the fixture, so what is compared
-    is everything the table decides.
-    """
     fixture = load_profile(REFERENCE)
     derived = profile_from_csv(
         CSV,
@@ -86,11 +68,6 @@ def test_the_shipped_fixture_is_the_delivered_table_re_derived() -> None:
 
 
 def test_the_delivered_table_has_the_published_properties() -> None:
-    """Section 5.2.1's measured row, to 1e-9: extent, count, topology, area.
-
-    The extents are section 2.2's published ones to the digit, which is the
-    check that this table is the geometry the reference model was solved on.
-    """
     fixture = load_profile(REFERENCE)
     points = fixture.as_array()
     assert len(points) == 185
@@ -103,31 +80,18 @@ def test_the_delivered_table_has_the_published_properties() -> None:
 
 
 def test_the_reference_fixture_is_accepted_for_tier_three_work() -> None:
-    """`author-supplied` is a reference source: the delivered table is the geometry."""
     fixture = load_profile(REFERENCE)
     assert fixture.is_reference
     fixture.require_reference("a VAL-01 comparison")
 
 
-# --- the measures ----------------------------------------------------------
-
-
 def test_signed_area_is_negative_for_a_clockwise_loop() -> None:
-    """The sign is the orientation, and the closing edge is implied."""
     counter_clockwise = np.array([[1.0, 0.0], [2.0, 0.0], [2.0, 1.0], [1.0, 1.0]])
     assert signed_area(counter_clockwise) == pytest.approx(1.0)
     assert signed_area(counter_clockwise[::-1]) == pytest.approx(-1.0)
 
 
 def test_the_local_feature_size_skips_the_vertexs_own_neighbourhood() -> None:
-    """With only the incident edges excluded the measure is the shortest edge.
-
-    That is why :data:`LOCAL_EDGES` is 2. On a densely sampled convex arc every
-    vertex is within one edge length of its neighbour's edge, so a feature size
-    that excluded only the incident edges would report sampling density — 0.0361
-    nm on the reference polygon, its shortest edge — and never see a genuine
-    self-approach.
-    """
     arc = np.array(
         [[2.0 + np.cos(angle), np.sin(angle)] for angle in np.linspace(0.0, 2.0 * np.pi, 60)[:-1]]
     )
@@ -137,7 +101,6 @@ def test_the_local_feature_size_skips_the_vertexs_own_neighbourhood() -> None:
 
 
 def test_the_local_feature_size_sees_a_self_approach() -> None:
-    """A hairpin closing to 0.1 nm is measured at 0.1 nm, not at its edge length."""
     hairpin = np.array(
         [
             [1.0, 0.0],
@@ -153,11 +116,7 @@ def test_the_local_feature_size_sees_a_self_approach() -> None:
     assert min_feature_size(hairpin) == pytest.approx(0.1)
 
 
-# --- the gate --------------------------------------------------------------
-
-
 def test_a_profile_whose_provenance_describes_another_polygon_is_refused() -> None:
-    """Recorded measurements are re-checked against the vertices at load."""
     with pytest.raises(ValueError, match="does not describe this polygon"):
         unit_square(provenance={"min_vertex_spacing_nm": 0.5})
     with pytest.raises(ValueError, match="vertex_count is 4 but the table carries 5"):
@@ -168,19 +127,17 @@ def test_a_profile_whose_provenance_describes_another_polygon_is_refused() -> No
 
 
 def test_a_repeated_closing_vertex_is_named_as_such() -> None:
-    """The closing edge is implied by the format; repeating it is the usual slip."""
     with pytest.raises(ValueError, match="closing edge is implied"):
         unit_square(vertices=[(1.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 0.0)])
 
 
 def test_a_self_intersecting_loop_is_refused() -> None:
-    """A bow tie is not a pore boundary, and the message names both edges."""
     with pytest.raises(ValueError, match="the loop is not simple: edge"):
         unit_square(vertices=[(1.0, 0.0), (2.0, 1.0), (2.0, 0.0), (1.0, 1.0)])
 
 
+# CON-04
 def test_a_negative_radius_is_refused() -> None:
-    """CON-04: there is no geometry at r < 0 in the half-plane."""
     with pytest.raises(ValueError, match="radius must be non-negative"):
         unit_square(vertices=[(-1.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0)])
 
@@ -190,7 +147,6 @@ def test_a_negative_radius_is_refused() -> None:
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @pytest.mark.parametrize("bad", [float("nan"), float("inf")])
 def test_a_vertex_that_is_not_finite_is_refused_naming_it(bad: float) -> None:
-    """A NaN radius fails ``r < 0`` and every other comparison, so it passed them all."""
     with pytest.raises(ValueError, match=r"vertex 2 is .* finite number"):
         unit_square(vertices=[(1.0, 0.0), (2.0, 0.0), (bad, 1.0), (1.0, 1.0)])
 
@@ -201,7 +157,6 @@ def test_too_few_vertices_for_a_loop_is_refused() -> None:
 
 
 def test_an_unknown_key_in_the_fixture_is_named(tmp_path: Path) -> None:
-    """IF-03's house standard: the offending key at load, not a KeyError later."""
     raw = yaml.safe_load(profile_file(REFERENCE).read_text(encoding="utf-8"))
     raw["vertex_spacing"] = 0.05
     path = tmp_path / "extra.yaml"
@@ -211,7 +166,6 @@ def test_an_unknown_key_in_the_fixture_is_named(tmp_path: Path) -> None:
 
 
 def test_a_fixture_declaring_another_schema_names_the_file_and_the_schema(tmp_path: Path) -> None:
-    """Checked before the fields, so a future schema is one message and not a wall."""
     raw = yaml.safe_load(profile_file(REFERENCE).read_text(encoding="utf-8"))
     raw["schema"] = "nanopnp/profile/v99"
     path = tmp_path / "future.yaml"
@@ -226,7 +180,6 @@ def test_a_missing_fixture_names_the_directory_searched() -> None:
 
 
 def test_a_stand_in_profile_is_refused_for_tier_three_work() -> None:
-    """A Tier-3 agreement measured against a stand-in geometry means nothing."""
     stand_in = unit_square()
     assert not stand_in.is_reference
     with pytest.raises(ValueError, match="needs the reference geometry"):
@@ -234,12 +187,6 @@ def test_a_stand_in_profile_is_refused_for_tier_three_work() -> None:
 
 
 def test_a_path_is_read_as_a_path_whatever_its_suffix(tmp_path: Path) -> None:
-    """Only a string can name a shipped fixture; a ``Path`` never does (CODE_REVIEW_003 CR-11).
-
-    A supplied ``inputs.profile.path`` need not end in ``.yaml``, and one that does not
-    is still read as a path, never looked up as a fixture name under the package's
-    data directory.
-    """
     bare = tmp_path / "pore"
     bare.write_text(profile_file(REFERENCE).read_text(encoding="utf-8"), encoding="utf-8")
     assert load_profile(bare) == load_profile(REFERENCE)

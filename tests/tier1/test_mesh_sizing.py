@@ -1,11 +1,4 @@
-"""VER-53: the size fields of a generated mesh, and the case keys that set them (FR-10, NUM-30).
-
-``wall_h_nm: auto`` is ``size_scale x min(0.05 nm, lambda_D / 5)`` with lambda_D
-at ``eps_r,f0`` (section 5.3.1 NOTE on ``numerics.mesh``). The oracle is NUM-30's
-own check values, 1.357, 0.304 and 0.175 nm at 0.05, 1 and 3 M, and the
-closed-form crossover ``lambda_D = 0.25 nm``, which the WP21 plan puts at
-1.4741 M (Design section 2).
-"""
+"""VER-53: the size fields of a generated mesh, and the case keys that set them (FR-10, NUM-30)."""
 
 from __future__ import annotations
 
@@ -43,12 +36,10 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 
 def eps_r0(document: CaseDocument) -> float:
-    """Return ``eps_r,f0`` read straight from the case's parameter file."""
     return load_corrections(document.electrolyte.parameters).solvent.permittivity.eps_r0
 
 
 def wall_size(document: CaseDocument) -> WallSize:
-    """Return :func:`resolve_wall_size` at the parameter file's ``eps_r,f0``."""
     return resolve_wall_size(document, permittivity_0=eps_r0(document))
 
 
@@ -88,7 +79,6 @@ def case(
     extra: str = "",
     path: Path | None = None,
 ) -> str:
-    """Return a profile case at ``concentration`` and ``temperature``."""
     return CASE.format(
         path=path or profile_file("clya_reference_profile"),
         concentration=concentration,
@@ -109,7 +99,6 @@ def case(
 def test_ver53_auto_is_the_ceiling_or_num30_whichever_is_finer(
     concentration: float, debye_nm: float, auto_nm: float
 ) -> None:
-    """NUM-30's lambda_D at eps_r,f0, and ``min(0.05, lambda_D / 5)`` (D7)."""
     wall = wall_size(loads_case(case(concentration)))
     assert wall.debye_length_nm == pytest.approx(debye_nm, abs=5e-4)
     assert wall.wall_h_nm == pytest.approx(auto_nm, abs=1e-4)
@@ -124,7 +113,6 @@ def test_ver53_auto_is_the_ceiling_or_num30_whichever_is_finer(
 
 
 def test_ver53_num30_alone_would_be_coarse_at_low_salt() -> None:
-    """lambda_D / 5 is 0.27 nm at 0.05 M and 0.035 nm at 3 M; the ceiling holds below 1.474 M."""
     low = wall_size(loads_case(case(0.05)))
     high = wall_size(loads_case(case(3.0)))
     assert low.debye_target_nm == pytest.approx(0.27, abs=2e-3)
@@ -133,7 +121,6 @@ def test_ver53_num30_alone_would_be_coarse_at_low_salt() -> None:
 
 
 def test_ver53_the_crossover_is_at_1_4741_molar() -> None:
-    """``lambda_D = 0.25 nm`` where ``c = eps_0 eps_r,f0 R T / (2 F^2 (0.25 nm)^2)``."""
     from nanopnp.core.constants import FARADAY, GAS_CONSTANT, VACUUM_PERMITTIVITY
     from nanopnp.core.scaling import REFERENCE_PERMITTIVITY
 
@@ -153,7 +140,6 @@ def test_ver53_the_crossover_is_at_1_4741_molar() -> None:
 
 
 def test_ver53_size_scale_multiplies_every_size_and_temperature_enters_as_sqrt_t() -> None:
-    """``size_scale`` scales the wall and the table alike; lambda_D goes as sqrt(T) at fixed I."""
     scaled = wall_size(loads_case(case(3.0, extra="numerics: {mesh: {size_scale: 2.0}}\n")))
     plain = wall_size(loads_case(case(3.0)))
     assert scaled.wall_h_nm == pytest.approx(2.0 * plain.wall_h_nm, rel=1e-15)
@@ -174,7 +160,6 @@ def test_ver53_size_scale_multiplies_every_size_and_temperature_enters_as_sqrt_t
 
 
 def test_ver53_the_ionic_strength_weights_valence_squared() -> None:
-    """``I = 1/2 sum z_i^2 c``: c for NaCl, and lambda_D follows it."""
     document = loads_case(case(0.5))
     assert ionic_strength_M(document) == pytest.approx(0.5)
     assert case_debye_length_nm(document, permittivity_0=eps_r0(document)) == pytest.approx(
@@ -183,11 +168,6 @@ def test_ver53_the_ionic_strength_weights_valence_squared() -> None:
 
 
 def test_ver53_the_recipe_carries_the_backend_the_sizes_and_the_gate() -> None:
-    """D10: everything that moves a vertex of a generated mesh or a verdict of its gate.
-
-    Netgen's recipe keeps WP21's keys in WP21's order (WP23 D8), so its canonical
-    bytes, and every stored key, are unchanged.
-    """
     wall = wall_size(loads_case(case(3.0)))
     recipe = sizing_parameters(wall, SIZES)
     assert list(recipe) == ["backend", "wall", "table", "grading", "optsteps2d", "gate"]
@@ -204,7 +184,6 @@ def test_ver53_the_recipe_carries_the_backend_the_sizes_and_the_gate() -> None:
 
 
 def test_ver54_backend_gmsh_resolves_on_any_install() -> None:
-    """WP23 D9: the case is not refused; stage 6 refuses a missing extra, naming it."""
     resolved = resolve(loads_case(case(extra="numerics: {mesh: {backend: gmsh}}\n")))
     assert resolved.document.numerics.mesh.backend == "gmsh"
 
@@ -253,7 +232,6 @@ def test_ver54_backend_gmsh_resolves_on_any_install() -> None:
 def test_ver53_a_generated_mesh_s_refusals_name_the_key(
     extra: str, error: type[Exception], fragment: str
 ) -> None:
-    """D14: each refusal names the key and its value."""
     with pytest.raises(error) as caught:
         resolve(loads_case(case(extra=extra)))
     assert fragment in str(caught.value)
@@ -269,14 +247,12 @@ def test_ver53_a_generated_mesh_s_refusals_name_the_key(
     ],
 )
 def test_ver53_a_mesh_key_beside_a_supplied_mesh_is_refused_naming_it(mesh: str, key: str) -> None:
-    """D14: nothing meshes beside ``inputs.mesh``, so a mesh key there would change nothing."""
     with pytest.raises(CaseValidationError, match=key.replace(".", r"\.")):
         loads_case(MESH_CASE.format(mesh=mesh))
     loads_case(MESH_CASE.format(mesh="wall_h_nm: auto, size_scale: 1.0"))
 
 
 def _sweep(tmp_path: Path, values: list[float]) -> Path:
-    """Write a profile case and a sweep over its concentration."""
     tmp_path.mkdir(parents=True, exist_ok=True)
     base = tmp_path / "base.case.yaml"
     base.write_text(case(), encoding="utf-8")
@@ -293,7 +269,6 @@ def _sweep(tmp_path: Path, values: list[float]) -> Path:
 
 
 def test_ver53_a_salt_axis_is_a_barrier_only_where_it_moves_the_wall(tmp_path: Path) -> None:
-    """D15: [1, 3] M resolves two wall sizes and severs; [0.1, 1] M resolves one and chains."""
     severed = plan_from_document(_sweep(tmp_path / "severed", [1.0, 3.0]))
     assert [point.parent for point in severed.points] == [None, None]
     assert any("electrolyte.concentration_M" in warning for warning in severed.warnings)
@@ -304,13 +279,11 @@ def test_ver53_a_salt_axis_is_a_barrier_only_where_it_moves_the_wall(tmp_path: P
 
 
 def test_ver53_a_salt_point_with_no_wall_size_is_refused_naming_it(tmp_path: Path) -> None:
-    """D15: a point whose lambda_D is undefined is a plan error naming it, not a bare ValueError."""
     with pytest.raises(SweepPlanError, match=r"electrolyte\.concentration_M': 0\.0.*positive"):
         plan_from_document(_sweep(tmp_path, [1.0, 0.0]))
 
 
 def test_ver53_upstream_geometry_axes_are_barriers(tmp_path: Path) -> None:
-    """D15: an axis over the membrane moves a generated mesh, so each value is its own root."""
     base = tmp_path / "base.case.yaml"
     base.write_text(case(extra="geometry: {membrane: {centre_z_nm: 0.0}}\n"), encoding="utf-8")
     sweep = tmp_path / "sweep.yaml"
@@ -332,14 +305,6 @@ SHIPPED_CASES = sorted((Path(__file__).parents[2] / "examples").glob("*/*.case.y
 
 @pytest.mark.parametrize("path", SHIPPED_CASES, ids=lambda path: path.name)
 def test_ver53_the_mesher_and_the_sweep_plan_size_the_wall_at_one_eps_r0(path: Path) -> None:
-    """Stage 6 sizes at the resolved electrolyte's ``eps_r,f0``; a sweep plan at the file's.
-
-    A sweep plan decides its warm-start barriers from the wall size before any
-    case is resolved, so it reads ``eps_r,f0`` from the parameter file, while the
-    generator and the ingest stage pass ``resolved.electrolyte.permittivity_0``.
-    The two must be one number, exactly, or a plan would place a barrier where
-    the mesh does not move, and an ``auto`` wall would differ between them.
-    """
     document = load_case(path)
     resolved = resolve(document)
     assert resolved.electrolyte.permittivity_0 == eps_r0(document)

@@ -1,19 +1,4 @@
-"""VER-61: the subpackage import relation is the one the modularity report records (WP35, G1).
-
-``docs/project/modularity-layering.yaml`` lists every subpackage edge of the static
-relation (imports at module scope, inside a function or under ``TYPE_CHECKING``)
-and of the string relation (a constant naming a module, as the stage registry and
-``PUBLIC`` do). The live relation, measured from the syntax tree by
-:mod:`nanopnp.validation.modularity`, must equal it in both directions, so a new
-coupling between layers is a decision recorded in the commit that makes it, and a
-removed one cannot leave a stale row.
-
-The guard is shown to fire on the code that should trip it: an upward import
-substituted into ``core/constants.py`` fails naming the edge, the module and the
-line; a recorded edge with no import behind it fails as removed. The classifier
-and the component search are each checked against a package and a graph whose
-answers are written down by hand, so neither can pass by agreeing with itself.
-"""
+"""VER-61: the subpackage import relation matches the modularity report in both directions."""
 
 from __future__ import annotations
 
@@ -55,7 +40,6 @@ def test_ver61_live_relation_equals_the_recorded_layering() -> None:
 
 
 def test_ver61_every_annotated_edge_names_a_finding_of_the_log() -> None:
-    """An edge's ``finding`` is a ``MOD-nn`` or ``REV-nn`` row, so a typo or a dropped row fails."""
     project = REPOSITORY / "docs" / "project"
     ids = {
         row.id
@@ -68,31 +52,23 @@ def test_ver61_every_annotated_edge_names_a_finding_of_the_log() -> None:
 
 
 def test_ver61_every_ratchet_row_names_its_finding() -> None:
-    """An edge kept against the order says why, so the YAML header's rule is a test (H12)."""
     for ratchet in RATCHETS:
         unexplained = [e for e in accepted_upward(ratchet=ratchet) if e.finding is None]
         assert unexplained == [], (ratchet, unexplained)
 
 
 def test_ver61_the_measurement_adds_no_edge_of_its_own() -> None:
-    """The measuring modules name what they read by path, so they couple to nothing."""
     own = {"validation/modularity.py", "validation/findings.py"}
     assert [edge for edge in import_edges() if edge.path in own] == []
 
 
 def test_ver61_upward_top_edges_equal_the_recorded_ratchet() -> None:
-    """The ``top`` edges pointing up the layer order are exactly the ``upward:`` rows (H11).
-
-    WP39 empties the list (REV-05): the facade's version and public surface live
-    in ``core/public.py``, so no module imports upward at top level.
-    """
     comparison = compare({UPWARD: upward_edges(import_edges())}, accepted_upward())
     assert comparison.equal, comparison.describe()
     assert {(edge.source, edge.target) for edge in accepted_upward()} == set()
 
 
 def test_ver61_a_stage_importing_the_assembler_fails_naming_the_edge() -> None:
-    """A stage that resolved its own case again would import ``pipeline`` upward (WP38 D4)."""
     ingest = PACKAGE / "mesh" / "ingest.py"
     text = ingest.read_text(encoding="utf-8")
     line = len(text.splitlines()) + 1
@@ -107,7 +83,6 @@ def test_ver61_a_stage_importing_the_assembler_fails_naming_the_edge() -> None:
 
 
 def test_ver61_the_base_importing_materials_at_run_time_fails_naming_the_edge() -> None:
-    """The resolved case annotates the electrolyte; importing it is ``io -> materials`` (D2)."""
     resolved = PACKAGE / "io" / "resolved.py"
     text = resolved.read_text(encoding="utf-8")
     guarded = "    from nanopnp.materials.electrolyte import Electrolyte\n"
@@ -121,10 +96,6 @@ def test_ver61_the_base_importing_materials_at_run_time_fails_naming_the_edge() 
 
 
 def test_ver61_upward_deferred_edges_equal_the_recorded_ratchet() -> None:
-    """Imports inside a function that point up the order are the ``deferred_upward:`` rows (H12).
-
-    WP39 empties the list (REV-05): the desktop shell's probe reads ``core.public``.
-    """
     measured = upward_edges(import_edges(), kinds=RATCHETS[DEFERRED_UPWARD])
     accepted = accepted_upward(ratchet=DEFERRED_UPWARD)
     comparison = compare({DEFERRED_UPWARD: measured}, accepted)
@@ -133,7 +104,6 @@ def test_ver61_upward_deferred_edges_equal_the_recorded_ratchet() -> None:
 
 
 def test_ver61_an_annotation_cut_deferred_into_a_function_fails_as_deferred_upward() -> None:
-    """``geometry -> mesh`` stays a static edge, so only the deferred ratchet sees this (D12)."""
     text = ANALYTE.read_text(encoding="utf-8")
     line = len(text.splitlines()) + 2
     late = "def _late():\n    from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
@@ -164,11 +134,6 @@ def test_ver61_the_layer_order_places_every_subpackage_once() -> None:
 
 
 def test_ver61_an_annotation_cut_returning_to_module_scope_fails_as_upward() -> None:
-    """``geometry -> mesh`` is a ``typing`` edge after D6, so the static relation keeps it.
-
-    Moving ``CylindricalPoreGeometry`` back out of ``TYPE_CHECKING`` changes no row
-    of ``edges:``; only the ratchet sees it, naming the edge, the module and the line.
-    """
     text = ANALYTE.read_text(encoding="utf-8")
     line = len(text.splitlines()) + 1
     restored = f"{text}from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
@@ -205,7 +170,6 @@ def test_ver61_top_level_module_imports_are_acyclic() -> None:
 
 
 def test_ver61_top_subpackage_cycle_is_detected_naming_components() -> None:
-    """The oracle for D10: a module-scope import closing a cycle between subpackages."""
     text = ANALYTE.read_text(encoding="utf-8")
     restored = f"{text}from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
     edges = import_edges(sources={"geometry/analyte.py": restored})
@@ -214,11 +178,6 @@ def test_ver61_top_subpackage_cycle_is_detected_naming_components() -> None:
 
 
 def test_ver61_a_cycle_through_a_package_init_is_a_cycle() -> None:
-    """A load-time cycle that no two modules close between themselves.
-
-    ``a.m`` imports ``b.n``, which runs ``b/__init__`` first; that imports ``b.k``,
-    which imports ``a.m``, and Python meets ``a.m`` half-initialised.
-    """
     edges = (
         ImportEdge("nanopnp.a.m", "nanopnp.b.n", "top", 1, "a/m.py"),
         ImportEdge("nanopnp.b", "nanopnp.b.k", "top", 1, "b/__init__.py"),
@@ -350,6 +309,5 @@ finding names (``cli/__init__.py`` at ``fd4308f``), since the finding states non
     ],
 )
 def test_mod13_no_module_of_the_io_split_exceeds_the_bound(path: str) -> None:
-    """Each module ``io/case.py`` became is at most 1,266 lines (WP38 D14)."""
     lines = len((PACKAGE / path).read_text(encoding="utf-8").splitlines())
     assert lines <= SPLIT_BOUND, f"{path} has {lines} lines"
