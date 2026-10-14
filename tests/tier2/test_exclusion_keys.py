@@ -32,12 +32,13 @@ KEYS_V2 = {
     "solve": "b1370ee6183a4bdebd8697f9dc41846fd5bf8c89d51e246495b498033726806a",
 }
 
-# Keys under repo-wide v0.5 schemas, with the stage-6 wall record of WP46 D2.
+# Keys under repo-wide v0.5 schemas, with the stage-6 wall record of WP46 D2 and the charge-grid
+# lattice record of REV-101.
 KEYS_V05 = {
     "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
     "mesh": "4be21a3052091a42d579d43c923b55d4097bdd358a1fd53b5cb82a998be88c55",
-    "charge": "6c6156eab35e15a72ccd8acd8cdff0758befef64c7e71e87af33be4d7e68f934",
-    "solve": "b5404c1d296fe335ee6668cc0d9175874b3a0c16a9e568b090add0eba3397209",
+    "charge": "3b8a969645c474fdbd205a2063763234cc428b9389576cf5c56631a97283dfe5",
+    "solve": "f5b1b23aeb4e696b45e8bc802d6bee1558ddbcb8b6859d962466f0f62eeb4e75",
 }
 
 PROFILE_SCHEMA_V1 = "nanopnp/profile/v1"
@@ -196,7 +197,9 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
 
     prot = artefacts["protonation"]
     prot_v1 = content_hash(PROTONATION_SCHEMA_V1, prot.parameters, prot.inputs)
-    grid_v1 = content_hash(CHARGE_GRID_SCHEMA_V1, grid.parameters, {"protonation": prot_v1})
+    # The lattice record of REV-101 entered the charge-grid key after bbca737.
+    grid_parameters_bbca = {k: v for k, v in grid.parameters.items() if k != "lattice_record"}
+    grid_v1 = content_hash(CHARGE_GRID_SCHEMA_V1, grid_parameters_bbca, {"protonation": prot_v1})
     charge_v1 = content_hash(
         FIELDS_SCHEMA_V1,
         charge.parameters,
