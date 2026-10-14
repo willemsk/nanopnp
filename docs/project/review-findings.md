@@ -38,7 +38,7 @@ is a rolling register, and its header stays `open`.
 | REV-16 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A salt sweep regenerates an identical mesh at each concentration](review-items.md#rev-16-a-salt-sweep-regenerates-an-identical-mesh-at-each-concentration) |
 | REV-17 | numerics | low | fixed | [WP41](../plans/wp41-accuracy-fixes.md) | [A warm start is gated on free prose in the stabilisation provenance](review-items.md#rev-17-a-warm-start-is-gated-on-free-prose-in-the-stabilisation-provenance) |
 | REV-18 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Concurrent sweep members may write the same store key](review-items.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key) |
-| REV-19 | interface | low | accepted | §8.2.9 I2 | [A zero-frame trajectory raises a bare IndexError](review-items.md#rev-19-a-zero-frame-trajectory-raises-a-bare-indexerror) |
+| REV-19 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A zero-frame trajectory raises a bare IndexError](review-items.md#rev-19-a-zero-frame-trajectory-raises-a-bare-indexerror) |
 | REV-20 | process | low | deferred | §8.2.8 H12 | [The desktop shell has no multiprocessing.freeze_support](review-items.md#rev-20-the-desktop-shell-has-no-multiprocessingfreeze_support) |
 | REV-21 | process | low | declined | §8.2.8 H12 | [numerics/linear.py imports scipy inside its functions](review-items.md#rev-21-numericslinearpy-imports-scipy-inside-its-functions) |
 | REV-22 | process | low | declined | §8.2.8 H12 | [write_dx formats with %](review-items.md#rev-22-write_dx-formats-with) |
@@ -76,7 +76,7 @@ is a rolling register, and its header stays `open`.
 | REV-54 | verification | low | fixed | [WP38](../plans/wp38-io-split.md) | [The MOD-12 check compared names, not modules](review-items.md#rev-54-the-mod-12-check-compared-names-not-modules) |
 | REV-55 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Per-stage mkdtemp fallbacks](review-items.md#rev-55-per-stage-mkdtemp-fallbacks) |
 | REV-56 | performance | low | deferred | §8.2.9 I3 | [The geometry editor's simplicity check runs on the Qt thread](review-items.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread) |
-| REV-57 | performance | low | accepted | §8.2.9 I2 | [frame_times decodes every frame](review-items.md#rev-57-frame_times-decodes-every-frame) |
+| REV-57 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [frame_times decodes every frame](review-items.md#rev-57-frame_times-decodes-every-frame) |
 | REV-58 | performance | low | post-1.0 | §8.2.9 I3 | [The azimuthal reduction projects cells it then drops](review-items.md#rev-58-the-azimuthal-reduction-projects-cells-it-then-drops) |
 | REV-59 | interface | low | accepted | §8.2.9 I2 | [attribute_to_construction raises the wrong error on a lax comparison](review-items.md#rev-59-attribute_to_construction-raises-the-wrong-error-on-a-lax-comparison) |
 | REV-60 | performance | low | deferred | §8.2.9 I3 | [UMFPACK repeats its symbolic analysis every Newton step](review-items.md#rev-60-umfpack-repeats-its-symbolic-analysis-every-newton-step) |

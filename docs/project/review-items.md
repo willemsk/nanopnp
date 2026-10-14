@@ -215,7 +215,7 @@ that is safe depends on how atomic `Store.put` is, which has not been measured.
 than a refusal naming the file (QR-12). Two Cα with the same `(resid, icode)` in one chain also
 overwrite each other in `per_chain`.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D5: a trajectory holding no frame is refused naming the file, and a second Cα at one chain, residue and insertion code is refused naming both.
 
 ### REV-20 — The desktop shell has no multiprocessing.freeze_support
 
@@ -548,7 +548,7 @@ at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without co
 **Measured.** `structure/read.py`'s `frame_times` decodes every frame only to read its time, and no
 PBC or RMSD gate catches a chain split across the periodic box.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D5: a DCD's frame times are computed from its header without decoding a frame; XTC, TRR and NetCDF decode, their times living in frame headers. A chain split across the periodic box is refused naming chain, pair, frame and distance; the deposited 2WCD's largest consecutive-Cα distance is 0.3856 nm (`.knowledge/04` §1.1).
 
 ### REV-58 — The azimuthal reduction projects cells it then drops
 

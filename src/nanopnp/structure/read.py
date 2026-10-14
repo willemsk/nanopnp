@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import gemmi
 import MDAnalysis as mda  # noqa: N813 - the alias the library documents
+from MDAnalysis.coordinates.DCD import DCDReader
 from MDAnalysis.coordinates.memory import MemoryReader
 from MDAnalysis.exceptions import SelectionError
 
@@ -42,6 +43,8 @@ TRAJECTORY_FORMATS: dict[str, str] = {
 }
 
 HISTIDINES: frozenset[str] = frozenset({"HSD", "HSE", "HSP", "HID", "HIE", "HIP"})
+
+WRAP_BOUND_NM = 1.0
 
 COVERAGE_FRACTION = 0.5
 
@@ -93,7 +96,8 @@ def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
     Raises
     ------
     StructureInputError
-        If a file is missing or unsupported, or the trajectory does not hold the structure's atoms.
+        If a file is missing or unsupported, or the trajectory holds no frame or does not hold
+        the structure's atoms.
     """
     _require_file(source, "structure.source.path")
     kind = structure_format(source)
@@ -116,6 +120,12 @@ def load_universe(source: Path, trajectory: Path | None = None) -> mda.Universe:
                     f"structure.ensemble.trajectory {trajectory.name!r} cannot be read against "
                     f"structure.source.path {source.name!r}, which holds {len(universe.atoms)} "
                     f"atoms: {error}"
+                ) from error
+            except OSError as error:
+                # MDAnalysis raises a bare OSError for a file holding no frame.
+                raise StructureInputError(
+                    f"structure.ensemble.trajectory {trajectory.name!r} holds no frame or cannot "
+                    f"be read: {error}"
                 ) from error
     return universe
 
@@ -325,7 +335,14 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
         name = str(resnames[index])
         residue_names.setdefault(chain, {})[residue] = "HIS" if name in HISTIDINES else name
         if is_ca[index]:
-            per_chain.setdefault(chain, {})[residue] = index
+            seen = per_chain.setdefault(chain, {})
+            if residue in seen:
+                raise StructureInputError(
+                    f"chain {chain} carries two C-alpha at residue {residue[0]}{residue[1]} "
+                    f"(atoms {seen[residue] + 1} and {index + 1} of the selection); one would "
+                    "silently replace the other"
+                )
+            seen[residue] = index
 
     counts = {chain: len(per_chain.get(chain, {})) for chain in present}
     most = max(counts.values())
@@ -454,7 +471,15 @@ def frame_times(universe: mda.Universe) -> tuple[tuple[float, ...], float]:
     with warnings.catch_warnings():
         # The "no dt information" warning repeats what the recorded interval already says.
         warnings.simplefilter("ignore")
-        times = tuple(float(step.time) * PS_NS for step in trajectory)
+        if isinstance(trajectory, DCDReader):
+            # A DCD header fixes every frame's time, which the reader sets as this expression.
+            header = trajectory._file.header
+            offset = header["istart"] / header["nsavc"]
+            times = tuple(
+                float((frame + offset) * trajectory.dt) * PS_NS for frame in range(len(trajectory))
+            )
+        else:
+            times = tuple(float(step.time) * PS_NS for step in trajectory)
         interval = float(trajectory.dt) * PS_NS
     return times, (0.0 if math.isnan(interval) else interval)
 
@@ -475,3 +500,41 @@ def positions_nm(group: mda.AtomGroup, indices: Sequence[int]) -> np.ndarray:
             positions[frame] = group.positions
             positions[frame] *= ANGSTROM_NM
     return positions
+
+
+def check_chains_whole(selection: Selection, positions: np.ndarray, frames: Sequence[int]) -> None:
+    """Refuse a chain split across the periodic box in any of the frames.
+
+    Raises
+    ------
+    StructureInputError
+        If two C-alpha of one chain at consecutive residue numbers, neither with an insertion
+        code, lie further apart than ``WRAP_BOUND_NM`` in a frame.
+    """
+    import numpy as np
+
+    table = selection.atoms
+    carbons = selection.fit_index
+    by_residue = {
+        (str(table.chain[index]), int(table.resid[index])): position
+        for position, index in enumerate(carbons)
+        if not str(table.icode[index])
+    }
+    pairs = [
+        (key, (key[0], key[1] + 1)) for key in by_residue if (key[0], key[1] + 1) in by_residue
+    ]
+    if not pairs:
+        return
+    first = np.asarray([carbons[by_residue[a]] for a, _ in pairs])
+    second = np.asarray([carbons[by_residue[b]] for _, b in pairs])
+    gaps = np.linalg.norm(positions[:, first] - positions[:, second], axis=2)
+    if not np.all(gaps <= WRAP_BOUND_NM):
+        frame, pair = np.argwhere(~(gaps <= WRAP_BOUND_NM))[0]
+        (chain, residue), _ = pairs[int(pair)]
+        raise StructureInputError(
+            f"chain {chain} is split across the periodic box in frame {frames[int(frame)]}: the "
+            f"C-alpha of residues {residue} and {residue + 1} lie {gaps[frame, pair]:.3f} nm "
+            f"apart, where a peptide bond is 0.38 nm and a wrapped pair is a box length. Make "
+            "the molecule whole before reading it (SPECIFICATION.md section 5.3.1 NOTE on "
+            "structure:)"
+        )

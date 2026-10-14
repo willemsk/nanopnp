@@ -35,6 +35,7 @@ from nanopnp.structure.axis import SymmetryGateError, measure_axis, minimal_rota
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.structure.read import (
     StructureInputError,
+    check_chains_whole,
     frame_times,
     load_universe,
     positions_nm,
@@ -656,3 +657,112 @@ def test_ver48_the_stage_is_created_through_the_registry() -> None:
 
 def test_ver48_minimal_rotation_is_the_identity_on_z() -> None:
     assert np.array_equal(minimal_rotation(np.array([0.0, 0.0, 1.0])), np.eye(3))
+
+
+# QR-12
+@pytest.mark.parametrize("suffix", [".dcd", ".xtc", ".trr"])
+def test_ver48_a_trajectory_with_no_frame_is_refused_naming_the_file(
+    two_chains: tuple[Path, np.ndarray], suffix: str, tmp_path: Path
+) -> None:
+    topology, _ = two_chains
+    empty = tmp_path / f"empty{suffix}"
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        with mda.Writer(str(empty), 4):
+            pass
+    with pytest.raises(StructureInputError, match=rf"'empty{suffix}' holds no frame"):
+        load_universe(topology, empty)
+
+
+def _second_ca_takes_the_first_residue_number(lines: list[str], atoms: list[int]) -> None:
+    alpha = [index for index in atoms if lines[index][12:16] == " CA " and lines[index][21] == "A"]
+    lines[alpha[1]] = lines[alpha[1]][:22] + lines[alpha[0]][22:26] + lines[alpha[1]][26:]
+
+
+# QR-12
+def test_ver48_a_second_c_alpha_at_one_residue_is_refused_naming_chain_and_residue(
+    dodecamer_pdb: Path, tmp_path: Path
+) -> None:
+    path = _edited(dodecamer_pdb, tmp_path, "twice.pdb", _second_ca_takes_the_first_residue_number)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        universe = load_universe(path)
+    with pytest.raises(StructureInputError, match=r"chain A carries two C-alpha at residue"):
+        select(universe, selection="protein", chains="all", n=12)
+
+
+# QR-12
+def test_ver48_a_chain_wrapped_across_the_box_in_one_frame_is_refused(
+    two_chains: tuple[Path, np.ndarray], tmp_path: Path
+) -> None:
+    topology, frames = two_chains
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        group = mda.Universe(str(topology)).atoms
+    universe = load_universe(topology, _write(group, frames, tmp_path / "whole.dcd"))
+    chosen = select(universe, selection="protein", chains="all", n=2)
+    whole = positions_nm(chosen.group, range(3))
+    check_chains_whole(chosen, whole, range(3))
+
+    moved = frames.copy()
+    pair_start = int(chosen.fit_index[10])
+    moved[2, pair_start:] += np.array([0.0, 0.0, 100.0])
+    dcd = _write(group, moved, tmp_path / "wrapped.dcd")
+    wrapped = load_universe(topology, dcd)
+    chosen = select(wrapped, selection="protein", chains="all", n=2)
+    with pytest.raises(
+        StructureInputError,
+        match=r"chain A is split .* in frame 2: .* residues 17 and 18 lie 9\.\d{3} nm",
+    ):
+        check_chains_whole(chosen, positions_nm(chosen.group, range(3)), range(3))
+
+
+# QR-12
+def test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound() -> None:
+    universe = load_universe(PDB)
+    chosen = select(universe, selection="protein", chains=DODECAMER, n=12)
+    positions = positions_nm(chosen.group, [0])
+    check_chains_whole(chosen, positions, [0])
+    carbons = {
+        (str(chosen.atoms.chain[i]), int(chosen.atoms.resid[i])): int(i)
+        for i in chosen.fit_index
+        if not str(chosen.atoms.icode[i])
+    }
+    gaps = [
+        float(
+            np.linalg.norm(positions[0, carbons[key]] - positions[0, carbons[key[0], key[1] + 1]])
+        )
+        for key in carbons
+        if (key[0], key[1] + 1) in carbons
+    ]
+    assert len(gaps) == 3408
+    assert max(gaps) == pytest.approx(0.3856, abs=1e-4)
+
+
+def test_ver48_a_dcd_reports_its_frame_times_without_decoding_a_frame(
+    two_chains: tuple[Path, np.ndarray], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    topology, frames = two_chains
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        group = mda.Universe(str(topology)).atoms
+        path = tmp_path / "timed.dcd"
+        merged = mda.Merge(group)
+        merged.load_new(np.asarray(frames, dtype=np.float32), format=MemoryReader)
+        with mda.Writer(str(path), merged.atoms.n_atoms, dt=2.5, istart=2, nsavc=2) as writer:
+            for step in merged.trajectory:
+                step.dt = 2.5
+                writer.write(merged.atoms)
+        universe = load_universe(topology, path)
+        decoded = tuple(float(step.time) * 1e-3 for step in universe.trajectory)
+
+    def refuse(*args: object, **kwargs: object) -> None:
+        raise AssertionError("a frame was decoded")
+
+    reader = type(universe.trajectory)
+    for name in ("_read_next_timestep", "_read_frame", "_read_frame_with_aux"):
+        monkeypatch.setattr(reader, name, refuse)
+    times, interval = frame_times(universe)
+
+    assert times == decoded
+    assert interval == pytest.approx(2.5e-3)
