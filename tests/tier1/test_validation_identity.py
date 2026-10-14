@@ -1,21 +1,4 @@
-"""A golden's case identity names the charge stage 7 deposits and the ``chi`` it derives (VAL-03).
-
-Section 8.2.5 E3 closes OPN-07: a deposited charge enters
-:func:`~nanopnp.validation.comsol.case_identity` by its stage-7 recipe, the
-stage-1 and protonation keys' parameters and the kernel's, and a derived ``chi``
-by its derivation parameters and the stage-1 key's parameters (WP34 D1, D3). The
-export lattice's spacing and the element order are discretisation and stay out
-(D2), and so do the protonation gates' tolerances, which move a verdict and
-never a charge. A non-zero ion-exclusion offset is a physics switch and enters.
-A finished run's identity is read from the artefacts the run recorded, never
-from the files its case names now. pH 5, 7.5 and 9 and
-``sharpness`` 0.8 of example 06 must not share one identity (the old value was
-``8559ee13...``); the first test fails on a hash that ignores them.
-
-The identity hashes the structure file's bytes and never reads its atoms, so
-the deposited 2WCD stands in for example 06's prepared copy: these tests are
-about which keys move the hash, not about what stage 1 makes of the file.
-"""
+"""A golden's case identity names the charge stage 7 deposits and the chi it derives (VAL-03)."""
 
 from __future__ import annotations
 
@@ -54,7 +37,6 @@ Edit = Callable[[dict[str, Any]], None]
 
 @pytest.fixture
 def example_06(tmp_path: Path) -> Callable[..., ResolvedCase]:
-    """Return a function resolving example 06 under an edit of its document."""
     structure = tmp_path / "2wcd.pdb.gz"
     shutil.copyfile(DEPOSITED_2WCD, structure)
     counter = iter(range(1_000))
@@ -73,7 +55,6 @@ def example_06(tmp_path: Path) -> Callable[..., ResolvedCase]:
 
 @pytest.fixture
 def identity(example_06: Callable[..., ResolvedCase]) -> Callable[..., str]:
-    """Return a function giving example 06's identity under an edit of its document."""
 
     def _identity(edit: Edit | None = None) -> str:
         return case_identity(example_06(edit))
@@ -82,7 +63,6 @@ def identity(example_06: Callable[..., ResolvedCase]) -> Callable[..., str]:
 
 
 def _charge(**keys: float) -> Edit:
-    """Return an edit setting keys of the ``charge:`` block, dotted for ``smearing``."""
 
     def edit(document: dict[str, Any]) -> None:
         block = document.setdefault("charge", {})
@@ -96,7 +76,6 @@ def _charge(**keys: float) -> Edit:
 
 
 def _pqr(path: Path) -> Edit:
-    """Return an edit supplying ``path`` as ``inputs.pqr``."""
 
     def edit(document: dict[str, Any]) -> None:
         document.setdefault("inputs", {})["pqr"] = {"path": str(path), "format": "pqr"}
@@ -105,14 +84,12 @@ def _pqr(path: Path) -> Edit:
 
 
 def _pqr_text(charge_e: float) -> str:
-    """Return a one-atom PQR whose bytes depend on ``charge_e``."""
     return f"ATOM      1  N   MET A   1       0.000   0.000   0.000 {charge_e:7.4f} 1.8240\nEND\n"
 
 
 def test_val03_case_identity_names_a_deposited_charge(
     identity: Callable[..., str], tmp_path: Path
 ) -> None:
-    """VAL-03, E3: the protonation and the kernel move the identity; the discretisation does not."""
     default = identity()
     moved = {
         "pH 5": identity(_charge(ph=5.0)),
@@ -121,7 +98,6 @@ def test_val03_case_identity_names_a_deposited_charge(
         "sharpness 0.8": identity(_charge(sharpness=0.8)),
     }
     assert len(set(moved.values())) == len(moved), moved
-    # D2: the export lattice and the element order are discretisation.
     assert identity(_charge(grid_spacing_nm=0.01)) == default
 
     def order(document: dict[str, Any]) -> None:
@@ -129,7 +105,6 @@ def test_val03_case_identity_names_a_deposited_charge(
 
     assert identity(order) == default
 
-    # The PQR's contents are the charge; where the file lives is not.
     first, second = tmp_path / "a" / "x.pqr", tmp_path / "b" / "x.pqr"
     other = tmp_path / "c" / "x.pqr"
     for path, text in (
@@ -146,23 +121,16 @@ def test_val03_case_identity_names_a_deposited_charge(
 
 
 def test_val03_case_identity_names_a_derived_chi(identity: Callable[..., str]) -> None:
-    """VAL-03, E3: ``dielectric_transition_nm`` moves a deriving case's identity (D3)."""
     sharp = identity()
     narrow = identity(_charge(dielectric_transition_nm=0.1))
     wide = identity(_charge(dielectric_transition_nm=0.2))
     assert len({sharp, narrow, wide}) == 3
 
 
+# VER-23
 def test_val03_identity_leaves_the_solve_provenance_alone(
     example_06: Callable[..., ResolvedCase],
 ) -> None:
-    """VAL-03, VER-23, D5, REV-13: ``fields.charge`` still means "supplied", and no solve key moves.
-
-    The recipe is added to the identity's own record, never to the solve
-    provenance every stage key is built from, so computing the identity leaves
-    that provenance as it was. Example 06's stage-7 keys are pinned rather than
-    asserted against themselves (REV-13, D11).
-    """
     resolved = example_06()
     before = content_hash(CASE_IDENTITY_SCHEMA, resolved.solve_provenance)
     assert resolved.deposits_charge
@@ -195,7 +163,6 @@ def test_val03_identity_leaves_the_solve_provenance_alone(
 
 
 def test_val03_non_producer_identity_is_unchanged() -> None:
-    """D4: a case that neither supplies, deposits nor derives a field hashes as it did."""
     case = ROOT / "examples" / "01-quickstart" / "quickstart.case.yaml"
     resolved = resolve(load_case(case))
     assert not resolved.deposits_charge
@@ -218,11 +185,6 @@ def test_val03_non_producer_identity_is_unchanged() -> None:
 def test_val03_identity_ignores_the_protonation_gate_tolerances(
     identity: Callable[..., str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """VAL-03: a gate tolerance moves whether a protonation is accepted, not the case.
-
-    Tightening one must not give every depositing case a new identity, or every
-    golden made before it would refuse every later run of the same physics.
-    """
     default = identity()
     monkeypatch.setattr(protonation_module, "Q_NET_TOLERANCE_E", 1e-9)
     monkeypatch.setattr(protonation_module, "REGISTRATION_TOLERANCE_A", 1e-9)
@@ -231,21 +193,19 @@ def test_val03_identity_ignores_the_protonation_gate_tolerances(
     assert identity(_charge(ph=5.0)) != default
 
 
+# FR-15
 def test_val03_case_identity_names_the_exclusion_shell(identity: Callable[..., str]) -> None:
-    """VAL-03, FR-15: a non-zero ``exclusion_offset_nm`` moves the identity; 0 does not (D4)."""
     default = identity()
     assert identity(_charge(exclusion_offset_nm=0.0)) == default
     shells = {identity(_charge(exclusion_offset_nm=offset)) for offset in (0.2, 0.3)}
     assert len(shells) == 2
     assert default not in shells
-    # The shell and the derived chi are two switches, and each moves the identity alone.
     both = identity(_charge(exclusion_offset_nm=0.3, dielectric_transition_nm=0.15))
     transition = identity(_charge(dielectric_transition_nm=0.15))
     assert len({default, both, transition, identity(_charge(exclusion_offset_nm=0.3))}) == 4
 
 
 def _recorded(resolved: ResolvedCase) -> dict[str, Artefact]:
-    """Return the stage-1 and protonation keys a run of ``resolved`` records."""
     structure = create("structure").key(StageInputs(resolved=resolve(resolved.document)))
     protonation = create("protonation").key(
         StageInputs(resolved=resolve(resolved.document), upstream={"structure": structure})
@@ -256,12 +216,6 @@ def _recorded(resolved: ResolvedCase) -> dict[str, Artefact]:
 def test_val03_run_identity_is_read_from_the_recorded_artefacts(
     example_06: Callable[..., ResolvedCase], tmp_path: Path
 ) -> None:
-    """VAL-03: a finished run's identity describes the structure it solved, from anywhere.
-
-    Read from the recorded artefacts, the identity is the one the case gives
-    before any run, and it stays so when the structure file has since gone or
-    changed, where the case alone would refuse or move.
-    """
     resolved = example_06()
     recorded = _recorded(resolved)
     expected = case_identity(resolved)
@@ -287,7 +241,6 @@ def test_val03_run_identity_is_read_from_the_recorded_artefacts(
 def test_val03_reopen_reads_the_runs_own_upstream_artefacts(
     example_06: Callable[..., ResolvedCase], tmp_path: Path
 ) -> None:
-    """VAL-03: a run's stage-1 and protonation artefacts come from its store, or it is refused."""
     resolved = example_06()
     store = Store(tmp_path / "store")
     stored = {name: store.put(artefact) for name, artefact in _recorded(resolved).items()}

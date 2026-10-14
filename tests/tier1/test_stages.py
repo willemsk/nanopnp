@@ -1,17 +1,4 @@
-"""VER-25 — the stage protocol, the registry, and the three promises FR-27 makes.
-
-Every stage of section 5.2 must be independently invocable, cancellable and
-introspectable. Each of those is a claim that fails quietly:
-
-- *introspectable* fails by working — ``nanopnp stage --list`` answers correctly
-  while importing NGSolve, and nobody notices until a sweep dispatches a job
-  array and pays 370 ms per worker for a question about a stage's inputs. The
-  subprocess tests below are the only way to see it;
-- *cancellable* fails by leaving a partial artefact behind, or by not stopping
-  until the stage would have finished anyway;
-- the registry's descriptions fail by drifting from the stages they describe,
-  because they are deliberately written somewhere else.
-"""
+"""VER-25: the stage protocol, the registry and the promises FR-27 makes."""
 
 from __future__ import annotations
 
@@ -55,7 +42,6 @@ physics: {model: pnp-ns}
 
 
 def _in_subprocess(script: str) -> dict[str, object]:
-    """Run ``script`` in a fresh interpreter and return the JSON it prints."""
     completed = subprocess.run(
         [sys.executable, "-c", script], capture_output=True, text=True, check=True
     )
@@ -67,13 +53,6 @@ def _in_subprocess(script: str) -> dict[str, object]:
 
 
 def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
-    """Listing and describing stages imports neither NGSolve nor the stage modules.
-
-    The registry holds each description beside a ``module:attribute`` target
-    string precisely so this is true. Asserted in a subprocess because this
-    session has imported everything many times over, and the in-process check
-    would pass no matter what the registry did.
-    """
     script = (
         "import sys, json;"
         "from nanopnp.core.stages import registered_stages;"
@@ -116,42 +95,27 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
         "qoi",
         "report",
     ]
-    # WP36 D3: the facts a walk acts on are introspected with the rest.
     assert reported["facts"]["solve"] == [True, False, False, 0.75, None, ["charge"]]
     assert reported["facts"]["structure"] == [True, False, False, 0.05, "structure", []]
     assert reported["facts"]["charge"][-1] == ["protonation", "region"]
     assert reported["ngsolve"] is False
-    # VER-48, WP18 D13: stage 1's dependencies are behind the `structure` extra,
-    # and introspecting it must not need them.
     assert reported["structure"] is False
     assert reported["extras"] == []
-    # VER-49, WP19 D1: stages 2 and 3 are listed without importing their modules,
-    # or the numpy and scipy they defer.
     assert reported["density"] is False
     assert reported["symmetry"] is False
-    # WP20 D1: stage 4 is listed without importing scikit-image or Shapely.
     assert reported["contour"] is False
-    # VER-52, WP21 D1: stage 5 is listed without importing its module or netgen.
     assert reported["region"] is False
     assert reported["netgen"] is False
     assert reported["numpy"] is False
     assert reported["solve"] is False
     assert reported["materials"] is False
     assert reported["charge"] is False
-    # VER-57, WP27 D4: the protonation stage is listed without importing its
-    # module, PDB2PQR or PROPKA.
     assert reported["protonation"] is False
     assert reported["mesh"] is False
     assert reported["post"] is False
 
 
 def test_ver25_a_stage_description_matches_the_stage_it_describes() -> None:
-    """Each registered target resolves, and its ``describe()`` is the registry's row.
-
-    The description is written in the registry rather than beside the class, so
-    that answering a question about a stage need not import it. The cost of that
-    is that the two can drift; this is what stops them.
-    """
     for name, entry in _catalogue().items():
         module_name, _, attribute = entry.target.partition(":")
         stage = getattr(importlib.import_module(module_name), attribute)()
@@ -160,7 +124,6 @@ def test_ver25_a_stage_description_matches_the_stage_it_describes() -> None:
 
 
 def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
-    """Stages are numbered by their position in the section 5.2 table."""
     numbered = {entry.name: entry.number for entry in registered_stages()}
     assert numbered == {
         "structure": 1,
@@ -180,7 +143,6 @@ def test_ver25_the_pipeline_numbers_match_section_5_2() -> None:
 
 
 def test_ver25_stage_descriptions_match_artefact_schemas() -> None:
-    """Every registered stage's artefact_schema matches the canonical constant in io.artefact."""
     from nanopnp.io import artefact
 
     stage_to_schema = {
@@ -209,12 +171,6 @@ def test_ver25_stage_descriptions_match_artefact_schemas() -> None:
 def test_ver48_a_missing_extra_is_named_when_the_stage_is_created(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """``create()`` names the extra, the module and the install command (WP18 D12).
-
-    ``gemmi`` is made unimportable for the duration, and the stage modules that
-    import it are dropped from ``sys.modules`` so that ``create`` imports them
-    afresh.
-    """
     import sys
 
     monkeypatch.setitem(sys.modules, "gemmi", None)
@@ -232,7 +188,6 @@ def test_ver48_a_missing_extra_is_named_when_the_stage_is_created(
 
 
 def test_ver51_contour_names_its_missing_extra(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Stage 4 imports scikit-image at the top, so ``create()`` names the extra (WP20 D1)."""
     import sys
 
     monkeypatch.setitem(sys.modules, "skimage", None)
@@ -248,7 +203,6 @@ def test_ver51_contour_names_its_missing_extra(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_ver25_an_unknown_stage_is_refused_by_name() -> None:
-    """The diagnostic lists the stages that exist, because this is a typo's home."""
     with pytest.raises(KeyError, match="materials"):
         describe("solver")
     with pytest.raises(KeyError, match="materials"):
@@ -256,7 +210,6 @@ def test_ver25_an_unknown_stage_is_refused_by_name() -> None:
 
 
 def test_ver25_a_stage_cannot_be_registered_twice() -> None:
-    """Replacing a registered stage would let two runs share a manifest."""
     description = StageDescription(
         name="solve",
         number=10,
@@ -276,7 +229,6 @@ def test_ver25_a_stage_cannot_be_registered_twice() -> None:
 
 
 def test_ver25_a_malformed_target_is_refused() -> None:
-    """A target must name a module and an attribute, or nothing can resolve it."""
     description = StageDescription(
         name="not-a-stage",
         number=99,
@@ -299,7 +251,6 @@ def test_ver25_a_malformed_target_is_refused() -> None:
 
 
 def test_ver25_progress_is_clamped_into_the_unit_interval() -> None:
-    """A stage that miscounts its rungs still drives a progress bar."""
     seen: list[float] = []
     report(lambda fraction, message: seen.append(fraction), 1.7, "over")
     report(lambda fraction, message: seen.append(fraction), -0.2, "under")
@@ -307,7 +258,6 @@ def test_ver25_progress_is_clamped_into_the_unit_interval() -> None:
 
 
 def test_ver25_a_cancelled_token_raises_naming_where_it_stopped() -> None:
-    """``Cancelled`` says how far the run got, which is what an operator asks."""
     flag = CancelFlag()
     check_cancelled(flag, "the solve")  # not set: nothing happens
     flag.cancel()
@@ -316,12 +266,6 @@ def test_ver25_a_cancelled_token_raises_naming_where_it_stopped() -> None:
 
 
 def test_ver25_cancellation_is_not_an_error_subclass_of_the_gates() -> None:
-    """A cancelled run is distinguishable from a diverged one.
-
-    Both unwind the same call stack. If cancellation were caught by the same
-    ``except`` an operator uses for a gate violation, "I stopped it" and "it
-    produced a wrong answer" would read identically in the log.
-    """
     from nanopnp.numerics.gates import GateViolationError
 
     assert not issubclass(Cancelled, GateViolationError)
@@ -332,7 +276,6 @@ def test_ver25_cancellation_is_not_an_error_subclass_of_the_gates() -> None:
 
 
 def test_ver25_the_materials_stage_reports_progress_ending_at_one() -> None:
-    """Stage 8 runs alone, from the case and nothing else."""
     seen: list[float] = []
     stage = create("materials")
     artefact = stage.run(
@@ -346,7 +289,6 @@ def test_ver25_the_materials_stage_reports_progress_ending_at_one() -> None:
 
 
 def test_ver25_a_cancelled_stage_returns_no_artefact() -> None:
-    """Cancellation raises rather than returning a partial result (section 5.3.2)."""
     flag = CancelFlag()
     flag.cancel()
     with pytest.raises(Cancelled):
@@ -354,14 +296,12 @@ def test_ver25_a_cancelled_stage_returns_no_artefact() -> None:
 
 
 def test_ver25_a_stage_invoked_without_its_upstream_says_which_one() -> None:
-    """Running a stage alone is exactly when a missing input shows up."""
     inputs = StageInputs(resolved=resolve(loads_case(MINIMAL)))
     with pytest.raises(KeyError, match="materials"):
         inputs.require("materials")
 
 
 def test_ver25_stage_name_enum_matches_registered_stages() -> None:
-    """Verify that StageName enum members match registered stages."""
     registered = {d.name for d in registered_stages()}
     enum_values = tuple(s.value for s in StageName)
     assert set(enum_values) == registered
@@ -373,7 +313,6 @@ def test_ver25_stage_name_enum_matches_registered_stages() -> None:
 
 
 def test_ver25_create_and_describe_accept_stage_name_enum() -> None:
-    """describe() and create() accept StageName enum members."""
     identifier: StageIdentifier = StageName.CASE
     assert describe(identifier) == describe("case")
     stage = create(StageName.MATERIALS)
@@ -385,7 +324,6 @@ def test_ver25_create_and_describe_accept_stage_name_enum() -> None:
 
 
 def test_ver25_a_registered_name_is_a_plain_string_whatever_identifier_registered_it() -> None:
-    """A ``StageName`` member would put ``<StageName.CASE: 'case'>`` into every ``{name!r}``."""
     for description in registered_stages():
         assert type(description.name) is str
         assert repr(description.name) == f"'{description.name}'"

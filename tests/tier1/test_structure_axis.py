@@ -1,9 +1,4 @@
-"""VER-48: the Cₙ axis by chain-permutation superposition, on synthetic assemblies (FR-01, FR-02).
-
-Every oracle here is a closed form: an assembly built about a known axis, a
-rigid move applied with a known rotation. None of it reads a file, so an error
-found here is in :mod:`nanopnp.structure.axis` and nowhere else (§7.1).
-"""
+"""VER-48: the Cₙ axis by permutation superposition, on synthetic assemblies (FR-01, FR-02)."""
 
 from __future__ import annotations
 
@@ -29,24 +24,15 @@ from nanopnp.structure.axis import (
 logger = logging.getLogger(__name__)
 
 ATOMS_PER_CHAIN = 285
-"""The ClyA common-C-alpha count, so the synthetic has the real one's statistics."""
 
 
 def _rotation(axis: np.ndarray, angle: float) -> np.ndarray:
-    """Return the rotation by ``angle`` (radians) about the unit ``axis`` (Rodrigues)."""
     k = np.asarray(axis, dtype=np.float64) / np.linalg.norm(axis)
     skew = np.array([[0.0, -k[2], k[1]], [k[2], 0.0, -k[0]], [-k[1], k[0], 0.0]])
     return np.eye(3) + math.sin(angle) * skew + (1.0 - math.cos(angle)) * (skew @ skew)
 
 
 def _protomer(n: int, rng: np.random.Generator, *, isotropic: bool) -> np.ndarray:
-    """Return one chain of the Design §5 synthetic, about z through the origin.
-
-    ``rho ~ U(2, 5)`` nm, ``φ`` inside ±80 % of the chain's wedge, ``z`` uniform and
-    then — when ``isotropic`` — centred and rescaled so that ``⟨z²⟩ = ⟨rho²⟩/2``
-    exactly. Replicated ``n`` times, that makes the assembly's second moments
-    isotropic, so its principal axes are undetermined before noise is added.
-    """
     rho = rng.uniform(2.0, 5.0, ATOMS_PER_CHAIN)
     half_wedge = 0.8 * math.pi / n
     phi = rng.uniform(-half_wedge, half_wedge, ATOMS_PER_CHAIN)
@@ -58,36 +44,28 @@ def _protomer(n: int, rng: np.random.Generator, *, isotropic: bool) -> np.ndarra
 
 
 def _assembly(n: int, protomer: np.ndarray) -> np.ndarray:
-    """Return ``(n, m, 3)``: ``protomer`` turned by ``2πk/n`` about z, k = 0 … n - 1."""
     return np.stack(
         [protomer @ _rotation(np.array([0, 0, 1.0]), 2 * math.pi * k / n).T for k in range(n)]
     )
 
 
 def _move(chains: np.ndarray, rotation: np.ndarray, shift: np.ndarray) -> np.ndarray:
-    """Return ``chains`` moved rigidly: ``R x + t``."""
     return np.asarray(chains @ rotation.T + shift, dtype=np.float64)
 
 
 TILT = _rotation(np.array([1.0, 2.0, 0.0]), math.radians(35.0))
-"""A 35° tilt about a direction in the xy-plane: the known axis is ``TILT @ ẑ``."""
 
 OFFSET_NM = np.array([3.0, -1.5, 40.0])
 
 
 def _line_distance(record: AxisRecord, axis: np.ndarray, point: np.ndarray) -> float:
-    """Return the distance from ``point`` to the line ``record`` describes, in nm."""
     offset = point - record.centroid_nm
     return float(np.linalg.norm(offset - (offset @ record.axis) * record.axis))
 
 
+# FR-02
 @pytest.mark.parametrize("n", [7, 8, 12])
 def test_ver48_exact_cn_assembly_recovers_its_axis(n: int) -> None:
-    """An exact Cₙ about a tilted, offset axis recovers that axis to round-off (FR-02).
-
-    The chains are lettered in a shuffled order, so the test also holds the
-    ordering to not trusting the labels (WP18 Design §1).
-    """
     rng = np.random.default_rng(48)
     chains = _move(_assembly(n, _protomer(n, rng, isotropic=False)), TILT, OFFSET_NM)
     shuffled = chains[rng.permutation(n)]
@@ -112,12 +90,6 @@ def test_ver48_exact_cn_assembly_recovers_its_axis(n: int) -> None:
 def _principal_axis_nearest(
     points: np.ndarray, target: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return the principal axis of ``points`` closest to ``target``, through their centroid.
-
-    The most favourable choice a principal-axes method could make: in the
-    isotropic synthetic the eigenvalues carry no information about which
-    eigenvector is the axis, so the one nearest the truth is taken.
-    """
     centroid = points.mean(axis=0)
     _, vectors = np.linalg.eigh(np.cov((points - centroid).T))
     best = vectors[:, int(np.argmax(np.abs(vectors.T @ target)))]
@@ -125,12 +97,6 @@ def _principal_axis_nearest(
 
 
 def test_ver48_permutation_meets_the_budget_where_principal_axes_do_not() -> None:
-    """Per-atom noise of 0.02 nm: the permutation axis stays inside 0.01 nm; principal axes do not.
-
-    The isotropic-moment synthetic of WP18 Design §5, C12, one fixed seed. Both
-    estimates are measured the same way — the lateral displacement from the true
-    axis over the axial extent — after the known move is undone.
-    """
     n = 12
     rng = np.random.default_rng(20260925)
     ideal = _assembly(n, _protomer(n, rng, isotropic=True))
@@ -138,7 +104,6 @@ def test_ver48_permutation_meets_the_budget_where_principal_axes_do_not() -> Non
     moved = _move(noisy, TILT, OFFSET_NM)
 
     record = measure_axis(moved, n)
-    # Back into the frame in which the true axis is z through the origin.
     axis = TILT.T @ record.axis
     point = TILT.T @ (record.centroid_nm - OFFSET_NM)
     extent = (float(noisy[..., 2].min()), float(noisy[..., 2].max()))
@@ -162,7 +127,6 @@ def test_ver48_permutation_meets_the_budget_where_principal_axes_do_not() -> Non
 
 
 def _six_by_two() -> np.ndarray:
-    """Twelve chains in six pairs: a C6 of dimers claimed as C12 (azimuth gaps 0° and 60°)."""
     rng = np.random.default_rng(6)
     base = _protomer(12, rng, isotropic=False)
     upper = base + np.array([0.0, 0.0, 2.5])
@@ -173,15 +137,6 @@ def _six_by_two() -> np.ndarray:
 
 
 def _dihedral() -> np.ndarray:
-    """Return a D6 assembly: six chains up, six turned over about the two-fold axes between.
-
-    Azimuths exactly 30° apart, alternating up and down, every chain congruent.
-    What is missing is a single 30° rotation carrying each chain to its
-    neighbour. The rotations from chain 0 onto the others sum to zero here — six
-    turns about z give ``6 ẑẑᵀ`` and six two-folds perpendicular to it give
-    ``-6 ẑẑᵀ`` — so the ordering axis is undetermined and the chains are ordered
-    about an arbitrary direction, which the spacing gate then refuses.
-    """
     rng = np.random.default_rng(12)
     base = _protomer(12, rng, isotropic=False) + np.array([0.0, 0.0, 1.5])
     z = np.array([0.0, 0.0, 1.0])
@@ -198,13 +153,6 @@ def _dihedral() -> np.ndarray:
 
 
 def _unturned_ring() -> np.ndarray:
-    """Twelve chains 30° apart whose own orientation turns at a quarter of the ring's rate.
-
-    The centroids are an exact C12 ring, so the spacing gate passes, but the
-    chains are not rotational copies: the rotation carrying the assembly onto its
-    cyclic permutation is a 28.07° turn, not 30°. This is the angle gate's case —
-    a ring of the right count and spacing that is not Cₙ.
-    """
     rng = np.random.default_rng(12)
     base = _protomer(12, rng, isotropic=False)
     centre = base.mean(axis=0)
@@ -219,7 +167,6 @@ def _unturned_ring() -> np.ndarray:
 
 
 def _cn(n: int, rotation: np.ndarray | None = None, shift: np.ndarray | None = None) -> np.ndarray:
-    """Return an exact Cₙ about z through the origin, optionally moved rigidly."""
     chains = _assembly(n, _protomer(n, np.random.default_rng(n), isotropic=False))
     return _move(
         chains,
@@ -228,12 +175,11 @@ def _cn(n: int, rotation: np.ndarray | None = None, shift: np.ndarray | None = N
     )
 
 
+# QR-12
 @pytest.mark.parametrize(
     ("build", "n", "measured", "low", "high"),
     [
-        # A 6 x 2 arrangement has gaps of 0 and 60 degrees, and two chains at
-        # one azimuth order either way round, so the worst gap can read as a
-        # near-full turn: either way it is far outside 7.5 degrees.
+        # A 6 x 2 arrangement has azimuth gaps of 0 and 60 degrees, far outside 7.5 degrees.
         pytest.param(
             _six_by_two,
             12,
@@ -270,7 +216,6 @@ def _cn(n: int, rotation: np.ndarray | None = None, shift: np.ndarray | None = N
     ],
 )
 def test_ver48_gates_fire(build: object, n: int, measured: str, low: float, high: float) -> None:
-    """Each symmetry gate refuses its constructed input, naming the gate and the value (QR-12)."""
     chains = build()  # type: ignore[operator]
     with pytest.raises(SymmetryGateError) as raised:
         detect_axis(chains, n)
@@ -283,11 +228,6 @@ def test_ver48_gates_fire(build: object, n: int, measured: str, low: float, high
 
 
 def test_ver48_axis_z_beyond_the_budget_is_refused() -> None:
-    """``axis: z`` on an exact C12 offset 0.02 nm from the file's z is refused, naming all three.
-
-    And the same assembly offset by 0.005 nm, inside the 0.01 nm budget, passes
-    with the displacement measured to round-off.
-    """
     outside = _cn(12, shift=np.array([0.02, 0.0, 0.0]))
     record = detect_axis(outside, 12)
     extent = (float(outside[..., 2].min()), float(outside[..., 2].max()))
@@ -304,8 +244,8 @@ def test_ver48_axis_z_beyond_the_budget_is_refused() -> None:
     assert abs(found.displacement_nm - 0.005) <= 1e-12
 
 
+# FR-01
 def test_ver48_kabsch_matches_mdanalysis() -> None:
-    """The in-project Kabsch rotation equals MDAnalysis ``rotation_matrix`` (FR-01)."""
     from MDAnalysis.analysis.align import rotation_matrix
 
     rng = np.random.default_rng(1)
@@ -322,7 +262,6 @@ def test_ver48_kabsch_matches_mdanalysis() -> None:
 
 
 def test_ver48_kabsch_never_returns_a_reflection() -> None:
-    """A mirrored point set is fitted by a proper rotation; the determinant sign is fixed (D6)."""
     rng = np.random.default_rng(2)
     reference = rng.normal(size=(50, 3))
     mirrored = reference * np.array([1.0, 1.0, -1.0])
@@ -330,10 +269,6 @@ def test_ver48_kabsch_never_returns_a_reflection() -> None:
 
 
 def test_ver48_the_frame_puts_the_axis_on_z_and_keeps_the_axial_coordinate() -> None:
-    """``x' = Q(x - p)`` maps the axis to z through r = 0, keeps ``z = â·x``, chain 0 on +x (D8).
-
-    Re-detecting the axis on the transformed assembly gives ẑ through the origin.
-    """
     rotation = _rotation(np.array([1.0, -1.0, 0.0]), math.radians(6.0))
     chains = _cn(12, rotation, np.array([0.7, -0.4, 3.0]))[
         np.array([3, 0, 7, 1, 11, 2, 5, 4, 6, 10, 9, 8])
@@ -350,6 +285,5 @@ def test_ver48_the_frame_puts_the_axis_on_z_and_keeps_the_axial_coordinate() -> 
     again = detect_axis(moved, 12)
     assert np.linalg.norm(np.cross(again.axis, [0.0, 0.0, 1.0])) <= 1e-12
     assert np.hypot(*again.foot_nm[:2]) <= 1e-12
-    # Counter-clockwise from chain 0, in the order the record gives.
     phi = np.degrees(np.arctan2(moved[..., 1].mean(axis=1), moved[..., 0].mean(axis=1)))
     assert np.allclose(np.mod(np.diff(phi[list(record.order)]), 360.0), 30.0, atol=1e-9)

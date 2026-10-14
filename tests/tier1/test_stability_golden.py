@@ -1,11 +1,4 @@
-"""VER-62: the number-stability comparison asks the right question of each mesh.
-
-On a recorded mesh the golden holds round-off; on an unseen mesh it holds the
-walk's measured mesh-moved tolerance, except in the reference environment, where
-an unseen mesh fails. These run the comparison on synthetic goldens, so a
-regression in the classification shows at Tier 1 rather than as a CI leg that
-passes while checking nothing (WP35 D13, as amended; section 8.2.7 G10).
-"""
+"""VER-62: the number-stability comparison asks the right question of each mesh."""
 
 from __future__ import annotations
 
@@ -82,7 +75,6 @@ def test_ver62_mesh_moved_tolerance_is_the_safety_factor_on_the_spread() -> None
 
 
 def test_ver62_the_reference_environment_refuses_an_unseen_mesh() -> None:
-    """There a mesh move is a code change, so it never falls back to the mesh-moved band."""
     golden = _golden(
         _record(MESH_A, 1.0e-10, REFERENCE_ENVIRONMENT),
         _record(MESH_B, 1.0e-10 * (1 + 2e-5), ELSEWHERE),
@@ -118,7 +110,6 @@ def test_ver62_fold_refuses_to_overwrite_or_to_hold_zero() -> None:
 
 
 def test_ver62_a_known_mesh_gains_the_environment_that_deployed_it() -> None:
-    """Round-off between environments on one mesh folds in; the first values stay."""
     golden = _golden(
         _record(MESH_A, 1.0e-10, REFERENCE_ENVIRONMENT),
         _record(MESH_A, 1.0e-10 * (1 + 1e-13), ELSEWHERE),

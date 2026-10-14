@@ -1,26 +1,4 @@
-"""VER-72: the source conventions of ``CLAUDE.md`` that a review would otherwise have to catch.
-
-Four rules are read from the source, with no module of the package imported; the
-first three from the syntax tree, through
-:func:`nanopnp.validation.modularity.parse_package`:
-
-- (a) an import inside a function names only what ``CLAUDE.md`` lets a function
-  import: ``nanopnp`` itself (VER-61's ``deferred_upward:`` governs those), the
-  costly core packages and an optional extra's package (:data:`DEFERRABLE`);
-- (b) no module imports another module's private name, beyond the recorded
-  :data:`PRIVATE_IMPORTS`, a list that only shrinks;
-- (c) every name the package defines is spelt the British way: ``-ise`` and ``-yse``,
-  not ``-ize`` and ``-yze`` (:data:`AMERICAN`);
-- (f) every ``# pragma: no cover`` gives its reason on the same line, as
-  ``# pragma: no cover - <reason>``: the push gate requires every changed line
-  of ``src/nanopnp`` to be covered, and an exclusion is a claim a reviewer reads.
-
-Check (e) is the plans' records, in ``test_plan_records.py``; (g) is ``test_plan_shape.py`` and (h)
-``test_public_docstrings.py``.
-
-Each check is shown to fire on a source substituted into the package, naming the
-file, the line and the name, so none can pass by accepting everything.
-"""
+"""VER-72: the source conventions of CLAUDE.md, read from the syntax tree."""
 
 from __future__ import annotations
 
@@ -38,19 +16,14 @@ DEFERRABLE: frozenset[str] = frozenset(
     {
         # The package itself: VER-61's `deferred_upward:` ratchet governs these.
         "nanopnp",
-        # Core dependencies costly to import (CLAUDE.md, *Coding conventions*):
-        # ngsolve ~370 ms, numpy ~67 ms, scipy.sparse ~260 ms (section 8.2.8 H12);
-        # meshio ~170 ms and h5py ~140-180 ms (`python -X importtime`, measured for VER-72).
+        # Costly to import (CLAUDE.md); timings in .knowledge/07-software-stack.md.
         "ngsolve",
         "netgen",
         "numpy",
         "scipy",
         "meshio",
         "h5py",
-        # The import names of pyproject.toml's [project.optional-dependencies]:
-        # `structure` (MDAnalysis, GridDataFormats, scikit-image, shapely, pdb2pqr
-        # with its propka, gemmi), `gui`, `gmsh` and `examples`; and apbs-binary,
-        # from the test-only `apbs` group, whose wheel exists on some platforms only.
+        # Import names of pyproject.toml's optional extras; apbs_binary is test-only.
         "MDAnalysis",
         "gridData",
         "skimage",
@@ -64,7 +37,6 @@ DEFERRABLE: frozenset[str] = frozenset(
         "apbs_binary",
     }
 )
-"""The top-level packages a function may import (VER-72 a)."""
 
 PRIVATE_IMPORTS: Mapping[tuple[str, str, str], str] = {
     ("density/map.py", "nanopnp.density.grid", "_grid_data_module"): (
@@ -86,63 +58,35 @@ PRIVATE_IMPORTS: Mapping[tuple[str, str, str], str] = {
         "the deposit kernel's patch table, which the charge harness drives directly"
     ),
 }
-"""``(importing file, module, name)`` of each private import across modules kept for now.
-
-The list only shrinks: an entry the source no longer makes fails, so renaming a
-helper public removes its row in the same commit, and a new private import is
-never fixed by recording it (VER-72 b).
-"""
 
 AMERICAN = re.compile(r"[iy]z(?:e|ing|ation|abl)")
-"""An ``-ize`` or ``-yze`` family ending inside one lower-cased word of a name (VER-72 c).
-
-``-ize``, ``-izes``, ``-ized``, ``-izer``, ``-izing``, ``-ization`` and ``-izable``
-(*serializable*, *analyzable*), and the same after ``y``.
-"""
 
 WORDS = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+")
-"""One word of a snake_case, CamelCase or UPPER_CASE name."""
 
 SIZE_STEM = re.compile(
     r"(?:re|over|under|down|up|out|cap|sub|pre"
     r"|max|min|step|chunk|batch|cell|mesh|grid|block|file|page)?(?:s|se|pr)"
 )
-"""What may precede ``iz`` in ``size``, ``seize`` and ``prize`` and their compounds.
-
-Only these: a stem ending in ``s`` is no excuse, or ``emphasize`` and
-``synthesize`` would pass as ``size`` does. The compounds are written out, the
-run-together ones of numerical code (``maxsize``, ``stepsize``, ``chunksize``)
-among them.
-"""
 
 
 @dataclass(frozen=True, order=True)
 class Violation:
-    """One breach of a convention, where it is and what it names."""
-
     path: str
     line: int
     name: str
     rule: str
 
     def __str__(self) -> str:
-        """Return ``src/nanopnp/<path>:<line>: <name> (<rule>)``, the diagnostic line."""
         return f"src/nanopnp/{self.path}:{self.line}: {self.name} ({self.rule})"
 
 
 def _function_imports(module: Module) -> Iterator[ast.Import | ast.ImportFrom]:
-    """Yield each import statement inside a function or lambda, once.
-
-    VER-61's own reading of the syntax tree, whose ``deferred`` kind is exactly
-    this, so the two checks cannot disagree on what a function-level import is.
-    """
     for statement, kind in _scoped_imports(module.tree):
         if kind == "deferred":
             yield statement
 
 
 def _absolute(module: Module, node: ast.ImportFrom) -> str:
-    """Return the module an ``import from`` names, a relative one resolved against ``module``."""
     if not node.level:
         return node.module or ""
     package = module.name if module.is_package else module.name.rpartition(".")[0]
@@ -152,7 +96,6 @@ def _absolute(module: Module, node: ast.ImportFrom) -> str:
 
 
 def deferred_imports(modules: tuple[Module, ...]) -> list[Violation]:
-    """Return each function-level import of a package outside :data:`DEFERRABLE`."""
     found = []
     for module in modules:
         for statement in _function_imports(module):
@@ -168,11 +111,6 @@ def deferred_imports(modules: tuple[Module, ...]) -> list[Violation]:
 
 
 def private_imports(modules: tuple[Module, ...]) -> list[tuple[Violation, tuple[str, str, str]]]:
-    """Return each ``from nanopnp.x import _name`` of another module, with its allowlist key.
-
-    A relative import is resolved first, so ``from .kernel import _accumulate`` is
-    the same breach as its absolute spelling.
-    """
     found = []
     for module in modules:
         for node in ast.walk(module.tree):
@@ -193,7 +131,6 @@ def unrecorded_private_imports(
     found: list[tuple[Violation, tuple[str, str, str]]],
     recorded: Mapping[tuple[str, str, str], str] = PRIVATE_IMPORTS,
 ) -> list[Violation]:
-    """Return the private imports in ``found`` that ``recorded`` does not list."""
     return [violation for violation, key in found if key not in recorded]
 
 
@@ -201,17 +138,10 @@ def stale_private_imports(
     found: list[tuple[Violation, tuple[str, str, str]]],
     recorded: Mapping[tuple[str, str, str], str] = PRIVATE_IMPORTS,
 ) -> list[tuple[str, str, str]]:
-    """Return the ``recorded`` entries that ``found`` no longer imports."""
     return sorted(set(recorded) - {key for _, key in found})
 
 
 def _defined_names(tree: ast.AST) -> Iterator[tuple[str, int]]:
-    """Yield ``(name, line)`` of each name a module defines.
-
-    Definitions, classes, arguments and assignment targets, including attributes
-    assigned (``self.x = …``). A call or an attribute read is someone else's API,
-    ``gmsh.initialize`` among them, and is not a definition.
-    """
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
             yield node.name, node.lineno
@@ -233,7 +163,6 @@ def _is_american(name: str) -> bool:
 
 
 def american_names(modules: tuple[Module, ...]) -> list[Violation]:
-    """Return each defined name with an ``-ize`` or ``-yze`` ending (British spelling)."""
     found = {
         Violation(module.path, line, name, "American spelling; nanopnp writes -ise")
         for module in modules
@@ -244,15 +173,9 @@ def american_names(modules: tuple[Module, ...]) -> list[Violation]:
 
 
 PRAGMA = re.compile(r"#\s*pragma[:\s]?\s*no\s*cover(?!\s*-\s*\S)", re.IGNORECASE)
-"""A ``no cover`` pragma with no ``- <reason>`` after it (VER-72 f).
-
-It reads every spelling coverage.py's own exclusion pattern does (``# pragma no
-cover``, ``#pragma:no  cover``, upper case), because each of them excludes the line.
-"""
 
 
 def bare_pragmas(texts: Mapping[str, str]) -> list[Violation]:
-    """Return each ``# pragma: no cover`` in ``{path: text}`` that gives no reason."""
     rule = "write the reason after it: # pragma: no cover - <why no test reaches it>"
     return sorted(
         Violation(path, number, "pragma: no cover", rule)
@@ -299,16 +222,10 @@ def test_ver72_every_coverage_exclusion_gives_its_reason() -> None:
 # -- each guard fires --------------------------------------------------------------
 
 ORACLE = "mesh/oracle_conventions.py"
-"""A module substituted into the package by the tests below; it never exists on disk."""
 
 
 @pytest.fixture
 def oracle(tmp_path: Path) -> Callable[[str], tuple[Module, ...]]:
-    """Return a parser of one substituted module, in an otherwise empty package.
-
-    The checks judge each module alone, so the rest of the package would only
-    cost a parse per case.
-    """
 
     def parse(source: str) -> tuple[Module, ...]:
         return parse_package(tmp_path, sources={ORACLE: source})
@@ -348,7 +265,6 @@ def test_ver72_deferrable_and_type_checking_imports_are_admitted(
     ("source", "module"),
     [
         ("from nanopnp.numerics.linear import _REJECTED, __all__\n", "nanopnp.numerics.linear"),
-        # Relative, resolved against the oracle's package, nanopnp.mesh.
         ("from .meshers import _REJECTED, __all__\n", "nanopnp.mesh.meshers"),
         ("from ..numerics.linear import _REJECTED, __all__\n", "nanopnp.numerics.linear"),
     ],
@@ -362,7 +278,6 @@ def test_ver72_a_private_import_across_modules_is_named(
 
 
 def test_ver72_an_unused_allowlist_entry_is_stale() -> None:
-    """The list shrinks: delete the import, and the recorded row is reported."""
     source = "from nanopnp.core.errors import classify\n"
     modules = parse_package(sources={"density/map.py": source})
     entry = ("density/map.py", "nanopnp.density.grid", "_grid_data_module")
@@ -390,8 +305,7 @@ def test_ver72_a_private_import_missing_from_the_list_is_unrecorded(
         ("def f(optimizer):\n    return optimizer\n", 1, "optimizer"),
         ("x = 1\nlinearized = x\n", 2, "linearized"),
         ("class A:\n    def f(self):\n        self.discretization = 1\n", 3, "discretization"),
-        # `size` is no excuse for a stem that merely ends in `s`, and CLAUDE.md's own
-        # example of the British spelling is `analyse`.
+        # A stem ending in s is no excuse: emphasize and synthesize must not pass as size.
         ("def emphasize(x):\n    return x\n", 1, "emphasize"),
         ("def f(synthesizer):\n    return synthesizer\n", 1, "synthesizer"),
         ("class Hypothesizer:\n    pass\n", 1, "Hypothesizer"),

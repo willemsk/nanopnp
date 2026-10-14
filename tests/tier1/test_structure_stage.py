@@ -1,19 +1,4 @@
-"""VER-48: stage 1 on real files — readers, refusals, frames, the artefact and the walk.
-
-The axis itself is verified on synthetic assemblies in ``test_structure_axis.py``;
-this file holds the parts that need a file: the PDB and mmCIF readers, every
-trajectory format, the input refusals of the section 5.3.1 NOTE on
-``structure:``, the frame window, the superposition, the artefact and the walk
-rules (IF-02, IF-04, FR-01 to FR-03, FR-27).
-
-The vendored wwPDB entry 2WCD holds two dodecamers (chains A-L and M-X) in the
-crystal frame, where the pore axis is 22.9 degrees from z and +z points to
-*trans*. That frame is refused by the orientation gate, as the specification
-requires (a test below holds it). The stage-one run uses chains A-L rigidly
-moved into a frame the stage admits, the root conftest's ``prepared_2wcd``: a
-test-time preparation, since preparing a structure is outside the pipeline
-(WP18 Outcomes; WP19 D14).
-"""
+"""VER-48: stage 1 on real files: readers, refusals, frames, the artefact and the walk."""
 
 from __future__ import annotations
 
@@ -69,7 +54,6 @@ DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
 
 
 def _case(tmp_path: Path, structure: str, *, name: str = "structure") -> Path:
-    """Write a case file carrying ``structure`` (YAML text) and return its path."""
     text = (
         f"schema: {CASE_SCHEMA}\n"
         f"name: {name}\n"
@@ -97,7 +81,6 @@ def _block(
     selection: str = "protein",
     variant: str | None = None,
 ) -> str:
-    """Return a ``structure:`` block as YAML text."""
     label = "" if variant is None else f", variant: '{variant}'"
     lines = [
         f"  source: {{path: {path}, chains: '{chains}', selection: '{selection}'{label}}}\n",
@@ -112,17 +95,12 @@ def _block(
 
 
 def _rotation(axis: np.ndarray, angle: float) -> np.ndarray:
-    """Return the rotation by ``angle`` (radians) about ``axis``."""
     k = np.asarray(axis, dtype=np.float64) / np.linalg.norm(axis)
     skew = np.array([[0.0, -k[2], k[1]], [k[2], 0.0, -k[0]], [-k[1], k[0], 0.0]])
     return np.eye(3) + math.sin(angle) * skew + (1.0 - math.cos(angle)) * (skew @ skew)
 
 
 def _write(group: mda.AtomGroup, frames_angstrom: np.ndarray, path: Path) -> Path:
-    """Write ``group``'s topology with ``frames_angstrom`` as its coordinates.
-
-    A ``.pdb`` gets the first frame; a trajectory extension gets every frame.
-    """
     universe = mda.Merge(group)
     universe.load_new(np.asarray(frames_angstrom, dtype=np.float32), format=MemoryReader)
     with warnings.catch_warnings():
@@ -138,12 +116,10 @@ def _write(group: mda.AtomGroup, frames_angstrom: np.ndarray, path: Path) -> Pat
 
 @pytest.fixture(scope="module")
 def prepared(prepared_2wcd: Prepared2WCD) -> Path:
-    """Return the root conftest's prepared 2WCD: chains A-L, *cis* up, tilted 4° and shifted."""
     return prepared_2wcd.path
 
 
 def _run(case: Path, store: Path) -> AlignedEnsemble:
-    """Run stage 1 alone and return the ensemble it wrote."""
     result = run_case(case, store=Store(store), upto="structure", write=False)
     artefact = result.artefacts["structure"]
     return AlignedEnsemble.read(artefact.payload["ensemble"])
@@ -152,13 +128,6 @@ def _run(case: Path, store: Path) -> AlignedEnsemble:
 def test_ver48_relabelling_the_variant_is_a_cache_hit_and_the_manifest_keeps_the_label(
     prepared: Path, tmp_path: Path
 ) -> None:
-    """``structure.source.variant`` is a label (OPN-04): it names the run and keys nothing.
-
-    A relabelled case is served from the store, so its ensemble is not re-aligned and its
-    stages 2 to 6 keep their keys, and the label reaches the manifest through the embedded
-    case rather than through a payload a cache hit would hand back stale (CODE_REVIEW_003
-    CR-13).
-    """
     store = Store(tmp_path / "store")
     first = run_case(
         _case(tmp_path, _block(prepared, variant="ClyA-AS"), name="first"),
@@ -183,7 +152,6 @@ def test_ver48_relabelling_the_variant_is_a_cache_hit_and_the_manifest_keeps_the
 def test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate(
     tmp_path: Path,
 ) -> None:
-    """The wwPDB entry as deposited: 22.9 degrees from z, refused naming the angle (§5.3.1 NOTE)."""
     case = _case(tmp_path, _block(PDB, chains=DODECAMER))
     with pytest.raises(SymmetryGateError, match=r"orientation gate: the detected axis is 22\.9"):
         run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
@@ -192,12 +160,6 @@ def test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate(
 def test_ver48_2wcd_runs_as_stage_one(
     prepared: Path, prepared_2wcd: Prepared2WCD, tmp_path: Path
 ) -> None:
-    """``run_case(upto="structure")``: 12 chains, 285 common C-alpha, gates pass, output on z.
-
-    The prepared copy is tilted by 4 degrees, so the stage must measure that tilt
-    (the algorithm is equivariant under a rigid move) and undo it. Re-detecting
-    the axis on the output gives z through r = 0 to float32 round-off.
-    """
     case = _case(tmp_path, _block(prepared))
     result = run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
     artefact = result.artefacts["structure"]
@@ -228,7 +190,6 @@ def test_ver48_2wcd_runs_as_stage_one(
     again = measure_axis(np.asarray(chains), 12)
     assert np.linalg.norm(np.cross(again.axis, [0.0, 0.0, 1.0])) <= 1e-6
     assert np.hypot(*again.foot_nm[:2]) <= 1e-6
-    # z' = a.x: the file's axial coordinate along the axis is kept.
     first = ensemble.positions_nm[0].astype(np.float64)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -238,7 +199,6 @@ def test_ver48_2wcd_runs_as_stage_one(
 
 
 def test_ver48_2wcd_pdb_and_mmcif_agree() -> None:
-    """PDB and mmCIF of one entry read to the same atom table and coordinates (IF-04)."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         from_pdb = select(load_universe(PDB), selection="protein", chains=DODECAMER, n=12)
@@ -256,7 +216,6 @@ def test_ver48_2wcd_pdb_and_mmcif_agree() -> None:
 def two_chains(
     dodecamer_2wcd: mda.AtomGroup, tmp_path_factory: pytest.TempPathFactory
 ) -> tuple[Path, np.ndarray]:
-    """Chains A-B of 2WCD as a PDB, and three frames of coordinates in ångströms."""
     group = dodecamer_2wcd.select_atoms("chainID A B")
     rng = np.random.default_rng(3)
     frames = np.stack(
@@ -268,21 +227,13 @@ def two_chains(
 
 @pytest.mark.parametrize(
     ("suffix", "tolerance_nm"),
-    # DCD and NetCDF store float32 angstroms, so the read is the written bytes
-    # exactly. TRR stores float32 nanometres, so the conversion costs up to two
-    # float32 ulps at 13 nm (2 x 2^-23 x 13 nm = 3.1e-6 nm). XTC is quantised to
-    # 0.001 nm, so rounds by half of that, plus the same float32 round-off.
+    # DCD and NetCDF are exact; TRR and XTC round as recorded in
+    # .knowledge/07-software-stack.md (trajectory formats).
     [(".dcd", 0.0), (".xtc", 5e-4 + 3.1e-6), (".trr", 3.1e-6), (".nc", 0.0), (".ncdf", 0.0)],
 )
 def test_ver48_each_trajectory_format_reads(
     two_chains: tuple[Path, np.ndarray], suffix: str, tolerance_nm: float, tmp_path: Path
 ) -> None:
-    """DCD, XTC, TRR and NetCDF written from a 2WCD subset read back (IF-04).
-
-    Exact to the float32 bytes written for DCD and NetCDF, which store
-    angstroms; within float32 round-off for TRR, which stores nanometres; within
-    XTC's 0.001 nm quantisation.
-    """
     topology, frames = two_chains
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -298,7 +249,6 @@ def test_ver48_each_trajectory_format_reads(
 def test_ver48_frame_selection_and_the_time_gate(
     two_chains: tuple[Path, np.ndarray], tmp_path: Path
 ) -> None:
-    """The stride ends on the last frame; an untimed DCD's span refuses ``last_ns``; count > N."""
     times = [0.005 * k for k in range(1000)]
     window = select_frames(times, 0.005, last_ns=5.0, count=50)
     assert window.indices == tuple(range(19, 1000, 20))
@@ -325,12 +275,6 @@ def test_ver48_frame_selection_and_the_time_gate(
 def test_ver48_the_last_ns_window_does_not_depend_on_the_float32_timestep(
     dt_ps: float, tmp_path: Path
 ) -> None:
-    """A DCD stores its timestep as a float32, and the window stays inclusive for all of them.
-
-    1 ps reads back as 1.0000000328 ps and 10 ps as 9.99999996 ps, so times accumulated as
-    ``frame * dt`` drift in opposite directions. The frame exactly ``last_ns`` before the
-    last one is in the window either way (CODE_REVIEW_003 CR-3, WP18 plan D5).
-    """
     frames = 1001
     universe = mda.Universe.empty(4, trajectory=True)
     universe.load_new(
@@ -353,7 +297,6 @@ def test_ver48_the_last_ns_window_does_not_depend_on_the_float32_timestep(
 
 
 def _edited(path: Path, tmp_path: Path, name: str, edit: object) -> Path:
-    """Write a copy of ``path`` with ``edit`` applied to its ATOM lines."""
     lines = path.read_text().splitlines()
     atoms = [index for index, line in enumerate(lines) if line.startswith("ATOM")]
     edit(lines, atoms)  # type: ignore[operator]
@@ -364,7 +307,6 @@ def _edited(path: Path, tmp_path: Path, name: str, edit: object) -> Path:
 
 @pytest.fixture(scope="module")
 def dodecamer_pdb(dodecamer_2wcd: mda.AtomGroup, tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Chains A-L of 2WCD, as deposited, as a plain PDB the refusal cases edit."""
     group = dodecamer_2wcd
     return _write(group, group.positions[None], tmp_path_factory.mktemp("refusals") / "al.pdb")
 
@@ -396,6 +338,7 @@ def _rename_residue(lines: list[str], atoms: list[int]) -> None:
             lines[index] = line[:17] + "TRP" + line[20:]
 
 
+# FR-03, QR-12
 @pytest.mark.parametrize(
     ("edit", "chains", "point_group", "message"),
     [
@@ -415,7 +358,6 @@ def test_ver48_input_refusals(
     point_group: str,
     message: str,
 ) -> None:
-    """Each input the §5.3.1 NOTE refuses is refused naming the atom or the chain (FR-03, QR-12)."""
     path = dodecamer_pdb if edit is None else _edited(dodecamer_pdb, tmp_path, "edited.pdb", edit)
     case = _case(tmp_path, _block(path, chains=chains, point_group=point_group))
     with pytest.raises(StructureInputError, match=message):
@@ -430,11 +372,6 @@ def _alternate_in_chain_l(lines: list[str], atoms: list[int]) -> None:
 def test_ver48_element_and_location_refusals_apply_to_the_listed_chains(
     dodecamer_pdb: Path, tmp_path: Path
 ) -> None:
-    """An alternate location in a chain ``source.chains`` leaves out is not refused (§5.3.1 NOTE).
-
-    The chains a case lists are the selected ones; the same file with every
-    chain selected is refused naming the atom.
-    """
     path = _edited(dodecamer_pdb, tmp_path, "alternate_l.pdb", _alternate_in_chain_l)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -445,17 +382,17 @@ def test_ver48_element_and_location_refusals_apply_to_the_listed_chains(
         select(universe, selection="protein", chains="all", n=12)
 
 
+# QR-12
 def test_ver48_a_malformed_selection_is_refused_naming_the_key(tmp_path: Path) -> None:
-    """A selection MDAnalysis cannot parse is a named refusal, not an unexpected error (QR-12)."""
     case = _case(tmp_path, _block(PDB, selection="protien"))
     with pytest.raises(StructureInputError, match=r"selection 'protien' is not an MDAnalysis"):
         run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
 
 
+# QR-12
 def test_ver48_a_trajectory_of_other_atoms_is_refused_naming_both_files(
     two_chains: tuple[Path, np.ndarray], tmp_path: Path
 ) -> None:
-    """A trajectory whose atom count is not the structure's is refused naming both (QR-12)."""
     topology, frames = two_chains
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -467,11 +404,6 @@ def test_ver48_a_trajectory_of_other_atoms_is_refused_naming_both_files(
 
 
 def test_ver48_mmcif_models_must_hold_the_same_atoms_in_order(tmp_path: Path) -> None:
-    """An mmCIF model listing the same atoms in another order is refused (IF-04).
-
-    Equal atom counts are not enough: with chain A moved after chain B in model
-    2, chain B's coordinates would otherwise be read onto chain A's topology.
-    """
 
     def two_models(swap: bool) -> Path:
         structure = gemmi.read_structure(str(CIF))
@@ -512,7 +444,6 @@ def test_ver48_mmcif_models_must_hold_the_same_atoms_in_order(tmp_path: Path) ->
     ],
 )
 def test_ver48_resolution_refusals(tmp_path: Path, block: str, message: str) -> None:
-    """The refusals that need no file are made by ``resolve()``, naming the key (§5.3.1 NOTE)."""
     key, _, value = block.partition(": ")
     options = {
         "point_group": {"point_group": value},
@@ -526,10 +457,6 @@ def test_ver48_resolution_refusals(tmp_path: Path, block: str, message: str) -> 
 
 
 def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) -> None:
-    """The ``.npz`` round-trips; the key is stable across processes; a hand edit reads as one.
-
-    The exported PDB and DCD reload through MDAnalysis to the same coordinates.
-    """
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
     result = run_case(case, store=store, upto="structure", write=False)
@@ -553,7 +480,6 @@ def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) ->
     )
     assert other.stdout.strip() == artefact.hash
 
-    # A second run is a cache hit, and a hand edit of the payload is recorded as one.
     assert run_case(case, store=store, upto="structure", write=False).stages[-1].cached
     stored = store.get(artefact.schema, artefact.hash)
     assert stored is not None
@@ -588,13 +514,6 @@ def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) ->
 def test_ver48_an_export_keeps_chains_distinct_whatever_their_keys(
     chains: list[str], tmp_path: Path
 ) -> None:
-    """A key longer than the PDB chain column keeps its chain: the writer's ``X`` merged them.
-
-    Stage 1 keys chains by segid where the chain column is blank, so ``PROA``/``PROB`` and
-    two-character mmCIF identifiers are admitted. The export gives each chain its own
-    character and writes the key in the segid columns; read back, the partition is the
-    original one (CODE_REVIEW_003 CR-9).
-    """
     atoms = len(chains)
     ensemble = AlignedEnsemble(
         positions_nm=np.random.default_rng(1).random((2, atoms, 3)).astype(np.float32),
@@ -615,7 +534,6 @@ def test_ver48_an_export_keeps_chains_distinct_whatever_their_keys(
     assert [ids[i] == ids[0] for i in range(atoms)] == [chain == chains[0] for chain in chains]
     if chains[0] == "PROA":
         assert [str(value) for value in written.segids] == chains
-    # Single-character keys are written as they are.
     letters = ["A", "A", "B", "B", "C", "C"][:atoms]
     plain = dataclasses.replace(ensemble, chain=np.array(letters))
     pdb_plain, _ = plain.export(tmp_path, stem="plain")
@@ -625,11 +543,6 @@ def test_ver48_an_export_keeps_chains_distinct_whatever_their_keys(
 
 
 def test_ver48_insertion_codes_survive_the_artefact_and_its_export(tmp_path: Path) -> None:
-    """Residues 27 and 27A stay two residues through the ``.npz`` and the PDB export (IF-04).
-
-    They share a residue number and differ only in insertion code, so an atom
-    table without one would merge them.
-    """
     ensemble = AlignedEnsemble(
         positions_nm=np.arange(12, dtype=np.float32).reshape(1, 4, 3),
         element=np.array(["N", "C", "N", "C"]),
@@ -654,8 +567,8 @@ def test_ver48_insertion_codes_survive_the_artefact_and_its_export(tmp_path: Pat
     ]
 
 
+# FR-01
 def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> None:
-    """Frames ``R_k x + t_k`` of the prepared 2WCD superpose on the first to zero RMSD (FR-01)."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         group = mda.Universe(str(prepared)).atoms
@@ -676,16 +589,9 @@ def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> 
 
 
 def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
-    """A full walk selects every stage; ``upto`` must name a stage the case has (IF-02).
-
-    A ``structure:`` case's full walk reaches every stage (section 5.3.1 NOTE on
-    ``structure:``). The walk itself is Tier 2's (``test_pipeline_2wcd.py``).
-    """
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
     assert "region" in selected_stages(resolve(load_case(case)), None)
-    # Both halves of stage 7 follow the mesh: the case protonates and its model
-    # declares fixed_charge, so its charge is deposited (WP28 D8).
     assert selected_stages(resolve(load_case(case)), "solve")[-6:] == (
         "region",
         "mesh",
@@ -706,7 +612,6 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
 
 
 def test_ver48_a_sweep_over_a_structure_case_plans(prepared: Path, tmp_path: Path) -> None:
-    """A sweep over a ``structure:`` case plans through stage 5."""
     from nanopnp.sweep.plan import plan_from_document
 
     case = _case(tmp_path, _block(prepared))
@@ -725,7 +630,6 @@ def test_ver48_a_sweep_over_a_structure_case_plans(prepared: Path, tmp_path: Pat
 
 
 def test_ver48_structure_beside_a_supplied_mesh_is_refused(tmp_path: Path) -> None:
-    """A supplied mesh means stage 1 never runs, so ``structure:`` beside it is refused."""
     case = _case(tmp_path, _block(PDB, chains=DODECAMER))
     text = case.read_text().replace(
         "structure:\n", "inputs:\n  mesh: {path: pore.msh, format: msh41}\nstructure:\n", 1
@@ -738,19 +642,17 @@ def test_ver48_structure_beside_a_supplied_mesh_is_refused(tmp_path: Path) -> No
 def test_ver48_axis_z_on_the_prepared_copy_is_refused_by_the_budget(
     prepared: Path, tmp_path: Path
 ) -> None:
-    """``axis: z`` on a copy 4 degrees off z is refused, naming the tilt and displacement."""
     case = _case(tmp_path, _block(prepared, axis="z"))
     with pytest.raises(SymmetryGateError, match=r"axis: z displacement gate: .* \(tilt 4\.000"):
         run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
 
 
+# VER-25
 def test_ver48_the_stage_is_created_through_the_registry() -> None:
-    """``create("structure")`` returns the stage its registry entry describes (VER-25)."""
     stage = create("structure")
     assert stage.describe().name == "structure"
     assert stage.describe().number == 1
 
 
 def test_ver48_minimal_rotation_is_the_identity_on_z() -> None:
-    """The frame rotation of an axis already on z is the identity (D8)."""
     assert np.array_equal(minimal_rotation(np.array([0.0, 0.0, 1.0])), np.eye(3))
