@@ -401,7 +401,7 @@ repository holds a logger.
 **Measured.** A density map written before the ångström convention of §8.2.2 B10 is read without
 refusal, ten times off.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D6: `DensityMap.read` refuses an interchange file whose spacing lies outside FR-04's 0.025-0.05 nm, saying a map is written in ångströms; `GRID_SPACING_RANGE_NM` lives in `density/map.py` and `pipeline/case.py` imports it.
 
 ### REV-41 — No prepare command, upto on reproduce, or region export
 

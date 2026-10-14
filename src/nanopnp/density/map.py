@@ -23,6 +23,9 @@ _INTERCHANGE: Mapping[str, str] = {".dx": "DX", ".ccp4": "MRC", ".mrc": "MRC", "
 # The interchange files' length unit.
 ANGSTROM_PER_NM = 10.0
 
+# FR-04's density grid spacing, 0.25-0.5 Å (SPECIFICATION.md section 5.3.1 NOTE).
+GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
+
 # gridData writes an OpenDX delta to seven significant figures.
 SPACING_TOLERANCE_NM = 1e-6
 
@@ -122,6 +125,13 @@ class DensityMap:
         delta = np.asarray(data.delta, dtype=np.float64).reshape(-1)[:3] / ANGSTROM_PER_NM
         # MRC's float32 returns 0.5 Å as 0.500000007; seven figures reads it as the double 0.05 nm.
         h = float(f"{float(delta[0]):.7g}")
+        low, high = GRID_SPACING_RANGE_NM
+        if not low <= h <= high:
+            raise GridFormatError(
+                f"{path.name!r} has a spacing of {h:g} nm, outside FR-04's {low:g}-{high:g} nm "
+                f"(0.25-0.5 A). A density map is written in angstroms (IF-05); a file written in "
+                f"nm reads ten times too small"
+            )
         nx, ny, nz = (int(size) for size in array.shape)
         # An origin off the lattice would shift every value by up to h/2 if rounded.
         nodes = np.rint(origin / h)

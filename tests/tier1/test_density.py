@@ -471,3 +471,18 @@ def test_ver49_2wcd_resolves_every_atom(prepared_2wcd: Prepared2WCD) -> None:
     assert int(np.sum(group.resnames == "HIS")) == 120
     assert math.isclose(float(radii.radii_nm.max()), 0.2275)
     assert math.isclose(float(radii.radii_nm.min()), 0.170)
+
+
+# IF-05
+def test_ver49_nm_written_map_is_refused(tmp_path: Path) -> None:
+    from gridData import Grid
+
+    spacing_nm = 0.05
+    raw = np.ones((5, 5, 5))
+    for suffix, file_format in ((".dx", "DX"), (".ccp4", "MRC")):
+        path = tmp_path / f"in-nm{suffix}"
+        Grid(grid=raw, origin=(-0.1,) * 3, delta=(spacing_nm,) * 3).export(
+            str(path), file_format=file_format
+        )
+        with pytest.raises(GridFormatError, match=r"written in angstroms.*nm reads ten times"):
+            DensityMap.read(path)

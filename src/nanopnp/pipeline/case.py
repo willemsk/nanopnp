@@ -15,6 +15,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
+from nanopnp.density.map import GRID_SPACING_RANGE_NM
 from nanopnp.io.artefact import CaseArtefact, StageInputs
 from nanopnp.io.case import (
     CaseDocument,
@@ -44,10 +45,6 @@ from nanopnp.pipeline.checks import (
     element_orders,
     require_runnable,
 )
-
-# FR-04's density grid spacing, 0.25-0.5 Å (SPECIFICATION.md section 5.3.1 NOTE).
-GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
-
 
 _POINT_GROUP = re.compile(r"C([1-9][0-9]*)")
 

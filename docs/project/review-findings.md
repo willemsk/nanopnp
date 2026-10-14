@@ -59,7 +59,7 @@ is a rolling register, and its header stays `open`.
 | REV-37 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [A broken gmsh wheel is not a refusal](review-items.md#rev-37-a-broken-gmsh-wheel-is-not-a-refusal) |
 | REV-38 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [gmsh.model.remove() can mask the error it follows](review-items.md#rev-38-gmshmodelremove-can-mask-the-error-it-follows) |
 | REV-39 | interface | low | deferred | §8.2.9 I3 | [A case supplying inputs.profile gets no contour editor](review-items.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor) |
-| REV-40 | interface | low | accepted | §8.2.9 I2 | [DensityMap.read accepts a file written in nm](review-items.md#rev-40-densitymapread-accepts-a-file-written-in-nm) |
+| REV-40 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [DensityMap.read accepts a file written in nm](review-items.md#rev-40-densitymapread-accepts-a-file-written-in-nm) |
 | REV-41 | interface | low | deferred | §8.2.9 I3 | [No prepare command, upto on reproduce, or region export](review-items.md#rev-41-no-prepare-command-upto-on-reproduce-or-region-export) |
 | REV-42 | interface | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [pnp carries inert flow keys](review-items.md#rev-42-pnp-carries-inert-flow-keys) |
 | REV-43 | process | low | accepted | §8.2.9 I2 | [chain_characters duplicates the export's mapping](review-items.md#rev-43-chain_characters-duplicates-the-exports-mapping) |
