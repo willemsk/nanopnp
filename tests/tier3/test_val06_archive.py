@@ -1,21 +1,4 @@
-"""VAL-06 at Tier 3, recorded: the ClyA-AS ensemble against APBS (WP29 D14).
-
-The author's PQRs 50-99 are the paper's 50 frames (``.knowledge/04`` §1.1),
-supplied through ``inputs.pqr`` beside the ClyA-AS ``structure:``; with
-``centre_z_nm = 0`` the model frame is the MD frame (G9), as in
-``test_charge_archive``. The case is ``poisson`` at zero bias, at ``P2`` and ``P3``.
-
-Recorded, not gated (section 7.1):
-
-1. the gated construction once, on the frame-averaged deposit: the budget, the
-   charge's visibility and the agreement, with :func:`check_report`'s verdict;
-2. the recorded leg on every frame, APBS's ``spl4`` and ``smol`` from that frame's
-   PQR with the membrane imposed: each frame's ring-mean agreement with ours,
-   and the frames' mean of APBS's ring means against ours.
-
-About 75 minutes, most of it 100 APBS runs at 193^3. Skips without the archive;
-the box is refused, naming its face, if the ensemble's charge does not fit it.
-"""
+"""VAL-06 at Tier 3, recorded: the ClyA-AS ensemble against APBS."""
 
 from __future__ import annotations
 
@@ -58,10 +41,8 @@ logger = logging.getLogger(__name__)
 ARCHIVED = [
     reference_file(f"prod5_protein_aligned_100ps_{number:02d}.pdb.pqr") for number in range(50, 100)
 ]
-"""The PQRs of the paper's 50 frames, in time order: DCD frames 48-97."""
 
 GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
-"""G9: the MD frame's bilayer centre is z = 0, so the model frame is the stage-1 frame."""
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -82,7 +63,6 @@ physics:
 numerics: {{continuation: none, elements: {{phi: P{order}, c: P{order}}}}}
 outputs: []
 """
-"""D1 on the ensemble: ``poisson`` at zero bias on the archived charge."""
 
 pytestmark = pytest.mark.skipif(
     any(path is None for path in ARCHIVED),
@@ -91,7 +71,6 @@ pytestmark = pytest.mark.skipif(
 
 
 def _bundle(target: Path) -> Path:
-    """Write PQRs 50-99 as one multi-MODEL PQR, one MODEL per frame, as ``test_charge_archive``."""
     with target.open("w", encoding="utf-8") as handle:
         for model, path in enumerate(ARCHIVED, start=1):
             assert path is not None
@@ -109,7 +88,6 @@ def test_val06_the_ensemble_against_apbs_gated_construction_and_per_frame(
     ensemble_case: Callable[..., Path],
     apbs: None,
 ) -> None:
-    """Both legs on the archive; recorded, with the gated construction's verdict logged."""
     root = tmp_path_factory.mktemp("clya-as-val06")
     bundle = _bundle(root / "archived.pqr")
     structured = ensemble_case(root, name="clya-as-val06", geometry=GEOMETRY)

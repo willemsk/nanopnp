@@ -1,29 +1,4 @@
-"""Tier 3: the four-rung ladder, against the archive and against ourselves.
-
-VAL-01, VAL-02, VAL-04. **Recorded, not gated** (§7.1, §7.6): §7.4's 1 % and 0.5 %
-targets apply only once the matching stabilised mode exists *and* the meshes have
-been convergence-matched. WP12 delivered the first; the second is not this
-package's to achieve. So nothing here asserts a discrepancy is small. What is
-asserted is that the numbers are *attributable*: that four rungs were compared
-against one golden on one probe grid with one set of masks, that the deltas
-telescope, and that the report says which of them could be a defect.
-
-Two tests, and they answer different questions.
-
-The **archive** test is the real one and it **skips** where
-``$NANOPNP_REFERENCE_DATA`` is unset or does not hold the golden. Section 7.1's
-NOTE is explicit: an unavailable reference is missing evidence, not a defect, and
-a test that failed on one would make the tier unrunnable off the machine that
-holds the archive.
-
-The **self-golden** test runs everywhere, and its report carries
-``golden_source: self``. It tests the machinery and nothing else — no number it
-produces says anything about the reference implementation — and the point of
-running the *full* ladder against it is that ``Delta_resid`` is then known in
-advance: rung 3 generated the golden, so its distance from it is exactly zero,
-and every other rung's distance is a real measurement of what that rung's
-configuration costs on this discretisation.
-"""
+"""VAL-01, VAL-02 and VAL-04 at Tier 3: the four-rung ladder, against the archive and itself."""
 
 from __future__ import annotations
 
@@ -81,35 +56,17 @@ patches:
 REFERENCE_PROBE = Path("docs/validation/probes/clya-reference.probe.yaml")
 FROZEN_CASES = Path("docs/validation/cases")
 ARCHIVE_SUBDIR = "comsol"
-"""Where ``ingest-golden`` is expected to have written under the archive root.
-
-``$NANOPNP_REFERENCE_DATA/comsol/<case>/<refinement>/golden.npz``, which is the
-layout ``docs/validation/comsol-export-contract.md`` asks the author for.
-"""
 
 GENERATING_RUNG = len(LADDER) - 1
-"""The rung a self-golden is made from: the last one, so ``Delta_resid`` vanishes.
-
-``Delta_resid = E_3`` by construction, so making the golden from any other rung
-would leave the one delta §7.4's targets apply to as an unpredicted number in a
-test whose whole value is that every number in it is predicted.
-"""
 
 
 def _order(element: str) -> int:
-    """Return the polynomial degree a ``P<n>`` element name carries."""
     return int(element[1:])
 
 
 @pytest.fixture(scope="module")
 def solved_ladder():
-    """Return one converged solution per rung, on one mesh, plus the probe grid.
-
-    Four full ePNP-NS solves. The flow must be *on*: rungs 2 and 3 differ only in
-    the velocity and pressure spaces, and a classical truncation that solved no
-    flow would make ``Delta_pair`` identically zero for a reason that has nothing
-    to do with the discretisation.
-    """
+    # The flow stays on: rungs 2 and 3 differ only in the velocity and pressure spaces.
     mesh = PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
     solutions = []
     for rung in LADDER:
@@ -145,17 +102,6 @@ def solved_ladder():
 
 
 def test_val01_full_ladder_against_a_self_golden(solved_ladder, tmp_path: Path) -> None:
-    """The whole ladder against one of our own solutions: every number predicted.
-
-    ``Delta_resid`` is exactly zero because rung 3 generated the golden. The
-    identity telescopes. The report says ``golden_source: self``, which is what
-    keeps a reader from mistaking any of it for a statement about COMSOL.
-
-    The other three deltas are **measurements**, recorded and not gated: what the
-    transport stabilisation, the flow GLS term and the element pair each cost on
-    this benchmark's discretisation. They are logged rather than bounded, because
-    bounding them here would be inventing a tolerance §7.4 does not give.
-    """
     document, grid, _, sampled = solved_ladder
 
     manifest = GoldenManifest.model_validate(
@@ -226,20 +172,6 @@ def test_val01_full_ladder_against_a_self_golden(solved_ladder, tmp_path: Path) 
 
 
 def test_val01_val02_val04_attribution_against_the_archive() -> None:
-    """The ladder on the five frozen cases against the archived COMSOL goldens.
-
-    **Recorded, not gated.** The deltas, ``Delta_ref`` and the verdict are written
-    to a report and logged; no threshold is asserted, because §7.4's targets are
-    conditional on both of its preconditions and only one of them holds.
-
-    **Skips** where ``$NANOPNP_REFERENCE_DATA`` is unset or holds no golden: an
-    unavailable reference is missing evidence, not a defect (§7.1 NOTE).
-
-    It also needs the ladder sweep to have been *run*, because the comparison is
-    post-processing and never solves (:mod:`nanopnp.validation.runs`); the run
-    directory is named by ``$NANOPNP_LADDER_RUNS``. Without it the archive is
-    present and the solves are not, which is again missing evidence.
-    """
     import os
 
     root = reference_data_root()
@@ -329,6 +261,5 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
 
 
 def _currents(recorded: Mapping[str, object]) -> Mapping[str, float] | None:
-    """Return the recorded per-species stabilisation contribution, or ``None``."""
     value = recorded.get("stabilisation_currents_A")
     return dict(value) if isinstance(value, dict) else None

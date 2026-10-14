@@ -1,15 +1,4 @@
-"""VER-48 on the author's ClyA-AS ensemble: stage 1 over all 98 frames, recorded.
-
-The archive is ``prod5_clya_as.{pdb,dcd}`` under ``$NANOPNP_REFERENCE_DATA``:
-54,075 atoms, protein and hydrogens only, chains A-L with 286 C-alpha each, and a
-DCD whose time metadata reads 1.0 ps per frame
-(``.knowledge/04-clya-geometry-and-charge.md`` §1.1). It is the author's and is
-not vendored, so the test skips visibly without it.
-
-Every frame is taken, because which 50 made the paper's ensemble is unresolved
-(WP18 open question 1, gap G1). The gates must pass; the drift, the RMSD and the
-tilt are recorded, not gated (section 7.1: Tier 3 is recorded).
-"""
+"""VER-48 on the author's ClyA-AS ensemble: stage 1 over all 98 frames, recorded."""
 
 from __future__ import annotations
 
@@ -35,7 +24,6 @@ needs_archive = pytest.mark.skipif(
 
 @needs_archive
 def test_ver48_clya_as_ensemble(tmp_path: Path) -> None:
-    """All 98 frames pass the stage-1 gates; drift, RMSD and tilt are logged (VER-48)."""
     case = tmp_path / "clya-as.case.yaml"
     case.write_text(
         "schema: nanopnp/case/v0.5\n"
