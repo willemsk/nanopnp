@@ -319,8 +319,8 @@ class StructureStage:
         """
         structure = _structure(inputs)
         parameters = structure_parameters(structure)
+        directory = scratch_directory(self._workspace, self.name)
         alignment = align(structure, parameters=parameters, progress=progress, cancel=cancel)
-        directory = scratch_directory(self._workspace, "structure")
         path = alignment.ensemble.write(directory / f"{PAYLOAD_NAME}.npz")
         summary = {**alignment.ensemble.header, "payload_digest": alignment.ensemble.digest()}
         return StructureArtefact(

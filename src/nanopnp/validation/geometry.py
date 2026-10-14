@@ -488,13 +488,11 @@ def attribute_to_construction(
         If ``comparison`` was not made on the planes this binned comparison uses, or leaves a
         plane outside the tip band uncrossed.
     """
+    import numpy as np
+
     direct = comparison if comparison is not None else compare_profiles(ours, reference)
-    low, high = direct.tips_reference_nm
-    loose = [
-        z
-        for z in direct.uncrossed_planes_nm
-        if not (z - low <= TIP_BAND_NM or high - z <= TIP_BAND_NM)
-    ]
+    uncrossed = np.asarray(direct.uncrossed_planes_nm, dtype=np.float64)
+    loose = uncrossed[~_in_tip_band(uncrossed, *direct.tips_reference_nm, TIP_BAND_NM)].tolist()
     if loose:
         raise GeometryComparisonError(
             f"the comparison supplied leaves {len(loose)} plane(s) outside the {TIP_BAND_NM:g} nm "

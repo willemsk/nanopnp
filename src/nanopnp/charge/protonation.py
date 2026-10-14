@@ -73,8 +73,6 @@ logger = logging.getLogger(__name__)
 PAYLOAD_NAME = "protonation"
 """The artefact's payload key, and the ``.npz`` file's stem."""
 
-"""Directory under the store root the payload is written to when no workspace is given."""
-
 FIXED_FLAGS: tuple[str, ...] = ("--drop-water", "--keep-chain")
 """PHY-16 step 3's flags that no case key sets."""
 

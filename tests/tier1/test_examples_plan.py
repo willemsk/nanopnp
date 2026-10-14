@@ -193,7 +193,9 @@ def test_ver46_example_05_renders_one_dependent_array_per_wave(planned: Path) ->
     assert f"--job-name={plan['name']}\n" in member
 
 
-def test_sbatch_values_are_raw_and_refused_when_unpassable(planned: Path, tmp_path: Path) -> None:
+def test_ver46_example_05_sbatch_values_are_raw_and_refused_when_unpassable(
+    planned: Path, tmp_path: Path
+) -> None:
     spec = importlib.util.spec_from_file_location("render_slurm", planned / "render_slurm.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

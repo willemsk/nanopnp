@@ -79,6 +79,7 @@ class SymmetryStage:
         """
         parameters = reduction_parameters(inputs)
         density = inputs.require("density")
+        directory = scratch_directory(self._workspace, self.name)
         check_cancelled(cancel, "reading the density map")
         report(progress, 0.0, "reading the density map")
         source = DensityMap.read(density.payload[DENSITY_PAYLOAD])
@@ -86,7 +87,6 @@ class SymmetryStage:
         reduced = reduce_map(source, n, progress=progress, cancel=cancel)
         maximum = reduced.header["maximum"]
         logger.info("reduction: C%d over %d bins; maxima %s", n, len(reduced.r_nm), maximum)
-        directory = scratch_directory(self._workspace, "symmetry")
         path = reduced.write(directory / f"{PAYLOAD_NAME}.npz")
         report(progress, 1.0, "reduction written")
         return ReducedArtefact(

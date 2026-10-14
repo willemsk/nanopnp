@@ -3,6 +3,7 @@
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -366,6 +367,7 @@ root, name, go = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
 source = root / name / "fields.bin"
 source.write_bytes(name.encode() * 200_000)
 artefact = Artefact(schema=SOLUTION_SCHEMA, parameters={"k": 1}, payload={"fields": source})
+(root / f"{name}.ready").touch()
 while not go.exists():
     time.sleep(0.001)
 stored = Store(root / "store").put(artefact)
@@ -383,8 +385,17 @@ def test_ver26_two_processes_race(tmp_path: Path) -> None:
         )
         for name in ("a", "b")
     ]
-    go.touch()
-    outputs = [process.communicate(timeout=120)[0].strip() for process in processes]
+    try:
+        # Released only once both have imported and built their artefact, or it is no barrier.
+        deadline = time.monotonic() + 120
+        while not all((tmp_path / f"{name}.ready").exists() for name in ("a", "b")):
+            assert time.monotonic() < deadline, "a writer never reached the barrier"
+            time.sleep(0.01)
+        go.touch()
+        outputs = [process.communicate(timeout=120)[0].strip() for process in processes]
+    finally:
+        for process in processes:
+            process.kill()
     assert [process.returncode for process in processes] == [0, 0]
 
     store = Store(tmp_path / "store")

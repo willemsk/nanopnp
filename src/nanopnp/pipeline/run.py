@@ -30,6 +30,7 @@ from nanopnp.core.stages import (
 from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
 from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store, atomic_write_bytes
+from nanopnp.mesh.sizing import case_debye_record
 from nanopnp.pipeline.case import loads_case, resolve
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -450,6 +451,19 @@ def _record(artefact: Artefact | None, keys: tuple[str, ...]) -> dict[str, Canon
     return {key: artefact.summary[key] for key in keys if key in artefact.summary}
 
 
+def _mesh_record(walk: _Walk, mesh: Artefact | None) -> dict[str, Canonicalisable] | None:
+    if mesh is None:
+        return None
+    record = dict(mesh.summary)
+    if walk.resolved.generates_mesh:
+        # Members whose salts size the wall alike share one stored mesh, so its summary holds the
+        # Debye length of whichever member meshed first, not this run's.
+        sizing = record["sizing"]
+        assert isinstance(sizing, dict)  # a generated mesh's summary carries its sizing block
+        record["sizing"] = {**sizing, **case_debye_record(walk.resolved)}
+    return record
+
+
 def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifest:
     case = walk.artefacts.get("case")
     structure = walk.artefacts.get("structure")
@@ -490,7 +504,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         case_hash=case.hash if case is not None else CaseArtefact(walk.document).hash,
         input_files=input_files(walk.resolved, case_path),
         upstream=dict(walk.artefacts),
-        mesh=dict(mesh.summary) if mesh is not None else None,
+        mesh=_mesh_record(walk, mesh),
         structure=_record(structure, STRUCTURE_RECORD_KEYS),
         density=_record(density, DENSITY_RECORD_KEYS),
         reduction=_record(symmetry, REDUCTION_RECORD_KEYS),

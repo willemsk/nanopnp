@@ -88,8 +88,8 @@ Tier 1 unless stated; command `uv run pytest --extended`, then `.claude/hooks/ga
 | `test_stage_workspace.py:: (new) test_stage_without_workspace_refuses_scratch` | — | Each scratch-writing stage of the registry, run without a workspace, raises `MissingWorkspaceError` naming `workspace`; none writes under `store_root()` |
 | `test_structure_stage.py::test_ver48_*` (zero frames, duplicate Cα, wrapped chain, DCD frame times) | VER-48 | Each refusal names what D5 says; DCD times equal decoded times exactly with zero frames decoded; 2WCD passes |
 | `test_density.py::test_ver49_nm_written_map_is_refused` | VER-49 | A map exported with spacing divided by ten is refused saying nm; the existing exports still read |
-| `test_val05_geometry.py::test_lax_comparison_is_refused_by_attribution` | — | `GeometryComparisonError`, not `MissingPlaneError` |
-| `test_examples_plan.py::test_sbatch_values_are_raw_and_refused_when_unpassable` | — | A plain name appears unquoted; each forbidden character is refused naming its key |
+| `test_val05_geometry.py::test_val05_a_lax_comparison_is_refused_by_attribution` | — | `GeometryComparisonError`, not `MissingPlaneError` |
+| `test_examples_plan.py::test_ver46_example_05_sbatch_values_are_raw_and_refused_when_unpassable` | — | A plain name appears unquoted; each forbidden character is refused naming its key |
 | Tier 2 `test_axis_weight_order.py` | — | Unchanged result through `innermost_crossings` |
 | VER-61, VER-62, VER-63 | — | Layering, golden at 1e-8, the register's rows |
 

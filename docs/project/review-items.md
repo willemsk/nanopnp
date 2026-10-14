@@ -975,3 +975,42 @@ About 93 docstrings and 64 comments in `src/nanopnp` cite `FR-` or `NUM-` identi
 
 **Fixed** in WP45 (§8.2.11 L10): `test_prose_share.py` uses `same_tree.is_directive`, and VER-75 (b) names the shebang and coding line.
 
+### REV-98 — The scratch directory is the workspace itself, where the specification says fresh per run
+
+*Area:* interface. *Severity:* medium. *Found:* WP46 review (finding 6).
+
+`scratch_directory` returns the workspace, created. The workspace-locality NOTE in §5.3.2 says the scratch directory is fresh per run, and plan D4 ruled a fresh `mkdtemp` inside the workspace. Two runs of one `ProtonationStage(workspace=w)` overwrite `w/protonation.npz` and `w/frame-N/*`, so the first run's payload, when no store is attached, disagrees with its recorded digest.
+
+**Open**: the author rules whether to restore the `mkdtemp` (the plan and the NOTE stand) or amend the NOTE to name the workspace itself and its single-use contract.
+
+### REV-99 — A put killed before the rename leaves a hidden staging directory nothing reclaims
+
+*Area:* coupling. *Severity:* low. *Found:* WP46 review (finding 12).
+
+A `put` killed between `staging.mkdir` and the rename (a SLURM time limit, SIGKILL) leaves a hidden `.<digest>.<pid>.<token>` directory with a full copy of the payload, in `artefacts/<slug>/<fanout>/`. Nothing enumerates or removes it.
+
+**Open**: the author rules whether the store gains a sweep of stale staging directories.
+
+### REV-100 — A put copies and hashes a payload before learning the key is already stored
+
+*Area:* performance. *Severity:* low. *Found:* WP46 review (finding 13).
+
+`put` stages and hashes every payload before it finds a complete entry under the key, then discards the copy. A worker that lost the race pays the full cost of a large solution payload.
+
+**Open**: the author rules whether `put` checks for an existing entry first.
+
+### REV-101 — A pre-WP46 charge-grid npz in a store is served under an unchanged key
+
+*Area:* numerics. *Severity:* low. *Found:* WP46 review (finding 14).
+
+The charge-grid key did not move when REV-14 added `origin_nm` and `spacing_nm` to the `.npz`. A legacy axes-only entry is still a cache hit, whose grid differs from a fresh run's in the last bits.
+
+**Open**: the author rules whether the key moves, as the mesh keys did, or the difference is accepted.
+
+### REV-102 — frame_times reads a private MDAnalysis attribute
+
+*Area:* coupling. *Severity:* low. *Found:* WP46 review (finding 15).
+
+`frame_times` reads `trajectory._file.header` and copies the expression of `DCDReader._frame_to_ts`, to avoid decoding frames. A release that renames `_file` or changes how `ts.time` is derived makes the DCD branch raise `AttributeError` or disagree with `step.time`.
+
+**Open**: the author rules whether to keep it behind a version-pinned test or decode the frames.

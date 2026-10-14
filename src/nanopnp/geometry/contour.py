@@ -775,6 +775,7 @@ class ContourStage:
         structure = inputs.require("structure")
         symmetry = inputs.require("symmetry")
         h = density.grid_spacing_nm
+        directory = scratch_directory(self._workspace, self.name)
 
         check_cancelled(cancel, "reading the reduced map")
         report(progress, 0.0, "reading the reduced map")
@@ -814,7 +815,6 @@ class ContourStage:
             ),
             vertices=[(float(r), float(z)) for r, z in loop],
         )
-        directory = scratch_directory(self._workspace, "contour")
         path = write_profile(profile, directory / f"{PAYLOAD_NAME}.yaml")
         logger.info(
             "contour: %d vertices, spacing %.4f nm, feature size %.4f nm, band [%+.3f, %+.3f] nm, "

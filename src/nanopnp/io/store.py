@@ -63,7 +63,10 @@ class Store:
         return (self.location(artefact.schema, artefact.hash) / META).is_file()
 
     def put(self, artefact: Artefact) -> Artefact:
-        """Write an artefact to the store and return it; StoreError if a payload is missing."""
+        """Store an artefact; return the entry held, the first writer's if the key was taken.
+
+        Raises StoreError if a payload is missing or the entry cannot be published.
+        """
         directory = self.location(artefact.schema, artefact.hash)
         for name, source in artefact.payload.items():
             if not Path(source).is_file():
@@ -157,16 +160,18 @@ class Store:
 def _publish(staging: Path, directory: Path) -> None:
     # A rename onto a non-empty directory fails: the first complete entry stays, and a
     # directory without a record (an older put's) is cleared and replaced.
+    refused: OSError | None = None
     for _ in range(3):
         try:
             staging.rename(directory)
-        except OSError:
+        except OSError as error:
             if (directory / META).is_file():
                 return
+            refused = error
             shutil.rmtree(directory, ignore_errors=True)
         else:
             return
-    raise StoreError(f"could not publish the artefact at {directory}")
+    raise StoreError(f"could not publish the artefact at {directory}: {refused}") from refused
 
 
 def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str, str]]:

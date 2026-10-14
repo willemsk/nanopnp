@@ -21,6 +21,7 @@ from nanopnp.mesh.sizing import (
     SizeTable,
     WallSize,
     corrected_debye_ratio,
+    debye_record,
     resolve_wall_size,
 )
 
@@ -189,11 +190,8 @@ class GeneratedMesh:
         """Return the manifest's ``sizing`` block, the mesher's version beside it."""
         return {
             **sizing_parameters(self.wall, self.sizes, self.backend, exclusion=self.exclusion),
-            "wall": self.wall.summary(),
+            **debye_record(self.wall, self.corrected_ratio),
             "backend_version": self.backend_version,
-            "debye_target_nm": self.wall.debye_target_nm,
-            "num30_ratio": self.wall.wall_h_nm / self.wall.debye_target_nm,
-            "num30_ratio_corrected": self.corrected_ratio,
             "wall_statistics": self.statistics.summary(),
         }
 

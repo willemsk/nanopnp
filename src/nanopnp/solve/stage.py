@@ -150,6 +150,8 @@ class SolveStage:
     ) -> SolutionArtefact:
         """Solve the case and emit the stage-10 artefact."""
         check_cancelled(cancel, "the solve")
+        # The payload is written only after the ladder has run; refuse a missing workspace first.
+        scratch_directory(self._workspace, self.name)
         report(progress, 0.0, "reading and gating the mesh")
         resolved, ingested, mesh_artefact, materials, fields_artefact, supplied = self._prepare(
             inputs, load=True
@@ -322,7 +324,7 @@ class SolveStage:
         mesh_content_hash: str,
         boundaries: CoupledBoundaries,
     ) -> dict[str, Path]:
-        directory = scratch_directory(self._workspace, "solve")
+        directory = scratch_directory(self._workspace, self.name)
         target = save(
             solution,
             directory / STATE_FILENAME,

@@ -509,7 +509,7 @@ def check_chains_whole(selection: Selection, positions: np.ndarray, frames: Sequ
     ------
     StructureInputError
         If two C-alpha of one chain at consecutive residue numbers, neither with an insertion
-        code, lie further apart than ``WRAP_BOUND_NM`` in a frame.
+        code and none inserted between them, lie further apart than ``WRAP_BOUND_NM`` in a frame.
     """
     import numpy as np
 
@@ -520,8 +520,16 @@ def check_chains_whole(selection: Selection, positions: np.ndarray, frames: Sequ
         for position, index in enumerate(carbons)
         if not str(table.icode[index])
     }
+    # Residues 52A to 52F lie between 52 and 53 in the chain, so that pair is not bonded.
+    inserted = {
+        (str(table.chain[index]), int(table.resid[index]))
+        for index in carbons
+        if str(table.icode[index])
+    }
     pairs = [
-        (key, (key[0], key[1] + 1)) for key in by_residue if (key[0], key[1] + 1) in by_residue
+        (key, (key[0], key[1] + 1))
+        for key in by_residue
+        if (key[0], key[1] + 1) in by_residue and key not in inserted
     ]
     if not pairs:
         return

@@ -718,6 +718,25 @@ def test_ver48_a_chain_wrapped_across_the_box_in_one_frame_is_refused(
 
 
 # QR-12
+def test_ver48_a_pair_across_an_inserted_residue_is_not_a_bonded_pair(
+    two_chains: tuple[Path, np.ndarray],
+) -> None:
+    topology, _ = two_chains
+    chosen = select(load_universe(topology), selection="protein", chains="all", n=2)
+    positions = positions_nm(chosen.group, [0])
+    positions[0, int(chosen.fit_index[10]) :] += np.array([0.0, 0.0, 10.0])
+    with pytest.raises(StructureInputError, match="residues 17 and 18 lie"):
+        check_chains_whole(chosen, positions, [0])
+
+    resid, icode = chosen.atoms.resid.copy(), chosen.atoms.icode.copy()
+    resid[chosen.fit_index[20]], icode[chosen.fit_index[20]] = 17, "A"
+    inserted = dataclasses.replace(
+        chosen, atoms=dataclasses.replace(chosen.atoms, resid=resid, icode=icode)
+    )
+    check_chains_whole(inserted, positions, [0])
+
+
+# QR-12
 def test_ver48_a_selection_without_consecutive_residues_has_nothing_to_check(
     two_chains: tuple[Path, np.ndarray],
 ) -> None:

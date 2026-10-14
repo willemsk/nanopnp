@@ -140,11 +140,11 @@ def _shell(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[floa
     return (float(inner), float(outer))
 
 
-def _solution(inputs: StageInputs, *, solving: bool) -> Artefact:
+def _solution(inputs: StageInputs, *, solving: bool, workspace: Path | None = None) -> Artefact:
     solution = inputs.upstream.get("solve")
     if solution is not None:
         return solution
-    stage = SolveStage()
+    stage = SolveStage(workspace=None if workspace is None else workspace / "solve")
     return stage.run(inputs) if solving else stage.key(inputs)
 
 
@@ -396,7 +396,7 @@ class ReportStage:
 
     def _hashes(self, inputs: StageInputs, *, solving: bool) -> tuple[str, Artefact, Artefact]:
         qoi = inputs.require("qoi")
-        solution = _solution(inputs, solving=solving)
+        solution = _solution(inputs, solving=solving, workspace=self._workspace)
         case = inputs.upstream.get("case")
         case_hash = case.hash if case is not None else CaseArtefact(inputs.resolved.document).hash
         return case_hash, qoi, solution
@@ -482,4 +482,4 @@ class ReportStage:
         return payload, record
 
     def _directory(self) -> Path:
-        return scratch_directory(self._workspace, "post")
+        return scratch_directory(self._workspace, self.name)
