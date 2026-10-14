@@ -1,3 +1,5 @@
+"""The commit hook, gate script and session-start hook, run on temporary repositories."""
+
 from __future__ import annotations
 
 import json
@@ -81,12 +83,6 @@ def test_session_start_preserves_remote_frozen_sync(
 def test_session_start_installs_gmsh_libraries_or_names_them(
     hook_repo: Path, monkeypatch: pytest.MonkeyPatch, apt_works: bool
 ) -> None:
-    """A Gmsh that cannot find libGLU gets its libraries, or one line naming them.
-
-    ``gate.sh run`` requires Gmsh as CI does, so a fresh container without the
-    libraries would fail the push gate; installing them at start-up, where no
-    prompt is needed, keeps Gmsh's tests running instead of failing or skipping.
-    """
     venv = hook_repo / ".venv/bin"
     venv.mkdir(parents=True)
     fake_python = venv / "python"
@@ -128,11 +124,6 @@ def _git(repo: Path, *args: str) -> str:
 
 @pytest.fixture
 def worktree_pair(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]:
-    """Return a main checkout whose tree is stamped as passed, and a worktree with an edit.
-
-    ``uv`` on ``PATH`` always fails, so any tree the gate actually checks is refused:
-    an empty stdout from the hook means it gated nothing, or a stamped tree.
-    """
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
@@ -147,8 +138,6 @@ def worktree_pair(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path
     worktree = tmp_path / "worktree"
     _git(main, "worktree", "add", "-q", str(worktree))
     (worktree / "src/nanopnp/__init__.py").write_text("broken = (\n", encoding="utf-8")
-    # The stamp the gate writes after a pass: the tree id of the working copy and
-    # the selection that passed, here the commit hook's own.
     (Path(_git(main, "rev-parse", "--absolute-git-dir")) / "nanopnp-gate.pass").write_text(
         f"{_git(main, 'write-tree')} development", encoding="utf-8"
     )
@@ -163,7 +152,6 @@ def worktree_pair(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path
 
 
 def _hook(started_in: Path, session_dir: Path, command: str) -> str:
-    """Run the gate in hook mode from ``started_in``, as the harness does, and return stdout."""
     assert _BASH is not None
     payload = json.dumps({"cwd": str(session_dir), "tool_input": {"command": command}})
     result = subprocess.run(
@@ -197,13 +185,6 @@ def _run(repo: Path) -> subprocess.CompletedProcess[str]:
 def test_gate_hook_gates_the_worktree_a_session_commits_from(
     worktree_pair: tuple[Path, Path], session: str, command: str
 ) -> None:
-    """Started from the stamped main checkout, the hook still gates the session's worktree.
-
-    The harness starts the hook in the project directory, the main checkout, and
-    the payload's ``cwd`` says where the command runs; a relative ``-C`` resolves
-    against it, as git resolves it. Gating the hook's own directory let a worktree
-    commit through on the main checkout's stamp (WP32).
-    """
     main, worktree = worktree_pair
     session_dir = worktree if session == "worktree" else worktree.parent
     output = json.loads(_hook(main, session_dir, command))["hookSpecificOutput"]
@@ -212,14 +193,12 @@ def test_gate_hook_gates_the_worktree_a_session_commits_from(
 
 
 def test_gate_hook_follows_a_cd_before_the_commit(worktree_pair: tuple[Path, Path]) -> None:
-    """``cd <worktree> && git commit`` gates the worktree, wherever the session stood."""
     main, worktree = worktree_pair
     decision = json.loads(_hook(main, main, f"cd {worktree} && git add -A && git commit -m x"))
     assert decision["hookSpecificOutput"]["permissionDecision"] == "deny"
 
 
 def test_gate_hook_still_lets_a_stamped_tree_through(worktree_pair: tuple[Path, Path]) -> None:
-    """The session in the stamped main checkout commits without re-running anything."""
     main, _ = worktree_pair
     assert _hook(main, main, "git commit -m 'edit'") == ""
 
@@ -227,12 +206,6 @@ def test_gate_hook_still_lets_a_stamped_tree_through(worktree_pair: tuple[Path, 
 def test_gate_run_does_not_take_a_development_pass_for_its_own(
     worktree_pair: tuple[Path, Path],
 ) -> None:
-    """``gate.sh run`` adds the ``extended`` tests, so the hook's pass does not stand in for it.
-
-    The skills run it before they push, and CI gates the ``extended`` tests on every
-    push (section 7.6 NOTE): a tree that passed only the development selection is
-    gated again, here reaching the fake ``uv`` that refuses.
-    """
     main, _ = worktree_pair
     result = _run(main)
     assert result.returncode != 0
@@ -242,13 +215,6 @@ def test_gate_run_does_not_take_a_development_pass_for_its_own(
 def test_gate_run_on_a_clean_tree_runs_the_extended_tests_on_unpushed_code(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``gate.sh run`` on a committed tree reaches pytest with ``--extended``.
-
-    The skills commit, then run the gate before they push. Judged against HEAD,
-    that clean tree is all prose and pytest would be skipped while the stamp
-    claimed the extended pass; ``run`` judges what the push would send, here a
-    code commit on a branch never pushed (section 7.6 NOTE).
-    """
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
         monkeypatch.delenv(name, raising=False)
     repo = tmp_path / "repo"
@@ -285,14 +251,6 @@ def test_gate_run_on_a_clean_tree_runs_the_extended_tests_on_unpushed_code(
 def test_gate_run_on_an_already_pushed_branch_still_runs_the_extended_tests(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``gate.sh run`` judges the whole branch against ``main``, not its upstream.
-
-    ``/wp-ship`` and the steward run it on a branch already pushed, often from a
-    fresh container with no stamp. Against the upstream that clean branch has
-    nothing to send, reads as prose, and passed on ruff alone while stamping the
-    extended selection; CI's pull_request check compares base...head and runs
-    pytest (section 7.6 NOTE, PR 74 review).
-    """
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
         monkeypatch.delenv(name, raising=False)
     origin = tmp_path / "origin.git"
@@ -332,6 +290,7 @@ def test_gate_run_on_an_already_pushed_branch_still_runs_the_extended_tests(
 _PROSE_ONLY = Path(__file__).resolve().parents[2] / ".github/scripts/prose-only.sh"
 
 
+# VER-63
 @pytest.mark.parametrize(
     ("path", "prose"),
     [
@@ -351,10 +310,6 @@ _PROSE_ONLY = Path(__file__).resolve().parents[2] / ".github/scripts/prose-only.
     ],
 )
 def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) -> None:
-    """A findings log, and the pages VER-63 and test_plan_shape.py read, must run the tests.
-
-    WP35 D19; H12; REV-84.
-    """
     assert _BASH is not None
     result = subprocess.run(
         [_BASH, str(_PROSE_ONLY)], input=f"{path}\n", capture_output=True, text=True, timeout=10
@@ -363,7 +318,6 @@ def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) ->
 
 
 def _branch_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str) -> Path:
-    """Return a repository on a branch ``work`` whose one commit past ``main`` adds ``changed``."""
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.delenv("NANOPNP_REQUIRE_GMSH", raising=False)
@@ -386,7 +340,6 @@ def _branch_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str) 
 
 
 def _recording_uv(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, body: str = "") -> Path:
-    """Put a fake ``uv`` on ``PATH`` that logs ``<NANOPNP_REQUIRE_GMSH>|<args>`` per call."""
     calls = tmp_path / "uv-calls"
     binaries = tmp_path / "bin"
     binaries.mkdir()
@@ -509,6 +462,7 @@ def test_gate_commit_pass_keeps_the_push_gates_extended_line(
     assert len(lines) == 2 and lines[1].endswith(" development") and "b" * 40 not in lines[1]
 
 
+# VAL-06
 @pytest.mark.parametrize(
     ("system", "machine", "required"),
     [
@@ -521,12 +475,6 @@ def test_gate_commit_pass_keeps_the_push_gates_extended_line(
 def test_gate_run_requires_apbs_only_where_its_wheel_installs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, system: str, machine: str, required: str
 ) -> None:
-    """``gate.sh run`` requires APBS where ``apbs-binary`` installs, as CI's legs do (VAL-06).
-
-    The wheel exists for Linux x86_64 and macOS only (``pyproject.toml``, the
-    ``apbs`` group); elsewhere uv installs no binary, and requiring one would fail
-    VAL-06 on every run of the gate.
-    """
     monkeypatch.delenv("NANOPNP_REQUIRE_APBS", raising=False)
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     seen = tmp_path / "apbs-seen"
@@ -548,7 +496,6 @@ def test_gate_run_requires_apbs_only_where_its_wheel_installs(
         ("src/nanopnp/mesh/gmsh_backend.py", "y = 2\n", "1"),
         ("tests/tier1/test_mesh_gmsh.py", "y = 2\n", "1"),
         ("tests/tier2/test_mesh_backends.py", "y = 2\n", "1"),
-        # A test taking the fixture is Gmsh's wherever it lives, and so is the fixture.
         ("tests/tier1/test_mesh_quality.py", "def test_x(gmsh_module):\n    pass\n", "1"),
         ("tests/conftest.py", "def import_gmsh():\n    pass\n", "1"),
         ("tests/tier1/test_mesh_quality.py", "y = 2\n", "unset"),
@@ -558,7 +505,6 @@ def test_gate_run_requires_apbs_only_where_its_wheel_installs(
 def test_gate_hook_requires_gmsh_only_for_a_change_to_gmsh(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str, content: str, required: str
 ) -> None:
-    """The commit hook fails Gmsh's tests on a missing library only when the change is Gmsh's."""
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/other.py")
@@ -576,7 +522,6 @@ def test_gate_hook_requires_gmsh_only_for_a_change_to_gmsh(
 def test_gate_names_the_system_libraries_when_gmsh_cannot_import(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A Gmsh that cannot import fails ``run`` with the ``apt-get`` line that fixes it."""
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     failing = (
         'case "$*" in *--extended*) echo "Failed: NANOPNP_REQUIRE_GMSH=1 and gmsh does not '
@@ -592,11 +537,6 @@ def test_gate_names_the_system_libraries_when_gmsh_cannot_import(
 def test_gate_hook_requires_gmsh_for_a_tracked_change_beside_an_untracked_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A tracked Gmsh change still counts when an untracked file follows it in the path list.
-
-    ``grep -q`` exits at the first match; piped under ``pipefail`` the writer's
-    SIGPIPE once made the match read as a miss.
-    """
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/mesh/gmsh_backend.py")
@@ -644,7 +584,6 @@ def test_gate_run_stamps_extended_only_on_a_pass(
 def test_gate_run_stamps_nothing_when_the_tree_changes_while_it_runs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A background run vouches only for the tree it started on; an edit during it is refused."""
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     edit = f'case "$*" in *--extended*) echo "x = 3" > "{repo}/src/nanopnp/code.py";; esac\n'
     _recording_uv(tmp_path, monkeypatch, edit)
@@ -659,7 +598,6 @@ def test_gate_run_stamps_nothing_when_the_tree_changes_while_it_runs(
 def test_gate_run_waits_for_a_run_in_progress_and_takes_over_a_stale_lock(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """One run at a time: a live holder's PID makes a run wait; a dead one's is taken over."""
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     _recording_uv(tmp_path, monkeypatch)
     common = Path(_git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir"))
@@ -696,7 +634,6 @@ def test_gate_run_waits_for_a_run_in_progress_and_takes_over_a_stale_lock(
 def test_gate_run_reports_a_pass_in_one_line(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Started in the background, ``run`` prints its failures, or one line on a pass (D7)."""
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")
     _recording_uv(tmp_path, monkeypatch)
     result = _run(repo)
@@ -731,7 +668,6 @@ def test_gate_refuses_an_argument_it_does_not_know(argument: str) -> None:
 def test_gate_hook_refuses_a_push_in_the_command_that_commits(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``git commit && git push`` would push a tree no stamp read before the commit can name."""
     if shutil.which("jq") is None:
         pytest.skip("the gate hook reads its payload with jq")
     repo = _branch_repo(tmp_path, monkeypatch, "src/nanopnp/code.py")

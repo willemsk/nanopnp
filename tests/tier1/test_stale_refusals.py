@@ -1,11 +1,4 @@
-"""No refusal names a release that has shipped (VER-67, IF-02; WP40, ``MOD-14``).
-
-The release-name check reads the source with no checked module imported, and reads
-which releases are tagged from ``CHANGELOG.md``'s milestone headings, never from git:
-a CI checkout carries no tags (WP40 D2). Each refusal names its requirement and the release
-that schedules it, or says that none does, and exits as it did (VER-47); the texts are the WP40
-plan's *Design* §1. A string pairing a requirement with a release agrees with §3.2 (D10).
-"""
+"""No refusal names a release that has shipped (VER-67, IF-02; WP40, MOD-14)."""
 
 from __future__ import annotations
 
@@ -47,7 +40,6 @@ def _quickstart() -> dict[str, Any]:
 
 
 def _refusal(raw: dict[str, Any]) -> str:
-    """Return the text of the refusal resolving ``raw`` raises, checking its class."""
     with pytest.raises(UnsupportedCaseSection) as caught:
         resolve(loads_case(yaml.safe_dump(raw, sort_keys=False)))
     return str(caught.value)
@@ -74,7 +66,7 @@ def test_ver67_a_changelog_that_names_no_release_or_skips_one_is_refused() -> No
 
 
 def test_ver67_a_changelog_that_lost_its_oldest_releases_is_refused() -> None:
-    # A truncated head would un-tag v0.1 and v0.2, and pass every string naming them.
+    # Anchored: a truncated head would un-tag v0.1 and v0.2.
     with pytest.raises(ValueError, match=r"v0\.1"):
         tagged_releases("## [0.3.0] - 2026-09-30\n")
     with pytest.raises(ValueError, match=r"v1\.0"):
@@ -232,7 +224,6 @@ def test_fr27_the_num20_damping_is_refused_naming_its_schedule() -> None:
 
 
 def _field_refusal(key: str, what: str) -> str:
-    """Return the refusal of ``inputs.<key>: artefact:`` on a supplied field, as WP40 words it."""
     return (
         f"inputs.{key}: artefact: names {what} by its store hash. FR-27's substitution reads a "
         "supplied field by path only, and no release of SPECIFICATION.md schedules the store "

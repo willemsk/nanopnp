@@ -1,35 +1,4 @@
-"""VER-34 — persisting a converged state, and the gate that refuses a wrong one.
-
-Stage 10's payload is the only route by which a solved state outlives the
-process that solved it, and every later stage that is served from a cache hit
-reads it rather than Newton. Two claims therefore have to hold, and each of them
-fails silently:
-
-- the numbers come back *exactly*. Not to a tolerance: a coefficient vector is
-  either the one that was written or it is a different state wearing its
-  provenance, and a round-trip that loses the last bits of a converged solution
-  would show up as a QoI that drifts by an amount nobody can attribute;
-- the operator comes back too. NUM-25 is the assembled residual evaluated on the
-  constrained degrees of freedom, so a restored solution without a residual can
-  answer only half of the QR-04 cross-check. The residual is reassembled from
-  the rung the ladder ends on, against the **stored** wall-distance field — and
-  the test that it is the stored one, rather than a fresh screened-Poisson
-  solve, is the perturbation test below, because a re-solved field agrees with
-  the stored one to about ten digits and disagreeing in the last bits is exactly
-  the failure that produces a plausible wrong flux.
-
-What guards both is the descriptor: everything in it is re-derived on load and
-compared key by key, and the first difference aborts (QR-12). Restore is a gate,
-never an adaptation, so each of those keys gets a test that mutating it alone is
-refused by name.
-
-Stabilisation is ``none`` for the descriptor gates (NUM-11); the mesh is the
-coarsest one that carries all four domains, because what is under test is the
-payload rather than the physics. One test restores a ``supg`` state as well,
-because reassembling the residual of a stabilised mode needs the state that was
-just loaded and nothing about a ``none`` payload would notice if it were not
-passed.
-"""
+"""VER-34: persisting a converged state, and the gate that refuses a wrong one."""
 
 from __future__ import annotations
 
@@ -72,32 +41,10 @@ PORE = CylindricalPoreGeometry(
 )
 MAXH_NM = 2.0
 WALL_H_NM = 0.35
-"""Element size of every mesh in this module.
-
-Set by NUM-34 rather than by NUM-26. With the wall corrections active the P2
-distance field undershoots below zero at the re-entrant corner of the pore
-mouth unless the wall is resolved, and the transition is a regime change rather
-than a gradient: measured on this pore, ``wall_h`` 0.4 nm gives
-``min d = -1.08`` nm and 0.35 nm gives ``+9.5e-06`` nm, with nothing in between.
-The gate refuses everything on the wrong side of it, so this is the coarsest
-admissible wall spacing and every mesh here uses it.
-
-``maxh`` barely moves the element count once ``wall_h`` is that small — 4.0/0.35
-gives 392 elements against 2.0/0.35's 419 — which is why there is one mesh in
-this module and not the two it used to carry. **[tested]**
-
-Route agreement is comfortable at this resolution and is not what chose it: the
-two NUM-26 routes agree to 5.9e-06 here, against 3.0e-05 on the 257-element
-mesh this module used before and 5.5e-02 on a 124-element one. Note that the
-middle of those three *passes* NUM-26 while its current is 17 % low — the reason
-the PHY-02 clamp needs the NUM-34 gate beside it rather than instead of it.
-"""
 
 BAND_NM = 2.4
-"""Half-height of the NUM-24 indicator band: 0.8 of the membrane's half-thickness."""
 
 ROUTE_TOLERANCE = 1e-3
-"""NUM-26's relative agreement between the two routes."""
 
 CONCENTRATION_M = 0.1
 BIAS_V = 0.02
@@ -137,19 +84,14 @@ outputs: [current]
 
 @dataclass
 class Solved:
-    """One converged solve, the state it wrote, and what wrote it."""
-
     document: CaseDocument
     solution: ModelSolution
     path: Path
     work: Path
     artefact: Artefact | None = None
-    """Stage 10's artefact, where the solve ran through the stage."""
 
 
 class _KeepingStage(SolveStage):
-    """Stage 10, keeping the converged solution it writes, as Newton left it."""
-
     kept: ModelSolution | None = None
 
     def _write(
@@ -171,7 +113,6 @@ class _KeepingStage(SolveStage):
 
 @pytest.fixture(scope="module")
 def mesh_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write the module's one mesh (see :data:`WALL_H_NM`) once, for every solve here."""
     path = tmp_path_factory.mktemp("mesh") / "pore.vol"
     PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(path))
     return path
@@ -179,15 +120,6 @@ def mesh_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 @pytest.fixture(scope="module")
 def solved(mesh_path: Path) -> Solved:
-    """Solve a small ePNP-NS case through stage 10, keeping the in-memory solution.
-
-    Through :class:`~nanopnp.solve.stage.SolveStage` itself (WP33 D9), so the
-    payload every test here restores is the one the stage writes, gated by
-    NUM-34 on the way. The round-trip assertion needs the coefficients as Newton
-    left them, and the stage returns an artefact rather than a state, so the
-    stage is subclassed to keep the solution it hands to its own writer: the
-    object :func:`~nanopnp.solve.state.save` serialised, not a reconstruction.
-    """
     work = mesh_path.parent
     document = loads_case(
         CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V)
@@ -206,13 +138,6 @@ def solved(mesh_path: Path) -> Solved:
 
 @pytest.fixture(scope="module")
 def stabilised(tmp_path_factory: pytest.TempPathFactory, mesh_path: Path) -> Solved:
-    """Solve the same case in ``supg`` and save it: an operator carrying a term.
-
-    Separate from :func:`solved` rather than a parametrisation of it, because the
-    descriptor gates below are about the payload and are the same in every mode;
-    the one thing that is not the same is whether the residual can be rebuilt at
-    all, and that is what the single test using this fixture asserts.
-    """
     work = tmp_path_factory.mktemp("stabilised")
     document = loads_case(
         CASE.format(mesh_path=mesh_path, concentration_M=CONCENTRATION_M, bias_V=BIAS_V).replace(
@@ -239,7 +164,6 @@ def stabilised(tmp_path_factory: pytest.TempPathFactory, mesh_path: Path) -> Sol
 
 
 def _arrays(path: Path) -> dict[str, Any]:
-    """Return every array of an ``.npz`` payload, eagerly."""
     import numpy as np
 
     with np.load(path, allow_pickle=False) as archive:
@@ -247,7 +171,6 @@ def _arrays(path: Path) -> dict[str, Any]:
 
 
 def _rewrite(path: Path, arrays: dict[str, Any]) -> Path:
-    """Write ``arrays`` to ``path`` in the payload's own format and return it."""
     import numpy as np
 
     with path.open("wb") as handle:
@@ -256,7 +179,6 @@ def _rewrite(path: Path, arrays: dict[str, Any]) -> Path:
 
 
 def _with_descriptor(solved: Solved, tmp_path: Path, descriptor: dict[str, Any]) -> Path:
-    """Return a copy of the payload carrying ``descriptor`` instead of its own."""
     import numpy as np
 
     arrays = _arrays(solved.path)
@@ -265,13 +187,11 @@ def _with_descriptor(solved: Solved, tmp_path: Path, descriptor: dict[str, Any])
 
 
 def _stored_descriptor(solved: Solved) -> dict[str, Any]:
-    """Return the descriptor the payload was written with."""
     record: dict[str, Any] = json.loads(str(_arrays(solved.path)[DESCRIPTOR_ENTRY]))
     return record
 
 
 def _components(solution: ModelSolution) -> list[Any]:
-    """Return each field's coefficient vector, for a model of any arity."""
     if len(solution.model.fields) == 1:
         return [solution.state.vec]
     return [component.vec for component in solution.state.components]
@@ -281,13 +201,6 @@ def _components(solution: ModelSolution) -> list[Any]:
 
 
 def test_ver34_every_component_coefficient_returns_bit_for_bit(solved: Solved) -> None:
-    """Restore reproduces the solved coefficients to exactly zero difference.
-
-    Exactly, not to a tolerance. The payload is a coefficient record, not a
-    resampling: any nonzero difference here would mean the file and the space
-    disagree about what an entry means, and that error is a smooth-looking
-    field, not a crash.
-    """
     import numpy as np
 
     restored = restore(solved.path, resolved=resolve(solved.document))
@@ -302,15 +215,8 @@ def test_ver34_every_component_coefficient_returns_bit_for_bit(solved: Solved) -
         assert np.max(np.abs(recovered - original)) == 0.0, name
 
 
+# NUM-25
 def test_ver34_the_restored_operator_gives_the_same_reaction_flux(solved: Solved) -> None:
-    """The reassembled residual is the operator the solve converged on (NUM-25).
-
-    ``ModelSolution.residual`` is what the NUM-25 route applies; a restored
-    solution carrying a residual built from a *different* rung — one switch on,
-    one coefficient defaulted — would still return a number, and the number
-    would be wrong by an amount that looks like a modelling difference. Equality
-    to the live solution's flux is what says it is the same form.
-    """
     live = reaction_flux_currents(solved.solution)
     recovered = reaction_flux_currents(restore(solved.path, resolved=resolve(solved.document)))
     assert set(recovered) == set(live)
@@ -318,22 +224,10 @@ def test_ver34_the_restored_operator_gives_the_same_reaction_flux(solved: Solved
         assert recovered[species] == pytest.approx(value, rel=1e-12), species
 
 
+# NUM-25
 def test_ver34_a_stabilised_state_restores_with_the_operator_it_converged_on(
     stabilised: Solved,
 ) -> None:
-    """Restoring a ``supg`` state rebuilds the residual *with* its stabilisation.
-
-    The mode's parameters are evaluated at the iterate, so the residual cannot be
-    reassembled without the state -- :meth:`CoupledModel.residual_form` refuses
-    rather than silently linearising about zero wind. ``restore`` has the state
-    in hand two lines earlier, and this asserts it hands it over: without it every
-    stabilised case fails at stage 11 and at the IF-07 export, which is every path
-    a solved stabilised run has out of the solver.
-
-    Checked on the NUM-25 flux and not merely on "it returned": a residual rebuilt
-    Galerkin-only would restore without complaint and answer the reaction-flux
-    route with the unstabilised number.
-    """
     live = reaction_flux_currents(stabilised.solution)
     recovered = reaction_flux_currents(
         restore(stabilised.path, resolved=resolve(stabilised.document))
@@ -343,18 +237,10 @@ def test_ver34_a_stabilised_state_restores_with_the_operator_it_converged_on(
         assert recovered[species] == pytest.approx(value, rel=1e-12), species
 
 
+# PHY-02
 def test_ver34_the_wall_distance_field_is_restored_and_not_re_solved(
     solved: Solved, tmp_path: Path
 ) -> None:
-    """The stored PHY-02 vector reaches the operator, rather than a fresh solve.
-
-    Asserted by perturbation because agreement proves nothing here: the
-    screened-Poisson solve behind the distance field is deterministic within one
-    build, so a re-solved field would match the stored one to ten digits and
-    this test would pass while the guarantee — that a restore on another library
-    version reassembles the *same* operator — quietly did not hold. A payload
-    whose distance vector has been moved must restore the moved field.
-    """
     import numpy as np
 
     arrays = _arrays(solved.path)
@@ -369,23 +255,10 @@ def test_ver34_the_wall_distance_field_is_restored_and_not_re_solved(
     assert np.max(np.abs(recovered - moved)) == 0.0
 
 
+# FR-27, NUM-25, NUM-34
 def test_ver34_the_stage_payload_is_a_state_file_this_module_can_restore(
     solved: Solved,
 ) -> None:
-    """Stage 10 writes the payload this module reads (FR-27, section 5.3.2).
-
-    What is at stake is only the wiring — the filename, the boundaries handed
-    to :func:`~nanopnp.solve.state.save`, and the mesh hash. Each of those is a
-    silent failure: a payload keyed on the wrong boundaries restores into a
-    space with different constraints, and the NUM-25 reaction flux is then taken
-    over a boundary the solve left free.
-
-    On the stage's own run, the :func:`solved` fixture's (WP33 D9): every
-    round-trip test above restores that payload, so this one only checks the
-    artefact names it. Running through the stage rather than through
-    :func:`~nanopnp.solve.state.ladder` is also what puts the NUM-34 gate on
-    this path at all.
-    """
     artefact = solved.artefact
     assert artefact is not None
     assert artefact.schema == SOLUTION_SCHEMA
@@ -397,26 +270,13 @@ def test_ver34_the_stage_payload_is_a_state_file_this_module_can_restore(
     assert set(reaction_flux_currents(restored)) == {"Na+", "Cl-"}
 
 
+# NUM-26, QR-04, NUM-24, NUM-25
 def test_ver34_the_restored_operator_agrees_with_a_route_that_never_sees_it(
     solved: Solved,
 ) -> None:
-    """The reassembled residual passes the NUM-26 cross-check (QR-04, RSK-03).
-
-    This is the oracle the two tests above cannot be: they compare the restored
-    solution against the live one, and a save path and a restore path that share
-    a mistake would agree with each other perfectly. The NUM-24 indicator form
-    touches no residual at all — it rebuilds the flux from the coefficients
-    through the model's own seams — so its agreement with the NUM-25 reaction
-    flux of the *restored* solution is evidence about the operator rather than
-    about the round trip.
-
-    The tolerance is NUM-26's own 1e-3, and the mesh is the one that meets it;
-    see :data:`MAXH_NM`.
-    """
     restored = restore(solved.path, resolved=resolve(solved.document))
-    # Read from the case rather than pinned, exactly as the solve reads it: an
-    # indicator built at a different order than the model integrates a different
-    # discretisation and the cross-check stops being one (NUM-01).
+    # Read from the case, as the solve reads it: another order would integrate a
+    # different discretisation (NUM-01).
     order = int(resolve(solved.document).model_options.get("order", AXISYMMETRIC.element_order))
     psi = axial_indicator(restored.space.mesh, lower_nm=-BAND_NM, upper_nm=BAND_NM, order=order)
     measures = replace(AXISYMMETRIC, element_order=order)
@@ -430,13 +290,6 @@ def test_ver34_the_restored_operator_agrees_with_a_route_that_never_sees_it(
 
 
 def _mutations() -> list[tuple[str, Callable[[Any], Any]]]:
-    """Return one mutation per descriptor key, each changing that key alone.
-
-    Every key is here on purpose rather than a representative sample: a key the
-    gate records and does not compare is a key that reads as protection and is
-    not, and the failure it lets through — a state restored onto a space it was
-    not solved on — is the one this module exists to prevent.
-    """
     return [
         ("solve_hash", lambda value: "0" * len(str(value))),
         ("mesh_content_hash", lambda value: "0" * len(str(value))),
@@ -449,17 +302,11 @@ def _mutations() -> list[tuple[str, Callable[[Any], Any]]]:
     ]
 
 
+# QR-12
 @pytest.mark.parametrize(("key", "mutate"), _mutations(), ids=[key for key, _ in _mutations()])
 def test_ver34_a_descriptor_that_differs_in_one_key_aborts_naming_it(
     solved: Solved, tmp_path: Path, key: str, mutate: Callable[[Any], Any]
 ) -> None:
-    """Each recorded key is compared, and the diagnostic carries both values.
-
-    Naming the key is not decoration. The operator this refuses to build is one
-    that would converge, so the message is the whole diagnosis: it has to say
-    which of the case, the mesh, the discretisation or the model moved, and what
-    it moved from and to (QR-12).
-    """
     stored = _stored_descriptor(solved)
     assert key in stored, f"{key} is in DESCRIPTOR_KEYS but was never written"
     changed = mutate(stored[key])
@@ -475,17 +322,6 @@ def test_ver34_a_descriptor_that_differs_in_one_key_aborts_naming_it(
 
 
 def test_ver34_a_case_differing_only_in_what_it_reports_restores(solved: Solved) -> None:
-    """``outputs:`` and ``name:`` do not gate the state, because they do not solve it.
-
-    The gate exists to refuse a state whose coefficients describe a different
-    problem. Asking a converged case for one more quantity — adding ``fields``
-    so that a run writes a picture — changes neither the operator, the space nor
-    the boundary data, so the state still describes the run and refusing it
-    would throw away a solve for a question about post-processing. The digest
-    the descriptor carries is the one stage 10 keys its artefact on, so a state
-    the store serves is a state this gate admits; asserting both here is what
-    stops the two drifting apart.
-    """
     other = loads_case(
         CASE.format(
             mesh_path=solved.work / "pore.vol", concentration_M=CONCENTRATION_M, bias_V=BIAS_V
@@ -501,12 +337,6 @@ def test_ver34_a_case_differing_only_in_what_it_reports_restores(solved: Solved)
 
 
 def test_ver34_the_gate_checks_every_key_it_declares(solved: Solved) -> None:
-    """The parametrisation above covers ``DESCRIPTOR_KEYS`` exactly.
-
-    Written as an assertion rather than left to review: a key added to the
-    descriptor without a mutation here would be recorded, compared, and never
-    tested, which is indistinguishable from being recorded and not compared.
-    """
     assert tuple(key for key, _ in _mutations()) == DESCRIPTOR_KEYS
     assert sorted(_stored_descriptor(solved)) == sorted(DESCRIPTOR_KEYS)
 
@@ -514,11 +344,6 @@ def test_ver34_the_gate_checks_every_key_it_declares(solved: Solved) -> None:
 def test_ver34_a_descriptor_missing_a_key_is_refused_rather_than_skipped(
     solved: Solved, tmp_path: Path
 ) -> None:
-    """A payload this version cannot gate is not one it restores.
-
-    Skipping a key the file does not carry would make the gate weaker the older
-    the payload is, which is the opposite of what a schema version is for.
-    """
     stored = _stored_descriptor(solved)
     del stored["ndof"]
     path = _with_descriptor(solved, tmp_path, stored)
@@ -529,7 +354,6 @@ def test_ver34_a_descriptor_missing_a_key_is_refused_rather_than_skipped(
 def test_ver34_a_descriptor_carrying_an_unknown_key_is_refused(
     solved: Solved, tmp_path: Path
 ) -> None:
-    """A payload written by a later version is refused, not partially read."""
     path = _with_descriptor(solved, tmp_path, {**_stored_descriptor(solved), "temperature": 310.0})
     with pytest.raises(StateMismatchError, match="unexpected \\['temperature'\\]"):
         restore(path, resolved=resolve(solved.document))
@@ -538,13 +362,6 @@ def test_ver34_a_descriptor_carrying_an_unknown_key_is_refused(
 def test_ver34_a_payload_without_a_descriptor_is_refused_by_schema(
     solved: Solved, tmp_path: Path
 ) -> None:
-    """The ``nanopnp/solution/v1`` payload carried numbers and no record of them.
-
-    That is the whole reason for the version bump: a coefficient array is
-    meaningless without the space it belongs to, and a restore that inferred the
-    space from the case rather than checking it against the file would read a v1
-    payload as a v2 one whenever the two happened to be the same length.
-    """
     arrays = _arrays(solved.path)
     del arrays[DESCRIPTOR_ENTRY]
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
@@ -553,13 +370,6 @@ def test_ver34_a_payload_without_a_descriptor_is_refused_by_schema(
 
 
 def test_ver34_the_solution_schema_is_v2(solved: Solved) -> None:
-    """The payload contract changed, so the artefact schema version did too.
-
-    Section 5.3.2: a changed payload is a changed schema. Pinned here because
-    the constant is what the store, the registry and the manifest all agree on,
-    and a payload silently reinterpreted under an unchanged version is a wrong
-    number with a correct-looking provenance.
-    """
     assert SOLUTION_SCHEMA == "nanopnp/solution/v0.5"
 
 
@@ -569,12 +379,6 @@ def test_ver34_the_solution_schema_is_v2(solved: Solved) -> None:
 def test_ver34_a_truncated_coefficient_array_is_refused_by_length(
     solved: Solved, tmp_path: Path
 ) -> None:
-    """The arrays are checked as well as the descriptor that describes them.
-
-    Not redundant with the gate: the descriptor proves the *declared*
-    discretisation matches, and this proves the file actually holds it. A
-    payload truncated in transit passes the first check and fails this one.
-    """
     import numpy as np
 
     arrays = _arrays(solved.path)
@@ -588,7 +392,6 @@ def test_ver34_a_truncated_coefficient_array_is_refused_by_length(
 def test_ver34_a_missing_component_array_names_what_the_file_holds(
     solved: Solved, tmp_path: Path
 ) -> None:
-    """The diagnostic lists the entries present, because this is a typo's home."""
     arrays = _arrays(solved.path)
     name = next(key for key in arrays if str(key).startswith(FIELD_PREFIX))
     del arrays[name]
@@ -597,16 +400,10 @@ def test_ver34_a_missing_component_array_names_what_the_file_holds(
         restore(path, resolved=resolve(solved.document))
 
 
+# PHY-02
 def test_ver34_a_case_reading_d_without_a_stored_distance_is_refused(
     solved: Solved, tmp_path: Path
 ) -> None:
-    """A saturated constant is not a substitute for the field that was solved.
-
-    Restoring without the vector would reassemble every wall factor at its
-    far-field value: the ion wall function saturates to 1, the viscosity
-    correction to 1, and the resulting operator is the classical one wearing an
-    ePNP-NS provenance (PHY-02, section 5.3.2 NOTE).
-    """
     arrays = _arrays(solved.path)
     del arrays[WALL_DISTANCE_ENTRY]
     path = _rewrite(tmp_path / STATE_FILENAME, arrays)
@@ -614,24 +411,8 @@ def test_ver34_a_case_reading_d_without_a_stored_distance_is_refused(
         restore(path, resolved=resolve(solved.document))
 
 
+# PHY-02
 def test_ver34_a_cold_solve_carries_the_wall_distance_the_ladder_carries(solved: Solved) -> None:
-    """``continuation: none`` is a different route to the same operator, not a weaker one.
-
-    The rung built for a cold solve has to be handed the PHY-02 field for the
-    same reason every rung of the ladder is: with none supplied,
-    ``CoupledModel.solve`` falls back to
-    :data:`~nanopnp.physics.coefficients.SATURATED_WALL_DISTANCE_NM`, every wall
-    factor evaluates at its far-field value, and what converges is the classical
-    operator wearing an ePNP-NS provenance. It converges, which is what makes it
-    dangerous — and :func:`~nanopnp.solve.state.save` then refuses to store it,
-    aborting a run that has already paid for the solve.
-
-    Asserted on the rung rather than through a solve because that is where the
-    keyword either is or is not: identity against the field
-    :func:`~nanopnp.solve.state.wall_distance_field` returned localises the
-    failure to the one line that passes it on (an analytic test localises, a
-    whole-model comparison does not).
-    """
     cold = resolve(
         loads_case(
             CASE.format(

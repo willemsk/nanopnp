@@ -1,12 +1,4 @@
-"""VAL-05's harness, :mod:`nanopnp.validation.geometry`, against closed forms (WP22 Verification).
-
-Every assertion here has an oracle that is not the harness: a polygon against
-itself, a uniform radial scale whose first-order and exact conductance changes
-are ``2s`` and ``(1 + s)² - 1``, constructed bodies whose minima and missing
-planes are placed by hand, ``.knowledge/04`` §1.2's check values for the
-``pqr2grid`` erratum, and a translated synthetic C12 whose centroid moves by the
-translation.
-"""
+"""VAL-05's harness, nanopnp.validation.geometry, against closed forms (WP22 Verification)."""
 
 from __future__ import annotations
 
@@ -42,28 +34,23 @@ from nanopnp.validation.geometry import (
 )
 
 LOW, HIGH = -1.85, 12.25
-"""The delivered table's z extent, which the constructed bodies share."""
 
 
 def _body(lumen: list[tuple[float, float]], outer_nm: float = 6.0) -> np.ndarray:
-    """Return a clockwise body: the lumen bottom to top, then the outer wall top to bottom."""
     top, bottom = lumen[-1][1], lumen[0][1]
     return np.asarray([*lumen, (outer_nm, top), (outer_nm, bottom)], dtype=np.float64)
 
 
 def _straight(radius_nm: float = 3.0, low: float = LOW, high: float = HIGH) -> np.ndarray:
-    """Return a body with a straight lumen at ``radius_nm`` from ``low`` to ``high``."""
     return _body([(radius_nm, low), (radius_nm, high)])
 
 
 @pytest.fixture(scope="module")
 def reference() -> np.ndarray:
-    """Return the delivered 185-vertex polygon, already in the model frame."""
     return load_profile(profile_file("clya_reference_profile")).as_array()
 
 
 def test_val05_the_planes_are_the_282_mid_planes_of_the_reference(reference) -> None:
-    """D2: ``z_k = -1.85 + (k + 1/2)·0.05`` nm, k = 0 … 281."""
     planes = comparison_planes(reference)
     assert planes.size == 282
     assert planes[0] == pytest.approx(-1.825)
@@ -72,7 +59,6 @@ def test_val05_the_planes_are_the_282_mid_planes_of_the_reference(reference) -> 
 
 
 def test_val05_a_polygon_against_itself_is_zero(reference) -> None:
-    """Every deviation vanishes, and the constriction is the table's 1.650 nm at z = -1.225."""
     comparison = compare_profiles(reference, reference)
     assert comparison.compared_planes == comparison.planes == 282
     assert comparison.uncrossed_planes_nm == []
@@ -94,11 +80,6 @@ def test_val05_a_polygon_against_itself_is_zero(reference) -> None:
 
 @pytest.mark.parametrize("scale", [-0.02, 0.01, 0.03])
 def test_val05_a_uniform_scale_gives_two_s_and_the_exact_ratio(reference, scale: float) -> None:
-    """``r -> (1 + s) r`` gives ``ε_G = 2s`` and the exact series ratio ``(1 + s)² - 1``.
-
-    A radial scale maps each innermost crossing to ``(1 + s)`` times itself, so
-    ``Δ/r = s`` on every plane and the first-order sum is ``2s`` exactly.
-    """
     scaled = reference * np.array([1.0 + scale, 1.0])
     comparison = compare_profiles(scaled, reference)
     assert comparison.conductance_deviation == pytest.approx(2.0 * scale, rel=1e-12)
@@ -109,7 +90,6 @@ def test_val05_a_uniform_scale_gives_two_s_and_the_exact_ratio(reference, scale:
 
 
 def test_val05_each_constriction_is_located_on_its_own_polygon() -> None:
-    """Δr_c is the difference of two minima at different z, not a difference at one plane."""
     reference = _body([(3.0, LOW), (1.6, -1.0), (3.0, 0.0), (3.0, HIGH)])
     ours = _body([(3.0, LOW), (3.0, -0.5), (1.7, 0.5), (3.0, 1.5), (3.0, HIGH)])
     comparison = compare_profiles(ours, reference)
@@ -123,7 +103,6 @@ def test_val05_each_constriction_is_located_on_its_own_polygon() -> None:
 
 
 def test_val05_the_constriction_is_taken_only_inside_its_window() -> None:
-    """A narrower lumen above z = 1.6 nm is not the constriction."""
     reference = _straight()
     ours = _body([(3.0, LOW), (3.0, 4.0), (1.0, 5.0), (3.0, 6.0), (3.0, HIGH)])
     comparison = compare_profiles(ours, reference)
@@ -133,20 +112,19 @@ def test_val05_the_constriction_is_taken_only_inside_its_window() -> None:
 
 
 def test_val05_an_uncrossed_plane_inside_the_tip_band_is_admitted() -> None:
-    """A rounded end one or two planes short, within 2h of a tip, is recorded and admitted."""
     comparison = compare_profiles(_straight(low=-1.76, high=12.17), _straight())
     assert comparison.uncrossed_planes_nm == pytest.approx([-1.825, -1.775, 12.175, 12.225])
     assert comparison.compared_planes == 278
     assert comparison.tips_ours_nm == (-1.76, 12.17)
 
 
+# QR-12
 @pytest.mark.parametrize(
     ("low", "high", "named"), [(-1.7, HIGH, "-1.7250"), (LOW, 12.1, "12.1250")]
 )
 def test_val05_an_uncrossed_plane_outside_the_tip_band_fails_naming_z(
     low: float, high: float, named: str
 ) -> None:
-    """QR-12: the first uncrossed plane beyond 2h of a tip is named, with both extents."""
     with pytest.raises(MissingPlaneError, match=rf"the first at z = {named} nm") as caught:
         compare_profiles(_straight(low=low, high=high), _straight())
     assert "tip band" in str(caught.value)
@@ -158,7 +136,6 @@ def test_val05_an_uncrossed_plane_outside_the_tip_band_fails_naming_z(
 
 
 def test_val05_the_conductance_tolerance_fires_naming_leg_value_threshold_and_z() -> None:
-    """A 6 % wider lumen is ε_G = 12 %: over 2WCD's 10 % and the ensemble's 5 %."""
     reference = _body([(3.0, LOW), (1.7, -1.0), (3.0, 0.5), (3.0, HIGH)])
     comparison = compare_profiles(reference * np.array([1.06, 1.0]), reference)
     for leg, threshold in (("2wcd", "10%"), ("ensemble", "5%")):
@@ -174,7 +151,6 @@ def test_val05_the_conductance_tolerance_fires_naming_leg_value_threshold_and_z(
 
 
 def test_val05_the_constriction_tolerance_fires_naming_both_minima() -> None:
-    """A 0.2 nm notch of four planes moves r_c by 0.15 nm, and barely moves ε_G or the rms."""
     reference = _straight()
     ours = _body([(3.0, LOW), (3.0, -0.1), (2.8, 0.0), (3.0, 0.1), (3.0, HIGH)])
     comparison = compare_profiles(ours, reference)
@@ -190,7 +166,6 @@ def test_val05_the_constriction_tolerance_fires_naming_both_minima() -> None:
 
 
 def test_val05_the_rms_tolerance_fires_naming_the_largest_deviation() -> None:
-    """A ±0.3 nm zigzag above the window: ε_G and Δr_c stay small, the rms does not."""
     lumen = [(3.0, LOW), (3.0, 2.0)]
     lumen += [(3.3 if k % 2 else 2.7, 2.0 + 0.5 * k) for k in range(1, 20)]
     lumen += [(3.0, 12.0), (3.0, HIGH)]
@@ -207,7 +182,6 @@ def test_val05_the_rms_tolerance_fires_naming_the_largest_deviation() -> None:
 
 
 def test_val05_pqr2grid_radius_check_values() -> None:
-    """``.knowledge/04`` §1.2: at L = 15 nm, 1.65 nm reads 1.5744 nm and 5.66 nm 5.4615 nm."""
     assert pqr2grid_radius(1.65) == pytest.approx(1.5744, abs=1e-4)
     assert pqr2grid_radius(5.66) == pytest.approx(5.4615, abs=1e-4)
     # r_a = 0.96935 r - 0.025 nm, the map's closed form at h = 0.05 nm.
@@ -218,10 +192,6 @@ def test_val05_pqr2grid_radius_check_values() -> None:
 
 
 def test_val05_the_attribution_splits_the_offset_into_erratum_and_edit(reference) -> None:
-    """Against itself, the erratum is the map's own mean shift and the edit is its negative.
-
-    The map is affine and increasing in r, so it maps each crossing to itself mapped.
-    """
     attribution = attribute_to_construction(reference, reference)
     planes = comparison_planes(reference)
     lumen = innermost_crossings([reference], planes)
@@ -233,7 +203,6 @@ def test_val05_the_attribution_splits_the_offset_into_erratum_and_edit(reference
 
 
 def test_val05_the_centroid_registration_returns_the_translation(c12_assembly) -> None:
-    """A synthetic C12 translated by ``t``: ``centre_z_nm`` moves by ``t_z`` and nothing else."""
     positions, names, chains = c12_assembly(0.0)
     resid = [1 + (index // 5) % 8 for index in range(len(names))]
     shift = np.array([0.3, -0.2, 1.7])
@@ -244,14 +213,12 @@ def test_val05_the_centroid_registration_returns_the_translation(c12_assembly) -
         positions + shift, name=names, resid=resid, chain=chains, residues=(1, 8), z_md_nm=original
     )
     assert moved == pytest.approx(1.7, abs=1e-12)
-    # Frames average: the centroid of two frames is the centroid of their mean.
     frames = np.stack([positions, positions + shift])
     both = calpha_centroid_z_nm(frames, name=names, resid=resid, chain=chains, residues=(1, 8))
     assert both == pytest.approx(original + 0.85, abs=1e-12)
 
 
 def test_val05_the_registration_refuses_a_chain_with_no_selected_atom(c12_assembly) -> None:
-    """A chain the registration names but the structure lacks is refused, and named."""
     positions, names, chains = c12_assembly(0.0)
     resid = [1 + (index // 5) % 8 for index in range(len(names))]
     with pytest.raises(GeometryComparisonError, match=r"chain\(s\) M over residues 8-292"):
@@ -261,7 +228,6 @@ def test_val05_the_registration_refuses_a_chain_with_no_selected_atom(c12_assemb
 
 
 def test_val05_the_zero_crossing_interpolates_between_passing_levels(reference) -> None:
-    """ε_G of -4 % at 0.3 and +4 % at 0.4 crosses at 0.35; a refused level is skipped."""
     base = compare_profiles(reference, reference)
     points = [
         IsolevelPoint(isolevel=0.2, refusal="gate"),
@@ -274,7 +240,6 @@ def test_val05_the_zero_crossing_interpolates_between_passing_levels(reference) 
     ]
     assert zero_crossing(points) == pytest.approx(0.35)
     assert zero_crossing(points[:2]) is None
-    # A level at exactly zero is the crossing, the last passing level included.
     at_zero = IsolevelPoint(
         isolevel=0.5, comparison=base.model_copy(update={"conductance_deviation": 0.0})
     )
@@ -283,11 +248,6 @@ def test_val05_the_zero_crossing_interpolates_between_passing_levels(reference) 
 
 
 def test_val05_no_plane_sits_on_a_reference_tip() -> None:
-    """An extent of 29.5 h rounds to 30 planes, the last on the top tip: it is dropped.
-
-    The crossing test is half-open, so a plane on the top vertex is never crossed,
-    and the reference would be refused against itself.
-    """
     reference = _straight(low=-1.85, high=-1.85 + 29.5 * 0.05)
     planes = comparison_planes(reference)
     assert planes.size == 29
@@ -296,7 +256,6 @@ def test_val05_no_plane_sits_on_a_reference_tip() -> None:
 
 
 def test_val05_the_registration_refuses_an_empty_selection(c12_assembly) -> None:
-    """No chain named selects no atom, and is refused rather than averaged to NaN."""
     positions, names, chains = c12_assembly(0.0)
     resid = [1 + (index // 5) % 8 for index in range(len(names))]
     with pytest.raises(GeometryComparisonError, match="selects no atom over residues 1-8"):
@@ -306,11 +265,6 @@ def test_val05_the_registration_refuses_an_empty_selection(c12_assembly) -> None
 
 
 def test_val05_the_rms_optimal_offset_recovers_a_known_shift(reference) -> None:
-    """D6's diagnostic: the reference moved up 4.5 nm is best registered at 4.5 nm.
-
-    It agrees with :func:`compare_profiles`' rms at the neighbouring offsets, which
-    it must, since it is that rms computed on the lumen alone.
-    """
     stage1 = reference + np.array([0.0, 4.5])
     fitted = rms_optimal_offset(stage1, reference, centre_nm=4.47, half_width_nm=0.05)
     assert fitted == pytest.approx(4.5, abs=1e-9)
@@ -320,14 +274,12 @@ def test_val05_the_rms_optimal_offset_recovers_a_known_shift(reference) -> None:
 
 
 def test_val05_the_attribution_refuses_a_comparison_on_other_planes(reference) -> None:
-    """A supplied comparison on another plane set cannot be split against the binned one."""
     coarse = compare_profiles(reference, reference, spacing_nm=0.1)
     with pytest.raises(GeometryComparisonError, match="do not split one offset"):
         attribute_to_construction(reference, reference, coarse)
 
 
 def test_val05_importing_the_harness_imports_no_numpy() -> None:
-    """``CLAUDE.md``: NumPy, and stage 4's scikit-image and shapely, load on first use only."""
     script = (
         "import json, sys; import nanopnp.validation.geometry;"
         "print(json.dumps([m for m in ('numpy', 'skimage', 'shapely') if m in sys.modules]))"
@@ -339,6 +291,5 @@ def test_val05_importing_the_harness_imports_no_numpy() -> None:
 
 
 def test_val05_a_polygon_crossing_no_plane_is_refused_even_when_not_strict() -> None:
-    """A body wholly above the reference has nothing to compare, and says so."""
     with pytest.raises(MissingPlaneError, match="crosses none of the 282 comparison planes"):
         compare_profiles(_straight(low=13.0, high=14.0), _straight(), strict=False)

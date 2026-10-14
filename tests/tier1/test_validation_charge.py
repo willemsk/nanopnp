@@ -1,14 +1,4 @@
-"""The Tier 3 charge comparison's own machinery, on atoms whose answers are known (WP28).
-
-``tests/tier3/test_charge_archive.py`` splits our export's difference from the
-delivered ``rhoq_pore`` through the reference's construction rebuilt from the same
-PQRs (``.knowledge/04`` §3, G4). It runs only beside the archive, so what it relies
-on is checked here: that the rebuilt construction is the reference's 2D Gaussian,
-that it loses the part of an atom across the axis as the reference's did
-(PHY-17), that it differs from PHY-16 step 5's kernel as the PHY-16 NOTE
-states, and that the comparison aligns two
-grids by their nodes and refuses grids it would have to interpolate.
-"""
+"""The Tier 3 charge comparison's own machinery, on atoms whose answers are known (WP28)."""
 
 from __future__ import annotations
 
@@ -45,7 +35,6 @@ def _grid(r_max: float, z_low: float, z_high: float) -> RadialGrid:
 
 
 def test_ver01_the_rebuilt_construction_is_the_reference_2d_gaussian() -> None:
-    """Off the axis it integrates to the atom's charge and samples the printed formula."""
     atoms = _atoms(1.7, 0.3, 0.1, charge_e=-2.0)
     built = reference_construction(atoms, _grid(3.0, -1.0, 1.5))
     assert built.planar_integral() / ELEMENTARY_CHARGE == pytest.approx(-2.0, rel=1e-12)
@@ -60,23 +49,16 @@ def test_ver01_the_rebuilt_construction_is_the_reference_2d_gaussian() -> None:
     assert float(built.values[i_z, i_r]) == pytest.approx(expected, rel=1e-12, abs=1e-300)
 
 
+# PHY-17
 def test_ver01_the_rebuilt_construction_loses_the_half_across_the_axis() -> None:
-    """PHY-17: an atom on the axis keeps half its charge in the reference's construction."""
     built = reference_construction(_atoms(0.0, 0.0, 0.05), _grid(1.0, -1.0, 1.0))
     assert built.planar_integral() / ELEMENTARY_CHARGE == pytest.approx(0.5, rel=1e-12)
     kernel = sum_kernel(_atoms(0.0, 0.0, 0.05), H).grid
     assert kernel.planar_integral() / ELEMENTARY_CHARGE == pytest.approx(1.0, rel=1e-12)
 
 
+# PHY-16
 def test_ver01_the_two_constructions_differ_at_first_order_and_odd_about_the_atom() -> None:
-    """The PHY-16 NOTE: pointwise ``(r - r_i)/(2 r_i)``, the same charge and planes.
-
-    For ``2 r r_i/w^2`` large, ``2 pi r`` times step 5's kernel is the reference's
-    2D Gaussian times ``(r/r_i)^(1/2) (1 + O(w^2/r r_i))``. The difference is first
-    order in ``w/r_i`` and odd about the atom, peaking at ``(w/2 r_i)/(2e)^(1/2)``
-    of the peak, so the charge and every z-marginal agree, and the 3D
-    construction's radial centroid lies ``w^2/(4 r_i)`` further out.
-    """
     width = 0.1
     for ratio in (10.0, 20.0, 40.0):
         r_i = ratio * width
@@ -96,7 +78,6 @@ def test_ver01_the_two_constructions_differ_at_first_order_and_odd_about_the_ato
 
 
 def test_ver01_the_comparison_aligns_offset_grids_by_their_nodes() -> None:
-    """Two boxes on one lattice compare on their union, zero outside each; a shift is refused."""
     atoms = _atoms(2.0, 1.0, 0.1)
     ours = sum_kernel(atoms, H).grid
     wide = reference_construction(atoms, _grid(4.0, -2.0, 4.0))
