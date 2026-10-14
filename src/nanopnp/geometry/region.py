@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import math
-import tempfile
 from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
@@ -15,7 +14,6 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 from nanopnp.core.hashing import Canonicalisable
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     MissingExtraError,
@@ -40,6 +38,7 @@ from nanopnp.io.case import (
     ReservoirSpec,
     UnsupportedCaseSection,
 )
+from nanopnp.io.workspace import scratch_directory
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -65,7 +64,6 @@ KEY_CONSTANTS: Mapping[str, Canonicalisable] = {
 
 PAYLOAD_NAME = "region"
 
-WORKSPACE_DIRNAME = "tmp"
 
 DOMAINS: tuple[str, str, str] = ("electrolyte", "membrane", "protein")
 
@@ -1089,11 +1087,7 @@ class RegionStage:
             h_c_nm=resolved.contour_spacing_nm,
         )
 
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="region-", dir=root))
+        directory = scratch_directory(self._workspace, "region")
         written = write_region(record, directory / f"{PAYLOAD_NAME}.yaml")
         logger.info(
             "region: inner edge (%.4f, %.4f) nm, clearance %.4f nm, junction %.4f and %.4f nm, "

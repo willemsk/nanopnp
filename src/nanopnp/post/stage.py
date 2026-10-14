@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import logging
-import tempfile
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.charge.stage import fixed_charge_density, read_fields
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -21,6 +19,7 @@ from nanopnp.core.stages import (
 from nanopnp.geometry.analyte import ANALYTE_BOUNDARY, ANALYTE_DOMAIN
 from nanopnp.io.artefact import Artefact, CaseArtefact, QoIArtefact, ReportArtefact, StageInputs
 from nanopnp.io.defaults import ContributedDeviation
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import declaration
@@ -60,8 +59,6 @@ BAND_FRACTION = 0.8
 EXTENSION_INNER = 1.2
 
 EXTENSION_OUTER = 3.0
-
-WORKSPACE_DIRNAME = "tmp"
 
 
 class SelectionError(ValueError):
@@ -466,7 +463,7 @@ class ReportStage:
         )
         # Any model reports its scale set and the permittivity its solve used, or none.
         model = restored.model
-        directory = self._directory(resolved.name)
+        directory = self._directory()
         export = export_fields(
             restored,
             directory,
@@ -484,12 +481,5 @@ class ReportStage:
         }
         return payload, record
 
-    def _directory(self, name: str) -> Path:
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            safe = "".join(character if character.isalnum() else "-" for character in name)
-            directory = Path(tempfile.mkdtemp(prefix=f"{safe}-fields-", dir=root))
-        directory.mkdir(parents=True, exist_ok=True)
-        return directory
+    def _directory(self) -> Path:
+        return scratch_directory(self._workspace, "post")

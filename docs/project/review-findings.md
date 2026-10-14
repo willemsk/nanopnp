@@ -44,7 +44,7 @@ is a rolling register, and its header stays `open`.
 | REV-22 | process | low | declined | §8.2.8 H12 | [write_dx formats with %](review-items.md#rev-22-write_dx-formats-with) |
 | REV-23 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The corrections test bounds both ions by one range](review-items.md#rev-23-the-corrections-test-bounds-both-ions-by-one-range) |
 | REV-24 | process | low | accepted | §8.2.9 I2 | [Sampler construction may still be duplicated](review-items.md#rev-24-sampler-construction-may-still-be-duplicated) |
-| REV-25 | interface | low | accepted | §8.2.9 I2 | [A post stage run without a solve writes scratch to the default store](review-items.md#rev-25-a-post-stage-run-without-a-solve-writes-scratch-to-the-default-store) |
+| REV-25 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A post stage run without a solve writes scratch to the default store](review-items.md#rev-25-a-post-stage-run-without-a-solve-writes-scratch-to-the-default-store) |
 | REV-26 | interface | low | fixed | [WP41](../plans/wp41-accuracy-fixes.md) | [stabilisation_parameters returns an empty mapping off the coupled model](review-items.md#rev-26-stabilisation_parameters-returns-an-empty-mapping-off-the-coupled-model) |
 | REV-27 | interface | low | fixed | [WP38](../plans/wp38-io-split.md) | [The inf-sup check ran at resolve, not at validation](review-items.md#rev-27-the-inf-sup-check-ran-at-resolve-not-at-validation) |
 | REV-28 | performance | low | deferred | §8.2.9 I3 | [The viewer renders every finished run eagerly](review-items.md#rev-28-the-viewer-renders-every-finished-run-eagerly) |
@@ -74,7 +74,7 @@ is a rolling register, and its header stays `open`.
 | REV-52 | interface | low | deferred | §8.2.9 I3 | [deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol) |
 | REV-53 | interface | low | declined | §8.2.9 I3 | [Some walk rules stay as case logic](review-items.md#rev-53-some-walk-rules-stay-as-case-logic) |
 | REV-54 | verification | low | fixed | [WP38](../plans/wp38-io-split.md) | [The MOD-12 check compared names, not modules](review-items.md#rev-54-the-mod-12-check-compared-names-not-modules) |
-| REV-55 | interface | low | accepted | §8.2.9 I2 | [Per-stage mkdtemp fallbacks](review-items.md#rev-55-per-stage-mkdtemp-fallbacks) |
+| REV-55 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Per-stage mkdtemp fallbacks](review-items.md#rev-55-per-stage-mkdtemp-fallbacks) |
 | REV-56 | performance | low | deferred | §8.2.9 I3 | [The geometry editor's simplicity check runs on the Qt thread](review-items.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread) |
 | REV-57 | performance | low | accepted | §8.2.9 I2 | [frame_times decodes every frame](review-items.md#rev-57-frame_times-decodes-every-frame) |
 | REV-58 | performance | low | post-1.0 | §8.2.9 I3 | [The azimuthal reduction projects cells it then drops](review-items.md#rev-58-the-azimuthal-reduction-projects-cells-it-then-drops) |

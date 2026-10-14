@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import tempfile
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
@@ -17,7 +16,6 @@ from nanopnp.charge.stage import (
     read_fields,
     require_charge_artefact,
 )
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -28,6 +26,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC
@@ -58,7 +57,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 logger = logging.getLogger(__name__)
 
-WORKSPACE_DIRNAME = "tmp"
 
 LOAD_FRACTION = 0.05
 
@@ -324,13 +322,7 @@ class SolveStage:
         mesh_content_hash: str,
         boundaries: CoupledBoundaries,
     ) -> dict[str, Path]:
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            safe = "".join(character if character.isalnum() else "-" for character in resolved.name)
-            directory = Path(tempfile.mkdtemp(prefix=f"{safe}-", dir=root))
-        directory.mkdir(parents=True, exist_ok=True)
+        directory = scratch_directory(self._workspace, "solve")
         target = save(
             solution,
             directory / STATE_FILENAME,

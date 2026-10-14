@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import logging
-import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -31,6 +29,7 @@ from nanopnp.io.case import (
     DensitySpec,
     UnsupportedCaseSection,
 )
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 
@@ -38,8 +37,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
 
 logger = logging.getLogger(__name__)
-
-WORKSPACE_DIRNAME = "tmp"
 
 
 def _density(inputs: StageInputs) -> DensitySpec:
@@ -148,11 +145,7 @@ class DensityStage:
             "structure_payload_digest": structure.summary.get("payload_digest"),
         }
         density = DensityMap(values=values, grid=grid, header=header)
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="density-", dir=root))
+        directory = scratch_directory(self._workspace, "density")
         path = density.write(directory / f"{PAYLOAD_NAME}.npz")
         report(progress, 1.0, f"density on {grid.nz} z planes written")
         return DensityArtefact(

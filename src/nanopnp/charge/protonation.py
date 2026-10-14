@@ -8,7 +8,6 @@ import hashlib
 import json
 import logging
 import math
-import tempfile
 from collections import Counter
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -29,7 +28,6 @@ from nanopnp.charge.pqr import (
     write_pqr,
 )
 from nanopnp.core.hashing import Canonicalisable, content_hash, file_hash
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     MissingExtraError,
@@ -48,6 +46,7 @@ from nanopnp.io.artefact import (
 )
 from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.io.resolved import ResolvedProtonation
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 
@@ -75,7 +74,6 @@ logger = logging.getLogger(__name__)
 PAYLOAD_NAME = "protonation"
 """The artefact's payload key, and the ``.npz`` file's stem."""
 
-WORKSPACE_DIRNAME = "tmp"
 """Directory under the store root the payload is written to when no workspace is given."""
 
 FIXED_FLAGS: tuple[str, ...] = ("--drop-water", "--keep-chain")
@@ -1177,12 +1175,7 @@ class ProtonationStage:
         )
 
     def _directory(self) -> Path:
-        if self._workspace is not None:
-            self._workspace.mkdir(parents=True, exist_ok=True)
-            return Path(tempfile.mkdtemp(prefix="protonation-", dir=self._workspace))
-        root = store_root() / WORKSPACE_DIRNAME
-        root.mkdir(parents=True, exist_ok=True)
-        return Path(tempfile.mkdtemp(prefix="protonation-", dir=root))
+        return scratch_directory(self._workspace, "protonation")
 
     def _produced(
         self,

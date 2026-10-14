@@ -132,6 +132,11 @@ EXCLUDED: Final[dict[str, str]] = {
         "directions, so an unknown one means the manifest code and the case schema have diverged "
         "in this build, not that the user asked for something impossible"
     ),
+    "nanopnp.io.workspace:MissingWorkspaceError": (
+        "raised only to a library caller that constructs a stage without its workspace; the "
+        "walk behind every command of the CLI gives each stage one, so no command reaches it and "
+        "the traceback is the diagnostic"
+    ),
     "nanopnp.gui.probe:PayloadError": (
         "raised only inside the packaging probe's --selftest, which catches it, prints it naming "
         "the payload and exits 1 itself (WP24 D17); no command of the CLI reaches the probe, and "

@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import math
 import re
-import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,7 +17,6 @@ from shapely.validation import explain_validity
 from skimage.measure import find_contours
 
 from nanopnp.core.hashing import Canonicalisable
-from nanopnp.core.paths import store_root
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -47,6 +45,7 @@ from nanopnp.io.case import (
     DensitySpec,
     UnsupportedCaseSection,
 )
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
@@ -708,8 +707,6 @@ PAYLOAD_NAME = "profile"
 
 CITATION = "nanopnp stage 4, SPECIFICATION.md section 5.2.1"
 
-WORKSPACE_DIRNAME = "tmp"
-
 
 def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
     resolved = inputs.resolved
@@ -817,11 +814,7 @@ class ContourStage:
             ),
             vertices=[(float(r), float(z)) for r, z in loop],
         )
-        directory = self._workspace
-        if directory is None:
-            root = store_root() / WORKSPACE_DIRNAME
-            root.mkdir(parents=True, exist_ok=True)
-            directory = Path(tempfile.mkdtemp(prefix="contour-", dir=root))
+        directory = scratch_directory(self._workspace, "contour")
         path = write_profile(profile, directory / f"{PAYLOAD_NAME}.yaml")
         logger.info(
             "contour: %d vertices, spacing %.4f nm, feature size %.4f nm, band [%+.3f, %+.3f] nm, "
