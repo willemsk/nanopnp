@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal, TypeAlias
 
 from nanopnp.core.typing import Expression, IntegralTerm, Mesh, Numeric, Option
@@ -46,6 +46,10 @@ class Measures:
                 f"weight_extra_order is {self.weight_extra_order}; it adds orders for the r "
                 "weight and cannot remove any (NUM-07 NOTE on the r weight)"
             )
+
+    def at_order(self, order: int) -> Measures:
+        """Return these measures at finite-element order ``order``."""
+        return replace(self, element_order=order)
 
     @property
     def is_axisymmetric(self) -> bool:

@@ -240,6 +240,7 @@ def test_val01_a_finished_run_reopens_without_re_solving_it(archived_run) -> Non
     directory, store, probe_path, _ = archived_run
     run = reopen(directory, store=store)
     assert run.case.name == "validate-probe"
+    assert run.resolved.name == run.case.name
     assert run.quantities["current_A"] != 0.0
     assert run.quantities["bias_V"] == pytest.approx(0.02)
 

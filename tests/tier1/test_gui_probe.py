@@ -12,7 +12,6 @@ import numpy as np
 import pytest
 
 from nanopnp.charge import protonation
-from nanopnp.charge.pqr import chain_characters
 from nanopnp.core.paths import STRUCTURES_DIR, structure_file
 from nanopnp.gui import probe
 from nanopnp.gui.probe import (
@@ -25,6 +24,7 @@ from nanopnp.gui.probe import (
     licence_notice,
 )
 from nanopnp.io.resolved import ResolvedProtonation
+from nanopnp.structure.ensemble import chain_characters
 
 AMENDED_PAYLOAD_SET = frozenset(
     {

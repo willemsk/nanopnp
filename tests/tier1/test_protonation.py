@@ -188,8 +188,8 @@ def _written_names(tmp_path: Path) -> list[str]:
 def test_ver57_without_titration_the_ph_reaches_nothing(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    from nanopnp.charge.pqr import chain_characters
     from nanopnp.charge.protonation import run_pdb2pqr
+    from nanopnp.structure.ensemble import chain_characters
 
     low = ResolvedProtonation(ph=3.0, titration="none")
     high = ResolvedProtonation(ph=9.0, titration="none")
@@ -296,7 +296,7 @@ def _with_hydrogens(tmp_path: Path, ensemble: AlignedEnsemble) -> AlignedEnsembl
 def test_ver57_a_hse_named_histidine_is_titrated_as_his(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
-    from nanopnp.charge.pqr import chain_characters
+    from nanopnp.structure.ensemble import chain_characters
 
     plain = fragment_2wcd(*HISTIDINE)
     renamed = dataclasses.replace(

@@ -19,7 +19,6 @@ from nanopnp.charge.pqr import (
     PARENT_RESIDUE,
     PQRError,
     PQRFrame,
-    chain_characters,
     check_same_residues,
     is_hydrogen,
     parent_residue,
@@ -48,7 +47,7 @@ from nanopnp.io.case import UnsupportedCaseSection
 from nanopnp.io.resolved import ResolvedProtonation
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
-from nanopnp.structure.ensemble import AlignedEnsemble
+from nanopnp.structure.ensemble import AlignedEnsemble, chain_characters
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np

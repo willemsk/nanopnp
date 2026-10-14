@@ -977,7 +977,7 @@ class FieldStage:
         return produced, lattice, False
 
     def _measures(self, resolved: ResolvedCase) -> Measures:
-        return replace(AXISYMMETRIC, element_order=_element_order(resolved))
+        return AXISYMMETRIC.at_order(_element_order(resolved))
 
     def _prepare(
         self, inputs: StageInputs, *, ingest_mesh: bool

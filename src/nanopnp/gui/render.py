@@ -6,7 +6,7 @@ import json
 import logging
 import multiprocessing
 import queue as queue_module
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from pathlib import Path
 from string import Template
 from typing import TYPE_CHECKING, Literal, TypeAlias
@@ -514,7 +514,7 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
         )
     mesh = deployed_mesh(resolved, mesh_artefact).mesh
     order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-    measures = replace(AXISYMMETRIC, element_order=order)
+    measures = AXISYMMETRIC.at_order(order)
     read = None
     if resolved.charge is not None or resolved.eps_r is not None:
         read = read_fields(resolved)
