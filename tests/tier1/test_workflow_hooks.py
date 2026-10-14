@@ -317,6 +317,35 @@ def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) ->
     assert result.returncode == (0 if prose else 1)
 
 
+# VER-68
+@pytest.mark.parametrize(
+    ("path", "text", "prose"),
+    [
+        (".knowledge/index.md", "x\n", False),
+        ("CHANGELOG.md", "see `.knowledge/index.md`\n", False),
+        ("README.md", "see `.knowledge/` too\n", False),
+        ("README.md", "no citation\n", True),
+        ("deleted.md", None, True),
+    ],
+)
+def test_prose_only_reads_a_citing_markdown_file_as_not_prose(
+    tmp_path: Path, path: str, text: str | None, prose: bool
+) -> None:
+    assert _BASH is not None
+    if text is not None:
+        (tmp_path / path).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / path).write_text(text, encoding="utf-8")
+    result = subprocess.run(
+        [_BASH, str(_PROSE_ONLY)],
+        input=f"{path}\n",
+        capture_output=True,
+        text=True,
+        timeout=10,
+        cwd=tmp_path,
+    )
+    assert result.returncode == (0 if prose else 1)
+
+
 def _branch_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, changed: str) -> Path:
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE"):
         monkeypatch.delenv(name, raising=False)
