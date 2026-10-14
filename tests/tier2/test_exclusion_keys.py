@@ -32,12 +32,12 @@ KEYS_V2 = {
     "solve": "b1370ee6183a4bdebd8697f9dc41846fd5bf8c89d51e246495b498033726806a",
 }
 
-# Keys under repo-wide v0.5 schemas.
+# Keys under repo-wide v0.5 schemas, with the stage-6 wall record of WP46 D2.
 KEYS_V05 = {
     "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
-    "mesh": "89551d4667c54f0d0c648b4c0e7caed46c3aa4c3e3994b9180366a2252d45517",
-    "charge": "474b5b376e231d0f18d0e57e321c5fdb096f92f9a122f9c80b0e3f33e53e30a8",
-    "solve": "80e2ee0ec96e63671bb02613fadacc5e565d51bf2a41aa729bfa8dc54f7797dc",
+    "mesh": "4be21a3052091a42d579d43c923b55d4097bdd358a1fd53b5cb82a998be88c55",
+    "charge": "6c6156eab35e15a72ccd8acd8cdff0758befef64c7e71e87af33be4d7e68f934",
+    "solve": "b5404c1d296fe335ee6668cc0d9175874b3a0c16a9e568b090add0eba3397209",
 }
 
 PROFILE_SCHEMA_V1 = "nanopnp/profile/v1"
@@ -179,7 +179,20 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     dump_v1 = {**prof.model_dump(by_alias=True, mode="json"), "schema": PROFILE_SCHEMA_V1}
     prof_v1 = content_hash(PROFILE_SCHEMA_V1, dump_v1)
     region_v1 = content_hash(REGION_SCHEMA_V1, region.parameters, {"profile": prof_v1})
-    mesh_v1 = content_hash(MESH_ARTEFACT_SCHEMA_V1, mesh.parameters, {"region": region_v1})
+    # At bbca737 the stage-6 key carried the Debye length beside the wall size (WP46 D2 took it
+    # out); the manifest's sizing block still holds it.
+    sizing = mesh.parameters["sizing"]
+    mesh_params_bbca = {
+        **mesh.parameters,
+        "sizing": {
+            **sizing,
+            "wall": {
+                **sizing["wall"],
+                "debye_length_nm": mesh.summary["sizing"]["wall"]["debye_length_nm"],
+            },
+        },
+    }
+    mesh_v1 = content_hash(MESH_ARTEFACT_SCHEMA_V1, mesh_params_bbca, {"region": region_v1})
 
     prot = artefacts["protonation"]
     prot_v1 = content_hash(PROTONATION_SCHEMA_V1, prot.parameters, prot.inputs)
