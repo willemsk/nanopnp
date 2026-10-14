@@ -15,7 +15,7 @@ amendment, decided now and written in the same commit**, never a quiet divergenc
 
 ## Before writing anything
 
-1. Read `.knowledge/00-index.md`, then the sections of the files the package touches. Read
+1. Read `.knowledge/index.md`, then the sections of the files the package touches. Read
    `.claude/rules/physics-numerics.md` and `.claude/rules/python.md`: the plan must respect both,
    and a path-scoped rule does not load while you write only Markdown.
 2. Read `SPECIFICATION.md` §8.1, the sections the package implements, and its Appendix A rows.

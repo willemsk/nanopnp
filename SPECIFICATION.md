@@ -442,7 +442,7 @@ Outside the scope of v1. Identifiers retained from v0.4.
 
 This section states the mathematical model. Requirements carry `PHY-nn` IDs and use the keywords
 of §1.5. Symbols follow Willems K. et al., *Nanoscale* **12**, 16775–16795 (2020) and
-`.knowledge/01-physics-epnpns.md`. Where the reference and the published text differ, the COMSOL
+`.knowledge/01-physics-epnpns/index.md`. Where the reference and the published text differ, the COMSOL
 model report governs and §4.6 records the divergence.
 
 ### 4.1 Domains, boundaries and symbols
@@ -691,11 +691,11 @@ that construction's limit as the spacing goes to zero, without its cost, which w
 voxel updates for the 50-frame ClyA ensemble. Step 6 deposits onto the
 deployed mesh rather than sampling a grid there, which removes the aliasing of the consumer leg
 that the §4.4 NOTE measures on the delivered table. The reference built its table from a 2D Gaussian
-in (r, z) divided by `2πr` at the field point (`.knowledge/04` §3, gap G4). PHY-17 forbids that
+in (r, z) divided by `2πr` at the field point (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`, gap G4). PHY-17 forbids that
 construction, so it is not reproduced. Off the axis the two carry the same charge and the same
 z-marginal, and differ pointwise by `(r − r_i)/(2 r_i)` of the local value: first order in
 `w_i/r_i` and odd about the atom, so the 3D construction's radial centroid lies `w_i²/(4 r_i)`
-further out (`.knowledge/04` §3.3 [tested]). The difference on the ClyA
+further out (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice` [tested]). The difference on the ClyA
 ensemble is measured at Tier 3 rather than accommodated.
 
 NOTE (PHY-16 step 3, protonation as run; WP27): PDB2PQR SHALL be run
@@ -725,7 +725,7 @@ to a patch of half-width `6 w_i` about it in `r` and `z`, which leaves out `1 �
 4.3 × 10⁻¹⁷` of its charge. Its trapezoid sum on the lattice is then renormalised to `q_i e`, divided
 by the number of frames. That renormalisation is PHY-18's: on the lattice the sum is exact to
 10⁻¹⁵ off the axis, but an atom within a few `w_i` of the axis is short by `h²/(6 w_i²)`
-(`.knowledge/04` §3.3). A spacing above half the smallest `w_i` of a charged atom SHALL be refused
+(`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice`). A spacing above half the smallest `w_i` of a charged atom SHALL be refused
 naming that atom. The lattice and the atoms are in the model frame, `z ← z −
 geometry.membrane.centre_z_nm` when the case generates its mesh, as stage 5 moves the profile, and
 unshifted beside a supplied mesh. Atoms of zero charge are not deposited. The `r`-weighted L²
@@ -734,7 +734,7 @@ triangle, with its integrals taken by the lattice's trapezoid rule, each node co
 element containing it. Every test function of the potential's space is a polynomial of that order on
 each element, so the assembled source equals the lattice integral of the kernel against every test
 function, and the projection adds no error of its own. The charge is deposited on every material, as
-the reference applied `ρ_pore` across all computational domains (`.knowledge/04` §3). The deposit
+the reference applied `ρ_pore` across all computational domains (`.knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`). The deposit
 SHALL be refused, naming the quantity and its location (QR-12), where lattice charge falls on no
 element of the mesh, or where less than half of `Σ|q_i|` has its atom centres in solid materials,
 which is how a structure in another frame than its mesh shows.
@@ -1661,7 +1661,7 @@ its value rather than narrowed in the schema.
 `kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the `sharpness`. R_i is the
 atom's CHARMM van der Waals radius (Rmin/2) by residue and atom name, from the radius set of
 PDB2PQR's `CHARMM.DAT`, held as data under `data/radii/`. This is an **author ruling**: it is the set carried by the per-frame PQR files of the reference ensemble
-(`.knowledge/04` §1.1). The histidine names `HID`, `HIE` and `HIP` read as CHARMM's `HSD`, `HSE`
+(`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`). The histidine names `HID`, `HIE` and `HIP` read as CHARMM's `HSD`, `HSE`
 and `HSP`. `HIS` resolves only where every one of those three that names the atom gives the same
 radius. `ILE CD1` reads as `CD`, `OXT` as `OT2`,
 and terminal atoms resolve through the patch residues. An atom the set does not name SHALL be
@@ -2324,7 +2324,7 @@ geometry pipeline's compiled payloads, MDAnalysis and gemmi reading a structure,
 contour extraction, Shapely's polygon checks through GEOS, and Gmsh meshing a square (§8.2.2 B8).
 An extension that imports and then cannot load its library is RSK-13's failure, which an import
 alone does not detect: Gmsh's Python module imports with its library missing and fails on its first
-call (`.knowledge/07-software-stack.md` §5). Since WP31 the bundle also carries the charge
+call (`.knowledge/07-software-stack/05-gui-and-packaging.md`). Since WP31 the bundle also carries the charge
 pipeline's protonation payloads, PDB2PQR and PROPKA, with the data files each reads beside its own
 modules. `--selftest` protonates a nine-residue peptide at two pH values and requires the two net
 charges measured for it, so that a bundle missing PROPKA's parameter file fails naming PROPKA,
@@ -2470,7 +2470,7 @@ one extra order: on the three-layer capacitor of VER-56, whose exact solution th
 the error is 0.38 `V_T` (3 %) next to the axis at the default and 1.1 × 10⁻¹³ with it. The coupled
 models keep the default here, and whether their forms should gain the same order is open: it moves
 every number they produce, so it is a decision with a measurement, not a side effect of WP26
-(`.knowledge/06-numerics-fem.md` §2.2). A supplied field's source term is assembled at order 8
+(`.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`). A supplied field's source term is assembled at order 8
 (PHY-19's NOTE on one rule), which settles that term and not this question. **Measured by WP34**, through `Measures.weight_extra_order`, a seam no case key,
 option or flag reaches (`tests/tier2/test_axis_weight_order.py`, `slow`, stabilisation `none`). On
 VER-18's coupled manufactured solution at `maxh` 0.4, 0.2 and 0.1 nm, one extra order leaves the
@@ -3226,14 +3226,14 @@ reference inputs in the validated configuration, so a difference there belongs t
 the reference's own discretisation (RSK-09). The recorded leg solves the same cases on the geometry
 and charge generated from the ensemble. Its difference from the gated leg is what the pipeline adds,
 and it gates nothing. Every published number compared SHALL be declared with its unit and sign
-convention. A current SHALL also declare the boundary it was evaluated on (`.knowledge/04` §6.6),
+convention. A current SHALL also declare the boundary it was evaluated on (`.knowledge/04-clya-geometry-and-charge/06-validation-targets.md#66-auxiliary-formulas-needed-to-compute-the-targets`),
 and an average its weight. The published pore averages may omit the `2πr` Jacobian
-(`.knowledge/04` G6), so the declaration settles G6 and the comparison does not guess it. A
+(`.knowledge/04-clya-geometry-and-charge/08-gaps-and-ambiguities-questions-for-the.md` G6), so the declaration settles G6 and the comparison does not guess it. A
 reference value missing its declaration is refused, as VAL-03 refuses a golden. The tolerances are
 not QR-02's 1 % and 0.5 %. The published values carry no discretisation error bar, were solved with
 streamline and crosswind stabilisation on, and are quoted to two or three significant figures. The
 work package states each tolerance with that argument before the comparison is run. The published
-correction-ablation percentages (`.knowledge/04` §6.5) are recorded beside the verdict. A
+correction-ablation percentages (`.knowledge/04-clya-geometry-and-charge/06-validation-targets.md#65-correction-ablation-targets-t-sectransportcomparison_corrections`) are recorded beside the verdict. A
 discrepancy that appears under one correction family alone localises to it, which recovers part of
 what a field comparison would have localised.
 
@@ -3276,7 +3276,7 @@ at both tips (WP22 Outcomes). With `Δ = r_ours − r_ref` and `r = r_ref`, thre
 | ClyA-AS ensemble, DCD frames 48–97 (the Phase 2 gate) | 3 | ≤ 5 % | ≤ 0.1 nm | ≤ 0.1 nm | `centre_z_nm = 0` in the MD frame (G9) |
 | Vendored 2WCD, chains A–L | 2 | ≤ 10 % | ≤ 0.1 nm | ≤ 0.2 nm | Cα centroid of residues 8–292 at `Z_MD = 5.655` nm, the MD structure's over DCD frames 48–97, which the Tier-3 leg pins to 0.01 nm (the centroid with residue 7 included is 5.63 nm and is not the reference; §8.2.4 D7) |
 
-The argument for the tolerances follows. ±1 % on G (`.knowledge/04` G3) was a floor set while the
+The argument for the tolerances follows. ±1 % on G (`.knowledge/04-clya-geometry-and-charge/08-gaps-and-ambiguities-questions-for-the.md` G3) was a floor set while the
 vertex list was unavailable. The author has since confirmed that the table was made with
 `pqr2grid`'s radial binning at a 15 nm half-extent, an index-to-radius erratum worth about −8 % of
 ε_G, and then by a hand edit that moved vertices by about the same amount the other way. Neither
@@ -3380,7 +3380,7 @@ by the residual rather than by the magnitude of either term.
 NOTE: the ACS Nano 2019 trapping work is not a continuum analyte calculation. It uses equilibrium
 Poisson–Boltzmann in APBS on a coarse-grained bead model with a one-dimensional analytic rate
 model, and provides no stress-tensor force profile. Detail in
-`.knowledge/05-analyte-and-forces.md` §10.
+`.knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md`.
 
 ### 7.6 Continuous integration
 
@@ -3694,7 +3694,7 @@ single line. Where a ruling changes a clause, the last column names the clause a
 | J2 | *Superseded by L2.* **The commit hook runs the fast checks and the affected tests only**: the lock check, ruff, the format check and mypy, then the tests whose executed code or data the change touches, chosen by a test-impact selection. The development selection no longer runs on every commit | A typical commit costs about a minute, not 3.5. The full selection runs once before a push (J3) and in CI on every push, so §7.6's table is unchanged. The selection is proved by a test that plants a change and asserts that the tests executing it are selected (proposed VER-74). A change the tool cannot map, such as one to a conftest, the lock, a hook or a file it has no record of, falls back to the development selection | §7.6's development-selection NOTE and `CLAUDE.md`'s *Commands*, in WP43 |
 | J3 | *Superseded by L3.* **The push gate runs once per push, in the background, and reports only its failures.** A follow-up fix after a passing run re-runs the affected tests and the changed-line coverage over them, not the whole gate. The suite is made cheaper by §7.6's four levers only: sharing the 2WCD seeds and the meshes across workers, balancing the workers by recorded durations, and cheaper coverage collection | A session no longer polls or re-runs the gate for a one-line fix. CI's full run on every push stays the authority. No tolerance is loosened, and no oracle weakened | §7.6's coverage NOTE, `CLAUDE.md`, `gate.sh`, and the `wp-implement`, `wp-ship` and `steward` skills, in WP43 |
 | J4 | **CI runs one leg on a pull request and the platforms after a merge.** On a pull request: ubuntu on Python 3.14 runs lint, types, Tiers 1 and 2 with `--extended`, coverage sharded by recorded durations, diff-cover and the documentation build. On a push to `main`, macOS and Windows on Python 3.14 run Tiers 1 and 2 with `--extended`, with the Windows bundle probe; the ubuntu leg is skipped when the merged tree equals the pull-request head that passed. Nightly, Python 3.11, 3.12 and 3.13 install from wheels and run Tier 1, recorded and not gated, beside Tier 3. Before a tagged release, the full matrix runs. Every job has a timeout; the installs are trimmed and the apt step cached | Fewer runner minutes and a shorter wait. A platform-only failure, such as the VER-62 drift of 8 October 2026 on macOS and Windows, now surfaces on `main` after the merge and is fixed forward in a new pull request. QR-09 is unchanged: its evidence for 3.11 to 3.13 is the nightly install and the release run | §7.6's table and its development-selection NOTE ("on every leg"), in WP43. **Amended, 12 October 2026** (J10): the `extended` walks leave the pull-request leg |
-| J5 | **Python 3.14 is the development and CI default**, replacing 3.12: uv's pinned interpreter, the gate and CI's pull-request leg. Before the switch, WP43 asserts VER-62 on 3.14 at round-off against the recorded golden | One interpreter everywhere, so the local gate and CI agree. A move beyond round-off stops the package for the author's ruling, under G10 | `CLAUDE.md` ("developed on 3.12") and `.knowledge/07`, in WP43 |
+| J5 | **Python 3.14 is the development and CI default**, replacing 3.12: uv's pinned interpreter, the gate and CI's pull-request leg. Before the switch, WP43 asserts VER-62 on 3.14 at round-off against the recorded golden | One interpreter everywhere, so the local gate and CI agree. A move beyond round-off stops the package for the author's ruling, under G10 | `CLAUDE.md` ("developed on 3.12") and `.knowledge/07-software-stack/index.md`, in WP43 |
 | J6 | **The minimum Python stays 3.11, and lazy imports (PEP 810) are not adopted.** On 11 October 2026, h5py, gmsh, PyYAML, MDAnalysis and gemmi had no CPython 3.15 wheels; `import nanopnp` took 0.1 s and collection 3.7 s | A 3.15 floor would break QR-09 and require source builds (CON-07), for no measurable gain in the gate. OPN-09 records when to revisit | §10 gains OPN-09, in this commit |
 | J7 | *Superseded by L3 and L8.* **The loop's budgets are pre-registered**: the commit hook within 60 s for a typical one-module change on a 4-core machine; the push gate within 5 minutes (10 after the amendment below); the pull-request critical path in CI within 6 minutes; at least 30 % fewer tokens read before code in a `/wp-implement` session, measured on one package against WP42's. CI publishes the test durations and fails a selection that exceeds its recorded budget by more than a margin WP43's plan argues (proposed VER-73) | A ratchet against the drift back to ten minutes. On a miss, the package reports the measured number and its cause, and the author rules whether to re-argue or carry it. A budget is never met by loosening a tolerance or weakening an oracle (§7.6) | §7.6 gains a budget NOTE, in WP43; §8.1's Phase 4 gate, in this commit. **Amended, 12 October 2026**: the critical path is the pull-request leg's after J10; the token figure is counted as J11 defines. **Amended, 13 October 2026** (author, ruling REV-82): the push gate is within 10 minutes, the measured floor being example 07's walk (421 to 477 s), which §7.6's runtime NOTE does not let the suite shorten |
 | J8 | *Superseded by L6.* **Delegation runs through a defined roster of agents.** `.claude/agents/` defines each agent's model, tools and effort in its frontmatter, as a starting roster: a gate runner (Sonnet), a specification reader that returns clauses by identifier, a surveyor (Haiku, read-only), a CI-log classifier (Sonnet) and a physics reviewer (Opus, read-only). The model policy gives Haiku read-only retrieval and summaries that the caller checks. The skills and agent files are made leaner: they read clauses by identifier rather than whole sections, rules that apply only to some paths load only for those paths, and duplicated text is removed. A script reports a session's tokens, compactions, gate minutes and agent spawns | The policy is enforced by configuration, not remembered, as the gate hook made the gate structural. Context stays smaller, and J7 measures it. Anything that can produce a plausible wrong number stays on Opus | `.claude/model-policy.md`, `CLAUDE.md` and the skills, in WP43. **Amended, 12 October 2026** (author, reviewing WP43's plan): the specification reader is a script, not an agent, so the starting roster is four; the three retrieval agents skip `CLAUDE.md`; the physics reviewer runs at high effort; a hook on agent calls refuses a model other than the roster's, or none; the usage script reports tokens and spawns only; and the physics and numerics rules cover every module they govern, read explicitly by the planning and shipping skills |
@@ -3803,7 +3803,7 @@ otherwise report unbounded throughput for a resumed sweep.
 | ID | Item | Owner | Blocks |
 |---|---|---|---|
 | **OPN-01** | Radial potential at 0.15 M: the text quotes −14/−47 mV, the appendix table −29/−57 mV | Author | Use of the radial potential as a regression target; excluded from Tier 3 and Tier 4 targets until settled |
-| **OPN-02** | Location of the author's contour script. **Closed, 26 September 2026 (WP20 plan, Design §1).** It is `create_polygon_contour` in the author's `pqr2grid`, first committed 7 October 2019. It takes the first contour found at 0.25, applies Shapely `simplify(0.1)` and writes at `%.2f`, with no smoothing, spacing step or gate. Its radial binning places column j at `jh`, where the bin's centre is `(j + ½)w`, with `w = (2L + 1)h/(2L + h)`. That is an index-to-radius erratum (`.knowledge/04` §1.2). The WP20 plan, D2, records what ports | Closed | Closed |
+| **OPN-02** | Location of the author's contour script. **Closed, 26 September 2026 (WP20 plan, Design §1).** It is `create_polygon_contour` in the author's `pqr2grid`, first committed 7 October 2019. It takes the first contour found at 0.25, applies Shapely `simplify(0.1)` and writes at `%.2f`, with no smoothing, spacing step or gate. Its radial binning places column j at `jh`, where the bin's centre is `(j + ½)w`, with `w = (2L + 1)h/(2L + h)`. That is an index-to-radius erratum (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#12-the-authors-contour-script-read`). The WP20 plan, D2, records what ports | Closed | Closed |
 | **OPN-03** | PlyAB supporting-information details: analyte relative permittivity, per-position mesh strategy (remesh against ALE), barrier heights in kT, electro-osmotic flow velocities | Author, from the retained model files | Analyte force regression targets and adoption of PlyAB as a second reference case after v1.0 |
 | **OPN-04** | ClyA-AS mutation list: 8 mutations relative to the *S. typhi* wild type in one place, 27 relative to the *E. coli* 2WCD structure in another. Both internally correct | Author, with the structure-preparation stage | Provenance of `Q_net` (FR-12); the structure-preparation stage must record which list was applied to which PDB |
 | **OPN-05** | Pore-polygon vertex table. **Delivered** as `data/geometry/clya_as_radial_geometry.csv`, 185 vertices, extents as published. **Closed by the author, 5 September 2026: the delivered table is the geometry of record**, and the model report's 190 is the count after COMSOL's import conditioning. §2.2 and §5.2.1 are amended to it; the §5.2.1 fixture, `mesh/reference.py` and VAL-05 all cite it | Closed | Closed |
@@ -3822,16 +3822,16 @@ first commit, so that agents and people working on the codebase read from local,
 | Path | Content |
 |---|---|
 | `CLAUDE.md` | Agent instructions; points at the index; carries the maintenance rule |
-| `.knowledge/00-index.md` | Index, conventions, provenance, open questions |
-| `.knowledge/01-physics-epnpns.md` | Normative equations, corrections, parameters, errata |
-| `.knowledge/02-electrokinetics-background.md` | EDL, Poisson–Boltzmann, electro-osmosis, selectivity, rectification |
-| `.knowledge/03-nanopore-biology.md` | Biological nanopores, ClyA, electrophysiology, glossary |
-| `.knowledge/04-clya-geometry-and-charge.md` | The pipeline as executed, with numeric validation targets |
-| `.knowledge/05-analyte-and-forces.md` | Analyte representation, forces, trapping |
-| `.knowledge/06-numerics-fem.md` | Weak forms, solvers, continuation, QoI extraction |
-| `.knowledge/07-software-stack.md` | Libraries, versions, licences, tested behaviours |
-| `.knowledge/08-validation-benchmarks.md` | The four-tier benchmark ladder with formulas |
-| `.knowledge/09-comsol-reference-settings.md` | Reference mesh, solver and stabilisation settings |
+| `.knowledge/index.md` | Index, conventions, provenance, open questions |
+| `.knowledge/01-physics-epnpns/index.md` | Normative equations, corrections, parameters, errata |
+| `.knowledge/02-electrokinetics-background/index.md` | EDL, Poisson–Boltzmann, electro-osmosis, selectivity, rectification |
+| `.knowledge/03-nanopore-biology/index.md` | Biological nanopores, ClyA, electrophysiology, glossary |
+| `.knowledge/04-clya-geometry-and-charge/index.md` | The pipeline as executed, with numeric validation targets |
+| `.knowledge/05-analyte-and-forces/index.md` | Analyte representation, forces, trapping |
+| `.knowledge/06-numerics-fem/index.md` | Weak forms, solvers, continuation, QoI extraction |
+| `.knowledge/07-software-stack/index.md` | Libraries, versions, licences, tested behaviours |
+| `.knowledge/08-validation-benchmarks/index.md` | The four-tier benchmark ladder with formulas |
+| `.knowledge/09-comsol-reference-settings/index.md` | Reference mesh, solver and stabilisation settings |
 | `data/corrections/willems2020_nacl.yaml` | Fitted correction parameters, transcribed and verified |
 
 Claims verified by running code are marked `[tested]`, claims verified by arithmetic `[verified]`,
@@ -4008,7 +4008,7 @@ of §3, so they leave the count unchanged. VER-75 checks the prose rule of §8.2
 ## Appendix B. Reference COMSOL model settings
 
 Condensed from the 162-page model report. Full detail is in
-`.knowledge/09-comsol-reference-settings.md`.
+`.knowledge/09-comsol-reference-settings/index.md`.
 
 | Aspect | Setting |
 |---|---|

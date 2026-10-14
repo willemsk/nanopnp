@@ -12,7 +12,7 @@ execution taught, and open the PR. It does not chain into `/wp-ship`.
 
 1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its decisions are binding,
    subject to the specification. Correct a wrong decision in the brief (and the specification).
-2. `.knowledge/00-index.md`, then the sections of the files the package touches.
+2. `.knowledge/index.md`, then the sections of the files the package touches.
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites; `.claude/scripts/clause.py
    <ID>` prints one with its NOTEs and rulings.
 4. `uv sync --all-extras --frozen` if `.venv` is not current.
@@ -54,7 +54,7 @@ State every rule in the present tense; history lives in the log, `CHANGELOG.md`,
 | Record | Gets |
 |---|---|
 | `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances: normative changes only |
-| `.knowledge/<file>.md` | Durable findings marked **[tested]** or **[verified]**, with the source (see `.knowledge/00-index.md`) |
+| `.knowledge/<file>.md` | Durable findings marked **[tested]** or **[verified]**, with the source (see `.knowledge/index.md`) |
 | `docs/plans/wp<n>-*.md` | The current Execution brief and concise `> **Outcome — <what changed>.**` annotations linking the evidence; measured numbers the plan requested |
 | `docs/project/review-findings.md` | A `REV-nn` row, with its section in `review-items.md`, for every item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12). A row the package resolves is set `fixed` |
 

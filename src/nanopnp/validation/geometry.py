@@ -30,7 +30,8 @@ PLANE_SPACING_NM = 0.05
 
 TIP_BAND_NM = 0.1
 
-# The trans constriction in the model frame: .knowledge/04-clya-geometry-and-charge.md section 2.
+# The trans constriction in the model frame:
+# .knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md.
 CONSTRICTION_WINDOW_NM = (-1.85, 1.6)
 
 # Measured 5.6553 nm on the 50-frame ensemble, residues 8-292.
@@ -42,7 +43,8 @@ REGISTRATION_RESIDUES = (8, 292)
 
 REGISTRATION_CHAINS = tuple("ABCDEFGHIJKL")
 
-# The binning the reference was made with: .knowledge/04-clya-geometry-and-charge.md section 1.2.
+# The binning the reference was made with:
+# .knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md.
 PQR2GRID_HALF_EXTENT_NM = 15.0
 
 PQR2GRID_SPACING_NM = 0.05

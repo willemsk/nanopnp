@@ -2,7 +2,7 @@
 #
 # Material for MkDocs on MkDocs 1.x. Material is in maintenance mode and does not
 # support MkDocs 2, so this file stays readable by Zensical, its successor: no
-# `hooks:`, and no plugin Zensical has no shim for (.knowledge/07-software-stack.md
+# `hooks:`, and no plugin Zensical has no shim for (.knowledge/07-software-stack/index.md
 # section 13). Generated pages are written by a separate step, never by a hook:
 #
 #   uv sync --all-extras --group docs   (exact: without --all-extras it drops the extras)

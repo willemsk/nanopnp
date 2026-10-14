@@ -46,10 +46,11 @@ CASE_NAME = "clya-0.5M-plus50mV.case.yaml"
 
 ORDERS = (0, 1)
 
-# Pore axial extent: .knowledge/04 section 2; .knowledge/09 C.
+# Pore axial extent: .knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md;
+# .knowledge/09-comsol-reference-settings/04-physics-settings.md
 PORE_Z_NM = (-1.85, 12.25)
 
-# Pore-surface layer thickness: .knowledge/09 C.
+# Pore-surface layer thickness: .knowledge/09-comsol-reference-settings/04-physics-settings.md
 SURFACE_LAYER_NM = 0.5
 
 STAGE_MODULES = (

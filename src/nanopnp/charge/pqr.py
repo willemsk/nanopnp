@@ -30,7 +30,8 @@ __all__ = [
 PATCH_RESIDUES: frozenset[str] = frozenset({"TER", "DISU"})
 """The residue names ``--ffout=CHARMM`` gives patch atoms, which name no residue.
 
-``TER`` for a terminal patch (``.knowledge/07`` section 3) and ``DISU`` for the
+``TER`` for a terminal patch (``.knowledge/07-software-stack/03-charge-and-electrostatics.md``) and
+``DISU`` for the
 ``CB`` and ``SG`` of a disulfide-bonded cysteine, written ``1CB`` and ``1SG``
 (``CHARMM.names`` of PDB2PQR 3.7.1): without ``DISU``
 here every cysteine in a disulfide carries two names and is refused.

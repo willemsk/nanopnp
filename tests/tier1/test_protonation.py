@@ -44,7 +44,7 @@ pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
 
 Fragment = Callable[..., AlignedEnsemble]
 
-# GLU 18 to LEU 26 of chain A: .knowledge/07 section 3.
+# GLU 18 to LEU 26 of chain A: .knowledge/07-software-stack/03-charge-and-electrostatics.md.
 FRAGMENT = (18, 26)
 
 HISTIDINE = (285, 292)

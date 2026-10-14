@@ -38,7 +38,7 @@ paths:
   the gate, quantity and location (QR-12). Never return a plausible wrong answer.
 - **Integration order ≥ 3 on every form carrying `1/r`** (VER-07); order 2 samples `r = 0` and gives NaN.
 - **Never compute ionic current from a cross-section integral of the CG flux.** Use the indicator form
-  or the variational reaction flux, and cross-check both (FR-23, QR-04; `.knowledge/06` §7).
+  or the variational reaction flux, and cross-check both (FR-23, QR-04; `.knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`).
 - **Newton convergence needs the relative update on the undamped direction as well as the residual**;
   residual alone breaks warm starts. Never call a step that raised the residual convergence.
 - **Reach hard cases by continuation, not a cold solve** (FR-17); warm-start sweeps from a converged

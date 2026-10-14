@@ -172,7 +172,8 @@ def sample_at(
     import numpy as np
 
     # A space with ``definedon`` returns zero at an interface node whose point search lands outside
-    # the region; a whole-domain carrier is exact (.knowledge/07-software-stack.md, IF-07 export).
+    # the region; a whole-domain carrier is exact
+    # (.knowledge/07-software-stack/04-geometry-meshing-and-io.md).
     if carriers is None:
         carriers = {}
     space = carriers.get((order, dimension))

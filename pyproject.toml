@@ -97,7 +97,7 @@ packaging = [
 # The documentation site (QR-15, VER-45; WP16 D1, D12). Not a default group:
 # nothing on the end-user path needs it. Material for MkDocs is in maintenance
 # mode and does not support MkDocs 2, so MkDocs is pinned below 2
-# (.knowledge/07-software-stack.md section 13).
+# (.knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md).
 docs = [
     "mkdocs>=1.6,<2",
     "mkdocs-material>=9.5",
@@ -107,7 +107,7 @@ docs = [
 # a group never reaches a wheel, so APBS is not on the end-user path (CON-07).
 # A default group so that the gate runs VAL-06 wherever a wheel exists, which is
 # Linux x86_64 and macOS; one `py3-none` wheel serves every Python. Windows has
-# none, and the tests skip there by name (.knowledge/07-software-stack.md section 3).
+# none, and the tests skip there by name (.knowledge/07-software-stack/03-charge-and-electrostatics.md).
 apbs = [
     "apbs-binary==3.4.1.1 ; (platform_machine == 'x86_64' and sys_platform == 'linux') or sys_platform == 'darwin'",
 ]

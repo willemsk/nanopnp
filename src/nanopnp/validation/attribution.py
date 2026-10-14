@@ -117,7 +117,8 @@ LADDER: tuple[Rung, ...] = (
         stabilisation="reference",
         velocity_element="P1",
         pressure_element="P1",
-        what="the reference's own discretisation (.knowledge/09 C.2, E rows 1, 2, 4)",
+        what="the reference's own discretisation "
+        "(.knowledge/09-comsol-reference-settings/04-physics-settings.md, E rows 1, 2, 4)",
     ),
 )
 

@@ -41,9 +41,9 @@ Source context for a failure starts with the WP's Execution brief.
 
 `.github/workflows/ci.yml`, with `UV_LOCKED: "1"` throughout, so a `uv.lock` that no longer matches
 `pyproject.toml` fails every job at `uv sync`. pytest runs `-n auto --dist loadfile` with
-`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`.knowledge/07` §12), and
+`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`), and
 NumPy's SIMD dispatch capped at `X86_V3` by `NPY_DISABLE_CPU_FEATURES` (VER-62's reference environment,
-`.knowledge/06` §8.1.5), except `tests/tier1/test_gui_widgets.py`. That module runs serially in its own step on Windows and
+`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit`), except `tests/tier1/test_gui_widgets.py`. That module runs serially in its own step on Windows and
 macOS only, because it waits on a real QtWebEngine page by the wall clock and busy workers starved it
 (run 113). On ubuntu it skips itself, because PySide6 does not import there.
 
@@ -106,7 +106,7 @@ failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 | Windows or macOS only | Paths, line endings, thread counts, float repr | `pathlib` everywhere; pin thread counts in the test |
 | A tier 1 test | A real regression | Root-cause it |
 | `diff-cover` below 100 % | A changed line, or one branch arm, no gated test executes | Write the test that executes and asserts it. `# pragma: no cover - <reason>` only for a line no test on this leg can reach, never to get green (VER-72 f) |
-| `gmsh does not import` | The runner lacks the X and GL libraries | Install them (`.knowledge/07` §4); never unset the variable |
+| `gmsh does not import` | The runner lacks the X and GL libraries | Install them (`.knowledge/07-software-stack/04-geometry-meshing-and-io.md`); never unset the variable |
 | Fails under `-n`, passes serially | Order dependence or leaked state (a global, a patched attribute, a cwd) | Name the state and isolate it. Never drop `-n`, pin a worker or call it a flake |
 | A tier 2 analytic benchmark | **Evidence** | Read the next section first |
 | VER-62 number stability | The message decides: a recorded mesh or a moved mesh on the reference environment is G10 evidence; an unseen mesh on another leg is a platform deploying a mesh the golden has not seen | Investigate, then revert or rule and re-pin (§8.2.7 G10). For an unseen mesh, fold it in with `tests/tier2/data/merge_number_stability.py --entry` and say so in the PR; never fold a reference-environment record or edit `moved_tolerance` by hand |

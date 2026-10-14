@@ -13,7 +13,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 def _segment(x: np.ndarray, radius: np.ndarray) -> np.ndarray:
     import numpy as np
 
-    # atan2, not asin: asin is ill-conditioned near x = R (.knowledge/07-software-stack.md §2).
+    # atan2, not asin: asin is ill-conditioned near x = R
+    # (.knowledge/07-software-stack/02-structure-trajectory-and-density.md).
     s = np.sqrt(np.maximum((radius - x) * (radius + x), 0.0))
     area: np.ndarray = 0.5 * (x * s + radius**2 * np.arctan2(x, s))
     return area
