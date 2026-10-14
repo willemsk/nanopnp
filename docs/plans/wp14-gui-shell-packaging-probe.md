@@ -55,7 +55,7 @@ must carry every identifier claimed. Neither was cut to meet the count.
 | The Phase-1 GUI increment as specified | `SPECIFICATION.md` §8.1's GUI-increment table, §8.2 criterion 4, §8.2.1 amendments A2 and A4 |
 | The stage plumbing the shell consumes | `src/nanopnp/core/stages.py` (`Progress`, `CancelToken`, `CancelFlag`, `Cancelled`); `io/run.py`'s `run_case`; `solve/stage.py`'s `_instrumented` |
 | The schema and its dotted paths | `SPECIFICATION.md` §5.3.1 and every NOTE under it; `src/nanopnp/io/case.py` (`field_at`, `value_at`, `substitute`, `render_problems`); `src/nanopnp/io/defaults.py` (`SWITCH_PATHS`, `CONFIGURATION_PATHS`) |
-| Licences the bundle carries | `SPECIFICATION.md` CON-07, CON-09, CON-11, ADR-003; `.knowledge/07-software-stack.md` §5 and §6 |
+| Licences the bundle carries | `SPECIFICATION.md` CON-07, CON-09, CON-11, ADR-003; `.knowledge/07-software-stack/05-gui-and-packaging.md` and §6 |
 | The spawned-worker discipline to copy | `src/nanopnp/sweep/run.py` module docstring and `_worker`/`_pool` |
 | The exit-code contract the shell must agree with | `SPECIFICATION.md` §3.1's IF-02 NOTE; `src/nanopnp/cli/errors.py` |
 
@@ -63,8 +63,8 @@ must carry every identifier claimed. Neither was cut to meet the count.
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| Shell technology | **PySide6 native**. ADR-004's local-web-app alternative (FastAPI + `pywebview`) is **closed** in this commit | Author ruling, 20 September 2026, closing the alternative ADR-004 left "on the table… the choice may wait until Phase 1". PySide6 is already the `gui` extra and is named in §2.6 and CON-09; `QWebEngineView` hosting NGSolve webgui is **[tested]** in `.knowledge/07` §5 |
-| Packaging tool | **PyInstaller**, one-dir, not one-file | Author ruling, 20 September 2026. ADR-004 named briefcase or conda-constructor; PyInstaller is the third candidate `.knowledge/07` §5 lists and the sharpest RSK-13 detector — it resolves the four binary payloads or names the one that defeats it. One-dir: §Design 3. ADR-004 amended in this commit |
+| Shell technology | **PySide6 native**. ADR-004's local-web-app alternative (FastAPI + `pywebview`) is **closed** in this commit | Author ruling, 20 September 2026, closing the alternative ADR-004 left "on the table… the choice may wait until Phase 1". PySide6 is already the `gui` extra and is named in §2.6 and CON-09; `QWebEngineView` hosting NGSolve webgui is **[tested]** in `.knowledge/07-software-stack/05-gui-and-packaging.md` |
+| Packaging tool | **PyInstaller**, one-dir, not one-file | Author ruling, 20 September 2026. ADR-004 named briefcase or conda-constructor; PyInstaller is the third candidate `.knowledge/07-software-stack/05-gui-and-packaging.md` lists and the sharpest RSK-13 detector — it resolves the four binary payloads or names the one that defeats it. One-dir: §Design 3. ADR-004 amended in this commit |
 | Where the bundle is built and verified | A **`windows-latest` CI job builds it on every push** and uploads the artefact; `--selftest` launches it headlessly there; the **author double-clicks it once**, and that observation closes §8.2 criterion 4 | Author ruling, 20 September 2026, closing the phase plan's open decision. CI makes RSK-13 a continuous detector rather than a one-off; "double-clickable on a user's desktop" is a human observation, not a process exit code |
 | Is the bundle job gated? | **Yes** — a failed build fails CI. It is demoted to `continue-on-error` only if PyInstaller proves flaky for reasons outside this repository, and that demotion is recorded with the failure that caused it | RSK-13's detection value is entirely in being loud. A probe nobody looks at is amendment A2 again |
 | What the probe must import | PySide6 `QtWidgets`, **`QtWebEngineWidgets`**, `ngsolve`, `netgen`, `ngsolve.webgui`, in one process | Those are the binary payloads RSK-13 is about. A probe omitting Qt WebEngine tests the easy half (§Design 3) |
@@ -124,7 +124,7 @@ In dependency order. Read §Design 3 before item 2, §Design 1 before item 5, §
 | 8 | `src/nanopnp/gui/run_model.py` | The run-control view-model: the state machine (`idle → running → finished/failed/cancelled`), the monotone fraction, the message log, and the `RunResult` record read back from the run directory. No PySide6 import | IF-09, FR-27 |
 | 9 | `src/nanopnp/gui/widgets/` | `CaseEditorWidget` (a form built from `case_fields()`; `Literal` → combo box, `bool` → check box, numeric → validated line edit), `RunControlWidget` (start, cancel, progress bar, log), `ResultWidget` (the scalar QoIs and the manifest's Deviations group) | IF-09, QR-11 in part |
 | 10 | `src/nanopnp/gui/app.py`, `pyproject.toml` | `main(argv)` assembling the window; `[project.scripts] nanopnp-gui` | IF-09 |
-| 11 | `SPECIFICATION.md`, `docs/plans/phase-1-solver-core.md`, `docs/plans/current.md`, `.knowledge/07-software-stack.md` | The four amendments below; the phase plan's WP14/WP15 split and its closed open decision; `current.md` repointed; the measured Qt and import facts recorded | — |
+| 11 | `SPECIFICATION.md`, `docs/plans/phase-1-solver-core.md`, `docs/plans/current.md`, `.knowledge/07-software-stack/index.md` | The four amendments below; the phase plan's WP14/WP15 split and its closed open decision; `current.md` repointed; the measured Qt and import facts recorded | — |
 
 > **Outcome — all eleven items delivered; the schema walk yields 94 fields.** `case_fields()` is
 > frozen path by path in `tests/tier1/test_case_fields.py::SCHEMA_PATHS`, written out rather than
@@ -274,7 +274,7 @@ Measured, 20 September 2026 **[tested]**: `import nanopnp.io.case` costs 622 ms 
 > 253 ms warm), so it was taken under load or by another method; the absolute figure is
 > machine-dependent and the claim to rely on is the ratio to one NGSolve import (~370 ms) plus the
 > `sys.modules` assertion, which is not a timing claim at all.
-> `.knowledge/07-software-stack.md` §5 carries both. So the editor can enumerate, display and validate the whole
+> `.knowledge/07-software-stack/05-gui-and-packaging.md` carries both. So the editor can enumerate, display and validate the whole
 schema without the solver ever being imported — which is what keeps a GUI that is only browsing a
 case as cheap as the CLI's 56 ms budget intends stage introspection to be. NGSolve is imported by the
 *run* process, on the far side of the boundary, when the user asks for a solve.
@@ -349,7 +349,7 @@ every binary dependency the real shell will. Four payloads:
 | `PySide6.QtWidgets` | Qt's own platform plugins and their system-library dependencies. Measured here: it fails in this container (below) |
 | `PySide6.QtWebEngineWidgets` | By a wide margin the largest and most packaging-hostile — a Chromium build, a separate helper executable, and a resource tree a bundler must be told about |
 | `ngsolve`, `netgen` | Compiled extensions plus data files, and the wheels chosen for CON-07 in the first place |
-| `ngsolve.webgui` | The scene generator; `WebGLScene.GenerateHTML()` is what makes it embeddable (`.knowledge/07` §1, **[tested]**) |
+| `ngsolve.webgui` | The scene generator; `WebGLScene.GenerateHTML()` is what makes it embeddable (`.knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md`, **[tested]**) |
 
 A probe omitting QtWebEngine tests the easy half and would have retired RSK-13 without touching the
 dependency most likely to defeat it.

@@ -46,7 +46,7 @@ verified contract, so each needs its own decision.
 | Executed examples | VER-46; `validation/examples.py`; `tests/tier2/test_examples_0*.py`; `tests/tier1/test_examples_plan.py`; WP16 D8–D11 and Outcomes |
 | CLI surface | §3.1 IF-02 NOTEs; VER-32; `cli/__init__.py` `_stage`, `build_parser`; `cli/errors.py` |
 | Exporters | `structure/ensemble.py` `AlignedEnsemble.export`; `density/map.py` `export`/`read`; VER-49 |
-| Registration and the 2WCD frame | §7.4 NOTE on VAL-05; `.knowledge/04` §1.1, §1.4, §2.1; `tests/conftest.py` `_prepared_rotation` |
+| Registration and the 2WCD frame | §7.4 NOTE on VAL-05; `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`, §1.4, §2.1; `tests/conftest.py` `_prepared_rotation` |
 | Hand edits | §5.3.1 NOTE on `geometry.contour`; §8.2.2 B9; `io/case.py` `with_profile`; `docs/guide/desktop.md` |
 
 ### Decisions
@@ -54,7 +54,7 @@ verified contract, so each needs its own decision.
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
 | D1 | Guide pages | **`guide/structures.md`**, *Structures and trajectories*, covers stage 1: the file contract, chains, selection, ensembles and frames, the axis and its gates, and why preparation is the user's. **`guide/geometry.md`**, *From a structure to a mesh*, covers stages 2–6: the case keys, the variance output, the contour gate, the registration by `centre_z_nm`, the mesher, hand edits and exports. Nav follows *Meshes*. `concepts.md` loses its "first to arrive" wording and links both. `case-files.md`, `meshes.md` and `desktop.md` link them | The §8.1 row names five topics. Stage 1's contract is the densest, and it is where a user first fails |
-| D2 | What the guide may state | It says what each stage does and which key steers it. It links the rendered §5.2, §5.2.1 and §5.3.1 NOTEs for formulas and thresholds, and quotes a specification constant only beside that link. **No measured number appears**: `.knowledge/04` §1.3–§1.4 are linked, not transcribed | VER-46's last sentence. WP16 D4: restated summaries drift |
+| D2 | What the guide may state | It says what each stage does and which key steers it. It links the rendered §5.2, §5.2.1 and §5.3.1 NOTEs for formulas and thresholds, and quotes a specification constant only beside that link. **No measured number appears**: `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#13-stage-4-on-real-and-synthetic-inputs-measured`–§1.4 are linked, not transcribed | VER-46's last sentence. WP16 D4: restated summaries drift |
 | D3 | Example 06's steps | Refused: `nanopnp stage structure deposited.case.yaml`. Then run: `python prepare.py ../../tests/data/structures/2wcd.pdb.gz 2wcd-prepared.pdb` → `nanopnp run 2wcd.case.yaml --store store --run-dir run --upto mesh` → `stage structure … --export aligned.pdb` → `stage structure aligned.case.yaml` (`axis: z`) → `stage density … --export density.mrc` → `stage symmetry … --json` → `stage contour … --export contour.profile.yaml` → `run from-profile.case.yaml --store store --run-dir run-profile --upto mesh` → `inspect run-profile`. The four cases differ only in `structure:` or `inputs.profile` | Every step was prototyped on 29 September 2026 ([Design §3](#3-the-example-prototyped)). Identical electrolytes, because `auto`'s wall size reads the concentration |
 | D4 | Preparation | `prepare.py` uses MDAnalysis and NumPy, and imports nothing from nanopnp. It takes chains A–L, protein. **The axis is the eigenvector of the Cα covariance's distinct eigenvalue**; the script refuses when no eigenvalue is distinct. **The sign puts the wide end, the ClyA cap, at +z (*cis*)**. The Cα centroid of residues 8–292 goes to `(0, 0, 5.63)` nm, so the bilayer centre is z = 0 and the case takes the default `centre_z_nm` | Preparation is outside the pipeline (§5.3.1 NOTE on `structure:`), so it must not borrow stage 1's code. The estimate needs only the 10° gate, and stage 1 then finds the exact axis. The registration is VAL-05's (`Z_MD`, §7.4 NOTE). [Design §1](#1-a-preparation-that-needs-no-nanopnp) |
 | D5 | Showing the refusal | A README block tagged `<!-- example: refused -->`: every command in it SHALL exit 4, the gate class. The README says the deposited axis is "more than 10° from z", and prints no measured angle | The gate that makes preparation necessary is the lesson; a README that skipped it would teach a work-around |
@@ -80,7 +80,7 @@ verified contract, so each needs its own decision.
 > **Outcome — D7: `.map` never read back.** GridDataFormats guesses its *reader* from the
 > extension and has none for `.map`, so `DensityMap.read` failed on a file `export` had just
 > written. It now names the reader from the writer's table, and VER-49 covers `.map`
-> (`.knowledge/07` §2).
+> (`.knowledge/07-software-stack/02-structure-trajectory-and-density.md`).
 >
 > **Outcome — D3: every command passes `--store store`.** Without it, the refusal wrote the
 > process-default `nanopnp-store/` into the example directory. The cases also carry the validated
@@ -187,7 +187,7 @@ preparation needs only the 10° gate, and stage 1 then finds the exact axis.
 The sign follows `_prepared_rotation`. Along +a, the top fifth's mean Cα radius is 3.42 nm and the
 bottom fifth's is 4.28 nm, so the wide cap is at −a; the script flips it to +z. The rotation takes
 the signed axis to z by Rodrigues' formula about `a × ẑ`. Translation then puts the Cα centroid of
-residues 8–292 at `(0, 0, Z_MD)`, where `Z_MD` = 5.63 nm (`.knowledge/04` §1.1). Stage 1 keeps
+residues 8–292 at `(0, 0, Z_MD)`, where `Z_MD` = 5.63 nm (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`). Stage 1 keeps
 `z = â·x` with its axis through that centroid, so the registration survives the 0.096° residual
 tilt to within `5.63 (1 − cos 0.096°)` ≈ 8e-6 nm.
 

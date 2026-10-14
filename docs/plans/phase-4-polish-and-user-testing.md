@@ -597,7 +597,7 @@ covers:
 - **the plain summaries** (J9): `## In brief` in `/phase-plan`, `/wp-plan` and `/wp-implement`,
   and in the pull-request body they write;
 - **the clauses J2 to J9 amend**: §7.6's table and NOTEs, with its new budget NOTE; `CLAUDE.md`'s
-  *Setup* and *Commands*; and `.knowledge/07`'s gate timings.
+  *Setup* and *Commands*; and `.knowledge/07-software-stack/index.md`'s gate timings.
 
 Proposed **VER-73**, the loop's budgets: CI's duration report holds each selection within its
 recorded budget plus the argued margin. Its oracle is a budget recorded below the measured
@@ -667,7 +667,7 @@ behaviour, and plans a session can afford. Tag `v0.5.0-alpha.10`. It does:
   sections and plan-time planned tests, and mark compaction checkpoints; a test checks the cap on
   plans from WP44 on;
 - **clauses** (L2, L3): §7.6's table and NOTEs, Appendix A, `CLAUDE.md`, `CONTRIBUTING.md` and
-  `.knowledge/07` §12, in step.
+  `.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`, in step.
 
 REV-80 and REV-81 close by removal. Its numbers are reported against these predictions, none
 enforced: commit hook about 90 s on 4 cores; push gate 8 to 9 minutes; pull-request critical path

@@ -276,3 +276,12 @@ def test_ver68_pending_total_above_the_ceiling_is_refused(repository: Path) -> N
     )
     assert _check(repository, ceiling=1) == []
     assert any("exceed the ceiling 0" in f for f in _check(repository, ceiling=0))
+
+
+def test_ver68_repository_citations_all_resolve() -> None:
+    if not (okf.REPOSITORY / ".git").exists():
+        pytest.skip("a git checkout is needed to list the tracked files")
+    own = okf.REPOSITORY / "tests/tier1/test_okf_bundle.py"
+    files = [file for file in okf.tracked_files(okf.REPOSITORY) if file != own]
+    found = okf.check_citations(okf.REPOSITORY / ".knowledge", files, okf.REPOSITORY)
+    assert not found, "\n".join(str(finding) for finding in found)

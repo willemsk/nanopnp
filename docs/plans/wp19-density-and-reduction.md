@@ -50,8 +50,8 @@ against.
      gate that already holds it.
   4. §5.3.2 splits the stage 2–3 row from stage 7's.
   5. A NOTE under FR-05 and FR-06 in §3.2 points to the contract.
-- **Knowledge:** `.knowledge/04` §1.1 has the reference ensemble's PQR files and the frame
-  spacing they imply. `.knowledge/07` §2 has deposition cost, annular binning and the Cₙ
+- **Knowledge:** `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured` has the reference ensemble's PQR files and the frame
+  spacing they imply. `.knowledge/07-software-stack/02-structure-trajectory-and-density.md` has deposition cost, annular binning and the Cₙ
   projection, all measured.
 - **Code:**
   - `structure/ensemble.py` (`AlignedEnsemble.read`).
@@ -72,7 +72,7 @@ against.
 | D1 | Stages and walk | Stage 2 is `density`: number 2, inputs `("case", "structure")`, schema `nanopnp/density/v1`, target `nanopnp.density.stage:DensityStage`. Stage 3 is `symmetry`: number 3, inputs `("case", "density")`, schema `nanopnp/reduced/v1`, target `nanopnp.symmetry.stage:SymmetryStage`. Neither has an `extra`. `PIPELINE` becomes `("case", "structure", "density", "symmetry", "mesh", …)`, and `_selected` drops both stages without `structure:`. `STRUCTURE_WALK` gains both stages, and the refusal names stage 4 and WP20. Both stages are workspace stages | Stage name = module name, as `structure`, `mesh` and `charge` already are. Stage 2 imports only numpy and scipy (both core), and its export defers gridData as `density/grid.py` already does |
 | D2 | `geometry:` resolution | `_PIPELINE_SECTIONS` loses `geometry`. `geometry:` is accepted on a case carrying `structure:`. Beside `inputs.mesh` it is refused naming both, by the upstream rule. With neither, the existing "describes no run" refusal stands. In `resolve()`: `grid_spacing_nm` outside [0.025, 0.05] is refused naming FR-04, and `sharpness` ≤ 0 is refused. Neither is a pydantic narrowing | The §5.3.1 NOTE; WP18 D4's rule that value checks are refusals, so the schema does not move |
 | D3 | Radius set | **CHARMM Rmin/2 by (residue, atom)**, transcribed from PDB2PQR 3.7's `dat/CHARMM.DAT` (BSD-3) into `data/radii/pdb2pqr_charmm.yaml`. The file holds radii in Å as printed, the source file's sha256, and the notice. `kernel: gaussian_vdw` binds to this set. The lookup order is: (1) the residue, with `HID/HIE/HIP` read as `HSD/HSE/HSP`; (2) `HIS`, looked up in `HSD`, `HSE` and `HSP`, refused where their radii disagree; (3) the atom aliases `ILE CD1 → CD` and `OXT → OT2`; (4) the patch residues `NTER`, `CTER`, `GLYP` and `PROP`. Anything else is refused naming chain, residue number, residue and atom. There is no element fallback | **Author ruling, 25 September 2026.** Every radius in the reference ensemble's PQR files equals `CHARMM.DAT` [tested], [Design §4](#4-the-radius-set). A guessed radius is a plausible wrong geometry |
-| D4 | Density field | Each frame gets its own map, `ρ_f = −expm1(Σ_i log1p(−g_i))` with `g_i = exp(−d²/(σR_i)²)`, accumulated in float64. A term is kept iff `g_i ≥ ε = 10⁻⁶` (a sphere, not a cube), and is floored at `ln 2⁻⁵³`. The ensemble map is the **mean of the per-frame maps**. It is stored float32 | FR-04; `.knowledge/04` §1. The union runs over one frame's atoms; a union across frames would thicken every wall. [Design §1](#1-the-union-density) |
+| D4 | Density field | Each frame gets its own map, `ρ_f = −expm1(Σ_i log1p(−g_i))` with `g_i = exp(−d²/(σR_i)²)`, accumulated in float64. A term is kept iff `g_i ≥ ε = 10⁻⁶` (a sphere, not a cube), and is floored at `ln 2⁻⁵³`. The ensemble map is the **mean of the per-frame maps**. It is stored float32 | FR-04; `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md`. The union runs over one frame's atoms; a union across frames would thicken every wall. [Design §1](#1-the-union-density) |
 | D5 | Grid | Nodes sit at integer multiples of `h = grid_spacing_nm` in the stage-1 frame, so the axis is a node column and the grid is canonical. In x and y the grid is square and symmetric, with half-width `I·h`, `I = ⌈(max r_atom + max d_cut)/h⌉ + 1`, taken over all frames. z is bounded by the atoms' extent ± `max d_cut`, snapped outward. The spare ring makes every nonzero cell lie wholly inside the outermost annulus | Makes the reduction conserve the map exactly ([Design §3](#3-annular-weights)) |
 | D6 | Deposition | Vectorised over atoms grouped by radius, with a cube stencil masked to the sphere. The scatter is `np.bincount` over a z-slab, never `np.add.at` and never a full-grid `minlength`. The loops run slabs outer and frames inner. numpy and scipy are deferred inside functions. Progress is reported per slab, and cancellation is checked per slab | A prototype took 31 s for 2WCD with a full-grid bincount per batch ([Design §5](#5-runtime-and-memory)) |
 | D7 | Cₙ average | **Taken in the angular harmonic basis on the unrotated map.** The mean needs no average, because the Cₙ average does not move it. The Cₙ variance is `2Σ_{k≥1}|c_kn|²`, with no rotated deposition and no interpolation. `n = 1` returns the raw variance | Closes the phase plan's open decision. Exact, and it costs one deposition per frame instead of n. Bilinear map rotation lowers the peak Cₙ variance by 3–6 %. [Design §2](#2-the-rotational-average-as-a-harmonic-projection) |
@@ -99,7 +99,7 @@ against.
 > - **A zero radius is refused.** `DUM` has one, and a zero-width kernel deposits nothing.
 >
 > 2WCD resolves all 26,844 atoms: 216 `ILE CD1` through the alias, and 120 `HIS` atoms by
-> agreement (`.knowledge/07` §2).
+> agreement (`.knowledge/07-software-stack/02-structure-trajectory-and-density.md`).
 
 > **Outcome — D5 spares one z node at each end too, and D6 groups by stencil, not by radius.**
 > z runs from `⌊(z_min − d)/h⌋ − 1` to `⌈(z_max + d)/h⌉ + 1`, so the NOTE's "one cell to spare"
@@ -209,7 +209,7 @@ against.
 | `test_stages.py`, `test_cli.py`, `test_manifest.py`, `test_case_schema*.py` (existing) | 1 | VER-25, VER-32, VER-24, VER-45 | Registry names; modules not imported by a listing; the new errors classified; the reasons updated; the `geometry:` refusal tests moved to D2 | — |
 | `tests/tier2/test_density_2wcd.py::test_ver49_ver50_2wcd_to_stage_three` | 2 | VER-49, VER-50 | `run_case(upto="symmetry")` on `prepared_2wcd`: every atom resolves; bounds; conservation; `cn ≤ raw + 1e-4`; lumen open (`μ(0, z) < 0.25` over the central 80 % of the Cα extent); runtimes logged | Conservation 1e-9 relative. The rest are inequalities |
 | `…::test_ver49_2wcd_budget` (`slow`) | 2 | VER-49 | Wall-clock and peak RSS of stages 2 and 3 | Recorded, never gated. Predicted ≤ 60 s and < 1.5 GB ([Design §5](#5-runtime-and-memory)) |
-| `tests/tier3/test_density_ensemble.py::test_ver50_clya_as_ensemble` | 3 | VER-49, VER-50 | `prod5_clya_as` with `frames: {count: 50}` to stage 3. Stride ⌊98/50⌋ = 1 ending on the last frame gives DCD frames 48–97, the paper's final 5 ns (`.knowledge/04` §1.1); the test asserts those indices. Records runtime, memory, and the maximum Cₙ and non-Cₙ variance with their (r, z). Skips without the archive | Indices exact; the rest recorded |
+| `tests/tier3/test_density_ensemble.py::test_ver50_clya_as_ensemble` | 3 | VER-49, VER-50 | `prod5_clya_as` with `frames: {count: 50}` to stage 3. Stride ⌊98/50⌋ = 1 ending on the last frame gives DCD frames 48–97, the paper's final 5 ns (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`); the test asserts those indices. Records runtime, memory, and the maximum Cₙ and non-Cₙ variance with their (r, z). Skips without the archive | Indices exact; the rest recorded |
 
 ```bash
 uv run pytest tests/tier1/test_density.py tests/tier1/test_reduction.py -v
@@ -221,7 +221,7 @@ uv run pytest -m tier3 tests/tier3/test_density_ensemble.py -v
 
 > **Outcome — delivered as tabled, with one test added.** `test_density.py` holds 29 tests and
 > `test_reduction.py` 33, and both Tier-2 tests pass. `.claude/hooks/gate.sh run` passed on
-> 25 September 2026. The measured numbers are in `.knowledge/07` §2. What moved:
+> 25 September 2026. The measured numbers are in `.knowledge/07-software-stack/02-structure-trajectory-and-density.md`. What moved:
 >
 > - **VER-50's invariance test gained a 15° turn.** A 30° turn is one of the assembly's own
 >   symmetries, so it agrees to the float32 rounding and tests nothing about the grid. A 15° turn
@@ -258,7 +258,7 @@ uv run pytest -m tier3 tests/tier3/test_density_ensemble.py -v
 ### Open questions
 
 None. The radius set is ruled (D3). The three questions this plan carried to WP22 were answered
-by the author on 25 September 2026 (`.knowledge/04` §1.1, §8):
+by the author on 25 September 2026 (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`, §8):
 
 1. **Frame spacing: 100 ps.** The archived PQR files are all the frames. Matched by coordinates,
    the DCD's frames are PQRs 02–99 in time order, so the paper's final 5 ns are DCD frames 48–97.

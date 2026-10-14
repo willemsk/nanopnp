@@ -52,8 +52,8 @@ oracles.
 - §5.3.1 NOTE on `structure:`, which is normative. Stage 1 is built to it.
 - The §5.2 stage-1 row and design note; §5.3.2 (artefact keys, canonical serialisation, workspace
   locality); FR-01 to FR-03, IF-04, FR-27, QR-12 and CON-07 to CON-09.
-- `.knowledge/07-software-stack.md` §2 (axis detection, mmCIF, trajectory times) and
-  `.knowledge/04-clya-geometry-and-charge.md` §1.1 (the author's archive).
+- `.knowledge/07-software-stack/02-structure-trajectory-and-density.md` (axis detection, mmCIF, trajectory times) and
+  `.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured` (the author's archive).
 - Code: `core/stages.py` (`register`, `create`); `io/run.py` (`PIPELINE`, `_selected`,
   `WORKSPACE_STAGES`, `_WEIGHTS`, `_manifest`); `io/case.py` (`Structure`, `_require_runnable`,
   `_PIPELINE_SECTIONS`); `io/defaults.py` (`CONFIGURATION_PATHS`); `cli/errors.py`; the lazy
@@ -64,7 +64,7 @@ oracles.
 | # | Decision | Choice | Why / source |
 |---|---|---|---|
 | D1 | Stage identity and walk | The stage is named `structure`, number 1, with inputs `("case",)` and schema `nanopnp/structure/v1`. Its target is `nanopnp.structure.stage:StructureStage`. `PIPELINE` becomes `("case", "structure", "mesh", …)`, and `_selected` drops `structure` when the case has no `structure:` section. `resolve()` accepts `structure:`, while `geometry:` and `charge:` stay refused. `inputs.mesh` becomes optional **only** when `structure:` is present. A walk past stage 1 on a `structure:` case is refused (`UnsupportedCaseSection`, naming stage 2 and WP19). The refusal is one function of `(resolved, upto)`, called by `run_document` and by the sweep plan builder, so a sweep is refused when its plan is built | §5.3.1 NOTE (last paragraph). `structure:` beside `inputs.mesh` in a full walk would hash an input nothing reads (the `inputs:` NOTE). Stage 1 alone runs through `nanopnp stage structure` (IF-02) |
-| D2 | Readers | Extensions `.pdb`, `.ent`, `.cif` and `.mmcif`, each optionally `.gz`; anything else is refused naming the accepted set. PDB and every trajectory format are read by MDAnalysis. mmCIF is read by **gemmi** into an MDAnalysis `Universe` (`Universe.empty` plus topology attributes, with coordinates through `MemoryReader`), so everything downstream sees one object. Chains come from gemmi's `auth_asym_id`. Coordinates convert from Å to nm exactly once, in `structure/read.py` | **Author ruling, 25 September 2026.** MDAnalysis 2.10 has no mmCIF reader [tested] (`.knowledge/07` §2). gemmi 0.7.5 is MPL-2.0 with wheels for cp311–cp314 on all three platforms, so CON-07 and QR-09 hold. §2.6 and CON-09 are amended |
+| D2 | Readers | Extensions `.pdb`, `.ent`, `.cif` and `.mmcif`, each optionally `.gz`; anything else is refused naming the accepted set. PDB and every trajectory format are read by MDAnalysis. mmCIF is read by **gemmi** into an MDAnalysis `Universe` (`Universe.empty` plus topology attributes, with coordinates through `MemoryReader`), so everything downstream sees one object. Chains come from gemmi's `auth_asym_id`. Coordinates convert from Å to nm exactly once, in `structure/read.py` | **Author ruling, 25 September 2026.** MDAnalysis 2.10 has no mmCIF reader [tested] (`.knowledge/07-software-stack/02-structure-trajectory-and-density.md`). gemmi 0.7.5 is MPL-2.0 with wheels for cp311–cp314 on all three platforms, so CON-07 and QR-09 hold. §2.6 and CON-09 are amended |
 | D3 | Atom validity | Elements come from the file and are never guessed. Alternate locations are refused. The chain key is the chain identifier, or the segment identifier where that is blank, and the key used is recorded | §5.3.1 NOTE. A guessed element is a plausible wrong radius in WP19 |
 | D4 | Oligomeric state (FR-03) | The point group is parsed as `C<n>`, n ≥ 1, as a resolution-time refusal. The number of chains must equal `n`, and a missing listed chain is named. Each chain must carry at least half the Cα of the most complete chain (coverage ≥ 0.5). Residue names must agree at every shared residue number, with `HSD/HSE/HSP/HID/HIE/HIP` read as `HIS`. Every check here is a refusal in `resolve()` or the stage, **never** a pydantic narrowing | §5.3.1 NOTE. Narrowing a key's value set would move the schema (§5.3.1 compatibility rule). Measured: residue names agree at every Cα in 2WCD and the MD archive |
 | D5 | Frames | The ensemble is the trajectory's frames if one is given, else the source file's models. `last_ns` uses the recorded times and is refused if it exceeds span + interval. `count` takes the stride `⌊N/count⌋` ending on the last frame, and is refused if `count > N`. Indices and `times_ns` are recorded as read | §5.3.1 NOTE; [Design §3](#3-trajectory-time-metadata). The author's DCD reads 1 ps per frame |
@@ -78,7 +78,7 @@ oracles.
 | D13 | Imports | MDAnalysis and gemmi are imported at the top of `structure/read.py` (reached only through `create`). `structure/axis.py` is pure numpy, with numpy deferred inside functions. `nanopnp stage --list` imports neither MDAnalysis nor gemmi, which is asserted | The phase plan's optional-dependency rule; `CLAUDE.md` import rule |
 | D14 | Manifest | The Inputs group gains the structure and trajectory digests. The Geometry group gains a `structure` record (axis, gates, frames, drift), taken from the artefact summary and never recomputed | FR-25, §5.3.3 |
 | D15 | Public API | No new `nanopnp.__all__` name. The stage is reached through the registry, and WP25 decides what to document | IF-01 NOTE; `test_public_api.py` makes adding a name a decision |
-| D16 | Vendored 2WCD | The wwPDB entry goes in as `tests/data/structures/2wcd.pdb.gz` and `2wcd.cif.gz`, byte-for-byte as downloaded, with a README giving the URL, date, sha256 and CC0. Add `tests/data/** -text` to `.gitattributes`. It is shared with the WP22 Tier-2 leg | B2. The file digest enters the stage-1 key, and a CRLF rewrite would move it (`.knowledge/07` §14) |
+| D16 | Vendored 2WCD | The wwPDB entry goes in as `tests/data/structures/2wcd.pdb.gz` and `2wcd.cif.gz`, byte-for-byte as downloaded, with a README giving the URL, date, sha256 and CC0. Add `tests/data/** -text` to `.gitattributes`. It is shared with the WP22 Tier-2 leg | B2. The file digest enters the stage-1 key, and a CRLF rewrite would move it (`.knowledge/07-software-stack/14-a-windows-checkout-rewrites-the-bytes-a.md`) |
 
 > **Outcome — D16's entry is not the file Design §4 measured.** The wwPDB 2WCD holds two
 > dodecamers, chains A–L and M–X (24 × 285 Cα), in the crystal frame. Their axes are 22.92° and
@@ -88,7 +88,7 @@ oracles.
 > `axis: z` displacement 0.0062 nm). D16 stands: the bytes are the wwPDB's. Stage 1 refuses the
 > deposited frame by the 10° rule, and a Tier-1 test holds that refusal. The stage-one test moves
 > chains A–L rigidly at test time, *cis* up by the cap's width, then tilts them 4° and shifts them.
-> The stage recovers the 4° to 1e-6. The §5.3.1 NOTE says so (`.knowledge/04` §1.1). **For WP22:**
+> The stage recovers the 4° to 1e-6. The §5.3.1 NOTE says so (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`). **For WP22:**
 > the Tier-2 VAL-05 leg of B2 needs this 2WCD in an admitted frame. Preparing it is outside the
 > pipeline, so WP22 decides how: at test time, as here, or as a vendored derived file with its
 > transform.
@@ -98,7 +98,7 @@ oracles.
 > The ordering axis is then arbitrary, and the spacing gate fires, with a worst gap 281° off
 > nominal. The angle gate's case is a ring of 12 chains exactly 30° apart whose own orientation
 > turns at a quarter of the ring's rate. Its spacing error is 0.001° and its cyclic turn 28.07°.
-> Both are in `test_ver48_gates_fire` (`.knowledge/07` §2).
+> Both are in `test_ver48_gates_fire` (`.knowledge/07-software-stack/02-structure-trajectory-and-density.md`).
 
 > **Outcome — `source.chains` is a comma-separated string.** The v2 key is typed `str`, so a YAML
 > list would fail validation, and widening the type is not needed. The §5.3.1 NOTE now reads
@@ -196,7 +196,7 @@ uv run pytest -m tier3 tests/tier3/test_structure_ensemble.py -v
 >
 > - **TRR is not exact.** It stores float32 nanometres, so the ångström conversion costs two ulps
 >   (1.1e-6 nm at 13 nm). The test allows 3.1e-6 nm for TRR and 5e-4 + 3.1e-6 nm for XTC, which
->   is half its quantum plus the same round-off (`.knowledge/07` §2).
+>   is half its quantum plus the same round-off (`.knowledge/07-software-stack/02-structure-trajectory-and-density.md`).
 > - **The `last_ns` window is inclusive.** At 5 ps per frame, `last_ns: 1` takes frames 799–999,
 >   including the frame exactly 1 ns before the last. `count: 3` on 1,000 frames takes 333, 666 and
 >   999.
@@ -207,7 +207,7 @@ uv run pytest -m tier3 tests/tier3/test_structure_ensemble.py -v
 >   with a 0.0775 nm offset. Frame RMSD to frame 0 is 0.095–0.219 nm. Each frame's axis lies within
 >   0.0163° of the **ensemble-mean** axis. Design §4's ≤ 0.010° compared the frames with one
 >   another. The output re-detects z through r = 0, with a tilt of 0.0° and an offset of 3e-15 nm
->   (`.knowledge/04` §1.1).
+>   (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`).
 >
 > **Outcome — the shipping review added four refusals.** A selection MDAnalysis cannot parse, a
 > trajectory that does not hold the structure's atoms, and an mmCIF model whose atoms are not
@@ -244,7 +244,7 @@ None block WP18. Carried to their owners:
    unresolved. For WP22; the Tier-3 test here takes all 98 frames.
 2. **The van der Waals radius set the original density used.** For WP19, from the author or the
    contour script (B6).
-3. **G9.** The MD frame's extent suggests `centre_z_nm` ≈ 0 (`.knowledge/04` §1.1). For the author,
+3. **G9.** The MD frame's extent suggests `centre_z_nm` ≈ 0 (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`). For the author,
    before WP22.
 
 ## Design
@@ -300,7 +300,7 @@ the spacing uniform where a rounded `linspace` would not.
 ### 4. Measurements and threshold margins
 
 These were measured on 25 September 2026, using the scratch scripts of the planning session (not
-kept) and the author's archive (`.knowledge/04` §1.1).
+kept) and the author's archive (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`).
 
 | Quantity | 2WCD | 6MRT | MD frame 0 | MD, 98 frames | Threshold | Margin |
 |---|---|---|---|---|---|---|

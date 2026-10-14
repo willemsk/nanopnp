@@ -110,7 +110,7 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
 > 3 × 10⁻¹⁵ at +1.
 >
 > **Outcome — D8, measured** (4 October 2026). The numbers are in the NUM-07 NOTE and
-> `.knowledge/06` §2.2. (a) +1 leaves VER-18's finest-pair rates unchanged and lowers the error at fixed
+> `.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`. (a) +1 leaves VER-18's finest-pair rates unchanged and lowers the error at fixed
 > `h`, most for the concentrations: at 0.1 nm, ×0.42 for `c_Cl−` and ×0.77 for `c_Na+`. (b) On
 > example 05 the states differ by 4.9 × 10⁻⁷, and no compared number moves by more than
 > 7.6 × 10⁻⁸ relative (the EOF; `I`, `G` and `t₊` by 10⁻¹⁰ or less). Two changes to the test as
@@ -132,7 +132,7 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
 > :refs/tags/v0.5.0-alpha.5` on 4 October 2026; `git ls-remote --tags origin` lists no `v0.5.0`
 > name since. D12 as inventoried, with three readings: the README's release table
 > keeps a v1.0 row for the stable release beside the new v0.5–v0.7 rows; FR-11's "after v1.0" in
-> the `boundary_layer` refusal is the backlog and stays; and `.knowledge/00` ruling 10 (PlyAB after
+> the `boundary_layer` refusal is the backlog and stays; and `.knowledge/index.md` ruling 10 (PlyAB after
 > v1.0) is OPN-03's post-release generalisation and stays. No refusal test matched "v1.0".
 
 ### Work items
@@ -144,7 +144,7 @@ its 1,200 target**, because it carries five unrelated items, each needing its ow
    deposited charge.
 3. `physics/measures.py` `weight_extra_order` (D7), with the slow measurement test (D8). Then the
    numbers go into the NUM-07 NOTE, beside the capacitor's 0.38 `V_T`, as **[tested]** in
-   `.knowledge/06` §2.
+   `.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md`.
 4. `tests/tier1/test_public_api.py`: the D9 comment.
 5. The relabel (D12), the script's removal (D10) and the tag (D11).
 6. The phase plan: its status, the WP34 entry, the open-decisions rows (OPN-07 closed, NUM-07
@@ -226,7 +226,7 @@ gated. No outcome of (a) or (b) changes a default in WP34.
 From `git grep -E 'v1\.0|1\.0\.0'` at `4375797`, outside `SPECIFICATION.md` and `docs/plans/`:
 `CLAUDE.md` (the Tier 3 row), `CONTRIBUTING.md`, `README.md`, `docs/index.md`,
 `docs/guide/desktop.md`, `docs/project/citing.md`, `docs/validation/comsol-export-contract.md`, the
-READMEs of examples 04 and 07, `.knowledge/00-index.md`, `.knowledge/08-validation-benchmarks.md`,
+READMEs of examples 04 and 07, `.knowledge/index.md`, `.knowledge/08-validation-benchmarks/index.md`,
 `.github/workflows/release.yml`'s header comment, `src/nanopnp/io/case.py` (the FR-21 refusal),
 `src/nanopnp/geometry/analyte.py`, and `tests/tier2/test_force_convergence.py`. Each mention is read
 in context and classed as the validation release (→ v0.7) or stable (kept). `src/nanopnp/__init__.py` and

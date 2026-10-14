@@ -46,14 +46,14 @@ package still verifies inside one PR.
 | Case schema and its walk | §5.3.1; `io/case.py` `case_fields`, `field_at`, `options_at`; VER-43 |
 | Meshes | §5.2.2; `mesh/primitives.py` `CylindricalPoreGeometry`; `mesh/reference.py` `ReferenceGeometry.from_fixture().generate()`; `mesh/adapter.py` `from_ngsolve`, `write_msh41`; `mesh/ingest.py` vocabulary |
 | Fields for a charged example | §5.3.1 `inputs.charge` NOTE; `charge/fields.py` forms `uniform`, `gaussian_ring`, `slab` |
-| Tooling status | `.knowledge/07-software-stack.md` §13 |
-| Import budget | `.knowledge/07-software-stack.md` §9 and the `io.case` note in §5 |
+| Tooling status | `.knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md` |
+| Import budget | `.knowledge/07-software-stack/09-the-clis-import-budget-measured.md` and the `io.case` note in §5 |
 
 ### Decisions
 
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
-| D1 | Generator | `mkdocs<2`, `mkdocs-material`, `mkdocstrings[python]`, with `mkdocs.yml` restricted to what Zensical reads: no `hooks:`, and no plugin without a Zensical shim | Author ruling. Material is in maintenance mode and does not support MkDocs 2; Zensical lacks cross-references (`.knowledge/07` §13). **Migration trigger:** Zensical supports mkdocstrings cross-references |
+| D1 | Generator | `mkdocs<2`, `mkdocs-material`, `mkdocstrings[python]`, with `mkdocs.yml` restricted to what Zensical reads: no `hooks:`, and no plugin without a Zensical shim | Author ruling. Material is in maintenance mode and does not support MkDocs 2; Zensical lacks cross-references (`.knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md`). **Migration trigger:** Zensical supports mkdocstrings cross-references |
 | D2 | Hosting | Read the Docs, from `.readthedocs.yaml`, installing from `uv.lock` (verify the current RTD uv recipe via Context7). The site banner reads *pre-alpha, v0.2 scope* | Author ruling |
 | D3 | Site layout | `docs_dir: docs`, excluding `plans/`. Nav: Home · Getting started · User guide · Examples · Reference · Model · Project | Plans are not user material (CLAUDE.md) |
 | D4 | Model pages | A pre-build step copies `SPECIFICATION.md` and `.knowledge/*.md` into a gitignored `docs/_generated/`, rewriting relative links; the strict build proves every link resolves. One orientation page maps each case-file switch to its §4/§6 identifier and **restates no equation** | Author ruling. Restated summaries of this model drift and get copied wrong (CLAUDE.md) |
@@ -83,7 +83,7 @@ package still verifies inside one PR.
 > reference mesh through a frozen case. (2) meshio tried its ANSYS reader first on `.msh` and
 > printed that reader's empty refusal to standard output, so every `nanopnp run` on an MSH case had
 > leaked a blank line into the IF-02 result stream. `mesh/adapter.py` now names the format
-> (`.knowledge/07-software-stack.md` §4). The generator gates the file by the route a run reads it
+> (`.knowledge/07-software-stack/04-geometry-meshing-and-io.md`). The generator gates the file by the route a run reads it
 > (write beside the destination, read back, map, gate, rename), so the printed hash is the manifest's
 > by construction. A 0.01 nm membrane is the honest trigger for the exit-4 test: min SICN 0.025
 > against the 0.3 floor [tested].
@@ -115,7 +115,7 @@ package still verifies inside one PR.
 > fifth, the shipped correction files verbatim. `capture_gui.py` runs the quick-start case in the real
 > window and grabs three panels; it copies the example's inputs only, since a stale `store/` would
 > serve the solve from cache and leave the convergence plot empty. The strict build emits no
-> warning, mkdocstrings included (`.knowledge/07-software-stack.md` §13).
+> warning, mkdocstrings included (`.knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md`).
 
 **Examples** (`examples/NN-slug/`: `README.md`, cases, sweeps, optional `.py`):
 

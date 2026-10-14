@@ -748,7 +748,7 @@ The reviewer costed this from the comment at `charge/fields.py:386` ("parsing th
 
 ## Leads not settled
 
-- **The conservation gate and the Poisson source use different quadratures for an areal charge field** (`charge/fields.py:644-663` against `physics/models.py:1015`). The gate integrates with `singular=True`, while `charge_source(fixed_charge, ...)` assembles without it. On a synthetic alternating field, unit A measured 1e-5 to 1e-3 relative difference. Whether this exceeds QR-03 on the aliased ClyA table (`.knowledge/06` §8.1.1) needs that table, which is not in the repository. Units A and D raised this independently.
+- **The conservation gate and the Poisson source use different quadratures for an areal charge field** (`charge/fields.py:644-663` against `physics/models.py:1015`). The gate integrates with `singular=True`, while `charge_source(fixed_charge, ...)` assembles without it. On a synthetic alternating field, unit A measured 1e-5 to 1e-3 relative difference. Whether this exceeds QR-03 on the aliased ClyA table (`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#811-mesh-integral-error-on-a-sub-element-scale-field-converges-in-neither-h-nor-order`) needs that table, which is not in the repository. Units A and D raised this independently.
 - **Newton's relative-update test takes one ℓ2 norm over all fields** (`solve/newton.py:326-328`). With `a = 1 nm`, ũ ~ 1e-3, so the velocity and pressure blocks may be only about 1e-3 relatively converged when the test passes. The code matches NUM-16 as written, so this is a specification question for EOF and hydrodynamic-force accuracy.
 - **UMFPACK redoes its symbolic analysis on every Newton iteration** (`solve/linear.py:155`). The saving from reusing it is unmeasured.
 

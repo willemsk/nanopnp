@@ -44,7 +44,7 @@ findings are about what it removed, what its own checks measure, and conventions
 | 5 | medium | `SPECIFICATION.md:3069` | VER-75 (a) claims a source check that no test makes | skipped |
 | 6 | low | `.claude/scripts/same_tree.py:67` | An unparsable file crashes the check with `File "<unknown>"` | fixed |
 | 7 | low | `src/nanopnp/materials/corrections.py:198` | Garbled comment fragments around the cache copy and schema check | fixed |
-| 8 | low | `.knowledge/04`–`08`, 14 entries | Facts cite "(module docstring)" that this PR deleted | fixed |
+| 8 | low | `.knowledge/04-clya-geometry-and-charge/index.md`–`08`, 14 entries | Facts cite "(module docstring)" that this PR deleted | fixed |
 | 9 | low | `src/nanopnp/core/stages.py:81`; `tests/tier3/test_reference_charge_map.py:36` | Directive and skip reason point at prose that is gone | fixed |
 | 10 | low | `src/nanopnp/physics/models.py:454` and 6 more | A comment sits above the restored docstring, away from its code | fixed |
 | 11 | low | ~157 `src/` prose lines | Identifiers and plan history kept in prose | skipped |
@@ -77,7 +77,7 @@ The `.knowledge/` file now cites the cutoff. A reader of `forms.py` still sees a
 **Fix.** One-line source comments on 20 constants across 13 files. Two existing citations were wrong
 and are corrected:
 
-- `physics/pb.py` cited `.knowledge/01` §4 for `ε_r,f0`; the value is in §3.
+- `physics/pb.py` cited `.knowledge/01-physics-epnpns/04-rationale-worth-preserving.md` for `ε_r,f0`; the value is in §3.
 - The deleted docstring of `REFERENCE_DIFFUSIVITY_M2_S` called 1.334e-9 the NaCl mean. It is
   `D_Na⁰` (Mills 1989); the mean of `D_Na⁰` and `D_Cl⁰` is 1.683e-9.
 
@@ -159,7 +159,7 @@ the schema check. Each sentence had lost its subject. **Fix:** both are rewritte
 
 ### 8. `.knowledge/` cites deleted docstrings (low, fixed)
 
-Fourteen new entries in `.knowledge/04`–`08` give "Source: `tests/...py` (module docstring)". This
+Fourteen new entries in `.knowledge/04-clya-geometry-and-charge/index.md`–`08` give "Source: `tests/...py` (module docstring)". This
 PR cut those docstrings to one line, so the cited source no longer holds the fact. **Fix:** each now
 reads "(module docstring at `3782c43`, before WP45)".
 
@@ -226,7 +226,7 @@ is a spec question.
 - **Doctests were lost.** There were none (`>>>` appears in no removed line).
 - **A test was weakened.** It was not. The tree check passes on every test file, so no assertion,
   parametrisation or name changed.
-- **`.knowledge/04`'s "1.25 % consumer leg" contradicts the test's 0.99 %.** It does not: §3.2
+- **`.knowledge/04-clya-geometry-and-charge/index.md`'s "1.25 % consumer leg" contradicts the test's 0.99 %.** It does not: §3.2
   states that the 1.25 % is the reference's own consumer leg.
 
 ## Verification of the fixes

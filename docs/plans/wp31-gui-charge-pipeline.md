@@ -71,7 +71,7 @@ not met.
   - [WP24](wp24-gui-geometry-pipeline.md) D1, D4, D11–D13 and D17, and their Outcomes;
   - [WP28](wp28-charge-deposition.md) D9 and its Outcomes;
   - [WP30](wp30-dielectric-and-exclusion.md) D3's Outcome;
-  - `.knowledge/07` §3 (PDB2PQR as a driver) and §5 (bundling).
+  - `.knowledge/07-software-stack/03-charge-and-electrostatics.md` (PDB2PQR as a driver) and §5 (bundling).
 
 ### Decisions
 
@@ -90,7 +90,7 @@ not met.
 | D11 | The protonation pane | A frame selector, with `Q_net` per frame. A table of the titratable residues, meaning those with a PROPKA group: chain, number, name, applied charge, pKa, expected charge at the pH, and an *unapplied* flag. It is read from `ProtonationTable` and cross-checked against the summary's `unapplied`. Below it: `chain_differences`, `warnings` with their counts, and `variant` beside `Q_net` (OPN-04). A supplied PQR shows its charges, with pKa reported as *not run* | The §5.3.1 and PHY-16 NOTEs: the unapplied states and the per-chain differences are recorded diagnostics, never symmetrised, so the table shows them as recorded. The arrays are read off the Qt thread (WP24 D11) |
 | D12 | pH and force field in the editor | Generated from the schema. A number field whose schema declares both `ge` and `le` becomes a spin box with that range, taken from the field's metadata. It writes only on a user edit, so display rounding never rewrites a loaded value. `charge.forcefield` and `charge.titration` stay combo boxes over their `Literal`s. The shell holds no cross-field rule: `ph` beside `titration: none` is refused by the loader, with its own text | VER-43: no value set and no bound is written in `gui/`. The knob-with-no-effect refusal is the loader's (§5.3.1 NOTE) |
 | D13 | An absent `charge:` section | `io/case.py` gains `NEUTRAL_SECTIONS`, the optional top-level sections whose empty mapping resolves exactly as their absence, and `with_section(document, name)`. The set holds `charge`, and `geometry` only if the test shows it qualifies. The editor offers **Add section** for those alone, and writes an empty mapping. Nothing else in the shell creates a section | Without this the pH selector is greyed out on every structure case that does not already have the block, which defeats QR-10. Resolution already reads `Charge()` when the block is absent (`_resolve_protonation`). A block whose presence changes the physics, such as `geometry.analyte`, must never be added from a default. [Design §2](#2-a-section-that-means-nothing-when-empty) |
-| D14 | The probe's new payloads | `PAYLOADS` gains `pdb2pqr` and `propka`. The exercise protonates `GLU 18`–`LEU 26` of 2WCD chain A, shipped as `data/structures/2wcd-a-18-26.pdb`, through `charge/protonation.py`'s `run_pdb2pqr`. Settings are `Charge()`'s defaults with only `ph` set, at pH 2 and at pH 8. It requires `Q_net` = 0 e and −3 e, each an integer to 10⁻⁶. A failed PDB2PQR run, or charges with no atoms, names `pdb2pqr`. Equal charges at the two pH values name `propka` | `.knowledge/07` §3 measured both values on this fragment. The pH dependence is what proves that PROPKA and its `propka.cfg` were loaded. Without a titration method, pH 2 and pH 8 give the same charges. Going through the driver also exercises `restore_propka_annotations`. The file exists, so PDB2PQR cannot fetch from rcsb.org |
+| D14 | The probe's new payloads | `PAYLOADS` gains `pdb2pqr` and `propka`. The exercise protonates `GLU 18`–`LEU 26` of 2WCD chain A, shipped as `data/structures/2wcd-a-18-26.pdb`, through `charge/protonation.py`'s `run_pdb2pqr`. Settings are `Charge()`'s defaults with only `ph` set, at pH 2 and at pH 8. It requires `Q_net` = 0 e and −3 e, each an integer to 10⁻⁶. A failed PDB2PQR run, or charges with no atoms, names `pdb2pqr`. Equal charges at the two pH values name `propka` | `.knowledge/07-software-stack/03-charge-and-electrostatics.md` measured both values on this fragment. The pH dependence is what proves that PROPKA and its `propka.cfg` were loaded. Without a titration method, pH 2 and pH 8 give the same charges. Going through the driver also exercises `restore_propka_annotations`. The file exists, so PDB2PQR cannot fetch from rcsb.org |
 | D15 | Collecting them | `collect_all("pdb2pqr")` and `collect_all("propka")` carry `pdb2pqr/dat/` and `propka.cfg` beside their modules. Both libraries find their data through `Path(__file__).parent`. **Every pure-Python LGPL payload** is collected as source (`module_collection_mode="py"`): PROPKA, MDAnalysis and GridDataFormats. `LICENSES-BUNDLE.md` gains PDB2PQR (BSD-3), with its notice, and PROPKA (LGPL-2.1), and its "Your rights" section names the source-collected packages | ADR-004 meets the LGPL by keeping replaceable files, and a module inside the PYZ archive is not one. PROPKA is the first LGPL payload that is pure Python, and the same argument covers the two already carried. The ADR-004 NOTE is amended in this commit |
 | D16 | The vocabulary check | `test_if09_no_option_list_is_written_in_the_shell` matches `"propka"` and `'propka'` as string literals only, and gains `CHARMM`, `PEOEPB` and `SWANSON`. The `PAYLOADS` tuple is exempt, by AST, because its entries are module names, and the import walk already checks them | A module name is not a case value. WP24 narrowed `hand-edit` in the same way. The probe writes no titration or force-field literal (D14) |
 | D17 | The shell | The **Mesh** view already colours by material, so the `exclusion` shell shows as its own material. VER-60 asserts that it is listed. There is no new geometry view | WP30's out-of-scope row. Material-generic drawing is WP24 D12 |
@@ -110,7 +110,7 @@ not met.
 > - **D8: fixing the colour range takes the viewer's own settings too.** `funcmin`, `funcmax` and
 >   `autoscale: false` in the scene set only the defaults. webgui 0.2.39 then reads `gui_settings`,
 >   and autoscales again unless its `autoscale`, `colormap_min` and `colormap_max` are set as well.
->   The render child writes all five (`.knowledge/07` §5). The fixed range has not been watched
+>   The render child writes all five (`.knowledge/07-software-stack/05-gui-and-packaging.md`). The fixed range has not been watched
 >   drawing in a browser here.
 > - **D13: `NEUTRAL_SECTIONS` is `charge` alone.** An empty `charge:` keys stages 1 to 8 and 10 as
 >   its absence. Stage 9's key is the validated dump, so it moves with the case hash, and the QoI
@@ -146,7 +146,7 @@ In dependency order.
 6. `gui/widgets/charge.py`, `widgets/case_editor.py`, and `app.py`'s seventh tab (D2, D3).
 7. `gui/probe.py`, `core/paths.py` (`structure_file`), `data/structures/2wcd-a-18-26.pdb`,
    `packaging/nanopnp-probe.spec` and `packaging/LICENSES-BUNDLE.md` (D14, D15). Measure what each
-   payload adds to the bundle. `.knowledge/07` §5 gains what is learned, marked **[tested]**.
+   payload adds to the bundle. `.knowledge/07-software-stack/05-gui-and-packaging.md` gains what is learned, marked **[tested]**.
 8. `docs/guide/desktop.md`: the Charge tab, and "seven panels". `CHANGELOG.md` under
    `v0.4.0-alpha.6`. The specification rows listed under [Pointers](#pointers).
 
@@ -184,7 +184,7 @@ uv run pytest tests/tier2/test_charge_2wcd.py -v
 > - The probe's exercise takes 0.82 s unfrozen in a fresh process, and 0.23 s warm. A Linux rebuild
 >   of the recipe, PyInstaller 6.22.3, is 1.23 GB and builds in 2 min 25 s. PDB2PQR adds 1.1 MB to
 >   `_internal/`, of which `dat/` is 0.50 MB; PROPKA 0.34 MB as source files; GridDataFormats
->   0.12 MB. MDAnalysis is 45.7 MB either way (`.knowledge/07` §5). Its frozen selftest gave +0 e
+>   0.12 MB. MDAnalysis is 45.7 MB either way (`.knowledge/07-software-stack/05-gui-and-packaging.md`). Its frozen selftest gave +0 e
 >   and −3 e. The Windows bundle is the `bundle` job's to confirm.
 
 ### Out of scope

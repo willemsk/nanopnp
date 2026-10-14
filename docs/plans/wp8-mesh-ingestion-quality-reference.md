@@ -97,7 +97,7 @@ dependency: `meshio` 5.3.5 is already a core dependency and `gmsh` is already th
 ### The vertex count: OPN-05 is two numbers counting two things
 
 The specification says the pore boundary is a "closed 196-vertex polygon" (§2.2 line 120, §5.2.1),
-while `.knowledge/09-comsol-reference-settings.md` §C.9, mined from the model report's geometry
+while `.knowledge/09-comsol-reference-settings/04-physics-settings.md#c9-geometry-22`, mined from the model report's geometry
 section, records **190 vertices for the pore polygon** and **3 domains / 198 boundaries / 196
 vertices** for the whole geometry. `CLAUDE.md` says the model report governs, and it is unambiguous:
 the two numbers count the pore polygon and the assembled geometry respectively, and §2.2's "196" is
@@ -138,7 +138,7 @@ all of this; the five-vertex difference is the last thing OPN-05 is open on.
 
 ### The reference geometry, written out
 
-All lengths in nm, all from §5.2.1, §5.2.2 and `.knowledge/04` §2.
+All lengths in nm, all from §5.2.1, §5.2.2 and `.knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md`.
 
 | Element | Definition |
 |---|---|
@@ -305,7 +305,7 @@ two figures has a real chance of being a pass rather than an excuse.
 > a defect — the transverse extent is an artefact of solving a one-dimensional problem on a
 > two-dimensional mesh, and the stretched direction is the one the solution is constant in — so the
 > exemption is one keyword-only `check_quality=False` at that call site, with its reasoning beside
-> it, and the floor is untouched. `mesh/quality.py` and `.knowledge/06-numerics-fem.md` §8 carry the
+> it, and the floor is untouched. `mesh/quality.py` and `.knowledge/06-numerics-fem/08-mesh-resolution-and-adaptivity.md` carry the
 > numbers.
 
 ### Writing MSH 4.1 through meshio, and the two ways it goes wrong silently
@@ -367,7 +367,7 @@ opposite direction.
 
 Six facts above were established by executing NGSolve 6.2.2606, netgen, meshio 5.3.5 and gmsh
 4.15.2 in this environment rather than by reading documentation, and `/wp-implement` SHALL write
-them into `.knowledge/06-numerics-fem.md` §8 marked **[tested]** as it lands the code: netgen's
+them into `.knowledge/06-numerics-fem/08-mesh-resolution-and-adaptivity.md` marked **[tested]** as it lands the code: netgen's
 `ReadGmsh` is an MSH 2.2 parser and fails on 4.1; meshio's 4.1 writer collapses a multi-group cell
 block to one physical tag and omits an entity that owns no node, both silently on write; the
 array-to-`netgen.meshing.Mesh` recipe with its two opposite 0-/1-based index conventions; the SICN

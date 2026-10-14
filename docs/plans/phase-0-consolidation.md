@@ -94,7 +94,7 @@ Tier-2 benchmark asserts a physical quantity against a closed form or a measured
 VER identifiers with a real, traceable Phase-0 test: **VER-03, 04, 05, 06, 07, 08, 11, 12, 13, 14,
 15, 16, 17, 18, 19, 20, 21, 22.** Each names its requirement (`test_ver17_access_conductance_matches_maxwell_hall`),
 discharges it, and traces its reference value to `.knowledge/` or the spec (e.g. VER-03 to the §4.3
-check values; VER-04 to `μ⁰ = D⁰/V_T`; VER-05 to the `.knowledge/01` §3.0 drift table).
+check values; VER-04 to `μ⁰ = D⁰/V_T`; VER-05 to the `.knowledge/01-physics-epnpns/03-the-corrections.md#30-the-einstein-ratio-measured` drift table).
 
 Gaps, all distinguished as *missing test for a not-yet-built stage* rather than *missing
 requirement* — none is a defect, and the release plan (§2.7, §8.1) schedules each:
@@ -117,7 +117,7 @@ pressure (`tests/tier2/test_mms.py:118,128`), and VER-19 asserts a drag rate `> 
 1 % tolerance. The electrostatic and transport benchmarks (VER-12…VER-17) assert single-mesh
 tolerances rather than orders — which is correct: §7.3 designates VER-18 as "the only route that
 verifies the `u_r/r²` term and the axis treatment," and the DH-cylinder O(h³) result lives in
-`.knowledge/06` §8.3 as a measured fact rather than a gate. **Conclusion: convergence order is
+`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#83-convergence-and-solver-facts` as a measured fact rather than a gate. **Conclusion: convergence order is
 verified where it localises an error; no additional order-of-convergence test is owed in Phase 0.**
 
 Limits not yet claimed by any identifier (candidates for Phase 1, not Phase-0 defects): a
@@ -187,7 +187,7 @@ materials/physics/solve/post layers own only their own concerns.
   "logged with location and property," and `test_phy13_*` exercises them — but the only caller
   outside tests is nothing: `grep` finds no reference in `solve/`, `physics/` or `post/`. A real run
   at high salt near a charged wall (where the counter-ion driver can exceed 5.3 M) therefore clamps
-  the correction driver **silently**, which `.knowledge/01` §3 names explicitly as "a plausible
+  the correction driver **silently**, which `.knowledge/01-physics-epnpns/03-the-corrections.md` names explicitly as "a plausible
   source of confusion." The clamp itself is correct (PHY-13 cap); it is the *silence* that violates
   the requirement. Fix: WP-A1.
 - **[observation] Unspecified-but-justified constants.** `SATURATED_WALL_DISTANCE_NM = 3.0`
@@ -200,14 +200,14 @@ materials/physics/solve/post layers own only their own concerns.
 Reconciled in the SPECIFICATION → `.knowledge/` → code → docstring order.
 
 - **[verified consistent, no action] `T_H` sign convention.** `post/forces.py` returns
-  `−pI + 2η sym∇u` (the momentum-assembly convention) while `.knowledge/05` §4 prints its negative.
+  `−pI + 2η sym∇u` (the momentum-assembly convention) while `.knowledge/05-analyte-and-forces/05-force-computation-the-analytic-model.md` prints its negative.
   This is the deliberate opposite-sign pair the audit brief flags; the code's docstring pins which
   convention it holds, and route C (the reaction force) is the oracle that would catch a slip. No
   change — "fixing" this is a bug.
 - **[verified consistent, no action] Bias orientation.** `post/qoi.py:31` and NUM-24's amended sign
   agree: `ψ = 1` on cis (grounded, `φ = 0`), positive current trans→cis, `G > 0` — matching VER-17.
 - **[doc item, Low] The permittivity-parameter question is recorded as "still open" in
-  `.knowledge/00-index.md` (#5) and `.knowledge/01` §8 (E5), but the code and the spec have in fact
+  `.knowledge/index.md` (#5) and `.knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` (E5), but the code and the spec have in fact
   settled it.** `data/corrections/willems2020_nacl.yaml:125` and `forms.gavish_langevin` commit to
   the model-report Gavish values (30.08, 11.5), which govern per §1.6 and §4.6 erratum 6. The
   knowledge base's own "open" framing now lags the shipped decision; this is a documentation
@@ -290,16 +290,16 @@ missing coefficient key with a diagnostic that names the key — mirroring IF-03
 
 ### Phase C — documentation harmonisation
 
-**WP-C1 — Reconcile the permittivity "still open" note.** Update `.knowledge/00-index.md` (#5) and
-`.knowledge/01` §8 (E5) to record that the shipped model and §4.6 erratum 6 have settled on the
+**WP-C1 — Reconcile the permittivity "still open" note.** Update `.knowledge/index.md` (#5) and
+`.knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` (E5) to record that the shipped model and §4.6 erratum 6 have settled on the
 model-report Gavish parameters (30.08, 11.5) as governing, keeping the author-query history as
 resolved rather than open. No `src/` or `SPECIFICATION.md` change.
 - *Acceptance:* the two knowledge files and `SPECIFICATION.md` §4.6 state the same status; a grep
   for the stale "ask the author"/"open" framing on the permittivity cap returns nothing; docs-only
   diff.
 
-> **Outcome — delivered.** Reframed `.knowledge/01` §8 E5 (open question → settled), `.knowledge/00-index.md`
-> ruling 2 and its "Still open" list, and — beyond the two files the plan named — `.knowledge/09` §D3
+> **Outcome — delivered.** Reframed `.knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` E5 (open question → settled), `.knowledge/index.md`
+> ruling 2 and its "Still open" list, and — beyond the two files the plan named — `.knowledge/09-comsol-reference-settings/05-contradictions-with-the-rest-of-this.md`
 > row 3, which carried the same "re-put to the author" framing and had to move for the grep to come
 > back clean. All three and `SPECIFICATION.md` §4.6 now state that Gavish (30.08, 11.5) govern, cap
 > 42.67. Docs only.
@@ -332,7 +332,7 @@ guard against. If taken, it needs no spec amendment (QR-12 already mandates the 
 Each considered and rejected, with the reason. This list is as much of the deliverable as the
 findings.
 
-- **Not touching the `T_H` sign convention** (`post/forces.py` vs `.knowledge/05` §4). The opposite
+- **Not touching the `T_H` sign convention** (`post/forces.py` vs `.knowledge/05-analyte-and-forces/05-force-computation-the-analytic-model.md`). The opposite
   signs are deliberate and documented, and route C is the oracle that would catch a real slip.
   Aligning them would either double-negate the force or desync the docstring from the assembly.
 - **Not "tightening" `SATURATED_WALL_DISTANCE_NM`, `INTERIOR_OFFSET`, or `PACKING_WARNING`.** Each is
