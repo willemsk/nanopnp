@@ -486,7 +486,7 @@ can drift apart.
 
 **Measured.** `_inner_wall_nm` repeats the logic of `innermost_crossings`.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 item 9: `tests/tier2/test_axis_weight_order.py` samples the wall through `innermost_crossings`, the top plane taken 1e-9 nm inside the half-open rule; the old loop and the helper agree to 4.4e-16 nm at the 2,840 other samples.
 
 ### REV-51 — A redundant reopen and resolve in WP34's walk
 
