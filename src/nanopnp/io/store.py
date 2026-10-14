@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import secrets
+import shutil
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -64,45 +65,40 @@ class Store:
     def put(self, artefact: Artefact) -> Artefact:
         """Write an artefact to the store and return it; StoreError if a payload is missing."""
         directory = self.location(artefact.schema, artefact.hash)
-        directory.mkdir(parents=True, exist_ok=True)
-
-        stored_payload: dict[str, Path] = {}
-        for name, source in sorted(artefact.payload.items()):
+        for name, source in artefact.payload.items():
             if not Path(source).is_file():
                 raise StoreError(
                     f"payload {name!r} of artefact {artefact.short_hash} is not a file: {source}"
                 )
-            target = directory / Path(source).name
-            if Path(source).resolve() != target.resolve():
-                atomic_write_bytes(target, Path(source).read_bytes())
-            stored_payload[name] = target
-
-        record = Artefact(
-            schema=artefact.schema,
-            parameters=artefact.parameters,
-            inputs=artefact.inputs,
-            payload=stored_payload,
-            summary=artefact.summary,
-            created_at=artefact.created_at or timestamp(),
-        )
-        meta = record.meta()
-        atomic_write_bytes(
-            directory / META, json.dumps(meta, indent=2, sort_keys=True).encode("utf-8")
-        )
-        logger.debug("stored %s %s", record.schema, record.short_hash)
-        payload_digests = {
-            name: str(entry["sha256"]) for name, entry in _payload_entries(meta).items()
-        }
-        return Artefact(
-            schema=record.schema,
-            parameters=record.parameters,
-            inputs=record.inputs,
-            payload=record.payload,
-            summary=record.summary,
-            created_at=record.created_at,
-            recorded_hash=record.hash,
-            recorded_payload=payload_digests,
-        )
+        directory.parent.mkdir(parents=True, exist_ok=True)
+        # One writer's payloads and record arrive together or not at all: two puts of one key
+        # never interleave their files into a record that disagrees with its payloads.
+        staging = directory.with_name(f".{directory.name}.{os.getpid()}.{secrets.token_hex(4)}")
+        staging.mkdir()
+        try:
+            stored_payload: dict[str, Path] = {}
+            for name, source in sorted(artefact.payload.items()):
+                shutil.copyfile(source, staging / Path(source).name)
+                stored_payload[name] = staging / Path(source).name
+            record = Artefact(
+                schema=artefact.schema,
+                parameters=artefact.parameters,
+                inputs=artefact.inputs,
+                payload=stored_payload,
+                summary=artefact.summary,
+                created_at=artefact.created_at or timestamp(),
+            )
+            (staging / META).write_bytes(
+                json.dumps(record.meta(), indent=2, sort_keys=True).encode("utf-8")
+            )
+            _publish(staging, directory)
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
+        stored = self.get(artefact.schema, artefact.hash)
+        if stored is None:
+            raise StoreError(f"artefact {artefact.short_hash} is not in the store after its put")
+        logger.debug("stored %s %s", stored.schema, stored.short_hash)
+        return stored
 
     def get(self, schema: str, digest: str) -> Artefact | None:
         """Return a stored artefact, or None if absent; StoreError if its record is unreadable."""
@@ -156,6 +152,21 @@ class Store:
                 "cache hit would return a different run's answer"
             )
         return self.put(produced)
+
+
+def _publish(staging: Path, directory: Path) -> None:
+    # A rename onto a non-empty directory fails: the first complete entry stays, and a
+    # directory without a record (an older put's) is cleared and replaced.
+    for _ in range(3):
+        try:
+            staging.rename(directory)
+        except OSError:
+            if (directory / META).is_file():
+                return
+            shutil.rmtree(directory, ignore_errors=True)
+        else:
+            return
+    raise StoreError(f"could not publish the artefact at {directory}")
 
 
 def _payload_entries(meta: Mapping[str, Canonicalisable]) -> dict[str, dict[str, str]]:

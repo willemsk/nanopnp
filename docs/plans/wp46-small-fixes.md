@@ -54,7 +54,7 @@ Each item sets its `REV-nn` rows `fixed` in `docs/project/review-findings.md`, l
 and gives each `review-items.md` section a *Resolved* line.
 
 - [x] 1. 6891891 `density/grid.py`, `charge/stage.py` (D1); done when the round-trip and legacy-read tests of *Verification* pass and VER-62 holds.
-- [ ] 2. `mesh/sizing.py`, `mesh/generate.py`, any re-recorded key golden (D2); done when the shared-key test passes and VER-62 holds.
+- [x] 2. 0cf9b46 `mesh/sizing.py`, `mesh/generate.py`, any re-recorded key golden (D2); done when the shared-key test passes and VER-62 holds.
 - [ ] 3. `io/store.py` (D3); done when the interleaving and two-process tests pass.
 - [ ] 4. `io/workspace.py`, the eleven stage modules, their tests' `workspace=`, `CHANGELOG.md` (D4); done when the refusal test passes and VER-61 holds.
 

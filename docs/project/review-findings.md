@@ -37,7 +37,7 @@ is a rolling register, and its header stays `open`.
 | REV-15 | interface | low | accepted | §8.2.9 I2 | [Example 05 quotes #SBATCH directives as shell words](review-items.md#rev-15-example-05-quotes-sbatch-directives-as-shell-words) |
 | REV-16 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A salt sweep regenerates an identical mesh at each concentration](review-items.md#rev-16-a-salt-sweep-regenerates-an-identical-mesh-at-each-concentration) |
 | REV-17 | numerics | low | fixed | [WP41](../plans/wp41-accuracy-fixes.md) | [A warm start is gated on free prose in the stabilisation provenance](review-items.md#rev-17-a-warm-start-is-gated-on-free-prose-in-the-stabilisation-provenance) |
-| REV-18 | interface | low | accepted | §8.2.9 I2 | [Concurrent sweep members may write the same store key](review-items.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key) |
+| REV-18 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Concurrent sweep members may write the same store key](review-items.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key) |
 | REV-19 | interface | low | accepted | §8.2.9 I2 | [A zero-frame trajectory raises a bare IndexError](review-items.md#rev-19-a-zero-frame-trajectory-raises-a-bare-indexerror) |
 | REV-20 | process | low | deferred | §8.2.8 H12 | [The desktop shell has no multiprocessing.freeze_support](review-items.md#rev-20-the-desktop-shell-has-no-multiprocessingfreeze_support) |
 | REV-21 | process | low | declined | §8.2.8 H12 | [numerics/linear.py imports scipy inside its functions](review-items.md#rev-21-numericslinearpy-imports-scipy-inside-its-functions) |
