@@ -1,5 +1,7 @@
 # WP46 — The small fixes
 
+PR: [#100](https://github.com/willemsk/nanopnp/pull/100), branch claude/wizardly-cori-l0mxtl
+
 **Status: delivered, 14 October 2026.** Inherits WP44's loop and WP45's prose rule
 (§8.2.11 L4); the register's fifteen rows of §8.2.9 I2 (renumbered by §8.2.10 J1).
 
