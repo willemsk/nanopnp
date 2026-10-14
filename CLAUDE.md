@@ -145,9 +145,11 @@ messages (`.claude/rules/python.md`; §8.2.11 L4).
 
 ## Durable learnings
 
-Write a durable fact into the relevant `.knowledge/` file, with its source, marked **[tested]** or
-**[verified]** (`.knowledge/index.md`, *Conventions*). Status and scope opinions belong in the
-specification.
+Write a durable fact as a concept in the relevant `.knowledge/` directory, or into an existing one, with
+its source: mark a claim `[tested: <test>]` or `[verified]` with a source footnote, list the concept in the
+directory's `index.md` and add a line to `.knowledge/log.md`
+(`.knowledge/00-orientation/04-provenance-and-how-to-extend-this.md`). Status and scope opinions belong in
+the specification.
 
 ## Do NOT
 

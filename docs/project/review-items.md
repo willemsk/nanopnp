@@ -1018,3 +1018,12 @@ The charge-grid key did not move when REV-14 added `origin_nm` and `spacing_nm` 
 `frame_times` reads `trajectory._file.header` and copies the expression of `DCDReader._frame_to_ts`, to avoid decoding frames. A release that renames `_file` or changes how `ts.time` is derived makes the DCD branch raise `AttributeError` or disagree with `step.time`.
 
 **Fixed** in WP46: the header read falls back to decoding the frames when the reader no longer has the attribute; the test compares both with `step.time`.
+
+
+### REV-103 — A verified-only claim outside the test-evidence concepts is not yet classed as executable arithmetic or a source reading
+
+*Area:* verification. *Severity:* low. *Found:* WP47 item 6.
+
+G8 sends a `[verified]` claim whose arithmetic can be executed to a test and keeps a source reading as `[verified]` with a footnote. WP47 applies that split only where a concept's type is Test Evidence, whose `[verified]` claims became tested or pending claims. In the other concepts 56 `[verified]` claims stay as written: 9 cite a source by footnote and 47 name none, so `pending.yaml` counts them as `verified_unsourced`.
+
+Open: WP48 reads each of the 47, and either backs it with a test or gives it a footnote to a source; the ceiling falls with each.

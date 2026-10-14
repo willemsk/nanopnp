@@ -63,7 +63,7 @@ Opus only after Sonnet fails.
 > **Outcome — item 6.** 72 claims name a test; 311 are `[tested: pending]` and 47 `[verified]` claims carry no source footnote, so the ceiling is 358 in 55 concepts; 9 `[verified]` claims cite a source by footnote. A `[verified]` claim in a test-evidence concept became a tested or pending claim; elsewhere each stays `[verified]` until WP48 classifies it.
 
 - [ ] 7. `.knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
-- [ ] 8. `docs/scripts/generate.py`, `mkdocs.yml` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes.
+- [x] b3d1dcb 8. `docs/scripts/generate.py`, `mkdocs.yml` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes.
 - [ ] 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `README.md`, `SPECIFICATION.md` §11: the new first read, the maintenance rule (a durable fact is a concept with a log line), the pending figure; done when VER-68 and the build pass.
 
 *Compaction checkpoint: after item 9; then the push gate and `/wp-implement`'s PR.*
