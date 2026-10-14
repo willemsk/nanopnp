@@ -260,7 +260,7 @@ that fit both ions, not per-ion bounds.
 **Measured.** The per-point sampler rebuild was fixed by `FieldSampler.shared`; whether the
 SI-expression building is still duplicated was not checked.
 
-**Resolves it.** WP46, the small fixes, which measures the duplication first and removes it if it is there (§8.2.9 I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 item 10: measured on the cylindrical-pore case (`tests/conftest.py` `CYLINDRICAL_PORE_CASE`, epnp-ns, Na+/Cl-, 0.1 M, stabilisation as the case sets it): a run of ten solves of the continuation ladder builds the SI concentration expressions ten times, once per solve and once for both gates, against 36 Newton iterates and 46 positivity checks. The count per field per iterate is zero, below one, so nothing is removed; `tests/tier1/test_gate_builds.py` holds it.
 
 ### REV-25 — A post stage run without a solve writes scratch to the default store
 
