@@ -106,7 +106,9 @@ def _walk(case: Path, store: Store, root: Path, order: int) -> Solved:
     from nanopnp.solve.state import restore, warm_start_payload
 
     started = time.perf_counter()
-    result = run_case(case, store=store, upto="solve", workspace=root / "work", write=False)
+    result = run_case(
+        case, store=store, upto="solve", workspace=root / f"work-p{order}", write=False
+    )
     seconds = time.perf_counter() - started
     artefacts = result.artefacts
     solution = restore(
