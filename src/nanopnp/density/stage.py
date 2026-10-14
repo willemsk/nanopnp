@@ -98,6 +98,7 @@ class DensityStage:
         spec = _density(inputs)
         parameters = density_parameters(spec)
         structure = inputs.require("structure")
+        directory = scratch_directory(self._workspace, self.name)
         check_cancelled(cancel, "reading the aligned ensemble")
         report(progress, 0.0, "reading the aligned ensemble")
         ensemble = AlignedEnsemble.read(structure.payload[ENSEMBLE_PAYLOAD])
@@ -145,7 +146,6 @@ class DensityStage:
             "structure_payload_digest": structure.summary.get("payload_digest"),
         }
         density = DensityMap(values=values, grid=grid, header=header)
-        directory = scratch_directory(self._workspace, "density")
         path = density.write(directory / f"{PAYLOAD_NAME}.npz")
         report(progress, 1.0, f"density on {grid.nz} z planes written")
         return DensityArtefact(

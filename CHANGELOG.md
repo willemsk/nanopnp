@@ -28,6 +28,8 @@ its test; no computed number moves beyond round-off, and VER-62 holds.
   bit for bit; an axes-only file still reads; `charge/stage.py` deposits the grid it summed.
 - **Stage-6 key** (VER-53, VER-54, REV-16): leaves the Debye length out, so a salt sweep below
   about 1.5 M meshes once. Stored stage-6 keys change once, so an existing store re-meshes once.
+  The manifest's `sizing` block takes its Debye entries from the run's own case, not from the
+  summary of the mesh another salt stored.
 - **`Store.put`** (VER-26, REV-18): stages the entry in a sibling directory and renames it; the
   first complete entry stays and every writer returns it.
 - **Stage 1 refusals** (VER-48, REV-19, REV-57): a trajectory with no frame, a second Cα at one
@@ -49,7 +51,9 @@ its test; no computed number moves beyond round-off, and VER-62 holds.
 `MissingWorkspaceError` naming the argument; it no longer picks a directory under the default store
 root (REV-25, REV-55). A caller that built `MeshStage()` or any other stage by hand passes
 `workspace=<directory>`, which the stage writes into; a run through `run_case` or the CLI already
-does.
+does. The structure, density, symmetry, contour, region and solve stages refuse at the start of
+their run, before the work they would lose; `ReportStage` hands its workspace to the solve it runs
+when no solve artefact is offered.
 
 ## [0.5.0-alpha.11] - 2026-10-14
 

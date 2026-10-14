@@ -162,6 +162,22 @@ def corrected_debye_ratio(resolved: ResolvedCase, wall: WallSize) -> float:
     return wall.wall_h_nm / (corrected / DEBYE_FRACTION)
 
 
+def debye_record(wall: WallSize, corrected_ratio: float) -> dict[str, Canonicalisable]:
+    """Return the ``sizing`` entries that follow the salt, which a shared mesh does not."""
+    return {
+        "wall": wall.summary(),
+        "debye_target_nm": wall.debye_target_nm,
+        "num30_ratio": wall.wall_h_nm / wall.debye_target_nm,
+        "num30_ratio_corrected": corrected_ratio,
+    }
+
+
+def case_debye_record(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return ``debye_record`` for a case, from its own concentration and permittivity."""
+    wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
+    return debye_record(wall, corrected_debye_ratio(resolved, wall))
+
+
 ARC_NAMES = frozenset({"cis", "trans", "membrane_outer"})
 """The boundary names of the reservoir arc, sized at ``arc_nm``."""
 

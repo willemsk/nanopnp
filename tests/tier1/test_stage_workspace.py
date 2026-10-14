@@ -10,10 +10,12 @@ import pytest
 
 from nanopnp.core import stages as registry
 from nanopnp.core.paths import store_root
-from nanopnp.io.artefact import StageInputs
+from nanopnp.io.artefact import QOI_SCHEMA, Artefact, StageInputs
 from nanopnp.io.workspace import MissingWorkspaceError, scratch_directory
 from nanopnp.mesh.ingest import MeshStage
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.post.stage import QoIStage, ReportStage
+from nanopnp.solve.stage import SolveStage
 
 
 def _workspace_stages() -> list[tuple[str, Path]]:
@@ -61,3 +63,51 @@ def test_ver25_the_mesh_stage_without_a_workspace_refuses_scratch(
     with pytest.raises(MissingWorkspaceError, match="workspace"):
         MeshStage().run(StageInputs(resolved=resolved))
     assert not store_root().exists() or not any(store_root().rglob("*.msh"))
+
+
+class _ReachedError(Exception):
+    pass
+
+
+def _refuse_work(*arguments: object, **keywords: object) -> None:
+    raise _ReachedError
+
+
+def test_ver25_a_solve_stage_without_a_workspace_refuses_before_it_solves(
+    cylindrical_pore_case: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(SolveStage, "_prepare", _refuse_work)
+    resolved = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
+    with pytest.raises(MissingWorkspaceError, match="solve stage"):
+        SolveStage().run(StageInputs(resolved=resolved))
+
+
+def test_ver25_the_qoi_stage_given_no_solve_refuses_before_it_solves(
+    cylindrical_pore_case: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(SolveStage, "_prepare", _refuse_work)
+    resolved = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
+    with pytest.raises(MissingWorkspaceError, match="solve stage"):
+        QoIStage().run(StageInputs(resolved=resolved))
+
+
+def test_ver25_the_report_stage_hands_its_workspace_to_the_solve_it_runs(
+    cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspaces: list[Path | None] = []
+
+    def run(self: SolveStage, *arguments: object, **keywords: object) -> None:
+        workspaces.append(self._workspace)
+        raise _ReachedError
+
+    monkeypatch.setattr(SolveStage, "run", run)
+    text = cylindrical_pore_case.read_text(encoding="utf-8").replace(
+        "outputs: [current, transport_numbers, eof_rate]", "outputs: [current, fields]"
+    )
+    inputs = StageInputs(
+        resolved=resolve(loads_case(text)),
+        upstream={"qoi": Artefact(schema=QOI_SCHEMA, parameters={})},
+    )
+    with pytest.raises(_ReachedError):
+        ReportStage(workspace=tmp_path / "report").run(inputs)
+    assert workspaces == [tmp_path / "report" / "solve"]

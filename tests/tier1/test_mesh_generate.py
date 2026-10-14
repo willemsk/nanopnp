@@ -21,11 +21,14 @@ from nanopnp.geometry.profile import (
 )
 from nanopnp.geometry.region import RegionStage, read_region
 from nanopnp.io.artefact import StageInputs
+from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.generate import WallSizeGateError, generate
 from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
+from nanopnp.mesh.sizing import case_debye_record
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.run import run_case
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -129,6 +132,37 @@ def test_ver53_salt_below_ceiling_shares_stage6_key(workspace: Path, region) -> 
     assert key_at(0.15) == key_at(1.0)
     assert key_at(2.0) != key_at(3.0)
     assert key_at(1.0) != key_at(2.0)
+
+
+def test_ver53_a_shared_mesh_reports_each_run_its_own_debye_length(
+    workspace: Path, tmp_path: Path
+) -> None:
+    store = Store(tmp_path / "store")
+    meshes = {}
+    targets = {}
+    for concentration_M in (0.15, 1.0):
+        text = _case_text(workspace).replace(
+            "concentration_M: 1.0", f"concentration_M: {concentration_M}"
+        )
+        path = tmp_path / f"case-{concentration_M}.yaml"
+        path.write_text(text, encoding="utf-8")
+        result = run_case(
+            path,
+            store=store,
+            upto="mesh",
+            workspace=tmp_path / f"work-{concentration_M}",
+            write=False,
+        )
+        sizing = result.manifest.geometry_and_mesh["sizing"]
+        expected = case_debye_record(resolve(loads_case(text)))
+        assert sizing["debye_target_nm"] == pytest.approx(expected["debye_target_nm"])  # type: ignore[index]
+        assert sizing["num30_ratio"] == pytest.approx(expected["num30_ratio"])  # type: ignore[index]
+        assert sizing["wall"] == expected["wall"]  # type: ignore[index]
+        meshes[concentration_M] = result.artefacts["mesh"].hash
+        targets[concentration_M] = sizing["debye_target_nm"]  # type: ignore[index]
+
+    assert meshes[0.15] == meshes[1.0]
+    assert targets[0.15] != targets[1.0]
 
 
 def test_ver53_a_consumer_without_the_stage_6_artefact_is_refused(workspace: Path) -> None:

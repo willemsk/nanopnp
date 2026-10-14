@@ -1069,6 +1069,7 @@ class RegionStage:
         RegionGateError
             At the first junction criterion the region fails.
         """
+        directory = scratch_directory(self._workspace, self.name)
         check_cancelled(cancel, "reading the profile")
         report(progress, 0.0, "reading the profile")
         resolved = inputs.resolved
@@ -1087,7 +1088,6 @@ class RegionStage:
             h_c_nm=resolved.contour_spacing_nm,
         )
 
-        directory = scratch_directory(self._workspace, "region")
         written = write_region(record, directory / f"{PAYLOAD_NAME}.yaml")
         logger.info(
             "region: inner edge (%.4f, %.4f) nm, clearance %.4f nm, junction %.4f and %.4f nm, "

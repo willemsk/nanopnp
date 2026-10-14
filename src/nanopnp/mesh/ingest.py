@@ -43,8 +43,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 logger = logging.getLogger(__name__)
 
-"""Directory under the store root the archival MSH copy is written to."""
-
 MATERIAL_VOCABULARY: tuple[str, ...] = (
     "analyte",
     "cis",

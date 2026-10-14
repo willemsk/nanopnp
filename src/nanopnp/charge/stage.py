@@ -98,8 +98,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 logger = logging.getLogger(__name__)
 
-"""Directory under the store root the archival native copies are written to."""
-
 CHARGE_PAYLOAD = "charge"
 """The payload key of the charge's lattice ``.npz``: the archival copy of a supplied
 field, or the export lattice of a deposited one."""
@@ -1005,7 +1003,7 @@ class FieldStage:
         return resolved, ingested, mesh
 
     def _directory(self) -> Path:
-        return scratch_directory(self._workspace, "fields")
+        return scratch_directory(self._workspace, self.name)
 
     def _write(self, fields: ResolvedFields) -> dict[str, Path]:
         directory = self._directory()
