@@ -62,7 +62,7 @@ and gives each `review-items.md` section a *Resolved* line.
 *Compaction checkpoint: after item 4; resume from this plan and `git log`.*
 
 - [x] 5. 80da6ff `structure/read.py`, `structure/stage.py`, `.knowledge/04-clya-geometry-and-charge.md` (D5); done when the refusal and frame-time tests pass and the 2WCD walk passes.
-- [ ] 6. `density/map.py`, `pipeline/case.py`, `modularity-layering.yaml` if the edge is new (D6, REV-40).
+- [x] 6. 58103bd `density/map.py`, `pipeline/case.py`, `modularity-layering.yaml` if the edge is new (D6, REV-40).
 - [ ] 7. `validation/geometry.py` (REV-59) and `examples/05-clya-reference/render_slurm.py` (REV-15).
 - [ ] 8. `charge/pqr.py`, `structure/ensemble.py` (REV-43); `numerics/measures.py` and its callers (REV-49); `validation/runs.py`, `cli/__init__.py` (REV-51).
 - [ ] 9. `tests/tier2/test_axis_weight_order.py` (REV-50).

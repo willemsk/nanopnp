@@ -189,36 +189,43 @@ def test_ver46_example_05_renders_one_dependent_array_per_wave(planned: Path) ->
     assert "nanopnp sweep run" in member
     assert '--index "$((WAVE_FIRST + SLURM_ARRAY_TASK_ID))"' in member
     assert shlex.quote(str((planned / "phase1" / "plan.json").resolve())) in member
-    assert f"--chdir={shlex.quote(str(planned.parents[1].resolve()))}" in member
-    assert f"--job-name={shlex.quote(plan['name'])}\n" in member
+    assert f"--chdir={planned.parents[1].resolve()}" in member
+    assert f"--job-name={plan['name']}\n" in member
 
 
-def test_ver46_example_05_quotes_the_sweep_name_and_refuses_a_line_break(
-    planned: Path, tmp_path: Path
-) -> None:
+def test_sbatch_values_are_raw_and_refused_when_unpassable(planned: Path, tmp_path: Path) -> None:
     spec = importlib.util.spec_from_file_location("render_slurm", planned / "render_slurm.py")
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
 
     plan = json.loads((planned / "phase1" / "plan.json").read_text(encoding="utf-8"))
-    for name, refused in (("phase 1; rm -rf ~", False), ("phase1\necho injected", True)):
-        path = tmp_path / f"plan-{refused}.json"
+
+    def attempt(name: str, workdir: Path, time: str = "00:10:00") -> Path:
+        path = tmp_path / "plan.json"
         path.write_text(json.dumps({**plan, "name": name}), encoding="utf-8")
-        arguments = {
-            "workdir": tmp_path,
-            "store": tmp_path / "store",
-            "out": tmp_path / f"submit-{refused}.sh",
-            "time": "00:10:00",
-            "concurrency": 4,
-        }
-        if refused:
-            with pytest.raises(ValueError, match="control character"):
-                module.render(path, **arguments)
-            continue
-        _, member = module.render(path, **arguments)
-        text = member.read_text(encoding="utf-8")
-        assert f"#SBATCH --job-name={shlex.quote(name)}\n" in text
+        _, member = module.render(
+            path,
+            workdir=workdir,
+            store=tmp_path / "store",
+            out=tmp_path / "submit.sh",
+            time=time,
+            concurrency=4,
+        )
+        return member
+
+    text = attempt("clya-0.5M_reference", tmp_path).read_text(encoding="utf-8")
+    assert "#SBATCH --job-name=clya-0.5M_reference\n" in text
+    assert f"#SBATCH --chdir={tmp_path}\n" in text
+    assert "#SBATCH --time=00:10:00\n" in text
+
+    for character in (" ", "'", '"', "#", "%", "\n", "\t", "\x00"):
+        with pytest.raises(ValueError, match="--job-name"):
+            attempt(f"phase{character}1", tmp_path)
+    with pytest.raises(ValueError, match="--chdir"):
+        attempt("phase1", tmp_path / "a b")
+    with pytest.raises(ValueError, match="--time"):
+        attempt("phase1", tmp_path, time="1 day")
 
 
 def test_ver46_example_05_case_is_the_frozen_case() -> None:
