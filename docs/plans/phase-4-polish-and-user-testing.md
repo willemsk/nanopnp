@@ -679,7 +679,7 @@ under 6 minutes. A miss is reported with its cause and the author rules (L8). It
 > `same_tree.py` proved every commit changes no instruction. Every public function, class and method
 > keeps a condensed docstring (L4 as amended after item 19); tests keep none. VER-75 (a) and (b) are
 > `test_prose_share.py`, ceilings 11.62 % and 3.14 %. 33 fresh workers, one redo, no escalation (L9).
-> Facts found nowhere else moved to `.knowledge/`. REV-91 to REV-97 are open for the author.
+> Facts found nowhere else moved to `.knowledge/`. The review's REV-93 to REV-97 are fixed, REV-91 deferred and REV-92 declined (§8.2.11 L10).
 
 *Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
 rules, `CONTRIBUTING.md`) is WP44's. The tree, one commit per subpackage, by per-module agent

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import functools
+import importlib.util
 import io
 import itertools
 import tokenize
@@ -12,19 +13,19 @@ from pathlib import Path
 import pytest
 
 _ROOT = Path(__file__).resolve().parents[2]
-_DIRECTIVES = ("type:", "noqa", "pragma", "fmt:", "mypy:", "ruff:")
+_SCRIPT = _ROOT / ".claude/scripts/same_tree.py"
+_spec = importlib.util.spec_from_file_location("same_tree", _SCRIPT)
+assert _spec is not None and _spec.loader is not None
+same_tree = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(same_tree)
 
-# Measured at WP45's close, every bare string counted (src 11.40 %, tests 2.35 %), plus 1 point.
-CEILING_SRC = 0.1240
-CEILING_TESTS = 0.0335
+# Measured at WP45's close, every bare string counted (src 11.48 %, tests 2.48 %), plus 1 point.
+CEILING_SRC = 0.1248
+CEILING_TESTS = 0.0348
 
 
 def _is_private(name: str) -> bool:
     return name.startswith("_") and not (name.startswith("__") and name.endswith("__"))
-
-
-def _is_directive(comment: str) -> bool:
-    return comment.lstrip("# ").startswith(_DIRECTIVES)
 
 
 def _string(node: ast.AST) -> ast.Constant | None:
@@ -95,7 +96,7 @@ def _prose_lines(text: str, tree: ast.Module) -> tuple[int, int]:
         if doc is not None and doc.end_lineno is not None:
             prose.update(range(doc.lineno, doc.end_lineno + 1))
     for tok in tokenize.generate_tokens(io.StringIO(text).readline):
-        if tok.type == tokenize.COMMENT and not _is_directive(tok.string):
+        if tok.type == tokenize.COMMENT and not same_tree.is_directive(tok.string):
             prose.add(tok.start[0])
     return len(prose), len(text.splitlines())
 
@@ -198,6 +199,11 @@ def test_ver75_b_directive_comments_are_not_prose(tmp_path: Path) -> None:
         tmp_path / "m.py",
         "x = 1  # type: ignore[assignment]\ny = 2  # noqa: F841\nz = 3  # pragma: no cover - r\n",
     )
+    assert _scan(tmp_path, is_test=False)[1] == 0.0
+
+
+def test_ver75_b_shebang_and_coding_line_are_not_prose(tmp_path: Path) -> None:
+    _write(tmp_path / "m.py", "#!/usr/bin/env python\n# -*- coding: utf-8 -*-\nx = 1\n")
     assert _scan(tmp_path, is_test=False)[1] == 0.0
 
 

@@ -153,12 +153,8 @@ select = ["E", "F", "I", "N", "UP", "B", "SIM", "NPY", "RUF", "D", "ANN"]
 ignore = [
     "D203",   # incompatible with D211
     "D213",   # incompatible with D212
-    "D101",   # D101-D107 off by SPECIFICATION.md 8.2.11 L4; VER-72 (h) checks the PUBLIC names
-    "D102",
-    "D103",
-    "D104",
+    "D104",   # SPECIFICATION.md 8.2.11 L4: D101-D103 and D106 hold in src/nanopnp only
     "D105",
-    "D106",
     "D107",
     "D417",   # parameters are documented only where the name and type do not say
     "N803",   # physics notation: D0, P1, V_T are the published symbol names
@@ -172,6 +168,7 @@ convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D100", "D103", "ANN201", "ANN001"]
+"!src/nanopnp/**" = ["D101", "D102", "D103", "D106"]
 
 [tool.mypy]
 # The development pin, not the 3.11 support floor: NumPy's shipped stubs use
