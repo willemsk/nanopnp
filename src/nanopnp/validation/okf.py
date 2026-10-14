@@ -43,7 +43,7 @@ MODEL_IDENTIFIER = re.compile(r"(?i)\b(claude-)?(opus|sonnet|haiku|fable)\b")
 
 HEADING = re.compile(r"^(#{1,6})[ \t]+(.*?)[ \t]*$")
 
-EXPLICIT_ID = re.compile(r"[ \t]*\{#([A-Za-z][\w:.-]*)\}$")
+EXPLICIT_ID = re.compile(r"[ \t]*\{#([\w:.-]+)\}$")
 
 FENCE = re.compile(r"^[ \t]*(```|~~~)")
 

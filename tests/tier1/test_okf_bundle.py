@@ -157,12 +157,12 @@ def test_ver68_placeholder_in_a_code_span_passes(repository: Path) -> None:
 
 
 def test_ver68_explicit_ids_and_repeats_give_anchors(repository: Path) -> None:
-    body = "## 1. Thing\n\n### 1.1 Detail **[tested]** {#detail}\n\n### Repeat\n\n### Repeat\n"
+    body = "## 1. Thing\n\n### 1.1 Detail **[tested]** {#11-detail}\n\n### Repeat\n\n### Repeat\n"
     _concept(repository, "01-thing.md", body.replace("**[tested]** ", "**[tested: pending]** "))
     ok = _file(
         repository,
         "ok.md",
-        ".knowledge/01-a/01-thing.md#detail .knowledge/01-a/01-thing.md#repeat_1\n",
+        ".knowledge/01-a/01-thing.md#11-detail .knowledge/01-a/01-thing.md#repeat_1\n",
     )
     pending = {"01-a/01-thing.md": {"tested_pending": 1, "verified_unsourced": 0}}
     (repository / ".knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
