@@ -1,12 +1,4 @@
-"""VER-01, VER-02, VER-58, QR-12 at Tier 1: the deposit, its transfer, and the gates it must fail.
-
-The producer path's two legs are exact by construction (§4.4 NOTE on the
-producer path), so each is shown to fail on the broken construction WP28's
-*Design* §5 names for it, and the discriminating per-plane check on the one that
-passes both legs. The Galerkin property is checked through NGSolve's own
-integration of the transferred field, which is not the route the projection
-takes.
-"""
+"""VER-01, VER-02, VER-58, QR-12 at Tier 1: the deposit, its transfer and the gates it fails."""
 
 from __future__ import annotations
 
@@ -52,7 +44,6 @@ H = 0.005
 
 
 def _mesh(*, maxh: float = 0.12, r_max: float = 5.0, protein: bool = True) -> MeshData:
-    """Return a box ``[0, r_max] x [-2.5, 2.5]`` nm of water, with a protein block inside."""
     geometry = SplineGeometry()
     geometry.AddRectangle((0.0, -2.5), (r_max, 2.5), bcs=["trans", "wall", "cis", "axis"])
     geometry.SetMaterial(1, "water")
@@ -72,7 +63,6 @@ def _atoms(
     *,
     shift_z_nm: float = 0.0,
 ) -> SourceAtoms:
-    """Return one frame of source atoms given directly."""
     count = len(r_nm)
     return SourceAtoms(
         r_nm=np.asarray(r_nm, dtype=np.float64),
@@ -88,13 +78,11 @@ def _atoms(
 
 @pytest.fixture(scope="module")
 def mesh_data() -> MeshData:
-    """Return the two-material box, once per module."""
     return _mesh()
 
 
 @pytest.fixture(scope="module")
 def several() -> SourceAtoms:
-    """Atoms on and near the axis, and of every CHARMM-like width, in the protein block."""
     return _atoms(
         [0.0, 0.6, 1.5, 2.2, 3.9],
         [0.1, -0.4, 0.3, 1.1, -1.2],
@@ -106,19 +94,14 @@ def several() -> SourceAtoms:
 def _report(
     atoms: SourceAtoms, grid: RadialGrid, found: Deposit, data: MeshData
 ) -> DepositConservation:
-    """Return the producer-path report of ``found`` on ``data``'s NGSolve mesh."""
     mesh = to_ngsolve(data)
     field = gridfunction(found, mesh)
     measures = replace(AXISYMMETRIC, element_order=max(found.order, 1))
     return deposit_conservation(atoms, grid, field, mesh, measures)
 
 
-# -- the reference element -----------------------------------------------------------
-
-
 @pytest.mark.parametrize("degree", [0, 1, 3, 5, 7])
 def test_ver58_triangle_rule_is_exact_to_its_degree(degree: int) -> None:
-    """The collapsed Gauss rule integrates every monomial of its degree exactly on the reference."""
     barycentric, weights = triangle_rule(degree)
     xi, eta = barycentric[:, 1], barycentric[:, 2]
     for a in range(degree + 1):
@@ -128,7 +111,6 @@ def test_ver58_triangle_rule_is_exact_to_its_degree(degree: int) -> None:
 
 
 def test_ver58_locate_counts_every_node_once_and_lowest_index_wins(mesh_data: MeshData) -> None:
-    """Every lattice node is in exactly one element; a shared edge goes to the lower index."""
     grid = RadialGrid.from_axes(
         np.arange(0, 1001) * H, np.arange(-500, 501) * H, np.ones((1001, 1001))
     )
@@ -150,14 +132,10 @@ def test_ver58_locate_counts_every_node_once_and_lowest_index_wins(mesh_data: Me
         assert owner[node] == inside.min()
 
 
-# -- the Galerkin property and the transfer -------------------------------------------
-
-
 @pytest.mark.parametrize("order", [1, 2, 3])
 def test_ver58_deposit_moments_equal_the_lattice_against_every_monomial(
     mesh_data: MeshData, several: SourceAtoms, order: int
 ) -> None:
-    """``int rho_h r^a z^b r`` over the mesh, by NGSolve, equals the lattice's sum to 1e-12."""
     grid = sum_kernel(several, H).grid
     found = deposit(grid, mesh_data, order)
     mesh = to_ngsolve(mesh_data)
@@ -168,7 +146,6 @@ def test_ver58_deposit_moments_equal_the_lattice_against_every_monomial(
         lattice = float(np.sum(masses * nodes[:, 0] ** a * nodes[:, 1] ** b))
         integrated = ngs.Integrate(field * ngs.x ** (a + 1) * ngs.y**b, mesh, order=2 * order + 4)
         assert abs(integrated - lattice) <= 1e-12 * scale * 5.0 ** (a + b), (a, b)
-    # Element by element too, for the charge: each element carries its lattice charge.
     per_element = ngs.Integrate(field * ngs.x, mesh, order=order + 3, element_wise=True)
     charges = 2.0 * math.pi * 1e-27 * per_element.NumPy()
     assert np.max(np.abs(charges - found.element_charge_C)) <= 1e-12 * scale * 2 * math.pi * 1e-27
@@ -177,7 +154,6 @@ def test_ver58_deposit_moments_equal_the_lattice_against_every_monomial(
 def test_ver58_p0_misses_the_first_moment_that_p1_keeps(
     mesh_data: MeshData, several: SourceAtoms
 ) -> None:
-    """A deposit at P0 conserves charge but fails the Galerkin moment test (*Design* §5)."""
     grid = sum_kernel(several, H).grid
     mesh = to_ngsolve(mesh_data)
     lattice = grid.integral(z_weight=grid.z_nm)
@@ -196,7 +172,6 @@ def test_ver58_p0_misses_the_first_moment_that_p1_keeps(
 def test_ver58_ngsolve_field_equals_the_payload(
     mesh_data: MeshData, several: SourceAtoms, tmp_path
 ) -> None:
-    """The ``L2(order=k)`` field equals the payload's polynomials, and its order is ``k`` (D5)."""
     grid = sum_kernel(several, H).grid
     found = Deposit.read(deposit(grid, mesh_data, 2).write(tmp_path / "deposit.npz"))
     mesh = to_ngsolve(mesh_data)
@@ -217,11 +192,7 @@ def test_ver58_ngsolve_field_equals_the_payload(
     assert not charge.is_areal
 
 
-# -- the broken constructions of Design §5 --------------------------------------------
-
-
 def test_ver01_dropped_renormalisation_fails_the_producer_leg_only(mesh_data: MeshData) -> None:
-    """An atom on the axis, unrenormalised: the producer leg fails at -1.67e-3, not the consumer."""
     atoms = _atoms([0.0], [0.0], [0.05], [1.0])
     grid = sum_kernel(atoms, H, renormalise=False).grid
     report = _report(atoms, grid, deposit(grid, mesh_data, 2), mesh_data)
@@ -235,13 +206,9 @@ def test_ver01_dropped_renormalisation_fails_the_producer_leg_only(mesh_data: Me
 
 
 def test_ver01_truncated_patch_fails_the_producer_leg(mesh_data: MeshData) -> None:
-    """Patches cut at 2 w and not renormalised lose ``1 - erf(2)^2 = 0.93 %``: the producer leg."""
     atoms = _atoms([2.0], [0.0], [0.1], [1.0])
     grid = sum_kernel(atoms, H, half_widths=2.0, renormalise=False).grid
     report = _report(atoms, grid, deposit(grid, mesh_data, 2), mesh_data)
-    # The continuous loss is 1 - erf(2)^2 = 0.93 %. The patch's last nodes, at
-    # exactly +-2 w, keep their full trapezoid weight, which gives back
-    # h exp(-4)/(w sqrt(pi)) = 5e-4 on each axis: 0.83 % on the lattice.
     continuous = 1 - math.erf(2.0) ** 2
     returned = 2 * H * math.exp(-4.0) / (0.1 * math.sqrt(math.pi))
     assert report.producer_error == pytest.approx(-(continuous - returned), rel=0.01)
@@ -250,7 +217,6 @@ def test_ver01_truncated_patch_fails_the_producer_leg(mesh_data: MeshData) -> No
 
 
 def test_ver01_unweighted_gram_fails_the_consumer_leg_only(mesh_data: MeshData) -> None:
-    """The projection without its ``r`` weight, beside the axis: the consumer leg fails."""
     atoms = _atoms([0.05], [0.0], [0.08], [1.0])
     grid = sum_kernel(atoms, H).grid
     report = _report(atoms, grid, deposit(grid, mesh_data, 2, weighted=False), mesh_data)
@@ -264,7 +230,6 @@ def test_ver01_unweighted_gram_fails_the_consumer_leg_only(mesh_data: MeshData) 
 def test_ver02_dropped_jacobian_renormalised_globally_fails_the_planes_only(
     mesh_data: MeshData,
 ) -> None:
-    """``2 pi r`` dropped, rescaled to ``Q_net``: both legs pass, the planes fail (1.6 for 1.0)."""
     atoms = _atoms([1.0, 4.0], [-1.0, 1.0], [0.1, 0.1], [1.0, 1.0])
     good = sum_kernel(atoms, H).grid
     radius = good.r_nm[None, :]
@@ -289,14 +254,12 @@ def test_ver02_dropped_jacobian_renormalised_globally_fails_the_planes_only(
     assert below == pytest.approx(1.6, abs=0.02)
     with pytest.raises(ChargeFieldError, match="export lattice disagrees with the source atoms"):
         check_deposit_conservation(report)
-    # The correct construction passes every gate, the planes included.
     check_deposit_conservation(_report(atoms, good, deposit(good, mesh_data, 2), mesh_data))
 
 
 def test_ver01_ver02_correct_deposit_passes_every_gate(
     mesh_data: MeshData, several: SourceAtoms
 ) -> None:
-    """The construction as specified passes both legs and every plane at 1e-3."""
     grid = sum_kernel(several, H).grid
     report = check_deposit_conservation(
         _report(several, grid, deposit(grid, mesh_data, 2), mesh_data)
@@ -310,11 +273,7 @@ def test_ver01_ver02_correct_deposit_passes_every_gate(
     assert summary["per_plane"]["count"] == 12  # type: ignore[index]
 
 
-# -- the frame -----------------------------------------------------------------------
-
-
 def test_ver58_first_z_moment_is_the_source_moment_less_the_shift(mesh_data: MeshData) -> None:
-    """With ``centre_z_nm`` applied, the deposit's first z-moment is the source's minus it (D2)."""
     centre = 0.37
     z_source = [0.4, -0.2, 1.1]
     charges = [1.0, -2.0, 0.5]
@@ -332,7 +291,6 @@ def test_ver58_first_z_moment_is_the_source_moment_less_the_shift(mesh_data: Mes
 
 
 def test_qr12_solid_share_gate_names_the_share_and_the_shift(mesh_data: MeshData) -> None:
-    """Atoms in the protein pass; the same atoms 5 nm off their frame are refused (D4)."""
     r, z = [1.0, 2.0, 3.0], [0.2, -0.5, 0.9]
     passed = check_solid_share(
         _atoms(r, z, [0.1] * 3, [1.0, -1.0, 2.0]), mesh_data, ("protein",), cell_nm=H
@@ -349,7 +307,6 @@ def test_qr12_solid_share_gate_names_the_share_and_the_shift(mesh_data: MeshData
 
 
 def test_qr12_charge_on_no_element_is_refused_naming_its_location() -> None:
-    """A mesh that stops short of the structure is refused, naming the (r, z) of the charge (D4)."""
     small = _mesh(r_max=1.2, protein=False)
     atoms = _atoms([1.5], [0.3], [0.1], [1.0])
     grid = sum_kernel(atoms, H).grid
@@ -361,7 +318,6 @@ def test_qr12_charge_on_no_element_is_refused_naming_its_location() -> None:
 
 
 def test_qr12_charge_on_no_element_below_the_tolerance_is_deposited() -> None:
-    """Charge off the mesh under UNCOVERED_TOL of the largest node is deposited (D4)."""
     small = _mesh(r_max=1.2, protein=False)
     atoms = _atoms([0.3, 1.5], [0.0, 0.3], [0.1, 0.1], [1.0, 1.0e-14])
     grid = sum_kernel(atoms, H).grid
@@ -374,7 +330,6 @@ def test_qr12_charge_on_no_element_below_the_tolerance_is_deposited() -> None:
 def test_qr12_deposit_on_a_permuted_mesh_is_refused_naming_both_digests(
     mesh_data: MeshData, several: SourceAtoms
 ) -> None:
-    """A payload is read only on its own mesh in its own element order (D5)."""
     found = deposit(sum_kernel(several, H).grid, mesh_data, 2)
     permutation = np.random.default_rng(7).permutation(mesh_data.element_count)
     permuted = MeshData(

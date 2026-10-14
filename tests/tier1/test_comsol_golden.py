@@ -1,21 +1,4 @@
-"""The golden archive's refusals and its round trip (VAL-03, NUM-24, QR-12).
-
-Every test here is about something that would otherwise produce a finite,
-plausible, wrong number.
-
-A manifest missing its unit, its evaluation boundary or its sign reference is
-refused rather than defaulted, because ``.knowledge/09`` section F records the
-evaluation boundary as NOT IN REPORT: only the author knows it, and a build that
-guessed would be guessing on every nightly run thereafter.
-
-A ``mol/L`` declaration is refused rather than scaled, because a silent factor of
-1000 presents as a 99.9 % discrepancy — a physics failure that is a units
-failure.
-
-A ``trans``-referenced current is flipped *and the flip is recorded*, because a
-silent sign convention is how a rectification ratio comes out reciprocal
-(section 6.7 NOTE).
-"""
+"""The golden archive's refusals and its round trip (VAL-03, NUM-24, QR-12)."""
 
 from __future__ import annotations
 
@@ -51,12 +34,10 @@ PROBE_TEXT = (
 
 @pytest.fixture
 def probe() -> ProbeDocument:
-    """Return the fixture probe document."""
     return loads_probe(PROBE_TEXT)
 
 
 def manifest_document(probe: ProbeDocument, **overrides: object) -> dict[str, object]:
-    """Return a complete, valid manifest mapping, with ``overrides`` applied."""
     document: dict[str, object] = {
         "schema": GOLDEN_SCHEMA,
         "case": "fixture-0.5M-plus50mV",
@@ -81,11 +62,6 @@ def manifest_document(probe: ProbeDocument, **overrides: object) -> dict[str, ob
 
 
 def write_tables(directory: Path, probe: ProbeDocument, fields: dict[str, float]) -> None:
-    """Write one ``%Grid`` table per field per patch, each a known ramp.
-
-    The value is ``scale * (10 r + z)``, which is asymmetric under a transpose
-    everywhere off ``r = z`` — the shape the reader's row-order contract is about.
-    """
     import numpy as np
 
     from nanopnp.density.grid import RadialGrid
@@ -100,24 +76,15 @@ def write_tables(directory: Path, probe: ProbeDocument, fields: dict[str, float]
 
 
 def _yaml(document: dict[str, object]) -> str:
-    """Return a manifest mapping as YAML text."""
     import yaml
 
     return yaml.safe_dump(document, sort_keys=False)
-
-
-# -- the declaration refusals -------------------------------------------------
 
 
 @pytest.mark.parametrize(
     "missing", ["current_boundary", "current_sign_reference", "comsol_version", "model_file"]
 )
 def test_val03_golden_refuses_undeclared_units_and_sign(probe: ProbeDocument, missing: str) -> None:
-    """A manifest leaving a required declaration out is refused, naming it.
-
-    Structural, so exact. Each of these is something only the author knows, and
-    a default would be a guess repeated silently on every nightly run.
-    """
     document = manifest_document(probe)
     del document[missing]
     with pytest.raises(CaseValidationError) as raised:
@@ -129,10 +96,6 @@ def test_val03_golden_refuses_undeclared_units_and_sign(probe: ProbeDocument, mi
     "blank", ["current_boundary", "comsol_version", "model_file", "export_date", "case_hash"]
 )
 def test_val03_golden_refuses_a_blank_declaration(probe: ProbeDocument, blank: str) -> None:
-    """An empty string is as useless as an absent key, and is refused the same way.
-
-    ``str`` accepts ``""``; section 7.4 wants the generating model *named*.
-    """
     document = manifest_document(probe, **{blank: "   "})
     with pytest.raises(CaseValidationError) as raised:
         loads_manifest(_yaml(document))
@@ -140,7 +103,6 @@ def test_val03_golden_refuses_a_blank_declaration(probe: ProbeDocument, blank: s
 
 
 def test_val03_golden_refuses_a_missing_unit(probe: ProbeDocument) -> None:
-    """A field declaring an expression and no unit is refused naming the field."""
     document = manifest_document(probe)
     document["fields"] = {"potential": {"expression": "V"}}
     with pytest.raises(CaseValidationError) as raised:
@@ -153,7 +115,6 @@ def test_val03_golden_refuses_a_missing_unit(probe: ProbeDocument) -> None:
 def test_val03_golden_refuses_mol_per_litre_rather_than_scaling_it(
     probe: ProbeDocument,
 ) -> None:
-    """The unit is refused, not converted, and the message says what it would have cost."""
     document = manifest_document(probe)
     document["fields"] = {
         "potential": {"expression": "V", "unit": "V"},
@@ -168,7 +129,6 @@ def test_val03_golden_refuses_mol_per_litre_rather_than_scaling_it(
 
 
 def test_val03_golden_refuses_a_field_nothing_samples(probe: ProbeDocument) -> None:
-    """A field the comparison does not know would export a table nobody reads."""
     document = manifest_document(probe)
     document["fields"] = {
         "potential": {"expression": "V", "unit": "V"},
@@ -179,7 +139,6 @@ def test_val03_golden_refuses_a_field_nothing_samples(probe: ProbeDocument) -> N
 
 
 def test_val03_golden_refuses_a_manifest_without_the_potential(probe: ProbeDocument) -> None:
-    """The potential is the one field every configuration of the model carries."""
     document = manifest_document(probe)
     document["fields"] = {"c_Na+": {"expression": "cpos", "unit": "mol/m^3"}}
     with pytest.raises(CaseValidationError, match="potential"):
@@ -187,7 +146,6 @@ def test_val03_golden_refuses_a_manifest_without_the_potential(probe: ProbeDocum
 
 
 def test_val03_field_unit_covers_every_exported_field() -> None:
-    """The five field kinds of section 7.4 have one declared unit each."""
     assert field_unit("potential") == "V"
     assert field_unit("pressure") == "Pa"
     assert field_unit("velocity_r") == field_unit("velocity_z") == "m/s"
@@ -196,17 +154,9 @@ def test_val03_field_unit_covers_every_exported_field() -> None:
         field_unit("c_")
 
 
-# -- the hash refusals --------------------------------------------------------
-
-
 def test_val03_golden_refuses_a_probe_hash_that_is_not_the_grid(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """An export onto another set of points is refused before a norm is taken.
-
-    Every array keeps its shape, so nothing downstream would notice: the samples
-    would simply be in the wrong places.
-    """
     (tmp_path / MANIFEST_NAME).write_text(
         _yaml(manifest_document(probe, probe_hash="b" * 64)), encoding="utf-8"
     )
@@ -218,7 +168,6 @@ def test_val03_golden_refuses_a_probe_hash_that_is_not_the_grid(
 def test_val03_golden_refuses_a_case_hash_that_is_not_the_run(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """A golden answering another case is the most expensive kind of wrong answer."""
     (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
     write_tables(tmp_path, probe, {"potential": 1.0, "c_Na+": 1.0})
     ingest_golden(tmp_path, probe=probe)
@@ -231,7 +180,6 @@ def test_val03_golden_refuses_a_case_hash_that_is_not_the_run(
 def test_val03_golden_refuses_a_table_on_the_wrong_axes(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """A table exported on another grid is refused naming the patch and the miss."""
     import numpy as np
 
     from nanopnp.density.grid import RadialGrid
@@ -249,24 +197,13 @@ def test_val03_golden_refuses_a_table_on_the_wrong_axes(
 
 
 def test_val03_golden_refuses_an_absent_table(probe: ProbeDocument, tmp_path: Path) -> None:
-    """A declared field with no table names the file the contract expects."""
     (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
     write_tables(tmp_path, probe, {"potential": 1.0})
     with pytest.raises(GoldenError, match=table_name("c_Na\\+", "near")):
         ingest_golden(tmp_path, probe=probe)
 
 
-# -- the round trip -----------------------------------------------------------
-
-
 def test_val03_grid_table_round_trips_through_npz(probe: ProbeDocument, tmp_path: Path) -> None:
-    """A ``%Grid`` table written and re-ingested reproduces its array bit-for-bit.
-
-    Bitwise, not to a tolerance: the writer emits ``%.17g``, which round-trips
-    ``float64`` exactly by definition, so any difference at all is a defect in
-    the transport format rather than a rounding budget. The hash follows: a
-    golden re-ingested from the same tables keys the same archive.
-    """
     import numpy as np
 
     (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
@@ -291,12 +228,6 @@ def test_val03_grid_table_round_trips_through_npz(probe: ProbeDocument, tmp_path
 def test_val03_golden_refuses_a_transposed_square_table_by_construction(
     tmp_path: Path,
 ) -> None:
-    """The transpose guard is the patch shape, and it fires at ingest.
-
-    A square patch cannot exist, so a transposed table always mismatches a
-    declared ``(n_z, n_r)``. This asserts the consequence the guard buys: the
-    ingest names the shapes rather than reading the wrong field.
-    """
     import numpy as np
 
     from nanopnp.density.grid import RadialGrid
@@ -317,19 +248,9 @@ def test_val03_golden_refuses_a_transposed_square_table_by_construction(
         ingest_golden(tmp_path, probe=probe)
 
 
-# -- the sign contract --------------------------------------------------------
-
-
 def test_val03_trans_referenced_current_is_flipped_and_recorded(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """A ``trans``-referenced golden comes back in section 6.7's sign, and says so.
-
-    The current, the conductance and the electro-osmotic flow rate are the same
-    ``psi`` integral with the same outward normal, so all three flip. The
-    transport number is a ratio of two quantities that flip together and must
-    **not**: negating it is the bug this asserts against.
-    """
     quantities = {
         "bias_V": 0.05,
         "current_A": 1.25e-9,
@@ -357,7 +278,6 @@ def test_val03_trans_referenced_current_is_flipped_and_recorded(
 
 
 def test_val03_cis_referenced_current_is_left_alone(probe: ProbeDocument, tmp_path: Path) -> None:
-    """Our own convention passes through untouched, and the report says nothing flipped."""
     (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
     write_tables(tmp_path, probe, {"potential": 1.0, "c_Na+": 1.0})
     ingest_golden(tmp_path, probe=probe)
@@ -366,17 +286,9 @@ def test_val03_cis_referenced_current_is_left_alone(probe: ProbeDocument, tmp_pa
     assert golden.quantities.current_A == pytest.approx(1.25e-9)
 
 
-# -- what a golden does not carry ---------------------------------------------
-
-
 def test_val03_an_unexported_field_is_named_rather_than_skipped(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """A golden without ``pressure`` reports it unavailable; it does not vanish.
-
-    Whether the reference model exports ``p`` at all is answered at export time,
-    and a comparison that quietly covered one field fewer would answer it wrongly.
-    """
     (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
     write_tables(tmp_path, probe, {"potential": 1.0, "c_Na+": 1.0})
     ingest_golden(tmp_path, probe=probe)
@@ -386,17 +298,9 @@ def test_val03_an_unexported_field_is_named_rather_than_skipped(
         golden.defined("pressure")
 
 
-# -- the self-golden path -----------------------------------------------------
-
-
 def test_val03_export_golden_refuses_to_relabel_a_self_golden_as_comsol(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """Only ``ingest_golden`` writes a ``source: comsol`` archive.
-
-    One path that could write one from arrays in memory is one path by which a
-    self-golden becomes evidence.
-    """
     import numpy as np
 
     manifest = GoldenManifest.model_validate(manifest_document(probe))
@@ -407,7 +311,6 @@ def test_val03_export_golden_refuses_to_relabel_a_self_golden_as_comsol(
 def test_val03_self_golden_is_written_with_its_source_recorded(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """A self-golden round-trips through the archive and keeps ``source: self``."""
     import numpy as np
 
     values = {"potential": np.linspace(-0.2, 0.2, probe.count)}
@@ -432,7 +335,6 @@ def test_val03_self_golden_is_written_with_its_source_recorded(
 def test_val03_an_archive_without_its_manifest_is_refused(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
-    """Half a golden cannot state what it holds, so it is not read as a whole one."""
     (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
     write_tables(tmp_path, probe, {"potential": 1.0, "c_Na+": 1.0})
     ingest_golden(tmp_path, probe=probe)

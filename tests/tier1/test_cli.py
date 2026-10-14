@@ -1,34 +1,4 @@
-"""VER-32 — the command-line surface, and the exit code as a contract (IF-02).
-
-The CLI is a shell over the IF-01 stage objects (SPECIFICATION.md section 5.1),
-so most of what could go wrong here is not arithmetic. It is the four things a
-shell gets wrong quietly:
-
-**The exit status is a contract.** FR-24's job array branches on it and QR-06
-requires a member that *failed* to be distinguishable from one that was
-*refused*. Section 3.1's NOTE (IF-02) therefore requires the exception-to-code
-mapping to be an explicit enumeration and every public exception class of the
-package to be classified or excluded with a reason, in both directions — so that
-a class added later fails this file rather than silently becoming ``1``.
-
-**Introspection must not import a stage.** ``nanopnp stage --list`` answers from
-the registry; a stray module-scope import would cost every process of a sweep
-``import ngsolve``'s ~370 ms. VER-25 asserts that of the registry, and this
-asserts it of the process a user actually runs.
-
-**Standard output carries only the result.** A sweep parsing stdout must not
-receive log records, and a ``--json`` reader must be able to parse the whole
-stream.
-
-**No flag changes what is solved.** A flag duplicating a case-file setting would
-make the FR-25 manifest describe one of two disagreeing sources of truth
-(section 3.1 NOTE, IF-02), so the option names are enumerated against the
-vocabulary of the case schema.
-
-No solve happens here: exit codes 5 and 130 need one, and are discharged by
-classifying an instance of each class — the same route the CLI's own code takes.
-The end-to-end run is Tier 2's (VER-35). Stabilisation is ``none`` (NUM-11).
-"""
+"""VER-32 — the command-line surface, and the exit code as a contract (IF-02)."""
 
 from __future__ import annotations
 
@@ -73,11 +43,8 @@ from nanopnp.pipeline.run import (
     RUN_SCHEMA,
 )
 
-# -- the environment report ----------------------------------------------------
-
 
 def test_cli_env_reports_data_location(capsys: pytest.CaptureFixture[str]) -> None:
-    """``--env`` is retained as an alias for ``env``: removing it breaks callers."""
     assert main(["--env"]) == 0
     out = capsys.readouterr().out
     assert __version__ in out
@@ -87,13 +54,6 @@ def test_cli_env_reports_data_location(capsys: pytest.CaptureFixture[str]) -> No
 def test_val15_the_reference_archive_is_absent_rather_than_broken(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """An unset, misdirected or incomplete archive all read as "not available".
-
-    Tier 3 compares against reference files far too large to vendor, and the
-    skip condition that keeps that tier runnable elsewhere is exactly this
-    ``None``. An exception here would turn "you do not have the archive" into a
-    failing test run for everyone who does not (section 7.1).
-    """
     monkeypatch.delenv(REFERENCE_DATA_VARIABLE, raising=False)
     assert reference_data_root() is None
     assert reference_file("prod5_clya_charge") is None
@@ -109,20 +69,10 @@ def test_val15_the_reference_archive_is_absent_rather_than_broken(
     assert reference_file("prod5_clya_charge") == tmp_path.resolve() / "prod5_clya_charge"
 
 
-# -- the exit-code enumeration -------------------------------------------------
-
 _SOURCE_ROOT = Path(nanopnp.__file__).resolve().parent
 
 
 def _public_exception_classes() -> dict[str, str]:
-    """Return every public exception class under ``src/nanopnp``, by table key.
-
-    Found by parsing the source rather than by importing it: importing every
-    module to enumerate its exceptions would pull in NGSolve, and the point of
-    the string-keyed table is that classification imports nothing. A class is an
-    exception if it subclasses one of the builtin roots or another class found
-    here — the closure below — which is what catches one added under a new base.
-    """
     roots = {
         "Exception",
         "BaseException",
@@ -156,15 +106,8 @@ def _public_exception_classes() -> dict[str, str]:
     return found
 
 
+# IF-02
 def test_ver32_every_public_exception_class_is_classified_or_excluded() -> None:
-    """Both directions: nothing unlisted, and nothing listed that does not exist.
-
-    Section 3.1's NOTE (IF-02) requires the exception-to-code mapping to be an
-    enumeration rather than a base-class test, precisely so that a class added
-    later fails here rather than silently becoming an unexplained ``1``. The
-    reverse direction matters as much: an entry naming a class that was renamed
-    is a rule that stopped applying without anyone noticing.
-    """
     classes = _public_exception_classes()
     listed = set(EXIT_CODES) | set(EXCLUDED)
 
@@ -198,13 +141,6 @@ def test_ver32_every_public_exception_class_is_classified_or_excluded() -> None:
     ],
 )
 def test_ver32_each_code_is_produced_by_an_instance_of_its_class(key: str, code: int) -> None:
-    """The table is keyed on strings; this checks the strings name the real classes.
-
-    A typo in a key is invisible to the enumeration above, which compares two
-    sets of strings built the same way. Importing the class and classifying an
-    instance of it is the third route: it fails if the module moved, if the name
-    is misspelt, or if ``classify`` stops walking the MRO.
-    """
     module_name, _, class_name = key.partition(":")
     klass = getattr(importlib.import_module(module_name), class_name)
     # Built with ``__new__`` rather than called: these constructors take the gate,
@@ -215,10 +151,8 @@ def test_ver32_each_code_is_produced_by_an_instance_of_its_class(key: str, code:
 
 
 def test_ver32_classify_walks_the_mro_and_falls_back_to_unexpected() -> None:
-    """A subclass inherits its base's code; an unrelated exception does not."""
 
-    class StricterError(GateViolationError):
-        """A gate added later under a classified base."""
+    class StricterError(GateViolationError): ...
 
     stricter = StricterError("packing fraction", "phi", 1.4, (0.0, 0.0))
     assert classify(stricter) == EXIT_GATE
@@ -230,13 +164,6 @@ def test_ver32_classify_walks_the_mro_and_falls_back_to_unexpected() -> None:
 
 
 def test_ver32_classifying_imports_no_exception_module() -> None:
-    """``import nanopnp.cli`` must not pull in the modules the table names.
-
-    The table is strings and :func:`classify` walks ``type(error).__mro__``
-    exactly so that the CLI's import cost stays at the ~70 ms the deferred-import
-    rule protects. Importing ``nanopnp.numerics.newton`` to classify a
-    ``NewtonDivergenceError`` would drag NGSolve in behind it.
-    """
     listed = sorted({key.partition(":")[0] for key in EXIT_CODES} - {"builtins"})
     code = (
         "import sys, json\n"
@@ -249,9 +176,7 @@ def test_ver32_classifying_imports_no_exception_module() -> None:
     assert json.loads(result.stdout) == []
 
 
-# -- the command surface -------------------------------------------------------
-
-
+# IF-02
 @pytest.mark.parametrize(
     ("argv", "handler"),
     [
@@ -266,19 +191,13 @@ def test_ver32_classifying_imports_no_exception_module() -> None:
     ],
 )
 def test_ver32_every_subcommand_parses_and_dispatches(argv: list[str], handler: str) -> None:
-    """Each subcommand of IF-02 reaches its own handler with the shared flags."""
     args = build_parser().parse_args(argv)
     assert args.handler.__name__ == handler
     assert args.json is False and args.verbose == 0 and args.traceback is False
 
 
+# IF-02, FR-25
 def test_ver32_no_flag_changes_what_is_solved() -> None:
-    """Section 3.1's NOTE (IF-02): flags choose where output goes, never the physics.
-
-    Enumerated rather than argued: a flag named after a case-file section would
-    make the FR-25 manifest describe one of two disagreeing sources of truth, and
-    the way that arrives is somebody adding a convenience override.
-    """
     physics = {
         "bias",
         "voltage",
@@ -303,13 +222,6 @@ def test_ver32_no_flag_changes_what_is_solved() -> None:
     parser = build_parser()
 
     def nested(group: argparse.ArgumentParser) -> list[argparse.ArgumentParser]:
-        """Every parser under ``group``, however deep, except the mesh generators.
-
-        ``nanopnp mesh`` is excluded by section 3.1's generators NOTE: its
-        geometric flags shape an *input file*, which a run later records by
-        content hash through ``inputs.mesh`` like any external mesh, so they do
-        not reach what a run solves.
-        """
         found: list[argparse.ArgumentParser] = []
         for action in group._actions:
             if isinstance(action, argparse._SubParsersAction):
@@ -330,14 +242,8 @@ def test_ver32_no_flag_changes_what_is_solved() -> None:
     assert named & physics == {"tolerance"}
 
 
+# VER-25
 def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
-    """``nanopnp stage --list`` answers from the registry alone (VER-25, VER-32).
-
-    VER-25 asserts this of the registry; this asserts it of the process a user
-    actually runs, which is where a stray module-scope import in the CLI would
-    show up. A sweep dispatching a job array pays ``import ngsolve``'s ~370 ms
-    per process, so introspection that imports a stage is a real cost.
-    """
     code = (
         "import sys, json\n"
         "from nanopnp.cli import main\n"
@@ -366,7 +272,6 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
 def test_ver32_env_reports_the_store_and_the_reference_archive(
     capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """``env`` names where artefacts go, and which variable moved it."""
     monkeypatch.setenv(STORE_ROOT_VARIABLE, str(tmp_path / "elsewhere"))
     monkeypatch.delenv(REFERENCE_DATA_VARIABLE, raising=False)
     assert main(["env", "--json"]) == 0
@@ -376,19 +281,10 @@ def test_ver32_env_reports_the_store_and_the_reference_archive(
     assert found["reference_data"] is None
 
 
-# -- the exit codes, end to end ------------------------------------------------
-
-
+# FR-27, IF-02, VER-35
 def test_ver32_a_run_exits_zero_and_writes_where_run_dir_says(
     cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """``run`` walks the pipeline and puts the three files where asked (FR-27).
-
-    ``--run-dir`` moves output and nothing else: the run record's ``manifest``
-    hash is the same one the driver computed, so the flag demonstrably did not
-    reach the physics (section 3.1 NOTE, IF-02). Stopped at stage 6 — a solve
-    belongs to Tier 2 (VER-35), and what is under test here is the shell.
-    """
     where = tmp_path / "somewhere" / "else"
     code = main(
         [
@@ -411,10 +307,10 @@ def test_ver32_a_run_exits_zero_and_writes_where_run_dir_says(
     assert json.loads((where / RUN_RECORD_FILENAME).read_text())["manifest"] == record["manifest"]
 
 
+# QR-06
 def test_ver32_a_case_the_schema_refuses_exits_three(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Exit 3: the case file is wrong and a retry will fail identically (QR-06)."""
     path = tmp_path / "bad.yaml"
     path.write_text("schema: nanopnp/case/v0.5\nname: bad\nnonsense: 1\n", encoding="utf-8")
     assert main(["run", str(path), "--store", str(tmp_path / "store")]) == EXIT_CASE
@@ -424,15 +320,10 @@ def test_ver32_a_case_the_schema_refuses_exits_three(
     assert "Traceback" not in captured.err
 
 
+# QR-06
 def test_ver32_upto_naming_a_stage_the_run_does_not_walk_exits_three(
     cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Exit 3, not 1: a typo in ``--upto`` is not a failure worth a retry (QR-06).
-
-    ``1`` is the class whose traceback is worth keeping and the class a job
-    array re-dispatches; this one fails identically every time, and the fix is
-    an edit to the command line.
-    """
     code = main(
         ["run", str(cylindrical_pore_case), "--upto", "sovle", "--store", str(tmp_path / "store")]
     )
@@ -444,15 +335,10 @@ def test_ver32_upto_naming_a_stage_the_run_does_not_walk_exits_three(
     assert "Traceback" not in captured.err
 
 
+# QR-12, FR-27
 def test_ver32_only_with_an_empty_store_exits_four(
     cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Exit 4: a gate stopped the run, naming what was missing (QR-12).
-
-    ``--only`` is what makes a hand-substituted artefact testable (FR-27): it
-    proves the stage read the substituted file rather than recomputing past it,
-    and that only holds if a miss aborts.
-    """
     code = main(
         ["stage", "solve", str(cylindrical_pore_case), "--only", "--store", str(tmp_path / "empty")]
     )
@@ -463,13 +349,12 @@ def test_ver32_only_with_an_empty_store_exits_four(
 
 
 def test_ver32_a_usage_error_exits_two(capsys: pytest.CaptureFixture[str]) -> None:
-    """Exit 2 comes from argparse, and from the CLI's own usage refusals."""
     with pytest.raises(SystemExit) as unknown:
         main(["frobnicate"])
     assert unknown.value.code == EXIT_USAGE
 
     with pytest.raises(SystemExit) as incomplete:
-        main(["stage", "mesh"])  # a name, no case file, no --list
+        main(["stage", "mesh"])
     assert incomplete.value.code == EXIT_USAGE
     assert "--list" in capsys.readouterr().err
 
@@ -477,12 +362,6 @@ def test_ver32_a_usage_error_exits_two(capsys: pytest.CaptureFixture[str]) -> No
 def test_ver32_an_unclassified_failure_exits_one_and_says_to_ask_for_the_traceback(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Exit 1 is the only class whose traceback is worth keeping, so it is offered.
-
-    Exit codes 5 and 130 are not reachable in Tier 1 — forcing Newton to diverge
-    or a token to cancel needs a solve — and are discharged above by classifying
-    an instance of each class, which is the same route this code takes.
-    """
 
     def explode(*_args: object, **_kwargs: object) -> None:
         raise ZeroDivisionError("a bug, not a refusal")
@@ -500,10 +379,10 @@ def test_ver32_an_unclassified_failure_exits_one_and_says_to_ask_for_the_traceba
     assert "ZeroDivisionError: a bug, not a refusal" in captured.err
 
 
+# IF-02
 def test_ver32_stdout_carries_the_result_and_stderr_carries_the_log(
     cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """A caller parsing stdout must not receive log lines (section 3.1, IF-02)."""
     log = tmp_path / "run.log"
     code = main(
         [
@@ -523,7 +402,7 @@ def test_ver32_stdout_carries_the_result_and_stderr_carries_the_log(
     )
     assert code == EXIT_OK
     captured = capsys.readouterr()
-    assert json.loads(captured.out)["schema"] == RUN_SCHEMA  # parses whole: nothing else on stdout
+    assert json.loads(captured.out)["schema"] == RUN_SCHEMA
     assert "nanopnp.pipeline.run" in captured.err
     assert "nanopnp.pipeline.run" in log.read_text(encoding="utf-8")
 
@@ -531,7 +410,6 @@ def test_ver32_stdout_carries_the_result_and_stderr_carries_the_log(
 def test_ver32_inspect_reads_a_run_directory_back(
     cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """``inspect`` reports what is on disk, from the directory or from the file."""
     where = tmp_path / "out"
     assert (
         main(
@@ -554,10 +432,7 @@ def test_ver32_inspect_reads_a_run_directory_back(
     printed = capsys.readouterr().out
     from_directory = json.loads(printed)
     assert from_directory["schema"] == MANIFEST_SCHEMA
-    # Both files are written through ``canonical``, which encodes a float as
-    # ``{"__f__": <hex>}`` so that the digest is exact. Printing that back is
-    # printing the encoding rather than the run: the one command whose job is to
-    # read a run back has to undo it (section 5.3.3).
+    # The files hold ``canonical`` float encodings, which this command undoes (section 5.3.3).
     assert "__f__" not in printed, "inspect printed canonical float wrappers, not numbers"
     rtol = from_directory["solver"]["nonlinear"]["rtol"]
     assert isinstance(rtol, float) and rtol == pytest.approx(1e-6)
@@ -569,18 +444,9 @@ def test_ver32_inspect_reads_a_run_directory_back(
     assert "run directory" in capsys.readouterr().err
 
 
-# -- the Tier-3 harness surface (VAL-01, VAL-03) -------------------------------
-
-
 def test_val01_validate_export_grid_prints_the_hash_a_golden_declares(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """``validate export-grid`` emits the probe hash and the %Grid axes, in metres.
-
-    The author pastes those axes into COMSOL, so the command exists to stop them
-    being retyped: a hand-entered extent is a silently moved sample point that
-    the ``probe_hash`` cannot catch, because the document did not change.
-    """
     from nanopnp.validation.probe import load_probe
 
     probe = Path("docs/validation/probes/clya-reference.probe.yaml")
@@ -593,12 +459,6 @@ def test_val01_validate_export_grid_prints_the_hash_a_golden_declares(
 def test_val03_validate_case_hash_matches_every_rung_of_the_ladder(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """``validate case-hash`` prints the identity a golden declares for a frozen case.
-
-    It is the number the export contract tells the author to paste into
-    ``manifest.yaml``, so the command and the library must not be able to
-    disagree about it.
-    """
     from nanopnp.pipeline.case import load_case, resolve
     from nanopnp.validation.comsol import case_identity
 
@@ -608,15 +468,10 @@ def test_val03_validate_case_hash_matches_every_rung_of_the_ladder(
     assert record["case_hash"] == case_identity(resolve(load_case(case)))
 
 
+# QR-12
 def test_val03_validate_ingest_golden_refuses_a_directory_without_a_manifest(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """An export without its declaration is a pile of numbers, and exits 4.
-
-    Exit 4 and not 1: the Tier-3 refusals are gates in the QR-12 sense — rather
-    than report a comparison it cannot defend, the harness stops and says what is
-    missing.
-    """
     probe = Path("docs/validation/probes/clya-reference.probe.yaml")
     code = main(["validate", "ingest-golden", str(tmp_path), "--probe", str(probe)])
     assert code == EXIT_GATE
@@ -626,12 +481,6 @@ def test_val03_validate_ingest_golden_refuses_a_directory_without_a_manifest(
 def test_val01_validate_help_does_not_choke_on_the_grid_header(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """``--help`` renders, although the help text contains ``%Grid``.
-
-    argparse percent-formats help strings, so a literal ``%G`` makes ``--help``
-    raise ``TypeError`` rather than print — which no test of the handlers would
-    ever notice, and which is the first thing a new user hits.
-    """
     with pytest.raises(SystemExit) as raised:
         main(["validate", "--help"])
     assert raised.value.code == 0
@@ -648,18 +497,10 @@ def test_val01_validate_help_does_not_choke_on_the_grid_header(
         assert action in printed
 
 
-# -- the mesh generators (section 3.1 generators NOTE) -------------------------
-
-
+# VER-27, FR-25
 def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
     cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """The file ingests through the VER-27 gate with the mapping printed, unchanged.
-
-    And the hash printed is the one the run's FR-25 manifest records for it: the
-    generator gates and hashes the file by the route a run reads it, so the two
-    cannot disagree without this failing.
-    """
     out = tmp_path / "pore.msh"
     assert main(["mesh", "cylinder", "--out", str(out), "--json"]) == EXIT_OK
     printed = json.loads(capsys.readouterr().out)
@@ -690,7 +531,6 @@ def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
 def test_ver32_mesh_text_output_carries_a_pasteable_inputs_block(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Without ``--json`` the result ends in the ``inputs.mesh`` block a case needs."""
     out = tmp_path / "pore.msh"
     assert main(["mesh", "cylinder", "--out", str(out)]) == EXIT_OK
     text = capsys.readouterr().out
@@ -699,15 +539,10 @@ def test_ver32_mesh_text_output_carries_a_pasteable_inputs_block(
     assert "    format: msh41" in text
 
 
+# VER-10
 def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """A 0.01 nm membrane meshes to slivers; the VER-10 gate refuses it, exit 4.
-
-    Measured: minimum SICN 0.025 against the 0.3 floor. The refused mesh leaves
-    neither the destination nor its staging file behind, so a case cannot pick a
-    refused mesh up by name afterwards.
-    """
     out = tmp_path / "sliver.msh"
     code = main(["mesh", "cylinder", "--membrane-thickness-nm", "0.01", "--out", str(out)])
     assert code == EXIT_GATE
@@ -731,11 +566,6 @@ def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
 def test_ver32_mesh_refuses_a_bad_geometry_as_a_usage_error(
     argv: list[str], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A bad geometry or destination is a usage error, exit 2, refused before meshing.
-
-    Non-positive lengths, a pore wider than its reservoir, no ``--out``, or an
-    ``--out`` that is a directory or lies in a directory that does not exist.
-    """
     monkeypatch.chdir(tmp_path)
     with pytest.raises(SystemExit) as raised:
         main(argv)
@@ -745,7 +575,6 @@ def test_ver32_mesh_refuses_a_bad_geometry_as_a_usage_error(
 
 @pytest.mark.parametrize("shape", ["cylinder", "reference"])
 def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
-    """``--help`` on either generator answers without importing netgen or NGSolve."""
     code = (
         "import sys, json\n"
         "from nanopnp.cli import main\n"
@@ -762,8 +591,6 @@ def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
     assert json.loads(result.stderr) == []
     assert "--out" in result.stdout
 
-
-# -- stage --export (section 3.1 IF-02 export NOTE; IF-05 length-units NOTE) ----
 
 TUBE_CASE = """\
 schema: nanopnp/case/v0.5
@@ -795,7 +622,6 @@ numerics: {{mesh: {{size_scale: 20.0}}}}
 
 
 def _stage_json(capsys: pytest.CaptureFixture[str], *argv: str) -> dict[str, object]:
-    """Run ``nanopnp stage ... --json`` in process; return its parsed result."""
     assert main(["stage", *argv, "--json"]) == EXIT_OK
     found = json.loads(capsys.readouterr().out)
     assert isinstance(found, dict)
@@ -804,7 +630,6 @@ def _stage_json(capsys: pytest.CaptureFixture[str], *argv: str) -> dict[str, obj
 
 @pytest.fixture(scope="module")
 def tube_walk(tube_pdb: Path, tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
-    """Walk the synthetic C12 tube to stage 4 once; return its case and its store."""
     root = tmp_path_factory.mktemp("export")
     case = root / "tube.case.yaml"
     case.write_text(TUBE_CASE.format(pdb=tube_pdb), encoding="utf-8")
@@ -813,19 +638,10 @@ def tube_walk(tube_pdb: Path, tmp_path_factory: pytest.TempPathFactory) -> tuple
     return case, store
 
 
+# IF-05, VER-49
 def test_ver32_stage_export_writes_each_interchange_file(
     tube_walk: tuple[Path, Path], tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Stages 1 to 4 export by suffix; the native payloads are the store's bytes (IF-05).
-
-    Each walk is served from the store, and its hash is the one the same command
-    prints without ``--export``: the flag reaches no key. The PDB and the DCD
-    reload with the stored coordinates: the PDB to half its 0.001 Å column, 5e-5 nm,
-    and the DCD to float32; each plus the 1e-6 nm that float32 rounding of the
-    ångström values and their tenth costs at these few-nm coordinates. The density
-    map comes back on the stored grid from every format, which with the VER-49
-    header test pins it in Å.
-    """
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
     import numpy as np
 
@@ -876,10 +692,10 @@ def test_ver32_stage_export_writes_each_interchange_file(
     assert not list(tmp_path.glob(".*partial*")), "a staging file was left behind"
 
 
+# IF-06
 def test_ver32_stage_export_copies_the_generated_mesh(
     parallelogram_profile: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Stage 6's ``.msh`` is the stored MSH 4.1 file, byte for byte (IF-06)."""
     from nanopnp.mesh.adapter import read
 
     case = tmp_path / "coarse.case.yaml"
@@ -902,7 +718,6 @@ def test_ver32_stage_export_copies_the_generated_mesh(
         ("contour", "contour.yml", "writes .yaml"),
         ("structure", "aligned", "no suffix"),
         ("mesh", "missing/mesh.msh", "does not exist"),
-        # WP27 D16: the protonation artefact exports as a PQR and nothing else.
         ("protonation", "protonation.pdb", "writes .pqr"),
     ],
 )
@@ -915,10 +730,6 @@ def test_ver32_stage_export_refuses_before_any_stage_runs(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A stage without an export, or a suffix it does not write, exits 2 and runs nothing.
-
-    The store stays empty, so no stage ran, and no file is left at the destination.
-    """
     case = tmp_path / "tube.case.yaml"
     case.write_text(TUBE_CASE.format(pdb=tube_pdb), encoding="utf-8")
     work = tmp_path / "work"
@@ -939,7 +750,6 @@ def test_ver32_stage_export_that_fails_leaves_no_file(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A writer that fails part-way leaves neither the destination nor its staging file."""
     from nanopnp.density.map import DensityMap
 
     def half_written(self: DensityMap, path: Path) -> Path:
@@ -955,18 +765,13 @@ def test_ver32_stage_export_that_fails_leaves_no_file(
     assert list(tmp_path.iterdir()) == []
 
 
+# IF-02
 def test_ver32_stage_export_replaces_a_structure_pair_whole_or_not_at_all(
     tube_walk: tuple[Path, Path],
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A PDB never ends up beside another export's DCD (the IF-02 export NOTE).
-
-    An earlier pair sits at the destination. The rename of the new PDB fails after
-    the new DCD is in place: both earlier files come back byte for byte, and no
-    staging directory is left. Unpatched, the same export replaces both.
-    """
     case, store = tube_walk
     pdb, dcd = tmp_path / "aligned.pdb", tmp_path / "aligned.dcd"
     pdb.write_bytes(b"an earlier export's PDB")
@@ -999,7 +804,6 @@ def test_ver32_stage_export_replaces_a_structure_pair_whole_or_not_at_all(
 
 
 def test_ver32_stage_export_help_imports_no_stage_module() -> None:
-    """``stage --help`` lists the export table without importing a stage or NumPy."""
     code = (
         "import sys, json\n"
         "from nanopnp.cli import main\n"
@@ -1020,13 +824,9 @@ def test_ver32_stage_export_help_imports_no_stage_module() -> None:
     assert "--export" in result.stdout and ".mrc" in result.stdout
 
 
-# -- nanopnp validate case ---------------------------------------------------------
-
-
 def test_rev27_validate_case_accepts_a_runnable_case_and_lists_its_walk(
     cylindrical_pore_case: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """``nanopnp validate case`` checks a case as a run would, and solves nothing (WP38)."""
     code = main(["validate", "case", str(cylindrical_pore_case), "--json"])
     assert code == EXIT_OK
     reported = json.loads(capsys.readouterr().out)
@@ -1036,6 +836,7 @@ def test_rev27_validate_case_accepts_a_runnable_case_and_lists_its_walk(
     assert reported["stages"][-1] == "report"
 
 
+# IF-02
 @pytest.mark.parametrize(
     ("old", "new", "named"),
     [
@@ -1051,7 +852,6 @@ def test_rev27_validate_case_refuses_in_the_words_run_uses(
     new: str,
     named: str,
 ) -> None:
-    """A registry or inf-sup refusal exits 3 with the sentence ``nanopnp run`` prints (IF-02)."""
     text = cylindrical_pore_case.read_text(encoding="utf-8")
     assert old in text
     bad = tmp_path / "bad.case.yaml"
@@ -1066,13 +866,9 @@ def test_rev27_validate_case_refuses_in_the_words_run_uses(
     assert checked.err.removeprefix("nanopnp validate: ") == ran.err.removeprefix("nanopnp run: ")
 
 
-# -- Code review 005 findings (CR-1 through CR-9) -------------------------------
-
-
 def test_cr1_case_validation_error_with_traceback_preserves_exit_case(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """CR-1: --traceback preserves the domain exit code (EXIT_CASE=3) instead of exiting 1."""
 
     def fail_case(*_args: object, **_kwargs: object) -> None:
         raise CaseValidationError("invalid model configuration")
@@ -1088,7 +884,6 @@ def test_cr1_case_validation_error_with_traceback_preserves_exit_case(
 def test_cr2_validate_case_checks_referenced_files(
     cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """CR-2: validate case checks referenced file existence by default; --schema-only skips it."""
     text = cylindrical_pore_case.read_text(encoding="utf-8")
     missing_mesh = tmp_path / "nonexistent.msh"
     bad_case = tmp_path / "missing_mesh.case.yaml"
@@ -1110,7 +905,6 @@ def test_cr2_validate_case_checks_referenced_files(
 
 
 def test_cr2_check_referenced_files_all_leaves(tmp_path: Path) -> None:
-    """CR-2: check_referenced_files checks existence of every referenced external file."""
     from nanopnp.io.case import (
         Ensemble,
         Structure,
@@ -1145,11 +939,9 @@ numerics:
 """
     doc = loads_case(base_yaml)
 
-    # Base case with empty inputs / no structure (returns cleanly)
     assert doc.structure is None
     check_referenced_files(doc)
 
-    # Each input leaf (mesh, pqr, profile, charge, eps_r)
     for leaf in ("mesh", "pqr", "profile", "charge", "eps_r"):
         missing = tmp_path / f"missing_{leaf}.dat"
         setattr(doc.inputs, leaf, SuppliedArtefact(path=missing))
@@ -1163,12 +955,10 @@ numerics:
 
         setattr(doc.inputs, leaf, None)
 
-    # Supplied artefact with artefact hash instead of path
     doc.inputs.mesh = SuppliedArtefact(artefact="dummyhash")
     check_referenced_files(doc)
     doc.inputs.mesh = None
 
-    # structure.source.path
     missing_source = tmp_path / "missing_source.pdb"
     doc.structure = Structure(
         source=StructureSource(path=missing_source),
@@ -1185,7 +975,6 @@ numerics:
     )
     check_referenced_files(doc)
 
-    # structure.ensemble.trajectory
     missing_traj = tmp_path / "missing_traj.xtc"
     doc.structure = Structure(
         source=StructureSource(path=existing_source),
@@ -1204,7 +993,6 @@ numerics:
     )
     check_referenced_files(doc)
 
-    # Defensive branches for source/ensemble None or paths None
     doc.structure = Structure.model_construct(
         source=StructureSource.model_construct(path=None),
         ensemble=None,
@@ -1223,7 +1011,6 @@ numerics:
 def test_cr3_sweep_run_mutually_exclusive_and_workers_validation(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """CR-3: --index and --wave are mutually exclusive; --workers 0 is rejected."""
     plan = tmp_path / "dummy.plan.json"
     plan.write_text("{}", encoding="utf-8")
 
@@ -1247,7 +1034,6 @@ def test_cr3_sweep_run_mutually_exclusive_and_workers_validation(
 
 
 def test_cr4_global_flags_accepted_before_subcommand(capsys: pytest.CaptureFixture[str]) -> None:
-    """CR-4: Global flags (-v, --traceback, --json) are accepted before subcommands."""
     assert main(["-v", "env"]) == EXIT_OK
     capsys.readouterr()
     assert main(["--traceback", "env"]) == EXIT_OK
@@ -1260,7 +1046,6 @@ def test_cr4_global_flags_accepted_before_subcommand(capsys: pytest.CaptureFixtu
 def test_cr5_mesh_cylinder_invalid_number_clean_error(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """CR-5: Clean error when non-numeric or non-positive value is passed to mesh cylinder."""
     out_msh = str(tmp_path / "test.msh")
     with pytest.raises(SystemExit) as exc1:
         main(["mesh", "cylinder", "--pore-radius-nm", "abc", "--out", out_msh])
@@ -1278,7 +1063,6 @@ def test_cr5_mesh_cylinder_invalid_number_clean_error(
 
 
 def test_cr6_format_quantity_value() -> None:
-    """CR-6: _format_quantity_value normalises -0.0 and formats numbers cleanly."""
     from nanopnp.cli import _format_quantity_value
 
     assert _format_quantity_value(-0.0) == "0.0"
@@ -1290,10 +1074,10 @@ def test_cr6_format_quantity_value() -> None:
     assert _format_quantity_value(42) == "42"
 
 
+# IF-02
 def test_cr4_reproduce_without_a_tolerance_takes_the_pipelines_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """IF-02: `reproduce` names how closely the comparison must agree, defaulting to one place."""
     from nanopnp.pipeline.reproduce import DEFAULT_TOLERANCE
 
     seen: list[float] = []
@@ -1311,7 +1095,6 @@ def test_cr4_reproduce_without_a_tolerance_takes_the_pipelines_default(
 def test_cr4_verbosity_given_before_and_after_the_subcommand_adds_up(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """CR-4 (REV-78): `-vv env -v` is three levels, not the subcommand's one."""
     levels: list[int] = []
     monkeypatch.setattr(
         "nanopnp.cli._configure_logging", lambda verbose, log_file: levels.append(verbose)
@@ -1327,11 +1110,8 @@ def test_cr7_run_threads_flag_sets_environment(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """CR-7: --threads sets OpenMP/BLAS thread environment variables before running."""
     captured_env: dict[str, str | None] = {}
-    # ``main`` writes these into ``os.environ`` itself; registering them with
-    # ``monkeypatch`` first is what puts them back at teardown, so a later test (and
-    # every child process it spawns) does not inherit four threads.
+    # ``main`` writes these into ``os.environ``; ``monkeypatch`` restores them at teardown.
     for variable in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
         monkeypatch.setenv(variable, "1")
 
@@ -1350,7 +1130,6 @@ def test_cr7_run_threads_flag_sets_environment(
     assert captured_env["OPENBLAS_NUM_THREADS"] == "4"
     assert captured_env["MKL_NUM_THREADS"] == "4"
 
-    # --threads 0 rejected
     with pytest.raises(SystemExit) as exc:
         main(["run", str(cylindrical_pore_case), "--threads", "0"])
     assert exc.value.code == EXIT_USAGE
@@ -1358,7 +1137,6 @@ def test_cr7_run_threads_flag_sets_environment(
 
 
 def test_cr8_cr9_env_store_resolution_and_flag_json(capsys: pytest.CaptureFixture[str]) -> None:
-    """CR-8 & CR-9: env store is resolved, bare nanopnp exits 0, --env supports --json."""
     from nanopnp.cli import _environment
 
     env = _environment()

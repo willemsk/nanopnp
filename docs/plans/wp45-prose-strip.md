@@ -85,7 +85,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 
 *Compaction checkpoint: after item 19f.*
 
-- [ ] 20. `tests/tier1/test_[a-c]*.py`.
+- [x] 20. `tests/tier1/test_[a-c]*.py`.
 - [ ] 21. `tests/tier1/test_[d-g]*.py`.
 - [ ] 22. `tests/tier1/test_[h-m]*.py`.
 - [ ] 23. `tests/tier1/test_[n-r]*.py`.

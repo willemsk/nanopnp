@@ -1,8 +1,4 @@
-"""VER-47, G6 — the case schema ``nanopnp/case/v0.5``.
-
-Every case document must declare schema ``nanopnp/case/v0.5`` exactly (IF-03).
-Any other schema identifier is refused immediately.
-"""
+"""VER-47, G6 — the case schema ``nanopnp/case/v0.5``."""
 
 from __future__ import annotations
 
@@ -34,7 +30,6 @@ WRITTEN = ", variable_density: false, inertia: false"
 
 
 def test_the_schema_is_v05() -> None:
-    """The identifier is ``nanopnp/case/v0.5`` and default case declares it."""
     from nanopnp.io.artefact import CASE_SCHEMA
     from nanopnp.io.defaults import VALIDATED_DEFAULT_CASE
 
@@ -43,7 +38,6 @@ def test_the_schema_is_v05() -> None:
 
 
 def test_a_v05_document_loads_cleanly() -> None:
-    """A valid v0.5 document loads cleanly."""
     from nanopnp.pipeline.case import loads_case
 
     document = loads_case(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
@@ -55,7 +49,6 @@ def test_a_v05_document_loads_cleanly() -> None:
 
 @pytest.mark.parametrize("schema", ["nanopnp/case/v2", "nanopnp/case/v1", "nanopnp/case/v0.6"])
 def test_any_other_schema_identifier_is_refused(schema: str) -> None:
-    """Any other schema identifier is refused with expected schema message."""
     from nanopnp.io.case import CaseValidationError
     from nanopnp.pipeline.case import loads_case
 
@@ -64,17 +57,12 @@ def test_any_other_schema_identifier_is_refused(schema: str) -> None:
     assert str(raised.value) == f"<string>: expected schema 'nanopnp/case/v0.5', found '{schema}'"
 
 
-# -- the supported interpreter range (QR-09, section 2.5, VER-47) ----------------
-
-
 def _minor_versions(first: str, last: str) -> list[str]:
-    """Return ``3.x`` strings from ``first`` to ``last`` inclusive."""
     low, high = (int(version.split(".")[1]) for version in (first, last))
     return [f"3.{minor}" for minor in range(low, high + 1)]
 
 
 def _specified_range() -> list[str]:
-    """Return the interpreters section 2.5 names, read from the specification."""
     text = (ROOT / "SPECIFICATION.md").read_text(encoding="utf-8")
     found = re.search(r"^\| Python \| (3\.\d+) to (3\.\d+)", text, flags=re.MULTILINE)
     assert found is not None, "section 2.5 no longer has a 'Python | 3.x to 3.y' row"
@@ -82,7 +70,6 @@ def _specified_range() -> list[str]:
 
 
 def _python_versions(node: object) -> set[str]:
-    """Return every literal ``python-version`` under a workflow node."""
     found: set[str] = set()
     if isinstance(node, dict):
         for key, value in node.items():
@@ -98,7 +85,6 @@ def _python_versions(node: object) -> set[str]:
 
 
 def test_ver47_the_declared_python_range_agrees() -> None:
-    """``requires-python``, the classifiers, ruff's target and the CI matrix all say 3.11-3.14."""
     specified = _specified_range()
     assert specified == ["3.11", "3.12", "3.13", "3.14"]
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
@@ -140,7 +126,6 @@ def test_ver47_the_declared_python_range_agrees() -> None:
     ],
 )
 def test_ver47_value_range_refusals(path: str, bad_val: float) -> None:
-    """Out-of-range floats on exclusion offset, transition width and mesh size are refused."""
     from nanopnp.io.case import CaseValidationError
     from nanopnp.pipeline.case import loads_case
 
@@ -155,7 +140,6 @@ def test_ver47_value_range_refusals(path: str, bad_val: float) -> None:
 
 
 def test_ver47_deviations_offset_and_transition() -> None:
-    """A non-zero offset or transition width is recorded as a deviation; absent charge is empty."""
     from nanopnp.io.defaults import deviations
     from nanopnp.pipeline.case import load_case, loads_case
 
@@ -178,7 +162,6 @@ def test_ver47_deviations_offset_and_transition() -> None:
 
 
 def test_ver47_pqr_input_sets_protonates() -> None:
-    """inputs.pqr is read and sets resolved.protonates to True."""
     from nanopnp.pipeline.case import loads_case, resolve
 
     raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
@@ -188,16 +171,12 @@ def test_ver47_pqr_input_sets_protonates() -> None:
     assert resolved.protonates
 
 
-# -- refusals the retired v2 corpus held and no other test did (VER-47) -------------
-
-
 @pytest.mark.parametrize(
     ("upstream", "downstream"), [("profile", "mesh"), ("pqr", "charge")], ids=lambda value: value
 )
 def test_ver47_an_input_and_one_downstream_of_it_are_not_both_supplied(
     upstream: str, downstream: str
 ) -> None:
-    """A stage whose output is supplied does not run, nor does anything upstream of it."""
     from nanopnp.io.case import CaseValidationError
     from nanopnp.pipeline.case import loads_case
 
@@ -217,7 +196,6 @@ def test_ver47_an_input_and_one_downstream_of_it_are_not_both_supplied(
     [("size_scale", 0.5), ("wall_h_nm", 0.3), ("backend", "gmsh"), ("boundary_layer", True)],
 )
 def test_ver47_a_mesher_key_beside_a_supplied_mesh_is_refused(key: str, value: object) -> None:
-    """A supplied mesh is not meshed, so a key that configures the mesher would change nothing."""
     from nanopnp.io.case import CaseValidationError
     from nanopnp.pipeline.case import loads_case
 

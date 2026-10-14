@@ -1,18 +1,4 @@
-"""The three norms, the gauge-free pressure and the mask gate (VAL-01, NUM-06, QR-12).
-
-Two norms are reported because one of them cannot see the axis, and the second
-test here is the demonstration. The ``r`` weight of the axisymmetric norm is
-0.005 nm on the near-axis line of the reference probe grid and 60 nm at the far
-edge of the reservoir patch, so a perturbation confined to the axis contributes
-of order 1e-7 of the norm's denominator while occupying a quarter of its points.
-The axis is where the ``1/r`` forms of section 6.2 and the NUM-06 natural
-condition are fragile, so a comparison reporting ``rel_L2_r`` alone would be
-least sensitive exactly where this implementation is most likely to be wrong.
-
-No mesh is built here. The masks are handed to :class:`ProbeGrid` directly, so
-what is under test is the arithmetic and not the geometry — which is the point of
-an analytic test.
-"""
+"""The three norms, the gauge-free pressure and the mask gate (VAL-01, NUM-06, QR-12)."""
 
 from __future__ import annotations
 
@@ -41,7 +27,6 @@ REFERENCE_PROBE = Path("docs/validation/probes/clya-reference.probe.yaml")
 
 
 def _grid(document: ProbeDocument, fields: tuple[str, ...]) -> ProbeGrid:
-    """Return an all-retained grid for ``document``: the arithmetic, without a mesh."""
     import numpy as np
 
     keep = np.ones(document.count, dtype=bool)
@@ -57,30 +42,10 @@ def _grid(document: ProbeDocument, fields: tuple[str, ...]) -> ProbeGrid:
 
 @pytest.fixture(scope="module")
 def reference_document() -> ProbeDocument:
-    """Return the checked-in probe grid for the reference geometry."""
     return load_probe(REFERENCE_PROBE)
 
 
-# -- the closed form ----------------------------------------------------------
-
-
 def test_val01_relative_l2_on_a_known_field() -> None:
-    """Both norms match a closed form on a field whose sums are elementary.
-
-    On one patch with ``r_i = i h`` and a reference field ``g = 1``, a difference
-    ``s - g = r`` gives
-
-        rel_L2_r^2 = sum r^3 / sum r   = h^2 n (n - 1) / 2
-        rel_l2^2   = sum r^2 / n       = h^2 (n - 1)(2n - 1) / 6
-
-    by Faulhaber's formulae, the constant patch weight and the ``z`` sum
-    cancelling from both ratios. Independently derived rather than read off the
-    implementation, and it is the ``r`` factor that separates the two — which is
-    the only thing distinguishing the two norms at all.
-
-    Exact to round-off: every sum is finite and the tolerance is the accumulation
-    of a few thousand additions, not a quadrature budget.
-    """
     import numpy as np
 
     count, spacing = 41, 0.25
@@ -101,12 +66,6 @@ def test_val01_relative_l2_on_a_known_field() -> None:
 
 
 def test_val01_a_difference_proportional_to_the_reference_is_that_ratio() -> None:
-    """``s - g = alpha g`` gives ``alpha`` in every weighted norm, exactly.
-
-    The one closed form that holds for any weights at all, so it isolates the
-    ratio structure from the quadrature: a bug in either weight array would
-    leave this passing and the test above failing, and vice versa.
-    """
     import numpy as np
 
     document = loads_probe(
@@ -124,23 +83,9 @@ def test_val01_a_difference_proportional_to_the_reference_is_that_ratio() -> Non
         assert comparison.rel_l2 == pytest.approx(abs(alpha), rel=1e-14)
 
 
-# -- the axis --------------------------------------------------------------
-
-
 def test_val01_axis_defect_is_invisible_to_the_weighted_norm(
     reference_document: ProbeDocument,
 ) -> None:
-    """A defect on the axis passes ``rel_L2_r`` and fails ``rel_l2``, on the real grid.
-
-    ``g = 1`` everywhere and ``s = 2`` on the ``axis_line`` patch alone — 1 610 of
-    6 205 points, every one of them within 0.045 nm of the symmetry axis. The
-    unweighted norm sees ``sqrt(1610/6205) = 0.51``; the *r*-weighted norm sees
-    about 4e-4, because those points carry a weight of ``0.001 nm^2 * r`` against
-    a reservoir patch carrying ``6 nm^2 * r`` out to 60 nm.
-
-    That three-order gap is the whole reason both numbers are reported. The
-    thresholds are the WP13 plan's own: ``rel_L2_r < 1e-3`` and ``rel_l2 > 1e-1``.
-    """
     import numpy as np
 
     grid = _grid(reference_document, ("potential",))
@@ -154,7 +99,6 @@ def test_val01_axis_defect_is_invisible_to_the_weighted_norm(
     assert comparison.rel_l2 == pytest.approx(np.sqrt(on_axis.sum() / on_axis.size), rel=1e-12)
     assert comparison.rel_l2 > 1e-1
     assert comparison.rel_L2_r < 1e-3
-    # The maximum is located, and it is on the axis where the defect was put.
     assert comparison.max_abs_rel == pytest.approx(1.0)
     assert comparison.max_at_nm[0] <= 0.045
 
@@ -162,11 +106,6 @@ def test_val01_axis_defect_is_invisible_to_the_weighted_norm(
 def test_val01_the_same_defect_at_the_wall_is_visible_to_both(
     reference_document: ProbeDocument,
 ) -> None:
-    """The contrast is the axis, not the patch size: move the defect and both norms see it.
-
-    Without this, the test above would be consistent with ``rel_L2_r`` simply
-    being small whenever few points move.
-    """
     import numpy as np
 
     grid = _grid(reference_document, ("potential",))
@@ -181,18 +120,7 @@ def test_val01_the_same_defect_at_the_wall_is_visible_to_both(
     assert comparison.rel_l2 > 1e-1
 
 
-# -- the pressure gauge -------------------------------------------------------
-
-
 def test_val01_pressure_gauge_offset_does_not_register() -> None:
-    """Adding a constant to ``p`` leaves the discrepancy unchanged, and is reported.
-
-    ``p`` enters the momentum equation only through ``grad p``, and COMSOL's
-    gauge is not ours and is not in the model report. Compared raw, a 1 000 Pa
-    offset against a 10 Pa physical pressure is a 100-fold "discrepancy" that is
-    not one — which this asserts by comparing the gauge-free number against the
-    same fields with no offset at all.
-    """
     import numpy as np
 
     document = loads_probe(
@@ -219,11 +147,6 @@ def test_val01_pressure_gauge_offset_does_not_register() -> None:
 
 
 def test_val01_no_other_field_is_gauge_shifted() -> None:
-    """The potential's offset is physical — the cis electrode grounds it — so it counts.
-
-    Removing a mean from ``phi`` would hide a wrong boundary condition, which is
-    the opposite of what the pressure path is for.
-    """
     import numpy as np
 
     document = loads_probe(
@@ -239,13 +162,8 @@ def test_val01_no_other_field_is_gauge_shifted() -> None:
     assert comparison.rel_L2_r == pytest.approx(0.2, rel=1e-12)
 
 
+# QR-12
 def test_val01_a_norm_over_no_retained_point_aborts() -> None:
-    """An empty mask is refused, not reported as exact agreement (QR-12).
-
-    Every norm over zero points is 0, which is indistinguishable from a perfect
-    match. A self-golden built by a probe grid whose masks came back empty would
-    otherwise pass the Tier-2 round trip on every field while comparing nothing.
-    """
     import numpy as np
 
     document = loads_probe(
@@ -259,19 +177,8 @@ def test_val01_a_norm_over_no_retained_point_aborts() -> None:
         field_error("potential", values + 1.0, values, grid, nothing)
 
 
-# -- the mask gate ------------------------------------------------------------
-
-
+# QR-12
 def test_val01_mask_disagreement_aborts_with_location() -> None:
-    """Two statements about where a field exists must agree, or the run stops.
-
-    Our mask is the set of points inside the field's ``definedon`` materials;
-    the golden's is where COMSOL wrote a number rather than ``NaN``. Intersecting
-    them would absorb a real geometry difference, so the disagreement aborts —
-    naming the worst point's ``(r, z)`` and how far it is from the nearest point
-    the other mask retains, which is what separates a one-element fringe from a
-    block in the wrong place (QR-12).
-    """
     import numpy as np
 
     document = loads_probe(
@@ -284,7 +191,7 @@ def test_val01_mask_disagreement_aborts_with_location() -> None:
     theirs[12] = False
     r_nm, z_nm = grid.points_nm[12]
 
-    check_mask_agreement("c_Na+", ours, ours, grid)  # agreement is silent
+    check_mask_agreement("c_Na+", ours, ours, grid)
     with pytest.raises(ProbeGridError) as raised:
         check_mask_agreement("c_Na+", ours, theirs, grid)
     message = str(raised.value)
@@ -295,7 +202,6 @@ def test_val01_mask_disagreement_aborts_with_location() -> None:
 
 
 def _banded(document: ProbeDocument) -> ProbeGrid:
-    """Return a grid whose last z row lies outside ``c_Na+`` and whose r = 4 nm column is band."""
     import numpy as np
 
     points = document.points_nm()
@@ -312,7 +218,6 @@ def _banded(document: ProbeDocument) -> ProbeGrid:
 
 
 def _golden_defined_at(defined: object) -> Golden:
-    """Return a golden carrying ``c_Na+ = 1`` where ``defined`` holds and NaN elsewhere."""
     import numpy as np
 
     manifest = GoldenManifest.model_validate(
@@ -347,14 +252,6 @@ def _golden_defined_at(defined: object) -> Golden:
 
 
 def test_val01_the_margin_band_is_in_neither_the_mask_gate_nor_the_norms() -> None:
-    """A COMSOL export has values within ``margin_nm`` of an interface; a self-golden has NaN.
-
-    The gate used to compare our margin-shrunk mask with the golden's raw one, so
-    a real export, defined at every point next to an interface, would have
-    aborted every concentration comparison as a geometry difference. What the
-    gate asks is that the golden be defined at every kept point and undefined
-    outside the bare point test; the band between is neither.
-    """
     import numpy as np
 
     document = loads_probe(
@@ -366,7 +263,7 @@ def test_val01_the_margin_band_is_in_neither_the_mask_gate_nor_the_norms() -> No
     assert int(np.count_nonzero(grid.band("c_Na+"))) == 6
     ours = {"c_Na+": np.where(keep, 1.0, np.nan)}
 
-    for defined in (bare, keep):  # a COMSOL export, and a self-golden
+    for defined in (bare, keep):
         (comparison,) = compare_fields(ours, _golden_defined_at(defined), grid)
         assert comparison.points == int(np.count_nonzero(keep))
         assert comparison.rel_L2_r == 0.0
@@ -382,11 +279,6 @@ def test_val01_the_margin_band_is_in_neither_the_mask_gate_nor_the_norms() -> No
 
 
 def test_val01_mask_disagreement_names_the_furthest_point_not_the_first() -> None:
-    """The worst point is the diagnosis; the first is an accident of ordering.
-
-    A fringe one spacing wide and a block three spacings deep are different
-    problems, and the reported distance is what tells them apart.
-    """
     import numpy as np
 
     document = loads_probe(
@@ -397,7 +289,6 @@ def test_val01_mask_disagreement_names_the_furthest_point_not_the_first() -> Non
     points = grid.points_nm
     ours = np.ones(document.count, dtype=bool)
     theirs = ours.copy()
-    # One point on the edge of the block, and a compact square well inside it.
     theirs[0] = False
     deep = np.flatnonzero((points[:, 0] >= 3.0) & (points[:, 0] <= 5.0))
     theirs[deep] = False
@@ -405,10 +296,6 @@ def test_val01_mask_disagreement_names_the_furthest_point_not_the_first() -> Non
     with pytest.raises(ProbeGridError) as raised:
         check_mask_agreement("c_Na+", ours, theirs, grid)
     message = str(raised.value)
-    # The missing block spans r in {3, 4, 5} nm at dr = 1 nm, so its middle
-    # column is 2 nm from the nearest r the other mask still retains, while the
-    # isolated point at the origin is 1 nm from its neighbour. The reported
-    # point is the middle column's, and the reported distance is 2 nm.
     assert "2 nm from the nearest point" in message
     assert "(r, z) = (4," in message
     assert f"{len(deep) + 1} of {document.count}" in message

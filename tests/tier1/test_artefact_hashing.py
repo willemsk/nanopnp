@@ -1,14 +1,4 @@
-"""VER-23 — the content hash, and what it must and must not depend on (FR-27, section 5.3.2).
-
-Every assertion here is an equality or an exception; there is no tolerance to
-choose, and that is the point. A failure localises to one function.
-
-The three properties the hash must have are asserted separately, because they
-fail separately: it is stable across processes (nothing in the encoding depends
-on dict iteration order or `repr` formatting), it moves under any change to the
-parameters or the inputs, and it does *not* move under a change that resolves to
-the same run.
-"""
+"""VER-23 — the content hash, and what it must and must not depend on (FR-27, section 5.3.2)."""
 
 import json
 import subprocess
@@ -48,7 +38,6 @@ invalidated store.
 
 
 def test_ver23_content_hash_is_stable_across_processes() -> None:
-    """The digest does not depend on the interpreter's hash seed (section 5.3.2)."""
     script = (
         "import json,sys;"
         "from nanopnp.core.hashing import content_hash;"
@@ -69,7 +58,6 @@ def test_ver23_content_hash_is_stable_across_processes() -> None:
 
 
 def test_ver23_every_leaf_change_moves_the_hash() -> None:
-    """A change anywhere in the parameter tree reaches the digest."""
     base = content_hash("demo/v1", FIXTURE)
     variants = [
         {**FIXTURE, "bias_V": 0.100000000000001},
@@ -83,13 +71,6 @@ def test_ver23_every_leaf_change_moves_the_hash() -> None:
 
 
 def test_ver23_hash_ignores_what_resolves_to_the_same_run() -> None:
-    """Key order, ``1`` against ``1.0`` and the sign of zero are not differences.
-
-    ``1`` and ``1.0`` are one value once pydantic has coerced the field, so the
-    encoder must agree; ``-0.0`` and ``0.0`` are two spellings of the same bias
-    and ``(-0.0).hex()`` differs from ``(0.0).hex()``, which is why the encoder
-    normalises it.
-    """
     reordered = dict(reversed(list(FIXTURE.items())))
     assert content_hash("demo/v1", reordered) == content_hash("demo/v1", FIXTURE)
     assert canonical({"c": 1}) == canonical({"c": 1})
@@ -98,19 +79,8 @@ def test_ver23_hash_ignores_what_resolves_to_the_same_run() -> None:
     assert canonical({"bias": 1e-9}) == canonical({"bias": 0.000000001})
 
 
+# QR-08
 def test_ver23_decode_floats_restores_the_numbers_a_canonical_file_holds() -> None:
-    """The encoding is the on-disk format too, so a reader must be able to undo it.
-
-    ``manifest.json`` and ``run.json`` are both written through
-    :func:`canonical`, which means every float in them is a ``{"__f__": <hex>}``
-    wrapper. QR-08's reproduction check compares those recorded numbers against
-    a live run that holds bare floats, and two sides disagreeing about the
-    *encoding* would report a missing quantity where the number is in fact
-    there.
-
-    Exact rather than close: ``float.hex`` is the IEEE-754 bit pattern, so a
-    round trip that loses a bit is a broken encoder rather than a rounding.
-    """
     document = {
         "quantities": {"current_A": 3.6170916294619195e-11, "routes_checked": True},
         "band_nm": [0.6, 1.5],
@@ -136,7 +106,6 @@ def test_ver23_decode_floats_restores_the_numbers_a_canonical_file_holds() -> No
 
 
 def test_ver23_an_unhashable_type_is_rejected_naming_its_path() -> None:
-    """A set has no canonical order, so accepting one would make the hash depend on it."""
     with pytest.raises(CanonicalisationError, match=r"\$\.corrections\.models"):
         canonical({"corrections": {"models": {"a", "b"}}})
     with pytest.raises(CanonicalisationError, match=r"\$\.mesh"):
@@ -144,7 +113,6 @@ def test_ver23_an_unhashable_type_is_rejected_naming_its_path() -> None:
 
 
 def test_ver23_a_changed_input_hash_changes_the_output_hash() -> None:
-    """Section 5.3.2: a hand-substituted artefact registers as a changed input."""
     one = content_hash("demo/v1", FIXTURE, {"mesh": "a" * 64})
     two = content_hash("demo/v1", FIXTURE, {"mesh": "b" * 64})
     assert one != two
@@ -152,7 +120,6 @@ def test_ver23_a_changed_input_hash_changes_the_output_hash() -> None:
 
 
 def test_ver23_file_hash_is_content_not_path(tmp_path: Path) -> None:
-    """An input file is hashed by content, so moving it is not a change."""
     here = tmp_path / "here.msh"
     there = tmp_path / "elsewhere" / "there.msh"
     there.parent.mkdir()
@@ -164,14 +131,12 @@ def test_ver23_file_hash_is_content_not_path(tmp_path: Path) -> None:
 
 
 def test_ver23_short_prefix_is_the_display_form_only() -> None:
-    """The display prefix is 12 hex; the store never keys on it."""
     digest = content_hash("demo/v1", FIXTURE)
     assert short(digest) == digest[:12]
     assert len(digest) == 64
 
 
 def test_ver23_store_round_trips_an_artefact(tmp_path: Path) -> None:
-    """An artefact read back from the store carries the same key and summary."""
     store = Store(tmp_path)
     artefact = Artefact(
         schema=SOLUTION_SCHEMA,
@@ -189,14 +154,8 @@ def test_ver23_store_round_trips_an_artefact(tmp_path: Path) -> None:
     assert loaded.created_at is not None
 
 
+# FR-27
 def test_ver23_an_edited_payload_loads_as_hand_substituted(tmp_path: Path) -> None:
-    """FR-27 permits editing an artefact by hand; section 5.3.2 requires it be recorded.
-
-    The payload is outside the digest — the key must be computable before the
-    stage runs — so the edit is caught by recomputing the file's digest on load
-    and comparing it with the one recorded beside the artefact, never by trusting
-    the recorded value.
-    """
     store = Store(tmp_path)
     source = tmp_path / "fields.xdmf"
     source.write_text("<Xdmf/>", encoding="utf-8")
@@ -213,7 +172,6 @@ def test_ver23_an_edited_payload_loads_as_hand_substituted(tmp_path: Path) -> No
 
 
 def test_ver23_get_or_compute_returns_the_stored_artefact_on_a_hit(tmp_path: Path) -> None:
-    """The cache key is computable before the work, which is what makes it a cache."""
     store = Store(tmp_path)
     key = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE, inputs={"mesh": "d" * 64})
     calls = 0
@@ -243,7 +201,6 @@ def test_ver23_get_or_compute_returns_the_stored_artefact_on_a_hit(tmp_path: Pat
 def test_ver23_a_stage_whose_parameters_do_not_determine_its_output_is_refused(
     tmp_path: Path,
 ) -> None:
-    """A cache is only sound if the key determines the answer, so a mismatch aborts."""
     store = Store(tmp_path)
     key = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE)
     wrong = Artefact(schema=SOLUTION_SCHEMA, parameters={**FIXTURE, "bias_V": 0.2})
@@ -252,7 +209,6 @@ def test_ver23_a_stage_whose_parameters_do_not_determine_its_output_is_refused(
 
 
 def test_ver23_store_writes_are_atomic(tmp_path: Path) -> None:
-    """No temporary file survives a write; the store directory holds only the record."""
     store = Store(tmp_path)
     artefact = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE)
     store.put(artefact)
@@ -266,13 +222,6 @@ def test_ver23_store_writes_are_atomic(tmp_path: Path) -> None:
 def test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores(
     charged_tube, tmp_path: Path
 ) -> None:
-    """Every payload file byte-identical, and every record equal but its creation time (D15).
-
-    A charged tube walked to stage 7 into two empty stores. Stage 7 wrote wall-clock
-    seconds into ``deposit.npz`` and both of its summaries until WP32, so the same
-    deposit had a different recorded digest each run, and its manifest group never
-    compared equal. The control restores one ``seconds`` entry and must differ.
-    """
     import numpy as np
 
     from nanopnp.charge.stage import DEPOSIT_FILE

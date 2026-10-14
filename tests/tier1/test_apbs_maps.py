@@ -1,12 +1,4 @@
-"""VAL-06's driver without APBS: the maps it builds and the files it writes (WP29).
-
-The construction of the WP29 plan's *Design* sections 2 and 3, checked on inputs
-whose answer is known exactly. The hat-weighted charge map keeps the lattice's
-charge and first moments. The staggered dielectric maps take each edge's harmonic
-mean and sit ``h/2`` off the grid. The writer round-trips through GridDataFormats,
-and the box refuses a charge it would cut, naming the face. None of this needs
-APBS or NGSolve, and importing the module imports neither.
-"""
+"""VAL-06's driver without APBS: the maps it builds and the files it writes (WP29)."""
 
 from __future__ import annotations
 
@@ -52,7 +44,6 @@ DIME = 65
 
 
 def _lattice() -> RadialGrid:
-    """Return two smeared atoms off the axis and one on it, as stage 7 sums them."""
     atoms = SourceAtoms(
         r_nm=np.array([0.0, 0.73, 1.21]),
         z_nm=np.array([0.31, -0.42, 0.57]),
@@ -79,7 +70,6 @@ def grid(lattice: RadialGrid) -> CubicGrid:
 def test_val06_the_charge_map_keeps_the_lattices_charge_and_first_moments(
     lattice: RadialGrid, grid: CubicGrid
 ) -> None:
-    """The sum to 1e-12; the z-moment to 1e-12 e nm; the (x, y) dipole 0 to 1e-12 e nm."""
     charges = lattice_charges(lattice)
     q = float(charges.sum())
     z_moment = float(np.sum(charges * lattice.z_nm[:, None]))
@@ -94,14 +84,12 @@ def test_val06_the_charge_map_keeps_the_lattices_charge_and_first_moments(
 
 
 def test_val06_the_charge_map_is_in_e_per_cubic_angstrom(lattice: RadialGrid) -> None:
-    """At 0.2 nm the node sums are divided by 8 cubic angstroms: the row the ring cannot see."""
     coarse = fit_grid(charge_extent(lattice), spacing_nm=0.2, dime=33)
     found = charge_map(lattice, coarse)
     assert float(found.sum()) * 8.0 == pytest.approx(0.75, rel=1e-12)
 
 
 def _layered(spacing_nm: float, z0_nm: float, interface_nm: float) -> MaterialRaster:
-    """Return a raster at ``eps`` 2 below ``interface_nm`` and 80 above, all fluid."""
     rows, columns = 800, 600
     z = z0_nm + (np.arange(rows) + 0.5) * spacing_nm
     eps = np.where(z < interface_nm, 2.0, 80.0)[:, None] * np.ones((1, columns))
@@ -117,13 +105,6 @@ def _layered(spacing_nm: float, z0_nm: float, interface_nm: float) -> MaterialRa
 
 
 def test_val06_each_z_edge_takes_the_exact_harmonic_mean_of_a_layered_dielectric() -> None:
-    """An interface a quarter of the way along a z edge: ``h / (h/4 / 2 + 3h/4 / 80)`` exactly.
-
-    The x and y maps lie in a plane of one layer and take its value; the z map's
-    edge from node ``k`` to ``k + 1`` straddles the interface. It lies on a raster
-    cell face and between two of the eight sub-samples, so the eight-sample mean
-    is the exact one.
-    """
     grid = CubicGrid((-1.6, -1.6, -1.6), H_NM, 33)
     k = 16
     interface = grid.axis(2)[k] + 0.25 * H_NM
@@ -141,7 +122,6 @@ def test_val06_each_z_edge_takes_the_exact_harmonic_mean_of_a_layered_dielectric
 def test_val06_each_dielectric_map_is_staggered_half_a_spacing_along_its_axis(
     lattice: RadialGrid, grid: CubicGrid, tmp_path: Path
 ) -> None:
-    """The written x, y and z maps start at the grid origin plus ``h/2`` along their own axis."""
     raster = _layered(0.01, grid.origin_nm[2] - 1.0, 0.0)
     problem = ApbsProblem(
         grid=grid,
@@ -168,7 +148,6 @@ def test_val06_each_dielectric_map_is_staggered_half_a_spacing_along_its_axis(
 
 
 def test_val06_the_dx_writer_round_trips_through_griddata(tmp_path: Path) -> None:
-    """Values to 1e-10 relative, the origin and spacing in nm, an item count not a multiple of 3."""
     values = np.random.default_rng(6).standard_normal((5, 7, 11)) * 10.0 ** np.arange(11)
     path = write_dx(tmp_path / "map.dx", values, (-1.25, 0.5, 3.0), 0.2)
     read, origin, spacing = read_dx(path)
@@ -179,7 +158,6 @@ def test_val06_the_dx_writer_round_trips_through_griddata(tmp_path: Path) -> Non
 
 
 def test_val06_the_face_map_carries_the_potential_on_the_faces_only() -> None:
-    """``bcfl map`` reads the faces; the interior is zero, and each face node has its ``(r, z)``."""
     grid = CubicGrid((-0.4, -0.4, 1.0), 0.2, 5)
     found = face_map(grid, lambda r, z: 1.0 + r + 10.0 * z)
     assert np.all(found[1:-1, 1:-1, 1:-1] == 0.0)
@@ -201,14 +179,12 @@ def test_val06_the_face_map_carries_the_potential_on_the_faces_only() -> None:
 def test_val06_a_box_too_small_for_the_charge_is_refused_naming_the_face(
     extent: ChargeExtent, face: str
 ) -> None:
-    """D3: the charge must lie 1 nm inside every face, or the run is refused, not cut."""
     grid = CubicGrid((-3.2, -3.2, -3.2), H_NM, 65)
     with pytest.raises(BoxError, match=re.escape(f"{face} face")):
         check_box(grid, extent)
 
 
 def test_val06_fit_grid_puts_the_axis_on_a_node_line_and_the_membrane_between_planes() -> None:
-    """D3: x and y centred on the axis; each membrane face midway between two fine planes."""
     extent = ChargeExtent(r_max_nm=6.45, z_min_nm=-2.24, z_max_nm=12.84)
     grid = fit_grid(extent, interface_z_nm=1.4)
     assert (grid.dime, grid.spacing_nm, grid.nlev()) == (193, 0.1, 4)
@@ -223,7 +199,6 @@ def test_val06_fit_grid_puts_the_axis_on_a_node_line_and_the_membrane_between_pl
 
 
 def test_val06_probes_lie_in_the_fluid_clear_of_solids_and_faces() -> None:
-    """D6: nested-grid nodes in the fluid, at least 0.3 nm from a solid and 0.4 nm inside."""
     grid = CubicGrid((-1.6, -1.6, -1.6), H_NM, 33)
     rows, columns = 400, 300
     spacing = 0.01
@@ -250,7 +225,6 @@ def test_val06_probes_lie_in_the_fluid_clear_of_solids_and_faces() -> None:
 
 
 def test_val06_norms_and_the_check_read_the_budget_before_the_agreement() -> None:
-    """D6 and D8: the three norms, and a failing budget named before an agreement is read."""
     reference = np.array([1.0, -2.0, 4.0, 0.5])
     difference = np.array([0.01, 0.0, -0.02, 0.0])
     axis = np.array([True, False, False, True])
@@ -298,7 +272,6 @@ def test_val06_norms_and_the_check_read_the_budget_before_the_agreement() -> Non
 
 
 def test_val06_importing_the_driver_imports_neither_apbs_nor_ngsolve() -> None:
-    """The driver is introspectable cold: APBS is imported where it runs, NGSolve by the caller."""
     found = subprocess.run(
         [
             sys.executable,

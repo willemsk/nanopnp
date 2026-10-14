@@ -1,20 +1,4 @@
-"""The attribution ladder: the deltas, the verdict, and what the rungs may share.
-
-VAL-01, VAL-02, VAL-04, RSK-09, and section 5.3.2's warm-start partition.
-
-The plan for this package argued that the telescoping identity ``Delta_total +
-Delta_transport + Delta_flow + Delta_pair = Delta_resid`` "holds only if all four
-rungs were compared against the same golden on the same probe grid with the same
-masks". It does not: the sum telescopes for **any** four numbers, so a rung run
-against a re-exported golden satisfies it exactly as cleanly as one run against
-the right golden. The identity is worth asserting because it catches a slip in
-forming the deltas, and it is asserted here — but the job the plan wanted from it
-belongs to the provenance and mask gates, which are what the last four tests
-below exercise.
-
-Nothing here solves anything. The rung outcomes are built directly, so what is
-under test is the algebra and the gates rather than a solver.
-"""
+"""The attribution ladder: the deltas, the verdict, and what the rungs may share."""
 
 from __future__ import annotations
 
@@ -49,7 +33,6 @@ CASE_HASH = "f" * 64
 
 
 def _golden(source: str = "comsol") -> Golden:
-    """Return a golden carrying no arrays: the report's provenance, without files."""
     import numpy as np
 
     manifest = GoldenManifest.model_validate(
@@ -86,7 +69,6 @@ def _outcomes(
     golden_hash: str = GOLDEN_HASH,
     points: int = 100,
 ) -> list[RungOutcome]:
-    """Return one outcome per rung, carrying the given per-rung errors."""
     currents = [0.0, -4.1e-11, -8.1e-11, -9.4e-11]
     outcomes: list[RungOutcome] = []
     for index, rung in enumerate(LADDER):
@@ -118,9 +100,6 @@ def _outcomes(
     return outcomes
 
 
-# -- the identity -------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "errors",
     [
@@ -131,18 +110,6 @@ def _outcomes(
     ],
 )
 def test_val01_ladder_identity_holds_on_synthetic_errors(errors: list[float]) -> None:
-    """The five deltas telescope back to ``Delta_resid``, to 1e-14 absolute.
-
-    Four synthetic rung errors, including a monotone set, a flat set and a set
-    that swings by nine orders between adjacent rungs — the last because the
-    identity is an exact cancellation and cancellations are where floating point
-    is worst.
-
-    The named deltas are checked against their definitions as well as summing
-    correctly, because four deltas that summed correctly and were assigned to the
-    wrong rungs would pass a sum-only test and attribute the flow operator's
-    contribution to the transport stabilisation.
-    """
     report = attribute(_outcomes(errors), case="fixture", golden=_golden())
     entry = report.attribution("potential")
 
@@ -157,25 +124,16 @@ def test_val01_ladder_identity_holds_on_synthetic_errors(errors: list[float]) ->
 
 
 def test_val01_the_identity_cannot_see_a_stale_golden() -> None:
-    """The record of *why* the provenance gate exists, asserted rather than asserted of.
-
-    ``E_0 + (E_1 - E_0) + (E_2 - E_1) + (E_3 - E_2) = E_3`` holds for arbitrary
-    numbers, so four errors measured against four different objects telescope
-    perfectly. Comparing the hashes is what catches that, and this test pins the
-    algebraic fact so the plan's claim is not reintroduced.
-    """
     arbitrary = Attribution(key="potential", kind="field", errors=(7.0, -3.0, 11.5, 0.25))
     assert abs(arbitrary.identity_residual()) <= IDENTITY_TOLERANCE
 
 
 def test_val01_a_ladder_with_a_missing_rung_is_refused() -> None:
-    """Three outcomes do not make the remaining deltas mean less; they change what they mean."""
     with pytest.raises(LadderError, match="4 rungs and 3 outcome"):
         attribute(_outcomes([0.1, 0.2, 0.3, 0.4])[:3], case="fixture", golden=_golden())
 
 
 def test_val01_attribute_refuses_rungs_compared_against_different_goldens() -> None:
-    """A rung measured against another golden is refused, naming the rung and both hashes."""
     outcomes = _outcomes([0.1, 0.2, 0.3, 0.4])
     outcomes[2] = RungOutcome(
         rung=outcomes[2].rung,
@@ -193,7 +151,6 @@ def test_val01_attribute_refuses_rungs_compared_against_different_goldens() -> N
 
 
 def test_val01_attribute_refuses_rungs_masked_differently() -> None:
-    """The mask is a property of the geometry, so two rungs cannot honestly differ in it."""
     outcomes = _outcomes([0.1, 0.2, 0.3, 0.4])
     fewer = outcomes[1]
     outcomes[1] = RungOutcome(
@@ -217,18 +174,7 @@ def test_val01_attribute_refuses_rungs_masked_differently() -> None:
         attribute(outcomes, case="fixture", golden=_golden())
 
 
-# -- VAL-04's verdict ---------------------------------------------------------
-
-
 def test_val04_reference_limited_verdict() -> None:
-    """``Delta_resid < Delta_ref`` is ``reference-limited``; otherwise it is ours to explain.
-
-    Section 7.4's NOTE requires exactly this word: a comparison whose residual
-    falls below the reference's own discretisation error is reported as
-    reference-limited "rather than as agreement". Absent the refinement pair the
-    verdict is neither — RSK-09 is simply unbounded for that case, and saying so
-    is the honest report.
-    """
     errors = [0.0731, 0.0402, 0.0455, 0.0121]
     below = attribute(
         _outcomes(errors),
@@ -253,7 +199,6 @@ def test_val04_reference_limited_verdict() -> None:
 
 
 def test_val04_the_verdict_is_strict_at_the_boundary() -> None:
-    """Equality is not "limited": a residual exactly at the bound is still ours."""
     errors = [0.1, 0.1, 0.1, 0.02]
     report = attribute(
         _outcomes(errors), case="fixture", golden=_golden(), reference_errors={"potential": 0.02}
@@ -262,7 +207,6 @@ def test_val04_the_verdict_is_strict_at_the_boundary() -> None:
 
 
 def _refinement(refinement: str, values: dict[str, object]) -> Golden:
-    """Return one golden of a refinement pair, carrying ``values``."""
     manifest = GoldenManifest.model_validate(
         {
             **_golden().manifest.model_dump(),
@@ -283,16 +227,6 @@ def _refinement(refinement: str, values: dict[str, object]) -> Golden:
 
 
 def test_val04_delta_ref_is_taken_over_the_points_the_rungs_were() -> None:
-    """Delta_ref leaves out the margin band the rungs' grid drops, and only from the norm.
-
-    The two refinements differ by exactly 1 % away from the wall and by 50 % in
-    the outermost column, which stands for the band next to an interface: a COMSOL
-    export has values there, and the rungs' ``E_k`` are taken without it. Over the
-    rungs' points ``Delta_ref`` is therefore the 1 % exactly (the proportional
-    closed form of ``test_comparison_norms``); keeping the band would put the
-    50 % into a bound on errors that never saw it. A field the rungs' grid does
-    not compare has no ``E_k`` to bound and is left out.
-    """
     import numpy as np
 
     from nanopnp.validation.attribution import reference_error
@@ -323,20 +257,9 @@ def test_val04_delta_ref_is_taken_over_the_points_the_rungs_were() -> None:
     assert errors["potential"] == pytest.approx(0.01, rel=1e-12)
 
 
-# -- the report ---------------------------------------------------------------
-
-
 def test_val01_the_report_keeps_delta_transport_and_the_stabilisation_currents_apart(
     tmp_path: Path,
 ) -> None:
-    """Both numbers appear, under distinct names, and the markdown says why.
-
-    Section 6.7 extracts ``stabilisation_currents_A`` from a single run; the
-    ladder's ``Delta_transport`` is a difference of two runs' distances from a
-    third object. WP12 measured them agreeing to 1.55e-3 of the current on its
-    benchmark, which is evidence that both measure the same physics — not licence
-    to print one as the other.
-    """
     report = attribute(
         _outcomes([0.0731, 0.0402, 0.0455, 0.0121], [0.08, 0.05, 0.04, 0.01]),
         case="fixture",
@@ -358,12 +281,6 @@ def test_val01_the_report_keeps_delta_transport_and_the_stabilisation_currents_a
 
 
 def test_val01_a_self_golden_report_says_so_in_the_first_line() -> None:
-    """A ladder against a self-golden tests the machinery and nothing else.
-
-    Every consumer prints ``golden_source``; the markdown puts it above the
-    numbers, because a reader who reached the delta table first has already been
-    misled.
-    """
     report = attribute(_outcomes([0.0, 0.0, 0.0, 0.0]), case="fixture", golden=_golden("self"))
     assert report.golden_source == "self"
     text = report.markdown()
@@ -373,14 +290,6 @@ def test_val01_a_self_golden_report_says_so_in_the_first_line() -> None:
 
 
 def test_val01_an_unexported_field_is_named_in_the_report() -> None:
-    """A golden without ``pressure`` reports it unavailable; the table does not shrink silently.
-
-    ``sampled_fields`` is what makes the statement possible, and it is passed
-    rather than derived: a rung's comparisons are already the intersection of our
-    fields with the golden's, so a report that asked the golden which of *those*
-    it lacked would always answer "none" and would say a golden carrying no
-    ``pressure`` had covered it.
-    """
     outcomes = _outcomes([0.1, 0.2, 0.3, 0.4], [0.01, 0.02, 0.03, 0.04])
     report = attribute(
         outcomes,
@@ -400,41 +309,17 @@ def test_val01_an_unexported_field_is_named_in_the_report() -> None:
 
 
 def test_val01_unavailable_fields_cannot_be_derived_from_the_comparisons() -> None:
-    """Without ``sampled_fields`` the report can only say what it compared.
-
-    The degenerate answer is pinned here so the parameter is not quietly dropped
-    again: every field an outcome carries is by construction one the golden has,
-    so the complement over that set is empty however many fields are missing.
-    """
     report = attribute(_outcomes([0.1, 0.2, 0.3, 0.4]), case="fixture", golden=_golden())
     assert report.unavailable_fields == ()
 
 
-# -- the ladder as a sweep ----------------------------------------------------
-
-
 @pytest.fixture(scope="module")
 def ladder_plan():
-    """Return the checked-in ladder sweep, planned without touching a mesh."""
     document = load_sweep(LADDER_SWEEP)
     return build_plan(document, source=LADDER_SWEEP, check_meshes=False)
 
 
 def test_val01_ladder_rungs_are_separate_warm_start_components(ladder_plan) -> None:
-    """Planning the ladder puts each rung in its own component, rooted and cold.
-
-    Section 5.3.2 forbids a warm start across an element-space or operator
-    change, and ``load_initial`` refuses one at run time — exercised by
-    ``tests/tier1/test_warm_start_descriptor.py``, whose
-    ``test_val01_a_warm_start_across_an_element_order_is_refused`` and
-    ``test_num13_a_warm_start_across_two_stabilisation_modes_is_refused``
-    cover the two crossings this axis makes. Here the *plan* is under test: twenty
-    solves that each attempt a warm start, fail its gate and fall back is twenty
-    diagnostics for a fact the sweep document already states.
-
-    Asserted structurally: no edge of the forest joins two rungs, there is one
-    root per rung, and every rung's four remaining members hang off it.
-    """
     points = ladder_plan.points
     assert len(points) == len(LADDER) * 5
 
@@ -458,13 +343,6 @@ def test_val01_ladder_rungs_are_separate_warm_start_components(ladder_plan) -> N
 
 
 def test_val01_every_path_the_ladder_writes_is_a_warm_start_barrier() -> None:
-    """The ladder and the planner must agree about which paths sever the forest.
-
-    The structural link between :data:`LADDER` and
-    :data:`~nanopnp.sweep.plan.WARM_START_BARRIERS`: a rung assignment added later
-    over a path the planner does not treat as a barrier would silently restore an
-    edge the section 5.3.2 partition forbids.
-    """
     for rung in LADDER:
         for path in rung.assignments():
             assert any(
@@ -473,13 +351,6 @@ def test_val01_every_path_the_ladder_writes_is_a_warm_start_barrier() -> None:
 
 
 def test_val01_the_sweep_document_mirrors_the_ladder(ladder_plan) -> None:
-    """The document's ``rung`` axis is :data:`LADDER`, value for value and in order.
-
-    Two records of one fact, so they are checked against each other: a document
-    that had drifted would dispatch a configuration the report then labelled with
-    another rung's name, which is the one error the whole package exists to avoid
-    making about the reference.
-    """
     document = load_sweep(LADDER_SWEEP)
     rung_axis = next(axis for axis in document.axes if axis.name == "rung")
     assert [dict(entry) for entry in rung_axis.points()] == [
@@ -489,16 +360,6 @@ def test_val01_the_sweep_document_mirrors_the_ladder(ladder_plan) -> None:
 
 
 def test_val03_the_ladder_members_answer_the_five_frozen_cases(ladder_plan) -> None:
-    """Every member's case identity is one of the five frozen cases', and all five occur.
-
-    This is what makes the golden's ``case_hash`` gate mean anything: the sweep
-    is only the dispatch, and a member whose identity was not a frozen case's
-    would be compared against a golden for a case it did not solve.
-
-    It also pins that the identity is invariant across the ladder — four rungs,
-    one case — which is why :data:`~nanopnp.validation.comsol.DISCRETISATION_KEYS`
-    is left out of it.
-    """
     frozen = {
         path.name.split(".case")[0]: case_identity(resolve(load_case(path)))
         for path in sorted(FROZEN_CASES.glob("*.case.yaml"))
