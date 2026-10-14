@@ -164,7 +164,7 @@ change to the charge stage's key would pass it.
 spacing off in its last bits. `charge/stage.py` works around it by depositing the grid as re-read;
 the root fix belongs in `density/grid.py`.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D1: the `.npz` carries `origin_nm` and `spacing_nm` and reads them back bit for bit, and `charge/stage.py` deposits the grid it summed.
 
 ### REV-15 — Example 05 quotes #SBATCH directives as shell words
 

@@ -121,6 +121,48 @@ def test_ver29_a_grid_round_trips_through_the_native_format(tmp_path):
     assert back.digest() == grid.digest()
 
 
+def test_ver29_npz_round_trips_origin_and_spacing_bitwise(tmp_path):
+    spacing = (0.1 + 0.2, 1.0 / 3.0)
+    grid = RadialGrid(
+        origin_nm=(0.0, -7.0 / 3.0),
+        spacing_nm=spacing,
+        values=np.arange(4 * 5, dtype=float).reshape(5, 4),
+    )
+    back = read_grid(write_grid(grid, tmp_path / "field.npz"))
+
+    assert back.origin_nm == grid.origin_nm
+    assert back.spacing_nm == grid.spacing_nm
+    assert back.digest() == grid.digest()
+
+
+def test_ver29_axes_only_npz_still_reads(tmp_path):
+    path = tmp_path / "axes.npz"
+    np.savez(
+        path,
+        r_nm=np.array([0.0, 0.5, 1.0]),
+        z_nm=np.array([-1.0, 0.0]),
+        values=np.ones((2, 3)),
+    )
+    back = read_grid(path)
+
+    assert back.origin_nm == (0.0, -1.0)
+    assert back.spacing_nm == (0.5, 1.0)
+
+
+def test_ver29_npz_whose_axes_disagree_with_its_spacing_is_refused(tmp_path):
+    path = tmp_path / "bad.npz"
+    np.savez(
+        path,
+        r_nm=np.array([0.0, 0.5, 1.0]),
+        z_nm=np.array([-1.0, 0.0]),
+        origin_nm=np.array([0.0, -1.0]),
+        spacing_nm=np.array([0.6, 1.0]),
+        values=np.ones((2, 3)),
+    )
+    with pytest.raises(GridFormatError, match="r axis"):
+        read_grid(path)
+
+
 def test_ver29_the_writable_formats_exclude_the_read_only_reference_table():
     formats = writable_formats()
 
