@@ -1,4 +1,4 @@
-"""The mesher registry and the Mesher protocol (FR-10, QR-14; §5.5, §8.2.8 H7)."""
+"""The mesher registry and the Mesher protocol (FR-10, QR-14; §5.5)."""
 
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from nanopnp.mesh.adapter import MeshData
 
 GMSH_EXTRA = "gmsh"
-"""The ``pyproject.toml`` extra the Gmsh backend needs (CON-10, WP23 D9)."""
+"""The ``pyproject.toml`` extra the Gmsh backend needs (CON-10)."""
 
 
 class Mesher(Protocol):

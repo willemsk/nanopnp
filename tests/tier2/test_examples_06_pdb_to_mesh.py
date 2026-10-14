@@ -166,7 +166,7 @@ def test_ver46_06_the_exported_map_overlays_the_aligned_structure(
         bound,
         float(at_atoms.min()),
     )
-    # Design §2's 0.928 at h = 0.05 nm: a bound near zero would pass any map.
+    # 0.928 at h = 0.05 nm: a bound near zero would pass any map.
     assert bound > 0.9
     assert float(at_atoms.min()) >= bound
 

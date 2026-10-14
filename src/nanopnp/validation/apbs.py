@@ -1,4 +1,4 @@
-"""VAL-06: our Poisson solve against APBS's, on maps of the same problem (WP29)."""
+"""VAL-06: our Poisson solve against APBS's, on maps of the same problem."""
 
 from __future__ import annotations
 

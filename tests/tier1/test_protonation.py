@@ -315,7 +315,7 @@ def test_ver57_a_hse_named_histidine_is_titrated_as_his(
     assert found.q_net_e() == pytest.approx(reference.q_net_e(), abs=1e-9)
 
 
-# -- the D9 gates, each naming its frame ---------------------------------------
+# -- the gates, each naming its frame ---------------------------------------
 
 
 def _stand_in(
@@ -623,7 +623,7 @@ def test_ver57_without_pdb2pqr_a_structure_is_refused_and_a_pqr_runs(
     assert artefact.summary["q_net_e"] == [-3.0]
 
 
-# -- the case's refusals (D13) ---------------------------------------------------
+# -- the case's refusals ---------------------------------------------------
 
 
 def test_ver57_the_force_fields_are_a_subset_of_pdb2pqrs() -> None:

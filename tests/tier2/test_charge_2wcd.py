@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# Golden net charge at pH 7.5: WP27 (test_protonation_2wcd).
+# Golden net charge at pH 7.5 (test_protonation_2wcd).
 GOLDEN_Q_NET_E = -60
 
 CASE = """\

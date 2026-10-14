@@ -1,4 +1,4 @@
-"""The Geometry tab: stages 1 to 6 as they land, and a hand edit of the contour (WP24)."""
+"""The Geometry tab: stages 1 to 6 as they land, and a hand edit of the contour."""
 
 from __future__ import annotations
 

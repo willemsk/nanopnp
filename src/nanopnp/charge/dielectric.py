@@ -41,7 +41,7 @@ nanometres across.
 """
 
 EXCLUSION_MEAN_CEILING = 0.5
-"""The mean ``chi`` over ``exclusion`` must be below this, for every ``chi`` (WP30 D6).
+"""The mean ``chi`` over ``exclusion`` must be below this, for every ``chi``.
 
 The shell lies wholly on the water side of the dielectric contour, so ``chi`` is
 below 1/2 throughout it and so is its mean, while an inverted field puts it above.
@@ -55,33 +55,32 @@ EXCLUSION_MATERIAL = "exclusion"
 """The ion-exclusion shell's material (section 5.3.1 NOTE)."""
 
 DERIVED_SOURCE = "derived"
-"""What the stage-7 key and the manifest name a ``chi`` stage 7 derived (WP30 D5)."""
+"""What the stage-7 key and the manifest name a ``chi`` stage 7 derived."""
 
 TRANSITION_ID = "cubic-step-over-signed-distance/v1"
-"""The derived ``chi``'s construction: ``S(s/delta + 1/2)``, ``S = 3x^2 - 2x^3`` (WP30 D1)."""
+"""The derived ``chi``'s construction: ``S(s/delta + 1/2)``, ``S = 3x^2 - 2x^3``."""
 
 LATTICE_DIVISIONS = 20
-"""The derived ``chi``'s lattice spacing is ``delta`` over this (WP30 D4).
+"""The derived ``chi``'s lattice spacing is ``delta`` over this.
 
 The bilinear error off the profile's vertices is then at most ``0.75 (h/delta)^2
-= 1.9e-3`` (WP30 plan, *Design* section 1, [verified]).
+= 1.9e-3`` ([verified]).
 """
 
 BOX_WIDENING = 1.0
-"""The lattice covers the body's bounding box widened by this many ``delta`` (WP30 D4).
+"""The lattice covers the body's bounding box widened by this many ``delta``.
 
 ``chi`` reaches only ``delta/2`` past the profile, so the box's boundary samples
 are 0, as the padding ring is.
 """
 
 PROBE_NM = 1e-6
-"""How far outward of a profile piece's midpoint its side is probed, in nm (WP30 D2)."""
+"""How far outward of a profile piece's midpoint its side is probed, in nm."""
 
 MEMBRANE_HOLD_CELLS = 2.0
-"""Lattice nodes in the membrane within this many spacings of the body are held at 1 (WP30 D3).
+"""Lattice nodes in the membrane within this many spacings of the body are held at 1.
 
 They are the nodes a protein element beside the membrane interpolates from
-(WP30 Outcomes, D3).
 """
 
 DERIVED_CONSTANTS: dict[str, object] = {

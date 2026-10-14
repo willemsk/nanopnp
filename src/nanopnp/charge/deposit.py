@@ -46,20 +46,19 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 GEOMETRY_SCHEMA = "nanopnp/deposit-geometry/v0.5"
-"""Domain separator of the element-geometry digest a deposit belongs to (D5)."""
+"""Domain separator of the element-geometry digest a deposit belongs to."""
 
 DEPOSIT_PAYLOAD = "deposit"
-"""The stage-7 payload key of the deposit's ``.npz`` (D7)."""
+"""The stage-7 payload key of the deposit's ``.npz``."""
 
 UNCOVERED_TOL = 1e-12
-"""Largest lattice mass on no element, relative to the largest mass, that is not refused (D4)."""
+"""Largest lattice mass on no element, relative to the largest mass, that is not refused."""
 
 SOLID_SHARE_MIN = 0.5
-"""Smallest share of ``sum |q_i|`` whose atom centres must lie in a solid material (D4).
+"""Smallest share of ``sum |q_i|`` whose atom centres must lie in a solid material.
 
 A structure in another frame than its mesh shows as its atoms sitting in the
-electrolyte; ClyA's charged atoms sit in the protein (*Design* §5, the
-``centre_z_nm`` row).
+electrolyte; ClyA's charged atoms sit in the protein.
 """
 
 BARYCENTRIC_TOL = 1e-12

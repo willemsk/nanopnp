@@ -571,6 +571,7 @@ class CoupledModel:
 
     @property
     def fields(self) -> tuple[Field, ...]:
+        """The solved fields, in the order of the product space."""
         declared = [Field(POTENTIAL, "h1", self.order, None)]
         declared += [
             Field(concentration_field_name(name), "h1", self.order, self.fluid)
@@ -585,6 +586,7 @@ class CoupledModel:
 
     @property
     def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:
+        """The boundary-condition vocabulary, per field (PHY-09)."""
         vocabulary: dict[str, Mapping[str, str]] = {
             POTENTIAL: {
                 "cis": "phi = 0",
@@ -631,6 +633,7 @@ class CoupledModel:
 
     @property
     def provenance(self) -> Mapping[str, Any]:
+        """Everything a result manifest must record about the model (FR-25)."""
         return {
             "model": self.name,
             "fields": {
@@ -1271,6 +1274,7 @@ class ElectrostaticModel(_SingleFieldModel):
 
     @property
     def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:
+        """The boundary-condition vocabulary, per field (PHY-09)."""
         return {
             POTENTIAL: {
                 "cis": "phi = 0",
@@ -1290,6 +1294,7 @@ class ElectrostaticModel(_SingleFieldModel):
 
     @property
     def provenance(self) -> Mapping[str, Any]:
+        """Everything a result manifest must record about the model (FR-25)."""
         return {
             "model": self.name,
             "fields": {POTENTIAL: {"element": "h1", "order": self.order, "domain": None}},
@@ -1392,6 +1397,7 @@ class PoissonModel(_SingleFieldModel):
 
     @property
     def boundary_conditions(self) -> Mapping[str, Mapping[str, str]]:
+        """The boundary-condition vocabulary, per field (PHY-09)."""
         return {
             POTENTIAL: {
                 "cis": "phi = 0",
@@ -1404,6 +1410,7 @@ class PoissonModel(_SingleFieldModel):
 
     @property
     def provenance(self) -> Mapping[str, Any]:
+        """Everything a result manifest must record about the model (FR-25)."""
         return {
             "model": self.name,
             "fields": {POTENTIAL: {"element": "h1", "order": self.order, "domain": None}},

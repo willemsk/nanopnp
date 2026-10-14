@@ -133,7 +133,7 @@ class SolveStage:
         if materials is None:
             materials = MaterialsStage().run(StageInputs(resolved=inputs.resolved))
         fields = inputs.upstream.get("charge")
-        # A deposited charge comes only from the stage-7 artefact handed down (WP28 D9).
+        # A deposited charge comes only from the stage-7 artefact handed down.
         require_charge_artefact(resolved, fields)
         # Read, not gated: the key must not need an integral over the mesh.
         supplied: ResolvedFields | None = None

@@ -1,4 +1,4 @@
-"""Classification of every case schema leaf by what reads it (WP42 D4, REV-12, VER-71)."""
+"""Classification of every case schema leaf by what reads it (VER-71)."""
 
 from __future__ import annotations
 

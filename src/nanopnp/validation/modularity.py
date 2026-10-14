@@ -1,4 +1,4 @@
-"""Measure the package's structure from its source, for the modularity report (WP35, G1)."""
+"""Measure the package's structure from its source, for the modularity report."""
 
 from __future__ import annotations
 

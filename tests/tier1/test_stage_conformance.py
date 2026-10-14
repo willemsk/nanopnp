@@ -221,7 +221,7 @@ def test_ver64_each_optional_input_is_one_a_case_drops() -> None:
         ("protonation", "structure"),
         ("charge", "protonation"),
         ("charge", "region"),
-        # Stage 7's artefact, which a case with no field drops (WP38 D11).
+        # Stage 7's artefact, which a case with no field drops.
         ("solve", "charge"),
         ("qoi", "charge"),
         ("report", "charge"),
@@ -329,7 +329,7 @@ def test_ver64_a_stage_registered_later_is_walked_after_the_rest(
     assert describe("external").summary()["weight"] == 0.1
 
 
-# -- REV-63: a stage reads what it declares, and a walk to it runs what it reads --
+# -- a stage reads what it declares, and a walk to it runs what it reads --
 
 
 STAGES = Path(stages.__file__)

@@ -107,7 +107,7 @@ CHARGE_PAYLOAD = "charge"
 field, or the export lattice of a deposited one."""
 
 CHARGE_DOCUMENT_PAYLOAD = "charge_document"
-"""The payload key of a deposited charge's ``nanopnp/field/v0.5`` document (D7, D11)."""
+"""The payload key of a deposited charge's ``nanopnp/field/v0.5`` document."""
 
 LATTICE_PAYLOAD = "lattice"
 """The charge-grid artefact's payload key: the export lattice as ``.npz``."""
@@ -118,7 +118,7 @@ DEPOSIT_FILE = "deposit.npz"
 
 EPS_R_PAYLOAD = "eps_r"
 """The payload key of the solid fraction's lattice ``.npz``: a supplied field's archival
-copy, or the lattice of a derived one (WP30 D4)."""
+copy, or the lattice of a derived one."""
 
 EPS_R_FILE = "eps_r.npz"
 

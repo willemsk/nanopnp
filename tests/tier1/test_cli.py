@@ -263,7 +263,7 @@ def test_ver32_stage_list_imports_no_stage_module(tmp_path: Path) -> None:
     assert json.loads(result.stderr) == []
     numbers = [line.split()[0] for line in result.stdout.splitlines()]
     # Stage 7 is two stages, protonation and then charge, sharing the number so
-    # that stages 8 to 12 keep theirs (WP27 D1).
+    # that stages 8 to 12 keep theirs.
     assert numbers == ["1", "2", "3", "4", "5", "6", "7", "7", "8", "9", "10", "11", "12"]
     names = [line.split()[1] for line in result.stdout.splitlines()]
     assert names[6:8] == ["protonation", "charge"]

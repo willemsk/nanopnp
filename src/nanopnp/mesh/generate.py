@@ -31,16 +31,16 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 WALL_MEAN_BOUND = 1.15
-"""The ``wall`` segments' mean length may be at most this times the target (D9)."""
+"""The ``wall`` segments' mean length may be at most this times the target."""
 
 WALL_MAX_BOUND = 2.0
-"""The longest ``wall`` segment may be at most this times the target (D9)."""
+"""The longest ``wall`` segment may be at most this times the target."""
 
 GATE_CONSTANTS: Mapping[str, Canonicalisable] = {
     "wall_mean_bound": WALL_MEAN_BOUND,
     "wall_max_bound": WALL_MAX_BOUND,
 }
-"""The wall-size gate's thresholds, which key the stage-6 artefact (D10)."""
+"""The wall-size gate's thresholds, which key the stage-6 artefact."""
 
 COMMON_RECIPE_KEYS: frozenset[str] = frozenset(
     {"backend", "wall", "table", "grading", "gate", "exclusion"}

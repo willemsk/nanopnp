@@ -96,10 +96,12 @@ class SphereBody:
 
     @property
     def bounding_radius_nm(self) -> float:
+        """Largest radius the profile reaches, in nm."""
         return self.radius_nm
 
     @property
     def bounding_half_length_nm(self) -> float:
+        """Largest departure from ``z_nm`` the profile reaches, in nm."""
         return self.radius_nm
 
     @property
@@ -112,6 +114,7 @@ class SphereBody:
         return _charge_density_C_m3(self.volume_nm3, charge_e)
 
     def face(self, *, maxh_nm: float | None = None) -> Shape:
+        """Return the profile as a named OCC face, its surface edges named."""
         import netgen.occ as occ
 
         disc = occ.WorkPlane().Circle(0.0, self.z_nm, self.radius_nm).Face()
@@ -134,10 +137,12 @@ class SpheroidBody:
 
     @property
     def bounding_radius_nm(self) -> float:
+        """Largest radius the profile reaches, in nm."""
         return self.semi_radial_nm
 
     @property
     def bounding_half_length_nm(self) -> float:
+        """Largest departure from ``z_nm`` the profile reaches, in nm."""
         return self.semi_axial_nm
 
     @property
@@ -150,6 +155,7 @@ class SpheroidBody:
         return _charge_density_C_m3(self.volume_nm3, charge_e)
 
     def face(self, *, maxh_nm: float | None = None) -> Shape:
+        """Return the profile as a named OCC face, its surface edges named."""
         import netgen.occ as occ
 
         plane = occ.WorkPlane().MoveTo(0.0, self.z_nm)

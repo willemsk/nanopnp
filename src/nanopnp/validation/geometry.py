@@ -1,4 +1,4 @@
-"""VAL-05: a generated pore polygon against the delivered reference polygon (WP22 D1-D8)."""
+"""VAL-05: a generated pore polygon against the delivered reference polygon."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ TIP_BAND_NM = 0.1
 # The trans constriction in the model frame: .knowledge/04-clya-geometry-and-charge.md section 2.
 CONSTRICTION_WINDOW_NM = (-1.85, 1.6)
 
-# Measured 5.6553 nm on the 50-frame ensemble, residues 8-292 (SPECIFICATION.md section 8.2.4 D7).
+# Measured 5.6553 nm on the 50-frame ensemble, residues 8-292.
 Z_MD_NM = 5.655
 
 Z_MD_TOLERANCE_NM = 0.01

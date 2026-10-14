@@ -20,7 +20,7 @@ PAYLOAD_NAME = "density"
 
 _INTERCHANGE: Mapping[str, str] = {".dx": "DX", ".ccp4": "MRC", ".mrc": "MRC", ".map": "MRC"}
 
-# The interchange files' length unit (SPECIFICATION.md §8.2.2 B10).
+# The interchange files' length unit.
 ANGSTROM_PER_NM = 10.0
 
 # gridData writes an OpenDX delta to seven significant figures.

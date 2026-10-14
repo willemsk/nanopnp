@@ -81,7 +81,7 @@ DEFAULT_AXIS_CUTOFF_NM = 0.01
 """PHY-18's axis guard: ``r < 0.01 nm -> 0``, as the reference model applies it."""
 
 FIELD_QUADRATURE_ORDER = 8
-"""Explicit integration rule order evaluated by the source and every conservation leg (WP41 D2)."""
+"""Explicit integration rule order evaluated by the source and every conservation leg."""
 
 CONSERVATION_TOL = 1.0e-3
 """QR-03's budget on each leg of the conservation check."""
@@ -129,16 +129,16 @@ DEFAULT_PLANE_COUNT = 12
 """Planes the per-``z`` cumulative is evaluated at when a caller names none."""
 
 NEUTRAL_Q_NET_E = 1e-6
-"""``|Q_net|`` at or below which a deposited charge is net-neutral, in e (WP28 D6).
+"""``|Q_net|`` at or below which a deposited charge is net-neutral, in e.
 
 The protonation gate holds every frame's ``Q_net`` to within this of an integer
-(``charge.protonation.Q_NET_TOLERANCE_E``, WP27), so a frame mean this small is a
+(``charge.protonation.Q_NET_TOLERANCE_E``), so a frame mean this small is a
 zero summed in floating point: ``fsum`` of CHARMM's decimal charges is ~1e-17 e,
 not 0, and every relative leg against it is round-off over round-off.
 """
 
 PLANE_SMOOTHING_NM = 0.5
-"""``s`` of the producer path's per-plane weight ``1/2 erfc((z - p)/s)``, in nm (WP28 D6).
+"""``s`` of the producer path's per-plane weight ``1/2 erfc((z - p)/s)``, in nm.
 
 The consumer path keeps its 0.2 nm ramp. A polynomial of the deposit's order
 approximates this smooth weight to about ``0.064 h^3 |W'''|`` on an element of

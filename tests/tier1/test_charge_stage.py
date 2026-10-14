@@ -394,7 +394,7 @@ class _CancelOnCall:
     [
         (1, "reading the fields"),
         # The frame check before the sum: a misplaced structure is refused before
-        # it pays for every frame's kernel sum (D4).
+        # it pays for every frame's kernel sum.
         (2, "the solid-share gate"),
         (3, "summing the kernel of frame 0"),
         (4, "locating the lattice"),

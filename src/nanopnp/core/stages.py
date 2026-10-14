@@ -150,6 +150,7 @@ class CancelFlag:
         self._cancelled = True
 
     def cancelled(self) -> bool:
+        """Return whether the stage should raise ``Cancelled``."""
         return self._cancelled
 
 

@@ -17,7 +17,7 @@ from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.pipeline.run import run_case
 from nanopnp.solve.stage import SolveStage
 
-# Stage keys on bbca737 (D16), stage 7 at v1.
+# Stage keys on bbca737, stage 7 at v1.
 KEYS = {
     "region": "bb447f8fc0c1d3fa9318cd82d239f78e43d3ff0d6e3a66d5960c5276cf0d704c",
     "mesh": "069b2cd9753f2dc4b149f71284851e9b9e01d9c0726ad82b0618d7e9f7457000",
@@ -25,14 +25,14 @@ KEYS = {
     "solve": "6e3f8992206e2820221b04c4e2acd12405d4af11fa32b4932ca30c14e8c0b210",
 }
 
-# Keys with stage 7 at nanopnp/fields/v2: WP32 D15.
+# Keys with stage 7 at nanopnp/fields/v2.
 KEYS_V2 = {
     **KEYS,
     "charge": "3810c50e598c543d147a8bd8a804a68d7875c30ec00dfe94d5575f4cc79792dc",
     "solve": "b1370ee6183a4bdebd8697f9dc41846fd5bf8c89d51e246495b498033726806a",
 }
 
-# Keys under repo-wide v0.5 schemas: REV-71.
+# Keys under repo-wide v0.5 schemas.
 KEYS_V05 = {
     "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
     "mesh": "89551d4667c54f0d0c648b4c0e7caed46c3aa4c3e3994b9180366a2252d45517",
@@ -149,7 +149,7 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     case = write_golden_case(tmp_path / "case", parallelogram_profile, charge=charge)
     store = Store(tmp_path / "store")
     # The solve's inputs without the solve: a walk runs its target's inputs alone
-    # (WP38 D11), so the charge and the materials are walked to in turn.
+    # so the charge and the materials are walked to in turn.
     artefacts = {}
     for upto in ("charge", "materials"):
         result = run_case(case, store=store, workspace=tmp_path / "work", upto=upto)
@@ -192,9 +192,9 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     materials_v1 = content_hash(
         MATERIALS_SCHEMA_V1, materials.parameters, {"corrections": CORRECTIONS_SHA256_V1}
     )
-    # At bbca737 (WP30), pnp accepted and recorded variable_density: true, inertia: true;
-    # WP42 carries them as false (D5, D10), and its key gained `algorithm_revision` and the
-    # newton record's `field_floor_ratio` (REV-71). Restoring the bbca737 record recovers it.
+    # At bbca737, pnp accepted and recorded variable_density: true, inertia: true;
+    # the key gained `algorithm_revision` and the
+    # newton record's `field_floor_ratio`. Restoring the bbca737 record recovers it.
     params_bbca = {
         **{k: v for k, v in solve.parameters.items() if k != "algorithm_revision"},
         "newton": {k: v for k, v in solve.parameters["newton"].items() if k != "field_floor_ratio"},

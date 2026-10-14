@@ -56,31 +56,37 @@ class NumpyOps:
     """Numeric evaluation with NumPy, for scalars, arrays and tests."""
 
     def sqrt(self, x: Numeric) -> Numeric:
+        """Return the square root of ``x``."""
         import numpy as np
 
         return np.sqrt(x)
 
     def exp(self, x: Numeric) -> Numeric:
+        """Return the exponential of ``x``."""
         import numpy as np
 
         return np.exp(x)
 
     def sinh(self, x: Numeric) -> Numeric:
+        """Return the hyperbolic sine of ``x``."""
         import numpy as np
 
         return np.sinh(x)
 
     def cosh(self, x: Numeric) -> Numeric:
+        """Return the hyperbolic cosine of ``x``."""
         import numpy as np
 
         return np.cosh(x)
 
     def where_positive(self, condition: Numeric, if_true: Numeric, if_false: Numeric) -> Numeric:
+        """Return ``if_true`` where ``condition > 0`` and ``if_false`` elsewhere."""
         import numpy as np
 
         return np.where(np.asarray(condition) > 0.0, if_true, if_false)
 
     def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:
+        """Return ``x`` limited to ``[lower, upper]``; ``upper`` ``None`` is a floor only."""
         import numpy as np
 
         return np.clip(x, lower, upper)
@@ -90,31 +96,37 @@ class NGSolveOps:
     """Symbolic evaluation, building an NGSolve ``CoefficientFunction`` tree."""
 
     def sqrt(self, x: Numeric) -> Numeric:
+        """Return the square root of ``x``."""
         import ngsolve as ngs
 
         return ngs.sqrt(x)
 
     def exp(self, x: Numeric) -> Numeric:
+        """Return the exponential of ``x``."""
         import ngsolve as ngs
 
         return ngs.exp(x)
 
     def sinh(self, x: Numeric) -> Numeric:
+        """Return the hyperbolic sine of ``x``."""
         import ngsolve as ngs
 
         return ngs.sinh(x)
 
     def cosh(self, x: Numeric) -> Numeric:
+        """Return the hyperbolic cosine of ``x``."""
         import ngsolve as ngs
 
         return ngs.cosh(x)
 
     def where_positive(self, condition: Numeric, if_true: Numeric, if_false: Numeric) -> Numeric:
+        """Return ``if_true`` where ``condition > 0`` and ``if_false`` elsewhere."""
         import ngsolve as ngs
 
         return ngs.IfPos(condition, if_true, if_false)
 
     def clip(self, x: Numeric, lower: float, upper: float | None) -> Numeric:
+        """Return ``x`` limited to ``[lower, upper]``; ``upper`` ``None`` is a floor only."""
         import ngsolve as ngs
 
         if upper is None:
