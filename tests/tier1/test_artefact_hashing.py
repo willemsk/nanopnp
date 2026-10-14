@@ -267,3 +267,142 @@ def test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores(
         np.savez(handle, **arrays, seconds=np.asarray(0.25))
     assert restored.read_bytes() != deposit.read_bytes()
     assert file_hash(restored) != file_hash(deposit)
+
+
+def _put_with_payload(store: Store, directory: Path, content: bytes) -> Artefact:
+    directory.mkdir(parents=True, exist_ok=True)
+    source = directory / "fields.bin"
+    source.write_bytes(content)
+    return store.put(
+        Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE, payload={"fields": source})
+    )
+
+
+def _assert_one_consistent_entry(store: Store, *returned: Artefact) -> None:
+    stored = store.get(SOLUTION_SCHEMA, returned[0].hash)
+    assert stored is not None
+    directory = store.location(SOLUTION_SCHEMA, stored.hash)
+    record = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
+    for name, entry in record["payload"].items():
+        assert file_hash(directory / entry["file"]) == entry["sha256"], name
+    assert sorted(path.name for path in directory.iterdir()) == ["fields.bin", "meta.json"]
+    assert not stored.hand_substituted
+    for artefact in returned:
+        assert artefact.payload == stored.payload
+        assert artefact.recorded_payload == stored.recorded_payload
+        assert artefact.created_at == stored.created_at
+
+
+@pytest.mark.parametrize("step", ["before_copy", "before_publish"])
+def test_ver26_interleaved_puts_leave_one_consistent_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, step: str
+) -> None:
+    import nanopnp.io.store as store_module
+
+    store = Store(tmp_path / "store")
+    other: list[Artefact] = []
+    running = False
+
+    def writer_b() -> None:
+        nonlocal running
+        if not running:
+            running = True
+            other.append(_put_with_payload(store, tmp_path / "b", b"writer B"))
+
+    real_copy = store_module.shutil.copyfile
+    real_publish = store_module._publish
+
+    def copy(source: Path, target: Path) -> Path:
+        if step == "before_copy":
+            writer_b()
+        return real_copy(source, target)  # type: ignore[return-value]
+
+    def publish(staging: Path, directory: Path) -> None:
+        if step == "before_publish":
+            writer_b()
+        real_publish(staging, directory)
+
+    monkeypatch.setattr(store_module.shutil, "copyfile", copy)
+    monkeypatch.setattr(store_module, "_publish", publish)
+    first = _put_with_payload(store, tmp_path / "a", b"writer A, a different payload")
+    monkeypatch.undo()
+
+    assert len(other) == 1
+    _assert_one_consistent_entry(store, first, other[0])
+    assert (store.location(SOLUTION_SCHEMA, first.hash) / "fields.bin").read_bytes() == b"writer B"
+
+
+def test_ver26_an_entry_left_without_a_record_is_replaced(tmp_path: Path) -> None:
+    store = Store(tmp_path / "store")
+    artefact = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE)
+    directory = store.location(SOLUTION_SCHEMA, artefact.hash)
+    directory.mkdir(parents=True)
+    (directory / "fields.bin").write_bytes(b"left by an older put")
+
+    stored = _put_with_payload(store, tmp_path / "src", b"complete")
+
+    _assert_one_consistent_entry(store, stored)
+    assert (directory / "fields.bin").read_bytes() == b"complete"
+
+
+def test_ver26_a_payload_already_inside_the_entry_is_copied_not_moved(tmp_path: Path) -> None:
+    store = Store(tmp_path / "store")
+    artefact = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE)
+    directory = store.location(SOLUTION_SCHEMA, artefact.hash)
+    stored = _put_with_payload(store, directory, b"written in place")
+
+    _assert_one_consistent_entry(store, stored)
+    assert (directory / "fields.bin").read_bytes() == b"written in place"
+
+
+RACING_WRITER = """
+import sys, time
+from pathlib import Path
+from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
+from nanopnp.io.store import Store
+
+root, name, go = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
+(root / name).mkdir()
+source = root / name / "fields.bin"
+source.write_bytes(name.encode() * 200_000)
+artefact = Artefact(schema=SOLUTION_SCHEMA, parameters={"k": 1}, payload={"fields": source})
+while not go.exists():
+    time.sleep(0.001)
+stored = Store(root / "store").put(artefact)
+print(stored.payload["fields"].read_bytes()[:1].decode(), stored.created_at)
+"""
+
+
+def test_ver26_two_processes_race(tmp_path: Path) -> None:
+    go = tmp_path / "go"
+    processes = [
+        subprocess.Popen(
+            [sys.executable, "-c", RACING_WRITER, str(tmp_path), name, str(go)],
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        for name in ("a", "b")
+    ]
+    go.touch()
+    outputs = [process.communicate(timeout=120)[0].strip() for process in processes]
+    assert [process.returncode for process in processes] == [0, 0]
+
+    store = Store(tmp_path / "store")
+    stored = store.get(SOLUTION_SCHEMA, Artefact(schema=SOLUTION_SCHEMA, parameters={"k": 1}).hash)
+    assert stored is not None
+    directory = store.location(SOLUTION_SCHEMA, stored.hash)
+    record = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
+    assert file_hash(directory / "fields.bin") == record["payload"]["fields"]["sha256"]
+    winner = (directory / "fields.bin").read_bytes()[:1].decode()
+    assert outputs == [f"{winner} {stored.created_at}"] * 2
+
+
+def test_ver26_a_put_that_cannot_publish_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(self: Path, target: Path) -> Path:
+        raise PermissionError("read-only")
+
+    monkeypatch.setattr(Path, "rename", refuse)
+    with pytest.raises(StoreError, match="could not publish"):
+        _put_with_payload(Store(tmp_path / "store"), tmp_path / "src", b"x")

@@ -205,7 +205,7 @@ start. It fails closed.
 **Measured.** Job-array members generate and `put` the same stage 1–6 keys at the same time. Whether
 that is safe depends on how atomic `Store.put` is, which has not been measured.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D3: `Store.put` stages payloads and record in a sibling directory and renames it onto the entry; the first complete entry stays and both writers return `get()` of it.
 
 ### REV-19 — A zero-frame trajectory raises a bare IndexError
 
