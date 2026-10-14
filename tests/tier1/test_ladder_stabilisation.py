@@ -1,11 +1,4 @@
-"""NUM-13 (WP41 D9) — every solve names its stabilisation mode, and nothing defaults it.
-
-Before WP41 :class:`~nanopnp.solve.continuation.LadderResult` returned ``"none"`` and
-``{}`` for a model whose provenance carried no mode, the electrostatic models among
-them, so "this model has no stabilisable term" and "this record lost its mode" read
-the same (REV-26). A model now names its mode, ``none`` where it assembles no
-transport term, and the ladder reads the record without a default.
-"""
+"""NUM-13: every solve names its stabilisation mode, and nothing defaults it."""
 
 from __future__ import annotations
 
@@ -18,7 +11,6 @@ STABILISATION_KEYS = ("stabilisation", "stabilisation_parameters", "stabilisatio
 
 
 def test_num13_every_registered_model_names_its_stabilisation_mode() -> None:
-    """Each model's provenance carries a registered mode, its parameters and their sources."""
     from nanopnp.physics import models
     from nanopnp.physics.stabilisation import create, registered_stabilisations
 
@@ -38,7 +30,6 @@ def test_num13_every_registered_model_names_its_stabilisation_mode() -> None:
 
 @pytest.mark.parametrize("key", STABILISATION_KEYS)
 def test_num13_a_ladder_result_refuses_a_model_that_records_no_mode(key: str) -> None:
-    """A missing entry is refused naming the model and the key, never defaulted."""
     from nanopnp.solve.continuation import LadderResult
 
     recorded = {
@@ -60,7 +51,6 @@ def test_num13_a_ladder_result_refuses_a_model_that_records_no_mode(key: str) ->
 
 @pytest.mark.parametrize("key", STABILISATION_KEYS[1:])
 def test_num13_a_ladder_result_refuses_a_mapping_recorded_as_something_else(key: str) -> None:
-    """An entry that is not a mapping is refused, not read as empty."""
     from nanopnp.solve.continuation import LadderResult
 
     recorded: dict[str, object] = {

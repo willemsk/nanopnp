@@ -1,10 +1,4 @@
-"""VER-53: stage 6 generates, gates and keys a mesh from stage 5's region (FR-10, VER-10, CON-10).
-
-On a coarse synthetic region, so each mesh is a fraction of a second: a
-parallelogram body in a 30 nm reservoir at ``size_scale`` 20, which puts the
-wall target at 1 nm and every other size twenty times its section 5.2.2 value.
-The reference-scale meshes are Tier 2's.
-"""
+"""VER-53: stage 6 generates, gates and keys a mesh from stage 5 (FR-10, VER-10, CON-10)."""
 
 from __future__ import annotations
 
@@ -51,7 +45,6 @@ SOLIDS = "protein: 20.0, membrane: 3.2"
 
 
 def _write_parallelogram(path: Path) -> Path:
-    """Write a slanted body 1 nm wide across the slab as a profile document."""
     points = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
     array = np.asarray(points, dtype=np.float64)
     profile = PoreProfile.model_validate(
@@ -75,28 +68,25 @@ def _write_parallelogram(path: Path) -> Path:
 
 @pytest.fixture(scope="module")
 def workspace(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Return a directory holding the synthetic profile."""
     root = tmp_path_factory.mktemp("generate")
     _write_parallelogram(root / "profile.yaml")
     return root
 
 
 def _case_text(workspace: Path, solids: str = SOLIDS) -> str:
-    """Return the coarse case over the synthetic profile."""
     return CASE.format(path=workspace / "profile.yaml", solids=solids)
 
 
 @pytest.fixture(scope="module")
 def region(workspace: Path):
-    """Return the stage-5 artefact of the synthetic profile."""
     case = loads_case(_case_text(workspace))
     return RegionStage(workspace=workspace / "region").run(StageInputs(resolved=resolve(case)))
 
 
+# VER-10, VER-27
 def test_ver53_a_generated_mesh_passes_the_gates_and_is_keyed_on_its_recipe(
     workspace: Path, region
 ) -> None:
-    """VER-27, VER-10 and D9 pass; the key is the recipe, the content hash is recorded (D10)."""
     case = loads_case(_case_text(workspace))
     inputs = StageInputs(resolved=resolve(case), upstream={"region": region})
     stage = MeshStage(workspace=workspace / "mesh")
@@ -118,16 +108,13 @@ def test_ver53_a_generated_mesh_passes_the_gates_and_is_keyed_on_its_recipe(
     assert statistics["mean_ratio"] <= 1.15
     assert statistics["max_ratio"] <= 2.0
 
-    # The file on disk, read back through the adapter, is the mesh the summary names.
     payload = artefact.payload["mesh"]
     assert read(payload, format="msh41").content_hash == summary["content_hash"]
-    # And a consumer reads that file rather than regenerating it (D12).
     consumed = deployed_mesh(resolve(case), artefact)
     assert consumed.content_hash == summary["content_hash"]
 
 
 def test_ver53_a_consumer_without_the_stage_6_artefact_is_refused(workspace: Path) -> None:
-    """D12: a consumer never regenerates a mesh; it names the stage to run first."""
     resolved = resolve(loads_case(_case_text(workspace)))
     with pytest.raises(KeyError, match=r"run the pipeline through 'mesh' first"):
         deployed_mesh(resolved, None)
@@ -156,10 +143,10 @@ print(json.dumps({
 """
 
 
+# CON-10
 def test_ver53_two_fresh_processes_give_one_mesh_and_neither_imports_gmsh(
     workspace: Path, tmp_path: Path
 ) -> None:
-    """Netgen is deterministic in one platform [tested]; CON-10 keeps gmsh off the default path."""
     case = tmp_path / "case.yaml"
     case.write_text(_case_text(workspace), encoding="utf-8")
     found = []
@@ -178,7 +165,6 @@ def test_ver53_two_fresh_processes_give_one_mesh_and_neither_imports_gmsh(
 def test_ver53_the_wall_gate_fires_when_the_wall_field_is_withheld(
     workspace: Path, region, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """D9: without its size field the wall is meshed by the protein's, twice as coarse."""
     from nanopnp.mesh import meshers, sizing
 
     def without_wall(shape, *, wall_h_nm, axis_extent_nm, sizes, divide_wall) -> None:  # type: ignore[no-untyped-def]
@@ -205,7 +191,6 @@ def test_ver53_the_wall_gate_fires_when_the_wall_field_is_withheld(
 def test_ver53_a_generated_mesh_without_a_protein_permittivity_is_refused(
     workspace: Path, region
 ) -> None:
-    """D11: a generated mesh carries a structure's body, gated as an ingested mesh is."""
     case = loads_case(_case_text(workspace, solids="membrane: 3.2"))
     inputs = StageInputs(resolved=resolve(case), upstream={"region": region})
     with pytest.raises(
@@ -217,7 +202,6 @@ def test_ver53_a_generated_mesh_without_a_protein_permittivity_is_refused(
 def test_qr08_a_reproduced_mesh_with_another_content_hash_aborts_naming_both(
     tmp_path: Path,
 ) -> None:
-    """D13: a mesher difference is named as an input drift, not left to surface as a QoI drift."""
     from types import SimpleNamespace
 
     from nanopnp.pipeline.reproduce import (
@@ -264,12 +248,6 @@ outputs: [current, fields]
 def test_ver53_every_consumer_reads_the_generated_mesh_through_to_the_export(
     workspace: Path, tmp_path: Path
 ) -> None:
-    """D12 end to end: stages 7-12 and the IF-07 export each read stage 6's file, none regenerates.
-
-    A consumer that ingests ``inputs.mesh`` directly fails here with the KeyError
-    of :func:`~nanopnp.mesh.ingest.deployed_mesh`; the solve, the extraction and
-    the export each restore the mesh by a separate call.
-    """
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 

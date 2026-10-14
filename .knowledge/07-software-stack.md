@@ -1483,3 +1483,8 @@ value is, until upstream ships stubs that parse behind a marker (source: `core/t
 
 - **[tested]** A webgui scene of the reference mesh is 23 to 39 MB, and it is written twice, once as data and once inside the document. The render child therefore keeps only one field's pair and re-renders the next field, about a second, rather than keeping five. Source: `tests/tier1/test_gui_render.py` (`test_ver44_only_one_fields_scene_is_kept`).
 - **[tested]** On Linux, `Set` projects element-wise, so a coordinate field set to zero at a wall comes back as about -3e-16, not 0; the positivity gate therefore evaluates the coefficient function, which samples `x = 0` exactly. **[verified]** The test's author records the same round-off, of positive sign, on macOS and Windows. Source: `tests/tier1/test_gates.py` (`test_ver08_positivity_gate_rejects_exactly_zero`).
+
+## Tier-1 test evidence: the mesh seam and the layering ratchet (WP45 item 22)
+
+- **[tested]** meshio writes a whole cell block under the first geometrical tag it carries, so boundary groups packed into one block all read back under the first group's name, with no error raised. Source: `tests/tier1/test_mesh_adapter.py` (`test_if06_a_tagged_mesh_survives_an_msh41_round_trip`).
+- **[verified]** Each module into which `io/case.py` was split measures at most 1,266 lines (WP38 D14). Source: `tests/tier1/test_layering.py` (`test_mod13_no_module_of_the_io_split_exceeds_the_bound`).

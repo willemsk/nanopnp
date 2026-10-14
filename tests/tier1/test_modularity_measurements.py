@@ -1,10 +1,4 @@
-"""The modularity report's measurements beyond the import relation (§8.2.7 G1; WP35 D8).
-
-VER-61 pins the import relation. The other measurements the report quotes, stage
-conformance, the public surface, sizes and the generated page that renders them all,
-are checked here against a package whose answers are written down by hand, so that
-a number the report cites cannot come from a reader that skips what it should count.
-"""
+"""The modularity report's measurements beyond the import relation (section 8.2.7 G1)."""
 
 from __future__ import annotations
 
@@ -76,7 +70,6 @@ def test_sizes_count_a_function_defined_under_a_statement(tmp_path: Path) -> Non
 
 
 def test_the_matrix_counts_import_statements_not_imported_modules() -> None:
-    """``from nanopnp.y import n, k`` is two edges ``x -> y`` and one statement."""
     relation = {
         ("x", "y"): (
             ImportEdge("nanopnp.x.m", "nanopnp.y.k", "top", 3, "x/m.py"),
@@ -103,7 +96,6 @@ def test_the_measurements_page_renders_every_section_of_the_live_tree() -> None:
 
 
 def test_extension_points_lists_mesher_and_linear_solver_as_registries() -> None:
-    """The mesher and linear solver extension points are registries at their homes (D14)."""
     points = {p.name: p for p in extension_points()}
     assert points["mesher"].kind == "registry"
     assert points["mesher"].home == "mesh/meshers.py"
