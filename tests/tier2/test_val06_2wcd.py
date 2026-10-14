@@ -1,22 +1,4 @@
-"""VAL-06 at Tier 2 on 2WCD: our ``poisson`` against APBS on the same maps (WP29 D1 to D9).
-
-The Phase 3 gate's third leg. ``seeded_protonated_2wcd`` carries the PROPKA
-protonation of the prepared dodecamer, and the case is registered as
-``test_charge_2wcd`` registers it. It is walked to the solve with ``poisson``,
-both electrodes grounded, the protein at 20 and the membrane at 3.2, once at
-``P2`` and once at ``P3`` (D1).
-
-The gated leg (D2 to D8) hands APBS stage 7's export lattice by hat weights, the
-assembled permittivity by harmonic staggered maps, and our ``P2`` solution on the
-box faces. The refinement budget and the charge's visibility are measured first,
-in the same run, and :func:`~nanopnp.validation.apbs.check_report` reads them
-before the agreement: ``e_max <= 3 %``, ``e_rms <= 1 %`` and ``e_axis <= 1.5 %``
-(section 7.4 NOTE on VAL-06). The report is written as JSON and logged.
-
-Under ``-m slow``: the recorded leg (D9), APBS's own ``spl4`` charge and ``smol``
-surface with our membrane imposed, compared per probe ring; and a focused 0.05 nm
-grid on the lumen, which checks the order that makes ``e^_A`` a bound.
-"""
+"""VAL-06 at Tier 2 on 2WCD: our ``poisson`` against APBS on the same maps."""
 
 from __future__ import annotations
 
@@ -73,6 +55,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# PHY-20
 CASE = """\
 schema: nanopnp/case/v0.5
 name: 2wcd-val06
@@ -93,27 +76,21 @@ physics:
 numerics: {{continuation: none, elements: {{phi: P{order}, c: P{order}}}}}
 outputs: []
 """
-"""D1: ``poisson`` at zero bias, the solids of PHY-20, and the fluid at ``eps_r,f^0``."""
 
 
 @dataclass(frozen=True)
 class Solved:
-    """One ``poisson`` walk of 2WCD to the solve, and its restored solution."""
-
     result: RunResult
     solution: ModelSolution
     order: int
     seconds: float
 
     def sampler(self) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-        """Return the potential in ``kT/e`` at ``(r, z)`` arrays, through a whole-domain carrier."""
         return potential_sampler(self.solution, order=self.order)
 
 
 @dataclass(frozen=True)
 class Walked:
-    """2WCD solved at ``P2`` and ``P3`` on one store, and the gated leg's inputs."""
-
     root: Path
     p2: Solved
     p3: Solved
@@ -148,11 +125,6 @@ def walked(
     seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Walked:
-    """Register 2WCD by its C-alpha centroid (WP22 D6), solve at P2 and P3, raster the solve.
-
-    Stages 1 to 6, the registration and the protonation are the session's seeds
-    (WP33 D2): the default-size mesh both orders solve on is the seeded one.
-    """
     from nanopnp.density.grid import read_grid
     from nanopnp.physics.models import PoissonModel
 
@@ -221,7 +193,6 @@ def walked(
 
 @pytest.fixture(scope="module")
 def gated(walked: Walked, apbs: None) -> GatedResult:
-    """Run the gated leg at 0.1 and 0.2 nm, write its report, and log it."""
     mesh = walked.p2.result.artefacts["mesh"]
     inputs = GatedInputs(
         lattice=walked.lattice,
@@ -263,7 +234,6 @@ def gated(walked: Walked, apbs: None) -> GatedResult:
 def test_val06_2wcd_the_refinement_budget_holds_within_half_the_tolerance(
     gated: GatedResult,
 ) -> None:
-    """D8: ``e^_A + e^_F <= tau / 2`` in each norm, before any agreement is read."""
     report = gated.report
     assert report.budget is not None
     assert not report.budget.exceeding(TOLERANCE.scaled(0.5)), report.budget
@@ -271,12 +241,10 @@ def test_val06_2wcd_the_refinement_budget_holds_within_half_the_tolerance(
 
 
 def test_val06_2wcd_the_charge_not_the_faces_carries_the_comparison(gated: GatedResult) -> None:
-    """D8: zeroing the charge moves the probes by at least 10 ``tau_rms``."""
     assert gated.report.charge_visibility >= 10.0 * TOLERANCE.rms
 
 
 def test_val06_2wcd_apbs_agrees_with_poisson_within_the_tolerance(gated: GatedResult) -> None:
-    """VAL-06's gate: the budget, the visibility, then ``3 %``, ``1 %`` and ``1.5 %``."""
     check_report(gated.report)
     logger.info(
         "VAL-06 2WCD: agreement %s within %s; budget %s (APBS %s, ours %s); visibility %.3f",
@@ -290,7 +258,6 @@ def test_val06_2wcd_apbs_agrees_with_poisson_within_the_tolerance(gated: GatedRe
 
 
 def test_val06_2wcd_the_difference_is_located_and_recorded(gated: GatedResult) -> None:
-    """Recorded: where the largest difference between the two solvers lies."""
     probes, sampled = gated.probes, gated.sampled
     difference = sampled["apbs"] - sampled["ours"]
     worst = int(np.argmax(np.abs(difference)))
@@ -309,7 +276,6 @@ def test_val06_2wcd_the_difference_is_located_and_recorded(gated: GatedResult) -
 def test_val06_2wcd_apbs_is_unchanged_by_a_cubic_angstrom_slip_at_its_coarse_grid(
     gated: GatedResult,
 ) -> None:
-    """The 0.2 nm run's unit: its potential tracks the 0.1 nm run's within the budget, not by 8."""
     ratio = float(
         np.sqrt(np.mean(gated.sampled["apbs_coarse"] ** 2))
         / np.sqrt(np.mean(gated.sampled["apbs"] ** 2))
@@ -318,7 +284,6 @@ def test_val06_2wcd_apbs_is_unchanged_by_a_cubic_angstrom_slip_at_its_coarse_gri
 
 
 def _pqr(walked: Walked, path: Path) -> Path:
-    """Write the protonated 2WCD frame in the model frame: stage 5's shift applied to every atom."""
     from nanopnp.charge.protonation import ProtonationTable
     from nanopnp.charge.stage import frame_shift_nm
 
@@ -334,7 +299,6 @@ def _pqr(walked: Walked, path: Path) -> Path:
 def test_val06_2wcd_the_recorded_leg_measures_the_azimuthal_averaging(
     walked: Walked, gated: GatedResult
 ) -> None:
-    """D9, recorded: APBS's ``spl4`` and ``smol`` from the PQR, our membrane imposed, per ring."""
     inputs = RecordedInputs(
         pqr=_pqr(walked, walked.root / "2wcd-model-frame.pqr"),
         raster=walked.raster,
@@ -364,20 +328,12 @@ def test_val06_2wcd_the_recorded_leg_measures_the_azimuthal_averaging(
 
 
 FOCUS_NM = 0.05
-"""The focused grid's spacing: half the gated leg's."""
 
 
 @pytest.mark.slow
 def test_val06_2wcd_a_focused_grid_confirms_apbs_converges_at_first_order_or_better(
     walked: Walked, gated: GatedResult, tmp_path: Path
 ) -> None:
-    """D8's premise: ``|phi(h) - phi(2h)|`` bounds APBS's error only at first order or better.
-
-    A 193^3 grid at 0.05 nm, centred on the axis at the probe of the largest
-    ``e^_A``, takes its faces from APBS's own 0.1 nm solution (focusing) and the
-    charge inside it (clipped). Over the probes it holds, the ratio of
-    ``phi(0.1) - phi(0.2)`` to ``phi(0.05) - phi(0.1)`` is ``2^p``.
-    """
     grid, probes, sampled = walked.grid, gated.probes, gated.sampled
     estimate = np.abs(sampled["apbs"] - sampled["apbs_coarse"])
     worst = probes.points_nm[int(np.argmax(estimate))]

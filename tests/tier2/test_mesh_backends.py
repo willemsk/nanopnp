@@ -1,23 +1,4 @@
-"""VER-54 at Tier 2: the reference fixture meshed by both backends, and solved on both (WP23).
-
-The shipped ClyA profile goes through ``inputs.profile``, stage 5 and stage 6 at
-the section 5.2.2 sizes on netgen and on Gmsh. Stage 5 runs once: its key does
-not name the backend (D1), so the second backend reads it from the store.
-
-What is gated: the three stage-6 gates on each mesh, one vocabulary, every
-profile vertex a mesh node, VER-10 on Gmsh at ``size_scale`` 1, 2, 4 and 8 (the
-D4 regression: without D4's fields Gmsh fails at 2 and 4), and the frozen case of
-WP22 D9 on both backends' meshes at ``size_scale`` 2 to 1e-3.
-
-The 1e-3 is argued, not fitted (WP23 plan, Design section 4). The two backends'
-conductances were measured 1.25e-4 apart at ``size_scale`` 2. Refining netgen's
-own mesh from ``size_scale`` 2 to 1 moves its conductance by 2.0e-4, so the
-backends differ by less than a refinement moves either, and the bound sits eight
-times above the measured value: it passes a mesher difference of the size a
-discretisation change makes, and fails one that is a different region or a
-dropped size field. Everything else is logged at INFO beside each other: counts,
-quality and the D9 wall statistics.
-"""
+"""VER-54 at Tier 2: the reference fixture meshed and solved on both backends."""
 
 from __future__ import annotations
 
@@ -42,13 +23,10 @@ from nanopnp.pipeline.run import (
 logger = logging.getLogger(__name__)
 
 FROZEN_SIZE_SCALE = 2.0
-"""WP22 D9's ``size_scale`` at Tier 2, on both backends' meshes."""
 
 CONDUCTANCE_RTOL = 1e-3
-"""The frozen case's bound on ``|G_gmsh / G_netgen - 1|``: 8 x the measured 1.25e-4."""
 
 PROFILE_VERTICES = 185
-"""The delivered reference polygon's vertex count (section 5.2.1)."""
 
 MESH_CASE = """\
 schema: nanopnp/case/v0.5
@@ -93,25 +71,21 @@ numerics:
   mesh: {{backend: {backend}, size_scale: {size_scale}}}
 outputs: [current]
 """
-"""WP22 D9: uncharged, so G is geometric; 1 M, +50 mV, ground *cis*, every correction ``none``."""
 
 
 @pytest.fixture(scope="module")
 def root(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Return the module's working directory."""
     return tmp_path_factory.mktemp("backends")
 
 
 @pytest.fixture(scope="module")
 def store(root: Path) -> Store:
-    """Return the module's own store: stage 5 is shared between the backends through it."""
     return Store(root / "store")
 
 
 def _mesh(
     root: Path, store: Store, backend: str, *, concentration: float = 1.0, size_scale: float = 1.0
 ) -> RunResult:
-    """Run the fixture through stage 6 on ``backend``."""
     case = root / f"{backend}-{concentration}-{size_scale}.case.yaml"
     case.write_text(
         MESH_CASE.format(
@@ -126,17 +100,15 @@ def _mesh(
 
 
 def _seconds(result: RunResult, stage: str) -> float:
-    """Return a stage's wall time in this run."""
     return next(entry.seconds for entry in result.stages if entry.name == stage)
 
 
+# FR-10
 def test_ver54_the_fixture_meshes_on_both_backends_to_one_vocabulary(
     gmsh_module: ModuleType, root: Path, store: Store
 ) -> None:
-    """FR-10: both meshes pass every stage-6 gate, name the same sets and keep every vertex."""
     netgen = _mesh(root, store, "netgen")
     gmsh = _mesh(root, store, "gmsh")
-    # D1: one region, assembled once.
     assert gmsh.artefacts["region"].hash == netgen.artefacts["region"].hash
     assert next(entry for entry in gmsh.stages if entry.name == "region").cached
     record = read_region(gmsh.artefacts["region"].payload[REGION_PAYLOAD])
@@ -173,13 +145,13 @@ def test_ver54_the_fixture_meshes_on_both_backends_to_one_vocabulary(
         )
 
 
+# NUM-30
 @pytest.mark.parametrize(
     ("concentration", "wall_nm"), [(1.0, 0.05), (3.0, 0.03505), (5.0, 0.02715)]
 )
 def test_ver54_gmsh_holds_the_wall_size_gate_at_three_wall_sizes(
     gmsh_module: ModuleType, root: Path, store: Store, concentration: float, wall_nm: float
 ) -> None:
-    """D9 of WP21 on Gmsh: the ceiling, and NUM-30 at 3 M and 5 M; the statistics recorded."""
     result = _mesh(root, store, "gmsh", concentration=concentration)
     sizing = result.artefacts["mesh"].summary["sizing"]
     statistics = sizing["wall_statistics"]  # type: ignore[index]
@@ -207,12 +179,6 @@ def test_ver54_gmsh_holds_the_wall_size_gate_at_three_wall_sizes(
 def test_ver54_gmsh_passes_ver10_at_every_size_scale(
     gmsh_module: ModuleType, root: Path, store: Store, size_scale: float
 ) -> None:
-    """D4's regression: Gmsh given the table alone fails VER-10 here at 2 and 4.
-
-    ``size_scale`` 1 is the first test's mesh. Stage 6 would abort on a failed
-    gate; the minima are asserted as well, so the verdict does not rest on the
-    abort alone, and logged.
-    """
     result = _mesh(root, store, "gmsh", size_scale=size_scale)
     summary = result.artefacts["mesh"].summary
     quality = summary["quality"]
@@ -236,7 +202,6 @@ def test_ver54_gmsh_passes_ver10_at_every_size_scale(
 def test_ver54_the_frozen_case_conducts_alike_on_both_backends_meshes(
     gmsh_module: ModuleType, root: Path, store: Store
 ) -> None:
-    """The same region measured by a solve: ``|G_gmsh / G_netgen - 1| <= 1e-3`` at size_scale 2."""
     conductance = {}
     elements = {}
     seconds = {}

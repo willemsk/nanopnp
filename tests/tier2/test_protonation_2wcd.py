@@ -1,12 +1,4 @@
-"""VER-57, FR-12: the prepared 2WCD dodecamer protonated at pH 7.5 with PROPKA (WP27).
-
-The dodecamer is protonated once per session by the ``protonated_2wcd`` fixture,
-through the stage API, in about a minute (WP27 D17). The golden is ``Q_net`` in
-stage 1's frame, measured once and pinned: a move of it is a change in PDB2PQR
-or PROPKA, or in what the stage gives them, and the failure names the versions.
-The CHARMM radii, the repaired termini and the unapplied states are checked
-against what ``.knowledge/07`` section 3 and the PHY-16 step-3 NOTE record.
-"""
+"""VER-57, FR-12: the prepared 2WCD dodecamer protonated at pH 7.5 with PROPKA."""
 
 from __future__ import annotations
 
@@ -43,19 +35,12 @@ pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
 logger = logging.getLogger(__name__)
 
 GOLDEN_Q_NET_E = -60
-"""``Q_net`` of the prepared dodecamer at pH 7.5, CHARMM and PROPKA, in stage 1's frame.
-
--5 e per chain, as measured in the crystal frame while planning (``.knowledge/07``
-section 3), re-measured through the stage and pinned.
-"""
 
 CHAINS = 12
-"""ClyA is a dodecamer (C12)."""
 
 
 @pytest.fixture(scope="module")
 def protonated(protonated_2wcd: Protonated2WCD) -> tuple[ProtonationTable, dict[str, Any]]:
-    """Return the protonated dodecamer's table and summary."""
     artefact = Store(protonated_2wcd.store).get(
         "nanopnp/protonation/v0.5", protonated_2wcd.protonation
     )
@@ -67,7 +52,6 @@ def protonated(protonated_2wcd: Protonated2WCD) -> tuple[ProtonationTable, dict[
 def test_ver57_q_net_of_the_prepared_dodecamer_is_its_golden(
     protonated: tuple[ProtonationTable, dict[str, Any]],
 ) -> None:
-    """``Q_net`` is an integer to 10⁻⁶ e and equals its golden, -5 e on every chain."""
     table, summary = protonated
     versions = summary["versions"]
     (q_net,) = table.q_net_e().tolist()
@@ -87,11 +71,6 @@ def test_ver57_q_net_of_the_prepared_dodecamer_is_its_golden(
 def test_ver57_every_heavy_radius_is_the_charmm_tables(
     protonated: tuple[ProtonationTable, dict[str, Any]],
 ) -> None:
-    """The PQR's radii and the stage-2 table agree on every heavy atom (D14).
-
-    Both are transcribed from one ``CHARMM.DAT``, so a disagreement would be a
-    defect in one of them, not a modelling choice.
-    """
     _, summary = protonated
     radii = summary["radii"]
     logger.info("radii: %s", radii)
@@ -103,11 +82,6 @@ def test_ver57_every_heavy_radius_is_the_charmm_tables(
 def test_ver57_pdb2pqr_repairs_twelve_terminal_oxygens(
     protonated: tuple[ProtonationTable, dict[str, Any]],
 ) -> None:
-    """One ``OXT`` per chain, added as ``OT2``; every other heavy atom registers or is a flip.
-
-    The flipped amide and ring atoms are recorded, not held to 0.01 Å; they land
-    0.13-0.40 Å from any atom given (``.knowledge/07`` section 3).
-    """
     table, summary = protonated
     registration = summary["registration"]
     logger.info("registration: %s", registration)
@@ -118,15 +92,10 @@ def test_ver57_pdb2pqr_repairs_twelve_terminal_oxygens(
     assert int((names == "OT2").sum()) == CHAINS
 
 
+# PHY-16
 def test_ver57_cys_285_and_the_lys_8_n_terminus_are_unapplied_as_their_pka_says(
     protonated: tuple[ProtonationTable, dict[str, Any]],
 ) -> None:
-    """``CYS 285`` is unapplied in every chain; ``LYS 8`` exactly where its N+ pKa is below 7.5.
-
-    The PHY-16 step-3 NOTE: CHARMM cannot hold ``CYS⁻``, and PDB2PQR never applies
-    a terminal pKa. The N+ pKa of ``LYS 8`` is 7.48-7.50 across the chains, so
-    which chains are unapplied is decided by the unrounded value.
-    """
     table, _ = protonated
     resid = table.residue_resid.tolist()
     for column in [index for index, number in enumerate(resid) if number == 285]:
@@ -152,12 +121,6 @@ def test_ver57_the_export_resupplied_beside_the_structure_is_the_payload(
     protonated_2wcd: Protonated2WCD,
     tmp_path: Path,
 ) -> None:
-    """Export, then ``inputs.pqr`` beside ``structure:``: the atom table, bit for bit.
-
-    The section 3.1 IF-02 export NOTE on the reference structure: every frame
-    registers where it stands, so none is moved, and the flipped atoms keep the
-    positions PDB2PQR gave them.
-    """
     table, _ = protonated
     store = Store(protonated_2wcd.store)
     produced = store.get("nanopnp/protonation/v0.5", protonated_2wcd.protonation)
@@ -211,17 +174,11 @@ scale = 1e9 if sys.platform == "darwin" else 1e6
 peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / scale
 print(json.dumps({"seconds": seconds, "peak_GB": peak, "q_net_e": done.summary["q_net_e"]}))
 """
-"""One cold frame in a fresh process: no frame cache, and a peak RSS that is this run's."""
 
 
 @pytest.mark.slow
 @pytest.mark.skipif(sys.platform == "win32", reason="resource is POSIX only")
 def test_ver57_cost_of_one_dodecamer_frame(protonated_2wcd: Protonated2WCD, tmp_path: Path) -> None:
-    """Wall clock and peak memory of protonating one frame of the dodecamer, cold; recorded.
-
-    WP27's Verification asks for both per frame: the reference ensemble is 50
-    frames, and frames run serially (D15).
-    """
     result = subprocess.run(
         [
             sys.executable,

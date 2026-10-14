@@ -1,31 +1,4 @@
-"""VER-56, PHY-20: ``poisson`` on a three-layer capacitor, against its closed form.
-
-``z in [0, L]`` with fluid on ``[0, a)`` and ``(b, L]`` and a membrane on
-``[a, b]``, a uniform ``rho_0`` everywhere, ``phi(0) = 0`` and ``phi(L) = V``, and
-natural conditions on the axis and on ``r = R``. The solution does not depend on
-``r``. Gauss gives ``D(z) = D_0 + rho_0 z``, continuous across both interfaces,
-and
-
-    phi(z) = -[D_0 F1(z) + rho_0 F2(z)],   F1 = int_0^z ds/(eps_0 eps_r),
-                                           F2 = int_0^z s ds/(eps_0 eps_r),
-
-with ``D_0 = -(V + rho_0 I2)/I1`` from ``phi(L) = V`` (the WP26 plan's *Design*
-section 3, [verified]). ``phi`` is piecewise quadratic in ``z``, so the P2 space
-on a mesh whose element edges lie on ``z = a`` and ``z = b`` contains it exactly,
-and the ``r``-weighted integrands are cubic. NGSolve's own estimate integrates them
-at order 2, one short, because it does not count the ``r`` weight; ``poisson``
-adds :data:`~nanopnp.physics.models.RADIAL_WEIGHT_ORDER` to both terms, so they
-are integrated exactly (NUM-07 NOTE on the ``r`` weight) and the Galerkin solution
-*is* the closed form up to the linear solve's round-off. Any larger error is a
-scale, a sign or a permittivity defect, and each of the three moves the answer by
-far more than the tolerance -- which is why this test localises an error the
-whole-model comparison of VAL-06 could not.
-
-The check values are the plan's, at ``L = 10``, ``a = 4``, ``b = 6`` nm,
-``eps_f = 78.15`` (``eps_r,f^0``, Gavish 2016, ``data/corrections/
-willems2020_nacl.yaml``), ``eps_s = 3.2`` (PHY-20), ``rho_0 = -1.0e7 C m^-3``,
-``V = 0.05 V`` and 298.15 K.
-"""
+"""VER-56, PHY-20: ``poisson`` on a three-layer capacitor, against its closed form."""
 
 from __future__ import annotations
 
@@ -49,7 +22,6 @@ NM = 1e-9
 
 
 def _integrals(z_nm: float) -> tuple[float, float]:
-    """Return ``F1(z)`` and ``F2(z)`` in SI, integrating ``1/eps`` and ``s/eps`` layer by layer."""
     first = second = 0.0
     for start, stop, relative in (
         (0.0, LOWER_NM, FLUID),
@@ -66,19 +38,16 @@ def _integrals(z_nm: float) -> tuple[float, float]:
 
 
 def displacement_at_zero() -> float:
-    """Return ``D_0``, in C m^-2, from ``phi(L) = V``."""
     first, second = _integrals(LENGTH_NM)
     return -(BIAS_V + RHO_C_M3 * second) / first
 
 
 def potential_V(z_nm: float) -> float:
-    """Return the closed-form ``phi(z)``, in volts."""
     first, second = _integrals(z_nm)
     return -(displacement_at_zero() * first + RHO_C_M3 * second)
 
 
 def test_ver56_the_closed_form_reproduces_the_plans_check_values() -> None:
-    """The oracle first: the arithmetic of *Design* section 3, to its printed digits."""
     assert displacement_at_zero() == pytest.approx(0.049391, abs=5e-7)
     assert potential_V(4.0) == pytest.approx(-0.169903, abs=5e-7)
     assert potential_V(5.0) == pytest.approx(-0.324892, abs=5e-7)
@@ -88,7 +57,6 @@ def test_ver56_the_closed_form_reproduces_the_plans_check_values() -> None:
 
 
 def _capacitor() -> object:
-    """Return the three glued layers, meshed with element edges on ``z = a`` and ``z = b``."""
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -116,13 +84,6 @@ def _capacitor() -> object:
 
 
 def test_ver56_poisson_reproduces_the_three_layer_capacitor_to_round_off() -> None:
-    """P2 contains the exact solution, so the error is the linear solve's round-off.
-
-    Sampled along several verticals, including the axis and the outer wall, at
-    points on and between the element edges; the tolerance is 1e-10 of
-    ``max |phi~|``. The membrane is where a wrong ``eps_s/eps_r,f^0`` shows, and
-    ``z = 5`` is its middle.
-    """
     import ngsolve as ngs
 
     mesh = _capacitor()
@@ -155,13 +116,8 @@ def test_ver56_poisson_reproduces_the_three_layer_capacitor_to_round_off() -> No
     assert error <= 1e-10 * scale, f"max |phi~_h - phi~| = {error:.3e} against {scale:.4f}"
 
 
+# PHY-03
 def test_ver56_the_capacitor_distinguishes_the_permittivity_it_was_given() -> None:
-    """The benchmark measures something: the membrane at the fluid's ``eps`` misses by far more.
-
-    Without an entry the membrane is ion-free water, ``eps_r,f^0`` (PHY-03), and the
-    middle of the membrane moves by volts -- so a model that dropped
-    ``solid_permittivities`` could not pass the test above by accident.
-    """
     import ngsolve as ngs
 
     mesh = _capacitor()
