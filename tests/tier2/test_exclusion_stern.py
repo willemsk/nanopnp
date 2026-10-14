@@ -1,30 +1,4 @@
-"""VER-59 at Tier 2: Gauss's law across a generated ion-exclusion shell (FR-15, VER-31).
-
-VER-31's Stern benchmark, posed through stages 5 to 10 rather than on a drawn
-slab: a planar Stern problem cannot be posed through stage 5's axisymmetric
-region, so the body is a long cylindrical tube, ``r`` in ``[3, 5]`` nm, and the
-check is cylindrical (WP30 plan, *Design* section 3). On a plane where ``phi`` is
-flat in ``z``, the charge-free shell ``R - a < r < R`` carries the flux of the
-mobile charge it encloses, so
-
-``phi(R - a) - phi(R) = lambda_enc ln(R/(R - a)) / (2 pi eps_0 eps_r,f0)``
-
-with ``lambda_enc = F sum z_i int_0^(R-a) c_i(r) 2 pi r dr`` read off the solved
-concentrations on that plane, and ``phi`` logarithmic in ``r`` across the shell,
-so that it takes the mean of its ends at ``sqrt(R (R - a))``.
-
-The plane is 12 nm from the bilayer, not on it. **[tested]** With the membrane
-on the analysis plane, as *Design* section 3 first placed it, the drop missed
-Gauss's law by 6 %: the bilayer, ``eps`` = 3.2 on the body's outer side, curves
-``phi`` in ``z`` across the 2 nm body, and ``d^2 phi/dz^2`` is not zero there
-although ``d phi/dz`` is. The body is therefore 30 nm long and the bilayer is
-moved 12 nm below its middle with ``geometry.membrane.centre_z_nm``.
-
-The fixed charge is a supplied ``volume_charge_density``, smooth across the body
-so that the consumer gates resolve it, equivalent per unit length to VER-31's
-``sigma_s`` = 0.0435 C m^-2 on the inner wall. ``pnp`` with every correction
-``none`` leaves the fluid and the shell at one permittivity, ``eps_r,f0``.
-"""
+"""VER-59 (with FR-15, VER-31): Gauss's law across a generated ion-exclusion shell."""
 
 from __future__ import annotations
 
@@ -59,22 +33,18 @@ from nanopnp.solve.state import restore
 logger = logging.getLogger(__name__)
 
 INNER_RADIUS_NM = 3.0
-"""``R``: the body's lumen-facing radius."""
 
+# VER-31
 OFFSET_NM = 0.25
-"""``a``: ``a_Na/2`` of ``willems2020_nacl`` and VER-31's ``lambda_S`` (WP30 D15)."""
 
+# VER-31
 SIGMA_C_M2 = 0.0435
-"""VER-31's ``sigma_s``, whose charge per unit length on ``r = R`` the band carries."""
 
 CENTRE_Z_NM = -12.0
-"""``geometry.membrane.centre_z_nm``: the bilayer 12 nm below the body's middle."""
 
 PLANE_Z_NM = 12.0
-"""The analysis plane in the model frame: the body's middle."""
 
 SIMPSON_INTERVALS = 400
-"""Simpson's rule on the plane over ``[0, R - a]``."""
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -108,7 +78,6 @@ outputs: [current]
 
 
 def _write_tube(path: Path) -> Path:
-    """Write the tube ``r`` in [3, 5], ``z`` in [-15, 15] nm as a profile document."""
     points = [(3.0, -15.0), (5.0, -15.0), (5.0, 15.0), (3.0, 15.0)]
     array = np.asarray(points, dtype=np.float64)
     profile = PoreProfile(
@@ -129,12 +98,6 @@ def _write_tube(path: Path) -> Path:
 
 
 def _write_band(directory: Path) -> Path:
-    """Write the fixed charge: ``sin^2`` across ``r`` in [3.2, 4.8], flat over 18 nm of ``z``.
-
-    In the model frame, about the analysis plane, and smooth everywhere, so the
-    consumer's quadrature gate resolves it; scaled so that its charge per unit
-    length on the plane is ``-sigma_s 2 pi R``.
-    """
     r = np.arange(3.0, 5.0 + 1e-9, 0.01)
     z = np.arange(-3.0, 27.0 + 1e-9, 0.01)
     across = np.where((r > 3.2) & (r < 4.8), np.sin(np.pi * (r - 3.2) / 1.6) ** 2, 0.0)
@@ -162,7 +125,6 @@ def _write_band(directory: Path) -> Path:
 
 @pytest.fixture(scope="module")
 def solved(tmp_path_factory: pytest.TempPathFactory):  # type: ignore[no-untyped-def]
-    """Walk the tube through stage 10 with the shell, and return the run and its solution."""
     work = tmp_path_factory.mktemp("stern-pipeline")
     case = work / "stern.case.yaml"
     case.write_text(
@@ -192,13 +154,11 @@ def solved(tmp_path_factory: pytest.TempPathFactory):  # type: ignore[no-untyped
 
 
 def _potential_V(solution, r_nm: float) -> float:  # type: ignore[no-untyped-def]
-    """Return ``phi`` on the analysis plane at ``r``, in V."""
     mesh = solution.space.mesh
     return float(solution.potential(mesh(r_nm, PLANE_Z_NM))) * solution.model.scales.potential_V
 
 
 def _enclosed_C_m(solution, outer_nm: float) -> float:  # type: ignore[no-untyped-def]
-    """Return the mobile charge per unit length within ``r < outer_nm`` on the plane, C/m."""
     mesh = solution.space.mesh
     scales = solution.model.scales
     r = np.linspace(0.0, outer_nm, SIMPSON_INTERVALS + 1)
@@ -210,8 +170,8 @@ def _enclosed_C_m(solution, outer_nm: float) -> float:  # type: ignore[no-untype
     return float(simpson(density * 2.0 * np.pi * r * 1e-9, x=r * 1e-9))
 
 
+# VER-31
 def test_ver59_the_drop_across_a_generated_shell_obeys_gausss_law(solved) -> None:  # type: ignore[no-untyped-def]
-    """``Delta phi = lambda_enc ln(R/(R - a)) / (2 pi eps_0 eps_r,f0)`` to 1 % (VER-31's own)."""
     result, solution = solved
     assert "exclusion" in result.artefacts["mesh"].parameters["materials"]  # type: ignore[operator]
     inner = INNER_RADIUS_NM - OFFSET_NM
@@ -230,17 +190,10 @@ def test_ver59_the_drop_across_a_generated_shell_obeys_gausss_law(solved) -> Non
         1e3 * expected_V,
         drop_V / expected_V - 1.0,
     )
-    # Measured 1.3e-4 at the default sizes; 3.6e-3 at size_scale 2, where the
-    # lumen's concentration is coarser and the enclosed charge is what moves.
     assert drop_V == pytest.approx(expected_V, rel=1e-2)
 
 
 def test_ver59_the_potential_is_logarithmic_across_the_shell(solved) -> None:  # type: ignore[no-untyped-def]
-    """``phi(sqrt(R (R - a)))`` is the mean of the ends to 1e-3 of the drop: no ions in the shell.
-
-    A shell that held ions would curve the profile by its own space charge; the
-    geometric mean is where the logarithm takes the mean of its ends.
-    """
     _, solution = solved
     inner = INNER_RADIUS_NM - OFFSET_NM
     ends = (_potential_V(solution, inner), _potential_V(solution, INNER_RADIUS_NM))
@@ -250,9 +203,7 @@ def test_ver59_the_potential_is_logarithmic_across_the_shell(solved) -> None:  #
 
 
 def test_ver59_the_shell_drop_is_a_tenth_of_the_wall_potential_or_more(solved) -> None:  # type: ignore[no-untyped-def]
-    """The margin the benchmark lives on: the shell is an effect, not a correction."""
     _, solution = solved
     wall = _potential_V(solution, INNER_RADIUS_NM)
     drop = _potential_V(solution, INNER_RADIUS_NM - OFFSET_NM) - wall
-    # 17.8 % measured: the drop is 6.54 mV on a wall potential of -36.8 mV.
     assert abs(drop) >= 0.1 * abs(wall)

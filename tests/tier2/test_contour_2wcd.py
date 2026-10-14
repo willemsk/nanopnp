@@ -1,12 +1,4 @@
-"""VER-51 on a real structure: the vendored 2WCD through stage 4.
-
-The root conftest's ``prepared_2wcd`` is chains A-L of the deposited entry, rigidly
-moved into a frame stage 1 admits (WP19 D14). Stages 1 to 3 are re-run here rather
-than shared with ``test_density_2wcd.py``, because ``--dist loadfile`` may place the
-two files on different workers (WP20 plan, work item 6). The gate must pass and the
-payload must load through ``load_profile``; every measurement is logged, and
-recorded in the WP20 plan's Outcomes beside the prototype's (Design §6).
-"""
+"""VER-51: the vendored 2WCD through stage 4; its gate passes and its profile loads."""
 
 from __future__ import annotations
 
@@ -30,7 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 def _case(tmp_path: Path, pdb: Path) -> Path:
-    """Write the 2WCD case: C12, the default density and contour blocks."""
     path = tmp_path / "2wcd.case.yaml"
     path.write_text(
         "schema: nanopnp/case/v0.5\n"
@@ -52,15 +43,8 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
 def test_ver51_2wcd_contour(
     prepared_2wcd: Prepared2WCD, seeded_2wcd: Seed2WCD, tmp_path: Path
 ) -> None:
-    """2WCD runs to stage 4: the gate passes and the payload is a loadable profile.
-
-    The gate's verdict is the assertion; the measurements are logged. The profile
-    is in the stage-1 frame, so its z extent brackets the constriction the plan
-    measured at z = -1.40 nm on the author's copy.
-    """
     result = run_case(
         _case(tmp_path, prepared_2wcd.path),
-        # Stages 1 to 4 from the session's seed, which ran stage 4's gate on this key.
         store=Store(seeded_2wcd(tmp_path / "store")),
         upto="contour",
         write=False,

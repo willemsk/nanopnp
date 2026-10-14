@@ -1,40 +1,4 @@
-"""VER-46 — example 07, from a PDB entry to a charged run, executed verbatim (FR-12 to FR-15).
-
-The README's two blocks run from a copy of ``examples/07-pdb-to-charged-run``, the
-``run`` block first. It prepares the entry with example 06's own ``prepare.py``
-(WP32 D5), walks every stage to an ePNP-NS solve under the validated model,
-exports the PQR and the charge, feeds the PQR back through ``inputs.pqr``, and
-turns both FR-15 switches on. The ``refused`` block re-supplies the exported
-lattice through ``inputs.charge``, and stage 7's quadrature-agreement gate must
-refuse it with exit 4 (WP32 D4, D8; VAL-15).
-
-Each oracle is a property of the model, not a transcribed number (WP32 D7), and
-fails loudly on a specific error:
-
-- (a) the walk records every :func:`~nanopnp.core.stages.walk_order` stage and no deviation,
-  with a deposited charge from a PDB2PQR protonation;
-- (b) ``Q_net`` is the integer the exported PQR's charge column sums to, parsed here
-  independently of nanopnp: a lost frame or residue moves it;
-- (c) the conservation report is in the manifest, each leg and each worst plane
-  below its recorded tolerance. Stage 7 would have exited 4 otherwise, so this
-  passes by construction; it is asserted because it is what the guide tells a user
-  to read;
-- (d) the negatively charged lumen is cation-selective, ``t+ > 1/2``, with the
-  FR-23 routes in agreement. A flipped sign or a lost charge puts ``t+`` near or
-  below the uncharged pore's infinite-dilution 0.396 (the WP32 plan, Design §1);
-- (e) the PQR fed back gives the same atom table and byte-identical deposit and
-  lattice files under a different charge key: the deposit depends on the atoms
-  alone (VER-23's reproducible payloads, WP32 D15);
-- (f) the switches are exactly the two deviations listed, the mesh carries an
-  ``exclusion`` material, and the region and mesh keys move;
-- (g) the exported charge is a ``nanopnp/field/v0.5`` areal charge density declaring
-  the manifest's ``Q_net``;
-- (h) the re-supplied lattice is refused at the quadrature-agreement check.
-
-The mesh is ``size_scale`` 4, for runtime (WP32 D6); the stabilisation mode is the
-case's default, ``none``, and is logged with the transport number. Block and stage
-durations are logged.
-"""
+"""VER-46 (with FR-12, FR-15, FR-23, VAL-15, VER-23): example 07, to a charged run."""
 
 from __future__ import annotations
 
@@ -70,26 +34,22 @@ logger = logging.getLogger(__name__)
 REPOSITORY = Path(__file__).resolve().parents[2]
 
 TIMEOUT_S = 1800.0
-"""Per command: the solve is the longest, a few minutes on one core (WP32 D9)."""
 
 Q_NET_TOL_E = 1e-6
-"""How far the PQR's charge column, and the manifest's ``Q_net``, may lie from each other."""
 
+# FR-15
 SWITCHES = {"charge.exclusion_offset_nm", "charge.dielectric_transition_nm"}
-"""The two FR-15 switches ``switches.case.yaml`` sets away from their validated ``0``."""
 
 Ran = tuple[Path, list[CommandResult], list[CommandResult]]
 
 
 def _read(path: Path) -> dict[str, object]:
-    """Return a record written through ``canonical``, its floats decoded."""
     decoded = decode_floats(json.loads(path.read_text(encoding="utf-8")))
     assert isinstance(decoded, dict)
     return decoded
 
 
 def _charge_record(example: Path, run: str) -> dict[str, object]:
-    """Return a run's manifest charge group's deposited record."""
     group = _read(example / run / "manifest.json")["charge"]
     assert isinstance(group, dict)
     record = group["charge"]
@@ -98,7 +58,6 @@ def _charge_record(example: Path, run: str) -> dict[str, object]:
 
 
 def _artefacts(example: Path, run: str) -> dict[str, dict[str, object]]:
-    """Return a run's manifest ``inputs.artefacts``: each stage's hash and its substitution."""
     inputs = _read(example / run / "manifest.json")["inputs"]
     assert isinstance(inputs, dict)
     artefacts = inputs["artefacts"]
@@ -107,12 +66,6 @@ def _artefacts(example: Path, run: str) -> dict[str, dict[str, object]]:
 
 
 def _pqr_charge_sums(path: Path) -> list[float]:
-    """Return each ``MODEL``'s sum of a PQR's charge column, read without nanopnp.
-
-    A PQR line carries, after the coordinates, the charge and the radius as the
-    last two whitespace-separated fields; that is the layout PDB2PQR writes and
-    the export copies.
-    """
     sums: list[list[float]] = [[]]
     for line in path.read_text(encoding="ascii").splitlines():
         if line.startswith("ENDMDL"):
@@ -124,7 +77,6 @@ def _pqr_charge_sums(path: Path) -> list[float]:
 
 @pytest.fixture(scope="module")
 def ran(tmp_path_factory: pytest.TempPathFactory) -> Ran:
-    """Copy the example; run the ``run`` block, then the ``refused`` one, which reads its export."""
     example = copy_example(
         REPOSITORY / "examples" / "07-pdb-to-charged-run",
         tmp_path_factory.mktemp("examples"),
@@ -149,8 +101,8 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> Ran:
     return example, walked, refused
 
 
+# FR-12, FR-14, FR-25
 def test_ver46_07_the_prepared_entry_walks_every_stage_to_a_charged_solve(ran: Ran) -> None:
-    """(a) Every stage keyed, no deviation, a deposited charge from PDB2PQR (FR-12-FR-14, FR-25)."""
     example, walked, _ = ran
     assert [result.argv[:2] for result in walked] == [
         ("python", "../06-pdb-to-mesh/prepare.py"),
@@ -173,14 +125,12 @@ def test_ver46_07_the_prepared_entry_walks_every_stage_to_a_charged_solve(ran: R
     assert isinstance(group, dict)
     assert group["charge"]["source"] == "deposited"  # type: ignore[index]
     assert group["protonation"]["source"] == "pdb2pqr"  # type: ignore[index]
-    # ``inspect run`` shows the report where the guide says to read it.
     # The path as the platform writes it: ``run\\manifest.json`` on Windows.
     assert str(Path("run") / "manifest.json") in walked[2].stdout
     assert '"conservation"' in walked[2].stdout
 
 
 def test_ver46_07_q_net_is_the_integer_the_exported_pqr_sums_to(ran: Ran) -> None:
-    """(b) The PQR's charge column, parsed here, sums to an integer: the manifest's ``Q_net``."""
     example, _, _ = ran
     (column,) = _pqr_charge_sums(example / "2wcd.pqr")
     assert abs(column - round(column)) < Q_NET_TOL_E, column
@@ -191,8 +141,8 @@ def test_ver46_07_q_net_is_the_integer_the_exported_pqr_sums_to(ran: Ran) -> Non
     logger.info("example 07: Q_net %.9f e, PQR column %.9f e", q_net, column)
 
 
+# PHY-19, QR-03
 def test_ver46_07_the_conservation_report_is_in_the_manifest_and_passes(ran: Ran) -> None:
-    """(c) Each leg and each worst plane below the tolerance the record carries (PHY-19, QR-03)."""
     example, _, _ = ran
     report = _charge_record(example, "run")["conservation"]
     assert isinstance(report, dict)
@@ -215,8 +165,8 @@ def test_ver46_07_the_conservation_report_is_in_the_manifest_and_passes(ran: Ran
     )
 
 
+# FR-23
 def test_ver46_07_the_negatively_charged_lumen_is_cation_selective(ran: Ran) -> None:
-    """(d) ``t+ > 1/2`` at 0.15 M and +50 mV, with the FR-23 routes in agreement (VER-46)."""
     example, _, _ = ran
     quantities = _read(example / "run" / "run.json")["quantities"]
     assert isinstance(quantities, dict)
@@ -233,12 +183,8 @@ def test_ver46_07_the_negatively_charged_lumen_is_cation_selective(ran: Ran) -> 
     assert agreement["relative_difference"] < ROUTE_AGREEMENT_TOLERANCE
 
 
+# FR-12, FR-13
 def test_ver46_07_the_exported_pqr_deposits_the_same_charge(ran: Ran) -> None:
-    """(e) Same atom table, byte-identical deposit and lattice, under another key (FR-12, FR-13).
-
-    The protonation payloads are not compared: the PDB2PQR run's carries PROPKA's
-    group table, which a PQR does not hold (WP32 D7).
-    """
     example, _, _ = ran
     store = Store(example / "store")
     left, right = _artefacts(example, "run"), _artefacts(example, "run-pqr")
@@ -267,7 +213,6 @@ def test_ver46_07_the_exported_pqr_deposits_the_same_charge(ran: Ran) -> None:
 
 
 def test_ver46_07_both_switches_are_deviations_and_mesh_an_exclusion_material(ran: Ran) -> None:
-    """(f) Exactly the two ``charge.*`` switches listed; ``exclusion`` meshed; new region, mesh."""
     example, walked, _ = ran
     manifest = _read(example / "run-switches" / "manifest.json")
     deviations = manifest["deviations"]
@@ -287,7 +232,6 @@ def test_ver46_07_both_switches_are_deviations_and_mesh_an_exclusion_material(ra
 
 
 def test_ver46_07_the_exported_charge_is_an_areal_density_declaring_q_net(ran: Ran) -> None:
-    """(g) A ``nanopnp/field/v0.5`` areal charge density declaring the run's ``Q_net`` (IF-05)."""
     example, _, _ = ran
     header = yaml.safe_load((example / "charge.field.yaml").read_text(encoding="utf-8"))
     assert header["schema"] == "nanopnp/field/v0.5"
@@ -297,8 +241,8 @@ def test_ver46_07_the_exported_charge_is_an_areal_density_declaring_q_net(ran: R
     assert header["q_net_e"] == pytest.approx(q_net, abs=1e-9)
 
 
+# QR-12, VAL-15
 def test_ver46_07_the_resupplied_lattice_is_refused_by_the_quadrature_gate(ran: Ran) -> None:
-    """(h) Exit 4, naming the quadrature-agreement check and the supplied field (VAL-15, QR-12)."""
     _, _, refused = ran
     (result,) = refused
     assert result.returncode == 4
@@ -310,7 +254,6 @@ def test_ver46_07_the_resupplied_lattice_is_refused_by_the_quadrature_gate(ran: 
 def test_ver62_07_the_charged_run_holds_the_number_stability_golden(
     ran: Ran, number_stability: NumberStability
 ) -> None:
-    """VER-62: the charged run's numbers hold the golden recorded on v0.4.0's tree (G10)."""
     example = ran[0]
     quantities = _read(example / "run" / "run.json")["quantities"]
     group = _read(example / "run" / "manifest.json")["geometry_and_mesh"]

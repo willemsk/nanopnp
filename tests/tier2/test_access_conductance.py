@@ -1,42 +1,4 @@
-"""VER-17: the Maxwell-Hall access conductance of an uncharged pore, to 2 %.
-
-    G = sigma [ L/(pi a^2) + 1/(2a) ]^-1    ==    sigma [ 4L/(pi d^2) + 1/d ]^-1
-
-The bracket is a resistance per unit conductivity: a cylinder of length ``L`` and
-radius ``a``, plus the access resistance of the two mouths, ``1/(4 sigma a)``
-apiece. The two forms above are the same expression in the radius and in the
-diameter, and they are written out together because the widely-copied variant
-with ``1/a`` in place of ``1/(2a)`` is wrong by a factor of two in the access
-term — which for this pore is 19.5 % of the total resistance and would show up as
-a 16 % error in ``G``, well outside the tolerance but comfortably inside the range
-where a result still looks plausible.
-
-This is the one Tier-2 benchmark that pins an *absolute* current. VER-11 checks
-that the two extraction routes agree, which they would even if both were scaled
-by the same wrong constant; only a closed form catches that. So the ``2 pi`` of
-the NUM-27 convention, the NUM-09 current scale ``F D_0 c_0 a``, and the sign
-that makes ``G`` positive are all under test here and nowhere else.
-
-Why this runs classical and uncharged
--------------------------------------
-The closed form needs one bulk conductivity ``sigma``. With the corrections
-active ``mu_i`` varies with ``<c>`` and with the distance to the wall, so there
-is no single ``sigma`` for the formula to be compared against; the run is
-therefore ``pnp`` with ``classical=True``, which is the registered ``none``
-correction rather than a code branch (PHY-21). The pore is uncharged because a
-double layer would add surface conduction that the formula does not contain — and
-that economy is what makes the benchmark affordable: with no double layer there
-is no ``lambda_D/5`` wall grading to pay for, and the elements can be spent on the
-reservoir instead, where the access resistance actually lives.
-
-``sigma`` is derived from the model's own mobilities rather than quoted:
-``sigma = F sum_i z_i^2 mu_i^0 c_i``, the infinite-dilution conductivity, which is
-what a classical run with no mobility correction actually transports. It is
-12.6 S/m for 1 M NaCl here, against about 8.5 S/m measured for real 1 M brine;
-the difference is the concentration correction this configuration has switched
-off, and comparing against the measured value instead would be comparing two
-different models.
-"""
+"""VER-17 (with NUM-09, NUM-27 and PHY-21): Maxwell-Hall access conductance of an uncharged pore."""
 
 import logging
 import math
@@ -57,39 +19,17 @@ PORE_RADIUS_NM = 2.0
 MEMBRANE_THICKNESS_NM = 13.0
 CONCENTRATION_M = 1.0
 BIAS_V = 0.025
-"""Small enough that the response is ohmic, large enough to be well above the
-convergence floor. The formula is a linear-response result."""
 
+# QR-01, VER-17
 TOLERANCE = 0.02
-"""QR-01 and VER-17: "better than 2 %"."""
 
 RESERVOIR_RADII_NM = (50.0, 100.0)
-"""Two reservoirs, because the closed form assumes access to infinity.
-
-With ``a = 2 nm`` and ``L = 13 nm`` the pore term is ``L/(pi a^2) = 1.035e9 /m``
-and the access term ``1/(2a) = 2.5e8 /m``, so access is 19.5 % of the total. A
-finite reservoir truncates that term by of order ``a/R``, which at 50 nm is a few
-per cent of 19.5 %, so about 1 % on ``G`` — inside the tolerance, but not by
-enough to leave unmeasured. Running two radii turns that into a measurement: if
-``G`` barely moves between them, the benchmark is testing the discretisation
-rather than the truncation."""
 
 MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
-"""An insulating membrane, as the closed form assumes. Not a fitted parameter:
-Maxwell-Hall is derived for a perfectly insulating septum, and any value far
-below the electrolyte's 78 approximates that. Leaving it unset would put the
-electrolyte's permittivity in the membrane, letting the field leak through the
-septum and changing the very geometry the benchmark is about."""
 
 
+# PHY-14, VER-05
 def bulk_conductivity_S_m(electrolyte: Electrolyte, concentration_M: float) -> float:
-    """Return ``sigma = F sum_i z_i^2 mu_i^0 c_i``, in S/m.
-
-    The infinite-dilution conductivity, which is what a run with the ``none``
-    mobility correction transports. ``mu_i^0 = D_i^0 / V_T`` is the Nernst-
-    Einstein relation, which holds at infinite dilution and only there (PHY-14,
-    VER-05) — that is precisely why this benchmark runs classical.
-    """
     concentration_mol_m3 = concentration_M * 1.0e3
     return FARADAY * math.fsum(
         ion.valence**2 * ion.mobility_0 * concentration_mol_m3 for ion in electrolyte.species
@@ -99,7 +39,6 @@ def bulk_conductivity_S_m(electrolyte: Electrolyte, concentration_M: float) -> f
 def maxwell_hall_conductance_S(
     conductivity_S_m: float, *, radius_nm: float, length_nm: float
 ) -> float:
-    """Return ``G = sigma [L/(pi a^2) + 1/(2a)]^-1``, in siemens."""
     radius_m = radius_nm * 1e-9
     length_m = length_nm * 1e-9
     resistance = length_m / (math.pi * radius_m**2) + 1.0 / (2.0 * radius_m)
@@ -107,7 +46,6 @@ def maxwell_hall_conductance_S(
 
 
 def _solve(reservoir_radius_nm: float) -> float:
-    """Return the conductance of the uncharged pore in one reservoir, in siemens."""
     pore = CylindricalPoreGeometry(
         pore_radius_nm=PORE_RADIUS_NM,
         membrane_thickness_nm=MEMBRANE_THICKNESS_NM,
@@ -119,9 +57,8 @@ def _solve(reservoir_radius_nm: float) -> float:
         concentration_M=CONCENTRATION_M,
         solid_permittivities=MEMBRANE_PERMITTIVITY,
     )
-    # No wall grading: the pore is uncharged, so there is no double layer to
-    # resolve. The refinement goes to the mouth, where the current density is
-    # singular and the access resistance is set.
+    # Uncharged, so no double layer needs wall grading; the refinement goes to the
+    # mouth, where the access resistance is set.
     mesh = pore.generate(maxh_nm=reservoir_radius_nm / 12.0, wall_h_nm=0.5)
     bias_tilde = BIAS_V / model.scales.potential_V
     solution = model.solve(
@@ -147,13 +84,11 @@ def _solve(reservoir_radius_nm: float) -> float:
 
 @pytest.fixture(scope="module")
 def conductances() -> dict[float, float]:
-    """Return the measured conductance at each reservoir radius, in siemens."""
     return {radius: _solve(radius) for radius in RESERVOIR_RADII_NM}
 
 
 @pytest.fixture(scope="module")
 def analytic_S() -> float:
-    """Return the Maxwell-Hall conductance for this pore and electrolyte."""
     electrolyte = Electrolyte.from_parameter_file()
     conductivity = bulk_conductivity_S_m(electrolyte, CONCENTRATION_M)
     analytic = maxwell_hall_conductance_S(
@@ -163,11 +98,11 @@ def analytic_S() -> float:
     return analytic
 
 
+# QR-01
 @pytest.mark.parametrize("radius_nm", RESERVOIR_RADII_NM)
 def test_ver17_access_conductance_matches_maxwell_hall(
     conductances: dict[float, float], analytic_S: float, radius_nm: float
 ) -> None:
-    """``G`` from the solve is the closed form to better than 2 % (VER-17, QR-01)."""
     measured = conductances[radius_nm]
     error = abs(measured - analytic_S) / analytic_S
     logger.info(
@@ -190,13 +125,6 @@ def test_ver17_access_conductance_matches_maxwell_hall(
 def test_ver17_the_finite_reservoir_is_not_what_the_benchmark_measures(
     conductances: dict[float, float],
 ) -> None:
-    """Doubling the reservoir must move ``G`` by well under the tolerance.
-
-    The closed form assumes access to infinity. If ``G`` moved appreciably
-    between a 50 nm and a 100 nm reservoir, the 2 % above would be measuring the
-    truncation of the domain rather than the accuracy of the axisymmetric
-    discretisation, and passing it would mean nothing.
-    """
     small, large = (conductances[radius] for radius in RESERVOIR_RADII_NM)
     drift = abs(large - small) / large
     logger.info(
@@ -211,16 +139,6 @@ def test_ver17_the_finite_reservoir_is_not_what_the_benchmark_measures(
 
 
 def test_ver17_the_access_term_is_a_fifth_of_the_resistance_and_carries_the_factor_two() -> None:
-    """The variant with ``1/a`` would be 16 % out, so the two forms are checked against each other.
-
-    Two claims, both arithmetic and both cheap. First, that the radius form and
-    the diameter form of VER-17 are the same expression — a transcription error
-    between them is the easiest way to get this wrong. Second, that the access
-    term is a large enough share of the total for the factor of two in it to
-    matter: 19.5 % here, so halving the access resistance shifts ``G`` by about
-    10 % and doubling it by about 16 %, either of which is a plausible-looking
-    wrong answer.
-    """
     radius_m = PORE_RADIUS_NM * 1e-9
     diameter_m = 2.0 * radius_m
     length_m = MEMBRANE_THICKNESS_NM * 1e-9

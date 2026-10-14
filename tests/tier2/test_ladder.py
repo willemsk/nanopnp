@@ -1,26 +1,4 @@
-"""The NUM-18 ladder end to end, and the warm start the whole thing rests on.
-
-Everything here is about ``transfer``. It is the one genuinely new mechanism in
-the continuation package and the one place a silent error would live: an
-interpolation that landed the potential on the wrong component, or that carried
-the NUM-02 log variable across as though it were the concentration, would hand
-Newton a plausible initial guess for a different problem, converge, and be wrong.
-
-The property that catches all of that at once is **idempotence**: a converged
-rung, transferred onto its own model's space and re-solved, must cost zero Newton
-iterations. Nothing about the state has changed, so nothing about the answer may.
-A transfer that scrambled a component would need iterations to recover, and one
-that lost a field would need many. It is also the property that only works
-because of NUM-16's relative-update convergence test: measured on the residual
-alone, relative to the residual on entry, re-solving an already-converged state
-demands another six orders of magnitude from a residual already at its floor, and
-this test would fail on every rung.
-
-The ladder is run on a deliberately small pore at mild conditions. It is a
-structural test — every stage completes, the fields survive the two space
-changes, the record is complete — not a physics one; §8.2 criterion 2 is where
-the hard corner of the envelope is met, in ``test_envelope.py``.
-"""
+"""NUM-18 (with NUM-02, NUM-12, NUM-13, NUM-16, FR-25, PHY-22): the ladder and warm starts."""
 
 import logging
 
@@ -48,16 +26,9 @@ SURFACE_CHARGE_C_M2 = -0.02
 MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 
 
+# NUM-13
 @pytest.fixture(scope="module")
 def stabilised() -> LadderResult:
-    """Climb the same pore in ``reference``, for the NUM-13 per-rung record.
-
-    Shorter than the fixture below on purpose: the charge ramp is one step and the
-    salt sweep is skipped, because what is under test is *which mode each rung was
-    assembled in*, not the path. It is still a real climb through stage 8, so a
-    mode that failed to assemble on a rung fails here rather than being asserted
-    away on a rung list built without solving.
-    """
     mesh = PORE.generate(maxh_nm=3.0, wall_h_nm=0.5)
     rungs = default_ladder(
         mesh,
@@ -82,22 +53,10 @@ def stabilised() -> LadderResult:
     return result
 
 
+# NUM-18, PHY-22
 def test_num13_every_coupled_rung_of_a_reference_ladder_reports_that_mode(
     stabilised: LadderResult,
 ) -> None:
-    """The mode is on every rung of the climb, not only the one that reports a number.
-
-    The ladder is a sequence of warm starts. A mode switched on at the last rung
-    would ask that rung to converge from a state produced by a different operator,
-    while presenting as a warm start -- and the record would show one mode for a
-    run that used two. So this is asserted per rung, from the model each rung was
-    actually assembled with, rather than from the argument ``default_ladder`` was
-    given (NUM-13, NUM-18, FR-25).
-
-    Stages 1 and 2 solve for ``phi`` alone and report ``none``, which is the honest
-    answer and not a gap: there is no transport to stabilise, and an unstabilised
-    operator is the ``none`` model rather than the absence of a choice (PHY-22).
-    """
     by_stage: dict[int, list[str]] = {}
     for record in stabilised.rungs:
         by_stage.setdefault(record.stage, []).append(record.stabilisation)
@@ -125,12 +84,6 @@ def test_num13_every_coupled_rung_of_a_reference_ladder_reports_that_mode(
 def test_num12_the_reference_ladder_measures_the_cell_peclet_it_ran_at(
     stabilised: LadderResult,
 ) -> None:
-    """A number recorded without its cell Peclet cannot be attributed later (NUM-12).
-
-    The measurement is a warning and never a gate, so what is asserted here is that
-    it *happened* and that it is on the record -- not that it came out small. The
-    value itself is reported, because section 7.4 reads it beside the current.
-    """
     measured = stabilised.peclet
     assert measured is not None, "a ladder whose top rung solves transport must measure Pe_K"
     logger.info(
@@ -151,13 +104,6 @@ def test_num12_the_reference_ladder_measures_the_cell_peclet_it_ran_at(
 
 @pytest.fixture(scope="module")
 def ladder() -> LadderResult:
-    """Run the whole nine-stage ladder once and share the result.
-
-    The salt is swept from the ladder's 0.05 M start to 0.5 M, so stage 9 is
-    exercised rather than skipped, and the charge ramp is present so stage 4 is
-    too. Two sub-steps apiece: this is a structural test and the ramps only need
-    to have more than one rung for the transfer between them to be under test.
-    """
     mesh = PORE.generate(maxh_nm=3.0, wall_h_nm=0.5)
     rungs = default_ladder(
         mesh,
@@ -196,7 +142,6 @@ def ladder() -> LadderResult:
 
 
 def test_num18_every_stage_of_the_ladder_completes(ladder: LadderResult) -> None:
-    """All nine stages run, in order, and the top of the ladder is ePNP-NS."""
     stages = [record.stage for record in ladder.rungs]
     assert stages == sorted(stages)
     assert set(stages) == {1, 2, 3, 4, 5, 6, 7, 8, 9}
@@ -210,7 +155,6 @@ def test_num18_every_stage_of_the_ladder_completes(ladder: LadderResult) -> None
 def test_num18_every_nonlinear_rung_carries_a_convergence_record(
     ladder: LadderResult,
 ) -> None:
-    """A rung with no Newton record has not been solved, whatever it returned."""
     for record in ladder.rungs:
         if record.stage in (1,):
             # Linear Poisson-Boltzmann is a single linear solve and has none.
@@ -223,13 +167,6 @@ def test_num18_every_nonlinear_rung_carries_a_convergence_record(
 def test_num18_the_two_space_changes_carry_the_fields_they_should(
     ladder: LadderResult,
 ) -> None:
-    """Stage 3 adds the concentrations to ``phi``; stage 6 adds ``u`` and ``p``.
-
-    These are the only two transitions in the default ladder that change the
-    field set, and they are exactly what ``CoupledModel.solve`` cannot warm-start
-    on its own. The record says which fields came across warm and which started
-    cold, so a transfer that silently cold-started everything would show here.
-    """
     by_stage = {record.stage: record for record in ladder.rungs}
 
     third = by_stage[3]
@@ -240,27 +177,15 @@ def test_num18_the_two_space_changes_carry_the_fields_they_should(
     assert POTENTIAL in sixth.transferred_fields
     assert set(sixth.cold_fields) == {VELOCITY, PRESSURE}
 
-    # Everything after stage 6 transfers the whole field set.
     for record in ladder.rungs:
         if record.stage > 6:
             assert record.cold_fields == (), record.summary()
 
 
+# NUM-16
 def test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing(
     ladder: LadderResult,
 ) -> None:
-    """The warm-start idempotence the whole ladder rests on (NUM-16, NUM-18).
-
-    The converged top of the ladder is transferred onto its *own* model's space
-    and re-solved with the same arguments. The state has not changed, so Newton
-    must recognise that at once and the re-solved state must be the one it
-    started from.
-
-    "At once" is at most one iteration (zero when the entry residual is already
-    below the absolute floor; one when the undamped update test evaluates the
-    direction to confirm convergence). More than that means the transfer is
-    lossy, and the ladder is paying for it at every rung.
-    """
     solution = ladder.solution
     model = solution.model
     mesh = solution.space.mesh
@@ -297,8 +222,6 @@ def test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing
     )
     assert again.newton.forced_steps == 0
 
-    # The state may not move by more than the tolerance it converged to: one
-    # damped step along a direction of relative size <= rtol.
     drift = again.state.vec.CreateVector()
     drift.data = again.state.vec - solution.state.vec
     relative = drift.Norm() / solution.state.vec.Norm()
@@ -309,13 +232,6 @@ def test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing
 def test_num18_the_transfer_preserves_the_potential_across_a_space_change(
     ladder: LadderResult,
 ) -> None:
-    """``phi`` interpolated onto a larger space is the same function it was.
-
-    The space change is what makes the transfer necessary and what makes it able
-    to go wrong. Checked as a *function*, in L2 over the whole domain, not
-    coefficient by coefficient: the P2 basis is hierarchical, so equal functions
-    need not have equal coefficient vectors on two different spaces.
-    """
     mesh = ladder.solution.space.mesh
     rungs = default_ladder(
         mesh,
@@ -349,13 +265,6 @@ def test_num18_the_transfer_preserves_the_potential_across_a_space_change(
 
 
 def test_fr25_the_ladder_record_can_reconstruct_the_run(ladder: LadderResult) -> None:
-    """A continuation result is not reconstructible from its final state alone.
-
-    The path is part of how the answer was obtained, so FR-25 needs the rungs,
-    their models, the mesh they ran on and the damping they needed — in
-    particular which rungs went below 0.1, which is what the end-of-phase report
-    asks for.
-    """
     summary = ladder.summary()
     assert summary["stages"] == [1, 2, 3, 4, 5, 6, 7, 8, 9]
     assert summary["mesh"]["elements"] > 0

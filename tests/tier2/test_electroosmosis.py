@@ -1,31 +1,4 @@
-"""VER-14 and VER-15: electro-osmosis in a cylindrical capillary.
-
-Rice & Whitehead, *J. Phys. Chem.* **69**, 4017 (1965). For a capillary of
-radius ``a`` with a Debye-Hueckel double layer of zeta potential ``zeta`` under a
-uniform axial field ``E``, the fully developed axial velocity is
-
-    u_z(r) = -(eps zeta E / eta) [ 1 - I0(kappa r) / I0(kappa a) ]
-
-which in the NUM-09 variables — potential in ``V_T``, velocity in
-``u_0 = eps V_T^2/(eta L_0)``, lengths in the mesh's nanometre — carries no
-material constants at all:
-
-    u~_z(r) = E~ zeta~ [ I0(r/lambda) / I0(a/lambda) - 1 ]
-
-VER-15 is its thin-double-layer limit: as ``lambda/a -> 0`` the centreline
-velocity approaches the Helmholtz-Smoluchowski slip ``-zeta~ E~``, and the
-deviation is exactly ``1/I0(a/lambda)``, which is the asymptotic rate the
-acceptance criterion asks about.
-
-The radial part of the electrical body force, ``2 S psi~ psi~'``, is a pure
-gradient and is balanced entirely by the pressure. It is taken into the pressure
-here — the body force is built from the *applied* potential ``-E~ z`` — which is
-the same decomposition Rice & Whitehead make and which leaves ``p~ = 0``, so the
-traction-free condition at the two ends is satisfied exactly rather than
-approximately. The forms under test are unchanged by that choice: the viscous
-operator with its hoop term, the axisymmetric divergence, the pressure coupling
-and the PHY-08 body force all appear as they do in the coupled model.
-"""
+"""VER-14 and VER-15 (with NUM-09, PHY-08): electro-osmosis in a capillary."""
 
 import ngsolve as ngs
 import numpy as np
@@ -46,13 +19,11 @@ from nanopnp.physics.pb import solve_pb
 AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)
 RADIUS_NM, LENGTH_NM = 2.0, 8.0
 ZETA, FIELD = 1.0, 0.5
-"""Wall potential in ``V_T`` and applied axial field in ``V_T`` per nm."""
 
 
 def _electroosmotic_flow(
     debye_length_nm: float, *, maxh_nm: float = 0.2
 ) -> tuple[ngs.Mesh, ngs.GridFunction, ngs.GridFunction]:
-    """Solve Debye-Hueckel then Stokes, and return the mesh, velocity and pressure."""
     mesh = CylinderGeometry(radius_nm=RADIUS_NM, length_nm=LENGTH_NM).generate(
         maxh_nm=maxh_nm, wall_h_nm=min(maxh_nm, debye_length_nm / 4.0)
     )
@@ -98,7 +69,6 @@ def _electroosmotic_flow(
 
 
 def _exact_profile(radii: np.ndarray, debye_length_nm: float) -> np.ndarray:
-    """Return the Rice & Whitehead profile in the nondimensional variables."""
     return FIELD * ZETA * (i0(radii / debye_length_nm) / i0(RADIUS_NM / debye_length_nm) - 1.0)
 
 
@@ -107,13 +77,6 @@ def _exact_profile(radii: np.ndarray, debye_length_nm: float) -> np.ndarray:
     [(2.0, "thick double layer, kappa a = 1"), (0.2, "thin double layer, kappa a = 10")],
 )
 def test_ver14_rice_and_whitehead_capillary_profile(debye_length_nm: float, regime: str) -> None:
-    """The coupled Poisson-Stokes velocity profile, in both double-layer regimes.
-
-    The thick case has the double layer filling the capillary and the thin case
-    has it confined to a tenth of the radius; a solver that had dropped the hoop
-    term or the ``u_r/r`` in the divergence would fail the second in particular,
-    where the shear is concentrated near the wall.
-    """
     mesh, velocity, pressure = _electroosmotic_flow(debye_length_nm)
     radii = np.linspace(0.0, RADIUS_NM, 41)
     midplane = 0.5 * LENGTH_NM
@@ -133,12 +96,6 @@ def test_ver14_rice_and_whitehead_capillary_profile(debye_length_nm: float, regi
 
 
 def test_ver15_helmholtz_smoluchowski_limit_and_its_approach_rate() -> None:
-    """``u_slip -> -eps zeta E / eta`` as ``lambda/a -> 0``, at the rate ``1/I0(kappa a)``.
-
-    Asserting only the limit would be satisfied by any solver that happens to
-    saturate; the deviation from it is a closed form of its own, and matching
-    that is the stronger statement the acceptance criterion asks for.
-    """
     slip = -ZETA * FIELD
     midplane = 0.5 * LENGTH_NM
     deviations = []

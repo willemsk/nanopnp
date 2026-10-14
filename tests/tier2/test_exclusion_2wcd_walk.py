@@ -1,12 +1,4 @@
-"""VER-59 on a real structure: 2WCD's charged walk with the shell and a derived ``chi``.
-
-With ``a`` = 0.25 nm and ``delta`` = 0.15 nm, WP28's charged walk at ``size_scale``
-4 runs to stage 12 with every gate passing, and its manifest names both switches
-and the mesh's ``exclusion`` material. Split from ``test_exclusion_2wcd.py`` (WP33
-D7): only this walk needs the session's protonation, so only this file waits on
-it. Stages 1 to 4, the registration and the protonation come from the session's
-seeds; the shell gives stage 5 a key of its own.
-"""
+"""VER-59: 2WCD's charged walk with the ion-exclusion shell and a derived chi."""
 
 from __future__ import annotations
 
@@ -70,7 +62,6 @@ def registered(
     seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ):  # type: ignore[no-untyped-def]
-    """Return the store, the structure block and the membrane block registering 2WCD."""
     root = tmp_path_factory.mktemp("2wcd-shell-walk")
     store = Store(seeded_protonated_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
@@ -80,7 +71,6 @@ def registered(
 def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(  # type: ignore[no-untyped-def]
     registered, number_stability: NumberStability, exclusion_2wcd: Exclusion2WCD
 ) -> None:
-    """WP28's charged walk with both switches on: every gate, both switches and the material."""
     root, store, structure, geometry = registered
     case = root / "solve.case.yaml"
     charge = (
