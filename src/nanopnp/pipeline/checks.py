@@ -858,8 +858,8 @@ def check_operating_point(document: CaseDocument) -> None:
 
 
 def check_referenced_files(document: CaseDocument) -> None:
-    # Every ``inputs:`` key, read from the schema: a key added later is checked too.
     """Verify that every external file a case document references exists on disk."""
+    # Every ``inputs:`` key, read from the schema: a key added later is checked too.
     for leaf in type(document.inputs).model_fields:
         supplied = getattr(document.inputs, leaf)
         if supplied is not None and supplied.path is not None:

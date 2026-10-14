@@ -28,17 +28,17 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 logger = logging.getLogger(__name__)
 
+# Gmsh's element type for a three-node triangle.
 _TRIANGLE = 2
-"""Gmsh's element type for a three-node triangle."""
 
+# Gmsh's element type for a two-node line.
 _LINE = 1
-"""Gmsh's element type for a two-node line."""
 
+# Extra samples per curve above ``ceil(L / h)`` on each ``Distance`` field (WP23 D3).
 _SAMPLING_MARGIN = 2
-"""Extra samples per curve above ``ceil(L / h)`` on each ``Distance`` field (WP23 D3)."""
 
+# Numbers the models this module adds, so a session already open never sees a clash.
 _MODEL_IDS = itertools.count()
-"""Numbers the models this module adds, so a session already open never sees a clash."""
 
 
 class GmshMeshingError(RuntimeError):

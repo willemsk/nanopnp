@@ -10,6 +10,7 @@ from nanopnp.core.typing import Expression, IntegralTerm, Mesh, Numeric, Option
 
 Symmetry: TypeAlias = Literal["axisymmetric", "planar"]
 
+# The minimum order on a form carrying 1/r: SPECIFICATION.md NUM-07.
 SINGULAR_MIN_ORDER = 3
 
 NGSOLVE_INTEGRATE_ORDER = 5

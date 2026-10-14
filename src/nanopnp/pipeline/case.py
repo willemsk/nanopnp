@@ -45,7 +45,7 @@ from nanopnp.pipeline.checks import (
     require_runnable,
 )
 
-# FR-04: 0.25-0.5 A
+# FR-04's density grid spacing, 0.25-0.5 Å (SPECIFICATION.md section 5.3.1 NOTE).
 GRID_SPACING_RANGE_NM: tuple[float, float] = (0.025, 0.05)
 
 

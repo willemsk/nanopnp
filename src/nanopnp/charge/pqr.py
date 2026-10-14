@@ -63,8 +63,8 @@ PARENT_RESIDUE: Mapping[str, str] = {
 }
 """Protonation-variant residue names and the parent each is written as (PHY-16 step-3 NOTE)."""
 
+# The record types that carry an atom.
 _RECORDS = ("ATOM", "HETATM")
-"""The record types that carry an atom."""
 
 MAX_COORDINATE_A = 9999.999
 """The largest coordinate the eight-character ``%8.3f`` column holds."""

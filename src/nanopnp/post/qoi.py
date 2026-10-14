@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 TWO_PI = 2.0 * math.pi
 
+# NUM-26's declared tolerance, relative: below the |RR - 1| of order 0.1 it protects.
 ROUTE_AGREEMENT_TOLERANCE = 1.0e-3
 
 

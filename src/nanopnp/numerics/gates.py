@@ -16,12 +16,14 @@ from nanopnp.core.typing import Expression, Mesh
 
 logger = logging.getLogger(__name__)
 
+# Steric diameters a_i (Bazant 2009; a model parameter) and a_0: SPECIFICATION.md PHY-05.
 ION_DIAMETER_NM = 0.5
 
 WATER_DIAMETER_NM = 0.311
 
 PACKING_LIMIT = 1.0
 
+# Why this, PACKING_WARNING and MINIMUM_WALL_DISTANCE_NM: .knowledge/06, Gate constants.
 INTERIOR_OFFSET = 1e-4
 
 PACKING_WARNING = 0.8

@@ -54,6 +54,8 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+# NUM-29's 0.1 pN, absolute: the total is a small difference of two large forces
+# (.knowledge/06-numerics-fem.md, Tier-2 evidence).
 FORCE_ROUTE_TOLERANCE_N = 1.0e-13
 
 
@@ -700,7 +702,6 @@ def extract(
     tolerance_N: float = FORCE_ROUTE_TOLERANCE_N,
     check_routes: bool = True,
 ) -> AnalyteForces:
-    # One rebuild of the coefficients for all three routes.
     """Return the force on the body, with every route checked.
 
     Parameters
@@ -715,6 +716,7 @@ def extract(
     ForceDisagreementError
         If the routes disagree beyond tolerance.
     """
+    # One rebuild of the coefficients for all three routes.
     terms = _integrands(solution, wall_distance_nm)
     forces, korteweg_work = _domain_force(terms, measures, extension)
     residual = _dielectric_gradient_residual(terms, measures, extension, work=korteweg_work)

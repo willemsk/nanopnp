@@ -100,8 +100,8 @@ class FittedCorrection:
 
     @property
     def provenance(self) -> Mapping[str, str]:
-        # the form in force, not the one the file offers, or an ablated run looks full
         """Where the coefficients came from: the parameter file and its content hash."""
+        # The form in force, not the one the file offers, or an ablated run reads as the full one.
         record = {
             "model": self.name,
             "property": self.property_kind,

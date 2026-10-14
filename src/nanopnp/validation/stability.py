@@ -90,9 +90,9 @@ class StabilityGolden(BaseModel):
 
 
 def environment() -> str:
+    """Return ``<sys.platform>-<machine>/<highest NumPy SIMD target enabled>``."""
     # NumPy publishes these only on its private extension module; numpy.show_runtime
     # reads them from there too. Imported here, not at module scope (CLAUDE.md).
-    """Return ``<sys.platform>-<machine>/<highest NumPy SIMD target enabled>``."""
     umath = importlib.import_module("numpy._core._multiarray_umath")
     features: dict[str, bool] = umath.__cpu_features__
     enabled = [target for target in umath.__cpu_dispatch__ if features.get(target)]

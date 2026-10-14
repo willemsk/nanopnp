@@ -61,10 +61,10 @@ class ViewerWidget(QtWidgets.QWidget):
         self._show_model()
 
     def show_run(self, directory: str | Path | None, *, field: str = "") -> None:
+        """Render one field of a finished run, or clear the panel when given no run."""
         # Drop the render in flight first: a child left attached would load the previous run's
         # document into the cleared panel, and two renders of one run sweep each other's scene-*
         # pair out of viewer/.
-        """Render one field of a finished run, or clear the panel when given no run."""
         self._stop_render()
         if directory is None:
             self._run = None

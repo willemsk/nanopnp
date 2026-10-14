@@ -931,7 +931,7 @@ The strip removed test docstrings. Where a test's requirement identifier lived o
 
 *Area:* documentation. *Severity:* low. *Found:* WP45.
 
-The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now keeps a condensed docstring on every public method, so `src/nanopnp` closes at 10.6 % (by subpackage in the plan's Outcome). VER-75 (b) holds the ceiling at 11.62 %.
+The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now keeps a condensed docstring on every public method, so `src/nanopnp` closes at 10.6 % (by subpackage in the plan's Outcome). VER-75 (b) holds the ceiling at 12.40 %, set after review counted attribute docstrings (11.4 %).
 
 **Open.** The author rules whether to condense further or accept. *Recommendation:* accept; the next 0.6 point is NumPy-style parameter lists the author asked to keep.
 
@@ -942,4 +942,36 @@ The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now 
 `test_prose_share.py` treats `__call__` and other dunder methods of a public class as public, so the hook Protocols keep their one-line docstrings. VER-75 (a) and L4 say "leading underscore".
 
 **Open.** *Recommendation:* amend the wording to "a single leading underscore".
+
+### REV-94 — 47 public functions and methods carry no docstring, and nothing checks them
+
+*Area:* documentation. *Severity:* low. *Found:* WP45 review (`docs/code_reviews/CODE_REVIEW_006.md`, finding 4).
+
+L4 as amended asks for a condensed docstring on every public function, class and method, but ruff's D101–D107 stay off (L4's consequence column) and VER-72 (h) checks only the `nanopnp.PUBLIC` names. Ruff D101, D102, D103 and D106 find 47 public names without one, among them `CancelFlag.cancelled`, the `NumpyOps` and `NGSolveOps` methods and 17 methods of `physics/stabilisation.py`. They were missing on `main` before WP45 too (51 there); the strip removed none.
+
+**Open.** *Recommendation:* in WP46, write the 47 docstrings, turn on D102 and D103 in `pyproject.toml` and amend L4's consequence column in the same commit.
+
+### REV-95 — VER-75 (a) states a check on derivations and history that no test makes
+
+*Area:* verification. *Severity:* low. *Found:* WP45 review (finding 5).
+
+VER-75 opens "Read from the source", and (a) includes "no docstring holds a derivation or a history". `test_prose_share.py` cannot check that, so the identifier claims more than its test discharges.
+
+**Open.** *Recommendation:* move the clause out of VER-75 into L4 alone, where review enforces it.
+
+### REV-96 — About 157 prose lines in src and tests still carry identifiers or plan history
+
+*Area:* documentation. *Severity:* low. *Found:* WP45 review (finding 11).
+
+About 93 docstrings and 64 comments in `src/nanopnp` cite `FR-` or `NUM-` identifiers or plan history such as "WP23 D3", and 156 test-module docstrings start with an identifier. L4 and `CLAUDE.md` keep identifiers to test names and commit messages, but `python.md` asks for the source of every constant, which is often a specification identifier.
+
+**Open.** The author draws the line. *Recommendation:* keep a specification identifier where it is a constant's source; drop plan history (`WPnn Dn`); move test-module identifiers into the test names with REV-91's renaming.
+
+### REV-97 — A directive comment is defined twice, differently
+
+*Area:* verification. *Severity:* low. *Found:* WP45 review (finding 14).
+
+`.claude/scripts/same_tree.py` treats a shebang and a coding line as directives and matches its prefixes anywhere in a comment; `test_prose_share.py` and VER-75 (b) list six prefixes at the comment's start. A shebang therefore counts as code for L5 and as prose for VER-75 (b).
+
+**Open.** *Recommendation:* add the shebang and coding line to VER-75 (b)'s list and share one definition between the two checks.
 

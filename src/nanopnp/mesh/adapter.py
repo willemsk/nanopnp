@@ -43,8 +43,8 @@ differ only on the way out, where :func:`write_msh41` names the version it
 writes.
 """
 
+# Filename suffixes recognised when ``inputs.mesh.format`` is absent.
 _SUFFIXES: dict[str, str] = {".msh": "gmsh", ".vol": "netgen", ".vol.gz": "netgen"}
-"""Filename suffixes recognised when ``inputs.mesh.format`` is absent."""
 
 
 class MeshFormatError(ValueError):

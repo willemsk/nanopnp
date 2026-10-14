@@ -113,3 +113,7 @@ is a rolling register, and its header stays `open`.
 | REV-91 | documentation | low | open | — | [About 400 tests name their requirement only in a comment](review-items.md#rev-91-about-400-tests-name-their-requirement-only-in-a-comment) |
 | REV-92 | documentation | low | open | — | [src prose share is 10.6 %, above the 10 % prediction](review-items.md#rev-92-src-prose-share-is-106-above-the-10-prediction) |
 | REV-93 | documentation | low | open | — | [VER-75 (a) says leading underscore; dunder methods count as public](review-items.md#rev-93-ver-75-a-says-leading-underscore-dunder-methods-count-as-public) |
+| REV-94 | documentation | low | open | — | [47 public functions and methods carry no docstring, and nothing checks them](review-items.md#rev-94-47-public-functions-and-methods-carry-no-docstring-and-nothing-checks-them) |
+| REV-95 | verification | low | open | — | [VER-75 (a) states a check on derivations and history that no test makes](review-items.md#rev-95-ver-75-a-states-a-check-on-derivations-and-history-that-no-test-makes) |
+| REV-96 | documentation | low | open | — | [About 157 prose lines in src and tests still carry identifiers or plan history](review-items.md#rev-96-about-157-prose-lines-in-src-and-tests-still-carry-identifiers-or-plan-history) |
+| REV-97 | verification | low | open | — | [A directive comment is defined twice, differently](review-items.md#rev-97-a-directive-comment-is-defined-twice-differently) |

@@ -1,4 +1,4 @@
-"""VAL-15: the delivered ClyA rho_q table, read as the reference model wrote it."""
+"""VAL-15: the delivered ClyA rho_q table, from the reference archive; 77 MB, so not vendored."""
 
 from __future__ import annotations
 

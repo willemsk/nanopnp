@@ -118,8 +118,8 @@ distinction is enforced.
 """
 
 
+# Characters a flat name alternation cannot contain; see :func:`_options`.
 _METACHARACTERS: frozenset[str] = frozenset(".*+?[](){}^$\\")
-"""Characters a flat name alternation cannot contain; see :func:`_options`."""
 
 
 class MeshVocabularyError(ValueError):
@@ -183,16 +183,13 @@ def _options(pattern: str) -> tuple[str, ...]:
     return parts
 
 
+# What the diagnostic says each essential set is for, keyed by field (physics.models' vocabulary),
+# not by model; a key missing here, such as a species' concentration, is described generically.
 _ESSENTIAL_PURPOSES: dict[str, str] = {
     POTENTIAL: "the essential potential (PHY-09)",
     VELOCITY: "no-slip (NUM-06)",
     VELOCITY_AXIS: "the axis, carrying u_r = 0 and nothing else (NUM-06)",
 }
-"""What the diagnostic says each essential set is for, by the key the model reports it under.
-
-Keyed by field, the shared vocabulary of :mod:`nanopnp.physics.models`, not by
-model: a key missing here -- each species' concentration, or a field a new model
-brings -- is described generically."""
 
 
 def required_names(resolved: ResolvedCase) -> RequiredNames:

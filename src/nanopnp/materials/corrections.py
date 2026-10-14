@@ -195,9 +195,9 @@ def load_corrections(name_or_path: str | Path) -> CorrectionDocument:
         if Path(name_or_path).suffix == ".yaml"
         else correction_file(str(name_or_path))
     )
-    # copied: the extra="allow" blocks keep their extra values by reference
+    # Copied, so no caller mutates the cached tree: extra="allow" blocks keep values by reference.
     raw = cast("Mapping[str, object]", _fresh(_parse(path.read_text(encoding="utf-8"))))
-    # before validation, so a future schema fails naming the file and version found
+    # The schema first, so a future schema fails naming the file and version found.
     schema = raw.get("schema")
     if schema != SCHEMA:
         raise ValueError(f"{path}: expected schema {SCHEMA!r}, found {schema!r}")

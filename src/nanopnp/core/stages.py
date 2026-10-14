@@ -79,7 +79,7 @@ if TYPE_CHECKING:  # pragma: no cover - imported for annotations only
 
 
 class Cancelled(RuntimeError):  # noqa: N818 - see the docstring: this is not a failure
-    """A stage was cancelled through its cancel token and did not finish."""
+    """A stage was cancelled through its cancel token and did not finish; not a failure."""
 
 
 class Progress(Protocol):

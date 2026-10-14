@@ -34,7 +34,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-# eps_r,f0 after Gavish 2016, .knowledge/01-physics-epnpns.md section 4; held once in core.scaling.
+# eps_r,f0 after Gavish 2016, .knowledge/01-physics-epnpns.md section 3; held once in core.scaling.
 ELECTROLYTE_PERMITTIVITY = REFERENCE_PERMITTIVITY
 
 
