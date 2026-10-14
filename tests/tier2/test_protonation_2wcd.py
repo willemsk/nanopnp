@@ -35,7 +35,7 @@ pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
 logger = logging.getLogger(__name__)
 
 # -5 e per chain, measured in the crystal frame:
-# .knowledge/07-software-stack/03-charge-and-electrostatics.md.
+# knowledge/07-software-stack/03-charge-and-electrostatics.md.
 GOLDEN_Q_NET_E = -60
 
 CHAINS = 12

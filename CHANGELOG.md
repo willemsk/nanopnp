@@ -24,19 +24,21 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 WP47: the knowledge base as an Open Knowledge Format bundle (`SPECIFICATION.md` §8.2.6 F6, §8.2.7
 G12, VER-68). No code path of the solver changes, and VER-62 is untouched.
 
-- **The bundle** (VER-68): `.knowledge/` is a directory per note and a concept per `##` section,
+- **The folder** is `knowledge/`, no longer `.knowledge/`: the bundle is published and tested, so it is
+  no longer hidden. Every citation, the check's patterns, the gate and the documentation build follow.
+- **The bundle** (VER-68): `knowledge/` is a directory per note and a concept per `##` section,
   121 in all, each with a header (`type` from a closed list, `sources`, `generated`, `verified`), an
   `index.md` per directory, a root `index.md` declaring `okf_version: "0.2"`, `log.md` and
-  `pending.yaml`. The old files `.knowledge/0N-*.md` are gone: **a citation of one is a break**, and
+  `pending.yaml`. The old files `knowledge/0N-*.md` are gone: **a citation of one is a break**, and
   every address in the repository, the plans and this file's released sections names a bundle path.
 - **The check** (VER-68): `nanopnp.validation.okf` and `tests/tier1/test_okf_bundle.py` refuse a
   concept without a typed header, an address that reaches no concept or heading, a legacy
-  `.knowledge/0N §x` form, a `[tested: …]` naming no test, a bare `[tested]`, a `verified` list that
+  `knowledge/0N §x` form, a `[tested: …]` naming no test, a bare `[tested]`, a `verified` list that
   differs from the claims, a footnote that is no source, an older `tested_with`, and a pending list
   that differs from the files or exceeds 358.
 - **The ledger** (G3, G8): 72 claims name a test, 311 are `[tested: pending]` and 47 `[verified]`
   claims name no source; WP48 empties the list.
-- **The gate** (VER-45): `prose-only.sh` reads `.knowledge/` and any Markdown that cites it as
+- **The gate** (VER-45): `prose-only.sh` reads `knowledge/` and any Markdown that cites it as
   not prose; the documentation site renders the bundle through its index pages, with the
   `footnotes` extension.
 
@@ -89,7 +91,7 @@ WP45: the prose strip (`SPECIFICATION.md` §8.2.11 L4 amended, L5, L9, L10; VER-
 comments fall from 33.0 % to 10.6 % of the lines of `src/nanopnp` and from 18.8 % to 2.1 % of `tests/`,
 with no instruction changed (`.claude/scripts/same_tree.py` proves every commit). L4 now asks a condensed
 docstring on every public function, class and method, NumPy-style parameters where name and type do not
-say, none on a test or private code; ruff's D101 to D103 and D106 now hold in `src/nanopnp`. Derivations found nowhere else moved to `.knowledge/`. It discharges
+say, none on a test or private code; ruff's D101 to D103 and D106 now hold in `src/nanopnp`. Derivations found nowhere else moved to `knowledge/`. It discharges
 VER-75; REV-93 to REV-97 are fixed, REV-91 is deferred and REV-92 declined.
 
 ## [0.5.0-alpha.10] - 2026-10-13
@@ -740,7 +742,7 @@ WP29: VAL-06, Poisson against APBS, the fourth package of Phase 3 and the third 
   half the tolerance of it, and eight broken constructions of the maps must each exceed that.
 - Under `-m slow`: the recorded leg, with APBS's own `spl4` charge and `smol` surface from the PQR
   and our membrane imposed, compared per probe ring. Also a focused 0.05 nm grid, which measures
-  APBS's order at 1.6 (`.knowledge/07-software-stack/03-charge-and-electrostatics.md`). At Tier 3, recorded: the ClyA-AS ensemble from the
+  APBS's order at 1.6 (`knowledge/07-software-stack/03-charge-and-electrostatics.md`). At Tier 3, recorded: the ClyA-AS ensemble from the
   archived PQRs (`tests/tier3/test_val06_archive.py`).
 - The test-only dependency group `apbs` (`apbs-binary` 3.4.1.1 on Linux x86_64 and macOS), a
   default group so that the gate runs VAL-06. It never reaches a wheel (CON-07).
@@ -1433,7 +1435,7 @@ WP16: user documentation and worked examples ([#34](https://github.com/willemsk/
 
 - A documentation site (MkDocs and Material), built strictly on every push (VER-45). The case-file,
   command-line, exit-code and API references are generated from their sources, and the model pages
-  render `SPECIFICATION.md` and `.knowledge/` verbatim.
+  render `SPECIFICATION.md` and `knowledge/` verbatim.
 - Five worked examples, among them a SLURM job-array run of the ClyA reference. A test executes
   each README's commands verbatim against a model property (VER-46).
 - `nanopnp mesh cylinder|reference` writes a gated MSH 4.1 mesh (VER-32).

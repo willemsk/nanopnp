@@ -43,10 +43,10 @@ ARCHIVED = [
 TABLE = reference_file("prod5_clya_charge")
 
 # Archive Q_net:
-# .knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md.
+# knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md.
 ARCHIVED_Q_NET_E = -72
 
-# Validated default sharpness: .knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md.
+# Validated default sharpness: knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md.
 SHARPNESS = 0.5
 
 PLANE_SMOOTHING_NM = 0.5

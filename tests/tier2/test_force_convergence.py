@@ -197,7 +197,7 @@ REFERENCE_PORE = CylindricalPoreGeometry(
 REFERENCE_BODY = SpheroidBody(semi_radial_nm=2.9, semi_axial_nm=3.35)
 
 # q_Hb of the production runs:
-# .knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md#103-the-analyte.
+# knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md#103-the-analyte.
 REFERENCE_CHARGE_E = -4.0
 
 REFERENCE_BIAS_V = 0.05
@@ -206,7 +206,7 @@ REFERENCE_CONCENTRATION_M = 0.3
 REFERENCE_SURFACE_CHARGE_C_M2 = -0.02
 
 # FR-25
-# Candidates: .knowledge/05-analyte-and-forces/04-dielectric-constant-and-boundary.md; 20 is the
+# Candidates: knowledge/05-analyte-and-forces/04-dielectric-constant-and-boundary.md; 20 is the
 # upper one.
 ANALYTE_PERMITTIVITY = 20.0
 

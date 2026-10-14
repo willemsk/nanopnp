@@ -6,12 +6,12 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 
 ## Before doing anything
 
-- **Read `.knowledge/index.md`**: the verified knowledge base.
+- **Read `knowledge/index.md`**: the verified knowledge base.
 - **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`). Cite the
   identifier when you implement or test one. Changing specified behaviour means changing the
   specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
-  wrong. `.knowledge/01-physics-epnpns/index.md` is normative; where sources disagree, the COMSOL model
+  wrong. `knowledge/01-physics-epnpns/index.md` is normative; where sources disagree, the COMSOL model
   report governs (§1.6). Web search is fine for library versions/APIs (prefer Context7) and
   post-knowledge-base literature.
 - **Rules by path:** `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` load when you
@@ -70,7 +70,7 @@ a tree it has not passed.
   importing only `core` at run time; `pipeline/` case resolution, the walk, the assembler; `cli/`,
   `gui/` thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL comparison
 
-Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel), `.knowledge/`,
+Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel), `knowledge/`,
 `tests/tier{1,2,3,4}/`, `docs/`, `docs/plans/` (planning, not requirements; `SPECIFICATION.md` wins).
 
 A stage takes typed inputs and emits a typed, serialisable artefact carrying a content hash. Every
@@ -145,10 +145,10 @@ messages (`.claude/rules/python.md`; §8.2.11 L4).
 
 ## Durable learnings
 
-Write a durable fact as a concept in the relevant `.knowledge/` directory, or into an existing one, with
+Write a durable fact as a concept in the relevant `knowledge/` directory, or into an existing one, with
 its source: mark a claim `[tested: <test>]` or `[verified]` with a source footnote, list the concept in the
-directory's `index.md` and add a line to `.knowledge/log.md`
-(`.knowledge/00-orientation/04-provenance-and-how-to-extend-this.md`). Status and scope opinions belong in
+directory's `index.md` and add a line to `knowledge/log.md`
+(`knowledge/00-orientation/04-provenance-and-how-to-extend-this.md`). Status and scope opinions belong in
 the specification.
 
 ## Do NOT

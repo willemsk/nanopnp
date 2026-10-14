@@ -55,7 +55,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 # NUM-29's 0.1 pN, absolute: the total is a small difference of two large forces
-# (.knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md).
+# (knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md).
 FORCE_ROUTE_TOLERANCE_N = 1.0e-13
 
 

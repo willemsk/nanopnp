@@ -36,7 +36,7 @@ Nothing is committed in this turn.
 
 Read in this order, keeping a list of every item that needs a decision:
 
-1. `docs/plans/current.md`, then `.knowledge/index.md`, then
+1. `docs/plans/current.md`, then `knowledge/index.md`, then
    `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` (a path-scoped rule does not
    load while you write only Markdown).
 2. `SPECIFICATION.md` §8.1: Phase n's row and its GUI and documentation increments; then every

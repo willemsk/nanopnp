@@ -11,7 +11,7 @@ here are pointers into it. The spec amendments this package needs are made in th
 the §5.2 rows for stage 7 and the design note on its number, the PHY-16 NOTE on protonation as run,
 the §5.3.1 NOTE on the protonation keys, the `inputs.pqr` paragraph of the §5.3.1 NOTE on `inputs:`
 (§8.2.4 D4 assigns it here), the §5.3.2 artefact row and the IF-02 export NOTE. The PDB2PQR facts
-they rest on are in `.knowledge/07-software-stack/03-charge-and-electrostatics.md`, *PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver*.
+they rest on are in `knowledge/07-software-stack/03-charge-and-electrostatics.md`, *PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver*.
 
 ## Execution brief
 
@@ -23,7 +23,7 @@ The brief runs past its 1,200-word target because the supplied path carries gate
 (D9, D12) that cannot be deferred without leaving `inputs.pqr` unchecked.
 
 **Read first.** PHY-16 and its step-3 NOTE; §5.2 stage 7; the §5.3.1 NOTEs on `inputs:` and the
-protonation keys; `.knowledge/07-software-stack/03-charge-and-electrostatics.md`.
+protonation keys; `knowledge/07-software-stack/03-charge-and-electrostatics.md`.
 
 ### Decisions
 
@@ -57,7 +57,7 @@ protonation keys; `.knowledge/07-software-stack/03-charge-and-electrostatics.md`
 > PDB2PQR's own output and our own export. The flippable atoms (`ASN OD1 ND2`, `GLN OE1 NE2`,
 > `HIS ND1 CD2 CE1 NE2`) are now left out of the criterion, counted and their worst distance
 > recorded; the rest of each residue fixes the frame. Amended in the §5.3.1 NOTE on `inputs:` and
-> `.knowledge/07-software-stack/03-charge-and-electrostatics.md`. On the prepared dodecamer: 138 flipped, worst 0.397 Å, worst compared residual
+> `knowledge/07-software-stack/03-charge-and-electrostatics.md`. On the prepared dodecamer: 138 flipped, worst 0.397 Å, worst compared residual
 > 0.00085 Å.
 
 > **Outcome — two PDB2PQR layout facts the reader's own cross-check found.** On the fragment at
@@ -93,7 +93,7 @@ protonation keys; `.knowledge/07-software-stack/03-charge-and-electrostatics.md`
 > run: PROPKA reads `self.__annotations__`, which PEP 649/749 leaves on the class only. No PROPKA
 > release fixes it, and QR-09 forbids narrowing the interpreter range, so the driver gives
 > `Parameters` a fallback for that one name, installed only where it is missing; on 3.12 and 3.14
-> the fragment's PQR and pKas are identical with it (`.knowledge/07-software-stack/03-charge-and-electrostatics.md`,
+> the fragment's PQR and pKas are identical with it (`knowledge/07-software-stack/03-charge-and-electrostatics.md`,
 > `test_ver57_propka_reads_its_parameters_on_every_supported_python`).
 
 > **Outcome — the shipping review.** Corrected in review: a disulfide-bonded cysteine (`DISU`
@@ -160,7 +160,7 @@ the archived PQRs under `$NANOPNP_REFERENCE_DATA` for Tier 3.
 
 ### 1. PDB2PQR as measured
 
-`.knowledge/07-software-stack/03-charge-and-electrostatics.md` records the measurements this plan rests on. The decisions they force are:
+`knowledge/07-software-stack/03-charge-and-electrostatics.md` records the measurements this plan rests on. The decisions they force are:
 residue identity by chain, number and insertion code, because `--ffout=CHARMM` writes `TER`
 (D11, the reader); heavy-atom matching by position, because amide and ring flips relabel 140 heavy
 atoms of 2WCD (D12); hydrogens stripped and variants renamed, because `HSD`/`HSE` pin the state and
@@ -186,7 +186,7 @@ A PQR coordinate printed to 0.001 Å is off by at most 0.0005 Å per component, 
 Stage 1 stores float32 nm, whose spacing at 15 nm is 9.5 × 10⁻⁷ nm (9.5 × 10⁻⁶ Å). The tolerance is
 0.01 Å, about ten times their sum. The shortest heavy-atom bond is 1.23 Å (C=O), so at most one PQR
 heavy atom lies within 0.01 Å of any point, and matching within a residue by nearest neighbour is
-unambiguous. The archive's frames lie 0.095–0.219 nm RMSD from frame 0 (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`),
+unambiguous. The archive's frames lie 0.095–0.219 nm RMSD from frame 0 (`knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`),
 a hundred times the tolerance. Consecutive frames are not measured; Tier 3 records the smallest
 heavy-atom RMSD between neighbouring frames as the margin by which a frame offset by one is refused.
 The fit

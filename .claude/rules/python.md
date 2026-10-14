@@ -21,7 +21,7 @@ paths:
   numeric array as in `validation/apbs.py`'s `write_dx`; lazy `logging` arguments).
 - Pydantic models at every serialisation boundary; never raw dicts across a stage boundary.
 - `logging`, never `print()`, outside the CLI's own output. No `import *`.
-- Cite the source (`.knowledge/` file or specification section) of every physical constant and fit
+- Cite the source (`knowledge/` file or specification section) of every physical constant and fit
   coefficient in a comment.
 - **Imports at the top of the module.** Exceptions, imported inside the function that uses them:
   `ngsolve`, `netgen`, `numpy`, `scipy`, `meshio`, `h5py` (import cost; stage modules are imported

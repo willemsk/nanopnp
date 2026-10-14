@@ -45,7 +45,7 @@ in their docstring.
 | Decision | Choice | Why/source |
 |---|---|---|
 | D1 Tree check | `.claude/scripts/same_tree.py <ref> [paths]` compares every changed `.py` file with its version at `<ref>`: `ast.dump` without attributes, after deleting every bare string-constant statement, every `pass` and every bare `...`, must be equal; and the multiset of directive comments (`# type:`, `# noqa`, `# pragma`, `# fmt:`, `# mypy:`, `# ruff:`, `#!`, coding line) must be unchanged. A deleted, added or renamed file fails | L5. Comments are invisible to the syntax tree; directives are code |
-| D2 What stays in `src/` | A condensed docstring (summary line, NumPy-style parameters only where name and type do not say, no derivation or history) on every function, class and method with no leading underscore on it or an enclosing class; the first pass (items 2 to 19) kept only `PUBLIC` names and is redone as items 19a to 19f. A one-line docstring on every module; `cli/__init__.py`'s line stays its parser description. A comment only for a reason the code cannot show or the source of a constant (`python.md`). A derivation, measured number or rationale found in neither the specification nor `.knowledge/` moves to the `.knowledge/` file of its area, with the module as source, or stays as a why-comment of at most two lines; it is never deleted unrecorded | L4; `python.md`. `__doc__` is read only there (surveyed) |
+| D2 What stays in `src/` | A condensed docstring (summary line, NumPy-style parameters only where name and type do not say, no derivation or history) on every function, class and method with no leading underscore on it or an enclosing class; the first pass (items 2 to 19) kept only `PUBLIC` names and is redone as items 19a to 19f. A one-line docstring on every module; `cli/__init__.py`'s line stays its parser description. A comment only for a reason the code cannot show or the source of a constant (`python.md`). A derivation, measured number or rationale found in neither the specification nor `knowledge/` moves to the `knowledge/` file of its area, with the module as source, or stays as a why-comment of at most two lines; it is never deleted unrecorded | L4; `python.md`. `__doc__` is read only there (surveyed) |
 | D3 What stays in `tests/` | A one-line module docstring; none on a test, class, fixture or helper. Where an identifier lives only in a test's docstring, a one-line comment naming only the identifiers stays above the test; renaming is not done here (author's call) | L4; tree equality forbids renames |
 | D4 VER-75 | Appendix A gains VER-75 in this commit: (a) in `src/nanopnp` a function or class docstring only where D2 allows, in `tests/` none, and every module docstring one line; (b) the share of physical lines that are docstring or non-directive comment lines, at most the value measured at the close plus 1 point, for `src/nanopnp` and for `tests/`, the ceilings recorded in the test. A docstring added to a private function fails (a), naming file, line and name; a toy tree over its ceiling fails (b) | L5; the phase plan's oracle. A single docstring cannot move a share a point, hence (a) |
 | D5 Workers | Each strip item goes to a fresh `general-purpose` sub-agent: Sonnet for `src/`, Haiku for `tests/`, given the item, D1 to D3, `python.md` and the clauses it cites, not this conversation. It edits, runs `ruff format`, `ruff check`, `mypy src/` and `same_tree.py HEAD`, commits through the normal hook (`docs: strip the prose of <path>`), and reports the commit, its checks and its share in at most five lines. The main session keeps only this plan and `git log`, re-runs `same_tree.py HEAD~1` on the commit, then ticks. A failing commit is reverted and redone once on the same model, then on Opus | L5, L9 |
@@ -98,7 +98,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 
 *Compaction checkpoint: after item 27.*
 
-- [x] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record under Outcomes the shares by subpackage against the prediction, the number of workers, redos and escalations, and the moves into `.knowledge/`; mark the plan delivered, update `current.md`, the Phase 4 plan and `CHANGELOG.md`. Done when `.claude/hooks/gate.sh run` passes.
+- [x] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record under Outcomes the shares by subpackage against the prediction, the number of workers, redos and escalations, and the moves into `knowledge/`; mark the plan delivered, update `current.md`, the Phase 4 plan and `CHANGELOG.md`. Done when `.claude/hooks/gate.sh run` passes.
 
 ### Verification
 
@@ -113,7 +113,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 ### Out of scope
 
 Renaming tests to carry their identifiers (author's call; a later package by ruling). Prose in
-`docs/`, `.knowledge/` and the skills. Any change of behaviour, test assertion or name. Whether
+`docs/`, `knowledge/` and the skills. Any change of behaviour, test assertion or name. Whether
 `wp-implement` adopts the worker pattern: the author's ruling after comparing costs (L9).
 
 ### Open questions
@@ -133,4 +133,4 @@ None blocking. The *Your call* above has a default, D3.
 > one redo (19a, redone as 19g), no Opus escalation; `same_tree.py` refused no commit; the strict
 > documentation build passes. Lessons: reading D2 literally (`PUBLIC` only) removed docstrings the author
 > wanted condensed, and a condense brief needs numbers (at most 40 % of the original, no paragraph after
-> the summary), not "shorten". Facts moved to `.knowledge/` 01, 04 to 08. Rulings after review (§8.2.11 L10): REV-93 to REV-97 fixed, REV-91 deferred, REV-92 declined.
+> the summary), not "shorten". Facts moved to `knowledge/` 01, 04 to 08. Rulings after review (§8.2.11 L10): REV-93 to REV-97 fixed, REV-91 deferred, REV-92 declined.

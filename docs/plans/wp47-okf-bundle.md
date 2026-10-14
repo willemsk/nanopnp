@@ -43,28 +43,28 @@ Opus only after Sonnet fails.
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| D1 Layout | `.knowledge/index.md` (root; `okf_version: "0.2"`) and a directory per file, `NN-slug/`, with its own `index.md`. One concept per `##`, named `NN-heading-slug.md`; `###` and deeper stay headings. The text before a file's first `##` is `00-overview.md`. `00-index.md` goes: its traps, conventions, provenance, rulings and open items become concepts under `00-orientation/`. A heading carrying a marker gets an explicit `{#id}` | K1, K2; G12. All prose is in a concept with a header. Markers in headings would change anchors at item 6 and again in WP48 |
+| D1 Layout | `knowledge/index.md` (root; `okf_version: "0.2"`) and a directory per file, `NN-slug/`, with its own `index.md`. One concept per `##`, named `NN-heading-slug.md`; `###` and deeper stay headings. The text before a file's first `##` is `00-overview.md`. `00-index.md` goes: its traps, conventions, provenance, rulings and open items become concepts under `00-orientation/`. A heading carrying a marker gets an explicit `{#id}` | K1, K2; G12. All prose is in a concept with a header. Markers in headings would change anchors at item 6 and again in WP48 |
 | D2 Header | `type` from a closed list committed in the check, `title`, `description`, `tags`, `sources` (ids `thesis`, `paper`, `esi`, `comsol-report`, footnoted where a sentence already names one), `generated.by: claude-code/<installed nanopnp version>`, never a model identifier, and `verified` | K9, K10; G12. Rule 6 refuses a footnote that is no source id |
-| D3 Ledger | A bare `[tested]` becomes `[tested: pending]` or, where the named test exists, `[tested: tests/…]`; an executable `[verified]` becomes pending, a source reading stays `[verified]` with a footnote. `.knowledge/pending.yaml` counts both kinds per concept and must equal the files; the ceiling is a constant in the test, set at item 6. A concept's `verified` set is defined in the rules. `tested_with` is checked, carried by no concept until WP48 | K5 to K8; G3, G8 |
+| D3 Ledger | A bare `[tested]` becomes `[tested: pending]` or, where the named test exists, `[tested: tests/…]`; an executable `[verified]` becomes pending, a source reading stays `[verified]` with a footnote. `knowledge/pending.yaml` counts both kinds per concept and must equal the files; the ceiling is a constant in the test, set at item 6. A concept's `verified` set is defined in the rules. `tested_with` is checked, carried by no concept until WP48 | K5 to K8; G3, G8 |
 | D4 Citations | A one-off converter, not committed, rewrites every form in the rules (section, line, label, named section, whole file, link, URL) to a bundle path, and lists what it cannot place for Sonnet or the author; none is guessed. History is rewritten too | K3, K4. A wrong target passes the check |
 | D5 Check | `nanopnp.validation.okf` reads files and syntax trees and imports no checked module; its slug function is tested against the docs build's. `tests/tier1/test_okf_bundle.py` is VER-68. A word-for-word comparison of the joined bodies against the ten old files runs once at item 2, its result in the commit message | F6; VER-68 |
-| D6 Site and gate | `generate.py` recurses; `mkdocs.yml` gets `not_in_nav` and one entry; `prose-only.sh` treats `.knowledge/` and any Markdown containing `.knowledge/` as not prose; `log.md` holds one dated entry per event the notes already record | G12; the review of this plan |
+| D6 Site and gate | `generate.py` recurses; `mkdocs.yml` gets `not_in_nav` and one entry; `prose-only.sh` treats `knowledge/` and any Markdown containing `knowledge/` as not prose; `log.md` holds one dated entry per event the notes already record | G12; the review of this plan |
 
 ### Work items
 
 - [x] a0cf1a4 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workflow_hooks.py` (D5, D6): the check on constructed bundles, and the prose rule with a case each; done when those rows pass.
-- [x] a79e05d 2. `.knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header and explicit ids; done when the word-for-word comparison is clean.
-- [x] ce22f90 3. `.knowledge/` (D4): rewrite the citations between concepts; done when the checker, run by hand through `uv run`, resolves each and the unplaced list is empty by ruling.
-- [x] c02e775 4. every tracked file outside `.knowledge/`, `docs/plans/`, `docs/code_reviews/` and `CHANGELOG.md` (D4): the same; done by the same hand run.
+- [x] a79e05d 2. `knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header and explicit ids; done when the word-for-word comparison is clean.
+- [x] ce22f90 3. `knowledge/` (D4): rewrite the citations between concepts; done when the checker, run by hand through `uv run`, resolves each and the unplaced list is empty by ruling.
+- [x] c02e775 4. every tracked file outside `knowledge/`, `docs/plans/`, `docs/code_reviews/` and `CHANGELOG.md` (D4): the same; done by the same hand run.
 - [x] 8b5f5c8 5. `docs/plans/`, `docs/code_reviews/`, released `CHANGELOG.md` sections (D4, K4); adds `test_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.
 
 *Compaction checkpoint: after item 5; resume from this plan and `git log`.*
 
-- [x] 94b46dc 6. `.knowledge/` (D2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows pass.
+- [x] 94b46dc 6. `knowledge/` (D2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows pass.
 
 > **Outcome — item 6.** 72 claims name a test; 311 are `[tested: pending]` and 47 `[verified]` claims carry no source footnote, so the ceiling is 358 in 55 concepts; 9 `[verified]` claims cite a source by footnote. A `[verified]` claim in a test-evidence concept became a tested or pending claim; elsewhere each stays `[verified]` until WP48 classifies it.
 
-- [ ] 7. `.knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
+- [ ] 7. `knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
 - [x] b3d1dcb 8. `docs/scripts/generate.py`, `mkdocs.yml` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes.
 - [x] 58ca508 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `README.md`, `SPECIFICATION.md` §11: the new first read, the maintenance rule (a durable fact is a concept with a log line), the pending figure; done when VER-68 and the build pass.
 
@@ -91,7 +91,7 @@ Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py tests/tier1/test_w
 | `…footnote_without_source_is_refused` | VER-68 (6) | Unknown label fails |
 | `…pending_count_must_equal_the_committed_list`, `…ceiling` | VER-68, G3 | One more or fewer fails; above the ceiling fails |
 | `…repository_citations_all_resolve`, `…the_bundle_conforms` | VER-68 | The real tree: no finding |
-| `test_prose_only_` cases for `.knowledge/<file>.md`, a `CHANGELOG.md` and `README.md` containing a citation, one without | — | Not prose, not prose, prose |
+| `test_prose_only_` cases for `knowledge/<file>.md`, a `CHANGELOG.md` and `README.md` containing a citation, one without | — | Not prose, not prose, prose |
 | VER-45 | docs | `--strict` passes; no code path changes, VER-62 untouched |
 
 ### Out of scope

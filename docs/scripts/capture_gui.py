@@ -13,7 +13,7 @@ behaviour is Tier 1's (``tests/tier1/test_gui_widgets.py``), and these are pictu
 it.
 
 On a Linux machine without ``libEGL.so.1``, PySide6 does not import. See
-``.knowledge/07-software-stack/05-gui-and-packaging.md`` for the local shim.
+``knowledge/07-software-stack/05-gui-and-packaging.md`` for the local shim.
 """
 
 from __future__ import annotations

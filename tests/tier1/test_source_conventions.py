@@ -16,7 +16,7 @@ DEFERRABLE: frozenset[str] = frozenset(
     {
         # The package itself: VER-61's `deferred_upward:` ratchet governs these.
         "nanopnp",
-        # Costly to import (CLAUDE.md); timings in .knowledge/07-software-stack/index.md.
+        # Costly to import (CLAUDE.md); timings in knowledge/07-software-stack/index.md.
         "ngsolve",
         "netgen",
         "numpy",

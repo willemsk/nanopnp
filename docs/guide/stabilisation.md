@@ -20,7 +20,7 @@ so you can see whether the mesh needed stabilisation.
 ## Why `reference` exists
 
 The reference COMSOL model had streamline and crosswind stabilisation **on**, in transport and in
-flow (`.knowledge/09-comsol-reference-settings/index.md`). Its currents therefore include the stabilisation's own contribution, and a
+flow (`knowledge/09-comsol-reference-settings/index.md`). Its currents therefore include the stabilisation's own contribution, and a
 comparison against them is not like-for-like until ours does too. `reference` reproduces those
 settings, and it is the only mode that permits the equal-order velocity–pressure pair the reference
 used. The Tier-3 comparison runs it as one rung of an attribution ladder (§7.4), so a discrepancy can

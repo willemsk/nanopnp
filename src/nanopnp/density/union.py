@@ -14,7 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
 # A term is kept iff g >= EPSILON; the truncation error bound is in
-# .knowledge/07-software-stack/index.md.
+# knowledge/07-software-stack/index.md.
 EPSILON = 1e-6
 
 # Below ln 2**-53, 1 - rho is under float64's spacing at 1.

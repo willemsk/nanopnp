@@ -31,7 +31,7 @@ Measured at `81ec896`: ten files and 5,666 lines, with 88 `##` sections and 114 
 subsections. There are 193 `[tested]` and 53 `[verified]` markers, and **4 of the 193 tested
 claims name the test that backs them**. At least 28 tested claims in `07` describe a library's
 behaviour, which an upgrade in `uv.lock` can silently falsify. The repository cites the base 439
-times as `.knowledge/0N §x`: 133 at one level, 67 at two and 19 at three. The documentation site
+times as `knowledge/0N §x`: 133 at one level, 67 at two and 19 at three. The documentation site
 renders it verbatim (§8.1, the documentation track; `docs/scripts/generate.py`).
 
 OKF's motivation, provenance, trust and freshness, is this base's own. The base already exceeds it
@@ -45,7 +45,7 @@ runtime attestation, so Attested Computations are not adopted. What OKF exposes 
 |---|---|---|---|
 | K1 | Depth | **Full OKF bundle** | Ledger without OKF; OKF frontmatter on the ten files (file-level trust would overstate or understate a mixed file); not adopting |
 | K2 | Concept granularity | **One concept per `##` section**, in one directory per file; `###` subsections stay headings inside it | One per `###` (about 190 files) |
-| K3 | Citations | **Rewritten to bundle paths** (`.knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`), resolved by a Tier-1 check | `.knowledge/0N §x` kept as a stable address |
+| K3 | Citations | **Rewritten to bundle paths** (`knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`), resolved by a Tier-1 check | `knowledge/0N §x` kept as a stable address |
 | K4 | History | **Rewritten too**: delivered plans, code-review reports and released `CHANGELOG.md` sections | Kept, through a legacy-address key |
 | K5 | Ledger, test names | `[tested: tests/…::test_…]` inline, checked to name a collected test | — |
 | K6 | Ledger, backfill | **All 193**. A claim no existing test re-establishes **gets a test** | `[measured: <commit>]` for the rest; downgrading |
@@ -61,7 +61,7 @@ One Tier-1 test, given a VER identifier by the plan, refuses:
 
 1. a concept without parseable frontmatter or a non-empty `type` (OKF §11), and a reserved
    `index.md` or `log.md` out of form;
-2. a `.knowledge/` citation anywhere in the repository that resolves to no concept, or to no
+2. a `knowledge/` citation anywhere in the repository that resolves to no concept, or to no
    heading in it, under the same slug rule the documentation build uses;
 3. a `[tested: …]` naming a test `pytest --collect-only` does not collect, and a bare `[tested]`;
 4. a `verified` list that differs from the set of the concept's inline tests;
@@ -89,7 +89,7 @@ left to the bundle package's `/wp-plan` (G9). The text below is the questions as
 5. **`type` vocabulary**, for example `Physics`, `Erratum`, `Author Ruling`, `Numerics`,
    `Library Behaviour`, `Benchmark`, `Reference Settings`, `Background`. It is closed and checked,
    or open as OKF allows.
-6. **`log.md`**: whether to keep one, given that git already holds the history and `.knowledge/`
+6. **`log.md`**: whether to keep one, given that git already holds the history and `knowledge/`
    carries no project status.
 7. **The documentation site**: `generate.py` recursing over the bundle, the navigation generated
    from the `index.md` files, and frontmatter rendered as page metadata under `mkdocs build --strict`.

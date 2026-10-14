@@ -4,7 +4,7 @@ The corrections of the ePNP-NS model are **data, not code** (QR-14): the fitted 
 concentration- and wall-dependent diffusivity, mobility, viscosity, permittivity and density, and
 the parameters of the steric flux. They live in YAML files under `data/corrections/`, ship inside
 the package, and are listed by `nanopnp --env`. The functional forms they parameterise are specified
-in §4.3 and documented, with the errata of the printed sources, in `.knowledge/01-physics-epnpns/index.md`; read them
+in §4.3 and documented, with the errata of the printed sources, in `knowledge/01-physics-epnpns/index.md`; read them
 [there](../_generated/model/knowledge/01-physics-epnpns/index.md), not here.
 
 ## Selecting one

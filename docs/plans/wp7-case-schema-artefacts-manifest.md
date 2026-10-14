@@ -371,11 +371,11 @@ three, and the fourth removes a reading that silently deletes a boundary conditi
 Appendix A rows for IF-01, IF-08, FR-25, FR-26, FR-27 and QR-08 currently read "None yet"; they are
 updated by `/wp-implement` in the commit that lands the tests, not here.
 
-Outside the specification, `.knowledge/07-software-stack/06-licence-summary.md` still advises "Default the bundle to
+Outside the specification, `knowledge/07-software-stack/06-licence-summary.md` still advises "Default the bundle to
 scipy SuperLU (BSD) and make UMFPACK opt-in" — a scope opinion superseded by the CON-11 amendment of
 2 September and by the §6.6 measurement. It is corrected to record the measured fact (SuperLU was
 OOM-killed on the reference-sized factorisation) and to drop the recommendation, which does not
-belong in `.knowledge/` in any case.
+belong in `knowledge/` in any case.
 
 ## Verification
 

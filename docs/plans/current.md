@@ -67,7 +67,7 @@ edit. *Recommendation:* keep that reading; a copy of the whole git history would
 |---|---|
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | The small fixes as shipped | `wp46-small-fixes.md`; `CHANGELOG.md` `0.5.0-alpha.12`; `docs/project/review-items.md` |
-| The knowledge bundle as shipped | `wp47-okf-bundle.md`; `.knowledge/index.md`; `src/nanopnp/validation/okf.py` (VER-68) |
+| The knowledge bundle as shipped | `wp47-okf-bundle.md`; `knowledge/index.md`; `src/nanopnp/validation/okf.py` (VER-68) |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `okf-converter-rules.md` |
 

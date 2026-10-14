@@ -224,7 +224,7 @@ outputs: [current]
 """
 
 # Measured at maxh 4.0 nm on the 124-element mesh of
-# .knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md.
+# knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md.
 INADMISSIBLE_WALL_H_NM = 1.0
 
 # NUM-26, PHY-02

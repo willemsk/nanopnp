@@ -1,4 +1,4 @@
-"""Read and check the knowledge bundle under ``.knowledge/`` (VER-68; section 8.2.7 G12)."""
+"""Read and check the knowledge bundle under ``knowledge/`` (VER-68; section 8.2.7 G12)."""
 
 from __future__ import annotations
 
@@ -49,9 +49,13 @@ FENCE = re.compile(r"^[ \t]*(```|~~~)")
 
 CODE_SPAN = re.compile(r"(`+)(.+?)\1")
 
-CITATION = re.compile(r"\.knowledge(?:/(?P<path>[\w./-]*[\w/-]))?(?:#(?P<anchor>[\w:.-]*\w))?")
+CITATION = re.compile(
+    r"(?:(?<![\w./-])|(?<=\.\./))knowledge/(?P<path>[\w./-]*[\w/-])?(?:#(?P<anchor>[\w:.-]*\w))?"
+)
 
-LEGACY = re.compile(r"\.knowledge/\d\d(?:-[\w-]+\.md)?(?::[\d-]+)?`*\s*(?:§|section\b)")
+LEGACY = re.compile(
+    r"(?:(?<![\w./-])|(?<=\.\./))knowledge/\d\d(?:-[\w-]+\.md)?(?::[\d-]+)?`*\s*(?:§|section\b)"
+)
 
 PLACEHOLDER = re.compile(r"^(?:0N|NN)|[<*]")
 
@@ -302,7 +306,7 @@ def _anchors(file: Path) -> set[str]:
 
 
 def check_citations(root: Path, files: Iterable[Path], base: Path) -> list[Finding]:
-    """Refuse each ``.knowledge/`` address in ``files`` that reaches nothing (VER-68 2)."""
+    """Refuse each ``knowledge/`` address in ``files`` that reaches nothing (VER-68 2)."""
     findings: list[Finding] = []
     cache: dict[Path, set[str]] = {}
     for file in files:

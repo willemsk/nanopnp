@@ -918,7 +918,7 @@ def run_apbs(
     potential, found_origin, spacing = read_dx(output)
     # APBS writes the header's origin and delta at %12.6e, seven significant
     # figures, so a grid whose numbers carry more is read back rounded to 5e-7
-    # relative (`.knowledge/07-software-stack/03-charge-and-electrostatics.md`); a shift that
+    # relative (`knowledge/07-software-stack/03-charge-and-electrostatics.md`); a shift that
     # matters is a fraction of h.
     if (
         potential.shape != (grid.dime,) * 3

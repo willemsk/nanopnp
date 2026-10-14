@@ -127,7 +127,7 @@ continuation for free.
 trans side, 1 on the cis side. `cis` is at `+z` in `CylindricalPoreGeometry`, so `ψ` increases with
 `z`. Built by **interpolation**, never by writing degrees of freedom: NGSolve's P2 basis is
 hierarchical, and a degree-of-freedom-set indicator carries a clean, mesh-independent 8.33 % error
-that reads as a modelling difference rather than a bug (`.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, and
+that reads as a modelling difference rather than a bug (`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, and
 the same reasoning already written into `post/reaction_flux.py`).
 
 `check_indicator` asserts `ψ ≈ 1` on the cis boundary and `≈ 0` on trans, so an inverted band fails
@@ -212,7 +212,7 @@ loosely, and any shared helper in `src/nanopnp/validation/` rather than in `test
   the `2πr` convention to be stated; §6.7 records that `Measures` cancels `2π` and `post/` restores
   it, so every SI quantity of interest is a true three-dimensional one.
 - **`phase-0-spike.md`.** WP5 merged, criterion 2 met, criterion 1 outstanding only on VER-19 … VER-22.
-- **`.knowledge/06-numerics-fem/index.md`.** The measured route agreement, and the measured cross-section
+- **`knowledge/06-numerics-fem/index.md`.** The measured route agreement, and the measured cross-section
   spread the `ψ` form removes — §7's flux trap is currently asserted from the literature and becomes
   **[tested]** — plus any new silent NGSolve trap found on the way.
 

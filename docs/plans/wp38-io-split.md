@@ -143,7 +143,7 @@ answer: a dropped check, a changed refusal text or a stage starved of an input.
 7. The shell: `CaseModel.commit` runs `check_document`, and every import follows (QR-11, VER-43).
 8. `nanopnp/__init__.py`'s `PUBLIC` and mirror; `validation/modularity.py`'s `Surface`,
    `LAYER_ORDER` and the YAML (D12, D15).
-9. The tests, the user guide's `--upto` sentence in `docs/guide/running.md`, `.knowledge/07-software-stack/index.md`'s
+9. The tests, the user guide's `--upto` sentence in `docs/guide/running.md`, `knowledge/07-software-stack/index.md`'s
    paths, VER-64's row (D11, plus the `io/run.py` path) and Appendix A, the findings log and the
    register, `CHANGELOG.md`, and the phase plan's Outcome.
 

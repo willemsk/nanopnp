@@ -203,7 +203,7 @@ def rotation_about(axis: np.ndarray, angle: float) -> np.ndarray:
 
 def _prepared_rotation(group: mda.AtomGroup) -> np.ndarray:
     # The deposited +z end is trans, so the axis is taken to -z
-    # (.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md).
+    # (knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md).
     from nanopnp.structure.axis import measure_axis
 
     chains = []
@@ -396,7 +396,7 @@ def clya_reference_mesh(tmp_path_factory: pytest.TempPathFactory) -> Callable[[]
             path.parent.mkdir(parents=True, exist_ok=True)
             # A pickle, not a .vol: the .vol text moves vertices by up to 5.6e-17 nm and
             # changes the geometry digest
-            # (.knowledge/06-numerics-fem/17-tier-3-test-evidence-the-mesh-geometry.md).
+            # (knowledge/06-numerics-fem/17-tier-3-test-evidence-the-mesh-geometry.md).
             staging = path.with_suffix(f".{os.getpid()}.pickle")
             staging.write_bytes(pickle.dumps(mesh))
             staging.replace(path)
@@ -540,7 +540,7 @@ CHARGED_TUBE_SECOND_FRAME_E: tuple[float, float] = (1.0, -3.0)
 
 # size_scale 5, not the 20 of the uncharged case: at 20 the deployed field's worst plane fails the
 # 1e-3 quadrature gate
-# (.knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md).
+# (knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md).
 def write_charged_tube(
     directory: Path, *, frames: int = 1, size_scale: float = 5.0, charge_block: str | None = None
 ) -> Path:
@@ -780,7 +780,7 @@ def cylindrical_pore_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
 VAL05_REFERENCE_TRIANGLES = 120_917
 
 # Reference mesh quality: SPECIFICATION.md section 5.2.2;
-# .knowledge/09-comsol-reference-settings/index.md.
+# knowledge/09-comsol-reference-settings/index.md.
 VAL05_REFERENCE_MIN_QUALITY = 0.6378
 
 # Reference mesh quality: SPECIFICATION.md section 5.2.2.

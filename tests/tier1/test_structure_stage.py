@@ -229,7 +229,7 @@ def two_chains(
 @pytest.mark.parametrize(
     ("suffix", "tolerance_nm"),
     # DCD and NetCDF are exact; TRR and XTC round as recorded in
-    # .knowledge/07-software-stack/index.md (trajectory formats).
+    # knowledge/07-software-stack/index.md (trajectory formats).
     [(".dcd", 0.0), (".xtc", 5e-4 + 3.1e-6), (".trr", 3.1e-6), (".nc", 0.0), (".ncdf", 0.0)],
 )
 def test_ver48_each_trajectory_format_reads(
