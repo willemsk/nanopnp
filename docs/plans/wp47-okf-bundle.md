@@ -1,5 +1,7 @@
 # WP47 — The knowledge base as an OKF bundle
 
+PR: [#102](https://github.com/willemsk/nanopnp/pull/102), branch ccr-14fe3bdc-aizha0
+
 **Status: delivered, 14 October 2026.** Inherits WP46 as delivered (the tree it is written
 against), WP45's prose rule (§8.2.11 L4) and the input note `okf-knowledge-bundle.md` (K1 to K11).
 
