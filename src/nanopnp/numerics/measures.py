@@ -81,7 +81,8 @@ class Measures:
         bonus = extra
         if singular:
             # The bonus alone must reach the minimum: NGSolve's own estimate is unknowable
-            # here and can be 2 for a quotient (.knowledge/06-numerics-fem.md section 8.1).
+            # here and can be 2 for a quotient
+            # (.knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md).
             bonus = max(bonus, SINGULAR_MIN_ORDER)
         return bonus
 

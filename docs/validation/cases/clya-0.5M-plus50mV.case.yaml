@@ -59,7 +59,7 @@ physics:
 
 numerics:
   # Rung 0: Taylor-Hood, unstabilised. `phi` and `c` stay at P2 on every rung, which is
-  # the reference's own choice (.knowledge/09-comsol-reference-settings.md section C.2).
+  # the reference's own choice (.knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field).
   elements: {phi: P2, c: P2, u: P2, p: P1}
   continuation: default_ladder
   stabilisation: none

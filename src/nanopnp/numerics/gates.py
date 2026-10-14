@@ -23,7 +23,8 @@ WATER_DIAMETER_NM = 0.311
 
 PACKING_LIMIT = 1.0
 
-# Why this, PACKING_WARNING and MINIMUM_WALL_DISTANCE_NM: .knowledge/06, Gate constants.
+# Why this, PACKING_WARNING and MINIMUM_WALL_DISTANCE_NM:
+# .knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md.
 INTERIOR_OFFSET = 1e-4
 
 PACKING_WARNING = 0.8

@@ -52,7 +52,7 @@ Opus only after Sonnet fails.
 
 - [x] a0cf1a4 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workflow_hooks.py` (D5, D6): the check on constructed bundles, and the prose rule with a case each; done when those rows pass.
 - [x] a79e05d 2. `.knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header and explicit ids; done when the word-for-word comparison is clean.
-- [ ] 3. `.knowledge/` (D4): rewrite the citations between concepts; done when the checker, run by hand through `uv run`, resolves each and the unplaced list is empty by ruling.
+- [x] ce22f90 3. `.knowledge/` (D4): rewrite the citations between concepts; done when the checker, run by hand through `uv run`, resolves each and the unplaced list is empty by ruling.
 - [ ] 4. every tracked file outside `.knowledge/`, `docs/plans/`, `docs/code_reviews/` and `CHANGELOG.md` (D4): the same; done by the same hand run.
 - [ ] 5. `docs/plans/`, `docs/code_reviews/`, released `CHANGELOG.md` sections (D4, K4); adds `test_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.
 

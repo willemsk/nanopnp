@@ -21,7 +21,7 @@ fi
 set +e
 
 # `gate.sh run` requires Gmsh, whose wheel needs X and GL libraries
-# (.knowledge/07 section 4): install them if that needs no prompt, else warn.
+# (.knowledge/07-software-stack/04-geometry-meshing-and-io.md): install them if that needs no prompt, else warn.
 gmsh_libs="libglu1-mesa libxft2 libxinerama1 libxcursor1"
 # Captured, not piped into grep: pipefail would fail the pipeline.
 python=.venv/bin/python

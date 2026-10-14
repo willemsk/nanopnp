@@ -30,7 +30,8 @@ _SUFFIXES: dict[str, GridFormat] = {
 
 NM2_TO_M2 = 1e-18
 
-# Round-off on a table written in metres to ten figures (.knowledge/07-software-stack.md, gridData).
+# Round-off on a table written in metres to ten figures
+# (.knowledge/07-software-stack/02-structure-trajectory-and-density.md).
 UNIFORM_TOL_NM = 1e-9
 
 

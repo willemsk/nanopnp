@@ -49,7 +49,8 @@ __all__ = [
 # Chaudhry, Comer, Aksimentiev & Olson, Commun. Comput. Phys. 15, 93 (2014); section 6.4.1.
 STREAMLINE_CUTOFF = 1.0
 
-# COMSOL exports no tuning for tds.crosswind (.knowledge/09-comsol-reference-settings.md section F).
+# COMSOL exports no tuning for tds.crosswind
+# (.knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md).
 # Not a case-file field: a variant is a second registered mode.
 CROSSWIND_COEFFICIENT = 1.0
 
@@ -74,7 +75,7 @@ FLOW_BONUS_ORDER = 4
 WIND_FLOOR = 1.0e-30
 
 # Derivative guard inside sqrt of a squared vector: NGSolve's 0/0 is NaN in the Jacobian under
-# AssembleLinearization (.knowledge/06-numerics-fem.md section 4).
+# AssembleLinearization (.knowledge/06-numerics-fem/04-stabilisation.md).
 MAGNITUDE_FLOOR = WIND_FLOOR * WIND_FLOOR
 
 # No wind, no crosswind: the projector would degenerate to isotropic diffusion,

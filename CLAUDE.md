@@ -6,12 +6,12 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 
 ## Before doing anything
 
-- **Read `.knowledge/00-index.md`**: the verified knowledge base.
+- **Read `.knowledge/index.md`**: the verified knowledge base.
 - **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`). Cite the
   identifier when you implement or test one. Changing specified behaviour means changing the
   specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
-  wrong. `.knowledge/01-physics-epnpns.md` is normative; where sources disagree, the COMSOL model
+  wrong. `.knowledge/01-physics-epnpns/index.md` is normative; where sources disagree, the COMSOL model
   report governs (§1.6). Web search is fine for library versions/APIs (prefer Context7) and
   post-knowledge-base literature.
 - **Rules by path:** `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` load when you
@@ -146,7 +146,7 @@ messages (`.claude/rules/python.md`; §8.2.11 L4).
 ## Durable learnings
 
 Write a durable fact into the relevant `.knowledge/` file, with its source, marked **[tested]** or
-**[verified]** (`.knowledge/00-index.md`, *Conventions*). Status and scope opinions belong in the
+**[verified]** (`.knowledge/index.md`, *Conventions*). Status and scope opinions belong in the
 specification.
 
 ## Do NOT

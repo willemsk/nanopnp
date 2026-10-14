@@ -548,7 +548,7 @@ at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without co
 **Measured.** `structure/read.py`'s `frame_times` decodes every frame only to read its time, and no
 PBC or RMSD gate catches a chain split across the periodic box.
 
-**Resolved.** WP46 D5: a DCD's frame times are computed from its header without decoding a frame; XTC, TRR and NetCDF decode, their times living in frame headers. A chain split across the periodic box is refused naming chain, pair, frame and distance; the deposited 2WCD's largest consecutive-Cα distance is 0.3856 nm (`.knowledge/04` §1.1).
+**Resolved.** WP46 D5: a DCD's frame times are computed from its header without decoding a frame; XTC, TRR and NetCDF decode, their times living in frame headers. A chain split across the periodic box is refused naming chain, pair, frame and distance; the deposited 2WCD's largest consecutive-Cα distance is 0.3856 nm (`.knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`).
 
 ### REV-58 — The azimuthal reduction projects cells it then drops
 
@@ -844,11 +844,11 @@ the same walk whenever the change reaches a process-starting test (REV-80).
 first. pytest-xdist re-sorts the files by their number of tests unless `--no-loadscope-reorder` is
 passed, so the order only breaks ties. On a quiet machine, `--extended` without coverage on 4
 cores took 534 s and 512 s with the order, 477 s without it and 474 s with the order and
-`--no-loadscope-reorder` (`.knowledge/07` §12.2): within the spread of like runs, and every run
+`--no-loadscope-reorder` (`.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md#122-where-the-time-goes-on-314-and-coverages-sysmon-core`): within the spread of like runs, and every run
 bounded by example 07's 421 to 477 s. The shards' bin-packing reads the same record and is
 unaffected.
 
-**Fixed.** The sort is dropped from `tests/conftest.py`: collection keeps pytest's own order (`--ff`, `--nf` and fixture grouping stand), and `tests/durations.json` serves the shards' packing alone (`.knowledge/07` §12.2).
+**Fixed.** The sort is dropped from `tests/conftest.py`: collection keeps pytest's own order (`--ff`, `--nf` and fixture grouping stand), and `tests/durations.json` serves the shards' packing alone (`.knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md#122-where-the-time-goes-on-314-and-coverages-sysmon-core`).
 
 **Also found in review.** The same sort in `tests/conftest.py` runs `trylast` over every item, so it
 overrides the order that `pytest --ff` and `--nf` produce and undoes pytest's own fixture-grouping

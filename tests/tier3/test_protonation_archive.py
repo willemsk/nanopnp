@@ -30,7 +30,8 @@ ARCHIVED = [
     for number in ARCHIVED_FRAMES
 ]
 
-# Archive Q_net: .knowledge/04 section 3.1.
+# Archive Q_net:
+# .knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md.
 ARCHIVED_Q_NET_E = -72
 
 needs_pqrs = pytest.mark.skipif(

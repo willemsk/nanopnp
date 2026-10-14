@@ -23,7 +23,7 @@ Only links are touched in the copies. A relative link to another copied page is
 pointed at its copy, and one to any other repository file is pointed at the file on
 GitHub, so that the strict build proves every link resolves. This is a separate step
 rather than an MkDocs hook so that the configuration stays readable by Zensical
-(``.knowledge/07-software-stack.md`` section 13).
+(``.knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md``).
 """
 
 from __future__ import annotations

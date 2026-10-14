@@ -43,7 +43,9 @@ QUANTITIES: dict[str, dict[str, float]] = {
     # rather than inferred: the reference's own table stores the charge sum
     # *without* ``e`` (units m^-2) and its COMSOL assembly multiplies by
     # ``e_const``, so a table read as C m^-2 would be wrong by 1.6e-19 with
-    # nothing to say so (`.knowledge/04` §7 G5, settled on the delivered table).
+    # nothing to say so
+    # (`.knowledge/04-clya-geometry-and-charge/07-stated-limitations-and-caveats.md` G5, settled on
+    # the delivered table).
     "areal_charge_density": {"C/m^2": 1.0, "e/m^2": ELEMENTARY_CHARGE},
     "volume_charge_density": {"C/m^3": 1.0, "e/m^3": ELEMENTARY_CHARGE},
     "solid_fraction": {"1": 1.0},

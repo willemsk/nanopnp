@@ -54,7 +54,7 @@ axes:
       - numerics.stabilisation: reference
         numerics.elements.u: P2
         numerics.elements.p: P1
-      # 3 -- the reference's own discretisation (.knowledge/09 section C.2, section E
+      # 3 -- the reference's own discretisation (.knowledge/09-comsol-reference-settings/04-physics-settings.md#c2-discretisation-order-per-field, section E
       # rows 1, 2 and 4). Delta_resid is the like-for-like number, and the only part of
       # the discrepancy that could be a defect.
       - numerics.stabilisation: reference

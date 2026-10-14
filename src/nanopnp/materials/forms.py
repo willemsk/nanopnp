@@ -26,7 +26,8 @@ __all__ = [
     "poly_quadratic",
 ]
 
-# Where coth(x) - 1/x and x/3 are equally accurate: .knowledge/01-physics-epnpns.md section 7.
+# Where coth(x) - 1/x and x/3 are equally accurate:
+# .knowledge/01-physics-epnpns/07-implementation-notes-carried-forward.md.
 _LANGEVIN_SERIES_CUTOFF = 3e-4
 
 

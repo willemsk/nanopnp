@@ -12,7 +12,8 @@ from nanopnp.core.hashing import Canonicalisable
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-# Thresholds: SPECIFICATION.md §5.3.1 NOTE on structure:; margins: .knowledge/07-software-stack.md.
+# Thresholds: SPECIFICATION.md §5.3.1 NOTE on structure:; margins:
+# .knowledge/07-software-stack/index.md.
 SPACING_FRACTION = 0.25
 
 ANGLE_TOLERANCE_DEG = 1.0
