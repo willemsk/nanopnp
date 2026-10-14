@@ -1,5 +1,7 @@
 # WP45 — The prose strip
 
+PR: [#98](https://github.com/willemsk/nanopnp/pull/98), branch claude/elegant-wright-1xgxnk
+
 **Status: delivered, 14 October 2026.** Inherits WP44's loop and the prose rule it wrote
 (§8.2.11 L4); the trial of a fresh worker per item (L9). Tag `v0.5.0-alpha.11`.
 
