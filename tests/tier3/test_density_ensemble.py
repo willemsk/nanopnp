@@ -1,20 +1,4 @@
-"""VER-49 to VER-51 on the author's ClyA-AS ensemble: the paper's 50 frames to stage 4.
-
-The archive is ``prod5_clya_as.{pdb,dcd}`` under ``$NANOPNP_REFERENCE_DATA``: 98
-frames of 54,075 atoms, hydrogens included (``.knowledge/04-clya-geometry-and-charge.md``
-§1.1). The paper averaged the final 5 ns; ``frames: {count: 50}`` takes the stride
-floor(98/50) = 1 ending on the last frame, so DCD frames 48 to 97, and the test
-asserts exactly those. Every other number is recorded, not gated (section 7.1:
-Tier 3 is recorded): the stage times, the peak memory, and the largest Cn and
-non-Cn variance with where they sit.
-
-Stage 4's test runs on the tier's session-scoped store (WP22 D12), so it reads
-stages 1 to 3 from the VER-50 run's cache rather than depositing the ensemble
-again, as does VAL-05's ensemble leg; it shares the store and not a fixture, so a
-contour-gate failure cannot fail VER-50 (WP20 plan, work item 6). Its gate
-verdict is the assertion; the measurements are logged and recorded in the WP20
-plan's Outcomes.
-"""
+"""VER-49 to VER-51 on the author's ClyA-AS ensemble: the paper's 50 frames to stage 4."""
 
 from __future__ import annotations
 
@@ -41,11 +25,6 @@ needs_archive = pytest.mark.skipif(
 
 
 def _session_peak_rss_GB() -> float | None:
-    """Return this session's peak RSS in GB, an upper bound on the run's; ``None`` on Windows.
-
-    ``resource`` is POSIX only, so it is imported here: at module scope it fails the
-    module's collection on Windows, where every tier collects it.
-    """
     if sys.platform == "win32":
         return None
     import resource
@@ -59,7 +38,6 @@ def _session_peak_rss_GB() -> float | None:
 def test_ver50_clya_as_ensemble(
     tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
 ) -> None:
-    """The paper's final 50 frames run to stage 3; times, memory and variance maxima logged."""
     result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="symmetry", write=False)
     structure = result.artefacts["structure"].summary
     density = result.artefacts["density"].summary
@@ -93,13 +71,6 @@ def test_ver50_clya_as_ensemble(
 def test_ver51_clya_as_contour(
     tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
 ) -> None:
-    """Stage 4 on the 50-frame mean: the gate passes, and every measurement is logged.
-
-    The prototype passed at a feature size of 0.229 nm, with ``r_c - R_p`` from
-    +0.173 to +0.869 nm and the constriction 1.610 nm at z = -1.35 nm (WP20 plan,
-    Design §6). The contour is in the stage-1 frame, the MD frame, whose bilayer
-    centre is z = 0 (G9).
-    """
     result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="contour", write=False)
     seconds = {record.name: round(record.seconds, 1) for record in result.stages}
     cached = [record.name for record in result.stages if record.cached]

@@ -1,27 +1,4 @@
-"""VER-01, VER-02 and VAL-15 at Tier 3, recorded: the author's archived PQRs deposited (WP28).
-
-PQRs 50-99 are the paper's 50 frames (``.knowledge/04`` §1.1). Supplied through
-``inputs.pqr`` beside the ClyA-AS ``structure:``, each frame registers to its stage-1
-frame (WP27), and with ``centre_z_nm = 0`` the model frame is VAL-05's, the MD
-frame (G9). Recorded, not gated (section 7.1):
-
-1. stage 7's report on the generated mesh: both legs, the quadrature agreement,
-   the worst plane of each side, the solid share and ``Q_net``;
-2. the export against the delivered ``rhoq_pore``: planar integrals, the rms and
-   largest field difference, and the 12 planes, split through the reference's
-   construction rebuilt from the same PQRs (G4, :mod:`nanopnp.validation.charge`)
-   into the construction (ours against G4 on the registered atoms), the
-   registration (G4 registered against G4 on the archive as printed) and the
-   reproduction (G4 as printed against the table);
-3. the export read back through ``inputs.charge`` on the WP8 reference mesh: the
-   consumer path's report and the gates' verdict, beside VAL-15's 9.9e-3 for the
-   table on the same mesh;
-4. one frozen case, charged: ``G`` and ``t+`` on the pipeline's mesh and charge,
-   on the reference mesh with the same deposit, and the table's verdict on the
-   reference mesh, which VAL-15 says its quadrature gate refuses.
-
-Skips without the PQRs, the trajectory or the table.
-"""
+"""VER-01, VER-02 and VAL-15 at Tier 3, recorded: the author's archived PQRs deposited."""
 
 from __future__ import annotations
 
@@ -61,22 +38,16 @@ logger = logging.getLogger(__name__)
 ARCHIVED = [
     reference_file(f"prod5_protein_aligned_100ps_{number:02d}.pdb.pqr") for number in range(50, 100)
 ]
-"""The PQRs of the paper's 50 frames, in time order: DCD frames 48-97."""
 
 TABLE = reference_file("prod5_clya_charge")
-"""The delivered ``rhoq_pore`` table (VAL-15)."""
 
 ARCHIVED_Q_NET_E = -72
-"""The archive's ``Q_net`` (``.knowledge/04`` §3.1)."""
 
 SHARPNESS = 0.5
-"""The reference's sharpness, which is the validated default (``.knowledge/04`` §3)."""
 
 PLANE_SMOOTHING_NM = 0.5
-"""``s`` of the per-plane comparisons, the producer path's own (D6)."""
 
 GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
-"""G9: the MD frame's bilayer centre is z = 0, so the model frame is the stage-1 frame."""
 
 FROZEN_CASE = """\
 schema: nanopnp/case/v0.5
@@ -104,7 +75,6 @@ numerics:
   stabilisation: none
 outputs: [current]
 """
-"""WP22 D9's frozen case, charged: 1 M, +50 mV, ground *cis*, every correction ``none``."""
 
 needs_archive = pytest.mark.skipif(
     any(path is None for path in ARCHIVED) or TABLE is None,
@@ -123,7 +93,6 @@ def _write(path: Path, text: str) -> Path:
 
 
 def _bundle(target: Path) -> Path:
-    """Write PQRs 50-99 as one multi-MODEL PQR, one MODEL per frame (WP27)."""
     with target.open("w", encoding="utf-8") as handle:
         for model, path in enumerate(ARCHIVED, start=1):
             assert path is not None
@@ -136,7 +105,6 @@ def _bundle(target: Path) -> Path:
 
 
 def _table_document(target: Path) -> Path:
-    """Write the header the delivered table is read through (``test_reference_charge_map``)."""
     return _write(
         target,
         "schema: nanopnp/field/v0.5\n"
@@ -156,7 +124,6 @@ def _table_document(target: Path) -> Path:
 
 
 def _printed_atoms() -> SourceAtoms:
-    """Return the archive's charged atoms as printed, unregistered, in the MD frame."""
     frames = [read_pqr(path)[0] for path in ARCHIVED if path is not None]
     rows: dict[str, list[np.ndarray]] = {"r": [], "z": [], "w": [], "q": [], "frame": []}
     for index, frame in enumerate(frames):
@@ -190,7 +157,6 @@ def charged(
     ensemble_store: Store,
     ensemble_case: Callable[..., Path],
 ) -> tuple[Path, Path, RunResult]:
-    """Return the bundle, the frozen case on the generated mesh, and its walk to the report."""
     root = tmp_path_factory.mktemp("clya-as-charge")
     bundle = _bundle(root / "archived.pqr")
     structured = ensemble_case(root, name="clya-as-charged", geometry=GEOMETRY)
@@ -220,7 +186,6 @@ def _frozen(result: RunResult) -> dict[str, Any]:
 
 
 def test_ver01_the_archived_pqrs_deposit_on_the_generated_mesh(charged) -> None:
-    """Both legs, the quadrature agreement and the worst plane of each side; recorded."""
     _, _, result = charged
     record = result.artefacts["charge"].summary["charge"]
     conservation_record = record["conservation"]  # type: ignore[index]
@@ -244,7 +209,6 @@ def test_ver01_the_archived_pqrs_deposit_on_the_generated_mesh(charged) -> None:
 def test_val15_the_export_against_the_delivered_table_split_through_g4(
     charged, tmp_path: Path
 ) -> None:
-    """Ours against ``rhoq_pore``, and the three parts of the difference; recorded."""
     _, _, result = charged
     stage7 = result.artefacts["charge"]
     ours = read_grid(stage7.payload["charge"], format="npz")
@@ -272,7 +236,6 @@ def test_val15_the_export_against_the_delivered_table_split_through_g4(
 
 
 def test_val15_the_export_read_back_on_the_reference_mesh(charged, tmp_path: Path) -> None:
-    """``inputs.charge`` on the WP8 reference mesh: the consumer report and its verdict."""
     _, _, result = charged
     export_charge(result.artefacts["charge"], tmp_path / "clya-as.yaml")
     field = load_field(tmp_path / "clya-as.yaml")
@@ -296,7 +259,6 @@ def test_val15_the_export_read_back_on_the_reference_mesh(charged, tmp_path: Pat
 def test_val15_the_charged_frozen_case_against_the_reference_mesh(
     charged, ensemble_store: Store, tmp_path: Path
 ) -> None:
-    """``G`` and ``t+`` on the pipeline's mesh, on the reference mesh, and the table's verdict."""
     bundle, _, pipeline = charged
     profile = f"  profile: {{path: {profile_file('clya_reference_profile')}}}\n"
     reference = run_case(

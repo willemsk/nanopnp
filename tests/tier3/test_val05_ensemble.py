@@ -1,27 +1,4 @@
-"""VAL-05, the ensemble leg and the Phase 2 gate: ClyA-AS against the reference polygon (WP22 D4).
-
-DCD frames 48 to 97 of the author's archive run through stages 1 to 5 at
-``centre_z_nm = 0``: the MD trajectory was centred on the bilayer (G9, author
-ruling 12), and stage 1 keeps a file's axial coordinate (WP18 D8), so nothing is
-registered and nothing is fitted. The model-frame polygon is compared with the
-delivered 185-vertex table on the 282 D2 planes, and the D4 tolerances are the
-assertion: ``|ε_G| <= 5 %``, ``|Δr_c| <= 0.1 nm``, rms ``<= 0.1 nm`` (author
-ruling 14; ``SPECIFICATION.md`` §7.4 NOTE on VAL-05). The prediction from WP20
-Design §7 is ε_G ≈ -4.5 %, Δr_c = -0.040 nm and rms ≈ 0.09 nm: a pass, narrowly
-on ε_G. A miss is a finding recorded against the phase gate, never a reason to
-move the tolerance (§7.1: Tier 3 is recorded, not a push gate).
-
-``Z_MD``, the MD structure's C-alpha centroid that registers 2WCD at Tier 2, is
-measured here on the 50-frame mean and pinned to 0.01 nm (D6). Recorded beside
-the verdict, logged at INFO as YAML (D13): the attribution to the reference's
-construction (D7), the isolevel sweep (D8), one frozen case's conductance on the
-generated mesh against the fixture's at ``size_scale`` 1 (D9), the default-size
-mesh against the reference figures (D10), the same on the Gmsh backend beside
-netgen's (WP23 D13), and the stage-3 variance (D11).
-
-Stages 1 to 3 come from the tier's session-scoped store (D12), shared with
-``test_density_ensemble.py``, so the nightly session deposits them once.
-"""
+"""VAL-05, the ensemble leg and the Phase 2 gate: ClyA-AS against the reference polygon."""
 
 from __future__ import annotations
 
@@ -61,15 +38,12 @@ needs_archive = pytest.mark.skipif(
 )
 
 GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
-"""G9: the MD frame's bilayer centre is z = 0, so the model frame is the stage-1 frame."""
 
 FROZEN_SIZE_SCALE = 1.0
-"""D9's ``size_scale`` at Tier 3, on both meshes."""
 
 
 @pytest.fixture(scope="module")
 def reference() -> np.ndarray:
-    """Return the delivered 185-vertex polygon, in the model frame."""
     return load_profile(profile_file("clya_reference_profile")).as_array()
 
 
@@ -77,11 +51,6 @@ def reference() -> np.ndarray:
 def test_val05_ensemble_pins_z_md(
     tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
 ) -> None:
-    """D6: the 50-frame mean's C-alpha centroid, residues 8-292, lies within 0.01 nm of 5.655 nm.
-
-    If it does not, the constant and every 2WCD figure registered by it are
-    corrected in the WP22 Outcomes; the test fails so that happens.
-    """
     result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="structure", write=False)
     summary = result.artefacts["structure"].summary
     assert summary["frames"]["indices"] == list(range(48, 98))  # type: ignore[index]
@@ -108,17 +77,6 @@ def test_val05_ensemble_against_the_reference_polygon(
     reference: np.ndarray,
     as_yaml: Callable[[object], str],
 ) -> None:
-    """D4, the Phase 2 gate: |ε_G| <= 5 %, |Δr_c| <= 0.1 nm and rms <= 0.1 nm.
-
-    Every plane outside the tip band must be crossed (D2). The attribution (D7),
-    the isolevel sweep (D8) and the conditioning's share are recorded first, so
-    a miss still leaves them in the log.
-
-    The earlier run measured ε_G = -5.56 % and failed here. Phase 2
-    closed on the author's waiver (``SPECIFICATION.md`` §8.2.4 D7), and the
-    tolerance stands, so this test keeps failing on the archive until the method
-    or the reference changes. That failure is the record.
-    """
     case = ensemble_case(tmp_path, name="clya-as-val05", geometry=GEOMETRY)
     result = run_case(case, store=ensemble_store, upto="region", write=False)
     logger.info(
@@ -178,11 +136,6 @@ def test_val05_ensemble_mesh_and_frozen_case_conductance(
     val05_frozen_case: str,
     reference_triangles: int,
 ) -> None:
-    """D9 and D10, recorded: the default-size mesh, and G on it against the fixture's.
-
-    At ``size_scale`` 1 the frozen case's mesh is the default-size mesh, since
-    ``auto`` is 0.05 nm at 0.15 M and at 1 M alike.
-    """
     source = yaml.safe_load(ensemble_case(tmp_path, geometry=GEOMETRY).read_text("utf-8"))
     structure = yaml.safe_dump({"structure": source["structure"], "geometry": source["geometry"]})
     generated_case = tmp_path / "frozen-generated.case.yaml"
@@ -250,7 +203,6 @@ def test_val05_ensemble_mesh_on_both_backends(
     ensemble_store: Store,
     ensemble_case: Callable[..., Path],
 ) -> None:
-    """WP23 D13, recorded: ClyA-AS's default-size mesh on Gmsh beside netgen's."""
     base = ensemble_case(tmp_path, geometry=GEOMETRY).read_text("utf-8")
     for backend in ("netgen", "gmsh"):
         document = yaml.safe_load(base)
