@@ -31,9 +31,10 @@ keep that reading; a copy of the whole git history would only duplicate it.
 ## Execution brief
 
 Scope: the bundle, the citation rewrite, the F6 check as VER-68 with G3's ratchet, the documentation
-build. Not the backfill (WP48). Depends on WP46 as delivered. Clauses amended here: §8.2.7 G12,
-Appendix A VER-68, and at item 9 the §11 NOTE. Models (`CLAUDE.md`): Sonnet throughout; Haiku for items
-2 to 5; Opus only after Sonnet fails on an item.
+build. Depends on WP46 as delivered. Clauses amended here: §8.2.7 G12,
+Appendix A VER-68, and at item 9 the §11 NOTE. Models (`CLAUDE.md`): Sonnet by default; scripts, not models, move
+text in items 2 to 5, a Haiku worker only running them; Haiku, one worker per file, for item 6's headers;
+the parent commits; Opus only after Sonnet fails.
 
 ### Decisions
 
@@ -42,13 +43,13 @@ Appendix A VER-68, and at item 9 the §11 NOTE. Models (`CLAUDE.md`): Sonnet thr
 | D1 Layout | `.knowledge/index.md` (root; `okf_version: "0.2"`, lists every directory) and a directory per file, `NN-slug/`, with its own `index.md` listing its concepts. One concept file per `##`, named `NN-heading-slug.md` by the section number, unnumbered sections taking the next numbers; `###` and deeper stay headings inside it. The text before a file's first `##` is `00-overview.md`, type Overview. `00-index.md` goes: its table is the listing, and its traps, conventions, provenance, author rulings and still-open items become concepts under `00-orientation/` | K1, K2; G12. A sentence outside a concept escapes every check, so one rule holds: all prose is in a concept with a header |
 | D2 Header | `type` (a closed list committed in the check: Overview, Orientation, Physics, Erratum, Author Ruling, Numerics, Library Behaviour, Benchmark, Reference Settings, Background, Biology, Geometry and Charge, Test Evidence), `title`, `description`, `tags`, `sources`, `generated` (`by: claude-code/<version read from the installed distribution>`, never a model identifier), `verified`. `sources` carry stable ids `thesis`, `paper`, `esi`, `comsol-report`, cited by footnote only where the sentence already names the source; no attribution is invented | K9, K10; G12. Rule 6 refuses a footnote that is no `sources[].id` |
 | D3 Ledger | A bare `[tested]` becomes `[tested: pending]`, a bare `[verified]` stays with its footnote under `process:arithmetic`; the four claims that name a test become `[tested: tests/…::test_…]`. `.knowledge/pending.yaml` counts pending claims per concept; the check demands equality with the files and a total no larger than the figure recorded at this package's close. `tested_with` is checked against `uv.lock` but no concept carries it yet: it is WP48's, set when its test passes | K5 to K8; G3, G8. A count per concept survives edits that move a sentence |
-| D4 Citations | A one-off converter, not committed, rewrites each `.knowledge/0N §x` form (also `section x`, and the `§x` between notes) to a bundle path, and a `###` or deeper address to the concept plus that heading's slug. Citations in released `CHANGELOG.md` sections, delivered plans and code reviews are rewritten too. The converter lists each address it cannot place, and none is guessed; the check then proves every path and heading exists | K3, K4. A wrong target is worse than a failing check |
-| D5 Check | `nanopnp.validation.okf` reads the bundle from the files, imports no checked module, and `tests/tier1/test_okf_bundle.py` is VER-68. A test named in a claim is found by reading `test_*.py` under `tests/` as syntax trees, as VER-72 reads the source; the F6 wording "collected" is amended to that. A word-for-word comparison of every concept body, joined, against the ten old files, is run once at item 2 and its result recorded in the commit message | F6; VER-68. Reading trees avoids importing the stack on every commit |
+| D4 Citations | A one-off converter, not committed, rewrites each `.knowledge/0N §x` form (also `section x`, and the `§x` between notes) to a bundle path, and a `###` or deeper address to the concept plus that heading's slug. Citations in released `CHANGELOG.md` sections, delivered plans and code reviews are rewritten too. The converter lists each address it cannot place; Sonnet or the author rules on each, none is guessed; the check then proves every path and heading exists | K3, K4. A wrong target is worse than a failing check |
+| D5 Check | `nanopnp.validation.okf` reads the bundle from the files, imports no checked module, and `tests/tier1/test_okf_bundle.py` is VER-68. A test named in a claim is found by reading `test_*.py` under `tests/` as syntax trees, as VER-72 reads the source; the F6 wording "collected" is amended to that. A word-for-word comparison of the joined concept bodies against the ten old files runs once at item 2, its result in the commit message | F6; VER-68. Reading trees avoids importing the stack on every commit |
 | D6 Site and gate | `docs/scripts/generate.py` recurses over the bundle; `mkdocs.yml` carries one Knowledge entry and the generated `index.md` lists every page from the bundle's indexes; headers are page metadata. `prose-only.sh` stops treating `.knowledge/` as prose, so an edit there runs the check. `log.md` follows OKF's form, one dated entry per event the notes already record (the August 2026 verification, the author's rulings, the errata), the rest in git | K1; G12 for `log.md`. The change to `prose-only.sh` stops a knowledge-only edit skipping VER-68 |
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py` (D5): the check, each refusal shown on a constructed bundle (D2, D3); done when the *Verification* rows on constructed bundles pass.
+- [ ] 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py` (D5): the check, each refusal shown on a constructed bundle (D2, D3); done when the constructed-bundle rows pass.
 - [ ] 2. `.knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header on each concept; done when the word-for-word comparison is clean and the layout test passes.
 - [ ] 3. `.knowledge/` (D4): rewrite the citations between concepts; done when each resolves and the converter's unplaced list is empty by ruling.
 - [ ] 4. `src/`, `tests/`, `.claude/`, `.github/`, `docs/` outside `plans/`, `examples/`, `data/`, `CLAUDE.md`, `SPECIFICATION.md` (D4): rewrite those citations; done when the repository-wide resolution test passes.
@@ -83,8 +84,7 @@ refusal has its own otherwise valid constructed bundle.
 
 ### Out of scope
 
-The backfill and `tested_with` (WP48, which empties `pending.yaml`); the protocol (WP49);
-rewriting any claim's content.
+The backfill and `tested_with` (WP48); the protocol (WP49); rewriting any claim's content.
 
 ### Open questions
 
