@@ -1,6 +1,6 @@
 # WP45 — The prose strip
 
-**Status: planned, not started**, 13 October 2026. Inherits WP44's loop and the prose rule it wrote
+**Status: delivered, 14 October 2026.** Inherits WP44's loop and the prose rule it wrote
 (§8.2.11 L4); the trial of a fresh worker per item (L9). Tag `v0.5.0-alpha.11`.
 
 The Phase 4 plan owns the phase ([phase plan](phase-4-polish-and-user-testing.md), *WP45*).
@@ -96,7 +96,7 @@ Every strip item: done when `same_tree.py HEAD~1` passes on its commit and the c
 
 *Compaction checkpoint: after item 27.*
 
-- [ ] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record under Outcomes the shares by subpackage against the prediction, the number of workers, redos and escalations, and the moves into `.knowledge/`; mark the plan delivered, update `current.md`, the Phase 4 plan and `CHANGELOG.md`. Done when `.claude/hooks/gate.sh run` passes.
+- [x] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record under Outcomes the shares by subpackage against the prediction, the number of workers, redos and escalations, and the moves into `.knowledge/`; mark the plan delivered, update `current.md`, the Phase 4 plan and `CHANGELOG.md`. Done when `.claude/hooks/gate.sh run` passes.
 
 ### Verification
 
@@ -117,3 +117,17 @@ Renaming tests to carry their identifiers (author's call; a later package by rul
 ### Open questions
 
 None blocking. The *Your call* above has a default, D3.
+
+> **Outcome — delivered; `src/` misses its prediction by 0.6 point, `tests/` meets it.** Prose is the
+> share of physical lines that are docstring or non-directive comment lines (`test_prose_share.py`,
+> measured 14 October). `src/nanopnp`: 33.0 % to **10.6 %** (5,138 of 48,418 lines; 68,770 before),
+> predicted at most 10 %. `tests/`: 18.8 % to **2.1 %** (996 of 46,509), predicted at most 3 %.
+> By subpackage: post 12.9, gui 12.4, numerics 12.3, physics 12.1, validation 12.0, density 11.9,
+> sweep 11.8, solve 11.4, materials 11.2, structure 10.7, mesh 10.2, core 10.0, geometry 9.9,
+> symmetry 9.8, io 9.1, pipeline 8.4, charge 7.7, cli 3.1. The overshoot is the condensed docstring
+> kept on every public method after the author's correction at item 19 (REV-92). Ceilings in the
+> test: 11.62 % and 3.14 %. Workers: 33 fresh sub-agents (18 first-pass, 7 recovery, 8 for `tests/`),
+> one redo (19a, redone as 19g), no Opus escalation; `same_tree.py` refused no commit; the strict
+> documentation build passes. Lessons: reading D2 literally (`PUBLIC` only) removed docstrings the author
+> wanted condensed, and a condense brief needs numbers (at most 40 % of the original, no paragraph after
+> the summary), not "shorten". Facts moved to `.knowledge/` 01, 04 to 08. Open: REV-91 to REV-93.

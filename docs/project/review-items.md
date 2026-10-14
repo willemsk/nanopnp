@@ -918,3 +918,28 @@ D101 to D107 are off (§8.2.11 L4), so no automated check says a symbol of `nano
 VER-72 (d) and the planned-xfail handling in `tests/tier1/test_plan_records.py` still guard `planned: WP<n>` markers, while §8.2.11 L7 and the rewritten skills retire planned tests. Removing a VER clause is a specification ruling.
 
 **Fixed.** The author's ruling, taken on the recommendation: VER-72 (d) is withdrawn (the letter is not reused) and the planned-marker check, its helpers and its tests are deleted from `tests/tier1/test_plan_records.py`, which keeps (e).
+
+### REV-91 — About 400 tests name their requirement only in a comment
+
+*Area:* documentation. *Severity:* low. *Found:* WP45.
+
+The strip removed test docstrings. Where a test's requirement identifier lived only there, a one-line comment above the test keeps it; the test name still does not carry it (CLAUDE.md asks tests named for their requirement).
+
+**Open.** The author's call. *Recommendation:* rename those tests in a later package, since a rename is code and WP45 proves it changed none.
+
+### REV-92 — src prose share is 10.6 %, above the 10 % prediction
+
+*Area:* documentation. *Severity:* low. *Found:* WP45.
+
+The prediction (at most 10 %) assumed docstrings on `PUBLIC` names only. L4 now keeps a condensed docstring on every public method, so `src/nanopnp` closes at 10.6 % (by subpackage in the plan's Outcome). VER-75 (b) holds the ceiling at 11.62 %.
+
+**Open.** The author rules whether to condense further or accept. *Recommendation:* accept; the next 0.6 point is NumPy-style parameter lists the author asked to keep.
+
+### REV-93 — VER-75 (a) says leading underscore; dunder methods count as public
+
+*Area:* documentation. *Severity:* low. *Found:* WP45.
+
+`test_prose_share.py` treats `__call__` and other dunder methods of a public class as public, so the hook Protocols keep their one-line docstrings. VER-75 (a) and L4 say "leading underscore".
+
+**Open.** *Recommendation:* amend the wording to "a single leading underscore".
+

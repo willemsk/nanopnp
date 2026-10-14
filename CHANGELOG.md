@@ -19,6 +19,15 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.11] - 2026-10-14
+
+WP45: the prose strip (`SPECIFICATION.md` §8.2.11 L4 amended, L5, L9; VER-75). Docstrings and
+comments fall from 33.0 % to 10.6 % of the lines of `src/nanopnp` and from 18.8 % to 2.1 % of `tests/`,
+with no instruction changed (`.claude/scripts/same_tree.py` proves every commit). L4 now asks a condensed
+docstring on every public function, class and method, NumPy-style parameters where name and type do not
+say, none on a test or private code. Derivations found nowhere else moved to `.knowledge/`. It discharges
+VER-75; REV-91 to REV-93 are open.
+
 ## [0.5.0-alpha.10] - 2026-10-13
 
 WP44: the loop simplified (`SPECIFICATION.md` §8.2.11 L2, L3, L4 in rule, L6 to L9). A commit runs the
