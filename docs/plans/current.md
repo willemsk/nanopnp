@@ -1,19 +1,18 @@
 # Current work
 
-Updated 14 October 2026 (WP45 merged; WP46 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 14 October 2026 (WP46 delivered, awaiting `/wp-ship`). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it; the simpler loop and trimmed code are merged. The next package, now
-planned, fixes fifteen small faults earlier reviews left: a salt sweep stops rebuilding the same
-mesh, two sweep members saving one result at once can no longer corrupt it, and empty, duplicated,
-wrapped or wrongly scaled inputs are refused with a message naming them. A stage run by hand must
-now be given its scratch folder, as you ruled. None of it should move a computed result.
+Phase 4 tidies the program before others rely on it; the simpler loop, the trimmed code and now the
+fifteen small fixes are built. A salt sweep no longer rebuilds the same mesh at each concentration,
+two sweep members saving one result at once cannot corrupt it, and empty, duplicated, wrapped or
+wrongly scaled inputs are refused with a message naming them. A stage run by hand must be given its
+scratch folder, as you ruled; the change log says how. No computed result moved. It now waits for review in a fresh session.
 
-**Your call:** should the check for a molecule wrapped across the simulation box use a fixed 1 nm
-bound rather than the box the file records? *Recommendation:* yes, since many files record no box
-and no bonded pair comes near 1 nm.
+**Your call:** the molecule-wrapped-across-the-box check uses a fixed 1 nm bound, not the box the file
+records. *Recommendation:* keep it: many files record no box, and the deposited pore's largest pair is 0.39 nm.
 
 ## Position
 
@@ -22,9 +21,9 @@ and no bonded pair comes near 1 nm.
   **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J12). WP35 to WP45 are
   merged ([loop](wp44-simplify-the-loop.md), [prose](wp45-prose-strip.md)); tags to `v0.5.0-alpha.11`
   are the author's step.
-- **WP46, the small fixes** ([plan](wp46-small-fixes.md)), is **planned** (§8.2.9 I2; fifteen `REV-nn`
-  rows). Next: `/wp-implement`; then WP47–WP49 (OKF bundle, backfill, protocol); the author's
-  sessions; fixes from WP50.
+- **WP46, the small fixes** ([plan](wp46-small-fixes.md)), is **delivered** (§8.2.9 I2; fifteen
+  `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge. Next: `/wp-ship`; then WP47–WP49
+  (OKF bundle, backfill, protocol); the author's sessions; fixes from WP50.
 
 ## Not to be re-decided
 
@@ -63,7 +62,7 @@ and no bonded pair comes near 1 nm.
 | Need | Read |
 |---|---|
 | The loop as shipped | `wp44-simplify-the-loop.md` |
-| The small fixes | `wp46-small-fixes.md`; §8.2.9 I2; `docs/project/review-items.md` |
+| The small fixes as shipped | `wp46-small-fixes.md`; `CHANGELOG.md` `0.5.0-alpha.12`; `docs/project/review-items.md` |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G9 |
 

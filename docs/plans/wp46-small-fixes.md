@@ -1,6 +1,6 @@
 # WP46 — The small fixes
 
-**Status: planned, not started**, 14 October 2026. Inherits WP44's loop and WP45's prose rule
+**Status: delivered, 14 October 2026.** Inherits WP44's loop and WP45's prose rule
 (§8.2.11 L4); the register's fifteen rows of §8.2.9 I2 (renumbered by §8.2.10 J1).
 
 The Phase 4 plan owns the phase ([phase plan](phase-4-polish-and-user-testing.md), *WP46*).
@@ -69,7 +69,7 @@ and gives each `review-items.md` section a *Resolved* line.
 - [x] 10. a801912 REV-24: the count, recorded in this plan's Outcomes and the row's ruling; the cache only if needed.
   > **Outcome — REV-24: no duplicate.** On `CYLINDRICAL_PORE_CASE` (epnp-ns, 0.1 M NaCl, Python 3.14, the netgen mesh of the fixture) one `run_case(upto="solve")` makes ten solves, 36 Newton iterates and 46 positivity checks, and `species_concentrations_SI` is called ten times: once per solve, shared by the positivity and packing gates. The expression is built once and evaluated per iterate, so the count per field per iterate is below one and nothing is removed. Guard: `tests/tier1/test_gate_builds.py`.
 
-- [ ] 11. `.claude/skills/wp-ship/SKILL.md` §6 and `.claude/skills/steward/SKILL.md` *Bounded wakes*: once CI is green and the PR mergeable, report once, unsubscribe and cancel the check-in, so a merge does not wake a cold session; `/wp-ship` resumes (author, 14 October 2026).
+- [x] 11. 5ee1176 `.claude/skills/wp-ship/SKILL.md` §6 and `.claude/skills/steward/SKILL.md` *Bounded wakes*: once CI is green and the PR mergeable, report once, unsubscribe and cancel the check-in, so a merge does not wake a cold session; `/wp-ship` resumes (author, 14 October 2026).
 
 *Compaction checkpoint: after item 10; then the push gate and `/wp-implement`'s PR.*
 

@@ -21,13 +21,35 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [0.5.0-alpha.12] - 2026-10-14
 
-WP46: the small fixes (`SPECIFICATION.md` §8.2.9 I2).
+WP46: the small fixes (`SPECIFICATION.md` §8.2.9 I2). Fifteen register rows are fixed, each with
+its test; no computed number moves beyond round-off, and VER-62 holds.
+
+- **Radial grid `.npz`** (VER-29, REV-14): carries `origin_nm` and `spacing_nm` and reads them back
+  bit for bit; an axes-only file still reads; `charge/stage.py` deposits the grid it summed.
+- **Stage-6 key** (VER-53, VER-54, REV-16): leaves the Debye length out, so a salt sweep below
+  about 1.5 M meshes once. Stored stage-6 keys change once, so an existing store re-meshes once.
+- **`Store.put`** (VER-26, REV-18): stages the entry in a sibling directory and renames it; the
+  first complete entry stays and every writer returns it.
+- **Stage 1 refusals** (VER-48, REV-19, REV-57): a trajectory with no frame, a second Cα at one
+  residue and a chain split across the periodic box (consecutive Cα over 1.0 nm apart) are refused
+  naming the file, residue, or chain, pair, frame and distance; a DCD's frame times come from its
+  header without decoding.
+- **Density maps** (VER-49, REV-40): an interchange map whose spacing lies outside 0.025 to 0.05 nm
+  is refused saying maps are written in ångströms.
+- **Example 05** (REV-15): `#SBATCH` values are written raw, and one sbatch cannot read is refused.
+- **VAL-05** (REV-59): `attribute_to_construction` refuses a `strict=False` comparison with
+  `GeometryComparisonError`.
+- **Housekeeping** (REV-43, REV-49, REV-50, REV-51): `chain_characters` lives in
+  `structure/ensemble.py` (a chain-key overflow raises `EnsembleFormatError`, exit 4, not
+  `PQRError`); `Measures.at_order`; the axis-weight test uses `innermost_crossings`; `ReopenedRun`
+  carries its `ResolvedCase`. REV-24 measured no duplicate (one build per solve).
+- The shipping skill and the steward unsubscribe from a green, mergeable PR after one report.
 
 **Breaking.** A stage that writes a payload and is constructed without `workspace=` raises
 `MissingWorkspaceError` naming the argument; it no longer picks a directory under the default store
 root (REV-25, REV-55). A caller that built `MeshStage()` or any other stage by hand passes
-`workspace=<directory>`; a run through `run_case` or the CLI already does. Stored stage-6 keys change
-once, so an existing store re-meshes once (REV-16).
+`workspace=<directory>`, which the stage writes into; a run through `run_case` or the CLI already
+does.
 
 ## [0.5.0-alpha.11] - 2026-10-14
 
