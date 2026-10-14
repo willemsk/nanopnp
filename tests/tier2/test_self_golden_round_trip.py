@@ -1,22 +1,4 @@
-"""VAL-01, VAL-02: one solution through the whole golden path, back to itself.
-
-The Tier-3 harness has to be exercisable before the COMSOL exports land — and the
-honest way to exercise it is to make the reference *be* the solution under test,
-so that every field norm and every quantity-of-interest error is known in advance
-to be zero. Anything that is not zero is a defect in the harness: a transposed
-patch, a lost NaN, a scale applied twice, a sign flipped where none was declared.
-
-The path exercised is the whole one, not the shortcut. The converged fields are
-sampled on a probe grid, written as ``%Grid``/``%Data`` **text tables**, read back
-through :func:`~nanopnp.density.grid.read_grid` — the reader VAL-15 verified
-against the delivered 77 MB reference table to 4.7e-12 — archived as ``.npz`` with
-a validated manifest, and only then compared. A round trip through the in-memory
-arrays alone would test the container and skip the format.
-
-The tolerance is **exactly zero**, not 1e-14. ``%.17g`` round-trips ``float64``
-by definition, so a difference of one ulp here is a defect in the transport
-format rather than a rounding budget being spent.
-"""
+"""VAL-01, VAL-02: one solution through the whole golden path, back to itself."""
 
 from __future__ import annotations
 
@@ -54,14 +36,10 @@ logger = logging.getLogger(__name__)
 PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0
 )
-"""The VER-11 benchmark pore. Nothing here reads a number out of the solution, so
-the mesh is the cheapest one that converges: what is under test is the harness."""
 
 CONCENTRATION_M = 0.5
 BIAS_V = 0.05
 SURFACE_CHARGE_C_M2 = -0.05
-"""A charged pore, so the two species carry unequal currents and a transport
-number exists for the round trip to preserve."""
 
 PROBE_TEXT = f"""
 schema: {PROBE_SCHEMA}
@@ -70,18 +48,10 @@ patches:
   - {{name: lumen, r_nm: [0.0, 1.5], z_nm: [-6.0, 6.0], n_r: 7, n_z: 13}}
   - {{name: bulk, r_nm: [0.1, 10.1], z_nm: [10.0, 20.0], n_r: 11, n_z: 6}}
 """
-"""Two non-square patches: the lumen, where the mask keeps everything, and a
-block of cis reservoir. 91 + 66 = 157 points, which is a round trip and not a
-benchmark."""
 
 
 @pytest.fixture(scope="module")
 def solved():
-    """Return one converged solution, its probe grid and its quantities.
-
-    Module-scoped: the solve is the expensive part and every assertion below is a
-    reading of the same converged state.
-    """
     mesh = PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
     ladder = default_ladder(
         mesh,
@@ -117,7 +87,6 @@ def solved():
 
 
 def _manifest(document, quantities, fields) -> dict[str, object]:
-    """Return the self-golden manifest for this solution, as the author's YAML form."""
     return {
         "schema": GOLDEN_SCHEMA,
         "case": "ver11-benchmark",
@@ -144,18 +113,6 @@ def _manifest(document, quantities, fields) -> dict[str, object]:
 
 
 def test_val01_self_golden_reproduces_its_own_solution(solved, tmp_path: Path) -> None:
-    """Every field norm and every QoI error is exactly zero through the whole path.
-
-    Sampled, written as text tables, ingested through the reference reader,
-    archived, loaded and compared. Three things are asserted beyond the zeros,
-    because a comparison of a thing with itself passes trivially if it compared
-    nothing:
-
-    - the mask retains points, and the same points on both sides;
-    - the located maximum is a real ``(r, z)`` on the grid;
-    - the transport format is what was traversed — the tables exist on disk and
-      the archive was built from them, not from the arrays in memory.
-    """
     import numpy as np
 
     solution, document, grid, quantities = solved
@@ -194,13 +151,6 @@ def test_val01_self_golden_reproduces_its_own_solution(solved, tmp_path: Path) -
 
 
 def test_val01_the_round_trip_preserves_the_masked_points_as_nan(solved, tmp_path: Path) -> None:
-    """A masked point survives the text format as ``NaN``, not as a zero.
-
-    This is the failure the round trip is really guarding: NGSolve returns ``0``
-    outside a ``definedon`` region, so a masked point that came back a number
-    would enter the norm as fabricated agreement. It has to travel as ``NaN``
-    through ``%.17g``, through ``np.fromstring`` and through the archive.
-    """
     import numpy as np
 
     solution, document, grid, quantities = solved
@@ -253,7 +203,6 @@ outputs: [current, transport_numbers, eof_rate]
 SMALL_PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
-"""The cheapest pore a full ``run_case`` converges on; see tests/tier2/test_reproducibility.py."""
 
 RUN_PROBE_TEXT = f"""
 schema: {PROBE_SCHEMA}
@@ -266,7 +215,6 @@ patches:
 
 @pytest.fixture(scope="module")
 def archived_run(tmp_path_factory: pytest.TempPathFactory):
-    """Run one case end to end and keep its directory, store and probe document."""
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
@@ -283,17 +231,8 @@ def archived_run(tmp_path_factory: pytest.TempPathFactory):
     return result.directory, store, probe_path, work
 
 
+# FR-25
 def test_val01_a_finished_run_reopens_without_re_solving_it(archived_run) -> None:
-    """``reopen`` returns the run's own converged state and its *recorded* quantities.
-
-    Both halves matter. The state comes back through
-    :func:`~nanopnp.solve.state.restore`, which rebuilds the operator from the
-    same ladder the solve used, so it cannot differ from the solved one in a
-    switch. The quantities come from ``run.json`` rather than being re-extracted,
-    because FR-25 archived what the run *reported* and a comparison against
-    freshly recomputed numbers would be comparing the golden to something the
-    manifest does not describe.
-    """
     import numpy as np
 
     from nanopnp.validation.runs import reopen
@@ -316,14 +255,6 @@ def test_val01_a_finished_run_reopens_without_re_solving_it(archived_run) -> Non
 def test_val01_export_golden_then_compare_is_zero_through_the_cli(
     archived_run, tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """``validate export-golden`` then ``validate compare`` on one run: every number zero.
-
-    The end-to-end IF-02 path — reopen, sample, archive, reload, compare — with
-    the one solution playing both sides, so every field norm and every QoI error
-    is known in advance. It also pins the ``case_hash`` gate: the golden's
-    identity comes from the same route ``compare`` checks it against, so a
-    mismatch here would mean the two disagree about what a case *is*.
-    """
     import json
 
     from nanopnp.cli import main

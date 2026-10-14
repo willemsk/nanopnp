@@ -1,14 +1,4 @@
-"""VER-52, VER-53: the ClyA fixture through ``inputs.profile``, stages 5 and 6 (VER-28, VER-10).
-
-The fixture's membrane edge is *drawn* in :class:`~nanopnp.mesh.reference.ReferenceGeometry`
-and *derived* here (WP21 D2-D4), so the two routes to one region are
-independent up to the polygon they share. They must agree on everything VER-28
-asserts of the drawn one: three domains, the seven-name vocabulary, the
-junction on the pore's outer surface over one node chain, and no bilayer in the
-fluid. The derived route then meets VER-10's band and D9's wall-size gate, whose
-statistics at the two wall sizes the plan measured (0.05 and 0.035 nm) are
-logged for the WP21 Outcomes.
-"""
+"""VER-52, VER-53: the ClyA fixture through ``inputs.profile``, stages 5 and 6 (VER-28, VER-10)."""
 
 from __future__ import annotations
 
@@ -32,13 +22,10 @@ from nanopnp.pipeline.run import (
 logger = logging.getLogger(__name__)
 
 REFERENCE_MIN_QUALITY = 0.6378
-"""Minimum element quality of the reference COMSOL mesh (section 5.2.2)."""
 
 REFERENCE_MEAN_QUALITY = 0.9765
-"""Average element quality of the same mesh."""
 
 ELEMENT_COUNT_TOLERANCE = 1e-3
-"""The derived chord meshes within 0.1 % of the drawn one's element count (WP21 Verification)."""
 
 EDGE_COUNTS = {
     "axis": 3,
@@ -49,7 +36,6 @@ EDGE_COUNTS = {
     "trans": 1,
     "wall": 151,
 }
-"""VER-28's topology of the fixture's region: 195 edges, 193 vertices."""
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -65,11 +51,6 @@ physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}
 
 
 def _inside_polygon(profile: PoreProfile, points: np.ndarray) -> np.ndarray:
-    """Return which ``(r, z)`` points lie inside the polygon, by ray casting along ``+r``.
-
-    Written here rather than imported, so the test shares no routine with the
-    assembly it checks.
-    """
     starts = profile.as_array()
     ends = np.roll(starts, -1, axis=0)
     inside = np.zeros(len(points), dtype=bool)
@@ -83,7 +64,6 @@ def _inside_polygon(profile: PoreProfile, points: np.ndarray) -> np.ndarray:
 
 
 def _run(tmp_path_factory: pytest.TempPathFactory, concentration: float) -> RunResult:
-    """Run the fixture through stage 6 at ``concentration`` and return the result."""
     root = tmp_path_factory.mktemp(f"fixture-{concentration}")
     case = root / "fixture.case.yaml"
     case.write_text(
@@ -95,16 +75,13 @@ def _run(tmp_path_factory: pytest.TempPathFactory, concentration: float) -> RunR
 
 @pytest.fixture(scope="module")
 def at_1M(tmp_path_factory: pytest.TempPathFactory):
-    """Return the fixture's stage-6 run at 1 M, where ``auto`` is the 0.05 nm ceiling."""
     return _run(tmp_path_factory, 1.0)
 
 
 def test_ver52_the_derived_region_has_the_reference_topology(at_1M) -> None:
-    """193 vertices, 195 edges by name, and the junction at 2.7524 and 4.88 nm."""
     region = at_1M.artefacts["region"].summary
     assert region["edge_counts"] == EDGE_COUNTS
     assert region["profile_vertices"] == 185
-    # Counted on unique geometry, as VER-28 counts the drawn region's.
     shape = build_region(read_region(at_1M.artefacts["region"].payload["region"]))
     assert len({(round(v.p[0], 9), round(v.p[1], 9)) for v in shape.vertices}) == 193
     junction = region["junction_nm"]
@@ -121,7 +98,6 @@ def test_ver52_the_derived_region_has_the_reference_topology(at_1M) -> None:
 
 
 def test_ver53_the_generated_mesh_is_conformal_with_no_bilayer_in_the_fluid(at_1M) -> None:
-    """One node chain at the junction; membrane only in the slab and outside the body."""
     artefact = at_1M.artefacts["mesh"]
     data = read(artefact.payload["mesh"], format="msh41")
     assert data.content_hash == artefact.summary["content_hash"]
@@ -147,7 +123,6 @@ def test_ver53_the_generated_mesh_is_conformal_with_no_bilayer_in_the_fluid(at_1
 def test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band(
     at_1M, clya_reference_mesh
 ) -> None:
-    """Element count within 0.1 % of ``ReferenceGeometry``'s; quality in section 5.2.2's band."""
     summary = at_1M.artefacts["mesh"].summary
     drawn = from_ngsolve(clya_reference_mesh())
     generated = int(summary["elements"])
@@ -165,11 +140,11 @@ def test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band(
     )
 
 
+# NUM-30
 @pytest.mark.parametrize(("concentration", "wall_nm"), [(1.0, 0.05), (3.0, 0.03505)])
 def test_ver53_the_wall_gate_passes_at_both_measured_sizes(
     tmp_path_factory: pytest.TempPathFactory, at_1M, concentration: float, wall_nm: float
 ) -> None:
-    """D9 at the ceiling and at NUM-30's 3 M target; the statistics are logged for the Outcomes."""
     result = at_1M if concentration == 1.0 else _run(tmp_path_factory, concentration)
     sizing = result.artefacts["mesh"].summary["sizing"]
     statistics = sizing["wall_statistics"]

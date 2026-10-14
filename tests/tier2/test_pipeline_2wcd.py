@@ -1,22 +1,4 @@
-"""VER-53 on a real structure: the prepared 2WCD from its PDB file to a mesh, and on to a report.
-
-RSK-05 was that a structure-derived profile would not assemble and mesh without a
-hand-drawn membrane. This file retires it: the root conftest's ``prepared_2wcd``
-runs through stages 1 to 6 at the default sizes, and the mesh passes VER-10 and
-the D9 wall-size gate. The axial registration is VAL-05's (WP22 D6): the C-alpha
-centroid of residues 8-292 is placed at the MD structure's ``Z_MD``, through
-:func:`~nanopnp.validation.geometry.register_by_centroid`, so the suite registers
-2WCD one way. WP21 used the profile's *trans* tip plus 1.85 nm, 0.056 nm away.
-
-The second half walks the same structure to stage 12 at ``size_scale`` 4 with
-``pnp``, flow off and every correction off. That is the cheapest coupled model a
-structure case can solve: the electrostatic models refuse a solid domain with no
-transport to screen it (section 5.3.1 NOTE), and this case carries two. Since
-WP28 it is exit criterion 4's charged walk (D14): ``pnp`` declares ``fixed_charge``,
-so both halves of stage 7 run, the protonation read from a store seeded with the
-session's ``protonated_2wcd``. The manifest must key every stage, record the mesh
-the solve actually read, and record ``Q_net`` and the conservation report.
-"""
+"""VER-53 on a real structure: the prepared 2WCD from its PDB file to a mesh, and on to a report."""
 
 from __future__ import annotations
 
@@ -93,12 +75,6 @@ def registered(
     seeded_protonated_2wcd: Callable[[Path], Path],
     tmp_path_factory: pytest.TempPathFactory,
 ):
-    """Return the store, the structure block and the membrane block registering 2WCD.
-
-    Stages 1 to 6 and the protonation come from the session's seeds, and so does
-    the registration, read off the aligned structure stage 1 produced (WP33 D2);
-    every later run reuses them from the store.
-    """
     root = tmp_path_factory.mktemp("2wcd")
     store = Store(seeded_protonated_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
@@ -106,8 +82,8 @@ def registered(
     return root, store, structure, seeded_2wcd.geometry
 
 
+# VER-10
 def test_ver53_2wcd_meshes_at_the_default_sizes(registered) -> None:
-    """Stages 1-6 on 2WCD: VER-10 and D9 pass; the region and sizing are recorded (RSK-05)."""
     root, store, structure, geometry = registered
     case = root / "mesh.case.yaml"
     case.write_text(MESH_CASE.format(structure=structure, geometry=geometry), encoding="utf-8")
@@ -153,15 +129,10 @@ def test_ver53_2wcd_meshes_at_the_default_sizes(registered) -> None:
     )
 
 
+# FR-27, FR-25
 def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(
     registered, number_stability: NumberStability
 ) -> None:
-    """FR-27: every stage keyed in the manifest; the recorded mesh is the one on disk (FR-25).
-
-    The walk is charged (WP28 D14): every stage of :func:`~nanopnp.core.stages.walk_order` runs, the
-    protonation from the seeded store, and the manifest's Charge group records
-    ``Q_net`` and the conservation report the deposit was gated on.
-    """
     root, store, structure, geometry = registered
     case = root / "solve.case.yaml"
     case.write_text(SOLVE_CASE.format(structure=structure, geometry=geometry), encoding="utf-8")
@@ -208,8 +179,7 @@ def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(
     payload = result.artefacts["mesh"].payload["mesh"]
     assert read(payload, format="msh41").content_hash == geometry_group["content_hash"]
 
-    # VER-62 (G10): the charged walk's numbers and its deposited charge hold the
-    # golden recorded on v0.4.0's tree, the mesh hash asserted first.
+    # The golden was recorded on v0.4.0; the mesh hash is asserted before the numbers.
     number_stability(
         "2wcd-charged",
         geometry_group["content_hash"],

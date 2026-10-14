@@ -1,24 +1,4 @@
-"""VAL-06 at Tier 2 on a closed form: a Gaussian ring in a grounded dielectric sphere (WP29 D10).
-
-*Design* section 4 of the WP29 plan. A ring of unit charge at ``(r_b, z_b)``, each
-point smeared as PHY-16 step 4's 3D Gaussian of width ``w``, lies inside a sphere
-of radius ``a`` and permittivity ``eps_1`` in water (``eps_2 = eps_r,f^0``),
-grounded at ``R``. Outside ``rho = b`` the smeared ring is the point ring to
-``erfc`` of the gap over ``w``, about 1e-35 here, so in the water
-
-    phi = sum_l (B_l rho^l + C_l rho^-(l+1)) P_l(cos theta),
-
-with ``B_l``, ``C_l`` and the inner ``A_l`` fixed per ``l`` by the continuity of
-``phi`` and of ``D.n`` at ``a`` and by ``phi(R) = 0``. Inside, the ring's own
-potential is its azimuthal mean of ``erf(d/w)/d``, which the continuity check
-evaluates by the periodic trapezoid rule.
-
-APBS at 0.1 nm, with the box faces from the series, and our ``P2`` are each held to
-half of VAL-06's tolerance against the series, and to the whole tolerance against
-each other. Then every broken construction of *Design* section 6 must exceed half
-the tolerance in the norm it names. This is the test that localises a failure of
-the 2WCD comparison to the driver or to a solver.
-"""
+"""VAL-06 at Tier 2 on a closed form: a Gaussian ring in a grounded dielectric sphere."""
 
 from __future__ import annotations
 
@@ -64,48 +44,35 @@ from nanopnp.validation.apbs import (
 logger = logging.getLogger(__name__)
 
 RING_R_NM = 1.0
-"""``r_b``."""
 
 RING_Z_NM = 0.5
-"""``z_b``."""
 
 WIDTH_NM = 0.1
-"""``w`` of each ring point's Gaussian."""
 
 SPHERE_NM = 2.0
-"""``a``: the dielectric sphere."""
 
+# PHY-20
 SPHERE_PERMITTIVITY = 20.0
-"""``eps_1``, the protein's value (PHY-20, ``physics.solid_permittivities``)."""
 
 GROUND_NM = 20.0
-"""``R``: the grounded sphere, the half-disc's arc."""
 
 TEMPERATURE_K = 298.15
-"""The case default (``electrolyte.temperature_K``)."""
 
 TERMS = 80
-"""``l`` from 0 to 80: inside, the series converges as ``(b/a)^l = 0.56^l``."""
 
+# PHY-16
 LATTICE_NM = 0.005
-"""The export lattice's spacing (PHY-16 step 6)."""
 
 APBS_DIME = 65
-"""6.4 nm at 0.1 nm, which holds the ring 1.8 nm inside every face."""
 
 HALF = TOLERANCE.scaled(0.5)
 
 
 def water_permittivity() -> float:
-    """Return ``eps_r,f^0`` of the willems2020 NaCl parameters, the fluid ``poisson`` assembles."""
     return Electrolyte.from_parameter_file("willems2020_nacl").permittivity_0
 
 
 def bjerrum_vacuum_nm(temperature_K: float = TEMPERATURE_K) -> float:
-    """Return ``l_B^0 = e^2 / (4 pi eps_0 k T)`` in nm.
-
-    APBS's ``kT/e`` and the solver's ``phi~`` are the same unit at the same temperature.
-    """
     return (
         ELEMENTARY_CHARGE**2
         / (4.0 * math.pi * VACUUM_PERMITTIVITY * BOLTZMANN * temperature_K)
@@ -115,8 +82,6 @@ def bjerrum_vacuum_nm(temperature_K: float = TEMPERATURE_K) -> float:
 
 @dataclass(frozen=True)
 class Series:
-    """The scaled coefficients ``A'_l = A_l a^l``, ``B'_l = B_l a^l``, ``C'_l = C_l a^-(l+1)``."""
-
     a: np.ndarray
     b: np.ndarray
     c: np.ndarray
@@ -132,14 +97,6 @@ class Series:
         eps_2: float | None = None,
         ground_nm: float = GROUND_NM,
     ) -> Series:
-        """Solve the three conditions per ``l`` in the scaled unknowns, which keep them O(1).
-
-        With ``beta'_l = k p_l (b/a)^l / (eps_1 a)`` and ``gamma = (a/R)^(2l+1)``,
-        grounding gives ``B' = -gamma C'``, continuity ``A' = (1 - gamma) C' - beta'``,
-        and the displacement
-        ``C' = eps_1 (2l+1) beta' / (eps_1 l (1 - gamma) + eps_2 (l (1 + gamma) + 1))``.
-        As ``R -> inf``, ``C_l = k p_l b^l (2l+1) / (eps_1 l + eps_2 (l+1))``: Kirkwood's.
-        """
         eps_2 = water_permittivity() if eps_2 is None else eps_2
         k = bjerrum_vacuum_nm()
         ell = np.arange(TERMS + 1, dtype=np.float64)
@@ -156,7 +113,6 @@ class Series:
         return cls(a=(1 - gamma) * c - beta, b=-gamma * c, c=c, eps_1=eps_1, eps_2=eps_2, k=k)
 
     def outside(self, r_nm: np.ndarray, z_nm: np.ndarray) -> np.ndarray:
-        """Return ``phi~`` at ``a <= rho <= R``."""
         rho = np.hypot(r_nm, z_nm)
         if np.any(rho < SPHERE_NM * (1 - 1e-12)):
             raise ValueError("the outer series holds only outside the sphere")
@@ -170,7 +126,6 @@ class Series:
         return total
 
     def inside(self, r_nm: np.ndarray, z_nm: np.ndarray, *, angles: int = 2048) -> np.ndarray:
-        """Return ``phi~`` at ``rho <= a``: the ring's own potential plus the reaction field."""
         rho = np.hypot(r_nm, z_nm)
         cosine = np.where(rho > 0, z_nm / np.where(rho > 0, rho, 1.0), 1.0)
         theta = 2.0 * math.pi * np.arange(angles) / angles
@@ -188,7 +143,6 @@ class Series:
 
 
 def test_val06_the_ring_series_is_grounded_continuous_and_kirkwood_at_infinity() -> None:
-    """The oracle first: zero at ``R``, continuous at ``a``, Kirkwood's ``C_l`` as ``R -> inf``."""
     series = Series.build()
     angles = np.linspace(-0.5 * math.pi, 0.5 * math.pi, 61)
     r_ground, z_ground = GROUND_NM * np.cos(angles), GROUND_NM * np.sin(angles)
@@ -215,7 +169,6 @@ def test_val06_the_ring_series_is_grounded_continuous_and_kirkwood_at_infinity()
 
 
 def _mesh(near_nm: float) -> object:
-    """Return the grounded half-disc with the sphere as material ``protein``, water outside."""
     import netgen.occ as occ
     import ngsolve as ngs
 
@@ -247,8 +200,6 @@ def _mesh(near_nm: float) -> object:
 
 @dataclass(frozen=True)
 class Ring:
-    """The ring solved by us, rastered, and set up for APBS."""
-
     series: Series
     lattice: RadialGrid
     ours: Callable[[np.ndarray, np.ndarray], np.ndarray]
@@ -257,13 +208,11 @@ class Ring:
     probes: ProbeSet
     problem: ApbsProblem
     exact: np.ndarray
-    """The series at the probes."""
     elements: int
 
 
 @pytest.fixture(scope="module")
 def ring() -> Ring:
-    """Deposit and solve the ring at ``P2``, raster the solve and build APBS's maps at 0.1 nm."""
     eps_2 = water_permittivity()
     series = Series.build(eps_2=eps_2)
     atoms = SourceAtoms(
@@ -328,7 +277,6 @@ def ring() -> Ring:
 
 @pytest.fixture(scope="module")
 def apbs_ring(ring: Ring, apbs: None, tmp_path_factory: pytest.TempPathFactory) -> ApbsSolution:
-    """APBS on the ring's maps, with the series on the faces."""
     return run_apbs(ring.problem, tmp_path_factory.mktemp("val06-ring"), name="ring")
 
 
@@ -337,7 +285,6 @@ def _against_series(ring: Ring, values: np.ndarray) -> Norms:
 
 
 def test_val06_ring_p2_is_within_half_the_tolerance_of_the_series(ring: Ring) -> None:
-    """Our side alone: the deposit and ``poisson`` at ``P2`` against the series at the probes."""
     found = _against_series(ring, ring.probes.sample(ring.ours))
     logger.info(
         "VAL-06 ring: P2 (%d elements) against the series over %d probes (%d on the axis): %s",
@@ -352,7 +299,6 @@ def test_val06_ring_p2_is_within_half_the_tolerance_of_the_series(ring: Ring) ->
 def test_val06_ring_apbs_is_within_half_the_tolerance_of_the_series(
     ring: Ring, apbs_ring: ApbsSolution
 ) -> None:
-    """The driver and APBS: hat-weighted charge, harmonic staggered diel, series faces."""
     found = _against_series(ring, ring.probes.at(apbs_ring.potential))
     logger.info(
         "VAL-06 ring: APBS %d^3 at %.2f nm against the series: %s (%.1f s)",
@@ -367,7 +313,6 @@ def test_val06_ring_apbs_is_within_half_the_tolerance_of_the_series(
 def test_val06_ring_the_two_solvers_agree_within_the_tolerance(
     ring: Ring, apbs_ring: ApbsSolution
 ) -> None:
-    """D6's metric between the solvers, as the 2WCD leg forms it, but with series faces."""
     ours = ring.probes.sample(ring.ours)
     found = norms(ring.probes.at(apbs_ring.potential) - ours, ours, ring.probes.axis)
     logger.info("VAL-06 ring: APBS against P2: %s", found)
@@ -375,7 +320,6 @@ def test_val06_ring_the_two_solvers_agree_within_the_tolerance(
 
 
 def _node_sampled_dielectric(ring: Ring) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Each map's values at the grid *nodes*, while APBS reads them at the staggered origin."""
     grid = ring.grid
     x, y, z = grid.axis(0), grid.axis(1), grid.axis(2)
     radius = np.hypot(x[:, None], y[None, :])
@@ -387,7 +331,6 @@ def _node_sampled_dielectric(ring: Ring) -> tuple[np.ndarray, np.ndarray, np.nda
 
 
 def _point_sampled_charge(ring: Ring, width_nm: float) -> np.ndarray:
-    """Return the ring at ``width_nm`` point-sampled at the nodes, in e per cubic angstrom."""
     grid = ring.grid
     x, y, z = np.meshgrid(grid.axis(0), grid.axis(1), grid.axis(2), indexing="ij")
     theta = 2.0 * math.pi * np.arange(512) / 512
@@ -404,7 +347,6 @@ def _point_sampled_charge(ring: Ring, width_nm: float) -> np.ndarray:
 
 
 def _circumference_dropped(ring: Ring) -> np.ndarray:
-    """Return the map of the lattice divided by ``2 pi r`` in nm: areal read as volume density."""
     lattice = ring.lattice
     r = np.where(lattice.r_nm > 0, lattice.r_nm, np.inf)
     broken = RadialGrid(lattice.origin_nm, lattice.spacing_nm, lattice.values / (2 * math.pi * r))
@@ -420,7 +362,6 @@ def _shifted(ring: Ring, dz_nm: float) -> np.ndarray:
 
 
 def _coarse(ring: Ring, *, charge_scale: float = 1.0) -> ApbsProblem:
-    """Return the ring's problem on the nested ``2h`` grid, its charge times ``charge_scale``."""
     coarse = ring.grid.coarsened()
     return ApbsProblem(
         grid=coarse,
@@ -433,9 +374,8 @@ def _coarse(ring: Ring, *, charge_scale: float = 1.0) -> ApbsProblem:
 
 
 BROKEN: dict[str, tuple[Callable[[Ring], ApbsProblem], tuple[str, ...]]] = {
-    # At h = 0.1 nm = 1 angstrom, e per node and e per cubic angstrom are the same
-    # number, so this row is invisible on the fine grid: it runs on the nested
-    # 0.2 nm grid, where the factor is 8, as the 2WCD leg's 2h solve would see it.
+    # Invisible at h = 0.1 nm, where e per node and e per cubic angstrom are the same number;
+    # this row runs on the 0.2 nm grid, where the factor is 8.
     "charge in e per node, no 1/h^3": (
         lambda ring: _coarse(ring, charge_scale=(2.0 * ring.grid.spacing_nm * 10.0) ** 3),
         ("max", "rms", "axis"),
@@ -469,14 +409,12 @@ BROKEN: dict[str, tuple[Callable[[Ring], ApbsProblem], tuple[str, ...]]] = {
         ("max", "rms", "axis"),
     ),
 }
-"""*Design* section 6: each construction and the norms it must exceed half the tolerance in."""
 
 
 @pytest.mark.parametrize("name", list(BROKEN))
 def test_val06_ring_every_broken_construction_exceeds_half_the_tolerance(
     ring: Ring, apbs: None, name: str, tmp_path: Path
 ) -> None:
-    """A gate that cannot fail measures nothing: each row of *Design* section 6 must show."""
     build, expected = BROKEN[name]
     problem = build(ring)
     solved = run_apbs(problem, tmp_path, name="broken")

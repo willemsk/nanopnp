@@ -1,21 +1,4 @@
-"""VAL-05, the 2WCD leg: the vendored structure against the reference polygon (WP22 D5).
-
-The root conftest's ``prepared_2wcd`` runs through stages 1 to 5 at the defaults,
-registered to the MD frame by its C-alpha centroid (D6), and its model-frame
-polygon is compared with the delivered 185-vertex table on the 282 D2 planes.
-The D5 tolerances are the assertion: ``|ε_G| <= 10 %``, ``|Δr_c| <= 0.1 nm``,
-rms ``<= 0.2 nm`` (author ruling 14; ``SPECIFICATION.md`` §7.4 NOTE on VAL-05).
-The isolevel sweep's ``ε_G`` must be strictly increasing over the levels that
-pass (D8), a property of nested superlevel sets rather than a tolerance.
-
-Everything else is recorded, not gated, and logged at INFO as YAML (D13): the
-attribution to the reference's construction (D7), the rms-optimal offset (D6),
-one frozen case's conductance on the generated mesh against the fixture's (D9),
-the default-size mesh against the reference figures (D10), the same on the Gmsh
-backend beside netgen's (WP23 D13), and the stage-3 variance (D11). The module
-runs on its own store, as ``test_contour_2wcd.py`` does, because
-``--dist loadfile`` may place the two on different workers.
-"""
+"""VAL-05, the 2WCD leg: the vendored structure against the reference polygon."""
 
 from __future__ import annotations
 
@@ -63,7 +46,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 FROZEN_SIZE_SCALE = 2.0
-"""D9's ``size_scale`` at Tier 2, on both meshes, so they are like for like."""
 
 STRUCTURE = """\
 structure:
@@ -85,8 +67,6 @@ physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}
 
 @dataclass(frozen=True)
 class Walked:
-    """2WCD through stage 5 at the D6 registration, and the comparison of its polygon."""
-
     root: Path
     store: Store
     structure: str
@@ -96,12 +76,8 @@ class Walked:
     stage1: RunResult
     region: RunResult
     stage4: np.ndarray
-    """Stage 4's polygon, in the stage-1 frame."""
     ours: np.ndarray
-    """Stage 5's polygon, in the model frame."""
     comparison: ProfileComparison
-    """The comparison on the planes both polygons cross; the gated test applies D2's rule itself,
-    so a plane missed outside the tip band fails that test and leaves the records to run."""
 
 
 def _write(path: Path, text: str) -> Path:
@@ -110,18 +86,12 @@ def _write(path: Path, text: str) -> Path:
 
 
 def _stage_time(result: RunResult, name: str) -> str:
-    """Return a stage's time for a log line, or say it was read from the store.
-
-    The default-size mesh is the session seed's (WP33 D2): its lookup time is not
-    stage 6's, which the seed logs once where it computes it.
-    """
     record = next(entry for entry in result.stages if entry.name == name)
     return "read from the store" if record.cached else f"{record.seconds:.2f} s"
 
 
 @pytest.fixture(scope="module")
 def reference() -> np.ndarray:
-    """Return the delivered 185-vertex polygon, in the model frame."""
     return load_profile(profile_file("clya_reference_profile")).as_array()
 
 
@@ -132,12 +102,6 @@ def walked(
     tmp_path_factory: pytest.TempPathFactory,
     reference: np.ndarray,
 ) -> Walked:
-    """Run stages 1-4, register by the C-alpha centroid (D6), then stage 5, and compare (D2, D3).
-
-    Stages 1 to 6 are the session's seed (``seeded_2wcd``, WP33 D2), so each is
-    found rather than computed here. The registration is computed here as well,
-    and must be the seed's to the bit: the seed's stages 5 and 6 are keyed on it.
-    """
     root = tmp_path_factory.mktemp("2wcd-val05")
     store = Store(seeded_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
@@ -161,7 +125,6 @@ def walked(
     }
     record = read_region(region.artefacts["region"].payload[REGION_PAYLOAD])
     stage4 = load_profile(stage1.artefacts["contour"].payload[CONTOUR_PAYLOAD]).as_array()
-    # D2: the compared polygon is stage 5's, and it is stage 4's moved by centre_z_nm.
     assert np.array_equal(record.points(), to_model_frame(stage4, centre))
     assert record.membrane.centre_z_nm == centre
     logger.info(
@@ -189,12 +152,6 @@ def walked(
 def test_val05_2wcd_against_the_reference_polygon(
     walked: Walked, reference: np.ndarray, as_yaml: Callable[[object], str]
 ) -> None:
-    """D5: |ε_G| <= 10 %, |Δr_c| <= 0.1 nm and rms <= 0.2 nm; every plane off the tips crossed.
-
-    Predicted by the plan's prototype: ε_G = -8.08 %, Δr_c = -0.0205 nm, rms
-    0.158 nm (Design §4). The attribution (D7), the conditioning's share and the
-    rms-optimal offset (D6) are recorded beside the verdict.
-    """
     comparison = compare_profiles(walked.ours, reference)
     logger.info("VAL-05, 2WCD leg:\n%s", as_yaml(comparison))
     assert comparison.planes == 282
@@ -224,12 +181,6 @@ def test_val05_2wcd_against_the_reference_polygon(
 def test_val05_2wcd_isolevel_sweep_is_strictly_increasing(
     walked: Walked, reference: np.ndarray
 ) -> None:
-    """D8: ε_G strictly increasing over the passing isolevels; the zero crossing recorded.
-
-    The union density's superlevel sets are nested, so the raw lumen cannot
-    narrow as the level rises; the measured steps (2.0-5.3 pp) dwarf the
-    conditioning's 0.01 nm rms, so a violation is a sign or ordering error.
-    """
     case = _write(
         walked.root / "sweep.case.yaml",
         GEOMETRY_CASE.format(structure=walked.structure, geometry=walked.geometry),
@@ -270,7 +221,6 @@ def test_val05_2wcd_isolevel_sweep_is_strictly_increasing(
 def test_val05_2wcd_mesh_against_the_reference_figures(
     walked: Walked, d10_figures: D10Figures
 ) -> None:
-    """D10, recorded: the default-size mesh beside the reference's 120,917, 0.6378 and 0.9765."""
     case = _write(
         walked.root / "mesh.case.yaml",
         GEOMETRY_CASE.format(structure=walked.structure, geometry=walked.geometry),
@@ -305,11 +255,6 @@ def test_val05_2wcd_mesh_against_the_reference_figures(
 
 
 def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walked) -> None:
-    """WP23 D13, recorded: 2WCD's default-size mesh on Gmsh beside netgen's.
-
-    Recorded, not gated beyond stage 6's own gates, which either mesh must pass
-    to be recorded at all. Stage 5 is shared: its key does not name the backend.
-    """
     recorded = {}
     for backend in ("netgen", "gmsh"):
         case = _write(
@@ -343,19 +288,8 @@ def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walke
 
 @pytest.mark.slow
 def test_val05_2wcd_frozen_case_conductance(walked: Walked, val05_frozen_case: str) -> None:
-    """D9, recorded: G on the generated mesh against the fixture's, beside ε_G.
-
-    Uncharged at 1 M, so G is geometric and ``ε_G`` is its bulk-resistor proxy;
-    access resistance dilutes the difference, and by how much is the record.
-    ``slow`` since the follow-up to WP33: §7.4 records this conductance and gates
-    nothing on it. The 20 s it costs asserted that both are positive and that the
-    generated leg, read through ``inputs.mesh``, ran no stage 7; the second is
-    WP28 D14's rule, which ``test_run.py``'s stage selection gates on every push.
-    """
-    # WP28 D14: a structure case whose model declares a fixed charge now protonates
-    # and deposits it, so the generated leg reads the walked mesh through
-    # inputs.mesh and stays as uncharged as the fixture's. size_scale is the
-    # mesh's own (it is refused beside inputs.mesh).
+    # The model declares a fixed charge, so the generated leg reads the walked mesh through
+    # inputs.mesh and stays uncharged; size_scale is refused beside inputs.mesh.
     walk = run_case(
         _write(
             walked.root / "frozen-walk.case.yaml",
