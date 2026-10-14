@@ -810,9 +810,13 @@ def test_ver48_a_dcd_reader_without_its_header_is_decoded_for_its_frame_times(
         real = universe.trajectory._file
 
         class Headerless:
-            header = property(lambda self: (_ for _ in ()).throw(AttributeError("header")))
+            asked = False
 
             def __getattr__(self, name: str) -> object:
+                # Only the first read fails: the reader decodes frames through the same header.
+                if name == "header" and not self.asked:
+                    self.asked = True
+                    raise AttributeError(name)
                 return getattr(real, name)
 
             def __len__(self) -> int:
