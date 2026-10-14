@@ -151,7 +151,7 @@ def test_ver25_the_artefact_key_is_the_field_contents_and_not_its_path(
 def test_ver29_the_artefact_key_moves_with_the_order_its_gates_integrate_at(
     mesh_file: Path, field_document: Path, tmp_path: Path
 ) -> None:
-    stage = FieldStage(workspace=tmp_path / "work")
+    stage = FieldStage(workspace=tmp_path / "work", overwrite_workspace=True)
     second = stage.run(_inputs(mesh_file, field_document))
     third = stage.key(_inputs(mesh_file, field_document, order="P3"))
     assert third.hash != second.hash

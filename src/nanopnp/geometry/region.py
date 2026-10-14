@@ -1030,8 +1030,9 @@ class RegionStage:
 
     name = "region"
 
-    def __init__(self, *, workspace: Path | None = None) -> None:
+    def __init__(self, *, workspace: Path | None = None, overwrite_workspace: bool = False) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
+        self._overwrite = overwrite_workspace
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage."""
@@ -1069,7 +1070,7 @@ class RegionStage:
         RegionGateError
             At the first junction criterion the region fails.
         """
-        directory = scratch_directory(self._workspace, self.name)
+        directory = scratch_directory(self._workspace, self.name, overwrite=self._overwrite)
         check_cancelled(cancel, "reading the profile")
         report(progress, 0.0, "reading the profile")
         resolved = inputs.resolved

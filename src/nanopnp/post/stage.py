@@ -140,11 +140,15 @@ def _shell(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[floa
     return (float(inner), float(outer))
 
 
-def _solution(inputs: StageInputs, *, solving: bool, workspace: Path | None = None) -> Artefact:
+def _solution(
+    inputs: StageInputs, *, solving: bool, workspace: Path | None = None, overwrite: bool = False
+) -> Artefact:
     solution = inputs.upstream.get("solve")
     if solution is not None:
         return solution
-    stage = SolveStage(workspace=None if workspace is None else workspace / "solve")
+    stage = SolveStage(
+        workspace=None if workspace is None else workspace / "solve", overwrite_workspace=overwrite
+    )
     return stage.run(inputs) if solving else stage.key(inputs)
 
 
@@ -374,8 +378,9 @@ class ReportStage:
 
     name = "report"
 
-    def __init__(self, *, workspace: Path | None = None) -> None:
+    def __init__(self, *, workspace: Path | None = None, overwrite_workspace: bool = False) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
+        self._overwrite = overwrite_workspace
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage."""
@@ -396,7 +401,9 @@ class ReportStage:
 
     def _hashes(self, inputs: StageInputs, *, solving: bool) -> tuple[str, Artefact, Artefact]:
         qoi = inputs.require("qoi")
-        solution = _solution(inputs, solving=solving, workspace=self._workspace)
+        solution = _solution(
+            inputs, solving=solving, workspace=self._workspace, overwrite=self._overwrite
+        )
         case = inputs.upstream.get("case")
         case_hash = case.hash if case is not None else CaseArtefact(inputs.resolved.document).hash
         return case_hash, qoi, solution
@@ -482,4 +489,4 @@ class ReportStage:
         return payload, record
 
     def _directory(self) -> Path:
-        return scratch_directory(self._workspace, self.name)
+        return scratch_directory(self._workspace, self.name, overwrite=self._overwrite)

@@ -7,6 +7,7 @@ import logging
 import os
 import secrets
 import shutil
+import time
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -22,6 +23,9 @@ logger = logging.getLogger(__name__)
 META = "meta.json"
 
 FANOUT = 2
+
+STALE_STAGING_SECONDS = 24 * 3600
+"""Age after which a hidden staging directory is a killed put's, not a slow copy."""
 
 
 class StoreError(RuntimeError):
@@ -73,7 +77,11 @@ class Store:
                 raise StoreError(
                     f"payload {name!r} of artefact {artefact.short_hash} is not a file: {source}"
                 )
+        held = self.get(artefact.schema, artefact.hash)
+        if held is not None:
+            return held
         directory.parent.mkdir(parents=True, exist_ok=True)
+        _sweep_staging(directory.parent)
         # One writer's payloads and record arrive together or not at all: two puts of one key
         # never interleave their files into a record that disagrees with its payloads.
         staging = directory.with_name(f".{directory.name}.{os.getpid()}.{secrets.token_hex(4)}")
@@ -155,6 +163,18 @@ class Store:
                 "cache hit would return a different run's answer"
             )
         return self.put(produced)
+
+
+def _sweep_staging(parent: Path) -> None:
+    # A put killed before its rename (a time limit, SIGKILL) leaves its staging directory behind.
+    cutoff = time.time() - STALE_STAGING_SECONDS
+    for entry in parent.glob(".*"):
+        try:
+            stale = entry.is_dir() and entry.stat().st_mtime < cutoff
+        except OSError:  # pragma: no cover - the entry vanished between the glob and the stat
+            continue
+        if stale:
+            shutil.rmtree(entry, ignore_errors=True)
 
 
 def _publish(staging: Path, directory: Path) -> None:

@@ -544,8 +544,9 @@ class MeshStage:
 
     name = "mesh"
 
-    def __init__(self, *, workspace: Path | None = None) -> None:
+    def __init__(self, *, workspace: Path | None = None, overwrite_workspace: bool = False) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
+        self._overwrite = overwrite_workspace
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage."""
@@ -678,4 +679,4 @@ class MeshStage:
         return {MESH_PAYLOAD: write_msh41(ingested.data, directory / "mesh.msh")}
 
     def _directory(self) -> Path:
-        return scratch_directory(self._workspace, "mesh")
+        return scratch_directory(self._workspace, "mesh", overwrite=self._overwrite)

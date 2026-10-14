@@ -981,7 +981,8 @@ About 93 docstrings and 64 comments in `src/nanopnp` cite `FR-` or `NUM-` identi
 
 `scratch_directory` returns the workspace, created. The workspace-locality NOTE in §5.3.2 says the scratch directory is fresh per run, and plan D4 ruled a fresh `mkdtemp` inside the workspace. Two runs of one `ProtonationStage(workspace=w)` overwrite `w/protonation.npz` and `w/frame-N/*`, so the first run's payload, when no store is attached, disagrees with its recorded digest.
 
-**Open**: the author rules whether to restore the `mkdtemp` (the plan and the NOTE stand) or amend the NOTE to name the workspace itself and its single-use contract.
+**Fixed** in WP46 (author, 14 October 2026): the scratch directory is the workspace itself. A stage refuses a workspace that already holds files, naming them and the `overwrite_workspace` switch; `overwrite_workspace=True` on the stage, or on `run_case`, replaces them. The workspace-locality NOTE and plan D4 say so.
+
 
 ### REV-99 — A put killed before the rename leaves a hidden staging directory nothing reclaims
 
@@ -989,7 +990,8 @@ About 93 docstrings and 64 comments in `src/nanopnp` cite `FR-` or `NUM-` identi
 
 A `put` killed between `staging.mkdir` and the rename (a SLURM time limit, SIGKILL) leaves a hidden `.<digest>.<pid>.<token>` directory with a full copy of the payload, in `artefacts/<slug>/<fanout>/`. Nothing enumerates or removes it.
 
-**Open**: the author rules whether the store gains a sweep of stale staging directories.
+**Fixed** in WP46: `put` removes hidden staging directories older than a day from the fan-out directory it writes into.
+
 
 ### REV-100 — A put copies and hashes a payload before learning the key is already stored
 
@@ -997,7 +999,8 @@ A `put` killed between `staging.mkdir` and the rename (a SLURM time limit, SIGKI
 
 `put` stages and hashes every payload before it finds a complete entry under the key, then discards the copy. A worker that lost the race pays the full cost of a large solution payload.
 
-**Open**: the author rules whether `put` checks for an existing entry first.
+**Fixed** in WP46: `put` returns the stored entry before it copies or hashes anything.
+
 
 ### REV-101 — A pre-WP46 charge-grid npz in a store is served under an unchanged key
 
@@ -1005,7 +1008,8 @@ A `put` killed between `staging.mkdir` and the rename (a SLURM time limit, SIGKI
 
 The charge-grid key did not move when REV-14 added `origin_nm` and `spacing_nm` to the `.npz`. A legacy axes-only entry is still a cache hit, whose grid differs from a fresh run's in the last bits.
 
-**Open**: the author rules whether the key moves, as the mesh keys did, or the difference is accepted.
+**Fixed** in WP46: the charge-grid key names `lattice_record`, so an axes-only entry misses and the grid is deposited again once.
+
 
 ### REV-102 — frame_times reads a private MDAnalysis attribute
 
@@ -1013,4 +1017,4 @@ The charge-grid key did not move when REV-14 added `origin_nm` and `spacing_nm` 
 
 `frame_times` reads `trajectory._file.header` and copies the expression of `DCDReader._frame_to_ts`, to avoid decoding frames. A release that renames `_file` or changes how `ts.time` is derived makes the DCD branch raise `AttributeError` or disagree with `step.time`.
 
-**Open**: the author rules whether to keep it behind a version-pinned test or decode the frames.
+**Fixed** in WP46: the header read falls back to decoding the frames when the reader no longer has the attribute; the test compares both with `step.time`.

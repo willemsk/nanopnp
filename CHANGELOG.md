@@ -46,6 +46,10 @@ its test; no computed number moves beyond round-off, and VER-62 holds.
   `PQRError`); `Measures.at_order`; the axis-weight test uses `innermost_crossings`; `ReopenedRun`
   carries its `ResolvedCase`. REV-24 measured no duplicate (one build per solve).
 - The shipping skill and the steward unsubscribe from a green, mergeable PR after one report.
+- **Review fixes** (REV-98 to REV-102): `Store.put` returns a stored key's entry before copying
+  anything and removes staging directories a killed put left more than a day ago; the charge-grid
+  key names `lattice_record`, so stored charge grids are deposited again once; `frame_times`
+  decodes the frames when a DCD reader has no header attribute.
 
 **Breaking.** A stage that writes a payload and is constructed without `workspace=` raises
 `MissingWorkspaceError` naming the argument; it no longer picks a directory under the default store
@@ -53,7 +57,10 @@ root (REV-25, REV-55). A caller that built `MeshStage()` or any other stage by h
 `workspace=<directory>`, which the stage writes into; a run through `run_case` or the CLI already
 does. The structure, density, symmetry, contour, region and solve stages refuse at the start of
 their run, before the work they would lose; `ReportStage` hands its workspace to the solve it runs
-when no solve artefact is offered.
+when no solve artefact is offered. A stage also refuses a workspace that already holds files
+(`WorkspaceInUseError`, REV-98), because a second run would overwrite what the first run's
+artefact points at: give it an empty directory, or construct it with `overwrite_workspace=True`
+(`run_case(..., overwrite_workspace=True)` for a walk) to replace them.
 
 ## [0.5.0-alpha.11] - 2026-10-14
 
