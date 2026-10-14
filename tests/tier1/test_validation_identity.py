@@ -142,7 +142,7 @@ def test_val03_identity_leaves_the_solve_provenance_alone(
         == "df6f91dd43d10896482bebd403384381ab77e5ad8f69d5573e5bf92c2bb3865a"
     )
     grid = charge_grid_key(resolved, recorded["protonation"])
-    assert grid.hash == "5ae44d4eec14e5969f319146f582bb31cfd3f4fbb6baf1f1e54b9e31022f8a79"
+    assert grid.hash == "e045ed4f53ee6022ae3305090b86b4c8a4381204f8269c0d9b35d6e11928f606"
 
     case_identity(resolved)
 
@@ -153,7 +153,7 @@ def test_val03_identity_leaves_the_solve_provenance_alone(
         == "df6f91dd43d10896482bebd403384381ab77e5ad8f69d5573e5bf92c2bb3865a"
     )
     grid_after = charge_grid_key(resolved, recorded_after["protonation"])
-    assert grid_after.hash == "5ae44d4eec14e5969f319146f582bb31cfd3f4fbb6baf1f1e54b9e31022f8a79"
+    assert grid_after.hash == "e045ed4f53ee6022ae3305090b86b4c8a4381204f8269c0d9b35d6e11928f606"
 
     provenance = resolved.solve_provenance
     assert provenance["fields"] == {"charge": False, "eps_r": False}

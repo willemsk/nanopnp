@@ -795,3 +795,30 @@ def test_ver48_a_dcd_reports_its_frame_times_without_decoding_a_frame(
 
     assert times == decoded
     assert interval == pytest.approx(2.5e-3)
+
+
+def test_ver48_a_dcd_reader_without_its_header_is_decoded_for_its_frame_times(
+    two_chains: tuple[Path, np.ndarray], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    topology, frames = two_chains
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        group = mda.Universe(str(topology)).atoms
+        dcd = _write(group, frames, tmp_path / "plain.dcd")
+        universe = load_universe(topology, dcd)
+        decoded = tuple(float(step.time) * 1e-3 for step in universe.trajectory)
+        real = universe.trajectory._file
+
+        class Headerless:
+            header = property(lambda self: (_ for _ in ()).throw(AttributeError("header")))
+
+            def __getattr__(self, name: str) -> object:
+                return getattr(real, name)
+
+            def __len__(self) -> int:
+                return len(real)
+
+        monkeypatch.setattr(universe.trajectory, "_file", Headerless())
+        times, _ = frame_times(universe)
+
+    assert times == decoded

@@ -86,11 +86,13 @@ class SolveStage:
         self,
         *,
         workspace: Path | None = None,
+        overwrite_workspace: bool = False,
         warm_start: Artefact | None = None,
         cold_reason: str = "",
         solve_hook: SolveHook | None = None,
     ) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
+        self._overwrite = overwrite_workspace
         self._warm_start = warm_start
         self._cold_reason = cold_reason
         self._solve_hook = solve_hook
@@ -99,6 +101,7 @@ class SolveStage:
         """Return a copy of this stage reporting its progress through ``hook``."""
         return SolveStage(
             workspace=self._workspace,
+            overwrite_workspace=self._overwrite,
             warm_start=self._warm_start,
             cold_reason=self._cold_reason,
             solve_hook=hook,
@@ -151,7 +154,7 @@ class SolveStage:
         """Solve the case and emit the stage-10 artefact."""
         check_cancelled(cancel, "the solve")
         # The payload is written only after the ladder has run; refuse a missing workspace first.
-        scratch_directory(self._workspace, self.name)
+        scratch_directory(self._workspace, self.name, overwrite=self._overwrite)
         report(progress, 0.0, "reading and gating the mesh")
         resolved, ingested, mesh_artefact, materials, fields_artefact, supplied = self._prepare(
             inputs, load=True
@@ -324,7 +327,7 @@ class SolveStage:
         mesh_content_hash: str,
         boundaries: CoupledBoundaries,
     ) -> dict[str, Path]:
-        directory = scratch_directory(self._workspace, self.name)
+        directory = scratch_directory(self._workspace, self.name, overwrite=self._overwrite)
         target = save(
             solution,
             directory / STATE_FILENAME,

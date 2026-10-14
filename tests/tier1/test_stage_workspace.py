@@ -11,7 +11,7 @@ import pytest
 from nanopnp.core import stages as registry
 from nanopnp.core.paths import store_root
 from nanopnp.io.artefact import QOI_SCHEMA, Artefact, StageInputs
-from nanopnp.io.workspace import MissingWorkspaceError, scratch_directory
+from nanopnp.io.workspace import MissingWorkspaceError, WorkspaceInUseError, scratch_directory
 from nanopnp.mesh.ingest import MeshStage
 from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.post.stage import QoIStage, ReportStage
@@ -33,6 +33,43 @@ def test_ver25_scratch_directory_is_the_workspace_created(tmp_path: Path) -> Non
     target = tmp_path / "a" / "b"
     assert scratch_directory(target, "mesh") == target
     assert target.is_dir()
+
+
+def test_ver25_scratch_directory_refuses_a_workspace_that_holds_files(tmp_path: Path) -> None:
+    (tmp_path / "mesh.msh").write_text("earlier run", encoding="utf-8")
+    with pytest.raises(WorkspaceInUseError, match=r"mesh\.msh.*overwrite_workspace=True"):
+        scratch_directory(tmp_path, "mesh")
+    assert (tmp_path / "mesh.msh").read_text(encoding="utf-8") == "earlier run"
+
+
+def test_ver25_scratch_directory_overwrite_admits_a_workspace_that_holds_files(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "mesh.msh").write_text("earlier run", encoding="utf-8")
+    assert scratch_directory(tmp_path, "mesh", overwrite=True) == tmp_path
+
+
+def test_ver25_scratch_directory_admits_a_workspace_holding_only_directories(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "solve").mkdir()
+    assert scratch_directory(tmp_path, "report") == tmp_path
+
+
+def test_ver25_scratch_directory_names_at_most_five_files(tmp_path: Path) -> None:
+    for index in range(7):
+        (tmp_path / f"f{index}.npz").write_text("x", encoding="utf-8")
+    with pytest.raises(WorkspaceInUseError, match=r"f4\.npz, \.\.\."):
+        scratch_directory(tmp_path, "charge")
+
+
+@pytest.mark.parametrize(("name", "origin"), _workspace_stages(), ids=lambda v: str(v))
+def test_ver25_every_workspace_stage_takes_the_overwrite_switch(
+    name: str, origin: Path, tmp_path: Path
+) -> None:
+    stage = registry.create(name, workspace=tmp_path, overwrite_workspace=True)
+    assert stage._overwrite is True  # type: ignore[attr-defined]
+    assert registry.create(name, workspace=tmp_path)._overwrite is False  # type: ignore[attr-defined]
 
 
 def test_ver25_scratch_directory_without_a_workspace_names_the_argument() -> None:

@@ -1,6 +1,7 @@
 """VER-23 — the content hash, and what it must and must not depend on (FR-27, section 5.3.2)."""
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -17,7 +18,7 @@ from nanopnp.core.hashing import (
     short,
 )
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
-from nanopnp.io.store import Store, StoreError
+from nanopnp.io.store import STALE_STAGING_SECONDS, Store, StoreError
 
 FIXTURE = {
     "bias_V": 0.1,
@@ -331,6 +332,44 @@ def test_ver26_interleaved_puts_leave_one_consistent_entry(
     assert len(other) == 1
     _assert_one_consistent_entry(store, first, other[0])
     assert (store.location(SOLUTION_SCHEMA, first.hash) / "fields.bin").read_bytes() == b"writer B"
+
+
+def test_ver26_a_put_of_a_stored_key_copies_nothing_and_returns_the_first_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import nanopnp.io.store as store_module
+
+    store = Store(tmp_path / "store")
+    first = _put_with_payload(store, tmp_path / "a", b"first writer")
+
+    def refuse(source: Path, target: Path) -> None:
+        raise AssertionError("a payload was copied for a key that is already stored")
+
+    monkeypatch.setattr(store_module.shutil, "copyfile", refuse)
+    second = _put_with_payload(store, tmp_path / "b", b"a later writer")
+
+    assert second.payload["fields"].read_bytes() == b"first writer"
+    assert second.hash == first.hash
+
+
+def test_ver26_a_put_removes_staging_a_killed_put_left_and_keeps_a_recent_one(
+    tmp_path: Path,
+) -> None:
+    store = Store(tmp_path / "store")
+    artefact = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE)
+    parent = store.location(SOLUTION_SCHEMA, artefact.hash).parent
+    stale = parent / ".abcd.1.deadbeef"
+    recent = parent / ".abcd.2.cafef00d"
+    for staging in (stale, recent):
+        staging.mkdir(parents=True)
+        (staging / "fields.bin").write_bytes(b"half a copy")
+    old = time.time() - STALE_STAGING_SECONDS - 60
+    os.utime(stale, (old, old))
+
+    _put_with_payload(store, tmp_path / "src", b"complete")
+
+    assert not stale.exists()
+    assert recent.is_dir()
 
 
 def test_ver26_an_entry_left_without_a_record_is_replaced(tmp_path: Path) -> None:

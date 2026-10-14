@@ -292,8 +292,9 @@ class StructureStage:
 
     name = "structure"
 
-    def __init__(self, *, workspace: Path | None = None) -> None:
+    def __init__(self, *, workspace: Path | None = None, overwrite_workspace: bool = False) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
+        self._overwrite = overwrite_workspace
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage."""
@@ -319,7 +320,7 @@ class StructureStage:
         """
         structure = _structure(inputs)
         parameters = structure_parameters(structure)
-        directory = scratch_directory(self._workspace, self.name)
+        directory = scratch_directory(self._workspace, self.name, overwrite=self._overwrite)
         alignment = align(structure, parameters=parameters, progress=progress, cancel=cancel)
         path = alignment.ensemble.write(directory / f"{PAYLOAD_NAME}.npz")
         summary = {**alignment.ensemble.header, "payload_digest": alignment.ensemble.digest()}

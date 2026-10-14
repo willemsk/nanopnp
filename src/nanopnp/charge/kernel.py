@@ -21,6 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = [
     "KERNEL_ID",
+    "LATTICE_RECORD",
     "PATCH_HALF_WIDTHS",
     "PLANE_COUNT",
     "PLANE_SMOOTHING_NM",
@@ -46,6 +47,10 @@ A different kernel -- the reference's 2D ``(r, z)`` Gaussian divided by ``2 pi r
 which PHY-17 forbids -- would be a different identifier, never a different number
 under this one.
 """
+
+LATTICE_RECORD = "origin-and-spacing/v1"
+"""What the stored ``.npz`` holds of its lattice; an entry without it is not served."""
+
 
 PATCH_HALF_WIDTHS = 6.0
 """Each atom's patch half-width, in units of its ``w_i`` (PHY-16 NOTE on the deposition).
@@ -377,6 +382,7 @@ def kernel_parameters(
         "grid_spacing_nm": spacing_nm,
         "patch_half_widths": PATCH_HALF_WIDTHS,
         "frame_shift_nm": shift_z_nm,
+        "lattice_record": LATTICE_RECORD,
     }
 
 

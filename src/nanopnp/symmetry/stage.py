@@ -49,8 +49,9 @@ class SymmetryStage:
 
     name = "symmetry"
 
-    def __init__(self, *, workspace: Path | None = None) -> None:
+    def __init__(self, *, workspace: Path | None = None, overwrite_workspace: bool = False) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
+        self._overwrite = overwrite_workspace
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage."""
@@ -79,7 +80,7 @@ class SymmetryStage:
         """
         parameters = reduction_parameters(inputs)
         density = inputs.require("density")
-        directory = scratch_directory(self._workspace, self.name)
+        directory = scratch_directory(self._workspace, self.name, overwrite=self._overwrite)
         check_cancelled(cancel, "reading the density map")
         report(progress, 0.0, "reading the density map")
         source = DensityMap.read(density.payload[DENSITY_PAYLOAD])

@@ -290,7 +290,7 @@ def test_num27_a_zero_bias_case_reports_its_currents_and_leaves_the_ratios_undef
         outputs=outputs,
     )
     document = loads_case(text)
-    solution = SolveStage(workspace=solved.work / "solve-zero").run(
+    solution = SolveStage(workspace=solved.work / "solve-zero", overwrite_workspace=True).run(
         StageInputs(resolved=resolve(document))
     )
     summary = (

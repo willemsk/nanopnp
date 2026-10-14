@@ -519,3 +519,14 @@ def test_ver29_the_quadrature_check_compares_two_genuinely_different_orders():
 
     assert naive == base, "the trap this constant exists to avoid"
     assert refined == base + QUADRATURE_REFINEMENT
+
+
+def test_ver29_the_charge_grid_key_names_the_lattice_record_so_an_axes_only_entry_misses() -> None:
+    from nanopnp.charge.kernel import LATTICE_RECORD, kernel_parameters
+    from nanopnp.io.artefact import ChargeGridArtefact
+
+    parameters = kernel_parameters(sharpness=1.0, spacing_nm=0.05, shift_z_nm=0.0)
+    legacy = {name: value for name, value in parameters.items() if name != "lattice_record"}
+    assert parameters["lattice_record"] == LATTICE_RECORD
+    moved = ChargeGridArtefact(parameters=parameters, protonation_hash="p")
+    assert moved.hash != ChargeGridArtefact(parameters=legacy, protonation_hash="p").hash

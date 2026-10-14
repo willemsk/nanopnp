@@ -1058,8 +1058,15 @@ class ProtonationStage:
 
     name = "protonation"
 
-    def __init__(self, *, workspace: Path | None = None, store: Store | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        workspace: Path | None = None,
+        overwrite_workspace: bool = False,
+        store: Store | None = None,
+    ) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
+        self._overwrite = overwrite_workspace
         self._store = store
 
     def describe(self) -> StageDescription:
@@ -1172,7 +1179,7 @@ class ProtonationStage:
         )
 
     def _directory(self) -> Path:
-        return scratch_directory(self._workspace, "protonation")
+        return scratch_directory(self._workspace, "protonation", overwrite=self._overwrite)
 
     def _produced(
         self,

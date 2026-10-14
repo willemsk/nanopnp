@@ -170,6 +170,7 @@ class _Walk:
     records: list[StageRecord] = field(default_factory=list)
     contributed: list[ContributedDeviation] = field(default_factory=list)
     scratch: Path | None = None
+    overwrite_workspace: bool = False
 
     def inputs(self, name: str, *, own: bool = False) -> StageInputs:
         return StageInputs(
@@ -192,7 +193,9 @@ class _Walk:
             root = self.scratch
         directory = root / name
         directory.mkdir(parents=True, exist_ok=True)
-        return create(name, workspace=directory, **extra)
+        return create(
+            name, workspace=directory, overwrite_workspace=self.overwrite_workspace, **extra
+        )
 
 
 def offered(
@@ -584,6 +587,7 @@ def run_document(
     options: Mapping[str, Mapping[str, Canonicalisable]] | None = None,
     arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
     workspace: Path | None = None,
+    overwrite_workspace: bool = False,
     write: bool = True,
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
@@ -609,6 +613,8 @@ def run_document(
         Per-stage constructor arguments, by stage name; none enters an artefact key.
     workspace
         Directory for the file-writing stages; a fresh one under ``store`` when ``None``.
+    overwrite_workspace
+        Let the stages replace files an earlier run left in ``workspace``; refused otherwise.
     write
         Whether to write the run directory.
     progress
@@ -638,6 +644,7 @@ def run_document(
         arguments=dict(arguments or {}),
         workspace=Path(workspace) if workspace is not None else None,
         only=only,
+        overwrite_workspace=overwrite_workspace,
     )
     try:
         return _walk(
@@ -788,6 +795,7 @@ def run_case(
     options: Mapping[str, Mapping[str, Canonicalisable]] | None = None,
     arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
     workspace: Path | None = None,
+    overwrite_workspace: bool = False,
     write: bool = True,
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
@@ -808,6 +816,7 @@ def run_case(
         options=options,
         arguments=arguments,
         workspace=workspace,
+        overwrite_workspace=overwrite_workspace,
         write=write,
         progress=progress,
         cancel=cancel,

@@ -465,20 +465,27 @@ def select_frames(
     )
 
 
+def _dcd_header_times(trajectory: DCDReader) -> tuple[float, ...] | None:
+    # A DCD header fixes every frame's time, which the reader sets as this expression. It is read
+    # from a private attribute, so a reader that no longer has it is decoded frame by frame.
+    try:
+        header = trajectory._file.header
+        offset = header["istart"] / header["nsavc"]
+    except (AttributeError, KeyError, TypeError, ZeroDivisionError):
+        return None
+    return tuple(
+        float((frame + offset) * trajectory.dt) * PS_NS for frame in range(len(trajectory))
+    )
+
+
 def frame_times(universe: mda.Universe) -> tuple[tuple[float, ...], float]:
     """Return every frame's recorded time and the reader's interval, in nanoseconds."""
     trajectory = universe.trajectory
     with warnings.catch_warnings():
         # The "no dt information" warning repeats what the recorded interval already says.
         warnings.simplefilter("ignore")
-        if isinstance(trajectory, DCDReader):
-            # A DCD header fixes every frame's time, which the reader sets as this expression.
-            header = trajectory._file.header
-            offset = header["istart"] / header["nsavc"]
-            times = tuple(
-                float((frame + offset) * trajectory.dt) * PS_NS for frame in range(len(trajectory))
-            )
-        else:
+        times = _dcd_header_times(trajectory) if isinstance(trajectory, DCDReader) else None
+        if times is None:
             times = tuple(float(step.time) * PS_NS for step in trajectory)
         interval = float(trajectory.dt) * PS_NS
     return times, (0.0 if math.isnan(interval) else interval)

@@ -1966,13 +1966,16 @@ that store, scratch included, and SHALL NOT fall back to the process-default sto
 files a stage writes before its artefact is put away. FR-24's job array runs many members
 concurrently, each with its own store; a member whose scratch mesh went to the process default
 would leave the artefact and the file it points at in different stores, and QR-06 could not
-attribute either to the member that produced it. The scratch directory is fresh per run rather than
-named after the stage: two runs sharing a store hold different meshes, and a deterministic name
-would have the second overwrite a file the first's artefact still references. A stage constructed
-without a workspace SHALL refuse to write scratch, naming the `workspace` argument, rather than
-choose a directory of its own; describing and keying it need none (REV-25, REV-55; WP46). The store
-puts an artefact by building its whole directory beside the final one and renaming it into place,
-so concurrent writers of one key leave one complete entry, the first, whose record and payload
+attribute either to the member that produced it. The scratch directory of a stage is the workspace
+it was given, and the walk gives every stage a fresh `<run scratch>/<stage>` directory, so two runs
+of a case never share one. A stage SHALL refuse to write into a workspace that already holds files,
+naming them and the `overwrite_workspace` switch, because a second run would overwrite a file the
+first run's artefact still references; a caller that means to replace them constructs the stage with
+`overwrite_workspace=True`, or passes it to `run_case`. A stage constructed without a workspace
+SHALL refuse to write scratch, naming the `workspace` argument, rather than choose a directory of
+its own; describing and keying it need none (REV-25, REV-55, REV-98; WP46). The store puts an
+artefact by building its whole directory beside the final one and renaming it into place, so
+concurrent writers of one key leave one complete entry, the first, whose record and payload
 agree; a later writer returns that entry (REV-18; WP46).
 
 NOTE (solution payload, warm start): the stage-10 artefact's payload SHALL be a self-describing
