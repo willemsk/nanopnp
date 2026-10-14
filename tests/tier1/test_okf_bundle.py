@@ -319,3 +319,42 @@ def test_ver68_every_heading_id_matches_the_docs_build() -> None:
         html = converter.convert(parsed.body)
         built = re.findall(r'<h[1-6] id="([^"]+)"', html)
         assert [h.anchor for h in okf.headings(parsed.body)] == built, path
+
+
+def test_ver68_frontmatter_that_is_open_unparsed_or_no_mapping_is_refused(
+    repository: Path,
+) -> None:
+    for name, text in (
+        ("02-open.md", "---\ntype: Physics\n"),
+        ("03-broken.md", "---\n: : [\n---\n"),
+        ("04-list.md", "---\n- Physics\n---\n"),
+    ):
+        (repository / ".knowledge/01-a" / name).write_text(text, encoding="utf-8")
+    found = _check(repository)
+    assert any("02-open.md:1: frontmatter block is not closed" in f for f in found)
+    assert any("03-broken.md:1: frontmatter does not parse" in f for f in found)
+    assert any("04-list.md:1: frontmatter is not a mapping" in f for f in found)
+
+
+def test_ver68_missing_root_index_directory_index_log_or_pending_is_refused(
+    repository: Path,
+) -> None:
+    root = repository / ".knowledge"
+    (root / "01-a" / "index.md").unlink()
+    (root / "log.md").write_text("no title\n", encoding="utf-8")
+    (root / "pending.yaml").unlink()
+    found = _check(repository)
+    assert any("01-a:1: has no index.md" in f for f in found)
+    assert any("log.md must open with a title" in f for f in found)
+    assert any("pending.yaml is missing" in f for f in found)
+    (root / "index.md").unlink()
+    assert any("the root index.md is missing" in f for f in _check(repository))
+
+
+def test_ver68_citation_of_a_directory_or_an_index_heading_resolves(repository: Path) -> None:
+    cites = _file(
+        repository,
+        "cites.md",
+        "See `.knowledge/01-a` and `.knowledge/01-a/index.md#a`.\n",
+    )
+    assert _check(repository, files=(cites,)) == []
