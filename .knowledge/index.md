@@ -4,7 +4,7 @@ okf_version: "0.2"
 
 # nanopnp knowledge base
 
-* [nanopnp knowledge base — index](00-orientation/index.md) - Where to start: the traps, the conventions, the author rulings and the open items.
+* [Orientation](00-orientation/index.md) - Where to start: the traps, the conventions, the author rulings and the open items.
 * [ePNP-NS — normative physics reference](01-physics-epnpns/index.md) - First for physics work. The normative equations, corrections, parameters and errata.
 * [Electrokinetics background — double layers, PB, electro-osmosis, selectivity, conductance](02-electrokinetics-background/index.md) - Underlying theory: double layers, Poisson-Boltzmann, electro-osmosis, selectivity, rectification.
 * [Nanopore biology and electrophysiology — what the model is a model *of*](03-nanopore-biology/index.md) - Domain grounding: the pores, ClyA, electrophysiology, glossary.

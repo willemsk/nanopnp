@@ -1,6 +1,6 @@
 ---
 type: Overview
-title: nanopnp knowledge base — index (overview)
+title: Orientation (overview)
 description: What the knowledge base is, where it comes from and why to read it before searching the web.
 tags:
 - orientation
@@ -20,7 +20,7 @@ generated:
   at: '2026-10-14T00:00:00Z'
 ---
 
-# nanopnp knowledge base — index
+# nanopnp knowledge base
 
 Local domain knowledge for `nanopnp`, a reimplementation of the ePNP-NS framework for biological
 nanopores (Willems et al., *Nanoscale* **12**, 16775–16795, 2020).
@@ -28,7 +28,8 @@ nanopores (Willems et al., *Nanoscale* **12**, 16775–16795, 2020).
 **Agents read from here rather than searching the web.** Everything below was extracted from
 primary sources (the thesis LaTeX, the paper's ESI, library documentation) and cross-checked.
 Several widely-copied web summaries of this model are wrong; this records what is true, including
-where the sources contradict themselves.
+where the sources contradict themselves. Each note is a directory of concepts, one idea each; a
+concept's header names its type and its sources, and its claims say which test backs them.
 
 ---
 

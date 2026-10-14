@@ -16,7 +16,7 @@ generated:
 
 ## Files
 
-| File | Read it when |
+| Note | Read it when |
 |---|---|
 | **`.knowledge/01-physics-epnpns/index.md`** | **First for physics work.** The normative equations, corrections, parameters and errata; read the governing sections before implementing, testing or reviewing model behaviour. Workflow-only and mechanical tasks need not load it. |
 | `.knowledge/02-electrokinetics-background/index.md` | Underlying theory: double layers, Poisson–Boltzmann, electro-osmosis, selectivity, rectification. |
