@@ -1,8 +1,7 @@
 # WP46 — The small fixes
 
 **Status: planned, not started**, 14 October 2026. Inherits WP44's loop and WP45's prose rule
-(§8.2.11 L4); the register's rows REV-14 to REV-16, REV-18, REV-19, REV-24, REV-25, REV-40, REV-43,
-REV-49 to REV-51, REV-55, REV-57 and REV-59 (§8.2.9 I2, renumbered by §8.2.10 J1).
+(§8.2.11 L4); the register's fifteen rows of §8.2.9 I2 (renumbered by §8.2.10 J1).
 
 The Phase 4 plan owns the phase ([phase plan](phase-4-polish-and-user-testing.md), *WP46*).
 `SPECIFICATION.md` governs; identifiers are pointers. The behaviour this package adds is written
@@ -35,7 +34,7 @@ files record no box, and no bonded pair comes near 1 nm.
 Scope: the fifteen rows above; REV-47 stays with the close. Depends on WP45 as merged (`068a0d6`).
 Clauses amended here: §5.3.1 NOTEs on `numerics.mesh` and `structure:`; the IF-05 NOTE on length
 units; the §5.3.2 NOTE on workspace locality; VER-26, VER-29, VER-48, VER-49, VER-53 and VER-54.
-No new identifier. Models (`CLAUDE.md`): Sonnet by default; D2's key and D5's gate on Opus, as the
+Also the shipping skill's stop rule (item 11). No new identifier. Models (`CLAUDE.md`): Sonnet by default; D2's key and D5's gate on Opus, as the
 phase plan rules; Haiku for item 9.
 
 ### Decisions
@@ -68,6 +67,8 @@ and gives each `review-items.md` section a *Resolved* line.
 - [ ] 9. `tests/tier2/test_axis_weight_order.py` (REV-50).
 - [ ] 10. REV-24: the count, recorded in this plan's Outcomes and the row's ruling; the cache only if needed.
 
+- [ ] 11. `.claude/skills/wp-ship/SKILL.md` §6 and `.claude/skills/steward/SKILL.md` *Bounded wakes*: once CI is green and the PR mergeable, report once, unsubscribe and cancel the check-in, so a merge does not wake a cold session; `/wp-ship` resumes (author, 14 October 2026).
+
 *Compaction checkpoint: after item 10; then the push gate and `/wp-implement`'s PR.*
 
 ### Verification
@@ -78,9 +79,9 @@ Tier 1 unless stated; command `uv run pytest --extended`, then `.claude/hooks/ga
 |---|---|---|
 | `test_charge_fields.py::test_ver29_npz_round_trips_origin_and_spacing_bitwise` and `…_axes_only_npz_still_reads` | VER-29 | Equality of `origin_nm`, `spacing_nm` and `digest()` before and after; an axes-only file gives today's grid; disagreeing axes are refused |
 | `test_mesh_generate.py::test_ver53_salt_below_ceiling_shares_stage6_key` | VER-53, VER-54 | Keys at 0.15 and 1.0 M equal; at 2 and 3 M different; manifest `sizing` still carries λ_D |
-| `test_artefact_hashing.py::test_ver26_interleaved_puts_leave_one_consistent_entry` and `…_two_processes_race` | VER-26 | Rename monkeypatched so writer B finishes between each step of A; then two processes on a barrier. Every recorded `sha256` equals its file's; both returns equal `get()` |
+| `test_artefact_hashing.py::test_ver26_interleaved_puts_leave_one_consistent_entry` and `…_two_processes_race` | VER-26 | Writer B forced between each step of A, then two processes on a barrier; every recorded `sha256` matches its file; both returns equal `get()` |
 | `test_stage_workspace.py:: (new) test_stage_without_workspace_refuses_scratch` | — | Each scratch-writing stage of the registry, run without a workspace, raises `MissingWorkspaceError` naming `workspace`; none writes under `store_root()` |
-| `test_structure_stage.py::test_ver48_*` (zero frames, duplicate Cα, wrapped chain, DCD frame times) | VER-48 | Each refusal names its file, chain, residue, frame or distance; DCD times equal decoded times exactly with the reader's frame decode counted at zero; 2WCD passes the wrap gate |
+| `test_structure_stage.py::test_ver48_*` (zero frames, duplicate Cα, wrapped chain, DCD frame times) | VER-48 | Each refusal names what D5 says; DCD times equal decoded times exactly with zero frames decoded; 2WCD passes |
 | `test_density.py::test_ver49_nm_written_map_is_refused` | VER-49 | A map exported with spacing divided by ten is refused saying nm; the existing exports still read |
 | `test_val05_geometry.py::test_lax_comparison_is_refused_by_attribution` | — | `GeometryComparisonError`, not `MissingPlaneError` |
 | `test_examples_plan.py::test_sbatch_values_are_raw_and_refused_when_unpassable` | — | A plain name appears unquoted; each forbidden character is refused naming its key |
