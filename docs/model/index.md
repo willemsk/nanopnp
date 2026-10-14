@@ -5,10 +5,10 @@ nanopnp's model is documented by its two normative records, rendered here **verb
 - **[The specification](../_generated/model/specification.md)**, `SPECIFICATION.md`, is normative.
   Its requirements (`FR-`, `QR-`, `CON-`), physics (`PHY-`, §4), numerics (`NUM-`, §6) and
   verification (`VER-`, `VAL-`, §7) are what the code implements and the tests discharge.
-- **[The knowledge base](../_generated/model/knowledge/00-index.md)**, `.knowledge/`, is the
+- **[The knowledge base](../_generated/model/knowledge/index.md)**, `.knowledge/`, is the
   verified background: the physics and its errata, the numerics, the biology, the ClyA geometry and
-  charge, the reference COMSOL settings, and the tooling. Each claim is marked **[tested]** or
-  **[verified]** and cites its source.
+  charge, the reference COMSOL settings, and the tooling. Each concept's header names its
+  sources, and each claim is marked `[tested: <test>]` or `[verified]`.
 
 This page restates no equation, and neither does the rest of this documentation. Summaries of this
 model circulate that are wrong: the wall function's sign, the steric flux's sign and several

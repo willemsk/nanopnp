@@ -6,8 +6,8 @@ Run before every build, and never committed (WP16 D4, D5)::
 
 Five kinds of page, all derived:
 
-- **The model.** ``SPECIFICATION.md`` and every ``.knowledge/*.md``, copied verbatim.
-  The model is documented by rendering its normative records, never by restating
+- **The model.** ``SPECIFICATION.md`` and every Markdown file of the ``.knowledge/`` bundle,
+  copied verbatim. The model is documented by rendering its normative records, never by restating
   their equations (``SPECIFICATION.md`` section 8.1): restated summaries of this
   model drift and get copied wrong.
 - **The examples.** Each ``examples/NN-slug/README.md``, so the site shows the exact
@@ -66,8 +66,9 @@ def _copies() -> dict[Path, Path]:
         ROOT / "SPECIFICATION.md": OUTPUT / "model" / "specification.md",
         ROOT / "CHANGELOG.md": OUTPUT / "project" / "changelog.md",
     }
-    for source in sorted((ROOT / ".knowledge").glob("*.md")):
-        pages[source] = OUTPUT / "model" / "knowledge" / source.name
+    bundle = ROOT / ".knowledge"
+    for source in sorted(bundle.rglob("*.md")):
+        pages[source] = OUTPUT / "model" / "knowledge" / source.relative_to(bundle)
     for source in sorted((ROOT / "examples").glob("*/README.md")):
         pages[source] = OUTPUT / "examples" / f"{source.parent.name}.md"
     return pages

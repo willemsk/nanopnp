@@ -5,7 +5,7 @@ concentration- and wall-dependent diffusivity, mobility, viscosity, permittivity
 the parameters of the steric flux. They live in YAML files under `data/corrections/`, ship inside
 the package, and are listed by `nanopnp --env`. The functional forms they parameterise are specified
 in §4.3 and documented, with the errata of the printed sources, in `.knowledge/01-physics-epnpns/index.md`; read them
-[there](../_generated/model/knowledge/01-physics-epnpns.md), not here.
+[there](../_generated/model/knowledge/01-physics-epnpns/index.md), not here.
 
 ## Selecting one
 

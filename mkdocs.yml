@@ -26,6 +26,10 @@ exclude_docs: |
   scripts/
   overrides/
 
+# The concepts of the knowledge bundle are reached through its index pages.
+not_in_nav: |
+  _generated/model/knowledge/
+
 theme:
   name: material
   # The site-wide pre-alpha banner (WP16 D2) is the `announce` block of this
@@ -67,6 +71,7 @@ plugins:
 markdown_extensions:
   - admonition
   - attr_list
+  - footnotes
   - tables
   - toc:
       permalink: true
@@ -122,17 +127,7 @@ nav:
   - Model:
       - model/index.md
       - Specification: _generated/model/specification.md
-      - Knowledge base:
-          - Index: _generated/model/knowledge/00-index.md
-          - ePNP-NS physics: _generated/model/knowledge/01-physics-epnpns.md
-          - Electrokinetics background: _generated/model/knowledge/02-electrokinetics-background.md
-          - Nanopore biology: _generated/model/knowledge/03-nanopore-biology.md
-          - ClyA geometry and charge: _generated/model/knowledge/04-clya-geometry-and-charge.md
-          - Analyte and forces: _generated/model/knowledge/05-analyte-and-forces.md
-          - Numerics: _generated/model/knowledge/06-numerics-fem.md
-          - Software stack: _generated/model/knowledge/07-software-stack.md
-          - Validation benchmarks: _generated/model/knowledge/08-validation-benchmarks.md
-          - COMSOL reference settings: _generated/model/knowledge/09-comsol-reference-settings.md
+      - Knowledge base: _generated/model/knowledge/index.md
   - Project:
       - project/index.md
       - Contributing: project/contributing.md
