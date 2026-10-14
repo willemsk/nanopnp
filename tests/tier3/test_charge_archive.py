@@ -35,14 +35,17 @@ from nanopnp.validation.charge import AreaComparison, compare_areal, reference_c
 
 logger = logging.getLogger(__name__)
 
+# The paper's 50 frames, in time order: DCD frames 48-97.
 ARCHIVED = [
     reference_file(f"prod5_protein_aligned_100ps_{number:02d}.pdb.pqr") for number in range(50, 100)
 ]
 
 TABLE = reference_file("prod5_clya_charge")
 
+# Archive Q_net: .knowledge/04 section 3.1.
 ARCHIVED_Q_NET_E = -72
 
+# Validated default sharpness: .knowledge/04 section 3.
 SHARPNESS = 0.5
 
 PLANE_SMOOTHING_NM = 0.5

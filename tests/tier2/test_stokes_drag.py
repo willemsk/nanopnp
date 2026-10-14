@@ -21,6 +21,7 @@ VELOCITY = 0.05
 
 SHELL_NM = (1.5, 4.0)
 
+# Tolerance: VER-19's stated tolerance, 1 % of 6 pi eta a U.
 TOLERANCE = 0.01
 
 MESHES = ((1.6, 0.2), (0.8, 0.1), (0.4, 0.05))

@@ -17,6 +17,7 @@ from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.pipeline.run import run_case
 from nanopnp.solve.stage import SolveStage
 
+# Stage keys on bbca737 (D16), stage 7 at v1.
 KEYS = {
     "region": "bb447f8fc0c1d3fa9318cd82d239f78e43d3ff0d6e3a66d5960c5276cf0d704c",
     "mesh": "069b2cd9753f2dc4b149f71284851e9b9e01d9c0726ad82b0618d7e9f7457000",
@@ -24,12 +25,14 @@ KEYS = {
     "solve": "6e3f8992206e2820221b04c4e2acd12405d4af11fa32b4932ca30c14e8c0b210",
 }
 
+# Keys with stage 7 at nanopnp/fields/v2: WP32 D15.
 KEYS_V2 = {
     **KEYS,
     "charge": "3810c50e598c543d147a8bd8a804a68d7875c30ec00dfe94d5575f4cc79792dc",
     "solve": "b1370ee6183a4bdebd8697f9dc41846fd5bf8c89d51e246495b498033726806a",
 }
 
+# Keys under repo-wide v0.5 schemas: REV-71.
 KEYS_V05 = {
     "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
     "mesh": "89551d4667c54f0d0c648b4c0e7caed46c3aa4c3e3994b9180366a2252d45517",
@@ -63,6 +66,7 @@ RECORD_SHA256_V1 = "03da655ef254808e3403034ac9dd188335edc2f9630edb6565d967528c85
 
 RECORD_SHA256_WITHOUT_AREAS_V1 = "b41037c3587b2c398b7eb95900b39b620c55156b9a09d17f76ed6d65ca718463"
 
+# Face areas recorded on bbca737.
 FACE_AREAS_NM2 = {
     "electrolyte": 1336.3471929717593,
     "membrane": 71.36950114364842,

@@ -30,6 +30,7 @@ from nanopnp.pipeline.case import loads_case, resolve
 # PHY-20
 DELTA_NM = 0.15
 
+# Tolerance: twice the bilinear bound (Design section 1).
 TOLERANCE = 4e-3
 
 CASE = """\

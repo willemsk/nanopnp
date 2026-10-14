@@ -9,6 +9,7 @@ import pytest
 from nanopnp.core.constants import REFERENCE_TEMPERATURE_K, thermal_voltage
 from nanopnp.core.scaling import Scales
 
+# Pore radius the NUM-09 table is quoted at: SPECIFICATION.md NUM-09.
 CLYA_RADIUS_NM = 2.0
 
 

@@ -25,6 +25,7 @@ FIELD = 0.5
 # PHY-20
 ANALYTE_PERMITTIVITY = 20.0
 
+# Haemoglobin charge at pH 7.4: the PlyAB reference.
 CHARGE_E = -4.0
 
 MESH = (0.4, 0.08)
@@ -34,6 +35,7 @@ SHELL_NM = (1.5, 4.0)
 # NUM-29
 ZERO_TOLERANCE_N = 1e-15
 
+# Tolerance on F_z = q E_0: SPECIFICATION.md VER-20.
 ANCHOR_TOLERANCE = 0.01
 
 # NUM-09

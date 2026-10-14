@@ -196,6 +196,7 @@ REFERENCE_PORE = CylindricalPoreGeometry(
 # FR-22
 REFERENCE_BODY = SpheroidBody(semi_radial_nm=2.9, semi_axial_nm=3.35)
 
+# q_Hb of the production runs: .knowledge/05-analyte-and-forces.md section 10.3.
 REFERENCE_CHARGE_E = -4.0
 
 REFERENCE_BIAS_V = 0.05
@@ -204,6 +205,7 @@ REFERENCE_CONCENTRATION_M = 0.3
 REFERENCE_SURFACE_CHARGE_C_M2 = -0.02
 
 # FR-25
+# Candidates: .knowledge/05-analyte-and-forces.md section 3; 20 is the upper one.
 ANALYTE_PERMITTIVITY = 20.0
 
 MEMBRANE_PERMITTIVITY = 2.0

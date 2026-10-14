@@ -56,6 +56,7 @@ SPHERE_PERMITTIVITY = 20.0
 
 GROUND_NM = 20.0
 
+# Case default: electrolyte.temperature_K.
 TEMPERATURE_K = 298.15
 
 TERMS = 80

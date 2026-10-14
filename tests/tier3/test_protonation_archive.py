@@ -22,6 +22,7 @@ from nanopnp.structure.ensemble import AlignedEnsemble
 
 logger = logging.getLogger(__name__)
 
+# The paper's 50 frames, in time order: DCD frames 48-97.
 ARCHIVED_FRAMES = range(50, 100)
 
 ARCHIVED = [
@@ -29,6 +30,7 @@ ARCHIVED = [
     for number in ARCHIVED_FRAMES
 ]
 
+# Archive Q_net: .knowledge/04 section 3.1.
 ARCHIVED_Q_NET_E = -72
 
 needs_pqrs = pytest.mark.skipif(

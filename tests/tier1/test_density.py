@@ -41,8 +41,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Coarsest spacing admitted: SPECIFICATION.md FR-04.
 H = 0.05
 
+# CHARMM C-alpha radius, 2.275 Å.
 CA_WIDTH_NM = 0.93 * 0.2275
 
 

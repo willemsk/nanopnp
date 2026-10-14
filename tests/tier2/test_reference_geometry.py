@@ -17,8 +17,10 @@ from nanopnp.mesh.reference import (
     plane_crossings,
 )
 
+# Reference COMSOL mesh: SPECIFICATION.md section 5.2.2.
 REFERENCE_MIN_QUALITY = 0.6378
 
+# Reference COMSOL mesh: SPECIFICATION.md section 5.2.2.
 REFERENCE_MEAN_QUALITY = 0.9765
 
 JUNCTION_TOL_NM = 1e-9
