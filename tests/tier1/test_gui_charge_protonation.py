@@ -1,14 +1,4 @@
-"""VER-60 — the protonation pane, through PDB2PQR and PROPKA on a fragment of 2WCD.
-
-``GLU 18`` to ``LEU 26`` of chain A carries three acids and both termini, so its
-``Q_net`` moves from 0 e at pH 2 to -3 e at pH 8 (`.knowledge/07` section 3). The
-view is read from the artefact the stage stored, as the shell reads it, and
-every number it shows is checked against the payload read independently: the
-pKa column against ``group_pka``, the applied charges against ``Q_net``, and the
-unapplied flags against the record's own list.
-
-Needs the ``structure`` extra, and is skipped visibly without it.
-"""
+"""VER-60: the protonation pane, through PDB2PQR and PROPKA on a fragment of 2WCD."""
 
 from __future__ import annotations
 
@@ -45,7 +35,6 @@ physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}
 
 
 def _produce(directory: Path, fragment_2wcd: Callable[..., object], ph: float) -> Produced:
-    """Protonate ``GLU 18``-``LEU 26`` at ``ph``, store the artefact, and return its event."""
     ensemble = fragment_2wcd(18, 26)
     path = ensemble.write(directory / "ensemble.npz")  # type: ignore[attr-defined]
     structure = StructureArtefact(
@@ -71,7 +60,6 @@ def _produce(directory: Path, fragment_2wcd: Callable[..., object], ph: float) -
 def test_ver60_the_pane_shows_the_fragment_s_states_at_the_ph(
     tmp_path: Path, fragment_2wcd, ph: float, q_net_e: float
 ) -> None:
-    """``Q_net``, applied charges, pKa column and unapplied rows, each from the artefact."""
     event = _produce(tmp_path, fragment_2wcd, ph)
     view = load_protonation(event)
     stored = Store(Path(event.store)).get(event.schema, event.hash)
@@ -86,11 +74,9 @@ def test_ver60_the_pane_shows_the_fragment_s_states_at_the_ph(
     assert view.titrated
     assert view.pka_status == "computed"
 
-    # One row per PROPKA group, its pKa the table's, NaN shown as not computed.
     assert len(frame.rows) == len(table.group_type)
     shown = np.array([np.nan if row.pka is None else row.pka for row in frame.rows])
     np.testing.assert_array_equal(shown, table.group_pka[0])
-    # Each row's applied charge is its residue's, and the residues' sum is Q_net.
     residues = {(row.chain, row.residue): row.applied_e for row in frame.rows}
     for column in range(len(table.residue_name)):
         key = (

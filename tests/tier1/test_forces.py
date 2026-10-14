@@ -1,11 +1,4 @@
-"""The NUM-28 axial force on an analyte: ``w``, the tensors and the route record.
-
-Nothing here solves anything. The benchmarks of VER-19 to VER-22 measure whether
-the force is *right*; these tests pin the three things that would make it quietly
-wrong before any physics is involved — an extension that is not exactly ``e_z``
-on the body, a stress tensor with a flipped sign, and a route-agreement check
-whose tolerance measures the cancellation instead of the discretisation.
-"""
+"""The NUM-28 axial force on an analyte: w, the tensors and the route record (VER-22)."""
 
 import math
 
@@ -33,50 +26,28 @@ from nanopnp.post.forces import (
 )
 
 BODY_RADIUS_NM = 1.0
-"""The benchmark sphere of ``AnalyteInBoxGeometry``, in nm."""
 
 
 class TestAxialExtension:
-    """``w`` must be exactly ``e_z`` on the body and exactly zero elsewhere.
-
-    "Exactly" is the whole content of NUM-28: the domain form is a surface
-    traction rewritten by the divergence theorem, and the rewriting holds only
-    for those two boundary values. A band that leaks returns the force on the
-    reservoir instead, and reports it with no other symptom.
-    """
-
     @pytest.fixture(scope="class")
     @classmethod
     def mesh(cls) -> object:
-        """Return a 1 nm sphere in a 10 nm half-disc, graded on the body."""
         geometry = AnalyteInBoxGeometry(SphereBody(radius_nm=BODY_RADIUS_NM), outer_radius_nm=10.0)
         return geometry.generate(maxh_nm=1.5, wall_h_nm=0.2)
 
     @pytest.fixture(scope="class")
     @classmethod
     def extension(cls, mesh: object) -> object:
-        """``w`` over a shell from 1 nm to 3 nm from the body's surface."""
         return axial_extension(mesh, inner_nm=1.0, outer_nm=3.0)
 
     def test_num28_extension_is_ez_on_the_body_and_zero_on_the_outer_boundary(
         self, extension: object, mesh: object
     ) -> None:
-        """The two boundary values NUM-28's derivation assumes, measured.
-
-        ``axial_extension`` already runs this check; asserting it again here is
-        deliberate, because a future change that weakens the built-in check would
-        otherwise remove the only place the property is stated.
-        """
         check_extension(extension, mesh)
 
     def test_num28_check_extension_rejects_an_inverted_band(
         self, extension: object, mesh: object
     ) -> None:
-        """``e_z`` on the reservoir and zero on the body is the silent failure.
-
-        It integrates, converges and returns a force — of the wrong body. The
-        check is what turns it into an error.
-        """
         import ngsolve as ngs
 
         inverted = ngs.GridFunction(extension.space, name="w_inverted")
@@ -85,32 +56,16 @@ class TestAxialExtension:
             check_extension(inverted, mesh)
         assert "inverted" in str(raised.value)
 
+    # QR-12
     def test_num28_check_extension_names_a_boundary_the_mesh_does_not_have(
         self, extension: object, mesh: object
     ) -> None:
-        """A body pattern matching nothing is an error naming the mesh's boundaries (QR-12).
-
-        Were it measured, the empty region would integrate to zero and the check
-        would divide by it, or pass with nothing checked.
-        """
         with pytest.raises(ExtensionError, match="no boundary matching 'no_such_body'"):
             check_extension(extension, mesh, body="no_such_body")
 
     def test_num28_domain_form_is_invariant_to_the_pressure_datum(
         self, extension: object, mesh: object
     ) -> None:
-        """``int_Omega div(w) dV = 0``, so a constant added to ``p`` moves nothing.
-
-        The hydrodynamic stress carries ``-p I``, whose contraction with
-        ``grad(w)`` is ``-p div(w)``. VER-19 and VER-21 impose a Dirichlet
-        velocity on every boundary, which leaves the pressure determined only up
-        to a constant, so the force would be arbitrary unless that integral
-        vanished. It does, and exactly: by the divergence theorem it equals
-        ``-int_{dB} n_z dS`` over the closed surface of a body of revolution.
-
-        Asserted against the scale of ``grad(w)`` rather than against an absolute
-        number, so that the test says "cancels" and not "is small".
-        """
         import ngsolve as ngs
 
         fluid = mesh.Materials(ELECTROLYTE_DOMAINS)
@@ -138,21 +93,11 @@ class TestAxialExtension:
     def test_num28_extension_rejects_a_shell_that_is_not_a_shell(
         self, mesh: object, inner_nm: float, outer_nm: float
     ) -> None:
-        """A degenerate shell is refused before a distance field is solved for."""
         with pytest.raises(ExtensionError):
             axial_extension(mesh, inner_nm=inner_nm, outer_nm=outer_nm)
 
 
 def test_num28_the_shell_may_cross_a_pore_mouth() -> None:
-    """The two mouths are interior to the fluid, so ``w`` is free to be non-zero.
-
-    NUM-28's divergence theorem asks for ``w = 0`` on the boundary of the domain
-    it integrates over, and a lumen-to-reservoir interface is not on it: both
-    sides are electrolyte. They carry netgen's automatic name ``default``, so
-    sweeping every named boundary into the check aborted a body held within a
-    shell width of a mouth — and blamed an inverted shell for it, which is the
-    one diagnosis that is certainly wrong.
-    """
     import ngsolve as ngs
 
     pore = CylindricalPoreGeometry(
@@ -162,7 +107,6 @@ def test_num28_the_shell_may_cross_a_pore_mouth() -> None:
     mesh = PoreWithAnalyte(pore, body, analyte_h_nm=0.3).generate(maxh_nm=2.0)
     assert "default" in mesh.GetBoundaries()
 
-    # The shell reaches z = 8.5 nm and the trans mouth is at z = 6.5 nm.
     extension = axial_extension(mesh, inner_nm=1.0, outer_nm=3.0)
     mouth = mesh.Boundaries("default")
     crossing = float(ngs.Integrate(ngs.InnerProduct(extension, extension), mesh, definedon=mouth))
@@ -170,13 +114,6 @@ def test_num28_the_shell_may_cross_a_pore_mouth() -> None:
 
 
 def test_num28_maxwell_stress_check_values() -> None:
-    """``eps (E .x. E - 1/2 |E|^2 I)`` on a field a reader can check by eye.
-
-    With ``grad(phi) = (0, 1)`` and ``eps~_r = 2`` the tensor is
-    ``2 [[0, 0], [0, 1]] - [[1, 0], [0, 1]] = [[-1, 0], [0, 1]]``: tension along
-    the field, pressure across it. A sign error in either term flips one of those
-    and the electromagnetic force with it.
-    """
     import ngsolve as ngs
 
     stress = maxwell_stress(ngs.CF((0.0, 1.0)), 2.0)
@@ -186,14 +123,6 @@ def test_num28_maxwell_stress_check_values() -> None:
 
 
 def test_num28_hydrodynamic_stress_check_values() -> None:
-    """``-p I + 2 eta sym grad(u)``, in NUM-28's sign convention.
-
-    Shear ``grad(u) = [[0, 1], [0, 0]]`` at ``eta~ = 3`` gives an off-diagonal
-    traction of ``2 * 3 * 1/2 = 3``, and a pressure of 5 subtracts 5 from each
-    diagonal. ``.knowledge/05`` section 4 writes the same tensor with the
-    opposite overall sign; mixing the two negates the drag, which is why the
-    convention is pinned by a number rather than by a comment.
-    """
     import ngsolve as ngs
 
     stress = hydrodynamic_stress(ngs.CF((0.0, 1.0, 0.0, 0.0), dims=(2, 2)), 5.0, 3.0)
@@ -203,21 +132,12 @@ def test_num28_hydrodynamic_stress_check_values() -> None:
 
 
 def _unit_square() -> object:
-    """Return a one-element mesh of the unit square, to evaluate constants on."""
     from netgen.occ import OCCGeometry, Rectangle
 
     return OCCGeometry(Rectangle(1.0, 1.0).Face(), dim=2).GenerateMesh(maxh=2.0)
 
 
 def test_num28_force_scale_is_eps_vt_squared_and_carries_no_length() -> None:
-    """``force_N = pressure_Pa * length_m^2``, and the reference length cancels.
-
-    The pressure scale is ``eps V_T^2 / a^2`` and a force is a pressure over an
-    area, so the force unit is ``eps V_T^2`` whatever ``a`` is. Two scale sets a
-    decade apart in reference length must therefore report the same force unit —
-    if they do not, the ``2 pi int (...) r dr dz`` of a domain form has picked up
-    a stray ``a``.
-    """
     small = Scales(length_nm=1.0, concentration_M=0.3)
     large = Scales(length_nm=10.0, concentration_M=0.3)
     assert small.force_N == pytest.approx(small.pressure_Pa * small.length_m**2, rel=1e-12)
@@ -227,12 +147,6 @@ def test_num28_force_scale_is_eps_vt_squared_and_carries_no_length() -> None:
 
 
 def test_num27_the_azimuthal_factor_is_defined_in_one_place() -> None:
-    """``post.forces`` restores ``2 pi`` through ``post.qoi``'s own constant.
-
-    NUM-27's NOTE turns on the factor being applied exactly once, at exactly one
-    boundary. Two modules each holding their own literal is how it comes to be
-    applied twice.
-    """
     from nanopnp.post import forces
 
     assert forces.TWO_PI is qoi.TWO_PI
@@ -240,12 +154,6 @@ def test_num27_the_azimuthal_factor_is_defined_in_one_place() -> None:
 
 
 def test_num29_the_route_tolerance_is_a_fifth_of_a_force_unit() -> None:
-    """0.1 pN is 0.219 in the nondimensional scaling, whatever the pore radius.
-
-    The number the plan sizes the benchmark meshes against. Recomputed here so
-    that a change to ``FORCE_ROUTE_TOLERANCE_N`` or to the force scale restates
-    it rather than silently moving the bar the discretisation has to clear.
-    """
     tolerance_N = FORCE_ROUTE_TOLERANCE_N
     assert tolerance_N == pytest.approx(1e-13)
     scales = Scales(length_nm=2.0, concentration_M=0.3)
@@ -253,18 +161,7 @@ def test_num29_the_route_tolerance_is_a_fifth_of_a_force_unit() -> None:
 
 
 class TestForceAgreement:
-    """The route record, and why its tolerance is absolute."""
-
     def test_num29_agreement_is_absolute_and_not_relative(self) -> None:
-        """A near-cancelling total must not be allowed to pass on its smallness.
-
-        Two components of +10 pN and -10.02 pN sum to -0.02 pN. A relative test
-        on that sum passes anything within a few per cent of *it* — thousandths
-        of a piconewton — or fails everything, depending on which way the
-        cancellation fell; either way it measures the cancellation and not the
-        discretisation. Here the routes differ by 0.05 pN on components of 10 pN,
-        which is 0.5 % relative and half the absolute tolerance, and it passes.
-        """
         agreement = ForceAgreement(
             domain=ForceComponents(em_N=10e-12, hd_N=-10.02e-12),
             surface=ForceComponents(em_N=10.05e-12, hd_N=-10.02e-12),
@@ -273,7 +170,6 @@ class TestForceAgreement:
         agreement.check()
 
     def test_num29_a_disagreement_beyond_the_tolerance_raises(self) -> None:
-        """0.2 pN apart on the total is a failure however small the total is."""
         agreement = ForceAgreement(
             domain=ForceComponents(em_N=10e-12, hd_N=-10e-12),
             surface=ForceComponents(em_N=10.2e-12, hd_N=-10e-12),
@@ -282,12 +178,6 @@ class TestForceAgreement:
             agreement.check()
 
     def test_num29_the_message_names_all_three_routes(self) -> None:
-        """A failure must say which route said what, in piconewtons.
-
-        RSK-04's failure mode is a wrong *split* of a right total, so a message
-        reporting only a difference leaves the reader unable to tell which half
-        moved.
-        """
         agreement = ForceAgreement(
             domain=ForceComponents(em_N=11e-12, hd_N=-10e-12),
             surface=ForceComponents(em_N=12e-12, hd_N=-10e-12),
@@ -303,12 +193,6 @@ class TestForceAgreement:
         assert "RSK-04" in message
 
     def test_num29_route_c_is_the_oracle_of_the_hydrodynamic_split(self) -> None:
-        """A split that is wrong while the total is right must still fail.
-
-        Route A's ``F^em`` and ``F^hd`` here are each 5 pN away from the truth in
-        opposite directions, so the total agrees with route B exactly and only
-        the reaction force notices. That is the reason route C is in the package.
-        """
         agreement = ForceAgreement(
             domain=ForceComponents(em_N=15e-12, hd_N=-15e-12),
             surface=ForceComponents(em_N=15e-12, hd_N=-15e-12),
@@ -320,7 +204,6 @@ class TestForceAgreement:
             agreement.check()
 
     def test_num29_without_route_c_the_split_is_unchecked_and_says_so(self) -> None:
-        """No oracle means no hydrodynamic difference, and the message says so."""
         agreement = ForceAgreement(
             domain=ForceComponents(em_N=15e-12, hd_N=-15e-12),
             surface=ForceComponents(em_N=16e-12, hd_N=-15e-12),
@@ -331,13 +214,8 @@ class TestForceAgreement:
         assert "not taken" in str(raised.value)
 
 
+# NUM-27
 def test_fr25_the_summary_records_the_convention_and_the_routes() -> None:
-    """The manifest must say that ``2 pi`` is in and whether the routes were checked.
-
-    A force reported without either is not reproducible: the reader cannot tell
-    an unchecked split from a checked one, nor a per-radian force from a whole
-    one (FR-25, NUM-27).
-    """
     forces = AnalyteForces(
         forces=ForceComponents(em_N=10e-12, hd_N=-9e-12),
         dielectric_gradient_N=0.0,
@@ -360,34 +238,21 @@ def test_fr25_the_summary_records_the_convention_and_the_routes() -> None:
 
 
 def test_num28_a_model_without_a_flow_block_has_no_hydrodynamic_force() -> None:
-    """``pnp`` reports no force rather than reporting the hydrodynamic half as zero.
-
-    Zero is a *result*; it would claim the flow was computed and found to vanish.
-    """
     solution = ModelSolution(model=models.create("pnp"), space=None, state=None)
     with pytest.raises(TypeError) as raised:
         reaction_force(solution)
     assert "no flow block" in str(raised.value)
 
 
+# NUM-25
 def test_num28_the_reaction_route_needs_the_residual_the_solve_assembled() -> None:
-    """Route C without a residual form fails loudly rather than rebuilding one.
-
-    A coupled residual reassembled without the same ``wall_distance_nm`` is a
-    different operator, and the reaction taken against it is wrong with no
-    diagnostic at all (NUM-25).
-    """
     solution = ModelSolution(model=models.create("pnp-ns"), space=None, state=None)
     with pytest.raises(ValueError, match="no residual form"):
         reaction_force(solution)
 
 
+# VER-70
 def test_qr12_the_boundary_checks_of_the_force_routes_refuse_what_a_nan_would_pass() -> None:
-    """A NaN arc length must not orient the normal or pass the fluid-side check (VER-70).
-
-    ``abs(nan) < x`` is False, so a NaN ``sense`` used to skip the refusal and then
-    take ``-normal`` from ``nan > 0``: a force of the wrong sign with no other symptom.
-    """
     import ngsolve as ngs
 
     from nanopnp.post.forces import _boundary_region, _check_fluid_side, _oriented_normal

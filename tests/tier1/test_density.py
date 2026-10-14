@@ -1,12 +1,4 @@
-"""VER-49: stage 2, the density map — the union, its grid, its radii, its artefact and the walk.
-
-The closed-form tests come first because they localise an error to one term: one
-atom must deposit ``g`` itself, two must deposit ``g1 + g2 - g1 g2``, and two
-frames must average rather than unite. The truncation is then held to its own
-per-voxel bound against a brute-force evaluation with nothing truncated, which is
-the one oracle that does not share the implementation's stencil (WP19 plan,
-Verification; Design §1).
-"""
+"""VER-49: stage 2, the density map: union, grid, radii, artefact and walk."""
 
 from __future__ import annotations
 
@@ -50,31 +42,25 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 H = 0.05
-"""The coarsest spacing FR-04 admits, and the one every test here uses."""
 
 CA_WIDTH_NM = 0.93 * 0.2275
-"""sigma R for a CHARMM C-alpha, 2.275 A: the widest heavy-atom kernel."""
 
 
 def _nodes(grid: DensityGrid) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return the node coordinates as ``[z, y, x]`` arrays."""
     return np.meshgrid(grid.axis_nm("z"), grid.axis_nm("y"), grid.axis_nm("x"), indexing="ij")
 
 
 def _gaussian(grid: DensityGrid, centre: np.ndarray, width: float) -> np.ndarray:
-    """Return ``exp(-|x - a|^2/w^2)`` at every node, evaluated directly."""
     z, y, x = _nodes(grid)
     squared = (x - centre[0]) ** 2 + (y - centre[1]) ** 2 + (z - centre[2]) ** 2
     return np.exp(-squared / width**2)
 
 
 def _kept(g: np.ndarray) -> np.ndarray:
-    """Return ``g`` where it is kept and 0 where the stencil drops it."""
     return np.where(g >= EPSILON, g, 0.0)
 
 
 def _case(tmp_path: Path, pdb: Path, *, geometry: str = "", inputs: str = "") -> Path:
-    """Write a case carrying ``structure:`` for ``pdb``, and return its path."""
     text = (
         f"schema: {CASE_SCHEMA}\n"
         "name: density\n"
@@ -95,16 +81,7 @@ def _case(tmp_path: Path, pdb: Path, *, geometry: str = "", inputs: str = "") ->
     return path
 
 
-# -- the union, in closed form ------------------------------------------------
-
-
 def test_ver49_closed_forms() -> None:
-    """One atom deposits ``g``; two atoms 0.2 nm apart deposit ``g1 + g2 - g1 g2`` (FR-04).
-
-    To 1e-15 in the float64 accumulation, and to float32 round-off (6e-8) in the
-    stored map. The atoms sit off the nodes, so the separable stencil, the
-    fractional offsets and the log-sum all enter.
-    """
     one = np.array([[[0.013, -0.021, 0.37]]])
     widths = np.array([CA_WIDTH_NM])
     grid = canonical_grid(one, widths, H)
@@ -124,17 +101,11 @@ def test_ver49_closed_forms() -> None:
     assert np.max(np.abs(deposit(two, widths, grid) - expected)) <= 6e-8
 
 
+# QR-12
 def test_ver49_union_is_bounded() -> None:
-    """500 random atoms, ten of them coincident on a node: finite and within [0, 1] (QR-12).
-
-    At a node under ten coincident atoms each term is ``log1p(-1) = -inf`` before
-    the floor, so this is the case the floor exists for. The gate fires on an
-    injected NaN naming the voxel, and a non-finite coordinate is refused naming
-    the frame and the atom.
-    """
     rng = np.random.default_rng(49)
     positions = rng.uniform(-1.5, 1.5, (1, 500, 3))
-    positions[0, :10] = [0.1, -0.2, 0.3]  # on a node: g = 1 exactly there
+    positions[0, :10] = [0.1, -0.2, 0.3]
     widths = 0.93 * rng.choice([0.17, 0.185, 0.2, 0.2275, 0.132, 0.02245], 500)
     grid = canonical_grid(positions, widths, H)
     values = deposit(positions, widths, grid, float64=True)
@@ -162,13 +133,6 @@ def test_ver49_union_is_bounded() -> None:
 
 
 def test_ver49_truncation_bound() -> None:
-    """At each voxel, ``|delta rho| <= sum of g/(1 - g)`` over the dropped terms, nothing truncated.
-
-    The oracle evaluates every atom at every node with nothing dropped, so it
-    shares no stencil, no separable factorisation and no slab with the
-    implementation. The maximum is logged; Design §1 predicts about 1e-5 at the
-    protein's heavy-atom density.
-    """
     rng = np.random.default_rng(7)
     positions = rng.uniform(-0.9, 0.9, (1, 200, 3))
     widths = 0.93 * rng.choice([0.17, 0.185, 0.2, 0.2275], 200)
@@ -189,19 +153,10 @@ def test_ver49_truncation_bound() -> None:
         float(bound.max()),
     )
     assert np.all(error <= bound + 1e-15)
-    assert error.max() > 0.0  # the bound is not met by computing nothing
+    assert error.max() > 0.0
 
 
 def test_ver49_slab_thickness_does_not_change_the_map(monkeypatch: pytest.MonkeyPatch) -> None:
-    """One-plane slabs and one whole-grid slab deposit the same map, to float64 round-off.
-
-    A one-plane slab cuts every atom's stencil to the run of offsets in that plane,
-    which is the path fine spacing takes; one slab holding the grid takes every
-    offset of every atom. A slice off by one plane drops or doubles a plane of
-    terms, of order ``g`` itself, and cannot hide under the tolerance. Round-off
-    rather than equality, because the slab decides which atoms share a batch and
-    therefore how each voxel's sum is grouped.
-    """
     import nanopnp.density.union as union
 
     rng = np.random.default_rng(8)
@@ -212,16 +167,11 @@ def test_ver49_slab_thickness_does_not_change_the_map(monkeypatch: pytest.Monkey
     thin = deposit(positions, widths, grid, float64=True)
     monkeypatch.setattr(union, "SLAB_CELLS", grid.n * grid.n * grid.nz)
     whole = deposit(positions, widths, grid, float64=True)
-    assert thin.max() > 0.5  # the atoms deposited something to compare
+    assert thin.max() > 0.5
     assert np.max(np.abs(thin - whole)) <= 1e-14
 
 
 def test_ver49_frames_average_not_union() -> None:
-    """One atom in two frames 0.3 nm apart averages to ``(g_a + g_b)/2``, not their union.
-
-    At the midpoint the two differ by ``g_a g_b / 2``, about 0.18 here, so a union
-    across frames cannot pass (FR-04, WP19 D4).
-    """
     positions = np.array([[[0.0, 0.0, 0.40]], [[0.0, 0.0, 0.10]]])
     widths = np.array([CA_WIDTH_NM])
     grid = canonical_grid(positions, widths, H)
@@ -236,12 +186,6 @@ def test_ver49_frames_average_not_union() -> None:
 
 
 def test_ver49_grid_is_canonical() -> None:
-    """Nodes are multiples of h, the axis is a node column, and the box holds every kept term.
-
-    Permuting the frames changes neither the grid nor the map beyond summation
-    order. Moving every atom by exactly one spacing in z moves the map by exactly
-    one plane: the lattice is fixed by the frame, not by the atoms.
-    """
     rng = np.random.default_rng(11)
     positions = rng.uniform(-1.0, 1.0, (3, 60, 3)) + np.array([0.3, -0.2, 4.0])
     widths = 0.93 * rng.choice([0.17, 0.2, 0.2275], 60)
@@ -274,26 +218,22 @@ def test_ver49_grid_is_canonical() -> None:
     assert np.max(np.abs(deposit(shifted, widths, moved, float64=True) - values)) <= 1e-12
 
 
-# -- the radius set -----------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("residue", "atom", "radius"),
     [
-        ("ALA", "CA", 2.275),  # (1) the residue itself
-        ("HID", "ND1", 1.85),  # (1) PDB2PQR's histidine name, read as HSD
-        ("HIS", "CA", 2.275),  # (2) HIS, where HSD, HSE and HSP agree
-        ("HIS", "HD1", 0.2245),  # (2) HSD and HSP name it and agree; HSE lacks it
-        ("ILE", "CD1", 2.06),  # (3) the atom alias for CHARMM's CD
-        ("ALA", "OXT", 1.70),  # (3) OXT as OT2, then (4) the CTER patch
-        ("GLU", "HT1", 0.2245),  # (4) the NTER patch
-        ("HSE", "HT1", 0.2245),  # (4) the NTER patch on a CHARMM histidine
-        ("PRO", "HN1", 0.2245),  # (4) proline's own N-terminal patch
-        ("GLY", "HT2", 0.2245),  # (4) glycine's own N-terminal patch
+        ("ALA", "CA", 2.275),
+        ("HID", "ND1", 1.85),
+        ("HIS", "CA", 2.275),
+        ("HIS", "HD1", 0.2245),
+        ("ILE", "CD1", 2.06),
+        ("ALA", "OXT", 1.70),
+        ("GLU", "HT1", 0.2245),
+        ("HSE", "HT1", 0.2245),
+        ("PRO", "HN1", 0.2245),
+        ("GLY", "HT2", 0.2245),
     ],
 )
 def test_ver49_radius_lookup(residue: str, atom: str, radius: float) -> None:
-    """Each lookup route of WP19 D3 resolves to the CHARMM radius, in Å."""
     assert RadiusSet.load("pdb2pqr_charmm").radius_A(residue, atom) == radius
 
 
@@ -307,12 +247,6 @@ def test_ver49_radius_lookup(residue: str, atom: str, radius: float) -> None:
     ],
 )
 def test_ver49_radius_refusals(residue: str, atom: str, message: str) -> None:
-    """An atom the set does not resolve is refused naming chain, residue number, residue and atom.
-
-    There is no fallback by element (section 5.3.1 NOTE on ``geometry.density``).
-    An unknown residue is refused before the terminal patches are consulted,
-    which would otherwise place its C-alpha from ``NTER``.
-    """
     with pytest.raises(DensityInputError, match=message) as raised:
         resolve_radii(
             "pdb2pqr_charmm",
@@ -326,10 +260,6 @@ def test_ver49_radius_refusals(residue: str, atom: str, message: str) -> None:
 
 
 def test_ver49_radius_table_matches_charmm_dat() -> None:
-    """The shipped table equals PDB2PQR's ``CHARMM.DAT``, entry for entry, both ways.
-
-    Skips without the ``structure`` extra, which carries pdb2pqr.
-    """
     pdb2pqr = pytest.importorskip("pdb2pqr")
     source = Path(pdb2pqr.__file__).parent / "dat" / "CHARMM.DAT"
     table = RadiusSet.load("pdb2pqr_charmm")
@@ -349,23 +279,8 @@ def test_ver49_radius_table_matches_charmm_dat() -> None:
         assert file_hash(source) == raw["source"]["sha256"]
 
 
-# -- the artefact -------------------------------------------------------------
-
-
+# VER-29, IF-05, FR-27
 def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) -> None:
-    """The map round-trips through ``.npz``, OpenDX and CCP4; the key is stable; an edit is seen.
-
-    Origin, spacing and shape come back exactly, because the grid is rebuilt from
-    integer node indices. OpenDX writes float32 values to six decimals, so they
-    return within 5e-7 plus float32's spacing at 1 when parsed back, 6e-8; CCP4
-    stores float32, so they return exactly (VER-29's statement of each format's
-    precision; IF-05, FR-27).
-
-    The interchange files are in ångströms (§8.2.2 B10): their own headers, read
-    by GridDataFormats with no conversion, hold ten times the origin and spacing
-    in nm. A reader that round-tripped through its own inverse could not tell nm
-    from Å, so the header is read directly.
-    """
     case = _case(tmp_path, synthetic_c12)
     store = Store(tmp_path / "store")
     result = run_case(case, store=store, upto="density", write=False)
@@ -382,8 +297,6 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
 
     h = density.grid.spacing_nm
     x0, y0, z0 = density.grid.origin_nm
-    # Each format's precision on the header, in Å: OpenDX writes the origin to six
-    # decimals and the spacing to seven figures; MRC holds both as float32.
     for suffix, tolerance, header_A in (
         (".dx", 5e-7 + 2.0**-24, 5e-6),
         (".ccp4", 0.0, 5e-5),
@@ -391,7 +304,6 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
         (".map", 0.0, 5e-5),
     ):
         path = density.export(tmp_path / f"map{suffix}")
-        # The reader named, as gridData cannot guess one for ``.map``.
         header = Grid(str(path), file_format="DX" if suffix == ".dx" else "MRC")
         assert np.allclose(header.delta, 10.0 * h, rtol=0.0, atol=header_A)
         assert np.allclose(header.origin, 10.0 * np.asarray((x0, y0, z0)), rtol=0.0, atol=header_A)
@@ -400,11 +312,6 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
         assert np.max(np.abs(exported.values - density.values)) <= tolerance
     with pytest.raises(GridFormatError, match=r"\.npz, \.dx, \.ccp4"):
         density.export(tmp_path / "map.vtk")
-    # An origin off the lattice, by half a spacing in x and y or 0.013 nm in z, is
-    # refused rather than rounded onto it, which would move every value. Written in
-    # Å, as the reader expects. A 5^3 corner of the map: the refusal reads the
-    # header, and OpenDX writing the whole map twice more was a third of this
-    # test (WP33 D13).
     raw = np.transpose(density.values, (2, 1, 0))[:5, :5, :5]
     for origin in ((x0 - h / 2, y0 - h / 2, z0), (x0, y0, z0 + 0.013)):
         off = tmp_path / "off-lattice.dx"
@@ -437,7 +344,6 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
 
 
 def test_ver49_the_key_moves_with_every_input(synthetic_c12: Path, tmp_path: Path) -> None:
-    """The stage-2 key moves with the spacing and the sharpness, and not with the case name."""
     from nanopnp.core.stages import create
     from nanopnp.io.artefact import StageInputs
 
@@ -453,9 +359,6 @@ def test_ver49_the_key_moves_with_every_input(synthetic_c12: Path, tmp_path: Pat
     assert key("geometry: {density: {sharpness: 0.9}}\n") != base
 
 
-# -- case resolution and the walk ----------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("geometry", "message"),
     [
@@ -469,21 +372,12 @@ def test_ver49_the_key_moves_with_every_input(synthetic_c12: Path, tmp_path: Pat
 def test_ver49_resolution_refusals(
     synthetic_c12: Path, tmp_path: Path, geometry: str, message: str
 ) -> None:
-    """A spacing outside FR-04's range, or a non-positive sharpness, is refused naming the key."""
     case = _case(tmp_path, synthetic_c12, geometry=f"geometry: {{density: {geometry}}}\n")
     with pytest.raises(CaseValidationError, match=message):
         resolve(load_case(case))
 
 
 def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) -> None:
-    """A ``structure:`` case walks to stage 3, and its full walk and its sweep reach the solve.
-
-    The full walk selects every stage and the sweep plans (WP20 D1, WP21 D1).
-
-    ``geometry:`` beside ``inputs.mesh`` is refused naming both, by the upstream
-    rule; ``geometry:`` with neither ``structure:`` nor a mesh describes no run
-    (WP19 D1, D2; section 5.3.1 NOTE on ``geometry.density``).
-    """
     from nanopnp.sweep.plan import plan_from_document
 
     case = _case(tmp_path, synthetic_c12, geometry="geometry: {membrane: {thickness_nm: 2.8}}\n")
@@ -538,9 +432,8 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
 
 
 def test_ver49_a_bad_atom_aborts_stage_two_naming_it(synthetic_c12: Path, tmp_path: Path) -> None:
-    """An atom the radius set does not place aborts the run naming it, before any deposition."""
     lines = synthetic_c12.read_text(encoding="utf-8").splitlines()
-    lines[44] = lines[44][:12] + "CG  " + lines[44][16:]  # chain B, residue 1
+    lines[44] = lines[44][:12] + "CG  " + lines[44][16:]
     pdb = tmp_path / "bad.pdb"
     pdb.write_text("\n".join(lines) + "\n", encoding="utf-8")
     with pytest.raises(DensityInputError, match=r"atom 'CG' of residue ALA 1 in chain 'B'"):
@@ -548,11 +441,6 @@ def test_ver49_a_bad_atom_aborts_stage_two_naming_it(synthetic_c12: Path, tmp_pa
 
 
 def test_ver49_radius_refusal_names_the_first_atom_in_file_order() -> None:
-    """Of two atoms the set does not place, the refusal names the one earlier in the file.
-
-    ``TRP QQ`` comes first in the file and ``ALA QZ`` first in sorted order, which
-    is the order the distinct pairs are looked up in.
-    """
     columns = {
         "resname": np.array(["ALA", "TRP", "ALA"]),
         "atom": np.array(["CA", "QQ", "QZ"]),
@@ -565,11 +453,6 @@ def test_ver49_radius_refusal_names_the_first_atom_in_file_order() -> None:
 
 
 def test_ver49_2wcd_resolves_every_atom(prepared_2wcd: Prepared2WCD) -> None:
-    """Every heavy atom of the vendored 2WCD resolves: ILE CD1 and HIS are its two aliases.
-
-    Design §4: 216 ``ILE CD1`` and 120 ``HIS`` atoms are where 2WCD's names and
-    ``CHARMM.DAT``'s differ, and nothing else is.
-    """
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
 
     group = mda.Universe(str(prepared_2wcd.path)).atoms

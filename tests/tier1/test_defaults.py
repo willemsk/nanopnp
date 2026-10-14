@@ -28,7 +28,6 @@ from nanopnp.pipeline.case import loads_case
 
 
 def test_mesh_defaults_parity() -> None:
-    """Mesh defaults match geometry specs, primitives, and CLI cylinder parser."""
     assert CylindricalPoreGeometry().pore_radius_nm == DEFAULT_PORE_RADIUS_NM
 
     parser = build_parser()
@@ -41,7 +40,6 @@ def test_mesh_defaults_parity() -> None:
 
 
 def test_numerics_defaults_parity() -> None:
-    """The Newton constants match the spec; the spec matches _VALIDATED_DEFAULTS."""
     assert DEFAULT_NONLINEAR_RTOL == NonlinearSpec().rtol == NewtonSettings().relative_tolerance
     assert DEFAULT_NONLINEAR_MAX_ITER == NonlinearSpec().max_iter == NewtonSettings().max_iterations
 
@@ -64,7 +62,6 @@ def test_numerics_defaults_parity() -> None:
 
 
 def test_case_yaml_template_fixture(case_yaml_template: str) -> None:
-    """Verifies loads_case(case_yaml_template) parses and validates cleanly to CaseDocument."""
     doc = loads_case(case_yaml_template)
     assert isinstance(doc, CaseDocument)
     assert doc.schema_id == CASE_SCHEMA
@@ -72,7 +69,6 @@ def test_case_yaml_template_fixture(case_yaml_template: str) -> None:
 
 
 def test_make_case_dict_helper() -> None:
-    """Tests default dict generation and overrides (both top-level and dotted paths)."""
     base = make_case_dict()
     assert base["schema"] == CASE_SCHEMA
     assert base["name"] == "minimal"
@@ -81,12 +77,10 @@ def test_make_case_dict_helper() -> None:
     assert doc.schema_id == CASE_SCHEMA
     assert doc.name == "minimal"
 
-    # Top-level override
     overridden = make_case_dict(name="custom")
     assert overridden["name"] == "custom"
     assert CaseDocument.model_validate(overridden).name == "custom"
 
-    # Dotted override and deep-merging
     dotted = make_case_dict(
         name="custom_dotted",
         **{"physics.model": "pnp-ns", "boundary_conditions.bias_V": 0.05},
@@ -98,7 +92,6 @@ def test_make_case_dict_helper() -> None:
     assert doc_dotted.name == "custom_dotted"
     assert doc_dotted.boundary_conditions.bias_V == 0.05
 
-    # Nested mapping override deep-merging
     nested = make_case_dict(physics={"solid_permittivities": {"membrane": 3.2}})
     assert nested["physics"]["model"] == "pnp-ns"
     assert nested["physics"]["solid_permittivities"] == {"membrane": 3.2}
@@ -107,7 +100,6 @@ def test_make_case_dict_helper() -> None:
 
 
 def test_make_case_fixture(make_case) -> None:
-    """make_case fixture returns the make_case_dict helper."""
     assert make_case is make_case_dict
     doc = CaseDocument.model_validate(make_case(name="from_fixture"))
     assert doc.name == "from_fixture"

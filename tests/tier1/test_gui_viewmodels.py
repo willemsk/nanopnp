@@ -1,28 +1,4 @@
-"""VER-43 and VER-44 — the shell's view-models, asserted where Qt cannot be constructed.
-
-Every rule the desktop interface enforces lives below the Qt boundary, and this
-module is why. ``PySide6.QtWidgets`` raises ``ImportError: libEGL.so.1`` in the
-development container and on ``ubuntu-latest``
-(`.knowledge/07-software-stack.md` §5), so a rule implemented in a widget would
-be a rule asserted on two of the seven matrix jobs. Here the editor's
-validation, the vocabulary it offers, the run state machine and the exit-class
-agreement are all asserted on every one of them, at every supported Python
-version.
-
-The sharpest test in the file is
-:func:`test_if09_editor_reports_registry_problems_as_the_cli_does`, which
-asserts *string identity* between the diagnostic the interface shows and the one
-``nanopnp run`` prints for a file holding the same mistake. Two renderings of
-one error drift, and the one that drifts is the one the user is reading.
-
-WP15 adds the convergence plot's and the field viewer's models to the same
-discipline. What they decide is what a picture is allowed to claim — that a band
-with no steps says which of the two reasons made it silent, that a solve served
-from the store is named rather than drawn as an empty plot, that no NUM-16
-threshold is drawn, and that a document which loaded without its renderer is a
-diagnostic and not a blank panel — and every one of those decisions is asserted
-here rather than in a widget.
-"""
+"""VER-43 and VER-44: the shell's view-models, asserted where Qt cannot be built."""
 
 from __future__ import annotations
 
@@ -79,8 +55,6 @@ numerics: {continuation: default_ladder, stabilisation: none}
 """
 
 VOCABULARY = (
-    # Values that belong to the schema and to the registries. If any of these
-    # appears in ``gui/``, the interface has grown a second source of truth.
     "epnp-ns",
     "pnp-ns",
     "willems2020_nacl",
@@ -90,65 +64,30 @@ VOCABULARY = (
     "no_slip",
     "supg",
     "taubin",
-    # ``charge.titration`` and ``charge.forcefield`` (WP31 D16). ``propka`` is
-    # matched as a string literal only, because the probe imports the module of
-    # that name, and its ``PAYLOADS`` entry is exempt below.
     '"propka"',
     "'propka'",
     "CHARMM",
     "PEOEPB",
     "SWANSON",
-    # And the IF-07 attribute vocabulary, extended for WP15: the viewer's field
-    # names come from :func:`~nanopnp.post.export.attribute_name` over the model's
-    # own declarations, so a name written here would be the interface saying
-    # what a number means in a second place from the file that holds it.
     "phi_V",
     "u_m_s",
     "p_Pa",
     "mol_m3",
-    # And WP24's: the derived case's profile format and a hand edit's source
-    # come from ``io.case_paths.with_profile`` and ``geometry.profile.HAND_EDIT_SOURCE``.
     "profile1",
     '"hand-edit"',
-    # And WP31's: the deployed charge picture is titled with IF-07's own name,
-    # ``post.export.FIXED_CHARGE_ATTRIBUTE``, so the picture and the export agree.
     "rho_fixed_C_m3",
 )
 
 
 @pytest.fixture
 def case_file(tmp_path: Path) -> Path:
-    """Write a valid case file the editor can open."""
     path = tmp_path / "case.yaml"
     path.write_text(CASE, encoding="utf-8")
     return path
 
 
-# -- the boundary -------------------------------------------------------------
-
-
+# CON-09, VER-55, CON-10, VER-60
 def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
-    """In a fresh process, the view-models pull in neither a toolkit nor a solver.
-
-    ``sys.modules`` in a *subprocess*, because this one has imported half the
-    package already. Both halves are load-bearing: no Qt is what lets this file
-    run on the push gate at all, and no NGSolve is what keeps a shell that is
-    only browsing a case off the solver's ~370 ms — the editor validates the
-    whole schema without it.
-
-    ``PyQt5`` and ``PyQt6`` are checked as well. CON-09 forbids PyQt outright
-    (it is GPL-3 or commercial only), and an import reaching one through some
-    transitive path would put the whole bundle's licence in question.
-
-    WP24 adds the geometry tab's view-model and its measuring child, and with
-    them the geometry pipeline's libraries (VER-55): MDAnalysis, scikit-image
-    and Shapely are for the child that measures a contour, and Gmsh is CON-10's
-    optional backend, so none of them belongs in the process that draws.
-
-    WP31 adds the charge tab's view-model, and PDB2PQR and PROPKA to the absent
-    set (VER-60): the protonation table is read from the stored artefact, so the
-    process that draws it never runs either.
-    """
     probe = (
         "import sys;"
         "import nanopnp.gui.case_model, nanopnp.gui.run_model,"
@@ -165,12 +104,6 @@ def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
 
 
 def _without_payloads(source: str) -> str:
-    """Return ``source`` with a module-level ``PAYLOADS`` assignment blanked, found by AST.
-
-    The probe's ``PAYLOADS`` names modules, not case values: ``"propka"`` there
-    is the package the bundle must carry, and ``test_gui_probe.py`` checks it
-    against the probe's imports (WP31 D16). Only that one assignment is exempt.
-    """
     tree = ast.parse(source)
     for node in tree.body:
         targets = (
@@ -187,14 +120,8 @@ def _without_payloads(source: str) -> str:
     return source
 
 
+# FR-25
 def test_if09_no_option_list_is_written_in_the_shell() -> None:
-    """No value of the case vocabulary appears anywhere under ``gui/``.
-
-    The mechanical form of "the editor holds no vocabulary of its own". A
-    hard-coded list of stabilisation modes would be an interface offering a mode
-    this build does not register — a run whose FR-25 manifest describes
-    something that never happened (§5.3.3).
-    """
     root = Path(__file__).resolve().parents[2] / "src" / "nanopnp" / "gui"
     offenders = {
         f"{path.relative_to(root)}: {value}"
@@ -208,11 +135,7 @@ def test_if09_no_option_list_is_written_in_the_shell() -> None:
     )
 
 
-# -- the editor ---------------------------------------------------------------
-
-
 def test_if09_editor_refuses_a_value_the_schema_refuses(case_file: Path) -> None:
-    """A bad value is refused at the field, and the document does not move."""
     editor = CaseEditor.open(case_file)
     before = dumps_case(editor.document)
 
@@ -228,13 +151,6 @@ def test_if09_editor_refuses_a_value_the_schema_refuses(case_file: Path) -> None
 
 
 def test_if09_editor_reports_registry_problems_as_the_cli_does(case_file: Path) -> None:
-    """The interface's whole-document diagnostic is the command line's, character for character.
-
-    ``electrolyte.parameters`` is a plain ``str``, so the field check cannot
-    refuse an uninstalled parameter file; ``_check_installed`` does, on the
-    whole document, which is exactly the second stage of validation §5.3.4 asks
-    for. What is asserted is that the user reads the same sentence either way.
-    """
     editor = CaseEditor.open(case_file)
     editor.stage("electrolyte.parameters", "not_installed")
     with pytest.raises(CaseValidationError):
@@ -262,12 +178,6 @@ def test_if09_editor_reports_registry_problems_as_the_cli_does(case_file: Path) 
 def test_qr11_editor_refuses_what_check_document_refuses_in_the_cli_words(
     case_file: Path, path: str, value: str, written: str | None, named: str
 ) -> None:
-    """A model no registry has, or an unstable element pair, is refused at commit (WP38 D7, D8).
-
-    The registries left the schema for :func:`~nanopnp.pipeline.checks.check_document`,
-    and the editor runs it after substituting, so the shell still refuses what
-    ``nanopnp run`` refuses, in the same sentence.
-    """
     editor = CaseEditor.open(case_file)
     before = dumps_case(editor.document)
     editor.stage(path, value)
@@ -293,12 +203,6 @@ def test_qr11_editor_refuses_what_check_document_refuses_in_the_cli_words(
 
 
 def test_if09_editor_offers_only_what_the_schema_and_registries_name(case_file: Path) -> None:
-    """Every option list is ``get_args`` of a ``Literal``, or a live registry.
-
-    Both directions of "no vocabulary of its own": a ``Literal``-typed path
-    offers exactly its members, and a registry-backed path offers exactly what
-    is installed *now*, so a build without a correction file cannot offer it.
-    """
     editor = CaseEditor.open(case_file)
 
     registered = {
@@ -330,12 +234,6 @@ def test_if09_editor_offers_only_what_the_schema_and_registries_name(case_file: 
 
 
 def test_if09_editor_refuses_to_run_a_document_that_is_not_on_disk() -> None:
-    """A case assembled in memory has nowhere to be saved, and says so.
-
-    §5.3.1 makes the file the unit of reproducibility. A run of an in-memory
-    document would write a manifest naming an input that does not exist, so the
-    refusal belongs here rather than in the manifest.
-    """
     from nanopnp.pipeline.case import loads_case
 
     editor = CaseEditor(document=loads_case(CASE))
@@ -344,14 +242,6 @@ def test_if09_editor_refuses_to_run_a_document_that_is_not_on_disk() -> None:
 
 
 def test_if09_running_an_unchanged_case_does_not_rewrite_the_file(case_file: Path) -> None:
-    """A run that changed nothing runs the bytes the user wrote.
-
-    A case file is written by hand: comments, key order and ``1`` where
-    :func:`~nanopnp.io.case.dumps_case` writes ``1.0`` all survive a run and
-    none of them survives a round trip. Since the shell saves before it runs
-    (§5.3.1), an unconditional save would quietly destroy them the first time
-    anyone pressed Run.
-    """
     before = case_file.read_text(encoding="utf-8")
     editor = CaseEditor.open(case_file)
     assert not editor.dirty
@@ -368,14 +258,6 @@ def test_if09_running_an_unchanged_case_does_not_rewrite_the_file(case_file: Pat
 
 
 def test_if09_saving_refuses_while_an_edit_is_still_staged(case_file: Path) -> None:
-    """A staged edit is not in the document, so it must not be silently dropped.
-
-    :meth:`~nanopnp.gui.case_model.CaseEditor.save` writes ``document``, and a
-    staged edit is by construction not in it yet. Saving over the file with the
-    edit still pending would leave the user looking at a form that says ``0.2``
-    and a run, made from that very file, at ``0.1`` — §5.3.1's unit of
-    reproducibility reproducing something nobody asked for.
-    """
     editor = CaseEditor.open(case_file)
     editor.stage("boundary_conditions.bias_V", 0.2)
     with pytest.raises(ValueError, match="uncommitted edits"):
@@ -387,31 +269,14 @@ def test_if09_saving_refuses_while_an_edit_is_still_staged(case_file: Path) -> N
 
 
 def test_if09_a_field_absent_from_the_document_reads_as_absent(case_file: Path) -> None:
-    """A field of the schema the case does not carry is ``ABSENT``, never ``None``.
-
-    ``None`` is a value several fields may legitimately hold, and a panel that
-    conflated the two would show ``structure.source.path`` as set to nothing
-    rather than as living in a block this case has not got — which is a fact
-    about the document, and the distinction
-    :func:`~nanopnp.io.case_paths.substitute` acts on when it refuses to write into a
-    section that is not there.
-    """
     editor = CaseEditor.open(case_file)
-    # Blocks this case does not carry at all.
     assert editor.state("structure.source.path").value is ABSENT
     assert editor.state("geometry.analyte.shape").value is ABSENT
     assert editor.state("inputs.charge.path").value is ABSENT
-    # A field of a block it does carry, holding nothing.
     assert editor.state("inputs.mesh.artefact").value is None
 
 
 def _schema_bounds(path: str) -> tuple[float, float] | None:
-    """Return ``(minimum, maximum)`` the case's JSON Schema gives a path, or ``None``.
-
-    The second route to a field's bounds: pydantic's JSON Schema projection,
-    walked through ``$ref``, ``anyOf``, ``items`` and ``additionalProperties``,
-    rather than the field metadata :func:`~nanopnp.io.case_paths.field_bounds` reads.
-    """
     from nanopnp.io.case import CaseDocument
 
     schema = CaseDocument.model_json_schema()
@@ -446,26 +311,18 @@ def _schema_bounds(path: str) -> tuple[float, float] | None:
     return float(lower.pop()), float(upper.pop())  # type: ignore[arg-type]
 
 
+# IF-09
 def test_ver60_a_bounded_number_spins_over_exactly_the_schema_s_range(case_file: Path) -> None:
-    """Every closed-range number is a spin box over its schema bounds, and nothing else is (D12).
-
-    Both directions, against the JSON Schema rather than the metadata the editor
-    reads: a field the schema closes on both ends and the editor leaves a free
-    entry would let a typed value fail only at commit, and a spin range the
-    editor invented would be a bound written in ``gui/`` (IF-09, VER-43).
-    """
     editor = CaseEditor.open(case_file)
     shown = {state.path: state.bounds for state in editor.states() if state.kind == "bounded"}
     declared = {
         reference.path: bounds
         for reference in case_fields()
         if (bounds := _schema_bounds(reference.path)) is not None
-        # A field that admits null stays an entry however it is bounded (WP32 D12).
         and type(None) not in get_args(reference.annotation)
     }
     assert shown == declared
     assert shown["charge.ph"] == (0.0, 14.0)
-    # One open end is not a range a spin box can show: ``ge=0`` alone stays an entry.
     assert editor.state("charge.exclusion_offset_nm").kind == "number"
     assert editor.state("charge.exclusion_offset_nm").bounds is None
     assert editor.state("boundary_conditions.bias_V").bounds is None
@@ -484,14 +341,6 @@ def test_ver60_a_bounded_number_spins_over_exactly_the_schema_s_range(case_file:
 def test_ver60_only_a_field_that_cannot_be_unset_is_a_spin_box(
     annotation: object, kind: str, integral: bool
 ) -> None:
-    """``_kind`` on synthetic references closed on both ends (WP32 D12).
-
-    A spin box cannot say "unset", so a field admitting ``None`` stays a numeric
-    entry, where an empty line is ``None``. An ``int`` steps by whole numbers.
-    No field of today's schema is an optional bounded number or a bounded
-    integer, so the rule is asserted here, on the references a later field
-    would bring.
-    """
     from nanopnp.gui.case_model import FieldState, _kind
     from nanopnp.io.case_paths import FieldReference
 
@@ -506,20 +355,12 @@ def test_ver60_only_a_field_that_cannot_be_unset_is_a_spin_box(
         bounds=(1.0, 9.0) if found == "bounded" else None,
     )
     assert state.integral is integral
-    # One open end is never a spin box, optional or not.
     assert _kind(reference, None, closed=False) == "number"
 
 
 def test_ver60_add_section_writes_only_a_section_whose_empty_form_changes_nothing(
     case_file: Path,
 ) -> None:
-    """**Add section** creates ``charge: {}``, after which the pH is editable; nothing else (D13).
-
-    The case carries no ``charge:`` block, so its pH reads ``ABSENT`` and the
-    shell could not set it at all without this. What is added is exactly
-    ``with_section``'s empty mapping, which loads back as the default block, and
-    any section outside ``NEUTRAL_SECTIONS`` is refused in that function's words.
-    """
     from nanopnp.io.case import Charge
     from nanopnp.io.case_paths import NEUTRAL_SECTIONS
 
@@ -545,18 +386,7 @@ def test_ver60_add_section_writes_only_a_section_whose_empty_form_changes_nothin
     assert load_case(case_file).charge == Charge(ph=7.25)
 
 
-# -- run control --------------------------------------------------------------
-
-
 def test_if09_run_model_fraction_is_monotone_and_ends_at_one() -> None:
-    """The bar never goes backwards, and a settled run is at 1.
-
-    :class:`~nanopnp.core.stages.Progress` promises monotone in [0, 1], and
-    :func:`~nanopnp.core.stages.report` clamps the range but not the order — a
-    queue drained after a cancellation can hand over a late report from a stage
-    already superseded. A bar that moved backwards would be reporting the
-    transport rather than the run.
-    """
     model = RunModel()
     model.consume(
         [
@@ -585,13 +415,6 @@ def test_if09_run_model_fraction_is_monotone_and_ends_at_one() -> None:
 
 
 def test_if09_failure_carries_the_cli_exit_class() -> None:
-    """A failure is diagnosed with the §3.1 code the command line would return.
-
-    One representative of each class, asserted against the literal codes of
-    §3.1 rather than against a second call to
-    :func:`~nanopnp.core.errors.classify` — which would only establish that the
-    classifier agrees with itself.
-    """
     from nanopnp.numerics.newton import NewtonDivergenceError
     from nanopnp.post.qoi import RouteDisagreementError
 
@@ -620,14 +443,8 @@ def test_if09_failure_carries_the_cli_exit_class() -> None:
     assert cancelled.outcome() is None
 
 
+# QR-12
 def test_if09_an_event_the_model_does_not_apply_is_refused_not_read_as_cancelled() -> None:
-    """A variant added to ``RunEvent`` fails here rather than settling the run.
-
-    WP15 widens the union with a ``NewtonStep``. Dispatching the terminal state
-    from a trailing ``else`` would have made the first Newton step of every run
-    read as a cancellation — a run that produced a result reported as one that
-    wrote nothing, which is the shape of wrong answer QR-12 exists to refuse.
-    """
 
     @dataclass(frozen=True)
     class _FutureVariant:
@@ -640,16 +457,7 @@ def test_if09_an_event_the_model_does_not_apply_is_refused_not_read_as_cancelled
     assert model.state == "running"
 
 
-# -- the convergence plot ------------------------------------------------------
-
-
 def _ladder(model: RunModel) -> None:
-    """Drive one model through a small three-rung ladder.
-
-    Shaped like the real one and not like a convenient one: a rung that takes no
-    Newton callback, a rung that converged on entry, and a rung that took steps.
-    Those are the three cases the reference ladder actually produces.
-    """
     model.consume(
         [
             Started(case="case.yaml", store=None),
@@ -668,13 +476,6 @@ def _ladder(model: RunModel) -> None:
 
 
 def test_ver44_the_plot_bands_the_ladder_and_names_both_kinds_of_silence() -> None:
-    """A silent band says *why* it is silent, and the two reasons differ.
-
-    The whole reason the hook carries ``reporting``. A rung whose model takes no
-    Newton callback and a coupled rung that converged before its first step are
-    both empty, and a plot that annotated either as the other would be stating
-    something about the solve that is not true.
-    """
     model = RunModel()
     _ladder(model)
     plot = model.convergence
@@ -692,13 +493,6 @@ def test_ver44_the_plot_bands_the_ladder_and_names_both_kinds_of_silence() -> No
 
 
 def test_ver44_a_solve_served_from_the_store_is_named_not_drawn_empty() -> None:
-    """A finished run that reported no rung is a cache hit, and says so.
-
-    A finished run walked the whole pipeline, so its solve either climbed the
-    ladder or was answered from the artefact store. An empty plot would read as a
-    solve that converged instantly, which is the reading §5.3.2's cache must
-    never be given.
-    """
     served = RunModel()
     served.consume(
         [
@@ -712,8 +506,6 @@ def test_ver44_a_solve_served_from_the_store_is_named_not_drawn_empty() -> None:
     assert "served from the artefact store" in served.convergence.summary
     assert served.convergence.bands == []
 
-    # A walk truncated before the solve (``upto``, WP24 D3) finished without
-    # entering it, and is not a cache hit either: its plot is a plot of no solve.
     truncated = RunModel()
     truncated.consume(
         [
@@ -727,7 +519,6 @@ def test_ver44_a_solve_served_from_the_store_is_named_not_drawn_empty() -> None:
     assert truncated.convergence.state == "idle"
     assert "served" not in truncated.convergence.summary
 
-    # And a run that stopped is not that: it has no claim either way.
     stopped = RunModel()
     stopped.consume(
         [
@@ -741,13 +532,6 @@ def test_ver44_a_solve_served_from_the_store_is_named_not_drawn_empty() -> None:
 
 
 def test_ver44_the_band_names_the_num16_test_its_own_numbers_support() -> None:
-    """A forced last step, and an update above tolerance, both exclude the update test.
-
-    NUM-16 accepts *either* test and never the update test on a forced step, so
-    the two are not exclusive and the model claims only what the recorded numbers
-    prove. A band that asserted "the update test closed it" from a forced step
-    would be quoting a criterion the solver had refused to apply.
-    """
     forced = ConvergenceModel()
     forced.rung("r", 9, 0, 1, True, 1e-6)
     forced.step(1, 1e-13, 1e-9, 0.01, 6, True)
@@ -770,13 +554,6 @@ def test_ver44_the_band_names_the_num16_test_its_own_numbers_support() -> None:
 
 
 def test_ver44_the_axis_is_logarithmic_whole_decades_and_per_band() -> None:
-    """The mapping is the model's, the ticks are decades, and no band is joined to the next.
-
-    Each assertion is a way the plot could lie. A linear axis would hide the six
-    orders the plot exists to show; a tick at 2.5 decades would label a number
-    nobody reads; and a polyline running across a band boundary would draw a line
-    between two different operators.
-    """
     model = RunModel()
     _ladder(model)
     plot = model.convergence
@@ -786,8 +563,6 @@ def test_ver44_the_axis_is_logarithmic_whole_decades_and_per_band() -> None:
     assert low <= -12.0 <= high
     assert all(tick == float(int(tick)) for tick in plot.ticks())
 
-    # One polyline per band, in the band's own extent, and the values are the
-    # base-10 logarithms of the numbers the solver reported.
     band = plot.bands[-1]
     start, end = plot.extent(band)
     points = plot.points(band, RESIDUAL)
@@ -796,18 +571,11 @@ def test_ver44_the_axis_is_logarithmic_whole_decades_and_per_band() -> None:
     assert points[-1][1] == pytest.approx(-12.0)
     assert plot.points(plot.bands[0], RESIDUAL) == ()
 
-    # And the second series is a different curve, not a copy of the first.
     updates = plot.points(band, UPDATE)
     assert [y for _, y in updates] != [y for _, y in points]
 
 
 def test_ver44_a_sample_a_logarithm_cannot_place_is_omitted_and_counted() -> None:
-    """An exactly zero residual is not drawn at the axis floor; it is reported.
-
-    Placing it at the bottom of the frame would draw a number the solve never
-    produced, and placing it nowhere without saying so would lose a step from a
-    plot whose subject is how many there were.
-    """
     model = ConvergenceModel()
     model.rung("r", 9, 0, 1, True, 1e-6)
     model.step(1, 0.0, 0.0, 1.0, 1, False)
@@ -820,22 +588,12 @@ def test_ver44_a_sample_a_logarithm_cannot_place_is_omitted_and_counted() -> Non
 
 
 def test_ver44_a_step_with_no_rung_is_refused_not_banded_into_the_last_one() -> None:
-    """A step arriving before any rung aborts rather than being attributed.
-
-    The hook's contract is that a rung precedes the steps it scopes. A model that
-    fell back to "the last band" would silently draw one rung's iterates inside
-    another's, which is a wrong picture with nothing to say it is one.
-    """
     model = ConvergenceModel()
     with pytest.raises(ValueError, match="before any rung"):
         model.step(1, 1e-3, 1e-3, 1.0, 1, False)
 
 
-# -- the field viewer ----------------------------------------------------------
-
-
 def test_ver44_the_scene_model_offers_only_the_fields_the_child_reported() -> None:
-    """The selector is the render child's list, and the document is a file."""
     model = SceneModel()
     request = model.request("runs/probe")
     assert request.run == "runs/probe"
@@ -858,14 +616,6 @@ def test_ver44_the_scene_model_offers_only_the_fields_the_child_reported() -> No
 
 
 def test_ver44_a_document_that_loaded_without_drawing_is_a_diagnostic() -> None:
-    """``loadFinished(True)`` moves nothing; the probe decides, and names the source.
-
-    Qt reaches ``loadFinished(True)`` on a page whose renderer never arrived and
-    leaves ``webgui is not defined`` in a console nobody sees. Three answers, three
-    states: the scene initialised, the renderer was never there, or the scene threw.
-    A panel that could not tell the second from the first would report success on
-    an empty rectangle (QR-12).
-    """
     model = SceneModel()
     model.consume(
         [
@@ -882,11 +632,6 @@ def test_ver44_a_document_that_loaded_without_drawing_is_a_diagnostic() -> None:
     model.loaded(True)
     assert model.state == "loading", "a loaded document is not a drawn picture"
 
-    # A renderer that never arrived, reported as such — and the exception it
-    # actually throws is ``ReferenceError: webgui is not defined``, from the same
-    # line a real scene failure throws from. The document's ``renderer_loaded``
-    # flag is what tells them apart; matching on the message would make a
-    # renderer's wording into an interface.
     missing = SceneModel(**{**vars(model)})
     missing.probed(
         '{"ready": false, "renderer_loaded": false, '
@@ -918,7 +663,6 @@ def test_ver44_a_document_that_loaded_without_drawing_is_a_diagnostic() -> None:
 
 
 def test_ver44_a_refused_render_replaces_the_picture_with_what_the_gate_said() -> None:
-    """A refusal is the panel's content, verbatim, not a second wording of it."""
     model = SceneModel()
     model.request("runs/probe")
     model.consume(
@@ -932,7 +676,6 @@ def test_ver44_a_refused_render_replaces_the_picture_with_what_the_gate_said() -
 
 
 def test_ver44_a_render_event_the_model_does_not_apply_is_refused() -> None:
-    """A variant added to ``RenderEvent`` fails here rather than being ignored."""
 
     @dataclass(frozen=True)
     class _FutureVariant:
@@ -943,23 +686,13 @@ def test_ver44_a_render_event_the_model_does_not_apply_is_refused() -> None:
         model.consume([_FutureVariant(note="later")])  # type: ignore[list-item]
 
 
+# NUM-16, FR-17
 def test_ver44_a_long_rung_is_decimated_keeping_its_first_and_last_step() -> None:
-    """A band with more steps than the plot draws is thinned, not truncated.
-
-    The NUM-16 reference cap is 50 iterations and no band reaches the limit
-    today; the limit exists because a cap raised for a hard corner of the FR-17
-    envelope must cost the plot nothing. What must survive the thinning is the
-    shape's two ends: a plot that dropped the last step would show a rung as
-    having stopped short of where it converged.
-    """
     from nanopnp.gui.convergence import MAX_POINTS_PER_BAND
 
     model = ConvergenceModel()
     model.rung("r", 9, 0, 1, True, 1e-6)
     count = MAX_POINTS_PER_BAND * 3
-    # ``1 / n`` rather than ``10 ** -n``: past the 308th step the latter
-    # underflows to zero, and the samples the axis then omits would be mistaken
-    # for samples the decimation dropped.
     for index in range(1, count + 1):
         model.step(index, 1.0 / index, 0.5 / index, 1.0, 1, False)
     model.settle(finished=True)

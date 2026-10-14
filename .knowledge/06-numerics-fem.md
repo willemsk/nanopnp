@@ -1556,3 +1556,7 @@ cycle is collected with the mesh. **[tested]**
 - **[tested]** On the reference probe grid a defect on the axis (1 610 of 6 205 points, all within 0.045 nm of the axis) gives `sqrt(1610/6205) = 0.51` in the unweighted norm and about 4 × 10⁻⁴ in the `r`-weighted norm, because those points carry a weight of `0.001 nm² · r` against `6 nm² · r` out to 60 nm. Source: `test_comparison_norms.py` (`test_val01_axis_defect_is_invisible_to_the_weighted_norm`).
 - **[tested]** A constant offset of 1 000 Pa in `p` against a 10 Pa physical pressure is a 100-fold raw "discrepancy" that is not one; the gauge-free comparison removes it, and `φ` is not gauge-shifted. Source: `test_comparison_norms.py` (`test_val01_pressure_gauge_offset_does_not_register`).
 - **[tested]** The ladder's five deltas telescope to `Δ_resid` identically, for any four rung errors, so the telescoping identity alone cannot detect rungs measured against different goldens; the hash check is what does. Source: `tests/tier1/test_attribution.py` (`test_val01_the_identity_cannot_see_a_stale_golden`).
+
+## Tier-1 test evidence: the Langevin cutoff (WP45 item 21)
+
+- **[tested]** A Langevin series cutoff set too small hands the `coth` branch an argument with no significant digits left: at `x` = 1e-8 the `coth(x) - 1/x` form returned exactly zero, where the limit is `x/3`. The cutoff at `x = 3e-4` (`.knowledge/01`) keeps both branches clear of that cancellation. Source: `tests/tier1/test_electrolyte.py` (`test_langevin_is_accurate_across_the_series_cutoff`).

@@ -1,23 +1,4 @@
-"""VER-43 — a real spawned solve, reporting and cancelling across the boundary.
-
-Not a mock. What ADR-004 asks for is a *background process*, and the failure
-modes it has are exactly the ones a mock cannot have: an event that does not
-pickle, a queue that empties after the child exits, a cancellation that never
-reaches the child because the token was copied instead of shared, and an
-artefact left in the store by a run that was stopped.
-
-What WP15 adds to it is the second half of the same claim (VER-44): the
-continuation rung and the Newton step cross as *numbers*. The residual reaches a
-progress caption only inside a ``:.3e``, which is three significant figures of
-something a convergence plot needs six orders of, and the relative update reaches
-it not at all — so what is asserted below is that the last step of each rung
-equals the ``newton`` record the run's own manifest carries, to the last bit.
-
-The case is the cheapest one that walks the whole pipeline — the same
-cylindrical pore ``tests/tier1/test_run.py`` uses, whose full run takes about a
-second — because a driver defect that only an expensive solve reveals is not a
-driver defect. The stabilisation mode is ``none`` (NUM-11).
-"""
+"""VER-43: a real spawned solve, reporting and cancelling across the boundary."""
 
 from __future__ import annotations
 
@@ -46,12 +27,9 @@ from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 TIMEOUT_S = 300.0
-"""Generous: the child pays a ``spawn`` re-import of the package and of NGSolve
-before it does any work, and a loaded CI runner is slow at both."""
 
 
 def _settle(process: SolverProcess) -> tuple[RunEvent, ...]:
-    """Drain until the child posts a terminal event, or time out saying so."""
     found: list[RunEvent] = []
     deadline = time.monotonic() + TIMEOUT_S
     while time.monotonic() < deadline:
@@ -61,8 +39,6 @@ def _settle(process: SolverProcess) -> tuple[RunEvent, ...]:
             found.extend(process.drain())
             return tuple(found)
         if not process.running:
-            # The child exited without reporting: drain whatever is left and
-            # fail on it below rather than spinning to the deadline.
             time.sleep(0.05)
             found.extend(process.drain())
             break
@@ -74,12 +50,6 @@ def _settle(process: SolverProcess) -> tuple[RunEvent, ...]:
 def test_fr27_a_spawned_run_reports_progress_and_finishes(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """A real run posts its start, its stages, its progress and its directory.
-
-    And everything it posted crossed a process boundary, which is the claim: an
-    event carrying a ``Path``, an artefact or a live token would have failed to
-    pickle here and nowhere else.
-    """
     store = tmp_path / "store"
     process = SolverProcess(RunRequest(case=str(cylindrical_pore_case), store=str(store)))
     process.start()
@@ -92,7 +62,6 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(
     assert finished, [type(event).__name__ for event in events]
     assert process.exit_code == 0
 
-    # The stage hook forwarded positions as data, not as a parsed caption.
     stages = [event for event in events if isinstance(event, Stage)]
     assert [event.index for event in stages] == list(range(len(stages)))
     assert {event.total for event in stages} == {len(stages)}
@@ -101,7 +70,6 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(
     for name in (MANIFEST_FILENAME, CASE_FILENAME, RUN_RECORD_FILENAME):
         assert (directory / name).is_file(), name
 
-    # VER-44: the ladder crossed as data too, and the numbers are the solver's.
     rungs = [event for event in events if isinstance(event, Rung)]
     steps = [event for event in events if isinstance(event, Iteration)]
     assert rungs, [type(event).__name__ for event in events]
@@ -109,15 +77,8 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(
     assert [event.index for event in rungs] == list(range(len(rungs)))
     assert {event.total for event in rungs} == {len(rungs)}
     for step in steps:
-        # Floats, not the three significant figures of a ``:.3e`` caption. A
-        # string that survived the queue would pass ``isinstance(str)`` and fail
-        # here, which is the point.
         assert isinstance(step.residual, float)
         assert isinstance(step.update, float)
-    # And they are the numbers the run's own record carries. The manifest's
-    # solver group is written by the solve stage from the same ``NewtonResult``
-    # the hook's last step came from, so agreeing to the last bit is what makes
-    # the plot the solver's numbers rather than a parse of a display format.
     manifest = decode_floats(
         json.loads((directory / MANIFEST_FILENAME).read_text(encoding="utf-8"))
     )
@@ -144,16 +105,11 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(
     model.consume(events)
     assert model.state == "finished"
     assert model.fraction == 1.0
-    # Read back out of the run directory, not carried through the queue: the
-    # directory is the run's own record (§5.3.3), and a panel reading anything
-    # else would show what the QR-08 reproduction check could not reconstruct.
     outcome = model.outcome()
     assert outcome is not None
     assert outcome.directory == directory
     assert "current_A" in outcome.quantities
     assert outcome.stages
-    # Five corrections off against the validated default, and the model that
-    # follows from them: the panel shows them beside the number (FR-25).
     switches = {entry["path"] for entry in outcome.deviations["switches"]}
     assert "electrolyte.corrections.viscosity.model" in switches
     assert run_outcome(directory).quantities == outcome.quantities
@@ -162,19 +118,11 @@ def test_fr27_a_spawned_run_reports_progress_and_finishes(
 def test_fr27_a_child_killed_without_reporting_settles_the_run_as_failed(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """A child that dies by signal posts nothing, and the shell must still settle.
-
-    The OOM killer or a fault in a compiled library leaves no ``Failed`` event, and a
-    model that only reads the queue stays ``running`` for ever: the Run and Geometry
-    tabs then never re-enable (CODE_REVIEW_003 CR-1).
-    """
     control = RunControl()
     control.start(cylindrical_pore_case, store=tmp_path / "store")
     assert control.process is not None
-    child = control.process._process  # the test kills the real child
+    child = control.process._process
     assert child is not None
-    # ``kill`` is SIGKILL on POSIX and TerminateProcess on Windows, which has no SIGKILL;
-    # either way the child dies without posting a terminal event.
     child.kill()
     child.join(TIMEOUT_S)
     deadline = time.monotonic() + TIMEOUT_S
@@ -192,14 +140,6 @@ def test_fr27_a_child_killed_without_reporting_settles_the_run_as_failed(
 def test_fr27_cancelling_a_spawned_run_writes_no_artefact(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
-    """A cancelled run says where it stopped, exits, and leaves the store empty.
-
-    §5.3.2: a cancelled stage writes no artefact, so the store never holds a
-    partial result. Cancelling immediately means the first
-    :func:`~nanopnp.core.stages.check_cancelled` of the walk fires, before any
-    stage has run — which is the case where an artefact left behind would be
-    most obviously wrong.
-    """
     store = tmp_path / "store"
     process = SolverProcess(RunRequest(case=str(cylindrical_pore_case), store=str(store)))
     process.start()
@@ -223,14 +163,6 @@ def test_fr27_cancelling_a_spawned_run_writes_no_artefact(
 def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
     tmp_path: Path,
 ) -> None:
-    """The child classifies its own failure and reports the §3.1 class.
-
-    Run through the real boundary rather than through
-    :func:`~nanopnp.gui.solver.failure_event` alone, because what is in doubt is
-    not the classifier but whether a failure in the child reaches the parent at
-    all: an exception that escaped ``_worker`` would leave the parent waiting on
-    a queue that never carries another event.
-    """
     from nanopnp.core.errors import EXIT_CASE
 
     path = tmp_path / "broken.yaml"
@@ -244,8 +176,6 @@ def test_fr27_a_case_the_schema_refuses_comes_back_as_the_case_exit_class(
     assert failed[0].exit_code == EXIT_CASE
     assert "electrolyte" in failed[0].message
 
-
-# -- WP24: building the geometry through the same child (VER-55) --------------
 
 PROFILE_CASE = """
 schema: nanopnp/case/v0.5
@@ -264,7 +194,6 @@ numerics: {{mesh: {{size_scale: 20.0}}}}
 
 @pytest.fixture(scope="module")
 def profile_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Write a slanted 1 nm body across the slab and a coarse case naming it."""
     import numpy as np
 
     from nanopnp.geometry.profile import (
@@ -305,12 +234,6 @@ def profile_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
 def test_ver55_a_spawned_geometry_build_reports_each_stored_artefact(
     profile_case: Path, tmp_path: Path
 ) -> None:
-    """``upto="mesh"`` posts ``Produced`` for the region, then the mesh, then ``Finished`` (D1, D3).
-
-    Each ``Produced`` names an entry a fresh reader finds in the store the event
-    names, which is how the geometry views read a payload without parsing a
-    caption. The walk stops at stage 6, and the plot is left a plot of no solve.
-    """
     from nanopnp.gui.solver import Produced
     from nanopnp.io.store import Store
 
@@ -341,7 +264,6 @@ def test_ver55_a_spawned_geometry_build_reports_each_stored_artefact(
 def test_ver55_cancelling_a_geometry_build_writes_no_artefact(
     profile_case: Path, tmp_path: Path
 ) -> None:
-    """The build shares the run's cancel token, and a cancelled build leaves the store empty."""
     store = tmp_path / "store"
     process = SolverProcess(RunRequest(case=str(profile_case), store=str(store), upto="mesh"))
     process.start()
@@ -356,12 +278,6 @@ def test_ver55_cancelling_a_geometry_build_writes_no_artefact(
 def test_ver60_a_spawned_charge_build_reports_both_halves_of_stage_7(
     charged_tube, tmp_path: Path
 ) -> None:
-    """``upto="charge"`` posts ``region``, ``mesh``, ``protonation``, ``charge``, then ``Finished``.
-
-    **Build charge** runs through the same spawned child as **Build geometry**
-    (WP31 D2), so the Geometry tab still receives stages 1 to 6 and the Charge
-    tab reads stage 7's halves from the store the events name.
-    """
     from nanopnp.gui.solver import Produced
     from nanopnp.io.store import Store
 
@@ -385,7 +301,6 @@ def test_ver60_a_spawned_charge_build_reports_both_halves_of_stage_7(
 
 
 def test_ver60_cancelling_a_charge_build_writes_no_artefact(charged_tube, tmp_path: Path) -> None:
-    """A cancelled **Build charge** leaves the store empty, as a cancelled geometry build does."""
     case = charged_tube.write(tmp_path / "case")
     store = tmp_path / "store"
     process = SolverProcess(RunRequest(case=str(case), store=str(store), upto="charge"))

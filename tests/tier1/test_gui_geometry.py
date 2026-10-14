@@ -1,23 +1,4 @@
-"""VER-55 — the geometry tab's view-model: where a pixel sits, and what a hand edit writes.
-
-Every rule the tab enforces lives in :mod:`nanopnp.gui.geometry`, which imports no
-Qt, so it is asserted here on every matrix job. Three of the rules are ways to
-draw or write a plausible wrong geometry, and each has an oracle:
-
-- **A pixel sits on its node** (WP24 D11, Design §2). A Gaussian planted at a
-  known ``(r, z)`` has its maximum in the pixel whose centre is that point. An
-  image drawn over ``[0, n·h]`` would put it h/2 outward, which is the
-  ``pqr2grid`` erratum a display could reintroduce.
-- **A hand edit is a supplied profile, recorded as one** (D5). The null edit
-  reproduces its parent's vertices to the bit and records its parent's digest,
-  and an edited reference fixture stops being the reference.
-- **The edit is written in the stage-1 frame** (D4, Design §1). On the synthetic
-  tube at ``centre_z_nm = 1.5`` nm, the null edit run through the derived case
-  gives stage 5 the original's model-frame profile to the bit: an editor that
-  wrote stage 5's vertices back would move it by 1.5 nm. And its mesh has the
-  original's *content* hash under a different *key* (Design §3), while a 0.1 nm
-  move changes both.
-"""
+"""VER-55: the geometry tab's view-model: where a pixel sits and what a hand edit writes."""
 
 from __future__ import annotations
 
@@ -61,11 +42,7 @@ from nanopnp.pipeline.run import run_case
 H = 0.05
 
 
-# -- where a pixel sits -----------------------------------------------------------
-
-
 def test_ver55_a_planted_gaussian_lands_in_the_pixel_centred_on_it() -> None:
-    """Bin j is drawn centred on ``r = j·h``, top row at maximum z, r to the right (D11)."""
     r = np.arange(60) * H
     z = -1.0 + np.arange(80) * H
     r0, z0 = r[23], z[51]
@@ -76,20 +53,16 @@ def test_ver55_a_planted_gaussian_lands_in_the_pixel_centred_on_it() -> None:
     row, column = np.unravel_index(int(np.argmax(shown)), shown.shape)
     assert image.pixel_centre(int(column), int(row)) == (r0, z0)
     assert image.pixel_of(r0, z0) == (int(column), int(row))
-    # Top row is maximum z, and r increases to the right.
     assert image.pixel_centre(0, 0) == (r[0], z[-1])
     assert image.pixel_centre(image.width - 1, image.height - 1) == (r[-1], z[0])
-    # The image's edges are half a bin beyond the first and last centres.
     assert image.extent_nm == pytest.approx((-H / 2, r[-1] + H / 2, z[0] - H / 2, z[-1] + H / 2))
     assert image.frame == STAGE_1_FRAME
     assert image.scale == (0.0, 1.0)
 
-    # The RGBA bytes are that display order: the brightest pixel is the peak.
     pixels = np.frombuffer(image.rgba(), dtype=np.uint8).reshape(image.height, image.width, 4)
     brightness = pixels[..., :3].astype(np.int64).sum(axis=2)
     assert np.unravel_index(int(np.argmax(brightness)), brightness.shape) == (row, column)
 
-    # The transform puts that pixel's rectangle around the point, at one scale.
     transform = ViewTransform(
         x_range=image.extent_nm[:2], z_range=image.extent_nm[2:], width=640.0, height=480.0
     )
@@ -100,14 +73,12 @@ def test_ver55_a_planted_gaussian_lands_in_the_pixel_centred_on_it() -> None:
     assert top + row * height / image.height < py < top + (row + 1) * height / image.height
     assert transform.to_data(px, py) == pytest.approx((r0, z0))
 
-    # A variance has its own scale, named in its title.
     variance = reduced_image(r, z, 3e-4 * mean, quantity="cn_variance")
     assert variance.scale[1] == pytest.approx(3e-4)
     assert "cn variance" in variance.title
 
 
 def test_ver55_the_density_section_is_symmetric_about_the_axis() -> None:
-    """The stage-2 section is ``y = 0`` over ``x ∈ [-R, R]``: an axisymmetric map mirrors (D11)."""
     half = 30
     x = np.arange(-half, half + 1) * H
     z = np.arange(40) * H
@@ -121,11 +92,7 @@ def test_ver55_the_density_section_is_symmetric_about_the_axis() -> None:
     assert image.pixel_centre(half, 0)[0] == 0.0
 
 
-# -- the stage list -------------------------------------------------------------------
-
-
 def test_ver55_the_stage_list_is_a_projection_of_the_event_stream() -> None:
-    """Stored, cached, running and failed are read from the events and nothing else (D1, D15)."""
     rows = StageList(planned=("structure", "density", "symmetry", "contour", "region", "mesh"))
     model = RunModel()
     store = "/store"
@@ -182,9 +149,6 @@ def test_ver55_the_stage_list_is_a_projection_of_the_event_stream() -> None:
     assert [row.status for row in StageList(planned=("mesh",)).rows(done)] == ["waiting"]
 
 
-# -- the editor ---------------------------------------------------------------------
-
-
 SQUARE = [(2.0, 0.0), (2.0, 1.0), (3.0, 1.0), (3.0, 0.0)]
 
 
@@ -193,7 +157,6 @@ def _editor() -> ProfileEditor:
 
 
 def test_ver55_edit_operations_undo_exactly() -> None:
-    """Insert, delete and move, then undo and redo, return to the prior loop exactly (D14)."""
     editor = _editor()
     before = list(editor.vertices)
 
@@ -219,7 +182,6 @@ def test_ver55_edit_operations_undo_exactly() -> None:
     with pytest.raises(ValueError, match="at least three vertices"):
         small.delete(0)
 
-    # Hit-testing is on this side of the Qt boundary as well.
     transform = ViewTransform(x_range=(1.5, 3.5), z_range=(-0.5, 1.5), width=400.0, height=400.0)
     px, py = transform.to_screen(3.0, 1.0)
     assert nearest_vertex(SQUARE, transform, px + 3.0, py - 2.0) == 2
@@ -231,7 +193,6 @@ def test_ver55_edit_operations_undo_exactly() -> None:
 @pytest.mark.parametrize(
     ("edit", "message"),
     [
-        # A self-crossing: the top edge folded down through the bottom one.
         (lambda editor: editor.move(1, 3.0, -0.5), r"edge \d+ .* crosses edge \d+"),
         (lambda editor: editor.move(2, -0.1, 1.0), r"non-negative .* at vertex 2"),
         (lambda editor: editor.move(2, 2.0, 1.0), r"coincide .* vertices 1 and 2"),
@@ -239,7 +200,6 @@ def test_ver55_edit_operations_undo_exactly() -> None:
     ids=["self-crossing", "negative radius", "repeated vertex"],
 )
 def test_ver55_an_invalid_edit_cannot_be_saved(edit, message: str, tmp_path: Path) -> None:
-    """The refusal names the vertex, in the loader's own words, and nothing is written (D8)."""
     editor = _editor()
     edit(editor)
     problem = editor.problem
@@ -249,7 +209,6 @@ def test_ver55_an_invalid_edit_cannot_be_saved(edit, message: str, tmp_path: Pat
         editor.save(tmp_path)
     assert not list(tmp_path.iterdir())
 
-    # The loader, reading the same vertices from a file, says the same sentence.
     document = {
         "schema": "nanopnp/profile/v0.5",
         "name": "edited",
@@ -272,7 +231,6 @@ def test_ver55_an_invalid_edit_cannot_be_saved(edit, message: str, tmp_path: Pat
 
 
 def test_ver55_the_null_edit_is_its_parent_recorded_as_a_hand_edit(tmp_path: Path) -> None:
-    """The parent's vertices to the bit, ``hand-edit``, the parent's digest, measures re-derived."""
     parent = load_profile("clya_reference_profile")
     editor = ProfileEditor.from_profile(parent)
     saved = load_profile(editor.save(tmp_path))
@@ -284,16 +242,12 @@ def test_ver55_the_null_edit_is_its_parent_recorded_as_a_hand_edit(tmp_path: Pat
     assert saved.provenance.min_vertex_spacing_nm == parent.provenance.min_vertex_spacing_nm
     assert saved.provenance.min_feature_size_nm == parent.provenance.min_feature_size_nm
     assert saved.provenance.signed_area_nm2 == parent.provenance.signed_area_nm2
-    # Named by its own digest, so two different edits never share a file.
     assert profile_digest(saved)[:16] in editor.save(tmp_path).name
 
-    # Editing the reference fixture stops it being the reference.
     assert parent.is_reference
     with pytest.raises(ValueError, match=r"needs the reference geometry.*'hand-edit'"):
         saved.require_reference("a Tier-3 comparison")
 
-
-# -- the derived case, and the frame ----------------------------------------------------
 
 TUBE_CASE = """\
 schema: nanopnp/case/v0.5
@@ -313,12 +267,10 @@ numerics: {{mesh: {{size_scale: 20.0}}}}
 """
 
 CENTRE_NM = 1.5
-"""Non-zero on purpose: at ClyA's ``centre_z_nm = 0`` a doubled shift is invisible (Design §1)."""
 
 
 @pytest.fixture(scope="module")
 def built(tube_pdb: Path, tmp_path_factory: pytest.TempPathFactory):
-    """Return the tube case at ``centre_z_nm = 1.5``, its store, and its walk through stage 6."""
     root = tmp_path_factory.mktemp("edit")
     case = root / "tube.case.yaml"
     case.write_text(TUBE_CASE.format(pdb=tube_pdb, centre=CENTRE_NM), encoding="utf-8")
@@ -334,7 +286,6 @@ def _read(document, path: str) -> object:
 
 
 def test_ver55_the_derived_case_changes_only_the_profile_route(built, tmp_path: Path) -> None:
-    """No ``structure:``; loads and resolves; otherwise equal field by field (D6, D7)."""
     case, _store, result = built
     original = load_case(case)
     profile = load_profile(result.artefacts["contour"].payload["profile"])
@@ -375,11 +326,6 @@ def test_ver55_the_derived_case_changes_only_the_profile_route(built, tmp_path: 
 
 
 def test_ver55_the_null_edit_meshes_to_the_same_content_under_a_new_key(built) -> None:
-    """Stage 5's model-frame profile to the bit; the mesh content equal, its key not (Design §3).
-
-    And a 0.1 nm outward move of the constriction vertex changes both hashes, and
-    the manifest records the edit by content and no stage 1-4 artefact.
-    """
     case, store, result = built
     original = load_case(case)
     profile = load_profile(result.artefacts["contour"].payload["profile"])
@@ -403,7 +349,6 @@ def test_ver55_the_null_edit_meshes_to_the_same_content_under_a_new_key(built) -
         == result.artefacts["mesh"].summary["content_hash"]
     )
 
-    # Move the vertex nearest the constriction 0.1 nm outward.
     loop = np.asarray(profile.vertices)
     constriction = result.artefacts["contour"].summary["constriction"]
     target = (constriction["r_nm"], constriction["z_nm"])  # type: ignore[index]
