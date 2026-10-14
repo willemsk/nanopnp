@@ -172,7 +172,7 @@ def test_ver53_the_recipe_carries_the_backend_the_sizes_and_the_gate() -> None:
     recipe = sizing_parameters(wall, SIZES)
     assert list(recipe) == ["backend", "wall", "table", "grading", "optsteps2d", "gate"]
     assert recipe["backend"] == "netgen"
-    assert recipe["wall"] == wall.summary()
+    assert recipe["wall"] == wall.key()
     assert recipe["table"] == SIZES.summary()
     assert recipe["grading"] == 0.2
     assert recipe["optsteps2d"] == 5

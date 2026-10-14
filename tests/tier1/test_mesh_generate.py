@@ -107,11 +107,28 @@ def test_ver53_a_generated_mesh_passes_the_gates_and_is_keyed_on_its_recipe(
     statistics = summary["sizing"]["wall_statistics"]  # type: ignore[index]
     assert statistics["mean_ratio"] <= 1.15
     assert statistics["max_ratio"] <= 2.0
+    assert summary["sizing"]["wall"]["debye_length_nm"] > 0.0  # type: ignore[index]
+    assert "debye_length_nm" not in sizing["wall"]  # type: ignore[operator]
 
     payload = artefact.payload["mesh"]
     assert read(payload, format="msh41").content_hash == summary["content_hash"]
     consumed = deployed_mesh(resolve(case), artefact)
     assert consumed.content_hash == summary["content_hash"]
+
+
+def test_ver53_salt_below_ceiling_shares_stage6_key(workspace: Path, region) -> None:
+    stage = MeshStage(workspace=workspace / "mesh-keys")
+
+    def key_at(concentration_M: float) -> str:
+        text = _case_text(workspace).replace(
+            "concentration_M: 1.0", f"concentration_M: {concentration_M}"
+        )
+        inputs = StageInputs(resolved=resolve(loads_case(text)), upstream={"region": region})
+        return stage.key(inputs).hash
+
+    assert key_at(0.15) == key_at(1.0)
+    assert key_at(2.0) != key_at(3.0)
+    assert key_at(1.0) != key_at(2.0)
 
 
 def test_ver53_a_consumer_without_the_stage_6_artefact_is_refused(workspace: Path) -> None:

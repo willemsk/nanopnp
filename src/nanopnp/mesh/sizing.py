@@ -108,14 +108,13 @@ class WallSize:
         """Whether the wall size exceeds ``lambda_D / 5``; logged and recorded, not refused."""
         return self.wall_h_nm > self.debye_target_nm
 
+    def key(self) -> dict[str, Canonicalisable]:
+        """Return what moves a generated mesh: the stage-6 key's wall record."""
+        return {"wall_h_nm": self.wall_h_nm, "source": self.source, "size_scale": self.size_scale}
+
     def summary(self) -> dict[str, Canonicalisable]:
-        """Return the record the stage-6 key and the manifest carry."""
-        return {
-            "wall_h_nm": self.wall_h_nm,
-            "source": self.source,
-            "debye_length_nm": self.debye_length_nm,
-            "size_scale": self.size_scale,
-        }
+        """Return the manifest's wall record: the key's, with the Debye length beside it."""
+        return {**self.key(), "debye_length_nm": self.debye_length_nm}
 
 
 def ionic_strength_M(document: CaseDocument) -> float:
