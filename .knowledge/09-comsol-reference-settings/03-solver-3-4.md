@@ -1,6 +1,23 @@
 ---
 type: Reference Settings
 title: B. Solver (§3, §4)
+description: The COMSOL studies, sweeps and solver settings.
+tags:
+- comsol
+- reference-settings
+sources:
+- id: esi
+  resource: https://www.rsc.org/suppdata/d0/nr/d0nr03114c/d0nr03114c1.pdf
+  title: Electronic supplementary information of the paper
+- id: comsol-report
+  resource: COMSOL Multiphysics 5.4 model report of 22 May 2020
+  title: COMSOL model report (5.4)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## B. Solver (§3, §4)

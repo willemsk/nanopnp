@@ -1,6 +1,17 @@
 ---
-type: Domain
+type: Open Item
 title: 9. Gaps and ambiguities
+description: Gaps and ambiguities in the analyte work.
+tags:
+- analyte
+- open-item
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 9. Gaps and ambiguities
@@ -11,7 +22,7 @@ title: 9. Gaps and ambiguities
    2022; §10.6 gives regression targets. Analytic tests (isolated sphere: Maxwell integral → qE;
    Stokes sphere → 6πηaU) remain the right first check.
 
-   **Done, and they were the right first check [tested]** (WP6, `tests/tier2/`). On a P2 sphere of
+   **Done, and they were the right first check [tested: pending]** (WP6, `tests/tier2/`). On a P2 sphere of
    radius 1 nm in a box of radius 10 nm, `a = 1 nm` mesh units, the numbers are:
 
    | Check | Measured | Reference |

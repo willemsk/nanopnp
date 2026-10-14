@@ -1,6 +1,17 @@
 ---
 type: Background
 title: 6. Selectivity, transport number, reversal potential
+description: Selectivity, the transport number and the reversal potential.
+tags:
+- electrokinetics
+- background
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 6. Selectivity, transport number, reversal potential

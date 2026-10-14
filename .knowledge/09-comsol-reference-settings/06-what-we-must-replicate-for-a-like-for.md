@@ -1,6 +1,17 @@
 ---
 type: Reference Settings
 title: E. What we must replicate for a like-for-like comparison
+description: What must be replicated for a like-for-like comparison.
+tags:
+- comsol
+- reference-settings
+sources:
+- id: comsol-report
+  resource: COMSOL Multiphysics 5.4 model report of 22 May 2020
+  title: COMSOL model report (5.4)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## E. What we must replicate for a like-for-like comparison

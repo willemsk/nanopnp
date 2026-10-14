@@ -1,7 +1,18 @@
 ---
 type: Overview
-title: Electrokinetics background — double layers, PB, electro-osmosis, selectivity,
-  conductance (overview)
+title: Electrokinetics background — double layers, PB, electro-osmosis, selectivity, conductance (overview)
+description: 'The electrokinetic theory behind the model: double layers, Poisson-Boltzmann, electro-osmosis,
+  selectivity and rectification.'
+tags:
+- electrokinetics
+- overview
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 # Electrokinetics background — double layers, PB, electro-osmosis, selectivity, conductance

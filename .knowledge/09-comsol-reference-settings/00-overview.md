@@ -1,6 +1,26 @@
 ---
 type: Overview
 title: COMSOL reference settings — the published model report (overview)
+description: The settings of the published COMSOL 5.4 model report.
+tags:
+- comsol
+- overview
+sources:
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+- id: esi
+  resource: https://www.rsc.org/suppdata/d0/nr/d0nr03114c/d0nr03114c1.pdf
+  title: Electronic supplementary information of the paper
+- id: comsol-report
+  resource: COMSOL Multiphysics 5.4 model report of 22 May 2020
+  title: COMSOL model report (5.4)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 # COMSOL reference settings — the published model report

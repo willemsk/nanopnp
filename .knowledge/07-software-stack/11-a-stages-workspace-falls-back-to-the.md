@@ -1,10 +1,16 @@
 ---
 type: Library Behaviour
-title: 11. A stage's workspace falls back to the process store root, not the run's
-  store
+title: 11. A stage's workspace falls back to the process store root, not the run's store
+description: A stage's workspace falls back to the process store root, not the run's store.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
-## 11. A stage's workspace falls back to the process store root, not the run's store **[tested]** {#11-a-stages-workspace-falls-back-to-the-process-store-root-not-the-runs-store}
+## 11. A stage's workspace falls back to the process store root, not the run's store **[tested: pending]** {#11-a-stages-workspace-falls-back-to-the-process-store-root-not-the-runs-store}
 
 `mesh/ingest.py`, `charge/stage.py`, `solve/stage.py` and `post/stage.py` each fall back to
 `store_root() / "tmp"` plus a `mkdtemp` when constructed without a workspace — and `store_root()`

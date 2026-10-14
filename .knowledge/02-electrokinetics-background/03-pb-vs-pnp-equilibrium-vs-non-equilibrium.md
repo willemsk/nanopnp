@@ -1,6 +1,17 @@
 ---
 type: Background
 title: 3. PB vs PNP — equilibrium vs non-equilibrium
+description: Why Poisson-Boltzmann is a distinct model from PNP at zero bias.
+tags:
+- electrokinetics
+- background
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 3. PB vs PNP — equilibrium vs non-equilibrium

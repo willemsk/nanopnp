@@ -1,6 +1,13 @@
 ---
 type: Pipeline
 title: 7. Stated limitations and caveats
+description: The limitations and caveats the source work states.
+tags:
+- clya
+- pipeline
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 7. Stated limitations and caveats

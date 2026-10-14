@@ -1,6 +1,13 @@
 ---
 type: Numerics
 title: 6. Linear solvers
+description: Linear solvers, with UMFPACK and SuperLU measured at production size.
+tags:
+- numerics
+- numerics
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 6. Linear solvers
@@ -21,7 +28,7 @@ backend choice exists to avoid.
 
 SuiteSparse UMFPACK is GPL-2+ — relevant to what a redistributable bundle may contain.
 
-### 6.1 Measured: UMFPACK and SuperLU at production size **[tested]** {#61-measured-umfpack-and-superlu-at-production-size}
+### 6.1 Measured: UMFPACK and SuperLU at production size **[tested: pending]** {#61-measured-umfpack-and-superlu-at-production-size}
 
 The five-field system of NUM-01 on the analytic cylindrical pore — `φ` P2 on all of Ω, `c_±` P2,
 `u` P2 vector and `p` P1 on the fluid only — assembled with every coupling block present, then

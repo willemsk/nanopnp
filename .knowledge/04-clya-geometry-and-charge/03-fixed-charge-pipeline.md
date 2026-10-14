@@ -1,6 +1,17 @@
 ---
 type: Pipeline
 title: 3. Fixed-charge pipeline
+description: 'The fixed-charge pipeline: the delivered table, the 1.25 % aliasing and the closed-form
+  kernel.'
+tags:
+- clya
+- pipeline
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 3. Fixed-charge pipeline
@@ -35,7 +46,7 @@ scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*pi*r))     [C m^-3]
 final mesh gives **-72.9 e**, against **-72 e** for the atomistic model (T L425-427). Any
 reimplementation must land within ~1 % of -72 e.
 
-### 3.1 The delivered table, measured [tested] {#31-the-delivered-table-measured}
+### 3.1 The delivered table, measured [tested: pending] {#31-the-delivered-table-measured}
 
 `prod5_clya_charge` is the interpolation table the published model loads — COMSOL's
 `%Grid`/`%Data` text export, 77 MB, coordinates in metres. Measured directly (6 September 2026;
@@ -64,7 +75,7 @@ order the gap predicted. The pore spans `z` in [-1.85, 12.25], so the box clears
 either way, which is the ">= 4 sigma_max beyond the protein" of PHY-16 step 4 (4 x 0.085 = 0.34 nm)
 with a wide margin.
 
-### 3.2 The reference's 1.25 % is the *consumer's*, and it is aliasing [tested] {#32-the-references-125-is-the-consumers-and-it-is-aliasing}
+### 3.2 The reference's 1.25 % is the *consumer's*, and it is aliasing [tested: pending] {#32-the-references-125-is-the-consumers-and-it-is-aliasing}
 
 The producer leg is exact (4.7e-12, above), so the published `-72.9 e` against `-72 e` cannot be a
 smearing or projection error: it is COMSOL's own integral of its own table over its own mesh.
@@ -105,7 +116,7 @@ cannot resolve, and an aliased integral converges in neither `h` nor order. The 
 producer side: depositing onto the finite-element space and rescaling to `Q_net` conserves by
 construction, where sampling somebody else's interpolant at quadrature points cannot.
 
-### 3.3 The closed-form kernel on the 0.005 nm lattice [tested, verified] {#33-the-closed-form-kernel-on-the-0005-nm-lattice}
+### 3.3 The closed-form kernel on the 0.005 nm lattice [tested: pending] {#33-the-closed-form-kernel-on-the-0005-nm-lattice}
 
 PHY-16 step 5's kernel, `ρ̄_i = q_i π^(−3/2) w⁻³ exp(−((r − r_i)² + (z − z_i)²)/w²) Ĩ₀(2 r r_i/w²)` with
 `Ĩ₀ = scipy.special.i0e`, measured 1 October 2026 while planning WP28:
@@ -132,7 +143,7 @@ PHY-16 step 5's kernel, `ρ̄_i = q_i π^(−3/2) w⁻³ exp(−((r − r_i)² +
   `q_i ½ erfc((z_i − p)/√(s² + w²))`, which agrees with adaptive quadrature to round-off
   [verified]. That is the closed-form per-plane reference of the §4.4 NOTE on the producer path.
 
-Measured implementing it (WP28, 1 October 2026) **[tested]**:
+Measured implementing it (WP28, 1 October 2026) **[tested: pending]**:
 
 - **A `2w` patch without renormalisation loses 0.83 %, not the continuum's 0.933 %.** The
   continuum loss `1 − erf(2)²` is offset by the trapezoid rule's own end terms at the cut,

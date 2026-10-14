@@ -1,6 +1,13 @@
 ---
 type: Domain
 title: 6. What nanopores are used for
+description: What nanopores are used for.
+tags:
+- biology
+- domain
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 6. What nanopores are used for

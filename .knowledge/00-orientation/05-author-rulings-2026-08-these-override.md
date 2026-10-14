@@ -1,6 +1,16 @@
 ---
-type: Orientation
+type: Author Ruling
 title: Author rulings (2026-08) — these override the sources
+description: The author's fourteen rulings of August 2026, which override the printed sources.
+tags:
+- orientation
+- author-ruling
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: human:willemsk
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## Author rulings (2026-08) — these override the sources

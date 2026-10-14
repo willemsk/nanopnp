@@ -1,6 +1,23 @@
 ---
 type: Overview
 title: nanopnp knowledge base — index (overview)
+description: What the knowledge base is, where it comes from and why to read it before searching the web.
+tags:
+- orientation
+- overview
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+- id: esi
+  resource: https://www.rsc.org/suppdata/d0/nr/d0nr03114c/d0nr03114c1.pdf
+  title: Electronic supplementary information of the paper
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 # nanopnp knowledge base — index

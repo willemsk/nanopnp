@@ -1,6 +1,17 @@
 ---
 type: Overview
 title: Analyte bodies and forces — what the thesis actually contains (overview)
+description: 'Analyte bodies and forces: what the thesis contains and where it is silent.'
+tags:
+- analyte
+- overview
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 # Analyte bodies and forces — what the thesis actually contains

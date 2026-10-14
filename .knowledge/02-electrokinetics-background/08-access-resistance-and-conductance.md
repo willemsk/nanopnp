@@ -1,6 +1,13 @@
 ---
 type: Background
 title: 8. Access resistance and conductance decomposition
+description: Access resistance and the decomposition of the conductance.
+tags:
+- electrokinetics
+- background
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 8. Access resistance and conductance decomposition

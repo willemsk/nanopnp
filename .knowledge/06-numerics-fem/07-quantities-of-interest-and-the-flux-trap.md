@@ -1,6 +1,20 @@
 ---
 type: Numerics
 title: 7. Quantities of interest — and the flux trap
+description: The quantities of interest, the flux trap and the routes that extract them.
+tags:
+- numerics
+- numerics
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 7. Quantities of interest — and the flux trap
@@ -28,7 +42,7 @@ asserts. A minus references the trans electrode instead, negates every conductan
 this route relative to (b) taken on the same electrode, so the two would never agree. Printed forms
 of this expression carry a minus; that pairs with the trans electrode, not with `ψ = 1` on cis.
 
-**ψ must be built on the fluid domain alone. [tested]** The two routes agree because `ψ` differs
+**ψ must be built on the fluid domain alone. [tested: pending]** The two routes agree because `ψ` differs
 from the (b) boundary indicator by a function vanishing on both electrodes, hence by a legitimate
 test function of the converged residual — an identity that needs `ψ` to be *exactly* 1 and 0 there.
 Interpolated over the whole mesh it is not: the membrane spans the transition band, and an element
@@ -48,7 +62,7 @@ to 1 on a Dirichlet electrode (Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.
 **Derived QoIs.** `t₊ = I₊/(I₊ + I₋)` from the same `ψ` integrals. Rectification
 `α = |I(+V)|/|I(−V)|`. Conductance `G = I/V_b`.
 
-### 7.1 Measured: the two routes agree, and the band does not matter **[tested]** {#71-measured-the-two-routes-agree-and-the-band-does-not-matter}
+### 7.1 Measured: the two routes agree, and the band does not matter **[tested: pending]** {#71-measured-the-two-routes-agree-and-the-band-does-not-matter}
 
 Charged pore (`a` = 2 nm, `L` = 13 nm, σ_s = −0.05 C/m²), 0.5 M, classical PNP, ±50 mV, reached
 through the continuation ladder.
@@ -67,7 +81,7 @@ cross-section integral of a non-conservative CG flux is exactly an extraction wh
 the direction of the flux, which is how a percent-level flux error becomes a fabricated
 rectification signal.
 
-**Maxwell–Hall, measured. [tested]** Uncharged pore at 1 M, classical PNP,
+**Maxwell–Hall, measured. [tested: pending]** Uncharged pore at 1 M, classical PNP,
 `G = σ[L/(πa²) + 1/(2a)]⁻¹` with `σ = F Σ z_i² μ_i⁰ c_i` = 12.64 S/m: 0.15 % error at a 50 nm
 reservoir and 0.39 % at 100 nm, with `G` moving 0.23 % between them, so the benchmark measures the
 discretisation and not the truncation of the domain. The transport number comes out 0.3963, the
@@ -93,7 +107,7 @@ alone would not notice both routes being scaled by the same wrong constant.
 being described as volume averages (flagged in `.knowledge/04-clya-geometry-and-charge/index.md`). Any regression
 target that is a pore average must state which convention it uses.
 
-### 7.1.1 Measured: with the wall corrections on, route agreement *is* a mesh statement **[tested]** {#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement}
+### 7.1.1 Measured: with the wall corrections on, route agreement *is* a mesh statement **[tested: pending]** {#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement}
 
 §7.1's "3.8 × 10⁻⁶ throughout — set by the Newton residual, not the mesh" was measured on
 **classical PNP**, where every coefficient is constant. It does not carry over to ePNP-NS. The same
@@ -115,7 +129,7 @@ of freedom in total. The reaction flux and the indicator form disagree because t
 coefficient differently — the residual on the constrained `cis` dofs, against `∇ψ` over the fluid.
 
 **The mechanism is sharper than "under-resolved", and it is a sign error the field commits on its
-own [tested].** The P2 Varadhan distance field *undershoots below zero* at the re-entrant corner of
+own [tested: pending].** The P2 Varadhan distance field *undershoots below zero* at the re-entrant corner of
 the pore mouth (`r ≈ 2.0`, `z ≈ ±3.0`), and `FittedCorrection.evaluate` clamps the concentration
 driver but not `d`. A negative `d` puts `1 − exp(−6.2(d + 0.01))` below zero, so the diffusivity and
 mobility factors change sign in that neighbourhood: ions are driven *up* their own gradient there.
@@ -133,12 +147,12 @@ negative values reach the IF-07 export and the correction chain alike. It vanish
 on this toy pore, and WP8's ClyA reference mesh (44 316 triangles) is far finer than that
 everywhere, so production runs are expected clean.
 
-**Closed out under WP11: PHY-02's clamp and NUM-34's gate, and neither alone. [tested]**
+**Closed out under WP11: PHY-02's clamp and NUM-34's gate, and neither alone. [tested: pending]**
 `FittedCorrection.evaluate` now clips `d̄` at zero before either wall form reads it, and
 `solve/stage.py` gates `min d̄ ≥ −1 × 10⁻³ nm` over the fluid once per solve wherever a wall
 correction is active. The arithmetic behind the threshold is in `SPECIFICATION.md` NUM-34.
 
-**The transition is a regime change, not a gradient, and `wall_h` alone decides it. [tested]**
+**The transition is a regime change, not a gradient, and `wall_h` alone decides it. [tested: pending]**
 Measured on the same toy pore, sampling the fluid at the P2 nodal set the NUM-17 gates walk:
 
 | `maxh` / `wall_h` (nm) | elements | min `d̄` (nm) | fraction of samples < 0 |
@@ -165,7 +179,7 @@ orders inside NUM-34's threshold — the "few times `10⁻⁴` with a platform-d
 below is the unzeroed-projection case, which `physics/distance.py` does not produce.
 
 **The clamp alone would have been worse than nothing, and this is the measurement that says so.
-[tested]** With the driver clamped, the toy pore at 0.1 M and +20 mV gives:
+[tested: pending]** With the driver clamped, the toy pore at 0.1 M and +20 mV gives:
 
 | `maxh` / `wall_h` (nm) | min `d̄` (nm) | current (A) | NUM-26 route difference |
 |---|---|---|---|
@@ -192,7 +206,7 @@ Two consequences worth keeping:
 - **A mesh sized for a classical run is not sized for the corrected one.** Any correction-on test
   that asserts a current needs the route agreement asserted with it, or it is measuring the mesh.
 
-### 7.1.2 Measured: a reassembled residual reproduces the live one bit for bit **[tested]** {#712-measured-a-reassembled-residual-reproduces-the-live-one-bit-for-bit}
+### 7.1.2 Measured: a reassembled residual reproduces the live one bit for bit **[tested: pending]** {#712-measured-a-reassembled-residual-reproduces-the-live-one-bit-for-bit}
 
 The NUM-25 route needs `ModelSolution.residual`, which a state loaded from disk does not have. Built
 by re-running the rung construction against the **stored** wall-distance coefficient vector, the
@@ -219,7 +233,7 @@ that shell was put. **Omit it and each half of the force is a function of the ba
 while the sum is unaffected, because the two body-force terms cancel between the halves. That is
 the RSK-04 failure mode exactly: a total that agrees between routes over a split that is wrong.
 
-**Three routes, and what each is good for. [tested]**
+**Three routes, and what each is good for. [tested: pending]**
 
 | Route | What it is | Independent of `w`? |
 |---|---|---|
@@ -237,12 +251,12 @@ constrained on the body — which is why the `F = qE₀` anchor of VER-20 is not
 Measured on a charged sphere in an applied field at 0.3 M, with `F^em = −15.45 pN` against
 `F^hd = +9.95 pN` (`tests/tier2/`): A against B is 1.3–2.7 × 10⁻² pN and wanders under refinement,
 being surface quadrature on a different support; A against C is 4.6 × 10⁻⁴ → 1.3 × 10⁻⁴ →
-3.4 × 10⁻⁵ pN and falls monotonically, being consistency error in A alone. **[tested]**
+3.4 × 10⁻⁵ pN and falls monotonically, being consistency error in A alone. **[tested: pending]**
 
 **The residual `−∫ ½|E|²∇ε·w` is the Korteweg–Helmholtz force PHY-23 omits**, not a discretisation
 error: it is the gap between NUM-28 *as printed* and the force all three routes agree on. It is
 identically zero classically and −4.0 × 10⁻⁴ pN on the reference-shaped ePNP-NS case, i.e. 0.02 %
-of `F^em` there. **[tested]**
+of `F^em` there. **[tested: pending]**
 
 **No `1/r` term, and `singular=True` is not needed.** For an axial `w`, `(∇w)_φφ = w_r/r = 0`, so
 the hoop components of both tensors are contracted against zero and `T:∇w = T_rz ∂_r w_z +

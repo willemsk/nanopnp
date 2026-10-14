@@ -1,6 +1,17 @@
 ---
 type: Physics
 title: 4. Rationale worth preserving
+description: The rationale for the form of the corrections, worth preserving.
+tags:
+- physics
+- physics
+sources:
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 4. Rationale worth preserving

@@ -1,6 +1,14 @@
 ---
-type: Orientation
+type: Open Item
 title: Still open
+description: 'Questions still open: the radial potential at 0.15 M, the ClyA-AS mutation list and the
+  PlyAB supplementary details.'
+tags:
+- orientation
+- open-item
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## Still open

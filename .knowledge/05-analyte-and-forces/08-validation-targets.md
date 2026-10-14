@@ -1,6 +1,20 @@
 ---
 type: Domain
 title: 7. Validation targets
+description: The validation targets of the analyte work.
+tags:
+- analyte
+- domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 7. Validation targets

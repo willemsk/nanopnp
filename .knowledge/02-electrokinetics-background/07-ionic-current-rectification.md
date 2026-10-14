@@ -1,6 +1,13 @@
 ---
 type: Background
 title: 7. Ionic current rectification
+description: Ionic current rectification.
+tags:
+- electrokinetics
+- background
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 7. Ionic current rectification

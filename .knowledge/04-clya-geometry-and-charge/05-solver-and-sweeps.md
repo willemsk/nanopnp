@@ -1,6 +1,20 @@
 ---
 type: Pipeline
 title: 5. Solver and sweeps
+description: The solver and sweep settings of the reference case.
+tags:
+- clya
+- pipeline
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 5. Solver and sweeps

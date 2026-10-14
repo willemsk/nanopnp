@@ -1,6 +1,18 @@
 ---
 type: Orientation
 title: The five things most likely to trip you up
+description: 'The five errors most likely to be made when implementing the model: wall function, steric
+  sign, dielectric force, Einstein ratio, quadrature order.'
+tags:
+- orientation
+- orientation
+sources:
+- id: esi
+  resource: https://www.rsc.org/suppdata/d0/nr/d0nr03114c/d0nr03114c1.pdf
+  title: Electronic supplementary information of the paper
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## The five things most likely to trip you up

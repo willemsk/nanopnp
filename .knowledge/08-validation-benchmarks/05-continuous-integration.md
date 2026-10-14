@@ -1,6 +1,13 @@
 ---
 type: Benchmark
 title: Continuous integration
+description: Continuous integration.
+tags:
+- validation
+- benchmark
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## Continuous integration

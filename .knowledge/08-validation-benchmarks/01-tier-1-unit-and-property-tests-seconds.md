@@ -1,6 +1,16 @@
 ---
 type: Benchmark
 title: Tier 1 — Unit and property tests (seconds)
+description: Tier 1, unit and property tests, with their check values.
+tags:
+- validation
+- benchmark
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## Tier 1 — Unit and property tests (seconds)

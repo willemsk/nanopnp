@@ -1,6 +1,17 @@
 ---
 type: Domain
 title: 2. The pores that appear in this work
+description: The pores that appear in this work.
+tags:
+- biology
+- domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 2. The pores that appear in this work

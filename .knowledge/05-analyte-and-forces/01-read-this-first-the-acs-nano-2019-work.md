@@ -1,6 +1,17 @@
 ---
 type: Domain
 title: 0. Read this first — the ACS Nano 2019 work contains no continuum analyte
+description: The ACS Nano 2019 work contains no continuum analyte.
+tags:
+- analyte
+- domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 0. Read this first — the ACS Nano 2019 work contains no continuum analyte

@@ -1,6 +1,26 @@
 ---
 type: Numerics
 title: 8. Mesh resolution and adaptivity
+description: Mesh resolution and adaptivity, measured against the reference mesh.
+tags:
+- numerics
+- numerics
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+- id: esi
+  resource: https://www.rsc.org/suppdata/d0/nr/d0nr03114c/d0nr03114c1.pdf
+  title: Electronic supplementary information of the paper
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 8. Mesh resolution and adaptivity
@@ -15,7 +35,7 @@ title: 8. Mesh resolution and adaptivity
   the QoI at a fraction of the cost. Ship as an optional loop, not a v1 default.
 - **The published results carry no discretisation error bar.** The *thesis* states only "COMSOL
   Multiphysics v5.4" and mentions "the final mesh" in passing: no element counts, no types, no
-  refinement strategy, no tolerances, no convergence study. **[verified]** by grep over
+  refinement strategy, no tolerances, no convergence study. **[verified][^esi]** by grep over
   `thesis/chapters/`. Our mesh convergence study is therefore new work, and small disagreements
   with published numbers may be *their* discretisation error rather than ours.
   **Correction to the above, added later:** the paper's *ESI* is a 143-page COMSOL-generated model
@@ -24,7 +44,7 @@ title: 8. Mesh resolution and adaptivity
   been extracted (`WebFetch` truncates the PDF at ~p. 66 of 143). Still no convergence study.
   → `.knowledge/09-comsol-reference-settings/index.md`.
 
-### Measured: the reference region meshes to a third of COMSOL's element count **[tested]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
+### Measured: the reference region meshes to a third of COMSOL's element count **[tested: pending]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
 
 The ClyA region of §5.2.1 — the delivered 185-vertex profile, the membrane quadrilateral with its
 slanted inner edge, a 250 nm reservoir half-disc, glued — meshed by netgen at the §5.2.2 size fields
@@ -43,7 +63,7 @@ statement — the two meshers' size fields are not the same knobs, and COMSOL's 
 quality" is not stated to be SICN — but the quality band is, and it is met without boundary layers,
 by isotropic grading alone, which is what §5.2.2 says the reference model did.
 
-### Measured: the wall-size field reaches the wall, and a gate can tell **[tested]** {#measured-the-wall-size-field-reaches-the-wall-and-a-gate-can-tell}
+### Measured: the wall-size field reaches the wall, and a gate can tell **[tested: pending]** {#measured-the-wall-size-field-reaches-the-wall-and-a-gate-can-tell}
 
 Netgen treats a size as a target, not a bound. Stage 6 (WP21) measures the `wall` segment lengths
 over the resolved target, at the §5.2.2 sizes otherwise; netgen 6.2.2606, Linux, 26 September 2026:
@@ -70,7 +90,7 @@ wide (minimum SICN 0.647 against a 0.3 floor), so gating only *imported* meshes 
 we build ourselves unwatched for no saving.
 
 **`mesh/quality.py`'s SICN and gamma agree with `gmsh.model.mesh.getElementQualities(..., "minSICN")`
-and `"gamma"` to every digit gmsh prints [tested]**, which calibrates the 0.3 threshold against the
+and `"gamma"` to every digit gmsh prints [tested: pending]**, which calibrates the 0.3 threshold against the
 implementation that set it. gmsh returns `+1` for a clockwise triangle (a 2-D element in a discrete
 entity has no intrinsic orientation there), so only the magnitude is comparable; the sign is ours.
 
@@ -84,3 +104,4 @@ that call site, with its reasoning, not in the floor.
 
 ---
 
+[^esi]: Electronic supplementary information of the paper.

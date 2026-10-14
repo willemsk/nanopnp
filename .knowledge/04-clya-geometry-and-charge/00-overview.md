@@ -1,6 +1,21 @@
 ---
 type: Overview
 title: ClyA-AS — geometry, fixed charge, and validation targets (overview)
+description: The ClyA-AS pipelines from structure to geometry, charge and mesh, and the numeric validation
+  targets.
+tags:
+- clya
+- overview
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 # ClyA-AS — geometry, fixed charge, and validation targets
