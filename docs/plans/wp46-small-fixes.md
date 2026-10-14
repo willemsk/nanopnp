@@ -55,6 +55,7 @@ and gives each `review-items.md` section a *Resolved* line.
 
 - [x] 1. 6891891 `density/grid.py`, `charge/stage.py` (D1); done when the round-trip and legacy-read tests of *Verification* pass and VER-62 holds.
 - [x] 2. 0cf9b46 `mesh/sizing.py`, `mesh/generate.py`, any re-recorded key golden (D2); done when the shared-key test passes and VER-62 holds.
+  > **Outcome — D2's goldens.** Re-recorded: netgen's stage-6 key in `tests/tier1/test_mesh_gmsh.py` and the mesh, charge and solve keys of `KEYS_V05` in `tests/tier2/test_exclusion_keys.py` (found by the push gate). The latter test also rebuilds the `bbca737` keys from the new parameters with λ_D restored from the manifest's `sizing` block, and they equal the recorded literals: λ_D left the key and nothing else did.
 - [x] 3. 84fe7e3 `io/store.py` (D3); done when the interleaving and two-process tests pass.
 - [x] 4. 136f83c `io/workspace.py`, the eleven stage modules, their tests' `workspace=`, `CHANGELOG.md` (D4); done when the refusal test passes and VER-61 holds.
   > **Outcome — D4 writes into the workspace itself.** `scratch_directory(workspace, stage)` returns the workspace, created, rather than a fresh `mkdtemp` under it: the walk already gives each stage a fresh `<run scratch>/<stage>` directory, and a named workspace keeps `work/mesh/mesh.msh` where `test_ver32_a_run_removes_its_scratch_once_the_store_holds_the_payloads` and the examples read it. Ten stage modules held a fallback (the registry has ten workspace stages).
