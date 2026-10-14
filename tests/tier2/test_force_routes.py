@@ -15,6 +15,7 @@ CONCENTRATION_M = 0.3
 
 FIELD = 0.2
 
+# Charge scale of SPECIFICATION.md RSK-04 (both force halves reach 10 pN).
 CHARGE_E = -20.0
 
 MESH = (0.8, 0.1)

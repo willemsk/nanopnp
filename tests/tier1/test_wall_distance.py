@@ -22,6 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 ACCURACY_TOL_NM = 5e-3
 
+# C1 facet-jump tolerance: SPECIFICATION.md NUM-31.
 JUMP_TOL = 1e-2
 
 WALL_ZERO_TOL_NM = 1e-9
@@ -154,6 +155,7 @@ def test_ver06_the_ingested_membrane_is_not_a_distance_source(ingested_pore) -> 
 # -- VER-40: the PHY-02 clamp and the NUM-34 gate ------------------------------
 
 
+# Correction YAML's check value for f^w_D(0): SPECIFICATION.md PHY-11, VER-03.
 WALL_VALUE_D = 0.06011672921353888
 
 WALL_VALUE_ETA = 2.6387280882270177
@@ -163,6 +165,7 @@ CLAMPED_PORE = CylindricalPoreGeometry(
 )
 
 ADMISSIBLE_WALL_H_NM = 0.35
+# Regime change of SPECIFICATION.md NUM-34; measured on .knowledge/06 section 7.1.1.
 INADMISSIBLE_WALL_H_NM = 1.0
 
 

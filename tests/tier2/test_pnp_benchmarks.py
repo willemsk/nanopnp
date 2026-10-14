@@ -13,6 +13,7 @@ from nanopnp.numerics.measures import PLANAR
 from nanopnp.physics import models
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 
+# Film thickness: measured classical-PNP current against the closed form at delta = 1e-3.
 LENGTH_NM = 2000.0
 
 HEIGHT_NM = 0.5

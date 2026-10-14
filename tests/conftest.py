@@ -773,10 +773,13 @@ def cylindrical_pore_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
     return case_path
 
 
+# Reference COMSOL mesh: SPECIFICATION.md section 5.2.2.
 VAL05_REFERENCE_TRIANGLES = 120_917
 
+# Reference mesh quality: SPECIFICATION.md section 5.2.2; .knowledge/09.
 VAL05_REFERENCE_MIN_QUALITY = 0.6378
 
+# Reference mesh quality: SPECIFICATION.md section 5.2.2.
 VAL05_REFERENCE_MEAN_QUALITY = 0.9765
 
 VAL05_FROZEN_CASE = (

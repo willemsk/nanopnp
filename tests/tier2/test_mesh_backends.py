@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 
 FROZEN_SIZE_SCALE = 2.0
 
+# 8 x the measured 1.25e-4 relative difference between the two backends.
 CONDUCTANCE_RTOL = 1e-3
 
+# Delivered reference polygon: SPECIFICATION.md section 5.2.1.
 PROFILE_VERTICES = 185
 
 MESH_CASE = """\

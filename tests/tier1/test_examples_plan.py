@@ -25,8 +25,10 @@ from nanopnp.validation.examples import (
 REPOSITORY = Path(__file__).resolve().parents[2]
 EXAMPLES = sorted(path.parent for path in (REPOSITORY / "examples").glob("*/README.md"))
 
+# 5 configurations x 35 biases x 21 concentrations: SPECIFICATION.md section 8.3.
 REFERENCE_POINTS = 3675
 
+# Wave count: docs/sweeps/README.md, reference sweep.
 REFERENCE_WAVES = 42
 
 

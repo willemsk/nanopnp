@@ -45,8 +45,10 @@ CASE_NAME = "clya-0.5M-plus50mV.case.yaml"
 
 ORDERS = (0, 1)
 
+# Pore axial extent: .knowledge/04 section 2; .knowledge/09 C.
 PORE_Z_NM = (-1.85, 12.25)
 
+# Pore-surface layer thickness: .knowledge/09 C.
 SURFACE_LAYER_NM = 0.5
 
 STAGE_MODULES = (

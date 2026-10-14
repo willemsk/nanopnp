@@ -21,6 +21,7 @@ from nanopnp.numerics.measures import AXISYMMETRIC
 
 TABLE = "prod5_clya_charge"
 
+# Integral of the delivered table, measured at 4.68e-12 relative.
 Q_NET_E = -72.0
 
 GRID_SHAPE = (1401, 3401)
@@ -28,6 +29,7 @@ GRID_SHAPE = (1401, 3401)
 GRID_SPACING_NM = (0.005, 0.005)
 GRID_ORIGIN_NM = (0.0, -3.5)
 
+# Recorded measurement of Q_mesh against Q_grid on the WP8 reference mesh.
 CONSUMER_LEG = 9.868e-3
 
 table = reference_file(TABLE)

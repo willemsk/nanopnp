@@ -38,6 +38,7 @@ from nanopnp.validation.apbs import (
 
 logger = logging.getLogger(__name__)
 
+# The paper's 50 frames, in time order: DCD frames 48-97.
 ARCHIVED = [
     reference_file(f"prod5_protein_aligned_100ps_{number:02d}.pdb.pqr") for number in range(50, 100)
 ]

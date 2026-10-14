@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 
+# Half the PDB coordinate column's 0.001 Å resolution.
 PDB_ROUNDING_NM = 5e-5
 
 STAGES = {"case", "structure", "density", "symmetry", "contour", "region", "mesh"}

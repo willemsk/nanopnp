@@ -40,6 +40,7 @@ PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
 MAXH_NM = 4.0
+# Coarsest wall spacing admitted by SPECIFICATION.md NUM-34.
 WALL_H_NM = 0.35
 
 CASE = """

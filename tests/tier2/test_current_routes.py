@@ -223,6 +223,7 @@ numerics: {{continuation: default_ladder, stabilisation: none}}
 outputs: [current]
 """
 
+# Measured at maxh 4.0 nm on the 124-element mesh of .knowledge/06 section 7.1.1.
 INADMISSIBLE_WALL_H_NM = 1.0
 
 # NUM-26, PHY-02
@@ -231,6 +232,7 @@ PLAUSIBLE_WALL_H_NM = 0.5
 # NUM-34
 ADMISSIBLE_WALL_H_NM = 0.35
 
+# Measured at wall_h 0.35 nm (2.6514e-11 A) and 0.25 nm (2.6538e-11 A).
 RESOLVED_CURRENT_A = 2.65e-11
 
 

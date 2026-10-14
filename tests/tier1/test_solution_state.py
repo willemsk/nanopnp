@@ -40,10 +40,13 @@ PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
 MAXH_NM = 2.0
+# Wall element size set by SPECIFICATION.md NUM-34 (measured regime change on this pore).
 WALL_H_NM = 0.35
 
+# NUM-24 indicator band half-height: SPECIFICATION.md NUM-24.
 BAND_NM = 2.4
 
+# NUM-26 relative agreement between the two routes: SPECIFICATION.md NUM-26.
 ROUTE_TOLERANCE = 1e-3
 
 CONCENTRATION_M = 0.1

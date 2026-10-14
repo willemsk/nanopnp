@@ -42,10 +42,12 @@ PORE = CylindricalPoreGeometry(
 MAXH_NM = 4.0
 WALL_H_NM = 1.0
 
+# NUM-26 relative agreement between the NUM-24 and NUM-25 routes: SPECIFICATION.md NUM-26.
 ROUTE_TOLERANCE = 1e-3
 
 BAND_TOLERANCE = 1e-12
 
+# Band-independence claim: SPECIFICATION.md NUM-24; measured spread 6.7e-10 on this mesh.
 BAND_INDEPENDENCE = 1e-8
 
 CONCENTRATION_M = 0.1

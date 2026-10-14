@@ -25,8 +25,10 @@ from nanopnp.physics.pb import (
 )
 
 CONCENTRATION_M = 0.1
+# zeta~_d: VER-12's own wall potential (SPECIFICATION.md VER-12).
 DIFFUSE_ZETA = 2.0
 
+# a_Na/2: steric_diameter_nm of willems2020_nacl (0.5 nm).
 STERN_THICKNESS_NM = 0.25
 
 PERMITTIVITY = VACUUM_PERMITTIVITY * ELECTROLYTE_PERMITTIVITY

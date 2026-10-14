@@ -45,6 +45,7 @@ logger = logging.getLogger(__name__)
 
 MMS_MEASURES = Measures(symmetry="axisymmetric", element_order=2)
 MMS_RADIUS_NM, MMS_LENGTH_NM = 2.0, 4.0
+# Refinement sequence: SPECIFICATION.md VER-18.
 MMS_SIZES_NM = (0.4, 0.2, 0.1)
 
 MMS_FLOW_SIZES_NM = (0.4, 0.2)
@@ -57,6 +58,7 @@ MMS_BOUNDARIES = CoupledBoundaries(
     velocity_axis="axis",
 )
 
+# 2 - 0.2: the margin tests/tier2/test_mms.py already allows on its 3.
 STABILISED_RATE_FLOOR = 1.8
 
 MMS_GATED_MODE = "supg"
@@ -192,6 +194,7 @@ def test_ver42_the_unstabilised_mode_on_the_same_meshes_still_gives_ver18s_rate(
         assert min(rates) > 2.8, f"{name}: observed rates {rates} fall short of P2"
 
 
+# Measured footprint ratios of 24 to 213 with the source withheld.
 WITHHELD_FOOTPRINT_FACTOR = 5.0
 
 
@@ -225,6 +228,7 @@ def test_ver42_withholding_the_manufactured_source_switches_the_term_off(
             )
 
 
+# Measured velocity-error factor of 125 with the flow pair on.
 FLOW_PAIR_VELOCITY_FACTOR = 10.0
 
 
@@ -317,6 +321,7 @@ COARSE_PORE = CylindricalPoreGeometry(
     pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0
 )
 
+# Coarse wall spacing against SPECIFICATION.md NUM-30, at 0.5 M.
 COARSE_WALL_H_NM = 1.0
 
 RESOLVED_WALL_H_NM = 0.2
@@ -510,6 +515,7 @@ def test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh(
 
 CURRENT_WALL_H_NM = (0.8, 0.4, 0.2)
 
+# Measured |I_reference - I_none| / |I_none| at 0.5 M, +50 mV, -0.05 C/m^2.
 CURRENT_DIFFERENCES = (2.00e-1, 7.38e-2, 1.99e-2)
 
 
