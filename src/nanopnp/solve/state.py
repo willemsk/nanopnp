@@ -113,7 +113,7 @@ SPACE_KEYS: tuple[str, ...] = (
     "model.switches.pressure_constraint",
     # Stabilisation changes the form, not the space, but the NUM-14 reference mode compares two
     # numbers that must not be reached through each other. The constants are gated too: C_cw = 1
-    # and 0.35 are different operators. Provenance prose is in OPERATOR_KEYS (REV-17, D8).
+    # and 0.35 are different operators. Provenance prose is in OPERATOR_KEYS.
     "stabilisation",
     "model.stabilisation",
     "model.stabilisation_parameters",
@@ -136,7 +136,7 @@ OPERATOR_KEYS: tuple[str, ...] = (
     # The target solves its own distance field.
     "wall_distance.sources",
     "wall_distance.max_distance_nm",
-    # Recorded, not gated: mode and parameters stay gated in SPACE_KEYS (REV-17, D8).
+    # Recorded, not gated: mode and parameters stay gated in SPACE_KEYS.
     "model.stabilisation_provenance",
 )
 

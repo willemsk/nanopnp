@@ -1,4 +1,4 @@
-"""The optional Gmsh backend of ADR-002: stage 5's region meshed with the ``gmsh`` API (WP23)."""
+"""The optional Gmsh backend of ADR-002: stage 5's region meshed with the ``gmsh`` API."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ _TRIANGLE = 2
 # Gmsh's element type for a two-node line.
 _LINE = 1
 
-# Extra samples per curve above ``ceil(L / h)`` on each ``Distance`` field (WP23 D3).
+# Extra samples per curve above ``ceil(L / h)`` on each ``Distance`` field.
 _SAMPLING_MARGIN = 2
 
 # Numbers the models this module adds, so a session already open never sees a clash.

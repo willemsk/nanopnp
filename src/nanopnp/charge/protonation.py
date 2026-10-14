@@ -1,4 +1,4 @@
-"""Stage 7, first half: protonation, partial charges and radii per frame (FR-12, WP27)."""
+"""Stage 7, first half: protonation, partial charges and radii per frame (FR-12)."""
 
 from __future__ import annotations
 
@@ -85,26 +85,26 @@ REGISTRATION_TOLERANCE_A = 0.01
 """How far a supplied heavy atom may lie from its stage-1 atom, in Å (section 5.3.1 NOTE).
 
 About ten times the rounding of a PQR's coordinate columns plus stage 1's float32
-spacing, and a hundredth of the shortest heavy-atom bond (WP27 *Design* §3).
+spacing, and a hundredth of the shortest heavy-atom bond.
 """
 
 COORDINATE_DECIMALS = 3
 """The payload's coordinates lie on the 0.001 Å lattice a PQR prints, so an export reads back."""
 
 Q_NET_TOLERANCE_E = 1e-6
-"""How far ``Q_net`` may lie from an integer, in e (PHY-16 step 3, D9)."""
+"""How far ``Q_net`` may lie from an integer, in e (PHY-16 step 3)."""
 
 MINIMUM_CALPHA = 3
 """C-alpha pairs a registration needs: three points fix a rigid motion."""
 
 RADIUS_SET = "pdb2pqr_charmm"
-"""The stage-2 radius set the PQR's radii are compared with under CHARMM (D14)."""
+"""The stage-2 radius set the PQR's radii are compared with under CHARMM."""
 
 ACID_GROUPS: frozenset[str] = frozenset({"COO", "C-", "CYS", "TYR"})
-"""PROPKA group types that carry -1 at a pH at or above their pKa (*Design* §2)."""
+"""PROPKA group types that carry -1 at a pH at or above their pKa."""
 
 BASE_GROUPS: frozenset[str] = frozenset({"HIS", "LYS", "ARG", "N+"})
-"""PROPKA group types that carry +1 at a pH below their pKa (*Design* §2)."""
+"""PROPKA group types that carry +1 at a pH below their pKa."""
 
 FLIPPABLE: Mapping[str, frozenset[str]] = {
     "ASN": frozenset({"OD1", "ND2"}),
@@ -132,7 +132,7 @@ PDB2PQR a ``SOL`` it cannot parameterise or :func:`frame_pdb` a ``TIP3`` its
 columns cannot hold. ``TP3M`` is the name ``--ffout=CHARMM`` gives a water it keeps.
 """
 
-# The library loggers raised to WARNING during a call (D7); the versioned one is added.
+# The library loggers raised to WARNING during a call; the versioned one is added.
 _LOGGERS: tuple[str, ...] = ("pdb2pqr", "propka")
 
 # The extra that carries PDB2PQR and PROPKA (``pyproject.toml``).

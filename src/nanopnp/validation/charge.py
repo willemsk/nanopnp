@@ -1,4 +1,4 @@
-"""The deposited fixed charge against the reference's own table (WP28, VAL-15 at Tier 3)."""
+"""The deposited fixed charge against the reference's own table (VAL-15 at Tier 3)."""
 
 from __future__ import annotations
 

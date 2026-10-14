@@ -164,6 +164,7 @@ class QueueProgress:
     queue: Queue[RunEvent]
 
     def __call__(self, fraction: float, message: str) -> None:
+        """Post a ``Progress`` event."""
         self.queue.put(Progress(fraction=float(fraction), message=str(message)))
 
 
@@ -174,6 +175,7 @@ class QueueStage:
     queue: Queue[RunEvent]
 
     def __call__(self, name: str, index: int, total: int) -> None:
+        """Post a ``Stage`` event."""
         self.queue.put(Stage(name=str(name), index=int(index), total=int(total)))
 
 
@@ -185,6 +187,7 @@ class QueueArtefact:
     store: str
 
     def __call__(self, name: str, schema: str, hash: str, cached: bool) -> None:
+        """Post a ``Produced`` event."""
         self.queue.put(
             Produced(
                 name=str(name),
@@ -250,6 +253,7 @@ class EventCancel:
         self._event.set()
 
     def cancelled(self) -> bool:
+        """Return whether the stage should raise ``Cancelled``."""
         return self._event.is_set()
 
 

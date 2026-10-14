@@ -131,7 +131,7 @@ def test_ver12_grahame_surface_charge() -> None:
 
     # The reaction flux needs the residual form on the space the solve used,
     # which solve_pb owns; it is rebuilt here from the same term rather than
-    # duplicating the driver, so WP3's damped Newton replaces it in one place.
+    # duplicating the driver, so the damped Newton replaces it in one place.
     space = solution.space
     trial, test = space.TnT()
     residual = ngs.BilinearForm(space)

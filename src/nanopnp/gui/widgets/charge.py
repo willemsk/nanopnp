@@ -1,4 +1,4 @@
-"""The Charge tab: stage 7 as it lands, its pictures and its records (WP31)."""
+"""The Charge tab: stage 7 as it lands, its pictures and its records."""
 
 from __future__ import annotations
 

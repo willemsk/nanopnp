@@ -30,11 +30,10 @@ OPTIMISATION_STEPS = 5
 """``optsteps2d``: netgen's own optimisation pass, which section 5.2.2 requires."""
 
 GMSH_ALGORITHM = 6
-"""``Mesh.Algorithm`` on the Gmsh backend: Frontal-Delaunay (WP23 D5).
+"""``Mesh.Algorithm`` on the Gmsh backend: Frontal-Delaunay.
 
 On the reference fixture, algorithm 5 (Delaunay) gives 10 % more triangles at a
-mean gamma of 0.95 against 0.99, and 1 (MeshAdapt) is slower and worse (WP23
-plan, Design section 3).
+mean gamma of 0.95 against 0.99, and 1 (MeshAdapt) is slower and worse.
 """
 
 GMSH_SMOOTHING = 5
@@ -46,7 +45,7 @@ GMSH_FIELD_RULES: tuple[str, ...] = (
     "short-curve-vertices-below-target",
     "membrane-at-thickness-unscaled",
 )
-"""The Gmsh backend's size-field rules, as the stage-6 key names them (WP23 D3, D4, D8).
+"""The Gmsh backend's size-field rules, as the stage-6 key names them.
 
 Each changes the mesh, so each keys it: a rule edited in code is a new
 identifier here, and the mesh it makes a new store entry. Their statement is the
@@ -192,7 +191,7 @@ def edge_size(
 
 
 EXCLUSION_SIZE = "wall_h_nm"
-"""What the ``exclusion`` domain is sized at: the resolved wall target (WP30 D9).
+"""What the ``exclusion`` domain is sized at: the resolved wall target.
 
 A 0.25 nm shell then has about five elements across it at the default wall size,
 and the protein-to-shell dielectric jump keeps the resolution the wall had there
@@ -202,7 +201,7 @@ when its region carries a shell, so no shell-free key moves.
 
 
 EXCLUSION_WALL_DIVISION = 1.1
-"""On netgen, a shell's ``wall`` edge is cut into ``ceil(L / (1.1 wall_h))`` equal segments (WP30).
+"""On netgen, a shell's ``wall`` edge is cut into ``ceil(L / (1.1 wall_h))`` equal segments.
 
 The shell's outer surface is a ring of straight edges ``L`` = 1.05-1.15 ``h_c``
 long (:data:`nanopnp.geometry.region.EXCLUSION_RESAMPLE`), and netgen must keep

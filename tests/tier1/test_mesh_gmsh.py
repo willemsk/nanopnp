@@ -248,7 +248,7 @@ def test_ver54_the_key_moves_with_the_backend_and_netgen_s_does_not_move(
     keys = {}
     for backend in ("netgen", "gmsh"):
         case = loads_case(_case_text(workspace, backend))
-        # D1: stage 5 is netgen.occ on either backend, so its key does not move.
+        # Stage 5 is netgen.occ on either backend, so its key does not move.
         assert RegionStage().key(StageInputs(resolved=resolve(case))).hash == region.hash
         keys[backend] = MeshStage().key(
             StageInputs(resolved=resolve(case), upstream={"region": region})

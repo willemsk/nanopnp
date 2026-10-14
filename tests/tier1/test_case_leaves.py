@@ -191,7 +191,7 @@ def fingerprint(document: dict[str, Any]) -> tuple[object, ...]:
         if component.dim == 2:
             component.Set(ngs.CF((0.001 * ngs.x, 0.02 + 0.001 * ngs.y)))
         elif model.fields[index].name.startswith("c_"):
-            # Distinct per species, so the state is not electroneutral (Design §3).
+            # Distinct per species, so the state is not electroneutral.
             component.Set(1.0 + (0.01 + 0.007 * index) * ngs.x + (0.005 - 0.003 * index) * ngs.y)
         else:
             component.Set(0.03 * ngs.y + 0.01 * ngs.x + 0.002 * index)

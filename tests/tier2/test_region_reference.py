@@ -27,7 +27,7 @@ REFERENCE_MIN_QUALITY = 0.6378
 # Reference COMSOL mesh: SPECIFICATION.md section 5.2.2.
 REFERENCE_MEAN_QUALITY = 0.9765
 
-# Tolerance: WP21 Verification, element count of the derived chord meshes.
+# Tolerance: element count of the derived chord meshes.
 ELEMENT_COUNT_TOLERANCE = 1e-3
 
 # Topology of the fixture's region: SPECIFICATION.md VER-28.

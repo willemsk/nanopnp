@@ -267,7 +267,7 @@ def test_ver60_an_empty_charge_section_keys_every_physics_stage_as_its_absence(
     added = with_section(absent, "charge")
     store = Store(tmp_path / "store")
     # The solve's inputs, without the solve: the charge and the materials walks
-    # between them cover every stage the solve reads (WP38 D11).
+    # between them cover every stage the solve reads.
     for upto in ("charge", "materials"):
         run_case(dump_case(absent, tmp_path / "absent.yaml"), store=store, upto=upto)
 

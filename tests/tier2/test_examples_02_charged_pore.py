@@ -81,7 +81,7 @@ def _quantities(run: Path) -> dict[str, object]:
 
 
 # One test per case, not one for both: on a key with no entry the first assertion
-# fails, and the second case's entry would not be printed until another CI run (D14).
+# fails, and the second case's entry would not be printed until another CI run.
 def test_ver62_example_02_epnpns_holds_the_number_stability_golden(
     ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
 ) -> None:

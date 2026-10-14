@@ -40,7 +40,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 KERNEL_ID = "azimuthal-mean-3d-gaussian/v1"
-"""The kernel of PHY-16 step 5, named in the charge-grid key (D7).
+"""The kernel of PHY-16 step 5, named in the charge-grid key.
 
 A different kernel -- the reference's 2D ``(r, z)`` Gaussian divided by ``2 pi r``,
 which PHY-17 forbids -- would be a different identifier, never a different number
@@ -59,11 +59,11 @@ TILE_NM = 0.5
 
 A cost choice and not a number-changing one beyond summation order: the window a
 tile covers is ``TILE_NM + 12 w_max`` on a side, so smaller tiles shrink the
-products until the patches dominate (*Design* §6).
+products until the patches dominate.
 """
 
 PLANE_COUNT = 12
-"""Planes the per-plane check is evaluated at, spanning the atoms' z-extent (D6)."""
+"""Planes the per-plane check is evaluated at, spanning the atoms' z-extent."""
 
 NM_TO_M = 1e-9
 """Metres per nanometre."""

@@ -360,14 +360,17 @@ class NoStabilisation:
 
     @property
     def name(self) -> str:
+        """Registered name of the mode."""
         return "none"
 
     @property
     def parameters(self) -> Mapping[str, float]:
+        """The tuning constants in force, flattened for reporting."""
         return {}
 
     @property
     def provenance(self) -> Mapping[str, str]:
+        """Where the mode and its constants came from."""
         return {
             "mode": "none",
             "terms": "",
@@ -376,10 +379,12 @@ class NoStabilisation:
 
     @property
     def terms(self) -> tuple[str, ...]:
+        """The terms this mode assembles, in assembly order; empty for ``none``."""
         return ()
 
     @property
     def permits_equal_order(self) -> bool:
+        """Whether this mode supplies the flow stabilisation an equal-order pair requires."""
         return False
 
     def transport_contributions(
@@ -390,6 +395,7 @@ class NoStabilisation:
         test: Expression,
         source: Expression | None = None,
     ) -> tuple[StabilisationIntegrand, ...]:
+        """Return one species' transport contributions as unweighted integrands."""
         del trial, lagged, test, source
         return ()
 
@@ -403,6 +409,7 @@ class NoStabilisation:
         source: Expression | None = None,
         **kwargs: Option,
     ) -> IntegralTerm | None:
+        """Return this mode's contribution to one species' residual, or ``None``."""
         del measures, trial, lagged, test, source, kwargs
         return None
 
@@ -416,6 +423,7 @@ class NoStabilisation:
         pressure_test: Expression,
         **kwargs: Option,
     ) -> IntegralTerm | None:
+        """Return this mode's contribution to the flow residual, or ``None``."""
         del measures, trial, lagged, velocity_test, pressure_test, kwargs
         return None
 
@@ -429,6 +437,7 @@ class NoStabilisation:
         source: Expression | None = None,
         **kwargs: Option,
     ) -> float:
+        """Return this mode's contribution to the indicator of the current."""
         del measures, mesh, state, indicator, source, kwargs
         return 0.0
 
@@ -450,10 +459,12 @@ class StreamlineStabilisation:
 
     @property
     def name(self) -> str:
+        """Registered name of the mode."""
         return "supg"
 
     @property
     def permits_equal_order(self) -> bool:
+        """Whether this mode supplies the flow stabilisation an equal-order pair requires."""
         # Read off the flow term rather than declared per class: the pair is legal
         # exactly when the PSPG content of the GLS term is assembled, so a mode
         # that claimed otherwise would be claiming something about an operator it
@@ -462,6 +473,7 @@ class StreamlineStabilisation:
 
     @property
     def parameters(self) -> Mapping[str, float]:
+        """The tuning constants in force, flattened for reporting."""
         values = {"streamline_cutoff": float(self.streamline_cutoff)}
         if self.crosswind:
             values["crosswind_coefficient"] = float(self.crosswind_coefficient)
@@ -483,6 +495,7 @@ class StreamlineStabilisation:
 
     @property
     def provenance(self) -> Mapping[str, str]:
+        """Where the mode and its constants came from."""
         return {
             "mode": self.name,
             "terms": ",".join(self.terms),
@@ -557,6 +570,7 @@ class StreamlineStabilisation:
         source: Expression | None = None,
         **kwargs: Option,
     ) -> IntegralTerm | None:
+        """Return this mode's contribution to one species' residual, or ``None``."""
         contributions = self.transport_contributions(
             trial=trial, lagged=lagged, test=test, source=source
         )
@@ -572,6 +586,7 @@ class StreamlineStabilisation:
         pressure_test: Expression,
         **kwargs: Option,
     ) -> IntegralTerm | None:
+        """Return this mode's contribution to the flow residual, or ``None``."""
         if not self.flow:
             return None
         import ngsolve as ngs
@@ -617,6 +632,7 @@ class StreamlineStabilisation:
         source: Expression | None = None,
         **kwargs: Option,
     ) -> float:
+        """Return this mode's contribution to the indicator of the current."""
         total = 0.0
         for index, contribution in enumerate(
             self.transport_contributions(trial=state, lagged=state, test=indicator, source=source)
@@ -641,6 +657,7 @@ class ReferenceStabilisation(StreamlineStabilisation):
 
     @property
     def name(self) -> str:
+        """Registered name of the mode."""
         return "reference"
 
 

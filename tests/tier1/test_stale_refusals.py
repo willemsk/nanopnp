@@ -45,7 +45,7 @@ def _refusal(raw: dict[str, Any]) -> str:
     return str(caught.value)
 
 
-# -- the check (D1 to D3) -------------------------------------------------------------
+# -- the check -------------------------------------------------------------
 
 
 def test_ver67_tagged_releases_are_the_changelog_milestones() -> None:
@@ -173,7 +173,7 @@ def test_ver67_no_string_pairs_a_requirement_with_a_release_its_row_does_not_giv
     )
 
 
-# -- every inputs: key has a reader (REV-68, VER-47) ----------------------------------
+# -- every inputs: key has a reader (VER-47) ----------------------------------
 
 
 def test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage() -> None:
@@ -199,7 +199,7 @@ def test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage() -> None:
     assert unread == [], f"inputs: keys no stage reads (FR-25: hashed, never used): {unread}"
 
 
-# -- the refusals (D4 to D8) ----------------------------------------------------------
+# -- the refusals ----------------------------------------------------------
 
 
 def test_fr27_the_num20_strategy_is_refused_naming_its_schedule() -> None:

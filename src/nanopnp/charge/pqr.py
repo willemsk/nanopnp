@@ -1,4 +1,4 @@
-"""The PQR file: one reader and one writer for both of stage 7's protonation routes (WP27)."""
+"""The PQR file: one reader and one writer for both of stage 7's protonation routes."""
 
 from __future__ import annotations
 
