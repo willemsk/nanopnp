@@ -1,29 +1,33 @@
 # Current work
 
-Updated 14 October 2026 (WP46 delivered, awaiting `/wp-ship`; WP47 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 14 October 2026 (WP46 and WP47 delivered, awaiting `/wp-ship`). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it; the simpler loop, the trimmed code and now the
-fifteen small fixes are built. A salt sweep no longer rebuilds the same mesh at each concentration,
-two sweep members saving one result at once cannot corrupt it, and empty, duplicated, wrapped or
-wrongly scaled inputs are refused with a message naming them. A stage run by hand must be given its
-scratch folder, as you ruled; the change log says how. No computed result moved. It now waits for review in a fresh session.
+Phase 4 tidies the program before others rely on it. The simpler loop, the trimmed code and the
+fifteen small fixes are built, and now the reference notes every session reads first. They were ten
+long files; they are a hundred and twenty-one short pages, one idea each, in a folder per note. Each
+page has a small header saying what kind of page it is and where its claims come from. Every pointer
+to the notes, in the code, plans and history, names the new address, and an automatic check refuses a
+pointer to nothing. Claims that no test yet backs are marked as waiting, in a list that may only
+shrink: 358 today. No computed result moved. It now waits for review in a fresh session.
 
-**Your call:** the molecule-wrapped-across-the-box check uses a fixed 1 nm bound, not the box the file
-records. *Recommendation:* keep it: many files record no box, and the deposited pore's largest pair is 0.39 nm.
+**Your call:** the log keeps the dated events the notes already record, with git holding every earlier
+edit. *Recommendation:* keep that reading; a copy of the whole git history would only duplicate it.
 
 ## Position
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G11; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J12). WP35 to WP45 are
+  **in progress** (§8.2.7 G1–G12; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J12). WP35 to WP45 are
   merged ([loop](wp44-simplify-the-loop.md), [prose](wp45-prose-strip.md)); tags to `v0.5.0-alpha.11`
   are the author's step.
 - **WP46, the small fixes** ([plan](wp46-small-fixes.md)), is **delivered** (§8.2.9 I2; fifteen
-  `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge. Next: `/wp-ship`; then WP47 (OKF bundle, [plan](wp47-okf-bundle.md), planned), WP48 and WP49
-  (backfill, protocol); the author's sessions; fixes from WP50.
+  `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge.
+- **WP47, the OKF bundle** ([plan](wp47-okf-bundle.md)), is **delivered** (§8.2.7 G12; VER-68), tag
+  `v0.5.0-alpha.13` after the merge. Next: `/wp-ship`; then WP48 (backfill: empties `pending.yaml`,
+  `REV-103`) and WP49 (protocol); the author's sessions; fixes from WP50.
 
 ## Not to be re-decided
 
@@ -63,8 +67,9 @@ records. *Recommendation:* keep it: many files record no box, and the deposited 
 |---|---|
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | The small fixes as shipped | `wp46-small-fixes.md`; `CHANGELOG.md` `0.5.0-alpha.12`; `docs/project/review-items.md` |
+| The knowledge bundle as shipped | `wp47-okf-bundle.md`; `.knowledge/index.md`; `src/nanopnp/validation/okf.py` (VER-68) |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
-| The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `wp47-okf-bundle.md` |
+| The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `okf-converter-rules.md` |
 
 ## Handoff Rules
 

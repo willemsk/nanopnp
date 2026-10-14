@@ -19,6 +19,27 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.13] - 2026-10-14
+
+WP47: the knowledge base as an Open Knowledge Format bundle (`SPECIFICATION.md` §8.2.6 F6, §8.2.7
+G12, VER-68). No code path of the solver changes, and VER-62 is untouched.
+
+- **The bundle** (VER-68): `.knowledge/` is a directory per note and a concept per `##` section,
+  121 in all, each with a header (`type` from a closed list, `sources`, `generated`, `verified`), an
+  `index.md` per directory, a root `index.md` declaring `okf_version: "0.2"`, `log.md` and
+  `pending.yaml`. The old files `.knowledge/0N-*.md` are gone: **a citation of one is a break**, and
+  every address in the repository, the plans and this file's released sections names a bundle path.
+- **The check** (VER-68): `nanopnp.validation.okf` and `tests/tier1/test_okf_bundle.py` refuse a
+  concept without a typed header, an address that reaches no concept or heading, a legacy
+  `.knowledge/0N §x` form, a `[tested: …]` naming no test, a bare `[tested]`, a `verified` list that
+  differs from the claims, a footnote that is no source, an older `tested_with`, and a pending list
+  that differs from the files or exceeds 358.
+- **The ledger** (G3, G8): 72 claims name a test, 311 are `[tested: pending]` and 47 `[verified]`
+  claims name no source; WP48 empties the list.
+- **The gate** (VER-45): `prose-only.sh` reads `.knowledge/` and any Markdown that cites it as
+  not prose; the documentation site renders the bundle through its index pages, with the
+  `footnotes` extension.
+
 ## [0.5.0-alpha.12] - 2026-10-14
 
 WP46: the small fixes (`SPECIFICATION.md` §8.2.9 I2). Fifteen register rows are fixed, each with
