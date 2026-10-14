@@ -30,57 +30,58 @@ keep that reading; a copy of the whole git history would only duplicate it.
 
 ## Execution brief
 
-Scope: the bundle, the citation rewrite, the F6 check as VER-68 with G3's ratchet, the documentation
-build. Depends on WP46 as delivered. Clauses amended here: §8.2.7 G12,
-Appendix A VER-68, and at item 9 the §11 NOTE. Models (`CLAUDE.md`): Sonnet by default; scripts, not models, move
-text in items 2 to 5, a Haiku worker only running them; Haiku, one worker per file, for item 6's headers;
-the parent commits; Opus only after Sonnet fails.
+Scope: the bundle, the citation rewrite, VER-68 with G3's ratchet, the documentation build. Depends on
+WP46 as delivered. Amended here: §8.2.6 F6 ("collected"), §8.2.7 G12, Appendix A VER-68, and at item 9
+the §11 NOTE. The detail behind D1 to D6 is in [the converter rules](okf-converter-rules.md), a
+companion the plan's length cap keeps outside it. Models (`CLAUDE.md`): Sonnet by default; scripts, not
+models, move text in items 2 to 5; one Haiku worker per file for item 6's headers; the parent commits;
+Opus only after Sonnet fails.
 
 ### Decisions
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| D1 Layout | `.knowledge/index.md` (root; `okf_version: "0.2"`, lists every directory) and a directory per file, `NN-slug/`, with its own `index.md` listing its concepts. One concept file per `##`, named `NN-heading-slug.md` by the section number, unnumbered sections taking the next numbers; `###` and deeper stay headings inside it. The text before a file's first `##` is `00-overview.md`, type Overview. `00-index.md` goes: its table is the listing, and its traps, conventions, provenance, author rulings and still-open items become concepts under `00-orientation/` | K1, K2; G12. A sentence outside a concept escapes every check, so one rule holds: all prose is in a concept with a header |
-| D2 Header | `type` (a closed list committed in the check: Overview, Orientation, Physics, Erratum, Author Ruling, Numerics, Library Behaviour, Benchmark, Reference Settings, Background, Biology, Geometry and Charge, Test Evidence), `title`, `description`, `tags`, `sources`, `generated` (`by: claude-code/<version read from the installed distribution>`, never a model identifier), `verified`. `sources` carry stable ids `thesis`, `paper`, `esi`, `comsol-report`, cited by footnote only where the sentence already names the source; no attribution is invented | K9, K10; G12. Rule 6 refuses a footnote that is no `sources[].id` |
-| D3 Ledger | A bare `[tested]` becomes `[tested: pending]`, a bare `[verified]` stays with its footnote under `process:arithmetic`; the four claims that name a test become `[tested: tests/…::test_…]`. `.knowledge/pending.yaml` counts pending claims per concept; the check demands equality with the files and a total no larger than the figure recorded at this package's close. `tested_with` is checked against `uv.lock` but no concept carries it yet: it is WP48's, set when its test passes | K5 to K8; G3, G8. A count per concept survives edits that move a sentence |
-| D4 Citations | A one-off converter, not committed, rewrites each `.knowledge/0N §x` form (also `section x`, and the `§x` between notes) to a bundle path, and a `###` or deeper address to the concept plus that heading's slug. Citations in released `CHANGELOG.md` sections, delivered plans and code reviews are rewritten too. The converter lists each address it cannot place; Sonnet or the author rules on each, none is guessed; the check then proves every path and heading exists | K3, K4. A wrong target is worse than a failing check |
-| D5 Check | `nanopnp.validation.okf` reads the bundle from the files, imports no checked module, and `tests/tier1/test_okf_bundle.py` is VER-68. A test named in a claim is found by reading `test_*.py` under `tests/` as syntax trees, as VER-72 reads the source; the F6 wording "collected" is amended to that. A word-for-word comparison of the joined concept bodies against the ten old files runs once at item 2, its result in the commit message | F6; VER-68. Reading trees avoids importing the stack on every commit |
-| D6 Site and gate | `docs/scripts/generate.py` recurses over the bundle; `mkdocs.yml` carries one Knowledge entry and the generated `index.md` lists every page from the bundle's indexes; headers are page metadata. `prose-only.sh` stops treating `.knowledge/` as prose, so an edit there runs the check. `log.md` follows OKF's form, one dated entry per event the notes already record (the August 2026 verification, the author's rulings, the errata), the rest in git | K1; G12 for `log.md`. The change to `prose-only.sh` stops a knowledge-only edit skipping VER-68 |
+| D1 Layout | `.knowledge/index.md` (root; `okf_version: "0.2"`) and a directory per file, `NN-slug/`, with its own `index.md`. One concept per `##`, named `NN-heading-slug.md`; `###` and deeper stay headings. The text before a file's first `##` is `00-overview.md`. `00-index.md` goes: its traps, conventions, provenance, rulings and open items become concepts under `00-orientation/`. A heading carrying a marker gets an explicit `{#id}` | K1, K2; G12. All prose is in a concept with a header. Markers in headings would change anchors at item 6 and again in WP48 |
+| D2 Header | `type` from a closed list committed in the check, `title`, `description`, `tags`, `sources` (ids `thesis`, `paper`, `esi`, `comsol-report`, footnoted where a sentence already names one), `generated.by: claude-code/<installed nanopnp version>`, never a model identifier, and `verified` | K9, K10; G12. Rule 6 refuses a footnote that is no source id |
+| D3 Ledger | A bare `[tested]` becomes `[tested: pending]` or, where the named test exists, `[tested: tests/…]`; an executable `[verified]` becomes pending, a source reading stays `[verified]` with a footnote. `.knowledge/pending.yaml` counts both kinds per concept and must equal the files; the ceiling is a constant in the test, set at item 6. A concept's `verified` set is defined in the rules. `tested_with` is checked, carried by no concept until WP48 | K5 to K8; G3, G8 |
+| D4 Citations | A one-off converter, not committed, rewrites every form in the rules (section, line, label, named section, whole file, link, URL) to a bundle path, and lists what it cannot place for Sonnet or the author; none is guessed. History is rewritten too | K3, K4. A wrong target passes the check |
+| D5 Check | `nanopnp.validation.okf` reads files and syntax trees and imports no checked module; its slug function is tested against the docs build's. `tests/tier1/test_okf_bundle.py` is VER-68. A word-for-word comparison of the joined bodies against the ten old files runs once at item 2, its result in the commit message | F6; VER-68 |
+| D6 Site and gate | `generate.py` recurses; `mkdocs.yml` gets `not_in_nav` and one entry; `prose-only.sh` treats `.knowledge/` and any Markdown containing `.knowledge/` as not prose; `log.md` holds one dated entry per event the notes already record | G12; the review of this plan |
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py` (D5): the check, each refusal shown on a constructed bundle (D2, D3); done when the constructed-bundle rows pass.
-- [ ] 2. `.knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header on each concept; done when the word-for-word comparison is clean and the layout test passes.
-- [ ] 3. `.knowledge/` (D4): rewrite the citations between concepts; done when each resolves and the converter's unplaced list is empty by ruling.
-- [ ] 4. `src/`, `tests/`, `.claude/`, `.github/`, `docs/` outside `plans/`, `examples/`, `data/`, `CLAUDE.md`, `SPECIFICATION.md` (D4): rewrite those citations; done when the repository-wide resolution test passes.
-- [ ] 5. `docs/plans/`, `docs/code_reviews/`, `CHANGELOG.md` released sections (D4, K4): rewrite the history; done when the same test passes and `test_plan_shape.py` still passes.
+- [ ] 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workflow_hooks.py` (D5, D6): the check on constructed bundles, and the prose rule with a case each; done when those rows pass.
+- [ ] 2. `.knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header and explicit ids; done when the word-for-word comparison is clean.
+- [ ] 3. `.knowledge/` (D4): rewrite the citations between concepts; done when the checker, run by hand through `uv run`, resolves each and the unplaced list is empty by ruling.
+- [ ] 4. every tracked file outside `.knowledge/`, `docs/plans/`, `docs/code_reviews/` and `CHANGELOG.md` (D4): the same; done by the same hand run.
+- [ ] 5. `docs/plans/`, `docs/code_reviews/`, released `CHANGELOG.md` sections (D4, K4); adds `test_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.
 
 *Compaction checkpoint: after item 5; resume from this plan and `git log`.*
 
-- [ ] 6. `.knowledge/` (D2, D3): real headers, `[tested: pending]` and `[verified]` markers, footnotes where a source is named, each concept's `verified` list, `.knowledge/pending.yaml`; done when the real-bundle test passes.
-- [ ] 7. `.knowledge/index.md`, `.knowledge/00-orientation/`, `.knowledge/log.md` (D1, D6); done when every directory index lists its concepts and the check passes.
-- [ ] 8. `docs/scripts/generate.py`, `mkdocs.yml`, `.github/scripts/prose-only.sh` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes and a knowledge-only path is not prose.
-- [ ] 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `SPECIFICATION.md` §11 NOTE and the §11 table: the new first read, the maintenance rule (a durable fact is a concept, with a log line), the pending figure; done when VER-68 and the docs build pass.
+- [ ] 6. `.knowledge/` (D2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows pass.
+- [ ] 7. `.knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
+- [ ] 8. `docs/scripts/generate.py`, `mkdocs.yml` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes.
+- [ ] 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `README.md`, `SPECIFICATION.md` §11: the new first read, the maintenance rule (a durable fact is a concept with a log line), the pending figure; done when VER-68 and the build pass.
 
 *Compaction checkpoint: after item 9; then the push gate and `/wp-implement`'s PR.*
 
 ### Verification
 
-Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py`, then `.claude/hooks/gate.sh run`. Each
-refusal has its own otherwise valid constructed bundle.
+Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py tests/tier1/test_workflow_hooks.py`, then
+`.claude/hooks/gate.sh run`. Each refusal has its own otherwise valid constructed bundle.
 
-| Test | Identifiers | Oracle and tolerance |
+| Test | Identifiers | Oracle |
 |---|---|---|
-| `test_ver68_concept_without_type_or_frontmatter_is_refused`, `…_type_outside_the_list_is_refused`, `…_reserved_files_out_of_form_are_refused`, `…_undeclared_okf_version_is_refused` | VER-68 (1) | Each names its file; a valid bundle gives no finding |
-| `test_ver68_citation_to_missing_concept_or_heading_is_refused` | VER-68 (2) | Both failures named; the slug rule equals the one the docs build uses, on a heading with punctuation |
-| `test_ver68_tested_marker_naming_no_test_is_refused`, `…_bare_tested_marker_is_refused` | VER-68 (3) | A name absent from the trees, and a bare marker, each at its line; `pending` is accepted |
-| `test_ver68_verified_list_must_equal_inline_tests` | VER-68 (4) | An extra and a missing entry each fail |
-| `test_ver68_tested_with_older_than_lock_is_refused` | VER-68 (5) | Older fails, equal passes, an absent package is named |
-| `test_ver68_footnote_without_source_is_refused` | VER-68 (6) | Unknown label fails, known passes |
-| `test_ver68_pending_count_must_equal_the_committed_list` and `…_ceiling` | VER-68, G3 | One more or one fewer fails; a total above the ceiling fails |
-| `test_ver68_repository_citations_all_resolve` | VER-68 (2) | Every `.knowledge/` address in the tracked files resolves; zero legacy `§` forms remain |
-| `test_ver68_the_bundle_conforms` | VER-68 | The real bundle: no finding |
-| VER-45 | docs | The documentation build passes `--strict`; VER-62 is not touched, no code path changes |
+| `test_ver68_` `concept_without_type_or_frontmatter`, `type_outside_the_list`, `undeclared_okf_version`, `root_index_missing_a_directory`, `directory_index_missing_a_concept`, `log_out_of_form` `_is_refused` | VER-68 (1) | Each names its file; a valid bundle gives no finding |
+| `…citation_to_missing_concept_or_heading_is_refused`, `…legacy_section_form_is_refused`, `…slug_matches_the_docs_build` | VER-68 (2) | Each failure named; the slug on punctuation, accents and a repeat equals `markdown`'s when importable; a placeholder in a code span passes |
+| `…tested_marker_naming_no_test_is_refused`, `…bare_tested_marker_is_refused`, `…class_test_name_resolves` | VER-68 (3) | Absent name and bare marker at their lines; `pending` and `Class::test` accepted |
+| `…verified_set_must_equal_inline_tests_arithmetic_and_ruling` | VER-68 (4) | An extra and a missing entry each fail |
+| `…tested_with_older_than_lock_is_refused` | VER-68 (5) | Older fails, equal passes, an absent package is named |
+| `…footnote_without_source_is_refused` | VER-68 (6) | Unknown label fails |
+| `…pending_count_must_equal_the_committed_list`, `…ceiling` | VER-68, G3 | One more or fewer fails; above the ceiling fails |
+| `…repository_citations_all_resolve`, `…the_bundle_conforms` | VER-68 | The real tree: no finding |
+| `test_prose_only_` cases for `.knowledge/x.md`, a `CHANGELOG.md` and `README.md` containing a citation, one without | — | Not prose, not prose, prose |
+| VER-45 | docs | `--strict` passes; no code path changes, VER-62 untouched |
 
 ### Out of scope
 
