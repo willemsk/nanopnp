@@ -1,9 +1,16 @@
 ---
 type: Library Behaviour
 title: 12. The suite's BLAS threads buy nothing; parallelism has to come from workers
+description: The suite's BLAS threads buy nothing; parallelism has to come from workers.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
-## 12. The suite's BLAS threads buy nothing; parallelism has to come from workers **[tested]** {#12-the-suites-blas-threads-buy-nothing-parallelism-has-to-come-from-workers}
+## 12. The suite's BLAS threads buy nothing; parallelism has to come from workers **[tested: pending]** {#12-the-suites-blas-threads-buy-nothing-parallelism-has-to-come-from-workers}
 
 Tiers 1 and 2 were measured on four cores, 923 tests, after the VER-36 fix. Serially the suite takes
 6m10s whether or not the BLAS threads are pinned to one. Pinned, it uses half the CPU time
@@ -66,8 +73,8 @@ What was learnt on the way, each measured:
 - **Parsing the correction YAML dominated planning until it was cached by text.** PyYAML's pure-Python
   parser was 92 % of planning the 3,675-point reference sweep (29.4 s against 4.3 s cached); the cache
   is keyed on the file text, not on path and mtime, so an edit is re-parsed however quickly it was
-  written (source: `materials/corrections.py`, `_parse`). **[tested]**
-- **Where the suite's time goes** **[tested]**, after WP33. The 54 `extended` tests are the
+  written (source: `materials/corrections.py`, `_parse`). **[tested: pending]**
+- **Where the suite's time goes** **[tested: pending]**, after WP33. The 54 `extended` tests are the
   executed examples and the 2WCD walks. They are 3 % of the tests and 59 % of the test time: the
   development selection without them is 542.9 s of test time and 168 s of four-worker wall, against
   1,334.5 s and 394 s with them. Deleting duplicated or history-pinning tests recovered about 1 s.
@@ -77,7 +84,7 @@ What was learnt on the way, each measured:
   `extended` item whose file is named on the command line. A `-m` in `addopts` would deselect it
   even then, and the user would have to restate the whole marker expression.
 
-### 12.1 Test-impact selection was built, measured and removed **[tested]** {#121-test-impact-selection-was-built-measured-and-removed}
+### 12.1 Test-impact selection was built, measured and removed **[tested: pending]** {#121-test-impact-selection-was-built-measured-and-removed}
 
 WP43 built a recorder (`sys.monitoring` `PY_START`, `DISABLE` after the first hit, re-armed per
 test) and a selector for the commit hook; WP44 deleted both (§8.2.11 L2). Recording cost about 1 %
@@ -96,7 +103,7 @@ lines of code and test. What stays true:
 - **`sys._getframe` raises an audit event of its own**, and a `co_filename` can be `<frozen runpy>`
   or `<string>`, which `realpath` resolves against the working directory.
 
-### 12.2 Where the time goes on 3.14, and coverage's `sysmon` core **[tested]** {#122-where-the-time-goes-on-314-and-coverages-sysmon-core}
+### 12.2 Where the time goes on 3.14, and coverage's `sysmon` core **[tested: pending]** {#122-where-the-time-goes-on-314-and-coverages-sysmon-core}
 
 Measured for WP43 D8 on 12 October 2026: CPython 3.14.6, coverage 7.15.4, pytest-cov 7.1.0, four
 cores shared with another agent's runs, `-n 4 --dist loadfile`, BLAS threads 1,

@@ -1,6 +1,21 @@
 ---
 type: Pipeline
 title: 2. Model geometry and conventions
+description: The model geometry and its conventions, with the bilayer profile and the ion-exclusion shell
+  measured.
+tags:
+- clya
+- pipeline
+sources:
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 2. Model geometry and conventions
@@ -23,7 +38,7 @@ Consequences that must be reproduced: at **V_bias > 0** cations move **trans -> 
 pore is added to the grounded cis reservoir (T `sec:transport:methods` L1631-1633). Current is
 integrated over the **cis** boundary (eq. `eq:currentsim`).
 
-### 2.1 The bilayer on a structure-derived profile, measured [tested] {#21-the-bilayer-on-a-structure-derived-profile-measured}
+### 2.1 The bilayer on a structure-derived profile, measured [tested: pending] {#21-the-bilayer-on-a-structure-derived-profile-measured}
 
 Stage 5 (WP21) derives the membrane's inner edge from the profile rather than drawing it. On each
 plane `z = ±1.4` nm (model frame) the lumen-adjacent body interval is the profile's two smallest
@@ -42,7 +57,7 @@ profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
 
 - **The chord between the intervals' mid-points is wrong on both profiles.** On the fixture it
   runs (2.2387, −1.4) to (3.92, +1.4) and crosses the fluid cleft under the cap between
-  (3.070, −0.016) and (3.235, 0.260), splitting the electrolyte in two. **[tested]**
+  (3.070, −0.016) and (3.235, 0.260), splitting the electrolyte in two. **[tested: pending]**
 - **Any admissible chord gives the same region**: a pocket between two chords would be enclosed by
   them, the body and the plane stretches between their ends, which are body too, yet the
   complement of a simple polygon is connected. **[verified]**
@@ -52,11 +67,11 @@ profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
   second electrolyte face; joined below, the pocket under it is a second membrane face (and
   electrolyte where it passes the other plane). So "the membrane meets the body at `r₂`, not
   `r₄`" cannot be tested on a four-crossing body: no such body assembles. **[verified]** by the
-  argument, **[tested]** on a hook and a bridge profile, refused naming each face's centroid.
+  argument, **[tested: pending]** on a hook and a bridge profile, refused naming each face's centroid.
 - **The 1.85 nm trans-tip offset is the fixture's own** (pore axial extent −1.85 ≤ z, bilayer
   centre 0). Applying it to 2WCD is a test-time registration, not a VAL-05 claim.
 
-### 2.2 The ion-exclusion shell and the derived `χ` on 2WCD, measured [tested] {#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured}
+### 2.2 The ion-exclusion shell and the derived `χ` on 2WCD, measured [tested: pending] {#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured}
 
 WP30 (FR-15, VER-59), on the prepared 2WCD registered by its C-alpha centroid (VAL-05's frame),
 `h_c` = 0.05 nm, with the shell at `a` = 0.25 nm (`a_Na/2`) and `δ` = 0.15 nm
@@ -80,7 +95,7 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 - **The shell's mean `χ` is the planar estimate.** `3δ/(32a)` = 0.0563 at these values, measured
   0.056 on 2WCD and 0.0539 on the convex VER-59 parallelogram, where the corners spread the step.
   A remap of the stage-3 mean would not have given a width independent of `|∇ρ|` (WP30 plan,
-  *Design* §1). **[verified]** by the arithmetic, **[tested]** by the means.
+  *Design* §1). **[verified]** by the arithmetic, **[tested: pending]** by the means.
 - **The worst `χ` error sits at the profile's concave vertices**, where the medial axis crosses the
   band and `χ` has a kink. Measured, it is 1.1e-2 against *Design* §1's estimate of `0.75 h · 3/δ`
   ≈ 0.04 there. Off the vertices the bilinear bound `0.75 (h/δ)²` = 1.9e-3 holds: the 95th

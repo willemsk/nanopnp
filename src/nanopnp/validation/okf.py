@@ -486,7 +486,9 @@ def _version(text: str) -> tuple[int, ...]:
 def _locked(lock: Path) -> dict[str, str]:
     data = tomllib.loads(lock.read_text(encoding="utf-8"))
     return {
-        str(p["name"]).lower().replace("_", "-"): str(p["version"]) for p in data.get("package", [])
+        str(p["name"]).lower().replace("_", "-"): str(p["version"])
+        for p in data.get("package", [])
+        if "version" in p
     }
 
 

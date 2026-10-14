@@ -1,6 +1,13 @@
 ---
 type: Library Behaviour
 title: 1. FEM backend — NGSolve/Netgen
+description: 'The FEM backend NGSolve and Netgen: why not the alternatives, and prior art.'
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 1. FEM backend — NGSolve/Netgen
@@ -9,22 +16,22 @@ title: 1. FEM backend — NGSolve/Netgen
 
 | Fact | Value |
 |---|---|
-| Wheels | cp310–cp314, all three OSes. win_amd64 14.6 MB, macOS universal2 44.0 MB **[tested]** |
+| Wheels | cp310–cp314, all three OSes. win_amd64 14.6 MB, macOS universal2 44.0 MB **[tested: pending]** |
 | Compiler at runtime | **not needed** — forms are evaluated by the compiled C++ core. `Compile(realcompile=True)` is opt-in and *does* need one |
 | Mixed spaces | `X = V*Q` product spaces; Taylor–Hood directly |
-| Newton | `ngsolve.solvers.Newton(a, gfu, dampfactor=...)`, symbolic differentiation for the Jacobian **[tested]** |
+| Newton | `ngsolve.solvers.Newton(a, gfu, dampfactor=...)`, symbolic differentiation for the Jacobian **[tested: pending]** |
 | Axisymmetric | one-liner: `... * x * dx` where `x` is the radial coordinate. Natural but **undocumented** |
-| Rendering | `ngsolve.webgui` / `netgen.webgui`; `WebGLScene.GenerateHTML()` makes it embeddable **[tested]** |
+| Rendering | `ngsolve.webgui` / `netgen.webgui`; `WebGLScene.GenerateHTML()` makes it embeddable **[tested: pending]** |
 | Meshing | Netgen built in, with OpenCASCADE geometry — no external mesher needed |
 | API stability | remarkably stable for a decade |
 
 **Known limitations, both verified:**
 
-1. **No MPI in the wheels** — no MPI symbols in any shipped `.so`, no mpi4py **[tested]**. Parallel
+1. **No MPI in the wheels** — no MPI symbols in any shipped `.so`, no mpi4py **[tested: pending]**. Parallel
    mesh generation, parallel adaptive refinement and parallel multigrid are documented as
    unsupported. Irrelevant for 2D axisymmetric v1 (direct solves; sweeps parallelise at job level);
    becomes real in 3D. Mitigations: ngsPETSc, or a DOLFINx backend for HPC only.
-2. **No MUMPS/PARDISO/HYPRE/MKL in the wheels** — `ngsolve.config` reports all False **[tested]**.
+2. **No MUMPS/PARDISO/HYPRE/MKL in the wheels** — `ngsolve.config` reports all False **[tested: pending]**.
    See `.knowledge/06-numerics-fem/06-linear-solvers.md`.
 3. **2D boundary layers are immature.** Python API is
    `netgen.meshing.Mesh.BoundaryLayer2(domain, thicknesses, make_new_domain=True, boundaries=[])`

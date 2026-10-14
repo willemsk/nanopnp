@@ -1,6 +1,17 @@
 ---
 type: Physics
 title: 1. Symbols
+description: The symbols, units and notation of the model.
+tags:
+- physics
+- physics
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 1. Symbols

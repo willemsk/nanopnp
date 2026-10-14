@@ -1,7 +1,20 @@
 ---
 type: Domain
-title: '10. CORRECTION — continuum force computation DOES exist: PlyAB (Angew. Chem.
-  2022)'
+title: '10. CORRECTION — continuum force computation DOES exist: PlyAB (Angew. Chem. 2022)'
+description: 'The correction: a continuum force computation does exist, in the PlyAB work of 2022.'
+tags:
+- analyte
+- domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 10. CORRECTION — continuum force computation DOES exist: PlyAB (Angew. Chem. 2022)

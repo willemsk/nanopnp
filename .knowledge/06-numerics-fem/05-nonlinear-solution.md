@@ -1,6 +1,20 @@
 ---
 type: Numerics
 title: 5. Nonlinear solution
+description: 'The nonlinear solution: damped Newton, convergence tests and the continuation ladder.'
+tags:
+- numerics
+- numerics
+sources:
+- id: comsol-report
+  resource: COMSOL Multiphysics 5.4 model report of 22 May 2020
+  title: COMSOL model report (5.4)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 5. Nonlinear solution
@@ -38,7 +52,7 @@ residual on *entry* — `‖r‖ ≤ 1e-6 ‖r₀‖` — has a pathology that o
 wired in: re-solving an already-converged state demands another six orders of magnitude from a
 residual that is already at its floor, so a warm start onto its own solution either burns the
 iteration cap or fails outright. That is precisely the operation every rung of the ladder performs.
-**[tested]**
+**[tested: pending]**
 
 COMSOL's own "relative tolerance" is on the **solution update**, not on the residual. A relative
 residual test `‖r‖ ≤ 1e-6 ‖r₀‖` hides under-converged fields: one norm over all fields is dominated
@@ -47,7 +61,7 @@ by the largest, and on the seven gated walks it closed every rung but one, leavi
 relative update at 9 × 10⁻⁹ (WP41 D4, REV-08). The relative residual test closes nothing. Testing the
 absolute residual floor `‖r‖ ≤ 1e-12`, or the **per-field** relative Newton update
 `max_f ‖δu_f‖ / max(‖u_f‖, 10⁻⁶ · max(‖u‖, 1)) ≤ rtol`, restores idempotence and tests every field
-to the tolerance **[tested]**. Use the **undamped** Newton direction in that test, not the damped step:
+to the tolerance **[tested: pending]**. Use the **undamped** Newton direction in that test, not the damped step:
 a heavily damped step is small for reasons that have nothing to do with convergence, and testing it
 would report success in the middle of a difficult ramp. Guard it further by never accepting convergence
 on a step that failed to reduce the residual.
@@ -79,7 +93,7 @@ and the shared fields interpolated by name. Where the field sets match, copy the
 interpolating: interpolation of a function already in the space is the identity only to round-off,
 and most rungs of the ladder are same-space.
 
-**Re-solving a converged rung costs one Newton iteration, not zero. [tested]** The update-based
+**Re-solving a converged rung costs one Newton iteration, not zero. [tested: pending]** The update-based
 criterion cannot be evaluated without assembling the Jacobian and solving once; the entry-side
 residual test is measured relative to the entry residual, so a converged warm start never passes it.
 The state then moves by ~5 × 10⁻⁹ relative. This is the property to test a cross-space transfer with:
@@ -93,7 +107,7 @@ move with the salt. Note also that the charge scales `ε V_T/a²` and `ε V_T/a`
 so a fixed or surface charge ramped at one concentration keeps its dimensionless value at another.
 
 **The wall grading decides whether the charge ramp converges, not only how accurate it is.
-[tested]** The ladder raises `σ_s` while the model is still classical, and the field that fails
+[tested: pending]** The ladder raises `σ_s` while the model is still classical, and the field that fails
 first is the **co-ion**, not the counter-ion: against a negative wall the anion is depleted as
 `exp(−|φ̃|)`, so a Newton step in the primitive variable of the concentration overshoots a small
 positive number straight through zero. At `λ_D(3 M)/5` = 0.035 nm the ramp climbs −0.05 C/m²; at
@@ -103,7 +117,7 @@ gate stops a negative concentration becoming a plausible wrong current. So a red
 robustness at the charged end and not only accuracy; the log branch is the structural cure, and a
 strongly charged pore also wants the Poisson–Boltzmann initial guess the fallback list names.
 
-**The whole 0.05-3 M x +/-200 mV envelope, measured. [tested]** Thirty operating points on a
+**The whole 0.05-3 M x +/-200 mV envelope, measured. [tested: pending]** Thirty operating points on a
 2 nm x 13 nm pore at -0.02 C/m^2, every correction active against a real distance field, reached by
 climbing the ladder once to the easiest corner and warm-starting every other point from a converged
 neighbour: 13 rungs and 51 iterations for the climb, then 205 iterations over 621 s for the grid, no
@@ -124,14 +138,14 @@ or the wall gets credit for what the electrolyte did. And NaCl is **anion**-sele
 (`D_Cl` exceeds `D_Na` by 52 %), so "a negatively charged pore has `t+ > 1/2`" is false for any wall
 charge weak enough not to overturn that -- at -0.02 C/m^2 it holds only below about 0.3 M.
 
-**The correction set is worth a factor of two in conductance at 3 M. [tested]** ePNP-NS against
+**The correction set is worth a factor of two in conductance at 3 M. [tested: pending]** ePNP-NS against
 classical PNP-NS at 3 M, +200 mV, `-0.02 C/m^2`, same mesh and same code path: `G` falls by a factor
 0.452, which is the mobility correction (`mu/mu0` = 0.465 for Na+, 0.552 for Cl-) showing through
 almost undiluted, and `t+` moves 0.433 -> 0.384. The classical arm doubles as a Maxwell-Hall check at
 the top of the salt range: with the double layer a tenth of the pore radius it gives 2.9495e-8 S
 against the closed form's 2.95e-8 S.
 
-**A rung reports no Newton step for two unrelated reasons, and the silence is identical. [tested]**
+**A rung reports no Newton step for two unrelated reasons, and the silence is identical. [tested: pending]**
 Measured 21 September 2026 on the default ladder of an `epnp-ns` case at 0.1 M and 20 mV, twelve
 rungs on a cheap cylindrical pore. Two rungs (`1-pb-linear`, `2-pb`) are not coupled models, so
 `SolveStage._instrumented` injects no damped-Newton callback into them at all — a callback is a
@@ -145,7 +159,7 @@ which kind of rung it is looking at. Anything reporting the ladder has to carry 
 explicitly — it is knowable only where the callback is injected — or it will describe a warm-started
 rung that converged on entry as one that is not a Newton solve.
 
-**Measured, on a charged 2 nm × 13 nm pore. [tested]** The only rungs needing damping below the
+**Measured, on a charged 2 nm × 13 nm pore. [tested: pending]** The only rungs needing damping below the
 0.2 initial value were the surface-charge ramp, at 0.08; every other rung of every ladder tried held
 at 0.2. A full climb to the hard corner — 3 M, ±200 mV, every correction active, wall graded to
 `λ_D(3 M)/5`, 66 000 DOF — is 22 rungs, 106 Newton iterations and 500 s. At `λ_D(3 M)/2` (25 000 DOF)

@@ -1,6 +1,17 @@
 ---
 type: Domain
 title: 3. ClyA in depth — the reference system
+description: ClyA, the reference system, and the ClyA-AS variant series.
+tags:
+- biology
+- domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 3. ClyA in depth — the reference system

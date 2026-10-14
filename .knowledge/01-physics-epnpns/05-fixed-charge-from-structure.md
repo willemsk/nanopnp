@@ -1,6 +1,20 @@
 ---
 type: Physics
 title: 5. Fixed charge from structure
+description: How the fixed charge is obtained from the structure.
+tags:
+- physics
+- physics
+sources:
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+- id: esi
+  resource: https://www.rsc.org/suppdata/d0/nr/d0nr03114c/d0nr03114c1.pdf
+  title: Electronic supplementary information of the paper
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 5. Fixed charge from structure

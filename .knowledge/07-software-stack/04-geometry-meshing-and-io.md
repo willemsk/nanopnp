@@ -1,6 +1,16 @@
 ---
 type: Library Behaviour
 title: 4. Geometry, meshing and I/O
+description: The geometry, meshing and I/O libraries.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 4. Geometry, meshing and I/O
@@ -21,10 +31,10 @@ AUTHOR"*, and **TetGen 1.5** (AGPLv3). Also avoid **pygmsh** (last release 2022-
 **pygalmesh** (2022-09), both stale — call the `gmsh` API directly instead.
 
 **Shapely offsetting:** `parallel_offset` is *not* removed and emits *no* DeprecationWarning in
-2.1.2 **[tested]**, but its docstring marks it legacy in favour of `offset_curve` (different
+2.1.2 **[tested: pending]**, but its docstring marks it legacy in favour of `offset_curve` (different
 sign/`quad_segs` convention). For a closed contour, `buffer(-d)` is more robust than either.
 
-**`find_contours` orientation in (r, z) [tested].** On a `[z, r]` array with
+**`find_contours` orientation in (r, z) [tested: pending].** On a `[z, r]` array with
 `positive_orientation="high"`, a point `(row, col)` maps to `(r, z) = (col·Δr, row·Δz)`, which
 swaps the axes, so the winding flips from the one the docstring describes. A loop around values
 above the level has a **negative** shoelace area in (r, z), clockwise, and a loop around a void
@@ -33,7 +43,7 @@ WP20 D4). A contour that reaches the array's edge comes back open, with its firs
 distinct, and `fully_connected="high"` joins diagonal neighbours above the level. Measured with
 scikit-image 0.26.0 on 26 September 2026.
 
-**Shapely closing and opening [tested].** `region.buffer(δ, quad_segs=8, join_style="round")
+**Shapely closing and opening [tested: pending].** `region.buffer(δ, quad_segs=8, join_style="round")
 .buffer(−δ, …)` is a closing and the reverse order an opening; both keep a straight wall straight,
 fill a slot narrower than 2δ completely, and remove a fin thinner than 2δ with no bump at its root.
 A 90° corner moves by `δ²(1 − π/4)` in area, concave corners gaining and convex ones losing. The
@@ -43,7 +53,7 @@ resamples before it measures a feature size. Measured with Shapely 2.1.2 (VER-51
 **Keep MSH 4.1 as the archival interchange format** — physical groups survive round-trips there
 and get mangled in some VTU paths.
 
-**Netgen's own `.vol` round-trips boundary and material names [tested].** `mesh.ngmesh.Save(path)`
+**Netgen's own `.vol` round-trips boundary and material names [tested: pending].** `mesh.ngmesh.Save(path)`
 followed by `ngsolve.Mesh(path)` returns `GetMaterials()` and `GetBoundaries()` unchanged, so a
 mesh written by one process and solved by another keeps the vocabulary the essential conditions and
 the `definedon` restrictions are written against. Measured on a `CylindricalPoreGeometry` at
@@ -53,13 +63,13 @@ is what makes an externally supplied mesh usable at all — a format that droppe
 apply every essential condition to nothing and converge to the wrong problem in silence, so a
 release that reads a mesh from a case file must restrict itself to formats that carry them.
 
-**Netgen's own reader is an MSH 2.2 parser and cannot read the archival format [tested].**
+**Netgen's own reader is an MSH 2.2 parser and cannot read the archival format [tested: pending].**
 `netgen.read_gmsh.ReadGmsh` handed a 4.1 file dies inside `int()` on the entity-block header, so the
 reader for the format IF-06 mandates cannot be the one netgen ships. `meshio` is therefore not
 optional bookkeeping — it is the only route in. CON-10 keeps `gmsh` itself off the default path for
 an unrelated reason (GPLv2+), and the two constraints agree.
 
-**meshio 5.3.5's MSH 4.1 writer gets entity bookkeeping wrong in two ways, both silent [tested].**
+**meshio 5.3.5's MSH 4.1 writer gets entity bookkeeping wrong in two ways, both silent [tested: pending].**
 
 - *One cell block is one entity.* `_write_elements` takes the **first** `gmsh:geometrical` tag of a
   block and writes the whole block under it. Four boundary groups packed into a single `line` block
@@ -70,7 +80,7 @@ an unrelated reason (GPLv2+), and the two constraints agree.
   claims is omitted, and reading the file back raises `KeyError` — after the write reported success.
   Cure: assign each node its lowest-dimensional entity, then repair any group left with none.
 
-**Netgen's mesh tables mix 1-based and 0-based indices [tested].** Through `ngsolve.Mesh.ngmesh`,
+**Netgen's mesh tables mix 1-based and 0-based indices [tested: pending].** Through `ngsolve.Mesh.ngmesh`,
 `el.vertices[i].nr`, `Element2D.index` (into `GetMaterial`) and `Element1D.index` (into
 `GetBCName(index - 1)`) are 1-based, and `FaceDescriptor.SetBCName` is 0-based. Mixing the two shifts every
 boundary name by one (`wall` becomes the axis) and nothing raises. Names survive an OCC boolean and a
@@ -81,24 +91,24 @@ give each leftover node its lowest-dimensional entity, as gmsh does. Source: `me
 (`from_ngsolve`, `to_ngsolve`, `_node_entities`), `mesh/primitives.py` (`name_edges`).
 
 **`meshio.Mesh.field_data` is keyed by name, so it cannot carry the same name in two dimensions
-[tested].** The §5.3.1 vocabulary uses `cis`, `trans`, `membrane` and `analyte` as both a domain name
+[tested: pending].** The §5.3.1 vocabulary uses `cis`, `trans`, `membrane` and `analyte` as both a domain name
 and a boundary name, which is exactly the collision. Read `$PhysicalNames` off the file and key it
 `(dimension, tag)` instead.
 
-**A round trip through MSH 4.1 permutes both nodes and cells [tested]**, because meshio's reader
+**A round trip through MSH 4.1 permutes both nodes and cells [tested: pending]**, because meshio's reader
 returns nodes grouped by entity and cell blocks in entity order. A content hash taken over the arrays
 in file order would therefore make a mesh differ from itself. Hash a canonical form: vertices sorted
 by `(r, z)`, connectivity renumbered into that order, elements sorted by group name — invariant under
 everything the round trip does, and changing the moment an edge moves group.
 
 **`meshio.read` on a `.msh` file prints an empty line to standard output unless told the format
-[tested].** meshio 5.3.5 maps the `.msh` suffix to both `ansys` and `gmsh`, tries `ansys` first, and
+[tested: pending].** meshio 5.3.5 maps the `.msh` suffix to both `ansys` and `gmsh`, tries `ansys` first, and
 `print`s that reader's `ReadError` — whose text is empty — before falling through to `gmsh`. Found by
 WP16 (23 September 2026) when a CLI test asserted that a refused `nanopnp mesh` wrote nothing to
 stdout; every `nanopnp run` on an MSH case had been writing the same stray line, which a caller
 parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
 
-**netgen.occ facts, all measured on 6.2.2606 [tested]:**
+**netgen.occ facts, all measured on 6.2.2606 [tested: pending]:**
 
 - **A clockwise wire gives OCC a face of negative area, and a negative face subtracts as an
   addition.** With the delivered ClyA table's own orientation (signed area −26.4939 nm²),
@@ -115,7 +125,7 @@ parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
   `edge.parameter_interval` with `edge.Value(t)` to get a point that is actually on the edge.
 - **`edge.faces` is empty.** Traversal is downward only, so an edge cannot be named by which faces
   adjoin it; classify by geometry instead.
-  **The other direction works** **[tested]** (WP21, netgen 6.2.2606): a shape hashes and compares
+  **The other direction works** **[tested: pending]** (WP21, netgen 6.2.2606): a shape hashes and compares
   equal to the same topological entity reached another way, so `set(face.edges)` per named face
   after a `Glue` gives each edge's adjacency by membership. A seam shared by two faces is in both
   sets, and `set(shape.edges)` removes the per-face duplicates (383 listed edges become 195 on the
@@ -137,7 +147,7 @@ parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
   phase-0 geometries (192, 811 and 124 elements) do agree exactly across all three platforms,
   which is what makes this easy to miss until a mesh is large enough to have a choice to make.
 
-**Gmsh facts, measured on 4.15.2 with netgen 6.2.2606, Linux (WSL2), 29 September 2026 [tested]**
+**Gmsh facts, measured on 4.15.2 with netgen 6.2.2606, Linux (WSL2), 29 September 2026 [tested: pending]**
 (WP23; the implementation is `mesh/gmsh_backend.py`, the evidence the WP23 plan's Design and
 Outcomes):
 
@@ -186,12 +196,12 @@ Outcomes):
 - **The wheel can install and still fail to import.** On a bare Linux container `import gmsh`
   raises `OSError: libGLU.so.1`, not `ImportError`. A dispatch that turns a missing extra into a
   refusal has to catch both, as `tests/conftest.py`'s `import_gmsh` does for the tests.
-- **On `ubuntu-latest`, four packages make it import [tested].** GitHub's image lacks
+- **On `ubuntu-latest`, four packages make it import [tested: pending].** GitHub's image lacks
   `libGLU.so.1`. After `apt-get install --no-install-recommends libglu1-mesa libxft2 libxinerama1
   libxcursor1`, Gmsh 4.15 imports and meshes on Python 3.11 to 3.14 (WP23 PR, run 36574260470,
   29 September 2026).
-- **Session cleanup and borrowed sessions [tested].** `gmsh_backend._session` records each undo step (`gmsh.model.remove()`, restoring options, `gmsh.finalize()`) only once the change it reverses has been made, and runs every recorded step in reverse order, so a session it opened is finalised even when an intermediate step or the setup itself fails, and a borrowed session's own model is never removed in place of one that was never added. When an exception is active during cleanup, secondary failures are logged at WARNING and attached to the exception via `add_note()`, preventing the original error from being masked (REV-38). A borrowed session (`gmsh.isInitialized()` true on entry) leaves the caller's logger untouched (no `start` or `stop`), preserving caller messages (REV-36). If `gmsh.initialize()` fails, a `GmshInitialisationError` is raised, translated to `MissingExtraError` naming `gmsh` (REV-37).
-- **The IF-07 export samples a fluid-restricted field through a whole-domain carrier [tested].**
+- **Session cleanup and borrowed sessions [tested: pending].** `gmsh_backend._session` records each undo step (`gmsh.model.remove()`, restoring options, `gmsh.finalize()`) only once the change it reverses has been made, and runs every recorded step in reverse order, so a session it opened is finalised even when an intermediate step or the setup itself fails, and a borrowed session's own model is never removed in place of one that was never added. When an exception is active during cleanup, secondary failures are logged at WARNING and attached to the exception via `add_note()`, preventing the original error from being masked (REV-38). A borrowed session (`gmsh.isInitialized()` true on entry) leaves the caller's logger untouched (no `start` or `stop`), preserving caller messages (REV-36). If `gmsh.initialize()` fails, a `GmshInitialisationError` is raised, translated to `MissingExtraError` naming `gmsh` (REV-37).
+- **The IF-07 export samples a fluid-restricted field through a whole-domain carrier [tested: pending].**
   Point evaluation of a space built with `definedon=fluid` returns zero at an interface node whose
   point search lands in a membrane element. On the coarse four-material pore that is 16 of the 208
   fluid nodes, with a maximum error of 13.0 against a linear test function. Interpolating into a
@@ -199,7 +209,7 @@ Outcomes):
   node's value depends only on the entities carrying it, each a fluid entity (`post/export.py`
   `sample_at`).
 - **meshio 5.3.5 reads an XDMF `Information` element only in its own `field_data` encoding
-  [tested].** Children carry `key` and `dim` attributes with integer text; anything else raises
+  [tested: pending].** Children carry `key` and `dim` attributes with integer text; anything else raises
   `ParseError`. The IF-07 scale set is therefore written as HDF5 root attributes (`post/export.py`).
 - **Discontinuous export fields are cell-centred [verified].** `material_id` and `eps_r` jump across
   a material interface, so a node value there is one side chosen arbitrarily and a viewer draws a

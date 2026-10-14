@@ -1,6 +1,20 @@
 ---
 type: Benchmark
 title: Tier 2 — Analytic benchmarks (minutes)
+description: Tier 2, analytic benchmarks, with their formulas.
+tags:
+- validation
+- benchmark
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## Tier 2 — Analytic benchmarks (minutes)
@@ -13,7 +27,7 @@ title: Tier 2 — Analytic benchmarks (minutes)
 Mutually consistent to 6 digits by numerical differentiation. **[verified]**
 Tests: Poisson + Boltzmann equilibrium.
 
-### 2.1.1 Gouy–Chapman–Stern through stage 5: Gauss's law across a cylindrical shell **[tested]** {#211-gouychapmanstern-through-stage-5-gausss-law-across-a-cylindrical-shell}
+### 2.1.1 Gouy–Chapman–Stern through stage 5: Gauss's law across a cylindrical shell **[tested: pending]** {#211-gouychapmanstern-through-stage-5-gausss-law-across-a-cylindrical-shell}
 
 A planar Stern layer (VER-31) cannot be posed through stage 5, whose region is axisymmetric, so
 VER-59 poses it on a long tube, `r ∈ [3, 5]` nm, with stage 5's shell of `a` = 0.25 nm on its lumen

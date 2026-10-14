@@ -1,6 +1,17 @@
 ---
 type: Overview
 title: Nanopore biology and electrophysiology — what the model is a model *of* (overview)
+description: 'Biological nanopores and electrophysiology: what the model is a model of.'
+tags:
+- biology
+- overview
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 # Nanopore biology and electrophysiology — what the model is a model *of*

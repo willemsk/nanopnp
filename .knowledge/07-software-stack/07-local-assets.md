@@ -1,6 +1,13 @@
 ---
 type: Library Behaviour
 title: 7. Local assets
+description: The local assets the project keeps.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 7. Local assets

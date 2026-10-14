@@ -1,6 +1,13 @@
 ---
-type: Numerics
+type: Open Item
 title: 9. Unverified / to measure
+description: Items still unverified or to be measured.
+tags:
+- numerics
+- open-item
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 9. Unverified / to measure

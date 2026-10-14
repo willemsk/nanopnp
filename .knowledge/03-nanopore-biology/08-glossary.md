@@ -1,6 +1,13 @@
 ---
-type: Domain
+type: Glossary
 title: 8. Glossary
+description: Glossary of nanopore and electrophysiology terms.
+tags:
+- biology
+- glossary
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 8. Glossary

@@ -1,6 +1,13 @@
 ---
 type: Numerics
 title: 1. Discretisation
+description: 'The discretisation: elements, spaces and assembly.'
+tags:
+- numerics
+- numerics
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 1. Discretisation

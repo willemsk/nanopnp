@@ -1,6 +1,23 @@
 ---
-type: Physics
+type: Erratum
 title: 8. Errata in the source, with the arithmetic
+description: Errata in the printed sources, each with the arithmetic that settles it.
+tags:
+- physics
+- erratum
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+- id: comsol-report
+  resource: COMSOL Multiphysics 5.4 model report of 22 May 2020
+  title: COMSOL model report (5.4)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 8. Errata in the source, with the arithmetic
@@ -57,7 +74,8 @@ record `epsr_ms = 30.08`, `epsr_alpha = 11.5` — Gavish's values — so **those
 `SPECIFICATION.md` §4.6 erratum 6). The printed `42.12` is the stale cap: it follows from the
 authors' own Buchner fit, which the model did *not* use, so the cap with the parameters actually
 used is `42.67`. An earlier author recollection favouring the Buchner fit is superseded by the
-model file. The difference is ~1 % in `ε_r` at saturation and negligible below ~1 M. **[verified]**
+model file. The difference is ~1 % in `ε_r` at saturation and negligible below ~1 M. **[verified][^comsol-report]**
 
 ---
 
+[^comsol-report]: COMSOL model report (5.4).

@@ -1,9 +1,16 @@
 ---
 type: Library Behaviour
 title: 14. A Windows checkout rewrites the bytes a hash identifies
+description: A Windows checkout rewrites the bytes a hash identifies.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
-## 14. A Windows checkout rewrites the bytes a hash identifies **[tested]** {#14-a-windows-checkout-rewrites-the-bytes-a-hash-identifies}
+## 14. A Windows checkout rewrites the bytes a hash identifies **[tested: pending]** {#14-a-windows-checkout-rewrites-the-bytes-a-hash-identifies}
 
 GitHub's Windows runners, and most Windows installs of git, check out with `core.autocrlf=true`, so
 every text file in the index arrives with CRLF line endings. Any hash over a checked-out file's

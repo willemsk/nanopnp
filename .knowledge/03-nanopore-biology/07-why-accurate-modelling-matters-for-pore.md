@@ -1,6 +1,17 @@
 ---
 type: Domain
 title: 7. Why accurate modelling matters for pore engineering
+description: Why accurate modelling matters for pore engineering.
+tags:
+- biology
+- domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 7. Why accurate modelling matters for pore engineering

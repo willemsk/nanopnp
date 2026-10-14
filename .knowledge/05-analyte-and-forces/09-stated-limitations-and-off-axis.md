@@ -1,6 +1,17 @@
 ---
 type: Domain
 title: 8. Stated limitations, and off-axis behaviour
+description: The stated limitations and the off-axis behaviour.
+tags:
+- analyte
+- domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 8. Stated limitations, and off-axis behaviour

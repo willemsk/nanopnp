@@ -1,6 +1,21 @@
 ---
 type: Reference Settings
 title: C. Physics settings
+description: 'The COMSOL physics settings: stabilisation, discretisation, wall distance, correction functions
+  and parameters.'
+tags:
+- comsol
+- reference-settings
+sources:
+- id: comsol-report
+  resource: COMSOL Multiphysics 5.4 model report of 22 May 2020
+  title: COMSOL model report (5.4)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## C. Physics settings
@@ -46,7 +61,7 @@ The internal definitions of `tds.streamline`, `tds.crosswind`, `spf.streamlinens
 `spf.usePseudoTimeStepping = 0`, and the pseudo-time weak term is gated on it:
 `2*(spf.usePseudoTimeStepping>0)*spf.rho*spf.tsti*(-(u-nojac(u))*test(u)-(w-nojac(w))*test(w))*pi*r`
 → identically zero. `spf.localCFLvalue` and `spf.geometryLengthScale = 6.25 × 10⁻⁸ m` are defined
-but unused. **[verified]**
+but unused. **[verified][^comsol-report]**
 
 **Consequence.** The published currents were computed **with** consistent stabilisation in both the
 ion transport and the flow. The open question in `.knowledge/06-numerics-fem/04-stabilisation.md` is settled against our
@@ -271,3 +286,4 @@ Pore averages use `is_inside_pore`, `is_inside_pore_bulk` (`wdf.wd > 0.5 nm`) an
 
 ---
 
+[^comsol-report]: COMSOL model report (5.4).

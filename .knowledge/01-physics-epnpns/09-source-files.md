@@ -1,6 +1,17 @@
 ---
 type: Physics
 title: 9. Source files
+description: The source files from which the physics was extracted.
+tags:
+- physics
+- physics
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 9. Source files

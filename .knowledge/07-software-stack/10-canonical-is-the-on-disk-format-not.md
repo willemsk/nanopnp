@@ -1,6 +1,16 @@
 ---
 type: Library Behaviour
 title: 10. `canonical()` is the on-disk format, not only the hash input
+description: canonical() is the on-disk format, not only the hash input.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 10. `canonical()` is the on-disk format, not only the hash input
@@ -14,7 +24,7 @@ number.
 
 Comparing such a record against live values without decoding it does not report a *different*
 number — it reports a **missing** one, because a flatten-to-dotted-paths comparison yields
-`current_A.__f__` on one side and `current_A` on the other **[tested]**. `decode_floats` is the
+`current_A.__f__` on one side and `current_A` on the other **[tested: pending]**. `decode_floats` is the
 inverse and belongs to any reader of these files.
 
 It is deliberately not a full inverse of `canonical`: an array encodes as dtype, shape and a

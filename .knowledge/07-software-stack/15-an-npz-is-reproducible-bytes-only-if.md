@@ -1,9 +1,19 @@
 ---
 type: Library Behaviour
 title: 15. An `.npz` is reproducible bytes only if nothing in it moves with the clock
+description: An .npz is reproducible bytes only if nothing in it moves with the clock.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
-## 15. An `.npz` is reproducible bytes only if nothing in it moves with the clock **[tested]** {#15-an-npz-is-reproducible-bytes-only-if-nothing-in-it-moves-with-the-clock}
+## 15. An `.npz` is reproducible bytes only if nothing in it moves with the clock **[tested: pending]** {#15-an-npz-is-reproducible-bytes-only-if-nothing-in-it-moves-with-the-clock}
 
 `numpy.savez` writes a zip whose entries carry a fixed modification date, so the same arrays saved
 twice give the same bytes, seconds apart. A payload's recorded digest is therefore reproducible as

@@ -1,6 +1,16 @@
 ---
 type: Library Behaviour
 title: 3. Charge and electrostatics
+description: The charge and electrostatics tools PDB2PQR, PROPKA and APBS, as the pipeline drives them.
+tags:
+- software
+- library-behaviour
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 3. Charge and electrostatics
@@ -12,7 +22,7 @@ title: 3. Charge and electrostatics
 | **APBS** | 3.4.1 | BSD-3 | Poisson–Boltzmann cross-check. Driven by input files; read `.dx` with `gridData`. `apbs-binary` pip wrapper exists |
 | pKAI / pKa-ANI / PypKa | — | MIT / — / LGPL-3 + proprietary DelPhi | ML or PB pKa. Not integrated with PDB2PQR |
 
-**Verified CLI facts [tested]:** `--ff`, `--ffout`, `--with-ph`, `--titration-state-method`,
+**Verified CLI facts [tested: pending]:** `--ff`, `--ffout`, `--with-ph`, `--titration-state-method`,
 `--drop-water`, `--keep-chain` all exist; `CHARMM`, `AMBER`, `PARSE` are valid force fields.
 **`--titration-state-method` accepts `propka` ONLY** — `pkaani` is rejected by argparse. ML pKa
 predictors must be run separately and their states applied by hand.
@@ -32,7 +42,7 @@ least grid-sensitive); `srfm` ∈ {mol, **smol**, spl2, spl4}. Note `spl2`/`spl4
 produce unphysical results at non-zero ionic strengths" — run the cross-check at **zero** ionic
 strength, which also isolates charge-projection error from model differences.
 
-### PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver **[tested]**, 1 October 2026 {#pdb2pqr-371-and-propka-351-as-a-per-frame-driver-1-october-2026}
+### PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver **[tested: pending]**, 1 October 2026 {#pdb2pqr-371-and-propka-351-as-a-per-frame-driver-1-october-2026}
 
 Measured in this container while planning WP27, with `--ff=CHARMM --ffout=CHARMM --with-ph=7.5
 --titration-state-method=propka --drop-water --keep-chain` unless stated. Inputs were cut from the
@@ -80,7 +90,7 @@ frame).
   `CE1`, `NE2`) lie 0.13–0.15 Å (amides) and 0.19–0.40 Å (the ring) from every input heavy atom, and
   no other heavy atom moves. On the prepared dodecamer of the tests it is 138, worst 0.397 Å. Match
   heavy atoms by position within a residue, never by name, and leave the flippable atoms out of any
-  tight positional criterion **[tested]**, 1 October 2026 (WP27; this bullet first said the 140
+  tight positional criterion **[tested: pending]**, 1 October 2026 (WP27; this bullet first said the 140
   carried another atom's position exactly).
 - **Fused columns.** The PQR is written in PDB fixed columns, so a coordinate at or below −100 Å
   runs into its neighbour (`-37.705-115.041`). `pdb2pqr.io.read_pqr` splits on whitespace and
@@ -90,17 +100,17 @@ frame).
   and a shorter one from column 18; a four-character atom field then runs into it (`OD2ASPP`). A
   residue patched to a protonation variant is written with its backbone under the parent and its
   side chain under the variant: `ASP 21` of the fragment `GLU 18`–`LEU 26` at pH 2 carries both `ASP`
-  and `ASPP`. A reader that takes columns 18–21 reads `SPP` **[tested]**, 1 October 2026 (WP27).
+  and `ASPP`. A reader that takes columns 18–21 reads `SPP` **[tested: pending]**, 1 October 2026 (WP27).
 - **Disulfides, waters, `HETATM` and the C-terminal carboxyl.** Under `--ffout=CHARMM` a
   disulfide-bonded cysteine's `CB` and `SG` are written `1CB` and `1SG` under the patch residue
   `DISU` (`1CBDISU A 285`), its other atoms under `CYS`; under `SWANSON` and `PEOEPB` the whole
   residue is `CYX`. A reader naming residues by their atoms must treat `DISU` as it treats `TER`
-  **[tested]**, 1 October 2026, `CYS 285` of 2WCD chain A bonded to a mirrored copy (WP27 review).
+  **[tested: pending]**, 1 October 2026, `CYS 285` of 2WCD chain A bonded to a mirrored copy (WP27 review).
   `--drop-water` drops only `HOH` and `WAT` (`aa.WAT.water_residue_names`), and a water kept under
   CHARMM is `TP3M`. `HETATM` with a five-digit serial is written with nothing between them
   (`HETATM12345`, `get_common_string_rep`) **[verified]**, read from the 3.7.1 source. PROPKA types
   the C-terminus `COO`, as it does a side-chain carboxyl, and only its label says `C-`: a C-terminal
-  `ASP` or `GLU` carries two `COO` groups (`ASP  21 A`, `C-   21 A`) **[tested]**, 1 October 2026.
+  `ASP` or `GLU` carries two `COO` groups (`ASP  21 A`, `C-   21 A`) **[tested: pending]**, 1 October 2026.
 - **`run_pdb2pqr`'s first return is missing atoms**, not residues: the atoms
   `Biomolecule.apply_force_field` could not parameterise, which the PQR leaves out. An atom
   written with no charge gets `0.0000` (`get_pqr_string`) **[verified]**, read from the 3.7.1
@@ -115,7 +125,7 @@ frame).
   `GLU 18`–`LEU 26` at pH 2 gives byte-identical PQRs and equal pKas on 3.12 and on 3.14 with it.
   3.5.1 is the latest release (PyPI, 1 October 2026). `charge/protonation.py`'s
   `restore_propka_annotations` installs it only where the instance lacks the attribute
-  **[tested]**, 1 October 2026 (WP27).
+  **[tested: pending]**, 1 October 2026 (WP27).
 - **The stage's cost.** Protonating the prepared 2WCD dodecamer through the `protonation` stage
   takes 97.4 s and 0.44 GB peak RSS for one cold frame, in a fresh process; with the frame cached
   the stage's own work (reading the PQR, registering it, tabulating the states, checking the radii)
@@ -130,7 +140,7 @@ frame).
   `propka.*`. PROPKA's full report is logged at INFO, about 400 kB for the dodecamer. Importing
   `pdb2pqr` calls `logging.captureWarnings(True)`.
 
-### APBS 3.4.1 driven by maps **[tested]**, 1 October 2026 {#apbs-341-driven-by-maps-1-october-2026}
+### APBS 3.4.1 driven by maps **[tested: pending]**, 1 October 2026 {#apbs-341-driven-by-maps-1-october-2026}
 
 Measured in this container while planning WP29 (VAL-06), with `apbs-binary` 3.4.1.1 installed into
 a scratch environment. Lengths in the deck and the maps are in Å, and the potential is in `kT/e` at
@@ -184,7 +194,7 @@ the deck's `temp`.
   The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[verified]**.
 - **Case identity cost** (`validation/comsol.py`): hashing the 84 MB reference charge table takes about 1.6 s;
   hashing the 9.2 MB deposited 2WCD structure files takes 12 ms, plus 0.7 s on the first import of stage 1 and
-  MDAnalysis **[tested]**.
+  MDAnalysis **[tested: pending]**.
 - **Self-refinement on 2WCD.** The problem is `poisson` on the protonated, prepared 2WCD at the
   default mesh (44,987 elements), with both electrodes grounded. The box is 19.2 nm, with the faces
   from our own `P2` solution. The probes are 555,535 fluid nodes of the 0.2 nm grid, at least 0.3 nm
@@ -199,7 +209,7 @@ the deck's `temp`.
   the two solvers was not formed; VAL-06's tolerance was stated first (`SPECIFICATION.md` §7.4
   NOTE on VAL-06).
 
-### APBS in the VAL-06 driver **[tested]**, 1 October 2026 {#apbs-in-the-val-06-driver-1-october-2026}
+### APBS in the VAL-06 driver **[tested: pending]**, 1 October 2026 {#apbs-in-the-val-06-driver-1-october-2026}
 
 Measured while implementing WP29 (`src/nanopnp/validation/apbs.py`), in this container with 24
 cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.

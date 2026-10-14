@@ -54,11 +54,14 @@ Opus only after Sonnet fails.
 - [x] a79e05d 2. `.knowledge/` (D1): move the ten files into the bundle, bodies unchanged, a placeholder header and explicit ids; done when the word-for-word comparison is clean.
 - [x] ce22f90 3. `.knowledge/` (D4): rewrite the citations between concepts; done when the checker, run by hand through `uv run`, resolves each and the unplaced list is empty by ruling.
 - [x] c02e775 4. every tracked file outside `.knowledge/`, `docs/plans/`, `docs/code_reviews/` and `CHANGELOG.md` (D4): the same; done by the same hand run.
-- [ ] 5. `docs/plans/`, `docs/code_reviews/`, released `CHANGELOG.md` sections (D4, K4); adds `test_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.
+- [x] 8b5f5c8 5. `docs/plans/`, `docs/code_reviews/`, released `CHANGELOG.md` sections (D4, K4); adds `test_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.
 
 *Compaction checkpoint: after item 5; resume from this plan and `git log`.*
 
 - [ ] 6. `.knowledge/` (D2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows pass.
+
+> **Outcome — item 6.** 72 claims name a test; 311 are `[tested: pending]` and 47 `[verified]` claims carry no source footnote, so the ceiling is 358 in 55 concepts; 9 `[verified]` claims cite a source by footnote. A `[verified]` claim in a test-evidence concept became a tested or pending claim; elsewhere each stays `[verified]` until WP48 classifies it.
+
 - [ ] 7. `.knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
 - [ ] 8. `docs/scripts/generate.py`, `mkdocs.yml` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes.
 - [ ] 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `README.md`, `SPECIFICATION.md` §11: the new first read, the maintenance rule (a durable fact is a concept with a log line), the pending figure; done when VER-68 and the build pass.

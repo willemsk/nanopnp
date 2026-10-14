@@ -1,6 +1,17 @@
 ---
-type: Pipeline
+type: Open Item
 title: 8. Gaps and ambiguities (questions for the author)
+description: Gaps and ambiguities in the source, as questions for the author.
+tags:
+- clya
+- open-item
+sources:
+- id: paper
+  resource: https://doi.org/10.1039/D0NR03114C
+  title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+generated:
+  by: claude-code/0.5.0-alpha.13
+  at: '2026-10-14T00:00:00Z'
 ---
 
 ## 8. Gaps and ambiguities (questions for the author)
@@ -9,7 +20,7 @@ title: 8. Gaps and ambiguities (questions for the author)
   "i.e. every 100 fs". 50 frames over 5 ns is **every 100 ps**, and coordinates were only written
   every 5 ps (T L273-274). Assume 100 ps. **Evidence (§1.1):** the archived PQR
   files are named `…_aligned_100ps_NN`, 99 of them, and the analysis notebook reads the DCD at
-  `dt=100`. **CLOSED [tested], §1.1:** the DCD frames are the PQRs at 100 ps, in time order. The final
+  `dt=100`. **CLOSED [tested: pending], §1.1:** the DCD frames are the PQRs at 100 ps, in time order. The final
   5 ns are PQRs 50–99 (DCD frames 48–97).
 - **G2 — 25 % isolevel is unjustified.** No rationale, no sensitivity study, no comparison against
   the solvent-excluded surface. Since pore radius enters conductance roughly as r^2, this is the
@@ -26,7 +37,7 @@ title: 8. Gaps and ambiguities (questions for the author)
   position `r_i`; the implementation (COMSOL, `.knowledge/01-physics-epnpns/05-fixed-charge-from-structure.md`) divides by the **field point's** `r`. These
   differ within the Gaussian's support and diverge differently near the axis. The COMSOL form is what
   produced -72.9 e, so implement that; but the discrepancy should be confirmed.
-- **G5 — CLOSED [tested], §3.1.** The file stores the sum *without* `e`, in `e/m^2`: its planar
+- **G5 — CLOSED [tested: pending], §3.1.** The file stores the sum *without* `e`, in `e/m^2`: its planar
   integral is the integer -72, to 4.7e-12. `e_const` in the COMSOL assembly supplies the coulombs
   exactly once, and the `e` printed inside eq. `eq:scdpore` is not also in the table.
 - **G6 — pore averages omit the `2 pi r` Jacobian.** `eq:pore_surface_integral` integrates
@@ -53,7 +64,7 @@ title: 8. Gaps and ambiguities (questions for the author)
   brackets the model's pore extent to within 0.3–0.4 nm at each end, which is consistent with an
   offset near zero. **CLOSED by the author:** the MD trajectory was centred on
   the middle of the bilayer, so ClyA's `centre_z_nm` is 0 in the MD frame.
-- **G10 — CLOSED [tested], §3.1.** `r` in [0, 7] nm, `z` in [-3.5, 13.5] nm at 0.005 nm:
+- **G10 — CLOSED [tested: pending], §3.1.** `r` in [0, 7] nm, `z` in [-3.5, 13.5] nm at 0.005 nm:
   1401 x 3401 = 4.76e6 nodes, the order the estimate predicted.
 - **G11 — nothing on mesh or solver tolerances.** See §4 and §5. No convergence study of any kind is
   reported, so the published numbers carry no stated discretisation error bar.
