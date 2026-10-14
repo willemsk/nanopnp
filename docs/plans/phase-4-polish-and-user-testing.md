@@ -18,8 +18,9 @@ to be tagged `v0.5.0-alpha.7`; WP42, the verification checks
 WP43, the development loop ([wp43-development-loop.md](wp43-development-loop.md)), to be tagged
 `v0.5.0-alpha.9`; WP44, simplify the loop ([wp44-simplify-the-loop.md](wp44-simplify-the-loop.md)), to be
 tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-prose-strip.md)), to be tagged
-`v0.5.0-alpha.11`.
-Planned: WP46, the small fixes; WP47, the OKF bundle;
+`v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
+`v0.5.0-alpha.12`.
+Planned: WP47, the OKF bundle;
 WP48, its backfill; WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
@@ -694,6 +695,16 @@ rules whether to pass again or re-argue the figure by amendment. VER-62 and ever
 unchanged. Items are `[any]`.
 
 ### WP46 — The small fixes (REV-14 to REV-16, REV-18, REV-19, and eleven low items)
+
+> **Delivered, 14 October 2026** ([plan](wp46-small-fixes.md)). Fifteen `REV-nn` rows are `fixed`, each
+> with its test (VER-26, VER-29, VER-48, VER-49, VER-53, VER-54, VER-25 for the workspace). The stage-6 key
+> leaves λ_D out (`WallSize.key()`), so a salt sweep below 1.5 M meshes once; netgen's key golden is
+> re-recorded. `Store.put` publishes one complete entry by rename. A stage without a workspace raises
+> `MissingWorkspaceError` (a break, listed in `CHANGELOG.md`); the plan writes into the workspace itself
+> rather than a fresh directory under it. Stage 1 refuses an empty trajectory, a repeated Cα and a chain
+> split across the box (1.0 nm; the deposited 2WCD's largest consecutive pair is 0.3856 nm). REV-24
+> measured no duplicate. The new `pipeline → density` edge is in `modularity-layering.yaml`.
+> Live constraint: `chain_characters` raises `EnsembleFormatError` (exit 4).
 
 > **Amended, 11 October 2026** (§8.2.10 J1). This was WP43, and is now **WP46**, after the
 > development loop. Its scope is unchanged.
