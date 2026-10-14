@@ -17,8 +17,9 @@ to be tagged `v0.5.0-alpha.7`; WP42, the verification checks
 ([wp42-verification-checks.md](wp42-verification-checks.md)), to be tagged `v0.5.0-alpha.8`;
 WP43, the development loop ([wp43-development-loop.md](wp43-development-loop.md)), to be tagged
 `v0.5.0-alpha.9`; WP44, simplify the loop ([wp44-simplify-the-loop.md](wp44-simplify-the-loop.md)), to be
-tagged `v0.5.0-alpha.10`.
-Planned: WP45, the prose strip (§8.2.11 L1); then WP46, the small fixes; WP47, the OKF bundle;
+tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-prose-strip.md)), to be tagged
+`v0.5.0-alpha.11`.
+Planned: WP46, the small fixes; WP47, the OKF bundle;
 WP48, its backfill; WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
@@ -673,9 +674,12 @@ under 6 minutes. A miss is reported with its cause and the author rules (L8). It
 
 ### WP45 — The prose strip (§8.2.11 L4, L5; VER-75)
 
-> **Planned, 13 October 2026** ([plan](wp45-prose-strip.md)). VER-75 is in Appendix A: docstrings only where
-> the rule allows them, and a share ceiling for `src/` and `tests/`. A syntax-tree check script proves
-> each commit; 27 strip items, each to a fresh worker.
+> **Delivered, 14 October 2026** ([plan](wp45-prose-strip.md)). Docstrings and comments are 10.6 % of
+> `src/nanopnp` (from 33.0 %; predicted at most 10 %) and 2.1 % of `tests/` (from 18.8 %; at most 3 %).
+> `same_tree.py` proved every commit changes no instruction. Every public function, class and method
+> keeps a condensed docstring (L4 as amended after item 19); tests keep none. VER-75 (a) and (b) are
+> `test_prose_share.py`, ceilings 11.62 % and 3.14 %. 33 fresh workers, one redo, no escalation (L9).
+> Facts found nowhere else moved to `.knowledge/`. REV-91 to REV-93 are open for the author.
 
 *Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
 rules, `CONTRIBUTING.md`) is WP44's. The tree, one commit per subpackage, by per-module agent

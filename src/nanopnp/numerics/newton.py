@@ -184,7 +184,6 @@ def damped_newton(
     previous = solution.vec.CreateVector()
 
     def residual_norm() -> float:
-        """Return the free-DOF norm of the residual at the current iterate."""
         residual_form.Apply(solution.vec, residual)
         projector.Project(residual)
         return float(ngs.Norm(residual))

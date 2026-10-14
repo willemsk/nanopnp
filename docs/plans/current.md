@@ -1,6 +1,6 @@
 # Current work
 
-Updated 13 October 2026 (WP44 merged; WP45 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 14 October 2026 (WP44 merged; WP45 delivered, in review). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
@@ -25,8 +25,8 @@ changes code, which this package proves it never does.
   delivered, as `v0.5.0-alpha.1` to `.8`.
 - **WP43 and WP44** ([plans](wp44-simplify-the-loop.md)) are merged; tags `v0.5.0-alpha.9` and `.10` are
   the author's step.
-- **WP45, the prose strip** ([plan](wp45-prose-strip.md)), is **planned** (§8.2.11 L4, L5, L9; VER-75
-  added to Appendix A). Next: `/wp-implement`; then WP46 the small fixes, WP47–WP49 (OKF bundle,
+- **WP45, the prose strip** ([plan](wp45-prose-strip.md)), is **delivered** (§8.2.11 L4, L5, L9; VER-75),
+  tag `v0.5.0-alpha.11` after the merge. Next: `/wp-ship`; then WP46 the small fixes, WP47–WP49 (OKF bundle,
   backfill, protocol); the author's sessions; fixes from WP50. Phase 5 (`v0.6.0`) is the GUI,
   Phase 6 (`v0.7.0`) validation; v1.0 is OPN-08.
 
