@@ -279,6 +279,15 @@ def test_val05_the_attribution_refuses_a_comparison_on_other_planes(reference) -
         attribute_to_construction(reference, reference, coarse)
 
 
+def test_lax_comparison_is_refused_by_attribution() -> None:
+    ours = _straight(low=-1.7, high=HIGH)
+    lax = compare_profiles(ours, _straight(), strict=False)
+    assert lax.uncrossed_planes_nm
+    with pytest.raises(GeometryComparisonError, match="strict=False") as raised:
+        attribute_to_construction(ours, _straight(), lax)
+    assert not isinstance(raised.value, MissingPlaneError)
+
+
 def test_val05_importing_the_harness_imports_no_numpy() -> None:
     script = (
         "import json, sys; import nanopnp.validation.geometry;"

@@ -175,7 +175,7 @@ through `shlex.quote` into `#SBATCH` lines. sbatch does not read a directive as 
 value that needs quoting does not reach it as written; the review of PR #34 confirmed the finding
 and left it unfixed.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D6: `render_slurm.py` writes the #SBATCH values raw and refuses one holding whitespace, a quote, `#`, `%` or a control character, naming the key.
 
 ### REV-16 — A salt sweep regenerates an identical mesh at each concentration
 
@@ -567,7 +567,7 @@ bins with `K_j ≥ k` are kept, up to about 2× work. Correct.
 comparison, raises `MissingPlaneError` rather than saying the comparisons do not match. In-repo
 callers pass strict comparisons.
 
-**Resolves it.** WP46, the small fixes (§8.2.9 I1, I2; renumbered by §8.2.10 J1).
+**Resolved.** WP46 D6: `attribute_to_construction` raises `GeometryComparisonError` for a comparison leaving a plane outside the tip band uncrossed, before binning.
 
 ### REV-60 — UMFPACK repeats its symbolic analysis every Newton step
 

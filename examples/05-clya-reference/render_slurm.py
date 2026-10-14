@@ -29,10 +29,15 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import shlex
 from pathlib import Path
 
 log = logging.getLogger("render_slurm")
+
+# sbatch reads a directive's value to the end of the line, without shell quoting, and expands
+# %-patterns in file names; so a value that would need quoting cannot be passed at all.
+UNPASSABLE = re.compile(r"[\s'\"#%]|[^\x20-\x7e]")
 
 MEMBER = """#!/bin/bash
 #SBATCH --job-name={name}
@@ -48,6 +53,17 @@ exec nanopnp sweep run {plan} --store {store} --index "$((WAVE_FIRST + SLURM_ARR
 """
 
 
+def directive(key: str, value: str) -> str:
+    """Return `value` for an #SBATCH line; ValueError if sbatch would not read it as written."""
+    found = UNPASSABLE.search(value)
+    if found is not None:
+        raise ValueError(
+            f"{key} {value!r} cannot be an #SBATCH value: sbatch reads a directive to the end of "
+            f"the line without shell quoting, so it may not hold {found.group()!r}"
+        )
+    return value
+
+
 def render(
     plan_path: Path,
     *,
@@ -61,20 +77,16 @@ def render(
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
     waves: list[list[int]] = plan["waves"]
     name = plan["name"]
-    # Quoted like every other value in the script, and a line break refused
-    # outright: quoting does not stop one from starting a new line of shell.
-    if any(not character.isprintable() for character in name):
-        raise ValueError(f"the sweep name {name!r} carries a control character")
     member = out.with_suffix(".member.sbatch")
     logs = workdir / "slurm-logs"
     # ``newline="\n"``: these are bash scripts for a Linux cluster, and a CRLF
     # written on Windows breaks the shebang and every line after it.
     member.write_text(
         MEMBER.format(
-            name=shlex.quote(name),
-            workdir=shlex.quote(str(workdir)),
-            time=time,
-            logs=shlex.quote(str(logs)),
+            name=directive("--job-name", name),
+            workdir=directive("--chdir", str(workdir)),
+            time=directive("--time", time),
+            logs=directive("--output directory", str(logs)),
             plan=shlex.quote(str(plan_path.resolve())),
             store=shlex.quote(str(store.resolve())),
         ),

@@ -34,7 +34,7 @@ is a rolling register, and its header stays `open`.
 | REV-12 | verification | medium | fixed | [WP42](../plans/wp42-verification-checks.md) | [No test shows every case leaf changes the forms or is provenance-only](review-items.md#rev-12-no-test-shows-every-case-leaf-changes-the-forms-or-is-provenance-only) |
 | REV-13 | verification | medium | fixed | [WP42](../plans/wp42-verification-checks.md) | [Example 06's key test cannot see a stage-7 key change](review-items.md#rev-13-example-06s-key-test-cannot-see-a-stage-7-key-change) |
 | REV-14 | numerics | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A radial grid's .npz does not round-trip its spacing exactly](review-items.md#rev-14-a-radial-grids-npz-does-not-round-trip-its-spacing-exactly) |
-| REV-15 | interface | low | accepted | §8.2.9 I2 | [Example 05 quotes #SBATCH directives as shell words](review-items.md#rev-15-example-05-quotes-sbatch-directives-as-shell-words) |
+| REV-15 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Example 05 quotes #SBATCH directives as shell words](review-items.md#rev-15-example-05-quotes-sbatch-directives-as-shell-words) |
 | REV-16 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A salt sweep regenerates an identical mesh at each concentration](review-items.md#rev-16-a-salt-sweep-regenerates-an-identical-mesh-at-each-concentration) |
 | REV-17 | numerics | low | fixed | [WP41](../plans/wp41-accuracy-fixes.md) | [A warm start is gated on free prose in the stabilisation provenance](review-items.md#rev-17-a-warm-start-is-gated-on-free-prose-in-the-stabilisation-provenance) |
 | REV-18 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Concurrent sweep members may write the same store key](review-items.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key) |
@@ -78,7 +78,7 @@ is a rolling register, and its header stays `open`.
 | REV-56 | performance | low | deferred | §8.2.9 I3 | [The geometry editor's simplicity check runs on the Qt thread](review-items.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread) |
 | REV-57 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [frame_times decodes every frame](review-items.md#rev-57-frame_times-decodes-every-frame) |
 | REV-58 | performance | low | post-1.0 | §8.2.9 I3 | [The azimuthal reduction projects cells it then drops](review-items.md#rev-58-the-azimuthal-reduction-projects-cells-it-then-drops) |
-| REV-59 | interface | low | accepted | §8.2.9 I2 | [attribute_to_construction raises the wrong error on a lax comparison](review-items.md#rev-59-attribute_to_construction-raises-the-wrong-error-on-a-lax-comparison) |
+| REV-59 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [attribute_to_construction raises the wrong error on a lax comparison](review-items.md#rev-59-attribute_to_construction-raises-the-wrong-error-on-a-lax-comparison) |
 | REV-60 | performance | low | deferred | §8.2.9 I3 | [UMFPACK repeats its symbolic analysis every Newton step](review-items.md#rev-60-umfpack-repeats-its-symbolic-analysis-every-newton-step) |
 | REV-61 | interface | low | deferred | §8.2.9 I3 | [No B-spline fit or HOLE cross-check of the contour](review-items.md#rev-61-no-b-spline-fit-or-hole-cross-check-of-the-contour) |
 | REV-62 | interface | low | deferred | §8.2.9 I3 | [A mesh named by store key is refused](review-items.md#rev-62-a-mesh-named-by-store-key-is-refused) |

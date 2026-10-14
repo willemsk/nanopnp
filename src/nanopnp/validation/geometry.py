@@ -485,9 +485,22 @@ def attribute_to_construction(
     Raises
     ------
     GeometryComparisonError
-        If ``comparison`` was not made on the planes this binned comparison uses.
+        If ``comparison`` was not made on the planes this binned comparison uses, or leaves a
+        plane outside the tip band uncrossed.
     """
     direct = comparison if comparison is not None else compare_profiles(ours, reference)
+    low, high = direct.tips_reference_nm
+    loose = [
+        z
+        for z in direct.uncrossed_planes_nm
+        if not (z - low <= TIP_BAND_NM or high - z <= TIP_BAND_NM)
+    ]
+    if loose:
+        raise GeometryComparisonError(
+            f"the comparison supplied leaves {len(loose)} plane(s) outside the {TIP_BAND_NM:g} nm "
+            f"tip band uncrossed, the first at z = {loose[0]:.4f} nm; it was made with "
+            "strict=False, and an attribution splits the offset of a gated comparison"
+        )
     binned = compare_profiles(pqr2grid_polygon(ours), reference)
     supplied = (direct.planes, direct.plane_spacing_nm, direct.uncrossed_planes_nm)
     if supplied != (binned.planes, binned.plane_spacing_nm, binned.uncrossed_planes_nm):
