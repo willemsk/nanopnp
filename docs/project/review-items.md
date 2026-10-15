@@ -1035,7 +1035,7 @@ Open: WP48 reads each of the 47, and either backs it with a test or gives it a f
 
 The shipped `willems2020_nacl.yaml` still cites the physics note by the name it had before it became a directory in a comment. Its bytes are part of the pinned v0.5 solve key (VER-59), so the citation check skips it and a comment edit would move the key.
 
-Open: the author rules whether to re-pin the VER-59 golden together with a corrected citation, or to keep the skip.
+**Fixed** in WP47: the comment names the errata concept, the pinned solve key in `tests/tier2/test_exclusion_keys.py` is re-pinned to the new bytes, and the citation check no longer skips the file.
 
 
 ### REV-105 — SPECIFICATION G12 (7) says the navigation is generated from the index files; the build has one static entry
@@ -1044,7 +1044,7 @@ Open: the author rules whether to re-pin the VER-59 golden together with a corre
 
 The ruling reads that the documentation navigation comes from the `index.md` files. `mkdocs.yml` has one `Knowledge base` entry and lists the rest under `not_in_nav`.
 
-Open: the author rules whether to amend the ruling to the static entry or to generate the navigation.
+**Fixed** in WP47: `docs/scripts/generate.py` writes the knowledge navigation into `mkdocs.yml` between two marker comments, read from the `index.md` files; a Tier 1 test fails when the block is stale, so the ruling and the build agree.
 
 
 ### REV-106 — The heading-slug function differs from the table-of-contents slugger for emphasis, entities and images
@@ -1053,7 +1053,7 @@ Open: the author rules whether to amend the ruling to the static entry or to gen
 
 `okf.headings` strips the markup it knows; `_emphasis_`, HTML entities and images are read differently from the documentation build, so a citation to such a heading could pass the check and miss. No heading of the bundle has these today (the docs-anchor test compares all 241).
 
-Open: WP48 widens the comparison test when a heading first uses one.
+**Fixed** in WP47: the slug function reads emphasis with underscores, entities and images as the documentation build does, and a test compares seven such headings with the build.
 
 
 ### REV-107 — About 40 log entries are fragments
@@ -1062,4 +1062,4 @@ Open: WP48 widens the comparison test when a heading first uses one.
 
 Entries of `knowledge/log.md` made by cutting the old notes' dated lines read as fragments such as `Source: WP26 implementation session`. Two glaring ones were repaired in the WP47 review.
 
-Open: WP48 rewrites each entry from its note.
+**Fixed** in WP47: the fourteen entries cut mid-sentence now state what the concept records, taken from its description and the source it named; the measurements stay in the concepts.

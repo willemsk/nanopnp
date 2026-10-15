@@ -37,6 +37,9 @@ G12, VER-68). No code path of the solver changes, and VER-62 is untouched.
   differs from the claims, a footnote that is no source, an older `tested_with`, and a pending list
   that differs from the files or exceeds 361. `markdown` joins the `dev` group, so the comparison of
   heading ids with the documentation build runs in every test leg.
+- **The navigation** (G12 7): the knowledge base's menu is generated from the `index.md` files into
+  `mkdocs.yml` by `docs/scripts/generate.py`; a stale block fails Tier 1. The pinned correction file's
+  comment now names the errata concept, which moves the pinned v0.5 solve key (VER-59); nothing computed moves.
 - **The ledger** (G3, G8): 69 claims name a test, 314 are `[tested: pending]` and 47 `[verified]`
   claims name no source; WP48 empties the list.
 - **The gate** (VER-45): `prose-only.sh` reads `knowledge/` and any Markdown that cites it as

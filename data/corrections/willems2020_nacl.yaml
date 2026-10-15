@@ -16,7 +16,7 @@
 # All property values are  X(<c>,d) = X0 * fc(cbar) * fw(dbar).
 #
 # !! Four transcription traps, all verified numerically against the check values stated in the
-# !! thesis text. See knowledge/01-physics-epnpns.md section "Errata" for the arithmetic.
+# !! thesis text. See knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md for the arithmetic.
 #   1. The D/mu wall function uses (dbar + P2), NOT (dbar - P2). Thesis eq. 5.11 prints a minus
 #      sign; Table 5.1 prints a plus. The PLUS is correct.
 #   2. mu0 is in units of 1e-8 m^2/(V s), not 1e-4. Table 5.1 misprints the exponent.
