@@ -315,8 +315,8 @@ VER-55 to the charge views, with the view-models importing no Qt.
 > (`tests/tier1/test_gui_charge.py`, `test_gui_charge_protonation.py`, `test_gui_probe.py`,
 > `test_gui_render.py`, `test_gui_widgets.py`; `tests/tier2/test_charge_2wcd.py`). The 2WCD
 > picture carries −60 e to 10⁻¹². **Live for later packages:** the colour range is set in
-> webgui's `gui_settings` as well as the scene, and has not been watched drawing (`knowledge/07-software-stack/index.md`
-> §5); stage 7's summary records wall-clock seconds, so no two charged runs share a manifest hash.
+> webgui's `gui_settings` as well as the scene, and has not been watched drawing (`knowledge/07-software-stack/05-gui-and-packaging.md`);
+> stage 7's summary records wall-clock seconds, so no two charged runs share a manifest hash.
 
 ### WP32 — Documentation increment 3
 

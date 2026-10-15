@@ -35,8 +35,8 @@ runs:
     # tests/tier1/test_gui_widgets.py need there; on ubuntu-latest PySide6 does not
     # import at all (no libEGL) and those tests skip themselves. Installing system
     # packages to change that would buy Linux widget coverage at the price of a
-    # portability promise per runner image (knowledge/07-software-stack/index.md
-    # section 5).
+    # portability promise per runner image
+    # (knowledge/07-software-stack/05-gui-and-packaging.md).
     - if: inputs.code == 'true'
       shell: bash
       run: |

@@ -1027,3 +1027,39 @@ The charge-grid key did not move when REV-14 added `origin_nm` and `spacing_nm` 
 G8 sends a `[verified]` claim whose arithmetic can be executed to a test and keeps a source reading as `[verified]` with a footnote. WP47 applies that split only where a concept's type is Test Evidence, whose `[verified]` claims became tested or pending claims. In the other concepts 56 `[verified]` claims stay as written: 9 cite a source by footnote and 47 name none, so `pending.yaml` counts them as `verified_unsourced`.
 
 Open: WP48 reads each of the 47, and either backs it with a test or gives it a footnote to a source; the ceiling falls with each.
+
+
+### REV-104 — A correction file keeps a dead citation to the removed flat knowledge file
+
+*Area:* verification. *Severity:* low. *Found:* WP47 review.
+
+The shipped `willems2020_nacl.yaml` still cites the physics note by the name it had before it became a directory in a comment. Its bytes are part of the pinned v0.5 solve key (VER-59), so the citation check skips it and a comment edit would move the key.
+
+Open: the author rules whether to re-pin the VER-59 golden together with a corrected citation, or to keep the skip.
+
+
+### REV-105 — SPECIFICATION G12 (7) says the navigation is generated from the index files; the build has one static entry
+
+*Area:* documentation. *Severity:* low. *Found:* WP47 review.
+
+The ruling reads that the documentation navigation comes from the `index.md` files. `mkdocs.yml` has one `Knowledge base` entry and lists the rest under `not_in_nav`.
+
+Open: the author rules whether to amend the ruling to the static entry or to generate the navigation.
+
+
+### REV-106 — The heading-slug function differs from the table-of-contents slugger for emphasis, entities and images
+
+*Area:* verification. *Severity:* low. *Found:* WP47 review.
+
+`okf.headings` strips the markup it knows; `_emphasis_`, HTML entities and images are read differently from the documentation build, so a citation to such a heading could pass the check and miss. No heading of the bundle has these today (the docs-anchor test compares all 241).
+
+Open: WP48 widens the comparison test when a heading first uses one.
+
+
+### REV-107 — About 40 log entries are fragments
+
+*Area:* documentation. *Severity:* low. *Found:* WP47 review.
+
+Entries of `knowledge/log.md` made by cutting the old notes' dated lines read as fragments such as `Source: WP26 implementation session`. Two glaring ones were repaired in the WP47 review.
+
+Open: WP48 rewrites each entry from its note.

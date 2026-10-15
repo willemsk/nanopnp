@@ -62,17 +62,18 @@ Opus only after Sonnet fails.
 
 - [x] 94b46dc 6. `knowledge/` (D2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows pass.
 
-> **Outcome — item 6.** 72 claims name a test; 311 are `[tested: pending]` and 47 `[verified]` claims carry no source footnote, so the ceiling is 358 in 55 concepts; 9 `[verified]` claims cite a source by footnote. A `[verified]` claim in a test-evidence concept became a tested or pending claim; elsewhere each stays `[verified]` until WP48 classifies it.
+> **Outcome — item 6.** 69 claims name a test; 314 are `[tested: pending]` and 47 `[verified]` claims carry no source footnote, so the ceiling is 361 in 55 concepts; 9 `[verified]` claims cite a source by footnote. A `[verified]` claim in a test-evidence concept became a tested or pending claim; elsewhere each stays `[verified]` until WP48 classifies it.
 
-- [ ] 7. `knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
+- [x] 843cb77 7. `knowledge/index.md`, `00-orientation/`, `log.md` (D1, D6); adds `test_ver68_the_bundle_conforms`; done when it passes.
 - [x] b3d1dcb 8. `docs/scripts/generate.py`, `mkdocs.yml` (D6); done when `uv run docs/scripts/generate.py && uv run mkdocs build --strict` passes.
 - [x] 58ca508 9. `CLAUDE.md`, `.claude/skills/`, `.claude/rules/`, `README.md`, `SPECIFICATION.md` §11: the new first read, the maintenance rule (a durable fact is a concept with a log line), the pending figure; done when VER-68 and the build pass.
 
 > **Outcome — what ran differently.** Scripts did the text moves, as planned; the headers were scripted and the
 > descriptions written by hand, with no Haiku workers. File names keep at most 40 characters of the
 > heading. The Files table stays as `00-orientation/01-files.md`. `[verified]` claims were classed only in
-> test-evidence concepts (REV-103). `test_ver68_every_heading_id_matches_the_docs_build` runs where
-> `markdown` is installed.
+> test-evidence concepts (REV-103). `markdown` is a `dev` dependency, so
+> `test_ver68_every_heading_id_matches_the_docs_build` runs in every test leg, not only where the
+> `docs` group is synced.
 
 *Compaction checkpoint: after item 9; then the push gate and `/wp-implement`'s PR.*
 

@@ -4,7 +4,6 @@ title: 4. Rationale worth preserving
 description: The rationale for the form of the corrections, worth preserving.
 tags:
 - physics
-- physics
 sources:
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C

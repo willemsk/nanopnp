@@ -11,7 +11,7 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
   identifier when you implement or test one. Changing specified behaviour means changing the
   specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
-  wrong. `knowledge/01-physics-epnpns/index.md` is normative; where sources disagree, the COMSOL model
+  wrong. The concepts under `knowledge/01-physics-epnpns/` are normative; where sources disagree, the COMSOL model
   report governs (§1.6). Web search is fine for library versions/APIs (prefer Context7) and
   post-knowledge-base literature.
 - **Rules by path:** `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` load when you
@@ -52,8 +52,9 @@ a tree it has not passed.
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
 - When only prose changed, the hook runs ruff alone (`.github/scripts/prose-only.sh`;
-  `SPECIFICATION.md`, `docs/`, example READMEs and `.claude/{agents,skills,rules}/` are not prose,
-  and `docs/plans/` neither: a change to only those runs the tests); CI's documentation build still runs.
+  `SPECIFICATION.md`, `docs/`, example READMEs, `.claude/{agents,skills,rules}/`, `knowledge/` and any
+  Markdown that cites `knowledge/` are not prose, and `docs/plans/` neither: a change to only those
+  runs the tests); CI's documentation build still runs.
 
 ## Project structure
 

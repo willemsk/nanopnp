@@ -4,7 +4,6 @@ title: 3. Nondimensionalisation
 description: The nondimensionalisation and the scales that keep every field of order one.
 tags:
 - numerics
-- numerics
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

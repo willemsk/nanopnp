@@ -4,7 +4,6 @@ title: 2. Axisymmetric weak forms
 description: The axisymmetric weak forms, the axis and the quadrature order that avoids NaN.
 tags:
 - numerics
-- numerics
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

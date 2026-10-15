@@ -750,8 +750,8 @@ Opus. No new identifier.
 > in ten directories: a header on each (a closed list of 15 types, sources, `generated`, `verified`),
 > an `index.md` per directory, `log.md` and `pending.yaml`. VER-68 is `test_okf_bundle.py` over
 > `validation/okf.py`: each refusal on a constructed bundle, the real tree, every tracked address,
-> and the heading ids against the docs build. 72 claims name a test; 358 are pending, the ceiling
-> (311 `[tested: pending]`, 47 `[verified]` without a source). Live constraints: a durable fact is a
+> and the heading ids against the docs build. 69 claims name a test; 361 are pending, the ceiling
+> (314 `[tested: pending]`, 47 `[verified]` without a source). Live constraints: a durable fact is a
 > concept with a log line; a Markdown file that cites `knowledge/` runs the tests (`prose-only.sh`);
 > a heading carrying a marker has an explicit id. REV-103 is open for WP48.
 

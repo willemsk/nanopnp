@@ -37,7 +37,7 @@ while IFS= read -r path; do
         .claude/agents/* | .claude/skills/* | .claude/rules/* | docs/plans/*) exit 1 ;;
         SPECIFICATION.md | docs/project/modularity.md | docs/project/review-items.md) exit 1 ;;
         knowledge/*) exit 1 ;;
-        *.md) [[ -f $path ]] && grep -qE '(^|[^[:alnum:]_./-])knowledge/' -- "$path" && exit 1 ;;
+        *.md) [[ -f $path ]] && grep -qE '(^|[^[:alnum:]_./-]|\.\./)knowledge/' -- "$path" && exit 1 ;;
         *) exit 1 ;;
     esac
 done

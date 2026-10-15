@@ -4,7 +4,6 @@ title: 7. Implementation notes carried forward
 description: Implementation notes carried forward from the source work.
 tags:
 - physics
-- physics
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

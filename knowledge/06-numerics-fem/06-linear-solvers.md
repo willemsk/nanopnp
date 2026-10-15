@@ -4,7 +4,6 @@ title: 6. Linear solvers
 description: Linear solvers, with UMFPACK and SuperLU measured at production size.
 tags:
 - numerics
-- numerics
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

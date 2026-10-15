@@ -1544,6 +1544,7 @@ apbs = [
 dev = [
     { name = "diff-cover" },
     { name = "filelock" },
+    { name = "markdown" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -1587,6 +1588,7 @@ apbs = [{ name = "apbs-binary", marker = "(platform_machine == 'x86_64' and sys_
 dev = [
     { name = "diff-cover", specifier = ">=10.6.0" },
     { name = "filelock", specifier = ">=3.12" },
+    { name = "markdown", specifier = ">=3.5" },
     { name = "mypy", specifier = ">=1.11" },
     { name = "pytest", specifier = ">=8.2" },
     { name = "pytest-cov", specifier = ">=5.0" },

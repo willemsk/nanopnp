@@ -155,9 +155,10 @@ destroys Jacobian symmetry). Two properties are asserted rather than assumed:
   crosswind term is not a Galerkin-consistent perturbation in the same sense, and asserting an
   unmeasured order would be asserting something untrue.
 - **Vanishing difference.** The stabilised and unstabilised currents on the same case must approach
-  each other under refinement, at a measured rate. This is the quantitative form of `knowledge/09-comsol-reference-settings/index.md`
-  §F's "irreducible systematic bounded only by mesh refinement", and it is what licenses the
-  attribution ladder above.
+  each other under refinement, at a measured rate. This is the quantitative form of the "irreducible
+  systematic bounded only by mesh refinement" of
+  `knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` (§F), and it is
+  what licenses the attribution ladder above.
 
 NUM-15 fixes the quadrature: crosswind at integration order 6, streamline at 4 — both above the
 NUM-07 floor, and both requested through `Measures` rather than by passing `bonus_intorder` behind
@@ -929,8 +930,8 @@ requires it before WP17.
 (708 elements, 0.5 M, +50 mV, −0.05 C/m²; four full-ladder solves in 75 s). The `none`-rung
 distance splits as expected. `Δ_transport` carries 88 % of the potential's `Δ_total` (4.01 × 10⁻²),
 and `Δ_flow` carries 90 % of the radial velocity's (8.53 × 10⁻¹). `Δ_resid` is zero by
-construction, and the telescoping identity holds to round-off (`knowledge/08-validation-benchmarks/index.md`
-§Tier 3; `wp13-tier3-comsol-comparison.md` Outcomes). These numbers describe the ladder. They say
+construction, and the telescoping identity holds to round-off (`knowledge/08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md`;
+`wp13-tier3-comsol-comparison.md` Outcomes). These numbers describe the ladder. They say
 nothing about the reference implementation, so no fraction of `Δ_resid` has been bounded by VAL-04:
 its `Δ_ref` needs the published mesh and one uniform refinement from COMSOL. One Tier-3 number
 *does* concern the reference. VAL-15 measured the delivered `rhoq_pore` table on our 44,316-element

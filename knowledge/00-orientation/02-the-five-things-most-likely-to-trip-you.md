@@ -5,7 +5,6 @@ description: 'The five errors most likely to be made when implementing the model
   sign, dielectric force, Einstein ratio, quadrature order.'
 tags:
 - orientation
-- orientation
 sources:
 - id: esi
   resource: https://www.rsc.org/suppdata/d0/nr/d0nr03114c/d0nr03114c1.pdf

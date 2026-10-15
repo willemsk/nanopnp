@@ -154,8 +154,7 @@ moves to `slow` and is logged there.
 > binned through the erratum, ε_G = −16.01 % and the lumen mean Δ is −0.242 nm, so the hand edit
 > widened the lumen by 0.24 nm and moved the outer surface out by 0.19 nm. Conditioning moved the
 > lumen by at most 0.039 nm, rms 0.010. Registration: centroid 10.2027 nm, `centre_z_nm`
-> 4.5727 nm. The full record is [`knowledge/04-clya-geometry-and-charge/index.md`](../../knowledge/04-clya-geometry-and-charge/index.md)
-> §1.4.
+> 4.5727 nm. The full record is [`knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever`](../../knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever).
 
 > **Outcome — D8's sweep compares a level on the planes both polygons cross, not under D2's rule.**
 > The body shortens at both tips as the level rises. At 0.50 it spans z = −1.684 to 11.907 nm and

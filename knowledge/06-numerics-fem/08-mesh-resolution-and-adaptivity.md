@@ -4,7 +4,6 @@ title: 8. Mesh resolution and adaptivity
 description: Mesh resolution and adaptivity, measured against the reference mesh.
 tags:
 - numerics
-- numerics
 sources:
 - id: thesis
   resource: https://github.com/willemsk/phdthesis-text

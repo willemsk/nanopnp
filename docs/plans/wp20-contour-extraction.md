@@ -50,8 +50,8 @@ unless they are fixed together.
      names stage 5.
   4. §5.3.2 row 4: the stage-4 artefact.
   5. §10 OPN-02 is closed and §9 RSK-06 retired, with the finding of [Design §1](#1-the-authors-script-read).
-- **Knowledge:** `knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#12-the-authors-contour-script-read` (new) records the script and its erratum; `knowledge/07-software-stack/index.md`
-  §7 and the index's *Still open* item 3 are updated.
+- **Knowledge:** `knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#12-the-authors-contour-script-read` (new) records the script and its erratum; `knowledge/07-software-stack/07-local-assets.md`
+  and the index's *Still open* item 3 are updated.
 - **Code:** `symmetry/reduce.py` (`ReducedMap.grids`); `density/radii.py` (`resolve_radii`,
   `KERNEL_RADII`); `structure/ensemble.py` (`AlignedEnsemble.read`); `mesh/profile.py`
   (`PoreProfile`, `min_feature_size`, `min_vertex_spacing`, `signed_area`, `load_profile`);

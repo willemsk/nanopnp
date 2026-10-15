@@ -154,7 +154,8 @@ workflow.
 1. Commit on the working branch: `docs: Phase <n> plan and the author's rulings (§8.2.<k>)`, with
    identifiers and ruling numbers in the body. A Markdown-only change outside `packaging/`, `src/`,
    `data/` and `examples/` runs ruff alone (`.github/scripts/prose-only.sh`), except `docs/plans/`,
-   which also runs the tests that read plans.
+   which also runs the tests that read plans, and `knowledge/` with any Markdown that cites it, which
+   also runs the bundle check.
 2. Before the push, run the strict documentation build from `CLAUDE.md`'s *Commands* (the
    amended specification renders in it, and CI's `docs` job gates every push), start
    `.claude/hooks/gate.sh run` with Bash `run_in_background`, and push when it passes
