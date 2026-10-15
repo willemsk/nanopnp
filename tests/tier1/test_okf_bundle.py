@@ -302,7 +302,6 @@ def _scanned() -> list[Path]:
     # artefacts, so a comment edit to either would move a key.
     skipped = {
         okf.REPOSITORY / "tests/tier1/test_okf_bundle.py",
-        okf.REPOSITORY / "data/corrections/willems2020_nacl.yaml",
         okf.REPOSITORY / "data/radii/pdb2pqr_charmm.yaml",
     }
     return [file for file in okf.tracked_files(okf.REPOSITORY) if file not in skipped]
@@ -383,3 +382,50 @@ def test_ver68_citation_of_a_directory_or_an_index_heading_resolves(repository: 
         "See `knowledge/01-a` and `knowledge/01-a/index.md#a`.\n",
     )
     assert _check(repository, files=(cites,)) == []
+
+
+def test_ver68_navigation_is_read_from_the_index_pages(tmp_path: Path) -> None:
+    root = tmp_path / "knowledge"
+    (root / "01-a").mkdir(parents=True)
+    (root / "index.md").write_text("* [Alpha *one*](01-a/index.md) - x\n* [Page](p.md) - y\n")
+    (root / "01-a" / "index.md").write_text("* [1. First](f.md) - z\n")
+    lines = okf.navigation(root, "g/k")
+    assert lines == [
+        "- Knowledge base:",
+        "    - g/k/index.md",
+        '    - "Alpha one":',
+        "        - g/k/01-a/index.md",
+        '        - "1. First": g/k/01-a/f.md',
+        '    - "Page": g/k/p.md',
+        "    - Log: g/k/log.md",
+    ]
+    config = f"nav:\n  {okf.NAV_BEGIN}\n  old\n  {okf.NAV_END}\nrest\n"
+    spliced = okf.splice_navigation(config, ["- a:", "    - b"])
+    assert spliced == f"nav:\n  {okf.NAV_BEGIN}\n  - a:\n      - b\n  {okf.NAV_END}\nrest\n"
+    assert okf.splice_navigation(spliced, ["- a:", "    - b"]) == spliced
+
+
+def test_ver68_mkdocs_navigation_equals_the_index_pages() -> None:
+    config = okf.REPOSITORY / "mkdocs.yml"
+    if not config.is_file():
+        pytest.skip("not a source checkout")
+    text = config.read_text(encoding="utf-8")
+    lines = okf.navigation(okf.REPOSITORY / "knowledge", "_generated/model/knowledge")
+    assert text == okf.splice_navigation(text, lines), "run uv run docs/scripts/generate.py"
+
+
+def test_ver68_heading_markup_gives_the_slug_of_the_docs_build() -> None:
+    markdown = pytest.importorskip("markdown")
+    titles = [
+        "An _emphasised_ word",
+        "A __strong__ word",
+        "snake_case_name stays",
+        "Alpha &amp; beta",
+        "Caf&eacute; and *stars*",
+        "Image ![the alt](pic.png) here",
+        "A [link](x.md) and `code_span`",
+    ]
+    body = "\n\n".join(f"## {title}" for title in titles)
+    html_text = markdown.Markdown(extensions=["toc", "attr_list"]).convert(body)
+    built = re.findall(r'<h2 id="([^"]+)"', html_text)
+    assert [h.anchor for h in okf.headings(body)] == built

@@ -41,6 +41,7 @@ from nanopnp.cli.reference import (
     render_exit_codes,
 )
 from nanopnp.validation.modularity import render_measurements
+from nanopnp.validation.okf import navigation, splice_navigation
 
 logger = logging.getLogger("generate")
 
@@ -151,6 +152,12 @@ def main() -> int:
         path = OUTPUT / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
+    config = ROOT / "mkdocs.yml"
+    current = config.read_text(encoding="utf-8")
+    nav = navigation(ROOT / "knowledge", "_generated/model/knowledge")
+    spliced = splice_navigation(current, nav)
+    if spliced != current:
+        config.write_text(spliced, encoding="utf-8")
     logger.info("wrote %d pages to %s", len(pages) + len(rendered), OUTPUT.relative_to(ROOT))
     return 0
 

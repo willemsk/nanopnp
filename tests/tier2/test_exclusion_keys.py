@@ -38,7 +38,7 @@ KEYS_V05 = {
     "region": "85d3b34627c4a56b38640ffa6222ec8e53838090cab296a4d596b02cac68b7e2",
     "mesh": "4be21a3052091a42d579d43c923b55d4097bdd358a1fd53b5cb82a998be88c55",
     "charge": "3b8a969645c474fdbd205a2063763234cc428b9389576cf5c56631a97283dfe5",
-    "solve": "f5b1b23aeb4e696b45e8bc802d6bee1558ddbcb8b6859d962466f0f62eeb4e75",
+    "solve": "1d2f0c3c0f940cf96acb7d38c6fdfecdcfbfd896aef51d3214d4a34b566d1a69",
 }
 
 PROFILE_SCHEMA_V1 = "nanopnp/profile/v1"
