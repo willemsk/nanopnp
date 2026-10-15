@@ -6,7 +6,7 @@
 # as printed; charges and atom types are not carried. Two residues (CAL, DUM) are listed twice
 # in the source with identical entries and appear once here. The author ruled on 25 September
 # 2026 that these are the density map's radii: they are the set carried by the per-frame PQR
-# files of the reference ensemble (knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured).
+# files of the reference ensemble (.knowledge/04-clya-geometry-and-charge.md section 1.1).
 # tests/tier1/test_density.py::test_ver49_radius_table_matches_charmm_dat holds this file
 # equal to the installed CHARMM.DAT, entry by entry.
 #

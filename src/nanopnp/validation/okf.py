@@ -37,8 +37,6 @@ TYPES: frozenset[str] = frozenset(
     }
 )
 
-SOURCE_IDS: frozenset[str] = frozenset({"thesis", "paper", "esi", "comsol-report"})
-
 MODEL_IDENTIFIER = re.compile(r"(?i)\b(claude-)?(opus|sonnet|haiku|fable)\b")
 
 HEADING = re.compile(r"^(#{1,6})[ \t]+(.*?)[ \t]*$")
@@ -54,10 +52,10 @@ CITATION = re.compile(
 )
 
 LEGACY = re.compile(
-    r"(?:(?<![\w./-])|(?<=\.\./))knowledge/\d\d(?:-[\w-]+\.md)?(?::[\d-]+)?`*\s*(?:§|section\b)"
+    r"(?:(?<![\w./-])|(?<=\.\./))knowledge/\d\d(?:-[\w-]+(?:/index)?\.md)?(?::[\d-]+)?`*\s*(?:§|section\b)"
 )
 
-PLACEHOLDER = re.compile(r"^(?:0N|NN)|[<*]")
+PLACEHOLDER = re.compile(r"^(?:0N|NN)")
 
 CLAIM = re.compile(r"\[(tested|verified)(?::\s*([^\]]+?))?(?:,\s*verified)?\s*\]")
 
@@ -87,6 +85,7 @@ class Finding:
     message: str
 
     def __str__(self) -> str:
+        """Return the finding as ``path:line: message``."""
         return f"{self.path}:{self.line}: {self.message}"
 
 
@@ -131,16 +130,20 @@ def _plain(title: str) -> str:
 
 def headings(body: str, first_line: int = 1) -> list[Heading]:
     """Return the headings of ``body`` outside code fences, each with its anchor."""
-    found: list[Heading] = []
-    taken: set[str] = set()
+    matches: list[tuple[int, re.Match[str]]] = []
     fenced = False
     for offset, line in enumerate(body.splitlines()):
         if FENCE.match(line):
             fenced = not fenced
             continue
         match = None if fenced else HEADING.match(line)
-        if match is None:
-            continue
+        if match is not None:
+            matches.append((offset, match))
+    # Every explicit id is taken before a slug is assigned, so a slug that a later heading
+    # claims explicitly takes the suffix, as the table of contents gives it.
+    taken = {e.group(1) for _, m in matches if (e := EXPLICIT_ID.search(m.group(2)))}
+    found: list[Heading] = []
+    for offset, match in matches:
         title = match.group(2)
         explicit = EXPLICIT_ID.search(title)
         if explicit:
@@ -148,7 +151,7 @@ def headings(body: str, first_line: int = 1) -> list[Heading]:
             anchor = explicit.group(1)
         else:
             anchor = _unique(slugify(_plain(title)), taken)
-        taken.add(anchor)
+            taken.add(anchor)
         found.append(Heading(len(match.group(1)), first_line + offset, title, anchor))
     return found
 
@@ -203,7 +206,7 @@ def check_structure(root: Path) -> list[Finding]:
         findings.append(Finding(_relative(index, base), 1, f"okf_version must be declared: {head}"))
     listed = _listed(index)
     for directory in sorted(path for path in root.iterdir() if path.is_dir()):
-        if f"{directory.name}/index.md" not in listed and f"{directory.name}/" not in listed:
+        if f"{directory.name}/index.md" not in listed and directory.name not in listed:
             findings.append(
                 Finding(_relative(index, base), 1, f"does not list the directory {directory.name}")
             )
@@ -354,7 +357,7 @@ def tracked_files(repository: Path) -> list[Path]:
     return [repository / n for n in names if n and (repository / n).is_file()]
 
 
-def test_names(tests: Path) -> set[str]:
+def named_tests(tests: Path) -> set[str]:
     """Return the node ids of the test functions under ``tests``, read from their syntax trees."""
     names: set[str] = set()
     for file in sorted(tests.rglob("test_*.py")):
@@ -388,24 +391,22 @@ def claims(body: str, first_line: int = 1) -> list[tuple[int, str, str | None]]:
     return found
 
 
-def _tests_of(concept: Concept) -> tuple[set[str], int, int, int]:
+def _tests_of(concept: Concept) -> tuple[set[str], int, int]:
     named: set[str] = set()
-    pending = bare = verified = 0
+    pending = verified = 0
     for _, kind, test in claims(concept.body, concept.first_line):
         if kind == "verified":
             verified += 1
-        elif test is None:
-            bare += 1
-        elif test.strip() == PENDING:
+        elif test is not None and test.strip() == PENDING:
             pending += 1
-        else:
+        elif test is not None:
             named.add(test.strip())
-    return named, pending, bare, verified
+    return named, pending, verified
 
 
 def verified_set(concept: Concept) -> set[str]:
     """Return the ``verified`` actors the concept's own claims and type require."""
-    named, _, _, arithmetic = _tests_of(concept)
+    named, _, arithmetic = _tests_of(concept)
     expected = {f"process:{test}" for test in named}
     if arithmetic:
         expected.add(ARITHMETIC)
@@ -427,7 +428,7 @@ def pending_counts(root: Path) -> dict[str, dict[str, int]]:
         parsed = parse_concept(path)
         if isinstance(parsed, str):
             continue
-        _, pending, _, _ = _tests_of(parsed)
+        _, pending, _ = _tests_of(parsed)
         unsourced = 0
         for line, kind, _ in claims(parsed.body, parsed.first_line):
             if kind == "verified" and not _sourced(parsed.body, line - parsed.first_line):
@@ -441,15 +442,14 @@ def pending_counts(root: Path) -> dict[str, dict[str, int]]:
 
 
 def _sourced(body: str, offset: int) -> bool:
-    lines = body.splitlines()
-    return bool(FOOTNOTE_USE.search(lines[offset])) if offset < len(lines) else False
+    return bool(FOOTNOTE_USE.search(body.splitlines()[offset]))
 
 
 def check_ledger(root: Path, tests: Path, lock: Path | None = None) -> list[Finding]:
     """Refuse a concept whose markers, footnotes, verified set or versions disagree (VER-68 3-6)."""
     findings: list[Finding] = []
     base = root.parent
-    known = test_names(tests)
+    known = named_tests(tests)
     locked = _locked(lock) if lock is not None and lock.is_file() else {}
     for path in _concepts(root):
         parsed = parse_concept(path)
@@ -500,7 +500,10 @@ def _check_sources(concept: Concept, name: str) -> list[Finding]:
 
 
 def _version(text: str) -> tuple[int, ...]:
-    return tuple(int(part) for part in re.findall(r"\d+", text.split("+")[0]))
+    parts = [int(part) for part in re.findall(r"\d+", text.split("+")[0])]
+    while parts and parts[-1] == 0:
+        parts.pop()
+    return tuple(parts)
 
 
 def _locked(lock: Path) -> dict[str, str]:

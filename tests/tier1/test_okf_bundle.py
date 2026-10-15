@@ -101,6 +101,13 @@ def test_ver68_root_index_missing_a_directory_is_refused(repository: Path) -> No
     assert any("does not list the directory 02-b" in f for f in found)
 
 
+def test_ver68_root_index_may_link_a_directory_itself(repository: Path) -> None:
+    (repository / "knowledge/index.md").write_text(
+        '---\nokf_version: "0.2"\n---\n\n* [A](01-a/)\n', encoding="utf-8"
+    )
+    assert _check(repository) == []
+
+
 def test_ver68_directory_index_missing_a_concept_is_refused(repository: Path) -> None:
     _concept(repository, "02-other.md", BODY)
     found = _check(repository)
@@ -145,9 +152,13 @@ def test_ver68_citation_to_missing_concept_or_heading_is_refused(repository: Pat
 
 
 def test_ver68_legacy_section_form_is_refused(repository: Path) -> None:
-    legacy = _file(repository, "legacy.md", "See `knowledge/06` §2.2 and knowledge/04 section 3.\n")
+    legacy = _file(
+        repository,
+        "legacy.md",
+        "See `knowledge/06` §2.2, knowledge/04 section 3, `knowledge/01-a/index.md` section 1.\n",
+    )
     found = _check(repository, files=(legacy,))
-    assert sum("legacy section form" in f for f in found) == 2
+    assert sum("legacy section form" in f for f in found) == 3
 
 
 def test_ver68_placeholder_in_a_code_span_passes(repository: Path) -> None:
@@ -168,6 +179,11 @@ def test_ver68_explicit_ids_and_repeats_give_anchors(repository: Path) -> None:
     pending = {"01-a/01-thing.md": {"tested_pending": 1, "verified_unsourced": 0}}
     (repository / "knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
     assert _check(repository, ceiling=1, files=(ok,)) == []
+
+
+def test_ver68_an_explicit_id_claimed_later_moves_an_earlier_slug() -> None:
+    found = okf.headings("## Foo\n\n## Bar {#foo}\n\n## Baz\n")
+    assert [h.anchor for h in found] == ["foo_1", "foo", "baz"]
 
 
 def test_ver68_slug_matches_the_docs_build() -> None:
@@ -239,6 +255,7 @@ def test_ver68_tested_with_older_than_lock_is_refused(repository: Path) -> None:
         return _check(repository)
 
     assert found("6.2.2504") == []
+    assert found("6.2.2504.0") == []
     assert found("6.2.2600") == []
     assert any("older than 6.2.2504" in f for f in found("6.2.2400"))
     assert any("netgen, absent from uv.lock" in f for f in found("1.0", "netgen"))
@@ -281,10 +298,12 @@ def test_ver68_pending_total_above_the_ceiling_is_refused(repository: Path) -> N
 
 def _scanned() -> list[Path]:
     # The test module quotes bad addresses on purpose; the correction file is hashed into the
-    # pinned v0.5 solve key (VER-59), so a comment edit would move the key.
+    # pinned v0.5 solve key (VER-59), and the radii file's digest keys the density and protonation
+    # artefacts, so a comment edit to either would move a key.
     skipped = {
         okf.REPOSITORY / "tests/tier1/test_okf_bundle.py",
         okf.REPOSITORY / "data/corrections/willems2020_nacl.yaml",
+        okf.REPOSITORY / "data/radii/pdb2pqr_charmm.yaml",
     }
     return [file for file in okf.tracked_files(okf.REPOSITORY) if file not in skipped]
 
@@ -297,7 +316,7 @@ def test_ver68_repository_citations_all_resolve() -> None:
     assert not found, "\n".join(str(finding) for finding in found)
 
 
-CEILING = 358
+CEILING = 361
 
 
 def test_ver68_the_bundle_conforms() -> None:

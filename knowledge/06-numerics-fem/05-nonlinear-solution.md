@@ -4,7 +4,6 @@ title: 5. Nonlinear solution
 description: 'The nonlinear solution: damped Newton, convergence tests and the continuation ladder.'
 tags:
 - numerics
-- numerics
 sources:
 - id: comsol-report
   resource: COMSOL Multiphysics 5.4 model report of 22 May 2020

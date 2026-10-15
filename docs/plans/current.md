@@ -11,7 +11,7 @@ long files; they are a hundred and twenty-one short pages, one idea each, in a f
 page has a small header saying what kind of page it is and where its claims come from. Every pointer
 to the notes, in the code, plans and history, names the new address, and an automatic check refuses a
 pointer to nothing. Claims that no test yet backs are marked as waiting, in a list that may only
-shrink: 358 today. No computed result moved. It now waits for review in a fresh session.
+shrink: 361 today. No computed result moved. It now waits for review in a fresh session.
 
 **Your call:** the log keeps the dated events the notes already record, with git holding every earlier
 edit. *Recommendation:* keep that reading; a copy of the whole git history would only duplicate it.

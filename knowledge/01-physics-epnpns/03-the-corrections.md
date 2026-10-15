@@ -5,7 +5,6 @@ description: The concentration- and wall-distance-dependent corrections, the Ein
   and the reduction to PNP-NS.
 tags:
 - physics
-- physics
 sources:
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C

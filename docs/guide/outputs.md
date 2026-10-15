@@ -32,8 +32,8 @@ difference under `route_agreement`. The agreement is relative, so a run at exact
 the current is zero and both routes return round-off, fails it. Use a small nonzero bias instead.
 
 The current is never taken from a cross-section integral of the flux: on a continuous finite-element
-space that route converges more slowly and depends on where the cut is placed (`knowledge/06-numerics-fem/index.md`,
-§7).
+space that route converges more slowly and depends on where the cut is placed
+(`knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`).
 
 ## Exported fields
 

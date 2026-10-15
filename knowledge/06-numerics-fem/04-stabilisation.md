@@ -4,7 +4,6 @@ title: 4. Stabilisation
 description: 'Stabilisation: the mode as built and what each term does.'
 tags:
 - numerics
-- numerics
 sources:
 - id: comsol-report
   resource: COMSOL Multiphysics 5.4 model report of 22 May 2020

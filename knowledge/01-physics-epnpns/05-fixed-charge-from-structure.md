@@ -4,7 +4,6 @@ title: 5. Fixed charge from structure
 description: How the fixed charge is obtained from the structure.
 tags:
 - physics
-- physics
 sources:
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C

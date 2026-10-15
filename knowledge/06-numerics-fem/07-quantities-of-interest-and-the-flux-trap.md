@@ -4,7 +4,6 @@ title: 7. Quantities of interest — and the flux trap
 description: The quantities of interest, the flux trap and the routes that extract them.
 tags:
 - numerics
-- numerics
 sources:
 - id: thesis
   resource: https://github.com/willemsk/phdthesis-text

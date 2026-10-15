@@ -442,7 +442,7 @@ Outside the scope of v1. Identifiers retained from v0.4.
 
 This section states the mathematical model. Requirements carry `PHY-nn` IDs and use the keywords
 of §1.5. Symbols follow Willems K. et al., *Nanoscale* **12**, 16775–16795 (2020) and
-`knowledge/01-physics-epnpns/index.md`. Where the reference and the published text differ, the COMSOL
+the concepts under `knowledge/01-physics-epnpns/`. Where the reference and the published text differ, the COMSOL
 model report governs and §4.6 records the divergence.
 
 ### 4.1 Domains, boundaries and symbols
@@ -691,7 +691,7 @@ that construction's limit as the spacing goes to zero, without its cost, which w
 voxel updates for the 50-frame ClyA ensemble. Step 6 deposits onto the
 deployed mesh rather than sampling a grid there, which removes the aliasing of the consumer leg
 that the §4.4 NOTE measures on the delivered table. The reference built its table from a 2D Gaussian
-in (r, z) divided by `2πr` at the field point (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`, gap G4). PHY-17 forbids that
+in (r, z) divided by `2πr` at the field point (`knowledge/04-clya-geometry-and-charge/08-gaps-and-ambiguities-questions-for-the.md`, gap G4). PHY-17 forbids that
 construction, so it is not reproduced. Off the axis the two carry the same charge and the same
 z-marginal, and differ pointwise by `(r − r_i)/(2 r_i)` of the local value: first order in
 `w_i/r_i` and odd about the atom, so the 3D construction's radial centroid lies `w_i²/(4 r_i)`
@@ -3842,7 +3842,7 @@ directory per note, a concept per `##` section with a header (a `type` from a cl
 events. A claim verified by running code is marked `[tested: <test>]`, naming a test function under
 `tests/`, or `[tested: pending]` while none does; a claim verified by arithmetic or by reading a source
 is marked `[verified]`, with a footnote to a source of its concept. `knowledge/pending.yaml` counts
-the claims no test backs, per concept, and its total may only fall: at most 358, the figure recorded
+the claims no test backs, per concept, and its total may only fall: at most 361, the figure recorded
 at WP47's close (§8.2.7 G3). Anything unverified says so. The maintenance rule, stated in
 `CLAUDE.md`: when something durable is learned, it is written as a concept, with a line in the log.
 

@@ -35,8 +35,9 @@ G12, VER-68). No code path of the solver changes, and VER-62 is untouched.
   concept without a typed header, an address that reaches no concept or heading, a legacy
   `knowledge/0N §x` form, a `[tested: …]` naming no test, a bare `[tested]`, a `verified` list that
   differs from the claims, a footnote that is no source, an older `tested_with`, and a pending list
-  that differs from the files or exceeds 358.
-- **The ledger** (G3, G8): 72 claims name a test, 311 are `[tested: pending]` and 47 `[verified]`
+  that differs from the files or exceeds 361. `markdown` joins the `dev` group, so the comparison of
+  heading ids with the documentation build runs in every test leg.
+- **The ledger** (G3, G8): 69 claims name a test, 314 are `[tested: pending]` and 47 `[verified]`
   claims name no source; WP48 empties the list.
 - **The gate** (VER-45): `prose-only.sh` reads `knowledge/` and any Markdown that cites it as
   not prose; the documentation site renders the bundle through its index pages, with the

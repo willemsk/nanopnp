@@ -324,6 +324,7 @@ def test_prose_only_reads_a_findings_log_as_not_prose(path: str, prose: bool) ->
         ("knowledge/index.md", "x\n", False),
         ("CHANGELOG.md", "see `knowledge/index.md`\n", False),
         ("README.md", "see `knowledge/` too\n", False),
+        ("docs/a.md", "see [x](../knowledge/index.md)\n", False),
         ("README.md", "no citation\n", True),
         ("deleted.md", None, True),
     ],

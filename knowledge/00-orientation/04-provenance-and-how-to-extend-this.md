@@ -4,7 +4,6 @@ title: Provenance and how to extend this
 description: The primary sources and how a durable finding is added to the knowledge base.
 tags:
 - orientation
-- orientation
 sources:
 - id: thesis
   resource: https://github.com/willemsk/phdthesis-text

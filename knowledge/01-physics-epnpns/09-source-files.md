@@ -4,7 +4,6 @@ title: 9. Source files
 description: The source files from which the physics was extracted.
 tags:
 - physics
-- physics
 sources:
 - id: thesis
   resource: https://github.com/willemsk/phdthesis-text

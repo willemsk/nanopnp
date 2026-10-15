@@ -5,7 +5,6 @@ description: The Poisson, size-modified Nernst-Planck and Navier-Stokes equation
   and boundaries.
 tags:
 - physics
-- physics
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

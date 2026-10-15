@@ -8,7 +8,7 @@ Entries are the dated events the notes record, newest first; git holds every ear
 * **Update**: Recorded how the documentation build treats the bundle ([13. Documentation tooling: MkDocs, Material and Zensical](07-software-stack/13-documentation-tooling-mkdocs-material.md)).
 
 ## 2026-10-12
-* **Record**: ... ecorded reference mesh, and the largest relative drift against the golden recorded on 3.12 is 6.9 × 10⁻¹⁴ (example 01's eof_m3_s; every other walk at or below 2.7 × 10⁻¹⁵), 12 October 2026 (WP43, D12) ... ([8. Python version floor — the 3.10 target is not free](07-software-stack/08-python-version-floor-the-310-target-is.md))
+* **Record**: ... recorded reference mesh, and the largest relative drift against the golden recorded on 3.12 is 6.9 × 10⁻¹⁴ (example 01's eof_m3_s; every other walk at or below 2.7 × 10⁻¹⁵), 12 October 2026 (WP43, D12) ... ([8. Python version floor — the 3.10 target is not free](07-software-stack/08-python-version-floor-the-310-target-is.md))
 * **Record**: Measured for WP43 D8 on 12 October 2026: CPython 3.14.6, coverage 7.15.4, pytest-cov 7.1.0, four cores shared with another agent's runs, -n 4 --dist loadfile, BLAS threads 1, NPY_DISABLE_CPU_FEATURES ... ([12. The suite's BLAS threads buy nothing; parallelism has to come from workers](07-software-stack/12-the-suites-blas-threads-buy-nothing.md))
 * **Record**: The sub-agent frontmatter keys that code.claude.com documented on 12 October 2026 are the set that tests/tier1/test_plan_shape.py checks ([Tier-1 test evidence: stores, paths, OCC names, NaN and reduction tolerances (WP45 item 23)](07-software-stack/19-tier-1-test-evidence-stores-paths-occ.md))
 
@@ -16,7 +16,7 @@ Entries are the dated events the notes record, newest first; git holds every ear
 * **Record**: After import nanopnp.io.case the only nanopnp subpackages in sys.modules are core and io , 6 October 2026 ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 
 ## 2026-10-05
-* **Record**: Within one <platform-<machine key, NumPy's SIMD dispatch moves a PDB-derived mesh (WP35 review, 5 October 2026) ([8.1 NGSolve traps found by implementing this — all silent](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
+* **Record**: Within one `<platform>-<machine>` key, NumPy's SIMD dispatch moves a PDB-derived mesh (WP35 review, 5 October 2026) ([8.1 NGSolve traps found by implementing this — all silent](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
 
 ## 2026-10-04
 * **Record**: Source: WP34, 4 October 2026 ([2. Axisymmetric weak forms](06-numerics-fem/02-axisymmetric-weak-forms.md))

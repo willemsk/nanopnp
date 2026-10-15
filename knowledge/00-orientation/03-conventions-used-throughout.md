@@ -4,7 +4,6 @@ title: Conventions used throughout
 description: The notation and the marking of claims used throughout the knowledge base.
 tags:
 - orientation
-- orientation
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

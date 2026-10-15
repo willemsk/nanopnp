@@ -4,7 +4,6 @@ title: 1. Symbols
 description: The symbols, units and notation of the model.
 tags:
 - physics
-- physics
 sources:
 - id: thesis
   resource: https://github.com/willemsk/phdthesis-text
