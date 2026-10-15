@@ -1,6 +1,6 @@
 # Current work
 
-Updated 14 October 2026 (WP46 and WP47 delivered, awaiting `/wp-ship`). Navigation only; `SPECIFICATION.md` governs;
+Updated 15 October 2026 (WP47 delivered; WP48 planned). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
@@ -27,7 +27,7 @@ edit. *Recommendation:* keep that reading; a copy of the whole git history would
   `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge.
 - **WP47, the OKF bundle** ([plan](wp47-okf-bundle.md)), is **delivered** (§8.2.7 G12; VER-68), tag
   `v0.5.0-alpha.13` after the merge. Next: `/wp-ship`; then WP48 (backfill: empties `pending.yaml`,
-  `REV-103`) and WP49 (protocol); the author's sessions; fixes from WP50.
+  `REV-103`, [plan](wp48-okf-backfill.md), planned) and WP49 (protocol); the author's sessions; fixes from WP50.
 
 ## Not to be re-decided
 
@@ -68,6 +68,7 @@ edit. *Recommendation:* keep that reading; a copy of the whole git history would
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | The small fixes as shipped | `wp46-small-fixes.md`; `CHANGELOG.md` `0.5.0-alpha.12`; `docs/project/review-items.md` |
 | The knowledge bundle as shipped | `wp47-okf-bundle.md`; `knowledge/index.md`; `src/nanopnp/validation/okf.py` (VER-68) |
+| The OKF backfill as planned | `wp48-okf-backfill.md`; `knowledge/pending.yaml`; §8.2.7 G3, G8 |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `okf-converter-rules.md` |
 

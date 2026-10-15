@@ -21,7 +21,7 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
 `v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
 `v0.5.0-alpha.13`.
-Planned: WP48, its backfill; WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
+Planned: WP48, its backfill ([plan](wp48-okf-backfill.md)); WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
 which take their numbers then.
@@ -795,6 +795,11 @@ reason to loosen the test.
 > convergence test or the areal-charge quadrature is backed against WP41's tree, not the one before it.
 
 > **Amended, 11 October 2026** (§8.2.10 J1). This is now **WP48**.
+
+> **Planned, 15 October 2026** ([plan](wp48-okf-backfill.md)). Backfills all 361 open claims:
+> 89+ test-evidence claims re-linked to existing tests, 47 unsourced claims resolved (REV-103),
+> library behaviour concepts given `tested_with`, and new hermetic Tier-1 tests for NGSolve traps
+> and arithmetic. The package ends when `pending.yaml` is empty and `CEILING = 0` (G3).
 
 ### User-testing protocol — Provisional
 
