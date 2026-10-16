@@ -11,6 +11,10 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+sources:
+- id: wp15-plan
+  resource: docs/plans/wp15-gui-3d-view-and-packaging.md
+  title: WP15 GUI 3D view and packaging plan (`ngsolve_webgui_js` 0.2.39)
 ---
 
 ## 5. GUI and packaging
@@ -117,7 +121,7 @@ needs a different renderer source has to build the host document itself. The doc
 plus the render data, so that is cheap — but it is not optional.
 
 The renderer itself is npm `webgui`, `"license": "LGPL-2.1-or-later"` (npm registry metadata,
-**[verified]**). Its tarball for 0.2.39 is 503,052 B, and its published `dist.integrity` is
+**[verified][^wp15-plan]**). Its tarball for 0.2.39 is 503,052 B, and its published `dist.integrity` is
 `sha512-yDd6YR7E…Zubqw==`. The 1,206,946 B figure npm reports is the *unpacked* tarball. The file a
 page loads, `package/dist/webgui.js`, is **779,484 B**: a minified IIFE that defines the global
 `webgui`.
@@ -154,7 +158,7 @@ The same call draws a **two-component vector** field without special handling: a
 the `epnp-ns` family (the potential, two concentrations, the velocity and the pressure) produce a
 scene from one code path, the vector one costing about 1.5x the scalars.
 
-### A fixed colour range needs the scene's keys and the viewer's own settings **[verified]** {#a-fixed-colour-range-needs-the-scenes-keys-and-the-viewers-own-settings}
+### A fixed colour range needs the scene's keys and the viewer's own settings **[verified][^wp15-plan]** {#a-fixed-colour-range-needs-the-scenes-keys-and-the-viewers-own-settings}
 
 webgui 0.2.39 has one colour map per scene, and by default it autoscales to the sampled
 `funcmin`/`funcmax`, which `Draw(...).GetData()` returns. A diverging map centred on zero, or χ on
@@ -370,3 +374,4 @@ that is only browsing a case never pays for a solver or a toolkit.
 
 ---
 
+[^wp15-plan]: `docs/plans/wp15-gui-3d-view-and-packaging.md` (`ngsolve_webgui_js` 0.2.39 npm metadata and `src/scene.ts`).

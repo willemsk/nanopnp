@@ -1,7 +1,8 @@
 ---
 type: Library Behaviour
 title: 3. Charge and electrostatics
-description: The charge and electrostatics tools PDB2PQR, PROPKA and APBS, as the pipeline drives them.
+description: The charge and electrostatics tools PDB2PQR, PROPKA and APBS, as the
+  pipeline drives them.
 tags:
 - software
 - library-behaviour
@@ -11,6 +12,13 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+sources:
+- id: wp17-plan
+  resource: docs/plans/wp17-packaging-and-ci.md
+  title: WP17 packaging and CI plan (PyPI wheel metadata)
+- id: wp27-plan
+  resource: docs/plans/wp27-protonation-stage.md
+  title: WP27 protonation stage plan, Design §1 (PDB2PQR 3.7.1 source)
 ---
 
 ## 3. Charge and electrostatics
@@ -30,7 +38,7 @@ predictors must be run separately and their states applied by hand.
 PDB2PQR ignores PROPKA's `chains` option (relevant for homo-oligomeric pores) but *does* log a
 warning — surface it rather than swallowing it.
 
-**Package facts, read from PyPI's metadata on 30 September 2026 [verified]:** `pdb2pqr` 3.7.1 is
+**Package facts, read from PyPI's metadata on 30 September 2026 [verified]:**[^wp17-plan] `pdb2pqr` 3.7.1 is
 BSD-3, a pure-Python wheel, and requires Python ≥ 3.11, < 4. `propka` 3.5.1 is **LGPL-2.1** by its
 licence field and classifier, and is a pure-Python wheel. `SPECIFICATION.md` §2.6 called it BSD
 until that day. There is no `apbs` package on PyPI. `apbs-binary` 3.4.1.1 packages the BSD-3 APBS
@@ -108,12 +116,12 @@ frame).
   **[tested: pending]**, 1 October 2026, `CYS 285` of 2WCD chain A bonded to a mirrored copy (WP27 review).
   `--drop-water` drops only `HOH` and `WAT` (`aa.WAT.water_residue_names`), and a water kept under
   CHARMM is `TP3M`. `HETATM` with a five-digit serial is written with nothing between them
-  (`HETATM12345`, `get_common_string_rep`) **[verified]**, read from the 3.7.1 source. PROPKA types
+  (`HETATM12345`, `get_common_string_rep`) **[verified][^wp27-plan]**, read from the 3.7.1 source. PROPKA types
   the C-terminus `COO`, as it does a side-chain carboxyl, and only its label says `C-`: a C-terminal
   `ASP` or `GLU` carries two `COO` groups (`ASP  21 A`, `C-   21 A`) **[tested: pending]**, 1 October 2026.
 - **`run_pdb2pqr`'s first return is missing atoms**, not residues: the atoms
   `Biomolecule.apply_force_field` could not parameterise, which the PQR leaves out. An atom
-  written with no charge gets `0.0000` (`get_pqr_string`) **[verified]**, read from the 3.7.1
+  written with no charge gets `0.0000` (`get_pqr_string`) **[verified][^wp27-plan]**, read from the 3.7.1
   source, 1 October 2026.
 - **PROPKA 3.5.1 fails on Python 3.14.** `Parameters.parse_line` dispatches on
   `self.__annotations__`, and under PEP 649/749 annotations are a class attribute only: on an
@@ -267,3 +275,5 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
 
 ---
 
+[^wp17-plan]: `docs/plans/wp17-packaging-and-ci.md` and `uv.lock` (PyPI metadata for `pdb2pqr` 3.7.1 and `propka` 3.5.1).
+[^wp27-plan]: `docs/plans/wp27-protonation-stage.md`, Design §1 (`pdb2pqr` 3.7.1 `get_common_string_rep` and `get_pqr_string`).

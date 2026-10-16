@@ -1,8 +1,8 @@
 ---
 type: Pipeline
 title: 2. Model geometry and conventions
-description: The model geometry and its conventions, with the bilayer profile and the ion-exclusion shell
-  measured.
+description: The model geometry and its conventions, with the bilayer profile and
+  the ion-exclusion shell measured.
 tags:
 - clya
 - pipeline
@@ -10,6 +10,9 @@ sources:
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C
   title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+- id: wp21-plan
+  resource: docs/plans/wp21-region-and-meshing.md
+  title: WP21 region and meshing plan, Design §1
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
@@ -60,13 +63,13 @@ profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
   (3.070, −0.016) and (3.235, 0.260), splitting the electrolyte in two. **[tested: pending]**
 - **Any admissible chord gives the same region**: a pocket between two chords would be enclosed by
   them, the body and the plane stretches between their ends, which are body too, yet the
-  complement of a simple polygon is connected. **[verified]**
+  complement of a simple polygon is connected. **[verified][^wp21-plan]**
 - **A plane that crosses the profile more than twice always splits a domain.** The gap between
   the first two intervals is fluid bounded by body at both ends, and the arms either side of it
   join above the plane or below it. Joined above, the fluid over the gap is enclosed and is a
   second electrolyte face; joined below, the pocket under it is a second membrane face (and
   electrolyte where it passes the other plane). So "the membrane meets the body at `r₂`, not
-  `r₄`" cannot be tested on a four-crossing body: no such body assembles. **[verified]** by the
+  `r₄`" cannot be tested on a four-crossing body: no such body assembles. **[verified][^wp21-plan]** by the
   argument, **[tested: pending]** on a hook and a bridge profile, refused naming each face's centroid.
 - **The 1.85 nm trans-tip offset is the fixture's own** (pore axial extent −1.85 ≤ z, bilayer
   centre 0). Applying it to 2WCD is a test-time registration, not a VAL-05 claim.
@@ -106,3 +109,4 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 
 ---
 
+[^wp21-plan]: `docs/plans/wp21-region-and-meshing.md`, Design §1 (chord uniqueness and four-crossing topology).

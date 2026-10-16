@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-10-16
+* **Update**: Linked source footnotes and immutable plan records to report readings, topological/calculus identities and standalone archive observations across the bundle, including the ten unsourced COMSOL reference-settings claims (WP48 item 2).
+
 ## 2026-10-14
 * **Update**: The folder lost its leading dot and is now `knowledge/`; every citation follows.
 * **Update**: The notes became a bundle of concepts, one idea each, with a header, a ledger of test-backed claims and this log (WP47).

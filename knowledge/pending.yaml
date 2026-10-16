@@ -1,4 +1,3 @@
-# Claims no test yet backs, per concept (VER-68; section 8.2.7 G3). The list may only shrink.
 01-physics-epnpns/03-the-corrections.md:
   tested_pending: 1
   verified_unsourced: 0
@@ -6,19 +5,16 @@
   tested_pending: 5
   verified_unsourced: 0
 04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md:
-  tested_pending: 12
+  tested_pending: 7
   verified_unsourced: 4
 04-clya-geometry-and-charge/02-model-geometry-and-conventions.md:
   tested_pending: 5
-  verified_unsourced: 3
+  verified_unsourced: 1
 04-clya-geometry-and-charge/03-fixed-charge-pipeline.md:
-  tested_pending: 4
+  tested_pending: 2
   verified_unsourced: 1
 04-clya-geometry-and-charge/04-mesh.md:
   tested_pending: 1
-  verified_unsourced: 0
-04-clya-geometry-and-charge/08-gaps-and-ambiguities-questions-for-the.md:
-  tested_pending: 3
   verified_unsourced: 0
 04-clya-geometry-and-charge/09-tier-1-test-evidence-contours-and.md:
   tested_pending: 3
@@ -61,7 +57,7 @@
   verified_unsourced: 0
 06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md:
   tested_pending: 12
-  verified_unsourced: 4
+  verified_unsourced: 1
 06-numerics-fem/08-mesh-resolution-and-adaptivity.md:
   tested_pending: 3
   verified_unsourced: 0
@@ -91,13 +87,13 @@
   verified_unsourced: 1
 07-software-stack/03-charge-and-electrostatics.md:
   tested_pending: 10
-  verified_unsourced: 4
+  verified_unsourced: 1
 07-software-stack/04-geometry-meshing-and-io.md:
   tested_pending: 17
   verified_unsourced: 1
 07-software-stack/05-gui-and-packaging.md:
   tested_pending: 16
-  verified_unsourced: 3
+  verified_unsourced: 1
 07-software-stack/06-licence-summary.md:
   tested_pending: 1
   verified_unsourced: 0
@@ -124,7 +120,7 @@
   verified_unsourced: 0
 07-software-stack/15-an-npz-is-reproducible-bytes-only-if.md:
   tested_pending: 1
-  verified_unsourced: 1
+  verified_unsourced: 0
 07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md:
   tested_pending: 1
   verified_unsourced: 0
@@ -152,15 +148,3 @@
 08-validation-benchmarks/07-tier-3-test-evidence-run-times-of-the.md:
   tested_pending: 5
   verified_unsourced: 0
-09-comsol-reference-settings/00-overview.md:
-  tested_pending: 0
-  verified_unsourced: 1
-09-comsol-reference-settings/02-mesh-27.md:
-  tested_pending: 0
-  verified_unsourced: 1
-09-comsol-reference-settings/03-solver-3-4.md:
-  tested_pending: 0
-  verified_unsourced: 2
-09-comsol-reference-settings/04-physics-settings.md:
-  tested_pending: 0
-  verified_unsourced: 6

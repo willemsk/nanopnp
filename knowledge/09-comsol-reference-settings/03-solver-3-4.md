@@ -68,7 +68,7 @@ Inner stationary **Parametric 1 (p1)** / Study extensions:
 
 ### B.3 Nonlinear solver — Fully Coupled 1 (`fc1`)
 
-**Fully coupled. No segregated solver, no segregation groups.** **[verified]**
+**Fully coupled. No segregated solver, no segregation groups.** **[verified][^comsol-report]**
 
 | Setting | Value |
 |---|---|
@@ -84,7 +84,7 @@ Inner stationary **Parametric 1 (p1)** / Study extensions:
 | Residual/solution termination criterion | NOT IN REPORT |
 
 The presence of *initial*, *minimum* and *recovery* damping factors means the damping was
-**variable with a lower bound of 0.01**, started at 0.2. **[verified]**
+**variable with a lower bound of 0.01**, started at 0.2. **[verified][^comsol-report]**
 
 ### B.4 Stationary Solver 1 (`s1`) and linear solver
 
@@ -108,3 +108,4 @@ Dependent variables solved as one block: `comp1.cneg`, `comp1.cpos`, `comp1.p`,
 
 ---
 
+[^comsol-report]: COMSOL model report (5.4).

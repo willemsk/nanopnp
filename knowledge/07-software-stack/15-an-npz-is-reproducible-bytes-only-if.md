@@ -11,6 +11,10 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+sources:
+- id: wp32-plan
+  resource: docs/plans/wp32-examples-and-tutorials.md
+  title: WP32 examples and tutorials plan, D15 (`StageRecord` schema bump)
 ---
 
 ## 15. An `.npz` is reproducible bytes only if nothing in it moves with the clock **[tested: pending]** {#15-an-npz-is-reproducible-bytes-only-if-nothing-in-it-moves-with-the-clock}
@@ -29,10 +33,11 @@ to the log and to the run record's per-stage `seconds`, which no key or manifest
 walks a charged tube into two empty stores, finds every payload byte-identical, and shows that
 restoring one `seconds` entry breaks it. Source: WP32 plan D15 and its Outcomes.
 
-**Removing the time is a schema change, not just a code change [verified].** A store hit serves the
+**Removing the time is a schema change, not just a code change [verified][^wp32-plan].** A store hit serves the
 stored payload and summary unchanged, and the content hash covers the schema, the parameters and the
 input hashes, not the payload. An entry written before the change keeps its key, so it keeps being
 served with its old timings. Stage 7 therefore moved to `nanopnp/fields/v2` and
 `nanopnp/charge-grid/v2`, which makes every old entry a miss (§5.3.2 stage-7 row, amended for WP32).
 Source: the WP32 `/wp-ship` review.
 
+[^wp32-plan]: `docs/plans/wp32-examples-and-tutorials.md`, D15 and `/wp-ship` review (`nanopnp/fields/v2` and `nanopnp/charge-grid/v2`).
