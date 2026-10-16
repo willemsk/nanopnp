@@ -797,9 +797,11 @@ reason to loosen the test.
 > **Amended, 11 October 2026** (§8.2.10 J1). This is now **WP48**.
 
 > **Planned, 15 October 2026** ([plan](wp48-okf-backfill.md)). Backfills all 361 open claims:
-> 89+ test-evidence claims re-linked to existing tests, 47 unsourced claims resolved (REV-103),
-> library behaviour concepts given `tested_with`, and new hermetic Tier-1 tests for NGSolve traps
-> and arithmetic. The package ends when `pending.yaml` is empty and `CEILING = 0` (G3).
+> 100 pending test-evidence markers audited, all 56 verified markers classified (including nine
+> sourced markers outside the ledger), and all 17 library-behaviour concepts given checked
+> `tested_with` metadata. Historical measurements are separated from current properties; the
+> opening inventory establishes test cost. The package ends with the full evidence audit complete,
+> `pending.yaml` empty and `CEILING = 0` (G3, G8; REV-103).
 
 ### User-testing protocol — Provisional
 

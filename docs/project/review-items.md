@@ -1063,3 +1063,30 @@ The ruling reads that the documentation navigation comes from the `index.md` fil
 Entries of `knowledge/log.md` made by cutting the old notes' dated lines read as fragments such as `Source: WP26 implementation session`. Two glaring ones were repaired in the WP47 review.
 
 **Fixed** in WP47: the fourteen entries cut mid-sentence now state what the concept records, taken from its description and the source it named; the measurements stay in the concepts.
+
+
+### REV-108 - WP48 omitted sourced arithmetic from its audit
+
+*Area:* verification. *Severity:* medium. *Found:* WP48 plan review ([report](../code_reviews/CODE_REVIEW_007.md)).
+
+The original D2 audited only the 47 unsourced verified markers. Nine others already have footnotes, and at least three contain executable arithmetic; the pending ledger cannot detect that G8 work.
+
+**Fixed in the WP48 plan:** D2 and item 4 audit all 56 verified markers and require tests for sourced calculations too. This closes the planning omission, not the implementation; REV-103 remains open.
+
+
+### REV-109 - WP48 omitted version metadata coverage and refusal checks
+
+*Area:* verification. *Severity:* medium. *Found:* WP48 plan review ([report](../code_reviews/CODE_REVIEW_007.md)).
+
+The original D3 and item 5 omitted the numerics Library Behaviour concept, and their completion test accepts absent, non-mapping or empty metadata. All 17 concepts currently lack the key and that test passes.
+
+**Fixed in the WP48 plan:** D3 selects by type across the bundle, and item 5 requires presence enforcement, negative fixtures and the matching VER-68 amendment. Implementing those checks remains WP48 work.
+
+
+### REV-110 - WP48 lacked an evidence route for historical numerical experiments
+
+*Area:* verification. *Severity:* medium. *Found:* WP48 plan review ([report](../code_reviews/CODE_REVIEW_007.md)).
+
+The pending claims include numerical sweeps no current fixture runs and aliasing errors on millions of elements. Extra assertions or toy tests cannot establish those measurements at the original promised zero additional solver cost.
+
+**Fixed in the WP48 plan:** D1 inventories evidence and cost; D5 separates immutable historical records from current properties requiring tests. Unsupported measurements stay unresolved. The unconditional runtime promise and guessed intermediate ceilings are removed; implementation must establish the resulting evidence.
