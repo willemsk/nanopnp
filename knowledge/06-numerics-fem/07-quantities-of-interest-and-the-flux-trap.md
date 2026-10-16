@@ -1,13 +1,17 @@
 ---
 type: Numerics
 title: 7. Quantities of interest — and the flux trap
-description: The quantities of interest, the flux trap and the routes that extract them.
+description: The quantities of interest, the flux trap and the routes that extract
+  them.
 tags:
 - numerics
 sources:
 - id: thesis
   resource: https://github.com/willemsk/phdthesis-text
   title: Willems, PhD thesis (LaTeX source)
+- id: specification
+  resource: SPECIFICATION.md
+  title: Nanopnp Technical Specification (§4.2, PHY-06, NUM-24, NUM-28, NUM-29)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
@@ -32,7 +36,7 @@ Q_EOF =           ∫_Ω u·∇ψ    r dr dz
 ```
 Superconvergent and cross-section independent.
 
-**The sign is the one that references the current to the grounded cis electrode. [verified]**
+**The sign is the one that references the current to the grounded cis electrode. [verified][^specification]**
 By the divergence theorem with `∇·J_i = 0`, `∫_Ω J_i·∇ψ r dr dz = ∮_{Γ_cis} J_i·n` with `n` the
 outward normal, so with `ψ = 1` on cis the integral *is* the efflux through the cis cap. With `φ = 0`
 on cis and `φ = V_bias` on trans (§5.2.2 of the specification), a positive bias drives positive
@@ -224,7 +228,7 @@ equal to `e_z` on the body, zero on every other boundary, and `T = T_M + T_H`:
 F_z = ∮_∂B (T·n_B)·e_z dS = −∫_Ω T:∇w dV − ∫_Ω (∇·T)·w dV
 ```
 
-**NUM-28 prints only the first term, and the second is not zero in this model. [verified]**
+**NUM-28 prints only the first term, and the second is not zero in this model. [verified][^specification]**
 `∇·T_M = ρ_ion E − ½|E|²∇ε` and `∇·T_H = −f_total + Re ϱ(u·∇)u`, so each *component* carries a
 body-force term of the same order as the force itself — `∫ρ_ion E·w` is the electrical body force
 on the fluid inside the shell where `w` varies, an O(10 pN) number that depends entirely on where
@@ -266,7 +270,8 @@ reason. **[verified]**
 **The `2π` is restored once**, in `post/forces.py`, exactly as `post/qoi.py` does it: every solver
 integral is `∫ f r dr dz`. The force scale is `ε V_T² = 4.5677 × 10⁻¹³ N` — `p₀ a²` with the `a²`
 cancelling, so it does **not** depend on the reference length. NUM-29's 0.1 pN is 0.219 in those
-units. **[verified]**
+units. **[verified][^specification]**
 
 ---
 
+[^specification]: `SPECIFICATION.md` §4.2, PHY-06, NUM-24, NUM-28 and NUM-29.

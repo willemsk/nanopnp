@@ -1,8 +1,8 @@
 ---
 type: Pipeline
 title: 3. Fixed-charge pipeline
-description: 'The fixed-charge pipeline: the delivered table, the 1.25 % aliasing and the closed-form
-  kernel.'
+description: 'The fixed-charge pipeline: the delivered table, the 1.25 % aliasing
+  and the closed-form kernel.'
 tags:
 - clya
 - pipeline
@@ -12,6 +12,10 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+sources:
+- id: wp28-plan
+  resource: docs/plans/wp28-charge-projection.md
+  title: WP28 charge projection plan, Design §1
 ---
 
 ## 3. Fixed-charge pipeline
@@ -46,7 +50,7 @@ scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*pi*r))     [C m^-3]
 final mesh gives **-72.9 e**, against **-72 e** for the atomistic model (T L425-427). Any
 reimplementation must land within ~1 % of -72 e.
 
-### 3.1 The delivered table, measured [tested: pending] {#31-the-delivered-table-measured}
+### 3.1 The delivered table, measured [verified][^wp28-plan] {#31-the-delivered-table-measured}
 
 `prod5_clya_charge` is the interpolation table the published model loads — COMSOL's
 `%Grid`/`%Data` text export, 77 MB, coordinates in metres. Measured directly (6 September 2026;
@@ -75,7 +79,7 @@ order the gap predicted. The pore spans `z` in [-1.85, 12.25], so the box clears
 either way, which is the ">= 4 sigma_max beyond the protein" of PHY-16 step 4 (4 x 0.085 = 0.34 nm)
 with a wide margin.
 
-### 3.2 The reference's 1.25 % is the *consumer's*, and it is aliasing [tested: pending] {#32-the-references-125-is-the-consumers-and-it-is-aliasing}
+### 3.2 The reference's 1.25 % is the *consumer's*, and it is aliasing [verified][^wp28-plan] {#32-the-references-125-is-the-consumers-and-it-is-aliasing}
 
 The producer leg is exact (4.7e-12, above), so the published `-72.9 e` against `-72 e` cannot be a
 smearing or projection error: it is COMSOL's own integral of its own table over its own mesh.
@@ -177,3 +181,4 @@ Measured implementing it (WP28, 1 October 2026) **[tested: pending]**:
 
 ---
 
+[^wp28-plan]: `docs/plans/wp28-charge-projection.md`, Design §1 (`prod5_clya_charge` table and reference-mesh quadrature audit).

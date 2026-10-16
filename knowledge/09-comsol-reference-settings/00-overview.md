@@ -44,7 +44,7 @@ Report's own summary: *"the full implementation of the ePNP-NS equations … all
 variables, functions, geometries, solver settings and mesh settings needed to reproduce the
 results."*
 
-**Pagination.** The document runs to p. 162; 143 is the ToC page number of §5 *Results*. **[verified]**
+**Pagination.** The document runs to p. 162; 143 is the ToC page number of §5 *Results*. **[verified][^comsol-report]**
 
 All values below are transcribed from the report. Anything the report does not print is marked
 **NOT IN REPORT** — meaning COMSOL's default applied and was not exported, not that the setting
@@ -52,3 +52,4 @@ was off.
 
 ---
 
+[^comsol-report]: COMSOL model report (5.4).

@@ -44,7 +44,7 @@ if Sonnet fails.
 
 ### Work items
 
-- [ ] 1. Record the per-claim inventory under this plan's Outcome; measure test-cost assumptions and assign every claim to items 2-8 (D1-D5). Existing empty-ledger/zero-ceiling fixtures need no new scaffold. Done when the inventory reconciles 361 pending, 56 verified and 17 library concepts without omitted or double-counted claims.
+- [x] 6f6027f 1. Record the per-claim inventory under this plan's Outcome; measure test-cost assumptions and assign every claim to items 2-8 (D1-D5). Existing empty-ledger/zero-ceiling fixtures need no new scaffold. Done when the inventory reconciles 361 pending, 56 verified and 17 library concepts without omitted or double-counted claims.
 
 > **Outcome — item 1.** Reconciled inventory across all 90 concepts: **361 pending claims** in 55 concepts (`314 tested_pending` + `47 verified_unsourced`), **56 `[verified]` claims** in 25 concepts (`47 verified_unsourced` + `9 verified_sourced`, giving `370` audited claim markers in total), and **17 `Library Behaviour` concepts** (`06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` plus 16 concepts in `07-software-stack/`, including `07-local-assets.md` with zero pending markers). Baseline verification of `test_okf_bundle.py`, `test_plan_shape.py`, `test_plan_records.py` and `test_prose_share.py` (70 tests) runs in 8.59 s; new Tier-1 checks reuse miniature meshes and cached fixtures to stay under 5 s additional wall time, while Tier-2 assertions attach to existing module-scoped solves.
 >
