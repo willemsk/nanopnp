@@ -1,6 +1,6 @@
 # Current work
 
-Updated 15 October 2026 (WP47 delivered; WP48 planned). Navigation only; `SPECIFICATION.md` governs;
+Updated 15 October 2026 (WP47 delivered; WP48 plan reviewed and amended). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
