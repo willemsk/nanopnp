@@ -8,6 +8,11 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  pytest: 9.1.1
+  pytest-xdist: 3.8.0
+  filelock: 3.32.3
+  pyyaml: 6.0.3
 ---
 
 ## 12. The suite's BLAS threads buy nothing; parallelism has to come from workers **[tested: pending]** {#12-the-suites-blas-threads-buy-nothing-parallelism-has-to-come-from-workers}

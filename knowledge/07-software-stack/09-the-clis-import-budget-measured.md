@@ -8,6 +8,9 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  ngsolve: 6.2.2606
+  numpy: 2.5.2
 ---
 
 ## 9. The CLI's import budget, measured **[tested: pending]** {#9-the-clis-import-budget-measured}

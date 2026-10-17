@@ -11,6 +11,8 @@ generated:
 verified:
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_short_hash_collision_probability_bound
   at: '2026-10-16T00:00:00Z'
+tested_with:
+  numpy: 2.5.2
 ---
 
 ## 10. `canonical()` is the on-disk format, not only the hash input

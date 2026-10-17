@@ -1,13 +1,18 @@
 ---
 type: Library Behaviour
-title: 11. A stage's workspace falls back to the process store root, not the run's store
-description: A stage's workspace falls back to the process store root, not the run's store.
+title: 11. A stage's workspace falls back to the process store root, not the run's
+  store
+description: A stage's workspace falls back to the process store root, not the run's
+  store.
 tags:
 - software
 - library-behaviour
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  ngsolve: 6.2.2606
+  netgen-mesher: 6.2.2606
 ---
 
 ## 11. A stage's workspace falls back to the process store root, not the run's store **[tested: pending]** {#11-a-stages-workspace-falls-back-to-the-process-store-root-not-the-runs-store}

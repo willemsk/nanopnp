@@ -11,6 +11,12 @@ generated:
 verified:
 - by: process:tests/tier1/test_okf_bundle.py::test_ver68_every_heading_id_matches_the_docs_build
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  mkdocs: 1.6.1
+  mkdocs-material: 9.7.7
+  mkdocstrings: 1.0.6
+  mkdocstrings-python: 2.0.9
+  markdown: 3.10.3
 ---
 
 ## 13. Documentation tooling: MkDocs, Material and Zensical

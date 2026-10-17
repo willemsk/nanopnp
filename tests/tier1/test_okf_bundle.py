@@ -250,7 +250,11 @@ def test_ver68_verified_set_must_equal_inline_tests_arithmetic_and_ruling(reposi
 def test_ver68_tested_with_older_than_lock_is_refused(repository: Path) -> None:
     def found(version: str, package: str = "ngsolve") -> list[str]:
         _concept(
-            repository, "01-thing.md", BODY, extra=f"tested_with: {{{package}: '{version}'}}\n"
+            repository,
+            "01-thing.md",
+            BODY,
+            kind="Library Behaviour",
+            extra=f"tested_with: {{{package}: '{version}'}}\n",
         )
         return _check(repository)
 
@@ -259,6 +263,25 @@ def test_ver68_tested_with_older_than_lock_is_refused(repository: Path) -> None:
     assert found("6.2.2600") == []
     assert any("older than 6.2.2504" in f for f in found("6.2.2400"))
     assert any("netgen, absent from uv.lock" in f for f in found("1.0", "netgen"))
+    assert any("has no version" in f for f in found("", "ngsolve"))
+    _concept(repository, "01-thing.md", BODY, kind="Library Behaviour")
+    assert any("missing tested_with" in f for f in _check(repository))
+    _concept(
+        repository,
+        "01-thing.md",
+        BODY,
+        kind="Library Behaviour",
+        extra="tested_with: [ngsolve]\n",
+    )
+    assert any("tested_with must be a mapping" in f for f in _check(repository))
+    _concept(
+        repository,
+        "01-thing.md",
+        BODY,
+        kind="Library Behaviour",
+        extra="tested_with: {}\n",
+    )
+    assert any("tested_with mapping is empty" in f for f in _check(repository))
 
 
 def test_ver68_footnote_without_source_is_refused(repository: Path) -> None:

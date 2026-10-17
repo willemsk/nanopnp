@@ -15,6 +15,8 @@ sources:
 - id: wp32-plan
   resource: docs/plans/wp32-examples-and-tutorials.md
   title: WP32 examples and tutorials plan, D15 (`StageRecord` schema bump)
+tested_with:
+  numpy: 2.5.2
 ---
 
 ## 15. An `.npz` is reproducible bytes only if nothing in it moves with the clock **[tested: pending]** {#15-an-npz-is-reproducible-bytes-only-if-nothing-in-it-moves-with-the-clock}

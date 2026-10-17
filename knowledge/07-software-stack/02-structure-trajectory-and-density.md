@@ -11,6 +11,11 @@ generated:
 verified:
 - by: process:tests/tier1/test_reduction.py::test_ver50_off_axis_gaussian_closed_forms
   at: '2026-10-16T00:00:00Z'
+tested_with:
+  mdanalysis: 2.10.0
+  griddataformats: 1.2.0
+  scipy: 1.18.0
+  numpy: 2.5.2
 ---
 
 ## 2. Structure, trajectory and density

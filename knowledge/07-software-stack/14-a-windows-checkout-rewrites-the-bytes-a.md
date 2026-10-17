@@ -8,6 +8,8 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  pyyaml: 6.0.3
 ---
 
 ## 14. A Windows checkout rewrites the bytes a hash identifies **[tested: pending]** {#14-a-windows-checkout-rewrites-the-bytes-a-hash-identifies}
