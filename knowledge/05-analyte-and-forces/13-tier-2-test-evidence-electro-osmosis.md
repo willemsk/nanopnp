@@ -1,27 +1,44 @@
 ---
 type: Test Evidence
 title: 'Tier-2 test evidence: electro-osmosis and electrophoresis (WP45 item 25)'
-description: What the Tier-2 tests of electro-osmosis and electrophoresis establish, recorded at WP45
-  item 25.
+description: What the Tier-2 tests of electro-osmosis and electrophoresis establish,
+  recorded at WP45 item 25.
 tags:
 - analyte
 - test-evidence
+sources:
+- id: electrophoretic-mobility-3782c43
+  resource: git:3782c43:tests/tier2/test_electrophoretic_mobility.py
+  title: Module docstring of tests/tier2/test_electrophoretic_mobility.py before WP45
+    (commit 3782c43)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
+- by: process:arithmetic
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_electroosmosis.py::test_ver14_rice_and_whitehead_capillary_profile
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_electroosmosis.py::test_ver15_helmholtz_smoluchowski_limit_and_its_approach_rate
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_huckel_limit_is_recovered_at_small_kappa_a
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_climbs_towards_the_smoluchowski_limit
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_zeta_potential_is_the_same_in_both_solves
   at: '2026-10-14T00:00:00Z'
 ---
 
 ## Tier-2 test evidence: electro-osmosis and electrophoresis (WP45 item 25)
 
-- **[tested: pending]** Electro-osmosis in a cylindrical capillary (Rice & Whitehead, *J. Phys. Chem.* **69**, 4017, 1965): for radius `a`, Debye length `λ` and zeta potential `ζ` under a uniform axial field `E`, the fully developed velocity is `u_z(r) = −(εζE/η)[1 − I₀(κr)/I₀(κa)]`. In the NUM-09 variables (potential in `V_T`, velocity in `u₀ = εV_T²/(ηL₀)`) it carries no material constant: `ũ_z(r) = Ẽζ̃[I₀(r/λ)/I₀(a/λ) − 1]`. Its thin-double-layer limit approaches the Helmholtz-Smoluchowski slip `−ζ̃Ẽ` at the centreline with deviation exactly `1/I₀(a/λ)`. Source: `tests/tier2/test_electroosmosis.py` (VER-14, VER-15).
-- **[tested: pending]** In the electro-osmosis solve the radial part of the electrical body force, `2Sψ̃ψ̃′`, is a pure gradient and is taken into the pressure, with the body force built from the applied potential `−Ẽz`; this leaves `p̃ = 0` at both ends, so the traction-free condition holds exactly rather than approximately. Source: `test_electroosmosis.py` (module docstring at `3782c43`, before WP45).
-- **[tested: pending]** Electrophoresis of a charged sphere (VER-21): the free particle's mobility is the ratio of the field-solve force `F_E` to the drag-solve force `F_U`, `μ̃_e = F_E Ũ₀/(F_U Ẽ₀)`, in units of `εV_T/η`. Henry's function is `μ_e = (2εζ/3η) f(κa)` with `f(0) = 1` (Hückel, `μ̃ = 2ζ̃/3`) and `f(∞) = 3/2` (Smoluchowski, `μ̃ = ζ̃`). The reference is Ohshima's approximation (*J. Colloid Interface Sci.* **168**, 269, 1994): `f(x) = 1 + 1/(2[1 + 2.5/(x(1 + 2e^{−x}))]³)`. Source: `tests/tier2/test_electrophoretic_mobility.py`.
+- **[tested: tests/tier2/test_electroosmosis.py::test_ver14_rice_and_whitehead_capillary_profile]** Electro-osmosis in a cylindrical capillary (Rice & Whitehead, *J. Phys. Chem.* **69**, 4017, 1965): for radius `a`, Debye length `λ` and zeta potential `ζ` under a uniform axial field `E`, the fully developed velocity is `u_z(r) = −(εζE/η)[1 − I₀(κr)/I₀(κa)]`. In the NUM-09 variables (potential in `V_T`, velocity in `u₀ = εV_T²/(ηL₀)`) it carries no material constant: `ũ_z(r) = Ẽζ̃[I₀(r/λ)/I₀(a/λ) − 1]`. **[tested: tests/tier2/test_electroosmosis.py::test_ver15_helmholtz_smoluchowski_limit_and_its_approach_rate]** Its thin-double-layer limit approaches the Helmholtz-Smoluchowski slip `−ζ̃Ẽ` at the centreline with deviation exactly `1/I₀(a/λ)`. Source: `tests/tier2/test_electroosmosis.py` (VER-14, VER-15).
+- **[tested: tests/tier2/test_electroosmosis.py::test_ver14_rice_and_whitehead_capillary_profile]** In the electro-osmosis solve the radial part of the electrical body force, `2Sψ̃ψ̃′`, is a pure gradient and is taken into the pressure, with the body force built from the applied potential `−Ẽz`; this leaves `p̃ = 0` at both ends, so the traction-free condition holds exactly rather than approximately. Source: `test_electroosmosis.py` (module docstring at `3782c43`, before WP45).
+- **[tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio]** Electrophoresis of a charged sphere (VER-21): the free particle's mobility is the ratio of the field-solve force `F_E` to the drag-solve force `F_U`, `μ̃_e = F_E Ũ₀/(F_U Ẽ₀)`, in units of `εV_T/η`. **[tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_huckel_limit_is_recovered_at_small_kappa_a]** Henry's function is `μ_e = (2εζ/3η) f(κa)` with `f(0) = 1` (Hückel, `μ̃ = 2ζ̃/3`) and `f(∞) = 3/2` (Smoluchowski, `μ̃ = ζ̃`). The reference is Ohshima's approximation (*J. Colloid Interface Sci.* **168**, 269, 1994): `f(x) = 1 + 1/(2[1 + 2.5/(x(1 + 2e^{−x}))]³)`. Source: `tests/tier2/test_electrophoretic_mobility.py`.
 - **[tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_climbs_towards_the_smoluchowski_limit]** The approach to Smoluchowski goes as `1/κa` and is slow: at `κa = 16.5`, the largest the Tier-2 budget affords (about 44 000 dof, 16 s; a 5 % gate needs about 40), Henry is still 11.5 % below `εζ/η`. The Smoluchowski gate is therefore 15 %, and the Henry gate (5 % at every `κa`) carries the verification. The Hückel end needs no allowance: at `κa = 0.5`, `f = 1.014`. Source: `test_electrophoretic_mobility.py` (`test_ver21_the_mobility_climbs_towards_the_smoluchowski_limit`).
-- **[tested: pending]** The far field of the force-free pair is uniform to `O((a/R)³)`, because a force-free particle radiates no Stokeslet; imposing the exact translating-sphere field on the outer boundary would inject an `O(a/R)` Stokeslet that the physical solution does not have. A single confined drag solve at `R = 10a` instead carries a 28 % wall correction (the `1 + (9/4)(a/b)` form), which divides out of the force ratio. Source: `test_electrophoretic_mobility.py` (module docstring at `3782c43`, before WP45).
+- **[verified][^electrophoretic-mobility-3782c43]** The far field of the force-free pair is uniform to `O((a/R)³)`, because a force-free particle radiates no Stokeslet; imposing the exact translating-sphere field on the outer boundary would inject an `O(a/R)` Stokeslet that the physical solution does not have. A single confined drag solve at `R = 10a` instead carries a 28 % wall correction (the `1 + (9/4)(a/b)` form), **[tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio]** which divides out of the force ratio. Source: `test_electrophoretic_mobility.py` (module docstring at `3782c43`, before WP45).
 - **[tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_zeta_potential_is_the_same_in_both_solves]** `ζ` is read back as the `r`-weighted mean of `φ̃` over the body surface, not prescribed: prescribing `φ̃ = ζ` makes the body an equipotential, which expels the applied field and gives a different `f(κa)`. The applied perturbation is odd in `z` and averages out of the mean. Source: `test_electrophoretic_mobility.py` (`_surface_mean_potential`, `test_ver21_the_zeta_potential_is_the_same_in_both_solves`).
-- **[tested: pending]** Measured departures from Henry's `2f(κa)/3` are 2.3 %, 0.9 % and 1.5 % at `κa = 0.50`, `2.08` and `16.5`; they are set by the finite domain and by reading a nonlinear `ζ` into a linear-response formula. Source: `test_electrophoretic_mobility.py` (`HENRY_TOLERANCE`).
+- **[tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio]** Measured departures from Henry's `2f(κa)/3` are 2.3 %, 0.9 % and 1.5 % at `κa = 0.50`, `2.08` and `16.5`; they are set by the finite domain and by reading a nonlinear `ζ` into a linear-response formula. Source: `test_electrophoretic_mobility.py` (`HENRY_TOLERANCE`).
+
+[^electrophoretic-mobility-3782c43]: `git show 3782c43:tests/tier2/test_electrophoretic_mobility.py`, module docstring (before WP45).

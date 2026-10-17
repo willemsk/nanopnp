@@ -8,6 +8,11 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:tests/tier1/test_mesh_profile.py::test_the_delivered_table_has_the_published_properties
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_mesh_profile.py::test_the_local_feature_size_skips_the_vertexs_own_neighbourhood
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 4. Mesh
@@ -16,7 +21,7 @@ generated:
 strategy, or mesh-convergence study appears anywhere in ch. 6, ch. 6 SI, ch. 5 or ch. 5 SI. The only
 mesh reference is "integration ... over the final mesh" (T L425).
 
-**Measured on the delivered vertex table [tested: pending].** 185 vertices, traced **clockwise** (signed area
+**Measured on the delivered vertex table** **[tested: tests/tier1/test_mesh_profile.py::test_the_delivered_table_has_the_published_properties]** **[tested: tests/tier1/test_mesh_profile.py::test_the_local_feature_size_skips_the_vertexs_own_neighbourhood]**. 185 vertices, traced **clockwise** (signed area
 −26.4939 nm²), `r ∈ [1.65, 5.66]` nm, `z ∈ [−1.85, 12.25]` nm, sha256
 `d0c2008140dc43d4cf7465d2c345f927a7b77110936f5d941976fc2122b0b386`. Minimum vertex spacing
 **0.0361 nm**, on one edge; 10 of its 185 edges are shorter than the 0.05 nm reference wall size,

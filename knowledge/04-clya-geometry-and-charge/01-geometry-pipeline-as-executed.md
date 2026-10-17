@@ -1,8 +1,8 @@
 ---
 type: Pipeline
 title: 1. Geometry pipeline, as executed
-description: The geometry pipeline as executed, with measurements on the MD archive, the contour script
-  and 2WCD.
+description: The geometry pipeline as executed, with measurements on the MD archive,
+  the contour script and 2WCD.
 tags:
 - clya
 - pipeline
@@ -13,14 +13,53 @@ sources:
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C
   title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+- id: wp18-plan
+  resource: docs/plans/wp18-structure-stage.md
+  title: WP18 structure stage plan, Design §4 archive record
+- id: wp20-plan
+  resource: docs/plans/wp20-contour-and-probe.md
+  title: WP20 contour and probe plan, Design §1 pqr2grid audit
+- id: wp22-plan
+  resource: docs/plans/wp22-val05-reference-geometry.md
+  title: WP22 VAL-05 reference geometry plan, Outcome — item 4
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_taubin_circulant_pass_band_and_staircase_attenuation
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_mesh_profile.py::test_the_delivered_table_has_the_published_properties
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_structure_stage.py::test_ver48_frame_selection_and_the_time_gate
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_structure_stage.py::test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_structure_stage.py::test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_val05_geometry.py::test_val05_pqr2grid_radius_check_values
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_val05_geometry.py::test_val05_the_attribution_splits_the_offset_into_erratum_and_edit
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_contour_2wcd.py::test_ver51_2wcd_contour
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_val05_2wcd.py::test_val05_2wcd_frozen_case_conductance
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_val05_2wcd.py::test_val05_2wcd_isolevel_sweep_is_strictly_increasing
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_val05_2wcd.py::test_val05_2wcd_mesh_against_the_reference_figures
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier3/test_density_ensemble.py::test_ver51_clya_as_contour
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 1. Geometry pipeline, as executed
@@ -36,7 +75,7 @@ verified:
 | Frame set | **50 coordinate sets from the final 5 ns**, aligned by backbone-RMSD minimisation (VMD `RMSD tool`) | T L279-282 |
 
 `k = 1 kcal/mol/A^2 = 694.8 pN/nm`, so the two restraint numbers are the same constant expressed
-twice. Verified arithmetic, not stated in the thesis.
+twice **[tested: tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel]**, not stated in the thesis.
 
 **Molecular density map** (T L373-397, eq. `eq:denspore`):
 
@@ -46,7 +85,7 @@ d_i = sqrt((x-x_i)^2 + (y-y_i)^2 + (z-z_i)^2)
 sigma = 0.93        R_i = Van der Waals radius of atom i
 ```
 
-**Which radii.** The thesis says only "Van der Waals radius". The author ruled on 25 September 2026 that R_i is the CHARMM Rmin/2 of PDB2PQR's `CHARMM.DAT`, the set carried by the reference ensemble's per-frame PQR files (§1.1). For an isolated atom `ρ = g`, so the 25 % isolevel sits at `d = σR√ln 4 = 0.93 × 1.1774 R = 1.095 R`, just outside the van der Waals radius itself. The contour therefore moves one-for-one with the radius set **[verified][^thesis]**.
+**Which radii.** The thesis says only "Van der Waals radius". The author ruled on 25 September 2026 that R_i is the CHARMM Rmin/2 of PDB2PQR's `CHARMM.DAT`, the set carried by the reference ensemble's per-frame PQR files (§1.1). For an isolated atom `ρ = g`, so the 25 % isolevel sits at `d = σR√ln 4 = 0.93 × 1.1774 R = 1.095 R`, just outside the van der Waals radius itself **[tested: tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel]**. The contour therefore moves one-for-one with the radius set **[verified][^thesis]**.
 
 A probabilistic-union ("at least one atom here") field bounded in [0,1], after Li 2013. Grid
 **0.5 Angstrom** isotropic, computed in **3D for each of the 50 frames**, then the **50 maps are
@@ -65,7 +104,7 @@ not deviate materially from 2WCD or the cryo-EM 6MRT; mean lumen diameter is **6
 corrugations included), whereas the frequently quoted **5.5 nm** is the largest protein that fits
 without touching the wall.
 
-### 1.1 The author's MD archive, measured [tested: pending] {#11-the-authors-md-archive-measured}
+### 1.1 The author's MD archive, measured [verified][^wp18-plan] {#11-the-authors-md-archive-measured}
 
 Measured on 25 September 2026. The archive is held locally by the author at
 `~/repos/will2018-data/md_data/`. It is not vendored; Tier 3 reads it through
@@ -75,15 +114,15 @@ Measured on 25 September 2026. The archive is held locally by the author at
 |---|---|
 | `prod5_clya_as.pdb` | 54,075 atoms, all protein and hydrogens included: no lipids, waters or ions. Chains A–L, with the chain identifier equal to the segment identifier. Residues 7–292, 286 Cα per chain, histidines as `HSE`. Elements present in the file. Written by MDAnalysis |
 | `prod5_clya_as.dcd` | **98 frames. The time metadata reads 1.0 ps per frame**, a 0.097 ns span, which is the default of a DCD written without a timestep. **The true spacing is 100 ps**, and the frames are PQRs 02–99 of the archive below, in order. The paper's 50 frames are DCD frames 48–97 (G1, closed) |
-| `prod5_trajectory_last_10ns.7z` | **99 PQR files**, `prod5_protein_aligned_100ps_NN.pdb.pqr` with NN = 01–99, written by PDB2PQR 2.1.1 with `--with-ph=7.5 --ph-calc-method=propka --ff=charmm --ffout=charmm --chain`. Each holds 54,075 atoms, 27,134 of them hydrogens. The author confirmed on 25 September 2026 that these are all the PQR files, taken from the full-atom MD trajectory. **The frames are 100 ps apart**, and the DCD was built from them. Matched by coordinates, **DCD frames 0–97 are PQRs 02–99 in time order**, to 3.8e-6 Å, and PQR 01 is not in the DCD. `notebooks/clya_md_trajectory_analysis.ipynb` built the pair with `mda.Universe(*glob(...), dt=100)`, and its first file served as the topology only. The PDB's coordinates are PQR 02's. So the paper's "50 coordinate sets from the final 5 ns" at 100 ps are **PQRs 50–99, which are DCD frames 48–97**. That is inferred from the thesis's own wording, the spacing and the order both being measured. **The radii are CHARMM Rmin/2.** Frame 01 holds 318 distinct (residue, atom) pairs. 313 of them carry exactly the radius of PDB2PQR 3.7.1's `dat/CHARMM.DAT`, and the other five (`GLU HT1–HT3`, `HSE OT1–OT2`) are that file's `NTER` and `CTER` patch entries. By element the radii span C 1.80–2.275, N 1.85, O 1.70–1.77, S 2.00 and H 0.2245–1.468 Å. The author ruled on 25 September 2026 that these are the density map's van der Waals radii, and that the map was built from the full-atom trajectory, hydrogens included (`SPECIFICATION.md` §5.3.1 NOTE on `geometry.density`) **[tested: pending]**, 25 Sep 2026 |
+| `prod5_trajectory_last_10ns.7z` | **99 PQR files**, `prod5_protein_aligned_100ps_NN.pdb.pqr` with NN = 01–99, written by PDB2PQR 2.1.1 with `--with-ph=7.5 --ph-calc-method=propka --ff=charmm --ffout=charmm --chain`. Each holds 54,075 atoms, 27,134 of them hydrogens. The author confirmed on 25 September 2026 that these are all the PQR files, taken from the full-atom MD trajectory. **The frames are 100 ps apart**, and the DCD was built from them. Matched by coordinates, **DCD frames 0–97 are PQRs 02–99 in time order**, to 3.8e-6 Å, and PQR 01 is not in the DCD. `notebooks/clya_md_trajectory_analysis.ipynb` built the pair with `mda.Universe(*glob(...), dt=100)`, and its first file served as the topology only. The PDB's coordinates are PQR 02's. So the paper's "50 coordinate sets from the final 5 ns" at 100 ps are **PQRs 50–99, which are DCD frames 48–97**. That is inferred from the thesis's own wording, the spacing and the order both being measured. **The radii are CHARMM Rmin/2.** Frame 01 holds 318 distinct (residue, atom) pairs. 313 of them carry exactly the radius of PDB2PQR 3.7.1's `dat/CHARMM.DAT`, and the other five (`GLU HT1–HT3`, `HSE OT1–OT2`) are that file's `NTER` and `CTER` patch entries. By element the radii span C 1.80–2.275, N 1.85, O 1.70–1.77, S 2.00 and H 0.2245–1.468 Å. The author ruled on 25 September 2026 that these are the density map's van der Waals radii, and that the map was built from the full-atom trajectory, hydrogens included (`SPECIFICATION.md` §5.3.1 NOTE on `geometry.density`) **[verified][^wp18-plan]**, 25 Sep 2026 |
 | Also present | `2wcd.pdb` (12 × 285 Cα, residues 8–292, protein only), `6mrt.pdb`, and a `prod5_trajectory_last_10ns.7z`. `radius_comparison/2wcd_h.pdb` is 2WCD **flipped** (+z at the narrow *trans* end) |
 | Frame orientation | The Cₙ axis is 0.69° from the file's z in the MD frame, through (0.35, 0.02) Å. It is 0.047° from z in 2WCD and 0.006° in 6MRT. In all three the wide *cis* cap lies at +z |
-| The deposited 2WCD | **Not the author's `2wcd.pdb`.** The wwPDB entry's asymmetric unit holds two dodecamers, chains A–L and M–X (53,832 atoms, 24 × 285 Cα), in the crystal frame. The A–L axis is 22.92° from z and the M–X axis 22.98°, nearly parallel. Signed to +z, the axis has its narrow *trans* end up (mean Cα radius 3.42 nm in the top fifth of the axial extent, 4.28 nm in the bottom fifth). Chains A–L superpose on the author's copy with an RMSD of 1.0e-4 nm, and that superposition takes the deposited +z-signed axis to −z. So the author's file is chains A–L moved rigidly and flipped, *cis* up. Stage 1 refuses the deposited frame by its 10° rule. On the author's copy it measures a 29.99896° turn, a worst spacing error of 0.193°, a permutation RMSD of 0.0262 nm, a tilt of 0.047° and an `axis: z` displacement of 0.0062 nm. The Design §4 "2WCD" column of the WP18 plan is this copy **[tested: pending]**, 25 Sep 2026 |
+| The deposited 2WCD | **Not the author's `2wcd.pdb`.** The wwPDB entry's asymmetric unit holds two dodecamers, chains A–L and M–X (53,832 atoms, 24 × 285 Cα), in the crystal frame. The A–L axis is 22.92° from z and the M–X axis 22.98°, nearly parallel. Signed to +z, the axis has its narrow *trans* end up (mean Cα radius 3.42 nm in the top fifth of the axial extent, 4.28 nm in the bottom fifth). Chains A–L superpose on the author's copy with an RMSD of 1.0e-4 nm, and that superposition takes the deposited +z-signed axis to −z. So the author's file is chains A–L moved rigidly and flipped, *cis* up. Stage 1 refuses the deposited frame by its 10° rule **[tested: tests/tier1/test_structure_stage.py::test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate]**. On the author's copy it measures a 29.99896° turn, a worst spacing error of 0.193°, a permutation RMSD of 0.0262 nm, a tilt of 0.047° and an `axis: z` displacement of 0.0062 nm. The Design §4 "2WCD" column of the WP18 plan is this copy **[verified][^wp18-plan]**, 25 Sep 2026 |
 | Consecutive Cα on the deposited 2WCD | Chains A–L, residues without an insertion code, 3,408 pairs of consecutive residue numbers (284 per chain): **0.374 to 0.386 nm**, the largest at chain D, residues 266–267 (0.3856 nm). The PDB and mmCIF copies agree to the last digit. Stage 1's wrap gate refuses a pair over 1.0 nm in any selected frame, so the vendored structure sits at 0.39 of the bound; a wrapped pair would be a box length (about 10 nm) apart **[tested: tests/tier1/test_structure_stage.py::test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound]**, `tests/tier1/test_structure_stage.py` (`test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound`), 14 Oct 2026 |
-| Stage 1 on the archive | All 98 frames, superposed on frame 0 over every Cα (0.095–0.219 nm RMSD to it), 12 chains × 286 common Cα. On the ensemble-mean structure the cyclic turn is 29.9954°, the worst spacing error 0.679°, the permutation RMSD 0.136 nm and the tilt from the file's z 0.695°. Each frame's own permutation axis lies within 0.0163° of the ensemble-mean axis. This is a different reference from the ≤ 0.010° frame-to-frame figure of §5.2 (stage 1), which compared the frames' axes with one another. The DCD's interval reads 0.001 ns, so `last_ns: 5` is refused **[tested: pending]**, `tests/tier3/test_structure_ensemble.py`, 25 Sep 2026 |
+| Stage 1 on the archive | All 98 frames, superposed on frame 0 over every Cα (0.095–0.219 nm RMSD to it), 12 chains × 286 common Cα. On the ensemble-mean structure the cyclic turn is 29.9954°, the worst spacing error 0.679°, the permutation RMSD 0.136 nm and the tilt from the file's z 0.695°. Each frame's own permutation axis lies within 0.0163° of the ensemble-mean axis. This is a different reference from the ≤ 0.010° frame-to-frame figure of §5.2 (stage 1), which compared the frames' axes with one another **[verified][^wp18-plan]**. The DCD's interval reads 0.001 ns, so `last_ns: 5` is refused **[tested: tests/tier1/test_structure_stage.py::test_ver48_frame_selection_and_the_time_gate]**, `tests/tier3/test_structure_ensemble.py`, 25 Sep 2026 |
 | Axial placement | The Cα centroid is at z = 56.3 Å (MD; residues 7–292. Over residues 8–292 and DCD frames 48–97 it is 56.553 Å, §1.5) and 57.0 Å (2WCD), which matches G9's "(0, 0, 55 Å)". The MD all-atom extent is z = −2.28 to 12.52 nm, bracketing the model's pore extent of −1.85 to 12.25 nm by 0.43 and 0.27 nm. **Author ruling, 25 September 2026: the MD trajectory was centred on the middle of the bilayer, so in the MD frame `centre_z_nm` = 0** (G9, closed). The author's `2wcd.pdb` copy has its Cα centroid 0.07 nm from the MD one, but the vendored wwPDB 2WCD takes whatever axial position its test-time move gives it, so WP22 must register it to the MD frame |
 
-### 1.2 The author's contour script, read [tested: pending] {#12-the-authors-contour-script-read}
+### 1.2 The author's contour script, read [verified][^wp20-plan] {#12-the-authors-contour-script-read}
 
 Read on 26 September 2026 (`SPECIFICATION.md` OPN-02, closed). The script is
 `create_polygon_contour` in the author's `pqr2grid` repository, held locally at
@@ -94,9 +133,9 @@ it for ClyA.
 | Step | What the script does | Consequence |
 |---|---|---|
 | Density | The union of §1, `sigma=0.93`, radii from the PQR, on a Cartesian grid over `[−L, L]` at h | The model of `SPECIFICATION.md` §5.2 stage 2 |
-| Radial average | `np.histogram` of the node radii, at bin width `w = (x_max − x_min + 1)/N_x` | `w/h = (2L + 1)/(2L + h)`, not 1: the `+1` is in nm, where one spacing was meant. It is 1.0316 at L = 15 nm and 1.0701 at L = 6.75 nm **[verified]** |
+| Radial average | `np.histogram` of the node radii, at bin width `w = (x_max − x_min + 1)/N_x` | `w/h = (2L + 1)/(2L + h)`, not 1: the `+1` is in nm, where one spacing was meant. It is 1.0316 at L = 15 nm and 1.0701 at L = 6.75 nm **[tested: tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift]** |
 | Contour | `find_contours(D, 0.25)`, then `contours[0]` | The first contour in scan order, not the largest |
-| Coordinates | `r = col·h`, `z = row·h + z_min` | Bin j's centre is `(j + ½)w`, so a feature at true radius r is written at `r_a = (r/w − ½)h`. At L = 15, 1.65 nm reads 1.574 nm and 5.66 nm reads 5.462 nm **[verified]** |
+| Coordinates | `r = col·h`, `z = row·h + z_min` | Bin j's centre is `(j + ½)w`, so a feature at true radius r is written at `r_a = (r/w − ½)h`. At L = 15, 1.65 nm reads 1.574 nm and 5.66 nm reads 5.462 nm **[tested: tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift]** |
 | Simplify | `Polygon.simplify(0.1)`, topology preserved | Douglas–Peucker, with no smoothing, no spacing step and no gate |
 | Output | A z offset (PlyAB: −0.5 nm), then `savetxt(fmt='%.2f')` | Vertices rounded to 0.01 nm |
 
@@ -104,8 +143,8 @@ it for ClyA.
 from `nanopnp` stage 2 (L = 6.75 nm). The script's 0.25 contour lies 0.13–0.24 nm inside the exact
 reduction's at the lumen, and 0.21–0.40 nm inside at the outer surface. The same bins, placed at
 their centres `(j + ½)w`, agree with the exact reduction to ≤ 0.01 nm. So the error lies entirely
-in the index-to-radius map, not in the binning **[tested: pending]** (WP20 plan, Design §1, 26 Sep 2026).
-At L = 15 nm a feature at 1.65 nm reads 1.5744 nm and one at 5.66 nm reads 5.4615 nm **[verified]**
+in the index-to-radius map, not in the binning **[tested: tests/tier1/test_val05_geometry.py::test_val05_the_attribution_splits_the_offset_into_erratum_and_edit]** **[verified][^wp20-plan]** (WP20 plan, Design §1, 26 Sep 2026).
+At L = 15 nm a feature at 1.65 nm reads 1.5744 nm and one at 5.66 nm reads 5.4615 nm **[tested: tests/tier1/test_val05_geometry.py::test_val05_pqr2grid_radius_check_values]**
 (`validation/geometry.py`, `pqr2grid_radius`).
 
 **Answered by the author, 28 September 2026: it was.** The delivered 185-vertex polygon was made
@@ -116,7 +155,7 @@ moves both surfaces inward, so the edit moved them outward by more than the erra
 2WCD, of one MD frame, and of the 50-frame ensemble, and its outer surface is up to 0.12 nm
 narrower. The erratum would move both surfaces inward (WP20 plan, Design §7).
 
-**The delivered polygon's lattice fingerprint [tested: pending].** Of its 185 vertices, 58 % have at least
+**The delivered polygon's lattice fingerprint [tested: tests/tier1/test_mesh_profile.py::test_the_delivered_table_has_the_published_properties].** Of its 185 vertices, 58 % have at least
 one coordinate on the 0.05 nm lattice, and 32 % have both. A subset of marching-squares vertices on
 a 0.05 nm grid, written at `%.2f`, would have at least one lattice coordinate on *every* vertex,
 and both on about a fifth. So the table is not a vertex subset of such a contour. About four in ten
@@ -128,7 +167,7 @@ of overlapping and superfluous vertices", and it goes beyond it.
 with no `1/(2πr)`, whose planar integral is the net charge: the `e/m²` convention of the delivered
 table (G5). It is a pointer for Phase 3's FR-13.
 
-### 1.3 Stage 4 on real and synthetic inputs, measured [tested: pending] {#13-stage-4-on-real-and-synthetic-inputs-measured}
+### 1.3 Stage 4 on real and synthetic inputs, measured **[tested: tests/tier2/test_contour_2wcd.py::test_ver51_2wcd_contour]** **[tested: tests/tier3/test_density_ensemble.py::test_ver51_clya_as_contour]** **[tested: tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form]** **[verified][^wp20-plan]** {#13-stage-4-on-real-and-synthetic-inputs-measured}
 
 `nanopnp` stage 4 at its defaults (isolevel 0.25, Taubin, `simplify_tol_nm` 0.02, h = 0.05 nm,
 closing and opening by 2h), 26 September 2026 (`SPECIFICATION.md` §5.2.1; VER-51).
@@ -159,13 +198,13 @@ frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
 Taubin's umbrella operator on a closed loop is circulant: mode `k = 1 - cos θ` is scaled by
 `(1 - λk)(1 - μk)` per pass, with λ = 0.5, μ = -0.53, N = 10. The pass band is wavelengths above 13.08
 samples (0.33 nm at h/2 spacing), and the grid-scale staircase (k = 1) keeps 0.069 of its amplitude
-[verified]. Source: `geometry/contour.py` (`taubin`), WP20 plan Design §3.
+[tested: tests/tier1/test_knowledge_arithmetic.py::test_taubin_circulant_pass_band_and_staircase_attenuation]. Source: `geometry/contour.py` (`taubin`), WP20 plan Design §3.
 
 The probe-radius profile costs frames x atoms x planes distances, 7.8e8 for the 50-frame ClyA-AS
-ensemble, a few seconds, batched per frame and bounded by `CHUNK_ELEMENTS` (32 MB of float64) [tested: pending].
+ensemble, a few seconds, batched per frame and bounded by `CHUNK_ELEMENTS` (32 MB of float64) **[tested: tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form]** **[verified][^wp20-plan]**.
 Source: `geometry/probe.py`, WP20 plan Design §5.
 
-### 1.4 2WCD against the reference polygon, and the isolevel lever [tested: pending] {#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever}
+### 1.4 2WCD against the reference polygon, and the isolevel lever **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_isolevel_sweep_is_strictly_increasing]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_frozen_case_conductance]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_mesh_against_the_reference_figures]** **[verified][^wp22-plan]** {#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever}
 
 > **Registration.** 2WCD sits at `Z_MD` = 5.6553 nm over residues 8–292 (§1.5); the bullets below
 > were computed at 5.63 nm, the centroid with residue 7 included, and are a sensitivity reference.
@@ -176,7 +215,7 @@ Source: `geometry/probe.py`, WP20 plan Design §5.
 > at 0.416. The frozen case at `size_scale` 2 gives −6.59 % (14,116 triangles). The default-size
 > mesh is 44,987 triangles, minimum SICN 0.6956 (mean 0.9862), minimum gamma 0.6223 (mean
 > 0.9843). The rms-optimal offset, 4.5827 nm, now lies 0.035 nm from the registration. It is a
-> diagnostic and is never used **[tested: pending]**, `tests/tier2/test_val05_2wcd.py`, 30 Sep 2026.
+> diagnostic and is never used **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]** **[verified][^wp22-plan]**, `tests/tier2/test_val05_2wcd.py`, 30 Sep 2026.
 
 Measured on 28 September 2026 by the WP22 plan's prototype (Design §4), and again by the
 implementation, `nanopnp.validation.geometry` through `tests/tier2/test_val05_2wcd.py`, the same
@@ -231,7 +270,7 @@ series resistor. It is the `G ∝ r²` sensitivity weighted by where the resista
   (r, z) = (5.40, 12.95) nm, the *cis* rim, and the largest non-Cₙ variance 0.0095 at (1.65, 3.10) nm,
   which is the *trans* constriction's lumen wall.
 
-### 1.5 The ensemble against the reference polygon [tested: pending] {#15-the-ensemble-against-the-reference-polygon}
+### 1.5 The ensemble against the reference polygon [verified][^wp22-plan] {#15-the-ensemble-against-the-reference-polygon}
 
 Run by the author on 30 September 2026, `tests/tier3/test_val05_ensemble.py` on
 `$NANOPNP_REFERENCE_DATA`: DCD frames 48–97, stages 1–5 at the defaults, `centre_z_nm` = 0 in the
@@ -273,3 +312,6 @@ MD frame (G9). It uses the same planes and metric as §1.4.
 ---
 
 [^thesis]: Willems, PhD thesis (LaTeX source).
+[^wp18-plan]: `docs/plans/wp18-structure-stage.md`, Design §4 and Outcomes (25 September 2026).
+[^wp20-plan]: `docs/plans/wp20-contour-and-probe.md`, Design §1 (`pqr2grid` `create_polygon_contour`, commit `a8e2898`).
+[^wp22-plan]: `docs/plans/wp22-val05-reference-geometry.md`, Outcome — item 4 (30 September 2026).

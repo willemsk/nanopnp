@@ -1,12 +1,24 @@
 ---
 type: Numerics
 title: 2. Axisymmetric weak forms
-description: The axisymmetric weak forms, the axis and the quadrature order that avoids NaN.
+description: The axisymmetric weak forms, the axis and the quadrature order that avoids
+  NaN.
 tags:
 - numerics
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:tests/tier1/test_stabilisation.py::test_ver41_element_size_is_about_93_per_cent_of_an_equilateral_edge
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_stabilisation.py::test_ver41_element_size_is_the_square_root_of_twice_the_element_area
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_example_05
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_the_coupled_manufactured_solution
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_poisson_layers.py::test_ver56_poisson_reproduces_the_three_layer_capacitor_to_round_off
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 2. Axisymmetric weak forms
@@ -60,7 +72,7 @@ Integrate(gf*gf/(x*x)*x, mesh, order=3)  ->  correct
 **Requirement:** assert integration order ≥ 3 on every form containing `1/r`, and keep a unit test
 that integrates a known `1/r`-weighted quantity on an axis-touching mesh.
 
-**The default order does not count the `r` weight [tested: pending].** NGSolve estimates an integrand's
+**The default order does not count the `r` weight [tested: tests/tier2/test_poisson_layers.py::test_ver56_poisson_reproduces_the_three_layer_capacitor_to_round_off].** NGSolve estimates an integrand's
 order from its trial and test functions, not from coefficient functions such as `x`, so a
 non-singular `r`-weighted term is integrated one order below its degree. At P2 the stiffness
 `eps grad(u).grad(v) r` (degree 3) and the source `rho v r` (degree 3) are integrated at order 2.
@@ -74,7 +86,7 @@ and the source the error is 3.4e-2 `V_T`: the source is short too. `poisson` ass
 `RADIAL_WEIGHT_ORDER = 1`; the coupled models keep the default (SPECIFICATION.md NUM-07 NOTE on the
 `r` weight). Source: WP26 implementation session, 30 September 2026.
 
-**What the extra order moves in the coupled models [tested: pending].** Measured through
+**What the extra order moves in the coupled models** **[tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_the_coupled_manufactured_solution]** **[tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_example_05]**. Measured through
 `Measures.weight_extra_order` (0 against 1, added to every non-singular axisymmetric `volume` and
 `surface` term) by `tests/tier2/test_axis_weight_order.py`, NGSolve 6.2.2606, stabilisation `none`:
 
@@ -90,7 +102,7 @@ reference mesh (0.05 nm at the wall) it is invisible in every integrated quantit
 `nanopnp mesh` inside pytest calls `logging.basicConfig(force=True)` and silences `--log-cli-level`;
 the test restores the root handlers. Source: WP34, 4 October 2026.
 
-### 2.3 `specialcf.mesh_size` is `sqrt(2|K|)`, and it evaluates pointwise **[tested: pending]** {#23-specialcfmesh_size-is-sqrt2k-and-it-evaluates-pointwise}
+### 2.3 `specialcf.mesh_size` is `sqrt(2|K|)`, and it evaluates pointwise **[tested: tests/tier1/test_stabilisation.py::test_ver41_element_size_is_the_square_root_of_twice_the_element_area]** **[tested: tests/tier1/test_stabilisation.py::test_ver41_element_size_is_about_93_per_cent_of_an_equilateral_edge]** {#23-specialcfmesh_size-is-sqrt2k-and-it-evaluates-pointwise}
 
 On a 2D triangular element NGSolve's `specialcf.mesh_size` returns `√(2|K|)`, verified elementwise
 against `Integrate(1, ...)` per element on a 14-element unstructured mesh of the unit square to a

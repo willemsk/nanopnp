@@ -252,6 +252,7 @@ def test_ver02_dropped_jacobian_renormalised_globally_fails_the_planes_only(
         report.source_cumulative_C[middle] / ELEMENTARY_CHARGE,
     )
     assert below == pytest.approx(1.6, abs=0.02)
+    assert report.source_cumulative_C[middle] / ELEMENTARY_CHARGE == pytest.approx(1.0, abs=5e-3)
     with pytest.raises(ChargeFieldError, match="export lattice disagrees with the source atoms"):
         check_deposit_conservation(report)
     check_deposit_conservation(_report(atoms, good, deposit(good, mesh_data, 2), mesh_data))

@@ -29,6 +29,10 @@ def test_num25_vector_indicator_is_the_axial_unit_vector_on_its_boundary(
     # there. The ``end`` boundaries do share their corner dofs with it and are
     # not zero near them, which is the interpolation working as intended.
     assert _boundary_mean(indicator * indicator, mesh, "axis") == pytest.approx(0.0, abs=1e-24)
+    from netgen.meshing import NgException
+
+    with pytest.raises(NgException):
+        ngs.GridFunction(space).Set(ngs.CF(1.0), definedon=mesh.Boundaries("wall"))
 
 
 def test_num25_scalar_indicator_is_unchanged_by_the_new_argument(mesh: ngs.Mesh) -> None:

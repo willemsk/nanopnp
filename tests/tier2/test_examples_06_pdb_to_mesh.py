@@ -147,6 +147,7 @@ def test_ver46_06_the_exported_map_overlays_the_aligned_structure(
     # name would take a hydrogen's radius and make the bound vacuous.
     pairs = set(zip(heavy.resnames.tolist(), heavy.names.tolist(), strict=True))
     smallest_nm = ANGSTROM_TO_NM * min(radii.radius_A(resname, atom) for resname, atom in pairs)
+    assert ANGSTROM_TO_NM * radii.radius_A("NAD", "NH2T") < smallest_nm
     positions_A = heavy.positions.astype(np.float64)
     top_A = origin_A + (np.asarray(values.shape) - 1) * delta_A
     assert np.all(positions_A >= origin_A) and np.all(positions_A <= top_A), (

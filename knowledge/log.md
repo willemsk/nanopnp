@@ -2,6 +2,15 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-10-16
+* **Update**: Backed all 63 remaining domain claims across the bundle with Tier-1 and Tier-2 test evidence and immutable plan records, reducing total pending claims across the knowledge bundle to zero and lowering the ceiling to 0 (WP48 item 8).
+* **Update**: Backed all 51 pending NGSolve-trap `Library Behaviour` claims in `06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` with Tier-1 and Tier-2 test evidence (`tests/tier1/test_ngsolve_traps.py` and existing suites) and historical commit footnotes, lowering the pending ceiling from 114 to 63 (WP48 item 7).
+* **Update**: Backed all 90 pending software-stack `Library Behaviour` claims across `07-software-stack/01..16` with Tier-1 and Tier-2 test evidence (`tests/tier1/test_library_behaviour.py` and existing suites), lowering the pending ceiling from 204 to 114 (WP48 item 6).
+* **Update**: Recorded `tested_with` package-version mappings across all seventeen `Library Behaviour` concepts and enforced non-empty `tested_with` mappings in VER-68 (WP48 item 5).
+* **Update**: Replaced every executable `[verified]` arithmetic and closed-form claim across the bundle with Tier-1 test evidence (`tests/tier1/test_knowledge_arithmetic.py` and existing Tier-1 suites), reducing `verified_unsourced` to zero (WP48 item 4).
+* **Update**: Backed all 100 pending Test Evidence claims across the seventeen Test Evidence concepts with explicit test assertions or immutable historical records (WP48 item 3).
+* **Update**: Linked source footnotes and immutable plan records to report readings, topological/calculus identities and standalone archive observations across the bundle, including the ten unsourced COMSOL reference-settings claims (WP48 item 2).
+
 ## 2026-10-14
 * **Update**: The folder lost its leading dot and is now `knowledge/`; every citation follows.
 * **Update**: The notes became a bundle of concepts, one idea each, with a header, a ledger of test-backed claims and this log (WP47).

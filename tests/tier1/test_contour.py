@@ -343,6 +343,10 @@ def test_ver51_spacing_and_canonical_form() -> None:
 
 
 def test_ver51_probe_ring_closed_form() -> None:
+    from nanopnp.geometry.probe import CHUNK_ELEMENTS
+
+    assert CHUNK_ELEMENTS * 8 == 32_000_000
+
     rho0, z0, radius, shift = 2.4, 1.0, 0.17, 0.3
     angles = 2.0 * np.pi * np.arange(12) / 12
     ring = np.column_stack((rho0 * np.cos(angles), rho0 * np.sin(angles), np.full(12, z0)))

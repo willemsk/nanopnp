@@ -11,6 +11,39 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_gui_probe.py::test_ver60_a_missing_parameter_file_fails_naming_propka
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_gui_render.py::test_ver44_a_render_child_killed_before_it_answers_is_not_called_answered
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_netgen_webgui_generate_html_ignores_template_argument
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_webgui_region_draw_and_tarball_contents
+  at: '2026-10-16T00:00:00Z'
+sources:
+- id: wp14-plan
+  resource: docs/plans/wp14-gui-shell-packaging-probe.md
+  title: WP14 GUI shell and packaging probe plan (PySide6 GL library and Playwright
+    shim observations)
+- id: wp15-plan
+  resource: docs/plans/wp15-live-convergence-and-viewer.md
+  title: WP15 GUI 3D view and packaging plan (`ngsolve_webgui_js` 0.2.39 and PyInstaller
+    OCCT/OpenBLAS)
+- id: wp24-plan
+  resource: docs/plans/wp24-gui-geometry-pipeline.md
+  title: WP24 GUI geometry pipeline plan, D16–D17 (geometry payload bundle and view-model
+    costs)
+tested_with:
+  pyside6: 6.11.2
+  pyinstaller: 6.22.3
+  netgen-mesher: 6.2.2606
 ---
 
 ## 5. GUI and packaging
@@ -19,11 +52,11 @@ verified:
 |---|---|---|
 | **PySide6** 6.11.1 | LGPL-3 OR GPL-2 OR GPL-3 | **Use this.** LGPL option means no licence conflict |
 | PyQt6 | **GPL-3 only** | Avoid unless the project is GPL |
-| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[tested: pending]**. The earlier "imports cleanly" held on a machine with the GL libraries present; see the caveat below, which is a property of the machine and not of the wheel |
+| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[verified][^wp14-plan]**. The earlier "imports cleanly" held on a machine with the GL libraries present; see the caveat below, which is a property of the machine and not of the wheel |
 | PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026). `collect_all` over `ngsolve`, `netgen` and `ngsolve_openblas`, plus the `netgen-occt` libraries collected by hand (below); `upx=False`, which mangles Qt WebEngine's helper executable |
 | briefcase / conda-constructor | — | The other two candidates; not used |
 
-### PySide6 imports are a system-library question, not a wheel question **[tested: pending]** {#pyside6-imports-are-a-system-library-question-not-a-wheel-question}
+### PySide6 imports are a system-library question, not a wheel question **[verified][^wp14-plan]** {#pyside6-imports-are-a-system-library-question-not-a-wheel-question}
 
 Measured 20 September 2026, PySide6 6.11.2, in the Linux development container:
 
@@ -43,7 +76,7 @@ plugin works unaided and `QT_QPA_PLATFORM=offscreen` is all that is needed. Inst
 packages on a Linux gate job to work around this buys Linux coverage at the price of a portability
 promise per runner image.
 
-### A missing `libEGL.so.1` can be shimmed for local work, never for the gate **[tested: pending]** {#a-missing-libeglso1-can-be-shimmed-for-local-work-never-for-the-gate}
+### A missing `libEGL.so.1` can be shimmed for local work, never for the gate **[verified][^wp14-plan]** {#a-missing-libeglso1-can-be-shimmed-for-local-work-never-for-the-gate}
 
 Measured 20 September 2026. The pre-installed Playwright Chromium carries a real
 `libEGL.so`, and symlinking it as `libEGL.so.1` (with `libGLESv2.so` as `libGLESv2.so.2`) into a
@@ -56,7 +89,7 @@ that has nothing to do with this project, and CON-07's posture is that nothing o
 needs a build or an install step. Widget coverage belongs on `windows-latest` and `macos-latest`,
 where Qt's platform plugin works unaided.
 
-### `QWebEngineView` loads a webgui document with no GPU at all **[tested: pending]** {#qwebengineview-loads-a-webgui-document-with-no-gpu-at-all}
+### `QWebEngineView` loads a webgui document with no GPU at all **[verified][^wp14-plan]** {#qwebengineview-loads-a-webgui-document-with-no-gpu-at-all}
 
 Measured 20 September 2026, PySide6 6.11.2, Linux, no display and no GPU, with
 `QT_QPA_PLATFORM=offscreen` and `QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu --no-sandbox`. Qt logs
@@ -74,7 +107,7 @@ document that fetches its renderer from `https://cdn.jsdelivr.net/npm/webgui@<ve
 so on a machine with no network the page loads and the console says `webgui is not defined`.
 `loadFinished` is a statement about the document, not about the picture.
 
-### A webgui scene is JSON, costs ~200–320 B per element, and needs no Jupyter **[tested: pending]** {#a-webgui-scene-is-json-costs-200320-b-per-element-and-needs-no-jupyter}
+### A webgui scene is JSON, costs ~200–320 B per element, and needs no Jupyter **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api]** {#a-webgui-scene-is-json-costs-200320-b-per-element-and-needs-no-jupyter}
 
 Measured 21 September 2026, P2 `GridFunction` on a unit-square mesh,
 `Draw(gf, mesh, order=k, show=False).GetData()` then `json.dumps`:
@@ -99,7 +132,7 @@ inside a `try: import anywidget` and falls back to a stub with the same construc
 The returned dict is plain numbers and base64 strings, so it crosses a process boundary and
 serialises without help.
 
-### `netgen.webgui.GenerateHTML` ignores its `template` argument **[verified]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
+### `netgen.webgui.GenerateHTML` ignores its `template` argument **[tested: tests/tier1/test_knowledge_arithmetic.py::test_netgen_webgui_generate_html_ignores_template_argument]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
 
 Read from the installed source, 21 September 2026:
 
@@ -117,7 +150,7 @@ needs a different renderer source has to build the host document itself. The doc
 plus the render data, so that is cheap — but it is not optional.
 
 The renderer itself is npm `webgui`, `"license": "LGPL-2.1-or-later"` (npm registry metadata,
-**[verified]**). Its tarball for 0.2.39 is 503,052 B, and its published `dist.integrity` is
+**[verified][^wp15-plan]**). Its tarball for 0.2.39 is 503,052 B, and its published `dist.integrity` is
 `sha512-yDd6YR7E…Zubqw==`. The 1,206,946 B figure npm reports is the *unpacked* tarball. The file a
 page loads, `package/dist/webgui.js`, is **779,484 B**: a minified IIFE that defines the global
 `webgui`.
@@ -125,7 +158,7 @@ page loads, `package/dist/webgui.js`, is **779,484 B**: a minified IIFE that def
 That build **bundles two further works**: three.js r152 (MIT, which keeps its `@license` banner)
 and dat.gui 0.7 (Apache-2.0, which keeps no banner). The tarball also carries `src/*.ts`, the
 shaders and the vite configuration, so it is the corresponding source of the LGPL part as it
-stands. **[tested: pending]**, 22 September 2026.
+stands. **[tested: tests/tier1/test_library_behaviour.py::test_webgui_region_draw_and_tarball_contents]**, 22 September 2026.
 
 `cdn.jsdelivr.net` answers this development container's proxy with 403, but
 **`registry.npmjs.org` does not**. The tarball downloads here, and its SHA-512 matches the
@@ -138,7 +171,7 @@ the frozen probe bundle and in a plain `QWebEngineView`. With no GPU, `new webgu
 throws `TypeError: Cannot read properties of null (reading 'getExtension')`: WebGL has no
 context, which is a property of the machine and not of the renderer.
 
-### A webgui scene draws on a material *region*, not only on a whole mesh **[tested: pending]** {#a-webgui-scene-draws-on-a-material-region-not-only-on-a-whole-mesh}
+### A webgui scene draws on a material *region*, not only on a whole mesh **[tested: tests/tier1/test_library_behaviour.py::test_webgui_region_draw_and_tarball_contents]** {#a-webgui-scene-draws-on-a-material-region-not-only-on-a-whole-mesh}
 
 Measured 21 September 2026 on a restored four-material ePNP-NS solution, 124 triangles.
 `Draw(cf, mesh.Materials("electrolyte|cis|trans"), show=False, order=2).GetData()` succeeds and
@@ -154,7 +187,7 @@ The same call draws a **two-component vector** field without special handling: a
 the `epnp-ns` family (the potential, two concentrations, the velocity and the pressure) produce a
 scene from one code path, the vector one costing about 1.5x the scalars.
 
-### A fixed colour range needs the scene's keys and the viewer's own settings **[verified]** {#a-fixed-colour-range-needs-the-scenes-keys-and-the-viewers-own-settings}
+### A fixed colour range needs the scene's keys and the viewer's own settings **[verified][^wp15-plan]** {#a-fixed-colour-range-needs-the-scenes-keys-and-the-viewers-own-settings}
 
 webgui 0.2.39 has one colour map per scene, and by default it autoscales to the sampled
 `funcmin`/`funcmax`, which `Draw(...).GetData()` returns. A diverging map centred on zero, or χ on
@@ -166,7 +199,7 @@ shipped `webgui.js` and from the scenes the render child writes, 2 October 2026 
 fixed range has not been watched drawing in a browser here, because this container has no GPU for
 WebGL.
 
-### `QWebEngineView` can be constructed in this container with the Playwright GL shim **[tested: pending]** {#qwebengineview-can-be-constructed-in-this-container-with-the-playwright-gl-shim}
+### `QWebEngineView` can be constructed in this container with the Playwright GL shim **[verified][^wp15-plan]** {#qwebengineview-can-be-constructed-in-this-container-with-the-playwright-gl-shim}
 
 Measured 21 September 2026. With `libEGL.so.1` and `libGLESv2.so.2` symlinked from
 `/opt/pw-browsers/chromium-*/chrome-linux/` onto `LD_LIBRARY_PATH`, and
@@ -178,7 +211,7 @@ This is the §5 shim recorded above, used for the purpose that section already s
 widget code that would otherwise ship having never been executed. It stays off the push gate, where
 widget coverage remains `windows-latest` and `macos-latest`.
 
-### SIGTERM stops a child busy inside netgen in milliseconds **[tested: pending]** {#sigterm-stops-a-child-busy-inside-netgen-in-milliseconds}
+### SIGTERM stops a child busy inside netgen in milliseconds **[tested: tests/tier1/test_gui_render.py::test_ver44_a_render_child_killed_before_it_answers_is_not_called_answered]** {#sigterm-stops-a-child-busy-inside-netgen-in-milliseconds}
 
 Neither netgen nor NGSolve installs a SIGTERM handler, so the signal's default action ends a
 `spawn` child at once even while it is inside compiled meshing code; only a Python-level handler
@@ -187,7 +220,7 @@ joined **14 ms** after `terminate()`, exit code −15. `RenderProcess.terminate`
 therefore does not stall the Qt thread, and it is what keeps two render children of one run from
 sweeping each other's files. (Codebase review of 2026-09-28.)
 
-### A PyInstaller bundle carries neither OCCT nor OpenBLAS unless told to **[tested: pending]** {#a-pyinstaller-bundle-carries-neither-occt-nor-openblas-unless-told-to}
+### A PyInstaller bundle carries neither OCCT nor OpenBLAS unless told to **[verified][^wp15-plan]** {#a-pyinstaller-bundle-carries-neither-occt-nor-openblas-unless-told-to}
 
 Measured 22 September 2026: PyInstaller 6.22.3, contrib hooks 2026.7, NGSolve and Netgen
 6.2.2606, `netgen-occt` 7.8.1, `ngsolve-openblas` 0.3.33. The Windows build log and a Linux
@@ -231,7 +264,7 @@ GL shim. The unresolved-library warnings that remain in the build log are `libop
 the optional CUDA libraries of `_ngscuda.so`. The first is satisfied at run time by the preload;
 the second is never loaded unless a CUDA solver is asked for.
 
-### The geometry payloads bundle through `collect_all`; Gmsh's library does not **[tested: pending]** {#the-geometry-payloads-bundle-through-collect_all-gmshs-library-does-not}
+### The geometry payloads bundle through `collect_all`; Gmsh's library does not **[tested: tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry]** {#the-geometry-payloads-bundle-through-collect_all-gmshs-library-does-not}
 
 Measured 29 September 2026 on a Linux rebuild of the probe recipe in this container (WP24 D16, D17):
 PyInstaller 6.22.3, MDAnalysis 2.10.0, gemmi 0.7.5, scikit-image 0.26.0, Shapely 2.1.2 with GEOS
@@ -268,7 +301,7 @@ ndarray and raises `AttributeError: 'list' object has no attribute 'shape'` on a
 probe therefore builds its 3 × 3 input with `skimage.morphology.disk(1)`, so that it imports no
 undeclared NumPy.
 
-### PDB2PQR and PROPKA bundle through `collect_all`, and fail inside PDB2PQR's run **[tested: pending]** {#pdb2pqr-and-propka-bundle-through-collect_all-and-fail-inside-pdb2pqrs-run}
+### PDB2PQR and PROPKA bundle through `collect_all`, and fail inside PDB2PQR's run **[tested: tests/tier1/test_gui_probe.py::test_ver60_a_missing_parameter_file_fails_naming_propka]** {#pdb2pqr-and-propka-bundle-through-collect_all-and-fail-inside-pdb2pqrs-run}
 
 Measured 2 October 2026 on a Linux rebuild of the probe recipe in this container (WP31 D14, D15),
 with PyInstaller 6.22.3, PDB2PQR 3.7.1 and PROPKA 3.5.1. As with the geometry payloads, Windows
@@ -310,7 +343,7 @@ In this container the frozen `--selftest` stops at Gmsh, because `libGLU.so.1` i
 The figures above come from a local build whose selftest left Gmsh out. That edit was never
 committed.
 
-### The geometry tab's view-models stay under the schema's cost **[tested: pending]** {#the-geometry-tabs-view-models-stay-under-the-schemas-cost}
+### The geometry tab's view-models stay under the schema's cost **[verified][^wp24-plan]** {#the-geometry-tabs-view-models-stay-under-the-schemas-cost}
 
 Measured 29 September 2026, best of three fresh processes, warm cache:
 
@@ -326,7 +359,7 @@ scikit-image, only inside the spawned child. A drag on the editor canvas can be 
 sending `QMouseEvent`s through `QApplication.sendEvent`: press, move, release. That is how
 `test_gui_widgets.py` asserts it.
 
-### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested: pending]** {#nanopnpiocase-pulls-in-neither-ngsolve-nor-numpy-and-costs-250350-ms}
+### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested: tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing]** {#nanopnpiocase-pulls-in-neither-ngsolve-nor-numpy-and-costs-250350-ms}
 
 Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,
 `"ngsolve" in sys.modules` and `"numpy" in sys.modules` are both `False`. The cost is pydantic and
@@ -337,7 +370,7 @@ is what lets a schema-generated editor stay near the CLI's 56 ms stage-introspec
 spirit, with NGSolve imported only in whatever process actually solves. `io/case.py` imports only
 `core` at run time: the registry checks that need `materials` and `physics` live in
 `pipeline/checks.py`. After `import nanopnp.io.case` the only `nanopnp` subpackages in
-`sys.modules` are `core` and `io` **[tested: pending]**, 6 October 2026. `import nanopnp.pipeline.case`,
+`sys.modules` are `core` and `io` **[tested: tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing]**, 6 October 2026. `import nanopnp.pipeline.case`,
 which `load_case` and `resolve` come from, also loads `charge`, `density`, `geometry`, `materials`,
 `mesh`, `numerics` and `physics`, and still leaves `ngsolve` and `numpy` out of `sys.modules`; that
 holds because those modules defer their own NGSolve and NumPy imports.
@@ -349,7 +382,7 @@ machine-dependent and the ratio as the fact**: importing the case schema costs r
 NGSolve import (~370 ms) costs, and the load-bearing half — neither `ngsolve` nor `numpy` in
 `sys.modules` afterwards — is re-confirmed and is not a timing claim at all.
 
-### The desktop shell's view-model layer costs what the schema costs **[tested: pending]** {#the-desktop-shells-view-model-layer-costs-what-the-schema-costs}
+### The desktop shell's view-model layer costs what the schema costs **[tested: tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve]** {#the-desktop-shells-view-model-layer-costs-what-the-schema-costs}
 
 Measured 20 September 2026, best of three on an idle container, warm cache:
 
@@ -370,3 +403,6 @@ that is only browsing a case never pays for a solver or a toolkit.
 
 ---
 
+[^wp14-plan]: `docs/plans/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
+[^wp15-plan]: `docs/plans/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
+[^wp24-plan]: `docs/plans/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).

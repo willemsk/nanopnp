@@ -8,9 +8,14 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  pyyaml: 6.0.3
+verified:
+- by: process:tests/tier1/test_library_behaviour.py::test_gitattributes_marks_data_binary_and_crlf_moves_file_hash
+  at: '2026-10-16T00:00:00Z'
 ---
 
-## 14. A Windows checkout rewrites the bytes a hash identifies **[tested: pending]** {#14-a-windows-checkout-rewrites-the-bytes-a-hash-identifies}
+## 14. A Windows checkout rewrites the bytes a hash identifies **[tested: tests/tier1/test_library_behaviour.py::test_gitattributes_marks_data_binary_and_crlf_moves_file_hash]** {#14-a-windows-checkout-rewrites-the-bytes-a-hash-identifies}
 
 GitHub's Windows runners, and most Windows installs of git, check out with `core.autocrlf=true`, so
 every text file in the index arrives with CRLF line endings. Any hash over a checked-out file's

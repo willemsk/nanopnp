@@ -187,6 +187,9 @@ def test_ver40_both_wall_forms_return_their_wall_value_for_every_non_positive_sa
     diffusivity, viscosity = _corrections()
     assert float(diffusivity.evaluate(1e-9, distance_nm)) == pytest.approx(WALL_VALUE_D, rel=1e-12)
     assert float(viscosity.evaluate(1e-9, distance_nm)) == pytest.approx(WALL_VALUE_ETA, rel=1e-12)
+    assert (1.0 + float(np.exp(-3.36 * (-0.9401 - 0.147)))) / WALL_VALUE_ETA == pytest.approx(
+        15.0, rel=0.2
+    )
 
 
 def test_ver40_the_clamp_is_continuous_across_zero() -> None:
@@ -194,6 +197,7 @@ def test_ver40_the_clamp_is_continuous_across_zero() -> None:
     above = [float(diffusivity.evaluate(1e-9, epsilon)) for epsilon in (1e-15, 1e-12, 1e-9)]
     assert min(above) >= WALL_VALUE_D
     # The slope at the wall is P1 exp(-P1 P2) = 5.83 per nm: d = 1e-9 is 1e-7 of the wall value.
+    assert 6.2 * float(np.exp(-6.2 * 0.01)) == pytest.approx(5.83, abs=1e-2)
     assert max(above) == pytest.approx(WALL_VALUE_D, rel=1e-6)
 
 

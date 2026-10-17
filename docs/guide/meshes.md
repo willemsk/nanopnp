@@ -91,10 +91,15 @@ numerics:
 
 Gmsh is optional and GPL-2+, so it is an extra and never on the default path (CON-10). Install it
 with `pip install "nanopnp[gmsh] @ git+https://github.com/willemsk/nanopnp"`, or `uv sync
---all-extras` in a checkout. Without it, the case still validates, and the run stops at the meshing
-stage with exit code `3`, naming the extra and the import error. That includes a wheel that
-installed but could not load its native libraries, as happens on a bare Linux container without
-`libGLU`. The stages before meshing are cached, so after installing the extra a re-run pays for the
+--all-extras` in a checkout. `uv` manages Python wheels but cannot install operating system packages.
+On Linux, the Gmsh wheel dynamically links native OpenGL and X11 libraries:
+
+- **Arch Linux:** `sudo pacman -S glu libxft libxinerama libxcursor`
+- **Debian / Ubuntu:** `sudo apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1`
+
+Without these native libraries, the case still validates, and the run stops at the meshing
+stage with exit code `3`, naming the extra and the import error (`libGLU.so.1` or related X11 libraries missing).
+The stages before meshing are cached, so after installing the system packages and the extra, a re-run pays for the
 mesh only.
 
 Both meshers mesh the same region, assembled once, and under the same size table (§5.2.2). Gmsh

@@ -137,6 +137,8 @@ def mobilities() -> tuple[Mobility, ...]:
 def test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio(
     mobilities: tuple[Mobility, ...],
 ) -> None:
+    assert henry_function(1e-9) == pytest.approx(1.0, abs=1e-6)
+    assert henry_function(1e9) == pytest.approx(1.5, abs=1e-6)
     for point in mobilities:
         expected = 2.0 * point.zeta / 3.0 * henry_function(point.kappa_a)
         error = abs(point.mobility / expected - 1.0)

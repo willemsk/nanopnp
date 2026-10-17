@@ -202,11 +202,14 @@ def test_fr23_a_mesh_without_a_membrane_refuses_the_band_naming_it(solved: Solve
 def test_fr23_the_current_does_not_depend_on_where_the_band_sits(solved: Solved) -> None:
     reference = QoIStage().run(solved.inputs()).summary["current_A"]
     assert isinstance(reference, float)
+    currents = [reference]
     for half in (0.6, 1.5, 2.9):
         artefact = QoIStage().run(solved.inputs(indicator_band_nm=[-half, half]))
         current = artefact.summary["current_A"]
         assert isinstance(current, float)
+        currents.append(current)
         assert abs(current - reference) / abs(reference) < BAND_INDEPENDENCE, half
+    assert (max(currents) - min(currents)) / abs(reference) == pytest.approx(6.7e-10, rel=0.2)
 
 
 def test_fr23_an_inverted_band_is_refused_rather_than_sign_flipped(solved: Solved) -> None:

@@ -303,6 +303,10 @@ def test_val01_a_warm_start_across_an_element_order_is_refused(neighbour: Neighb
     assert "a different fields" in message
     assert '"name": "velocity"' in message
     assert '"order": 2' in message and '"order": 3' in message
+    from nanopnp.io.case import CaseValidationError
+
+    with pytest.raises(CaseValidationError):
+        resolve(_document(neighbour.mesh_path, velocity_element="P1"))
 
 
 # NUM-02

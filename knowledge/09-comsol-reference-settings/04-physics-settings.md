@@ -1,8 +1,8 @@
 ---
 type: Reference Settings
 title: C. Physics settings
-description: 'The COMSOL physics settings: stabilisation, discretisation, wall distance, correction functions
-  and parameters.'
+description: 'The COMSOL physics settings: stabilisation, discretisation, wall distance,
+  correction functions and parameters.'
 tags:
 - comsol
 - reference-settings
@@ -100,7 +100,7 @@ Not COMSOL's wall-distance interface. A **General Extrusion** coupling with clos
 | Dimensionless | `wdf.dwd = wdf.wd[1/nm]` |
 
 The selection is the **pore surface only** — the membrane boundaries are excluded, confirming the
-KB convention for `d`. **[verified]**
+KB convention for `d`. **[verified][^comsol-report]**
 
 Two further couplings:
 
@@ -125,7 +125,7 @@ Wall-distance factors (`wdf`), whole model:
 | `wdf.r0` | 0.14716 |
 
 `0.62e1` = **6.2 nm⁻¹**, with **`+0.01`** inside the exponent. Confirms trap 1 of `knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md` exactly.
-**[verified]**
+**[verified][^comsol-report]**
 
 Concentration factors (`cdf`), whole model:
 
@@ -142,7 +142,7 @@ Concentration factors (`cdf`), whole model:
 | `cdf.epsr_c` | `if(enable_cdf_epsr == 0, 1, 1 - (1 - epsr_ms/epsr0)*(coth((3*epsr_alpha*cdf.dcav)/(epsr0 - epsr_ms)) - (epsr0 - epsr_ms)/(3*epsr_alpha*cdf.dcav)))` |
 
 The clamp `cmax = 5.3 M` caps every concentration correction; `cdf.dcav` is the **average ion
-concentration**, confirming ruling 3 of `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md`. **[verified]**
+concentration**, confirming ruling 3 of `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md`. **[verified][^comsol-report]**
 
 Assembled local properties:
 
@@ -220,7 +220,7 @@ Also defined (diagnostics, not assembled): `smp.sflux_*` flux components, `smp.n
 
 Transcription defect: `smp.sfluxRes_cpos` contains `tds.D_cnegzz*cposz` where the pattern requires
 `tds.D_cposzz*cnegz`. It is a **post-processing residual diagnostic only** — it does not enter any
-weak form, so results are unaffected. **[verified]**
+weak form, so results are unaffected. **[verified][^comsol-report]**
 
 ### C.7 Fixed charge
 
@@ -243,7 +243,7 @@ during Newton iterations.
 | Item | Value |
 |---|---|
 | Body Force (§2.5.8) | `spf.Fr = es.Er*scd_ions`, `spf.Fz = es.Ez*scd_ions` |
-| Dielectric-gradient force | **Absent** — confirms trap 3 of `knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md`. **[verified]** |
+| Dielectric-gradient force | **Absent** — confirms trap 3 of `knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md`. **[verified][^comsol-report]** |
 | Density Continuity (§2.5.9) | weak contribution `(u*d(spf.rho, r) + w*d(spf.rho, z))*test(p)` |
 | Multiphysics | Potential Coupling 1 (es → tds); Flow Coupling 1 (spf → tds) |
 | Ground | Boundaries 196, 198 |
@@ -279,7 +279,7 @@ during Newton iterations.
 `tds.ntflux_i = tds.bndFlux_i = if(r>0.001/sqrt(sqrt(mean(emetric2))), -0.5*dflux_spatial(c_i)/(pi*r), NaN)`
 — i.e. the **variational/reaction boundary flux**, not a cross-section integral of the CG flux.
 This matches the rule in `CLAUDE.md` and `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`. The evaluation boundary is
-**NOT IN REPORT**. **[verified]**
+**NOT IN REPORT**. **[verified][^comsol-report]**
 
 Pore averages use `is_inside_pore`, `is_inside_pore_bulk` (`wdf.wd > 0.5 nm`) and
 `is_inside_pore_surface` (`wdf.wd <= 0.5 nm`), integration order 4.

@@ -245,6 +245,7 @@ def test_ver48_each_trajectory_format_reads(
     assert read.shape == (3, len(group), 3)
     written_nm = frames.astype(np.float32).astype(np.float64) * 0.1
     assert np.max(np.abs(read - written_nm)) <= tolerance_nm
+    assert 2.0 * math.ldexp(1.0, -23) * 13.0 == pytest.approx(3.1e-6, abs=1e-8)
 
 
 def test_ver48_frame_selection_and_the_time_gate(

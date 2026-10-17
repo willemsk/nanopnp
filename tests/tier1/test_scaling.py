@@ -34,6 +34,9 @@ def test_num09_peclet_number_is_below_one() -> None:
     peclet = _scales(1.0).peclet
     assert peclet == pytest.approx(0.3847, abs=1e-3)
     assert peclet < 1.0
+    assert Scales(
+        length_nm=CLYA_RADIUS_NM, concentration_M=1.0, relative_permittivity=78.4
+    ).peclet == pytest.approx(0.386, abs=5e-4)
 
 
 def test_num09_peclet_at_twenty_degrees_is_the_commonly_quoted_value() -> None:
@@ -151,6 +154,13 @@ def test_num09_summary_carries_every_scale_for_the_manifest() -> None:
     }
     assert defining.items() <= summary.items()
     assert Scales(**defining).summary() == summary  # the manifest reconstructs the run
+    twenty = Scales(
+        length_nm=CLYA_RADIUS_NM, concentration_M=1.0, temperature_K=293.15, viscosity_Pa_s=1.00e-3
+    )
+    assert all(
+        abs(getattr(twenty, k) - getattr(scales, k)) / getattr(scales, k) > 0.03
+        for k in ("velocity_m_s", "pressure_Pa", "peclet")
+    )
 
 
 # NUM-27

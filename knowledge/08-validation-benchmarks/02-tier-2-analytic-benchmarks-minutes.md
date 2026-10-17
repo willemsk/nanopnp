@@ -13,8 +13,14 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_exclusion_stern.py::test_ver59_the_drop_across_a_generated_shell_obeys_gausss_law
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_exclusion_stern.py::test_ver59_the_potential_is_logarithmic_across_the_shell
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_exclusion_stern.py::test_ver59_the_shell_drop_is_a_tenth_of_the_wall_potential_or_more
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## Tier 2 — Analytic benchmarks (minutes)
@@ -24,10 +30,10 @@ verified:
 φ̃(x) = 4 artanh( tanh(ζ̃/4) · e^{−x/λ_D} )          φ̃ = φF/RT
 σ_s   = √(8 ε R T c₀) · sinh(ζ̃/2)                    (Grahame)
 ```
-Mutually consistent to 6 digits by numerical differentiation. **[verified]**
+Mutually consistent to 6 digits by numerical differentiation. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms]**
 Tests: Poisson + Boltzmann equilibrium.
 
-### 2.1.1 Gouy–Chapman–Stern through stage 5: Gauss's law across a cylindrical shell **[tested: pending]** {#211-gouychapmanstern-through-stage-5-gausss-law-across-a-cylindrical-shell}
+### 2.1.1 Gouy–Chapman–Stern through stage 5: Gauss's law across a cylindrical shell **[tested: tests/tier2/test_exclusion_stern.py::test_ver59_the_drop_across_a_generated_shell_obeys_gausss_law]** **[tested: tests/tier2/test_exclusion_stern.py::test_ver59_the_potential_is_logarithmic_across_the_shell]** **[tested: tests/tier2/test_exclusion_stern.py::test_ver59_the_shell_drop_is_a_tenth_of_the_wall_potential_or_more]** {#211-gouychapmanstern-through-stage-5-gausss-law-across-a-cylindrical-shell}
 
 A planar Stern layer (VER-31) cannot be posed through stage 5, whose region is axisymmetric, so
 VER-59 poses it on a long tube, `r ∈ [3, 5]` nm, with stage 5's shell of `a` = 0.25 nm on its lumen
@@ -53,7 +59,7 @@ shell is 17.8 % of the wall potential (−36.8 mV), so a shell holding ions cann
 ```
 φ(r) = ζ · I₀(r/λ_D) / I₀(a/λ_D)
 ```
-Satisfies `∇²φ = φ/λ_D²` in cylindrical coordinates to 6 digits. **[verified]**
+Satisfies `∇²φ = φ/λ_D²` in cylindrical coordinates to 6 digits. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms]**
 **The cleanest single test of the axisymmetric Poisson weak form and the axis BC** — it exercises
 the `r`-weighted measure and the natural condition at `r = 0` with an exact answer.
 

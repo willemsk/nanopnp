@@ -1,8 +1,8 @@
 ---
 type: Physics
 title: 3. The corrections
-description: The concentration- and wall-distance-dependent corrections, the Einstein ratio as measured,
-  and the reduction to PNP-NS.
+description: The concentration- and wall-distance-dependent corrections, the Einstein
+  ratio as measured, and the reduction to PNP-NS.
 tags:
 - physics
 sources:
@@ -12,6 +12,9 @@ sources:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:tests/tier1/test_corrections.py::test_ver05_einstein_ratio_drifts_with_concentration
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 3. The corrections
@@ -58,7 +61,7 @@ questionable. Do not add it silently; if ever added, it must be an opt-in experi
 ### 3.0 The Einstein ratio, measured
 
 `D_i/μ_i` in units of `kT/e`, evaluated from the shipped coefficients far from any wall
-(`f^w = 1`), computed with the implementation in `nanopnp.materials`. **[tested: pending]**
+(`f^w = 1`), computed with the implementation in `nanopnp.materials`. **[tested: tests/tier1/test_corrections.py::test_ver05_einstein_ratio_drifts_with_concentration]**
 
 | `⟨c⟩` | 0.15 M | 1 M | 3 M | 5.3 M |
 |---|---|---|---|---|

@@ -19,6 +19,28 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.14] - 2026-10-17
+
+WP48: the OKF bundle backfilled and the pending ledger closed (`SPECIFICATION.md` §8.2.7 G3, G8,
+VER-68; REV-103 closed). No code path of the solver changes, and VER-62 is untouched.
+
+- **The ledger closed** (G3, G8): all 361 open claims from WP47 are resolved. `pending.yaml` is empty
+  (`{}`), `CEILING` is 0, and `[tested: pending]` is refused unconditionally in `nanopnp.validation.okf`
+  and `test_okf_bundle.py`.
+- **The claims backed** (VER-68): all 100 pending test-evidence claims are backed by assertions on
+  existing computations and D5 source citations; 90 library behaviour claims are backed in
+  `tests/tier1/test_library_behaviour.py`; 51 NGSolve trap claims are backed in
+  `tests/tier1/test_ngsolve_traps.py`; 63 physics and numerics domain claims are backed across
+  existing domain suites and `tests/tier1/test_knowledge_arithmetic.py`.
+- **The verified audit** (G8, REV-103): all 56 `[verified]` markers across the bundle are audited. 15
+  deterministic checks in `tests/tier1/test_knowledge_arithmetic.py` cover executable calculations, and
+  source readings and historical observations carry source footnotes (`verified_unsourced` is 0).
+- **Library Behaviour versions** (VER-68): all 17 `Library Behaviour` concepts declare non-empty
+  `tested_with` mappings matching `uv.lock`. Missing, non-mapping, empty, empty-version and stale
+  metadata are refused.
+- **Specification amendment**: `VER-68` (3) updated so `[tested: pending]` is refused and trailing
+  WP47-ceiling wording replaced with empty `pending.yaml` and zero ceiling.
+
 ## [0.5.0-alpha.13] - 2026-10-14
 
 WP47: the knowledge base as an Open Knowledge Format bundle (`SPECIFICATION.md` §8.2.6 F6, §8.2.7

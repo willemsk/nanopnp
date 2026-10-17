@@ -8,6 +8,16 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  ngsolve: 6.2.2606
+  scipy: 1.18.0
+  gmsh: 4.15.2
+  mdanalysis: 2.10.0
+  pyside6: 6.11.2
+  gemmi: 0.7.5
+verified:
+- by: process:tests/tier1/test_gui_probe.py::test_con11_the_licence_notice_states_the_bundle_licence
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 6. Licence summary
@@ -17,7 +27,7 @@ Permissive core is achievable. Everything is LGPL/BSD/MIT/Apache **except**:
 - **Gmsh** GPLv2+ → optional mesher backend only.
 - **SuiteSparse UMFPACK** GPL-2+ → if it is the bundled default linear solver, the *bundle*
   carries GPL even though the library does not, so the distribution licence follows the solver
-  chosen as default. **[tested: pending]** SciPy's SuperLU (BSD) is not an alternative at production size:
+  chosen as default. **[tested: tests/tier1/test_gui_probe.py::test_con11_the_licence_notice_states_the_bundle_licence]** SciPy's SuperLU (BSD) is not an alternative at production size:
   on the reference-sized factorisation (~1.2 × 10⁵ cells, five fields) it was OOM-killed, while
   UMFPACK completed — the measurement behind SPECIFICATION.md §6.6 and the CON-11 amendment of
   2 September 2026.

@@ -62,8 +62,8 @@ def test_num24_indicator_is_one_on_cis_and_zero_on_trans(mesh: ngs.Mesh) -> None
     lower, upper = lumen_band(PORE)
     indicator = axial_indicator(mesh, lower_nm=lower, upper_nm=upper)
     check_indicator(indicator, mesh)
-    assert _at(indicator, mesh, 0.5, PORE.half_thickness_nm + 1.0) > 0.99
-    assert _at(indicator, mesh, 0.5, -PORE.half_thickness_nm - 1.0) < 0.01
+    assert 0.99 < _at(indicator, mesh, 0.5, PORE.half_thickness_nm + 1.0) < 1.0
+    assert 0.0 < _at(indicator, mesh, 0.5, -PORE.half_thickness_nm - 1.0) < 0.01
 
 
 def test_num24_an_inverted_band_fails_loudly(mesh: ngs.Mesh) -> None:

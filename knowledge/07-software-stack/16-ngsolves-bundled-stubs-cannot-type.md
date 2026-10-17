@@ -1,16 +1,24 @@
 ---
 type: Library Behaviour
-title: 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py` are `Any`
-description: NGSolve's bundled stubs cannot type-check, so the aliases in core/typing.py are Any.
+title: 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py`
+  are `Any`
+description: NGSolve's bundled stubs cannot type-check, so the aliases in core/typing.py
+  are Any.
 tags:
 - software
 - library-behaviour
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  ngsolve: 6.2.2606
+  mypy: 2.3.1
+verified:
+- by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_stubs_have_no_py_typed_and_invalid_init_pyi
+  at: '2026-10-16T00:00:00Z'
 ---
 
-## 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py` are `Any` **[tested: pending]** {#16-ngsolves-bundled-stubs-cannot-type-check-so-the-aliases-in-coretypingpy-are-any}
+## 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py` are `Any` **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_stubs_have_no_py_typed_and_invalid_init_pyi]** {#16-ngsolves-bundled-stubs-cannot-type-check-so-the-aliases-in-coretypingpy-are-any}
 
 NGSolve 6.2.2606 ships pybind11-stubgen output (24 `.pyi` files) but no `py.typed` marker, so mypy
 skips them (PEP 561) and every NGSolve name resolves to `Any`. Supplying the marker only exposes that

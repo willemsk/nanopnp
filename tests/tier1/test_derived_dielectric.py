@@ -174,6 +174,8 @@ def test_ver59_the_shell_registers_below_one_half_on_a_thin_shell(
     _, means = derive_fields(resolved, record, ingested.mesh, measures=AXISYMMETRIC)
     shell = next(mean for mean in means if mean.material == "exclusion")
     assert 0.1 < shell.mean < EXCLUSION_MEAN_CEILING, shell.mean
+    assert abs(3.0 * 0.2 / (32.0 * 0.12) - 0.15625) < 1e-12
+    assert shell.mean < 3.0 * 0.2 / (32.0 * 0.12)
     assert shell.within
     assert not MaterialMean(material="exclusion", mean=0.5, branch="fluid").within
     assert MaterialMean(material="exclusion", mean=0.49, branch="fluid").within

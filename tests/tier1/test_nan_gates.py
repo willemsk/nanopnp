@@ -143,6 +143,11 @@ def test_ver70_a_nan_permissive_gate_is_found_at_its_line(tmp_path: Path) -> Non
             f"src/nanopnp/gates.py:{gate.line}: {gate.function}: if {gate.test} (VER-70)"
         )
     assert found.stale == ("gates.py:gone: value > tol",)
+    namespace: dict[str, object] = {}
+    exec(SYNTHETIC, namespace)
+    namespace["bare"](math.nan, 1.0)  # type: ignore[operator]
+    with pytest.raises(namespace["GateViolationError"]):  # type: ignore[arg-type]
+        namespace["negated"](math.nan, 1.0)  # type: ignore[operator]
 
 
 def test_ver70_no_gate_comparison_in_the_package_passes_a_nan() -> None:

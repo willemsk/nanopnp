@@ -1026,7 +1026,7 @@ The charge-grid key did not move when REV-14 added `origin_nm` and `spacing_nm` 
 
 G8 sends a `[verified]` claim whose arithmetic can be executed to a test and keeps a source reading as `[verified]` with a footnote. WP47 applies that split only where a concept's type is Test Evidence, whose `[verified]` claims became tested or pending claims. In the other concepts 56 `[verified]` claims stay as written: 9 cite a source by footnote and 47 name none, so `pending.yaml` counts them as `verified_unsourced`.
 
-Open: WP48 reads each of the 47, and either backs it with a test or gives it a footnote to a source; the ceiling falls with each.
+**Fixed** in WP48: all 56 `[verified]` markers across the bundle were audited. Executable calculations were backed by tests (including 15 deterministic checks in `tests/tier1/test_knowledge_arithmetic.py`), source readings and historical observations were backed with source footnotes and cited records, and `verified_unsourced` in `pending.yaml` was reduced to zero.
 
 
 ### REV-104 — A correction file keeps a dead citation to the removed flat knowledge file

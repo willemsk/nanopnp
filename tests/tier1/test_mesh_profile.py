@@ -68,6 +68,8 @@ def test_the_shipped_fixture_is_the_delivered_table_re_derived() -> None:
 
 
 def test_the_delivered_table_has_the_published_properties() -> None:
+    from shapely.geometry import LineString, Polygon
+
     fixture = load_profile(REFERENCE)
     points = fixture.as_array()
     assert len(points) == 185
@@ -77,6 +79,26 @@ def test_the_delivered_table_has_the_published_properties() -> None:
     assert signed_area(points) == pytest.approx(-26.4939, abs=1e-4)
     assert min_vertex_spacing(points) == pytest.approx(0.0361, abs=1e-4)
     assert min_feature_size(points) == pytest.approx(0.0806, abs=1e-4)
+
+    h = 0.05
+    on_r = np.isclose(points[:, 0] % h, 0, atol=1e-5) | np.isclose(points[:, 0] % h, h, atol=1e-5)
+    on_z = np.isclose(points[:, 1] % h, 0, atol=1e-5) | np.isclose(points[:, 1] % h, h, atol=1e-5)
+    assert np.mean(on_r | on_z) == pytest.approx(0.58, abs=0.01)
+    assert np.mean(on_r & on_z) == pytest.approx(0.32, abs=0.01)
+
+    edges = np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1)
+    assert np.sum(edges < 0.05) == 10
+    assert np.sum(edges < 0.1) == 45
+
+    poly = Polygon(points)
+    cut_trans = LineString([(0, -1.4), (10, -1.4)]).intersection(poly.exterior)
+    cut_cis = LineString([(0, 1.4), (10, 1.4)]).intersection(poly.exterior)
+    pts_trans = sorted(
+        [p.x for p in (cut_trans.geoms if hasattr(cut_trans, "geoms") else [cut_trans])]
+    )
+    pts_cis = sorted([p.x for p in (cut_cis.geoms if hasattr(cut_cis, "geoms") else [cut_cis])])
+    assert pts_trans[-1] == pytest.approx(2.7524, abs=1e-4)
+    assert pts_cis[-1] == pytest.approx(4.88, abs=1e-4)
 
 
 def test_the_reference_fixture_is_accepted_for_tier_three_work() -> None:
