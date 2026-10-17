@@ -276,3 +276,15 @@ def test_telescoping_identity_round_off_scales_with_error_magnitude() -> None:
             assert fail_rate >= min_fail
     large = Attribution(key="potential", kind="field", errors=(500.0, 120.0, 800.0, 310.0))
     assert abs(large.identity_residual()) <= 1e-14 * max(1.0, *large.errors)
+
+
+def test_limiting_current_depletion_debye_and_mobility_ratios() -> None:
+    from nanopnp.core.scaling import debye_length_nm
+
+    epnpns = Electrolyte.from_parameter_file("willems2020_nacl")
+    mu_ratio = epnpns.mobility("Na+", 1.0, 50.0) / epnpns.ion("Na+").mobility_0
+    d_ratio = epnpns.diffusivity("Na+", 1.0, 50.0) / epnpns.ion("Na+").diffusivity_0
+    assert mu_ratio == pytest.approx(0.63, abs=0.01)
+    assert d_ratio == pytest.approx(0.92, abs=0.01)
+    assert debye_length_nm(0.001) == pytest.approx(9.6, abs=0.05)
+

@@ -156,7 +156,12 @@ def test_ver58_unrenormalised_axis_sum_is_short_by_the_end_correction() -> None:
     raw = atom_lattice_sum(0.0, 0.0, width, H) - 1.0
     logger.info("on-axis raw deficit %.4e against -h^2/(6 w^2) = %.4e", raw, predicted)
     assert raw == pytest.approx(predicted, rel=0.1)
-    assert abs(atom_lattice_sum(3.0, 0.0, 0.0112, H) - 1.0) < 1e-14
+    assert atom_lattice_sum(0.0, 0.0, 0.05, H) - 1.0 == pytest.approx(-1.67e-3, abs=1e-5)
+    assert atom_lattice_sum(0.02, 0.0, 0.05, H) - 1.0 == pytest.approx(-1.42e-3, abs=1e-5)
+    assert atom_lattice_sum(0.05, 0.0, 0.1, H) - 1.0 == pytest.approx(-3.25e-4, abs=1e-5)
+    assert abs(atom_lattice_sum(0.1, 0.0, 0.0112, H) - 1.0) <= 1e-15
+    assert abs(atom_lattice_sum(3.0, 0.0, 0.0112, H) - 1.0) <= 1e-15
+    assert abs(atom_lattice_sum(3.0, 0.0, 0.1, H) - 1.0) <= 1e-15
 
     atoms = _atoms([0.0], [0.0], [width], [1.0])
     renormalised = sum_kernel(atoms, H).grid.planar_integral() / ELEMENTARY_CHARGE

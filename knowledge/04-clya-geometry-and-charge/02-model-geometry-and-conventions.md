@@ -13,6 +13,9 @@ sources:
 - id: wp21-plan
   resource: docs/plans/wp21-region-and-meshing.md
   title: WP21 region and meshing plan, Design §1
+- id: wp30-plan
+  resource: docs/plans/wp30-ion-exclusion-and-derived-dielectric.md
+  title: WP30 ion exclusion plan, Design §1 and Outcomes
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
@@ -20,6 +23,20 @@ verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_exclusion_shell_planar_chi_mean
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_region.py::test_ver52_a_body_cut_four_times_is_refused_naming_its_pocket
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_region.py::test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bound
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_exclusion_2wcd_walk.py::test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_pipeline_2wcd.py::test_ver53_2wcd_meshes_at_the_default_sizes
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_region_reference.py::test_ver52_the_derived_region_has_the_reference_topology
   at: '2026-10-16T00:00:00Z'
 ---
 
@@ -43,7 +60,7 @@ Consequences that must be reproduced: at **V_bias > 0** cations move **trans -> 
 pore is added to the grounded cis reservoir (T `sec:transport:methods` L1631-1633). Current is
 integrated over the **cis** boundary (eq. `eq:currentsim`).
 
-### 2.1 The bilayer on a structure-derived profile, measured [tested: pending] {#21-the-bilayer-on-a-structure-derived-profile-measured}
+### 2.1 The bilayer on a structure-derived profile, measured [tested: tests/tier1/test_region.py::test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region] [tested: tests/tier2/test_region_reference.py::test_ver52_the_derived_region_has_the_reference_topology] [tested: tests/tier2/test_pipeline_2wcd.py::test_ver53_2wcd_meshes_at_the_default_sizes] {#21-the-bilayer-on-a-structure-derived-profile-measured}
 
 Stage 5 (WP21) derives the membrane's inner edge from the profile rather than drawing it. On each
 plane `z = ±1.4` nm (model frame) the lumen-adjacent body interval is the profile's two smallest
@@ -62,7 +79,7 @@ profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
 
 - **The chord between the intervals' mid-points is wrong on both profiles.** On the fixture it
   runs (2.2387, −1.4) to (3.92, +1.4) and crosses the fluid cleft under the cap between
-  (3.070, −0.016) and (3.235, 0.260), splitting the electrolyte in two. **[tested: pending]**
+  (3.070, −0.016) and (3.235, 0.260), splitting the electrolyte in two. **[tested: tests/tier1/test_region.py::test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region]**
 - **Any admissible chord gives the same region**: a pocket between two chords would be enclosed by
   them, the body and the plane stretches between their ends, which are body too, yet the
   complement of a simple polygon is connected. **[verified][^wp21-plan]**
@@ -72,11 +89,11 @@ profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
   second electrolyte face; joined below, the pocket under it is a second membrane face (and
   electrolyte where it passes the other plane). So "the membrane meets the body at `r₂`, not
   `r₄`" cannot be tested on a four-crossing body: no such body assembles. **[verified][^wp21-plan]** by the
-  argument, **[tested: pending]** on a hook and a bridge profile, refused naming each face's centroid.
+  argument, **[tested: tests/tier1/test_region.py::test_ver52_a_body_cut_four_times_is_refused_naming_its_pocket]** on a hook and a bridge profile, refused naming each face's centroid.
 - **The 1.85 nm trans-tip offset is the fixture's own** (pore axial extent −1.85 ≤ z, bilayer
   centre 0). Applying it to 2WCD is a test-time registration, not a VAL-05 claim.
 
-### 2.2 The ion-exclusion shell and the derived `χ` on 2WCD, measured [tested: pending] {#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured}
+### 2.2 The ion-exclusion shell and the derived `χ` on 2WCD, measured [tested: tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bound] [tested: tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded] [tested: tests/tier2/test_exclusion_2wcd_walk.py::test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report] [verified][^wp30-plan] {#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured}
 
 WP30 (FR-15, VER-59), on the prepared 2WCD registered by its C-alpha centroid (VAL-05's frame),
 `h_c` = 0.05 nm, with the shell at `a` = 0.25 nm (`a_Na/2`) and `δ` = 0.15 nm
@@ -100,7 +117,7 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 - **The shell's mean `χ` is the planar estimate.** `3δ/(32a)` = 0.0563 at these values, measured
   0.056 on 2WCD and 0.0539 on the convex VER-59 parallelogram, where the corners spread the step.
   A remap of the stage-3 mean would not have given a width independent of `|∇ρ|` (WP30 plan,
-  *Design* §1). **[tested: tests/tier1/test_knowledge_arithmetic.py::test_exclusion_shell_planar_chi_mean]** by the arithmetic, **[tested: pending]** by the means.
+  *Design* §1). **[tested: tests/tier1/test_knowledge_arithmetic.py::test_exclusion_shell_planar_chi_mean]** by the arithmetic, **[tested: tests/tier2/test_exclusion_2wcd_walk.py::test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report]** by the means.
 - **The worst `χ` error sits at the profile's concave vertices**, where the medial axis crosses the
   band and `χ` has a kink. Measured, it is 1.1e-2 against *Design* §1's estimate of `0.75 h · 3/δ`
   ≈ 0.04 there. Off the vertices the bilinear bound `0.75 (h/δ)²` = 1.9e-3 holds: the 95th

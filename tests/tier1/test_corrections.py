@@ -88,15 +88,15 @@ def test_ver04_nernst_einstein_holds_at_infinite_dilution(epnpns: Electrolyte) -
 def test_ver05_einstein_ratio_drifts_with_concentration(epnpns: Electrolyte) -> None:
     v_t = thermal_voltage()
     tables = {
-        "Na+": (1.208, 1.468, 1.665),
-        "Cl-": (1.132, 1.221, 1.279),
+        "Na+": (1.208, 1.468, 1.665, 1.818),
+        "Cl-": (1.132, 1.221, 1.279, 1.300),
     }
     for name, expected in tables.items():
         ratios = [
             epnpns.diffusivity(name, c, FAR_FROM_WALL_NM)
             / epnpns.mobility(name, c, FAR_FROM_WALL_NM)
             / v_t
-            for c in (0.15, 1.0, 3.0)
+            for c in (0.15, 1.0, 3.0, 5.3)
         ]
         assert ratios == sorted(ratios), (
             f"{name}: D/mu should rise monotonically with concentration"

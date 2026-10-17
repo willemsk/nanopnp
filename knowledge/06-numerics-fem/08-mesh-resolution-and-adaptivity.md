@@ -20,6 +20,14 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_mesh_quality.py::test_ver10_gmsh_agrees_on_the_magnitude_of_both_measures
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_reference_geometry.py::test_ver10_the_reference_mesh_is_in_the_published_quality_band
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_region_reference.py::test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_region_reference.py::test_ver53_the_wall_gate_passes_at_both_measured_sizes
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 8. Mesh resolution and adaptivity
@@ -43,7 +51,7 @@ verified:
   been extracted (`WebFetch` truncates the PDF at ~p. 66 of 143). Still no convergence study.
   → `knowledge/09-comsol-reference-settings/index.md`.
 
-### Measured: the reference region meshes to a third of COMSOL's element count **[tested: pending]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
+### Measured: the reference region meshes to a third of COMSOL's element count **[tested: tests/tier2/test_reference_geometry.py::test_ver10_the_reference_mesh_is_in_the_published_quality_band] [tested: tests/tier2/test_region_reference.py::test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
 
 The ClyA region of §5.2.1 — the delivered 185-vertex profile, the membrane quadrilateral with its
 slanted inner edge, a 250 nm reservoir half-disc, glued — meshed by netgen at the §5.2.2 size fields
@@ -62,7 +70,7 @@ statement — the two meshers' size fields are not the same knobs, and COMSOL's 
 quality" is not stated to be SICN — but the quality band is, and it is met without boundary layers,
 by isotropic grading alone, which is what §5.2.2 says the reference model did.
 
-### Measured: the wall-size field reaches the wall, and a gate can tell **[tested: pending]** {#measured-the-wall-size-field-reaches-the-wall-and-a-gate-can-tell}
+### Measured: the wall-size field reaches the wall, and a gate can tell **[tested: tests/tier2/test_region_reference.py::test_ver53_the_wall_gate_passes_at_both_measured_sizes]** {#measured-the-wall-size-field-reaches-the-wall-and-a-gate-can-tell}
 
 Netgen treats a size as a target, not a bound. Stage 6 (WP21) measures the `wall` segment lengths
 over the resolved target, at the §5.2.2 sizes otherwise; netgen 6.2.2606, Linux, 26 September 2026:
@@ -89,7 +97,7 @@ wide (minimum SICN 0.647 against a 0.3 floor), so gating only *imported* meshes 
 we build ourselves unwatched for no saving.
 
 **`mesh/quality.py`'s SICN and gamma agree with `gmsh.model.mesh.getElementQualities(..., "minSICN")`
-and `"gamma"` to every digit gmsh prints [tested: pending]**, which calibrates the 0.3 threshold against the
+and `"gamma"` to every digit gmsh prints [tested: tests/tier1/test_mesh_quality.py::test_ver10_gmsh_agrees_on_the_magnitude_of_both_measures]**, which calibrates the 0.3 threshold against the
 implementation that set it. gmsh returns `+1` for a clockwise triangle (a 2-D element in a discrete
 entity has no intrinsic orientation there), so only the magnitude is comparable; the sign is ours.
 
