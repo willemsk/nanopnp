@@ -1,7 +1,8 @@
 ---
 type: Numerics
 title: 5. Nonlinear solution
-description: 'The nonlinear solution: damped Newton, convergence tests and the continuation ladder.'
+description: 'The nonlinear solution: damped Newton, convergence tests and the continuation
+  ladder.'
 tags:
 - numerics
 sources:
@@ -12,8 +13,8 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_concentration_rung_transfer_copies_vector_entries
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 5. Nonlinear solution
@@ -98,7 +99,7 @@ residual test is measured relative to the entry residual, so a converged warm st
 The state then moves by ~5 × 10⁻⁹ relative. This is the property to test a cross-space transfer with:
 a transfer that scrambles a component needs many iterations to recover.
 
-**Changing `c₀` between rungs is a vector copy, not an interpolation. [verified]** It changes the
+**Changing `c₀` between rungs is a vector copy, not an interpolation. [tested: tests/tier1/test_knowledge_arithmetic.py::test_concentration_rung_transfer_copies_vector_entries]** It changes the
 whole NUM-09 scale set — `S`, `Pe`, every nondimensional coefficient — but not the field set, and the
 previous solution stays a good guess because the nondimensionalisation leaves every field O(1) in the
 *new* scaling too: `c̃_i = 1` is bulk by the definition of `c₀`, and `φ̃` is in `V_T`, which does not

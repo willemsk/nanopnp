@@ -19,6 +19,8 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_exclusion_shell_planar_chi_mean
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 2. Model geometry and conventions
@@ -98,7 +100,7 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 - **The shell's mean `χ` is the planar estimate.** `3δ/(32a)` = 0.0563 at these values, measured
   0.056 on 2WCD and 0.0539 on the convex VER-59 parallelogram, where the corners spread the step.
   A remap of the stage-3 mean would not have given a width independent of `|∇ρ|` (WP30 plan,
-  *Design* §1). **[verified]** by the arithmetic, **[tested: pending]** by the means.
+  *Design* §1). **[tested: tests/tier1/test_knowledge_arithmetic.py::test_exclusion_shell_planar_chi_mean]** by the arithmetic, **[tested: pending]** by the means.
 - **The worst `χ` error sits at the profile's concave vertices**, where the medial axis crosses the
   band and `χ` has a kink. Measured, it is 1.1e-2 against *Design* §1's estimate of `0.75 h · 3/δ`
   ≈ 0.04 there. Off the vertices the bilinear bound `0.75 (h/δ)²` = 1.9e-3 holds: the 95th

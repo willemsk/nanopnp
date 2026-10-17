@@ -5,12 +5,20 @@ description: NGSolve traps found by implementing the model, all of them silent.
 tags:
 - numerics
 - library-behaviour
+sources:
+- id: wp45-validation-strip
+  resource: git:3872426:src/nanopnp/validation/attribution.py
+  title: Validation prose strip from attribution.py and mms.py (commit 3872426)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_exclusion_shell.py::test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_ngsolve_physics_small_facts
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 8.1 NGSolve traps found by implementing this — all silent
@@ -280,7 +288,7 @@ The construction is `F` = 1.05, because netgen leaves an edge of 1.5 times its s
 segment. At `F` = 1.5 the Stern tube's mean wall segment was 1.49 times the 0.05 nm target, and
 stage 6's wall-size gate refused it. With `F` = 1.05 every chord is above `h_c`, and the surface is
 at most `0.0048a + s²/(8a)` inside the offset, with `s < 1.15 h_c`, which is 0.62 of the bound at
-worst [verified]. Stage 5 also gates the bound on every edge: the least distance of a segment to a
+worst [tested: tests/tier1/test_exclusion_shell.py::test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset]. Stage 5 also gates the bound on every edge: the least distance of a segment to a
 polygon is the least of four endpoint distances (`chord_clearances`).
 
 The closing moves the surface outward where it fills a groove. On 2WCD at `a` = 0.25 nm, 8 % of the
@@ -573,7 +581,7 @@ cycle is collected with the mesh. **[tested: pending]**
   = 0.0543` against the clamped 0.0601).
 - The Poisson diagonal block scales as `1/lambda~^2`, 130 at 3 M and a 2 nm pore (NUM-10).
 
-### 8.5.1 Small facts recorded from the `physics/` prose strip **[verified]** {#851-small-facts-recorded-from-the-physics-prose-strip}
+### 8.5.1 Small facts recorded from the `physics/` prose strip **[tested: tests/tier1/test_knowledge_arithmetic.py::test_ngsolve_physics_small_facts]** {#851-small-facts-recorded-from-the-physics-prose-strip}
 
 - NGSolve's `SumOfIntegrals` has no unary minus: a surface-charge term is built with its sign in the
   integrand, because a form built and then negated is a `TypeError`
@@ -584,7 +592,7 @@ cycle is collected with the mesh. **[tested: pending]**
 - `phi~` at P2 has an element-wise constant Hessian, which is why the PHY-23 chain rule needs no
   further NGSolve construct (`physics/nernst_planck.py`, `excess_potential_gradient`).
 
-### 8.5.2 Small facts recorded from the `validation/` prose strip **[verified]** {#852-small-facts-recorded-from-the-validation-prose-strip}
+### 8.5.2 Small facts recorded from the `validation/` prose strip **[verified][^wp45-validation-strip]** {#852-small-facts-recorded-from-the-validation-prose-strip}
 
 - On the VER-11 benchmark pore, `Delta_transport` and `stabilisation_currents_A` agree to 1.55e-3 of the
   current: both measure the same physics, but the report prints them under distinct names
@@ -594,4 +602,6 @@ cycle is collected with the mesh. **[tested: pending]**
   `import nanopnp.physics.models` at 28 ms with the module present. Revisit if stage introspection reaches it.
 
 ---
+
+[^wp45-validation-strip]: `git show 3872426`, prose strip of `src/nanopnp/validation/attribution.py` and `src/nanopnp/validation/mms.py` (WP45, 13 October 2026).
 

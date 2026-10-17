@@ -1,7 +1,8 @@
 ---
 type: Erratum
 title: 8. Errata in the source, with the arithmetic
-description: Errata in the printed sources, each with the arithmetic that settles it.
+description: Errata in the printed sources, each with the arithmetic that settles
+  it.
 tags:
 - physics
 - erratum
@@ -18,6 +19,8 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_permittivity_cap_gavish_and_buchner_at_5_3_m
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 8. Errata in the source, with the arithmetic
@@ -74,7 +77,7 @@ record `epsr_ms = 30.08`, `epsr_alpha = 11.5` — Gavish's values — so **those
 `SPECIFICATION.md` §4.6 erratum 6). The printed `42.12` is the stale cap: it follows from the
 authors' own Buchner fit, which the model did *not* use, so the cap with the parameters actually
 used is `42.67`. An earlier author recollection favouring the Buchner fit is superseded by the
-model file. The difference is ~1 % in `ε_r` at saturation and negligible below ~1 M. **[verified][^comsol-report]**
+model file. The difference is ~1 % in `ε_r` at saturation and negligible below ~1 M **[tested: tests/tier1/test_knowledge_arithmetic.py::test_permittivity_cap_gavish_and_buchner_at_5_3_m]** **[verified][^comsol-report]**.
 
 ---
 

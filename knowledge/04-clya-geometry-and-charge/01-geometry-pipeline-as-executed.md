@@ -28,10 +28,18 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_taubin_circulant_pass_band_and_staircase_attenuation
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_structure_stage.py::test_ver48_frame_selection_and_the_time_gate
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_structure_stage.py::test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_val05_geometry.py::test_val05_pqr2grid_radius_check_values
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 1. Geometry pipeline, as executed
@@ -47,7 +55,7 @@ verified:
 | Frame set | **50 coordinate sets from the final 5 ns**, aligned by backbone-RMSD minimisation (VMD `RMSD tool`) | T L279-282 |
 
 `k = 1 kcal/mol/A^2 = 694.8 pN/nm`, so the two restraint numbers are the same constant expressed
-twice. Verified arithmetic, not stated in the thesis.
+twice **[tested: tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel]**, not stated in the thesis.
 
 **Molecular density map** (T L373-397, eq. `eq:denspore`):
 
@@ -57,7 +65,7 @@ d_i = sqrt((x-x_i)^2 + (y-y_i)^2 + (z-z_i)^2)
 sigma = 0.93        R_i = Van der Waals radius of atom i
 ```
 
-**Which radii.** The thesis says only "Van der Waals radius". The author ruled on 25 September 2026 that R_i is the CHARMM Rmin/2 of PDB2PQR's `CHARMM.DAT`, the set carried by the reference ensemble's per-frame PQR files (§1.1). For an isolated atom `ρ = g`, so the 25 % isolevel sits at `d = σR√ln 4 = 0.93 × 1.1774 R = 1.095 R`, just outside the van der Waals radius itself. The contour therefore moves one-for-one with the radius set **[verified][^thesis]**.
+**Which radii.** The thesis says only "Van der Waals radius". The author ruled on 25 September 2026 that R_i is the CHARMM Rmin/2 of PDB2PQR's `CHARMM.DAT`, the set carried by the reference ensemble's per-frame PQR files (§1.1). For an isolated atom `ρ = g`, so the 25 % isolevel sits at `d = σR√ln 4 = 0.93 × 1.1774 R = 1.095 R`, just outside the van der Waals radius itself **[tested: tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel]**. The contour therefore moves one-for-one with the radius set **[verified][^thesis]**.
 
 A probabilistic-union ("at least one atom here") field bounded in [0,1], after Li 2013. Grid
 **0.5 Angstrom** isotropic, computed in **3D for each of the 50 frames**, then the **50 maps are
@@ -105,9 +113,9 @@ it for ClyA.
 | Step | What the script does | Consequence |
 |---|---|---|
 | Density | The union of §1, `sigma=0.93`, radii from the PQR, on a Cartesian grid over `[−L, L]` at h | The model of `SPECIFICATION.md` §5.2 stage 2 |
-| Radial average | `np.histogram` of the node radii, at bin width `w = (x_max − x_min + 1)/N_x` | `w/h = (2L + 1)/(2L + h)`, not 1: the `+1` is in nm, where one spacing was meant. It is 1.0316 at L = 15 nm and 1.0701 at L = 6.75 nm **[verified]** |
+| Radial average | `np.histogram` of the node radii, at bin width `w = (x_max − x_min + 1)/N_x` | `w/h = (2L + 1)/(2L + h)`, not 1: the `+1` is in nm, where one spacing was meant. It is 1.0316 at L = 15 nm and 1.0701 at L = 6.75 nm **[tested: tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift]** |
 | Contour | `find_contours(D, 0.25)`, then `contours[0]` | The first contour in scan order, not the largest |
-| Coordinates | `r = col·h`, `z = row·h + z_min` | Bin j's centre is `(j + ½)w`, so a feature at true radius r is written at `r_a = (r/w − ½)h`. At L = 15, 1.65 nm reads 1.574 nm and 5.66 nm reads 5.462 nm **[verified]** |
+| Coordinates | `r = col·h`, `z = row·h + z_min` | Bin j's centre is `(j + ½)w`, so a feature at true radius r is written at `r_a = (r/w − ½)h`. At L = 15, 1.65 nm reads 1.574 nm and 5.66 nm reads 5.462 nm **[tested: tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift]** |
 | Simplify | `Polygon.simplify(0.1)`, topology preserved | Douglas–Peucker, with no smoothing, no spacing step and no gate |
 | Output | A z offset (PlyAB: −0.5 nm), then `savetxt(fmt='%.2f')` | Vertices rounded to 0.01 nm |
 
@@ -116,7 +124,7 @@ from `nanopnp` stage 2 (L = 6.75 nm). The script's 0.25 contour lies 0.13–0.24
 reduction's at the lumen, and 0.21–0.40 nm inside at the outer surface. The same bins, placed at
 their centres `(j + ½)w`, agree with the exact reduction to ≤ 0.01 nm. So the error lies entirely
 in the index-to-radius map, not in the binning **[tested: pending]** (WP20 plan, Design §1, 26 Sep 2026).
-At L = 15 nm a feature at 1.65 nm reads 1.5744 nm and one at 5.66 nm reads 5.4615 nm **[verified]**
+At L = 15 nm a feature at 1.65 nm reads 1.5744 nm and one at 5.66 nm reads 5.4615 nm **[tested: tests/tier1/test_val05_geometry.py::test_val05_pqr2grid_radius_check_values]**
 (`validation/geometry.py`, `pqr2grid_radius`).
 
 **Answered by the author, 28 September 2026: it was.** The delivered 185-vertex polygon was made
@@ -170,7 +178,7 @@ frame, whose bilayer centre is z = 0 (G9) (WP20 plan, Design §6).
 Taubin's umbrella operator on a closed loop is circulant: mode `k = 1 - cos θ` is scaled by
 `(1 - λk)(1 - μk)` per pass, with λ = 0.5, μ = -0.53, N = 10. The pass band is wavelengths above 13.08
 samples (0.33 nm at h/2 spacing), and the grid-scale staircase (k = 1) keeps 0.069 of its amplitude
-[verified]. Source: `geometry/contour.py` (`taubin`), WP20 plan Design §3.
+[tested: tests/tier1/test_knowledge_arithmetic.py::test_taubin_circulant_pass_band_and_staircase_attenuation]. Source: `geometry/contour.py` (`taubin`), WP20 plan Design §3.
 
 The probe-radius profile costs frames x atoms x planes distances, 7.8e8 for the 50-frame ClyA-AS
 ensemble, a few seconds, batched per frame and bounded by `CHUNK_ELEMENTS` (32 MB of float64) [tested: pending].

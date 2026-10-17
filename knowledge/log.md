@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-10-16
+* **Update**: Replaced every executable `[verified]` arithmetic and closed-form claim across the bundle with Tier-1 test evidence (`tests/tier1/test_knowledge_arithmetic.py` and existing Tier-1 suites), reducing `verified_unsourced` to zero (WP48 item 4).
 * **Update**: Backed all 100 pending Test Evidence claims across the seventeen Test Evidence concepts with explicit test assertions or immutable historical records (WP48 item 3).
 * **Update**: Linked source footnotes and immutable plan records to report readings, topological/calculus identities and standalone archive observations across the bundle, including the ten unsourced COMSOL reference-settings claims (WP48 item 2).
 

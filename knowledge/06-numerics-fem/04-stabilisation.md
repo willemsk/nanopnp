@@ -12,8 +12,12 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_reynolds_number_and_pspg_parameter_at_reference_scales
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_stabilisation.py::test_num14_crosswind_viscosity_is_identically_zero_below_unit_cell_peclet
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_stabilisation.py::test_num14_streamline_parameter_takes_the_diffusive_branch_below_unit_peclet
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 4. Stabilisation
@@ -66,7 +70,7 @@ limit of a `0/0`; the two agree at `Pe_K = 1`, so `τ_i` is continuous at the cr
 Galerkin diffusion they augment in this flux-form residual. The residual is *approximate* (NUM-14):
 every second derivative of a trial field is dropped, leaving `R̃_i = b̃_i·∇c̃_i − s̃_i`.
 
-### 4.2 The ratio SUPG adds is `Pe_K²`, exactly **[verified]** {#42-the-ratio-supg-adds-is-pe_k2-exactly}
+### 4.2 The ratio SUPG adds is `Pe_K²`, exactly **[tested: tests/tier1/test_stabilisation.py::test_num14_streamline_parameter_takes_the_diffusive_branch_below_unit_peclet]** {#42-the-ratio-supg-adds-is-pe_k2-exactly}
 
 Below unit Péclet `τ_i = h_K²/(4D̃_i)`, so the artificial streamline diffusivity `τ_i‖b̃_i‖²` against
 the physical `D̃_i` is
@@ -115,7 +119,7 @@ never taken.
 because this mesh is sized for the solve and not for NUM-30: at `Pe_K = 0.775` the added-diffusivity
 ratio `Pe_K²` is 0.60, not 0.09. The closed form is unchanged; only the substitution is.
 
-### 4.3 The crosswind switches itself off at `C_cw Pe_K ≤ 1` **[verified]** {#43-the-crosswind-switches-itself-off-at-c_cw-pe_k-1}
+### 4.3 The crosswind switches itself off at `C_cw Pe_K ≤ 1` **[tested: tests/tier1/test_stabilisation.py::test_num14_crosswind_viscosity_is_identically_zero_below_unit_cell_peclet]** {#43-the-crosswind-switches-itself-off-at-c_cw-pe_k-1}
 
 In production `s̃_i = 0`, so `R̃_i = b̃_i·∇c̃_i` exactly and Cauchy–Schwarz gives
 `‖R̃_i‖ ≤ ‖b̃_i‖‖∇c̃_i‖`, whence
@@ -269,7 +273,7 @@ A rate floor with no ceiling passes that. The discriminating quantity is the ter
 
 Two orders of separation, and no dependence on which direction the rate moves.
 
-### 4.4 At `Re = 6 × 10⁻⁴` the flow stabilisation is pure PSPG **[verified]** {#44-at-re-6-104-the-flow-stabilisation-is-pure-pspg}
+### 4.4 At `Re = 6 × 10⁻⁴` the flow stabilisation is pure PSPG **[tested: tests/tier1/test_knowledge_arithmetic.py::test_reynolds_number_and_pspg_parameter_at_reference_scales]** {#44-at-re-6-104-the-flow-stabilisation-is-pure-pspg}
 
 `NondimensionalCoefficients.reynolds = ρ₀ε V_T²/η₀²` is length-independent and equals
 **6 × 10⁻⁴**. In the Shakib parameter with `h̃ ≈ 0.03` and `‖ũ‖ ~ 1`:
