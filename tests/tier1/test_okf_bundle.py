@@ -169,16 +169,23 @@ def test_ver68_placeholder_in_a_code_span_passes(repository: Path) -> None:
 
 
 def test_ver68_explicit_ids_and_repeats_give_anchors(repository: Path) -> None:
-    body = "## 1. Thing\n\n### 1.1 Detail **[tested]** {#11-detail}\n\n### Repeat\n\n### Repeat\n"
-    _concept(repository, "01-thing.md", body.replace("**[tested]** ", "**[tested: pending]** "))
+    test = "tests/tier1/test_x.py::test_one"
+    body = (
+        f"## 1. Thing\n\n### 1.1 Detail **[tested: {test}]** {{#11-detail}}\n\n"
+        "### Repeat\n\n### Repeat\n"
+    )
+    _concept(
+        repository,
+        "01-thing.md",
+        body,
+        extra=f"verified:\n  - {{by: 'process:{test}', at: x}}\n",
+    )
     ok = _file(
         repository,
         "ok.md",
         "knowledge/01-a/01-thing.md#11-detail knowledge/01-a/01-thing.md#repeat_1\n",
     )
-    pending = {"01-a/01-thing.md": {"tested_pending": 1, "verified_unsourced": 0}}
-    (repository / "knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
-    assert _check(repository, ceiling=1, files=(ok,)) == []
+    assert _check(repository, files=(ok,)) == []
 
 
 def test_ver68_an_explicit_id_claimed_later_moves_an_earlier_slug() -> None:
@@ -215,34 +222,39 @@ def test_ver68_bare_tested_marker_is_refused(repository: Path) -> None:
 
 
 def test_ver68_class_test_name_resolves(repository: Path) -> None:
-    body = BODY + "\nOne [tested: tests/tier1/test_x.py::TestC::test_two], two [tested: pending].\n"
+    body = BODY + "\nOne [tested: tests/tier1/test_x.py::TestC::test_two].\n"
     _concept(
         repository,
         "01-thing.md",
         body,
         extra="verified:\n  - {by: 'process:tests/tier1/test_x.py::TestC::test_two', at: x}\n",
     )
-    pending = {"01-a/01-thing.md": {"tested_pending": 1, "verified_unsourced": 0}}
-    (repository / "knowledge/pending.yaml").write_text(yaml.safe_dump(pending), "utf-8")
-    assert _check(repository, ceiling=1) == []
+    assert _check(repository) == []
 
 
 def test_ver68_verified_set_must_equal_inline_tests_arithmetic_and_ruling(repository: Path) -> None:
     test = "tests/tier1/test_x.py::test_one"
-    body = BODY + f"\nA [tested: {test}] claim and an [verified] sum.\n"
-    unsourced = {"01-a/01-thing.md": {"tested_pending": 0, "verified_unsourced": 1}}
-    (repository / "knowledge/pending.yaml").write_text(yaml.safe_dump(unsourced), "utf-8")
+    body = BODY + f"\nA [tested: {test}] claim and a [verified] sum.[^sum]\n\n[^sum]: Sum.\n"
     extra = (
+        "sources:\n  - {id: sum, resource: https://example.org}\n"
         f"verified:\n  - {{by: 'process:{test}', at: x}}\n  - {{by: 'process:arithmetic', at: x}}\n"
     )
     _concept(repository, "01-thing.md", body, extra=extra)
-    assert _check(repository, ceiling=1) == []
-    _concept(repository, "01-thing.md", body, extra=f"verified: {{by: 'process:{test}', at: x}}\n")
-    assert any("verified lacks process:arithmetic" in f for f in _check(repository, ceiling=1))
+    assert _check(repository) == []
     _concept(
-        repository, "01-thing.md", body, extra=extra[:-1] + "\n  - {by: human:willemsk, at: x}\n"
+        repository,
+        "01-thing.md",
+        body,
+        extra=(
+            "sources:\n  - {id: sum, resource: https://example.org}\n"
+            f"verified: {{by: 'process:{test}', at: x}}\n"
+        ),
     )
-    assert any("holds human:willemsk" in f for f in _check(repository, ceiling=1))
+    assert any("verified lacks process:arithmetic" in f for f in _check(repository))
+    _concept(
+        repository, "01-thing.md", body, extra=extra + "  - {by: human:willemsk, at: x}\n"
+    )
+    assert any("holds human:willemsk" in f for f in _check(repository))
     _concept(repository, "01-thing.md", BODY, kind="Author Ruling")
     assert any("verified lacks human:willemsk" in f for f in _check(repository))
 
@@ -294,24 +306,43 @@ def test_ver68_footnote_without_source_is_refused(repository: Path) -> None:
     assert any("footnote [^folklore] is no source id" in f for f in _check(repository))
 
 
-def test_ver68_pending_count_must_equal_the_committed_list(repository: Path) -> None:
+def test_ver68_tested_pending_is_refused_unconditionally(repository: Path) -> None:
     _concept(repository, "01-thing.md", BODY + "\nA [tested: pending] claim.\n")
+    found = _check(repository, ceiling=5)
+    assert any("01-thing.md:12: [tested: pending] is refused" in f for f in found)
+
+
+def test_ver68_pending_count_must_equal_the_committed_list(repository: Path) -> None:
+    _concept(
+        repository,
+        "01-thing.md",
+        BODY + "\nA [verified] sum.\n",
+        extra="verified:\n  - {by: 'process:arithmetic', at: x}\n",
+    )
     assert any("committed None, files hold" in f for f in _check(repository, ceiling=5))
-    entry = {"tested_pending": 1, "verified_unsourced": 0}
+    entry = {"tested_pending": 0, "verified_unsourced": 1}
     (repository / "knowledge/pending.yaml").write_text(
         yaml.safe_dump({"01-a/01-thing.md": entry}), "utf-8"
     )
     assert _check(repository, ceiling=5) == []
-    entry["tested_pending"] = 2
+    entry["verified_unsourced"] = 2
     (repository / "knowledge/pending.yaml").write_text(
         yaml.safe_dump({"01-a/01-thing.md": entry}), "utf-8"
     )
-    assert any("committed {'tested_pending': 2" in f for f in _check(repository, ceiling=5))
+    assert any(
+        "committed {'tested_pending': 0, 'verified_unsourced': 2}" in f
+        for f in _check(repository, ceiling=5)
+    )
 
 
-def test_ver68_pending_total_above_the_ceiling_is_refused(repository: Path) -> None:
-    _concept(repository, "01-thing.md", BODY + "\nA [tested: pending] claim.\n")
-    entry = {"tested_pending": 1, "verified_unsourced": 0}
+def test_ver68_unsourced_verified_total_above_the_ceiling_is_refused(repository: Path) -> None:
+    _concept(
+        repository,
+        "01-thing.md",
+        BODY + "\nA [verified] sum.\n",
+        extra="verified:\n  - {by: 'process:arithmetic', at: x}\n",
+    )
+    entry = {"tested_pending": 0, "verified_unsourced": 1}
     (repository / "knowledge/pending.yaml").write_text(
         yaml.safe_dump({"01-a/01-thing.md": entry}), "utf-8"
     )

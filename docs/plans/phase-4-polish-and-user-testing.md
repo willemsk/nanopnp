@@ -20,8 +20,9 @@ WP43, the development loop ([wp43-development-loop.md](wp43-development-loop.md)
 tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-prose-strip.md)), to be tagged
 `v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
 `v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
-`v0.5.0-alpha.13`.
-Planned: WP48, its backfill ([plan](wp48-okf-backfill.md)); WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
+`v0.5.0-alpha.13`; WP48, the OKF backfill ([plan](wp48-okf-backfill.md)), to be tagged
+`v0.5.0-alpha.14`.
+Planned: WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
 which take their numbers then.
@@ -780,7 +781,13 @@ Its `/wp-plan` puts open questions 3 to 7 to the author (G9). `generate.py` has 
 > **Planned, 14 October 2026** ([plan](wp47-okf-bundle.md)). The author ruled the note's questions 3 to 7
 > (§8.2.7 G12); VER-68 is in Appendix A.
 
-### OKF backfill — Provisional
+### WP48 — The OKF backfill (§8.2.7 G3, G8; REV-103)
+
+> **Delivered, 17 October 2026** ([plan](wp48-okf-backfill.md)). Backfilled all 361 open claims across
+> the bundle, audited all 56 verified markers, populated and verified `tested_with` on all 17 library
+> behaviour concepts, and added assertions in existing suites and new Tier-1 suites (`test_knowledge_arithmetic.py`,
+> `test_library_behaviour.py`, `test_ngsolve_traps.py`). `pending.yaml` is empty (`{}`), `CEILING` is 0,
+> `[tested: pending]` is refused unconditionally in `okf.py`, `VER-68` is amended, and `REV-103` is closed.
 
 It waits on the bundle package. Every listed claim gets its test: a Tier-1 or Tier-2 test that
 re-establishes the claim, named inline. A library-behaviour concept gains `tested_with`. At the end

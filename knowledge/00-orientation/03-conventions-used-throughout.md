@@ -15,8 +15,8 @@ generated:
 - `⟨c⟩` is `(1/n)Σc_i`, not the ionic strength, and `d` is the distance to the nearest pore
   boundary (`.claude/rules/physics-numerics.md`).
 - Correction functions take dimensionless `c̄ = ⟨c⟩/(1 M)` and `d̄ = d/(1 nm)`.
-- A claim verified by running code is marked `[tested: <test>]`, naming the test, or `[tested: pending]`
-  while no test names it; a claim verified by arithmetic or by reading a source is marked `[verified]`
+- A claim verified by running code is marked `[tested: <test>]`, naming the test;
+  a claim verified by arithmetic or by reading a source is marked `[verified]`
   and cites a source by footnote. Anything unverified says so.
 
 ---

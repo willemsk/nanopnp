@@ -1,20 +1,20 @@
 # Current work
 
-Updated 15 October 2026 (WP47 delivered; WP48 plan reviewed and amended). Navigation only; `SPECIFICATION.md` governs;
+Updated 17 October 2026 (WP48 delivered; all 361 open claims resolved). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it. The simpler loop, the trimmed code and the
-fifteen small fixes are built, and now the reference notes every session reads first. They were ten
-long files; they are a hundred and twenty-one short pages, one idea each, in a folder per note. Each
-page has a small header saying what kind of page it is and where its claims come from. Every pointer
-to the notes, in the code, plans and history, names the new address, and an automatic check refuses a
-pointer to nothing. Claims that no test yet backs are marked as waiting, in a list that may only
-shrink: 361 today. No computed result moved. It now waits for review in a fresh session.
+Phase 4 tidies the program before others rely on it. The simpler loop, the trimmed code, the fifteen
+small fixes and the reference notes are built. The notes were ten long files; they are a hundred and
+twenty-one short pages, one idea each, in a folder per note. Every claim in the notes is now backed:
+calculations by fast automated tests, software behaviour by checked library assertions and version
+records, and historical measurements by exact citations to earlier work. The list of waiting claims
+is empty, and the check refuses any new unbacked claim. No computed result moved. It now waits for
+review in a fresh session.
 
-**Your call:** the log keeps the dated events the notes already record, with git holding every earlier
-edit. *Recommendation:* keep that reading; a copy of the whole git history would only duplicate it.
+**Your call:** the user testing protocol is next. *Recommendation:* proceed with planning the
+sessions once this work package merges.
 
 ## Position
 
@@ -26,8 +26,10 @@ edit. *Recommendation:* keep that reading; a copy of the whole git history would
 - **WP46, the small fixes** ([plan](wp46-small-fixes.md)), is **delivered** (§8.2.9 I2; fifteen
   `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge.
 - **WP47, the OKF bundle** ([plan](wp47-okf-bundle.md)), is **delivered** (§8.2.7 G12; VER-68), tag
-  `v0.5.0-alpha.13` after the merge. Next: `/wp-ship`; then WP48 (backfill: empties `pending.yaml`,
-  `REV-103`, [plan](wp48-okf-backfill.md), planned) and WP49 (protocol); the author's sessions; fixes from WP50.
+  `v0.5.0-alpha.13` after the merge.
+- **WP48, the OKF backfill** ([plan](wp48-okf-backfill.md)), is **delivered** (§8.2.7 G3, G8; VER-68;
+  REV-103 closed), tag `v0.5.0-alpha.14` after the merge. Next: `/wp-ship`; then WP49 (protocol;
+  the author's sessions; fixes from WP50).
 
 ## Not to be re-decided
 
@@ -68,7 +70,7 @@ edit. *Recommendation:* keep that reading; a copy of the whole git history would
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | The small fixes as shipped | `wp46-small-fixes.md`; `CHANGELOG.md` `0.5.0-alpha.12`; `docs/project/review-items.md` |
 | The knowledge bundle as shipped | `wp47-okf-bundle.md`; `knowledge/index.md`; `src/nanopnp/validation/okf.py` (VER-68) |
-| The OKF backfill as planned | `wp48-okf-backfill.md`; `knowledge/pending.yaml`; §8.2.7 G3, G8 |
+| The OKF backfill as shipped | `wp48-okf-backfill.md`; `knowledge/pending.yaml`; §8.2.7 G3, G8 |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `okf-converter-rules.md` |
 
