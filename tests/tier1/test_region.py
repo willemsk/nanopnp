@@ -147,6 +147,18 @@ def test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region(
     assert membrane.clearance_nm == pytest.approx(0.23645835468143087, abs=1e-9)
     assert fixture_region.junction_nm == pytest.approx({"trans": 2.7523809523809524, "cis": 4.88})
 
+    from shapely.geometry import LineString, Polygon
+
+    poly = Polygon(fixture_profile.vertices)
+    mid_trans = 0.5 * (1.725 + 2.7523809523809524)
+    mid_cis = 0.5 * (2.96 + 4.88)
+    chord = LineString([(mid_trans, -1.4), (mid_cis, 1.4)])
+    crossings = sorted(
+        [(p.x, p.y) for p in chord.intersection(poly.exterior).geoms], key=lambda pt: pt[1]
+    )
+    assert crossings[0] == pytest.approx((3.070, -0.016), abs=1e-3)
+    assert crossings[1] == pytest.approx((3.235, 0.260), abs=1e-3)
+
     drawn = ReferenceGeometry(profile=fixture_profile)
     areas, counts = measure(build_region(drawn.record()))
     assert counts == fixture_region.edge_counts

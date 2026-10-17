@@ -109,7 +109,11 @@ def test_langevin_limit_is_finite_at_zero_concentration(epnpns: Electrolyte) -> 
 
 
 def test_langevin_is_accurate_across_the_series_cutoff() -> None:
-    from nanopnp.materials.forms import langevin
+    from nanopnp.materials.forms import _LANGEVIN_SERIES_CUTOFF, langevin
+
+    assert _LANGEVIN_SERIES_CUTOFF == 3e-4
+    assert langevin(1.1e-8) == pytest.approx(1.1e-8 / 3.0, rel=1e-12)
+    assert 1.0 / np.tanh(1.1e-8) - 1.0 / 1.1e-8 == 0.0
 
     x = np.geomspace(1e-9, 1e-1, 400)
     series = x / 3.0 - x**3 / 45.0 + 2.0 * x**5 / 945.0

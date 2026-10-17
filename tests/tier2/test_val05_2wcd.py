@@ -167,6 +167,8 @@ def test_val05_2wcd_against_the_reference_polygon(
     logger.info("2WCD conditioning's lumen change (D7): %s", conditioning["lumen_change"])  # type: ignore[index]
 
     fitted = rms_optimal_offset(walked.stage4, reference, centre_nm=walked.centre_z_nm)
+    assert fitted == pytest.approx(4.5827, abs=5e-4)
+    assert walked.centre_z_nm == pytest.approx(4.5477, abs=5e-4)
     logger.info(
         "2WCD registration (D6): centroid %.4f nm, centre_z_nm %.4f nm; rms-optimal offset "
         "%.4f nm (%+.4f nm from the centroid's, a diagnostic never used)",

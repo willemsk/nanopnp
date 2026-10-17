@@ -136,10 +136,12 @@ if Sonnet fails.
 - [x] 6808960 6. Back software behaviours using existing suites or `tests/tier1/test_library_behaviour.py` (D3). Done when assigned assertions, metadata and bundle checks pass.
 
 > **Outcome — item 6.** Backed all 90 pending `Library Behaviour` markers across `07-software-stack/01..16` with deterministic assertions in `tests/tier1/test_library_behaviour.py` (18 tests covering NGSolve OCC/meshing/element-order contracts, MDAnalysis/GridDataFormats density round-trips, PROPKA/PDB2PQR protonation contracts, packaging/dependency/Python-floor/MkDocs/parallelism invariants) and existing Tier-1/Tier-2 suites, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `204` to `114`.
-- [ ] 7. Back NGSolve traps using existing suites or `tests/tier1/test_ngsolve_traps.py`; historical reference experiments follow D5 (D3). Done when properties and workarounds are asserted and affected tests pass.
+- [x] 52bd4f1 7. Back NGSolve traps using existing suites or `tests/tier1/test_ngsolve_traps.py`; historical reference experiments follow D5 (D3). Done when properties and workarounds are asserted and affected tests pass.
 
 > **Outcome — item 7.** Backed all 51 pending `Library Behaviour` markers in `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` with 9 targeted tests in `tests/tier1/test_ngsolve_traps.py`, wave-width assertions in `tests/tier1/test_sweep_plan.py`, existing Tier-1/Tier-2 suites and D5 footnotes for historical commit records (`0ea0789`, `c27c35c`, `6c0a249`, `1a2e383`, `7597814`), synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `114` to `63`.
 - [ ] 8. Resolve every remaining inventory row across `knowledge/` using domain tests (D4). Done when the full audit passes, all relevant tests run, and no unresolved claim remains.
+
+> **Outcome — item 8.** Backed all 63 remaining domain claims across the bundle (16 concepts across `01-physics-epnpns`, `04-clya-geometry-and-charge`, `05-analyte-and-forces`, `06-numerics-fem`, and `08-validation-benchmarks`) with Tier-1/Tier-2 test assertions (`test_corrections.py`, `test_electrolyte.py`, `test_knowledge_arithmetic.py`, `test_mesh_profile.py`, `test_contour.py`, `test_val05_2wcd.py`, `test_region.py`, `test_charge_kernel.py`, `test_solution_state.py`, and existing suites) and D5 immutable commit and plan records, reduced pending claims across the entire bundle to zero (`pending.yaml` is `{}`), and lowered `CEILING` to 0 in `tests/tier1/test_okf_bundle.py`.
 
 *Compaction checkpoint: after item 8; resume from this plan and `git log`.*
 

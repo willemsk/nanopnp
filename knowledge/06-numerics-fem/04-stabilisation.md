@@ -8,15 +8,40 @@ sources:
 - id: comsol-report
   resource: COMSOL Multiphysics 5.4 model report of 22 May 2020
   title: COMSOL model report (5.4)
+- id: fb4f9ae
+  resource: git:fb4f9ae
+  title: 'commit fb4f9ae, "test: cut the push gate from 353 s to 271 s with nothing de-gated"'
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
+- by: process:arithmetic
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_reynolds_number_and_pspg_parameter_at_reference_scales
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_stabilisation.py::test_num14_crosswind_viscosity_is_identically_zero_below_unit_cell_peclet
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_stabilisation.py::test_num14_streamline_parameter_takes_the_diffusive_branch_below_unit_peclet
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_current_routes.py::test_num11_the_stabilisation_current_is_the_bias_and_is_exactly_zero_in_none
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_num12_the_crosswind_is_active_where_the_cell_peclet_exceeds_one
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_num17_plain_galerkin_trips_positivity_where_reference_converges
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_ver42_the_flow_pair_and_not_the_transport_term_sets_the_reference_rate
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_ver42_the_unstabilised_mode_on_the_same_meshes_still_gives_ver18s_rate
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stabilised_mode.py::test_ver42_withholding_the_manufactured_source_switches_the_term_off
   at: '2026-10-16T00:00:00Z'
 ---
 
@@ -89,7 +114,7 @@ gradient is set by the bias over the pore length (`‖∇φ̃‖ ≈ 1.2` at 200
 orders of magnitude. Applying PHY-14's `μ̃_i/D̃_i` (1.2–1.7 between 0.15 M and 3 M) scales every
 `Pe_h` by 0.59–0.83 and every added diffusion by its square.
 
-### 4.2.1 The SUPG bias on the current is `S_i(ψ)` almost exactly **[tested: pending]** {#421-the-supg-bias-on-the-current-is-s_i-almost-exactly}
+### 4.2.1 The SUPG bias on the current is `S_i(ψ)` almost exactly **[tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term] [tested: tests/tier2/test_current_routes.py::test_num11_the_stabilisation_current_is_the_bias_and_is_exactly_zero_in_none]** {#421-the-supg-bias-on-the-current-is-s_i-almost-exactly}
 
 Under a stabilisation mode the assembled residual carries the stabilisation term, so the NUM-25
 reaction flux carries it too; the NUM-24 indicator form must therefore add
@@ -136,7 +161,7 @@ effective cell Péclet number to `1/C_cw`, so it cannot run away. The bound also
 assertable form of "the same elements the NUM-12 warning names": the warning is a point sample and
 the term is an element quantity, so the two fractions are not comparable but the inclusion is.
 
-### 4.3.1 Measured: where the mode earns its place, and where it does not **[tested: pending]** {#431-measured-where-the-mode-earns-its-place-and-where-it-does-not}
+### 4.3.1 Measured: where the mode earns its place, and where it does not **[tested: tests/tier2/test_stabilised_mode.py::test_num17_plain_galerkin_trips_positivity_where_reference_converges] [tested: tests/tier2/test_stabilised_mode.py::test_num12_the_crosswind_is_active_where_the_cell_peclet_exceeds_one] [tested: tests/tier2/test_stabilised_mode.py::test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh]** {#431-measured-where-the-mode-earns-its-place-and-where-it-does-not}
 
 The claim `reference` exists to support is that plain Galerkin loses concentration positivity on an
 under-resolved double layer and the stabilised mode does not. It is true, and it is true of a
@@ -169,7 +194,7 @@ classical model satisfies the Einstein relation exactly, so `Pe_K = |z_i| ‖∇
 `μ̃_i/D̃_i` ratio cancelled. The per-species split in the NUM-12 record only becomes informative once
 PHY-14's corrections are on.
 
-### 4.3.2 The stabilisation bias falls at `O(h²)`, approaching it from below **[tested: pending]** {#432-the-stabilisation-bias-falls-at-oh2-approaching-it-from-below}
+### 4.3.2 The stabilisation bias falls at `O(h²)`, approaching it from below **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement]** {#432-the-stabilisation-bias-falls-at-oh2-approaching-it-from-below}
 
 `|I_reference − I_none| / |I_none|` on the pore above at 0.5 M, +50 mV, −0.05 C/m², refining only
 the wall spacing (the stabilisation is a double-layer effect by three orders of magnitude, §4.2, so
@@ -189,7 +214,7 @@ That the difference vanishes at all is the substantive result: a stabilisation b
 refinement would make `reference` a different model rather than a different discretisation, and the
 §7.4 attribution would be subtracting something that never goes away.
 
-### 4.3.3 On a stable element pair the flow terms cost an order, and 20× the time **[tested: pending]** {#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time}
+### 4.3.3 On a stable element pair the flow terms cost an order, and 20× the time **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more] [tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_unstabilised_mode_on_the_same_meshes_still_gives_ver18s_rate] [tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_flow_pair_and_not_the_transport_term_sets_the_reference_rate]** {#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time}
 
 Measured on VER-18's manufactured solution — a 2 × 4 nm cylinder, P2 potential, concentration and
 velocity, P1 pressure, `maxh` 0.4/0.2/0.1 nm, 0.1 M, every correction off. `max Pe_K ≤ 0.084` there,
@@ -222,7 +247,7 @@ count, which is assembly, and the flow pair takes Newton from 5 iterations to 31
 `τ_m` — relagging a large parameter at each iterate turns Newton into a fixed-point iteration in `τ`
 and the contraction weakens as `τ` grows.
 
-Most of that assembly cost is the **manufactured source**, not the streamline term itself **[tested: pending]**.
+Most of that assembly cost is the **manufactured source**, not the streamline term itself **[verified][^fb4f9ae]**.
 With the setup above (5 Newton iterations in every case), a solve at `maxh` 0.4, 0.2 and 0.1 nm took
 0.4 s, 2.0 s and 8.0 s in `none` and 6.6 s, 27.6 s and 107.5 s in `supg`. At 0.2 nm, withholding
 `s̃_i` from `R̃_i` (§4.3.4) brings `supg` from 30 s down to 5.0 s. The sympy-generated source
@@ -232,7 +257,7 @@ only, with no C++ JIT, so CON-07 is untouched) recovers only 20 % (37 s to 29.6 
 and leaves the errors identical to 13 digits. This cost belongs to the MMS benchmark. A production
 run carries no manufactured source, so it does not pay it.
 
-**The cost is the source's *representation*, and it is removed in the harness [tested: pending].** `_reduce`
+**The cost is the source's *representation*, and it is removed in the harness [tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more] [verified][^fb4f9ae].** `_reduce`
 puts each species source over one common denominator (`cancel(together(·))`) so the removable `1/r`
 cancels. The result is about 3,800 operations. `lambdify` writes it as a tree in which every
 repeated subexpression is its own node, so NGSolve evaluates all of them at every quadrature point:
@@ -252,7 +277,7 @@ idle cores (158 s to 41 s at 0.1 nm). But the push gate runs four workers on fou
 is idle. Second, the form's derivative of the source is identically zero, so freezing it is exact
 but buys nothing.
 
-### 4.3.4 A stabilisation residual missing its source switches the term **off** **[tested: pending]** {#434-a-stabilisation-residual-missing-its-source-switches-the-term-off}
+### 4.3.4 A stabilisation residual missing its source switches the term **off** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_withholding_the_manufactured_source_switches_the_term_off]** {#434-a-stabilisation-residual-missing-its-source-switches-the-term-off}
 
 `R̃_i = b̃_i·∇c̃_i − s̃_i`, and on the exact solution the two sides balance the diffusion that was
 dropped: `b̃_i·∇c̃_i − s̃_i = ∇·(D̃∇c̃_i)`. Withholding `s̃_i` — the easiest wiring mistake in the

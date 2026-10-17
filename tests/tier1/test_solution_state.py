@@ -224,7 +224,7 @@ def test_ver34_the_restored_operator_gives_the_same_reaction_flux(solved: Solved
     recovered = reaction_flux_currents(restore(solved.path, resolved=resolve(solved.document)))
     assert set(recovered) == set(live)
     for species, value in live.items():
-        assert recovered[species] == pytest.approx(value, rel=1e-12), species
+        assert recovered[species] == value, species
 
 
 # NUM-25

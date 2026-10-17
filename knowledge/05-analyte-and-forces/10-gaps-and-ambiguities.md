@@ -12,6 +12,17 @@ sources:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+verified:
+- by: process:tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_maxwell_sphere.py::test_ver20_a_charged_body_in_a_uniform_field_feels_q_e_zero
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_maxwell_sphere.py::test_ver20_the_net_force_on_a_dielectric_sphere_vanishes
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stokes_drag.py::test_ver19_a_uniform_far_field_measures_the_wall_correction_instead
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_stokes_drag.py::test_ver19_stokes_drag_converges_to_the_closed_form
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 9. Gaps and ambiguities
@@ -22,7 +33,7 @@ generated:
    2022; §10.6 gives regression targets. Analytic tests (isolated sphere: Maxwell integral → qE;
    Stokes sphere → 6πηaU) remain the right first check.
 
-   **Done, and they were the right first check [tested: pending]** (WP6, `tests/tier2/`). On a P2 sphere of
+   **Done, and they were the right first check [tested: tests/tier2/test_stokes_drag.py::test_ver19_stokes_drag_converges_to_the_closed_form] [tested: tests/tier2/test_stokes_drag.py::test_ver19_a_uniform_far_field_measures_the_wall_correction_instead] [tested: tests/tier2/test_maxwell_sphere.py::test_ver20_the_net_force_on_a_dielectric_sphere_vanishes] [tested: tests/tier2/test_maxwell_sphere.py::test_ver20_a_charged_body_in_a_uniform_field_feels_q_e_zero] [tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio]** (WP6, `tests/tier2/`). On a P2 sphere of
    radius 1 nm in a box of radius 10 nm, `a = 1 nm` mesh units, the numbers are:
 
    | Check | Measured | Reference |
