@@ -16,32 +16,11 @@
 04-clya-geometry-and-charge/04-mesh.md:
   tested_pending: 1
   verified_unsourced: 0
-04-clya-geometry-and-charge/09-tier-1-test-evidence-contours-and.md:
-  tested_pending: 3
-  verified_unsourced: 0
-04-clya-geometry-and-charge/10-tier-1-test-evidence-the-derived.md:
-  tested_pending: 1
-  verified_unsourced: 0
-04-clya-geometry-and-charge/11-tier-1-test-evidence-the-val-05-harness.md:
-  tested_pending: 2
-  verified_unsourced: 0
-04-clya-geometry-and-charge/12-tier-2-test-evidence-quadrature-gates.md:
-  tested_pending: 4
-  verified_unsourced: 0
-04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md:
-  tested_pending: 2
-  verified_unsourced: 0
 05-analyte-and-forces/05-force-computation-the-analytic-model.md:
   tested_pending: 1
   verified_unsourced: 0
 05-analyte-and-forces/10-gaps-and-ambiguities.md:
   tested_pending: 1
-  verified_unsourced: 0
-05-analyte-and-forces/12-tier-1-test-evidence-analyte-bodies.md:
-  tested_pending: 1
-  verified_unsourced: 0
-05-analyte-and-forces/13-tier-2-test-evidence-electro-osmosis.md:
-  tested_pending: 5
   verified_unsourced: 0
 06-numerics-fem/02-axisymmetric-weak-forms.md:
   tested_pending: 3
@@ -64,21 +43,6 @@
 06-numerics-fem/09-ngsolve-traps-found-by-implementing.md:
   tested_pending: 51
   verified_unsourced: 3
-06-numerics-fem/13-tier-1-test-evidence-the-domain.md:
-  tested_pending: 1
-  verified_unsourced: 0
-06-numerics-fem/14-tier-1-test-evidence-newtons.md:
-  tested_pending: 2
-  verified_unsourced: 0
-06-numerics-fem/15-tier-1-test-evidence-scaling-the-wall.md:
-  tested_pending: 11
-  verified_unsourced: 0
-06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md:
-  tested_pending: 6
-  verified_unsourced: 0
-06-numerics-fem/17-tier-3-test-evidence-the-mesh-geometry.md:
-  tested_pending: 3
-  verified_unsourced: 0
 07-software-stack/01-fem-backend-ngsolvenetgen.md:
   tested_pending: 5
   verified_unsourced: 0
@@ -124,18 +88,6 @@
 07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md:
   tested_pending: 1
   verified_unsourced: 0
-07-software-stack/19-tier-1-test-evidence-stores-paths-occ.md:
-  tested_pending: 4
-  verified_unsourced: 0
-07-software-stack/20-tier-1-test-evidence-import-costs.md:
-  tested_pending: 2
-  verified_unsourced: 0
-07-software-stack/21-tier-2-test-evidence-budgets-timings.md:
-  tested_pending: 3
-  verified_unsourced: 0
-07-software-stack/22-tier-2-test-evidence-analytic.md:
-  tested_pending: 45
-  verified_unsourced: 0
 08-validation-benchmarks/01-tier-1-unit-and-property-tests-seconds.md:
   tested_pending: 0
   verified_unsourced: 3
@@ -145,6 +97,3 @@
 08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md:
   tested_pending: 5
   verified_unsourced: 2
-08-validation-benchmarks/07-tier-3-test-evidence-run-times-of-the.md:
-  tested_pending: 5
-  verified_unsourced: 0

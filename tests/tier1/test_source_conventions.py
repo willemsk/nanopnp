@@ -259,6 +259,7 @@ def test_ver72_deferrable_and_type_checking_imports_are_admitted(
         "    from nanopnp.core import errors\n    import scipy.sparse\n"
     )
     assert [v for v in deferred_imports(oracle(source)) if v.path == ORACLE] == []
+    assert {"ngsolve", "numpy", "scipy", "meshio", "h5py"} <= DEFERRABLE
 
 
 @pytest.mark.parametrize(

@@ -118,8 +118,12 @@ if Sonnet fails.
 > - **Item 6 (software-stack `Library Behaviour`):** 90 `tested_pending` across `07-01`..`07-16` (assertions in existing suites or `test_library_behaviour.py`, with historical timings/build records routed through D5), lowering `CEILING` by 90 (`204 -> 114`).
 > - **Item 7 (NGSolve traps):** 51 `tested_pending` in `06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` (assertions in existing suites or `test_ngsolve_traps.py`, with historical reference experiments routed through D5), lowering `CEILING` by 51 (`114 -> 63`).
 > - **Item 8 (remaining domain claims):** 63 `tested_pending` across `01-physics-epnpns` (6), `04-clya-geometry-and-charge` (15), `05-analyte-and-forces` (2), `06-numerics-fem` (34) and `08-validation-benchmarks` (6), lowering `CEILING` by 63 (`63 -> 0`).
-- [ ] 2. Resolve source readings and historical observations throughout `knowledge/`, including the ten unsourced COMSOL markers (D2, D5). Split mixed claims; preserve immutable evidence. Done when the assigned inventory rows and bundle checks pass.
+- [x] 91db08e 2. Resolve source readings and historical observations throughout `knowledge/`, including the ten unsourced COMSOL markers (D2, D5). Split mixed claims; preserve immutable evidence. Done when the assigned inventory rows and bundle checks pass.
+
+> **Outcome — item 2.** Resolved 31 pending markers across 13 concepts (`21 verified_unsourced` + `10 tested_pending`), split the three mixed source/arithmetic passages (`01-08:L77`, `04-01:L49`, `09-05:L29`), synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `361` to `330`.
 - [ ] 3. Back the 100 pending Test Evidence markers with assertions on existing computations where possible; route historical portions through D5 (D1). Done when affected tests and bundle checks pass; mere test-name resolution is insufficient.
+
+> **Outcome — item 3.** Backed all 100 pending `Test Evidence` markers across the 17 `Test Evidence` concepts (`04-09..13`, `05-12..13`, `06-13..17`, `07-19..22`, `08-07`), added explicit assertions in the cited Tier-1 and Tier-2 suites and fast contract checks in `tests/tier1/test_reproduce_diagnostics.py` and `tests/tier2/test_envelope.py`, routed historical pre-WP45 docstring and plan timings through D5 source footnotes, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `330` to `230`.
 - [ ] 4. Link or add Tier-1 arithmetic tests, using `tests/tier1/test_knowledge_arithmetic.py` where no suitable test exists (D2). Include the nine sourced markers in the audit. Done when every executable calculation has an asserting test and affected tests pass.
 
 *Compaction checkpoint: after item 4; resume from this plan and `git log`.*
