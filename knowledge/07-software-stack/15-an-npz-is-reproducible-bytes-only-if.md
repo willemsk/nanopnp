@@ -11,6 +11,8 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_artefact_hashing.py::test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores
+  at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp32-plan
   resource: docs/plans/wp32-examples-and-tutorials.md
@@ -19,7 +21,7 @@ tested_with:
   numpy: 2.5.2
 ---
 
-## 15. An `.npz` is reproducible bytes only if nothing in it moves with the clock **[tested: pending]** {#15-an-npz-is-reproducible-bytes-only-if-nothing-in-it-moves-with-the-clock}
+## 15. An `.npz` is reproducible bytes only if nothing in it moves with the clock **[tested: tests/tier1/test_artefact_hashing.py::test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores]** {#15-an-npz-is-reproducible-bytes-only-if-nothing-in-it-moves-with-the-clock}
 
 `numpy.savez` writes a zip whose entries carry a fixed modification date, so the same arrays saved
 twice give the same bytes, seconds apart. A payload's recorded digest is therefore reproducible as

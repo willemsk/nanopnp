@@ -9,6 +9,8 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
+- by: process:tests/tier1/test_artefact_hashing.py::test_ver23_decode_floats_restores_the_numbers_a_canonical_file_holds
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_short_hash_collision_probability_bound
   at: '2026-10-16T00:00:00Z'
 tested_with:
@@ -26,7 +28,7 @@ number.
 
 Comparing such a record against live values without decoding it does not report a *different*
 number — it reports a **missing** one, because a flatten-to-dotted-paths comparison yields
-`current_A.__f__` on one side and `current_A` on the other **[tested: pending]**. `decode_floats` is the
+`current_A.__f__` on one side and `current_A` on the other **[tested: tests/tier1/test_artefact_hashing.py::test_ver23_decode_floats_restores_the_numbers_a_canonical_file_holds]**. `decode_floats` is the
 inverse and belongs to any reader of these files.
 
 It is deliberately not a full inverse of `canonical`: an array encodes as dtype, shape and a

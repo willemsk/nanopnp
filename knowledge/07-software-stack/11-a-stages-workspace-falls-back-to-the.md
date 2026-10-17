@@ -13,9 +13,12 @@ generated:
 tested_with:
   ngsolve: 6.2.2606
   netgen-mesher: 6.2.2606
+verified:
+- by: process:tests/tier1/test_stage_workspace.py::test_ver25_no_workspace_stage_picks_a_scratch_directory_of_its_own
+  at: '2026-10-16T00:00:00Z'
 ---
 
-## 11. A stage's workspace falls back to the process store root, not the run's store **[tested: pending]** {#11-a-stages-workspace-falls-back-to-the-process-store-root-not-the-runs-store}
+## 11. A stage's workspace falls back to the process store root, not the run's store **[tested: tests/tier1/test_stage_workspace.py::test_ver25_no_workspace_stage_picks_a_scratch_directory_of_its_own]** {#11-a-stages-workspace-falls-back-to-the-process-store-root-not-the-runs-store}
 
 `mesh/ingest.py`, `charge/stage.py`, `solve/stage.py` and `post/stage.py` each fall back to
 `store_root() / "tmp"` plus a `mkdtemp` when constructed without a workspace — and `store_root()`

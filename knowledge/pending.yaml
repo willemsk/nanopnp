@@ -43,51 +43,6 @@
 06-numerics-fem/09-ngsolve-traps-found-by-implementing.md:
   tested_pending: 51
   verified_unsourced: 0
-07-software-stack/01-fem-backend-ngsolvenetgen.md:
-  tested_pending: 5
-  verified_unsourced: 0
-07-software-stack/02-structure-trajectory-and-density.md:
-  tested_pending: 18
-  verified_unsourced: 0
-07-software-stack/03-charge-and-electrostatics.md:
-  tested_pending: 10
-  verified_unsourced: 0
-07-software-stack/04-geometry-meshing-and-io.md:
-  tested_pending: 17
-  verified_unsourced: 0
-07-software-stack/05-gui-and-packaging.md:
-  tested_pending: 16
-  verified_unsourced: 0
-07-software-stack/06-licence-summary.md:
-  tested_pending: 1
-  verified_unsourced: 0
-07-software-stack/08-python-version-floor-the-310-target-is.md:
-  tested_pending: 8
-  verified_unsourced: 0
-07-software-stack/09-the-clis-import-budget-measured.md:
-  tested_pending: 4
-  verified_unsourced: 0
-07-software-stack/10-canonical-is-the-on-disk-format-not.md:
-  tested_pending: 1
-  verified_unsourced: 0
-07-software-stack/11-a-stages-workspace-falls-back-to-the.md:
-  tested_pending: 1
-  verified_unsourced: 0
-07-software-stack/12-the-suites-blas-threads-buy-nothing.md:
-  tested_pending: 5
-  verified_unsourced: 0
-07-software-stack/13-documentation-tooling-mkdocs-material.md:
-  tested_pending: 1
-  verified_unsourced: 0
-07-software-stack/14-a-windows-checkout-rewrites-the-bytes-a.md:
-  tested_pending: 1
-  verified_unsourced: 0
-07-software-stack/15-an-npz-is-reproducible-bytes-only-if.md:
-  tested_pending: 1
-  verified_unsourced: 0
-07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md:
-  tested_pending: 1
-  verified_unsourced: 0
 08-validation-benchmarks/02-tier-2-analytic-benchmarks-minutes.md:
   tested_pending: 1
   verified_unsourced: 0
