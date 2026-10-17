@@ -464,7 +464,9 @@ def check_ledger(root: Path, tests: Path, lock: Path | None = None) -> list[Find
         for number, kind, test in claims(parsed.body, parsed.first_line):
             if kind == "tested" and test is None:
                 findings.append(Finding(name, number, "a bare [tested] marker names no test"))
-            elif kind == "tested" and test and test.strip() not in {PENDING, *known}:
+            elif kind == "tested" and test and test.strip() == PENDING:
+                findings.append(Finding(name, number, "[tested: pending] is refused"))
+            elif kind == "tested" and test and test.strip() not in known:
                 findings.append(Finding(name, number, f"[tested: {test}] names no test"))
         expected = verified_set(parsed)
         actual = _actors(parsed.meta)
