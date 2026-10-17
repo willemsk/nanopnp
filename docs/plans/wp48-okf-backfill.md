@@ -1,5 +1,7 @@
 # WP48 — The OKF backfill
 
+PR: [#104](https://github.com/willemsk/nanopnp/pull/104), branch feat/wp48-okf-backfill
+
 **Status: delivered, 17 October 2026.** Inherits WP47 as delivered (the OKF bundle and its
 check VER-68), WP45's prose rule (§8.2.11 L4) and the input note `okf-knowledge-bundle.md` (K5 to K8;
 G3, G8).
