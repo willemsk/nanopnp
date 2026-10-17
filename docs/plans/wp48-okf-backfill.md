@@ -1,6 +1,6 @@
 # WP48 — The OKF backfill
 
-**Status: in progress**, 16 October 2026. Inherits WP47 as delivered (the OKF bundle and its
+**Status: delivered, 17 October 2026.** Inherits WP47 as delivered (the OKF bundle and its
 check VER-68), WP45's prose rule (§8.2.11 L4) and the input note `okf-knowledge-bundle.md` (K5 to K8;
 G3, G8).
 
@@ -153,7 +153,7 @@ Each batch synchronises inline evidence, source definitions, actors and `knowled
 `pending.yaml`, and lowers `CEILING` to the measured remainder. Inventory-derived counts replace
 guessed milestones; metadata work need not reduce the pending count.
 
-- [ ] 10. Document Gmsh's optional Linux runtime prerequisites in the development setup guidance: keep the `gmsh` Python wheel in its extra, explain that `uv` cannot install distribution packages, and give the Arch (`glu`, `libxft`, `libxinerama`, `libxcursor`) and Debian/Ubuntu equivalents. Done when the strict documentation build passes; do not make Gmsh a default end-user dependency.
+- [x] cd540cf 10. Document Gmsh's optional Linux runtime prerequisites in the development setup guidance: keep the `gmsh` Python wheel in its extra, explain that `uv` cannot install distribution packages, and give the Arch (`glu`, `libxft`, `libxinerama`, `libxcursor`) and Debian/Ubuntu equivalents. Done when the strict documentation build passes; do not make Gmsh a default end-user dependency.
 
 > **Outcome — item 10.** Documented Gmsh optional Linux distribution prerequisites (`glu`, `libxft`, `libxinerama`, `libxcursor` on Arch; `libglu1-mesa`, `libxft2`, `libxinerama1`, `libxcursor1` on Debian/Ubuntu) in `docs/getting-started.md` and `docs/guide/meshes.md`, separated adjacent claim brackets across 16 `knowledge/` concepts to eliminate MkDocs autorefs reference-link warnings, and verified that `uv run docs/scripts/generate.py && uv run mkdocs build --strict` builds cleanly with zero warnings.
 
