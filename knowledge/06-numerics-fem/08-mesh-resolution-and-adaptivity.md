@@ -51,7 +51,7 @@ verified:
   been extracted (`WebFetch` truncates the PDF at ~p. 66 of 143). Still no convergence study.
   → `knowledge/09-comsol-reference-settings/index.md`.
 
-### Measured: the reference region meshes to a third of COMSOL's element count **[tested: tests/tier2/test_reference_geometry.py::test_ver10_the_reference_mesh_is_in_the_published_quality_band] [tested: tests/tier2/test_region_reference.py::test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
+### Measured: the reference region meshes to a third of COMSOL's element count **[tested: tests/tier2/test_reference_geometry.py::test_ver10_the_reference_mesh_is_in_the_published_quality_band]** **[tested: tests/tier2/test_region_reference.py::test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
 
 The ClyA region of §5.2.1 — the delivered 185-vertex profile, the membrane quadrilateral with its
 slanted inner edge, a 250 nm reservoir half-disc, glued — meshed by netgen at the §5.2.2 size fields

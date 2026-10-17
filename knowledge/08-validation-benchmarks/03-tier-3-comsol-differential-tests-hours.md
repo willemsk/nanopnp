@@ -104,7 +104,7 @@ field is wrong everywhere except on the diagonal `r = z`, where it is exactly ri
 `n_r ≠ n_z` on every probe patch turns that case into a shape error at ingest and costs nothing —
 no physically motivated patch needs equal sample counts.
 
-### The *r*-weighted norm cannot see the axis **[tested: tests/tier1/test_comparison_norms.py::test_val01_axis_defect_is_invisible_to_the_weighted_norm] [tested: tests/tier1/test_comparison_norms.py::test_val01_the_same_defect_at_the_wall_is_visible_to_both]** {#the-r-weighted-norm-cannot-see-the-axis}
+### The *r*-weighted norm cannot see the axis **[tested: tests/tier1/test_comparison_norms.py::test_val01_axis_defect_is_invisible_to_the_weighted_norm]** **[tested: tests/tier1/test_comparison_norms.py::test_val01_the_same_defect_at_the_wall_is_visible_to_both]** {#the-r-weighted-norm-cannot-see-the-axis}
 
 On the checked-in ClyA probe grid, a unit perturbation confined to the `axis_line` patch — 1 610 of
 6 205 points, all within 0.045 nm of the symmetry axis — gives `rel_l2 = 0.51` and
@@ -137,7 +137,7 @@ gate comparing two empty masks passes. A self-golden made by a probe grid whose 
 empty — which `_inside`'s catch-all made one NGSolve API change away — would pass the Tier-2 round
 trip on every field while comparing nothing. An empty mask is now refused (CR-5).
 
-### A `%Grid` table round-trips `float64` exactly at `%.17g` **[tested: tests/tier1/test_comsol_golden.py::test_val03_grid_table_round_trips_through_npz] [tested: tests/tier2/test_self_golden_round_trip.py::test_val01_self_golden_reproduces_its_own_solution]** {#a-grid-table-round-trips-float64-exactly-at-17g}
+### A `%Grid` table round-trips `float64` exactly at `%.17g` **[tested: tests/tier1/test_comsol_golden.py::test_val03_grid_table_round_trips_through_npz]** **[tested: tests/tier2/test_self_golden_round_trip.py::test_val01_self_golden_reproduces_its_own_solution]** {#a-grid-table-round-trips-float64-exactly-at-17g}
 
 Seventeen significant decimal digits round-trip an IEEE-754 double by definition, so a solution
 written to a `%Grid` table and read back through `density.grid.read_grid` reproduces its array

@@ -86,7 +86,7 @@ and the source the error is 3.4e-2 `V_T`: the source is short too. `poisson` ass
 `RADIAL_WEIGHT_ORDER = 1`; the coupled models keep the default (SPECIFICATION.md NUM-07 NOTE on the
 `r` weight). Source: WP26 implementation session, 30 September 2026.
 
-**What the extra order moves in the coupled models [tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_the_coupled_manufactured_solution] [tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_example_05].** Measured through
+**What the extra order moves in the coupled models** **[tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_the_coupled_manufactured_solution]** **[tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_example_05]**. Measured through
 `Measures.weight_extra_order` (0 against 1, added to every non-singular axisymmetric `volume` and
 `surface` term) by `tests/tier2/test_axis_weight_order.py`, NGSolve 6.2.2606, stabilisation `none`:
 
@@ -102,7 +102,7 @@ reference mesh (0.05 nm at the wall) it is invisible in every integrated quantit
 `nanopnp mesh` inside pytest calls `logging.basicConfig(force=True)` and silences `--log-cli-level`;
 the test restores the root handlers. Source: WP34, 4 October 2026.
 
-### 2.3 `specialcf.mesh_size` is `sqrt(2|K|)`, and it evaluates pointwise **[tested: tests/tier1/test_stabilisation.py::test_ver41_element_size_is_the_square_root_of_twice_the_element_area] [tested: tests/tier1/test_stabilisation.py::test_ver41_element_size_is_about_93_per_cent_of_an_equilateral_edge]** {#23-specialcfmesh_size-is-sqrt2k-and-it-evaluates-pointwise}
+### 2.3 `specialcf.mesh_size` is `sqrt(2|K|)`, and it evaluates pointwise **[tested: tests/tier1/test_stabilisation.py::test_ver41_element_size_is_the_square_root_of_twice_the_element_area]** **[tested: tests/tier1/test_stabilisation.py::test_ver41_element_size_is_about_93_per_cent_of_an_equilateral_edge]** {#23-specialcfmesh_size-is-sqrt2k-and-it-evaluates-pointwise}
 
 On a 2D triangular element NGSolve's `specialcf.mesh_size` returns `√(2|K|)`, verified elementwise
 against `Integrate(1, ...)` per element on a 14-element unstructured mesh of the unit square to a

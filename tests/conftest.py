@@ -43,6 +43,8 @@ REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 
 EXTENDED = "--extended"
 
+os.environ.setdefault("GIT_CONFIG_GLOBAL", "/dev/null")
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(

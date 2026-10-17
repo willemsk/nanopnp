@@ -122,8 +122,8 @@ previous solution stays a good guess because the nondimensionalisation leaves ev
 move with the salt. Note also that the charge scales `ε V_T/a²` and `ε V_T/a` carry no `c₀` at all,
 so a fixed or surface charge ramped at one concentration keeps its dimensionless value at another.
 
-**The wall grading decides whether the charge ramp converges, not only how accurate it is.
-[tested: tests/tier2/test_envelope.py::test_num18_the_ablation_ladder_reaches_the_same_corner_without_the_corrections] [tested: tests/tier2/test_envelope.py::test_82_criterion_two_the_hard_corner_from_cold_costs_what_it_costs]** The ladder raises `σ_s` while the model is still classical, and the field that fails
+**The wall grading decides whether the charge ramp converges, not only how accurate it is.**
+**[tested: tests/tier2/test_envelope.py::test_num18_the_ablation_ladder_reaches_the_same_corner_without_the_corrections]** **[tested: tests/tier2/test_envelope.py::test_82_criterion_two_the_hard_corner_from_cold_costs_what_it_costs]** The ladder raises `σ_s` while the model is still classical, and the field that fails
 first is the **co-ion**, not the counter-ion: against a negative wall the anion is depleted as
 `exp(−|φ̃|)`, so a Newton step in the primitive variable of the concentration overshoots a small
 positive number straight through zero. At `λ_D(3 M)/5` = 0.035 nm the ramp climbs −0.05 C/m²; at
@@ -154,7 +154,7 @@ or the wall gets credit for what the electrolyte did. And NaCl is **anion**-sele
 (`D_Cl` exceeds `D_Na` by 52 %), so "a negatively charged pore has `t+ > 1/2`" is false for any wall
 charge weak enough not to overturn that -- at -0.02 C/m^2 it holds only below about 0.3 M.
 
-**The correction set is worth a factor of two in conductance at 3 M. [tested: tests/tier2/test_envelope.py::test_num18_the_ablation_ladder_reaches_the_same_corner_without_the_corrections] [tested: tests/tier2/test_access_conductance.py::test_ver17_access_conductance_matches_maxwell_hall]** ePNP-NS against
+**The correction set is worth a factor of two in conductance at 3 M.** **[tested: tests/tier2/test_envelope.py::test_num18_the_ablation_ladder_reaches_the_same_corner_without_the_corrections]** **[tested: tests/tier2/test_access_conductance.py::test_ver17_access_conductance_matches_maxwell_hall]** ePNP-NS against
 classical PNP-NS at 3 M, +200 mV, `-0.02 C/m^2`, same mesh and same code path: `G` falls by a factor
 0.452, which is the mobility correction (`mu/mu0` = 0.465 for Na+, 0.552 for Cl-) showing through
 almost undiluted, and `t+` moves 0.433 -> 0.384. The classical arm doubles as a Maxwell-Hall check at

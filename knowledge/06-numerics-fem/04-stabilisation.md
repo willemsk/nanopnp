@@ -114,7 +114,7 @@ gradient is set by the bias over the pore length (`‖∇φ̃‖ ≈ 1.2` at 200
 orders of magnitude. Applying PHY-14's `μ̃_i/D̃_i` (1.2–1.7 between 0.15 M and 3 M) scales every
 `Pe_h` by 0.59–0.83 and every added diffusion by its square.
 
-### 4.2.1 The SUPG bias on the current is `S_i(ψ)` almost exactly **[tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term] [tested: tests/tier2/test_current_routes.py::test_num11_the_stabilisation_current_is_the_bias_and_is_exactly_zero_in_none]** {#421-the-supg-bias-on-the-current-is-s_i-almost-exactly}
+### 4.2.1 The SUPG bias on the current is `S_i(ψ)` almost exactly **[tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term]** **[tested: tests/tier2/test_current_routes.py::test_num11_the_stabilisation_current_is_the_bias_and_is_exactly_zero_in_none]** {#421-the-supg-bias-on-the-current-is-s_i-almost-exactly}
 
 Under a stabilisation mode the assembled residual carries the stabilisation term, so the NUM-25
 reaction flux carries it too; the NUM-24 indicator form must therefore add
@@ -161,7 +161,7 @@ effective cell Péclet number to `1/C_cw`, so it cannot run away. The bound also
 assertable form of "the same elements the NUM-12 warning names": the warning is a point sample and
 the term is an element quantity, so the two fractions are not comparable but the inclusion is.
 
-### 4.3.1 Measured: where the mode earns its place, and where it does not **[tested: tests/tier2/test_stabilised_mode.py::test_num17_plain_galerkin_trips_positivity_where_reference_converges] [tested: tests/tier2/test_stabilised_mode.py::test_num12_the_crosswind_is_active_where_the_cell_peclet_exceeds_one] [tested: tests/tier2/test_stabilised_mode.py::test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh]** {#431-measured-where-the-mode-earns-its-place-and-where-it-does-not}
+### 4.3.1 Measured: where the mode earns its place, and where it does not **[tested: tests/tier2/test_stabilised_mode.py::test_num17_plain_galerkin_trips_positivity_where_reference_converges]** **[tested: tests/tier2/test_stabilised_mode.py::test_num12_the_crosswind_is_active_where_the_cell_peclet_exceeds_one]** **[tested: tests/tier2/test_stabilised_mode.py::test_num14_the_crosswind_contributes_exactly_zero_on_a_resolved_mesh]** {#431-measured-where-the-mode-earns-its-place-and-where-it-does-not}
 
 The claim `reference` exists to support is that plain Galerkin loses concentration positivity on an
 under-resolved double layer and the stabilised mode does not. It is true, and it is true of a
@@ -214,7 +214,7 @@ That the difference vanishes at all is the substantive result: a stabilisation b
 refinement would make `reference` a different model rather than a different discretisation, and the
 §7.4 attribution would be subtracting something that never goes away.
 
-### 4.3.3 On a stable element pair the flow terms cost an order, and 20× the time **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more] [tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_unstabilised_mode_on_the_same_meshes_still_gives_ver18s_rate] [tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_flow_pair_and_not_the_transport_term_sets_the_reference_rate]** {#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time}
+### 4.3.3 On a stable element pair the flow terms cost an order, and 20× the time **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more]** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_unstabilised_mode_on_the_same_meshes_still_gives_ver18s_rate]** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_flow_pair_and_not_the_transport_term_sets_the_reference_rate]** {#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time}
 
 Measured on VER-18's manufactured solution — a 2 × 4 nm cylinder, P2 potential, concentration and
 velocity, P1 pressure, `maxh` 0.4/0.2/0.1 nm, 0.1 M, every correction off. `max Pe_K ≤ 0.084` there,
@@ -257,7 +257,7 @@ only, with no C++ JIT, so CON-07 is untouched) recovers only 20 % (37 s to 29.6 
 and leaves the errors identical to 13 digits. This cost belongs to the MMS benchmark. A production
 run carries no manufactured source, so it does not pay it.
 
-**The cost is the source's *representation*, and it is removed in the harness [tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more] [verified][^fb4f9ae].** `_reduce`
+**The cost is the source's *representation*, and it is removed in the harness.** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more]** **[verified]**[^fb4f9ae] `_reduce`
 puts each species source over one common denominator (`cancel(together(·))`) so the removable `1/r`
 cancels. The result is about 3,800 operations. `lambdify` writes it as a tree in which every
 repeated subexpression is its own node, so NGSolve evaluates all of them at every quadrature point:
@@ -323,3 +323,4 @@ other.
 
 ---
 
+[^fb4f9ae]: commit fb4f9ae, "test: cut the push gate from 353 s to 271 s with nothing de-gated".

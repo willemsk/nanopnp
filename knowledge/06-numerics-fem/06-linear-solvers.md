@@ -32,7 +32,7 @@ backend choice exists to avoid.
 
 SuiteSparse UMFPACK is GPL-2+ — relevant to what a redistributable bundle may contain.
 
-### 6.1 Measured: UMFPACK and SuperLU at production size **[tested: tests/tier2/test_factorisation_benchmark.py::test_criterion3_umfpack_factorises_a_production_sized_problem] [tested: tests/tier2/test_factorisation_benchmark.py::test_criterion3_superlu_is_a_licence_fallback_not_a_performance_one]** {#61-measured-umfpack-and-superlu-at-production-size}
+### 6.1 Measured: UMFPACK and SuperLU at production size **[tested: tests/tier2/test_factorisation_benchmark.py::test_criterion3_umfpack_factorises_a_production_sized_problem]** **[tested: tests/tier2/test_factorisation_benchmark.py::test_criterion3_superlu_is_a_licence_fallback_not_a_performance_one]** {#61-measured-umfpack-and-superlu-at-production-size}
 
 The five-field system of NUM-01 on the analytic cylindrical pore — `φ` P2 on all of Ω, `c_±` P2,
 `u` P2 vector and `p` P1 on the fluid only — assembled with every coupling block present, then

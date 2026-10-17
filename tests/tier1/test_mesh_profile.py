@@ -101,7 +101,6 @@ def test_the_delivered_table_has_the_published_properties() -> None:
     assert pts_cis[-1] == pytest.approx(4.88, abs=1e-4)
 
 
-
 def test_the_reference_fixture_is_accepted_for_tier_three_work() -> None:
     fixture = load_profile(REFERENCE)
     assert fixture.is_reference

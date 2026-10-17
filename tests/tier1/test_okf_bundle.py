@@ -251,9 +251,7 @@ def test_ver68_verified_set_must_equal_inline_tests_arithmetic_and_ruling(reposi
         ),
     )
     assert any("verified lacks process:arithmetic" in f for f in _check(repository))
-    _concept(
-        repository, "01-thing.md", body, extra=extra + "  - {by: human:willemsk, at: x}\n"
-    )
+    _concept(repository, "01-thing.md", body, extra=extra + "  - {by: human:willemsk, at: x}\n")
     assert any("holds human:willemsk" in f for f in _check(repository))
     _concept(repository, "01-thing.md", BODY, kind="Author Ruling")
     assert any("verified lacks human:willemsk" in f for f in _check(repository))

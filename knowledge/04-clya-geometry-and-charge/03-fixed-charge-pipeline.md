@@ -134,7 +134,7 @@ cannot resolve, and an aliased integral converges in neither `h` nor order. The 
 producer side: depositing onto the finite-element space and rescaling to `Q_net` conserves by
 construction, where sampling somebody else's interpolant at quadrature points cannot.
 
-### 3.3 The closed-form kernel on the 0.005 nm lattice [tested: tests/tier1/test_charge_kernel.py::test_ver58_unrenormalised_axis_sum_is_short_by_the_end_correction] [tested: tests/tier1/test_charge_kernel.py::test_ver58_kernel_integrates_to_its_charge] [tested: tests/tier1/test_charge_kernel.py::test_ver58_tiled_sum_equals_the_direct_sum] {#33-the-closed-form-kernel-on-the-0005-nm-lattice}
+### 3.3 The closed-form kernel on the 0.005 nm lattice **[tested: tests/tier1/test_charge_kernel.py::test_ver58_unrenormalised_axis_sum_is_short_by_the_end_correction]** **[tested: tests/tier1/test_charge_kernel.py::test_ver58_kernel_integrates_to_its_charge]** **[tested: tests/tier1/test_charge_kernel.py::test_ver58_tiled_sum_equals_the_direct_sum]** {#33-the-closed-form-kernel-on-the-0005-nm-lattice}
 
 PHY-16 step 5's kernel, `ρ̄_i = q_i π^(−3/2) w⁻³ exp(−((r − r_i)² + (z − z_i)²)/w²) Ĩ₀(2 r r_i/w²)` with
 `Ĩ₀ = scipy.special.i0e`, measured 1 October 2026 while planning WP28:
@@ -161,7 +161,7 @@ PHY-16 step 5's kernel, `ρ̄_i = q_i π^(−3/2) w⁻³ exp(−((r − r_i)² +
   `q_i ½ erfc((z_i − p)/√(s² + w²))`, which agrees with adaptive quadrature to round-off
   [tested: tests/tier1/test_knowledge_arithmetic.py::test_charge_kernel_z_marginal_and_erfc_cumulative]. That is the closed-form per-plane reference of the §4.4 NOTE on the producer path.
 
-Measured implementing it (WP28, 1 October 2026) **[tested: tests/tier1/test_charge_deposit.py::test_ver01_truncated_patch_fails_the_producer_leg] [tested: tests/tier1/test_charge_deposit.py::test_ver01_ver02_correct_deposit_passes_every_gate] [tested: tests/tier2/test_charge_potential_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_on_the_axis] [verified][^wp28-plan]**:
+Measured implementing it (WP28, 1 October 2026) **[tested: tests/tier1/test_charge_deposit.py::test_ver01_truncated_patch_fails_the_producer_leg]** **[tested: tests/tier1/test_charge_deposit.py::test_ver01_ver02_correct_deposit_passes_every_gate]** **[tested: tests/tier2/test_charge_potential_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_on_the_axis]** **[verified][^wp28-plan]**:
 
 - **A `2w` patch without renormalisation loses 0.83 %, not the continuum's 0.933 %.** The
   continuum loss `1 − erf(2)²` is offset by the trapezoid rule's own end terms at the cut,

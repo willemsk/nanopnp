@@ -145,7 +145,7 @@ if Sonnet fails.
 
 *Compaction checkpoint: after item 8; resume from this plan and `git log`.*
 
-- [ ] 9. Close the ratchet in `validation/okf.py`, `test_okf_bundle.py`, `pending.yaml` and the specification; replace fixtures that accepted pending claims, close REV-103 in both registers, and update current-work navigation (D6). Done when closure fixtures and the full gate pass.
+- [x] f27f777 9. Close the ratchet in `validation/okf.py`, `test_okf_bundle.py`, `pending.yaml` and the specification; replace fixtures that accepted pending claims, close REV-103 in both registers, and update current-work navigation (D6). Done when closure fixtures and the full gate pass.
 
 > **Outcome — item 9.** Refused `[tested: pending]` unconditionally in `src/nanopnp/validation/okf.py`, updated `knowledge/00-orientation/03-conventions-used-throughout.md`, replaced fixtures in `tests/tier1/test_okf_bundle.py` with tests asserting unconditional refusal of `[tested: pending]` and refusal of unsourced `[verified]` at `CEILING = 0`, amended `VER-68` (3) and trailing ceiling text in `SPECIFICATION.md`, closed `REV-103` in `docs/project/review-findings.md` and `docs/project/review-items.md`, and updated current-work navigation and changelog.
 
@@ -154,6 +154,8 @@ Each batch synchronises inline evidence, source definitions, actors and `knowled
 guessed milestones; metadata work need not reduce the pending count.
 
 - [ ] 10. Document Gmsh's optional Linux runtime prerequisites in the development setup guidance: keep the `gmsh` Python wheel in its extra, explain that `uv` cannot install distribution packages, and give the Arch (`glu`, `libxft`, `libxinerama`, `libxcursor`) and Debian/Ubuntu equivalents. Done when the strict documentation build passes; do not make Gmsh a default end-user dependency.
+
+> **Outcome — item 10.** Documented Gmsh optional Linux distribution prerequisites (`glu`, `libxft`, `libxinerama`, `libxcursor` on Arch; `libglu1-mesa`, `libxft2`, `libxinerama1`, `libxcursor1` on Debian/Ubuntu) in `docs/getting-started.md` and `docs/guide/meshes.md`, separated adjacent claim brackets across 16 `knowledge/` concepts to eliminate MkDocs autorefs reference-link warnings, and verified that `uv run docs/scripts/generate.py && uv run mkdocs build --strict` builds cleanly with zero warnings.
 
 ### Verification
 
