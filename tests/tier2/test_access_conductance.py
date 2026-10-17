@@ -120,6 +120,8 @@ def test_ver17_access_conductance_matches_maxwell_hall(
         f"G = {measured:.6e} S against the Maxwell-Hall {analytic_S:.6e} S, an error of "
         f"{100.0 * error:.2f} % against a tolerance of {100.0 * TOLERANCE:.0f} %"
     )
+    sigma0 = bulk_conductivity_S_m(Electrolyte.from_parameter_file(), CONCENTRATION_M)
+    assert sigma0 == pytest.approx(12.6, abs=0.05)
 
 
 def test_ver17_the_finite_reservoir_is_not_what_the_benchmark_measures(

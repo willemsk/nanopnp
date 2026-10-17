@@ -349,6 +349,15 @@ def test_ver36_rectification_with_no_opposite_bias_pair_is_refused(tmp_path: Pat
         )
     assert "boundary_conditions.bias_V" in str(raised.value)
     assert "exactly opposite" in str(raised.value)
+    with pytest.raises(SweepPlanError):
+        _plan(
+            base,
+            """
+  - name: bias
+    path: boundary_conditions.bias_V
+    values: [-0.095, 0.1]
+""",
+        )
 
 
 def test_ver36_a_symmetric_bias_axis_supplies_the_pairs(tmp_path: Path) -> None:

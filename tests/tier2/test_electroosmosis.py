@@ -93,6 +93,8 @@ def test_ver14_rice_and_whitehead_capillary_profile(debye_length_nm: float, regi
     assert abs(pressure(mesh(0.5 * RADIUS_NM, midplane))) < 1e-3, (
         f"{regime}: electro-osmosis at a uniform capillary develops no pressure"
     )
+    assert abs(pressure(mesh(0.5 * RADIUS_NM, 0.0))) < 1e-3
+    assert abs(pressure(mesh(0.5 * RADIUS_NM, LENGTH_NM))) < 1e-3
 
 
 def test_ver15_helmholtz_smoluchowski_limit_and_its_approach_rate() -> None:

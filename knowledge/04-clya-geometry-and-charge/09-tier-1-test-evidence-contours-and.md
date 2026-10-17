@@ -1,8 +1,8 @@
 ---
 type: Test Evidence
 title: 'Tier-1 test evidence: contours and charge deposition (WP45 item 20)'
-description: What the Tier-1 tests of contours and charge deposition establish, recorded at WP45 item
-  20.
+description: What the Tier-1 tests of contours and charge deposition establish, recorded
+  at WP45 item 20.
 tags:
 - clya
 - test-evidence
@@ -10,8 +10,14 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
+- by: process:tests/tier1/test_charge_deposit.py::test_ver01_dropped_renormalisation_fails_the_producer_leg_only
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_deposit.py::test_ver01_truncated_patch_fails_the_producer_leg
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_charge_deposit.py::test_ver02_dropped_jacobian_renormalised_globally_fails_the_planes_only
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_charge_deposit.py::test_ver58_p0_misses_the_first_moment_that_p1_keeps
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_fields.py::test_ver29_a_grid_round_trips_through_opendx_and_ccp4
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_charge_fields.py::test_ver29_a_header_value_that_is_not_finite_is_refused
@@ -20,6 +26,8 @@ verified:
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_is_zero_outside_the_grid_box
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_charge_kernel.py::test_ver58_kernel_is_the_limit_of_the_3d_deposition_binned_by_annular_weights
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_kernel.py::test_ver58_unrenormalised_axis_sum_is_short_by_the_end_correction
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_charge_stage.py::test_ver01_the_producer_stage_deposits_keys_and_records_its_report
@@ -42,9 +50,9 @@ verified:
 - **[tested: tests/tier1/test_contour.py::test_ver51_closing_fills_subresolution_slot]** Closing and opening by `2h` fill a 0.1 nm slot, remove a 0.1 nm fin and keep a 0.3 nm slot; each concave corner of a hole moves by at most `δ²(1 − π/4)`. Source: `test_contour.py` (`test_ver51_closing_fills_subresolution_slot`).
 - **[tested: tests/tier1/test_charge_deposit.py::test_ver01_truncated_patch_fails_the_producer_leg]** Charge patch truncated at `±2w` and not renormalised loses `1 − erf(2)² = 0.93 %`; the end nodes keep their trapezoid weight and give back `h·exp(−4)/(w√π) = 5 × 10⁻⁴` per axis, 0.83 % on the lattice. Source: `tests/tier1/test_charge_deposit.py` (`test_ver01_truncated_patch_fails_the_producer_leg`).
 - **[tested: tests/tier1/test_charge_kernel.py::test_ver58_unrenormalised_axis_sum_is_short_by_the_end_correction]** An unrenormalised on-axis lattice sum is short by `h²/(6w²)` (10 % at the test's spacing); renormalised it is exact. Source: `tests/tier1/test_charge_kernel.py` (`test_ver58_unrenormalised_axis_sum_is_short_by_the_end_correction`).
-- **[tested: pending]** A P0 deposit conserves charge but fails the Galerkin first-moment test that P1 passes (Design §5). Dropping the renormalisation on an axis atom fails the producer leg only, at −1.67 × 10⁻³. Source: `test_charge_deposit.py`.
-- **[tested: pending]** Dropping the `2πr` Jacobian and rescaling globally to `Q_net` passes both conservation legs and fails the per-plane check (1.6 for 1.0). Source: `test_charge_deposit.py` (`test_ver02_…`).
-- **[tested: pending]** The kernel's limit from 3D Cartesian Gaussian deposition binned by exact annular overlaps converges at ≥ 3.5× per halving of the spacing, below 10⁻³ at the finest. Source: `test_charge_kernel.py` (`test_ver58_kernel_is_the_limit_of_the_3d_deposition…`).
+- **[tested: tests/tier1/test_charge_deposit.py::test_ver58_p0_misses_the_first_moment_that_p1_keeps]** A P0 deposit conserves charge but fails the Galerkin first-moment test that P1 passes (Design §5). **[tested: tests/tier1/test_charge_deposit.py::test_ver01_dropped_renormalisation_fails_the_producer_leg_only]** Dropping the renormalisation on an axis atom fails the producer leg only, at −1.67 × 10⁻³. Source: `test_charge_deposit.py`.
+- **[tested: tests/tier1/test_charge_deposit.py::test_ver02_dropped_jacobian_renormalised_globally_fails_the_planes_only]** Dropping the `2πr` Jacobian and rescaling globally to `Q_net` passes both conservation legs and fails the per-plane check (1.6 for 1.0). Source: `test_charge_deposit.py` (`test_ver02_…`).
+- **[tested: tests/tier1/test_charge_kernel.py::test_ver58_kernel_is_the_limit_of_the_3d_deposition_binned_by_annular_weights]** The kernel's limit from 3D Cartesian Gaussian deposition binned by exact annular overlaps converges at ≥ 3.5× per halving of the spacing, below 10⁻³ at the finest. Source: `test_charge_kernel.py` (`test_ver58_kernel_is_the_limit_of_the_3d_deposition…`).
 - **[tested: tests/tier1/test_charge_stage.py::test_ver01_the_producer_stage_deposits_keys_and_records_its_report]** At 1 nm elements the deployed field's per-plane error under the 0.5 nm weight is 3.2 × 10⁻³ (refused by the gate); at 0.5 nm it is 2.3 × 10⁻⁴. Source: `tests/tier1/test_charge_stage.py` (`test_ver01_the_producer_stage_deposits_keys_and_records_its_report`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed]** At the reference mesh the 0.01 nm axis guard is a fifteenth of an element, so no mesh integral sees its edge. The whole-grid conservation integral is a trapezium rule on a field that decays to zero (exact beyond all orders); the guard's partial integral carries an `O(h²)` term. What the guard leaves is about a seventh of the grid's charge, and its element-scale step costs a fixed fraction of the total. Source: `tests/tier1/test_charge_fields.py` (`test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_a_header_value_that_is_not_finite_is_refused]** `yaml.safe_dump` writes a NumPy NaN as `.nan`, and NaN passes every `> tol` gate; a NaN `q_net_e` once made three of five conservation legs NaN without any gate catching it. Source: `test_charge_fields.py` (`test_ver29_a_header_value_that_is_not_finite_is_refused`).

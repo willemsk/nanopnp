@@ -391,3 +391,21 @@ def test_num18_the_ablation_ladder_reaches_the_same_corner_without_the_correctio
         "the concentration corrections roughly halve the ionic mobility at 3 M, so ePNP-NS "
         f"must conduct appreciably less than classical PNP-NS there; the ratio is {ratio:.4f}"
     )
+
+
+def test_82_bias_walk_emits_waypoints_verbatim() -> None:
+    span = 0.20 - 0.05
+    assert span > 0.15
+    assert math.ceil(span / BIAS_WALK_STEP_V) == 4
+    assert [round(0.05 + span * (k + 1) / 4, 4) for k in range(4)] == [0.0875, 0.125, 0.1625, 0.2]
+    upwards = sorted(v for v in BIASES_V if v > BIASES_V[0])
+    downwards = sorted((v for v in BIASES_V if v < BIASES_V[0]), reverse=True)
+    recorded_up = [(w, rec) for w, rec in _walk(BIASES_V[0], upwards) if rec]
+    assert recorded_up == [(0.10, True), (0.20, True)]
+    walk_rungs = len(_walk(BIASES_V[0], upwards)) + len(_walk(BIASES_V[0], downwards))
+    spine_rungs = len(CONCENTRATIONS_M)
+    assert spine_rungs + len(CONCENTRATIONS_M) * walk_rungs == 45
+    restarted = sum(
+        len(_walk(BIASES_V[0], [target])) for target in BIASES_V if target != BIASES_V[0]
+    )
+    assert spine_rungs + len(CONCENTRATIONS_M) * restarted == 75
