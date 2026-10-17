@@ -12,6 +12,8 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_charge_kernel_z_marginal_and_erfc_cumulative
+  at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp28-plan
   resource: docs/plans/wp28-charge-projection.md
@@ -145,7 +147,7 @@ PHY-16 step 5's kernel, `ρ̄_i = q_i π^(−3/2) w⁻³ exp(−((r − r_i)² +
 - **The z-marginal survives azimuthal averaging exactly**: `∫ ρ̄_i 2πr dr = q_i exp(−(z − z_i)²/w²)/(w√π)`.
   So under the weight `½ erfc((z − p)/s)` an atom's charge below plane `p` is
   `q_i ½ erfc((z_i − p)/√(s² + w²))`, which agrees with adaptive quadrature to round-off
-  [verified]. That is the closed-form per-plane reference of the §4.4 NOTE on the producer path.
+  [tested: tests/tier1/test_knowledge_arithmetic.py::test_charge_kernel_z_marginal_and_erfc_cumulative]. That is the closed-form per-plane reference of the §4.4 NOTE on the producer path.
 
 Measured implementing it (WP28, 1 October 2026) **[tested: pending]**:
 

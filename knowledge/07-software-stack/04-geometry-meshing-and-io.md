@@ -9,8 +9,8 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_field_export.py::test_if07_a_discontinuous_quantity_is_written_cell_centred
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 4. Geometry, meshing and I/O
@@ -211,7 +211,7 @@ Outcomes):
 - **meshio 5.3.5 reads an XDMF `Information` element only in its own `field_data` encoding
   [tested: pending].** Children carry `key` and `dim` attributes with integer text; anything else raises
   `ParseError`. The IF-07 scale set is therefore written as HDF5 root attributes (`post/export.py`).
-- **Discontinuous export fields are cell-centred [verified].** `material_id` and `eps_r` jump across
+- **Discontinuous export fields are cell-centred [tested: tests/tier1/test_field_export.py::test_if07_a_discontinuous_quantity_is_written_cell_centred].** `material_id` and `eps_r` jump across
   a material interface, so a node value there is one side chosen arbitrarily and a viewer draws a
   ramp across every boundary element; a barycentre lies strictly inside its element, so the point
   search is unambiguous.

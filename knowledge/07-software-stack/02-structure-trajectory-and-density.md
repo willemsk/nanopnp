@@ -9,8 +9,8 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_reduction.py::test_ver50_off_axis_gaussian_closed_forms
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 2. Structure, trajectory and density
@@ -182,7 +182,7 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   width reads 8.7e-4. Subtracting the binned mean, as an even cubic spline evaluated at each cell's
   own radius, brings those to 3.6e-6 and 2.0e-8. Linear interpolation brings the C12 figure only
   to 5.4e-6.
-- **The Cₙ average is a projection [verified].** In the angular harmonic basis, averaging n rotated
+- **The Cₙ average is a projection [tested: tests/tier1/test_reduction.py::test_ver50_off_axis_gaussian_closed_forms].** In the angular harmonic basis, averaging n rotated
   copies multiplies `c_m` by `[n | m]`. It therefore leaves the azimuthal mean unchanged and needs
   no rotated map. Against the closed form `2E²Σ I_{kn}(β)²` for a C12 ring of Gaussians, the peak
   variance came out −0.3 to −0.7 % by harmonic projection, −1.4 to −2.4 % from exactly rotated

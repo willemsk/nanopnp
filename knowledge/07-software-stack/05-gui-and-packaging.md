@@ -11,6 +11,8 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_netgen_webgui_generate_html_ignores_template_argument
+  at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp15-plan
   resource: docs/plans/wp15-gui-3d-view-and-packaging.md
@@ -103,7 +105,7 @@ inside a `try: import anywidget` and falls back to a stub with the same construc
 The returned dict is plain numbers and base64 strings, so it crosses a process boundary and
 serialises without help.
 
-### `netgen.webgui.GenerateHTML` ignores its `template` argument **[verified]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
+### `netgen.webgui.GenerateHTML` ignores its `template` argument **[tested: tests/tier1/test_knowledge_arithmetic.py::test_netgen_webgui_generate_html_ignores_template_argument]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
 
 Read from the installed source, 21 September 2026:
 

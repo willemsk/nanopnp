@@ -6,13 +6,13 @@
   verified_unsourced: 0
 04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md:
   tested_pending: 7
-  verified_unsourced: 4
+  verified_unsourced: 0
 04-clya-geometry-and-charge/02-model-geometry-and-conventions.md:
   tested_pending: 5
-  verified_unsourced: 1
+  verified_unsourced: 0
 04-clya-geometry-and-charge/03-fixed-charge-pipeline.md:
   tested_pending: 2
-  verified_unsourced: 1
+  verified_unsourced: 0
 04-clya-geometry-and-charge/04-mesh.md:
   tested_pending: 1
   verified_unsourced: 0
@@ -27,37 +27,37 @@
   verified_unsourced: 0
 06-numerics-fem/04-stabilisation.md:
   tested_pending: 7
-  verified_unsourced: 3
+  verified_unsourced: 0
 06-numerics-fem/05-nonlinear-solution.md:
   tested_pending: 8
-  verified_unsourced: 1
+  verified_unsourced: 0
 06-numerics-fem/06-linear-solvers.md:
   tested_pending: 1
   verified_unsourced: 0
 06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md:
   tested_pending: 12
-  verified_unsourced: 1
+  verified_unsourced: 0
 06-numerics-fem/08-mesh-resolution-and-adaptivity.md:
   tested_pending: 3
   verified_unsourced: 0
 06-numerics-fem/09-ngsolve-traps-found-by-implementing.md:
   tested_pending: 51
-  verified_unsourced: 3
+  verified_unsourced: 0
 07-software-stack/01-fem-backend-ngsolvenetgen.md:
   tested_pending: 5
   verified_unsourced: 0
 07-software-stack/02-structure-trajectory-and-density.md:
   tested_pending: 18
-  verified_unsourced: 1
+  verified_unsourced: 0
 07-software-stack/03-charge-and-electrostatics.md:
   tested_pending: 10
-  verified_unsourced: 1
+  verified_unsourced: 0
 07-software-stack/04-geometry-meshing-and-io.md:
   tested_pending: 17
-  verified_unsourced: 1
+  verified_unsourced: 0
 07-software-stack/05-gui-and-packaging.md:
   tested_pending: 16
-  verified_unsourced: 1
+  verified_unsourced: 0
 07-software-stack/06-licence-summary.md:
   tested_pending: 1
   verified_unsourced: 0
@@ -69,7 +69,7 @@
   verified_unsourced: 0
 07-software-stack/10-canonical-is-the-on-disk-format-not.md:
   tested_pending: 1
-  verified_unsourced: 1
+  verified_unsourced: 0
 07-software-stack/11-a-stages-workspace-falls-back-to-the.md:
   tested_pending: 1
   verified_unsourced: 0
@@ -88,12 +88,9 @@
 07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md:
   tested_pending: 1
   verified_unsourced: 0
-08-validation-benchmarks/01-tier-1-unit-and-property-tests-seconds.md:
-  tested_pending: 0
-  verified_unsourced: 3
 08-validation-benchmarks/02-tier-2-analytic-benchmarks-minutes.md:
   tested_pending: 1
-  verified_unsourced: 2
+  verified_unsourced: 0
 08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md:
   tested_pending: 5
-  verified_unsourced: 2
+  verified_unsourced: 0

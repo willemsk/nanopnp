@@ -9,8 +9,8 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_short_hash_collision_probability_bound
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 10. `canonical()` is the on-disk format, not only the hash input
@@ -32,5 +32,5 @@ It is deliberately not a full inverse of `canonical`: an array encodes as dtype,
 
 The 12-hex-character display prefix (`core.hashing.SHORT_LENGTH`) is 48 bits; over the 3,675-solve
 datum at about six artefacts each (n ≈ 2.2 × 10⁴) the collision probability is n²/2N ≈ 8.6 × 10⁻⁷, adequate
-for a label. The store keys on the full digest, never on the prefix **[verified]** (`core/hashing.py`).
+for a label. The store keys on the full digest, never on the prefix **[tested: tests/tier1/test_knowledge_arithmetic.py::test_short_hash_collision_probability_bound]** (`core/hashing.py`).
 

@@ -12,6 +12,8 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_apbs_input_cleanup_and_250_bytes_per_node
+  at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp17-plan
   resource: docs/plans/wp17-packaging-and-ci.md
@@ -199,7 +201,7 @@ the deck's `temp`.
   | 193³ | 44 s | 1.9 GB |
 
   This is about 250 B per node.
-  The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[verified]**.
+  The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[tested: tests/tier1/test_knowledge_arithmetic.py::test_apbs_input_cleanup_and_250_bytes_per_node]**.
 - **Case identity cost** (`validation/comsol.py`): hashing the 84 MB reference charge table takes about 1.6 s;
   hashing the 9.2 MB deposited 2WCD structure files takes 12 ms, plus 0.7 s on the first import of stage 1 and
   MDAnalysis **[tested: pending]**.

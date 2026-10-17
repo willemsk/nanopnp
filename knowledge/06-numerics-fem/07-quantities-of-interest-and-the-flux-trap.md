@@ -18,6 +18,8 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_axisymmetric_strain_rate_omits_hoop_component_and_stress_contraction_is_2x2
+  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 7. Quantities of interest — and the flux trap
@@ -265,7 +267,7 @@ of `F^em` there. **[tested: pending]**
 the hoop components of both tensors are contracted against zero and `T:∇w = T_rz ∂_r w_z +
 T_zz ∂_z w_z`. The integrals still go through `Measures` for the `r` weight and the order floor.
 `physics/flow.strain_rate`'s documented omission of `ε_θθ = u_r/r` is harmless here for the same
-reason. **[verified]**
+reason. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_axisymmetric_strain_rate_omits_hoop_component_and_stress_contraction_is_2x2]**
 
 **The `2π` is restored once**, in `post/forces.py`, exactly as `post/qoi.py` does it: every solver
 integral is `∫ f r dr dz`. The force scale is `ε V_T² = 4.5677 × 10⁻¹³ N` — `p₀ a²` with the `a²`
