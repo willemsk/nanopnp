@@ -9,8 +9,45 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
+- by: process:arithmetic
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_density.py::test_ver49_grid_is_canonical
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_density.py::test_ver49_map_round_trip_and_export
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_density.py::test_ver49_nm_written_map_is_refused
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_density.py::test_ver49_slab_thickness_does_not_change_the_map
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_griddata_exporters_mrc_float32_and_2d_refusal
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_blank_and_odd_fields
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_mdanalysis_density_analysis_is_histogram_only
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_mdanalysis_trajectory_formats_and_dt
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_pyproject_requires_python_311_and_griddata_12
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_reduction.py::test_ver50_off_axis_gaussian_closed_forms
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_structure_axis.py::test_ver48_exact_cn_assembly_recovers_its_axis
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_density_2wcd.py::test_ver49_ver50_2wcd_to_stage_three
+  at: '2026-10-16T00:00:00Z'
+sources:
+- id: wp17-plan
+  resource: docs/plans/wp17-case-schema-v2.md
+  title: WP17 case schema v2 plan (GridDataFormats 1.0.2 vs 1.2.0)
+- id: wp18-plan
+  resource: docs/plans/wp18-structure-ingestion.md
+  title: WP18 structure ingestion plan, Design §2 (ClyA-AS principal vs permutation
+    axes)
+- id: wp19-plan
+  resource: docs/plans/wp19-density-and-reduction.md
+  title: WP19 density and reduction plan, Design §1–§5 (prototype measurements)
 tested_with:
   mdanalysis: 2.10.0
   griddataformats: 1.2.0
@@ -22,19 +59,19 @@ tested_with:
 
 | Tool | Version | Licence | Notes |
 |---|---|---|---|
-| **MDAnalysis** | 2.10.0 | LGPLv3+ | PDB, DCD/XTC/TRR/NCDF; `analysis.align.AlignTraj`, `rotation_matrix` **[tested: pending]**. **Not mmCIF**; see below |
-| **gemmi** | 0.7.5 | MPL-2.0 | mmCIF (and PDB) reader; wheels cp311–cp314 on manylinux, musllinux, macOS and win_amd64 **[tested: pending]**, 25 Sep 2026 |
+| **MDAnalysis** | 2.10.0 | LGPLv3+ | PDB, DCD/XTC/TRR/NCDF; `analysis.align.AlignTraj`, `rotation_matrix` **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts]**. **Not mmCIF**; see below |
+| **gemmi** | 0.7.5 | MPL-2.0 | mmCIF (and PDB) reader; wheels cp311–cp314 on manylinux, musllinux, macOS and win_amd64 **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts]**, 25 Sep 2026 |
 | MDTraj | 1.11.1 | LGPLv2.1+ | Faster I/O, leaner; no density-on-grid |
 | **GridDataFormats** | 1.2.0 | LGPL | OpenDX/CCP4 I/O; `Density` subclasses `gridData.core.Grid` |
 | mdahole2 (MDAKit) | current | GPL-ish + HOLE binary academic licence | Pore-radius profile — use to *validate* the contour |
 | PDBFixer / Modeller | — | MIT / academic | Fill missing loops **before** anything else |
 
-**`DensityAnalysis` is histogram-only** (`np.histogramdd`), no kernel option **[tested: pending]**. The
+**`DensityAnalysis` is histogram-only** (`np.histogramdd`), no kernel option **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_density_analysis_is_histogram_only]**. The
 paper's per-atom VdW-weighted Gaussian must be written by hand. Do **not** substitute "histogram
 then `gaussian_filter`" — uniform post-smoothing rounds the constriction, whereas VdW-weighted
 smearing preserves the exclusion surface.
 
-**gridData 1.2.0, as it actually behaves [tested: pending].** Three things a reader of the docs would not
+**gridData 1.2.0, as it actually behaves [tested: tests/tier1/test_library_behaviour.py::test_griddata_exporters_mrc_float32_and_2d_refusal].** Three things a reader of the docs would not
 predict, all found while building the `(r, z)` grid IO:
 
 - **There is no `CCP4` writer.** `file_format="ccp4"` raises `ValueError: File format CCP4 not
@@ -50,12 +87,12 @@ predict, all found while building the `(r, z)` grid IO:
   shape, so the user gets a diagnostic instead of a format-string traceback.
 - **The reference grid's axes are uniform to round-off.** Its COMSOL table is written in metres to
   ten significant figures, and its axes vary by 1e-15 nm about the 0.005 nm spacing, which is why
-  `nanopnp.density.grid` refuses a non-uniform axis at 1e-9 nm. **[tested: pending]**
+  `nanopnp.density.grid` refuses a non-uniform axis at 1e-9 nm. **[tested: tests/tier1/test_density.py::test_ver49_grid_is_canonical]**
 - **The reader is guessed from the extension, and `.map` has none.** `Grid("x.map")` raises
   `ValueError: File format MAP not available, choose one of dict_keys(['CCP4', 'MRC', 'DX', …])`,
   although the writer, told `file_format="MRC"`, wrote that file without complaint. Pass the
   reader's `file_format` explicitly, from the same suffix table as the writer. `DensityMap.read`
-  exported `.map` and failed to read it back until WP25 did so **[tested: pending]**, 29 September 2026.
+  exported `.map` and failed to read it back until WP25 did so **[tested: tests/tier1/test_density.py::test_ver49_map_round_trip_and_export]**, 29 September 2026.
 - **It carries no length unit.** `origin` and `delta` are written as given. CCP4/MRC defines its
   cell in ångströms, and molecular viewers read OpenDX in ångströms too, so a map written in nm
   overlays its structure at a tenth of its size. The 3D density map is therefore exported in Å and
@@ -63,9 +100,9 @@ predict, all found while building the `(r, z)` grid IO:
   2WCD, an overlay oracle that reads the exported MRC header raw and looks up each heavy atom's
   nearest node rejects all three errors a converter can make: read as nm, every atom falls outside
   the box; with the axes fully transposed, 89 % of atoms read below the single-frame bound; with x
-  and y alone swapped, 57 % do **[tested: pending]**, WP25, 29 September 2026.
+  and y alone swapped, 57 % do **[tested: tests/tier1/test_density.py::test_ver49_nm_written_map_is_refused]**, WP25, 29 September 2026.
 
-**GridDataFormats before 1.2 has no MRC writer [tested: pending].**
+**GridDataFormats before 1.2 has no MRC writer [verified][^wp17-plan].**
 GridDataFormats 1.2.0 requires Python ≥ 3.11, so a Python 3.10 resolver takes **1.0.2**, whose
 `Grid()._exporters` registry is `DX, PKL, PICKLE, PYTHON` — no `MRC` and no `VDB`. Its `_loaders`
 registry *does* carry `CCP4, DX, MRC, PLT, PKL, PICKLE, PYTHON`, and `gridData.mrc` imports on both,
@@ -82,7 +119,7 @@ Two consequences for anything that writes these formats across versions of gridD
 - A test guarded on "is gridData importable?" passes on 3.10 and then fails inside the writer. Guard
   on **writer availability**.
 
-**The 3.11 floor makes this moot [tested: pending].** With `requires-python = ">=3.11"` and
+**The 3.11 floor makes this moot [tested: tests/tier1/test_library_behaviour.py::test_pyproject_requires_python_311_and_griddata_12].** With `requires-python = ">=3.11"` and
 `GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and writes MRC, so the code has
 no writer-availability branch (§8.2.2 B4). The facts above describe 1.0.2, should an older
 environment turn up.
@@ -91,7 +128,7 @@ environment turn up.
 superposition**: superpose chain A onto chain B, and the rotation's eigenvector with eigenvalue 1
 *is* the Cₙ axis. It is about 40 lines and markedly more stable.
 
-**Why principal axes fail on ClyA: they drift, but not from degeneracy [tested: pending].** Measured on
+**Why principal axes fail on ClyA: they drift, but not from degeneracy [verified][^wp18-plan].** Measured on
 25 September 2026 on the author's ClyA-AS ensemble (`prod5_clya_as.{pdb,dcd}`, 98 frames), using
 the Cα set:
 
@@ -112,11 +149,11 @@ the Cα set:
   axis up to 6° astray, and 0.1 nm sends it up to 24°. The permutation axis stays within 0.02° and
   0.1° respectively.
 
-**MDAnalysis 2.10 reads no mmCIF [tested: pending].** `mda._PARSERS` and `mda._READERS` in 2.10.0 have no
+**MDAnalysis 2.10 reads no mmCIF [tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts].** `mda._PARSERS` and `mda._READERS` in 2.10.0 have no
 `CIF`, `MMCIF` or `PDBX` entry, and `MDAnalysis.topology.PDBxParser` does not import. Only the
 retired `MMTF` format is there. IF-04's mmCIF leg goes through gemmi (§2.6, WP18).
 
-**What the readers do with a blank or odd field [tested: pending].** Measured 25 September 2026 on MDAnalysis
+**What the readers do with a blank or odd field [tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_blank_and_odd_fields].** Measured 25 September 2026 on MDAnalysis
 2.10.0 and gemmi 0.7.5, while building stage 1 (WP18):
 
 - A PDB atom whose element columns are blank reads as element `''`. If **every** atom's are blank,
@@ -129,13 +166,13 @@ retired `MMTF` format is there. IF-04's mmCIF leg goes through gemmi (§2.6, WP1
 - `Universe.trajectory.dt` warns "Reader has no dt information, set to 1.0 ps" and returns 1.0 for
   a PDB and for an untimed DCD.
 
-**What each trajectory format gives back [tested: pending].** Coordinates written in float32 ångströms from a
+**What each trajectory format gives back [tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_trajectory_formats_and_dt].** Coordinates written in float32 ångströms from a
 `MemoryReader` universe and read again: DCD and NetCDF store ångströms and return the written bytes
 exactly. TRR stores float32 nanometres, so the ångström-to-nanometre conversion costs up to two
 float32 ulps, 1.1e-6 nm measured at 13 nm. XTC is quantised to 0.001 nm and returns within
 5.02e-4 nm, which is half the quantum plus the same float32 round-off.
 
-**The permutation axis on synthetic assemblies [tested: pending].** Measured with `nanopnp.structure.axis`
+**The permutation axis on synthetic assemblies [tested: tests/tier1/test_structure_axis.py::test_ver48_exact_cn_assembly_recovers_its_axis].** Measured with `nanopnp.structure.axis`
 (`tests/tier1/test_structure_axis.py`):
 
 - An exact C7, C8 or C12 about an axis tilted 35° and offset by (3, −1.5, 40) nm is recovered to
@@ -154,7 +191,7 @@ float32 ulps, 1.1e-6 nm measured at 13 nm. XTC is quantised to 0.001 nm and retu
   the 1° tolerance. Helical rises and partial turn-overs move the spacing before they move the
   angle.
 
-**MDAnalysis trajectory readers and their time metadata [tested: pending].** Each writer (DCD, XTC, TRR,
+**MDAnalysis trajectory readers and their time metadata [tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_trajectory_formats_and_dt].** Each writer (DCD, XTC, TRR,
 NCDF) round-trips three frames written from a static `Universe`. NCDF needs no `netCDF4`, because
 the scipy fallback suffices. The times are the trap:
 
@@ -166,7 +203,7 @@ the scipy fallback suffices. The times are the trap:
   wrong window. Gate a `last_ns` longer than the recorded span, and record the times as read
   (`SPECIFICATION.md` §5.3.1 NOTE on `structure:`).
 
-**Density deposition and the (r, z) reduction, measured [tested: pending].** Measured on 25 September 2026
+**Density deposition and the (r, z) reduction, measured [verified][^wp19-plan].** Measured on 25 September 2026
 with scratch prototypes while planning WP19. They are not the implementation, and the plan's Design
 §1–§5 has the derivations. At h = 0.05 nm:
 
@@ -198,7 +235,7 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   `b²/2` (relative to the peak) at r ≥ 1 nm when n | m. When n ∤ m, the Cₙ variance stays below
   7.1e-5 of it.
 
-**Stages 2 and 3 as implemented [tested: pending].** Measured on 25 September 2026 with
+**Stages 2 and 3 as implemented [tested: tests/tier2/test_density_2wcd.py::test_ver49_ver50_2wcd_to_stage_three].** Measured on 25 September 2026 with
 `nanopnp.density` and `nanopnp.symmetry` (WP19; `tests/tier1/test_density.py`,
 `tests/tier1/test_reduction.py`, `tests/tier2/test_density_2wcd.py`), at h = 0.05 nm and
 σ = 0.93:
@@ -212,7 +249,7 @@ with scratch prototypes while planning WP19. They are not the implementation, an
 - **Fine spacing needs the slab-clipped stencil.** Evaluating a whole stencil in every z-slab it
   reaches did 6.8x the work at h = 0.025 nm, where a slab is a few planes of a stencil tens of
   planes deep. Evaluating only the offsets that land in the slab (one contiguous run, because the
-  stencil's z offsets ascend) leaves the map bit-identical. **[tested: pending]** (`nanopnp.density.union`,
+  stencil's z offsets ascend) leaves the map bit-identical. **[tested: tests/tier1/test_density.py::test_ver49_slab_thickness_does_not_change_the_map]** (`nanopnp.density.union`,
   `_accumulate`.)
 - **The truncation error sits inside its bound.** On 200 random atoms against an untruncated
   evaluation, the largest voxel error was 7.8e-6. At every voxel it stayed below the sum of
@@ -252,4 +289,8 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   set refuses, because a zero-width kernel deposits nothing.
 
 ---
+
+[^wp17-plan]: `docs/plans/wp17-case-schema-v2.md` and `SPECIFICATION.md` §8.2.2 B4 (GridDataFormats 1.0.2 vs 1.2.0).
+[^wp18-plan]: `docs/plans/wp18-structure-ingestion.md`, Design §2 (principal vs permutation axes on the standalone `prod5_clya_as` ensemble).
+[^wp19-plan]: `docs/plans/wp19-density-and-reduction.md`, Design §1–§5 (scratch prototype measurements before stage 2/3 implementation).
 
