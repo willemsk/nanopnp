@@ -338,7 +338,7 @@ def test_ver68_repository_citations_all_resolve() -> None:
     assert not found, "\n".join(str(finding) for finding in found)
 
 
-CEILING = 114
+CEILING = 63
 
 
 def test_ver68_the_bundle_conforms() -> None:

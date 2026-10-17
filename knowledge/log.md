@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-10-16
+* **Update**: Backed all 51 pending NGSolve-trap `Library Behaviour` claims in `06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` with Tier-1 and Tier-2 test evidence (`tests/tier1/test_ngsolve_traps.py` and existing suites) and historical commit footnotes, lowering the pending ceiling from 114 to 63 (WP48 item 7).
 * **Update**: Backed all 90 pending software-stack `Library Behaviour` claims across `07-software-stack/01..16` with Tier-1 and Tier-2 test evidence (`tests/tier1/test_library_behaviour.py` and existing suites), lowering the pending ceiling from 204 to 114 (WP48 item 6).
 * **Update**: Recorded `tested_with` package-version mappings across all seventeen `Library Behaviour` concepts and enforced non-empty `tested_with` mappings in VER-68 (WP48 item 5).
 * **Update**: Replaced every executable `[verified]` arithmetic and closed-form claim across the bundle with Tier-1 test evidence (`tests/tier1/test_knowledge_arithmetic.py` and existing Tier-1 suites), reducing `verified_unsourced` to zero (WP48 item 4).

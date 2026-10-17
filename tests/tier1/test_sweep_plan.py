@@ -541,6 +541,8 @@ def test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid(
     plan = reference_plan
     assert len(plan.points) == 3675
     assert len(plan.waves()) == 42
+    assert len(plan.points) / len(plan.waves()) == pytest.approx(87.5)
+    assert max(last - first for first, last in plan.waves()) == 174
     assert max(point.wave for point in plan.points) == 41
     assert sum(1 for point in plan.points if point.parent is None) == 1
     assert not plan.warnings

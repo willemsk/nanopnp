@@ -40,9 +40,6 @@
 06-numerics-fem/08-mesh-resolution-and-adaptivity.md:
   tested_pending: 3
   verified_unsourced: 0
-06-numerics-fem/09-ngsolve-traps-found-by-implementing.md:
-  tested_pending: 51
-  verified_unsourced: 0
 08-validation-benchmarks/02-tier-2-analytic-benchmarks-minutes.md:
   tested_pending: 1
   verified_unsourced: 0
