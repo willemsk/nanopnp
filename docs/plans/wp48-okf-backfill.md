@@ -133,10 +133,12 @@ if Sonnet fails.
 - [x] bae78fa 5. Add `tested_with` to all 17 concepts after relevant checks run; implement metadata-presence fixtures and enforcement in `validation/okf.py` and `test_okf_bundle.py`, amending VER-68 (5) together (D3). Done when each negative fixture fails for its intended reason and the real bundle passes.
 
 > **Outcome — item 5.** Verified installed runtime versions against `uv.lock`, populated non-empty `tested_with` mappings across all 17 `Library Behaviour` concepts (`06-09` and `07-01..16`), enforced non-empty `tested_with` mappings in `src/nanopnp/validation/okf.py` with negative fixtures for missing, non-mapping, empty, empty-version and stale metadata in `tests/tier1/test_okf_bundle.py`, and amended `VER-68` (5) in `SPECIFICATION.md` (`CEILING` remains `204`).
-- [ ] 6. Back software behaviours using existing suites or `tests/tier1/test_library_behaviour.py` (D3). Done when assigned assertions, metadata and bundle checks pass.
+- [x] 6808960 6. Back software behaviours using existing suites or `tests/tier1/test_library_behaviour.py` (D3). Done when assigned assertions, metadata and bundle checks pass.
 
 > **Outcome — item 6.** Backed all 90 pending `Library Behaviour` markers across `07-software-stack/01..16` with deterministic assertions in `tests/tier1/test_library_behaviour.py` (18 tests covering NGSolve OCC/meshing/element-order contracts, MDAnalysis/GridDataFormats density round-trips, PROPKA/PDB2PQR protonation contracts, packaging/dependency/Python-floor/MkDocs/parallelism invariants) and existing Tier-1/Tier-2 suites, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `204` to `114`.
 - [ ] 7. Back NGSolve traps using existing suites or `tests/tier1/test_ngsolve_traps.py`; historical reference experiments follow D5 (D3). Done when properties and workarounds are asserted and affected tests pass.
+
+> **Outcome — item 7.** Backed all 51 pending `Library Behaviour` markers in `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` with 9 targeted tests in `tests/tier1/test_ngsolve_traps.py`, wave-width assertions in `tests/tier1/test_sweep_plan.py`, existing Tier-1/Tier-2 suites and D5 footnotes for historical commit records (`0ea0789`, `c27c35c`, `6c0a249`, `1a2e383`, `7597814`), synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `114` to `63`.
 - [ ] 8. Resolve every remaining inventory row across `knowledge/` using domain tests (D4). Done when the full audit passes, all relevant tests run, and no unresolved claim remains.
 
 *Compaction checkpoint: after item 8; resume from this plan and `git log`.*
