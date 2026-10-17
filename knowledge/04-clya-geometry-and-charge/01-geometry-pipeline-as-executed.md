@@ -143,7 +143,7 @@ it for ClyA.
 from `nanopnp` stage 2 (L = 6.75 nm). The script's 0.25 contour lies 0.13–0.24 nm inside the exact
 reduction's at the lumen, and 0.21–0.40 nm inside at the outer surface. The same bins, placed at
 their centres `(j + ½)w`, agree with the exact reduction to ≤ 0.01 nm. So the error lies entirely
-in the index-to-radius map, not in the binning **[tested: tests/tier1/test_val05_geometry.py::test_val05_the_attribution_splits_the_offset_into_erratum_and_edit] [verified][^wp20-plan]** (WP20 plan, Design §1, 26 Sep 2026).
+in the index-to-radius map, not in the binning **[tested: tests/tier1/test_val05_geometry.py::test_val05_the_attribution_splits_the_offset_into_erratum_and_edit]** **[verified][^wp20-plan]** (WP20 plan, Design §1, 26 Sep 2026).
 At L = 15 nm a feature at 1.65 nm reads 1.5744 nm and one at 5.66 nm reads 5.4615 nm **[tested: tests/tier1/test_val05_geometry.py::test_val05_pqr2grid_radius_check_values]**
 (`validation/geometry.py`, `pqr2grid_radius`).
 
@@ -167,7 +167,7 @@ of overlapping and superfluous vertices", and it goes beyond it.
 with no `1/(2πr)`, whose planar integral is the net charge: the `e/m²` convention of the delivered
 table (G5). It is a pointer for Phase 3's FR-13.
 
-### 1.3 Stage 4 on real and synthetic inputs, measured [tested: tests/tier2/test_contour_2wcd.py::test_ver51_2wcd_contour] [tested: tests/tier3/test_density_ensemble.py::test_ver51_clya_as_contour] [tested: tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form] [verified][^wp20-plan] {#13-stage-4-on-real-and-synthetic-inputs-measured}
+### 1.3 Stage 4 on real and synthetic inputs, measured **[tested: tests/tier2/test_contour_2wcd.py::test_ver51_2wcd_contour]** **[tested: tests/tier3/test_density_ensemble.py::test_ver51_clya_as_contour]** **[tested: tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form]** **[verified][^wp20-plan]** {#13-stage-4-on-real-and-synthetic-inputs-measured}
 
 `nanopnp` stage 4 at its defaults (isolevel 0.25, Taubin, `simplify_tol_nm` 0.02, h = 0.05 nm,
 closing and opening by 2h), 26 September 2026 (`SPECIFICATION.md` §5.2.1; VER-51).
@@ -201,10 +201,10 @@ samples (0.33 nm at h/2 spacing), and the grid-scale staircase (k = 1) keeps 0.0
 [tested: tests/tier1/test_knowledge_arithmetic.py::test_taubin_circulant_pass_band_and_staircase_attenuation]. Source: `geometry/contour.py` (`taubin`), WP20 plan Design §3.
 
 The probe-radius profile costs frames x atoms x planes distances, 7.8e8 for the 50-frame ClyA-AS
-ensemble, a few seconds, batched per frame and bounded by `CHUNK_ELEMENTS` (32 MB of float64) [tested: tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form] [verified][^wp20-plan].
+ensemble, a few seconds, batched per frame and bounded by `CHUNK_ELEMENTS` (32 MB of float64) **[tested: tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form]** **[verified][^wp20-plan]**.
 Source: `geometry/probe.py`, WP20 plan Design §5.
 
-### 1.4 2WCD against the reference polygon, and the isolevel lever [tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon] [tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_isolevel_sweep_is_strictly_increasing] [tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_frozen_case_conductance] [tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_mesh_against_the_reference_figures] [verified][^wp22-plan] {#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever}
+### 1.4 2WCD against the reference polygon, and the isolevel lever **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_isolevel_sweep_is_strictly_increasing]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_frozen_case_conductance]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_mesh_against_the_reference_figures]** **[verified][^wp22-plan]** {#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever}
 
 > **Registration.** 2WCD sits at `Z_MD` = 5.6553 nm over residues 8–292 (§1.5); the bullets below
 > were computed at 5.63 nm, the centroid with residue 7 included, and are a sensitivity reference.
@@ -215,7 +215,7 @@ Source: `geometry/probe.py`, WP20 plan Design §5.
 > at 0.416. The frozen case at `size_scale` 2 gives −6.59 % (14,116 triangles). The default-size
 > mesh is 44,987 triangles, minimum SICN 0.6956 (mean 0.9862), minimum gamma 0.6223 (mean
 > 0.9843). The rms-optimal offset, 4.5827 nm, now lies 0.035 nm from the registration. It is a
-> diagnostic and is never used **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon] [verified][^wp22-plan]**, `tests/tier2/test_val05_2wcd.py`, 30 Sep 2026.
+> diagnostic and is never used **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]** **[verified][^wp22-plan]**, `tests/tier2/test_val05_2wcd.py`, 30 Sep 2026.
 
 Measured on 28 September 2026 by the WP22 plan's prototype (Design §4), and again by the
 implementation, `nanopnp.validation.geometry` through `tests/tier2/test_val05_2wcd.py`, the same

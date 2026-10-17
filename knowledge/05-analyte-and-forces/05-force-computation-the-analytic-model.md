@@ -52,7 +52,7 @@ using the full hydrodynamic stress tensor to calculate the force, rather than ju
 drag*". T_H is the **same** tensor as in the momentum equation (`knowledge/01-physics-epnpns/02-governing-equations.md#23-navierstokes-variable-density-and-viscosity`), so η
 is the corrected position-dependent viscosity — the integrand inherits the wall correction.
 
-**Sign, resolved [tested: tests/tier1/test_forces.py::test_num28_hydrodynamic_stress_check_values] [tested: tests/tier2/test_stokes_drag.py::test_ver19_the_three_routes_agree_on_the_drag].** `T_H = p I − η[∇u + (∇u)ᵀ]` as printed above is the *negative* of the
+**Sign, resolved** **[tested: tests/tier1/test_forces.py::test_num28_hydrodynamic_stress_check_values]** **[tested: tests/tier2/test_stokes_drag.py::test_ver19_the_three_routes_agree_on_the_drag]**. `T_H = p I − η[∇u + (∇u)ᵀ]` as printed above is the *negative* of the
 Cauchy stress the momentum equation is written in, which is `T_H = −p I + 2 η sym ∇u` with
 `∇·T_H + f = Re ϱ(u·∇)u` — a positive pressure pushing outward. NUM-28 and
 `post/forces.hydrodynamic_stress` use the momentum-equation convention, because the domain form is

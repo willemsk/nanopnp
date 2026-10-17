@@ -176,9 +176,7 @@ def test_ngsolve_traps_10_12_13_14_and_19_forms_and_spaces() -> None:
     gf.Set(ngs.CF(2.0))
     scratch = ngs.GridFunction(fes)
     scratch.Set(ngs.CF(5.0), definedon=mesh.Boundaries("bottom"))
-    gf.vec.data = (
-        ngs.Projector(b_dofs, False) * gf.vec + ngs.Projector(b_dofs, True) * scratch.vec
-    )
+    gf.vec.data = ngs.Projector(b_dofs, False) * gf.vec + ngs.Projector(b_dofs, True) * scratch.vec
     assert np.allclose(gf.vec.FV().NumPy()[free_mask], before[free_mask])
     assert float(gf(mesh(0.5, 0.0))) == pytest.approx(5.0)
     assert float(gf(mesh(0.5, 1.0))) == pytest.approx(2.0)

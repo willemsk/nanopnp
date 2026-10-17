@@ -60,7 +60,7 @@ Consequences that must be reproduced: at **V_bias > 0** cations move **trans -> 
 pore is added to the grounded cis reservoir (T `sec:transport:methods` L1631-1633). Current is
 integrated over the **cis** boundary (eq. `eq:currentsim`).
 
-### 2.1 The bilayer on a structure-derived profile, measured [tested: tests/tier1/test_region.py::test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region] [tested: tests/tier2/test_region_reference.py::test_ver52_the_derived_region_has_the_reference_topology] [tested: tests/tier2/test_pipeline_2wcd.py::test_ver53_2wcd_meshes_at_the_default_sizes] {#21-the-bilayer-on-a-structure-derived-profile-measured}
+### 2.1 The bilayer on a structure-derived profile, measured **[tested: tests/tier1/test_region.py::test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region]** **[tested: tests/tier2/test_region_reference.py::test_ver52_the_derived_region_has_the_reference_topology]** **[tested: tests/tier2/test_pipeline_2wcd.py::test_ver53_2wcd_meshes_at_the_default_sizes]** {#21-the-bilayer-on-a-structure-derived-profile-measured}
 
 Stage 5 (WP21) derives the membrane's inner edge from the profile rather than drawing it. On each
 plane `z = ±1.4` nm (model frame) the lumen-adjacent body interval is the profile's two smallest
@@ -93,7 +93,7 @@ profile (SPECIFICATION.md §5.2.1 NOTE on the membrane junction).
 - **The 1.85 nm trans-tip offset is the fixture's own** (pore axial extent −1.85 ≤ z, bilayer
   centre 0). Applying it to 2WCD is a test-time registration, not a VAL-05 claim.
 
-### 2.2 The ion-exclusion shell and the derived `χ` on 2WCD, measured [tested: tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bound] [tested: tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded] [tested: tests/tier2/test_exclusion_2wcd_walk.py::test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report] [verified][^wp30-plan] {#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured}
+### 2.2 The ion-exclusion shell and the derived `χ` on 2WCD, measured **[tested: tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_with_a_shell_meshes_and_every_wall_node_clears_the_lower_bound]** **[tested: tests/tier2/test_exclusion_2wcd.py::test_ver59_2wcd_chi_at_delta_h_c_costs_and_errors_are_recorded]** **[tested: tests/tier2/test_exclusion_2wcd_walk.py::test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report]** **[verified][^wp30-plan]** {#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured}
 
 WP30 (FR-15, VER-59), on the prepared 2WCD registered by its C-alpha centroid (VAL-05's frame),
 `h_c` = 0.05 nm, with the shell at `a` = 0.25 nm (`a_Na/2`) and `δ` = 0.15 nm
@@ -129,3 +129,4 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 ---
 
 [^wp21-plan]: `docs/plans/wp21-region-and-meshing.md`, Design §1 (chord uniqueness and four-crossing topology).
+[^wp30-plan]: `docs/plans/wp30-ion-exclusion-and-derived-dielectric.md`, Design §1 and Outcomes.

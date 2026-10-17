@@ -51,7 +51,7 @@ verified:
   produces an object that reports one configuration in its provenance and evaluates another, and the
   run that follows calls itself PNP-NS, converges, and is ePNP-NS. That makes the PHY-21 ablation
   compare a configuration against itself. Rebuild the resolved models whenever the switches change,
-  and refuse a pair that disagrees. **[tested: tests/tier1/test_electrolyte.py::test_phy21_with_switches_changes_the_behaviour_not_only_the_record] [tested: tests/tier1/test_electrolyte.py::test_phy21_switches_and_corrections_cannot_disagree]**
+  and refuse a pair that disagrees. **[tested: tests/tier1/test_electrolyte.py::test_phy21_with_switches_changes_the_behaviour_not_only_the_record]** **[tested: tests/tier1/test_electrolyte.py::test_phy21_switches_and_corrections_cannot_disagree]**
 - **Two errors can cancel and hide both.** The 1D limiting-current benchmark passed for a while at
   the wrong film length *because* of the bug above: a 100 nm film is space-charge-limited and reads
   14 % high against the electroneutral closed form, while the silently-active corrections broke the
@@ -61,12 +61,12 @@ verified:
   as `c^(-1/2)`, so at 1e-3 of bulk it is thirty-two times larger — 9.6 nm at 1 M. A benchmark that
   justifies its geometry with the bulk value can be an order of magnitude out. The signature of a
   space-charge-limited film is that the plateau current stops depending on the electrode
-  concentration at all. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios] [tested: tests/tier2/test_pnp_benchmarks.py::test_ver16_current_saturates_at_the_limiting_value]**
+  concentration at all. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios]** **[tested: tests/tier2/test_pnp_benchmarks.py::test_ver16_current_saturates_at_the_limiting_value]**
 - **`d` is a discrete field, so it must travel with the solution, not be recomputed.** Two calls to
   the same distance solver return grid functions that differ at round-off, and a residual reassembled
   against the second is a *different operator* from the one that was solved. Any post-processing that
   rebuilds the flux — the ψ-indicator current does — or any warm start that re-solves a converged
-  state must read `d` back off the solution. **[tested: tests/tier1/test_solution_state.py::test_ver34_the_wall_distance_field_is_restored_and_not_re_solved] [tested: tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing]**
+  state must read `d` back off the solution. **[tested: tests/tier1/test_solution_state.py::test_ver34_the_wall_distance_field_is_restored_and_not_re_solved]** **[tested: tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing]**
 - **The Langevin function switches to its `x/3` limit at `x = 3e-4`.** `coth(x) - 1/x` has relative
   error about `3 eps / x^2` and the series `x/3` has `x^2/15`; they cross near `3e-4`, both accurate to
   about 7e-9. A cutoff of 1e-8 is inside the cancellation region: `L(1.1e-8)` evaluates to exactly zero

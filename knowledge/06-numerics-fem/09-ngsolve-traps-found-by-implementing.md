@@ -202,7 +202,7 @@ computed order at 5. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_
 So a minimum integration order cannot be guaranteed by passing the *deficit* between that minimum
 and an assumed base — the assumption is unverifiable, and for a quotient NGSolve's estimate can be
 as low as 2. A guarantee of order `n` has to come from a bonus of `n` on its own. Measured orders
-for the axis trap: order 2 gives NaN on `1/r`, orders 3, 4, 5 and 8 do not. **[tested: tests/tier2/test_axis_quadrature.py::test_ver07_order_two_returns_nan_on_an_axis_touching_mesh] [tested: tests/tier2/test_axis_quadrature.py::test_ver07_singular_integral_is_correct_at_the_guaranteed_order]**
+for the axis trap: order 2 gives NaN on `1/r`, orders 3, 4, 5 and 8 do not. **[tested: tests/tier2/test_axis_quadrature.py::test_ver07_order_two_returns_nan_on_an_axis_touching_mesh]** **[tested: tests/tier2/test_axis_quadrature.py::test_ver07_singular_integral_is_correct_at_the_guaranteed_order]**
 
 **6. The reaction flux is the residual `a(u,v) - f(v)`, so the load form must be subtracted.**
 `BilinearForm.Apply` gives `a(u, ·)` alone. Omitting `f` on a problem with a source biases the flux
@@ -252,13 +252,13 @@ by material is not enough, because the node still has the interface's coordinate
 element's sample points a small fraction towards that element's own centroid fixes it; the fraction
 has to be big enough to beat the location tolerance. Measured on the analytic pore at `maxh` 6 nm
 and 2 nm: 1e-6 still resolves into the solid, 1e-5 is the first that does not, and 1e-4 leaves an
-order of margin while moving a P2 value by 1e-4 of its variation across the element. **[tested: tests/tier1/test_gates.py::test_sampler_covers_the_p2_nodal_set] [tested: tests/tier2/test_coupled_gates.py::test_num17_gates_sample_the_fluid_only]**
+order of margin while moving a P2 value by 1e-4 of its variation across the element. **[tested: tests/tier1/test_gates.py::test_sampler_covers_the_p2_nodal_set]** **[tested: tests/tier2/test_coupled_gates.py::test_num17_gates_sample_the_fluid_only]**
 
 **12. `GridFunction.Set` on a compound space raises rather than dispatching to the components.**
 `gf.Set(CF(1.0), definedon=mesh.Boundaries(name))` on a product space raises `CompoundFESpace does
 not have an evaluator for BND!`. Build the boundary indicator of NUM-25 on one component —
 `gf.components[i].Set(...)` — which is what you want anyway: the inner product with the residual
-then picks out one equation's flux rather than the sum over all of them. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_10_12_13_14_and_19_forms_and_spaces] [tested: tests/tier1/test_reaction_flux.py::test_num25_vector_indicator_selects_one_block_of_a_product_space]**
+then picks out one equation's flux rather than the sum over all of them. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_10_12_13_14_and_19_forms_and_spaces]** **[tested: tests/tier1/test_reaction_flux.py::test_num25_vector_indicator_selects_one_block_of_a_product_space]**
 
 **13. `ngsolve.grad(gridfunction)` evaluated on a boundary region returns the *surface* gradient of
 the trace, silently dropping the normal derivative.** The surface route of NUM-28 needs the volume
@@ -280,13 +280,13 @@ to go on asking exactly, because the failure it exists to catch is a mesh mirror
 which is a sign error; a tolerance wide enough to pass round-off is a tolerance that has to justify
 its width. And a content hash over the coordinate bytes makes two runs of the same mesher two
 different meshes and two cache entries. Snap `|r| < 1e-9` nm to zero on the way into the in-memory
-mesh, for every route in, the meshers' own included. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent] [tested: tests/tier1/test_mesh_adapter.py::test_if06_a_mesh_off_the_half_plane_is_refused]**
+mesh, for every route in, the meshers' own included. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]** **[tested: tests/tier1/test_mesh_adapter.py::test_if06_a_mesh_off_the_half_plane_is_refused]**
 
 **16. `VoxelCoefficient`'s value array is indexed `[axis-2, axis-1]`.** For a 2D grid over
 `(r, z)` the array must be `values[i_z, i_r]`. Passing the transpose raises nothing: a field built
 to be `10r + z` returned 1.0 at `(r=1, z=0)` where 10.0 was intended, and **agreed exactly** at the
 symmetric sample `(0.5, 0.5)` — so a test that samples on the diagonal passes on a transposed field.
-Assert against a field that is not symmetric in its arguments, at an off-diagonal point. **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_reproduces_a_field_that_is_not_symmetric] [tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]**
+Assert against a field that is not symmetric in its arguments, at an off-diagonal point. **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_reproduces_a_field_that_is_not_symmetric]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]**
 
 **17. `VoxelCoefficient` continues by the clamped edge value outside its box, not by zero** — as its
 docstring says, and as measured beyond the box in `r` and in `z`. For a charge grid this is not a
@@ -295,14 +295,14 @@ detail: the reference mesh is a half-disc of radius 250 nm (98,175 nm²) against
 value array with a ring of zeros and extend the box by one spacing each way; the field is then zero
 outside *and* continuous, where an `IfPos` window would be zero and discontinuous. Gate what the
 padding threw away by refusing a grid whose boundary ring is not negligible against its interior.
-**[tested: tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_is_zero_outside_the_grid_box] [tested: tests/tier1/test_charge_fields.py::test_ver29_the_truncation_gate_names_the_ring_value_and_its_location]**
+**[tested: tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_is_zero_outside_the_grid_box]** **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_truncation_gate_names_the_ring_value_and_its_location]**
 
 **18. `extra_order=3` on a singular form is not a refinement.** `Measures.bonus_order(singular=True)`
 takes `max(extra, 3)` — NUM-07's floor for a form carrying `1/r` — so asking for three extra orders
 on such a form evaluates at *exactly* the assembly order and returns a bit-identical number. A
 quadrature-agreement gate written that way compares a value with itself and passes unconditionally.
 Measured on the delivered ClyA charge table: `extra=0` and `extra=3` both give -71.289538 e, while
-`extra=6` gives -71.957178 e. Ask for enough extra orders to clear the floor. **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_quadrature_check_compares_two_genuinely_different_orders] [tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]**[^wp9-clya-aliasing]
+`extra=6` gives -71.957178 e. Ask for enough extra orders to clear the floor. **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_quadrature_check_compares_two_genuinely_different_orders]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]**[^wp9-clya-aliasing]
 
 **19. `sqrt` of an exactly-zero vector puts `NaN` in the Jacobian, but not in the residual.** A
 stabilisation parameter built from the lagged grid function is constant with respect to the trial
@@ -332,7 +332,7 @@ because `IfPos` differentiates branchwise with no division, which is why the sca
 Fix: floor inside the root, `√(v·v + ε²)` with `ε` the same floor already guarding the reciprocal.
 At `ε = 1e-30` the perturbation to a magnitude of order 1 is `5e-61`, below the last bit of a double,
 and the derivative becomes `0/1e-30 = 0` exactly. Verify on the **assembled Jacobian entries**: a
-residual norm reports zero, not `NaN`. **[tested: tests/tier1/test_stabilisation.py::test_ver41_the_linearisation_is_finite_at_the_zero_wind_cold_state] [tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_10_12_13_14_and_19_forms_and_spaces]**
+residual norm reports zero, not `NaN`. **[tested: tests/tier1/test_stabilisation.py::test_ver41_the_linearisation_is_finite_at_the_zero_wind_cold_state]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_10_12_13_14_and_19_forms_and_spaces]**
 
 **Trap: a coefficient built from `definedon` fields reads their zero everywhere else.** The
 concentrations live on the fluid, so off it they evaluate to 0, `average_concentration` clamps
@@ -343,7 +343,7 @@ number was near the right one only by accident: under author ruling 13 `⟨c⟩`
 fluid, and water there is ion-free, `ε_r,f⁰` = 78.15, which the code now sets as such. The same trap
 made the fluid side of a χ blend discard χ, because its solid branch defaulted to the fluid value.
 Any expression evaluated on a material its inputs are not defined on has to be given a value there
-deliberately. (Codebase review of 2026-09-28, CR-2.) **[tested: tests/tier1/test_dielectric_field.py::test_ver30_water_off_the_fluid_is_ion_free_water] [tested: tests/tier1/test_dielectric_field.py::test_ver30_blend_takes_the_whole_solid_branch_not_one_constant]**
+deliberately. (Codebase review of 2026-09-28, CR-2.) **[tested: tests/tier1/test_dielectric_field.py::test_ver30_water_off_the_fluid_is_ion_free_water]** **[tested: tests/tier1/test_dielectric_field.py::test_ver30_blend_takes_the_whole_solid_branch_not_one_constant]**
 
 **20. An explicit integration rule in `dx` agrees with `Integrate(·, order=...)` to round-off.**
 `dx(intrules={ngs.TRIG: ngs.IntegrationRule(ngs.TRIG, n), ngs.QUAD: ngs.IntegrationRule(ngs.QUAD, n)})`
@@ -353,7 +353,7 @@ in a `LinearForm` (and in a residual `BilinearForm` applied to zero) gives the s
 resolved 0.5 nm alternating field, order 3 against 8 was 1.2 × 10⁻² off, leaving the solve with
 a charge 12 times QR-03's conservation budget while the order-8 gate passed at 2 × 10⁻⁵.
 Sharing one rule through `Measures.volume(..., rule_order=n)` and `Measures.integrate(..., rule_order=n)`
-makes the operator and its gate one rule exactly. **[tested: tests/tier1/test_charge_quadrature.py::test_qr03_the_gate_measures_the_charge_the_solve_assembles] [tested: tests/tier1/test_charge_quadrature.py::test_qr03_every_fixed_charge_source_carries_the_charge_s_rule]**
+makes the operator and its gate one rule exactly. **[tested: tests/tier1/test_charge_quadrature.py::test_qr03_the_gate_measures_the_charge_the_solve_assembles]** **[tested: tests/tier1/test_charge_quadrature.py::test_qr03_every_fixed_charge_source_carries_the_charge_s_rule]**
 
 ### 8.1.1 Mesh-integral error on a sub-element-scale field converges in neither `h` nor order
 
@@ -374,9 +374,9 @@ order/order+N quadrature agreement beside the conservation figure, and let it be
 so the diagnostic says "the mesh under-resolves the supplied field" rather than "charge was lost".
 Second, the fix is on the producer side — deposit onto the finite-element space and rescale to
 `Q_net`, which conserves by construction — and no amount of consumer-side effort substitutes for it.
-**[tested: tests/tier2/test_charge_conservation.py::test_ver29_a_coarsened_mesh_fails_the_quadrature_gate_not_the_conservation_one] [tested: tests/tier1/test_charge_deposit.py::test_ver01_ver02_correct_deposit_passes_every_gate]**[^wp9-clya-aliasing]
+**[tested: tests/tier2/test_charge_conservation.py::test_ver29_a_coarsened_mesh_fails_the_quadrature_gate_not_the_conservation_one]** **[tested: tests/tier1/test_charge_deposit.py::test_ver01_ver02_correct_deposit_passes_every_gate]**[^wp9-clya-aliasing]
 
-### 8.1.3 An OCC-generated extent is one ulp off the number the geometry was given **[tested: tests/tier1/test_qoi_stage.py::test_fr23_the_generated_mesh_gives_the_same_band_to_mesh_round_off] [tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]** {#813-an-occ-generated-extent-is-one-ulp-off-the-number-the-geometry-was-given}
+### 8.1.3 An OCC-generated extent is one ulp off the number the geometry was given **[tested: tests/tier1/test_qoi_stage.py::test_fr23_the_generated_mesh_gives_the_same_band_to_mesh_round_off]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]** {#813-an-occ-generated-extent-is-one-ulp-off-the-number-the-geometry-was-given}
 
 `CylindricalPoreGeometry(membrane_thickness_nm=6.0, ...)` produces a mesh whose `membrane` vertices
 span `z ∈ [−3.0, 3.000000000000001]`: the upper face is one unit in the last place high, and
@@ -387,7 +387,7 @@ geometry formula to about 4 × 10⁻¹⁶ nm and not exactly. Assert such an ide
 `MeshData` with exact coordinates, and assert the meshed one to a tolerance far below any length in
 the problem; an `==` against a meshed extent is a test that will fail on some other platform's OCC.
 
-### 8.1.4 A GEOS round-join offset, then step 6, is not "within a chord's sagitta" of the offset **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset] [tested: tests/tier1/test_exclusion_shell.py::test_ver59_an_outer_surface_inside_the_bound_is_refused_naming_where]** {#814-a-geos-round-join-offset-then-step-6-is-not-within-a-chords-sagitta-of-the-offset}
+### 8.1.4 A GEOS round-join offset, then step 6, is not "within a chord's sagitta" of the offset **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset]** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_an_outer_surface_inside_the_bound_is_refused_naming_where]** {#814-a-geos-round-join-offset-then-step-6-is-not-within-a-chords-sagitta-of-the-offset}
 
 Found building stage 5's ion-exclusion shell (WP30). `Polygon(P).buffer(a, quad_segs=8)` places
 every vertex of its round joins exactly on the offset circle: the vertex distance to `P` equals `a`
@@ -430,7 +430,7 @@ The closing moves the surface outward where it fills a groove. On 2WCD at `a` = 
 `wall` nodes lie beyond `a + 10⁻⁶` nm (`knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured`).
 
 **Netgen keeps every ring vertex and rounds each edge's segment count, so a shell's wall fails the
-gate in bands of wall target** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h] [tested: tests/tier1/test_exclusion_shell.py::test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed]** (WP30 review, 2 October 2026, netgen 6.2.2606). Given
+gate in bands of wall target** **** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h]** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed]** (WP30 review, 2 October 2026, netgen 6.2.2606). Given
 `maxh = h` on a straight edge of length `L` whose ends it must keep, netgen cuts it into about
 `⌊L/h + 0.4⌋` segments: one up to `L/h` ≈ 1.5, two from about 1.6, three from about 2.6. The ring's
 edges are 1.05–1.15 `h_c` ≈ 0.0525 nm, so the mean segment is up to 1.6 × the target wherever the
@@ -485,7 +485,7 @@ The rule: **a test that asserts a quadrature-error magnitude must run on a struc
 that asserts a converged physical quantity may use whatever mesh the pipeline deploys, because that
 number is mesh-independent by construction and an unstructured mesh is then the more honest one.
 
-### 8.1.5 Within one build, a deployed walk's quantities repeat bit for bit **[tested: tests/tier1/test_stability_golden.py::test_ver62_a_recorded_mesh_holds_round_off] [tested: tests/tier1/test_number_stability_file.py::test_ver62_every_golden_walk_is_asserted_by_exactly_one_test]**[^wp35-simd-dispatch] {#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit}
+### 8.1.5 Within one build, a deployed walk's quantities repeat bit for bit **[tested: tests/tier1/test_stability_golden.py::test_ver62_a_recorded_mesh_holds_round_off]** **[tested: tests/tier1/test_number_stability_file.py::test_ver62_every_golden_walk_is_asserted_by_exactly_one_test]**[^wp35-simd-dispatch] {#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit}
 
 The converse of §8.1.2, measured for VER-62 (WP35). On one Linux x86-64 build (Python 3.12,
 `uv.lock` at `v0.4.0`, `OMP_NUM_THREADS=OPENBLAS_NUM_THREADS=MKL_NUM_THREADS=1`), seven gated walks
@@ -510,7 +510,7 @@ and held to ≤ 1.9 × 10⁻¹³. So equal mesh hashes and zero drift hold on on
 not across every machine sharing a platform key.
 
 **The split is AVX-512 against everything below it, and a moved mesh is not always a moved number**
-**[tested: tests/tier1/test_stability_golden.py::test_ver62_mesh_moved_tolerance_is_the_safety_factor_on_the_spread] [tested: tests/tier1/test_number_stability_file.py::test_ver62_mesh_moved_tolerance_is_derived_and_under_the_ceiling]**[^wp35-simd-dispatch] (WP35 amendment, 5 October 2026; NumPy 2.5.2, Python 3.12, threads pinned to 1). The
+**[tested: tests/tier1/test_stability_golden.py::test_ver62_mesh_moved_tolerance_is_the_safety_factor_on_the_spread]** **[tested: tests/tier1/test_number_stability_file.py::test_ver62_mesh_moved_tolerance_is_derived_and_under_the_ceiling]**[^wp35-simd-dispatch] (WP35 amendment, 5 October 2026; NumPy 2.5.2, Python 3.12, threads pinned to 1). The
 seven walks were recorded on an AVX2 machine at its native `X86_V3` and again with
 `NPY_DISABLE_CPU_FEATURES` capping it at the `X86_V2` baseline. All seven deploy the same mesh at both
 levels, and every value agrees **bit for bit**. Against the `X86_V4` (AVX-512) recording:
@@ -538,7 +538,7 @@ every leg, is its first test.
 ### 8.2 Measured: the reaction flux really is worth it
 
 Gouy-Chapman at 0.1 M, ζ̃ = 2, P2, planar slab. Wall gradient recovered two ways and compared with
-the analytic `-φ̃'(0) = (2/λ_D) sinh(ζ̃/2)`. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts] [tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver12_grahame_surface_charge]**
+the analytic `-φ̃'(0) = (2/λ_D) sinh(ζ̃/2)`. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]** **[tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver12_grahame_surface_charge]**
 
 | mesh | variational reaction flux | pointwise `grad(u)` at the wall |
 |---|---|---|
@@ -555,18 +555,18 @@ gradient- or cross-section-based extraction.
 - **P2 gives clean O(h³) in L² on the r-weighted axisymmetric form.** Debye-Hückel in a cylinder,
   relative weighted L² error against `ζ I₀(r/λ)/I₀(a/λ)`: 1.12e-3 → 1.48e-4 → 1.99e-5 → 2.46e-6 for
   `maxh` 0.4 → 0.05 nm, i.e. rates 2.92, 2.90, 3.01. The axisymmetric weak form and the natural
-  axis condition are correct. **[tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver13_debye_huckel_in_a_cylinder] [tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver13_axis_condition_is_natural_not_dirichlet]**
+  axis condition are correct. **[tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver13_debye_huckel_in_a_cylinder]** **[tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver13_axis_condition_is_natural_not_dirichlet]**
 - **UMFPACK *is* built into the pip wheel**: `ngsolve.config.USE_UMFPACK` is True and
   `mat.Inverse(freedofs, inverse="umfpack")` works. `USE_MUMPS`, `USE_PARDISO` and `USE_MKL` remain
   False, and `inverse="pardiso"` raises "MKL Pardiso is not available". So the default direct path
   of NUM-21 is available out of the box; only the GPL-2+ licensing of UMFPACK is at issue, not its
-  presence. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts] [tested: tests/tier1/test_linear_solver.py::test_num21_both_licensed_paths_are_available]**
+  presence. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]** **[tested: tests/tier1/test_linear_solver.py::test_num21_both_licensed_paths_are_available]**
 - **The coupled axisymmetric system converges at the Taylor-Hood rates under MMS.** Manufactured
   `φ, c_i, u, p` on a 2 × 4 nm cylinder, constant transport coefficients with the steric `β_i`
   retained, `maxh` 0.4 → 0.2 → 0.1 nm (2 × 10⁴ DOF at the finest). Relative `r`-weighted L² rates:
   2.9–3.6 for `φ`, 3.0–4.0 for `c_i`, 3.0–3.5 for `u`, and **2.7 for `p`**. The pressure rate is the
   P1 half of the P2/P1 pair, not a shortfall — asserting O(h³) there would be asserting something
-  untrue of a correct solver. **[tested: tests/tier2/test_mms.py::test_ver18_second_order_fields_converge_at_third_order] [tested: tests/tier2/test_mms.py::test_ver18_taylor_hood_pressure_converges_at_its_own_order]**
+  untrue of a correct solver. **[tested: tests/tier2/test_mms.py::test_ver18_second_order_fields_converge_at_third_order]** **[tested: tests/tier2/test_mms.py::test_ver18_taylor_hood_pressure_converges_at_its_own_order]**
 - **An uncurved mesh of a curved Dirichlet boundary costs the P2 rate an order.** Netgen meshes
   are affine unless `Curve` is called, so a grounded sphere of radius `R` is a polygon whose chords
   sag by `h²/(8R)`, and the potential inside carries that `O(h²)` geometric error whatever the
@@ -574,11 +574,11 @@ gradient- or cross-section-based extraction.
   `poisson`, `P2`), letting the arc follow the far field's 1.6/0.8/0.4 nm held the disc error's rate
   at 2.02 between the finest two levels; fixing the arc at 0.02 nm at every level gave 3.00, the
   potential's own. An analytic benchmark on a curved boundary pins the boundary's element size, or
-  curves the mesh, before it reads a rate. **[tested: tests/tier2/test_charge_potential_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_on_the_axis] [tested: tests/tier2/test_charge_potential_off_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_off_the_axis]**
+  curves the mesh, before it reads a rate. **[tested: tests/tier2/test_charge_potential_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_on_the_axis]** **[tested: tests/tier2/test_charge_potential_off_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_off_the_axis]**
 - **`CoefficientFunction.Diff` and `Operator("hesse")` both work on a component of a product
   space**, and `Diff` works with respect to a `GridFunction` as well as a trial proxy. That is what
   makes the PHY-23 dielectric terms expressible: `∇ε_r = Σ_i (∂ε_r/∂c_i) ∇c_i` by the chain rule,
-  with the sensitivities taken symbolically rather than by finite differences. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts] [tested: tests/tier1/test_nernst_planck.py::test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off]**
+  with the sensitivities taken symbolically rather than by finite differences. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]** **[tested: tests/tier1/test_nernst_planck.py::test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off]**
 - **A `BilinearForm` term carrying no trial function assembles and linearises correctly.**
   `a += (-f*v)*dx` with `f` a coefficient function contributes to `Apply` and contributes nothing to
   `AssembleLinearization`, which is exactly right for a manufactured or body source in a nonlinear
@@ -587,7 +587,7 @@ gradient- or cross-section-based extraction.
   `d = -√t ln w`, solved **planar** in (r, z) — for a surface of revolution the meridian-plane
   distance *is* the 3D distance. Against the exact `a - r` of a cylinder, within 1.5 nm of the
   wall: √t = 0.1 nm → 0.6 pm worst error, 1.1 % gradient jump; √t = 0.2 → 1.4 pm, 0.17 %; √t = 0.3
-  → 10 pm, 0.08 %. **[tested: tests/tier1/test_wall_distance.py::test_ver06_distance_matches_the_exact_field_near_the_wall] [tested: tests/tier1/test_wall_distance.py::test_ver06_gradient_is_continuous_to_the_stated_tolerance]**
+  → 10 pm, 0.08 %. **[tested: tests/tier1/test_wall_distance.py::test_ver06_distance_matches_the_exact_field_near_the_wall]** **[tested: tests/tier1/test_wall_distance.py::test_ver06_gradient_is_continuous_to_the_stated_tolerance]**
 - **…but the diffusion length must be resolved by the mesh it is solved on, and the default is
   sized for the wall corrections, not for a force band.** Reusing `DEFAULT_DIFFUSION_LENGTH_NM`
   (0.2 nm) to build the NUM-28 extension `w` on a mesh whose elements are 1.6 nm across leaves the
@@ -598,7 +598,7 @@ gradient- or cross-section-based extraction.
   extension. Sizing √t at a quarter of the shell width instead cured it and improved the Stokes-drag
   benchmark by a factor of thirty, from a 6 × 10⁻⁴ plateau to 2.0 × 10⁻⁵ falling monotonically.
   **The rule: √t is set by the feature the field has to resolve, and there is no single default that
-  serves both a sub-nanometre wall correction and a several-nanometre force band.** **[tested: tests/tier1/test_forces.py::TestAxialExtension::test_num28_extension_is_ez_on_the_body_and_zero_on_the_outer_boundary] [tested: tests/tier1/test_qoi_stage.py::test_num28_the_extension_shell_scales_to_the_body_in_the_mesh]**
+  serves both a sub-nanometre wall correction and a several-nanometre force band.** **** **[tested: tests/tier1/test_forces.py::TestAxialExtension::test_num28_extension_is_ez_on_the_body_and_zero_on_the_outer_boundary]** **[tested: tests/tier1/test_qoi_stage.py::test_num28_the_extension_shell_scales_to_the_body_in_the_mesh]**
 
 ### 8.4 Sweeps: the warm start, the forest, and what parallel scaling measures
 
@@ -624,7 +624,7 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   ran alongside the rest of the test suite. A wall-time comparison between two passes of the same
   work is a statement about what else the machine is doing; the iteration counts are a property of
   the solves. `MemberResult` carries both, and only the second is ever asserted on. **[tested: tests/tier2/test_sweep.py::test_ver37_the_warm_path_costs_strictly_fewer_newton_iterations]**
-- **What differs across an edge, by axis. [tested: tests/tier1/test_warm_start_descriptor.py::test_ver37_a_neighbour_along_the_bias_axis_loads_and_records_the_difference] [tested: tests/tier1/test_warm_start_descriptor.py::test_ver37_a_neighbour_along_the_salt_axis_loads_and_records_the_scales]** A bias step differs from its parent in
+- **What differs across an edge, by axis.** **[tested: tests/tier1/test_warm_start_descriptor.py::test_ver37_a_neighbour_along_the_bias_axis_loads_and_records_the_difference]** **[tested: tests/tier1/test_warm_start_descriptor.py::test_ver37_a_neighbour_along_the_salt_axis_loads_and_records_the_scales]** A bias step differs from its parent in
   `solve_hash` alone; a salt step differs in `solve_hash` **and** `model.scales`, the NUM-09 scale
   set being a function of `concentration_M`. Both are operator keys the §5.3.2 partition permits;
   a gate on either would refuse the axis outright.
@@ -637,7 +637,7 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   counts pinned to 1 per worker. Wall clock 33.5 → 22.1 → 16.8 s, so 2.0× at four workers on a
   four-core machine that is also running the parent process. Throughput over uncached members:
   2 686 → 2 034 → 1 337 points per worker-hour.
-- **One pool per plan, not one per wave, and it is worth a factor of the same size. [tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants] [tested: tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded]**
+- **One pool per plan, not one per wave, and it is worth a factor of the same size.** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]** **[tested: tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded]**
   `spawn` re-imports the package in each worker at about a second apiece. Creating the pool per
   wave put that cost into the measurement: on a nine-point grid in five waves it took
   `efficiency(4)` from 0.75 to **0.29**. The pool is now held open across the whole plan.
@@ -652,7 +652,7 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   keys the parent's walk through the solve's inputs with every payload taken from the store, and only a
   missing artefact is a cold fallback (CR-1, `tests/tier2/test_sweep_generated_mesh.py`).
 
-### 8.4.1 A sweep axis over a space key severs the forest, and the gate that fires is `fields` **[tested: tests/tier1/test_attribution.py::test_val01_ladder_rungs_are_separate_warm_start_components] [tested: tests/tier1/test_warm_start_descriptor.py::test_val01_a_warm_start_across_an_element_order_is_refused]** {#841-a-sweep-axis-over-a-space-key-severs-the-forest-and-the-gate-that-fires-is-fields}
+### 8.4.1 A sweep axis over a space key severs the forest, and the gate that fires is `fields` **[tested: tests/tier1/test_attribution.py::test_val01_ladder_rungs_are_separate_warm_start_components]** **[tested: tests/tier1/test_warm_start_descriptor.py::test_val01_a_warm_start_across_an_element_order_is_refused]** {#841-a-sweep-axis-over-a-space-key-severs-the-forest-and-the-gate-that-fires-is-fields}
 
 An axis varying `numerics.elements`, `numerics.stabilisation`, `inputs.mesh`, `physics.model`,
 `physics.flow` or `boundary_conditions.ground` writes a descriptor key `load_initial` refuses, so
@@ -666,7 +666,7 @@ refusal a P2 → P3 crossing actually produces names `fields` and prints both fi
 orders; `model.elements` is the same fact restated per field kind, gated on the same side so the two
 cannot disagree, and is the belt to `fields`'s braces rather than the key that fires. [tested: tests/tier1/test_warm_start_descriptor.py::test_val01_a_warm_start_across_an_element_order_is_refused]
 
-### 8.5 Measured: NUM-26's relative route check is inapplicable at exactly zero bias **[tested: tests/tier1/test_qoi.py::test_num26_two_vanishing_currents_do_not_divide_by_zero] [tested: tests/tier1/test_sweep_plan.py::test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid]** {#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias}
+### 8.5 Measured: NUM-26's relative route check is inapplicable at exactly zero bias **[tested: tests/tier1/test_qoi.py::test_num26_two_vanishing_currents_do_not_divide_by_zero]** **[tested: tests/tier1/test_sweep_plan.py::test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid]** {#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias}
 
 At `V = 0` the current is zero, and both extraction routes return round-off:
 `I_ψ = 2.288 × 10⁻²⁷` A against `I_reaction = 4.606 × 10⁻²⁵` A on the toy pore above. The relative
@@ -688,7 +688,7 @@ Not fixed here. Making the check inapplicable rather than failing at zero curren
 what "no current" is, which is a scale the extraction does not currently carry, and NUM-26 is a
 Phase-1 headline gate. Recorded for whoever owns it next.
 
-### 8.6 Measured: locating the gate sample points costs 100× evaluating on them **[tested: tests/tier1/test_gates.py::test_sampler_locates_its_points_once] [tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**[^wp45-numerics-strip] {#86-measured-locating-the-gate-sample-points-costs-100-evaluating-on-them}
+### 8.6 Measured: locating the gate sample points costs 100× evaluating on them **[tested: tests/tier1/test_gates.py::test_sampler_locates_its_points_once]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**[^wp45-numerics-strip] {#86-measured-locating-the-gate-sample-points-costs-100-evaluating-on-them}
 
 On a 144,628-element mesh, `FieldSampler` over the fluid holds 1,012,396 points (duplicates kept on
 purpose, so each stays inside its own element) and takes 2.7 s to build and **21.7 s** to locate;

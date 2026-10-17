@@ -287,4 +287,3 @@ def test_limiting_current_depletion_debye_and_mobility_ratios() -> None:
     assert mu_ratio == pytest.approx(0.63, abs=0.01)
     assert d_ratio == pytest.approx(0.92, abs=0.01)
     assert debye_length_nm(0.001) == pytest.approx(9.6, abs=0.05)
-

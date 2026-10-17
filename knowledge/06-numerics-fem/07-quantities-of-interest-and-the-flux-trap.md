@@ -97,7 +97,7 @@ to 1 on a Dirichlet electrode (Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.
 **Derived QoIs.** `t₊ = I₊/(I₊ + I₋)` from the same `ψ` integrals. Rectification
 `α = |I(+V)|/|I(−V)|`. Conductance `G = I/V_b`.
 
-### 7.1 Measured: the two routes agree, and the band does not matter **[tested: tests/tier2/test_current_routes.py::test_ver11_the_two_current_routes_agree_at_the_lowest_envelope_bias] [tested: tests/tier2/test_current_routes.py::test_num24_the_indicator_current_does_not_depend_on_the_band]** {#71-measured-the-two-routes-agree-and-the-band-does-not-matter}
+### 7.1 Measured: the two routes agree, and the band does not matter **[tested: tests/tier2/test_current_routes.py::test_ver11_the_two_current_routes_agree_at_the_lowest_envelope_bias]** **[tested: tests/tier2/test_current_routes.py::test_num24_the_indicator_current_does_not_depend_on_the_band]** {#71-measured-the-two-routes-agree-and-the-band-does-not-matter}
 
 Charged pore (`a` = 2 nm, `L` = 13 nm, σ_s = −0.05 C/m²), 0.5 M, classical PNP, ±50 mV, reached
 through the continuation ladder.
@@ -182,7 +182,7 @@ negative values reach the IF-07 export and the correction chain alike. It vanish
 on this toy pore, and WP8's ClyA reference mesh (44 316 triangles) is far finer than that
 everywhere, so production runs are expected clean.
 
-**Closed out under WP11: PHY-02's clamp and NUM-34's gate, and neither alone. [tested: tests/tier1/test_wall_distance.py::test_ver40_both_wall_forms_return_their_wall_value_for_every_non_positive_sample] [tested: tests/tier1/test_wall_distance.py::test_num34_the_coarse_mesh_is_refused_naming_everything_it_measured]**
+**Closed out under WP11: PHY-02's clamp and NUM-34's gate, and neither alone.** **[tested: tests/tier1/test_wall_distance.py::test_ver40_both_wall_forms_return_their_wall_value_for_every_non_positive_sample]** **[tested: tests/tier1/test_wall_distance.py::test_num34_the_coarse_mesh_is_refused_naming_everything_it_measured]**
 `FittedCorrection.evaluate` now clips `d̄` at zero before either wall form reads it, and
 `solve/stage.py` gates `min d̄ ≥ −1 × 10⁻³ nm` over the fluid once per solve wherever a wall
 correction is active. The arithmetic behind the threshold is in `SPECIFICATION.md` NUM-34.
@@ -268,7 +268,7 @@ that shell was put. **Omit it and each half of the force is a function of the ba
 while the sum is unaffected, because the two body-force terms cancel between the halves. That is
 the RSK-04 failure mode exactly: a total that agrees between routes over a split that is wrong.
 
-**Three routes, and what each is good for. [tested: tests/tier2/test_force_routes.py::test_ver22_both_halves_of_the_force_are_large_and_opposed] [tested: tests/tier2/test_force_routes.py::test_ver22_the_domain_and_surface_routes_agree_to_better_than_a_tenth_of_a_piconewton] [tested: tests/tier2/test_force_routes.py::test_ver22_the_reaction_route_confirms_the_hydrodynamic_split]**
+**Three routes, and what each is good for.** **[tested: tests/tier2/test_force_routes.py::test_ver22_both_halves_of_the_force_are_large_and_opposed]** **[tested: tests/tier2/test_force_routes.py::test_ver22_the_domain_and_surface_routes_agree_to_better_than_a_tenth_of_a_piconewton]** **[tested: tests/tier2/test_force_routes.py::test_ver22_the_reaction_route_confirms_the_hydrodynamic_split]**
 
 | Route | What it is | Independent of `w`? |
 |---|---|---|
@@ -291,7 +291,7 @@ being surface quadrature on a different support; A against C is 4.6 × 10⁻⁴ 
 **The residual `−∫ ½|E|²∇ε·w` is the Korteweg–Helmholtz force PHY-23 omits**, not a discretisation
 error: it is the gap between NUM-28 *as printed* and the force all three routes agree on. It is
 identically zero classically and −4.0 × 10⁻⁴ pN on the reference-shaped ePNP-NS case, i.e. 0.02 %
-of `F^em` there. **[tested: tests/tier2/test_force_convergence.py::test_rsk04_the_omitted_korteweg_helmholtz_term_is_measured_not_assumed] [tested: tests/tier2/test_force_routes.py::test_ver22_the_korteweg_helmholtz_residual_vanishes_in_the_classical_model]**
+of `F^em` there. **[tested: tests/tier2/test_force_convergence.py::test_rsk04_the_omitted_korteweg_helmholtz_term_is_measured_not_assumed]** **[tested: tests/tier2/test_force_routes.py::test_ver22_the_korteweg_helmholtz_residual_vanishes_in_the_classical_model]**
 
 **No `1/r` term, and `singular=True` is not needed.** For an axial `w`, `(∇w)_φφ = w_r/r = 0`, so
 the hoop components of both tensors are contracted against zero and `T:∇w = T_rz ∂_r w_z +
