@@ -124,13 +124,15 @@ if Sonnet fails.
 - [x] 694d239 3. Back the 100 pending Test Evidence markers with assertions on existing computations where possible; route historical portions through D5 (D1). Done when affected tests and bundle checks pass; mere test-name resolution is insufficient.
 
 > **Outcome — item 3.** Backed all 100 pending `Test Evidence` markers across the 17 `Test Evidence` concepts (`04-09..13`, `05-12..13`, `06-13..17`, `07-19..22`, `08-07`), added explicit assertions in the cited Tier-1 and Tier-2 suites and fast contract checks in `tests/tier1/test_reproduce_diagnostics.py` and `tests/tier2/test_envelope.py`, routed historical pre-WP45 docstring and plan timings through D5 source footnotes, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `330` to `230`.
-- [ ] 4. Link or add Tier-1 arithmetic tests, using `tests/tier1/test_knowledge_arithmetic.py` where no suitable test exists (D2). Include the nine sourced markers in the audit. Done when every executable calculation has an asserting test and affected tests pass.
+- [x] 57254c6 4. Link or add Tier-1 arithmetic tests, using `tests/tier1/test_knowledge_arithmetic.py` where no suitable test exists (D2). Include the nine sourced markers in the audit. Done when every executable calculation has an asserting test and affected tests pass.
 
 > **Outcome — item 4.** Audited all 56 `[verified]` markers across the bundle (including the 9 sourced markers), linked existing Tier-1 tests or added 15 deterministic arithmetic tests in `tests/tier1/test_knowledge_arithmetic.py` covering the remaining 26 `verified_unsourced` markers and the 3 arithmetic passages split in item 2 (`01-08:L77`, `04-01:L49`, `09-05:L29`), synchronised `verified` actor sets and `knowledge/pending.yaml` (zero `verified_unsourced` remaining), and lowered `CEILING` from `230` to `204`.
 
 *Compaction checkpoint: after item 4; resume from this plan and `git log`.*
 
 - [ ] 5. Add `tested_with` to all 17 concepts after relevant checks run; implement metadata-presence fixtures and enforcement in `validation/okf.py` and `test_okf_bundle.py`, amending VER-68 (5) together (D3). Done when each negative fixture fails for its intended reason and the real bundle passes.
+
+> **Outcome — item 5.** Verified installed runtime versions against `uv.lock`, populated non-empty `tested_with` mappings across all 17 `Library Behaviour` concepts (`06-09` and `07-01..16`), enforced non-empty `tested_with` mappings in `src/nanopnp/validation/okf.py` with negative fixtures for missing, non-mapping, empty, empty-version and stale metadata in `tests/tier1/test_okf_bundle.py`, and amended `VER-68` (5) in `SPECIFICATION.md` (`CEILING` remains `204`).
 - [ ] 6. Back software behaviours using existing suites or `tests/tier1/test_library_behaviour.py` (D3). Done when assigned assertions, metadata and bundle checks pass.
 - [ ] 7. Back NGSolve traps using existing suites or `tests/tier1/test_ngsolve_traps.py`; historical reference experiments follow D5 (D3). Done when properties and workarounds are asserted and affected tests pass.
 - [ ] 8. Resolve every remaining inventory row across `knowledge/` using domain tests (D4). Done when the full audit passes, all relevant tests run, and no unresolved claim remains.

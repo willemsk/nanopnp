@@ -1,13 +1,17 @@
 ---
 type: Library Behaviour
 title: 1. FEM backend — NGSolve/Netgen
-description: 'The FEM backend NGSolve and Netgen: why not the alternatives, and prior art.'
+description: 'The FEM backend NGSolve and Netgen: why not the alternatives, and prior
+  art.'
 tags:
 - software
 - library-behaviour
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  ngsolve: 6.2.2606
+  netgen-mesher: 6.2.2606
 ---
 
 ## 1. FEM backend — NGSolve/Netgen

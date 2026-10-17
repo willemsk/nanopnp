@@ -8,6 +8,13 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  ngsolve: 6.2.2606
+  scipy: 1.18.0
+  gmsh: 4.15.2
+  mdanalysis: 2.10.0
+  pyside6: 6.11.2
+  gemmi: 0.7.5
 ---
 
 ## 6. Licence summary

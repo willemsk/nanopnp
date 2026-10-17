@@ -17,6 +17,10 @@ sources:
 - id: wp15-plan
   resource: docs/plans/wp15-gui-3d-view-and-packaging.md
   title: WP15 GUI 3D view and packaging plan (`ngsolve_webgui_js` 0.2.39)
+tested_with:
+  pyside6: 6.11.2
+  pyinstaller: 6.22.3
+  netgen-mesher: 6.2.2606
 ---
 
 ## 5. GUI and packaging

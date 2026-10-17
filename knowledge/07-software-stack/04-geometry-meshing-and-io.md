@@ -11,6 +11,13 @@ generated:
 verified:
 - by: process:tests/tier1/test_field_export.py::test_if07_a_discontinuous_quantity_is_written_cell_centred
   at: '2026-10-16T00:00:00Z'
+tested_with:
+  scikit-image: 0.26.0
+  shapely: 2.1.2
+  gmsh: 4.15.2
+  meshio: 5.3.5
+  h5py: 3.16.0
+  netgen-mesher: 6.2.2606
 ---
 
 ## 4. Geometry, meshing and I/O

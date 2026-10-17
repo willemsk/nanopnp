@@ -21,6 +21,12 @@ sources:
 - id: wp27-plan
   resource: docs/plans/wp27-protonation-stage.md
   title: WP27 protonation stage plan, Design §1 (PDB2PQR 3.7.1 source)
+tested_with:
+  pdb2pqr: 3.7.1
+  propka: 3.5.1
+  apbs-binary: 3.4.1.1
+  numpy: 2.5.2
+  scipy: 1.18.0
 ---
 
 ## 3. Charge and electrostatics

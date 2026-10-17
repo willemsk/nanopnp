@@ -522,13 +522,21 @@ def _locked(lock: Path) -> dict[str, str]:
 
 def _check_tested_with(concept: Concept, name: str, locked: dict[str, str]) -> list[Finding]:
     declared = concept.meta.get("tested_with")
-    if not isinstance(declared, dict):
+    if declared is None:
+        if concept.meta.get("type") == "Library Behaviour":
+            return [Finding(name, 1, "Library Behaviour concept is missing tested_with")]
         return []
+    if not isinstance(declared, dict):
+        return [Finding(name, 1, "tested_with must be a mapping")]
+    if not declared:
+        return [Finding(name, 1, "tested_with mapping is empty")]
     findings: list[Finding] = []
     for package, version in declared.items():
         key = str(package).lower().replace("_", "-")
         if key not in locked:
             findings.append(Finding(name, 1, f"tested_with names {package}, absent from uv.lock"))
+        elif not _version(str(version)):
+            findings.append(Finding(name, 1, f"tested_with {package} has no version"))
         elif _version(str(version)) < _version(locked[key]):
             findings.append(
                 Finding(name, 1, f"tested_with {package} {version} is older than {locked[key]}")

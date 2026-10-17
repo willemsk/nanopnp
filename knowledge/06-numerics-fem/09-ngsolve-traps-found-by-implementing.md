@@ -19,6 +19,11 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_ngsolve_physics_small_facts
   at: '2026-10-16T00:00:00Z'
+tested_with:
+  ngsolve: 6.2.2606
+  netgen-mesher: 6.2.2606
+  numpy: 2.5.2
+  sympy: 1.14.0
 ---
 
 ## 8.1 NGSolve traps found by implementing this — all silent

@@ -8,6 +8,14 @@ tags:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
+tested_with:
+  mdanalysis: 2.10.0
+  griddataformats: 1.2.0
+  pdb2pqr: 3.7.1
+  ngsolve: 6.2.2606
+  numpy: 2.5.2
+  scipy: 1.18.0
+  mypy: 2.3.1
 ---
 
 ## 8. Python version floor — the 3.10 target is not free
