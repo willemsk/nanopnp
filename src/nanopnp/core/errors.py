@@ -127,6 +127,10 @@ EXCLUDED: Final[dict[str, str]] = {
         "never by a command of the CLI: it reports that one of those commands exited nonzero, "
         "and the command's own exit code is the classified one"
     ),
+    "nanopnp.validation.costs:CostStudyError": (
+        "raised by the cost-study script, run as a module and never by a command of the CLI: it "
+        "reports a measurement that cannot be trusted, and the traceback is the diagnostic"
+    ),
     "nanopnp.io.defaults:UnknownSwitchPathError": (
         "likewise internal: the switch paths are a frozen enumeration checked by VER-24 in both "
         "directions, so an unknown one means the manifest code and the case schema have diverged "
