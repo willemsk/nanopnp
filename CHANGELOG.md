@@ -29,7 +29,14 @@ WP49: the cost study (`SPECIFICATION.md` §8.2.12 M2; REV-112, REV-113; VER-76).
   `schema_leaves`, generated from the case document's own model; the documentation build publishes
   it as `reference/case.schema.json`. A test fails when its leaves and `case_fields()` differ.
 - **The cost-study script** (REV-112): `python -m nanopnp.validation.costs`, whose record is
-  `docs/project/cost-study.json`.
+  `docs/project/cost-study.json`. The measurement found no cost over its threshold: stage 1 projects
+  to 1.14 GB at 1,000 frames (limit 4 GB), building forms is at most 0.33 % of stage 10 (limit 5 %)
+  and store IO at most 0.51 % of a cold walk (limit 10 %), so nothing was changed.
+
+### Fixed
+
+- **Main's CI on macOS and Windows** (VER-72): the check of the ngsolve stub file runs only where the
+  wheel ships it.
 
 ## [0.5.0-alpha.14] - 2026-10-17
 

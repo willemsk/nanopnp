@@ -1110,8 +1110,10 @@ claims A1, A8 and A16, checked at `645289e` (§8.2.12).
 (`structure/ensemble.py`); each continuation rung rebuilds its symbolic forms (`physics/models.py`);
 each stage reads its inputs back through the store (`pipeline/run.py`). None has been timed or sized.
 
-**Resolves it:** WP49 measures each against the threshold the Phase 4 plan registers, and fixes only
-a cost over it (M2).
+**Fixed in the WP49 plan:** measured on the quick-start pore and the prepared 2WCD
+(`docs/project/cost-study.json`). Stage 1 projects to 1.14 GB at 1,000 frames (limit 4 GB); building
+forms is 0.02 % to 0.33 % of stage 10 (limit 5 %); store IO is 0.10 % to 0.51 % of a cold walk (limit
+10 %). None is over its threshold, so nothing is changed (M2).
 
 ### REV-113 — The case schema has no JSON Schema export
 
@@ -1120,8 +1122,9 @@ a cost over it (M2).
 The case document is Pydantic v2 with `extra="forbid"` (`io/case.py`), but nothing exports it as a
 JSON Schema that a browser editor or another tool could read.
 
-**Resolves it:** WP49 publishes the export, checked against `case_fields` in both directions
-(proposed VER-76).
+**Fixed in the WP49 plan:** `case_json_schema()` exports the schema, the documentation build publishes
+it as `reference/case.schema.json`, and VER-76 checks its leaves against `case_fields` in both
+directions.
 
 ### REV-114 — The shell moves from Qt to a browser
 
