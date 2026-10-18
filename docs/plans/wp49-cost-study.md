@@ -72,7 +72,7 @@ stay independently invocable (FR-27). Models: Sonnet by default, Haiku for items
   > program changes, VER-62 is untouched and no `REV-nn` row carries a cost (M2).
 - [x] fb4801f 6. VER-76 (D6): `case_json_schema` and `schema_leaves` in `src/nanopnp/io/case_paths.py`; `tests/tier1/test_case_json_schema.py`; a VER-76 row in Appendix A of `SPECIFICATION.md`. Done when the VER-76 rows pass.
 - [x] 4deb53e 7. `docs/scripts/generate.py` writes `reference/case.schema.json`, and a link to it goes into the generated case-file reference. Add a `CHANGELOG.md` *Added* line. Done when the documentation build passes `--strict` and the file parses as JSON.
-- [ ] 8. Close: set REV-112 and REV-113 `fixed` in `docs/project/review-findings.md` and `review-items.md`, with the measured numbers. Mark this plan *delivered*, update the phase plan's *Delivered* line and replace `docs/plans/current.md`. Done when `test_plan_shape.py` and `test_plan_records.py` pass.
+- [x] 74d6066 8. Close: set REV-112 and REV-113 `fixed` in `docs/project/review-findings.md` and `review-items.md`, with the measured numbers. Mark this plan *delivered*, update the phase plan's *Delivered* line and replace `docs/plans/current.md`. Done when `test_plan_shape.py` and `test_plan_records.py` pass.
 - [x] cc58ca1 9. Added at the author's request: main's CI failed on macOS and Windows, whose ngsolve
   wheels ship no `__init__.pyi`; the stub check runs only where it ships (VER-72).
 
