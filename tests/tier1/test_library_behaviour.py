@@ -408,6 +408,8 @@ def test_ngsolve_stubs_have_no_py_typed_and_invalid_init_pyi() -> None:
     assert not (ngs_dir / "py.typed").exists()
     init_pyi = ngs_dir / "__init__.pyi"
     # The macOS and Windows wheels ship no __init__.pyi; where it ships, it is invalid Python.
+    if sys.platform.startswith("linux"):
+        assert init_pyi.is_file()
     if init_pyi.is_file():
         with pytest.raises(SyntaxError):
             ast.parse(init_pyi.read_text(encoding="utf-8"))

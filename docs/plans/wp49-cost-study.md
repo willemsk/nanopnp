@@ -64,6 +64,11 @@ stay independently invocable (FR-27). Models: Sonnet by default, Haiku for items
   > (0.036 s of 213 s) and 0.33 % on the quick-start pore, against 5 % (prediction under 1 %; met). **A16:**
   > store IO is 0.51 % of the cold 2WCD walk (writes 0.50 %, reads 0.01 %) and 0.10 % of the quick-start
   > walk, against 10 % (prediction under 5 %; met). The stage totals agree with `StageRecord` within 2 %.
+  >
+  > **Amended at `/wp-ship`.** The review found the harness missed calls through `from … import`
+  > copies and lazy `.npz` reads, so the A8 and A16 shares above under-count. The fixed harness, run
+  > once on a loaded container, gave A8 at most 0.54 % and A16 at most 0.69 %: every verdict holds. The
+  > author ruled no re-run here; the record is replaced at the Phase 4 close (REV-116).
 
 *Compaction checkpoint: after item 4; resume from this plan, `docs/project/cost-study.json` and `git log`.*
 

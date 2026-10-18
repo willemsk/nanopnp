@@ -834,7 +834,8 @@ reason to loosen the test.
 > **Delivered, 18 October 2026** ([plan](wp49-cost-study.md), to be tagged `v0.5.0-alpha.15`). Measured
 > A1, A8 and A16 with a committed script (`validation/costs.py`; `docs/project/cost-study.json`): stage 1
 > projects to 1.14 GB at 1,000 frames (limit 4 GB), form building is at most 0.33 % of stage 10 (limit
-> 5 %), store IO at most 0.51 % of a cold walk (limit 10 %). None is over, so nothing is fixed and
+> 5 %), store IO at most 0.51 % of a cold walk (limit 10 %); the fixed harness gives at most 0.54 % and
+> 0.69 %, and the close re-runs it (REV-116). None is over, so nothing is fixed and
 > VER-62 is untouched. VER-76 exports the case schema as JSON Schema, published as
 > `reference/case.schema.json`. REV-112 and REV-113 are `fixed`. Main's macOS and Windows CI failure
 > (no ngsolve stub file in those wheels) is fixed in the same package.

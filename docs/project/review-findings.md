@@ -135,3 +135,4 @@ is a rolling register, and its header stays `open`.
 | REV-113 | interface | low | fixed | [WP49 plan](../plans/wp49-cost-study.md) | [The case schema has no JSON Schema export](review-items.md#rev-113-the-case-schema-has-no-json-schema-export) |
 | REV-114 | interface | medium | deferred | §8.2.12 M3 | [The shell moves from Qt to a browser](review-items.md#rev-114-the-shell-moves-from-qt-to-a-browser) |
 | REV-115 | process | low | declined | §8.2.12 M1 | [The architecture review's already-met claims](review-items.md#rev-115-the-architecture-reviews-already-met-claims) |
+| REV-116 | verification | low | open | — | [The cost record predates the harness fixes](review-items.md#rev-116-the-cost-record-predates-the-harness-fixes) |

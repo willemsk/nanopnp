@@ -31,7 +31,9 @@ WP49: the cost study (`SPECIFICATION.md` §8.2.12 M2; REV-112, REV-113; VER-76).
 - **The cost-study script** (REV-112): `python -m nanopnp.validation.costs`, whose record is
   `docs/project/cost-study.json`. The measurement found no cost over its threshold: stage 1 projects
   to 1.14 GB at 1,000 frames (limit 4 GB), building forms is at most 0.33 % of stage 10 (limit 5 %)
-  and store IO at most 0.51 % of a cold walk (limit 10 %), so nothing was changed.
+  and store IO at most 0.51 % of a cold walk (limit 10 %), so nothing was changed. The review's
+  harness fixes raise the last two to at most 0.54 % and 0.69 %; the record is re-run at the Phase 4
+  close (REV-116).
 
 ### Fixed
 
