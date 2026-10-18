@@ -1,0 +1,88 @@
+{
+  "a1": {
+    "over": false,
+    "points": [
+      {
+        "frames": 16,
+        "stage1_peak_mb": 157.68359375,
+        "stage1_seconds": 0.870255330999953,
+        "stage2_peak_mb": 400.3515625
+      },
+      {
+        "frames": 32,
+        "stage1_peak_mb": 172.1015625,
+        "stage1_seconds": 0.9462889349999841,
+        "stage2_peak_mb": 373.3984375
+      },
+      {
+        "frames": 64,
+        "stage1_peak_mb": 206.76953125,
+        "stage1_seconds": 1.1712188430001333,
+        "stage2_peak_mb": 414.9609375
+      }
+    ],
+    "prediction_gb": 1.0,
+    "projected_frames": 1000,
+    "projected_stage1_gb": 1.1441913332257945,
+    "projected_stage2_gb": 0.8066395350864949,
+    "threshold_gb": 4.0
+  },
+  "environment": {
+    "commit": "4deb53ecf68a2cccccfc29d5465ad0782ab06c16",
+    "cpu_count": 4,
+    "threads": {
+      "MKL_NUM_THREADS": "unset",
+      "OMP_NUM_THREADS": "unset",
+      "OPENBLAS_NUM_THREADS": "unset"
+    },
+    "versions": {
+      "MDAnalysis": "2.10.0",
+      "nanopnp": "0.0.1.dev53+g4deb53ecf.d20261018",
+      "ngsolve": "6.2.2606",
+      "numpy": "2.5.2",
+      "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+      "python": "3.14.6",
+      "scipy": "1.18.0"
+    }
+  },
+  "walks": {
+    "2wcd": {
+      "a16": {
+        "over": false,
+        "read_s": 0.026467159000276297,
+        "read_share": 8.880590417632778e-05,
+        "share": 0.0051186020985167545,
+        "threshold": 0.1,
+        "write_s": 1.4990491550006482,
+        "write_share": 0.005029796194340426
+      },
+      "a8": {
+        "build_s": 0.03647558199963896,
+        "over": false,
+        "share": 0.0001708482254850723,
+        "threshold": 0.05
+      },
+      "stage10_s": 213.496990654,
+      "wall_s": 298.033776535
+    },
+    "quickstart": {
+      "a16": {
+        "over": false,
+        "read_s": 0.0009343890005766298,
+        "read_share": 9.577247915433087e-05,
+        "share": 0.0010014027419465643,
+        "threshold": 0.1,
+        "write_s": 0.008835637999709434,
+        "write_share": 0.0009056302627922333
+      },
+      "a8": {
+        "build_s": 0.03190687699998307,
+        "over": false,
+        "share": 0.0033474016317663995,
+        "threshold": 0.05
+      },
+      "stage10_s": 9.53183409400026,
+      "wall_s": 9.756341370999962
+    }
+  }
+}

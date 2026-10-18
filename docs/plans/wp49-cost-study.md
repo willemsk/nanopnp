@@ -1,6 +1,8 @@
 # WP49 — The cost study
 
-**Status: planned, not started.** 18 October 2026. Inherits WP48 as shipped (the OKF backfill,
+PR: [#107](https://github.com/willemsk/nanopnp/pull/107), branch claude/wp-implement-49-oejjuz
+
+**Status: delivered, 18 October 2026.** Inherits WP48 as shipped (the OKF backfill,
 PR #104), the Phase 4 amendment of 18 October 2026 (§8.2.12 M1 to M5) and the thresholds that
 amendment registered.
 
@@ -19,13 +21,11 @@ standard machine-readable form.
 format description goes into the documentation, and a check fails if it and the program's own list
 of settings disagree.
 
-**Cost.** About a day of machine time on the four-core container, most of it in the two full
-protein runs. Six to eight commits. Each fix, if one is needed, adds a few days.
+**Cost.** About a day of machine time. Six to eight commits.
 
 **What could go wrong.** A fix could change a computed result. The existing record of results
-catches a change in the eighth digit, and a fix that changes one is undone. A measurement could
-flatter the program, so the timers count generously. A fix too big for one package is registered
-for a later ruling.
+catches a change in the eighth digit, and such a fix is undone. A measurement could flatter the
+program, so the timers count generously. A fix too big for one package is registered for a later ruling.
 
 **Your call.** Should the format description also come with the program, through a command, as
 well as in the documentation? *Recommendation:* documentation only for now; the browser page can
@@ -52,17 +52,35 @@ stay independently invocable (FR-27). Models: Sonnet by default, Haiku for items
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/validation/costs.py` holds the harness skeleton (D1): the category timers with their nesting guard, the record writer and the linear projection, with no measurement yet. `tests/tier1/test_cost_study.py` is its tests. Done when the D1 rows of *Verification* pass.
-- [ ] 2. The A1 leg (D2): a synthetic-trajectory writer and the subprocess runs. Done when `costs a1` writes its block and the A1 Tier-1 rows pass.
-- [ ] 3. The A8 leg (D3). Done when `costs a8` writes both ladders' shares and the 2 % consistency check holds.
-- [ ] 4. The A16 leg (D4). Run `costs all` and commit `docs/project/cost-study.json`. The *Outcome* quotes each cost, its threshold, its prediction and its verdict.
+- [x] 3bc1e16 1. `src/nanopnp/validation/costs.py` holds the harness skeleton (D1): the category timers with their nesting guard, the record writer and the linear projection, with no measurement yet. `tests/tier1/test_cost_study.py` is its tests. Done when the D1 rows of *Verification* pass.
+- [x] 3bc1e16 2. The A1 leg (D2): a synthetic-trajectory writer and the subprocess runs. Done when `costs a1` writes its block and the A1 Tier-1 rows pass.
+- [x] 1db058a 3. The A8 leg (D3). Done when `costs a8` writes both ladders' shares and the 2 % consistency check holds.
+- [x] 1db058a 4. The A16 leg (D4). Run `costs all` and commit `docs/project/cost-study.json`. The *Outcome* quotes each cost, its threshold, its prediction and its verdict.
+
+  > **Outcome — all three costs are under their thresholds** (`docs/project/cost-study.json`, four-core
+  > container, stabilisation unchanged). **A1:** stage 1 peaks at 158, 172 and 207 MB for 16, 32 and 64
+  > frames and projects to 1.14 GB at 1,000 frames against 4 GB (prediction about 1 GB; not over). Stage 2
+  > projects to 0.81 GB, recorded. **A8:** building symbolic forms is 0.02 % of stage 10 on the 2WCD
+  > (0.036 s of 213 s) and 0.33 % on the quick-start pore, against 5 % (prediction under 1 %; met). **A16:**
+  > store IO is 0.51 % of the cold 2WCD walk (writes 0.50 %, reads 0.01 %) and 0.10 % of the quick-start
+  > walk, against 10 % (prediction under 5 %; met). The stage totals agree with `StageRecord` within 2 %.
+  >
+  > **Amended at `/wp-ship`.** The review found the harness missed calls through `from … import`
+  > copies and lazy `.npz` reads, so the A8 and A16 shares above under-count. The fixed harness, run
+  > once on a loaded container, gave A8 at most 0.54 % and A16 at most 0.69 %: every verdict holds. The
+  > author ruled no re-run here; the record is replaced at the Phase 4 close (REV-116).
 
 *Compaction checkpoint: after item 4; resume from this plan, `docs/project/cost-study.json` and `git log`.*
 
-- [ ] 5. Fixes (D5): one commit for each cost over its threshold, in the file the phase plan names. If no cost is over, this item's *Outcome* says so and nothing changes. Done when VER-62 passes at 10⁻⁸ and the harness leg, re-run, is under its threshold, or a `REV-nn` row records the carried cost.
-- [ ] 6. VER-76 (D6): `case_json_schema` and `schema_leaves` in `src/nanopnp/io/case_paths.py`; `tests/tier1/test_case_json_schema.py`; a VER-76 row in Appendix A of `SPECIFICATION.md`. Done when the VER-76 rows pass.
-- [ ] 7. `docs/scripts/generate.py` writes `reference/case.schema.json`, and a link to it goes into the generated case-file reference. Add a `CHANGELOG.md` *Added* line. Done when the documentation build passes `--strict` and the file parses as JSON.
-- [ ] 8. Close: set REV-112 and REV-113 `fixed` in `docs/project/review-findings.md` and `review-items.md`, with the measured numbers. Mark this plan *delivered*, update the phase plan's *Delivered* line and replace `docs/plans/current.md`. Done when `test_plan_shape.py` and `test_plan_records.py` pass.
+- [x] none 5. Fixes (D5): one commit for each cost over its threshold, in the file the phase plan names. If no cost is over, this item's *Outcome* says so and nothing changes. Done when VER-62 passes at 10⁻⁸ and the harness leg, re-run, is under its threshold, or a `REV-nn` row records the carried cost.
+
+  > **Outcome — nothing is fixed.** No cost is over its threshold (item 4), so no code path of the
+  > program changes, VER-62 is untouched and no `REV-nn` row carries a cost (M2).
+- [x] fb4801f 6. VER-76 (D6): `case_json_schema` and `schema_leaves` in `src/nanopnp/io/case_paths.py`; `tests/tier1/test_case_json_schema.py`; a VER-76 row in Appendix A of `SPECIFICATION.md`. Done when the VER-76 rows pass.
+- [x] 4deb53e 7. `docs/scripts/generate.py` writes `reference/case.schema.json`, and a link to it goes into the generated case-file reference. Add a `CHANGELOG.md` *Added* line. Done when the documentation build passes `--strict` and the file parses as JSON.
+- [x] 74d6066 8. Close: set REV-112 and REV-113 `fixed` in `docs/project/review-findings.md` and `review-items.md`, with the measured numbers. Mark this plan *delivered*, update the phase plan's *Delivered* line and replace `docs/plans/current.md`. Done when `test_plan_shape.py` and `test_plan_records.py` pass.
+- [x] cc58ca1 9. Added at the author's request: main's CI failed on macOS and Windows, whose ngsolve
+  wheels ship no `__init__.pyi`; the stub check runs only where it ships (VER-72).
 
 ### Verification
 
@@ -84,9 +102,7 @@ stay independently invocable (FR-27). Models: Sonnet by default, Haiku for items
 | VER-61, VER-45 | 1, 2 | — | Kept green; the documentation build is `--strict` |
 
 The measurements are verdicts recorded, not gates (M2). Commands:
-`uv run python -m nanopnp.validation.costs all`; `uv run pytest tests/tier1/test_cost_study.py
-tests/tier1/test_case_json_schema.py`; `.claude/hooks/gate.sh run`; the documentation build in
-`CLAUDE.md`.
+`uv run python -m nanopnp.validation.costs all`; the two Tier-1 files; `.claude/hooks/gate.sh run`.
 
 ### Out of scope
 

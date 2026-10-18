@@ -22,9 +22,9 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
 `v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
 `v0.5.0-alpha.13`; WP48, the OKF backfill ([plan](wp48-okf-backfill.md)), to be tagged
-`v0.5.0-alpha.14`.
-Planned: WP49, the cost study (§8.2.12 M2, M4); WP50, the user-testing protocol (§8.2.9 I1,
-renumbered by §8.2.12 M4).
+`v0.5.0-alpha.14`; WP49, the cost study ([plan](wp49-cost-study.md)), to be tagged
+`v0.5.0-alpha.15`.
+Planned: WP50, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.12 M4).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP51, then the documentation increment and the close,
 which take their numbers then.
@@ -829,7 +829,16 @@ reason to loosen the test.
 > opening inventory establishes test cost. The package ends with the full evidence audit complete,
 > `pending.yaml` empty and `CEILING = 0` (G3, G8; REV-103).
 
-### WP49 — The cost study (§8.2.12 M2; REV-112, REV-113; VER-76 proposed)
+### WP49 — The cost study (§8.2.12 M2; REV-112, REV-113; VER-76)
+
+> **Delivered, 18 October 2026** ([plan](wp49-cost-study.md), to be tagged `v0.5.0-alpha.15`). Measured
+> A1, A8 and A16 with a committed script (`validation/costs.py`; `docs/project/cost-study.json`): stage 1
+> projects to 1.14 GB at 1,000 frames (limit 4 GB), form building is at most 0.33 % of stage 10 (limit
+> 5 %), store IO at most 0.51 % of a cold walk (limit 10 %); the fixed harness gives at most 0.54 % and
+> 0.69 %, and the close re-runs it (REV-116). None is over, so nothing is fixed and
+> VER-62 is untouched. VER-76 exports the case schema as JSON Schema, published as
+> `reference/case.schema.json`. REV-112 and REV-113 are `fixed`. Main's macOS and Windows CI failure
+> (no ngsolve stub file in those wheels) is fixed in the same package.
 
 Added on 18 October 2026 (§8.2.12 M2, M4). It waits on WP48's merge, and the protocol waits on it.
 It measures three costs an external review suspected, on a 4-core container, on the quick-start pore

@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-10-18
+* **Update**: Stated that `ngsolve/__init__.pyi` ships only in the Linux wheel, so the stub test checks it where present. ([16. NGSolve's bundled stubs cannot type](07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md))
 * **Update**: Repointed the six source citations that named plan files which do not exist (`wp18`, `wp20`, `wp21`, `wp28`, `wp30`, `wp32`) at the plans that do, and re-wired the claims for the 1 M NaCl conductivity, the zero-bias route check, the telescoping round-off statistics, the trailing-NUL behaviour and the fluid-only indicator to tests that assert them (WP48 review).
 * **Update**: Corrected the integration-order example to the tested fourth-degree polynomial and synchronised the specification's maintenance text with the closed, zero-pending ledger (WP48 review).
 * **Update**: Linked executable force-scale arithmetic to its existing assertions, recorded the exercised gemmi version, and restricted the FEM wheel table to its checked lockfile range (WP48 review).
