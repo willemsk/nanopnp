@@ -1,35 +1,29 @@
 # Current work
 
-Updated 17 October 2026 (WP48 delivered; all 361 open claims resolved). Navigation only; `SPECIFICATION.md` governs;
+Updated 18 October 2026 (Phase 4 amended after the architecture review, §8.2.12). Navigation only; `SPECIFICATION.md` governs;
 an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it. The simpler loop, the trimmed code, the fifteen
-small fixes and the reference notes are built. The notes were ten long files; they are a hundred and
-twenty-one short pages, one idea each, in a folder per note. Every claim in the notes is now backed:
-calculations by fast automated tests, software behaviour by checked library assertions and version
-records, and historical measurements by exact citations to earlier work. The list of waiting claims
-is empty, and the check refuses any new unbacked claim. No computed result moved. It now waits for
-review in a fresh session.
+Phase 4 tidies the program before others rely on it; the loop, the code and the notes are done. An
+outside design review was checked claim by claim, and the program already does most of it. One short
+package now precedes user testing: it measures three suspected costs and fixes only those over a
+limit set beforehand. The interface phase will build a browser page in place of the desktop window.
 
-**Your call:** the user testing protocol is next. *Recommendation:* proceed with planning the
-sessions once this work package merges.
+**Your call:** the cost study is next. *Recommendation:* plan it once the notes package merges.
 
 ## Position
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 G1–G12; §8.2.8 H1–H12; §8.2.9 I1–I5; §8.2.10 J1–J12). WP35 to WP45 are
+  **in progress** (§8.2.7 to §8.2.12). WP35 to WP45 are
   merged ([loop](wp44-simplify-the-loop.md), [prose](wp45-prose-strip.md)); tags to `v0.5.0-alpha.11`
   are the author's step.
-- **WP46, the small fixes** ([plan](wp46-small-fixes.md)), is **delivered** (§8.2.9 I2; fifteen
-  `REV-nn` rows `fixed`), tag `v0.5.0-alpha.12` after the merge.
-- **WP47, the OKF bundle** ([plan](wp47-okf-bundle.md)), is **delivered** (§8.2.7 G12; VER-68), tag
-  `v0.5.0-alpha.13` after the merge.
-- **WP48, the OKF backfill** ([plan](wp48-okf-backfill.md)), is **delivered** (§8.2.7 G3, G8; VER-68;
-  REV-103 closed), tag `v0.5.0-alpha.14` after the merge. Next: `/wp-ship`; then WP49 (protocol;
-  the author's sessions; fixes from WP50).
+- **WP46 to WP48 are delivered**: [small fixes](wp46-small-fixes.md), [OKF bundle](wp47-okf-bundle.md),
+  [OKF backfill](wp48-okf-backfill.md); tags `v0.5.0-alpha.12` to `.14` after each merge.
+- **Amended 18 October 2026** (§8.2.12): review claims already met declined (REV-115); browser
+  shell to Phase 5 (M3). **WP49, the cost study** (M2; REV-112, REV-113), is in the phase plan. Next: `/wp-ship` for WP48, then `/wp-plan 49`; then WP50
+  (protocol; the author's sessions; fixes from WP51).
 
 ## Not to be re-decided
 
@@ -38,6 +32,8 @@ sessions once this work package merges.
   pull-request leg on Python 3.14; Haiku, then Sonnet, then Opus; plans of at most 1,500 words with
   compaction checkpoints; two agents, and WP45's fresh worker per item as a trial (L9); prose only on the public API; `## In brief`. Floor 3.11. → §8.2.10 J4–J6,
   J9; OPN-09.
+- **Cost fixes follow measurement against thresholds registered before it** (§8.2.12 M2).
+  **Phase 5 builds a browser shell; the Qt shell stays gated until it is replaced** (M3).
 - **Phase 4's shape:** refactors before the protocol (G2); two OKF packages and a ratchet (G3, G8);
   checked findings logs (G4); protocol findings only from the author's sessions (G7); the VER-62
   golden (G10). → §8.2.7. The `MOD-nn` rulings stand (§8.2.8).
@@ -68,10 +64,9 @@ sessions once this work package merges.
 | Need | Read |
 |---|---|
 | The loop as shipped | `wp44-simplify-the-loop.md` |
-| The small fixes as shipped | `wp46-small-fixes.md`; `CHANGELOG.md` `0.5.0-alpha.12`; `docs/project/review-items.md` |
-| The knowledge bundle as shipped | `wp47-okf-bundle.md`; `knowledge/index.md`; `src/nanopnp/validation/okf.py` (VER-68) |
-| The OKF backfill as shipped | `wp48-okf-backfill.md`; `knowledge/pending.yaml`; §8.2.7 G3, G8 |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
+| The cost study and the review verdicts | Phase 4 plan, WP49; §8.2.12; `review-items.md` REV-112 to REV-115 |
+| The OKF bundle and backfill | `wp47-okf-bundle.md`, `wp48-okf-backfill.md`; `validation/okf.py` (VER-68) |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `okf-converter-rules.md` |
 
 ## Handoff Rules

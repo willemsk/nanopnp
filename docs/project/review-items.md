@@ -1099,3 +1099,52 @@ The pending claims include numerical sweeps no current fixture runs and aliasing
 `knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md` says no shipped `.so` of the NGSolve wheels carries MPI symbols and there is no `mpi4py`. Its marker cites `test_ngsolve_wheel_table_and_config_flags`, which shows only that `mpi4py` is not a locked package, so the symbol half of the claim has no test. Scanning the shipped binaries for MPI symbols depends on how NGSolve loads MPI, which is unsettled.
 
 **Open:** the author rules whether to add a binary scan, or to narrow the claim to the lock file and the configuration flags.
+
+
+### REV-112 — Three suspected costs were never measured
+
+*Area:* performance. *Severity:* low. *Found:* the external architecture review of 18 October 2026,
+claims A1, A8 and A16, checked at `645289e` (§8.2.12).
+
+**Measured.** Not yet. The aligned ensemble holds every frame in one float32 array
+(`structure/ensemble.py`); each continuation rung rebuilds its symbolic forms (`physics/models.py`);
+each stage reads its inputs back through the store (`pipeline/run.py`). None has been timed or sized.
+
+**Resolves it:** WP49 measures each against the threshold the Phase 4 plan registers, and fixes only
+a cost over it (M2).
+
+### REV-113 — The case schema has no JSON Schema export
+
+*Area:* interface. *Severity:* low. *Found:* the same review, claim A17.
+
+The case document is Pydantic v2 with `extra="forbid"` (`io/case.py`), but nothing exports it as a
+JSON Schema that a browser editor or another tool could read.
+
+**Resolves it:** WP49 publishes the export, checked against `case_fields` in both directions
+(proposed VER-76).
+
+### REV-114 — The shell moves from Qt to a browser
+
+*Area:* interface. *Severity:* medium. *Found:* the same review, claims A4 to A7.
+
+The review proposed removing PySide6, the Qt widgets and the PyInstaller bundle for a local server and
+a browser front end. Its plan modified `webgui.js`, which CON-09 forbids, and ADR-004 had rejected the
+alternative. The author ruled the browser shell for Phase 5 (M3); ADR-004 and CON-09 carry a NOTE.
+
+**Resolves it:** Phase 5's design document restates the shell's gating clauses for the browser shell,
+which then replaces the Qt shell.
+
+### REV-115 — The architecture review's already-met claims
+
+*Area:* process. *Severity:* low. *Found:* the same review.
+
+Eleven claims describe what the code already does or what a ruling already placed: A2 (patch-limited
+kernels and bucketed point location), A3 (exact annulus weights, closed-form azimuthal kernel,
+conservation gate), A9 (NUM-21; the solver registry), A10 (NUM-02's log branch, damping cut by the
+increment gates), A11 (heat-method distance with a smoothing pass; closed-form corrections), A12
+(MOD-08, MOD-09), A13 (`post/indicator.py` is NUM-24's ψ; adaptivity is FR-29, post-1.0), A14
+(NUM-25), A15 (the spawned pool and the warm-start forest), A16's atomicity (`io/store.py` stages and
+renames) and A18 (`requires-python` is already `>=3.11,<3.15`). The evidence for each is in §8.2.12's
+preamble.
+
+**Declined** (M1): no change.

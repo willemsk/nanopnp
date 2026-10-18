@@ -418,7 +418,7 @@ comparison would, which is why the Tier-2 benchmarks, which localise to a single
 | **CON-06** | The single production FEM backend SHALL be NGSolve/Netgen 6.2.2606+ (LGPL-2.1), behind a thin internal interface sized only to make a future second backend bounded work. |
 | **CON-07** | No component on the end-user execution path SHALL require a C++ compiler, a source build or a JIT toolchain on the end-user machine. |
 | **CON-08** | The distributed wheels are serial-only and ship without MUMPS, and the reference model's PARDISO is equally unavailable; the desktop path SHALL use UMFPACK or scipy SuperLU. |
-| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PROPKA LGPL-2.1, PySide6 LGPL-3). MPL-2.0 dependencies are acceptable used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. PyQt SHALL NOT be used, being GPL-3 or commercial only. |
+| **CON-09** | The core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking (NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PROPKA LGPL-2.1, PySide6 LGPL-3). MPL-2.0 dependencies are acceptable used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra). The field viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at run time, beside its licence texts and a notice naming its corresponding source, which the repository and the source distribution carry verbatim; nothing in the library SHALL be linked against it. PyQt SHALL NOT be used, being GPL-3 or commercial only. The PySide6 clause lapses when Phase 5 removes the Qt shell; the renderer clause binds the browser shell (§8.2.12 M3). |
 | **CON-10** | Gmsh (GPLv2+) SHALL be an optional backend only; the default path SHALL NOT link Gmsh, and the core library SHALL remain functional without it. |
 | **CON-11** | SuiteSparse UMFPACK is GPL-2+, so a bundle defaulting to UMFPACK carries GPL obligations even though the library does not. The core library SHALL remain BSD-3 and SHALL NOT itself depend on UMFPACK; the redistributable bundle SHALL default to UMFPACK, SHALL be distributed under the resulting GPL-2+ obligations and SHALL state them in its licence notice, scipy SuperLU remaining selectable at runtime. The default follows the §6.6 measurement: SuperLU did not factorise the reference-sized problem at all, so a SuperLU-default bundle could not run the published case. |
 | **CON-12** | Meshing components with distribution-restricting licences SHALL NOT be depended upon, specifically Triangle (and MeshPy, which wraps it) and TetGen 1.5 (AGPLv3). |
@@ -2342,6 +2342,13 @@ is a thin shell over the stage objects the CLI drives (IF-09). Each release from
 a usable graphical surface over the functionality existing at that release (QR-11); the per-phase
 increments are in §8.1.
 
+NOTE (the browser shell, 18 October 2026). The author ruled that Phase 5 replaces the PySide6 shell
+with a browser shell: a local server in `gui/` over the existing view-models and a browser front end
+(§8.2.12 M3). The rejection of a local web application above is withdrawn. The decision and the
+packaging NOTE stand for the Qt shell until Phase 5's design document restates the shell's gating
+clauses and the browser shell meets them; then PySide6, the Qt widgets and the PyInstaller bundle
+leave. The consequences above hold for either shell.
+
 #### ADR-005 Two levels of pluggability
 
 Decision: correction models as data files (level 1) and physics models as classes (level 2), per
@@ -3463,7 +3470,7 @@ instance, and `nanopnp.validation.stability` the mechanism a later golden reuses
 | 2. Geometry pipeline | Structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh | VAL-05: the auto-generated mesh reproduces the hand-conditioned reference geometry; met as amended by §8.2.4 D7 | 8–12 weeks |
 | 3. Charge pipeline | PDB2PQR to smeared volumetric `ρ_fixed` and dielectric field | VER-01, VER-02 and VAL-06 pass | 3–5 weeks |
 | 4. Polish and user testing | An exploration of the modularity of the implementation architecture, reported first, and the refactors the author accepts from it; the companion knowledge base restructured as an Open Knowledge Format bundle with a test-backed claim ledger (§8.2.6 F6); then a user-testing pass over the physics, the numerics, the Python API and the command line, in scripted sessions; before the knowledge-base work, a faster development loop (§8.2.10); v0.5 (§8.2.6 F3; §8.2.7) | The modularity report is merged, with each finding resolved or deferred by the author's ruling; the user-testing findings log is closed, each finding fixed or deferred by the author's ruling, both logs closed as a Tier-1 check reads them (§8.2.7 G4); no number of the pinned number-stability golden moves by more than 10⁻⁸ relative on a mesh it holds, nor beyond its measured mesh-moved tolerance on one it does not (§8.2.7 G10; VER-62); the development loop is simple and the prose small, as §8.2.11 L2 to L8 rule, with the loop's timings reported and a miss ruled by the author; Tiers 1 and 2 pass | 4–6 weeks (§8.2.9 I5) |
-| 5. Graphical interface | A design and requirements document with mockups, a visual-feedback workflow, then the desktop application its implementation plan sets; v0.6 (§8.2.6 F5) | QR-10, observed by a person: an experimentalist runs a case unaided; Tiers 1 and 2 pass | Set by the phase plan |
+| 5. Graphical interface | A design and requirements document with mockups, a visual-feedback workflow, then the browser shell its implementation plan sets, replacing the Qt shell (§8.2.12 M3); v0.6 (§8.2.6 F5) | QR-10, observed by a person: an experimentalist runs a case unaided; Tiers 1 and 2 pass | Set by the phase plan |
 | 6. Validation and release | Full V&V suite in CI, documentation, JOSS paper, v0.7 (§8.2.5 E2; §8.2.6 F1) | Tier 4 passes (VAL-07 to VAL-10), and Tier 3 against the published results passes (VAL-16, VAL-17; §8.2.4 D6) | 4–6 weeks |
 | GUI | One increment per phase from Phase 0 to Phase 3, then the dedicated Phase 5 (§8.2.6 F5) | QR-10: an experimentalist runs a case unaided, which is Phase 5's gate | Phase 5 |
 | Documentation | Continuous track from Phase 1 onward, one increment per phase | VER-45 and VER-46 pass on every push | continuous |
@@ -3477,7 +3484,7 @@ GUI increments, one per phase to Phase 3 (ADR-004), then the GUI phase (§8.2.6 
 | 2 | Geometry pipeline surfaced: load a structure, inspect the density, contour and mesh steps, override the contour by hand |
 | 3 | Charge pipeline surfaced: pH selector, force field, charge map viewer, conservation report |
 | 4 | None. The shell follows every change Phase 4 makes to the API and the case schema, so that QR-11 holds at v0.5, and gains nothing |
-| 5 | The GUI phase: the design and requirements document and its mockups, the visual-feedback workflow, then the desktop application. The former Phase 4 increment (sweep builder, result browser, figure export, case comparison) is an input to the document, not a commitment |
+| 5 | The GUI phase: the design and requirements document and its mockups, the visual-feedback workflow, then the browser shell, after which PySide6, the Qt widgets and the PyInstaller bundle leave (§8.2.12 M3). The former Phase 4 increment (sweep builder, result browser, figure export, case comparison) is an input to the document, not a commitment |
 | 6 | None planned. Residuals of Phase 5 only |
 | post-1.0 | Installers for all three platforms, in-application tutorials |
 
@@ -3492,7 +3499,7 @@ by a restatement of their equations:
 | 2 | The geometry pipeline: structure and trajectory input, density, symmetry reduction, contour, meshing; an example from a PDB entry to a mesh |
 | 3 | The charge pipeline: protonation, force field, smearing, the conservation report; an example from a PDB entry to a charged run |
 | 4 | The modularity report; the user guide, the API reference and the command-line reference revised with the user-testing findings, and every break listed with its migration (§8.2.6 F4) |
-| 5 | The desktop-application guide rewritten against the Phase 5 workflow, with the screens the visual-feedback workflow renders |
+| 5 | The application guide rewritten against the Phase 5 browser workflow, with the screens the visual-feedback workflow renders |
 | 6 | Tutorials completed against the validated release, the JOSS paper, and the DOI-archived v0.7 (QR-15 in full; §8.2.5 E2, §8.2.6 F1) |
 | post-1.0 | In-application tutorials, with the GUI track |
 
@@ -3727,6 +3734,35 @@ are WP46, the OKF bundle WP47, its backfill WP48, the protocol WP49 and the fixe
 | L8 | **The remediation has no dollar gate.** The checks are the word caps of L7, the prose ceiling of L5 and the deletions of L2, L3 and L6 | A cost figure is not gated; the author reads sessions' costs in the app. J7's 30 % token figure and J11 are withdrawn | None |
 | L9 | **Two agents, and a trial of a fresh worker per item.** *Added 13 October 2026, after WP44's review.* The agent files are the physics reviewer (Opus, read-only) and the CI-log classifier, now on Haiku. WP45 trials a fresh worker per item: the main session keeps only the plan and the git log and hands each work item, for WP45 each subpackage, to a new Sonnet sub-agent given that item and the clauses it cites; the worker edits, runs the item's checks and commits, and reports the commit and its checks in a few lines; the main session re-runs the item's check before the next. The author compares WP45's session cost with WP44's and rules whether `wp-implement` adopts the pattern | Context stays flat across a package instead of growing item by item; a classifier that quotes lines needs no Sonnet. No other role agent is added; lookups use the built-in explorer | `.claude/agents/ci-log-classifier.md`, the `wp-implement` skill, the Phase 4 plan's WP45 and `current.md`, in this commit |
 | L10 | **WP45's review rulings.** *Added 14 October 2026, after WP45's review.* Renaming the tests that name their requirement only in a comment waits for a later package (REV-91). The source's prose share of 11.4 %, above the 10 % prediction, is accepted, its remainder being the parameter lists L4 keeps (REV-92). A dunder method counts as public (REV-93). The public names without a docstring get one and ruff's D101 to D103 and D106 hold in `src/nanopnp` (REV-94). That a docstring holds no derivation or history is checked by review, not by VER-75 (REV-95). Prose drops plan history and keeps a specification identifier where it is a source (REV-96). The two checks share one definition of a directive comment, shebang and coding line included (REV-97) | REV-93 to REV-97 are fixed in WP45; REV-91 is deferred, REV-92 declined | L4, VER-75 (a) and (b), `pyproject.toml`, `.claude/rules/python.md`, `CLAUDE.md`, in WP45 |
+
+#### 8.2.12 Phase 4 amended: the architecture review checked, agreed 18 October 2026
+
+Rulings by the author, taken through `/phase-plan amend 4` after WP48 was delivered. The input is an
+externally generated architecture review proposing eighteen work packages (A1 to A18) for a later
+phase. Each claim was checked against the code at `645289e`. Eleven describe what the code already
+does or what a ruling already placed: A2 (each atom's kernel touches a patch of 6 `w_i` and point
+location is bucketed, `charge/kernel.py`, `charge/deposit.py`), A3 (exact cell–annulus overlap weights,
+the closed-form azimuthal kernel of §5.3.1 step 5 and the conservation gate), A9 (direct solves, NUM-21;
+the solver registry of VER-66 takes a Krylov solver as one class), A10 (the NUM-02 log branch and
+the increment gates that cut the damping), A11 (the distance field is a heat-method solve and a
+smoothing pass with no `min`; corrections are closed forms built as symbolic coefficients), A12
+(MOD-08, MOD-09; §8.2.8 H4, H5), A13 (`post/indicator.py` is NUM-24's ψ, not an error indicator;
+adaptivity is FR-29, NUM-32, post-1.0), A14 (NUM-25's variational reaction flux), A15 (the spawned
+pool with pinned threads and the warm-start forest, `sweep/`), A16's atomicity (staging and rename in
+`io/store.py`) and A18 (`requires-python` is already `>=3.11,<3.15`). Four are open and unmeasured:
+A1 (the aligned ensemble holds every frame, float32, in memory; the density deposit already streams
+by frame), A8 (each continuation rung rebuilds its symbolic forms on a reused space), A16's
+in-memory hand-off (each stage reads its inputs back through the store) and A17 (the case schema is
+Pydantic v2 with `extra="forbid"`, and no JSON Schema is exported). A4 to A7 propose a browser shell
+in place of PySide6. Package numbers from M4 on supersede L1's.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| M1 | **The review's already-met claims are declined with their evidence**: A2, A3, A9 to A15, A16's atomicity and A18. A12 stays under MOD-08 and MOD-09, A13 under FR-29 and NUM-32, A9 under NUM-21 | No package; one register row records the verdicts (REV-115) | None |
+| M2 | **One measure-first package, WP49, the cost study.** It measures A1, A8 and A16 on the quick-start pore and the prepared 2WCD on a 4-core container, against thresholds registered in the Phase 4 plan before any measurement, and fixes in the same package only a cost over its threshold. It exports the case schema as JSON Schema, generated from the case document's model, its leaves equal to `case_fields`' in both directions (proposed VER-76). A fix changes no number: VER-62 holds at 10⁻⁸ on a recorded mesh, and a miss is reverted (G10). A fix too large for the package is carried as a `REV-nn` row and ruled into a fix package | Every claimed cost becomes a measured one, and nothing is optimised on a guess. REV-112 and REV-113 are WP49's | Appendix A gains VER-76, in WP49 |
+| M3 | **Phase 5 builds a browser shell in place of the Qt desktop shell.** A local server in `gui/` over the existing view-models, and a browser front end; PySide6, the Qt widgets, the PyInstaller bundle and the packaging probe leave in Phase 5, once the browser shell meets the shell's gating clauses as Phase 5's design document restates them. The view-models stay pure Python and hold no physics (VER-60). CON-09's renderer clause stands: `webgui.js` is loaded unmodified as a separate file, or the front end draws without it. Phase 4 does no GUI work; the Qt shell keeps QR-11 at v0.5 | ADR-004's rejection of a local web application is withdrawn. F5's design document designs the browser shell and chooses its server library. The shell's gating clauses keep gating the Qt shell until Phase 5 replaces them, so v0.5 ships a gated surface. RSK-13 is re-scoped by the design document. REV-114 is deferred to Phase 5 | ADR-004 and CON-09 (a NOTE each) and §8.1's Phase 5 rows, in this commit; VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause and RSK-13, in Phase 5's design-document commit |
+| M4 | **WP49 comes before the protocol.** The protocol becomes WP50 and the fix packages are numbered from WP51. Tag `v0.5.0-alpha.15` | Testers judge the tree v0.5 ships (G2). The sessions start about a week later | The Phase 4 plan, in this commit |
+| M5 | **The phase estimate stands** at 4–6 weeks | The study is absorbed, as WP43 was (J12) | None |
 
 ### 8.3 Effort estimate
 
