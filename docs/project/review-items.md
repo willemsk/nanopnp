@@ -1113,7 +1113,8 @@ each stage reads its inputs back through the store (`pipeline/run.py`). None has
 **Fixed in the WP49 plan:** measured on the quick-start pore and the prepared 2WCD
 (`docs/project/cost-study.json`). Stage 1 projects to 1.14 GB at 1,000 frames (limit 4 GB); building
 forms is 0.02 % to 0.33 % of stage 10 (limit 5 %); store IO is 0.10 % to 0.51 % of a cold walk (limit
-10 %). None is over its threshold, so nothing is changed (M2).
+10 %). None is over its threshold, so nothing is changed (M2). The A8 and A16 figures under-count;
+the fixed harness gives at most 0.54 % and 0.69 %, and the record is replaced at the close (REV-116).
 
 ### REV-113 — The case schema has no JSON Schema export
 
@@ -1151,3 +1152,20 @@ renames) and A18 (`requires-python` is already `>=3.11,<3.15`). The evidence for
 preamble.
 
 **Declined** (M1): no change.
+
+### REV-116 — The cost record predates the harness fixes
+
+*Area:* verification. *Severity:* low. *Found:* WP49 `/wp-ship` review
+(`docs/code_reviews/CODE_REVIEW_009.md`, R2 to R7).
+
+`docs/project/cost-study.json` was written by the harness as it stood before the review. That harness
+missed calls made through a `from … import` copy (the ladder in `solve/stage.py`, the mesh read and
+write in `mesh/ingest.py`), timed only the opening of a lazy `.npz`, left the payload types' own
+reads and writes off the list, and ran both walks in one process. Its A8 and A16 shares therefore
+under-count, and its environment block names `4deb53e` on a dirty tree. The fixed harness, run once on
+a loaded container and an uncommitted tree, gave A8 at 0.03 % and 0.54 % (limit 5 %) and A16 at 0.69 %
+and 0.64 % (limit 10 %): every verdict holds. A1's method is unchanged and its 1.14 GB stands.
+
+**Open.** The author ruled on 18 October 2026 against a re-run in WP49, since no verdict can change.
+The row stays open until the Phase 4 close re-runs `python -m nanopnp.validation.costs all` on a clean
+tree, replaces the record and sets it `fixed`.
