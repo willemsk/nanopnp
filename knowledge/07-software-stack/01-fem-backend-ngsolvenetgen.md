@@ -25,7 +25,7 @@ verified:
 
 | Fact | Value |
 |---|---|
-| Wheels | cp310–cp314, all three OSes. win_amd64 14.6 MB, macOS universal2 44.0 MB **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_wheel_table_and_config_flags]** |
+| Locked wheels | cp311–cp314, all three OSes. win_amd64 14–15.5 MB, macOS universal2 43–45 MB **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_wheel_table_and_config_flags]** |
 | Compiler at runtime | **not needed** — forms are evaluated by the compiled C++ core. `Compile(realcompile=True)` is opt-in and *does* need one |
 | Mixed spaces | `X = V*Q` product spaces; Taylor–Hood directly |
 | Newton | `ngsolve.solvers.Newton(a, gfu, dampfactor=...)`, symbolic differentiation for the Jacobian **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api]** |

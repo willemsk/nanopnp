@@ -322,14 +322,14 @@ def test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants() 
     c2 = np.array([v.point for v in smesh2.vertices])
     assert np.array_equal(c1, c2)
 
-    foreign = "X86_V4" if platform.machine().lower() in {"arm64", "aarch64"} else "NEON ASIMD"
+    disabled = "X86_V4" if platform.machine().lower().startswith(("arm", "aarch")) else "NEON ASIMD"
     proc = subprocess.run(
         [
             sys.executable,
             "-c",
             "import numpy._core._multiarray_umath as m; assert m.__cpu_features__",
         ],
-        env={**os.environ, "NPY_DISABLE_CPU_FEATURES": foreign},
+        env={**os.environ, "NPY_DISABLE_CPU_FEATURES": disabled},
         capture_output=True,
         text=True,
         check=False,

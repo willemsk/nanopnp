@@ -11,10 +11,10 @@ sources:
   resource: https://doi.org/10.1039/D0NR03114C
   title: Willems et al., Nanoscale 12, 16775-16795 (2020)
 - id: wp21-plan
-  resource: docs/plans/wp21-cad-assembly-and-meshing.md
+  resource: git:0ff2d619:docs/plans/wp21-cad-assembly-and-meshing.md
   title: WP21 region and meshing plan, Design §1
 - id: wp30-plan
-  resource: docs/plans/wp30-dielectric-and-exclusion.md
+  resource: git:0ff2d619:docs/plans/wp30-dielectric-and-exclusion.md
   title: WP30 ion exclusion plan, Design §1 and Outcomes
 generated:
   by: claude-code/0.5.0-alpha.13
@@ -128,5 +128,5 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 
 ---
 
-[^wp21-plan]: `docs/plans/wp21-cad-assembly-and-meshing.md`, Design §1 (chord uniqueness and four-crossing topology).
-[^wp30-plan]: `docs/plans/wp30-dielectric-and-exclusion.md`, Design §1 and Outcomes.
+[^wp21-plan]: `git show 0ff2d619:docs/plans/wp21-cad-assembly-and-meshing.md`, Design §1 (chord uniqueness and four-crossing topology).
+[^wp30-plan]: `git show 0ff2d619:docs/plans/wp30-dielectric-and-exclusion.md`, Design §1 and Outcomes.

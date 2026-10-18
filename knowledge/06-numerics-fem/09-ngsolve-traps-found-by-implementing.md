@@ -20,6 +20,12 @@ sources:
   resource: git:7597814:src/nanopnp/numerics/gates.py
   title: Numerics prose strip recording 144,628-element FieldSampler timings (commit
     7597814)
+- id: wp3-singular-system
+  resource: git:0f8b57b:.knowledge/06-numerics-fem.md
+  title: WP3 singular five-field system measurements and residual warning
+- id: wp11-sweep-timings
+  resource: git:5abcf42:.knowledge/06-numerics-fem.md
+  title: WP11 toy-pore sweep timings and parallel-efficiency measurements
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
@@ -196,7 +202,7 @@ other two. Sample the coefficient function itself when a test needs an exact bou
 **4. `Integrate`'s `order=` replaces NGSolve's default of 5, it does not raise it.**
 `ngsolve.Integrate(cf, mesh)` uses order 5 when none is given. A helper that computes an order and
 passes it explicitly therefore *lowers* the accuracy of every integral that did not need raising:
-integrating `x^3` over the unit square at the order-2 rule returns 0.20005 for an exact 0.2, while
+integrating `x^4` over the unit square at order 2 underintegrates the exact value 0.2, while
 the bare call returns 0.2 to machine precision. Any wrapper around `Integrate` must floor its
 computed order at 5. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_4_integrate_order_replaces_default_five]**
 
@@ -235,7 +241,11 @@ and the Stokes block has nothing fixing the pressure — is factorised happily b
 scipy SuperLU. The "solutions" come back finite: `‖x‖_inf` of 2e16 from SuperLU and 8e33 from
 UMFPACK on the same 1.5e4-dof system, with residuals of 5e3 and 6e20. So `np.isfinite(x).all()` is
 **not** evidence that a factorisation is usable; assert on the residual `‖Ax − b‖`, which is 1e-13
-once the reservoir caps are constrained. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_8_and_9_superlu_registration_and_singular_factorisation]**
+once the reservoir caps are constrained. These are WP3's recorded five-field measurements.
+**[verified][^wp3-singular-system]** The current scalar-Poisson reproduction separately checks
+that a finite singular solution has a non-small residual and that constraining the system restores
+a small residual; it does not reproduce those five-field magnitudes.
+**[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_8_and_9_superlu_registration_and_singular_factorisation]**
 
 **10. `GridFunction.Set(cf, definedon=region)` zeroes every degree of freedom outside `region`.**
 It is an interpolation onto the whole function, not a write into part of it. So the natural order —
@@ -634,15 +644,18 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   21 concentrations = 3,675 points, one root, deepest point at depth 41, peak wave width 174. The
   dependency structure is therefore not what limits QR-06 on twelve cores; the serial tail is the
   last few waves and it is short.
-- **Parallel efficiency on four cores: 1.00, 0.76, 0.50 at N = 1, 2, 4. [tested: tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded]** 25 points in
+- **Parallel efficiency on four cores: 1.00, 0.76, 0.50 at N = 1, 2, 4. [verified][^wp11-sweep-timings]** 25 points in
   seven waves of widths 1, 3, 5, 5, 5, 4, 2; fresh store each run, every member a miss, thread
   counts pinned to 1 per worker. Wall clock 33.5 → 22.1 → 16.8 s, so 2.0× at four workers on a
   four-core machine that is also running the parent process. Throughput over uncached members:
   2 686 → 2 034 → 1 337 points per worker-hour.
+  These are the historical WP11 timings, not asserted performance bounds. The current benchmark
+  checks completion and records a new curve. **[tested: tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded]**
 - **One pool per plan, not one per wave, and it is worth a factor of the same size.** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]** **[tested: tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded]**
   `spawn` re-imports the package in each worker at about a second apiece. Creating the pool per
   wave put that cost into the measurement: on a nine-point grid in five waves it took
-  `efficiency(4)` from 0.75 to **0.29**. The pool is now held open across the whole plan.
+  `efficiency(4)` from 0.75 to **0.29**. **[verified][^wp11-sweep-timings]**
+  The pool is now held open across the whole plan.
 - **A single-axis grid caps the curve at N = 2 whatever the runner does.** A one-axis sweep rooted
   in its middle has waves two points wide, so a scaling measurement on one reports the *grid*. Two
   axes are the minimum for a curve that says anything about the dispatch.
@@ -744,3 +757,5 @@ cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::
 [^wp9-clya-aliasing]: `git show 0ea0789` and `git show c27c35c`, WP9 delivered ClyA charge-table aliasing and multi-OS unstructured mesh quadrature records.
 [^wp35-simd-dispatch]: `git show 6c0a249` and `git show 1a2e383`, WP35 NumPy SIMD dispatch and VER-62 number-stability mesh records (5 October 2026).
 [^wp45-numerics-strip]: `git show 7597814`, prose strip of `src/nanopnp/numerics/gates.py` recording the 144,628-element `FieldSampler` timings (WP45, 13 October 2026).
+[^wp3-singular-system]: `git show 0f8b57b:.knowledge/06-numerics-fem.md`, trap 9 (singular five-field block system, solver norms and residuals, WP3 review).
+[^wp11-sweep-timings]: `git show 5abcf42:.knowledge/06-numerics-fem.md`, section 8.4 (WP11 toy-pore setup, one thread per worker, worker counts 1/2/4 and pool lifetime).

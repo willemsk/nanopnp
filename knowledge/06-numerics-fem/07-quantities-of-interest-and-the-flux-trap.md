@@ -18,6 +18,12 @@ generated:
 verified:
 - by: process:arithmetic
   at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_forces.py::test_num27_the_azimuthal_factor_is_defined_in_one_place
+  at: '2026-10-18T00:00:00Z'
+- by: process:tests/tier1/test_forces.py::test_num28_force_scale_is_eps_vt_squared_and_carries_no_length
+  at: '2026-10-18T00:00:00Z'
+- by: process:tests/tier1/test_forces.py::test_num29_the_route_tolerance_is_a_fifth_of_a_force_unit
+  at: '2026-10-18T00:00:00Z'
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_axisymmetric_strain_rate_omits_hoop_component_and_stress_contraction_is_2x2
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_solution_state.py::test_ver34_the_restored_operator_gives_the_same_reaction_flux
@@ -302,9 +308,10 @@ T_zz ∂_z w_z`. The integrals still go through `Measures` for the `r` weight an
 reason. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_axisymmetric_strain_rate_omits_hoop_component_and_stress_contraction_is_2x2]**
 
 **The `2π` is restored once**, in `post/forces.py`, exactly as `post/qoi.py` does it: every solver
-integral is `∫ f r dr dz`. The force scale is `ε V_T² = 4.5677 × 10⁻¹³ N` — `p₀ a²` with the `a²`
+integral is `∫ f r dr dz`. **[tested: tests/tier1/test_forces.py::test_num27_the_azimuthal_factor_is_defined_in_one_place]**
+The force scale is `ε V_T² = 4.5677 × 10⁻¹³ N` — `p₀ a²` with the `a²`
 cancelling, so it does **not** depend on the reference length. NUM-29's 0.1 pN is 0.219 in those
-units. **[verified][^specification]**
+units. **[tested: tests/tier1/test_forces.py::test_num28_force_scale_is_eps_vt_squared_and_carries_no_length]** **[tested: tests/tier1/test_forces.py::test_num29_the_route_tolerance_is_a_fifth_of_a_force_unit]**
 
 ---
 

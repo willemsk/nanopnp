@@ -40,6 +40,9 @@ sources:
   resource: docs/plans/wp24-gui-geometry-pipeline.md
   title: WP24 GUI geometry pipeline plan, D16–D17 (geometry payload bundle and view-model
     costs)
+- id: wp31-plan
+  resource: git:0ff2d619:docs/plans/wp31-gui-charge-pipeline.md
+  title: WP31 charge viewer plan, D8 (fixed colour range and viewer settings)
 tested_with:
   pyside6: 6.11.2
   pyinstaller: 6.22.3
@@ -187,7 +190,7 @@ The same call draws a **two-component vector** field without special handling: a
 the `epnp-ns` family (the potential, two concentrations, the velocity and the pressure) produce a
 scene from one code path, the vector one costing about 1.5x the scalars.
 
-### A fixed colour range needs the scene's keys and the viewer's own settings **[verified][^wp15-plan]** {#a-fixed-colour-range-needs-the-scenes-keys-and-the-viewers-own-settings}
+### A fixed colour range needs the scene's keys and the viewer's own settings **[verified][^wp31-plan]** {#a-fixed-colour-range-needs-the-scenes-keys-and-the-viewers-own-settings}
 
 webgui 0.2.39 has one colour map per scene, and by default it autoscales to the sampled
 `funcmin`/`funcmax`, which `Draw(...).GetData()` returns. A diverging map centred on zero, or χ on
@@ -406,3 +409,4 @@ that is only browsing a case never pays for a solver or a toolkit.
 [^wp14-plan]: `docs/plans/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
 [^wp15-plan]: `docs/plans/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
 [^wp24-plan]: `docs/plans/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).
+[^wp31-plan]: `git show 0ff2d619:docs/plans/wp31-gui-charge-pipeline.md`, D8 (scene colour limits and `gui_settings.autoscale`).

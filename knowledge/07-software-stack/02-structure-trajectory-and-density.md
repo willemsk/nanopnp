@@ -52,6 +52,7 @@ sources:
   title: WP19 density and reduction plan, Design §1–§5 (prototype measurements)
 tested_with:
   mdanalysis: 2.10.0
+  gemmi: 0.7.5
   griddataformats: 1.2.0
   scipy: 1.18.0
   numpy: 2.5.2
