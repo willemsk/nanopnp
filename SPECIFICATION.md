@@ -3095,6 +3095,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-73** | Withdrawn | The loop has no enforced budget and no budget file (§8.2.11 L3, L8). The identifier is not reused |
 | **VER-74** | Withdrawn | The commit hook selects no tests: it runs all of Tier 1 (§8.2.11 L2). The identifier is not reused |
 | **VER-75** | The prose stays small | Read from the source with no checked module imported: (a) in `src/nanopnp` a function, class or attribute carries a docstring only if neither it nor an enclosing class has a leading underscore, a dunder method counting as public, and not inside a function; in `tests/` no function or class carries one; every module docstring is one line; (b) the share of physical lines that are docstring lines or comment lines, directive comments excepted (one holding `type:`, `noqa`, `pragma`, `fmt:`, `mypy:` or `ruff:` after a `#`, a shebang or a coding line, one definition shared with L5's tree check), is at most its value measured at WP45's close plus 1 point, for `src/nanopnp` and for `tests/` separately, the two ceilings recorded in the test. A docstring added to a private function, one added to a test and a two-line module docstring each fail (a) naming the file, line and name; a substituted tree over its ceiling fails (b) naming the share (§8.2.11 L4, L5; WP45) |
+| **VER-76** | The published case schema equals the one the editors walk | `case_json_schema()` returns the case document's JSON Schema, generated from its own model, and `schema_leaves` reads its leaves by the rules `case_fields` walks by (a reference is resolved; a union is entered at its first object branch; a list of blocks is entered at index `0`; a list or mapping of plain values is one leaf; a mapping of blocks raises `NotImplementedError`): (a) the two leaf sets are equal, so a field added to the model and missing from either walk fails naming its path; (b) a schema with one leaf added fails, and one with a leaf removed fails, and a `case_fields` with an extra leaf fails; (c) every `Literal` leaf carries an `enum` or a `const` equal to its arguments and the schema survives `json.dumps`. The documentation build writes it as `reference/case.schema.json` (§8.2.12 M2; WP49) |
 
 ### 7.3 Tier 2 analytic benchmarks
 
@@ -4041,7 +4042,7 @@ predominantly interface, portability, licensing and documentation requirements w
 is by inspection rather than by test. QR-07 is counted as "none yet", its entry
 naming §8.2 criterion 3 as the measurement it is still waiting for rather than as one it has. VER-61, VER-62 and VER-63 verify Phase 4's gate (§8.1; §8.2.7 G1, G4 and
 G10), VER-72 the source conventions of `CLAUDE.md` and the plans' records, rather than a requirement
-of §3, so they leave the count unchanged. VER-75 checks the prose rule of §8.2.11 L4 and, like VER-72, leaves the count unchanged. VER-68 checks the knowledge base's form and leaves it unchanged. VER-73 and VER-74 are withdrawn (§8.2.11 L2, L3).
+of §3, so they leave the count unchanged. VER-75 checks the prose rule of §8.2.11 L4 and, like VER-72, leaves the count unchanged. VER-76 checks the published case schema against the fields the editors walk and leaves it unchanged. VER-68 checks the knowledge base's form and leaves it unchanged. VER-73 and VER-74 are withdrawn (§8.2.11 L2, L3).
 
 ---
 

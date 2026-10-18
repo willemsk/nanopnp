@@ -6,7 +6,7 @@ import difflib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, get_args, get_origin
+from typing import Any, Literal, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic.fields import FieldInfo
@@ -186,6 +186,85 @@ def _walk_fields(owner: type[BaseModel], prefix: str) -> list[FieldReference]:
             continue
         found.append(FieldReference(path=path, annotation=annotation))
     return found
+
+
+def case_json_schema() -> dict[str, Any]:
+    """Return the case document's JSON Schema, generated from its own model."""
+    return CaseDocument.model_json_schema(by_alias=True, mode="validation")
+
+
+def schema_leaves(schema: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
+    """Return the schema node of every leaf a JSON Schema of the case document declares.
+
+    The paths are those :func:`case_fields` walks: a list of blocks is entered at index ``0``, and
+    a list or mapping of plain values is one leaf.
+
+    Raises
+    ------
+    NotImplementedError
+        If the schema holds a mapping whose values are blocks.
+    """
+    leaves: dict[str, Mapping[str, Any]] = {}
+    _collect_leaves(schema, schema, "", leaves)
+    return leaves
+
+
+def _dereference(root: Mapping[str, Any], node: Mapping[str, Any]) -> Mapping[str, Any]:
+    while "$ref" in node:
+        target: Any = root
+        for part in str(node["$ref"]).removeprefix("#/").split("/"):
+            target = target[part]
+        node = target
+    return node
+
+
+def _block(node: Mapping[str, Any]) -> bool:
+    return isinstance(node.get("properties"), Mapping)
+
+
+def _collect_leaves(
+    root: Mapping[str, Any],
+    node: Mapping[str, Any],
+    prefix: str,
+    leaves: dict[str, Mapping[str, Any]],
+) -> None:
+    for name, declared in _dereference(root, node).get("properties", {}).items():
+        path = f"{prefix}{name}"
+        resolved = _dereference(root, declared)
+        candidates = [
+            resolved,
+            *(_dereference(root, branch) for branch in resolved.get("anyOf", ())),
+        ]
+        entries = [candidate for candidate in candidates if _entry_of(root, candidate) is not None]
+        if entries:
+            kind, element = _entry_of(root, entries[0]) or ("", {})
+            if not _block(element):
+                leaves[path] = declared
+            elif kind == "mapping":
+                raise NotImplementedError(
+                    f"{path!r} is a mapping of blocks; the schema walk has no representative key "
+                    "to walk one under, so a mapping of blocks needs a decision here rather than "
+                    "silently missing fields"
+                )
+            else:
+                _collect_leaves(root, element, f"{path}.{SEQUENCE_INDEX}.", leaves)
+            continue
+        blocks = [candidate for candidate in candidates if _block(candidate)]
+        if blocks:
+            _collect_leaves(root, blocks[0], f"{path}.", leaves)
+        else:
+            leaves[path] = declared
+
+
+def _entry_of(
+    root: Mapping[str, Any], node: Mapping[str, Any]
+) -> tuple[str, Mapping[str, Any]] | None:
+    if node.get("type") == "array" and isinstance(node.get("items"), Mapping):
+        return "sequence", _dereference(root, node["items"])
+    extra = node.get("additionalProperties")
+    if node.get("type") == "object" and isinstance(extra, Mapping) and not _block(node):
+        return "mapping", _dereference(root, extra)
+    return None
 
 
 def schema_default(path: str) -> tuple[bool, FieldValue]:
