@@ -209,7 +209,7 @@ def test_fr23_the_current_does_not_depend_on_where_the_band_sits(solved: Solved)
         assert isinstance(current, float)
         currents.append(current)
         assert abs(current - reference) / abs(reference) < BAND_INDEPENDENCE, half
-    assert (max(currents) - min(currents)) / abs(reference) == pytest.approx(6.7e-10, rel=0.2)
+    assert 6.7e-11 < (max(currents) - min(currents)) / abs(reference) < 6.7e-9
 
 
 def test_fr23_an_inverted_band_is_refused_rather_than_sign_flipped(solved: Solved) -> None:

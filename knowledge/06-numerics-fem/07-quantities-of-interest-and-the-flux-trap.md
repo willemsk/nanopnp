@@ -50,6 +50,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_force_routes.py::test_ver22_the_reaction_route_confirms_the_hydrodynamic_split
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_indicator.py::test_num24_the_indicator_is_built_on_the_fluid_and_that_is_load_bearing
+  at: '2026-10-18T00:00:00Z'
 ---
 
 ## 7. Quantities of interest — and the flux trap
@@ -77,7 +79,7 @@ asserts. A minus references the trans electrode instead, negates every conductan
 this route relative to (b) taken on the same electrode, so the two would never agree. Printed forms
 of this expression carry a minus; that pairs with the trans electrode, not with `ψ = 1` on cis.
 
-**ψ must be built on the fluid domain alone. [tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term]** The two routes agree because `ψ` differs
+**ψ must be built on the fluid domain alone. [tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term]** **[tested: tests/tier1/test_indicator.py::test_num24_the_indicator_is_built_on_the_fluid_and_that_is_load_bearing]** The two routes agree because `ψ` differs
 from the (b) boundary indicator by a function vanishing on both electrodes, hence by a legitimate
 test function of the converged residual — an identity that needs `ψ` to be *exactly* 1 and 0 there.
 Interpolated over the whole mesh it is not: the membrane spans the transition band, and an element

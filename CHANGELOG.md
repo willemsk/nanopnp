@@ -39,7 +39,8 @@ VER-68; REV-103 closed). No code path of the solver changes, and VER-62 is untou
   `tested_with` mappings matching `uv.lock`. Missing, non-mapping, empty, empty-version and stale
   metadata are refused.
 - **Specification amendment**: `VER-68` (3) updated so `[tested: pending]` is refused and trailing
-  WP47-ceiling wording replaced with empty `pending.yaml` and zero ceiling.
+  WP47-ceiling wording replaced with empty `pending.yaml` and zero ceiling; (5) holds a package
+  that `uv.lock` resolves at two versions to the older one; §11's description of the ledger follows.
 
 ## [0.5.0-alpha.13] - 2026-10-14
 

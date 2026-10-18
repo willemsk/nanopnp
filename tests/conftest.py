@@ -10,7 +10,7 @@ import pickle
 import shutil
 import sys
 import warnings
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -43,7 +43,13 @@ REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 
 EXTENDED = "--extended"
 
-os.environ.setdefault("GIT_CONFIG_GLOBAL", "/dev/null")
+
+@pytest.fixture(scope="session", autouse=True)
+def _isolate_git_config() -> Iterator[None]:
+    with pytest.MonkeyPatch.context() as patch:
+        if "GIT_CONFIG_GLOBAL" not in os.environ:
+            patch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+        yield
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

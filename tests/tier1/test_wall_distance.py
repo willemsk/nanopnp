@@ -187,8 +187,8 @@ def test_ver40_both_wall_forms_return_their_wall_value_for_every_non_positive_sa
     diffusivity, viscosity = _corrections()
     assert float(diffusivity.evaluate(1e-9, distance_nm)) == pytest.approx(WALL_VALUE_D, rel=1e-12)
     assert float(viscosity.evaluate(1e-9, distance_nm)) == pytest.approx(WALL_VALUE_ETA, rel=1e-12)
-    assert (1.0 + float(np.exp(-3.36 * (-0.9401 - 0.147)))) / WALL_VALUE_ETA == pytest.approx(
-        15.0, rel=0.2
+    assert (1.0 + float(np.exp(-3.36 * (-0.9913 - 0.147)))) / WALL_VALUE_ETA == pytest.approx(
+        17.7, rel=5e-3
     )
 
 

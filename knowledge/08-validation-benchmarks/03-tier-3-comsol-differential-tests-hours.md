@@ -35,6 +35,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier3/test_comsol_comparison.py::test_val01_full_ladder_against_a_self_golden
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_telescoping_identity_round_off_scales_with_error_magnitude
+  at: '2026-10-18T00:00:00Z'
 ---
 
 ## Tier 3 — COMSOL differential tests (hours, nightly)
@@ -128,7 +130,7 @@ Its round-off is not absolute. An `E_k` is a relative error and exceeds 10 where
 small, and the round-off of the telescoped sum grows with it: over 100k random draws an absolute
 1e-14 failed **0 %** for `E_k ∈ [0, 2]`, **2.7 %** for `[10, 100]` and **16.1 %** for
 `[100, 1000]`, aborting the report on correct input. The tolerance is therefore taken relative to
-`max(1, |E_k|)` (codebase review of 2026-09-28, CR-7). **[tested: tests/tier1/test_attribution.py::test_val01_ladder_identity_holds_on_synthetic_errors]**
+`max(1, |E_k|)` (codebase review of 2026-09-28, CR-7). **[tested: tests/tier1/test_attribution.py::test_val01_ladder_identity_holds_on_synthetic_errors]** **[tested: tests/tier1/test_knowledge_arithmetic.py::test_telescoping_identity_round_off_scales_with_error_magnitude]**
 
 ### A norm over no points is zero, which reads as agreement **[tested: tests/tier1/test_comparison_norms.py::test_val01_a_norm_over_no_retained_point_aborts]** {#a-norm-over-no-points-is-zero-which-reads-as-agreement}
 

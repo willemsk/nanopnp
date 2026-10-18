@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-10-18
+* **Update**: Repointed the six source citations that named plan files which do not exist (`wp18`, `wp20`, `wp21`, `wp28`, `wp30`, `wp32`) at the plans that do, and re-wired the claims for the 1 M NaCl conductivity, the zero-bias route check, the telescoping round-off statistics, the trailing-NUL behaviour and the fluid-only indicator to tests that assert them (WP48 review).
+
 ## 2026-10-16
 * **Update**: Backed all 63 remaining domain claims across the bundle with Tier-1 and Tier-2 test evidence and immutable plan records, reducing total pending claims across the knowledge bundle to zero and lowering the ceiling to 0 (WP48 item 8).
 * **Update**: Backed all 51 pending NGSolve-trap `Library Behaviour` claims in `06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` with Tier-1 and Tier-2 test evidence (`tests/tier1/test_ngsolve_traps.py` and existing suites) and historical commit footnotes, lowering the pending ceiling from 114 to 63 (WP48 item 7).
