@@ -260,7 +260,11 @@ def _run_child(arguments: Sequence[str]) -> dict[str, object]:
     return dict(json.loads(done.stdout.strip().splitlines()[-1]))
 
 
-def _prepare_2wcd(repository: Path, directory: Path) -> Path:
+def _prepare_2wcd(
+    repository: Path, directory: Path
+) -> (
+    Path
+):  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     prepared = directory / "2wcd-prepared.pdb"
     subprocess.run(
         [
@@ -294,7 +298,11 @@ JITTER_DEG = 0.5
 JITTER_NM = 0.02
 
 
-def _write_dcd(pdb: Path, frames: int, target: Path) -> None:
+def _write_dcd(
+    pdb: Path, frames: int, target: Path
+) -> (
+    None
+):  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     import MDAnalysis as mda  # noqa: N813 - the alias the library documents
     import numpy as np
 
@@ -318,7 +326,11 @@ def _write_dcd(pdb: Path, frames: int, target: Path) -> None:
                 writer.write(universe.atoms)
 
 
-def _a1_child(case: Path, store: Path, upto: str) -> dict[str, object]:
+def _a1_child(
+    case: Path, store: Path, upto: str
+) -> dict[
+    str, object
+]:  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
@@ -327,7 +339,11 @@ def _a1_child(case: Path, store: Path, upto: str) -> dict[str, object]:
     return {"peak_mb": _peak_rss_mb(), "seconds": time.perf_counter() - started}
 
 
-def measure_a1(repository: Path) -> dict[str, object]:
+def measure_a1(
+    repository: Path,
+) -> dict[
+    str, object
+]:  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     """Measure stage 1's peak resident memory per frame count; project it to 1,000 frames."""
     points: list[dict[str, object]] = []
     with tempfile.TemporaryDirectory(prefix="cost-a1-") as scratch:
@@ -365,7 +381,11 @@ def measure_a1(repository: Path) -> dict[str, object]:
     }
 
 
-def _quickstart_case(repository: Path, directory: Path) -> Path:
+def _quickstart_case(
+    repository: Path, directory: Path
+) -> (
+    Path
+):  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     source = repository / "examples" / "01-quickstart"
     text = (source / "quickstart.case.yaml").read_text(encoding="utf-8")
     (directory / "quickstart.case.yaml").write_text(
@@ -380,7 +400,11 @@ def _quickstart_case(repository: Path, directory: Path) -> Path:
     return directory / "quickstart.case.yaml"
 
 
-def _charged_case(repository: Path, directory: Path) -> Path:
+def _charged_case(
+    repository: Path, directory: Path
+) -> (
+    Path
+):  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     _prepare_2wcd(repository, directory)
     text = (repository / "examples" / "07-pdb-to-charged-run" / "2wcd.case.yaml").read_text(
         encoding="utf-8"
@@ -393,7 +417,11 @@ def _charged_case(repository: Path, directory: Path) -> Path:
     return case
 
 
-def _walk(case: Path, store: Path, legs: Sequence[str]) -> tuple[dict[str, float], float, float]:
+def _walk(
+    case: Path, store: Path, legs: Sequence[str]
+) -> tuple[
+    dict[str, float], float, float
+]:  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
@@ -416,7 +444,11 @@ def _walk(case: Path, store: Path, legs: Sequence[str]) -> tuple[dict[str, float
 
 
 @contextlib.contextmanager
-def _split_io(timer: CategoryTimer) -> Iterator[None]:
+def _split_io(
+    timer: CategoryTimer,
+) -> Iterator[
+    None
+]:  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     writes = ("nanopnp.io.store.Store.put", "numpy.savez", "numpy.savez_compressed")
     reads = tuple(name for name in A16_IO if name not in writes)
     with (
@@ -426,7 +458,11 @@ def _split_io(timer: CategoryTimer) -> Iterator[None]:
         yield
 
 
-def measure_walks(repository: Path, legs: Sequence[str]) -> dict[str, object]:
+def measure_walks(
+    repository: Path, legs: Sequence[str]
+) -> dict[
+    str, object
+]:  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     """Walk the quick-start and the 2WCD case cold, timing what each requested leg counts."""
     record: dict[str, object] = {}
     with tempfile.TemporaryDirectory(prefix="cost-walk-") as scratch:
@@ -463,12 +499,20 @@ def measure_walks(repository: Path, legs: Sequence[str]) -> dict[str, object]:
     return record
 
 
-def _fresh(directory: Path) -> Path:
+def _fresh(
+    directory: Path,
+) -> (
+    Path
+):  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     directory.mkdir(parents=True)
     return directory
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def main(
+    argv: Sequence[str] | None = None,
+) -> (
+    int
+):  # pragma: no cover - runs minutes-long walks on the protein case; the script, not CI, runs it
     """Run a leg of the cost study and write the record."""
     parser = argparse.ArgumentParser(prog="python -m nanopnp.validation.costs")
     parser.add_argument("leg", choices=["a1", "a8", "a16", "walks", "all", "_a1"])

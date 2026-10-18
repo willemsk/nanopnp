@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import time
+from pathlib import Path
 
 import pytest
 
@@ -77,3 +78,68 @@ def test_a8_refuses_a_stage_total_off_by_more_than_two_percent() -> None:
     with pytest.raises(costs.CostStudyError, match="off the recorded"):
         costs.check_stage_total(103.0, 100.0)
     costs.check_stage_total(101.0, 100.0)
+
+
+def test_a_timed_call_outside_its_enclosing_call_is_not_counted() -> None:
+    timer = costs.CategoryTimer()
+    calls: list[int] = []
+
+    def probe() -> int:
+        calls.append(1)
+        return 7
+
+    wrapped = costs._timed(timer, "build", probe, None, "solve")
+    assert wrapped() == 7
+    assert "build" not in timer.totals
+    with timer.time("solve"):
+        assert timer.active("solve")
+        wrapped()
+    assert "build" in timer.totals
+    assert not timer.active("solve")
+    assert len(calls) == 2
+
+
+def test_a_name_that_is_not_callable_or_not_importable_is_refused() -> None:
+    with pytest.raises(costs.CostStudyError, match="not callable"):
+        costs.resolve("nanopnp.validation.costs.THREAD_VARIABLES")
+    with pytest.raises(costs.CostStudyError, match="nothing that can be imported"):
+        costs.resolve("no_such_package_here.thing")
+
+
+def test_the_record_survives_a_missing_package_and_a_missing_git(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    def absent(name: str) -> str:
+        raise costs.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(costs.metadata, "version", absent)
+    record = costs.environment_record(tmp_path)
+    versions = record["versions"]
+    assert isinstance(versions, dict)
+    assert versions["numpy"] == "not installed"
+
+    def no_git(*args: object, **kwargs: object) -> object:
+        raise OSError("no git")
+
+    monkeypatch.setattr(costs.subprocess, "run", no_git)
+    assert costs.environment_record(tmp_path)["commit"] == "unknown"
+
+
+def test_peak_memory_is_a_positive_number_of_megabytes() -> None:
+    assert costs._peak_rss_mb() > 0.0
+
+
+def test_a_failed_child_is_refused_and_a_good_child_is_parsed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class Done:
+        def __init__(self, code: int, out: str) -> None:
+            self.returncode = code
+            self.stdout = out
+            self.stderr = "boom"
+
+    monkeypatch.setattr(costs.subprocess, "run", lambda *a, **k: Done(1, ""))
+    with pytest.raises(costs.CostStudyError, match="boom"):
+        costs._run_child(["_a1"])
+    monkeypatch.setattr(costs.subprocess, "run", lambda *a, **k: Done(0, 'noise\n{"a": 1}\n'))
+    assert costs._run_child(["_a1"]) == {"a": 1}
