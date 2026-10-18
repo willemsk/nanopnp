@@ -1,5 +1,7 @@
 # WP49 — The cost study
 
+PR: [#107](https://github.com/willemsk/nanopnp/pull/107), branch claude/wp-implement-49-oejjuz
+
 **Status: delivered, 18 October 2026.** Inherits WP48 as shipped (the OKF backfill,
 PR #104), the Phase 4 amendment of 18 October 2026 (§8.2.12 M1 to M5) and the thresholds that
 amendment registered.
