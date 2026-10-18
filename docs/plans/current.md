@@ -20,9 +20,8 @@ keep it so until the browser page needs a command.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 to §8.2.13). WP35 to WP49 are delivered ([WP49](wp49-cost-study.md));
   tags to `v0.5.0-alpha.15` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
-- **Amended 18 October 2026** (§8.2.13): **WP50, the test scope** (N1 to N5;
-  [design](../superpowers/specs/2026-10-18-test-pruning-design.md)), before the protocol. Next:
-  `/wp-plan 50`, then WP51 (protocol; the author's sessions; fixes from WP52).
+- **Amended 18 October 2026** (§8.2.13): **WP50, the test scope** (N1 to N5), before the protocol,
+  is **planned** ([plan](wp50-test-scope.md)). Next: `/wp-implement`, then WP51 (protocol; the author's sessions; fixes from WP52).
 
 ## Not to be re-decided
 
@@ -61,7 +60,7 @@ keep it so until the browser page needs a command.
 
 | Need | Read |
 |---|---|
-| The test scope | §8.2.13; `docs/superpowers/specs/2026-10-18-test-pruning-design.md` |
+| The test scope | `wp50-test-scope.md`; §8.2.13; `docs/superpowers/specs/2026-10-18-test-pruning-design.md` |
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
 | The OKF bundle | `wp47-okf-bundle.md`, `wp48-okf-backfill.md` |
