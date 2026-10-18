@@ -43,7 +43,7 @@ restate the code. Tier 2 (222 tests) is mostly analytic benchmarks and end-to-en
     (VER-65). Tests asserting that a module "imports no backend/numpy" belong here.
   - A refusal test stays only when the refusal is a numerical or physical gate (state gates, packing,
     quadrature floor, inf-sup pair, mesh quality, coarse-mesh refusal). Input-validation refusals and
-    message wording go **(my call)**.
+    message wording go (proposed in the brainstorm playback; the author did not object).
 - **A thin smoke test per entry point (my call):** the CLI runs a case, the GUI window opens, a case file
   loads, `import nanopnp` works. One or two tests each, not a suite.
 - **No coverage gate (author).** Remove the CI `coverage` job, `diff-cover`, the `# pragma: no cover -
@@ -52,12 +52,21 @@ restate the code. Tier 2 (222 tests) is mostly analytic benchmarks and end-to-en
 - **Requirement IDs need a test only for physics, numerics or core mechanisms (author).** Other VER rows
   remain normative behaviour but are discharged by the code and the review.
 - **Per-push vs nightly (author).**
-  - Every push (PR CI, push to `main`, `gate.sh run`): tier 1 plus the tier 2 analytic benchmarks, plus
-    the quickstart example (example 01) **only while it solves in under 60 s**; past that it moves to
-    nightly.
+  - Every push (PR CI, push to `main`, `gate.sh run`): tier 1 plus in-scope tier 2 tests that neither
+    walk the pipeline end to end nor carry `slow` (the analytic benchmarks and fast machinery such as
+    `test_artefact_cache`, `test_reproducibility`, `test_ladder`, `test_sweep`; **my call**), plus the
+    quickstart example (example 01) **only while it solves in under 60 s**; past that it moves to
+    nightly. One charged walk also stays on every push, so a moved physics number is caught before the
+    merge **(author)**: example 02's ePNP-NS charged pore with its number-stability golden, the cheapest
+    charged walk measured (about 17 s setup) **(my call on which)**. A push to `main` keeps its macOS and Windows legs on this selection, so the GUI smoke test
+    still runs where PySide6 imports **(my call)**.
   - Nightly: everything else in tiers 1–2 (the 2WCD walks, examples 02–07, `slow` benchmarks) plus tier 3,
     on the platforms the nightly job already covers.
-  - A tagged release requires a green nightly on the tagged commit (or a nightly run triggered on it).
+  - A failed nightly run opens a GitHub issue (one per failing night, naming the failing jobs and the
+    commit); it does not block merges **(author)**.
+  - A tagged release keeps `release.yml`'s full run (every tier, Python 3.11–3.14, three platforms),
+    which includes everything nightly runs; no lookup of a scheduled run is built **(my call)**.
+  - User-testing protocol scripts (§8.2 G7, WP50) are treated like examples 02–07: nightly **(my call)**.
 - **Prevention (author): a judgement rule plus a reviewer step that deletes off-category tests.**
   - The rule, stated once in `CLAUDE.md` § Testing and in `.claude/rules/python.md` (for `tests/**`):
     the scope above, and "a new test's name or first line says which silent failure it catches". It
@@ -99,7 +108,10 @@ restate the code. Tier 2 (222 tests) is mostly analytic benchmarks and end-to-en
     VER-45/VER-46 (the strict docs build stays in CI; executed examples move to nightly except 01).
     Interface VERs (e.g. VER-32, VER-38, VER-47, VER-76) stay normative with "verified at review".
   - A new §8.2 ruling block (§8.2.13, "the test scope", dated) records the author's decisions above,
-    and G3, G8 and §8.2.11 L3's coverage clause are marked superseded by it.
+    and G3, G8, §8.2.11 L3's coverage clause, J10's walk placement and G7's push-gate clause are marked
+    superseded by it. Where a ruling or §8.1 gate leans on a withdrawn VER (G4/H12 "a Tier-1 check reads
+    the logs", F6's "test-backed claim ledger", §8.1's "VER-45 and VER-46 pass on every push"), it is
+    reworded to "checked at review" or to the nightly run, not dropped **(my call)**.
 - `knowledge/`: 380 `[tested: <test>]` markers exist. A marker naming a deleted test is retargeted to a
   surviving test that asserts the same claim, else becomes `[verified]` when the concept carries a source
   footnote, else the marker is dropped **(my call)**. `knowledge/pending.yaml` and its rule go. Log the
