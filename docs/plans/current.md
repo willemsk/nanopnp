@@ -1,17 +1,20 @@
 # Current work
 
-Updated 18 October 2026 (WP49 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 18 October 2026 (WP49 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it; the loop, the code and the notes are done. One
-short package now precedes user testing, and it is planned: it measures three suspected costs, fixes
-only those over a limit set beforehand, and publishes the case-file format for other tools. The
-interface phase will build a browser page in place of the desktop window.
+Phase 4 tidies the program before others rely on it; the loop, the code, the notes and now the cost
+study are done. Three suspected costs were measured and none came near its limit, so nothing was
+changed: the biggest protein ensemble would need about a quarter of the memory limit, building
+equations is under half a percent of a solve, and saving results is about half a percent of a run.
+The case-file format is now published in a standard machine-readable form, and a check fails if it
+and the program disagree. Main's failing test on Mac and Windows is fixed. Next is the protocol for
+the author's testing sessions.
 
-**Your call:** should that format also come with the program through a command? *Recommendation:*
-no, documentation only until the browser page needs it.
+**Your call:** none open; the format ships in the documentation only. *Recommendation:* keep it so
+until the browser page needs a command.
 
 ## Position
 
@@ -20,11 +23,12 @@ no, documentation only until the browser page needs it.
   **in progress** (§8.2.7 to §8.2.12). WP35 to WP45 are
   merged ([loop](wp44-simplify-the-loop.md), [prose](wp45-prose-strip.md)); tags to `v0.5.0-alpha.11`
   are the author's step.
-- **WP46 to WP48 are delivered** ([WP48](wp48-okf-backfill.md)); tags `v0.5.0-alpha.12` to `.14`.
+- **WP46 to WP49 are delivered** ([WP48](wp48-okf-backfill.md), [WP49](wp49-cost-study.md)); tags
+  `v0.5.0-alpha.12` to `.15`.
 - **Amended 18 October 2026** (§8.2.12): review claims already met declined (REV-115); browser
-  shell to Phase 5 (M3). **WP49, the cost study** (M2; REV-112, REV-113; VER-76 proposed), is
-  **planned** ([plan](wp49-cost-study.md)). Next: WP48 merged, then `/wp-implement`; then WP50
-  (protocol; the author's sessions; fixes from WP51).
+  shell to Phase 5 (M3). **WP49, the cost study** (M2; REV-112, REV-113; VER-76), found every cost
+  under its threshold (`docs/project/cost-study.json`). Next: WP49 merged, then WP50 (protocol; the
+  author's sessions; fixes from WP51).
 
 ## Not to be re-decided
 
@@ -34,15 +38,12 @@ no, documentation only until the browser page needs it.
   API. Floor 3.11. → §8.2.10 J4–J6, J9; OPN-09.
 - **Cost fixes follow measurement against thresholds registered before it** (§8.2.12 M2).
   **Phase 5 builds a browser shell; the Qt shell stays gated until it is replaced** (M3).
-- **Phase 4's shape:** refactors before the protocol (G2); two OKF packages and a ratchet (G3, G8);
-  checked findings logs (G4); protocol findings only from the author's sessions (G7); the VER-62
-  golden (G10). → §8.2.7. The `MOD-nn` rulings stand (§8.2.8).
+- **Phase 4's shape:** refactors before the protocol (G2); findings only from the author's sessions
+  (G7); the VER-62 golden (G10). → §8.2.7. The `MOD-nn` rulings stand (§8.2.8).
 - **A moved edge edits `modularity-layering.yaml` in the same commit (VER-61)**; a VER-62 miss is
   reverted, or ruled and re-pinned (G10, I4).
 - **What a package leaves open is a `REV-nn` row** until resolved (H12); Phase 4's are `fixed` by
   the close (I3).
-- **A stage declares its walk facts and reads in the registry, and defines `key`** (VER-64).
-- **Tier 3 compares the published I–V and pore averages**, gating v0.7 (VAL-16, VAL-17).
 - **Layers read a model's declaration, never its name** (VER-56). **A refusal names its requirement
   and release** (VER-67). **Only `poisson` adds a quadrature order for `r`** (E4; NUM-07 NOTE).
   **A golden carries the stage-7 recipe** (E3; VAL-03).
