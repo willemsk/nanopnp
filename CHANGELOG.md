@@ -19,6 +19,18 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.15] - 2026-10-18
+
+WP49: the cost study (`SPECIFICATION.md` §8.2.12 M2; REV-112, REV-113; VER-76).
+
+### Added
+
+- **The case schema as JSON Schema** (VER-76): `nanopnp.io.case_paths.case_json_schema()` and
+  `schema_leaves`, generated from the case document's own model; the documentation build publishes
+  it as `reference/case.schema.json`. A test fails when its leaves and `case_fields()` differ.
+- **The cost-study script** (REV-112): `python -m nanopnp.validation.costs`, whose record is
+  `docs/project/cost-study.json`.
+
 ## [0.5.0-alpha.14] - 2026-10-17
 
 WP48: the OKF bundle backfilled and the pending ledger closed (`SPECIFICATION.md` §8.2.7 G3, G8,

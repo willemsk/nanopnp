@@ -4,7 +4,7 @@ Run before every build, and never committed (WP16 D4, D5)::
 
     uv run docs/scripts/generate.py && uv run mkdocs build --strict
 
-Five kinds of page, all derived:
+Six kinds of file, all derived:
 
 - **The model.** ``SPECIFICATION.md`` and every Markdown file of the ``knowledge/`` bundle,
   copied verbatim. The model is documented by rendering its normative records, never by restating
@@ -16,6 +16,7 @@ Five kinds of page, all derived:
   git tags themselves (``SPECIFICATION.md`` section 2.7, Versioning).
 - **The references.** The case-file, command-line, exit-code and API pages, rendered
   from the live objects by :mod:`nanopnp.cli.reference`.
+- **The case schema.** ``reference/case.schema.json``, the case document's JSON Schema (VER-76).
 - **The modularity measurements.** The numbers the modularity report quotes, measured
   on this tree by :func:`nanopnp.validation.modularity.render_measurements` (WP35 D1).
 
@@ -28,6 +29,7 @@ rather than an MkDocs hook so that the configuration stays readable by Zensical
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import shutil
@@ -40,6 +42,7 @@ from nanopnp.cli.reference import (
     render_cli_reference,
     render_exit_codes,
 )
+from nanopnp.io.case_paths import case_json_schema
 from nanopnp.validation.modularity import render_measurements
 from nanopnp.validation.okf import navigation, splice_navigation
 
@@ -152,13 +155,15 @@ def main() -> int:
         path = OUTPUT / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
+    schema = OUTPUT / "reference" / "case.schema.json"
+    schema.write_text(json.dumps(case_json_schema(), indent=2) + "\n", encoding="utf-8")
     config = ROOT / "mkdocs.yml"
     current = config.read_text(encoding="utf-8")
     nav = navigation(ROOT / "knowledge", "_generated/model/knowledge")
     spliced = splice_navigation(current, nav)
     if spliced != current:
         config.write_text(spliced, encoding="utf-8")
-    logger.info("wrote %d pages to %s", len(pages) + len(rendered), OUTPUT.relative_to(ROOT))
+    logger.info("wrote %d pages to %s", len(pages) + len(rendered) + 1, OUTPUT.relative_to(ROOT))
     return 0
 
 
