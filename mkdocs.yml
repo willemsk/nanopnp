@@ -24,6 +24,7 @@ docs_dir: docs
 exclude_docs: |
   plans/
   code_reviews/
+  superpowers/
   scripts/
   overrides/
 
