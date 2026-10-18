@@ -367,9 +367,12 @@ def measure_a1(repository: Path) -> dict[str, object]:
 
 def _quickstart_case(repository: Path, directory: Path) -> Path:
     source = repository / "examples" / "01-quickstart"
-    shutil.copy(source / "quickstart.case.yaml", directory / "quickstart.case.yaml")
+    text = (source / "quickstart.case.yaml").read_text(encoding="utf-8")
+    (directory / "quickstart.case.yaml").write_text(
+        text.replace("path: pore.msh", f"path: {directory / 'pore.msh'}"), encoding="utf-8"
+    )
     subprocess.run(
-        [sys.executable, "-m", "nanopnp", "mesh", "cylinder", "--out", str(directory / "pore.msh")],
+        [str(Path(sys.executable).with_name("nanopnp")), "mesh", "cylinder", "--out", "pore.msh"],
         check=True,
         capture_output=True,
         cwd=directory,
@@ -378,13 +381,15 @@ def _quickstart_case(repository: Path, directory: Path) -> Path:
 
 
 def _charged_case(repository: Path, directory: Path) -> Path:
-    prepared = _prepare_2wcd(repository, directory)
+    _prepare_2wcd(repository, directory)
     text = (repository / "examples" / "07-pdb-to-charged-run" / "2wcd.case.yaml").read_text(
         encoding="utf-8"
     )
     case = directory / "2wcd.case.yaml"
-    case.write_text(text, encoding="utf-8")
-    shutil.copy(prepared, directory / "2wcd-prepared.pdb")
+    case.write_text(
+        text.replace("path: 2wcd-prepared.pdb", f"path: {directory / '2wcd-prepared.pdb'}"),
+        encoding="utf-8",
+    )
     return case
 
 
@@ -466,7 +471,7 @@ def _fresh(directory: Path) -> Path:
 def main(argv: Sequence[str] | None = None) -> int:
     """Run a leg of the cost study and write the record."""
     parser = argparse.ArgumentParser(prog="python -m nanopnp.validation.costs")
-    parser.add_argument("leg", choices=["a1", "a8", "a16", "all", "_a1"])
+    parser.add_argument("leg", choices=["a1", "a8", "a16", "walks", "all", "_a1"])
     parser.add_argument("rest", nargs="*")
     parser.add_argument("--repository", type=Path, default=_repository())
     parser.add_argument("--out", type=Path, default=None)
@@ -482,7 +487,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if out.is_file():
         record = json.loads(out.read_text(encoding="utf-8"))
     record["environment"] = environment_record(repository)
-    legs = ["a1", "a8", "a16"] if args.leg == "all" else [args.leg]
+    legs = {
+        "all": ["a1", "a8", "a16"],
+        "walks": ["a8", "a16"],
+    }.get(args.leg, [args.leg])
     if "a1" in legs:
         record["a1"] = measure_a1(repository)
     walks = [leg for leg in legs if leg != "a1"]
