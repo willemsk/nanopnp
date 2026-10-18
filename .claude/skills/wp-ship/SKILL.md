@@ -69,10 +69,19 @@ only the diff.
 Run the review from this session, invoking the skill directly and never wrapped in an `Agent`:
 
 ```
-Skill(skill="code-review", args="xhigh --fix <pr-number>")
+Skill(skill="code-review", args="xhigh --fix <pr-number> out=docs/code_reviews/ -- Static review. Run no benchmark, sweep, cost study, gate.sh or pytest --extended, and nothing that takes over a minute; /wp-ship gates the fixes afterwards. Run a narrow test file in the foreground only if it ends within four minutes. Start any command that may run longer in the background and poll it with waits of at most 240 s each, ending a wait at 240 s and re-issuing it; no foreground command or single wait may pass 240 s.")
 ```
 
 Wrapped, it returned no findings; called directly it forks its own review agent.
+
+That agent has its own prompt cache, never this session's: a five-minute one, where this session's is
+one hour. Any pause over five minutes in it, such as a long test run or a wait on a background job,
+re-writes its whole context (about 300k tokens in WP49, twice). A foreground command that runs past
+five minutes costs the same as a wait, and the commit hook, `gate.sh run` and a full test run all do:
+they belong in this session, whose one-hour cache carries them, never in the reviewer. A background
+job polled every 240 s costs about a tenth of one rewrite per poll. Keep the review gap-free; do not
+lengthen the cache TTL instead, since a one-hour write costs more than a five-minute one and pays only
+when a long pause cannot be avoided. The fixes are verified by the gate in step 3, not by the reviewer.
 
 **The pass must produce evidence that it completed, not that it edited files.** Wait for the
 review skill's final report, which must establish the reviewed revision, completed status and the
