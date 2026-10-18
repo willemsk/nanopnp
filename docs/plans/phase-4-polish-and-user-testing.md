@@ -3,7 +3,8 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`. Amended the
 same day, after the author ruled every `MOD-nn` (§8.2.8). Amended again on 6 October 2026, after
 the author ruled the review register (§8.2.9), and on 11 October 2026, when the author inserted the
-development loop (§8.2.10), and on 13 October 2026, when the author simplified it (§8.2.11).
+development loop (§8.2.10), on 13 October 2026, when the author simplified it (§8.2.11), and on
+18 October 2026, after the author ruled an external architecture review (§8.2.12).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
 WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)),
@@ -22,36 +23,36 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
 `v0.5.0-alpha.13`; WP48, the OKF backfill ([plan](wp48-okf-backfill.md)), to be tagged
 `v0.5.0-alpha.14`.
-Planned: WP49, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.10 J1).
+Planned: WP49, the cost study (§8.2.12 M2, M4); WP50, the user-testing protocol (§8.2.9 I1,
+renumbered by §8.2.12 M4).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
-and ruled every `UT-nn`: the fixes, from WP50, then the documentation increment and the close,
+and ruled every `UT-nn`: the fixes, from WP51, then the documentation increment and the close,
 which take their numbers then.
 Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
-Phase 4 tidies the program before anyone other than its author relies on it. The code's structure
-was measured and the chosen parts rebuilt; most review fixes are done. Still to come: the small
-fixes, the reorganised reference notes, and the author's scripted trials as a user, with the
-problems found fixed.
+Phase 4 tidies the program before others rely on it. The rebuilt structure, the simpler loop, the
+trimmed code, the small fixes and the reorganised notes are done. On 18 October an outside review of
+the program's design was checked claim by claim. Most of what it proposed the program already does.
+Three costs it suspected were never measured, and it proposed replacing the desktop window with a
+page in a web browser.
 
-The package added on 11 October to speed up the daily loop was built but did not deliver: a
-commit's check still takes two to four minutes, the full check about nine, and the AI session that
-built it cost about four times a normal one. It also left a third of the code's lines as
-explanatory prose.
+**What changes.** One short package now comes before the user testing. It measures the three
+suspected costs: memory for long simulations, repeated set-up inside the solver, and reloading saved
+steps from disk. It fixes only a cost over a limit written down before measuring. It also publishes
+the case file's format in a standard form that a web page can read. The interface phase will build
+the browser page in place of the desktop window.
 
-Two packages now come first. One swaps the clever machinery for plain rules: a commit runs the
-style checks and every quick test, the full check runs once before a push, plans stay under a page
-and a half, and cheaper AI models do routine work. The other removes most comments from the code,
-and proves by machine that no behaviour changed.
+**Cost.** About a week, inside the four to six weeks already set. The testing sessions start a week
+later.
 
-**Cost.** About a week for both. The estimate stays 4 to 6 weeks unless you rule otherwise.
+**What could go wrong.** A fix could change a computed result; the stability check stops any change
+above one part in a hundred million. The browser decision reverses an earlier choice, so the
+interface phase's design document must show it still meets the licence rules.
 
-**What could go wrong.** A removed comment could hold a reason found nowhere else; you read the
-pull request. A slow test left to the full check could surface a failure one step later.
-
-**Your call.** Should the rule that blocks a push until the full check passed stay?
-*Recommendation:* yes, it is small and makes the check hard to skip.
+**Your call.** Should the desktop window stay until the browser page can do everything it does?
+*Recommendation:* yes, so every release keeps a working, tested window.
 
 ## Context
 
@@ -59,7 +60,8 @@ This is the delivery plan for Phase 4 of `SPECIFICATION.md` §8.1. The specifica
 Where this file and the specification disagree, the specification governs and this file is wrong.
 Requirement identifiers here are pointers into the specification, never restatements of it. The
 author's rulings behind this plan are §8.2.6 F3, F4 and F6, §8.2.7 G1 to G11, §8.2.8 H1 to H12 (on
-the modularity report and the review register), §8.2.9 I1 to I5 (on planning the register's items), and §8.2.10 J1 to J9 (on the development loop).
+the modularity report and the review register), §8.2.9 I1 to I5 (on planning the register's items), §8.2.10 J1 to J9 (on the development loop), and
+§8.2.12 M1 to M5 (on the architecture review).
 They are not re-argued here.
 
 Phases 0 to 3 built the pipeline, from a structure to a charged current. Phase 4 asks two questions
@@ -170,7 +172,22 @@ Deliberately excluded:
 - structure preparation, and OPN-04;
 - any new physics. A finding that asks for physics is deferred, with a ruling, to Phase 6 or to
   post-1.0;
-- Python 3.15 and its lazy imports, which wait on OPN-09 (§8.2.10 J6).
+- Python 3.15 and its lazy imports, which wait on OPN-09 (§8.2.10 J6);
+- the browser shell that replaces the Qt shell, which is Phase 5's (§8.2.12 M3), and every claim of
+  the 18 October architecture review that the code already meets (M1, REV-115).
+
+The rulings on the architecture review (§8.2.12), 18 October 2026, rest on four facts measured at
+`645289e`:
+
+- **The aligned ensemble is held whole.** `structure/ensemble.py` `AlignedEnsemble.positions_nm` is
+  one float32 array of frames × atoms × 3, while `density/union.py` `deposit` already streams by frame
+  and by z slab.
+- **Every rung rebuilds its forms.** `physics/models.py` `CoupledModel.solve` builds a new
+  `BilinearForm` per rung, on the space the warm start hands it.
+- **Every stage reads its inputs back from the store.** `pipeline/run.py` goes through
+  `Store.get_or_compute`, whose writes are already staged and renamed (`io/store.py`).
+- **The case schema is Pydantic v2 and strict, and has no JSON Schema export.** `io/case.py` sets
+  `extra="forbid"`; nothing calls `model_json_schema`.
 
 ## Design decisions
 
@@ -196,6 +213,8 @@ contents and the guard's form, and the first OKF package decides open questions 
 | The review register's items | Those accepted for Phase 4 land in three packages by kind, WP41 to WP43, after WP40 and before the OKF bundle. The OKF bundle, the backfill and the protocol become WP46 to WP48 (§8.2.9 I1, I2) | Numbers settle before the ledger re-establishes them and before the testers see them |
 | The open `REV-nn` rows | Each one ruled: into a Phase 4 package, deferred to Phase 5 or 6, post-1.0, or declined (I3) | Every item of the register has an owner |
 | An accuracy fix and the golden | WP41's plan argues a bound for each VER-62 QoI before the change. A drift within that bound is re-pinned in the same commit as the amended clause; a drift beyond it stops the package (I4) | G10's ruling is given in advance for a fix whose purpose is to move a number, and only within a bound registered beforehand |
+| The architecture review | Already-met claims declined with their evidence; one measure-first package with registered thresholds and a JSON Schema export; the browser shell to Phase 5 (§8.2.12 M1 to M3) | A cost is fixed when it is measured, not when it is suspected |
+| Where the cost study goes | WP49, before the protocol, which becomes WP50 (M4) | Testers see the tree v0.5 ships (G2) |
 | The development loop | WP43, before the small fixes. The commit hook runs the fast checks and the affected tests. The push gate runs once, in the background. CI runs ubuntu on Python 3.14 on a pull request, and macOS and Windows after a merge. Python 3.14 is the default. The agent roster is defined, and plans open with a plain-language summary. Every change is held to pre-registered budgets (§8.2.10 J1 to J9) | Every later package is built on it. The budgets keep it from drifting back |
 
 ## Conventions established by earlier phases
@@ -810,6 +829,29 @@ reason to loosen the test.
 > opening inventory establishes test cost. The package ends with the full evidence audit complete,
 > `pending.yaml` empty and `CEILING = 0` (G3, G8; REV-103).
 
+### WP49 — The cost study (§8.2.12 M2; REV-112, REV-113; VER-76 proposed)
+
+Added on 18 October 2026 (§8.2.12 M2, M4). It waits on WP48's merge, and the protocol waits on it.
+It measures three costs an external review suspected, on a 4-core container, on the quick-start pore
+and on the prepared 2WCD, with a committed script whose numbers the plan's Outcome and the
+end-of-phase report quote. It fixes a cost only if it crosses its threshold, which is registered
+here, before any measurement:
+
+| Cost | Measured as | Fixed if | Prediction | The fix |
+|---|---|---|---|---|
+| A1, the ensemble in memory | Stage 1's peak resident memory on 2WCD's ensemble, projected linearly to 1,000 frames | Over 4 GB | About 1 GB: the array is about 0.7 GB at 1,000 frames of 55,000 atoms | Align and write frame by frame, so peak memory holds a frame, not the ensemble; the artefact's bytes and key unchanged |
+| A8, forms rebuilt per rung | Share of stage 10's wall time spent building symbolic forms, not assembling them, over both NUM-18 ladders | Over 5 % | Under 1 % | Build the forms once per mesh, with the rung's scales as parameters |
+| A16, stages read back from the store | Share of a cold walk's wall time spent serialising and reading artefacts between stages | Over 10 % | Under 5 % | Hand a stage's in-memory result to the next, the store still written and every key unchanged |
+
+It also exports the case schema as a JSON Schema, generated from the case document's own model and
+published by the documentation build. Proposed **VER-76**: the export's leaves equal those
+`case_fields` walks, in both directions, so a field added to one and not the other fails; its oracle
+is a substituted schema with one extra leaf, which must fail.
+
+A fix changes no number: VER-62 holds at 10⁻⁸ on a recorded mesh, and a miss is reverted (G10).
+A fix that does not fit one pull request is carried as a `REV-nn` row and ruled into a fix package.
+The package claims VER-76 and sets REV-112 and REV-113 `fixed`. Tag `v0.5.0-alpha.15`.
+
 ### User-testing protocol — Provisional
 
 It waits on the OKF backfill. It writes:
@@ -834,6 +876,9 @@ protocol. **The sessions themselves are the author's**, and their findings are l
 
 > **Amended, 11 October 2026** (§8.2.10 J1). This is now **WP49**.
 
+> **Amended, 18 October 2026** (§8.2.12 M4). This is now **WP50**, and it waits on WP49, the cost
+> study, as well as the OKF backfill. Tag `v0.5.0-alpha.16`.
+
 ### Fix packages — Provisional
 
 They wait on the sessions and on the author's ruling of each `UT-nn`. A second `/phase-plan amend 4`
@@ -848,6 +893,9 @@ shell following, and schema moves under `nanopnp/case/v0.5` (G6).
 > recorded in the register.
 
 > **Amended, 11 October 2026** (§8.2.10 J1). They are numbered from **WP50**.
+
+> **Amended, 18 October 2026** (§8.2.12 M4). They are numbered from **WP51**. They also take any
+> cost WP49 measures over its threshold and cannot fix within its own pull request, by ruling.
 
 ### Documentation increment 4 — Provisional
 
@@ -922,6 +970,9 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | An accuracy fix that moves VER-62 | Stop (G10), pre-rule, or diagnose only | **Settled by the author, 6 October 2026** (I4): pre-ruled within a bound WP41's plan argues |
 | REV-06's frame, and whether REV-08 makes NUM-16's test per field | — | **Settled by WP41's plan, 7 October 2026**, from measurement: a supplied field is in the model frame, and a declared other frame is refused (WP41 D1, amended in the plan's commit); the test becomes per field, and the relative residual test no longer closes a rung (WP41 D4, amended in its item's commit, I4) |
 | `with_section`, `register` in `PUBLIC` | Add or keep out | Carried from WP34 D9 as `MOD-11`. **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
+| The architecture review of 18 October 2026 | Which claims to act on, the browser shell, where the study goes, the estimate | **Settled by the author, 18 October 2026** (§8.2.12 M1 to M5) |
+| The Qt shell until the browser shell matches it | Keep it gated through v0.5 and until Phase 5 replaces it, or drop it earlier | **Settled by the author, 18 October 2026** (M3): kept. The In brief's *Your call* invites a re-ruling |
+| WP49's thresholds | 4 GB, 5 %, 10 % | **Registered by this amendment**, 18 October 2026. A re-argued threshold is a plan amendment before the measurement, never after |
 | NUM-07 order; the archive-dependent legs | — | **Phase 6** (E1, E4, F1). Not this phase's |
 | OPN-04, OPN-08 | — | **Author, open.** Not on this phase's path |
 
@@ -942,6 +993,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The required status checks renamed in the repository's branch protection, if it has any | WP43's merge | The pull request cannot merge, or merges with stale checks required |
 | The tag `v0.5.0-alpha.9` and CI result as the required check | Now | WP44's pull request waits on the old checks |
 | A read of WP45's pull request, and of any module the author picks | WP45's merge | The pull request waits |
+| A ruling on any WP49 cost over its threshold that one pull request cannot fix | WP49's shipping | The cost is carried as a `REV-nn` row, and the protocol does not wait on it |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
 
@@ -971,9 +1023,10 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP46, small fixes | 1, 2 | Tests named by item; no new identifier |
 | WP47, OKF bundle | 1 | VER-68, the F6 check |
 | WP48, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
-| WP49, protocol | 1 or 2 | VER-69 (proposed) |
+| WP49, cost study | 1, 2 | VER-76 (proposed); VER-62 unchanged |
+| WP50, protocol | 1 or 2 | VER-69 (proposed) |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-63 kept green |
-| Fixes, from WP50 | 1, 2 | Claimed at the second amendment |
+| Fixes, from WP51 | 1, 2 | Claimed at the second amendment |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | VER-63 against closed logs |
 
@@ -1024,6 +1077,11 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
     about 90 s), the push gate (8 to 9 minutes) and the pull-request critical path (under 6
     minutes). If a gated item misses, it is fixed; if a reported number misses, the cause is
     reported and the author rules. No tolerance is loosened and no oracle weakened.
+12. *Added, 18 October 2026* (§8.2.12 M2). **Each cost the architecture review suspected is measured**
+    against its threshold registered under WP49, and each one over it is fixed or ruled into a fix
+    package; VER-76 passes. Prediction: all three under their thresholds, so no fix lands. If a
+    measurement misses its prediction, the number is reported and the fix follows the threshold, not
+    the prediction; a threshold is never moved after its measurement.
 
 ## End-of-phase report
 
@@ -1049,6 +1107,8 @@ Empty until the close package fills it. It reports:
   CLI changes, each with its migration. Sources: `test_public_api.py`, VER-47 and `CHANGELOG.md`.
 - **The suite:** test counts by tier and the push gate's serial and parallel durations, against the
   1,764 collected by default at `v0.4.0`. Source: the gate run on the close package's tree.
+- **The cost study:** WP49's three measurements against their thresholds and predictions, and what
+  was fixed. Source: WP49's script, re-run on the close's tree.
 - **The development loop:** the wall times of the commit hook, the push gate and CI's pull-request
   critical path, against 11 October 2026's 199 s, 527 s and about 10.5 minutes. Sources: the gate log
   (`<git dir>/nanopnp-gate.log`) and CI's job timings.
