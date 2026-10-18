@@ -1090,3 +1090,12 @@ The original D3 and item 5 omitted the numerics Library Behaviour concept, and t
 The pending claims include numerical sweeps no current fixture runs and aliasing errors on millions of elements. Extra assertions or toy tests cannot establish those measurements at the original promised zero additional solver cost.
 
 **Fixed in the WP48 plan:** D1 inventories evidence and cost; D5 separates immutable historical records from current properties requiring tests. Unsupported measurements stay unresolved. The unconditional runtime promise and guessed intermediate ceilings are removed; implementation must establish the resulting evidence.
+
+
+### REV-111 - The no-MPI-symbols claim is backed only by the lock file
+
+*Area:* verification. *Severity:* low. *Found:* WP48 `/wp-ship` review.
+
+`knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md` says no shipped `.so` of the NGSolve wheels carries MPI symbols and there is no `mpi4py`. Its marker cites `test_ngsolve_wheel_table_and_config_flags`, which shows only that `mpi4py` is not a locked package, so the symbol half of the claim has no test. Scanning the shipped binaries for MPI symbols depends on how NGSolve loads MPI, which is unsettled.
+
+**Open:** the author rules whether to add a binary scan, or to narrow the claim to the lock file and the configuration flags.

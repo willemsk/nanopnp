@@ -130,3 +130,4 @@ is a rolling register, and its header stays `open`.
 | REV-108 | verification | medium | fixed | [WP48 plan amendment](../plans/wp48-okf-backfill.md) | [WP48 omitted sourced arithmetic from its audit](review-items.md#rev-108-wp48-omitted-sourced-arithmetic-from-its-audit) |
 | REV-109 | verification | medium | fixed | [WP48 plan amendment](../plans/wp48-okf-backfill.md) | [WP48 omitted version metadata coverage and refusal checks](review-items.md#rev-109-wp48-omitted-version-metadata-coverage-and-refusal-checks) |
 | REV-110 | verification | medium | fixed | [WP48 plan amendment](../plans/wp48-okf-backfill.md) | [WP48 lacked an evidence route for historical numerical experiments](review-items.md#rev-110-wp48-lacked-an-evidence-route-for-historical-numerical-experiments) |
+| REV-111 | verification | low | open | — | [The no-MPI-symbols claim is backed only by the lock file](review-items.md#rev-111-the-no-mpi-symbols-claim-is-backed-only-by-the-lock-file) |
