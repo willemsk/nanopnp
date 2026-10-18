@@ -1,16 +1,17 @@
 # Current work
 
-Updated 18 October 2026 (Phase 4 amended after the architecture review, §8.2.12). Navigation only; `SPECIFICATION.md` governs;
-an unmerged branch is not shipped.
+Updated 18 October 2026 (WP49 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it; the loop, the code and the notes are done. An
-outside design review was checked claim by claim, and the program already does most of it. One short
-package now precedes user testing: it measures three suspected costs and fixes only those over a
-limit set beforehand. The interface phase will build a browser page in place of the desktop window.
+Phase 4 tidies the program before others rely on it; the loop, the code and the notes are done. One
+short package now precedes user testing, and it is planned: it measures three suspected costs, fixes
+only those over a limit set beforehand, and publishes the case-file format for other tools. The
+interface phase will build a browser page in place of the desktop window.
 
-**Your call:** the cost study is next. *Recommendation:* plan it once the notes package merges.
+**Your call:** should that format also come with the program through a command? *Recommendation:*
+no, documentation only until the browser page needs it.
 
 ## Position
 
@@ -19,19 +20,18 @@ limit set beforehand. The interface phase will build a browser page in place of 
   **in progress** (§8.2.7 to §8.2.12). WP35 to WP45 are
   merged ([loop](wp44-simplify-the-loop.md), [prose](wp45-prose-strip.md)); tags to `v0.5.0-alpha.11`
   are the author's step.
-- **WP46 to WP48 are delivered**: [small fixes](wp46-small-fixes.md), [OKF bundle](wp47-okf-bundle.md),
-  [OKF backfill](wp48-okf-backfill.md); tags `v0.5.0-alpha.12` to `.14` after each merge.
+- **WP46 to WP48 are delivered** ([WP48](wp48-okf-backfill.md)); tags `v0.5.0-alpha.12` to `.14`.
 - **Amended 18 October 2026** (§8.2.12): review claims already met declined (REV-115); browser
-  shell to Phase 5 (M3). **WP49, the cost study** (M2; REV-112, REV-113), is in the phase plan. Next: `/wp-ship` for WP48, then `/wp-plan 49`; then WP50
+  shell to Phase 5 (M3). **WP49, the cost study** (M2; REV-112, REV-113; VER-76 proposed), is
+  **planned** ([plan](wp49-cost-study.md)). Next: WP48 merged, then `/wp-implement`; then WP50
   (protocol; the author's sessions; fixes from WP51).
 
 ## Not to be re-decided
 
 - **Versions:** one minor per phase; the close takes `v0.5.0` alone (E2, F2, G11). → §2.7 NOTE.
-- **The development loop** (§8.2.11): lint, types and Tier 1 on commit; one push gate without coverage; one
-  pull-request leg on Python 3.14; Haiku, then Sonnet, then Opus; plans of at most 1,500 words with
-  compaction checkpoints; two agents, and WP45's fresh worker per item as a trial (L9); prose only on the public API; `## In brief`. Floor 3.11. → §8.2.10 J4–J6,
-  J9; OPN-09.
+- **The development loop** (§8.2.11): Tier 1 on commit; one push gate; one pull-request leg on
+  Python 3.14; Haiku, Sonnet, then Opus; capped plans; two agents (L9); prose only on the public
+  API. Floor 3.11. → §8.2.10 J4–J6, J9; OPN-09.
 - **Cost fixes follow measurement against thresholds registered before it** (§8.2.12 M2).
   **Phase 5 builds a browser shell; the Qt shell stays gated until it is replaced** (M3).
 - **Phase 4's shape:** refactors before the protocol (G2); two OKF packages and a ratchet (G3, G8);
@@ -65,7 +65,7 @@ limit set beforehand. The interface phase will build a browser page in place of 
 |---|---|
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
-| The cost study and the review verdicts | Phase 4 plan, WP49; §8.2.12; `review-items.md` REV-112 to REV-115 |
+| The cost study and the review verdicts | `wp49-cost-study.md`; Phase 4 plan, WP49's thresholds; §8.2.12; `review-items.md` REV-112 to REV-115 |
 | The OKF bundle and backfill | `wp47-okf-bundle.md`, `wp48-okf-backfill.md`; `validation/okf.py` (VER-68) |
 | The OKF decisions | `okf-knowledge-bundle.md` (K1–K11); §8.2.7 G3, G8, G12; `okf-converter-rules.md` |
 
