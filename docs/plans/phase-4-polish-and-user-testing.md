@@ -4,7 +4,8 @@
 same day, after the author ruled every `MOD-nn` (§8.2.8). Amended again on 6 October 2026, after
 the author ruled the review register (§8.2.9), and on 11 October 2026, when the author inserted the
 development loop (§8.2.10), on 13 October 2026, when the author simplified it (§8.2.11), and on
-18 October 2026, after the author ruled an external architecture review (§8.2.12).
+18 October 2026, after the author ruled an external architecture review (§8.2.12), and again that
+day, when the author ruled the test scope (§8.2.13).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
 WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)),
@@ -24,32 +25,31 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.13`; WP48, the OKF backfill ([plan](wp48-okf-backfill.md)), to be tagged
 `v0.5.0-alpha.14`; WP49, the cost study ([plan](wp49-cost-study.md)), to be tagged
 `v0.5.0-alpha.15`.
-Planned: WP50, the user-testing protocol (§8.2.9 I1, renumbered by §8.2.12 M4).
+Planned: WP50, the test scope (§8.2.13); WP51, the user-testing protocol (§8.2.9 I1, renumbered by
+§8.2.12 M4 and §8.2.13 N6).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
-and ruled every `UT-nn`: the fixes, from WP51, then the documentation increment and the close,
+and ruled every `UT-nn`: the fixes, from WP52, then the documentation increment and the close,
 which take their numbers then.
 Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the simpler loop, the
-trimmed code, the small fixes and the reorganised notes are done. On 18 October an outside review of
-the program's design was checked claim by claim. Most of what it proposed the program already does.
-Three costs it suspected were never measured, and it proposed replacing the desktop window with a
-page in a web browser.
+trimmed code, the reorganised notes and the cost study are done. On 18 October the author ruled that
+the test suite has grown far beyond what protects the program: about as many lines of tests as of
+program, most of them checking messages, wiring or the project's own documents.
 
-**What changes.** One short package now comes before the user testing. It measures the three
-suspected costs: memory for long simulations, repeated set-up inside the solver, and reloading saved
-steps from disk. It fixes only a cost over a limit written down before measuring. It also publishes
-the case file's format in a standard form that a web page can read. The interface phase will build
-the browser page in place of the desktop window.
+**What changes.** One package now comes before the user testing. It deletes the tests that guard
+nothing that could silently go wrong, keeping the physics, the numerics, the core machinery and the
+licence and architecture guards. It removes the rule that every changed line be exercised by a test,
+moves the long end-to-end runs to a nightly check that opens an issue when it fails, and writes the
+rule that stops the pile growing back, with a reviewer step that deletes tests outside it.
 
-**Cost.** About a week, inside the four to six weeks already set. The testing sessions start a week
-later.
+**Cost.** A few days, inside the four to six weeks already set. Every later push is minutes faster.
 
-**What could go wrong.** A fix could change a computed result; the stability check stops any change
-above one part in a hundred million. The browser decision reverses an earlier choice, so the
-interface phase's design document must show it still meets the licence rules.
+**What could go wrong.** A deletion could leave a physics result unchecked; one charged example still
+runs on every push and holds its recorded numbers. A slower example's moved number shows up the
+night after a merge.
 
 **Your call.** Should the desktop window stay until the browser page can do everything it does?
 *Recommendation:* yes, so every release keeps a working, tested window.
@@ -215,6 +215,7 @@ contents and the guard's form, and the first OKF package decides open questions 
 | An accuracy fix and the golden | WP41's plan argues a bound for each VER-62 QoI before the change. A drift within that bound is re-pinned in the same commit as the amended clause; a drift beyond it stops the package (I4) | G10's ruling is given in advance for a fix whose purpose is to move a number, and only within a bound registered beforehand |
 | The architecture review | Already-met claims declined with their evidence; one measure-first package with registered thresholds and a JSON Schema export; the browser shell to Phase 5 (§8.2.12 M1 to M3) | A cost is fixed when it is measured, not when it is suspected |
 | Where the cost study goes | WP49, before the protocol, which becomes WP50 (M4) | Testers see the tree v0.5 ships (G2) |
+| The test scope | Tests only for physics, numerics, core mechanisms and the licence and architecture guards; no coverage gate; walks nightly but for examples 01 and 02; a reviewer step deletes off-category tests; WP50, before the protocol (§8.2.13 N1 to N6) | Development speed is spent on tests that can catch a wrong answer |
 | The development loop | WP43, before the small fixes. The commit hook runs the fast checks and the affected tests. The push gate runs once, in the background. CI runs ubuntu on Python 3.14 on a pull request, and macOS and Windows after a merge. Python 3.14 is the default. The agent roster is defined, and plans open with a plain-language summary. Every change is held to pre-registered budgets (§8.2.10 J1 to J9) | Every later package is built on it. The budgets keep it from drifting back |
 
 ## Conventions established by earlier phases
@@ -861,6 +862,25 @@ A fix changes no number: VER-62 holds at 10⁻⁸ on a recorded mesh, and a miss
 A fix that does not fit one pull request is carried as a `REV-nn` row and ruled into a fix package.
 The package claims VER-76 and sets REV-112 and REV-113 `fixed`. Tag `v0.5.0-alpha.15`.
 
+### WP50 — The test scope (§8.2.13 N1 to N5)
+
+Added on 18 October 2026 (§8.2.13 N6). It waits on WP49's merge, and the protocol waits on it. The
+design is `docs/superpowers/specs/2026-10-18-test-pruning-design.md`. It:
+
+- writes N1's rule once in `CLAUDE.md` and `.claude/rules/python.md`, and replaces every instruction
+  to write a test per item, per identifier or per changed line in the skills, `CONTRIBUTING.md`, the
+  pull-request template and `tests/README.md`;
+- removes the coverage job and `diff-cover` (N2);
+- replaces `extended` with `nightly`, sets the per-push selection of N4, keeps examples 01 (under 60 s)
+  and 02's ePNP-NS pore on every push, and makes a failed nightly run open an issue;
+- deletes the tests outside N1, area by area, keeping a smoke test per entry point;
+- withdraws N3's identifiers, amends §7.1 to §7.3, §7.6, §8.1 and Appendix A, and retargets the
+  knowledge base's markers;
+- adds N5's reviewer step to `/wp-ship`.
+
+No tolerance is loosened, and no kept test is weakened. VER-62 holds at 10⁻⁸ on a recorded mesh on the
+tests that remain. It claims no new identifier. Tag `v0.5.0-alpha.16`.
+
 ### User-testing protocol — Provisional
 
 It waits on the OKF backfill. It writes:
@@ -888,6 +908,10 @@ protocol. **The sessions themselves are the author's**, and their findings are l
 > **Amended, 18 October 2026** (§8.2.12 M4). This is now **WP50**, and it waits on WP49, the cost
 > study, as well as the OKF backfill. Tag `v0.5.0-alpha.16`.
 
+> **Amended, 18 October 2026** (§8.2.13 N4, N6). This is now **WP51**, and it waits on WP50. Its
+> scripts run nightly, not in the push gate, and VER-69 is proposed on that footing. Tag
+> `v0.5.0-alpha.17`.
+
 ### Fix packages — Provisional
 
 They wait on the sessions and on the author's ruling of each `UT-nn`. A second `/phase-plan amend 4`
@@ -905,6 +929,8 @@ shell following, and schema moves under `nanopnp/case/v0.5` (G6).
 
 > **Amended, 18 October 2026** (§8.2.12 M4). They are numbered from **WP51**. They also take any
 > cost WP49 measures over its threshold and cannot fix within its own pull request, by ruling.
+
+> **Amended, 18 October 2026** (§8.2.13 N6). They are numbered from **WP52**, and their tests follow N1.
 
 ### Documentation increment 4 — Provisional
 
@@ -939,6 +965,9 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 > of serial time saved, and no file over 90 s. It then states, in the end-of-phase report, whether
 > each target is met, re-argued or retired. It also confirms that every `REV-nn` row whose ruling
 > places it in a Phase 4 package is `fixed` (criterion 10).
+
+> **Amended, 18 October 2026** (§8.2.13 N3). VER-63 is withdrawn: the close reads both logs and the
+> register itself and records their closure in the report. REV-47's targets are retired by N4.
 
 ## Open decisions
 
@@ -981,6 +1010,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | `with_section`, `register` in `PUBLIC` | Add or keep out | Carried from WP34 D9 as `MOD-11`. **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
 | The architecture review of 18 October 2026 | Which claims to act on, the browser shell, where the study goes, the estimate | **Settled by the author, 18 October 2026** (§8.2.12 M1 to M5) |
 | The Qt shell until the browser shell matches it | Keep it gated through v0.5 and until Phase 5 replaces it, or drop it earlier | **Settled by the author, 18 October 2026** (M3): kept. The In brief's *Your call* invites a re-ruling |
+| The test scope, its place and the estimate | What is tested, the coverage gate, the split, prevention, WP50 before the protocol | **Settled by the author, 18 October 2026** (§8.2.13 N1 to N7) |
 | WP49's thresholds | 4 GB, 5 %, 10 % | **Registered by this amendment**, 18 October 2026. A re-argued threshold is a plan amendment before the measurement, never after |
 | NUM-07 order; the archive-dependent legs | — | **Phase 6** (E1, E4, F1). Not this phase's |
 | OPN-04, OPN-08 | — | **Author, open.** Not on this phase's path |
@@ -1033,11 +1063,17 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP47, OKF bundle | 1 | VER-68, the F6 check |
 | WP48, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
 | WP49, cost study | 1, 2 | VER-76 (proposed); VER-62 unchanged |
-| WP50, protocol | 1 or 2 | VER-69 (proposed) |
+| WP50, test scope | 1, 2 | None new; N3's identifiers withdrawn; VER-61, VER-62, VER-65 kept green |
+| WP51, protocol | nightly | VER-69 (proposed) |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-63 kept green |
-| Fixes, from WP51 | 1, 2 | Claimed at the second amendment |
+| Fixes, from WP52 | 1, 2 | Claimed at the second amendment |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | VER-63 against closed logs |
+
+> **Amended, 18 October 2026** (§8.2.13 N2 to N4). From WP50 the push gate runs N4's per-push
+> selection and no `--extended`; the rest runs nightly. Criterion 1 reads "Tiers 1 and 2 pass, per
+> push and nightly". Where criteria 2, 4, 5, 10 and 11 cite VER-63, VER-68, VER-75, the plan-shape test
+> or G3's list, the close verifies the same condition at review and records it in the report.
 
 **The phase is complete when:**
 
