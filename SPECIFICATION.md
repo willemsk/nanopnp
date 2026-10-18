@@ -3840,9 +3840,10 @@ The knowledge base is an Open Knowledge Format v0.2 bundle (VER-68; §8.2.6 F6, 
 directory per note, a concept per `##` section with a header (a `type` from a closed list, its
 `sources`, and who generated and verified it), an `index.md` per directory and a `log.md` of dated
 events. A claim verified by running code is marked `[tested: <test>]`, naming a test function under
-`tests/`, and `[tested: pending]` is refused; a claim verified by arithmetic or by reading a source
-is marked `[verified]`, with a footnote to a source of its concept. `knowledge/pending.yaml` is empty
-(`{}`) and its ceiling is 0, the ratchet of §8.2.7 G3 closed at WP48. Anything unverified says so. The maintenance rule, stated in
+`tests/`; bare `[tested]` and `[tested: pending]` markers are refused. Executable arithmetic also
+gets a Tier-1 test (§8.2.7 G8); a reading of a source stays `[verified]`, with a footnote to a source
+of its concept. `knowledge/pending.yaml` is empty and the ceiling is 0, following WP48's backfill
+(§8.2.7 G3; VER-68). Anything unverified says so. The maintenance rule, stated in
 `CLAUDE.md`: when something durable is learned, it is written as a concept, with a line in the log.
 
 ---

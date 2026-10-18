@@ -28,7 +28,7 @@ verified:
   at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp28-plan
-  resource: docs/plans/wp28-charge-deposition.md
+  resource: git:0ff2d619:docs/plans/wp28-charge-deposition.md
   title: WP28 charge projection plan, Design §1
 ---
 
@@ -195,4 +195,4 @@ Measured implementing it (WP28, 1 October 2026) **[tested: tests/tier1/test_char
 
 ---
 
-[^wp28-plan]: `docs/plans/wp28-charge-deposition.md`, Design §1 (`prod5_clya_charge` table and reference-mesh quadrature audit).
+[^wp28-plan]: `git show 0ff2d619:docs/plans/wp28-charge-deposition.md`, Design §1 (`prod5_clya_charge` table and reference-mesh quadrature audit).

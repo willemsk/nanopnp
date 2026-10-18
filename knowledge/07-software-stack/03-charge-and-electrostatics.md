@@ -41,9 +41,9 @@ sources:
 - id: wp27-plan
   resource: docs/plans/wp27-protonation.md
   title: WP27 protonation stage plan, Design §1 (PDB2PQR 3.7.1 source)
-- id: wp29-plan
-  resource: docs/plans/wp29-val06-apbs.md
-  title: WP29 VAL-06 APBS cross-check plan (case identity cost and APBS driver measurements)
+- id: case-identity-record
+  resource: git:1761f15c:src/nanopnp/validation/comsol.py
+  title: Case identity hashing measurements in case_identity before WP45's prose strip
 tested_with:
   pdb2pqr: 3.7.1
   propka: 3.5.1
@@ -230,9 +230,9 @@ the deck's `temp`.
 
   This is about 250 B per node.
   The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[tested: tests/tier1/test_knowledge_arithmetic.py::test_apbs_input_cleanup_and_250_bytes_per_node]**.
-- **Case identity cost** (`validation/comsol.py`): hashing the 84 MB reference charge table takes about 1.6 s;
+- **Case identity cost**, recorded before WP45's prose strip (`validation/comsol.py`): hashing the 84 MB reference charge table took about 1.6 s;
   hashing the 9.2 MB deposited 2WCD structure files takes 12 ms, plus 0.7 s on the first import of stage 1 and
-  MDAnalysis **[verified][^wp29-plan]**.
+  MDAnalysis **[verified][^case-identity-record]**. These are historical measurements, not performance guarantees.
 - **Self-refinement on 2WCD.** The problem is `poisson` on the protonated, prepared 2WCD at the
   default mesh (44,987 elements), with both electrodes grounded. The box is 19.2 nm, with the faces
   from our own `P2` solution. The probes are 555,535 fluid nodes of the 0.2 nm grid, at least 0.3 nm
@@ -307,4 +307,4 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
 
 [^wp17-plan]: `docs/plans/wp17-case-schema-v2.md` and `uv.lock` (PyPI metadata for `pdb2pqr` 3.7.1 and `propka` 3.5.1).
 [^wp27-plan]: `docs/plans/wp27-protonation.md`, Design §1 (`pdb2pqr` 3.7.1 `get_common_string_rep` and `get_pqr_string`).
-[^wp29-plan]: `docs/plans/wp29-val06-apbs.md` (case identity hashing cost and VAL-06 APBS driver measurements).
+[^case-identity-record]: `git show 1761f15c:src/nanopnp/validation/comsol.py`, `case_identity` docstring (84 MB charge-table hashing and the 9.2 MB deposited-structure recipe, WP34 D6).

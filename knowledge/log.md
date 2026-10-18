@@ -4,6 +4,9 @@ Entries are the dated events the notes record, newest first; git holds every ear
 
 ## 2026-10-18
 * **Update**: Repointed the six source citations that named plan files which do not exist (`wp18`, `wp20`, `wp21`, `wp28`, `wp30`, `wp32`) at the plans that do, and re-wired the claims for the 1 M NaCl conductivity, the zero-bias route check, the telescoping round-off statistics, the trailing-NUL behaviour and the fluid-only indicator to tests that assert them (WP48 review).
+* **Update**: Corrected the integration-order example to the tested fourth-degree polynomial and synchronised the specification's maintenance text with the closed, zero-pending ledger (WP48 review).
+* **Update**: Linked executable force-scale arithmetic to its existing assertions, recorded the exercised gemmi version, and restricted the FEM wheel table to its checked lockfile range (WP48 review).
+* **Update**: Repaired historical plan addresses and viewer attribution, pinned hashing, singular-system and sweep measurements to their immutable records, and separated historical magnitudes from current reproductions (WP48 review).
 
 ## 2026-10-16
 * **Update**: Backed all 63 remaining domain claims across the bundle with Tier-1 and Tier-2 test evidence and immutable plan records, reducing total pending claims across the knowledge bundle to zero and lowering the ceiling to 0 (WP48 item 8).
