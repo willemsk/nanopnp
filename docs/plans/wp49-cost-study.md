@@ -21,12 +21,11 @@ standard machine-readable form.
 format description goes into the documentation, and a check fails if it and the program's own list
 of settings disagree.
 
-**Cost.** About a day of machine time on the four-core container. Six to eight commits.
+**Cost.** About a day of machine time. Six to eight commits.
 
 **What could go wrong.** A fix could change a computed result. The existing record of results
-catches a change in the eighth digit, and a fix that changes one is undone. A measurement could
-flatter the program, so the timers count generously. A fix too big for one package is registered
-for a later ruling.
+catches a change in the eighth digit, and such a fix is undone. A measurement could flatter the
+program, so the timers count generously. A fix too big for one package is registered for a later ruling.
 
 **Your call.** Should the format description also come with the program, through a command, as
 well as in the documentation? *Recommendation:* documentation only for now; the browser page can
