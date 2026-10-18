@@ -15,7 +15,7 @@ verified:
   at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp32-plan
-  resource: docs/plans/wp32-examples-and-tutorials.md
+  resource: docs/plans/wp32-charge-docs-and-example.md
   title: WP32 examples and tutorials plan, D15 (`StageRecord` schema bump)
 tested_with:
   numpy: 2.5.2
@@ -44,4 +44,4 @@ served with its old timings. Stage 7 therefore moved to `nanopnp/fields/v2` and
 `nanopnp/charge-grid/v2`, which makes every old entry a miss (§5.3.2 stage-7 row, amended for WP32).
 Source: the WP32 `/wp-ship` review.
 
-[^wp32-plan]: `docs/plans/wp32-examples-and-tutorials.md`, D15 and `/wp-ship` review (`nanopnp/fields/v2` and `nanopnp/charge-grid/v2`).
+[^wp32-plan]: `docs/plans/wp32-charge-docs-and-example.md`, D15 and `/wp-ship` review (`nanopnp/fields/v2` and `nanopnp/charge-grid/v2`).

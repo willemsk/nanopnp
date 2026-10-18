@@ -515,11 +515,15 @@ def _version(text: str) -> tuple[int, ...]:
 
 def _locked(lock: Path) -> dict[str, str]:
     data = tomllib.loads(lock.read_text(encoding="utf-8"))
-    return {
-        str(p["name"]).lower().replace("_", "-"): str(p["version"])
-        for p in data.get("package", [])
-        if "version" in p
-    }
+    oldest: dict[str, str] = {}
+    for package in data.get("package", []):
+        if "version" not in package:
+            continue
+        name = str(package["name"]).lower().replace("_", "-")
+        version = str(package["version"])
+        if name not in oldest or _version(version) < _version(oldest[name]):
+            oldest[name] = version
+    return oldest
 
 
 def _check_tested_with(concept: Concept, name: str, locked: dict[str, str]) -> list[Finding]:

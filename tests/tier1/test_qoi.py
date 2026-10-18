@@ -150,6 +150,13 @@ def test_num26_two_vanishing_currents_do_not_divide_by_zero() -> None:
     agreement.check()
 
 
+def test_num26_round_off_currents_at_zero_bias_fail_the_relative_check() -> None:
+    agreement = RouteAgreement(indicator_A=2.288e-27, reaction_A=4.606e-25)
+    assert agreement.relative_difference == pytest.approx(0.995, abs=1e-3)
+    with pytest.raises(RouteDisagreementError):
+        agreement.check()
+
+
 def test_fr25_the_summary_states_the_two_pi_convention() -> None:
     point = _point(0.05, 4.0e-9)
     summary = point.summary()

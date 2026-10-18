@@ -37,6 +37,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_density_2wcd.py::test_ver49_ver50_2wcd_to_stage_three
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_numpy_unicode_array_strips_trailing_nul
+  at: '2026-10-18T00:00:00Z'
 sources:
 - id: wp17-plan
   resource: docs/plans/wp17-case-schema-v2.md
@@ -271,7 +273,7 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   re-rounding, 2⁻²⁴. MRC stores the values and the voxel size as float32: 0.05 reads back as
   0.05000000074505806. A grid identity check must round the spacing, as `%.7g` does, before
   comparing.
-- **numpy's fixed-width strings drop trailing NULs.** `np.char.add(a, "\x00")` returns `a`
+- **numpy's fixed-width strings drop trailing NULs** **[tested: tests/tier1/test_library_behaviour.py::test_numpy_unicode_array_strips_trailing_nul]**. `np.char.add(a, "\x00")` returns `a`
   unchanged, because a `<U` array treats trailing NULs as padding. So a `"\x00"` separator between
   residue and atom names silently vanishes, and `ALA`+`CA` reads `ALACA`. Use a printable separator
   that no name contains, such as a tab.

@@ -148,6 +148,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_qoi.py::test_num26_round_off_currents_at_zero_bias_fail_the_relative_check
+  at: '2026-10-18T00:00:00Z'
 tested_with:
   ngsolve: 6.2.2606
   netgen-mesher: 6.2.2606
@@ -430,7 +432,7 @@ The closing moves the surface outward where it fills a groove. On 2WCD at `a` = 
 `wall` nodes lie beyond `a + 10⁻⁶` nm (`knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md#22-the-ion-exclusion-shell-and-the-derived-on-2wcd-measured`).
 
 **Netgen keeps every ring vertex and rounds each edge's segment count, so a shell's wall fails the
-gate in bands of wall target** **** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h]** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed]** (WP30 review, 2 October 2026, netgen 6.2.2606). Given
+gate in bands of wall target** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h]** **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed]** (WP30 review, 2 October 2026, netgen 6.2.2606). Given
 `maxh = h` on a straight edge of length `L` whose ends it must keep, netgen cuts it into about
 `⌊L/h + 0.4⌋` segments: one up to `L/h` ≈ 1.5, two from about 1.6, three from about 2.6. The ring's
 edges are 1.05–1.15 `h_c` ≈ 0.0525 nm, so the mean segment is up to 1.6 × the target wherever the
@@ -598,7 +600,7 @@ gradient- or cross-section-based extraction.
   extension. Sizing √t at a quarter of the shell width instead cured it and improved the Stokes-drag
   benchmark by a factor of thirty, from a 6 × 10⁻⁴ plateau to 2.0 × 10⁻⁵ falling monotonically.
   **The rule: √t is set by the feature the field has to resolve, and there is no single default that
-  serves both a sub-nanometre wall correction and a several-nanometre force band.** **** **[tested: tests/tier1/test_forces.py::TestAxialExtension::test_num28_extension_is_ez_on_the_body_and_zero_on_the_outer_boundary]** **[tested: tests/tier1/test_qoi_stage.py::test_num28_the_extension_shell_scales_to_the_body_in_the_mesh]**
+  serves both a sub-nanometre wall correction and a several-nanometre force band.** **[tested: tests/tier1/test_forces.py::TestAxialExtension::test_num28_extension_is_ez_on_the_body_and_zero_on_the_outer_boundary]** **[tested: tests/tier1/test_qoi_stage.py::test_num28_the_extension_shell_scales_to_the_body_in_the_mesh]**
 
 ### 8.4 Sweeps: the warm start, the forest, and what parallel scaling measures
 
@@ -666,7 +668,7 @@ refusal a P2 → P3 crossing actually produces names `fields` and prints both fi
 orders; `model.elements` is the same fact restated per field kind, gated on the same side so the two
 cannot disagree, and is the belt to `fields`'s braces rather than the key that fires. [tested: tests/tier1/test_warm_start_descriptor.py::test_val01_a_warm_start_across_an_element_order_is_refused]
 
-### 8.5 Measured: NUM-26's relative route check is inapplicable at exactly zero bias **[tested: tests/tier1/test_qoi.py::test_num26_two_vanishing_currents_do_not_divide_by_zero]** **[tested: tests/tier1/test_sweep_plan.py::test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid]** {#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias}
+### 8.5 Measured: NUM-26's relative route check is inapplicable at exactly zero bias **[tested: tests/tier1/test_qoi.py::test_num26_two_vanishing_currents_do_not_divide_by_zero]** **[tested: tests/tier1/test_qoi.py::test_num26_round_off_currents_at_zero_bias_fail_the_relative_check]** **[tested: tests/tier1/test_sweep_plan.py::test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid]** {#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias}
 
 At `V = 0` the current is zero, and both extraction routes return round-off:
 `I_ψ = 2.288 × 10⁻²⁷` A against `I_reaction = 4.606 × 10⁻²⁵` A on the toy pore above. The relative
@@ -742,5 +744,3 @@ cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::
 [^wp9-clya-aliasing]: `git show 0ea0789` and `git show c27c35c`, WP9 delivered ClyA charge-table aliasing and multi-OS unstructured mesh quadrature records.
 [^wp35-simd-dispatch]: `git show 6c0a249` and `git show 1a2e383`, WP35 NumPy SIMD dispatch and VER-62 number-stability mesh records (5 October 2026).
 [^wp45-numerics-strip]: `git show 7597814`, prose strip of `src/nanopnp/numerics/gates.py` recording the 144,628-element `FieldSampler` timings (WP45, 13 October 2026).
-
-

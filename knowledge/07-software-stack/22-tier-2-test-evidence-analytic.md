@@ -108,6 +108,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_val06_ring.py::test_val06_the_ring_series_is_grounded_continuous_and_kirkwood_at_infinity
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_qoi.py::test_num26_round_off_currents_at_zero_bias_fail_the_relative_check
+  at: '2026-10-18T00:00:00Z'
 ---
 
 ## Tier-2 test evidence: analytic benchmarks and reference checks (WP45 item 26)
@@ -156,7 +158,7 @@ verified:
 - **[tested: tests/tier2/test_sweep.py::test_ver37_the_warm_path_costs_strictly_fewer_newton_iterations]** Warm 34.3 s against cold 26.7 s when measured alongside the rest of the suite; on an idle machine the same code gave 10.0 s against 21.6 s. The warm test therefore asserts Newton iterations, which are a property of the solves. Source: `tests/tier2/test_sweep.py` (`test_ver37_the_warm_path_costs_strictly_fewer_newton_iterations`).
 - **[tested: tests/tier2/test_sweep.py::test_fr25_the_manifest_of_a_warm_member_records_how_it_was_reached]** A `canonical` manifest encodes each float as `{"__f__": <hex>}` for an exact digest, so a decoder is required beside it (§5.3.2) and a comparison against a recorded number has to use it. Source: `tests/tier2/test_sweep.py`.
 - **[tested: tests/tier2/test_sweep.py::test_ver38_a_member_whose_parent_is_absent_falls_back_to_the_full_ladder]** The cold pass runs members in reverse index order into an empty store, so no parent has been solved when its child looks for it: the state of a job-array member on a machine that has seen nothing else (FR-24). Source: `tests/tier2/test_sweep.py` (`swept`).
-- **[tested: tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded]** A zero-bias member makes the route check inapplicable: `I_ψ` = 2.3 × 10⁻²⁷ A against `I_reaction` = 4.6 × 10⁻²⁵ A is a relative difference of 0.995 and aborts the member. Source: `tests/tier2/test_sweep_throughput.py`.
+- **[tested: tests/tier1/test_qoi.py::test_num26_round_off_currents_at_zero_bias_fail_the_relative_check]** A zero-bias member makes the route check inapplicable: `I_ψ` = 2.3 × 10⁻²⁷ A against `I_reaction` = 4.6 × 10⁻²⁵ A is a relative difference of 0.995 and aborts the member. Source: `tests/tier2/test_sweep_throughput.py`.
 - **[tested: tests/tier2/test_sweep_throughput.py::test_ver39_the_scaling_curve_is_measured_and_recorded]** The throughput measurement uses 25 points in seven waves of widths 1, 3, 5, 5, 5, 4 and 2, over two axes; the one-worker point runs in-process so that `efficiency(1)` does not pay `spawn`. The development machine reports four cores, so N = 4 is the whole machine. Source: `tests/tier2/test_sweep_throughput.py`.
 - **[tested: tests/tier2/test_sweep_generated_mesh.py::test_ver37_a_generated_mesh_sweep_warm_starts_from_its_parent]** A sweep over a generated mesh keys its parent from the stored stage-6 artefact. Until that was fixed, the member runner keyed the parent from the bare case, raised for every such sweep, and fell back to cold starts silently, so every member climbed the full ladder. Source: `tests/tier2/test_sweep_generated_mesh.py`.
 - **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]** VAL-05's predicted values from the plan's prototype are `ε_G` = −8.08 %, `Δr_c` = −0.0205 nm and rms 0.158 nm; the isolevel steps are 2.0 to 5.3 percentage points against a conditioning rms of 0.01 nm. Source: `tests/tier2/test_val05_2wcd.py`.

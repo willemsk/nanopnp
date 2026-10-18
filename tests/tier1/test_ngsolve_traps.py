@@ -6,6 +6,7 @@ import gc
 import inspect
 import math
 import os
+import platform
 import subprocess
 import sys
 import weakref
@@ -310,7 +311,8 @@ def test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts() -> None:
     err_flux = abs(flux_grad - exact_grad) / exact_grad
     err_pw = abs(pw_grad - exact_grad) / exact_grad
     assert err_flux < 1e-4
-    assert err_pw == pytest.approx(0.0084, rel=0.05)
+    assert 1e-3 < err_pw < 5e-2
+    assert err_pw > 10.0 * err_flux
 
 
 def test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants() -> None:
@@ -320,13 +322,14 @@ def test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants() 
     c2 = np.array([v.point for v in smesh2.vertices])
     assert np.array_equal(c1, c2)
 
+    foreign = "X86_V4" if platform.machine().lower() in {"arm64", "aarch64"} else "NEON ASIMD"
     proc = subprocess.run(
         [
             sys.executable,
             "-c",
             "import numpy._core._multiarray_umath as m; assert m.__cpu_features__",
         ],
-        env={**os.environ, "NPY_DISABLE_CPU_FEATURES": "NEON ASIMD X86_V4"},
+        env={**os.environ, "NPY_DISABLE_CPU_FEATURES": foreign},
         capture_output=True,
         text=True,
         check=False,

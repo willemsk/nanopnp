@@ -120,6 +120,9 @@ def test_ver17_access_conductance_matches_maxwell_hall(
         f"G = {measured:.6e} S against the Maxwell-Hall {analytic_S:.6e} S, an error of "
         f"{100.0 * error:.2f} % against a tolerance of {100.0 * TOLERANCE:.0f} %"
     )
+
+
+def test_ver17_the_model_s_own_bulk_conductivity_of_1_m_nacl_is_12_6_s_per_m() -> None:
     sigma0 = bulk_conductivity_S_m(Electrolyte.from_parameter_file(), CONCENTRATION_M)
     assert sigma0 == pytest.approx(12.6, abs=0.05)
 

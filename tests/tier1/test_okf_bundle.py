@@ -294,6 +294,29 @@ def test_ver68_tested_with_older_than_lock_is_refused(repository: Path) -> None:
     assert any("tested_with mapping is empty" in f for f in _check(repository))
 
 
+def test_ver68_a_package_locked_at_two_versions_is_held_to_the_older(repository: Path) -> None:
+    (repository / "uv.lock").write_text(
+        '[[package]]\nname = "numpy"\nversion = "2.4.6"\n\n'
+        '[[package]]\nname = "numpy"\nversion = "2.5.2"\n\n'
+        '[[package]]\nname = "nanopnp"\nsource = {editable = "."}\n',
+        encoding="utf-8",
+    )
+
+    def found(version: str) -> list[str]:
+        _concept(
+            repository,
+            "01-thing.md",
+            BODY,
+            kind="Library Behaviour",
+            extra=f"tested_with: {{numpy: '{version}'}}\n",
+        )
+        return _check(repository)
+
+    assert found("2.4.6") == []
+    assert found("2.5.2") == []
+    assert any("older than 2.4.6" in f for f in found("2.4.0"))
+
+
 def test_ver68_footnote_without_source_is_refused(repository: Path) -> None:
     sources = "sources:\n  - {id: thesis, resource: https://example.org}\n"
     _concept(

@@ -39,14 +39,14 @@ from nanopnp.validation.geometry import pqr2grid_radius
 def test_permittivity_cap_gavish_and_buchner_at_5_3_m() -> None:
     from nanopnp.materials.forms import gavish_langevin
 
-    gavish_p = {"P0": 78.15, "P1": 30.08, "P2": 11.5}
+    shipped = Electrolyte.from_parameter_file("willems2020_nacl")
     buchner_p = {"P0": 78.15, "P1": 29.50, "P2": 11.74}
-    eps_gavish = 78.15 * float(gavish_langevin(gavish_p, 5.3))
+    eps_gavish = float(shipped.relative_permittivity(5.3))
     eps_buchner = 78.15 * float(gavish_langevin(buchner_p, 5.3))
     assert eps_gavish == pytest.approx(42.67, abs=0.01)
     assert eps_buchner == pytest.approx(42.13, abs=0.01)
     assert abs(eps_gavish - eps_buchner) / eps_gavish == pytest.approx(0.0127, abs=2e-3)
-    eps_1m_g = 78.15 * float(gavish_langevin(gavish_p, 1.0))
+    eps_1m_g = float(shipped.relative_permittivity(1.0))
     eps_1m_b = 78.15 * float(gavish_langevin(buchner_p, 1.0))
     assert abs(eps_1m_g - eps_1m_b) / eps_1m_g < 5e-3
 
@@ -162,6 +162,11 @@ def test_axisymmetric_strain_rate_omits_hoop_component_and_stress_contraction_is
     u.Set(ngs.CF((0.3 * ngs.x + 0.1 * ngs.y, -0.2 * ngs.x + 0.4 * ngs.y)))
     sym = strain_rate(u)
     assert tuple(sym.dims) == (2, 2)
+    point = mesh(0.4, 0.4)
+    expected = ((0.3, -0.05), (-0.05, 0.4))
+    for i in range(2):
+        for j in range(2):
+            assert float(sym[i, j](point)) == pytest.approx(expected[i][j], abs=1e-12)
 
 
 def test_ngsolve_physics_small_facts() -> None:

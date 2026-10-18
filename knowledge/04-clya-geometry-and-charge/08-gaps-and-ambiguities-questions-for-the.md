@@ -10,10 +10,10 @@ sources:
   resource: https://doi.org/10.1039/D0NR03114C
   title: Willems et al., Nanoscale 12, 16775-16795 (2020)
 - id: wp18-plan
-  resource: docs/plans/wp18-structure-stage.md
+  resource: docs/plans/wp18-structure-ingestion.md
   title: WP18 structure stage plan, Design §4
 - id: wp28-plan
-  resource: docs/plans/wp28-charge-projection.md
+  resource: docs/plans/wp28-charge-deposition.md
   title: WP28 charge projection plan, Design §1
 generated:
   by: claude-code/0.5.0-alpha.13
@@ -83,5 +83,5 @@ verified:
   to the average of 0.57 (1 M) and 0.84 (0.15 M); the arithmetic mean is 0.705, and for `P_Na` the
   mean of 1.3 and 5.4 is 3.35 versus the measured 1.9. The claim is qualitative, not arithmetic.
 
-[^wp18-plan]: `docs/plans/wp18-structure-stage.md`, Design §4 (MD archive frame spacing and PQR correspondence).
-[^wp28-plan]: `docs/plans/wp28-charge-projection.md`, Design §1 (`prod5_clya_charge` grid dimensions and integral).
+[^wp18-plan]: `docs/plans/wp18-structure-ingestion.md`, Design §4 (MD archive frame spacing and PQR correspondence).
+[^wp28-plan]: `docs/plans/wp28-charge-deposition.md`, Design §1 (`prod5_clya_charge` grid dimensions and integral).

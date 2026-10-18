@@ -13,6 +13,7 @@ import tarfile
 import tomllib
 import warnings
 from pathlib import Path
+from typing import Any
 
 import gemmi
 import gridData
@@ -409,4 +410,4 @@ def test_ngsolve_stubs_have_no_py_typed_and_invalid_init_pyi() -> None:
     assert init_pyi.is_file()
     with pytest.raises(SyntaxError):
         ast.parse(init_pyi.read_text(encoding="utf-8"))
-    assert core_typing.Mesh is inspect.Parameter.empty or core_typing.Mesh is not None
+    assert core_typing.Mesh is Any
