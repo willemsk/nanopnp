@@ -25,7 +25,8 @@ generated:
 Debye lengths (1:1, 25 °C): 1.357 nm at 0.05 M, 0.304 nm at 1 M, **0.175 nm at 3 M**.
 
 Follow with field-wise row scaling (`-ksp_diagonal_scale` or equivalent) so all diagonal Jacobian
-blocks have O(1) norm.
+blocks have O(1) norm. (Not applied here: the direct solvers' own row scaling discharges
+`SPECIFICATION.md` NUM-10, author ruling 2026-10-19.)
 
 ---
 

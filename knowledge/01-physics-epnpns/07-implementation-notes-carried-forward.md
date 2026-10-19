@@ -30,7 +30,9 @@ verified:
   distance. Because `D`, `μ` and `η` all depend on `d`, a kinked `d` propagates straight into the
   Jacobian. Compute `d` once per mesh (eikonal or screened-Poisson) and smooth it to C¹. This is a
   deviation from the original *implementation* but not from the *model*, and should improve Newton
-  behaviour rather than change the answer. Verify against COMSOL either way.
+  behaviour rather than change the answer. Verify against COMSOL either way. **Superseded by the
+  author's ruling of 2026-10-19:** the validated default is the unsmoothed C⁰ field and the C¹
+  smoothing is an optional deviation, off by default (`SPECIFICATION.md` PHY-02, NUM-31).
 - **Direct solver + damped Newton is known to work.** The author reports efficient convergence in
   COMSOL using PARDISO with a Newton method and a **lower-bounded variable damping factor**. This
   is direct empirical evidence for this exact system and outweighs the general literature warning

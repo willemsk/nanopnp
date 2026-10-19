@@ -285,3 +285,21 @@ def test_a_reversed_boundary_segment_does_not_flip_the_normal() -> None:
     upper = ngs.Integrate(normal[0] * ngs.IfPos(ngs.y - 0.5, 1, 0), mesh, definedon=right)
     assert lower == pytest.approx(0.5)
     assert upper == pytest.approx(0.5)
+
+
+def test_a_seam_normal_does_not_flip_with_the_order_of_the_material_table() -> None:
+    vertices = np.array([[0, 0], [1, 0], [1, 1], [0, 1], [1, 0.5], [0, 0.5]], dtype=float)
+    triangles = np.array([[0, 1, 4], [0, 4, 5], [5, 4, 2], [5, 2, 3]])
+    edges = np.array([[0, 1], [1, 4], [4, 2], [2, 3], [3, 5], [5, 0], [5, 4]])
+    group = np.array([0, 0, 0, 0, 0, 0, 1])
+
+    def build(materials: tuple[str, str], tags: list[int]) -> MeshData:
+        return MeshData(
+            vertices, triangles, np.array(tags), materials, edges, group, ("outer", "seam")
+        )
+
+    forward = build(("a", "b"), [0, 0, 1, 1])
+    swapped = build(("b", "a"), [1, 1, 0, 0])
+
+    assert forward.content_hash == swapped.content_hash
+    assert np.array_equal(forward.oriented_edges(), swapped.oriented_edges())

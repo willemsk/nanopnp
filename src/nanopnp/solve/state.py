@@ -360,7 +360,6 @@ def _descriptor(
 def _check_descriptor_keys(
     stored: Mapping[str, Any], path: Path, error: type[StateMismatchError]
 ) -> None:
-    """Raise ``error`` unless ``stored`` carries exactly the descriptor keys this version gates."""
     if sorted(stored) != sorted(DESCRIPTOR_KEYS):
         missing = sorted(set(DESCRIPTOR_KEYS) - set(stored))
         extra = sorted(set(stored) - set(DESCRIPTOR_KEYS))
