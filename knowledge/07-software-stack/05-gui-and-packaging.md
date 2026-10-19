@@ -13,19 +13,11 @@ verified:
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_gui_probe.py::test_ver60_a_missing_parameter_file_fails_naming_propka
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_gui_render.py::test_ver44_a_render_child_killed_before_it_answers_is_not_called_answered
-  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_knowledge_arithmetic.py::test_netgen_webgui_generate_html_ignores_template_argument
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_library_behaviour.py::test_webgui_region_draw_and_tarball_contents
   at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp14-plan
@@ -135,7 +127,7 @@ inside a `try: import anywidget` and falls back to a stub with the same construc
 The returned dict is plain numbers and base64 strings, so it crosses a process boundary and
 serialises without help.
 
-### `netgen.webgui.GenerateHTML` ignores its `template` argument **[tested: tests/tier1/test_knowledge_arithmetic.py::test_netgen_webgui_generate_html_ignores_template_argument]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
+### `netgen.webgui.GenerateHTML` ignores its `template` argument **[verified]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
 
 Read from the installed source, 21 September 2026:
 
@@ -161,7 +153,7 @@ page loads, `package/dist/webgui.js`, is **779,484 B**: a minified IIFE that def
 That build **bundles two further works**: three.js r152 (MIT, which keeps its `@license` banner)
 and dat.gui 0.7 (Apache-2.0, which keeps no banner). The tarball also carries `src/*.ts`, the
 shaders and the vite configuration, so it is the corresponding source of the LGPL part as it
-stands. **[tested: tests/tier1/test_library_behaviour.py::test_webgui_region_draw_and_tarball_contents]**, 22 September 2026.
+stands. **[verified]**, 22 September 2026.
 
 `cdn.jsdelivr.net` answers this development container's proxy with 403, but
 **`registry.npmjs.org` does not**. The tarball downloads here, and its SHA-512 matches the
@@ -174,7 +166,7 @@ the frozen probe bundle and in a plain `QWebEngineView`. With no GPU, `new webgu
 throws `TypeError: Cannot read properties of null (reading 'getExtension')`: WebGL has no
 context, which is a property of the machine and not of the renderer.
 
-### A webgui scene draws on a material *region*, not only on a whole mesh **[tested: tests/tier1/test_library_behaviour.py::test_webgui_region_draw_and_tarball_contents]** {#a-webgui-scene-draws-on-a-material-region-not-only-on-a-whole-mesh}
+### A webgui scene draws on a material *region*, not only on a whole mesh **[verified]** {#a-webgui-scene-draws-on-a-material-region-not-only-on-a-whole-mesh}
 
 Measured 21 September 2026 on a restored four-material ePNP-NS solution, 124 triangles.
 `Draw(cf, mesh.Materials("electrolyte|cis|trans"), show=False, order=2).GetData()` succeeds and
@@ -214,7 +206,7 @@ This is the §5 shim recorded above, used for the purpose that section already s
 widget code that would otherwise ship having never been executed. It stays off the push gate, where
 widget coverage remains `windows-latest` and `macos-latest`.
 
-### SIGTERM stops a child busy inside netgen in milliseconds **[tested: tests/tier1/test_gui_render.py::test_ver44_a_render_child_killed_before_it_answers_is_not_called_answered]** {#sigterm-stops-a-child-busy-inside-netgen-in-milliseconds}
+### SIGTERM stops a child busy inside netgen in milliseconds **[verified]** {#sigterm-stops-a-child-busy-inside-netgen-in-milliseconds}
 
 Neither netgen nor NGSolve installs a SIGTERM handler, so the signal's default action ends a
 `spawn` child at once even while it is inside compiled meshing code; only a Python-level handler
@@ -304,7 +296,7 @@ ndarray and raises `AttributeError: 'list' object has no attribute 'shape'` on a
 probe therefore builds its 3 × 3 input with `skimage.morphology.disk(1)`, so that it imports no
 undeclared NumPy.
 
-### PDB2PQR and PROPKA bundle through `collect_all`, and fail inside PDB2PQR's run **[tested: tests/tier1/test_gui_probe.py::test_ver60_a_missing_parameter_file_fails_naming_propka]** {#pdb2pqr-and-propka-bundle-through-collect_all-and-fail-inside-pdb2pqrs-run}
+### PDB2PQR and PROPKA bundle through `collect_all`, and fail inside PDB2PQR's run **[verified]** {#pdb2pqr-and-propka-bundle-through-collect_all-and-fail-inside-pdb2pqrs-run}
 
 Measured 2 October 2026 on a Linux rebuild of the probe recipe in this container (WP31 D14, D15),
 with PyInstaller 6.22.3, PDB2PQR 3.7.1 and PROPKA 3.5.1. As with the geometry payloads, Windows

@@ -19,8 +19,6 @@ generated:
 verified:
 - by: process:tests/tier1/test_attribution.py::test_val01_ladder_identity_holds_on_synthetic_errors
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_attribution.py::test_val01_the_identity_cannot_see_a_stale_golden
-  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_comparison_norms.py::test_val01_a_norm_over_no_retained_point_aborts
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_comparison_norms.py::test_val01_axis_defect_is_invisible_to_the_weighted_norm
@@ -28,8 +26,6 @@ verified:
 - by: process:tests/tier1/test_comparison_norms.py::test_val01_the_same_defect_at_the_wall_is_visible_to_both
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_comsol_golden.py::test_val03_grid_table_round_trips_through_npz
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_probe_grid.py::test_val01_probe_patch_refuses_square_grid
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_self_golden_round_trip.py::test_val01_self_golden_reproduces_its_own_solution
   at: '2026-10-16T00:00:00Z'
@@ -97,7 +93,7 @@ at Taylor-Hood would carry that as an unexplained residual.
 These are machinery measurements on a coarse benchmark, not statements about the reference
 implementation: the golden is one of our own solutions and the report says `golden_source: self`.
 
-### The transposed table is silent, and non-square patches are the cheap gate **[tested: tests/tier1/test_probe_grid.py::test_val01_probe_patch_refuses_square_grid]** {#the-transposed-table-is-silent-and-non-square-patches-are-the-cheap-gate}
+### The transposed table is silent, and non-square patches are the cheap gate **** {#the-transposed-table-is-silent-and-non-square-patches-are-the-cheap-gate}
 
 A COMSOL `%Data` block is one row per `z` sample and one value per `r` sample, which is
 `RadialGrid`'s own `[i_z, i_r]` layout. The reader checks that every row has the same width, which
@@ -117,7 +113,7 @@ would be least sensitive exactly where the implementation is most likely to be w
 perturbation moved to the reservoir patch gives `rel_L2_r > 0.1`, which is what shows the contrast
 is the axis and not the patch's point count.
 
-### The telescoping identity catches a slip, not a stale golden **[tested: tests/tier1/test_attribution.py::test_val01_the_identity_cannot_see_a_stale_golden]** {#the-telescoping-identity-catches-a-slip-not-a-stale-golden}
+### The telescoping identity catches a slip, not a stale golden **** {#the-telescoping-identity-catches-a-slip-not-a-stale-golden}
 
 `Δ_total + Δ_transport + Δ_flow + Δ_pair = E₀ + (E₁−E₀) + (E₂−E₁) + (E₃−E₂) = E₃ = Δ_resid` holds
 for **any** four numbers. It is worth asserting — it fails if the deltas are formed or assigned

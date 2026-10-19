@@ -20,8 +20,6 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_fields.py::test_ver29_a_grid_round_trips_through_opendx_and_ccp4
   at: '2026-10-14T00:00:00Z'
-- by: process:tests/tier1/test_charge_fields.py::test_ver29_a_header_value_that_is_not_finite_is_refused
-  at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_charge_fields.py::test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_is_zero_outside_the_grid_box
@@ -55,7 +53,7 @@ verified:
 - **[tested: tests/tier1/test_charge_kernel.py::test_ver58_kernel_is_the_limit_of_the_3d_deposition_binned_by_annular_weights]** The kernel's limit from 3D Cartesian Gaussian deposition binned by exact annular overlaps converges at ≥ 3.5× per halving of the spacing, below 10⁻³ at the finest. Source: `test_charge_kernel.py` (`test_ver58_kernel_is_the_limit_of_the_3d_deposition…`).
 - **[tested: tests/tier1/test_charge_stage.py::test_ver01_the_producer_stage_deposits_keys_and_records_its_report]** At 1 nm elements the deployed field's per-plane error under the 0.5 nm weight is 3.2 × 10⁻³ (refused by the gate); at 0.5 nm it is 2.3 × 10⁻⁴. Source: `tests/tier1/test_charge_stage.py` (`test_ver01_the_producer_stage_deposits_keys_and_records_its_report`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed]** At the reference mesh the 0.01 nm axis guard is a fifteenth of an element, so no mesh integral sees its edge. The whole-grid conservation integral is a trapezium rule on a field that decays to zero (exact beyond all orders); the guard's partial integral carries an `O(h²)` term. What the guard leaves is about a seventh of the grid's charge, and its element-scale step costs a fixed fraction of the total. Source: `tests/tier1/test_charge_fields.py` (`test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed`).
-- **[tested: tests/tier1/test_charge_fields.py::test_ver29_a_header_value_that_is_not_finite_is_refused]** `yaml.safe_dump` writes a NumPy NaN as `.nan`, and NaN passes every `> tol` gate; a NaN `q_net_e` once made three of five conservation legs NaN without any gate catching it. Source: `test_charge_fields.py` (`test_ver29_a_header_value_that_is_not_finite_is_refused`).
+- **** `yaml.safe_dump` writes a NumPy NaN as `.nan`, and NaN passes every `> tol` gate; a NaN `q_net_e` once made three of five conservation legs NaN without any gate catching it. Source: `test_charge_fields.py` (`test_ver29_a_header_value_that_is_not_finite_is_refused`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_a_grid_round_trips_through_opendx_and_ccp4]** CCP4 is written through gridData's MRC writer (no `CCP4` registry entry) as `float32`, so that round trip is not bit-exact. Source: `test_charge_fields.py` (`test_ver29_a_grid_round_trips_through_opendx_and_ccp4`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_is_zero_outside_the_grid_box]** A charge field continued by its box's edge value over a 250 nm reservoir would make a charge sheet about a thousand times the grid's own footprint, hence zero padding outside the box. Source: `test_charge_fields.py` (`test_ver29_the_interpolant_is_zero_outside_the_grid_box`).
 
