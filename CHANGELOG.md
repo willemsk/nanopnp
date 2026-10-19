@@ -25,7 +25,7 @@ WP50: the test scope (`SPECIFICATION.md` §8.2.13 N1 to N5).
 
 ### Changed
 
-- **Tests only where a silent wrong answer is possible** (N1): 386 Tier 1 tests of repository
+- **Tests only where a silent wrong answer is possible** (N1): 378 Tier 1 tests of repository
   self-checks, interface wording and refusals are deleted; the physics, numerics, core mechanisms and
   the licence and architecture guards stay.
 - **`nightly` replaces `extended`** (N4): `pytest --nightly`; the per-push selection holds example 01

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -41,6 +42,7 @@ from nanopnp.geometry.region import (
 )
 from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.case import (
+    CaseValidationError,
     MembraneSpec,
     ReservoirSpec,
 )
@@ -423,3 +425,32 @@ def test_ver52_an_edge_lying_on_a_bilayer_plane_extends_the_interval_along_it(
 ) -> None:
     reservoir = ReservoirSpec(radius_nm=30.0)
     assert derive_region(_profile(points), MEMBRANE, reservoir).junction_nm == junction
+
+
+@pytest.mark.parametrize(
+    ("inputs", "extra", "fragment"),
+    [
+        ("{artefact: " + "a" * 64 + "}", "", "inputs.profile: artefact:"),
+        ("{path: p.yaml, groups: {a: wall}}", "", "inputs.profile.groups"),
+        ("{path: p.yaml, format: csv}", "", "inputs.profile.format is 'csv'"),
+        ("{path: p.yaml}", "geometry: {density: {grid_spacing_nm: 0.03}}\n", "geometry.density"),
+        ("{path: p.yaml}", "geometry: {contour: {isolevel: 0.3}}\n", "geometry.contour"),
+    ],
+)
+def test_ver52_a_supplied_profile_s_refusals_name_the_key(
+    inputs: str, extra: str, fragment: str
+) -> None:
+    text = profile_case(Path("p.yaml"), extra).replace("{path: p.yaml}", inputs, 1)
+    with pytest.raises(CaseValidationError, match=re.escape(fragment)):
+        resolve(loads_case(text))
+
+
+def test_ver52_structure_beside_a_supplied_profile_is_refused_naming_both(tmp_path: Path) -> None:
+    text = profile_case(
+        Path("p.yaml"),
+        "structure:\n  source: {path: s.pdb}\n  symmetry: {point_group: C12}\n",
+    )
+    with pytest.raises(
+        CaseValidationError, match=r"structure: section and supplies inputs\.profile"
+    ):
+        resolve(loads_case(text))

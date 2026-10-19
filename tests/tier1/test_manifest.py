@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -24,6 +25,7 @@ from nanopnp.io import manifest as manifest_module
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import (
     CaseDocument,
+    CaseValidationError,
 )
 from nanopnp.io.case_paths import (
     FieldReference,
@@ -410,3 +412,26 @@ def test_ver24_the_environment_group_names_versions_without_importing_ngsolve() 
     reported = json.loads(completed.stdout)
     assert reported["ngsolve"] is False
     assert reported["version"]
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        ("numerics.wall_distance.max_distance_nm", 0.0),
+        ("numerics.wall_distance.max_distance_nm", float("nan")),
+        ("electrolyte.concentration_M", -0.5),
+        ("electrolyte.concentration_M", float("nan")),
+        ("boundary_conditions.bias_V", float("inf")),
+    ],
+)
+def test_ver24_resolve_refuses_an_operating_point_no_solve_could_use(
+    path: str, value: float
+) -> None:
+    document = loads_case(MINIMAL)
+    section, *middle, leaf = path.split(".")
+    target = getattr(document, section)
+    for part in middle:
+        target = getattr(target, part)
+    setattr(target, leaf, value)
+    with pytest.raises(CaseValidationError, match=re.escape(path)):
+        resolve(document)

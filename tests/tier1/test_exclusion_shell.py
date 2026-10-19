@@ -390,3 +390,20 @@ def test_ver59_derive_region_at_zero_offset_runs_none_of_the_shell(
     shape = build_region(record)
     name_region(shape, reservoir_radius_nm=30.0)
     assert not any(face.name == EXCLUSION for face in shape.faces)
+
+
+def test_ver59_the_keys_beside_a_supplied_mesh_or_without_a_profile_are_refused() -> None:
+    mesh_case = (
+        "schema: nanopnp/case/v0.5\nname: supplied\n"
+        "inputs:\n  mesh: {path: pore.msh, format: msh41}\n"
+        "electrolyte:\n  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
+        "  concentration_M: 1.0\n"
+        "boundary_conditions: {bias_V: 0.05, ground: cis}\n"
+        "physics: {model: pnp-ns}\n"
+    )
+    for charge in (_offset(), "charge: {dielectric_transition_nm: 0.15}\n"):
+        with pytest.raises(CaseValidationError) as raised:
+            resolve(loads_case(mesh_case + charge))
+        message = str(raised.value)
+        assert "beside inputs.mesh" in message
+        assert re.search(r"charge\.(exclusion_offset|dielectric_transition)_nm", message)

@@ -18,6 +18,7 @@ import pytest
 from MDAnalysis.coordinates.memory import MemoryReader
 
 from nanopnp.io.artefact import CASE_SCHEMA
+from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import (
     load_case,
@@ -615,3 +616,13 @@ def test_ver48_a_dcd_reader_without_its_header_is_decoded_for_its_frame_times(
         times, _ = frame_times(universe)
 
     assert times == decoded
+
+
+def test_ver48_structure_beside_a_supplied_mesh_is_refused(tmp_path: Path) -> None:
+    case = _case(tmp_path, _block(PDB, chains=DODECAMER))
+    text = case.read_text().replace(
+        "structure:\n", "inputs:\n  mesh: {path: pore.msh, format: msh41}\nstructure:\n", 1
+    )
+    case.write_text(text)
+    with pytest.raises(CaseValidationError, match=r"structure: section and supplies inputs.mesh"):
+        resolve(load_case(case))

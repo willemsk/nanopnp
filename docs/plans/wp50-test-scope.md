@@ -120,7 +120,7 @@ None blocking. The *Your call* above defaults to its recommendation.
 > the gate 439 s. After: 1,287 `def test_`, 1,600 collected with `--nightly` (1,556 run, 44 deselected
 > `slow`), 38,700 test lines; the per-push `pytest` run (1,505 tests, Tiers 1 and 2) takes 201 s. The
 > prediction of "roughly half" was over-optimistic: N1's "doubt keeps the test" kept the mixed physics
-> files; 386 `def test_` left Tier 1 in items 5 to 7. Example 01's solve takes 10 s with its mesh
+> files; 386 `def test_` left Tier 1 in items 5 to 7, and the physics reviewer's read of the diff restored eight refusals that guard a setting silently dropped beside a supplied input, an unphysical operating point and PHY-21's solid gate; the rest of its findings are N1 input validation and stay deleted. Example 01's solve takes 10 s with its mesh
 > (D4): it carries no marker. Example 02 splits into `test_examples_02_epnpns.py` (every push, with
 > its VER-62 golden; `run_tagged` gains `only`) and `test_examples_02_classical.py` (nightly). D5's
 > issue step is its own job, `nightly-issue`, because `issues: write` is a job permission; the

@@ -24,7 +24,7 @@ from nanopnp.io.store import Store
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-from nanopnp.mesh.ingest import deployed_mesh
+from nanopnp.mesh.ingest import MeshVocabularyError, deployed_mesh, ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.mesh.sizing import case_debye_length_nm
 from nanopnp.numerics.measures import AXISYMMETRIC
@@ -806,3 +806,29 @@ def test_ver56_poisson_with_solids_and_a_supplied_charge_equals_the_api_solve(
     charged_state = np.asarray(direct.state.vec.FV().NumPy())
     assert _relative(case_state, charged_state) < 1e-12
     assert _relative(np.asarray(uncharged.state.vec.FV().NumPy()), charged_state) > 1e-3
+
+
+def test_ver56_a_model_without_solids_is_refused_a_generated_mesh() -> None:
+    text = case_text(physics=ELECTROSTATIC_PHYSICS % "pb", outputs="[]").replace(
+        "mesh: {path: absent.msh, format: msh41}", "profile: {path: absent.yaml}"
+    )
+    message = _refusal(text)
+    assert "'pb'" in message and "inputs.mesh" in message and "poisson" in message
+
+
+def test_ver56_the_mesh_gate_refuses_a_solid_under_a_model_without_solids(
+    pore_mesh: Path,
+) -> None:
+    text = case_text(
+        pore_mesh,
+        physics=ELECTROSTATIC_PHYSICS % "pb",
+        outputs="[]",
+        groups="{default: interface}",
+    )
+    resolved = resolve(loads_case(text))
+    assert resolved.mesh is not None
+    with pytest.raises(
+        MeshVocabularyError, match="cannot be posed on a mesh with a solid"
+    ) as raised:
+        ingest(resolved.mesh, resolved)
+    assert "'pb'" in str(raised.value) and "'membrane'" in str(raised.value)
