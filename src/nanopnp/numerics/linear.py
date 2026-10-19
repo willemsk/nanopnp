@@ -1,8 +1,7 @@
-"""Direct linear solves and block-scaling diagnostics (NUM-10, NUM-21)."""
+"""Direct linear solves (NUM-10, NUM-21)."""
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Protocol, TypeAlias
 
@@ -10,13 +9,9 @@ if TYPE_CHECKING:
     import numpy as np
     from scipy.sparse import csr_matrix
 
-from nanopnp.core.typing import Expression, FESpace, GridFunction, Mesh, Option
-
-logger = logging.getLogger(__name__)
+from nanopnp.core.typing import Expression, GridFunction, Mesh, Option
 
 DEFAULT_SOLVER = "umfpack"
-
-BLOCK_SCALING_WARNING = 1.0e3
 
 _REJECTED = {
     "sparsecholesky": (
@@ -204,60 +199,6 @@ def solve_superlu(
     correction = np.zeros(matrix.height)
     correction[free] = factorisation.solve(right)
     return correction
-
-
-def diagonal_block_norms(matrix: Expression, space: FESpace) -> dict[str, float]:
-    """Return the largest absolute row sum of each diagonal Jacobian block, by field."""
-    system = to_scipy(matrix)
-    ranges = _component_ranges(space)
-    norms: dict[str, float] = {}
-    for name, (start, stop) in ranges.items():
-        # abs() the block, not the matrix: blocks are a small part of a 6e7-nonzero Jacobian.
-        block = abs(system[start:stop, start:stop])
-        norms[name] = float(block.sum(axis=1).max()) if block.nnz else 0.0
-    return norms
-
-
-def field_row_scaling(matrix: Expression, space: FESpace) -> dict[str, float]:
-    """Return the reciprocal diagonal-block norms as row scaling factors."""
-    return {
-        name: (1.0 / norm if norm > 0.0 else 1.0)
-        for name, norm in diagonal_block_norms(matrix, space).items()
-    }
-
-
-def report_block_scaling(
-    matrix: Expression, space: FESpace, *, threshold: float = BLOCK_SCALING_WARNING
-) -> dict[str, float]:
-    """Log the diagonal-block norms, warn above a spread of ``threshold``, and return them."""
-    norms = diagonal_block_norms(matrix, space)
-    nonzero = [value for value in norms.values() if value > 0.0]
-    if not nonzero:
-        return norms
-    spread = max(nonzero) / min(nonzero)
-    logger.debug("diagonal block norms: %s (spread %.3g)", norms, spread)
-    if spread > threshold:
-        logger.warning(
-            "diagonal Jacobian block norms span a factor of %.3g (%s); NUM-10 asks for O(1) "
-            "blocks, so check the nondimensionalisation before trusting the factorisation",
-            spread,
-            norms,
-        )
-    return norms
-
-
-def _component_ranges(space: FESpace) -> dict[str, tuple[int, int]]:
-    try:
-        components = space.components
-    except Exception:
-        return {"field": (0, space.ndof)}
-    if not components:
-        return {"field": (0, space.ndof)}
-    ranges = {}
-    for index in range(len(components)):
-        dof_range = space.Range(index)
-        ranges[f"field_{index}"] = (int(dof_range.start), int(dof_range.stop))
-    return ranges
 
 
 def mesh_size_report(mesh: Mesh) -> str:

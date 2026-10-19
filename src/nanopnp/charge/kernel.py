@@ -12,7 +12,7 @@ from nanopnp.charge.fields import PLANE_SMOOTHING_NM, ChargeFieldError
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.hashing import Canonicalisable
 from nanopnp.core.stages import CancelToken, Progress, check_cancelled, report
-from nanopnp.density.grid import RadialGrid
+from nanopnp.density.grid import RadialGrid, trapezium_factor
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -216,12 +216,6 @@ def lattice_axes(
     return n_r, k0, k1 - k0 + 1
 
 
-def _trapezoid(indices: np.ndarray, count: int) -> np.ndarray:
-    import numpy as np
-
-    return np.where((indices == 0) | (indices == count - 1), 0.5, 1.0)
-
-
 def _patches(
     centre_nm: np.ndarray,
     width_nm: np.ndarray,
@@ -266,7 +260,7 @@ def _factors(
     z_inside = np.arange(span_z)[None, :] < z_count[:, None]
     z_nodes = (k0 + z_index) * h
     z_values = np.where(z_inside, np.exp(-(((z_nodes - z_i[:, None]) / w[:, None]) ** 2)), 0.0)
-    z_sum = np.sum(z_values * _trapezoid(z_index, n_z), axis=1)
+    z_sum = np.sum(z_values * trapezium_factor(z_index, n_z), axis=1)
 
     r_first, r_count = _patches(r_i, w, h, 0, n_r, half_widths)
     span_r = int(r_count.max())
@@ -276,7 +270,7 @@ def _factors(
     gaussian = np.exp(-(((r_nodes - r_i[:, None]) / w[:, None]) ** 2))
     bessel = i0e(2.0 * r_nodes * r_i[:, None] / w[:, None] ** 2)
     r_values = np.where(r_inside, 2.0 * math.pi * r_nodes * gaussian * bessel, 0.0)
-    r_sum = np.sum(r_values * _trapezoid(r_index, n_r), axis=1)
+    r_sum = np.sum(r_values * trapezium_factor(r_index, n_r), axis=1)
     return (z_first, z_values, z_sum), (r_first, r_values, r_sum)
 
 

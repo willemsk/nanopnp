@@ -161,10 +161,7 @@ class RadialGrid:
             if axis == "r"
             else (self.values.shape[0], self.spacing_nm[1])
         )
-        weights = np.full(count, step, dtype=np.float64)
-        weights[0] *= 0.5
-        weights[-1] *= 0.5
-        return weights
+        return trapezium_factor(np.arange(count), count) * step
 
     def truncated_weights(self, axis: Literal["r", "z"], upper: float) -> np.ndarray:
         """Return trapezium weights for the integral up to ``upper``, in nm."""
@@ -268,6 +265,16 @@ class RadialGrid:
             spacing_nm=(dr, dz),
             values=np.pad(self.values, 1, mode="constant", constant_values=0.0),
         )
+
+
+def trapezium_factor(indices: np.ndarray, count: int) -> np.ndarray:
+    """Return each index's trapezium factor: one half at an end of ``count`` nodes, else one."""
+    import numpy as np
+
+    factor = np.ones(indices.shape, dtype=np.float64)
+    factor[indices == 0] *= 0.5
+    factor[indices == count - 1] *= 0.5
+    return factor
 
 
 def coefficient(grid: RadialGrid, *, pad: bool = True) -> Expression:

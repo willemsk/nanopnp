@@ -20,7 +20,7 @@ from nanopnp.physics.pb import (
     ELECTROLYTE_PERMITTIVITY,
     debye_length_nm,
     nonlinear_pb_residual,
-    solve_pb,
+    solve_pb_recorded,
 )
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 
@@ -48,14 +48,14 @@ def test_ver13_debye_huckel_in_a_cylinder() -> None:
     errors = []
     for maxh in (0.4, 0.2, 0.1):
         mesh = CylinderGeometry(radius_nm=radius, length_nm=length).generate(maxh_nm=maxh)
-        solution = solve_pb(
+        solution = solve_pb_recorded(
             mesh,
             AXISYMMETRIC,
             debye_length_nm=lam,
             dirichlet="wall",
             boundary_values=ngs.CF(zeta),
             nonlinear=False,
-        )
+        )[0]
         errors.append(_weighted_error(solution, exact, samples, weights, mesh, 0.5 * length))
 
     assert errors[-1] < 5e-5, f"finest-mesh error {errors[-1]:.3g} is too large"
@@ -67,22 +67,22 @@ def test_ver13_debye_huckel_in_a_cylinder() -> None:
 def test_ver13_axis_condition_is_natural_not_dirichlet() -> None:
     radius, lam, zeta = 2.0, 0.5, 1.0
     mesh = CylinderGeometry(radius_nm=radius, length_nm=4.0).generate(maxh_nm=0.1)
-    natural = solve_pb(
+    natural = solve_pb_recorded(
         mesh,
         AXISYMMETRIC,
         debye_length_nm=lam,
         dirichlet="wall",
         boundary_values=ngs.CF(zeta),
         nonlinear=False,
-    )
-    pinned = solve_pb(
+    )[0]
+    pinned = solve_pb_recorded(
         mesh,
         AXISYMMETRIC,
         debye_length_nm=lam,
         dirichlet="wall|axis",
         boundary_values=mesh.BoundaryCF({"wall": zeta, "axis": 0.0}),
         nonlinear=False,
-    )
+    )[0]
     exact_centre = zeta * i0(0.0) / i0(radius / lam)
     assert natural(mesh(0.0, 2.0)) == pytest.approx(exact_centre, rel=1e-3)
     assert pinned(mesh(0.0, 2.0)) == pytest.approx(0.0, abs=1e-12)
@@ -99,14 +99,14 @@ def test_ver12_gouy_chapman_profile() -> None:
     errors = []
     for maxh in (lam / 2.0, lam / 4.0, lam / 8.0):
         mesh = SlabGeometry(width_nm=width, height_nm=lam).generate(maxh_nm=maxh)
-        solution = solve_pb(
+        solution = solve_pb_recorded(
             mesh,
             PLANAR,
             debye_length_nm=lam,
             dirichlet="wall|bulk",
             boundary_values=mesh.BoundaryCF({"wall": zeta, "bulk": 0.0}),
             nonlinear=True,
-        )
+        )[0]
         errors.append(_weighted_error(solution, exact, samples, weights, mesh, 0.5 * lam))
 
     assert errors[-1] < 1e-5, f"finest-mesh error {errors[-1]:.3g} is too large"
@@ -120,17 +120,17 @@ def test_ver12_grahame_surface_charge() -> None:
     lam = debye_length_nm(concentration_M)
     height_nm = lam
     mesh = SlabGeometry(width_nm=20.0 * lam, height_nm=height_nm).generate(maxh_nm=lam / 8.0)
-    solution = solve_pb(
+    solution = solve_pb_recorded(
         mesh,
         PLANAR,
         debye_length_nm=lam,
         dirichlet="wall|bulk",
         boundary_values=mesh.BoundaryCF({"wall": zeta, "bulk": 0.0}),
         nonlinear=True,
-    )
+    )[0]
 
     # The reaction flux needs the residual form on the space the solve used,
-    # which solve_pb owns; it is rebuilt here from the same term rather than
+    # which solve_pb_recorded owns; it is rebuilt here from the same term rather than
     # duplicating the driver, so the damped Newton replaces it in one place.
     space = solution.space
     trial, test = space.TnT()
