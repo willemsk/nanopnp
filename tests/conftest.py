@@ -41,7 +41,7 @@ DODECAMER = "A,B,C,D,E,F,G,H,I,J,K,L"
 
 REQUIRE_GMSH = "NANOPNP_REQUIRE_GMSH"
 
-EXTENDED = "--extended"
+NIGHTLY = "--nightly"
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -54,16 +54,16 @@ def _isolate_git_config() -> Iterator[None]:
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
-        EXTENDED,
+        NIGHTLY,
         action="store_true",
-        help="also run the tests marked extended: the executed examples and the 2WCD "
-        "walks, which CI gates after a merge (SPECIFICATION.md section 7.6)",
+        help="also run the tests marked nightly: the executed examples and the 2WCD "
+        "walks, which CI runs every night (SPECIFICATION.md section 7.6)",
     )
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    if not config.getoption(EXTENDED):
+    if not config.getoption(NIGHTLY):
         named = {
             Path(argument.split("::")[0]).resolve()
             for argument in config.args
@@ -72,7 +72,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         kept, left_out = [], []
         for item in items:
             if (
-                item.get_closest_marker("extended")
+                item.get_closest_marker("nightly")
                 and not item.get_closest_marker("slow")
                 and Path(item.path).resolve() not in named
             ):
@@ -82,9 +82,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         if left_out:
             config.hook.pytest_deselected(items=left_out)
             items[:] = kept
-    for item in items:
-        if item.get_closest_marker("extended"):
-            item.add_marker(pytest.mark.no_cover)
 
 
 def import_gmsh() -> ModuleType:

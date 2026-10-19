@@ -19,7 +19,7 @@ from nanopnp.post.export import (
 )
 from nanopnp.validation.examples import copy_example, run_tagged
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 

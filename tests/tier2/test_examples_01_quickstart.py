@@ -15,7 +15,7 @@ from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 if TYPE_CHECKING:
     from conftest import NumberStability
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 

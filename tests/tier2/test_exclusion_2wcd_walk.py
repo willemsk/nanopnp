@@ -11,7 +11,7 @@ from nanopnp.core.stages import walk_order
 from nanopnp.io.store import Store
 from nanopnp.pipeline.run import run_case
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from collections.abc import Callable

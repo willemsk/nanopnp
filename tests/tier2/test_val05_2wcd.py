@@ -36,7 +36,7 @@ from nanopnp.validation.geometry import (
     zero_crossing,
 )
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from collections.abc import Callable

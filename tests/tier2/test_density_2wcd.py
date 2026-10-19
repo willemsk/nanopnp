@@ -23,7 +23,7 @@ from nanopnp.symmetry.annular import annular_weights
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
 from nanopnp.symmetry.reduce import ReducedMap
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from conftest import Prepared2WCD

@@ -44,7 +44,7 @@ from nanopnp.validation.apbs import (
     write_pqr,
 )
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from collections.abc import Callable

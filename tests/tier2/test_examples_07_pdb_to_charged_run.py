@@ -27,7 +27,7 @@ from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 if TYPE_CHECKING:
     from conftest import NumberStability
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 logger = logging.getLogger(__name__)
 
