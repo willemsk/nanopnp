@@ -34,7 +34,8 @@ A brief is navigation, not a review oracle: read normative sections independentl
 Do not push a tree you have not gated: start `.claude/hooks/gate.sh run` with Bash
 `run_in_background` and push when it passes; never poll. The push guard refuses any other tree.
 
-Also confirm: `git status` clean; every `VER-`/`VAL-` the plan claimed has a test named for it;
+Also confirm: `git status` clean; every in-scope `VER-`/`VAL-` the plan claimed has its test (`SPECIFICATION.md` §8.2.13 N1, N3), and
+each other claimed identifier is checked against the code at review;
 `SPECIFICATION.md`, `knowledge/` and the Outcome annotations are committed; `CHANGELOG.md` has the
 package's section (`CONTRIBUTING.md`, *Versions and releases*). If the branch is `main` or equals
 `origin/main`, stop and ask. If it is behind `main`, merge `main` in and re-gate.
@@ -66,10 +67,18 @@ this session. Read `.claude/rules/physics-numerics.md` and `.claude/rules/python
 and your adjudication of its fixes need them, and a path-scoped rule does not load while you read
 only the diff.
 
+**Test scope first.** Before the review, read the pull request's added and changed tests
+(`git diff origin/main...HEAD -- tests/`) against the test scope of `SPECIFICATION.md` §8.2.13 N1: a
+test stays only if it guards physics or numerics, a core mechanism, or a licence or architecture
+guard, or is a thin entry-point smoke test, or a refusal that is a numerical or physical gate. Read
+the diffs in physics and numerics areas with the `physics-reviewer` agent. Delete each test outside
+that scope in its own commit, `test: drop tests outside the test scope`, with the identifiers in
+the body (N5). The gate runs before each commit.
+
 Run the review from this session, invoking the skill directly and never wrapped in an `Agent`:
 
 ```
-Skill(skill="code-review", args="xhigh --fix <pr-number> out=docs/code_reviews/ -- Static review. Run no benchmark, sweep, cost study, gate.sh or pytest --extended, and nothing that takes over a minute; /wp-ship gates the fixes afterwards. Run a narrow test file in the foreground only if it ends within four minutes. Start any command that may run longer in the background and poll it with waits of at most 240 s each, ending a wait at 240 s and re-issuing it; no foreground command or single wait may pass 240 s.")
+Skill(skill="code-review", args="xhigh --fix <pr-number> out=docs/code_reviews/ -- Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly, and nothing that takes over a minute; /wp-ship gates the fixes afterwards. Run a narrow test file in the foreground only if it ends within four minutes. Start any command that may run longer in the background and poll it with waits of at most 240 s each, ending a wait at 240 s and re-issuing it; no foreground command or single wait may pass 240 s.")
 ```
 
 Wrapped, it returned no findings; called directly it forks its own review agent.

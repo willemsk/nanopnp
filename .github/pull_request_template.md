@@ -42,13 +42,13 @@ None.
 
 ## Verification
 
-- [ ] `.claude/hooks/gate.sh run` green on this branch (lint, format, types, the lock and `pytest --extended`, as CI gates it; ruff alone when the branch changes only prose)
+- [ ] `.claude/hooks/gate.sh run` green on this branch (lint, format, types, the lock and the per-push selection, as CI gates it; ruff alone when the branch changes only Markdown)
 - [ ] The strict documentation build green (`uv run docs/scripts/generate.py && uv run mkdocs build --strict`), which CI's `docs` job gates on every push, prose-only ones included
-- [ ] Every `VER-`/`VAL-` claimed above has a test named for the requirement, in the tier directory that marks it
+- [ ] Every added or changed test is in the test scope (`SPECIFICATION.md` §8.2.13 N1) and its name says which silent failure it catches; a test outside it is deleted, not kept
 - [ ] No test was skipped, `xfail`ed, or had its tolerance loosened to make this pass
 - [ ] `uv.lock` regenerated if `pyproject.toml` moved
 - [ ] Any switch away from the validated default is opt-in, default off, and recorded in the FR-25 manifest
-- [ ] Durable findings written into `knowledge/` as concepts, marked `[tested: <test>]` or `[verified]` with their source, and logged
+- [ ] Durable findings written into `knowledge/` as concepts, marked `[tested: <test>]`, naming a test in scope, or `[verified]` with their source, and logged
 - [ ] `docs/plans/` updated — Outcome annotations where a prediction was wrong, and the work-package section of the phase plan
 
 <!-- Tiers 3 and 4 do not run in CI. If either was run locally, say so and give

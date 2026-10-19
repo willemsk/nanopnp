@@ -39,7 +39,9 @@ next, so a later session resumes from the first unticked one. The gate hook refu
 gated tree can be split into several commits.
 
 Write each item's tests with the item, from the plan's *Verification* rows; the plan commits none.
-Name each test for the requirement it discharges, in the tier directory that decides its marker.
+Write a test only inside the test scope (`SPECIFICATION.md` §8.2.13 N1): physics, numerics, core
+mechanisms, the licence and architecture guards, and a thin smoke test per entry point. Name each
+test for the silent failure it catches, in the tier directory that decides its marker.
 Write the analytic test that localises an error to one term first. Where a tolerance could be met
 for the wrong reason, or two routes could share a mistake, assert against a third route.
 
@@ -75,7 +77,7 @@ and put it where the plan asked.
 Confirm yourself:
 
 - every work item is done and ticked, or deferred with a reason in the plan and a `REV-nn` row;
-- every `VER-`/`VAL-` the plan claimed has a passing test named for it;
+- every in-scope `VER-`/`VAL-` the plan claimed has a passing test (N3); each other claimed identifier is checked against the code and the PR says so;
 - the specification, knowledge base and Outcome annotations are committed, both **Status** lines
   and `current.md` are updated, and `CHANGELOG.md` has the package's section under
   `vX.Y.Z-alpha.N` (`CONTRIBUTING.md`, *Versions and releases*, also covers the close package);

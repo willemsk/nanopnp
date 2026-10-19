@@ -29,8 +29,8 @@ and no bare `python`.
 
 ```bash
 uv sync --all-extras     # create or refresh .venv from uv.lock
-uv run pytest            # tiers 1 and 2, without the end-to-end walks — the development selection
-uv run pytest --extended # the whole of tiers 1 and 2, as the push gate and CI after a merge run it
+uv run pytest            # tiers 1 and 2, without the `nightly` and `slow` tests: the default selection
+uv run pytest --nightly  # the whole of tiers 1 and 2, as the nightly run does
 ```
 
 A VS Code Dev Container and a GitHub Codespace configuration are in [`.devcontainer/`](.devcontainer)
@@ -44,23 +44,21 @@ Everything must pass before a commit:
 uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
 ```
 
-and before a push, with `uv run pytest --extended`. The tests marked `extended` walk the pipeline
-end to end: the executed worked examples and the vendored 2WCD entry. They take most of the suite's
-time, so the development selection leaves them out. The push gate runs them before every push,
-and CI after a merge, nightly and before a release (`SPECIFICATION.md` §7.6 NOTE). Naming one's
-file, `uv run pytest tests/tier2/test_charge_2wcd.py`, runs it without the flag.
+and before a push, run `.claude/hooks/gate.sh run`: lint, format and types, then the per-push selection. That
+selection is Tier 1, the Tier 2 tests that neither walk the pipeline nor carry `slow`, example 01 while it solves
+in under 60 seconds, and the charged ePNP-NS walk of example 02. The tests marked `nightly` walk the pipeline end
+to end (the executed worked examples and the vendored 2WCD entry) and the rest of Tiers 1 and 2; the nightly run
+executes them, and a failed nightly run opens an issue and blocks nothing (`SPECIFICATION.md` §7.6). Naming one's
+file, `uv run pytest tests/tier2/test_charge_2wcd.py`, runs it without the flag. No coverage is measured.
 
-The lines your branch changes in `src/nanopnp/` (not `gui/`) need full branch coverage, which CI's
-`coverage` job checks with `diff-cover` (the push gate measures none); an exempt line says
-`# pragma: no cover - <reason>`. Gmsh's tests
-fail rather than skip; on Debian or Ubuntu it needs `apt-get install libglu1-mesa libxft2
+Gmsh's tests fail rather than skip; on Debian or Ubuntu it needs `apt-get install libglu1-mesa libxft2
 libxinerama1 libxcursor1`.
 
-A pull request runs lint and types, the development selection in two shards and the strict
+A pull request runs lint and types, the per-push selection in two shards and the strict
 documentation build, on ubuntu with Python 3.14; `CI result` is the one required check, and the
 documentation build runs on every push, prose-only ones included. After a merge, macOS and
-Windows run Tiers 1 and 2 with `--extended`, and nightly and before a release Python 3.11 to 3.13
-run too (`SPECIFICATION.md` §7.6). `uv.lock` is committed and CI resolves nothing: if you edit
+Windows run the per-push selection; nightly and before a release the whole of Tiers 1 and 2 runs, and
+Python 3.11 to 3.13 runs too (`SPECIFICATION.md` §7.6). `uv.lock` is committed and CI resolves nothing: if you edit
 `pyproject.toml`, run `uv lock` in the same commit.
 
 ## The documentation
@@ -96,8 +94,8 @@ may appear in the documentation as a result unless an example asserts it (VER-46
   provenance manifest (FR-25). The published agreement with experiment was obtained with a specific
   set of terms.
 
-Tests live in `tests/tier{1,2,3,4}/`; the directory decides the tier marker. Tiers 1 and 2 gate every
-push. Tests must not reach the network and must not need a COMSOL licence.
+Tests live in `tests/tier{1,2,3,4}/`; the directory decides the tier marker. The per-push selection of
+Tiers 1 and 2 gates every push; the rest runs nightly. Tests must not reach the network and must not need a COMSOL licence.
 
 ## Physics
 

@@ -13,7 +13,7 @@ paths:
 - **In-code prose (§8.2.11 L4).** A docstring on every public function, class and method of `src/` (no
   leading underscore; a dunder method is public): a summary line, with NumPy-style parameters only where the name and type do not say, and no derivation or history.
   A one-line docstring on every module. No docstring on a test or on private code. A comment only where the
-  code cannot say why it is so, and for the source of a physical constant. Identifiers live in test names and
+  code cannot say why it is so, and for the source of a physical constant. Requirement identifiers live in the names of in-scope tests and
   commit messages, not in prose.
 - SI internally; units in the name at the boundary (`radius_nm`, `bias_V`). No bare floats in interfaces.
 - British spelling in prose and identifiers (`normalise`, `analyse`).

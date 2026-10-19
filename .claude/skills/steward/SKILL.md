@@ -51,27 +51,27 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   (`base...head`), or the push range on `main`, through `.github/scripts/prose-only.sh`. When
   everything is prose, the test jobs skip their steps and report success. On a push to `main` it
   reads the PR head's `ci/tested-tree` status: when the merged tree is the one the PR passed, ubuntu
-  runs only the `extended` walks.
-- **A pull request** (§7.6, §8.2.10 J4, J10) — ubuntu, 3.14 only. **`lint`** (`ruff check`, `ruff
-  format --check`, `mypy src/`); **`docs`**; **`tests (tier1)`** and **`tests (tier2)`**,
-  the development selection (no `extended` walks) under branch coverage, split by marker
-  (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`); **`coverage`**, which combines the
-  shards and runs `diff-cover` at 100 % of the changed `src/nanopnp` lines outside `gui/` (§7.6 NOTE,
-  VER-72 f); and **`CI result`**, the one required check, which fails unless
-  every one of those succeeded and posts `ci/tested-tree`. Reproduce a shard with `uv run pytest
-  -m "tier1 and not slow"` (or `tier2`); the gate does not measure coverage, so reproduce a
-  `diff-cover` miss with `--cov=src/nanopnp --cov-branch` and `diff-cover`.
+  runs only the `nightly`-marked tests the PR did not run.
+- **A pull request** (§7.6, §8.2.10 J4, §8.2.13 N4) — ubuntu, 3.14 only. **`lint`** (`ruff check`,
+  `ruff format --check`, `mypy src/`); **`docs`**; **`tests (tier1)`** and **`tests (tier2)`**, the
+  per-push selection (Tier 1, the non-walk Tier 2 tests, example 01 and example 02's charged leg;
+  no `nightly` tests), split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`); and
+  **`CI result`**, the one required check, which fails unless every one of those succeeded and posts
+  `ci/tested-tree`. Reproduce a shard with `uv run pytest -m "tier1 and not slow"` (or `tier2`).
+  There is no coverage job (§8.2.13 N2).
 - **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`, on
   **every** push, prose-only ones included, because a broken link or anchor is exactly what a prose
   edit introduces. Reproduce with `uv sync --all-extras --group docs && uv run
   docs/scripts/generate.py && uv run mkdocs build --strict`.
-- **`platforms`** — after a merge and nightly: `pytest --extended` on ubuntu, macOS and Windows,
-  3.14, and the GUI file serially on the last two. A walk-only or platform-only failure surfaces
-  here, on `main`, and is fixed forward in a new PR.
+- **`platforms`** — after a merge: the per-push selection on ubuntu, macOS and Windows, 3.14, and
+  the GUI file serially on the last two. A platform-only failure surfaces here, on `main`, and is
+  fixed forward in a new PR.
 - **`full-matrix`** — `full: true` (a dispatch, or `release.yml` before it builds a tag): the three
-  platforms × 3.11 to 3.14, `--extended` (QR-09, CON-13).
-- **`nightly`** — 3.11 to 3.13 on the three platforms, dependencies from wheels only, Tier 1;
-  `continue-on-error`, recorded, never gated.
+  platforms × 3.11 to 3.14, `--nightly` (the whole of Tiers 1 and 2; QR-09, CON-13).
+- **`nightly`** — the scheduled run: every Tier 1 and Tier 2 test outside the per-push selection,
+  under `--nightly`, on the three platforms (§8.2.13 N4), and 3.11 to 3.13 on the three platforms,
+  dependencies from wheels only, Tier 1. A failure opens an issue and blocks nothing; it is fixed
+  forward in a PR.
 - **`bundle`** — **gated**. Windows PyInstaller build of `packaging/nanopnp-probe.spec`, then the
   bundle's own `--selftest` (RSK-13, §8.2.1 A4), after a merge, before a release and nightly, as the
   runner-image drift probe.
@@ -79,7 +79,7 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
   gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip
   there is missing evidence, not a defect.
 
-The default `pytest` selection is tiers 1 and 2 without the `extended` tests, which CI adds after a merge. Tier 4
+The default `pytest` selection is tiers 1 and 2 without the `nightly` tests, which the nightly run adds. Tier 4
 gates releases; `-m slow` is measured, never gated. Nothing in the suite reaches the network or
 needs a COMSOL licence, so a failure in `ruff`, `mypy` or `pytest` is always a real one — a lint, a
 type error, or a tier 1–2 assertion, never an environment excuse.
@@ -105,7 +105,7 @@ failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 | One Python version only | A compatibility gap | Fix across 3.11–3.14; **never** narrow `requires-python` (QR-09) |
 | Windows or macOS only | Paths, line endings, thread counts, float repr | `pathlib` everywhere; pin thread counts in the test |
 | A tier 1 test | A real regression | Root-cause it |
-| `diff-cover` below 100 % | A changed line, or one branch arm, no gated test executes | Write the test that executes and asserts it. `# pragma: no cover - <reason>` only for a line no test on this leg can reach, never to get green (VER-72 f) |
+| A `nightly` run | A test outside the per-push selection failed (a walk, a golden or a platform); the run opened an issue and blocks nothing | Reproduce it locally with `uv run pytest --nightly <node id>`, root-cause it and fix forward in a PR, under the Tier 2 rules below |
 | `gmsh does not import` | The runner lacks the X and GL libraries | Install them (`knowledge/07-software-stack/04-geometry-meshing-and-io.md`); never unset the variable |
 | Fails under `-n`, passes serially | Order dependence or leaked state (a global, a patched attribute, a cwd) | Name the state and isolate it. Never drop `-n`, pin a worker or call it a flake |
 | A tier 2 analytic benchmark | **Evidence** | Read the next section first |

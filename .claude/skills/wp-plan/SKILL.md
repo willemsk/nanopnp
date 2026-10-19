@@ -49,8 +49,8 @@ a single term (§7.1).
 | `## In brief` | Before the Execution brief; the template below |
 | `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. The plan holds **at most 1,500 words outside its Outcome annotations** (`tests/tier1/test_plan_shape.py` fails a longer one); link evidence rather than retelling earlier packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve every choice that affects correctness now |
-| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass`. Name the files in backticks. After a group of items, a line *Compaction checkpoint: after item N; resume from this plan and `git log`.* |
-| `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command. Every claimed `VER-`/`VAL-` appears here |
+| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass`, or, for an item outside the test scope (`SPECIFICATION.md` §8.2.13 N1), done when the code and review say so. Name the files in backticks. After a group of items, a line *Compaction checkpoint: after item N; resume from this plan and `git log`.* |
+| `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command, for in-scope tests only (§8.2.13 N1). Every claimed in-scope `VER-`/`VAL-` appears here; an out-of-scope item's done-criterion is "the code and review say so" (N3) |
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation; ask blocking ones before committing |
 
