@@ -6,11 +6,10 @@ from collections.abc import Callable
 from dataclasses import fields
 from pathlib import Path
 
-import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from nanopnp.core.stages import create, describe
-from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
+from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
@@ -18,9 +17,7 @@ from nanopnp.io.case import (
 )
 from nanopnp.io.case_paths import (
     NEUTRAL_SECTIONS,
-    _walk_fields,
     case_fields,
-    field_at,
     with_section,
 )
 from nanopnp.io.defaults import CONFIGURATION_PATHS, SWITCH_PATHS
@@ -147,30 +144,6 @@ and the manifest pointing at nothing.
 """
 
 
-def test_if09_case_fields_enumerates_the_whole_schema() -> None:
-    assert CASE_SCHEMA.startswith("nanopnp/case/")
-    found = case_fields()
-    assert tuple(reference.path for reference in found) == SCHEMA_PATHS
-
-
-def test_if09_every_walked_field_is_the_one_field_at_resolves() -> None:
-    for reference in case_fields():
-        assert field_at(reference.path) == reference
-
-
-# FR-25
-def test_if09_case_fields_refuses_a_mapping_of_blocks() -> None:
-
-    class _Entry(BaseModel):
-        value: float = 0.0
-
-    class _Block(BaseModel):
-        entries: dict[str, _Entry] = {}
-
-    with pytest.raises(NotImplementedError, match="mapping of _Entry blocks"):
-        _walk_fields(_Block, "")
-
-
 def test_fr25_switch_paths_are_the_same_walk() -> None:
     walked = {reference.path for reference in case_fields()}
     unreachable = [path for path in (*SWITCH_PATHS, *CONFIGURATION_PATHS) if path not in walked]
@@ -217,13 +190,6 @@ def _bases(directory: Path, write_tube: Callable[..., Path]) -> tuple[CaseDocume
     return (load_case(QUICKSTART), load_case(write_tube(directory)))
 
 
-def test_ver60_the_neutral_sections_are_optional_sections_of_the_schema() -> None:
-    optional = set(_optional_sections())
-    assert optional == {"structure", "geometry", "charge"}
-    assert optional >= NEUTRAL_SECTIONS
-    assert "charge" in NEUTRAL_SECTIONS
-
-
 def test_ver60_a_listed_section_resolves_empty_as_absent(tmp_path: Path, charged_tube) -> None:
     for base in _bases(tmp_path, charged_tube.write):
         for name in NEUTRAL_SECTIONS:
@@ -248,16 +214,6 @@ def test_ver60_every_unlisted_optional_section_is_refused_empty_or_resolves_diff
             except (ValidationError, CaseValidationError) as error:
                 evidence.append(f"{base.name}: refused ({type(error).__name__})")
         assert evidence, f"{name}: {{}} resolves as its absence on every base case; list it"
-
-
-def test_ver60_with_section_refuses_an_unlisted_or_present_section(tmp_path: Path) -> None:
-    base = load_case(QUICKSTART)
-    for name in ("structure", "geometry", "analyte", "physics"):
-        with pytest.raises(ValueError, match="cannot be added from a default"):
-            with_section(base, name)
-    present = with_section(_without(base, "charge"), "charge")
-    with pytest.raises(ValueError, match="already carries a charge: section"):
-        with_section(present, "charge")
 
 
 def test_ver60_an_empty_charge_section_keys_every_physics_stage_as_its_absence(

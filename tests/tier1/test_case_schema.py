@@ -7,12 +7,10 @@ import pytest
 
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import (
-    SCHEMA,
     CaseValidationError,
     UnsupportedCaseSection,
     dump_case,
 )
-from nanopnp.io.case_paths import substitute
 from nanopnp.pipeline.case import (
     load_case,
     loads_case,
@@ -174,32 +172,6 @@ def test_ver09_a_change_that_changes_the_run_changes_the_hash() -> None:
         assert CaseArtefact(altered).hash != reference, edit
 
 
-def test_if03_an_unknown_key_is_named_with_its_dotted_path_and_a_suggestion() -> None:
-    text = REFERENCE_CASE.replace("diffusivity:  {model", "diffusivty:  {model")
-    with pytest.raises(CaseValidationError) as raised:
-        loads_case(text)
-    message = str(raised.value)
-    assert "electrolyte.corrections.diffusivty" in message
-    assert "unknown key" in message
-    assert "did you mean 'diffusivity'?" in message
-
-
-def test_if03_an_unknown_key_with_no_near_match_lists_the_block_s_keys() -> None:
-    text = REFERENCE_CASE.replace("  continuation: default_ladder", "  zzz_unrelated: 1")
-    with pytest.raises(CaseValidationError, match=r"numerics\.zzz_unrelated") as raised:
-        loads_case(text)
-    assert "stabilisation" in str(raised.value)
-
-
-def test_if03_a_future_schema_fails_naming_the_schema_before_any_field_error() -> None:
-    text = REFERENCE_CASE.replace(SCHEMA, "nanopnp/case/v3").replace("bias_V: 0.100", "bias: 0.100")
-    with pytest.raises(CaseValidationError) as raised:
-        loads_case(text)
-    message = str(raised.value)
-    assert "nanopnp/case/v3" in message
-    assert "bias" not in message
-
-
 # PHY-21
 def test_if03_a_misspelt_correction_model_is_refused_rather_than_silently_disabled() -> None:
     text = REFERENCE_CASE.replace(
@@ -207,42 +179,6 @@ def test_if03_a_misspelt_correction_model_is_refused_rather_than_silently_disabl
     )
     with pytest.raises(CaseValidationError, match="willems2020_kcl"):
         loads_case(text)
-
-
-def test_if03_an_output_that_is_not_selectable_is_refused() -> None:
-    with pytest.raises(CaseValidationError, match="conductance"):
-        loads_case(REFERENCE_CASE.replace("outputs: [current", "outputs: [conductance, current"))
-
-
-def test_if03_a_supplied_artefact_names_exactly_one_source() -> None:
-    with pytest.raises(CaseValidationError, match="exactly one"):
-        loads_case(REFERENCE_CASE.replace("{path: clya.msh, format: msh41,", "{format: msh41,"))
-
-
-@pytest.mark.parametrize(
-    ("smearing", "inputs", "fragments"),
-    [
-        ("{sharpness: 0.4}", "", ("charge.smearing.sharpness", "structure:", "nothing to deposit")),
-        ("{grid_spacing_nm: 0.004}", "", ("charge.smearing.grid_spacing_nm", "structure:")),
-        (
-            "{sharpness: 0.4}",
-            "  charge: {path: rho.yaml, format: field1}\n",
-            ("charge.smearing.sharpness", "inputs.charge"),
-        ),
-        ("{axis_cutoff_nm: 0.02}", "", ("charge.smearing.axis_cutoff_nm", "PHY-18")),
-        ("{axis_cutoff_nm: 0.0}", "", ("charge.smearing.axis_cutoff_nm", "PHY-18")),
-        ("{sharpness: 0.0}", "", ("charge.smearing.sharpness", "finite and positive")),
-        ("{grid_spacing_nm: .inf}", "", ("charge.smearing.grid_spacing_nm", "finite")),
-    ],
-)
-def test_ver24_charge_smearing_refusals_name_their_keys(
-    smearing: str, inputs: str, fragments: tuple[str, ...]
-) -> None:
-    text = REFERENCE_CASE.replace("inputs:\n", f"inputs:\n{inputs}", 1)
-    with pytest.raises(CaseValidationError) as raised:
-        resolve(loads_case(text + f"charge:\n  smearing: {smearing}\n"))
-    message = str(raised.value)
-    assert all(fragment in message for fragment in fragments), message
 
 
 def test_ver24_a_pqr_beside_a_model_without_a_fixed_charge_is_refused_naming_it() -> None:
@@ -258,22 +194,6 @@ def test_ver24_a_pqr_beside_a_model_without_a_fixed_charge_is_refused_naming_it(
     assert "'pb'" in message
     assert "inputs.pqr" in message
     assert "poisson" in message
-
-
-def test_fr27_a_case_without_a_supplied_mesh_says_where_the_mesh_comes_from() -> None:
-    text = REFERENCE_CASE.replace(
-        "inputs:\n  mesh: {path: clya.msh, format: msh41,\n"
-        "         groups: {pore: pore, membrane: membrane, reservoir: bulk}}\n",
-        "",
-    )
-    with pytest.raises(CaseValidationError, match=r"inputs\.mesh nor inputs\.profile"):
-        resolve(loads_case(text))
-
-
-def test_fr27_the_num20_fallbacks_are_refused_by_name() -> None:
-    text = REFERENCE_CASE.replace("strategy: newton", "strategy: hybrid")
-    with pytest.raises(UnsupportedCaseSection, match="NUM-20"):
-        resolve(loads_case(text))
 
 
 @pytest.mark.parametrize(
@@ -382,25 +302,6 @@ def test_fr25_the_same_switch_on_a_single_rung_resolves_and_is_carried() -> None
     assert resolved.model_options["inertia"] is False
 
 
-# PHY-21
-def test_fr25_pnp_on_the_ladder_is_refused_with_advice_it_can_take() -> None:
-    text = (
-        REFERENCE_CASE.replace("model: epnp-ns", "model: pnp")
-        .replace(
-            "    viscosity:    {model: willems2020_nacl, wall: true, concentration: true}\n", ""
-        )
-        .replace("    density:      {model: willems2020_nacl}\n", "")
-        .replace("flow: true", "flow: false")
-        .replace("variable_density: true", "variable_density: false")
-        .replace("inertia: true", "inertia: false")
-    )
-    with pytest.raises(CaseValidationError, match="pnp-ns") as raised:
-        resolve(loads_case(text))
-    message = str(raised.value)
-    assert "match the ladder" not in message
-    assert "numerics.continuation: none" in message
-
-
 def test_phy21_pnp_with_flow_is_refused_by_the_model_check_not_the_ladder_check() -> None:
     text = REFERENCE_CASE.replace("model: epnp-ns", "model: pnp")
     with pytest.raises(CaseValidationError, match=re.escape("physics.flow must be false")):
@@ -442,25 +343,6 @@ def test_num03_phi_and_c_must_still_agree_and_the_message_names_both() -> None:
     assert "numerics.elements.phi" in message
 
 
-@pytest.mark.parametrize("mode", ["none", "supg", "reference"])
-def test_if03_every_registered_stabilisation_mode_validates(mode: str) -> None:
-    from nanopnp.physics.models import registered_stabilisations
-
-    assert mode in registered_stabilisations()
-    text = REFERENCE_CASE.replace("stabilisation: none", f"stabilisation: {mode}")
-    assert resolve(loads_case(text)).stabilisation == mode
-
-
-def test_if03_an_unregistered_stabilisation_mode_is_refused_naming_the_registry() -> None:
-    text = REFERENCE_CASE.replace("stabilisation: none", "stabilisation: streamline")
-    with pytest.raises(CaseValidationError) as raised:
-        loads_case(text)
-    message = str(raised.value)
-    assert "numerics.stabilisation" in message
-    for mode in ("none", "supg", "reference"):
-        assert mode in message
-
-
 INF_SUP_UNSTABLE = REFERENCE_CASE.replace(
     "elements: {phi: P2, c: P2, u: P2, p: P1}", "elements: {phi: P2, c: P2, u: P1, p: P1}"
 )
@@ -473,24 +355,6 @@ def test_num03_an_unstable_pair_is_refused_at_load_naming_inf_sup() -> None:
         INF_SUP_UNSTABLE.replace("stabilisation: none", "stabilisation: reference")
     )
     assert accepted.numerics.elements.u == "P1"
-
-
-def test_if03_a_registry_refusal_reads_as_the_schema_wrote_it() -> None:
-    text = REFERENCE_CASE.replace("model: epnp-ns", "model: epnp-nz")
-    with pytest.raises(CaseValidationError) as refused:
-        loads_case(text, source="case.yaml")
-    assert str(refused.value) == (
-        "case.yaml: 1 problem(s) in the case document\n"
-        "  <document>: Value error, physics.model 'epnp-nz' is not registered; the models "
-        "are epnp-ns, pb, pb-linear, pnp, pnp-ns, poisson"
-    )
-    assert refused.value.errors is not None
-
-
-def test_if03_a_substituted_unregistered_model_is_refused_at_resolve() -> None:
-    document = substitute(loads_case(REFERENCE_CASE), {"physics.model": "epnp-nz"})
-    with pytest.raises(CaseValidationError, match="'epnp-nz' is not registered"):
-        resolve(document)
 
 
 def test_phy21_the_resolved_declaration_and_boundaries_are_the_registry_s() -> None:

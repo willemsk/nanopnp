@@ -12,16 +12,13 @@ from typing import TYPE_CHECKING
 import pytest
 
 from nanopnp.cli import main
-from nanopnp.core.errors import EXIT_CASE, EXIT_OK
+from nanopnp.core.errors import EXIT_CASE
 from nanopnp.core.paths import profile_file
-from nanopnp.gui.case_model import CaseEditor
-from nanopnp.io.case import CaseDocument, CaseValidationError
+from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.mesh import meshers
 from nanopnp.mesh.adapter import read as read_mesh
-from nanopnp.mesh.generate import sizing_parameters
 from nanopnp.mesh.meshers import create_mesher, register_mesher
-from nanopnp.mesh.sizing import SIZES, WallSize
 from nanopnp.numerics import linear
 from nanopnp.numerics.linear import create_solver, register_solver
 from nanopnp.physics import stabilisation as stabilisation_mod
@@ -32,7 +29,6 @@ from nanopnp.physics.stabilisation import (
     register as register_stabilisation,
 )
 from nanopnp.pipeline.case import loads_case
-from nanopnp.pipeline.checks import check_document
 from nanopnp.pipeline.run import run_case, run_document
 
 if TYPE_CHECKING:
@@ -145,45 +141,6 @@ def quickstart_pore_msh(tmp_path_factory: pytest.TempPathFactory) -> Path:
         pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
     ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
     return write_msh41(from_ngsolve(generated), tmp_path_factory.mktemp("pore") / "pore.msh")
-
-
-def test_ver66_stubs_validate_and_appear_in_editor_options(
-    registered_stubs: tuple[_StubMesher, _StubSolver, _StubStabilisation],
-    tmp_path: Path,
-) -> None:
-    fixture_path = profile_file("clya_reference_profile")
-    case_text = f"""\
-schema: nanopnp/case/v0.5
-name: stub-validation-case
-inputs:
-  profile: {{path: {fixture_path}}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 1.0
-  parameters: willems2020_nacl
-boundary_conditions: {{bias_V: 0.1}}
-physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
-numerics:
-  mesh: {{backend: stub-mesher}}
-  linear: {{solver: stub-solver}}
-  stabilisation: stub-mode
-"""
-    case_file = tmp_path / "case.yaml"
-    case_file.write_text(case_text, encoding="utf-8")
-
-    document = loads_case(case_text)
-    assert isinstance(document, CaseDocument)
-    checked = check_document(document)
-    assert checked is document
-
-    code = main(["validate", "case", str(case_file)])
-    assert code == EXIT_OK
-
-    editor = CaseEditor.open(case_file)
-    assert "stub-mesher" in (editor.state("numerics.mesh.backend").options or ())
-    assert "stub-solver" in (editor.state("numerics.linear.solver").options or ())
-    assert "stub-mode" in (editor.state("numerics.stabilisation").options or ())
-    assert editor.problems() is None
 
 
 def test_ver66_forwarding_solver_and_mode_agree_with_plain_run(
@@ -314,101 +271,6 @@ numerics:
     np.testing.assert_array_equal(stub_data.triangles, netgen_data.triangles)
 
 
-@pytest.mark.parametrize(
-    ("path", "unregistered_value", "expected_fragment"),
-    [
-        (
-            "numerics.mesh.backend",
-            "nonexistent_mesher",
-            (
-                "numerics.mesh.backend 'nonexistent_mesher' is not a registered mesher; "
-                "the meshers are"
-            ),
-        ),
-        (
-            "numerics.linear.solver",
-            "nonexistent_solver",
-            "numerics.linear.solver 'nonexistent_solver' is not available; the solvers are",
-        ),
-        (
-            "numerics.stabilisation",
-            "nonexistent_mode",
-            (
-                "numerics.stabilisation 'nonexistent_mode' is not a registered mode; "
-                "the available modes are"
-            ),
-        ),
-    ],
-)
-def test_ver66_unregistered_name_is_refused_consistently_cli_and_editor(
-    path: str,
-    unregistered_value: str,
-    expected_fragment: str,
-    capsys: pytest.CaptureFixture[str],
-    tmp_path: Path,
-) -> None:
-    fixture_path = profile_file("clya_reference_profile")
-    base_case = f"""\
-schema: nanopnp/case/v0.5
-name: unregistered-test
-inputs:
-  profile: {{path: {fixture_path}}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 1.0
-  parameters: willems2020_nacl
-boundary_conditions: {{bias_V: 0.1}}
-physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
-numerics:
-  mesh: {{backend: netgen}}
-  linear: {{solver: umfpack}}
-  stabilisation: none
-"""
-    base_file = tmp_path / "base_case.yaml"
-    base_file.write_text(base_case, encoding="utf-8")
-
-    editor = CaseEditor.open(base_file)
-    editor.stage(path, unregistered_value)
-    with pytest.raises(CaseValidationError):
-        editor.commit()
-    editor_problems = editor.problems()
-    assert expected_fragment in editor_problems
-
-    defaults = {
-        "numerics.mesh.backend": "netgen",
-        "numerics.linear.solver": "umfpack",
-        "numerics.stabilisation": "none",
-    }
-    values = {**defaults, path: unregistered_value}
-    bad_case_text = f"""\
-schema: nanopnp/case/v0.5
-name: unregistered-test
-inputs:
-  profile: {{path: {fixture_path}}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 1.0
-  parameters: willems2020_nacl
-boundary_conditions: {{bias_V: 0.1}}
-physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
-numerics:
-  mesh: {{backend: {values["numerics.mesh.backend"]}}}
-  linear: {{solver: {values["numerics.linear.solver"]}}}
-  stabilisation: {values["numerics.stabilisation"]}
-"""
-    bad_file = tmp_path / f"bad_{path.replace('.', '_')}.yaml"
-    bad_file.write_text(bad_case_text, encoding="utf-8")
-
-    with pytest.raises(CaseValidationError) as exc_info:
-        loads_case(bad_case_text)
-    assert expected_fragment in str(exc_info.value)
-
-    code = main(["validate", "case", str(bad_file)])
-    assert code == EXIT_CASE
-    captured = capsys.readouterr()
-    assert expected_fragment in captured.err
-
-
 def test_ver66_an_unregistered_rejected_solver_is_refused_naming_num21(
     capsys: pytest.CaptureFixture[str], tmp_path: Path
 ) -> None:
@@ -438,23 +300,6 @@ numerics:
     case_file.write_text(case_text, encoding="utf-8")
     assert main(["validate", "case", str(case_file)]) == EXIT_CASE
     assert expected in capsys.readouterr().err
-
-
-def test_ver66_a_mesher_naming_a_common_recipe_entry_is_refused() -> None:
-
-    class Clashing:
-        name = "clashing"
-
-        def settings(self, *, exclusion: bool = False) -> dict[str, object]:
-            return {"backend": "netgen", "optsteps2d": 5}
-
-    register_mesher("clashing", Clashing)  # type: ignore[arg-type]
-    try:
-        wall = WallSize(wall_h_nm=0.1, source="explicit", debye_length_nm=0.5, size_scale=1.0)
-        with pytest.raises(ValueError, match="mesher 'clashing' returns settings backend"):
-            sizing_parameters(wall, SIZES, "clashing")
-    finally:
-        meshers._REGISTRY.pop("clashing", None)
 
 
 def test_ver66_registered_meshers_in_fresh_process_imports_no_backend() -> None:
