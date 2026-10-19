@@ -1,5 +1,7 @@
 # WP50 — The test scope
 
+PR: [#110](https://github.com/willemsk/nanopnp/pull/110), branch claude/friendly-cori-xjlj5i
+
 **Status: delivered, 19 October 2026.** Written 18 October 2026. Inherits WP49 as shipped, the Phase 4
 amendment of 18 October 2026 (§8.2.13 N1 to N7) and the approved design
 `docs/superpowers/specs/2026-10-18-test-pruning-design.md`.
