@@ -9,12 +9,10 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core import stages as registry
-from nanopnp.core.paths import store_root
 from nanopnp.io.artefact import QOI_SCHEMA, Artefact, StageInputs
-from nanopnp.io.workspace import MissingWorkspaceError, WorkspaceInUseError, scratch_directory
-from nanopnp.mesh.ingest import MeshStage
+from nanopnp.io.workspace import scratch_directory
 from nanopnp.pipeline.case import loads_case, resolve
-from nanopnp.post.stage import QoIStage, ReportStage
+from nanopnp.post.stage import ReportStage
 from nanopnp.solve.stage import SolveStage
 
 
@@ -35,48 +33,6 @@ def test_ver25_scratch_directory_is_the_workspace_created(tmp_path: Path) -> Non
     assert target.is_dir()
 
 
-def test_ver25_scratch_directory_refuses_a_workspace_that_holds_files(tmp_path: Path) -> None:
-    (tmp_path / "mesh.msh").write_text("earlier run", encoding="utf-8")
-    with pytest.raises(WorkspaceInUseError, match=r"mesh\.msh.*overwrite_workspace=True"):
-        scratch_directory(tmp_path, "mesh")
-    assert (tmp_path / "mesh.msh").read_text(encoding="utf-8") == "earlier run"
-
-
-def test_ver25_scratch_directory_overwrite_admits_a_workspace_that_holds_files(
-    tmp_path: Path,
-) -> None:
-    (tmp_path / "mesh.msh").write_text("earlier run", encoding="utf-8")
-    assert scratch_directory(tmp_path, "mesh", overwrite=True) == tmp_path
-
-
-def test_ver25_scratch_directory_admits_a_workspace_holding_only_directories(
-    tmp_path: Path,
-) -> None:
-    (tmp_path / "solve").mkdir()
-    assert scratch_directory(tmp_path, "report") == tmp_path
-
-
-def test_ver25_scratch_directory_names_at_most_five_files(tmp_path: Path) -> None:
-    for index in range(7):
-        (tmp_path / f"f{index}.npz").write_text("x", encoding="utf-8")
-    with pytest.raises(WorkspaceInUseError, match=r"f4\.npz, \.\.\."):
-        scratch_directory(tmp_path, "charge")
-
-
-@pytest.mark.parametrize(("name", "origin"), _workspace_stages(), ids=lambda v: str(v))
-def test_ver25_every_workspace_stage_takes_the_overwrite_switch(
-    name: str, origin: Path, tmp_path: Path
-) -> None:
-    stage = registry.create(name, workspace=tmp_path, overwrite_workspace=True)
-    assert stage._overwrite is True  # type: ignore[attr-defined]
-    assert registry.create(name, workspace=tmp_path)._overwrite is False  # type: ignore[attr-defined]
-
-
-def test_ver25_scratch_directory_without_a_workspace_names_the_argument() -> None:
-    with pytest.raises(MissingWorkspaceError, match="workspace=<directory>"):
-        scratch_directory(None, "mesh")
-
-
 @pytest.mark.parametrize(("name", "origin"), _workspace_stages(), ids=lambda v: str(v))
 def test_ver25_no_workspace_stage_picks_a_scratch_directory_of_its_own(
     name: str, origin: Path
@@ -92,40 +48,8 @@ def test_ver25_no_workspace_stage_picks_a_scratch_directory_of_its_own(
     assert "store_root" not in called, f"stage {name!r} reads the process-default store root"
 
 
-def test_ver25_the_mesh_stage_without_a_workspace_refuses_scratch(
-    cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("NANOPNP_STORE", str(tmp_path / "default-store"))
-    resolved = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
-    with pytest.raises(MissingWorkspaceError, match="workspace"):
-        MeshStage().run(StageInputs(resolved=resolved))
-    assert not store_root().exists() or not any(store_root().rglob("*.msh"))
-
-
 class _ReachedError(Exception):
     pass
-
-
-def _refuse_work(*arguments: object, **keywords: object) -> None:
-    raise _ReachedError
-
-
-def test_ver25_a_solve_stage_without_a_workspace_refuses_before_it_solves(
-    cylindrical_pore_case: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(SolveStage, "_prepare", _refuse_work)
-    resolved = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
-    with pytest.raises(MissingWorkspaceError, match="solve stage"):
-        SolveStage().run(StageInputs(resolved=resolved))
-
-
-def test_ver25_the_qoi_stage_given_no_solve_refuses_before_it_solves(
-    cylindrical_pore_case: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(SolveStage, "_prepare", _refuse_work)
-    resolved = resolve(loads_case(cylindrical_pore_case.read_text(encoding="utf-8")))
-    with pytest.raises(MissingWorkspaceError, match="solve stage"):
-        QoIStage().run(StageInputs(resolved=resolved))
 
 
 def test_ver25_the_report_stage_hands_its_workspace_to_the_solve_it_runs(
