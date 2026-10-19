@@ -24,8 +24,9 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
 `v0.5.0-alpha.13`; WP48, the OKF backfill ([plan](wp48-okf-backfill.md)), to be tagged
 `v0.5.0-alpha.14`; WP49, the cost study ([plan](wp49-cost-study.md)), to be tagged
-`v0.5.0-alpha.15`.
-Planned: WP50, the test scope (§8.2.13); WP51, the user-testing protocol (§8.2.9 I1, renumbered by
+`v0.5.0-alpha.15`; WP50, the test scope ([plan](wp50-test-scope.md)), to be tagged
+`v0.5.0-alpha.16`.
+Planned: WP51, the user-testing protocol (§8.2.9 I1, renumbered by
 §8.2.12 M4 and §8.2.13 N6).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
 and ruled every `UT-nn`: the fixes, from WP52, then the documentation increment and the close,
@@ -863,6 +864,16 @@ A fix that does not fit one pull request is carried as a `REV-nn` row and ruled 
 The package claims VER-76 and sets REV-112 and REV-113 `fixed`. Tag `v0.5.0-alpha.15`.
 
 ### WP50 — The test scope (§8.2.13 N1 to N5)
+
+> **Delivered, 19 October 2026** ([plan](wp50-test-scope.md), to be tagged `v0.5.0-alpha.16`). N1's
+> rule is written once in `CLAUDE.md` and `.claude/rules/python.md`, and the skills, `CONTRIBUTING.md`,
+> the pull-request template and `tests/README.md` follow it; `/wp-ship` deletes off-scope tests before
+> `/code-review` (N5). The coverage job and `diff-cover` are gone (N2). `nightly` replaces `extended`;
+> every push runs example 01 and example 02's ePNP-NS leg with their VER-62 goldens, and a failed
+> nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
+> import guard, and §7.1 to §7.3, §7.6, §8.1 and Appendix A follow (N3). 386 Tier 1 tests and
+> `pending.yaml` are deleted; 31 knowledge markers are retargeted. The per-push run takes 201 s
+> (1,505 tests). VER-61, VER-62 and VER-65 hold. REV-117 carries the tooling left without tests.
 
 Added on 18 October 2026 (§8.2.13 N6). It waits on WP49's merge, and the protocol waits on it. The
 design is `docs/superpowers/specs/2026-10-18-test-pruning-design.md`. It:

@@ -1,14 +1,14 @@
 # Current work
 
-Updated 18 October 2026 (WP49 delivered; Phase 4 amended for the test scope). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 19 October 2026 (WP50 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it; the loop, the code, the notes and the cost
-study are done. The tests have outgrown their use, so the next package deletes those that guard
-nothing that could silently go wrong, keeps the physics, the numerics, the core machinery and the
-licence and architecture guards, and runs the long examples nightly. Then comes the protocol for the
+study are done. The tests had outgrown their use, so the last package deleted those that guard nothing that could
+silently go wrong, kept the physics, the numerics, the core machinery and the licence and
+architecture guards, and moved the long examples to a nightly run. Next comes the protocol for the
 author's testing sessions.
 
 **Your call:** none open; the case-file format ships in the documentation only. *Recommendation:*
@@ -18,10 +18,10 @@ keep it so until the browser page needs a command.
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 to §8.2.13). WP35 to WP49 are delivered ([WP49](wp49-cost-study.md));
-  tags to `v0.5.0-alpha.15` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
-- **Amended 18 October 2026** (§8.2.13): **WP50, the test scope** (N1 to N5), before the protocol,
-  is **planned** ([plan](wp50-test-scope.md)). Next: `/wp-implement`, then WP51 (protocol; the author's sessions; fixes from WP52).
+  **in progress** (§8.2.7 to §8.2.13). WP35 to WP50 are delivered ([WP50](wp50-test-scope.md));
+  tags to `v0.5.0-alpha.16` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
+- **Amended 18 October 2026** (§8.2.13): WP50, the test scope, is **delivered** (REV-117 open).
+  Next: WP51 (protocol; the author's sessions; fixes from WP52).
 
 ## Not to be re-decided
 
