@@ -119,24 +119,6 @@ def apbs() -> None:
     require_apbs()
 
 
-CASE_YAML_TEMPLATE: str = f"""\
-schema: {CASE_SCHEMA}
-name: minimal
-inputs: {{mesh: {{path: pore.vol, format: vol}}}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 1.0
-  parameters: willems2020_nacl
-boundary_conditions: {{bias_V: 0.1}}
-physics: {{model: pnp-ns}}
-"""
-
-
-@pytest.fixture
-def case_yaml_template() -> str:
-    return CASE_YAML_TEMPLATE
-
-
 def _deep_merge_dict(target: dict[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
     for key, value in source.items():
         if key in target and isinstance(target[key], dict) and isinstance(value, Mapping):

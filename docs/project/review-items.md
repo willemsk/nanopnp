@@ -1169,3 +1169,12 @@ and 0.64 % (limit 10 %): every verdict holds. A1's method is unchanged and its 1
 **Open.** The author ruled on 18 October 2026 against a re-run in WP49, since no verdict can change.
 The row stays open until the Phase 4 close re-runs `python -m nanopnp.validation.costs all` on a clean
 tree, replaces the record and sets it `fixed`.
+
+## REV-117: Tooling left without tests by the test scope
+
+WP50 deleted the tests of the OKF checker (`validation/okf.py`), the findings-log reader, the plan
+shape, the same-tree and push-guard scripts and similar repository tooling (§8.2.13 N3). The tools
+stay in `src/` and `.claude/`, as WP50's scope kept them, and nothing now exercises them.
+
+**Open.** The author decides whether each earns its keep or is deleted; recommendation: delete the
+OKF checker and the findings-log reader, which no gate calls.

@@ -136,3 +136,4 @@ is a rolling register, and its header stays `open`.
 | REV-114 | interface | medium | deferred | §8.2.12 M3 | [The shell moves from Qt to a browser](review-items.md#rev-114-the-shell-moves-from-qt-to-a-browser) |
 | REV-115 | process | low | declined | §8.2.12 M1 | [The architecture review's already-met claims](review-items.md#rev-115-the-architecture-reviews-already-met-claims) |
 | REV-116 | verification | low | open | — | [The cost record predates the harness fixes](review-items.md#rev-116-the-cost-record-predates-the-harness-fixes) |
+| REV-117 | process | low | open | — | [Tooling left without tests by the test scope](review-items.md#rev-117-tooling-left-without-tests-by-the-test-scope) |

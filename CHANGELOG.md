@@ -19,6 +19,23 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.16] - 2026-10-19
+
+WP50: the test scope (`SPECIFICATION.md` §8.2.13 N1 to N5).
+
+### Changed
+
+- **Tests only where a silent wrong answer is possible** (N1): 386 Tier 1 tests of repository
+  self-checks, interface wording and refusals are deleted; the physics, numerics, core mechanisms and
+  the licence and architecture guards stay.
+- **`nightly` replaces `extended`** (N4): `pytest --nightly`; the per-push selection holds example 01
+  and example 02's ePNP-NS leg with their VER-62 goldens; a failed nightly run opens an issue.
+- **VER-63, VER-67, VER-68 and VER-75 are withdrawn; VER-72 keeps its import guard** (N3).
+
+### Removed
+
+- The coverage job, `diff-cover` and `pytest-cov` (N2); `knowledge/pending.yaml`.
+
 ## [0.5.0-alpha.15] - 2026-10-18
 
 WP49: the cost study (`SPECIFICATION.md` §8.2.12 M2; REV-112, REV-113; VER-76).
