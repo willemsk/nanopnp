@@ -1,4 +1,4 @@
-"""VER-46 (with FR-25, NUM-11, PHY-21, PHY-22): example 02, a charged pore."""
+"""VER-46, VER-62: example 02's classical leg, nightly."""
 
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.nightly
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-RUNS = ("run-epnpns", "run-classical")
 
 
 def _read(path: Path) -> dict[str, object]:
@@ -39,12 +38,11 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, list[CommandRes
 
 
 # FR-23
-@pytest.mark.parametrize("run", RUNS)
-def test_ver46_a_negatively_charged_pore_is_cation_selective(
-    ran: tuple[Path, list[CommandResult]], run: str
+def test_ver46_classical_pnp_ns_is_cation_selective(
+    ran: tuple[Path, list[CommandResult]],
 ) -> None:
     example, _ = ran
-    quantities = _read(example / run / "run.json")["quantities"]
+    quantities = _read(example / "run-classical" / "run.json")["quantities"]
     assert isinstance(quantities, dict)
     assert quantities["transport_number"] > 0.5, quantities
     agreement = quantities["route_agreement"]
@@ -63,9 +61,6 @@ def test_ver46_classical_pnp_ns_lists_every_none_as_a_deviation(
     expected.add("electrolyte.corrections.steric.model")
     assert set(listed) == expected
     assert all(entry["value"] == "none" for entry in listed.values())
-    validated = _read(example / "run-epnpns" / "manifest.json")["deviations"]
-    assert isinstance(validated, dict)
-    assert validated["count"] == 0, validated
 
 
 def _mesh_hash(run: Path) -> str:
@@ -82,13 +77,6 @@ def _quantities(run: Path) -> dict[str, object]:
 
 # One test per case, not one for both: on a key with no entry the first assertion
 # fails, and the second case's entry would not be printed until another CI run.
-def test_ver62_example_02_epnpns_holds_the_number_stability_golden(
-    ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
-) -> None:
-    run = ran[0] / "run-epnpns"
-    number_stability("example-02-epnpns", _mesh_hash(run), _quantities(run))
-
-
 def test_ver62_example_02_classical_holds_the_number_stability_golden(
     ran: tuple[Path, list[CommandResult]], number_stability: NumberStability
 ) -> None:
