@@ -14,7 +14,7 @@ from nanopnp.physics.flow import (
     pressure_term,
     viscous_operator,
 )
-from nanopnp.physics.pb import solve_pb
+from nanopnp.physics.pb import solve_pb_recorded
 
 AXISYMMETRIC = Measures(symmetry="axisymmetric", element_order=2)
 RADIUS_NM, LENGTH_NM = 2.0, 8.0
@@ -27,14 +27,14 @@ def _electroosmotic_flow(
     mesh = CylinderGeometry(radius_nm=RADIUS_NM, length_nm=LENGTH_NM).generate(
         maxh_nm=maxh_nm, wall_h_nm=min(maxh_nm, debye_length_nm / 4.0)
     )
-    double_layer = solve_pb(
+    double_layer = solve_pb_recorded(
         mesh,
         AXISYMMETRIC,
         debye_length_nm=debye_length_nm,
         dirichlet="wall",
         boundary_values=ngs.CF(ZETA),
         nonlinear=False,
-    )
+    )[0]
     # Debye-Hueckel for a symmetric monovalent salt: rho~_ion = -2 psi~, and the
     # Poisson source coefficient S is 1/(2 lambda^2).
     screening = 1.0 / (2.0 * debye_length_nm**2)

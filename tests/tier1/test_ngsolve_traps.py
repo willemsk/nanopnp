@@ -27,7 +27,7 @@ from nanopnp.numerics.gates import (
 )
 from nanopnp.numerics.linear import create_solver, to_scipy
 from nanopnp.numerics.measures import AXISYMMETRIC, PLANAR
-from nanopnp.physics.pb import debye_length_nm, nonlinear_pb_residual, solve_pb
+from nanopnp.physics.pb import debye_length_nm, nonlinear_pb_residual, solve_pb_recorded
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 from nanopnp.sweep import run as sweep_run
 
@@ -295,14 +295,14 @@ def test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts() -> None:
     zeta = 2.0
     exact_grad = (2.0 / lam) * math.sinh(0.5 * zeta)
     gmesh = SlabGeometry(width_nm=15.0 * lam, height_nm=lam).generate(maxh_nm=lam / 4.0)
-    sol = solve_pb(
+    sol = solve_pb_recorded(
         gmesh,
         PLANAR,
         debye_length_nm=lam,
         dirichlet="wall|bulk",
         boundary_values=gmesh.BoundaryCF({"wall": zeta, "bulk": 0.0}),
         nonlinear=True,
-    )
+    )[0]
     res = ngs.BilinearForm(sol.space)
     tr, te = sol.space.TnT()
     res += nonlinear_pb_residual(tr, te, PLANAR, debye_length_nm=lam)

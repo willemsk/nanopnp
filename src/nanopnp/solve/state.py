@@ -357,15 +357,22 @@ def _descriptor(
     return record
 
 
-def _gate(stored: Mapping[str, Any], expected: Mapping[str, Any], path: Path) -> None:
+def _check_descriptor_keys(
+    stored: Mapping[str, Any], path: Path, error: type[StateMismatchError]
+) -> None:
+    """Raise ``error`` unless ``stored`` carries exactly the descriptor keys this version gates."""
     if sorted(stored) != sorted(DESCRIPTOR_KEYS):
         missing = sorted(set(DESCRIPTOR_KEYS) - set(stored))
         extra = sorted(set(stored) - set(DESCRIPTOR_KEYS))
-        raise StateMismatchError(
+        raise error(
             f"{path} carries a descriptor this version cannot gate: "
             f"missing {missing or 'nothing'}, unexpected {extra or 'nothing'}. "
             "A changed payload contract is a changed artefact schema version (section 5.3.2)"
         )
+
+
+def _gate(stored: Mapping[str, Any], expected: Mapping[str, Any], path: Path) -> None:
+    _check_descriptor_keys(stored, path, StateMismatchError)
     for key in DESCRIPTOR_KEYS:
         if stored[key] != expected[key]:
             raise StateMismatchError(
@@ -608,14 +615,7 @@ def load_initial(
 
 
 def _gate_space(stored: Mapping[str, Any], expected: Mapping[str, Any], path: Path) -> None:
-    if sorted(stored) != sorted(DESCRIPTOR_KEYS):
-        missing = sorted(set(DESCRIPTOR_KEYS) - set(stored))
-        extra = sorted(set(stored) - set(DESCRIPTOR_KEYS))
-        raise WarmStartError(
-            f"{path} carries a descriptor this version cannot gate: "
-            f"missing {missing or 'nothing'}, unexpected {extra or 'nothing'}. "
-            "A changed payload contract is a changed artefact schema version (section 5.3.2)"
-        )
+    _check_descriptor_keys(stored, path, WarmStartError)
     for key in SPACE_KEYS:
         found, wanted = _leaf_at(stored, key), _leaf_at(expected, key)
         if found != wanted:

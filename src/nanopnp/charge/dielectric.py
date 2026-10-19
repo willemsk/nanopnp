@@ -125,29 +125,20 @@ class MaterialMean:
         return {"material": self.material, "mean": self.mean, "branch": self.branch}
 
 
-@dataclass(frozen=True)
-class SolidFractionField:
-    """A supplied solid fraction, ready to blend onto a mesh."""
+class _SolidFractionChecks:
+    """The range and registration checks every solid-fraction field shares."""
 
-    document: FieldDocument
     grid: RadialGrid
-    source: Path
-
-    def __post_init__(self) -> None:
-        if self.document.quantity != SOLID_FRACTION:
-            raise FieldDocumentError(
-                f"inputs.eps_r names quantity {self.document.quantity!r}; a dielectric field "
-                f"supplies {SOLID_FRACTION!r}, a fraction in [0, 1] the solver blends as "
-                "eps_r = chi * eps_p + (1 - chi) * eps_r,f(<c>) (§4.4 NOTE)"
-            )
+    label: str
+    """The name the field's diagnostics give it, such as ``"the supplied solid fraction"``."""
 
     def chi(self) -> Expression:
-        """Return the solid fraction as a coefficient function; zero outside the grid."""
-        return coefficient(self.grid)
+        """Return the solid fraction as a coefficient function."""
+        raise NotImplementedError
 
     def check_range(self) -> None:
         """Abort unless every grid sample of chi lies in [0, 1]."""
-        check_range(self.grid, what="the supplied solid fraction")
+        check_range(self.grid, what=self.label)
 
     def material_means(
         self, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
@@ -166,9 +157,31 @@ class SolidFractionField:
     ) -> tuple[MaterialMean, ...]:
         """Abort unless every material's mean chi matches its branch."""
         return check_registration(
-            self.material_means(mesh, measures, solids=solids),
-            what="the supplied solid fraction",
+            self.material_means(mesh, measures, solids=solids), what=self.label
         )
+
+
+@dataclass(frozen=True)
+class SolidFractionField(_SolidFractionChecks):
+    """A supplied solid fraction, ready to blend onto a mesh."""
+
+    label = "the supplied solid fraction"
+
+    document: FieldDocument
+    grid: RadialGrid
+    source: Path
+
+    def __post_init__(self) -> None:
+        if self.document.quantity != SOLID_FRACTION:
+            raise FieldDocumentError(
+                f"inputs.eps_r names quantity {self.document.quantity!r}; a dielectric field "
+                f"supplies {SOLID_FRACTION!r}, a fraction in [0, 1] the solver blends as "
+                "eps_r = chi * eps_p + (1 - chi) * eps_r,f(<c>) (§4.4 NOTE)"
+            )
+
+    def chi(self) -> Expression:
+        """Return the solid fraction as a coefficient function; zero outside the grid."""
+        return coefficient(self.grid)
 
 
 def check_range(grid: RadialGrid, *, what: str) -> None:
@@ -441,8 +454,10 @@ def derive_solid_fraction(
 
 
 @dataclass(frozen=True)
-class DerivedSolidFraction:
+class DerivedSolidFraction(_SolidFractionChecks):
     """A chi derived from the stage-4 profile, bound to a mesh."""
+
+    label = "the derived solid fraction"
 
     grid: RadialGrid
     transition_nm: float
@@ -457,25 +472,6 @@ class DerivedSolidFraction:
             return lattice
         indicator = self.mesh.MaterialCF(dict.fromkeys(present, 1.0), default=0.0)
         return indicator + (1.0 - indicator) * lattice
-
-    def check_range(self) -> None:
-        """Abort unless every lattice sample lies in [0, 1]."""
-        check_range(self.grid, what="the derived solid fraction")
-
-    def material_means(
-        self, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
-    ) -> tuple[MaterialMean, ...]:
-        """Return the mean of chi over every material of mesh."""
-        return material_means(self.chi(), mesh, measures, solids=solids)
-
-    def check_materials(
-        self, mesh: Mesh, measures: Measures, *, solids: Iterable[str]
-    ) -> tuple[MaterialMean, ...]:
-        """Abort unless every material's mean chi matches its branch."""
-        return check_registration(
-            self.material_means(mesh, measures, solids=solids),
-            what="the derived solid fraction",
-        )
 
 
 def derived_summary(

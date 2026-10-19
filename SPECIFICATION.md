@@ -2523,8 +2523,11 @@ Debye lengths for a 1:1 electrolyte at 25 °C, which set the near-wall mesh requ
 | 1 M | 0.304 nm |
 | 3 M | 0.175 nm |
 
-**NUM-10.** Field-wise row scaling (`-ksp_diagonal_scale` or equivalent) SHALL be applied after
-nondimensionalisation so that all diagonal Jacobian blocks have O(1) norm.
+**NUM-10.** Row scaling SHALL be applied after nondimensionalisation so that the factorised system
+is equilibrated. The direct solvers discharge it: UMFPACK applies its default row scaling, and the
+SuperLU path divides each row by its largest magnitude (`equilibrate`). No separate field-wise block
+scaling is applied; the nondimensionalisation (NUM-09) is what keeps the diagonal blocks within a few
+orders of magnitude.
 
 ### 6.4 Stabilisation
 

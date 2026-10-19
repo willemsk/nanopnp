@@ -1362,7 +1362,7 @@ class ElectrostaticModel(_SingleFieldModel):
             settings=settings,
             initial=None if initial is None else initial.state,
         )
-        # The residual is rebuilt rather than returned by ``solve_pb``, which
+        # The residual is rebuilt rather than returned by ``solve_pb_recorded``, which
         # owns its own; it is written in the same trial function and on the same
         # space, so the two are the same operator.
         residual = ngs.BilinearForm(state.space)

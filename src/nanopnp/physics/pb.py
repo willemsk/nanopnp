@@ -28,7 +28,6 @@ __all__ = [
     "debye_length_nm",
     "linear_pb_operator",
     "nonlinear_pb_residual",
-    "solve_pb",
     "solve_pb_recorded",
 ]
 
@@ -95,54 +94,6 @@ def nonlinear_pb_residual(
     return poisson_operator(potential, test, measures) + measures.volume(
         screening * ngs.sinh(potential) * test, **_ion_region(ions)
     )
-
-
-def solve_pb(
-    mesh: Mesh,
-    measures: Measures,
-    *,
-    debye_length_nm: float,
-    dirichlet: str,
-    boundary_values: Expression,
-    ions: str | None = None,
-    surface_charge: float = 0.0,
-    surface_charge_boundary: str = "wall",
-    nonlinear: bool = True,
-    order: int = 2,
-    solver: str = DEFAULT_SOLVER,
-    settings: NewtonSettings = DEFAULT_SETTINGS,
-    initial: GridFunction | None = None,
-) -> GridFunction:
-    """Solve Poisson-Boltzmann and return the nondimensional potential.
-
-    Parameters
-    ----------
-    debye_length_nm
-        Debye length in mesh units.
-    dirichlet
-        Boundary-name regular expression of the essential condition; the axis must not appear.
-    boundary_values
-        Values on those boundaries, in units of V_T.
-    ions
-        Material-name regular expression of the mobile charge; None puts it everywhere.
-    nonlinear
-        Solve the full sinh form, or the Debye-Hueckel linearisation.
-    """
-    return solve_pb_recorded(
-        mesh,
-        measures,
-        debye_length_nm=debye_length_nm,
-        dirichlet=dirichlet,
-        boundary_values=boundary_values,
-        ions=ions,
-        surface_charge=surface_charge,
-        surface_charge_boundary=surface_charge_boundary,
-        nonlinear=nonlinear,
-        order=order,
-        solver=solver,
-        settings=settings,
-        initial=initial,
-    )[0]
 
 
 def solve_pb_recorded(

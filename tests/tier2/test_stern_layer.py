@@ -21,7 +21,7 @@ from nanopnp.physics.pb import (
     ELECTROLYTE_PERMITTIVITY,
     debye_length_nm,
     dimensionless_surface_charge,
-    solve_pb,
+    solve_pb_recorded,
 )
 
 CONCENTRATION_M = 0.1
@@ -45,7 +45,7 @@ def _solve(*, exclusion_nm: float, maxh_nm: float, sigma_C_m2: float) -> tuple[M
     mesh = SlabGeometry(width_nm=20.0 * lam, height_nm=lam, exclusion_nm=exclusion_nm).generate(
         maxh_nm=maxh_nm
     )
-    return mesh, solve_pb(
+    return mesh, solve_pb_recorded(
         mesh,
         PLANAR,
         debye_length_nm=lam,
@@ -59,7 +59,7 @@ def _solve(*, exclusion_nm: float, maxh_nm: float, sigma_C_m2: float) -> tuple[M
         ),
         surface_charge_boundary="wall",
         nonlinear=True,
-    )
+    )[0]
 
 
 @pytest.fixture(scope="module")
