@@ -1,18 +1,16 @@
 # Current work
 
-Updated 19 October 2026 (WP50 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 19 October 2026 (WP50 delivered, WP51 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it; the loop, the code, the notes and the cost
-study are done. The tests had outgrown their use, so the last package deleted those that guard nothing that could
-silently go wrong, kept the physics, the numerics, the core machinery and the licence and
-architecture guards, and moved the long examples to a nightly run. Next comes the protocol for the
-author's testing sessions.
+Phase 4 tidies the program before others rely on it; the loop, the code, the notes, the cost
+study and the test pruning are done. Next comes the protocol for the
+author's testing sessions: five scripted tasks and an empty log, their commands run each night.
 
-**Your call:** none open; the case-file format ships in the documentation only. *Recommendation:*
-keep it so until the browser page needs a command.
+**Your call:** should the sessions use a fresh install of the release, off the documentation site?
+*Recommendation:* yes; installing is part of what a user meets.
 
 ## Position
 
@@ -21,7 +19,8 @@ keep it so until the browser page needs a command.
   **in progress** (§8.2.7 to §8.2.13). WP35 to WP50 are delivered ([WP50](wp50-test-scope.md));
   tags to `v0.5.0-alpha.16` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
 - **Amended 18 October 2026** (§8.2.13): WP50, the test scope, is **delivered** (REV-117, REV-118 fixed in its review).
-  Next: WP51 (protocol; the author's sessions; fixes from WP52).
+  Next: [WP51](wp51-user-testing-protocol.md), the protocol, **planned**; then the author's
+  sessions, and fixes from WP52.
 
 ## Not to be re-decided
 
@@ -60,6 +59,7 @@ keep it so until the browser page needs a command.
 
 | Need | Read |
 |---|---|
+| The protocol | `wp51-user-testing-protocol.md`; §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46 |
 | The test scope | `wp50-test-scope.md`; §8.2.13; `docs/superpowers/specs/2026-10-18-test-pruning-design.md` |
 | The loop as shipped | `wp44-simplify-the-loop.md` |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
