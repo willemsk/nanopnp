@@ -145,8 +145,12 @@ def _generated_patterns(gitignore: Path) -> tuple[str, ...]:
     return (*patterns, *GENERATED)
 
 
-def run_tagged(directory: Path, tag: str, *, timeout_s: float = 1800.0) -> list[CommandResult]:
+def run_tagged(
+    directory: Path, tag: str, *, timeout_s: float = 1800.0, only: tuple[str, ...] | None = None
+) -> list[CommandResult]:
     """Run every ``tag`` command of ``directory/README.md`` in ``directory``.
+
+    ``only`` keeps the commands whose arguments contain one of those words.
 
     Raises
     ------
@@ -160,6 +164,8 @@ def run_tagged(directory: Path, tag: str, *, timeout_s: float = 1800.0) -> list[
         )
     results: list[CommandResult] = []
     for argv in tagged_commands(directory / "README.md", tag):
+        if only is not None and not set(only) & set(argv):
+            continue
         resolved = [_program(argv[0]), *argv[1:]]
         logger.info("%s$ %s", directory.name, shlex.join(argv))
         completed = subprocess.run(
