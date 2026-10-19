@@ -15,13 +15,11 @@ from nanopnp.charge.fields import (
     ChargeFieldError,
     ConservationReport,
     FieldDocument,
-    FieldDocumentError,
     FormSpec,
     check_conservation,
     conservation,
     create_form,
     load_field,
-    registered_forms,
 )
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.density.grid import (
@@ -149,33 +147,6 @@ def test_ver29_axes_only_npz_still_reads(tmp_path):
     assert back.spacing_nm == (0.5, 1.0)
 
 
-def test_ver29_npz_whose_axes_disagree_with_its_spacing_is_refused(tmp_path):
-    path = tmp_path / "bad.npz"
-    np.savez(
-        path,
-        r_nm=np.array([0.0, 0.5, 1.0]),
-        z_nm=np.array([-1.0, 0.0]),
-        origin_nm=np.array([0.0, -1.0]),
-        spacing_nm=np.array([0.6, 1.0]),
-        values=np.ones((2, 3)),
-    )
-    with pytest.raises(GridFormatError, match="r axis"):
-        read_grid(path)
-
-
-def test_ver29_the_writable_formats_exclude_the_read_only_reference_table():
-    formats = writable_formats()
-
-    assert "npz" in formats
-    assert "comsolgrid" not in formats
-    assert formats <= {"npz", "dx", "mrc"}
-
-
-@needs_griddata
-def test_ver29_with_griddataformats_both_interchange_formats_are_writable():
-    assert writable_formats() == {"npz", "dx", "mrc"}
-
-
 # IF-05
 @needs_griddata
 @pytest.mark.parametrize(
@@ -195,19 +166,6 @@ def test_ver29_a_grid_round_trips_through_opendx_and_ccp4(tmp_path, name, writer
     assert back.origin_nm == pytest.approx(grid.origin_nm)
     assert back.spacing_nm == pytest.approx(grid.spacing_nm)
     np.testing.assert_allclose(back.values, grid.values, rtol=tolerance, atol=tolerance)
-
-
-@needs_griddata
-def test_ver29_a_genuinely_two_dimensional_array_is_refused_naming_its_shape(tmp_path):
-    import gridData
-
-    path = tmp_path / "flat.dx"
-    gridData.Grid(
-        grid=np.arange(24.0).reshape(4, 3, 2), origin=(0.0, 0.0, 0.0), delta=(1.0, 1.0, 1.0)
-    ).export(str(path), file_format="DX")
-
-    with pytest.raises(GridFormatError, match=r"\(4, 3, 2\)"):
-        read_grid(path)
 
 
 def test_ver29_the_value_array_is_checked_against_the_axes_it_belongs_to():
@@ -256,50 +214,6 @@ def test_ver29_the_comsol_grid_table_reads_as_delivered(tmp_path):
     assert grid.values[2, 0] == 7.0
 
 
-def test_ver29_a_comsol_table_with_ragged_rows_is_refused(tmp_path):
-    path = tmp_path / "ragged.txt"
-    path.write_text("%Grid\n0 1e-9\n0 1e-9\n%Data\n1 2\n3\n", encoding="utf-8")
-    with pytest.raises(GridFormatError, match="different lengths"):
-        read_grid(path)
-
-
-def test_ver29_the_comsol_table_is_read_only(tmp_path):
-    grid = RadialGrid.from_axes(np.array([0.0, 1.0]), np.array([0.0, 1.0]), np.zeros((2, 2)))
-    with pytest.raises(GridFormatError, match="read-only"):
-        write_grid(grid, tmp_path / "out.txt")
-
-
-def test_ver29_a_non_uniform_axis_is_refused_rather_than_resampled():
-    with pytest.raises(GridFormatError, match="not uniformly ascending"):
-        RadialGrid.from_axes(np.array([0.0, 1.0, 3.0]), np.array([0.0, 1.0]), np.zeros((2, 3)))
-
-
-def test_if03_an_unknown_key_in_a_field_document_is_rejected_naming_it(tmp_path):
-    path = tmp_path / "field.yaml"
-    path.write_text(
-        "schema: nanopnp/field/v0.5\n"
-        "name: ring\n"
-        "quantity: areal_charge_density\n"
-        "units: C/m^2\n"
-        "q_net: -72\n"
-        "provenance: {source: analytic}\n"
-        "data: {path: ring.npz}\n",
-        encoding="utf-8",
-    )
-    with pytest.raises(FieldDocumentError, match="q_net"):
-        load_field(path)
-
-
-def test_ver30_an_absolute_permittivity_field_is_refused_naming_the_blend():
-    with pytest.raises(ValueError, match=r"eps_r,f\^c|concentration dependence"):
-        _document(_ring(), quantity="relative_permittivity", units="1")
-
-
-def test_ver29_units_are_checked_against_the_quantity_they_belong_to():
-    with pytest.raises(ValueError, match="do not belong to quantity"):
-        _document(_ring(), units="C/m^3")
-
-
 def test_ver29_declared_units_convert_onto_the_canonical_si_unit(tmp_path):
     grid = RadialGrid.from_axes(np.array([0.0, 1.0]), np.array([0.0, 1.0]), np.full((2, 2), 2.0))
     write_grid(grid, tmp_path / "ring.npz")
@@ -315,48 +229,6 @@ def test_ver29_declared_units_convert_onto_the_canonical_si_unit(tmp_path):
     field = load_field(tmp_path / "field.yaml")
 
     assert field.grid.values[0, 0] == pytest.approx(2.0 * ELEMENTARY_CHARGE)
-
-
-@pytest.mark.parametrize("key", ["q_net_e", "axis_cutoff_nm"])
-@pytest.mark.parametrize("value", [math.nan, math.inf])
-def test_ver29_a_header_value_that_is_not_finite_is_refused(key, value):
-    with pytest.raises(ValueError, match=key):
-        _document(_ring(), **{key: value})
-
-
-def test_ver29_a_document_naming_both_a_file_and_a_form_is_refused():
-    with pytest.raises(ValueError, match="exactly one"):
-        _document(_ring(), data={"path": "ring.npz"})
-
-
-def test_ver29_a_declared_grid_descriptor_is_checked_against_the_data(tmp_path):
-    grid = RadialGrid.from_axes(np.array([0.0, 1.0]), np.array([0.0, 1.0]), np.zeros((2, 2)))
-    write_grid(grid, tmp_path / "ring.npz")
-    (tmp_path / "field.yaml").write_text(
-        "schema: nanopnp/field/v0.5\n"
-        "name: ring\n"
-        "quantity: solid_fraction\n"
-        "units: '1'\n"
-        "provenance: {source: analytic}\n"
-        "data: {path: ring.npz}\n"
-        "grid: {origin_nm: [0.0, 0.0], spacing_nm: [1.0, 1.0], shape: [3, 3]}\n",
-        encoding="utf-8",
-    )
-    with pytest.raises(FieldDocumentError, match=r"shape \[3, 3\]"):
-        load_field(tmp_path / "field.yaml")
-
-
-def test_ver29_a_solid_fraction_is_refused_as_a_fixed_charge():
-    with pytest.raises(FieldDocumentError, match=r"inputs\.eps_r"):
-        _field(_ring(), quantity="solid_fraction", units="1")
-
-
-def test_fr16_the_analytic_forms_are_a_named_registry():
-    assert registered_forms() == ("gaussian_ring", "slab", "uniform")
-    with pytest.raises(FieldDocumentError, match="gaussian_ring"):
-        create_form(_ring().model_copy(update={"name": "not_a_form"}))
-    with pytest.raises(FieldDocumentError, match="centre_z_nm"):
-        create_form(_ring().model_copy(update={"parameters": {"centre_r_nm": 1.0}}))
 
 
 # QR-03

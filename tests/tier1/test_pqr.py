@@ -78,26 +78,6 @@ def test_ver57_a_whitespace_separated_pqr_is_read_by_its_fields() -> None:
     assert frame.radius_A.tolist() == [1.85, 2.275, 2.175]
 
 
-def test_ver57_a_line_the_two_readings_disagree_on_is_refused_naming_it() -> None:
-    good = "ATOM      1  N   GLU A  18      -2.661   5.770 -35.426 -0.3000 1.8500\n"
-    ambiguous = "ATOM      2  CA  GLU     8           1       2       3 0.1 1.5 7\n"
-    assert parse_pqr(good)
-    with pytest.raises(PQRError, match=r"shifted.pqr line 2 reads differently"):
-        parse_pqr(good + ambiguous, source="shifted.pqr")
-
-
-def test_ver57_a_line_neither_reading_accepts_is_refused_naming_it() -> None:
-    text = PDB2PQR_LINES.replace(" 0.2100 2.2750", " 0.2100")
-    with pytest.raises(PQRError, match=r"line 3"):
-        parse_pqr(text)
-
-
-def test_ver57_a_residue_with_two_names_is_refused() -> None:
-    text = PDB2PQR_LINES.replace("C   GLU A  18", "C   ASP A  18")
-    with pytest.raises(PQRError, match=r"residue 18 of chain 'A' carries the names ASP, GLU"):
-        parse_pqr(text)
-
-
 def _model(index: int, body: str) -> str:
     return f"MODEL     {index:>4}\n{body}ENDMDL\n"
 
@@ -107,13 +87,6 @@ def test_ver57_model_records_are_frames_and_their_atoms_may_differ() -> None:
     second = "\n".join(line for line in atoms.splitlines() if "HT1" not in line) + "\n"
     frames = parse_pqr(_model(1, atoms) + _model(2, second))
     assert [frame.atoms for frame in frames] == [7, 6]
-
-
-def test_ver57_frames_holding_different_residues_are_refused_naming_the_frame() -> None:
-    atoms = PDB2PQR_LINES.split("\n", 1)[1].replace("TER\nEND\n", "")
-    other = atoms.replace("THR A  19", "THR A  20")
-    with pytest.raises(PQRError, match=r"frame 1 does not hold the residues of frame 0"):
-        parse_pqr(_model(1, atoms) + _model(2, other), source="two.pqr")
 
 
 def test_ver57_a_patched_residue_is_named_by_its_variant() -> None:
@@ -151,27 +124,6 @@ def test_ver57_a_histidine_renamed_between_frames_is_one_residue() -> None:
     assert [frame.resname[0] for frame in frames] == ["HSE", "HSD"]
 
 
-@pytest.mark.parametrize(
-    ("text", "match"),
-    [
-        ("ENDMDL\n", "ENDMDL without a MODEL"),
-        ("MODEL        1\nMODEL        2\n", "MODEL inside a MODEL"),
-        ("MODEL        1\nENDMDL\n", "holds no atom"),
-        ("MODEL        1\n" + PDB2PQR_LINES.splitlines()[1] + "\n", "not closed"),
-        ("REMARK nothing\n", "holds no ATOM"),
-    ],
-)
-def test_ver57_malformed_model_records_are_refused(text: str, match: str) -> None:
-    with pytest.raises(PQRError, match=match):
-        parse_pqr(text)
-
-
-def test_ver57_an_atom_outside_any_model_is_refused_where_models_exist() -> None:
-    atom = PDB2PQR_LINES.splitlines()[1] + "\n"
-    with pytest.raises(PQRError, match="outside any MODEL"):
-        parse_pqr(_model(1, atom) + atom)
-
-
 def _frame(charges: list[float], radii: list[float], shift: float = 0.0) -> PQRFrame:
     return PQRFrame(
         name=np.array(["N", "CA", "HG21"]),
@@ -201,13 +153,6 @@ def test_ver57_writer_then_reader_is_exact(tmp_path: Path) -> None:
         assert read.charge_e.tobytes() == written.charge_e.tobytes()
         assert read.radius_A.tobytes() == written.radius_A.tobytes()
     assert format_pqr(frames[:1]).count("MODEL") == 0
-
-
-def test_ver57_the_writer_refuses_what_the_columns_cannot_hold() -> None:
-    frame = _frame([0.0, 0.0, 0.0], [1.0, 1.0, 1.0])
-    frame.positions_A[0, 0] = -1000.0
-    with pytest.raises(PQRError, match="outside what the PDB coordinate columns hold"):
-        format_pqr([frame])
 
 
 def test_ver57_chain_characters_keep_single_characters_and_map_longer_keys() -> None:

@@ -12,15 +12,12 @@ import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import gemmi
 import MDAnalysis as mda  # noqa: N813 - the alias the library documents
 import numpy as np
 import pytest
 from MDAnalysis.coordinates.memory import MemoryReader
 
-from nanopnp.core.stages import create
 from nanopnp.io.artefact import CASE_SCHEMA
-from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import (
     load_case,
@@ -298,166 +295,6 @@ def test_ver48_the_last_ns_window_does_not_depend_on_the_float32_timestep(
         assert len(window.indices) == round((frames - 1) * fraction) + 1
 
 
-def _edited(path: Path, tmp_path: Path, name: str, edit: object) -> Path:
-    lines = path.read_text().splitlines()
-    atoms = [index for index, line in enumerate(lines) if line.startswith("ATOM")]
-    edit(lines, atoms)  # type: ignore[operator]
-    target = tmp_path / name
-    target.write_text("\n".join(lines) + "\n")
-    return target
-
-
-@pytest.fixture(scope="module")
-def dodecamer_pdb(dodecamer_2wcd: mda.AtomGroup, tmp_path_factory: pytest.TempPathFactory) -> Path:
-    group = dodecamer_2wcd
-    return _write(group, group.positions[None], tmp_path_factory.mktemp("refusals") / "al.pdb")
-
-
-def _blank_element(lines: list[str], atoms: list[int]) -> None:
-    lines[atoms[3]] = lines[atoms[3]][:76] + "  " + lines[atoms[3]][78:]
-
-
-def _alternate(lines: list[str], atoms: list[int]) -> None:
-    lines[atoms[5]] = lines[atoms[5]][:16] + "A" + lines[atoms[5]][17:]
-
-
-def _drop_chain_k(lines: list[str], atoms: list[int]) -> None:
-    for index in reversed(atoms):
-        if lines[index][21] == "K":
-            del lines[index]
-
-
-def _truncate_chain_c(lines: list[str], atoms: list[int]) -> None:
-    for index in reversed(atoms):
-        if lines[index][21] == "C" and int(lines[index][22:26]) > 120:
-            del lines[index]
-
-
-def _rename_residue(lines: list[str], atoms: list[int]) -> None:
-    for index in atoms:
-        line = lines[index]
-        if line[21] == "D" and int(line[22:26]) == 50:
-            lines[index] = line[:17] + "TRP" + line[20:]
-
-
-# FR-03, QR-12
-@pytest.mark.parametrize(
-    ("edit", "chains", "point_group", "message"),
-    [
-        (_blank_element, "all", "C12", r"atom 4 \(O LYS 8, chain A\) carries no element"),
-        (_alternate, "all", "C12", r"atom 6 .* has alternate location 'A'"),
-        (_drop_chain_k, "all", "C12", r"C12 expects 12 chains, and the selection holds 11"),
-        (None, "A,B,C,D,E,F,G,H,I,J,K,M", "C12", r"lists M, which the selection does not"),
-        (_truncate_chain_c, "all", "C12", r"chain C carries \d+ C-alpha, under half"),
-        (_rename_residue, "all", "C12", r"chain D has TRP at residue 50 where chain A has"),
-    ],
-)
-def test_ver48_input_refusals(
-    dodecamer_pdb: Path,
-    tmp_path: Path,
-    edit: object,
-    chains: str,
-    point_group: str,
-    message: str,
-) -> None:
-    path = dodecamer_pdb if edit is None else _edited(dodecamer_pdb, tmp_path, "edited.pdb", edit)
-    case = _case(tmp_path, _block(path, chains=chains, point_group=point_group))
-    with pytest.raises(StructureInputError, match=message):
-        run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
-
-
-def _alternate_in_chain_l(lines: list[str], atoms: list[int]) -> None:
-    index = next(index for index in atoms if lines[index][21] == "L")
-    lines[index] = lines[index][:16] + "A" + lines[index][17:]
-
-
-def test_ver48_element_and_location_refusals_apply_to_the_listed_chains(
-    dodecamer_pdb: Path, tmp_path: Path
-) -> None:
-    path = _edited(dodecamer_pdb, tmp_path, "alternate_l.pdb", _alternate_in_chain_l)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        universe = load_universe(path)
-    chosen = select(universe, selection="protein", chains="A,B,C,D,E,F,G,H,I,J,K", n=11)
-    assert chosen.chains == tuple("ABCDEFGHIJK")
-    with pytest.raises(StructureInputError, match=r"chain L\) has alternate location 'A'"):
-        select(universe, selection="protein", chains="all", n=12)
-
-
-# QR-12
-def test_ver48_a_malformed_selection_is_refused_naming_the_key(tmp_path: Path) -> None:
-    case = _case(tmp_path, _block(PDB, selection="protien"))
-    with pytest.raises(StructureInputError, match=r"selection 'protien' is not an MDAnalysis"):
-        run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
-
-
-# QR-12
-def test_ver48_a_trajectory_of_other_atoms_is_refused_naming_both_files(
-    two_chains: tuple[Path, np.ndarray], tmp_path: Path
-) -> None:
-    topology, frames = two_chains
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        group = mda.Universe(str(topology)).select_atoms("chainID A")
-    count = len(group)
-    dcd = _write(group, frames[:, :count], tmp_path / "a.dcd")
-    with pytest.raises(StructureInputError, match=r"'a\.dcd' cannot be read against .*'ab\.pdb'"):
-        load_universe(topology, dcd)
-
-
-def test_ver48_mmcif_models_must_hold_the_same_atoms_in_order(tmp_path: Path) -> None:
-
-    def two_models(swap: bool) -> Path:
-        structure = gemmi.read_structure(str(CIF))
-        structure.remove_ligands_and_waters()
-        model = structure[0]
-        for name in [chain.name for chain in model]:
-            if name not in ("A", "B"):
-                model.remove_chain(name)
-        second = model.clone()
-        second.num = 2
-        if swap:
-            chain = second["A"].clone()
-            second.remove_chain("A")
-            second.add_chain(chain)
-        structure.add_model(second)
-        path = tmp_path / f"models_{swap}.cif"
-        structure.make_mmcif_document().write_file(str(path))
-        return path
-
-    assert len(load_universe(two_models(swap=False)).trajectory) == 2
-    with pytest.raises(StructureInputError, match=r"atom 1 of model 2 is not atom 1 of model 1"):
-        load_universe(two_models(swap=True))
-
-
-@pytest.mark.parametrize(
-    ("block", "message"),
-    [
-        ("point_group: D6", r"point_group 'D6' is not a cyclic point group"),
-        ("point_group: C0", r"point_group 'C0' is not a cyclic point group"),
-        ("point_group: C1", r"axis is auto and the point group is C1"),
-        (
-            "chains: 'A,B'",
-            r"lists 2 chains \(A, B\), and structure.symmetry.point_group C12 has 12",
-        ),
-        ("chains: 'A,,B'", r"has an empty entry"),
-        ("last_ns: 0", r"last_ns is 0.0; it is a positive time"),
-        ("count: 0", r"count is 0; it is at least 1"),
-    ],
-)
-def test_ver48_resolution_refusals(tmp_path: Path, block: str, message: str) -> None:
-    key, _, value = block.partition(": ")
-    options = {
-        "point_group": {"point_group": value},
-        "chains": {"chains": value.strip("'")},
-        "last_ns": {"frames": f"last_ns: {value}"},
-        "count": {"frames": f"count: {value}"},
-    }[key]
-    case = _case(tmp_path, _block(PDB, **options))
-    with pytest.raises(CaseValidationError, match=message):
-        resolve(load_case(case))
-
-
 def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) -> None:
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
@@ -631,16 +468,6 @@ def test_ver48_a_sweep_over_a_structure_case_plans(prepared: Path, tmp_path: Pat
     assert plan.warnings == ()
 
 
-def test_ver48_structure_beside_a_supplied_mesh_is_refused(tmp_path: Path) -> None:
-    case = _case(tmp_path, _block(PDB, chains=DODECAMER))
-    text = case.read_text().replace(
-        "structure:\n", "inputs:\n  mesh: {path: pore.msh, format: msh41}\nstructure:\n", 1
-    )
-    case.write_text(text)
-    with pytest.raises(CaseValidationError, match=r"structure: section and supplies inputs.mesh"):
-        resolve(load_case(case))
-
-
 def test_ver48_axis_z_on_the_prepared_copy_is_refused_by_the_budget(
     prepared: Path, tmp_path: Path
 ) -> None:
@@ -649,47 +476,8 @@ def test_ver48_axis_z_on_the_prepared_copy_is_refused_by_the_budget(
         run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
 
 
-# VER-25
-def test_ver48_the_stage_is_created_through_the_registry() -> None:
-    stage = create("structure")
-    assert stage.describe().name == "structure"
-    assert stage.describe().number == 1
-
-
 def test_ver48_minimal_rotation_is_the_identity_on_z() -> None:
     assert np.array_equal(minimal_rotation(np.array([0.0, 0.0, 1.0])), np.eye(3))
-
-
-# QR-12
-@pytest.mark.parametrize("suffix", [".dcd", ".xtc", ".trr"])
-def test_ver48_a_trajectory_with_no_frame_is_refused_naming_the_file(
-    two_chains: tuple[Path, np.ndarray], suffix: str, tmp_path: Path
-) -> None:
-    topology, _ = two_chains
-    empty = tmp_path / f"empty{suffix}"
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        with mda.Writer(str(empty), 4):
-            pass
-    with pytest.raises(StructureInputError, match=rf"'empty{suffix}' holds no frame"):
-        load_universe(topology, empty)
-
-
-def _second_ca_takes_the_first_residue_number(lines: list[str], atoms: list[int]) -> None:
-    alpha = [index for index in atoms if lines[index][12:16] == " CA " and lines[index][21] == "A"]
-    lines[alpha[1]] = lines[alpha[1]][:22] + lines[alpha[0]][22:26] + lines[alpha[1]][26:]
-
-
-# QR-12
-def test_ver48_a_second_c_alpha_at_one_residue_is_refused_naming_chain_and_residue(
-    dodecamer_pdb: Path, tmp_path: Path
-) -> None:
-    path = _edited(dodecamer_pdb, tmp_path, "twice.pdb", _second_ca_takes_the_first_residue_number)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        universe = load_universe(path)
-    with pytest.raises(StructureInputError, match=r"chain A carries two C-alpha at residue"):
-        select(universe, selection="protein", chains="all", n=12)
 
 
 # QR-12

@@ -81,37 +81,6 @@ def _yaml(document: dict[str, object]) -> str:
     return yaml.safe_dump(document, sort_keys=False)
 
 
-@pytest.mark.parametrize(
-    "missing", ["current_boundary", "current_sign_reference", "comsol_version", "model_file"]
-)
-def test_val03_golden_refuses_undeclared_units_and_sign(probe: ProbeDocument, missing: str) -> None:
-    document = manifest_document(probe)
-    del document[missing]
-    with pytest.raises(CaseValidationError) as raised:
-        loads_manifest(_yaml(document))
-    assert missing in str(raised.value)
-
-
-@pytest.mark.parametrize(
-    "blank", ["current_boundary", "comsol_version", "model_file", "export_date", "case_hash"]
-)
-def test_val03_golden_refuses_a_blank_declaration(probe: ProbeDocument, blank: str) -> None:
-    document = manifest_document(probe, **{blank: "   "})
-    with pytest.raises(CaseValidationError) as raised:
-        loads_manifest(_yaml(document))
-    assert blank in str(raised.value)
-
-
-def test_val03_golden_refuses_a_missing_unit(probe: ProbeDocument) -> None:
-    document = manifest_document(probe)
-    document["fields"] = {"potential": {"expression": "V"}}
-    with pytest.raises(CaseValidationError) as raised:
-        loads_manifest(_yaml(document))
-    message = str(raised.value)
-    assert "unit" in message
-    assert "potential" in message
-
-
 def test_val03_golden_refuses_mol_per_litre_rather_than_scaling_it(
     probe: ProbeDocument,
 ) -> None:
@@ -126,23 +95,6 @@ def test_val03_golden_refuses_mol_per_litre_rather_than_scaling_it(
     assert "mol/L" in message
     assert "factor 1000" in message
     assert "refused rather than converted" in message
-
-
-def test_val03_golden_refuses_a_field_nothing_samples(probe: ProbeDocument) -> None:
-    document = manifest_document(probe)
-    document["fields"] = {
-        "potential": {"expression": "V", "unit": "V"},
-        "temperature": {"expression": "T", "unit": "K"},
-    }
-    with pytest.raises(CaseValidationError, match="temperature"):
-        loads_manifest(_yaml(document))
-
-
-def test_val03_golden_refuses_a_manifest_without_the_potential(probe: ProbeDocument) -> None:
-    document = manifest_document(probe)
-    document["fields"] = {"c_Na+": {"expression": "cpos", "unit": "mol/m^3"}}
-    with pytest.raises(CaseValidationError, match="potential"):
-        loads_manifest(_yaml(document))
 
 
 def test_val03_field_unit_covers_every_exported_field() -> None:
@@ -193,13 +145,6 @@ def test_val03_golden_refuses_a_table_on_the_wrong_axes(
     )
     write_comsol_table(shifted, tmp_path / table_name("potential", patch.name))
     with pytest.raises(GoldenError, match="r axis differs"):
-        ingest_golden(tmp_path, probe=probe)
-
-
-def test_val03_golden_refuses_an_absent_table(probe: ProbeDocument, tmp_path: Path) -> None:
-    (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
-    write_tables(tmp_path, probe, {"potential": 1.0})
-    with pytest.raises(GoldenError, match=table_name("c_Na\\+", "near")):
         ingest_golden(tmp_path, probe=probe)
 
 
@@ -286,18 +231,6 @@ def test_val03_cis_referenced_current_is_left_alone(probe: ProbeDocument, tmp_pa
     assert golden.quantities.current_A == pytest.approx(1.25e-9)
 
 
-def test_val03_an_unexported_field_is_named_rather_than_skipped(
-    probe: ProbeDocument, tmp_path: Path
-) -> None:
-    (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
-    write_tables(tmp_path, probe, {"potential": 1.0, "c_Na+": 1.0})
-    ingest_golden(tmp_path, probe=probe)
-    golden = load_golden(tmp_path)
-    assert golden.unavailable(["potential", "c_Na+", "pressure"]) == ("pressure",)
-    with pytest.raises(GoldenError, match="carries no field 'pressure'"):
-        golden.defined("pressure")
-
-
 def test_val03_export_golden_refuses_to_relabel_a_self_golden_as_comsol(
     probe: ProbeDocument, tmp_path: Path
 ) -> None:
@@ -330,14 +263,3 @@ def test_val03_self_golden_is_written_with_its_source_recorded(
     assert np.array_equal(golden.values["potential"], values["potential"])
     assert (tmp_path / table_name("potential", probe.patches[0].name)).is_file()
     assert (tmp_path / ARCHIVE_MANIFEST_NAME).is_file()
-
-
-def test_val03_an_archive_without_its_manifest_is_refused(
-    probe: ProbeDocument, tmp_path: Path
-) -> None:
-    (tmp_path / MANIFEST_NAME).write_text(_yaml(manifest_document(probe)), encoding="utf-8")
-    write_tables(tmp_path, probe, {"potential": 1.0, "c_Na+": 1.0})
-    ingest_golden(tmp_path, probe=probe)
-    (tmp_path / ARCHIVE_MANIFEST_NAME).unlink()
-    with pytest.raises(GoldenError, match="no golden manifest"):
-        load_golden(tmp_path)

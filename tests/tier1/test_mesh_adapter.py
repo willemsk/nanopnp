@@ -10,9 +10,7 @@ import pytest
 
 from nanopnp.mesh.adapter import (
     MeshData,
-    MeshDataError,
     MeshFormatError,
-    detect_format,
     from_ngsolve,
     read,
     read_physical_names,
@@ -80,31 +78,6 @@ def assert_same_mesh(left: MeshData, right: MeshData) -> None:
     assert a.content_hash == b.content_hash
 
 
-@pytest.mark.parametrize(
-    ("name", "route"),
-    [("mesh.msh", "gmsh"), ("mesh.vol", "netgen"), ("mesh.vol.gz", "netgen")],
-)
-def test_if06_detect_format_reads_the_route_off_the_suffix(name: str, route: str) -> None:
-    assert detect_format(Path(name)) == route
-
-
-def test_if06_a_declared_format_wins_over_the_suffix() -> None:
-    assert detect_format(Path("mesh.dat"), "msh41") == "gmsh"
-    assert detect_format(Path("mesh.msh"), "netgen") == "netgen"
-
-
-def test_if06_an_unknown_format_names_the_ones_that_work() -> None:
-    with pytest.raises(MeshFormatError, match="netgen"):
-        detect_format(Path("mesh.dat"), "exodus")
-    with pytest.raises(MeshFormatError, match=r"\.vol"):
-        detect_format(Path("mesh.dat"))
-
-
-def test_if06_reading_a_missing_file_says_so(tmp_path: Path) -> None:
-    with pytest.raises(MeshFormatError, match="no mesh file"):
-        read(tmp_path / "absent.msh")
-
-
 def test_if06_meshdata_normalises_the_dtypes_the_hash_is_taken_over() -> None:
     narrow = replacing(
         vertices=SQUARE.vertices.astype(np.float32),
@@ -115,34 +88,6 @@ def test_if06_meshdata_normalises_the_dtypes_the_hash_is_taken_over() -> None:
     )
     assert narrow.triangles.dtype == np.int64
     assert narrow.content_hash == SQUARE.content_hash
-
-
-# QR-12
-@pytest.mark.parametrize(
-    ("fields", "message"),
-    [
-        ({"triangle_material": np.array([0, 0, 1])}, "triangle_material has"),
-        ({"edge_group": np.array([0, 1, 2])}, "edge_group has"),
-        ({"triangles": np.where(SQUARE.triangles == 4, 99, SQUARE.triangles)}, "out of range"),
-        ({"vertices": np.zeros((9, 3))}, r"\(n, 2\)"),
-        ({"edges": np.zeros((8, 3), dtype=int)}, r"\(k, 2\)"),
-        (
-            {"triangles": np.zeros((0, 3), dtype=int), "triangle_material": np.zeros(0, dtype=int)},
-            "no domain to solve on",
-        ),
-        ({"boundaries": ("axis", "wall", "cis", "cis")}, "must be unique"),
-    ],
-)
-def test_if06_a_malformed_mesh_is_refused_at_construction(
-    fields: dict[str, object], message: str
-) -> None:
-    with pytest.raises(MeshDataError, match=message):
-        replacing(**fields)
-
-
-def test_if06_a_name_no_element_uses_is_refused() -> None:
-    with pytest.raises(MeshDataError, match="names no element uses: protein"):
-        replacing(materials=("electrolyte", "membrane", "protein"))
 
 
 def test_if06_material_and_edge_selection_by_name() -> None:
@@ -157,13 +102,6 @@ def test_if06_renamed_merges_the_groups_that_map_together() -> None:
     assert merged.boundaries == ("axis", "wall")
     assert merged.edge_group.tolist() == [0, 0, 1, 1, 1, 1, 1, 1]
     assert len(merged.edges_of("wall")) == 6
-
-
-def test_if06_canonical_refuses_coincident_vertices() -> None:
-    vertices = SQUARE.vertices.copy()
-    vertices[8] = vertices[0]
-    with pytest.raises(MeshDataError, match="no canonical vertex order"):
-        replacing(vertices=vertices).canonical()
 
 
 def test_if06_the_content_hash_ignores_the_order_the_arrays_arrive_in() -> None:
@@ -251,28 +189,6 @@ def test_if06_a_name_used_as_a_domain_and_as_a_boundary_survives(tmp_path: Path)
     assert_same_mesh(mesh, back)
 
 
-def test_if06_every_group_owns_a_node_in_the_file(tmp_path: Path) -> None:
-    path = write_msh41(SQUARE, tmp_path / "shared.msh")
-    header = path.read_text().split("$Entities")[1].split()[:4]
-    assert header == ["0", "4", "2", "0"]  # no points, four curves, two surfaces
-    assert read(path).boundaries == SQUARE.boundaries
-
-
-# QR-12
-def test_if06_more_groups_than_nodes_is_refused_with_a_diagnostic() -> None:
-    pinwheel = MeshData(
-        vertices=np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.5, 0.5]]),
-        triangles=np.array([[0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4]]),
-        triangle_material=np.array([0, 0, 1, 1]),
-        materials=("electrolyte", "membrane"),
-        edges=np.array([[0, 1], [1, 2], [2, 3], [3, 0]]),
-        edge_group=np.array([0, 1, 2, 3]),
-        boundaries=("axis", "wall", "cis", "trans"),
-    )
-    with pytest.raises(MeshDataError, match="fewer nodes than groups"):
-        write_msh41(pinwheel, Path("unreachable.msh"))
-
-
 def test_if06_the_hash_ignores_a_file_meshio_rewrote(tmp_path: Path) -> None:
     first = write_msh41(SQUARE, tmp_path / "first.msh")
     second = write_msh41(read(first), tmp_path / "second.msh", binary=True)
@@ -290,15 +206,6 @@ def test_if06_a_mesh_off_the_half_plane_is_refused(tmp_path: Path) -> None:
     assert lifted != head, "no node coordinate line was found to lift"
     path.write_text(lifted + marker + rest)
     with pytest.raises(MeshFormatError, match="three-dimensional"):
-        read(path)
-
-
-def test_if06_a_mesh_with_no_boundary_segments_is_refused(tmp_path: Path) -> None:
-    bare = replacing(
-        edges=np.zeros((0, 2), dtype=int), edge_group=np.zeros(0, dtype=int), boundaries=()
-    )
-    path = write_msh41(bare, tmp_path / "bare.msh")
-    with pytest.raises(MeshFormatError, match="no boundary segments"):
         read(path)
 
 

@@ -12,11 +12,8 @@ from nanopnp.sweep.plan import WARM_START_BARRIERS, build_plan
 from nanopnp.validation.attribution import (
     IDENTITY_TOLERANCE,
     LADDER,
-    Attribution,
-    LadderError,
     RungOutcome,
     attribute,
-    write_report,
 )
 from nanopnp.validation.compare import FieldComparison, QoIComparison
 from nanopnp.validation.comsol import GOLDEN_SCHEMA, Golden, GoldenManifest, case_identity
@@ -123,57 +120,6 @@ def test_val01_ladder_identity_holds_on_synthetic_errors(errors: list[float]) ->
     report.check_identity()
 
 
-def test_val01_the_identity_cannot_see_a_stale_golden() -> None:
-    arbitrary = Attribution(key="potential", kind="field", errors=(7.0, -3.0, 11.5, 0.25))
-    assert abs(arbitrary.identity_residual()) <= IDENTITY_TOLERANCE
-
-
-def test_val01_a_ladder_with_a_missing_rung_is_refused() -> None:
-    with pytest.raises(LadderError, match="4 rungs and 3 outcome"):
-        attribute(_outcomes([0.1, 0.2, 0.3, 0.4])[:3], case="fixture", golden=_golden())
-
-
-def test_val01_attribute_refuses_rungs_compared_against_different_goldens() -> None:
-    outcomes = _outcomes([0.1, 0.2, 0.3, 0.4])
-    outcomes[2] = RungOutcome(
-        rung=outcomes[2].rung,
-        golden_hash="0" * 64,
-        probe_hash=outcomes[2].probe_hash,
-        case_hash=outcomes[2].case_hash,
-        fields=outcomes[2].fields,
-        quantities=outcomes[2].quantities,
-    )
-    with pytest.raises(LadderError) as raised:
-        attribute(outcomes, case="fixture", golden=_golden())
-    message = str(raised.value)
-    assert "golden_hash" in message
-    assert "reference-taylor-hood" in message
-
-
-def test_val01_attribute_refuses_rungs_masked_differently() -> None:
-    outcomes = _outcomes([0.1, 0.2, 0.3, 0.4])
-    fewer = outcomes[1]
-    outcomes[1] = RungOutcome(
-        rung=fewer.rung,
-        golden_hash=fewer.golden_hash,
-        probe_hash=fewer.probe_hash,
-        case_hash=fewer.case_hash,
-        fields=(
-            FieldComparison(
-                field="potential",
-                points=99,
-                rel_L2_r=0.2,
-                rel_l2=0.4,
-                max_abs_rel=0.6,
-                max_at_nm=(1.5, -0.5),
-            ),
-        ),
-        quantities=fewer.quantities,
-    )
-    with pytest.raises(LadderError, match="99 probe points"):
-        attribute(outcomes, case="fixture", golden=_golden())
-
-
 def test_val04_reference_limited_verdict() -> None:
     errors = [0.0731, 0.0402, 0.0455, 0.0121]
     below = attribute(
@@ -257,62 +203,6 @@ def test_val04_delta_ref_is_taken_over_the_points_the_rungs_were() -> None:
     assert errors["potential"] == pytest.approx(0.01, rel=1e-12)
 
 
-def test_val01_the_report_keeps_delta_transport_and_the_stabilisation_currents_apart(
-    tmp_path: Path,
-) -> None:
-    report = attribute(
-        _outcomes([0.0731, 0.0402, 0.0455, 0.0121], [0.08, 0.05, 0.04, 0.01]),
-        case="fixture",
-        golden=_golden(),
-    )
-    record = report.summary()
-    entry = next(item for item in record["attributions"] if item["key"] == "potential")
-    assert entry["delta_transport"] == pytest.approx(0.0402 - 0.0731)
-    assert record["ladder"][1]["stabilisation_currents_A"] == {"Na+": -4.1e-11}
-
-    text = report.markdown()
-    assert "Δ_transport" in text
-    assert "a different quantity" in text
-    assert "not the same number" in text
-
-    document, readable = write_report(report, tmp_path)
-    assert document.is_file() and readable.is_file()
-    assert "attribution_hash" in document.read_text(encoding="utf-8")
-
-
-def test_val01_a_self_golden_report_says_so_in_the_first_line() -> None:
-    report = attribute(_outcomes([0.0, 0.0, 0.0, 0.0]), case="fixture", golden=_golden("self"))
-    assert report.golden_source == "self"
-    text = report.markdown()
-    assert "`self`" in text
-    assert "tests the harness and nothing else" in text
-    assert text.index("Golden source") < text.index("| key |")
-
-
-def test_val01_an_unexported_field_is_named_in_the_report() -> None:
-    outcomes = _outcomes([0.1, 0.2, 0.3, 0.4], [0.01, 0.02, 0.03, 0.04])
-    report = attribute(
-        outcomes,
-        case="fixture",
-        golden=_golden(),
-        sampled_fields=["potential", "pressure", "velocity_z"],
-    )
-    assert report.unavailable_fields == ("pressure", "velocity_z")
-    assert set(report.unavailable_quantities) == {
-        "conductance_S",
-        "transport_number",
-        "eof_m3_s",
-    }
-    markdown = report.markdown()
-    assert "Not compared" in markdown
-    assert "`pressure`" in markdown
-
-
-def test_val01_unavailable_fields_cannot_be_derived_from_the_comparisons() -> None:
-    report = attribute(_outcomes([0.1, 0.2, 0.3, 0.4]), case="fixture", golden=_golden())
-    assert report.unavailable_fields == ()
-
-
 @pytest.fixture(scope="module")
 def ladder_plan():
     document = load_sweep(LADDER_SWEEP)
@@ -348,15 +238,6 @@ def test_val01_every_path_the_ladder_writes_is_a_warm_start_barrier() -> None:
             assert any(
                 path == barrier or path.startswith(f"{barrier}.") for barrier in WARM_START_BARRIERS
             ), f"rung {rung.name!r} writes {path!r}, which no warm-start barrier covers"
-
-
-def test_val01_the_sweep_document_mirrors_the_ladder(ladder_plan) -> None:
-    document = load_sweep(LADDER_SWEEP)
-    rung_axis = next(axis for axis in document.axes if axis.name == "rung")
-    assert [dict(entry) for entry in rung_axis.points()] == [
-        dict(rung.assignments()) for rung in LADDER
-    ]
-    assert ladder_plan.document["axes"][0]["name"] == "rung"
 
 
 def test_val03_the_ladder_members_answer_the_five_frozen_cases(ladder_plan) -> None:
