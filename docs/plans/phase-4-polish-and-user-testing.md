@@ -871,7 +871,7 @@ The package claims VER-76 and sets REV-112 and REV-113 `fixed`. Tag `v0.5.0-alph
 > `/code-review` (N5). The coverage job and `diff-cover` are gone (N2). `nightly` replaces `extended`;
 > every push runs example 01 and example 02's ePNP-NS leg with their VER-62 goldens, and a failed
 > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
-> import guard, and §7.1 to §7.3, §7.6, §8.1 and Appendix A follow (N3). 386 Tier 1 tests and
+> import guard, and §7.1 to §7.3, §7.6, §8.1 and Appendix A follow (N3). 378 Tier 1 tests and
 > `pending.yaml` are deleted; 31 knowledge markers are retargeted. The per-push run takes 201 s
 > (1,505 tests). VER-61, VER-62 and VER-65 hold. REV-117 carries the tooling left without tests.
 

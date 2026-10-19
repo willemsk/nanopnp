@@ -32,6 +32,7 @@ from nanopnp.core.stages import CancelFlag, Cancelled
 from nanopnp.io.artefact import StageInputs, StructureArtefact
 from nanopnp.io.case import (
     CaseDocument,
+    CaseValidationError,
 )
 from nanopnp.io.resolved import ResolvedProtonation
 from nanopnp.io.store import Store
@@ -587,3 +588,47 @@ def test_ver57_propka_reads_its_parameters_on_every_supported_python() -> None:
         parameters.no_such_parameter  # noqa: B018 - the access is the assertion
     if sys.version_info < (3, 14):
         assert "__getattr__" not in vars(Parameters)
+
+
+@pytest.mark.parametrize(
+    ("charge", "kwargs", "error", "fragments"),
+    [
+        ("forcefield: AMBER", {}, CaseValidationError, ("forcefield",)),
+        ("ph: 15.0", {}, CaseValidationError, ("ph",)),
+        ("ph: .nan", {}, CaseValidationError, ("ph",)),
+        ("ph: 6.0, titration: none", {}, CaseValidationError, ("charge.ph", "titration: none")),
+        ("ph: 6.0", {"pqr": True}, CaseValidationError, ("charge.ph", "inputs.pqr")),
+        (
+            "forcefield: SWANSON",
+            {"pqr": True},
+            CaseValidationError,
+            ("charge.forcefield", "inputs.pqr"),
+        ),
+        (
+            "ph: 6.0",
+            {"structure": False, "mesh": True},
+            CaseValidationError,
+            ("charge.ph", "nothing to protonate"),
+        ),
+        # charge.smearing resolves beside a structure; beside a supplied mesh with nothing
+        # to protonate it is refused, naming both keys.
+        (
+            "smearing: {sharpness: 0.4}",
+            {"structure": False, "mesh": True},
+            CaseValidationError,
+            ("charge.smearing.sharpness", "structure:"),
+        ),
+    ],
+)
+def test_ver57_each_protonation_refusal_names_its_keys(
+    tmp_path: Path,
+    charge: str,
+    kwargs: dict[str, bool],
+    error: type[Exception],
+    fragments: tuple[str, ...],
+) -> None:
+    pqr = tmp_path / "supplied.pqr" if kwargs.pop("pqr", False) else None
+    with pytest.raises(error) as raised:
+        resolve(_case(tmp_path, charge=charge, pqr=pqr, **kwargs))
+    message = str(raised.value)
+    assert all(fragment in message for fragment in fragments), message
