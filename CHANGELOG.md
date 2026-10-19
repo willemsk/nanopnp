@@ -31,6 +31,7 @@ WP50: the test scope (`SPECIFICATION.md` §8.2.13 N1 to N5).
 - **`nightly` replaces `extended`** (N4): `pytest --nightly`; the per-push selection holds example 01
   and example 02's ePNP-NS leg with their VER-62 goldens; a failed nightly run opens an issue.
 - **VER-63, VER-67, VER-68 and VER-75 are withdrawn; VER-72 keeps its import guard** (N3).
+- **Review gaps closed:** the VER-62 golden-file, solution-state, VER-71 classification, charge-input, manifest-group and VER-76 tests stay or are restored; the OKF and findings-log check functions are deleted (REV-117, REV-118 fixed).
 
 ### Removed
 

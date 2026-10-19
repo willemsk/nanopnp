@@ -808,3 +808,84 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         | {f"inputs.eps_r.{k}" for k in ("path", "format", "groups")}
     )
     assert covered == set(p for p, leaf in LEAVES.items() if leaf.kind == "stage")
+
+
+def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
+    from nanopnp.core.stages import registered_stages
+    from nanopnp.io.case_paths import case_fields
+    from nanopnp.validation.case_leaves import KINDS, LEAVES
+
+    walked = {reference.path for reference in case_fields()}
+    assert set(LEAVES) == walked
+    assert KINDS == ("solve", "solver", "stage", "post", "fixed", "checked", "provenance")
+    for path, leaf in LEAVES.items():
+        assert leaf.kind in KINDS, path
+        assert leaf.reason.strip(), path
+        if leaf.kind == "stage":
+            assert leaf.consumer in {stage.name for stage in registered_stages()}, path
+    solve = {path for path, leaf in LEAVES.items() if leaf.kind == "solve"}
+    assert solve == {path for path, _ in SOLVE_PROBES} | {"physics.model"}
+    assert {path for path, leaf in LEAVES.items() if leaf.kind == "solver"} == {
+        "numerics.nonlinear.max_iter",
+        "numerics.nonlinear.rtol",
+        "numerics.linear.solver",
+        "numerics.continuation",
+    }
+    assert {path for path, leaf in LEAVES.items() if leaf.kind == "provenance"} == {
+        "schema",
+        "name",
+        "structure.source.variant",
+    }
+    assert {path for path, leaf in LEAVES.items() if leaf.kind == "checked"} == {
+        "electrolyte.corrections.steric.a_ion_nm",
+        "electrolyte.corrections.steric.a_water_nm",
+    }
+    assert {path for path, leaf in LEAVES.items() if leaf.kind == "post"} == {"outputs"}
+    assert {path for path, leaf in LEAVES.items() if leaf.kind == "fixed"} == {
+        "numerics.nonlinear.strategy",
+        "numerics.nonlinear.damping",
+        "boundary_conditions.walls.ion_flux",
+        "boundary_conditions.walls.slip",
+        "charge.smearing.axis_cutoff_nm",
+        "electrolyte.temperature_K",
+        "electrolyte.parameters",
+        "electrolyte.species.0.name",
+        "electrolyte.species.0.z",
+        "inputs.mesh.artefact",
+        "inputs.charge.artefact",
+        "inputs.eps_r.artefact",
+    }
+
+
+def test_ver71_a_leaf_added_to_the_schema_and_classified_nowhere_fails() -> None:
+    from nanopnp.io.case_paths import case_fields
+    from nanopnp.validation.case_leaves import LEAVES, unclassified
+
+    walked = [reference.path for reference in case_fields()]
+    assert unclassified(walked, LEAVES) == ((), ())
+    assert unclassified([*walked, "physics.extra_flag"], LEAVES) == (("physics.extra_flag",), ())
+    stale = {**LEAVES, "physics.gone": LEAVES["name"]}
+    assert unclassified(walked, stale) == ((), ("physics.gone",))
+
+
+@pytest.mark.parametrize("model", MODELS)
+def test_ver71_each_model_declares_the_leaves_it_does_not_read(model: str) -> None:
+    from nanopnp.physics.models import declaration
+
+    assert declaration(model).unread == UNREAD[model]
+
+
+@pytest.mark.parametrize("model", MODELS)
+def test_ver71_every_unread_path_is_a_schema_leaf(model: str) -> None:
+    from nanopnp.io.case_paths import case_fields
+    from nanopnp.physics.models import declaration
+
+    walked = {reference.path for reference in case_fields()}
+    unread = declaration(model).unread
+    assert unread <= walked, f"{model}: not schema leaves: {sorted(unread - walked)}"
+
+
+def test_ver71_the_shipped_models_are_the_ones_the_leaf_tests_cover() -> None:
+    from nanopnp.physics.models import registered_models
+
+    assert set(registered_models()) == set(MODELS)

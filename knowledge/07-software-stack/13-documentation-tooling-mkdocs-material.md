@@ -59,5 +59,5 @@ Python 3.12:
   names the page). `not_in_nav` takes a directory, so the concept pages of the bundle need no
   navigation entry beyond its index, and the `footnotes` extension renders a `[^id]` source label.
 - An `attr_list` heading id may begin with a digit, and the table-of-contents slug of all 241
-  headings of the bundle equals the one `nanopnp.validation.okf.slugify` computes, including the
+  headings of the bundle was checked against the slug the bundle checker computed (since removed, REV-117), including the
   `_1` suffix of a repeat.

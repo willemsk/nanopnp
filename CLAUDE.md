@@ -30,7 +30,7 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 | Command | Purpose |
 |---|---|
 | `uv run pytest` | Tiers 1–2 without `nightly` and `slow` tests: the default selection |
-| `uv run pytest --nightly` | All of tiers 1–2, as the nightly run does. Naming a `nightly` test's file runs it without the flag |
+| `uv run pytest --nightly` | Adds the `nightly` walks; `-m "(tier1 or tier2) and slow"` adds the `slow` tests, as the nightly run does. Naming a `nightly` test's file runs it without the flag |
 | `uv run pytest -n auto --dist loadfile` | Parallel; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs serially, apart |
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison / benchmarks (the last two not gated) |
 | `uv run ruff check . && uv run ruff format .`; `uv run mypy src/` | Lint and format; strict types |
@@ -124,7 +124,7 @@ governs a PR in flight.
 **Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and
 moves to Opus only after Sonnet has failed on the item. Sub-agents kept: `physics-reviewer`,
 `ci-log-classifier` and the `.claude/scripts/clause.py` script. Plans hold at most 1,500 words and six
-decisions, with compaction checkpoints (VER-72 g).
+decisions, with compaction checkpoints.
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, one above the highest present;
 pass `out=`.
