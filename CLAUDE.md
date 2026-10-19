@@ -29,8 +29,8 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 
 | Command | Purpose |
 |---|---|
-| `uv run pytest` | Tiers 1–2 without `extended` tests: the development selection |
-| `uv run pytest --extended` | All of tiers 1–2, as CI runs it. Naming an `extended` test's file runs it without the flag |
+| `uv run pytest` | Tiers 1–2 without `nightly` and `slow` tests: the default selection |
+| `uv run pytest --nightly` | All of tiers 1–2, as the nightly run does. Naming a `nightly` test's file runs it without the flag |
 | `uv run pytest -n auto --dist loadfile` | Parallel; set `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS` to 1. `tests/tier1/test_gui_widgets.py` runs serially, apart |
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison / benchmarks (the last two not gated) |
 | `uv run ruff check . && uv run ruff format .`; `uv run mypy src/` | Lint and format; strict types |
@@ -38,23 +38,20 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 | `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | Documentation build, as CI's `docs` job (VER-45) |
 
 Gate before committing: `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest -m tier1`.
-Gate before pushing: `.claude/hooks/gate.sh run` (the above with `pytest --extended` over the whole suite, no
-coverage). `gate.sh` runs before each `git commit` Claude Code makes (`--no-verify` skips it): the lock check,
-lint, format, types and every Tier 1 test without the `extended` marker. A hook pass never stands in for `run`.
+Gate before pushing: `.claude/hooks/gate.sh run` (lint, format and types, then the per-push selection: Tier 1, the
+Tier 2 tests that neither walk the pipeline nor carry `slow`, example 01 while it solves in under 60 s, and example
+02's charged ePNP-NS walk). No coverage is measured. `gate.sh` runs before each `git commit` Claude Code makes
+(`--no-verify` skips it): the lock check, lint, format, types and the Tier 1 tests without the `nightly` marker.
+A hook pass never stands in for `run`.
 Start `run` with Bash `run_in_background`, wait for it in the same turn (a foreground `until` loop on
 its output; re-run the wait if the 10-minute limit ends it), push when it passes, and only then end the
 turn: a turn ended on an unpushed commit trips the environment's stop hook. The hook refuses a push of
 a tree it has not passed.
 
-- Changed-line branch coverage (`src/nanopnp/` outside `gui/`, `diff-cover` against `main`) is checked by CI alone.
-  An exempt line says `# pragma: no cover - <reason>`. Coverage misses missing code and the untaken arm of
-  `a if c else b`; write the tests with the item.
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
-- When only prose changed, the hook runs ruff alone (`.github/scripts/prose-only.sh`;
-  `SPECIFICATION.md`, `docs/`, example READMEs, `.claude/{agents,skills,rules}/`, `knowledge/` and any
-  Markdown that cites `knowledge/` are not prose, and `docs/plans/` neither: a change to only those
-  runs the tests); CI's documentation build still runs.
+- When only Markdown changed, the hook runs ruff alone (`.github/scripts/prose-only.sh`), wherever the Markdown
+  lives, `SPECIFICATION.md`, `docs/`, `knowledge/` and `.claude/` included; CI's documentation build still runs.
 
 ## Project structure
 
@@ -89,7 +86,14 @@ sets the marker, so location decides the tier.
 | 3 | Cross-implementation comparison (VAL-01 … VAL-06, VAL-16, VAL-17) | hours | nightly, recorded not gated |
 | 4 | Experimental reproduction (VAL-07 … VAL-14) | hours | before a tagged release |
 
-- Name tests for the requirement they discharge: `test_ver03_ion_wall_function_check_values`.
+- Write a test only for the test scope (`SPECIFICATION.md` §8.2.13 N1): physics and numerics, core mechanisms,
+  and the licence and architecture guards (CON-10, CON-12, VER-61, VER-65, no backend import). Each entry point
+  keeps a thin smoke test. A refusal is tested only where it is a numerical or physical gate.
+- A new test's name or first line says which silent failure it catches, e.g. `test_ver03_ion_wall_function_check_values`.
+- A requirement identifier is named in a test only where the requirement is physics, numerics or a core mechanism;
+  other identifiers are verified at review (N3).
+- Off-scope tests are deleted in their own `test: drop tests outside the test scope` commit by `/wp-ship`. No
+  tolerance is slackened and no kept test is weakened.
 - Fix Tier 2 before chasing a Tier 3 discrepancy.
 - No network and no COMSOL licence in tests; Tier 3 reads archived reference data.
 
@@ -147,7 +151,7 @@ messages (`.claude/rules/python.md`; §8.2.11 L4).
 ## Durable learnings
 
 Write a durable fact as a concept in the relevant `knowledge/` directory, or into an existing one, with
-its source: mark a claim `[tested: <test>]` or `[verified]` with a source footnote, list the concept in the
+its source: mark a claim `[tested: <test>]`, naming a test in scope, or `[verified]`, with a source footnote, list the concept in the
 directory's `index.md` and add a line to `knowledge/log.md`
 (`knowledge/00-orientation/04-provenance-and-how-to-extend-this.md`). Status and scope opinions belong in
 the specification.

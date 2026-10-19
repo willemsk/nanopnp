@@ -74,7 +74,8 @@ amendment, versioning and the close. Always cover:
 
 Draft each decision as one question with its identifiers, two to four options (consequence for
 correctness, scope, gate cost, clause amended) and a recommendation first, with why. Also draft the
-**work-package sequence**, the numbered **completion criteria** (each checkable by a named test or
+**work-package sequence**, the numbered **completion criteria** (each checkable by a named test, in
+the test scope of §8.2.13 N1, or by the code and review where the item is outside it, or by a named observation)
 observation) and what the phase **excludes**, with where each goes.
 
 ### 5. Put it to the author
@@ -124,7 +125,7 @@ change, and §8.1's row if the deliverable, gate or estimate moved.
 | `## Work packages` | `### WP<n> — <name> (<identifiers>)`: scope, identifiers, proposed `VER-`/`VAL-` with oracle, Tier 3 legs. Provisional ones say so and what they wait on. Close last. Tags `v0.<n+1>.0-alpha.N` |
 | `## Open decisions` | `# \| Decision \| Owner and status`, with the rulings just taken as **Settled by the author, <date>** |
 | `## What the author supplies` | `Item \| Needed by \| If it does not arrive` |
-| `## Verification` | Gate commands; a `Package \| Tier \| Identifiers` table; **The phase is complete when:** the numbered criteria with test, tolerance, prediction and ruled fallback |
+| `## Verification` | Gate commands; a `Package \| Tier \| Identifiers` table listing in-scope tests only (N1); **The phase is complete when:** the numbered criteria with test, tolerance, prediction and ruled fallback |
 | `## End-of-phase report` | Only the list of numbers it must report, each with the test that logs it; the close fills it |
 
 Target 1,500 words, excluding the report.
