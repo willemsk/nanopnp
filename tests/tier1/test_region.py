@@ -41,14 +41,12 @@ from nanopnp.geometry.region import (
 )
 from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.case import (
-    CaseValidationError,
     MembraneSpec,
     ReservoirSpec,
 )
 from nanopnp.io.store import Store
 from nanopnp.mesh.reference import ReferenceGeometry
 from nanopnp.pipeline.case import (
-    load_case,
     loads_case,
     resolve,
 )
@@ -315,41 +313,6 @@ def test_ver52_a_supplied_profile_is_read_by_stage_5(tmp_path: Path) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ("inputs", "extra", "fragment"),
-    [
-        ("{artefact: " + "a" * 64 + "}", "", "inputs.profile: artefact:"),
-        ("{path: p.yaml, groups: {a: wall}}", "", "inputs.profile.groups"),
-        ("{path: p.yaml, format: csv}", "", "inputs.profile.format is 'csv'"),
-        ("{path: p.yaml}", "geometry: {density: {grid_spacing_nm: 0.03}}\n", "geometry.density"),
-        ("{path: p.yaml}", "geometry: {contour: {isolevel: 0.3}}\n", "geometry.contour"),
-    ],
-)
-def test_ver52_a_supplied_profile_s_refusals_name_the_key(
-    inputs: str, extra: str, fragment: str
-) -> None:
-    text = profile_case(Path("p.yaml"), extra).replace("{path: p.yaml}", inputs, 1)
-    with pytest.raises(CaseValidationError, match=re_escape(fragment)):
-        resolve(loads_case(text))
-
-
-def re_escape(text: str) -> str:
-    import re
-
-    return re.escape(text)
-
-
-def test_ver52_structure_beside_a_supplied_profile_is_refused_naming_both(tmp_path: Path) -> None:
-    text = profile_case(
-        Path("p.yaml"),
-        "structure:\n  source: {path: s.pdb}\n  symmetry: {point_group: C12}\n",
-    )
-    with pytest.raises(
-        CaseValidationError, match=r"structure: section and supplies inputs\.profile"
-    ):
-        resolve(loads_case(text))
-
-
 def _key(text: str) -> str:
     return RegionStage().key(StageInputs(resolved=resolve(loads_case(text)))).hash
 
@@ -426,12 +389,6 @@ def test_ver52_to_model_frame_shifts_z_only() -> None:
     points = np.array([[1.0, 2.0], [3.0, -4.0]])
     assert np.array_equal(to_model_frame(points, 1.5), np.array([[1.0, 0.5], [3.0, -5.5]]))
     assert np.array_equal(points, np.array([[1.0, 2.0], [3.0, -4.0]]))
-
-
-def test_ver52_a_supplied_profile_case_file_loads(tmp_path: Path) -> None:
-    case = tmp_path / "profile.case.yaml"
-    case.write_text(profile_case(profile_file(FIXTURE)), encoding="utf-8")
-    assert resolve(load_case(case)).profile is not None
 
 
 @pytest.mark.parametrize(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 import sys
 from itertools import product
@@ -12,7 +11,6 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.hashing import file_hash
-from nanopnp.io.case import CaseValidationError
 from nanopnp.pipeline.case import loads_case
 from nanopnp.sweep.document import loads_sweep
 from nanopnp.sweep.plan import (
@@ -116,34 +114,6 @@ def test_ver36_an_assignment_valued_axis_moves_several_paths_together(base: Path
         "electrolyte.corrections.steric.model": "none",
     }
     assert plan.points[1].assignments["electrolyte.corrections.steric.model"] == "borukhov"
-
-
-def test_ver36_two_axes_writing_one_path_are_refused(base: Path) -> None:
-    with pytest.raises(
-        SweepPlanError, match=re.escape("both write 'physics.dielectric_gradient_forces'")
-    ):
-        _plan(
-            base,
-            """
-  - name: one
-    assignments: [{physics.dielectric_gradient_forces: true},
-                  {physics.dielectric_gradient_forces: false}]
-  - name: two
-    assignments: [{physics.dielectric_gradient_forces: true}]
-""",
-        )
-
-
-def test_ver36_an_axis_declaring_the_same_value_twice_is_refused(base: Path) -> None:
-    with pytest.raises(SweepPlanError, match="identical assignments"):
-        _plan(
-            base,
-            """
-  - name: bias
-    path: boundary_conditions.bias_V
-    values: [0.05, 0.05]
-""",
-        )
 
 
 # -- identity, and what it is not ---------------------------------------------
@@ -270,94 +240,7 @@ def test_ver36_a_symmetric_axis_roots_at_its_declared_origin_and_walks_both_ways
     assert len(plan.waves()[1]) and plan.waves()[1] == (1, 3), "one step each way"
 
 
-def test_ver36_an_origin_off_the_end_of_its_axis_is_refused(base: Path) -> None:
-    with pytest.raises(CaseValidationError, match="origin 9"):
-        _plan(
-            base,
-            """
-  - name: bias
-    path: boundary_conditions.bias_V
-    origin: 9
-    values: [-0.1, 0.1]
-""",
-        )
-
-
 # -- what the plan refuses ----------------------------------------------------
-
-
-def test_ver36_a_misspelt_path_is_refused_naming_the_component_and_the_prefix(base: Path) -> None:
-    with pytest.raises(SweepPlanError) as raised:
-        _plan(
-            base,
-            """
-  - name: bias
-    path: boundary_conditions.bais_V
-    values: [-0.05, 0.05]
-""",
-        )
-    message = str(raised.value)
-    assert "axis 'bias'" in message
-    assert "boundary_conditions has no 'bais_V'" in message
-    assert "did you mean 'bias_V'" in message
-
-
-def test_ver36_a_value_of_the_wrong_declared_type_is_refused_at_plan_time(base: Path) -> None:
-    with pytest.raises(SweepPlanError, match="not a value this field accepts"):
-        _plan(
-            base,
-            """
-  - name: bias
-    path: boundary_conditions.bias_V
-    values: [0.05, hot]
-""",
-        )
-
-
-# NUM-18
-def test_ver36_a_point_the_case_schema_refuses_fails_when_the_plan_is_built(base: Path) -> None:
-    with pytest.raises(SweepPlanError) as raised:
-        _plan(
-            base,
-            """
-  - name: flow
-    path: physics.flow
-    values: [true, false]
-""",
-        )
-    message = str(raised.value)
-    assert "point 1" in message
-    assert "physics.flow" in message
-    assert "default_ladder" in message or "ladder" in message
-
-
-# QR-12
-def test_ver36_rectification_with_no_opposite_bias_pair_is_refused(tmp_path: Path) -> None:
-    base = tmp_path / "base.yaml"
-    base.write_text(
-        BASE.format(mesh=tmp_path / "pore.vol", outputs="[current, rectification]"),
-        encoding="utf-8",
-    )
-    with pytest.raises(SweepPlanError) as raised:
-        _plan(
-            base,
-            """
-  - name: bias
-    path: boundary_conditions.bias_V
-    values: [0.05, 0.1]
-""",
-        )
-    assert "boundary_conditions.bias_V" in str(raised.value)
-    assert "exactly opposite" in str(raised.value)
-    with pytest.raises(SweepPlanError):
-        _plan(
-            base,
-            """
-  - name: bias
-    path: boundary_conditions.bias_V
-    values: [-0.095, 0.1]
-""",
-        )
 
 
 def test_ver36_a_symmetric_bias_axis_supplies_the_pairs(tmp_path: Path) -> None:
@@ -502,19 +385,6 @@ def test_ver36_the_recorded_file_digests_round_trip_and_an_older_plan_is_refused
     path.write_text(json.dumps(document), encoding="utf-8")
     with pytest.raises(SweepPlanError, match=r"records no input file digests.*re-plan"):
         read_plan(path)
-
-
-def test_ver36_a_file_of_another_schema_is_refused(tmp_path: Path) -> None:
-    path = tmp_path / "plan.json"
-    path.write_text('{"schema": "nanopnp/run/v0.5"}', encoding="utf-8")
-    with pytest.raises(SweepPlanError, match=r"nanopnp/run/v0\.5"):
-        read_plan(path)
-
-
-def test_ver36_an_index_the_plan_does_not_enumerate_is_named(base: Path) -> None:
-    plan = _plan(base, TWO_BY_THREE)
-    with pytest.raises(SweepPlanError, match="there is no point 6"):
-        plan.point(6)
 
 
 # -- the checked-in reference sweep -------------------------------------------

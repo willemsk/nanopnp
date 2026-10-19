@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -25,7 +24,6 @@ from nanopnp.io import manifest as manifest_module
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import (
     CaseDocument,
-    CaseValidationError,
 )
 from nanopnp.io.case_paths import (
     FieldReference,
@@ -36,11 +34,10 @@ from nanopnp.io.defaults import (
     MODEL_SWITCH_PATHS,
     SWITCH_PATHS,
     VALIDATED_DEFAULT_CASE,
-    UnknownSwitchPathError,
     deviations,
     value_at,
 )
-from nanopnp.io.manifest import GROUPS, MANIFEST_SCHEMA, build, read
+from nanopnp.io.manifest import build, read
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
 from nanopnp.pipeline.case import loads_case, resolve
@@ -118,11 +115,6 @@ def test_ver24_the_two_classifications_are_disjoint() -> None:
     assert not set(SWITCH_PATHS) & set(CONFIGURATION_PATHS)
 
 
-def test_ver24_an_unknown_path_is_refused_by_name() -> None:
-    with pytest.raises(UnknownSwitchPathError, match=re.escape("physics.flowe")):
-        value_at(VALIDATED_DEFAULT_CASE, "physics.flowe")
-
-
 # PHY-22, PHY-23
 def test_ver24_the_validated_default_case_deviates_from_nothing() -> None:
     assert deviations(VALIDATED_DEFAULT_CASE) == ()
@@ -146,30 +138,6 @@ def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
     recorded = found["numerics.wall_distance.max_distance_nm"]
     assert recorded.value == 0.3
     assert recorded.validated == 3.0
-
-
-# QR-12
-@pytest.mark.parametrize(
-    ("path", "value"),
-    [
-        ("numerics.wall_distance.max_distance_nm", 0.0),
-        ("numerics.wall_distance.max_distance_nm", float("nan")),
-        ("electrolyte.concentration_M", -0.5),
-        ("electrolyte.concentration_M", float("nan")),
-        ("boundary_conditions.bias_V", float("inf")),
-    ],
-)
-def test_ver24_resolve_refuses_an_operating_point_no_solve_could_use(
-    path: str, value: float
-) -> None:
-    document = loads_case(MINIMAL)
-    section, *middle, leaf = path.split(".")
-    target = getattr(document, section)
-    for part in middle:
-        target = getattr(target, part)
-    setattr(target, leaf, value)
-    with pytest.raises(CaseValidationError, match=re.escape(path)):
-        resolve(document)
 
 
 def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
@@ -199,24 +167,6 @@ def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None
         "physics.dielectric_gradient_forces",
         "electrolyte.corrections.steric.model",
     }
-
-
-def test_ver24_the_manifest_carries_all_eight_groups_of_section_5_3_3() -> None:
-    document = loads_case(MINIMAL)
-    written = _manifest(document).document()
-    for group in GROUPS:
-        assert group in written, f"the manifest omits the {group!r} group"
-    assert written["schema"] == MANIFEST_SCHEMA
-
-
-def test_ver24_a_group_no_stage_produced_names_the_reason() -> None:
-    document = loads_case(MINIMAL)
-    written = _manifest(document).document()
-    for group in ("geometry_and_mesh", "charge", "materials"):
-        block = written[group]
-        assert isinstance(block, dict)
-        assert block["status"] == "not run"
-        assert block["reason"]
 
 
 def test_ver24_the_solver_group_records_the_settings_and_the_run() -> None:

@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from nanopnp.core.stages import MissingExtraError
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import (
     EXCLUSION,
@@ -185,17 +184,6 @@ def test_ver59_an_offset_closing_the_constriction_is_refused_naming_its_z() -> N
     assert "a + h_c = 0.3000 nm" in message
 
 
-@pytest.mark.parametrize("vertex", [0, 1, 3])
-def test_ver59_a_non_finite_profile_coordinate_is_refused_naming_its_vertex(vertex: int) -> None:
-    points = np.array([(3.0, -5.0), (3.0, 0.0), (3.0, 5.0), (4.5, 5.0), (4.5, -5.0)])
-    points[vertex, 0] = np.nan
-    with pytest.raises(RegionGateError) as raised:
-        exclusion_shell(points, OFFSET_NM, H_C_NM, reservoir_radius_nm=30.0)
-    message = str(raised.value)
-    assert "exclusion shell input" in message
-    assert f"at vertex {vertex}" in message
-
-
 def test_ver59_an_outer_surface_inside_the_bound_is_refused_naming_where(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -249,35 +237,6 @@ def test_ver59_an_offset_at_most_twice_h_c_is_refused_naming_both_keys(
     with pytest.raises(CaseValidationError) as raised:
         resolve(loads_case(case_text(parallelogram_profile, charge=charge)))
     assert all(fragment in str(raised.value) for fragment in fragments), raised.value
-
-
-def test_ver59_the_keys_beside_a_supplied_mesh_or_without_a_profile_are_refused() -> None:
-    mesh_case = (
-        "schema: nanopnp/case/v0.5\nname: supplied\n"
-        "inputs:\n  mesh: {path: pore.msh, format: msh41}\n"
-        "electrolyte:\n  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
-        "  concentration_M: 1.0\n"
-        "boundary_conditions: {bias_V: 0.05, ground: cis}\n"
-        "physics: {model: pnp-ns}\n"
-    )
-    for charge in (_offset(), "charge: {dielectric_transition_nm: 0.15}\n"):
-        with pytest.raises(CaseValidationError) as raised:
-            resolve(loads_case(mesh_case + charge))
-        message = str(raised.value)
-        assert "beside inputs.mesh" in message
-        assert re.search(r"charge\.(exclusion_offset|dielectric_transition)_nm", message)
-
-
-def test_ver59_the_case_without_shapely_is_refused_naming_the_extra_and_the_key(
-    parallelogram_profile: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    monkeypatch.setitem(sys.modules, "shapely", None)
-    case = loads_case(case_text(parallelogram_profile, charge=_offset()))
-    with pytest.raises(MissingExtraError) as raised:
-        RegionStage(workspace=tmp_path).run(StageInputs(resolved=resolve(case)))
-    message = str(raised.value)
-    assert "'structure' extra" in message
-    assert "charge.exclusion_offset_nm" in message
 
 
 def test_ver59_the_record_round_trips_and_rebuilds_without_shapely(

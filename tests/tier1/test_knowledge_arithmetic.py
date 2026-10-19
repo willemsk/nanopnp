@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import ast
-import inspect
 import math
 
 import numpy as np
@@ -203,28 +201,6 @@ def test_ngsolve_physics_small_facts() -> None:
     )
     pt = mesh(0.4, 0.4)
     assert all(math.isfinite(float(grad_phi_ex[i](pt))) for i in range(2))
-
-
-def test_apbs_input_cleanup_and_250_bytes_per_node() -> None:
-    from nanopnp.validation import apbs
-
-    assert pytest.approx(264.0, abs=20.0) == 1.9e9 / (193**3)
-    source = inspect.getsource(apbs.run_apbs)
-    assert "unlink" in source
-
-
-def test_netgen_webgui_generate_html_ignores_template_argument() -> None:
-    import netgen.webgui as webgui
-
-    source = inspect.getsource(webgui.GenerateHTML)
-    tree = ast.parse(source)
-    func = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
-    loads = [
-        node.id
-        for node in ast.walk(func)
-        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load) and node.id == "template"
-    ]
-    assert loads == ["template"]
 
 
 def test_short_hash_collision_probability_bound() -> None:

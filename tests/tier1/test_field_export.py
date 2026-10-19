@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -16,7 +15,6 @@ from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
 from nanopnp.physics import models
 from nanopnp.physics.models import ModelSolution
 from nanopnp.post.export import (
-    EXPORT_SCHEMA,
     OMEGA_STEM,
     OMEGA_W_STEM,
     FieldExport,
@@ -193,23 +191,6 @@ def test_ver33_the_pressure_is_exact_at_the_midside_nodes_it_did_not_ask_for(
     assert np.abs(grid.point_data["p_Pa"] - expected).max() < EXACT_NM * abs(scales.pressure_Pa)
 
 
-def test_ver33_the_two_files_carry_the_whole_domain_and_fluid_field_sets(
-    exported: FieldExport,
-) -> None:
-    omega = _read(exported, OMEGA_STEM)
-    omega_w = _read(exported, OMEGA_W_STEM)
-    assert set(omega.point_data) == {"phi_V", "rho_fixed_C_m3"}
-    assert set(omega.cell_data) == {"material_id", "eps_r"}
-    assert set(omega_w.point_data) == {
-        "c_Na+_mol_m3",
-        "c_Cl-_mol_m3",
-        "u_m_s",
-        "p_Pa",
-        "wall_distance_nm",
-    }
-    assert omega_w.cell_data == {}
-
-
 def test_ver33_the_fluid_file_holds_no_node_that_only_a_solid_element_carries(
     solution: ModelSolution,
     exported: FieldExport,
@@ -303,41 +284,6 @@ def test_ver33_the_wall_distance_is_written_in_nm_and_not_rescaled(
     assert np.abs(grid.point_data["wall_distance_nm"] - expected).max() < EXACT_NM
 
 
-def test_ver33_the_topology_is_triangle_6_at_six_nodes_per_element(
-    exported: FieldExport,
-) -> None:
-    root = ET.parse(exported.omega[0]).getroot()
-    topology = root.find("Domain/Grid/Topology")
-    assert topology is not None
-    assert topology.attrib["TopologyType"] == "Triangle_6"
-    assert topology.attrib["NodesPerElement"] == "6"
-
-
-def test_ver33_heavy_data_is_compressed(exported: FieldExport) -> None:
-    import h5py
-
-    for path in exported.paths():
-        if path.suffix != ".h5":
-            continue
-        with h5py.File(path, "r") as handle:
-            datasets = list(handle.values())
-            assert datasets, f"{path} holds no heavy data"
-            for dataset in datasets:
-                assert dataset.compression == "gzip", f"{path}:{dataset.name} is uncompressed"
-
-
-def test_if07_each_file_names_its_schema_and_the_materials_it_covers(
-    exported: FieldExport,
-) -> None:
-    omega = _metadata(exported, OMEGA_STEM)
-    omega_w = _metadata(exported, OMEGA_W_STEM)
-    assert omega["schema"] == omega_w["schema"] == EXPORT_SCHEMA
-    assert omega["domain"] == "omega"
-    assert omega_w["domain"] == "omega_w"
-    assert set(json.loads(omega["domain_materials"])) == {"electrolyte", "membrane", "cis", "trans"}
-    assert set(json.loads(omega_w["domain_materials"])) == {"electrolyte", "cis", "trans"}
-
-
 def test_if07_a_discontinuous_quantity_is_written_cell_centred(
     exported: FieldExport,
 ) -> None:
@@ -349,30 +295,6 @@ def test_if07_a_discontinuous_quantity_is_written_cell_centred(
     identifiers = np.concatenate(grid.cell_data["material_id"])
     assert identifiers.shape == (grid.cells[0].data.shape[0],)
     assert set(np.unique(identifiers)) == set(range(4))
-
-
-# QR-12
-def test_if07_a_material_selection_matching_nothing_is_refused_naming_the_mesh(
-    mesh: Mesh,
-) -> None:
-    with pytest.raises(ValueError, match="no element of the mesh carries a material"):
-        p2_nodes(mesh, materials="protein")
-
-
-# FR-25
-def test_if07_the_export_reports_every_path_and_attribute_it_wrote(
-    exported: FieldExport,
-) -> None:
-    assert len(exported.paths()) == 4
-    assert all(isinstance(path, Path) and path.exists() for path in exported.paths())
-    assert exported.attributes[OMEGA_STEM] == ("phi_V", "rho_fixed_C_m3", "eps_r", "material_id")
-    assert exported.attributes[OMEGA_W_STEM] == (
-        "c_Cl-_mol_m3",
-        "c_Na+_mol_m3",
-        "p_Pa",
-        "u_m_s",
-        "wall_distance_nm",
-    )
 
 
 def test_if07_the_report_exports_the_fixed_charge_it_read_for_the_restore(

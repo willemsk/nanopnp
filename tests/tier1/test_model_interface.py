@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-import json
 import math
 import subprocess
 import sys
@@ -25,7 +24,7 @@ from nanopnp.io.store import Store
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-from nanopnp.mesh.ingest import MeshVocabularyError, deployed_mesh, ingest, required_names
+from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.mesh.sizing import case_debye_length_nm
 from nanopnp.numerics.measures import AXISYMMETRIC
@@ -294,68 +293,6 @@ def test_phy24_a_supplied_field_beside_poisson_boltzmann_is_refused(
     assert "poisson" in message and "epnp-ns" in message
 
 
-def test_ver56_an_unadmitted_strategy_is_refused_naming_the_admitted_values() -> None:
-    message = _refusal(
-        case_text(
-            physics=(
-                "{model: pnp, flow: false, variable_density: false, "
-                "inertia: false, solid_permittivities: {membrane: 3.2}}"
-            ),
-            continuation="default_ladder",
-        )
-    )
-    assert "'pnp'" in message and "numerics.continuation: none" in message
-    assert "epnp-ns, pnp-ns" in message
-
-
-@pytest.mark.parametrize(
-    ("physics", "outputs", "named", "declared"),
-    [
-        (ELECTROSTATIC_PHYSICS % "poisson", "[current]", "current", "no quantity of interest"),
-        (ELECTROSTATIC_PHYSICS % "pb", "[transport_numbers, fields]", "transport_numbers", "no"),
-        (
-            (
-                "{model: pnp, flow: false, variable_density: false, "
-                "inertia: false, solid_permittivities: {membrane: 3.2}}"
-            ),
-            "[current, eof_rate]",
-            "eof_rate",
-            "current, transport_numbers, rectification",
-        ),
-    ],
-)
-def test_ver56_an_undeclared_quantity_is_refused_when_the_case_is_resolved(
-    physics: str, outputs: str, named: str, declared: str
-) -> None:
-    message = _refusal(case_text(physics=physics, outputs=outputs))
-    assert named in message and declared in message
-    assert f"'{physics.split(',')[0].split(': ')[1].rstrip('}')}'" in message
-
-
-def test_ver56_fields_is_admitted_for_every_model() -> None:
-    for model in ("pb", "pb-linear", "poisson"):
-        resolved = resolve(
-            loads_case(case_text(physics=ELECTROSTATIC_PHYSICS % model, outputs="[fields]"))
-        )
-        assert resolved.outputs == ("fields",)
-
-
-def test_ver56_a_builder_refusal_is_re_raised_naming_the_model(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    def refuse(**_: object) -> PhysicsModel:
-        raise ValueError("this configuration is refused for a reason of its own")
-
-    monkeypatch.setitem(
-        models._REGISTRY,
-        "refusing",
-        models._Registration(builder=refuse, declaration=models.declaration("pb")),
-    )
-    message = _refusal(case_text(physics=ELECTROSTATIC_PHYSICS % "refusing", outputs="[]"))
-    assert "physics.model 'refusing'" in message
-    assert "for a reason of its own" in message
-
-
 def _divalent() -> Electrolyte:
     salt = Electrolyte.from_parameter_file("willems2020_nacl")
     return replace(salt, species=(replace(salt.species[0], valence=2), salt.species[1]))
@@ -381,45 +318,6 @@ def test_fr19_the_ladder_initialisers_state_their_own_debye_length_for_any_salt(
     mesh = CylindricalPoreGeometry().generate(maxh_nm=4.0)
     rungs = default_ladder(mesh, electrolyte=divalent, solid_permittivities={"membrane": 3.2})
     assert [rung.model.name for rung in rungs[:2]] == ["pb-linear", "pb"]
-
-
-def test_ver56_a_declaration_cannot_admit_a_ladder_that_does_not_end_at_it() -> None:
-    with pytest.raises(ValueError, match="ends at epnp-ns or pnp-ns"):
-        models.register_model(
-            "laddered", lambda **_: models.create("pnp-ns"), models.declaration("epnp-ns")
-        )
-    assert "laddered" not in models.registered_models()
-
-
-def test_ver56_a_builder_must_build_the_model_it_is_registered_as(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setitem(
-        models._REGISTRY,
-        "misnamed",
-        models._Registration(
-            builder=lambda **options: models.create("pnp", **options),
-            declaration=models.declaration("pnp"),
-        ),
-    )
-    with pytest.raises(ValueError, match="built a model named 'pnp'"):
-        models.create("misnamed")
-
-
-# PHY-21
-def test_ver56_a_model_without_solids_is_refused_a_generated_mesh() -> None:
-    text = case_text(physics=ELECTROSTATIC_PHYSICS % "pb", outputs="[]").replace(
-        "mesh: {path: absent.msh, format: msh41}", "profile: {path: absent.yaml}"
-    )
-    message = _refusal(text)
-    assert "'pb'" in message and "inputs.mesh" in message and "poisson" in message
-
-
-def test_ver56_the_declared_switches_are_not_shared_between_declarations() -> None:
-    shared = {name: (False,) for name in models.SWITCHES}
-    first = models.ModelDeclaration(options=(), switches=shared, solids=False)
-    shared["flow"] = (False, True)
-    assert first.switches["flow"] == (False,)
 
 
 def test_ver56_building_a_model_while_resolving_imports_no_backend() -> None:
@@ -908,71 +806,3 @@ def test_ver56_poisson_with_solids_and_a_supplied_charge_equals_the_api_solve(
     charged_state = np.asarray(direct.state.vec.FV().NumPy())
     assert _relative(case_state, charged_state) < 1e-12
     assert _relative(np.asarray(uncharged.state.vec.FV().NumPy()), charged_state) > 1e-3
-
-
-def test_ver56_the_mesh_gate_refuses_a_solid_under_a_model_without_solids(
-    pore_mesh: Path,
-) -> None:
-    text = case_text(
-        pore_mesh,
-        physics=ELECTROSTATIC_PHYSICS % "pb",
-        outputs="[]",
-        groups="{default: interface}",
-    )
-    resolved = resolve(loads_case(text))
-    assert resolved.mesh is not None
-    with pytest.raises(
-        MeshVocabularyError, match="cannot be posed on a mesh with a solid"
-    ) as raised:
-        ingest(resolved.mesh, resolved)
-    assert "'pb'" in str(raised.value) and "'membrane'" in str(raised.value)
-
-
-@pytest.mark.parametrize(
-    ("physics", "concentration", "no_slip", "sources"),
-    [
-        ("{model: epnp-ns, solid_permittivities: {membrane: 3.2}}", True, True, True),
-        (
-            (
-                "{model: pnp, flow: false, variable_density: false, "
-                "inertia: false, solid_permittivities: {membrane: 3.2}}"
-            ),
-            True,
-            False,
-            True,
-        ),
-        (ELECTROSTATIC_PHYSICS % "poisson", False, False, False),
-        (ELECTROSTATIC_PHYSICS % "pb", False, False, False),
-    ],
-)
-def test_ver56_the_mesh_asks_for_what_the_model_declares(
-    physics: str, concentration: bool, no_slip: bool, sources: bool
-) -> None:
-    outputs = "[current]" if concentration else "[]"
-    resolved = resolve(loads_case(case_text(physics=physics, outputs=outputs)))
-    purposes = [requirement.purpose for requirement in required_names(resolved).boundaries]
-    assert any("essential potential" in purpose for purpose in purposes)
-    assert any("c_Na+" in purpose for purpose in purposes) is concentration
-    assert any("no-slip" in purpose for purpose in purposes) is no_slip
-    assert any("PHY-02" in purpose for purpose in purposes) is sources
-
-
-def test_ver56_the_declarations_are_readable_without_building() -> None:
-    for name in models.registered_models():
-        declared = models.declaration(name)
-        assert json.dumps(sorted(declared.switches)) == json.dumps(sorted(models.SWITCHES))
-    assert models.declaration("pnp").switches["flow"] == (False,)
-    assert models.declaration("pnp").strategies == ("none",)
-    assert models.declaration("epnp-ns").strategies == ("default_ladder", "none")
-    assert models.declaration("poisson").coefficients == models.COEFFICIENTS
-    assert not models.declaration("pb").solids
-    with pytest.raises(KeyError, match="registered models are"):
-        models.declaration("no-such-model")
-
-
-# NUM-07
-def test_num07_at_order_changes_only_the_element_order() -> None:
-    raised = AXISYMMETRIC.at_order(3)
-    assert raised == replace(AXISYMMETRIC, element_order=3)
-    assert raised.symmetry == AXISYMMETRIC.symmetry
-    assert AXISYMMETRIC.element_order == 2

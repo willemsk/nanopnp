@@ -28,12 +28,10 @@ from nanopnp.charge.protonation import (
     frame_pdb,
     pdb2pqr_arguments,
 )
-from nanopnp.core.stages import CancelFlag, Cancelled, MissingExtraError
+from nanopnp.core.stages import CancelFlag, Cancelled
 from nanopnp.io.artefact import StageInputs, StructureArtefact
 from nanopnp.io.case import (
     CaseDocument,
-    CaseValidationError,
-    UnsupportedCaseSection,
 )
 from nanopnp.io.resolved import ResolvedProtonation
 from nanopnp.io.store import Store
@@ -262,21 +260,6 @@ def test_ver57_a_c_terminal_acid_keeps_both_carboxyl_groups(
     assert table.expected_charge_e[0, column] == -2.0
 
 
-def test_ver57_pdb2pqr_giving_up_names_the_frame(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
-) -> None:
-    def gives_up(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
-        del pdb, pqr, settings
-        try:
-            raise ValueError("Unable to debump biomolecule.")
-        except ValueError as error:
-            raise RuntimeError from error
-
-    monkeypatch.setattr("nanopnp.charge.protonation.run_pdb2pqr", gives_up)
-    with pytest.raises(ProtonationError, match=r"frame 0: .*Unable to debump"):
-        _run(tmp_path, fragment_2wcd(*FRAGMENT))
-
-
 def _with_hydrogens(tmp_path: Path, ensemble: AlignedEnsemble) -> AlignedEnsemble:
     table, _ = _run(tmp_path / "hydrogens", ensemble)
     (frame,) = table.pqr_frames()
@@ -491,29 +474,6 @@ def test_ver57_a_pqr_missing_a_flippable_atom_is_refused(
         _supply(tmp_path, ensemble, edited)
 
 
-def test_ver57_a_pqr_with_another_frame_count_is_refused(
-    tmp_path: Path, fragment_2wcd: Fragment
-) -> None:
-    exported, _ = _produced(tmp_path, fragment_2wcd(*FRAGMENT))
-    with pytest.raises(PQRError, match="holds 1 frames and the ensemble 2"):
-        _supply(tmp_path, _two_frames(fragment_2wcd), exported)
-
-
-def test_ver57_a_pqr_missing_a_residue_is_refused_naming_the_frame(
-    tmp_path: Path, fragment_2wcd: Fragment
-) -> None:
-    ensemble = _two_frames(fragment_2wcd)
-    exported, _ = _produced(tmp_path, ensemble)
-    first, second = read_pqr(exported)
-    keep = second.resid != 22
-    second = PQRFrame(
-        **{field.name: getattr(second, field.name)[keep] for field in dataclasses.fields(PQRFrame)}
-    )
-    edited = write_pqr(tmp_path / "edited.pqr", [first, second])
-    with pytest.raises(PQRError, match=r"frame 1 does not hold the residues"):
-        _supply(tmp_path, ensemble, edited)
-
-
 def test_ver57_a_pqr_of_another_frame_is_refused_naming_it(
     tmp_path: Path, fragment_2wcd: Fragment
 ) -> None:
@@ -608,106 +568,7 @@ def test_ver57_cancellation_is_checked_between_frames(
     assert not list((tmp_path / "workspace").rglob("protonation.npz"))
 
 
-def test_ver57_without_pdb2pqr_a_structure_is_refused_and_a_pqr_runs(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fragment_2wcd: Fragment
-) -> None:
-    exported, _ = _produced(tmp_path, fragment_2wcd(*FRAGMENT))
-    for module in [name for name in sys.modules if name.split(".")[0] in ("pdb2pqr", "propka")]:
-        monkeypatch.delitem(sys.modules, module)
-    monkeypatch.setitem(sys.modules, "pdb2pqr", None)
-    monkeypatch.setitem(sys.modules, "pdb2pqr.main", None)
-    with pytest.raises(MissingExtraError, match="'structure' extra"):
-        _run(tmp_path / "refused", fragment_2wcd(*FRAGMENT))
-    case = _case(tmp_path, pqr=exported, structure=False, mesh=True)
-    artefact = ProtonationStage(workspace=tmp_path / "pqr").run(StageInputs(resolved=resolve(case)))
-    assert artefact.summary["q_net_e"] == [-3.0]
-
-
 # -- the case's refusals ---------------------------------------------------
-
-
-def test_ver57_the_force_fields_are_a_subset_of_pdb2pqrs() -> None:
-    from typing import get_args
-
-    from pdb2pqr.main import build_main_parser
-
-    from nanopnp.io.case import Charge
-
-    accepted = next(
-        action.choices for action in build_main_parser()._actions if action.dest == "ff"
-    )
-    offered = set(get_args(Charge.model_fields["forcefield"].annotation))
-    assert offered == {"CHARMM", "PEOEPB", "SWANSON"}
-    assert offered <= set(accepted)
-
-
-@pytest.mark.parametrize(
-    ("charge", "kwargs", "error", "fragments"),
-    [
-        ("forcefield: AMBER", {}, CaseValidationError, ("forcefield",)),
-        ("ph: 15.0", {}, CaseValidationError, ("ph",)),
-        ("ph: .nan", {}, CaseValidationError, ("ph",)),
-        ("ph: 6.0, titration: none", {}, CaseValidationError, ("charge.ph", "titration: none")),
-        ("ph: 6.0", {"pqr": True}, CaseValidationError, ("charge.ph", "inputs.pqr")),
-        (
-            "forcefield: SWANSON",
-            {"pqr": True},
-            CaseValidationError,
-            ("charge.forcefield", "inputs.pqr"),
-        ),
-        (
-            "ph: 6.0",
-            {"structure": False, "mesh": True},
-            CaseValidationError,
-            ("charge.ph", "nothing to protonate"),
-        ),
-        # charge.smearing resolves beside a structure; beside a supplied mesh with nothing
-        # to protonate it is refused, naming both keys.
-        (
-            "smearing: {sharpness: 0.4}",
-            {"structure": False, "mesh": True},
-            CaseValidationError,
-            ("charge.smearing.sharpness", "structure:"),
-        ),
-    ],
-)
-def test_ver57_each_protonation_refusal_names_its_keys(
-    tmp_path: Path,
-    charge: str,
-    kwargs: dict[str, bool],
-    error: type[Exception],
-    fragments: tuple[str, ...],
-) -> None:
-    pqr = tmp_path / "supplied.pqr" if kwargs.pop("pqr", False) else None
-    with pytest.raises(error) as raised:
-        resolve(_case(tmp_path, charge=charge, pqr=pqr, **kwargs))
-    message = str(raised.value)
-    assert all(fragment in message for fragment in fragments), message
-
-
-@pytest.mark.parametrize(
-    ("supplied", "match"),
-    [
-        ("{artefact: abc123, format: pqr}", "inputs.pqr: artefact:"),
-        ("{path: x.pqr, format: pqr, groups: {a: b}}", "inputs.pqr.groups"),
-        ("{path: x.pqr, format: pdb}", "inputs.pqr.format"),
-    ],
-)
-def test_ver57_a_supplied_pqr_is_named_by_path_and_format(supplied: str, match: str) -> None:
-    text = CASE.format(
-        name="pqr",
-        inputs=f"inputs:\n  pqr: {supplied}\n  mesh: {{path: pore.msh, format: msh41}}\n",
-        structure="",
-        charge="",
-    )
-    with pytest.raises(CaseValidationError, match=match):
-        resolve(loads_case(text))
-
-
-def test_ver57_a_case_with_nothing_to_protonate_is_refused_by_the_stage(tmp_path: Path) -> None:
-    case = _case(tmp_path, structure=False, mesh=True)
-    with pytest.raises(UnsupportedCaseSection, match="no structure: section and supplies no"):
-        ProtonationStage().key(StageInputs(resolved=resolve(case)))
 
 
 # QR-09

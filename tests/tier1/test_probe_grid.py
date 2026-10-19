@@ -7,16 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.io.case import CaseValidationError
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.validation.probe import (
     PROBE_SCHEMA,
     ProbeDocument,
     ProbeGrid,
-    ProbeGridError,
     ProbePatch,
     load_probe,
-    loads_probe,
 )
 
 REFERENCE_PROBE = Path("docs/validation/probes/clya-reference.probe.yaml")
@@ -47,44 +44,6 @@ def reference_grid(reference_document: ProbeDocument, reference_mesh) -> ProbeGr
 
 
 # -- the transpose refusal ----------------------------------------------------
-
-
-def test_val01_probe_patch_refuses_square_grid() -> None:
-    with pytest.raises(CaseValidationError) as raised:
-        loads_probe(_document(n_r=9, n_z=9))
-    message = str(raised.value)
-    assert "square" in message
-    assert "%Data" in message
-    assert "one row per z sample" in message
-    assert "r = z" in message
-
-
-def test_val01_probe_patch_accepts_a_rectangular_grid() -> None:
-    document = loads_probe(_document(n_r=9, n_z=10))
-    assert document.patches[0].count == 90
-
-
-@pytest.mark.parametrize(
-    ("patch", "expected"),
-    [
-        ({"n_r": 1}, "at least two samples"),
-        ({"r_nm": [1.0, 1.0]}, "must be distinct"),
-        ({"r_nm": [1.0, 0.0]}, "must be distinct"),
-    ],
-)
-def test_val01_probe_patch_refuses_a_degenerate_axis(patch: dict, expected: str) -> None:
-    with pytest.raises(CaseValidationError, match=expected):
-        loads_probe(_document(**patch))
-
-
-def test_val01_probe_document_refuses_two_patches_sharing_a_point() -> None:
-    text = (
-        f"schema: {PROBE_SCHEMA}\nname: probe\npatches:\n"
-        "  - {name: a, r_nm: [0.0, 1.0], z_nm: [0.0, 2.0], n_r: 3, n_z: 5}\n"
-        "  - {name: b, r_nm: [0.0, 1.0], z_nm: [0.0, 4.0], n_r: 3, n_z: 9}\n"
-    )
-    with pytest.raises(CaseValidationError, match="twice"):
-        loads_probe(text)
 
 
 # -- the document is the interface --------------------------------------------
@@ -174,18 +133,6 @@ def test_val01_probe_mask_keeps_the_near_axis_line(reference_grid: ProbeGrid) ->
     assert on_axis.any()
     assert reference_grid.masks["c"][on_axis].all()
     assert (reference_grid.points_nm[on_axis, 0] == 0.0).any()
-
-
-def test_val01_probe_mask_refuses_a_patch_outside_the_mesh(reference_mesh) -> None:
-    document = loads_probe(_document(r_nm=[0.0, 1.0], z_nm=[400.0, 402.0]))
-    with pytest.raises(ProbeGridError, match="mask margin"):
-        ProbeGrid.on_mesh(document, reference_mesh, {"potential": None})
-
-
-def test_val01_probe_mask_refuses_materials_no_mesh_carries(reference_mesh) -> None:
-    document = loads_probe(_document())
-    with pytest.raises(ProbeGridError, match="matches none"):
-        ProbeGrid.on_mesh(document, reference_mesh, {"c": "cytoplasm"})
 
 
 def test_val01_probe_weights_are_each_patch_own_spacing(

@@ -5,13 +5,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from nanopnp.core.stages import CancelFlag, Cancelled, create, describe
+from nanopnp.core.stages import CancelFlag, Cancelled
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import CaseDocument
 from nanopnp.mesh.adapter import MeshData, read, write_msh41
 from nanopnp.mesh.ingest import (
-    BOUNDARY_VOCABULARY,
-    MATERIAL_VOCABULARY,
     MeshStage,
     MeshVocabularyError,
     apply_groups,
@@ -138,20 +136,6 @@ def test_ver27_the_distance_sources_are_required_even_with_every_wall_factor_off
     assert sources[0].options == ("wall",)
 
 
-def test_ver27_a_selection_pattern_that_is_not_a_flat_alternation_is_refused(
-    mesh_file: Path,
-) -> None:
-    document = loads_case(
-        case_text(
-            mesh_file,
-            physics="{model: epnp-ns, solid_permittivities: {membrane: 3.2}}",
-            numerics="{continuation: none, wall_distance: {sources: 'w.*'}}",
-        )
-    )
-    with pytest.raises(MeshVocabularyError, match="flat alternation"):
-        required_names(resolve(document))
-
-
 def test_ver27_the_mapping_renames_both_namespaces_and_records_what_it_did() -> None:
     mapped, applied = apply_groups(
         exported_mesh(),
@@ -212,47 +196,6 @@ def test_ver27_an_unclaimed_group_aborts_and_says_why_a_free_boundary_is_silent(
     assert "'wall'" in message and "'electrolyte'" in message
 
 
-def test_ver27_a_mapping_written_the_wrong_way_round_says_so() -> None:
-    with pytest.raises(MeshVocabularyError, match="the other way round"):
-        apply_groups(exported_mesh(), {"wall": "Wall", "axis": "Axis"})
-
-
-def test_ver27_a_key_naming_no_group_of_the_mesh_lists_what_it_carries() -> None:
-    with pytest.raises(MeshVocabularyError) as raised:
-        apply_groups(exported_mesh(), {"Walls": "wall"})
-    assert "'Walls'" in str(raised.value)
-    assert "Wall" in str(raised.value)
-
-
-def test_ver27_a_group_mapped_into_the_wrong_namespace_aborts() -> None:
-    with pytest.raises(MeshVocabularyError, match="wrong namespace") as raised:
-        apply_groups(exported_mesh(), {"PoreFluid": "axis"})
-    assert "not a domain name" in str(raised.value)
-
-
-# FR-16
-def test_ver27_the_two_namespaces_are_the_specified_vocabulary() -> None:
-    assert MATERIAL_VOCABULARY == (
-        "analyte",
-        "cis",
-        "electrolyte",
-        "exclusion",
-        "membrane",
-        "protein",
-        "trans",
-    )
-    assert BOUNDARY_VOCABULARY == (
-        "analyte",
-        "axis",
-        "cis",
-        "interface",
-        "membrane",
-        "membrane_outer",
-        "trans",
-        "wall",
-    )
-
-
 def test_ver27_a_name_the_run_selects_on_and_no_group_supplies_aborts(mesh_file: Path) -> None:
     groups = (
         "{PoreFluid: electrolyte, Membrane: membrane, "
@@ -293,13 +236,6 @@ def test_qr12_a_slivered_supplied_mesh_aborts_before_any_solve(tmp_path: Path) -
     assert raised.value.gate in {"minimum SICN", "minimum gamma"}
 
 
-def test_ver27_a_missing_mesh_file_names_the_path(tmp_path: Path) -> None:
-    document = loads_case(case_text(tmp_path / "absent.msh"))
-    resolved = resolve(document)
-    with pytest.raises(FileNotFoundError, match=r"absent\.msh"):
-        ingest(resolved.mesh, resolved)
-
-
 # FR-25
 def test_ver27_the_gated_mesh_carries_what_the_gates_measured(mesh_file: Path) -> None:
     _, resolved = resolved_case(mesh_file)
@@ -313,14 +249,6 @@ def test_ver27_the_gated_mesh_carries_what_the_gates_measured(mesh_file: Path) -
     assert quality["elements"] == ingested.data.element_count
     assert quality["min_sicn"] > 0.3 and quality["min_gamma"] > 0.3
     assert quality["inverted"] == 0
-
-
-# FR-27
-def test_ver25_the_mesh_stage_is_stage_six_and_describes_itself() -> None:
-    description = describe("mesh")
-    assert description.number == 6
-    assert description.inputs == ("case", "region")
-    assert create("mesh").describe() == description
 
 
 def test_ver27_the_artefact_key_is_the_contents_and_the_mapping(

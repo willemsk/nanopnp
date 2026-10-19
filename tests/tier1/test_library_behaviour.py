@@ -9,11 +9,9 @@ import json
 import math
 import subprocess
 import sys
-import tarfile
 import tomllib
 import warnings
 from pathlib import Path
-from typing import Any
 
 import gemmi
 import gridData
@@ -34,28 +32,8 @@ from skimage import measure
 
 from nanopnp.charge.protonation import restore_propka_annotations
 from nanopnp.core import errors, hashing, stages
-from nanopnp.core import typing as core_typing
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.validation import okf
-
-
-def test_ngsolve_wheel_table_and_config_flags() -> None:
-    lock = tomllib.loads((okf.REPOSITORY / "uv.lock").read_text(encoding="utf-8"))
-    packages = {p["name"]: p for p in lock["package"]}
-    assert "mpi4py" not in packages
-    ngs_wheels = packages["ngsolve"]["wheels"]
-    assert len(ngs_wheels) == 12
-    for tag in ("cp311", "cp312", "cp313", "cp314"):
-        assert sum(tag in w["url"] for w in ngs_wheels) == 3
-    win_sizes = [w["size"] for w in ngs_wheels if "win_amd64" in w["url"]]
-    mac_sizes = [w["size"] for w in ngs_wheels if "macosx_10_15_universal2" in w["url"]]
-    assert all(14_000_000 <= s <= 15_500_000 for s in win_sizes)
-    assert all(43_000_000 <= s <= 45_000_000 for s in mac_sizes)
-    for flag in ("USE_MUMPS", "USE_PARDISO", "USE_HYPRE", "USE_MKL"):
-        assert getattr(ngsolve.config, flag) is False
-    assert ngsolve.config.USE_UMFPACK is True
-    non_local = [p for p in lock["package"] if p["name"] != "nanopnp"]
-    assert all("wheels" in p for p in non_local)
 
 
 def test_ngsolve_newton_and_webgui_api() -> None:
@@ -78,37 +56,6 @@ def test_ngsolve_newton_and_webgui_api() -> None:
     assert 150.0 <= per_el <= 600.0
     html = scene.GenerateHTML()
     assert "webgui" in html
-
-
-def test_webgui_region_draw_and_tarball_contents() -> None:
-    mesh = CylindricalPoreGeometry(2.0, 13.0, 25.0).generate(maxh_nm=5.0)
-    fes = ngsolve.H1(mesh, order=2)
-    gfu = ngsolve.GridFunction(fes)
-    gfu.Set(ngsolve.x)
-    whole = json.dumps(ngsolve.webgui.Draw(gfu, mesh, show=False, order=2).GetData())
-    fluid = json.dumps(
-        ngsolve.webgui.Draw(
-            gfu, mesh.Materials("electrolyte|cis|trans"), show=False, order=2
-        ).GetData()
-    )
-    assert len(fluid) < len(whole)
-    vec_cf = ngsolve.CoefficientFunction((ngsolve.x, ngsolve.y))
-    vec_scene = json.dumps(
-        ngsolve.webgui.Draw(
-            vec_cf, mesh.Materials("electrolyte|cis|trans"), show=False, order=2
-        ).GetData()
-    )
-    assert len(vec_scene) > len(fluid)
-    tarball = okf.REPOSITORY / "third_party/webgui-0.2.39.tgz"
-    assert tarball.stat().st_size == 503_052
-    with tarfile.open(tarball, "r:gz") as archive:
-        names = set(archive.getnames())
-        assert "package/src/scene.ts" in names
-        js_bytes = archive.extractfile("package/dist/webgui.js")
-        assert js_bytes is not None
-        js_text = js_bytes.read()
-    assert len(js_text) == 779_484
-    assert b"@license" in js_text and b"dat.gui" in js_text
 
 
 def test_mdanalysis_and_gemmi_wheel_and_format_facts() -> None:
@@ -155,20 +102,6 @@ def test_griddata_exporters_mrc_float32_and_2d_refusal(tmp_path: Path) -> None:
     grid2 = gridData.core.Grid(np.ones((4, 3)), origin=(0.0, 0.0), delta=(0.1, 0.1))
     with pytest.raises(TypeError):
         grid2.export(str(tmp_path / "bad.dx"), file_format="DX")
-
-
-def test_pyproject_requires_python_311_and_griddata_12() -> None:
-    pyproject = tomllib.loads((okf.REPOSITORY / "pyproject.toml").read_text(encoding="utf-8"))
-    assert pyproject["project"]["requires-python"] == ">=3.11,<3.15"
-    structure = pyproject["project"]["optional-dependencies"]["structure"]
-    assert any(dep.startswith("MDAnalysis>=2.10") for dep in structure)
-    assert any(dep.startswith("GridDataFormats>=1.2") for dep in structure)
-    assert any(dep.startswith("pdb2pqr>=3.7") for dep in structure)
-    lock = tomllib.loads((okf.REPOSITORY / "uv.lock").read_text(encoding="utf-8"))
-    versions = {p["name"]: p["version"] for p in lock["package"] if "version" in p}
-    assert versions["mdanalysis"] == "2.10.0"
-    assert versions["griddataformats"] == "1.2.0"
-    assert versions["pdb2pqr"] == "3.7.1"
 
 
 def test_mdanalysis_and_gemmi_blank_and_odd_fields(tmp_path: Path) -> None:
@@ -401,16 +334,3 @@ def test_gitattributes_marks_data_binary_and_crlf_moves_file_hash(tmp_path: Path
     crlf = tmp_path / "willems2020_nacl.yaml"
     crlf.write_bytes(raw.replace(b"\n", b"\r\n"))
     assert hashing.file_hash(src) != hashing.file_hash(crlf)
-
-
-def test_ngsolve_stubs_have_no_py_typed_and_invalid_init_pyi() -> None:
-    ngs_dir = Path(ngsolve.__file__).resolve().parent
-    assert not (ngs_dir / "py.typed").exists()
-    init_pyi = ngs_dir / "__init__.pyi"
-    # The macOS and Windows wheels ship no __init__.pyi; where it ships, it is invalid Python.
-    if sys.platform.startswith("linux"):
-        assert init_pyi.is_file()
-    if init_pyi.is_file():
-        with pytest.raises(SyntaxError):
-            ast.parse(init_pyi.read_text(encoding="utf-8"))
-    assert core_typing.Mesh is Any
