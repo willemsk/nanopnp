@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -135,6 +135,8 @@ class RungOutcome:
         Provenance the ladder gates on; rungs that differ in any are not comparable.
     stabilisation_currents_A
         Per-species stabilisation contribution from this run alone, beside the deltas.
+    zero_reference
+        Our value of each quantity whose golden value is exactly zero, which has no relative error.
     """
 
     rung: Rung
@@ -144,6 +146,7 @@ class RungOutcome:
     fields: tuple[FieldComparison, ...]
     quantities: tuple[QoIComparison, ...]
     stabilisation_currents_A: Mapping[str, float] | None = None
+    zero_reference: Mapping[str, float] = field(default_factory=dict)
 
     def field_errors(self) -> dict[str, float]:
         """Return ``rel_L2_r`` per field."""
@@ -171,6 +174,7 @@ class RungOutcome:
                 if self.stabilisation_currents_A is None
                 else dict(self.stabilisation_currents_A)
             ),
+            "zero_reference": dict(self.zero_reference),
         }
 
 
@@ -253,6 +257,8 @@ class AttributionReport:
         ``"comsol"`` or ``"self"``; a self-golden tests the machinery only.
     unavailable_fields, unavailable_quantities
         What the golden did not carry, reported rather than skipped.
+    zero_reference_quantities
+        Our value of each quantity whose golden value is exactly zero.
     """
 
     case: str
@@ -265,6 +271,7 @@ class AttributionReport:
     attributions: tuple[Attribution, ...]
     unavailable_fields: tuple[str, ...] = ()
     unavailable_quantities: tuple[str, ...] = ()
+    zero_reference_quantities: Mapping[str, float] = field(default_factory=dict)
 
     def attribution(self, key: str) -> Attribution:
         """Return one key's attribution.
@@ -322,6 +329,7 @@ class AttributionReport:
             "attributions": [entry.summary() for entry in self.attributions],
             "unavailable_fields": list(self.unavailable_fields),
             "unavailable_quantities": list(self.unavailable_quantities),
+            "zero_reference_quantities": dict(self.zero_reference_quantities),
         }
 
     def markdown(self) -> str:
@@ -397,6 +405,18 @@ class AttributionReport:
                 "- fields: " + (", ".join(f"`{name}`" for name in self.unavailable_fields) or "—"),
                 "- quantities: "
                 + (", ".join(f"`{name}`" for name in self.unavailable_quantities) or "—"),
+            ]
+        if self.zero_reference_quantities:
+            lines += [
+                "",
+                "## Zero reference",
+                "",
+                "Golden is zero; relative error undefined. Our absolute value is shown.",
+                "",
+                *(
+                    f"- `{name}`: ours {value:.4e}, golden 0"
+                    for name, value in sorted(self.zero_reference_quantities.items())
+                ),
             ]
         return "\n".join(lines) + "\n"
 
@@ -525,8 +545,11 @@ def attribute(
             sorted(outcomes[0].field_errors()) if sampled_fields is None else sampled_fields
         ),
         unavailable_quantities=tuple(
-            name for name in COMPARED_QUANTITIES if name not in outcomes[0].quantity_errors()
+            name
+            for name in COMPARED_QUANTITIES
+            if name not in outcomes[0].quantity_errors() and name not in outcomes[0].zero_reference
         ),
+        zero_reference_quantities=dict(outcomes[0].zero_reference),
     )
     report.check_identity()
     return report

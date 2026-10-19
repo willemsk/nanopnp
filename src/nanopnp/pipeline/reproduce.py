@@ -303,7 +303,9 @@ def reproduce(
     if not case_path.is_file():
         raise ReproductionError(f"{case_path} is not there; this is not a run directory")
     embedded = manifest.get("case")
-    if isinstance(embedded, dict) and case_path.read_text(encoding="utf-8") != embedded.get("text"):
+    if isinstance(embedded, dict) and case_path.read_bytes().decode("utf-8") != embedded.get(
+        "text"
+    ):
         raise ReproductionError(
             f"{case_path} differs from the case text embedded in {manifest_path}. They are written "
             "from one string, so one of them has been edited since the run"

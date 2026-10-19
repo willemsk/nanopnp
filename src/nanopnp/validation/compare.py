@@ -31,6 +31,7 @@ __all__ = [
     "probe_domains",
     "sample_on_probe",
     "unavailable_quantities",
+    "zero_reference_quantities",
 ]
 
 PRESSURE_FIELD = "pressure"
@@ -328,7 +329,11 @@ def field_error(
         points=int(keep.sum()),
         rel_L2_r=_relative(difference, reference, radial),
         rel_l2=_relative(difference, reference, None),
-        max_abs_rel=float(np.max(np.abs(difference)) / scale) if scale > 0.0 else 0.0,
+        max_abs_rel=(
+            float(np.max(np.abs(difference)) / scale)
+            if scale > 0.0
+            else (float("inf") if np.any(difference) else 0.0)
+        ),
         max_at_nm=(float(location[0]), float(location[1])),
         gauge_removed=gauge,
     )
@@ -361,6 +366,17 @@ def _relative(difference: np.ndarray, reference: np.ndarray, weights: np.ndarray
     if bottom <= 0.0:
         return 0.0 if top <= 0.0 else float("inf")
     return float(np.sqrt(top / bottom))
+
+
+def zero_reference_quantities(
+    ours: Mapping[str, object], golden: GoldenQuantities
+) -> tuple[str, ...]:
+    """Return the ``COMPARED_QUANTITIES`` whose golden is exactly zero."""
+    return tuple(
+        name
+        for name in COMPARED_QUANTITIES
+        if ours.get(name) is not None and getattr(golden, name, None) == 0.0
+    )
 
 
 def unavailable_quantities(ours: Mapping[str, object], golden: GoldenQuantities) -> tuple[str, ...]:

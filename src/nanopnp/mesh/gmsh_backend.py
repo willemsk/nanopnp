@@ -107,7 +107,9 @@ def _session(options: Mapping[str, float]) -> Iterator[None]:
         else:
             previous_model = gmsh.model.getCurrent()
             undo.append(lambda: gmsh.model.setCurrent(previous_model))
-            saved.update({name: gmsh.option.getNumber(name) for name in options})
+            saved.update(
+                {name: gmsh.option.getNumber(name) for name in options if name not in saved}
+            )
         for name, value in options.items():
             gmsh.option.setNumber(name, value)
         gmsh.model.add(f"nanopnp-region-{next(_MODEL_IDS)}")

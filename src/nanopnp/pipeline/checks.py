@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 import math
 from collections.abc import Callable
 from pathlib import Path
@@ -40,6 +41,7 @@ from nanopnp.io.case_paths import (
 from nanopnp.io.resolved import contour_spacing_nm
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.materials.models import PropertyKind, applies_part
+from nanopnp.mesh.ingest import FLUID_MATERIALS, MATERIAL_VOCABULARY
 from nanopnp.mesh.meshers import registered_meshers
 from nanopnp.numerics.linear import registered_solvers, rejection
 from nanopnp.physics.models import (
@@ -332,6 +334,7 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     # Read from the model's declaration, never from its name (section 5.4.3
     # NOTE): the switch check first, because a case the model cannot pose is a
     # more precise diagnostic than one about how to continue it.
+    _check_solid_permittivity_keys(document)
     _check_physics_switches(document)
     _check_unread(document)
     _check_correction_parts(document)
@@ -597,6 +600,24 @@ def _honouring(switch: str, value: bool) -> str:
 
 def _accepting(coefficient: str) -> str:
     return _admitting(lambda other: coefficient in declaration(other).coefficients)
+
+
+def _check_solid_permittivity_keys(document: CaseDocument) -> None:
+    for name in document.physics.solid_permittivities:
+        if name in FLUID_MATERIALS:
+            raise CaseValidationError(
+                f"physics.solid_permittivities names the fluid domain {name!r}. A constant "
+                "there replaces the concentration-dependent eps_r,f in the electrolyte with "
+                "nothing to say so (PHY-03, PHY-20)"
+            )
+        if name not in MATERIAL_VOCABULARY:
+            close = difflib.get_close_matches(name, MATERIAL_VOCABULARY, n=1)
+            hint = f"; did you mean {close[0]!r}?" if close else ""
+            solids = sorted(set(MATERIAL_VOCABULARY) - FLUID_MATERIALS)
+            raise CaseValidationError(
+                f"physics.solid_permittivities names {name!r}, which is not a material of the "
+                f"vocabulary; the solids are {solids}{hint}"
+            )
 
 
 def _check_physics_switches(document: CaseDocument) -> None:

@@ -16,7 +16,7 @@ from nanopnp.io.vocabulary import (
     VELOCITY,
 )
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
-from nanopnp.physics.models import ModelSolution
+from nanopnp.physics.models import ModelSolution, concentration_field_name, transport_model
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -257,6 +257,8 @@ def export_fields(
     relative_permittivity
         ``eps_r`` as the form used it, if buildable; written cell-centred.
     """
+    import numpy as np
+
     directory.mkdir(parents=True, exist_ok=True)
     mesh = solution.space.mesh
     model = solution.model
@@ -268,6 +270,13 @@ def export_fields(
     carriers: dict[tuple[int, int], FESpace] = {}
     whole: dict[str, np.ndarray] = {}
     restricted: dict[str, np.ndarray] = {}
+    # The NUM-02 branch solves ln c. Its nodal values are exponentiated after sampling: sampling
+    # exp(ln c) through a carrier projects it and does not reproduce c at the nodes.
+    log_concentrations = (
+        {concentration_field_name(species) for species in model.species}
+        if model.species and transport_model(model).log_variables
+        else set()
+    )
     for field in model.fields:
         if field.element == "number":
             continue
@@ -280,7 +289,10 @@ def export_fields(
             dimension=2 if field.element == "vector_h1" else 1,
             materials=field.domain,
             carriers=carriers,
-        ) * field_scale(field.name, scales)
+        )
+        if field.name in log_concentrations:
+            values = np.exp(values)
+        values = values * field_scale(field.name, scales)
         target = whole if field.domain is None else restricted
         target[name] = _as_vector(values) if field.element == "vector_h1" else values[:, 0]
 

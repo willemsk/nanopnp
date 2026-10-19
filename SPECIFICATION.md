@@ -2058,7 +2058,10 @@ the quantity comparison, which is the assertion that matters.
 #### 5.3.3 Provenance manifest
 
 Emitted with every result artefact (FR-25, IF-08) and sufficient alone to reconstruct the run
-(QR-08).
+(QR-08). The run directory holding it is `runs/<name>-<short hash>`, the hash covering the case
+hash and the sha256 of every recorded input file, so an input regenerated at the same path yields a
+new directory rather than overwriting the earlier run. The directory's `case.yaml` is the source
+case file's bytes, verbatim.
 
 | Field group | Contents |
 |---|---|

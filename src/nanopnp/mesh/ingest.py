@@ -33,7 +33,7 @@ from nanopnp.mesh.primitives import (
     ELECTROLYTE_DOMAINS,
     PERMITTIVITY_EXEMPT,
 )
-from nanopnp.mesh.quality import QualityReport, check_quality, check_radii, element_quality
+from nanopnp.mesh.quality import QualityReport, check_quality, check_radii
 from nanopnp.mesh.sizing import SIZES, resolve_wall_size
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -374,6 +374,15 @@ def check_solid_permittivities(
     MeshVocabularyError
         Naming every solid material with no entry, or the model and its solid domains.
     """
+    fluid = sorted(name for name in solid_permittivities if name in FLUID_MATERIALS)
+    if fluid:
+        raise MeshVocabularyError(
+            f"{where}: physics.solid_permittivities names the fluid "
+            f"{'domains' if len(fluid) > 1 else 'domain'} "
+            f"{', '.join(repr(name) for name in fluid)}. "
+            "A constant there replaces the concentration-dependent eps_r,f in the electrolyte "
+            "with nothing to say so (PHY-03, PHY-20)"
+        )
     if not solids:
         present = sorted(name for name in data.materials if name not in FLUID_MATERIALS)
         if present:
@@ -494,8 +503,7 @@ def ingest(supplied: SuppliedArtefact, resolved: ResolvedCase) -> IngestedMesh:
         solids=resolved.declaration.solids,
     )
 
-    quality = element_quality(mapped)
-    check_quality(mapped, where=where)
+    quality = check_quality(mapped, where=where)
     check_radii(mapped, where=where)
 
     logger.info(

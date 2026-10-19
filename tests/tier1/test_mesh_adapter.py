@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import ngsolve as ngs
 import numpy as np
 import pytest
 
@@ -262,3 +263,25 @@ def test_if06_a_generated_mesh_survives_the_archival_format(tmp_path: Path) -> N
     back = read(write_msh41(mesh, tmp_path / "slab.msh"))
     assert_same_mesh(mesh, back)
     assert back.element_count == mesh.element_count
+
+
+def test_a_reversed_boundary_segment_does_not_flip_the_normal() -> None:
+    vertices = np.array([[0, 0], [1, 0], [1, 1], [0, 1], [1, 0.5]], dtype=float)
+    triangles = np.array([[0, 1, 4], [0, 4, 2], [0, 2, 3]])
+    reversed_segment = np.array([[0, 1], [4, 1], [4, 2], [2, 3], [3, 0]])
+    data = MeshData(
+        vertices,
+        triangles,
+        np.zeros(3, dtype=np.int64),
+        ("electrolyte",),
+        reversed_segment,
+        np.array([0, 1, 1, 0, 0]),
+        ("other", "right"),
+    )
+    mesh = to_ngsolve(data)
+    normal = ngs.specialcf.normal(2)
+    right = mesh.Boundaries("right")
+    lower = ngs.Integrate(normal[0] * ngs.IfPos(0.5 - ngs.y, 1, 0), mesh, definedon=right)
+    upper = ngs.Integrate(normal[0] * ngs.IfPos(ngs.y - 0.5, 1, 0), mesh, definedon=right)
+    assert lower == pytest.approx(0.5)
+    assert upper == pytest.approx(0.5)

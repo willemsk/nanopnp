@@ -6,7 +6,7 @@ import difflib
 import itertools
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, TypeAlias, get_args
+from typing import Annotated, Any, Literal, TypeAlias, get_args
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -399,7 +399,9 @@ class PhysicsSpec(_Strict):
     variable_density: bool = True
     inertia: bool = True
     dielectric_gradient_forces: bool = False
-    solid_permittivities: dict[str, float] = Field(default_factory=dict)
+    solid_permittivities: dict[str, Annotated[float, Field(gt=0.0, allow_inf_nan=False)]] = Field(
+        default_factory=dict
+    )
 
 
 class ElementsSpec(_Strict):
@@ -428,8 +430,8 @@ class NonlinearSpec(_Strict):
 
     strategy: Literal["newton", "hybrid"] = "newton"
     damping: Literal["residual", "backtracking"] = "residual"
-    max_iter: int = 100
-    rtol: float = 1.0e-6
+    max_iter: int = Field(default=100, ge=1)
+    rtol: float = Field(default=1.0e-6, gt=0.0, lt=1.0, allow_inf_nan=False)
 
 
 class LinearSpec(_Strict):
