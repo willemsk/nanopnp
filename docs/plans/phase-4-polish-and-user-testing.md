@@ -894,6 +894,9 @@ tests that remain. It claims no new identifier. Tag `v0.5.0-alpha.16`.
 
 ### User-testing protocol — Provisional
 
+> **Planned, 19 October 2026** ([plan](wp51-user-testing-protocol.md)): five sessions, VER-69 on
+> VER-46's runner, nightly.
+
 It waits on the OKF backfill. It writes:
 
 - `docs/user-testing/protocol.md`, the protocol;
