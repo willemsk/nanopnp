@@ -1182,9 +1182,9 @@ which CI's `docs` job runs on every push, imports `navigation` and `splice_navig
 `tests/tier1/test_layering.py` (VER-61, a kept guard) imports `REPOSITORY` and `parse_log` from
 `validation/findings.py`.
 
-**Open.** The author decides whether each earns its keep or is deleted; recommendation: delete the
-checks of the OKF bundle (`check_*`, `pending_counts`, `named_tests`) and of the findings-log
-format, and keep the navigation helpers, `REPOSITORY` and `parse_log` the callers above need.
+**Fixed** (author's ruling, WP50 review). The checks of the OKF bundle and of the findings-log format
+are deleted; `validation/okf.py` keeps the navigation helpers and `REPOSITORY`, and
+`validation/findings.py` keeps `parse_log` and its types.
 
 ## REV-118: Gate and mechanism tests the pruning removed
 
@@ -1199,6 +1199,5 @@ remain deleted:
   stop a wrong quantity reaching the charge or dielectric;
 - the manifest tests that every manifest carries the eight §5.3.3 groups, each absent group with a reason.
 
-**Open.** The author decides whether each is restored; recommendation: restore all three, as numerical
-gates and a core mechanism, in a follow-up commit. VER-76's row also still specifies checks whose
-test file was deleted whole; mark it "verified at review" as VER-45 is, or restore the file.
+**Fixed** (author's ruling, WP50 review). All three groups are restored in `test_case_leaves.py`,
+`test_charge_fields.py` and `test_manifest.py`, and `test_case_json_schema.py` (VER-76) is restored whole.

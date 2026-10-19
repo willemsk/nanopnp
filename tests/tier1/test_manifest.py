@@ -39,7 +39,7 @@ from nanopnp.io.defaults import (
     deviations,
     value_at,
 )
-from nanopnp.io.manifest import build, read
+from nanopnp.io.manifest import GROUPS, MANIFEST_SCHEMA, build, read
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
 from nanopnp.pipeline.case import loads_case, resolve
@@ -435,3 +435,21 @@ def test_ver24_resolve_refuses_an_operating_point_no_solve_could_use(
     setattr(target, leaf, value)
     with pytest.raises(CaseValidationError, match=re.escape(path)):
         resolve(document)
+
+
+def test_ver24_the_manifest_carries_all_eight_groups_of_section_5_3_3() -> None:
+    document = loads_case(MINIMAL)
+    written = _manifest(document).document()
+    for group in GROUPS:
+        assert group in written, f"the manifest omits the {group!r} group"
+    assert written["schema"] == MANIFEST_SCHEMA
+
+
+def test_ver24_a_group_no_stage_produced_names_the_reason() -> None:
+    document = loads_case(MINIMAL)
+    written = _manifest(document).document()
+    for group in ("geometry_and_mesh", "charge", "materials"):
+        block = written[group]
+        assert isinstance(block, dict)
+        assert block["status"] == "not run"
+        assert block["reason"]

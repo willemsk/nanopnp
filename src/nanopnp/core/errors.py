@@ -152,8 +152,8 @@ EXCLUDED: Final[dict[str, str]] = {
         "a broken bundle is a packaging defect rather than a case, gate or convergence class"
     ),
     "nanopnp.validation.findings:LogFormatError": (
-        "raised only by the VER-63 findings-log check, which catches it and returns it as one of "
-        "the log's errors; no command of the CLI reads a findings log"
+        "raised only when the VER-61 guard reads a malformed findings log; "
+        "no command of the CLI reads a findings log"
     ),
     "nanopnp.validation.stability:FoldError": (
         "raised only when the VER-62 golden's merge script folds a recorded walk in; no command "

@@ -15,6 +15,7 @@ from nanopnp.charge.fields import (
     ChargeFieldError,
     ConservationReport,
     FieldDocument,
+    FieldDocumentError,
     FormSpec,
     check_conservation,
     conservation,
@@ -402,3 +403,47 @@ def test_ver29_the_charge_grid_key_names_the_lattice_record_so_an_axes_only_entr
     assert parameters["lattice_record"] == LATTICE_RECORD
     moved = ChargeGridArtefact(parameters=parameters, protonation_hash="p")
     assert moved.hash != ChargeGridArtefact(parameters=legacy, protonation_hash="p").hash
+
+
+def test_ver29_a_non_uniform_axis_is_refused_rather_than_resampled():
+    with pytest.raises(GridFormatError, match="not uniformly ascending"):
+        RadialGrid.from_axes(np.array([0.0, 1.0, 3.0]), np.array([0.0, 1.0]), np.zeros((2, 3)))
+
+
+def test_ver30_an_absolute_permittivity_field_is_refused_naming_the_blend():
+    with pytest.raises(ValueError, match=r"eps_r,f\^c|concentration dependence"):
+        _document(_ring(), quantity="relative_permittivity", units="1")
+
+
+def test_ver29_units_are_checked_against_the_quantity_they_belong_to():
+    with pytest.raises(ValueError, match="do not belong to quantity"):
+        _document(_ring(), units="C/m^3")
+
+
+@pytest.mark.parametrize("key", ["q_net_e", "axis_cutoff_nm"])
+@pytest.mark.parametrize("value", [math.nan, math.inf])
+def test_ver29_a_header_value_that_is_not_finite_is_refused(key, value):
+    with pytest.raises(ValueError, match=key):
+        _document(_ring(), **{key: value})
+
+
+def test_ver29_a_declared_grid_descriptor_is_checked_against_the_data(tmp_path):
+    grid = RadialGrid.from_axes(np.array([0.0, 1.0]), np.array([0.0, 1.0]), np.zeros((2, 2)))
+    write_grid(grid, tmp_path / "ring.npz")
+    (tmp_path / "field.yaml").write_text(
+        "schema: nanopnp/field/v0.5\n"
+        "name: ring\n"
+        "quantity: solid_fraction\n"
+        "units: '1'\n"
+        "provenance: {source: analytic}\n"
+        "data: {path: ring.npz}\n"
+        "grid: {origin_nm: [0.0, 0.0], spacing_nm: [1.0, 1.0], shape: [3, 3]}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(FieldDocumentError, match=r"shape \[3, 3\]"):
+        load_field(tmp_path / "field.yaml")
+
+
+def test_ver29_a_solid_fraction_is_refused_as_a_fixed_charge():
+    with pytest.raises(FieldDocumentError, match=r"inputs\.eps_r"):
+        _field(_ring(), quantity="solid_fraction", units="1")

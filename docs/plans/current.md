@@ -20,7 +20,7 @@ keep it so until the browser page needs a command.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 to §8.2.13). WP35 to WP50 are delivered ([WP50](wp50-test-scope.md));
   tags to `v0.5.0-alpha.16` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
-- **Amended 18 October 2026** (§8.2.13): WP50, the test scope, is **delivered** (REV-117 open).
+- **Amended 18 October 2026** (§8.2.13): WP50, the test scope, is **delivered** (REV-117, REV-118 fixed in its review).
   Next: WP51 (protocol; the author's sessions; fixes from WP52).
 
 ## Not to be re-decided
