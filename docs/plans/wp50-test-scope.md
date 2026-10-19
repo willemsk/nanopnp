@@ -50,24 +50,24 @@ and 7 before they are committed.
 
 ### Work items
 
-- [ ] 1. The rule: `CLAUDE.md` (*Testing*, *Commands*, the gate paragraph, *Durable learnings*),
+- [x] 1. The rule: `CLAUDE.md` (*Testing*, *Commands*, the gate paragraph, *Durable learnings*),
   `.claude/rules/python.md`, `CONTRIBUTING.md`, `tests/README.md`, `.github/pull_request_template.md`.
   The deleting-a-test sentence becomes "deleting a test outside the test scope is allowed" (N1, N5);
   done when no file instructs a test per item, per identifier or per changed line.
-- [ ] 2. The skills: `wp-plan`, `wp-implement`, `phase-plan`, `steward`, and `wp-ship`, which gains
+- [x] 2. The skills: `wp-plan`, `wp-implement`, `phase-plan`, `steward`, and `wp-ship`, which gains
   N5's reviewer step before `/code-review` and one sentence in the review's args (N5); done when the
   skills name N1 and no longer name diff-cover or a VER-per-test check.
-- [ ] 3. CI and the gate (D3, D5): `.github/workflows/ci.yml` (drop `coverage`, its `ci-result` input
+- [x] 3. CI and the gate (D3, D5): `.github/workflows/ci.yml` (drop `coverage`, its `ci-result` input
   and the PR shards' `--cov`; the nightly issue step), `.github/actions/tier12/`, `release.yml`'s
   selection, `.github/scripts/prose-only.sh` (Markdown is prose again, `docs/` keeps the docs build),
   `.claude/hooks/gate.sh`, `pyproject.toml`, `uv lock`, `tests/conftest.py`; done when
   `uv run pytest` and `uv run pytest --nightly --collect-only` collect, and `gate.sh run` passes.
-- [ ] 4. The specification (D6): §7.1 to §7.3, §7.6's table and NOTEs (the coverage NOTE deleted),
+- [x] 4. The specification (D6): §7.1 to §7.3, §7.6's table and NOTEs (the coverage NOTE deleted),
   §8.1's Phase 4 and Documentation rows, Appendix A; done when the strict documentation build passes.
 
 *Compaction checkpoint: after item 4; resume from this plan and `git log`.*
 
-- [ ] 5. Delete the repository self-checks (D1): `test_okf_bundle`, `test_findings_logs`,
+- [x] 5. Delete the repository self-checks (D1): `test_okf_bundle`, `test_findings_logs`,
   `test_plan_shape`, `test_plan_records`, `test_prose_share`, `test_same_tree`, `test_source_conventions`
   except (a), `test_stale_refusals`, `test_workflow_hooks`, `test_push_guard`, `test_agent_adapter`,
   `test_number_stability_file`, `test_pull_request_shards`, `test_modularity_measurements`,
