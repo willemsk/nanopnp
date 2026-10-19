@@ -16,7 +16,7 @@ tested_with:
 verified:
 ---
 
-## 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py` are `Any` **** {#16-ngsolves-bundled-stubs-cannot-type-check-so-the-aliases-in-coretypingpy-are-any}
+## 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py` are `Any` {#16-ngsolves-bundled-stubs-cannot-type-check-so-the-aliases-in-coretypingpy-are-any}
 
 NGSolve 6.2.2606 ships pybind11-stubgen output (24 `.pyi` files) but no `py.typed` marker, so mypy
 skips them (PEP 561) and every NGSolve name resolves to `Any`. Supplying the marker only exposes that

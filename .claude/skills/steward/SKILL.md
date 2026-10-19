@@ -49,15 +49,13 @@ macOS only, because it waits on a real QtWebEngine page by the wall clock and bu
 
 - **`changes`** — names the run's mode (`pr`, `main`, `full`, `nightly`) and diffs the whole PR
   (`base...head`), or the push range on `main`, through `.github/scripts/prose-only.sh`. When
-  everything is prose, the test jobs skip their steps and report success. On a push to `main` it
-  reads the PR head's `ci/tested-tree` status: when the merged tree is the one the PR passed, ubuntu
-  runs only the `nightly`-marked tests the PR did not run.
+  everything is prose, the test jobs skip their steps and report success.
 - **A pull request** (§7.6, §8.2.10 J4, §8.2.13 N4) — ubuntu, 3.14 only. **`lint`** (`ruff check`,
   `ruff format --check`, `mypy src/`); **`docs`**; **`tests (tier1)`** and **`tests (tier2)`**, the
   per-push selection (Tier 1, the non-walk Tier 2 tests, example 01 and example 02's charged leg;
   no `nightly` tests), split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`); and
-  **`CI result`**, the one required check, which fails unless every one of those succeeded and posts
-  `ci/tested-tree`. Reproduce a shard with `uv run pytest -m "tier1 and not slow"` (or `tier2`).
+  **`CI result`**, the one required check, which fails unless every one of those succeeded.
+  Reproduce a shard with `uv run pytest -m "tier1 and not slow"` (or `tier2`).
   There is no coverage job (§8.2.13 N2).
 - **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`, on
   **every** push, prose-only ones included, because a broken link or anchor is exactly what a prose

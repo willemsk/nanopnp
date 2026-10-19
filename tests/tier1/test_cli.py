@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-import nanopnp
 from nanopnp.cli import build_parser, main
 from nanopnp.core.errors import (
     EXIT_CODES,
@@ -20,8 +19,6 @@ from nanopnp.core.errors import (
 from nanopnp.pipeline.run import (
     RUN_RECORD_FILENAME,
 )
-
-_SOURCE_ROOT = Path(nanopnp.__file__).resolve().parent
 
 
 def test_ver32_classifying_imports_no_exception_module() -> None:
@@ -222,21 +219,6 @@ def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
     )
     assert json.loads(result.stderr) == []
     assert "--out" in result.stdout
-
-
-TUBE_CASE = """\
-schema: nanopnp/case/v0.5
-name: tube
-structure:
-  source: {{path: {pdb}}}
-  symmetry: {{point_group: C12}}
-electrolyte:
-  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
-  concentration_M: 0.1
-  parameters: willems2020_nacl
-boundary_conditions: {{bias_V: 0.1}}
-physics: {{model: epnp-ns, solid_permittivities: {{membrane: 3.2}}}}
-"""
 
 
 def test_ver32_stage_export_help_imports_no_stage_module() -> None:

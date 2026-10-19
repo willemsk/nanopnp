@@ -303,7 +303,7 @@ NOTE (IF-01, public surface): the stable API is the set of names in
 `nanopnp.__all__`, together with the modules the user documentation's API reference names. Every
 other module is internal and may change without notice before v1.0. Before v1.0 the public surface
 may change too, in any phase (§8.2.6 F4), but never without notice: each
-change is a decision recorded in `tests/tier1/test_public_api.py`, and each break is listed in
+change is a decision made in review (§8.2.13 N3), and each break is listed in
 `CHANGELOG.md` with its migration. The top-level names are
 resolved lazily (PEP 562 `__getattr__`), so `import nanopnp` imports neither NGSolve, Netgen nor
 numpy. The command line, the shell and the sweep runner import the package purely to introspect
@@ -3995,7 +3995,7 @@ needed.
 |---|---|
 | IF-01 | VER-25, VER-32, VER-45 (the public surface, the modules its mirror imports from, and its import cost) |
 | IF-02 | VER-32, VER-38, VER-45 (the generated command-line and exit-code references), VER-46 (every documented command executed) |
-| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (case schema v0.5), VER-71 (the v0.5 refusals of a value never applied), VER-57 (`inputs.pqr` read, registered and refused; the protonation keys' refusals); the registry and inf-sup refusals made at load, through `nanopnp validate case` and the shell's commit with a run's text (`tests/tier1/test_case_schema.py`, `test_cli.py`, `test_gui_viewmodels.py`) |
+| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (case schema v0.5), VER-71 (the v0.5 refusals of a value never applied), VER-57 (`inputs.pqr` read, registered and refused; the protonation keys' refusals); the registry and inf-sup refusals made at load (`tests/tier1/test_case_schema.py`); that `nanopnp validate case` and the shell's commit give them in a run's text is verified at review (§8.2.13 N3) |
 | IF-04 | VER-48 (PDB, mmCIF and each trajectory format read; PDB and mmCIF of one entry agree), VER-32 (the aligned ensemble exported as a PDB and a DCD) |
 | IF-05 | VER-29, VER-49 (the density map in `.npz`, OpenDX and CCP4, in ångströms at the file boundary), VER-50 (the reduced map exported as radial grids), VER-32 and VER-46 (the map exported from the command line and overlaid on its structure), VAL-15 |
 | IF-06 | VER-27 |

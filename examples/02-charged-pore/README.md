@@ -48,8 +48,9 @@ list is empty.
 
 ## What the test asserts
 
-`tests/tier2/test_examples_02_charged_pore.py` runs the commands above, verbatim, from a copy of
-this directory, and checks properties of the model rather than numbers:
+`tests/tier2/test_examples_02_epnpns.py` (every push) runs the mesh and ePNP-NS commands above,
+verbatim, from a copy of this directory, and `tests/tier2/test_examples_02_classical.py` (nightly)
+runs all of them. Between them they check properties of the model rather than numbers:
 
 - **counter-ion selectivity**: in both runs, the cation transport number `t+` is above ½. A negative
   fixed charge enriches cations in the pore, so they carry most of the current. A sign error
