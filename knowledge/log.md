@@ -4,6 +4,7 @@ Entries are the dated events the notes record, newest first; git holds every ear
 
 ## 2026-10-19
 * **Update**: Retargeted the `[tested: …]` markers that named a test deleted by the test scope (WP50, §8.2.13 N3): 31 markers became `[verified]` on their source footnote, or were dropped where the concept has none, and `pending.yaml` was removed.
+* **Update**: Removed the empty `****` markers that retargeting left in nine concepts, the empty `verified:` key of concept 13, and the present-tense statements about `--extended`, `no_cover` and `test_plan_shape.py` that WP50 made false (WP50 review).
 
 ## 2026-10-18
 * **Update**: Stated that `ngsolve/__init__.pyi` ships only in the Linux wheel, so the stub test checks it where present. ([16. NGSolve's bundled stubs cannot type](07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md))

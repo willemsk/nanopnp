@@ -36,11 +36,6 @@ def test_a_v05_document_loads_cleanly() -> None:
     assert document.physics.inertia is False
 
 
-def _minor_versions(first: str, last: str) -> list[str]:
-    low, high = (int(version.split(".")[1]) for version in (first, last))
-    return [f"3.{minor}" for minor in range(low, high + 1)]
-
-
 def _python_versions(node: object) -> set[str]:
     found: set[str] = set()
     if isinstance(node, dict):

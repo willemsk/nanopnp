@@ -67,10 +67,8 @@ integration, and `render_slurm.py` is two loops over them: adapt it to PBS or LS
 
 ## What the tests assert
 
-- **Tier 1** (`tests/tier1/test_examples_plan.py`, every push): the `plan` block runs verbatim and
-  enumerates the sweep's points in waves, exactly as §8.3 and the sweep's own README specify; the
-  rendered submission has one job array per wave, and together they cover every point once, in
-  order; this directory's case has the frozen case's identity.
-- **Tier 2, slow** (`tests/tier2/test_examples_05_clya_reference.py`, recorded, not gated): the
-  `run` block runs verbatim, exits `0`, and the two current-extraction routes of FR-23 agree to the
-  tolerance the solver gates on.
+- **Tier 2, slow** (`tests/tier2/test_examples_05_clya_reference.py`, run by the nightly run, which
+  opens an issue on failure and blocks nothing): the `run` block runs verbatim, exits `0`, and the
+  two current-extraction routes of FR-23 agree to the tolerance the solver gates on.
+- No test executes the `plan` block or `render_slurm.py` (SPECIFICATION.md §8.2.13 N3): check the
+  waves and the rendered job arrays by eye when you adapt them.

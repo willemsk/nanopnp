@@ -30,7 +30,7 @@ and no bare `python`.
 ```bash
 uv sync --all-extras     # create or refresh .venv from uv.lock
 uv run pytest            # tiers 1 and 2, without the `nightly` and `slow` tests: the default selection
-uv run pytest --nightly  # the whole of tiers 1 and 2, as the nightly run does
+uv run pytest --nightly  # adds the nightly walks; `-m "(tier1 or tier2) and slow"` adds the slow tests, as the nightly run does
 ```
 
 A VS Code Dev Container and a GitHub Codespace configuration are in [`.devcontainer/`](.devcontainer)

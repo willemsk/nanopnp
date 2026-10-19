@@ -22,6 +22,8 @@ from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import register_by_centroid
 
+pytestmark = pytest.mark.nightly
+
 if TYPE_CHECKING:
     from conftest import Prepared2WCD
     from nanopnp.gui.solver import RunEvent

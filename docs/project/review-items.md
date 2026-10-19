@@ -1174,7 +1174,31 @@ tree, replaces the record and sets it `fixed`.
 
 WP50 deleted the tests of the OKF checker (`validation/okf.py`), the findings-log reader, the plan
 shape, the same-tree and push-guard scripts and similar repository tooling (§8.2.13 N3). The tools
-stay in `src/` and `.claude/`, as WP50's scope kept them, and nothing now exercises them.
+stay in `src/` and `.claude/`, as WP50's scope kept them, and nothing now exercises their checks.
+
+Two parts are still called by a gate, so neither module can be deleted whole. `docs/scripts/generate.py`,
+which CI's `docs` job runs on every push, imports `navigation` and `splice_navigation` from
+`validation/okf.py`, and `tests/tier1/test_library_behaviour.py` takes `REPOSITORY` from it.
+`tests/tier1/test_layering.py` (VER-61, a kept guard) imports `REPOSITORY` and `parse_log` from
+`validation/findings.py`.
 
 **Open.** The author decides whether each earns its keep or is deleted; recommendation: delete the
-OKF checker and the findings-log reader, which no gate calls.
+checks of the OKF bundle (`check_*`, `pending_counts`, `named_tests`) and of the findings-log
+format, and keep the navigation helpers, `REPOSITORY` and `parse_log` the callers above need.
+
+## REV-118: Gate and mechanism tests the pruning removed
+
+WP50's review found deletions that arguably fall inside §8.2.13 N1 (doubt keeps the test) and
+restored two groups (the number-stability file tests, the solution-state integrity tests). Three
+remain deleted:
+
+- the VER-71 classification-completeness tests of `test_case_leaves.py`: a new solve leaf that is
+  accepted and ignored is caught only if it is added to `SOLVE_PROBES` by hand;
+- the field-input gates of `test_charge_fields.py` (non-finite header value, units against quantity,
+  solid fraction as fixed charge, absolute permittivity, non-uniform axis, grid descriptor), which
+  stop a wrong quantity reaching the charge or dielectric;
+- the manifest tests that every manifest carries the eight §5.3.3 groups, each absent group with a reason.
+
+**Open.** The author decides whether each is restored; recommendation: restore all three, as numerical
+gates and a core mechanism, in a follow-up commit. VER-76's row also still specifies checks whose
+test file was deleted whole; mark it "verified at review" as VER-45 is, or restore the file.

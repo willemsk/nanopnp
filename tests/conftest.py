@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 import logging
 import math
 import os
@@ -14,14 +13,14 @@ from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
 import yaml
 from filelock import FileLock
 
-from nanopnp.io.artefact import CASE_SCHEMA as CASE_SCHEMA
+from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.pipeline.case import resolve
 
 # Make ``tests.conftest`` name this module, so both import paths share its fixtures.
@@ -117,56 +116,6 @@ def require_apbs() -> None:
 @pytest.fixture(scope="session")
 def apbs() -> None:
     require_apbs()
-
-
-def _deep_merge_dict(target: dict[str, Any], source: Mapping[str, Any]) -> dict[str, Any]:
-    for key, value in source.items():
-        if key in target and isinstance(target[key], dict) and isinstance(value, Mapping):
-            _deep_merge_dict(target[key], value)
-        else:
-            target[key] = copy.deepcopy(value) if isinstance(value, (dict, list)) else value
-    return target
-
-
-def _set_nested_override(
-    target: dict[str, Any],
-    path: str,
-    value: Any,  # noqa: ANN401
-) -> None:
-    parts = path.split(".")
-    curr = target
-    for part in parts[:-1]:
-        if part not in curr or not isinstance(curr[part], dict):
-            curr[part] = {}
-        curr = curr[part]
-    last = parts[-1]
-    if last in curr and isinstance(curr[last], dict) and isinstance(value, Mapping):
-        _deep_merge_dict(curr[last], value)
-    else:
-        curr[last] = copy.deepcopy(value) if isinstance(value, (dict, list)) else value
-
-
-def make_case_dict(**overrides: Any) -> dict[str, Any]:  # noqa: ANN401
-    base: dict[str, Any] = {
-        "schema": CASE_SCHEMA,
-        "name": "minimal",
-        "inputs": {"mesh": {"path": "pore.vol", "format": "vol"}},
-        "electrolyte": {
-            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
-            "concentration_M": 1.0,
-            "parameters": "willems2020_nacl",
-        },
-        "boundary_conditions": {"bias_V": 0.1},
-        "physics": {"model": "pnp-ns"},
-    }
-    for path, value in overrides.items():
-        _set_nested_override(base, path, value)
-    return base
-
-
-@pytest.fixture
-def make_case() -> Callable[..., dict[str, Any]]:
-    return make_case_dict
 
 
 PREPARED_TILT_DEG = 4.0

@@ -100,9 +100,11 @@ What was learnt on the way, each measured:
   1,334.5 s and 394 s with them. Deleting duplicated or history-pinning tests recovered about 1 s.
   A walk is slow because it composes the stages, not because it repeats a check.
 - **pytest: a custom option, not `addopts -m`, for a selection a named file should override.**
-  `--extended` is read in the root conftest's `pytest_collection_modifyitems`, which keeps an
-  `extended` item whose file is named on the command line. A `-m` in `addopts` would deselect it
-  even then, and the user would have to restate the whole marker expression.
+  `--nightly` (called `--extended` until WP50) is read in the root conftest's
+  `pytest_collection_modifyitems`, which keeps a `nightly` item whose file is named on the command
+  line. A `-m` in `addopts` would deselect it even then, and the user would have to restate the
+  whole marker expression. `addopts` still holds `not slow`, so `--nightly` alone leaves the `slow`
+  tests out; CI's nightly run adds them with a second call, `-m "(tier1 or tier2) and slow"`.
 
 ### 12.1 Test-impact selection was built, measured and removed **[verified][^wp44-plan]** {#121-test-impact-selection-was-built-measured-and-removed}
 
@@ -156,8 +158,9 @@ ordering conftest (the order's re-measurement, below, on a quiet machine). Each 
   branch coverage, so the gate and CI use it without configuration; pinning `core` in
   `pyproject.toml` would make every coverage run on 3.11 to 3.13 warn and fall back.
 - **pytest-cov's `no_cover` marker stops coverage for the call phase only**
-  (`pytest_runtest_call`): a fixture's setup is still measured. The root conftest puts it on every
-  `extended` item, so the walks no longer pay the tracer in their calls, where their time is.
+  (`pytest_runtest_call`): a fixture's setup is still measured. WP43 put it on every `extended`
+  item so that the walks did not pay the tracer in their calls; WP50 removed pytest-cov, the
+  marker and the coverage gate (§8.2.13 N2), so nothing in the suite measures coverage now.
 
 [^wp33-plan]: `docs/plans/wp33-test-durations.md` (suite BLAS thread and extended-test timing measurements).
 [^wp43-plan]: `docs/plans/wp43-development-loop.md`, D8 and item 10 (CPython 3.14.6 suite timings and `COVERAGE_CORE=sysmon`).

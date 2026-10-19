@@ -75,7 +75,7 @@ amendment, versioning and the close. Always cover:
 Draft each decision as one question with its identifiers, two to four options (consequence for
 correctness, scope, gate cost, clause amended) and a recommendation first, with why. Also draft the
 **work-package sequence**, the numbered **completion criteria** (each checkable by a named test, in
-the test scope of §8.2.13 N1, or by the code and review where the item is outside it, or by a named observation)
+the test scope of §8.2.13 N1, or by the code and review where the item is outside it, or by a named
 observation) and what the phase **excludes**, with where each goes.
 
 ### 5. Put it to the author
@@ -143,7 +143,7 @@ At most 250 words, no backticks or identifiers; for a reader who does not code.
 **Your call.** Each decision the author owns, as a question, with *Recommendation:* and one reason.
 ```
 
-`tests/tier1/test_plan_shape.py` checks every phase plan from Phase 4 on.
+Review checks every phase plan from Phase 4 on against these caps (§8.2.13 N3).
 
 **`docs/plans/current.md`**: replace the position with Phase n planned and `/wp-plan <n>` next,
 replace the "not to be re-decided" entries the rulings supersede, and keep its In brief and word
@@ -154,9 +154,8 @@ workflow.
 
 1. Commit on the working branch: `docs: Phase <n> plan and the author's rulings (§8.2.<k>)`, with
    identifiers and ruling numbers in the body. A Markdown-only change outside `packaging/`, `src/`,
-   `data/` and `examples/` runs ruff alone (`.github/scripts/prose-only.sh`), except `docs/plans/`,
-   which also runs the tests that read plans, and `knowledge/` with any Markdown that cites it, which
-   also runs the bundle check.
+   `data/` and `examples/` runs ruff alone (`.github/scripts/prose-only.sh`); CI's documentation build
+   still runs.
 2. Before the push, run the strict documentation build from `CLAUDE.md`'s *Commands* (the
    amended specification renders in it, and CI's `docs` job gates every push), start
    `.claude/hooks/gate.sh run` with Bash `run_in_background`, and push when it passes

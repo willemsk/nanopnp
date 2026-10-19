@@ -25,6 +25,8 @@ from nanopnp.solve.continuation import run_ladder
 from nanopnp.solve.stage import SolveStage
 from nanopnp.solve.state import (
     DESCRIPTOR_ENTRY,
+    DESCRIPTOR_KEYS,
+    FIELD_PREFIX,
     STATE_FILENAME,
     WALL_DISTANCE_ENTRY,
     StateMismatchError,
@@ -337,6 +339,11 @@ def test_ver34_a_case_differing_only_in_what_it_reports_restores(solved: Solved)
     assert restored.space.ndof == solved.solution.space.ndof
 
 
+def test_ver34_the_gate_checks_every_key_it_declares(solved: Solved) -> None:
+    assert tuple(key for key, _ in _mutations()) == DESCRIPTOR_KEYS
+    assert sorted(_stored_descriptor(solved)) == sorted(DESCRIPTOR_KEYS)
+
+
 def test_ver34_a_descriptor_missing_a_key_is_refused_rather_than_skipped(
     solved: Solved, tmp_path: Path
 ) -> None:
@@ -347,7 +354,53 @@ def test_ver34_a_descriptor_missing_a_key_is_refused_rather_than_skipped(
         restore(path, resolved=resolve(solved.document))
 
 
+def test_ver34_a_descriptor_carrying_an_unknown_key_is_refused(
+    solved: Solved, tmp_path: Path
+) -> None:
+    path = _with_descriptor(solved, tmp_path, {**_stored_descriptor(solved), "temperature": 310.0})
+    with pytest.raises(StateMismatchError, match="unexpected \\['temperature'\\]"):
+        restore(path, resolved=resolve(solved.document))
+
+
+def test_ver34_a_payload_without_a_descriptor_is_refused_by_schema(
+    solved: Solved, tmp_path: Path
+) -> None:
+    arrays = _arrays(solved.path)
+    del arrays[DESCRIPTOR_ENTRY]
+    path = _rewrite(tmp_path / STATE_FILENAME, arrays)
+    with pytest.raises(StateMismatchError, match=SOLUTION_SCHEMA):
+        restore(path, resolved=resolve(solved.document))
+
+
+def test_ver34_the_solution_schema_is_v2(solved: Solved) -> None:
+    assert SOLUTION_SCHEMA == "nanopnp/solution/v0.5"
+
+
 # -- the fields the state itself carries --------------------------------------
+
+
+def test_ver34_a_truncated_coefficient_array_is_refused_by_length(
+    solved: Solved, tmp_path: Path
+) -> None:
+    import numpy as np
+
+    arrays = _arrays(solved.path)
+    name = next(key for key in arrays if str(key).startswith(FIELD_PREFIX))
+    arrays[name] = np.asarray(arrays[name], dtype=np.float64)[:-1]
+    path = _rewrite(tmp_path / STATE_FILENAME, arrays)
+    with pytest.raises(StateMismatchError, match="coefficients for field"):
+        restore(path, resolved=resolve(solved.document))
+
+
+def test_ver34_a_missing_component_array_names_what_the_file_holds(
+    solved: Solved, tmp_path: Path
+) -> None:
+    arrays = _arrays(solved.path)
+    name = next(key for key in arrays if str(key).startswith(FIELD_PREFIX))
+    del arrays[name]
+    path = _rewrite(tmp_path / STATE_FILENAME, arrays)
+    with pytest.raises(StateMismatchError, match="carries no"):
+        restore(path, resolved=resolve(solved.document))
 
 
 # PHY-02

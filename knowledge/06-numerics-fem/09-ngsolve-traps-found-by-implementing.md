@@ -92,6 +92,12 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_8_and_9_superlu_registration_and_singular_factorisation
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_number_stability_file.py::test_ver62_every_golden_walk_is_asserted_by_exactly_one_test
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_number_stability_file.py::test_ver62_every_mesh_of_a_walk_holds_the_same_quantities
+  at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_number_stability_file.py::test_ver62_mesh_moved_tolerance_is_derived_and_under_the_ceiling
+  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_qoi.py::test_num26_two_vanishing_currents_do_not_divide_by_zero
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_qoi_stage.py::test_fr23_the_generated_mesh_gives_the_same_band_to_mesh_round_off
@@ -491,7 +497,7 @@ The rule: **a test that asserts a quadrature-error magnitude must run on a struc
 that asserts a converged physical quantity may use whatever mesh the pipeline deploys, because that
 number is mesh-independent by construction and an unstructured mesh is then the more honest one.
 
-### 8.1.5 Within one build, a deployed walk's quantities repeat bit for bit **[tested: tests/tier1/test_stability_golden.py::test_ver62_a_recorded_mesh_holds_round_off]** **[verified]**[^wp35-simd-dispatch] {#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit}
+### 8.1.5 Within one build, a deployed walk's quantities repeat bit for bit **[tested: tests/tier1/test_stability_golden.py::test_ver62_a_recorded_mesh_holds_round_off]** **[tested: tests/tier1/test_number_stability_file.py::test_ver62_every_golden_walk_is_asserted_by_exactly_one_test]**[^wp35-simd-dispatch] {#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit}
 
 The converse of §8.1.2, measured for VER-62 (WP35). On one Linux x86-64 build (Python 3.12,
 `uv.lock` at `v0.4.0`, `OMP_NUM_THREADS=OPENBLAS_NUM_THREADS=MKL_NUM_THREADS=1`), seven gated walks
@@ -504,7 +510,7 @@ enter the numbers. Across platforms the mesh itself differs (§8.1.2, `knowledge
 golden is keyed per platform and asserts the mesh hash before any number.
 
 **Within one `<platform>-<machine>` key, NumPy's SIMD dispatch moves a PDB-derived mesh**
-**[verified]**[^wp35-simd-dispatch] (WP35 review, 5 October 2026). WP35's first CI run on `ubuntu-latest` produced a
+**[tested: tests/tier1/test_number_stability_file.py::test_ver62_every_mesh_of_a_walk_holds_the_same_quantities]**[^wp35-simd-dispatch] (WP35 review, 5 October 2026). WP35's first CI run on `ubuntu-latest` produced a
 different deployed mesh for the 2WCD shell walk (`289b175e…`) from the one recorded on an AVX-512
 build machine (`47b8e51f…`), both `linux-x86_64`, same `uv.lock`, threads pinned to 1. Locally,
 `NPY_DISABLE_CPU_FEATURES="X86_V4 AVX512_ICL AVX512_SPR"` reproduces CI's hash exactly, while
@@ -516,7 +522,7 @@ and held to ≤ 1.9 × 10⁻¹³. So equal mesh hashes and zero drift hold on on
 not across every machine sharing a platform key.
 
 **The split is AVX-512 against everything below it, and a moved mesh is not always a moved number**
-**[tested: tests/tier1/test_stability_golden.py::test_ver62_mesh_moved_tolerance_is_the_safety_factor_on_the_spread]** **[verified]**[^wp35-simd-dispatch] (WP35 amendment, 5 October 2026; NumPy 2.5.2, Python 3.12, threads pinned to 1). The
+**[tested: tests/tier1/test_stability_golden.py::test_ver62_mesh_moved_tolerance_is_the_safety_factor_on_the_spread]** **[tested: tests/tier1/test_number_stability_file.py::test_ver62_mesh_moved_tolerance_is_derived_and_under_the_ceiling]**[^wp35-simd-dispatch] (WP35 amendment, 5 October 2026; NumPy 2.5.2, Python 3.12, threads pinned to 1). The
 seven walks were recorded on an AVX2 machine at its native `X86_V3` and again with
 `NPY_DISABLE_CPU_FEATURES` capping it at the `X86_V2` baseline. All seven deploy the same mesh at both
 levels, and every value agrees **bit for bit**. Against the `X86_V4` (AVX-512) recording:

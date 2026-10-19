@@ -37,9 +37,11 @@ on:
     # push gate establishes; this is the recording run, not a second gate.
     - cron: "30 2 * * *"
 
+# The nightly run takes hours (it adds the `slow` tests), so a push to `main` neither
+# cancels it nor shares its group.
 concurrency:
-  group: ${{ github.workflow }}-ci-${{ github.ref }}-${{ inputs.ref || '' }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-ci-${{ github.event_name == 'schedule' && 'night-' || '' }}${{ github.ref }}-${{ inputs.ref || '' }}
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 env:
   # Fail if uv.lock no longer matches pyproject.toml. UV_LOCKED asserts that;
@@ -280,7 +282,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.mode == 'main' || needs.changes.outputs.mode == 'nightly'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    # The nightly leg runs the `slow` tests too: example 05's frozen solve alone took
+    # 2,512 s on one core and its test allows 7,200 s.
+    timeout-minutes: ${{ needs.changes.outputs.mode == 'nightly' && 240 || 40 }}
     strategy:
       fail-fast: false
       matrix:
@@ -307,7 +311,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.mode == 'full'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    # Runs the `slow` tests (nightly: "true" below); see the `platforms` job's timeout.
+    timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
