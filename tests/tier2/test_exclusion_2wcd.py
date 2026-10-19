@@ -19,7 +19,7 @@ from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import run_case
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from conftest import Exclusion2WCD, Prepared2WCD, Seed2WCD

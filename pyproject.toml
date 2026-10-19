@@ -80,13 +80,11 @@ nanopnp-probe = "nanopnp.gui.probe:main"
 [dependency-groups]
 dev = [
     "pytest>=8.2",
-    "pytest-cov>=5.0",
     "ruff>=0.6",
     "mypy>=1.11",
     "types-PyYAML>=6.0",
     "pytest-xdist>=3.8.0",
     "filelock>=3.12",
-    "diff-cover>=10.6.0",
     "markdown>=3.5",
 ]
 # Bundle builders only (ADR-004, section 8.2 criterion 4). Not in
@@ -211,9 +209,5 @@ markers = [
     "tier3: COMSOL cross-implementation comparison, hours, nightly (section 7.4)",
     "tier4: experimental reproduction, hours, before a tagged release (section 7.5)",
     "slow: takes more than a minute regardless of tier",
-    "extended: an end-to-end walk, gated in CI after a merge and by the push gate, and left out of the development selection unless --extended (section 7.6)",
-    "no_cover: stop coverage for the test's call phase; pytest-cov defines it, and it is listed here because tests/conftest.py puts it on every extended test and --strict-markers refuses it where pytest-cov is off (-p no:cov)",
+    "nightly: an end-to-end walk, run every night and by the release, and left out of the development selection unless --nightly (section 7.6)",
 ]
-
-[tool.coverage.run]
-source = ["src/nanopnp"]

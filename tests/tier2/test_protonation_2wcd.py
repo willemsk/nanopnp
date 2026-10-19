@@ -25,7 +25,7 @@ from nanopnp.pipeline.case import (
     resolve,
 )
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from conftest import Protonated2WCD

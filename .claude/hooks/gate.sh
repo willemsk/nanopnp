@@ -7,14 +7,14 @@
 #
 #   gate.sh        hook mode, payload on stdin. On a `git commit`: uv lock --check, ruff
 #                  check, ruff format --check, mypy, then every Tier 1 test without the
-#                  `extended` marker (the GUI file serially, apart). On a `git push`: runs
+#                  `nightly` marker (the GUI file serially, apart). On a `git push`: runs
 #                  nothing and goes through only when the stamp names the pushed tree with
-#                  `extended`, the pass of `gate.sh run`. Text that only names a push, in a
+#                  `push`, the pass of `gate.sh run`. Text that only names a push, in a
 #                  commit message or a pull request body, is no push.
-#   gate.sh run    the push gate: the same four checks, then `pytest --extended` over the
-#                  whole suite, no coverage, with the Gmsh and APBS requirements set. One
+#   gate.sh run    the push gate: the same four checks, then `pytest` over the
+#                  per-push selection (Tier 1, Tier 2 without `nightly` or `slow`), with the Gmsh and APBS requirements set. One
 #                  run at a time: a second waits for the first. It stamps the tree
-#                  `extended` only on a pass, and only if the tree did not change meanwhile.
+#                  `push` only on a pass, and only if the tree did not change meanwhile.
 #                  What the skills start in the background before they push.
 #
 # Every run appends one line to <git dir>/nanopnp-gate.log: time, mode, selection, seconds,
@@ -140,7 +140,7 @@ if [[ $mode == hook ]]; then
     # Judge one `git push` in the current directory, from its own arguments $1.
     # Prints nothing when the push needs no stamp (not this repository,
     # --no-verify, a dry run, tags or deletions alone), `gated` when every tree it
-    # sends is stamped `extended`, and the refusal otherwise.
+    # sends is stamped `push`, and the refusal otherwise.
     push_verdict() {
         local args token tokens=() positional=() expect=false all=false tags=false deleting=false
         local root stamp_path refspec src dst rev tree what revs=()
@@ -199,7 +199,7 @@ push gate passes one tree. Push the branch by name. --no-verify skips this."
         for rev in "${revs[@]}"; do
             tree=$(git rev-parse -q --verify "$rev^{tree}" 2>/dev/null) || tree=""
             if [[ -z $tree || ! -f $stamp_path ]] ||
-                ! awk -v t="$tree" '$1 == t && $2 == "extended" { f = 1 } END { exit !f }' "$stamp_path"; then
+                ! awk -v t="$tree" '$1 == t && $2 == "push" { f = 1 } END { exit !f }' "$stamp_path"; then
                 what="HEAD's tree"
                 [[ $rev != HEAD ]] && what="the tree of $rev"
                 printf '%s' "The push was not made: no passing push gate for ${what}${tree:+ (${tree:0:12})}. Run
@@ -380,7 +380,7 @@ take_lock() {
 
 state=$(state_hash) || state=""
 selection=development
-[[ $mode == run ]] && selection=extended
+[[ $mode == run ]] && selection=push
 
 log() {
     printf '%s %s %s %s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$mode" "$selection" \
@@ -389,7 +389,7 @@ log() {
 }
 
 # The stamp holds one "<tree> <selection>" line per selection, so a commit-hook pass never
-# overwrites the `extended` line the push guard reads.
+# overwrites the `push` line the push guard reads.
 stamped() {
     [[ -f $stamp_file ]] &&
         awk -v t="$1" -v s="$2" '$1 == t && $2 == s { f = 1 } END { exit !f }' "$stamp_file"
@@ -402,7 +402,7 @@ stamp() {
     mv "$stamp_file.$$" "$stamp_file"
 }
 
-if [[ -n $state ]] && { stamped "$state" extended || { [[ $mode == hook ]] && stamped "$state" development; }; }; then
+if [[ -n $state ]] && { stamped "$state" push || { [[ $mode == hook ]] && stamped "$state" development; }; }; then
     say "gate: this tree state already passed; nothing to re-run."
     exit 0
 fi
@@ -410,7 +410,7 @@ fi
 # The prose rule lives in one script that CI's `changes` job uses too. A commit is judged
 # against HEAD, which was gated when it was committed. `run` judges the whole branch since it
 # left main, as CI's pull_request range does: against HEAD alone the clean tree the skills run
-# it on would read as prose and the `extended` tests would never run. With no merge base found
+# it on would read as prose and the `push` tests would never run. With no merge base found
 # the whole gate runs.
 base=HEAD
 if [[ $mode == run ]]; then
@@ -539,8 +539,8 @@ else
     # The GUI file runs serially and alone, as in CI: it waits on a real QtWebEngine page by
     # the wall clock, which busy xdist workers can starve (ci.yml, run 113).
     if [[ $mode == run ]]; then
-        check "pytest (extended)" uv run pytest -q -rsfE -n auto --dist loadfile \
-            --ignore=tests/tier1/test_gui_widgets.py --extended
+        check "pytest (push selection)" uv run pytest -q -rsfE -n auto --dist loadfile \
+            --ignore=tests/tier1/test_gui_widgets.py
     else
         check "pytest (tier 1)" uv run pytest -q -rsfE -n auto --dist loadfile \
             --ignore=tests/tier1/test_gui_widgets.py -m "tier1 and not slow"

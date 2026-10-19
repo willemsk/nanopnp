@@ -13,7 +13,7 @@ from nanopnp.geometry.profile import PIPELINE_SOURCE, load_profile, min_feature_
 from nanopnp.io.store import Store
 from nanopnp.pipeline.run import run_case
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from conftest import Prepared2WCD, Seed2WCD

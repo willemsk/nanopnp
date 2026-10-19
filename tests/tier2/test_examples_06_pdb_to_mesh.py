@@ -18,7 +18,7 @@ from nanopnp.pipeline.case import load_case
 from nanopnp.structure.axis import ORIENTATION_LIMIT_DEG
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@ from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.pipeline.run import run_case
 
-pytestmark = pytest.mark.extended
+pytestmark = pytest.mark.nightly
 
 if TYPE_CHECKING:
     from collections.abc import Callable

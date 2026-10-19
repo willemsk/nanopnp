@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   # Before a tagged release, the full matrix (SPECIFICATION.md section 7.6;
-  # section 8.2.10 J4): CI's `full: true`, Tiers 1 and 2 with --extended on the
+  # section 8.2.10 J4): CI's `full: true`, Tiers 1 and 2 with --nightly on the
   # three platforms and Python 3.11 to 3.14, and Tier 3 recorded. A tag push runs
   # it on the tag. A dispatch re-releases a tag that exists already, such as one
   # of the retroactive history whose code predates this workflow's options, so it
@@ -41,7 +41,7 @@ jobs:
       contents: read
       actions: read
       pull-requests: read
-      statuses: write
+      issues: write
     uses: ./.github/workflows/ci.yml
     with:
       full: true

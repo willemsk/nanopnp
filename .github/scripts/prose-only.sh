@@ -9,22 +9,10 @@
 #   src/, data/ package data;
 #   examples/   the worked examples, whose READMEs tests/tier2/test_examples_*.py
 #               executes (VER-46);
-#   *findings.md a findings log, whose table tests/tier1/test_findings_logs.py
-#               checks (VER-63), so a ruling edit runs the test that reads it.
-#   SPECIFICATION.md, docs/project/modularity.md, docs/project/review-items.md
-#               the pages VER-63 reads beside a log: a ruling names a section 8.2
-#               row, and a finding links to a report heading (section 8.2.8 H12).
-#   .claude/agents/ .claude/skills/ .claude/rules/ docs/plans/
-#               the agent, skill, rule and plan pages whose frontmatter, tools,
-#               paths and plan caps tests/tier1/test_plan_shape.py
-#               reads (REV-84). A change to only these runs the tests in full.
-#   knowledge/ and any Markdown whose text contains `knowledge/`
-#               the bundle, and the files citing it, whose addresses
-#               tests/tier1/test_okf_bundle.py resolves (VER-68). A deleted path
-#               is read as prose, since there is no text to read.
 # docs/ is NOT prose as a directory: docs/sweeps/ and docs/validation/ hold the
 # YAML that tests/tier1 reads (the section 8.3 reference sweep, the frozen
-# cases, the probe grid). Only its Markdown is.
+# cases, the probe grid). Only its Markdown is, and CI's documentation build runs
+# on every change regardless.
 #
 # Empty input is prose: there is nothing to test.
 set -uo pipefail
@@ -33,11 +21,7 @@ while IFS= read -r path; do
     [[ -z $path ]] && continue
     case $path in
         packaging/* | src/* | data/* | examples/*) exit 1 ;;
-        *findings.md) exit 1 ;;
-        .claude/agents/* | .claude/skills/* | .claude/rules/* | docs/plans/*) exit 1 ;;
-        SPECIFICATION.md | docs/project/modularity.md | docs/project/review-items.md) exit 1 ;;
-        knowledge/*) exit 1 ;;
-        *.md) [[ -f $path ]] && grep -qE '(^|[^[:alnum:]_./-]|\.\./)knowledge/' -- "$path" && exit 1 ;;
+        *.md) ;;
         *) exit 1 ;;
     esac
 done
