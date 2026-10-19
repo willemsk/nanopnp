@@ -29,8 +29,6 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_library_behaviour.py::test_mdanalysis_trajectory_formats_and_dt
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_library_behaviour.py::test_pyproject_requires_python_311_and_griddata_12
-  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_reduction.py::test_ver50_off_axis_gaussian_closed_forms
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_structure_axis.py::test_ver48_exact_cn_assembly_recovers_its_axis
@@ -122,7 +120,7 @@ Two consequences for anything that writes these formats across versions of gridD
 - A test guarded on "is gridData importable?" passes on 3.10 and then fails inside the writer. Guard
   on **writer availability**.
 
-**The 3.11 floor makes this moot [tested: tests/tier1/test_library_behaviour.py::test_pyproject_requires_python_311_and_griddata_12].** With `requires-python = ">=3.11"` and
+**The 3.11 floor makes this moot [verified].** With `requires-python = ">=3.11"` and
 `GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and writes MRC, so the code has
 no writer-availability branch (§8.2.2 B4). The facts above describe 1.0.2, should an older
 environment turn up.

@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-10-19
+* **Update**: Retargeted the `[tested: …]` markers that named a test deleted by the test scope (WP50, §8.2.13 N3): 31 markers became `[verified]` on their source footnote, or were dropped where the concept has none, and `pending.yaml` was removed.
+
 ## 2026-10-18
 * **Update**: Stated that `ngsolve/__init__.pyi` ships only in the Linux wheel, so the stub test checks it where present. ([16. NGSolve's bundled stubs cannot type](07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md))
 * **Update**: Repointed the six source citations that named plan files which do not exist (`wp18`, `wp20`, `wp21`, `wp28`, `wp30`, `wp32`) at the plans that do, and re-wired the claims for the 1 M NaCl conductivity, the zero-bias route check, the telescoping round-off statistics, the trailing-NUL behaviour and the fluid-only indicator to tests that assert them (WP48 review).

@@ -16,8 +16,6 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_apbs_maps.py::test_val06_the_charge_map_is_in_e_per_cubic_angstrom
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_knowledge_arithmetic.py::test_apbs_input_cleanup_and_250_bytes_per_node
-  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_library_behaviour.py::test_pdb2pqr_cli_parser_and_propka_annotations
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_pqr.py::test_ver57_a_disulfide_patched_cysteine_is_named_by_its_residue
@@ -229,7 +227,7 @@ the deck's `temp`.
   | 193³ | 44 s | 1.9 GB |
 
   This is about 250 B per node.
-  The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[tested: tests/tier1/test_knowledge_arithmetic.py::test_apbs_input_cleanup_and_250_bytes_per_node]**.
+  The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[verified]**.
 - **Case identity cost**, recorded before WP45's prose strip (`validation/comsol.py`): hashing the 84 MB reference charge table took about 1.6 s;
   hashing the 9.2 MB deposited 2WCD structure files takes 12 ms, plus 0.7 s on the first import of stage 1 and
   MDAnalysis **[verified][^case-identity-record]**. These are historical measurements, not performance guarantees.

@@ -25,8 +25,6 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_mesh_adapter.py::test_if06_a_name_used_as_a_domain_and_as_a_boundary_survives
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_mesh_adapter.py::test_if06_every_group_owns_a_node_in_the_file
-  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_mesh_adapter.py::test_if06_the_hash_ignores_a_file_meshio_rewrote
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_mesh_adapter.py::test_if06_to_ngsolve_then_from_ngsolve_is_the_identity_on_the_tag_maps
@@ -104,7 +102,7 @@ reader for the format IF-06 mandates cannot be the one netgen ships. `meshio` is
 optional bookkeeping — it is the only route in. CON-10 keeps `gmsh` itself off the default path for
 an unrelated reason (GPLv2+), and the two constraints agree.
 
-**meshio 5.3.5's MSH 4.1 writer gets entity bookkeeping wrong in two ways, both silent [tested: tests/tier1/test_mesh_adapter.py::test_if06_every_group_owns_a_node_in_the_file].**
+**meshio 5.3.5's MSH 4.1 writer gets entity bookkeeping wrong in two ways, both silent [verified].**
 
 - *One cell block is one entity.* `_write_elements` takes the **first** `gmsh:geometrical` tag of a
   block and writes the whole block under it. Four boundary groups packed into a single `line` block

@@ -74,19 +74,19 @@ and 7 before they are committed.
   `test_public_docstrings`, `test_doc_reference`, `test_examples_plan`, `test_cost_study`, and the like
   inside mixed files. Kept: `test_layering`, `test_backend_guard`, CON-10 and CON-12; done when the
   per-push run passes.
-- [ ] 6. Prune the interface areas to D2's smoke tests: `gui`, `cli`, `sweep_cli`, the case schema,
+- [x] 6. Prune the interface areas to D2's smoke tests: `gui`, `cli`, `sweep_cli`, the case schema,
   `case_fields`, `defaults`, `stages`, `stage_workspace`, `public_api`, registries; done when the
   per-push run passes.
-- [ ] 7. Prune the mixed machinery files test by test (D1), Tiers 1 and 2: `charge_fields`,
+- [x] 7. Prune the mixed machinery files test by test (D1), Tiers 1 and 2: `charge_fields`,
   `comsol_golden`, `structure_stage`, `sweep_plan`, `protonation`, `mesh_ingest`, `mesh_adapter`,
   `mesh_profile`, `region`, `exclusion_shell`, `field_export`, `model_interface`, `solution_state`,
   `pqr`, `manifest`, `library_behaviour` and the rest; done when the per-push and nightly runs pass.
 
 *Compaction checkpoint: after item 7; resume from this plan and `git log`.*
 
-- [ ] 8. Tier 2 markers (D3, D4): `nightly` on the walks, examples 01 and 02's ePNP-NS leg per push,
+- [x] 8. Tier 2 markers (D3, D4): `nightly` on the walks, examples 01 and 02's ePNP-NS leg per push,
   example 01 timed; done when the per-push run holds both VER-62 goldens.
-- [ ] 9. The knowledge base (D6): retarget the 380 markers, delete `knowledge/pending.yaml`, a line in
+- [x] 9. The knowledge base (D6): retarget the 380 markers, delete `knowledge/pending.yaml`, a line in
   `knowledge/log.md`; done when no marker names a missing test.
 - [ ] 10. Unused fixtures, helpers and data removed; the counts and timings below written into the
   Outcome; done when `gate.sh run` passes.

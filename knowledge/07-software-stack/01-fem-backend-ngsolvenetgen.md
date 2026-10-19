@@ -15,8 +15,6 @@ tested_with:
 verified:
 - by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_wheel_table_and_config_flags
-  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 1. FEM backend — NGSolve/Netgen
@@ -25,7 +23,7 @@ verified:
 
 | Fact | Value |
 |---|---|
-| Locked wheels | cp311–cp314, all three OSes. win_amd64 14–15.5 MB, macOS universal2 43–45 MB **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_wheel_table_and_config_flags]** |
+| Locked wheels | cp311–cp314, all three OSes. win_amd64 14–15.5 MB, macOS universal2 43–45 MB **** |
 | Compiler at runtime | **not needed** — forms are evaluated by the compiled C++ core. `Compile(realcompile=True)` is opt-in and *does* need one |
 | Mixed spaces | `X = V*Q` product spaces; Taylor–Hood directly |
 | Newton | `ngsolve.solvers.Newton(a, gfu, dampfactor=...)`, symbolic differentiation for the Jacobian **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api]** |
@@ -36,11 +34,11 @@ verified:
 
 **Known limitations, both verified:**
 
-1. **No MPI in the wheels** — no MPI symbols in any shipped `.so`, no mpi4py **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_wheel_table_and_config_flags]**. Parallel
+1. **No MPI in the wheels** — no MPI symbols in any shipped `.so`, no mpi4py ****. Parallel
    mesh generation, parallel adaptive refinement and parallel multigrid are documented as
    unsupported. Irrelevant for 2D axisymmetric v1 (direct solves; sweeps parallelise at job level);
    becomes real in 3D. Mitigations: ngsPETSc, or a DOLFINx backend for HPC only.
-2. **No MUMPS/PARDISO/HYPRE/MKL in the wheels** — `ngsolve.config` reports all False **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_wheel_table_and_config_flags]**.
+2. **No MUMPS/PARDISO/HYPRE/MKL in the wheels** — `ngsolve.config` reports all False ****.
    See `knowledge/06-numerics-fem/06-linear-solvers.md`.
 3. **2D boundary layers are immature.** Python API is
    `netgen.meshing.Mesh.BoundaryLayer2(domain, thicknesses, make_new_domain=True, boundaries=[])`
