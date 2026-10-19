@@ -68,7 +68,9 @@ A run writes two kinds of output:
   It is a cache: a second run of the same case, or of a case that shares its upstream stages, is
   served from it.
 - **The run directory**, `--run-dir`, or `runs/<name>-<hash>/` inside the store, holds the three
-  files that describe one run: `manifest.json`, `case.yaml` and `run.json`.
+  files that describe one run: `manifest.json`, `case.yaml` and `run.json`. The hash covers the
+  case and the contents of every input file, so a regenerated mesh at the same path gets a new
+  directory.
 
 `nanopnp inspect <run directory>` reads a run back, and `nanopnp reproduce <run directory>`
 re-solves it and checks that every number comes back.

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.core.hashing import Canonicalisable, canonical
+from nanopnp.core.hashing import Canonicalisable, canonical, content_hash
 from nanopnp.core.stages import (
     ArtefactHook,
     CancelToken,
@@ -56,6 +56,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 RUN_SCHEMA = "nanopnp/run/v0.5"
+_RUN_KEY_SCHEMA = "nanopnp/run-key/v0.5"
 
 RUN_RECORD_FILENAME = "run.json"
 
@@ -774,7 +775,7 @@ def _walk(
     complete = stages == selected_stages(walk.resolved, None)
     label = document.name if complete else f"{document.name}-upto-{stages[-1]}"
     result = RunResult(
-        directory=walk.store.run_directory(label, manifest.case_hash),
+        directory=walk.store.run_directory(label, _run_key(manifest)),
         manifest=manifest,
         artefacts=dict(walk.artefacts),
         stages=tuple(walk.records),
@@ -784,6 +785,16 @@ def _walk(
         result.write()
         logger.info("run %r written to %s", document.name, result.directory)
     return result
+
+
+def _run_key(manifest: Manifest) -> str:
+    # The case hash does not cover input file contents; a regenerated file at the same path
+    # must not overwrite the earlier run.
+    files = manifest.inputs.get("files")
+    digests: dict[str, Canonicalisable] = {}
+    if isinstance(files, Mapping):
+        digests = {role: record["sha256"] for role, record in sorted(files.items())}
+    return content_hash(_RUN_KEY_SCHEMA, {"case": manifest.case_hash, "files": digests})
 
 
 def run_case(
@@ -805,7 +816,7 @@ def run_case(
 ) -> RunResult:
     """Load a case file and run it; the keywords are those of :func:`run_document`."""
     source = Path(path)
-    text = source.read_text(encoding="utf-8")
+    text = source.read_bytes().decode("utf-8")
     return run_document(
         loads_case(text, source=str(source)),
         case_text=text,

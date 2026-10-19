@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from nanopnp.core.scaling import Scales
-from nanopnp.core.typing import Expression, Mesh, Numeric
+from nanopnp.core.typing import Expression, Mesh, Numeric, Option
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
 from nanopnp.physics import models
 from nanopnp.physics.models import ModelSolution
@@ -70,11 +70,10 @@ def mesh() -> Mesh:
     return PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
 
 
-@pytest.fixture(scope="module")
-def solution(mesh: Mesh) -> ModelSolution:
+def _populated(mesh: Mesh, **options: Option) -> ModelSolution:
     import ngsolve as ngs
 
-    model = models.create("epnp-ns", solid_permittivities=MEMBRANE_PERMITTIVITY)
+    model = models.create("epnp-ns", solid_permittivities=MEMBRANE_PERMITTIVITY, **options)
     space = model.space(mesh)
     state = model.cold_state(mesh)
     fluid = mesh.Materials(ELECTROLYTE_DOMAINS)
@@ -99,6 +98,16 @@ def solution(mesh: Mesh) -> ModelSolution:
     distance = ngs.GridFunction(ngs.H1(mesh, order=2))
     distance.Set(NONDIMENSIONAL["wall_distance"](ngs.x, ngs.y))
     return ModelSolution(model=model, space=space, state=state, wall_distance_nm=distance)
+
+
+@pytest.fixture(scope="module")
+def solution(mesh: Mesh) -> ModelSolution:
+    return _populated(mesh)
+
+
+@pytest.fixture(scope="module")
+def log_solution(mesh: Mesh) -> ModelSolution:
+    return _populated(mesh, log_variables=True)
 
 
 @pytest.fixture(scope="module")
@@ -178,6 +187,20 @@ def test_ver33_a_quadratic_survives_the_export_exactly_on_the_fluid(
         assert np.abs(grid.point_data[attribute] - expected).max() < EXACT_NM * abs(
             scales.concentration_mol_m3
         )
+
+
+def test_ver33_the_log_branch_exports_the_concentration_and_not_its_logarithm(
+    log_solution: ModelSolution, tmp_path: Path
+) -> None:
+    import numpy as np
+
+    exported = export_fields(log_solution, tmp_path, scales=log_solution.model.scales)
+    grid = _read(exported, OMEGA_W_STEM)
+    x, y = grid.points[:, 0], grid.points[:, 1]
+    concentration = log_solution.model.scales.concentration_mol_m3
+    expected = np.exp(NONDIMENSIONAL["c_Na+"](x, y)) * concentration
+    written = grid.point_data["c_Na+_mol_m3"]
+    assert np.abs(written - expected).max() < 1e-9 * np.abs(expected).max()
 
 
 def test_ver33_the_pressure_is_exact_at_the_midside_nodes_it_did_not_ask_for(

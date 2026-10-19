@@ -262,13 +262,16 @@ class Electrolyte:
             )
         lower, upper = CONCENTRATION_FLOOR_M, self.validity_M[1]
         clamped = [ops.clip(c * MOLAR_PER_SI, lower, upper) for c in concentrations]
+        return self._driver_of(clamped)
+
+    def _driver_of(self, values_M: Sequence[Numeric]) -> Numeric:
         if self.driver == "ionic_strength":
             weighted = [
-                0.5 * ion.valence**2 * c for ion, c in zip(self.species, clamped, strict=True)
+                0.5 * ion.valence**2 * c for ion, c in zip(self.species, values_M, strict=True)
             ]
             return sum(weighted[1:], start=weighted[0])
-        total = sum(clamped[1:], start=clamped[0])
-        return total / len(clamped)
+        total = sum(values_M[1:], start=values_M[0])
+        return total / len(values_M)
 
     def diffusivity(
         self,
@@ -349,7 +352,7 @@ class Electrolyte:
         )
         driver_label = f"correction driver ({self.driver.replace('_', ' ')})"
         driver_count = log_clamp_activations(
-            self.average_concentration(samples),
+            self._driver_of([values * MOLAR_PER_SI for values in samples]),
             label=driver_label,
             limit=limit,
             coordinates=coordinates,
@@ -398,7 +401,7 @@ def log_clamp_activations(
     where = "" if coordinates is None else f" worst at {coordinates[worst]}"
     logger.warning(
         "%s: concentration correction clamped at %.3g M for %d sample(s); "
-        "peak driver %.4g M is outside the fit range.%s",
+        "peak concentration %.4g M is outside the fit range.%s",
         label,
         limit,
         exceeded.size,

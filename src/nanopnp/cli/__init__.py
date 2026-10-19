@@ -700,6 +700,7 @@ def _validate_compare(args: argparse.Namespace) -> int:
         compare_fields,
         compare_quantities,
         unavailable_quantities,
+        zero_reference_quantities,
     )
     from nanopnp.validation.comsol import load_golden
 
@@ -710,6 +711,7 @@ def _validate_compare(args: argparse.Namespace) -> int:
     grid = _probe_grid(document, resolved)
     fields = compare_fields(sampled, golden, grid)
     quantities = compare_quantities(resolved.quantities, golden.quantities)
+    zero_reference = zero_reference_quantities(resolved.quantities, golden.quantities)
     payload: dict[str, Canonicalisable] = {
         "run": str(resolved.directory),
         "golden_hash": golden.hash,
@@ -721,6 +723,7 @@ def _validate_compare(args: argparse.Namespace) -> int:
         "unavailable_quantities": list(
             unavailable_quantities(resolved.quantities, golden.quantities)
         ),
+        "zero_reference_quantities": list(zero_reference),
     }
     lines = [
         f"run          {resolved.directory}",
@@ -733,6 +736,11 @@ def _validate_compare(args: argparse.Namespace) -> int:
         for entry in fields
     ]
     lines += [f"{entry.name:<12} {entry.relative:+.4e} relative" for entry in quantities]
+    lines += [
+        f"{name:<12} golden is zero; relative error undefined "
+        f"(ours {float(resolved.quantities[name]):.4e})"
+        for name in zero_reference
+    ]
     _emit(payload, lines, as_json=args.json)
     return EXIT_OK
 
@@ -747,7 +755,11 @@ def _validate_report(args: argparse.Namespace) -> int:
         attribute,
         write_report,
     )
-    from nanopnp.validation.compare import compare_fields, compare_quantities
+    from nanopnp.validation.compare import (
+        compare_fields,
+        compare_quantities,
+        zero_reference_quantities,
+    )
     from nanopnp.validation.comsol import load_golden
     from nanopnp.validation.probe import load_probe
     from nanopnp.validation.runs import reopen
@@ -785,6 +797,10 @@ def _validate_report(args: argparse.Namespace) -> int:
             fields=compare_fields(sampled, golden, grid),
             quantities=compare_quantities(resolved.quantities, golden.quantities),
             stabilisation_currents_A=_stabilisation_currents(resolved.quantities),
+            zero_reference={
+                name: float(resolved.quantities[name])
+                for name in zero_reference_quantities(resolved.quantities, golden.quantities)
+            },
         )
     missing = [rung.name for rung in LADDER if rung.index not in by_rung]
     if missing:

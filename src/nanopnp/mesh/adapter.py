@@ -127,6 +127,52 @@ class MeshData:
             vertices[:, 0] = snapped
             object.__setattr__(self, "vertices", vertices)
 
+    def oriented_edges(self) -> np.ndarray:
+        """Return the edges directed with the adjacent triangle of the lowest material on the left.
+
+        NGSolve's normal follows the order an edge is added in, and the force traction reads it.
+        An edge between two triangles of one material, which carries no side, is ascending.
+        """
+        import numpy as np
+
+        if self.edges.shape[0] == 0:
+            return self.edges
+        n = self.vertices.shape[0]
+        starts = self.triangles
+        ends = np.roll(self.triangles, -1, axis=1)
+        low = np.minimum(starts, ends).ravel()
+        high = np.maximum(starts, ends).ravel()
+        forward = (starts <= ends).ravel()
+        material = np.repeat(self.triangle_material, 3)
+        half_key = low * n + high
+        order = np.lexsort((material, half_key))
+        half_key, material, forward = half_key[order], material[order], forward[order]
+
+        edge_low = np.minimum(self.edges[:, 0], self.edges[:, 1])
+        edge_high = np.maximum(self.edges[:, 0], self.edges[:, 1])
+        key = edge_low * n + edge_high
+        first = np.searchsorted(half_key, key)
+        found = first < half_key.size
+        first = np.where(found, first, 0)
+        found &= half_key[first] == key
+        following = np.minimum(first + 1, half_key.size - 1)
+        tied = (
+            found
+            & (following != first)
+            & (half_key[following] == key)
+            & (material[following] == material[first])
+        )
+        ascending = np.where(found & ~tied, forward[first], True)
+        given = self.edges[:, 0] <= self.edges[:, 1]
+        # An edge no triangle touches keeps the direction it was given.
+        ascending = np.where(found, ascending, given)
+        oriented = np.where(
+            ascending[:, None],
+            np.stack([edge_low, edge_high], axis=1),
+            np.stack([edge_high, edge_low], axis=1),
+        )
+        return np.ascontiguousarray(oriented, dtype=np.int64)
+
     def _validate(self) -> None:
         import numpy as np
 
@@ -476,7 +522,7 @@ def to_ngsolve(data: MeshData) -> Mesh:
     for position, name in enumerate(data.boundaries, start=1):
         ngmesh.Add(FaceDescriptor(surfnr=position, domin=1, bc=position))
         ngmesh.SetBCName(position - 1, name)
-    for edge, group in zip(data.edges, data.edge_group, strict=True):
+    for edge, group in zip(data.oriented_edges(), data.edge_group, strict=True):
         ngmesh.Add(Element1D([points[int(edge[0])], points[int(edge[1])]], index=int(group) + 1))
     return ngs.Mesh(ngmesh)
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import platform
 import sys
 from dataclasses import dataclass, field
@@ -288,10 +287,8 @@ class Manifest:
         """Write the manifest and case file into a run directory; return the manifest path."""
         directory.mkdir(parents=True, exist_ok=True)
         # Atomic: job-array members sharing a case write one run directory.
-        # Platform line endings, as text mode wrote them: the case hash is of the source file,
-        # CRLF on Windows, so an LF copy there fails ``reproduce`` (QR-08).
-        text = self.case_text.replace("\n", os.linesep)
-        atomic_write_bytes(directory / CASE_FILENAME, text.encode("utf-8"))
+        # Verbatim: the recorded case sha256 is of the source file's bytes (QR-08).
+        atomic_write_bytes(directory / CASE_FILENAME, self.case_text.encode("utf-8"))
         path = directory / MANIFEST_FILENAME
         atomic_write_bytes(path, canonical(self.document()) + b"\n")
         return path

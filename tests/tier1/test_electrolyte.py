@@ -191,7 +191,7 @@ def test_phy13_a_clamp_of_the_ionic_strength_driver_is_logged(
     (record,) = caplog.records
     assert record.getMessage() == (
         "correction driver (ionic strength): concentration correction clamped at 5.3 M for "
-        "1 sample(s); peak driver 6 M is outside the fit range. worst at (1.0, 2.0)"
+        "1 sample(s); peak concentration 6 M is outside the fit range. worst at (1.0, 2.0)"
     )
 
     caplog.clear()
