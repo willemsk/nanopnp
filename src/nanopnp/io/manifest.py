@@ -287,7 +287,7 @@ class Manifest:
         """Write the manifest and case file into a run directory; return the manifest path."""
         directory.mkdir(parents=True, exist_ok=True)
         # Atomic: job-array members sharing a case write one run directory.
-        # Verbatim: the recorded case sha256 is of the source file's bytes (QR-08).
+        # Verbatim: the recorded case sha256 is of the source file's bytes.
         atomic_write_bytes(directory / CASE_FILENAME, self.case_text.encode("utf-8"))
         path = directory / MANIFEST_FILENAME
         atomic_write_bytes(path, canonical(self.document()) + b"\n")

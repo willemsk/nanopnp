@@ -16,7 +16,12 @@ from nanopnp.io.vocabulary import (
     VELOCITY,
 )
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
-from nanopnp.physics.models import ModelSolution, concentration_field_name, transport_model
+from nanopnp.physics.models import (
+    ModelSolution,
+    PhysicsModel,
+    concentration_field_name,
+    transport_model,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -31,6 +36,7 @@ __all__ = [
     "attribute_name",
     "export_fields",
     "field_scale",
+    "logarithmic_fields",
     "p2_nodes",
     "sample_at",
 ]
@@ -104,6 +110,13 @@ def field_scale(field: str, scales: Scales) -> float:
     if field == PRESSURE:
         return scales.pressure_Pa
     return scales.concentration_mol_m3
+
+
+def logarithmic_fields(model: PhysicsModel) -> frozenset[str]:
+    """Return the fields that hold ln c, the unknowns of the logarithmic branch; else none."""
+    if not model.species or not transport_model(model).log_variables:
+        return frozenset()
+    return frozenset(concentration_field_name(species) for species in model.species)
 
 
 def p2_nodes(mesh: Mesh, *, materials: str | None = None) -> P2Nodes:
@@ -270,13 +283,9 @@ def export_fields(
     carriers: dict[tuple[int, int], FESpace] = {}
     whole: dict[str, np.ndarray] = {}
     restricted: dict[str, np.ndarray] = {}
-    # The NUM-02 branch solves ln c. Its nodal values are exponentiated after sampling: sampling
-    # exp(ln c) through a carrier projects it and does not reproduce c at the nodes.
-    log_concentrations = (
-        {concentration_field_name(species) for species in model.species}
-        if model.species and transport_model(model).log_variables
-        else set()
-    )
+    # The logarithmic branch solves ln c. Its nodal values are exponentiated after sampling:
+    # sampling exp(ln c) through a carrier projects it and does not reproduce c at the nodes.
+    logarithmic = logarithmic_fields(model)
     for field in model.fields:
         if field.element == "number":
             continue
@@ -290,7 +299,7 @@ def export_fields(
             materials=field.domain,
             carriers=carriers,
         )
-        if field.name in log_concentrations:
+        if field.name in logarithmic:
             values = np.exp(values)
         values = values * field_scale(field.name, scales)
         target = whole if field.domain is None else restricted

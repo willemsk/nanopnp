@@ -199,3 +199,11 @@ def test_phy13_a_clamp_of_the_ionic_strength_driver_is_logged(
     with caplog.at_level("WARNING", logger="nanopnp.materials.electrolyte"):
         assert averaged.report_clamp_activations(samples, coordinates=[(1.0, 2.0)]) == 0
     assert not caplog.records
+
+    caplog.clear()
+    # The fits see the mean of the clipped concentrations, 4.65 M here, so the unclipped mean of
+    # 5.5 M must not be counted as a driver clamp.
+    beyond = [np.array([7000.0]), np.array([4000.0])]
+    with caplog.at_level("WARNING", logger="nanopnp.materials.electrolyte"):
+        assert averaged.report_clamp_activations(beyond, coordinates=[(1.0, 2.0)]) == 1
+    assert "correction driver" not in caplog.text

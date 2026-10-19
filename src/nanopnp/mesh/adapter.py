@@ -128,7 +128,7 @@ class MeshData:
             object.__setattr__(self, "vertices", vertices)
 
     def oriented_edges(self) -> np.ndarray:
-        """Return the edges directed with the adjacent triangle of the lowest material on the left.
+        """Return the edges directed with the triangle of the first material by name on the left.
 
         NGSolve's normal follows the order an edge is added in, and the force traction reads it.
         An edge between two triangles of one material, which carries no side, is ascending.
@@ -143,7 +143,9 @@ class MeshData:
         low = np.minimum(starts, ends).ravel()
         high = np.maximum(starts, ends).ravel()
         forward = (starts <= ends).ravel()
-        material = np.repeat(self.triangle_material, 3)
+        # Ranked by name, as ``canonical`` orders the table: meshes of one content hash then agree.
+        rank = np.argsort(np.argsort(np.array(self.materials)))
+        material = np.repeat(rank[self.triangle_material], 3)
         half_key = low * n + high
         order = np.lexsort((material, half_key))
         half_key, material, forward = half_key[order], material[order], forward[order]

@@ -361,6 +361,7 @@ def render(request: RenderRequest) -> Rendered:
     from nanopnp.post.export import (
         attribute_name,
         field_scale,
+        logarithmic_fields,
     )
     from nanopnp.solve.state import restore
 
@@ -388,13 +389,17 @@ def render(request: RenderRequest) -> Rendered:
         raise KeyError(f"no field {wanted!r} in this solution; it carries {', '.join(names)}")
     declared = drawable[names.index(wanted)]
 
+    import ngsolve as ngs
     from ngsolve.webgui import Draw
 
     mesh = solution.space.mesh
     # Restricted to the field's domain as the IF-07 export is: over the whole mesh a concentration
     # would read zero in the membrane, like a depletion.
     region = mesh if declared.domain is None else mesh.Materials(declared.domain)
-    drawn = solution.component(declared.name) * field_scale(declared.name, model.scales)
+    drawn = solution.component(declared.name)
+    if declared.name in logarithmic_fields(model):
+        drawn = ngs.exp(drawn)
+    drawn = drawn * field_scale(declared.name, model.scales)
     scene = Draw(drawn, region, show=False, order=declared.order).GetData()
     elements = _element_count(mesh, declared.domain)
 

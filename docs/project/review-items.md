@@ -1201,3 +1201,31 @@ remain deleted:
 
 **Fixed** (author's ruling, WP50 review). All three groups are restored in `test_case_leaves.py`,
 `test_charge_fields.py` and `test_manifest.py`, and `test_case_json_schema.py` (VER-76) is restored whole.
+
+## REV-119: The analyte benchmark meshes skip the quality gate
+
+`AnalyteInBoxGeometry.generate` and `PoreWithAnalyte.generate` (`geometry/analyte.py`) return the
+netgen mesh without the element-quality gate (minimum SICN and gamma above 0.3) that every primitive
+in `mesh/primitives.py` applies. Their only callers are the Tier 2 force benchmarks, which compare
+with analytic values, so a degraded mesh fails there and not at a gate that names the element.
+
+**Declined** (author's ruling, CODE_REVIEW_010 CR-8). A gate inside `geometry/` is a new upward
+`geometry → mesh` edge, which VER-61 refuses, and moving both classes into `mesh/` costs more than a
+low finding is worth.
+
+## REV-120: The force-traction normal needs one material on the left along the whole surface
+
+`MeshData.oriented_edges` directs every boundary edge with the adjacent triangle of the first material
+by name on its left (CODE_REVIEW_010 CR-5), and `post/forces.py` fixes only the overall sign of the
+traction normal, by n·(x − c). Along a surface whose neighbouring material changes, the first material
+by name is not always the same side: an analyte that straddles the electrolyte/`cis` interface has the
+analyte on the left where it meets `cis` but, were the body named after `electrolyte`, not where it
+meets `electrolyte`. The normal then points out of the body on one part and into it on the other, and
+part of the traction is negated with no warning. The built-in analyte geometry refuses a body that
+crosses a pore mouth (`geometry/analyte.py`), and a body named `analyte` sorts before `cis`,
+`electrolyte` and `trans`, so the built-in path is safe; a supplied `inputs.mesh` with a body of
+another name that touches two fluid domains is not stopped.
+
+*Recommendation:* refuse, in the force stage, a force surface whose two sides are not one pair of
+materials all along it, rather than orient it by name. Not done here: it widens a review-fix package
+into the force stage.

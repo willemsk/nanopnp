@@ -138,3 +138,5 @@ is a rolling register, and its header stays `open`.
 | REV-116 | verification | low | open | — | [The cost record predates the harness fixes](review-items.md#rev-116-the-cost-record-predates-the-harness-fixes) |
 | REV-117 | process | low | fixed | — | [Tooling left without tests by the test scope](review-items.md#rev-117-tooling-left-without-tests-by-the-test-scope) |
 | REV-118 | verification | medium | fixed | §8.2.13 N1 | [Gate and mechanism tests the pruning removed](review-items.md#rev-118-gate-and-mechanism-tests-the-pruning-removed) |
+| REV-119 | verification | low | declined | [CODE_REVIEW_010](../code_reviews/CODE_REVIEW_010.md) | [The analyte benchmark meshes skip the quality gate](review-items.md#rev-119-the-analyte-benchmark-meshes-skip-the-quality-gate) |
+| REV-120 | physics | medium | open | — | [The force-traction normal needs one material on the left along the whole surface](review-items.md#rev-120-the-force-traction-normal-needs-one-material-on-the-left-along-the-whole-surface) |

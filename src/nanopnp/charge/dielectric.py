@@ -126,11 +126,8 @@ class MaterialMean:
 
 
 class _SolidFractionChecks:
-    """The range and registration checks every solid-fraction field shares."""
-
     grid: RadialGrid
     label: str
-    """The name the field's diagnostics give it, such as ``"the supplied solid fraction"``."""
 
     def chi(self) -> Expression:
         """Return the solid fraction as a coefficient function."""

@@ -64,6 +64,10 @@ def _python_versions(node: object) -> set[str]:
         ("numerics.mesh.size_scale", 0.0),
         ("numerics.mesh.size_scale", float("inf")),
         ("numerics.mesh.size_scale", float("nan")),
+        ("numerics.nonlinear.rtol", float("nan")),
+        ("numerics.nonlinear.rtol", 0.0),
+        ("numerics.nonlinear.rtol", 1.0),
+        ("numerics.nonlinear.max_iter", 0),
     ],
 )
 def test_ver47_value_range_refusals(path: str, bad_val: float) -> None:

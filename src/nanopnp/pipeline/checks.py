@@ -41,7 +41,7 @@ from nanopnp.io.case_paths import (
 from nanopnp.io.resolved import contour_spacing_nm
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.materials.models import PropertyKind, applies_part
-from nanopnp.mesh.ingest import FLUID_MATERIALS, MATERIAL_VOCABULARY
+from nanopnp.mesh.ingest import SOLID_MATERIALS, fluid_permittivity_refusal
 from nanopnp.mesh.meshers import registered_meshers
 from nanopnp.numerics.linear import registered_solvers, rejection
 from nanopnp.physics.models import (
@@ -603,17 +603,15 @@ def _accepting(coefficient: str) -> str:
 
 
 def _check_solid_permittivity_keys(document: CaseDocument) -> None:
-    for name in document.physics.solid_permittivities:
-        if name in FLUID_MATERIALS:
-            raise CaseValidationError(
-                f"physics.solid_permittivities names the fluid domain {name!r}. A constant "
-                "there replaces the concentration-dependent eps_r,f in the electrolyte with "
-                "nothing to say so (PHY-03, PHY-20)"
-            )
-        if name not in MATERIAL_VOCABULARY:
-            close = difflib.get_close_matches(name, MATERIAL_VOCABULARY, n=1)
+    named = document.physics.solid_permittivities
+    refusal = fluid_permittivity_refusal(named)
+    if refusal is not None:
+        raise CaseValidationError(refusal)
+    solids = sorted(SOLID_MATERIALS)
+    for name in named:
+        if name not in SOLID_MATERIALS:
+            close = difflib.get_close_matches(name, solids, n=1)
             hint = f"; did you mean {close[0]!r}?" if close else ""
-            solids = sorted(set(MATERIAL_VOCABULARY) - FLUID_MATERIALS)
             raise CaseValidationError(
                 f"physics.solid_permittivities names {name!r}, which is not a material of the "
                 f"vocabulary; the solids are {solids}{hint}"

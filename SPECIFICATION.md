@@ -1794,7 +1794,11 @@ material name to relative permittivity, defaulting to empty; PHY-20 gives ε_r =
 and 20 for the protein and the analyte, and it is not defaulted because the mesh decides which
 solids exist. It is the one member of `physics:` that is not a switch, and `pb` and `pb-linear`
 carry no solids, so a non-empty map beside one of them SHALL be refused as §5.3.1's other
-inapplicable switches are; `poisson` carries them as the coupled models do (WP26: the refusal covered all three electrostatic models, which left none of them runnable
+inapplicable switches are; each value SHALL be finite and positive, and each key SHALL name a solid
+material of the vocabulary, because a key naming a fluid domain (`electrolyte`, `cis`, `trans`) would
+replace ε_r,f(⟨c⟩) in the electrolyte and a name outside the vocabulary would be recorded and never
+applied, so case resolution refuses both naming the key (a vocabulary solid the mesh lacks is allowed);
+`poisson` carries them as the coupled models do (WP26: the refusal covered all three electrostatic models, which left none of them runnable
 on any mesh with a membrane). On an **ingested** mesh, a material that is
 neither in the fluid set nor named in `physics.solid_permittivities` SHALL abort the run, naming the
 material; for a model that carries no solids the abort SHALL say that the model cannot be posed on
@@ -2662,7 +2666,9 @@ or when the residual is at its absolute floor, 10⁻¹². One norm over all fiel
 largest, and the residual relative to its entry value is one norm too: measured on the seven gated
 walks, it closed every rung but one, and on a warm-started rung of example 03 it left the velocity
 8.2 × 10⁻⁶ and the pressure 2.0 × 10⁻⁶ relatively unconverged with the ions at 2 × 10⁻⁸ (WP41 D4,
-REV-08). A step that failed to reduce the residual never counts as convergence.
+REV-08). A step that failed to reduce the residual never counts as convergence. `numerics.nonlinear.rtol` SHALL
+be finite and lie in (0, 1) and `max_iter` SHALL be at least 1, because the update test can never pass
+for a NaN `rtol` and every rung would then report a divergence the case caused.
 
 **NUM-17.** The following SHALL be asserted at every Newton step, and a violation SHALL abort the
 solve with a diagnostic naming the field and the spatial location:
@@ -3062,7 +3068,7 @@ archive, so the push gate is unaffected by whether it is present.
 | **VER-03** | Correction models reproduce their published check values | `f^w_D(0) = 0.0601`, `f^w_D(0.75) = 0.9910`, `η⁰/η^w(0) = 0.3790`, `η⁰/η^w(1.45) = 0.9876`, `η(5.3 M) = 1.752 × 10⁻³ Pa s`, `ϱ(5.3 M) = 1194 kg m⁻³`, `D_Na(5.3 M) = 8.13 × 10⁻¹⁰ m² s⁻¹`, `D_Cl(5.3 M) = 1.071 × 10⁻⁹ m² s⁻¹`, each to four significant figures; clamping above 5.3 M activates and is logged |
 | **VER-04** | Nernst–Einstein consistency at infinite dilution | `μ_i⁰ = D_i⁰/V_T` with `V_T = 25.693 mV`: 5.1922 × 10⁻⁸ (Na⁺) and 7.9089 × 10⁻⁸ (Cl⁻) m² V⁻¹ s⁻¹, to four figures |
 | **VER-05** | Einstein-ratio drift | `D_i/μ_i` rises to 1.2–1.7 × kT/e between 0.15 M and 3 M and matches the expected profile. A test asserting `D_i/μ_i = kT/e` at finite concentration SHALL NOT be written (PHY-14) |
-| **VER-06** | Wall-distance field | Mollified field has continuous gradient across element boundaries to a stated tolerance; `d = 0` on the pore boundary; membrane absent from the distance source set (PHY-02) |
+| **VER-06** | Wall-distance field | The field is continuous and its gradient jump across element boundaries stays within a stated tolerance on a cylinder, and a further mollification (NUM-31) reduces it; `d = 0` on the pore boundary; membrane absent from the distance source set (PHY-02) |
 | **VER-07** | Integration order on 1/r forms | Every form carrying a 1/r factor asserts integration order ≥ 3; assembly on an axis-touching mesh returns no NaN and no Inf |
 | **VER-08** | Packing fraction and positivity | `Φ = Σ_j N_A a_j³ c_j < 1` and `min_i c_i > 0` at every nonlinear iterate; violation aborts with the offending quantity and its location (PHY-06) |
 | **VER-09** | Case-file schema round-trip | A written and re-read case file yields a semantically identical run configuration; an unknown key is rejected with a diagnostic naming the key |

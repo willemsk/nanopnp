@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from nanopnp.io.vocabulary import PRESSURE, VELOCITY
 from nanopnp.post.export import (
     field_scale,
+    logarithmic_fields,
     sample_at,
 )
 from nanopnp.validation.comsol import Golden, GoldenQuantities
@@ -148,6 +149,7 @@ def sample_on_probe(
     points = grid.points_nm
     carriers: dict[tuple[int, int], FESpace] = {}
     sampled: dict[str, np.ndarray] = {}
+    logarithmic = logarithmic_fields(solution.model)
     for field in solution.model.fields:
         if field.element == "number":
             continue
@@ -160,7 +162,10 @@ def sample_on_probe(
             dimension=2 if vector else 1,
             materials=field.domain,
             carriers=carriers,
-        ) * field_scale(field.name, scales)
+        )
+        if field.name in logarithmic:
+            values = np.exp(values)
+        values = values * field_scale(field.name, scales)
         if vector:
             for index, name in enumerate(VELOCITY_COMPONENTS):
                 sampled[name] = values[:, index]
@@ -370,13 +375,18 @@ def _relative(difference: np.ndarray, reference: np.ndarray, weights: np.ndarray
 
 def zero_reference_quantities(
     ours: Mapping[str, object], golden: GoldenQuantities
-) -> tuple[str, ...]:
-    """Return the ``COMPARED_QUANTITIES`` whose golden is exactly zero."""
-    return tuple(
-        name
-        for name in COMPARED_QUANTITIES
-        if ours.get(name) is not None and getattr(golden, name, None) == 0.0
-    )
+) -> dict[str, float]:
+    """Return our value of each ``COMPARED_QUANTITIES`` whose golden is exactly zero."""
+    zero: dict[str, float] = {}
+    for name in COMPARED_QUANTITIES:
+        value = ours.get(name)
+        if (
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and getattr(golden, name, None) == 0.0
+        ):
+            zero[name] = float(value)
+    return zero
 
 
 def unavailable_quantities(ours: Mapping[str, object], golden: GoldenQuantities) -> tuple[str, ...]:

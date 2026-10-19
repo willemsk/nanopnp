@@ -352,6 +352,19 @@ def check_names(data: MeshData, required: RequiredNames, *, where: str) -> None:
     )
 
 
+def fluid_permittivity_refusal(names: Iterable[str]) -> str | None:
+    """Return the refusal for fluid domains named in ``physics.solid_permittivities``, else None."""
+    fluid = sorted(name for name in names if name in FLUID_MATERIALS)
+    if not fluid:
+        return None
+    return (
+        f"physics.solid_permittivities names the fluid {'domains' if len(fluid) > 1 else 'domain'} "
+        f"{', '.join(repr(name) for name in fluid)}. "
+        "A constant there replaces the concentration-dependent eps_r,f in the electrolyte "
+        "with nothing to say so (PHY-03, PHY-20)"
+    )
+
+
 def check_solid_permittivities(
     data: MeshData,
     solid_permittivities: dict[str, float],
@@ -374,15 +387,9 @@ def check_solid_permittivities(
     MeshVocabularyError
         Naming every solid material with no entry, or the model and its solid domains.
     """
-    fluid = sorted(name for name in solid_permittivities if name in FLUID_MATERIALS)
-    if fluid:
-        raise MeshVocabularyError(
-            f"{where}: physics.solid_permittivities names the fluid "
-            f"{'domains' if len(fluid) > 1 else 'domain'} "
-            f"{', '.join(repr(name) for name in fluid)}. "
-            "A constant there replaces the concentration-dependent eps_r,f in the electrolyte "
-            "with nothing to say so (PHY-03, PHY-20)"
-        )
+    refusal = fluid_permittivity_refusal(solid_permittivities)
+    if refusal is not None:
+        raise MeshVocabularyError(f"{where}: {refusal}")
     if not solids:
         present = sorted(name for name in data.materials if name not in FLUID_MATERIALS)
         if present:

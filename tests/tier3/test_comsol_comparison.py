@@ -24,6 +24,7 @@ from nanopnp.validation.compare import (
     compare_quantities,
     probe_domains,
     sample_on_probe,
+    zero_reference_quantities,
 )
 from nanopnp.validation.comsol import (
     ARCHIVE_NAME,
@@ -236,6 +237,7 @@ def test_val01_val02_val04_attribution_against_the_archive() -> None:
                 fields=compare_fields(sampled, golden, grid),
                 quantities=compare_quantities(run.quantities, golden.quantities),
                 stabilisation_currents_A=_currents(run.quantities),
+                zero_reference=zero_reference_quantities(run.quantities, golden.quantities),
             )
         if len(outcomes) != len(LADDER):
             pytest.skip(

@@ -36,7 +36,7 @@ Resolved on the same branch after the review, with the author's rulings of 19 Oc
 | CR-3 | Resolved by amending NUM-10 (ruling): the direct solvers' own row scaling discharges it. The three unused helpers and their tests are deleted. |
 | CR-4 | Fixed: `max_iter ≥ 1`, `0 < rtol < 1`, finite. |
 | CR-5 | Fixed in `to_ngsolve`, which builds every edge directed with the lowest-material adjacent triangle on its left, so the normal no longer follows the source's segment order. `MeshData` and its hash are unchanged: orientation is now derived from the triangles, so two meshes differing only in it build the same NGSolve mesh. Hashing it would have moved every recorded mesh hash and forced a re-pin of the number-stability golden. Tested in `tests/tier1/test_mesh_adapter.py`. |
-| CR-6 | Fixed. The driver is counted on the unclipped concentrations. |
+| CR-6 | Declined, on the pass that shipped it. The model clamps the driver of the clipped concentrations (`average_concentration`, then the second clip in `CorrectionModel.evaluate`), so counting the unclipped mean logs a clamp the fits never see: 7 M and 4 M give 5.5 M against the 4.65 M they evaluate. The count stays on the clipped driver, as WP41 D7 says ("under `average` it never fires"); a test pins it. |
 | CR-7 | Fixed. |
 | CR-8 | Declined. A gate inside `geometry/` is a new upward `geometry → mesh` edge, which VER-61 refuses, and moving both classes into `mesh/` costs more than a low finding is worth. The only callers are Tier 2 benchmarks that compare with analytic values, so a degraded mesh fails there. |
 | CR-9 | Fixed. |

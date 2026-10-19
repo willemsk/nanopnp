@@ -41,7 +41,9 @@ generated:
 > only. The bilayer is deliberately not a source of wall distance, because electrolyte properties
 > near the membrane do not affect the pore's figures of merit. In COMSOL this was implemented with
 > a general extrusion operator and was **not smoothed** (author, 2026-08). See §7 for why we
-> nevertheless recommend mollifying it in the new implementation.
+> nevertheless recommend mollifying it in the new implementation. (Superseded by the author's ruling
+> of 2026-10-19: the validated default is the unsmoothed field and mollification is an optional
+> deviation, off by default; `SPECIFICATION.md` PHY-02, NUM-31.)
 
 ---
 

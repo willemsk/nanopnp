@@ -723,7 +723,7 @@ def _validate_compare(args: argparse.Namespace) -> int:
         "unavailable_quantities": list(
             unavailable_quantities(resolved.quantities, golden.quantities)
         ),
-        "zero_reference_quantities": list(zero_reference),
+        "zero_reference_quantities": zero_reference,
     }
     lines = [
         f"run          {resolved.directory}",
@@ -737,9 +737,8 @@ def _validate_compare(args: argparse.Namespace) -> int:
     ]
     lines += [f"{entry.name:<12} {entry.relative:+.4e} relative" for entry in quantities]
     lines += [
-        f"{name:<12} golden is zero; relative error undefined "
-        f"(ours {float(resolved.quantities[name]):.4e})"
-        for name in zero_reference
+        f"{name:<12} golden is zero; relative error undefined (ours {value:.4e})"
+        for name, value in zero_reference.items()
     ]
     _emit(payload, lines, as_json=args.json)
     return EXIT_OK
@@ -797,10 +796,7 @@ def _validate_report(args: argparse.Namespace) -> int:
             fields=compare_fields(sampled, golden, grid),
             quantities=compare_quantities(resolved.quantities, golden.quantities),
             stabilisation_currents_A=_stabilisation_currents(resolved.quantities),
-            zero_reference={
-                name: float(resolved.quantities[name])
-                for name in zero_reference_quantities(resolved.quantities, golden.quantities)
-            },
+            zero_reference=zero_reference_quantities(resolved.quantities, golden.quantities),
         )
     missing = [rung.name for rung in LADDER if rung.index not in by_rung]
     if missing:
