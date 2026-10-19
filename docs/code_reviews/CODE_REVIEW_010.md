@@ -25,6 +25,38 @@ The gates are written NaN-closed (`not x <= tol`) throughout. The defects sit at
 | Medium | 2 |
 | Low | 8 |
 
+## Resolution
+
+Resolved on the same branch after the review, with the author's rulings of 19 October 2026.
+
+| ID | Outcome |
+|---|---|
+| CR-1 | Fixed. Values are finite and positive in the schema. Case resolution refuses a fluid key or a name outside the material vocabulary, with a suggestion; ingest keeps the fluid refusal as a backstop. Vocabulary solids absent from the mesh stay allowed (ruling). Tested in `tests/tier1/test_solid_permittivity_keys.py`. |
+| CR-2 | Fixed. `case.yaml` is the source bytes, verbatim; tested for CRLF and LF in `tests/tier1/test_case_bytes_round_trip.py`. |
+| CR-3 | Resolved by amending NUM-10 (ruling): the direct solvers' own row scaling discharges it. The three unused helpers and their tests are deleted. |
+| CR-4 | Fixed: `max_iter ≥ 1`, `0 < rtol < 1`, finite. |
+| CR-5 | Fixed in `to_ngsolve`, which builds every edge directed with the lowest-material adjacent triangle on its left, so the normal no longer follows the source's segment order. `MeshData` and its hash are unchanged: orientation is now derived from the triangles, so two meshes differing only in it build the same NGSolve mesh. Hashing it would have moved every recorded mesh hash and forced a re-pin of the number-stability golden. Tested in `tests/tier1/test_mesh_adapter.py`. |
+| CR-6 | Fixed. The driver is counted on the unclipped concentrations. |
+| CR-7 | Fixed. |
+| CR-8 | Declined. A gate inside `geometry/` is a new upward `geometry → mesh` edge, which VER-61 refuses, and moving both classes into `mesh/` costs more than a low finding is worth. The only callers are Tier 2 benchmarks that compare with analytic values, so a degraded mesh fails there. |
+| CR-9 | Fixed. |
+| CR-10 | Fixed. Zero-golden quantities are reported as "golden is zero; relative error undefined", with our value, by `validate compare` and in the attribution report. |
+| CR-11 | Fixed. `solve_pb` is removed and callers use `solve_pb_recorded(...)[0]`. |
+
+Also resolved:
+
+- **Simplifications.** The trapezium weights are shared, the solid-fraction checks share a mixin, the
+  descriptor key-set check is one helper, and ingest uses the quality report it already gets.
+- **Log-branch export.** `export_fields` now writes c, not ln c, in the NUM-02 log branch. It was
+  latent, and a test now covers it.
+- **Mollification (ruling).** PHY-02 and NUM-31 now state that the validated field is the unsmoothed
+  C⁰ field, and that C¹ mollification is a deviation, off by default.
+- **Run directory (ruling).** Its name hashes the case hash together with every recorded input file's
+  sha256 (§5.3.3).
+- **Case hash in the QoI and report keys.** Kept as is. Over-keying costs cache hits but can never
+  serve a wrong artefact, whereas narrowing the key risks one that misses an input.
+- **Rules wording.** `.claude/rules/physics-numerics.md` now states NUM-16's disjunctive test.
+
 ## Findings at a glance
 
 | ID | Sev | Category | Location | Finding |

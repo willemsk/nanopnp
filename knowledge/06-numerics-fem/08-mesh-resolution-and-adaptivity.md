@@ -34,8 +34,10 @@ verified:
 
 - First wall layer `h₁ ≈ λ_D/5` — 0.035 nm at 3 M. Geometric ratio 1.15–1.2 over ~15 layers,
   growing to 5–10 nm in the far reservoir. Expect 5 × 10⁴ – 2 × 10⁵ cells.
-- **Compute the wall-distance field once per mesh and mollify it to C¹** (eikonal or
-  screened-Poisson). `D`, `μ`, `η` all depend on `d`, so a kinked `d` propagates into the Jacobian.
+- **Compute the wall-distance field once per mesh** (eikonal or screened-Poisson). `D`, `μ`, `η`
+  all depend on `d`, so a kinked `d` propagates into the Jacobian. The validated default is the
+  unsmoothed C⁰ field; a C¹ mollification is a deviation, off by default (`SPECIFICATION.md` PHY-02,
+  NUM-31; author ruling 2026-10-19).
 - Goal-oriented (DWR) adaptivity on the current QoI: Becker & Rannacher, *Acta Numerica* **10**, 1
   (2001). Mitscha-Baude's economy — build the estimator from the **linear PB surrogate** rather
   than the full coupled adjoint — is heuristic but empirically retains the optimal O(h²) rate in

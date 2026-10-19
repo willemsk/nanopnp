@@ -497,8 +497,10 @@ symmetric 1:1 salt, so the published results do not discriminate; the arithmetic
 model evaluates and generalises unambiguously to multivalent species.
 
 **PHY-02.** The wall distance `d` SHALL be the distance to the nearest pore boundary, with the
-membrane excluded from the distance source set. `d` SHALL be computed once per mesh as a field
-(eikonal solve or screened-Poisson smoothing) and mollified to C¹ continuity.
+membrane excluded from the distance source set. `d` SHALL be computed once per mesh as a continuous field
+(eikonal solve or screened-Poisson smoothing). The validated default is that field unsmoothed: it is
+C⁰, with gradient jumps across element edges. Mollification to C¹ (the `smoothing_length_nm` pass of
+NUM-31) is a deviation, off by default.
 
 Rationale: the reference model used a general-extrusion operator over the pore boundaries only;
 electrolyte properties near the bilayer do not affect the pore's figures of merit. That field was
@@ -2967,7 +2969,8 @@ NOTE: the reference reached the published results with graded free triangular me
 boundary-layer node, at 120,917 triangles with minimum element quality 0.6378 and average 0.9765.
 
 **NUM-31.** The wall-distance field `d` SHALL be computed once per mesh (eikonal solve or
-screened-Poisson smoothing) and mollified to C¹ continuity, as required by PHY-02.
+screened-Poisson smoothing) as a continuous field, as required by PHY-02. A mollification pass to C¹
+MAY be applied; it is a deviation from the validated model and off by default.
 
 Rationale: `D`, `μ` and `η` depend on `d`, so a kinked distance field enters the Jacobian and
 degrades Newton convergence.
@@ -3844,7 +3847,7 @@ otherwise report unbounded throughput for a resumed sweep.
 
 | ID | Risk | Severity | Likelihood | Mitigation | Detection phase |
 |---|---|---|---|---|---|
-| **RSK-01** | Newton stagnates once `⟨c⟩`- and `d`-dependent `D`, `μ`, `ε`, `ϱ` are active | High | Low–Med | Corrections enabled last in the continuation ladder; pseudo-transient continuation and hybrid fallbacks; mollified C¹ distance field (VER-06). The reference converged on this system with a fully coupled direct solver and lower-bounded variable damping | Phase 0 |
+| **RSK-01** | Newton stagnates once `⟨c⟩`- and `d`-dependent `D`, `μ`, `ε`, `ϱ` are active | High | Low–Med | Corrections enabled last in the continuation ladder; pseudo-transient continuation and hybrid fallbacks; a continuous distance field, with an optional C¹ mollification (VER-06). The reference converged on this system with a fully coupled direct solver and lower-bounded variable damping | Phase 0 |
 | **RSK-02** | Under-resolved Debye layer at 3 M (λ_D = 0.18 nm) gives negative concentrations and a silently wrong current | High | Med | Mesh criterion `h ≤ λ_D/5`; `min c_i` monitored per Newton step and failed loudly (VER-08) | Phase 0–1 |
 | **RSK-03** | Current QoI wrong from non-conservative CG flux, corrupting the rectification signal | High | Med | Both the ψ-domain-integral and the variational reaction flux mandated, with automatic agreement check (VER-11) | Phase 1 |
 | **RSK-04** | Analyte net force is a near-cancellation of two terms of about 10 pN and opposite sign; a small error in either integral flips the sign of the total | High | Med–High | Domain-form force evaluation (§6.7) rather than surface integration; dedicated force convergence study; both routes cross-checked to better than 0.1 pN (VER-22) | Analyte phase |

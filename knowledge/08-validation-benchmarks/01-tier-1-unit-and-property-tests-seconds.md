@@ -33,7 +33,7 @@ verified:
   drifts to 1.2–1.7 × `kT/e` between 0.15 and 3 M because D and μ were fitted independently. Assert
   the drift matches expectation rather than asserting the Einstein relation. This is also why
   Poisson–Boltzmann is a *separate model*, not the PNP solver at zero bias.
-- Wall-distance field is C¹ after mollification.
+- Wall-distance field is continuous; C¹ only where the optional mollification is applied.
 - Integration order ≥ 3 asserted on every form containing `1/r`; a unit test integrating a known
   `1/r`-weighted quantity on an axis-touching mesh (order 2 returns NaN — see
   `knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`). **[tested: tests/tier1/test_charge_quadrature.py::test_qr03_an_explicit_rule_below_num07_s_floor_is_refused]**
