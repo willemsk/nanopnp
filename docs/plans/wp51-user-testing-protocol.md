@@ -26,8 +26,6 @@ nightly check fails a task with no runnable step.
 **Your call.**
 - Should the sessions run against the installed package, built fresh from the tagged release, rather
   than the development checkout? *Recommendation:* yes; installing is part of what a user meets.
-- Should the tasks stay off the documentation site until the documentation increment? *Recommendation:*
-  yes; they are a test instrument, and the increment rewrites the guide from their findings.
 
 ## Execution brief
 
@@ -88,5 +86,6 @@ the tester's to check and are asserted by no test (D3, D5).
 
 ### Open questions
 
-None blocking. The two *Your call* items default to their recommendations; a contrary ruling changes
-item 1's setup text and `mkdocs.yml` only.
+None blocking. The *Your call* item defaults to its recommendation; a contrary ruling changes the setup
+text only. The author ruled on 20 October 2026 that the tasks stay off the documentation site until the
+documentation increment (D1).
