@@ -9,7 +9,7 @@ Phase 4 tidies the program before others rely on it; the loop, the code, the not
 study and the test pruning are done. Next comes the protocol for the
 author's testing sessions: five scripted tasks and an empty log, their commands run each night.
 
-**Your call:** should the sessions use a fresh install of the release, off the documentation site?
+**Your call:** should the sessions use a fresh install of the release?
 *Recommendation:* yes; installing is part of what a user meets.
 
 ## Position
