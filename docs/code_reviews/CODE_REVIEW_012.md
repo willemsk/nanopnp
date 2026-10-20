@@ -13,10 +13,10 @@ The review found the numerical core and architectural hygiene to be exceptionall
 | Finding Category | Critical | High | Medium | Low | Total |
 |---|---:|---:|---:|---:|---:|
 | Physics & Numerics (Core) | 0 | 0 | 3 | 2 | 5 |
-| Frontend Geometry & CAD | 0 | 0 | 1 | 3 | 4 |
+| Frontend Geometry & CAD | 0 | 0 | 1 | 4 | 5 |
 | 3D Extensibility Scaling | 0 | 1 | 1 | 0 | 2 |
 | Physics Modularity & Schema | 0 | 0 | 1 | 2 | 3 |
-| Notebook Tooling & Visualization | 0 | 0 | 1 | 2 | 3 |
+| Notebook Tooling & Visualization | 0 | 0 | 1 | 1 | 2 |
 | **Total** | **0** | **1** | **7** | **9** | **17** |
 
 ---
@@ -29,15 +29,15 @@ The review found the numerical core and architectural hygiene to be exceptionall
 | AR-02 | Numerics | Medium | Reference-matching stabilization drops second derivatives in residuals, causing loss of Galerkin consistency and sub-optimal $O(h^2)$ convergence. | Maintain unstabilized Galerkin as normative; implement consistent Variational Multiscale stabilization for future non-reference runs. |
 | AR-03 | Physics | Medium | Baseline model omits Korteweg–Helmholtz dielectric-gradient body forces, creating a minor thermodynamic fluid momentum imbalance. | Keep bundled behind `dielectric_gradient_forces`; document thermodynamic trade-off for users. |
 | AR-04 | Physics | Low | Continuum Navier–Stokes and mean-field PNP break down in sub-1.5 nm pore constrictions due to water structuring and dehydration energy barriers. | Augment 1D/2D models with empirical potential-of-mean-force dehydration barriers for sub-nanometer pores. |
-| AR-05 | Numerics | Low | SciPy SuperLU suffers from fill-in explosion on fine meshes (>15 GB RAM at 1M DOFs), leaving large runs dependent on GPL SuiteSparse UMFPACK. | Cache symbolic sparse factorizations in Newton loops (REV-60); prioritize iterative solvers. |
+| AR-05 | Numerics | Low | SciPy SuperLU suffers from fill-in explosion on fine meshes (>15 GB RAM at 1M DOFs), leaving large runs dependent on GPL SuiteSparse UMFPACK. | Bring the BSD-licensed iterative fallback (`NUM-22`) forward; reusing UMFPACK's symbolic analysis (REV-60) saves time on the UMFPACK path but does not reduce SuperLU's fill-in. |
 | AR-06 | Post | Medium | Interface normal orientation in `MeshData.oriented_edges` can flip direction on boundaries touching multiple fluid zones (REV-120). | Assert uniform adjacent material pairs along any force-evaluated boundary in `post/forces.py`. |
 | AR-07 | Geometry | Low | Slanted membrane-protein triple junctions can create acute contact angles (<25°), stressing Netgen element conditioning near SICN 0.3. | Add a minimum-angle check or local chamfer at the bilayer junction. |
 | AR-08 | Geometry | Low | Advancing-front mesher in Netgen rounds edge subdivisions on thin ion-exclusion shells, requiring an explicit subdivision override. | Retain `divide_wall` workaround; document Netgen advance-front thin-layer behavior. |
-| AR-09 | Structure | Low | Stage 1 axis detection enforces strict sequence identity across chains, refusing hetero-oligomers, monomeric pores, or damaged PDBs. | Implement a channel cavity axis fallback for monomeric ($C_1$) or asymmetric assemblies. |
-| AR-10 | Density | Low | Atomic radius lookup raises fatal KeyError on non-standard residues or cofactors without an elemental fallback. | Add standard Bondi/Pauling elemental radius fallbacks with warning logs. |
+| AR-09 | Structure | Low | `symmetry.axis: auto` requires the chains to agree in residue name wherever they share a residue number, and a chain to carry at least half the C-alpha of the most complete one, so hetero-oligomers are refused; a monomeric ($C_1$) pore is accepted only with `symmetry.axis: z`, which takes the file's z axis unchecked. | Consider a channel-cavity axis estimate for $C_1$ and hetero-oligomeric assemblies, in place of the unchecked `axis: z`. |
+| AR-10 | Density | Low | Stage 2 refuses (`DensityInputError`, naming chain, residue and atom) an atom the CHARMM radius set does not name, so non-standard residues and cofactors must be deselected or added to the radius set. | Keep the refusal: "there is no fallback by element" is an author ruling (`SPECIFICATION.md` §5.2, stage 2), since a guessed radius is a plausible wrong geometry. An elemental fallback would first need that ruling changed. |
 | AR-11 | 3D Extensibility | High | Direct sparse solvers (UMFPACK, SuperLU) collapse on 3D meshes ($10^6 - 10^7$ DOFs) due to $O(N^2)$ operation and memory scaling. | Implement `NUM-22` distributed-memory PETSc block preconditioning (`PCFIELDSPLIT`, AMG, Stokes Schur complement). |
 | AR-12 | 3D Extensibility | Medium | Stages 3–6 are inherently two-dimensional; 3D requires solid OpenCASCADE booleans, 3D surface extraction, and tetrahedral meshing. | Build 3D Marching Cubes/MSMS pipeline and extend `MeshData` to 3D tetrahedra. |
-| AR-13 | Physics Modularity | Medium | Continuation ladder in `solve/continuation.py` is hardcoded to nine specific ePNP-NS stages and rejects other target models during validation. | Generalize continuation ladder to accept custom rung sequences for arbitrary coupled PDEs. |
+| AR-13 | Physics Modularity | Medium | `default_ladder` in `solve/continuation.py` builds the fixed nine-stage NUM-18 path and ends only at `LADDER_TARGETS` (`epnp-ns`, `pnp-ns`); `solve_ladder` already takes any rung sequence, but the case schema can reach only the default ladder or a single rung (`numerics.continuation: none`). | Expose a model-declared ladder through the physics-model declaration, so a new coupled PDE brings its own rungs without a case-level ladder configuration (the NUM-18 NOTE keeps the ePNP-NS path fixed). |
 | AR-14 | Physics Modularity | Low | Surface charge density weak form is fully implemented in `physics/poisson.py` but omitted from the case YAML schema. | Expose `surface_charge_C_m2` in `BoundaryConditions` (`io/case.py`). |
 | AR-15 | Physics Modularity | Low | Custom empirical parameter files are confined to `data/corrections/` inside the repository and cannot be loaded by external path. | Allow absolute or case-relative paths in electrolyte parameter resolution. |
 | AR-16 | Notebook Usability | Medium | The core package contains zero plotting imports (`matplotlib`, `pyvista`, `plotly`), and GUI plots are coupled to PySide6 Qt widgets. | Add a lightweight `nanopnp.post.plotting` module with Matplotlib convenience helpers. |
@@ -78,7 +78,7 @@ The review found the numerical core and architectural hygiene to be exceptionall
 - **Protonation (`charge/protonation.py`):** Drives PDB2PQR and PROPKA 3 at specified pH. Enforces heavy-atom coordinate registration to $0.01\text{ \AA}$ and net charge integrality to $10^{-6} e$.
 - **Closed-Form Azimuthal Gaussian Kernel (`charge/kernel.py`):** Fixed charges are projected analytically using modified Bessel functions:
   $$\bar{\rho}_i(r, z) = q_i e \pi^{-3/2} w_i^{-3} \exp\left(-\frac{(r - r_i)^2 + (z - z_i)^2}{w_i^2}\right) \tilde{I}_0\left(\frac{2 r r_i}{w_i^2}\right)$$
-  where $\tilde{I}_0(x) = e^{-x} I_0(x)$ is evaluated via `scipy.special.i0e`. The kernel is completely smooth and finite at $r = 0$, replacing singular $1/(2\pi r)$ approximations.
+  where $\tilde{I}_0(x) = e^{-x} I_0(x)$ is evaluated via `scipy.special.i0e`. The kernel is completely smooth and finite at $r = 0$, replacing singular $1/(2\pi r)$ approximations on the deposition path; a supplied `areal_charge_density` field (`charge/fields.py`) still takes the $1/(2\pi r)$ projection, guarded by an axis cutoff.
 - **$r$-Weighted $L^2$ Projection (`charge/deposit.py`):** Charge is projected onto discontinuous finite-element spaces ($P_k$) by inverting local Gram matrices with exact collapsed-Gauss triangle quadrature, conserving net charge on the discrete mesh to $10^{-13}$.
 - **Smooth Dielectric Transition (`charge/dielectric.py`):** Signed distance to fluid-facing walls generates a $C^1$ cubic Hermite solid fraction $\chi(r, z)$. Permittivity transitions smoothly over width $\delta$: $\varepsilon_r(r, z) = \chi(r, z) \varepsilon_p + (1 - \chi(r, z)) \varepsilon_{r,f}(\langle c \rangle)$.
 
@@ -106,7 +106,7 @@ The review found the numerical core and architectural hygiene to be exceptionall
 | **QoI Verification** | Automated dual-route verification (indicator volume vs reaction flux) gated to $<0.1\%$. | Single-route cross-sectional integration; subject to CG flux errors. | Manual post-processing; no built-in dual-route gating. | Single-surface flux calculation; non-conservative. |
 | **Solvers & Continuation** | Automated 9-stage continuation homotopy; state gates on $c_i > 0$ and $\Phi < 1$. | Parameter sweeps; manual tuning of damping and continuation steps. | Manual script loops; Newton solver frequently diverges on cold starts. | Basic Picard iteration or undamped Newton; fragile at high bias. |
 | **Pipeline Integration** | End-to-end: PDB/trajectory $\to$ CAD $\to$ Mesh $\to$ Solve $\to$ QoI $\to$ Provenance. | Disjoint: manual PDB alignment, manual CAD vertex cleanup, manual solver setup. | Solvers only; external tools required for CAD, meshing, and chemistry. | Fragmented standalone scripts; limited geometry automation. |
-| **Licensing & Architecture** | LGPL-2.1 core; zero upward AST import ratchets; quarantined optional GPL backends. | Commercial, proprietary closed-source binary; costly licensing per core. | Open source (LGPL/GPL); solver library only. | Academic open source; often unmaintained. |
+| **Licensing & Architecture** | BSD-3-Clause core on the LGPL-2.1 NGSolve/Netgen backend; zero upward AST import ratchets; quarantined optional GPL backends (Gmsh), and the bundle's GPL-2+ UMFPACK default (CON-11). | Commercial, proprietary closed-source binary; costly licensing per core. | Open source (LGPL/GPL); solver library only. | Academic open source; often unmaintained. |
 
 ---
 
@@ -124,7 +124,7 @@ Extending `nanopnp` from 2D-axisymmetric to full 3D is a split-difficulty archit
    - Symbolic forms in `physics/poisson.py` and `physics/nernst_planck.py` evaluate identically in 3D Cartesian space without modification.
    - The hoop stress term in `physics/flow.py` vanishes in 3D; the code already branches on `if not measures.is_axisymmetric: return deviatoric`.
    - Measure weights become 1.0; singular $1/r$ quadrature rules are dropped.
-   - Only three isolated files have hardcoded 2D identity tensors (`physics/stabilisation.py` line 222, `post/forces.py` lines 202 and 213).
+   - Hardcoded 2D identity tensors sit at three sites in two files (`physics/stabilisation.py` line 222, `post/forces.py` lines 202 and 213). The second coordinate is also read as the pore axis outside the measures, in `post/indicator.py` (the indicator's `ngs.y`), `post/forces.py` (the `(ngs.x, ngs.y)` position) and `charge/fields.py` (the membrane planes), and each needs the same change.
 2. **Post-Processing & QoI (Easy):**
    - Dual-route volume indicators and boundary reaction fluxes carry over directly. The pore axis direction updates from the second coordinate component to the third, and the azimuthal $2\pi$ multiplier is removed.
    - Force evaluation expands from axial force $F_z$ to full 3D force vectors $(F_x, F_y, F_z)$ and torques $(\tau_x, \tau_y, \tau_z)$.
@@ -133,7 +133,7 @@ Extending `nanopnp` from 2D-axisymmetric to full 3D is a split-difficulty archit
    - A 3D implementation requires bypassing azimuthal reduction, implementing 3D Marching Cubes or molecular surface extraction, performing solid OpenCASCADE boolean operations, and overhauling `MeshData` from triangles to tetrahedra.
 4. **Linear Solvers and Scalability (Fundamental Redesign):**
    - A 3D nanopore mesh with resolved Debye layers requires between 5 million and 20 million degrees of freedom.
-   - Direct sparse solvers (UMFPACK and SuperLU) scale with $\mathcal{O}(N^2)$ operations in 3D and will crash with out-of-memory errors (measured).
+   - Direct sparse solvers (UMFPACK and SuperLU) scale with $\mathcal{O}(N^2)$ operations in 3D and are expected to exhaust memory: already in 2D, SuperLU was killed at 15.4 GB on the 1.04 × 10⁶-DOF reference mesh (`SPECIFICATION.md` §6.6, measured); the 3D figure is an extrapolation, not a measurement.
    - A 3D extension strictly requires distributed-memory preconditioned iterative solvers (PETSc/ngsPETSc with `PCFIELDSPLIT`, algebraic multigrid, and a Stokes Schur complement).
 
 ---
@@ -165,7 +165,7 @@ The physics architecture is modular at the solver layer, but guarded by an inten
 ### 4.4 Adding Entirely New Coupled PDEs (e.g., Temperature / Joule Heating)
 - Adding an entirely new coupled field requires coordinated edits across six modules: `physics/models.py`, `physics/spaces.py`, `io/case.py`, `pipeline/checks.py`, `solve/state.py`, and `solve/continuation.py`.
 - NGSolve automatic differentiation builds the coupled Jacobian automatically.
-- However, the top-level continuation ladder in `solve/continuation.py` is hardcoded to nine specific ePNP-NS stages and rejects any unregistered target model names during validation.
+- However, `default_ladder` in `solve/continuation.py` builds the fixed nine-stage NUM-18 path and ends only at `LADDER_TARGETS` (`epnp-ns`, `pnp-ns`). `solve_ladder` itself takes any rung sequence, so a new model's ladder is a new rung builder, but the case schema reaches only the default ladder or a single rung (`numerics.continuation: none`).
 
 ---
 
@@ -175,7 +175,7 @@ The physics architecture is modular at the solver layer, but guarded by an inten
 - `nanopnp` can be imported and executed inside Jupyter notebooks without display servers or GUI event loops.
 - Top-level symbols are resolved lazily via `__getattr__`, keeping initial import overhead low.
 - Truncated walks using `upto="mesh"` or `upto="materials"` allow interactive execution and inspection of intermediate stages.
-- Interactive callback hooks (`on_progress`, `on_solve`) report stage progress and Newton residuals dynamically.
+- Interactive callback hooks on `run_case` (`progress`, `on_stage`, `on_solve`, `on_artefact`) report stage progress and Newton residuals dynamically, and `cancel` takes a cancellation token.
 
 ### 5.2 Data Interoperability: High
 - Users can extract raw NumPy arrays directly from stage artefacts (`PoreProfile.as_array()`, `ReducedMap.mean`, `MeshData.vertices`, and `MeshData.triangles`).
@@ -193,15 +193,14 @@ The physics architecture is modular at the solver layer, but guarded by an inten
 
 1. **Immediate (v0.5.x):**
    - Enforce uniform interface materials along force-evaluated boundaries (REV-120).
-   - Cache symbolic Jacobian factorizations across Newton steps for fixed meshes (REV-60).
    - Expose `surface_charge_C_m2` in the case schema (`io/case.py`).
-   - Add standard elemental van der Waals radius fallbacks in `density/radii.py`.
    - Provide lightweight Matplotlib plotting helpers (`nanopnp.post.plotting`) and `_repr_html_()` methods on `RunResult`.
 2. **Mid-Term (v0.6 – v0.7):**
    - Replace the Varadhan screened-Poisson distance approximation with an upwind Hamilton–Jacobi or fast marching Eikonal solver.
-   - Implement store garbage collection (`nanopnp store gc`) and zstandard array payload compression (REV-32).
+   - Reuse UMFPACK's symbolic analysis across Newton steps on a fixed mesh (REV-60, deferred to Phase 6 by §8.2.9 I3).
+   - Implement store garbage collection (`nanopnp store gc`) for entries of an earlier schema (REV-32, deferred to Phase 5 by §8.2.9 I3), and zstandard array payload compression.
    - Migrate GUI to a decoupled browser architecture (REV-114).
-   - Generalize the continuation ladder to accept custom rung sequences.
+   - Let a physics model declare its own continuation ladder (AR-13).
 3. **Long-Term (v1.0+):**
    - Implement distributed-memory PETSc block preconditioning (`PCFIELDSPLIT`, AMG, Stokes Schur complement) per `NUM-22`.
    - Construct a 3D solid surface extraction and tetrahedral meshing pipeline.
