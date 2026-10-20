@@ -1229,3 +1229,43 @@ another name that touches two fluid domains is not stopped.
 *Recommendation:* refuse, in the force stage, a force surface whose two sides are not one pair of
 materials all along it, rather than orient it by name. Not done here: it widens a review-fix package
 into the force stage.
+
+## REV-121: Stage 1 checks no axis for a monomeric or hetero-oligomeric pore
+
+`symmetry.axis: auto` finds the axis by cyclic chain permutation, so it needs n ≥ 2 chains that agree
+in residue name wherever they share a residue number, each with at least half the C-alpha of the most
+complete chain (`structure/read.py`; VER-48 refuses `auto` on C1). A hetero-oligomeric pore is
+therefore refused, and a monomeric (C1) pore runs only under `symmetry.axis: z`, which takes the
+file's z axis through its origin unchecked (§5.3.1). Found by CODE_REVIEW_012 AR-09.
+
+**Open** (author's ruling, CODE_REVIEW_012 disposition, 20 October 2026): confirmed as a gap.
+*Recommendation:* an axis estimate from the channel cavity, gated like the permutation axis, for C1
+and hetero-oligomeric assemblies. It needs a specification change to §5.3.1 and VER-48 first.
+
+## REV-122: A case cannot load a correction file from outside the installed package
+
+`electrolyte.parameters` and every `electrolyte.corrections.*.model` must name a file in
+`CORRECTIONS_DIR`, inside the installed package (`core/paths.py`); any other name is refused as not
+installed (`io/case.py`). `materials.models.register` adds a coded correction from Python, but no
+route reads a parameter file from elsewhere. FR-16's "a new electrolyte or surface is a data file
+rather than a code change" therefore holds only for a repository checkout: an installed user writes
+into site-packages. Found by CODE_REVIEW_012 AR-15.
+
+**Open** (author's ruling, CODE_REVIEW_012 disposition, 20 October 2026): confirmed.
+*Recommendation:* admit a case-relative or absolute path. The case file is the unit of
+reproducibility and a file outside the wheel is not pinned by its version, so the file's content
+hash enters the stage-8 key and the FR-25 manifest, and the manifest lists it as a deviation from the
+validated default; otherwise a cached result survives an edit of the file.
+
+## REV-123: The library has no plotting helpers or notebook display
+
+`src/nanopnp/` imports no plotting library outside `gui/`, whose plots are PySide6 widgets
+(`ConvergencePlot`, `GeometryCanvas`) and whose `gui/render.py` writes Three.js files to disk. No
+artefact or result type defines `_repr_html_` or `_repr_svg_`. A notebook user reads the arrays
+(`PoreProfile.as_array()`, `MeshData.vertices`, `sample_at()`) and writes the figures by hand. No
+requirement asks for either. Found by CODE_REVIEW_012 AR-16 and AR-17, merged here.
+
+**Open** (author's ruling, CODE_REVIEW_012 disposition, 20 October 2026): confirmed as a feature gap.
+*Recommendation:* an optional `plot` extra with Matplotlib helpers for the profile, mesh and fields,
+and rich display on `RunResult`, `PoreProfile` and `MeshData`, kept off the default import path. It
+needs a requirement first.

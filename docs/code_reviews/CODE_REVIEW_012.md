@@ -191,17 +191,43 @@ The physics architecture is modular at the solver layer, but guarded by an inten
 
 ## 6. Recommendations & Roadmap
 
+Items for findings the author declined (§7) are left out.
+
 1. **Immediate (v0.5.x):**
    - Enforce uniform interface materials along force-evaluated boundaries (REV-120).
-   - Expose `surface_charge_C_m2` in the case schema (`io/case.py`).
-   - Provide lightweight Matplotlib plotting helpers (`nanopnp.post.plotting`) and `_repr_html_()` methods on `RunResult`.
+   - Provide lightweight Matplotlib plotting helpers and rich notebook display (REV-123).
 2. **Mid-Term (v0.6 – v0.7):**
-   - Replace the Varadhan screened-Poisson distance approximation with an upwind Hamilton–Jacobi or fast marching Eikonal solver.
+   - Admit a correction parameter file by path, hashed into the stage-8 key and the manifest (REV-122).
+   - Estimate the axis of a monomeric or hetero-oligomeric pore (REV-121).
    - Reuse UMFPACK's symbolic analysis across Newton steps on a fixed mesh (REV-60, deferred to Phase 6 by §8.2.9 I3).
    - Implement store garbage collection (`nanopnp store gc`) for entries of an earlier schema (REV-32, deferred to Phase 5 by §8.2.9 I3), and zstandard array payload compression.
    - Migrate GUI to a decoupled browser architecture (REV-114).
-   - Let a physics model declare its own continuation ladder (AR-13).
 3. **Long-Term (v1.0+):**
    - Implement distributed-memory PETSc block preconditioning (`PCFIELDSPLIT`, AMG, Stokes Schur complement) per `NUM-22`.
-   - Construct a 3D solid surface extraction and tetrahedral meshing pipeline.
-   - Incorporate ion dehydration free-energy barriers for sub-1.5 nm pore channels.
+
+---
+
+## 7. Disposition
+
+The author ruled on each finding on 20 October 2026. Three items stay open in the
+[review register](../project/review-items.md); the rest are declined, with the reason.
+
+| ID | Ruling | Reason or item |
+|---|---|---|
+| AR-01 | declined | NUM-31 admits the screened-Poisson field. `physics/distance.py` clamps the decayed field to at most 1 and zeroes the source degrees of freedom, so `d ≥ 0` by construction; corner smoothing is its measured accuracy. |
+| AR-02 | declined | Already the design: `stabilisation: none` is the default, and NUM-14 makes the dropped second derivatives a deliberate reproduction of the reference settings. The O(h²) claim has no evidence. |
+| AR-03 | declined | Already the design: PHY-23 keeps the force off by default and records it as a deviation when on. |
+| AR-04 | declined | A change to the model physics, which the COMSOL report fixes (§1.6). |
+| AR-05 | declined | Duplicates NUM-22 and the SuperLU measurement of §6.6 (CON-11). |
+| AR-06 | declined | Duplicates REV-120, open. |
+| AR-07 | declined | No measurement; the SICN > 0.3 quality gate refuses such a mesh. |
+| AR-08 | declined | No defect: it recommends keeping `divide_wall`. |
+| AR-09 | open | [REV-121](../project/review-items.md#rev-121-stage-1-checks-no-axis-for-a-monomeric-or-hetero-oligomeric-pore) |
+| AR-10 | declined | The §5.2 ruling: no fallback by element. |
+| AR-11 | declined | Duplicates NUM-22, which already precedes any 3D capability. |
+| AR-12 | declined | 3D is out of scope (N4); CON-01 asks only that the architecture not preclude it. |
+| AR-13 | declined | QR-14 holds: a model registered as one class runs as a single rung, and no model yet needs another ladder. |
+| AR-14 | declined | No requirement asks for a pore-wall surface charge in the case; surface charge belongs to the analyte, FR-21, v0.7. |
+| AR-15 | open | [REV-122](../project/review-items.md#rev-122-a-case-cannot-load-a-correction-file-from-outside-the-installed-package) |
+| AR-16 | open | [REV-123](../project/review-items.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display), with AR-17 |
+| AR-17 | open | Merged into REV-123 |
