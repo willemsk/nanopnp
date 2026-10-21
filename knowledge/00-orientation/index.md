@@ -7,4 +7,4 @@
 * [Provenance and how to extend this](04-provenance-and-how-to-extend-this.md) - The primary sources and how a durable finding is added to the knowledge base.
 * [Author rulings (2026-08) — these override the sources](05-author-rulings-2026-08-these-override.md) - The author's fourteen rulings of August 2026, which override the printed sources.
 * [Still open](06-still-open.md) - Questions still open: the radial potential at 0.15 M, the ClyA-AS mutation list and the PlyAB supplementary details.
-* [7. Glossary of project terminology and shorthands](07-glossary.md) - Comprehensive glossary of specification prefixes, numerical continuation ladders, rungs, review findings, and software architecture concepts.
+* [Glossary of project terminology and shorthands](07-glossary.md) - Comprehensive glossary of specification prefixes, numerical continuation ladders, rungs, review findings, and software architecture concepts.
