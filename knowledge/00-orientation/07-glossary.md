@@ -45,7 +45,7 @@ generated:
 
 * **MOD-nn**. Modularity review findings recorded in docs/project/modularity-findings.md and ruled in SPECIFICATION section 8.2.8. They record findings from the Phase 4 architectural modularity exploration regarding coupling, layering, and extension points.
 
-* **CR-nn**. Code review findings. They record specific technical findings identified during formal code review passes on work package pull requests.
+* **CR-nn**. Numbered comments of a code review of a pull request (for example CR-1 to CR-17 of PR #43). Those left open are carried as REV-nn items.
 
 * **OPN-nn**. Open items register defined in SPECIFICATION section 10. They document open scientific questions, parameter uncertainties, and deferred technical decisions.
 
@@ -53,9 +53,9 @@ generated:
 
 * **WP-nn**. Work packages. They are scoped development increments that execute the phased project roadmap. Each package carries a dedicated plan in docs/plans/.
 
-* **D1/D2**. Work package decisions and deliverables. They designate numbered decision items and deliverable clauses within work package plans and phase amendments.
+* **D1/D2**. Numbered decisions. They designate the rows of a work package plan's Decisions table and the rulings labelled D in a phase section of SPECIFICATION section 8.2 (for example D2 in section 8.2.4).
 
-* **H1-H12**. Modularity report rulings defined in SPECIFICATION section 8.2.8. They represent the twelve authoritative author rulings that resolved the modularity findings of Phase 4. They belong to the broader set of author rulings documented in SPECIFICATION section 8.2.
+* **H1-H12**. Modularity report rulings defined in SPECIFICATION section 8.2.8. They represent twelve author rulings on the modularity report, its sequence and its fixes; H12 rules how open items are kept. They belong to the broader set of author rulings documented in SPECIFICATION section 8.2.
 
 ## Section 3. Physics and electrokinetics terms
 
@@ -73,13 +73,13 @@ generated:
 
 * **EOF**. Electro-osmotic flow. It is bulk fluid motion driven by an applied electric field acting on net space charge within the electrical double layer.
 
-* **steric flux / Bikerman**. An ion-crowding exclusion flux formulation in the Nernst-Planck equation. It penalises ionic volume packing fractions approaching unity.
+* **steric flux (PHY-05)**. The ion-crowding term beta_i added to the Nernst-Planck flux bracket. It is species-dependent, through the prefactor a_i^3 / a_0^3 (4.16 for the reference NaCl parameters), and sums the concentration gradients of all species. It is singular as the packing fraction Phi approaches 1, which NUM-17 asserts against at every Newton step. It is not the single-species Bikerman form.
 
-* **dielectric saturation / Booth**. The reduction of solvent relative permittivity under strong electric fields. It arises from the electrostatic alignment of water dipole moments.
+* **concentration-dependent permittivity (PHY-11)**. The fall of the solvent relative permittivity with local salt concentration, in the Langevin form fitted by Gavish. It is a function of the concentration alone, not of the electric field, so it is not a field-driven (Booth) saturation.
 
 * **access resistance / Maxwell-Hall**. The spreading electrical resistance of the bulk electrolyte at the entrance and exit apertures of a pore. It scales inversely with pore diameter and electrolyte conductivity.
 
-* **access conductance trap**. A common literature error that substitutes pore radius for diameter in Hall access conductance. The correct two-sided access resistance is rho over 2a, which equals 1 over sigma times d. Substituting radius for diameter under-predicts total conductance by 16 percent on standard reference pores.
+* **access conductance trap**. A common literature error that substitutes pore radius for diameter in Hall access conductance. The correct two-sided access resistance is rho over 2a, which equals 1 over sigma times d. Substituting radius for diameter under-predicts total conductance by about 16 percent for a = 2 nm and L = 13 nm (VER-17 note).
 
 * **wall distance field (d, PHY-02)**. The scalar distance from any fluid point to the nearest pore boundary. The membrane boundary is explicitly excluded from this distance calculation. The field is clamped at zero to prevent the empirical wall functions from producing negative values or unphysical anti-diffusion.
 
@@ -131,7 +131,7 @@ generated:
 
 ## Section 5. Software architecture and pipeline
 
-* **the walk**. The canonical pipeline that executes simulation workflows across thirteen registered stages. Stage 9 (case) executes first to resolve inputs and settings for all downstream stages. The walk then proceeds through structure ingestion, density map generation, symmetry reduction, contour extraction, CAD boundary assembly, mesh generation, protonation, fixed charge assembly, materials resolution, nonlinear solution, quantity of interest extraction, and reporting. Stage 7 comprises two registered stages, protonation and charge.
+* **the walk**. The canonical pipeline that executes simulation workflows over the thirteen registered stages, minus those a case does not need (protonation, charge and region are dropped when nothing reads them). Stage 9 (case) executes first to resolve inputs and settings for all downstream stages. The walk then proceeds through structure ingestion, density map generation, symmetry reduction, contour extraction, CAD boundary assembly, mesh generation, protonation, fixed charge assembly, materials resolution, nonlinear solution, quantity of interest extraction, and reporting. Stage 7 comprises two registered stages, protonation and charge.
 
 * **case file**. Declarative YAML configuration document. It defines physical parameters, numerical options, boundary conditions, and file inputs. It is the primary unit of scientific reproducibility.
 
