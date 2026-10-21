@@ -209,7 +209,7 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
 
     for filename in (MANIFEST_FILENAME, CASE_FILENAME, RUN_RECORD_FILENAME):
         assert (result.directory / filename).is_file(), filename
-    written_case = (result.directory / CASE_FILENAME).read_text(encoding="utf-8")
+    written_case = (result.directory / CASE_FILENAME).read_bytes().decode("utf-8")
     assert written_case == result.manifest.case_text
 
     record = result.record()
