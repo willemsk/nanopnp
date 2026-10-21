@@ -1,23 +1,30 @@
 ---
 type: Glossary
-title: 7. Glossary of project terminology and shorthands
+title: Glossary of project terminology and shorthands
 description: Comprehensive glossary of nanopnp specification prefixes, numerical continuation ladders, rungs, review findings, and software architecture concepts.
 tags:
 - orientation
 - glossary
 - specification
+sources:
+- id: spec
+  resource: SPECIFICATION.md
+  title: The normative specification
+- id: code
+  resource: src/nanopnp/pipeline/run.py
+  title: The pipeline walk (selected_stages)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-20T00:00:00Z'
 ---
 
-# 7. Glossary of project terminology and shorthands
+# Glossary of project terminology and shorthands
 
 ## Section 1. Core shorthands
 
 * **ladder**. The numerical continuation ladder defined in NUM-18. It defines a sequential homotopy path of nine rungs. It advances from a simple linear electrostatic problem to the fully coupled nonlinear continuum system. Each rung warm-starts from the converged solution of the preceding rung. Rungs 4, 5, and 9 contain parameter ramps, so a complete ladder solve executes many discrete numerical steps. The sequence enables robust convergence across the entire operating envelope. Enabling physical corrections last isolates their individual impact on numerical stability.
 
-* **rung**. A single discrete sub-problem solved within the NUM-18 continuation ladder. The ladder numbers its rungs 1 to 9; these are not the pipeline stage numbers of the walk (section 5), which are a separate sequence. Each rung solves an intermediate model to convergence using damped Newton iterations. It transfers its converged state vector to initialise the next rung. The nine standard rungs proceed in a fixed sequence. Rung 1 solves linear Poisson-Boltzmann. Rung 2 solves nonlinear Poisson-Boltzmann. Rung 3 solves equilibrium Poisson-Nernst-Planck at zero bias and zero fluid velocity. Rung 4 ramps surface charge and pore charge from zero to target values. Rung 5 ramps applied voltage bias from zero to target potential in small steps. Rung 6 enables Stokes or Navier-Stokes hydrodynamic flow coupling. Rung 7 activates concentration-dependent and wall-distance-dependent property corrections for diffusivity, mobility, fluid viscosity, solvent permittivity, and solution density. Rung 8 enables steric flux. Rung 9 sweeps electrolyte salt concentration across the operating range. Re-solving an already converged rung costs at most one Newton step: when the entry residual is already below its target the solve returns before its first step (NUM-16, VER-44).
+* **rung**. A single discrete sub-problem solved within the NUM-18 continuation ladder. The ladder numbers its rungs 1 to 9; these are not the pipeline stage numbers of the walk (section 5), which are a separate sequence. Each rung solves an intermediate model to convergence using damped Newton iterations. It transfers its converged state vector to initialise the next rung. The nine standard rungs proceed in a fixed sequence. Rung 1 solves linear Poisson-Boltzmann. Rung 2 solves nonlinear Poisson-Boltzmann. Rung 3 solves equilibrium Poisson-Nernst-Planck at zero bias and zero fluid velocity. Rung 4 ramps surface charge and pore charge from zero to target values. Rung 5 ramps applied voltage bias from zero to target potential in small steps. Rung 6 enables Stokes or Navier-Stokes hydrodynamic flow coupling. Rung 7 activates concentration-dependent and wall-distance-dependent property corrections for diffusivity, mobility, fluid viscosity, solvent permittivity, and solution density. Rung 8 enables steric flux. Rung 9 sweeps electrolyte salt concentration across the operating range. Re-solving an already converged rung costs at most one Newton step: when the entry residual is already below its target the solve returns before its first step (NUM-16, VER-44). **[verified][^spec]**
 
 * **REV**. Review register findings tracked in docs/project/review-findings.md and review-items.md. They log items left open during work package implementation or review. Each item records its identifier, area, severity, status, and authoritative ruling. An item remains open until resolved by an author ruling or a resolving commit.
 
@@ -73,13 +80,13 @@ generated:
 
 * **EOF**. Electro-osmotic flow. It is bulk fluid motion driven by an applied electric field acting on net space charge within the electrical double layer.
 
-* **steric flux (PHY-05)**. The ion-crowding term beta_i added to the Nernst-Planck flux bracket. It is species-dependent, through the prefactor a_i^3 / a_0^3 (4.16 for the reference NaCl parameters), and sums the concentration gradients of all species. It is singular as the packing fraction Phi approaches 1, which NUM-17 asserts against at every Newton step. It is not the single-species Bikerman form.
+* **steric flux (PHY-05)**. The ion-crowding term beta_i added to the Nernst-Planck flux bracket. It is species-dependent, through the prefactor a_i^3 / a_0^3 (4.16 for the reference NaCl parameters), and sums the concentration gradients of all species. It is singular as the packing fraction Phi approaches 1, which NUM-17 asserts against at every Newton step. It is not the single-species Bikerman form. **[verified][^spec]**
 
-* **concentration-dependent permittivity (PHY-11)**. The fall of the solvent relative permittivity with local salt concentration, in the Langevin form fitted by Gavish. It is a function of the concentration alone, not of the electric field, so it is not a field-driven (Booth) saturation.
+* **concentration-dependent permittivity (PHY-11)**. The fall of the solvent relative permittivity with local salt concentration, in the Langevin form fitted by Gavish. It is a function of the concentration alone, not of the electric field, so it is not a field-driven (Booth) saturation. **[verified][^spec]**
 
 * **access resistance / Maxwell-Hall**. The spreading electrical resistance of the bulk electrolyte at the entrance and exit apertures of a pore. It scales inversely with pore diameter and electrolyte conductivity.
 
-* **access conductance trap**. A common literature error that substitutes pore radius for diameter in Hall access conductance. The correct two-sided access resistance is rho over 2a, which equals 1 over sigma times d. Substituting radius for diameter under-predicts total conductance by about 16 percent for a = 2 nm and L = 13 nm (VER-17 note).
+* **access conductance trap**. A common literature error that substitutes pore radius for diameter in Hall access conductance. The correct two-sided access resistance is rho over 2a, which equals 1 over sigma times d. Substituting radius for diameter under-predicts total conductance by about 16 percent for a = 2 nm and L = 13 nm only; other geometries differ (VER-17 note). **[verified][^spec]**
 
 * **wall distance field (d, PHY-02)**. The scalar distance from any fluid point to the nearest pore boundary. The membrane boundary is explicitly excluded from this distance calculation. The field is clamped at zero to prevent the empirical wall functions from producing negative values or unphysical anti-diffusion.
 
@@ -117,9 +124,9 @@ generated:
 
 * **SICN vs gamma**. Finite-element mesh quality metrics. Signed Inverted Condition Number is signed. A zero or negative SICN flags inverted or degenerate triangles. The gamma metric measures element equilateral shape but is unsigned, so it cannot detect inverted elements.
 
-* **cylindrical hoop strain (NUM-05)**. The geometric viscous stress term 2 eta u_r v_r / r^2 of the cylindrical strong form, which the r integration weight reduces to 2 eta u_r v_r / r in the axisymmetric weak form. Omitting this term silently corrupts the computed velocity and pressure fields near the central symmetry axis.
+* **cylindrical hoop strain (NUM-05)**. The geometric viscous stress term 2 eta u_r v_r / r^2 of the cylindrical strong form, which the r integration weight reduces to 2 eta u_r v_r / r in the axisymmetric weak form. **[verified][^spec]** Omitting this term silently corrupts the computed velocity and pressure fields near the central symmetry axis.
 
-* **dual-route agreement (NUM-26, QR-04)**. The requirement that total current computed via cross-sectional indicator integration and via variational reaction flux agree within 0.001 relative tolerance. Disagreement indicates numerical error or inadequate mesh refinement.
+* **dual-route agreement (NUM-26, QR-04)**. The requirement that total current computed via cross-sectional indicator integration and via variational reaction flux agree within 0.001 relative tolerance. **[verified][^spec]** Disagreement indicates numerical error or inadequate mesh refinement.
 
 * **natural axis conditions (NUM-06)**. Boundary conditions on the symmetry axis r = 0. Only radial velocity u_r = 0 is an essential Dirichlet constraint. The radial derivatives of potential, concentrations, and axial velocity vanish naturally under the axisymmetric radial integration weight r.
 
@@ -131,7 +138,7 @@ generated:
 
 ## Section 5. Software architecture and pipeline
 
-* **the walk**. The canonical pipeline that executes simulation workflows over the thirteen registered stages, minus those a case does not need (protonation, charge and region are dropped when nothing reads them). Stage 9 (case) executes first to resolve inputs and settings for all downstream stages. The walk then proceeds through structure ingestion, density map generation, symmetry reduction, contour extraction, CAD boundary assembly, mesh generation, protonation, fixed charge assembly, materials resolution, nonlinear solution, quantity of interest extraction, and reporting. Stage 7 comprises two registered stages, protonation and charge.
+* **the walk**. The canonical pipeline that executes simulation workflows over the thirteen registered stages, minus those a case does not need (protonation, charge and region are dropped when nothing reads them). Stage 9 (case) executes first to resolve inputs and settings for all downstream stages. The walk then proceeds through structure ingestion, density map generation, symmetry reduction, contour extraction, CAD boundary assembly, mesh generation, protonation, fixed charge assembly, materials resolution, nonlinear solution, quantity of interest extraction, and reporting. Stage 7 comprises two registered stages, protonation and charge. **[verified][^code]**
 
 * **case file**. Declarative YAML configuration document. It defines physical parameters, numerical options, boundary conditions, and file inputs. It is the primary unit of scientific reproducibility.
 
@@ -143,6 +150,9 @@ generated:
 
 * **deviations (FR-25)**. An explicit list in the run manifest documenting every physics switch or parameter set away from its validated default.
 
-* **refusal vs failure**. Exit codes are a contract (IF-02). A refusal is a clean, diagnostic abort: exit code 3 for a case rejected by validation or schema, exit code 4 for a numerical gate abort of the QR-12 family. Exit code 5 is nonlinear non-convergence, an expected result at the corners of a sweep envelope. A failure is exit code 1, an unexpected exception, the only class whose traceback is worth keeping.
+* **refusal vs failure**. Exit codes are a contract (IF-02). A refusal is a clean, diagnostic abort: exit code 3 for a case rejected by validation or schema, exit code 4 for a numerical gate abort of the QR-12 family. Exit code 5 is nonlinear non-convergence, an expected result at the corners of a sweep envelope. A failure is exit code 1, an unexpected exception, the only class whose traceback is worth keeping. **[verified][^spec]**
 
 * **test tiers 1-4**. The four-tier verification and validation hierarchy. Tier 1 executes unit and property tests in seconds on every push. Tier 2 executes analytic benchmarks in minutes on every push and nightly. Tier 3 executes cross-implementation comparisons against reference COMSOL simulations. Tier 4 executes experimental reproduction benchmarks to gate releases.
+
+[^spec]: SPECIFICATION.md: NUM-05, NUM-16, NUM-17, NUM-18, NUM-26, PHY-05, PHY-11, VER-17 and its NOTE, VER-44, IF-02.
+[^code]: `selected_stages()` in `src/nanopnp/pipeline/run.py`.
