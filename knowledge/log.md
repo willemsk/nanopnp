@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-10-21
+* **Add**: A glossary of the project's shorthands: specification identifier prefixes, the NUM-18 ladder and its rungs, review registers and the pipeline terms. ([7. Glossary of project terminology and shorthands](00-orientation/07-glossary.md))
+
 ## 2026-10-19
 * **Update**: Marked the advice to mollify the wall-distance field and the advice to apply field-wise row scaling as superseded by the CODE_REVIEW_010 rulings (PHY-02, NUM-31, NUM-10). ([1. Symbols](01-physics-epnpns/01-symbols.md), [7. Implementation notes carried forward](01-physics-epnpns/07-implementation-notes-carried-forward.md), [3. Nondimensionalisation](06-numerics-fem/03-nondimensionalisation.md))
 * **Update**: Stated that the validated wall-distance field is the unsmoothed C⁰ field and that C¹ mollification is a deviation, off by default (author ruling, CODE_REVIEW_010). ([8. Mesh resolution and adaptivity](06-numerics-fem/08-mesh-resolution-and-adaptivity.md))

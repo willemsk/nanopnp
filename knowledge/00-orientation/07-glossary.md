@@ -15,9 +15,9 @@ generated:
 
 ## Section 1. Core shorthands
 
-* **ladder**. The numerical continuation ladder defined in NUM-18. It defines a sequential homotopy path of nine distinct stages. It advances from a simple linear electrostatic problem to the fully coupled nonlinear continuum system. Each stage warm-starts from the converged solution of the preceding stage. Stages 4, 5, and 9 contain parameter ramps, so a complete ladder solve executes many discrete numerical steps. The sequence enables robust convergence across the entire operating envelope. Enabling physical corrections last isolates their individual impact on numerical stability.
+* **ladder**. The numerical continuation ladder defined in NUM-18. It defines a sequential homotopy path of nine rungs. It advances from a simple linear electrostatic problem to the fully coupled nonlinear continuum system. Each rung warm-starts from the converged solution of the preceding rung. Rungs 4, 5, and 9 contain parameter ramps, so a complete ladder solve executes many discrete numerical steps. The sequence enables robust convergence across the entire operating envelope. Enabling physical corrections last isolates their individual impact on numerical stability.
 
-* **rung**. A single discrete sub-problem solved within the NUM-18 continuation ladder. Each rung solves an intermediate model to convergence using damped Newton iterations. It transfers its converged state vector to initialise the next rung. The nine standard stages proceed in a fixed sequence. Stage 1 solves linear Poisson-Boltzmann. Stage 2 solves nonlinear Poisson-Boltzmann. Stage 3 solves equilibrium Poisson-Nernst-Planck at zero bias and zero fluid velocity. Stage 4 ramps surface charge and pore charge from zero to target values. Stage 5 ramps applied voltage bias from zero to target potential in small steps. Stage 6 enables Stokes or Navier-Stokes hydrodynamic flow coupling. Stage 7 activates concentration-dependent and wall-distance-dependent property corrections for diffusivity, mobility, fluid viscosity, solvent permittivity, and solution density. Stage 8 enables steric flux. Stage 9 sweeps electrolyte salt concentration across the operating range. Re-solving an already converged rung costs exactly one Newton iteration to assemble the Jacobian and verify the relative update criterion.
+* **rung**. A single discrete sub-problem solved within the NUM-18 continuation ladder. The ladder numbers its rungs 1 to 9; these are not the pipeline stage numbers of the walk (section 5), which are a separate sequence. Each rung solves an intermediate model to convergence using damped Newton iterations. It transfers its converged state vector to initialise the next rung. The nine standard rungs proceed in a fixed sequence. Rung 1 solves linear Poisson-Boltzmann. Rung 2 solves nonlinear Poisson-Boltzmann. Rung 3 solves equilibrium Poisson-Nernst-Planck at zero bias and zero fluid velocity. Rung 4 ramps surface charge and pore charge from zero to target values. Rung 5 ramps applied voltage bias from zero to target potential in small steps. Rung 6 enables Stokes or Navier-Stokes hydrodynamic flow coupling. Rung 7 activates concentration-dependent and wall-distance-dependent property corrections for diffusivity, mobility, fluid viscosity, solvent permittivity, and solution density. Rung 8 enables steric flux. Rung 9 sweeps electrolyte salt concentration across the operating range. Re-solving an already converged rung costs at most one Newton step: when the entry residual is already below its target the solve returns before its first step (NUM-16, VER-44).
 
 * **REV**. Review register findings tracked in docs/project/review-findings.md and review-items.md. They log items left open during work package implementation or review. Each item records its identifier, area, severity, status, and authoritative ruling. An item remains open until resolved by an author ruling or a resolving commit.
 
@@ -43,15 +43,15 @@ generated:
 
 * **RSK-nn**. Risk register entries defined in SPECIFICATION section 9. They track project risks, severities, likelihoods, mitigations, and detection phases.
 
-* **MOD-nn**. Modularity review findings defined in SPECIFICATION section 5.4 and section 8.2.8. They record findings from the Phase 4 architectural modularity exploration regarding coupling, layering, and extension points.
+* **MOD-nn**. Modularity review findings recorded in docs/project/modularity-findings.md and ruled in SPECIFICATION section 8.2.8. They record findings from the Phase 4 architectural modularity exploration regarding coupling, layering, and extension points.
 
 * **CR-nn**. Code review findings. They record specific technical findings identified during formal code review passes on work package pull requests.
 
 * **OPN-nn**. Open items register defined in SPECIFICATION section 10. They document open scientific questions, parameter uncertainties, and deferred technical decisions.
 
-* **UT-nn**. User testing findings defined in SPECIFICATION section 8.2.14. They track issues identified during end-user evaluation protocols.
+* **UT-nn**. User-testing findings, logged in docs/user-testing/findings.md once the Phase 4 sessions run and ruled by the author (SPECIFICATION section 8.2.8, H2 and H9). They track issues identified during end-user evaluation protocols.
 
-* **WP-nn**. Work packages. They are scoped development increments that execute the phased project roadmap. Each package carries a dedicated plan and implementation report.
+* **WP-nn**. Work packages. They are scoped development increments that execute the phased project roadmap. Each package carries a dedicated plan in docs/plans/.
 
 * **D1/D2**. Work package decisions and deliverables. They designate numbered decision items and deliverable clauses within work package plans and phase amendments.
 
@@ -111,13 +111,13 @@ generated:
 
 * **P1 / P2 function spaces**. Continuous Lagrange finite-element polynomial spaces. In nanopnp, electrostatic potential and ionic concentrations live in P2. Velocity lives in vector P2. Pressure lives in P1.
 
-* **SUPG / PSPG stabilisation**. Petrov-Galerkin finite-element stabilisation methods. Streamline-Upwind Petrov-Galerkin stabilises advection-dominated transport. Pressure-Stabilizing Petrov-Galerkin stabilises equal-order velocity and pressure elements.
+* **SUPG / PSPG stabilisation**. Petrov-Galerkin finite-element stabilisation methods. Streamline-Upwind Petrov-Galerkin stabilises advection-dominated transport. Pressure-Stabilizing Petrov-Galerkin stabilises equal-order velocity and pressure elements. The production solve runs without stabilisation (NUM-11); SUPG is an optional flag.
 
 * **direct linear solvers (UMFPACK / SuperLU)**. Sparse direct matrix factorisation libraries. They compute exact LU decompositions of the linearised Newton system at each iteration. They avoid iterative convergence issues in coupled indefinite systems.
 
 * **SICN vs gamma**. Finite-element mesh quality metrics. Signed Inverted Condition Number is signed. A zero or negative SICN flags inverted or degenerate triangles. The gamma metric measures element equilateral shape but is unsigned, so it cannot detect inverted elements.
 
-* **cylindrical hoop strain (NUM-05)**. The geometric viscous stress term 2 eta u_r v_r / r present in cylindrical axisymmetric weak forms. Omitting this term silently corrupts the computed velocity and pressure fields near the central symmetry axis.
+* **cylindrical hoop strain (NUM-05)**. The geometric viscous stress term 2 eta u_r v_r / r^2 of the cylindrical strong form, which the r integration weight reduces to 2 eta u_r v_r / r in the axisymmetric weak form. Omitting this term silently corrupts the computed velocity and pressure fields near the central symmetry axis.
 
 * **dual-route agreement (NUM-26, QR-04)**. The requirement that total current computed via cross-sectional indicator integration and via variational reaction flux agree within 0.001 relative tolerance. Disagreement indicates numerical error or inadequate mesh refinement.
 
@@ -143,6 +143,6 @@ generated:
 
 * **deviations (FR-25)**. An explicit list in the run manifest documenting every physics switch or parameter set away from its validated default.
 
-* **refusal vs failure**. A refusal with exit code 4 is a clean, diagnostic pre-solve abort triggered when an input, geometry, or numerical state violates a specification gate. A failure with exit code 1 represents an unhandled crash or numerical breakdown.
+* **refusal vs failure**. Exit codes are a contract (IF-02). A refusal is a clean, diagnostic abort: exit code 3 for a case rejected by validation or schema, exit code 4 for a numerical gate abort of the QR-12 family. Exit code 5 is nonlinear non-convergence, an expected result at the corners of a sweep envelope. A failure is exit code 1, an unexpected exception, the only class whose traceback is worth keeping.
 
 * **test tiers 1-4**. The four-tier verification and validation hierarchy. Tier 1 executes unit and property tests in seconds on every push. Tier 2 executes analytic benchmarks in minutes on every push and nightly. Tier 3 executes cross-implementation comparisons against reference COMSOL simulations. Tier 4 executes experimental reproduction benchmarks to gate releases.
