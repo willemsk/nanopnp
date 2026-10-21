@@ -137,6 +137,7 @@ nav:
               - "Provenance and how to extend this": _generated/model/knowledge/00-orientation/04-provenance-and-how-to-extend-this.md
               - "Author rulings (2026-08) — these override the sources": _generated/model/knowledge/00-orientation/05-author-rulings-2026-08-these-override.md
               - "Still open": _generated/model/knowledge/00-orientation/06-still-open.md
+              - "7. Glossary of project terminology and shorthands": _generated/model/knowledge/00-orientation/07-glossary.md
           - "ePNP-NS — normative physics reference":
               - _generated/model/knowledge/01-physics-epnpns/index.md
               - "ePNP-NS — normative physics reference (overview)": _generated/model/knowledge/01-physics-epnpns/00-overview.md
