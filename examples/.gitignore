@@ -20,3 +20,4 @@ contour.profile.yaml
 2wcd.pqr
 charge.field.yaml
 charge.field.npz
+2wcd-prepared-*.pdb
