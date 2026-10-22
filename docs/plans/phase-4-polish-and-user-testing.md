@@ -1004,6 +1004,12 @@ script whose output goes into the Outcome. Its `/wp-plan` decides the file bound
 `type` vocabulary, where this plan's amendment record lives and how the restated rows are listed.
 Tag `v0.5.0-alpha.18`.
 
+> **Amended, 22 October 2026** (§8.2.16 R11). At its plan the author added two workflow changes, which
+> WP52 carries: the planning skills open the PR, and a plan may add up to 1,000 words of implementation
+> details for a smaller model, names each item's executor and makes each compaction checkpoint a work
+> item that ends the turn with a `/compact` prompt. The plan is
+> [wp52-specification-and-plans-split.md](wp52-specification-and-plans-split.md).
+
 ### WP53 — The workflow: three skills with levels, workers, and a current checkout (§8.2.16 R5 to R7)
 
 *Added, 22 October 2026* (§8.2.16 R1). It waits on WP52, whose layout its skills read. It delivers:

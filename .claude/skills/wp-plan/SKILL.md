@@ -35,7 +35,8 @@ amendment, decided now and written in the same commit**, never a quiet divergenc
 
 ## Grounding the plan
 
-The plan is written for an implementer on Sonnet who has not seen this session. Once the decisions
+The plan is written for an implementer on Sonnet who has not seen this session, and each item
+marked for a sub-agent for the smaller model that executes it (§8.2.16 R11). Once the decisions
 are drafted, and before committing, read the code each decision and work item changes or relies on,
 yourself, and settle every point the implementer would otherwise guess at (§8.2.15 Q1). For each,
 ask:
@@ -77,10 +78,11 @@ a single term (§7.1).
 | Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, and what it inherits |
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## In brief` | Before the Execution brief; the template below |
-| `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. The plan holds **at most 2,500 words outside its Outcome annotations, at most 1,500 of them outside `### Grounding`** (a longer one is a review finding, §8.2.13 N3; §8.2.15 Q1); link evidence rather than retelling earlier packages |
+| `## Execution brief` | Current scope, dependencies, requirement pointers, the implementing session's model and effort, and the subsections below. The plan holds **at most 3,500 words outside its Outcome annotations, at most 1,500 of them outside `### Grounding` and `### Implementation details`** (a longer one is a review finding, §8.2.13 N3; §8.2.15 Q1; §8.2.16 R11); link evidence rather than retelling earlier packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve every choice that affects correctness now |
 | `### Grounding` | The facts of *Grounding the plan*, grouped by decision (`D1`, `D2`, …), one bullet each: `path:symbol`, what it does today and what the change does to it. Facts only: no alternatives, no history and no restated specification. Cite symbols, not line numbers, which drift |
-| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass`, or, for an item outside the test scope (`SPECIFICATION.md` §8.2.13 N1), done when the code and review say so. Name the files in backticks. After a group of items, a line *Compaction checkpoint: after item N; resume from this plan and `git log`.* |
+| `### Implementation details` | Optional, at most 1,000 words: the exact steps, layouts, commands and file formats an item needs when a smaller model executes it, grouped by item. Steps, not design: a choice still belongs in *Decisions* |
+| `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass. **Executor:** <main, or a sub-agent type on a model>`, or, for an item outside the test scope (`SPECIFICATION.md` §8.2.13 N1), done when the code and review say so. Name the files in backticks. After a group of items, a checkpoint item: `- [ ] 5. Compaction checkpoint. **Executor:** main` (§8.2.16 R11) |
 | `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command, for in-scope tests only (§8.2.13 N1). Every claimed in-scope `VER-`/`VAL-` appears here; an out-of-scope item's done-criterion is "the code and review say so" (N3) |
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation; ask blocking ones before committing |
@@ -107,7 +109,12 @@ Review checks every plan from WP44 on against these caps (§8.2.13 N3).
 
 ### Work items
 
-Leave the boxes unticked; `/wp-implement` ticks them. The plan commits no tests: the implementer writes
+Leave the boxes unticked; `/wp-implement` ticks them. **Each item names its executor** (§8.2.16 R6,
+R11): `main`, or a sub-agent type and model, for example `general-purpose` on Haiku. A sub-agent
+takes only an item that is independent and mechanical, and whose checks it can run: a sweep, a
+slice, a rename, a fixed list of edits. An item that needs judgement on normative text, physics or
+numerics stays `main`. A Haiku item is covered by *Implementation details* in full, so that it
+chooses nothing. The plan commits no tests: the implementer writes
 each with its item from the *Verification* rows. Where a decision says *never*, *always* or *every*, its
 verification row enumerates each point of failure with one assertion each: an oracle looser than its
 decision is a defect.

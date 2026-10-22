@@ -23,13 +23,17 @@ execution taught, and open the PR. It does not chain into `/wp-ship`.
    was given, stop and ask before writing anything.
 
 Build a task list from the work items, starting at the first unticked one. Models (`CLAUDE.md`): Haiku
-for an easy mechanical item, Sonnet by default, Opus only after Sonnet has failed on the item. At a
-compaction checkpoint of the plan, compact the context; the next item resumes from the plan and
-`git log`.
+for an easy mechanical item, Sonnet by default, Opus only after Sonnet has failed on the item. A
+**compaction checkpoint** is a work item (§8.2.16 R11). Tick it in its own commit, run the push gate
+and push as in *Finishing*. Then print a prompt in a `text` block: `/compact`, followed by the
+package, the next item's number, any values later items need that are not in the plan or
+`git log`, and "resume with `/wp-implement`". End the turn there. The author compacts and resumes,
+and the next item starts from the plan and `git log`.
 
-**Fresh worker per item** (§8.2.11 L9; a trial, WP45 only unless the author adopts it): when the
-plan says so, hand each item to a new sub-agent (Agent tool, the model above) with the item's text,
-its done-criterion, the clauses it cites and this skill's *How the work lands*. It edits, runs the
+**Sub-agent items** (§8.2.16 R6, R11): hand each item whose **Executor** names a sub-agent to a new
+one of that type and model (Agent tool), with the item's text, its done-criterion, the plan's
+*Implementation details* for it, the clauses it cites and this skill's *How the work lands*. Items
+marked `main` stay in this session. It edits, runs the
 item's checks, commits and ticks, and replies with the commit and the checks it ran, nothing more.
 Re-run the item's check yourself before the next item; on a failure, revert and hand the item to
 a fresh worker once, then the next model. Do not read the worker's files into this session.
