@@ -34,7 +34,18 @@ def _(mo):
 
 
 @app.cell
-def _(Store, collect, example, plan_from_document, run_plan, write_plan):
+def _(example, mo):
+    from nanopnp.cli import main
+
+    mesh = example / "pore.msh"
+    if not mesh.exists():
+        main(["mesh", "cylinder", "--out", str(mesh)])
+    mo.md(f"**Step 0.** Wrote `{mesh.name}` with `nanopnp mesh cylinder`, the mesh the case reads.")
+    return (mesh,)
+
+
+@app.cell
+def _(Store, collect, example, mesh, plan_from_document, run_plan, write_plan):
     directory = example / "iv-charged"
     plan = plan_from_document(example / "charged.sweep.yaml")
     write_plan(plan, directory)

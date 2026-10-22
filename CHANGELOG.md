@@ -40,7 +40,7 @@ WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to 
   rung, the residual, update, damping and trials of every Newton step. An artefact cached before this
   release lacks it and draws "history not recorded".
 - **Extras.** `plot`, `notebook` (`plot` and marimo) and `examples` (`plot`).
-- **`notebooks/`**: four marimo notebooks (geometry, charge, solve, sweep), each run headless every night.
+- **`notebooks/`**: four marimo notebooks (geometry, charge, solve, sweep), each run headless every night. A notebook prepares its own input (the structure, or the pore mesh) in its first cell, so nothing is run before it.
 
 ### Changed
 

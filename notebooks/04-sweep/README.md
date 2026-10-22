@@ -6,12 +6,11 @@ directory; in a development checkout, put `uv run` in front of each.
 
 <!-- example: run -->
 ```console
-$ nanopnp mesh cylinder --out ../../examples/03-iv-sweep/pore.msh
 $ python notebook.py
 ```
 
-The first command writes the pore mesh the case reads. The second runs the notebook headless. To work
-in it, open it in the browser:
+The notebook's first cell writes the pore mesh the case reads, so nothing is run beforehand. The command
+runs it headless. To work in it, open it in the browser:
 
 ```console
 $ marimo edit notebook.py

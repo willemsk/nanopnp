@@ -37,6 +37,28 @@ def _(mo):
 
 
 @app.cell
+def _(example, mo):
+    import importlib.util
+
+    script = example.parent / "06-pdb-to-mesh" / "prepare.py"
+    prepared = example / "2wcd-prepared.pdb"
+    if not prepared.exists():
+        # Preparing a structure is the user's job, not the pipeline's: stage 1 refuses an
+        # unaligned file, so the notebook does it here, as example 06's script does.
+        spec = importlib.util.spec_from_file_location("prepare", script)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        module.prepare(
+            example.parents[1] / "tests" / "data" / "structures" / "2wcd.pdb.gz", prepared
+        )
+    mo.md(
+        f"**Step 0.** Prepared `{prepared.name}` with `{script.name}`: "
+        "the dodecamer, its pore axis on z, *cis* up."
+    )
+    return (prepared,)
+
+
+@app.cell
 def _(document, mo):
     stage = mo.ui.dropdown(["protonation", "charge", "materials"], value="materials", label="Stage")
     salt = mo.ui.slider(
@@ -47,7 +69,7 @@ def _(document, mo):
 
 
 @app.cell
-def _(Store, document, dumps_case, example, run_document, salt):
+def _(Store, document, dumps_case, example, prepared, run_document, salt):
     edited = document.model_copy(
         update={
             "electrolyte": document.electrolyte.model_copy(update={"concentration_M": salt.value})
