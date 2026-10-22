@@ -53,16 +53,17 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package starts.
   `/np-implement` stops at the pull request; `/np-ship` starts in a fresh session that did not make
   its decisions. (§8.2.11 L7; §8.2.16 R5; `CLAUDE.md`)
-* A phase plan, a work-package plan and a work-package pull request open with `## In brief`: at most
-  250 words, readable without code or identifiers, covering what changes and why, what it costs, what
-  could go wrong and how it would be noticed, and *Your call*, each decision awaiting the author with
-  a recommendation. (§8.2.10 J9)
+* A phase plan, a work-package plan and a work-package pull request open with `## In brief`, at most
+  250 words and readable without code or identifiers. It says what changes and why, what it costs,
+  what could go wrong and how it would be noticed. Its *Your call* gives each decision that waits for
+  the author, with a recommendation. (§8.2.10 J9)
 * A work-package plan is grounded in the code. Its `### Grounding` records, by symbol, what the code
-  does today, the call path the change rides on, the shape of what it reads and writes, every variant
-  of its input, the registry and layering rows it adds, and how each test obtains the object it
-  checks. It holds at most 3,500 words outside its Outcome annotations, 1,500 of them outside its
-  Grounding and its `### Implementation details`, which holds at most 1,000 and gives a smaller model
-  the exact steps; six decisions; no `## Design` heading. (§8.2.15 Q1; §8.2.16 R11)
+  does today, the call path of the change, the shape of what it reads and writes, every variant of its
+  input, the registry and layering rows it adds, and how each test gets the object it checks. The plan
+  holds at most 3,500 words outside its Outcome annotations, and 1,500 of them outside its Grounding
+  and its `### Implementation details`. The details hold at most 1,000 words and give a smaller model
+  the exact steps. The plan has at most six decisions and no `## Design` heading. (§8.2.15 Q1;
+  §8.2.16 R11)
 * Each work item names its executor: the main session, or a sub-agent by type and model. The plan
   names the implementing session's model and effort. One commit per work item, ticked
   `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11)

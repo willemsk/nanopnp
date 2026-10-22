@@ -266,7 +266,7 @@ its *Implementation details*; `main` re-runs its check.
   delivered summary; `current.md`; `CHANGELOG.md`. Done when the code and review say so. **Executor:**
   `main`.
 - [x] 8. Compaction checkpoint. **Executor:** `main`.
-- [ ] 9. Review of the workflow files for inefficiencies, contradictions and flaky behaviour (D2).
+- [x] 934c87b 9. Review of the workflow files for inefficiencies, contradictions and flaky behaviour (D2).
   Done when each finding is fixed or a `REV-nn` row, in the Outcome. **Executor:** `main`, with a
   fresh read-only `general-purpose` agent on Sonnet.
 
