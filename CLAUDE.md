@@ -42,14 +42,15 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 Gate before committing: `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest -m tier1`.
 Gate before pushing: `.claude/hooks/gate.sh run` (lint, format and types, then the per-push selection: Tier 1, the
 Tier 2 tests that neither walk the pipeline nor carry `slow`, example 01 while it solves in under 60 s, and example
-02's charged ePNP-NS walk). No coverage is measured. `gate.sh` runs before each `git commit` Claude Code makes
-(`--no-verify` skips it): the lock check, lint, format, types and the Tier 1 tests without the `nightly` marker.
-A hook pass never stands in for `run`.
-Start `run` with Bash `run_in_background` as `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`,
-wait for it in the same turn (a foreground `until grep -q '^exit ' <log>; do sleep 10; done`; re-run the
-wait if the 10-minute limit ends it), push when it passes (`exit 0`), and only then end the
-turn: a turn ended on an unpushed commit trips the environment's stop hook. The hook refuses a push of
-a tree it has not passed.
+02's charged ePNP-NS walk). No coverage is measured. `gate.sh` also runs before each `git commit` that Claude Code
+makes (`--no-verify` skips it): the lock check, lint, format, types and the Tier 1 tests without the `nightly`
+marker. A hook pass never stands in for `run`.
+
+1. Start `run` with Bash `run_in_background`: `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`.
+2. Wait for it in the same turn: `until grep -q '^exit ' <log>; do sleep 10; done` in the foreground. If the
+   10-minute limit ends the wait, run it again.
+3. Push when the log ends in `exit 0`; the hook refuses a push of a tree it has not passed. Only then end the
+   turn: a turn that ends on an unpushed commit trips the environment's stop hook.
 
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
@@ -111,8 +112,8 @@ reconstruct the run is not a result.
 
 ## Implementation workflow
 
-One work package per PR, green on tiers 1–2 before the next. To plan or resume, start at
-`docs/plans/current.md`, then the WP's Execution brief and its cited sections; a brief never
+One work package per PR, green on tiers 1–2 before the next. To plan or resume, read
+`docs/plans/current.md`, then the WP's Execution brief and the sections it cites. A brief never
 overrides a normative requirement.
 
 | Step | Command | What it does |
@@ -123,16 +124,16 @@ overrides a normative requirement.
 | 3–4 | `/np-ship [wp <n>]` | Gates, pushes, reviews (`/code-review xhigh --fix`), drives CI to green |
 | close | `/np-ship phase <n>` | Ships the close package and tags the release |
 
-Step 2 does not chain into 3: `/np-ship` starts in a fresh session (`.claude/workflow/core.md`, *Report and stop*).
-Plans before WP53 name these `/phase-plan`, `/wp-plan`, `/wp-implement` and `/wp-ship`. The steward
-skill governs a PR in flight.
+Step 2 does not chain into 3: `/np-ship` starts in a fresh session (`.claude/workflow/core.md`, *Report and
+stop*). Plans before WP53 name these `/phase-plan`, `/wp-plan`, `/wp-implement` and `/wp-ship`. The steward skill
+governs a PR in flight.
 
-**Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and
-moves to Opus only after Sonnet has failed on the item. Sub-agents kept: `physics-reviewer`,
-`ci-log-classifier` and the `.claude/scripts/clause.py` script. A WP plan is grounded in the code and
-holds at most 3,500 words (1,500 outside its Grounding and Implementation details) and six decisions,
-with compaction checkpoints as work items, each ending the turn with a `/compact` prompt. It names the implementing model and each item's executor, the main
-session or a sub-agent by type and model (§8.4.4; §8.2.15 Q1; §8.2.16 R11).
+**Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default. It moves to Opus
+only after Sonnet fails on the item. Kept: the `physics-reviewer` and `ci-log-classifier` sub-agents and the
+`.claude/scripts/clause.py` script. A WP plan is grounded in the code. It holds at most 3,500 words (1,500 outside
+its Grounding and Implementation details) and six decisions. Its compaction checkpoints are work items, and each
+ends the turn with a `/compact` prompt. It names the implementing model and the executor of each item: the main
+session, or a sub-agent by type and model (§8.4.4; §8.2.15 Q1; §8.2.16 R11).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, one above the highest present;
 pass `out=`.
