@@ -12,6 +12,42 @@ set -euo pipefail
 root=${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
 cd "$root" || exit 0
 
+# Bring the primary checkout's main up to origin/main before anything reads the skills and rules
+# from it (§8.2.16 R7). A linked worktree's primary is the parent of the common git directory.
+# Ancestry decides, not counts: a hosted clone is shallow. Nothing here may fail the session.
+set +e
+main_note=""
+common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+if [ -n "$common" ]; then
+    primary=$(dirname "$common")
+    where=""
+    [ "$primary" -ef "$root" ] || where=" (the primary checkout, $primary)"
+    fetch_timeout=""
+    command -v timeout >/dev/null 2>&1 && fetch_timeout="timeout 30"
+    # shellcheck disable=SC2086  # $fetch_timeout splits on purpose
+    if ! GIT_TERMINAL_PROMPT=0 $fetch_timeout git -C "$primary" fetch --quiet origin \
+        +refs/heads/main:refs/remotes/origin/main </dev/null >/dev/null 2>&1; then
+        main_note="- warning: could not fetch origin main${where}; the skills and rules here may be behind it"
+    elif ! git -C "$primary" merge-base --is-ancestor origin/main HEAD 2>/dev/null; then
+        primary_branch=$(git -C "$primary" symbolic-ref --quiet --short HEAD 2>/dev/null)
+        if [ "$primary_branch" != main ]; then
+            main_note="- warning: ${primary_branch:-the detached HEAD}${where} lacks origin/main; merge it before relying on main's skills and rules"
+        elif [ -n "$(git -C "$primary" status --porcelain 2>/dev/null)" ]; then
+            main_note="- warning: main${where} is behind origin/main with uncommitted changes; not fast-forwarded"
+        elif ! git -C "$primary" merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
+            main_note="- warning: main${where} has diverged from origin/main; not fast-forwarded"
+        else
+            before=$(git -C "$primary" rev-parse --short HEAD 2>/dev/null)
+            if git -C "$primary" merge --ff-only --quiet origin/main >/dev/null 2>&1; then
+                main_note="- main${where} fast-forwarded to origin/main (${before}..$(git -C "$primary" rev-parse --short HEAD 2>/dev/null))"
+            else
+                main_note="- warning: main${where} is behind origin/main and the fast-forward failed"
+            fi
+        fi
+    fi
+fi
+set -e
+
 # Only sync in Claude Code on the web / remote sessions — local devs manage
 # their own venv per CLAUDE.md.
 if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
@@ -79,6 +115,7 @@ dirty=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 
 echo "nanopnp — where the work stands (.claude/hooks/session-start.sh):"
 echo "- branch ${branch}${position}, working tree ${tree}"
+[ -z "$main_note" ] || echo "$main_note"
 
 if [ -f docs/plans/current.md ]; then
     echo "- current phase and work package: docs/plans/current.md (read when planning or resuming work)"
@@ -86,6 +123,6 @@ else
     echo "- current brief unavailable; locate the requested plan in docs/plans/ when needed"
 fi
 
-echo "- workflow: /wp-plan -> /wp-implement -> /wp-ship, under a phase planned by /phase-plan; CLAUDE.md 'Implementation workflow'"
+echo "- workflow: /np-plan wp <n> -> /np-implement -> /np-ship, under a phase planned by /np-plan phase <n>; CLAUDE.md 'Implementation workflow'"
 
 exit 0
