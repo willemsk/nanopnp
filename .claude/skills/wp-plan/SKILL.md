@@ -122,5 +122,12 @@ Link the planned package and its live dependencies; its word target is in its *H
 2. Commit on the working branch (on `main`, switch to the branch this session was given, or stop
    and ask): `docs: WP<n> implementation plan`, identifiers in the body. A plan-only change runs
    ruff and the tests (`CLAUDE.md`, *Commands*). Then `git push -u origin <branch>`: another session on another machine may work from it.
-3. Report the path, the close calls, what the grounding pass changed, any spec amendment and
-   the open questions. Then stop; implementation is `/wp-implement`, a separate turn.
+3. Open or reuse the branch's PR against `main` without asking, by the lookup and title/body contract
+   of `wp-ship` §3 (do not invoke that skill). It is the package's PR: `/wp-implement` reuses it.
+   The body's In brief is the plan's, *What this delivers* says the plan is in and implementation
+   follows, and *Verification* ticks only the plan's gate, with review pending `/wp-ship`. Then
+   write `PR: [#<n>](<url>), branch <head>` under the plan's title, commit it
+   (`docs: record WP<n>'s PR`), gate and push as above. If creation is blocked, report the blocker
+   and the pushed branch.
+4. Report the path, the PR, the close calls, what the grounding pass changed, any spec amendment
+   and the open questions. Then stop; implementation is `/wp-implement`, a separate turn.
