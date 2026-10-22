@@ -144,11 +144,11 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * R2 - §11
 * R3 - §8.4.4
 * R4 - §8.4.4
-* R5 - open: WP53 rebuilds the commands
+* R5 - §8.4.4
 * R6 - §8.4.5
-* R7 - open: WP53 changes the session-start hook
+* R7 - `.claude/hooks/session-start.sh`
 * R8 - open: WP54 sets its own scope
 * R9 - spent
 * R10 - spent
 * R11 - §8.4.4, §8.4.5
-* R12 - open: WP53 renames the commands
+* R12 - §8.4.4

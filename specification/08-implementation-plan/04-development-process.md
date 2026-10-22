@@ -41,14 +41,17 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 * A test's name or first line says which silent failure it catches. The implementer writes each test
   with its work item; a plan commits none and lists only in-scope tests. (§8.2.13 N1, N5; §8.2.11 L7)
-* `/wp-ship` reads the pull request's added and changed tests against the scope before the review
+* `/np-ship` reads the pull request's added and changed tests against the scope before the review
   and deletes each one outside it, in its own `test: drop tests outside the test scope` commit. A
   review finding is never closed by an off-category test. No test checks this rule. (§8.2.13 N5)
 
 #### 8.4.4 Plans and the workflow
 
+* The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n>`,
+  `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
+  core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package starts.
-  `/wp-implement` stops at the pull request; `/wp-ship` starts in a fresh session that did not make
+  `/np-implement` stops at the pull request; `/np-ship` starts in a fresh session that did not make
   its decisions. (§8.2.11 L7; §8.2.16 R5; `CLAUDE.md`)
 * A phase plan, a work-package plan and a work-package pull request open with `## In brief`: at most
   250 words, readable without code or identifiers, covering what changes and why, what it costs, what

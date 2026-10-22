@@ -19,6 +19,27 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.19] - 2026-10-22
+
+WP53: the workflow, three commands with levels, workers and a current checkout (`SPECIFICATION.md`
+§8.2.16 R5 to R7, R12).
+
+### Changed
+
+- **The workflow is three commands with levels.** `/np-plan <project | phase n | amend n | wp n>`,
+  `/np-implement [wp n]` and `/np-ship [wp n | phase n]` replace `/phase-plan`, `/wp-plan`,
+  `/wp-implement` and `/wp-ship`, with no aliases. Each `SKILL.md` routes to a shared core,
+  `.claude/workflow/core.md`, and the file of its level, so an invocation loads only the rules it
+  needs. `/np-plan project` re-plans the project; `/np-ship phase n` confirms a phase's close and
+  tags its release.
+- **Rulings and amendments are written where §8.2.16 R3 and R4 put them**: a ruling's table to a new
+  `specification/history/` record, its standing rule to §8.4, and a phase plan's amendment to the
+  phase's record.
+- **The session-start hook keeps the checkout current.** It fetches `origin main` into the primary
+  checkout, fast-forwards a clean `main` that is behind it, and warns when the checkout lacks its
+  commits. Nothing in it fails the session.
+- `CLAUDE.md`, §8.4.3, §8.4.4 and the live pointers name the new commands.
+
 ## [0.5.0-alpha.18] - 2026-10-22
 
 WP52: the documents, the specification and the plans split (`SPECIFICATION.md` §8.2.16 R2 to R4, R9, R10).
