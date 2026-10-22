@@ -1,0 +1,20 @@
+---
+type: Ruling Record
+title: "8.2.5 Phase 3 exit and the Phase 4 release, agreed 3 October 2026"
+description: "Records the author's rulings on the Phase 3 exit and Phase 4 release, agreed 3 October 2026, taken while planning WP34."
+---
+
+#### 8.2.5 Phase 3 exit and the Phase 4 release, agreed 3 October 2026
+
+Rulings by the author, taken while planning WP34, the last Phase 3 work package
+(`docs/plans/wp34-phase-3-close.md`). Where a ruling changes a clause, the clause is amended in the
+commit named in the last column.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| E1 | Phase 3 closes on its Tier 1 and Tier 2 evidence. The ensemble half of the phase's second criterion (VER-01 and VER-02 on the ensemble at Tier 3) and the end-of-phase report's numbers that need the author's archive are waived from the Phase 3 close and carried to Phase 4. Those numbers are `Q_net` per frame, protonation agreement with the archived PQRs, the deposition against the delivered `rhoq_pore` table, VAL-06's recorded leg on the ensemble, and the end-to-end charged case against the reference mesh and table | Every waived item was a recorded Tier-3 leg that gated nothing, and none is a property the 2WCD legs do not already gate. The Tier-3 tests stay as written and run when the archive is supplied. Their numbers are reported in Phase 4's end-of-phase report, beside VAL-16's recorded leg, which needs the same archive. v0.4.0 is released on this basis | None in this section's text. The Phase 3 plan's verification section and end-of-phase report record the waiver, in WP34 |
+| E2 | Phase 4 is released as **v0.5**, not v1.0, because the project is not yet ready for a stable release. Phase 4 keeps its deliverable and its gate (§8.1). v1.0 becomes a later stable release whose content and gate the author defines (OPN-08). The retired `v0.5.0` tag names are reused for Phase 4, and a pre-renumber manifest recording `0.5.0aN` is read by its `created_at` | Every requirement tagged v1.0 is a Phase 4 requirement and is retagged v0.5. Where an earlier ruling in §8.2 (A1, C1, D1, D6, D7) says v1.0 for Phase 4's release, it now reads v0.5. Phase 5's v1.5 and the post-1.0 backlog do not move, and IF-01's "before v1.0" still names the stable release. The stray retired tag `v0.5.0-alpha.5`, left on origin by the 30 September renumber on the commit of `v0.2.0-alpha.5`, is deleted before Phase 4 tags its first package | §2.7 (the table, the tag values and the Versioning NOTE), the Release column of FR-21, FR-22 and FR-28, QR-02, QR-15 and its NOTE, §7.4 and VAL-16 and VAL-17, §8.1 (Phase 4 and the documentation increment), §8.3 and Appendix A, in the WP34 plan's commit |
+| E3 | A golden's case identity represents a fixed charge that stage 7 deposits by the **stage-7 recipe**. That is the stage-1 key's parameters and the protonation key's (the structure or PQR digest, the frames, pH, force field and titration, without the gate tolerances), together with the kernel's physical parameters. A `χ` that stage 7 derives is represented by its derivation parameters and the stage-1 key's parameters. The export lattice's spacing and the element order are left out, as discretisation | It closes OPN-07. The identity is still computed from the resolved case without running a stage, and it reads no lattice. Non-producer identities and every solve key are unchanged, and `fields.charge` keeps meaning "supplied" | §10 OPN-07, in the WP34 plan's commit. The implementation and its VAL-03 test are WP34's |
+| E4 | NUM-07's open question, whether the coupled models' `r`-weighted forms gain one quadrature order as `poisson`'s do, is measured in WP34 and decided in Phase 4 | No number moves in v0.4.0. The measurement goes into the NUM-07 NOTE, and the decision is taken with VAL-16 and VAL-17, which can judge it | The NUM-07 NOTE, in WP34 |
+| E5 | The end-of-phase report is written in WP34, and WP34's last commit on `main` is tagged `v0.4.0` alone, with no `v0.4.0-alpha.9` | The release commit is the one that merges the report, as the Versioning NOTE of §2.7 requires, without a second tag on the same commit | None |
+
