@@ -125,8 +125,9 @@ governs a PR in flight.
 **Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and
 moves to Opus only after Sonnet has failed on the item. Sub-agents kept: `physics-reviewer`,
 `ci-log-classifier` and the `.claude/scripts/clause.py` script. A WP plan is grounded in the code and
-holds at most 2,500 words (1,500 outside its Grounding) and six decisions, with compaction checkpoints
-(§8.2.15 Q1).
+holds at most 3,500 words (1,500 outside its Grounding and Implementation details) and six decisions,
+with compaction checkpoints as work items, each ending the turn with a `/compact` prompt. It names the implementing model and each item's executor, the main
+session or a sub-agent by type and model (§8.2.15 Q1; §8.2.16 R11).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, one above the highest present;
 pass `out=`.

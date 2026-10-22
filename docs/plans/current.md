@@ -30,7 +30,7 @@ revised from the author's notes.
   independent batches (L9, R6); prose only on the public API. Floor 3.11. → §8.2.10
   J4–J6, J9; §8.2.15; OPN-09.
 - **The documents and the workflow** (§8.2.16): specification and plans read current by default,
-  history on demand; `/plan`, `/implement`, `/ship` with levels; WP54's scope open. → R2 to R10.
+  history on demand; `/plan`, `/implement`, `/ship` with levels; WP54's scope open. → R2 to R11.
 - **The test scope** (§8.2.13): tests only for physics, numerics, core mechanisms and the licence
   and architecture guards; no coverage gate; walks nightly but for examples 01 and 02. → N1 to N5.
 - **Figures:** Matplotlib in `plot/`, below `pipeline`, importing no backend; figures declared in
