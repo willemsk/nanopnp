@@ -13,18 +13,19 @@ where this plan and it disagree, this plan is wrong. Identifiers are pointers, n
 **What changes.** The four working instructions a session follows to plan a phase, plan a package,
 build it and ship it become three commands, plan, implement and ship, each told what level it works
 at: the whole project, a phase, an amendment or one package. Each loads a short shared part and the
-part for its level. The commands carry a short project prefix, because the plain
-word plan is already taken by the tool itself outside a terminal. The script that starts every
-session brings the author's main copy of the code up to date when that is safe, and says so when it
-is not, so a session no longer works from instructions months old.
+part for its level. The commands carry a short project prefix, because the tool itself already uses
+the word plan. The script that starts every session brings the author's main copy of the code up to
+date when that is safe, and says so when it is not, so a session no longer works from instructions
+months old.
 
 **Cost.** One pull request, one session. Nothing a user of the program runs changes.
 
 **What could go wrong.** A rule could be lost when the instructions are cut and moved: a script lists
-every old sentence missing from the new text, and each is accounted for before the merge. The start
-script could change the author's copy unexpectedly: it only ever moves a clean main copy forward, and
-it is tried against ten prepared copies. The new commands could fail in practice: the next package is
-the first planned, built and shipped with them.
+every old sentence missing from the new text, each accounted for before the merge. The start script
+could change the author's copy unexpectedly: it only moves a clean main copy forward, and it is tried
+against ten prepared copies. Plainer rewording could change a rule: a second reader compares before
+and after. The new commands could fail in practice: the next package is the first planned, built and
+shipped with them.
 
 **Your call.** Should the old command names be kept as aliases for a while? *Recommendation:* no;
 each listed command costs every session a little reading, and a mistyped old name fails at once.
@@ -33,19 +34,19 @@ each listed command costs every session a little reading, and a mistyped old nam
 
 Scope: the Phase 4 plan's WP53 (§8.2.16 R5 to R7), named by R12. No identifier is claimed and no
 test is kept (N1); WP54's sessions are the live check. Pointers: R3, R4, R6, R11; §8.4.1, §8.4.4,
-§8.4.5. Implemented by a Sonnet 5.5 session at high effort, through the old `/wp-implement` and
-`/wp-ship`, since the new commands exist only once this package merges.
+§8.4.5. Implemented by a Sonnet 5.5 session at high effort, from item 4 on through the new commands
+on this branch.
 
 ### Decisions
 
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
-| D1 | Names, routing, aliases | `/np-plan <project \| phase n \| amend n \| wp n>`, `/np-implement [wp n]`, `/np-ship [wp n \| phase n]`. Each `.claude/skills/np-<verb>/SKILL.md`, at most 150 words, reads `.claude/workflow/core.md`, then the level file beside it. With no argument, `/np-implement` and `/np-ship` take the package `current.md` names for that step, and ask if it names none or several. A missing or unknown level prints the usage and stops. **No aliases**: the four old skill directories are deleted; records keep the old names | R5, R12. Every session reads each listed skill's description; an old name fails visibly |
-| D2 | What the core and the levels hold | `core.md`, at most 900 words: reading order; the branch rule; normativity and where a change of behaviour lands; models and executors; the records table; the In brief template; gate and push; the PR contract (lookup, title, body, the `PR:` line); report and stop. Levels: `np-plan/{wp,phase,amend,project}.md`, `np-plan/rulings.md` (read by `phase`, `amend` and `project`), `np-implement/wp.md`, `np-ship/{wp,phase}.md`. **Text moves verbatim** from the old skills; a sentence is edited only for a name, a path, a section reference, or R3, R4, R12. One invocation loads at most 2,200 words (router, core, level, `rulings.md` where read); the new files total at most 7,000 | R5. Moving, not retyping, makes D6's check possible |
-| D3 | Rulings and plan amendments | `rulings.md` holds the ruling round (old `phase-plan` Turn 1, steps 4 and 5) and three rules. A round's table is a new `specification/history/<kk>-<slug>.md`, listed in `history/index.md` with a `* <id> - <where it holds now>` line per ruling; each ruling amends its clause in the same commit, or is restated in §8.4 when it sets a standing process rule with no clause (R3). A ruling taken at a package's plan on a record's date is a row added to that record, marked *Added <date>, at WP<n>'s plan.*, and a superseded ruling gains only a pointer in its first cell (R11, R12). A phase plan's entry is rewritten to its current scope with no `Amended` blockquote, and the amendment's text is appended to `docs/plans/phase-<n>-record.md` as `## Amended <date> (§8.2.<k> <ids>)`; a missing record is created with `phase-4-record.md`'s header (R4) | R3, R4 |
-| D4 | The new levels | `/np-plan project` runs the ruling round on §8.1's rows and the later phases, then amends §8.1, §3's Release column, §2.7's Versioning NOTE, §8.3 and the later plans where they move, in one commit `docs: re-plan the project (§8.2.<k>)`. `/np-ship phase n` resolves the phase's close package from the phase plan, runs `np-ship/wp.md` on its PR, and before the review confirms the close's items (*Implementation details*); after the merge it pushes the annotated release tag if access allows, else prints the commands. Release tag alone (§8.4.1) | R5; `CONTRIBUTING.md` |
-| D5 | The hook (R7) | Before the sync, `.claude/hooks/session-start.sh` finds the primary checkout through `git rev-parse --git-common-dir` and fetches `origin main`. On `main`, clean, with `HEAD` an ancestor of `origin/main`: `git merge --ff-only origin/main` (the two halves of `git pull --ff-only`), reported. On `main` but dirty or diverged, and on another branch or a detached `HEAD` that lacks `origin/main`: a warning, no write. A checkout that contains `origin/main` is silent. A failed fetch warns once. Nothing fails the session | R7; the Phase 4 plan leaves these cases to this plan. Warning an up-to-date branch would fire in every hosted session |
-| D6 | Checks | No kept test (N1). Three one-off checks, outputs in the Outcome: `rules.py` lists each sentence of the four old skills that no new file contains, and each is accounted for as edited or dropped, with a reason; `hook-check.sh` runs ten prepared repositories through the hook; a grep finds the old names only in records. D2's word counts | WP52's R10 pattern, with no waiver |
+| D1 | Names, routing, aliases | `/np-plan <project \| phase n \| amend n \| wp n>`, `/np-implement [wp n]`, `/np-ship [wp n \| phase n]`. Each `.claude/skills/np-<verb>/SKILL.md`, at most 150 words, reads `.claude/workflow/core.md`, then the level file beside it. With no argument, `/np-implement` and `/np-ship` take the package `current.md` names, or ask. An unknown level prints the usage. **No aliases**: the four old skill directories are deleted; records keep the old names | R5, R12. Every session reads each listed skill's description; an old name fails visibly |
+| D2 | What the core and the levels hold | `core.md`, at most 900 words, holds what every level shares: reading order, branch, normativity, models, records, the In brief, gate and push, the PR contract, the report. Levels: `np-plan/{wp,phase,amend,project}.md`, `np-plan/rulings.md` (read by `phase`, `amend` and `project`), `np-implement/wp.md`, `np-ship/{wp,phase}.md`. **Text moves verbatim** from the old skills; a sentence is edited only for a name, a path, a section reference, or R3, R4, R12. Item 10 then rewords to ASD-STE100, under a rule-by-rule check. One invocation loads at most 2,200 words (router, core, level, `rulings.md` where read); the new files total at most 7,000 | R5. Moving, not retyping, makes D6's check possible |
+| D3 | Rulings and plan amendments | `np-plan/rulings.md` holds the ruling round (old `phase-plan` Turn 1, steps 4 and 5) and its rules. A round's table is a new `specification/history/<kk>-<slug>.md`, indexed with each ruling's current home; each ruling amends its clause in the same commit, or is restated in §8.4 (R3). A ruling taken at a package's plan is a row added to that day's record; a superseded ruling gains a pointer (R11, R12). A phase plan's entry is rewritten to its current scope, and the amendment's text is appended to `docs/plans/phase-<n>-record.md` (R4) | R3, R4 |
+| D4 | The new levels | `/np-plan project` runs the ruling round on §8.1's rows and the later phases, then amends §8.1, §3's Release column, §2.7's Versioning NOTE, §8.3 and the later plans where they move, in one commit `docs: re-plan the project (§8.2.<k>)`. `/np-ship phase n` runs `np-ship/wp.md` on the close package's PR, confirms the close's items before the review (*Implementation details*), and after the merge pushes the annotated release tag alone (§8.4.1), or prints the commands | R5; `CONTRIBUTING.md` |
+| D5 | The hook (R7) | Before the sync, `.claude/hooks/session-start.sh` finds the primary checkout through `git rev-parse --git-common-dir` and fetches `origin main`. On `main`, clean, with `HEAD` an ancestor of `origin/main`: `git merge --ff-only origin/main` (the two halves of `git pull --ff-only`), reported. Dirty, diverged, or another branch or a detached `HEAD` lacking `origin/main`: a warning, no write. Containing `origin/main`: silent. A failed fetch warns once; nothing fails the session | R7; the Phase 4 plan leaves these cases to this plan. Warning an up-to-date branch would fire in every hosted session |
+| D6 | Checks | No kept test (N1). Four one-off checks, outputs in the Outcome: `rules.py` lists each sentence of the four old skills that no new file contains, and each is accounted for as edited or dropped, with a reason; `hook-check.sh` runs ten prepared repositories through the hook; a grep finds the old names only in records; no rule is lost in the rewording. D2's word counts | WP52's R10 pattern, with no waiver |
 
 ### Grounding
 
@@ -179,10 +180,34 @@ Assert exit 0, the expected line and `HEAD` before and after, one line each:
   `review-findings.md`, `modularity.md` paragraph 1, `wp55-user-testing-protocol.md`, and the Phase 4
   plan's status line and *Context*: substitute by item 1's map.
 
+**Item 9, the review**, of `.claude/workflow/core.md`, `.claude/skills/np-*/`,
+`.claude/hooks/session-start.sh`, `CLAUDE.md` (*Commands*' gate text, *Implementation workflow*) and
+§8.4.3 to §8.4.5, read together. *Inefficiencies*: a file or section read twice, text said in two places, a
+step that costs a turn, a gate run or a push and changes nothing. *Contradictions*: between two
+workflow files, or with the steward, `CLAUDE.md`, `.claude/hooks/gate.sh` or §8.4. *Flaky
+behaviour*: a step that depends on timing, the network, a shallow clone, the 10-minute tool limit,
+state that a compaction loses, or a wording two sessions read two ways. The agent reports each
+finding with its file, its quoted text and a proposed fix, and edits nothing. The Outcome lists
+each finding and its disposition, and `rules.py <base>` re-run on this tree, each new missing
+sentence accounted for.
+
+**Item 10, ASD-STE100's writing rules**, as they apply to process text:
+
+- An instruction is one imperative sentence of at most 20 words; a description is at most 25 words.
+  A paragraph has at most six sentences.
+- The active voice; a condition first ("If X, do Y"); one name for one thing, in every file.
+- No word that adds no fact or instruction ("note that", "in order to", "simply").
+- Numbered steps for a sequence; a table for a lookup only.
+- Unchanged: paths, commands, identifiers, the front matter's `name`, the trigger words of each
+  `description`, and each heading another file cites. *Must*, *never*, *at most* and every number
+  keep their force.
+
+**Item 11** also names items 9 and 10 in the delivered summary and `CHANGELOG.md`.
+
 ### Work items
 
-`main` is the Sonnet 5.5 session. A sub-agent item goes to `general-purpose` on Haiku, with the item
-and its *Implementation details*; `main` re-runs its check.
+`main` is the implementing session. A sub-agent item goes to the agent it names, with the item and
+its *Implementation details*; `main` re-runs its check.
 
 - [x] 1. `<scratch>/rules.py` (D6); no commit. Done when `--self` prints `missing: 0`. **Executor:**
   `general-purpose`, Haiku.
@@ -231,18 +256,22 @@ and its *Implementation details*; `main` re-runs its check.
   > `np-plan wp` 2,351, `phase` 2,729, `amend` 1,791, `project` 1,931; `np-implement` 1,687;
   > `np-ship wp` 2,200, `phase` 2,455. The total and four invocations exceed D2's caps; item 9
   > reports the final figures.
-- [x] 4. Compaction checkpoint; the prompt carries the scratch path. **Executor:** `main`.
+- [x] 4. Compaction checkpoint. **Executor:** `main`.
 - [x] 78bdcc3 5. `.claude/hooks/session-start.sh`: the fast-forward and warnings, and the workflow line
   (D5); `<scratch>/hook-check.sh`. Done when its ten cases pass and `bash -n` is clean.
   **Executor:** `main`.
 - [x] e0566f6 6. The pointer edits of *Implementation details*. Done when the code and review say so.
   **Executor:** `general-purpose`, Haiku.
-- [x] b7d8fa5 7. §8.4.3 and §8.4.4 name the new commands; `history/index.md` sets R5 and R12 to §8.4.4 and
-  R7 to `.claude/hooks/session-start.sh`; the Phase 4 plan's delivered summary; `current.md`;
-  `CHANGELOG.md`'s `0.5.0-alpha.19` section. Done when the code and review say so. **Executor:**
+- [x] b7d8fa5 7. §8.4.3 and §8.4.4; the R5, R7 and R12 homes in `history/index.md`; the Phase 4 plan's
+  delivered summary; `current.md`; `CHANGELOG.md`. Done when the code and review say so. **Executor:**
   `main`.
 - [x] 8. Compaction checkpoint. **Executor:** `main`.
-- [ ] 9. D6's checks and word counts on the final tree, into the Outcome. Done when each passes.
+- [ ] 9. Review of the workflow files for inefficiencies, contradictions and flaky behaviour (D2).
+  Done when each finding is fixed or a `REV-nn` row, in the Outcome. **Executor:** `main`, with a
+  fresh read-only `general-purpose` agent on Sonnet.
+- [ ] 10. ASD-STE100 rewording of item 9's files (D2). Done when a fresh `general-purpose` agent on
+  Sonnet finds no rule lost or changed in force. **Executor:** `main`.
+- [ ] 11. D6's checks and word counts on the final tree, into the Outcome. Done when each passes.
   **Executor:** `main`.
 
 ### Verification
@@ -251,7 +280,8 @@ No kept test (N1). One-off checks, run in the pull request:
 
 | Check | Oracle | Command | On a miss |
 |---|---|---|---|
-| Rules kept | Each sentence `rules.py` prints is in the Outcome as edited (its new file) or dropped (why) | `uv run --no-project python <scratch>/rules.py e4b52bc` | Restored, or accounted for |
+| Rules kept | Each sentence `rules.py` prints is in the Outcome as edited (its new file) or dropped (why), on item 9's tree | `uv run --no-project python <scratch>/rules.py e4b52bc` | Restored, or accounted for |
+| Rewording | A fresh agent lists no rule lost or changed in force | `git diff <item 9>..<item 10>` | Restored |
 | Hook | Cases 1 to 10, each with its expected line and `HEAD` | `bash <scratch>/hook-check.sh .claude/hooks/session-start.sh` | Fixed |
 | Names | `grep -rnE '\b(phase-plan\|wp-plan\|wp-implement\|wp-ship)\b' --exclude-dir=.git --exclude-dir=.venv .` hits only the records of *Grounding* D6 and this plan | as written | The live mention is repointed |
 | Caps | D2: router ≤ 150, core ≤ 900, invocation ≤ 2,200, total ≤ 7,000 words, by `wc -w` | `wc -w .claude/workflow/core.md .claude/skills/np-*/*.md` | Cut, or reported |
