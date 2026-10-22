@@ -18,6 +18,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 PROFILE_SCHEMA: str = PROFILE_ARTEFACT_SCHEMA
 
+PAYLOAD_NAME = "profile"
+"""The payload key of stage 4's conditioned profile."""
+
 REFERENCE_SOURCES: frozenset[str] = frozenset({"model-report", "author-supplied"})
 
 PIPELINE_SOURCE: str = "pipeline"

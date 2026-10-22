@@ -274,8 +274,8 @@ def restored(
         carried = ", ".join(sorted(solution.payload)) or "nothing"
         raise KeyError(
             f"the solve artefact carries no {STATE_KEY!r} payload (the {STATE_FILENAME} "
-            f"record); it carries {carried}. "
-            "The IF-07 export is of the converged fields and there is nothing to export from"
+            f"record); it carries {carried}, so there is no converged state to read the "
+            "fields from"
         )
     resolved = inputs.resolved
     supplied = (
