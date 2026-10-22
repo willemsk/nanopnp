@@ -87,12 +87,12 @@ sets the marker, so location decides the tier.
 | 3 | Cross-implementation comparison (VAL-01 … VAL-06, VAL-16, VAL-17) | hours | nightly, recorded not gated |
 | 4 | Experimental reproduction (VAL-07 … VAL-14) | hours | before a tagged release |
 
-- Write a test only for the test scope (`SPECIFICATION.md` §8.2.13 N1): physics and numerics, core mechanisms,
+- Write a test only for the test scope (`SPECIFICATION.md` §7.1; §8.2.13 N1): physics and numerics, core mechanisms,
   and the licence and architecture guards (CON-10, CON-12, VER-61, VER-65, no backend import). Each entry point
   keeps a thin smoke test. A refusal is tested only where it is a numerical or physical gate.
 - A new test's name or first line says which silent failure it catches, e.g. `test_ver03_ion_wall_function_check_values`.
 - A requirement identifier is named in a test only where the requirement is physics, numerics or a core mechanism;
-  other identifiers are verified at review (N3).
+  other identifiers are verified at review (§7.1; N3).
 - Off-scope tests are deleted in their own `test: drop tests outside the test scope` commit by `/wp-ship`. No
   tolerance is slackened and no kept test is weakened.
 - Fix Tier 2 before chasing a Tier 3 discrepancy.
@@ -127,14 +127,14 @@ moves to Opus only after Sonnet has failed on the item. Sub-agents kept: `physic
 `ci-log-classifier` and the `.claude/scripts/clause.py` script. A WP plan is grounded in the code and
 holds at most 3,500 words (1,500 outside its Grounding and Implementation details) and six decisions,
 with compaction checkpoints as work items, each ending the turn with a `/compact` prompt. It names the implementing model and each item's executor, the main
-session or a sub-agent by type and model (§8.2.15 Q1; §8.2.16 R11).
+session or a sub-agent by type and model (§8.4.4; §8.2.15 Q1; §8.2.16 R11).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, one above the highest present;
 pass `out=`.
 
 **Open items** (a finding not fixed, a deferral, a question for the author) are `REV-nn` rows in
 `docs/project/review-findings.md` with a section in `review-items.md`, until the commit that
-resolves one sets it `fixed` (§8.2.8 H12). A PR body is never their only record.
+resolves one sets it `fixed` (§8.4.6; §8.2.8 H12). A PR body is never their only record.
 
 ## Git
 
@@ -149,7 +149,7 @@ A docstring on every public function, class and method of `src/` (no leading und
 line and NumPy-style parameters only where name and type do not say, without derivations or history. A one-line docstring on every
 module; none on a test or private code. A comment only where the code cannot
 say why it is so, and for the source of a physical constant. Identifiers live in test names and commit
-messages (`.claude/rules/python.md`; §8.2.11 L4).
+messages (`.claude/rules/python.md`; §8.4.2; §8.2.11 L4).
 
 ## Durable learnings
 

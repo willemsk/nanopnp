@@ -6,7 +6,7 @@ okf_version: "0.2"
 
 The dated rulings of the author and the Phase 0 exit criteria, moved here verbatim from §8.2 of the
 specification. Read them when the reason behind a rule is wanted, not by default: every ruling's
-effect is in a current clause or in §8.4, and `uv run .claude/scripts/clause.py <ruling>` prints a
+effect is in a current clause or in §8.4, unless the ruling is spent, superseded or still open, and `uv run .claude/scripts/clause.py <ruling>` prints a
 ruling's row after its clause. The rulings are lettered, one letter per dated record, and numbered
 within it (A1, B3, R10).
 
@@ -27,3 +27,127 @@ within it (A1, B3, R10).
 * [8.2.14 Phase 4 amended: the plotting library and the notebooks, agreed 22 October 2026](14-phase-4-amended-the-plotting-library-and-the-noteb.md) - Records the rulings on the plotting library and notebooks, agreed 22 October 2026, prompted by REV-123.
 * [8.2.15 The work-package plan grounded in the code, agreed 22 October 2026](15-the-work-package-plan-grounded-in-the-code-agreed.md) - Records the ruling on WP51's plan, agreed 22 October 2026, which read the plan against the code, finding points an implementer could guess at.
 * [8.2.16 Phase 4 amended: the specification and the workflow restructured, agreed 22 October 2026](16-phase-4-amended-the-specification-and-the-workflow.md) - Records the rulings on the specification's restructuring and the workflow, agreed 22 October 2026, after WP51 merged.
+
+## Where each ruling holds now
+
+Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `superseded by` a later one, `open` until a named package or session rules, or `spent`: a one-time act the record keeps.
+
+* A1 - FR-21, FR-22, §8.1
+* A2 - spent
+* A3 - spent
+* A4 - ADR-004 packaging NOTE, VER-55
+* B1 - spent
+* B2 - VAL-05
+* B3 - superseded by G6
+* B4 - QR-09, §2.5
+* B5 - §5.2 stage 3, §5.2.1
+* B6 - OPN-02
+* B7 - §8.1 NOTE
+* B8 - ADR-004 packaging NOTE, VER-55
+* B9 - §5.3.1 NOTE on `geometry.contour`
+* B10 - IF-05 NOTE on length units, VER-49
+* C1 - spent
+* C2 - QR-06
+* D1 - superseded by E2 and F1
+* D2 - PHY-16, PHY-18, §5.2 stage 7
+* D3 - VAL-06, §2.6
+* D4 - §5.3.1 NOTE on `inputs:`
+* D5 - FR-15
+* D6 - QR-02, VAL-16, VAL-17, §7.4
+* D7 - spent
+* E1 - spent
+* E2 - §2.7
+* E3 - OPN-07, VAL-03
+* E4 - NUM-07 NOTE
+* E5 - §8.4.1
+* F1 - §2.7, §8.1
+* F2 - §2.7 Versioning NOTE
+* F3 - spent (§8.1)
+* F4 - IF-01 NOTE
+* F5 - §8.1, RSK-15
+* F6 - §11
+* G1 - spent
+* G2 - spent (§8.1)
+* G3 - spent; its ratchet superseded by N3
+* G4 - superseded by N3
+* G5 - spent
+* G6 - §5.3.1 NOTE on the compatibility rule
+* G7 - §8.4.6; its push-gate execution superseded by N4
+* G8 - superseded by N3
+* G9 - spent
+* G10 - VER-62
+* G11 - §8.4.1
+* G12 - spent
+* H1 - spent
+* H2 - open: the user-testing sessions rule `MOD-11`
+* H3 - QR-13, §5.4.1 NOTE, VER-65
+* H4 - spent (deferred to Phase 5)
+* H5 - spent (post-1.0)
+* H6 - VER-61
+* H7 - spent
+* H8 - spent
+* H9 - superseded by I5
+* H10 - spent (deferred to Phase 5)
+* H11 - §5.1, VER-61, VER-65
+* H12 - §8.4.6
+* I1 - spent
+* I2 - spent
+* I3 - spent
+* I4 - VER-62
+* I5 - §8.3
+* J1 - spent
+* J2 - superseded by L2
+* J3 - superseded by L3
+* J4 - §7.6
+* J5 - §8.4.2
+* J6 - §8.4.2, OPN-09
+* J7 - superseded by L3 and L8
+* J8 - superseded by L6
+* J9 - §8.4.4
+* J10 - superseded by N4
+* J11 - superseded by L8
+* J12 - §8.3
+* L1 - spent
+* L2 - §7.6
+* L3 - §7.6, §8.4.2
+* L4 - §8.4.2
+* L5 - superseded by N3
+* L6 - §8.4.5
+* L7 - §8.4.4
+* L8 - spent
+* L9 - §8.4.5
+* L10 - §8.4.2
+* M1 - spent
+* M2 - VER-76
+* M3 - ADR-004, CON-09, §8.1
+* M4 - spent
+* M5 - §8.3
+* N1 - §7.1 to §7.3, §8.4.3
+* N2 - §7.6
+* N3 - §7.1, §7.2, §7.3, Appendix A
+* N4 - §7.6
+* N5 - §8.4.3
+* N6 - spent
+* N7 - §8.3
+* P1 - superseded by R1
+* P2 - FR-30
+* P3 - §5.1
+* P4 - FR-30
+* P5 - open: WP54 revises the notebooks
+* P6 - FR-30
+* P7 - §8.3
+* P8 - spent
+* P9 - spent
+* P10 - §5.3.1 NOTE on `numerics.mesh`, VER-53
+* Q1 - §8.4.4
+* R1 - spent
+* R2 - §11
+* R3 - §8.4.4
+* R4 - §8.4.4
+* R5 - open: WP53 rebuilds the commands
+* R6 - §8.4.5
+* R7 - open: WP53 changes the session-start hook
+* R8 - open: WP54 sets its own scope
+* R9 - spent
+* R10 - spent
+* R11 - §8.4.4, §8.4.5
