@@ -43,4 +43,3 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | `cli/` | Command-line entry points |
 | `gui/` | Desktop application |
 | `validation/` | Benchmarks, MMS, COMSOL comparison harness, regression fixtures |
-

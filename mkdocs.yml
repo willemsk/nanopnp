@@ -126,7 +126,7 @@ nav:
       - model/index.md
       - Specification:
           - _generated/model/specification.md
-          - _generated/model/specification/index.md
+          - _generated/model/specification/contents.md
           - "1. Introduction": _generated/model/specification/01-introduction.md
           - "2. Product overview": _generated/model/specification/02-product-overview.md
           - "3. Requirements": _generated/model/specification/03-requirements.md

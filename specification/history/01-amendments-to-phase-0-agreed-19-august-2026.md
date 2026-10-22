@@ -24,4 +24,3 @@ a window drawing a basic mesh with its controls. The author called it "still a b
 a usability remark on the probe and not a packaging failure: the criterion asks that the bundle
 build and open, and it did. Amendment A4's build and observation have both happened, so criterion 4
 is met and RSK-13 is retired as a risk. The `bundle` job keeps detecting it on every push.
-

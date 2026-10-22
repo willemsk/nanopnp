@@ -28,11 +28,14 @@ author's notes.
 
 - **Reading the specification:** `SPECIFICATION.md` is the entry point over `specification/`; the
   current files by default, `specification/history/` on demand, `clause.py <ID>` for a clause. → R2, R3.
+  Until WP53 merges, the skills still say `SPECIFICATION.md` §8.2: an amendment writes its ruling
+  table to a new `specification/history/` file, listed in `history/index.md` and in `mkdocs.yml`'s
+  nav, and its standing rules to §8.4 (WP52 plan, *Out of scope*).
 - **The rules of process** (versions, the loop, the test scope, plans, agents and models, open
   items) are §8.4: one minor version per phase and `v0.5.0` alone at the close (§8.4.1); the commit
   hook, the push gate and Python 3.14 with a 3.11 floor (§8.4.2); tests only inside the scope
-  (§8.4.3, §7.1); `/plan`, `/implement`, `/ship` with levels are WP53's, and WP54's scope is open
-  (§8.4.4).
+  (§8.4.3, §7.1). `/plan`, `/implement`, `/ship` with levels are WP53's, and WP54's scope is open
+  (§8.2.16 R5, R8, both open).
 - **Figures:** Matplotlib in `plot/`, below `pipeline`, importing no backend; figures declared in
   the stage registry; marimo notebooks, nightly. → §8.2.14 P2 to P6; FR-30.
 - **Cost fixes follow measurement against registered thresholds** (§8.2.12 M2). **Phase 5

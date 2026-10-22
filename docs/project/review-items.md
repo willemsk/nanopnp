@@ -1275,3 +1275,15 @@ requirement. Matplotlib draws in a new `plot/` subpackage below `pipeline`. A st
 figure in the stage registry, and every artefact and `RunResult` displays itself in a notebook.
 
 **Fixed** (WP51, 22 October 2026). `nanopnp.plot` draws a figure of every stage's artefact and of a sweep, the stage registry declares each figure, `Artefact` and `RunResult` display themselves in a notebook, and four marimo notebooks run nightly (FR-30; `CHANGELOG.md`, `0.5.0-alpha.17`).
+
+## REV-124: The specification's site navigation is listed by hand
+
+`mkdocs.yml` lists the specification bundle's 52 pages by hand (WP52 plan D5), while the knowledge
+base's navigation is generated from its index pages. `nav.omitted_files` is `warn` under `--strict`,
+so every new `specification/` file, one per amendment until WP53 rewrites the skills, fails VER-45's
+build until it is listed. Generating it would generalise `okf.navigation` in `src/`, which WP52 left
+untouched. Found by CODE_REVIEW_013.
+
+**Open**: confirmed. *Recommendation:* WP53, which rewrites where an amendment writes, generates the
+specification's navigation from `specification/index.md` and the directory indexes as the knowledge
+base's is.

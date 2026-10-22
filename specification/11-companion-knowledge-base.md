@@ -39,4 +39,3 @@ says so. The maintenance rule, stated in
 `CLAUDE.md`: when something durable is learned, it is written as a concept, with a line in the log.
 
 ---
-

@@ -1,7 +1,7 @@
 ---
 type: Process
 title: "8.4 Development process"
-description: "States the rules in force for versions, the development loop, the test scope, plans, agents and models, and open items, each with the ruling it came from."
+description: "States the rules in force on versions, the loop, the test scope, plans, agents and models, and open items, each with its ruling."
 ---
 
 ### 8.4 Development process
@@ -49,7 +49,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package starts.
   `/wp-implement` stops at the pull request; `/wp-ship` starts in a fresh session that did not make
-  its decisions. (§8.2.11 L7)
+  its decisions. (§8.2.11 L7; §8.2.16 R5; `CLAUDE.md`)
 * A phase plan, a work-package plan and a work-package pull request open with `## In brief`: at most
   250 words, readable without code or identifiers, covering what changes and why, what it costs, what
   could go wrong and how it would be noticed, and *Your call*, each decision awaiting the author with

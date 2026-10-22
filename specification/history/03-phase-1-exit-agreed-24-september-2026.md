@@ -16,4 +16,3 @@ The end-of-phase report (`docs/plans/phase-1-solver-core.md`) measures the phase
 
 Phase 0 criterion 4 is not changed by this section. It was closed by the author's double-click,
 recorded in the NOTE to §8.2.1 on the same day, which met the last condition of §8.2.2 B1.
-

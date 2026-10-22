@@ -21,4 +21,3 @@ All four SHALL be met.
 
 COMSOL comparison is not a Phase 0 gate. Tier 3 runs once criterion 1 is met, and early
 disagreement at the per-cent level is expected for the reasons in §7.4.
-

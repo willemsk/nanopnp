@@ -29,4 +29,3 @@ description: "Lists the RSK-nn risk register, each risk with its severity, likel
 | **RSK-19** | Analyte force computation has no prior implementation. Retired. The PlyAB work (*Angew. Chem. Int. Ed.* 2022, DOI 10.1002/anie.202206227) is a full ePNP-NS continuum force computation with published targets and a retained COMSOL model | Closed | Closed | Superseded by RSK-04 | Retired |
 
 ---
-

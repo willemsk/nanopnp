@@ -40,4 +40,3 @@ environment variable `NANOPNP_REFERENCE_DATA`, naming a directory of files by na
 test whose file is absent SHALL **skip** rather than fail: Tier 3 is recorded and not gated, so an
 unavailable reference is missing evidence, not a defect. Tier 1 and Tier 2 SHALL NOT read the
 archive, so the push gate is unaffected by whether it is present.
-

@@ -134,4 +134,3 @@ test harness can exercise is not one a user holding an archived result can rely 
 calculation reported as the same one; drift in a recorded library version is reported and not fatal
 unless the caller asks for a strict environment, because a version that moved a number is caught by
 the quantity comparison, which is the assertion that matters.
-

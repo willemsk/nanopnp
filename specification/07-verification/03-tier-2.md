@@ -82,4 +82,3 @@ rather than by kind — it needs a converged solve, and §7.2 is seconds. It is 
 §7.1 maps Tier 2 to this section; the tier a test belongs to is decided by which directory it is
 placed in, and this one is placed in Tier 2. Its acceptance criteria are equalities and exceptions,
 so it carries no tolerance.
-

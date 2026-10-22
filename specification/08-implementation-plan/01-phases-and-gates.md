@@ -52,4 +52,3 @@ NOTE (FR-19, FR-20): FR-19 is tagged
 v0.4, the end of the scope the old v0.9 named, and its `pb` and `pb-linear` models shipped in
 Phase 0. FR-20, the documented physics-model
 interface, is assigned to **Phase 3**, which is where the table above leaves room for it (§8.2.2 B7).
-

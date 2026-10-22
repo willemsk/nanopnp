@@ -40,4 +40,3 @@ will not become a general symbolic PDE framework. Users do not write weak forms.
 swapped or extended; an unrelated multiphysics problem may not be posed, and users wanting
 arbitrary weak forms should use NGSolve or FEniCS directly. Deriving new correction
 parameterisations from MD is a separate later tool (N6).
-

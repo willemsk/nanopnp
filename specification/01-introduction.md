@@ -84,4 +84,3 @@ coefficient as `0.62e1`, which is 6.2.
 Claims that could not be verified are marked in place. Errata in the source material are in §4.6.
 
 ---
-
