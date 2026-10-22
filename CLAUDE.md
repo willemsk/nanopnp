@@ -95,7 +95,7 @@ sets the marker, so location decides the tier.
 - A new test's name or first line says which silent failure it catches, e.g. `test_ver03_ion_wall_function_check_values`.
 - A requirement identifier is named in a test only where the requirement is physics, numerics or a core mechanism;
   other identifiers are verified at review (§7.1; N3).
-- Off-scope tests are deleted in their own `test: drop tests outside the test scope` commit by `/wp-ship`. No
+- Off-scope tests are deleted in their own `test: drop tests outside the test scope` commit by `/np-ship`. No
   tolerance is slackened and no kept test is weakened.
 - Fix Tier 2 before chasing a Tier 3 discrepancy.
 - No network and no COMSOL licence in tests; Tier 3 reads archived reference data.
@@ -116,13 +116,15 @@ overrides a normative requirement.
 
 | Step | Command | What it does |
 |---|---|---|
-| 0 | `/phase-plan <n\|amend>` | Puts the phase's decisions to the author; writes rulings into §8.2 and the plan, pushes, opens its PR |
-| 1 | `/wp-plan <n>` | Writes and commits the WP plan, pushes, opens the package's PR |
-| 2 | `/wp-implement` | Executes the plan, gates, pushes, opens or reuses the PR, stops |
-| 3–4 | `/wp-ship` | Gates, pushes, reviews (`/code-review xhigh --fix`), drives CI to green |
+| 0 | `/np-plan project`, `/np-plan phase <n>`, `/np-plan amend <n>` | Puts the decisions to the author; writes the rulings into `specification/history/` and the plan, pushes, opens its PR |
+| 1 | `/np-plan wp <n>` | Writes and commits the WP plan, pushes, opens the package's PR |
+| 2 | `/np-implement [wp <n>]` | Executes the plan, gates, pushes, opens or reuses the PR, stops |
+| 3–4 | `/np-ship [wp <n>]` | Gates, pushes, reviews (`/code-review xhigh --fix`), drives CI to green |
+| close | `/np-ship phase <n>` | Ships the close package and tags the release |
 
-Step 2 does not chain into 3: `/wp-ship` starts in a fresh session (`wp-ship` §4). The steward skill
-governs a PR in flight.
+Step 2 does not chain into 3: `/np-ship` starts in a fresh session (`np-ship/wp.md`, *Review pass*).
+Plans before WP53 name these `/phase-plan`, `/wp-plan`, `/wp-implement` and `/wp-ship`. The steward
+skill governs a PR in flight.
 
 **Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and
 moves to Opus only after Sonnet has failed on the item. Sub-agents kept: `physics-reviewer`,

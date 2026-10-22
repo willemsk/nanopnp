@@ -5,7 +5,7 @@ current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment sinc
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
 demand. Delivered: WP35 to WP52, below. Planned: WP53, the workflow ([plan](wp53-workflow-commands.md)); WP54, the notebooks and figures
 revised; WP55, the user-testing protocol ([plan](wp55-user-testing-protocol.md)). Provisional, and
-planned by the second `/phase-plan amend 4` once the author has run the sessions and ruled every
+planned by the second `/np-plan amend 4` once the author has run the sessions and ruled every
 `UT-nn`: the fixes from WP56, the documentation increment and the close, which take their numbers
 then. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
@@ -77,7 +77,7 @@ The phase retires no risk. RSK-15 and RSK-16 stay continuous.
 
 ## Design decisions
 
-Each package's `/wp-plan` decides the rest in its own decisions table.
+Each package's `/np-plan wp` decides the rest in its own decisions table.
 
 | Decision | Choice | Why |
 |---|---|---|
@@ -219,7 +219,7 @@ as they run. Tag `v0.5.0-alpha.21`.
 
 ### Fix packages (provisional)
 
-They wait on the sessions and on the author's ruling of each `UT-nn`; a second `/phase-plan amend 4`
+They wait on the sessions and on the author's ruling of each `UT-nn`; a second `/np-plan amend 4`
 plans them, numbered from WP56. They carry `MOD-11`, decided by the author's ruling of the sessions'
 findings (H2), and any cost WP49 measured over its threshold that one pull request could not fix.
 The rules of the refactor packages apply: VER-61, VER-62, `CHANGELOG.md` breaks, the shell following,

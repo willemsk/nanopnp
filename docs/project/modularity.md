@@ -2,7 +2,7 @@
 
 This report measures nanopnp's architecture against its own claims and logs what it finds as
 numbered findings, `MOD-nn`. It changes no code: the author rules each finding before anything
-moves (§8.2.7 G1), through `/phase-plan amend 4`. The findings and their status are logged in
+moves (§8.2.7 G1), through `/np-plan amend 4`. The findings and their status are logged in
 [the findings log](modularity-findings.md), and the live measurements are on
 [the measurements page](../_generated/project/modularity-measurements.md).
 

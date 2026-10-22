@@ -232,10 +232,10 @@ and its *Implementation details*; `main` re-runs its check.
   > `np-ship wp` 2,200, `phase` 2,455. The total and four invocations exceed D2's caps; item 9
   > reports the final figures.
 - [x] 4. Compaction checkpoint; the prompt carries the scratch path. **Executor:** `main`.
-- [ ] 5. `.claude/hooks/session-start.sh`: the fast-forward and warnings, and the workflow line
+- [x] 78bdcc3 5. `.claude/hooks/session-start.sh`: the fast-forward and warnings, and the workflow line
   (D5); `<scratch>/hook-check.sh`. Done when its ten cases pass and `bash -n` is clean.
   **Executor:** `main`.
-- [ ] 6. The pointer edits of *Implementation details*. Done when the code and review say so.
+- [x] 6. The pointer edits of *Implementation details*. Done when the code and review say so.
   **Executor:** `general-purpose`, Haiku.
 - [ ] 7. §8.4.3 and §8.4.4 name the new commands; `history/index.md` sets R5 and R12 to §8.4.4 and
   R7 to `.claude/hooks/session-start.sh`; the Phase 4 plan's delivered summary; `current.md`;
