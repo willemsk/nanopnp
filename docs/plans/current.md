@@ -1,17 +1,16 @@
 # Current work
 
-Updated 22 October 2026 (Phase 4 amended, §8.2.16). Navigation only; `SPECIFICATION.md` governs; an
+Updated 22 October 2026 (§8.2.16). Navigation only; `SPECIFICATION.md` governs; an
 unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it; all but the testing sessions is done. Three
-packages come first: the specification and this phase's plan split into what holds today, read
-by default, and their history, read on demand; the working instructions rebuilt as plan, implement
-and ship, each with levels; and the notebooks and figures revised from the author's notes.
+Phase 4 tidies the program before others rely on it. Three packages precede the testing
+sessions: the specification and this phase's plan split into what holds today and their history;
+the working instructions rebuilt as three commands with levels; and the notebooks and figures
+revised from the author's notes.
 
-**Your call:** should the phase estimate grow to five to seven weeks? *Recommendation:* yes; the
-sessions matter more than the date.
+**Your call:** should the phase estimate grow to five to seven weeks? *Recommendation:* yes.
 
 ## Position
 
@@ -19,8 +18,8 @@ sessions matter more than the date.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 to §8.2.16). WP35 to WP51 are delivered; tags to `v0.5.0-alpha.17` are
   the author's step.
-- **Amended 22 October 2026** (§8.2.16 R1): WP52, the documents, is next: **`/wp-plan 52`**. Then
-  WP53, the workflow, and WP54, the notebooks revised; then [WP55](wp55-user-testing-protocol.md),
+- **Amended 22 October 2026** (§8.2.16 R1): [WP52](wp52-specification-and-plans-split.md), the
+  documents, is **planned**; next: **`/wp-implement`**. Then WP53, the workflow, and WP54, the notebooks revised; then [WP55](wp55-user-testing-protocol.md),
   the protocol, **planned**; then the author's sessions, and fixes from WP56.
 
 ## Not to be re-decided
@@ -30,9 +29,8 @@ sessions matter more than the date.
   Python 3.14; Haiku, Sonnet, then Opus; plans grounded in the code (Q1); two agents; workers for
   independent batches (L9, R6); prose only on the public API. Floor 3.11. → §8.2.10
   J4–J6, J9; §8.2.15; OPN-09.
-- **The documents and the workflow** (§8.2.16): `specification/` read current by default, history
-  on demand, plans likewise; `/plan`, `/implement`, `/ship` with levels; the hook fast-forwards a
-  clean primary `main`; WP54's scope open. → R2 to R10.
+- **The documents and the workflow** (§8.2.16): specification and plans read current by default,
+  history on demand; `/plan`, `/implement`, `/ship` with levels; WP54's scope open. → R2 to R10.
 - **The test scope** (§8.2.13): tests only for physics, numerics, core mechanisms and the licence
   and architecture guards; no coverage gate; walks nightly but for examples 01 and 02. → N1 to N5.
 - **Figures:** Matplotlib in `plot/`, below `pipeline`, importing no backend; figures declared in
@@ -55,7 +53,7 @@ sessions matter more than the date.
 
 ## What is still somebody else's
 
-- **The paper's figure data** for VAL-16 and VAL-17 (§8.2.4 D6), and E1's ensemble legs.
+- **The paper's figure data** for VAL-16 and VAL-17 (§8.2.4 D6); E1's ensemble legs.
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
 - **The notes on the notebooks and figures, for WP54's plan.** **The user-testing sessions, and
@@ -65,7 +63,8 @@ sessions matter more than the date.
 
 | Need | Read |
 |---|---|
-| The documents, the workflow | The Phase 4 plan's WP52 and WP53; §8.2.16; §11 |
+| The documents | `wp52-specification-and-plans-split.md`; §8.2.16 R2 to R4, R9, R10; §11 |
+| The workflow | The Phase 4 plan's WP53; §8.2.16 R5 to R7 |
 | The notebooks revised | The Phase 4 plan's WP54; `wp51-plotting-and-notebooks.md`; §8.2.14; FR-30 |
 | The protocol | `wp55-user-testing-protocol.md`; §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46 |
 
