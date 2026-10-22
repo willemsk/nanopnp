@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
+from nanopnp.materials.electrolyte import MOLAR_PER_SI
 from nanopnp.plot import data
 from nanopnp.plot.data import DISPLAY, axis_label
 
@@ -153,9 +154,9 @@ def region_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figu
         return _absent(artefact, "region", "the region record")
     figure = Figure(figsize=(5.0, 6.0), layout="constrained")
     ax = figure.subplots()
-    half = drawing.membrane_half_thickness_m * NM
     radius = drawing.reservoir_radius_m * NM
-    ax.fill_between([0.0, radius], -half, half, color="tab:orange", alpha=0.35, label="membrane")
+    membrane = drawing.membrane_m * NM
+    ax.fill(membrane[:, 0], membrane[:, 1], color="tab:orange", alpha=0.35, label="membrane")
     pore = [*drawing.pore_m, drawing.pore_m[0]]
     ax.fill([p[0] * NM for p in pore], [p[1] * NM for p in pore], color="tab:blue", alpha=0.3)
     ax.plot([p[0] * NM for p in pore], [p[1] * NM for p in pore], color="tab:blue", label="pore")
@@ -230,11 +231,12 @@ def charge_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figu
         return _absent(artefact, "charge", "a stored charge or ε_r grid")
     figure = Figure(figsize=(4.5 * len(grids), 6.0), layout="constrained")
     axes = figure.subplots(1, len(grids), squeeze=False)[0]
-    for ax, (name, (r, z, values)) in zip(axes, grids.items(), strict=True):
-        image = _mesh(ax, r, z, values, cmap="coolwarm" if name == "charge" else "viridis")
-        figure.colorbar(image, ax=ax, label="fixed charge" if name == "charge" else "ε_r field")
+    for ax, (name, grid) in zip(axes, grids.items(), strict=True):
+        cmap = "coolwarm" if name == "charge" else "viridis"
+        image = _mesh(ax, grid.r_m, grid.z_m, grid.values, cmap=cmap)
+        figure.colorbar(image, ax=ax, label=f"{grid.quantity.replace('_', ' ')} ({grid.unit})")
         _rz_axes(ax)
-        ax.set_title(f"stored {name} grid")
+        ax.set_title(f"stored {grid.quantity.replace('_', ' ')}")
     return figure
 
 
@@ -245,10 +247,14 @@ def materials_figure(artefact: Artefact, inputs: StageInputs | None = None) -> F
     if inputs is None:
         return _absent(artefact, "materials", "the correction models")
     electrolyte = inputs.resolved.electrolyte
+    # Every species sits at the case's concentration in the bulk; the driver is formed from
+    # them as the solve forms it: <c> = (1/n) sum c_i, or I, clamped to the fitted range.
+    bulk_SI = inputs.resolved.concentration_M / MOLAR_PER_SI
+    driver_M = float(electrolyte.average_concentration([bulk_SI] * len(electrolyte.species)))
     curves = data.correction_curves(
         electrolyte.corrections,
         driver=electrolyte.driver,
-        concentration_M=inputs.resolved.concentration_M,
+        concentration_M=driver_M,
         validity_M=electrolyte.validity_M,
     )
     if not curves:
@@ -301,8 +307,6 @@ def _field_panel(
 def _convergence(figure: Figure, residual_ax: Axes, damping_ax: Axes, rungs: list[Any]) -> None:
     offset = 0
     for rung in rungs:
-        if rung.iteration.size == 0:
-            continue
         steps = offset + rung.iteration
         residual_ax.semilogy(steps, rung.residual, marker=".", label=rung.name)
         damping_ax.plot(steps, rung.damping, marker=".", label=rung.name)
@@ -319,10 +323,11 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
     """Draw stage 10: the solved fields and the Newton history per rung."""
     from matplotlib.figure import Figure
 
-    rungs = data.newton_history(artefact)
+    history = data.newton_history(artefact)
+    rungs = None if history is None else [rung for rung in history if rung.iteration.size]
     summary: Mapping[str, Any] = artefact.summary
     fields = None if inputs is None else data.solution_fields(inputs, artefact)
-    if fields is None and rungs is None:
+    if fields is None and not rungs:
         return _absent(artefact, "solve", "the fields or the Newton history")
     model = fields.model if fields is not None else "solve"
     title = f"{model}, stabilisation: {summary.get('stabilisation', 'not recorded')}"
@@ -369,8 +374,9 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
         residual_ax = figure.add_subplot(bottom[0, 0])
         damping_ax = figure.add_subplot(bottom[0, 1])
         _convergence(figure, residual_ax, damping_ax, rungs)
-    elif fields is not None and inputs is not None:
-        figure.text(0.5, 0.01, "Newton history not recorded for this solve", ha="center")
+    elif fields is not None:
+        why = "not recorded for this solve" if history is None else "not reported by this model"
+        figure.text(0.5, 0.01, f"Newton history {why}", ha="center")
     return figure
 
 
@@ -409,8 +415,22 @@ HEADLINE = (
 """The sweep quantities drawn large, as ``(key, symbol, DISPLAY quantity, colour)``."""
 
 
-def _sweep_axis(ax: Axes, curves: data.SweepCurves, values: np.ndarray) -> None:
-    ax.plot(curves.x, values, marker="o", ms=4)
+def _sweep_axis(
+    ax: Axes, curves: data.SweepCurves, values: np.ndarray, colour: str | None = None
+) -> None:
+    groups = list(dict.fromkeys(curves.group)) or [""]
+    for group in groups:
+        member = [g == group for g in curves.group] if curves.group else [True] * curves.x.size
+        ax.plot(
+            curves.x[member],
+            values[member],
+            marker="o",
+            ms=4,
+            color=colour if len(groups) == 1 else None,
+            label=group or None,
+        )
+    if len(groups) > 1:
+        ax.legend(fontsize="small")
     bad = curves.x[~curves.ok]
     if bad.size:
         ax.plot(bad, [0.0] * bad.size, "rx", transform=ax.get_xaxis_transform(), clip_on=False)
@@ -441,8 +461,7 @@ def sweep_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
         span = cells // len(headline)
         ax = figure.add_subplot(grid[0, index * span : (index + 1) * span])
         display = DISPLAY[quantity]
-        _sweep_axis(ax, curves, curves.quantities[key] * display.per_SI)
-        ax.lines[0].set_color(colour)
+        _sweep_axis(ax, curves, curves.quantities[key] * display.per_SI, colour)
         ax.axhline(0.0, color="0.7", lw=0.8, zorder=0)
         ax.axvline(0.0, color="0.7", lw=0.8, zorder=0)
         ax.set_ylabel(f"{symbol} ({display.unit})")

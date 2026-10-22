@@ -281,8 +281,7 @@ def register(
             f"{_REGISTRY[description.name].target!r}; replacing it would let two runs share a "
             "manifest and execute different code"
         )
-    if target.count(":") != 1:
-        raise ValueError(f"stage target {target!r} must be of the form 'module:attribute'")
+    _checked_target(target, "stage")
     if figure is not None:
         _checked_target(figure, "stage figure")
     for name in description.inputs:

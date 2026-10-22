@@ -145,7 +145,6 @@ def _():
     charge_settings = {
         "charge.smearing.sharpness": 0.5,  # the width of each atom's Gaussian
         "charge.smearing.grid_spacing_nm": 0.005,  # the lattice the average is taken on
-        "charge.smearing.axis_cutoff_nm": 0.01,
         "charge.dielectric_transition_nm": 0.0,  # above 0 grades the permittivity at the wall
     }
     return (charge_settings,)

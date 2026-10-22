@@ -10,11 +10,12 @@ from typing import TYPE_CHECKING, Any, cast
 
 from nanopnp.charge.protonation import PAYLOAD_NAME as PROTONATION_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
-from nanopnp.charge.stage import CHARGE_PAYLOAD, EPS_R_PAYLOAD
+from nanopnp.charge.stage import EPS_R_PAYLOAD, stored_lattice
 from nanopnp.core.hashing import decode_floats
 from nanopnp.density.grid import read_grid
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
+from nanopnp.geometry.profile import PAYLOAD_NAME as PROFILE_PAYLOAD
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import RegionRecord, read_region
@@ -45,6 +46,7 @@ __all__ = [
     "ProtonationCharges",
     "RegionDrawing",
     "SolutionFields",
+    "StoredGrid",
     "SweepCurves",
     "atoms_r_z_m",
     "axial_section",
@@ -157,10 +159,6 @@ def reduced_map(artefact: Artefact) -> ReducedMap | None:
 
 def contour_polygon_m(artefact: Artefact) -> np.ndarray | None:
     """Return the conditioned contour as an ``(n, 2)`` array of ``(r, z)`` in m."""
-    # Imported here: the contour module needs the structure extra, and a figure of the other
-    # stages must not.
-    from nanopnp.geometry.contour import PAYLOAD_NAME as PROFILE_PAYLOAD
-
     path = _payload(artefact, PROFILE_PAYLOAD)
     if path is None:
         return None
@@ -172,6 +170,7 @@ class RegionDrawing:
     """Stage 5's named regions as outlines in m, in the model frame."""
 
     pore_m: np.ndarray
+    membrane_m: np.ndarray
     exclusion_m: np.ndarray | None
     membrane_half_thickness_m: float
     reservoir_radius_m: float
@@ -185,9 +184,24 @@ def region_drawing(artefact: Artefact) -> RegionDrawing | None:
     if path is None:
         return None
     record = read_region(path)
+    import numpy as np
+
     exclusion = None if record.exclusion is None else record.exclusion.points() * _NM
+    membrane = record.membrane
+    half = membrane.half_thickness_nm
+    # The face stage 5 meshes (geometry/region.py _membrane_face): from the inner chord out.
+    outer = record.reservoir_radius_nm + half
+    membrane_nm = np.array(
+        [
+            (membrane.inner_trans_nm, -half),
+            (outer, -half),
+            (outer, half),
+            (membrane.inner_cis_nm, half),
+        ]
+    )
     return RegionDrawing(
         pore_m=record.points() * _NM,
+        membrane_m=membrane_nm * _NM,
         exclusion_m=exclusion,
         membrane_half_thickness_m=record.membrane.half_thickness_nm * _NM,
         reservoir_radius_m=record.reservoir_radius_nm * _NM,
@@ -275,14 +289,34 @@ def protonation_charges(artefact: Artefact) -> ProtonationCharges | None:
     return ProtonationCharges(labels, charge)
 
 
-def charge_grids(artefact: Artefact) -> dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]]:
-    """Return the stored charge and ε_r grids as ``{name: (r, z, values[z, r])}``, axes in m."""
+@dataclass(frozen=True)
+class StoredGrid:
+    """One stored stage-7 lattice: axes in m, ``values[z, r]`` as stored, and what they are."""
+
+    r_m: np.ndarray
+    z_m: np.ndarray
+    values: np.ndarray
+    quantity: str
+    unit: str
+
+
+def charge_grids(artefact: Artefact) -> dict[str, StoredGrid]:
+    """Return the stored charge lattice and solid-fraction grid, each with its quantity."""
     found = {}
-    for key in (CHARGE_PAYLOAD, EPS_R_PAYLOAD):
-        path = _payload(artefact, key)
-        if path is not None:
-            grid = read_grid(path, format="npz")
-            found[key] = (grid.r_nm * _NM, grid.z_nm * _NM, grid.values)
+    lattice = stored_lattice(artefact)
+    if lattice is not None:
+        grid = lattice.grid
+        found["charge"] = StoredGrid(
+            grid.r_nm * _NM, grid.z_nm * _NM, grid.values, lattice.quantity, lattice.units
+        )
+    path = _payload(artefact, EPS_R_PAYLOAD)
+    if path is not None:
+        # The ``eps_r`` payload holds the solid fraction chi, not a permittivity
+        # (charge/dielectric.py SOLID_FRACTION).
+        grid = read_grid(path, format="npz")
+        found["solid_fraction"] = StoredGrid(
+            grid.r_nm * _NM, grid.z_nm * _NM, grid.values, "solid fraction χ", "1"
+        )
     return found
 
 
@@ -434,12 +468,19 @@ def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
 
 @dataclass(frozen=True)
 class SweepCurves:
-    """A sweep's scalar quantities against its swept axis, ordered by the axis value."""
+    """A sweep's scalar quantities against its swept axis, ordered by the axis value.
+
+    Parameters
+    ----------
+    group
+        Per point, the values of the sweep's other axes; one curve is drawn per group.
+    """
 
     axis: str
     x: np.ndarray
     ok: np.ndarray
     quantities: dict[str, np.ndarray]
+    group: tuple[str, ...] = ()
 
 
 def _scalars(quantities: Mapping[str, Any]) -> dict[str, float]:
@@ -467,7 +508,18 @@ def sweep_curves(rows: Sequence[Mapping[str, Any]]) -> SweepCurves | None:
     paths = sorted({path for row in rows for path in row["assignments"]})
     varying = [p for p in paths if len({str(row["assignments"].get(p)) for row in rows}) > 1]
     axis = varying[0] if varying else (paths[0] if paths else "index")
-    ordered = sorted(rows, key=lambda row: _axis_value(row, axis))
+    # Another axis takes several values at one x; a path moved with the axis takes one.
+    at_x: dict[str, dict[str, set[str]]] = {p: {} for p in varying[1:]}
+    for row in rows:
+        x_value = str(row["assignments"].get(axis))
+        for p, seen in at_x.items():
+            seen.setdefault(x_value, set()).add(str(row["assignments"].get(p)))
+    others = [p for p, seen in at_x.items() if any(len(v) > 1 for v in seen.values())]
+
+    def group_of(row: Mapping[str, Any]) -> str:
+        return ", ".join(f"{p.rsplit('.', 1)[-1]}={row['assignments'].get(p)}" for p in others)
+
+    ordered = sorted(rows, key=lambda row: (group_of(row), _axis_value(row, axis)))
     names = sorted({k for row in ordered for k in _scalars(row.get("quantities") or {})})
     series = {
         name: np.array(
@@ -481,6 +533,7 @@ def sweep_curves(rows: Sequence[Mapping[str, Any]]) -> SweepCurves | None:
         x=np.array([_axis_value(row, axis) for row in ordered], dtype=np.float64),
         ok=np.array([row["status"] == "ok" for row in ordered], dtype=bool),
         quantities=series,
+        group=tuple(group_of(row) for row in ordered),
     )
 
 

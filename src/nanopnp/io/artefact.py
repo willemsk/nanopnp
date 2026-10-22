@@ -130,7 +130,10 @@ class Artefact:
         # exception must not load the module of the class it names.
         from nanopnp.core.stages import MissingExtraError, draw
 
-        text = f"{self.schema} {self.short_hash}: {len(self.summary)} summary entries"
+        held = ", ".join(sorted(self.payload)) or "none"
+        text = (
+            f"{self.schema} {self.short_hash}: {len(self.summary)} summary entries; payload {held}"
+        )
         try:
             figure = draw(self)
         except MissingExtraError:

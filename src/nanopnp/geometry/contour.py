@@ -39,6 +39,9 @@ from nanopnp.geometry.profile import (
     signed_area,
     write_profile,
 )
+from nanopnp.geometry.profile import (
+    PAYLOAD_NAME as PROFILE_PAYLOAD,
+)
 from nanopnp.io.artefact import ProfileArtefact
 from nanopnp.io.case import (
     ContourSpec,
@@ -704,7 +707,7 @@ def lumen_change(
     }
 
 
-PAYLOAD_NAME = "profile"
+PAYLOAD_NAME = PROFILE_PAYLOAD
 
 CITATION = "nanopnp stage 4, SPECIFICATION.md section 5.2.1"
 
