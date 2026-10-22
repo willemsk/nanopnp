@@ -207,9 +207,9 @@ item 2's commit. Scripts use the standard library only and run as `uv run --no-p
 `main` is the Sonnet 5.5 session. A sub-agent item goes to `general-purpose` on Haiku, with the item
 and its *Implementation details*, and `main` re-runs its check.
 
-- [ ] 1. The R10 check scripts in `<scratch>`, self-tested (D5); no commit. **Executor:**
+- [x] no commit. 1. The R10 check scripts in `<scratch>`, self-tested (D5); no commit. **Executor:**
   `general-purpose`, Haiku.
-- [ ] 2. `specification/` sliced, front matter filled, `SPECIFICATION.md` cut (D1, D2, D4). Done
+- [x] 24cea0e. 2. `specification/` sliced, front matter filled, `SPECIFICATION.md` cut (D1, D2, D4). Done
   when `lines.py` reports 0. **Executor:** `general-purpose`, Haiku.
 - [ ] 3. `SPECIFICATION.md` completed as the entry point; `specification/index.md`,
   `history/index.md` and the directory indexes written; §11's table gains the three (D2, D4). Done
