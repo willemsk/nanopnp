@@ -37,6 +37,7 @@ USAGE_WIDTH = 88
 
 API_SECTIONS: dict[str, str] = {
     "nanopnp.pipeline.run": "Running a case",
+    "nanopnp.pipeline.handle": "Running a case",
     "nanopnp.io.case": "Case files",
     "nanopnp.pipeline.case": "Case files",
     "nanopnp.io.store": "The artefact store",
