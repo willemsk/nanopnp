@@ -201,7 +201,9 @@ switch) and D5 ("at most two widgets"). Six decisions, the author's unless marke
 - [x] 12. **06-2wcd** as blocks. Done when it passes headless. Done 22 October 2026: eleven blocks, 12 minutes from an empty
   store; example 07's case now spells `geometry:` at the defaults, which moves no key from structure to solve (the case and
   qoi hashes move, as they hash the whole document). The prepared structure is named by the preparation values.
-- [ ] 13. **01, 02, 03, 04** as blocks, one commit each, with the READMEs.
+- [x] 13. **01, 02, 03, 04** as blocks, one commit each, with the READMEs. Done 22 October 2026. Example 06's case now
+  spells `geometry:` and `numerics.mesh` at the defaults, for 01 (no key moves; the case hash does). 01's region block has
+  no `charge.exclusion_offset_nm`, since that case has no `charge:` section.
 - [ ] 14. §8.2.14 P5 and P9 amended in place, D5 and the Outcome, the READMEs, `CHANGELOG.md`; the strict
   documentation build and `.claude/hooks/gate.sh run` pass.
 
