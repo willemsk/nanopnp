@@ -18,7 +18,7 @@ becomes a map from each section and identifier to the file that holds it. A sess
 of map and the sections it needs. The Phase 4 plan is cut to
 what holds today, its full text kept as a record.
 
-**Cost.** One pull request, one or two sessions; no program code or test changes.
+**Cost.** One pull request, one or two sessions.
 
 **What could go wrong.** A clause could be lost or altered in the move: a script checks that
 every old line is still present, and another that every identifier still prints the same text.
@@ -32,10 +32,10 @@ lost, and nobody reads it by default.
 
 ## Execution brief
 
-Scope: the Phase 4 plan's WP52. Depends on WP51, merged. No identifier is claimed and no test is
-kept (N1). Pointers: §8.2.16 R2 to R4, R9, R10; §11; VER-45.
+Scope: the Phase 4 plan's WP52, and the planning skills' PR step the author asked for
+(`f90e3d4`). No identifier is claimed and no test is kept (N1). Pointers: §8.2.16 R2 to R4, R9, R10; §11; VER-45.
 
-R10's base is this plan's commit; every old line and clause is read from it.
+R10's base is this plan's commit, from which every old line and clause is read.
 
 ### Decisions
 
@@ -44,7 +44,7 @@ R10's base is this plan's commit; every old line and clause is read from it.
 | D1 | File boundaries | One file per `##` section. §5, §7 and §8 are directories split at `###`, and §5.3 is further split at `####` (four files). Layout in *Grounding* D1. **The split is made by a one-off script that slices the old file at its heading lines; no line of the old text is retyped or reflowed.** A `---` rule before a `##` heading stays at the end of the preceding file | R2. §5.3.1 alone is 7,467 words. Retyping is where text gets lost |
 | D2 | What moves to history | All of `### 8.2`: its Phase 0 criteria and §8.2.1 to §8.2.16, one file each, verbatim. Nothing outside §8.2 moves. The withdrawn `VER-` and retired `RSK-` rows are already R2's one-line entries; ADRs are records. Current §8.2 becomes a stub headed `### 8.2 Rulings by date`, linking the history. `history/index.md` lists each ruling with where it holds now: a clause, a §8.4 rule, `superseded by <id>`, or `spent` (a one-time act, such as a numbering or an estimate) | R2, R3. The index makes R3's section reviewable against the tables |
 | D3 | The rules in force | A new `### 8.4 Development process` in `08-implementation-plan/04-development-process.md`, at most 1,500 words. Its subsections are 8.4.1 Versions and releases, 8.4.2 The development loop, 8.4.3 The test scope, 8.4.4 Plans and the workflow, 8.4.5 Agents and models, 8.4.6 Open items and review. Each rule is a bullet ending in its sources. **A ruling is restated only if** it is in force, sets a standing rule rather than a one-time act, and no current clause already carries it. No rule is a table row (`clause.py` would read a letter-number first cell as a ruling). `CLAUDE.md` and `.claude/rules/python.md` cite `§8.4.k` beside each ruling identifier they name | R3: a restatement, no new rule. A new §8.4 renumbers nothing |
-| D4 | Entry point and `type` vocabulary | `SPECIFICATION.md` keeps its title block, its first 14 lines unchanged, then adds: how to read (current by default, `history/` on demand, `clause.py`), a section-to-file table, and an identifier-prefix-to-file table. Ruling letters map to history files: A is §8.2.1 to R is §8.2.16, with no K or O. Each non-index file opens with front matter `type`, `title` and `description`. The `type` is one of `Specification`, `Process` (§8.4 only) or `Ruling Record` (history). `specification/index.md` declares `okf_version: "0.2"` and lists the files in the OKF form `* [title](path) - description` | R2. A small closed list, as in `knowledge/` |
+| D4 | Entry point and `type` vocabulary | `SPECIFICATION.md` keeps its title block, its first 14 lines unchanged, then adds: how to read (current by default, `history/` on demand, `clause.py`), a section-to-file table, and an identifier-prefix-to-file table. Ruling letters map to history files (A is §8.2.1, R is §8.2.16). Each non-index file opens with front matter `type`, `title` and `description`. The `type` is one of `Specification`, `Process` (§8.4 only) or `Ruling Record` (history). `specification/index.md` declares `okf_version: "0.2"` and lists the files in the OKF form `* [title](path) - description` | R2. A small closed list, as in `knowledge/` |
 | D5 | Tooling | `clause.py` reads the bundle, not `SPECIFICATION.md`. It searches the current files before `history/` and, within each, in path order with `index.md` first. A ruling is a ruling-shaped row in a `history/` file. It prints **every** definition, first-found first, each labelled with its file and line range. `generate.py` copies the bundle beside the entry point. `mkdocs.yml` lists every bundle page statically. The guide's anchored links are repointed | R2. Printing every definition fixes `N1` and `P1`, which resolve today to the §3.5 and §2.4 rows only. R10 compares the first definition, which is unchanged |
 | D6 | The Phase 4 plan | `phase-4-record.md` is a verbatim copy of the plan at the base, under a three-line header; later amendments append dated sections to it. The plan is rewritten to its current scope: WP35 to WP51 as one table (package, plan link, tag), and WP52 to the close, the open decisions, the supplies and the criteria with every amendment folded in and no `Amended` blockquote. Under 6,000 words (criterion 14) | R4; a copy cannot lose a line |
 
@@ -157,11 +157,11 @@ No kept test (N1). The checks are one-off scripts in the scratchpad, run in the 
 
 ### Out of scope
 
-- Rewriting the skills to the new layout, including where `/phase-plan` writes a ruling and R3's rule
+- Rewriting the skills to the new layout (but the PR step), including where `/phase-plan` writes a ruling and R3's rule
   that every ruling also lands in a current clause: WP53. Until it merges, an amendment writes its
   table into a new `history/` file, and its rules into §8.4.
 - Splitting `knowledge/` (R9); rewording any clause.
 
 ### Open questions
 
-The verbatim record (In brief): the plan proceeds on the recommendation unless ruled otherwise.
+The verbatim record (In brief): the plan follows the recommendation unless ruled otherwise.
