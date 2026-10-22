@@ -177,8 +177,10 @@ routers over `.claude/workflow/core.md` and one file per level, replacing `phase
 `project` re-plans the project, and `/np-ship phase` confirms the close and tags the release. The
 worker pattern is in `np-implement/wp.md` (R6). The session-start hook fast-forwards a clean primary
 `main` behind `origin/main` and warns when the checkout lacks it (R7). `CLAUDE.md`, §8.4.3, §8.4.4
-and the live pointers name the new commands. `steward` and the agent files stay. No test is kept
-(N1); the plan's Outcome holds D6's checks and the word counts, which exceed D2's caps. WP54 is the
+and the live pointers name the new commands. A review for inefficiencies, contradictions and flaky
+steps fixed 21 findings, and the text was reworded to ASD-STE100's rules. `steward` and the agent
+files stay. No test is kept (N1); the plan's Outcome holds D6's checks and the word counts, which
+exceed D2's caps. WP54 is the
 first package run with the commands.
 
 ### WP54 — The notebooks and figures revised (§8.2.16 R8)
