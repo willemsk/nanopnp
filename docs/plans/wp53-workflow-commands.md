@@ -189,7 +189,7 @@ and its *Implementation details*; `main` re-runs its check.
 - [x] 277b468 2. `.claude/workflow/core.md` and `.claude/skills/np-plan/` (`SKILL.md`, `rulings.md`, `wp.md`,
   `phase.md`, `amend.md`, `project.md`) (D1 to D4). Done when the code and review say so.
   **Executor:** `main`: normative process text.
-- [ ] 3. `.claude/skills/np-implement/` and `np-ship/` (`SKILL.md`, `wp.md`; `np-ship/phase.md`); the
+- [x] dae89fb 3. `.claude/skills/np-implement/` and `np-ship/` (`SKILL.md`, `wp.md`; `np-ship/phase.md`); the
   four old skill directories deleted (D1, D2, D4). Done when `rules.py <base>` runs and each missing
   sentence is accounted for in the Outcome. **Executor:** `main`.
 
@@ -231,7 +231,7 @@ and its *Implementation details*; `main` re-runs its check.
   > `np-plan wp` 2,351, `phase` 2,729, `amend` 1,791, `project` 1,931; `np-implement` 1,687;
   > `np-ship wp` 2,200, `phase` 2,455. The total and four invocations exceed D2's caps; item 9
   > reports the final figures.
-- [ ] 4. Compaction checkpoint; the prompt carries the scratch path. **Executor:** `main`.
+- [x] 4. Compaction checkpoint; the prompt carries the scratch path. **Executor:** `main`.
 - [ ] 5. `.claude/hooks/session-start.sh`: the fast-forward and warnings, and the workflow line
   (D5); `<scratch>/hook-check.sh`. Done when its ten cases pass and `bash -n` is clean.
   **Executor:** `main`.
