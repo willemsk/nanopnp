@@ -6,7 +6,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from zipfile import BadZipFile
 
 from nanopnp.charge.stage import (
@@ -16,6 +16,7 @@ from nanopnp.charge.stage import (
     read_fields,
     require_charge_artefact,
 )
+from nanopnp.core.hashing import canonical
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -26,13 +27,15 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import Artefact, SolutionArtefact, StageInputs
-from nanopnp.io.workspace import scratch_directory
+from nanopnp.io.workspace import require_workspace, scratch_directory
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, declaration
 from nanopnp.solve.continuation import Rung, run_ladder
 from nanopnp.solve.state import (
+    NEWTON_HISTORY_FILENAME,
+    NEWTON_HISTORY_KEY,
     STATE_FILENAME,
     STATE_KEY,
     StateMismatchError,
@@ -198,7 +201,10 @@ class SolveStage:
             # The ladder's last rung is the target point; the rest is a path the
             # neighbour already supplies.
             rungs = rungs[-1:]
-        prepared, on_rung = self._instrumented(resolved, rungs, progress=progress, cancel=cancel)
+        history: list[dict[str, Any]] = []
+        prepared, on_rung = self._instrumented(
+            resolved, rungs, history, progress=progress, cancel=cancel
+        )
         result = run_ladder(
             prepared, initial=None if warm is None else warm.solution, on_rung=on_rung
         )
@@ -210,6 +216,7 @@ class SolveStage:
             mesh_content_hash=ingested.content_hash,
             boundaries=prepared[-1].boundaries,
         )
+        payload[NEWTON_HISTORY_KEY] = self._write_history(history)
         return SolutionArtefact(
             parameters=resolved.solve_provenance,
             inputs=_input_hashes(mesh_artefact, materials, fields_artefact),
@@ -259,6 +266,7 @@ class SolveStage:
         self,
         resolved: ResolvedCase,
         rungs: tuple[Rung, ...],
+        history: list[dict[str, Any]],
         *,
         progress: Progress | None,
         cancel: CancelToken | None,
@@ -275,6 +283,7 @@ class SolveStage:
 
         def on_rung(index: int, rung: Rung) -> None:
             current[0] = index
+            history.append({"name": rung.name, "stage": rung.stage, "steps": []})
             check_cancelled(cancel, f"rung {rung.name!r}")
             report(progress, LOAD_FRACTION + span * index / total, f"rung {rung.name}")
             if hook is not None:
@@ -288,6 +297,16 @@ class SolveStage:
                 )
 
         def on_step(step: NewtonStep) -> None:
+            history[-1]["steps"].append(
+                {
+                    "iteration": step.iteration,
+                    "residual": step.residual,
+                    "update": step.update,
+                    "damping": step.damping,
+                    "trials": step.trials,
+                    "forced": step.forced,
+                }
+            )
             check_cancelled(cancel, f"Newton iteration {step.iteration}")
             within = min(1.0, step.iteration / iterations)
             report(
@@ -336,3 +355,8 @@ class SolveStage:
             boundaries=boundaries,
         )
         return {STATE_KEY: target}
+
+    def _write_history(self, history: list[dict[str, Any]]) -> Path:
+        record = require_workspace(self._workspace, self.name) / NEWTON_HISTORY_FILENAME
+        record.write_bytes(canonical({"rungs": history}))
+        return record
