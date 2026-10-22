@@ -3,17 +3,27 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
 
 from nanopnp.core.hashing import decode_floats
+from nanopnp.io.artefact import StageInputs
+from nanopnp.pipeline.run import offered
+from nanopnp.plot import data
+from nanopnp.post.export import attribute_name, field_scale, logarithmic_fields, restored
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from conftest import NumberStability
+    from nanopnp.pipeline.run import RunResult
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 
@@ -73,3 +83,65 @@ def test_ver62_quickstart_holds_the_number_stability_golden(
     quantities = _read(example / "run" / "run.json")["quantities"]
     assert isinstance(quantities, dict)
     number_stability("example-01", _mesh_hash(example / "run"), quantities)
+
+
+def test_every_figure_draws_and_displays(
+    ran: tuple[Path, list[CommandResult]],
+    cached_run: Callable[..., RunResult],
+    check_figures: Callable[[RunResult], None],
+) -> None:
+    check_figures(cached_run(ran[0], "quickstart.case.yaml"))
+
+
+def test_field_on_a_grid_matches_sample_at(
+    ran: tuple[Path, list[CommandResult]], cached_run: Callable[..., RunResult]
+) -> None:
+    # The figure samples through the export's path; a third route evaluates the restored state
+    # at the same nm points, so a swapped (r, z), a missed exp of ln c or a scale of 1 fails.
+    result = cached_run(ran[0], "quickstart.case.yaml")
+    inputs = StageInputs(
+        resolved=result.resolved,
+        upstream=offered("solve", result.artefacts),
+    )
+    solution = result.artefacts["solve"]
+    fields = data.solution_fields(inputs, solution)
+    state, _ = restored(inputs, solution)
+    mesh = state.space.mesh
+    logarithmic = logarithmic_fields(state.model)
+    targets = np.array(
+        [(r, z) for r in (0.5, 1.5, 3.0, 4.5, 6.0) for z in (4.0, 5.5, 7.0, 8.5, 10.0)]
+    )
+    checked = 0
+    for field in state.model.fields:
+        if field.element != "h1" or field.name == "pressure":
+            continue
+        points, _, values = fields.whole if field.domain is None else fields.fluid
+        name = attribute_name(field.name)
+        nodes_nm = points * 1e9
+        picked = [int(np.argmin(np.linalg.norm(nodes_nm - target, axis=1))) for target in targets]
+        for index in picked:
+            r_nm, z_nm = nodes_nm[index]
+            direct = float(state.component(field.name)(mesh(r_nm, z_nm)))
+            if field.name in logarithmic:
+                direct = float(np.exp(direct))
+            expected = direct * field_scale(field.name, state.model.scales)
+            assert values[name][index] == pytest.approx(expected, rel=1e-12, abs=1e-30)
+            checked += 1
+    assert checked >= 25 * 3
+
+
+def test_default_import_and_walk_load_no_plotting(
+    ran: tuple[Path, list[CommandResult]],
+) -> None:
+    code = (
+        "import json, sys\n"
+        "import nanopnp, nanopnp.plot\n"
+        "from nanopnp.io.store import Store\n"
+        "from nanopnp.pipeline.run import run_case\n"
+        "run_case('quickstart.case.yaml', store=Store('store'), write=False)\n"
+        "print(json.dumps([m for m in ('matplotlib', 'marimo') if m in sys.modules]))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], cwd=ran[0], capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout.strip().splitlines()[-1]) == []

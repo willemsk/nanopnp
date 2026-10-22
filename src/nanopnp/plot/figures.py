@@ -365,8 +365,9 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
         )
     if rungs:
         last = rows - 1
-        residual_ax = figure.add_subplot(grid[last, : max(1, columns // 2)])
-        damping_ax = figure.add_subplot(grid[last, max(1, columns // 2) :])
+        bottom = grid[last, :].subgridspec(1, 2)
+        residual_ax = figure.add_subplot(bottom[0, 0])
+        damping_ax = figure.add_subplot(bottom[0, 1])
         _convergence(figure, residual_ax, damping_ax, rungs)
     elif fields is not None and inputs is not None:
         figure.text(0.5, 0.01, "Newton history not recorded for this solve", ha="center")
