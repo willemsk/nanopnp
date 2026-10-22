@@ -6,10 +6,10 @@ Run before every build, and never committed (WP16 D4, D5)::
 
 Six kinds of file, all derived:
 
-- **The model.** ``SPECIFICATION.md`` and every Markdown file of the ``knowledge/`` bundle,
-  copied verbatim. The model is documented by rendering its normative records, never by restating
-  their equations (``SPECIFICATION.md`` section 8.1): restated summaries of this
-  model drift and get copied wrong.
+- **The model.** ``SPECIFICATION.md``, the ``specification/`` bundle and the ``knowledge/``
+  bundle, copied verbatim. The model is documented by rendering its normative records,
+  never by restating their equations (``SPECIFICATION.md`` section 8.1): restated
+  summaries of this model drift and get copied wrong.
 - **The examples.** Each ``examples/NN-slug/README.md``, so the site shows the exact
   text whose tagged commands VER-46 executes.
 - **The release notes.** ``CHANGELOG.md``, copied verbatim, as the versions it records are the
@@ -73,6 +73,9 @@ def _copies() -> dict[Path, Path]:
     bundle = ROOT / "knowledge"
     for source in sorted(bundle.rglob("*.md")):
         pages[source] = OUTPUT / "model" / "knowledge" / source.relative_to(bundle)
+    specification = ROOT / "specification"
+    for source in sorted(specification.rglob("*.md")):
+        pages[source] = OUTPUT / "model" / "specification" / source.relative_to(specification)
     for source in sorted((ROOT / "examples").glob("*/README.md")):
         pages[source] = OUTPUT / "examples" / f"{source.parent.name}.md"
     return pages
