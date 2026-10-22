@@ -63,7 +63,8 @@ a tree it has not passed.
   fields, quality gates; `numerics/` linear solvers, damped Newton, gates, the axisymmetric measure
 - `charge/` PDB2PQR, partial charges, projection, dielectric; `materials/` electrolytes and the
   correction registry; `physics/` weak forms and the wall-distance field; `solve/` continuation
-  ladder, warm start; `post/` QoI (current, transport number, EOF, forces); `sweep/` sweeps
+  ladder, warm start; `post/` QoI (current, transport number, EOF, forces); `plot/` figures of the
+  artefacts (Matplotlib, the `plot` extra); `sweep/` sweeps
 - `io/` case schema, artefact and resolved-case types, result store, manifests; the base layer,
   importing only `core` at run time; `pipeline/` case resolution, the walk, the assembler; `cli/`,
   `gui/` thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL comparison
