@@ -19,8 +19,8 @@ came out.
   the force field; for the sweep, the sweep values.
 - **Strictness.** A stage's cell runs that stage alone and takes everything upstream from the store; it
   never silently recomputes an earlier stage.
-- **Reactivity does the bookkeeping.** Editing a value re-runs that stage's cells and the cells after
-  them, never the ones before.
+- **Reactivity does the bookkeeping.** Running an edited settings cell re-runs the cells after it (marimo's
+  default `autorun`), never the ones before; marimo does not re-run a cell the moment its text changes.
 - A headless run still solves the example's own case: the values are the example's values.
 
 ## Non-goals and anti-goals
@@ -62,7 +62,8 @@ Four cells per stage, in this order:
    example's value. A leaf name is allowed only where unique (P8); the block uses dotted paths, so the
    field named is the field changed.
 3. **Run.** `case_mesh = case_region.with_(**mesh_settings)`, then
-   `run_mesh = case_mesh.run(upto="mesh", only=True)`.
+   `run_mesh = case_mesh.run(upto="mesh", only=True)`, both in one cell, and the cell names the previous
+   block's `run_region`, so marimo's dependency order cannot run it before the stage it needs is stored.
 4. **Show.** The stage's record (short hash, recomputed or cached), the artefact's summary and
    `run_mesh.figure("mesh", scale=scale)`.
 
@@ -81,13 +82,19 @@ reads it:
 | density | `geometry.density.*` |
 | symmetry | `structure.symmetry.point_group`, `axis` |
 | contour | `geometry.contour.*` |
-| region | `geometry.membrane.*`, `geometry.reservoir.*`, `geometry.analyte.*` |
-| mesh | `numerics.mesh.*` (`backend`, `size_scale`, `wall_h_nm`, `boundary_layer`) |
+| region | `geometry.membrane.*`, `geometry.reservoir.*`, `geometry.analyte.*`, `charge.exclusion_offset_nm` (it moves the region's key) |
+| mesh | `numerics.mesh.*` (`backend`, `size_scale`, `wall_h_nm`, `wall_for_concentration_M`, `boundary_layer`) |
 | protonation | `charge.ph`, `charge.forcefield`, `charge.titration` |
-| charge | `charge.smearing.*`, `charge.exclusion_offset_nm`, `charge.dielectric_transition_nm`, `physics.solid_permittivities` |
+| charge | `charge.smearing.*`, `charge.dielectric_transition_nm`, `physics.solid_permittivities` |
 | materials | `electrolyte.*` (concentration, temperature, driver, corrections) |
 | solve | `boundary_conditions.*`, `physics.*`, `numerics.nonlinear.*`, `continuation`, `stabilisation`, `elements`, `linear` |
 | qoi | `outputs` |
+
+The rule for placing a setting: it lives in the block of the **earliest stage whose hash it moves**, or an
+`only=True` cell would find an earlier stage missing. Two cases need care. `charge.exclusion_offset_nm` moves the
+region's key, so it is in the region block. And for a *generated* mesh (06) the Debye length sizes the wall, so
+`electrolyte.temperature_K`, the species' valences and `electrolyte.parameters` move the mesh key too; the salt moves it
+only above 1.474 M (see *The mesh and the salt*). The builder checks each setting by moving it.
 
 The rule for the curated list: a scalar or an enumerated choice a user could reasonably vary; never an
 identity or provenance field (`schema`, `name`, file paths) and never a field that needs another
@@ -96,11 +103,22 @@ artefact to make sense. The builder checks each against the schema.
 Three things are outside the case and get a cell of the same shape:
 
 - **How the cylinder mesh is built** (notebooks 03 and 05): the `nanopnp mesh cylinder` arguments, such
-  as `--maxh-nm`, are plain values in the mesh block; the block then points `inputs.mesh.path` at the
-  result. This is the author's "how it was built".
+  as `--maxh-nm`, are plain values in the mesh block; the block names the file by its arguments, so an
+  edited value cannot silently reuse an old `pore.msh`, and points `inputs.mesh.path` at the result. This is the author's "how it was built".
 - **Structure preparation** (01, 02 and 06): the values `prepare.py` takes, in the structure block.
 - **The sweep** (04 and 05): an `axes` dict of path, values and origin, written out as the sweep
-  document, then run and collected. The sweep values are edited as numbers like everything else.
+  document, then run and collected. The sweep's `base` is the edited case, written into the example's own
+  directory (the base is re-read from disk, and its relative mesh and charge paths resolve there), and the plan
+  is rebuilt when it changes. A sweep computes its own members; the engine has no `only`. The sweep values are edited as numbers like everything else.
+
+## The mesh and the salt
+
+`wall_h_nm: auto` is `size_scale × min(0.05 nm, λ_D/5)`, and the 0.05 nm ceiling governs up to 1.474 M, so
+salts below that already share one mesh (VER-53). The author chose to make the design point explicit anyway:
+a new field `numerics.mesh.wall_for_concentration_M` takes λ_D at that concentration instead of the run's
+own. Every salt at or above it reuses the one mesh; above it the wall is coarser than λ_D/5, which the manifest
+records as it does today (logged, not refused). The field is refused beside an explicit `wall_h_nm` and beside a
+supplied `inputs.mesh`, where it would move nothing (§5.3.1). It is its own commit, before the notebooks.
 
 ## Which notebooks
 
@@ -115,7 +133,7 @@ All six take the pattern; the author's examples run through them.
 | 05-cylinder | mesh, charge, materials, solve, qoi, sweep |
 | 06-2wcd | structure through qoi, eleven blocks |
 
-A notebook that starts mid-pipeline (02, 03, 04) opens with one **setup cell**, labelled as such, that
+A notebook that starts mid-pipeline (02, 03) opens with one **setup cell**, labelled as such, that
 runs the upstream stages with a plain `run(upto=…)`; its blocks then use `only=True`. Without it, the
 first `only=True` cell would find an empty store.
 
@@ -126,8 +144,9 @@ first `only=True` cell would find an empty store.
 - Plain values are literals equal to the example's, not reads from the case, so the file shows what the
   run uses. A wrong path fails loudly through `Case` (`UnknownCasePathError`); a value equal to the
   default records no deviation.
-- With no Run button, **opening 06 for the first time runs its whole walk, about eleven minutes**; later
-  opens read the store. A user who wants a gate can set marimo's lazy runtime. Not designed here.
+- With no Run button, `python 06-2wcd/notebook.py` and `marimo run` walk all eleven stages the first time, about
+  eleven minutes. `marimo edit` does not run the cells on open in marimo's default configuration (`auto_instantiate`
+  is off), so the user starts the walk there; later runs read the store.
 - The notebooks' READMEs, the WP51 plan's D5 and Outcome, `CHANGELOG.md` and a ruling in §8.2.14 are
   updated in the same commits: P5's "figures and widgets" becomes "a block of cells per stage".
 
