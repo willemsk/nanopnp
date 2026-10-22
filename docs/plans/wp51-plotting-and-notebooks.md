@@ -79,7 +79,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
 - The sweep: `io/artefact.py:SweepArtefact.summary["rows"]` is a list of `MemberResult.row()`, each with `status`, `assignments` (case path → value) and `quantities`. The swept axis is the assignment that varies.
 
 **D5**
-- `validation/examples.py:copy_example` puts a copy at `root/examples/<name>`, the same depth as `notebooks/<name>`, and mirrors every `../` word of the README's commands. So `$ python ../../examples/06-pdb-to-mesh/prepare.py ../../tests/data/structures/2wcd.pdb.gz 2wcd-prepared.pdb` works as it does in example 07. `run_tagged` resolves `python` to `sys.executable`.
+- `validation/examples.py:copy_example` puts a copy at `root/examples/<name>`, the same depth as `notebooks/<name>`. A notebook prepares its own input (its first cell runs example 06's `prepare.py`, or `nanopnp mesh cylinder`, when the file is missing), so its README names no `../` path. `test_notebook_runs_headless` copies the examples and the 2WCD entry the notebook reads beside it. `run_tagged` resolves `python` to `sys.executable`.
 - Each notebook ends `if __name__ == "__main__": app.run()`.
 - Widgets:
   - 01 has a stage selector.

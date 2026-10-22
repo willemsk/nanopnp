@@ -6,12 +6,11 @@ directory; in a development checkout, put `uv run` in front of each.
 
 <!-- example: run -->
 ```console
-$ python ../../examples/06-pdb-to-mesh/prepare.py ../../tests/data/structures/2wcd.pdb.gz ../../examples/06-pdb-to-mesh/2wcd-prepared.pdb
 $ python notebook.py
 ```
 
-The first command prepares the entry as example 06 does. The second runs the notebook headless and
-exits `0` once every cell has run. To work in it, open it in the browser:
+The notebook's first cell prepares the entry as example 06 does, so nothing is run beforehand. The command
+runs it headless and exits `0` once every cell has run. To work in it, open it in the browser:
 
 ```console
 $ marimo edit notebook.py
