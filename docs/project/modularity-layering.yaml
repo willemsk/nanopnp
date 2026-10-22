@@ -104,6 +104,7 @@ edges:
   - {from: pipeline, to: mesh, relation: static, finding: null}
   - {from: pipeline, to: numerics, relation: static, finding: null}
   - {from: pipeline, to: physics, relation: static, finding: null}
+  - {from: plot, to: io, relation: static, finding: null}
   - {from: post, to: charge, relation: static, finding: null}
   - {from: post, to: core, relation: static, finding: null}
   - {from: post, to: geometry, relation: static, finding: null}
@@ -158,6 +159,7 @@ edges:
   - {from: core, to: numerics, relation: string, finding: MOD-05}
   - {from: core, to: physics, relation: string, finding: null}
   - {from: core, to: pipeline, relation: string, finding: null}
+  - {from: core, to: plot, relation: string, finding: MOD-15}
   - {from: core, to: post, relation: string, finding: MOD-15}
   - {from: core, to: solve, relation: string, finding: MOD-15}
   - {from: core, to: structure, relation: string, finding: MOD-15}

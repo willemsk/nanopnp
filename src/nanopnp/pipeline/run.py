@@ -15,6 +15,7 @@ from nanopnp.core.hashing import Canonicalisable, canonical, content_hash
 from nanopnp.core.stages import (
     ArtefactHook,
     CancelToken,
+    MissingExtraError,
     Progress,
     SolveHook,
     SolveReporting,
@@ -24,16 +25,26 @@ from nanopnp.core.stages import (
     check_cancelled,
     create,
     describe,
+    draw,
+    figure_target,
     report,
     walk_order,
 )
-from nanopnp.io.artefact import Artefact, CaseArtefact, StageInputs
+from nanopnp.io.artefact import (
+    Artefact,
+    CaseArtefact,
+    StageInputs,
+    figure_html,
+    summary_html,
+)
 from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.mesh.sizing import case_debye_record
 from nanopnp.pipeline.case import loads_case, resolve
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from matplotlib.figure import Figure
+
     from nanopnp.io.case import CaseDocument
     from nanopnp.io.defaults import ContributedDeviation
     from nanopnp.io.resolved import ResolvedCase
@@ -109,6 +120,10 @@ class StageRecord:
         }
 
 
+def _has_figure(artefact: Artefact) -> bool:
+    return figure_target(artefact.schema) is not None
+
+
 @dataclass(frozen=True)
 class RunResult:
     """One completed run: its artefacts, its manifest and where they were written."""
@@ -118,6 +133,51 @@ class RunResult:
     artefacts: Mapping[str, Artefact]
     stages: tuple[StageRecord, ...] = ()
     store: Store | None = None
+    resolved: ResolvedCase | None = None
+
+    def figure(self, stage: str) -> Figure | None:
+        """Draw one stage's artefact with the walk's own inputs; None where it has no figure.
+
+        Raises
+        ------
+        KeyError
+            The run holds no artefact of ``stage``.
+        MissingExtraError
+            Matplotlib is not installed.
+        """
+        try:
+            artefact = self.artefacts[stage]
+        except KeyError:
+            held = ", ".join(self.artefacts) or "none"
+            raise KeyError(f"this run holds no {stage!r} artefact; it holds {held}") from None
+        inputs = None
+        if self.resolved is not None:
+            inputs = StageInputs(
+                resolved=self.resolved, upstream=offered(stage, self.artefacts, own=False)
+            )
+        return draw(artefact, inputs)
+
+    def _repr_mimebundle_(self, include: object = None, exclude: object = None) -> dict[str, str]:
+        rows: dict[str, Canonicalisable] = {
+            f"{record.number:>2} {record.name}": f"{record.schema} {record.hash[:8]}"
+            f"{' cached' if record.cached else ''} {record.seconds:.1f} s"
+            for record in self.stages
+        }
+        rows.update({f"quantity {name}": value for name, value in self.quantities.items()})
+        text = f"run of {self.manifest.case_hash[:8]}: {len(self.stages)} stages"
+        shown = "solve" if "solve" in self.artefacts else None
+        shown = shown or next(
+            (s.name for s in reversed(self.stages) if _has_figure(self.artefacts[s.name])), None
+        )
+        body = summary_html(rows)
+        if shown is not None:
+            try:
+                figure = self.figure(shown)
+            except MissingExtraError:
+                return {"text/plain": text}
+            if figure is not None:
+                body += figure_html(figure)
+        return {"text/plain": text, "text/html": body}
 
     @property
     def quantities(self) -> Mapping[str, Canonicalisable]:
@@ -780,6 +840,7 @@ def _walk(
         artefacts=dict(walk.artefacts),
         stages=tuple(walk.records),
         store=walk.store,
+        resolved=walk.resolved,
     )
     if write:
         result.write()

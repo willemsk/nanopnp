@@ -10,6 +10,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, runtime_checkable
 
 __all__ = [
+    "FIGURE_FREE",
     "ArtefactHook",
     "CancelFlag",
     "CancelToken",
@@ -29,7 +30,10 @@ __all__ = [
     "check_cancelled",
     "create",
     "describe",
+    "draw",
+    "figure_target",
     "register",
+    "register_figure",
     "registered_stages",
     "report",
     "walk_order",
@@ -75,6 +79,8 @@ StageOption: TypeAlias = Any
 
 if TYPE_CHECKING:  # pragma: no cover - imported for annotations only
     # ``io`` depends on ``core``, never the reverse at run time
+    from matplotlib.figure import Figure
+
     from nanopnp.io.artefact import Artefact, StageInputs
 
 
@@ -241,6 +247,7 @@ class StageEntry:
     description: StageDescription
     target: str
     extra: str | None = None
+    figure: str | None = None
 
 
 class MissingExtraError(ImportError):
@@ -250,7 +257,23 @@ class MissingExtraError(ImportError):
 _REGISTRY: dict[str, StageEntry] = {}
 
 
-def register(description: StageDescription, target: str, *, extra: str | None = None) -> None:
+_FIGURES: dict[str, str] = {}
+
+FIGURE_FREE: frozenset[str] = frozenset({"case", "report"})
+
+
+def _checked_target(target: str, what: str) -> None:
+    if target.count(":") != 1:
+        raise ValueError(f"{what} target {target!r} must be of the form 'module:attribute'")
+
+
+def register(
+    description: StageDescription,
+    target: str,
+    *,
+    extra: str | None = None,
+    figure: str | None = None,
+) -> None:
     """Register a stage under its name; ValueError for a duplicate or malformed entry."""
     if description.name in _REGISTRY:
         raise ValueError(
@@ -260,6 +283,8 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
         )
     if target.count(":") != 1:
         raise ValueError(f"stage target {target!r} must be of the form 'module:attribute'")
+    if figure is not None:
+        _checked_target(figure, "stage figure")
     for name in description.inputs:
         if name != "case_path" and name not in _REGISTRY:
             raise ValueError(
@@ -278,7 +303,50 @@ def register(description: StageDescription, target: str, *, extra: str | None = 
             f"stage {description.name!r} has progress weight {description.weight!r}; a weight "
             "must be finite and positive"
         )
-    _REGISTRY[description.name] = StageEntry(description=description, target=target, extra=extra)
+    _REGISTRY[description.name] = StageEntry(
+        description=description, target=target, extra=extra, figure=figure
+    )
+
+
+def register_figure(schema: str, target: str) -> None:
+    """Register the figure of an artefact no stage emits, such as a sweep's dataset."""
+    _checked_target(target, "figure")
+    _FIGURES[schema] = target
+
+
+def figure_target(schema: str) -> str | None:
+    """Return the ``module:function`` that draws artefacts of ``schema``, or None."""
+    for entry in _REGISTRY.values():
+        if entry.description.artefact_schema == schema and entry.figure is not None:
+            return entry.figure
+    return _FIGURES.get(schema)
+
+
+def draw(artefact: Artefact, inputs: StageInputs | None = None) -> Figure | None:
+    """Draw ``artefact`` with its registered figure; None where its schema has none.
+
+    Raises
+    ------
+    MissingExtraError
+        Matplotlib is not installed; the message names the ``plot`` extra.
+    """
+    target = figure_target(artefact.schema)
+    if target is None:
+        return None
+    module_name, _, attribute = target.partition(":")
+    function = getattr(importlib.import_module(module_name), attribute)
+    try:
+        figure: Figure = function(artefact, inputs)
+    except ModuleNotFoundError as error:
+        missing = error.name or ""
+        if missing != "matplotlib" and not missing.startswith("matplotlib."):
+            raise
+        raise MissingExtraError(
+            f"a figure of {artefact.schema!r} needs the 'plot' extra: {missing!r} is not "
+            "installed. Install the extras with `uv sync --all-extras`",
+            name=missing,
+        ) from error
+    return figure
 
 
 def walk_order() -> tuple[str, ...]:
@@ -366,6 +434,7 @@ def _register_builtins() -> None:
         ),
         "nanopnp.structure.stage:StructureStage",
         extra="structure",
+        figure="nanopnp.plot.figures:structure_figure",
     )
     register(
         StageDescription(
@@ -384,6 +453,7 @@ def _register_builtins() -> None:
             optional_inputs=(),
         ),
         "nanopnp.density.stage:DensityStage",
+        figure="nanopnp.plot.figures:density_figure",
     )
     register(
         StageDescription(
@@ -401,6 +471,7 @@ def _register_builtins() -> None:
             optional_inputs=(),
         ),
         "nanopnp.symmetry.stage:SymmetryStage",
+        figure="nanopnp.plot.figures:symmetry_figure",
     )
     register(
         StageDescription(
@@ -423,6 +494,7 @@ def _register_builtins() -> None:
         ),
         "nanopnp.geometry.contour:ContourStage",
         extra="structure",
+        figure="nanopnp.plot.figures:contour_figure",
     )
     register(
         StageDescription(
@@ -443,6 +515,7 @@ def _register_builtins() -> None:
             optional_inputs=("contour",),
         ),
         "nanopnp.geometry.region:RegionStage",
+        figure="nanopnp.plot.figures:region_figure",
     )
     register(
         StageDescription(
@@ -461,6 +534,7 @@ def _register_builtins() -> None:
             optional_inputs=("region",),
         ),
         "nanopnp.mesh.ingest:MeshStage",
+        figure="nanopnp.plot.figures:mesh_figure",
     )
     register(
         StageDescription(
@@ -486,6 +560,7 @@ def _register_builtins() -> None:
         ),
         # No extra: inputs.pqr runs without PDB2PQR, imported only when the stage protonates.
         "nanopnp.charge.protonation:ProtonationStage",
+        figure="nanopnp.plot.figures:protonation_figure",
     )
     register(
         StageDescription(
@@ -510,6 +585,7 @@ def _register_builtins() -> None:
             optional_inputs=("protonation", "region"),
         ),
         "nanopnp.charge.stage:FieldStage",
+        figure="nanopnp.plot.figures:charge_figure",
     )
     register(
         StageDescription(
@@ -527,6 +603,7 @@ def _register_builtins() -> None:
             optional_inputs=(),
         ),
         "nanopnp.materials.stage:MaterialsStage",
+        figure="nanopnp.plot.figures:materials_figure",
     )
     register(
         StageDescription(
@@ -544,6 +621,7 @@ def _register_builtins() -> None:
             optional_inputs=("charge",),
         ),
         "nanopnp.solve.stage:SolveStage",
+        figure="nanopnp.plot.figures:solve_figure",
     )
     register(
         StageDescription(
@@ -561,6 +639,7 @@ def _register_builtins() -> None:
             optional_inputs=("charge",),
         ),
         "nanopnp.post.stage:QoIStage",
+        figure="nanopnp.plot.figures:qoi_figure",
     )
     register(
         StageDescription(
@@ -579,6 +658,9 @@ def _register_builtins() -> None:
         ),
         "nanopnp.post.stage:ReportStage",
     )
+    # The sweep's dataset is emitted by no stage, so its figure is registered by schema; ``core``
+    # does not import ``io`` at run time, so the schema is a literal.
+    register_figure("nanopnp/sweep/v0.5", "nanopnp.plot.figures:sweep_figure")
 
 
 _register_builtins()

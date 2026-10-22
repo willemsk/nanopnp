@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import base64
+import html
+import io
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -11,6 +14,8 @@ from typing import TYPE_CHECKING
 from nanopnp.core.hashing import Canonicalisable, content_hash, file_hash, short
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only; io must not import at runtime
+    from matplotlib.figure import Figure
+
     from nanopnp.io.case import CaseDocument
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.materials.electrolyte import Electrolyte
@@ -47,6 +52,25 @@ QOI_SCHEMA = "nanopnp/qoi/v0.5"
 REPORT_SCHEMA = "nanopnp/report/v0.5"
 
 SWEEP_SCHEMA = "nanopnp/sweep/v0.5"
+
+
+def summary_html(rows: Mapping[str, Canonicalisable], *, limit: int = 40) -> str:
+    """Return a two-column HTML table of ``rows``, long values cut and the rest counted."""
+    shown = list(rows.items())[:limit]
+    body = "".join(
+        f"<tr><td>{html.escape(str(key))}</td><td>{html.escape(str(value)[:120])}</td></tr>"
+        for key, value in shown
+    )
+    more = f"<p>and {len(rows) - limit} more</p>" if len(rows) > limit else ""
+    return f"<table>{body}</table>{more}"
+
+
+def figure_html(figure: Figure) -> str:
+    """Return ``figure`` as an HTML image tag holding an embedded PNG."""
+    buffer = io.BytesIO()
+    figure.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f'<img src="data:image/png;base64,{encoded}" style="max-width:100%">'
 
 
 def timestamp() -> str:
@@ -100,6 +124,21 @@ class Artefact:
         if self.recorded_hash is not None and self.recorded_hash != self.hash:
             return True
         return bool(self.recorded_payload) and self.recorded_payload != self.payload_hashes()
+
+    def _repr_mimebundle_(self, include: object = None, exclude: object = None) -> dict[str, str]:
+        # Imported here: the exit-code table names MissingExtraError, and classifying an
+        # exception must not load the module of the class it names.
+        from nanopnp.core.stages import MissingExtraError, draw
+
+        text = f"{self.schema} {self.short_hash}: {len(self.summary)} summary entries"
+        try:
+            figure = draw(self)
+        except MissingExtraError:
+            return {"text/plain": text}
+        body = f"<h4>{html.escape(self.schema)} {self.short_hash}</h4>{summary_html(self.summary)}"
+        if figure is not None:
+            body += figure_html(figure)
+        return {"text/plain": text, "text/html": body}
 
     def meta(self) -> dict[str, Canonicalisable]:
         """Return the ``meta.json`` record of this artefact."""
