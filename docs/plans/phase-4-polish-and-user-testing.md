@@ -27,8 +27,8 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.14`; WP49, the cost study ([plan](wp49-cost-study.md)), to be tagged
 `v0.5.0-alpha.15`; WP50, the test scope ([plan](wp50-test-scope.md)), to be tagged
 `v0.5.0-alpha.16`.
-Planned: WP51, the plotting library and the notebooks ([plan](wp51-plotting-and-notebooks.md);
-§8.2.14 P1).
+WP51, the plotting library and the notebooks ([plan](wp51-plotting-and-notebooks.md)), to be tagged
+`v0.5.0-alpha.17`.
 Planned: WP52, the user-testing protocol ([plan](wp52-user-testing-protocol.md); §8.2.9 I1,
 renumbered by §8.2.12 M4, §8.2.13 N6 and §8.2.14 P1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
@@ -963,7 +963,16 @@ move. Its `/wp-plan` decides the public names (`nanopnp.plot`, and whether a nam
 F4), the figure-free list, how a sweep's results reach `plot/` from below `sweep`, and the notebooks'
 widgets. REV-123 becomes `fixed`. Tag `v0.5.0-alpha.17`.
 
-> **Planned, 22 October 2026** ([plan](wp51-plotting-and-notebooks.md)). Its decisions: no name joins
+> **Delivered, 22 October 2026** ([plan](wp51-plotting-and-notebooks.md), to be tagged
+> `v0.5.0-alpha.17`). `nanopnp.plot`, behind the `plot` extra, draws a figure of every stage's artefact
+> and of a sweep, from the stored artefacts alone; the stage registry declares each figure (`case` and
+> `report` are figure-free), and `Artefact` and `RunResult` display themselves in a notebook. The solve
+> now stores its Newton history, and the IF-07 export and the figures share one restore and sampling path.
+> Four marimo notebooks (geometry, charge, solve, sweep) run headless every night. `plot` follows `post`
+> in the layer order with no upward edge, and VER-61, VER-62 and VER-65 hold. The gate gains about 13 s.
+> REV-123 is fixed. The author must look at every figure and notebook before the merge.
+>
+> *Planned, 22 October 2026.* Its decisions: no name joins
 > `PUBLIC`; `case` and `report` are figure-free; a sweep is drawn from its `io` artefact's rows; each
 > notebook has at most two widgets. Stage 8's line read "against ionic strength"; the driver is
 > the one the electrolyte declares, ⟨c⟩ = (1/n)Σcᵢ by default and the ionic strength only where the

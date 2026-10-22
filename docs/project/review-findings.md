@@ -142,4 +142,4 @@ is a rolling register, and its header stays `open`.
 | REV-120 | physics | medium | open | — | [The force-traction normal needs one material on the left along the whole surface](review-items.md#rev-120-the-force-traction-normal-needs-one-material-on-the-left-along-the-whole-surface) |
 | REV-121 | interface | low | open | — | [Stage 1 checks no axis for a monomeric or hetero-oligomeric pore](review-items.md#rev-121-stage-1-checks-no-axis-for-a-monomeric-or-hetero-oligomeric-pore) |
 | REV-122 | interface | low | open | — | [A case cannot load a correction file from outside the installed package](review-items.md#rev-122-a-case-cannot-load-a-correction-file-from-outside-the-installed-package) |
-| REV-123 | interface | low | accepted | §8.2.14 P6 | [The library has no plotting helpers or notebook display](review-items.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display) |
+| REV-123 | interface | low | fixed | §8.2.14 P6 | [The library has no plotting helpers or notebook display](review-items.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display) |
