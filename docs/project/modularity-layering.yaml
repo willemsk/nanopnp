@@ -104,7 +104,17 @@ edges:
   - {from: pipeline, to: mesh, relation: static, finding: null}
   - {from: pipeline, to: numerics, relation: static, finding: null}
   - {from: pipeline, to: physics, relation: static, finding: null}
+  - {from: plot, to: charge, relation: static, finding: null}
+  - {from: plot, to: core, relation: static, finding: null}
+  - {from: plot, to: density, relation: static, finding: null}
+  - {from: plot, to: geometry, relation: static, finding: null}
   - {from: plot, to: io, relation: static, finding: null}
+  - {from: plot, to: materials, relation: static, finding: null}
+  - {from: plot, to: mesh, relation: static, finding: null}
+  - {from: plot, to: post, relation: static, finding: null}
+  - {from: plot, to: solve, relation: static, finding: null}
+  - {from: plot, to: structure, relation: static, finding: null}
+  - {from: plot, to: symmetry, relation: static, finding: null}
   - {from: post, to: charge, relation: static, finding: null}
   - {from: post, to: core, relation: static, finding: null}
   - {from: post, to: geometry, relation: static, finding: null}

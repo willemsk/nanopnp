@@ -101,7 +101,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
 
 *Compaction checkpoint: after item 3; resume from this plan and `git log`.*
 
-- [ ] 4. `plot/data.py` and `plot/figures.py` for stages 1 to 8 and the sweep, registered (D3, D4);
+- [x] 4. `plot/data.py` and `plot/figures.py` for stages 1 to 8 and the sweep, registered (D3, D4);
   done when the Tier 1 data-layer tests pass.
 - [ ] 5. Stages 10 and 11; `cached_run`; the per-push smoke tests, the grid sample and the import
   guard (D4); done when examples 01's and 02's Tier 2 modules pass.
