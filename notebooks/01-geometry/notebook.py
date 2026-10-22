@@ -10,14 +10,13 @@ def _():
 
     import marimo as mo
 
-    from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
+    from nanopnp import Case
 
     example = (
         Path(__file__).resolve().parent / ".." / ".." / "examples" / "06-pdb-to-mesh"
     ).resolve()
     os.chdir(example)
-    return Store, example, mo, run_case
+    return Case, example, mo
 
 
 @app.cell
@@ -67,8 +66,9 @@ def _(mo):
 
 
 @app.cell
-def _(Store, example, prepared, run_case):
-    result = run_case("2wcd.case.yaml", store=Store(example / "store"), upto="mesh", write=False)
+def _(Case, example, prepared):
+    case = Case.load("2wcd.case.yaml", store=example / "store", write=False)
+    result = case.run(upto="mesh")
     return (result,)
 
 

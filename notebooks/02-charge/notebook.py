@@ -10,17 +10,14 @@ def _():
 
     import marimo as mo
 
-    from nanopnp.io.case import dumps_case
-    from nanopnp.io.store import Store
-    from nanopnp.pipeline.case import load_case
-    from nanopnp.pipeline.run import run_document
+    from nanopnp import Case
 
     example = (
         Path(__file__).resolve().parent / ".." / ".." / "examples" / "07-pdb-to-charged-run"
     ).resolve()
     os.chdir(example)
-    document = load_case("2wcd.case.yaml")
-    return Store, document, dumps_case, example, mo, run_document
+    case = Case.load("2wcd.case.yaml", store=example / "store", write=False)
+    return case, example, mo
 
 
 @app.cell
@@ -59,29 +56,16 @@ def _(example, mo):
 
 
 @app.cell
-def _(document, mo):
+def _(case, mo):
     stage = mo.ui.dropdown(["protonation", "charge", "materials"], value="materials", label="Stage")
-    salt = mo.ui.slider(
-        0.05, 1.0, step=0.05, value=document.electrolyte.concentration_M, label="NaCl (M)"
-    )
+    salt = mo.ui.slider(0.05, 1.0, step=0.05, value=case["concentration_M"], label="NaCl (M)")
     mo.hstack([stage, salt])
     return salt, stage
 
 
 @app.cell
-def _(Store, document, dumps_case, example, prepared, run_document, salt):
-    edited = document.model_copy(
-        update={
-            "electrolyte": document.electrolyte.model_copy(update={"concentration_M": salt.value})
-        }
-    )
-    result = run_document(
-        edited,
-        case_text=dumps_case(edited),
-        store=Store(example / "store"),
-        upto="materials",
-        write=False,
-    )
+def _(case, prepared, salt):
+    result = case.run(upto="materials", concentration_M=salt.value)
     return (result,)
 
 

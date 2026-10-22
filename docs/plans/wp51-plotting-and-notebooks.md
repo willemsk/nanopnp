@@ -15,7 +15,7 @@ The author asked to see what every step of the pipeline produces, and to try the
 **What changes.** In a notebook, every step's result shows itself as a picture: the atoms, the
 density, the pore's outline, the mesh, the charges, the corrections, the solved fields with the
 solver's convergence, the numbers, and a sweep's curves. Without the plotting add-on, a result
-shows a short text summary. Four notebooks run every night, so they cannot go stale before the
+shows a short text summary. Six notebooks run every night, so they cannot go stale before the
 sessions.
 
 **Cost.** About a week of work. Each push gains a few seconds, since the pictures reuse runs the
@@ -149,11 +149,11 @@ None blocking. The *Your call* defaults to its recommendation; a contrary ruling
 `core/public.py`.
 
 > **Outcome — every stage has a figure, and every artefact and run result displays itself.** Measured on
-> 4 cores, 22 October 2026. `plot/` holds the data layer and thirteen figures; no name joins `PUBLIC`.
+> 4 cores, 22 October 2026. `plot/` holds the data layer and thirteen figures. After the author's review `nanopnp.Case` joined `PUBLIC` (§8.2.14 P8), so a notebook edits a case with one call.
 > The per-push gate gains about 13 s: the figure test is 5.9 s on example 02 and 5.4 s on example 01, and
 > the import guard, grid sample and Tier 1 data tests together a second; both examples' walks were
 > already in the gate. The notebooks run nightly in 73.8 s (01), 6.4 s (02; shorter than 01, its cache
-> provenance not examined), 26.9 s (03) and 41.7 s (04). By hand, once: a marimo script with a cell
+> provenance not examined), 26.9 s (03) and 41.7 s (04); the end-to-end notebooks take 45.3 s (05, cylinder) and 658.7 s (06, 2WCD, whose walk runs headless as the Run button cannot be pressed). The notebooks prepare their own input in a first cell. By hand, once: a marimo script with a cell
 > that raises exits 1, so the nightly test fails on a stale notebook. Corrections to the plan:
 > `cached_run` calls `run_case`, since `run_document` needs the case text; the Newton history of the
 > Poisson-Boltzmann rung has `steps: []` (that rung reports no steps); `test_field_export.py` patches
