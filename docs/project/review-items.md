@@ -1269,3 +1269,7 @@ requirement asks for either. Found by CODE_REVIEW_012 AR-16 and AR-17, merged he
 *Recommendation:* an optional `plot` extra with Matplotlib helpers for the profile, mesh and fields,
 and rich display on `RunResult`, `PoreProfile` and `MeshData`, kept off the default import path. It
 needs a requirement first.
+
+**Accepted** for WP51 (author's ruling, §8.2.14 P1 to P6, 22 October 2026). FR-30 states the
+requirement. Matplotlib draws in a new `plot/` subpackage below `pipeline`. A stage declares its
+figure in the stage registry, and every artefact and `RunResult` displays itself in a notebook.

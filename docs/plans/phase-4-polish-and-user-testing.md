@@ -5,7 +5,8 @@ same day, after the author ruled every `MOD-nn` (§8.2.8). Amended again on 6 Oc
 the author ruled the review register (§8.2.9), and on 11 October 2026, when the author inserted the
 development loop (§8.2.10), on 13 October 2026, when the author simplified it (§8.2.11), and on
 18 October 2026, after the author ruled an external architecture review (§8.2.12), and again that
-day, when the author ruled the test scope (§8.2.13).
+day, when the author ruled the test scope (§8.2.13), and on 22 October 2026, when the author inserted
+the plotting library and the notebooks (§8.2.14).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
 WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)),
@@ -26,34 +27,36 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.14`; WP49, the cost study ([plan](wp49-cost-study.md)), to be tagged
 `v0.5.0-alpha.15`; WP50, the test scope ([plan](wp50-test-scope.md)), to be tagged
 `v0.5.0-alpha.16`.
-Planned: WP51, the user-testing protocol (§8.2.9 I1, renumbered by
-§8.2.12 M4 and §8.2.13 N6).
+Inserted: WP51, the plotting library and the notebooks (§8.2.14 P1), for `/wp-plan 51`.
+Planned: WP52, the user-testing protocol ([plan](wp52-user-testing-protocol.md); §8.2.9 I1,
+renumbered by §8.2.12 M4, §8.2.13 N6 and §8.2.14 P1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
-and ruled every `UT-nn`: the fixes, from WP52, then the documentation increment and the close,
+and ruled every `UT-nn`: the fixes, from WP53, then the documentation increment and the close,
 which take their numbers then.
 Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the simpler loop, the
-trimmed code, the reorganised notes and the cost study are done. On 18 October the author ruled that
-the test suite has grown far beyond what protects the program: about as many lines of tests as of
-program, most of them checking messages, wiring or the project's own documents.
+trimmed code and tests, the reorganised notes and the cost study are done. On 22 October the author
+asked to see what each step of the pipeline produces before testing it as a user would.
 
-**What changes.** One package now comes before the user testing. It deletes the tests that guard
-nothing that could silently go wrong, keeping the physics, the numerics, the core machinery and the
-licence and architecture guards. It removes the rule that every changed line be exercised by a test,
-moves the long end-to-end runs to a nightly check that opens an issue when it fails, and writes the
-rule that stops the pile growing back, with a reviewer step that deletes tests outside it.
+**What changes.** One package now comes before the user testing. It draws a picture of every step:
+the protein's atoms, the density, the pore's outline, the mesh, the charge, the material
+coefficients, the computed fields, how the solver converged and a voltage sweep's curve. It adds
+notebooks, plain files opened in a browser, whose sliders rerun a case. A result shows its picture
+when a notebook prints it. The notebooks run every night, and one becomes a session's script.
 
-**Cost.** A few days, inside the four to six weeks already set. Every later push is minutes faster.
+**Cost.** About a week, inside the four to six weeks already set. The pictures load only when asked
+for, so a run without them is no slower.
 
-**What could go wrong.** A deletion could leave a physics result unchecked; one charged example still
-runs on every push and holds its recorded numbers. A slower example's moved number shows up the
-night after a merge.
+**What could go wrong.** A picture could mislabel an axis or a unit and mislead; the numbers behind
+it are checked where they are computed, and the author looks at every picture before the package
+merges. A step added later without a picture fails a check. A broken notebook shows up the next
+morning.
 
-**Your call.** Should the desktop window stay until the browser page can do everything it does?
-*Recommendation:* yes, so every release keeps a working, tested window.
+**Your call.** Should the notebooks go on the documentation site with this phase's documentation
+update? *Recommendation:* yes, once the sessions have shown which of them help.
 
 ## Context
 
@@ -62,7 +65,8 @@ Where this file and the specification disagree, the specification governs and th
 Requirement identifiers here are pointers into the specification, never restatements of it. The
 author's rulings behind this plan are §8.2.6 F3, F4 and F6, §8.2.7 G1 to G11, §8.2.8 H1 to H12 (on
 the modularity report and the review register), §8.2.9 I1 to I5 (on planning the register's items), §8.2.10 J1 to J9 (on the development loop), and
-§8.2.12 M1 to M5 (on the architecture review).
+§8.2.12 M1 to M5 (on the architecture review), §8.2.13 N1 to N7 (on the test scope) and §8.2.14 P1
+to P7 (on the plotting library and the notebooks).
 They are not re-argued here.
 
 Phases 0 to 3 built the pipeline, from a structure to a charged current. Phase 4 asks two questions
@@ -175,7 +179,10 @@ Deliberately excluded:
   post-1.0;
 - Python 3.15 and its lazy imports, which wait on OPN-09 (§8.2.10 J6);
 - the browser shell that replaces the Qt shell, which is Phase 5's (§8.2.12 M3), and every claim of
-  the 18 October architecture review that the code already meets (M1, REV-115).
+  the 18 October architecture review that the code already meets (M1, REV-115);
+- the export of figures from a run by the command line and the report stage, FR-28's at v0.7 in
+  Phase 6; the GUI's own plots, which Phase 5 replaces (M3; §8.2.14 P3); and the notebooks on the
+  documentation site, which wait on documentation increment 4 (P5).
 
 The rulings on the architecture review (§8.2.12), 18 October 2026, rest on four facts measured at
 `645289e`:
@@ -189,6 +196,24 @@ The rulings on the architecture review (§8.2.12), 18 October 2026, rest on four
   `Store.get_or_compute`, whose writes are already staged and renamed (`io/store.py`).
 - **The case schema is Pydantic v2 and strict, and has no JSON Schema export.** `io/case.py` sets
   `extra="forbid"`; nothing calls `model_json_schema`.
+
+The rulings on the plotting library and the notebooks (§8.2.14), 22 October 2026, rest on five facts
+at `7f32b20`:
+
+- **The library draws nothing.** No module of `src/nanopnp/` outside `gui/` imports a plotting
+  library. Examples 03 (`plot_iv.py`) and 04 (`tour.py`) draw with Matplotlib, the `examples`
+  extra's only package, and `tests/tier1/test_source_conventions.py` `DEFERRABLE` already admits it.
+- **The GUI's drawing data sits above everything.** `gui/geometry.py` `ImageModel`,
+  `reduced_image` and `density_section`, `gui/charge.py` `charge_image` and `gui/convergence.py`
+  `ConvergenceModel` import no Qt, but `gui` is last in `validation/modularity.py` `LAYER_ORDER`.
+  The plots are `QPainter` widgets, and the fields go through `webgui` (`gui/render.py` `render`).
+- **Fields come out as arrays.** `post/export.py` `p2_nodes` and `sample_at` give a field's
+  values at points, and `RunResult.artefacts` (`pipeline/run.py`) maps each stage to its artefact.
+- **The registry already names things lazily.** `core/stages.py` `_register_builtins` registers each
+  stage by a dotted path and an optional `extra=`, both resolved at `create()`.
+- **No artefact displays itself.** No type defines a `_repr_*_` method, and no notebook tool is in
+  `uv.lock` (REV-123). The examples runner, `validation/examples.py`, runs `nanopnp` and `python`
+  commands only.
 
 ## Design decisions
 
@@ -217,6 +242,7 @@ contents and the guard's form, and the first OKF package decides open questions 
 | The architecture review | Already-met claims declined with their evidence; one measure-first package with registered thresholds and a JSON Schema export; the browser shell to Phase 5 (§8.2.12 M1 to M3) | A cost is fixed when it is measured, not when it is suspected |
 | Where the cost study goes | WP49, before the protocol, which becomes WP50 (M4) | Testers see the tree v0.5 ships (G2) |
 | The test scope | Tests only for physics, numerics, core mechanisms and the licence and architecture guards; no coverage gate; walks nightly but for examples 01 and 02; a reviewer step deletes off-category tests; WP50, before the protocol (§8.2.13 N1 to N6) | Development speed is spent on tests that can catch a wrong answer |
+| The plotting library and the notebooks | WP51, before the protocol, which becomes WP52. Matplotlib in a new `plot/` below `pipeline`, importing no backend; each stage's figure declared in the stage registry, so every artefact displays itself; marimo notebooks run nightly; FR-30, tested by a smoke test and an import guard (§8.2.14 P1 to P7) | The author confirms each stage by eye before the sessions, and neither the display nor a later stage can break the layering |
 | The development loop | WP43, before the small fixes. The commit hook runs the fast checks and the affected tests. The push gate runs once, in the background. CI runs ubuntu on Python 3.14 on a pull request, and macOS and Windows after a merge. Python 3.14 is the default. The agent roster is defined, and plans open with a plain-language summary. Every change is held to pre-registered budgets (§8.2.10 J1 to J9) | Every later package is built on it. The budgets keep it from drifting back |
 
 ## Conventions established by earlier phases
@@ -892,10 +918,58 @@ design is `docs/superpowers/specs/2026-10-18-test-pruning-design.md`. It:
 No tolerance is loosened, and no kept test is weakened. VER-62 holds at 10⁻⁸ on a recorded mesh on the
 tests that remain. It claims no new identifier. Tag `v0.5.0-alpha.16`.
 
+### WP51 — The plotting library and the notebooks (FR-30; §8.2.14 P1 to P6; REV-123)
+
+*Added, 22 October 2026* (§8.2.14 P1). It waits on WP50's merge, and the protocol waits on it. The
+author asked for a figure of every part of the pipeline, to confirm by eye what each stage
+produces, and for notebooks in which to test the API interactively. It delivers:
+
+- **`plot/`**, a new subpackage after `post` and before `pipeline` (P3). Its data layer turns each
+  artefact into arrays in SI units and the model frame. Its drawing layer, Matplotlib behind a
+  `plot` extra and imported inside the functions that draw (P2), makes:
+  - stage 1: the aligned atoms in (r, z);
+  - stages 2 and 3: the density's section and the reduced map with its azimuthal variance (CON-04);
+  - stage 4: the conditioned contour over that map;
+  - stages 5 and 6: the regions and their boundaries, and the mesh with its size field and quality;
+  - stage 7: the protonation states, the deposited charge and the dielectric field;
+  - stage 8: the corrections against ionic strength and wall distance;
+  - stage 10: the fields, the Newton history and the continuation rungs;
+  - stage 11: the quantities;
+  - a sweep's collected curves.
+
+  Fields are read through `post/export.py`'s sampling, so `plot/` imports no backend.
+- **The display** (P6). `core.stages.register` takes an optional `figure=` dotted path, as it takes
+  `extra=`, and every builtin stage declares one or sits on a recorded figure-free list. Every
+  artefact and `RunResult` answer the `_repr_*_` display protocol: the figure with the extra
+  installed, otherwise a text summary of schema, key and payload.
+- **`notebooks/`**: marimo notebooks, plain `.py` files, one each for geometry, charge, solve and
+  fields, and sweep (P5). Each walks the public API with figures and widgets. A `notebook` extra
+  adds marimo, and the examples runner runs each as `python <notebook>.py` every night.
+- **The clauses**: §5.1's table, `CLAUDE.md`'s structure list, `modularity-layering.yaml` and
+  `LAYER_ORDER` gain `plot`, with no upward edge; `CHANGELOG.md` lists `register`'s new keyword and
+  the extras.
+
+Tests, by N1 (P4):
+
+- a smoke test that draws every declared figure on examples 01 and 02 per push, and on examples 06
+  and 07 nightly, and refuses a stage neither declaring a figure nor on the figure-free list;
+- the data layer's unit and frame conversions, and a field sampled on a grid against `sample_at`;
+- an architecture guard that `import nanopnp` and a walk load neither Matplotlib nor marimo;
+- the notebooks, run nightly with their exit status as the oracle.
+
+No figure is compared with a baseline image. VER-61 is re-recorded, and VER-62 and VER-65 do not
+move. Its `/wp-plan` decides the public names (`nanopnp.plot`, and whether a name joins `PUBLIC`,
+F4), the figure-free list, how a sweep's results reach `plot/` from below `sweep`, and the notebooks'
+widgets. REV-123 becomes `fixed`. Tag `v0.5.0-alpha.17`.
+
 ### User-testing protocol — Provisional
 
-> **Planned, 19 October 2026** ([plan](wp51-user-testing-protocol.md)): five sessions, VER-69 on
+> **Planned, 19 October 2026** ([plan](wp52-user-testing-protocol.md)): five sessions, VER-69 on
 > VER-46's runner, nightly.
+
+> **Amended, 22 October 2026** (§8.2.14 P1, P5). This is now **WP52**, and it waits on WP51. Session
+> 04, the Python API, is a marimo notebook in its own directory, using WP51's figures and display;
+> the tester installs the `notebook` extra. Tag `v0.5.0-alpha.18`.
 
 It waits on the OKF backfill. It writes:
 
@@ -945,6 +1019,8 @@ shell following, and schema moves under `nanopnp/case/v0.5` (G6).
 > cost WP49 measures over its threshold and cannot fix within its own pull request, by ruling.
 
 > **Amended, 18 October 2026** (§8.2.13 N6). They are numbered from **WP52**, and their tests follow N1.
+
+> **Amended, 22 October 2026** (§8.2.14 P1). They are numbered from **WP53**.
 
 ### Documentation increment 4 — Provisional
 
@@ -1023,8 +1099,11 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | REV-06's frame, and whether REV-08 makes NUM-16's test per field | — | **Settled by WP41's plan, 7 October 2026**, from measurement: a supplied field is in the model frame, and a declared other frame is refused (WP41 D1, amended in the plan's commit); the test becomes per field, and the relative residual test no longer closes a rung (WP41 D4, amended in its item's commit, I4) |
 | `with_section`, `register` in `PUBLIC` | Add or keep out | Carried from WP34 D9 as `MOD-11`. **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
 | The architecture review of 18 October 2026 | Which claims to act on, the browser shell, where the study goes, the estimate | **Settled by the author, 18 October 2026** (§8.2.12 M1 to M5) |
-| The Qt shell until the browser shell matches it | Keep it gated through v0.5 and until Phase 5 replaces it, or drop it earlier | **Settled by the author, 18 October 2026** (M3): kept. The In brief's *Your call* invites a re-ruling |
+| The Qt shell until the browser shell matches it | Keep it gated through v0.5 and until Phase 5 replaces it, or drop it earlier | **Settled by the author, 18 October 2026** (M3): kept. The In brief of 18 October invited a re-ruling |
 | The test scope, its place and the estimate | What is tested, the coverage gate, the split, prevention, WP50 before the protocol | **Settled by the author, 18 October 2026** (§8.2.13 N1 to N7) |
+| The plotting library and the notebooks | Their place in the sequence, the notebook form, the drawing library, the subpackage's place, the requirement and its tests, the display, the estimate | **Settled by the author, 22 October 2026** (§8.2.14 P1 to P7). P6 follows the author's instruction to build the most long-term viable design |
+| WP51's public names | `nanopnp.plot` as a namespace, and whether any name joins `PUBLIC` | **Open**, owned by WP51's `/wp-plan`; a change to `PUBLIC` is decided in `test_public_api.py` (F4) |
+| The notebooks on the documentation site | In documentation increment 4, or later | **Author, open**, at the second amendment. Default: on the site, after the sessions show which help |
 | WP49's thresholds | 4 GB, 5 %, 10 % | **Registered by this amendment**, 18 October 2026. A re-argued threshold is a plan amendment before the measurement, never after |
 | NUM-07 order; the archive-dependent legs | — | **Phase 6** (E1, E4, F1). Not this phase's |
 | OPN-04, OPN-08 | — | **Author, open.** Not on this phase's path |
@@ -1047,6 +1126,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The tag `v0.5.0-alpha.9` and CI result as the required check | Now | WP44's pull request waits on the old checks |
 | A read of WP45's pull request, and of any module the author picks | WP45's merge | The pull request waits |
 | A ruling on any WP49 cost over its threshold that one pull request cannot fix | WP49's shipping | The cost is carried as a `REV-nn` row, and the protocol does not wait on it |
+| A look at every stage's figure and every notebook, on a case of the author's choosing | WP51's merge | The pull request waits; a figure the author finds misleading is a `REV-nn` row, fixed before the merge |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
 
@@ -1078,9 +1158,10 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP48, OKF backfill | 1, 2 | Tests named by claim; no new identifier |
 | WP49, cost study | 1, 2 | VER-76 (proposed); VER-62 unchanged |
 | WP50, test scope | 1, 2 | None new; N3's identifiers withdrawn; VER-61, VER-62, VER-65 kept green |
-| WP51, protocol | nightly | VER-69 (proposed) |
+| WP51, plotting and notebooks | 1, 2, nightly | FR-30's smoke test, the data layer's conversions, the import guard and the notebooks' nightly run; VER-61 re-recorded; VER-62 and VER-65 unchanged |
+| WP52, protocol | nightly | VER-69 (proposed) |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-63 kept green |
-| Fixes, from WP52 | 1, 2 | Claimed at the second amendment |
+| Fixes, from WP53 | 1, 2 | Claimed at the second amendment |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | VER-63 against closed logs |
 
@@ -1141,6 +1222,15 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
     package; VER-76 passes. Prediction: all three under their thresholds, so no fix lands. If a
     measurement misses its prediction, the number is reported and the fix follows the threshold, not
     the prediction; a threshold is never moved after its measurement.
+13. *Added, 22 October 2026* (§8.2.14 P3 to P6). **FR-30 holds.** Every registered stage declares a
+    figure or is on the recorded figure-free list, checked both ways. The smoke test draws every
+    declared figure on examples 01 and 02 per push, and on 06 and 07 nightly. `import nanopnp` and a
+    walk load neither Matplotlib nor marimo. Every notebook runs headless nightly. VER-61 records
+    `plot` with no upward edge, VER-65's set stays at eleven, and VER-62 shows zero drift.
+    Prediction: all met in WP51, with `case` and `report` the only figure-free stages. If one
+    misses, it is fixed in WP51. A backend import is removed, VER-65's set growing only by the
+    author's ruling, and a VER-62 move is reverted (G10). A figure the author finds misleading is
+    fixed before the merge.
 
 ## End-of-phase report
 
@@ -1168,6 +1258,9 @@ Empty until the close package fills it. It reports:
   1,764 collected by default at `v0.4.0`. Source: the gate run on the close package's tree.
 - **The cost study:** WP49's three measurements against their thresholds and predictions, and what
   was fixed. Source: WP49's script, re-run on the close's tree.
+- **Plotting and notebooks:** the stages with a figure and those on the figure-free list, the
+  notebooks, and their nightly runtime on four cores. Sources: FR-30's smoke test and the nightly
+  run.
 - **The development loop:** the wall times of the commit hook, the push gate and CI's pull-request
   critical path, against 11 October 2026's 199 s, 527 s and about 10.5 minutes. Sources: the gate log
   (`<git dir>/nanopnp-gate.log`) and CI's job timings.
