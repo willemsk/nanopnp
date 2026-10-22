@@ -322,8 +322,10 @@ def figure_target(schema: str) -> str | None:
     return _FIGURES.get(schema)
 
 
-def draw(artefact: Artefact, inputs: StageInputs | None = None) -> Figure | None:
-    """Draw ``artefact`` with its registered figure; None where its schema has none.
+def draw(
+    artefact: Artefact, inputs: StageInputs | None = None, *, scale: float = 1.0
+) -> Figure | None:
+    """Draw ``artefact`` with its registered figure, enlarged by ``scale``; None where it has none.
 
     Raises
     ------
@@ -346,6 +348,9 @@ def draw(artefact: Artefact, inputs: StageInputs | None = None) -> Figure | None
             "installed. Install the extras with `uv sync --all-extras`",
             name=missing,
         ) from error
+    if scale != 1.0:
+        width, height = figure.get_size_inches()
+        figure.set_size_inches(width * scale, height * scale)
     return figure
 
 

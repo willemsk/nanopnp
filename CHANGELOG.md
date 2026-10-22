@@ -25,6 +25,10 @@ WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to 
 
 ### Added
 
+- **I-V and flow figures, and larger figures.** A sweep's figure leads with the I-V curve (nA) and the
+  electro-osmotic flow rate (µm³/s); `plot.figure` and `RunResult.figure` take `scale`; the notebooks
+  carry a size slider and a zoom-and-pan switch. Example 03's charged case now outputs `eof_rate`
+  (§8.2.14 P9).
 - **`nanopnp.plot`**, behind the `plot` extra (Matplotlib): `plot.figure(artefact, inputs=None)` draws
   the figure of any stage's artefact and of a sweep. Figures of the aligned atoms, the density, the
   reduced map, the contour, the regions, the mesh, the protonation states, the charge and dielectric
