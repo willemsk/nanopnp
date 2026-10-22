@@ -645,4 +645,3 @@ under-resolved at the wall rather than marginally inaccurate, which NUM-26's rou
 reports independently and which the measured transition confirms: the minimum steps from
 `−9.6 × 10⁻¹` nm to `+7.9 × 10⁻³` nm across a single refinement, so this gate discriminates a regime
 and does not shave a tolerance.
-

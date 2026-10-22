@@ -6,8 +6,8 @@ okf_version: "0.2"
 
 The dated rulings of the author and the Phase 0 exit criteria, moved here verbatim from §8.2 of the
 specification. Read them when the reason behind a rule is wanted, not by default: every ruling's
-effect is in a current clause or in §8.4, unless the ruling is spent, superseded or still open, and `uv run .claude/scripts/clause.py <ruling>` prints a
-ruling's row after its clause. The rulings are lettered, one letter per dated record, and numbered
+effect is in a current clause or in §8.4, unless the ruling is spent, superseded or still open, and `uv run .claude/scripts/clause.py <identifier>` prints a
+clause and, after it, every ruling row that names it. The rulings are lettered, one letter per dated record, and numbered
 within it (A1, B3, R10).
 
 * [8.2 Phase 0 exit criteria](00-phase-0-exit-criteria.md) - States the four Phase 0 exit criteria, all four of which SHALL be met.

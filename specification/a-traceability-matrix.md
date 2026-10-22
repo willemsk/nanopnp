@@ -88,4 +88,3 @@ naming §8.2 criterion 3 as the measurement it is still waiting for rather than 
 of §3, so they leave the count unchanged. VER-76 checks the published case schema against the fields the editors walk and leaves it unchanged. VER-63, VER-67, VER-68, VER-73, VER-74 and VER-75 are withdrawn (§8.2.11 L2, L3; §8.2.13 N3).
 
 ---
-

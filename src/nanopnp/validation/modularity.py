@@ -1247,7 +1247,7 @@ def requirement_releases(specification_text: str) -> dict[str, str]:
     Parameters
     ----------
     specification_text
-        The text of ``SPECIFICATION.md``.
+        The text of ``specification/03-requirements.md``.
     """
     return dict(REQUIREMENT_ROW.findall(specification_text))
 

@@ -68,4 +68,3 @@ honours `variable_density` and `inertia` false only, as the electrostatic models
 whose density and permittivity are constant, honours `variable_density` true only and
 `dielectric_gradient_forces` false only. The load-time inf-sup check runs only for a model that
 reads `numerics.elements.u`, so a model without flow is refused on its flow switch (VER-71).
-

@@ -19,4 +19,3 @@ description: "Lists the open items, OPN-nn, each with its owner and the work it 
 | **OPN-09** | When to support Python 3.15, and whether to adopt its lazy imports (PEP 810) in place of VER-72 (a)'s function-level imports. Not adopted on 11 October 2026, because five dependencies had no 3.15 wheels and import cost is not what makes the gate slow (§8.2.10 J6). Support follows once every dependency ships 3.15 wheels; lazy imports are reconsidered when Python 3.11 reaches end of life (October 2027) or at v1.0, whichever is first | Author | Nothing on the v0.7 path |
 
 ---
-

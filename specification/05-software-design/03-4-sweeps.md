@@ -61,4 +61,3 @@ was served from cache, and the warm-start record. The quantities of a member tha
 SHALL be absent rather than defaulted, QR-06 requiring that a failed member be distinguishable from a
 refused one and from one that was never dispatched. A flat tabular export MAY be written beside it
 and is derived rather than normative.
-

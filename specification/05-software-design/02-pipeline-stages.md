@@ -348,4 +348,3 @@ gives conductances 1.25e-4 apart on the two backends' meshes at `size_scale` 2. 
 The analyte is a hard dielectric body with no ion flux, no-slip and a dielectric jump, as at the
 pore wall (FR-21). Both charge models ship as named options, a surface charge density and a smeared
 volumetric charge, sharing the smearing machinery of §4.4.
-

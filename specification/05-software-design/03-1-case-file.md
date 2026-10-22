@@ -578,4 +578,3 @@ collection, from pairs of members whose case-file assignments are equal except a
 a tolerance on the pairing would report the ratio of two unrelated operating points as a
 rectification. A sweep asking for `rectification` whose axes produce no such pair SHALL be refused
 when the plan is built, naming the axis, rather than collecting a column of absent values (QR-12).
-

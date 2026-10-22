@@ -68,4 +68,3 @@ moved code path and fails. CI and the gate cap NumPy's dispatch at `X86_V3` with
 instance, and `nanopnp.validation.stability` the mechanism a later golden reuses.
 
 ---
-

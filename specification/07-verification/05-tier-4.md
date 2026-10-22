@@ -41,4 +41,3 @@ NOTE: the ACS Nano 2019 trapping work is not a continuum analyte calculation. It
 Poisson–Boltzmann in APBS on a coarse-grained bead model with a one-dimensional analytic rate
 model, and provides no stress-tensor force profile. Detail in
 `knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md`.
-

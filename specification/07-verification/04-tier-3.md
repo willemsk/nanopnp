@@ -179,4 +179,3 @@ the max norm, and each of the eight broken constructions exceeds half the tolera
 leg's ring means differ from ours by 15.7 %, 6.7 % and 13.6 %, and the spread around a ring reaches
 46 % of `max|φ|` (4.1 % rms). That is the azimuthal averaging of CON-04 together with APBS's own
 charge and surface models, recorded and not gated.
-

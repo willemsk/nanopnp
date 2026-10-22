@@ -22,4 +22,3 @@ case file's bytes, verbatim.
 | Solver | Physics model, element orders, continuation rungs, nonlinear and linear settings, iteration counts |
 | Stabilisation | The stabilisation mode that produced the number, its tuning parameters and the provenance of each, and — where a mode is active — its own contribution to the current and the largest cell Péclet number per species (§6.4, NUM-12, NUM-13) |
 | Deviations | Every switch set away from the validated default, including `dielectric_gradient_forces` (PHY-23) |
-

@@ -76,6 +76,9 @@ def _copies() -> dict[Path, Path]:
     specification = ROOT / "specification"
     for source in sorted(specification.rglob("*.md")):
         pages[source] = OUTPUT / "model" / "specification" / source.relative_to(specification)
+    # model/specification.md is already served at model/specification/, and MkDocs would let
+    # the bundle's index overwrite it there without a warning.
+    pages[specification / "index.md"] = OUTPUT / "model" / "specification" / "contents.md"
     for source in sorted((ROOT / "examples").glob("*/README.md")):
         pages[source] = OUTPUT / "examples" / f"{source.parent.name}.md"
     return pages
@@ -111,13 +114,17 @@ def rewrite_links(text: str, source: Path, destination: Path, pages: dict[Path, 
             raise SystemExit(f"{source.relative_to(ROOT)}: broken link {target!r}")
         return f"{label}({REPOSITORY}/{resolved.relative_to(ROOT).as_posix()}{suffix})"
 
-    # Code is split out first: ``a[i](x)`` in a code span is not a link, and
-    # rewriting it would alter a verbatim page or fail the build as a broken link.
-    # ``split`` on one capturing group puts the code pieces at the odd indices.
-    pieces = CODE.split(text)
-    return "".join(
-        piece if index % 2 else LINK.sub(replace, piece) for index, piece in enumerate(pieces)
-    )
+    # Code is masked first: ``a[i](x)`` in a code span is not a link, and rewriting
+    # it would alter a verbatim page or fail the build as a broken link. Masking
+    # rather than splitting keeps a link whose label is code, [`x`](y), whole.
+    spans: list[str] = []
+
+    def mask(match: re.Match[str]) -> str:
+        spans.append(match.group(0))
+        return f"\0{len(spans) - 1}\0"
+
+    masked = LINK.sub(replace, CODE.sub(mask, text))
+    return re.sub(r"\0(\d+)\0", lambda match: spans[int(match.group(1))], masked)
 
 
 def _correction_files() -> str:

@@ -23,4 +23,3 @@ test-backed knowledge claims and repository self-checks that make a Markdown edi
 | N5 | **Prevention is the judgement rule of N1, plus a reviewer step.** `/wp-ship` reads the pull request's added and changed tests against N1 before `/code-review` and deletes each one outside it, in its own commit; a review finding is never closed by an off-category test. Plans list only in-scope tests. No test checks the rule | Test growth is bounded by review, not by a count | The skills and the pull-request template, in WP50 |
 | N6 | **The test scope is WP50, before the protocol.** The protocol becomes WP51 and the fix packages are numbered from WP52. Tag `v0.5.0-alpha.16` | The protocol's scripts are written onto N4's split | The Phase 4 plan, in this commit. **Renumbered, 22 October 2026** (§8.2.14 P1): the protocol is WP52, the fixes from WP53 |
 | N7 | **The phase estimate stands** at 4–6 weeks | WP50 is absorbed, as WP43 and WP49 were (J12, M5) | None |
-

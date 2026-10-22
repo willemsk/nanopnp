@@ -7,7 +7,9 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 ## Before doing anything
 
 - **Read `knowledge/index.md`**: the verified knowledge base.
-- **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`). Cite the
+- **`SPECIFICATION.md` is normative** (`FR-`, `QR-`, `CON-`, `PHY-`, `NUM-`, `VER-`, `VAL-`): it is
+  the entry point and map; the text is in `specification/`, its dated rulings in
+  `specification/history/`, read on demand; `uv run .claude/scripts/clause.py <ID>` prints a clause. Cite the
   identifier when you implement or test one. Changing specified behaviour means changing the
   specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
@@ -69,7 +71,7 @@ a tree it has not passed.
   importing only `core` at run time; `pipeline/` case resolution, the walk, the assembler; `cli/`,
   `gui/` thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL comparison
 
-Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel), `knowledge/`,
+Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel), `specification/`, `knowledge/`,
 `tests/tier{1,2,3,4}/`, `docs/`, `docs/plans/` (planning, not requirements; `SPECIFICATION.md` wins).
 
 A stage takes typed inputs and emits a typed, serialisable artefact carrying a content hash. Every
