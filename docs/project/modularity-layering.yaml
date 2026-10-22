@@ -14,7 +14,7 @@
 #
 # The layer order, lowest first, is LAYER_ORDER of nanopnp.validation.modularity:
 # core, io, structure, density, symmetry, geometry, mesh, numerics, charge, materials,
-# physics, solve, post, pipeline, sweep, validation, cli, gui, nanopnp. `io` is the
+# physics, solve, post, plot, pipeline, sweep, validation, cli, gui, nanopnp. `io` is the
 # base, which imports only core and io at module scope; `pipeline` is the assembler
 # (section 5.1). An edge pointing up that order is annotated with the finding that
 # explains it: io's annotation-only imports of the electrolyte, the Newton settings

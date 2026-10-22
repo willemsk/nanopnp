@@ -92,7 +92,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
 
 ### Work items
 
-- [ ] 1. Extras, `uv.lock`, `LAYER_ORDER`, the layering record, §5.1, `CLAUDE.md`, an empty
+- [x] 1. Extras, `uv.lock`, `LAYER_ORDER`, the layering record, §5.1, `CLAUDE.md`, an empty
   `plot/` (D5, D6); done when `tests/tier1/test_layering.py` and `test_backend_guard.py` pass.
 - [ ] 2. The figure registry, `draw`, `_repr_mimebundle_` and the `RunResult` additions (D1, D2);
   done when `test_figure_classification_both_ways` passes.

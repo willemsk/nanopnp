@@ -55,6 +55,7 @@ LAYER_ORDER: tuple[str, ...] = (
     "physics",
     "solve",
     "post",
+    "plot",
     "pipeline",
     "sweep",
     "validation",

@@ -1009,6 +1009,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | `physics/` | Weak forms: Poisson, Nernst–Planck, Navier–Stokes; the wall-distance field |
 | `solve/` | Continuation ladder, warm start, the solve stage |
 | `post/` | QoI extraction: current, transport number, EOF, rectification, forces |
+| `plot/` | Figures of every stage's artefact and of a sweep, drawn from the stored results alone with Matplotlib (the `plot` extra); imports no backend (§8.2.14 P3) |
 | `sweep/` | Parameter sweeps, job-array dispatch, result collection |
 | `io/` | Case-file schema, artefact and resolved-case types, the solution-field vocabulary, result store, provenance manifests: the base every stage imports, importing only `core` at run time (`MOD-04`; WP38) |
 | `pipeline/` | Case resolution and the checks against the registries, the pipeline walk, reproduction: the assembler, which imports the stages (`MOD-04`; WP38) |

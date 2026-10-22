@@ -58,9 +58,14 @@ gui = ["PySide6>=6.7"]
 # OPTIONAL MESHER BACKEND ONLY. gmsh is GPLv2+; the default path must never
 # import it and the library must stay functional without it (CON-10, ADR-002).
 gmsh = ["gmsh>=4.13"]
+# The figures of nanopnp.plot (SPECIFICATION.md section 8.2.14 P3). Never needed to
+# run a case: a result without it displays as text.
+plot = ["matplotlib>=3.8"]
+# The interactive notebooks of notebooks/ (section 8.2.14 P5).
+notebook = ["nanopnp[plot]", "marimo>=0.25.2"]
 # The worked examples' plots (examples/, WP16 D12). Never needed to run a case:
 # every example writes its numbers as CSV and plots only when this imports.
-examples = ["matplotlib>=3.8"]
+examples = ["nanopnp[plot]"]
 
 [project.urls]
 Homepage = "https://github.com/willemsk/nanopnp"
