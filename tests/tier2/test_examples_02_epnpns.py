@@ -13,7 +13,10 @@ from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from conftest import NumberStability
+    from nanopnp.pipeline.run import RunResult
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 
@@ -73,3 +76,11 @@ def test_ver62_example_02_epnpns_holds_the_number_stability_golden(
 ) -> None:
     run = ran[0] / "run-epnpns"
     number_stability("example-02-epnpns", _mesh_hash(run), _quantities(run))
+
+
+def test_every_figure_draws_and_displays(
+    ran: tuple[Path, list[CommandResult]],
+    cached_run: Callable[..., RunResult],
+    check_figures: Callable[[RunResult], None],
+) -> None:
+    check_figures(cached_run(ran[0], "epnpns.case.yaml"))
