@@ -301,10 +301,34 @@ its *Implementation details*; `main` re-runs its check.
   > the clone's tip (case 10); the Gmsh lines before the header and the 600 s worst case predate
   > R7; a shallow gate without a merge base runs in full, slower but right. `rules.py e4b52bc`:
   > `missing: 75`, the 43 of item 3 and 32 sentences these fixes edit or move.
-- [ ] 10. ASD-STE100 rewording of item 9's files (D2). Done when a fresh `general-purpose` agent on
+- [x] 9449e91 10. ASD-STE100 rewording of item 9's files (D2). Done when a fresh `general-purpose` agent on
   Sonnet finds no rule lost or changed in force. **Executor:** `main`.
-- [ ] 11. D6's checks and word counts on the final tree, into the Outcome. Done when each passes.
+
+  > **Outcome — reworded, with text that restated `CLAUDE.md` replaced by pointers; the check found
+  > eight drifts, all restored.** Short sentences, the active voice, conditions first and numbered
+  > steps in the core, the levels, `CLAUDE.md`'s gate text and workflow section and §8.4.4; the
+  > hook's messages were already short. The test scope, the knowledge and open-item records and the
+  > prose-only rule now point to `CLAUDE.md`. The agent's comparison of `934c87b` and the first
+  > draft found a permission made a mandate (the review retry), two options made a default and a
+  > fallback, the reused PR's head and base check, the specification correction, the one-PR rule in
+  > `np-plan/wp.md`, "the skills" in `phase.md`, and two clauses of the cache paragraph; each was
+  > restored before the commit. Its third point, a prose-only scope missing from `CLAUDE.md`, read
+  > the text before item 9.
+- [x] 11. D6's checks and word counts on the final tree, into the Outcome. Done when each passes.
   **Executor:** `main`.
+
+  > **Outcome — each check passes but the caps, which stay exceeded.** Rules kept: `rules.py
+  > e4b52bc` on item 9's tree, `missing: 75`, accounted for in items 3 and 9; the rewording by item
+  > 10's check. Hook: ten cases pass on the final tree, and a failing `uv sync` still prints the
+  > summary. Names: the grep hits records only (history, delivered plans, `phase-4-record.md`, code
+  > reviews, `review-items.md`'s findings, a `knowledge/` source line), this plan, `CLAUDE.md`'s
+  > "Plans before WP53" sentence, the core's opening, the Phase 4 plan's WP53 summary and the
+  > `CHANGELOG.md` entry; `review-items.md`'s opening named the old commands and is repointed here.
+  > VER-45: the strict build passes. Caps (D2), by `wc -w`: routers 100 to 137; core 974 of 900;
+  > invocations `np-plan wp` 2,535, `phase` 2,995, `amend` 2,282, `project` 2,381,
+  > `np-implement` 1,885, `np-ship wp` 2,318, `phase` 2,548, against 2,200; 7,409 in all, against
+  > 7,000. Item 9 moved the shared phase text into `rulings.md`, which `phase` now loads in full; no
+  > rule was cut to meet a count. The gate's result is in the PR.
 
 ### Verification
 

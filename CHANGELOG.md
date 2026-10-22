@@ -38,6 +38,10 @@ WP53: the workflow, three commands with levels, workers and a current checkout (
 - **The session-start hook keeps the checkout current.** It fetches `origin main` into the primary
   checkout, fast-forwards a clean `main` that is behind it, and warns when the checkout lacks its
   commits. Nothing in it fails the session.
+- **The workflow was reviewed and reworded.** A review fixed 21 inefficiencies, contradictions and
+  flaky steps: among them, `/np-implement` and `/np-ship` find the package's PR the same way, the
+  gate has one waiting rule, and `/np-ship` tags after the merge. The text follows ASD-STE100's
+  writing rules.
 - `CLAUDE.md`, §8.4.3, §8.4.4 and the live pointers name the new commands.
 
 ## [0.5.0-alpha.18] - 2026-10-22
