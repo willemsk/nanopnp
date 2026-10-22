@@ -2,7 +2,7 @@
 
 PR: [#121](https://github.com/willemsk/nanopnp/pull/121), branch claude/wp52-documents
 
-**Status: planned, not started.** Written 22 October 2026; grounded in the code at `0329cde`
+**Status: delivered, 2026-10-22.** Written 22 October 2026; grounded in the code at `0329cde`
 (§8.2.15 Q1). Inherits WP51 as shipped and the Phase 4 amendment (§8.2.16 R1 to R10).
 
 The [Phase 4 plan](phase-4-polish-and-user-testing.md) owns the phase. `SPECIFICATION.md` governs;
@@ -239,6 +239,17 @@ No kept test (N1). The checks are one-off scripts in the scratchpad, run in the 
 | R10 (b), identifiers | For each identifier of base Appendix A (149) and each base ruling (119): the base `clause.py`, run in a `git worktree` of `<base>`, and the new `clause.py` print the same text in their **first** `definition` block, labels excluded | `uv run --no-project python <scratch>/ids.py <base>` | The bundle or the script is fixed; no waiver |
 | VER-45 | Strict build | `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | Fixed before the merge |
 | Gate | Full push gate | `.claude/hooks/gate.sh run` | Fixed |
+
+> **Outcome — the split loses no line and changes no definition.** On the final tree, with
+> `<base>` = `a201d923ecc80f09e3ea10c0b731b8a88db52e7f`: R10 (a), `lines.py`, prints `missing: 0`; no old
+> line was edited on purpose. R10 (b), `ids.py`, prints `identifiers: 268, differing: 0` (149
+> Appendix A identifiers and 119 rulings, first definition block, base against working tree). VER-45's
+> strict build passes (202 pages). Criterion 14, reported and not gated: the current specification
+> files (`SPECIFICATION.md` and `specification/` without `history/`) hold 67,629 words, inside the
+> predicted 60,000 to 68,000; `specification/history/` holds 18,109; §8.4 holds 1,021, front matter
+> included; the Phase 4 plan holds 4,819, against a prediction under 6,000, and `phase-4-record.md` 16,636. The
+> base `SPECIFICATION.md` held 80,055. The 5,683 words the bundle adds (85,738 against 80,055) are
+> front matter, indexes, the map, §8.4 and the history index's *where each ruling holds now* list.
 
 ### Out of scope
 
