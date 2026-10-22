@@ -30,7 +30,37 @@ amendment, decided now and written in the same commit**, never a quiet divergenc
 4. Survey the code the package builds on: what exists, what is an empty package reserving a slot,
    which seams take the argument you need. Delegate a survey to Haiku or Sonnet (`CLAUDE.md`, *Models*) and read the lines it
    returns before relying on them; keep every physics and numerics decision yourself.
-5. Do not search the web for the model equations or their parameters (`CLAUDE.md`).
+5. Do not search the web for the model equations or their parameters (`CLAUDE.md`). Check every
+   library API the plan names against its current documentation (Context7).
+
+## Grounding the plan
+
+The plan is written for an implementer on Sonnet who has not seen this session. Once the decisions
+are drafted, and before committing, read the code each decision and work item changes or relies on,
+yourself, and settle every point the implementer would otherwise guess at (§8.2.15 Q1). For each,
+ask:
+
+- **Where.** Which function, class or constant changes, named `path:symbol`. Is it the seam the
+  change belongs in, or a caller of it?
+- **Does it run.** Trace the call path the change rides on. Does it run on the default path, or only
+  when a caller passes a hook, an option or an extra? A recording hung on an optional callback
+  records nothing for the caller who passes none.
+- **Shapes.** What it reads and writes: types, fields, units, payload keys and file formats. A new
+  file or record is given its exact layout.
+- **Variants.** Every form its input takes: supplied or generated, cached before or after the
+  change, an extra installed or not, an optional upstream stage present or absent. Name the
+  variant the obvious path misses, and say what happens to it.
+- **Rows.** The registry entries, `modularity-layering.yaml` rows (static or string, with their
+  finding) and public names it adds, and which existing guard reads them.
+- **Tests.** How each test obtains the object it checks: the fixture, the store, the working
+  directory and the commands an existing example already runs. Name an existing helper to reuse
+  before writing one.
+
+Each answer is a fact, verified at the commit the plan is written on. It goes into
+`### Grounding`, or into its decision where it changes the choice. A fact that changes a decision
+is a decision, and the decision moves. Then read the plan as its implementer would. For each work
+item, could it be written without opening a file the plan does not name, and without choosing
+between two behaviours? If not, the plan is not finished.
 
 ## Scope of one work package
 
@@ -47,17 +77,18 @@ a single term (§7.1).
 | Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, and what it inherits |
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## In brief` | Before the Execution brief; the template below |
-| `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. The plan holds **at most 1,500 words outside its Outcome annotations** (a longer one is a review finding, §8.2.13 N3); link evidence rather than retelling earlier packages |
+| `## Execution brief` | Current scope, dependencies, requirement pointers and the subsections below. The plan holds **at most 2,500 words outside its Outcome annotations, at most 1,500 of them outside `### Grounding`** (a longer one is a review finding, §8.2.13 N3; §8.2.15 Q1); link evidence rather than retelling earlier packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve every choice that affects correctness now |
+| `### Grounding` | The facts of *Grounding the plan*, grouped by decision (`D1`, `D2`, …), one bullet each: `path:symbol`, what it does today and what the change does to it. Facts only: no alternatives, no history and no restated specification. Cite symbols, not line numbers, which drift |
 | `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass`, or, for an item outside the test scope (`SPECIFICATION.md` §8.2.13 N1), done when the code and review say so. Name the files in backticks. After a group of items, a line *Compaction checkpoint: after item N; resume from this plan and `git log`.* |
 | `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command, for in-scope tests only (§8.2.13 N1). Every claimed in-scope `VER-`/`VAL-` appears here; an out-of-scope item's done-criterion is "the code and review say so" (N3) |
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation; ask blocking ones before committing |
 
 The plan is an index and execution contract, with no per-item design and no `## Design` heading. A
-derivation that is new and load-bearing goes into the specification, which the plan links. If 1,500 words
-and six decisions cannot hold the correctness-critical choices, split the package; never omit a
-required check to meet a count.
+derivation that is new and load-bearing goes into the specification, which the plan links. If the
+word caps and six decisions cannot hold the correctness-critical choices and the facts they rest
+on, split the package; never omit a required check or a grounding fact to meet a count.
 
 ### The In brief
 
@@ -91,5 +122,5 @@ Link the planned package and its live dependencies; its word target is in its *H
 2. Commit on the working branch (on `main`, switch to the branch this session was given, or stop
    and ask): `docs: WP<n> implementation plan`, identifiers in the body. A plan-only change runs
    ruff and the tests (`CLAUDE.md`, *Commands*). Then `git push -u origin <branch>`: another session on another machine may work from it.
-3. Report the path, the close calls, any spec amendment and
+3. Report the path, the close calls, what the grounding pass changed, any spec amendment and
    the open questions. Then stop; implementation is `/wp-implement`, a separate turn.
