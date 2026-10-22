@@ -1,5 +1,7 @@
 # WP53 — The workflow: three commands with levels, and a current checkout
 
+PR: [#124](https://github.com/willemsk/nanopnp/pull/124), branch ccr-a62c64fc-ixc0r7
+
 **Status: planned, not started.** Written 22 October 2026; grounded in the code at `e4b52bc`
 (§8.2.15 Q1). Inherits WP52 as merged and the Phase 4 amendment (§8.2.16 R5 to R7, R11, R12).
 
