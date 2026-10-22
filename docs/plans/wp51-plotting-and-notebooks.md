@@ -96,7 +96,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
   `plot/` (D5, D6); done when `tests/tier1/test_layering.py` and `test_backend_guard.py` pass.
 - [ ] 2. The figure registry, `draw`, `_repr_mimebundle_` and the `RunResult` additions (D1, D2);
   done when `test_figure_classification_both_ways` passes.
-- [ ] 3. `restored`, `sampled_fields` and `newton_history.json` (D3); done when Tier 1 and examples
+- [x] 3. `restored`, `sampled_fields` and `newton_history.json` (D3); done when Tier 1 and examples
   01's and 02's Tier 2 modules pass unchanged and `physics-reviewer` finds nothing.
 
 *Compaction checkpoint: after item 3; resume from this plan and `git log`.*

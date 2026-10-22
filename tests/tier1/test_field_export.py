@@ -325,7 +325,7 @@ def test_if07_the_report_exports_the_fixed_charge_it_read_for_the_restore(
 ) -> None:
     import shutil
 
-    import nanopnp.post.stage as post_stage
+    import nanopnp.post.export as post_stage
     import nanopnp.solve.state as solve_state
     from nanopnp.charge.stage import read_fields
     from nanopnp.cli import main

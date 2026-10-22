@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.charge.stage import fixed_charge_density, read_fields
+from nanopnp.charge.stage import fixed_charge_density
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -25,7 +25,7 @@ from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import declaration
 from nanopnp.post import forces as force_post
 from nanopnp.post import qoi as qoi_post
-from nanopnp.post.export import export_fields
+from nanopnp.post.export import export_fields, restored
 from nanopnp.post.indicator import axial_indicator
 from nanopnp.solve.stage import SolveStage
 from nanopnp.solve.state import STATE_FILENAME, STATE_KEY, restore
@@ -447,38 +447,19 @@ class ReportStage:
     def _export(
         self, inputs: StageInputs, solution: Artefact
     ) -> tuple[dict[str, Path], dict[str, Canonicalisable]]:
-        state_path = solution.payload.get(STATE_KEY)
-        if state_path is None:
-            carried = ", ".join(sorted(solution.payload)) or "nothing"
-            raise KeyError(
-                f"the solve artefact carries no {STATE_KEY!r} payload (the {STATE_FILENAME} "
-                f"record); it carries {carried}. "
-                "The IF-07 export is of the converged fields and there is nothing to export from"
-            )
         resolved = inputs.resolved
-        supplied = (
-            read_fields(resolved)
-            if resolved.charge is not None or resolved.eps_r is not None
-            else None
-        )
-        restored = restore(
-            Path(state_path),
-            resolved=inputs.resolved,
-            mesh_artefact=inputs.upstream.get("mesh"),
-            fields=supplied,
-            charge_artefact=inputs.upstream.get("charge"),
-        )
+        restored_state, supplied = restored(inputs, solution)
         # Any model reports its scale set and the permittivity its solve used, or none.
-        model = restored.model
+        model = restored_state.model
         directory = self._directory()
         export = export_fields(
-            restored,
+            restored_state,
             directory,
             scales=model.scales,
-            relative_permittivity=model.relative_permittivity(restored),
+            relative_permittivity=model.relative_permittivity(restored_state),
             # Through stage 7's one loader: deposit, else supplied interpolant.
             fixed_charge_C_m3=fixed_charge_density(
-                resolved, supplied, inputs.upstream.get("charge"), restored.space.mesh
+                resolved, supplied, inputs.upstream.get("charge"), restored_state.space.mesh
             ),
         )
         payload = {path.name: path for path in export.paths()}

@@ -39,6 +39,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.resolved import ResolvedCase
 
 __all__ = [
+    "NEWTON_HISTORY_FILENAME",
+    "NEWTON_HISTORY_KEY",
     "OPERATOR_KEYS",
     "SPACE_KEYS",
     "STATE_FILENAME",
@@ -64,6 +66,10 @@ __all__ = [
 STATE_KEY = "state"
 
 STATE_FILENAME = "state.npz"
+
+NEWTON_HISTORY_KEY = "newton_history"
+
+NEWTON_HISTORY_FILENAME = "newton_history.json"
 
 DESCRIPTOR_ENTRY = "descriptor"
 

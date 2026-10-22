@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from nanopnp.charge.stage import ResolvedFields, read_fields
 from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import Expression, FESpace, Mesh
 from nanopnp.io.vocabulary import (
@@ -22,9 +23,12 @@ from nanopnp.physics.models import (
     concentration_field_name,
     transport_model,
 )
+from nanopnp.solve.state import STATE_FILENAME, STATE_KEY, restore
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
+
+    from nanopnp.io.artefact import Artefact, StageInputs
 
 __all__ = [
     "EXPORT_SCHEMA",
@@ -33,12 +37,15 @@ __all__ = [
     "OMEGA_W_STEM",
     "FieldExport",
     "P2Nodes",
+    "SampledFields",
     "attribute_name",
     "export_fields",
     "field_scale",
     "logarithmic_fields",
     "p2_nodes",
+    "restored",
     "sample_at",
+    "sampled_fields",
 ]
 
 logger = logging.getLogger(__name__)
@@ -252,30 +259,66 @@ def _write_pair(
     return (path, heavy)
 
 
-def export_fields(
-    solution: ModelSolution,
-    directory: Path,
-    *,
-    scales: Scales,
-    fluid: str = ELECTROLYTE_DOMAINS,
-    fixed_charge_C_m3: Expression | None = None,
-    relative_permittivity: Expression | None = None,
-) -> FieldExport:
-    """Write the solved fields as XDMF with HDF5 data in SI; return what was written.
+def restored(
+    inputs: StageInputs, solution: Artefact
+) -> tuple[ModelSolution, ResolvedFields | None]:
+    """Restore the converged state of ``solution``; also return the supplied fields, if any.
+
+    Raises
+    ------
+    KeyError
+        The solve artefact carries no state record.
+    """
+    state_path = solution.payload.get(STATE_KEY)
+    if state_path is None:
+        carried = ", ".join(sorted(solution.payload)) or "nothing"
+        raise KeyError(
+            f"the solve artefact carries no {STATE_KEY!r} payload (the {STATE_FILENAME} "
+            f"record); it carries {carried}. "
+            "The IF-07 export is of the converged fields and there is nothing to export from"
+        )
+    resolved = inputs.resolved
+    supplied = (
+        read_fields(resolved) if resolved.charge is not None or resolved.eps_r is not None else None
+    )
+    state = restore(
+        Path(state_path),
+        resolved=resolved,
+        mesh_artefact=inputs.upstream.get("mesh"),
+        fields=supplied,
+        charge_artefact=inputs.upstream.get("charge"),
+    )
+    return state, supplied
+
+
+@dataclass(frozen=True)
+class SampledFields:
+    """Every solved field in SI at the P2 nodes of the whole domain or of the fluid.
 
     Parameters
     ----------
-    fixed_charge_C_m3
-        The supplied fixed charge in C/m^3, if any; written node-centred.
-    relative_permittivity
-        ``eps_r`` as the form used it, if buildable; written cell-centred.
+    whole, restricted
+        Field arrays by attribute name; ``(n,)`` for a scalar and ``(n, 2)`` for the
+        ``(r, z)`` velocity.
+    carriers
+        The carrier spaces built on the way, for the caller to reuse.
     """
+
+    omega: P2Nodes
+    omega_w: P2Nodes
+    whole: dict[str, np.ndarray]
+    restricted: dict[str, np.ndarray]
+    carriers: dict[tuple[int, int], FESpace]
+
+
+def sampled_fields(
+    solution: ModelSolution, scales: Scales, *, fluid: str = ELECTROLYTE_DOMAINS
+) -> SampledFields:
+    """Sample every field of ``solution`` at the P2 nodes, exponentiated and scaled to SI."""
     import numpy as np
 
-    directory.mkdir(parents=True, exist_ok=True)
     mesh = solution.space.mesh
     model = solution.model
-
     omega = p2_nodes(mesh)
     omega_w = p2_nodes(mesh, materials=fluid)
 
@@ -303,7 +346,43 @@ def export_fields(
             values = np.exp(values)
         values = values * field_scale(field.name, scales)
         target = whole if field.domain is None else restricted
-        target[name] = _as_vector(values) if field.element == "vector_h1" else values[:, 0]
+        target[name] = values if field.element == "vector_h1" else values[:, 0]
+    return SampledFields(omega, omega_w, whole, restricted, carriers)
+
+
+def export_fields(
+    solution: ModelSolution,
+    directory: Path,
+    *,
+    scales: Scales,
+    fluid: str = ELECTROLYTE_DOMAINS,
+    fixed_charge_C_m3: Expression | None = None,
+    relative_permittivity: Expression | None = None,
+) -> FieldExport:
+    """Write the solved fields as XDMF with HDF5 data in SI; return what was written.
+
+    Parameters
+    ----------
+    fixed_charge_C_m3
+        The supplied fixed charge in C/m^3, if any; written node-centred.
+    relative_permittivity
+        ``eps_r`` as the form used it, if buildable; written cell-centred.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    mesh = solution.space.mesh
+    model = solution.model
+
+    sampled = sampled_fields(solution, scales, fluid=fluid)
+    omega, omega_w = sampled.omega, sampled.omega_w
+    carriers = sampled.carriers
+    whole = {
+        name: _as_vector(values) if values.ndim == 2 else values
+        for name, values in sampled.whole.items()
+    }
+    restricted = {
+        name: _as_vector(values) if values.ndim == 2 else values
+        for name, values in sampled.restricted.items()
+    }
 
     if fixed_charge_C_m3 is not None:
         whole[FIXED_CHARGE_ATTRIBUTE] = sample_at(
