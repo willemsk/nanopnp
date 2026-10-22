@@ -197,7 +197,7 @@ switch) and D5 ("at most two widgets"). Six decisions, the author's unless marke
   items 12 and 13 add a `geometry:` block at the defaults to the case they use (it moves no key); the curated lists drop
   `electrolyte.temperature_K` and the `physics.*` switches, which the case refuses; item 14 sets marimo's
   `on_cell_change = "lazy"` for the project.
-- [ ] 11. **05-cylinder** as blocks, with the sweep block (A1 to A3). README. Done when `test_notebook_runs_headless[05-cylinder]` passes.
+- [x] 11. **05-cylinder** as blocks, with the sweep block (A1 to A3). README. Done when `test_notebook_runs_headless[05-cylinder]` passes.
 - [ ] 12. **06-2wcd** as blocks. Done when it passes headless.
 - [ ] 13. **01, 02, 03, 04** as blocks, one commit each, with the READMEs.
 - [ ] 14. §8.2.14 P5 and P9 amended in place, D5 and the Outcome, the READMEs, `CHANGELOG.md`; the strict
