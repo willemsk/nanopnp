@@ -16,10 +16,10 @@ what it needs upstream, and prints its artefact.
 
 This page says what each stage does and which key steers it. The formulas, thresholds and their
 derivations are in the [specification](../_generated/model/specification.md): §5.2 lists the
-stages, [§5.2.1](../_generated/model/specification.md#521-contour-conditioning-and-its-gate) the
-contour's conditioning and gate, [§5.2.2](../_generated/model/specification.md#522-meshing) the
+stages, [§5.2.1](../_generated/model/specification/05-software-design/02-pipeline-stages.md#521-contour-conditioning-and-its-gate) the
+contour's conditioning and gate, [§5.2.2](../_generated/model/specification/05-software-design/02-pipeline-stages.md#522-meshing) the
 mesh sizes, and the NOTEs of
-[§5.3.1](../_generated/model/specification.md#531-case-file) the case keys. Measurements on ClyA
+[§5.3.1](../_generated/model/specification/05-software-design/03-1-case-file.md#531-case-file) the case keys. Measurements on ClyA
 are in the knowledge base, ClyA geometry and
 charge, [§1.3](../_generated/model/knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#13-stage-4-on-real-and-synthetic-inputs-measured)
 and [§1.4](../_generated/model/knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever).
@@ -83,7 +83,7 @@ simplified to within `simplify_tol_nm`, which must be below the grid spacing, an
 than the spacing are removed.
 
 The loop is then gated on the criteria of
-[§5.2.1](../_generated/model/specification.md#521-contour-conditioning-and-its-gate): it must be
+[§5.2.1](../_generated/model/specification/05-software-design/02-pipeline-stages.md#521-contour-conditioning-and-its-gate): it must be
 simple, its vertices spaced and its features wide enough to mesh, and it must stay clear of the
 axis. Its radius is also checked against the largest sphere that fits on the axis between the
 atoms, frame by frame. The contour may cut into that sphere by no more than the grid spacing, and
@@ -124,7 +124,7 @@ charge](charge.md#the-two-fr-15-switches) covers both.
 ## Stage 6: the mesh
 
 Stage 6 meshes the region under the size table of
-[§5.2.2](../_generated/model/specification.md#522-meshing), with netgen by default or Gmsh on
+[§5.2.2](../_generated/model/specification/05-software-design/02-pipeline-stages.md#522-meshing), with netgen by default or Gmsh on
 request (see [Meshes](meshes.md#choosing-the-mesher-of-a-generated-mesh)).
 
 `numerics.mesh.wall_h_nm` sets the element size on the pore wall. `auto` takes it from the Debye

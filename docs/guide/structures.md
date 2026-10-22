@@ -4,7 +4,7 @@ Stage 1, `structure`, is where a protein enters nanopnp. It reads a structure fi
 a trajectory. It checks that the file holds the symmetric assembly the case says it does, finds
 the pore axis, and aligns everything so that the axis lies on z at r = 0. Everything downstream
 works in that frame. The contract is the §5.3.1 NOTE on `structure:` in the
-[specification](../_generated/model/specification.md#531-case-file); this page says what it means
+[specification](../_generated/model/specification/05-software-design/03-1-case-file.md#531-case-file); this page says what it means
 in practice.
 
 A case with a `structure:` section walks the whole pipeline, from stage 1 to the mesh and on to

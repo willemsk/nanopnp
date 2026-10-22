@@ -16,9 +16,9 @@ so changing the pH re-runs the protonation and the deposition, and nothing upstr
 
 This page says what each step does and which key steers it. The formulas, the tolerances and their
 derivations are in the [specification](../_generated/model/specification.md):
-[§4.4](../_generated/model/specification.md#44-fixed-charge-and-dielectric-model) has the charge
+[§4.4](../_generated/model/specification/04-physics.md#44-fixed-charge-and-dielectric-model) has the charge
 pipeline (PHY-16 to PHY-20) and its NOTEs, and the NOTEs of
-[§5.3.1](../_generated/model/specification.md#531-case-file) the case keys. A field supplied as a
+[§5.3.1](../_generated/model/specification/05-software-design/03-1-case-file.md#531-case-file) the case keys. A field supplied as a
 file, rather than produced from a structure, is [Charge and permittivity fields](fields.md).
 
 ## The case keys

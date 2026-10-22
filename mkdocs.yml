@@ -124,7 +124,64 @@ nav:
       - Shipped parameter files: _generated/reference/correction-files.md
   - Model:
       - model/index.md
-      - Specification: _generated/model/specification.md
+      - Specification:
+          - _generated/model/specification.md
+          - _generated/model/specification/index.md
+          - "1. Introduction": _generated/model/specification/01-introduction.md
+          - "2. Product overview": _generated/model/specification/02-product-overview.md
+          - "3. Requirements": _generated/model/specification/03-requirements.md
+          - "4. Physics specification (normative)": _generated/model/specification/04-physics.md
+          - "5. Software design":
+              - _generated/model/specification/05-software-design/index.md
+              - "5.1 Architectural overview": _generated/model/specification/05-software-design/01-architectural-overview.md
+              - "5.2 Pipeline stages": _generated/model/specification/05-software-design/02-pipeline-stages.md
+              - "5.3 Data design": _generated/model/specification/05-software-design/03-1-case-file.md
+              - "5.3.2 Artefacts and interchange formats": _generated/model/specification/05-software-design/03-2-artefacts.md
+              - "5.3.3 Provenance manifest": _generated/model/specification/05-software-design/03-3-provenance-manifest.md
+              - "5.3.4 Sweep specification and dataset": _generated/model/specification/05-software-design/03-4-sweeps.md
+              - "5.4 Component design": _generated/model/specification/05-software-design/04-component-design.md
+              - "5.5 Extension points": _generated/model/specification/05-software-design/05-extension-points.md
+              - "5.6 Architecture decisions": _generated/model/specification/05-software-design/06-architecture-decisions.md
+          - "6. Numerical methods specification": _generated/model/specification/06-numerics.md
+          - "7. Verification":
+              - _generated/model/specification/07-verification/index.md
+              - "7.1 Strategy and ordering": _generated/model/specification/07-verification/01-strategy.md
+              - "7.2 Tier 1 unit and property tests": _generated/model/specification/07-verification/02-tier-1.md
+              - "7.3 Tier 2 analytic benchmarks": _generated/model/specification/07-verification/03-tier-2.md
+              - "7.4 Tier 3 cross-implementation comparison": _generated/model/specification/07-verification/04-tier-3.md
+              - "7.5 Tier 4 experimental reproduction": _generated/model/specification/07-verification/05-tier-4.md
+              - "7.6 Continuous integration": _generated/model/specification/07-verification/06-continuous-integration.md
+          - "8. Implementation plan":
+              - _generated/model/specification/08-implementation-plan/index.md
+              - "8.1 Phases and gates": _generated/model/specification/08-implementation-plan/01-phases-and-gates.md
+              - "8.2 Rulings by date": _generated/model/specification/08-implementation-plan/02-rulings.md
+              - "8.3 Effort estimate": _generated/model/specification/08-implementation-plan/03-effort-estimate.md
+              - "8.4 Development process": _generated/model/specification/08-implementation-plan/04-development-process.md
+          - "9. Risk register": _generated/model/specification/09-risks.md
+          - "10. Open items": _generated/model/specification/10-open-items.md
+          - "11. Companion knowledge base": _generated/model/specification/11-companion-knowledge-base.md
+          - "12. References": _generated/model/specification/12-references.md
+          - "Appendix A. Requirements traceability matrix": _generated/model/specification/a-traceability-matrix.md
+          - "Appendix B. Reference COMSOL model settings": _generated/model/specification/b-comsol-settings.md
+          - "History":
+              - _generated/model/specification/history/index.md
+              - "8.2 Phase 0 exit criteria": _generated/model/specification/history/00-phase-0-exit-criteria.md
+              - "8.2.1 Amendments to Phase 0, agreed 19 August 2026": _generated/model/specification/history/01-amendments-to-phase-0-agreed-19-august-2026.md
+              - "8.2.2 Phase 2 decisions, agreed 24 September 2026": _generated/model/specification/history/02-phase-2-decisions-agreed-24-september-2026.md
+              - "8.2.3 Phase 1 exit, agreed 24 September 2026": _generated/model/specification/history/03-phase-1-exit-agreed-24-september-2026.md
+              - "8.2.4 Phase 2 exit and Phase 3 decisions, agreed 30 September 2026": _generated/model/specification/history/04-phase-2-exit-and-phase-3-decisions-agreed-30-septe.md
+              - "8.2.5 Phase 3 exit and the Phase 4 release, agreed 3 October 2026": _generated/model/specification/history/05-phase-3-exit-and-the-phase-4-release-agreed-3-octo.md
+              - "8.2.6 Phases 4 to 6 re-planned, agreed 4 October 2026": _generated/model/specification/history/06-phases-4-to-6-re-planned-agreed-4-october-2026.md
+              - "8.2.7 Phase 4 decisions, agreed 5 October 2026": _generated/model/specification/history/07-phase-4-decisions-agreed-5-october-2026.md
+              - "8.2.8 Phase 4 rulings on the modularity report, agreed 5 October 2026": _generated/model/specification/history/08-phase-4-rulings-on-the-modularity-report-agreed-5.md
+              - "8.2.9 Phase 4 amended: the review register planned, agreed 6 October 2026": _generated/model/specification/history/09-phase-4-amended-the-review-register-planned-agreed.md
+              - "8.2.10 Phase 4 amended: the development loop, agreed 11 October 2026": _generated/model/specification/history/10-phase-4-amended-the-development-loop-agreed-11-oct.md
+              - "8.2.11 Phase 4 amended: the development loop simplified, agreed 13 October 2026": _generated/model/specification/history/11-phase-4-amended-the-development-loop-simplified-ag.md
+              - "8.2.12 Phase 4 amended: the architecture review checked, agreed 18 October 2026": _generated/model/specification/history/12-phase-4-amended-the-architecture-review-checked-ag.md
+              - "8.2.13 Phase 4 amended: the test scope, agreed 18 October 2026": _generated/model/specification/history/13-phase-4-amended-the-test-scope-agreed-18-october-2.md
+              - "8.2.14 Phase 4 amended: the plotting library and the notebooks, agreed 22 October 2026": _generated/model/specification/history/14-phase-4-amended-the-plotting-library-and-the-noteb.md
+              - "8.2.15 The work-package plan grounded in the code, agreed 22 October 2026": _generated/model/specification/history/15-the-work-package-plan-grounded-in-the-code-agreed.md
+              - "8.2.16 Phase 4 amended: the specification and the workflow restructured, agreed 22 October 2026": _generated/model/specification/history/16-phase-4-amended-the-specification-and-the-workflow.md
       # BEGIN knowledge navigation (generated by docs/scripts/generate.py)
       - Knowledge base:
           - _generated/model/knowledge/index.md
