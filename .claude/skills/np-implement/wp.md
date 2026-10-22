@@ -1,12 +1,7 @@
----
-name: wp-implement
-description: Implement a planned nanopnp work package, keep the specification, knowledge base and plan in step, then gate, push and open its PR. Use when the user asks to implement or build a work package, start work on WP7, execute the plan, or invokes /wp-implement.
----
-
 # Implement a work package
 
-Step 2 of the implementation workflow: execute the plan under `docs/plans/`, record what the
-execution taught, and open the PR. It does not chain into `/wp-ship`.
+`/np-implement [wp <n>]`. Step 2 of the implementation workflow: execute the plan under
+`docs/plans/`, record what the execution taught, and open the PR. It does not chain into `/np-ship`.
 
 ## Load the brief
 
@@ -18,21 +13,17 @@ execution taught, and open the PR. It does not chain into `/wp-ship`.
 2. `knowledge/index.md`, then the sections of the files the package touches.
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites; `.claude/scripts/clause.py
    <ID>` prints one with its NOTEs and rulings.
-4. `uv sync --all-extras --frozen` if `.venv` is not current.
-5. Check the branch. On `main`, switch to the development branch this session was given; if none
-   was given, stop and ask before writing anything.
 
-Build a task list from the work items, starting at the first unticked one. Models (`CLAUDE.md`): Haiku
-for an easy mechanical item, Sonnet by default, Opus only after Sonnet has failed on the item. A
+Build a task list from the work items, starting at the first unticked one. A
 **compaction checkpoint** is a work item (§8.2.16 R11). Tick it in its own commit, run the push gate
 and push as in *Finishing*. Then print a prompt in a `text` block: `/compact`, followed by the
 package, the next item's number, any values later items need that are not in the plan or
-`git log`, and "resume with `/wp-implement`". End the turn there. The author compacts and resumes,
+`git log`, and "resume with `/np-implement`". End the turn there. The author compacts and resumes,
 and the next item starts from the plan and `git log`.
 
 **Sub-agent items** (§8.2.16 R6, R11): hand each item whose **Executor** names a sub-agent to a new
 one of that type and model (Agent tool), with the item's text, its done-criterion, the plan's
-*Implementation details* for it, the clauses it cites and this skill's *How the work lands*. Items
+*Implementation details* for it, the clauses it cites and this file's *How the work lands*. Items
 marked `main` stay in this session. It edits, runs the
 item's checks, commits and ticks, and replies with the commit and the checks it ran, nothing more.
 Re-run the item's check yourself before the next item; on a failure, revert and hand the item to
@@ -54,18 +45,7 @@ for the wrong reason, or two routes could share a mistake, assert against a thir
 
 ## Keeping the record straight
 
-A change to what the finished software does changes `SPECIFICATION.md` **in the same commit**: the
-identifier, the NOTE, the amended tolerance, with the derivation. A tolerance is never slackened to
-fit a number (the steward's *Tier 2 failures* section says why).
-
-State every rule in the present tense; history lives in the log, `CHANGELOG.md`, plans and §8.2.
-
-| Record | Gets |
-|---|---|
-| `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances: normative changes only |
-| `knowledge/<file>.md` | Durable findings as concepts, each claim marked `[tested: <test>]` or `[verified]` with its source, and a line in `knowledge/log.md` (see `knowledge/index.md`) |
-| `docs/plans/wp<n>-*.md` | The current Execution brief and concise `> **Outcome — <what changed>.**` annotations linking the evidence; measured numbers the plan requested |
-| `docs/project/review-findings.md` | A `REV-nn` row, with its section in `review-items.md`, for every item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12). A row the package resolves is set `fixed` |
+The core's *Records* table says what each record gets.
 
 The phase plan's `### WP<n>` section gains a delivered summary (target 150 words): scope,
 identifiers, live inherited constraints, links to evidence. Update `docs/plans/current.md` in place
@@ -88,24 +68,11 @@ Confirm yourself:
 - the specification, knowledge base and Outcome annotations are committed, both **Status** lines
   and `current.md` are updated, and `CHANGELOG.md` has the package's section under
   `vX.Y.Z-alpha.N` (`CONTRIBUTING.md`, *Versions and releases*, also covers the close package);
-- `git status` is clean. Start `.claude/hooks/gate.sh run` with Bash `run_in_background` and push
-  (`git push -u origin <branch>`) when it passes; the push guard refuses a tree it has not passed.
+- gate and push (the core).
 
-Then open or reuse the branch's PR against `main` without asking again, by the lookup and
-title/body contract of `wp-ship` §3 (do not invoke that skill). A new PR states under
-**Verification** that review is pending `/wp-ship`. If creation is blocked, report the blocker and
-the pushed branch.
-
-The PR body opens with `## In brief`, for a reader who does not code: at most 250 words, no
-backticks or identifiers. **What changes** and why; **Cost**; **What could go wrong**, each risk
-and how it would be noticed; **Your call**, each decision the author owns with *Recommendation:*
-and one reason.
-
-Once the PR exists, write `PR: [#<n>](<url>), branch <head>` under the title of
-`docs/plans/wp<n>-*.md`, commit it (`docs: record WP<n>'s PR`), start `.claude/hooks/gate.sh run`
-again in the background (the commit is a new tree, and the push guard names the tree) and push when it
-passes; `/wp-ship` finds the package from this line (`wp-ship` §0).
+Then open or reuse the PR by the core's *PR contract*. A new PR states under
+**Verification** that review is pending `/np-ship`. Record its `PR:` line as the core says.
 
 Stop and report the PR link, the identifiers discharged, the tag the last commit takes after the
-merge, and readiness for `/wp-ship`. Do not start the review or CI monitoring: the review should
+merge, and readiness for `/np-ship`. Do not start the review or CI monitoring: the review should
 come from a fresh session that did not make these decisions.

@@ -184,14 +184,53 @@ Assert exit 0, the expected line and `HEAD` before and after, one line each:
 `main` is the Sonnet 5.5 session. A sub-agent item goes to `general-purpose` on Haiku, with the item
 and its *Implementation details*; `main` re-runs its check.
 
-- [ ] 1. `<scratch>/rules.py` (D6); no commit. Done when `--self` prints `missing: 0`. **Executor:**
+- [x] 1. `<scratch>/rules.py` (D6); no commit. Done when `--self` prints `missing: 0`. **Executor:**
   `general-purpose`, Haiku.
-- [ ] 2. `.claude/workflow/core.md` and `.claude/skills/np-plan/` (`SKILL.md`, `rulings.md`, `wp.md`,
+- [x] 277b468 2. `.claude/workflow/core.md` and `.claude/skills/np-plan/` (`SKILL.md`, `rulings.md`, `wp.md`,
   `phase.md`, `amend.md`, `project.md`) (D1 to D4). Done when the code and review say so.
   **Executor:** `main`: normative process text.
 - [ ] 3. `.claude/skills/np-implement/` and `np-ship/` (`SKILL.md`, `wp.md`; `np-ship/phase.md`); the
   four old skill directories deleted (D1, D2, D4). Done when `rules.py <base>` runs and each missing
   sentence is accounted for in the Outcome. **Executor:** `main`.
+
+  > **Outcome — 43 of the old skills' sentences are not carried verbatim, each by design.**
+  > `rules.py e4b52bc` on item 3's tree printed `missing: 43` (`--self`: 0). Grouped by reason:
+  >
+  > - *Written once in the core* (16). The branch rule (`phase-plan` precondition 1, `wp-plan`
+  >   Finishing 2); gate and push (`wp-plan` Finishing 2's other two sentences, `phase-plan`
+  >   Finishing 2, `wp-implement` Finishing, `wp-ship` §1's "Also confirm: `git status` clean" and
+  >   §2's `git push`); the PR lookup, creation contract and body (`wp-ship` §3's three); the PR
+  >   body's In brief (`wp-implement`'s two sentences, restating the template); the `PR:` line
+  >   (`wp-plan` Finishing 3, and `wp-implement`'s, which cited "`wp-ship` §0"); `phase-plan`'s
+  >   shorter "The plan points into it and never restates it.", which the core's normativity
+  >   paragraph contains. `wp-plan`'s "A plan-only change runs ruff and the tests" is replaced by
+  >   the core's sentence on what a Markdown-only change runs.
+  > - *A section reference* (10). "the template below" in both plans' In brief rows (now "the core's
+  >   template"); "the lookup and title/body contract of `wp-ship` §3" (`wp-plan`, `wp-implement`)
+  >   and "the `wp-plan` template" (`phase-plan` Finishing 3), now the core's; "this skill's *How
+  >   the work lands*" (now "this file's"); *Amending a phase* in `phase-plan`'s intro and
+  >   precondition 2 (now `amend.md`); the amendment's "as in Turn 1 steps 4–5" and "as in
+  >   *Finishing*" (now `rulings.md` and `phase.md`'s *Finishing*).
+  > - *R3: a ruling round is a history record, not a §8.2.x subsection* (8). `phase-plan`'s
+  >   deliverables sentence; "this skill decides" (now "this level"); its collect step 2, which
+  >   read every §8.2.x section (now §8.4 and the history index); "A ruling that changes a clause
+  >   … the §8.2.x row names the clause" (now in `rulings.md`, naming the ruling's row); the three
+  >   sentences of *What to write*'s §8.2.x paragraph (now `rulings.md`'s *Where the rulings are
+  >   written*); the amendment's "New rulings get a new §8.2.x subsection".
+  > - *R4: a plan states its current scope* (1). "An amended package entry gains a `> **Amended**`
+  >   blockquote …; the original paragraph stays", replaced by the rewrite and the record.
+  > - *D1's levels* (5). `wp-ship` §0's "The argument is a PR number or a WP number" and "For a WP
+  >   number, list open PRs …" (now `wp <n>`, or the package `current.md` names); the amendment
+  >   section's heading, its first sentence, naming `/phase-plan amend`, and "The same two turns
+  >   apply." (now `amend.md`'s opening, naming `/np-plan amend <n>` and `phase.md`).
+  > - *Dropped* (3). `phase-plan`'s *Rules the plan must respect* heading and its sentence: the
+  >   rules files are read at its step 2 and the normativity rules are the core's.
+  >   `wp-implement`'s "Check the branch.", a heading word for the core's branch rule.
+  >
+  > Word counts on this tree: core 799, routers 101 to 137, and 7,208 words in all. Invocations:
+  > `np-plan wp` 2,351, `phase` 2,729, `amend` 1,791, `project` 1,931; `np-implement` 1,687;
+  > `np-ship wp` 2,200, `phase` 2,455. The total and four invocations exceed D2's caps; item 9
+  > reports the final figures.
 - [ ] 4. Compaction checkpoint; the prompt carries the scratch path. **Executor:** `main`.
 - [ ] 5. `.claude/hooks/session-start.sh`: the fast-forward and warnings, and the workflow line
   (D5); `<scratch>/hook-check.sh`. Done when its ten cases pass and `bash -n` is clean.
