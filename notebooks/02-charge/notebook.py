@@ -70,8 +70,17 @@ def _(case, prepared, salt):
 
 
 @app.cell
-def _(result, stage):
-    result.figure(stage.value)
+def _(mo):
+    size = mo.ui.slider(0.5, 3.0, step=0.25, value=1.5, label="Figure size")
+    zoom = mo.ui.switch(label="Zoom and pan")
+    mo.hstack([size, zoom])
+    return size, zoom
+
+
+@app.cell
+def _(mo, result, size, stage, zoom):
+    _figure = result.figure(stage.value, scale=size.value)
+    mo.mpl.interactive(_figure) if zoom.value else _figure
     return
 
 

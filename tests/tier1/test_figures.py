@@ -91,3 +91,30 @@ def test_sweep_curves_keep_failed_points() -> None:
     assert curves.ok.tolist() == [True, False, True]
     assert curves.quantities["I"][[0, 2]].tolist() == [-4.0, 4.0]
     assert np.isnan(curves.quantities["I"][1])
+
+
+def test_sweep_figure_draws_current_in_nanoamperes_and_scales() -> None:
+    # A sweep whose current is in A must reach the I-V panel in nA, and scale must grow the canvas.
+    pytest.importorskip("matplotlib")
+    from nanopnp.io.artefact import SWEEP_SCHEMA, Artefact
+    from nanopnp.plot import figure
+
+    rows = [
+        {
+            "index": i,
+            "assignments": {"boundary_conditions.bias_V": v},
+            "status": "ok",
+            "quantities": {"current_A": 2e-9 * v, "eof_m3_s": 1e-21 * v},
+        }
+        for i, v in enumerate([-0.1, 0.1])
+    ]
+    artefact = Artefact(schema=SWEEP_SCHEMA, parameters={}, summary={"rows": rows})
+    drawn = figure(artefact)
+    iv, flow = drawn.axes[:2]
+    assert iv.get_ylabel() == "I (nA)"
+    assert iv.lines[0].get_ydata().tolist() == pytest.approx([-0.2, 0.2])
+    assert flow.get_ylabel() == "Q_EOF (µm³/s)"
+    assert flow.lines[0].get_ydata().tolist() == pytest.approx([-1e-4, 1e-4])
+    assert figure(artefact, scale=2.0).get_size_inches().tolist() == pytest.approx(
+        (2 * drawn.get_size_inches()).tolist()
+    )

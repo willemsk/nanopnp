@@ -88,6 +88,8 @@ DISPLAY: dict[str, Display] = {
     "pressure": Display("Pa", 1.0),
     "charge_density": Display("C/m³", 1.0),
     "density": Display("1", 1.0),
+    "current": Display("nA", 1e9),
+    "flow": Display("µm³/s", 1e18),
 }
 """Every display unit of a figure, in one place; an axis names its unit from here."""
 

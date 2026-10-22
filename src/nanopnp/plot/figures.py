@@ -402,28 +402,60 @@ def qoi_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
     return figure
 
 
+HEADLINE = (
+    ("current_A", "I", "current", "tab:blue"),
+    ("eof_m3_s", "Q_EOF", "flow", "tab:green"),
+)
+"""The sweep quantities drawn large, as ``(key, symbol, DISPLAY quantity, colour)``."""
+
+
+def _sweep_axis(ax: Axes, curves: data.SweepCurves, values: np.ndarray) -> None:
+    ax.plot(curves.x, values, marker="o", ms=4)
+    bad = curves.x[~curves.ok]
+    if bad.size:
+        ax.plot(bad, [0.0] * bad.size, "rx", transform=ax.get_xaxis_transform(), clip_on=False)
+    ax.set_xlabel(curves.axis.rsplit(".", 1)[-1])
+
+
 def sweep_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
-    """Draw a sweep: each scalar quantity against the swept axis, failed points marked."""
+    """Draw a sweep: the current and flow rate large, the other scalars against the swept axis."""
     from matplotlib.figure import Figure
 
     rows = data.sweep_rows(artefact)
     curves = None if rows is None else data.sweep_curves(rows)
     if curves is None or not curves.quantities:
         return text_figure("this sweep holds no rows with a scalar quantity")
-    names = list(curves.quantities)
-    columns = min(3, len(names))
-    rows_n = -(-len(names) // columns)
-    figure = Figure(figsize=(4.2 * columns, 3.0 * rows_n), layout="constrained")
-    axes = figure.subplots(rows_n, columns, squeeze=False)
-    for ax, name in zip(axes.ravel(), names, strict=False):
-        ax.plot(curves.x, curves.quantities[name], marker="o", ms=3)
-        bad = curves.x[~curves.ok]
-        if bad.size:
-            ax.plot(bad, [0.0] * bad.size, "rx", transform=ax.get_xaxis_transform(), clip_on=False)
-        ax.set_xlabel(curves.axis)
+    axis_name = curves.axis.rsplit(".", 1)[-1]
+    headline = [h for h in HEADLINE if h[0] in curves.quantities]
+    shown = {h[0] for h in headline} | {axis_name}
+    names = [n for n in curves.quantities if n not in shown]
+    columns = min(3, max(len(names), 1))
+    small_rows = -(-len(names) // columns) if names else 0
+    height_ratios = ([1.8] if headline else []) + [1.0] * small_rows
+    width = 4.6 * max(columns, len(headline))
+    figure = Figure(figsize=(width, 3.0 * sum(height_ratios)), layout="constrained")
+    cells = 6  # a common multiple of one to three panels per row
+    grid = figure.add_gridspec(len(height_ratios), cells, height_ratios=height_ratios)
+    offset = 1 if headline else 0
+    for index, (key, symbol, quantity, colour) in enumerate(headline):
+        span = cells // len(headline)
+        ax = figure.add_subplot(grid[0, index * span : (index + 1) * span])
+        display = DISPLAY[quantity]
+        _sweep_axis(ax, curves, curves.quantities[key] * display.per_SI)
+        ax.lines[0].set_color(colour)
+        ax.axhline(0.0, color="0.7", lw=0.8, zorder=0)
+        ax.axvline(0.0, color="0.7", lw=0.8, zorder=0)
+        ax.set_ylabel(f"{symbol} ({display.unit})")
+        ax.set_title("I-V curve" if key == "current_A" else "electro-osmotic flow rate")
+        ax.grid(alpha=0.3)
+    span = cells // columns
+    for index, name in enumerate(names):
+        column = index % columns
+        ax = figure.add_subplot(
+            grid[offset + index // columns, column * span : (column + 1) * span]
+        )
+        _sweep_axis(ax, curves, curves.quantities[name])
         ax.set_ylabel(name)
-    for ax in axes.ravel()[len(names) :]:
-        ax.axis("off")
     if not curves.ok.all():
         figure.suptitle(f"{int((~curves.ok).sum())} point(s) not ok, marked x", color="tab:red")
     return figure

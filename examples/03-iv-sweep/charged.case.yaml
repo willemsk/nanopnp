@@ -39,4 +39,4 @@ numerics:
   continuation: default_ladder
   stabilisation: none
 
-outputs: [current, transport_numbers, rectification]
+outputs: [current, transport_numbers, eof_rate, rectification]

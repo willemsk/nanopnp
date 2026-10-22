@@ -70,8 +70,17 @@ def _(bias, case, mesh, salt):
 
 
 @app.cell
-def _(result, stage):
-    result.figure(stage.value)
+def _(mo):
+    size = mo.ui.slider(0.5, 3.0, step=0.25, value=1.5, label="Figure size")
+    zoom = mo.ui.switch(label="Zoom and pan")
+    mo.hstack([size, zoom])
+    return size, zoom
+
+
+@app.cell
+def _(mo, result, size, stage, zoom):
+    _figure = result.figure(stage.value, scale=size.value)
+    mo.mpl.interactive(_figure) if zoom.value else _figure
     return
 
 
@@ -102,6 +111,15 @@ def _(Store, collect, example, mesh, plan_from_document, run_plan, write_plan):
     run_plan(plan, directory, store=Store(example / "store"))
     dataset = collect(plan, directory)
     return (dataset,)
+
+
+@app.cell
+def _(dataset, mo, size, zoom):
+    from nanopnp.plot import figure as _draw
+
+    _curves = _draw(dataset, scale=size.value)
+    mo.mpl.interactive(_curves) if zoom.value else _curves
+    return
 
 
 @app.cell

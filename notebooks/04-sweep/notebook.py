@@ -55,6 +55,23 @@ def _(Store, collect, example, mesh, plan_from_document, run_plan, write_plan):
 
 
 @app.cell
+def _(mo):
+    size = mo.ui.slider(0.5, 3.0, step=0.25, value=1.5, label="Figure size")
+    zoom = mo.ui.switch(label="Zoom and pan")
+    mo.hstack([size, zoom])
+    return size, zoom
+
+
+@app.cell
+def _(dataset, mo, size, zoom):
+    from nanopnp.plot import figure as _draw
+
+    _curves = _draw(dataset, scale=size.value)
+    mo.mpl.interactive(_curves) if zoom.value else _curves
+    return
+
+
+@app.cell
 def _(dataset, mo):
     rows = dataset.summary["rows"]
     point = mo.ui.dropdown(

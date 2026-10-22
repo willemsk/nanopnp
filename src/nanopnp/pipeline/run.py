@@ -135,8 +135,10 @@ class RunResult:
     store: Store | None = None
     resolved: ResolvedCase | None = None
 
-    def figure(self, stage: str) -> Figure | None:
+    def figure(self, stage: str, *, scale: float = 1.0) -> Figure | None:
         """Draw one stage's artefact with the walk's own inputs; None where it has no figure.
+
+        ``scale`` multiplies the figure's width and height.
 
         Raises
         ------
@@ -155,7 +157,7 @@ class RunResult:
             inputs = StageInputs(
                 resolved=self.resolved, upstream=offered(stage, self.artefacts, own=False)
             )
-        return draw(artefact, inputs)
+        return draw(artefact, inputs, scale=scale)
 
     def _repr_mimebundle_(self, include: object = None, exclude: object = None) -> dict[str, str]:
         rows: dict[str, Canonicalisable] = {
