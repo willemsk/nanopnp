@@ -161,3 +161,48 @@ None blocking. The *Your call* defaults to its recommendation; a contrary ruling
 > `post.export`, where `read_fields` now lives; the notebooks' files are `notebook.py`, and ruff
 > ignores D100, ANN and B018 under `notebooks/`. **The figures of stages 1 to 5 and 7 have passed
 > only their smoke tests; the author must look at every figure and notebook before the merge.**
+
+## Addition: the notebooks as one block of cells per stage
+
+Added 22 October 2026, from the author's review of the notebooks; checked against the code by an independent
+reviewer before it was written here. The design is `docs/superpowers/specs/2026-10-22-notebooks-per-stage-design.md`;
+this section is the plan to build it. It amends §8.2.14 P5 ("figures and widgets"), P9 (the size slider and zoom
+switch) and D5 ("at most two widgets"). Six decisions, the author's unless marked.
+
+| Decision | Ruling | Why |
+|---|---|---|
+| A1 The stage block | Four cells per stage: a description from `registered_stages()`; a settings dict of dotted case paths to plain values (the example's own, one line and a comment each); a run cell holding `case_<stage> = case_<prev>.with_(**settings)` and `run_<stage> = case_<stage>.run(upto="<stage>", only=True)` and naming `run_<prev>`; a show cell (record, artefact summary, `run_<stage>.figure(stage, scale=scale)`). No widgets | The author wants the stages and steps visible, "not a semi-GUI". `only=True` refuses to recompute an earlier stage (`MissingUpstreamError`); naming `run_<prev>` makes marimo's data-dependency order run the previous stage first |
+| A2 Order and setup | A notebook that starts mid-pipeline (02, 03) opens with one labelled setup cell, `run(upto=…)` without `only`. Display settings are two plain values, `scale = 1.5` and `interactive = False`, in one cell. `qoi` is the last `only=True` block, since its key holds the whole case hash. *My call* | marimo orders cells by dependency, not position; an empty store would fail the first `only=True` cell |
+| A3 Settings outside the case | The cylinder mesh's `nanopnp mesh cylinder` arguments sit in the mesh block (03, 05), the file named by them so an edit cannot reuse an old `pore.msh`; `prepare.py`'s values sit in the structure block (01, 02, 06); the sweep's `axes` dict (path, values, origin) is written out as a sweep document whose `base` is the edited case, written into the example's own directory (the base is re-read from disk and its relative paths resolve there), and the plan is rebuilt on a change. A sweep computes its own members; the engine has no `only`, so 04 needs no setup cell. *My call* | `sweep/plan.py:194-214` re-reads and hash-checks the base |
+| A4 The mesh and the salt | New field `numerics.mesh.wall_for_concentration_M` (finite, > 0, default none): `wall_h_nm: auto` is then `size_scale × min(0.05 nm, λ_D(c_design)/5)`, independent of the run's salt, so every salt at or above it shares one mesh; above it the wall is coarser than λ_D/5, which the manifest records as today (logged, not refused). Refused beside an explicit `wall_h_nm` and beside a supplied `inputs.mesh`. `source` stays `auto`; the design concentration is in `summary()`, not `key()`. Below 1.474 M the 0.05 nm ceiling already makes every salt share a mesh (VER-53) | The author chose it, to state the mesh's design point and for sweeps above the ceiling |
+| A5 Placement | All six notebooks take the pattern: 01 (structure to mesh), 02 (protonation, charge, materials), 03 (solve, qoi), 04 (the sweep), 05 (mesh to qoi, then the sweep), 06 (structure to qoi). A setting lives in the block of the earliest stage whose hash it moves: `charge.exclusion_offset_nm` is in the region block; for a generated mesh (06), `electrolyte.temperature_K`, the species and `electrolyte.parameters` move the mesh key, and the salt only above 1.474 M | Each curated setting is checked by moving it, as item 10 says |
+| A6 Cost | Nightly times stay close to today's. `python notebook.py` and `marimo run` walk 06's eleven stages the first time, about eleven minutes; `marimo edit` does not run cells on open by default (`auto_instantiate` off), and running an edited cell re-runs the cells after it | No Run button to gate the headless run. *My call* |
+
+### Items
+
+- [ ] 9. **Mesh design concentration** (A4), one `feat:` commit. `MeshSpec.wall_for_concentration_M`; `resolve_wall_size`
+  sizes λ_D at it; `WallSize` gains `sizing_debye_length_nm` (in `summary()`, not `key()`) and `debye_length_nm` stays the
+  run's own, so `debye_target_nm`, `coarser_than_num30` and `num30_ratio` stay at the run's salt; the refusals sit
+  with the `wall_h_nm` check in `pipeline/checks.py` (§5.3.1). Specification: a ruling §8.2.14 P10, the NOTE on
+  `numerics.mesh` in §5.3.1 and the VER-53 row. `src/nanopnp/validation/case_leaves.py` classifies the leaf
+  (`Leaf("stage", "mesh", …)`), and `tests/tier1/test_case_leaves.py` probes it on a base case with
+  `wall_h_nm: auto` at a salt above 1.474 M, since its current base case sets an explicit wall the new field is
+  refused beside. `CHANGELOG.md`. Done when the tests below pass and a salt axis from 2 to 3 M is not a warm-start
+  barrier with the field at 3 M, and is without it.
+- [ ] 10. **Prove `only=True` in notebook order** (a spike, thrown away): on a fresh store, a walk to each stage of 06
+  and of 02 with `only=True`, in notebook order, so a branch is covered (protonation reads only the structure; 05
+  has none); each curated setting moves its stage's hash and the later ones, the electrolyte settings and
+  `charge.exclusion_offset_nm` included. Done when the order is known to hold, or the block changes (A1, A2, A5).
+- [ ] 11. **05-cylinder** as blocks, with the sweep block (A1 to A3). README. Done when `test_notebook_runs_headless[05-cylinder]` passes.
+- [ ] 12. **06-2wcd** as blocks. Done when it passes headless.
+- [ ] 13. **01, 02, 03, 04** as blocks, one commit each, with the READMEs.
+- [ ] 14. §8.2.14 P5 and P9 amended in place, D5 and the Outcome, the READMEs, `CHANGELOG.md`; the strict
+  documentation build and `.claude/hooks/gate.sh run` pass.
+
+| Test | Tier | Oracle | Tolerance |
+|---|---|---|---|
+| `test_ver53_a_design_concentration_shares_the_mesh_at_and_above_it` | 1 | With `wall_for_concentration_M: 3.0`, the stage-6 key at 2.0, 3.0 and 4.0 M is one key; without the field 2.0 and 3.0 M differ. The sweep planner places no barrier on a 2 to 3 M axis with the field, and one without | Exact |
+| `test_wall_sized_at_the_design_concentration_reports_the_runs_own_ratio` | 1 | The wall is `min(0.05, λ_D(3 M)/5) × size_scale`; at 4 M `num30_ratio` is that wall over λ_D(4 M)/5, above 1, and a shared mesh still reports each run's own Debye length | 1e-12 relative |
+| `test_notebook_runs_headless` | 2 nightly | Unchanged: each notebook exits 0 | Exit status |
+
+No test covers the new refusals (§8.2.13 N1: a refusal is tested only where it is a numerical or physical gate).
