@@ -1284,6 +1284,7 @@ so every new `specification/` file, one per amendment until WP53 rewrites the sk
 build until it is listed. Generating it would generalise `okf.navigation` in `src/`, which WP52 left
 untouched. Found by CODE_REVIEW_013.
 
-**Open**: confirmed. *Recommendation:* WP53, which rewrites where an amendment writes, generates the
-specification's navigation from `specification/index.md` and the directory indexes as the knowledge
-base's is.
+**Fixed** in WP52 (author's request, 22 October 2026): `nanopnp.validation.okf.navigation` takes the
+bundle's title and its opening and closing entries, and `docs/scripts/generate.py` writes the
+specification's navigation between its own markers in `mkdocs.yml`, read from `specification/index.md`
+and the directory indexes. The root index lists the top-level files and the directory indexes only.

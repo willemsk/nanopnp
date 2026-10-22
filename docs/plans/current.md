@@ -29,8 +29,8 @@ author's notes.
 - **Reading the specification:** `SPECIFICATION.md` is the entry point over `specification/`; the
   current files by default, `specification/history/` on demand, `clause.py <ID>` for a clause. → R2, R3.
   Until WP53 merges, the skills still say `SPECIFICATION.md` §8.2: an amendment writes its ruling
-  table to a new `specification/history/` file, listed in `history/index.md` and in `mkdocs.yml`'s
-  nav, and its standing rules to §8.4 (WP52 plan, *Out of scope*).
+  table to a new `specification/history/` file, listed in `history/index.md`, and its standing
+  rules to §8.4 (WP52 plan, *Out of scope*; `SPECIFICATION.md`, *Changing the specification*).
 - **The rules of process** (versions, the loop, the test scope, plans, agents and models, open
   items) are §8.4: one minor version per phase and `v0.5.0` alone at the close (§8.4.1); the commit
   hook, the push gate and Python 3.14 with a 3.11 floor (§8.4.2); tests only inside the scope
