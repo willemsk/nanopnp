@@ -32,8 +32,8 @@ WP52: the documents, the specification and the plans split (`SPECIFICATION.md` ย
 - **ยง8.4, the development process.** The rulings in force that no clause carries, restated once, each
   with its ruling. `specification/history/index.md` lists where each of the 119 rulings holds now.
 - **`.claude/scripts/clause.py`** reads the bundle and prints every definition of an identifier, each
-  labelled with its file and line range. The site copies the bundle, `mkdocs.yml` lists its pages and
-  the guide's anchored links point into it.
+  labelled with its file and line range. The site copies the bundle, its navigation is generated from
+  the bundle's index pages as the knowledge base's is, and the guide's anchored links point into it.
 - **The Phase 4 plan states its current scope.** Its amendments and its earlier text are in
   `docs/plans/phase-4-record.md`.
 

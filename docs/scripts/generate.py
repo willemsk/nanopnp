@@ -169,8 +169,19 @@ def main() -> int:
     schema.write_text(json.dumps(case_json_schema(), indent=2) + "\n", encoding="utf-8")
     config = ROOT / "mkdocs.yml"
     current = config.read_text(encoding="utf-8")
-    nav = navigation(ROOT / "knowledge", "_generated/model/knowledge")
-    spliced = splice_navigation(current, nav)
+    knowledge = "_generated/model/knowledge"
+    nav = navigation(
+        ROOT / "knowledge",
+        knowledge,
+        "Knowledge base",
+        [f"{knowledge}/index.md"],
+        [f"Log: {knowledge}/log.md"],
+    )
+    spliced = splice_navigation(current, nav, "knowledge")
+    specification = "_generated/model/specification"
+    opening = [f"{specification}.md", f"{specification}/contents.md"]
+    nav = navigation(ROOT / "specification", specification, "Specification", opening)
+    spliced = splice_navigation(spliced, nav, "specification")
     if spliced != current:
         config.write_text(spliced, encoding="utf-8")
     logger.info("wrote %d pages to %s", len(pages) + len(rendered) + 1, OUTPUT.relative_to(ROOT))

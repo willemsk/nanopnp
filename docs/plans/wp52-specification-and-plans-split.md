@@ -250,6 +250,12 @@ No kept test (N1). The checks are one-off scripts in the scratchpad, run in the 
 > included; the Phase 4 plan holds 4,819, against a prediction under 6,000, and `phase-4-record.md` 16,636. The
 > base `SPECIFICATION.md` held 80,055. The 5,683 words the bundle adds (85,738 against 80,055) are
 > front matter, indexes, the map, §8.4 and the history index's *where each ruling holds now* list.
+>
+> **Outcome — after review (CODE_REVIEW_013).** D5's static listing is replaced at the author's
+> request (REV-124): the specification's navigation is generated from its index pages, as the
+> knowledge base's is, and the root index lists the top-level files and directory indexes only. The
+> entry point gains linked maps, the authority and conventions, a reading path by task and how the
+> specification is changed.
 
 ### Out of scope
 

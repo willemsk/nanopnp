@@ -143,4 +143,4 @@ is a rolling register, and its header stays `open`.
 | REV-121 | interface | low | open | — | [Stage 1 checks no axis for a monomeric or hetero-oligomeric pore](review-items.md#rev-121-stage-1-checks-no-axis-for-a-monomeric-or-hetero-oligomeric-pore) |
 | REV-122 | interface | low | open | — | [A case cannot load a correction file from outside the installed package](review-items.md#rev-122-a-case-cannot-load-a-correction-file-from-outside-the-installed-package) |
 | REV-123 | interface | low | fixed | §8.2.14 P6 | [The library has no plotting helpers or notebook display](review-items.md#rev-123-the-library-has-no-plotting-helpers-or-notebook-display) |
-| REV-124 | tooling | low | open | [CODE_REVIEW_013](../code_reviews/CODE_REVIEW_013.md) | [The specification's site navigation is listed by hand](review-items.md#rev-124-the-specifications-site-navigation-is-listed-by-hand) |
+| REV-124 | tooling | low | fixed | [CODE_REVIEW_013](../code_reviews/CODE_REVIEW_013.md) | [The specification's site navigation is listed by hand](review-items.md#rev-124-the-specifications-site-navigation-is-listed-by-hand) |
