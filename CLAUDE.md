@@ -114,8 +114,8 @@ overrides a normative requirement.
 
 | Step | Command | What it does |
 |---|---|---|
-| 0 | `/phase-plan <n\|amend>` | Puts the phase's decisions to the author; writes rulings into §8.2 and the plan |
-| 1 | `/wp-plan <n>` | Writes and commits the WP plan |
+| 0 | `/phase-plan <n\|amend>` | Puts the phase's decisions to the author; writes rulings into §8.2 and the plan, pushes, opens its PR |
+| 1 | `/wp-plan <n>` | Writes and commits the WP plan, pushes, opens the package's PR |
 | 2 | `/wp-implement` | Executes the plan, gates, pushes, opens or reuses the PR, stops |
 | 3–4 | `/wp-ship` | Gates, pushes, reviews (`/code-review xhigh --fix`), drives CI to green |
 

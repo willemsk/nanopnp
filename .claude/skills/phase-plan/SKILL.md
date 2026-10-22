@@ -160,7 +160,11 @@ workflow.
    amended specification renders in it, and CI's `docs` job gates every push), start
    `.claude/hooks/gate.sh run` with Bash `run_in_background`, and push when it passes
    (`git push -u origin <branch>`).
-3. Report the paths, the rulings, the package sequence with what is provisional, the open
+3. Open or reuse the branch's PR against `main` without asking: base `main`, title the commit's
+   subject, body an In brief (the `wp-plan` template), the rulings, the package sequence, the open
+   decisions, the checks run, and the attribution footer. The author merges it before the first
+   package is planned. If creation is blocked, report the blocker and the pushed branch.
+4. Report the paths, the PR, the rulings, the package sequence with what is provisional, the open
    decisions and owners, **what the author must supply and when**, and the next step. Then stop.
 
 ## Amending a phase
@@ -176,7 +180,7 @@ pointer. An amended package entry gains a
 `> **Amended, <date>.**` blockquote (what changed, the ruling); the original paragraph stays. Update the plan's **Status**, `## Open decisions`, `## What the author supplies`,
 `## Verification`, the Execution brief of every planned package the change moves, and
 `docs/plans/current.md`, all in the one commit, `docs: amend the Phase <n> plan — <what changed>`.
-Gate and push as in *Finishing*, report and stop.
+Gate, push and open its PR as in *Finishing*, report and stop.
 
 ## Rules the plan must respect
 
