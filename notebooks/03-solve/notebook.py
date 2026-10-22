@@ -10,17 +10,14 @@ def _():
 
     import marimo as mo
 
-    from nanopnp.io.case import dumps_case
-    from nanopnp.io.store import Store
-    from nanopnp.pipeline.case import load_case
-    from nanopnp.pipeline.run import run_document
+    from nanopnp import Case
 
     example = (
         Path(__file__).resolve().parent / ".." / ".." / "examples" / "02-charged-pore"
     ).resolve()
     os.chdir(example)
-    document = load_case("epnpns.case.yaml")
-    return Store, document, dumps_case, example, mo, run_document
+    case = Case.load("epnpns.case.yaml", store=example / "store", write=False)
+    return case, example, mo
 
 
 @app.cell
@@ -48,26 +45,15 @@ def _(example, mo):
 
 
 @app.cell
-def _(document, mo):
-    bias = mo.ui.slider(
-        -0.2, 0.2, step=0.05, value=document.boundary_conditions.bias_V, label="Bias (V)"
-    )
+def _(case, mo):
+    bias = mo.ui.slider(-0.2, 0.2, step=0.05, value=case["bias_V"], label="Bias (V)")
     bias
     return (bias,)
 
 
 @app.cell
-def _(Store, bias, document, dumps_case, example, mesh, run_document):
-    edited = document.model_copy(
-        update={
-            "boundary_conditions": document.boundary_conditions.model_copy(
-                update={"bias_V": bias.value}
-            )
-        }
-    )
-    result = run_document(
-        edited, case_text=dumps_case(edited), store=Store(example / "store"), write=False
-    )
+def _(bias, case, mesh):
+    result = case.run(bias_V=bias.value)
     return (result,)
 
 

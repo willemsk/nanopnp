@@ -17,10 +17,12 @@ logger = logging.getLogger(__name__)
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 NOTEBOOKS = {
-    "01-geometry": "06-pdb-to-mesh",
-    "02-charge": "07-pdb-to-charged-run",
-    "03-solve": "02-charged-pore",
-    "04-sweep": "03-iv-sweep",
+    "01-geometry": ("06-pdb-to-mesh",),
+    "02-charge": ("07-pdb-to-charged-run", "06-pdb-to-mesh"),
+    "03-solve": ("02-charged-pore",),
+    "04-sweep": ("03-iv-sweep",),
+    "05-cylinder": ("03-iv-sweep",),
+    "06-2wcd": ("07-pdb-to-charged-run", "06-pdb-to-mesh"),
 }
 
 
@@ -30,7 +32,7 @@ def test_notebook_runs_headless(notebook: str, tmp_path: Path) -> None:
     directory = copy_example(REPOSITORY / "notebooks" / notebook, tmp_path, repository=REPOSITORY)
     # The notebook prepares its own input: the examples it reads sit beside it, as in the repo.
     examples = REPOSITORY / "examples"
-    for name in {NOTEBOOKS[notebook], "06-pdb-to-mesh"}:
+    for name in NOTEBOOKS[notebook]:
         shutil.copytree(
             examples / name,
             tmp_path / "examples" / name,
