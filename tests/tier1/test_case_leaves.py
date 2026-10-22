@@ -697,6 +697,19 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         for u in upstream_of(consumer):
             assert stage_key(u, res) == stage_key(u, res_base), f"{path} moved upstream {u}"
 
+    # The explicit wall of the base case would refuse the design concentration, and below
+    # 1.474 M the ceiling hides it: probe it where ``auto`` follows the Debye length.
+    auto_base = put(
+        put(pdb_base, "numerics.mesh.wall_h_nm", "auto"), "electrolyte.concentration_M", 2.0
+    )
+    res_auto = resolve(loads_case(yaml.safe_dump(auto_base)))
+    designed = resolve(
+        loads_case(yaml.safe_dump(put(auto_base, "numerics.mesh.wall_for_concentration_M", 4.0)))
+    )
+    assert stage_key("mesh", designed) != stage_key("mesh", res_auto)
+    for u in upstream_of("mesh"):
+        assert stage_key(u, designed) == stage_key(u, res_auto)
+
     refused = {
         "geometry.density.kernel": "other",
         "geometry.analyte.shape": "sphere",
@@ -802,6 +815,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     covered = (
         set(live_pdb)
         | set(refused)
+        | {"numerics.mesh.wall_for_concentration_M"}
         | {"inputs.profile.path", "inputs.pqr.path"}
         | {f"inputs.mesh.{k}" for k in ("path", "format", "groups")}
         | {f"inputs.charge.{k}" for k in ("path", "format", "groups")}

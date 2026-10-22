@@ -25,6 +25,9 @@ WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to 
 
 ### Added
 
+- **`numerics.mesh.wall_for_concentration_M`.** Sizes `wall_h_nm: auto` at the Debye length of a design
+  concentration, so a salt sweep above 1.474 M can share one mesh. The run's own NUM-30 ratio is still
+  recorded. Refused beside an explicit `wall_h_nm`. FR-10, VER-53; §8.2.14 P10.
 - **I-V and flow figures, and larger figures.** A sweep's figure leads with the I-V curve (nA) and the
   electro-osmotic flow rate (µm³/s); `plot.figure` and `RunResult.figure` take `scale`; the notebooks
   carry a size slider and a zoom-and-pan switch. Example 03's charged case now outputs `eof_rate`

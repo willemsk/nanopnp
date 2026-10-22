@@ -180,7 +180,7 @@ switch) and D5 ("at most two widgets"). Six decisions, the author's unless marke
 
 ### Items
 
-- [ ] 9. **Mesh design concentration** (A4), one `feat:` commit. `MeshSpec.wall_for_concentration_M`; `resolve_wall_size`
+- [x] 9. **Mesh design concentration** (A4), one `feat:` commit. `MeshSpec.wall_for_concentration_M`; `resolve_wall_size`
   sizes λ_D at it; `WallSize` gains `sizing_debye_length_nm` (in `summary()`, not `key()`) and `debye_length_nm` stays the
   run's own, so `debye_target_nm`, `coarser_than_num30` and `num30_ratio` stay at the run's salt; the refusals sit
   with the `wall_h_nm` check in `pipeline/checks.py` (§5.3.1). Specification: a ruling §8.2.14 P10, the NOTE on
