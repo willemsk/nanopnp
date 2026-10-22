@@ -15,7 +15,7 @@ Nothing is committed in this turn.
    on a later phase; §10's open `OPN-` items and §9's `RSK-` register; the phase plan in flight, its
    *Open decisions* and the end-of-phase report of the last closed phase; and every later phase plan
    or input note under `docs/plans/`.
-2. Versions agree, as `phase.md`'s precondition 3 says. One minor per phase.
+2. Versions agree, as `rulings.md` says.
 3. Draft the decisions and put them to the author as `rulings.md` says. Each names the phases it
    moves, and for each phase its deliverable, gate, estimate and release.
 
@@ -30,9 +30,8 @@ In one commit, `docs: re-plan the project (§8.2.<k>)`:
 - `docs/plans/current.md`: its position, its "not to be re-decided" entries and its In brief,
   within its *Handoff Rules*.
 
-Gate and push as in `phase.md`'s *Finishing*, with the strict documentation build, and open its PR:
-base `main`, title the commit's subject, body an In brief (the core's template), the rulings, the
-phases as re-planned, the open decisions, the checks run, and the attribution footer.
+Gate, push and open its PR as `rulings.md`'s *Finishing* says, its body naming the phases as
+re-planned.
 
 Report the paths, the PR, the rulings, the phases as they now stand, the open decisions and owners,
 and the next step. Then stop.

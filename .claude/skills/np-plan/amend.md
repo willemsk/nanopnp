@@ -7,10 +7,10 @@ dropping a package mid-phase (the author's reason, its place, its identifiers), 
 later phases (the rulings, §8.1's rows and any later plans or input notes).
 
 The same two turns apply as for `phase.md`: the ruling round, then the write-up. Read what
-`phase.md`'s step 2 lists, as far as the amendment reaches. New rulings get a new record, as
+`rulings.md`'s *What a phase inherits* lists, as far as the amendment reaches. New rulings get a new record, as
 `rulings.md` says; a superseded ruling gains only a pointer. An amended package entry is rewritten
 to its current scope, and its old text goes to the phase's record (`rulings.md`). Update the plan's
 **Status**, `## Open decisions`, `## What the author supplies`, `## Verification`, the Execution
 brief of every planned package the change moves, and `docs/plans/current.md`, all in the one
-commit, `docs: amend the Phase <n> plan — <what changed>`. Gate, push and open its PR as in
-`phase.md`'s *Finishing*, report and stop.
+commit, `docs: amend the Phase <n> plan — <what changed>`. Gate, push and open its PR as
+`rulings.md`'s *Finishing* says, report and stop.

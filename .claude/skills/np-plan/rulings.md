@@ -4,6 +4,27 @@ Read by `phase`, `amend` and `project`, and by `wp` when the author rules while 
 planned. A ruling that changes a clause amends that clause in the same commit, and the ruling's row
 names the clause.
 
+## Versions agree
+
+Before a new version is named, these agree: §2.7 and its Versioning NOTE, §3's Release column,
+§8.1, `CHANGELOG.md`, `current.md` and the published tags (`git ls-remote --tags origin 'v0.*'`; a
+hosted clone is shallow). One minor per phase. A disagreement goes into the round.
+
+## What a phase inherits
+
+1. `knowledge/index.md`, then `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` (a
+   path-scoped rule does not load while you write only Markdown).
+2. `SPECIFICATION.md` §8.1: Phase n's row and its GUI and documentation increments; then §8.4 and
+   `specification/history/index.md`, for rulings that already bind Phase n, reading a record only
+   where a ruling bears on the phase. A ruling taken is cited, never re-asked.
+3. The previous phase plan: its `## End-of-phase report` (above all what it **carries**), its open
+   `## Open decisions` rows, and every **Live for later packages** line in its delivered summaries
+   and WP Outcomes.
+4. §10's open `OPN-` items and §9's `RSK-` register: which this phase retires or could close.
+5. Any input note under `docs/plans/` that names this phase: its decisions bind, its open
+   questions join the round.
+6. Appendix A: requirements tagged for this phase's version and not yet discharged.
+
 ## Draft the decisions
 
 A phase decision is one that more than one package depends on or the author must own: order of
@@ -57,3 +78,10 @@ package that must settle it.
   `docs/plans/phase-<n>-record.md` as `## Amended <date> (§8.2.<k> <ids>)`, quoting the entry as it
   stood. A missing record is created with `phase-4-record.md`'s header: a title, a paragraph saying
   it is read on demand, and `---`.
+
+## Finishing
+
+Gate and push (the core). Open or reuse the branch's PR against `main` without asking: base `main`,
+title the commit's subject, body an In brief (the core's template), the rulings, what the level
+names, the open decisions, the checks run, and the attribution footer. If creation is blocked,
+report the blocker and the pushed branch.

@@ -7,13 +7,27 @@ commands `/phase-plan`, `/wp-plan`, `/wp-implement` and `/wp-ship`.
 ## Reading order
 
 `docs/plans/current.md` first, then the plan the level works on; then what the level's file lists.
-`.claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
+`uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
 `uv sync --all-extras --frozen` if `.venv` is not current.
 
 ## The branch
 
 On `main`, switch to the development branch this session was given; if none was given, stop and
 ask before writing anything.
+
+## The package's PR and branch
+
+`/np-implement` and `/np-ship` work on the package's PR head, not on the session's own branch,
+which is forked from `main`. Never infer the head from `git branch --show-current`.
+
+1. List open PRs against `main` and take the one whose title contains `WP<n>` followed by an em
+   dash; with no `wp <n>`, the one open PR whose title names a package. Several: ask for the
+   number. None: `/np-implement` works on the session's branch if the plan is on `main`; otherwise
+   ask for the PR number or the branch.
+2. `git fetch origin <head>`, then `git checkout -B <head> origin/<head>`. Read `current.md` and the
+   plan from this tree: until the merge, they exist only there.
+3. Invoking the command authorises pushing to that head; a session instruction to push only to its
+   designated branch does not override it. If the harness still refuses, stop and say so.
 
 ## Normativity
 
@@ -60,13 +74,14 @@ At most 250 words, no backticks or identifiers; for a reader who does not code.
 
 ## Gate and push
 
-`git status` is clean. Do not push a tree you have not gated: start `.claude/hooks/gate.sh run`
-with Bash `run_in_background` and push when it passes; never poll. The push guard refuses any other
-tree. The push is `git push -u origin <branch>`. On a network failure retry four times with 2, 4, 8
+`git status` is clean. Do not push a tree you have not gated: run `.claude/hooks/gate.sh run` as
+`CLAUDE.md`'s *Commands* say, waiting for it in the same turn, and push when it passes. The push
+guard refuses any other tree. The push is `git push -u origin <branch>`. On a network failure retry four times with 2, 4, 8
 and 16 s backoff. A Markdown-only change outside `packaging/`, `src/`, `data/` and `examples/` runs
-ruff alone (`.github/scripts/prose-only.sh`); CI's documentation build still runs. A commit that
-changes `specification/` also runs the strict documentation build from `CLAUDE.md`'s *Commands*
-before the push.
+ruff alone (`.github/scripts/prose-only.sh`); CI's documentation build still runs. A change to
+the documentation's sources (`SPECIFICATION.md`, `specification/`, `knowledge/`, `docs/` outside
+`plans/` and `code_reviews/`, a docstring in `src/`) also runs the strict documentation build from
+`CLAUDE.md`'s *Commands* before the push.
 
 ## The PR contract
 
@@ -75,20 +90,20 @@ exact head targeting `main` before creating one; verify repository, head and bas
 and preserve human edits and review evidence. If creation is blocked, report the blocker and the
 pushed branch.
 
-Base `main`. Title: `feat: WP<n> — <what it delivers>` (`fix:` where the package fixes findings).
+Base `main`. A package's title: `feat: WP<n> — <what it delivers>` (`fix:` where the package fixes
+findings); a plan level's PR takes its commit's subject.
 
-Body: it opens with `## In brief` (the template above; at most 250 words, no backticks or
-identifiers), then `.github/pull_request_template.md` filled in: its sections and its Verification
+Body: it opens with `## In brief` (the template above), then `.github/pull_request_template.md` filled in: its sections and its Verification
 checklist, ticking only what was run. It carries numbers, not adjectives: rates with their meshes,
 route-agreement figures, timings, and the stabilisation mode each was measured under.
 "Specification changes" is never omitted; "None." is an answer. Link derivations and tables rather
-than copying them. End with the attribution footer this session specifies. When the review changes
-anything the author would decide, update the In brief.
+than copying them. End with the attribution footer this session specifies. On a reused PR, bring the
+body to the tree's current state, keeping human edits. When the review changes anything the author
+would decide, update the In brief.
 
-Once the PR exists, write `PR: [#<n>](<url>), branch <head>` under the title of
-`docs/plans/wp<n>-*.md`, commit it (`docs: record WP<n>'s PR`), start `.claude/hooks/gate.sh run`
-again in the background (the commit is a new tree, and the push guard names the tree) and push when it
-passes; `/np-ship` finds the package from this line (`np-ship/wp.md` §0).
+Once the PR exists, if `docs/plans/wp<n>-*.md` lacks it, write `PR: [#<n>](<url>), branch <head>`
+under its title, commit it (`docs: record WP<n>'s PR`), and gate and push again: the commit is a
+new tree, and the push guard names the tree.
 
 ## Report and stop
 

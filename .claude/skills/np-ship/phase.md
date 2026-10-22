@@ -16,10 +16,8 @@
      `date-released`;
    - `docs/plans/current.md` points at the next phase.
 4. **Run `wp.md`** §4 to §6.
-5. **The tag.** The close takes the release tag alone, with no `-alpha.N` (§8.4.1). After the
-   author merges, tag the merge commit on `main`, if this session's access allows it:
-   `git tag -a vX.Y.0 <merge sha> -m "vX.Y.0"`, then `git push origin vX.Y.0`; a hosted clone is
-   shallow, so fetch `main` first. Otherwise print the two commands for the author. The release
-   workflow publishes the GitHub Release from the tag (`CONTRIBUTING.md`, *Versions and releases*).
+5. **The tag.** The close takes the release tag `vX.Y.0` alone, with no `-alpha.N` (§8.4.1).
+   `/np-ship phase <n>` after the author merges runs `wp.md` §7 with it. The release workflow
+   publishes the GitHub Release from the tag (`CONTRIBUTING.md`, *Versions and releases*).
 
 Report as `wp.md` §6 does, adding the close's confirmations and the tag, pushed or printed.
