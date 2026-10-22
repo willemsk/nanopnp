@@ -30,6 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.pipeline.case import load_case as load_case
     from nanopnp.pipeline.case import loads_case as loads_case
     from nanopnp.pipeline.case import resolve as resolve
+    from nanopnp.pipeline.handle import Case as Case
     from nanopnp.pipeline.run import RunResult as RunResult
     from nanopnp.pipeline.run import run_case as run_case
     from nanopnp.pipeline.run import run_document as run_document

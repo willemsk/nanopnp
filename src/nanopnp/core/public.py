@@ -13,6 +13,7 @@ PUBLIC: dict[str, str] = {
     "run_case": "nanopnp.pipeline.run",
     "run_document": "nanopnp.pipeline.run",
     "RunResult": "nanopnp.pipeline.run",
+    "Case": "nanopnp.pipeline.handle",
     "CaseDocument": "nanopnp.io.case",
     "load_case": "nanopnp.pipeline.case",
     "loads_case": "nanopnp.pipeline.case",
