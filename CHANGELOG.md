@@ -19,6 +19,34 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.17] - 2026-10-22
+
+WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to P6; FR-30).
+
+### Added
+
+- **`nanopnp.plot`**, behind the `plot` extra (Matplotlib): `plot.figure(artefact, inputs=None)` draws
+  the figure of any stage's artefact and of a sweep. Figures of the aligned atoms, the density, the
+  reduced map, the contour, the regions, the mesh, the protonation states, the charge and dielectric
+  grids, the corrections against the driver the electrolyte declares, the solve (fields, Newton
+  history, continuation rungs) and the quantities. No name joins `PUBLIC` (F4). `plot` follows `post`
+  in the layer order and imports no backend; `modularity-layering.yaml` records it (VER-61).
+- **Notebook display.** `Artefact` and `RunResult` answer `_repr_mimebundle_` (text and HTML with the
+  figure embedded). `RunResult` gains `resolved` and `figure(stage)`.
+- **Stage registry.** `core.stages.register(..., figure="module:function")`, `register_figure`,
+  `figure_target`, `draw` and `FIGURE_FREE` (`case`, `report`). Every builtin stage declares a figure or
+  is figure-free; `draw` turns a missing Matplotlib into `MissingExtraError` naming `plot`.
+- **A new payload.** The solve stage writes `newton_history.json` (payload key `newton_history`): per
+  rung, the residual, update, damping and trials of every Newton step. An artefact cached before this
+  release lacks it and draws "history not recorded".
+- **Extras.** `plot`, `notebook` (`plot` and marimo) and `examples` (`plot`).
+- **`notebooks/`**: four marimo notebooks (geometry, charge, solve, sweep), each run headless every night.
+
+### Changed
+
+- `post/export.py` gains `restored` and `sampled_fields`, the one restore and sampling path of the
+  IF-07 export and the figures. The export's output is unchanged.
+
 ## [0.5.0-alpha.16] - 2026-10-19
 
 WP50: the test scope (`SPECIFICATION.md` §8.2.13 N1 to N5).

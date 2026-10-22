@@ -1,6 +1,6 @@
 # WP51 — The plotting library and the notebooks
 
-**Status: planned, not started.** Written 22 October 2026; grounded in the code at `1eb209d`
+**Status: delivered, 22 October 2026.** Written 22 October 2026; grounded in the code at `1eb209d`
 (§8.2.15 Q1). Inherits WP50 as shipped (§8.2.13) and the Phase 4 amendment (§8.2.14 P1 to P7).
 
 The [Phase 4 plan](phase-4-polish-and-user-testing.md) owns the phase. `SPECIFICATION.md` governs;
@@ -111,7 +111,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
 
 - [x] 7. `notebooks/` and `tests/tier2/test_notebooks.py` (D5). Once, by hand, a notebook with a
   raising cell must exit non-zero, recorded in the Outcome; done when the test passes with `--nightly`.
-- [ ] 8. `CHANGELOG.md`, REV-123, the Outcome (each notebook's nightly seconds and the push gate's
+- [x] 8. `CHANGELOG.md`, REV-123, the Outcome (each notebook's nightly seconds and the push gate's
   added seconds), `current.md` and the Phase 4 plan (D6); done when `.claude/hooks/gate.sh run` and
   the strict documentation build pass.
 
@@ -145,3 +145,16 @@ Commands: `uv run pytest <file>`, with `--nightly` for the nightly rows.
 
 None blocking. The *Your call* defaults to its recommendation; a contrary ruling adds a line to
 `core/public.py`.
+
+> **Outcome — every stage has a figure, and every artefact and run result displays itself.** Measured on
+> 4 cores, 22 October 2026. `plot/` holds the data layer and thirteen figures; no name joins `PUBLIC`.
+> The per-push gate gains about 13 s: the figure test is 5.9 s on example 02 and 5.4 s on example 01, and
+> the import guard, grid sample and Tier 1 data tests together a second; both examples' walks were
+> already in the gate. The notebooks run nightly in 73.8 s (01), 6.4 s (02; shorter than 01, its cache
+> provenance not examined), 26.9 s (03) and 41.7 s (04). By hand, once: a marimo script with a cell
+> that raises exits 1, so the nightly test fails on a stale notebook. Corrections to the plan:
+> `cached_run` calls `run_case`, since `run_document` needs the case text; the Newton history of the
+> Poisson-Boltzmann rung has `steps: []` (that rung reports no steps); `test_field_export.py` patches
+> `post.export`, where `read_fields` now lives; the notebooks' files are `notebook.py`, and ruff
+> ignores D100, ANN and B018 under `notebooks/`. **The figures of stages 1 to 5 and 7 have passed
+> only their smoke tests; the author must look at every figure and notebook before the merge.**

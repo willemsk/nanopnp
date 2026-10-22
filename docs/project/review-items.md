@@ -1273,3 +1273,5 @@ needs a requirement first.
 **Accepted** for WP51 (author's ruling, §8.2.14 P1 to P6, 22 October 2026). FR-30 states the
 requirement. Matplotlib draws in a new `plot/` subpackage below `pipeline`. A stage declares its
 figure in the stage registry, and every artefact and `RunResult` displays itself in a notebook.
+
+**Fixed** (WP51, 22 October 2026). `nanopnp.plot` draws a figure of every stage's artefact and of a sweep, the stage registry declares each figure, `Artefact` and `RunResult` display themselves in a notebook, and four marimo notebooks run nightly (FR-30; `CHANGELOG.md`, `0.5.0-alpha.17`).

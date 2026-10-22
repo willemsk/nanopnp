@@ -1,14 +1,14 @@
 # Current work
 
-Updated 22 October 2026 (WP51 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 22 October 2026 (WP51 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it; the loop, the code, the notes, the cost
-study and the test pruning are done. Next comes a picture of every step of the pipeline and
-notebooks to try the program interactively, so the author can see each step before the testing
-sessions; then the protocol for those sessions.
+study, the test pruning and now a picture of every step of the pipeline are done, with four
+notebooks to try the program interactively. The author should look at each figure and notebook
+before they merge; then comes the protocol for the testing sessions.
 
 **Your call:** should the notebooks go on the documentation site with this phase's documentation
 update? *Recommendation:* yes, once the sessions show which of them help.
@@ -17,11 +17,12 @@ update? *Recommendation:* yes, once the sessions show which of them help.
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 to §8.2.14). WP35 to WP50 are delivered ([WP50](wp50-test-scope.md));
-  tags to `v0.5.0-alpha.16` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
+  **in progress** (§8.2.7 to §8.2.14). WP35 to WP51 are delivered ([WP51](wp51-plotting-and-notebooks.md));
+  tags to `v0.5.0-alpha.17` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
 - **Amended 22 October 2026** (§8.2.14): [WP51](wp51-plotting-and-notebooks.md), the plotting
-  library and the notebooks, is **planned**; next is `/wp-implement`. Then [WP52](wp52-user-testing-protocol.md), the protocol,
-  **planned**; then the author's sessions, and fixes from WP53.
+  library and the notebooks, is **delivered**, once the author has looked at the figures; next is
+  `/wp-ship`. Then [WP52](wp52-user-testing-protocol.md), the protocol, **planned**; then the author's
+  sessions, and fixes from WP53.
 
 ## Not to be re-decided
 

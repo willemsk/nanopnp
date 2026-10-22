@@ -4083,7 +4083,7 @@ needed.
 | FR-27 | VER-23, VER-25, VER-26, VER-32, VER-34, VER-51 (the stage-4 payload is an `inputs.profile` document), VER-52, VER-53 (stages 5 and 6 keyed and walked to stage 12), VER-55 (each stage's artefact reported as it is stored, by a hook that keys nothing), VER-57 (the protonation stage cached per frame, its export read back exactly through `inputs.pqr`), VER-60 (both halves of stage 7 reported as each is stored, and a cancelled charge build writing no artefact), VER-64 (every stage keyed before it runs, the facts the walk reads and the upstream artefacts it reads declared by the stage, and a walk running its target's input closure) |
 | FR-28 | None yet |
 | FR-29 | None yet |
-| FR-30 | None yet; WP51's smoke test and import guard, by §8.2.14 P4 |
+| FR-30 | `test_figure_classification_both_ways`, `test_every_figure_draws_and_displays` (examples 01 and 02 per push; 03, 06 and 07 nightly), `test_field_on_a_grid_matches_sample_at`, `test_default_import_and_walk_load_no_plotting`, `test_notebook_runs_headless` (nightly), by §8.2.14 P4 |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
 | QR-02 | VAL-16, VAL-17 (gating v0.7); VAL-01, VAL-02 (kept, not required) |
 | QR-03 | VER-01, VER-29, VER-58, VAL-15 |
