@@ -1,6 +1,6 @@
 # Current work
 
-Updated 22 October 2026 (WP51 inserted). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 22 October 2026 (WP51 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -19,8 +19,8 @@ update? *Recommendation:* yes, once the sessions show which of them help.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 to §8.2.14). WP35 to WP50 are delivered ([WP50](wp50-test-scope.md));
   tags to `v0.5.0-alpha.16` are the author's step. Browser shell to Phase 5 (§8.2.12 M3).
-- **Amended 22 October 2026** (§8.2.14): **WP51**, the plotting library and the notebooks, is
-  inserted; next is `/wp-plan 51`. Then [WP52](wp52-user-testing-protocol.md), the protocol,
+- **Amended 22 October 2026** (§8.2.14): [WP51](wp51-plotting-and-notebooks.md), the plotting
+  library and the notebooks, is **planned**; next is `/wp-implement`. Then [WP52](wp52-user-testing-protocol.md), the protocol,
   **planned**; then the author's sessions, and fixes from WP53.
 
 ## Not to be re-decided
@@ -63,7 +63,7 @@ update? *Recommendation:* yes, once the sessions show which of them help.
 
 | Need | Read |
 |---|---|
-| Plotting and notebooks | The Phase 4 plan's WP51; §8.2.14; FR-30; REV-123 |
+| Plotting and notebooks | `wp51-plotting-and-notebooks.md`; §8.2.14; FR-30; REV-123 |
 | The protocol | `wp52-user-testing-protocol.md`; §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46 |
 | The test scope | `wp50-test-scope.md`; §8.2.13; `docs/superpowers/specs/2026-10-18-test-pruning-design.md` |
 | Phase 4 scope and packages | `phase-4-polish-and-user-testing.md`; §8.2.6 F3–F6, §8.2.7, §8.2.8 |
