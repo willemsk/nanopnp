@@ -8,6 +8,7 @@ import math
 import re
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -17,6 +18,11 @@ from nanopnp.geometry.profile import PIPELINE_SOURCE, load_profile
 from nanopnp.pipeline.case import load_case
 from nanopnp.structure.axis import ORIENTATION_LIMIT_DEG
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from nanopnp.pipeline.run import RunResult
 
 pytestmark = pytest.mark.nightly
 
@@ -203,3 +209,11 @@ def test_ver46_06_the_profile_meshes_to_the_same_mesh_under_another_key(
     meshes = structure["geometry_and_mesh"], profile["geometry_and_mesh"]
     assert meshes[0]["content_hash"] == meshes[1]["content_hash"]  # type: ignore[index]
     assert "run-profile" in _command(walked, "nanopnp", "inspect").stdout
+
+
+def test_every_figure_draws_and_displays(
+    ran: tuple[Path, list[CommandResult], list[CommandResult]],
+    cached_run: Callable[..., RunResult],
+    check_figures: Callable[[RunResult], None],
+) -> None:
+    check_figures(cached_run(ran[0], "2wcd.case.yaml", upto="mesh"))

@@ -9,8 +9,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp import plot
 from nanopnp.core.hashing import decode_floats
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
+from nanopnp.sweep.collect import collect
+from nanopnp.sweep.plan import read_plan
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
 if TYPE_CHECKING:
@@ -88,3 +91,11 @@ def test_ver62_charged_sweep_holds_the_number_stability_golden(
         meshes.add(manifest["geometry_and_mesh"]["content_hash"])
     assert len(meshes) == 1, meshes
     number_stability("example-03-charged", meshes.pop(), {}, values)
+
+
+def test_every_figure_draws_and_displays(ran: tuple[Path, list[CommandResult]]) -> None:
+    directory = ran[0] / "iv-charged"
+    artefact = collect(read_plan(directory / "plan.json"), directory)
+    figure = plot.figure(artefact)
+    assert figure.axes
+    assert "data:image/png;base64," in artefact._repr_mimebundle_()["text/html"]
