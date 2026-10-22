@@ -1,6 +1,6 @@
 # WP52 — The documents: the specification and the plans split
 
-PR: [#121](https://github.com/willemsk/nanopnp/pull/121), branch claude/wp52-documents
+PR: [#123](https://github.com/willemsk/nanopnp/pull/123), branch claude/brave-thompson-e3mlxz
 
 **Status: delivered, 2026-10-22.** Written 22 October 2026; grounded in the code at `0329cde`
 (§8.2.15 Q1). Inherits WP51 as shipped and the Phase 4 amendment (§8.2.16 R1 to R10).
@@ -225,7 +225,7 @@ and its *Implementation details*, and `main` re-runs its check.
 - [x] b4647ce. 8. `docs/plans/phase-4-record.md`, the Phase 4 plan rewritten (D6), `current.md`,
   `CHANGELOG.md`'s `0.5.0-alpha.18` section. Done when the code and review say so. **Executor:** `main`.
 - [x] checkpoint. 9. Compaction checkpoint. **Executor:** `main`.
-- [ ] 10. Both R10 checks re-run on the final tree, their output and `<base>` into the Outcome, with
+- [x] 5f82179. 10. Both R10 checks re-run on the final tree, their output and `<base>` into the Outcome, with
   criterion 14's word counts (current files, `history/`, §8.4, the Phase 4 plan). Done when they
   pass. **Executor:** `main`.
 
