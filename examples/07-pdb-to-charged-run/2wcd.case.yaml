@@ -9,6 +9,11 @@ name: 2wcd-charged
 structure:
   source: {path: 2wcd-prepared.pdb}
   symmetry: {point_group: C12}
+geometry:                          # the defaults, spelled out: the keys you would edit
+  density: {grid_spacing_nm: 0.05, kernel: gaussian_vdw, sharpness: 0.93}
+  contour: {isolevel: 0.25, smoothing: taubin, simplify_tol_nm: 0.02}
+  membrane: {thickness_nm: 2.8, centre_z_nm: 0.0}
+  reservoir: {radius_nm: 250.0}
 charge: {ph: 7.5, forcefield: CHARMM, titration: propka}
 electrolyte:
   species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
