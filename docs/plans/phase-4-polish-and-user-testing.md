@@ -933,7 +933,7 @@ produces, and for notebooks in which to test the API interactively. It delivers:
   - stage 4: the conditioned contour over that map;
   - stages 5 and 6: the regions and their boundaries, and the mesh with its size field and quality;
   - stage 7: the protonation states, the deposited charge and the dielectric field;
-  - stage 8: the corrections against the mean concentration ⟨c⟩ and the wall distance;
+  - stage 8: the corrections against their declared driver (⟨c⟩ by default) and the wall distance;
   - stage 10: the fields, the Newton history and the continuation rungs;
   - stage 11: the quantities;
   - a sweep's collected curves.
@@ -965,9 +965,9 @@ widgets. REV-123 becomes `fixed`. Tag `v0.5.0-alpha.17`.
 
 > **Planned, 22 October 2026** ([plan](wp51-plotting-and-notebooks.md)). Its decisions: no name joins
 > `PUBLIC`; `case` and `report` are figure-free; a sweep is drawn from its `io` artefact's rows; each
-> notebook has a stage selector and at most two widgets. Stage 8's line read "against ionic
-> strength"; the corrections' driver is ⟨c⟩ = (1/n)Σcᵢ, which is the ionic strength only for a
-> symmetric 1:1 salt, so the line now says so.
+> notebook has at most two widgets. Stage 8's line read "against ionic strength"; the driver is
+> the one the electrolyte declares, ⟨c⟩ = (1/n)Σcᵢ by default and the ionic strength only where the
+> corrections file says so (`Electrolyte.driver`), so the line now says so.
 
 ### User-testing protocol — Provisional
 

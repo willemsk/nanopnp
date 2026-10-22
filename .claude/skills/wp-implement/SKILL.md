@@ -12,6 +12,9 @@ execution taught, and open the PR. It does not chain into `/wp-ship`.
 
 1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its decisions are binding,
    subject to the specification. Correct a wrong decision in the brief (and the specification).
+   Its `### Grounding` is what the code held when the plan was written. A fact that has since gone
+   wrong is corrected in the plan, in the commit of the item that found it. If the correction
+   changes a decision, it is a wrong decision, handled as above.
 2. `knowledge/index.md`, then the sections of the files the package touches.
 3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites; `.claude/scripts/clause.py
    <ID>` prints one with its NOTEs and rulings.

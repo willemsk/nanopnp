@@ -27,8 +27,8 @@ update? *Recommendation:* yes, once the sessions show which of them help.
 
 - **Versions:** one minor per phase; the close takes `v0.5.0` alone (E2, F2, G11). → §2.7 NOTE.
 - **The development loop** (§8.2.11): Tier 1 on commit; one push gate; one pull-request leg on
-  Python 3.14; Haiku, Sonnet, then Opus; capped plans; two agents (L9); prose only on the public
-  API. Floor 3.11. → §8.2.10 J4–J6, J9; OPN-09.
+  Python 3.14; Haiku, Sonnet, then Opus; plans grounded in the code (Q1); two agents (L9); prose
+  only on the public API. Floor 3.11. → §8.2.10 J4–J6, J9; §8.2.15; OPN-09.
 - **The test scope** (§8.2.13): tests only for physics, numerics, core mechanisms and the licence
   and architecture guards; no coverage gate; walks nightly but for examples 01 and 02; `/wp-ship`
   deletes off-category tests. → N1 to N5.
