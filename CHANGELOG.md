@@ -40,7 +40,8 @@ WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to 
   rung, the residual, update, damping and trials of every Newton step. An artefact cached before this
   release lacks it and draws "history not recorded".
 - **Extras.** `plot`, `notebook` (`plot` and marimo) and `examples` (`plot`).
-- **`notebooks/`**: four marimo notebooks (geometry, charge, solve, sweep), each run headless every night. A notebook prepares its own input (the structure, or the pore mesh) in its first cell, so nothing is run before it.
+- **`nanopnp.Case`** (`pipeline/handle.py`, in `PUBLIC`): `Case.load(path, store=...)`, `case.run(upto=..., bias_V=0.1)`, `case.with_(...)` and `case[name]`. A field is named by its dotted case-file path or by a leaf name only one field ends in; a shared name is refused. §8.2.14 P8.
+- **`notebooks/`**: six marimo notebooks (geometry, charge, solve, sweep, and the cylindrical pore and 2WCD each end to end; the notebooks edit a case through `nanopnp.Case`), each run headless every night. A notebook prepares its own input (the structure, or the pore mesh) in its first cell, so nothing is run before it.
 
 ### Changed
 
