@@ -1,7 +1,7 @@
-# WP52 — The user-testing protocol
+# WP55 — The user-testing protocol
 
 **Status: planned, not started.** Written 19 October 2026; renumbered from WP51 on 22 October 2026
-(§8.2.14 P1). Inherits WP50 as shipped (§8.2.13 N1 to N6)
+(§8.2.14 P1), and from WP52 the same day (§8.2.16 R1). Inherits WP50 as shipped (§8.2.13 N1 to N6)
 and the protocol package's amendments (§8.2.7 G7, §8.2.8 H2).
 
 The [Phase 4 plan](phase-4-polish-and-user-testing.md) owns the phase. `SPECIFICATION.md` governs;
@@ -32,8 +32,8 @@ nightly check fails a task with no runnable step.
 
 Scope: the Phase 4 plan's *User-testing protocol* section, with its amendments; §8.2.7 G7 as
 superseded by §8.2.13 N4 (the scripts run nightly); §8.2.6 F3 (sessions the author runs); §8.2.8 H2
-(a task touching `with_section` and stage registration, for `MOD-11`). Depends on WP51 merged.
-Claims VER-69 (proposed in the Phase 4 plan; §8.2.9 I2), on VER-46's pattern. Tag `v0.5.0-alpha.18`. Models: Sonnet
+(a task touching `with_section` and stage registration, for `MOD-11`). Depends on WP54 merged; session 04 is re-read against the notebooks WP54 leaves.
+Claims VER-69 (proposed in the Phase 4 plan; §8.2.9 I2), on VER-46's pattern. Tag `v0.5.0-alpha.21`. Models: Sonnet
 by default; Haiku for item 1. No physics or numerics code changes, so no `physics-reviewer` pass is
 required; a session's stated expectation that names a physical property is read against
 `knowledge/01-physics-epnpns/` by the implementer.
@@ -65,7 +65,7 @@ required; a session's stated expectation that names a physical property is read 
 - [ ] 4. `docs/user-testing/sessions/04-python-api/` with its notebook, and `05-sweep/` (D2, D3,
   H2); done when the same command passes.
 - [ ] 5. The dry run and the broken-command check (D6); the nightly runtime of the five sessions on
-  four cores in the Outcome; `docs/plans/current.md` and the Phase 4 plan's WP52 section marked
+  four cores in the Outcome; `docs/plans/current.md` and the Phase 4 plan's WP55 section marked
   delivered; done when `.claude/hooks/gate.sh run` passes and the test passes with `--nightly`.
 
 ### Verification
@@ -81,7 +81,7 @@ the tester's to check and are asserted by no test (D3, D5).
 
 - The sessions themselves, and every `UT-nn` row: the author's (F3, G7).
 - The `MOD-11` choice: a fix package, after the sessions (H2).
-- The fix packages, from WP52, the documentation increment and the close: the second
+- The fix packages, from WP56, the documentation increment and the close: the second
   `/phase-plan amend 4`.
 - Putting the sessions on the documentation site: documentation increment 4, if the author rules so.
 
