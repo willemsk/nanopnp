@@ -5,10 +5,9 @@ Open-source continuum simulation of biological nanopores (ePNP-NS)
 | Field | Value |
 |---|---|
 | Package | `nanopnp` |
-| Version | 0.5 |
-| Date | 16 August 2026 |
+| Version | None of its own: the specification is versioned with the code, by the release tags of §2.7. The text a release was built against is this tree at its tag, and [`CHANGELOG.md`](CHANGELOG.md) lists every tag with what changed |
+| History | The author's dated rulings, with their reasons, are [`specification/history/`](specification/history/index.md); every edit is in `git log -- SPECIFICATION.md specification/` |
 | Author of record | Kherim Willems |
-| Status | Draft for review |
 | Structure | ISO/IEC/IEEE 29148 (requirements), IEEE 1016 (design), IEEE 1012 (verification and validation) |
 
 ---

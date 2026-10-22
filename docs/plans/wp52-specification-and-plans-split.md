@@ -256,6 +256,11 @@ No kept test (N1). The checks are one-off scripts in the scratchpad, run in the 
 > knowledge base's is, and the root index lists the top-level files and directory indexes only. The
 > entry point gains linked maps, the authority and conventions, a reading path by task and how the
 > specification is changed.
+>
+> **Outcome — the title block (author's request).** The entry point's Version, Date and Status rows
+> (`0.5`, 16 August 2026, `Draft for review`) are removed: the specification is versioned by the
+> release tags (§2.7), and a History row points to `specification/history/` and the git log. These
+> three base lines are the only ones R10 (a) would now report missing, removed on purpose.
 
 ### Out of scope
 
