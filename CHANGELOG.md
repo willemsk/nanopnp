@@ -19,6 +19,24 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [0.5.0-alpha.18] - 2026-10-22
+
+WP52: the documents, the specification and the plans split (`SPECIFICATION.md` §8.2.16 R2 to R4, R9, R10).
+
+### Changed
+
+- **The specification is a bundle.** `SPECIFICATION.md` is the entry point, with the reading rule and a
+  map from section and identifier to file; the text is in `specification/`, one file per numbered
+  section, with §5, §7 and §8 split by subsection, and the Phase 0 exit criteria and §8.2.1 to §8.2.16
+  moved verbatim to `specification/history/`. No clause is reworded. §11 gains three rows.
+- **§8.4, the development process.** The rulings in force that no clause carries, restated once, each
+  with its ruling. `specification/history/index.md` lists where each of the 119 rulings holds now.
+- **`.claude/scripts/clause.py`** reads the bundle and prints every definition of an identifier, each
+  labelled with its file and line range. The site copies the bundle, `mkdocs.yml` lists its pages and
+  the guide's anchored links point into it.
+- **The Phase 4 plan states its current scope.** Its amendments and its earlier text are in
+  `docs/plans/phase-4-record.md`.
+
 ## [0.5.0-alpha.17] - 2026-10-22
 
 WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to P6; FR-30).

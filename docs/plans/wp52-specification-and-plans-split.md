@@ -220,9 +220,9 @@ and its *Implementation details*, and `main` re-runs its check.
 - [x] a33baa3. 6. `04-development-process.md` (D3); `history/index.md`'s *where it holds now* for all 119
   rulings; `CLAUDE.md` and `.claude/rules/python.md` cite §8.4. Done when the code and review say so.
   **Executor:** `main`: judgement on normative text.
-- [ ] 7. `docs/scripts/generate.py`, `mkdocs.yml` and the guide's links (D5). Done when VER-45's build
+- [x] d648802. 7. `docs/scripts/generate.py`, `mkdocs.yml` and the guide's links (D5). Done when VER-45's build
   passes. **Executor:** `general-purpose`, Haiku.
-- [ ] 8. `docs/plans/phase-4-record.md`, the Phase 4 plan rewritten (D6), `current.md`,
+- [x] 8. `docs/plans/phase-4-record.md`, the Phase 4 plan rewritten (D6), `current.md`,
   `CHANGELOG.md`'s `0.5.0-alpha.18` section. Done when the code and review say so. **Executor:** `main`.
 - [ ] 9. Compaction checkpoint. **Executor:** `main`.
 - [ ] 10. Both R10 checks re-run on the final tree, their output and `<base>` into the Outcome, with
