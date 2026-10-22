@@ -109,7 +109,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
 
 *Compaction checkpoint: after item 6; resume from this plan and `git log`.*
 
-- [ ] 7. `notebooks/` and `tests/tier2/test_notebooks.py` (D5). Once, by hand, a notebook with a
+- [x] 7. `notebooks/` and `tests/tier2/test_notebooks.py` (D5). Once, by hand, a notebook with a
   raising cell must exit non-zero, recorded in the Outcome; done when the test passes with `--nightly`.
 - [ ] 8. `CHANGELOG.md`, REV-123, the Outcome (each notebook's nightly seconds and the push gate's
   added seconds), `current.md` and the Phase 4 plan (D6); done when `.claude/hooks/gate.sh run` and

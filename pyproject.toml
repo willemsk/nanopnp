@@ -173,6 +173,8 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D100", "D103", "ANN201", "ANN001"]
 "!src/nanopnp/**" = ["D101", "D102", "D103", "D106"]
+# A marimo notebook is cells of bare names and a trailing expression, which is what it displays.
+"notebooks/*" = ["D100", "ANN001", "ANN202", "B018"]
 
 [tool.mypy]
 # The development pin, not the 3.11 support floor: NumPy's shipped stubs use
