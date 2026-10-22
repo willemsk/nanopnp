@@ -8,7 +8,7 @@ findings:
 # Review findings
 
 The log of [the review register](review-items.md) (§8.2.8 H12): every item a work package's
-implementation or review left open, until it is resolved. `/wp-implement` and `/wp-ship` add a row
+implementation or review left open, until it is resolved. `/np-implement` and `/np-ship` add a row
 in the commit that leaves an item open, and the commit that resolves it sets the row `fixed`, its
 ruling linking the plan that fixed it.
 

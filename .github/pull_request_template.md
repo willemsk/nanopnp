@@ -2,7 +2,7 @@
 Delete the sections that do not apply — except "Specification changes", where
 "None." is the answer and silence is not.
 
-A work package delivered through /wp-ship fills this in automatically.
+A work package delivered through /np-ship fills this in automatically.
 -->
 
 ## What this delivers

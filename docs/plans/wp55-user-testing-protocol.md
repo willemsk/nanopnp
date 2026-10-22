@@ -82,7 +82,7 @@ the tester's to check and are asserted by no test (D3, D5).
 - The sessions themselves, and every `UT-nn` row: the author's (F3, G7).
 - The `MOD-11` choice: a fix package, after the sessions (H2).
 - The fix packages, from WP56, the documentation increment and the close: the second
-  `/phase-plan amend 4`.
+  `/np-plan amend 4`.
 - Putting the sessions on the documentation site: documentation increment 4, if the author rules so.
 
 ### Open questions
