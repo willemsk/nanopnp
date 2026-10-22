@@ -2,7 +2,7 @@
 
 PR: [#124](https://github.com/willemsk/nanopnp/pull/124), branch ccr-a62c64fc-ixc0r7
 
-**Status: planned, not started.** Written 22 October 2026; grounded in the code at `e4b52bc`
+**Status: delivered, 22 October 2026.** Written 22 October 2026; grounded in the code at `e4b52bc`
 (§8.2.15 Q1). Inherits WP52 as merged and the Phase 4 amendment (§8.2.16 R5 to R7, R11, R12).
 
 The [Phase 4 plan](phase-4-polish-and-user-testing.md) owns the phase. `SPECIFICATION.md` governs;
@@ -235,7 +235,7 @@ and its *Implementation details*; `main` re-runs its check.
 - [x] 78bdcc3 5. `.claude/hooks/session-start.sh`: the fast-forward and warnings, and the workflow line
   (D5); `<scratch>/hook-check.sh`. Done when its ten cases pass and `bash -n` is clean.
   **Executor:** `main`.
-- [x] 6. The pointer edits of *Implementation details*. Done when the code and review say so.
+- [x] e0566f6 6. The pointer edits of *Implementation details*. Done when the code and review say so.
   **Executor:** `general-purpose`, Haiku.
 - [ ] 7. §8.4.3 and §8.4.4 name the new commands; `history/index.md` sets R5 and R12 to §8.4.4 and
   R7 to `.claude/hooks/session-start.sh`; the Phase 4 plan's delivered summary; `current.md`;

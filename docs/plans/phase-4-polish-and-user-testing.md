@@ -3,7 +3,7 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP52, below. Planned: WP53, the workflow ([plan](wp53-workflow-commands.md)); WP54, the notebooks and figures
+demand. Delivered: WP35 to WP53, below. Planned: WP54, the notebooks and figures
 revised; WP55, the user-testing protocol ([plan](wp55-user-testing-protocol.md)). Provisional, and
 planned by the second `/np-plan amend 4` once the author has run the sessions and ruled every
 `UT-nn`: the fixes from WP56, the documentation increment and the close, which take their numbers
@@ -13,18 +13,17 @@ then. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the simpler loop, the
 trimmed code and tests, the reorganised notes, the cost study, a picture of every step of the
-pipeline with notebooks to try it, and the split specification are done.
+pipeline with notebooks to try it, the split specification and the working instructions rebuilt as
+three commands, plan, implement and ship, each taking a level, are done.
 
-**What changes.** Two packages and a revision come before the testing sessions. The first rebuilds
-the working instructions as three commands, plan, implement and ship, each taking a level; hands
-batches of independent edits to fresh helpers; and keeps the instructions a session loads up to
-date. The second revises the notebooks and figures from the author's notes. The third writes the
-protocol the author's sessions follow.
+**What changes.** Two packages come before the testing sessions. The first revises the notebooks
+and figures from the author's notes, and is the first run with the new commands. The second writes
+the protocol the author's sessions follow.
 
-**Cost.** About a week. Nothing a user runs changes in the first.
+**Cost.** About a week.
 
-**What could go wrong.** A rewritten instruction could lose a rule; the first package planned with
-the new commands would show it. The notebooks' revision has an open scope, so its plan names any new
+**What could go wrong.** A rewritten instruction could have lost a rule; the first package planned
+with the new commands would show it. The notebooks' revision has an open scope, so its plan names any new
 dependency before it enters.
 
 **Your call.** Should the phase estimate grow from four to six weeks to five to seven?
@@ -170,23 +169,17 @@ checks, their output in the plan's Outcome, found no lost line and no changed de
 
 ### WP53 — The workflow: three commands with levels, workers, and a current checkout (§8.2.16 R5 to R7, R12)
 
-[Plan](wp53-workflow-commands.md). It waits on WP52, whose layout its skills read.
-
-- **`/np-plan`, `/np-implement` and `/np-ship`** (R5, named by R12), each a short router over a
-  shared core file and one file per level (`project`, `phase`, `amend` and `wp` for `/np-plan`; `wp`
-  and `phase` for `/np-ship`), replacing `phase-plan`, `wp-plan`, `wp-implement` and `wp-ship`, with
-  no aliases. R3's and R4's rules for rulings and plan amendments go into the planning levels: a
-  ruling's table is written to a new `history/` file and its rule to §8.4.
-- **The worker pattern** in the implementing level, and the planning level's mark for the items that
-  go to workers (R6).
-- **The session-start hook's fast-forward** of a clean primary `main`, and a warning when the
-  checkout lacks commits of `origin/main` (R7).
-- **The pointers**: `CLAUDE.md`'s *Implementation workflow* and *Commands*, `current.md`'s handoff
-  rules, §8.4.4 and every live mention of the old names.
-
-`steward` and the two agent files stay. No test is kept (N1). WP54 is the first package planned,
-implemented and shipped with the new commands, and its sessions are the check. Tag
-`v0.5.0-alpha.19`.
+Delivered ([plan](wp53-workflow-commands.md); tag `v0.5.0-alpha.19`). `/np-plan <project | phase n
+| amend n | wp n>`, `/np-implement [wp n]` and `/np-ship [wp n | phase n]` (R5, named by R12) are
+routers over `.claude/workflow/core.md` and one file per level, replacing `phase-plan`, `wp-plan`,
+`wp-implement` and `wp-ship`, with no aliases. `np-plan/rulings.md` writes a ruling's table to a
+`history/` record and its rule to §8.4, and an amendment's text to the phase's record (R3, R4);
+`project` re-plans the project, and `/np-ship phase` confirms the close and tags the release. The
+worker pattern is in `np-implement/wp.md` (R6). The session-start hook fast-forwards a clean primary
+`main` behind `origin/main` and warns when the checkout lacks it (R7). `CLAUDE.md`, §8.4.3, §8.4.4
+and the live pointers name the new commands. `steward` and the agent files stay. No test is kept
+(N1); the plan's Outcome holds D6's checks and the word counts, which exceed D2's caps. WP54 is the
+first package run with the commands.
 
 ### WP54 — The notebooks and figures revised (§8.2.16 R8)
 
