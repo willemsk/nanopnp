@@ -1,10 +1,11 @@
-"""Print specification clauses by identifier (WP43 D13; SPECIFICATION.md §8.2.10 J8).
+"""Print specification clauses by identifier (SPECIFICATION.md §8.2.10 J8, §8.2.16 R2).
 
-For each identifier (``VER-62``, ``FR-16``, ``§7.6``, ``J8``) the script prints, with line
-ranges, the section or table row that defines it, every NOTE that names it and every §8.2
-ruling row that names it. Matching is on whole identifiers, so ``VER-6`` never matches
-``VER-62``. An identifier with no definition is named on standard error and the exit status
-is non-zero.
+For each identifier (``VER-62``, ``FR-16``, ``§7.6``, ``J8``) the script prints, with the file and
+line range, every section or table row that defines it, every NOTE that names it and every ruling
+row of ``specification/history/`` that names it. The current files are searched before the
+history, each in path order with ``index.md`` first. Matching is on whole identifiers, so
+``VER-6`` never matches ``VER-62``. An identifier with no definition is named on standard error and
+the exit status is non-zero.
 
 Run it as ``uv run .claude/scripts/clause.py VER-62 §7.6``.
 """
@@ -17,7 +18,7 @@ import re
 import sys
 from pathlib import Path
 
-SPECIFICATION = Path(__file__).resolve().parents[2] / "SPECIFICATION.md"
+BUNDLE = Path(__file__).resolve().parents[2] / "specification"
 RULING_ROW = re.compile(r"^\|\s*([A-Z]\d+)\s*\|")
 
 
@@ -44,15 +45,23 @@ def _section_end(lines: list[str], start: int) -> int:
     return end
 
 
-def _definition(lines: list[str], identifier: str) -> tuple[int, int] | None:
-    """Return the 0-based half-open line range defining ``identifier``, or ``None``."""
+def _definitions(lines: list[str], identifier: str) -> list[tuple[int, int]]:
+    """Return the 0-based half-open line ranges defining ``identifier`` in one file."""
     heading = rf"#+ {re.escape(identifier[1:] if identifier.startswith('§') else identifier)}(\s|$)"
-    for start, line in enumerate(lines):
+    found: list[tuple[int, int]] = []
+    start = 0
+    while start < len(lines):
+        line = lines[start]
         if _heading_level(line) and re.match(heading, line):
-            return start, _section_end(lines, start)
-        if not identifier.startswith("§") and _first_cell(line) == identifier:
-            return start, start + 1
-    return None
+            end = _section_end(lines, start)
+        elif not identifier.startswith("§") and _first_cell(line) == identifier:
+            end = start + 1
+        else:
+            start += 1
+            continue
+        found.append((start, end))
+        start = end
+    return found
 
 
 def _notes(lines: list[str]) -> list[tuple[int, int]]:
@@ -72,26 +81,31 @@ def _notes(lines: list[str]) -> list[tuple[int, int]]:
 
 
 def _rulings(lines: list[str]) -> list[int]:
-    """Return the 0-based lines of every ruling row in §8.2."""
-    begin = next((i for i, line in enumerate(lines) if line.startswith("### 8.2 ")), None)
-    if begin is None:
-        return []
-    end = next((i for i in range(begin + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
-    return [i for i in range(begin, end) if RULING_ROW.match(lines[i])]
+    """Return the 0-based lines of every ruling row of one history file."""
+    return [i for i, line in enumerate(lines) if RULING_ROW.match(line)]
 
 
-def _emit(lines: list[str], label: str, start: int, end: int) -> None:
-    sys.stdout.write(f"--- {label} (lines {start + 1}-{end}) ---\n")
+def _files() -> list[Path]:
+    """Return the bundle files, current before history, in path order with ``index.md`` first."""
+
+    def key(path: Path) -> tuple[bool, str]:
+        relative = path.relative_to(BUNDLE).as_posix()
+        return relative.startswith("history/"), relative.replace("index.md", "!index.md")
+
+    return sorted(BUNDLE.rglob("*.md"), key=key)
+
+
+def _emit(path: Path, lines: list[str], label: str, start: int, end: int) -> None:
+    where = f"{path.relative_to(BUNDLE.parent).as_posix()}:{start + 1}-{end}"
+    sys.stdout.write(f"--- {label} ({where}) ---\n")
     sys.stdout.write("\n".join(lines[start:end]) + "\n")
 
 
-def clause(lines: list[str], identifier: str) -> bool:
-    """Print the clause for ``identifier``.
+def clause(identifier: str) -> bool:
+    """Print every definition of ``identifier``, then the NOTEs and ruling rows that name it.
 
     Parameters
     ----------
-    lines
-        The specification, one string per line.
     identifier
         A requirement identifier, a ruling identifier or a section number with ``§``.
 
@@ -100,19 +114,25 @@ def clause(lines: list[str], identifier: str) -> bool:
     bool
         ``False`` when the identifier has no definition, ``True`` otherwise.
     """
-    definition = _definition(lines, identifier)
-    if definition is None:
+    texts = {path: path.read_text(encoding="utf-8").splitlines() for path in _files()}
+    definitions = {path: _definitions(lines, identifier) for path, lines in texts.items()}
+    if not any(definitions.values()):
         return False
     pattern = _pattern(identifier)
     sys.stdout.write(f"=== {identifier} ===\n")
-    _emit(lines, "definition", *definition)
-    for start, end in _notes(lines):
-        inside = definition[0] <= start and end <= definition[1]
-        if not inside and pattern.search("\n".join(lines[start:end])):
-            _emit(lines, "NOTE", start, end)
-    for row in _rulings(lines):
-        if not (definition[0] <= row < definition[1]) and pattern.search(lines[row]):
-            _emit(lines, "ruling", row, row + 1)
+    for path, ranges in definitions.items():
+        for start, end in ranges:
+            _emit(path, texts[path], "definition", start, end)
+    for path, lines in texts.items():
+        for start, end in _notes(lines):
+            inside = any(a <= start and end <= b for a, b in definitions[path])
+            if not inside and pattern.search("\n".join(lines[start:end])):
+                _emit(path, lines, "NOTE", start, end)
+        if "history" not in path.relative_to(BUNDLE).parts:
+            continue
+        for row in _rulings(lines):
+            if not any(a <= row < b for a, b in definitions[path]) and pattern.search(lines[row]):
+                _emit(path, lines, "ruling", row, row + 1)
     return True
 
 
@@ -126,11 +146,10 @@ def main(argv: list[str] | None = None) -> int:
     # UTF-8 streams (Linux, macOS) still receive the text verbatim.
     if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(errors="backslashreplace")
-    lines = SPECIFICATION.read_text(encoding="utf-8").splitlines()
     status = 0
     for identifier in arguments.identifiers:
-        if not clause(lines, identifier):
-            sys.stderr.write(f"clause.py: no definition of {identifier} in {SPECIFICATION.name}\n")
+        if not clause(identifier):
+            sys.stderr.write(f"clause.py: no definition of {identifier} in {BUNDLE.name}/\n")
             status = 1
     return status
 

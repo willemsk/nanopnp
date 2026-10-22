@@ -211,10 +211,10 @@ and its *Implementation details*, and `main` re-runs its check.
   `general-purpose`, Haiku.
 - [x] 24cea0e. 2. `specification/` sliced, front matter filled, `SPECIFICATION.md` cut (D1, D2, D4). Done
   when `lines.py` reports 0. **Executor:** `general-purpose`, Haiku.
-- [ ] 3. `SPECIFICATION.md` completed as the entry point; `specification/index.md`,
+- [x] eed4f2e. 3. `SPECIFICATION.md` completed as the entry point; `specification/index.md`,
   `history/index.md` and the directory indexes written; §11's table gains the three (D2, D4). Done
   when the code and review say so. **Executor:** `main`.
-- [ ] 4. `.claude/scripts/clause.py` reads the bundle (D5). Done when `ids.py` reports 0.
+- [x] 4. `.claude/scripts/clause.py` reads the bundle (D5). Done when `ids.py` reports 0.
   **Executor:** `main`.
 - [ ] 5. Compaction checkpoint; the prompt carries `<base>`. **Executor:** `main`.
 - [ ] 6. `04-development-process.md` (D3); `history/index.md`'s *where it holds now* for all 119
