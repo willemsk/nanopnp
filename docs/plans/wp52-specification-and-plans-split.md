@@ -222,9 +222,9 @@ and its *Implementation details*, and `main` re-runs its check.
   **Executor:** `main`: judgement on normative text.
 - [x] d648802. 7. `docs/scripts/generate.py`, `mkdocs.yml` and the guide's links (D5). Done when VER-45's build
   passes. **Executor:** `general-purpose`, Haiku.
-- [x] 8. `docs/plans/phase-4-record.md`, the Phase 4 plan rewritten (D6), `current.md`,
+- [x] b4647ce. 8. `docs/plans/phase-4-record.md`, the Phase 4 plan rewritten (D6), `current.md`,
   `CHANGELOG.md`'s `0.5.0-alpha.18` section. Done when the code and review say so. **Executor:** `main`.
-- [ ] 9. Compaction checkpoint. **Executor:** `main`.
+- [x] checkpoint. 9. Compaction checkpoint. **Executor:** `main`.
 - [ ] 10. Both R10 checks re-run on the final tree, their output and `<base>` into the Outcome, with
   criterion 14's word counts (current files, `history/`, §8.4, the Phase 4 plan). Done when they
   pass. **Executor:** `main`.
