@@ -25,7 +25,10 @@ from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from conftest import NumberStability
+    from nanopnp.pipeline.run import RunResult
 
 pytestmark = pytest.mark.nightly
 
@@ -259,3 +262,11 @@ def test_ver62_07_the_charged_run_holds_the_number_stability_golden(
     group = _read(example / "run" / "manifest.json")["geometry_and_mesh"]
     assert isinstance(quantities, dict) and isinstance(group, dict)
     number_stability("example-07", str(group["content_hash"]), quantities)
+
+
+def test_every_figure_draws_and_displays(
+    ran: Ran,
+    cached_run: Callable[..., RunResult],
+    check_figures: Callable[[RunResult], None],
+) -> None:
+    check_figures(cached_run(ran[0], "2wcd.case.yaml"))

@@ -105,7 +105,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
   done when the Tier 1 data-layer tests pass.
 - [x] 5. Stages 10 and 11; `cached_run`; the per-push smoke tests, the grid sample and the import
   guard (D4); done when examples 01's and 02's Tier 2 modules pass.
-- [ ] 6. The smoke tests for examples 03, 06 and 07; done when they pass with `--nightly`.
+- [x] 6. The smoke tests for examples 03, 06 and 07; done when they pass with `--nightly`.
 
 *Compaction checkpoint: after item 6; resume from this plan and `git log`.*
 
