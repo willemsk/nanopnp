@@ -1,5 +1,7 @@
 # WP51 — The plotting library and the notebooks
 
+PR: [#119](https://github.com/willemsk/nanopnp/pull/119), branch ccr-10787f91-npvpk1
+
 **Status: delivered, 22 October 2026.** Written 22 October 2026; grounded in the code at `1eb209d`
 (§8.2.15 Q1). Inherits WP50 as shipped (§8.2.13) and the Phase 4 amendment (§8.2.14 P1 to P7).
 
