@@ -217,7 +217,7 @@ and its *Implementation details*, and `main` re-runs its check.
 - [x] 5a542d7. 4. `.claude/scripts/clause.py` reads the bundle (D5). Done when `ids.py` reports 0.
   **Executor:** `main`.
 - [x] checkpoint. 5. Compaction checkpoint; the prompt carries `<base>`. **Executor:** `main`.
-- [ ] 6. `04-development-process.md` (D3); `history/index.md`'s *where it holds now* for all 119
+- [x] a33baa3. 6. `04-development-process.md` (D3); `history/index.md`'s *where it holds now* for all 119
   rulings; `CLAUDE.md` and `.claude/rules/python.md` cite §8.4. Done when the code and review say so.
   **Executor:** `main`: judgement on normative text.
 - [ ] 7. `docs/scripts/generate.py`, `mkdocs.yml` and the guide's links (D5). Done when VER-45's build
