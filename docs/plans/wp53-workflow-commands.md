@@ -41,7 +41,7 @@ on this branch.
 
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
-| D1 | Names, routing, aliases | `/np-plan <project \| phase n \| amend n \| wp n>`, `/np-implement [wp n]`, `/np-ship [wp n \| phase n]`. Each `.claude/skills/np-<verb>/SKILL.md`, at most 150 words, reads `.claude/workflow/core.md`, then the level file beside it. With no argument, `/np-implement` and `/np-ship` take the package `current.md` names, or ask. An unknown level prints the usage. **No aliases**: the four old skill directories are deleted; records keep the old names | R5, R12. Every session reads each listed skill's description; an old name fails visibly |
+| D1 | Names, routing, aliases | `/np-plan <project \| phase n \| amend n \| wp n>`, `/np-implement [wp n]`, `/np-ship [wp n \| phase n]`. Each `.claude/skills/np-<verb>/SKILL.md`, at most 150 words, reads `.claude/workflow/core.md`, then the level file beside it. With no argument, `/np-implement` and `/np-ship` take the one open package PR, or ask. An unknown level prints the usage. **No aliases**: the four old skill directories are deleted; records keep the old names | R5, R12. Every session reads each listed skill's description; an old name fails visibly |
 | D2 | What the core and the levels hold | `core.md`, at most 900 words, holds what every level shares: reading order, branch, normativity, models, records, the In brief, gate and push, the PR contract, the report. Levels: `np-plan/{wp,phase,amend,project}.md`, `np-plan/rulings.md` (read by `phase`, `amend` and `project`), `np-implement/wp.md`, `np-ship/{wp,phase}.md`. **Text moves verbatim** from the old skills; a sentence is edited only for a name, a path, a section reference, or R3, R4, R12. Item 10 then rewords to ASD-STE100, under a rule-by-rule check. One invocation loads at most 2,200 words (router, core, level, `rulings.md` where read); the new files total at most 7,000 | R5. Moving, not retyping, makes D6's check possible |
 | D3 | Rulings and plan amendments | `np-plan/rulings.md` holds the ruling round (old `phase-plan` Turn 1, steps 4 and 5) and its rules. A round's table is a new `specification/history/<kk>-<slug>.md`, indexed with each ruling's current home; each ruling amends its clause in the same commit, or is restated in §8.4 (R3). A ruling taken at a package's plan is a row added to that day's record; a superseded ruling gains a pointer (R11, R12). A phase plan's entry is rewritten to its current scope, and the amendment's text is appended to `docs/plans/phase-<n>-record.md` (R4) | R3, R4 |
 | D4 | The new levels | `/np-plan project` runs the ruling round on §8.1's rows and the later phases, then amends §8.1, §3's Release column, §2.7's Versioning NOTE, §8.3 and the later plans where they move, in one commit `docs: re-plan the project (§8.2.<k>)`. `/np-ship phase n` runs `np-ship/wp.md` on the close package's PR, confirms the close's items before the review (*Implementation details*), and after the merge pushes the annotated release tag alone (§8.4.1), or prints the commands | R5; `CONTRIBUTING.md` |
@@ -269,6 +269,38 @@ its *Implementation details*; `main` re-runs its check.
 - [ ] 9. Review of the workflow files for inefficiencies, contradictions and flaky behaviour (D2).
   Done when each finding is fixed or a `REV-nn` row, in the Outcome. **Executor:** `main`, with a
   fresh read-only `general-purpose` agent on Sonnet.
+
+  > **Outcome — 19 findings from the agent and five of this session's, 21 fixed, three left with
+  > a reason.** Fixed:
+  >
+  > - *The package's PR and branch* moves from `np-ship` §0 into the core, for `/np-implement` too: a
+  >   fresh session is on its own branch, without the plan. With no argument, the one open package
+  >   PR names the package, since `current.md` on `main` is stale until the merge (D1 amended).
+  > - The gate's wait: the core said "never poll", `CLAUDE.md` a foreground `until` loop with no
+  >   condition. `CLAUDE.md` now gives the exit marker and the loop; the core points to it.
+  > - The tag: `np-ship` §6 said the tag was the author's, against §8.4.1. A new §7, *After the
+  >   merge*, tags when `/np-ship` finds the PR merged; `phase.md` step 5 runs it.
+  > - `np-ship`: one gate, only when the tree changed; a recorded review at the head skips to §5;
+  >   the head and base SHAs are written under **Verification** after the test drops are pushed;
+  >   fixes are committed with the review's report before the gate; one 240 s limit in the review
+  >   prompt; `sleep` is barred for CI waits only; a missing PR is opened once the author names the
+  >   branch. The `PR:` line is no lookup fallback, and is written only when missing.
+  > - The strict documentation build runs on a change to any of its sources, named once in the
+  >   core; `CLAUDE.md`'s prose-only sentence names `prose-only.sh`'s exclusions.
+  > - `amend` and `project` cited parts of `phase.md` they never load: the version check, the
+  >   inherited reads and *Finishing* move to `rulings.md`.
+  > - `/np-implement`: tick in the next commit, by this session; the resume prompt names `wp <n>`.
+  > - `uv run .claude/scripts/clause.py` (no shebang); routers check the argument before reading;
+  >   the amend check opens `np-plan/wp.md`; the repeated `current.md` reads, survey sentence and
+  >   In brief limits are cut; a reused PR's body is brought current; `CLAUDE.md` cites *Report and
+  >   stop* for the fresh session; the core's title rule is a package's.
+  > - The hook: a failed `uv sync` is a warning line, so the R7 note still prints. Ten cases pass,
+  >   and a failing `uv` prints the full summary.
+  >
+  > Left: the hook's ancestry tests on a shallow clone are sound, since a hosted branch forks from
+  > the clone's tip (case 10); the Gmsh lines before the header and the 600 s worst case predate
+  > R7; a shallow gate without a merge base runs in full, slower but right. `rules.py e4b52bc`:
+  > `missing: 75`, the 43 of item 3 and 32 sentences these fixes edit or move.
 - [ ] 10. ASD-STE100 rewording of item 9's files (D2). Done when a fresh `general-purpose` agent on
   Sonnet finds no rule lost or changed in force. **Executor:** `main`.
 - [ ] 11. D6's checks and word counts on the final tree, into the Outcome. Done when each passes.

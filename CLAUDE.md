@@ -45,15 +45,16 @@ Tier 2 tests that neither walk the pipeline nor carry `slow`, example 01 while i
 02's charged ePNP-NS walk). No coverage is measured. `gate.sh` runs before each `git commit` Claude Code makes
 (`--no-verify` skips it): the lock check, lint, format, types and the Tier 1 tests without the `nightly` marker.
 A hook pass never stands in for `run`.
-Start `run` with Bash `run_in_background`, wait for it in the same turn (a foreground `until` loop on
-its output; re-run the wait if the 10-minute limit ends it), push when it passes, and only then end the
+Start `run` with Bash `run_in_background` as `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`,
+wait for it in the same turn (a foreground `until grep -q '^exit ' <log>; do sleep 10; done`; re-run the
+wait if the 10-minute limit ends it), push when it passes (`exit 0`), and only then end the
 turn: a turn ended on an unpushed commit trips the environment's stop hook. The hook refuses a push of
 a tree it has not passed.
 
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
-- When only Markdown changed, the hook runs ruff alone (`.github/scripts/prose-only.sh`), wherever the Markdown
-  lives, `SPECIFICATION.md`, `docs/`, `knowledge/` and `.claude/` included; CI's documentation build still runs.
+- When only Markdown outside `packaging/`, `src/`, `data/` and `examples/` changed, the hook runs ruff alone
+  (`.github/scripts/prose-only.sh`); CI's documentation build still runs.
 
 ## Project structure
 
@@ -122,7 +123,7 @@ overrides a normative requirement.
 | 3–4 | `/np-ship [wp <n>]` | Gates, pushes, reviews (`/code-review xhigh --fix`), drives CI to green |
 | close | `/np-ship phase <n>` | Ships the close package and tags the release |
 
-Step 2 does not chain into 3: `/np-ship` starts in a fresh session (`np-ship/wp.md`, *Review pass*).
+Step 2 does not chain into 3: `/np-ship` starts in a fresh session (`.claude/workflow/core.md`, *Report and stop*).
 Plans before WP53 name these `/phase-plan`, `/wp-plan`, `/wp-implement` and `/wp-ship`. The steward
 skill governs a PR in flight.
 

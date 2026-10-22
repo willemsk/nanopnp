@@ -15,36 +15,22 @@ Nothing is committed in this turn.
 
 ### 1. Preconditions
 
-1. If a `docs/plans/phase-<n>-*.md` exists, this is an amendment: follow `amend.md`.
+1. If a `docs/plans/phase-<n>-*.md` exists, this is an amendment: read `amend.md` beside this
+   file and follow it.
 2. Phase n−1 is closed: its close package has merged, its end-of-phase report is written and its
    `vX.Y.0` tag is published or is the author's next step. If not, say so **first** and put the
    close first in the round: finish it, or rule that Phase n overlaps it and what Phase n may not
    do before it lands.
-3. Versions agree before a new one is named: §2.7 and its Versioning NOTE, §3's Release column,
-   §8.1, `CHANGELOG.md`, `current.md` and the published tags (`git ls-remote --tags origin
-   'v0.*'`; a hosted clone is shallow). One minor per phase. A disagreement goes into the round.
+3. Versions agree, as `rulings.md` says.
 
 ### 2. Collect what the phase inherits
 
-Read in this order, keeping a list of every item that needs a decision:
-
-1. `docs/plans/current.md`, then `knowledge/index.md`, then
-   `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` (a path-scoped rule does not
-   load while you write only Markdown).
-2. `SPECIFICATION.md` §8.1: Phase n's row and its GUI and documentation increments; then §8.4 and
-   `specification/history/index.md`, for rulings that already bind Phase n, reading a record only
-   where a ruling bears on the phase. A ruling taken is cited, never re-asked.
-3. The previous phase plan: its `## End-of-phase report` (above all what it **carries**), its open
-   `## Open decisions` rows, and every **Live for later packages** line in its delivered summaries
-   and WP Outcomes.
-4. §10's open `OPN-` items and §9's `RSK-` register: which this phase retires or could close.
-5. Any input note under `docs/plans/` that names this phase: its decisions bind, its open
-   questions join the round.
-6. Appendix A: requirements tagged for this phase's version and not yet discharged.
+Read what `rulings.md`'s *What a phase inherits* lists, keeping a list of every item that needs a
+decision.
 
 ### 3. Survey the codebase
 
-Delegate a survey (Haiku or Sonnet, `CLAUDE.md` *Models*; read the lines it returns) of what the phase builds on: what exists, what is
+Delegate a survey (the core, *Models*) of what the phase builds on: what exists, what is
 refused today naming a later phase, which seams take what the phase needs. From it write the
 **"true of the codebase today"** list yourself: five or so facts, each naming its file and function.
 
@@ -103,11 +89,7 @@ workflow.
 
 1. Commit on the working branch: `docs: Phase <n> plan and the author's rulings (§8.2.<k>)`, with
    identifiers and ruling numbers in the body.
-2. Gate and push (the core), with the strict documentation build: the amended specification renders
-   in it, and CI's `docs` job gates every push.
-3. Open or reuse the branch's PR against `main` without asking: base `main`, title the commit's
-   subject, body an In brief (the core's template), the rulings, the package sequence, the open
-   decisions, the checks run, and the attribution footer. The author merges it before the first
-   package is planned. If creation is blocked, report the blocker and the pushed branch.
-4. Report the paths, the PR, the rulings, the package sequence with what is provisional, the open
+2. Gate, push and open the PR as `rulings.md`'s *Finishing* says, its body naming the package
+   sequence. The author merges it before the first package is planned.
+3. Report the paths, the PR, the rulings, the package sequence with what is provisional, the open
    decisions and owners, **what the author must supply and when**, and the next step. Then stop.

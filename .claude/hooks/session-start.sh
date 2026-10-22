@@ -50,8 +50,10 @@ set -e
 
 # Only sync in Claude Code on the web / remote sessions — local devs manage
 # their own venv per CLAUDE.md.
-if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
-    uv sync --all-extras --frozen >&2
+# A failed sync is a warning in the summary, so the lines above it still reach the session.
+sync_note=""
+if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] && ! uv sync --all-extras --frozen >&2; then
+    sync_note="- warning: uv sync failed; run \`uv sync --all-extras\` before any \`uv run\`"
 fi
 
 set +e
@@ -116,6 +118,7 @@ dirty=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 echo "nanopnp — where the work stands (.claude/hooks/session-start.sh):"
 echo "- branch ${branch}${position}, working tree ${tree}"
 [ -z "$main_note" ] || echo "$main_note"
+[ -z "$sync_note" ] || echo "$sync_note"
 
 if [ -f docs/plans/current.md ]; then
     echo "- current phase and work package: docs/plans/current.md (read when planning or resuming work)"

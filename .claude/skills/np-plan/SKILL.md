@@ -6,10 +6,11 @@ argument-hint: <project | phase n | amend n | wp n>
 
 # Plan: `$ARGUMENTS`
 
-1. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
-2. The first argument is the level, the second its number n. Read the level's file beside this one:
-   `${CLAUDE_SKILL_DIR}/<level>.md`, one of `project.md`, `phase.md`, `amend.md` and `wp.md`.
-   `project`, `phase` and `amend` also read `rulings.md` beside it.
-3. A missing or unknown level, or a level other than `project` without n: print
-   `Usage: /np-plan <project | phase n | amend n | wp n>` and stop.
+1. The first argument is the level, the second its number n. A missing or unknown level, or a
+   level other than `project` without n: print `Usage: /np-plan <project | phase n | amend n | wp n>`
+   and stop.
+2. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
+3. Read the level's file beside this one: `${CLAUDE_SKILL_DIR}/<level>.md`, one of `project.md`,
+   `phase.md`, `amend.md` and `wp.md`. `project`, `phase` and `amend` also read `rulings.md` beside
+   it.
 4. Follow the level's file.

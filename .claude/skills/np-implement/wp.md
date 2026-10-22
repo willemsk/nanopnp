@@ -5,35 +5,36 @@
 
 ## Load the brief
 
-1. Read `docs/plans/current.md` and the requested WP's Execution brief. Its decisions are binding,
+1. Resolve the package's PR and branch (the core), then read the WP's Execution brief. Its decisions are binding,
    subject to the specification. Correct a wrong decision in the brief (and the specification).
    Its `### Grounding` is what the code held when the plan was written. A fact that has since gone
    wrong is corrected in the plan, in the commit of the item that found it. If the correction
    changes a decision, it is a wrong decision, handled as above.
 2. `knowledge/index.md`, then the sections of the files the package touches.
-3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites; `.claude/scripts/clause.py
-   <ID>` prints one with its NOTEs and rulings.
+3. The `SPECIFICATION.md` sections and Appendix A rows the plan cites (`clause.py`, the core).
 
 Build a task list from the work items, starting at the first unticked one. A
 **compaction checkpoint** is a work item (§8.2.16 R11). Tick it in its own commit, run the push gate
 and push as in *Finishing*. Then print a prompt in a `text` block: `/compact`, followed by the
 package, the next item's number, any values later items need that are not in the plan or
-`git log`, and "resume with `/np-implement`". End the turn there. The author compacts and resumes,
+`git log`, and "resume with `/np-implement wp <n>`". End the turn there. The author compacts and resumes,
 and the next item starts from the plan and `git log`.
 
 **Sub-agent items** (§8.2.16 R6, R11): hand each item whose **Executor** names a sub-agent to a new
 one of that type and model (Agent tool), with the item's text, its done-criterion, the plan's
 *Implementation details* for it, the clauses it cites and this file's *How the work lands*. Items
 marked `main` stay in this session. It edits, runs the
-item's checks, commits and ticks, and replies with the commit and the checks it ran, nothing more.
+item's checks and commits, and replies with the commit and the checks it ran, nothing more. This
+session ticks the item.
 Re-run the item's check yourself before the next item; on a failure, revert and hand the item to
 a fresh worker once, then the next model. Do not read the worker's files into this session.
 
 ## How the work lands
 
 **One commit per work item**, done when the tests its done-criterion names pass. Conventional
-prefix, requirement identifier in the body. Tick each item `[x] <short sha>` in that commit or the
-next, so a later session resumes from the first unticked one. The gate hook refuses a failing commit and remembers a pass, so a
+prefix, requirement identifier in the body. Tick each item `[x] <short sha>` in the next commit
+(a checkpoint ticks itself, and the item before it), so a later session resumes from the first
+unticked one. The gate hook refuses a failing commit and remembers a pass, so a
 gated tree can be split into several commits.
 
 Write each item's tests with the item, from the plan's *Verification* rows; the plan commits none.

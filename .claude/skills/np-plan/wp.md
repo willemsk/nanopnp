@@ -6,21 +6,21 @@ re-deciding anything that matters. The plan is a commit under `docs/plans/`, not
 
 ## Before writing anything
 
-1. Read `knowledge/index.md`, then the sections of the files the package touches. Read
+1. A package not in its phase plan, or listed **Provisional**, goes through `/np-plan amend`
+   first.
+2. Read `knowledge/index.md`, then the sections of the files the package touches. Read
    `.claude/rules/physics-numerics.md` and `.claude/rules/python.md`: the plan must respect both,
    and a path-scoped rule does not load while you write only Markdown.
-2. Read `SPECIFICATION.md` §8.1, the sections the package implements, and its Appendix A rows.
+3. Read `SPECIFICATION.md` §8.1, the sections the package implements, and its Appendix A rows.
    Collect the `FR-`/`QR-`/`CON-`/`PHY-`/`NUM-`/`VER-`/`VAL-`/`RSK-` identifiers it discharges, the
    `IF-` interfaces it satisfies, the `ADR-` decisions that constrain it and any `OPN-` open in
    this area (closing one is a spec edit; `## Open questions` is for it).
-3. Read `docs/plans/current.md`, then the package's scope, phase decisions and verification rows.
-   Follow dependency links only where they constrain this package. If the brief is absent or
-   stale, repair it from the phase and WP headings. A package not in its phase plan, or listed
-   **Provisional**, goes through `/np-plan amend` first.
-4. Survey the code the package builds on: what exists, what is an empty package reserving a slot,
-   which seams take the argument you need. Delegate a survey to Haiku or Sonnet (`CLAUDE.md`, *Models*) and read the lines it
-   returns before relying on them; keep every physics and numerics decision yourself.
-5. Do not search the web for the model equations or their parameters (`CLAUDE.md`). Check every
+4. Read the package's scope, phase decisions and verification rows. Follow dependency links only
+   where they constrain this package. If the brief is absent or stale, repair it from the phase and
+   WP headings.
+5. Survey the code the package builds on (the core, *Models*): what exists, what is an empty
+   package reserving a slot, which seams take the argument you need.
+6. Do not search the web for the model equations or their parameters (`CLAUDE.md`). Check every
    library API the plan names against its current documentation (Context7).
 
 ## Grounding the plan

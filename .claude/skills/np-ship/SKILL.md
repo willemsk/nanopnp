@@ -6,7 +6,8 @@ argument-hint: "[wp n | phase n]"
 
 # Ship: `$ARGUMENTS`
 
-1. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
-2. `wp <n>`, or no argument: read `${CLAUDE_SKILL_DIR}/wp.md`, beside this file, and follow it.
+1. An argument other than `wp <n>`, `phase <n>` or none: print `Usage: /np-ship [wp n | phase n]`
+   and stop.
+2. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
+3. `wp <n>`, or no argument: read `${CLAUDE_SKILL_DIR}/wp.md`, beside this file, and follow it.
    `phase <n>`: read `${CLAUDE_SKILL_DIR}/phase.md` and follow it; it runs `wp.md` too.
-3. Any other argument: print `Usage: /np-ship [wp n | phase n]` and stop.
