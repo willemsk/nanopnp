@@ -1,5 +1,7 @@
 # WP52 — The documents: the specification and the plans split
 
+PR: [#121](https://github.com/willemsk/nanopnp/pull/121), branch claude/wp52-documents
+
 **Status: planned, not started.** Written 22 October 2026; grounded in the code at `0329cde`
 (§8.2.15 Q1). Inherits WP51 as shipped and the Phase 4 amendment (§8.2.16 R1 to R10).
 
