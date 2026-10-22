@@ -214,9 +214,9 @@ and its *Implementation details*, and `main` re-runs its check.
 - [x] eed4f2e. 3. `SPECIFICATION.md` completed as the entry point; `specification/index.md`,
   `history/index.md` and the directory indexes written; §11's table gains the three (D2, D4). Done
   when the code and review say so. **Executor:** `main`.
-- [x] 4. `.claude/scripts/clause.py` reads the bundle (D5). Done when `ids.py` reports 0.
+- [x] 5a542d7. 4. `.claude/scripts/clause.py` reads the bundle (D5). Done when `ids.py` reports 0.
   **Executor:** `main`.
-- [ ] 5. Compaction checkpoint; the prompt carries `<base>`. **Executor:** `main`.
+- [x] checkpoint. 5. Compaction checkpoint; the prompt carries `<base>`. **Executor:** `main`.
 - [ ] 6. `04-development-process.md` (D3); `history/index.md`'s *where it holds now* for all 119
   rulings; `CLAUDE.md` and `.claude/rules/python.md` cite §8.4. Done when the code and review say so.
   **Executor:** `main`: judgement on normative text.
