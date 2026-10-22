@@ -159,6 +159,37 @@ def test_ver53_size_scale_multiplies_every_size_and_temperature_enters_as_sqrt_t
     assert explicit.source == "explicit"
 
 
+def test_ver53_a_design_concentration_shares_the_mesh_at_and_above_it(tmp_path: Path) -> None:
+    extra = "numerics: {mesh: {wall_for_concentration_M: 3.0}}\n"
+    wall = {c: wall_size(loads_case(case(c, extra=extra))) for c in (2.0, 3.0, 4.0)}
+    assert wall[2.0].key() == wall[3.0].key() == wall[4.0].key()
+    assert wall[3.0].wall_h_nm == pytest.approx(wall_size(loads_case(case(3.0))).wall_h_nm)
+    # Without the field the wall follows the salt above the ceiling.
+    assert wall_size(loads_case(case(2.0))).key() != wall_size(loads_case(case(3.0))).key()
+
+    plan = plan_from_document(_sweep(tmp_path / "designed", [2.0, 3.0], extra=extra))
+    assert [point.parent for point in plan.points] == [None, 0]
+    assert plan.warnings == ()
+    plain = plan_from_document(_sweep(tmp_path / "plain", [2.0, 3.0]))
+    assert [point.parent for point in plain.points] == [None, None]
+
+
+def test_wall_sized_at_the_design_concentration_reports_the_runs_own_ratio() -> None:
+    # The Debye length that sized the wall must not stand in for the run's own: the NUM-30
+    # ratio of a salt above the design concentration would then read as met.
+    extra = "numerics: {mesh: {wall_for_concentration_M: 2.0}}\n"
+    wall = wall_size(loads_case(case(4.0, extra=extra)))
+    sizing = case_debye_length_nm(
+        loads_case(case(2.0)), permittivity_0=eps_r0(loads_case(case(2.0)))
+    )
+    assert wall.sizing_debye_length_nm == pytest.approx(sizing, rel=1e-12)
+    assert wall.wall_h_nm == pytest.approx(min(WALL_CEILING_NM, sizing / 5.0), rel=1e-12)
+    own = case_debye_length_nm(loads_case(case(4.0)), permittivity_0=eps_r0(loads_case(case(4.0))))
+    assert wall.debye_length_nm == pytest.approx(own, rel=1e-12)
+    assert wall.debye_target_nm == pytest.approx(own / 5.0, rel=1e-12)
+    assert wall.coarser_than_num30 is True
+
+
 def test_ver53_the_ionic_strength_weights_valence_squared() -> None:
     document = loads_case(case(0.5))
     assert ionic_strength_M(document) == pytest.approx(0.5)
@@ -252,10 +283,10 @@ def test_ver53_a_mesh_key_beside_a_supplied_mesh_is_refused_naming_it(mesh: str,
     loads_case(MESH_CASE.format(mesh="wall_h_nm: auto, size_scale: 1.0"))
 
 
-def _sweep(tmp_path: Path, values: list[float]) -> Path:
+def _sweep(tmp_path: Path, values: list[float], extra: str = "") -> Path:
     tmp_path.mkdir(parents=True, exist_ok=True)
     base = tmp_path / "base.case.yaml"
-    base.write_text(case(), encoding="utf-8")
+    base.write_text(case(extra=extra), encoding="utf-8")
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
         "schema: nanopnp/sweep/v0.5\n"

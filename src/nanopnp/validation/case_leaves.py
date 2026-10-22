@@ -271,6 +271,9 @@ LEAVES: dict[str, Leaf] = {
     "numerics.mesh.wall_h_nm": Leaf(
         "stage", "mesh", "target mesh element size along pore walls in stage 6"
     ),
+    "numerics.mesh.wall_for_concentration_M": Leaf(
+        "stage", "mesh", "concentration whose Debye length sizes the auto wall target in stage 6"
+    ),
     "numerics.mesh.size_scale": Leaf(
         "stage", "mesh", "global mesh resolution scaling factor applied in stage 6"
     ),

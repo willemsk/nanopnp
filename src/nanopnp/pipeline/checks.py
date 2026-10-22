@@ -562,6 +562,12 @@ def _check_generation(document: CaseDocument) -> None:
             f"numerics.mesh.wall_h_nm is {mesh.wall_h_nm}; it is `auto` or an element size in "
             "nm, finite and positive (section 5.3.1 NOTE on numerics.mesh)"
         )
+    if mesh.wall_for_concentration_M is not None and mesh.wall_h_nm != "auto":
+        raise CaseValidationError(
+            f"numerics.mesh.wall_for_concentration_M is {mesh.wall_for_concentration_M} beside "
+            f"numerics.mesh.wall_h_nm {mesh.wall_h_nm}; it sizes `auto`, and an explicit size "
+            "is used as written, so it would change nothing (section 5.3.1 NOTE on numerics.mesh)"
+        )
 
 
 # default_ladder reads none of these from the case: flow is on from the stage-6 rung and

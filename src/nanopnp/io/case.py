@@ -421,6 +421,15 @@ class MeshSpec(_Strict):
         description="The mesher backend, checked against the mesher registry (section 5.5).",
     )
     wall_h_nm: float | Literal["auto"] = "auto"
+    wall_for_concentration_M: float | None = Field(
+        default=None,
+        gt=0.0,
+        allow_inf_nan=False,
+        description=(
+            "The concentration, in mol/L, at whose Debye length `wall_h_nm: auto` is sized; "
+            "none sizes it at the case's own."
+        ),
+    )
     size_scale: float = Field(default=1.0, gt=0.0, allow_inf_nan=False)
     boundary_layer: bool = False
 

@@ -97,6 +97,8 @@ class WallSize:
     source: str
     debye_length_nm: float
     size_scale: float
+    design_concentration_M: float | None = None
+    sizing_debye_length_nm: float | None = None
 
     @property
     def debye_target_nm(self) -> float:
@@ -114,30 +116,54 @@ class WallSize:
 
     def summary(self) -> dict[str, Canonicalisable]:
         """Return the manifest's wall record: the key's, with the Debye length beside it."""
-        return {**self.key(), "debye_length_nm": self.debye_length_nm}
+        record = {**self.key(), "debye_length_nm": self.debye_length_nm}
+        if self.design_concentration_M is not None:
+            record["design_concentration_M"] = self.design_concentration_M
+            record["sizing_debye_length_nm"] = self.sizing_debye_length_nm
+        return record
 
 
-def ionic_strength_M(document: CaseDocument) -> float:
-    """Return the bulk ionic strength ``I = 1/2 sum z_i^2 c``, in mol/L."""
-    concentration = document.electrolyte.concentration_M
+def ionic_strength_M(document: CaseDocument, *, concentration_M: float | None = None) -> float:
+    """Return the bulk ionic strength ``I = 1/2 sum z_i^2 c``, in mol/L.
+
+    ``concentration_M`` replaces the case's own concentration.
+    """
+    concentration = (
+        document.electrolyte.concentration_M if concentration_M is None else concentration_M
+    )
     return 0.5 * sum(species.z**2 * concentration for species in document.electrolyte.species)
 
 
-def case_debye_length_nm(document: CaseDocument, *, permittivity_0: float) -> float:
-    """Return the case's Debye length ``lambda_D`` at ``eps_r,f0``, in nm."""
+def case_debye_length_nm(
+    document: CaseDocument, *, permittivity_0: float, concentration_M: float | None = None
+) -> float:
+    """Return the case's Debye length ``lambda_D`` at ``eps_r,f0``, in nm.
+
+    ``concentration_M`` replaces the case's own concentration.
+    """
     return debye_length_nm(
-        ionic_strength_M(document),
+        ionic_strength_M(document, concentration_M=concentration_M),
         relative_permittivity=permittivity_0,
         temperature_K=document.electrolyte.temperature_K,
     )
 
 
 def resolve_wall_size(document: CaseDocument, *, permittivity_0: float) -> WallSize:
-    """Return the wall target in nm: ``auto`` or the explicit value, times ``size_scale``."""
+    """Return the wall target in nm: ``auto`` or the explicit value, times ``size_scale``.
+
+    ``auto`` is sized at ``numerics.mesh.wall_for_concentration_M`` when it is set; the
+    returned ``debye_length_nm`` stays the case's own.
+    """
     mesh = document.numerics.mesh
     debye = case_debye_length_nm(document, permittivity_0=permittivity_0)
+    design = mesh.wall_for_concentration_M
+    sizing = (
+        debye
+        if design is None
+        else case_debye_length_nm(document, permittivity_0=permittivity_0, concentration_M=design)
+    )
     if mesh.wall_h_nm == "auto":
-        base = min(WALL_CEILING_NM, debye / DEBYE_FRACTION)
+        base = min(WALL_CEILING_NM, sizing / DEBYE_FRACTION)
         source = "auto"
     else:
         base = float(mesh.wall_h_nm)
@@ -147,6 +173,8 @@ def resolve_wall_size(document: CaseDocument, *, permittivity_0: float) -> WallS
         source=source,
         debye_length_nm=debye,
         size_scale=mesh.size_scale,
+        design_concentration_M=design,
+        sizing_debye_length_nm=None if design is None else sizing,
     )
 
 
