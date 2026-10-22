@@ -189,10 +189,14 @@ switch) and D5 ("at most two widgets"). Six decisions, the author's unless marke
   `wall_h_nm: auto` at a salt above 1.474 M, since its current base case sets an explicit wall the new field is
   refused beside. `CHANGELOG.md`. Done when the tests below pass and a salt axis from 2 to 3 M is not a warm-start
   barrier with the field at 3 M, and is without it.
-- [ ] 10. **Prove `only=True` in notebook order** (a spike, thrown away): on a fresh store, a walk to each stage of 06
+- [x] 10. **Prove `only=True` in notebook order** (a spike, thrown away): on a fresh store, a walk to each stage of 06
   and of 02 with `only=True`, in notebook order, so a branch is covered (protonation reads only the structure; 05
   has none); each curated setting moves its stage's hash and the later ones, the electrolyte settings and
   `charge.exclusion_offset_nm` included. Done when the order is known to hold, or the block changes (A1, A2, A5).
+  Done 22 October 2026 on 2WCD; the findings are in the design (*What the spike found*). The order holds. What it changes:
+  items 12 and 13 add a `geometry:` block at the defaults to the case they use (it moves no key); the curated lists drop
+  `electrolyte.temperature_K` and the `physics.*` switches, which the case refuses; item 14 sets marimo's
+  `on_cell_change = "lazy"` for the project.
 - [ ] 11. **05-cylinder** as blocks, with the sweep block (A1 to A3). README. Done when `test_notebook_runs_headless[05-cylinder]` passes.
 - [ ] 12. **06-2wcd** as blocks. Done when it passes headless.
 - [ ] 13. **01, 02, 03, 04** as blocks, one commit each, with the READMEs.

@@ -92,9 +92,10 @@ reads it:
 
 The rule for placing a setting: it lives in the block of the **earliest stage whose hash it moves**, or an
 `only=True` cell would find an earlier stage missing. Two cases need care. `charge.exclusion_offset_nm` moves the
-region's key, so it is in the region block. And for a *generated* mesh (06) the Debye length sizes the wall, so
-`electrolyte.temperature_K`, the species' valences and `electrolyte.parameters` move the mesh key too; the salt moves it
-only above 1.474 M (see *The mesh and the salt*). The builder checks each setting by moving it.
+region's key, so it is in the region block. And for a *generated* mesh (06) the Debye length sizes the wall, so the
+salt moves the mesh key above 1.474 M (see *The mesh and the salt*), measured: 0.3 M moves materials and solve, 2.0 M
+moves the mesh as well. The temperature would too, but the shipped parameter set refuses any other than 298.15 K, so it is
+not a notebook setting. The spike checked each setting by moving it (*What the spike found*).
 
 The rule for the curated list: a scalar or an enumerated choice a user could reasonably vary; never an
 identity or provenance field (`schema`, `name`, file paths) and never a field that needs another
@@ -156,6 +157,34 @@ first `only=True` cell would find an empty store.
   notebooks run, including a branch (protonation reads only the structure) and the stage after the
   mesh. The code in `pipeline/run.py` says so; the first step of the plan proves it on 02 and 06.
 - That each curated setting moves exactly its stage's hash and the hashes after it.
+
+## What the spike found
+
+Run on 2WCD (example 07's case) from an empty store, 22 October 2026 (WP51 item 10; the scripts were thrown away).
+
+- **The order holds.** `run(upto=stage, only=True)` for the eleven stages in notebook order computes the target and
+  takes every other stage of its closure from the store, including the branch (`protonation` walks `case`, `structure`,
+  `protonation`) and the stages after the mesh. A second pass finds every target cached. An empty store refuses the first
+  call naming `structure`. The `case` and `materials` stages are their own keys, so a first run reports them
+  computed; the show cell does not read that as a recompute. The solve took 401 s on the 4x coarse mesh and the walk
+  about eleven minutes.
+- **Each setting moves its stage first.** Moving a setting and keying every stage on the stored upstream:
+  `structure.symmetry.point_group` → structure; `geometry.density.*` → density (the grid spacing also moves symmetry and
+  contour, which read the grid); `geometry.contour.*` → contour; `geometry.membrane.*`, `geometry.reservoir.*` and
+  `charge.exclusion_offset_nm` → region (`membrane.centre_z_nm` also moves the charge deposit); `numerics.mesh.*` → mesh;
+  `charge.ph`, `charge.forcefield` → protonation; `charge.smearing.*`, `charge.dielectric_transition_nm` → charge;
+  `electrolyte.concentration_M` → materials, then solve, and the mesh too at 2.0 M; `boundary_conditions.bias_V`,
+  `numerics.stabilisation`, `numerics.wall_distance.*` → solve; `outputs` → qoi.
+- **A geometry setting needs a `geometry:` block in the case.** `Case.with_` refuses to add a section from defaults
+  (`with_section` allows only `charge`), and no shipped case carries `geometry:`. A block spelled at the defaults
+  (`geometry: {}`) moves no stage key, so the example case for 06 (and 01 if it needs it) spells the block out; the edit
+  goes in the same commit as the notebook.
+- **Two curated lists are shorter than the table says.** `electrolyte.temperature_K` is refused (the parameters are
+  fitted at 298.15 K), and `physics.inertia` and its siblings are refused, because the NUM-18 ladder fixes the path.
+  The solve block lists `bias_V`, `stabilisation` and `wall_distance` and not the `physics` switches.
+- **Reactivity costs a re-solve.** Running an edited early block autoruns every later block, the solve included.
+  Marimo's `on_cell_change = "lazy"` marks them stale instead; `pyproject.toml` can set it for the project
+  (`[tool.marimo.runtime]`), and headless runs are unaffected. Item 14 sets it and checks it in `marimo edit`.
 
 ## Left to the builder
 
