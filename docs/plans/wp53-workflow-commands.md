@@ -237,11 +237,11 @@ and its *Implementation details*; `main` re-runs its check.
   **Executor:** `main`.
 - [x] e0566f6 6. The pointer edits of *Implementation details*. Done when the code and review say so.
   **Executor:** `general-purpose`, Haiku.
-- [ ] 7. §8.4.3 and §8.4.4 name the new commands; `history/index.md` sets R5 and R12 to §8.4.4 and
+- [x] b7d8fa5 7. §8.4.3 and §8.4.4 name the new commands; `history/index.md` sets R5 and R12 to §8.4.4 and
   R7 to `.claude/hooks/session-start.sh`; the Phase 4 plan's delivered summary; `current.md`;
   `CHANGELOG.md`'s `0.5.0-alpha.19` section. Done when the code and review say so. **Executor:**
   `main`.
-- [ ] 8. Compaction checkpoint. **Executor:** `main`.
+- [x] 8. Compaction checkpoint. **Executor:** `main`.
 - [ ] 9. D6's checks and word counts on the final tree, into the Outcome. Done when each passes.
   **Executor:** `main`.
 
