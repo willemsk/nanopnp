@@ -1370,3 +1370,32 @@ Empty until the close package fills it. It reports:
 - **The development loop:** the wall times of the commit hook, the push gate and CI's pull-request
   critical path, against 11 October 2026's 199 s, 527 s and about 10.5 minutes. Sources: the gate log
   (`<git dir>/nanopnp-gate.log`) and CI's job timings.
+
+---
+
+## Amended 22 October 2026 (§8.2.16 R12)
+
+At WP53's plan the author renamed the commands, because `/plan` is a built-in Claude Code command. The
+plan settled the aliases and the hook's open cases. WP53's entry read, before this amendment:
+
+> **WP53 — The workflow: three skills with levels, workers, and a current checkout (§8.2.16 R5 to R7)**
+>
+> It waits on WP52, whose layout its skills read.
+>
+> - **`/plan`, `/implement` and `/ship`**, each a short router over a shared core file and one file per
+>   level (`project`, `phase`, `amend` and `wp` for `/plan`; `wp` and `phase` for `/ship`), replacing
+>   `phase-plan`, `wp-plan`, `wp-implement` and `wp-ship`. R3's and R4's rules for rulings and plan
+>   amendments go into the planning levels, and a ruling's table is written to a new `history/` file
+>   and its rule to §8.4 (R5).
+> - **The worker pattern** in the implementing level, and the planning level's mark for the items that
+>   go to workers (R6).
+> - **The session-start hook's fast-forward** of a clean primary `main`, and its warning otherwise (R7).
+> - **The pointers**: `CLAUDE.md`'s *Implementation workflow* and *Commands*, `current.md`'s handoff
+>   rules, §8.4.4 and every mention of the old names.
+>
+> `steward` and the two agent files stay. No test is kept (N1). WP54 is the first package planned,
+> implemented and shipped with the new skills, and its sessions are the check. Its plan decides the
+> core file's contents, whether the old names stay as aliases and the hook's behaviour on a detached or
+> diverged checkout. Tag `v0.5.0-alpha.19`.
+
+The *Open decisions* row on WP53's aliases and the hook read **Open**, owned by WP53's plan.

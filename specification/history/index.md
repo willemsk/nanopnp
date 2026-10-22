@@ -151,3 +151,4 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * R9 - spent
 * R10 - spent
 * R11 - §8.4.4, §8.4.5
+* R12 - open: WP53 renames the commands
