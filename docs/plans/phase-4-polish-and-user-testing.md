@@ -3,7 +3,7 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP52, below. Planned: WP53, the workflow; WP54, the notebooks and figures
+demand. Delivered: WP35 to WP52, below. Planned: WP53, the workflow ([plan](wp53-workflow-commands.md)); WP54, the notebooks and figures
 revised; WP55, the user-testing protocol ([plan](wp55-user-testing-protocol.md)). Provisional, and
 planned by the second `/phase-plan amend 4` once the author has run the sessions and ruled every
 `UT-nn`: the fixes from WP56, the documentation increment and the close, which take their numbers
@@ -168,25 +168,25 @@ read the bundle. This plan is its current scope, its amendments in
 [phase-4-record.md](phase-4-record.md). No identifier is claimed and no test kept (N1); R10's two
 checks, their output in the plan's Outcome, found no lost line and no changed definition.
 
-### WP53 — The workflow: three skills with levels, workers, and a current checkout (§8.2.16 R5 to R7)
+### WP53 — The workflow: three commands with levels, workers, and a current checkout (§8.2.16 R5 to R7, R12)
 
-It waits on WP52, whose layout its skills read.
+[Plan](wp53-workflow-commands.md). It waits on WP52, whose layout its skills read.
 
-- **`/plan`, `/implement` and `/ship`**, each a short router over a shared core file and one file per
-  level (`project`, `phase`, `amend` and `wp` for `/plan`; `wp` and `phase` for `/ship`), replacing
-  `phase-plan`, `wp-plan`, `wp-implement` and `wp-ship`. R3's and R4's rules for rulings and plan
-  amendments go into the planning levels, and a ruling's table is written to a new `history/` file
-  and its rule to §8.4 (R5).
+- **`/np-plan`, `/np-implement` and `/np-ship`** (R5, named by R12), each a short router over a
+  shared core file and one file per level (`project`, `phase`, `amend` and `wp` for `/np-plan`; `wp`
+  and `phase` for `/np-ship`), replacing `phase-plan`, `wp-plan`, `wp-implement` and `wp-ship`, with
+  no aliases. R3's and R4's rules for rulings and plan amendments go into the planning levels: a
+  ruling's table is written to a new `history/` file and its rule to §8.4.
 - **The worker pattern** in the implementing level, and the planning level's mark for the items that
   go to workers (R6).
-- **The session-start hook's fast-forward** of a clean primary `main`, and its warning otherwise (R7).
+- **The session-start hook's fast-forward** of a clean primary `main`, and a warning when the
+  checkout lacks commits of `origin/main` (R7).
 - **The pointers**: `CLAUDE.md`'s *Implementation workflow* and *Commands*, `current.md`'s handoff
-  rules, §8.4.4 and every mention of the old names.
+  rules, §8.4.4 and every live mention of the old names.
 
 `steward` and the two agent files stay. No test is kept (N1). WP54 is the first package planned,
-implemented and shipped with the new skills, and its sessions are the check. Its plan decides the
-core file's contents, whether the old names stay as aliases and the hook's behaviour on a detached or
-diverged checkout. Tag `v0.5.0-alpha.19`.
+implemented and shipped with the new commands, and its sessions are the check. Tag
+`v0.5.0-alpha.19`.
 
 ### WP54 — The notebooks and figures revised (§8.2.16 R8)
 
@@ -253,7 +253,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 |---|---|
 | The phase estimate after R1: 4–6 weeks stands (P7), or 5–7 | **Author, open.** Recommendation: 5–7 weeks |
 | The notebooks on the documentation site: in documentation increment 4, or later | **Author, open**, at the second amendment. Default: on the site, after the sessions show which help |
-| WP53's aliases for the old command names, and the hook on a diverged checkout | **Open**, owned by WP53's plan |
+| WP53's aliases for the old command names, and the hook on a diverged checkout | **Settled** by WP53's plan: no aliases; a warning, and no write, unless a clean primary `main` can fast-forward |
 | WP54's scope | **Settled** (R8): open, decided at its plan from the author's notes |
 | Each `UT-nn`: fix or defer | **Author**, through the second amendment |
 | `MOD-11` | **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
