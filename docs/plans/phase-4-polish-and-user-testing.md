@@ -6,7 +6,8 @@ the author ruled the review register (§8.2.9), and on 11 October 2026, when the
 development loop (§8.2.10), on 13 October 2026, when the author simplified it (§8.2.11), and on
 18 October 2026, after the author ruled an external architecture review (§8.2.12), and again that
 day, when the author ruled the test scope (§8.2.13), and on 22 October 2026, when the author inserted
-the plotting library and the notebooks (§8.2.14).
+the plotting library and the notebooks (§8.2.14), and again that day, when the author inserted the
+documents, the workflow and the notebooks' revision (§8.2.16).
 Delivered: WP35, the modularity exploration
 ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
 WP36, the stage protocol and the walk ([wp36-stage-protocol-and-walk.md](wp36-stage-protocol-and-walk.md)),
@@ -29,35 +30,38 @@ tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-pros
 `v0.5.0-alpha.16`.
 WP51, the plotting library and the notebooks ([plan](wp51-plotting-and-notebooks.md)), to be tagged
 `v0.5.0-alpha.17`.
-Planned: WP52, the user-testing protocol ([plan](wp52-user-testing-protocol.md); §8.2.9 I1,
-renumbered by §8.2.12 M4, §8.2.13 N6 and §8.2.14 P1).
+Planned (§8.2.16 R1), each awaiting its plan: WP52, the documents; WP53, the workflow; WP54, the
+notebooks and figures revised.
+Planned: WP55, the user-testing protocol ([plan](wp55-user-testing-protocol.md); §8.2.9 I1,
+renumbered by §8.2.12 M4, §8.2.13 N6, §8.2.14 P1 and §8.2.16 R1).
 Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
-and ruled every `UT-nn`: the fixes, from WP53, then the documentation increment and the close,
+and ruled every `UT-nn`: the fixes, from WP56, then the documentation increment and the close,
 which take their numbers then.
 Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the simpler loop, the
-trimmed code and tests, the reorganised notes and the cost study are done. On 22 October the author
-asked to see what each step of the pipeline produces before testing it as a user would.
+trimmed code and tests, the reorganised notes, the cost study, and a picture of every step of the
+pipeline with notebooks to try it are done. On 22 October the author asked for two more things
+before the testing sessions.
 
-**What changes.** One package now comes before the user testing. It draws a picture of every step:
-the protein's atoms, the density, the pore's outline, the mesh, the charge, the material
-coefficients, the computed fields, how the solver converged and a voltage sweep's curve. It adds
-notebooks, plain files opened in a browser, whose sliders rerun a case. A result shows its picture
-when a notebook prints it. The notebooks run every night, and one becomes a session's script.
+**What changes.** Three packages now come before the protocol. The first splits the specification
+into what holds today, read by default, and its history, read only when needed, and does the same
+for this plan. The second rebuilds the working instructions as three commands, plan, implement and
+ship, each taking a level; hands batches of independent edits to fresh helpers; and keeps the
+instructions a session loads up to date. The third revises the notebooks and figures from the
+author's notes.
 
-**Cost.** About a week, inside the four to six weeks already set. The pictures load only when asked
-for, so a run without them is no slower.
+**Cost.** About a week and a half. Nothing a user runs changes in the first two.
 
-**What could go wrong.** A picture could mislabel an axis or a unit and mislead; the numbers behind
-it are checked where they are computed, and the author looks at every picture before the package
-merges. A step added later without a picture fails a check. A broken notebook shows up the next
-morning.
+**What could go wrong.** Moving 78,000 words could drop or alter a requirement; a script checks that
+every line lands somewhere, and every identifier still finds the same text. A rewritten instruction
+could lose a rule; the first package planned with the new commands would show it. The notebooks'
+revision has an open scope, so its plan names any new dependency before it enters.
 
-**Your call.** Should the notebooks go on the documentation site with this phase's documentation
-update? *Recommendation:* yes, once the sessions have shown which of them help.
+**Your call.** Should the phase estimate grow from four to six weeks to five to seven?
+*Recommendation:* yes; the sessions matter more than the date.
 
 ## Context
 
@@ -244,6 +248,7 @@ contents and the guard's form, and the first OKF package decides open questions 
 | Where the cost study goes | WP49, before the protocol, which becomes WP50 (M4) | Testers see the tree v0.5 ships (G2) |
 | The test scope | Tests only for physics, numerics, core mechanisms and the licence and architecture guards; no coverage gate; walks nightly but for examples 01 and 02; a reviewer step deletes off-category tests; WP50, before the protocol (§8.2.13 N1 to N6) | Development speed is spent on tests that can catch a wrong answer |
 | The plotting library and the notebooks | WP51, before the protocol, which becomes WP52. Matplotlib in a new `plot/` below `pipeline`, importing no backend; each stage's figure declared in the stage registry, so every artefact displays itself; marimo notebooks run nightly; FR-30, tested by a smoke test and an import guard (§8.2.14 P1 to P7) | The author confirms each stage by eye before the sessions, and neither the display nor a later stage can break the layering |
+| The documents and the workflow | WP52 to WP54, before the protocol, which becomes WP55. The specification an OKF bundle read current by default, its history on demand, the rulings in force restated in a process section; plans current, their amendments in a record; `/plan`, `/implement` and `/ship` with levels; workers for independent batches; the primary checkout fast-forwarded; the notebooks revised from the author's notes, scope open (§8.2.16 R1 to R10) | A session reads what holds today, and the author tests notebooks revised from their own review |
 | The development loop | WP43, before the small fixes. The commit hook runs the fast checks and the affected tests. The push gate runs once, in the background. CI runs ubuntu on Python 3.14 on a pull request, and macOS and Windows after a merge. Python 3.14 is the default. The agent roster is defined, and plans open with a plain-language summary. Every change is held to pre-registered budgets (§8.2.10 J1 to J9) | Every later package is built on it. The budgets keep it from drifting back |
 
 ## Conventions established by earlier phases
@@ -978,14 +983,68 @@ widgets. REV-123 becomes `fixed`. Tag `v0.5.0-alpha.17`.
 > the one the electrolyte declares, ⟨c⟩ = (1/n)Σcᵢ by default and the ionic strength only where the
 > corrections file says so (`Electrolyte.driver`), so the line now says so.
 
+### WP52 — The documents: the specification and the plans split (§8.2.16 R2 to R4, R9, R10)
+
+*Added, 22 October 2026* (§8.2.16 R1). It waits on WP51's merge. The author asked that a session read
+the current specification by default and its history only on demand. It delivers:
+
+- **`specification/`**, an OKF bundle beside `knowledge/`: one file per numbered section, §5 and §7 by
+  subsection, an `index.md` per directory. `specification/history/` takes the dated §8.2.x tables and
+  the superseded and withdrawn rows and NOTEs; each leaves a one-line pointer in the current text (R2).
+- **The development-process section**: the rulings in force that have no clause of their own,
+  restated once, each pointing to its ruling (R3).
+- **`SPECIFICATION.md` as the entry point** and map from section and identifier to file;
+  `clause.py`, `docs/scripts/generate.py` and `mkdocs.yml` reading the directory; anchored links in
+  `docs/`, `knowledge/` and `.claude/` repointed; §11 and `CLAUDE.md` updated (R2, R9).
+- **This plan restructured** to its current scope, its amendments moved to a record (R4).
+
+No file under `src/` or `tests/` changes, so the gate is prose-only. No identifier is claimed and no
+test is kept (N1). R10's two conditions are checked in the pull request, the line check by a one-off
+script whose output goes into the Outcome. Its `/wp-plan` decides the file boundaries, the bundle's
+`type` vocabulary, where this plan's amendment record lives and how the restated rows are listed.
+Tag `v0.5.0-alpha.18`.
+
+### WP53 — The workflow: three skills with levels, workers, and a current checkout (§8.2.16 R5 to R7)
+
+*Added, 22 October 2026* (§8.2.16 R1). It waits on WP52, whose layout its skills read. It delivers:
+
+- **`/plan`, `/implement` and `/ship`**, each a short router over a shared core file and one file per
+  level (`project`, `phase`, `amend` and `wp` for `/plan`; `wp` and `phase` for `/ship`), replacing
+  `phase-plan`, `wp-plan`, `wp-implement` and `wp-ship`. R3's and R4's rules for rulings and plan
+  amendments go into the planning levels (R5).
+- **The worker pattern** in the implementing level, and the planning level's mark for the items that
+  go to workers (R6).
+- **The session-start hook's fast-forward** of a clean primary `main`, and its warning otherwise (R7).
+- **The pointers**: `CLAUDE.md`'s *Implementation workflow* and *Commands*, `current.md`'s handoff
+  rules, and every mention of the old names.
+
+`steward` and the two agent files stay. No test is kept (N1). WP54 is the first package planned,
+implemented and shipped with the new skills, and its sessions are the check. Its `/wp-plan` decides
+the core file's contents, whether the old names stay as aliases, and the hook's behaviour on a
+detached or diverged checkout. Tag `v0.5.0-alpha.19`.
+
+### WP54 — The notebooks and figures revised (§8.2.16 R8)
+
+*Added, 22 October 2026* (§8.2.16 R1). It waits on WP53, and on the author's document of comments
+and notes on WP51's notebooks and figures, which its `/plan wp 54` reads. Its scope is what that
+document asks (R8), new dependencies and changes below `plot/` included, each a decision of its plan.
+WP51's rules carry unless that plan rules otherwise and amends FR-30 in the same commit: `plot/`
+imports no backend; `import nanopnp` and a walk load no drawing or notebook library; every notebook
+runs headless nightly; every stage declares a figure or is figure-free. A change to `PUBLIC` is decided
+in `test_public_api.py` (F4) and listed in `CHANGELOG.md`. VER-61, VER-62 and VER-65 stay green. Its
+plan claims its identifiers. Tag `v0.5.0-alpha.20`.
+
 ### User-testing protocol — Provisional
 
-> **Planned, 19 October 2026** ([plan](wp52-user-testing-protocol.md)): five sessions, VER-69 on
+> **Planned, 19 October 2026** ([plan](wp55-user-testing-protocol.md)): five sessions, VER-69 on
 > VER-46's runner, nightly.
 
 > **Amended, 22 October 2026** (§8.2.14 P1, P5). This is now **WP52**, and it waits on WP51. Session
 > 04, the Python API, is a marimo notebook in its own directory, using WP51's figures and display;
 > the tester installs the `notebook` extra. Tag `v0.5.0-alpha.18`.
+
+> **Amended, 22 October 2026** (§8.2.16 R1). This is now **WP55**, and it waits on WP54, whose
+> notebooks session 04 is re-read against. Tag `v0.5.0-alpha.21`.
 
 It waits on the OKF backfill. It writes:
 
@@ -1037,6 +1096,8 @@ shell following, and schema moves under `nanopnp/case/v0.5` (G6).
 > **Amended, 18 October 2026** (§8.2.13 N6). They are numbered from **WP52**, and their tests follow N1.
 
 > **Amended, 22 October 2026** (§8.2.14 P1). They are numbered from **WP53**.
+
+> **Amended, 22 October 2026** (§8.2.16 R1). They are numbered from **WP56**.
 
 ### Documentation increment 4 — Provisional
 
@@ -1120,6 +1181,10 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The plotting library and the notebooks | Their place in the sequence, the notebook form, the drawing library, the subpackage's place, the requirement and its tests, the display, the estimate | **Settled by the author, 22 October 2026** (§8.2.14 P1 to P7). P6 follows the author's instruction to build the most long-term viable design |
 | WP51's public names | `nanopnp.plot` as a namespace, and whether any name joins `PUBLIC` | **Open**, owned by WP51's `/wp-plan`; a change to `PUBLIC` is decided in `test_public_api.py` (F4) |
 | The notebooks on the documentation site | In documentation increment 4, or later | **Author, open**, at the second amendment. Default: on the site, after the sessions show which help |
+| The documents and the workflow | The packages, the specification's home, current and history, the plans, the skills, the workers, the checkout, `knowledge/`'s scope, WP52's checks | **Settled by the author, 22 October 2026** (§8.2.16 R1 to R7, R9, R10) |
+| WP54's scope | Bounded to `plot/` and `notebooks/`, or open | **Settled by the author, 22 October 2026** (R8): open, decided at its plan from the author's notes |
+| WP52's file boundaries, `type` vocabulary and amendment record; WP53's aliases and the hook on a diverged checkout | — | **Open**, owned by WP52's and WP53's plans |
+| The phase estimate after R1 | 4–6 weeks stands (P7), or 5–7 | **Author, open.** Recommendation: 5–7 weeks |
 | WP49's thresholds | 4 GB, 5 %, 10 % | **Registered by this amendment**, 18 October 2026. A re-argued threshold is a plan amendment before the measurement, never after |
 | NUM-07 order; the archive-dependent legs | — | **Phase 6** (E1, E4, F1). Not this phase's |
 | OPN-04, OPN-08 | — | **Author, open.** Not on this phase's path |
@@ -1143,6 +1208,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | A read of WP45's pull request, and of any module the author picks | WP45's merge | The pull request waits |
 | A ruling on any WP49 cost over its threshold that one pull request cannot fix | WP49's shipping | The cost is carried as a `REV-nn` row, and the protocol does not wait on it |
 | A look at every stage's figure and every notebook, on a case of the author's choosing | WP51's merge | The pull request waits; a figure the author finds misleading is a `REV-nn` row, fixed before the merge |
+| The document of comments and notes on the notebooks and figures | WP54's plan | WP54 waits; the author may drop it by ruling and the protocol goes ahead |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
 
@@ -1175,9 +1241,12 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP49, cost study | 1, 2 | VER-76 (proposed); VER-62 unchanged |
 | WP50, test scope | 1, 2 | None new; N3's identifiers withdrawn; VER-61, VER-62, VER-65 kept green |
 | WP51, plotting and notebooks | 1, 2, nightly | FR-30's smoke test, the data layer's conversions, the import guard and the notebooks' nightly run; VER-61 re-recorded; VER-62 and VER-65 unchanged |
-| WP52, protocol | nightly | VER-69 (proposed) |
+| WP52, documents | 1, 2 | None new; R10's line and identifier checks in the pull request; VER-45 |
+| WP53, workflow | 1, 2 | None new |
+| WP54, notebooks revised | 1, 2, nightly | Claimed by its plan; FR-30's tests kept; VER-61, VER-62, VER-65 unchanged |
+| WP55, protocol | nightly | VER-69 (proposed) |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-63 kept green |
-| Fixes, from WP53 | 1, 2 | Claimed at the second amendment |
+| Fixes, from WP56 | 1, 2 | Claimed at the second amendment |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | VER-63 against closed logs |
 
@@ -1247,6 +1316,15 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
     misses, it is fixed in WP51. A backend import is removed, VER-65's set growing only by the
     author's ruling, and a VER-62 move is reverted (G10). A figure the author finds misleading is
     fixed before the merge.
+14. *Added, 22 October 2026* (§8.2.16 R2 to R7, R10). **The specification and the plans read current
+    by default, and the skills have levels.** `SPECIFICATION.md` is the entry point over
+    `specification/`, with the history in `specification/history/`. R10's line check and identifier
+    check pass in WP52, their output in its Outcome, and VER-45 passes. This plan states its current
+    scope, with its amendments in a record. The skills are `/plan`, `/implement`, `/ship` and
+    `steward`. Prediction, reported and not gated (§8.2.11 L8): the current text of the
+    specification is 60,000 to 68,000 words, and this plan's current scope under 6,000. A lost line or
+    an unresolved identifier is fixed before WP52 merges, with no waiver. A missed prediction is
+    reported.
 
 ## End-of-phase report
 
