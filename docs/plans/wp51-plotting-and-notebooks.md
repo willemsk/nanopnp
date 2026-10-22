@@ -43,7 +43,7 @@ Scope: the Phase 4 plan's WP51; FR-30; §8.2.14 P2 to P6; REV-123. Depends on WP
 | D2 Registry and display | `register` takes `figure=`, a `module:function`. `register_figure(schema, target)` serves the sweep dataset, which no stage emits. `FIGURE_FREE` is `case` and `report`. `draw(artefact, inputs)` resolves a schema's target and calls it; a missing Matplotlib becomes `MissingExtraError` naming `plot`. `Artefact` and `RunResult` implement `_repr_mimebundle_`: `text/plain` always, plus `text/html` holding the summary and an embedded PNG. Only `MissingExtraError` falls back to text | P6. marimo and Jupyter both read `_repr_mimebundle_` (marimo, *Displaying objects*, via Context7) |
 | D3 What a figure reads | `inputs` is the walk's own `StageInputs`. A bare artefact draws what its payload and summary carry; where that is nothing, it shows text naming `result.figure(stage)`. Fields are read through the export's own restore and sampling, factored out of `post/` with the IF-07 export unchanged. The solve stage writes its Newton history as a payload. A sweep is drawn from its `io` artefact's rows | FR-30: "from the stored artefacts alone". One sampling path for figure and export |
 | D4 The figures | All in (r, z), r ≥ 0, in stage 1's frame. **1** the atoms at r = hypot(x, y). **2** the density's axial section. **3** the reduced map and its variance. **4** the contour, over the map when inputs are given. **5** the named regions. **6** element size h and SICN, with the 0.3 floor marked. **7a** each titratable residue's charge. **7** the stored charge and ε_r grids. **8** each correction against **the driver the electrolyte declares**, with the validity range shaded. That is ⟨c⟩ = (1/n)Σcᵢ by default, the ionic strength only where the corrections file says so, and the axis is labelled to match. Each is also drawn against d, the distance to the nearest pore boundary, from 0. **10** the potential, the concentrations, the velocity and the pressure, plus residual and damping per rung, titled with the model and the stabilisation mode. **11** the quantities, as a table. **Sweep** the current (nA) and the electro-osmotic flow rate (µm³/s) large against the swept axis, then each other scalar quantity, with any point not `ok` marked (P9). `scale` enlarges any figure; the notebooks add a size slider and a zoom-and-pan switch | The physics rules. The Phase 4 plan's "ionic strength" is corrected |
-| D5 Extras and notebooks | `plot = ["matplotlib>=3.8"]`; `notebook = ["nanopnp[plot]", "marimo>=<the release uv resolves>"]`; `examples = ["nanopnp[plot]"]`. One directory per notebook, `notebooks/NN-<area>/`: **01-geometry** example 06's case to `mesh`; **02-charge** example 07's case to `materials`; **03-solve** example 02's ePNP-NS case; **04-sweep** example 03's charged sweep. Each is run headless from its README, every night. Each has at most two widgets, and their defaults are the example's values, so a headless run solves the example's own case | P5 |
+| D5 Extras and notebooks | `plot = ["matplotlib>=3.8"]`; `notebook = ["nanopnp[plot]", "marimo>=<the release uv resolves>"]`; `examples = ["nanopnp[plot]"]`. One directory per notebook, `notebooks/NN-<area>/`: **01-geometry** example 06's case to `mesh`; **02-charge** example 07's case to `materials`; **03-solve** example 02's ePNP-NS case; **04-sweep** example 03's charged sweep. Each is run headless from its README, every night. *Amended 22 October 2026 (the Addition below):* each is one block of cells per stage with plain-value settings and no widgets, the values being the example's own, so a headless run solves the example's own case | P5 |
 | D6 Clauses | `plot` follows `post` in the layer order, with no upward edge, and VER-65's set stays at eleven. §5.1 and `CLAUDE.md`'s structure list gain `plot/`. `CHANGELOG.md` lists the API additions, the extras and the new payload. REV-123 is set `fixed` | P3, P6; H12 |
 
 ### Grounding
@@ -150,7 +150,7 @@ None blocking. The *Your call* defaults to its recommendation; a contrary ruling
 
 > **Outcome — every stage has a figure, and every artefact and run result displays itself.** Measured on
 > 4 cores, 22 October 2026. `plot/` holds the data layer and thirteen figures. After the author's review `nanopnp.Case` joined `PUBLIC` (§8.2.14 P8), so a notebook edits a case with one call.
-> A sweep's figure now leads with the I-V curve and the flow rate, `figure(..., scale=)` enlarges any figure, and each notebook has a size slider and a zoom-and-pan switch (P9); 05 runs headless in 41.6 s with example 03 outputting `eof_rate`.
+> A sweep's figure now leads with the I-V curve and the flow rate, `figure(..., scale=)` enlarges any figure, and each notebook holds a `scale` and an `interactive` value in place of a size slider and a zoom switch (P9); 05 runs headless in 41.6 s with example 03 outputting `eof_rate`.
 > The per-push gate gains about 13 s: the figure test is 5.9 s on example 02 and 5.4 s on example 01, and
 > the import guard, grid sample and Tier 1 data tests together a second; both examples' walks were
 > already in the gate. The notebooks run nightly in 73.8 s (01), 6.4 s (02; shorter than 01, its cache
@@ -204,7 +204,7 @@ switch) and D5 ("at most two widgets"). Six decisions, the author's unless marke
 - [x] 13. **01, 02, 03, 04** as blocks, one commit each, with the READMEs. Done 22 October 2026. Example 06's case now
   spells `geometry:` and `numerics.mesh` at the defaults, for 01 (no key moves; the case hash does). 01's region block has
   no `charge.exclusion_offset_nm`, since that case has no `charge:` section.
-- [ ] 14. §8.2.14 P5 and P9 amended in place, D5 and the Outcome, the READMEs, `CHANGELOG.md`; the strict
+- [x] 14. §8.2.14 P5 and P9 amended in place, D5 and the Outcome, the READMEs, `CHANGELOG.md`; the strict
   documentation build and `.claude/hooks/gate.sh run` pass.
 
 | Test | Tier | Oracle | Tolerance |
@@ -214,3 +214,17 @@ switch) and D5 ("at most two widgets"). Six decisions, the author's unless marke
 | `test_notebook_runs_headless` | 2 nightly | Unchanged: each notebook exits 0 | Exit status |
 
 No test covers the new refusals (§8.2.13 N1: a refusal is tested only where it is a numerical or physical gate).
+
+> **Outcome of the Addition — the notebooks are one block of cells per stage.** Measured on 4 cores,
+> 22 October 2026. All six notebooks hold plain-value settings and no widgets; `run(upto=…, only=True)` holds in
+> notebook order on 2WCD from an empty store (item 10), so each block refuses to recompute an earlier stage. Headless
+> from an empty store through `test_notebook_runs_headless`: 01 in 75 s, 02 in 212 s, 04 in 46 s, 03 and 04 together in
+> 74 s, 06 in 11 min 54 s (nearly all the solve). `numerics.mesh.wall_for_concentration_M` is in (P10). Examples 06
+> and 07 now spell `geometry:` at the defaults (06 also `numerics.mesh`), because `Case.with_` cannot add an absent
+> section; no stage key from structure to solve moves, and the case and qoi hashes do. Measured against the plan: the
+> spike showed that `electrolyte.temperature_K` and the `physics.*` switches are refused on these cases, so no notebook
+> lists them; notebook 01 has no exclusion-shell setting, since example 06's case has no `charge:` section.
+> `[tool.marimo.runtime] on_cell_change = "lazy"` is set and marimo reports it as the project override. **Untried,
+> because `marimo edit` cannot run here: that the lazy setting stops an edit starting the solve, the zoom switch
+> (`interactive = True`) and marimo's reactivity in the browser. The author must check them before the merge.** I looked at the 2WCD
+> mesh, solve and charge figures and at 05's; the other figures through 01 to 04 have passed only the headless run.

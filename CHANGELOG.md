@@ -30,7 +30,7 @@ WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to 
   recorded. Refused beside an explicit `wall_h_nm`. FR-10, VER-53; §8.2.14 P10.
 - **I-V and flow figures, and larger figures.** A sweep's figure leads with the I-V curve (nA) and the
   electro-osmotic flow rate (µm³/s); `plot.figure` and `RunResult.figure` take `scale`; the notebooks
-  carry a size slider and a zoom-and-pan switch. Example 03's charged case now outputs `eof_rate`
+  take a `scale` and an `interactive` value. Example 03's charged case now outputs `eof_rate`
   (§8.2.14 P9).
 - **`nanopnp.plot`**, behind the `plot` extra (Matplotlib): `plot.figure(artefact, inputs=None)` draws
   the figure of any stage's artefact and of a sweep. Figures of the aligned atoms, the density, the
@@ -48,7 +48,7 @@ WP51: the plotting library and the notebooks (`SPECIFICATION.md` §8.2.14 P1 to 
   release lacks it and draws "history not recorded".
 - **Extras.** `plot`, `notebook` (`plot` and marimo) and `examples` (`plot`).
 - **`nanopnp.Case`** (`pipeline/handle.py`, in `PUBLIC`): `Case.load(path, store=...)`, `case.run(upto=..., bias_V=0.1)`, `case.with_(...)` and `case[name]`. A field is named by its dotted case-file path or by a leaf name only one field ends in; a shared name is refused. §8.2.14 P8.
-- **`notebooks/`**: six marimo notebooks (geometry, charge, solve, sweep, and the cylindrical pore and 2WCD each end to end; the notebooks edit a case through `nanopnp.Case`), each run headless every night. A notebook prepares its own input (the structure, or the pore mesh) in its first cell, so nothing is run before it.
+- **`notebooks/`**: six marimo notebooks (geometry, charge, solve, sweep, and the cylindrical pore and 2WCD each end to end), each run headless every night. Each is one block of cells per stage: what the stage is, its settings as plain values (dotted case paths, edited through `nanopnp.Case`), the line that runs it with `only=True`, and what it stored; no widgets. Notebooks 02 and 03 start mid-pipeline and open with a labelled set-up cell. A notebook prepares its own input (the structure, or the pore mesh), so nothing is run before it. `pyproject.toml` sets marimo's `on_cell_change = "lazy"`, so editing a cell marks the later ones stale instead of re-running the solve.
 
 ### Changed
 
