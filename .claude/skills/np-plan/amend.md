@@ -8,7 +8,8 @@
 - adding or dropping a package in mid-phase: the author's reason, its place, its identifiers;
 - planning the later phases again: the rulings, §8.1's rows, and the later plans or input notes.
 
-It has the same two turns as `phase.md`: the ruling round, then the write-up.
+It has the same two turns as `phase.md`: the ruling round, then the write-up. Commit nothing in the
+ruling round.
 
 1. Read what `rulings.md`'s *What a phase inherits* lists, as far as the amendment reaches.
 2. New rulings get a new record, as `rulings.md` says. A superseded ruling gets only a pointer.
@@ -17,4 +18,6 @@ It has the same two turns as `phase.md`: the ruling round, then the write-up.
 4. In one commit, `docs: amend the Phase <n> plan — <what changed>`, update the plan's **Status**,
    `## Open decisions`, `## What the author supplies` and `## Verification`, the Execution brief of
    each planned package that the change moves, and `docs/plans/current.md`.
-5. Gate, push and open its PR as `rulings.md`'s *Finishing* says. Report, and stop.
+5. Gate, push and open its PR as `rulings.md`'s *Finishing* says. Report the paths, the PR, the
+   rulings, the packages as they now are, the open decisions and their owners, and the next step.
+   Then stop.

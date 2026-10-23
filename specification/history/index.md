@@ -146,7 +146,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * R4 - §8.4.4
 * R5 - §8.4.4
 * R6 - §8.4.5
-* R7 - `.claude/hooks/session-start.sh`
+* R7 - §8.4.2
 * R8 - open: WP54 sets its own scope
 * R9 - spent
 * R10 - spent

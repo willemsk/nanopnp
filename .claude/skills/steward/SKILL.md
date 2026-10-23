@@ -12,9 +12,9 @@ evidence rather than chores.
 
 `uv` owns it (`CLAUDE.md`, *Setup*).
 
-The gate is `.claude/hooks/gate.sh run`. Start it with Bash `run_in_background` on the committed
-fix and push when it passes: the hook refuses a push of a tree it has not passed, and every fix is
-gated in full. `--no-verify` exists and is not for you.
+The gate is `.claude/hooks/gate.sh run`. Run it on the committed fix as `CLAUDE.md`'s *Commands* say,
+waiting for it in the same turn, and push when it passes: the hook refuses a push of a tree it has
+not passed, and every fix is gated in full. `--no-verify` exists and is not for you.
 
 ## Bounded wakes
 

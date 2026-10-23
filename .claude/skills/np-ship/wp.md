@@ -7,11 +7,14 @@ and the CI watch need no further prompt.
 
 ## 0. Resolve the package's PR and branch
 
-1. Find them as the core's *The package's PR and branch* says. If no open PR matches and a merged PR
-   does, go to §7.
+1. Find them as the core's *The package's PR and branch* says. If no open PR matches, list the
+   closed PRs against `main` (the REST route `pulls?state=closed`) with the same title rule. If one of
+   them is merged, go to §7.
 2. If no PR is found and the branch has no commits beyond `origin/main`, stop. A plan on `main` does
    not show that the package was implemented.
-3. If the PR's **Verification** records a completed review at the current head, go to §5.
+3. If the PR's **Verification** records a completed review, and the only commits after its reviewed
+   head are the recorded fix commits and the review's report commit, subscribe to the PR's activity
+   (§4) and go to §5. A review adds its own commits, so the current head is never the reviewed head.
 
 ## 1. Preflight
 
@@ -120,7 +123,8 @@ again if the PR is still open.
 The package's last commit on `main` gets its tag: `vX.Y.Z-alpha.N` from its `CHANGELOG.md` section
 (`CONTRIBUTING.md`, *Versions and releases*), or the release tag for a close (`phase.md`).
 
-1. Fetch `main`: a hosted clone is shallow.
-2. If the access of this session allows it (§8.4.1), run `git tag -a <tag> <merge sha> -m "<tag>"`
+1. Fetch `main`: a hosted clone is shallow. The merge sha is the `merge_commit_sha` of the merged PR.
+2. If `git ls-remote --tags origin <tag>` lists the tag, report it and stop.
+3. If the access of this session allows it (§8.4.1), run `git tag -a <tag> <merge sha> -m "<tag>"`
    and `git push origin <tag>`. Otherwise print the two commands for the author.
-3. Report the tag, pushed or printed, and stop.
+4. Report the tag, pushed or printed, and stop.
