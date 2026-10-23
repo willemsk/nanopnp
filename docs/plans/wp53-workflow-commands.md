@@ -42,7 +42,7 @@ on this branch.
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
 | D1 | Names, routing, aliases | `/np-plan <project \| phase n \| amend n \| wp n>`, `/np-implement [wp n]`, `/np-ship [wp n \| phase n]`. Each `.claude/skills/np-<verb>/SKILL.md`, at most 150 words, reads `.claude/workflow/core.md`, then the level file beside it. With no argument, `/np-implement` and `/np-ship` take the one open package PR, or ask. An unknown level prints the usage. **No aliases**: the four old skill directories are deleted; records keep the old names | R5, R12. Every session reads each listed skill's description; an old name fails visibly |
-| D2 | What the core and the levels hold | `core.md`, at most 900 words, holds what every level shares: reading order, branch, normativity, models, records, the In brief, gate and push, the PR contract, the report. Levels: `np-plan/{wp,phase,amend,project}.md`, `np-plan/rulings.md` (read by `phase`, `amend` and `project`), `np-implement/wp.md`, `np-ship/{wp,phase}.md`. **Text moves verbatim** from the old skills; a sentence is edited only for a name, a path, a section reference, or R3, R4, R12. Item 10 then rewords to ASD-STE100, under a rule-by-rule check. One invocation loads at most 2,200 words (router, core, level, `rulings.md` where read); the new files total at most 7,000 | R5. Moving, not retyping, makes D6's check possible |
+| D2 | What the core and the levels hold | `core.md`, at most 985 words (REV-125), holds what every level shares: reading order, branch, normativity, models, records, the In brief, gate and push, the PR contract, the report. Levels: `np-plan/{wp,phase,amend,project}.md`, `np-plan/rulings.md` (read by `phase`, `amend` and `project`), `np-implement/wp.md`, `np-ship/{wp,phase}.md`. **Text moves verbatim** from the old skills; a sentence is edited only for a name, a path, a section reference, or R3, R4, R12. Item 10 then rewords to ASD-STE100, under a rule-by-rule check. One invocation loads at most 3,006 words (router, core, level, `rulings.md` where read); the new files total at most 7,518 (both REV-125) | R5. Moving, not retyping, makes D6's check possible |
 | D3 | Rulings and plan amendments | `np-plan/rulings.md` holds the ruling round (old `phase-plan` Turn 1, steps 4 and 5) and its rules. A round's table is a new `specification/history/<kk>-<slug>.md`, indexed with each ruling's current home; each ruling amends its clause in the same commit, or is restated in §8.4 (R3). A ruling taken at a package's plan is a row added to that day's record; a superseded ruling gains a pointer (R11, R12). A phase plan's entry is rewritten to its current scope, and the amendment's text is appended to `docs/plans/phase-<n>-record.md` (R4) | R3, R4 |
 | D4 | The new levels | `/np-plan project` runs the ruling round on §8.1's rows and the later phases, then amends §8.1, §3's Release column, §2.7's Versioning NOTE, §8.3 and the later plans where they move, in one commit `docs: re-plan the project (§8.2.<k>)`. `/np-ship phase n` runs `np-ship/wp.md` on the close package's PR, confirms the close's items before the review (*Implementation details*), and after the merge pushes the annotated release tag alone (§8.4.1), or prints the commands | R5; `CONTRIBUTING.md` |
 | D5 | The hook (R7) | Before the sync, `.claude/hooks/session-start.sh` finds the primary checkout through `git rev-parse --git-common-dir` and fetches `origin main`. On `main`, clean, with `HEAD` an ancestor of `origin/main`: `git merge --ff-only origin/main` (the two halves of `git pull --ff-only`), reported. Dirty, diverged, or another branch or a detached `HEAD` lacking `origin/main`: a warning, no write. Containing `origin/main`: silent. A failed fetch warns once; nothing fails the session | R7; the Phase 4 plan leaves these cases to this plan. Warning an up-to-date branch would fire in every hosted session |
@@ -340,7 +340,7 @@ No kept test (N1). One-off checks, run in the pull request:
 | Rewording | A fresh agent lists no rule lost or changed in force | `git diff <item 9>..<item 10>` | Restored |
 | Hook | Cases 1 to 10, each with its expected line and `HEAD` | `bash <scratch>/hook-check.sh .claude/hooks/session-start.sh` | Fixed |
 | Names | `grep -rnE '\b(phase-plan\|wp-plan\|wp-implement\|wp-ship)\b' --exclude-dir=.git --exclude-dir=.venv .` hits only the records of *Grounding* D6 and this plan | as written | The live mention is repointed |
-| Caps | D2: router ≤ 150, core ≤ 900, invocation ≤ 2,200, total ≤ 7,000 words, by `wc -w` | `wc -w .claude/workflow/core.md .claude/skills/np-*/*.md` | Cut, or reported |
+| Caps | D2: router ≤ 150, core ≤ 985, invocation ≤ 3,006, total ≤ 7,518 words, by `wc -w` (REV-125) | `wc -w .claude/workflow/core.md .claude/skills/np-*/*.md` | Cut, or reported |
 | VER-45 | Strict build | `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | Fixed |
 | Gate | Push gate | `.claude/hooks/gate.sh run` | Fixed |
 
@@ -352,4 +352,13 @@ No kept test (N1). One-off checks, run in the pull request:
 
 ### Open questions
 
-The aliases (In brief): the plan follows the recommendation unless ruled otherwise.
+> **Outcome — three open items settled by the author's direction, 23 October 2026.**
+>
+> - *Aliases:* none, as D1 and the In brief recommend. The four old skill directories are gone and
+>   no old name resolves.
+> - *The `PR:` line:* dropped. No level writes it, and no code or test reads it. The core, `np-plan`'s
+>   and `np-implement`'s package steps no longer name it. The lines already in `docs/plans/` stay as
+>   records.
+> - *REV-125, the caps:* raised to what was delivered, as D2 and the Verification row now state. The
+>   core is 985 words, one invocation 3,006 at most (`np-plan phase`), the new files 7,518 in all,
+>   measured after CODE_REVIEW_014's fixes. The router cap of 150 holds: the largest router is 137.

@@ -80,7 +80,7 @@ Confirm these yourself:
 - Gate and push (the core).
 
 Then open or reuse the PR by the core's *PR contract*. A new PR states under **Verification** that
-the review waits for `/np-ship`. Record its `PR:` line as the core says.
+the review waits for `/np-ship`.
 
 Stop. Report the PR link, the identifiers discharged, the tag that the last commit gets after the
 merge, and that the package is ready for `/np-ship`. Do not start the review or monitor CI: a fresh

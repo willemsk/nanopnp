@@ -111,6 +111,6 @@ Link the planned package and its live dependencies. Its word target is in its *H
 3. Open the PR by the core's *PR contract*. It is the package's PR, and `/np-implement` reuses it.
    The body's In brief is the plan's. *What this delivers* says that the plan is in and the
    implementation follows. *Verification* ticks only the plan's gate, and says that the review waits
-   for `/np-ship`. Then record its `PR:` line as the core says.
+   for `/np-ship`.
 4. Report the path, the PR, the close calls, what the grounding pass changed, each spec amendment and
    the open questions. Then stop: implementation is `/np-implement`, in a separate turn.
