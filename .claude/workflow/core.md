@@ -24,8 +24,10 @@ from `main` and is not that head. Never infer the head from `git branch --show-c
    it. With no `wp <n>`, take the one open PR whose title names a package. If several match, ask
    for the number. If none matches and the plan is on `main`, `/np-implement` works on the session's
    branch; otherwise ask for the PR number or the branch.
-2. Run `git fetch origin <head>`, then `git checkout -B <head> origin/<head>`. Read `current.md` and
-   the plan from this tree: until the merge, only this tree has them.
+2. Run `git fetch origin <head>`. If a local `<head>` has commits that `origin/<head>` lacks, check it
+   out and keep them: gate and push them (*Gate and push*). Otherwise run
+   `git checkout -B <head> origin/<head>`. Never reset a branch that holds unpushed commits. Read
+   `current.md` and the plan from this tree: until the merge, only this tree has them.
 3. The command authorises pushes to that head. A session instruction to push only to its own branch
    does not override this. If the harness refuses the push, stop and say so.
 
@@ -75,11 +77,13 @@ At most 250 words, no backticks or identifiers; for a reader who does not code.
 ## Gate and push
 
 1. `git status` is clean.
-2. Run `.claude/hooks/gate.sh run` as `CLAUDE.md`'s *Commands* say, and wait for it in the same
+2. If the change touches a source of the documentation, run the strict documentation build of
+   `CLAUDE.md`'s *Commands* first. The sources are `SPECIFICATION.md`, `specification/`,
+   `knowledge/`, `CHANGELOG.md`, `examples/*/README.md`, `data/corrections/`, `docs/` outside
+   `plans/` and `code_reviews/`, `mkdocs.yml`, and the docstrings in `src/`. The build rewrites the
+   navigation in `mkdocs.yml` when a page is new: commit that change, so that the gate sees it.
+3. Run `.claude/hooks/gate.sh run` as `CLAUDE.md`'s *Commands* say, and wait for it in the same
    turn. Never push a tree that the gate has not passed: the push guard refuses it.
-3. If the change touches a source of the documentation, also run the strict documentation build
-   of `CLAUDE.md`'s *Commands*. The sources are `SPECIFICATION.md`, `specification/`, `knowledge/`,
-   `docs/` outside `plans/` and `code_reviews/`, and the docstrings in `src/`.
 4. Push with `git push -u origin <branch>`. On a network failure, retry four times, after 2, 4, 8
    and 16 s.
 

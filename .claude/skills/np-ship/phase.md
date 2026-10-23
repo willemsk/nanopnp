@@ -16,7 +16,7 @@
    - `CHANGELOG.md` has the `[X.Y.0]` section, and `CITATION.cff` has its `version` and
      `date-released`.
    - `docs/plans/current.md` points at the next phase.
-4. **Run `wp.md`** §4 to §6.
+4. **Run `wp.md`** §4 to §6, or §5 and §6 if `wp.md` §0.3 sent you to §5.
 5. **The tag.** The close gets the release tag `vX.Y.0` alone, with no `-alpha.N` (§8.4.1). After
    the author merges, `/np-ship phase <n>` runs `wp.md` §7 with this tag. The release workflow
    publishes the GitHub Release from the tag (`CONTRIBUTING.md`, *Versions and releases*).

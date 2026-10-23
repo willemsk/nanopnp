@@ -27,6 +27,10 @@ here once.
 * Before a push, `.claude/hooks/gate.sh run` passes on the tree being pushed. The session starts it in
   the background and waits for it in the same turn, and the push guard refuses a tree it has not
   passed. A pass of the commit hook never stands in for it. (§7.6; §8.2.11 L2, L3)
+* The session-start hook fetches `origin/main` into the primary checkout and fast-forwards a clean
+  `main` that is behind it. In any other state it writes nothing and prints a warning. A failed fetch
+  or a failed `uv sync` is a warning and never fails the session. (§8.2.16 R7;
+  `.claude/hooks/session-start.sh`)
 * Python 3.14 is the development and continuous-integration default and 3.11 the minimum. Lazy imports
   (PEP 810) are not adopted. (§8.2.10 J5, J6; OPN-09)
 * In-code prose follows one rule: a docstring on every public function, class and method of `src/`

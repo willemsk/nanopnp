@@ -17,6 +17,7 @@ cd "$root" || exit 0
 # Ancestry decides, not counts: a hosted clone is shallow. Nothing here may fail the session.
 set +e
 main_note=""
+worktree_note=""
 common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
 if [ -n "$common" ]; then
     primary=$(dirname "$common")
@@ -25,8 +26,10 @@ if [ -n "$common" ]; then
     fetch_timeout=""
     command -v timeout >/dev/null 2>&1 && fetch_timeout="timeout 30"
     # shellcheck disable=SC2086  # $fetch_timeout splits on purpose
-    if ! GIT_TERMINAL_PROMPT=0 $fetch_timeout git -C "$primary" fetch --quiet origin \
-        +refs/heads/main:refs/remotes/origin/main </dev/null >/dev/null 2>&1; then
+    GIT_TERMINAL_PROMPT=0 $fetch_timeout git -C "$primary" fetch --quiet origin \
+        +refs/heads/main:refs/remotes/origin/main </dev/null >/dev/null 2>&1
+    fetch_status=$?
+    if [ "$fetch_status" -ne 0 ]; then
         main_note="- warning: could not fetch origin main${where}; the skills and rules here may be behind it"
     elif ! git -C "$primary" merge-base --is-ancestor origin/main HEAD 2>/dev/null; then
         primary_branch=$(git -C "$primary" symbolic-ref --quiet --short HEAD 2>/dev/null)
@@ -44,6 +47,10 @@ if [ -n "$common" ]; then
                 main_note="- warning: main${where} is behind origin/main and the fast-forward failed"
             fi
         fi
+    fi
+    # A linked worktree reads its own skills and rules, so its HEAD must hold origin/main too.
+    if [ "$fetch_status" -eq 0 ] && [ -n "$where" ] && ! git merge-base --is-ancestor origin/main HEAD 2>/dev/null; then
+        worktree_note="- warning: this worktree lacks origin/main; merge it before relying on its skills and rules"
     fi
 fi
 set -e
@@ -118,6 +125,7 @@ dirty=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 echo "nanopnp — where the work stands (.claude/hooks/session-start.sh):"
 echo "- branch ${branch}${position}, working tree ${tree}"
 [ -z "$main_note" ] || echo "$main_note"
+[ -z "$worktree_note" ] || echo "$worktree_note"
 [ -z "$sync_note" ] || echo "$sync_note"
 
 if [ -f docs/plans/current.md ]; then
