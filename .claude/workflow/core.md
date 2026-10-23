@@ -104,10 +104,6 @@ answer. Link derivations and tables; do not copy them. End with the attribution 
 session. On a reused PR, bring the body to the current state of the tree, and keep human edits. If
 the review changes a decision of the author, update the In brief.
 
-When the PR exists and `docs/plans/wp<n>-*.md` does not have its line, write
-`PR: [#<n>](<url>), branch <head>` under the plan's title. Commit it as `docs: record WP<n>'s PR`.
-Then gate and push again: the commit is a new tree, and the push guard checks each tree.
-
 ## Report and stop
 
 Each level ends with the report that its file names, and then stops. The next step is a separate
