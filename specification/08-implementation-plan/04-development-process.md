@@ -58,6 +58,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n>`,
   `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
+* Beside them, `/np-gui <render | review | publish | collect | grill>` renders screens and mockups
+  headless, has them reviewed, publishes them for the author's verdicts, collects the verdicts and
+  runs a design round. A package that changes a screen uses it. (§8.2.17 S21, S22;
+  `.claude/skills/np-gui/`)
 * From Phase 5, a work package is named `WP<phase>.<nn>`, numbered from 01 within its phase
   (`WP5.01`): its plan is `docs/plans/wp5.01-<slug>.md`, its pull request `feat: WP5.01 — …`, and the
   commands take `wp 5.01`. Phase 4 keeps its flat numbers to its close. (§8.2.17 S16)
@@ -101,8 +105,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 * Implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and moves to
   Opus only after Sonnet has failed on the item. (§8.2.11 L6)
-* Two agents are kept: the physics reviewer, read-only, and the CI-log classifier. The script
-  `.claude/scripts/clause.py` prints a clause by identifier. (§8.2.11 L6, L9; §8.2.16 R6)
+* Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
+  classifier. The script
+  `.claude/scripts/clause.py` prints a clause by identifier. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17
+  S22)
 * A batch of independent, mechanical items, such as a sweep over many files, a rename or a per-module
   pass, goes item by item to a new Haiku or Sonnet sub-agent given the item and the clauses it cites.
   The main session keeps the plan and the git log and re-runs the item's check before the next. Items

@@ -310,9 +310,17 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
 
 ### Work items
 
-- [ ] 1. `.claude/scripts/gui/shoot.cjs` and `.claude/scripts/gui/capture_qt.py` (D1, D4); done when
+- [x] 147baa2 1. `.claude/scripts/gui/shoot.cjs` and `.claude/scripts/gui/capture_qt.py` (D1, D4); done when
   the self-check passes and `capture_qt.py` writes every grab of *Grounding D1*'s list, or names the
   one it could not reach. **Executor:** main.
+
+  > **Outcome — 22 grabs, none missed; three HTML stand-ins.** Seven tabs opened, one refusal, six
+  > Geometry rows and four Charge panes built, four tabs after the run; about eight minutes. The
+  > case's one `bounded` field, `charge.ph`, is a spin box clamped to its range, so the refusal is
+  > `numerics.mesh.size_scale = -2`, refused at commit; a negative concentration is accepted at
+  > commit and refused only at the build. Offscreen, the shell replaces each web view with its own
+  > "did not draw" diagnostic (`getExtension` of a null WebGL context), so a grab maps to its HTML
+  > shot by the document the view loaded.
 - [ ] 2. `.claude/skills/np-gui/` (router and five levels), `.claude/agents/gui-reviewer.md`, §8.4.4,
   §8.4.5, `CLAUDE.md`, `np-implement/wp.md`, `np-ship/wp.md` (D4; S22); done when the code and
   review say so. **Executor:** main.
