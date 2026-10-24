@@ -154,17 +154,22 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * R11 - §8.4.4, §8.4.5
 * R12 - §8.4.4
 * S1 - §8.4.4
-* S2 - §8.1; open: WP57 restates P3 and QR-10
-* S3 - open: WP57 writes the composer's requirements
+* S2 - §8.1; open: WP5.01 restates P3 and QR-10 (S17)
+* S3 - open: WP5.01 writes the composer's requirements
 * S4 - §8.1
 * S5 - §8.1
-* S6 - open: WP57 writes the live views as requirements
+* S6 - open: WP5.01 writes the live views as requirements
 * S7 - §8.1, RSK-15, §8.3
-* S8 - open: WP58's spike, then ADR-004
-* S9 - open: WP58 writes the workflow into §8.4.4 and CONTRIBUTING.md
-* S10 - open: WP58 proposes its VER- identifier
-* S11 - open: WP57's design document
-* S12 - open: WP57 restates ADR-004's packaging NOTE, CON-09 and RSK-13
+* S8 - open: WP5.02's spike, then ADR-004
+* S9 - open: WP5.02 writes the workflow into §8.4.4 and CONTRIBUTING.md
+* S10 - open: WP5.02 proposes its VER- identifier
+* S11 - open: WP5.01's design document
+* S12 - open: WP5.01 restates ADR-004's packaging NOTE, CON-09 and RSK-13
 * S13 - §8.1
 * S14 - spent
-* S15 - §8.4.1, §8.4.4
+* S15 - §2.7 Versioning NOTE, §8.4.1, §8.4.4
+* S16 - §8.4.1, §8.4.4
+* S17 - §8.4.4
+* S18 - §8.4.4
+* S19 - §8.4.1
+* S20 - §8.4.4

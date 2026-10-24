@@ -6,7 +6,7 @@ argument-hint: <project | phase n | amend n | wp n>
 
 # Plan: `$ARGUMENTS`
 
-1. The first argument is the level, the second its number n. A missing or unknown level, or a
+1. The first argument is the level, the second its number n (for `wp`, `54` or `5.01`). A missing or unknown level, or a
    level other than `project` without n: print `Usage: /np-plan <project | phase n | amend n | wp n>`
    and stop.
 2. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).

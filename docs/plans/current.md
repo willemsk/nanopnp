@@ -22,7 +22,7 @@ One line per lane (§8.4.4).
   the author's notes; then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then
   the author's sessions, the fixes from WP56, the documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **planned**. Next:
-  **`/np-plan wp 57`**, the design study, beside Phase 4, untagged before `v0.5.0`; WP58 after
+  **`/np-plan wp 5.01`**, the design study, beside Phase 4, untagged before `v0.5.0`; WP5.02 after
   `v0.5.0`.
 
 ## Not to be re-decided
@@ -37,7 +37,7 @@ One line per lane (§8.4.4).
 - **Figures:** Matplotlib in `plot/`, below `pipeline`, importing no backend; figures declared in
   the stage registry; marimo notebooks, nightly. → §8.2.14 P2 to P6; FR-30.
 - **Cost fixes follow measurement against registered thresholds** (§8.2.12 M2). **Phase 5 is a
-  browser workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15).
+  browser workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15); **packages `WP5.01` on** (S16).
 - **Phase 4's shape:** refactors before the protocol (G2); findings only from the author's sessions
   (G7); the VER-62 golden (G10). The `MOD-nn` rulings stand (§8.2.8).
 - **A moved edge edits `modularity-layering.yaml` in the same commit (VER-61)**; a VER-62 miss is

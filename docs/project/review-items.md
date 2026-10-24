@@ -1301,11 +1301,15 @@ Phase 4's remaining packages are numbered from WP56 when the second `/np-plan am
 
 **Open** for the author: number Phase 4's remaining packages now, start Phase 5 above them, or add package numbers to S15's list.
 
+**Fixed** (author's ruling, 24 October 2026, §8.2.17 S16): from Phase 5 a package is `WP<phase>.<nn>`, numbered from 01 within its phase, and Phase 4 keeps its flat numbers to its close, so the lanes cannot claim one number. WP57 and WP58 are WP5.01 and WP5.02 (§8.4.4).
+
 ## REV-127: WP57 may restate the Qt shell's gating clauses before v0.5.0
 
 WP57 may merge before `v0.5.0` (S1) and restates VER-43, VER-44, VER-55, VER-60, CON-09's PySide6 clause, ADR-004's packaging NOTE, RSK-13, P3 and QR-10 for the browser shell. The lane excludes `src/`, `tests/`, the case schema and the public API, not normative clauses, and M3 keeps those clauses gating the Qt shell that `v0.5.0` ships. Found by CODE_REVIEW_015, finding 5.
 
 **Open** for the author: add each restatement beside its clause, tagged v0.6, until Qt leaves, or hold WP57's restatements until after `v0.5.0`.
+
+**Fixed** (author's ruling, 24 October 2026, §8.2.17 S17): a clause the design study restates before the current release is added beside the clause, tagged v0.6, and replaces it only at `v0.6.0`, so `v0.5.0` ships the clauses gating its Qt shell (§8.4.4; the Phase 5 plan's WP5.01).
 
 ## REV-128: The renumbering list leaves out other identifier kinds and the ruling letters
 
@@ -1313,11 +1317,15 @@ S15 and §8.4.4 renumber `REV-nn` rows, history records, code reviews and `VER-`
 
 **Open** for the author: widen the list to every numbered register and the ruling series.
 
+**Fixed** (author's direction, 24 October 2026, §8.2.17 S18): the pull request that merges second renumbers every new item of every numbered register, the requirement identifiers of every prefix and the history records with their §8.2 number and ruling letters included, with every reference (§8.4.4; `.claude/workflow/core.md`).
+
 ## REV-129: WP58's tag and the place of a held changelog entry are undefined
 
 If WP57 merges untagged before `v0.5.0`, nothing says whether WP58 is `v0.6.0-alpha.1` or `-alpha.2`: `CONTRIBUTING.md` counts the phase's packages. "The next release's section" is undefined in a changelog ordered newest first, where a `[0.6.0]` section above later `[0.5.0-alpha.N]` sections breaks the order. Found by CODE_REVIEW_015, finding 9.
 
 **Open** for the author: rule WP58's tag and where a held entry sits.
+
+**Fixed** (author's ruling, 24 October 2026, §8.2.17 S19): N is the package's number within its phase, so WP5.02 takes `v0.6.0-alpha.2` whether or not WP5.01 took a tag, and an untagged package's entry goes under `## [Unreleased]`, moved by the next tagged package of its phase (§8.4.1; §2.7's Versioning NOTE; `CONTRIBUTING.md`).
 
 ## REV-130: Nothing checks that identifiers stay unique after both lanes merge
 
@@ -1325,11 +1333,15 @@ Renumbering happens only when a later `/np-ship` merges `main` into a stale bran
 
 **Open** for the author: add a Tier 1 or CI uniqueness check over the registers, or accept the manual rule.
 
+**Fixed** (author's ruling, 24 October 2026, §8.2.17 S20): `/np-ship` runs `.claude/scripts/duplicates.py` after merging `main`, and the author merges a second-lane pull request only after `/np-ship` has run on it against the current `main`. No test, as §8.2.13 N3 withdrew the repository self-checks (§8.4.4; `np-ship/wp.md` §1 and §6).
+
 ## REV-131: The charge-level mutator has no library step or tier row
 
 v0.6 ships the charge-level mutator (S3 to S5), but the Phase 5 plan gives it no library function and no Tier 1 or Tier 2 row, and the library has no residue mutation, against the library-first rule §8.1 sets for the other tools and RSK-15's mitigation. Found by CODE_REVIEW_015, finding 12.
 
 **Open**: WP57's design document places the mutator; `/np-plan amend 5` plans its library step and tests.
+
+**Fixed** in the Phase 5 plan (24 October 2026): the shell packages land the mutator library first, a `charge/` function that sets a residue's charge state with a Tier 1 test that the projected charge changes by that residue's alone, before its shell control; the Verification table lists the test.
 
 ## REV-132: The Phase 5 end-of-phase report names no source for its numbers
 
@@ -1337,8 +1349,12 @@ The report lists click-to-redraw time, clean-machine install time and VER-77's c
 
 **Open**: WP58 defines the measures and the commands that log them.
 
+**Fixed** in the Phase 5 plan (24 October 2026): VER-77's test logs its screen and state counts, and WP5.02 names the commands that log the click-to-redraw and clean-environment install times, which the close re-runs.
+
 ## REV-133: The Phase 5 plan and the core exceed their word caps
 
 The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at review (§8.2.13 N3); the core holds 1,111 against the 985 delivered under REV-125, and the workflow files exceed their 7,518 in all. `current.md` was cut to 695. Found by CODE_REVIEW_015, finding 11.
 
 **Open** for the author: cut the plan and the core, or restate the caps.
+
+**Fixed** (24 October 2026): the Phase 5 plan holds 1,500 words without its report, and the core 985. The workflow files hold 7,666 words in all against WP53's delivered 7,518: the difference is the rules S15 to S20 add to the level files, kept rather than cut, as REV-125 did.

@@ -9,7 +9,8 @@ Every notable change to nanopnp, newest first. The format follows
   Phase 5 (the graphical interface) and v0.7 is Phase 6 (the validated release), before the
   stable v1.0 (§8.2.6);
 - a **work-package pre-release** `vX.Y.Z-alpha.N` marks the merge of the N-th work package toward
-  that release.
+  that release; from Phase 5, the package `WP5.N` (`WP5.02` is `v0.6.0-alpha.2`). A package merged
+  before the previous release takes no tag, and its entry waits under `## [Unreleased]` (§8.4.1).
 
 The package version comes from the tag (hatch-vcs). A commit between two tags installs as a
 development version that names it, for example `0.2.0a11.dev3+g1a2b3c4`, and that is the version

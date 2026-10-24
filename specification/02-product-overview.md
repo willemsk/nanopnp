@@ -109,7 +109,9 @@ phase's end-of-phase report (§8.1): `v0.1.0` for Phase 0, `v0.2.0` for Phase 1,
 Phase 2, `v0.4.0` for Phase 3, `v0.5.0` for Phase 4, `v0.6.0` for Phase 5 and `v0.7.0` for Phase 6
 (§8.2.5 E2, §8.2.6 F1 and F2). Each merged work package is tagged
 `vX.Y.Z-alpha.N` on its last commit on `main`, where N counts the phase's work packages toward
-that release. The tag names are SemVer, and PEP 440 reads them as
+that release; from Phase 5, N is the package's number within its phase (`WP5.02` takes
+`v0.6.0-alpha.2`), and a package merged before its previous phase's release takes no tag (§8.4.1;
+§8.2.17 S15, S16, S19). The tag names are SemVer, and PEP 440 reads them as
 `X.Y.ZaN` (`0.2.0a10`). The package version is derived from the tag (hatch-vcs), so a commit between
 tags installs as a development version naming that commit, and the provenance manifest's recorded
 `nanopnp` version identifies the code that produced a result (FR-25). The version enters no artefact
