@@ -59,6 +59,9 @@ Push each pre-review commit, the test drops included (the core's *Gate and push*
 PR's head and base SHAs under its **Verification**. The review covers that head, and the record
 stays after a compaction.
 
+A PR that changes a screen runs `/np-gui review` and `/np-gui publish`, links the gallery under
+**Verification**, and runs `/np-gui collect` before the merge.
+
 Run the review from this session. Call the skill directly, never inside an `Agent`:
 
 ```

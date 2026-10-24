@@ -126,10 +126,11 @@ overrides a normative requirement.
 
 Step 2 does not chain into 3: `/np-ship` starts in a fresh session (`.claude/workflow/core.md`, *Report and
 stop*). Plans before WP53 name these `/phase-plan`, `/wp-plan`, `/wp-implement` and `/wp-ship`. The steward skill
-governs a PR in flight.
+governs a PR in flight. Beside them, `/np-gui <render | review | publish | collect | grill>` pictures screens and
+mockups headless, reviews them, publishes them for the author's verdicts and runs a design round (§8.4.4).
 
 **Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default. It moves to Opus
-only after Sonnet fails on the item. Kept: the `physics-reviewer` and `ci-log-classifier` sub-agents and the
+only after Sonnet fails on the item. Kept: the `physics-reviewer`, `gui-reviewer` and `ci-log-classifier` sub-agents and the
 `.claude/scripts/clause.py` script. A WP plan is grounded in the code. It holds at most 3,500 words (1,500 outside
 its Grounding and Implementation details) and six decisions. Its compaction checkpoints are work items, and each
 ends the turn with a `/compact` prompt. It names the implementing model and the executor of each item: the main
