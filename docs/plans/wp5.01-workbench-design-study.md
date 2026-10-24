@@ -1,9 +1,9 @@
-# WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the jobs drawn, the requirements written
+# WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
 **Status: planned, not started.** Written 24 October 2026; grounded in the code at `e78b6aa`
-(§8.2.15 Q1). Amended the same day for the author's rulings S21 to S23: the design round on the
-workbench's organisation and look and feel, and the GUI development tools. Inherits the Phase 5
-plan and §8.2.17 S1 to S23; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
+(§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
+workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
+plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
 exceeds §8.4.4's word caps; its six-decision cap holds.
 
 The [Phase 5 plan](phase-5-workbench.md) owns the phase. `SPECIFICATION.md` governs; where this plan
@@ -16,8 +16,8 @@ pictures every screen without a display, a reviewer that checks the pictures, an
 where you mark each one keep, drop or change. You judge today's program screen by screen. Then a
 design conversation: three or four ways of organising the workbench, not only one tab per step, are
 sketched side by side, and you are questioned until the organisation and the look and feel are
-settled. Your everyday jobs are then drawn as clickable mock screens in that design, and a design
-document and its requirements follow.
+settled. The five areas you named, from the molecular viewer to the results analyser, are then
+drawn as clickable mock screens in that design; a public design document and its requirements follow.
 
 **Cost.** Two to three weeks, mostly waiting for you; about six sessions, including two or three
 conversations of up to an hour.
@@ -27,15 +27,12 @@ sketches could favour one design: each draws the same job, with its weaknesses b
 screens could promise a tool not yet built: each later tool carries a "later phase" banner. Phase 4
 keeps priority: this work waits whenever Phase 4 needs the session.
 
-**Your call.**
-1. Which three to five jobs should the mock screens show? *Recommendation:* name them with your
-   verdicts; otherwise the study drafts five and asks.
-2. Who is the colleague who will try the workbench at the end? *Recommendation:* name them now.
-3. Should the design document be public on the documentation site? *Recommendation:* yes, at no cost.
+**Your call.** Nothing now: each design question is put to you in the conversation, and the
+colleague who tries the workbench is named before the phase closes.
 
 ## Execution brief
 
-Scope: the Phase 5 plan's WP5.01 as amended (F5; S2 to S7, S11, S12, S17, S21, S22), its open
+Scope: the Phase 5 plan's WP5.01 as amended (F5; S2 to S7, S11, S12, S17, S21, S22, S24), its open
 decisions 3 and 4. Prose, mockups, the specification and tools under `.claude/` only: no `src/`,
 `tests/`, case schema or public API (S1). Discharges no `VER-`/`VAL-`; restates IF-09, VER-43,
 VER-44, VER-55, VER-60, CON-09's PySide6 clause, ADR-004's packaging NOTE, RSK-13, P3 and QR-10,
@@ -52,8 +49,8 @@ verdict after item 4 goes through `/np-gui`.
 | # | Decision | Choice | Why/source |
 |---|---|---|---|
 | D1 | Today's shell: pictures, critique, capability list | Example 07's `2wcd.case.yaml` driven through `MainWindow` offscreen in three states (opened, after *Build charge*, after *Run*) and one refused field; every tab and sub-view of *Grounding D1* grabbed with `QWidget.grab()`, and each WebEngine view replaced by a screenshot of the HTML document the render child wrote. Rendered by `/np-gui render qt`, reviewed by `/np-gui review`, published for verdicts by `/np-gui publish`. The **Qt capability list** (one row per control or view that does something) is committed in `docs/design/workbench.md`, the list S13's gate checks before Qt leaves | One real case reaches all seven tabs; offscreen WebEngine draws nothing (WP16 D14), while the shell's own host page renders headless (*Grounding D1*). The gate's list must live in the repository, not on a private page |
-| D2 | The design round on organisation and look and feel | Three steps, by `/np-gui grill`. **Diverge**: four low-fidelity, greyscale concept boards, each drawing the same two jobs (QR-10's guided run on 2WCD; a charge-level mutation compared with its parent) under one organising principle: C1 *model builder* (a case tree of stages, a settings pane, one graphics window, as in COMSOL); C2 *molecular workspace* (a central canvas always visible, docked tool panels, a command line, as in PyMOL or ChimeraX); C3 *project and runs* (a browser of structures, cases, runs and comparisons opening each item as a document, as in an IDE); C4 *guided routes* (one route per job, step by step, over any of the others). Each board lists its strengths and weaknesses per persona and job. **Grill**: the organisation agenda, then, after a style tile of three visual directions, the look-and-feel agenda (*Implementation details*), at most four questions per call, each with options, consequences and a recommendation first, every answer tested by walking a job through it. **Record**: each ruling in the author's words as a `WB-nn` row of the design document's decision log; the chosen direction's tokens as `docs/design/tokens.css` | S21: "not just stage by stage". Boards drawn without style keep the organisation judged apart from colour; one job across all boards makes them comparable; the grilling settles each point rather than leaving a mood |
-| D3 | The jobs, the mockups and the design document | The author's three to five jobs; without them by item 7, five drafted from P1 to P3 (QR-10's guided run, a salt and voltage sweep, a charge-level mutation, a hand-edited profile, two runs compared) and confirmed in the round. Each job is a clickable plain-HTML page under `docs/design/mockups/`, in the ruled organisation and with `tokens.css`, no framework, fixtures as inline data; a screen of a later tool phase carries a "later phase" banner and no working control. One revision after the author's comments. `docs/design/workbench.md` is in the site's *Project* section; `docs/design/{concepts,style,mockups,reviews}/` are excluded from the site. It settles Phase 5 open decision 4: the browser shell's pictures come from `plot/data.py`, whose duplicates in `gui/` retire with Qt | Plain HTML presumes nothing of WP5.02's framework (S8); the banner keeps v0.6's scope visible (S7; RSK-15); F5; S2 to S7, S11, S12 |
+| D2 | The design round on organisation and look and feel | Three steps, by `/np-gui grill`. **Diverge**: four low-fidelity, greyscale concept boards, each placing the author's areas (S24) and drawing the same two jobs through them (QR-10's guided run on 2WCD; a charge-level mutation compared with its parent) under one organising principle: C1 *model builder* (a case tree of stages, a settings pane, one graphics window, as in COMSOL); C2 *molecular workspace* (a central canvas always visible, docked tool panels, a command line, as in PyMOL or ChimeraX); C3 *project and runs* (a browser of structures, cases, runs and comparisons opening each item as a document, as in an IDE); C4 *guided routes* (one route per job, step by step, over any of the others). Each board lists its strengths and weaknesses per persona and job. **Grill**: the organisation agenda, then, after a style tile of three visual directions, the look-and-feel agenda (*Implementation details*), at most four questions per call, each with options, consequences and a recommendation first, every answer tested by walking a job through it. **Record**: each ruling in the author's words as a `WB-nn` row of the design document's decision log; the chosen direction's tokens as `docs/design/tokens.css` | S21: "not just stage by stage". Boards drawn without style keep the organisation judged apart from colour; one job across all boards makes them comparable; the grilling settles each point rather than leaving a mood |
+| D3 | The areas, the mockups and the design document | The author's areas (S24): the **molecular viewer and editor**, the **geometry builder**, the **mesh builder**, the **physics assigner** and the **results analyser**, and any the round adds. Each area is a clickable plain-HTML page under `docs/design/mockups/` showing one working session in it, in the ruled organisation and with `tokens.css`, no framework, fixtures as inline data; v0.6's controls work, and each part of a later tool phase (the structural editor, the sketcher, the composer; *Grounding D3*) carries a "later phase" banner and no working control. One more page threads QR-10's guided run through the areas. One revision after the author's comments. `docs/design/workbench.md` is public, in the site's *Project* section (S24); `docs/design/{concepts,style,mockups,reviews}/` are excluded from the site. It settles Phase 5 open decision 4: the browser shell's pictures come from `plot/data.py`, whose duplicates in `gui/` retire with Qt | The author named the areas (S24); plain HTML presumes nothing of WP5.02's framework (S8); the banner keeps v0.6's scope visible (S7; RSK-15); F5; S2 to S7, S11, S12 |
 | D4 | The GUI development tools | A skill `/np-gui <render \| review \| publish \| collect \| grill>` (`.claude/skills/np-gui/`, a router and one file per level); two scripts, `.claude/scripts/gui/shoot.cjs` (Node, Playwright) and `.claude/scripts/gui/capture_qt.py` (the Qt shell, removed with it); a read-only agent `.claude/agents/gui-reviewer.md` on Sonnet. `/np-implement` renders and reads each screen an item changes before committing it; `/np-ship` reviews and publishes the screens of a package that changes any, and collects the verdicts before the merge. WP5.02 adds the `shell` target (fixture states, S10) and the local live loop (S9). Specified in *Implementation details* | S22. Pictures, a check that reads them, and verdicts that reach the session without retyping are the loop every later GUI package repeats; built first, so this package uses them |
 | D5 | Requirements into the specification | Each restated clause gets a `NOTE (the browser shell, v0.6)` paragraph after its table or section, holding the full new text; the old text keeps gating the Qt shell and the NOTE replaces it in the package that removes Qt. IF-09 joins the restated set: it names "a desktop graphical interface". New functional requirements are `FR-31` onward in §3's table, Release `v0.6` or the tool phase's name (`composer phase`, `structural-mutator phase`, `sketcher phase`); a quality ruling of the round (accessibility, responsiveness) is `QR-16` onward. Each has an Appendix A row `None yet; <owner>`. A `WB-nn` ruling that departs from S2's "distinct tabs for each part of the workflow" amends §8.1's Phase 5 row in the same commit (S21). No `VER-` is added (VER-77 is WP5.02's) | S17; F5; S3 to S5. A NOTE leaves v0.5's text intact whatever the merge order |
 | D6 | The inherited rows | The design document proposes a ruling for each of REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114 and `MOD-09`, `MOD-13`'s command-line part and `MOD-18`. The author rules through `AskUserQuestion`; the round is written as `specification/history/18-…` (§8.2.18, letters from T) by `np-plan/rulings.md`, each row then `fixed`, `deferred` with an owner, or `wontfix` | Phase 5 open decision 3; §8.4.6 |
@@ -102,6 +99,15 @@ verdict after item 4 goes through `/np-gui`.
 
 **D3.**
 
+- What each area can draw on at v0.6, by case section (`io/case.py`): the molecular viewer,
+  `Structure` (source, `Frames`, `Ensemble`, `SymmetrySpec`) and stage 7's protonation and PQR
+  (`Charge`, `inputs.pqr`), editing charges only (S4); the geometry builder, `Geometry`
+  (`MembraneSpec`, `ReservoirSpec`, `AnalyteSpec`), `DensitySpec`, `ContourSpec` and `inputs.profile`;
+  the mesh builder, `MeshSpec` (`backend`, `size_scale`, …), `ElementsSpec` and stage 6's quality
+  report; the physics assigner, `PhysicsSpec`, `ElectrolyteSpec` with `CorrectionsSpec`,
+  `BoundaryConditions` and `WallSpec`, choosing among registered models only (S3); the results
+  analyser, the run record, `outputs`, the fields and sweeps. Later phases: side-chain replacement
+  (S4), the (r, z) sketcher (S5), model composition (S3).
 - `mesh/primitives.py` has three parametric geometries; `inputs.profile` and `inputs.pqr` take a
   hand-edited contour and PQR; `physics/models.py` registers six models. No residue mutation and no
   free-form (r, z) domain exist (Phase 5 plan, *Context*).
@@ -211,7 +217,7 @@ level, as `np-plan`'s router. Levels:
 - `collect.md`: read `verdicts` with `ArtifactData`; write `docs/design/reviews/<yyyy-mm-dd>-<topic>.md`
   as `| Shot | Verdict | Note | Reviewer finding | Disposition |`. A `drop` or `change` is acted on in
   the package, or becomes a `REV-nn` row (§8.4.6).
-- `grill.md`: the method of D2 and its agendas, below. Prepare: read the inputs (verdicts, jobs, P1
+- `grill.md`: the method of D2 and its agendas, below. Prepare: read the inputs (verdicts, areas, P1
   to P3, S2, S6, the design document so far) and write the assumptions they leave. Diverge: publish
   the boards. Grill: one agenda point at a time, at most four questions per call, recommendation
   first; challenge an answer that contradicts an earlier one or a clause; walk one job through each
@@ -221,7 +227,7 @@ level, as `np-plan`'s router. Levels:
   confirmation. A ruling that changes a clause amends it (D5).
 
 **The organisation agenda.** (1) The organising principle, primary and secondary: stage, object,
-project, job, or a hybrid of the boards. (2) What is always on screen: the pore picture, the case
+project, job, or a hybrid of the boards; how the author's areas (S24) sit in it. (2) What is always on screen: the pore picture, the case
 tree, run status, the log, provenance. (3) One case open at a time or several, and how two are
 compared. (4) Where the live views live: one central canvas switching layers (structure, density,
 contour, mesh, charge, fields) or a canvas per tool; how a selection travels between linked views
@@ -277,15 +283,16 @@ Mark each `[verified]` with a footnote to this plan; add a `knowledge/log.md` li
 `<section data-screen>`; the strengths and weaknesses as a side note per persona. Published as one
 gallery by `/np-gui publish`, with the verdict `prefer`, `borrow`, `reject`.
 
-**Item 10, the mockups.** One file per job, `docs/design/mockups/<nn>-<job>.html`, plus
-`index.html`; `<link rel="stylesheet" href="../tokens.css">`; screens as `<section data-screen>`,
+**Item 10, the mockups.** One file per area, `docs/design/mockups/<nn>-<area>.html`
+(`01-molecular`, `02-geometry`, `03-mesh`, `04-physics`, `05-results`, then any the round adds),
+`00-guided-route.html` and `index.html`; `<link rel="stylesheet" href="../tokens.css">`; screens as `<section data-screen>`,
 moved between by *next* and *back* links to `#<id>`; the frame (navigation, persistent views) as the
 round ruled it. Published with `files` carrying `tokens.css`. Add `design/concepts/`,
 `design/style/`, `design/mockups/` and `design/reviews/` to `exclude_docs`; the design document names
 them by path in backticks, not by link.
 
 **Item 12, `workbench.md`'s sections**, in order: *Purpose and users* (P1 to P3); *Today's shell*
-(the capability list and the verdicts); *The jobs*; *Organisation* (the principle, the frame, what
+(the capability list and the verdicts); *The areas* (S24); *Organisation* (the principle, the frame, what
 is always on screen); *Look and feel* (the direction, the tokens, the accessibility target);
 *Tabs or areas*; *Tools* (each with its live view, S6); *The four live links*; *The project folder*
 (layout, the project file's fields, the export; S11); *Install and start* (S12); *The guided route*
@@ -315,7 +322,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
 - [ ] 5. `/np-gui render qt`, `review`, `publish`: the critique; the capability list in
   `docs/design/workbench.md`'s *Today's shell* (D1); done when published, and the grab count in
   `qt-index.json` equals the views of *Grounding D1*. **Executor:** main.
-- [ ] 6. Wait checkpoint: the verdicts and the jobs. **Executor:** main.
+- [ ] 6. Wait checkpoint: the verdicts. **Executor:** main.
 - [ ] 7. `/np-gui collect`; the concept boards, rendered, reviewed and published; `/np-gui grill
   organisation` with the author; the `WB-nn` rows (D2); done when every organisation agenda point has
   a ruling or a deferral. **Executor:** main.
@@ -323,7 +330,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   the `WB-nn` rows (D2); done when every look-and-feel agenda point has a ruling or a deferral.
   **Executor:** main.
 - [ ] 9. Compaction checkpoint: the round is recorded. **Executor:** main.
-- [ ] 10. The mockups of the jobs in `docs/design/mockups/`, rendered, reviewed and published;
+- [ ] 10. The mockups of the areas and the guided route in `docs/design/mockups/`, rendered, reviewed and published;
   `mkdocs.yml`'s `exclude_docs` (D3); done when no blocking reviewer finding is open and the strict
   build passes. **Executor:** main.
 - [ ] 11. Wait checkpoint: the comments on the mockups. **Executor:** main.
@@ -364,6 +371,7 @@ in Appendix A, and that S22's clause edits match *Implementation details*.
 
 ### Open questions
 
-1. The jobs and the colleague: asked in item 5's report; D3 holds the fallback.
+1. Answered 24 October 2026 (S24): the areas; the design document public; the colleague later, by
+   the close (Phase 5 plan, *What the author supplies*).
 2. If WP54 merges first with new FR or QR rows, or a history record 18, `/np-ship` renumbers this
    package's (§8.4.4).

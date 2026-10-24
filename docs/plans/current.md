@@ -56,7 +56,7 @@ One line per lane (§8.4.4).
 - **The paper's figure data** for VAL-16 and VAL-17 (§8.2.4 D6); E1's ensemble legs.
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
-- **Phase 5's comments, jobs, framework ruling and QR-10 colleague** (S8, S13).
+- **Phase 5's comments, design-round answers, framework ruling, colleague** (S8, S13, S21).
 - **The notes on the notebooks and figures, for WP54's plan.** **The user-testing sessions, and
   the rulings on each `UT-nn`, `MOD-11`, any residual cycle (H6) and any WP41 drift (I4).** **The archived PQRs** for WP27–WP29's Tier 3.
 
