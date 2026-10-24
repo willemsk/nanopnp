@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: planned, not started.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 4 done.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -321,12 +321,12 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > commit and refused only at the build. Offscreen, the shell replaces each web view with its own
   > "did not draw" diagnostic (`getExtension` of a null WebGL context), so a grab maps to its HTML
   > shot by the document the view loaded.
-- [ ] 2. `.claude/skills/np-gui/` (router and five levels), `.claude/agents/gui-reviewer.md`, §8.4.4,
+- [x] a543bb2 2. `.claude/skills/np-gui/` (router and five levels), `.claude/agents/gui-reviewer.md`, §8.4.4,
   §8.4.5, `CLAUDE.md`, `np-implement/wp.md`, `np-ship/wp.md` (D4; S22); done when the code and
   review say so. **Executor:** main.
-- [ ] 3. `knowledge/07-software-stack/05-gui-and-packaging.md`, `knowledge/log.md` (D1, D4); done
+- [x] a9ca3d3 3. `knowledge/07-software-stack/05-gui-and-packaging.md`, `knowledge/log.md` (D1, D4); done
   when the code and review say so. **Executor:** `general-purpose` on Haiku.
-- [ ] 4. Compaction checkpoint: the tools exist. **Executor:** main.
+- [x] 4. Compaction checkpoint: the tools exist. **Executor:** main.
 - [ ] 5. `/np-gui render qt`, `review`, `publish`: the critique; the capability list in
   `docs/design/workbench.md`'s *Today's shell* (D1); done when published, and the grab count in
   `qt-index.json` equals the views of *Grounding D1*. **Executor:** main.
