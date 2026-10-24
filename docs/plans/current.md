@@ -22,8 +22,8 @@ One line per lane (§8.4.4).
   the author's notes; then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then
   the author's sessions, the fixes from WP56, the documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **planned**. Next:
-  **`/np-plan wp 5.01`**, the design study, beside Phase 4, untagged before `v0.5.0`; WP5.02 after
-  `v0.5.0`.
+  **`/np-implement wp 5.01`**, [the design study](wp5.01-workbench-design-study.md), **planned**,
+  beside Phase 4, untagged before `v0.5.0`. WP5.02 after `v0.5.0`.
 
 ## Not to be re-decided
 

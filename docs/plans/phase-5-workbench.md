@@ -76,6 +76,8 @@ analytes (N4, N5).
 
 ### WP5.01 — Discovery and the design and requirements document (F5; S2 to S7, S11, S12)
 
+**Planned:** [the plan](wp5.01-workbench-design-study.md).
+
 Prose and Artifact pages only (S1). It publishes today's Qt shell, rendered offscreen, for the
 author's keep, kill or change per screen; draws the author's three to five jobs as clickable
 mockups; and writes `docs/design/workbench.md`: tabs, tools, the four live views, the project
