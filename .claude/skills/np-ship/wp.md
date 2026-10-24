@@ -29,7 +29,8 @@ Confirm these:
 - `CHANGELOG.md` has the package's section (`CONTRIBUTING.md`, *Versions and releases*).
 
 If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `main`, merge `main`
-into it, and renumber as the core's *Two lanes* says.
+into it, and renumber as the core's *Two lanes* says. Then run `uv run .claude/scripts/duplicates.py`
+and renumber until it passes.
 
 ## 2. Push
 
@@ -113,7 +114,9 @@ wait on CI with `sleep`. Report a missing subscription or scheduler as an automa
 
 When CI is green and the PR is mergeable, tell the user in one message: the PR link, the checks that
 passed, what the review changed, what is left for them to decide, and the tag that the last commit
-on `main` gets after the merge, or that it gets none (`CONTRIBUTING.md`). The merge is theirs; `/np-ship` after the merge
+on `main` gets after the merge, or that it gets none (`CONTRIBUTING.md`). While the other lane has
+a PR open, say that whichever merges second needs `/np-ship` again on the new `main` before its
+merge (§8.4.4). The merge is theirs; `/np-ship` after the merge
 pushes the tag (§7). Cancel each open fallback check-in and unsubscribe from the PR's activity, so
 that the merge does not wake a cold session. Then stop. A later `/np-ship` resumes, and subscribes
 again if the PR is still open.

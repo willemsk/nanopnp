@@ -18,12 +18,13 @@ here once.
   `CONTRIBUTING.md`, *Versions and releases*. (§2.7; §8.2.4 D1)
 * Each merged work package takes `vX.Y.Z-alpha.N` on its last commit on `main`. The session pushes the
   tag if its GitHub access allows it; otherwise it prints the commands and the author pushes them.
-  (§8.2.7 G11)
+  From Phase 5, N is the package's number within its phase: WP5.02 takes `v0.6.0-alpha.2`. (§8.2.7
+  G11; §8.2.17 S19)
 * A phase's close package takes the release tag alone, with no alpha tag on the same commit; Phase 4's
   is `v0.5.0`. (§8.2.5 E5; §8.2.7 G11)
-* A package merged before its previous phase's release takes no alpha tag. Its `CHANGELOG.md` entry
-  waits in the next release's section, and that release's first alpha tag follows the previous
-  release, so versions on `main` only increase. (§8.2.17 S15)
+* A package merged before its previous phase's release takes no alpha tag, so versions on `main` only
+  increase. Its `CHANGELOG.md` entry goes under `## [Unreleased]` at the top of the file, and the next
+  tagged package of its phase moves it into its own section. (§8.2.17 S15, S19)
 
 #### 8.4.2 The loop
 
@@ -57,16 +58,24 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n>`,
   `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
+* From Phase 5, a work package is named `WP<phase>.<nn>`, numbered from 01 within its phase
+  (`WP5.01`): its plan is `docs/plans/wp5.01-<slug>.md`, its pull request `feat: WP5.01 — …`, and the
+  commands take `wp 5.01`. Phase 4 keeps its flat numbers to its close. (§8.2.17 S16)
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package of its lane
   starts. `/np-implement` stops at the pull request; `/np-ship` starts in a fresh session that did
   not make its decisions. (§8.2.11 L7; §8.2.16 R5; `CLAUDE.md`)
 * At most two lanes are in flight. The current phase runs one package at a time; the second lane is
   the next phase's design study, which changes no `src/`, `tests/`, case schema or public API before
-  the current phase's release. While two pull requests are open, `/np-implement` and `/np-ship` take
-  `wp <n>`, `docs/plans/current.md` holds one position line per lane, and each package edits only its
-  own. The pull request that merges second renumbers its new `REV-nn` rows, history records,
-  code-review reports and `VER-`/`VAL-` identifiers to one above the highest on `main`. (§8.2.17 S1,
-  S15)
+  the current phase's release. A clause that the study restates before that release is added beside
+  the clause, tagged for the study's release, and replaces it only when that release ships. While two
+  pull requests are open, `/np-implement` and `/np-ship` take `wp <n>`, `docs/plans/current.md` holds
+  one position line per lane, and each package edits only its own. The pull request that merges
+  second renumbers every new item of every numbered register (`REV-nn` rows, requirement identifiers
+  of every prefix, history records with their §8.2 number and ruling letters, code-review reports),
+  each kind in order from one above the highest on `main`, with every reference to them. `/np-ship`
+  runs `.claude/scripts/duplicates.py` after merging `main`, and the author merges a second-lane pull
+  request only after `/np-ship` has run on it against the current `main`. (§8.2.17 S1, S15 to S18,
+  S20)
 * A phase plan, a work-package plan and a work-package pull request open with `## In brief`, at most
   250 words and readable without code or identifiers. It says what changes and why, what it costs,
   what could go wrong and how it would be noticed. Its *Your call* gives each decision that waits for

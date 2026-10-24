@@ -52,7 +52,7 @@ As `rulings.md` says.
   runs the end-of-phase numbers again on its own tree, writes the report, and sets the
   `CHANGELOG.md` section and `CITATION.cff`. Its last commit on `main` gets the release tag (§2.7
   Versioning NOTE). `/np-ship phase <n>` ships it.
-- Number the packages on from the highest `wp<n>`. Proposed `VER-`/`VAL-` continue from Appendix
+- Number the packages from `WP<phase>.01` (§8.4.4). Proposed `VER-`/`VAL-` continue from Appendix
   A's.
 
 ### What to write
