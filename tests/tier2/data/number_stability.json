@@ -9,18 +9,6 @@
       "reference_mesh": "cf215dadd4920727a9f1b1743ce60424321594ef1b7670cb28bb436f973b707f",
       "moved_tolerance": 1e-08,
       "meshes": {
-        "f7a54456bbb25a4f89e43d78de739c5fa63769a14b7187957428e994c46da70e": {
-          "values": {
-            "conductance_S": "0x1.5b39932b3bbb3p-30",
-            "current_A": "0x1.15c7a8ef62fc3p-34",
-            "currents_A[Cl-]": "0x1.128811e222b82p-35",
-            "currents_A[Na+]": "0x1.19073ffca3404p-35",
-            "q_mesh_e": "-0x1.dfffffffffe84p+5"
-          },
-          "seen_on": [
-            "linux-x86_64/X86_V4"
-          ]
-        },
         "cf215dadd4920727a9f1b1743ce60424321594ef1b7670cb28bb436f973b707f": {
           "values": {
             "conductance_S": "0x1.5b39932b3bbb7p-30",
@@ -32,6 +20,18 @@
           "seen_on": [
             "linux-x86_64/X86_V2",
             "linux-x86_64/X86_V3"
+          ]
+        },
+        "f7a54456bbb25a4f89e43d78de739c5fa63769a14b7187957428e994c46da70e": {
+          "values": {
+            "conductance_S": "0x1.5b39932b3bbb3p-30",
+            "current_A": "0x1.15c7a8ef62fc3p-34",
+            "currents_A[Cl-]": "0x1.128811e222b82p-35",
+            "currents_A[Na+]": "0x1.19073ffca3404p-35",
+            "q_mesh_e": "-0x1.dfffffffffe84p+5"
+          },
+          "seen_on": [
+            "linux-x86_64/X86_V4"
           ]
         }
       }
@@ -210,83 +210,33 @@
     },
     "example-03-charged": {
       "reference_mesh": "546c34f4fb4b625162ad2aeb2893b1ba6e221a5d40c868f615c6048e1731c631",
-      "moved_tolerance": 1e-08,
+      "moved_tolerance": null,
       "meshes": {
-        "10eb4a477f15ec03566de96614bbff4ed3b6e83aca366a3f25fdcbdcb4418941": {
-          "values": {
-            "point-0.conductance_S": "0x1.49e4162c76b32p-30",
-            "point-0.current_A": "0x1.07e9ab56c55c2p-34",
-            "point-0.currents_A[Cl-]": "0x1.ee2079ce93a83p-36",
-            "point-0.currents_A[Na+]": "0x1.18c319c640e43p-35",
-            "point-0.transport_number": "0x1.10581a94d450ap-1",
-            "point-1.conductance_S": "0x1.6a87c2cf931dbp-30",
-            "point-1.current_A": "-0x1.22063572dc17cp-34",
-            "point-1.currents_A[Cl-]": "-0x1.166606b594103p-35",
-            "point-1.currents_A[Na+]": "-0x1.2da66430241f5p-35",
-            "point-1.transport_number": "0x1.0a4307f7b6a50p-1",
-            "point-2.conductance_S": "0x1.3d1f1bf6d15afp-30",
-            "point-2.current_A": "0x1.fb64f98ae8918p-34",
-            "point-2.currents_A[Cl-]": "0x1.d8d54a1e3974bp-35",
-            "point-2.currents_A[Na+]": "0x1.0efa547bcbd73p-34",
-            "point-2.transport_number": "0x1.116fff551aea1p-1",
-            "point-3.conductance_S": "0x1.7a7e666cbfd3bp-30",
-            "point-3.current_A": "-0x1.2ecb8523cca96p-33",
-            "point-3.currents_A[Cl-]": "-0x1.275a0bd4f5d59p-34",
-            "point-3.currents_A[Na+]": "-0x1.363cfe72a37d3p-34",
-            "point-3.transport_number": "0x1.064afec8de009p-1"
-          },
-          "seen_on": [
-            "darwin-arm64/ASIMDDP"
-          ]
-        },
-        "137ec9d01fa4f1250909c44154ce81f09a0dfbc3c6fd288bd7dbd9a76226c23e": {
-          "values": {
-            "point-0.conductance_S": "0x1.49e4162c76b32p-30",
-            "point-0.current_A": "0x1.07e9ab56c55c2p-34",
-            "point-0.currents_A[Cl-]": "0x1.ee2079ce93a81p-36",
-            "point-0.currents_A[Na+]": "0x1.18c319c640e44p-35",
-            "point-0.transport_number": "0x1.10581a94d450bp-1",
-            "point-1.conductance_S": "0x1.6a87c2cf931dbp-30",
-            "point-1.current_A": "-0x1.22063572dc17cp-34",
-            "point-1.currents_A[Cl-]": "-0x1.166606b594102p-35",
-            "point-1.currents_A[Na+]": "-0x1.2da66430241f7p-35",
-            "point-1.transport_number": "0x1.0a4307f7b6a51p-1",
-            "point-2.conductance_S": "0x1.3d1f1bf6d15b2p-30",
-            "point-2.current_A": "0x1.fb64f98ae891ep-34",
-            "point-2.currents_A[Cl-]": "0x1.d8d54a1e39751p-35",
-            "point-2.currents_A[Na+]": "0x1.0efa547bcbd76p-34",
-            "point-2.transport_number": "0x1.116fff551aea1p-1",
-            "point-3.conductance_S": "0x1.7a7e666cbfd39p-30",
-            "point-3.current_A": "-0x1.2ecb8523cca94p-33",
-            "point-3.currents_A[Cl-]": "-0x1.275a0bd4f5d57p-34",
-            "point-3.currents_A[Na+]": "-0x1.363cfe72a37d0p-34",
-            "point-3.transport_number": "0x1.064afec8de008p-1"
-          },
-          "seen_on": [
-            "win32-AMD64/X86_V3"
-          ]
-        },
         "546c34f4fb4b625162ad2aeb2893b1ba6e221a5d40c868f615c6048e1731c631": {
           "values": {
             "point-0.conductance_S": "0x1.49e4162c76b2dp-30",
             "point-0.current_A": "0x1.07e9ab56c55bep-34",
             "point-0.currents_A[Cl-]": "0x1.ee2079ce93a7ep-36",
             "point-0.currents_A[Na+]": "0x1.18c319c640e3ep-35",
+            "point-0.eof_m3_s": "0x1.1b1445a04b508p-63",
             "point-0.transport_number": "0x1.10581a94d4509p-1",
             "point-1.conductance_S": "0x1.6a87c2cf931d3p-30",
             "point-1.current_A": "-0x1.22063572dc176p-34",
             "point-1.currents_A[Cl-]": "-0x1.166606b5940fbp-35",
             "point-1.currents_A[Na+]": "-0x1.2da66430241f2p-35",
+            "point-1.eof_m3_s": "-0x1.19fbe257ab644p-63",
             "point-1.transport_number": "0x1.0a4307f7b6a53p-1",
             "point-2.conductance_S": "0x1.3d1f1bf6d15acp-30",
             "point-2.current_A": "0x1.fb64f98ae8914p-34",
             "point-2.currents_A[Cl-]": "0x1.d8d54a1e39748p-35",
             "point-2.currents_A[Na+]": "0x1.0efa547bcbd70p-34",
+            "point-2.eof_m3_s": "0x1.14e2be597dd87p-62",
             "point-2.transport_number": "0x1.116fff551aea0p-1",
             "point-3.conductance_S": "0x1.7a7e666cbfd35p-30",
             "point-3.current_A": "-0x1.2ecb8523cca91p-33",
             "point-3.currents_A[Cl-]": "-0x1.275a0bd4f5d53p-34",
             "point-3.currents_A[Na+]": "-0x1.363cfe72a37cfp-34",
+            "point-3.eof_m3_s": "-0x1.12dce92ff8e9fp-62",
             "point-3.transport_number": "0x1.064afec8de00ap-1"
           },
           "seen_on": [
@@ -301,18 +251,6 @@
       "reference_mesh": "d45f1dd021f0471bd041e91f5aee28e236eb4d82c80136c38c219f3ef9773c35",
       "moved_tolerance": 1e-08,
       "meshes": {
-        "e2030d0fd6e8c3ef47d069d5464822ce6a9cf6ed3fe2d2badcde32a862b81101": {
-          "values": {
-            "conductance_S": "0x1.0b9340f0f2e3dp-30",
-            "current_A": "0x1.ac1ece4e516c9p-35",
-            "currents_A[Cl-]": "0x1.877bb2130991cp-36",
-            "currents_A[Na+]": "0x1.d0c1ea8999476p-36",
-            "transport_number": "0x1.15e85bb8bc314p-1"
-          },
-          "seen_on": [
-            "linux-x86_64/X86_V4"
-          ]
-        },
         "d45f1dd021f0471bd041e91f5aee28e236eb4d82c80136c38c219f3ef9773c35": {
           "values": {
             "conductance_S": "0x1.0b9340f0f2e49p-30",
@@ -324,6 +262,18 @@
           "seen_on": [
             "linux-x86_64/X86_V2",
             "linux-x86_64/X86_V3"
+          ]
+        },
+        "e2030d0fd6e8c3ef47d069d5464822ce6a9cf6ed3fe2d2badcde32a862b81101": {
+          "values": {
+            "conductance_S": "0x1.0b9340f0f2e3dp-30",
+            "current_A": "0x1.ac1ece4e516c9p-35",
+            "currents_A[Cl-]": "0x1.877bb2130991cp-36",
+            "currents_A[Na+]": "0x1.d0c1ea8999476p-36",
+            "transport_number": "0x1.15e85bb8bc314p-1"
+          },
+          "seen_on": [
+            "linux-x86_64/X86_V4"
           ]
         }
       }
