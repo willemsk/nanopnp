@@ -35,6 +35,10 @@ sources:
 - id: wp31-plan
   resource: git:0ff2d619:docs/plans/wp31-gui-charge-pipeline.md
   title: WP31 charge viewer plan, D8 (fixed colour range and viewer settings)
+- id: wp501-plan
+  resource: docs/plans/wp5.01-workbench-design-study.md
+  title: WP5.01 workbench design study plan (offscreen Qt and headless Playwright
+    render checks)
 tested_with:
   pyside6: 6.11.2
   pyinstaller: 6.22.3
@@ -73,6 +77,10 @@ promise per runner image.
 
 ### A missing `libEGL.so.1` can be shimmed for local work, never for the gate **[verified][^wp14-plan]** {#a-missing-libeglso1-can-be-shimmed-for-local-work-never-for-the-gate}
 
+**Superseded on 24 October 2026.** The shim now fails at the Playwright Chromium bundle
+`/opt/pw-browsers/chromium-1243/chrome-linux64/` with `undefined symbol: eglQueryString`; see the next
+section. The text below is kept as the record of 20 September 2026.
+
 Measured 20 September 2026. The pre-installed Playwright Chromium carries a real
 `libEGL.so`, and symlinking it as `libEGL.so.1` (with `libGLESv2.so` as `libGLESv2.so.2`) into a
 scratch directory on `LD_LIBRARY_PATH` makes `from PySide6 import QtWidgets` succeed, a
@@ -83,6 +91,33 @@ It is **not** a way to get Linux widget coverage on the push gate. It depends on
 that has nothing to do with this project, and CON-07's posture is that nothing on the user path
 needs a build or an install step. Widget coverage belongs on `windows-latest` and `macos-latest`,
 where Qt's platform plugin works unaided.
+
+### Offscreen Qt runs with system libraries, and headless Playwright draws a host document **[verified][^wp501-plan]** {#offscreen-qt-runs-with-system-libraries-and-headless-playwright-draws-a-host-document}
+
+Measured 24 October 2026 in the Linux development container. Installing the system libraries makes the
+Qt imports work without a shim:
+
+```
+apt-get install -y --no-install-recommends libegl1 libgl1 libxkbcommon0 libnss3 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libxkbfile1 libasound2t64
+```
+
+With them, `from PySide6 import QtWidgets, QtWebEngineWidgets` imports, and the whole `MainWindow`
+constructs and runs under `QT_QPA_PLATFORM=offscreen` with `QTWEBENGINE_CHROMIUM_FLAGS="--disable-gpu --no-sandbox"`.
+`.claude/scripts/gui/capture_qt.py` drove it through example 07 (a charge build and a charged solve) to
+22 window grabs in about eight minutes.
+
+Offscreen, a `QWebEngineView` loads the host document but gets no WebGL context. The scene's
+initialisation throws `TypeError: Cannot read properties of null (reading 'getExtension')`, and the shell
+shows its own "did not draw" diagnostic in place of the view. A picture of a web view therefore comes
+from the HTML document the render child wrote, not from the grab.
+
+Node Playwright 1.63.0 is installed globally for Node 22, at `/opt/node22/lib/node_modules/playwright`,
+and is found through `NODE_PATH=/usr/local/lib/node_modules_global`. `NODE_PATH` serves `require` only,
+not `import`, so a script that uses it is CommonJS (`.cjs`). It is not in the `uv` environment. Launched
+with `--enable-unsafe-swiftshader`, its Chromium renders a `host_document` page (WebGL2: colour bar, mesh)
+headless with no GPU. `node .claude/scripts/gui/shoot.cjs --self-check <dir>` checks it.
+
+This is for local design work and the `/np-gui render qt` target, never for the push gate (CON-07).
 
 ### `QWebEngineView` loads a webgui document with no GPU at all **[verified][^wp14-plan]** {#qwebengineview-loads-a-webgui-document-with-no-gpu-at-all}
 
@@ -402,3 +437,4 @@ that is only browsing a case never pays for a solver or a toolkit.
 [^wp15-plan]: `docs/plans/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
 [^wp24-plan]: `docs/plans/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).
 [^wp31-plan]: `git show 0ff2d619:docs/plans/wp31-gui-charge-pipeline.md`, D8 (scene colour limits and `gui_settings.autoscale`).
+[^wp501-plan]: `docs/plans/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).
