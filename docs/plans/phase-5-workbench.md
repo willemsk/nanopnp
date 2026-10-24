@@ -1,6 +1,7 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: planned, not started.** Written 24 October 2026, during Phase 4 (§8.2.17). Planned:
+**Status: planned, not started.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended
+the same day (S21 to S23; [the record](phase-5-record.md)). Planned:
 WP5.01, beside Phase 4 (S1), and WP5.02, after `v0.5.0`. The shell packages from WP5.03 and their
 estimate wait for `/np-plan amend 5` (S14); the close is last. Release: **v0.6** (`v0.6.0`).
 
@@ -56,11 +57,11 @@ analytes (N4, N5).
 | Decision | Choice | Why |
 |---|---|---|
 | Overlap | Only WP5.01 before `v0.5.0` | The API may still move (S1, S15) |
-| The GUI | A tabbed workbench for P1 to P3, tools linked to live views | The author's brief (S2, S6) |
+| The GUI | A workbench for P1 to P3, tools linked to live views; its organisation and look ruled in WP5.01's design round | The author's brief (S2, S6, S21) |
 | v0.6's scope | The whole design; the shell over today's capabilities; the charge mutator | Validation waits on no new tool (S4, S7) |
 | Physics editor | Composition from registered blocks; room for equations later | QR-13, VER-60 (S3) |
 | Front end | WP5.02's spike decides | Evidence (S8) |
-| Working loop | Artifact mockups; a live local loop | Both see and control it (S9) |
+| Working loop | Artifact mockups; a live local loop; `/np-gui` renders, reviews and collects verdicts | Both see and control it (S9, S22) |
 | Screen checks | Fixture states, headless renders; no pixel gate | Runner-independent (S10) |
 | Document | A plain project folder; a readable export | No opaque archive (S11) |
 | Install, compute | One `uv` command, `nanopnp gui`; local solves over a network API | Remote later (S12) |
@@ -78,14 +79,18 @@ analytes (N4, N5).
 
 **Planned:** [the plan](wp5.01-workbench-design-study.md).
 
-Prose and Artifact pages only (S1). It publishes today's Qt shell, rendered offscreen, for the
-author's keep, kill or change per screen; draws the author's three to five jobs as clickable
-mockups; and writes `docs/design/workbench.md`: tabs, tools, the four live views, the project
-folder, the guided QR-10 route, a glossary, and the three later tools with S3's room for equations.
-Each settled requirement enters the specification tagged v0.6 or for its tool phase (F5). VER-43,
-VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3 and QR-10 are
-restated for the browser shell (M3, S2, S12), each beside its clause and replacing it only at
-`v0.6.0` (S17). It proposes a ruling on each inherited row.
+Prose, mockups, the specification and the GUI development tools under `.claude/` (S1, S22). It
+first builds `/np-gui` and the `gui-reviewer` agent, and uses them: it publishes today's Qt shell,
+rendered offscreen, for the author's keep, drop or change per screen; runs an interactive design
+round, a brainstorm over several organising principles and then a grilling, on how the workbench is
+organised beyond one tab per stage and how it looks and feels (S21); draws the author's three to
+five jobs as clickable mockups in the ruled organisation and style; and writes
+`docs/design/workbench.md`: the organisation, the look and feel, tabs, tools, the four live views,
+the project folder, the guided QR-10 route, a glossary, and the three later tools with S3's room for
+equations. Each settled requirement enters the specification tagged v0.6 or for its tool phase (F5).
+IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
+and QR-10 are restated for the browser shell (M3, S2, S12), each beside its clause and replacing it
+only at `v0.6.0` (S17). It proposes a ruling on each inherited row.
 
 Tests: none kept; the strict documentation build (VER-45). Tag: none if it merges before `v0.5.0`,
 its entry under `## [Unreleased]`; otherwise `v0.6.0-alpha.1` (§8.4.1).
@@ -132,6 +137,7 @@ the capability list covered, orders the tool phases (S7), and writes the report,
 | Item | Needed by | If it does not arrive |
 |---|---|---|
 | Comments on the screens and mockups | WP5.01 | WP5.01 waits |
+| Answers in the design round on organisation and look (S21) | WP5.01 | WP5.01 waits |
 | Three to five concrete jobs | WP5.01's start | WP5.01 drafts from P1 to P3 and asks |
 | The framework ruling | WP5.02's end | The shell packages wait |
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
