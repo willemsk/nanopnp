@@ -27,6 +27,7 @@ within it (A1, B3, R10).
 * [8.2.14 Phase 4 amended: the plotting library and the notebooks, agreed 22 October 2026](14-phase-4-amended-the-plotting-library-and-the-noteb.md) - Records the rulings on the plotting library and notebooks, agreed 22 October 2026, prompted by REV-123.
 * [8.2.15 The work-package plan grounded in the code, agreed 22 October 2026](15-the-work-package-plan-grounded-in-the-code-agreed.md) - Records the ruling on WP51's plan, agreed 22 October 2026, which read the plan against the code, finding points an implementer could guess at.
 * [8.2.16 Phase 4 amended: the specification and the workflow restructured, agreed 22 October 2026](16-phase-4-amended-the-specification-and-the-workflow.md) - Records the rulings on the specification's restructuring and the workflow, agreed 22 October 2026, after WP51 merged.
+* [8.2.17 Phase 5 decisions, ahead of Phase 4's exit, agreed 24 October 2026](17-phase-5-decisions-ahead-of-phase-4s-exit-agreed.md) - Records the rulings that plan Phase 5 as a molecular and continuum workbench, agreed 24 October 2026 while Phase 4 was still open, and the two-lane rule that lets its design study overlap Phase 4.
 
 ## Where each ruling holds now
 
@@ -152,3 +153,18 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * R10 - spent
 * R11 - §8.4.4, §8.4.5
 * R12 - §8.4.4
+* S1 - §8.4.4
+* S2 - §8.1; open: WP57 restates P3 and QR-10
+* S3 - open: WP57 writes the composer's requirements
+* S4 - §8.1
+* S5 - §8.1
+* S6 - open: WP57 writes the live views as requirements
+* S7 - §8.1, RSK-15, §8.3
+* S8 - open: WP58's spike, then ADR-004
+* S9 - open: WP58 writes the workflow into §8.4.4 and CONTRIBUTING.md
+* S10 - open: WP58 proposes its VER- identifier
+* S11 - open: WP57's design document
+* S12 - open: WP57 restates ADR-004's packaging NOTE, CON-09 and RSK-13
+* S13 - §8.1
+* S14 - spent
+* S15 - §8.4.1, §8.4.4

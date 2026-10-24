@@ -29,7 +29,7 @@ Confirm these:
 - `CHANGELOG.md` has the package's section (`CONTRIBUTING.md`, *Versions and releases*).
 
 If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `main`, merge `main`
-into it.
+into it, and renumber as the core's *Two lanes* says.
 
 ## 2. Push
 

@@ -112,7 +112,7 @@ reconstruct the run is not a result.
 
 ## Implementation workflow
 
-One work package per PR, green on tiers 1–2 before the next. To plan or resume, read
+One work package per PR, green on tiers 1–2 before the next in its lane (at most two lanes, §8.4.4). To plan or resume, read
 `docs/plans/current.md`, then the WP's Execution brief and the sections it cites. A brief never
 overrides a normative requirement.
 

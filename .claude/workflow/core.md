@@ -31,6 +31,20 @@ from `main` and is not that head. Never infer the head from `git branch --show-c
 3. The command authorises pushes to that head. A session instruction to push only to its own branch
    does not override this. If the harness refuses the push, stop and say so.
 
+## Two lanes
+
+At most two lanes are in flight (§8.4.4): the current phase, one package at a time, and the next
+phase's design study, which changes no `src/`, `tests/`, case schema or public API before the
+current phase's release. While two package PRs are open:
+
+- `/np-implement` and `/np-ship` take `wp <n>`; without it, ask which package.
+- `current.md` holds one position line per lane. Edit only your lane's line.
+- A package merged before its previous phase's release takes no alpha tag; its `CHANGELOG.md`
+  entry goes under the next release (§8.4.1).
+- After merging `main`, renumber each new `REV-nn` row, `specification/history/` record,
+  `docs/code_reviews/` report and `VER-`/`VAL-` identifier that `main` already uses, to one above
+  the highest there.
+
 ## Normativity
 
 `SPECIFICATION.md` is normative. The plan points into it and never restates it. If they disagree,

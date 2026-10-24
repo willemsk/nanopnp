@@ -21,6 +21,9 @@ here once.
   (§8.2.7 G11)
 * A phase's close package takes the release tag alone, with no alpha tag on the same commit; Phase 4's
   is `v0.5.0`. (§8.2.5 E5; §8.2.7 G11)
+* A package merged before its previous phase's release takes no alpha tag. Its `CHANGELOG.md` entry
+  waits in the next release's section, and that release's first alpha tag follows the previous
+  release, so versions on `main` only increase. (§8.2.17 S15)
 
 #### 8.4.2 The loop
 
@@ -54,9 +57,16 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n>`,
   `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
-* One work package makes one pull request, green on Tiers 1 and 2 before the next package starts.
-  `/np-implement` stops at the pull request; `/np-ship` starts in a fresh session that did not make
-  its decisions. (§8.2.11 L7; §8.2.16 R5; `CLAUDE.md`)
+* One work package makes one pull request, green on Tiers 1 and 2 before the next package of its lane
+  starts. `/np-implement` stops at the pull request; `/np-ship` starts in a fresh session that did
+  not make its decisions. (§8.2.11 L7; §8.2.16 R5; `CLAUDE.md`)
+* At most two lanes are in flight. The current phase runs one package at a time; the second lane is
+  the next phase's design study, which changes no `src/`, `tests/`, case schema or public API before
+  the current phase's release. While two pull requests are open, `/np-implement` and `/np-ship` take
+  `wp <n>`, `docs/plans/current.md` holds one position line per lane, and each package edits only its
+  own. The pull request that merges second renumbers its new `REV-nn` rows, history records,
+  code-review reports and `VER-`/`VAL-` identifiers to one above the highest on `main`. (§8.2.17 S1,
+  S15)
 * A phase plan, a work-package plan and a work-package pull request open with `## In brief`, at most
   250 words and readable without code or identifiers. It says what changes and why, what it costs,
   what could go wrong and how it would be noticed. Its *Your call* gives each decision that waits for
