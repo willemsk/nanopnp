@@ -1,18 +1,19 @@
 # Current work
 
-Updated 22 October 2026 (§8.2.16). Navigation only; `SPECIFICATION.md` governs; an
+Updated 24 October 2026 (§8.2.17). Navigation only; `SPECIFICATION.md` governs; an
 unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it. The specification and this phase's plan are now
-split into what holds today, read by default, and their history, read only when needed. The working
-instructions are rebuilt as three commands with levels, awaiting review. Then come the notebooks and figures
-revised from the author's notes, and the testing sessions.
+Phase 4 tidies the program before others rely on it: the working instructions await review, then
+come the revised notebooks and the testing sessions. Phase 5, a workbench in the browser, is
+planned; its design study may run alongside, and nothing is built until Phase 4's release.
 
-**Your call:** should the phase estimate grow to five to seven weeks? *Recommendation:* yes.
+**Your call:** should Phase 4's estimate grow to five to seven weeks? *Recommendation:* yes.
 
 ## Position
+
+One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
@@ -20,15 +21,15 @@ revised from the author's notes, and the testing sessions.
   author's step.
 - [WP53](wp53-workflow-commands.md), the workflow, is **implemented** on its branch
   ([#124](https://github.com/willemsk/nanopnp/pull/124)); its tag is `v0.5.0-alpha.19`. Next:
-  **`/np-ship wp 53`**, in a fresh session. Then WP54, the notebooks revised, the first run of the
-  new commands; then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then the
+  **`/np-ship wp 53`**. Then WP54, the notebooks revised; then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then the
   author's sessions, and fixes from WP56.
+- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **planned**. Next:
+  **`/np-plan wp 57`**, the design study, beside Phase 4, untagged before `v0.5.0`; WP58 after it.
 
 ## Not to be re-decided
 
-- **Reading the specification:** `SPECIFICATION.md` is the entry point over `specification/`; the
-  current files by default, `specification/history/` on demand, `clause.py <ID>` for a clause. → R2, R3.
-  A ruling's table goes to a new `specification/history/` record, its standing rule to §8.4.
+- **Reading the specification:** `SPECIFICATION.md` maps `specification/`; history on demand;
+  `clause.py <ID>` for a clause; a ruling's table to a new history record, its rule to §8.4 (R2, R3).
 - **The rules of process** (versions, the loop, the test scope, plans, agents and models, open
   items) are §8.4: one minor version per phase and `v0.5.0` alone at the close (§8.4.1); the commit
   hook, the push gate and Python 3.14 with a 3.11 floor (§8.4.2); tests only inside the scope
@@ -36,8 +37,8 @@ revised from the author's notes, and the testing sessions.
   open (§8.2.16 R8).
 - **Figures:** Matplotlib in `plot/`, below `pipeline`, importing no backend; figures declared in
   the stage registry; marimo notebooks, nightly. → §8.2.14 P2 to P6; FR-30.
-- **Cost fixes follow measurement against registered thresholds** (§8.2.12 M2). **Phase 5
-  builds a browser shell; the Qt shell stays gated until then** (M3).
+- **Cost fixes follow measurement against registered thresholds** (§8.2.12 M2). **Phase 5 is a
+  browser workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15).
 - **Phase 4's shape:** refactors before the protocol (G2); findings only from the author's sessions
   (G7); the VER-62 golden (G10). The `MOD-nn` rulings stand (§8.2.8).
 - **A moved edge edits `modularity-layering.yaml` in the same commit (VER-61)**; a VER-62 miss is
@@ -56,6 +57,7 @@ revised from the author's notes, and the testing sessions.
 - **The paper's figure data** for VAL-16 and VAL-17 (§8.2.4 D6); E1's ensemble legs.
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
+- **Phase 5's comments, jobs, framework ruling and QR-10 colleague** (S8, S13).
 - **The notes on the notebooks and figures, for WP54's plan.** **The user-testing sessions, and
   the rulings on each `UT-nn`, `MOD-11`, any residual cycle (H6) and any WP41 drift (I4).** **The archived PQRs** for WP27–WP29's Tier 3.
 
@@ -63,11 +65,12 @@ revised from the author's notes, and the testing sessions.
 
 | Need | Read |
 |---|---|
-| The specification | `SPECIFICATION.md`, then the file its map names; `specification/history/index.md` for where each ruling holds now |
+| The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The documents' record | `wp52-specification-and-plans-split.md`; `phase-4-record.md` for the phase plan's amendments |
-| The workflow | `.claude/workflow/core.md` and `.claude/skills/np-*/`; `wp53-workflow-commands.md`; §8.4.4, §8.4.5 |
+| The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
 | The notebooks revised | The Phase 4 plan's WP54; `wp51-plotting-and-notebooks.md`; §8.2.14; FR-30 |
 | The protocol | `wp55-user-testing-protocol.md`; §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46 |
+| The workbench | `phase-5-workbench.md`; §8.2.17; M3; F5 |
 
 ## Handoff Rules
 

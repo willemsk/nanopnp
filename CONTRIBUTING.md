@@ -150,7 +150,9 @@ v0.5 Phase 4 (polish and user testing), v0.6 Phase 5 (the graphical interface) a
 - **A work package's PR writes its own [`CHANGELOG.md`](CHANGELOG.md) section** under the version
   it will be tagged, `vX.Y.Z-alpha.N`, where `vX.Y.Z` is the phase's release and N counts the phase's
   work packages. **After it merges**, tag its last commit on `main` with that version, so that the
-  tagged commit already carries its own entry.
+  tagged commit already carries its own entry. A package of the next phase's design study that
+  merges before the current phase's release takes no tag: its entry waits under the next release,
+  and that release's first alpha tag follows the current release (`SPECIFICATION.md` §8.4.1).
 - **To cut a release** `vX.Y.Z`, commit the changelog section and `CITATION.cff`'s `version` and
   `date-released`, then tag and push the tag. `.github/workflows/release.yml` builds it and
   publishes a GitHub Release, whose notes are that version's section of

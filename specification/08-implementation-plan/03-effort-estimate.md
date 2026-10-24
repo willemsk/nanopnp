@@ -10,7 +10,8 @@ Estimate to the validated release (v0.7, Phase 6; §8.2.5 E2, §8.2.6 F1) withou
 months of part-time work. With the desktop GUI: 9–14 months. Both figures are for one person; the
 calendar halves at full-time effort. Since §8.2.6 F1 the GUI phase precedes the validated release, so
 the second figure is the one that applies, and Phase 4, which neither figure counts, adds 4–6 weeks
-(§8.2.9 I5).
+(§8.2.9 I5). Neither figure counts the workbench's tool phases (§8.2.17 S7), whose estimates their
+own plans set.
 
 Factors making the work more tractable:
 

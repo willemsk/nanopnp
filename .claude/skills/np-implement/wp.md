@@ -56,7 +56,8 @@ The core's *Records* table says what each record gets.
 
 The phase plan's `### WP<n>` section gets a delivered summary (target 150 words): scope,
 identifiers, live inherited constraints and links to evidence. Update `docs/plans/current.md` in
-place (its word target is in its *Handoff Rules*). Both plans' **Status** lines change with the
+place, only your lane's position line when two lanes are open (the core's *Two lanes*; its word
+target is in its *Handoff Rules*). Both plans' **Status** lines change with the
 summary. The WP plan's line becomes `**Status: delivered, <date>.**`. The phase plan's roll-up
 moves `WP<n>` to the delivered list.
 
