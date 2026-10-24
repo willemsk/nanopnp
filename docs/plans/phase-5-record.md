@@ -26,3 +26,12 @@ Each settled requirement enters the specification tagged v0.6 or for its tool ph
 VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3 and QR-10 are
 restated for the browser shell (M3, S2, S12), each beside its clause and replacing it only at
 `v0.6.0` (S17). It proposes a ruling on each inherited row.
+
+---
+
+## 24 October 2026: the author's areas supplied (§8.2.17 S24)
+
+The author named the workbench's areas and made the design document public. Replaced text in
+*What the author supplies*:
+
+| Three to five concrete jobs | WP5.01's start | WP5.01 drafts from P1 to P3 and asks |

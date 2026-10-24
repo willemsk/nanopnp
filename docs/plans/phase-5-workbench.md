@@ -138,7 +138,7 @@ the capability list covered, orders the tool phases (S7), and writes the report,
 |---|---|---|
 | Comments on the screens and mockups | WP5.01 | WP5.01 waits |
 | Answers in the design round on organisation and look (S21) | WP5.01 | WP5.01 waits |
-| Three to five concrete jobs | WP5.01's start | WP5.01 drafts from P1 to P3 and asks |
+| The workbench's areas | WP5.01's start | **Supplied 24 October 2026** (S24) |
 | The framework ruling | WP5.02's end | The shell packages wait |
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
 | An experimentalist new to nanopnp | The close | QR-10 is waived and carried (S13) |
