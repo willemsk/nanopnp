@@ -45,6 +45,10 @@ conventional prefix, and put the requirement identifier in the body. Tick each i
 session then resumes from the first unticked item. The gate hook refuses a failing commit and
 remembers a pass, so you can split a gated tree into several commits.
 
+An item that changes a screen (`src/nanopnp/gui/`, the front end, `docs/design/`) runs `/np-gui
+render <target>` and reads each changed screen before its commit; a page error or a failed check
+stops the item.
+
 Write the tests of an item with the item, from the plan's *Verification* rows; the plan commits no
 tests. Each test is in the test scope and named as `CLAUDE.md`'s *Testing* says (§8.2.13 N1). First
 write the analytic test that localises an error to one term. If a tolerance can pass
