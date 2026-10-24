@@ -122,7 +122,7 @@ the `CHANGELOG.md` section and `CITATION.cff`. Its last commit takes `v0.6.0` al
 |---|---|---|
 | 1 | The scope, the overlap, the slicing, the loop, the document, the install and the gate | **Settled by the author, 24 October 2026** (S1 to S15) |
 | 2 | The front-end framework and server library | **Author**, from WP58's evidence (S8) |
-| 3 | The inherited rows: REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -73, -114; `MOD-09`, `MOD-11`, `MOD-13` | **WP57** proposes, the author rules |
+| 3 | The inherited rows: REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) | **WP57** proposes, the author rules |
 | 4 | Whether the shell reads `plot/data.py` and retires its own plots | **WP57** (P3) |
 | 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7) |
 

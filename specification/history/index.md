@@ -120,7 +120,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * L10 - §8.4.2
 * M1 - spent
 * M2 - VER-76
-* M3 - ADR-004, CON-09, §8.1
+* M3 - ADR-004, CON-09, §8.1; its choice of the server library superseded by S8
 * M4 - spent
 * M5 - §8.3
 * N1 - §7.1 to §7.3, §8.4.3

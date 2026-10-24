@@ -42,7 +42,7 @@ As `rulings.md` says.
 
 ### Breaking the phase into packages
 
-- **One PR per package**, green on tiers 1 and 2 before the next. If a package cannot be verified by
+- **One PR per package**, green on tiers 1 and 2 before the next in its lane. If a package cannot be verified by
   the end of its own PR, it is two packages.
 - **Order by evidence** (§7.1): a closed form before 2WCD, 2WCD before the ensemble.
 - **An opening study goes first and fixes only itself.** Plan it in full. List the other packages as
@@ -81,7 +81,8 @@ Target 1,500 words, without the report.
 
 Review checks each phase plan from Phase 4 on against these caps (§8.2.13 N3).
 
-**`docs/plans/current.md`**: replace the position with Phase n planned and `/np-plan wp <n>` next.
+**`docs/plans/current.md`**: replace the position with Phase n planned and `/np-plan wp <n>` next,
+or add that line beside Phase n−1's while it is open (the core's *Two lanes*).
 Replace the "not to be re-decided" entries that the rulings supersede. Keep its In brief and its word
 target (its *Handoff Rules*). `CLAUDE.md`, `.claude/workflow/` and the skills change only if a ruling changes the
 workflow.
