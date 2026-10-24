@@ -77,12 +77,13 @@ Confirm these yourself:
 - The specification, the knowledge base and the Outcome annotations are committed. Both **Status**
   lines and `current.md` are updated. `CHANGELOG.md` has the package's section under
   `vX.Y.Z-alpha.N` (`CONTRIBUTING.md`, *Versions and releases*; this also covers the close
-  package).
+  package). A package that merges before its previous phase's release writes its entry under the
+  next release instead, and takes no tag (the core's *Two lanes*).
 - Gate and push (the core).
 
 Then open or reuse the PR by the core's *PR contract*. A new PR states under **Verification** that
 the review waits for `/np-ship`.
 
 Stop. Report the PR link, the identifiers discharged, the tag that the last commit gets after the
-merge, and that the package is ready for `/np-ship`. Do not start the review or monitor CI: a fresh
+merge (or that it gets none), and that the package is ready for `/np-ship`. Do not start the review or monitor CI: a fresh
 session that did not make these decisions does the review.

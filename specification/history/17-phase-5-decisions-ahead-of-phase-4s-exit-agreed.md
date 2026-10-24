@@ -7,15 +7,16 @@ description: "Records the rulings that plan Phase 5 as a molecular and continuum
 #### 8.2.17 Phase 5 decisions, ahead of Phase 4's exit, agreed 24 October 2026
 
 Rulings by the author, taken through `/np-plan phase 5` in five rounds of questions while Phase 4
-was in progress: WP53 was unshipped, and WP54, WP55, the author's sessions, WP56 and the close
-remained. The author asked to "already begin discussion and brainstorming on phase 5", with two
-first aims: to find out "what kind of GUI and features I actually want, because it is not clear in my
-head", and to build "a robust workflow for GUI development that allows us both to see and control
-the GUI". The author first chose a design-only overlap, then said that Phase 4's packages finish
-before any real implementation and asked whether the workflow handles two packages in parallel. It
-did not: §8.4.4 ran one package at a time, `current.md` held one position, and alpha tags, register
-numbers and changelog sections assumed one branch in flight. S1 states the narrowed overlap and S15
-the rule that carries it. The letter series continues at S.
+was in progress: WP53 had merged, and WP54, WP55, the author's sessions, the fix packages from WP56,
+the documentation increment and the close remained. The author asked to "already begin discussion
+and brainstorming on phase 5", with two first aims: to find out "what kind of GUI and features I
+actually want, because it is not clear in my head", and to build "a robust workflow for GUI
+development that allows us both to see and control the GUI". The author first chose a design-only
+overlap, then said that Phase 4's packages finish before any real implementation and asked whether
+the workflow handles two packages in parallel. It did not: §8.4.4 ran one package at a time,
+`current.md` held one position, and alpha tags, register numbers and changelog sections assumed one
+branch in flight. S1 states the narrowed overlap and S15 the rule that carries it. The letter series
+continues at S.
 
 | # | Decision | Consequence | Clause changed, and when |
 |---|---|---|---|

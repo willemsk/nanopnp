@@ -41,9 +41,9 @@ current phase's release. While two package PRs are open:
 - `current.md` holds one position line per lane. Edit only your lane's line.
 - A package merged before its previous phase's release takes no alpha tag; its `CHANGELOG.md`
   entry goes under the next release (§8.4.1).
-- After merging `main`, renumber each new `REV-nn` row, `specification/history/` record,
-  `docs/code_reviews/` report and `VER-`/`VAL-` identifier that `main` already uses, to one above
-  the highest there.
+- After merging `main`, renumber the branch's new `REV-nn` rows, `specification/history/` records,
+  `docs/code_reviews/` reports and `VER-`/`VAL-` identifiers, each kind in order from one above the
+  highest on `main`, and every reference to them.
 
 ## Normativity
 

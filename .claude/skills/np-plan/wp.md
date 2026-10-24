@@ -55,7 +55,7 @@ not finished.
 
 ## Scope of one work package
 
-One PR, green on tiers 1 and 2 before the next package starts. If a package cannot be verified by the
+One PR, green on tiers 1 and 2 before the next package of its lane starts. If a package cannot be verified by the
 end of its own PR, it is two packages. Prefer the split that lets an analytic benchmark localise an
 error to one term (§7.1).
 

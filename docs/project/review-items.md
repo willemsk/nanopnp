@@ -1294,3 +1294,51 @@ and the directory indexes. The root index lists the top-level files and the dire
 WP53's plan D2 caps one invocation at 2,200 words and the new files at 7,000 in all, and the core at 900. The delivered files hold 7,409 words in all, a core of 974, and invocations of 2,282 to 2,995 for `/np-plan` and 2,318 and 2,548 for `/np-ship` (`wc -w`, the plan's item 11 Outcome). No rule was cut to meet a count, and only the plan's Outcome and the pull request body recorded the overshoot. Found by CODE_REVIEW_014.
 
 **Fixed** in WP53 (author's direction, 23 October 2026): D2 and its Verification row now state the caps as delivered, measured after the `PR:` line was dropped and CODE_REVIEW_014's fixes were merged. The core is 985 words, one invocation 3,006 at most (`np-plan phase`), and the new files 7,518 in all. The router cap of 150 holds, as the largest router is 137. The cut the review named, from `np-plan/phase.md` and `np-plan/rulings.md`, is not made.
+
+## REV-126: Package numbers can collide between the two lanes
+
+Phase 4's remaining packages are numbered from WP56 when the second `/np-plan amend 4` runs (its fix packages, documentation increment 4 and the close), while Phase 5's plan already claims WP57 and WP58 (§8.2.17 S1, S14). S15's renumbering covers `REV-nn` rows, history records, code reviews and `VER-`/`VAL-` identifiers, not package numbers, so plan files, PR titles, tags and `current.md` could name two packages with one number. Found by CODE_REVIEW_015, finding 2.
+
+**Open** for the author: number Phase 4's remaining packages now, start Phase 5 above them, or add package numbers to S15's list.
+
+## REV-127: WP57 may restate the Qt shell's gating clauses before v0.5.0
+
+WP57 may merge before `v0.5.0` (S1) and restates VER-43, VER-44, VER-55, VER-60, CON-09's PySide6 clause, ADR-004's packaging NOTE, RSK-13, P3 and QR-10 for the browser shell. The lane excludes `src/`, `tests/`, the case schema and the public API, not normative clauses, and M3 keeps those clauses gating the Qt shell that `v0.5.0` ships. Found by CODE_REVIEW_015, finding 5.
+
+**Open** for the author: add each restatement beside its clause, tagged v0.6, until Qt leaves, or hold WP57's restatements until after `v0.5.0`.
+
+## REV-128: The renumbering list leaves out other identifier kinds and the ruling letters
+
+S15 and §8.4.4 renumber `REV-nn` rows, history records, code reviews and `VER-`/`VAL-` identifiers, but not `FR-`, `QR-`, `IF-`, `CON-`, `RSK-`, `ADR-` or `OPN-` identifiers, nor the §8.2 record number and its ruling letter series, all of which a lane can add. Found by CODE_REVIEW_015, finding 7.
+
+**Open** for the author: widen the list to every numbered register and the ruling series.
+
+## REV-129: WP58's tag and the place of a held changelog entry are undefined
+
+If WP57 merges untagged before `v0.5.0`, nothing says whether WP58 is `v0.6.0-alpha.1` or `-alpha.2`: `CONTRIBUTING.md` counts the phase's packages. "The next release's section" is undefined in a changelog ordered newest first, where a `[0.6.0]` section above later `[0.5.0-alpha.N]` sections breaks the order. Found by CODE_REVIEW_015, finding 9.
+
+**Open** for the author: rule WP58's tag and where a held entry sits.
+
+## REV-130: Nothing checks that identifiers stay unique after both lanes merge
+
+Renumbering happens only when a later `/np-ship` merges `main` into a stale branch. Two lanes' PRs merged one after the other can each add the same `VER-` number or history record in different files, with no textual conflict and no test of uniqueness. Found by CODE_REVIEW_015, finding 10.
+
+**Open** for the author: add a Tier 1 or CI uniqueness check over the registers, or accept the manual rule.
+
+## REV-131: The charge-level mutator has no library step or tier row
+
+v0.6 ships the charge-level mutator (S3 to S5), but the Phase 5 plan gives it no library function and no Tier 1 or Tier 2 row, and the library has no residue mutation, against the library-first rule §8.1 sets for the other tools and RSK-15's mitigation. Found by CODE_REVIEW_015, finding 12.
+
+**Open**: WP57's design document places the mutator; `/np-plan amend 5` plans its library step and tests.
+
+## REV-132: The Phase 5 end-of-phase report names no source for its numbers
+
+The report lists click-to-redraw time, clean-machine install time and VER-77's counts with no test or command that logs them, which the phase-plan template requires and the close must re-run. Found by CODE_REVIEW_015, finding 14.
+
+**Open**: WP58 defines the measures and the commands that log them.
+
+## REV-133: The Phase 5 plan and the core exceed their word caps
+
+The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at review (§8.2.13 N3); the core holds 1,111 against the 985 delivered under REV-125, and the workflow files exceed their 7,518 in all. `current.md` was cut to 695. Found by CODE_REVIEW_015, finding 11.
+
+**Open** for the author: cut the plan and the core, or restate the caps.

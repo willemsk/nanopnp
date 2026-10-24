@@ -113,7 +113,7 @@ wait on CI with `sleep`. Report a missing subscription or scheduler as an automa
 
 When CI is green and the PR is mergeable, tell the user in one message: the PR link, the checks that
 passed, what the review changed, what is left for them to decide, and the tag that the last commit
-on `main` gets after the merge (`CONTRIBUTING.md`). The merge is theirs; `/np-ship` after the merge
+on `main` gets after the merge, or that it gets none (`CONTRIBUTING.md`). The merge is theirs; `/np-ship` after the merge
 pushes the tag (§7). Cancel each open fallback check-in and unsubscribe from the PR's activity, so
 that the merge does not wake a cold session. Then stop. A later `/np-ship` resumes, and subscribes
 again if the PR is still open.
@@ -121,7 +121,9 @@ again if the PR is still open.
 ## 7. After the merge
 
 The package's last commit on `main` gets its tag: `vX.Y.Z-alpha.N` from its `CHANGELOG.md` section
-(`CONTRIBUTING.md`, *Versions and releases*), or the release tag for a close (`phase.md`).
+(`CONTRIBUTING.md`, *Versions and releases*), or the release tag for a close (`phase.md`). A
+package merged before its previous phase's release gets no tag, although its section names a
+release (the core's *Two lanes*): report that, and stop.
 
 1. Fetch `main`: a hosted clone is shallow. The merge sha is the `merge_commit_sha` of the merged PR.
 2. If `git ls-remote --tags origin <tag>` lists the tag, report it and stop.

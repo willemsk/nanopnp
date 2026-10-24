@@ -5,9 +5,9 @@ unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it: the working instructions await review, then
-come the revised notebooks and the testing sessions. Phase 5, a workbench in the browser, is
-planned; its design study may run alongside, and nothing is built until Phase 4's release.
+Phase 4 tidies the program before others rely on it: the revised notebooks come next, then the
+testing sessions. Phase 5, a workbench in the browser, is planned; its design study may run
+alongside, and nothing is built until Phase 4's release.
 
 **Your call:** should Phase 4's estimate grow to five to seven weeks? *Recommendation:* yes.
 
@@ -17,14 +17,13 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 to §8.2.16). WP35 to WP52 are merged; tags to `v0.5.0-alpha.18` are the
-  author's step.
-- [WP53](wp53-workflow-commands.md), the workflow, is **implemented** on its branch
-  ([#124](https://github.com/willemsk/nanopnp/pull/124)); its tag is `v0.5.0-alpha.19`. Next:
-  **`/np-ship wp 53`**. Then WP54, the notebooks revised; then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then the
-  author's sessions, and fixes from WP56.
+  **in progress** (§8.2.7 to §8.2.16). WP35 to WP53 are merged and tagged to `v0.5.0-alpha.19`;
+  `v0.5.0-alpha.16` is the author's step. Next: **`/np-plan wp 54`**, the notebooks revised, from
+  the author's notes; then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then
+  the author's sessions, the fixes from WP56, the documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **planned**. Next:
-  **`/np-plan wp 57`**, the design study, beside Phase 4, untagged before `v0.5.0`; WP58 after it.
+  **`/np-plan wp 57`**, the design study, beside Phase 4, untagged before `v0.5.0`; WP58 after
+  `v0.5.0`.
 
 ## Not to be re-decided
 
