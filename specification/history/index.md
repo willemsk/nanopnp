@@ -173,3 +173,6 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * S18 - §8.4.4
 * S19 - §8.4.1
 * S20 - §8.4.4
+* S21 - the Phase 5 plan; open: WP5.01's design document, and §8.1 where a ruling moves it
+* S22 - open: WP5.01 amends §8.4.4, §8.4.5 and CLAUDE.md with its workflow item
+* S23 - the WP5.01 plan
