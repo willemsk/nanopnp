@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 4 done.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 6 done; waiting on the author's verdicts.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -327,7 +327,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
 - [x] a9ca3d3 3. `knowledge/07-software-stack/05-gui-and-packaging.md`, `knowledge/log.md` (D1, D4); done
   when the code and review say so. **Executor:** `general-purpose` on Haiku.
 - [x] f31cd3c 4. Compaction checkpoint: the tools exist. **Executor:** main.
-- [ ] 5. `/np-gui render qt`, `review`, `publish`: the critique; the capability list in
+- [x] a610700 5. `/np-gui render qt`, `review`, `publish`: the critique; the capability list in
   `docs/design/workbench.md`'s *Today's shell* (D1); done when published, and the grab count in
   `qt-index.json` equals the views of *Grounding D1*. **Executor:** main.
 
@@ -337,7 +337,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > holds Q01 to Q41. The reviewer's two blocking findings are the Result tab's float wrapper,
   > a v0.5 defect recorded as REV-134, and the field view's opening camera. `workbench.md` joins
   > *Project* in `mkdocs.yml` now, not at item 12: under `--strict` a page outside `nav` fails.
-- [ ] 6. Wait checkpoint: the verdicts. **Executor:** main.
+- [x] 6. Wait checkpoint: the verdicts. **Executor:** main.
 - [ ] 7. `/np-gui collect`; the concept boards, rendered, reviewed and published; `/np-gui grill
   organisation` with the author; the `WB-nn` rows (D2); done when every organisation agenda point has
   a ruling or a deferral. **Executor:** main.
