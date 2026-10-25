@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choices: geometry and region</title>
+<link rel="stylesheet" href="choices.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <linearGradient id="g-seq" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".25" stop-color="#3b528b"/><stop offset=".5" stop-color="#21918c"/><stop offset=".75" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <linearGradient id="g-seq2" x1="0" y1="1" x2=".3" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".3" stop-color="#3b528b"/><stop offset=".55" stop-color="#21918c"/><stop offset=".8" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <radialGradient id="g-diff" cx=".35" cy=".55" r=".55">
+      <stop offset="0" stop-color="#b2182b"/><stop offset=".35" stop-color="#f4a582"/><stop offset=".7" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d1e5f0"/>
+    </radialGradient>
+    <clipPath id="disc"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0 Z"/></clipPath>
+    <symbol id="pore-rz" viewBox="0 0 180 300"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".7"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="protein-rz" viewBox="0 0 180 300"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="pore-3d" viewBox="0 0 300 300">
+      <ellipse cx="150" cy="70" rx="120" ry="36" fill="#7b8494"/>
+      <path d="M30 70 Q30 120 90 150 L100 262 Q150 282 200 262 L210 150 Q270 120 270 70 Q270 106 150 106 Q30 106 30 70Z" fill="#5c6474"/>
+      <path d="M70 92 Q72 125 108 150 L114 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M150 106 L150 276" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M230 92 Q228 125 192 150 L186 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <ellipse cx="150" cy="70" rx="58" ry="16" fill="#0d0f13" stroke="#9aa3b2"/>
+      <circle cx="118" cy="190" r="5" fill="#ef6f6c"/><circle cx="182" cy="200" r="5" fill="#ef6f6c"/>
+      <circle cx="132" cy="122" r="5" fill="#6fa8ff"/><circle cx="170" cy="230" r="5" fill="#6fa8ff"/>
+    </symbol>
+</defs></svg>
+<section data-screen="ge1-a" id="ge1-a" aria-labelledby="ge1-a-h">
+  <header class="cap"><span class="cid">GE1</span><h1 id="ge1-a-h">How the protein geometry tool is laid out (WB-15)</h1><span class="take">Steps by stage, each with a thumbnail and its gate</span><span class="var" role="img" aria-label="Variant A">A</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px 340px minmax(0,1fr);min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button" aria-current="true">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button">Physics defaults</button></li></ul></div>
+  <div class="pane stack focus-ring" style="margin:4px;overflow:auto"><h2>Protein geometry · from 2WCD, pH 7.5</h2>
+  <span class="muted">Stage 1, alignment, is done in Molecular, Prepare.</span>
+  <div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div class="cplot" style="width:48px;height:80px;flex:none" role="img" aria-label="density preview"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq2)" clip-path="url(#disc)"/></svg></div><div class="stack" style="gap:2px;min-width:0"><b>Stage 2 · density <span class="ok">built</span></b><div class="field"><label for="g1a-h">Grid spacing</label><div class="v"><input id="g1a-h" class="num" type="text" value="x.xx"><span class="unit">Å</span></div></div></div></div>
+  <div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div class="cplot" style="width:48px;height:80px;flex:none" role="img" aria-label="symmetry preview"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq)" clip-path="url(#disc)"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="stack" style="gap:2px;min-width:0"><b>Stage 3 · symmetry to (r, z) <span class="ok">built</span></b><span class="muted">C12; azimuthal variance, peak x.xx</span></div></div>
+  <div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div class="cplot" style="width:48px;height:80px;flex:none" role="img" aria-label="contour preview"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="4"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="stack" style="gap:2px;min-width:0"><b>Stage 4 · contour <span class="ok">gate passed</span></b><div class="field"><label for="g1a-i">Isolevel</label><div class="v"><input id="g1a-i" class="num" type="text" value="x.xx"><span class="chg">changed</span></div></div><div class="field"><label for="g1a-s">Simplification</label><div class="v"><input id="g1a-s" class="num" type="text" value="x.xx"><span class="unit">nm</span></div></div></div></div>
+  <div class="row"><button class="btn primary" type="button">Build geometry</button><button class="btn small" type="button" aria-label="Reset isolevel to its default">Reset</button></div>
+</div>
+<div class="cplot" style="position:relative" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#protein-rz"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="2"/><polygon points="45.7,87.8 43.6,124.1 53.1,134.6 53.2,134.8 53.3,134.9 53.4,135.0 53.4,135.2 53.5,135.3 53.5,135.5 53.5,135.6 56.7,215.5 69.1,215.5 76.7,129.0 76.7,128.8 76.8,128.7 76.8,128.5 76.9,128.4 76.9,128.2 77.0,128.1 77.1,128.0 77.2,127.9 77.4,127.8 77.5,127.7 77.6,127.7 77.8,127.6 77.9,127.6 78.0,127.5 125.1,120.0 125.1,87.8 45.7,87.8" fill="none" style="stroke:var(--warn)" stroke-width="1.5" stroke-dasharray="3 2"/></svg></div></div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="01-molecular.html#mo3-b">Back: Molecular</a><a href="index.html">All choices</a><span class="sp"></span><a href="#ge1-b">Variant B</a></nav>
+</section>
+
+<section data-screen="ge1-b" id="ge1-b" aria-labelledby="ge1-b-h">
+  <header class="cap"><span class="cid">GE1</span><h1 id="ge1-b-h">How the protein geometry tool is laid out (WB-15)</h1><span class="take">Folding sections, one large view with layer switches</span><span class="var" role="img" aria-label="Variant B">B</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px 340px minmax(0,1fr);min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button" aria-current="true">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button">Physics defaults</button></li></ul></div>
+  <div class="pane stack" style="overflow:auto"><h2>Protein geometry · from 2WCD, pH 7.5</h2>
+  <span class="muted">Stage 1, alignment, is done in Molecular, Prepare.</span>
+  <details open><summary><b>Density</b>, stage 2 <span class="ok">built</span></summary><div class="field"><label for="g1b-h">Grid spacing</label><div class="v"><input id="g1b-h" class="num" type="text" value="x.xx"><span class="unit">Å</span></div></div></details>
+  <details><summary><b>Symmetry to (r, z)</b>, stage 3 <span class="ok">built</span></summary></details>
+  <details open><summary><b>Contour</b>, stage 4 <span class="ok">gate passed</span></summary><div class="field"><label for="g1b-i">Isolevel</label><div class="v"><input id="g1b-i" class="num" type="text" value="x.xx"><span class="chg">changed</span></div></div><div class="field"><label for="g1b-s">Simplification</label><div class="v"><input id="g1b-s" class="num" type="text" value="x.xx"><span class="unit">nm</span></div></div></details>
+  <div class="row"><button class="btn primary" type="button">Build geometry</button><button class="btn small" type="button" aria-label="Reset isolevel to its default">Reset</button></div>
+</div>
+<div style="display:grid;grid-template-rows:auto 1fr;min-height:0">
+  <div class="row focus-ring" style="margin:4px;padding:4px" role="group" aria-label="Layers">
+    <span class="muted">Show</span>
+    <label class="chip"><input type="checkbox" checked> Density map</label>
+    <label class="chip"><input type="checkbox"> Azimuthal variance</label>
+    <label class="chip"><input type="checkbox" checked> Contour</label>
+    <label class="chip"><input type="checkbox" checked> Probe-radius profile</label>
+  </div>
+  <div class="cplot" style="position:relative" role="img" aria-label="Field map in (r, z)"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)">
+<rect x="20" y="10" width="140" height="280" fill="url(#g-seq2)" clip-path="url(#disc)"/>
+<polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="corner"><div class="cbox"><span class="cl">Density, 0 to 1</span><div class="cbar seq"></div><div class="row num cl" style="justify-content:space-between"><span>0</span><span>1</span></div></div></div></div>
+</div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="#ge1-a">Variant A</a><a href="index.html">All choices</a><span class="sp"></span><a href="#ge2-a">Next: GE2</a></nav>
+</section>
+
+<section data-screen="ge2-a" id="ge2-a" aria-labelledby="ge2-a-h">
+  <header class="cap"><span class="cid">GE2</span><h1 id="ge2-a-h">How the region is dimensioned</h1><span class="take">Dimensions edited on the drawing, as in AutoCAD</span><span class="var" role="img" aria-label="Variant A">A</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px 230px minmax(0,1fr);min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button" aria-current="true">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button">Physics defaults</button></li></ul></div>
+  <div class="pane stack" style="overflow:auto"><h2>Region: membrane and reservoir</h2>
+  <span class="muted">Edit the dimensions on the drawing.</span><span class="muted">Membrane centre, z: <span class="num">x.xx nm</span>, set in Molecular, Prepare</span>
+  <div class="later"><b>Sketcher</b>: drawing a pore by hand</div>
+</div>
+<div class="cplot" style="position:relative" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><g style="stroke:var(--accent)" stroke-width="1.5"><line x1="128" y1="175.3" x2="128" y2="199.5"/><line x1="123" y1="175.3" x2="133" y2="175.3"/><line x1="123" y1="199.5" x2="133" y2="199.5"/><line x1="20.0" y1="150.0" x2="134.7" y2="69.7" stroke-dasharray="4 3"/></g></svg>
+<div class="over focus-ring" style="left:74.4%;top:57.1%;background:var(--canvas-plot);padding:2px"><label class="cl" for="g2a-t" style="display:block">Thickness</label><span class="row"><input id="g2a-t" class="num" type="text" value="x.xx" style="width:4rem"><span class="unit">nm</span></span></div>
+<div class="over" style="left:22.2%;top:10.0%;background:var(--canvas-plot);padding:2px"><label class="cl" for="g2a-r" style="display:block">Reservoir radius</label><span class="row"><input id="g2a-r" class="num" type="text" value="x.xx" style="width:4rem"><span class="unit">nm</span></span></div>
+<div class="over cl" style="left:2%;bottom:1%">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="#ge1-b">Back: GE1</a><a href="index.html">All choices</a><span class="sp"></span><a href="#ge2-b">Variant B</a></nav>
+</section>
+
+<section data-screen="ge2-b" id="ge2-b" aria-labelledby="ge2-b-h">
+  <header class="cap"><span class="cid">GE2</span><h1 id="ge2-b-h">How the region is dimensioned</h1><span class="take">A form, its fields lettered on the drawing</span><span class="var" role="img" aria-label="Variant B">B</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px 340px minmax(0,1fr);min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button" aria-current="true">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button">Physics defaults</button></li></ul></div>
+  <div class="pane stack focus-ring" style="margin:4px;overflow:auto"><h2>Region: membrane and reservoir</h2>
+  <div class="field"><label for="g2b-t">a Thickness</label><div class="v"><input id="g2b-t" class="num" type="text" value="x.xx"><span class="unit">nm</span></div></div><div class="field"><label for="g2b-r">b Reservoir radius</label><div class="v"><input id="g2b-r" class="num" type="text" value="x.xx"><span class="unit">nm</span></div></div><span class="muted">Membrane centre, z: <span class="num">x.xx nm</span>, set in Molecular, Prepare</span>
+  <button class="btn primary" type="button" style="justify-self:start">Build region</button>
+  <div class="later"><b>Sketcher</b>: drawing a pore by hand</div>
+</div>
+<div class="cplot" style="position:relative" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><g style="stroke:var(--accent)" stroke-width="1"><line x1="128" y1="175.3" x2="128" y2="199.5"/><line x1="20.0" y1="150.0" x2="134.7" y2="69.7" stroke-dasharray="4 3"/></g></svg><span class="lbl over" style="left:73.3%;top:60.5%"><b>a</b></span><span class="lbl over" style="left:38.9%;top:34.7%"><b>b</b></span><div class="over cl" style="left:2%;bottom:1%">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="#ge2-a">Variant A</a><a href="index.html">All choices</a><span class="sp"></span><a href="03-mesh.html">Next: Mesh</a></nav>
+</section>
+</body>
+</html>

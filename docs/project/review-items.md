@@ -1387,10 +1387,13 @@ resolves into one complete case file (WB-11, a case-schema change); studies that
 physics defaults (WB-16); and a saved comparison of two runs with a difference field (WB-04). RSK-15 lets no screen
 be built for a capability Tiers 1 and 2 do not verify, and §8.2.17 S7 puts each new capability in the library
 first. The concept-board review found the comparison and the queue drawn with no verifying artefact (finding B14).
+The choice-panel review adds probes and cuts on a field, selecting mesh elements by a quality measure, an arrangement
+of result tiles, and the deployed charge linked back to its residues (WB-06), each drawn with no verifying artefact
+(`docs/design/reviews/2026-10-25-choices.md`, finding F).
 
 **Open** for the author; proposed owner `/np-plan amend 5`, which sets Phase 5's packages after WP5.02: each capability becomes a library
 package with its tests before the shell surfaces it, or the author moves it to a later phase. WP5.01 changes no
-`src/` (§8.2.17 S1); its item 13 writes the requirements.
+`src/` (§8.2.17 S1); its item 15 writes the requirements.
 
 ## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 

@@ -125,7 +125,14 @@ function checkPage() {
   const controls = "a, button, input:not([type=hidden]), select, textarea, [role=button]";
   for (const element of document.body.querySelectorAll(controls)) {
     if (!visible(element)) continue;
-    const rect = element.getBoundingClientRect();
+    let rect = element.getBoundingClientRect();
+    // A checkbox or radio is hit through its label too, so the larger of the two is its target.
+    if (element.type === "checkbox" || element.type === "radio") {
+      for (const label of element.labels || []) {
+        const box = label.getBoundingClientRect();
+        if (box.width * box.height > rect.width * rect.height) rect = box;
+      }
+    }
     if (rect.width < 24 || rect.height < 24) {
       const inline =
         element.tagName === "A" && getComputedStyle(element).display === "inline";

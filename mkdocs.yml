@@ -29,6 +29,7 @@ exclude_docs: |
   overrides/
   design/concepts/
   design/style/
+  design/choices/
   design/mockups/
   design/reviews/
 

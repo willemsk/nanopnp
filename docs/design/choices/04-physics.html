@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choices: physics</title>
+<link rel="stylesheet" href="choices.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <linearGradient id="g-seq" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".25" stop-color="#3b528b"/><stop offset=".5" stop-color="#21918c"/><stop offset=".75" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <linearGradient id="g-seq2" x1="0" y1="1" x2=".3" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".3" stop-color="#3b528b"/><stop offset=".55" stop-color="#21918c"/><stop offset=".8" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <radialGradient id="g-diff" cx=".35" cy=".55" r=".55">
+      <stop offset="0" stop-color="#b2182b"/><stop offset=".35" stop-color="#f4a582"/><stop offset=".7" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d1e5f0"/>
+    </radialGradient>
+    <clipPath id="disc"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0 Z"/></clipPath>
+    <symbol id="pore-rz" viewBox="0 0 180 300"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".7"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="protein-rz" viewBox="0 0 180 300"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="pore-3d" viewBox="0 0 300 300">
+      <ellipse cx="150" cy="70" rx="120" ry="36" fill="#7b8494"/>
+      <path d="M30 70 Q30 120 90 150 L100 262 Q150 282 200 262 L210 150 Q270 120 270 70 Q270 106 150 106 Q30 106 30 70Z" fill="#5c6474"/>
+      <path d="M70 92 Q72 125 108 150 L114 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M150 106 L150 276" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M230 92 Q228 125 192 150 L186 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <ellipse cx="150" cy="70" rx="58" ry="16" fill="#0d0f13" stroke="#9aa3b2"/>
+      <circle cx="118" cy="190" r="5" fill="#ef6f6c"/><circle cx="182" cy="200" r="5" fill="#ef6f6c"/>
+      <circle cx="132" cy="122" r="5" fill="#6fa8ff"/><circle cx="170" cy="230" r="5" fill="#6fa8ff"/>
+    </symbol>
+</defs></svg>
+<section data-screen="ph1-a" id="ph1-a" aria-labelledby="ph1-a-h">
+  <header class="cap"><span class="cid">PH1</span><h1 id="ph1-a-h">How conditions are put on boundaries (WB-16)</h1><span class="take">A list of the boundaries, a condition each</span><span class="var" role="img" aria-label="Variant A">A</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px 380px minmax(0,1fr);min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button" aria-current="true">Physics defaults</button></li></ul></div>
+  <div class="pane stack focus-ring" style="margin:4px;overflow:auto"><h2>Physics defaults · boundaries</h2>
+  <table><thead><tr><th>Boundary</th><th>Condition</th></tr></thead><tbody><tr><td>Cis reservoir boundary</td><td><select aria-label="Condition on Cis reservoir boundary"><option>Ground, bulk concentration</option></select></td></tr><tr><td>Trans reservoir boundary</td><td><select aria-label="Condition on Trans reservoir boundary"><option>Bias, bulk concentration</option></select></td></tr><tr aria-current="true"><td>Protein surface</td><td><select aria-label="Condition on Protein surface"><option>No flux, no slip</option></select></td></tr><tr><td>Membrane surface</td><td><select aria-label="Condition on Membrane surface"><option>No flux, no slip</option></select></td></tr><tr><td>Axis</td><td><select aria-label="Condition on Axis"><option>Symmetry</option></select></td></tr></tbody></table>
+  <span class="muted">The protein's fixed charge is a volume charge from the molecular model, assembled on the mesh in the study.</span><span class="muted">Selecting a row highlights the boundary. A study may override any condition.</span>
+</div>
+<div class="cplot" style="position:relative" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="3"/></svg><span class="lbl over" style="left:83.3%;top:13.3%">cis</span><span class="lbl over" style="left:83.3%;top:83.3%">trans</span></div></div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="03-mesh.html#me2-b">Back: Mesh</a><a href="index.html">All choices</a><span class="sp"></span><a href="#ph1-b">Variant B</a></nav>
+</section>
+
+<section data-screen="ph1-b" id="ph1-b" aria-labelledby="ph1-b-h">
+  <header class="cap"><span class="cid">PH1</span><h1 id="ph1-b-h">How conditions are put on boundaries (WB-16)</h1><span class="take">Pick a boundary in the view; its properties beside</span><span class="var" role="img" aria-label="Variant B">B</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px minmax(0,1fr) 320px;min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button" aria-current="true">Physics defaults</button></li></ul></div>
+  <div class="cplot" style="position:relative" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="3"/></svg><span class="lbl over" style="left:83.3%;top:13.3%">cis</span><span class="lbl over" style="left:83.3%;top:83.3%">trans</span><span class="lbl over" style="left:33.3%;top:25.0%;background:var(--canvas-plot);color:var(--canvas-plot-ink)">◉ protein surface</span></div></div>
+<div class="pane stack focus-ring" style="margin:4px"><h2>Protein surface</h2>
+  <div class="field"><label for="p1b-c">Condition</label><div class="v"><select id="p1b-c"><option>No flux, no slip</option></select></div></div>
+  <span class="muted">The protein's fixed charge is a volume charge from the molecular model, assembled on the mesh in the study.</span>
+  <hr><span class="h">All boundaries</span>
+  <ul class="tools"><li><button type="button">Cis reservoir boundary</button></li><li><button type="button">Trans reservoir boundary</button></li><li><button type="button" aria-current="true">Protein surface</button></li><li><button type="button">Membrane surface</button></li><li><button type="button">Axis</button></li></ul>
+</div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="#ph1-a">Variant A</a><a href="index.html">All choices</a><span class="sp"></span><a href="#ph2-a">Next: PH2</a></nav>
+</section>
+
+<section data-screen="ph2-a" id="ph2-a" aria-labelledby="ph2-a-h">
+  <header class="cap"><span class="cid">PH2</span><h1 id="ph2-a-h">How the electrolyte is set</h1><span class="take">A salt from the registry and one concentration</span><span class="var" role="img" aria-label="Variant A">A</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px 340px minmax(0,1fr);min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button" aria-current="true">Physics defaults</button></li></ul></div>
+  <div class="pane stack focus-ring" style="margin:4px;overflow:auto"><h2>Physics defaults · electrolyte</h2>
+  <div class="field"><label for="p2a-m">Model</label><div class="v"><select id="p2a-m"><option>ePNP-NS</option><option>PNP-NS</option><option>PNP</option><option>PB</option></select></div></div>
+  <div class="field"><label for="p2a-e">Electrolyte</label><div class="v"><select id="p2a-e"><option>NaCl</option></select></div></div>
+  <div class="field"><label for="p2a-c">Concentration</label><div class="v"><input id="p2a-c" class="num" type="text" value="" placeholder="set" aria-describedby="p2a-n"><span class="unit">M</span></div></div>
+  <div class="muted" id="p2a-n">No default: set the salt here or in the study.</div>
+  <div class="field"><span class="k">Corrections</span><span class="v">as validated <button class="btn small" type="button">Show the list</button></span></div><div class="later"><b>Composer</b>: a model of your own equations</div>
+</div>
+<div class="cplot" style="position:relative" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/></svg></div></div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="#ph1-b">Back: PH1</a><a href="index.html">All choices</a><span class="sp"></span><a href="#ph2-b">Variant B</a></nav>
+</section>
+
+<section data-screen="ph2-b" id="ph2-b" aria-labelledby="ph2-b-h">
+  <header class="cap"><span class="cid">PH2</span><h1 id="ph2-b-h">How the electrolyte is set</h1><span class="take">A table of the ions under one salt concentration</span><span class="var" role="img" aria-label="Variant B">B</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px 340px minmax(0,1fr);min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st warn">stale</span></button></li><li><button type="button" aria-current="true">Physics defaults</button></li></ul></div>
+  <div class="pane stack focus-ring" style="margin:4px;overflow:auto"><h2>Physics defaults · species</h2>
+  <div class="field"><label for="p2b-m">Model</label><div class="v"><select id="p2b-m"><option>ePNP-NS</option><option>PNP-NS</option><option>PNP</option><option>PB</option></select></div></div>
+  <div class="field"><label for="p2b-c">NaCl, bulk</label><div class="v"><input id="p2b-c" class="num" type="text" placeholder="set"><span class="unit">M</span></div></div>
+  <table><thead><tr><th>Ion</th><th>z</th><th>Bulk, M</th><th>D, 10⁻⁹ m²/s</th></tr></thead><tbody>
+  <tr><td>Na⁺</td><td class="num">+1</td><td class="muted">as the salt</td><td class="num">x.xx</td></tr>
+  <tr><td>Cl⁻</td><td class="num">−1</td><td class="muted">as the salt</td><td class="num">x.xx</td></tr></tbody></table>
+  <span class="muted">The bulk is electroneutral; D at infinite dilution, scaled by the corrections.</span>
+  <div class="field"><span class="k">Corrections</span><span class="v">as validated <button class="btn small" type="button">Show the list</button></span></div><div class="later"><b>Composer</b>: a model of your own equations</div>
+</div>
+<div class="cplot" style="position:relative" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/></svg></div></div>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="#ph2-a">Variant A</a><a href="index.html">All choices</a><span class="sp"></span><a href="05-results.html">Next: Studies and results</a></nav>
+</section>
+</body>
+</html>

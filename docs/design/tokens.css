@@ -23,7 +23,7 @@
   --focus: #5b3fd6;         /* focus ring, 5.6:1 on --sel */
 
   /* Semantic colours, each paired with a glyph and a word, never colour alone (WB-20) */
-  --ok: #1f7a4a;            /* built, passed  ✓ */
+  --ok: #1b7043;            /* built, passed  ✓; 5.1:1 on --sel */
   --warn: #8a5200;          /* stale, a warning  ● */
   --err: #b4231a;           /* refused, failed  ✕ */
   --changed: #0f6b75;       /* a value changed from its default  ◆; an override, outlined ◇ (WB-28) */
