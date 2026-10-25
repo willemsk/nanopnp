@@ -153,3 +153,4 @@ is a rolling register, and its header stays `open`.
 | REV-131 | verification | medium | fixed | [Phase 5 plan](../plans/phase-5-workbench.md) | [The charge-level mutator has no library step or tier row](review-items.md#rev-131-the-charge-level-mutator-has-no-library-step-or-tier-row) |
 | REV-132 | process | low | fixed | [Phase 5 plan](../plans/phase-5-workbench.md) | [The Phase 5 end-of-phase report names no source for its numbers](review-items.md#rev-132-the-phase-5-end-of-phase-report-names-no-source-for-its-numbers) |
 | REV-133 | process | low | fixed | [CODE_REVIEW_015](../code_reviews/CODE_REVIEW_015.md) | [The Phase 5 plan and the core exceed their word caps](review-items.md#rev-133-the-phase-5-plan-and-the-core-exceed-their-word-caps) |
+| REV-134 | interface | medium | open | — | [The Qt shell's Result tab prints the stored float wrapper, not the number](review-items.md#rev-134-the-qt-shells-result-tab-prints-the-stored-float-wrapper-not-the-number) |

@@ -1358,3 +1358,9 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 **Open** for the author: cut the plan and the core, or restate the caps.
 
 **Fixed** (24 October 2026): the Phase 5 plan holds 1,500 words without its report, and the core 985. The workflow files hold 7,666 words in all against WP53's delivered 7,518: the difference is the rules S15 to S20 add to the level files, kept rather than cut, as REV-125 did.
+
+## REV-134: The Qt shell's Result tab prints the stored float wrapper, not the number
+
+`gui/run_model.py` reads the run record's `quantities` as stored, so the Result tab shows each float as the canonical wrapper, `{'__f__': '0x1.ac1ece4e515e9p-35'}` for `current_A`, where the command line and `pipeline/reproduce.py` undo it with `core/hashing.py:decode_floats`. A user of the v0.5 shell cannot read the current, conductance or transport number. Found by WP5.01's critique of today's shell (`/np-gui review`, finding C45, on example 07).
+
+**Open** for the author: fix it in the Phase 4 lane before `v0.5.0` (one call to `decode_floats` and a number format with units), or carry it until the browser shell replaces the Qt one. WP5.01 changes no `src/` (§8.2.17 S1).
