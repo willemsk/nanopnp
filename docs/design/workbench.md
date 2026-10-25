@@ -74,5 +74,47 @@ Nielsen's heuristics and WCAG 2.2 AA: 50 findings, two of them blocking the run.
 prints each number as the store's float wrapper, so the current cannot be read (REV-134), and the
 field view opens on the whole 250 nm domain, where the pore is two pixels wide. Across the shell,
 stage records and gates are shown as raw dictionaries without a verdict, pictures carry no colour
-bar or unit, and the status bar keeps "running" after a run ends. The author's verdict on each
-screen, keep, change or drop, follows here once collected.
+bar or unit, and the status bar keeps "running" after a run ends.
+
+### The author's verdicts
+
+The author marked 20 of the 22 screens *change* and 2 *keep* (the Run tab and the refusal), and
+dropped none, so every row of the capability list stays; the notes move rows, they remove none. The
+record, screen by screen and with each disposition, is
+`docs/design/reviews/2026-10-25-qt-shell.md`. In the author's words, the case editor "should not be
+the first point of entry" and may stay "as an 'overview' feature"; there should be "3 more
+independent major parts of the workbench: 1) molecular, 2) continuum, 3) analysis, each with their
+own sub-tasks and tools"; stages 1 to 5 "should be part of a protein geometry tool in the geometry
+suite"; protonation "should be moved before building the geometry"; convergence merges into a run
+suite; and the result and field views become "a fully fledged results explorer and plotter suite",
+with zooming, colour scales and the mesh on or off, "much like how COMSOL handles this today". One
+note raises a physics question, whether the density should see the protonation chosen later
+(REV-135).
+
+## Decision log
+
+The design round's rulings, in the author's words where they gave them (§8.2.17 S21). The
+organisation round ran on 25 October 2026 over four concept boards, C1 *model builder*, C2
+*molecular workspace*, C3 *project and runs* and C4 *guided routes*, kept in
+`docs/design/concepts/`; the author ruled for a hybrid in the round rather than marking the boards.
+Each ruling was played back and confirmed.
+
+| # | Question | Ruling (author's words) | Consequence |
+|---|---|---|---|
+| WB-01 | The organising principle | "Suites in a project": C3's project folder and run queue as the frame, the parts as suites inside it, each in C1's pattern of tool list, settings and live view, C4's routes over them | The workbench is neither one tab per pipeline stage nor one canvas; S2's "distinct tabs for each part of the workflow" becomes suites, and §8.1's Phase 5 row says so |
+| WB-02 | How many top-level parts | Three parts and a run queue | *Molecular*, *Continuum* (geometry, mesh, physics) and *Analysis* (the results explorer). Running is not a part: a queue present in every suite, from whose entries convergence and the log open |
+| WB-03 | What is always on screen | The project browser, the changed-from-default marks and the run queue with its status; "there will likely be other useful things to keep on the screen, but this should grow naturally as the design gets clearer" | FR-25's switches stay visible as a count that opens their list (agenda point 10); the list of what is always on screen stays open to additions |
+| WB-04 | Cases open at once, and comparison | Several open; a comparison is a saved document | A variant is derived from its parent and shown as a difference from it; a comparison is a project item pairing runs on one colour scale |
+| WB-05 | Where the live views live | A canvas per suite; "for certain tools a custom view (or maybe overlay or popup) would be more convenient" | Molecular draws in 3D, Continuum in (r, z), Analysis fields and plots; a tool may bring its own view, overlay or popup |
+| WB-06 | How a selection travels | "Explicit links", with S6's four pairs linked by default | A residue and the charge map, a geometry and its parameters, a field and its probes and cuts, a run and its result follow each other until unlinked; any other pairing is a link the user pins. S6 stands |
+| WB-07 | How tools appear in a suite | A tool list beside the selected tool's settings; "the plumbing should be there for docking and modal editors if the tool calls for it" | v0.6 builds the list; the frame allows docked and modal tools later |
+| WB-08 | Expert and guided use | One interface with routes | QR-10's guided run is a route through the suites, highlighting the next tool and filling defaults, left at any step; a value changed from its default is marked |
+| WB-09 | How commands are reached | Menus, a command palette and keyboard shortcuts, and a ribbon: "the approach [taken] by AutoCAD is quite comprehensive. Let's focus on getting 1 up and running, while making sure the plumbing for 3 is there" | v0.6 builds the menus, the palette and the shortcuts, every command reachable by keyboard; the ribbon is a later addition the frame allows |
+| WB-10 | A Python console for P1 | A later phase | The project folder stays plain files that scripts and notebooks read; the mockups show the console with a later-phase banner |
+| WB-11 | Running, reuse and the library | One component per suite; a case references them; each suite builds its own, and the solve runs in a study. The author: "a single molecular suite output can be used for multiple continuum runs without recomputing. This alludes again to building a library of components that can be re-used" | A **molecular model** (the prepared structure, its ensemble and protonation) and a **continuum model** (the protein geometry, the region and the mesh) are named items of the project library, each built by its suite. A **study** in Analysis pairs one of each, assembles the charge on the mesh and solves; the queue holds builds and studies, and a sweep may range over components. A case names its components and resolves at run time to one complete case file, written with the run's manifest, which the command line still runs (FR-25); the references are a case-schema change for a shell package after `v0.5.0` (S1) |
+| WB-12 | Where a refusal shows | At the field, and in a problems list | A field refused at entry turns red with a message naming the rule and its requirement (VER-67); a build refused later marks its queue entry and lists the refusal, which jumps to the tool and field |
+| WB-13 | Who arranges the layout | A designed default per suite, saved | Panels resize and fold, and later dock (WB-07); the arrangement and the open cases are saved in the project file (S11), never in a case; *Reset layout* restores the default |
+| WB-14 | Preparing a structure | "Prepare tool in v0.6"; asked against S4's "structure preparation stays out of the library until its phase", "Amend: in Phase 5" | Structure preparation becomes a Phase 5 library capability first, in `structure/` with its Tier 1 tests: the axis estimated, the chains chosen, and the flip and the membrane's place set by the user in the 3D view, with no rule specific to one pore. The Molecular suite's *Prepare* tool surfaces it in v0.6. §8.1's Phase 5 deliverable says so; the Phase 5 plan's packages follow at `/np-plan amend 5` |
+| WB-15 | The author's unfinished notes on the contour and the region | "Region is separate" | Stages 1 to 4 fold into the protein geometry tool; the membrane and the reservoirs, stage 5's region, are a Continuum tool of their own |
+| WB-16 | Where the physics and the conditions belong | "a hybrid is in order here, much like in COMSOL. The default BCs should be defined in the continuum model, with potential overrides in the study (e.g., for sweeping or ramping)" | The continuum model holds the physics defaults: the model, the electrolyte and the boundary conditions. A study overrides any of them, for a sweep or a ramp, and marks each override as it marks a switch |
+
