@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C1 Model builder</title>
+<link rel="stylesheet" href="board.css">
+<style>
+  .c1 { grid-template-rows: auto 1fr 120px; grid-template-columns: 250px 360px 1fr; }
+  .c1 .menu { grid-column: 1 / -1; }
+  .c1 .log { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<section data-screen="j1-load" id="j1-load">
+  <header class="cap"><span class="board">C1 Model builder</span><span class="job">Job 1: the guided run on 2WCD</span>
+    <span class="step">1 of 3. The user opens a new case and picks the structure node. The structure shows in the one graphics window.</span></header>
+  <div class="win c1">
+    <div class="menu"><span class="title">nanopnp</span><span>File</span><span>Edit</span><span>Case</span><span>Run</span><span>Results</span><span>Help</span><span class="right">Project: ClyA pores · 2wcd.case</span></div>
+    <div class="box">
+      <h4>Case tree</h4>
+      <ul class="tree">
+        <li class="grp">2wcd</li>
+        <li class="l1 grp">Molecular</li>
+        <li class="l2 sel">Structure</li>
+        <li class="l2">Protonation and charge</li>
+        <li class="l1 grp">Continuum</li>
+        <li class="l2">Geometry: protein</li>
+        <li class="l2">Membrane and reservoirs</li>
+        <li class="l2">Mesh</li>
+        <li class="l2">Physics: electrolyte</li>
+        <li class="l2">Physics: boundaries</li>
+        <li class="l1 grp">Study</li>
+        <li class="l2">Run</li>
+        <li class="l1 grp">Results</li>
+        <li class="l2 dim">(none yet)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h4>Settings: Structure</h4>
+      <div class="row"><span class="k">Source</span><span class="v">2wcd-prepared.pdb</span><span class="btn">Browse…</span></div>
+      <div class="row"><span class="k">Frames</span><span class="v">all (1)</span></div>
+      <div class="row"><span class="k">Symmetry</span><span class="v">C12, found</span></div>
+      <div class="row"><span class="k">Membrane</span><span class="v">auto-aligned</span></div>
+      <p class="note">Every node has defaults. A node changed from its default is marked in the tree.</p>
+      <div class="row"><span class="btn primary">Build to here</span><span class="btn">Next node</span></div>
+    </div>
+    <div class="box fill"><div class="pic"><span class="corner">Graphics: structure</span><span class="lbl">The pore as a molecule, cartoon, 12 subunits, membrane slab drawn</span></div></div>
+    <div class="box log"><h4>Messages · Progress · Log</h4>
+      <div class="mono">Structure read: 12 chains, n atoms. Point group C12, axis aligned.</div></div>
+  </div>
+  <nav class="nav"><a href="index.html">All boards</a><a href="#j1-setup">Next</a><span class="here">Screen 1 of 6</span></nav>
+</section>
+
+<section data-screen="j1-setup" id="j1-setup">
+  <header class="cap"><span class="board">C1 Model builder</span><span class="job">Job 1: the guided run on 2WCD</span>
+    <span class="step">2 of 3. The user walks the tree top to bottom. Salt and bias sit in their physics nodes; every other node keeps its default.</span></header>
+  <div class="win c1">
+    <div class="menu"><span class="title">nanopnp</span><span>File</span><span>Edit</span><span>Case</span><span>Run</span><span>Results</span><span>Help</span><span class="right">Project: ClyA pores · 2wcd.case</span></div>
+    <div class="box">
+      <h4>Case tree</h4>
+      <ul class="tree">
+        <li class="grp">2wcd</li>
+        <li class="l1 grp">Molecular</li>
+        <li class="l2">Structure ✓</li>
+        <li class="l2">Protonation and charge ✓</li>
+        <li class="l1 grp">Continuum</li>
+        <li class="l2">Geometry: protein ✓</li>
+        <li class="l2">Membrane and reservoirs ✓</li>
+        <li class="l2">Mesh ✓</li>
+        <li class="l2 sel">Physics: electrolyte</li>
+        <li class="l2">Physics: boundaries</li>
+        <li class="l1 grp">Study</li>
+        <li class="l2">Run</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h4>Settings: Physics, electrolyte</h4>
+      <div class="row"><span class="k">Model</span><span class="v">ePNP-NS (validated default)</span></div>
+      <div class="row"><span class="k">Salt</span><span class="v">NaCl</span></div>
+      <div class="row"><span class="k">Concentration</span><span class="v">1.0</span><span>M</span></div>
+      <div class="row"><span class="k">Corrections</span><span class="v">registered set</span></div>
+      <div class="row"><span class="k">Temperature</span><span class="v">298.15</span><span>K</span></div>
+      <p class="note">Bias is set on the next node, Physics: boundaries, as +50 mV.</p>
+    </div>
+    <div class="box fill"><div class="pic"><span class="corner">Graphics: region and mesh</span><span class="lbl">The (r, z) region, the pore wall, the reservoirs; the mesh drawn over it</span></div></div>
+    <div class="box log"><h4>Messages · Progress · Log</h4>
+      <div class="mono">Mesh: n triangles, worst quality q at the constriction; wall-size gate passed.</div></div>
+  </div>
+  <nav class="nav"><a href="index.html">All boards</a><a href="#j1-load">Back</a><a href="#j1-result">Next</a><span class="here">Screen 2 of 6</span></nav>
+</section>
+
+<section data-screen="j1-result" id="j1-result">
+  <header class="cap"><span class="board">C1 Model builder</span><span class="job">Job 1: the guided run on 2WCD</span>
+    <span class="step">3 of 3. Run, then a result node appears per quantity and per plot. The graphics window shows the selected plot.</span></header>
+  <div class="win c1">
+    <div class="menu"><span class="title">nanopnp</span><span>File</span><span>Edit</span><span>Case</span><span>Run</span><span>Results</span><span>Help</span><span class="right">Run finished · all stages</span></div>
+    <div class="box">
+      <h4>Case tree</h4>
+      <ul class="tree">
+        <li class="grp">2wcd</li>
+        <li class="l1 grp">Molecular ✓</li>
+        <li class="l1 grp">Continuum ✓</li>
+        <li class="l1 grp">Study</li>
+        <li class="l2">Run ✓</li>
+        <li class="l1 grp">Results</li>
+        <li class="l2">Conductance</li>
+        <li class="l2 sel">Plot: potential</li>
+        <li class="l2">Plot: concentration</li>
+        <li class="l2">Table: all quantities</li>
+        <li class="l2">Convergence</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h4>Settings: Plot, potential</h4>
+      <div class="row"><span class="k">Quantity</span><span class="v">φ, V</span></div>
+      <div class="row"><span class="k">View</span><span class="v">framed on the pore</span></div>
+      <div class="row"><span class="k">Colour scale</span><span class="v">diverging about 0</span></div>
+      <div class="row"><span class="k">Mesh</span><span class="v">off</span></div>
+      <h4 style="margin-top:12px">Conductance</h4>
+      <div class="big">x.xx nS</div>
+      <div class="dim">at +50 mV, 1.0 M NaCl; current x.xx nA</div>
+    </div>
+    <div class="box fill"><div class="pic"><span class="corner">Graphics: φ</span><span class="lbl">The potential in (r, z), framed on the constriction, with its colour bar and unit</span><span class="bar"></span></div></div>
+    <div class="box log"><h4>Messages · Progress · Log</h4>
+      <div class="mono">Ladder: n rungs, all converged. No switch away from the validated default.</div></div>
+  </div>
+  <nav class="nav"><a href="index.html">All boards</a><a href="#j1-setup">Back</a><a href="#j2-mutate">Next</a><span class="here">Screen 3 of 6</span></nav>
+</section>
+
+<section data-screen="j2-mutate" id="j2-mutate">
+  <header class="cap"><span class="board">C1 Model builder</span><span class="job">Job 2: a charge-level mutation against its parent</span>
+    <span class="step">1 of 2. Duplicate the case in the tree, then edit one residue on its protonation node. The table and the charge map select each other.</span></header>
+  <div class="win c1">
+    <div class="menu"><span class="title">nanopnp</span><span>File</span><span>Edit</span><span>Case</span><span>Run</span><span>Results</span><span>Help</span><span class="right">Project: ClyA pores · 2wcd-D64N.case</span></div>
+    <div class="box">
+      <h4>Project tree</h4>
+      <ul class="tree">
+        <li class="grp">2wcd</li>
+        <li class="grp">2wcd-D64N (from 2wcd)</li>
+        <li class="l1 grp">Molecular</li>
+        <li class="l2">Structure</li>
+        <li class="l2 sel">Protonation and charge ●</li>
+        <li class="l1 grp">Continuum</li>
+        <li class="l1 grp">Study</li>
+        <li class="l1 grp">Results</li>
+      </ul>
+      <p class="dim">● changed from the parent</p>
+    </div>
+    <div class="box">
+      <h4>Settings: Protonation and charge</h4>
+      <table class="t"><tr><th>Residue</th><th>pKa</th><th>Charge, e</th></tr>
+        <tr><td>A:ASP 63</td><td class="n">3.9</td><td class="n">−1</td></tr>
+        <tr class="sel"><td>A:ASP 64 → neutral</td><td class="n">4.1</td><td class="n">0</td></tr>
+        <tr><td>A:LYS 68</td><td class="n">10.4</td><td class="n">+1</td></tr></table>
+      <p class="note">Net charge of the pore: x e (parent y e). Edited at the PQR step only; no side chain is replaced.</p>
+    </div>
+    <div class="box fill"><div class="pic"><span class="corner">Graphics: charge map</span><span class="lbl">The areal charge in (r, z); the twelve copies of residue 64 ringed</span><span class="bar"></span></div></div>
+    <div class="box log"><h4>Messages · Progress · Log</h4>
+      <div class="mono">Charge conservation: both legs within tolerance.</div></div>
+  </div>
+  <nav class="nav"><a href="index.html">All boards</a><a href="#j1-result">Back</a><a href="#j2-compare">Next</a><span class="here">Screen 4 of 6</span></nav>
+</section>
+
+<section data-screen="j2-compare" id="j2-compare">
+  <header class="cap"><span class="board">C1 Model builder</span><span class="job">Job 2: a charge-level mutation against its parent</span>
+    <span class="step">2 of 2. Run the variant; a comparison node under Results plots the two cases side by side and their difference.</span></header>
+  <div class="win c1">
+    <div class="menu"><span class="title">nanopnp</span><span>File</span><span>Edit</span><span>Case</span><span>Run</span><span>Results</span><span>Help</span><span class="right">Run finished · stages 1 to 6 from the store</span></div>
+    <div class="box">
+      <h4>Project tree</h4>
+      <ul class="tree">
+        <li class="grp">2wcd</li>
+        <li class="grp">2wcd-D64N</li>
+        <li class="grp">Comparisons</li>
+        <li class="l1 sel">D64N against 2wcd</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h4>Settings: Comparison</h4>
+      <table class="t"><tr><th>Quantity</th><th>2wcd</th><th>D64N</th><th>Change</th></tr>
+        <tr><td>Conductance, nS</td><td class="n">x.xx</td><td class="n">x.xx</td><td class="n">±x %</td></tr>
+        <tr><td>Transport number</td><td class="n">x.xx</td><td class="n">x.xx</td><td class="n">±x</td></tr>
+        <tr><td>EOF, m³/s</td><td class="n">x.x</td><td class="n">x.x</td><td class="n">±x %</td></tr></table>
+      <div class="row" style="margin-top:8px"><span class="k">Plot</span><span class="v">Δφ, mutant minus parent</span></div>
+    </div>
+    <div class="box fill"><div class="pic"><span class="corner">Graphics: Δφ</span><span class="lbl">The difference in potential, framed on the constriction</span><span class="bar"></span></div></div>
+    <div class="box log"><h4>Messages · Progress · Log</h4>
+      <div class="mono">Stages 1 to 6 reused from the store; stages 7 to 12 run.</div></div>
+  </div>
+  <nav class="nav"><a href="index.html">All boards</a><a href="#j2-mutate">Back</a><a href="#notes">Next</a><span class="here">Screen 5 of 6</span></nav>
+</section>
+
+<section data-screen="notes" id="notes">
+  <header class="cap"><span class="board">C1 Model builder</span><span class="job">Strengths and weaknesses</span>
+    <span class="step">As in COMSOL: a case tree of nodes, a settings pane, one graphics window.</span></header>
+  <div class="notes">
+    <p class="principle"><b>Principle.</b> The case is a tree whose nodes follow the pipeline, grouped as the author's three parts (molecular, continuum, analysis); each node has one settings form and one picture. The areas are branches of the tree, not separate windows.</p>
+    <table class="t">
+      <tr><th>Persona</th><th>Strengths</th><th>Weaknesses</th></tr>
+      <tr><td>P1 Method developers</td><td>Every setting is one click from the tree; changed nodes are marked, so FR-25's switches stay visible. Familiar to COMSOL users.</td><td>As drawn, one graphics window: the molecule, the charge map and a field are not seen together (COMSOL allows more). Scripting sits outside the tree; numerics and outputs have no node.</td></tr>
+      <tr><td>P2 Computational scientists</td><td>The tree follows the case file's main sections; duplicating a case is a natural variant.</td><td>Comparisons and sweeps are bolted on as extra nodes; many cases make a long tree.</td></tr>
+      <tr><td>P3 Experimentalists</td><td>Walking the tree top to bottom is a route of its own.</td><td>Eight nodes before a result; nothing says which ones matter. The tree is jargon until learnt.</td></tr>
+    </table>
+    <p><b>Job 1</b> takes about ten clicks, most on nodes left at their defaults. <b>Job 2</b> needs a duplicate, a node edit and a comparison node: easy once the tree is known. <b>Live links</b> (S6) work within one node: table and map yes, a residue and a field no.</p>
+  </div>
+  <nav class="nav"><a href="index.html">All boards</a><a href="#j2-compare">Back</a><span class="here">Screen 6 of 6</span></nav>
+</section>
+
+</body>
+</html>

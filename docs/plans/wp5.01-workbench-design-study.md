@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 6 done; waiting on the author's verdicts.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 7 done; next, the look-and-feel round.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -337,10 +337,21 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > holds Q01 to Q41. The reviewer's two blocking findings are the Result tab's float wrapper,
   > a v0.5 defect recorded as REV-134, and the field view's opening camera. `workbench.md` joins
   > *Project* in `mkdocs.yml` now, not at item 12: under `--strict` a page outside `nav` fails.
-- [x] 6. Wait checkpoint: the verdicts. **Executor:** main.
+- [x] efdf5b4 6. Wait checkpoint: the verdicts. **Executor:** main.
 - [ ] 7. `/np-gui collect`; the concept boards, rendered, reviewed and published; `/np-gui grill
   organisation` with the author; the `WB-nn` rows (D2); done when every organisation agenda point has
   a ruling or a deferral. **Executor:** main.
+
+  > **Outcome — sixteen rulings, WB-01 to WB-16; suites in a project.** The author marked all 22 Qt
+  > screens (20 *change*, 2 *keep*, none dropped; `docs/design/reviews/2026-10-25-qt-shell.md`) and
+  > ruled the organisation in conversation rather than marking the four boards: three suites,
+  > *Molecular*, *Continuum* and *Analysis*, in a project with a run queue, and a library of molecular
+  > and continuum models paired in studies (WB-11, WB-16). WB-14 brings structure preparation into
+  > Phase 5, library first, against S4's consequence; with WB-02 it amends §8.1's Phase 5 rows. The
+  > board review's 19 findings, none blocking, go to the mockups or to REV-136 (the library
+  > capabilities the rulings need) and REV-137 (the renderer); the Qt verdicts raise REV-135. All four
+  > `design/` folders join `exclude_docs` now, not at item 10: under `--strict` the review records
+  > would otherwise fail the build.
 - [ ] 8. The style tile in `docs/design/style/`; `/np-gui grill look-and-feel`; `docs/design/tokens.css`;
   the `WB-nn` rows (D2); done when every look-and-feel agenda point has a ruling or a deferral.
   **Executor:** main.

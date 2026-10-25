@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workbench concept boards</title>
+<link rel="stylesheet" href="board.css">
+<style>
+  .ix { padding: 16px; max-width: 1100px; overflow: auto; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+  .card { border: 1.5px solid var(--fg); border-radius: 6px; padding: 12px; }
+  .card h3 { margin: 0 0 4px; font-size: 15px; }
+  .card a { display: inline-flex; align-items: center; min-height: 28px; }
+</style>
+</head>
+<body>
+<section data-screen="overview" id="overview">
+  <header class="cap"><span class="board">Workbench concept boards</span><span class="job">WP5.01 design round, organisation</span>
+    <span class="step">Four ways to organise the same areas, each drawing the same two jobs. Greyscale on purpose: judge the organisation, not the look.</span></header>
+  <div class="ix">
+    <p><b>The areas</b> (§8.2.17 S24): the molecular viewer and editor, the geometry builder, the mesh builder, the physics assigner and the results analyser, with a run area from the verdicts on today's shell. C1 groups them as molecular, continuum, study and results; C2 and C3 show them as flat tabs; C4 is a layer of routes over any of the others and places none.</p>
+    <p><b>Job 1</b>, QR-10's guided run: load 2WCD, accept the defaults, set salt and bias, get a conductance and a field picture. <b>Job 2</b>: a charge-level mutation of one residue (S4), compared with its parent. Numbers are placeholders (x.xx); no artefact supplies them.</p>
+    <div class="grid">
+      <div class="card"><h3>C1 Model builder</h3><p>A case tree of stages, a settings pane, one graphics window, as in COMSOL.</p><a href="c1-model-builder.html">Open C1</a></div>
+      <div class="card"><h3>C2 Molecular workspace</h3><p>One central canvas always visible, docked panels, a command line, as in PyMOL or ChimeraX.</p><a href="c2-molecular-workspace.html">Open C2</a></div>
+      <div class="card"><h3>C3 Project and runs</h3><p>A browser of structures, cases, runs and comparisons, each opened as a document, as in an IDE.</p><a href="c3-project-and-runs.html">Open C3</a></div>
+      <div class="card"><h3>C4 Guided routes</h3><p>One route per job, one question per step, over any of the other three.</p><a href="c4-guided-routes.html">Open C4</a></div>
+    </div>
+  </div>
+  <nav class="nav"><span class="here">Mark each board prefer, borrow or reject, with a note.</span></nav>
+</section>
+</body>
+</html>

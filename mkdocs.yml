@@ -27,6 +27,10 @@ exclude_docs: |
   superpowers/
   scripts/
   overrides/
+  design/concepts/
+  design/style/
+  design/mockups/
+  design/reviews/
 
 theme:
   name: material

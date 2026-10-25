@@ -1364,3 +1364,43 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 `gui/run_model.py` reads the run record's `quantities` as stored, so the Result tab shows each float as the canonical wrapper, `{'__f__': '0x1.ac1ece4e515e9p-35'}` for `current_A`, where the command line and `pipeline/reproduce.py` undo it with `core/hashing.py:decode_floats`. A user of the v0.5 shell cannot read the current, conductance or transport number. Found by WP5.01's critique of today's shell (`/np-gui review`, finding C45, on example 07).
 
 **Open** for the author: fix it in the Phase 4 lane before `v0.5.0` (one call to `decode_floats` and a number format with units), or carry it until the browser shell replaces the Qt one. WP5.01 changes no `src/` (§8.2.17 S1).
+
+## REV-135: The density does not see the protonation chosen at the charge stage
+
+The density stage smears the atoms of the structure as loaded at stage 1 (`density/stage.py`, its record counting the
+hydrogens present), while protonation is chosen later, at stage 7's PDB2PQR and PROPKA step, and is not fed back. A
+protonation state, or a charge-level mutation (§8.2.17 S4), therefore changes the charge but not the density, contour
+or mesh. The author, marking today's shell (WP5.01, `docs/design/reviews/2026-10-25-qt-shell.md`, `opened-charge`):
+"changes in protonation state may impact density, and thus geometry".
+
+**Open** for the author, as a physics question for the knowledge base: whether the density should be built from the
+protonated structure, and so whether protonation moves before the geometry stages in the pipeline, not only in the
+workbench. The workbench design places protonation in the molecular area, before the geometry builder, either way.
+WP5.01 changes no `src/` (§8.2.17 S1).
+
+## REV-136: The organisation round's rulings need library capabilities v0.5 lacks
+
+The design round of WP5.01 (`docs/design/workbench.md`, *Decision log*) rules a workbench whose suites rest on
+capabilities the library does not have at v0.5: structure preparation (WB-14: the axis estimated, the chains chosen,
+the flip and the membrane's place set by the user); named molecular and continuum models that a case references and
+resolves into one complete case file (WB-11, a case-schema change); studies that override the continuum model's
+physics defaults (WB-16); and a saved comparison of two runs with a difference field (WB-04). RSK-15 lets no screen
+be built for a capability Tiers 1 and 2 do not verify, and §8.2.17 S7 puts each new capability in the library
+first. The concept-board review found the comparison and the queue drawn with no verifying artefact (finding B14).
+
+**Open** for the author; proposed owner `/np-plan amend 5`, which sets Phase 5's packages after WP5.02: each capability becomes a library
+package with its tests before the shell surfaces it, or the author moves it to a later phase. WP5.01 changes no
+`src/` (§8.2.17 S1); its item 13 writes the requirements.
+
+## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
+
+CON-09 lets the field viewer's renderer, npm `webgui`, ship only unmodified and as a separate file. The organisation
+round places a 3D molecule view in the Molecular suite (WB-05, WB-14) and asks the results explorer for zoom, a
+colour scale per quantity, the mesh on or off and a framed opening view (the author's verdicts on today's shell);
+`webgui` draws meshes and fields, not a molecular cartoon, and whether its own interface offers each control is not
+checked. Found by the concept-board review (finding B15).
+
+**Open** for the author; proposed owner WP5.02, whose spike chooses the front end (§8.2.17 S8): it names the renderer for each view, checks
+the explorer's controls against `webgui`'s interface, and puts any second renderer's licence to the author under
+CON-09.
+
