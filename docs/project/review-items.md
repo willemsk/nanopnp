@@ -1404,3 +1404,16 @@ checked. Found by the concept-board review (finding B15).
 the explorer's controls against `webgui`'s interface, and puts any second renderer's licence to the author under
 CON-09.
 
+## REV-138: The render check measures text contrast but not the contrast of controls and graphics
+
+`.claude/scripts/gui/shoot.cjs` checks each visible text element against WCAG 2.2 1.4.3 and each native control's size
+against 2.5.8, and reports nothing else: an input's border, a focus ring, a selection fill or a colour bar's low end
+is never measured against 1.4.11's 3:1. The style tile's review found input borders near 1.3:1 and viridis's dark end
+near 1.1:1 on a dark panel, while `index.json` reported no failure (finding T1). WB-24 holds the workbench to
+non-text contrast as well.
+
+**Open** for the author; proposed owner WP5.02, which extends `/np-gui render` with the shell target: measure the
+border, outline and fill of every control, and the ends of every colour bar, against the surface behind them.
+Until then a review states non-text contrast as not measured. `tokens.css` holds its own pairs at 3:1 by
+calculation.
+

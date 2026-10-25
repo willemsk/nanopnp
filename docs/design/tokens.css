@@ -1,0 +1,126 @@
+/* nanopnp workbench design tokens (WP5.01 look-and-feel round; docs/design/workbench.md, WB-17 to WB-28).
+   The molecular direction is the base, instrument's dark theme gives the dark tokens. Light by default;
+   dark under prefers-color-scheme, or forced by data-theme on the root. Contrast pairs are held to
+   WCAG 2.2 AA: text 4.5:1, controls, focus rings and graphical objects 3:1 against their surface. */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #f6f7f9;            /* the frame behind panels */
+  --panel: #ffffff;         /* panels, cards, menus */
+  --sel: #ece7ff;           /* a selected row or tab, always with a marker (--accent edge or weight) */
+  --line: #d9dce3;          /* dividers only; never the edge of a control */
+  --control-edge: #868c99;  /* inputs, secondary buttons, toggles: 3.4:1 on --panel, 3.2:1 on --bg */
+
+  /* Text */
+  --ink: #16181d;           /* 17.8:1 on --panel */
+  --muted: #4f5563;         /* 7.5:1 on --panel; secondary text, units */
+
+  /* One accent: selection, the primary action, focus, links (WB-20) */
+  --accent: #5b3fd6;        /* 6.7:1 on --panel */
+  --accent-ink: #ffffff;    /* text on --accent, 6.7:1 */
+  --focus: #5b3fd6;         /* focus ring, 5.6:1 on --sel */
+
+  /* Semantic colours, each paired with a glyph and a word, never colour alone (WB-20) */
+  --ok: #1f7a4a;            /* built, passed  ✓ */
+  --warn: #8a5200;          /* stale, a warning  ● */
+  --err: #b4231a;           /* refused, failed  ✕ */
+  --changed: #0f6b75;       /* a value changed from its default  ◆; an override, outlined ◇ (WB-28) */
+
+  /* Canvases (WB-26): the 3D molecular view is always near-black; (r, z) views and plots follow the theme */
+  --canvas-3d: #0d0f13;
+  --canvas-3d-ink: #e8eaef;
+  --canvas-plot: #ffffff;
+  --canvas-plot-ink: #16181d;
+  --colourbar-outline: var(--ink);  /* every colour bar is outlined at 3:1, so its low end never dissolves */
+
+  /* Colour maps (WB-20): defaults, any map may be chosen per plot */
+  --map-sequential: viridis;
+  --map-sequential-cvd: cividis;
+  --map-diverging: RdBu_r;  /* centred on zero, with its unit, for charge and differences (VER-60) */
+
+  /* Type (WB-21): one sans shipped with the application, a monospace with tabular figures for numbers */
+  --font-ui: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-num: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --text-xs: 0.75rem;       /* 12 px, the floor for secondary text */
+  --text-sm: 0.8125rem;     /* 13 px */
+  --text-md: 0.84375rem;    /* 13.5 px, body */
+  --text-lg: 1rem;          /* 16 px, section */
+  --text-xl: 1.375rem;      /* 22 px, a headline number */
+  --text-2xl: 1.75rem;      /* 28 px, page heading */
+  --unit-gap: "\202F";      /* a narrow no-break space between a number and its unit: 1.234 nS */
+
+  /* Density (WB-18): medium by default; data-density="compact" on the root for P1 */
+  --row: 1.875rem;          /* 30 px */
+  --gap: 0.5rem;
+  --pad: 0.75rem;
+  --radius: 6px;
+  --target-min: 24px;       /* WCAG 2.2 2.5.8 */
+
+  /* Focus (WB-24) */
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* Motion (WB-23): functional only, under 200 ms, none when reduced motion is asked for */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root[data-density="compact"] {
+  --text-md: 0.78125rem;    /* 12.5 px */
+  --row: 1.625rem;          /* 26 px */
+  --gap: 0.375rem;
+  --pad: 0.5rem;
+  --radius: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #14171c;
+    --panel: #1c2027;
+    --sel: #2e2752;
+    --line: #2f3440;
+    --control-edge: #6f7685;  /* 3.6:1 on --panel */
+    --ink: #e8eaef;
+    --muted: #a9afbd;
+    --accent: #b4a2ff;
+    --accent-ink: #1a1240;
+    --focus: #b4a2ff;
+    --ok: #79d6a0;
+    --warn: #f2bd5e;
+    --err: #ff8b80;
+    --changed: #5fd0d9;
+    --canvas-plot: #1c2027;
+    --canvas-plot-ink: #e8eaef;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #14171c;
+  --panel: #1c2027;
+  --sel: #2e2752;
+  --line: #2f3440;
+  --control-edge: #6f7685;
+  --ink: #e8eaef;
+  --muted: #a9afbd;
+  --accent: #b4a2ff;
+  --accent-ink: #1a1240;
+  --focus: #b4a2ff;
+  --ok: #79d6a0;
+  --warn: #f2bd5e;
+  --err: #ff8b80;
+  --changed: #5fd0d9;
+  --canvas-plot: #1c2027;
+  --canvas-plot-ink: #e8eaef;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+  }
+}
