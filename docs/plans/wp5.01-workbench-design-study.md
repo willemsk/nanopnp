@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 8 done; next, the checkpoint.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 9 done; next, the mockups of the areas.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -351,7 +351,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > capabilities the rulings need) and REV-137 (the renderer); the Qt verdicts raise REV-135. All four
   > `design/` folders join `exclude_docs` now, not at item 10: under `--strict` the review records
   > would otherwise fail the build.
-- [ ] 8. The style tile in `docs/design/style/`; `/np-gui grill look-and-feel`; `docs/design/tokens.css`;
+- [x] 74d3062 8. The style tile in `docs/design/style/`; `/np-gui grill look-and-feel`; `docs/design/tokens.css`;
   the `WB-nn` rows (D2); done when every look-and-feel agenda point has a ruling or a deferral.
   **Executor:** main.
 
@@ -364,7 +364,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > a changed-from-default colour apart from the accent, outlined colour bars; the rest go to the
   > mockups, and the checker's missing non-text measure is REV-138. The plan's agenda cited VER-67 for
   > refusals; VER-67 is withdrawn, so point 9 and WB-12 name no identifier.
-- [ ] 9. Compaction checkpoint: the round is recorded. **Executor:** main.
+- [x] 9. Compaction checkpoint: the round is recorded. **Executor:** main.
 - [ ] 10. The mockups of the areas and the guided route in `docs/design/mockups/`, rendered, reviewed and published;
   `mkdocs.yml`'s `exclude_docs` (D3); done when no blocking reviewer finding is open and the strict
   build passes. **Executor:** main.
