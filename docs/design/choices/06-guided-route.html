@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choices: the guided route</title>
+<link rel="stylesheet" href="choices.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <linearGradient id="g-seq" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".25" stop-color="#3b528b"/><stop offset=".5" stop-color="#21918c"/><stop offset=".75" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <linearGradient id="g-seq2" x1="0" y1="1" x2=".3" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".3" stop-color="#3b528b"/><stop offset=".55" stop-color="#21918c"/><stop offset=".8" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <radialGradient id="g-diff" cx=".35" cy=".55" r=".55">
+      <stop offset="0" stop-color="#b2182b"/><stop offset=".35" stop-color="#f4a582"/><stop offset=".7" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d1e5f0"/>
+    </radialGradient>
+    <clipPath id="disc"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0 Z"/></clipPath>
+    <symbol id="pore-rz" viewBox="0 0 180 300"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".7"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="protein-rz" viewBox="0 0 180 300"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="pore-3d" viewBox="0 0 300 300">
+      <ellipse cx="150" cy="70" rx="120" ry="36" fill="#7b8494"/>
+      <path d="M30 70 Q30 120 90 150 L100 262 Q150 282 200 262 L210 150 Q270 120 270 70 Q270 106 150 106 Q30 106 30 70Z" fill="#5c6474"/>
+      <path d="M70 92 Q72 125 108 150 L114 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M150 106 L150 276" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M230 92 Q228 125 192 150 L186 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <ellipse cx="150" cy="70" rx="58" ry="16" fill="#0d0f13" stroke="#9aa3b2"/>
+      <circle cx="118" cy="190" r="5" fill="#ef6f6c"/><circle cx="182" cy="200" r="5" fill="#ef6f6c"/>
+      <circle cx="132" cy="122" r="5" fill="#6fa8ff"/><circle cx="170" cy="230" r="5" fill="#6fa8ff"/>
+    </symbol>
+</defs></svg>
+<section data-screen="gr1-a" id="gr1-a" aria-labelledby="gr1-a-h">
+  <header class="cap"><span class="cid">GR1</span><h1 id="gr1-a-h">How the guided route shows the next step (WB-08)</h1><span class="take">A checklist beside the tools; the next field outlined</span><span class="var" role="img" aria-label="Variant A">A</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto">
+<div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div>
+<div style="display:grid;grid-template-columns:180px minmax(0,1fr) 300px;min-height:0">
+  <div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st ok">built</span></button></li><li><button type="button" aria-current="true">Physics defaults</button></li></ul></div>
+  <div class="pane stack"><h2>Physics defaults · electrolyte</h2><div class="field"><label for="g1a-e">Electrolyte</label><div class="v"><select id="g1a-e"><option>NaCl</option></select></div></div>
+  <div class="field" style="outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--radius)"><label for="g1a-c">Concentration</label><div class="v"><input id="g1a-c" class="num" type="text" placeholder="set"><span class="unit">M</span></div></div>
+  <div class="field"><span class="k">pH</span><span class="v num">7.5 <span class="muted">default</span></span></div></div>
+<aside class="pane stack focus-ring" style="margin:4px" aria-label="Route"><h2>Guided run · step 4 of 7</h2><ol style="list-style:none;margin:0;padding:0"><li style="border-radius:var(--radius);"><div style="display:flex;gap:6px;align-items:center;min-height:28px;padding:0 6px"><span class="num muted">1</span>Load and prepare 2WCD<span style="margin-left:auto"><span class="ok">done</span></span></div></li><li style="border-radius:var(--radius);"><div style="display:flex;gap:6px;align-items:center;min-height:28px;padding:0 6px"><span class="num muted">2</span>Molecular model, with the defaults<span style="margin-left:auto"><span class="ok">done</span></span></div></li><li style="border-radius:var(--radius);"><div style="display:flex;gap:6px;align-items:center;min-height:28px;padding:0 6px"><span class="num muted">3</span>Continuum model, with the defaults<span style="margin-left:auto"><span class="ok">done</span></span></div></li><li aria-current="step" style="border-radius:var(--radius);background:var(--sel);box-shadow:inset 3px 0 0 var(--accent);"><div style="display:flex;gap:6px;align-items:center;min-height:28px;padding:0 6px"><span class="num muted">4</span>Set the salt<span style="margin-left:auto"><b style="color:var(--accent)">now</b></span></div><div class="muted" style="font-size:var(--text-sm);padding:0 6px 4px 22px">The bulk NaCl concentration in both reservoirs, in M. There is no default.</div></li><li style="border-radius:var(--radius);"><div style="display:flex;gap:6px;align-items:center;min-height:28px;padding:0 6px"><span class="num muted">5</span>Set the bias<span style="margin-left:auto"></span></div></li><li style="border-radius:var(--radius);"><div style="display:flex;gap:6px;align-items:center;min-height:28px;padding:0 6px"><span class="num muted">6</span>Pair the models in a study and run<span style="margin-left:auto"></span></div></li><li style="border-radius:var(--radius);"><div style="display:flex;gap:6px;align-items:center;min-height:28px;padding:0 6px"><span class="num muted">7</span>Read the conductance<span style="margin-left:auto"></span></div></li></ol>
+  <div class="row"><button class="btn small" type="button">Back</button><button class="btn primary small" type="button">Next</button><button class="btn small" type="button">Leave the route</button></div></aside>
+</div>
+<div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="05-results.html#re5-b">Back: Studies and results</a><a href="index.html">All choices</a><span class="sp"></span><a href="#gr1-b">Variant B</a></nav>
+</section>
+
+<section data-screen="gr1-b" id="gr1-b" aria-labelledby="gr1-b-h">
+  <header class="cap"><span class="cid">GR1</span><h1 id="gr1-b-h">How the guided route shows the next step (WB-08)</h1><span class="take">The screen dimmed around the next field, a card beside it</span><span class="var" role="img" aria-label="Variant B">B</span></header>
+  <div class="stage">
+<div class="win" style="grid-template-rows:auto 1fr auto;position:relative">
+<div inert><div class="titlebar"><span class="proj">ClyA study</span><div class="tabs" role="tablist" aria-label="Suites"><button type="button" role="tab" aria-selected="false">Molecular</button><button type="button" role="tab" aria-selected="true">Continuum</button><button type="button" role="tab" aria-selected="false">Analysis</button></div><span class="sp"></span>
+<button class="chip" type="button" aria-label="x values changed from their defaults: show the list"><span class="chg">x changed</span></button>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></div></div>
+<div style="display:grid;grid-template-columns:180px minmax(0,1fr);min-height:0">
+  <div class="pane" inert><h2>Continuum tools</h2><ul class="tools" aria-label="Tools"><li><button type="button">Protein geometry<span class="st ok">built</span></button></li><li><button type="button">Region<span class="st ok">built</span></button></li><li><button type="button">Mesh<span class="st ok">built</span></button></li><li><button type="button" aria-current="true">Physics defaults</button></li></ul></div>
+  <div class="pane stack"><h2 inert>Physics defaults · electrolyte</h2><div class="field" inert><label for="g1b-e">Electrolyte</label><div class="v"><select id="g1b-e"><option>NaCl</option></select></div></div>
+  <div class="field" style="position:relative;z-index:2;background:var(--panel);outline:2px solid var(--accent);outline-offset:4px;border-radius:var(--radius)"><label for="g1b-c">Concentration</label><div class="v"><input id="g1b-c" class="num" type="text" placeholder="set"><span class="unit">M</span></div></div>
+  <div class="field" inert><span class="k">pH</span><span class="v num">7.5 <span class="muted">default</span></span></div>
+  <div class="focus-ring" role="dialog" aria-modal="true" aria-label="Guided run, step 4 of 7" style="position:relative;z-index:3;width:320px;margin-left:8.5rem;background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius);padding:10px;display:grid;gap:6px">
+    <span class="h">Guided run · step 4 of 7</span><b>Set the salt</b><span>The bulk NaCl concentration in both reservoirs, in M. There is no default.</span>
+    <div class="row"><button class="btn small" type="button">Back</button><button class="btn primary small" type="button">Next</button><button class="btn small" type="button">Leave the route</button></div></div>
+  </div>
+</div>
+<div inert><div class="queue"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div aria-hidden="true" style="position:absolute;inset:0;background:rgb(0 0 0 / .4);z-index:1;pointer-events:none"></div>
+</div>
+  </div>
+  <nav class="foot" aria-label="Choices"><a href="#gr1-a">Variant A</a><a href="index.html">All choices</a><span class="sp"></span></nav>
+</section>
+</body>
+</html>

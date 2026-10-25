@@ -16,10 +16,11 @@
 3. `node .claude/scripts/gui/shoot.cjs <r>/webgui-manifest.json <r>/html`: the HTML documents the
    render children wrote, standing for the web views that draw nothing offscreen.
 
-**`mockups`**, every `docs/design/{concepts,style,mockups}/*.html`. Write `<r>/manifest.json`, four
+**`mockups`**, every `docs/design/{concepts,style,choices,mockups}/**/*.html`. Write `<r>/manifest.json`, four
 entries per page: viewports `[1440, 900]` and `[1280, 800]`, schemes `light` and `dark`, `wait_ms:
-300`, `expand: "[data-screen]"`, id `<dir>-<stem>-<w>-<scheme>`, `url` the page's `file://` URI. Then
-`node .claude/scripts/gui/shoot.cjs <r>/manifest.json <r>`.
+300`, `expand: "[data-screen]"`, id `<dir>-<stem>-<w>-<scheme>`, `url` the page's `file://` URI. A
+choice panel is a fragment, small enough to judge on a phone: two entries, `[960, 640]`, light and dark.
+Then `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <r>`.
 
 **`shell`**: added by WP5.02; until then say so and stop.
 

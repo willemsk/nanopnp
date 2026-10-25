@@ -9,7 +9,8 @@ marks back. One page per topic; a new round republishes to the same URL.
    (a mockup page's `tokens.css` too). One card per shot: the picture, the shot id, its state, two
    lines on what it shows, and the reviewer's findings for it from `<r>/review.md`. On each card a
    verdict control and a note field: `keep`, `drop`, `change` for today's screens; `fine`, `change`
-   for a mockup; `prefer`, `borrow`, `reject` for a concept board. Each change saves at once to the
+   for a mockup; `prefer`, `borrow`, `reject` for a concept board; `A`, `B`, `either`, `neither` for a
+   choice panel, whose card carries both variants' pictures side by side, stacked on a phone. Each change saves at once to the
    `verdicts` collection, document id the shot id, fields `verdict`, `note`, `round`.
 3. Publish with the Artifact tool (private by default). The first time, record the URL in
    `<s>/gallery/<topic>/url`; later rounds pass it as `url` and bump `round`.
