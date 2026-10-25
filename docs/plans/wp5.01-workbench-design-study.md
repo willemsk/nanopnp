@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 7 done; next, the look-and-feel round.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 8 done; next, the checkpoint.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -235,8 +235,7 @@ contour, mesh, charge, fields) or a canvas per tool; how a selection travels bet
 a guided overlay (QR-10), or two modes; how defaults are shown. (7) Commands: menus, toolbar, a
 command palette, the keyboard; whether P1 gets a Python console over the public API, which holds no
 physics (S3). (8) Runs and the store: how runs, cached stages, sweeps and results are browsed; what
-*Run* means when stages are cached. (9) Refusals: where a refusal shows, naming its requirement
-(VER-67). (10) Switches away from the validated default (FR-25): how they stay visible. (11) Layout:
+*Run* means when stages are cached. (9) Refusals: where a refusal shows, naming its rule. (10) Switches away from the validated default (FR-25): how they stay visible. (11) Layout:
 fixed or arranged by the user, saved with the project (S11).
 
 **The look-and-feel agenda**, after the style tile (three directions: *instrument*, dense and dark
@@ -338,7 +337,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > a v0.5 defect recorded as REV-134, and the field view's opening camera. `workbench.md` joins
   > *Project* in `mkdocs.yml` now, not at item 12: under `--strict` a page outside `nav` fails.
 - [x] efdf5b4 6. Wait checkpoint: the verdicts. **Executor:** main.
-- [ ] 7. `/np-gui collect`; the concept boards, rendered, reviewed and published; `/np-gui grill
+- [x] 65d1d7a 7. `/np-gui collect`; the concept boards, rendered, reviewed and published; `/np-gui grill
   organisation` with the author; the `WB-nn` rows (D2); done when every organisation agenda point has
   a ruling or a deferral. **Executor:** main.
 
@@ -355,6 +354,16 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
 - [ ] 8. The style tile in `docs/design/style/`; `/np-gui grill look-and-feel`; `docs/design/tokens.css`;
   the `WB-nn` rows (D2); done when every look-and-feel agenda point has a ruling or a deferral.
   **Executor:** main.
+
+  > **Outcome — twelve rulings, WB-17 to WB-28; `tokens.css`.** The style tile drew three directions,
+  > light and dark; the author ruled each of the nine points in conversation and marked no direction:
+  > each suite borrows its reference tool's idiom under one harmonised token set, medium density with
+  > a compact option, both themes following the system, user-chosen colour maps with viridis and a
+  > zero-centred diverging map as defaults, and WCAG 2.2 AA including non-text contrast (WB-24). The
+  > tile's review (16 findings, none blocking) shaped the tokens: a control edge at 3:1, a focus ring,
+  > a changed-from-default colour apart from the accent, outlined colour bars; the rest go to the
+  > mockups, and the checker's missing non-text measure is REV-138. The plan's agenda cited VER-67 for
+  > refusals; VER-67 is withdrawn, so point 9 and WB-12 name no identifier.
 - [ ] 9. Compaction checkpoint: the round is recorded. **Executor:** main.
 - [ ] 10. The mockups of the areas and the guided route in `docs/design/mockups/`, rendered, reviewed and published;
   `mkdocs.yml`'s `exclude_docs` (D3); done when no blocking reviewer finding is open and the strict

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workbench style tile</title>
+<style>
+/* Three visual directions for the workbench (WP5.01 D2, the look-and-feel round). Each section
+   carries its own tokens, light and dark; the shared rules below read only the tokens. */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: #e9e9e9; color: #111; font: 14px/1.4 system-ui, sans-serif; }
+@media (prefers-color-scheme: dark) { body { background: #111; color: #eee; } }
+
+section[data-screen] { display: none; min-height: 100vh; }
+section[data-screen]:target { display: block; }
+body:not(:has(section[data-screen]:target)) section[data-screen]:first-of-type { display: block; }
+
+/* Direction tokens. */
+.instrument {
+  --bg: #eef1f4; --panel: #ffffff; --canvas: #e3e7eb; --line: #c9d0d7; --ink: #14171a; --muted: #4a5560;
+  --accent: #0a6fa8; --accent-ink: #ffffff; --ok: #1b7a43; --warn: #8a5a00; --err: #b3261e; --sel: #d6ebf7;
+  --font: "Inter", system-ui, "Segoe UI", Roboto, sans-serif; --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --head: var(--font); --size: 12.5px; --row: 26px; --radius: 3px; --gap: 6px;
+}
+.notebook {
+  --bg: #fbfaf7; --panel: #ffffff; --canvas: #f3f1ec; --line: #e0dbd1; --ink: #1f1d1a; --muted: #5c574f;
+  --accent: #3b5bdb; --accent-ink: #ffffff; --ok: #2b7a3d; --warn: #8a5300; --err: #b42318; --sel: #e7ecff;
+  --font: system-ui, "Segoe UI", Roboto, sans-serif; --mono: ui-monospace, Menlo, Consolas, monospace;
+  --head: Charter, "Iowan Old Style", Georgia, serif; --size: 15px; --row: 36px; --radius: 8px; --gap: 12px;
+}
+.molecular {
+  --bg: #f6f7f9; --panel: #ffffff; --canvas: #0f1115; --canvas-ink: #e8eaef; --line: #d9dce3; --ink: #16181d; --muted: #4f5563;
+  --accent: #5b3fd6; --accent-ink: #ffffff; --ok: #1f7a4a; --warn: #8a5200; --err: #b4231a; --sel: #ece7ff;
+  --font: system-ui, "Segoe UI", Roboto, sans-serif; --mono: ui-monospace, Menlo, Consolas, monospace;
+  --head: var(--font); --size: 13.5px; --row: 30px; --radius: 6px; --gap: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  .instrument {
+    --bg: #14171a; --panel: #1c2126; --canvas: #0e1114; --line: #2e353d; --ink: #e6e9ec; --muted: #9aa4ae;
+    --accent: #4cc2ff; --accent-ink: #06202e; --ok: #5fd38d; --warn: #f2c14e; --err: #ff7b72; --sel: #12384d;
+  }
+  .notebook {
+    --bg: #1b1a18; --panel: #23221f; --canvas: #2a2925; --line: #3a3833; --ink: #eceae5; --muted: #b0aba2;
+    --accent: #9db1ff; --accent-ink: #0f1633; --ok: #7fd19a; --warn: #f0b860; --err: #ff8a80; --sel: #2d3555;
+  }
+  .molecular {
+    --bg: #171a20; --panel: #1d2027; --line: #333845; --ink: #e8eaef; --muted: #a9afbd;
+    --accent: #b4a2ff; --accent-ink: #1a1240; --ok: #79d6a0; --warn: #f2bd5e; --err: #ff8b80; --sel: #2e2752;
+  }
+}
+
+/* Shared rules, tokens only. */
+.dir { background: var(--bg); color: var(--ink); font: var(--size)/1.4 var(--font); padding: 20px 24px 28px; min-height: 100vh; }
+.dir header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.dir h1 { font: 600 calc(var(--size) * 1.9)/1.15 var(--head); margin: 0; }
+.dir header p { margin: 0; color: var(--muted); max-width: 70ch; }
+.nav { display: flex; gap: 8px; margin-left: auto; }
+.nav a { display: inline-flex; align-items: center; min-height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); text-decoration: none; background: var(--panel); }
+.nav a[aria-current="page"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.grid { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.card h2 { font: 600 calc(var(--size) * 0.85) var(--font); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+.frame { grid-row: span 2; display: grid; grid-template-rows: auto 1fr auto; padding: 0; overflow: hidden; }
+.bar { display: flex; gap: 14px; align-items: center; padding: 6px 12px; border-bottom: 1px solid var(--line); }
+.bar .suite { padding: 4px 10px; border-radius: var(--radius); }
+.bar .suite.on { background: var(--sel); color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.bar .right { margin-left: auto; color: var(--muted); font-size: .92em; }
+.body { display: grid; grid-template-columns: 150px 1fr; min-height: 300px; }
+.tools { border-right: 1px solid var(--line); padding: 8px; }
+.tools div { padding: 4px 8px; border-radius: var(--radius); }
+.tools .on { background: var(--sel); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
+.view { background: var(--canvas); position: relative; min-height: 220px; display: flex; align-items: center; justify-content: center; }
+.view .lbl { max-width: 80%; text-align: center; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 8px; }
+.molecular .view .lbl { background: #1d2027; color: #e8eaef; border-color: #333845; }
+.status { display: flex; gap: 16px; padding: 6px 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92em; }
+.form .row { display: grid; grid-template-columns: 1fr auto; align-items: center; min-height: var(--row); border-bottom: 1px solid var(--line); gap: 8px; }
+.form .row:last-child { border-bottom: 0; }
+.form label { color: var(--muted); }
+.form input { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 2px 6px; width: 90px; text-align: right; min-height: 24px; }
+.form .unit { color: var(--muted); margin-left: 4px; }
+.default { font-size: .85em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 6px; margin-left: 6px; }
+.changed { font-size: .85em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 6px; margin-left: 6px; }
+.btns { display: flex; gap: var(--gap); margin-top: 10px; flex-wrap: wrap; }
+button { font: inherit; min-height: 28px; padding: 0 12px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.num { font: 600 calc(var(--size) * 2.2)/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.num .u { font: 500 calc(var(--size) * 1.1) var(--font); color: var(--muted); margin-left: 6px; }
+.numsub { color: var(--muted); }
+.stages { list-style: none; margin: 0; padding: 0; }
+.stages li { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; min-height: var(--row); border-bottom: 1px solid var(--line); }
+.stages li:last-child { border-bottom: 0; }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .err { color: var(--err); } .acc { color: var(--accent); }
+.refusal { border: 1px solid var(--err); border-left-width: 4px; border-radius: var(--radius); padding: 8px 10px; }
+.refusal b { color: var(--err); }
+.refusal .why { color: var(--ink); }
+.refusal .id { font-family: var(--mono); color: var(--muted); font-size: .9em; }
+.cbar { height: 16px; border-radius: 2px; border: 1px solid var(--line); }
+.seq { background: linear-gradient(90deg, #440154, #3b528b, #21918c, #5ec962, #fde725); }
+.div { background: linear-gradient(90deg, #2166ac, #67a9cf, #d1e5f0, #f7f7f7, #fddbc7, #ef8a62, #b2182b); }
+.ticks { display: flex; justify-content: space-between; font: .9em var(--mono); color: var(--muted); margin-top: 2px; }
+.ticks .zero { color: var(--ink); font-weight: 600; }
+.cap { color: var(--muted); margin: 10px 0 4px; }
+.type div { margin: 2px 0; }
+.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.sw { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; font: .85em var(--mono); }
+.sw i { display: block; height: 26px; }
+.sw span { display: block; padding: 2px 6px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<section data-screen="instrument" id="instrument" class="dir instrument">
+  <header>
+    <h1>Instrument</h1>
+    <p>Dense and dark first, as an engineering suite: small type, tight rows, square corners, one cyan accent. Most on screen at once; for long sessions.</p>
+    <nav class="nav" aria-label="Directions"><a href="#instrument" aria-current="page">Instrument</a><a href="#notebook">Notebook</a><a href="#molecular">Molecular</a></nav>
+  </header>
+  <div class="grid">
+    <div class="card frame">
+      <div class="bar"><span class="suite">Molecular</span><span class="suite on">Continuum</span><span class="suite">Analysis</span><span class="right">ClyA pores · 2wcd · 1 change from default</span></div>
+      <div class="body">
+        <div class="tools"><div>Protein geometry</div><div>Region</div><div class="on">Mesh</div><div>Physics</div></div>
+        <div class="view"><span class="lbl">Continuum view: (r, z), the mesh over the region</span></div>
+      </div>
+      <div class="status"><span class="acc">▶ Solving 2wcd · rung 7 · 40 %</span><span>1 queued</span><span>Problems: 0</span></div>
+    </div>
+    <div class="card">
+      <h2>Settings, with units</h2>
+      <div class="form">
+        <div class="row"><label for="i1">Size scale</label><span><input id="i1" value="1.0"><span class="default">default</span></span></div>
+        <div class="row"><label for="i2">Wall size</label><span><input id="i2" value="0.20"><span class="unit">nm</span><span class="changed">changed</span></span></div>
+        <div class="row"><label for="i3">Concentration</label><span><input id="i3" value="1.0"><span class="unit">M</span></span></div>
+        <div class="row"><label for="i4">Bias</label><span><input id="i4" value="+50"><span class="unit">mV</span></span></div>
+      </div>
+      <div class="btns"><button class="primary" type="button">Build mesh</button><button type="button">Reset to default</button></div>
+    </div>
+    <div class="card">
+      <h2>A number and its unit (sample)</h2>
+      <div class="num">1.234<span class="u">nS</span></div>
+      <div class="numsub">conductance at +50 mV, 1.0 M NaCl</div>
+      <h2 style="margin-top:14px">Colour bars</h2>
+      <div class="cap">Sequential, perceptually uniform: c, M</div>
+      <div class="cbar seq"></div><div class="ticks"><span>0</span><span>0.5</span><span>1.0</span></div>
+      <div class="cap">Diverging about zero: ρ, e nm⁻²</div>
+      <div class="cbar div"></div><div class="ticks"><span>−0.4</span><span class="zero">0</span><span>+0.4</span></div>
+    </div>
+    <div class="card">
+      <h2>Stage status</h2>
+      <ul class="stages">
+        <li><span class="ok">✓</span>Structure<span class="ok">built</span></li>
+        <li><span class="ok">✓</span>Protonation<span class="numsub">from the store</span></li>
+        <li><span class="warn">●</span>Mesh<span class="warn">stale: size scale changed</span></li>
+        <li><span class="acc">▶</span>Solve<span class="acc">running</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>A refusal</h2>
+      <div class="refusal"><b>Refused.</b> <span class="why">Concentration must be greater than 0 M; −0.1 was entered.</span><div class="id">electrolyte.concentration_M</div></div>
+      <h2 style="margin-top:14px">Type</h2>
+      <div class="type"><div style="font:600 1.9em var(--head)">Heading</div><div style="font:600 1.2em var(--font)">Section</div><div>Body text, 12.5 px</div><div style="font-family:var(--mono)">mono 0.123 456</div></div>
+    </div>
+  </div>
+</section>
+
+<section data-screen="notebook" id="notebook" class="dir notebook">
+  <header>
+    <h1>Notebook</h1>
+    <p>Light and explanatory: larger type, a serif for headings, generous rows, rounded corners, a blue accent, a sentence under each setting. Least on screen; easiest to learn.</p>
+    <nav class="nav" aria-label="Directions"><a href="#instrument">Instrument</a><a href="#notebook" aria-current="page">Notebook</a><a href="#molecular">Molecular</a></nav>
+  </header>
+  <div class="grid">
+    <div class="card frame">
+      <div class="bar"><span class="suite">Molecular</span><span class="suite on">Continuum</span><span class="suite">Analysis</span><span class="right">2wcd · 1 change</span></div>
+      <div class="body">
+        <div class="tools"><div>Protein geometry</div><div>Region</div><div class="on">Mesh</div><div>Physics</div></div>
+        <div class="view"><span class="lbl">Continuum view: (r, z), the mesh</span></div>
+      </div>
+      <div class="status"><span class="acc">▶ Solving, 40 %</span><span>1 queued</span></div>
+    </div>
+    <div class="card">
+      <h2>Settings, with units</h2>
+      <div class="form">
+        <div class="row"><label for="n1">Size scale</label><span><input id="n1" value="1.0"><span class="default">default</span></span></div>
+        <div class="row"><label for="n2">Wall size</label><span><input id="n2" value="0.20"><span class="unit">nm</span><span class="changed">changed</span></span></div>
+        <div class="row"><label for="n3">Concentration</label><span><input id="n3" value="1.0"><span class="unit">M</span></span></div>
+      </div>
+      <p class="numsub" style="margin:8px 0 0">The wall size sets the smallest element at the pore wall; smaller is more accurate and slower.</p>
+      <div class="btns"><button class="primary" type="button">Build mesh</button><button type="button">Reset to default</button></div>
+    </div>
+    <div class="card">
+      <h2>A number and its unit (sample)</h2>
+      <div class="num">1.234<span class="u">nS</span></div>
+      <div class="numsub">conductance at +50 mV, 1.0 M NaCl</div>
+      <h2 style="margin-top:14px">Colour bars</h2>
+      <div class="cap">Sequential: c, M</div>
+      <div class="cbar seq"></div><div class="ticks"><span>0</span><span>0.5</span><span>1.0</span></div>
+      <div class="cap">Diverging about zero: ρ, e nm⁻²</div>
+      <div class="cbar div"></div><div class="ticks"><span>−0.4</span><span class="zero">0</span><span>+0.4</span></div>
+    </div>
+    <div class="card">
+      <h2>Stage status</h2>
+      <ul class="stages">
+        <li><span class="ok">✓</span>Structure<span class="ok">built</span></li>
+        <li><span class="ok">✓</span>Protonation<span class="numsub">reused</span></li>
+        <li><span class="warn">●</span>Mesh<span class="warn">out of date</span></li>
+        <li><span class="acc">▶</span>Solve<span class="acc">running</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>A refusal</h2>
+      <div class="refusal"><b>This value can't be used.</b> <span class="why">The salt concentration must be above 0 M. You entered −0.1 M.</span><div class="id">electrolyte.concentration_M</div></div>
+      <h2 style="margin-top:14px">Type</h2>
+      <div class="type"><div style="font:600 1.9em var(--head)">Heading</div><div style="font:600 1.2em var(--font)">Section</div><div>Body text, 15 px</div><div style="font-family:var(--mono)">mono 0.123 456</div></div>
+    </div>
+  </div>
+</section>
+
+<section data-screen="molecular" id="molecular" class="dir molecular">
+  <header>
+    <h1>Molecular</h1>
+    <p>A dark canvas with light panels, as in molecular viewers: pictures always on black, controls in a calm light frame, a violet accent. The pictures stand out; the panels stay readable.</p>
+    <nav class="nav" aria-label="Directions"><a href="#instrument">Instrument</a><a href="#notebook">Notebook</a><a href="#molecular" aria-current="page">Molecular</a></nav>
+  </header>
+  <div class="grid">
+    <div class="card frame">
+      <div class="bar"><span class="suite">Molecular</span><span class="suite on">Continuum</span><span class="suite">Analysis</span><span class="right">ClyA pores · 2wcd · 1 change from default</span></div>
+      <div class="body">
+        <div class="tools"><div>Protein geometry</div><div>Region</div><div class="on">Mesh</div><div>Physics</div></div>
+        <div class="view"><span class="lbl">Continuum view on black: (r, z), the mesh</span></div>
+      </div>
+      <div class="status"><span class="acc">▶ Solving 2wcd · 40 %</span><span>1 queued</span><span>Problems: 0</span></div>
+    </div>
+    <div class="card">
+      <h2>Settings, with units</h2>
+      <div class="form">
+        <div class="row"><label for="m1">Size scale</label><span><input id="m1" value="1.0"><span class="default">default</span></span></div>
+        <div class="row"><label for="m2">Wall size</label><span><input id="m2" value="0.20"><span class="unit">nm</span><span class="changed">changed</span></span></div>
+        <div class="row"><label for="m3">Concentration</label><span><input id="m3" value="1.0"><span class="unit">M</span></span></div>
+        <div class="row"><label for="m4">Bias</label><span><input id="m4" value="+50"><span class="unit">mV</span></span></div>
+      </div>
+      <div class="btns"><button class="primary" type="button">Build mesh</button><button type="button">Reset to default</button></div>
+    </div>
+    <div class="card">
+      <h2>A number and its unit (sample)</h2>
+      <div class="num">1.234<span class="u">nS</span></div>
+      <div class="numsub">conductance at +50 mV, 1.0 M NaCl</div>
+      <h2 style="margin-top:14px">Colour bars</h2>
+      <div class="cap">Sequential, perceptually uniform: c, M</div>
+      <div class="cbar seq"></div><div class="ticks"><span>0</span><span>0.5</span><span>1.0</span></div>
+      <div class="cap">Diverging about zero: ρ, e nm⁻²</div>
+      <div class="cbar div"></div><div class="ticks"><span>−0.4</span><span class="zero">0</span><span>+0.4</span></div>
+    </div>
+    <div class="card">
+      <h2>Stage status</h2>
+      <ul class="stages">
+        <li><span class="ok">✓</span>Structure<span class="ok">built</span></li>
+        <li><span class="ok">✓</span>Protonation<span class="numsub">from the store</span></li>
+        <li><span class="warn">●</span>Mesh<span class="warn">stale</span></li>
+        <li><span class="acc">▶</span>Solve<span class="acc">running</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>A refusal</h2>
+      <div class="refusal"><b>Refused.</b> <span class="why">Concentration must be greater than 0 M; −0.1 was entered.</span><div class="id">electrolyte.concentration_M</div></div>
+      <h2 style="margin-top:14px">Type</h2>
+      <div class="type"><div style="font:600 1.9em var(--head)">Heading</div><div style="font:600 1.2em var(--font)">Section</div><div>Body text, 13.5 px</div><div style="font-family:var(--mono)">mono 0.123 456</div></div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
