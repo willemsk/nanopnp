@@ -96,7 +96,7 @@ note raises a physics question, whether the density should see the protonation c
 The design round's rulings, in the author's words where they gave them (§8.2.17 S21). The
 organisation round ran on 25 October 2026 over four concept boards, C1 *model builder*, C2
 *molecular workspace*, C3 *project and runs* and C4 *guided routes*, kept in
-`docs/design/concepts/`; the author ruled for a hybrid in the round rather than marking the boards.
+`docs/design/concepts/`; the author ruled for a hybrid in the round, the marks on the boards following later.
 Each ruling was played back and confirmed. The look-and-feel round followed the same day over a
 style tile of three directions, *instrument*, *notebook* and *molecular*, kept in `docs/design/style/`;
 its tokens are `docs/design/tokens.css`.
