@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 10 done; next, the author's picks on the choice panels.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 11 done; waiting on the author's picks; next, the two whole-workbench mockups.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -375,7 +375,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > mockups, and the checker's missing non-text measure is REV-138. The plan's agenda cited VER-67 for
   > refusals; VER-67 is withdrawn, so point 9 and WB-12 name no identifier.
 - [x] 9. Compaction checkpoint: the round is recorded. **Executor:** main.
-- [ ] 10. The choice panels of the areas and the guided route in `docs/design/choices/`, rendered, reviewed and
+- [x] 4c82e50 10. The choice panels of the areas and the guided route in `docs/design/choices/`, rendered, reviewed and
   published; `mkdocs.yml`'s `exclude_docs`; `/np-gui`'s choice verdicts (D3); done when no blocking reviewer finding
   is open and the strict build passes. **Executor:** main.
 
@@ -389,7 +389,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > 960 × 640 in both themes, has no page error and no failed contrast or target check. The checker now measures a
   > checkbox or radio by its label, which is its target; `--ok` darkened to 5.1:1 on `--sel`. Published for the
   > picks at `https://claude.ai/artifact/FX2W3zrgWv9yRX2HEAJu8e`.
-- [ ] 11. Wait checkpoint: the picks on the panels. **Executor:** main.
+- [x] 11. Wait checkpoint: the picks on the panels. **Executor:** main.
 - [ ] 12. `/np-gui collect` (the panels); the two whole-workbench mockups, A and B, in `docs/design/mockups/`,
   rendered, reviewed and published (D3); done when no blocking reviewer finding is open and the strict build
   passes. **Executor:** main.
