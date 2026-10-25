@@ -326,10 +326,17 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   review say so. **Executor:** main.
 - [x] a9ca3d3 3. `knowledge/07-software-stack/05-gui-and-packaging.md`, `knowledge/log.md` (D1, D4); done
   when the code and review say so. **Executor:** `general-purpose` on Haiku.
-- [x] 4. Compaction checkpoint: the tools exist. **Executor:** main.
+- [x] f31cd3c 4. Compaction checkpoint: the tools exist. **Executor:** main.
 - [ ] 5. `/np-gui render qt`, `review`, `publish`: the critique; the capability list in
   `docs/design/workbench.md`'s *Today's shell* (D1); done when published, and the grab count in
   `qt-index.json` equals the views of *Grounding D1*. **Executor:** main.
+
+  > **Outcome — 41 capabilities, 50 findings, the gallery published.** The render at `f31cd3c` took
+  > 22 grabs and 3 HTML stand-ins, none missed, none with a page error; after the run it takes the
+  > four tabs a run fills, as *Implementation details* says, not all seven. The capability list
+  > holds Q01 to Q41. The reviewer's two blocking findings are the Result tab's float wrapper,
+  > a v0.5 defect recorded as REV-134, and the field view's opening camera. `workbench.md` joins
+  > *Project* in `mkdocs.yml` now, not at item 12: under `--strict` a page outside `nav` fails.
 - [ ] 6. Wait checkpoint: the verdicts. **Executor:** main.
 - [ ] 7. `/np-gui collect`; the concept boards, rendered, reviewed and published; `/np-gui grill
   organisation` with the author; the `WB-nn` rows (D2); done when every organisation agenda point has

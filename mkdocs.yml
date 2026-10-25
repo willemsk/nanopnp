@@ -341,6 +341,7 @@ nav:
       - Modularity measurements: _generated/project/modularity-measurements.md
       - Review register: project/review-items.md
       - Review findings: project/review-findings.md
+      - Workbench design: design/workbench.md
       - Citing: project/citing.md
       - Release notes: _generated/project/changelog.md
       - Licence: project/licence.md
