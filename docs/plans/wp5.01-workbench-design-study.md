@@ -343,7 +343,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
 
   > **Outcome — sixteen rulings, WB-01 to WB-16; suites in a project.** The author marked all 22 Qt
   > screens (20 *change*, 2 *keep*, none dropped; `docs/design/reviews/2026-10-25-qt-shell.md`) and
-  > ruled the organisation in conversation rather than marking the four boards: three suites,
+  > ruled the organisation in conversation, the marks on the four boards pending (too small on a phone): three suites,
   > *Molecular*, *Continuum* and *Analysis*, in a project with a run queue, and a library of molecular
   > and continuum models paired in studies (WB-11, WB-16). WB-14 brings structure preparation into
   > Phase 5, library first, against S4's consequence; with WB-02 it amends §8.1's Phase 5 rows. The
@@ -356,7 +356,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   **Executor:** main.
 
   > **Outcome — twelve rulings, WB-17 to WB-28; `tokens.css`.** The style tile drew three directions,
-  > light and dark; the author ruled each of the nine points in conversation and marked no direction:
+  > light and dark; the author ruled each of the nine points in conversation, the marks pending:
   > each suite borrows its reference tool's idiom under one harmonised token set, medium density with
   > a compact option, both themes following the system, user-chosen colour maps with viridis and a
   > zero-centred diverging map as defaults, and WCAG 2.2 AA including non-text contrast (WB-24). The
@@ -369,7 +369,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   `mkdocs.yml`'s `exclude_docs` (D3); done when no blocking reviewer finding is open and the strict
   build passes. **Executor:** main.
 - [ ] 11. Wait checkpoint: the comments on the mockups. **Executor:** main.
-- [ ] 12. `/np-gui collect`; one revision of the mockups; `docs/design/workbench.md` complete;
+- [ ] 12. `/np-gui collect` (the mockups, and the pending marks on the concept boards and the style tile, a contradicting mark reopening its ruling); one revision of the mockups; `docs/design/workbench.md` complete;
   `mkdocs.yml`'s nav (D3); done when the strict build passes. **Executor:** main.
 - [ ] 13. The specification (D5): NOTEs in `specification/02-product-overview.md`,
   `03-requirements.md`, `05-software-design/06-architecture-decisions.md`,
