@@ -1,0 +1,140 @@
+{
+ "r-prepare": [
+  {
+   "severity": "major",
+   "text": "The route drew state not yet made, and no way to load the structure. Fixed: a clean project, Open structure\u2026, and distinct names for the two saves."
+  }
+ ],
+ "r-ph": [
+  {
+   "severity": "major",
+   "text": "Fixed: nothing off default on the route; the button is Build molecular model."
+  }
+ ],
+ "r-mesh": [
+  {
+   "severity": "major",
+   "text": "Card and verdict clipped at 1280. Fixed: Build mesh and its verdict sit first; nothing is built before the step."
+  }
+ ],
+ "r-salt": [
+  {
+   "severity": "major",
+   "text": "The salt was set in two places. Fixed: set once here; the card states the refusal of an empty value."
+  }
+ ],
+ "r-bias": [
+  {
+   "severity": "major",
+   "text": "Card clipped at 1280. Fixed: placed on the side with room."
+  }
+ ],
+ "r-follow": [
+  {
+   "severity": "major",
+   "text": "New step: the route waited on nothing between Run and the result."
+  }
+ ],
+ "m-charge": [
+  {
+   "severity": "major",
+   "text": "No path from the variant to its comparison. Fixed: Run beside the parent, Compare with the parent."
+  }
+ ],
+ "m-view": [
+  {
+   "severity": "minor",
+   "text": "Charge by hue alone. Fixed: signed residues, a legend and the diverging bar."
+  }
+ ],
+ "g-contour": [
+  {
+   "severity": "major",
+   "text": "Lacked undo, redo, delete, measure, seed and save edit, and hid the reset. Fixed: all live; the Sketcher banner is for hand-drawing only."
+  }
+ ],
+ "g-region": [
+  {
+   "severity": "minor",
+   "text": "Radius line crossed the protein. Fixed: drawn below the membrane, labelled beside it."
+  }
+ ],
+ "g-problems": [
+  {
+   "severity": "minor",
+   "text": "Fixed: Build region is disabled while the value is refused."
+  }
+ ],
+ "s-size": [
+  {
+   "severity": "major",
+   "text": "Mesh cut at 1280 and verdict under the queue. Fixed: the drawing letterboxes; scale, build and verdict first."
+  }
+ ],
+ "s-quality": [
+  {
+   "severity": "minor",
+   "text": "Fixed: bars at 3:1, the axis titled, selected elements outlined."
+  }
+ ],
+ "st-overview": [
+  {
+   "severity": "major",
+   "text": "Export is FR-28, v0.7. Fixed: removed; the case file is written with each run's manifest."
+  }
+ ],
+ "st-form": [
+  {
+   "severity": "minor",
+   "text": "Bias set in three places; blank column. Fixed: the study owns it; the column lists the runs."
+  }
+ ],
+ "st-graph": [
+  {
+   "severity": "minor",
+   "text": "Floating edge, no direction. Fixed: a grid of nodes with arrowed edges."
+  }
+ ],
+ "st-sweep": [
+  {
+   "severity": "major",
+   "text": "Fixed: a variant's row compares with its parent; the bias is read-only here."
+  }
+ ],
+ "st-runs": [
+  {
+   "severity": "major",
+   "text": "Lost the convergence plot and rung notes; no failed run. Fixed: both restored, a failed run drawn."
+  }
+ ],
+ "st-changes": [
+  {
+   "severity": "minor",
+   "text": "Fixed: grouped by model, a row selected, a close button, counts that match."
+  }
+ ],
+ "a-explorer": [
+  {
+   "severity": "major",
+   "text": "Figure export is v0.7. Fixed: later-phase banner; the field's link to its probes shown."
+  }
+ ],
+ "a-compare-side": [
+  {
+   "severity": "major",
+   "text": "Fixed: pick the two runs, the bias and the quantity; start a new comparison."
+  }
+ ],
+ "a-compare-diff": [
+  {
+   "severity": "major",
+   "text": "Fixed: the same pickers as side by side."
+  }
+ ],
+ "_general": [
+  {
+   "severity": "note",
+   "text": "The GUI reviewer found 14 issues and 6 doubts, none blocking; each is fixed or answered in docs/design/reviews/2026-10-26-mockups.md. Every field map is schematic."
+  }
+ ]
+}

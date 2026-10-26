@@ -31,6 +31,7 @@ exclude_docs: |
   design/style/
   design/choices/
   design/mockups/
+  design/generators/
   design/reviews/
 
 theme:
