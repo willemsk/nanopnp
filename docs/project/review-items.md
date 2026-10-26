@@ -1389,7 +1389,9 @@ be built for a capability Tiers 1 and 2 do not verify, and §8.2.17 S7 puts each
 first. The concept-board review found the comparison and the queue drawn with no verifying artefact (finding B14).
 The choice-panel review adds probes and cuts on a field, selecting mesh elements by a quality measure, an arrangement
 of result tiles, and the deployed charge linked back to its residues (WB-06), each drawn with no verifying artefact
-(`docs/design/reviews/2026-10-25-choices.md`, finding F).
+(`docs/design/reviews/2026-10-25-choices.md`, finding F). The author's picks add size fields over
+sub-regions drawn by hand, to refine the mesh locally beyond the size table's parts (the ME1 note); the mockups draw
+them with the later-phase banner.
 
 **Open** for the author; proposed owner `/np-plan amend 5`, which sets Phase 5's packages after WP5.02: each capability becomes a library
 package with its tests before the shell surfaces it, or the author moves it to a later phase. WP5.01 changes no

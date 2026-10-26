@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup B: the guided route</title>
+<link rel="stylesheet" href="../mockups.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <linearGradient id="g-seq" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".25" stop-color="#3b528b"/><stop offset=".5" stop-color="#21918c"/><stop offset=".75" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <linearGradient id="g-seq2" x1="0" y1="1" x2=".3" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".3" stop-color="#3b528b"/><stop offset=".55" stop-color="#21918c"/><stop offset=".8" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <radialGradient id="g-diff" cx=".35" cy=".55" r=".55">
+      <stop offset="0" stop-color="#b2182b"/><stop offset=".35" stop-color="#f4a582"/><stop offset=".7" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d1e5f0"/>
+    </radialGradient>
+    <clipPath id="disc"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0 Z"/></clipPath>
+    <symbol id="pore-rz" viewBox="0 0 180 300"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".7"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="protein-rz" viewBox="0 0 180 300"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="pore-3d" viewBox="0 0 300 300">
+      <ellipse cx="150" cy="70" rx="120" ry="36" fill="#7b8494"/>
+      <path d="M30 70 Q30 120 90 150 L100 262 Q150 282 200 262 L210 150 Q270 120 270 70 Q270 106 150 106 Q30 106 30 70Z" fill="#5c6474"/>
+      <path d="M70 92 Q72 125 108 150 L114 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M150 106 L150 276" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M230 92 Q228 125 192 150 L186 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <ellipse cx="150" cy="70" rx="58" ry="16" fill="#0d0f13" stroke="#9aa3b2"/>
+      <circle cx="118" cy="190" r="7" fill="#ef6f6c"/><text x="118" y="194" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text><circle cx="182" cy="200" r="7" fill="#ef6f6c"/><text x="182" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text>
+      <circle cx="132" cy="122" r="7" fill="#6fa8ff"/><text x="132" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text><circle cx="170" cy="230" r="7" fill="#6fa8ff"/><text x="170" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text>
+    </symbol>
+</defs></svg>
+<section data-screen="r-prepare" id="r-prepare" aria-label="Guided run · 1. Load and prepare 2WCD" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html" aria-current="page"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">2WCD, pH 7.5</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Molecular tools</h2><ul class="tools" aria-label="Molecular tools"><li><a href="#m-prepare" aria-current="true">Prepare structure</a></li><li><a href="#m-ensemble">Ensemble</a></li><li><a href="#m-protonation">Protonation</a></li><li><a href="#m-charge">Charge edit</a></li><li><a href="#m-view">View</a></li></ul></div></div>
+<div class="viewwrap"><div class="c3d" style="position:relative;" role="img" aria-label="3D view of the pore"><div class="vb" style="aspect-ratio:1 / 1"><svg viewBox="0 0 300 300" width="100%" height="100%"><use href="#pore-3d"/><line x1="150" y1="14" x2="150" y2="292" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><rect x="40" y="214" width="220" height="26" fill="none" style="stroke:var(--warn)" stroke-width="2"/><circle cx="150" cy="18" r="7" style="fill:var(--accent)"/><path d="M143 30 L150 18 L157 30" fill="none" style="stroke:var(--canvas-3d-ink)" stroke-width="2"/><rect x="252" y="221" width="14" height="12" rx="2" style="fill:var(--warn)"/><rect x="34" y="221" width="14" height="12" rx="2" style="fill:var(--warn)"/></svg></div><div class="over card" style="right:8px;bottom:8px;padding:6px 8px;gap:2px;font-size:var(--text-xs)"><span><span style="display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;color:#0d0f13;font-weight:700;margin-right:4px;background:#ef6f6c" aria-hidden="true">−</span>negative residue</span><span><span style="display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;color:#0d0f13;font-weight:700;margin-right:4px;background:#6fa8ff" aria-hidden="true">+</span>positive residue</span></div><div class="over toolbar" style="left:8px;top:8px">
+  <button class="btn small" type="button">Reset view</button><button class="btn small" type="button" aria-pressed="false">Clip</button>
+  <span class="chip" style="background:var(--panel)">Linked: residue and charge map</span></div><div class="over card" style="left:12px;top:52px;width:300px">
+  <b>Prepare</b>
+  <div class="row"><span class="muted">Structure</span><span class="num">2wcd.cif</span><button class="btn small" type="button">Open structure…</button></div>
+  <div class="row"><span class="muted">Chains</span><button class="chip" type="button" aria-pressed="true">A–L, 12</button></div>
+  <div class="spot" style="display:block"><div class="row"><label for="mp-tl" class="muted">Axis tilt</label><input id="mp-tl" class="num" type="text" value="x.xx" style="width:4rem"><span class="unit">°</span><button class="btn small" type="button">Estimate</button></div><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="left:calc(100% + 16px);top:-8px"><span class="h">Guided run · step 1 of 8</span><b>Load and prepare 2WCD</b><span>2WCD is open. Estimate the pore's axis, check it on the view, and save the prepared structure. The chains and the membrane's place keep their defaults.</span>
+<div class="row"><button class="btn small" type="button" disabled>Back</button><a class="btn primary small" href="#r-ph">Next</a><a class="btn small" href="index.html">Leave the route</a></div></div></div>
+  <div class="row"><label for="mp-z" class="muted">Membrane centre, z</label><input id="mp-z" class="num" type="text" value="x.xx" style="width:4rem"><span class="unit">nm</span></div>
+  <div class="row"><span class="muted">Thickness</span><span class="num">x.xx nm</span><span class="muted">set in Continuum, Region</span></div>
+  <div class="row"><button class="btn small" type="button">Flip</button><button class="btn primary small" type="button">Save prepared structure</button></div>
+  <div class="verdict"><span class="ok">Orientation gate passed</span><button class="btn small" type="button" aria-expanded="false">Checks</button></div>
+  <span class="muted" style="font-size:var(--text-xs)">Drag the axis by its top handle, the membrane by its ends; or type the values.</span>
+</div></div></div>
+</div>
+<div inert><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="muted">empty</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 1. Load and prepare 2WCD</b> <span class="muted">· screen 1 of 8</span></span>
+<span class="sp"></span><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-prepare">Same screen in A</a><a href="#r-ph">Next: 2. Molecular model, with the defaults</a></nav>
+</section>
+<section data-screen="r-ph" id="r-ph" aria-label="Guided run · 2. Molecular model, with the defaults" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html" aria-current="page"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">2WCD, pH 7.5</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Molecular tools</h2><ul class="tools" aria-label="Molecular tools"><li><a href="#m-prepare">Prepare structure<span class="st ok">saved</span></a></li><li><a href="#m-ensemble">Ensemble</a></li><li><a href="#m-protonation" aria-current="true">Protonation</a></li><li><a href="#m-charge">Charge edit</a></li><li><a href="#m-view">View</a></li></ul></div></div>
+<div class="viewwrap" style="grid-template-rows:minmax(0,1fr) auto"><div class="c3d" style="position:relative;" role="img" aria-label="3D view of the pore"><div class="vb" style="aspect-ratio:1 / 1"><svg viewBox="0 0 300 300" width="100%" height="100%"><use href="#pore-3d"/><circle cx="118" cy="190" r="10" fill="none" style="stroke:var(--accent)" stroke-width="3"/></svg></div><div class="over card" style="right:8px;bottom:8px;padding:6px 8px;gap:2px;font-size:var(--text-xs)"><span><span style="display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;color:#0d0f13;font-weight:700;margin-right:4px;background:#ef6f6c" aria-hidden="true">−</span>negative residue</span><span><span style="display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;color:#0d0f13;font-weight:700;margin-right:4px;background:#6fa8ff" aria-hidden="true">+</span>positive residue</span></div><div class="over toolbar" style="left:8px;top:8px">
+  <button class="btn small" type="button">Reset view</button><button class="btn small" type="button" aria-pressed="false">Clip</button>
+  <span class="chip" style="background:var(--panel)">Linked: residue and charge map</span></div></div>
+<div class="card" style="min-width:0">
+  <div class="row"><b>Protonation · chain A</b><span class="muted">0 off default · at pH 7.5, from PROPKA</span><span style="margin-left:auto"></span><span class="spot" style="display:inline-block"><span class="row"><label for="mo-ph" class="muted">pH</label><input id="mo-ph" class="num" type="text" value="7.5" style="width:4rem"><button class="btn primary small" type="button">Build molecular model</button></span><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="right:0;bottom:calc(100% + 16px)"><span class="h">Guided run · step 2 of 8</span><b>Molecular model, with the defaults</b><span>The protonation at pH 7.5, from PROPKA, nothing changed. Build the molecular model: the ensemble, the protonation and the charges.</span>
+<div class="row"><a class="btn small" href="#r-prepare">Back</a><a class="btn primary small" href="#r-mesh">Next</a><a class="btn small" href="index.html">Leave the route</a></div></div></span></div>
+  <div class="strip" role="group" aria-label="Chain A, placeholder sequence"><button type="button" class="" aria-label="M1"><span class="sg" aria-hidden="true"></span>M</button><button type="button" class="" aria-label="T2"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="S3"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="" aria-label="I4"><span class="sg" aria-hidden="true"></span>I</button><button type="button" class="" aria-label="F5"><span class="sg" aria-hidden="true"></span>F</button><button type="button" class="" aria-label="A6"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="neg" aria-label="E7, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="" aria-label="S8"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="" aria-label="T9"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="V10"><span class="sg" aria-hidden="true"></span>V</button><button type="button" class="" aria-label="Q11"><span class="sg" aria-hidden="true"></span>Q</button><button type="button" class="pos" aria-label="K12, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="neg" aria-label="D13, charge −"><span class="sg" aria-hidden="true">−</span>D</button><button type="button" class="" aria-label="G14"><span class="sg" aria-hidden="true"></span>G</button><button type="button" class="" aria-label="L15"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="" aria-label="P16"><span class="sg" aria-hidden="true"></span>P</button><button type="button" class="" aria-label="G17"><span class="sg" aria-hidden="true"></span>G</button><button type="button" class="" aria-label="T18"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="N19"><span class="sg" aria-hidden="true"></span>N</button><button type="button" class="" aria-label="I20"><span class="sg" aria-hidden="true"></span>I</button><button type="button" class="" aria-label="F21"><span class="sg" aria-hidden="true"></span>F</button><button type="button" class="pos" aria-label="K22, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="pos" aria-label="K23, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="" aria-label="A24"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="" aria-label="L25"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="" aria-label="S26"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="neg" aria-label="D27, charge −"><span class="sg" aria-hidden="true">−</span>D</button><button type="button" class="" aria-label="Y28"><span class="sg" aria-hidden="true"></span>Y</button><button type="button" class="" aria-label="L29"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="neg" aria-label="E30, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="" aria-label="A31"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="" aria-label="G32"><span class="sg" aria-hidden="true"></span>G</button><button type="button" class="" aria-label="V33"><span class="sg" aria-hidden="true"></span>V</button><button type="button" class="" aria-label="N34"><span class="sg" aria-hidden="true"></span>N</button><button type="button" class="neg" aria-label="D35, charge −"><span class="sg" aria-hidden="true">−</span>D</button><button type="button" class="" aria-label="P36"><span class="sg" aria-hidden="true"></span>P</button><button type="button" class="" aria-label="A37"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="neg" aria-label="E38, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="" aria-label="V39"><span class="sg" aria-hidden="true"></span>V</button><button type="button" class="" aria-label="V40"><span class="sg" aria-hidden="true"></span>V</button><button type="button" class="pos" aria-label="K41, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="" aria-label="T42"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="A43"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="" aria-label="S44"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="" aria-label="T45"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="W46"><span class="sg" aria-hidden="true"></span>W</button><button type="button" class="" aria-label="V47"><span class="sg" aria-hidden="true"></span>V</button><button type="button" class="neg" aria-label="D48, charge −"><span class="sg" aria-hidden="true">−</span>D</button><button type="button" class="pos" aria-label="K49, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="" aria-label="L50"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="" aria-label="H51"><span class="sg" aria-hidden="true"></span>H</button><button type="button" class="" aria-label="A52"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="neg" aria-label="E53, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="" aria-label="A54"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="neg" aria-label="E55, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="pos" aria-label="K56, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="" aria-label="L57"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="" aria-label="L58"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="" aria-label="S59"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="neg" aria-label="E60, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="" aria-label="A61"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="" aria-label="S62"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="pos" aria-label="R63, charge +"><span class="sg" aria-hidden="true">+</span>R</button><button type="button" class="neg" aria-pressed="true" aria-label="D64, charge −"><span class="sg" aria-hidden="true">−</span>D</button><button type="button" class="" aria-label="A65"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="" aria-label="T66"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="Q67"><span class="sg" aria-hidden="true"></span>Q</button><button type="button" class="pos" aria-label="K68, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="" aria-label="A69"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="" aria-label="G70"><span class="sg" aria-hidden="true"></span>G</button><button type="button" class="neg" aria-label="E71, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="" aria-label="L72"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="" aria-label="M73"><span class="sg" aria-hidden="true"></span>M</button><button type="button" class="" aria-label="T74"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="S75"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="" aria-label="I76"><span class="sg" aria-hidden="true"></span>I</button><button type="button" class="" aria-label="F77"><span class="sg" aria-hidden="true"></span>F</button><button type="button" class="" aria-label="A78"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="neg" aria-label="E79, charge −"><span class="sg" aria-hidden="true">−</span>E</button><button type="button" class="" aria-label="S80"><span class="sg" aria-hidden="true"></span>S</button><button type="button" class="" aria-label="T81"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="V82"><span class="sg" aria-hidden="true"></span>V</button><button type="button" class="" aria-label="Q83"><span class="sg" aria-hidden="true"></span>Q</button><button type="button" class="pos" aria-label="K84, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="neg" aria-label="D85, charge −"><span class="sg" aria-hidden="true">−</span>D</button><button type="button" class="" aria-label="G86"><span class="sg" aria-hidden="true"></span>G</button><button type="button" class="" aria-label="L87"><span class="sg" aria-hidden="true"></span>L</button><button type="button" class="" aria-label="P88"><span class="sg" aria-hidden="true"></span>P</button><button type="button" class="" aria-label="G89"><span class="sg" aria-hidden="true"></span>G</button><button type="button" class="" aria-label="T90"><span class="sg" aria-hidden="true"></span>T</button><button type="button" class="" aria-label="N91"><span class="sg" aria-hidden="true"></span>N</button><button type="button" class="" aria-label="I92"><span class="sg" aria-hidden="true"></span>I</button><button type="button" class="" aria-label="F93"><span class="sg" aria-hidden="true"></span>F</button><button type="button" class="pos" aria-label="K94, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="pos" aria-label="K95, charge +"><span class="sg" aria-hidden="true">+</span>K</button><button type="button" class="" aria-label="A96"><span class="sg" aria-hidden="true"></span>A</button><button type="button" class="" aria-label="L97"><span class="sg" aria-hidden="true"></span>L</button></div>
+  <div class="row muted" style="font-size:var(--text-xs)"><span>− negative</span><span>+ positive</span><span>0 changed to neutral</span><span>placeholder sequence; scroll for the rest</span><span style="margin-left:auto"></span><span class="row"><span class="muted">Q<sub>net</sub></span><span class="num">xx e per frame, frame 1 of x</span></span><span class="row"><span class="warn">x PROPKA warnings</span><button class="btn small" type="button">Show</button></span></div>
+</div></div>
+</div>
+<div inert><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="muted">empty</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 2. Molecular model, with the defaults</b> <span class="muted">· screen 2 of 8</span></span>
+<span class="sp"></span><a href="#r-prepare">Back: 1. Load and prepare 2WCD</a><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-ph">Same screen in A</a><a href="#r-mesh">Next: 3. Continuum model, with the defaults</a></nav>
+</section>
+<section data-screen="r-mesh" id="r-mesh" aria-label="Guided run · 3. Continuum model, with the defaults" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px 520px minmax(0,1fr)">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">ClyA pore, reference mesh</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="02-geometry.html#g-geometry">Protein geometry<span class="st ok">built</span></a></li><li><a href="02-geometry.html#g-contour">Contour<span class="st ok">built</span></a></li><li><a href="02-geometry.html#g-region">Region<span class="st ok">built</span></a></li><li><a href="#s-size" aria-current="true">Mesh</a></li><li><a href="04-physics.html#p-boundaries">Physics defaults</a></li></ul></div></div>
+<div class="settings"><h2>Mesh · sizes</h2>
+  <div class="field"><label for="ms-m">Mesher</label><div class="v"><select id="ms-m"><option>Netgen (default)</option><option>Gmsh (optional, its own licence)</option></select></div></div>
+  <fieldset style="border:0;padding:0;margin:0;display:grid;gap:2px"><legend class="h">Elements</legend>
+    <label class="row"><input type="radio" name="ms-e" checked> Free triangles, as validated</label>
+    <div class="later"><b>Boundary layers</b> at the wall</div></fieldset>
+  <h3>Size scale</h3>
+  <div class="row"><input id="ms-r" type="range" min="0" max="4" value="2" aria-label="Size scale"><input class="num" type="text" value="1.00" style="width:4rem" aria-label="Size scale, typed"><span class="muted">1.00, the reference</span></div>
+  <span class="muted">The scale multiplies every part's sizes. Only the reference is validated; a coarser scale may fail the quality gate.</span>
+  <div class="spot" style="display:block"><div class="row"><button class="btn primary" type="button">Build mesh</button><span class="muted">x.x k elements</span></div><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="left:calc(100% + 24px);top:-8px"><span class="h">Guided run · step 3 of 8</span><b>Continuum model, with the defaults</b><span>The geometry and the region are built from the molecular model with their defaults. Build the mesh at the reference size, the validated one.</span>
+<div class="row"><a class="btn small" href="#r-ph">Back</a><a class="btn primary small" href="#r-salt">Next</a><a class="btn small" href="index.html">Leave the route</a></div></div></div><div class="verdict"><span class="muted">Not built yet</span></div>
+  <details open><summary><b>Per part</b>, a typed size overriding the scale</summary>
+  <table><thead><tr><th>Part</th><th>Max, nm</th><th>Min, nm</th><th>Growth</th><th></th></tr></thead><tbody><tr><td>Global</td><td><input class="num" type="text" value="x.xx" aria-label="Global maximum size, nm" style="width:3.6rem"></td><td><input class="num" type="text" value="x.xx" aria-label="Global minimum size, nm" style="width:3.6rem"></td><td class="num">x.xx</td><td><span class="muted">from the scale</span></td></tr><tr><td>Pore boundary</td><td><input class="num" type="text" value="x.xx" aria-label="Pore boundary maximum size, nm" style="width:3.6rem"></td><td><input class="num" type="text" value="x.xx" aria-label="Pore boundary minimum size, nm" style="width:3.6rem"></td><td class="num">x.xx</td><td><span class="muted">from the scale</span></td></tr><tr><td>Pore domain</td><td><input class="num" type="text" value="x.xx" aria-label="Pore domain maximum size, nm" style="width:3.6rem"></td><td><input class="num" type="text" value="x.xx" aria-label="Pore domain minimum size, nm" style="width:3.6rem"></td><td class="num">x.xx</td><td><span class="muted">from the scale</span></td></tr><tr><td>Reservoir domain</td><td><input class="num" type="text" value="x.xx" aria-label="Reservoir domain maximum size, nm" style="width:3.6rem"></td><td><input class="num" type="text" value="x.xx" aria-label="Reservoir domain minimum size, nm" style="width:3.6rem"></td><td class="num">x.xx</td><td><span class="muted">from the scale</span></td></tr><tr><td>Reservoir outer boundary</td><td><input class="num" type="text" value="x.xx" aria-label="Reservoir outer boundary maximum size, nm" style="width:3.6rem"></td><td><input class="num" type="text" value="x.xx" aria-label="Reservoir outer boundary minimum size, nm" style="width:3.6rem"></td><td class="num">—</td><td><span class="muted">from the scale</span></td></tr><tr><td>Axis</td><td><input class="num" type="text" value="x.xx" aria-label="Axis maximum size, nm" style="width:3.6rem"></td><td><input class="num" type="text" value="x.xx" aria-label="Axis minimum size, nm" style="width:3.6rem"></td><td class="num">—</td><td><span class="muted">from the scale</span></td></tr></tbody></table>
+  <span class="muted">The membrane is sized at its own thickness.</span></details>
+  <div class="later"><b>Refinement regions</b> drawn by hand, each with its own sizes</div>
+</div>
+<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/></svg></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
+</div>
+<div inert><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="muted">empty</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 3. Continuum model, with the defaults</b> <span class="muted">· screen 3 of 8</span></span>
+<span class="sp"></span><a href="#r-ph">Back: 2. Molecular model, with the defaults</a><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-mesh">Same screen in A</a><a href="#r-salt">Next: 4. Set the salt</a></nav>
+</section>
+<section data-screen="r-salt" id="r-salt" aria-label="Guided run · 4. Set the salt" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) 380px">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">ClyA pore, reference mesh</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="02-geometry.html#g-geometry">Protein geometry<span class="st ok">built</span></a></li><li><a href="02-geometry.html#g-contour">Contour<span class="st ok">built</span></a></li><li><a href="02-geometry.html#g-region">Region<span class="st ok">built</span></a></li><li><a href="03-mesh.html#s-size">Mesh<span class="st ok">built</span></a></li><li><a href="#p-boundaries" aria-current="true">Physics defaults</a></li></ul></div></div>
+<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/></svg><span class="lbl over" style="left:83.3%;top:13.3%">cis</span><span class="lbl over" style="left:83.3%;top:83.3%">trans</span></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
+<div class="settings" style="border-right:0;border-left:1px solid var(--line)"><div class="tabs" role="tablist" aria-label="Physics defaults"><a role="tab" href="#p-boundaries" aria-selected="false">Boundaries</a><a role="tab" href="#p-electrolyte" aria-selected="true">Model and electrolyte</a></div>
+  <h2>Model and electrolyte</h2>
+  <div class="field"><label for="pe-m">Model</label><div class="v"><select id="pe-m"><option>ePNP-NS</option><option>PNP-NS</option><option>PNP</option><option>PB</option></select></div></div>
+  <div class="spot" style="display:block"><div class="field"><label for="pe-c">NaCl, bulk</label><div class="v"><input id="pe-c" class="num" type="text" placeholder="set" aria-describedby="pe-n"><span class="unit">M</span></div></div><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="right:calc(100% + 24px);top:-8px"><span class="h">Guided run · step 4 of 8</span><b>Set the salt</b><span>The bulk NaCl concentration in both reservoirs, in M. There is no default: Next refuses an empty or out-of-range value here, naming the range.</span>
+<div class="row"><a class="btn small" href="#r-mesh">Back</a><a class="btn primary small" href="#r-bias">Next</a><a class="btn small" href="index.html">Leave the route</a></div></div></div>
+  <span class="muted" id="pe-n">No default: set the salt here or as a study's override.</span>
+  <table><thead><tr><th>Ion</th><th>z</th><th>Bulk, M</th><th>D, 10⁻⁹ m²/s</th></tr></thead><tbody>
+  <tr><td>Na⁺</td><td class="num">+1</td><td class="muted">as the salt</td><td class="num">x.xx</td></tr>
+  <tr><td>Cl⁻</td><td class="num">−1</td><td class="muted">as the salt</td><td class="num">x.xx</td></tr></tbody></table>
+  <span class="muted">The bulk is electroneutral; D at infinite dilution, scaled by the corrections.</span>
+  <div class="field"><span class="k">Corrections</span><span class="v">as validated, willems2020_nacl <button class="btn small" type="button">Show the list</button></span></div>
+  <div class="field"><span class="k">Permittivity</span><span class="v num">protein x.x, membrane x.x</span></div>
+  <div class="later"><b>Composer</b>: a model of your own equations</div>
+</div>
+</div>
+<div inert><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="muted">empty</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 4. Set the salt</b> <span class="muted">· screen 4 of 8</span></span>
+<span class="sp"></span><a href="#r-mesh">Back: 3. Continuum model, with the defaults</a><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-salt">Same screen in A</a><a href="#r-bias">Next: 5. Set the bias</a></nav>
+</section>
+<section data-screen="r-bias" id="r-bias" aria-label="Guided run · 5. Set the bias" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1.4fr) minmax(0,1fr)">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph" aria-current="true">Study setup</a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh</a></li><li><a href="#st-runs">Runs</a></li></ul></div></div>
+<div class="settings"><div class="row"><h2>Study · I–V, NaCl</h2><span style="margin-left:auto"></span><div class="tabs" role="tablist" aria-label="Show the study as"><a role="tab" href="#st-form" aria-selected="true">Form</a><a role="tab" href="#st-graph" aria-selected="false">Graph</a></div></div>
+  <div class="field"><label for="sf-m">Molecular model</label><div class="v"><select id="sf-m"><option>2WCD, pH 7.5</option><option>2WCD, ASP 64 neutral</option></select><span class="ok">built</span></div></div>
+<div class="field"><label for="sf-c">Continuum model</label><div class="v"><select id="sf-c"><option>ClyA pore, reference mesh</option></select><span class="ok">built</span></div></div>
+  <div class="field"><label for="sf-sw">Sweep over</label><div class="v"><select id="sf-sw"><option>Bias</option><option>Molecular models</option><option>Continuum models</option><option>Bias and molecular models</option></select></div></div>
+  <h3>Overrides of the continuum model's defaults</h3>
+  <div class="spot" style="display:block"><div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <button class="btn small" type="button">Edit</button><button class="btn small" type="button" aria-label="Reset bias override to its default">Reset</button></span></div><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="left:calc(100% + 24px);top:-8px"><span class="h">Guided run · step 5 of 8</span><b>Set the bias</b><span>The voltage on the trans side, the cis side grounded. The study overrides the continuum model's default, marked with an outlined diamond. The salt stays as set.</span>
+<div class="row"><a class="btn small" href="#r-salt">Back</a><a class="btn primary small" href="#r-run">Next</a><a class="btn small" href="index.html">Leave the route</a></div></div></div>
+  
+  <button class="btn small" type="button" style="justify-self:start">Add an override…</button>
+  <h3>Outputs</h3>
+  <div class="row"><label class="row"><input type="checkbox" checked> Current</label><label class="row"><input type="checkbox" checked> Transport numbers</label><label class="row"><input type="checkbox"> EOF rate</label></div>
+  <div class="row"><button class="btn primary" type="button">Run study</button><span class="muted">queues the charge on the mesh, then the solves</span></div>
+</div>
+<div class="settings" style="border-right:0"><h2>Runs of this study</h2><span class="muted">None yet: run the study to queue them.</span></div>
+</div>
+<div inert><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="muted">empty</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 5. Set the bias</b> <span class="muted">· screen 5 of 8</span></span>
+<span class="sp"></span><a href="#r-salt">Back: 4. Set the salt</a><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-bias">Same screen in A</a><a href="#r-run">Next: 6. Pair the models in a study and run</a></nav>
+</section>
+<section data-screen="r-run" id="r-run" aria-label="Guided run · 6. Pair the models in a study and run" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1.4fr) minmax(0,1fr)">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph" aria-current="true">Study setup</a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh</a></li><li><a href="#st-runs">Runs</a></li></ul></div></div>
+<div class="settings"><div class="row"><h2>Study · I–V, NaCl</h2><span style="margin-left:auto"></span><div class="tabs" role="tablist" aria-label="Show the study as"><a role="tab" href="#st-form" aria-selected="true">Form</a><a role="tab" href="#st-graph" aria-selected="false">Graph</a></div></div>
+  <div class="field"><label for="sf-m">Molecular model</label><div class="v"><select id="sf-m"><option>2WCD, pH 7.5</option><option>2WCD, ASP 64 neutral</option></select><span class="ok">built</span></div></div>
+<div class="field"><label for="sf-c">Continuum model</label><div class="v"><select id="sf-c"><option>ClyA pore, reference mesh</option></select><span class="ok">built</span></div></div>
+  <div class="field"><label for="sf-sw">Sweep over</label><div class="v"><select id="sf-sw"><option>Bias</option><option>Molecular models</option><option>Continuum models</option><option>Bias and molecular models</option></select></div></div>
+  <h3>Overrides of the continuum model's defaults</h3>
+  <div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <button class="btn small" type="button">Edit</button><button class="btn small" type="button" aria-label="Reset bias override to its default">Reset</button></span></div>
+  
+  <button class="btn small" type="button" style="justify-self:start">Add an override…</button>
+  <h3>Outputs</h3>
+  <div class="row"><label class="row"><input type="checkbox" checked> Current</label><label class="row"><input type="checkbox" checked> Transport numbers</label><label class="row"><input type="checkbox"> EOF rate</label></div>
+  <div class="spot" style="display:block"><div class="row"><button class="btn primary" type="button">Run study</button><span class="muted">queues the charge on the mesh, then the solves</span></div><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="left:0;top:calc(100% + 16px)"><span class="h">Guided run · step 6 of 8</span><b>Pair the models in a study and run</b><span>The study pairs the two models, assembles the charge on the mesh, then solves at each bias.</span>
+<div class="row"><a class="btn small" href="#r-bias">Back</a><a class="btn primary small" href="#r-follow">Next</a><a class="btn small" href="index.html">Leave the route</a></div></div></div>
+</div>
+<div class="settings" style="border-right:0"><h2>Runs of this study</h2><span class="muted">None yet: run the study to queue them.</span></div>
+</div>
+<div inert><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="muted">empty</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 6. Pair the models in a study and run</b> <span class="muted">· screen 6 of 8</span></span>
+<span class="sp"></span><a href="#r-bias">Back: 5. Set the bias</a><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-run">Same screen in A</a><a href="#r-follow">Next: 7. Follow the run</a></nav>
+</section>
+<section data-screen="r-follow" id="r-follow" aria-label="Guided run · 7. Follow the run" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh</a></li><li><a href="#st-runs" aria-current="true">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="settings" style="border-right:0"><h2>Run · I–V, NaCl · bias x.xx V, x of n</h2>
+  <div class="spot" style="display:block"><div class="row"><span class="warn">running: rung x of N</span><span class="muted">elapsed x min</span><span style="margin-left:auto"></span><button class="btn" type="button">Cancel</button></div><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="left:0;top:calc(100% + 12px)"><span class="h">Guided run · step 7 of 8</span><b>Follow the run</b><span>The run's own page: each rung, the test that ended it and the residual. You may go on working; the queue keeps it.</span>
+<div class="row"><a class="btn small" href="#r-run">Back</a><a class="btn primary small" href="#r-conductance">Next</a><a class="btn small" href="index.html">Leave the route</a></div></div></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px"><table><thead><tr><th>Rung</th><th>Steps</th><th>Ended by</th><th>Last value</th><th>Tolerance</th><th>Smallest damping</th></tr></thead><tbody>
+  <tr><td class="num">x</td><td class="num">x</td><td>residual</td><td class="num">x.x e−x</td><td class="num">x.x e−x</td><td class="num">x.xx</td></tr>
+  <tr><td class="num">x</td><td class="num">x</td><td>relative update</td><td class="num">x.x e−x</td><td class="num">x.x e−x</td><td class="num">x.xx</td></tr>
+  <tr aria-current="true"><td class="num">x</td><td class="num">x</td><td class="warn">running</td><td class="num">x.x e−x</td><td class="num">x.x e−x</td><td class="num">x.xx</td></tr></tbody></table><div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0;height:220px">
+<span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Residual and update, log</span>
+<svg viewBox="0 0 120 100" preserveAspectRatio="none" width="100%" height="100%" role="img" aria-label="Residual and relative update per Newton step on a log scale, banded by rung"><rect x="0" y="0" width="30" height="100" style="fill:var(--line)" opacity="0.5"/><rect x="60" y="0" width="30" height="100" style="fill:var(--line)" opacity="0.5"/>
+<polyline points="0,10 10,30 20,55 30,80 32,20 42,45 52,70 60,85 62,25 72,50 82,72" fill="none" style="stroke:var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+<polyline points="0,20 10,40 20,62 30,88 32,30 42,52 52,76 60,90 62,35 72,58 82,80" fill="none" style="stroke:var(--warn)" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>
+<line x1="0" y1="92" x2="120" y2="92" style="stroke:var(--err)" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/></svg>
+<span></span><span class="cl row" style="justify-content:space-between"><span>Newton step; rungs shaded</span><span><span style="color:var(--accent)">━</span> residual <span style="color:var(--warn)">┅</span> relative update <span style="color:var(--err)">┄</span> tolerance</span></span></div></div>
+  <h3>Log</h3>
+  <pre class="yaml" tabindex="0" aria-label="Log">rung x: Newton x, residual x.x e−x, damping x.xx
+rung x: Newton x, residual x.x e−x, damping x.xx</pre>
+  <h3>Other runs of this study</h3>
+  <table><tbody><tr><td>bias x.xx V, 1 of n</td><td class="ok">done</td><td><a class="btn small" href="05-results.html#a-explorer">Open result</a></td></tr>
+  <tr><td>bias x.xx V, 2 of n</td><td class="ok">done</td><td><a class="btn small" href="05-results.html#a-explorer">Open result</a></td></tr>
+  <tr><td>bias x.xx V, 6 of n</td><td class="err">failed: damping below x.xx at rung x</td><td><button class="btn small" type="button">Open log</button></td></tr>
+  <tr><td>bias x.xx V, 4 of n</td><td class="muted">queued</td><td></td></tr></tbody></table>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="warn">I–V, NaCl: rung x of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 7. Follow the run</b> <span class="muted">· screen 7 of 8</span></span>
+<span class="sp"></span><a href="#r-run">Back: 6. Pair the models in a study and run</a><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-follow">Same screen in A</a><a href="#r-conductance">Next: 8. Read the conductance</a></nav>
+</section>
+<section data-screen="r-conductance" id="r-conductance" aria-label="Guided run · 8. Read the conductance" class="route">
+<div inert><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<span class="chip" aria-label="No value changed from its default">0 changed</span>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div inert style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html" aria-current="page"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div inert style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl · run x of n</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div inert style="display:grid;min-height:0"><div class="pane"><h2>Analysis tools</h2><ul class="tools" aria-label="Analysis tools"><li><a href="#a-explorer" aria-current="true">Results explorer</a></li><li><a href="#a-compare-diff">Comparison</a></li></ul></div></div>
+<div class="viewwrap" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1.3fr) minmax(0,1fr)">
+  <div style="grid-column:1/-1" class="toolbar"><h2 style="margin:0;font-size:var(--text-lg)">I–V, NaCl</h2><span class="muted">2WCD, pH 7.5 on the reference mesh</span><span style="margin-left:auto"></span>
+    <label for="ae-b" class="muted">Bias</label><select id="ae-b"><option>x.xx V, x of n</option></select><button class="btn small" type="button">Add a tile…</button><span class="later" style="padding:2px 6px"><b>Figure export</b></span></div>
+  <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px;grid-row:span 2;grid-template-rows:auto minmax(0,1fr) auto"><div class="row"><b>Potential</b><select aria-label="Quantity"><option>Potential</option><option>Concentration, Na⁺</option><option>Velocity</option></select><select aria-label="Colour map"><option>viridis</option><option>cividis</option></select><button class="btn small" type="button" style="margin-left:auto" aria-label="Potential tile options">⋯</button></div>
+    <div class="cplot" style="position:relative;" role="img" aria-label="Potential in (r, z), the axial cut and a probe marked"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="#c9ced8" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/><line x1="20" y1="10" x2="20" y2="290" style="stroke:var(--accent)" stroke-width="3"/><circle cx="33" cy="190" r="4" style="fill:var(--panel);stroke:var(--accent)" stroke-width="2"/></svg></div><div class="corner"><div class="cbox"><span class="cl">Potential, mV</span><div class="cbar seq"></div><div class="row num cl" style="justify-content:space-between"><span>x.xx</span><span>x.xx</span></div></div></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div>
+    <div class="row"><span class="chip">Linked: field and its probes and cuts</span><button class="btn small" type="button">Unlink</button></div></div>
+  <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><div class="row"><b>Current against bias</b><button class="btn small" type="button" style="margin-left:auto" aria-label="Current tile options">⋯</button></div><div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0"><span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Current, nA</span><svg viewBox="0 0 200 120" width="100%" height="100%" preserveAspectRatio="none" role="img" aria-label="Current against bias"><line x1="0" y1="60" x2="200" y2="60" stroke="currentColor" stroke-opacity=".5"/><line x1="100" y1="0" x2="100" y2="120" stroke="currentColor" stroke-opacity=".5"/><polyline points="5,105 50,85 80,68 100,60 120,50 150,32 195,12" fill="none" style="stroke:var(--accent)" stroke-width="2"/><circle cx="150" cy="32" r="4" style="fill:var(--accent)"/></svg><span></span><span class="cl" style="text-align:center">Bias, V</span></div></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;min-height:0">
+    <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><div class="row"><b>Quantities</b><button class="btn small" type="button" style="margin-left:auto" aria-label="Quantities tile options">⋯</button></div><div class="spot" style="display:block"><table><tbody><tr><td>Conductance</td><td class="num">x.xx nS</td></tr><tr><td>Transport number</td><td class="num">x.xx</td></tr><tr><td>EOF rate</td><td class="num">x.xx m³/s</td></tr></tbody></table><div class="coach" role="dialog" aria-modal="true" aria-label="Guided run" style="right:calc(100% + 16px);top:-8px"><span class="h">Guided run · step 8 of 8</span><b>Read the conductance</b><span>The run is done. The conductance is the current over the bias at this run; the transport number and the EOF rate beside it.</span>
+<div class="row"><a class="btn small" href="#r-follow">Back</a><a class="btn primary small" href="05-results.html#a-explorer">Finish</a><a class="btn small" href="index.html">Leave the route</a></div></div></div></div>
+    <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><div class="row"><b>Axial cut, r = 0</b><button class="btn small" type="button" style="margin-left:auto" aria-label="Axial cut tile options">⋯</button></div><div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0"><span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Potential, mV</span><svg viewBox="0 0 200 120" width="100%" height="100%" preserveAspectRatio="none" role="img" aria-label="Potential along the axis"><line x1="0" y1="110" x2="200" y2="110" stroke="currentColor" stroke-opacity=".5"/><polyline points="0,20 50,22 80,40 110,85 140,96 200,98" fill="none" style="stroke:var(--accent)" stroke-width="2"/></svg><span></span><span class="cl" style="text-align:center">z, nm</span></div></div>
+  </div>
+</div>
+</div>
+<div inert><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto"><b>Queue</b><span class="ok">I–V, NaCl: done</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="dim" aria-hidden="true"></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Guided run · 8. Read the conductance</b> <span class="muted">· screen 8 of 8</span></span>
+<span class="sp"></span><a href="#r-follow">Back: 7. Follow the run</a><a href="index.html">All screens</a><a href="../a/00-guided-route.html#r-conductance">Same screen in A</a><a href="01-molecular.html#m-prepare">Next: Prepare structure</a></nav>
+</section>
+</body>
+</html>

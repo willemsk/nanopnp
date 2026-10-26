@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup B: study</title>
+<link rel="stylesheet" href="../mockups.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <linearGradient id="g-seq" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".25" stop-color="#3b528b"/><stop offset=".5" stop-color="#21918c"/><stop offset=".75" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <linearGradient id="g-seq2" x1="0" y1="1" x2=".3" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".3" stop-color="#3b528b"/><stop offset=".55" stop-color="#21918c"/><stop offset=".8" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <radialGradient id="g-diff" cx=".35" cy=".55" r=".55">
+      <stop offset="0" stop-color="#b2182b"/><stop offset=".35" stop-color="#f4a582"/><stop offset=".7" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d1e5f0"/>
+    </radialGradient>
+    <clipPath id="disc"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0 Z"/></clipPath>
+    <symbol id="pore-rz" viewBox="0 0 180 300"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".7"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="protein-rz" viewBox="0 0 180 300"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="pore-3d" viewBox="0 0 300 300">
+      <ellipse cx="150" cy="70" rx="120" ry="36" fill="#7b8494"/>
+      <path d="M30 70 Q30 120 90 150 L100 262 Q150 282 200 262 L210 150 Q270 120 270 70 Q270 106 150 106 Q30 106 30 70Z" fill="#5c6474"/>
+      <path d="M70 92 Q72 125 108 150 L114 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M150 106 L150 276" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M230 92 Q228 125 192 150 L186 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <ellipse cx="150" cy="70" rx="58" ry="16" fill="#0d0f13" stroke="#9aa3b2"/>
+      <circle cx="118" cy="190" r="7" fill="#ef6f6c"/><text x="118" y="194" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text><circle cx="182" cy="200" r="7" fill="#ef6f6c"/><text x="182" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text>
+      <circle cx="132" cy="122" r="7" fill="#6fa8ff"/><text x="132" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text><circle cx="170" cy="230" r="7" fill="#6fa8ff"/><text x="170" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text>
+    </symbol>
+</defs></svg>
+<section data-screen="st-overview" id="st-overview" aria-label="Study · Overview of the case">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview" aria-current="true">Overview</a></li><li><a href="#st-graph">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="settings"><h2>Overview · I–V, NaCl</h2>
+  <span class="muted">What this study is made of, and what it resolves to.</span>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+    <div style="border:1px solid var(--line);border-radius:var(--radius);padding:8px;display:grid;gap:4px;align-content:start"><span class="h">Molecular model</span><b>2WCD, pH 7.5</b><span class="ok">built</span><span class="muted">Prepare, ensemble, protonation</span><a class="btn small" href="01-molecular.html#m-prepare" style="justify-self:start">Open in Molecular</a></div>
+    <div style="border:1px solid var(--line);border-radius:var(--radius);padding:8px;display:grid;gap:4px;align-content:start"><span class="h">Continuum model</span><b>ClyA pore, reference mesh</b><span class="ok">built</span><span class="muted">Geometry, region, mesh, physics defaults</span><a class="btn small" href="02-geometry.html#g-geometry" style="justify-self:start">Open in Continuum</a></div>
+  </div>
+  <h3>The study</h3>
+  <div class="field"><span class="k">Sweep</span><span class="v">bias, n steps</span></div>
+  <div class="field"><span class="k ovr">Overrides</span><span class="v">bias, NaCl</span></div>
+  <div class="field"><span class="k chg">Changed</span><span class="v">2 values from their defaults <a class="btn small" href="#st-changes">Show</a></span></div>
+  <div class="field"><span class="k">Runs</span><span class="v"><span class="warn">x of n running</span></span></div>
+</div><div class="settings" style="border-right:0"><h2>Resolved case file</h2>
+  <span class="muted">One complete case file, written with each run's manifest; the command line runs it as it is.</span>
+  <pre class="yaml" tabindex="0" aria-label="Resolved case file">schema: nanopnp/case/v0.5
+name: i-v-nacl
+structure:
+  source: {path: 2wcd-prepared.pdb}
+  symmetry: {point_group: C12}
+geometry:
+  contour: {isolevel: x.xx}   # ◆ changed
+  membrane: {thickness_nm: 2.8, centre_z_nm: x.xx}
+  reservoir: {radius_nm: 250.0}
+charge: {ph: 7.5, titration: propka}
+electrolyte:
+  concentration_M: x.xx    # ◇ override
+  parameters: willems2020_nacl
+boundary_conditions: {bias_V: x.xx, ground: cis}
+physics: {model: epnp-ns}</pre>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · Overview of the case</b> <span class="muted">· screen 1 of 8</span></span>
+<span class="sp"></span><a href="04-physics.html#p-electrolyte">Back: Physics defaults, model and electrolyte</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-overview">Same screen in A</a><a href="#st-graph">Next: Study setup, as a graph</a></nav>
+</section>
+<section data-screen="st-graph" id="st-graph" aria-label="Study · Study setup, as a graph">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) 340px">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph" aria-current="true">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="viewwrap" style="grid-template-rows:auto minmax(0,1fr)">
+  <div class="row"><h2 style="margin:0;font-size:var(--text-lg)">Study · I–V, NaCl</h2><span style="margin-left:auto"></span><div class="tabs" role="tablist" aria-label="Show the study as"><a role="tab" href="#st-form" aria-selected="false">Form</a><a role="tab" href="#st-graph" aria-selected="true">Graph</a></div></div>
+  <div class="bg" style="display:grid;grid-template-columns:minmax(0,1.2fr) 48px minmax(0,1fr) 40px minmax(0,1fr) 40px minmax(0,1fr);grid-template-rows:1fr 1fr;padding:24px 16px;border:1px solid var(--line);border-radius:var(--radius);min-height:360px" role="group" aria-label="Study graph: two models feed the charge on the mesh, then the solve, then the results">
+  <button type="button" style="background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius);padding:6px 8px;display:grid;gap:2px;font-size:var(--text-sm);text-align:left;font-family:inherit;color:var(--ink);align-self:center;grid-column:1;grid-row:1"><b>Molecular model</b><span>2WCD, pH 7.5</span><span class="ok">built</span></button>
+  <button type="button" style="background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius);padding:6px 8px;display:grid;gap:2px;font-size:var(--text-sm);text-align:left;font-family:inherit;color:var(--ink);align-self:center;grid-column:1;grid-row:2"><b>Continuum model</b><span>ClyA pore, reference mesh</span><span class="ok">built</span></button>
+  <div style="grid-column:2;grid-row:1/3"><div style="position:relative;height:100%"><svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true"><path d="M0 25 C 50 25, 50 50, 96 50 M0 75 C 50 75, 50 50, 96 50" fill="none" style="stroke:var(--muted)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg><span aria-hidden="true" style="position:absolute;right:-3px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:11px;line-height:1">▶</span></div></div>
+  <button type="button" style="background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius);padding:6px 8px;display:grid;gap:2px;font-size:var(--text-sm);text-align:left;font-family:inherit;color:var(--ink);align-self:center;grid-column:3;grid-row:1/3"><b>Charge on the mesh</b><span class="muted">stage 7</span></button>
+  <div style="grid-column:4;grid-row:1/3"><div style="position:relative;height:100%"><svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true"><path d="M0 50 L 96 50" fill="none" style="stroke:var(--muted)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg><span aria-hidden="true" style="position:absolute;right:-3px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:11px;line-height:1">▶</span></div></div>
+  <button type="button" aria-pressed="true" style="background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius);padding:6px 8px;display:grid;gap:2px;font-size:var(--text-sm);text-align:left;font-family:inherit;color:var(--ink);align-self:center;grid-column:5;grid-row:1/3;box-shadow:0 0 0 2px var(--accent)"><b>Solve</b><span class="ovr">2 overrides</span><span class="muted">sweep: bias</span></button>
+  <div style="grid-column:6;grid-row:1/3"><div style="position:relative;height:100%"><svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true"><path d="M0 50 L 96 50" fill="none" style="stroke:var(--muted)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg><span aria-hidden="true" style="position:absolute;right:-3px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:11px;line-height:1">▶</span></div></div>
+  <button type="button" style="background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius);padding:6px 8px;display:grid;gap:2px;font-size:var(--text-sm);text-align:left;font-family:inherit;color:var(--ink);align-self:center;grid-column:7;grid-row:1/3"><b>Results</b><span class="muted">current, transport numbers</span></button>
+  </div>
+</div>
+<div class="settings" style="border-right:0;border-left:1px solid var(--line)"><h2>Solve</h2>
+  <div class="field"><label for="sg-sw">Sweep over</label><div class="v"><select id="sg-sw"><option>Bias</option><option>Molecular models</option><option>Continuum models</option><option>Bias and molecular models</option></select></div></div>
+  <h3>Overrides of the continuum model's defaults</h3>
+  <div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <button class="btn small" type="button">Edit</button><button class="btn small" type="button" aria-label="Reset bias override to its default">Reset</button></span></div>
+  <div class="field"><span class="k ovr">NaCl</span><span class="v num">x.xx M <button class="btn small" type="button">Edit</button><button class="btn small" type="button" aria-label="Reset NaCl override to its default">Reset</button></span></div>
+  <button class="btn small" type="button" style="justify-self:start">Add an override…</button>
+  <div class="row"><button class="btn primary" type="button">Run study</button><span class="muted">queues the charge on the mesh, then the solves</span></div>
+  <span class="muted">Select a node to set it here. The graph and the form are two views of one study.</span>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · Study setup, as a graph</b> <span class="muted">· screen 2 of 8</span></span>
+<span class="sp"></span><a href="#st-overview">Back: Overview of the case</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-graph">Same screen in A</a><a href="#st-form">Next: Study setup, as a form</a></nav>
+</section>
+<section data-screen="st-form" id="st-form" aria-label="Study · Study setup, as a form">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1.4fr) minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph" aria-current="true">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="settings"><div class="row"><h2>Study · I–V, NaCl</h2><span style="margin-left:auto"></span><div class="tabs" role="tablist" aria-label="Show the study as"><a role="tab" href="#st-form" aria-selected="true">Form</a><a role="tab" href="#st-graph" aria-selected="false">Graph</a></div></div>
+  <div class="field"><label for="sf-m">Molecular model</label><div class="v"><select id="sf-m"><option>2WCD, pH 7.5</option><option>2WCD, ASP 64 neutral</option></select><span class="ok">built</span></div></div>
+<div class="field"><label for="sf-c">Continuum model</label><div class="v"><select id="sf-c"><option>ClyA pore, reference mesh</option></select><span class="ok">built</span></div></div>
+  <div class="field"><label for="sf-sw">Sweep over</label><div class="v"><select id="sf-sw"><option>Bias</option><option>Molecular models</option><option>Continuum models</option><option>Bias and molecular models</option></select></div></div>
+  <h3>Overrides of the continuum model's defaults</h3>
+  <div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <button class="btn small" type="button">Edit</button><button class="btn small" type="button" aria-label="Reset bias override to its default">Reset</button></span></div>
+  <div class="field"><span class="k ovr">NaCl</span><span class="v num">x.xx M <button class="btn small" type="button">Edit</button><button class="btn small" type="button" aria-label="Reset NaCl override to its default">Reset</button></span></div>
+  <button class="btn small" type="button" style="justify-self:start">Add an override…</button>
+  <h3>Outputs</h3>
+  <div class="row"><label class="row"><input type="checkbox" checked> Current</label><label class="row"><input type="checkbox" checked> Transport numbers</label><label class="row"><input type="checkbox"> EOF rate</label></div>
+  <div class="row"><button class="btn primary" type="button">Run study</button><span class="muted">queues the charge on the mesh, then the solves</span></div>
+</div>
+<div class="settings" style="border-right:0"><h2>Runs of this study</h2><table><tbody><tr><td class="num">bias x.xx V, 1 of n</td><td><span class="ok">done</span></td><td><a class="btn small" href="05-results.html#a-explorer">Open result</a></td></tr><tr><td class="num">bias x.xx V, 2 of n</td><td><span class="ok">done</span></td><td><a class="btn small" href="05-results.html#a-explorer">Open result</a></td></tr><tr><td class="num">bias x.xx V, 3 of n</td><td><span class="warn">running</span></td><td></td></tr><tr><td class="num">bias x.xx V, 4 of n</td><td><span class="muted">queued</span></td><td></td></tr></tbody></table></div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · Study setup, as a form</b> <span class="muted">· screen 3 of 8</span></span>
+<span class="sp"></span><a href="#st-graph">Back: Study setup, as a graph</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-form">Same screen in A</a><a href="#st-sweep">Next: A sweep over components</a></nav>
+</section>
+<section data-screen="st-sweep" id="st-sweep" aria-label="Study · A sweep over components">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px 380px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep" aria-current="true">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="settings"><h2>Sweep · over components</h2>
+  <div class="field"><label for="sw-sw">Sweep over</label><div class="v"><select id="sw-sw"><option>Bias</option><option>Molecular models</option><option>Continuum models</option><option selected>Bias and molecular models</option></select></div></div>
+  <h3>Molecular models</h3>
+  <label class="row"><input type="checkbox" checked> 2WCD, pH 7.5</label>
+  <label class="row"><input type="checkbox" checked> 2WCD, ASP 64 neutral <span class="muted">charge variant</span></label>
+  <label class="row"><input type="checkbox"> 2WCD, pH 5.0</label>
+  <h3>Bias</h3>
+  <div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <a class="btn small" href="#st-form">Edit in the setup</a></span></div>
+  <span class="muted">The continuum model is shared: each molecular model is assembled on the same mesh, without rebuilding it.</span>
+  <div class="row"><button class="btn primary" type="button">Run the sweep</button><span class="muted">2 × n runs</span></div>
+</div>
+<div class="settings" style="border-right:0"><h2>Runs of the sweep</h2>
+  <table class="matrix"><thead><tr><th>Molecular model</th><th>x.xx V</th><th>x.xx V</th><th>x.xx V</th><th>x.xx V</th><th></th></tr></thead><tbody><tr><td>2WCD, pH 7.5</td><td><span class="ok">done</span></td><td><span class="ok">done</span></td><td><span class="warn">running</span></td><td><span class="muted">queued</span></td><td></td></tr><tr><td>2WCD, ASP 64 neutral</td><td><span class="ok">done</span></td><td><span class="ok">done</span></td><td><span class="muted">queued</span></td><td><span class="muted">queued</span></td><td><a class="btn small" href="05-results.html#a-compare-side">Compare with the parent</a></td></tr></tbody></table>
+  <span class="muted">Each cell is a run in the queue; a done cell opens its result in Analysis. A variant's row compares it with its parent at each bias both have.</span>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · A sweep over components</b> <span class="muted">· screen 4 of 8</span></span>
+<span class="sp"></span><a href="#st-form">Back: Study setup, as a form</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-sweep">Same screen in A</a><a href="#st-charge">Next: Charge on the mesh</a></nav>
+</section>
+<section data-screen="st-charge" id="st-charge" aria-label="Study · Charge on the mesh">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge" aria-current="true">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="viewwrap" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto">
+  <div class="row" style="grid-column:1/-1"><h2 style="margin:0;font-size:var(--text-lg)">Charge on the mesh · 2WCD, pH 7.5 on the reference mesh</h2></div>
+  <div class="c3d" style="position:relative;" role="img" aria-label="3D view of the molecule, ASP 64 selected"><div class="vb" style="aspect-ratio:1 / 1"><svg viewBox="0 0 300 300" width="100%" height="100%"><use href="#pore-3d"/><circle cx="118" cy="190" r="10" fill="none" style="stroke:var(--accent)" stroke-width="3"/></svg></div></div>
+  <div class="cplot" style="position:relative;" role="img" aria-label="Deployed charge density in (r, z), ASP 64 selected"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="url(#g-diff)" stroke="currentColor"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="none" stroke="currentColor" stroke-opacity=".7"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg><span class="lbl over" style="left:30%;top:56%;background:var(--canvas-plot)">◉ ASP 64</span></div><div class="corner"><div class="cbox"><span class="cl">Charge density, e/nm³</span><div class="cbar div"></div><div class="row num cl" style="justify-content:space-between"><span>−x</span><span>0</span><span>+x</span></div></div></div><div class="over cl" style="left:8px;bottom:6px">Schematic. The charge is a volume charge inside the protein.</div></div>
+  <div class="verdict" style="grid-column:1/-1"><b>Conservation on the mesh</b><span class="ok">total within 10⁻³ of Q<sub>net</sub></span><span class="ok">per z-slice, passed</span><span class="muted">Selecting in either view selects in the other.</span></div>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · Charge on the mesh</b> <span class="muted">· screen 5 of 8</span></span>
+<span class="sp"></span><a href="#st-sweep">Back: A sweep over components</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-charge">Same screen in A</a><a href="#st-runs">Next: A run followed</a></nav>
+</section>
+<section data-screen="st-runs" id="st-runs" aria-label="Study · A run followed">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-graph">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs" aria-current="true">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="settings" style="border-right:0"><h2>Run · I–V, NaCl · bias x.xx V, x of n</h2>
+  <div class="row"><span class="warn">running: rung x of N</span><span class="muted">elapsed x min</span><span style="margin-left:auto"></span><button class="btn" type="button">Cancel</button></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px"><table><thead><tr><th>Rung</th><th>Steps</th><th>Ended by</th><th>Last value</th><th>Tolerance</th><th>Smallest damping</th></tr></thead><tbody>
+  <tr><td class="num">x</td><td class="num">x</td><td>residual</td><td class="num">x.x e−x</td><td class="num">x.x e−x</td><td class="num">x.xx</td></tr>
+  <tr><td class="num">x</td><td class="num">x</td><td>relative update</td><td class="num">x.x e−x</td><td class="num">x.x e−x</td><td class="num">x.xx</td></tr>
+  <tr aria-current="true"><td class="num">x</td><td class="num">x</td><td class="warn">running</td><td class="num">x.x e−x</td><td class="num">x.x e−x</td><td class="num">x.xx</td></tr></tbody></table><div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0;height:220px">
+<span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Residual and update, log</span>
+<svg viewBox="0 0 120 100" preserveAspectRatio="none" width="100%" height="100%" role="img" aria-label="Residual and relative update per Newton step on a log scale, banded by rung"><rect x="0" y="0" width="30" height="100" style="fill:var(--line)" opacity="0.5"/><rect x="60" y="0" width="30" height="100" style="fill:var(--line)" opacity="0.5"/>
+<polyline points="0,10 10,30 20,55 30,80 32,20 42,45 52,70 60,85 62,25 72,50 82,72" fill="none" style="stroke:var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+<polyline points="0,20 10,40 20,62 30,88 32,30 42,52 52,76 60,90 62,35 72,58 82,80" fill="none" style="stroke:var(--warn)" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>
+<line x1="0" y1="92" x2="120" y2="92" style="stroke:var(--err)" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/></svg>
+<span></span><span class="cl row" style="justify-content:space-between"><span>Newton step; rungs shaded</span><span><span style="color:var(--accent)">━</span> residual <span style="color:var(--warn)">┅</span> relative update <span style="color:var(--err)">┄</span> tolerance</span></span></div></div>
+  <h3>Log</h3>
+  <pre class="yaml" tabindex="0" aria-label="Log">rung x: Newton x, residual x.x e−x, damping x.xx
+rung x: Newton x, residual x.x e−x, damping x.xx</pre>
+  <h3>Other runs of this study</h3>
+  <table><tbody><tr><td>bias x.xx V, 1 of n</td><td class="ok">done</td><td><a class="btn small" href="05-results.html#a-explorer">Open result</a></td></tr>
+  <tr><td>bias x.xx V, 2 of n</td><td class="ok">done</td><td><a class="btn small" href="05-results.html#a-explorer">Open result</a></td></tr>
+  <tr><td>bias x.xx V, 6 of n</td><td class="err">failed: damping below x.xx at rung x</td><td><button class="btn small" type="button">Open log</button></td></tr>
+  <tr><td>bias x.xx V, 4 of n</td><td class="muted">queued</td><td></td></tr></tbody></table>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · A run followed</b> <span class="muted">· screen 6 of 8</span></span>
+<span class="sp"></span><a href="#st-charge">Back: Charge on the mesh</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-runs">Same screen in A</a><a href="#st-changes">Next: The changed values</a></nav>
+</section>
+<section data-screen="st-changes" id="st-changes" aria-label="Study · The changed values">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="true" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) 540px">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview" aria-current="true">Overview</a></li><li><a href="#st-graph">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="settings"><h2>Overview · I–V, NaCl</h2>
+  <span class="muted">What this study is made of, and what it resolves to.</span>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+    <div style="border:1px solid var(--line);border-radius:var(--radius);padding:8px;display:grid;gap:4px;align-content:start"><span class="h">Molecular model</span><b>2WCD, pH 7.5</b><span class="ok">built</span><span class="muted">Prepare, ensemble, protonation</span><a class="btn small" href="01-molecular.html#m-prepare" style="justify-self:start">Open in Molecular</a></div>
+    <div style="border:1px solid var(--line);border-radius:var(--radius);padding:8px;display:grid;gap:4px;align-content:start"><span class="h">Continuum model</span><b>ClyA pore, reference mesh</b><span class="ok">built</span><span class="muted">Geometry, region, mesh, physics defaults</span><a class="btn small" href="02-geometry.html#g-geometry" style="justify-self:start">Open in Continuum</a></div>
+  </div>
+  <h3>The study</h3>
+  <div class="field"><span class="k">Sweep</span><span class="v">bias, n steps</span></div>
+  <div class="field"><span class="k ovr">Overrides</span><span class="v">bias, NaCl</span></div>
+  <div class="field"><span class="k chg">Changed</span><span class="v">2 values from their defaults <a class="btn small" href="#st-changes">Show</a></span></div>
+  <div class="field"><span class="k">Runs</span><span class="v"><span class="warn">x of n running</span></span></div>
+</div>
+<aside class="settings" style="border-right:0;border-left:1px solid var(--line)" aria-label="Changes"><div class="row"><h2>Changes</h2><span style="margin-left:auto"></span><a class="btn small" href="#st-overview">Close</a></div>
+  <h3>The open study, by model</h3><table><thead><tr><th>Value</th><th>Now</th><th>Default</th><th></th></tr></thead><tbody><tr><th colspan="4" scope="colgroup">Continuum model · ClyA pore, reference mesh</th></tr><tr aria-current="true"><td>Contour isolevel</td><td class="num"><span class="chg">x.xx</span></td><td class="num muted">0.25</td><td><button class="btn small" type="button" aria-label="Reset Contour isolevel">Reset</button></td></tr><tr><td>Pore boundary maximum size</td><td class="num"><span class="chg">x.xx nm</span></td><td class="num muted">x.xx nm</td><td><button class="btn small" type="button" aria-label="Reset Pore boundary maximum size">Reset</button></td></tr><tr><th colspan="4" scope="colgroup">Study · I–V, NaCl, overriding the continuum model</th></tr><tr><td>Bias</td><td class="num"><span class="ovr">−x.xx to +x.xx V</span></td><td class="num muted">x.xx V</td><td><button class="btn small" type="button" aria-label="Reset Bias">Reset</button></td></tr><tr><td>NaCl</td><td class="num"><span class="ovr">x.xx M</span></td><td class="num muted">none</td><td><button class="btn small" type="button" aria-label="Reset NaCl">Reset</button></td></tr></tbody></table><span class="muted"><span class="chg">changed</span> from a default; <span class="ovr">override</span> by the study. The molecular model, 2WCD, pH 7.5, has none.</span>
+  <h3>Variants in the library, against their parents</h3>
+  <table><tbody><tr><td>2WCD, ASP 64 neutral</td><td>ASP 64 state</td><td class="num">ASH, 0</td><td class="num muted">parent: ASP, −1</td></tr></tbody></table>
+</aside>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · The changed values</b> <span class="muted">· screen 7 of 8</span></span>
+<span class="sp"></span><a href="#st-runs">Back: A run followed</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-changes">Same screen in A</a><a href="#st-tree">Next: The project tree unfolded</a></nav>
+</section>
+<section data-screen="st-tree" id="st-tree" aria-label="Study · The project tree unfolded">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 300px 184px minmax(0,1fr) minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project" style="padding:6px">
+  <div class="row"><b>Project</b><span style="margin-left:auto"></span><a class="btn small" href="#st-overview">Fold to the rail</a></div>
+  <ul class="tree">
+    <li><span class="grp">Library</span><ul>
+      <li><span class="muted">Molecular models</span><ul><li><a href="01-molecular.html#m-prepare">2WCD, pH 7.5 <span class="ok">built</span></a></li><li><a href="01-molecular.html#m-charge">2WCD, ASP 64 neutral <span class="muted">variant</span></a></li></ul></li>
+      <li><span class="muted">Continuum models</span><ul><li><a href="02-geometry.html#g-geometry">ClyA pore, reference mesh <span class="ok">built</span></a></li></ul></li></ul></li>
+    <li><span class="grp">Studies</span><ul><li><a href="#st-overview" aria-current="true">I–V, NaCl <span class="warn">running</span></a></li><li><a href="#st-sweep">Sweep over models</a></li></ul></li>
+    <li><span class="grp">Comparisons</span><ul><li><a href="05-results.html#a-compare-side">Parent and ASP 64 neutral</a></li></ul></li>
+  </ul></nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview" aria-current="true">Overview</a></li><li><a href="#st-graph">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li><li><a href="#st-runs">Runs<span class="st warn">1 running</span></a></li></ul></div></div>
+<div class="settings"><h2>Overview · I–V, NaCl</h2>
+  <span class="muted">What this study is made of, and what it resolves to.</span>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+    <div style="border:1px solid var(--line);border-radius:var(--radius);padding:8px;display:grid;gap:4px;align-content:start"><span class="h">Molecular model</span><b>2WCD, pH 7.5</b><span class="ok">built</span><span class="muted">Prepare, ensemble, protonation</span><a class="btn small" href="01-molecular.html#m-prepare" style="justify-self:start">Open in Molecular</a></div>
+    <div style="border:1px solid var(--line);border-radius:var(--radius);padding:8px;display:grid;gap:4px;align-content:start"><span class="h">Continuum model</span><b>ClyA pore, reference mesh</b><span class="ok">built</span><span class="muted">Geometry, region, mesh, physics defaults</span><a class="btn small" href="02-geometry.html#g-geometry" style="justify-self:start">Open in Continuum</a></div>
+  </div>
+  <h3>The study</h3>
+  <div class="field"><span class="k">Sweep</span><span class="v">bias, n steps</span></div>
+  <div class="field"><span class="k ovr">Overrides</span><span class="v">bias, NaCl</span></div>
+  <div class="field"><span class="k chg">Changed</span><span class="v">2 values from their defaults <a class="btn small" href="#st-changes">Show</a></span></div>
+  <div class="field"><span class="k">Runs</span><span class="v"><span class="warn">x of n running</span></span></div>
+</div><div class="settings" style="border-right:0"><h2>Resolved case file</h2>
+  <span class="muted">One complete case file, written with each run's manifest; the command line runs it as it is.</span>
+  <pre class="yaml" tabindex="0" aria-label="Resolved case file">schema: nanopnp/case/v0.5
+name: i-v-nacl
+structure:
+  source: {path: 2wcd-prepared.pdb}
+  symmetry: {point_group: C12}
+geometry:
+  contour: {isolevel: x.xx}   # ◆ changed
+  membrane: {thickness_nm: 2.8, centre_z_nm: x.xx}
+  reservoir: {radius_nm: 250.0}
+charge: {ph: 7.5, titration: propka}
+electrolyte:
+  concentration_M: x.xx    # ◇ override
+  parameters: willems2020_nacl
+boundary_conditions: {bias_V: x.xx, ground: cis}
+physics: {model: epnp-ns}</pre>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Study · The project tree unfolded</b> <span class="muted">· screen 8 of 8</span></span>
+<span class="sp"></span><a href="#st-changes">Back: The changed values</a><a href="index.html">All screens</a><a href="../a/06-study.html#st-tree">Same screen in A</a><a href="05-results.html#a-explorer">Next: Results explorer</a></nav>
+</section>
+</body>
+</html>
