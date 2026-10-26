@@ -1,0 +1,78 @@
+/* Whole-workbench mockups: one working session per suite, in the ruled frame, over the workbench tokens (WP5.01 D3). */
+@import url("../tokens.css");
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: var(--text-md)/1.4 var(--font-ui);
+}
+a { color: var(--accent); }
+:focus-visible { outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+
+/* One screen at a time: the targeted one, else the first. A screen is the whole window. */
+section[data-screen] { display: none; height: 100vh; min-height: 640px; grid-template-rows: auto minmax(0, 1fr) auto auto; position: relative; background: var(--panel); }
+section[data-screen]:target { display: grid; }
+body:not(:has(section[data-screen]:target)) section[data-screen]:first-of-type { display: grid; }
+.main { display: grid; min-height: 0; }
+
+/* The title bar: the application, the menus (WB-09), the project, the changed count (WB-28), the palette. */
+.titlebar { height: 36px; }
+.titlebar .app { font-weight: 700; letter-spacing: .01em; }
+.menus { display: flex; gap: 0; }
+.menus button { min-height: 28px; padding: 0 8px; border: 0; border-radius: var(--radius); background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.titlebar a.chip { color: var(--ink); }
+
+/* The activity bar (FR1 B), with each suite's problem count (FR4 B). */
+.activity { width: 72px; }
+.activity a { position: relative; min-height: 52px; align-content: center; }
+.activity .badge { position: absolute; top: 3px; right: 6px; }
+
+/* The project rail (FR3 B). */
+.rail { background: var(--bg); border-right: 1px solid var(--line); padding: 6px 4px; display: grid; align-content: start; gap: 2px; min-height: 0; overflow: auto; }
+.rail .tools a { min-height: 28px; font-size: var(--text-sm); }
+.rail .grp { font-size: var(--text-xs); color: var(--muted); font-weight: 600; padding: 6px 8px 2px; }
+
+/* The bottom panel (FR2 A): folded to one line, or open on the queue. */
+.panel { border-top: 1px solid var(--line); background: var(--panel); }
+.panel .ptabs { display: flex; align-items: center; gap: 0; border-bottom: 1px solid var(--line); padding: 0 6px; }
+.panel .ptabs > .tabs [role="tab"] { min-height: 28px; }
+.panel .later { padding: 1px 6px; margin-left: 6px; font-size: var(--text-xs); }
+
+/* The guided route (GR1 B): the window dimmed, the next field lifted, a card beside it. */
+.dim { position: absolute; inset: 0; background: rgb(0 0 0 / .45); z-index: 2; }
+.route .over { z-index: auto; }
+.route .pane, .route .settings { overflow: visible !important; }
+.spot { position: relative; z-index: 3; background: var(--panel); outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--radius); }
+.coach { position: absolute; z-index: 4; width: 300px; background: var(--panel); color: var(--ink); border: 1px solid var(--control-edge); border-radius: var(--radius); padding: 10px; display: grid; gap: 6px; box-shadow: 0 8px 24px rgb(0 0 0 / .35); text-align: left; font-weight: 400; }
+.coach .row { flex-wrap: nowrap; }
+
+/* The mockup's own bar, outside the workbench: which screen this is, and the way through. */
+.mock { display: flex; gap: 8px; align-items: center; padding: 3px 10px; background: var(--bg); border-top: 2px dashed var(--control-edge); font-size: var(--text-sm); }
+.mock .tag { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: var(--radius); background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.mock a { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 8px; border: 1px solid var(--control-edge); border-radius: var(--radius); text-decoration: none; color: var(--ink); }
+.mock .sp { margin-left: auto; }
+
+/* Settings and views. */
+.settings { border-right: 1px solid var(--line); padding: 10px; min-height: 0; overflow: auto; display: grid; gap: 10px; align-content: start; }
+.settings h2 { font-size: var(--text-lg); color: var(--ink); margin: 0; font-weight: 600; }
+.settings h3 { font-size: var(--text-sm); color: var(--muted); margin: 0; font-weight: 600; }
+.viewwrap { position: relative; display: grid; min-height: 0; padding: 6px; gap: 6px; }
+.card { background: var(--panel); color: var(--ink); border: 1px solid var(--control-edge); border-radius: var(--radius); padding: 10px; display: grid; gap: 6px; }
+.toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tile { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 6px; display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; gap: 4px; }
+details > summary { min-height: var(--target-min); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.verdict { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+pre.yaml { margin: 0; padding: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); font: var(--text-xs)/1.5 var(--font-num); white-space: pre; overflow: auto; }
+.matrix td, .matrix th { text-align: center; }
+.matrix td:first-child, .matrix th:first-child { text-align: left; }
+.field .v { flex-wrap: wrap; }
+/* A drawing letterboxes inside its view: the view's one track never grows to the drawing's width. */
+.cplot, .c3d { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.bars button { background: var(--control-edge); }
+.bars button[aria-pressed="true"] { background: var(--accent); }
+.btn[disabled] { opacity: .55; cursor: not-allowed; }
+.c3d .cbox .cl { color: var(--canvas-3d-ink); }

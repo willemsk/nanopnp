@@ -1,0 +1,358 @@
+<title>Workbench Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&display=swap">
+<style>
+/* Layout: a review sheet. A sticky tally bar; one card per choice: its question, A and B side by side (stacked on a phone), then the pick and a note. */
+:root {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --ink: #1b2330;
+  --muted: #586274;
+  --line: #d6dae2;
+  --accent: #1f4e8c;
+  --accent-soft: #e3ebf6;
+  --pick: #1d6b3f; --pick-soft: #e1f1e7;
+  --either: #8a5300; --either-soft: #fbeed6;
+  --neither: #a1261c; --neither-soft: #f8e1de;
+  --major: #8a5300; --blocking: #a1261c; --minor: #586274;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --panel: #1a2029; --ink: #e4e8ef; --muted: #9aa4b5; --line: #2e3643;
+    --accent: #8fb4e6; --accent-soft: #1f2d42;
+    --pick: #7fd1a0; --pick-soft: #183326; --either: #f0b860; --either-soft: #3a2c14;
+    --neither: #f19288; --neither-soft: #3d1c19; --major: #f0b860; --blocking: #f19288; --minor: #9aa4b5;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1a2029; --ink: #e4e8ef; --muted: #9aa4b5; --line: #2e3643;
+  --accent: #8fb4e6; --accent-soft: #1f2d42;
+  --pick: #7fd1a0; --pick-soft: #183326; --either: #f0b860; --either-soft: #3a2c14;
+  --neither: #f19288; --neither-soft: #3d1c19; --major: #f0b860; --blocking: #f19288; --minor: #9aa4b5;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.intro { padding-block: 28px 18px; display: grid; gap: 8px; }
+.eyebrow { font: 500 12px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 600 30px/1.15 var(--font-head); margin: 0; text-wrap: balance; }
+.intro p { margin: 0; max-width: 72ch; color: var(--muted); }
+.intro a { color: var(--accent); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding-block: 10px; }
+.tally { display: flex; gap: 14px; font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+.tally b { font-weight: 500; }
+.t-a, .t-b { color: var(--pick); } .t-either { color: var(--either); } .t-neither { color: var(--neither); } .t-open { color: var(--muted); }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.filters button { font: 500 13px var(--font-body); padding: 6px 12px; min-height: 32px; border-radius: 16px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.store { font-size: 13px; color: var(--muted); width: 100%; }
+.store.warn { color: var(--neither); }
+main { display: grid; gap: 34px; padding-block: 26px 60px; }
+section.area > h2 { font: 600 20px var(--font-head); margin: 0 0 12px; }
+.cards { display: grid; gap: 18px; }
+article.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; display: grid; }
+article.card[data-verdict="fine"], article.card[data-verdict="A"], article.card[data-verdict="B"] { box-shadow: inset 4px 0 0 var(--pick); }
+article.card[data-verdict="change"], article.card[data-verdict="either"] { box-shadow: inset 4px 0 0 var(--either); }
+article.card[data-verdict="neither"] { box-shadow: inset 4px 0 0 var(--neither); }
+.head { padding: 14px 18px 10px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.cid { font: 500 13px var(--font-mono); color: var(--accent); }
+.head h3 { margin: 0; font: 600 18px/1.3 var(--font-head); text-wrap: balance; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-block: 1px solid var(--line); }
+figure.v { margin: 0; background: var(--panel); display: grid; grid-template-rows: auto 1fr; min-width: 0; }
+figure.v button { display: block; padding: 0; border: 0; background: var(--bg); cursor: zoom-in; }
+figure.v img { display: block; width: 100%; height: auto; }
+figure.v figcaption { padding: 8px 12px 10px; font-size: 14px; display: grid; gap: 4px; }
+.letter { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; background: var(--accent); color: var(--panel); font: 600 13px var(--font-mono); margin-right: 6px; }
+figure.v a { font-size: 13px; color: var(--accent); display: inline-flex; align-items: center; min-height: 28px; }
+.read { padding: 14px 18px 16px; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.findings { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.findings li { font-size: 14px; display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+.sev { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; }
+.sev.blocking { color: var(--blocking); } .sev.major { color: var(--major); } .sev.minor { color: var(--minor); } .sev.note { color: var(--accent); }
+.findings .none { color: var(--muted); font-size: 14px; display: block; }
+.mark { display: grid; gap: 10px; }
+fieldset.verdict { border: 0; padding: 0; margin: 0; display: flex; gap: 6px; flex-wrap: wrap; }
+fieldset.verdict legend { font: 500 12px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; padding: 0; }
+.verdict label { position: relative; }
+.verdict input { position: absolute; opacity: 0; inset: 0; }
+.verdict span { display: inline-flex; align-items: center; min-height: 36px; padding: 0 16px; border: 1px solid var(--line); border-radius: 4px; font-weight: 500; cursor: pointer; }
+.verdict input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.verdict input[value="A"]:checked + span, .verdict input[value="B"]:checked + span { background: var(--pick-soft); border-color: var(--pick); color: var(--pick); }
+.verdict input[value="fine"]:checked + span { background: var(--pick-soft); border-color: var(--pick); color: var(--pick); }
+.verdict input[value="change"]:checked + span { background: var(--either-soft); border-color: var(--either); color: var(--either); }
+.verdict input[value="either"]:checked + span { background: var(--either-soft); border-color: var(--either); color: var(--either); }
+.verdict input[value="neither"]:checked + span { background: var(--neither-soft); border-color: var(--neither); color: var(--neither); }
+.verdict input:disabled + span { cursor: default; opacity: .6; }
+.note label { font: 500 12px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 4px; }
+.note textarea { width: 100%; min-height: 64px; resize: vertical; font: 14px/1.45 var(--font-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+.note textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.saved { font-size: 12px; color: var(--muted); min-height: 1em; }
+.scheme { display: inline-flex; gap: 4px; align-items: center; font-size: 13px; color: var(--muted); }
+.scheme button { font: 500 13px var(--font-body); padding: 4px 10px; min-height: 32px; border-radius: 4px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.scheme button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+dialog { border: 0; padding: 0; max-width: min(98vw, 1100px); background: var(--panel); }
+dialog#live { width: min(98vw, 1480px); max-width: none; height: 94vh; max-height: none; }
+#live[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+#live .lbar { display: flex; gap: 10px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 14px; }
+#live .lbar b { margin-right: auto; }
+#live .lbar button, #live .lbar a { font: 500 13px var(--font-body); padding: 6px 12px; min-height: 32px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+#live iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+dialog::backdrop { background: rgb(0 0 0 / .7); }
+dialog img { display: block; max-width: 100%; height: auto; }
+#zoom button { position: absolute; top: 8px; right: 8px; font: 500 13px var(--font-body); padding: 6px 12px; min-height: 32px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 4px; cursor: pointer; }
+@media (max-width: 760px) { .pair { grid-template-columns: minmax(0, 1fr); } .read { grid-template-columns: minmax(0, 1fr); } .filters { margin-left: 0; } }
+@media (prefers-reduced-motion: no-preference) { article.card { transition: box-shadow .15s; } }
+</style>
+
+<header class="wrap intro">
+  <div class="eyebrow">nanopnp · WP5.01 · the areas, round 2 of 2</div>
+  <h1>Two whole workbenches, A and B</h1>
+  <p>Your picks on the choice panels, assembled into one working session on 2WCD through the four suites: Molecular, Continuum, the new Study suite, and Analysis. Mockup A and mockup B are the same session; they differ only where you picked "either" without asking for both: the changed list, how a study opens, where a run is followed, and how a comparison opens. Those four screens are marked. First pick the mockup you prefer overall; then mark each screen <b>fine</b> or <b>change</b>, with a note on what to change. Numbers are placeholders (x.xx). Tap a picture to enlarge it, or open it live and click through the session.</p>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="tally" id="tally" aria-live="polite"></div>
+    <div class="scheme" role="group" aria-label="Pictures in"><span>Pictures</span><button type="button" data-scheme="light" aria-pressed="true">Light</button><button type="button" data-scheme="dark" aria-pressed="false">Dark</button></div>
+    <div class="filters" role="group" aria-label="Show">
+      <button type="button" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" data-filter="open" aria-pressed="false">Unpicked</button>
+      <button type="button" data-filter="differs" aria-pressed="false">A and B differ</button>
+      <button type="button" data-filter="findings" aria-pressed="false">With findings</button>
+    </div>
+    <div class="store" id="store">Connecting to the verdict store…</div>
+  </div>
+</div>
+
+<main class="wrap" id="main"><section class="area" aria-labelledby="h-overall"><h2 id="h-overall">Overall</h2><div class="cards" id="overall"></div></section></main>
+
+<dialog id="live" aria-labelledby="live-title"><div class="lbar"><b id="live-title"></b><button type="button" id="live-other">Same screen in B</button><button type="button" id="live-close">Close</button></div><iframe id="live-frame" title="Live mockup"></iframe></dialog>
+<dialog id="zoom"><button type="button" id="zoom-close">Close</button><img id="zoom-img" alt=""></dialog>
+
+<script>
+const DATA = /*DATA*/null;
+const OPTS = ["fine", "change"];
+const TOP = ["A", "B", "either", "neither"];
+const verdicts = {};
+let db = null, writable = true, filter = "all", scheme = "light";
+const main = document.getElementById("main");
+const storeLine = document.getElementById("store");
+
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "text") n.textContent = v; else if (v !== null && v !== undefined) n.setAttribute(k, v);
+  }
+  for (const k of kids) if (k) n.append(k);
+  return n;
+}
+
+function card(c) {
+  const art = el("article", { class: "card", id: c.id, "data-findings": c.findings.length ? "1" : "0", "aria-labelledby": "q-" + c.id });
+  art.append(el("div", { class: "head" }, el("span", { class: "cid", text: c.differs ? "A and B differ" : c.id }), el("h3", { id: "q-" + c.id, text: c.question })));
+  const pair = el("div", { class: "pair" });
+  for (const v of ["a", "b"]) {
+    const img = el("img", { "data-v": v, alt: `${c.question}, mockup ${v.toUpperCase()}: ${c.takes[v]}`, loading: "lazy", width: 1440, height: 900 });
+    const btn = el("button", { type: "button", "aria-label": `Enlarge mockup ${v.toUpperCase()}` }, img);
+    btn.addEventListener("click", () => zoom(img.src, img.alt));
+    const cap = el("figcaption", {},
+      el("span", {}, el("span", { class: "letter", "aria-hidden": "true", text: v.toUpperCase() }), document.createTextNode(c.takes[v])),
+      el("a", { href: c.pages[v], "data-live": `Mockup ${v.toUpperCase()} · ${c.question}`, text: `Open ${v.toUpperCase()} live` }));
+    pair.append(el("figure", { class: "v" }, btn, cap));
+  }
+  art.append(pair);
+  const read = el("div", { class: "read" });
+  const left = el("div", {});
+  const list = el("ul", { class: "findings", "aria-label": "Reviewer findings" });
+  if (!c.findings.length) list.append(el("li", {}, el("span", { class: "none", text: "No reviewer finding left open on this screen." })));
+  c.findings.forEach(f => list.append(el("li", {}, el("span", { class: "sev " + f.severity, text: f.severity }), el("span", { text: f.text }))));
+  left.append(list);
+  const mark = el("div", { class: "mark" });
+  const fs = el("fieldset", { class: "verdict" }, el("legend", { text: "This screen" }));
+  for (const v of OPTS) {
+    const input = el("input", { type: "radio", name: "v-" + c.id, id: `v-${c.id}-${v}`, value: v });
+    input.addEventListener("change", () => save(c.id, { verdict: v }));
+    fs.append(el("label", { for: input.id }, input, el("span", { text: v[0].toUpperCase() + v.slice(1) })));
+  }
+  mark.append(fs);
+  const ta = el("textarea", { id: "n-" + c.id, placeholder: "What to change, and in which mockup" });
+  let timer = null;
+  ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save(c.id, { note: ta.value }), 900); });
+  ta.addEventListener("blur", () => { clearTimeout(timer); if ((verdicts[c.id]?.note ?? "") !== ta.value) save(c.id, { note: ta.value }); });
+  mark.append(el("div", { class: "note" }, el("label", { for: ta.id, text: "Note" }), ta), el("div", { class: "saved", id: "s-" + c.id }));
+  read.append(left, mark);
+  art.append(read);
+  return art;
+}
+
+function overallCard() {
+  const art = el("article", { class: "card", id: "overall-card", "aria-labelledby": "q-overall" });
+  art.append(el("div", { class: "head" }, el("h3", { id: "q-overall", text: "Which workbench do you prefer?" })));
+  const read = el("div", { class: "read" });
+  const left = el("div", {}, el("p", { style: "margin:0", text: DATA.overallText }));
+  const links = el("p", { style: "margin:8px 0 0" }, el("a", { href: "mockups/a/00-guided-route.html", "data-live": "Mockup A", text: "Open mockup A live" }), document.createTextNode(" · "), el("a", { href: "mockups/b/00-guided-route.html", "data-live": "Mockup B", text: "Open mockup B live" }));
+  left.append(links);
+  const mark = el("div", { class: "mark" });
+  const fs = el("fieldset", { class: "verdict" }, el("legend", { text: "Your pick" }));
+  for (const v of TOP) {
+    const input = el("input", { type: "radio", name: "v-overall", id: `v-overall-${v}`, value: v });
+    input.addEventListener("change", () => save("overall", { verdict: v }));
+    fs.append(el("label", { for: input.id }, input, el("span", { text: v.length === 1 ? v : v[0].toUpperCase() + v.slice(1) })));
+  }
+  const ta = el("textarea", { id: "n-overall", placeholder: "Why, or what to take from the other" });
+  let timer = null;
+  ta.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(() => save("overall", { note: ta.value }), 900); });
+  ta.addEventListener("blur", () => { clearTimeout(timer); if ((verdicts.overall?.note ?? "") !== ta.value) save("overall", { note: ta.value }); });
+  mark.append(fs, el("div", { class: "note" }, el("label", { for: ta.id, text: "Note" }), ta), el("div", { class: "saved", id: "s-overall" }));
+  read.append(left, mark); art.append(read);
+  document.getElementById("overall").append(art);
+}
+
+function render() {
+  overallCard();
+  const areas = [...new Set(DATA.choices.map(c => c.area))];
+  for (const area of areas) {
+    const cs = DATA.choices.filter(c => c.area === area);
+    const id = "h-" + cs[0].id;
+    const sec = el("section", { class: "area", "aria-labelledby": id }, el("h2", { id, text: `${area} · ${cs.length}` }));
+    const cards = el("div", { class: "cards" });
+    cs.forEach(c => cards.append(card(c)));
+    sec.append(cards); main.append(sec);
+  }
+  if (DATA.general.length) {
+    const g = el("section", { class: "area", "aria-labelledby": "h-general" }, el("h2", { id: "h-general", text: "Across the mockups" }));
+    const ul = el("ul", { class: "findings" });
+    DATA.general.forEach(f => ul.append(el("li", {}, el("span", { class: "sev " + f.severity, text: f.severity }), el("span", { text: f.text }))));
+    g.append(ul); main.append(g);
+  }
+  paintScheme();
+}
+
+function paintScheme() {
+  for (const img of main.querySelectorAll("img[data-v]")) {
+    const id = img.closest("article").id;
+    img.src = DATA.choices.find(c => c.id === id).pictures[scheme][img.dataset.v];
+  }
+}
+
+function paint(id) {
+  const v = verdicts[id] || {};
+  const art = document.getElementById(id === "overall" ? "overall-card" : id);
+  if (!art) return;
+  art.dataset.verdict = v.verdict || "";
+  for (const opt of (id === "overall" ? TOP : OPTS)) {
+    const input = document.getElementById(`v-${id}-${opt}`);
+    input.checked = v.verdict === opt;
+    input.disabled = !writable;
+  }
+  const ta = document.getElementById("n-" + id);
+  if (document.activeElement !== ta) ta.value = v.note || "";
+  ta.readOnly = !writable;
+}
+
+function tally() {
+  const c = { fine: 0, change: 0 };
+  for (const s of DATA.choices) { const v = verdicts[s.id]?.verdict; if (v in c) c[v]++; }
+  const open = DATA.choices.length - c.fine - c.change;
+  const o = verdicts.overall?.verdict;
+  document.getElementById("tally").innerHTML =
+    `<span class="t-a">Overall: <b>${o ? (o.length === 1 ? "mockup " + o : o) : "not picked"}</b></span><span class="t-a"><b>${c.fine}</b> fine</span><span class="t-either"><b>${c.change}</b> change</span>` +
+    `<span class="t-open"><b>${open}</b> of ${DATA.choices.length} screens unmarked</span>`;
+  applyFilter();
+}
+
+function applyFilter() {
+  for (const s of DATA.choices) {
+    const v = verdicts[s.id]?.verdict;
+    document.getElementById(s.id).hidden = !(filter === "all" || (filter === "open" && !v) || (filter === "differs" && s.differs) || (filter === "findings" && s.findings.length));
+  }
+  for (const sec of main.querySelectorAll("section.area")) {
+    const arts = [...sec.querySelectorAll("article")];
+    if (arts.length && sec.querySelector("#overall") === null) sec.hidden = !arts.some(a => !a.hidden);
+  }
+}
+
+const pending = {};
+async function save(id, patch) {
+  verdicts[id] = { ...(verdicts[id] || {}), ...patch };
+  paint(id); tally();
+  const line = document.getElementById("s-" + id);
+  if (!db || !writable) { line.textContent = db ? "" : "Not saved: the verdict store is not available in this view."; return; }
+  const body = { verdict: verdicts[id].verdict || "", note: verdicts[id].note || "", round: DATA.round };
+  pending[id] = (pending[id] || Promise.resolve()).then(async () => {
+    try { await db.collection("verdicts").doc(id).set(body); line.textContent = "Saved."; }
+    catch (e) {
+      if (e && e.code === "invalid_argument") { writable = false; DATA.choices.forEach(s => paint(s.id)); paint("overall"); paint("overall"); storeLine.textContent = "You can read these picks but not change them."; }
+      line.textContent = "Not saved: " + (e && e.message ? e.message : "the store refused the write") + ".";
+    }
+  });
+}
+
+function zoom(src, alt) {
+  const d = document.getElementById("zoom");
+  const img = document.getElementById("zoom-img");
+  img.src = src; img.alt = alt;
+  try { d.showModal(); } catch { window.open(src); }
+}
+document.getElementById("zoom-close").addEventListener("click", () => document.getElementById("zoom").close());
+
+// The page runs in a sandbox that opens no new tab, so a mockup opens live in a dialog above the gallery.
+const live = document.getElementById("live"), frame = document.getElementById("live-frame"), other = document.getElementById("live-other");
+function openLive(href, title) {
+  frame.src = href;
+  document.getElementById("live-title").textContent = title;
+  const v = href.includes("mockups/a/") ? "a" : "b", w = v === "a" ? "b" : "a";
+  other.textContent = `Same screen in ${w.toUpperCase()}`;
+  other.onclick = () => {
+    let cur = href;
+    try { cur = frame.contentWindow.location.href; } catch {}
+    const tail = cur.slice(cur.indexOf(`mockups/${v}/`) + 10);
+    openLive(`mockups/${w}/${tail}`, title.replace(`Mockup ${v.toUpperCase()}`, `Mockup ${w.toUpperCase()}`));
+  };
+  if (!live.open) { try { live.showModal(); } catch { live.setAttribute("open", ""); } }
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[data-live]");
+  if (!a) return;
+  e.preventDefault();
+  openLive(a.getAttribute("href"), a.dataset.live);
+});
+document.getElementById("live-close").addEventListener("click", () => { live.close(); frame.src = "about:blank"; });
+document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.filter;
+  document.querySelectorAll(".filters button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  applyFilter();
+}));
+document.querySelectorAll(".scheme button").forEach(b => b.addEventListener("click", () => {
+  scheme = b.dataset.scheme;
+  document.querySelectorAll(".scheme button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  paintScheme();
+}));
+
+render(); tally();
+DATA.choices.forEach(s => paint(s.id)); paint("overall");
+
+(async () => {
+  db = window.claude ? await window.claude.use("db") : null;
+  if (!db) { storeLine.textContent = "The verdict store is not available in this view: picks will not be saved."; storeLine.classList.add("warn"); writable = false; DATA.choices.forEach(s => paint(s.id)); paint("overall"); paint("overall"); return; }
+  const user = await window.claude.use("user");
+  const can = user ? await user.can("data.write") : null;
+  if (can === false) { writable = false; DATA.choices.forEach(s => paint(s.id)); paint("overall"); storeLine.textContent = "You can read these picks but not change them."; }
+  else storeLine.textContent = `Round ${DATA.round}. Marks save to the verdict store as you make them.`;
+  db.collection("verdicts").onSnapshot(snap => {
+    for (const d of snap.docs) {
+      const body = d.data() || {};
+      verdicts[d.id] = { verdict: body.verdict || "", note: body.note || "" };
+    }
+    DATA.choices.forEach(s => paint(s.id)); paint("overall"); tally();
+  }, () => { storeLine.textContent = "The verdict store stopped answering; reload the page to reconnect."; storeLine.classList.add("warn"); });
+})();
+</script>

@@ -1,0 +1,11 @@
+# Outputs of the builds: the pages are written to ../choices/ and ../mockups/, which are committed;
+# what lands here is regenerated on each run.
+__pycache__/
+choices/choices.json
+mockups/mockups.json
+gallery/*/index.html
+gallery/*/shots/
+gallery/*/choices/
+gallery/*/mockups/
+gallery/*/tokens.css
+gallery/*/files*.json

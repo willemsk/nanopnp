@@ -1,0 +1,23 @@
+{
+ "fr2": [{"severity": "note", "text": "Fixed after review: B no longer shows a percentage bar; both carry Problems, Log and the console banner."}],
+ "fr3": [{"severity": "note", "text": "Fixed after review: B was a drawer, against WB-03; it is now a rail always on screen."}],
+ "fr4": [{"severity": "note", "text": "Fixed after review: the refusal names the range, a remedy and the real case path; the orientation-gate refusal is listed. A goes with either queue placement."}],
+ "fr5": [{"severity": "note", "text": "Added after review: no panel showed the gates and their verdicts."}],
+ "fr6": [{"severity": "note", "text": "Added after review: the changed count opened nothing drawn."}],
+ "mo1": [{"severity": "note", "text": "Fixed after review: B draws its handles and types the same values. The membrane's place is set here, its thickness in Region."}],
+ "mo2": [{"severity": "note", "text": "Fixed after review: A widened; residue numbers other than ASP 64 are placeholders; each change has a reset."}],
+ "mo3": [{"severity": "note", "text": "Fixed after review: Q_net is an integer per frame; pKa and PROPKA's warnings shown; B's strip cells are 24 px buttons with a count off default."}],
+ "ge1": [{"severity": "note", "text": "Fixed after review: steps carry the stage numbers 2 to 4; the membrane left to Region; drawings use the theme's colours."}],
+ "ge2": [{"severity": "note", "text": "Fixed after review: the half-disc reservoir is drawn, not to scale; the membrane's centre is read from Prepare."}],
+ "me1": [{"severity": "note", "text": "Fixed after review: only the reference size is validated; no invented estimates; B uses the specification's size table."}],
+ "me2": [{"severity": "note", "text": "Fixed after review: SICN and gamma with the 0.3 gate; a graded mesh with the elements marked in both."}],
+ "ph1": [{"severity": "note", "text": "Fixed after review: cis grounded and trans biased, as the default case; walls no flux and no slip."}],
+ "ph2": [{"severity": "note", "text": "Fixed after review: NaCl, the validated electrolyte; one salt concentration in B; the same models in both."}],
+ "re1": [{"severity": "note", "text": "Both now offer a sweep over bias or over models (WB-11)."}],
+ "re3": [{"severity": "note", "text": "Fixed after review: B has the colour bar, axis titles, probes and the bias selector A has."}],
+ "re4": [{"severity": "note", "text": "Fixed after review: A's two runs differ visibly; both carry ticked colour bars."}],
+ "re5": [{"severity": "note", "text": "Added after review: where the charge on the mesh is seen, with its conservation checks."}],
+ "gr1": [{"severity": "note", "text": "Fixed after review: B dims the whole window as a modal step; both explain the step."}],
+ "_general": [{"severity": "note", "text": "The reviewer found about forty issues in the first drawing, none blocking: invented mesh measures, cis and trans reversed, KCl where only NaCl is validated, units in capitals, one-sided banners. All are fixed or answered; the record is docs/design/reviews/2026-10-25-choices.md."},
+              {"severity": "note", "text": "Probes and cuts, selecting elements by quality, result tiles and the charge's link to residues are drawn before the library has them: REV-136."}]
+}
