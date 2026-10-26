@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 11 done; waiting on the author's picks; next, the two whole-workbench mockups.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 12 done; waiting on the author's verdicts on the two mockups; next, their collection and one revision.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -393,6 +393,17 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
 - [ ] 12. `/np-gui collect` (the panels); the two whole-workbench mockups, A and B, in `docs/design/mockups/`,
   rendered, reviewed and published (D3); done when no blocking reviewer finding is open and the strict build
   passes. **Executor:** main.
+
+  > **Outcome — every choice picked; Study a suite; two workbenches of 32 screens.** The author picked all
+  > twenty-one choices: fourteen A or B and seven either, four of whose notes asked for both variants together and one for a switch between them
+  > ([the picks](../design/reviews/2026-10-25-choices.md)). The RE1 note made Study a suite of its own (WB-29), amending
+  > WB-02, WB-11 and §8.1's Phase 5 row; the ME1 note's refinement sub-regions joined REV-136. Mockups A and B under
+  > `docs/design/mockups/` draw one session on 2WCD through the four suites and the guided route, differing at FR6,
+  > RE1, RE2 and RE4. The review found fourteen issues and six doubts, none blocking: the route drew state not yet
+  > made, cards clipped at 1280, no path from a variant to its comparison, Qt capabilities missing from the contour
+  > editor and the run views. Each is fixed or answered in [the review record](../design/reviews/2026-10-26-mockups.md).
+  > The final render, 256 shots at 1440 × 900 and 1280 × 800 in both themes, has no page error and no failed
+  > contrast or target check. Published for the verdicts at `https://claude.ai/artifact/W4oUSuDkXS61KoBQGxU7ag`.
 - [ ] 13. Wait checkpoint: the verdicts on the two mockups. **Executor:** main.
 - [ ] 14. `/np-gui collect` (the mockups, and the pending marks on the concept boards and the style tile, a contradicting mark reopening its ruling); one revision of the chosen mockup; `docs/design/workbench.md` complete;
   `mkdocs.yml`'s nav (D3); done when the strict build passes. **Executor:** main.

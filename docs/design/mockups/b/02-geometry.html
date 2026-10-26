@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup B: continuum: geometry and region</title>
+<link rel="stylesheet" href="../mockups.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <linearGradient id="g-seq" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".25" stop-color="#3b528b"/><stop offset=".5" stop-color="#21918c"/><stop offset=".75" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <linearGradient id="g-seq2" x1="0" y1="1" x2=".3" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".3" stop-color="#3b528b"/><stop offset=".55" stop-color="#21918c"/><stop offset=".8" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <radialGradient id="g-diff" cx=".35" cy=".55" r=".55">
+      <stop offset="0" stop-color="#b2182b"/><stop offset=".35" stop-color="#f4a582"/><stop offset=".7" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d1e5f0"/>
+    </radialGradient>
+    <clipPath id="disc"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0 Z"/></clipPath>
+    <symbol id="pore-rz" viewBox="0 0 180 300"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".7"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="protein-rz" viewBox="0 0 180 300"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="pore-3d" viewBox="0 0 300 300">
+      <ellipse cx="150" cy="70" rx="120" ry="36" fill="#7b8494"/>
+      <path d="M30 70 Q30 120 90 150 L100 262 Q150 282 200 262 L210 150 Q270 120 270 70 Q270 106 150 106 Q30 106 30 70Z" fill="#5c6474"/>
+      <path d="M70 92 Q72 125 108 150 L114 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M150 106 L150 276" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M230 92 Q228 125 192 150 L186 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <ellipse cx="150" cy="70" rx="58" ry="16" fill="#0d0f13" stroke="#9aa3b2"/>
+      <circle cx="118" cy="190" r="7" fill="#ef6f6c"/><text x="118" y="194" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text><circle cx="182" cy="200" r="7" fill="#ef6f6c"/><text x="182" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text>
+      <circle cx="132" cy="122" r="7" fill="#6fa8ff"/><text x="132" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text><circle cx="170" cy="230" r="7" fill="#6fa8ff"/><text x="170" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text>
+    </symbol>
+</defs></svg>
+<section data-screen="g-geometry" id="g-geometry" aria-label="Continuum · Protein geometry">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px 340px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">ClyA pore, reference mesh</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="#g-geometry" aria-current="true">Protein geometry<span class="st ok">gate passed</span></a></li><li><a href="#g-contour">Contour<span class="st ok">gate passed</span></a></li><li><a href="#g-region">Region<span class="st ok">built</span></a></li><li><a href="03-mesh.html#s-size">Mesh<span class="st ok">gate passed</span></a></li><li><a href="04-physics.html#p-boundaries">Physics defaults</a></li></ul></div></div>
+<div class="settings"><h2>Protein geometry</h2><span class="muted">From the molecular model 2WCD, pH 7.5. Stage 1, alignment, is done in Molecular, Prepare.</span>
+  <details open><summary><b>Density</b>, stage 2 <span class="ok">built</span></summary>
+    <div class="field"><label for="cg-h">Grid spacing</label><div class="v"><input id="cg-h" class="num" type="text" value="0.05"><span class="unit">nm</span></div></div><div class="field"><label for="cg-k">Kernel</label><div class="v"><select id="cg-k"><option>Gaussian, van der Waals</option></select></div></div></details>
+  <details><summary><b>Symmetry to (r, z)</b>, stage 3 <span class="ok">built</span></summary><div class="field"><span class="k">Point group</span><span class="v">C12</span></div></details>
+  <details open><summary><b>Contour</b>, stage 4 <span class="ok">gate passed</span></summary>
+    <div class="field"><label for="cg-i">Isolevel</label><div class="v"><input id="cg-i" class="num" type="text" value="x.xx"></div></div><div class="row" style="padding-left:8.5rem"><span class="chg">changed</span><span class="muted">default <span class="num">0.25</span></span><button class="btn small" type="button" aria-label="Reset isolevel to its default">Reset</button></div><a class="btn small" href="#g-contour" style="justify-self:start">Edit the contour…</a></details>
+  <div class="row"><button class="btn primary" type="button">Build geometry</button></div>
+</div>
+<div class="viewwrap" style="grid-template-rows:auto minmax(0,1fr)">
+  <div class="toolbar" role="group" aria-label="Layers"><span class="muted">Show</span>
+    <label class="chip"><input type="checkbox" checked> Density map</label><label class="chip"><input type="checkbox"> Azimuthal variance</label>
+    <label class="chip"><input type="checkbox" checked> Contour</label><label class="chip"><input type="checkbox" checked> Probe-radius profile</label></div>
+  <div class="cplot" style="position:relative;" role="img" aria-label="Field map in (r, z)"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq2)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="2"/><polygon points="45.7,87.8 43.6,124.1 53.1,134.6 53.2,134.8 53.3,134.9 53.4,135.0 53.4,135.2 53.5,135.3 53.5,135.5 53.5,135.6 56.7,215.5 69.1,215.5 76.7,129.0 76.7,128.8 76.8,128.7 76.8,128.5 76.9,128.4 76.9,128.2 77.0,128.1 77.1,128.0 77.2,127.9 77.4,127.8 77.5,127.7 77.6,127.7 77.8,127.6 77.9,127.6 78.0,127.5 125.1,120.0 125.1,87.8 45.7,87.8" fill="none" style="stroke:var(--warn)" stroke-width="1.5" stroke-dasharray="3 2"/></svg></div><div class="corner"><div class="cbox"><span class="cl">Density, 0 to 1</span><div class="cbar seq"></div><div class="row num cl" style="justify-content:space-between"><span>0</span><span>1</span></div></div></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Continuum · Protein geometry</b> <span class="muted">· screen 1 of 4</span></span>
+<span class="sp"></span><a href="01-molecular.html#m-view">Back: View</a><a href="index.html">All screens</a><a href="../a/02-geometry.html#g-geometry">Same screen in A</a><a href="#g-contour">Next: Contour</a></nav>
+</section>
+<section data-screen="g-contour" id="g-contour" aria-label="Continuum · Contour">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px 340px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">ClyA pore, reference mesh</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="#g-geometry">Protein geometry<span class="st ok">gate passed</span></a></li><li><a href="#g-contour" aria-current="true">Contour<span class="st ok">gate passed</span></a></li><li><a href="#g-region">Region<span class="st ok">built</span></a></li><li><a href="03-mesh.html#s-size">Mesh<span class="st ok">gate passed</span></a></li><li><a href="04-physics.html#p-boundaries">Physics defaults</a></li></ul></div></div>
+<div class="settings"><h2>Contour · stage 4</h2><span class="muted">From the molecular model 2WCD, pH 7.5. Stage 1, alignment, is done in Molecular, Prepare.</span>
+  <div class="field"><label for="cc-i">Isolevel</label><div class="v"><input id="cc-i" class="num" type="text" value="x.xx"></div></div><div class="row" style="padding-left:8.5rem"><span class="chg">changed</span><span class="muted">default <span class="num">0.25</span></span><button class="btn small" type="button" aria-label="Reset isolevel to its default">Reset</button></div>
+  <div class="field"><label for="cc-s">Smoothing</label><div class="v"><select id="cc-s"><option>Taubin</option><option>None</option></select></div></div>
+  <div class="field"><label for="cc-t">Simplification</label><div class="v"><input id="cc-t" class="num" type="text" value="0.02"><span class="unit">nm</span></div></div>
+  <div class="verdict"><span class="ok">Gate passed: the radius follows the probe-radius profile within x.xx nm</span><button class="btn small" type="button" aria-expanded="false">Checks</button></div>
+  <div class="tile" style="height:190px"><b>Radius against z</b><div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0"><span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Radius, nm</span><svg viewBox="0 0 200 110" width="100%" height="100%" preserveAspectRatio="none" role="img" aria-label="Pore radius against z: the contour and the probe-radius profile">
+<line x1="20" y1="95" x2="195" y2="95" stroke="currentColor" stroke-opacity=".5"/><line x1="20" y1="5" x2="20" y2="95" stroke="currentColor" stroke-opacity=".5"/>
+<polyline points="20,30 50,32 80,60 110,72 140,74 170,73 195,72" fill="none" style="stroke:var(--accent)" stroke-width="2"/>
+<polyline points="20,36 50,38 80,64 110,77 140,79 170,78 195,77" fill="none" style="stroke:var(--warn)" stroke-width="1.5" stroke-dasharray="4 3"/></svg><span></span><span class="cl" style="text-align:center">z, nm</span></div></div>
+  <h3>Vertices · x after simplification</h3>
+  <table><thead><tr><th>#</th><th>r, nm</th><th>z, nm</th></tr></thead><tbody><tr><td class="num">1</td><td class="num">x.xx</td><td class="num">x.xx</td></tr><tr><td class="num">2</td><td class="num">x.xx</td><td class="num">x.xx</td></tr><tr><td class="num">3</td><td class="num">x.xx</td><td class="num">x.xx</td></tr><tr><td class="num">4</td><td class="num">x.xx</td><td class="num">x.xx</td></tr><tr><td class="num">5</td><td class="num">x.xx</td><td class="num">x.xx</td></tr><tr aria-current="true"><td class="num">6</td><td class="num">x.xx</td><td class="num">x.xx</td></tr><tr><td class="num">7</td><td class="num">x.xx</td><td class="num">x.xx</td></tr><tr><td class="num">8</td><td class="num">x.xx</td><td class="num">x.xx</td></tr></tbody></table>
+  <div class="row"><button class="btn" type="button">Seed from refusal</button><button class="btn primary" type="button">Save edit…</button></div>
+  <span class="muted">Saving writes the edited profile and a derived continuum model; this one is unchanged.</span>
+  <div class="later"><b>Sketcher</b>: drawing a pore by hand</div>
+</div>
+<div class="viewwrap">
+  <div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#protein-rz"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="2"/><polygon points="45.7,87.8 43.6,124.1 53.1,134.6 53.2,134.8 53.3,134.9 53.4,135.0 53.4,135.2 53.5,135.3 53.5,135.5 53.5,135.6 56.7,215.5 69.1,215.5 76.7,129.0 76.7,128.8 76.8,128.7 76.8,128.5 76.9,128.4 76.9,128.2 77.0,128.1 77.1,128.0 77.2,127.9 77.4,127.8 77.5,127.7 77.6,127.7 77.8,127.6 77.9,127.6 78.0,127.5 125.1,120.0 125.1,87.8 45.7,87.8" fill="none" style="stroke:var(--warn)" stroke-width="1.5" stroke-dasharray="3 2"/><circle cx="44.2" cy="86.2" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="126.7" cy="86.2" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="126.7" cy="121.4" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="78.3" cy="129.1" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="70.6" cy="217.1" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="55.2" cy="217.1" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="51.9" cy="135.7" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="42.0" cy="124.7" r="2.6" style="fill:var(--panel);stroke:var(--accent)" stroke-width="1.5"/><circle cx="55.2" cy="217.1" r="4.5" fill="none" style="stroke:var(--ink)" stroke-width="1.5"/></svg></div><div class="over card" style="left:8px;top:8px;right:8px;padding:6px;gap:4px">
+  <div class="toolbar"><button class="btn small" type="button">Undo</button><button class="btn small" type="button">Redo</button><button class="btn small" type="button">Delete vertex</button>
+    <button class="btn small" type="button">Measure criteria</button><span class="chip"><span style="color:var(--accent)">━</span> contour</span><span class="chip"><span style="color:var(--warn)">┅</span> probe-radius profile</span></div>
+  <span class="muted" style="font-size:var(--text-xs)">Drag a vertex to move it; double-click an edge to insert one; Delete removes the selected one, never below three.</span></div></div>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Continuum · Contour</b> <span class="muted">· screen 2 of 4</span></span>
+<span class="sp"></span><a href="#g-geometry">Back: Protein geometry</a><a href="index.html">All screens</a><a href="../a/02-geometry.html#g-contour">Same screen in A</a><a href="#g-region">Next: Region</a></nav>
+</section>
+<section data-screen="g-region" id="g-region" aria-label="Continuum · Region">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px 320px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">ClyA pore, reference mesh</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="#g-geometry">Protein geometry<span class="st ok">gate passed</span></a></li><li><a href="#g-contour">Contour<span class="st ok">gate passed</span></a></li><li><a href="#g-region" aria-current="true">Region<span class="st ok">built</span></a></li><li><a href="03-mesh.html#s-size">Mesh<span class="st ok">gate passed</span></a></li><li><a href="04-physics.html#p-boundaries">Physics defaults</a></li></ul></div></div>
+<div class="settings"><h2>Region: membrane and reservoir</h2>
+  <div class="field"><label for="cr-t">a Thickness</label><div class="v"><input id="cr-t" class="num" type="text" value="2.8"><span class="unit">nm</span></div></div><div class="field"><label for="cr-r">b Reservoir radius</label><div class="v"><input id="cr-r" class="num" type="text" value="250"><span class="unit">nm</span></div></div><div class="field"><span class="k">Membrane centre, z</span><span class="v"><span class="num">x.xx nm</span> <span class="muted">set in Molecular, Prepare</span></span></div>
+  <span class="muted">Each value can be typed here or on the drawing; both show the same value.</span>
+  <div class="row"><button class="btn primary" type="button">Build region</button><span class="ok">built</span></div>
+  <div class="later"><b>Sketcher</b>: drawing a pore by hand</div>
+</div>
+<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><g style="stroke:var(--accent)" stroke-width="1.5"><line x1="128" y1="175.3" x2="128" y2="199.5"/><line x1="123" y1="175.3" x2="133" y2="175.3"/><line x1="123" y1="199.5" x2="133" y2="199.5"/><line x1="20.0" y1="150.0" x2="56.2" y2="285.2" stroke-dasharray="4 3"/></g></svg><div class="over" style="left:74.4%;top:57.1%;background:var(--canvas-plot);padding:2px"><span class="cl" style="display:block"><b>a</b> Thickness</span><span class="row"><input id="cr-dt" class="num" type="text" value="2.8" style="width:4rem" aria-label="a Thickness, on the drawing"><span class="unit">nm</span></span></div>
+<div class="over" style="left:24.4%;top:78.7%;background:var(--canvas-plot);padding:2px"><span class="cl" style="display:block"><b>b</b> Reservoir radius, from the axis</span><span class="row"><input class="num" type="text" value="250" style="width:4rem" aria-label="b Reservoir radius, on the drawing"><span class="unit">nm</span></span></div></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Continuum · Region</b> <span class="muted">· screen 3 of 4</span></span>
+<span class="sp"></span><a href="#g-contour">Back: Contour</a><a href="index.html">All screens</a><a href="../a/02-geometry.html#g-region">Same screen in A</a><a href="#g-problems">Next: Region, a refused value</a></nav>
+</section>
+<section data-screen="g-problems" id="g-problems" aria-label="Continuum · Region, a refused value">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px 320px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum<span class="badge"><span aria-hidden="true">1</span><span class="vh">1 problem</span></span></a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">ClyA pore, reference mesh</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="#g-geometry">Protein geometry<span class="st ok">gate passed</span></a></li><li><a href="#g-contour">Contour<span class="st ok">gate passed</span></a></li><li><a href="#g-region" aria-current="true">Region <span class="badge"><span aria-hidden="true">1</span><span class="vh">1 problem</span></span><span class="st err">refused</span></a></li><li><a href="03-mesh.html#s-size">Mesh<span class="st ok">gate passed</span></a></li><li><a href="04-physics.html#p-boundaries">Physics defaults</a></li></ul></div></div>
+<div class="settings"><h2>Region: membrane and reservoir</h2>
+  <div class="field"><label for="cr-t">a Thickness</label><div class="v"><input id="cr-t" class="num refused" type="text" value="x.xx" aria-invalid="true" aria-describedby="cr-m"><span class="unit">nm</span></div></div>
+  <div class="msg" id="cr-m">✕ x.xx nm is outside x.xx to x.xx nm. Enter a thickness in that range. <span class="num">geometry.membrane.thickness_nm</span></div><div class="field"><label for="cr-r">b Reservoir radius</label><div class="v"><input id="cr-r" class="num" type="text" value="250"><span class="unit">nm</span></div></div><div class="field"><span class="k">Membrane centre, z</span><span class="v"><span class="num">x.xx nm</span> <span class="muted">set in Molecular, Prepare</span></span></div>
+  <span class="muted">Each value can be typed here or on the drawing; both show the same value.</span>
+  <div class="row"><button class="btn primary" type="button" disabled aria-describedby="cr-m">Build region</button><span class="muted">clear the refusal first</span></div>
+  <div class="later"><b>Sketcher</b>: drawing a pore by hand</div>
+</div>
+<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><g style="stroke:var(--accent)" stroke-width="1.5"><line x1="128" y1="175.3" x2="128" y2="199.5"/><line x1="123" y1="175.3" x2="133" y2="175.3"/><line x1="123" y1="199.5" x2="133" y2="199.5"/><line x1="20.0" y1="150.0" x2="56.2" y2="285.2" stroke-dasharray="4 3"/></g></svg><div class="over" style="left:74.4%;top:57.1%;background:var(--canvas-plot);padding:2px"><span class="cl" style="display:block"><b>a</b> Thickness</span><span class="row"><input id="cr-dt" class="num refused" type="text" value="x.xx" style="width:4rem" aria-invalid="true" aria-label="a Thickness, on the drawing"><span class="unit">nm</span></span></div>
+<div class="over" style="left:24.4%;top:78.7%;background:var(--canvas-plot);padding:2px"><span class="cl" style="display:block"><b>b</b> Reservoir radius, from the axis</span><span class="row"><input class="num" type="text" value="250" style="width:4rem" aria-label="b Reservoir radius, on the drawing"><span class="unit">nm</span></span></div></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+<div class="card" role="dialog" aria-label="Problems" style="position:absolute;top:40px;right:12px;width:440px;z-index:5;box-shadow:0 6px 20px rgb(0 0 0 / .25)">
+  <h2 class="h">1 problem in Continuum</h2><div class="qrow" style="grid-template-columns:1.4rem minmax(0,1fr) auto"><span class="err" aria-hidden="true"></span><span><b>Region · membrane thickness</b>: x.xx nm is outside x.xx to x.xx nm; enter a thickness in that range. <span class="num muted">geometry.membrane.thickness_nm</span></span><a class="btn small" href="#g-problems">Go to field</a></div></div>
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup B">B</span><span><b>Continuum · Region, a refused value</b> <span class="muted">· screen 4 of 4</span></span>
+<span class="sp"></span><a href="#g-region">Back: Region</a><a href="index.html">All screens</a><a href="../a/02-geometry.html#g-problems">Same screen in A</a><a href="03-mesh.html#s-size">Next: Mesh, sizes</a></nav>
+</section>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup A: analysis</title>
+<link rel="stylesheet" href="../mockups.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <linearGradient id="g-seq" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".25" stop-color="#3b528b"/><stop offset=".5" stop-color="#21918c"/><stop offset=".75" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <linearGradient id="g-seq2" x1="0" y1="1" x2=".3" y2="0">
+      <stop offset="0" stop-color="#440154"/><stop offset=".3" stop-color="#3b528b"/><stop offset=".55" stop-color="#21918c"/><stop offset=".8" stop-color="#5ec962"/><stop offset="1" stop-color="#fde725"/>
+    </linearGradient>
+    <radialGradient id="g-diff" cx=".35" cy=".55" r=".55">
+      <stop offset="0" stop-color="#b2182b"/><stop offset=".35" stop-color="#f4a582"/><stop offset=".7" stop-color="#f7f7f7"/><stop offset="1" stop-color="#d1e5f0"/>
+    </radialGradient>
+    <clipPath id="disc"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0 Z"/></clipPath>
+    <symbol id="pore-rz" viewBox="0 0 180 300"><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-opacity=".7"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="protein-rz" viewBox="0 0 180 300"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="currentColor" fill-opacity=".32" stroke="currentColor"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></symbol>
+    <symbol id="pore-3d" viewBox="0 0 300 300">
+      <ellipse cx="150" cy="70" rx="120" ry="36" fill="#7b8494"/>
+      <path d="M30 70 Q30 120 90 150 L100 262 Q150 282 200 262 L210 150 Q270 120 270 70 Q270 106 150 106 Q30 106 30 70Z" fill="#5c6474"/>
+      <path d="M70 92 Q72 125 108 150 L114 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M150 106 L150 276" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <path d="M230 92 Q228 125 192 150 L186 262" stroke="#9aa3b2" stroke-width="2" fill="none"/>
+      <ellipse cx="150" cy="70" rx="58" ry="16" fill="#0d0f13" stroke="#9aa3b2"/>
+      <circle cx="118" cy="190" r="7" fill="#ef6f6c"/><text x="118" y="194" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text><circle cx="182" cy="200" r="7" fill="#ef6f6c"/><text x="182" y="204" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">−</text>
+      <circle cx="132" cy="122" r="7" fill="#6fa8ff"/><text x="132" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text><circle cx="170" cy="230" r="7" fill="#6fa8ff"/><text x="170" y="234" text-anchor="middle" font-size="11" font-weight="700" fill="#0d0f13" font-family="sans-serif">+</text>
+    </symbol>
+</defs></svg>
+<section data-screen="a-explorer" id="a-explorer" aria-label="Analysis · Results explorer">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html" aria-current="page"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">I–V, NaCl · run x of n</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Analysis tools</h2><ul class="tools" aria-label="Analysis tools"><li><a href="#a-explorer" aria-current="true">Results explorer</a></li><li><a href="#a-compare-side">Comparison</a></li></ul></div></div>
+<div class="viewwrap" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1.3fr) minmax(0,1fr)">
+  <div style="grid-column:1/-1" class="toolbar"><h2 style="margin:0;font-size:var(--text-lg)">I–V, NaCl</h2><span class="muted">2WCD, pH 7.5 on the reference mesh</span><span style="margin-left:auto"></span>
+    <label for="ae-b" class="muted">Bias</label><select id="ae-b"><option>x.xx V, x of n</option></select><button class="btn small" type="button">Add a tile…</button><span class="later" style="padding:2px 6px"><b>Figure export</b></span></div>
+  <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px;grid-row:span 2;grid-template-rows:auto minmax(0,1fr) auto"><div class="row"><b>Potential</b><select aria-label="Quantity"><option>Potential</option><option>Concentration, Na⁺</option><option>Velocity</option></select><select aria-label="Colour map"><option>viridis</option><option>cividis</option></select><button class="btn small" type="button" style="margin-left:auto" aria-label="Potential tile options">⋯</button></div>
+    <div class="cplot" style="position:relative;" role="img" aria-label="Potential in (r, z), the axial cut and a probe marked"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="#c9ced8" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/><line x1="20" y1="10" x2="20" y2="290" style="stroke:var(--accent)" stroke-width="3"/><circle cx="33" cy="190" r="4" style="fill:var(--panel);stroke:var(--accent)" stroke-width="2"/></svg></div><div class="corner"><div class="cbox"><span class="cl">Potential, mV</span><div class="cbar seq"></div><div class="row num cl" style="justify-content:space-between"><span>x.xx</span><span>x.xx</span></div></div></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div>
+    <div class="row"><span class="chip">Linked: field and its probes and cuts</span><button class="btn small" type="button">Unlink</button></div></div>
+  <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><div class="row"><b>Current against bias</b><button class="btn small" type="button" style="margin-left:auto" aria-label="Current tile options">⋯</button></div><div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0"><span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Current, nA</span><svg viewBox="0 0 200 120" width="100%" height="100%" preserveAspectRatio="none" role="img" aria-label="Current against bias"><line x1="0" y1="60" x2="200" y2="60" stroke="currentColor" stroke-opacity=".5"/><line x1="100" y1="0" x2="100" y2="120" stroke="currentColor" stroke-opacity=".5"/><polyline points="5,105 50,85 80,68 100,60 120,50 150,32 195,12" fill="none" style="stroke:var(--accent)" stroke-width="2"/><circle cx="150" cy="32" r="4" style="fill:var(--accent)"/></svg><span></span><span class="cl" style="text-align:center">Bias, V</span></div></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;min-height:0">
+    <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><div class="row"><b>Quantities</b><button class="btn small" type="button" style="margin-left:auto" aria-label="Quantities tile options">⋯</button></div><table><tbody><tr><td>Conductance</td><td class="num">x.xx nS</td></tr><tr><td>Transport number</td><td class="num">x.xx</td></tr><tr><td>EOF rate</td><td class="num">x.xx m³/s</td></tr></tbody></table></div>
+    <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><div class="row"><b>Axial cut, r = 0</b><button class="btn small" type="button" style="margin-left:auto" aria-label="Axial cut tile options">⋯</button></div><div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0"><span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Potential, mV</span><svg viewBox="0 0 200 120" width="100%" height="100%" preserveAspectRatio="none" role="img" aria-label="Potential along the axis"><line x1="0" y1="110" x2="200" y2="110" stroke="currentColor" stroke-opacity=".5"/><polyline points="0,20 50,22 80,40 110,85 140,96 200,98" fill="none" style="stroke:var(--accent)" stroke-width="2"/></svg><span></span><span class="cl" style="text-align:center">z, nm</span></div></div>
+  </div>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup A">A</span><span><b>Analysis · Results explorer</b> <span class="muted">· screen 1 of 3</span></span>
+<span class="sp"></span><a href="06-study.html#st-tree">Back: The project tree unfolded</a><a href="index.html">All screens</a><a href="../b/05-results.html#a-explorer">Same screen in B</a><a href="#a-compare-side">Next: Comparison, side by side</a></nav>
+</section>
+<section data-screen="a-compare-side" id="a-compare-side" aria-label="Analysis · Comparison, side by side">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html" aria-current="page"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">Parent and ASP 64 neutral</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Analysis tools</h2><ul class="tools" aria-label="Analysis tools"><li><a href="#a-explorer">Results explorer</a></li><li><a href="#a-compare-side" aria-current="true">Comparison</a></li></ul></div></div>
+<div class="viewwrap" style="grid-template-rows:auto minmax(0,1fr) auto">
+  <div class="stack" style="gap:6px"><div class="row"><h2 style="margin:0;font-size:var(--text-lg)">Parent and ASP 64 neutral</h2><span class="muted">one colour scale</span><span style="margin-left:auto"></span><div class="tabs" role="tablist" aria-label="Show"><a role="tab" href="#a-compare-side" aria-selected="true">Side by side</a><a role="tab" href="#a-compare-diff" aria-selected="false">Difference</a></div></div>
+<div class="toolbar"><label class="muted" for="cs-1">Run</label><select id="cs-1"><option>I–V, NaCl · 2WCD, pH 7.5</option></select><label class="muted" for="cs-2">against</label><select id="cs-2"><option>I–V, NaCl · 2WCD, ASP 64 neutral</option></select>
+<label class="muted" for="cs-b">Bias</label><select id="cs-b"><option>x.xx V, x of n</option></select><label class="muted" for="cs-q">Quantity</label><select id="cs-q"><option>Potential</option></select><button class="btn small" type="button">New comparison…</button></div></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;min-height:0">
+    <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><span>Parent · <span class="num">x.xx nS</span></span><div class="cplot" style="position:relative;" role="img" aria-label="Field map in (r, z)"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="#c9ced8" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div></div>
+    <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><span>ASP 64 neutral · <span class="num">x.xx nS</span> <span class="chg">1 change</span></span><div class="cplot" style="position:relative;" role="img" aria-label="Field map in (r, z)"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq2)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="#c9ced8" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div></div>
+  </div>
+  <div class="cbox"><span class="cl">Potential, mV, shared</span><div class="cbar seq"></div><div class="row num cl" style="justify-content:space-between"><span>x.xx</span><span>x.xx</span></div></div>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup A">A</span><span><b>Analysis · Comparison, side by side</b> <span class="muted">· screen 2 of 3</span></span>
+<span class="sp"></span><a href="#a-explorer">Back: Results explorer</a><a href="index.html">All screens</a><a href="../b/05-results.html#a-compare-side">Same screen in B</a><a href="#a-compare-diff">Next: Comparison, the difference</a></nav>
+</section>
+<section data-screen="a-compare-diff" id="a-compare-diff" aria-label="Analysis · Comparison, the difference">
+<div><header class="titlebar"><span class="app">nanopnp</span><nav class="menus" aria-label="Menus"><button type="button" aria-haspopup="menu">File</button><button type="button" aria-haspopup="menu">Edit</button><button type="button" aria-haspopup="menu">View</button><button type="button" aria-haspopup="menu">Run</button><button type="button" aria-haspopup="menu">Help</button></nav>
+<span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
+<a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
+<button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr)">
+<div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html" aria-current="page"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
+<div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
+  <span class="grp">Open</span>
+  <ul class="tools"><li><a href="#" aria-current="true">Parent and ASP 64 neutral</a></li></ul>
+  <span class="grp">Project</span>
+  <ul class="tools">
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Library <span class="st muted">3</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Studies <span class="st muted">2</span></a></li>
+    <li><a href="06-study.html#st-tree" aria-expanded="false">Comparisons <span class="st muted">1</span></a></li>
+  </ul>
+  <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
+</nav></div>
+<div style="display:grid;min-height:0"><div class="pane"><h2>Analysis tools</h2><ul class="tools" aria-label="Analysis tools"><li><a href="#a-explorer">Results explorer</a></li><li><a href="#a-compare-side" aria-current="true">Comparison</a></li></ul></div></div>
+<div class="viewwrap" style="grid-template-rows:auto minmax(0,1fr)">
+  <div class="stack" style="gap:6px"><div class="row"><h2 style="margin:0;font-size:var(--text-lg)">Parent and ASP 64 neutral</h2><span class="muted">one colour scale</span><span style="margin-left:auto"></span><div class="tabs" role="tablist" aria-label="Show"><a role="tab" href="#a-compare-side" aria-selected="false">Side by side</a><a role="tab" href="#a-compare-diff" aria-selected="true">Difference</a></div></div>
+<div class="toolbar"><label class="muted" for="cd-1">Run</label><select id="cd-1"><option>I–V, NaCl · 2WCD, pH 7.5</option></select><label class="muted" for="cd-2">against</label><select id="cd-2"><option>I–V, NaCl · 2WCD, ASP 64 neutral</option></select>
+<label class="muted" for="cd-b">Bias</label><select id="cd-b"><option>x.xx V, x of n</option></select><label class="muted" for="cd-q">Quantity</label><select id="cd-q"><option>Potential</option></select><button class="btn small" type="button">New comparison…</button></div></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:8px;min-height:0">
+    <div style="border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:6px;display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;gap:4px"><span><b>ASP 64 neutral − parent</b> <span class="muted">conductance x.xx nS against x.xx nS</span></span><div class="cplot" style="position:relative;" role="img" aria-label="Field map in (r, z)"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-diff)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="#c9ced8" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="corner"><div class="cbox"><span class="cl">Variant − parent, mV</span><div class="cbar div"></div><div class="row num cl" style="justify-content:space-between"><span>−x</span><span>0</span><span>+x</span></div></div></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div></div>
+    <div class="stack" style="align-content:start"><span class="h">Parent</span><div style="height:170px;display:grid"><div class="cplot" style="position:relative;" role="img" aria-label="Field map in (r, z)"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="#c9ced8" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div></div>
+      <span class="h">ASP 64 neutral</span><div style="height:170px;display:grid"><div class="cplot" style="position:relative;" role="img" aria-label="Field map in (r, z)"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><rect x="20" y="10" width="140" height="280" fill="url(#g-seq2)" clip-path="url(#disc)"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="#9aa3b2" stroke="#16181d"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="#c9ced8" stroke="#16181d"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg></div><div class="over cl" style="left:6px;bottom:4px;background:var(--canvas-plot);padding:0 3px">Schematic</div></div></div><div class="cbox"><span class="cl">Potential, mV, shared</span><div class="cbar seq"></div><div class="row num cl" style="justify-content:space-between"><span>x.xx</span><span>x.xx</span></div></div>
+      <a class="btn small" href="#a-compare-side" style="justify-self:start">Show both large</a></div>
+  </div>
+</div>
+</div>
+<div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
+
+<nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup A">A</span><span><b>Analysis · Comparison, the difference</b> <span class="muted">· screen 3 of 3</span></span>
+<span class="sp"></span><a href="#a-compare-side">Back: Comparison, side by side</a><a href="index.html">All screens</a><a href="../b/05-results.html#a-compare-diff">Same screen in B</a></nav>
+</section>
+</body>
+</html>
