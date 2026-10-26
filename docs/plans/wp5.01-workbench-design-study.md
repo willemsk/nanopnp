@@ -390,7 +390,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > checkbox or radio by its label, which is its target; `--ok` darkened to 5.1:1 on `--sel`. Published for the
   > picks at `https://claude.ai/artifact/FX2W3zrgWv9yRX2HEAJu8e`.
 - [x] 11. Wait checkpoint: the picks on the panels. **Executor:** main.
-- [ ] 12. `/np-gui collect` (the panels); the two whole-workbench mockups, A and B, in `docs/design/mockups/`,
+- [x] 528f236 12. `/np-gui collect` (the panels); the two whole-workbench mockups, A and B, in `docs/design/mockups/`,
   rendered, reviewed and published (D3); done when no blocking reviewer finding is open and the strict build
   passes. **Executor:** main.
 
@@ -404,7 +404,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > editor and the run views. Each is fixed or answered in [the review record](../design/reviews/2026-10-26-mockups.md).
   > The final render, 256 shots at 1440 × 900 and 1280 × 800 in both themes, has no page error and no failed
   > contrast or target check. Published for the verdicts at `https://claude.ai/artifact/W4oUSuDkXS61KoBQGxU7ag`.
-- [ ] 13. Wait checkpoint: the verdicts on the two mockups. **Executor:** main.
+- [x] 13. Wait checkpoint: the verdicts on the two mockups. **Executor:** main.
 - [ ] 14. `/np-gui collect` (the mockups, and the pending marks on the concept boards and the style tile, a contradicting mark reopening its ruling); one revision of the chosen mockup; `docs/design/workbench.md` complete;
   `mkdocs.yml`'s nav (D3); done when the strict build passes. **Executor:** main.
 - [ ] 15. The specification (D5): NOTEs in `specification/02-product-overview.md`,
