@@ -20,6 +20,32 @@ Phase 2's were `v0.9.0-alpha.1` to `v0.9.0-alpha.9`. A manifest written before t
 version, and this file's sections carry the new names. Each entry names the requirements it discharges. The
 evidence is in the work package's plan under [docs/plans/](docs/plans), not here.
 
+## [Unreleased]
+
+WP5.01: the workbench design study, Phase 5's first package, in the second lane beside Phase 4. It
+merges before `v0.5.0` and takes no tag, so its entry waits here (`SPECIFICATION.md` §8.2.17 S15,
+S19). It critiques the Qt shell, holds a design round with the author, draws the areas as choice
+panels and two whole-workbench mockups, and writes the design document and its requirements. No
+`src/`, `tests/`, case schema or public API changes (S1). The
+[plan](docs/plans/wp5.01-workbench-design-study.md) records the work.
+
+### Added
+
+- **`/np-gui` with five levels**: `render`, `review`, `publish`, `collect` and `grill`; the
+  `gui-reviewer` agent; and the scripts `.claude/scripts/gui/shoot.cjs` and `capture_qt.py`
+  (§8.2.17 S22).
+- **The design document** `docs/design/workbench.md`, on the documentation site. It gives the Qt
+  shell's capability list and critique, four suites in a project (Molecular, Continuum, Study,
+  Analysis), the look and feel with its tokens in `docs/design/tokens.css`, the tools, the four live
+  links, the project folder, the guided route, the later tools, and the decision log WB-01 to WB-32.
+- **The concept boards, style tile, choice panels and mockups A and B** under `docs/design/`, with
+  their generators and review records. Mockup A is chosen and revised.
+- **`SPECIFICATION.md`**: FR-31 to FR-43 and QR-16; the browser shell's restatements of P3, IF-09,
+  QR-10, CON-09, the packaging NOTE of ADR-004, RSK-13, VER-43, VER-44, VER-55 and VER-60, each a
+  NOTE that replaces its clause when Qt leaves (S17); and the rulings of §8.2.18 on the inherited
+  review rows.
+- **Open items** REV-134 to REV-139 and REV-141; REV-140 was raised and fixed in the same package.
+
 ## [0.5.0-alpha.19] - 2026-10-22
 
 WP53: the workflow, three commands with levels, workers and a current checkout (`SPECIFICATION.md`
