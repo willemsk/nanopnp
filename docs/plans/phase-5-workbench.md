@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: planned, not started.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended
+**Status: in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended
 the same day (S21 to S23; [the record](phase-5-record.md)). Planned:
 WP5.01, beside Phase 4 (S1), and WP5.02, after `v0.5.0`. The shell packages from WP5.03 and their
 estimate wait for `/np-plan amend 5` (S14); the close is last. Release: **v0.6** (`v0.6.0`).
@@ -77,9 +77,17 @@ analytes (N4, N5).
 
 ### WP5.01 — Discovery and the design and requirements document (F5; S2 to S7, S11, S12)
 
-**Planned:** [the plan](wp5.01-workbench-design-study.md).
+**Delivered** ([the plan](wp5.01-workbench-design-study.md)), 27 October 2026, awaiting `/np-ship`.
+It built `/np-gui`, the `gui-reviewer` agent and the render scripts, and used them on every round. The
+Qt shell's 41 capabilities are listed and critiqued (REV-134). The design round ruled "suites in a
+project", later four suites with Study the fourth (WB-01 to WB-29), and a look and feel whose tokens are
+`docs/design/tokens.css` as the default theme. Twenty-one choices were picked, and mockup A was chosen
+and revised; `docs/design/workbench.md` holds the whole design. The specification gains FR-31 to FR-43
+and QR-16, and the browser shell's restatements as NOTEs (S17). The inherited rows are ruled in
+§8.2.18, MOD-09 brought into v0.6. **Live for later packages:** REV-135 to REV-139 and REV-141; the
+library capabilities of REV-136 and MOD-09 (T4) before their screens; open decisions 3 and 4 settled.
 
-Prose, mockups, the specification and the GUI development tools under `.claude/` (S1, S22). It
+*As planned:* prose, mockups, the specification and the GUI development tools under `.claude/` (S1, S22). It
 first builds `/np-gui` and the `gui-reviewer` agent, and uses them: it publishes today's Qt shell,
 rendered offscreen, for the author's keep, drop or change per screen; runs an interactive design
 round, a brainstorm over several organising principles and then a grilling, on how the workbench is
