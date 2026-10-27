@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 16 done; next, item 17, the changelog and `current.md`.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: delivered, 27 October 2026.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -434,7 +434,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > are tagged for the composer, structural-mutator and sketcher phases; QR-16 is WB-24's accessibility target.
   > Each has its Appendix A row. §8.1's Phase 5 rows already carried WB-01, WB-02, WB-14 and WB-29. Writing the
   > restatements found CON-08 and CON-11 still naming the bundle: REV-141. `duplicates.py` and the strict build pass.
-- [ ] 16. The inherited rows (D6): the round, `specification/history/18-…`, its index lines, the
+- [x] 8ed4a5d 16. The inherited rows (D6): the round, `specification/history/18-…`, its index lines, the
   REV and MOD rows; done when the code and review say so. **Executor:** main.
 
   > **Outcome — the inherited rows ruled; two marks explained; WB-30 to WB-32 restated.** The author ruled
@@ -446,7 +446,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > author put WB-30 and WB-31 under user settings, a theme the user adjusts, and called the wheel rule of WB-32
   > "not a literal constraint" (T8): FR-34 now asks that a setting be guarded against an accidental change.
   > Phase 5's open decisions 3 and 4 are settled.
-- [ ] 17. `CHANGELOG.md` and `docs/plans/current.md` (S19); done when the code and review say so.
+- [x] 753aac6 17. `CHANGELOG.md` and `docs/plans/current.md` (S19); done when the code and review say so.
   **Executor:** `general-purpose` on Haiku.
 
 ### Verification
