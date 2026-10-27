@@ -231,7 +231,7 @@ Each tool has its settings and its live view (S6). The mockup screen named is in
 | Molecular | Prepare structure | The structure file, the chains, the axis tilt (estimated or typed), the flip, the membrane's centre; the orientation gate; *Save prepared structure* | 3D: the axis and the membrane slab, dragged by their handles | `m-prepare` |
 | Molecular | Ensemble | The source (a trajectory or the structure alone), the stride, the frames used with their Q<sub>net</sub> | 3D, one frame or the frames overlaid | `m-ensemble` |
 | Molecular | Protonation | The pH, the force field, the titration; *Build molecular model*; the residue states | 3D and the residue strip, each residue with its sign | `m-protonation` |
-| Molecular | Charge edit | A residue's protonation state, on every chain, saved as a variant | 3D, the residue picked or chosen from a list | `m-charge` |
+| Molecular | Charge edit | A residue's protonation state, charge or radius, on every chain, saved as a variant (§8.2.19 U6) | 3D, the residue picked or chosen from a list | `m-charge` |
 | Molecular | View | The representation, the colouring, the background, the slab, the clip; a residue list | 3D, with the charge's diverging bar | `m-view` |
 | Continuum | Protein geometry | Stages 2 to 4: the grid and kernel, the point group, the isolevel; *Build geometry* | (r, z): the density, the variance, the contour and the probe-radius profile as layers | `g-geometry` |
 | Continuum | Contour | The isolevel, the smoothing, the simplification; the vertices; the gate | (r, z) editor over the map; the radius against z | `g-contour` |
@@ -366,7 +366,7 @@ its clause, tagged for v0.6, and replaces it in the package that removes Qt (S17
 | ADR-004's packaging NOTE | A one-dir PyInstaller bundle with its probe | Lapses with the bundle: the workbench is the package with its `gui` extra, the front end prebuilt inside it; the solver process is still spawned |
 | RSK-13 | Desktop packaging defeated by a binary dependency | The workbench's install defeated by a binary dependency: every payload a wheel; CI installs the `gui` extra on Linux, macOS and Windows and runs the self-test |
 
-The new requirements are §3's FR-31 to FR-42 and QR-16, each with its Appendix A row: the suites (FR-31),
+The new requirements are §3's FR-31 to FR-43 and QR-16, each with its Appendix A row: the suites (FR-31),
 the project folder (FR-32), the four live links (FR-33), the changed marks and no hidden state (FR-34), the
 refusal at its field (FR-35), the guided route (FR-36), structure preparation (FR-37), the charge-level
 mutator (FR-38), the study's overrides and sweeps (FR-39), and the accessibility target (QR-16); the

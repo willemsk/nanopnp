@@ -156,17 +156,17 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * R11 - §8.4.4, §8.4.5
 * R12 - §8.4.4
 * S1 - §8.4.4
-* S2 - §8.1; open: WP5.01 restates P3 and QR-10 (S17)
-* S3 - open: WP5.01 writes the composer's requirements
-* S4 - §8.1
-* S5 - §8.1
-* S6 - open: WP5.01 writes the live views as requirements
+* S2 - §8.1; the v0.6 NOTEs beside P3 and QR-10; open: the package that removes Qt makes them the text (S17)
+* S3 - FR-40
+* S4 - §8.1, FR-38, FR-41; structure preparation brought into Phase 5 by the design document's WB-14, FR-37
+* S5 - §8.1, FR-42
+* S6 - FR-33
 * S7 - §8.1, RSK-15, §8.3
 * S8 - open: WP5.02's spike, then ADR-004
 * S9 - open: WP5.02 writes the workflow into §8.4.4 and CONTRIBUTING.md
 * S10 - open: WP5.02 proposes its VER- identifier
-* S11 - open: WP5.01's design document
-* S12 - open: WP5.01 restates ADR-004's packaging NOTE, CON-09 and RSK-13
+* S11 - FR-32; the design document's *The project folder*
+* S12 - the v0.6 NOTEs beside ADR-004's packaging NOTE, CON-09 and RSK-13; open: the package that removes Qt makes them the text
 * S13 - §8.1
 * S14 - spent
 * S15 - §2.7 Versioning NOTE, §8.4.1, §8.4.4
@@ -175,10 +175,10 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * S18 - §8.4.4
 * S19 - §8.4.1
 * S20 - §8.4.4
-* S21 - the Phase 5 plan; open: WP5.01's design document, and §8.1 where a ruling moves it
-* S22 - open: WP5.01 amends §8.4.4, §8.4.5 and CLAUDE.md with its workflow item
+* S21 - the Phase 5 plan; §8.1; the design document's decision log
+* S22 - §8.4.4, §8.4.5
 * S23 - the WP5.01 plan
-* S24 - the Phase 5 plan; open: WP5.01's design document
+* S24 - the Phase 5 plan; the design document's *The areas*
 * T1 - spent
 * T2 - open: the workbench's packages, set by `/np-plan amend 5`
 * T3 - open: structure preparation's package, the Study package, FR-28 and the composer phase
@@ -192,3 +192,5 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * U3 - open: `/np-plan amend 5`
 * U4 - open: `/np-plan amend 5`
 * U5 - open: WP5.02
+* U6 - FR-38
+* U7 - open: WP5.02

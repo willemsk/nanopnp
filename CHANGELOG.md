@@ -47,7 +47,8 @@ panels and two whole-workbench mockups, and writes the design document and its r
 - **Open items** REV-134 to REV-139 and REV-141, ruled in §8.2.19: REV-134 carried until Qt leaves;
   protonation to move before the density, the protonated density the validated default (REV-135, a NOTE
   beside PHY-16); REV-136 and the sweep's design round to `/np-plan amend 5`; REV-137, REV-138 and
-  REV-141 to WP5.02. REV-140 was raised and fixed in the same package.
+  REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
+  restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
 ## [0.5.0-alpha.19] - 2026-10-22
 

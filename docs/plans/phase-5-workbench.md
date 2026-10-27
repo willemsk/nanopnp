@@ -85,7 +85,7 @@ project", later four suites with Study the fourth (WB-01 to WB-29), and a look a
 and revised; `docs/design/workbench.md` holds the whole design. The specification gains FR-31 to FR-43
 and QR-16, and the browser shell's restatements as NOTEs (S17). The inherited rows are ruled in
 §8.2.18, MOD-09 brought into v0.6, and the rows it left open in §8.2.19. **Live for later packages:**
-REV-137, REV-138 and REV-141 for WP5.02 (U5); for `/np-plan amend 5`, the library capabilities of REV-136
+REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
 (U3) and MOD-09 (T4) before their screens, protonation before the density (REV-135, U2) and the sweep's
 design round (REV-139, U4); REV-134 closes with Qt (U1); open decisions 3 and 4 settled.
 
@@ -117,11 +117,12 @@ browser-console error; oracle, the screen registry. It names the commands that l
 end-of-phase numbers: click-to-redraw time and the clean-environment install time. Tag
 `v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the explorer's controls
 against `webgui`), REV-138 (non-text contrast in `/np-gui render`) and REV-141 (CON-08 and CON-11
-restated beside ADR-004) (§8.2.19 U5).
+restated beside ADR-004) (§8.2.19 U5), and REV-143 (the light theme's control edge on a selected row,
+with REV-138) (U7).
 
 ### WP5.03 onward — The shell (provisional)
 
-The workbench's frame, its tabs over today's capabilities and the four live views, the charge-level
+The workbench's frame, its four suites over today's capabilities and the four live views, the charge-level
 mutator, the project folder, `nanopnp gui`, then Qt's removal and documentation increment 5. Before
 the mutator, a library package moves protonation before the density, the protonated density the
 validated default (REV-135; §8.2.19 U2). The amendment also runs the sweep's design round (REV-139,

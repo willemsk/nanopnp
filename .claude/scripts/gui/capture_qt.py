@@ -178,6 +178,12 @@ class Capture:
         charge = self.window._charge
         self.select_tab("Charge")
         self.window.build_charge()
+        # Both tabs clear their settled flag as a build starts; a refused build leaves them set, and
+        # the rows would be grabbed unbuilt.
+        if geometry._settled or charge._settled:
+            message = self.window.statusBar().currentMessage()
+            self.missed.append(f"built: the charge build did not start: {message}")
+            return
         if not self.pump(
             lambda: geometry._settled and charge._settled, WALK_TIMEOUT_S, "the charge build"
         ):
