@@ -100,8 +100,8 @@ the rows above gate the Qt shell (§8.2.17 S13, S17).
 - **VER-60**, *Charge pipeline surfaced in the workbench*: as the row above, with four changes. The
   view-models import no front-end framework, NGSolve, PDB2PQR or PROPKA in a fresh process. "Each
   bounded number's field accepts exactly its schema bounds, in both directions; an integer field
-  accepts whole numbers only, and a field that admits `null` can say "unset" (WP32)" replaces the
-  spin-box sentence. "The study's charge on the mesh drives the walk to `upto: charge` and shows each
+  accepts whole numbers only, and a field that admits `null` can say "unset" (WP32); and a loaded pH
+  of 7.25 is shown and not rewritten" replaces the spin-box sentence. "The study's charge on the mesh drives the walk to `upto: charge` and shows each
   stage's hash, the marked planes, the five legs and the deployed field under IF-07's name; the
   Protonation tool shows the protonation row" replaces the Charge tab's sentence. "The server's
   self-test exercises PDB2PQR and PROPKA" replaces "The probe carries PDB2PQR and PROPKA", the rest of

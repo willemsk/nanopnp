@@ -71,7 +71,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * At most two lanes are in flight. The current phase runs one package at a time; the second lane is
   the next phase's design study, which changes no `src/`, `tests/`, case schema or public API before
   the current phase's release. A clause that the study restates before that release is added beside
-  the clause, tagged for the study's release, and replaces it only when that release ships. While two
+  the clause, tagged for the study's release, and replaces it only when that release ships, or, for a
+  clause gating code that the study's phase removes, in the package that removes it. While two
   pull requests are open, `/np-implement` and `/np-ship` take `wp <n>`, `docs/plans/current.md` holds
   one position line per lane, and each package edits only its own. The pull request that merges
   second renumbers every new item of every numbered register (`REV-nn` rows, requirement identifiers
@@ -79,7 +80,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   each kind in order from one above the highest on `main`, with every reference to them. `/np-ship`
   runs `.claude/scripts/duplicates.py` after merging `main`, and the author merges a second-lane pull
   request only after `/np-ship` has run on it against the current `main`. (§8.2.17 S1, S15 to S18,
-  S20)
+  S20; §8.2.18 T5)
 * A phase plan, a work-package plan and a work-package pull request open with `## In brief`, at most
   250 words and readable without code or identifiers. It says what changes and why, what it costs,
   what could go wrong and how it would be noticed. Its *Your call* gives each decision that waits for

@@ -1495,10 +1495,28 @@ workbench is the package with its `gui` extra, installed from wheels, and WP5.01
 NOTE and RSK-13 say so. Neither constraint was in the set WP5.01 restates (IF-09, P3, QR-10, VER-43, VER-44, VER-55,
 VER-60, CON-09, ADR-004's packaging NOTE, RSK-13), so once Qt leaves no text says which linear solver an installed
 workbench defaults to, where UMFPACK comes from on a wheel install, or where its GPL-2+ notice is shown. Found while
-writing the restatements (WP5.01 item 15).
+writing the restatements (WP5.01 item 15). VER-60's restatement keeps the probe sentence's last
+clause, "the licence notice has a row for each payload", which names the bundle's CON-11 notice.
 
 **Open** for the author; proposed owner WP5.02, whose spike records the front end and the packaging in ADR-004
 (§8.2.17 S8): restate CON-08 and CON-11 for an installed workbench, beside the other restated clauses.
 
 **Ruled** (§8.2.19 U5): owned by WP5.02, as proposed.
 
+## REV-142: FR-38 drops the charge and radius edits of the charge-level mutator
+
+§8.2.17 S4 rules a charge-level mutation in which "a residue's protonation, charge or radius is edited at stage 7's
+PQR step". FR-38, as WP5.01 wrote it, and the design document's Charge edit tool offered only the protonation state,
+and no ruling recorded the cut. Found by `/np-ship`'s review of WP5.01 (`docs/code_reviews/CODE_REVIEW_016.md`).
+
+**Fixed** (§8.2.19 U6): FR-38 and the Charge edit row restore the charge and radius edits, as S4 rules.
+
+## REV-143: The light theme's control edge is under 3:1 on a selected row
+
+`docs/design/tokens.css` gives `--control-edge` (`#868c99`) 3.4:1 on `--panel` and 3.2:1 on `--bg`, but an input in
+a selected row sits on `--sel` (`#ece7ff`), where the edge is 2.80:1, under WCAG 2.2 1.4.11's 3:1 for a control's
+boundary. The dark theme's edge is 3.0:1 on its `--sel`. `/np-gui render` measures text contrast only (REV-138), so
+the rendered rounds did not see it. Found by `/np-ship`'s review of WP5.01 (`docs/code_reviews/CODE_REVIEW_016.md`).
+
+**Ruled** (§8.2.19 U7): owned by WP5.02, with REV-138's non-text measure: the token is darkened (`#7c8290` gives
+3.2:1 on `--sel`) and the pages rendered again there.

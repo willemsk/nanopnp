@@ -6,7 +6,9 @@
 // The manifest is a JSON list of {id, url, viewport: [w, h], scheme: "light"|"dark", wait_ms,
 // expand}. With `expand`, a CSS selector, the page is shot once per matching element's
 // `data-screen` value, after setting `location.hash` to it, as `<id>-<screen>`. Writes
-// `<out>/<id>.png` and `<out>/index.json`. Exits 0, or 2 if a page failed to load.
+// `<out>/<id>.png` and `<out>/index.json`; a shot's `viewer` is the shell's host-document flag, or
+// null on another page, and `unmeasured` lists the text the contrast check could not measure.
+// Exits 0, or 2 if a page failed to load.
 //
 // CommonJS: Playwright is installed globally and found through NODE_PATH, which serves
 // `require` and not `import`.
@@ -93,13 +95,33 @@ function checkPage() {
     return layers.reduceRight((below, layer) => over(layer, below), root());
   };
 
+  // Opacity below 1 on the element or an ancestor fades the text by an amount the layer walk
+  // cannot place, so such text is reported as not measured rather than passed.
+  const faded = (element) => {
+    for (let node = element; node && node.nodeType === 1; node = node.parentElement) {
+      if (Number(getComputedStyle(node).opacity) < 1) return true;
+    }
+    return false;
+  };
+
   const contrast = [];
+  const unmeasured = [];
   for (const element of document.body.querySelectorAll("*")) {
     if (["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE"].includes(element.tagName)) continue;
     const own = [...element.childNodes].some(
       (n) => n.nodeType === 3 && n.textContent.trim().length > 0,
     );
     if (!own || !visible(element)) continue;
+    // SVG text is painted by `fill` over sibling shapes, neither of which the walk above sees.
+    const reason = element instanceof SVGElement ? "svg text" : faded(element) ? "opacity" : "";
+    if (reason) {
+      unmeasured.push({
+        selector: selector(element),
+        text: element.textContent.trim().slice(0, 60),
+        reason,
+      });
+      continue;
+    }
     const style = getComputedStyle(element);
     const back = background(element);
     const fore = parse(style.color);
@@ -118,6 +140,18 @@ function checkPage() {
         background: hex(back),
         font_px: size,
       });
+    }
+  }
+
+  // Text drawn through <use> lives in a shadow tree the loop above never reaches.
+  for (const use of document.body.querySelectorAll("use")) {
+    if (!visible(use)) continue;
+    const ref = use.getAttribute("href") || use.getAttribute("xlink:href") || "";
+    const target = ref.startsWith("#") ? document.getElementById(ref.slice(1)) : null;
+    if (!target) continue;
+    for (const text of target.querySelectorAll("text")) {
+      const words = text.textContent.trim();
+      if (words) unmeasured.push({ selector: selector(use), text: words.slice(0, 60), reason: "svg text" });
     }
   }
 
@@ -146,7 +180,15 @@ function checkPage() {
       });
     }
   }
-  return { contrast, targets };
+  return { contrast, targets, unmeasured };
+}
+
+// The shell's host document reports whether its scene initialised (gui/render.py, READY_FLAG): a
+// renderer that never arrived or a WebGL context that failed is caught there, not a page error.
+function viewerState() {
+  const flag = window.__nanopnp_viewer;
+  if (typeof flag !== "object" || flag === null) return null;
+  return { ready: Boolean(flag.ready), error: String(flag.error || "") };
 }
 
 async function shootOne(browser, entry, out) {
@@ -171,17 +213,27 @@ async function shootOne(browser, entry, out) {
     loaded = false;
     pageErrors.push(`load failed: ${error.message}`);
   }
-  const record = (id, url) => ({
-    id,
-    file: `${id}.png`,
-    url,
-    viewport: [width, height],
-    scheme: entry.scheme || "light",
-    console: [...consoleErrors],
-    page_errors: [...pageErrors],
-    contrast: [],
-    targets: [],
-  });
+  // Each shot carries the errors raised since the previous shot, the first one those of the load.
+  let seenConsole = 0;
+  let seenPage = 0;
+  const record = (id, url) => {
+    const shot = {
+      id,
+      file: `${id}.png`,
+      url,
+      viewport: [width, height],
+      scheme: entry.scheme || "light",
+      console: consoleErrors.slice(seenConsole),
+      page_errors: pageErrors.slice(seenPage),
+      viewer: null,
+      contrast: [],
+      targets: [],
+      unmeasured: [],
+    };
+    seenConsole = consoleErrors.length;
+    seenPage = pageErrors.length;
+    return shot;
+  };
 
   if (!loaded) {
     records.push({ ...record(entry.id, entry.url), file: null });
@@ -205,8 +257,9 @@ async function shootOne(browser, entry, out) {
     }
     await page.screenshot({ path: path.join(out, `${id}.png`) });
     const checks = await page.evaluate(checkPage);
+    const viewer = await page.evaluate(viewerState);
     const url = screen ? `${entry.url.split("#")[0]}#${screen}` : entry.url;
-    records.push({ ...record(id, url), ...checks });
+    records.push({ ...record(id, url), viewer, ...checks });
   }
   await context.close();
   return { records, loaded };
@@ -219,12 +272,38 @@ async function shoot(manifest, out) {
   let failed = false;
   try {
     for (const entry of manifest) {
-      const { records, loaded } = await shootOne(browser, entry, out);
+      let records;
+      let loaded;
+      try {
+        ({ records, loaded } = await shootOne(browser, entry, out));
+      } catch (error) {
+        // One page that cannot be shot is recorded as failed; the other pages keep their records.
+        loaded = false;
+        records = [
+          {
+            id: entry.id,
+            file: null,
+            url: entry.url,
+            viewport: entry.viewport || [1280, 800],
+            scheme: entry.scheme || "light",
+            console: [],
+            page_errors: [`shoot failed: ${error.message}`],
+            viewer: null,
+            contrast: [],
+            targets: [],
+            unmeasured: [],
+          },
+        ];
+      }
       index.push(...records);
       failed = failed || !loaded;
       for (const r of records) {
         const problems =
-          r.page_errors.length + r.console.length + r.contrast.length + r.targets.length;
+          r.page_errors.length +
+          r.console.length +
+          r.contrast.length +
+          r.targets.length +
+          (r.viewer && !r.viewer.ready ? 1 : 0);
         console.log(`${r.id}: ${r.file || "not loaded"}${problems ? `, ${problems} findings` : ""}`);
       }
     }
@@ -260,8 +339,13 @@ async function selfCheck(out) {
     out,
   );
   const [record] = JSON.parse(fs.readFileSync(path.join(out, "index.json"), "utf8"));
-  const ready = record.page_errors.length === 0 && status === 0;
-  console.log(ready ? "self-check passed" : `self-check failed: ${record.page_errors.join("; ")}`);
+  const drew = record.viewer !== null && record.viewer.ready;
+  const ready = record.page_errors.length === 0 && status === 0 && drew;
+  const reasons = [
+    ...record.page_errors,
+    ...(drew ? [] : [`the scene did not draw: ${record.viewer ? record.viewer.error : "no flag"}`]),
+  ];
+  console.log(ready ? "self-check passed" : `self-check failed: ${reasons.join("; ")}`);
   return ready ? 0 : 1;
 }
 

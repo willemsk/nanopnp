@@ -13,7 +13,8 @@ in the commit that leaves an item open, and the commit that resolves it sets the
 ruling linking the plan that fixed it.
 
 **Status** is `open` until the author rules; then `accepted` (owned by a named later package),
-`fixed`, or `deferred`, `post-1.0` or `declined` (the ruling names the §8.2 row). **Severity** is
+`fixed`, or `deferred`, `post-1.0`, `declined` or `wontfix` (the ruling names the §8.2 row; `wontfix`
+for a row whose code or bundle leaves before it is fixed). **Severity** is
 `high` for a SHALL the code does not meet, `medium` for a property held only by convention, and
 `low` for size or tidiness. `tests/tier1/test_findings_logs.py` checks every row (VER-63). The log
 is a rolling register, and its header stays `open`.
@@ -161,3 +162,5 @@ is a rolling register, and its header stays `open`.
 | REV-139 | interface | medium | accepted | §8.2.19 U4 | [The sweep needs a design round: any value, user-defined variables, rebuilds detected](review-items.md#rev-139-the-sweep-needs-a-design-round-any-value-user-defined-variables-rebuilds-detected) |
 | REV-140 | interface | low | fixed | §8.2.18 T6, T7 | [Two of the author's marks on the mockups ask what is not yet said](review-items.md#rev-140-two-of-the-authors-marks-on-the-mockups-ask-what-is-not-yet-said) |
 | REV-141 | coupling | medium | accepted | §8.2.19 U5 | [CON-08 and CON-11 name a bundle and a desktop path the browser shell removes](review-items.md#rev-141-con-08-and-con-11-name-a-bundle-and-a-desktop-path-the-browser-shell-removes) |
+| REV-142 | interface | medium | fixed | §8.2.19 U6 | [FR-38 drops the charge and radius edits of the charge-level mutator](review-items.md#rev-142-fr-38-drops-the-charge-and-radius-edits-of-the-charge-level-mutator) |
+| REV-143 | interface | low | accepted | §8.2.19 U7 | [The light theme's control edge is under 3:1 on a selected row](review-items.md#rev-143-the-light-themes-control-edge-is-under-31-on-a-selected-row) |

@@ -374,7 +374,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > a changed-from-default colour apart from the accent, outlined colour bars; the rest go to the
   > mockups, and the checker's missing non-text measure is REV-138. The plan's agenda cited VER-67 for
   > refusals; VER-67 is withdrawn, so point 9 and WB-12 name no identifier.
-- [x] 9. Compaction checkpoint: the round is recorded. **Executor:** main.
+- [x] 4d37db9 9. Compaction checkpoint: the round is recorded. **Executor:** main.
 - [x] 4c82e50 10. The choice panels of the areas and the guided route in `docs/design/choices/`, rendered, reviewed and
   published; `mkdocs.yml`'s `exclude_docs`; `/np-gui`'s choice verdicts (D3); done when no blocking reviewer finding
   is open and the strict build passes. **Executor:** main.
@@ -389,7 +389,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > 960 × 640 in both themes, has no page error and no failed contrast or target check. The checker now measures a
   > checkbox or radio by its label, which is its target; `--ok` darkened to 5.1:1 on `--sel`. Published for the
   > picks at `https://claude.ai/artifact/FX2W3zrgWv9yRX2HEAJu8e`.
-- [x] 11. Wait checkpoint: the picks on the panels. **Executor:** main.
+- [x] 363ca45 11. Wait checkpoint: the picks on the panels. **Executor:** main.
 - [x] 528f236 12. `/np-gui collect` (the panels); the two whole-workbench mockups, A and B, in `docs/design/mockups/`,
   rendered, reviewed and published (D3); done when no blocking reviewer finding is open and the strict build
   passes. **Executor:** main.
@@ -410,7 +410,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   `mkdocs.yml`'s nav (D3); done when the strict build passes. **Executor:** main.
 
   > **Outcome — A chosen and revised; two rulings reopened; the design document complete.** The author marked
-  > every screen: A overall, 22 `fine`, 10 `change` ([the verdicts](../design/reviews/2026-10-26-mockups.md)). Round 2
+  > every screen: A overall, 22 `fine`, 10 `change`, one a slip that stands as `fine` (§8.2.18 T7) ([the verdicts](../design/reviews/2026-10-26-mockups.md)). Round 2
   > of A docks Prepare's and Protonation's settings beside the view, moves the physics defaults' settings to the
   > left, lists the physics in the study's overview, redraws the sweep over any value with the rebuilds it needs,
   > says what the charge on the mesh is for, and takes B's side panel for the changed list; B stays as marked. Its
@@ -456,7 +456,7 @@ No test is kept: the package changes no program code, and the tools are outside 
 
 | Check | Oracle | Command |
 |---|---|---|
-| D1's "every tab and sub-view" | `qt-index.json`'s grabs against *Grounding D1*: the seven tabs in `opened` and `run`, each Geometry stage row and each Charge pane in `built`, the refusal, and an HTML shot for each empty WebEngine view (Geometry mesh, Charge deployed field, Fields) | `/np-gui render qt` |
+| D1's "every tab and sub-view" | `qt-index.json`'s grabs against *Grounding D1*: the seven tabs in `opened`, the four a run fills in `run`, each Geometry stage row and each Charge pane in `built`, the refusal, and an HTML shot for each empty WebEngine view (Geometry mesh, Charge deployed field, Fields) | `/np-gui render qt` |
 | The shooter loads a WebGL page | The unit-square `host_document` page: no page error, `index.json` written | `node .claude/scripts/gui/shoot.cjs` |
 | D2's "every agenda point" | Each of the eleven and nine points has a `WB-nn` row or a deferral with its owner | Review |
 | Choice panels and mockups | No page error; no blocking `gui-reviewer` finding open; contrast and target checks recorded | `/np-gui render mockups`, `/np-gui review` |
