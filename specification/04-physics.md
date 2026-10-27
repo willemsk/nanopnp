@@ -286,6 +286,16 @@ the N-terminus of `LYS 8` wherever its pKa, 7.48 to 7.50 across the chains, fall
 not gated. The protonation states of the chains of a homo-oligomer are not symmetrised: a residue
 whose charge differs between chains of identical sequence is recorded as a per-chain diagnostic.
 
+NOTE (protonation before the density, §8.2.19 U2). When the library package that `/np-plan amend 5`
+names lands, step 3's protonation runs on the aligned ensemble before stage 2, and stage 2 smears the
+protonated frames, PDB2PQR's atoms with their PQR radii, so a protonation state or a charge-level
+variant moves the density, the contour and the mesh as well as the charge. That is the validated
+default. Smearing the hydrogens as loaded, as the reference did from its MD frames, becomes a switch
+away from it, recorded in the manifest (FR-25) and set by the reference-reproduction cases (VAL-03's
+golden, Tier 3). The package amends this clause, FR-04, §5.2's stage 2 and 7 rows and its stage-7
+design note, and adds a Tier 1 test that a changed protonation state moves the density. Until then the
+text above holds.
+
 NOTE (PHY-16 steps 4–6, the deposition as run; WP28): the closed form of
 step 5 SHALL be evaluated on the export lattice of step 6, whose spacing is
 `charge.smearing.grid_spacing_nm` and which carries a node on `r = 0`. Each atom's kernel is cut

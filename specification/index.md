@@ -24,4 +24,4 @@ and identifier to its file. The rules of the development process that no clause 
 * [12. References](12-references.md) - Lists the normative sources, numerical methods, software and standards cited by the specification.
 * [Appendix A. Requirements traceability matrix](a-traceability-matrix.md) - Maps each requirement of §3 to the activity of §7 that demonstrates it, marking those with none yet specified.
 * [Appendix B. Reference COMSOL model settings](b-comsol-settings.md) - Condenses the reference COMSOL model settings from the 162-page model report; the full detail is in the knowledge base.
-* [History](history/index.md) - The Phase 0 exit criteria and the author's dated rulings, §8.2.1 to §8.2.18, and where each ruling holds now.
+* [History](history/index.md) - The Phase 0 exit criteria and the author's dated rulings, §8.2.1 to §8.2.19, and where each ruling holds now.

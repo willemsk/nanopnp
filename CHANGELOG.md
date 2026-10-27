@@ -44,7 +44,10 @@ panels and two whole-workbench mockups, and writes the design document and its r
   QR-10, CON-09, the packaging NOTE of ADR-004, RSK-13, VER-43, VER-44, VER-55 and VER-60, each a
   NOTE that replaces its clause when Qt leaves (S17); and the rulings of §8.2.18 on the inherited
   review rows.
-- **Open items** REV-134 to REV-139 and REV-141; REV-140 was raised and fixed in the same package.
+- **Open items** REV-134 to REV-139 and REV-141, ruled in §8.2.19: REV-134 carried until Qt leaves;
+  protonation to move before the density, the protonated density the validated default (REV-135, a NOTE
+  beside PHY-16); REV-136 and the sweep's design round to `/np-plan amend 5`; REV-137, REV-138 and
+  REV-141 to WP5.02. REV-140 was raised and fixed in the same package.
 
 ## [0.5.0-alpha.19] - 2026-10-22
 
