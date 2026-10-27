@@ -22,6 +22,13 @@ The subject of each requirement is the product unless stated otherwise.
 | **IF-08** | SHALL accompany every result artefact with a machine-readable provenance manifest (FR-25). |
 | **IF-09** | SHALL provide a desktop graphical interface covering case editing, run control, convergence monitoring and field visualisation, as a thin shell over the IF-01 stage objects. |
 
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, IF-09 reads:
+"SHALL provide a graphical workbench, served by a local server and opened in the browser by
+`nanopnp gui`, covering the four suites of the workbench design (Molecular, Continuum, Study and
+Analysis), the run queue and the project folder, as a thin shell over the IF-01 stage objects that
+speaks to its server through a network API." Until then the text above gates the Qt shell (§8.2.17
+S12, S17; `docs/design/workbench.md`, WB-01, WB-29).
+
 Rationale (IF-06): MSH 4.1 is the only format in the toolchain carrying physical-group tags,
 higher-order elements and mixed element types without loss.
 
@@ -147,6 +154,18 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-28** | SHALL export figures, fields and the originating case file from a completed run. | v0.7 |
 | **FR-29** | MAY perform goal-oriented (dual-weighted-residual) mesh adaptivity targeting the ionic current. | post-1.0 |
 | **FR-30** | SHALL draw a figure of the artefact of every stage that declares one, of the solve's Newton and continuation history, and of a sweep's collected results, from the stored artefacts alone, in SI units and the model frame, through an optional extra the default import path does not load; and SHALL let a notebook display any artefact and run result, as its stage's figure where one is declared (§8.2.14 P2 to P6). | v0.5 |
+| **FR-31** | SHALL provide the workbench as four suites in a project, Molecular, Continuum, Study and Analysis, each tool's settings docked beside its live view, with the project rail, the changed-from-default count and the run queue always on screen (§8.2.17 S2; WB-01 to WB-03, WB-05, WB-07, WB-29). | v0.6 |
+| **FR-32** | SHALL keep a workbench project as a plain folder of named molecular and continuum models, studies pairing one of each, comparisons, runs each with its resolved case file and manifest, the store, and a project file holding no physics; and SHALL export it as a portable copy of readable files (§8.2.17 S11; WB-04, WB-11, WB-13). | v0.6 |
+| **FR-33** | SHALL link, both ways and until unlinked, a residue and the charge map, a geometry and its parameters, a field and its probes and cuts, and a run and its result (§8.2.17 S6; WB-06). | v0.6 |
+| **FR-34** | SHALL mark every value set away from its default and every study override where it is shown, count them on screen, and list them grouped by model with each default and a reset; and SHALL keep every setting of a tool on its pane, a scroll changing no value (FR-25; WB-03, WB-28, WB-32). | v0.6 |
+| **FR-35** | SHALL refuse a value at its field, naming the rule, the value entered, the case path and a remedy, and SHALL list each refusal of a later build in a problems list that leads to its field (QR-12; WB-12, WB-25). | v0.6 |
+| **FR-36** | SHALL offer QR-10's guided run as a route through the suites from a clean project, a layer that lifts the next control, fills defaults, marks a changed value, refuses a missing or out-of-range value at its step, and may be left at any step (WB-08). | v0.6 |
+| **FR-37** | SHALL prepare a structure: estimate its pore axis, choose its chains, and let the user set the flip and the membrane's place, with no rule specific to one pore, as a library capability before the workbench surfaces it (§8.2.17 S4 as amended; WB-14). | v0.6 |
+| **FR-38** | SHALL set a titratable residue's protonation state on every chain and save the result as a variant of its molecular model, shown as its difference from its parent (§8.2.17 S4; WB-04). | v0.6 |
+| **FR-39** | SHALL let a study override any of its continuum model's physics defaults, sweep over its values and over the library's models, and assemble each molecular model on a shared mesh without rebuilding it (WB-11, WB-16, WB-29). | v0.6 |
+| **FR-40** | SHALL compose a physics model from registered building blocks, in `physics/` with its own Tier 1 and Tier 2 tests, its architecture leaving room for equations the user writes (§8.2.17 S3). | composer phase |
+| **FR-41** | SHALL replace a residue's side chain in 3D and rebuild the density, the contour, the mesh and the charge from it, library first with a vetted dependency (§8.2.17 S4). | structural-mutator phase |
+| **FR-42** | SHALL draw the (r, z) domain by hand with lines, arcs, booleans and named boundaries, meshed by the library, the solve staying 2D axisymmetric (§8.2.17 S5; N4). | sketcher phase |
 
 Rationale (FR-23): continuous-Galerkin fluxes are not pointwise conservative, so a current obtained
 by integrating flux over an interior cross-section varies between cross-sections by amounts that
@@ -182,6 +201,12 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | **QR-13** | The ePNP-NS weak forms SHALL be expressed once and SHALL NOT be duplicated per backend. Until a second backend is planned they are expressed against NGSolve directly, and the subpackages that import NGSolve or Netgen SHALL stay within a recorded set, which may shrink and grows only by the author's ruling (§5.4.1 NOTE; §8.2.8 H3). | Maintainability |
 | **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20); adding a mesher, a linear solver or a stabilisation mode SHALL require only a registration, with no file of the package edited (§5.5; §8.2.8 H7). | Maintainability |
 | **QR-15** | v0.7 (Phase 6; §8.2.5 E2, §8.2.6 F1) SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
+| **QR-16** | The workbench SHALL meet WCAG 2.2 AA in both its themes, the contrast of controls, focus rings and colour bars included, and SHALL be operable by keyboard alone, every action on a canvas having a keyboard path (WB-19, WB-24). | Usability |
+
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, QR-10 reads: "A
+nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a
+structure, accept defaults and obtain a conductance prediction and a field visualisation in it
+unaided." Until then the text above gates the Qt shell (§8.2.17 S12, S13, S17).
 
 NOTE (QR-15): the user documentation and the worked examples are
 delivered incrementally from v0.2, by the documentation track of §8.1, each phase documenting what
@@ -215,6 +240,18 @@ comparison would, which is why the Tier-2 benchmarks, which localise to a single
 | **CON-12** | Meshing components with distribution-restricting licences SHALL NOT be depended upon, specifically Triangle (and MeshPy, which wraps it) and TetGen 1.5 (AGPLv3). |
 | **CON-13** | SHALL support Windows, macOS and Linux on desktop hardware, and Linux for headless and HPC execution. |
 | **CON-14** | The repository SHALL carry a `CITATION.cff` pointing at the Nanoscale paper and the software DOI. |
+
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, CON-09 reads: "The
+core library SHALL be licensed BSD-3-Clause. LGPL dependencies are acceptable under dynamic linking
+(NGSolve/Netgen LGPL-2.1, MDAnalysis LGPLv3, PROPKA LGPL-2.1). MPL-2.0 dependencies are acceptable
+used unmodified as separate packages (gemmi, the mmCIF reader of the `structure` extra). The field
+viewer's renderer, npm `webgui` (LGPL-2.1-or-later, bundling three.js under MIT and dat.gui under
+Apache-2.0), MAY be redistributed with the package, **unmodified and as a separate file** loaded at
+run time, beside its licence texts and a notice naming its corresponding source, which the repository
+and the source distribution carry verbatim; nothing in the library SHALL be linked against it. A
+dependency of the workbench's front end SHALL be under a permissive licence, or under the LGPL or the
+MPL-2.0 used unmodified as a separate file as the renderer is. PyQt SHALL NOT be used, being GPL-3 or
+commercial only." Until then the text above gates the Qt shell (§8.2.12 M3; §8.2.17 S17).
 
 ### 3.5 Exclusions
 

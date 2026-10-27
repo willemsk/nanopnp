@@ -66,3 +66,43 @@ description: "Lists the Tier 1 unit and property tests (VER-01 onward), each wit
 | **VER-74** | Withdrawn | The commit hook selects no tests: it runs all of Tier 1 (§8.2.11 L2). The identifier is not reused |
 | **VER-75** | Withdrawn | The prose rule of §8.2.11 L4 is read at review (§8.2.13 N3). The identifier is not reused |
 | **VER-76** | The published case schema equals the one the editors walk | `case_json_schema()` returns the case document's JSON Schema, generated from its own model, and `schema_leaves` reads its leaves by the rules `case_fields` walks by (a reference is resolved; a union is entered at its first object branch; a list of blocks is entered at index `0`; a list or mapping of plain values is one leaf; a mapping of blocks raises `NotImplementedError`): (a) the two leaf sets are equal, so a field added to the model and missing from either walk fails naming its path; (b) a schema with one leaf added fails, and one with a leaf removed fails, and a `case_fields` with an extra leaf fails; (c) every `Literal` leaf carries an `enum` or a `const` equal to its arguments and the schema survives `json.dumps`. The documentation build writes it as `reference/case.schema.json` (§8.2.12 M2; WP49) |
+
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, VER-43, VER-44,
+VER-55 and VER-60 read as below, each over the workbench of `docs/design/workbench.md`. Until then
+the rows above gate the Qt shell (§8.2.17 S13, S17).
+
+- **VER-43**, *Workbench forms, solver process and self-test*: "The schema walk enumerates exactly the
+  editable dotted paths of the current case schema, asserted in both directions so that a field added
+  later fails this test rather than becoming silently uneditable, and the switch classification of
+  FR-25 is checked against that same walk rather than a second one; the shell's view-model layer and
+  its server import no front-end framework and no NGSolve, asserted on `sys.modules` in a fresh
+  process, and no `PyQt` module is reachable from any import path the shell takes (CON-09); every
+  option a form offers comes from the schema's own declared type or from a live registry, so no value
+  set is written in `gui/`; a value the schema refuses is refused at the field before any
+  substitution, naming the path, the value and the declared type, and a document the registries refuse
+  produces the same diagnostic text the command line prints for the same file; run control drives the
+  case through a **spawned** process, forwards a monotone completion fraction ending at 1, receives
+  each stage transition as data — the stage's name and its position in the walk, through a structural
+  hook, never recovered by parsing a progress caption — and cancels through a token the child
+  honours, a cancelled run writing no artefact; a failed run reports the §3.1 exit class the command
+  line would return for the same case; and the server's self-test imports NGSolve, Netgen and the
+  shipped renderer in one process, failing naming the payload that does not load (IF-09, QR-11,
+  FR-27, CON-09, RSK-13)".
+- **VER-44**, *Live convergence monitoring and field visualisation*: as the row above, the scene
+  served to the browser as a file rather than a data URL, and with "the server's self-test fails when
+  the shipped renderer does not reach its document" in place of the packaging probe's selftest.
+- **VER-55**, *Geometry pipeline surfaced in the workbench*: as the row above, for the Continuum
+  suite's tools, with three changes. The geometry view-models import no front-end framework, NGSolve,
+  Netgen, MDAnalysis, scikit-image, Shapely or Gmsh in a fresh process. The contour editor's
+  refusals and measurements are those of the Contour tool. "The server's self-test exercises
+  MDAnalysis, gemmi, scikit-image, Shapely, and Gmsh where its extra is installed, failing naming the
+  payload that does not work" replaces the packaging probe's sentence.
+- **VER-60**, *Charge pipeline surfaced in the workbench*: as the row above, with four changes. The
+  view-models import no front-end framework, NGSolve, PDB2PQR or PROPKA in a fresh process. "Each
+  bounded number's field accepts exactly its schema bounds, in both directions; an integer field
+  accepts whole numbers only, and a field that admits `null` can say "unset" (WP32)" replaces the
+  spin-box sentence. "The study's charge on the mesh drives the walk to `upto: charge` and shows each
+  stage's hash, the marked planes, the five legs and the deployed field under IF-07's name; the
+  Protonation tool shows the protonation row" replaces the Charge tab's sentence. "The server's
+  self-test exercises PDB2PQR and PROPKA" replaces "The probe carries PDB2PQR and PROPKA", the rest of
+  that sentence unchanged.

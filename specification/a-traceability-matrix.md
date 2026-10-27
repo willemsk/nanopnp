@@ -51,6 +51,18 @@ needed.
 | FR-28 | None yet |
 | FR-29 | None yet |
 | FR-30 | `test_figure_classification_both_ways`, `test_every_figure_draws_and_displays` (examples 01 and 02 per push; 03, 06 and 07 nightly), `test_field_on_a_grid_matches_sample_at`, `test_default_import_and_walk_load_no_plotting`, `test_notebook_runs_headless` (nightly), `test_case_leaf_name_shared_by_two_fields_is_refused` (P8), `test_sweep_figure_draws_current_in_nanoamperes_and_scales` (P9), by §8.2.14 P4 |
+| FR-31 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
+| FR-32 | None yet; a Phase 5 library package before the workbench surfaces it (REV-136); then the workbench |
+| FR-33 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
+| FR-34 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
+| FR-35 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
+| FR-36 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`); QR-10's observation at the close |
+| FR-37 | None yet; a Phase 5 library package before the workbench surfaces it (REV-136) |
+| FR-38 | None yet; the charge-level mutator, Phase 5 |
+| FR-39 | None yet; a Phase 5 library package before the workbench surfaces it (REV-136); REV-139 |
+| FR-40 | None yet; the composer phase |
+| FR-41 | None yet; the structural-mutator phase |
+| FR-42 | None yet; the sketcher phase |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
 | QR-02 | VAL-16, VAL-17 (gating v0.7); VAL-01, VAL-02 (kept, not required) |
 | QR-03 | VER-01, VER-29, VER-58, VAL-15 |
@@ -66,6 +78,7 @@ needed.
 | QR-13 | VER-65 (the subpackages reaching NGSolve or Netgen equal a recorded set, in both directions). The §5.4.1 interface is absent (`MOD-10`), deferred to Phase 6 by §8.2.8 H3, which restated QR-13 as the single statement of the weak forms plus this guard |
 | QR-14 | VER-03 (a correction is a data file), VER-56 (a physics model is one class), VER-66 (a backend registry is one registration) |
 | QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v0.7 |
+| QR-16 | None yet; WP5.02 extends the render check to non-text contrast (REV-138), and each workbench package reviews its screens against it |
 | CON-01 | None yet |
 | CON-02 | VER-20, VER-22 |
 | CON-03 | None yet |

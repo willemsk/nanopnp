@@ -122,6 +122,20 @@ packaging NOTE stand for the Qt shell until Phase 5's design document restates t
 clauses and the browser shell meets them; then PySide6, the Qt widgets and the PyInstaller bundle
 leave. The consequences above hold for either shell.
 
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, the packaging
+NOTE above reads: "The workbench SHALL be distributed as the package with its `gui` extra, installed
+by one documented `uv` command, with no bundle (§8.2.17 S12). Its front end SHALL ship prebuilt inside
+the wheel, so no user builds it (CON-07), and the shipped renderer SHALL stay an unmodified, separate
+file (CON-09). The server's self-test SHALL exercise once each, failing naming the payload: NGSolve,
+Netgen and the renderer reaching its document; MDAnalysis and gemmi reading a structure,
+scikit-image's contour extraction and Shapely's polygon checks through GEOS, and Gmsh where its extra
+is installed; PDB2PQR and PROPKA protonating a nine-residue peptide at two pH values, whose two net
+charges it requires, so that PROPKA's parameter file out of reach fails naming PROPKA. The
+background solver process SHALL be started with the `spawn` start method: it is the only one Windows
+has, and a forked child would inherit the server's event loop and its already-imported numerical
+libraries." Until then the packaging NOTE gates the Qt shell (§8.2.17 S17). The decision above is
+restated by WP5.02's spike, which records the front end chosen (§8.2.17 S8).
+
 #### ADR-005 Two levels of pluggability
 
 Decision: correction models as data files (level 1) and physics models as classes (level 2), per
