@@ -39,7 +39,7 @@ is a rolling register, and its header stays `open`.
 | REV-17 | numerics | low | fixed | [WP41](../plans/wp41-accuracy-fixes.md) | [A warm start is gated on free prose in the stabilisation provenance](review-items.md#rev-17-a-warm-start-is-gated-on-free-prose-in-the-stabilisation-provenance) |
 | REV-18 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Concurrent sweep members may write the same store key](review-items.md#rev-18-concurrent-sweep-members-may-write-the-same-store-key) |
 | REV-19 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A zero-frame trajectory raises a bare IndexError](review-items.md#rev-19-a-zero-frame-trajectory-raises-a-bare-indexerror) |
-| REV-20 | process | low | deferred | §8.2.8 H12 | [The desktop shell has no multiprocessing.freeze_support](review-items.md#rev-20-the-desktop-shell-has-no-multiprocessingfreeze_support) |
+| REV-20 | process | low | wontfix | §8.2.18 T1 | [The desktop shell has no multiprocessing.freeze_support](review-items.md#rev-20-the-desktop-shell-has-no-multiprocessingfreeze_support) |
 | REV-21 | process | low | declined | §8.2.8 H12 | [numerics/linear.py imports scipy inside its functions](review-items.md#rev-21-numericslinearpy-imports-scipy-inside-its-functions) |
 | REV-22 | process | low | declined | §8.2.8 H12 | [write_dx formats with %](review-items.md#rev-22-write_dx-formats-with) |
 | REV-23 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The corrections test bounds both ions by one range](review-items.md#rev-23-the-corrections-test-bounds-both-ions-by-one-range) |
@@ -47,46 +47,46 @@ is a rolling register, and its header stays `open`.
 | REV-25 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A post stage run without a solve writes scratch to the default store](review-items.md#rev-25-a-post-stage-run-without-a-solve-writes-scratch-to-the-default-store) |
 | REV-26 | interface | low | fixed | [WP41](../plans/wp41-accuracy-fixes.md) | [stabilisation_parameters returns an empty mapping off the coupled model](review-items.md#rev-26-stabilisation_parameters-returns-an-empty-mapping-off-the-coupled-model) |
 | REV-27 | interface | low | fixed | [WP38](../plans/wp38-io-split.md) | [The inf-sup check ran at resolve, not at validation](review-items.md#rev-27-the-inf-sup-check-ran-at-resolve-not-at-validation) |
-| REV-28 | performance | low | deferred | §8.2.9 I3 | [The viewer renders every finished run eagerly](review-items.md#rev-28-the-viewer-renders-every-finished-run-eagerly) |
+| REV-28 | performance | low | deferred | §8.2.18 T2 | [The viewer renders every finished run eagerly](review-items.md#rev-28-the-viewer-renders-every-finished-run-eagerly) |
 | REV-29 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The cylindrical-pore fixture is copied into four test modules](review-items.md#rev-29-the-cylindrical-pore-fixture-is-copied-into-four-test-modules) |
-| REV-30 | performance | low | deferred | §8.2.9 I3 | [The viewer's scene is written twice](review-items.md#rev-30-the-viewers-scene-is-written-twice) |
-| REV-31 | documentation | low | deferred | §8.2.9 I3 | [The bundle's size is not recorded](review-items.md#rev-31-the-bundles-size-is-not-recorded) |
-| REV-32 | interface | low | deferred | §8.2.9 I3 | [Old store entries are neither migrated nor removed](review-items.md#rev-32-old-store-entries-are-neither-migrated-nor-removed) |
+| REV-30 | performance | low | deferred | §8.2.18 T2 | [The viewer's scene is written twice](review-items.md#rev-30-the-viewers-scene-is-written-twice) |
+| REV-31 | documentation | low | wontfix | §8.2.18 T1 | [The bundle's size is not recorded](review-items.md#rev-31-the-bundles-size-is-not-recorded) |
+| REV-32 | interface | low | deferred | §8.2.18 T2 | [Old store entries are neither migrated nor removed](review-items.md#rev-32-old-store-entries-are-neither-migrated-nor-removed) |
 | REV-33 | interface | low | declined | §8.2.9 I3 | [writable_formats assumes the extra's floor](review-items.md#rev-33-writable_formats-assumes-the-extras-floor) |
 | REV-34 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [Two reference tests duplicate the frozen case](review-items.md#rev-34-two-reference-tests-duplicate-the-frozen-case) |
 | REV-35 | performance | low | post-1.0 | §8.2.9 I3 | [_second_crossings loops in Python](review-items.md#rev-35-_second_crossings-loops-in-python) |
 | REV-36 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [The gmsh session stops a caller's logger](review-items.md#rev-36-the-gmsh-session-stops-a-callers-logger) |
 | REV-37 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [A broken gmsh wheel is not a refusal](review-items.md#rev-37-a-broken-gmsh-wheel-is-not-a-refusal) |
 | REV-38 | interface | low | fixed | [WP39](../plans/wp39-backend-registries.md) | [gmsh.model.remove() can mask the error it follows](review-items.md#rev-38-gmshmodelremove-can-mask-the-error-it-follows) |
-| REV-39 | interface | low | deferred | §8.2.9 I3 | [A case supplying inputs.profile gets no contour editor](review-items.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor) |
+| REV-39 | interface | low | deferred | §8.2.18 T2 | [A case supplying inputs.profile gets no contour editor](review-items.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor) |
 | REV-40 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [DensityMap.read accepts a file written in nm](review-items.md#rev-40-densitymapread-accepts-a-file-written-in-nm) |
-| REV-41 | interface | low | deferred | §8.2.9 I3 | [No prepare command, upto on reproduce, or region export](review-items.md#rev-41-no-prepare-command-upto-on-reproduce-or-region-export) |
+| REV-41 | interface | low | deferred | §8.2.18 T3 | [No prepare command, upto on reproduce, or region export](review-items.md#rev-41-no-prepare-command-upto-on-reproduce-or-region-export) |
 | REV-42 | interface | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [pnp carries inert flow keys](review-items.md#rev-42-pnp-carries-inert-flow-keys) |
 | REV-43 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [chain_characters duplicates the export's mapping](review-items.md#rev-43-chain_characters-duplicates-the-exports-mapping) |
 | REV-44 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The Stern-layer test re-solves the drawn slab](review-items.md#rev-44-the-stern-layer-test-re-solves-the-drawn-slab) |
-| REV-45 | interface | low | deferred | §8.2.9 I3 | [The derived χ field has no export](review-items.md#rev-45-the-derived-field-has-no-export) |
+| REV-45 | interface | low | deferred | §8.2.18 T3 | [The derived χ field has no export](review-items.md#rev-45-the-derived-field-has-no-export) |
 | REV-46 | verification | low | deferred | §8.2.9 I3 | [Example 07 is not run at default sizes or on the ensemble](review-items.md#rev-46-example-07-is-not-run-at-default-sizes-or-on-the-ensemble) |
 | REV-47 | process | low | accepted | §8.2.9 I3 | [The test-duration targets are missed](review-items.md#rev-47-the-test-duration-targets-are-missed) |
 | REV-48 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The 2WCD walk test copies its constants](review-items.md#rev-48-the-2wcd-walk-test-copies-its-constants) |
 | REV-49 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [AXISYMMETRIC is replaced repeatedly](review-items.md#rev-49-axisymmetric-is-replaced-repeatedly) |
 | REV-50 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [_inner_wall_nm re-implements innermost_crossings](review-items.md#rev-50-_inner_wall_nm-re-implements-innermost_crossings) |
 | REV-51 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A redundant reopen and resolve in WP34's walk](review-items.md#rev-51-a-redundant-reopen-and-resolve-in-wp34s-walk) |
-| REV-52 | interface | low | deferred | §8.2.9 I3 | [deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol) |
+| REV-52 | interface | low | deferred | §8.2.18 T2 | [deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol) |
 | REV-53 | interface | low | declined | §8.2.9 I3 | [Some walk rules stay as case logic](review-items.md#rev-53-some-walk-rules-stay-as-case-logic) |
 | REV-54 | verification | low | fixed | [WP38](../plans/wp38-io-split.md) | [The MOD-12 check compared names, not modules](review-items.md#rev-54-the-mod-12-check-compared-names-not-modules) |
 | REV-55 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Per-stage mkdtemp fallbacks](review-items.md#rev-55-per-stage-mkdtemp-fallbacks) |
-| REV-56 | performance | low | deferred | §8.2.9 I3 | [The geometry editor's simplicity check runs on the Qt thread](review-items.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread) |
+| REV-56 | performance | low | wontfix | §8.2.18 T1 | [The geometry editor's simplicity check runs on the Qt thread](review-items.md#rev-56-the-geometry-editors-simplicity-check-runs-on-the-qt-thread) |
 | REV-57 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [frame_times decodes every frame](review-items.md#rev-57-frame_times-decodes-every-frame) |
 | REV-58 | performance | low | post-1.0 | §8.2.9 I3 | [The azimuthal reduction projects cells it then drops](review-items.md#rev-58-the-azimuthal-reduction-projects-cells-it-then-drops) |
 | REV-59 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [attribute_to_construction raises the wrong error on a lax comparison](review-items.md#rev-59-attribute_to_construction-raises-the-wrong-error-on-a-lax-comparison) |
 | REV-60 | performance | low | deferred | §8.2.9 I3 | [UMFPACK repeats its symbolic analysis every Newton step](review-items.md#rev-60-umfpack-repeats-its-symbolic-analysis-every-newton-step) |
 | REV-61 | interface | low | deferred | §8.2.9 I3 | [No B-spline fit or HOLE cross-check of the contour](review-items.md#rev-61-no-b-spline-fit-or-hole-cross-check-of-the-contour) |
-| REV-62 | interface | low | deferred | §8.2.9 I3 | [A mesh named by store key is refused](review-items.md#rev-62-a-mesh-named-by-store-key-is-refused) |
+| REV-62 | interface | low | deferred | §8.2.18 T2 | [A mesh named by store key is refused](review-items.md#rev-62-a-mesh-named-by-store-key-is-refused) |
 | REV-63 | performance | low | fixed | [WP38](../plans/wp38-io-split.md) | [The protonation stage walked through meshing](review-items.md#rev-63-the-protonation-stage-walked-through-meshing) |
 | REV-64 | verification | low | deferred | §8.2.9 I3 | [A sweep's plan-time NUM-34 gate skips generated meshes](review-items.md#rev-64-a-sweeps-plan-time-num-34-gate-skips-generated-meshes) |
-| REV-65 | interface | low | deferred | §8.2.9 I3 | [The Windows bundle exposes no mesh command](review-items.md#rev-65-the-windows-bundle-exposes-no-mesh-command) |
+| REV-65 | interface | low | wontfix | §8.2.18 T1 | [The Windows bundle exposes no mesh command](review-items.md#rev-65-the-windows-bundle-exposes-no-mesh-command) |
 | REV-66 | interface | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [A model without flow is refused on its element pair before its flow switch](review-items.md#rev-66-a-model-without-flow-is-refused-on-its-element-pair-before-its-flow-switch) |
-| REV-67 | interface | low | deferred | §8.2.8 H2 | [Public registration functions for backend registries (MOD-11)](review-items.md#rev-67-public-registration-functions-for-backend-registries-mod-11) |
+| REV-67 | interface | low | deferred | §8.2.18 T3 | [Public registration functions for backend registries (MOD-11)](review-items.md#rev-67-public-registration-functions-for-backend-registries-mod-11) |
 | REV-68 | verification | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [The spec still promises a refusal that D8 removed](review-items.md#rev-68-the-spec-still-promises-a-refusal-that-d8-removed) |
 | REV-69 | verification | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [VER-67 defers its refusal texts to a plan](review-items.md#rev-69-ver-67-defers-its-refusal-texts-to-a-plan) |
 | REV-70 | interface | low | fixed | [WP40](../plans/wp40-stale-refusals.md) | [WP40 D5 and D8 go beyond MOD-14's letter](review-items.md#rev-70-wp40-d5-and-d8-go-beyond-mod-14s-letter) |
@@ -133,7 +133,7 @@ is a rolling register, and its header stays `open`.
 | REV-111 | verification | low | open | — | [The no-MPI-symbols claim is backed only by the lock file](review-items.md#rev-111-the-no-mpi-symbols-claim-is-backed-only-by-the-lock-file) |
 | REV-112 | performance | low | fixed | [WP49 plan](../plans/wp49-cost-study.md) | [Three suspected costs were never measured](review-items.md#rev-112-three-suspected-costs-were-never-measured) |
 | REV-113 | interface | low | fixed | [WP49 plan](../plans/wp49-cost-study.md) | [The case schema has no JSON Schema export](review-items.md#rev-113-the-case-schema-has-no-json-schema-export) |
-| REV-114 | interface | medium | deferred | §8.2.12 M3 | [The shell moves from Qt to a browser](review-items.md#rev-114-the-shell-moves-from-qt-to-a-browser) |
+| REV-114 | interface | medium | fixed | §8.2.18 T5 | [The shell moves from Qt to a browser](review-items.md#rev-114-the-shell-moves-from-qt-to-a-browser) |
 | REV-115 | process | low | declined | §8.2.12 M1 | [The architecture review's already-met claims](review-items.md#rev-115-the-architecture-reviews-already-met-claims) |
 | REV-116 | verification | low | open | — | [The cost record predates the harness fixes](review-items.md#rev-116-the-cost-record-predates-the-harness-fixes) |
 | REV-117 | process | low | fixed | — | [Tooling left without tests by the test scope](review-items.md#rev-117-tooling-left-without-tests-by-the-test-scope) |
@@ -159,5 +159,5 @@ is a rolling register, and its header stays `open`.
 | REV-137 | interface | medium | open | — | [No renderer is chosen for the molecule in 3D or for the explorer's controls](review-items.md#rev-137-no-renderer-is-chosen-for-the-molecule-in-3d-or-for-the-explorers-controls) |
 | REV-138 | verification | medium | open | — | [The render check measures text contrast but not the contrast of controls and graphics](review-items.md#rev-138-the-render-check-measures-text-contrast-but-not-the-contrast-of-controls-and-graphics) |
 | REV-139 | interface | medium | open | — | [The sweep needs a design round: any value, user-defined variables, rebuilds detected](review-items.md#rev-139-the-sweep-needs-a-design-round-any-value-user-defined-variables-rebuilds-detected) |
-| REV-140 | interface | low | open | — | [Two of the author's marks on the mockups ask what is not yet said](review-items.md#rev-140-two-of-the-authors-marks-on-the-mockups-ask-what-is-not-yet-said) |
+| REV-140 | interface | low | fixed | §8.2.18 T6, T7 | [Two of the author's marks on the mockups ask what is not yet said](review-items.md#rev-140-two-of-the-authors-marks-on-the-mockups-ask-what-is-not-yet-said) |
 | REV-141 | coupling | medium | open | — | [CON-08 and CON-11 name a bundle and a desktop path the browser shell removes](review-items.md#rev-141-con-08-and-con-11-name-a-bundle-and-a-desktop-path-the-browser-shell-removes) |

@@ -1,6 +1,6 @@
 # WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written
 
-**Status: in progress; items 1 to 15 done; next, item 16, the author's rulings on the inherited rows.** Written 24 October 2026; grounded in the code at `e78b6aa`
+**Status: in progress; items 1 to 16 done; next, item 17, the changelog and `current.md`.** Written 24 October 2026; grounded in the code at `e78b6aa`
 (§8.2.15 Q1). Amended the same day for the author's rulings S21 to S24: the design round on the
 workbench's organisation and look and feel, the GUI development tools, and the workbench's areas. Inherits the Phase 5
 plan and §8.2.17 S1 to S24; runs in the second lane beside Phase 4 (S1, S15). By S23 this plan
@@ -419,7 +419,7 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > view's background a setting) and WB-31 (tighter spacing, in `tokens.css`). The sweep's brainstorm is REV-139;
   > an unnoted `change` and "partial protonation" are REV-140. `docs/design/workbench.md` has every section this
   > plan lists, the restated clauses and the inherited rows proposed for item 16; its nav entry was already in place.
-- [ ] 15. The specification (D5): NOTEs in `specification/02-product-overview.md`,
+- [x] 6e67717 15. The specification (D5): NOTEs in `specification/02-product-overview.md`,
   `03-requirements.md`, `05-software-design/06-architecture-decisions.md`,
   `07-verification/02-tier-1.md`, `09-risks.md`; FR and QR rows; `a-traceability-matrix.md`; §8.1
   where a `WB-nn` ruling moves it; done when `uv run .claude/scripts/duplicates.py` and the strict
@@ -436,6 +436,16 @@ and an *Added* list (the tools, the design document); `current.md`: only the Pha
   > restatements found CON-08 and CON-11 still naming the bundle: REV-141. `duplicates.py` and the strict build pass.
 - [ ] 16. The inherited rows (D6): the round, `specification/history/18-…`, its index lines, the
   REV and MOD rows; done when the code and review say so. **Executor:** main.
+
+  > **Outcome — the inherited rows ruled; two marks explained; WB-30 to WB-32 restated.** The author ruled
+  > every row (§8.2.18, `specification/history/18-…`, T1 to T5): the five bound to the Qt bundle or code
+  > `wontfix`, what they still ask carried into the workbench; seven deferred to the workbench's packages and
+  > three to later work, as proposed; REV-114 fixed by item 15; and MOD-09, against the proposal, brought into
+  > v0.6 as registries in a Phase 5 library package. "Partial protonation" is a fractional charge at the pH,
+  > FR-43 for a later phase (T6); the unnoted `change` on `g-geometry` was a slip (T7), so REV-140 is fixed. The
+  > author put WB-30 and WB-31 under user settings, a theme the user adjusts, and called the wheel rule of WB-32
+  > "not a literal constraint" (T8): FR-34 now asks that a setting be guarded against an accidental change.
+  > Phase 5's open decisions 3 and 4 are settled.
 - [ ] 17. `CHANGELOG.md` and `docs/plans/current.md` (S19); done when the code and review say so.
   **Executor:** `general-purpose` on Haiku.
 
