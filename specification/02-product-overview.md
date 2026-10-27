@@ -54,6 +54,11 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | P2 | Collaborating computational scientists | Linux/macOS, Python-literate | Config-file-driven CLI runs, reproducible cases, sensible defaults |
 | P3 | Experimental nanopore laboratories | Windows/macOS laptop, no Python | Desktop application: select a PDB, set salt and voltage, obtain a prediction and a visualisation |
 
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, P3's primary need
+reads: "The workbench, installed with one documented command and opened in the browser: select a
+PDB, set salt and voltage, obtain a prediction and a visualisation." Until then the text above gates
+the Qt shell (§8.2.17 S2, S12, S17).
+
 ### 2.5 Operating environment
 
 | Aspect | Value |

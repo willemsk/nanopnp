@@ -160,3 +160,4 @@ is a rolling register, and its header stays `open`.
 | REV-138 | verification | medium | open | — | [The render check measures text contrast but not the contrast of controls and graphics](review-items.md#rev-138-the-render-check-measures-text-contrast-but-not-the-contrast-of-controls-and-graphics) |
 | REV-139 | interface | medium | open | — | [The sweep needs a design round: any value, user-defined variables, rebuilds detected](review-items.md#rev-139-the-sweep-needs-a-design-round-any-value-user-defined-variables-rebuilds-detected) |
 | REV-140 | interface | low | open | — | [Two of the author's marks on the mockups ask what is not yet said](review-items.md#rev-140-two-of-the-authors-marks-on-the-mockups-ask-what-is-not-yet-said) |
+| REV-141 | coupling | medium | open | — | [CON-08 and CON-11 name a bundle and a desktop path the browser shell removes](review-items.md#rev-141-con-08-and-con-11-name-a-bundle-and-a-desktop-path-the-browser-shell-removes) |

@@ -1449,3 +1449,16 @@ Two of the author's marks on mockup A (WP5.01, `docs/design/reviews/2026-10-26-m
 group's states at the pH, or states chosen for some groups only), so that the mockup can draw it and, if it is a
 fractional charge, the specification can say it.
 
+## REV-141: CON-08 and CON-11 name a bundle and a desktop path the browser shell removes
+
+CON-11 makes "the redistributable bundle" default to UMFPACK under GPL-2+ obligations stated in its licence notice,
+and CON-08 has "the desktop path" use UMFPACK or SuperLU. The browser shell ships no bundle (§8.2.17 S12): the
+workbench is the package with its `gui` extra, installed from wheels, and WP5.01's restatements of the packaging
+NOTE and RSK-13 say so. Neither constraint was in the set WP5.01 restates (IF-09, P3, QR-10, VER-43, VER-44, VER-55,
+VER-60, CON-09, ADR-004's packaging NOTE, RSK-13), so once Qt leaves no text says which linear solver an installed
+workbench defaults to, where UMFPACK comes from on a wheel install, or where its GPL-2+ notice is shown. Found while
+writing the restatements (WP5.01 item 15).
+
+**Open** for the author; proposed owner WP5.02, whose spike records the front end and the packaging in ADR-004
+(§8.2.17 S8): restate CON-08 and CON-11 for an installed workbench, beside the other restated clauses.
+

@@ -363,11 +363,12 @@ its clause, tagged for v0.6, and replaces it in the package that removes Qt (S17
 | ADR-004's packaging NOTE | A one-dir PyInstaller bundle with its probe | Lapses with the bundle: the workbench is the package with its `gui` extra, the front end prebuilt inside it; the solver process is still spawned |
 | RSK-13 | Desktop packaging defeated by a binary dependency | The workbench's install defeated by a binary dependency: every payload a wheel; CI installs the `gui` extra on Linux, macOS and Windows and runs the self-test |
 
-New requirements are written into §3 as FR-31 onward and QR-16 onward, each with its Appendix A row: the
-suites and the project folder, the four live links, the changed-from-default count, the guided route, the
-refusal at its field, the charge-level mutator, structure preparation, and the accessibility target
-(WB-24) as a quality requirement; the composer, the structural mutator and the sketcher tagged for their
-phases.
+The new requirements are §3's FR-31 to FR-42 and QR-16, each with its Appendix A row: the suites (FR-31),
+the project folder (FR-32), the four live links (FR-33), the changed marks and no hidden state (FR-34), the
+refusal at its field (FR-35), the guided route (FR-36), structure preparation (FR-37), the charge-level
+mutator (FR-38), the study's overrides and sweeps (FR-39), and the accessibility target (QR-16); the
+composer (FR-40), the structural mutator (FR-41) and the sketcher (FR-42) are tagged for their phases.
+CON-08 and CON-11 still name the bundle and the desktop path: REV-141.
 
 ## Inherited rows
 
