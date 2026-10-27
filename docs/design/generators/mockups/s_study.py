@@ -14,15 +14,20 @@ SWEEP = '<div class="field"><label for="{p}-sw">Sweep over</label><div class="v"
 def switch(current):
     form = "#st-form"
     graph = "#st-graph"
-    return (f'<div class="tabs" role="tablist" aria-label="Show the study as"><a role="tab" href="{form}" aria-selected="{str(current == "form").lower()}">Form</a>'
-            f'<a role="tab" href="{graph}" aria-selected="{str(current == "graph").lower()}">Graph</a></div>')
+    return (
+        f'<div class="tabs" role="tablist" aria-label="Show the study as"><a role="tab" href="{form}" aria-selected="{str(current == "form").lower()}">Form</a>'
+        f'<a role="tab" href="{graph}" aria-selected="{str(current == "graph").lower()}">Graph</a></div>'
+    )
 
 
 NACL = f'<div class="field"><span class="k ovr">NaCl</span><span class="v num">x.xx M <button class="btn small" type="button">Edit</button>{reset("NaCl override")}</span></div>'
 
 
 def overrides(p):
-    bias = spot("bias", f'<div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <button class="btn small" type="button">Edit</button>{reset("bias override")}</span></div>')
+    bias = spot(
+        "bias",
+        f'<div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <button class="btn small" type="button">Edit</button>{reset("bias override")}</span></div>',
+    )
     return f"""<h3>Overrides of the continuum model's defaults</h3>
   {bias}
   {"" if route() else NACL}
@@ -36,8 +41,16 @@ def study_runs():
     """The study's runs beside its settings, each opening its result (S6: a run and its result)."""
     if route() in ("prepare", "ph", "mesh", "salt", "bias", "run"):
         return '<div class="settings" style="border-right:0"><h2>Runs of this study</h2><span class="muted">None yet: run the study to queue them.</span></div>'
-    rows = [("1 of n", "ok", "done"), ("2 of n", "ok", "done"), ("3 of n", "warn", "running"), ("4 of n", "", "queued")]
-    trs = "".join(f'<tr><td class="num">bias x.xx V, {n}</td><td><span class="{c or "muted"}">{w}</span></td><td>{"<a class=\"btn small\" href=\"05-results.html#a-explorer\">Open result</a>" if c == "ok" else ""}</td></tr>' for n, c, w in rows)
+    rows = [
+        ("1 of n", "ok", "done"),
+        ("2 of n", "ok", "done"),
+        ("3 of n", "warn", "running"),
+        ("4 of n", "", "queued"),
+    ]
+    trs = "".join(
+        f'<tr><td class="num">bias x.xx V, {n}</td><td><span class="{c or "muted"}">{w}</span></td><td>{'<a class="btn small" href="05-results.html#a-explorer">Open result</a>' if c == "ok" else ""}</td></tr>'
+        for n, c, w in rows
+    )
     return f'<div class="settings" style="border-right:0"><h2>Runs of this study</h2><table><tbody>{trs}</tbody></table></div>'
 
 
@@ -54,7 +67,9 @@ def form_body():
 
 
 def form():
-    return window(PAGE, "study", "Study setup", form_body(), "minmax(0,1.4fr) minmax(0,1fr)", item=ITEM)
+    return window(
+        PAGE, "study", "Study setup", form_body(), "minmax(0,1.4fr) minmax(0,1fr)", item=ITEM
+    )
 
 
 NODE = "background:var(--panel);border:1px solid var(--control-edge);border-radius:var(--radius);padding:6px 8px;display:grid;gap:2px;font-size:var(--text-sm);text-align:left;font-family:inherit;color:var(--ink);align-self:center"
@@ -62,9 +77,11 @@ NODE = "background:var(--panel);border:1px solid var(--control-edge);border-radi
 
 def edge(d):
     """An edge stretching with its grid cell, its arrowhead a glyph at the cell's right edge."""
-    return (f'<div style="position:relative;height:100%"><svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true">'
-            f'<path d="{d}" fill="none" style="stroke:var(--muted)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>'
-            '<span aria-hidden="true" style="position:absolute;right:-3px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:11px;line-height:1">▶</span></div>')
+    return (
+        f'<div style="position:relative;height:100%"><svg viewBox="0 0 100 100" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true">'
+        f'<path d="{d}" fill="none" style="stroke:var(--muted)" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>'
+        '<span aria-hidden="true" style="position:absolute;right:-3px;top:50%;transform:translateY(-52%);color:var(--muted);font-size:11px;line-height:1">▶</span></div>'
+    )
 
 
 def graph():
@@ -120,6 +137,15 @@ def overview_left():
   <div class="field"><span class="k ovr">Overrides</span><span class="v">bias, NaCl</span></div>
   <div class="field"><span class="k chg">Changed</span><span class="v">2 values from their defaults <a class="btn small" href="#st-changes">Show</a></span></div>
   <div class="field"><span class="k">Runs</span><span class="v"><span class="warn">x of n running</span></span></div>
+  <h3>Physics · the continuum model's defaults and the study's overrides</h3>
+  <table><thead><tr><th>Setting</th><th>Value</th><th>From</th></tr></thead><tbody>
+  <tr><td>Model</td><td>ePNP-NS</td><td class="muted">continuum</td></tr>
+  <tr><td>Electrolyte</td><td><span class="num">x.xx M</span> NaCl</td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Corrections</td><td>willems2020_nacl, as validated</td><td class="muted">continuum</td></tr>
+  <tr><td>Cis side</td><td>ground</td><td class="muted">continuum</td></tr>
+  <tr><td>Trans side</td><td>bias, <span class="num">−x.xx to +x.xx V</span></td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Walls</td><td>no flux, no slip</td><td class="muted">continuum</td></tr></tbody></table>
+  <a class="btn small" href="04-physics.html#p-electrolyte" style="justify-self:start">Open the physics defaults</a>
 </div>"""
 
 
@@ -135,42 +161,63 @@ def overview_body():
 
 
 def overview():
-    return window(PAGE, "study", "Overview", overview_body(), "minmax(0,1fr) minmax(0,1fr)", item=ITEM)
+    return window(
+        PAGE, "study", "Overview", overview_body(), "minmax(0,1fr) minmax(0,1fr)", item=ITEM
+    )
 
 
 def sweep():
-    cell = {"ok": '<span class="ok">done</span>', "warn": '<span class="warn">running</span>', "q": '<span class="muted">queued</span>'}
-    rows = [("2WCD, pH 7.5", ["ok", "ok", "warn", "q"], ""),
-            ("2WCD, ASP 64 neutral", ["ok", "ok", "q", "q"], '<a class="btn small" href="05-results.html#a-compare-side">Compare with the parent</a>')]
+    cell = {
+        "ok": '<span class="ok">done</span>',
+        "warn": '<span class="warn">running</span>',
+        "q": '<span class="muted">queued</span>',
+    }
+    rows = [
+        ("2WCD, pH 7.5", ["ok", "ok", "warn", "q"], ""),
+        (
+            "2WCD, ASP 64 neutral",
+            ["ok", "ok", "q", "q"],
+            '<a class="btn small" href="05-results.html#a-compare-side">Compare with the parent</a>',
+        ),
+    ]
     head = "".join("<th>x.xx V</th>" for _ in range(4))
-    body_rows = "".join(f"<tr><td>{m}</td>{''.join(f'<td>{cell[c]}</td>' for c in cs)}<td>{cmp}</td></tr>" for m, cs, cmp in rows)
-    body = f"""<div class="settings"><h2>Sweep · over components</h2>
-  {SWEEP.format(p="sw").replace("<option>Bias and molecular models</option>", "<option selected>Bias and molecular models</option>")}
-  <h3>Molecular models</h3>
-  <label class="row"><input type="checkbox" checked> 2WCD, pH 7.5</label>
-  <label class="row"><input type="checkbox" checked> 2WCD, ASP 64 neutral <span class="muted">charge variant</span></label>
-  <label class="row"><input type="checkbox"> 2WCD, pH 5.0</label>
-  <h3>Bias</h3>
-  <div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <a class="btn small" href="#st-form">Edit in the setup</a></span></div>
-  <span class="muted">The continuum model is shared: each molecular model is assembled on the same mesh, without rebuilding it.</span>
-  <div class="row"><button class="btn primary" type="button">Run the sweep</button><span class="muted">2 × n runs</span></div>
+    body_rows = "".join(
+        f"<tr><td>{m}</td>{''.join(f'<td>{cell[c]}</td>' for c in cs)}<td>{cmp}</td></tr>"
+        for m, cs, cmp in rows
+    )
+    body = f"""<div class="settings"><h2>Sweep</h2>
+  <span class="muted">Any value of the study may be swept, the models included. Each parameter adds an axis; the runs are every combination.</span>
+  <h3>Parameters</h3>
+  <table><thead><tr><th>Parameter</th><th>Values</th><th>Rebuilds</th></tr></thead><tbody>
+  <tr><td><span class="ovr">Bias</span></td><td class="num">−x.xx to +x.xx V, n</td><td class="muted">none</td></tr>
+  <tr><td>Molecular model</td><td>pH 7.5; ASP 64 neutral</td><td class="muted">the charge on the mesh</td></tr>
+  <tr aria-current="true"><td>Reservoir radius</td><td class="num">x, y nm</td><td class="warn">the region and the mesh</td></tr></tbody></table>
+  <div class="row"><button class="btn small" type="button">Add a parameter…</button><button class="btn small" type="button">Define a variable…</button><a class="btn small" href="#st-form">Edit the bias in the setup</a></div>
+  <div class="verdict"><span class="warn">Reservoir radius changes the geometry: each value rebuilds the region and the mesh, x builds before the runs</span></div>
+  <span class="muted">A variable is a named value that several fields use, swept as one. A molecular model alone reuses the mesh: each is assembled on it without rebuilding.</span>
+  <div class="row"><button class="btn primary" type="button">Run the sweep</button><span class="muted">n × 2 × 2 runs</span></div>
 </div>
-<div class="settings" style="border-right:0"><h2>Runs of the sweep</h2>
+<div class="settings" style="border-right:0"><div class="row"><h2>Runs of the sweep</h2><span style="margin-left:auto"></span><label for="sw-r" class="muted">Reservoir radius</label><select id="sw-r"><option>x nm, 1 of 2</option></select></div>
   <table class="matrix"><thead><tr><th>Molecular model</th>{head}<th></th></tr></thead><tbody>{body_rows}</tbody></table>
   <span class="muted">Each cell is a run in the queue; a done cell opens its result in Analysis. A variant's row compares it with its parent at each bias both have.</span>
 </div>"""
     return window(PAGE, "study", "Sweep", body, "380px minmax(0,1fr)", item=ITEM)
 
 
-PICK = '<circle cx="118" cy="190" r="10" fill="none" style="stroke:var(--accent)" stroke-width="3"/>'
+PICK = (
+    '<circle cx="118" cy="190" r="10" fill="none" style="stroke:var(--accent)" stroke-width="3"/>'
+)
 RHO = cbar("Charge density, e/nm³", kind="div", ticks=("−x", "0", "+x"))
-RHO_RAW = (f'<polygon points="{S.pts(S.PROT)}" fill="url(#g-diff)" stroke="currentColor"/>'
-           f'<polygon points="{S.pts(S.MEM)}" fill="none" stroke="currentColor" stroke-opacity=".7"/>{S.RESERVOIR}{S.AXIS}')
+RHO_RAW = (
+    f'<polygon points="{S.pts(S.PROT)}" fill="url(#g-diff)" stroke="currentColor"/>'
+    f'<polygon points="{S.pts(S.MEM)}" fill="none" stroke="currentColor" stroke-opacity=".7"/>{S.RESERVOIR}{S.AXIS}'
+)
 
 
 def charge():
     body = f"""<div class="viewwrap" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto">
-  <div class="row" style="grid-column:1/-1"><h2 style="margin:0;font-size:var(--text-lg)">Charge on the mesh · 2WCD, pH 7.5 on the reference mesh</h2></div>
+  <div class="stack" style="grid-column:1/-1;gap:4px"><h2 style="margin:0;font-size:var(--text-lg)">Charge on the mesh · 2WCD, pH 7.5 on the reference mesh</h2>
+  <span class="muted">What the solve sees of the protein's charge: the molecular model's charges, deposited as a volume charge on the continuum model's mesh (stage 7). The study builds it once for each pair of models, before its first run, and every run reuses it. Check it here before a long sweep: the total must match the model's Q<sub>net</sub>, and a residue's charge must land where the residue is.</span></div>
   {view3d(over=PICK, label="3D view of the molecule, ASP 64 selected")}
   {viewrz(raw=RHO_RAW, cards=f'<div class="corner">{RHO}</div><div class="over cl" style="left:8px;bottom:6px">Schematic. The charge is a volume charge inside the protein.</div>', inside='<span class="lbl over" style="left:30%;top:56%;background:var(--canvas-plot)">◉ ASP 64</span>', label="Deployed charge density in (r, z), ASP 64 selected")}
   <div class="verdict" style="grid-column:1/-1"><b>Conservation on the mesh</b><span class="ok">total within 10⁻³ of Q<sub>net</sub></span><span class="ok">per z-slice, passed</span><span class="muted">Selecting in either view selects in the other.</span></div>
@@ -180,7 +227,10 @@ def charge():
 
 def conv_plot(height):
     """The convergence plot: residual and relative update per Newton step, log scale, banded by rung (Q35)."""
-    bands = "".join(f'<rect x="{x}" y="0" width="{w}" height="100" style="fill:var(--line)" opacity="{o}"/>' for x, w, o in ((0, 30, .5), (60, 30, .5)))
+    bands = "".join(
+        f'<rect x="{x}" y="0" width="{w}" height="100" style="fill:var(--line)" opacity="{o}"/>'
+        for x, w, o in ((0, 30, 0.5), (60, 30, 0.5))
+    )
     return f"""<div style="display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;min-height:0;height:{height}">
 <span class="cl" style="writing-mode:vertical-rl;transform:rotate(180deg)">Residual and update, log</span>
 <svg viewBox="0 0 120 100" preserveAspectRatio="none" width="100%" height="100%" role="img" aria-label="Residual and relative update per Newton step on a log scale, banded by rung">{bands}
@@ -199,7 +249,10 @@ FAILED = '<div class="qrow" style="grid-template-columns:1.4rem 1fr auto auto"><
 
 def detail():
     """A run unfolded in the queue (RE2 A), with its convergence (Q35, Q36)."""
-    status = spot("follow", '<div class="row"><b>Study · I–V, NaCl · bias x.xx V, x of n</b><span class="warn">running: rung x of N</span><button class="btn small" type="button">Cancel</button><button class="btn small" type="button">Open log</button></div>')
+    status = spot(
+        "follow",
+        '<div class="row"><b>Study · I–V, NaCl · bias x.xx V, x of n</b><span class="warn">running: rung x of N</span><button class="btn small" type="button">Cancel</button><button class="btn small" type="button">Open log</button></div>',
+    )
     return f"""<div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px;padding:8px">
 <div class="stack" style="gap:6px">{status}{RUNGS}</div>{conv_plot("190px")}</div>
 <div class="qrow" style="grid-template-columns:1.4rem 1fr auto auto"><span class="ok" aria-hidden="true"></span><span>Study · I–V, NaCl · bias x.xx V, 2 of n</span><span class="ok">done</span><a class="btn small" href="05-results.html#a-explorer">Open result</a></div>
@@ -208,9 +261,20 @@ def detail():
 
 def runs():
     if CTX["v"] == "a":
-        return window(PAGE, "study", "Study setup", form_body(), "minmax(0,1.4fr) minmax(0,1fr)", item=ITEM,
-                      panel_state="open", run_detail=detail())
-    status = spot("follow", '<div class="row"><span class="warn">running: rung x of N</span><span class="muted">elapsed x min</span><span style="margin-left:auto"></span><button class="btn" type="button">Cancel</button></div>')
+        return window(
+            PAGE,
+            "study",
+            "Study setup",
+            form_body(),
+            "minmax(0,1.4fr) minmax(0,1fr)",
+            item=ITEM,
+            panel_state="open",
+            run_detail=detail(),
+        )
+    status = spot(
+        "follow",
+        '<div class="row"><span class="warn">running: rung x of N</span><span class="muted">elapsed x min</span><span style="margin-left:auto"></span><button class="btn" type="button">Cancel</button></div>',
+    )
     body = f"""<div class="settings" style="border-right:0"><h2>Run · I–V, NaCl · bias x.xx V, x of n</h2>
   {status}
   <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px">{RUNGS}{conv_plot("220px")}</div>
@@ -226,8 +290,19 @@ rung x: Newton x, residual x.x e−x, damping x.xx</pre>
     return window(PAGE, "study", "Runs", body, "minmax(0,1fr)", item=ITEM)
 
 
-GROUPS = [("Continuum model · ClyA pore, reference mesh", [("Contour isolevel", "chg", "x.xx", "0.25"), ("Pore boundary maximum size", "chg", "x.xx nm", "x.xx nm")]),
-          ("Study · I–V, NaCl, overriding the continuum model", [("Bias", "ovr", "−x.xx to +x.xx V", "x.xx V"), ("NaCl", "ovr", "x.xx M", "none")])]
+GROUPS = [
+    (
+        "Continuum model · ClyA pore, reference mesh",
+        [
+            ("Contour isolevel", "chg", "x.xx", "0.25"),
+            ("Pore boundary maximum size", "chg", "x.xx nm", "x.xx nm"),
+        ],
+    ),
+    (
+        "Study · I–V, NaCl, overriding the continuum model",
+        [("Bias", "ovr", "−x.xx to +x.xx V", "x.xx V"), ("NaCl", "ovr", "x.xx M", "none")],
+    ),
+]
 
 
 def change_table():
@@ -238,26 +313,26 @@ def change_table():
         for w, c, v, d in rows:
             cur = ' aria-current="true"' if first else ""
             first = False
-            out.append(f'<tr{cur}><td>{w}</td><td class="num"><span class="{c}">{v}</span></td><td class="num muted">{d}</td><td><button class="btn small" type="button" aria-label="Reset {w}">Reset</button></td></tr>')
-    return f'<table><thead><tr><th>Value</th><th>Now</th><th>Default</th><th></th></tr></thead><tbody>{"".join(out)}</tbody></table>'
+            out.append(
+                f'<tr{cur}><td>{w}</td><td class="num"><span class="{c}">{v}</span></td><td class="num muted">{d}</td><td><button class="btn small" type="button" aria-label="Reset {w}">Reset</button></td></tr>'
+            )
+    return f"<table><thead><tr><th>Value</th><th>Now</th><th>Default</th><th></th></tr></thead><tbody>{''.join(out)}</tbody></table>"
 
 
 LEGEND = '<span class="muted"><span class="chg">changed</span> from a default; <span class="ovr">override</span> by the study. The molecular model, 2WCD, pH 7.5, has none.</span>'
 
 
 def changes():
-    if CTX["v"] == "a":
-        pop = f"""<div class="card" role="dialog" aria-label="Values changed from their defaults" style="position:absolute;top:40px;right:12px;width:580px;z-index:5;box-shadow:0 6px 20px rgb(0 0 0 / .25)">
-  <div class="row"><h2 class="h" style="margin:0">2 changed from their defaults, 2 overrides</h2><span style="margin-left:auto"></span><a class="btn small" href="#st-overview">Close</a></div>{change_table()}{LEGEND}
-  <button class="btn small" type="button" style="justify-self:start">Go to the selected value</button></div>"""
-        return window(PAGE, "study", "Overview", overview_body(), "minmax(0,1fr) minmax(0,1fr)", item=ITEM, overlay=pop, changed_open=True)
+    """The side panel, grouped by model: B's, which A takes in round 2 (the verdict on st-changes)."""
     body = f"""{overview_left()}
 <aside class="settings" style="border-right:0;border-left:1px solid var(--line)" aria-label="Changes"><div class="row"><h2>Changes</h2><span style="margin-left:auto"></span><a class="btn small" href="#st-overview">Close</a></div>
   <h3>The open study, by model</h3>{change_table()}{LEGEND}
   <h3>Variants in the library, against their parents</h3>
   <table><tbody><tr><td>2WCD, ASP 64 neutral</td><td>ASP 64 state</td><td class="num">ASH, 0</td><td class="num muted">parent: ASP, −1</td></tr></tbody></table>
 </aside>"""
-    return window(PAGE, "study", "Overview", body, "minmax(0,1fr) 540px", item=ITEM, changed_open=True)
+    return window(
+        PAGE, "study", "Overview", body, "minmax(0,1fr) 540px", item=ITEM, changed_open=True
+    )
 
 
 TREE = """<nav class="rail" aria-label="Project" style="padding:6px">
@@ -272,13 +347,28 @@ TREE = """<nav class="rail" aria-label="Project" style="padding:6px">
 
 
 def tree():
-    return window(PAGE, "study", "Overview", overview_body(), "minmax(0,1fr) minmax(0,1fr)", item=ITEM, rail_html=TREE, rail_w="300px")
+    return window(
+        PAGE,
+        "study",
+        "Overview",
+        overview_body(),
+        "minmax(0,1fr) minmax(0,1fr)",
+        item=ITEM,
+        rail_html=TREE,
+        rail_w="300px",
+    )
 
 
-SCREENS = [("st-overview", "Study · Overview of the case", overview), ("st-form", "Study · Study setup, as a form", form),
-           ("st-graph", "Study · Study setup, as a graph", graph), ("st-sweep", "Study · A sweep over components", sweep),
-           ("st-charge", "Study · Charge on the mesh", charge), ("st-runs", "Study · A run followed", runs),
-           ("st-changes", "Study · The changed values", changes), ("st-tree", "Study · The project tree unfolded", tree)]
+SCREENS = [
+    ("st-overview", "Study · Overview of the case", overview),
+    ("st-form", "Study · Study setup, as a form", form),
+    ("st-graph", "Study · Study setup, as a graph", graph),
+    ("st-sweep", "Study · A sweep over components", sweep),
+    ("st-charge", "Study · Charge on the mesh", charge),
+    ("st-runs", "Study · A run followed", runs),
+    ("st-changes", "Study · The changed values", changes),
+    ("st-tree", "Study · The project tree unfolded", tree),
+]
 
 
 def screens():

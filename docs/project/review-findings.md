@@ -158,3 +158,5 @@ is a rolling register, and its header stays `open`.
 | REV-136 | coupling | medium | open | — | [The organisation round's rulings need library capabilities v0.5 lacks](review-items.md#rev-136-the-organisation-rounds-rulings-need-library-capabilities-v05-lacks) |
 | REV-137 | interface | medium | open | — | [No renderer is chosen for the molecule in 3D or for the explorer's controls](review-items.md#rev-137-no-renderer-is-chosen-for-the-molecule-in-3d-or-for-the-explorers-controls) |
 | REV-138 | verification | medium | open | — | [The render check measures text contrast but not the contrast of controls and graphics](review-items.md#rev-138-the-render-check-measures-text-contrast-but-not-the-contrast-of-controls-and-graphics) |
+| REV-139 | interface | medium | open | — | [The sweep needs a design round: any value, user-defined variables, rebuilds detected](review-items.md#rev-139-the-sweep-needs-a-design-round-any-value-user-defined-variables-rebuilds-detected) |
+| REV-140 | interface | low | open | — | [Two of the author's marks on the mockups ask what is not yet said](review-items.md#rev-140-two-of-the-authors-marks-on-the-mockups-ask-what-is-not-yet-said) |

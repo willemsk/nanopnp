@@ -36,7 +36,7 @@
 <span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
 <a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
 <button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
-<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) 380px">
+<div class="main" style="grid-template-columns:72px 184px 184px 380px minmax(0,1fr)">
 <div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
 <div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
   <span class="grp">Open</span>
@@ -50,8 +50,7 @@
   <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
 </nav></div>
 <div style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="02-geometry.html#g-geometry">Protein geometry<span class="st ok">gate passed</span></a></li><li><a href="02-geometry.html#g-contour">Contour<span class="st ok">gate passed</span></a></li><li><a href="02-geometry.html#g-region">Region<span class="st ok">built</span></a></li><li><a href="03-mesh.html#s-size">Mesh<span class="st ok">gate passed</span></a></li><li><a href="#p-boundaries" aria-current="true">Physics defaults</a></li></ul></div></div>
-<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="3"/></svg><span class="lbl over" style="left:83.3%;top:13.3%">cis</span><span class="lbl over" style="left:83.3%;top:83.3%">trans</span><span class="lbl over" style="left:33.3%;top:25.0%">◉ protein surface</span></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
-<div class="settings" style="border-right:0;border-left:1px solid var(--line)"><div class="tabs" role="tablist" aria-label="Physics defaults"><a role="tab" href="#p-boundaries" aria-selected="true">Boundaries</a><a role="tab" href="#p-electrolyte" aria-selected="false">Model and electrolyte</a></div>
+<div class="settings"><div class="tabs" role="tablist" aria-label="Physics defaults"><a role="tab" href="#p-boundaries" aria-selected="true">Boundaries</a><a role="tab" href="#p-electrolyte" aria-selected="false">Model and electrolyte</a></div>
   <h2>Protein surface</h2>
   <div class="field"><label for="pb-c">Condition</label><div class="v"><select id="pb-c"><option>No flux, no slip</option></select></div></div>
   <span class="muted">The protein's fixed charge is a volume charge from the molecular model, assembled on the mesh in the study.</span>
@@ -64,6 +63,7 @@
   <tr><td>Axis</td><td>Symmetry</td></tr></tbody></table>
   <span class="muted">These are the continuum model's defaults; a study may override any of them.</span>
 </div>
+<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="none" style="stroke:var(--accent)" stroke-width="3"/></svg><span class="lbl over" style="left:83.3%;top:13.3%">cis</span><span class="lbl over" style="left:83.3%;top:83.3%">trans</span><span class="lbl over" style="left:33.3%;top:25.0%">◉ protein surface</span></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
 </div>
 <div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
 
@@ -75,7 +75,7 @@
 <span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
 <a class="chip" href="06-study.html#st-changes" aria-expanded="false" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
 <button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
-<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) 380px">
+<div class="main" style="grid-template-columns:72px 184px 184px 380px minmax(0,1fr)">
 <div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html" aria-current="page"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
 <div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
   <span class="grp">Open</span>
@@ -89,8 +89,7 @@
   <a class="btn small" href="06-study.html#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
 </nav></div>
 <div style="display:grid;min-height:0"><div class="pane"><h2>Continuum tools</h2><ul class="tools" aria-label="Continuum tools"><li><a href="02-geometry.html#g-geometry">Protein geometry<span class="st ok">gate passed</span></a></li><li><a href="02-geometry.html#g-contour">Contour<span class="st ok">gate passed</span></a></li><li><a href="02-geometry.html#g-region">Region<span class="st ok">built</span></a></li><li><a href="03-mesh.html#s-size">Mesh<span class="st ok">gate passed</span></a></li><li><a href="#p-boundaries" aria-current="true">Physics defaults</a></li></ul></div></div>
-<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/></svg><span class="lbl over" style="left:83.3%;top:13.3%">cis</span><span class="lbl over" style="left:83.3%;top:83.3%">trans</span></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
-<div class="settings" style="border-right:0;border-left:1px solid var(--line)"><div class="tabs" role="tablist" aria-label="Physics defaults"><a role="tab" href="#p-boundaries" aria-selected="false">Boundaries</a><a role="tab" href="#p-electrolyte" aria-selected="true">Model and electrolyte</a></div>
+<div class="settings"><div class="tabs" role="tablist" aria-label="Physics defaults"><a role="tab" href="#p-boundaries" aria-selected="false">Boundaries</a><a role="tab" href="#p-electrolyte" aria-selected="true">Model and electrolyte</a></div>
   <h2>Model and electrolyte</h2>
   <div class="field"><label for="pe-m">Model</label><div class="v"><select id="pe-m"><option>ePNP-NS</option><option>PNP-NS</option><option>PNP</option><option>PB</option></select></div></div>
   <div class="field"><label for="pe-c">NaCl, bulk</label><div class="v"><input id="pe-c" class="num" type="text" placeholder="set" aria-describedby="pe-n"><span class="unit">M</span></div></div>
@@ -103,6 +102,7 @@
   <div class="field"><span class="k">Permittivity</span><span class="v num">protein x.x, membrane x.x</span></div>
   <div class="later"><b>Composer</b>: a model of your own equations</div>
 </div>
+<div class="viewwrap"><div class="cplot" style="position:relative;" role="img" aria-label="(r, z) view, not to scale"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><use href="#pore-rz"/></svg><span class="lbl over" style="left:83.3%;top:13.3%">cis</span><span class="lbl over" style="left:83.3%;top:83.3%">trans</span></div><div class="over cl" style="left:8px;bottom:6px">Not to scale: the reservoir is about a hundred times the pore.</div></div></div>
 </div>
 <div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
 
