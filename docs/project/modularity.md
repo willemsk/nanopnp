@@ -277,6 +277,8 @@ user, and the enumeration's shape should follow that.
 
 **User-visible.** No.
 
+**Ruled** (§8.2.18 T4): brought into v0.6. The outputs and the steric models become registries in a Phase 5 library package, set by `/np-plan amend 5`, so a new quantity of interest needs no schema edit.
+
 ### MOD-10 — The backend interface of section 5.4.1 does not exist
 
 *Area:* extension. *Severity:* high.
@@ -350,6 +352,8 @@ Phase 5: `cli/__init__.py` with the GUI's shell work, and `physics/models.py` an
 `default_ladder` with whatever MOD-10's amendment decides.
 
 **User-visible.** No.
+
+**Ruled** for its command-line part (§8.2.18 T2): `cli/__init__.py` is split by the package that adds `nanopnp gui`.
 
 ### MOD-14 — Refusals name releases that have shipped
 
@@ -447,6 +451,8 @@ lists them.
 
 **User-visible.** Only to someone registering a stage, which `PUBLIC` does not yet offer
 (`MOD-11`).
+
+**Ruled** `wontfix` for the Qt tab (§8.2.18 T1). The workbench lists stages from the registry, and a stage without a view of its own shows its record and verdict.
 
 ## Seed findings merged or added
 

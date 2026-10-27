@@ -28,6 +28,7 @@ within it (A1, B3, R10).
 * [8.2.15 The work-package plan grounded in the code, agreed 22 October 2026](15-the-work-package-plan-grounded-in-the-code-agreed.md) - Records the ruling on WP51's plan, agreed 22 October 2026, which read the plan against the code, finding points an implementer could guess at.
 * [8.2.16 Phase 4 amended: the specification and the workflow restructured, agreed 22 October 2026](16-phase-4-amended-the-specification-and-the-workflow.md) - Records the rulings on the specification's restructuring and the workflow, agreed 22 October 2026, after WP51 merged.
 * [8.2.17 Phase 5 decisions, ahead of Phase 4's exit, agreed 24 October 2026](17-phase-5-decisions-ahead-of-phase-4s-exit-agreed.md) - Records the rulings that plan Phase 5 as a molecular and continuum workbench, agreed 24 October 2026 while Phase 4 was still open, and the two-lane rule that lets its design study overlap Phase 4.
+* [8.2.18 The workbench design study's rulings, agreed 27 October 2026](18-the-workbench-design-studys-rulings-agreed-27-oct.md) - Records the author's rulings at the end of WP5.01: the review rows and modularity findings inherited by the Phase 5 shell, what partial protonation means, and the look-and-feel notes taken from the galleries.
 
 ## Where each ruling holds now
 
@@ -177,3 +178,11 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * S22 - open: WP5.01 amends §8.4.4, §8.4.5 and CLAUDE.md with its workflow item
 * S23 - the WP5.01 plan
 * S24 - the Phase 5 plan; open: WP5.01's design document
+* T1 - spent
+* T2 - open: the workbench's packages, set by `/np-plan amend 5`
+* T3 - open: structure preparation's package, the Study package, FR-28 and the composer phase
+* T4 - open: a Phase 5 library package, set by `/np-plan amend 5`
+* T5 - spent
+* T6 - FR-43
+* T7 - spent
+* T8 - FR-34; the design document's WB-30 to WB-32

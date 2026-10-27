@@ -155,8 +155,9 @@ without being rebuilt.
 every value changed from its default and every study override, grouped by model (WB-28; FR6); and the
 queue's status line. The list stays open to additions as the design grows.
 
-**State is never hidden** (WB-32): every setting of a tool is on its pane, none in a sub-menu; a scroll
-moves the pane and never changes a value; and every value away from its default carries its mark.
+**State is never hidden** (WB-32): every setting of a tool is on its pane, none in a sub-menu; a setting
+is guarded against being changed by accident, the means left to the shell's package; and every value away
+from its default carries its mark.
 
 **Several items are open at once** (WB-04); a variant is derived from its parent and shown as its
 difference, and a comparison is a saved project item. **A refusal** shows at its field and in the problems
@@ -172,7 +173,9 @@ start from the style tile's *molecular* direction, with *instrument*'s dark them
 
 **The tokens** are `docs/design/tokens.css`, CSS custom properties on `:root`, redefined for the dark
 theme: surfaces, text, one accent, the semantic colours, the canvases, the colour maps, the type scale, the
-density, focus and motion. In short:
+density, focus and motion. They are the default theme: a user adjusts it or chooses another (its colours,
+density, spacing and the 3D view's background), saved per user, every theme held to the same
+accessibility target (WB-30, WB-31). In short, the default:
 
 - medium density by default, 13.5 px type and 30 px rows, and a compact setting of 12.5 px and 26 px, saved
   per user; the gaps and padding tight at both (WB-18, WB-31);
@@ -330,8 +333,8 @@ closes (S7). The mockups draw where each will sit, with the later-phase banner a
   by the library. It opens from Contour and Region. The solve stays 2D axisymmetric.
 
 Smaller later parts, each drawn with its banner: the Python console (WB-10), the ribbon (WB-09), docked and
-modal tools (WB-07), refinement regions and boundary layers in Mesh (REV-136), partial protonation (REV-140)
-and figure export (FR-28).
+modal tools (WB-07), refinement regions and boundary layers in Mesh (REV-136), partial protonation, a
+fractional charge at the pH (FR-43; §8.2.18 T6), and figure export (FR-28).
 
 ## The shell's reading of artefacts
 
@@ -367,16 +370,17 @@ The new requirements are §3's FR-31 to FR-42 and QR-16, each with its Appendix 
 the project folder (FR-32), the four live links (FR-33), the changed marks and no hidden state (FR-34), the
 refusal at its field (FR-35), the guided route (FR-36), structure preparation (FR-37), the charge-level
 mutator (FR-38), the study's overrides and sweeps (FR-39), and the accessibility target (QR-16); the
-composer (FR-40), the structural mutator (FR-41) and the sketcher (FR-42) are tagged for their phases.
+composer (FR-40), the structural mutator (FR-41), the sketcher (FR-42) and fractional protonation (FR-43)
+are tagged for later phases.
 CON-08 and CON-11 still name the bundle and the desktop path: REV-141.
 
 ## Inherited rows
 
-Fourteen deferred review rows and three modularity findings wait on this document (Phase 5 open decision 3).
-Each is proposed a ruling here; the author rules them, and the round is recorded in the specification's
-history (WP5.01 item 16).
+Fourteen deferred review rows and three modularity findings waited on this document (Phase 5 open decision
+3). Each was proposed a ruling here, and the author ruled them on 27 October 2026 (§8.2.18 T1 to T5): as
+proposed, but for MOD-09, which the author brought into v0.6 (T4).
 
-| Row | What it is | Proposed ruling |
+| Row | What it is | Ruling |
 |---|---|---|
 | REV-20 | No `freeze_support` for a frozen shell | `wontfix`: no frozen executable remains once the bundle leaves (S12) |
 | REV-28 | The viewer renders every finished run eagerly | `deferred` to the Analysis package: a field is drawn when a tile opens it |
@@ -392,7 +396,7 @@ history (WP5.01 item 16).
 | REV-65 | The Windows bundle has no `mesh` command | `wontfix`: no bundle; the command line installs with the package everywhere |
 | REV-67 | No public registration functions for backend registries | `deferred` to the composer phase, with MOD-11 |
 | REV-114 | The shell moves from Qt to a browser | `fixed` by this document and the restated clauses; the package that removes Qt makes them the text |
-| MOD-09 | Outputs and steric models are closed enumerations | `deferred` to the composer phase; v0.6's study lists the outputs the enumeration holds |
+| MOD-09 | Outputs and steric models are closed enumerations | Brought into v0.6 by the author (T4): both become registries in a Phase 5 library package, so a new quantity of interest needs no schema edit. Proposed: `deferred` to the composer phase |
 | MOD-13 (its command-line part) | `cli/__init__.py` past review size | `deferred` to the package that adds `nanopnp gui`, which splits the command line as it adds the command |
 | MOD-18 | The Geometry tab views only the stages it knows | `wontfix` for the Qt tab; the workbench lists stages from the registry, and a stage without a view of its own shows its record and verdict |
 
@@ -406,7 +410,10 @@ Each ruling was played back and confirmed. The look-and-feel round followed the 
 style tile of three directions, *instrument*, *notebook* and *molecular*, kept in `docs/design/style/`;
 its tokens are `docs/design/tokens.css`. WB-29 came from the author's picks on the choice panels.
 WB-30 to WB-32 come from the author's notes on the concept boards and the style tile, collected with
-the verdicts on the mockups, where a note contradicting a ruling reopened it.
+the verdicts on the mockups, where a note contradicting a ruling reopened it; played back, the author
+restated them (§8.2.18 T8): "I think many of these should fall under user settings or even a "theme"
+approach. The mouse wheel not changing a field was not a literal constraint, just an annoyance that we
+should address in one way or another."
 
 | # | Question | Ruling (author's words) | Consequence |
 |---|---|---|---|
@@ -439,9 +446,9 @@ the verdicts on the mockups, where a note contradicting a ruling reopened it.
 | WB-27 | The direction the tokens start from | The molecular direction, with instrument's dark theme | `docs/design/tokens.css` |
 | WB-28 | The changed-from-default mark | Its own mark, on changed values only | A filled diamond in its own colour, never the accent, showing the default and a per-field reset; a study override (WB-16) an outlined diamond; the frame's count (WB-03) a button opening the list |
 | WB-29 | Where studies are made | Its own suite. The author, picking on the choice panels (RE1): "Now that I see the organisation, I think 'Study' should be its own fully fledged suite next to Molecular, Continuum, and Analysis" | Four suites and a run queue: *Molecular*, *Continuum*, *Study* (pairing the models, the overrides, the sweep, the charge on the mesh, a run's progress) and *Analysis* (the results explorer and the comparisons). Amends WB-02 and WB-11; §8.1's Phase 5 row says so |
-| WB-30 | The 3D view's background, reopening WB-26 | The author, marking the style tile's *molecular* direction: "Maybe the always black viewer is not needed, better to be user adjustable" | The Molecular suite's 3D view is near-black by default; the View tool sets it to near-black, the theme or white, saved per user. The colour bars stay outlined at 3:1 on each |
-| WB-31 | The spacing, reopening WB-18 | The author, on the same direction: "Spacings can be even tighter" | The gaps and the padding tighten at both densities (`--gap` 6 px and `--pad` 8 px by default, 4 px and 6 px compact); the type and the row heights stay, the targets at least 24 px (WB-24) |
-| WB-32 | Hidden state | The author, marking the *model builder* board: "One of my major gripes with COMSOL though, is the sheer amount of "state" a GUI-based run has, and that everything is hidden in menu's or sub-menus, where an accidental click or scroll may invertedly change a settings" | Every setting of a tool is on its pane, never in a sub-menu; the mouse wheel scrolls the pane and changes no field; every value away from its default is marked (WB-28) and counted (WB-03), and a study's overrides are listed with it |
+| WB-30 | The 3D view's background, reopening WB-26 | The author, marking the style tile's *molecular* direction: "Maybe the always black viewer is not needed, better to be user adjustable" | The Molecular suite's 3D view is near-black by default; the View tool sets it to near-black, the theme or white, saved per user, as part of the user's theme (§8.2.18 T8). The colour bars stay outlined at 3:1 on each |
+| WB-31 | The spacing, reopening WB-18 | The author, on the same direction: "Spacings can be even tighter" | The default theme's gaps and padding tighten at both densities (`--gap` 6 px and `--pad` 8 px by default, 4 px and 6 px compact); the type and the row heights stay, the targets at least 24 px (WB-24). Spacing is a user setting of the theme (§8.2.18 T8) |
+| WB-32 | Hidden state | The author, marking the *model builder* board: "One of my major gripes with COMSOL though, is the sheer amount of "state" a GUI-based run has, and that everything is hidden in menu's or sub-menus, where an accidental click or scroll may invertedly change a settings" | Every setting of a tool is on its pane, never in a sub-menu; a setting is guarded against an accidental change, the means (the mouse wheel among them) left to the shell's package, the wheel rule "not a literal constraint" (§8.2.18 T8); every value away from its default is marked (WB-28) and counted (WB-03), and a study's overrides are listed with it (FR-34) |
 
 ## Glossary
 

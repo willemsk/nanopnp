@@ -1,4 +1,5 @@
-/* nanopnp workbench design tokens (WP5.01 look-and-feel round; docs/design/workbench.md, WB-17 to WB-28).
+/* nanopnp workbench design tokens, the default theme (WP5.01 look-and-feel round; docs/design/workbench.md,
+   WB-17 to WB-31): a user adjusts it or chooses another, saved per user (§8.2.18 T8).
    The molecular direction is the base, instrument's dark theme gives the dark tokens. Light by default;
    dark under prefers-color-scheme, or forced by data-theme on the root. Contrast pairs are held to
    WCAG 2.2 AA: text 4.5:1, controls, focus rings and graphical objects 3:1 against their surface. */

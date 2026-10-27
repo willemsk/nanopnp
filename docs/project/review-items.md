@@ -226,6 +226,8 @@ shell spawns children on Windows.
 
 **Resolves it.** Phase 5, which makes the shell the bundle's executable (QR-10).
 
+**Ruled** `wontfix` (§8.2.18 T1): no frozen executable remains once the bundle leaves (§8.2.17 S12).
+
 ### REV-21 — numerics/linear.py imports scipy inside its functions
 
 *Area:* process. *Severity:* low. *Found:* PR #4 (WP3), a convention decision for the author.
@@ -302,6 +304,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
+**Ruled** (§8.2.18 T2): owned by the workbench's Analysis package, which draws a field when a tile opens it.
+
 ### REV-29 — The cylindrical-pore fixture is copied into four test modules
 
 *Area:* verification. *Severity:* low. *Found:* PR #32 (WP15).
@@ -318,6 +322,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
+**Ruled** (§8.2.18 T2): owned by the workbench's Analysis package, which writes each scene once and serves it.
+
 ### REV-31 — The bundle's size is not recorded
 
 *Area:* documentation. *Severity:* low. *Found:* PR #37 (Phase 1 close).
@@ -326,6 +332,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
+**Ruled** `wontfix` (§8.2.18 T1): the browser shell ships no bundle; the install's size is the package's.
+
 ### REV-32 — Old store entries are neither migrated nor removed
 
 *Area:* interface. *Severity:* low. *Found:* PR #38 (WP17).
@@ -333,6 +341,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 **Measured.** Entries written under an earlier schema stay in the store, unread and unremoved.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
+**Ruled** (§8.2.18 T2): owned by the project-folder package: the library lists entries of an older schema and removes them on request.
 
 ### REV-33 — writable_formats assumes the extra's floor
 
@@ -394,6 +404,8 @@ repository holds a logger.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
+**Ruled** (§8.2.18 T2): owned by the workbench's Continuum package: the Contour tool opens on any profile, extracted or supplied.
+
 ### REV-40 — DensityMap.read accepts a file written in nm
 
 *Area:* interface. *Severity:* low. *Found:* PR #50 (WP25).
@@ -411,6 +423,8 @@ refusal, ten times off.
 no later owner.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
+**Ruled** (§8.2.18 T3): `prepare` comes with structure preparation (FR-37); `upto` on reproduce with the workbench's Study package; the region export with FR-28, v0.7.
 
 ### REV-42 — pnp carries inert flow keys
 
@@ -444,6 +458,8 @@ they do nothing.
 **Measured.** WP31 shows χ in the GUI; no command exports it.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
+**Ruled** (§8.2.18 T3): with FR-28, v0.7.
 
 ### REV-46 — Example 07 is not run at default sizes or on the ensemble
 
@@ -505,6 +521,8 @@ can drift apart.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
+**Ruled** (§8.2.18 T2): owned by the first shell package, library first: `deviations` and `SolveReporting` join the stage protocol as optional members.
+
 ### REV-53 — Some walk rules stay as case logic
 
 *Area:* interface. *Severity:* low. *Found:* PR #79 (WP36).
@@ -540,6 +558,8 @@ name and both modules (VER-45).
 at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without confirmation.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
+
+**Ruled** `wontfix` for the Qt code (§8.2.18 T1). The workbench's Contour tool checks its edits off the interface's thread and asks before discarding one.
 
 ### REV-57 — frame_times decodes every frame
 
@@ -596,6 +616,8 @@ only as a file.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
+**Ruled** (§8.2.18 T2): owned by the named-model capability (REV-136), which references a continuum model's mesh.
+
 ### REV-63 — The protonation stage walked through meshing
 
 *Area:* performance. *Severity:* low. *Found:* PR #55 (WP27); verified open at `5559c7e`.
@@ -627,6 +649,8 @@ otherwise.
 
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
+**Ruled** `wontfix` (§8.2.18 T1): no bundle; the command line installs with the package everywhere.
+
 ### REV-66 — A model without flow is refused on its element pair before its flow switch
 
 *Area:* interface. *Severity:* low. *Found:* PR #82 (WP38), the `/wp-ship` review; reproduced at
@@ -652,6 +676,8 @@ The document is refused either way; only the first diagnostic misleads (QR-12).
 `PUBLIC` (D12).
 
 **Deferred.** Phase 5, evaluated with `MOD-11` and the extension point public surface ruling (§8.2.8 H2).
+
+**Ruled** (§8.2.18 T3): with the composer phase and MOD-11.
 
 ### REV-68 — The spec still promises a refusal that D8 removed
 
@@ -1138,6 +1164,8 @@ alternative. The author ruled the browser shell for Phase 5 (M3); ADR-004 and CO
 **Resolves it:** Phase 5's design document restates the shell's gating clauses for the browser shell,
 which then replaces the Qt shell.
 
+**Fixed** (§8.2.18 T5) by WP5.01: the gating clauses are restated as `NOTE (the browser shell, v0.6)` beside each, and the package that removes Qt makes them the text.
+
 ### REV-115 — The architecture review's already-met claims
 
 *Area:* process. *Severity:* low. *Found:* the same review.
@@ -1445,9 +1473,7 @@ Two of the author's marks on mockup A (WP5.01, `docs/design/reviews/2026-10-26-m
   titratable group one state from PROPKA at the pH (PHY-16 step 3; FR-12); a partial, or fractional, state is not
   specified. Round 2 draws it with the later-phase banner.
 
-**Open** for the author: what `g-geometry` should change, and what partial protonation means (a charge averaged over a
-group's states at the pH, or states chosen for some groups only), so that the mockup can draw it and, if it is a
-fractional charge, the specification can say it.
+**Fixed** (§8.2.18 T6, T7): the `g-geometry` mark was a slip, and the screen stands as `fine`. Partial protonation is a fractional charge at the pH, each titratable group carrying its charge averaged over its states from its pKa: FR-43, a later capability whose physics its library package writes, shown in v0.6 with the later-phase banner.
 
 ## REV-141: CON-08 and CON-11 name a bundle and a desktop path the browser shell removes
 

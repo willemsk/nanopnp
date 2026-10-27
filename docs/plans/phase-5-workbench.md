@@ -128,8 +128,8 @@ the capability list covered, orders the tool phases (S7), and writes the report,
 |---|---|---|
 | 1 | The scope, the overlap, the slicing, the loop, the document, the install, the gate, the package names | **Settled by the author, 24 October 2026** (S1 to S20) |
 | 2 | The front-end framework and server library | **Author**, from WP5.02's evidence (S8) |
-| 3 | The inherited rows: REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) | **WP5.01** proposes, the author rules |
-| 4 | Whether the shell reads `plot/data.py` and retires its own plots | **WP5.01** (P3) |
+| 3 | The inherited rows: REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) | **Settled by the author, 27 October 2026** (§8.2.18 T1 to T5): MOD-09 brought into v0.6, the rest as WP5.01 proposed; `/np-plan amend 5` carries the owners |
+| 4 | Whether the shell reads `plot/data.py` and retires its own plots | **Settled by WP5.01**: it does, and `gui/`'s duplicates retire with Qt (`docs/design/workbench.md`, *The shell's reading of artefacts*) |
 | 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7) |
 
 ## What the author supplies
