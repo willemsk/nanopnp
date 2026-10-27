@@ -1,41 +1,62 @@
-"""01-molecular: Prepare (MO1 B), Ensemble and View (E7), Protonation (MO3 B), Charge edit (MO2 B)."""
+"""01-molecular: Prepare (MO1 B), Ensemble and View (E7), Protonation (MO3 B), Charge edit (MO2 B); round 2 docks Prepare's and Protonation's settings."""
 
 from mk import cbar, f, reset, ro, route, spot, view3d, window
 
 PAGE = "01-molecular.html"
 
-AXIS = ('<line x1="150" y1="14" x2="150" y2="292" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>'
-        '<rect x="40" y="214" width="220" height="26" fill="none" style="stroke:var(--warn)" stroke-width="2"/>')
-HANDLES = ('<circle cx="150" cy="18" r="7" style="fill:var(--accent)"/><path d="M143 30 L150 18 L157 30" fill="none" style="stroke:var(--canvas-3d-ink)" stroke-width="2"/>'
-           '<rect x="252" y="221" width="14" height="12" rx="2" style="fill:var(--warn)"/><rect x="34" y="221" width="14" height="12" rx="2" style="fill:var(--warn)"/>')
-PICK = '<circle cx="118" cy="190" r="10" fill="none" style="stroke:var(--accent)" stroke-width="3"/>'
+AXIS = (
+    '<line x1="150" y1="14" x2="150" y2="292" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>'
+    '<rect x="40" y="214" width="220" height="26" fill="none" style="stroke:var(--warn)" stroke-width="2"/>'
+)
+HANDLES = (
+    '<circle cx="150" cy="18" r="7" style="fill:var(--accent)"/><path d="M143 30 L150 18 L157 30" fill="none" style="stroke:var(--canvas-3d-ink)" stroke-width="2"/>'
+    '<rect x="252" y="221" width="14" height="12" rx="2" style="fill:var(--warn)"/><rect x="34" y="221" width="14" height="12" rx="2" style="fill:var(--warn)"/>'
+)
+PICK = (
+    '<circle cx="118" cy="190" r="10" fill="none" style="stroke:var(--accent)" stroke-width="3"/>'
+)
 LEGEND = '<div class="over card" style="right:8px;bottom:8px;padding:6px 8px;gap:2px;font-size:var(--text-xs)"><span><span style="display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;color:#0d0f13;font-weight:700;margin-right:4px;background:#ef6f6c" aria-hidden="true">−</span>negative residue</span><span><span style="display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;color:#0d0f13;font-weight:700;margin-right:4px;background:#6fa8ff" aria-hidden="true">+</span>positive residue</span></div>'
-VIEWBAR = LEGEND + """<div class="over toolbar" style="left:8px;top:8px">
+VIEWBAR = (
+    LEGEND
+    + """<div class="over toolbar" style="left:8px;top:8px">
   <button class="btn small" type="button">Reset view</button><button class="btn small" type="button" aria-pressed="false">Clip</button>
   <span class="chip" style="background:var(--panel)">Linked: residue and charge map</span></div>"""
+)
 
 
 def prepare():
-    card = f"""<div class="over card" style="left:12px;top:52px;width:300px">
-  <b>Prepare</b>
+    """A docked settings panel beside the view, as every other tool (the verdict on m-prepare, round 1)."""
+    axis = spot(
+        "prepare",
+        '<div class="row"><label for="mp-tl" class="muted">Axis tilt</label><input id="mp-tl" class="num" type="text" value="x.xx" style="width:4rem"><span class="unit">°</span><button class="btn small" type="button">Estimate</button></div>',
+    )
+    body = f"""<div class="settings"><h2>Prepare structure</h2>
   <div class="row"><span class="muted">Structure</span><span class="num">2wcd.cif</span><button class="btn small" type="button">Open structure…</button></div>
-  <div class="row"><span class="muted">Chains</span><button class="chip" type="button" aria-pressed="true">A–L, 12</button></div>
-  {spot("prepare", '<div class="row"><label for="mp-tl" class="muted">Axis tilt</label><input id="mp-tl" class="num" type="text" value="x.xx" style="width:4rem"><span class="unit">°</span><button class="btn small" type="button">Estimate</button></div>')}
-  <div class="row"><label for="mp-z" class="muted">Membrane centre, z</label><input id="mp-z" class="num" type="text" value="x.xx" style="width:4rem"><span class="unit">nm</span></div>
-  <div class="row"><span class="muted">Thickness</span><span class="num">x.xx nm</span><span class="muted">set in Continuum, Region</span></div>
-  <div class="row"><button class="btn small" type="button">Flip</button><button class="btn primary small" type="button">Save prepared structure</button></div>
+  <div class="field"><span class="k">Chains</span><span class="v"><button class="chip" type="button" aria-pressed="true">A–L, 12</button></span></div>
+  <h3>Axis</h3>
+  {axis}
+  <div class="row"><button class="btn small" type="button">Flip</button><span class="muted">turns the pore end over end</span></div>
+  <h3>Membrane</h3>
+  {f("mp-z", "Centre, z", "x.xx", "nm")}
+  {ro("Thickness", '<span class="num">x.xx nm</span> <span class="muted">set in Continuum, Region</span>')}
   <div class="verdict"><span class="ok">Orientation gate passed</span><button class="btn small" type="button" aria-expanded="false">Checks</button></div>
-  <span class="muted" style="font-size:var(--text-xs)">Drag the axis by its top handle, the membrane by its ends; or type the values.</span>
-</div>"""
-    body = f'<div class="viewwrap">{view3d(over=AXIS + HANDLES, cards=VIEWBAR + card)}</div>'
-    return window(PAGE, "molecular", "Prepare structure", body, "minmax(0,1fr)", item="2WCD, pH 7.5")
+  <div class="row"><button class="btn primary" type="button">Save prepared structure</button></div>
+  <span class="muted">Drag the axis by its top handle, the membrane by its ends, or type the values; both show the same value.</span>
+</div>
+<div class="viewwrap">{view3d(over=AXIS + HANDLES, cards=VIEWBAR)}</div>"""
+    return window(
+        PAGE, "molecular", "Prepare structure", body, "320px minmax(0,1fr)", item="2WCD, pH 7.5"
+    )
 
 
 FRAMES = [(1, "xx", "x.xx"), (2, "xx", "x.xx"), (3, "xx", "x.xx"), (4, "xx", "x.xx")]
 
 
 def ensemble():
-    rows = "".join(f'<tr{" aria-current=\"true\"" if i == 1 else ""}><td class="num">{n}</td><td class="num">{q} e</td><td class="num">{r} ns</td><td><label class="row"><input type="checkbox" checked><span class="vh">Use frame {n}</span></label></td></tr>' for i, (n, q, r) in enumerate(FRAMES))
+    rows = "".join(
+        f'<tr{' aria-current="true"' if i == 1 else ""}><td class="num">{n}</td><td class="num">{q} e</td><td class="num">{r} ns</td><td><label class="row"><input type="checkbox" checked><span class="vh">Use frame {n}</span></label></td></tr>'
+        for i, (n, q, r) in enumerate(FRAMES)
+    )
     body = f"""<div class="settings"><h2>Ensemble · 2WCD</h2>
   <div class="field"><label for="me-src">Source</label><div class="v"><select id="me-src"><option>Trajectory, x frames</option><option>The structure alone</option></select></div></div>
   {f("me-st", "Stride", "x")}
@@ -49,7 +70,9 @@ def ensemble():
     return window(PAGE, "molecular", "Ensemble", body, "320px minmax(0,1fr)", item="2WCD, pH 7.5")
 
 
-SEQ = list("MTSIFAESTVQKDGLPGTNIFKKALSDYLEAGVNDPAEVVKTASTWVDKLHAEAEKLLSEASRLATQKAGELMTSIFAESTVQKDGLPGTNIFKKAL")
+SEQ = list(
+    "MTSIFAESTVQKDGLPGTNIFKKALSDYLEAGVNDPAEVVKTASTWVDKLHAEAEKLLSEASRLATQKAGELMTSIFAESTVQKDGLPGTNIFKKAL"
+)
 SEQ[63] = "D"
 SIGN = {"D": ("neg", "−"), "E": ("neg", "−"), "K": ("pos", "+"), "R": ("pos", "+")}
 
@@ -61,8 +84,14 @@ def strip():
         if i == 63 and not route():
             cls, sg = "", "0"
         pressed = ' aria-pressed="true"' if i == 63 else ""
-        cells.append(f'<button type="button" class="{cls}"{pressed} aria-label="{c}{i + 1}{", charge " + sg if sg else ""}"><span class="sg" aria-hidden="true">{sg}</span>{c}</button>')
-    return '<div class="strip" role="group" aria-label="Chain A, placeholder sequence">' + "".join(cells) + "</div>"
+        cells.append(
+            f'<button type="button" class="{cls}"{pressed} aria-label="{c}{i + 1}{", charge " + sg if sg else ""}"><span class="sg" aria-hidden="true">{sg}</span>{c}</button>'
+        )
+    return (
+        '<div class="strip" role="group" aria-label="Chain A, placeholder sequence">'
+        + "".join(cells)
+        + "</div>"
+    )
 
 
 QNET = '<span class="row"><span class="muted">Q<sub>net</sub></span><span class="num">xx e per frame, frame 1 of x</span></span>'
@@ -70,16 +99,41 @@ WARN = '<span class="row"><span class="warn">x PROPKA warnings</span><button cla
 
 
 def protonation():
-    state = ('<span class="muted">0 off default · at pH 7.5, from PROPKA</span>' if route() else
-             '<span class="chg">1 off default</span><span class="muted">selected: ASP 64, ASH, 0 · pKa x.x</span>')
-    ph = spot("ph", '<span class="row"><label for="mo-ph" class="muted">pH</label><input id="mo-ph" class="num" type="text" value="7.5" style="width:4rem"><button class="btn primary small" type="button">Build molecular model</button></span>', inline=True)
-    body = f"""<div class="viewwrap" style="grid-template-rows:minmax(0,1fr) auto">{view3d(over=PICK, cards=VIEWBAR)}
+    state = (
+        '<span class="muted">0 off default · at pH 7.5, from PROPKA</span>'
+        if route()
+        else '<span class="chg">1 off default</span><span class="muted">selected: ASP 64, ASH, 0 · pKa x.x</span>'
+    )
+    build = spot(
+        "ph",
+        f"""<div class="stack" style="gap:6px">{f("mo-ph", "pH", "7.5")}
+  <div class="field"><label for="mo-ff">Force field</label><div class="v"><select id="mo-ff"><option>CHARMM</option><option>PEOEPB</option><option>SWANSON</option></select></div></div>
+  <div class="field"><label for="mo-t">Titration</label><div class="v"><select id="mo-t"><option>PROPKA</option><option>None: standard states</option></select></div></div>
+  <div class="row"><button class="btn primary" type="button">Build molecular model</button></div></div>""",
+    )
+    body = f"""<div class="settings"><h2>Protonation</h2>
+  {build}
+  <span class="muted">CHARMM and PROPKA are the validated defaults; another force field or no titration is a switch away from them, marked and recorded with each run.</span>
+  <div class="later"><b>Partial protonation</b></div>
+  <h3>Residue states</h3>
+  <div class="row">{state}</div>
+  <div class="row"><span class="muted">Change one residue's state in</span><a class="btn small" href="#m-charge">Charge edit</a></div>
+  {QNET}{WARN}
+</div>
+<div class="viewwrap" style="grid-template-rows:minmax(0,1fr) auto">{view3d(over=PICK, cards=VIEWBAR)}
 <div class="card" style="min-width:0">
-  <div class="row"><b>Protonation · chain A</b>{state}<span style="margin-left:auto"></span>{ph}</div>
+  <div class="row"><b>Chain A</b><span class="muted">select a residue to see its state and pKa</span></div>
   {strip()}
-  <div class="row muted" style="font-size:var(--text-xs)"><span>− negative</span><span>+ positive</span><span>0 changed to neutral</span><span>placeholder sequence; scroll for the rest</span><span style="margin-left:auto"></span>{QNET}{WARN}</div>
+  <div class="row muted" style="font-size:var(--text-xs)"><span>− negative</span><span>+ positive</span><span>0 changed to neutral</span><span>placeholder sequence; scroll for the rest</span></div>
 </div></div>"""
-    return window(PAGE, "molecular", "Protonation", body, "minmax(0,1fr)", item="2WCD, pH 7.5" if route() else "2WCD, ASP 64 neutral")
+    return window(
+        PAGE,
+        "molecular",
+        "Protonation",
+        body,
+        "320px minmax(0,1fr)",
+        item="2WCD, pH 7.5" if route() else "2WCD, ASP 64 neutral",
+    )
 
 
 def charge():
@@ -101,6 +155,7 @@ def view():
     body = f"""<div class="settings"><h2>View</h2>
   <div class="field"><label for="mv-r">Representation</label><div class="v"><select id="mv-r"><option>Surface</option><option>Cartoon</option><option>Atoms</option></select></div></div>
   <div class="field"><label for="mv-c">Colour by</label><div class="v"><select id="mv-c"><option>Charge</option><option>Chain</option><option>Changed from default</option></select></div></div>
+  <div class="field"><label for="mv-bg">Background</label><div class="v"><select id="mv-bg"><option>Near-black</option><option>The theme</option><option>White</option></select></div></div>
   <label class="row"><input type="checkbox" checked> Show the membrane slab</label>
   <label class="row"><input type="checkbox"> Clip at the axis</label>
   <h3>Select</h3>
@@ -110,10 +165,16 @@ def view():
   <tr><td>ASP xx</td><td>A–L</td><td class="num">−1</td></tr><tr><td>LYS xx</td><td>A–L</td><td class="num">+1</td></tr></tbody></table>
   <span class="muted">A residue picked here or on the view selects its charge in Study's charge map until unlinked.</span>
 </div>
-<div class="viewwrap">{view3d(over=PICK, cards=VIEWBAR + '<div class="over" style="right:8px;top:8px">' + cbar("Charge, e", kind="div", ticks=("−1", "0", "+1")) + '</div>')}</div>"""
-    return window(PAGE, "molecular", "View", body, "320px minmax(0,1fr)", item="2WCD, ASP 64 neutral")
+<div class="viewwrap">{view3d(over=PICK, cards=VIEWBAR + '<div class="over" style="right:8px;top:8px">' + cbar("Charge, e", kind="div", ticks=("−1", "0", "+1")) + "</div>")}</div>"""
+    return window(
+        PAGE, "molecular", "View", body, "320px minmax(0,1fr)", item="2WCD, ASP 64 neutral"
+    )
 
 
-SCREENS = [("m-prepare", "Molecular · Prepare structure", prepare), ("m-ensemble", "Molecular · Ensemble", ensemble),
-           ("m-protonation", "Molecular · Protonation", protonation), ("m-charge", "Molecular · Charge edit", charge),
-           ("m-view", "Molecular · View", view)]
+SCREENS = [
+    ("m-prepare", "Molecular · Prepare structure", prepare),
+    ("m-ensemble", "Molecular · Ensemble", ensemble),
+    ("m-protonation", "Molecular · Protonation", protonation),
+    ("m-charge", "Molecular · Charge edit", charge),
+    ("m-view", "Molecular · View", view),
+]

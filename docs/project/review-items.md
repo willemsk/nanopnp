@@ -1422,3 +1422,30 @@ border, outline and fill of every control, and the ends of every colour bar, aga
 Until then a review states non-text contrast as not measured. `tokens.css` holds its own pairs at 3:1 by
 calculation.
 
+## REV-139: The sweep needs a design round: any value, user-defined variables, rebuilds detected
+
+The author, marking the mockups' sweep (WP5.01, `docs/design/reviews/2026-10-26-mockups.md`, `st-sweep`): "I like
+having the ability to sweep over everything. We should also be able to sweep over user-defined variables, and the need
+for remeshing should be detected (and mentioned as a warning perhaps?). This screen needs some brainstorming still."
+Round 2 of mockup A draws a first take: a list of parameters over any value, each naming what it rebuilds, a named
+variable that several fields share, and a warning with the count of builds when a parameter changes the geometry.
+FR-24's sweep already ranges over any case-file field; the library does not sweep over named models (WB-11), a case
+has no variables, and nothing says which stages a value invalidates before the walk reaches them.
+
+**Open** for the author: a design round on the sweep (`/np-gui grill`), then its library capabilities, as REV-136's
+are, in a package after WP5.02. Variables in a case are a case-schema change for a package after `v0.5.0` (§8.2.17 S1).
+The stages a value invalidates follow from the content hashes that key each stage's artefact (FR-27).
+
+## REV-140: Two of the author's marks on the mockups ask what is not yet said
+
+Two of the author's marks on mockup A (WP5.01, `docs/design/reviews/2026-10-26-mockups.md`) could not be acted on:
+
+- `g-geometry`, the protein geometry tool, is marked `change` with no note.
+- `m-protonation` asks for "partial protonation" among the protonation's settings. The protonation stage assigns each
+  titratable group one state from PROPKA at the pH (PHY-16 step 3; FR-12); a partial, or fractional, state is not
+  specified. Round 2 draws it with the later-phase banner.
+
+**Open** for the author: what `g-geometry` should change, and what partial protonation means (a charge averaged over a
+group's states at the pH, or states chosen for some groups only), so that the mockup can draw it and, if it is a
+fractional charge, the specification can say it.
+

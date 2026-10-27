@@ -61,6 +61,15 @@
   <div class="field"><span class="k ovr">Overrides</span><span class="v">bias, NaCl</span></div>
   <div class="field"><span class="k chg">Changed</span><span class="v">2 values from their defaults <a class="btn small" href="#st-changes">Show</a></span></div>
   <div class="field"><span class="k">Runs</span><span class="v"><span class="warn">x of n running</span></span></div>
+  <h3>Physics · the continuum model's defaults and the study's overrides</h3>
+  <table><thead><tr><th>Setting</th><th>Value</th><th>From</th></tr></thead><tbody>
+  <tr><td>Model</td><td>ePNP-NS</td><td class="muted">continuum</td></tr>
+  <tr><td>Electrolyte</td><td><span class="num">x.xx M</span> NaCl</td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Corrections</td><td>willems2020_nacl, as validated</td><td class="muted">continuum</td></tr>
+  <tr><td>Cis side</td><td>ground</td><td class="muted">continuum</td></tr>
+  <tr><td>Trans side</td><td>bias, <span class="num">−x.xx to +x.xx V</span></td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Walls</td><td>no flux, no slip</td><td class="muted">continuum</td></tr></tbody></table>
+  <a class="btn small" href="04-physics.html#p-electrolyte" style="justify-self:start">Open the physics defaults</a>
 </div><div class="settings" style="border-right:0"><h2>Resolved case file</h2>
   <span class="muted">One complete case file, written with each run's manifest; the command line runs it as it is.</span>
   <pre class="yaml" tabindex="0" aria-label="Resolved case file">schema: nanopnp/case/v0.5
@@ -189,18 +198,19 @@ physics: {model: epnp-ns}</pre>
   <a class="btn small" href="#st-tree" aria-keyshortcuts="Control+Shift+E" title="Ctrl Shift E" style="justify-self:start;margin:6px 4px">Unfold the tree</a>
 </nav></div>
 <div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-form">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep" aria-current="true">Sweep</a></li><li><a href="#st-charge">Charge on the mesh<span class="st ok">passed</span></a></li></ul></div></div>
-<div class="settings"><h2>Sweep · over components</h2>
-  <div class="field"><label for="sw-sw">Sweep over</label><div class="v"><select id="sw-sw"><option>Bias</option><option>Molecular models</option><option>Continuum models</option><option selected>Bias and molecular models</option></select></div></div>
-  <h3>Molecular models</h3>
-  <label class="row"><input type="checkbox" checked> 2WCD, pH 7.5</label>
-  <label class="row"><input type="checkbox" checked> 2WCD, ASP 64 neutral <span class="muted">charge variant</span></label>
-  <label class="row"><input type="checkbox"> 2WCD, pH 5.0</label>
-  <h3>Bias</h3>
-  <div class="field"><span class="k ovr">Bias</span><span class="v num">−x.xx to +x.xx V, n steps <a class="btn small" href="#st-form">Edit in the setup</a></span></div>
-  <span class="muted">The continuum model is shared: each molecular model is assembled on the same mesh, without rebuilding it.</span>
-  <div class="row"><button class="btn primary" type="button">Run the sweep</button><span class="muted">2 × n runs</span></div>
+<div class="settings"><h2>Sweep</h2>
+  <span class="muted">Any value of the study may be swept, the models included. Each parameter adds an axis; the runs are every combination.</span>
+  <h3>Parameters</h3>
+  <table><thead><tr><th>Parameter</th><th>Values</th><th>Rebuilds</th></tr></thead><tbody>
+  <tr><td><span class="ovr">Bias</span></td><td class="num">−x.xx to +x.xx V, n</td><td class="muted">none</td></tr>
+  <tr><td>Molecular model</td><td>pH 7.5; ASP 64 neutral</td><td class="muted">the charge on the mesh</td></tr>
+  <tr aria-current="true"><td>Reservoir radius</td><td class="num">x, y nm</td><td class="warn">the region and the mesh</td></tr></tbody></table>
+  <div class="row"><button class="btn small" type="button">Add a parameter…</button><button class="btn small" type="button">Define a variable…</button><a class="btn small" href="#st-form">Edit the bias in the setup</a></div>
+  <div class="verdict"><span class="warn">Reservoir radius changes the geometry: each value rebuilds the region and the mesh, x builds before the runs</span></div>
+  <span class="muted">A variable is a named value that several fields use, swept as one. A molecular model alone reuses the mesh: each is assembled on it without rebuilding.</span>
+  <div class="row"><button class="btn primary" type="button">Run the sweep</button><span class="muted">n × 2 × 2 runs</span></div>
 </div>
-<div class="settings" style="border-right:0"><h2>Runs of the sweep</h2>
+<div class="settings" style="border-right:0"><div class="row"><h2>Runs of the sweep</h2><span style="margin-left:auto"></span><label for="sw-r" class="muted">Reservoir radius</label><select id="sw-r"><option>x nm, 1 of 2</option></select></div>
   <table class="matrix"><thead><tr><th>Molecular model</th><th>x.xx V</th><th>x.xx V</th><th>x.xx V</th><th>x.xx V</th><th></th></tr></thead><tbody><tr><td>2WCD, pH 7.5</td><td><span class="ok">done</span></td><td><span class="ok">done</span></td><td><span class="warn">running</span></td><td><span class="muted">queued</span></td><td></td></tr><tr><td>2WCD, ASP 64 neutral</td><td><span class="ok">done</span></td><td><span class="ok">done</span></td><td><span class="muted">queued</span></td><td><span class="muted">queued</span></td><td><a class="btn small" href="05-results.html#a-compare-side">Compare with the parent</a></td></tr></tbody></table>
   <span class="muted">Each cell is a run in the queue; a done cell opens its result in Analysis. A variant's row compares it with its parent at each bias both have.</span>
 </div>
@@ -230,7 +240,8 @@ physics: {model: epnp-ns}</pre>
 </nav></div>
 <div style="display:grid;min-height:0"><div class="pane"><h2>Study tools</h2><ul class="tools" aria-label="Study tools"><li><a href="#st-overview">Overview</a></li><li><a href="#st-form">Study setup<span class="st warn">running</span></a></li><li><a href="#st-sweep">Sweep</a></li><li><a href="#st-charge" aria-current="true">Charge on the mesh<span class="st ok">passed</span></a></li></ul></div></div>
 <div class="viewwrap" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto">
-  <div class="row" style="grid-column:1/-1"><h2 style="margin:0;font-size:var(--text-lg)">Charge on the mesh · 2WCD, pH 7.5 on the reference mesh</h2></div>
+  <div class="stack" style="grid-column:1/-1;gap:4px"><h2 style="margin:0;font-size:var(--text-lg)">Charge on the mesh · 2WCD, pH 7.5 on the reference mesh</h2>
+  <span class="muted">What the solve sees of the protein's charge: the molecular model's charges, deposited as a volume charge on the continuum model's mesh (stage 7). The study builds it once for each pair of models, before its first run, and every run reuses it. Check it here before a long sweep: the total must match the model's Q<sub>net</sub>, and a residue's charge must land where the residue is.</span></div>
   <div class="c3d" style="position:relative;" role="img" aria-label="3D view of the molecule, ASP 64 selected"><div class="vb" style="aspect-ratio:1 / 1"><svg viewBox="0 0 300 300" width="100%" height="100%"><use href="#pore-3d"/><circle cx="118" cy="190" r="10" fill="none" style="stroke:var(--accent)" stroke-width="3"/></svg></div></div>
   <div class="cplot" style="position:relative;" role="img" aria-label="Deployed charge density in (r, z), ASP 64 selected"><div class="vb" style="aspect-ratio:180 / 300"><svg viewBox="0 0 180 300" width="100%" height="100%" style="color:var(--canvas-plot-ink)"><polygon points="44.2,86.2 126.7,86.2 126.7,121.4 78.3,129.1 70.6,217.1 55.2,217.1 51.9,135.7 42.0,124.7" fill="url(#g-diff)" stroke="currentColor"/><polygon points="75.6,175.3 157.7,175.3 151.0,199.5 71.2,199.5" fill="none" stroke="currentColor" stroke-opacity=".7"/><path d="M20.0 10.0 A140.0 140.0 0 0 1 20.0 290.0" fill="none" stroke="currentColor" stroke-opacity=".7"/><line x1="20.0" y1="10.0" x2="20.0" y2="290.0" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4"/></svg><span class="lbl over" style="left:30%;top:56%;background:var(--canvas-plot)">◉ ASP 64</span></div><div class="corner"><div class="cbox"><span class="cl">Charge density, e/nm³</span><div class="cbar div"></div><div class="row num cl" style="justify-content:space-between"><span>−x</span><span>0</span><span>+x</span></div></div></div><div class="over cl" style="left:8px;bottom:6px">Schematic. The charge is a volume charge inside the protein.</div></div>
   <div class="verdict" style="grid-column:1/-1"><b>Conservation on the mesh</b><span class="ok">total within 10⁻³ of Q<sub>net</sub></span><span class="ok">per z-slice, passed</span><span class="muted">Selecting in either view selects in the other.</span></div>
@@ -297,7 +308,7 @@ physics: {model: epnp-ns}</pre>
 <span class="muted" aria-hidden="true">·</span><span class="proj">ClyA study</span><span class="sp"></span>
 <a class="chip" href="#st-changes" aria-expanded="true" aria-label="2 values changed from their defaults and 2 study overrides: show the list"><span class="chg">2 changed</span> <span class="ovr">2</span></a>
 <button class="btn small" type="button">Commands <span class="muted num">Ctrl K</span></button></header></div>
-<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) minmax(0,1fr)">
+<div class="main" style="grid-template-columns:72px 184px 184px minmax(0,1fr) 540px">
 <div style="display:grid;min-height:0"><nav class="activity" aria-label="Suites"><a href="01-molecular.html"><span class="ico" aria-hidden="true">⬡</span>Molecular</a><a href="02-geometry.html"><span class="ico" aria-hidden="true">△</span>Continuum</a><a href="06-study.html" aria-current="page"><span class="ico" aria-hidden="true">⧉</span>Study</a><a href="05-results.html"><span class="ico" aria-hidden="true">∿</span>Analysis</a></nav></div>
 <div style="display:grid;min-height:0"><nav class="rail" aria-label="Project">
   <span class="grp">Open</span>
@@ -322,29 +333,24 @@ physics: {model: epnp-ns}</pre>
   <div class="field"><span class="k ovr">Overrides</span><span class="v">bias, NaCl</span></div>
   <div class="field"><span class="k chg">Changed</span><span class="v">2 values from their defaults <a class="btn small" href="#st-changes">Show</a></span></div>
   <div class="field"><span class="k">Runs</span><span class="v"><span class="warn">x of n running</span></span></div>
-</div><div class="settings" style="border-right:0"><h2>Resolved case file</h2>
-  <span class="muted">One complete case file, written with each run's manifest; the command line runs it as it is.</span>
-  <pre class="yaml" tabindex="0" aria-label="Resolved case file">schema: nanopnp/case/v0.5
-name: i-v-nacl
-structure:
-  source: {path: 2wcd-prepared.pdb}
-  symmetry: {point_group: C12}
-geometry:
-  contour: {isolevel: x.xx}   # ◆ changed
-  membrane: {thickness_nm: 2.8, centre_z_nm: x.xx}
-  reservoir: {radius_nm: 250.0}
-charge: {ph: 7.5, titration: propka}
-electrolyte:
-  concentration_M: x.xx    # ◇ override
-  parameters: willems2020_nacl
-boundary_conditions: {bias_V: x.xx, ground: cis}
-physics: {model: epnp-ns}</pre>
+  <h3>Physics · the continuum model's defaults and the study's overrides</h3>
+  <table><thead><tr><th>Setting</th><th>Value</th><th>From</th></tr></thead><tbody>
+  <tr><td>Model</td><td>ePNP-NS</td><td class="muted">continuum</td></tr>
+  <tr><td>Electrolyte</td><td><span class="num">x.xx M</span> NaCl</td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Corrections</td><td>willems2020_nacl, as validated</td><td class="muted">continuum</td></tr>
+  <tr><td>Cis side</td><td>ground</td><td class="muted">continuum</td></tr>
+  <tr><td>Trans side</td><td>bias, <span class="num">−x.xx to +x.xx V</span></td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Walls</td><td>no flux, no slip</td><td class="muted">continuum</td></tr></tbody></table>
+  <a class="btn small" href="04-physics.html#p-electrolyte" style="justify-self:start">Open the physics defaults</a>
 </div>
+<aside class="settings" style="border-right:0;border-left:1px solid var(--line)" aria-label="Changes"><div class="row"><h2>Changes</h2><span style="margin-left:auto"></span><a class="btn small" href="#st-overview">Close</a></div>
+  <h3>The open study, by model</h3><table><thead><tr><th>Value</th><th>Now</th><th>Default</th><th></th></tr></thead><tbody><tr><th colspan="4" scope="colgroup">Continuum model · ClyA pore, reference mesh</th></tr><tr aria-current="true"><td>Contour isolevel</td><td class="num"><span class="chg">x.xx</span></td><td class="num muted">0.25</td><td><button class="btn small" type="button" aria-label="Reset Contour isolevel">Reset</button></td></tr><tr><td>Pore boundary maximum size</td><td class="num"><span class="chg">x.xx nm</span></td><td class="num muted">x.xx nm</td><td><button class="btn small" type="button" aria-label="Reset Pore boundary maximum size">Reset</button></td></tr><tr><th colspan="4" scope="colgroup">Study · I–V, NaCl, overriding the continuum model</th></tr><tr><td>Bias</td><td class="num"><span class="ovr">−x.xx to +x.xx V</span></td><td class="num muted">x.xx V</td><td><button class="btn small" type="button" aria-label="Reset Bias">Reset</button></td></tr><tr><td>NaCl</td><td class="num"><span class="ovr">x.xx M</span></td><td class="num muted">none</td><td><button class="btn small" type="button" aria-label="Reset NaCl">Reset</button></td></tr></tbody></table><span class="muted"><span class="chg">changed</span> from a default; <span class="ovr">override</span> by the study. The molecular model, 2WCD, pH 7.5, has none.</span>
+  <h3>Variants in the library, against their parents</h3>
+  <table><tbody><tr><td>2WCD, ASP 64 neutral</td><td>ASP 64 state</td><td class="num">ASH, 0</td><td class="num muted">parent: ASP, −1</td></tr></tbody></table>
+</aside>
 </div>
 <div><div class="panel"><div class="qrow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><b>Queue</b><span class="muted">1 running · 1 queued · 1 built</span><span class="warn">I–V, NaCl: rung 7 of N</span><button class="btn small" type="button" aria-expanded="false">Show queue</button></div></div></div>
-<div class="card" role="dialog" aria-label="Values changed from their defaults" style="position:absolute;top:40px;right:12px;width:580px;z-index:5;box-shadow:0 6px 20px rgb(0 0 0 / .25)">
-  <div class="row"><h2 class="h" style="margin:0">2 changed from their defaults, 2 overrides</h2><span style="margin-left:auto"></span><a class="btn small" href="#st-overview">Close</a></div><table><thead><tr><th>Value</th><th>Now</th><th>Default</th><th></th></tr></thead><tbody><tr><th colspan="4" scope="colgroup">Continuum model · ClyA pore, reference mesh</th></tr><tr aria-current="true"><td>Contour isolevel</td><td class="num"><span class="chg">x.xx</span></td><td class="num muted">0.25</td><td><button class="btn small" type="button" aria-label="Reset Contour isolevel">Reset</button></td></tr><tr><td>Pore boundary maximum size</td><td class="num"><span class="chg">x.xx nm</span></td><td class="num muted">x.xx nm</td><td><button class="btn small" type="button" aria-label="Reset Pore boundary maximum size">Reset</button></td></tr><tr><th colspan="4" scope="colgroup">Study · I–V, NaCl, overriding the continuum model</th></tr><tr><td>Bias</td><td class="num"><span class="ovr">−x.xx to +x.xx V</span></td><td class="num muted">x.xx V</td><td><button class="btn small" type="button" aria-label="Reset Bias">Reset</button></td></tr><tr><td>NaCl</td><td class="num"><span class="ovr">x.xx M</span></td><td class="num muted">none</td><td><button class="btn small" type="button" aria-label="Reset NaCl">Reset</button></td></tr></tbody></table><span class="muted"><span class="chg">changed</span> from a default; <span class="ovr">override</span> by the study. The molecular model, 2WCD, pH 7.5, has none.</span>
-  <button class="btn small" type="button" style="justify-self:start">Go to the selected value</button></div>
+
 <nav class="mock" aria-label="Mockup"><span class="tag" role="img" aria-label="Mockup A">A</span><span><b>Study · The changed values</b> <span class="muted">· screen 7 of 8</span></span>
 <span class="sp"></span><a href="#st-runs">Back: A run followed</a><a href="index.html">All screens</a><a href="../b/06-study.html#st-changes">Same screen in B</a><a href="#st-tree">Next: The project tree unfolded</a></nav>
 </section>
@@ -376,6 +382,15 @@ physics: {model: epnp-ns}</pre>
   <div class="field"><span class="k ovr">Overrides</span><span class="v">bias, NaCl</span></div>
   <div class="field"><span class="k chg">Changed</span><span class="v">2 values from their defaults <a class="btn small" href="#st-changes">Show</a></span></div>
   <div class="field"><span class="k">Runs</span><span class="v"><span class="warn">x of n running</span></span></div>
+  <h3>Physics · the continuum model's defaults and the study's overrides</h3>
+  <table><thead><tr><th>Setting</th><th>Value</th><th>From</th></tr></thead><tbody>
+  <tr><td>Model</td><td>ePNP-NS</td><td class="muted">continuum</td></tr>
+  <tr><td>Electrolyte</td><td><span class="num">x.xx M</span> NaCl</td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Corrections</td><td>willems2020_nacl, as validated</td><td class="muted">continuum</td></tr>
+  <tr><td>Cis side</td><td>ground</td><td class="muted">continuum</td></tr>
+  <tr><td>Trans side</td><td>bias, <span class="num">−x.xx to +x.xx V</span></td><td><span class="ovr">study</span></td></tr>
+  <tr><td>Walls</td><td>no flux, no slip</td><td class="muted">continuum</td></tr></tbody></table>
+  <a class="btn small" href="04-physics.html#p-electrolyte" style="justify-self:start">Open the physics defaults</a>
 </div><div class="settings" style="border-right:0"><h2>Resolved case file</h2>
   <span class="muted">One complete case file, written with each run's manifest; the command line runs it as it is.</span>
   <pre class="yaml" tabindex="0" aria-label="Resolved case file">schema: nanopnp/case/v0.5
