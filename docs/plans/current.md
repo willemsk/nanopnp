@@ -21,9 +21,9 @@ One line per lane (§8.4.4).
   `v0.5.0-alpha.16` is the author's step. Next: **`/np-plan wp 54`**, the notebooks revised, from
   the author's notes; then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then
   the author's sessions, the fixes from WP56, the documentation increment and the close.
-- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **planned**. Next:
-  **`/np-implement wp 5.01`**, [the design study](wp5.01-workbench-design-study.md), **planned**,
-  beside Phase 4, untagged before `v0.5.0`. WP5.02 after `v0.5.0`.
+- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
+  lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **implemented**, untagged
+  before `v0.5.0`; next: **`/np-ship wp 5.01`**. WP5.02, the spike, after `v0.5.0`.
 
 ## Not to be re-decided
 
