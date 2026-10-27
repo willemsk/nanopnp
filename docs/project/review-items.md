@@ -1393,6 +1393,8 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Open** for the author: fix it in the Phase 4 lane before `v0.5.0` (one call to `decode_floats` and a number format with units), or carry it until the browser shell replaces the Qt one. WP5.01 changes no `src/` (§8.2.17 S1).
 
+**Ruled** `deferred` (§8.2.19 U1): carried until Qt leaves. `v0.5.0` ships the wrapper on the Result tab, and the user-testing sessions read the numbers from the command line or the run record; the package that removes Qt closes the row, the browser shell reading the numbers through `plot/data.py`.
+
 ## REV-135: The density does not see the protonation chosen at the charge stage
 
 The density stage smears the atoms of the structure as loaded at stage 1 (`density/stage.py`, its record counting the
@@ -1405,6 +1407,8 @@ or mesh. The author, marking today's shell (WP5.01, `docs/design/reviews/2026-10
 protonated structure, and so whether protonation moves before the geometry stages in the pipeline, not only in the
 workbench. The workbench design places protonation in the molecular area, before the geometry builder, either way.
 WP5.01 changes no `src/` (§8.2.17 S1).
+
+**Ruled** (§8.2.19 U2): protonation moves before the geometry stages, and the density smeared from the protonated frames is the validated default; the hydrogens as loaded become a switch, set by the reference-reproduction cases. A Phase 5 library package that `/np-plan amend 5` sets lands it, before the charge mutator, with a Tier 1 test that a changed protonation state moves the density (the NOTE beside PHY-16 step 3).
 
 ## REV-136: The organisation round's rulings need library capabilities v0.5 lacks
 
@@ -1425,6 +1429,8 @@ them with the later-phase banner.
 package with its tests before the shell surfaces it, or the author moves it to a later phase. WP5.01 changes no
 `src/` (§8.2.17 S1); its item 15 writes the requirements.
 
+**Ruled** (§8.2.19 U3): owned by `/np-plan amend 5`, as proposed; the author rules the cut line between v0.6 and later phases there.
+
 ## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 
 CON-09 lets the field viewer's renderer, npm `webgui`, ship only unmodified and as a separate file. The organisation
@@ -1436,6 +1442,8 @@ checked. Found by the concept-board review (finding B15).
 **Open** for the author; proposed owner WP5.02, whose spike chooses the front end (§8.2.17 S8): it names the renderer for each view, checks
 the explorer's controls against `webgui`'s interface, and puts any second renderer's licence to the author under
 CON-09.
+
+**Ruled** (§8.2.19 U5): owned by WP5.02, as proposed.
 
 ## REV-138: The render check measures text contrast but not the contrast of controls and graphics
 
@@ -1450,6 +1458,8 @@ border, outline and fill of every control, and the ends of every colour bar, aga
 Until then a review states non-text contrast as not measured. `tokens.css` holds its own pairs at 3:1 by
 calculation.
 
+**Ruled** (§8.2.19 U5): owned by WP5.02, as proposed.
+
 ## REV-139: The sweep needs a design round: any value, user-defined variables, rebuilds detected
 
 The author, marking the mockups' sweep (WP5.01, `docs/design/reviews/2026-10-26-mockups.md`, `st-sweep`): "I like
@@ -1463,6 +1473,8 @@ has no variables, and nothing says which stages a value invalidates before the w
 **Open** for the author: a design round on the sweep (`/np-gui grill`), then its library capabilities, as REV-136's
 are, in a package after WP5.02. Variables in a case are a case-schema change for a package after `v0.5.0` (§8.2.17 S1).
 The stages a value invalidates follow from the content hashes that key each stage's artefact (FR-27).
+
+**Ruled** (§8.2.19 U4): the design round runs in `/np-plan amend 5`, as a `/np-gui grill` after WP5.02 has chosen the stack; its library capabilities join REV-136's packages.
 
 ## REV-140: Two of the author's marks on the mockups ask what is not yet said
 
@@ -1487,4 +1499,6 @@ writing the restatements (WP5.01 item 15).
 
 **Open** for the author; proposed owner WP5.02, whose spike records the front end and the packaging in ADR-004
 (§8.2.17 S8): restate CON-08 and CON-11 for an installed workbench, beside the other restated clauses.
+
+**Ruled** (§8.2.19 U5): owned by WP5.02, as proposed.
 

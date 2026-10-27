@@ -84,8 +84,10 @@ project", later four suites with Study the fourth (WB-01 to WB-29), and a look a
 `docs/design/tokens.css` as the default theme. Twenty-one choices were picked, and mockup A was chosen
 and revised; `docs/design/workbench.md` holds the whole design. The specification gains FR-31 to FR-43
 and QR-16, and the browser shell's restatements as NOTEs (S17). The inherited rows are ruled in
-§8.2.18, MOD-09 brought into v0.6. **Live for later packages:** REV-135 to REV-139 and REV-141; the
-library capabilities of REV-136 and MOD-09 (T4) before their screens; open decisions 3 and 4 settled.
+§8.2.18, MOD-09 brought into v0.6, and the rows it left open in §8.2.19. **Live for later packages:**
+REV-137, REV-138 and REV-141 for WP5.02 (U5); for `/np-plan amend 5`, the library capabilities of REV-136
+(U3) and MOD-09 (T4) before their screens, protonation before the density (REV-135, U2) and the sweep's
+design round (REV-139, U4); REV-134 closes with Qt (U1); open decisions 3 and 4 settled.
 
 *As planned:* prose, mockups, the specification and the GUI development tools under `.claude/` (S1, S22). It
 first builds `/np-gui` and the `gui-reviewer` agent, and uses them: it publishes today's Qt shell,
@@ -113,13 +115,17 @@ written into `CONTRIBUTING.md` and §8.4.4.
 Proposed: **VER-77**, every fixture state loads every screen with its declared controls and no
 browser-console error; oracle, the screen registry. It names the commands that log the
 end-of-phase numbers: click-to-redraw time and the clean-environment install time. Tag
-`v0.6.0-alpha.2` (S19).
+`v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the explorer's controls
+against `webgui`), REV-138 (non-text contrast in `/np-gui render`) and REV-141 (CON-08 and CON-11
+restated beside ADR-004) (§8.2.19 U5).
 
 ### WP5.03 onward — The shell (provisional)
 
 The workbench's frame, its tabs over today's capabilities and the four live views, the charge-level
-mutator, the project folder, `nanopnp gui`, then Qt's removal and documentation increment 5. The
-mutator lands library first: a `charge/` function that sets a residue's charge state, with a Tier 1
+mutator, the project folder, `nanopnp gui`, then Qt's removal and documentation increment 5. Before
+the mutator, a library package moves protonation before the density, the protonated density the
+validated default (REV-135; §8.2.19 U2). The amendment also runs the sweep's design round (REV-139,
+U4) and orders REV-136's capabilities (U3). The mutator lands library first: a `charge/` function that sets a residue's charge state, with a Tier 1
 test that the projected charge changes by that residue's alone, before its shell control (§8.1;
 RSK-15). They wait on WP5.01's requirements and WP5.02's framework ruling; `/np-plan amend 5` plans
 them from WP5.03.

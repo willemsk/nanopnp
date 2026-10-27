@@ -110,7 +110,7 @@ suite"; protonation "should be moved before building the geometry"; convergence 
 suite; and the result and field views become "a fully fledged results explorer and plotter suite",
 with zooming, colour scales and the mesh on or off, "much like how COMSOL handles this today". One
 note raises a physics question, whether the density should see the protonation chosen later
-(REV-135).
+(REV-135): ruled yes, protonation moving before the geometry stages in the pipeline as well (§8.2.19 U2).
 
 ## The areas
 
