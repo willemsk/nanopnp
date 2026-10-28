@@ -236,7 +236,8 @@ class Selection:
     common_index: np.ndarray
 
 
-def _chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
+def chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
+    """Return each atom's chain, by ``chainID`` or by ``segid`` where it is blank, and which."""
     chain_ids = [str(value).strip() for value in group.chainIDs]
     segids = [str(value).strip() for value in group.segids]
     blank = [not value for value in chain_ids]
@@ -269,7 +270,7 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
         ) from error
     if len(group) == 0:
         raise StructureInputError(f"structure.source.selection {selection!r} selects no atom")
-    keys, chain_key = _chain_keys(group)
+    keys, chain_key = chain_keys(group)
     listed = parse_chains(chains)
     present = tuple(dict.fromkeys(keys))
     if listed is not None:

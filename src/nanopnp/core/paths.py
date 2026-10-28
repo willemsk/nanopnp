@@ -8,6 +8,7 @@ from pathlib import Path
 _PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 _PACKAGED_DATA = _PACKAGE_ROOT / "data"
 _REPO_DATA = _PACKAGE_ROOT.parents[1] / "data"
+_REPO_TEST_STRUCTURES = _PACKAGE_ROOT.parents[1] / "tests" / "data" / "structures"
 
 PACKAGE_ROOT: Path = _PACKAGE_ROOT
 
@@ -57,11 +58,20 @@ def radii_file(name: str) -> Path:
 
 
 def structure_file(name: str) -> Path:
-    """Return the path of a named structure fixture; FileNotFoundError if not installed."""
-    path = STRUCTURES_DIR / f"{name}.pdb"
-    if not path.is_file():
-        raise FileNotFoundError(f"no structure fixture {name!r} in {STRUCTURES_DIR}")
-    return path
+    """Return the path of a named structure file; FileNotFoundError if none is installed.
+
+    ``name`` is a file name, such as ``2wcd.pdb.gz``, or a bare stem read as ``<stem>.pdb``.
+    In a development checkout, ``tests/data/structures/`` is searched after the packaged ones.
+    """
+    file_name = name if Path(name).suffix else f"{name}.pdb"
+    places = [STRUCTURES_DIR]
+    if _REPO_DATA.is_dir() and _REPO_TEST_STRUCTURES.is_dir():
+        places.append(_REPO_TEST_STRUCTURES)
+    for place in places:
+        if (place / file_name).is_file():
+            return place / file_name
+    searched = ", ".join(str(place) for place in places)
+    raise FileNotFoundError(f"no structure file {file_name!r} in {searched}")
 
 
 STORE_ROOT_VARIABLE = "NANOPNP_STORE"

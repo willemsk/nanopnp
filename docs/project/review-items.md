@@ -1431,6 +1431,11 @@ package with its tests before the shell surfaces it, or the author moves it to a
 
 **Ruled** (§8.2.19 U3): owned by `/np-plan amend 5`, as proposed; the author rules the cut line between v0.6 and later phases there.
 
+**Progress** (§8.2.20 V1): structure preparation's library half lands in WP54 as `nanopnp.structure.orient_pore`
+(FR-37), which estimates the axis, keeps the chains named, points +z at the end the user names and places a
+registration centroid; the workbench surfaces it in Phase 5 (WB-14). The item stays accepted for the other
+capabilities.
+
 ## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 
 CON-09 lets the field viewer's renderer, npm `webgui`, ship only unmodified and as a separate file. The organisation
