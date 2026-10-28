@@ -135,6 +135,33 @@ def test_field_on_a_grid_matches_sample_at(
     assert checked >= 25 * 3
 
 
+def test_cutline_matches_the_p2_nodes_on_the_axis(
+    ran: tuple[Path, list[CommandResult]], cached_run: Callable[..., RunResult]
+) -> None:
+    # On the four linear triangles of each P2 cell a cutline passes through every node; a
+    # corner-only triangulation interpolates across the midsides and misses them.
+    pytest.importorskip("matplotlib")
+    from matplotlib.tri import LinearTriInterpolator, Triangulation
+
+    from nanopnp.plot import data
+
+    fields = cached_run(ran[0], "quickstart.case.yaml").fields
+    for quantity in ("potential", next(k for k in fields.fluid[2] if k.endswith("_mol_m3"))):
+        points, cells, values = data.field_values(fields, quantity)
+        on_axis = np.flatnonzero(points[:, 0] == 0.0)
+        z_nm = points[on_axis, 1] * 1e9
+        _, line = data.axial_cutline(fields, quantity, r_nm=0.0, z_nm=z_nm)
+        # A grounded node holds round-off about zero, so the floor is relative to the field's size.
+        floor = 1e-12 * float(np.abs(values).max())
+        np.testing.assert_allclose(line, values[on_axis], rtol=1e-12, atol=floor, err_msg=quantity)
+        corners = Triangulation(points[:, 0] * 1e9, points[:, 1] * 1e9, cells[:, :3])
+        midsides = np.setdiff1d(on_axis, cells[:, :3])
+        coarse = LinearTriInterpolator(corners, values)(
+            np.zeros(midsides.size), z_nm[np.searchsorted(on_axis, midsides)]
+        )
+        assert not np.allclose(coarse, values[midsides], rtol=1e-12, atol=floor), quantity
+
+
 def test_default_import_and_walk_load_no_plotting(
     ran: tuple[Path, list[CommandResult]],
 ) -> None:
