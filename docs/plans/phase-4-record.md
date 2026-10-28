@@ -1399,3 +1399,20 @@ plan settled the aliases and the hook's open cases. WP53's entry read, before th
 > diverged checkout. Tag `v0.5.0-alpha.19`.
 
 The *Open decisions* row on WP53's aliases and the hook read **Open**, owned by WP53's plan.
+
+## Amended 28 October 2026 (§8.2.20 V1 to V5)
+
+At WP54's plan the author's notes set the package's scope, and four rulings in them settled its
+conflicts with the specification; a fifth asked for the notebooks to be published at each
+checkpoint. WP54's entry read, before this amendment:
+
+> **WP54 — The notebooks and figures revised (§8.2.16 R8)**
+>
+> It waits on WP53, and on the author's document of comments and notes on WP51's notebooks and
+> figures. Its scope is what that document asks (R8), new dependencies and changes below `plot/`
+> included, each a decision of its plan. WP51's rules carry unless that plan rules otherwise and amends
+> FR-30 in the same commit: `plot/` imports no backend; `import nanopnp` and a walk load no drawing or
+> notebook library; every notebook runs headless nightly; every stage declares a figure or is
+> figure-free. A change to `PUBLIC` is decided in `test_public_api.py` (F4) and listed in
+> `CHANGELOG.md`. VER-61, VER-62 and VER-65 stay green. Its plan claims its identifiers. Tag
+> `v0.5.0-alpha.20`.
