@@ -199,7 +199,11 @@ def mesh_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure
     panels.plot_mesh(elements, ax=whole)
     debye_target_nm, note = _debye_target_nm(artefact, inputs)
     panels.plot_mesh(
-        elements, ax=lumen, zoom_nm=data.LUMEN_NM, debye_target_nm=debye_target_nm, debye_note=note
+        elements,
+        ax=lumen,
+        zoom_nm=elements.lumen_nm,
+        debye_target_nm=debye_target_nm,
+        debye_note=note,
     )
     return figure
 
@@ -330,11 +334,10 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
     figure = Figure(figsize=(4.2 * columns, 5.0 * rows), layout="constrained")
     figure.suptitle(title)
     grid = figure.add_gridspec(rows, columns)
-    bulk_M = None if inputs is None else inputs.resolved.concentration_M
     if fields is not None:
         for index, quantity in enumerate(quantities):
             ax = figure.add_subplot(grid[index // columns, index % columns])
-            panels.plot_field(fields, quantity, ax=ax, relative_to_M=bulk_M)
+            panels.plot_field(fields, quantity, ax=ax, relative=True)
     if rungs:
         last = rows - 1
         bottom = grid[last, :].subgridspec(1, 2)

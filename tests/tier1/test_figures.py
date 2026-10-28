@@ -131,11 +131,16 @@ def _p2_square() -> tuple[np.ndarray, np.ndarray]:
 
 
 def _fields(
-    fluid: dict[str, np.ndarray], whole: dict[str, np.ndarray] | None = None
+    fluid: dict[str, np.ndarray],
+    whole: dict[str, np.ndarray] | None = None,
+    bulk_mol_m3: dict[str, float] | None = None,
 ) -> SolutionFields:
     points_m, cells = _p2_square()
     return SolutionFields(
-        model="test", whole=(points_m, cells, whole or {}), fluid=(points_m, cells, fluid)
+        model="test",
+        whole=(points_m, cells, whole or {}),
+        fluid=(points_m, cells, fluid),
+        bulk_mol_m3=bulk_mol_m3 or {},
     )
 
 
@@ -155,6 +160,18 @@ def test_radial_cutline_is_masked_outside_the_fluid() -> None:
     quadratic = _fields({"c_Na_mol_m3": r_nm**2})
     _, at_midsides = data.radial_cutline(quadratic, "c_Na_mol_m3", z_nm=0.0, r_nm=np.array([0.5]))
     np.testing.assert_allclose(at_midsides, [0.25], rtol=1e-12)
+    # A swapped midside column keeps every node a vertex but overlaps the four sub-triangles.
+    _, cells = _p2_square()
+
+    def areas(triangles: np.ndarray) -> np.ndarray:
+        a, b, c = (points_m[triangles[:, k]] for k in range(3))
+        return np.asarray(
+            0.5 * np.abs((b - a)[:, 0] * (c - a)[:, 1] - (c - a)[:, 0] * (b - a)[:, 1])
+        )
+
+    np.testing.assert_allclose(
+        areas(data.subdivided(cells)).reshape(4, -1).sum(axis=0), areas(cells[:, :3]), rtol=1e-12
+    )
 
 
 def test_potential_panel_is_millivolts_centred_at_zero() -> None:
@@ -172,16 +189,22 @@ def test_potential_panel_is_millivolts_centred_at_zero() -> None:
     assert ranged.norm(20.0) == pytest.approx(0.6, rel=1e-12)
 
 
-def test_concentration_panel_is_log_relative_to_bulk() -> None:
-    # c = 2 c_bulk reads log10 2; a bulk taken in M rather than mol/m3 is off by 3.
+def test_concentration_panel_is_log_relative_to_each_species_bulk() -> None:
+    # c = 2 c_bulk reads log10 2 against that species' own bulk, in mol/m3 as the solve imposed it:
+    # one bulk for every species, or one in M, would read another number.
     pytest.importorskip("matplotlib")
     from nanopnp.plot.panels import plot_field
 
-    fields = _fields({"c_Na_mol_m3": np.full(9, 200.0)})
-    ax = plot_field(fields, "c_Na_mol_m3", relative_to_M=0.1)
-    image = ax.collections[0]
-    np.testing.assert_allclose(np.asarray(image.get_array()), np.log10(2.0), rtol=1e-12)
-    assert getattr(image.norm, "vcenter", None) == 0.0
+    fields = _fields(
+        {"c_Na_mol_m3": np.full(9, 200.0), "c_Cl_mol_m3": np.full(9, 50.0)},
+        bulk_mol_m3={"c_Na_mol_m3": 100.0, "c_Cl_mol_m3": 25.0},
+    )
+    for key in ("c_Na_mol_m3", "c_Cl_mol_m3"):
+        image = plot_field(fields, key, relative=True).collections[0]
+        np.testing.assert_allclose(np.asarray(image.get_array()), np.log10(2.0), rtol=1e-12)
+        assert getattr(image.norm, "vcenter", None) == 0.0
+    with pytest.raises(ValueError, match="record no bulk"):
+        plot_field(_fields({"c_K_mol_m3": np.full(9, 1.0)}), "c_K_mol_m3", relative=True)
 
 
 def test_sweep_panels_share_the_cis_referenced_bias_and_keep_failed_points() -> None:
@@ -207,6 +230,16 @@ def test_sweep_panels_share_the_cis_referenced_bias_and_keep_failed_points() -> 
     assert flow.lines[0].get_xdata().tolist() == pytest.approx([100.0, -50.0, -100.0])
     failed = [line for line in iv.lines if line.get_marker() == "x"]
     assert failed[0].get_xdata().tolist() == pytest.approx([-50.0])
+    # With no point at a non-zero bias to say which side is ground, its sign is unknown.
+    none_ok = data.cis_referenced_bias_V(
+        data.SweepCurves(
+            axis="boundary_conditions.bias_V",
+            x=np.array([0.0, 0.05]),
+            ok=np.array([True, False]),
+            quantities={"bias_V": np.array([0.0, np.nan])},
+        )
+    )
+    assert none_ok[0] == 0.0 and np.isnan(none_ok[1])
 
 
 def test_qoi_rows_show_each_quantity_in_its_display_unit() -> None:
@@ -219,6 +252,7 @@ def test_qoi_rows_show_each_quantity_in_its_display_unit() -> None:
             "currents_A": {"Na+": 1.5e-9},
             "route_agreement": {"reaction_A": 2e-9, "relative_difference": 1e-5},
             "eof_m3_s": 3e-19,
+            "forces": {"total_N": 2.5e-12},
         }
     )
     assert [(row["quantity"], row["value"], row["unit"]) for row in rows] == [
@@ -227,4 +261,5 @@ def test_qoi_rows_show_each_quantity_in_its_display_unit() -> None:
         ("route agreement (reaction)", "2", "nA"),
         ("route agreement (relative difference)", "1e-05", ""),
         ("eof", "0.3", "µm³/s"),
+        ("forces (total)", "2.5", "pN"),
     ]

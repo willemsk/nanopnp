@@ -18,6 +18,7 @@ def _():
         plot_iv,
         plot_radial_cutline,
     )
+    from nanopnp.plot.data import default_potential_range_mV, field_menu
     from nanopnp.sweep import sweep
 
     here = Path(__file__).resolve().parent
@@ -26,6 +27,8 @@ def _():
     return (
         Case,
         DEFAULT_CYLINDER_WALL_H_NM,
+        default_potential_range_mV,
+        field_menu,
         mo,
         plot_axial_cutline,
         plot_field,
@@ -173,29 +176,20 @@ def _(mo, run):
 
 
 @app.cell
-def _(run):
+def _(field_menu, run):
     fields = run.fields
-    quantities = {
-        "potential φ": "potential",
-        **{
-            f"{key.removesuffix('_mol_m3')} against the bulk": key
-            for key in sorted(fields.fluid[2])
-            if key.endswith("_mol_m3")
-        },
-        "axial velocity u_z": "u_z",
-        "pressure p": "p_Pa",
-    }
+    quantities = field_menu(fields, radial=False)
     return fields, quantities
 
 
 @app.cell
-def _(mo, settings):
+def _(default_potential_range_mV, mo, settings):
     # The ring's charge sits in the membrane; a range from the bias keeps the pore's drop in view.
     potential_range = mo.ui.slider(
         5.0,
         1000.0,
         5.0,
-        max(10.0, 2.0 * abs(settings["bias_mV"])),
+        default_potential_range_mV(settings["bias_mV"]),
         debounce=True,
         show_value=True,
         label="potential colour range ± (mV)",
@@ -205,14 +199,14 @@ def _(mo, settings):
 
 
 @app.cell
-def _(fields, mo, plot_field, potential_range, quantities, settings):
+def _(fields, mo, plot_field, potential_range, quantities):
     mo.ui.tabs(
         {
             label: mo.mpl.interactive(
                 plot_field(
                     fields,
                     quantity,
-                    relative_to_M=settings["concentration_M"],
+                    relative=True,
                     halfrange=potential_range.value if quantity == "potential" else None,
                 )
             )
@@ -271,18 +265,14 @@ def _(
     plot_radial_cutline,
     quantities,
     r_nm,
-    settings,
     z_nm,
 ):
     profile = quantities[cutline_quantity.value]
-    bulk_M = settings["concentration_M"]
     mo.hstack(
         [
+            mo.mpl.interactive(plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative=True)),
             mo.mpl.interactive(
-                plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative_to_M=bulk_M)
-            ),
-            mo.mpl.interactive(
-                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative_to_M=bulk_M)
+                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative=True)
             ),
         ],
         widths="equal",

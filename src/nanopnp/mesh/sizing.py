@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 from nanopnp.core.scaling import debye_length_nm
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from collections.abc import Iterable
+
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.core.typing import Shape
     from nanopnp.io.case import CaseDocument
@@ -123,6 +125,16 @@ class WallSize:
         return record
 
 
+def ionic_strength_of_M(valences: Iterable[int], concentration_M: float) -> float:
+    """Return ``I = 1/2 sum z_i^2 c`` for species that share one concentration, in mol/L."""
+    return 0.5 * sum(z**2 * concentration_M for z in valences)
+
+
+def debye_wall_nm(length_nm: float) -> float:
+    """Return the first wall layer ``min(0.05 nm, lambda_D / 5)`` of a Debye length, in nm."""
+    return min(WALL_CEILING_NM, length_nm / DEBYE_FRACTION)
+
+
 def ionic_strength_M(document: CaseDocument, *, concentration_M: float | None = None) -> float:
     """Return the bulk ionic strength ``I = 1/2 sum z_i^2 c``, in mol/L.
 
@@ -131,7 +143,9 @@ def ionic_strength_M(document: CaseDocument, *, concentration_M: float | None = 
     concentration = (
         document.electrolyte.concentration_M if concentration_M is None else concentration_M
     )
-    return 0.5 * sum(species.z**2 * concentration for species in document.electrolyte.species)
+    return ionic_strength_of_M(
+        (species.z for species in document.electrolyte.species), concentration
+    )
 
 
 def case_debye_length_nm(
@@ -163,7 +177,7 @@ def resolve_wall_size(document: CaseDocument, *, permittivity_0: float) -> WallS
         else case_debye_length_nm(document, permittivity_0=permittivity_0, concentration_M=design)
     )
     if mesh.wall_h_nm == "auto":
-        base = min(WALL_CEILING_NM, sizing / DEBYE_FRACTION)
+        base = debye_wall_nm(sizing)
         source = "auto"
     else:
         base = float(mesh.wall_h_nm)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import logging
 from dataclasses import dataclass
@@ -358,6 +359,10 @@ class SolutionFields:
 
     Parameters
     ----------
+    wall_extent_nm
+        The largest ``r`` and ``|z|`` of the boundary ``wall``, in nm, where the mesh names one.
+    bulk_mol_m3
+        Each species' value on the Dirichlet boundaries, in mol/m^3, by attribute name.
     whole, fluid
         ``(points_m, cells, fields)``: the Triangle_6 cells, corners in columns 0 to 2 and the
         midsides of edges (0, 1), (1, 2), (2, 0) in columns 3 to 5; a vector field is
@@ -367,17 +372,66 @@ class SolutionFields:
     model: str
     whole: tuple[np.ndarray, np.ndarray, dict[str, np.ndarray]]
     fluid: tuple[np.ndarray, np.ndarray, dict[str, np.ndarray]]
+    wall_extent_nm: tuple[float, float] | None = None
+    bulk_mol_m3: dict[str, float] = dataclasses.field(default_factory=dict)
+
+
+DIRICHLET_BULK = 1.0
+"""The dimensionless concentration the solve imposes on ``cis`` and ``trans``: 1, bulk."""
+
+_RESTORED_FIELDS: dict[str, SolutionFields] = {}
+_KEPT_RESTORES = 2
+
+
+def wall_extent_nm(mesh: Mesh) -> tuple[float, float] | None:
+    """Return the largest ``r`` and the largest ``|z|`` on the boundary ``wall``, in nm.
+
+    ``None`` where the mesh names no such boundary.
+    """
+    import ngsolve as ngs
+
+    if "wall" not in mesh.GetBoundaries():
+        return None
+    keep = mesh.Boundaries("wall").Mask()
+    points = [
+        mesh.vertices[vertex.nr].point
+        for element in mesh.Elements(ngs.BND)
+        if keep[element.index]
+        for vertex in element.vertices
+    ]
+    if not points:
+        return None
+    return max(abs(point[0]) for point in points), max(abs(point[1]) for point in points)
 
 
 def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
-    """Restore the converged state of a solve artefact and sample its fields at the P2 nodes."""
+    """Restore the converged state of a solve artefact and sample its fields at the P2 nodes.
+
+    The last two restores are kept by the artefact's hash, so a figure and a run's ``fields``
+    restore a solve once.
+    """
+    kept = _RESTORED_FIELDS.get(artefact.hash)
+    if kept is not None:
+        return kept
     state, _ = restored(inputs, artefact)
     sampled = sampled_fields(state, state.model.scales)
-    return SolutionFields(
+    fields = SolutionFields(
         model=state.model.name,
         whole=(sampled.omega.points_nm * 1e-9, sampled.omega.cells, sampled.whole),
         fluid=(sampled.omega_w.points_nm * 1e-9, sampled.omega_w.cells, sampled.restricted),
+        wall_extent_nm=wall_extent_nm(state.space.mesh),
+        bulk_mol_m3={
+            attribute_name(concentration_field_name(species)): field_scale(
+                concentration_field_name(species), state.model.scales
+            )
+            * DIRICHLET_BULK
+            for species in state.model.species
+        },
     )
+    while len(_RESTORED_FIELDS) >= _KEPT_RESTORES:
+        del _RESTORED_FIELDS[next(iter(_RESTORED_FIELDS))]
+    _RESTORED_FIELDS[artefact.hash] = fields
+    return fields
 
 
 def export_fields(

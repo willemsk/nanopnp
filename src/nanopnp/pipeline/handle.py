@@ -17,7 +17,7 @@ from nanopnp.io.case_paths import UnknownCasePathError, case_fields, substitute,
 from nanopnp.io.defaults import VALIDATED_DEFAULT_CASE
 from nanopnp.io.store import Store
 from nanopnp.materials.corrections import load_corrections
-from nanopnp.mesh.cylinder import mesh_cylinder
+from nanopnp.mesh.cylinder import mesh_cylinder, mesher_identity
 from nanopnp.mesh.defaults import (
     DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
     DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM,
@@ -25,7 +25,7 @@ from nanopnp.mesh.defaults import (
     DEFAULT_MAXH_NM,
     DEFAULT_PORE_RADIUS_NM,
 )
-from nanopnp.mesh.sizing import DEBYE_FRACTION
+from nanopnp.mesh.sizing import debye_wall_nm, ionic_strength_of_M
 from nanopnp.pipeline.case import load_case, loads_case
 from nanopnp.pipeline.run import RunResult, run_document
 
@@ -135,8 +135,9 @@ class Case:
             A field document (``field1``) of the fixed charge; an uncharged pore when ``None``.
         wall_h_nm
             The element size on the pore wall; the default is the mesh command's, coarser than
-            NUM-30's first layer at most concentrations. ``"debye"`` sizes it at ``λ_D/5`` of
-            this salt, so a new concentration meshes again.
+            NUM-30's first layer at most concentrations. ``"debye"`` sizes it as NUM-30 does,
+            ``min(0.05 nm, λ_D/5)`` of this salt at ``ε_r,f0``, so a new concentration above
+            about 1.5 M meshes again.
         parameters
             The correction parameter file every correction and the membrane permittivity
             are read from.
@@ -151,7 +152,7 @@ class Case:
                 _debye_wall_nm(parameters, concentration_M) if wall_h_nm == "debye" else wall_h_nm
             ),
         }
-        key = short(content_hash(CYLINDER_MESH_SCHEMA, geometry), 12)
+        key = short(content_hash(CYLINDER_MESH_SCHEMA, geometry, {"mesher": mesher_identity()}), 12)
         mesh = held.root / "meshes" / f"cylinder-{key}.msh"
         if not mesh.is_file():
             mesh.parent.mkdir(parents=True, exist_ok=True)
@@ -277,13 +278,14 @@ def _electrolyte(parameters: str, concentration_M: float) -> dict[str, Any]:
 
 def _debye_wall_nm(parameters: str, concentration_M: float) -> float:
     corrections = load_corrections(parameters)
-    ionic_M = 0.5 * sum(species.z**2 * concentration_M for species in corrections.species.values())
     debye = debye_length_nm(
-        ionic_M,
+        ionic_strength_of_M(
+            (species.z for species in corrections.species.values()), concentration_M
+        ),
         relative_permittivity=corrections.solvent.permittivity.eps_r0,
         temperature_K=corrections.temperature_K,
     )
-    return debye / DEBYE_FRACTION
+    return debye_wall_nm(debye)
 
 
 def _validated(document: dict[str, Any], name: str) -> CaseDocument:

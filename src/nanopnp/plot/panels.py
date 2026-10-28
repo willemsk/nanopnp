@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from nanopnp.materials.electrolyte import MOLAR_PER_SI
 from nanopnp.plot import data
 from nanopnp.plot.data import DISPLAY, axis_label
 
@@ -50,7 +49,7 @@ class _Shown:
     centred: bool
 
 
-def _shown(key: str, values: np.ndarray, relative_to_M: float | None) -> _Shown:
+def _shown(key: str, values: np.ndarray, bulk_mol_m3: float | None) -> _Shown:
     import numpy as np
 
     if key in ("potential", "phi_V"):
@@ -67,10 +66,9 @@ def _shown(key: str, values: np.ndarray, relative_to_M: float | None) -> _Shown:
         )
     if key.endswith(_CONCENTRATION):
         name = key[: -len(_CONCENTRATION)]
-        if relative_to_M is None:
+        if bulk_mol_m3 is None:
             per = DISPLAY["concentration"].per_SI
             return _Shown(values * per, axis_label(name, "concentration"), "viridis", False)
-        bulk_mol_m3 = relative_to_M / MOLAR_PER_SI
         with np.errstate(divide="ignore", invalid="ignore"):
             ratio = np.log10(values / bulk_mol_m3)
         return _Shown(ratio, f"log₁₀({name} / c_bulk)", "PuOr_r", True)
@@ -93,6 +91,16 @@ def _norm(shown: _Shown, halfrange: float | None = None) -> Normalize | None:
     reach = float(finite.max()) if finite.size else 0.0
     # CenteredNorm cannot span zero width; a uniform zero field still draws, in the centre colour.
     return CenteredNorm(vcenter=0.0, halfrange=reach if reach > 0.0 else 1.0)
+
+
+def _bulk(fields: SolutionFields, key: str, relative: bool) -> float | None:
+    if not relative or not key.endswith(_CONCENTRATION):
+        return None
+    try:
+        return fields.bulk_mol_m3[key]
+    except KeyError:
+        known = ", ".join(sorted(fields.bulk_mol_m3)) or "none"
+        raise ValueError(f"the fields record no bulk for {key!r}; they record {known}") from None
 
 
 def _axes(ax: Axes | None, size: tuple[float, float]) -> Axes:
@@ -166,7 +174,7 @@ def plot_field(
     *,
     ax: Axes | None = None,
     zoom_nm: tuple[float, float] | None = None,
-    relative_to_M: float | None = None,
+    relative: bool = False,
     halfrange: float | None = None,
 ) -> Axes:
     """Draw one solved field over ``(r, z)``; a signed field is coloured about zero.
@@ -177,8 +185,9 @@ def plot_field(
         An attribute key of the fields, or ``"potential"``, ``"u_r"`` or ``"u_z"``.
     zoom_nm
         The ``(r, |z|)`` window drawn, in nm; by default up to :data:`VIEW_NM`.
-    relative_to_M
-        A bulk concentration in mol/L: a concentration is then drawn as ``log₁₀(c / c_bulk)``.
+    relative
+        Draw a concentration as ``log₁₀(c / c_bulk)``, with the bulk the solve imposed on that
+        species (``fields.bulk_mol_m3``).
     halfrange
         The colour scale's reach either side of zero, in the panel's unit (mV for the
         potential); values beyond it saturate. By default the field's largest magnitude.
@@ -190,13 +199,13 @@ def plot_field(
     ValueError
         ``halfrange`` is given for a field not drawn about zero, or is not positive.
     """
-    from matplotlib.tri import Triangulation
-
     points, cells, values = data.field_values(fields, quantity)
     key = data.FIELD_ALIASES.get(quantity, (quantity, None))[0]
-    shown = _shown(quantity if quantity in ("u_r", "u_z") else key, values, relative_to_M)
+    shown = _shown(
+        quantity if quantity in ("u_r", "u_z") else key, values, _bulk(fields, key, relative)
+    )
     ax = _axes(ax, (4.6, 5.6))
-    triangulation = Triangulation(points[:, 0] * _NM, points[:, 1] * _NM, data.subdivided(cells))
+    triangulation = data.field_triangulation(points, cells)
     image = ax.tripcolor(
         triangulation,
         shown.values,
@@ -208,7 +217,7 @@ def plot_field(
         image, ax=ax, label=shown.label, extend="neither" if halfrange is None else "both"
     )
     if quantity == "u_z":
-        _streamlines(ax, fields, zoom_nm or data.LUMEN_NM)
+        _streamlines(ax, fields, zoom_nm or data.fields_lumen_nm(fields))
     ax.set_title(shown.label.split(" (")[0])
     _rz(ax)
     _window(ax, points, zoom_nm)
@@ -286,11 +295,11 @@ def _line(
     position: np.ndarray,
     values: np.ndarray,
     key: str,
-    relative_to_M: float | None,
+    bulk_mol_m3: float | None,
     *,
     along: str,
 ) -> Axes:
-    shown = _shown(key, values, relative_to_M)
+    shown = _shown(key, values, bulk_mol_m3)
     ax.plot(position, shown.values, color="tab:blue")
     if shown.centred:
         ax.axhline(0.0, color="0.7", lw=0.8, zorder=0)
@@ -306,7 +315,7 @@ def plot_axial_cutline(
     *,
     r_nm: float = 0.0,
     ax: Axes | None = None,
-    relative_to_M: float | None = None,
+    relative: bool = False,
 ) -> Axes:
     """Draw one field along the line ``r = r_nm``, against z; a gap where the line leaves it."""
     z, values = data.axial_cutline(fields, quantity, r_nm=r_nm)
@@ -316,7 +325,7 @@ def plot_axial_cutline(
         z,
         values,
         quantity if quantity in ("u_r", "u_z") else key,
-        relative_to_M,
+        _bulk(fields, key, relative),
         along="z",
     )
     ax.set_title(f"along r = {r_nm:g} nm")
@@ -329,7 +338,7 @@ def plot_radial_cutline(
     *,
     z_nm: float = 0.0,
     ax: Axes | None = None,
-    relative_to_M: float | None = None,
+    relative: bool = False,
 ) -> Axes:
     """Draw one field along the line ``z = z_nm``, against r; a gap where the line leaves it."""
     r, values = data.radial_cutline(fields, quantity, z_nm=z_nm)
@@ -339,7 +348,7 @@ def plot_radial_cutline(
         r,
         values,
         quantity if quantity in ("u_r", "u_z") else key,
-        relative_to_M,
+        _bulk(fields, key, relative),
         along="r",
     )
     ax.set_title(f"across z = {z_nm:g} nm")

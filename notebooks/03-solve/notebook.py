@@ -12,14 +12,21 @@ def _():
 
     from nanopnp import Case, Store
     from nanopnp.plot import plot_axial_cutline, plot_field, plot_radial_cutline
-    from nanopnp.plot.data import LUMEN_NM, qoi_rows
+    from nanopnp.plot.data import (
+        default_potential_range_mV,
+        field_menu,
+        fields_lumen_nm,
+        qoi_rows,
+    )
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
     ring = here.parents[1] / "examples" / "02-charged-pore" / "ring.field.yaml"
     return (
         Case,
-        LUMEN_NM,
+        default_potential_range_mV,
+        field_menu,
+        fields_lumen_nm,
         mo,
         plot_axial_cutline,
         plot_field,
@@ -112,21 +119,11 @@ def _(mo, run):
 
 
 @app.cell
-def _(LUMEN_NM, mo, run, settings):
+def _(default_potential_range_mV, field_menu, fields_lumen_nm, mo, run, settings):
     fields = run.fields
-    quantities = {
-        "potential φ": "potential",
-        **{
-            f"{key.removesuffix('_mol_m3')} against the bulk": key
-            for key in sorted(fields.fluid[2])
-            if key.endswith("_mol_m3")
-        },
-        "axial velocity u_z": "u_z",
-        "radial velocity u_r": "u_r",
-        "pressure p": "p_Pa",
-    }
+    quantities = field_menu(fields)
     window = mo.ui.radio(
-        {"around the pore": None, "the lumen": LUMEN_NM},
+        {"around the pore": None, "the lumen": fields_lumen_nm(fields)},
         value="around the pore",
         inline=True,
         label="window",
@@ -136,7 +133,7 @@ def _(LUMEN_NM, mo, run, settings):
         5.0,
         1000.0,
         5.0,
-        max(10.0, 2.0 * abs(settings["bias_mV"])),
+        default_potential_range_mV(settings["bias_mV"]),
         debounce=True,
         show_value=True,
         label="potential colour range ± (mV)",
@@ -146,7 +143,7 @@ def _(LUMEN_NM, mo, run, settings):
 
 
 @app.cell
-def _(fields, mo, plot_field, potential_range, quantities, settings, window):
+def _(fields, mo, plot_field, potential_range, quantities, window):
     # One figure per field; a concentration is drawn as log10(c / c_bulk), so depletion shows.
     mo.ui.tabs(
         {
@@ -155,7 +152,7 @@ def _(fields, mo, plot_field, potential_range, quantities, settings, window):
                     fields,
                     quantity,
                     zoom_nm=window.value,
-                    relative_to_M=settings["concentration_M"],
+                    relative=True,
                     halfrange=potential_range.value if quantity == "potential" else None,
                 )
             )
@@ -200,18 +197,14 @@ def _(
     plot_radial_cutline,
     quantities,
     r_nm,
-    settings,
     z_nm,
 ):
     profile = quantities[cutline_quantity.value]
-    bulk_M = settings["concentration_M"]
     mo.hstack(
         [
+            mo.mpl.interactive(plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative=True)),
             mo.mpl.interactive(
-                plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative_to_M=bulk_M)
-            ),
-            mo.mpl.interactive(
-                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative_to_M=bulk_M)
+                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative=True)
             ),
         ],
         widths="equal",

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
+import os
 import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -13,7 +16,7 @@ from nanopnp.io.resolved import parse_chains
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-__all__ = ["DEGENERACY", "orient_pore"]
+__all__ = ["DEGENERACY", "OFF_AXIS_WARNING_NM", "orient_pore", "prepared_pore"]
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +25,9 @@ DEGENERACY = 0.25
 
 END_FRACTION = 0.2
 """The fraction of the C-alpha heights at each end whose mean radius tells the wider end."""
+
+OFF_AXIS_WARNING_NM = 0.1
+"""The registration centroid's distance from the axis, in nm, above which a warning is logged."""
 
 _ANGSTROM_PER_NM = 10.0
 
@@ -86,7 +92,10 @@ def orient_pore(
     """Write a structure's protein chains with the pore axis on z and the named end *cis*.
 
     The axis is estimated from the C-alpha covariance, so it needs only to fall inside stage 1's
-    gate, which then finds the axis itself. Returns ``out``.
+    gate, which then finds the axis itself. The structure is centred laterally on the registration
+    residues' centroid, which lies on the axis for a full ring; a warning is logged where it is
+    more than :data:`OFF_AXIS_WARNING_NM` off, as when a chain lacks some of those residues.
+    Returns ``out``.
 
     Parameters
     ----------
@@ -152,6 +161,14 @@ def orient_pore(
         if len(anchor) == 0:
             raise ValueError(f"no kept C-alpha lies in residues {first} to {last}")
     centroid = anchor.positions.astype(np.float64).mean(axis=0)
+    offset = centroid - calpha.mean(axis=0)
+    off_axis = float(np.linalg.norm(offset - (offset @ axis) * axis)) / _ANGSTROM_PER_NM
+    if off_axis > OFF_AXIS_WARNING_NM:
+        logger.warning(
+            "the registration centroid is %.2f nm off the estimated pore axis, so the pore axis "
+            "will sit that far from r = 0; a chain may lack some of the registration residues",
+            off_axis,
+        )
     target = np.array([0.0, 0.0, centroid_z_nm * _ANGSTROM_PER_NM])
     moved = (protein.positions.astype(np.float64) - centroid) @ _onto_z(axis).T + target
     protein.positions = moved.astype(np.float32)
@@ -162,3 +179,39 @@ def orient_pore(
         protein.write(str(destination))
     logger.info("wrote %s: %d atoms", destination, len(protein))
     return destination
+
+
+def prepared_pore(
+    source: str | Path,
+    *,
+    directory: str | Path,
+    chains: str = "all",
+    cis_end: Literal["wider", "narrower"],
+    registration_residues: tuple[int, int] | None = None,
+    centroid_z_nm: float = 0.0,
+) -> Path:
+    """Return ``orient_pore``'s file for these choices, written under ``directory`` once.
+
+    The file is named by a digest of the source file's bytes, the choices and this module's
+    code, so a changed source or preparation is a new file; it is written whole or not at all.
+    """
+    origin = Path(source)
+    choices = {
+        "chains": chains,
+        "cis_end": cis_end,
+        "registration_residues": registration_residues,
+        "centroid_z_nm": centroid_z_nm,
+    }
+    digest = hashlib.sha256(origin.read_bytes())
+    digest.update(json.dumps(choices, sort_keys=True).encode())
+    digest.update(Path(__file__).read_bytes())
+    prepared = Path(directory) / f"{origin.name.split('.')[0]}-{digest.hexdigest()[:12]}.pdb"
+    if not prepared.is_file():
+        prepared.parent.mkdir(parents=True, exist_ok=True)
+        staged = prepared.with_name(f".{prepared.stem}.{os.getpid()}.partial.pdb")
+        try:
+            orient_pore(origin, out=staged, **choices)  # type: ignore[arg-type]
+            staged.replace(prepared)
+        finally:
+            staged.unlink(missing_ok=True)
+    return prepared

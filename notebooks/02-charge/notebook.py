@@ -5,8 +5,6 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import hashlib
-    import json
     import os
     from pathlib import Path
 
@@ -17,7 +15,7 @@ def _():
     from nanopnp.core.stages import describe
     from nanopnp.plot.data import charge_grids
     from nanopnp.plot.panels import plot_charge
-    from nanopnp.structure import orient_pore
+    from nanopnp.structure import prepared_pore
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
@@ -27,10 +25,8 @@ def _():
         charge_grids,
         describe,
         entry,
-        hashlib,
-        json,
         mo,
-        orient_pore,
+        prepared_pore,
         plot_charge,
         store,
     )
@@ -53,7 +49,7 @@ def _(mo):
 
 
 @app.cell
-def _(Case, entry, hashlib, json, mo, orient_pore, store):
+def _(Case, entry, mo, prepared_pore, store):
     # Notebook 01's preparation at its defaults, and the same case: stages 1 to 6 are shared.
     preparation = {
         "chains": "A,B,C,D,E,F,G,H,I,J,K,L",
@@ -62,18 +58,14 @@ def _(Case, entry, hashlib, json, mo, orient_pore, store):
         "last_residue": 292,
         "centroid_z_nm": 5.655,
     }
-    key = hashlib.sha256(json.dumps(preparation, sort_keys=True).encode()).hexdigest()[:12]
-    prepared = store.root / "structures" / f"2wcd-{key}.pdb"
-    if not prepared.is_file():
-        prepared.parent.mkdir(parents=True, exist_ok=True)
-        orient_pore(
-            entry,
-            chains=preparation["chains"],
-            cis_end=preparation["cis_end"],
-            registration_residues=(preparation["first_residue"], preparation["last_residue"]),
-            centroid_z_nm=preparation["centroid_z_nm"],
-            out=prepared,
-        )
+    prepared = prepared_pore(
+        entry,
+        directory=store.root / "structures",
+        chains=preparation["chains"],
+        cis_end=preparation["cis_end"],
+        registration_residues=(preparation["first_residue"], preparation["last_residue"]),
+        centroid_z_nm=preparation["centroid_z_nm"],
+    )
     case = Case.from_structure(
         prepared,
         point_group="C12",
