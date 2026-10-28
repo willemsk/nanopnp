@@ -50,6 +50,48 @@ panels and two whole-workbench mockups, and writes the design document and its r
   REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
   restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
+## [0.5.0-alpha.20]
+
+WP54: the notebooks and figures revised, the library's cylinder and case factories, a one-axis sweep in Python,
+and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATION.md` §8.2.20 V1 to V4). The
+[plan](docs/plans/wp54-notebooks-and-figures-revised.md) records the work.
+
+### Added
+
+- **`nanopnp.mesh.mesh_cylinder`** and `generate_cylinder`: the CLI's cylindrical-pore mesher moves into the
+  library, and the CLI calls it (FR-37, as amended).
+- **`Case.cylinder` and `Case.from_structure`**: factories that build a case on the validated ePNP-NS model,
+  with its species, corrections and solid permittivities read from the parameter file (FR-30, §8.2.20 V3).
+- **`nanopnp.sweep.sweep(case, axis=, values=, origin=)`**, returning a `Sweep` whose `run()` plans, runs and
+  collects the dataset (FR-30, VER-36).
+- **`RunResult.current_nA`, `conductance_nS` and `fields`**: the run's current, conductance and solved fields
+  in SI (FR-30).
+- **Panels in `nanopnp.plot`**: `plot_field`, `plot_mesh`, `plot_axial_cutline`, `plot_radial_cutline` and
+  `plot_iv`, with `plot_charge` and `mark_constriction` in `nanopnp.plot.panels`, and the cutlines in
+  `nanopnp.plot.data` (FR-30).
+- **Notebook 05**, the cylindrical pore, in four steps: the mesh, the solve, profiles along and across the pore
+  on debounced sliders, and the I-V sweep (FR-30, §8.2.20 V2).
+
+### Changed
+
+- **`Case.load` makes relative input paths absolute** against the case file (FR-25, QR-08).
+- **`SolutionFields` and `solution_fields` move to `nanopnp.post.export`**, keeping the six-node cells (FR-30).
+- **The stage figures are rebuilt on the panels**: the potential in mV centred on zero; each concentration as
+  log10(c/c_bulk); u_z with streamlines; the mesh as the whole domain and the lumen by SICN, with a λ_D/5 bar;
+  the charge about zero with the χ = 0.5 contour; the constriction and the operating concentration marked; the
+  rectification ratios and G on the I-V (FR-30, NUM-30).
+- **Notebooks 03 and 04 run on `Case.cylinder`**, from a shared store (`$NANOPNP_STORE`, else
+  `notebooks/.store`), with form-gated solves, one figure per field and debounced cutline sliders (FR-30,
+  §8.2.20 V2).
+
+### Fixed
+
+- **A `Case.load` run reproduces.** The run records the case as held in memory, so a reproduction checks the
+  case file it wrote (FR-25, QR-08).
+- **A sweep's panels share the cis-referenced bias and keep failed points** (FR-30).
+
+Open items REV-146, REV-147 and REV-148 are logged in `docs/project/review-findings.md` for the author.
+
 ## [0.5.0-alpha.19] - 2026-10-22
 
 WP53: the workflow, three commands with levels, workers and a current checkout (`SPECIFICATION.md`
