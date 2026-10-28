@@ -166,6 +166,6 @@ is a rolling register, and its header stays `open`.
 | REV-143 | interface | low | accepted | §8.2.19 U7 | [The light theme's control edge is under 3:1 on a selected row](review-items.md#rev-143-the-light-themes-control-edge-is-under-31-on-a-selected-row) |
 | REV-144 | interface | low | deferred | §8.2.20 V3 | [Case.cylinder takes a charge field, not a uniform wall surface charge](review-items.md#rev-144-casecylinder-takes-a-charge-field-not-a-uniform-wall-surface-charge) |
 | REV-145 | interface | low | deferred | §8.2.20 V3 | [No case builders by section before Phase 5](review-items.md#rev-145-no-case-builders-by-section-before-phase-5) |
-| REV-146 | numerics | high | open | — | [The cylinder's default wall size is coarser than NUM-30's first layer](review-items.md#rev-146-the-cylinders-default-wall-size-is-coarser-than-num-30s-first-layer) |
+| REV-146 | numerics | high | fixed | §8.2.20 V9 | [The cylinder's default wall size is coarser than NUM-30's first layer](review-items.md#rev-146-the-cylinders-default-wall-size-is-coarser-than-num-30s-first-layer) |
 | REV-147 | interface | low | open | — | [The lumen window is fixed, not read from the region](review-items.md#rev-147-the-lumen-window-is-fixed-not-read-from-the-region) |
 | REV-148 | physics | low | open | — | [A concentration panel's bulk is the case's salt for every species](review-items.md#rev-148-a-concentration-panels-bulk-is-the-cases-salt-for-every-species) |

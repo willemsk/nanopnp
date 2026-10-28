@@ -1,7 +1,7 @@
 ---
 type: Ruling Record
 title: "8.2.20 WP54's notebooks and figures, agreed 28 October 2026"
-description: "Records the author's rulings on WP54's scope, taken in the review of WP51's notebooks and figures: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint."
+description: "Records the author's rulings on WP54's scope, taken in the review of WP51's notebooks and figures: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint; then the steering of its second checkpoint."
 ---
 
 #### 8.2.20 WP54's notebooks and figures, agreed 28 October 2026
@@ -9,7 +9,8 @@ description: "Records the author's rulings on WP54's scope, taken in the review 
 Rulings by the author, written in `docs/plans/notebooks-review-for-wp54.md` §7.1 as A1 to A4 on
 28 October 2026, where they settle four conflicts between the author's notes and the specification
 (§8.2.16 R8 left WP54's scope to that document). V5 was given the same day, while the package was
-planned. The letter series continues at V; V1 to V4 are the document's A1 to A4.
+planned. The letter series continues at V; V1 to V4 are the document's A1 to A4. V6 to V9 were given the
+same day, at WP54's second checkpoint, in answer to its questions for steering.
 
 | # | Decision | Consequence | Clause changed, and when |
 |---|---|---|---|
@@ -18,3 +19,7 @@ planned. The letter series continues at V; V1 to V4 are the document's A1 to A4.
 | V3 | **The case schema stays as it is; the notebooks build cases with typed factories**, `Case.cylinder(...)` and `Case.from_structure(...)`. `Case.cylinder` meshes into the store, under a name keyed by its parameters, and sets `inputs.mesh.path`. Builders by section (`with_density`, `with_numerics`) wait for Phase 5 | IF-02 and `nanopnp/case/v0.5` do not move. A value the schema cannot say (a uniform wall surface charge) is not a factory argument | None; the Phase 4 plan's WP54 entry, in this commit |
 | V4 | **The field figures read in physical units** (*amends P9 and FR-30*): the potential in mV on a scale centred at 0 mV; the mesh as the whole domain beside the lumen, with λ_D/5 marked; the signed axial velocity with streamlines in the lumen; axial and radial cutlines of any solved field, exported from `nanopnp.plot` | P9's `scale` and `interactive` values leave the notebooks; `figure(scale=)` stays. The cutlines are read from the stored P2 nodes, with no second restore | FR-30 and its Appendix A row, in this commit; P9's pointer, in this commit |
 | V5 | **Each compaction checkpoint of WP54 publishes the notebooks revised so far as private artifacts for the author's steering.** *Added 28 October 2026, at WP54's plan.* The implementing session exports each notebook with `marimo export html`, publishes it, and ends the turn with the links | The export runs the notebook once and shows its widgets at their defaults; there is no kernel behind the page, and NGSolve has no browser build, so a moved slider recomputes nothing there. The author's comments are read before the next item starts | None; the WP54 plan |
+| V6 | **The potential's colour range is set by a slider** (*amends V4*), centred at 0 mV with a default reach of twice the applied bias. *Added 28 October 2026, at WP54's second checkpoint.* `plot_field` takes `halfrange=` in the panel's unit, and values beyond it saturate | The fixed charge inside the membrane (−440 mV for example 02's ring) no longer sets the scale, so the pore's drop shows. A `halfrange` on a field not drawn about zero is refused | FR-30 and its Appendix A row, in this commit |
+| V7 | **The notebooks' figures pan and zoom.** *Added 28 October 2026, at WP54's second checkpoint.* Each field, cutline, mesh and I-V figure is shown through `mo.mpl.interactive`; the tabs stay, one figure each | A headless run and `marimo export` fall back to the static PNG, so the nightly notebook test does not change. The checkpoint pages zoom and pan the static image. P9's `interactive` value, removed by V4, stays out of the library: the notebook asks for it | None; the notebooks, in WP54 |
+| V8 | **Notebook 05 solves the ring near the cis mouth of example 03**, not example 02's symmetric ring. *Added 28 October 2026, at WP54's second checkpoint* | Its I-V sweep rectifies, as notebook 04's does, rather than drawing a near-straight line | None; the WP54 plan |
+| V9 | **`Case.cylinder` offers both wall sizes** (*answers REV-146*): the mesh command's fixed 0.35 nm stays the default, and `wall_h_nm="debye"` sizes the wall at `λ_D/5` of the case's salt at `ε_r,f0`. Notebook 05 offers both. *Added 28 October 2026, at WP54's second checkpoint* | Examples 02 and 03 and VER-62's golden keep their mesh. A Debye-sized wall meshes again for each new salt; at 0.1 M it is 0.19 nm | None; FR-30's factories, in WP54; REV-146 fixed |

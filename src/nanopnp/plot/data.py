@@ -41,6 +41,7 @@ __all__ = [
     "DISPLAY",
     "FIELD_ALIASES",
     "LUMEN_NM",
+    "QOI_UNITS",
     "SICN_FLOOR",
     "CorrectionCurves",
     "Display",
@@ -64,6 +65,7 @@ __all__ = [
     "mesh_elements",
     "newton_history",
     "protonation_charges",
+    "qoi_rows",
     "radial_cutline",
     "reduced_map",
     "region_drawing",
@@ -443,6 +445,56 @@ def newton_history(artefact: Artefact) -> list[NewtonRung] | None:
             )
         )
     return rungs
+
+
+QOI_UNITS: dict[str, str | None] = {
+    "_m3_s": "flow",
+    "_A": "current",
+    "_S": "conductance",
+    "_V": "potential",
+    "_nm": "length",
+}
+"""A quantity of interest's SI suffix and its :data:`DISPLAY` quantity; ``_nm`` stays as is."""
+
+
+def _qoi_value(value: object, per: float) -> str | None:
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, int | float):
+        return f"{value * per:.4g}"
+    if isinstance(value, list) and value and all(isinstance(item, int | float) for item in value):
+        return " to ".join(f"{item * per:.4g}" for item in value)
+    return None
+
+
+def _split_unit(key: str) -> tuple[str, str]:
+    suffix = next((end for end in QOI_UNITS if key.endswith(end)), "")
+    return (key.removesuffix(suffix) if suffix else key).replace("_", " "), suffix
+
+
+def qoi_rows(summary: Mapping[str, Any]) -> list[dict[str, str]]:
+    """Return the quantities of interest as rows of ``quantity``, ``value`` and ``unit``.
+
+    A key's SI suffix (:data:`QOI_UNITS`) sets the display unit; a mapping gives one row per
+    entry, each entry taking its own suffix or, without one, its mapping's.
+    """
+    rows: list[dict[str, str]] = []
+
+    def visit(label: str, suffix: str, value: object) -> None:
+        if isinstance(value, Mapping):
+            for key, inner in value.items():
+                name, own = _split_unit(str(key))
+                visit(f"{label} ({name})" if label else name, own or suffix, inner)
+            return
+        quantity = QOI_UNITS.get(suffix)
+        display = DISPLAY[quantity] if quantity not in (None, "length") else None
+        shown = _qoi_value(value, display.per_SI if display else 1.0)
+        if shown is not None:
+            unit = display.unit if display else ("nm" if suffix == "_nm" else "")
+            rows.append({"quantity": label, "value": shown, "unit": unit})
+
+    visit("", "", summary)
+    return rows
 
 
 def subdivided(cells: np.ndarray) -> np.ndarray:

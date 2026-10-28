@@ -11,6 +11,7 @@ def _():
     import marimo as mo
 
     from nanopnp import Case, Store
+    from nanopnp.mesh.defaults import DEFAULT_CYLINDER_WALL_H_NM
     from nanopnp.plot import (
         plot_axial_cutline,
         plot_field,
@@ -21,9 +22,10 @@ def _():
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
-    ring = here.parents[1] / "examples" / "02-charged-pore" / "ring.field.yaml"
+    ring = here.parents[1] / "examples" / "03-iv-sweep" / "cis-ring.field.yaml"
     return (
         Case,
+        DEFAULT_CYLINDER_WALL_H_NM,
         mo,
         plot_axial_cutline,
         plot_field,
@@ -44,7 +46,9 @@ def _(mo):
         A charged cylinder in four steps: its mesh, the ePNP-NS solve, profiles through
         the solved fields, and an I-V sweep of the same pore. Each step that computes
         waits for its button; each runs only the stages its settings change, and takes
-        the rest from the store. The fixed charge is the ring of example 02.
+        the rest from the store. The fixed charge is a ring near the cis mouth, as in
+        notebook 04, so the pore rectifies. In a running notebook each figure pans and
+        zooms.
         """
     )
     return
@@ -58,18 +62,25 @@ def _(mo):
 
         The pore's size sets the mesh. The figure shows the whole domain by element
         size and, beside it, the lumen by element quality, with the double-layer target
-        λ_D/5 drawn to scale.
+        λ_D/5 drawn to scale. The wall is sized either at the mesh command's fixed
+        0.35 nm, as examples 02 and 03 are, or at λ_D/5 of the salt below; the second
+        meets the double-layer target and meshes again for each new salt.
         """
     )
     return
 
 
 @app.cell
-def _(mo):
+def _(DEFAULT_CYLINDER_WALL_H_NM, mo):
+    WALLS = {
+        f"fixed, {DEFAULT_CYLINDER_WALL_H_NM:g} nm": DEFAULT_CYLINDER_WALL_H_NM,
+        "λ_D/5 of the salt": "debye",
+    }
     MESH_DEFAULTS = {
         "pore_radius_nm": 2.0,
         "membrane_thickness_nm": 6.0,
         "reservoir_radius_nm": 10.0,
+        "wall_h_nm": DEFAULT_CYLINDER_WALL_H_NM,
     }
     mesh_form = mo.ui.dictionary(
         {
@@ -82,6 +93,7 @@ def _(mo):
             "reservoir_radius_nm": mo.ui.number(
                 6.0, 40.0, 1.0, MESH_DEFAULTS["reservoir_radius_nm"], label="reservoir (nm)"
             ),
+            "wall_h_nm": mo.ui.dropdown(WALLS, value=next(iter(WALLS)), label="wall size"),
         }
     ).form(submit_button_label="Mesh")
     mesh_form
@@ -95,9 +107,9 @@ def _(MESH_DEFAULTS, mesh_form):
 
 
 @app.cell
-def _(case):
+def _(case, mo):
     # The λ_D/5 bar follows the salt of the solve below.
-    case.run(upto="mesh").figure("mesh")
+    mo.mpl.interactive(case.run(upto="mesh").figure("mesh"))
     return
 
 
@@ -177,12 +189,33 @@ def _(run):
 
 
 @app.cell
-def _(fields, mo, plot_field, quantities, settings):
+def _(mo, settings):
+    # The ring's charge sits in the membrane; a range from the bias keeps the pore's drop in view.
+    potential_range = mo.ui.slider(
+        5.0,
+        1000.0,
+        5.0,
+        max(10.0, 2.0 * abs(settings["bias_mV"])),
+        debounce=True,
+        show_value=True,
+        label="potential colour range ± (mV)",
+    )
+    potential_range
+    return (potential_range,)
+
+
+@app.cell
+def _(fields, mo, plot_field, potential_range, quantities, settings):
     mo.ui.tabs(
         {
-            label: plot_field(
-                fields, quantity, relative_to_M=settings["concentration_M"]
-            ).get_figure()
+            label: mo.mpl.interactive(
+                plot_field(
+                    fields,
+                    quantity,
+                    relative_to_M=settings["concentration_M"],
+                    halfrange=potential_range.value if quantity == "potential" else None,
+                )
+            )
             for label, quantity in quantities.items()
         }
     )
@@ -245,10 +278,12 @@ def _(
     bulk_M = settings["concentration_M"]
     mo.hstack(
         [
-            plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative_to_M=bulk_M).get_figure(),
-            plot_radial_cutline(
-                fields, profile, z_nm=z_nm.value, relative_to_M=bulk_M
-            ).get_figure(),
+            mo.mpl.interactive(
+                plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative_to_M=bulk_M)
+            ),
+            mo.mpl.interactive(
+                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative_to_M=bulk_M)
+            ),
         ],
         widths="equal",
     )
@@ -298,7 +333,7 @@ def _(SWEEP_DEFAULTS, case, settings, sweep, sweep_form):
 def _(dataset, mo, plot_iv):
     mo.vstack(
         [
-            plot_iv(dataset).get_figure(),
+            mo.mpl.interactive(plot_iv(dataset)),
             mo.ui.table(dataset.summary["rows"], selection=None),
         ]
     )

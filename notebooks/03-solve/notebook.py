@@ -12,7 +12,7 @@ def _():
 
     from nanopnp import Case, Store
     from nanopnp.plot import plot_axial_cutline, plot_field, plot_radial_cutline
-    from nanopnp.plot.data import LUMEN_NM
+    from nanopnp.plot.data import LUMEN_NM, qoi_rows
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
@@ -24,6 +24,7 @@ def _():
         plot_axial_cutline,
         plot_field,
         plot_radial_cutline,
+        qoi_rows,
         ring,
         store,
     )
@@ -41,7 +42,8 @@ def _(mo):
 
         Edit the settings and press **Solve**. The run takes every stage it does not change
         from the store, so a new bias re-solves without meshing again. The views below the
-        solve redraw at once: they read the solved fields, sampled once per solve.
+        solve redraw at once: they read the solved fields, sampled once per solve. In a
+        running notebook each figure pans and zooms.
         """
     )
     return
@@ -109,7 +111,7 @@ def _(mo, run):
 
 
 @app.cell
-def _(LUMEN_NM, mo, run):
+def _(LUMEN_NM, mo, run, settings):
     fields = run.fields
     quantities = {
         "potential φ": "potential",
@@ -128,21 +130,34 @@ def _(LUMEN_NM, mo, run):
         inline=True,
         label="window",
     )
-    window
-    return fields, quantities, window
+    # The ring's charge sits in the membrane; a range from the bias keeps the pore's drop in view.
+    potential_range = mo.ui.slider(
+        5.0,
+        1000.0,
+        5.0,
+        max(10.0, 2.0 * abs(settings["bias_mV"])),
+        debounce=True,
+        show_value=True,
+        label="potential colour range ± (mV)",
+    )
+    mo.hstack([window, potential_range], justify="start", gap=2)
+    return fields, potential_range, quantities, window
 
 
 @app.cell
-def _(fields, mo, plot_field, quantities, settings, window):
+def _(fields, mo, plot_field, potential_range, quantities, settings, window):
     # One figure per field; a concentration is drawn as log10(c / c_bulk), so depletion shows.
     mo.ui.tabs(
         {
-            label: plot_field(
-                fields,
-                quantity,
-                zoom_nm=window.value,
-                relative_to_M=settings["concentration_M"],
-            ).get_figure()
+            label: mo.mpl.interactive(
+                plot_field(
+                    fields,
+                    quantity,
+                    zoom_nm=window.value,
+                    relative_to_M=settings["concentration_M"],
+                    halfrange=potential_range.value if quantity == "potential" else None,
+                )
+            )
             for label, quantity in quantities.items()
         }
     )
@@ -191,10 +206,12 @@ def _(
     bulk_M = settings["concentration_M"]
     mo.hstack(
         [
-            plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative_to_M=bulk_M).get_figure(),
-            plot_radial_cutline(
-                fields, profile, z_nm=z_nm.value, relative_to_M=bulk_M
-            ).get_figure(),
+            mo.mpl.interactive(
+                plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative_to_M=bulk_M)
+            ),
+            mo.mpl.interactive(
+                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative_to_M=bulk_M)
+            ),
         ],
         widths="equal",
     )
@@ -202,8 +219,13 @@ def _(
 
 
 @app.cell
-def _(mo, run):
-    mo.accordion({"Every quantity of interest": run.figure("qoi")})
+def _(mo, qoi_rows, run):
+    mo.vstack(
+        [
+            mo.md("**Every quantity of interest**"),
+            mo.ui.table(qoi_rows(run.quantities), selection=None),
+        ]
+    )
     return
 
 

@@ -77,12 +77,18 @@ def _shown(key: str, values: np.ndarray, relative_to_M: float | None) -> _Shown:
     return _Shown(values, key, "viridis", False)
 
 
-def _norm(shown: _Shown) -> Normalize | None:
+def _norm(shown: _Shown, halfrange: float | None = None) -> Normalize | None:
     import numpy as np
     from matplotlib.colors import CenteredNorm
 
     if not shown.centred:
+        if halfrange is not None:
+            raise ValueError(f"{shown.label} is not drawn about zero, so it takes no halfrange")
         return None
+    if halfrange is not None:
+        if not halfrange > 0.0:
+            raise ValueError(f"the colour halfrange must be positive, got {halfrange}")
+        return CenteredNorm(vcenter=0.0, halfrange=halfrange)
     finite = np.abs(shown.values[np.isfinite(shown.values)])
     reach = float(finite.max()) if finite.size else 0.0
     # CenteredNorm cannot span zero width; a uniform zero field still draws, in the centre colour.
@@ -161,6 +167,7 @@ def plot_field(
     ax: Axes | None = None,
     zoom_nm: tuple[float, float] | None = None,
     relative_to_M: float | None = None,
+    halfrange: float | None = None,
 ) -> Axes:
     """Draw one solved field over ``(r, z)``; a signed field is coloured about zero.
 
@@ -172,11 +179,16 @@ def plot_field(
         The ``(r, |z|)`` window drawn, in nm; by default up to :data:`VIEW_NM`.
     relative_to_M
         A bulk concentration in mol/L: a concentration is then drawn as ``log₁₀(c / c_bulk)``.
+    halfrange
+        The colour scale's reach either side of zero, in the panel's unit (mV for the
+        potential); values beyond it saturate. By default the field's largest magnitude.
 
     Raises
     ------
     KeyError
         The run holds no such field.
+    ValueError
+        ``halfrange`` is given for a field not drawn about zero, or is not positive.
     """
     from matplotlib.tri import Triangulation
 
@@ -186,9 +198,15 @@ def plot_field(
     ax = _axes(ax, (4.6, 5.6))
     triangulation = Triangulation(points[:, 0] * _NM, points[:, 1] * _NM, data.subdivided(cells))
     image = ax.tripcolor(
-        triangulation, shown.values, shading="gouraud", cmap=shown.cmap, norm=_norm(shown)
+        triangulation,
+        shown.values,
+        shading="gouraud",
+        cmap=shown.cmap,
+        norm=_norm(shown, halfrange),
     )
-    _figure(ax).colorbar(image, ax=ax, label=shown.label)
+    _figure(ax).colorbar(
+        image, ax=ax, label=shown.label, extend="neither" if halfrange is None else "both"
+    )
     if quantity == "u_z":
         _streamlines(ax, fields, zoom_nm or data.LUMEN_NM)
     ax.set_title(shown.label.split(" (")[0])

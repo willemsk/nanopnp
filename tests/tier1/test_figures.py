@@ -159,6 +159,7 @@ def test_radial_cutline_is_masked_outside_the_fluid() -> None:
 
 def test_potential_panel_is_millivolts_centred_at_zero() -> None:
     # A one-signed potential: TwoSlopeNorm would raise, and a panel in V would read 0.02.
+    # A set colour range is in mV too: one taken in V would saturate the whole panel.
     pytest.importorskip("matplotlib")
     from nanopnp.plot.panels import plot_field
 
@@ -167,6 +168,8 @@ def test_potential_panel_is_millivolts_centred_at_zero() -> None:
     image = ax.collections[0]
     np.testing.assert_allclose(np.asarray(image.get_array()), 20.0, rtol=1e-12)
     assert getattr(image.norm, "vcenter", None) == 0.0
+    ranged = plot_field(fields, "potential", halfrange=100.0).collections[0]
+    assert ranged.norm(20.0) == pytest.approx(0.6, rel=1e-12)
 
 
 def test_concentration_panel_is_log_relative_to_bulk() -> None:
@@ -204,3 +207,24 @@ def test_sweep_panels_share_the_cis_referenced_bias_and_keep_failed_points() -> 
     assert flow.lines[0].get_xdata().tolist() == pytest.approx([100.0, -50.0, -100.0])
     failed = [line for line in iv.lines if line.get_marker() == "x"]
     assert failed[0].get_xdata().tolist() == pytest.approx([-50.0])
+
+
+def test_qoi_rows_show_each_quantity_in_its_display_unit() -> None:
+    # A species' current takes its mapping's unit; a nested key takes its own, not the parent's.
+    from nanopnp.plot.data import qoi_rows
+
+    rows = qoi_rows(
+        {
+            "current_A": 2e-9,
+            "currents_A": {"Na+": 1.5e-9},
+            "route_agreement": {"reaction_A": 2e-9, "relative_difference": 1e-5},
+            "eof_m3_s": 3e-19,
+        }
+    )
+    assert [(row["quantity"], row["value"], row["unit"]) for row in rows] == [
+        ("current", "2", "nA"),
+        ("currents (Na+)", "1.5", "nA"),
+        ("route agreement (reaction)", "2", "nA"),
+        ("route agreement (relative difference)", "1e-05", ""),
+        ("eof", "0.3", "µm³/s"),
+    ]

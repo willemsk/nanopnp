@@ -82,7 +82,7 @@ def _(Case, SWEEP_DEFAULTS, ring, store, sweep, sweep_form):
 def _(dataset, draw, mo, plot_iv):
     mo.vstack(
         [
-            plot_iv(dataset).get_figure(),
+            mo.mpl.interactive(plot_iv(dataset)),
             mo.ui.table(dataset.summary["rows"], selection=None),
             mo.accordion({"Every quantity against the bias": draw(dataset)}),
         ]
