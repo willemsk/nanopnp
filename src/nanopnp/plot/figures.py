@@ -187,14 +187,15 @@ def _debye_target_nm(artefact: Artefact, inputs: StageInputs | None) -> tuple[fl
 
 
 def mesh_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
-    """Draw stage 6: the whole domain by element size, and the lumen by SICN with its edges."""
+    """Draw stage 6: the element edges, the whole domain by element size, and the lumen by SICN."""
     from matplotlib.figure import Figure
 
     elements = data.mesh_of(artefact, inputs)
     if elements is None:
         return _absent(artefact, "mesh", "the mesh (a supplied mesh is read from its file)")
-    figure = Figure(figsize=(9.0, 6.5), layout="constrained")
-    whole, lumen = figure.subplots(1, 2)
+    figure = Figure(figsize=(13.0, 6.5), layout="constrained")
+    edges, whole, lumen = figure.subplots(1, 3)
+    panels.plot_mesh(elements, ax=edges, edges_only=True)
     panels.plot_mesh(elements, ax=whole)
     debye_target_nm, note = _debye_target_nm(artefact, inputs)
     panels.plot_mesh(

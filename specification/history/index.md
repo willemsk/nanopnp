@@ -30,7 +30,7 @@ within it (A1, B3, R10).
 * [8.2.17 Phase 5 decisions, ahead of Phase 4's exit, agreed 24 October 2026](17-phase-5-decisions-ahead-of-phase-4s-exit-agreed.md) - Records the rulings that plan Phase 5 as a molecular and continuum workbench, agreed 24 October 2026 while Phase 4 was still open, and the two-lane rule that lets its design study overlap Phase 4.
 * [8.2.18 The workbench design study's rulings, agreed 27 October 2026](18-the-workbench-design-studys-rulings-agreed-27-oct.md) - Records the author's rulings at the end of WP5.01: the review rows and modularity findings inherited by the Phase 5 shell, what partial protonation means, and the look-and-feel notes taken from the galleries.
 * [8.2.19 The workbench design study's open items, agreed 27 October 2026](19-the-workbench-design-studys-open-items-agreed-27.md) - Records the author's rulings on the review rows WP5.01 left open: the Qt Result tab, protonation before the density, the library capabilities and the sweep's design round, and the rows WP5.02 owns.
-* [8.2.20 WP54's notebooks and figures, agreed 28 October 2026](20-wp54s-notebooks-and-figures-agreed-28-october-2.md) - Records the author's rulings on WP54's scope: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint; then the steering of its second checkpoint.
+* [8.2.20 WP54's notebooks and figures, agreed 28 October 2026](20-wp54s-notebooks-and-figures-agreed-28-october-2.md) - Records the author's rulings on WP54's scope: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint; then the steering of its second and third checkpoints.
 
 ## Where each ruling holds now
 
@@ -204,3 +204,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * V7 - open: WP54
 * V8 - the WP54 plan
 * V9 - open: WP54
+* V10 - open: WP54
+* V11 - open: WP54
+* V12 - FR-30; open: WP54
+* V13 - REV-149

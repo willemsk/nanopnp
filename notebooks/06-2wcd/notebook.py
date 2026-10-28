@@ -46,9 +46,9 @@ def _(mo):
         The 2WCD pore of notebooks 01 and 02, solved with the validated ePNP-NS model. The
         case is built as they build it, so the stages up to the materials come from the
         store when they have run; from an empty store the whole walk takes about eleven
-        minutes, most of it the solve. The mesh is four times coarser than the default
-        sizes, for runtime only: the transport number it gives is a property check, not a
-        prediction. In a running notebook each figure pans and zooms.
+        minutes, most of it the solve. By default the mesh is four times coarser than the
+        default sizes, for runtime only; the form's mesh size scale refines it, at the cost
+        the table below gives. In a running notebook each figure pans and zooms.
         """
     )
     return
@@ -91,7 +91,38 @@ def _(Case, entry, hashlib, json, orient_pore, store):
 
 @app.cell
 def _(mo):
-    SOLVE_DEFAULTS = {"concentration_M": 0.15, "bias_mV": 50.0, "stabilisation": "none"}
+    mo.md(
+        """
+        ## The solve
+
+        The form sets the salt, the bias, the stabilisation and the mesh size scale, which
+        multiplies every element size. What the scale costs, measured once at the defaults,
+        on one cloud machine, with the stages before the charge in the store:
+
+        | mesh size scale | elements | solve | G at +50 mV |
+        |---:|---:|---:|---:|
+        | 4 | 6,223 | 5 min | 0.9734 nS |
+        | 3 | 7,955 | 7 min | 0.9731 nS |
+        | 2 | 14,072 | 7.5 min | 0.9732 nS |
+        | 1.5 | 21,799 | 10.5 min | 0.9731 nS |
+        | 1 | 44,811 | 47 min | 0.9730 nS |
+
+        The conductance moves by less than 0.05 % between the coarsest and the finest
+        mesh; a finer mesh resolves the fields near the wall, and costs a new charge
+        deposition as well as the solve.
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    SOLVE_DEFAULTS = {
+        "concentration_M": 0.15,
+        "bias_mV": 50.0,
+        "stabilisation": "none",
+        "size_scale": 4.0,
+    }
     solve_form = mo.ui.dictionary(
         {
             "concentration_M": mo.ui.number(
@@ -102,6 +133,12 @@ def _(mo):
             ),
             "stabilisation": mo.ui.dropdown(
                 ["none", "supg"], SOLVE_DEFAULTS["stabilisation"], label="stabilisation"
+            ),
+            "size_scale": mo.ui.slider(
+                steps=[1.0, 1.5, 2.0, 3.0, 4.0],
+                value=SOLVE_DEFAULTS["size_scale"],
+                show_value=True,
+                label="mesh size scale",
             ),
         }
     ).form(submit_button_label="Solve")
@@ -116,6 +153,7 @@ def _(SOLVE_DEFAULTS, case, solve_form):
         concentration_M=settings["concentration_M"],
         bias_V=settings["bias_mV"] * 1e-3,
         stabilisation=settings["stabilisation"],
+        **{"numerics.mesh.size_scale": settings["size_scale"]},
     )
     return run, settings
 
@@ -134,23 +172,12 @@ def _(mo, run):
 
 @app.cell
 def _(mo, run):
-    mo.accordion(
+    mo.ui.tabs(
         {
-            "The stages before the solve": mo.ui.tabs(
-                {
-                    name: mo.mpl.interactive(run.figure(name))
-                    for name in (
-                        "structure",
-                        "symmetry",
-                        "contour",
-                        "mesh",
-                        "charge",
-                        "materials",
-                    )
-                }
-            ),
-            "The Newton and continuation history": mo.mpl.interactive(run.figure("solve")),
+            name: mo.mpl.interactive(run.figure(name))
+            for name in ("structure", "symmetry", "contour", "mesh", "charge", "materials")
         }
+        | {"Newton and continuation": mo.mpl.interactive(run.figure("solve"))}
     )
     return
 

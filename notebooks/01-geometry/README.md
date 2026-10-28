@@ -3,8 +3,9 @@
 The cytolysin A pore as deposited in the Protein Data Bank (2WCD), prepared with `nanopnp.structure.orient_pore`
 and taken through the geometry stages with `Case.from_structure(...)`: the structure, the density, the symmetry
 reduction, the contour, the region and the mesh. The preparation's choices are yours and sit in a form: the
-chains, which end faces *cis*, and the residues whose C-alpha centroid places the membrane. A slider sets the
-contour's isolevel and redraws the contour, the region and the mesh in a few seconds. Every run takes the stages
+chains, which end faces *cis*, and the residues whose C-alpha centroid places the membrane. Two sliders set the
+contour's isolevel and the mesh size scale and redraw the contour, the region and the mesh in seconds; a table
+gives what a finer mesh costs the solve in notebook 06. Every run takes the stages
 it does not change from the store the six notebooks share, `notebooks/.store` unless `$NANOPNP_STORE` names
 another; notebooks 02 and 06 build the same case, so they share these stages.
 With nanopnp installed with the `notebook` extra, run every command from this directory; in a development

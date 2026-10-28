@@ -222,6 +222,7 @@ def plot_mesh(
     zoom_nm: tuple[float, float] | None = None,
     debye_target_nm: float | None = None,
     debye_note: str = "",
+    edges_only: bool = False,
 ) -> Axes:
     """Draw a mesh: the whole domain by element size, or a zoomed window by SICN with its edges.
 
@@ -230,6 +231,8 @@ def plot_mesh(
     zoom_nm
         The ``(r, |z|)`` window drawn, in nm; given, the elements are coloured by SICN, the gate's
         floor marked, and their edges drawn.
+    edges_only
+        Draw the element edges alone, in grey on white, over the whole domain or the window.
     debye_target_nm
         ``λ_D / 5`` in nm, drawn as a scale bar.
     debye_note
@@ -242,7 +245,15 @@ def plot_mesh(
     vertices = elements.vertices_m * _NM
     triangulation = Triangulation(vertices[:, 0], vertices[:, 1], elements.triangles)
     figure = _figure(ax)
-    if zoom_nm is None:
+    if edges_only:
+        ax.triplot(triangulation, color="0.45", lw=0.3)
+        ax.set_title(f"{elements.triangles.shape[0]} elements, {vertices.shape[0]} vertices")
+        if zoom_nm is None:
+            ax.set_xlim(0.0, float(vertices[:, 0].max()))
+            ax.set_ylim(float(vertices[:, 1].min()), float(vertices[:, 1].max()))
+        else:
+            _window(ax, elements.vertices_m, zoom_nm)
+    elif zoom_nm is None:
         size = elements.size_m * _NM
         image = ax.tripcolor(
             triangulation,

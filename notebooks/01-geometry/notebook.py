@@ -161,11 +161,15 @@ def _(mo):
         """
         ## 3 · Contour, region and mesh
 
-        The pore wall is the contour of the reduced density at one isolevel. The slider
-        re-draws it and the mesh behind it, in a few seconds; the stages before come from
-        the store. The region joins the wall to a 2.8 nm bilayer and two reservoirs, and
-        the mesh is four times coarser than the default sizes, as in notebook 06, so the
-        solve there stays short.
+        The pore wall is the contour of the reduced density at one isolevel, and the region
+        joins it to a 2.8 nm bilayer and two reservoirs. The sliders re-draw the contour and
+        the mesh behind it in seconds; the stages before come from the store. Near either
+        end of the isolevel's range the contour gates refuse the wall, and the refusal says
+        which gate and where.
+
+        The mesh size scale multiplies every element size. Notebooks 02 and 06 use 4, four
+        times coarser than the default, so that the solve stays near five minutes; the
+        table below says what a finer mesh costs in 06 and what it changes.
         """
     )
     return
@@ -174,16 +178,59 @@ def _(mo):
 @app.cell
 def _(mo):
     isolevel = mo.ui.slider(
-        0.15, 0.45, 0.01, 0.25, debounce=True, show_value=True, label="contour isolevel"
+        0.01, 0.99, 0.01, 0.25, debounce=True, show_value=True, label="contour isolevel"
     )
-    isolevel
-    return (isolevel,)
+    size_scale = mo.ui.slider(
+        steps=[1.0, 1.5, 2.0, 3.0, 4.0],
+        value=4.0,
+        debounce=True,
+        show_value=True,
+        label="mesh size scale",
+    )
+    mo.hstack([isolevel, size_scale], justify="start", gap=2)
+    return isolevel, size_scale
 
 
 @app.cell
-def _(case, isolevel, mo, stage_tab):
-    meshed = case.run(upto="mesh", **{"geometry.contour.isolevel": isolevel.value})
-    mo.ui.tabs({name: stage_tab(meshed, name) for name in ("contour", "region", "mesh")})
+def _(case, isolevel, mo, size_scale, stage_tab):
+    try:
+        meshed = case.run(
+            upto="mesh",
+            **{
+                "geometry.contour.isolevel": isolevel.value,
+                "numerics.mesh.size_scale": size_scale.value,
+            },
+        )
+    except ValueError as refusal:
+        shown = mo.callout(mo.md(f"**The walk stopped.** {refusal}"), kind="warn")
+    else:
+        shown = mo.ui.tabs(
+            {name: stage_tab(meshed, name) for name in ("contour", "region", "mesh")}
+        )
+    shown
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        """
+        **What the mesh size scale costs** in notebook 06, measured once at its defaults (0.15 M,
+        +50 mV), on one cloud machine, with the stages before the charge in the store:
+
+        | mesh size scale | elements | solve | G at +50 mV |
+        |---:|---:|---:|---:|
+        | 4 | 6,223 | 5 min | 0.9734 nS |
+        | 3 | 7,955 | 7 min | 0.9731 nS |
+        | 2 | 14,072 | 7.5 min | 0.9732 nS |
+        | 1.5 | 21,799 | 10.5 min | 0.9731 nS |
+        | 1 | 44,811 | 47 min | 0.9730 nS |
+
+        The conductance moves by less than 0.05 % between the coarsest and the finest
+        mesh, so 4 is enough for it; a finer mesh resolves the fields near the wall, where the
+        double layer is thinnest, and costs a new charge deposition as well as the solve.
+        """
+    )
     return
 
 

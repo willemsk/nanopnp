@@ -169,3 +169,4 @@ is a rolling register, and its header stays `open`.
 | REV-146 | numerics | high | fixed | §8.2.20 V9 | [The cylinder's default wall size is coarser than NUM-30's first layer](review-items.md#rev-146-the-cylinders-default-wall-size-is-coarser-than-num-30s-first-layer) |
 | REV-147 | interface | low | open | — | [The lumen window is fixed, not read from the region](review-items.md#rev-147-the-lumen-window-is-fixed-not-read-from-the-region) |
 | REV-148 | physics | low | open | — | [A concentration panel's bulk is the case's salt for every species](review-items.md#rev-148-a-concentration-panels-bulk-is-the-cases-salt-for-every-species) |
+| REV-149 | interface | low | deferred | §8.2.20 V13 | [Notebook 01 prepares a structure but does not change its residues](review-items.md#rev-149-notebook-01-prepares-a-structure-but-does-not-change-its-residues) |

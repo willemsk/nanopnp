@@ -1,7 +1,7 @@
 ---
 type: Ruling Record
 title: "8.2.20 WP54's notebooks and figures, agreed 28 October 2026"
-description: "Records the author's rulings on WP54's scope, taken in the review of WP51's notebooks and figures: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint; then the steering of its second checkpoint."
+description: "Records the author's rulings on WP54's scope, taken in the review of WP51's notebooks and figures: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint; then the steering of its second and third checkpoints."
 ---
 
 #### 8.2.20 WP54's notebooks and figures, agreed 28 October 2026
@@ -10,7 +10,7 @@ Rulings by the author, written in `docs/plans/notebooks-review-for-wp54.md` §7.
 28 October 2026, where they settle four conflicts between the author's notes and the specification
 (§8.2.16 R8 left WP54's scope to that document). V5 was given the same day, while the package was
 planned. The letter series continues at V; V1 to V4 are the document's A1 to A4. V6 to V9 were given the
-same day, at WP54's second checkpoint, in answer to its questions for steering.
+same day, at WP54's second checkpoint, in answer to its questions for steering, and V10 to V13 at its third.
 
 | # | Decision | Consequence | Clause changed, and when |
 |---|---|---|---|
@@ -23,3 +23,7 @@ same day, at WP54's second checkpoint, in answer to its questions for steering.
 | V7 | **The notebooks' figures pan and zoom.** *Added 28 October 2026, at WP54's second checkpoint.* Each field, cutline, mesh and I-V figure is shown through `mo.mpl.interactive`; the tabs stay, one figure each | A headless run and `marimo export` fall back to the static PNG, so the nightly notebook test does not change. The checkpoint pages zoom and pan the static image. P9's `interactive` value, removed by V4, stays out of the library: the notebook asks for it | None; the notebooks, in WP54 |
 | V8 | **Notebook 05 solves the ring near the cis mouth of example 03**, not example 02's symmetric ring. *Added 28 October 2026, at WP54's second checkpoint* | Its I-V sweep rectifies, as notebook 04's does, rather than drawing a near-straight line | None; the WP54 plan |
 | V9 | **`Case.cylinder` offers both wall sizes** (*answers REV-146*): the mesh command's fixed 0.35 nm stays the default, and `wall_h_nm="debye"` sizes the wall at `λ_D/5` of the case's salt at `ε_r,f0`. Notebook 05 offers both. *Added 28 October 2026, at WP54's second checkpoint* | Examples 02 and 03 and VER-62's golden keep their mesh. A Debye-sized wall meshes again for each new salt; at 0.1 M it is 0.19 nm | None; FR-30's factories, in WP54; REV-146 fixed |
+| V10 | **The 2WCD notebooks let the user choose the mesh size scale**, with what it costs. *Added 28 October 2026, at WP54's third checkpoint.* Notebook 01 sets it with a slider beside the isolevel, notebook 06 in its solve form; both keep 4 as the default and show a table, measured once, of the element count, the solve time and the conductance at each scale | A finer mesh costs a longer solve in 06 and a new charge deposition; notebook 02 stays at 4. The table is documentation, not a prediction: it was measured on one machine at the defaults | None; the notebooks, in WP54 |
+| V11 | **Notebook 01's isolevel slider spans 0.01 to 0.99**, the open interval the schema allows. *Added 28 October 2026, at WP54's third checkpoint* | Near either end the contour gates refuse the wall (below about 0.1 the lumen closes on the probe; above about 0.7 the wall breaks into islands), and the notebook shows the refusal in place of the figures | None; the notebooks, in WP54 |
+| V12 | **The mesh figure draws the element edges in grey on white** (*amends V4*), beside the whole domain by element size and the lumen by SICN. Notebook 06 shows the stage figures and the Newton history in one row of tabs. *Added 28 October 2026, at WP54's third checkpoint* | `plot_mesh(..., edges_only=True)` draws the edges alone. The checkpoint pages magnify their static images; a running notebook rescales the axes as it zooms | FR-30 and its Appendix A row, in this commit |
+| V13 | **Notebook 01's preparation form keeps its five choices**: the chains, the cis end, the residue range and the centroid height. Changing residues waits for later work. *Added 28 October 2026, at WP54's third checkpoint* | REV-149 records the deferral | None |
