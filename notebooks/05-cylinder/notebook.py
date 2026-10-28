@@ -5,67 +5,33 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import hashlib
     import os
     from pathlib import Path
 
     import marimo as mo
-    import yaml
 
-    from nanopnp import Case
-    from nanopnp.cli import main
-    from nanopnp.core.stages import describe
-    from nanopnp.io.case import dumps_case
-    from nanopnp.plot import figure as draw
-    from nanopnp.sweep.collect import collect
-    from nanopnp.sweep.plan import plan_from_document, write_plan
-    from nanopnp.sweep.run import run_plan
+    from nanopnp import Case, Store
+    from nanopnp.plot import (
+        plot_axial_cutline,
+        plot_field,
+        plot_iv,
+        plot_radial_cutline,
+    )
+    from nanopnp.sweep import sweep
 
-    example = (Path(__file__).resolve().parent / ".." / ".." / "examples" / "03-iv-sweep").resolve()
-    os.chdir(example)
-    case = Case.load("charged.case.yaml", store=example / "store", write=False)
-
-    def stage_card(name, what):
-        stage = describe(name)
-        reads = ", ".join(f"`{item}`" for item in stage.inputs)
-        return mo.md(
-            f"## Stage {stage.number} · {stage.title}\n\n{what}\n\n"
-            f"*Reads* {reads} · *emits* `{stage.artefact_schema}`"
-        )
-
-    def show(result, name, *, scale, interactive):
-        record = next(item for item in result.stages if item.name == name)
-        where = "from the store" if record.cached else "computed"
-        figure = result.figure(name, scale=scale)
-        if figure is None:
-            drawn = mo.md("*This stage has no figure.*")
-        else:
-            drawn = mo.mpl.interactive(figure) if interactive else figure
-        return mo.vstack(
-            [
-                mo.md(f"`{record.hash[:12]}` · {where} in {record.seconds:.1f} s"),
-                mo.accordion({"Artefact summary": mo.json(dict(result.artefacts[name].summary))}),
-                drawn,
-            ]
-        )
-
+    here = Path(__file__).resolve().parent
+    store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
+    ring = here.parents[1] / "examples" / "02-charged-pore" / "ring.field.yaml"
     return (
         Case,
-        Path,
-        case,
-        collect,
-        draw,
-        dumps_case,
-        example,
-        hashlib,
-        main,
         mo,
-        plan_from_document,
-        run_plan,
-        show,
-        stage_card,
-        write_plan,
-        yaml,
+        plot_axial_cutline,
+        plot_field,
+        plot_iv,
+        plot_radial_cutline,
+        ring,
+        store,
+        sweep,
     )
 
 
@@ -75,203 +41,12 @@ def _(mo):
         """
         # The cylindrical pore, end to end
 
-        Example 03's charged pore, one block of cells per stage: the mesh, the charge on
-        it, the materials, the ePNP-NS solve and its quantities of interest, and then an
-        I-V sweep of the same case. Each block has four cells: what the stage is, its
-        settings as plain values you can edit, the line that runs it, and what it stored.
-
-        A stage's run takes everything before it from the store and refuses to recompute
-        it (`only=True`), so the blocks go in order. After you edit a setting, run its
-        cell; marimo then offers to re-run the cells that follow.
+        A charged cylinder in four steps: its mesh, the ePNP-NS solve, profiles through
+        the solved fields, and an I-V sweep of the same pore. Each step that computes
+        waits for its button; each runs only the stages its settings change, and takes
+        the rest from the store. The fixed charge is the ring of example 02.
         """
     )
-    return
-
-
-@app.cell
-def _():
-    # How the figures are drawn: a multiplier on their size, and whether they zoom and pan.
-    scale = 1.5
-    interactive = False
-    return interactive, scale
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "mesh",
-        "The finite-element mesh the solve runs on. This case supplies one, made by "
-        "`nanopnp mesh cylinder`: the stage reads it, tags its boundaries and gates its quality.",
-    )
-    return
-
-
-@app.cell
-def _():
-    # The arguments of `nanopnp mesh cylinder`, in nm. The file is named by them, so an edited
-    # value makes a new file instead of reusing an old one.
-    cylinder = {
-        "--pore-radius-nm": 2.0,
-        "--membrane-thickness-nm": 6.0,
-        "--reservoir-radius-nm": 10.0,
-        "--maxh-nm": 4.0,  # the largest element anywhere
-        "--wall-h-nm": 0.35,  # the element size on the pore wall
-    }
-    return (cylinder,)
-
-
-@app.cell
-def _(case, cylinder, example, main):
-    mesh_file = example / ("pore-" + "-".join(f"{value:g}" for value in cylinder.values()) + ".msh")
-    if not mesh_file.exists():
-        flags = [str(item) for pair in cylinder.items() for item in pair]
-        main(["mesh", "cylinder", *flags, "--out", str(mesh_file)])
-    case_mesh = case.with_(**{"inputs.mesh.path": str(mesh_file)})
-    run_mesh = case_mesh.run(upto="mesh", only=True)
-    return case_mesh, mesh_file, run_mesh
-
-
-@app.cell
-def _(interactive, run_mesh, scale, show):
-    show(run_mesh, "mesh", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "charge",
-        "The fixed charge on the mesh. This case supplies it as a field file: a ring of "
-        "negative charge on the cis half of the pore, which makes the pore rectify.",
-    )
-    return
-
-
-@app.cell
-def _():
-    charge_settings = {
-        "inputs.charge.path": "cis-ring.field.yaml",  # the fixed-charge field the stage reads
-    }
-    return (charge_settings,)
-
-
-@app.cell
-def _(case_mesh, charge_settings, run_mesh):
-    assert run_mesh.stages[-1].name == "mesh"  # the mesh block ran first; its artefact is stored
-    case_charge = case_mesh.with_(**charge_settings)
-    run_charge = case_charge.run(upto="charge", only=True)
-    return case_charge, run_charge
-
-
-@app.cell
-def _(interactive, run_charge, scale, show):
-    show(run_charge, "charge", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "materials",
-        "The electrolyte and its correction functions: how its diffusivity, mobility, "
-        "viscosity, permittivity and density change with the salt and near the wall.",
-    )
-    return
-
-
-@app.cell
-def _():
-    materials_settings = {
-        "electrolyte.concentration_M": 0.1,  # the bulk salt, mol/L
-        # Each correction is a named model; "none" switches it off, and the manifest records that.
-        "electrolyte.corrections.diffusivity.model": "willems2020_nacl",
-        "electrolyte.corrections.mobility.model": "willems2020_nacl",
-        "electrolyte.corrections.viscosity.model": "willems2020_nacl",
-        "electrolyte.corrections.permittivity.model": "willems2020_nacl",
-        "electrolyte.corrections.density.model": "willems2020_nacl",
-        "electrolyte.corrections.steric.model": "borukhov",
-    }
-    return (materials_settings,)
-
-
-@app.cell
-def _(case_charge, materials_settings, run_charge):
-    assert run_charge.stages[-1].name == "charge"  # the charge block ran first
-    case_materials = case_charge.with_(**materials_settings)
-    run_materials = case_materials.run(upto="materials", only=True)
-    return case_materials, run_materials
-
-
-@app.cell
-def _(interactive, run_materials, scale, show):
-    show(run_materials, "materials", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "solve",
-        "The ePNP-NS solve: Poisson, Nernst-Planck and Navier-Stokes together, reached by "
-        "continuation from a gentle start to the case's own bias.",
-    )
-    return
-
-
-@app.cell
-def _():
-    solve_settings = {
-        "boundary_conditions.bias_V": 0.05,  # applied across the pore, V
-        "physics.model": "epnp-ns",  # "pnp-ns" leaves out the finite-size and correction terms
-        "numerics.stabilisation": "none",  # "supg" adds streamline stabilisation
-        "numerics.wall_distance.max_distance_nm": 3.0,  # how far the wall functions reach
-    }
-    return (solve_settings,)
-
-
-@app.cell
-def _(case_materials, run_materials, solve_settings):
-    assert run_materials.stages[-1].name == "materials"  # the materials block ran first
-    case_solve = case_materials.with_(**solve_settings)
-    run_solve = case_solve.run(upto="solve", only=True)
-    return case_solve, run_solve
-
-
-@app.cell
-def _(interactive, run_solve, scale, show):
-    show(run_solve, "solve", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "qoi",
-        "The quantities of interest read off the solution: the ionic current, the "
-        "transport numbers and the electro-osmotic flow rate.",
-    )
-    return
-
-
-@app.cell
-def _():
-    qoi_settings = {
-        "outputs": ["current", "transport_numbers", "eof_rate"],
-    }
-    return (qoi_settings,)
-
-
-@app.cell
-def _(case_solve, qoi_settings, run_solve):
-    assert run_solve.stages[-1].name == "solve"  # the solve block ran first
-    case_qoi = case_solve.with_(**qoi_settings)
-    run_qoi = case_qoi.run(upto="qoi", only=True)
-    return case_qoi, run_qoi
-
-
-@app.cell
-def _(interactive, run_qoi, scale, show):
-    show(run_qoi, "qoi", scale=scale, interactive=interactive)
     return
 
 
@@ -279,90 +54,251 @@ def _(interactive, run_qoi, scale, show):
 def _(mo):
     mo.md(
         """
-        ## The I-V sweep
+        ## 1 · The mesh
 
-        A sweep is its own document: a base case and the axes to vary, by their case-file
-        paths. Here the base is the case the blocks above built, and the axis is the bias.
-        Each point is a complete case, warm-started from a converged neighbour one step
-        nearer the `origin` value, and the stages a point does not change come from the store.
+        The pore's size sets the mesh. The figure shows the whole domain by element
+        size and, beside it, the lumen by element quality, with the double-layer target
+        λ_D/5 drawn to scale.
         """
     )
     return
 
 
 @app.cell
-def _():
-    sweep_settings = {
-        # `rectification` compares each bias with its opposite, so the biases come in pairs.
-        "outputs": ["current", "transport_numbers", "eof_rate", "rectification"],
+def _(mo):
+    MESH_DEFAULTS = {
+        "pore_radius_nm": 2.0,
+        "membrane_thickness_nm": 6.0,
+        "reservoir_radius_nm": 10.0,
     }
-    axes = [
+    mesh_form = mo.ui.dictionary(
         {
-            "name": "bias",
-            "path": "boundary_conditions.bias_V",
-            "values": [-0.1, -0.05, 0.05, 0.1],  # V
-            "origin": 2,  # the index of the value solved first: +50 mV, the easiest point
+            "pore_radius_nm": mo.ui.number(
+                0.5, 5.0, 0.1, MESH_DEFAULTS["pore_radius_nm"], label="pore radius (nm)"
+            ),
+            "membrane_thickness_nm": mo.ui.number(
+                2.0, 12.0, 0.5, MESH_DEFAULTS["membrane_thickness_nm"], label="membrane (nm)"
+            ),
+            "reservoir_radius_nm": mo.ui.number(
+                6.0, 40.0, 1.0, MESH_DEFAULTS["reservoir_radius_nm"], label="reservoir (nm)"
+            ),
         }
-    ]
-    return axes, sweep_settings
+    ).form(submit_button_label="Mesh")
+    mesh_form
+    return MESH_DEFAULTS, mesh_form
+
+
+@app.cell
+def _(MESH_DEFAULTS, mesh_form):
+    geometry = mesh_form.value or MESH_DEFAULTS
+    return (geometry,)
+
+
+@app.cell
+def _(case):
+    # The λ_D/5 bar follows the salt of the solve below.
+    case.run(upto="mesh").figure("mesh")
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        """
+        ## 2 · The solve
+
+        The salt and the bias leave the mesh as it is, so a new value re-solves only.
+        Each field is its own figure; a concentration is drawn against the bulk, so
+        depletion and enrichment show either side of zero.
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    SOLVE_DEFAULTS = {"concentration_M": 0.1, "bias_mV": 50.0}
+    solve_form = mo.ui.dictionary(
+        {
+            "concentration_M": mo.ui.number(
+                0.01, 3.0, 0.01, SOLVE_DEFAULTS["concentration_M"], label="NaCl (M)"
+            ),
+            "bias_mV": mo.ui.number(
+                -200.0, 200.0, 5.0, SOLVE_DEFAULTS["bias_mV"], label="bias (mV)"
+            ),
+        }
+    ).form(submit_button_label="Solve")
+    solve_form
+    return SOLVE_DEFAULTS, solve_form
+
+
+@app.cell
+def _(Case, SOLVE_DEFAULTS, geometry, ring, solve_form, store):
+    settings = solve_form.value or SOLVE_DEFAULTS
+    case = Case.cylinder(
+        **geometry,
+        concentration_M=settings["concentration_M"],
+        bias_V=settings["bias_mV"] * 1e-3,
+        charge=ring,
+        name="cylinder-end-to-end",
+        store=store,
+        write=False,
+    )
+    run = case.run()
+    return case, run, settings
+
+
+@app.cell
+def _(mo, run):
+    conductance = run.conductance_nS
+    mo.md(
+        f"**I = {run.current_nA:.4g} nA**"
+        + ("" if conductance is None else f" · **G = {conductance:.4g} nS**")
+        + f" · {sum(record.cached for record in run.stages)} of {len(run.stages)} "
+        "stages from the store"
+    )
+    return
+
+
+@app.cell
+def _(run):
+    fields = run.fields
+    quantities = {
+        "potential φ": "potential",
+        **{
+            f"{key.removesuffix('_mol_m3')} against the bulk": key
+            for key in sorted(fields.fluid[2])
+            if key.endswith("_mol_m3")
+        },
+        "axial velocity u_z": "u_z",
+        "pressure p": "p_Pa",
+    }
+    return fields, quantities
+
+
+@app.cell
+def _(fields, mo, plot_field, quantities, settings):
+    mo.ui.tabs(
+        {
+            label: plot_field(
+                fields, quantity, relative_to_M=settings["concentration_M"]
+            ).get_figure()
+            for label, quantity in quantities.items()
+        }
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        """
+        ## 3 · Profiles through the pore
+
+        A profile along the pore at a radius, and one across it at a height. They read
+        the fields already sampled, so a slider redraws them at once. Across the pore,
+        a concentration ends at the wall; the potential carries on into the membrane.
+        """
+    )
+    return
+
+
+@app.cell
+def _(fields, geometry, mo, quantities):
+    z_extent_nm = fields.fluid[0][:, 1] * 1e9
+    cutline_quantity = mo.ui.dropdown(list(quantities), value="potential φ", label="profile of")
+    r_nm = mo.ui.slider(
+        0.0,
+        geometry["pore_radius_nm"],
+        0.05,
+        0.0,
+        debounce=True,
+        show_value=True,
+        label="along the pore at r (nm)",
+    )
+    z_nm = mo.ui.slider(
+        round(float(z_extent_nm.min()), 1),
+        round(float(z_extent_nm.max()), 1),
+        0.1,
+        0.0,
+        debounce=True,
+        show_value=True,
+        label="across the pore at z (nm)",
+    )
+    mo.hstack([cutline_quantity, r_nm, z_nm], justify="start", gap=2)
+    return cutline_quantity, r_nm, z_nm
 
 
 @app.cell
 def _(
-    axes,
-    case_qoi,
-    collect,
-    dumps_case,
-    example,
-    hashlib,
-    mesh_file,
-    plan_from_document,
-    run_plan,
-    run_qoi,
-    sweep_settings,
-    write_plan,
-    yaml,
+    cutline_quantity,
+    fields,
+    mo,
+    plot_axial_cutline,
+    plot_radial_cutline,
+    quantities,
+    r_nm,
+    settings,
+    z_nm,
 ):
-    assert run_qoi.stages[-1].name == "qoi"  # the stage blocks ran first
-    # The sweep reads its base from a file, so the case is written out; its inputs are
-    # absolute because the file does not sit beside them.
-    base = case_qoi.with_(
-        **sweep_settings,
-        **{
-            "inputs.mesh.path": str(mesh_file),
-            "inputs.charge.path": str(example / "cis-ring.field.yaml"),
-        },
+    profile = quantities[cutline_quantity.value]
+    bulk_M = settings["concentration_M"]
+    mo.hstack(
+        [
+            plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative_to_M=bulk_M).get_figure(),
+            plot_radial_cutline(
+                fields, profile, z_nm=z_nm.value, relative_to_M=bulk_M
+            ).get_figure(),
+        ],
+        widths="equal",
     )
-    sweep_text = yaml.safe_dump(
-        {
-            "schema": "nanopnp/sweep/v0.5",
-            "name": "iv-notebook",
-            "base": "base.case.yaml",
-            "axes": axes,
-        },
-        sort_keys=False,
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(
+        """
+        ## 4 · The I-V sweep
+
+        The same pore at several biases, in one call. Each point warm-starts from a
+        converged neighbour one step nearer the bias solved first, and the stages a
+        point does not change come from the store. Opposite biases pair into a
+        rectification ratio.
+        """
     )
-    case_text = dumps_case(base.document)
-    # A directory holds one plan, so an edited setting makes a new directory.
-    directory = example / (
-        "iv-notebook-" + hashlib.sha256((sweep_text + case_text).encode()).hexdigest()[:8]
+    return
+
+
+@app.cell
+def _(mo):
+    SWEEP_DEFAULTS = {"biases_mV": "-100, -50, 50, 100"}
+    sweep_form = mo.ui.dictionary(
+        {"biases_mV": mo.ui.text(SWEEP_DEFAULTS["biases_mV"], label="biases (mV)")}
+    ).form(submit_button_label="Sweep")
+    sweep_form
+    return SWEEP_DEFAULTS, sweep_form
+
+
+@app.cell
+def _(SWEEP_DEFAULTS, case, settings, sweep, sweep_form):
+    biases_V = [
+        float(text) * 1e-3 for text in (sweep_form.value or SWEEP_DEFAULTS)["biases_mV"].split(",")
+    ]
+    first = min(range(len(biases_V)), key=lambda i: abs(biases_V[i] - settings["bias_mV"] * 1e-3))
+    swept = case.with_(
+        bias_V=biases_V[first],
+        outputs=["current", "transport_numbers", "eof_rate", "rectification"],
     )
-    directory.mkdir(exist_ok=True)
-    (directory / "base.case.yaml").write_text(case_text, encoding="utf-8")
-    (directory / "sweep.yaml").write_text(sweep_text, encoding="utf-8")
-    plan = plan_from_document(directory / "sweep.yaml")
-    write_plan(plan, directory)
-    run_plan(plan, directory, store=base.store)
-    dataset = collect(plan, directory)
+    dataset = sweep(swept, axis="bias_V", values=biases_V, origin=first).run()
     return (dataset,)
 
 
 @app.cell
-def _(dataset, draw, interactive, mo, scale):
-    curves = draw(dataset, scale=scale)
+def _(dataset, mo, plot_iv):
     mo.vstack(
         [
-            mo.mpl.interactive(curves) if interactive else curves,
+            plot_iv(dataset).get_figure(),
             mo.ui.table(dataset.summary["rows"], selection=None),
         ]
     )
