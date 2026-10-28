@@ -1520,3 +1520,22 @@ the rendered rounds did not see it. Found by `/np-ship`'s review of WP5.01 (`doc
 
 **Ruled** (§8.2.19 U7): owned by WP5.02, with REV-138's non-text measure: the token is darkened (`#7c8290` gives
 3.2:1 on `--sel`) and the pages rendered again there.
+
+## REV-144: Case.cylinder takes a charge field, not a uniform wall surface charge
+
+The author's notes for WP54 (`docs/plans/notebooks-review-for-wp54.md`, Area A) give `Case.cylinder` a
+`surface_charge_C_m2` argument. The case schema has no surface charge: a fixed charge reaches a case only as a field
+under `inputs.charge` (`nanopnp/field/v0.5`, whose forms are `uniform`, `gaussian_ring` and `slab`), or deposited
+from a structure. §8.2.20 V3 keeps the schema unchanged, so `Case.cylinder` takes a field file (`charge=`) instead,
+and the cylinder notebooks use the Gaussian rings of examples 02 and 03. Found while WP54 was planned.
+
+**Ruled** (§8.2.20 V3): deferred to the package that next changes the case schema, which decides whether a uniform
+wall charge is a boundary condition or a field form.
+
+## REV-145: No case builders by section before Phase 5
+
+The author's notes for WP54 name builders by section, `with_density` and `with_numerics`, beside the leaf edits of
+`Case.with_`. §8.2.20 V3 defers them: WP54 adds the typed factories and keeps `with_` for edits. They bear on
+`MOD-11`'s `with_section` (§8.2.8 H2), which the user-testing sessions inform.
+
+**Ruled** (§8.2.20 V3): deferred to Phase 5, with `MOD-11`.
