@@ -341,7 +341,8 @@ fractional charge at the pH (FR-43; §8.2.18 T6), and figure export (FR-28).
 The shell holds no physics and computes no number (QR-13; RSK-15). The server reads each artefact from the
 store through the library and sends its data, with names and units, to the browser, which draws it. The
 browser shell's pictures come from `plot/data.py` (`density_section`, `contour_polygon_m`, `mesh_of`,
-`protonation_charges`, `charge_grids`, `newton_history`, `solution_fields`, `sweep_curves`); the duplicates
+`protonation_charges`, `charge_grids`, `newton_history`, `sweep_curves`, and `post/export.py`'s
+`solution_fields`); the duplicates
 in `gui/` (`gui/geometry.py`'s `density_section`, `reduced_image` and `ImageModel`) retire with Qt. This
 settles Phase 5's open decision 4. Every number shown is read from its stage's artefact, floats decoded as
 the command line decodes them (REV-134), and a number no artefact supplies is not shown. Meshes and fields

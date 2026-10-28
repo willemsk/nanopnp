@@ -382,12 +382,16 @@ def plot_iv(artefact: Artefact, *, ax: Axes | None = None, annotate: bool = True
     Raises
     ------
     ValueError
-        The artefact is not a sweep, or none of its rows reports a current.
+        The artefact is not a sweep, none of its rows reports a current, or it is not swept
+        over the bias.
     """
     rows = data.sweep_rows(artefact)
     curves = None if rows is None else data.sweep_curves(rows)
     if curves is None or "current_A" not in curves.quantities:
         raise ValueError(f"{artefact.schema}: no row reports a current to draw against the bias")
+    if curves.axis.rsplit(".", 1)[-1] != "bias_V":
+        # Any other axis would be read as a bias in mV: a concentration of 0.2 M as 200 mV.
+        raise ValueError(f"{artefact.schema}: swept over {curves.axis}, not the bias")
     ax = _axes(ax, (5.6, 4.0))
     bias = data.cis_referenced_bias_V(curves) * DISPLAY["potential"].per_SI
     current = curves.quantities["current_A"] * DISPLAY["current"].per_SI

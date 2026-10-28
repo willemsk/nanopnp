@@ -63,15 +63,17 @@ def structure_file(name: str) -> Path:
     ``name`` is a file name, such as ``2wcd.pdb.gz``, or a bare stem read as ``<stem>.pdb``.
     In a development checkout, ``tests/data/structures/`` is searched after the packaged ones.
     """
-    file_name = name if Path(name).suffix else f"{name}.pdb"
+    # The name as given first, so a stem with a dot in it is still read as a stem.
+    file_names = (name, f"{name}.pdb")
     places = [STRUCTURES_DIR]
     if _REPO_DATA.is_dir() and _REPO_TEST_STRUCTURES.is_dir():
         places.append(_REPO_TEST_STRUCTURES)
     for place in places:
-        if (place / file_name).is_file():
-            return place / file_name
+        for file_name in file_names:
+            if (place / file_name).is_file():
+                return place / file_name
     searched = ", ".join(str(place) for place in places)
-    raise FileNotFoundError(f"no structure file {file_name!r} in {searched}")
+    raise FileNotFoundError(f"no structure file {name!r} (or {file_names[1]!r}) in {searched}")
 
 
 STORE_ROOT_VARIABLE = "NANOPNP_STORE"

@@ -331,10 +331,10 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
     figure.suptitle(title)
     grid = figure.add_gridspec(rows, columns)
     bulk_M = None if inputs is None else inputs.resolved.concentration_M
-    for index, quantity in enumerate(quantities):
-        ax = figure.add_subplot(grid[index // columns, index % columns])
-        assert fields is not None
-        panels.plot_field(fields, quantity, ax=ax, relative_to_M=bulk_M)
+    if fields is not None:
+        for index, quantity in enumerate(quantities):
+            ax = figure.add_subplot(grid[index // columns, index % columns])
+            panels.plot_field(fields, quantity, ax=ax, relative_to_M=bulk_M)
     if rungs:
         last = rows - 1
         bottom = grid[last, :].subgridspec(1, 2)

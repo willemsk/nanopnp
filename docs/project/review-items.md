@@ -1581,3 +1581,54 @@ it. Found by the physics review of WP54 items 6 and 7.
 Notebook 01's preparation form chooses the chains, the cis end, the residue range and the centroid
 height, and hands them to `orient_pore`. It cannot change a residue (a point mutation, a removed loop),
 which the author would like a later stage to offer. Deferred by §8.2.20 V13, at WP54's third checkpoint.
+
+## REV-150: `wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling
+
+`Case.cylinder(wall_h_nm="debye")` (§8.2.20 V9) sizes the wall at `λ_D/5` of the case's salt at `ε_r,f0`, with
+no ceiling: 0.19 nm at 0.1 M. The NOTE on NUM-30 resolves a generated mesh's first layer as
+`min(0.05 nm, λ_D/5)`, because a layer coarser than the ion wall function's decay length, 1/6.2 = 0.161 nm,
+under-resolves it. The option is opt-in and the wall size is a case value, but notebook 05 describes it as
+NUM-30's wall, and at 0.1 M it is coarser than that NOTE allows. The solve it gives (G = 1.21 nS against
+1.20 nS for 0.35 nm) hides the difference. Found by the `physics-reviewer` pass of `/np-ship wp 54`. The
+test `test_cylinder_debye_wall_is_stage_6s_lambda_d_over_5` compares with the mesh figure's `λ_D/5` marker,
+which is uncapped, not with stage 6's wall.
+
+**Question for the author:** should `"debye"` apply the same `min(0.05 nm, λ_D/5)` (at 0.1 M it is then
+0.05 nm, and the option differs from the generated mesh only above 1.5 M), or stay at the uncapped `λ_D/5`
+with its description and the test name corrected?
+
+## REV-151: `orient_pore` centres laterally on the registration residues, not on the pore axis
+
+`orient_pore` fits the axis through the mean of the selected C-α atoms but rotates and translates about the
+centroid of the registration residues. For a full ring these coincide. If a chain lacks some of the
+registration residues, the structure shifts sideways and the pore axis lies parallel to z but off r = 0, so
+`symmetry.axis: z` can refuse it. Stage 1 refits the axis, so the solve is probably unaffected. Fixing it
+changes the prepared 2WCD bytes and the goldens of examples 06 and 07, so it needs the author's ruling.
+Found by the `/np-ship wp 54` review and the `physics-reviewer` pass.
+
+## REV-152: WP54 review items left for later: cache key, restores, duplicated helpers, edge cases
+
+Found by the `/np-ship wp 54` review ([CODE_REVIEW_017](../code_reviews/CODE_REVIEW_017.md)) and the
+`physics-reviewer` pass, and not fixed in the package:
+
+- **Cylinder mesh cache key.** `Case.cylinder` names its cached mesh by its geometry numbers alone, so a mesher
+  fix or a tighter quality gate silently reuses the old file in `meshes/`. The key needs a mesher identity that
+  is cheap to read.
+- **Second restore.** `run.figure("solve")` and `run.fields` each restore the solved state, and `data.sampled`
+  rebuilds the whole-mesh triangulation on each call, against V4's "no second restore". It needs a cache keyed by
+  the artefact hash or a change to `draw`'s signature.
+- **Duplicated Debye length.** `Case._debye_wall_nm` re-derives what `mesh.sizing` computes; both assume a 1:1 salt
+  (REV-148), so a fix to one does not reach the other. The mesh is needed before the document exists.
+- **Duplicated notebook cells.** The preparation block sits in notebooks 01, 02 and 06 and the field-view cells in
+  03, 05 and 06; D6 forbids importing a shared module. A library helper is a design choice. The prepared file's
+  key ignores the source entry and `orient_pore`'s version, and a call that dies mid-write leaves a truncated
+  `prepared.pdb` that the existence check accepts.
+- **Failed sweep points.** `plot.data.cis_referenced_bias_V` infers the ground side from successful points at
+  non-zero bias; if there is none, a failed point is marked at the assigned bias, with the wrong sign under
+  `ground: trans`.
+- **Forces in the quantities table.** `QOI_UNITS` has no `_N` entry, so analyte forces show in N with no unit
+  column.
+- **The sweep directory digest.** `sweep()` names its directory by its own digest, not `plan.hash`, so
+  `nanopnp sweep plan` on the `sweep.yaml` it wrote names another directory.
+- **Cutline midside test.** The two cutline tests evaluate at nodes or on a linear field, so a swapped midside
+  column would pass; asserting positive sub-triangle areas would close it.

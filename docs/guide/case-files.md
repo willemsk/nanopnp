@@ -73,6 +73,11 @@ process**, not the directory of the case file. The sweep runner never changes di
 member cannot silently read a different mesh from the one the plan was built against. Run a case
 from the directory its paths are written relative to, as every worked example does.
 
+The Python `Case.load` is the exception: it makes each relative input path absolute beside the case
+file, so a script or notebook runs from any directory, and the case it holds, its hash and its manifest
+carry the absolute paths. A path set afterwards, with `Case.with_` or as an edit to `Case.run`, is read
+against the working directory as everywhere else, so write it absolute.
+
 ## Correction parameter files
 
 `electrolyte.parameters` names a correction parameter file: fitted coefficients, one file per
