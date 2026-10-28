@@ -22,7 +22,9 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 __all__ = [
     "STREAM_GRID",
     "VIEW_NM",
+    "mark_constriction",
     "plot_axial_cutline",
+    "plot_charge",
     "plot_field",
     "plot_iv",
     "plot_mesh",
@@ -375,4 +377,59 @@ def plot_iv(artefact: Artefact, *, ax: Axes | None = None, annotate: bool = True
             bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.85, "lw": 0.5},
         )
     ax.set_title("I-V curve")
+    return ax
+
+
+def mark_constriction(ax: Axes, contour: Artefact) -> None:
+    """Mark the narrowest lumen radius stage 4 measured, if its artefact records one."""
+    found = contour.summary.get("constriction")
+    if not isinstance(found, Mapping):
+        return
+    r_nm, z_nm = float(found["r_nm"]), float(found["z_nm"])
+    ax.plot([0.0, r_nm], [z_nm, z_nm], color="tab:red", lw=1.0, ls="--")
+    ax.annotate(
+        f"constriction r = {r_nm:.2f} nm",
+        (r_nm, z_nm),
+        xytext=(4, 4),
+        textcoords="offset points",
+        color="tab:red",
+        fontsize="small",
+    )
+
+
+def plot_charge(grids: Mapping[str, data.StoredGrid], *, ax: Axes | None = None) -> Axes:
+    """Draw the deposited charge about zero, the solid's edge ``χ = 0.5`` drawn over it.
+
+    Raises
+    ------
+    KeyError
+        ``grids`` holds no ``charge`` grid.
+    """
+    import numpy as np
+
+    charge = grids["charge"]
+    ax = _axes(ax, (4.6, 5.6))
+    shown = _Shown(np.asarray(charge.values, dtype=np.float64), "", "RdBu_r", True)
+    image = ax.pcolormesh(
+        charge.r_m * _NM,
+        charge.z_m * _NM,
+        shown.values,
+        shading="auto",
+        cmap=shown.cmap,
+        norm=_norm(shown),
+    )
+    label = f"{charge.quantity.replace('_', ' ')} ({charge.unit})"
+    _figure(ax).colorbar(image, ax=ax, label=label)
+    solid = grids.get("solid_fraction")
+    if solid is not None:
+        ax.contour(
+            solid.r_m * _NM,
+            solid.z_m * _NM,
+            solid.values,
+            levels=[0.5],
+            colors="0.15",
+            linewidths=0.8,
+        )
+    ax.set_title(f"deposited {charge.quantity.replace('_', ' ')}, χ = 0.5 drawn")
+    _rz(ax)
     return ax
