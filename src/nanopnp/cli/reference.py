@@ -41,6 +41,8 @@ API_SECTIONS: dict[str, str] = {
     "nanopnp.io.case": "Case files",
     "nanopnp.pipeline.case": "Case files",
     "nanopnp.io.store": "The artefact store",
+    "nanopnp.mesh.cylinder": "Structures and meshes",
+    "nanopnp.structure.orient": "Structures and meshes",
     "nanopnp.physics.models": "Physics models",
     "nanopnp.sweep.plan": "Sweeps",
     "nanopnp.sweep.run": "Sweeps",
