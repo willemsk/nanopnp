@@ -22,6 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.io.case import dump_case as dump_case
     from nanopnp.io.case import dumps_case as dumps_case
     from nanopnp.io.store import Store as Store
+    from nanopnp.mesh.cylinder import mesh_cylinder as mesh_cylinder
     from nanopnp.physics.models import ModelDeclaration as ModelDeclaration
     from nanopnp.physics.models import PhysicsModel as PhysicsModel
     from nanopnp.physics.models import TransportModel as TransportModel
@@ -34,6 +35,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.pipeline.run import RunResult as RunResult
     from nanopnp.pipeline.run import run_case as run_case
     from nanopnp.pipeline.run import run_document as run_document
+    from nanopnp.structure.orient import orient_pore as orient_pore
     from nanopnp.sweep.plan import plan_from_document as plan_from_document
     from nanopnp.sweep.run import run_plan as run_plan
 

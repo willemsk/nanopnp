@@ -21,6 +21,8 @@ PUBLIC: dict[str, str] = {
     "dumps_case": "nanopnp.io.case",
     "resolve": "nanopnp.pipeline.case",
     "Store": "nanopnp.io.store",
+    "mesh_cylinder": "nanopnp.mesh.cylinder",
+    "orient_pore": "nanopnp.structure.orient",
     "PhysicsModel": "nanopnp.physics.models",
     "TransportModel": "nanopnp.physics.models",
     "ModelDeclaration": "nanopnp.physics.models",
