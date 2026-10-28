@@ -135,9 +135,9 @@ class Case:
             A field document (``field1``) of the fixed charge; an uncharged pore when ``None``.
         wall_h_nm
             The element size on the pore wall; the default is the mesh command's, coarser than
-            NUM-30's first layer at most concentrations. ``"debye"`` sizes it as NUM-30 does,
-            ``min(0.05 nm, λ_D/5)`` of this salt at ``ε_r,f0``, so a new concentration above
-            about 1.5 M meshes again.
+            the first layer of a generated mesh at most concentrations. ``"debye"`` sizes it as
+            stage 6 does, ``min(0.05 nm, λ_D/5)`` of this salt at ``ε_r,f0``, so a new
+            concentration above about 1.5 M meshes again.
         parameters
             The correction parameter file every correction and the membrane permittivity
             are read from.

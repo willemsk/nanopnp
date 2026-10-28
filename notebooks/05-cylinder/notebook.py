@@ -63,11 +63,14 @@ def _(mo):
         """
         ## 1 · The mesh
 
-        The pore's size sets the mesh. The figure shows the whole domain by element
-        size and, beside it, the lumen by element quality, with the double-layer target
-        λ_D/5 drawn to scale. The wall is sized either at the mesh command's fixed
-        0.35 nm, as examples 02 and 03 are, or at λ_D/5 of the salt below; the second
-        meets the double-layer target and meshes again for each new salt.
+        The pore's size sets the mesh; the radius stops at 2.2 nm because the fixed charge's
+        ring sits 2.6 nm from the axis, and a wider pore would hold it in the lumen. The
+        figure shows the whole domain by element size and, beside it, the lumen by element
+        quality, with the double-layer target λ_D/5 drawn to scale. The wall is sized either
+        at the mesh command's fixed 0.35 nm, as examples 02 and 03 are, or as stage 6 sizes
+        a generated mesh, at λ_D/5 of the salt below but at most 0.05 nm; the second
+        resolves the ion wall function's decay length, and meshes again only where λ_D/5
+        falls below 0.05 nm, above about 1.5 M.
         """
     )
     return
@@ -77,7 +80,7 @@ def _(mo):
 def _(DEFAULT_CYLINDER_WALL_H_NM, mo):
     WALLS = {
         f"fixed, {DEFAULT_CYLINDER_WALL_H_NM:g} nm": DEFAULT_CYLINDER_WALL_H_NM,
-        "λ_D/5 of the salt": "debye",
+        "stage 6's target, at most 0.05 nm": "debye",
     }
     MESH_DEFAULTS = {
         "pore_radius_nm": 2.0,
@@ -88,7 +91,7 @@ def _(DEFAULT_CYLINDER_WALL_H_NM, mo):
     mesh_form = mo.ui.dictionary(
         {
             "pore_radius_nm": mo.ui.number(
-                0.5, 5.0, 0.1, MESH_DEFAULTS["pore_radius_nm"], label="pore radius (nm)"
+                0.5, 2.2, 0.1, MESH_DEFAULTS["pore_radius_nm"], label="pore radius (nm)"
             ),
             "membrane_thickness_nm": mo.ui.number(
                 2.0, 12.0, 0.5, MESH_DEFAULTS["membrane_thickness_nm"], label="membrane (nm)"

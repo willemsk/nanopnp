@@ -25,8 +25,16 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
 __all__ = ["generate_cylinder", "mesh_cylinder", "mesher_identity", "write_gated_msh"]
 
-# What decides a cylinder mesh beside its numbers: the mesher and the code that makes and gates it.
-_MESHER_SOURCES = ("cylinder.py", "primitives.py", "quality.py", "ingest.py", "adapter.py")
+# What decides a cylinder mesh beside its numbers: the mesher and the code that makes and gates it,
+# the edge-naming tolerance included.
+_MESHER_SOURCES = (
+    "mesh/cylinder.py",
+    "mesh/primitives.py",
+    "mesh/quality.py",
+    "mesh/ingest.py",
+    "mesh/adapter.py",
+    "geometry/tolerance.py",
+)
 
 
 def mesher_identity() -> str:
@@ -34,9 +42,10 @@ def mesher_identity() -> str:
 
     A cached mesh is reused only while this is unchanged.
     """
+    package = Path(__file__).resolve().parents[1]
     digest = hashlib.sha256(metadata.version("ngsolve").encode())
     for name in _MESHER_SOURCES:
-        digest.update((Path(__file__).with_name(name)).read_bytes())
+        digest.update((package / name).read_bytes())
     return digest.hexdigest()
 
 

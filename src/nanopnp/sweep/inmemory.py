@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import os
-import shutil
+import tempfile
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import yaml
@@ -42,9 +41,10 @@ class Sweep:
 
 
 def _plain(value: FieldValue) -> FieldValue:
-    # An element of an ndarray is a numpy scalar, which YAML and the content hash cannot write.
-    item = getattr(value, "item", None)
-    return item() if callable(item) else value
+    # An element of an ndarray is a numpy scalar, and a row of a 2-D one an array: neither can be
+    # written by YAML or the content hash, and ``tolist`` turns both into plain Python.
+    tolist = getattr(value, "tolist", None)
+    return tolist() if callable(tolist) else value
 
 
 def sweep(
@@ -102,25 +102,22 @@ def sweep(
     text = yaml.safe_dump(document, sort_keys=False)
     base_text = dumps_case(case.document).encode("utf-8")
     # The directory is named by the plan's hash, as the sweep command names it, so the plan is
-    # first built in a staging directory to read that hash.
-    staging = store.root / "sweeps" / f".staging-{os.getpid()}"
-    try:
-        staging.mkdir(parents=True, exist_ok=True)
+    # first built beside its files in a staging directory to read that hash. The hash does not
+    # depend on where the base case lies, so the plan is built once and moved.
+    sweeps = store.root / "sweeps"
+    sweeps.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=sweeps, prefix=".staging-") as scratch:
+        staging = Path(scratch)
         atomic_write_bytes(staging / BASE_FILENAME, base_text)
         atomic_write_bytes(staging / SWEEP_FILENAME, text.encode("utf-8"))
         staged = build_plan(
             loads_sweep(text, source=str(staging / SWEEP_FILENAME)),
             source=staging / SWEEP_FILENAME,
-            check_meshes=False,
+            check_meshes=check_meshes,
         )
-    finally:
-        shutil.rmtree(staging, ignore_errors=True)
     directory = store.sweep_directory(name, staged.hash)
     directory.mkdir(parents=True, exist_ok=True)
     atomic_write_bytes(directory / BASE_FILENAME, base_text)
-    source = directory / SWEEP_FILENAME
-    atomic_write_bytes(source, text.encode("utf-8"))
-    plan = build_plan(
-        loads_sweep(text, source=str(source)), source=source, check_meshes=check_meshes
-    )
+    atomic_write_bytes(directory / SWEEP_FILENAME, text.encode("utf-8"))
+    plan = replace(staged, base_path=(directory / BASE_FILENAME).resolve())
     return Sweep(plan, directory, store)

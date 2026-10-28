@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import logging
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -44,6 +45,7 @@ __all__ = [
     "export_fields",
     "field_scale",
     "logarithmic_fields",
+    "lumen_extent_nm",
     "p2_nodes",
     "restored",
     "sample_at",
@@ -360,7 +362,8 @@ class SolutionFields:
     Parameters
     ----------
     wall_extent_nm
-        The largest ``r`` and ``|z|`` of the boundary ``wall``, in nm, where the mesh names one.
+        The lumen's largest ``r`` and the boundary ``wall``'s largest ``|z|``, in nm, where the mesh
+        names one.
     bulk_mol_m3
         Each species' value on the Dirichlet boundaries, in mol/m^3, by attribute name.
     whole, fluid
@@ -380,15 +383,39 @@ DIRICHLET_BULK = 1.0
 """The dimensionless concentration the solve imposes on ``cis`` and ``trans``: 1, bulk."""
 
 _RESTORED_FIELDS: dict[str, SolutionFields] = {}
+_RESTORE_LOCK = threading.Lock()
 _KEPT_RESTORES = 2
 
 
-def wall_extent_nm(mesh: Mesh) -> tuple[float, float] | None:
-    """Return the largest ``r`` and the largest ``|z|`` on the boundary ``wall``, in nm.
+LUMEN_BIN_NM = 1.0
+"""The height of a slice of the pore wall; its lumen side is the point nearest the axis."""
 
-    ``None`` where the mesh names no such boundary.
+
+def lumen_extent_nm(wall_points_nm: np.ndarray) -> tuple[float, float] | None:
+    """Return the largest ``r`` of the lumen side and the largest ``|z|`` of a pore wall, in nm.
+
+    A protein's boundary beside the electrolyte holds its outer face in the reservoirs as well as
+    the lumen, so the lumen side is the point nearest the axis in each slice of the wall.
+    ``wall_points_nm`` is ``(n, 2)`` in ``(r, z)``; ``None`` where it is empty.
+    """
+    import numpy as np
+
+    if len(wall_points_nm) == 0:
+        return None
+    r, z = np.abs(wall_points_nm[:, 0]), wall_points_nm[:, 1]
+    slices = np.floor((z - z.min()) / LUMEN_BIN_NM).astype(int)
+    nearest = np.full(slices.max() + 1, np.inf)
+    np.minimum.at(nearest, slices, r)
+    return float(nearest[np.isfinite(nearest)].max()), float(np.abs(z).max())
+
+
+def wall_extent_nm(mesh: Mesh) -> tuple[float, float] | None:
+    """Return the lumen's largest ``r`` and the wall's largest ``|z|`` of ``mesh``, in nm.
+
+    ``None`` where the mesh names no boundary ``wall``.
     """
     import ngsolve as ngs
+    import numpy as np
 
     if "wall" not in mesh.GetBoundaries():
         return None
@@ -399,9 +426,7 @@ def wall_extent_nm(mesh: Mesh) -> tuple[float, float] | None:
         if keep[element.index]
         for vertex in element.vertices
     ]
-    if not points:
-        return None
-    return max(abs(point[0]) for point in points), max(abs(point[1]) for point in points)
+    return lumen_extent_nm(np.asarray(points, dtype=np.float64).reshape(-1, 2))
 
 
 def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
@@ -428,9 +453,10 @@ def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
             for species in state.model.species
         },
     )
-    while len(_RESTORED_FIELDS) >= _KEPT_RESTORES:
-        del _RESTORED_FIELDS[next(iter(_RESTORED_FIELDS))]
-    _RESTORED_FIELDS[artefact.hash] = fields
+    with _RESTORE_LOCK:
+        while len(_RESTORED_FIELDS) >= _KEPT_RESTORES:
+            del _RESTORED_FIELDS[next(iter(_RESTORED_FIELDS))]
+        _RESTORED_FIELDS[artefact.hash] = fields
     return fields
 
 

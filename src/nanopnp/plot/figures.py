@@ -322,13 +322,7 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
         return _absent(artefact, "solve", "the fields or the Newton history")
     model = fields.model if fields is not None else "solve"
     title = f"{model}, stabilisation: {summary.get('stabilisation', 'not recorded')}"
-    quantities: list[str] = []
-    if fields is not None:
-        held = {*fields.whole[2], *fields.fluid[2]}
-        quantities += ["potential"] if "phi_V" in held else []
-        quantities += sorted(k for k in held if k.endswith("_mol_m3"))
-        quantities += ["u_z"] if "u_m_s" in held else []
-        quantities += ["p_Pa"] if "p_Pa" in held else []
+    quantities = [] if fields is None else list(data.field_menu(fields, radial=False).values())
     columns = max(1, min(4, len(quantities)))
     rows = -(-len(quantities) // columns) + (1 if rungs else 0)
     figure = Figure(figsize=(4.2 * columns, 5.0 * rows), layout="constrained")
@@ -453,5 +447,8 @@ def sweep_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
         _sweep_axis(ax, curves, curves.quantities[name])
         ax.set_ylabel(name)
     if not curves.ok.all():
-        figure.suptitle(f"{int((~curves.ok).sum())} point(s) not ok, marked x", color="tab:red")
+        figure.suptitle(
+            f"{int((~curves.ok).sum())} point(s) not ok, marked x where the bias is known",
+            color="tab:red",
+        )
     return figure
