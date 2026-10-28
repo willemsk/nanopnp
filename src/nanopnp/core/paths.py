@@ -64,7 +64,7 @@ def structure_file(name: str) -> Path:
     In a development checkout, ``tests/data/structures/`` is searched after the packaged ones.
     """
     # The name as given first, so a stem with a dot in it is still read as a stem.
-    file_names = (name, f"{name}.pdb")
+    file_names = (name,) if name.endswith(".pdb") else (name, f"{name}.pdb")
     places = [STRUCTURES_DIR]
     if _REPO_DATA.is_dir() and _REPO_TEST_STRUCTURES.is_dir():
         places.append(_REPO_TEST_STRUCTURES)
@@ -73,7 +73,8 @@ def structure_file(name: str) -> Path:
             if (place / file_name).is_file():
                 return place / file_name
     searched = ", ".join(str(place) for place in places)
-    raise FileNotFoundError(f"no structure file {name!r} (or {file_names[1]!r}) in {searched}")
+    tried = " or ".join(repr(file_name) for file_name in file_names)
+    raise FileNotFoundError(f"no structure file {tried} in {searched}")
 
 
 STORE_ROOT_VARIABLE = "NANOPNP_STORE"

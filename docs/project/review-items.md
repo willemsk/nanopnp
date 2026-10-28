@@ -1568,8 +1568,10 @@ not centred on z = 0, is cut off. The window could be read from the stage-5 regi
 extent and its largest lumen radius. Found by the physics review of WP54 items 6 and 7; the notebooks offer
 a window selector meanwhile.
 
-**Ruled** (§8.2.20 V16): fixed. The window is read from the mesh's `wall` boundary, 2.5 wall radii out and two
-radii past its ends; the fixed window is the fallback for a mesh with no such boundary.
+**Ruled** (§8.2.20 V16): fixed. The window is read from the mesh's `wall` boundary, 2.5 lumen radii out and two
+radii past its ends, the lumen radius being the wall's point nearest the axis in each 1 nm slice (the second review
+found that a protein's outer face in the reservoir had widened it to 14 by 24 nm on 2WCD); the fixed window is the
+fallback for a mesh with no such boundary.
 
 ## REV-148: A concentration panel's bulk is the case's salt for every species
 
@@ -1649,3 +1651,27 @@ its Debye length from `mesh.sizing`; the notebooks share `structure.prepared_por
 `default_potential_range_mV`, and the marimo cells that draw them stay per notebook (D6); a failed sweep point
 whose side of the ground is unknown is left off; `QOI_UNITS` gains `_N` in pN; `sweep()` names its directory by
 `plan.hash`; the cutline test checks the four sub-triangles' areas.
+
+## REV-153: Latent gaps the second WP54 review left: the bulk's source, the Debye length twice, two hand-kept lists
+
+Found by the second `/np-ship wp 54` review ([CODE_REVIEW_018](../code_reviews/CODE_REVIEW_018.md)) of `96181c2` and
+`86d5b46`. None changes a number today; each is a coupling a later change could break silently.
+
+- **The bulk is a constant.** `SolutionFields.bulk_mol_m3` is the concentration scale times
+  `post.export.DIRICHLET_BULK = 1.0`, the default of `CoupledModel.solve`'s `concentration_values`. The pipeline
+  passes no `concentration_values` (a solve-only keyword, not recorded), so every species' bulk is that value and
+  the field panels read it right; a pipeline path that imposes another bulk would need the solve to record it.
+- **The Debye length twice.** `Case._debye_wall_nm` reads the permittivity and temperature from the parameter file
+  as `mesh.sizing.case_debye_length_nm` reads them from the resolved case; the cap and the ionic strength are
+  shared (`debye_wall_nm`, `ionic_strength_of_M`). The factory needs the wall before a document exists, and
+  `test_cylinder_debye_wall_is_num30s_first_layer_with_its_ceiling` pins the two equal at three concentrations.
+- **Two hand-kept source lists.** `mesh.cylinder.mesher_identity` and `structure.prepared_pore`'s digest name the
+  files that decide their output. The mesher's list now holds `geometry/tolerance.py`; the digest holds
+  `orient.py` alone and not `structure/read.py`, so a change to the reader leaves a prepared file in use.
+  Widening the digest renames every prepared file.
+- **The triangulation cache.** `plot.data.field_triangulation` keeps four triangulations by array identity, in a
+  module list; list operations are atomic under the GIL, so a shell with worker threads cannot corrupt it, but the
+  arrays stay alive for the process. The restore cache in `post.export` takes a lock.
+
+Recommendation: leave all four. Each is a few lines against a failure no current caller reaches; the Debye length
+is covered by a test.

@@ -263,3 +263,17 @@ def test_qoi_rows_show_each_quantity_in_its_display_unit() -> None:
         ("eof", "0.3", "µm³/s"),
         ("forces (total)", "2.5", "pN"),
     ]
+
+
+def test_lumen_window_follows_the_lumen_not_the_proteins_outer_face() -> None:
+    # A protein's wall holds its outer face in the reservoir beside the lumen; framing the larger
+    # radius would turn the close-up of the pore into a view of the whole protein.
+    from nanopnp.post.export import lumen_extent_nm
+
+    z = np.linspace(-2.0, 12.0, 57)
+    lumen = np.column_stack([2.5 + 0.1 * z, z])
+    outer = np.column_stack([5.5 + 0.0 * z, z])
+    radius, half_length = lumen_extent_nm(np.vstack([lumen, outer])) or (0.0, 0.0)
+    assert radius == pytest.approx(2.5 + 0.1 * 12.0)
+    assert half_length == pytest.approx(12.0)
+    assert lumen_extent_nm(np.empty((0, 2))) is None

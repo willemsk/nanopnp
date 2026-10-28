@@ -210,7 +210,14 @@ def prepared_pore(
         prepared.parent.mkdir(parents=True, exist_ok=True)
         staged = prepared.with_name(f".{prepared.stem}.{os.getpid()}.partial.pdb")
         try:
-            orient_pore(origin, out=staged, **choices)  # type: ignore[arg-type]
+            orient_pore(
+                origin,
+                chains=chains,
+                cis_end=cis_end,
+                registration_residues=registration_residues,
+                centroid_z_nm=centroid_z_nm,
+                out=staged,
+            )
             staged.replace(prepared)
         finally:
             staged.unlink(missing_ok=True)

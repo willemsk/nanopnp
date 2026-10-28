@@ -24,6 +24,7 @@ from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.adapter import read as read_mesh
 from nanopnp.mesh.ingest import MESH_PAYLOAD, deployed_mesh
 from nanopnp.mesh.quality import QualityReport, element_quality
+from nanopnp.post.export import lumen_extent_nm
 from nanopnp.solve.state import NEWTON_HISTORY_KEY
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
@@ -260,8 +261,7 @@ def mesh_elements(data: MeshData, quality: QualityReport | None = None) -> MeshE
     report = element_quality(data) if quality is None else quality
     extent = None
     if "wall" in data.boundaries:
-        wall = data.vertices[data.edges_of("wall").ravel()]
-        extent = (float(abs(wall[:, 0]).max()), float(abs(wall[:, 1]).max())) if wall.size else None
+        extent = lumen_extent_nm(data.vertices[data.edges_of("wall").ravel()])
     return MeshElements(
         vertices_m=data.vertices * _NM,
         triangles=data.triangles,
@@ -542,10 +542,10 @@ LUMEN_VESTIBULE_RADII = 2.0
 
 
 def lumen_window_nm(wall_extent_nm: tuple[float, float] | None) -> tuple[float, float]:
-    """Return the ``(r, |z|)`` close-up of a pore from its wall's largest ``r`` and ``|z|``, in nm.
+    """Return the ``(r, |z|)`` close-up of a pore from its lumen's largest ``r`` and wall's ``|z|``.
 
-    The window reaches 2.5 wall radii out and two wall radii past the wall's ends; :data:`LUMEN_NM`
-    where there is no wall.
+    The window reaches 2.5 lumen radii out and two lumen radii past the wall's ends, in nm;
+    :data:`LUMEN_NM` where there is no wall.
     """
     if wall_extent_nm is None:
         return LUMEN_NM
@@ -593,14 +593,22 @@ _KEPT_TRIANGULATIONS = 4
 
 
 def field_menu(fields: SolutionFields, *, radial: bool = True) -> dict[str, str]:
-    """Return the fields a viewer can draw, by label, in the panels' quantity names."""
-    menu = {"potential φ": "potential"}
-    held = sorted(key for key in fields.fluid[2] if key.endswith(_MOLAR_SUFFIX))
-    menu.update({f"{key.removesuffix(_MOLAR_SUFFIX)} against the bulk": key for key in held})
-    menu["axial velocity u_z"] = "u_z"
-    if radial:
-        menu["radial velocity u_r"] = "u_r"
-    menu["pressure p"] = "p_Pa"
+    """Return the fields the solve holds, by label, in the panels' quantity names.
+
+    A model without flow offers neither velocity nor pressure.
+    """
+    held = {*fields.whole[2], *fields.fluid[2]}
+    menu = {"potential φ": "potential"} if "phi_V" in held else {}
+    concentrations = sorted(key for key in held if key.endswith(_MOLAR_SUFFIX))
+    menu.update(
+        {f"{key.removesuffix(_MOLAR_SUFFIX)} against the bulk": key for key in concentrations}
+    )
+    if "u_m_s" in held:
+        menu["axial velocity u_z"] = "u_z"
+        if radial:
+            menu["radial velocity u_r"] = "u_r"
+    if "p_Pa" in held:
+        menu["pressure p"] = "p_Pa"
     return menu
 
 
