@@ -48,12 +48,13 @@ $ nanopnp run from-profile.case.yaml --store store --run-dir run-profile --upto 
 $ nanopnp inspect run-profile
 ```
 
-1. **`python prepare.py`** is one way of preparing the entry, and it uses no nanopnp code. It
-   keeps chains A to L, protein only. It estimates the pore axis from the shape of the C-alpha
-   cloud, points +z at the wide cap of ClyA, which faces *cis*, and turns the axis onto z. It
-   then places the C-alpha centroid of residues 8 to 292 at z = 5.655 nm. That puts the bilayer
-   centre at z = 0, so the case keeps `geometry.membrane.centre_z_nm` at its default. The
-   script's docstring says why each step is enough.
+1. **`python prepare.py`** makes the choices for ClyA and hands them to the library's
+   `nanopnp.structure.orient_pore`. It keeps chains A to L, protein only. `orient_pore`
+   estimates the pore axis from the shape of the C-alpha cloud, points +z at the end named
+   *cis*, here the wide cap of ClyA, and turns the axis onto z. It then places the C-alpha
+   centroid of residues 8 to 292 at z = 5.655 nm. That puts the bilayer centre at z = 0, so the
+   case keeps `geometry.membrane.centre_z_nm` at its default. The script's docstring says why
+   each choice is made.
 2. **`nanopnp run … --upto mesh`** walks stages 1 to 6 and stops. Stage 1 finds the exact axis
    and aligns the structure. Stage 2 smears its atoms into a 3D density map. Stage 3 averages
    the map about the axis to an (r, z) map. Stage 4 draws the pore's outline from it. Stage 5

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import math
 import re
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -287,3 +288,53 @@ def test_ver48_the_frame_puts_the_axis_on_z_and_keeps_the_axial_coordinate() -> 
     assert np.hypot(*again.foot_nm[:2]) <= 1e-12
     phi = np.degrees(np.arctan2(moved[..., 1].mean(axis=1), moved[..., 0].mean(axis=1)))
     assert np.allclose(np.mod(np.diff(phi[list(record.order)]), 360.0), 30.0, atol=1e-9)
+
+
+def _tilted_ring_pdb(path: Path, *, n: int = 8, residues: int = 40) -> None:
+    # A C_n ring of C-alpha, wider at its +z end, then turned 160 degrees so the file's +z
+    # points at the narrow end, and moved off the origin.
+    height = np.linspace(-60.0, 60.0, residues)
+    radius = 30.0 + 0.25 * height
+    wobble = 0.3 * np.sin(np.arange(residues))
+    tilt = _rotation(np.array([1.0, 1.0, 0.0]), math.radians(160.0))
+    lines = []
+    for chain in range(n):
+        phi = 2.0 * math.pi * chain / n + wobble
+        ring = np.column_stack([radius * np.cos(phi), radius * np.sin(phi), height])
+        for residue, (x, y, z) in enumerate(ring @ tilt.T + [5.0, -3.0, 12.0], start=1):
+            serial = chain * residues + residue
+            lines.append(
+                f"ATOM  {serial:5d}  CA  ALA {chr(65 + chain)}{residue:4d}    "
+                f"{x:8.3f}{y:8.3f}{z:8.3f}  1.00  0.00           C"
+            )
+    path.write_text("\n".join([*lines, "END", ""]))
+
+
+@pytest.mark.parametrize("cis_end", ["wider", "narrower"])
+def test_orient_pore_puts_a_tilted_ring_on_z_with_the_named_end_cis(
+    cis_end: str, tmp_path: Path
+) -> None:
+    # FR-37: a sign lost would put the wrong mouth cis, and stage 1's gate would not see it.
+    pytest.importorskip("MDAnalysis")
+    import MDAnalysis as mda  # noqa: N813 - the alias the library documents
+
+    from nanopnp.structure import orient_pore
+
+    source = tmp_path / "ring.pdb"
+    _tilted_ring_pdb(source)
+    kwargs = {"cis_end": cis_end, "registration_residues": (5, 30), "centroid_z_nm": 5.655}
+    first = orient_pore(source, **kwargs, out=tmp_path / "first.pdb")  # type: ignore[arg-type]
+    second = orient_pore(source, **kwargs, out=tmp_path / "second.pdb")  # type: ignore[arg-type]
+    assert first.read_bytes() == second.read_bytes()
+
+    calpha = mda.Universe(str(first)).select_atoms("name CA")
+    positions = calpha.positions.astype(np.float64) / 10.0
+    _, vectors = np.linalg.eigh(np.cov(positions.T))
+    axis = vectors[:, 2]
+    assert math.degrees(math.acos(min(1.0, abs(axis[2])))) < 0.5
+    radius = np.hypot(positions[:, 0], positions[:, 1])
+    top = radius[positions[:, 2] > np.quantile(positions[:, 2], 0.8)].mean()
+    bottom = radius[positions[:, 2] < np.quantile(positions[:, 2], 0.2)].mean()
+    assert (top > bottom) == (cis_end == "wider")
+    anchor = calpha.select_atoms("resid 5:30").positions.astype(np.float64).mean(axis=0) / 10.0
+    np.testing.assert_allclose(anchor, [0.0, 0.0, 5.655], atol=1e-3)

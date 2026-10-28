@@ -128,8 +128,10 @@ structure should:
 - carry an element on every atom and no alternate locations;
 - have its pore axis within 10° of z, with +z pointing to *cis*.
 
-`examples/06-pdb-to-mesh/prepare.py` is one way of doing the last step, with MDAnalysis and
-NumPy alone. It uses no nanopnp code, because preparation is outside the pipeline.
+`nanopnp.structure.orient_pore` does the last step outside the pipeline: it keeps the chains you
+name, estimates the pore axis, points +z at the end you name *cis* (`"wider"` or `"narrower"`), and
+places a registration centroid on the axis where you put the membrane. Stage 1 never re-orients a
+structure itself. `examples/06-pdb-to-mesh/prepare.py` calls it with ClyA's choices.
 
 ## Reading the result
 
