@@ -58,8 +58,12 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
 
 ### Added
 
-- **`nanopnp.mesh.mesh_cylinder`** and `generate_cylinder`: the CLI's cylindrical-pore mesher moves into the
-  library, and the CLI calls it (FR-37, as amended).
+- **`nanopnp.mesh_cylinder`** (and `nanopnp.mesh.generate_cylinder`): the CLI's cylindrical-pore mesher moves
+  into the library and the public surface, and the CLI calls it (FR-37, as amended).
+- **`nanopnp.orient_pore`**, structure preparation in the library: it keeps the chains named, estimates the
+  pore axis, points +z at the end the user names *cis* and places a registration centroid on the axis.
+  Example 06's `prepare.py` calls it, and `core.paths.structure_file` takes a full file name, searching
+  `tests/data/structures/` in a checkout (FR-37, §8.2.20 V1).
 - **`Case.cylinder` and `Case.from_structure`**: factories that build a case on the validated ePNP-NS model,
   with its species, corrections and solid permittivities read from the parameter file (FR-30, §8.2.20 V3).
 - **`nanopnp.sweep.sweep(case, axis=, values=, origin=)`**, returning a `Sweep` whose `run()` plans, runs and
@@ -85,6 +89,12 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
   log10(c/c_bulk); u_z with streamlines; the mesh as the whole domain and the lumen by SICN, with a λ_D/5 bar;
   the charge about zero with the χ = 0.5 contour; the constriction and the operating concentration marked; the
   rectification ratios and G on the I-V (FR-30, NUM-30).
+- **Notebooks 01, 02 and 06 run on `orient_pore` and `Case.from_structure`**, from the deposited 2WCD entry,
+  with no `os.chdir`, `only=True` or call into an example: one case in all three, so they share their stages
+  from the store; the preparation, protonation, salt and solve in forms, the contour's isolevel on a slider,
+  and 06's solved fields one figure each, as in 03 (FR-30, FR-37, §8.2.20 V1, V2).
+- **`Case.from_structure` writes the `geometry` block** at its defaults, so `with_` can edit a contour or
+  membrane setting; the stage keys do not move.
 - **Notebooks 03 and 04 run on `Case.cylinder`**, from a shared store (`$NANOPNP_STORE`, else
   `notebooks/.store`), with form-gated solves, one figure per field and debounced cutline sliders (FR-30,
   §8.2.20 V2). Their figures pan and zoom in a running notebook, and the potential's colour range is a

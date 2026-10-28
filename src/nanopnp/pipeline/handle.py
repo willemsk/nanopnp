@@ -215,6 +215,8 @@ class Case:
                 "source": {"path": str(source), "chains": chains},
                 "symmetry": {"point_group": point_group},
             },
+            # The defaults, held as a block so that an edit can reach them (with_).
+            "geometry": {},
             "charge": {},
             "electrolyte": _electrolyte(parameters, concentration_M),
             "boundary_conditions": {"bias_V": bias_V, "ground": "cis"},

@@ -6,46 +6,21 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import hashlib
-    import importlib.util
+    import json
     import os
     from pathlib import Path
 
     import marimo as mo
 
-    from nanopnp import Case
+    from nanopnp import Case, Store
+    from nanopnp.core.paths import structure_file
     from nanopnp.core.stages import describe
+    from nanopnp.structure import orient_pore
 
-    example = (
-        Path(__file__).resolve().parent / ".." / ".." / "examples" / "06-pdb-to-mesh"
-    ).resolve()
-    os.chdir(example)
-    case = Case.load("2wcd.case.yaml", store=example / "store", write=False)
-
-    def stage_card(name, what):
-        stage = describe(name)
-        reads = ", ".join(f"`{item}`" for item in stage.inputs)
-        return mo.md(
-            f"## Stage {stage.number} · {stage.title}\n\n{what}\n\n"
-            f"*Reads* {reads} · *emits* `{stage.artefact_schema}`"
-        )
-
-    def show(result, name, *, scale, interactive):
-        record = next(item for item in result.stages if item.name == name)
-        where = "from the store" if record.cached else "computed"
-        figure = result.figure(name, scale=scale)
-        if figure is None:
-            drawn = mo.md("*This stage has no figure.*")
-        else:
-            drawn = mo.mpl.interactive(figure) if interactive else figure
-        return mo.vstack(
-            [
-                mo.md(f"`{record.hash[:12]}` · {where} in {record.seconds:.1f} s"),
-                mo.accordion({"Artefact summary": mo.json(dict(result.artefacts[name].summary))}),
-                drawn,
-            ]
-        )
-
-    return Case, Path, case, example, hashlib, importlib, mo, show, stage_card
+    here = Path(__file__).resolve().parent
+    store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
+    entry = structure_file("2wcd.pdb.gz")
+    return Case, describe, entry, hashlib, json, mo, orient_pore, store
 
 
 @app.cell
@@ -54,246 +29,161 @@ def _(mo):
         """
         # From a PDB entry to a mesh
 
-        Example 06's case, one block of cells per stage, from the deposited 2WCD entry to
-        the finite-element mesh. Each block has four cells: what the stage is, its settings
-        as plain values you can edit, the line that runs it, and what it stored.
-
-        A stage's run takes everything before it from the store and refuses to recompute it
-        (`only=True`), so the blocks go in order. After you edit a setting, run its cell;
-        marimo then offers to re-run the cells that follow.
+        The cytolysin A pore as deposited (2WCD), prepared and taken through the geometry
+        stages: the structure, the density, the symmetry reduction, the contour, the region
+        and the mesh. Each step that computes waits for its button, and each run takes
+        every stage it does not change from the store, which notebooks 02 and 06 share:
+        they build the same case. In a running notebook each figure pans and zooms.
         """
     )
     return
 
 
 @app.cell
-def _():
-    # How the figures are drawn: a multiplier on their size, and whether they zoom and pan.
-    scale = 1.5
-    interactive = False
-    return interactive, scale
+def _(mo):
+    mo.md(
+        """
+        ## 1 · Prepare the entry
 
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "structure",
-        "The deposited entry, prepared and read. Preparing a structure is your job, not the "
-        "pipeline's: stage 1 refuses a file whose pore axis is more than 10° from z, so "
-        "example 06's `prepare.py` takes one dodecamer of 2WCD, turns its axis onto z and puts "
-        "the cap *cis*. Stage 1 then finds the axis itself and checks the symmetry.",
+        Stage 1 refuses a file whose pore axis is more than 10° from z, and never turns
+        one itself. `orient_pore` does it, with the choices that are yours: the chains,
+        which end faces *cis* (+z), and where the membrane sits, by placing the C-alpha
+        centroid of a run of residues on the axis. For ClyA, the first dodecamer, its
+        wide cap *cis*, and residues 8 to 292 at 5.655 nm, which puts the bilayer centre
+        at z = 0.
+        """
     )
     return
 
 
 @app.cell
-def _():
-    # The values `prepare.py` uses, which this cell sets on it.
-    preparation = {
-        "CHAINS": "A B C D E F G H I J K L",  # the first dodecamer of the entry
-        "REGISTRATION_RESIDUES": "8:292",  # the C-alpha centroid of these goes on the axis
-        "CENTROID_Z_NM": 5.655,  # and at this height, with the bilayer centre at 0
+def _(mo):
+    PREPARE_DEFAULTS = {
+        "chains": "A,B,C,D,E,F,G,H,I,J,K,L",
+        "cis_end": "wider",
+        "first_residue": 8,
+        "last_residue": 292,
+        "centroid_z_nm": 5.655,
     }
-    structure_settings = {
-        "structure.symmetry.point_group": "C12",  # the expected symmetry; stage 1 checks it
-    }
-    return preparation, structure_settings
+    prepare_form = mo.ui.dictionary(
+        {
+            "chains": mo.ui.text(PREPARE_DEFAULTS["chains"], label="chains"),
+            "cis_end": mo.ui.dropdown(
+                ["wider", "narrower"], PREPARE_DEFAULTS["cis_end"], label="cis end"
+            ),
+            "first_residue": mo.ui.number(
+                1, 400, 1, PREPARE_DEFAULTS["first_residue"], label="from residue"
+            ),
+            "last_residue": mo.ui.number(
+                1, 400, 1, PREPARE_DEFAULTS["last_residue"], label="to residue"
+            ),
+            "centroid_z_nm": mo.ui.number(
+                -20.0, 20.0, 0.005, PREPARE_DEFAULTS["centroid_z_nm"], label="at z (nm)"
+            ),
+        }
+    ).form(submit_button_label="Prepare")
+    prepare_form
+    return PREPARE_DEFAULTS, prepare_form
 
 
 @app.cell
-def _(case, example, hashlib, importlib, preparation, structure_settings):
-    script = example.parent / "06-pdb-to-mesh" / "prepare.py"
-    prepared = example / (
-        "2wcd-prepared-" + hashlib.sha256(repr(preparation).encode()).hexdigest()[:8] + ".pdb"
-    )
-    if not prepared.exists():
-        spec = importlib.util.spec_from_file_location("prepare", script)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        for key, value in preparation.items():
-            setattr(module, key, value)
-        module.prepare(
-            example.parents[1] / "tests" / "data" / "structures" / "2wcd.pdb.gz", prepared
+def _(PREPARE_DEFAULTS, entry, hashlib, json, orient_pore, prepare_form, store):
+    preparation = prepare_form.value or PREPARE_DEFAULTS
+    key = hashlib.sha256(json.dumps(preparation, sort_keys=True).encode()).hexdigest()[:12]
+    prepared = store.root / "structures" / f"2wcd-{key}.pdb"
+    if not prepared.is_file():
+        prepared.parent.mkdir(parents=True, exist_ok=True)
+        orient_pore(
+            entry,
+            chains=preparation["chains"],
+            cis_end=preparation["cis_end"],
+            registration_residues=(preparation["first_residue"], preparation["last_residue"]),
+            centroid_z_nm=preparation["centroid_z_nm"],
+            out=prepared,
         )
-    case_structure = case.with_(**structure_settings, **{"structure.source.path": str(prepared)})
-    run_structure = case_structure.run(upto="structure", only=True)
-    return case_structure, run_structure
+    return (prepared,)
 
 
 @app.cell
-def _(interactive, run_structure, scale, show):
-    show(run_structure, "structure", scale=scale, interactive=interactive)
-    return
+def _(Case, prepared, store):
+    # The same call in notebooks 01, 02 and 06, so the three share stages 1 to 8.
+    case = Case.from_structure(
+        prepared,
+        point_group="C12",
+        concentration_M=0.15,
+        bias_V=0.05,
+        size_scale=4.0,
+        name="2wcd",
+        store=store,
+        write=False,
+    )
+    return (case,)
 
 
 @app.cell
-def _(stage_card):
-    stage_card(
-        "density",
-        "The atoms smeared into a density map: each atom a Gaussian sized by its van der "
-        "Waals radius, summed on a grid. The pore wall is a contour of this map.",
+def _(mo):
+    mo.md(
+        """
+        ## 2 · Structure, density and symmetry
+
+        Stage 1 finds the exact axis by superposing the twelve chains and checks the
+        symmetry; stage 2 smears each atom into a Gaussian on a grid; stage 3 averages the
+        map about the axis, reducing it to the (r, z) half-plane the solve works on. These
+        take about half a minute from an empty store.
+        """
     )
     return
 
 
 @app.cell
-def _():
-    density_settings = {
-        "geometry.density.grid_spacing_nm": 0.05,  # the grid spacing; this sets the mesh floor
-        "geometry.density.sharpness": 0.93,  # how tightly each Gaussian hugs its atom
-    }
-    return (density_settings,)
+def _(case, describe, mo):
+    reduced = case.run(upto="symmetry")
+
+    def stage_tab(result, name):
+        record = next(item for item in result.stages if item.name == name)
+        stage = describe(name)
+        where = "from the store" if record.cached else f"computed in {record.seconds:.1f} s"
+        return mo.vstack(
+            [
+                mo.md(f"*Stage {stage.number}, {stage.title}:* `{record.hash[:12]}`, {where}"),
+                mo.mpl.interactive(result.figure(name)),
+                mo.accordion({"Artefact summary": mo.json(dict(result.artefacts[name].summary))}),
+            ]
+        )
+
+    mo.ui.tabs({name: stage_tab(reduced, name) for name in ("structure", "density", "symmetry")})
+    return (stage_tab,)
 
 
 @app.cell
-def _(case_structure, density_settings, run_structure):
-    assert run_structure.stages[-1].name == "structure"  # the structure block ran first
-    case_density = case_structure.with_(**density_settings)
-    run_density = case_density.run(upto="density", only=True)
-    return case_density, run_density
+def _(mo):
+    mo.md(
+        """
+        ## 3 · Contour, region and mesh
 
-
-@app.cell
-def _(interactive, run_density, scale, show):
-    show(run_density, "density", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "symmetry",
-        "The density averaged around the pore axis, which reduces the 3D map to the (r, z) "
-        "half-plane the solve works on. The spread around the mean shows how well the "
-        "dodecamer obeys its symmetry.",
+        The pore wall is the contour of the reduced density at one isolevel. The slider
+        re-draws it and the mesh behind it, in a few seconds; the stages before come from
+        the store. The region joins the wall to a 2.8 nm bilayer and two reservoirs, and
+        the mesh is four times coarser than the default sizes, as in notebook 06, so the
+        solve there stays short.
+        """
     )
     return
 
 
 @app.cell
-def _():
-    # This stage has no setting of its own: it follows the point group (stage 1) and the grid
-    # spacing (stage 2), so those are the values to change.
-    symmetry_settings = {}
-    return (symmetry_settings,)
-
-
-@app.cell
-def _(case_density, run_density, symmetry_settings):
-    assert run_density.stages[-1].name == "density"  # the density block ran first
-    case_symmetry = case_density.with_(**symmetry_settings)
-    run_symmetry = case_symmetry.run(upto="symmetry", only=True)
-    return case_symmetry, run_symmetry
-
-
-@app.cell
-def _(interactive, run_symmetry, scale, show):
-    show(run_symmetry, "symmetry", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "contour",
-        "The pore wall: the contour of the reduced density at one isolevel, smoothed and "
-        "simplified to a clean profile. The feature-size gate runs here.",
+def _(mo):
+    isolevel = mo.ui.slider(
+        0.15, 0.45, 0.01, 0.25, debounce=True, show_value=True, label="contour isolevel"
     )
-    return
+    isolevel
+    return (isolevel,)
 
 
 @app.cell
-def _():
-    contour_settings = {
-        "geometry.contour.isolevel": 0.25,  # the density that counts as the wall
-        "geometry.contour.smoothing": "taubin",  # "none" keeps the raw contour
-        "geometry.contour.simplify_tol_nm": 0.02,  # must stay below the grid spacing
-    }
-    return (contour_settings,)
-
-
-@app.cell
-def _(case_symmetry, contour_settings, run_symmetry):
-    assert run_symmetry.stages[-1].name == "symmetry"  # the symmetry block ran first
-    case_contour = case_symmetry.with_(**contour_settings)
-    run_contour = case_contour.run(upto="contour", only=True)
-    return case_contour, run_contour
-
-
-@app.cell
-def _(interactive, run_contour, scale, show):
-    show(run_contour, "contour", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "region",
-        "The computational domain: the pore profile joined to a bilayer and two reservoirs, "
-        "each region and boundary named for the mesh and the solve.",
-    )
-    return
-
-
-@app.cell
-def _():
-    region_settings = {
-        "geometry.membrane.thickness_nm": 2.8,  # the bilayer
-        "geometry.membrane.centre_z_nm": 0.0,  # in the structure's frame
-        "geometry.reservoir.radius_nm": 250.0,
-        # The ion-exclusion shell, `charge.exclusion_offset_nm`, is a setting of example 07's case.
-    }
-    return (region_settings,)
-
-
-@app.cell
-def _(case_contour, region_settings, run_contour):
-    assert run_contour.stages[-1].name == "contour"  # the contour block ran first
-    case_region = case_contour.with_(**region_settings)
-    run_region = case_region.run(upto="region", only=True)
-    return case_region, run_region
-
-
-@app.cell
-def _(interactive, run_region, scale, show):
-    show(run_region, "region", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "mesh",
-        "The finite-element mesh of that domain, refined at the pore wall where the electrical "
-        "double layer lives. The quality gates run here.",
-    )
-    return
-
-
-@app.cell
-def _():
-    mesh_settings = {
-        "numerics.mesh.size_scale": 1.0,  # a multiplier on every element size
-        "numerics.mesh.wall_h_nm": "auto",  # or a size in nm; auto follows the Debye length
-        # None sizes `auto` at this case's own salt. A concentration here sizes it there, so a
-        # salt sweep below that concentration shares one mesh.
-        "numerics.mesh.wall_for_concentration_M": None,
-    }
-    return (mesh_settings,)
-
-
-@app.cell
-def _(case_region, mesh_settings, run_region):
-    assert run_region.stages[-1].name == "region"  # the region block ran first
-    case_mesh = case_region.with_(**mesh_settings)
-    run_mesh = case_mesh.run(upto="mesh", only=True)
-    return case_mesh, run_mesh
-
-
-@app.cell
-def _(interactive, run_mesh, scale, show):
-    show(run_mesh, "mesh", scale=scale, interactive=interactive)
+def _(case, isolevel, mo, stage_tab):
+    meshed = case.run(upto="mesh", **{"geometry.contour.isolevel": isolevel.value})
+    mo.ui.tabs({name: stage_tab(meshed, name) for name in ("contour", "region", "mesh")})
     return
 
 
