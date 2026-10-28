@@ -1539,3 +1539,15 @@ The author's notes for WP54 name builders by section, `with_density` and `with_n
 `MOD-11`'s `with_section` (§8.2.8 H2), which the user-testing sessions inform.
 
 **Ruled** (§8.2.20 V3): deferred to Phase 5, with `MOD-11`.
+
+## REV-146: The cylinder's default wall size is coarser than NUM-30's first layer
+
+`nanopnp mesh cylinder` sizes the pore wall at 0.35 nm by default, and examples 02 and 03 solve on that
+mesh. `Case.cylinder` (WP54) takes the same default, so a notebook's cylinder inherits it. NUM-30 asks for a
+first wall layer of `λ_D/5`: 0.19 nm at 0.1 M, 0.06 nm at 1 M. Nothing flags it: the coarse-wall warning
+covers a generated stage-6 mesh, and the deviation list compares switches, not sizes. WP54's mesh figure
+marks `λ_D/5` beside the wall, so the gap shows.
+
+**Question for the author:** should `Case.cylinder` size the wall from the case's Debye length, at the cost
+of its parity with examples 02 and 03 and their VER-62 golden?
+

@@ -24,7 +24,6 @@ from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.adapter import read as read_mesh
 from nanopnp.mesh.ingest import MESH_PAYLOAD, deployed_mesh
 from nanopnp.mesh.quality import QualityReport, element_quality
-from nanopnp.post.export import restored, sampled_fields
 from nanopnp.solve.state import NEWTON_HISTORY_KEY
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
@@ -45,7 +44,6 @@ __all__ = [
     "NewtonRung",
     "ProtonationCharges",
     "RegionDrawing",
-    "SolutionFields",
     "StoredGrid",
     "SweepCurves",
     "atoms_r_z_m",
@@ -61,8 +59,8 @@ __all__ = [
     "protonation_charges",
     "reduced_map",
     "region_drawing",
-    "solution_fields",
     "structure_atoms",
+    "subdivided",
     "sweep_curves",
 ]
 
@@ -437,29 +435,18 @@ def newton_history(artefact: Artefact) -> list[NewtonRung] | None:
     return rungs
 
 
-@dataclass(frozen=True)
-class SolutionFields:
-    """The solved fields in SI on the P2 nodes of the whole domain and of the fluid.
+def subdivided(cells: np.ndarray) -> np.ndarray:
+    """Split each Triangle_6 cell into its four linear triangles, ``(n, 6)`` to ``(4n, 3)``."""
+    import numpy as np
 
-    Parameters
-    ----------
-    whole, fluid
-        ``(points_m, corner triangles, fields)``; a vector field is ``(n, 2)`` in ``(r, z)``.
-    """
-
-    model: str
-    whole: tuple[np.ndarray, np.ndarray, dict[str, np.ndarray]]
-    fluid: tuple[np.ndarray, np.ndarray, dict[str, np.ndarray]]
-
-
-def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
-    """Restore the converged state and sample its fields through the export's own path."""
-    state, _ = restored(inputs, artefact)
-    sampled = sampled_fields(state, state.model.scales)
-    return SolutionFields(
-        model=state.model.name,
-        whole=(sampled.omega.points_nm * _NM, sampled.omega.cells[:, :3], sampled.whole),
-        fluid=(sampled.omega_w.points_nm * _NM, sampled.omega_w.cells[:, :3], sampled.restricted),
+    a, b, c, ab, bc, ca = (cells[:, k] for k in range(6))
+    return np.concatenate(
+        [
+            np.stack([a, ab, ca], axis=1),
+            np.stack([ab, b, bc], axis=1),
+            np.stack([ca, bc, c], axis=1),
+            np.stack([ab, bc, ca], axis=1),
+        ]
     )
 
 

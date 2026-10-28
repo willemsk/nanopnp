@@ -8,6 +8,7 @@ import tempfile
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -41,6 +42,7 @@ from nanopnp.io.manifest import Manifest, build
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.mesh.sizing import case_debye_record
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.post.export import SolutionFields, solution_fields
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from matplotlib.figure import Figure
@@ -124,6 +126,13 @@ def _has_figure(artefact: Artefact) -> bool:
     return figure_target(artefact.schema) is not None
 
 
+def _nano(quantities: Mapping[str, Canonicalisable], key: str) -> float | None:
+    value = quantities.get(key)
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return float(value) * 1e9
+
+
 @dataclass(frozen=True)
 class RunResult:
     """One completed run: its artefacts, its manifest and where they were written."""
@@ -186,6 +195,59 @@ class RunResult:
         """The stage-11 summary: every scalar this run extracted; empty before stage 11."""
         qoi = self.artefacts.get("qoi")
         return dict(qoi.summary) if qoi is not None else {}
+
+    @property
+    def current_nA(self) -> float | None:
+        """The stage-11 current in nA; None where the run reports none.
+
+        Raises
+        ------
+        KeyError
+            The run did not reach stage 11, ``qoi``.
+        """
+        return _nano(self._qoi("current_nA"), "current_A")
+
+    @property
+    def conductance_nS(self) -> float | None:
+        """The stage-11 conductance in nS; None at zero bias or where the case asked for none.
+
+        Raises
+        ------
+        KeyError
+            The run did not reach stage 11, ``qoi``.
+        """
+        return _nano(self._qoi("conductance_nS"), "conductance_S")
+
+    def _qoi(self, wanted: str) -> Mapping[str, Canonicalisable]:
+        qoi = self.artefacts.get("qoi")
+        if qoi is None:
+            held = ", ".join(self.artefacts) or "none"
+            raise KeyError(
+                f"{wanted} is read from stage 11, 'qoi', which this run did not reach; "
+                f"it holds {held}"
+            )
+        return qoi.summary
+
+    @cached_property
+    def fields(self) -> SolutionFields:
+        """The solved fields in SI at the P2 nodes, restored once and kept.
+
+        Raises
+        ------
+        KeyError
+            The run did not reach stage 10, ``solve``, or holds no resolved case.
+        """
+        solution = self.artefacts.get("solve")
+        if solution is None or self.resolved is None:
+            held = ", ".join(self.artefacts) or "none"
+            raise KeyError(
+                f"the fields are read from stage 10, 'solve', which this run did not reach; "
+                f"it holds {held}"
+            )
+        inputs = StageInputs(
+            resolved=self.resolved, upstream=offered("solve", self.artefacts, own=False)
+        )
+        return solution_fields(inputs, solution)
 
     @property
     def files(self) -> tuple[Path, ...]:

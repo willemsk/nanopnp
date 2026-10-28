@@ -25,3 +25,16 @@ def test_case_leaf_name_shared_by_two_fields_is_refused() -> None:
     case = nanopnp.Case.load(CASE, write=False)
     with pytest.raises(UnknownCasePathError, match="more than one field"):
         case.with_(grid_spacing_nm=1.0)
+
+
+def test_case_load_rebases_relative_inputs_on_the_case_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    case = nanopnp.Case.load(CASE, write=False)
+    inputs = case.document.inputs
+    assert inputs is not None
+    for supplied in (inputs.mesh, inputs.charge):
+        assert supplied is not None and supplied.path is not None
+        assert supplied.path.is_absolute()
+        assert supplied.path.parent == CASE.parent

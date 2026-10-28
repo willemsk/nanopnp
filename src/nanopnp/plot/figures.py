@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from nanopnp.materials.electrolyte import MOLAR_PER_SI
 from nanopnp.plot import data
 from nanopnp.plot.data import DISPLAY, axis_label
+from nanopnp.post.export import solution_fields
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -296,7 +297,9 @@ def _field_panel(
 ) -> None:
     from matplotlib.tri import Triangulation
 
-    triangulation = Triangulation(points_m[:, 0] * NM, points_m[:, 1] * NM, triangles)
+    triangulation = Triangulation(
+        points_m[:, 0] * NM, points_m[:, 1] * NM, data.subdivided(triangles)
+    )
     image = ax.tripcolor(triangulation, values * scale, shading="gouraud", cmap=cmap)
     figure.colorbar(image, ax=ax, label=label)
     ax.set_title(title)
@@ -326,7 +329,7 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
     history = data.newton_history(artefact)
     rungs = None if history is None else [rung for rung in history if rung.iteration.size]
     summary: Mapping[str, Any] = artefact.summary
-    fields = None if inputs is None else data.solution_fields(inputs, artefact)
+    fields = None if inputs is None else solution_fields(inputs, artefact)
     if fields is None and not rungs:
         return _absent(artefact, "solve", "the fields or the Newton history")
     model = fields.model if fields is not None else "solve"
