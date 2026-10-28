@@ -1,0 +1,2 @@
+# The store the six notebooks share, unless $NANOPNP_STORE names another.
+.store/
