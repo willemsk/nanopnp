@@ -449,3 +449,25 @@ def test_ver36_the_reference_sweep_resolves_a_sample_of_its_members(
     )
     assert corrected.electrolyte.corrections.diffusivity.wall is True
     assert corrected.physics.model == "epnp-ns"
+
+
+def test_in_memory_sweep_matches_the_sweep_file_plan(base: Path, tmp_path: Path) -> None:
+    from nanopnp.io.store import Store
+    from nanopnp.pipeline.handle import Case
+    from nanopnp.sweep import sweep
+
+    case = Case.load(base, store=Store(tmp_path / "store"), write=False)
+    held = sweep(case, axis="bias_V", values=[-0.05, 0.05], origin=1, check_meshes=False)
+    filed = _plan(
+        base,
+        "  - name: bias\n    path: boundary_conditions.bias_V\n    origin: 1\n"
+        "    values: [-0.05, 0.05]\n",
+    )
+    assert held.directory.parent == tmp_path / "store" / "sweeps"
+    assert held.plan.base_hash == filed.base_hash
+    assert [point.point_id for point in held.plan.points] == [
+        point.point_id for point in filed.points
+    ]
+    assert [dict(point.assignments) for point in held.plan.points] == [
+        dict(point.assignments) for point in filed.points
+    ]
