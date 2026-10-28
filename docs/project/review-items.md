@@ -1551,6 +1551,10 @@ marks `λ_D/5` beside the wall, so the gap shows.
 **Question for the author:** should `Case.cylinder` size the wall from the case's Debye length, at the cost
 of its parity with examples 02 and 03 and their VER-62 golden?
 
+**Ruled** (§8.2.20 V9): both. The fixed 0.35 nm stays the default, keeping the examples' mesh and golden, and
+`Case.cylinder(wall_h_nm="debye")` sizes the wall at `λ_D/5` of the case's salt; notebook 05 offers both
+([WP54 plan](../plans/wp54-notebooks-and-figures-revised.md)).
+
 ## REV-147: The lumen window is fixed, not read from the region
 
 `plot.data.LUMEN_NM` is r ≤ 5 nm, |z| ≤ 10 nm about z = 0. The mesh figure's close-up and the u_z panel's

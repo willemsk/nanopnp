@@ -69,8 +69,13 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
 - **Panels in `nanopnp.plot`**: `plot_field`, `plot_mesh`, `plot_axial_cutline`, `plot_radial_cutline` and
   `plot_iv`, with `plot_charge` and `mark_constriction` in `nanopnp.plot.panels`, and the cutlines in
   `nanopnp.plot.data` (FR-30).
-- **Notebook 05**, the cylindrical pore, in four steps: the mesh, the solve, profiles along and across the pore
-  on debounced sliders, and the I-V sweep (FR-30, §8.2.20 V2).
+- **Notebook 05**, the cylindrical pore, in four steps: the mesh, its wall sized fixed or at λ_D/5, the solve,
+  profiles along and across the pore on debounced sliders, and the I-V sweep of the cis ring (FR-30,
+  §8.2.20 V2, V8, V9).
+- **`Case.cylinder(wall_h_nm="debye")`** sizes the pore wall at λ_D/5 of the case's salt; the fixed 0.35 nm
+  stays the default (NUM-30, §8.2.20 V9).
+- **`plot_field(halfrange=)`** sets the colour scale's reach about zero, and `nanopnp.plot.data.qoi_rows`
+  lists the quantities of interest in display units (FR-30, §8.2.20 V6).
 
 ### Changed
 
@@ -82,7 +87,8 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
   rectification ratios and G on the I-V (FR-30, NUM-30).
 - **Notebooks 03 and 04 run on `Case.cylinder`**, from a shared store (`$NANOPNP_STORE`, else
   `notebooks/.store`), with form-gated solves, one figure per field and debounced cutline sliders (FR-30,
-  §8.2.20 V2).
+  §8.2.20 V2). Their figures pan and zoom in a running notebook, and the potential's colour range is a
+  slider, by default twice the bias (§8.2.20 V6, V7).
 
 ### Fixed
 
@@ -90,7 +96,7 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
   case file it wrote (FR-25, QR-08).
 - **A sweep's panels share the cis-referenced bias and keep failed points** (FR-30).
 
-Open items REV-146, REV-147 and REV-148 are logged in `docs/project/review-findings.md` for the author.
+REV-146 is fixed by §8.2.20 V9; REV-147 and REV-148 are logged in `docs/project/review-findings.md` for the author.
 
 ## [0.5.0-alpha.19] - 2026-10-22
 

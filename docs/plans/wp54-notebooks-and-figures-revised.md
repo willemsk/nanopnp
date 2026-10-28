@@ -106,9 +106,9 @@ store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
 `notebooks/.gitignore` holds `.store/`. A slow stage reads its form in a later cell than the one
 defining it: `settings = solve_form.value or SOLVE_DEFAULTS`, the defaults a module-level dict in the
 form's cell. A slider is `mo.ui.slider(..., debounce=True)`. Cutline and zoom views read
-`run.fields` once, in their own cell, so a slider never re-samples the solution. 03 and 05 pass
-`charge=(here.parents[1] / "examples" / "02-charged-pore" / "ring.field.yaml")`, 04 the
-`03-iv-sweep/cis-ring.field.yaml`, and the CLI's cylinder defaults; nothing is written outside the
+`run.fields` once, in their own cell, so a slider never re-samples the solution. 03 passes
+`charge=(here.parents[1] / "examples" / "02-charged-pore" / "ring.field.yaml")`, 04 and 05 the
+`03-iv-sweep/cis-ring.field.yaml` (§8.2.20 V8), and the CLI's cylinder defaults; nothing is written outside the
 store.
 
 **Item 11.** `orient_pore(source, *, chains="all", cis_end, registration_residues=None,
@@ -173,6 +173,11 @@ the next item; a change of scope is a ruling (`rulings.md`).
 >   stored mesh is labelled "as meshed", since a shared mesh records the first member's salt. Not
 >   fixed: REV-147 (the lumen window is fixed) and REV-148 (one bulk for every species).
 > - The checkpoint pages render marimo's tabs as working tabs; the rest stays static.
+> - Steering from checkpoint 2 (§8.2.20 V6 to V9): the potential's colour range is a slider, by
+>   default twice the bias (`plot_field(halfrange=)`); every notebook figure pans and zooms through
+>   `mo.mpl.interactive`; notebook 05 solves the cis ring; `Case.cylinder(wall_h_nm="debye")` sizes
+>   the wall at `λ_D/5`, and 05 offers it beside the fixed 0.35 nm (REV-146 fixed). On the author's
+>   comment, 03's quantities of interest are a table in display units (`plot.data.qoi_rows`).
 - [ ] 11. `src/nanopnp/structure/orient.py`, `structure/__init__.py`, `core/paths.py:structure_file`, `examples/06-pdb-to-mesh/prepare.py` as a wrapper, REV-136's section (D1); done when its row and VER-46 for example 06 pass. **Executor:** main.
 - [ ] 12. `notebooks/01-geometry`, `02-charge`, `06-2wcd` on `Case.from_structure` (D6); done when the notebook test passes for all six. **Executor:** main.
 - [ ] 13. `core/public.py`, `nanopnp/__init__.py`, `modularity-layering.yaml` (`nanopnp → mesh`, `nanopnp → structure`), `CHANGELOG.md` (D1); done when `test_public_api.py` and `test_layering.py` pass. **Executor:** main.

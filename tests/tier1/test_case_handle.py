@@ -38,3 +38,28 @@ def test_case_load_rebases_relative_inputs_on_the_case_file(
         assert supplied is not None and supplied.path is not None
         assert supplied.path.is_absolute()
         assert supplied.path.parent == CASE.parent
+
+
+@pytest.mark.parametrize("concentration_M", [0.1, 1.0])
+def test_cylinder_debye_wall_is_stage_6s_lambda_d_over_5(
+    concentration_M: float, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # NUM-30: the factory's own lambda_D / 5 must be the target the mesh figure marks.
+    import nanopnp.pipeline.handle as handle
+    from nanopnp.materials.corrections import load_corrections
+    from nanopnp.mesh.sizing import resolve_wall_size
+
+    meshed: dict[str, float] = {}
+
+    def recorded(*, out: Path, **geometry: float) -> Path:
+        meshed.update(geometry)
+        out.touch()
+        return out
+
+    monkeypatch.setattr(handle, "mesh_cylinder", recorded)
+    case = nanopnp.Case.cylinder(
+        concentration_M=concentration_M, bias_V=0.0, wall_h_nm="debye", store=tmp_path
+    )
+    permittivity = load_corrections(case.document.electrolyte.parameters).solvent.permittivity
+    wall = resolve_wall_size(case.document, permittivity_0=permittivity.eps_r0)
+    assert meshed["wall_h_nm"] == pytest.approx(wall.debye_target_nm, rel=1e-12)
