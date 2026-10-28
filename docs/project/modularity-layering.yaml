@@ -159,8 +159,10 @@ edges:
   - {from: validation, to: solve, relation: static, finding: null}
   - {from: cli, to: core, relation: string, finding: null}
   - {from: cli, to: io, relation: string, finding: null}
+  - {from: cli, to: mesh, relation: string, finding: null}
   - {from: cli, to: physics, relation: string, finding: null}
   - {from: cli, to: pipeline, relation: string, finding: null}
+  - {from: cli, to: structure, relation: string, finding: null}
   - {from: cli, to: sweep, relation: string, finding: null}
   - {from: core, to: charge, relation: string, finding: MOD-15}
   - {from: core, to: density, relation: string, finding: MOD-15}
