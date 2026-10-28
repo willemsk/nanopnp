@@ -1,6 +1,6 @@
 # WP54 — The notebooks and figures revised
 
-**Status: in progress; items 1 to 5 done.** Written 28 October 2026 from the author's notes,
+**Status: in progress; items 1 to 10 done.** Written 28 October 2026 from the author's notes,
 [notebooks-review-for-wp54.md](notebooks-review-for-wp54.md), and the rulings they carry
 (§8.2.20 V1 to V5). Inherits WP51 as shipped (§8.2.14 P2 to P10) and WP53's commands.
 
@@ -154,11 +154,25 @@ the next item; a change of scope is a ruling (`rulings.md`).
 > - V5 pages: the marimo export pulls its styles from a CDN the artifact frame blocks, so each
 >   page is rebuilt from the export's embedded cells and outputs, the widgets drawn at their
 >   defaults.
-- [ ] 6. `plot/panels.py`, `plot/data.py` (`subdivided`, cutlines), `plot/__init__.py` (D3, D4); done when its rows pass. **Executor:** main.
-- [ ] 7. `plot/figures.py` rebuilt on the panels: solve, charge, contour, materials, sweep, mesh (D3, D5); done when `test_figures.py` and `test_every_figure_draws_and_displays` pass. **Executor:** main.
-- [ ] 8. `notebooks/05-cylinder`; 03's cutline slider and field selector (D6); done when the notebook test passes for 03 and 05. **Executor:** main.
-- [ ] 9. `CHANGELOG.md` entries for items 1 to 8; the strict documentation build of `CLAUDE.md`'s *Commands* passes. **Executor:** `general-purpose` on Haiku.
-- [ ] 10. Checkpoint: publish 03 to 05. **Executor:** main.
+- [x] 694fa53 6. `plot/panels.py`, `plot/data.py` (`subdivided`, cutlines), `plot/__init__.py` (D3, D4); done when its rows pass. **Executor:** main.
+- [x] 6664262 7. `plot/figures.py` rebuilt on the panels: solve, charge, contour, materials, sweep, mesh (D3, D5); done when `test_figures.py` and `test_every_figure_draws_and_displays` pass. **Executor:** main.
+- [x] 87036fd 8. `notebooks/05-cylinder`; 03's cutline slider and field selector (D6); done when the notebook test passes for 03 and 05. **Executor:** main.
+- [x] 4ab1443 9. `CHANGELOG.md` entries for items 1 to 8; the strict documentation build of `CLAUDE.md`'s *Commands* passes. **Executor:** `general-purpose` on Haiku.
+- [x] 10. Checkpoint: publish 03 to 05. **Executor:** main.
+> **Outcome — slice 2 (items 6 to 10).**
+> - Steering from checkpoint 1: the author did not want every figure in one panel. Notebooks 03 and
+>   05 show each solved field as its own figure, in tabs, and 04 shows the I-V panel on its own with
+>   the full sweep figure in an accordion. The stage figures stay one per stage.
+> - Item 6 adds `plot_charge` and `mark_constriction` beside the five planned panels, a
+>   `relative_to_M` keyword on the cutlines, and `plot.data.field_values`, `sampled` and
+>   `LUMEN_NM`; `DISPLAY["potential"]` is mV. The cutline test's floor is relative to the field's
+>   size, since a grounded node holds round-off about zero.
+> - The physics review of items 6 and 7 found a sweep's I-V panel drew against the recorded bias
+>   while its neighbours drew the assigned one, lost a failed point, and joined the groups of a
+>   two-axis sweep; fixed in 3f0b588 (`plot.data.cis_referenced_bias_V`). A λ_D/5 bar read from a
+>   stored mesh is labelled "as meshed", since a shared mesh records the first member's salt. Not
+>   fixed: REV-147 (the lumen window is fixed) and REV-148 (one bulk for every species).
+> - The checkpoint pages render marimo's tabs as working tabs; the rest stays static.
 - [ ] 11. `src/nanopnp/structure/orient.py`, `structure/__init__.py`, `core/paths.py:structure_file`, `examples/06-pdb-to-mesh/prepare.py` as a wrapper, REV-136's section (D1); done when its row and VER-46 for example 06 pass. **Executor:** main.
 - [ ] 12. `notebooks/01-geometry`, `02-charge`, `06-2wcd` on `Case.from_structure` (D6); done when the notebook test passes for all six. **Executor:** main.
 - [ ] 13. `core/public.py`, `nanopnp/__init__.py`, `modularity-layering.yaml` (`nanopnp → mesh`, `nanopnp → structure`), `CHANGELOG.md` (D1); done when `test_public_api.py` and `test_layering.py` pass. **Executor:** main.
