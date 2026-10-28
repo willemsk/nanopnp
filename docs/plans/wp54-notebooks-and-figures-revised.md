@@ -178,7 +178,7 @@ the next item; a change of scope is a ruling (`rulings.md`).
 >   `mo.mpl.interactive`; notebook 05 solves the cis ring; `Case.cylinder(wall_h_nm="debye")` sizes
 >   the wall at `λ_D/5`, and 05 offers it beside the fixed 0.35 nm (REV-146 fixed). On the author's
 >   comment, 03's quantities of interest are a table in display units (`plot.data.qoi_rows`).
-- [ ] 11. `src/nanopnp/structure/orient.py`, `structure/__init__.py`, `core/paths.py:structure_file`, `examples/06-pdb-to-mesh/prepare.py` as a wrapper, REV-136's section (D1); done when its row and VER-46 for example 06 pass. **Executor:** main.
+- [x] c2be267 11. `src/nanopnp/structure/orient.py`, `structure/__init__.py`, `core/paths.py:structure_file`, `examples/06-pdb-to-mesh/prepare.py` as a wrapper, REV-136's section (D1); done when its row and VER-46 for example 06 pass. **Executor:** main.
 - [ ] 12. `notebooks/01-geometry`, `02-charge`, `06-2wcd` on `Case.from_structure` (D6); done when the notebook test passes for all six. **Executor:** main.
 - [ ] 13. `core/public.py`, `nanopnp/__init__.py`, `modularity-layering.yaml` (`nanopnp → mesh`, `nanopnp → structure`), `CHANGELOG.md` (D1); done when `test_public_api.py` and `test_layering.py` pass. **Executor:** main.
 - [ ] 14. Checkpoint: publish all six. **Executor:** main.

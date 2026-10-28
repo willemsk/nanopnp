@@ -5,46 +5,35 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import importlib.util
+    import hashlib
+    import json
     import os
     from pathlib import Path
 
     import marimo as mo
 
-    from nanopnp import Case
+    from nanopnp import Case, Store
+    from nanopnp.core.paths import structure_file
     from nanopnp.core.stages import describe
+    from nanopnp.plot.data import charge_grids
+    from nanopnp.plot.panels import plot_charge
+    from nanopnp.structure import orient_pore
 
-    example = (
-        Path(__file__).resolve().parent / ".." / ".." / "examples" / "07-pdb-to-charged-run"
-    ).resolve()
-    os.chdir(example)
-    case = Case.load("2wcd.case.yaml", store=example / "store", write=False)
-
-    def stage_card(name, what):
-        stage = describe(name)
-        reads = ", ".join(f"`{item}`" for item in stage.inputs)
-        return mo.md(
-            f"## Stage {stage.number} · {stage.title}\n\n{what}\n\n"
-            f"*Reads* {reads} · *emits* `{stage.artefact_schema}`"
-        )
-
-    def show(result, name, *, scale, interactive):
-        record = next(item for item in result.stages if item.name == name)
-        where = "from the store" if record.cached else "computed"
-        figure = result.figure(name, scale=scale)
-        if figure is None:
-            drawn = mo.md("*This stage has no figure.*")
-        else:
-            drawn = mo.mpl.interactive(figure) if interactive else figure
-        return mo.vstack(
-            [
-                mo.md(f"`{record.hash[:12]}` · {where} in {record.seconds:.1f} s"),
-                mo.accordion({"Artefact summary": mo.json(dict(result.artefacts[name].summary))}),
-                drawn,
-            ]
-        )
-
-    return Case, Path, case, example, importlib, mo, show, stage_card
+    here = Path(__file__).resolve().parent
+    store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
+    entry = structure_file("2wcd.pdb.gz")
+    return (
+        Case,
+        charge_grids,
+        describe,
+        entry,
+        hashlib,
+        json,
+        mo,
+        orient_pore,
+        plot_charge,
+        store,
+    )
 
 
 @app.cell
@@ -53,153 +42,157 @@ def _(mo):
         """
         # Charge and materials
 
-        Example 07's case, one block of cells per stage: the protonation of the structure,
-        the charge deposited on the mesh and the materials. Each block has four cells: what
-        the stage is, its settings as plain values you can edit, the line that runs it, and
-        what it stored.
-
-        This notebook starts after the mesh. A stage's run takes everything before it from
-        the store and refuses to recompute it (`only=True`), so the **set-up** cell below
-        runs the stages before it first. After you edit a setting, run its cell; marimo then
-        offers to re-run the cells that follow.
+        The 2WCD pore of notebook 01, charged: PDB2PQR and PROPKA protonate the structure,
+        its atoms' charges are deposited on the mesh, and the electrolyte's correction
+        functions are evaluated. The case is built as notebooks 01 and 06 build it, so the
+        stages they share come from the store. In a running notebook each figure pans and
+        zooms.
         """
     )
     return
 
 
 @app.cell
-def _():
-    # How the figures are drawn: a multiplier on their size, and whether they zoom and pan.
-    scale = 1.5
-    interactive = False
-    return interactive, scale
-
-
-@app.cell
-def _(case, example, importlib, mo):
-    # Set-up: prepare the structure as example 06 does, then run stages 1 to 6, the structure
-    # to the mesh, with their settings as they stand in the case. Notebook 06 has a block each.
-    script = example.parent / "06-pdb-to-mesh" / "prepare.py"
-    prepared = example / "2wcd-prepared.pdb"
-    if not prepared.exists():
-        spec = importlib.util.spec_from_file_location("prepare", script)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        module.prepare(
-            example.parents[1] / "tests" / "data" / "structures" / "2wcd.pdb.gz", prepared
+def _(Case, entry, hashlib, json, mo, orient_pore, store):
+    # Notebook 01's preparation at its defaults, and the same case: stages 1 to 6 are shared.
+    preparation = {
+        "chains": "A,B,C,D,E,F,G,H,I,J,K,L",
+        "cis_end": "wider",
+        "first_residue": 8,
+        "last_residue": 292,
+        "centroid_z_nm": 5.655,
+    }
+    key = hashlib.sha256(json.dumps(preparation, sort_keys=True).encode()).hexdigest()[:12]
+    prepared = store.root / "structures" / f"2wcd-{key}.pdb"
+    if not prepared.is_file():
+        prepared.parent.mkdir(parents=True, exist_ok=True)
+        orient_pore(
+            entry,
+            chains=preparation["chains"],
+            cis_end=preparation["cis_end"],
+            registration_residues=(preparation["first_residue"], preparation["last_residue"]),
+            centroid_z_nm=preparation["centroid_z_nm"],
+            out=prepared,
         )
-    run_setup = case.run(upto="mesh")
+    case = Case.from_structure(
+        prepared,
+        point_group="C12",
+        concentration_M=0.15,
+        bias_V=0.05,
+        size_scale=4.0,
+        name="2wcd",
+        store=store,
+        write=False,
+    )
+    meshed = case.run(upto="mesh")
     mo.md(
-        f"**Set-up.** Prepared `{prepared.name}` and ran {len(run_setup.stages)} stages "
-        f"in {sum(item.seconds for item in run_setup.stages):.1f} s, up to the mesh."
+        f"**Stages 1 to 6**, the structure to the mesh: "
+        f"{sum(record.cached for record in meshed.stages)} of {len(meshed.stages)} from the store."
     )
-    return (run_setup,)
+    return (case,)
 
 
 @app.cell
-def _(stage_card):
-    stage_card(
-        "protonation",
-        "The structure protonated by PDB2PQR, with PROPKA choosing each titratable residue's "
-        "state at one pH. Each atom comes out with a partial charge and a radius.",
-    )
-    return
+def _(mo):
+    mo.md(
+        """
+        ## 1 · Protonation and the deposited charge
 
-
-@app.cell
-def _():
-    protonation_settings = {
-        "charge.ph": 7.5,  # the pH PROPKA works at
-        "charge.forcefield": "CHARMM",  # also "PEOEPB" or "SWANSON"
-    }
-    return (protonation_settings,)
-
-
-@app.cell
-def _(case, protonation_settings, run_setup):
-    assert run_setup.stages[-1].name == "mesh"  # the set-up ran first
-    case_protonation = case.with_(**protonation_settings)
-    run_protonation = case_protonation.run(upto="protonation", only=True)
-    return case_protonation, run_protonation
-
-
-@app.cell
-def _(interactive, run_protonation, scale, show):
-    show(run_protonation, "protonation", scale=scale, interactive=interactive)
-    return
-
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "charge",
-        "The fixed charge on the mesh: each atom smeared into a Gaussian, averaged exactly "
-        "around the axis and deposited element by element. The run stops if the charge on the "
-        "mesh is not the charge of the atoms.",
+        PROPKA chooses each titratable residue's state at the pH, and PDB2PQR gives every
+        atom a partial charge and a radius in the force field. Each atom's charge is then
+        smeared into a Gaussian, averaged exactly about the axis and deposited element by
+        element; the run stops if the charge on the mesh is not the charge of the atoms.
+        """
     )
     return
 
 
 @app.cell
-def _():
-    charge_settings = {
-        "charge.smearing.sharpness": 0.5,  # the width of each atom's Gaussian
-        "charge.smearing.grid_spacing_nm": 0.005,  # the lattice the average is taken on
-        "charge.dielectric_transition_nm": 0.0,  # above 0 grades the permittivity at the wall
-    }
-    return (charge_settings,)
+def _(mo):
+    CHARGE_DEFAULTS = {"ph": 7.5, "forcefield": "CHARMM"}
+    charge_form = mo.ui.dictionary(
+        {
+            "ph": mo.ui.number(2.0, 12.0, 0.1, CHARGE_DEFAULTS["ph"], label="pH"),
+            "forcefield": mo.ui.dropdown(
+                ["CHARMM", "PEOEPB", "SWANSON"],
+                CHARGE_DEFAULTS["forcefield"],
+                label="force field",
+            ),
+        }
+    ).form(submit_button_label="Charge")
+    charge_form
+    return CHARGE_DEFAULTS, charge_form
 
 
 @app.cell
-def _(case_protonation, charge_settings, run_protonation):
-    assert run_protonation.stages[-1].name == "protonation"  # the protonation block ran first
-    case_charge = case_protonation.with_(**charge_settings)
-    run_charge = case_charge.run(upto="charge", only=True)
-    return case_charge, run_charge
+def _(CHARGE_DEFAULTS, case, charge_form):
+    charging = charge_form.value or CHARGE_DEFAULTS
+    charged = case.run(
+        upto="charge",
+        **{"charge.ph": charging["ph"], "charge.forcefield": charging["forcefield"]},
+    )
+    return (charged,)
 
 
 @app.cell
-def _(interactive, run_charge, scale, show):
-    show(run_charge, "charge", scale=scale, interactive=interactive)
-    return
+def _(charge_grids, charged, describe, mo, plot_charge):
+    def where(name):
+        record = next(item for item in charged.stages if item.name == name)
+        stage = describe(name)
+        found = "from the store" if record.cached else f"computed in {record.seconds:.1f} s"
+        return mo.md(f"*Stage {stage.number}, {stage.title}:* `{record.hash[:12]}`, {found}")
 
-
-@app.cell
-def _(stage_card):
-    stage_card(
-        "materials",
-        "The electrolyte and its correction functions: how its diffusivity, mobility, "
-        "viscosity, permittivity and density change with the salt and near the wall.",
+    mo.ui.tabs(
+        {
+            "protonation": mo.vstack(
+                [where("protonation"), mo.mpl.interactive(charged.figure("protonation"))]
+            ),
+            "deposited charge": mo.vstack(
+                [
+                    where("charge"),
+                    mo.mpl.interactive(plot_charge(charge_grids(charged.artefacts["charge"]))),
+                ]
+            ),
+            "charge and solid fraction": mo.mpl.interactive(charged.figure("charge")),
+        }
     )
     return
 
 
 @app.cell
-def _():
-    materials_settings = {
-        "electrolyte.concentration_M": 0.15,  # the bulk salt, mol/L
-        # Each correction is a named model; "none" switches it off, and the manifest records that.
-        "electrolyte.corrections.diffusivity.model": "willems2020_nacl",
-        "electrolyte.corrections.mobility.model": "willems2020_nacl",
-        "electrolyte.corrections.viscosity.model": "willems2020_nacl",
-        "electrolyte.corrections.permittivity.model": "willems2020_nacl",
-        "electrolyte.corrections.density.model": "willems2020_nacl",
-        "electrolyte.corrections.steric.model": "borukhov",
-    }
-    return (materials_settings,)
+def _(mo):
+    mo.md(
+        """
+        ## 2 · The materials
+
+        The electrolyte's correction functions: how the diffusivity, mobility, viscosity,
+        permittivity and density change with the salt and near the wall, each read from the
+        parameter file, the operating salt marked. The stage reads nothing of the mesh, so a
+        new salt re-evaluates it alone.
+        """
+    )
+    return
 
 
 @app.cell
-def _(case_charge, materials_settings, run_charge):
-    assert run_charge.stages[-1].name == "charge"  # the charge block ran first
-    case_materials = case_charge.with_(**materials_settings)
-    run_materials = case_materials.run(upto="materials", only=True)
-    return case_materials, run_materials
+def _(mo):
+    MATERIALS_DEFAULTS = {"concentration_M": 0.15}
+    materials_form = mo.ui.dictionary(
+        {
+            "concentration_M": mo.ui.number(
+                0.01, 3.0, 0.01, MATERIALS_DEFAULTS["concentration_M"], label="NaCl (M)"
+            )
+        }
+    ).form(submit_button_label="Evaluate")
+    materials_form
+    return MATERIALS_DEFAULTS, materials_form
 
 
 @app.cell
-def _(interactive, run_materials, scale, show):
-    show(run_materials, "materials", scale=scale, interactive=interactive)
+def _(MATERIALS_DEFAULTS, case, materials_form, mo):
+    salt = materials_form.value or MATERIALS_DEFAULTS
+    materials = case.run(upto="materials", concentration_M=salt["concentration_M"])
+    mo.mpl.interactive(materials.figure("materials"))
     return
 
 
