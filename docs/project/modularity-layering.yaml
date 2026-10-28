@@ -87,8 +87,10 @@ edges:
   - {from: mesh, to: io, relation: static, finding: null}
   - {from: nanopnp, to: core, relation: static, finding: null}
   - {from: nanopnp, to: io, relation: static, finding: null}
+  - {from: nanopnp, to: mesh, relation: static, finding: null}
   - {from: nanopnp, to: physics, relation: static, finding: null}
   - {from: nanopnp, to: pipeline, relation: static, finding: null}
+  - {from: nanopnp, to: structure, relation: static, finding: null}
   - {from: nanopnp, to: sweep, relation: static, finding: null}
   - {from: numerics, to: core, relation: static, finding: null}
   - {from: physics, to: core, relation: static, finding: null}
