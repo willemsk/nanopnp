@@ -1,6 +1,6 @@
 # WP54 — The notebooks and figures revised
 
-**Status: in progress; items 1 to 10 done.** Written 28 October 2026 from the author's notes,
+**Status: in progress; items 1 to 14 done; the finishing steps wait on the author's steering at checkpoint 3.** Written 28 October 2026 from the author's notes,
 [notebooks-review-for-wp54.md](notebooks-review-for-wp54.md), and the rulings they carry
 (§8.2.20 V1 to V5). Inherits WP51 as shipped (§8.2.14 P2 to P10) and WP53's commands.
 
@@ -180,8 +180,18 @@ the next item; a change of scope is a ruling (`rulings.md`).
 >   comment, 03's quantities of interest are a table in display units (`plot.data.qoi_rows`).
 - [x] c2be267 11. `src/nanopnp/structure/orient.py`, `structure/__init__.py`, `core/paths.py:structure_file`, `examples/06-pdb-to-mesh/prepare.py` as a wrapper, REV-136's section (D1); done when its row and VER-46 for example 06 pass. **Executor:** main.
 - [x] 36c6466 12. `notebooks/01-geometry`, `02-charge`, `06-2wcd` on `Case.from_structure` (D6); done when the notebook test passes for all six. **Executor:** main.
-- [ ] 13. `core/public.py`, `nanopnp/__init__.py`, `modularity-layering.yaml` (`nanopnp → mesh`, `nanopnp → structure`), `CHANGELOG.md` (D1); done when `test_public_api.py` and `test_layering.py` pass. **Executor:** main.
-- [ ] 14. Checkpoint: publish all six. **Executor:** main.
+- [x] 914d69a 13. `core/public.py`, `nanopnp/__init__.py`, `modularity-layering.yaml` (`nanopnp → mesh`, `nanopnp → structure`), `CHANGELOG.md` (D1); done when `test_public_api.py` and `test_layering.py` pass. **Executor:** main.
+- [x] 14. Checkpoint: publish all six. **Executor:** main.
+> **Outcome — slice 3 (items 11 to 14).**
+> - Steering from checkpoint 2 landed first, in 1b4c5e5 (§8.2.20 V6 to V9; see slice 2's outcome).
+> - `orient_pore` writes the prepared 2WCD file byte for byte as the old `prepare.py` did; the
+>   sign test fails for one of its two cases when the flip is dropped. `structure.read.chain_keys`
+>   is public, so the chain selection is not written twice.
+> - Grounding missed that `Case.from_structure` wrote no `geometry` block, so `with_` could not
+>   reach the contour's isolevel; the factory now writes it at its defaults, and no stage key moves.
+> - The three 2WCD notebooks repeat the preparation's defaults rather than import a shared module,
+>   which D6 forbids (`importlib`); identical values give the same prepared file in the store.
+>   From an empty store the six take 8.6 min, 06's solve 5 min of it.
 
 ### Verification
 
