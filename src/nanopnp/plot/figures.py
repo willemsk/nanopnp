@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from nanopnp.materials.electrolyte import MOLAR_PER_SI
-from nanopnp.plot import data
+from nanopnp.mesh.sizing import case_debye_record
+from nanopnp.plot import data, panels
 from nanopnp.plot.data import DISPLAY, axis_label
 from nanopnp.post.export import solution_fields
 
@@ -35,9 +36,6 @@ __all__ = [
 ]
 
 NM = DISPLAY["length"].per_SI
-
-VIEW_NM = (30.0, 45.0)
-"""The ``(r, |z|)`` window of a field panel, cropped from a larger domain."""
 
 
 def text_figure(message: str) -> Figure:
@@ -127,7 +125,7 @@ def symmetry_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Fi
 
 
 def contour_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
-    """Draw stage 4: the conditioned contour, over the reduced map when inputs give it."""
+    """Draw stage 4: the conditioned contour and its constriction, over the reduced map."""
     from matplotlib.figure import Figure
 
     polygon = data.contour_polygon_m(artefact)
@@ -140,7 +138,8 @@ def contour_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Fig
     if mapped is not None:
         _mesh(ax, mapped.r_nm * 1e-9, mapped.z_nm * 1e-9, mapped.mean, cmap="Greys", alpha=0.6)
     closed = [*polygon, polygon[0]]
-    ax.plot([p[0] * NM for p in closed], [p[1] * NM for p in closed], color="tab:red", lw=1.5)
+    ax.plot([p[0] * NM for p in closed], [p[1] * NM for p in closed], color="tab:blue", lw=1.5)
+    panels.mark_constriction(ax, artefact)
     _rz_axes(ax)
     ax.set_title("conditioned pore contour")
     return figure
@@ -177,31 +176,30 @@ def region_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figu
     return figure
 
 
+def _debye_target_nm(artefact: Artefact, inputs: StageInputs | None) -> float | None:
+    if inputs is not None:
+        return float(cast("float", case_debye_record(inputs.resolved)["debye_target_nm"]))
+    sizing = artefact.summary.get("sizing")
+    found = sizing.get("debye_target_nm") if isinstance(sizing, Mapping) else None
+    return None if found is None else float(found)
+
+
 def mesh_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
-    """Draw stage 6: element size and SICN, the 0.3 floor marked."""
+    """Draw stage 6: the whole domain by element size, and the lumen by SICN with its edges."""
     from matplotlib.figure import Figure
-    from matplotlib.tri import Triangulation
 
     elements = data.mesh_of(artefact, inputs)
     if elements is None:
         return _absent(artefact, "mesh", "the mesh (a supplied mesh is read from its file)")
-    triangulation = Triangulation(
-        elements.vertices_m[:, 0] * NM, elements.vertices_m[:, 1] * NM, elements.triangles
-    )
     figure = Figure(figsize=(9.0, 6.5), layout="constrained")
-    left, right = figure.subplots(1, 2, sharey=True)
-    image = left.tripcolor(triangulation, facecolors=elements.size_m * NM, cmap="viridis")
-    figure.colorbar(image, ax=left, label=axis_label("longest edge h", "length"))
-    left.set_title(f"{triangulation.triangles.shape[0]} elements")
-    _rz_axes(left)
-    image = right.tripcolor(
-        triangulation, facecolors=elements.sicn, cmap="RdYlGn", vmin=0.0, vmax=1.0
+    whole, lumen = figure.subplots(1, 2)
+    panels.plot_mesh(elements, ax=whole)
+    panels.plot_mesh(
+        elements,
+        ax=lumen,
+        zoom_nm=data.LUMEN_NM,
+        debye_target_nm=_debye_target_nm(artefact, inputs),
     )
-    bar = figure.colorbar(image, ax=right, label="SICN")
-    bar.ax.axhline(data.SICN_FLOOR, color="k", lw=1.5)
-    right.set_title(f"min SICN {elements.sicn.min():.3f} (floor {data.SICN_FLOOR})")
-    right.set_xlabel(axis_label("r", "length"))
-    right.set_aspect("equal", adjustable="box")
     return figure
 
 
@@ -224,20 +222,25 @@ def protonation_figure(artefact: Artefact, inputs: StageInputs | None = None) ->
 
 
 def charge_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
-    """Draw stage 7's fields: the stored charge and ε_r grids."""
+    """Draw stage 7's fields: the deposited charge about zero, and the solid fraction χ."""
     from matplotlib.figure import Figure
 
     grids = data.charge_grids(artefact)
     if not grids:
         return _absent(artefact, "charge", "a stored charge or ε_r grid")
     figure = Figure(figsize=(4.5 * len(grids), 6.0), layout="constrained")
-    axes = figure.subplots(1, len(grids), squeeze=False)[0]
-    for ax, (name, grid) in zip(axes, grids.items(), strict=True):
-        cmap = "coolwarm" if name == "charge" else "viridis"
-        image = _mesh(ax, grid.r_m, grid.z_m, grid.values, cmap=cmap)
-        figure.colorbar(image, ax=ax, label=f"{grid.quantity.replace('_', ' ')} ({grid.unit})")
+    axes = list(figure.subplots(1, len(grids), squeeze=False)[0])
+    if "charge" in grids:
+        panels.plot_charge(grids, ax=axes.pop(0))
+    solid = grids.get("solid_fraction")
+    if solid is not None:
+        ax = axes.pop(0)
+        image = _mesh(ax, solid.r_m, solid.z_m, solid.values, cmap="Greys")
+        image.set_clim(0.0, 1.0)
+        ax.contour(solid.r_m * NM, solid.z_m * NM, solid.values, levels=[0.5], colors="tab:orange")
+        figure.colorbar(image, ax=ax, label=f"{solid.quantity} ({solid.unit})")
         _rz_axes(ax)
-        ax.set_title(f"stored {grid.quantity.replace('_', ' ')}")
+        ax.set_title("solid fraction, χ = 0.5 drawn")
     return figure
 
 
@@ -266,6 +269,17 @@ def materials_figure(artefact: Artefact, inputs: StageInputs | None = None) -> F
     for (left, right), curve in zip(axes, curves, strict=True):
         left.plot(curve.driver_M * per_M, curve.factor_vs_driver)
         left.axvspan(*curve.validity_M, color="0.9", zorder=0)
+        left.axvline(curve.at_driver_M, color="tab:red", lw=1.0, ls="--")
+        left.annotate(
+            f"operating {curve.at_driver_M:g} M",
+            (curve.at_driver_M, 1.0),
+            xycoords=("data", "axes fraction"),
+            xytext=(3, -3),
+            textcoords="offset points",
+            va="top",
+            color="tab:red",
+            fontsize="small",
+        )
         left.set_xlabel(f"{curve.driver_label} (M)")
         left.set_ylabel(f"{curve.name} factor")
         left.set_title(f"{curve.name}: {curve.model} (fitted range shaded)")
@@ -273,38 +287,6 @@ def materials_figure(artefact: Artefact, inputs: StageInputs | None = None) -> F
         right.set_xlabel(axis_label("distance d to the pore wall", "length"))
         right.set_title(f"at {curve.driver_label} = {curve.at_driver_M:g} M")
     return figure
-
-
-def _crop(ax: Axes, points_m: np.ndarray) -> None:
-    r_max = min(float(points_m[:, 0].max()) * NM, VIEW_NM[0])
-    z_low = max(float(points_m[:, 1].min()) * NM, -VIEW_NM[1])
-    z_high = min(float(points_m[:, 1].max()) * NM, VIEW_NM[1])
-    ax.set_xlim(0.0, r_max)
-    ax.set_ylim(z_low, z_high)
-
-
-def _field_panel(
-    figure: Figure,
-    ax: Axes,
-    points_m: np.ndarray,
-    triangles: np.ndarray,
-    values: np.ndarray,
-    *,
-    title: str,
-    label: str,
-    scale: float,
-    cmap: str,
-) -> None:
-    from matplotlib.tri import Triangulation
-
-    triangulation = Triangulation(
-        points_m[:, 0] * NM, points_m[:, 1] * NM, data.subdivided(triangles)
-    )
-    image = ax.tripcolor(triangulation, values * scale, shading="gouraud", cmap=cmap)
-    figure.colorbar(image, ax=ax, label=label)
-    ax.set_title(title)
-    _rz_axes(ax)
-    _crop(ax, points_m)
 
 
 def _convergence(figure: Figure, residual_ax: Axes, damping_ax: Axes, rungs: list[Any]) -> None:
@@ -323,7 +305,7 @@ def _convergence(figure: Figure, residual_ax: Axes, damping_ax: Axes, rungs: lis
 
 
 def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
-    """Draw stage 10: the solved fields and the Newton history per rung."""
+    """Draw stage 10: each solved field on its own panel, and the Newton history per rung."""
     from matplotlib.figure import Figure
 
     history = data.newton_history(artefact)
@@ -334,43 +316,23 @@ def solve_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
         return _absent(artefact, "solve", "the fields or the Newton history")
     model = fields.model if fields is not None else "solve"
     title = f"{model}, stabilisation: {summary.get('stabilisation', 'not recorded')}"
-    panels: list[tuple[str, np.ndarray, np.ndarray, np.ndarray, str, float, str]] = []
+    quantities: list[str] = []
     if fields is not None:
-        points, triangles, whole = fields.whole
-        for name, values in whole.items():
-            if name == "phi_V":
-                panels.append(("potential", points, triangles, values, "V", 1.0, "RdBu_r"))
-        points, triangles, fluid = fields.fluid
-        for name, values in fluid.items():
-            if name.endswith("_mol_m3"):
-                scale = DISPLAY["concentration"].per_SI
-                panels.append(
-                    (name[: -len("_mol_m3")], points, triangles, values, "M", scale, "viridis")
-                )
-            elif name == "u_m_s":
-                speed = (values**2).sum(axis=1) ** 0.5
-                scale = DISPLAY["velocity"].per_SI
-                panels.append(("speed |u|", points, triangles, speed, "µm/s", scale, "magma"))
-            elif name == "p_Pa":
-                panels.append(("pressure", points, triangles, values, "Pa", 1.0, "PuOr"))
-    columns = max(1, min(4, len(panels)))
-    rows = -(-len(panels) // columns) + (1 if rungs else 0)
+        held = {*fields.whole[2], *fields.fluid[2]}
+        quantities += ["potential"] if "phi_V" in held else []
+        quantities += sorted(k for k in held if k.endswith("_mol_m3"))
+        quantities += ["u_z"] if "u_m_s" in held else []
+        quantities += ["p_Pa"] if "p_Pa" in held else []
+    columns = max(1, min(4, len(quantities)))
+    rows = -(-len(quantities) // columns) + (1 if rungs else 0)
     figure = Figure(figsize=(4.2 * columns, 5.0 * rows), layout="constrained")
     figure.suptitle(title)
     grid = figure.add_gridspec(rows, columns)
-    for index, (name, points, triangles, values, unit, scale, cmap) in enumerate(panels):
+    bulk_M = None if inputs is None else inputs.resolved.concentration_M
+    for index, quantity in enumerate(quantities):
         ax = figure.add_subplot(grid[index // columns, index % columns])
-        _field_panel(
-            figure,
-            ax,
-            points,
-            triangles,
-            values,
-            title=name,
-            label=f"{name} ({unit})",
-            scale=scale,
-            cmap=cmap,
-        )
+        assert fields is not None
+        panels.plot_field(fields, quantity, ax=ax, relative_to_M=bulk_M)
     if rungs:
         last = rows - 1
         bottom = grid[last, :].subgridspec(1, 2)
@@ -463,6 +425,9 @@ def sweep_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
     for index, (key, symbol, quantity, colour) in enumerate(headline):
         span = cells // len(headline)
         ax = figure.add_subplot(grid[0, index * span : (index + 1) * span])
+        if key == "current_A" and axis_name == "bias_V":
+            panels.plot_iv(artefact, ax=ax)
+            continue
         display = DISPLAY[quantity]
         _sweep_axis(ax, curves, curves.quantities[key] * display.per_SI, colour)
         ax.axhline(0.0, color="0.7", lw=0.8, zorder=0)
