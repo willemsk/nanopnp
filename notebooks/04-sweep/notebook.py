@@ -12,12 +12,13 @@ def _():
 
     from nanopnp import Case, Store
     from nanopnp.plot import figure as draw
+    from nanopnp.plot import plot_iv
     from nanopnp.sweep import sweep
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
     ring = here.parents[1] / "examples" / "03-iv-sweep" / "cis-ring.field.yaml"
-    return Case, draw, mo, ring, store, sweep
+    return Case, draw, mo, plot_iv, ring, store, sweep
 
 
 @app.cell
@@ -78,8 +79,14 @@ def _(Case, SWEEP_DEFAULTS, ring, store, sweep, sweep_form):
 
 
 @app.cell
-def _(dataset, draw, mo):
-    mo.vstack([draw(dataset), mo.ui.table(dataset.summary["rows"], selection=None)])
+def _(dataset, draw, mo, plot_iv):
+    mo.vstack(
+        [
+            plot_iv(dataset).get_figure(),
+            mo.ui.table(dataset.summary["rows"], selection=None),
+            mo.accordion({"Every quantity against the bias": draw(dataset)}),
+        ]
+    )
     return
 
 
