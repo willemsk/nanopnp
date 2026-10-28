@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 
 from nanopnp.materials.electrolyte import MOLAR_PER_SI
@@ -176,12 +177,13 @@ def region_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figu
     return figure
 
 
-def _debye_target_nm(artefact: Artefact, inputs: StageInputs | None) -> float | None:
+def _debye_target_nm(artefact: Artefact, inputs: StageInputs | None) -> tuple[float | None, str]:
     if inputs is not None:
-        return float(cast("float", case_debye_record(inputs.resolved)["debye_target_nm"]))
+        return float(cast("float", case_debye_record(inputs.resolved)["debye_target_nm"])), ""
+    # A mesh shared by sweep members records the salt of the member that meshed it first.
     sizing = artefact.summary.get("sizing")
     found = sizing.get("debye_target_nm") if isinstance(sizing, Mapping) else None
-    return None if found is None else float(found)
+    return (None, "") if found is None else (float(found), "as meshed")
 
 
 def mesh_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure:
@@ -194,11 +196,9 @@ def mesh_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figure
     figure = Figure(figsize=(9.0, 6.5), layout="constrained")
     whole, lumen = figure.subplots(1, 2)
     panels.plot_mesh(elements, ax=whole)
+    debye_target_nm, note = _debye_target_nm(artefact, inputs)
     panels.plot_mesh(
-        elements,
-        ax=lumen,
-        zoom_nm=data.LUMEN_NM,
-        debye_target_nm=_debye_target_nm(artefact, inputs),
+        elements, ax=lumen, zoom_nm=data.LUMEN_NM, debye_target_nm=debye_target_nm, debye_note=note
     )
     return figure
 
@@ -270,6 +270,7 @@ def materials_figure(artefact: Artefact, inputs: StageInputs | None = None) -> F
         left.plot(curve.driver_M * per_M, curve.factor_vs_driver)
         left.axvspan(*curve.validity_M, color="0.9", zorder=0)
         left.axvline(curve.at_driver_M, color="tab:red", lw=1.0, ls="--")
+        left.set_xlim(right=max(left.get_xlim()[1], 1.05 * curve.at_driver_M))
         left.annotate(
             f"operating {curve.at_driver_M:g} M",
             (curve.at_driver_M, 1.0),
@@ -411,6 +412,10 @@ def sweep_figure(artefact: Artefact, inputs: StageInputs | None = None) -> Figur
     if curves is None or not curves.quantities:
         return text_figure("this sweep holds no rows with a scalar quantity")
     axis_name = curves.axis.rsplit(".", 1)[-1]
+    if axis_name == "bias_V":
+        # Every panel against the bias the current is reported against, as the I-V panel is.
+        bias_mV = data.cis_referenced_bias_V(curves) * DISPLAY["potential"].per_SI
+        curves = replace(curves, x=bias_mV, axis=axis_label("V", "potential"))
     headline = [h for h in HEADLINE if h[0] in curves.quantities]
     shown = {h[0] for h in headline} | {axis_name}
     names = [n for n in curves.quantities if n not in shown]

@@ -151,6 +151,10 @@ def test_radial_cutline_is_masked_outside_the_fluid() -> None:
     inside = r <= 1.0
     np.testing.assert_allclose(values[inside], 3.0 + 2.0 * r[inside] - 0.25, rtol=1e-12)
     assert np.isnan(values[~inside]).all()
+    # r² is quadratic: only a split through the midsides returns it at the midside nodes.
+    quadratic = _fields({"c_Na_mol_m3": r_nm**2})
+    _, at_midsides = data.radial_cutline(quadratic, "c_Na_mol_m3", z_nm=0.0, r_nm=np.array([0.5]))
+    np.testing.assert_allclose(at_midsides, [0.25], rtol=1e-12)
 
 
 def test_potential_panel_is_millivolts_centred_at_zero() -> None:
@@ -175,3 +179,28 @@ def test_concentration_panel_is_log_relative_to_bulk() -> None:
     image = ax.collections[0]
     np.testing.assert_allclose(np.asarray(image.get_array()), np.log10(2.0), rtol=1e-12)
     assert getattr(image.norm, "vcenter", None) == 0.0
+
+
+def test_sweep_panels_share_the_cis_referenced_bias_and_keep_failed_points() -> None:
+    # Under ground: trans the recorded bias is the assigned one's negative; a failed point
+    # records none, and must still be marked at its cis-referenced bias, on every panel alike.
+    pytest.importorskip("matplotlib")
+    from nanopnp.io.artefact import SWEEP_SCHEMA, Artefact
+    from nanopnp.plot import figure
+
+    def row(index: int, bias_V: float, ok: bool) -> dict[str, object]:
+        quantities = {"current_A": -1e-9 * bias_V * 10, "eof_m3_s": 1e-21, "bias_V": -bias_V}
+        return {
+            "index": index,
+            "assignments": {"boundary_conditions.bias_V": bias_V},
+            "status": "ok" if ok else "failed",
+            "quantities": quantities if ok else None,
+        }
+
+    rows = [row(0, -0.1, True), row(1, 0.05, False), row(2, 0.1, True)]
+    drawn = figure(Artefact(schema=SWEEP_SCHEMA, parameters={}, summary={"rows": rows}))
+    iv, flow = drawn.axes[:2]
+    assert iv.lines[0].get_xdata().tolist() == pytest.approx([100.0, -50.0, -100.0])
+    assert flow.lines[0].get_xdata().tolist() == pytest.approx([100.0, -50.0, -100.0])
+    failed = [line for line in iv.lines if line.get_marker() == "x"]
+    assert failed[0].get_xdata().tolist() == pytest.approx([-50.0])

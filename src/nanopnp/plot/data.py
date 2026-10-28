@@ -55,6 +55,7 @@ __all__ = [
     "axial_section",
     "axis_label",
     "charge_grids",
+    "cis_referenced_bias_V",
     "contour_polygon_m",
     "correction_curves",
     "density_section",
@@ -561,6 +562,8 @@ class SweepCurves:
     ----------
     group
         Per point, the values of the sweep's other axes; one curve is drawn per group.
+    index
+        Per point, its index in the sweep's plan.
     """
 
     axis: str
@@ -568,6 +571,7 @@ class SweepCurves:
     ok: np.ndarray
     quantities: dict[str, np.ndarray]
     group: tuple[str, ...] = ()
+    index: tuple[int, ...] = ()
 
 
 def _scalars(quantities: Mapping[str, Any]) -> dict[str, float]:
@@ -621,7 +625,25 @@ def sweep_curves(rows: Sequence[Mapping[str, Any]]) -> SweepCurves | None:
         ok=np.array([row["status"] == "ok" for row in ordered], dtype=bool),
         quantities=series,
         group=tuple(group_of(row) for row in ordered),
+        index=tuple(int(row["index"]) for row in ordered),
     )
+
+
+def cis_referenced_bias_V(curves: SweepCurves) -> np.ndarray:
+    """Return each point's bias as the current is reported against it, ``φ_trans - φ_cis``.
+
+    A point that recorded no bias, as a failed one, takes its assigned bias, flipped where the
+    recorded ones are the assigned ones' negatives (``ground: trans``).
+    """
+    import numpy as np
+
+    recorded = curves.quantities.get("bias_V")
+    if recorded is None:
+        return curves.x
+    both = np.isfinite(recorded) & (curves.x != 0.0)
+    flipped = bool(both.any()) and bool(np.median(recorded[both] / curves.x[both]) < 0.0)
+    assigned = -curves.x if flipped else curves.x
+    return np.where(np.isfinite(recorded), recorded, assigned)
 
 
 def sweep_rows(artefact: Artefact) -> list[Mapping[str, Any]] | None:
