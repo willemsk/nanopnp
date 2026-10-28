@@ -203,6 +203,7 @@ def plot_mesh(
     ax: Axes | None = None,
     zoom_nm: tuple[float, float] | None = None,
     debye_target_nm: float | None = None,
+    debye_note: str = "",
 ) -> Axes:
     """Draw a mesh: the whole domain by element size, or a zoomed window by SICN with its edges.
 
@@ -213,6 +214,8 @@ def plot_mesh(
         floor marked, and their edges drawn.
     debye_target_nm
         ``λ_D / 5`` in nm, drawn as a scale bar.
+    debye_note
+        Where that value comes from, appended to the bar's label.
     """
     from matplotlib.colors import LogNorm
     from matplotlib.tri import Triangulation
@@ -243,7 +246,8 @@ def plot_mesh(
         ax.set_title(f"min SICN {elements.sicn.min():.3f} (floor {data.SICN_FLOOR})")
         _window(ax, elements.vertices_m, zoom_nm)
     if debye_target_nm is not None:
-        _scale_bar(ax, debye_target_nm, f"λ_D/5 = {debye_target_nm:.2g} nm")
+        note = f" ({debye_note})" if debye_note else ""
+        _scale_bar(ax, debye_target_nm, f"λ_D/5 = {debye_target_nm:.2g} nm{note}")
     _rz(ax)
     return ax
 
@@ -313,29 +317,33 @@ def plot_radial_cutline(
     return ax
 
 
-def _bias_mV(curves: data.SweepCurves) -> np.ndarray:
-    # The cis-referenced bias the current is reported against, where the run records it.
-    recorded = curves.quantities.get("bias_V")
-    bias = curves.x if recorded is None else recorded
-    return bias * DISPLAY["potential"].per_SI
-
-
 def _annotation(artefact: Artefact, curves: data.SweepCurves, bias_mV: np.ndarray) -> str:
     import numpy as np
 
+    per = DISPLAY["potential"].per_SI
+    group_of = dict(zip(curves.index, curves.group, strict=False))
     lines = []
     ratios: Any = artefact.summary.get("rectification") or []
     for entry in ratios:
         if isinstance(entry, Mapping):
-            per = DISPLAY["potential"].per_SI
-            lines.append(f"RR(±{abs(entry['bias_V']) * per:g} mV) = {entry['rectification']:.3g}")
+            group = group_of.get(int(entry["forward"]), "")
+            lines.append(
+                f"RR(±{abs(entry['bias_V']) * per:g} mV) = {entry['rectification']:.3g}"
+                + (f", {group}" if group else "")
+            )
     conductance = curves.quantities.get("conductance_S")
     if conductance is not None:
-        positive = np.flatnonzero(curves.ok & (bias_mV > 0.0) & np.isfinite(conductance))
-        if positive.size:
-            at = positive[np.argmin(bias_mV[positive])]
-            per = DISPLAY["conductance"].per_SI
-            lines.append(f"G = {conductance[at] * per:.3g} nS at +{bias_mV[at]:g} mV")
+        groups = np.array(curves.group or [""] * bias_mV.size)
+        for group in dict.fromkeys(groups.tolist()):
+            positive = np.flatnonzero(
+                (groups == group) & curves.ok & (bias_mV > 0.0) & np.isfinite(conductance)
+            )
+            if positive.size:
+                at = positive[np.argmin(bias_mV[positive])]
+                lines.append(
+                    f"G = {conductance[at] * DISPLAY['conductance'].per_SI:.3g} nS at "
+                    f"+{bias_mV[at]:g} mV" + (f", {group}" if group else "")
+                )
     return "\n".join(lines)
 
 
@@ -352,9 +360,21 @@ def plot_iv(artefact: Artefact, *, ax: Axes | None = None, annotate: bool = True
     if curves is None or "current_A" not in curves.quantities:
         raise ValueError(f"{artefact.schema}: no row reports a current to draw against the bias")
     ax = _axes(ax, (5.6, 4.0))
-    bias = _bias_mV(curves)
+    bias = data.cis_referenced_bias_V(curves) * DISPLAY["potential"].per_SI
     current = curves.quantities["current_A"] * DISPLAY["current"].per_SI
-    ax.plot(bias, current, marker="o", ms=4, color="tab:blue")
+    groups = list(dict.fromkeys(curves.group)) or [""]
+    for group in groups:
+        member = [g == group for g in curves.group] if curves.group else [True] * bias.size
+        ax.plot(
+            bias[member],
+            current[member],
+            marker="o",
+            ms=4,
+            color="tab:blue" if len(groups) == 1 else None,
+            label=group or None,
+        )
+    if len(groups) > 1:
+        ax.legend(fontsize="small", loc="lower right")
     failed = bias[~curves.ok]
     if failed.size:
         ax.plot(
@@ -430,6 +450,6 @@ def plot_charge(grids: Mapping[str, data.StoredGrid], *, ax: Axes | None = None)
             colors="0.15",
             linewidths=0.8,
         )
-    ax.set_title(f"deposited {charge.quantity.replace('_', ' ')}, χ = 0.5 drawn")
+    ax.set_title(f"deposited {charge.quantity.replace('_', ' ')}, the lattice's χ = 0.5 drawn")
     _rz(ax)
     return ax
