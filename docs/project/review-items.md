@@ -1576,3 +1576,8 @@ case's concentration; `core/scaling.py`), so it is right for the validated 1:1 m
 1:1, or a bulk that differs between cis and trans, would read 0 in a reservoir it does not fill and hide
 it. Found by the physics review of WP54 items 6 and 7.
 
+## REV-149: Notebook 01 prepares a structure but does not change its residues
+
+Notebook 01's preparation form chooses the chains, the cis end, the residue range and the centroid
+height, and hands them to `orient_pore`. It cannot change a residue (a point mutation, a removed loop),
+which the author would like a later stage to offer. Deferred by §8.2.20 V13, at WP54's third checkpoint.
