@@ -315,9 +315,7 @@ def _reproduce(args: argparse.Namespace) -> int:
 
 
 def _mesh(args: argparse.Namespace) -> int:
-    from nanopnp.mesh.adapter import from_ngsolve, read, write_msh41
-    from nanopnp.mesh.ingest import apply_groups
-    from nanopnp.mesh.quality import check_quality, check_radii
+    from nanopnp.mesh.cylinder import generate_cylinder, write_gated_msh
 
     # Refused before the mesher runs: left to the write, a bad destination would exit 3 or 1
     # instead of 2.
@@ -328,44 +326,23 @@ def _mesh(args: argparse.Namespace) -> int:
         args.parser.error(f"--out {out}: the directory {out.parent} does not exist")
 
     if args.shape == "cylinder":
-        from nanopnp.mesh.primitives import CylindricalPoreGeometry
-
         if args.pore_radius_nm >= args.reservoir_radius_nm:
             args.parser.error(
                 f"--pore-radius-nm {args.pore_radius_nm:g} must be smaller than "
                 f"--reservoir-radius-nm {args.reservoir_radius_nm:g}"
             )
-        geometry = CylindricalPoreGeometry(
+        generated = generate_cylinder(
             pore_radius_nm=args.pore_radius_nm,
             membrane_thickness_nm=args.membrane_thickness_nm,
             reservoir_radius_nm=args.reservoir_radius_nm,
-        )
-        # Ungated here; gated once below, on the file as written.
-        generated = geometry.generate(
-            maxh_nm=args.maxh_nm, wall_h_nm=args.wall_h_nm, check_quality=False
+            maxh_nm=args.maxh_nm,
+            wall_h_nm=args.wall_h_nm,
         )
     else:
         from nanopnp.mesh.reference import ReferenceGeometry
 
         generated = ReferenceGeometry.from_fixture().generate(check_quality=False)
-    data = from_ngsolve(generated)
-
-    # OCC leaves the two pore-mouth fluid-fluid seams at default; map them to interface.
-    # Other unknown groups are refused by apply_groups.
-    groups = {"default": "interface"} if "default" in data.boundaries else {}
-
-    # The process id keeps two generators aimed at one destination from sharing a staging file.
-    partial = out.with_name(f".{out.stem}.{os.getpid()}.partial{out.suffix}")
-    where = f"the generated mesh {out.name!r}"
-    try:
-        write_msh41(data, partial)
-        mapped, _applied = apply_groups(read(partial, format="msh41"), groups)
-        quality = check_quality(mapped, where=where)
-        check_radii(mapped, where=where)
-        partial.replace(out)
-    finally:
-        partial.unlink(missing_ok=True)
-
+    mapped, quality, groups = write_gated_msh(generated, out)
     flow = "{" + ", ".join(f"{key}: {value}" for key, value in sorted(groups.items())) + "}"
     payload: dict[str, Canonicalisable] = {
         "path": str(out),
