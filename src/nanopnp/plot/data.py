@@ -1,4 +1,4 @@
-"""Arrays for every figure, read from stored artefacts in SI and the model frame; no Matplotlib."""
+"""Arrays for every figure, read from stored artefacts in SI and the model frame; no drawing."""
 
 from __future__ import annotations
 
@@ -34,9 +34,13 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
     from nanopnp.materials.models import CorrectionModel
+    from nanopnp.post.export import SolutionFields
 
 __all__ = [
+    "CUTLINE_POINTS",
     "DISPLAY",
+    "FIELD_ALIASES",
+    "LUMEN_NM",
     "SICN_FLOOR",
     "CorrectionCurves",
     "Display",
@@ -47,6 +51,7 @@ __all__ = [
     "StoredGrid",
     "SweepCurves",
     "atoms_r_z_m",
+    "axial_cutline",
     "axial_section",
     "axis_label",
     "charge_grids",
@@ -54,11 +59,14 @@ __all__ = [
     "correction_curves",
     "density_section",
     "element_sizes_m",
+    "field_values",
     "mesh_elements",
     "newton_history",
     "protonation_charges",
+    "radial_cutline",
     "reduced_map",
     "region_drawing",
+    "sampled",
     "structure_atoms",
     "subdivided",
     "sweep_curves",
@@ -83,12 +91,13 @@ class Display:
 DISPLAY: dict[str, Display] = {
     "length": Display("nm", 1e9),
     "concentration": Display("M", 1e-3),
-    "potential": Display("V", 1.0),
+    "potential": Display("mV", 1e3),
     "velocity": Display("µm/s", 1e6),
     "pressure": Display("Pa", 1.0),
     "charge_density": Display("C/m³", 1.0),
     "density": Display("1", 1.0),
     "current": Display("nA", 1e9),
+    "conductance": Display("nS", 1e9),
     "flow": Display("µm³/s", 1e18),
 }
 """Every display unit of a figure, in one place; an axis names its unit from here."""
@@ -448,6 +457,97 @@ def subdivided(cells: np.ndarray) -> np.ndarray:
             np.stack([ab, bc, ca], axis=1),
         ]
     )
+
+
+FIELD_ALIASES: dict[str, tuple[str, int | None]] = {
+    "potential": ("phi_V", None),
+    "u_r": ("u_m_s", 0),
+    "u_z": ("u_m_s", 1),
+}
+"""Quantity names a field panel takes beside the attribute keys, as ``(key, component)``."""
+
+LUMEN_NM = (5.0, 10.0)
+"""The ``(r, |z|)`` window of a close-up of the pore, in nm."""
+
+CUTLINE_POINTS = 400
+
+
+def field_values(
+    fields: SolutionFields, quantity: str
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return ``(points_m, cells, values)`` of one quantity, on the domain it is solved on.
+
+    Parameters
+    ----------
+    quantity
+        An attribute key of the fields (``phi_V``, ``c_Na_mol_m3``, ``p_Pa``), or
+        ``"potential"``, ``"u_r"`` or ``"u_z"``.
+
+    Raises
+    ------
+    KeyError
+        No field of that name, or a vector named without its component.
+    """
+    import numpy as np
+
+    key, component = FIELD_ALIASES.get(quantity, (quantity, None))
+    for points, cells, values in (fields.whole, fields.fluid):
+        if key not in values:
+            continue
+        found = np.asarray(values[key], dtype=np.float64)
+        if component is not None:
+            return points, cells, found[:, component]
+        if found.ndim != 1:
+            raise KeyError(f"{quantity!r} is a vector; name a component, 'u_r' or 'u_z'")
+        return points, cells, found
+    known = sorted({*fields.whole[2], *fields.fluid[2], *FIELD_ALIASES})
+    raise KeyError(f"no field {quantity!r}; the run holds {', '.join(known)}")
+
+
+def sampled(
+    fields: SolutionFields, quantity: str, r_nm: np.ndarray, z_nm: np.ndarray
+) -> np.ndarray:
+    """Return one field at the points ``(r_nm, z_nm)``, NaN outside the field's domain."""
+    import numpy as np
+    from matplotlib.tri import LinearTriInterpolator, Triangulation
+
+    points, cells, values = field_values(fields, quantity)
+    # Split into the four linear triangles of each P2 cell, so a cutline is exact at the nodes.
+    triangulation = Triangulation(points[:, 0] / _NM, points[:, 1] / _NM, subdivided(cells))
+    found = LinearTriInterpolator(triangulation, values)(r_nm, z_nm)
+    return np.ma.filled(np.ma.asarray(found, dtype=np.float64), np.nan)
+
+
+def axial_cutline(
+    fields: SolutionFields, quantity: str, *, r_nm: float = 0.0, z_nm: np.ndarray | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return ``(z_nm, values)`` along the line ``r = r_nm``, NaN outside the field's domain.
+
+    ``z_nm`` defaults to :data:`CUTLINE_POINTS` points over the field's axial extent.
+    """
+    import numpy as np
+
+    if z_nm is None:
+        points = field_values(fields, quantity)[0]
+        z_nm = np.linspace(points[:, 1].min() / _NM, points[:, 1].max() / _NM, CUTLINE_POINTS)
+    z = np.asarray(z_nm, dtype=np.float64)
+    return z, sampled(fields, quantity, np.full_like(z, r_nm), z)
+
+
+def radial_cutline(
+    fields: SolutionFields, quantity: str, *, z_nm: float = 0.0, r_nm: np.ndarray | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return ``(r_nm, values)`` along the line ``z = z_nm``, NaN outside the field's domain.
+
+    ``r_nm`` defaults to :data:`CUTLINE_POINTS` points from the axis to the field's outer edge.
+    """
+    import numpy as np
+
+    if r_nm is None:
+        points = field_values(fields, quantity)[0]
+        r_nm = np.linspace(0.0, points[:, 0].max() / _NM, CUTLINE_POINTS)
+    r = np.asarray(r_nm, dtype=np.float64)
+    return r, sampled(fields, quantity, r, np.full_like(r, z_nm))
 
 
 # --- sweep -----------------------------------------------------------------------------------

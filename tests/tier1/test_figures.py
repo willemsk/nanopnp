@@ -12,6 +12,7 @@ from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.quality import element_quality
 from nanopnp.plot import data
+from nanopnp.post.export import SolutionFields
 
 
 def test_figure_classification_both_ways() -> None:
@@ -118,3 +119,59 @@ def test_sweep_figure_draws_current_in_nanoamperes_and_scales() -> None:
     assert figure(artefact, scale=2.0).get_size_inches().tolist() == pytest.approx(
         (2 * drawn.get_size_inches()).tolist()
     )
+
+
+def _p2_square() -> tuple[np.ndarray, np.ndarray]:
+    # The unit square in nm as two P2 triangles: four corners, then the five edge midpoints.
+    corners = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
+    midsides = [(0.5, 0.0), (1.0, 0.5), (0.5, 0.5), (0.5, 1.0), (0.0, 0.5)]
+    points_m = np.array(corners + midsides) * 1e-9
+    cells = np.array([[0, 1, 2, 4, 5, 6], [0, 2, 3, 6, 7, 8]])
+    return points_m, cells
+
+
+def _fields(
+    fluid: dict[str, np.ndarray], whole: dict[str, np.ndarray] | None = None
+) -> SolutionFields:
+    points_m, cells = _p2_square()
+    return SolutionFields(
+        model="test", whole=(points_m, cells, whole or {}), fluid=(points_m, cells, fluid)
+    )
+
+
+def test_radial_cutline_is_masked_outside_the_fluid() -> None:
+    # A linear field is exact on the subdivided cells; past r = 1 nm the line leaves the fluid.
+    pytest.importorskip("matplotlib")
+    points_m, _ = _p2_square()
+    r_nm, z_nm = points_m[:, 0] * 1e9, points_m[:, 1] * 1e9
+    fields = _fields({"c_Na_mol_m3": 3.0 + 2.0 * r_nm - z_nm})
+    r, values = data.radial_cutline(
+        fields, "c_Na_mol_m3", z_nm=0.25, r_nm=np.linspace(0.0, 2.0, 41)
+    )
+    inside = r <= 1.0
+    np.testing.assert_allclose(values[inside], 3.0 + 2.0 * r[inside] - 0.25, rtol=1e-12)
+    assert np.isnan(values[~inside]).all()
+
+
+def test_potential_panel_is_millivolts_centred_at_zero() -> None:
+    # A one-signed potential: TwoSlopeNorm would raise, and a panel in V would read 0.02.
+    pytest.importorskip("matplotlib")
+    from nanopnp.plot.panels import plot_field
+
+    fields = _fields({}, {"phi_V": np.full(9, 0.02)})
+    ax = plot_field(fields, "potential")
+    image = ax.collections[0]
+    np.testing.assert_allclose(np.asarray(image.get_array()), 20.0, rtol=1e-12)
+    assert getattr(image.norm, "vcenter", None) == 0.0
+
+
+def test_concentration_panel_is_log_relative_to_bulk() -> None:
+    # c = 2 c_bulk reads log10 2; a bulk taken in M rather than mol/m3 is off by 3.
+    pytest.importorskip("matplotlib")
+    from nanopnp.plot.panels import plot_field
+
+    fields = _fields({"c_Na_mol_m3": np.full(9, 200.0)})
+    ax = plot_field(fields, "c_Na_mol_m3", relative_to_M=0.1)
+    image = ax.collections[0]
+    np.testing.assert_allclose(np.asarray(image.get_array()), np.log10(2.0), rtol=1e-12)
+    assert getattr(image.norm, "vcenter", None) == 0.0
