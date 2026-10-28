@@ -6,8 +6,9 @@ import difflib
 import json
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from nanopnp.core.hashing import content_hash, short
 from nanopnp.core.scaling import debye_length_nm
@@ -32,17 +33,17 @@ CYLINDER_MESH_SCHEMA = "nanopnp/mesh/cylinder/v0.5"
 
 DEFAULT_OUTPUTS: tuple[str, ...] = ("current", "transport_numbers", "eof_rate")
 
-# Every case field that names a file. A relative one is read against the working directory,
-# so Case.load makes each absolute beside the case file.
-_PATH_FIELDS: tuple[str, ...] = (
-    "inputs.mesh.path",
-    "inputs.charge.path",
-    "inputs.eps_r.path",
-    "inputs.profile.path",
-    "inputs.pqr.path",
-    "structure.source.path",
-    "structure.ensemble.trajectory",
-)
+
+@cache
+def _path_fields() -> tuple[str, ...]:
+    # Every case field that names a file, read off the schema so that a new one is not missed.
+    # A relative one is read against the working directory, so Case.load makes each absolute
+    # beside the case file.
+    return tuple(
+        reference.path
+        for reference in case_fields()
+        if reference.annotation is Path or Path in get_args(reference.annotation)
+    )
 
 
 def field_path(name: str) -> str:
@@ -293,7 +294,7 @@ def input_paths(document: CaseDocument) -> dict[str, str]:
     """Return every input file a case names, by dotted case path, as written."""
     payload = document.model_dump(by_alias=True, mode="json")
     found: dict[str, str] = {}
-    for dotted in _PATH_FIELDS:
+    for dotted in _path_fields():
         cursor: Any = payload
         for part in dotted.split("."):
             cursor = cursor.get(part) if isinstance(cursor, dict) else None

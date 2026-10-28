@@ -38,7 +38,8 @@ def _(mo):
 
         A charged cylindrical pore in 0.1 M NaCl, built in one line of Python and solved
         with the validated ePNP-NS model: Poisson, Nernst-Planck and Navier-Stokes together,
-        every correction on. The fixed charge is the ring of example 02.
+        every correction on. The fixed charge is the ring of example 02, 2.6 nm from the axis,
+        so the pore radius stops at 2.2 nm: a wider pore would hold the ring in its lumen.
 
         Edit the settings and press **Solve**. The run takes every stage it does not change
         from the store, so a new bias re-solves without meshing again. The views below the
@@ -61,7 +62,7 @@ def _(mo):
     solve_form = mo.ui.dictionary(
         {
             "pore_radius_nm": mo.ui.number(
-                0.5, 5.0, 0.1, SOLVE_DEFAULTS["pore_radius_nm"], label="pore radius (nm)"
+                0.5, 2.2, 0.1, SOLVE_DEFAULTS["pore_radius_nm"], label="pore radius (nm)"
             ),
             "membrane_thickness_nm": mo.ui.number(
                 2.0, 12.0, 0.5, SOLVE_DEFAULTS["membrane_thickness_nm"], label="membrane (nm)"

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-from nanopnp.core.hashing import content_hash, short
+from nanopnp.core.hashing import content_hash
 from nanopnp.io.artefact import SWEEP_SCHEMA, CaseArtefact, SweepArtefact
 from nanopnp.io.case import FieldValue, dumps_case
 from nanopnp.io.store import Store, atomic_write_bytes
@@ -38,6 +38,12 @@ class Sweep:
         write_plan(self.plan, self.directory)
         run_plan(self.plan, self.directory, store=self.store, workers=workers)
         return collect(self.plan, self.directory)
+
+
+def _plain(value: FieldValue) -> FieldValue:
+    # An element of an ndarray is a numpy scalar, which YAML and the content hash cannot write.
+    item = getattr(value, "item", None)
+    return item() if callable(item) else value
 
 
 def sweep(
@@ -86,7 +92,7 @@ def sweep(
             {
                 "name": dotted.rsplit(".", 1)[-1],
                 "path": dotted,
-                "values": list(values),
+                "values": [_plain(value) for value in values],
                 "origin": origin,
             }
         ],
@@ -95,7 +101,7 @@ def sweep(
     digest = content_hash(
         SWEEP_SCHEMA, {"sweep": document}, {"base_case": CaseArtefact(case.document).hash}
     )
-    directory = store.root / "sweeps" / f"{name}-{short(digest, 12)}"
+    directory = store.sweep_directory(name, digest)
     directory.mkdir(parents=True, exist_ok=True)
     atomic_write_bytes(directory / BASE_FILENAME, dumps_case(case.document).encode("utf-8"))
     source = directory / SWEEP_FILENAME

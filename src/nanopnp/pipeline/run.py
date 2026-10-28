@@ -238,12 +238,14 @@ class RunResult:
             The run did not reach stage 10, ``solve``, or holds no resolved case.
         """
         solution = self.artefacts.get("solve")
-        if solution is None or self.resolved is None:
+        if solution is None:
             held = ", ".join(self.artefacts) or "none"
             raise KeyError(
                 f"the fields are read from stage 10, 'solve', which this run did not reach; "
                 f"it holds {held}"
             )
+        if self.resolved is None:
+            raise KeyError("the fields are restored with the resolved case, which this run lacks")
         inputs = StageInputs(
             resolved=self.resolved, upstream=offered("solve", self.artefacts, own=False)
         )
