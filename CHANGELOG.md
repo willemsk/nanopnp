@@ -53,7 +53,7 @@ panels and two whole-workbench mockups, and writes the design document and its r
 ## [0.5.0-alpha.20]
 
 WP54: the notebooks and figures revised, the library's cylinder and case factories, a one-axis sweep in Python,
-and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATION.md` §8.2.20 V1 to V4). The
+and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATION.md` §8.2.20 V1 to V13). The
 [plan](docs/plans/wp54-notebooks-and-figures-revised.md) records the work.
 
 ### Added
@@ -80,19 +80,24 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
   stays the default (NUM-30, §8.2.20 V9).
 - **`plot_field(halfrange=)`** sets the colour scale's reach about zero, and `nanopnp.plot.data.qoi_rows`
   lists the quantities of interest in display units (FR-30, §8.2.20 V6).
+- **`plot_mesh(edges_only=True)`** draws the element edges alone, in grey on white (FR-30, §8.2.20 V12).
 
 ### Changed
 
 - **`Case.load` makes relative input paths absolute** against the case file (FR-25, QR-08).
 - **`SolutionFields` and `solution_fields` move to `nanopnp.post.export`**, keeping the six-node cells (FR-30).
 - **The stage figures are rebuilt on the panels**: the potential in mV centred on zero; each concentration as
-  log10(c/c_bulk); u_z with streamlines; the mesh as the whole domain and the lumen by SICN, with a λ_D/5 bar;
+  log10(c/c_bulk); u_z with streamlines; the mesh as its edges, the whole domain by size and the lumen by SICN,
+  with a λ_D/5 bar;
   the charge about zero with the χ = 0.5 contour; the constriction and the operating concentration marked; the
   rectification ratios and G on the I-V (FR-30, NUM-30).
 - **Notebooks 01, 02 and 06 run on `orient_pore` and `Case.from_structure`**, from the deposited 2WCD entry,
   with no `os.chdir`, `only=True` or call into an example: one case in all three, so they share their stages
   from the store; the preparation, protonation, salt and solve in forms, the contour's isolevel on a slider,
-  and 06's solved fields one figure each, as in 03 (FR-30, FR-37, §8.2.20 V1, V2).
+  and 06's solved fields one figure each, as in 03 (FR-30, FR-37, §8.2.20 V1, V2). 01 and 06 choose the mesh
+  size scale and show a measured table of its cost; 01's isolevel spans 0.01 to 0.99 and shows a gate's
+  refusal in place of the figures; 06 shows its stage figures and Newton history in one row of tabs
+  (§8.2.20 V10 to V12).
 - **`Case.from_structure` writes the `geometry` block** at its defaults, so `with_` can edit a contour or
   membrane setting; the stage keys do not move.
 - **Notebooks 03 and 04 run on `Case.cylinder`**, from a shared store (`$NANOPNP_STORE`, else
@@ -106,7 +111,8 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
   case file it wrote (FR-25, QR-08).
 - **A sweep's panels share the cis-referenced bias and keep failed points** (FR-30).
 
-REV-146 is fixed by §8.2.20 V9; REV-147 and REV-148 are logged in `docs/project/review-findings.md` for the author.
+REV-146 is fixed by §8.2.20 V9; REV-147 and REV-148 are logged in `docs/project/review-findings.md` for the author,
+and REV-149 (changing residues in notebook 01) is deferred by §8.2.20 V13.
 
 ## [0.5.0-alpha.19] - 2026-10-22
 

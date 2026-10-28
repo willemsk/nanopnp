@@ -1,6 +1,6 @@
 # WP54 — The notebooks and figures revised
 
-**Status: in progress; items 1 to 14 done; the finishing steps wait on the author's steering at checkpoint 3.** Written 28 October 2026 from the author's notes,
+**Status: delivered, 28 October 2026.** Written 28 October 2026 from the author's notes,
 [notebooks-review-for-wp54.md](notebooks-review-for-wp54.md), and the rulings they carry
 (§8.2.20 V1 to V5). Inherits WP51 as shipped (§8.2.14 P2 to P10) and WP53's commands.
 
@@ -192,6 +192,15 @@ the next item; a change of scope is a ruling (`rulings.md`).
 > - The three 2WCD notebooks repeat the preparation's defaults rather than import a shared module,
 >   which D6 forbids (`importlib`); identical values give the same prepared file in the store.
 >   From an empty store the six take 8.6 min, 06's solve 5 min of it.
+> - Steering from checkpoint 3 (§8.2.20 V10 to V13): notebooks 01 and 06 choose the mesh size
+>   scale, with a measured table of its cost; 01's isolevel spans 0.01 to 0.99 and shows a gate's
+>   refusal in place of the figures; the mesh figure gains a panel of grey element edges
+>   (`plot_mesh(edges_only=True)`); 06's stage figures and Newton history are one row of tabs.
+>   Changing residues in 01 is deferred (REV-149). The pages keep magnifying their static images,
+>   since only a running notebook redraws the axes as it zooms.
+> - 2WCD at 0.15 M and +50 mV, no stabilisation, by mesh size scale 4, 3, 2, 1.5 and 1: 6,223 to
+>   44,811 elements; G = 0.9734, 0.9731, 0.9732, 0.9731 and 0.9730 nS; the solve 5, 7, 7.5, 10.5
+>   and 47 min on the cloud machine. The conductance moves by under 0.05 %, so 06 keeps 4.
 
 ### Verification
 
