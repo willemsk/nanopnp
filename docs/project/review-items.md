@@ -1568,6 +1568,9 @@ not centred on z = 0, is cut off. The window could be read from the stage-5 regi
 extent and its largest lumen radius. Found by the physics review of WP54 items 6 and 7; the notebooks offer
 a window selector meanwhile.
 
+**Ruled** (§8.2.20 V16): fixed. The window is read from the mesh's `wall` boundary, 2.5 wall radii out and two
+radii past its ends; the fixed window is the fallback for a mesh with no such boundary.
+
 ## REV-148: A concentration panel's bulk is the case's salt for every species
 
 `plot_field(..., relative_to_M=)` draws `log₁₀(c / c_bulk)` with one `c_bulk`, the case's concentration
@@ -1575,6 +1578,9 @@ in mol/m³ for every species. That matches the solver as it stands (every specie
 case's concentration; `core/scaling.py`), so it is right for the validated 1:1 model. A salt that is not
 1:1, or a bulk that differs between cis and trans, would read 0 in a reservoir it does not fill and hide
 it. Found by the physics review of WP54 items 6 and 7.
+
+**Ruled** (§8.2.20 V16): fixed. A concentration is drawn against `SolutionFields.bulk_mol_m3`, the value the
+solve imposed on cis and trans for that species, read from the model's scales.
 
 ## REV-149: Notebook 01 prepares a structure but does not change its residues
 
@@ -1593,9 +1599,8 @@ NUM-30's wall, and at 0.1 M it is coarser than that NOTE allows. The solve it gi
 test `test_cylinder_debye_wall_is_stage_6s_lambda_d_over_5` compares with the mesh figure's `λ_D/5` marker,
 which is uncapped, not with stage 6's wall.
 
-**Question for the author:** should `"debye"` apply the same `min(0.05 nm, λ_D/5)` (at 0.1 M it is then
-0.05 nm, and the option differs from the generated mesh only above 1.5 M), or stay at the uncapped `λ_D/5`
-with its description and the test name corrected?
+**Ruled** (§8.2.20 V14): `"debye"` applies the same `min(0.05 nm, λ_D/5)`, by the helper stage 6 uses
+(`mesh.sizing.debye_wall_nm`). Fixed.
 
 ## REV-151: `orient_pore` centres laterally on the registration residues, not on the pore axis
 
@@ -1606,10 +1611,15 @@ registration residues, the structure shifts sideways and the pore axis lies para
 changes the prepared 2WCD bytes and the goldens of examples 06 and 07, so it needs the author's ruling.
 Found by the `/np-ship wp 54` review and the `physics-reviewer` pass.
 
-## REV-152: WP54 review items left for later: cache key, restores, duplicated helpers, edge cases
+**Ruled** (§8.2.20 V15): deferred to its own package. Meanwhile `orient_pore` logs a warning where the
+registration centroid is more than 0.1 nm off the estimated axis, and its docstring states the assumption.
+
+## REV-152: WP54 review items: cache key, restores, duplicated helpers, edge cases
 
 Found by the `/np-ship wp 54` review ([CODE_REVIEW_017](../code_reviews/CODE_REVIEW_017.md)) and the
-`physics-reviewer` pass, and not fixed in the package:
+`physics-reviewer` pass.
+
+**Ruled** (§8.2.20 V17): all fixed in WP54, as below.
 
 - **Cylinder mesh cache key.** `Case.cylinder` names its cached mesh by its geometry numbers alone, so a mesher
   fix or a tighter quality gate silently reuses the old file in `meshes/`. The key needs a mesher identity that
@@ -1632,3 +1642,10 @@ Found by the `/np-ship wp 54` review ([CODE_REVIEW_017](../code_reviews/CODE_REV
   `nanopnp sweep plan` on the `sweep.yaml` it wrote names another directory.
 - **Cutline midside test.** The two cutline tests evaluate at nodes or on a linear field, so a swapped midside
   column would pass; asserting positive sub-triangle areas would close it.
+
+Fixed as follows: the key carries `mesh.cylinder.mesher_identity`; `post.export.solution_fields` keeps the last two
+restores by artefact hash and `plot.data.field_triangulation` the last four triangulations; `Case.cylinder` takes
+its Debye length from `mesh.sizing`; the notebooks share `structure.prepared_pore`, `plot.data.field_menu` and
+`default_potential_range_mV`, and the marimo cells that draw them stay per notebook (D6); a failed sweep point
+whose side of the ground is unknown is left off; `QOI_UNITS` gains `_N` in pN; `sweep()` names its directory by
+`plan.hash`; the cutline test checks the four sub-triangles' areas.

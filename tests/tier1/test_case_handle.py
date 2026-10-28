@@ -40,11 +40,16 @@ def test_case_load_rebases_relative_inputs_on_the_case_file(
         assert supplied.path.parent == CASE.parent
 
 
-@pytest.mark.parametrize("concentration_M", [0.1, 1.0])
-def test_cylinder_debye_wall_is_stage_6s_lambda_d_over_5(
-    concentration_M: float, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("concentration_M", "wall_nm"),
+    [(0.1, 0.05), (1.0, 0.05), (3.0, 0.035)],
+)
+def test_cylinder_debye_wall_is_num30s_first_layer_with_its_ceiling(
+    concentration_M: float, wall_nm: float, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # NUM-30: the factory's own lambda_D / 5 must be the target the mesh figure marks.
+    # NUM-30: min(0.05 nm, lambda_D/5) at eps_r,f0. The absolute values are NUM-30's own (0.035 nm
+    # at 3 M), so a mol/L slip shared with stage 6's Debye length cannot pass; stage 6's wall
+    # is the second oracle, and 0.1 M and 1 M sit on the ceiling an uncapped lambda_D/5 misses.
     import nanopnp.pipeline.handle as handle
     from nanopnp.materials.corrections import load_corrections
     from nanopnp.mesh.sizing import resolve_wall_size
@@ -62,4 +67,27 @@ def test_cylinder_debye_wall_is_stage_6s_lambda_d_over_5(
     )
     permittivity = load_corrections(case.document.electrolyte.parameters).solvent.permittivity
     wall = resolve_wall_size(case.document, permittivity_0=permittivity.eps_r0)
-    assert meshed["wall_h_nm"] == pytest.approx(wall.debye_target_nm, rel=1e-12)
+    assert meshed["wall_h_nm"] == pytest.approx(wall.wall_h_nm, rel=1e-12)
+    assert meshed["wall_h_nm"] == pytest.approx(wall_nm, abs=5e-4)
+
+
+def test_cylinder_mesh_is_remade_when_the_mesher_changes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A cached mesh is keyed by its numbers and the mesher's identity: a mesher or gate fix must
+    # not silently reuse the file an older one wrote.
+    import nanopnp.pipeline.handle as handle
+
+    made: list[Path] = []
+
+    def recorded(*, out: Path, **geometry: float) -> Path:
+        made.append(out)
+        out.touch()
+        return out
+
+    monkeypatch.setattr(handle, "mesh_cylinder", recorded)
+    for identity in ("before", "before", "after"):
+        monkeypatch.setattr(handle, "mesher_identity", lambda identity=identity: identity)
+        nanopnp.Case.cylinder(concentration_M=0.1, bias_V=0.0, store=tmp_path)
+    assert len(made) == 2
+    assert made[0] != made[1]

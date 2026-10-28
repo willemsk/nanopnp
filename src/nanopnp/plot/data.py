@@ -32,6 +32,7 @@ from nanopnp.symmetry.reduce import ReducedMap
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
+    from matplotlib.tri import Triangulation
 
     from nanopnp.materials.models import CorrectionModel
     from nanopnp.post.export import SolutionFields
@@ -59,9 +60,13 @@ __all__ = [
     "cis_referenced_bias_V",
     "contour_polygon_m",
     "correction_curves",
+    "default_potential_range_mV",
     "density_section",
     "element_sizes_m",
+    "field_menu",
     "field_values",
+    "fields_lumen_nm",
+    "lumen_window_nm",
     "mesh_elements",
     "newton_history",
     "protonation_charges",
@@ -102,6 +107,7 @@ DISPLAY: dict[str, Display] = {
     "current": Display("nA", 1e9),
     "conductance": Display("nS", 1e9),
     "flow": Display("µm³/s", 1e18),
+    "force": Display("pN", 1e12),
 }
 """Every display unit of a figure, in one place; an axis names its unit from here."""
 
@@ -231,6 +237,7 @@ class MeshElements:
     triangles: np.ndarray
     size_m: np.ndarray
     sicn: np.ndarray
+    lumen_nm: tuple[float, float] = (5.0, 10.0)
 
 
 def element_sizes_m(vertices_nm: np.ndarray, triangles: np.ndarray) -> np.ndarray:
@@ -251,11 +258,16 @@ def element_sizes_m(vertices_nm: np.ndarray, triangles: np.ndarray) -> np.ndarra
 def mesh_elements(data: MeshData, quality: QualityReport | None = None) -> MeshElements:
     """Return the per-element size and SICN of ``data``; SICN from ``quality`` if given."""
     report = element_quality(data) if quality is None else quality
+    extent = None
+    if "wall" in data.boundaries:
+        wall = data.vertices[data.edges_of("wall").ravel()]
+        extent = (float(abs(wall[:, 0]).max()), float(abs(wall[:, 1]).max())) if wall.size else None
     return MeshElements(
         vertices_m=data.vertices * _NM,
         triangles=data.triangles,
         size_m=element_sizes_m(data.vertices, data.triangles),
         sicn=report.sicn,
+        lumen_nm=lumen_window_nm(extent),
     )
 
 
@@ -452,6 +464,7 @@ QOI_UNITS: dict[str, str | None] = {
     "_A": "current",
     "_S": "conductance",
     "_V": "potential",
+    "_N": "force",
     "_nm": "length",
 }
 """A quantity of interest's SI suffix and its :data:`DISPLAY` quantity; ``_nm`` stays as is."""
@@ -520,7 +533,25 @@ FIELD_ALIASES: dict[str, tuple[str, int | None]] = {
 """Quantity names a field panel takes beside the attribute keys, as ``(key, component)``."""
 
 LUMEN_NM = (5.0, 10.0)
-"""The ``(r, |z|)`` window of a close-up of the pore, in nm."""
+"""The ``(r, |z|)`` window of a close-up of the pore, in nm, where the mesh names no pore wall."""
+
+_MOLAR_SUFFIX = "_mol_m3"
+
+LUMEN_RADII = 2.5
+LUMEN_VESTIBULE_RADII = 2.0
+
+
+def lumen_window_nm(wall_extent_nm: tuple[float, float] | None) -> tuple[float, float]:
+    """Return the ``(r, |z|)`` close-up of a pore from its wall's largest ``r`` and ``|z|``, in nm.
+
+    The window reaches 2.5 wall radii out and two wall radii past the wall's ends; :data:`LUMEN_NM`
+    where there is no wall.
+    """
+    if wall_extent_nm is None:
+        return LUMEN_NM
+    radius, half_length = wall_extent_nm
+    return LUMEN_RADII * radius, half_length + LUMEN_VESTIBULE_RADII * radius
+
 
 CUTLINE_POINTS = 400
 
@@ -557,16 +588,58 @@ def field_values(
     raise KeyError(f"no field {quantity!r}; the run holds {', '.join(known)}")
 
 
+_TRIANGULATIONS: list[tuple[np.ndarray, np.ndarray, Triangulation]] = []
+_KEPT_TRIANGULATIONS = 4
+
+
+def field_menu(fields: SolutionFields, *, radial: bool = True) -> dict[str, str]:
+    """Return the fields a viewer can draw, by label, in the panels' quantity names."""
+    menu = {"potential φ": "potential"}
+    held = sorted(key for key in fields.fluid[2] if key.endswith(_MOLAR_SUFFIX))
+    menu.update({f"{key.removesuffix(_MOLAR_SUFFIX)} against the bulk": key for key in held})
+    menu["axial velocity u_z"] = "u_z"
+    if radial:
+        menu["radial velocity u_r"] = "u_r"
+    menu["pressure p"] = "p_Pa"
+    return menu
+
+
+def default_potential_range_mV(bias_mV: float) -> float:
+    """Return the potential colour range to start from: twice the bias, at least 10 mV."""
+    return max(10.0, 2.0 * abs(bias_mV))
+
+
+def fields_lumen_nm(fields: SolutionFields) -> tuple[float, float]:
+    """Return the ``(r, |z|)`` close-up of the pore that solved ``fields``, in nm."""
+    return lumen_window_nm(fields.wall_extent_nm)
+
+
+def field_triangulation(points_m: np.ndarray, cells: np.ndarray) -> Triangulation:
+    """Return the mesh in nm as the four linear triangles of each P2 cell; the last few are kept.
+
+    A cutline is exact at the P2 nodes only on this split. The arrays are matched by identity, so
+    a figure and a slider that read the same fields build it once.
+    """
+    from matplotlib.tri import Triangulation
+
+    for held_points, held_cells, held in _TRIANGULATIONS:
+        if held_points is points_m and held_cells is cells:
+            return held
+    built = Triangulation(points_m[:, 0] / _NM, points_m[:, 1] / _NM, subdivided(cells))
+    _TRIANGULATIONS.append((points_m, cells, built))
+    del _TRIANGULATIONS[:-_KEPT_TRIANGULATIONS]
+    return built
+
+
 def sampled(
     fields: SolutionFields, quantity: str, r_nm: np.ndarray, z_nm: np.ndarray
 ) -> np.ndarray:
     """Return one field at the points ``(r_nm, z_nm)``, NaN outside the field's domain."""
     import numpy as np
-    from matplotlib.tri import LinearTriInterpolator, Triangulation
+    from matplotlib.tri import LinearTriInterpolator
 
     points, cells, values = field_values(fields, quantity)
-    # Split into the four linear triangles of each P2 cell, so a cutline is exact at the nodes.
-    triangulation = Triangulation(points[:, 0] / _NM, points[:, 1] / _NM, subdivided(cells))
+    triangulation = field_triangulation(points, cells)
     found = LinearTriInterpolator(triangulation, values)(r_nm, z_nm)
     return np.ma.filled(np.ma.asarray(found, dtype=np.float64), np.nan)
 
@@ -685,7 +758,8 @@ def cis_referenced_bias_V(curves: SweepCurves) -> np.ndarray:
     """Return each point's bias as the current is reported against it, ``φ_trans - φ_cis``.
 
     A point that recorded no bias, as a failed one, takes its assigned bias, flipped where the
-    recorded ones are the assigned ones' negatives (``ground: trans``).
+    recorded ones are the assigned ones' negatives (``ground: trans``). Where no point at a
+    non-zero bias recorded one, the side of the ground is unknown and such a point is NaN.
     """
     import numpy as np
 
@@ -693,7 +767,9 @@ def cis_referenced_bias_V(curves: SweepCurves) -> np.ndarray:
     if recorded is None:
         return curves.x
     both = np.isfinite(recorded) & (curves.x != 0.0)
-    flipped = bool(both.any()) and bool(np.median(recorded[both] / curves.x[both]) < 0.0)
+    if not both.any():
+        return np.where(np.isfinite(recorded), recorded, np.where(curves.x == 0.0, 0.0, np.nan))
+    flipped = bool(np.median(recorded[both] / curves.x[both]) < 0.0)
     assigned = -curves.x if flipped else curves.x
     return np.where(np.isfinite(recorded), recorded, assigned)
 

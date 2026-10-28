@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import os
+import shutil
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
 
-from nanopnp.core.hashing import content_hash
-from nanopnp.io.artefact import SWEEP_SCHEMA, CaseArtefact, SweepArtefact
+from nanopnp.io.artefact import SWEEP_SCHEMA, SweepArtefact
 from nanopnp.io.case import FieldValue, dumps_case
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.pipeline.handle import Case, field_path, input_paths
@@ -98,14 +99,26 @@ def sweep(
         ],
     }
     store = case.store or Store()
-    digest = content_hash(
-        SWEEP_SCHEMA, {"sweep": document}, {"base_case": CaseArtefact(case.document).hash}
-    )
-    directory = store.sweep_directory(name, digest)
-    directory.mkdir(parents=True, exist_ok=True)
-    atomic_write_bytes(directory / BASE_FILENAME, dumps_case(case.document).encode("utf-8"))
-    source = directory / SWEEP_FILENAME
     text = yaml.safe_dump(document, sort_keys=False)
+    base_text = dumps_case(case.document).encode("utf-8")
+    # The directory is named by the plan's hash, as the sweep command names it, so the plan is
+    # first built in a staging directory to read that hash.
+    staging = store.root / "sweeps" / f".staging-{os.getpid()}"
+    try:
+        staging.mkdir(parents=True, exist_ok=True)
+        atomic_write_bytes(staging / BASE_FILENAME, base_text)
+        atomic_write_bytes(staging / SWEEP_FILENAME, text.encode("utf-8"))
+        staged = build_plan(
+            loads_sweep(text, source=str(staging / SWEEP_FILENAME)),
+            source=staging / SWEEP_FILENAME,
+            check_meshes=False,
+        )
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+    directory = store.sweep_directory(name, staged.hash)
+    directory.mkdir(parents=True, exist_ok=True)
+    atomic_write_bytes(directory / BASE_FILENAME, base_text)
+    source = directory / SWEEP_FILENAME
     atomic_write_bytes(source, text.encode("utf-8"))
     plan = build_plan(
         loads_sweep(text, source=str(source)), source=source, check_meshes=check_meshes

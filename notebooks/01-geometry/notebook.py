@@ -5,8 +5,6 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import hashlib
-    import json
     import os
     from pathlib import Path
 
@@ -15,12 +13,12 @@ def _():
     from nanopnp import Case, Store
     from nanopnp.core.paths import structure_file
     from nanopnp.core.stages import describe
-    from nanopnp.structure import orient_pore
+    from nanopnp.structure import prepared_pore
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
     entry = structure_file("2wcd.pdb.gz")
-    return Case, describe, entry, hashlib, json, mo, orient_pore, store
+    return Case, describe, entry, mo, prepared_pore, store
 
 
 @app.cell
@@ -87,20 +85,16 @@ def _(mo):
 
 
 @app.cell
-def _(PREPARE_DEFAULTS, entry, hashlib, json, orient_pore, prepare_form, store):
+def _(PREPARE_DEFAULTS, entry, prepared_pore, prepare_form, store):
     preparation = prepare_form.value or PREPARE_DEFAULTS
-    key = hashlib.sha256(json.dumps(preparation, sort_keys=True).encode()).hexdigest()[:12]
-    prepared = store.root / "structures" / f"2wcd-{key}.pdb"
-    if not prepared.is_file():
-        prepared.parent.mkdir(parents=True, exist_ok=True)
-        orient_pore(
-            entry,
-            chains=preparation["chains"],
-            cis_end=preparation["cis_end"],
-            registration_residues=(preparation["first_residue"], preparation["last_residue"]),
-            centroid_z_nm=preparation["centroid_z_nm"],
-            out=prepared,
-        )
+    prepared = prepared_pore(
+        entry,
+        directory=store.root / "structures",
+        chains=preparation["chains"],
+        cis_end=preparation["cis_end"],
+        registration_residues=(preparation["first_residue"], preparation["last_residue"]),
+        centroid_z_nm=preparation["centroid_z_nm"],
+    )
     return (prepared,)
 
 

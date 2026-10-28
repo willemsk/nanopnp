@@ -162,6 +162,25 @@ def test_cutline_matches_the_p2_nodes_on_the_axis(
         assert not np.allclose(coarse, values[midsides], rtol=1e-12, atol=floor), quantity
 
 
+def test_fields_record_the_solvers_bulk_per_species_and_the_pore_wall(
+    ran: tuple[Path, list[CommandResult]], cached_run: Callable[..., RunResult]
+) -> None:
+    # The bulk a concentration panel is drawn against must be the value the solve imposed on cis
+    # and trans, per species: the fluid's end faces hold exactly it. The wall extent sets the
+    # lumen window, so it must sit inside the domain it frames.
+    fields = cached_run(ran[0], "quickstart.case.yaml").fields
+    points, _, values = fields.fluid
+    z = points[:, 1]
+    assert fields.bulk_mol_m3
+    for key, bulk in fields.bulk_mol_m3.items():
+        for end in (z.min(), z.max()):
+            np.testing.assert_allclose(values[key][z == end], bulk, rtol=1e-9, err_msg=key)
+    assert fields.wall_extent_nm is not None
+    radius_nm, half_length_nm = fields.wall_extent_nm
+    assert 0.0 < radius_nm * 1e-9 < points[:, 0].max()
+    assert 0.0 < half_length_nm * 1e-9 < z.max()
+
+
 def test_default_import_and_walk_load_no_plotting(
     ran: tuple[Path, list[CommandResult]],
 ) -> None:

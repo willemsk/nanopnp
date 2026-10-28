@@ -19,7 +19,7 @@ One line per lane (§8.4.4).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 to §8.2.16). WP35 to WP53 are merged and tagged to `v0.5.0-alpha.19`;
   `v0.5.0-alpha.16` is the author's step. [WP54](wp54-notebooks-and-figures-revised.md), the
-  notebooks revised, is **implemented** (§8.2.20 V1 to V13); next **`/np-ship wp 54`**, then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then
+  notebooks revised, is **implemented** (§8.2.20 V1 to V17); next **`/np-ship wp 54`**, then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then
   the author's sessions, the fixes from WP56, the documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **implemented**, untagged
@@ -33,7 +33,7 @@ One line per lane (§8.4.4).
   items) are §8.4: one minor version per phase and `v0.5.0` alone at the close (§8.4.1); the commit
   hook, the push gate and Python 3.14 with a 3.11 floor (§8.4.2); tests only inside the scope
   (§8.4.3, §7.1); `/np-plan`, `/np-implement` and `/np-ship` with levels (§8.4.4). WP54's scope is
-  §8.2.20 V1 to V13.
+  §8.2.20 V1 to V17.
 - **Figures:** Matplotlib in `plot/`, below `pipeline`, importing no backend; figures declared in
   the stage registry; marimo notebooks, nightly. → §8.2.14 P2 to P6; FR-30.
 - **Cost fixes follow measurement against registered thresholds** (§8.2.12 M2). **Phase 5 is a

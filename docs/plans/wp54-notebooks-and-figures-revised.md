@@ -94,7 +94,7 @@ in a checkpoint that publishes the notebooks revised so far (V5).
 
 **Item 3.** `src/nanopnp/sweep/inmemory.py`: `sweep()`, the `Sweep` dataclass. The hash is `content_hash("nanopnp/sweep/v0.5", {"sweep": <document dict>}, {"base_case": CaseArtefact(document).hash})`. `axis` accepts a leaf name through `pipeline/handle.py:_path_of`.
 
-**Item 6.** `plot/panels.py`: `plot_field(fields, quantity, *, ax=None, zoom_nm=None, relative_to_M=None)`, `plot_mesh(elements, *, ax=None, zoom_nm=None, debye_target_nm=None)`, `plot_axial_cutline(fields, quantity, *, r_nm=0.0, ax=None)`, `plot_radial_cutline(fields, quantity, *, z_nm=0.0, ax=None)`, `plot_iv(artefact, *, ax=None, annotate=True)`; each returns its `Axes` and builds a `Figure` when `ax` is `None`. `quantity` is an attribute key, or `"potential"` (`phi_V`), `"u_z"` (`u_m_s[:, 1]`), `"u_r"`. `data.subdivided(cells) -> (4n, 3)`.
+**Item 6.** `plot/panels.py`: `plot_field(fields, quantity, *, ax=None, zoom_nm=None, relative=False)`, `plot_mesh(elements, *, ax=None, zoom_nm=None, debye_target_nm=None)`, `plot_axial_cutline(fields, quantity, *, r_nm=0.0, ax=None)`, `plot_radial_cutline(fields, quantity, *, z_nm=0.0, ax=None)`, `plot_iv(artefact, *, ax=None, annotate=True)`; each returns its `Axes` and builds a `Figure` when `ax` is `None`. `quantity` is an attribute key, or `"potential"` (`phi_V`), `"u_z"` (`u_m_s[:, 1]`), `"u_r"`. `data.subdivided(cells) -> (4n, 3)`.
 
 **Items 4, 8 and 12.** The first cell of each notebook:
 
@@ -202,6 +202,13 @@ the next item; a change of scope is a ruling (`rulings.md`).
 >   44,811 elements; G = 0.9734, 0.9731, 0.9732, 0.9731 and 0.9730 nS; the solve 5, 7, 7.5, 10.5
 >   and 47 min on the cloud machine. The conductance moves by under 0.05 %, so 06 keeps 4.
 
+> **Outcome — ship (`/np-ship wp 54`; §8.2.20 V14 to V17).** The review and the author's rulings changed four
+> things the plan fixed: `Case.cylinder(wall_h_nm="debye")` takes NUM-30's `min(0.05 nm, λ_D/5)` (V14);
+> concentration panels draw against each species' bulk from the solve and the lumen window is read from the
+> pore wall, so `relative_to_M` became `relative` and `SolutionFields` gained `bulk_mol_m3` and
+> `wall_extent_nm` (V16); `orient_pore` warns where its registration centroid is off the axis, the fix
+> waiting for its own package (V15); and the review's smaller items were fixed (V17, REV-152).
+
 ### Verification
 
 | Test (file, tier) | Identifier | Oracle and tolerance |
@@ -212,7 +219,7 @@ the next item; a change of scope is a ruling (`rulings.md`).
 | `test_cutline_matches_the_p2_nodes_on_the_axis` (`test_examples_01_quickstart.py`, 2) | FR-30 | At each P2 node on r = 0, the axial cutline equals the node's value, rel 1e-12; a corner-only triangulation fails at the midsides |
 | `test_radial_cutline_is_masked_outside_the_fluid` (`test_figures.py`, 1) | FR-30 | Two hand-built P2 triangles: a linear field exact (1e-12) inside, NaN outside |
 | `test_potential_panel_is_millivolts_centred_at_zero` (`test_figures.py`, 1) | FR-30 | φ = 0.02 V everywhere: the colour data reads 20 mV and the norm's `vcenter` is 0, with no exception |
-| `test_concentration_panel_is_log_relative_to_bulk` (`test_figures.py`, 1) | FR-30 | c = 2 c_bulk reads log₁₀ 2; c_bulk taken in M instead of mol/m³ is off by 3 |
+| `test_concentration_panel_is_log_relative_to_each_species_bulk` (`test_figures.py`, 1) | FR-30 | c = 2 c_bulk reads log₁₀ 2; c_bulk taken in M instead of mol/m³ is off by 3 |
 | `test_run_result_current_and_conductance_in_nano_units` (`test_run.py`, 1) | — | 2e-9 A and 4e-8 S read 2 nA and 40 nS; `None` stays `None`; without stage 11 it raises naming `qoi` |
 | `test_notebook_runs_headless` (`test_notebooks.py`, 2, nightly) | FR-30 | In place, order 01 to 06, one module-scoped store (`NANOPNP_STORE` via `pytest.MonkeyPatch.context()`); exit 0; `git status --porcelain notebooks examples` empty |
 | `test_layering.py`, `test_backend_guard.py`, `test_public_api.py` (1) | VER-61, VER-65, VER-45 | Kept green; `structure` stays out of the backend set |

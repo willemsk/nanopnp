@@ -182,7 +182,7 @@ files stay. No test is kept (N1); the plan's Outcome holds D6's checks and the w
 exceed D2's caps. WP54 is the
 first package run with the commands.
 
-### WP54 — The notebooks and figures revised (§8.2.16 R8; §8.2.20 V1 to V13)
+### WP54 — The notebooks and figures revised (§8.2.16 R8; §8.2.20 V1 to V17)
 
 Delivered ([plan](wp54-notebooks-and-figures-revised.md); tag `v0.5.0-alpha.20`). The six notebooks
 build cases from Python with `Case.cylinder` and `Case.from_structure`, the schema unchanged (V3); mesh
@@ -192,7 +192,7 @@ and their figures pan and zoom (V7). The figures read in mV centred at zero with
 range, log concentrations, the signed axial velocity with streamlines, a mesh drawn as edges, size
 and SICN with λ_D/5 marked, cutlines and a table of the quantities of interest, from `nanopnp.plot`
 (V4, V6, V12; FR-30). `Case.cylinder(wall_h_nm="debye")` closes REV-146 (V9). The author steered at
-three checkpoints (V5 to V13); REV-147 and REV-148 stay open and REV-149 is deferred. WP51's rules
+three checkpoints (V5 to V13); REV-147 and REV-148 were fixed at ship (V16), and REV-149 is deferred. WP51's rules
 carry: `plot/` imports no backend, and every notebook runs headless nightly.
 
 ### WP55 — The user-testing protocol (provisional detail)
@@ -250,7 +250,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The phase estimate after R1: 4–6 weeks stands (P7), or 5–7 | **Author, open.** Recommendation: 5–7 weeks |
 | The notebooks on the documentation site: in documentation increment 4, or later | **Author, open**, at the second amendment. Default: on the site, after the sessions show which help |
 | WP53's aliases for the old command names, and the hook on a diverged checkout | **Settled** by WP53's plan: no aliases; a warning, and no write, unless a clean primary `main` can fast-forward |
-| WP54's scope | **Settled** (R8; §8.2.20 V1 to V13): the author's notes and the steering at its checkpoints |
+| WP54's scope | **Settled** (R8; §8.2.20 V1 to V17): the author's notes and the steering at its checkpoints |
 | Each `UT-nn`: fix or defer | **Author**, through the second amendment |
 | `MOD-11` | **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
 | OPN-04, OPN-08 | **Author, open.** Not on this phase's path |
@@ -265,7 +265,7 @@ Everything else the phase decided is in *Design decisions*, with its ruling.
 | Item | Needed by | If it does not arrive |
 |---|---|---|
 | The document of comments and notes on the notebooks and figures | WP54's plan | **Delivered** 28 October 2026 |
-| Steering at each of WP54's checkpoints (V5) | WP54's next item | **Delivered** at three checkpoints, 28 October 2026 (V6 to V13) |
+| Steering at each of WP54's checkpoints (V5) | WP54's next item | **Delivered** at three checkpoints, 28 October 2026 (V6 to V13; V14 to V17 at `/np-ship wp 54`) |
 | The scripted sessions, run by the author, with findings logged | The second amendment, then the fix packages | The phase waits. No agent session substitutes (G7) |
 | A ruling on every `UT-nn`, and on `MOD-11` | The fix packages and the close | `MOD-11` stays `accepted` and the close does not read as closed |
 | A ruling on a residual cycle, a drift beyond a bound or a cost over its threshold | The package that reports it | The package stops at the edge and carries it as a `REV-nn` row |

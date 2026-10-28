@@ -208,3 +208,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * V11 - open: WP54
 * V12 - FR-30; open: WP54
 * V13 - REV-149
+* V14 - REV-150
+* V15 - REV-151
+* V16 - FR-30; REV-147, REV-148
+* V17 - REV-152

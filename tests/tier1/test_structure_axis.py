@@ -338,3 +338,24 @@ def test_orient_pore_puts_a_tilted_ring_on_z_with_the_named_end_cis(
     assert (top > bottom) == (cis_end == "wider")
     anchor = calpha.select_atoms("resid 5:30").positions.astype(np.float64).mean(axis=0) / 10.0
     np.testing.assert_allclose(anchor, [0.0, 0.0, 5.655], atol=1e-3)
+
+
+def test_prepared_pore_is_keyed_by_the_source_and_the_choices(tmp_path: Path) -> None:
+    # A stale prepared file would silently feed an old orientation to every stage after it.
+    pytest.importorskip("MDAnalysis")
+    from nanopnp.structure import prepared_pore
+
+    source = tmp_path / "ring.pdb"
+    _tilted_ring_pdb(source)
+    choices = {"cis_end": "wider", "registration_residues": (5, 30), "centroid_z_nm": 5.655}
+    first = prepared_pore(source, directory=tmp_path / "kept", **choices)  # type: ignore[arg-type]
+    written = first.stat().st_mtime_ns
+    assert prepared_pore(source, directory=tmp_path / "kept", **choices) == first  # type: ignore[arg-type]
+    assert first.stat().st_mtime_ns == written
+    other = prepared_pore(source, directory=tmp_path / "kept", **{**choices, "cis_end": "narrower"})  # type: ignore[arg-type]
+    assert other != first
+    _tilted_ring_pdb(source, residues=41)
+    assert prepared_pore(source, directory=tmp_path / "kept", **choices) not in (first, other)  # type: ignore[arg-type]
+    assert sorted(path.name for path in (tmp_path / "kept").iterdir()) == sorted(
+        path.name for path in (tmp_path / "kept").glob("ring-*.pdb")
+    )

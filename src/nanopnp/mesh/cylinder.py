@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import os
+from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -21,7 +23,21 @@ from nanopnp.mesh.quality import QualityReport, check_quality, check_radii
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
 
-__all__ = ["generate_cylinder", "mesh_cylinder", "write_gated_msh"]
+__all__ = ["generate_cylinder", "mesh_cylinder", "mesher_identity", "write_gated_msh"]
+
+# What decides a cylinder mesh beside its numbers: the mesher and the code that makes and gates it.
+_MESHER_SOURCES = ("cylinder.py", "primitives.py", "quality.py", "ingest.py", "adapter.py")
+
+
+def mesher_identity() -> str:
+    """Return a digest of the mesher's version and of the sources that build and gate a cylinder.
+
+    A cached mesh is reused only while this is unchanged.
+    """
+    digest = hashlib.sha256(metadata.version("ngsolve").encode())
+    for name in _MESHER_SOURCES:
+        digest.update((Path(__file__).with_name(name)).read_bytes())
+    return digest.hexdigest()
 
 
 def write_gated_msh(generated: Mesh, out: Path) -> tuple[MeshData, QualityReport, dict[str, str]]:

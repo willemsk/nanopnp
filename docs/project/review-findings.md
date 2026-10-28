@@ -167,9 +167,9 @@ is a rolling register, and its header stays `open`.
 | REV-144 | interface | low | deferred | §8.2.20 V3 | [Case.cylinder takes a charge field, not a uniform wall surface charge](review-items.md#rev-144-casecylinder-takes-a-charge-field-not-a-uniform-wall-surface-charge) |
 | REV-145 | interface | low | deferred | §8.2.20 V3 | [No case builders by section before Phase 5](review-items.md#rev-145-no-case-builders-by-section-before-phase-5) |
 | REV-146 | numerics | high | fixed | §8.2.20 V9 | [The cylinder's default wall size is coarser than NUM-30's first layer](review-items.md#rev-146-the-cylinders-default-wall-size-is-coarser-than-num-30s-first-layer) |
-| REV-147 | interface | low | open | — | [The lumen window is fixed, not read from the region](review-items.md#rev-147-the-lumen-window-is-fixed-not-read-from-the-region) |
-| REV-148 | physics | low | open | — | [A concentration panel's bulk is the case's salt for every species](review-items.md#rev-148-a-concentration-panels-bulk-is-the-cases-salt-for-every-species) |
+| REV-147 | interface | low | fixed | §8.2.20 V16 | [The lumen window is fixed, not read from the region](review-items.md#rev-147-the-lumen-window-is-fixed-not-read-from-the-region) |
+| REV-148 | physics | low | fixed | §8.2.20 V16 | [A concentration panel's bulk is the case's salt for every species](review-items.md#rev-148-a-concentration-panels-bulk-is-the-cases-salt-for-every-species) |
 | REV-149 | interface | low | deferred | §8.2.20 V13 | [Notebook 01 prepares a structure but does not change its residues](review-items.md#rev-149-notebook-01-prepares-a-structure-but-does-not-change-its-residues) |
-| REV-150 | numerics | medium | open | — | [`wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling](review-items.md#rev-150-wall_h_nmdebye-is-not-capped-at-num-30s-005-nm-ceiling) |
-| REV-151 | physics | low | open | — | [`orient_pore` centres laterally on the registration residues, not on the pore axis](review-items.md#rev-151-orient_pore-centres-laterally-on-the-registration-residues-not-on-the-pore-axis) |
-| REV-152 | interface | low | open | — | [WP54 review items left for later: cache key, restores, duplicated helpers, edge cases](review-items.md#rev-152-wp54-review-items-left-for-later-cache-key-restores-duplicated-helpers-edge-cases) |
+| REV-150 | numerics | medium | fixed | §8.2.20 V14 | [`wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling](review-items.md#rev-150-wall_h_nmdebye-is-not-capped-at-num-30s-005-nm-ceiling) |
+| REV-151 | physics | low | deferred | §8.2.20 V15 | [`orient_pore` centres laterally on the registration residues, not on the pore axis](review-items.md#rev-151-orient_pore-centres-laterally-on-the-registration-residues-not-on-the-pore-axis) |
+| REV-152 | interface | low | fixed | §8.2.20 V17 | [WP54 review items: cache key, restores, duplicated helpers, edge cases](review-items.md#rev-152-wp54-review-items-cache-key-restores-duplicated-helpers-edge-cases) |

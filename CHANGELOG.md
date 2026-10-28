@@ -53,7 +53,7 @@ panels and two whole-workbench mockups, and writes the design document and its r
 ## [0.5.0-alpha.20]
 
 WP54: the notebooks and figures revised, the library's cylinder and case factories, a one-axis sweep in Python,
-and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATION.md` §8.2.20 V1 to V13). The
+and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATION.md` §8.2.20 V1 to V17). The
 [plan](docs/plans/wp54-notebooks-and-figures-revised.md) records the work.
 
 ### Added
@@ -76,8 +76,11 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
 - **Notebook 05**, the cylindrical pore, in four steps: the mesh, its wall sized fixed or at λ_D/5, the solve,
   profiles along and across the pore on debounced sliders, and the I-V sweep of the cis ring (FR-30,
   §8.2.20 V2, V8, V9).
-- **`Case.cylinder(wall_h_nm="debye")`** sizes the pore wall at λ_D/5 of the case's salt; the fixed 0.35 nm
-  stays the default (NUM-30, §8.2.20 V9).
+- **`Case.cylinder(wall_h_nm="debye")`** sizes the pore wall as NUM-30 does, `min(0.05 nm, λ_D/5)` of the
+  case's salt; the fixed 0.35 nm stays the default (NUM-30, §8.2.20 V9, V14).
+- **`nanopnp.structure.prepared_pore`** writes `orient_pore`'s file once, named by the source's bytes and the
+  choices, and `plot.data.field_menu` and `default_potential_range_mV` give the notebooks their menu and
+  default range (FR-37, FR-30, §8.2.20 V17).
 - **`plot_field(halfrange=)`** sets the colour scale's reach about zero, and `nanopnp.plot.data.qoi_rows`
   lists the quantities of interest in display units (FR-30, §8.2.20 V6).
 - **`plot_mesh(edges_only=True)`** draws the element edges alone, in grey on white (FR-30, §8.2.20 V12).
@@ -109,10 +112,18 @@ and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATIO
 
 - **A `Case.load` run reproduces.** The run records the case as held in memory, so a reproduction checks the
   case file it wrote (FR-25, QR-08).
-- **A sweep's panels share the cis-referenced bias and keep failed points** (FR-30).
+- **A sweep's panels share the cis-referenced bias and keep failed points**; a failed point whose side of the
+  ground is unknown is left off (FR-30).
+- **The code review's findings** (§8.2.20 V16, V17): `sweep()` accepts numpy values and names its directory by the
+  plan's hash; `plot_iv` refuses a sweep that is not over the bias; the case's path fields are read from the
+  schema; `structure_file` tries a name as given before adding `.pdb`; `Case.cylinder`'s cached mesh is keyed by
+  the mesher's identity; a solve is restored once for its figures and `RunResult.fields`; forces show in pN; the
+  concentration panels draw against the bulk the solve imposed on each species, and the lumen close-up is read
+  from the pore wall (FR-30, NUM-30).
 
-REV-146 is fixed by §8.2.20 V9; REV-147 and REV-148 are logged in `docs/project/review-findings.md` for the author,
-and REV-149 (changing residues in notebook 01) is deferred by §8.2.20 V13.
+`orient_pore` logs a warning where its registration centroid is more than 0.1 nm off the estimated axis
+(§8.2.20 V15). REV-146, REV-147, REV-148, REV-150 and REV-152 are fixed; REV-151 (centring on the axis) waits for
+its own package, and REV-149 (changing residues in notebook 01) is deferred by §8.2.20 V13.
 
 ## [0.5.0-alpha.19] - 2026-10-22
 
