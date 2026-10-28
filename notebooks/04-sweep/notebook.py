@@ -5,41 +5,19 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
-    import hashlib
     import os
     from pathlib import Path
 
     import marimo as mo
-    import yaml
 
-    from nanopnp import Case
-    from nanopnp.cli import main
-    from nanopnp.io.case import dumps_case
+    from nanopnp import Case, Store
     from nanopnp.plot import figure as draw
-    from nanopnp.sweep.collect import collect
-    from nanopnp.sweep.plan import plan_from_document, write_plan
-    from nanopnp.sweep.run import run_plan
+    from nanopnp.sweep import sweep
 
-    example = (Path(__file__).resolve().parent / ".." / ".." / "examples" / "03-iv-sweep").resolve()
-    os.chdir(example)
-    case = Case.load("charged.case.yaml", store=example / "store", write=False)
-
-    return (
-        Case,
-        Path,
-        case,
-        collect,
-        draw,
-        dumps_case,
-        example,
-        hashlib,
-        main,
-        mo,
-        plan_from_document,
-        run_plan,
-        write_plan,
-        yaml,
-    )
+    here = Path(__file__).resolve().parent
+    store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
+    ring = here.parents[1] / "examples" / "03-iv-sweep" / "cis-ring.field.yaml"
+    return Case, draw, mo, ring, store, sweep
 
 
 @app.cell
@@ -48,123 +26,60 @@ def _(mo):
         """
         # An I-V sweep
 
-        Example 03's charged pore, solved at four biases. A sweep is its own document: a base
-        case and the axes to vary, by their case-file paths. Each point is a complete case,
-        warm-started from a converged neighbour one step nearer the `origin` value, and the
-        stages a point does not change come from the store.
+        A charged cylindrical pore, its fixed charge a ring near the cis mouth, solved at
+        several biases in one call. Each point warm-starts from a converged neighbour one
+        step nearer the first bias solved, and the stages a point does not change come from
+        the store. Opposite biases pair into a rectification ratio.
 
-        A sweep computes its own points, so this notebook needs no set-up beyond the pore mesh.
-        After you edit a setting, run its cell; marimo then offers to re-run the cells that
-        follow.
+        Edit the biases and press **Sweep**.
         """
     )
     return
 
 
 @app.cell
-def _():
-    # How the figures are drawn: a multiplier on their size, and whether they zoom and pan.
-    scale = 1.5
-    interactive = False
-    return interactive, scale
-
-
-@app.cell
-def _():
-    # The arguments of `nanopnp mesh cylinder`, in nm. The file is named by them, so an edited
-    # value makes a new file instead of reusing an old one.
-    cylinder = {
-        "--pore-radius-nm": 2.0,
-        "--membrane-thickness-nm": 6.0,
-        "--reservoir-radius-nm": 10.0,
-        "--maxh-nm": 4.0,  # the largest element anywhere
-        "--wall-h-nm": 0.35,  # the element size on the pore wall
+def _(mo):
+    SWEEP_DEFAULTS = {
+        "concentration_M": 0.1,
+        "biases_mV": "-100, -50, 50, 100",
+        "first_mV": 50.0,
     }
-    return (cylinder,)
-
-
-@app.cell
-def _():
-    base_settings = {
-        "electrolyte.concentration_M": 0.1,  # the bulk salt, mol/L
-        "physics.model": "epnp-ns",  # "pnp-ns" leaves out the finite-size and correction terms
-        "numerics.stabilisation": "none",  # "supg" adds streamline stabilisation
-        # `rectification` compares each bias with its opposite, so the biases come in pairs.
-        "outputs": ["current", "transport_numbers", "eof_rate", "rectification"],
-    }
-    axes = [
+    sweep_form = mo.ui.dictionary(
         {
-            "name": "bias",
-            "path": "boundary_conditions.bias_V",
-            "values": [-0.1, -0.05, 0.05, 0.1],  # V
-            "origin": 2,  # the index of the value solved first: +50 mV, the easiest point
+            "concentration_M": mo.ui.number(
+                0.01, 3.0, 0.01, SWEEP_DEFAULTS["concentration_M"], label="NaCl (M)"
+            ),
+            "biases_mV": mo.ui.text(SWEEP_DEFAULTS["biases_mV"], label="biases (mV)"),
+            "first_mV": mo.ui.number(
+                -200.0, 200.0, 5.0, SWEEP_DEFAULTS["first_mV"], label="solved first (mV)"
+            ),
         }
-    ]
-    return axes, base_settings
+    ).form(submit_button_label="Sweep")
+    sweep_form
+    return SWEEP_DEFAULTS, sweep_form
 
 
 @app.cell
-def _(
-    axes,
-    base_settings,
-    case,
-    collect,
-    cylinder,
-    dumps_case,
-    example,
-    hashlib,
-    main,
-    plan_from_document,
-    run_plan,
-    write_plan,
-    yaml,
-):
-    mesh_file = example / ("pore-" + "-".join(f"{value:g}" for value in cylinder.values()) + ".msh")
-    if not mesh_file.exists():
-        flags = [str(item) for pair in cylinder.items() for item in pair]
-        main(["mesh", "cylinder", *flags, "--out", str(mesh_file)])
-    # The sweep reads its base from a file, so the case is written out; its inputs are
-    # absolute because the file does not sit beside them.
-    base = case.with_(
-        **base_settings,
-        **{
-            "inputs.mesh.path": str(mesh_file),
-            "inputs.charge.path": str(example / "cis-ring.field.yaml"),
-        },
+def _(Case, SWEEP_DEFAULTS, ring, store, sweep, sweep_form):
+    settings = sweep_form.value or SWEEP_DEFAULTS
+    biases_V = [float(text) * 1e-3 for text in settings["biases_mV"].split(",")]
+    first = min(range(len(biases_V)), key=lambda i: abs(biases_V[i] - settings["first_mV"] * 1e-3))
+    case = Case.cylinder(
+        concentration_M=settings["concentration_M"],
+        bias_V=biases_V[first],
+        charge=ring,
+        outputs=("current", "transport_numbers", "eof_rate", "rectification"),
+        name="iv-cylinder",
+        store=store,
+        write=False,
     )
-    sweep_text = yaml.safe_dump(
-        {
-            "schema": "nanopnp/sweep/v0.5",
-            "name": "iv-notebook",
-            "base": "base.case.yaml",
-            "axes": axes,
-        },
-        sort_keys=False,
-    )
-    case_text = dumps_case(base.document)
-    # A directory holds one plan, so an edited setting makes a new directory.
-    directory = example / (
-        "iv-notebook-" + hashlib.sha256((sweep_text + case_text).encode()).hexdigest()[:8]
-    )
-    directory.mkdir(exist_ok=True)
-    (directory / "base.case.yaml").write_text(case_text, encoding="utf-8")
-    (directory / "sweep.yaml").write_text(sweep_text, encoding="utf-8")
-    plan = plan_from_document(directory / "sweep.yaml")
-    write_plan(plan, directory)
-    run_plan(plan, directory, store=base.store)
-    dataset = collect(plan, directory)
+    dataset = sweep(case, axis="bias_V", values=biases_V, origin=first).run()
     return (dataset,)
 
 
 @app.cell
-def _(dataset, draw, interactive, mo, scale):
-    curves = draw(dataset, scale=scale)
-    mo.vstack(
-        [
-            mo.mpl.interactive(curves) if interactive else curves,
-            mo.ui.table(dataset.summary["rows"], selection=None),
-        ]
-    )
+def _(dataset, draw, mo):
+    mo.vstack([draw(dataset), mo.ui.table(dataset.summary["rows"], selection=None)])
     return
 
 

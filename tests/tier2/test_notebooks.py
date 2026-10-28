@@ -1,47 +1,48 @@
-"""FR-30: each notebook runs headless from its README and exits 0."""
+"""FR-30: each notebook runs headless from its README, in place, and exits 0."""
 
 from __future__ import annotations
 
 import logging
-import shutil
+import subprocess
 import time
 from pathlib import Path
 
 import pytest
 
-from nanopnp.validation.examples import copy_example, run_tagged
+from nanopnp.validation.examples import run_tagged
 
 pytestmark = pytest.mark.nightly
 
 logger = logging.getLogger(__name__)
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-NOTEBOOKS = {
-    "01-geometry": ("06-pdb-to-mesh",),
-    "02-charge": ("07-pdb-to-charged-run", "06-pdb-to-mesh"),
-    "03-solve": ("02-charged-pore",),
-    "04-sweep": ("03-iv-sweep",),
-    "05-cylinder": ("03-iv-sweep",),
-    "06-2wcd": ("07-pdb-to-charged-run", "06-pdb-to-mesh"),
-}
+NOTEBOOKS = ("01-geometry", "02-charge", "03-solve", "04-sweep", "05-cylinder", "06-2wcd")
+
+
+@pytest.fixture(scope="module")
+def store(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    # One store for the six, as a reader has: the 2WCD notebooks share their walk.
+    return tmp_path_factory.mktemp("store")
+
+
+def _status() -> str:
+    return subprocess.run(
+        ["git", "status", "--porcelain", "--", "notebooks", "examples"],
+        cwd=REPOSITORY,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
 
 
 @pytest.mark.parametrize("notebook", NOTEBOOKS)
-def test_notebook_runs_headless(notebook: str, tmp_path: Path) -> None:
-    # A cell that raises must fail the run: a stale notebook is the silent failure.
-    directory = copy_example(REPOSITORY / "notebooks" / notebook, tmp_path, repository=REPOSITORY)
-    # The notebook prepares its own input: the examples it reads sit beside it, as in the repo.
-    examples = REPOSITORY / "examples"
-    for name in NOTEBOOKS[notebook]:
-        shutil.copytree(
-            examples / name,
-            tmp_path / "examples" / name,
-            ignore=shutil.ignore_patterns("*.msh", "store", "*-prepared.pdb"),
-            dirs_exist_ok=True,
-        )
-    structures = Path("tests", "data", "structures")
-    (tmp_path / structures).mkdir(parents=True)
-    shutil.copy2(REPOSITORY / structures / "2wcd.pdb.gz", tmp_path / structures)
+def test_notebook_runs_headless(notebook: str, store: Path) -> None:
+    # A cell that raises must fail the run, and a notebook that writes beside itself or into
+    # an example fails too: a reader's checkout stays as it was.
+    before = _status()
     started = time.perf_counter()
-    run_tagged(directory, "run")
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("NANOPNP_STORE", str(store))
+        run_tagged(REPOSITORY / "notebooks" / notebook, "run")
     logger.info("notebook %s: %.1f s", notebook, time.perf_counter() - started)
+    assert _status() == before
