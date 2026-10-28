@@ -1,6 +1,6 @@
 # WP54 — The notebooks and figures revised
 
-**Status: planned, not started.** Written 28 October 2026 from the author's notes,
+**Status: in progress; items 1 to 5 done.** Written 28 October 2026 from the author's notes,
 [notebooks-review-for-wp54.md](notebooks-review-for-wp54.md), and the rulings they carry
 (§8.2.20 V1 to V5). Inherits WP51 as shipped (§8.2.14 P2 to P10) and WP53's commands.
 
@@ -130,11 +130,30 @@ the next item; a change of scope is a ruling (`rulings.md`).
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/mesh/cylinder.py`, `mesh/__init__.py`, `cli/__init__.py` (D1); done when `tests/tier1/test_cli.py` passes. **Executor:** `general-purpose` on Sonnet.
-- [ ] 2. `pipeline/handle.py` (`cylinder`, `from_structure`, `load` rebasing), `post/export.py` (`SolutionFields` moved, six-node cells), `plot/data.py`, `pipeline/run.py` (`current_nA`, `conductance_nS`, `fields`), `modularity-layering.yaml` (`pipeline → post`) (D1, D4); done when the item's Verification rows and `test_layering.py` pass. **Executor:** main.
-- [ ] 3. `src/nanopnp/sweep/inmemory.py`, `sweep/__init__.py` (D2); done when its row passes. **Executor:** main.
-- [ ] 4. `notebooks/03-solve`, `notebooks/04-sweep`, their READMEs, `notebooks/.gitignore`, `tests/tier2/test_notebooks.py` (D6, figures as they stand); done when `uv run pytest tests/tier2/test_notebooks.py -k "03 or 04"` passes. **Executor:** main.
-- [ ] 5. Checkpoint: publish 03, 04. **Executor:** main.
+- [x] c1db2b8 1. `src/nanopnp/mesh/cylinder.py`, `mesh/__init__.py`, `cli/__init__.py` (D1); done when `tests/tier1/test_cli.py` passes. **Executor:** `general-purpose` on Sonnet.
+- [x] 3effa2c 2. `pipeline/handle.py` (`cylinder`, `from_structure`, `load` rebasing), `post/export.py` (`SolutionFields` moved, six-node cells), `plot/data.py`, `pipeline/run.py` (`current_nA`, `conductance_nS`, `fields`), `modularity-layering.yaml` (`pipeline → post`) (D1, D4); done when the item's Verification rows and `test_layering.py` pass. **Executor:** main.
+- [x] 1d1664d 3. `src/nanopnp/sweep/inmemory.py`, `sweep/__init__.py` (D2); done when its row passes. **Executor:** main.
+- [x] 65b049f 4. `notebooks/03-solve`, `notebooks/04-sweep`, their READMEs, `notebooks/.gitignore`, `tests/tier2/test_notebooks.py` (D6, figures as they stand); done when `uv run pytest tests/tier2/test_notebooks.py -k "03 or 04"` passes. **Executor:** main.
+- [x] 5. Checkpoint: publish 03, 04. **Executor:** main.
+
+> **Outcome — slice 1 (items 1 to 5).**
+> - Item 1 also exports `generate_cylinder`, the ungated mesher, because the CLI prints the
+>   gated mesh's report and `mesh_cylinder` returns only the path.
+> - Item 2 lands `plot.data.subdivided`, planned for item 6, since the solve figure needs it once
+>   the cells are six-node. `field_path` and `input_paths` in `pipeline/handle.py` are public for
+>   the sweep. The model name is read from `VALIDATED_DEFAULT_CASE` (VER-56). The cylinder mesh
+>   key's schema is `nanopnp/mesh/cylinder/v0.5`.
+> - Grounding missed that `Case.run` recorded the case file's path beside the dumped text, so a
+>   reproduction of a `Case.load` run failed its case check; with rebasing it always would.
+>   `Case.run` now records the case as held in memory (`case_path=None`), and `Case.load`
+>   keeps the resolved source. A rebased case hash also depends on where the files live.
+> - The physics review found the cylinder's 0.35 nm wall coarser than NUM-30's `λ_D/5`:
+>   REV-146, a question for the author.
+> - The notebook test compares `git status` before and after each notebook, rather than asking
+>   for an empty one, so a dirty development tree does not fail it.
+> - V5 pages: the marimo export pulls its styles from a CDN the artifact frame blocks, so each
+>   page is rebuilt from the export's embedded cells and outputs, the widgets drawn at their
+>   defaults.
 - [ ] 6. `plot/panels.py`, `plot/data.py` (`subdivided`, cutlines), `plot/__init__.py` (D3, D4); done when its rows pass. **Executor:** main.
 - [ ] 7. `plot/figures.py` rebuilt on the panels: solve, charge, contour, materials, sweep, mesh (D3, D5); done when `test_figures.py` and `test_every_figure_draws_and_displays` pass. **Executor:** main.
 - [ ] 8. `notebooks/05-cylinder`; 03's cutline slider and field selector (D6); done when the notebook test passes for 03 and 05. **Executor:** main.
