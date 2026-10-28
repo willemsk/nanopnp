@@ -104,6 +104,7 @@ edges:
   - {from: pipeline, to: mesh, relation: static, finding: null}
   - {from: pipeline, to: numerics, relation: static, finding: null}
   - {from: pipeline, to: physics, relation: static, finding: null}
+  - {from: pipeline, to: post, relation: static, finding: null}
   - {from: plot, to: charge, relation: static, finding: null}
   - {from: plot, to: core, relation: static, finding: null}
   - {from: plot, to: density, relation: static, finding: null}

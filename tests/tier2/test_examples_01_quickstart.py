@@ -14,8 +14,13 @@ import pytest
 from nanopnp.core.hashing import decode_floats
 from nanopnp.io.artefact import StageInputs
 from nanopnp.pipeline.run import offered
-from nanopnp.plot import data
-from nanopnp.post.export import attribute_name, field_scale, logarithmic_fields, restored
+from nanopnp.post.export import (
+    attribute_name,
+    field_scale,
+    logarithmic_fields,
+    restored,
+    solution_fields,
+)
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.validation.examples import CommandResult, copy_example, run_tagged
 
@@ -104,7 +109,7 @@ def test_field_on_a_grid_matches_sample_at(
         upstream=offered("solve", result.artefacts),
     )
     solution = result.artefacts["solve"]
-    fields = data.solution_fields(inputs, solution)
+    fields = solution_fields(inputs, solution)
     state, _ = restored(inputs, solution)
     mesh = state.space.mesh
     logarithmic = logarithmic_fields(state.model)

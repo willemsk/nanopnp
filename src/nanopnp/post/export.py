@@ -38,6 +38,7 @@ __all__ = [
     "FieldExport",
     "P2Nodes",
     "SampledFields",
+    "SolutionFields",
     "attribute_name",
     "export_fields",
     "field_scale",
@@ -46,6 +47,7 @@ __all__ = [
     "restored",
     "sample_at",
     "sampled_fields",
+    "solution_fields",
 ]
 
 logger = logging.getLogger(__name__)
@@ -348,6 +350,34 @@ def sampled_fields(
         target = whole if field.domain is None else restricted
         target[name] = values if field.element == "vector_h1" else values[:, 0]
     return SampledFields(omega, omega_w, whole, restricted, carriers)
+
+
+@dataclass(frozen=True)
+class SolutionFields:
+    """The solved fields in SI on the P2 nodes of the whole domain and of the fluid.
+
+    Parameters
+    ----------
+    whole, fluid
+        ``(points_m, cells, fields)``: the Triangle_6 cells, corners in columns 0 to 2 and the
+        midsides of edges (0, 1), (1, 2), (2, 0) in columns 3 to 5; a vector field is
+        ``(n, 2)`` in ``(r, z)``.
+    """
+
+    model: str
+    whole: tuple[np.ndarray, np.ndarray, dict[str, np.ndarray]]
+    fluid: tuple[np.ndarray, np.ndarray, dict[str, np.ndarray]]
+
+
+def solution_fields(inputs: StageInputs, artefact: Artefact) -> SolutionFields:
+    """Restore the converged state of a solve artefact and sample its fields at the P2 nodes."""
+    state, _ = restored(inputs, artefact)
+    sampled = sampled_fields(state, state.model.scales)
+    return SolutionFields(
+        model=state.model.name,
+        whole=(sampled.omega.points_nm * 1e-9, sampled.omega.cells, sampled.whole),
+        fluid=(sampled.omega_w.points_nm * 1e-9, sampled.omega_w.cells, sampled.restricted),
+    )
 
 
 def export_fields(

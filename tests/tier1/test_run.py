@@ -464,3 +464,23 @@ def test_ver64_a_walk_past_stage_7_that_skips_it_says_so_in_the_charge_group(
     skipped = group["protonation"]
     assert isinstance(skipped, dict)
     assert "the walk to 'materials' does not read stage 7" in str(skipped["reason"])
+
+
+def test_run_result_current_and_conductance_in_nano_units(tmp_path: Path) -> None:
+    from typing import Any, cast
+
+    from nanopnp.io.artefact import Artefact
+    from nanopnp.pipeline.run import RunResult
+
+    def result(**summary: object) -> RunResult:
+        qoi = Artefact(schema="nanopnp/qoi/v0.5", parameters={}, summary=summary)
+        return RunResult(tmp_path, cast("Any", None), {"qoi": qoi})
+
+    solved = result(current_A=2e-9, conductance_S=4e-8)
+    assert solved.current_nA == pytest.approx(2.0, rel=1e-15)
+    assert solved.conductance_nS == pytest.approx(40.0, rel=1e-15)
+    unbiased = result(current_A=None, conductance_S=None)
+    assert unbiased.current_nA is None
+    assert unbiased.conductance_nS is None
+    with pytest.raises(KeyError, match="qoi"):
+        _ = RunResult(tmp_path, cast("Any", None), {}).current_nA
