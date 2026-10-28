@@ -1551,3 +1551,19 @@ marks `λ_D/5` beside the wall, so the gap shows.
 **Question for the author:** should `Case.cylinder` size the wall from the case's Debye length, at the cost
 of its parity with examples 02 and 03 and their VER-62 golden?
 
+## REV-147: The lumen window is fixed, not read from the region
+
+`plot.data.LUMEN_NM` is r ≤ 5 nm, |z| ≤ 10 nm about z = 0. The mesh figure's close-up and the u_z panel's
+streamlines use it for every pore (WP54, D3 and D5), so a pore whose lumen reaches past either bound, or is
+not centred on z = 0, is cut off. The window could be read from the stage-5 region record: the pore's axial
+extent and its largest lumen radius. Found by the physics review of WP54 items 6 and 7; the notebooks offer
+a window selector meanwhile.
+
+## REV-148: A concentration panel's bulk is the case's salt for every species
+
+`plot_field(..., relative_to_M=)` draws `log₁₀(c / c_bulk)` with one `c_bulk`, the case's concentration
+in mol/m³ for every species. That matches the solver as it stands (every species' Dirichlet value is the
+case's concentration; `core/scaling.py`), so it is right for the validated 1:1 model. A salt that is not
+1:1, or a bulk that differs between cis and trans, would read 0 in a reservoir it does not fill and hide
+it. Found by the physics review of WP54 items 6 and 7.
+
