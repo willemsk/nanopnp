@@ -1,0 +1,6 @@
+store/
+*.msh
+run-*/
+iv-*/
+__pycache__/
+__marimo__/
