@@ -26,6 +26,9 @@ rules it.
 | UT-07 | cli | low | open | | `nanopnp run` lacks progress feedback or live status during long solves |
 | UT-08 | docs | low | open | | Inconsistent case naming in session 03 (`coarse.case.yaml` vs `wall-100.msh`) |
 | UT-09 | numerics | medium | open | | Severe runtime scaling on moderate meshes (~16k elements) due to serial UMFPACK and multi-rung ladder |
+| UT-10 | api | medium | open | | Python API is un-pythonic and exposes raw pipeline plumbing (dumps_case, StageDescription, dict ASTs) |
+| UT-11 | docs | low | open | | Undocumented thread pinning behavior in `sweep run` causes oversubscription concerns |
+| UT-12 | cli | medium | open | | `nanopnp inspect` on a sweep dataset dumps raw JSON instead of tabular results and rectification ratios |
 
 ## UT-01 · No documented way to visually inspect a generated mesh from the CLI
 
@@ -247,6 +250,88 @@ Suggested remedies:
 - Allow configurable continuation strategies (e.g. bypassing intermediate PB/ramp rungs for simple uncharged cases).
 - Support modified Newton steps (freezing the LU factorization across iterations when convergence is rapid).
 - Explore multi-threaded or iterative linear solver backends where available.
+
+## UT-10 · Python API is un-pythonic and exposes raw pipeline plumbing
+
+**Area:** `api`. **Severity:** `medium`. **Session:** `04-python-api`.
+
+### Context and expectation
+
+In Session 04, the user walks through driving `nanopnp` via Python in `notebook.py` (stopping a run, progress reporting, swapping a mesh, editing sections, and adding a custom stage).
+
+User feedback summarizes the core design friction:
+> *"This example seems to do what it is supposed to do, but the current implementation of the API is anything but intuitive... most sections (basically all except 02) which I either do not readily understand by reading the code, or which seem very convoluted. Like the code was forced into an API role rather than native to it."*
+
+Specific points of friction where internal implementation details leak into the public API:
+
+1. **Redundant execution arguments (`run_document`):**
+   ```python
+   result = run_document(
+       case.document,
+       case_text=dumps_case(case.document),
+       store=case.store,
+       cancel=flag,
+       write=False,
+   )
+   ```
+   A caller holding a `Case` instance must extract its underlying dict AST (`case.document`), manually re-serialize it (`case_text=dumps_case(...)`), extract `case.store`, and pass `write=False`. Instead, a native API would simply be:
+   ```python
+   result = case.run(cancel=flag, progress=...)
+   ```
+
+2. **Awkward case manipulation via raw dict paths:**
+   ```python
+   swapped = case.with_(**{"inputs.mesh.path": finer["inputs.mesh.path"]})
+   edited = with_section(case.document, "charge")
+   ```
+   Because Python does not permit dots in keyword arguments, users must write `**{"inputs.mesh.path": ...}` or import internal dictionary manipulators like `with_section`. Users expect first-class builder methods (e.g. `case.with_mesh(...)` or `case.with_charge(...)`).
+
+3. **High barrier to custom stage extension (`StageDescription`):**
+   Registering a custom stage requires constructing a `StageDescription` with 12 low-level fields (`number=13`, `takes_workspace=False`, `takes_store=False`, `key_is_artefact=False`, `weight=0.01`, `needs_section=None`, etc.) and a string import path `"selectivity:SelectivityStage"`.
+   Furthermore, the stage class itself (`selectivity.py`) requires manually calculating content hashes and constructing low-level `Artefact` objects rather than just implementing a high-level function `run(inputs) -> output`.
+
+Conclusion: The current API reflects the internal stage execution engine rather than being designed around how a Python scientist expects to write scripts and notebooks.
+
+## UT-11 · Undocumented thread pinning behavior in `sweep run` causes oversubscription concerns
+
+**Area:** `docs`. **Severity:** `low`. **Session:** `05-sweep`.
+
+### Context and expectation
+
+When running parallel parameter sweeps with `nanopnp sweep run --workers N`, users are concerned about thread oversubscription (e.g., whether each worker process will spawn $M$ BLAS/OpenMP threads, leading to $N \times M$ contending threads that thrash CPU cores).
+
+In the implementation (`src/nanopnp/sweep/run.py`):
+1. `sweep run` initializes its process pool using `pin_threads()`.
+2. This automatically sets `OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, and `MKL_NUM_THREADS=1` in each spawned worker before any compute or linear algebra libraries are imported.
+3. Thus, each worker process consumes exactly 1 core, preventing oversubscription.
+
+However:
+- Neither `nanopnp sweep run --help` nor the documentation explains this thread-pinning behavior.
+- While `nanopnp run` accepts a `--threads <N>` argument for single runs, `sweep run` does not mention threading, leaving users unsure how resource allocation and core pinning are managed.
+
+## UT-12 · `nanopnp inspect` on a sweep dataset dumps raw JSON instead of tabular results and rectification ratios
+
+**Area:** `cli`. **Severity:** `medium`. **Session:** `05-sweep`.
+
+### Context and expectation
+
+In Session 05 step 5, the user is instructed to run:
+```console
+$ nanopnp inspect iv-grid/dataset.json
+```
+The documentation promises: *"inspect reads the dataset: its points, and the rectification ratio of each opposite pair."*
+
+User reaction:
+> *"The run seems to have worked, but I am not digging through the JSON output to find the relevant data..."*
+
+Why this failed:
+1. `nanopnp inspect` treats `dataset.json` as an arbitrary JSON file, printing keys followed by unformatted, serialized JSON blobs (`json.dumps(value)`).
+2. The user is presented with a screenful of stringified lists containing 8 point dictionaries, assignments, manifests, and rectification objects.
+3. While the `--csv` flag generated `iv-grid/dataset.csv`, the session documentation directs users to `inspect dataset.json` without mentioning how to view the CSV or providing a tabular summary.
+4. An end user inspecting a sweep dataset expects an ASCII table showing the parameter grid, currents, and the computed rectification ratios ($I(+V)/|I(-V)|$), rather than being forced to parse raw JSON.
+
+
+
 
 
 
