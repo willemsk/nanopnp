@@ -65,6 +65,15 @@ directions, so that an error type added later fails the enumeration rather than 
 `1`. Diagnostics and log records go to standard error; standard output carries only the command's
 own result, so that a caller may parse it.
 
+NOTE (IF-02, reading; §8.2.21 W2): a command's text output is a reading for a person, and `--json`
+prints the whole record a caller parses, unchanged by that reading. `nanopnp inspect` reads a record
+by its schema: a run directory or its manifest as its model, its stages, each rung with its Newton
+iterations and time, its quantities and its deviations; a sweep dataset as a table of its points,
+with each rectification ratio beside the values that make its pair; a stored artefact as its schema,
+key and summary. A record of another schema is listed key by key. Two run directories given together
+are compared: the case fields that differ, the deviations of each run, and each quantity of either
+side by side with their relative difference. A comparison exits `0`, being a reading and not a test.
+
 NOTE (IF-02, configuration): no command-line flag SHALL change what is solved. Flags select where
 output is written, which stages run and how much is logged; every quantity that changes a number
 lives in the case file (IF-03). A flag duplicating a case-file setting would make the FR-25 manifest
@@ -151,7 +160,7 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-25** | SHALL emit with every result a provenance manifest recording input hashes, library versions, mesh hash, solver settings, stabilisation mode and correction parameter file versions. | v0.2 |
 | **FR-26** | SHALL round-trip a case file, a written and re-read case yielding a semantically identical run configuration. | v0.2 |
 | **FR-27** | SHALL make every stage independently invocable, cancellable, progress-reporting and introspectable, emitting a typed, serialisable, content-hashed artefact that may be inspected, exported, edited and substituted by hand. | v0.2 |
-| **FR-28** | SHALL export figures, fields and the originating case file from a completed run. | v0.7 |
+| **FR-28** | SHALL export fields and the originating case file from a completed run; its figures are FR-44's (§8.2.21 W3). | v0.7 |
 | **FR-29** | MAY perform goal-oriented (dual-weighted-residual) mesh adaptivity targeting the ionic current. | post-1.0 |
 | **FR-30** | SHALL draw a figure of the artefact of every stage that declares one, of the solve's Newton and continuation history, and of a sweep's collected results, from the stored artefacts alone, in SI units and the model frame, through an optional extra the default import path does not load; SHALL draw a solved potential in mV on a colour scale centred at 0 mV whose reach the caller may set, a concentration relative to the bulk the solve imposed on that species, on a logarithmic scale, the signed axial velocity with streamlines in the lumen, the lumen being read from the pore wall of the mesh, and a mesh as its element edges and its whole domain beside its lumen with λ_D/5 marked, and SHALL draw an axial or radial cutline of any solved field from the stored nodes; and SHALL let a notebook display any artefact and run result, as its stage's figure where one is declared (§8.2.14 P2 to P6; §8.2.20 V4, V6, V12, V16). | v0.5 |
 | **FR-31** | SHALL provide the workbench as four suites in a project, Molecular, Continuum, Study and Analysis, each tool's settings docked beside its live view, with the project rail, the changed-from-default count and the run queue always on screen (§8.2.17 S2; WB-01 to WB-03, WB-05, WB-07, WB-29). | v0.6 |
@@ -167,6 +176,7 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-41** | SHALL replace a residue's side chain in 3D and rebuild the density, the contour, the mesh and the charge from it, library first with a vetted dependency (§8.2.17 S4). | structural-mutator phase |
 | **FR-42** | SHALL draw the (r, z) domain by hand with lines, arcs, booleans and named boundaries, meshed by the library, the solve staying 2D axisymmetric (§8.2.17 S5; N4). | sketcher phase |
 | **FR-43** | MAY assign each titratable group, as a switch away from the validated default of PHY-16 step 3, its charge averaged over its protonation states at the pH, from its pKa; its physics is written into §4 with its library package (§8.2.18 T6). | a later phase |
+| **FR-44** | SHALL draw from the command line, to a PNG, SVG or PDF file, the declared figure of a stage of a case, of a completed run and of a sweep's collected dataset, through FR-30's figures and their optional extra, and SHALL refuse before any stage runs a suffix it does not write or a stage that declares no figure (§8.2.21 W3). | v0.5 |
 
 Rationale (FR-23): continuous-Galerkin fluxes are not pointwise conservative, so a current obtained
 by integrating flux over an interior cross-section varies between cross-sections by amounts that
@@ -203,6 +213,16 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20); adding a mesher, a linear solver or a stabilisation mode SHALL require only a registration, with no file of the package edited (§5.5; §8.2.8 H7). | Maintainability |
 | **QR-15** | v0.7 (Phase 6; §8.2.5 E2, §8.2.6 F1) SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
 | **QR-16** | The workbench SHALL meet WCAG 2.2 AA in both its themes, the contrast of controls, focus rings and colour bars included, and SHALL be operable by keyboard alone, every action on a canvas having a keyboard path (WB-19, WB-24). | Usability |
+
+NOTE (QR-12, the remedy; §8.2.21 W5): a diagnostic that names a remedy SHALL name a setting the
+run reads. The wall-distance gate of NUM-34 names `numerics.mesh.wall_h_nm` for a mesh stage 6
+generates, and for a supplied mesh the file it reads and its generator (`nanopnp mesh cylinder
+--wall-h-nm`), `numerics.mesh` being refused beside `inputs.mesh`. Where a document states one quantity
+twice, a refusal of their disagreement SHALL name both keys. An analytic form that carries a charge
+(`gaussian_ring`'s `charge_e`) need not equal `q_net_e`, the planar integral over `r ≥ 0`: a ring on
+the axis integrates to half its charge. A charge and a `q_net_e` of opposite sign, or one of them zero
+and the other not, are refused when the document is read, before its grid is built; a disagreement in
+size is the producer leg's of PHY-19, whose refusal names `q_net_e` and the form's charge parameter.
 
 NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, QR-10 reads: "A
 nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a

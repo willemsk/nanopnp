@@ -3,27 +3,26 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP55, below. Provisional, and
-planned by the second `/np-plan amend 4` once the author has run the sessions and ruled every
-`UT-nn`: the fixes from WP56, the documentation increment and the close, which take their numbers
-then. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
+demand. Delivered: WP35 to WP55, below. The author ran the sessions and ruled every `UT-nn` on
+29 October 2026, at WP56's plan (§8.2.21): planned, WP56 and WP57, the fix packages; provisional, the
+documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the simpler loop, the
-trimmed code and tests, the reorganised notes, the cost study, a picture of every step of the
-pipeline with notebooks to try it, the split specification and the working instructions rebuilt as
-three commands, plan, implement and ship, each taking a level, are done.
+trimmed code and tests, the reorganised notes, the cost study, the notebooks, the split specification,
+the three working commands and the testing protocol are done, and the author has run the sessions.
 
-**What changes.** Two packages come before the testing sessions. The first revises the notebooks
-and figures from the author's notes, and is the first run with the new commands. The second writes
-the protocol the author's sessions follow.
+**What changes.** Two packages fix what the sessions found. The first makes the command line readable:
+a short account of a run in place of its whole record, two runs compared, a picture drawn to a file,
+a line for each step of a long solve, and messages that name what the user can change. The second
+makes the Python interface one designed for its user. Then the guide is revised, and the phase closes.
 
-**Cost.** About a week.
+**Cost.** About a week for the two packages.
 
-**What could go wrong.** A rewritten instruction could have lost a rule; the first package planned
-with the new commands would show it. The notebooks' revision has an open scope, so its plan names any new
-dependency before it enters.
+**What could go wrong.** A shorter account could leave out what a user needs; the full record stays one
+flag away, and a test reads the deviations back. A new interface could break a notebook; each one runs
+every night.
 
 **Your call.** Should the phase estimate grow from four to six weeks to five to seven?
 *Recommendation:* yes; the sessions matter more than the date.
@@ -207,20 +206,36 @@ tagged commands nightly on VER-46's runner (G7, N4); exit status is the oracle. 
 sessions themselves are the author's** (F3), and their findings are logged as they run; the second
 `/np-plan amend 4` rules them. Measured times and the broken-command check are in the plan's Outcome.
 
-### Fix packages (provisional)
+### WP56 — The command line read by a person (§8.2.21 W1 to W6, W8)
 
-They wait on the sessions and on the author's ruling of each `UT-nn`; a second `/np-plan amend 4`
-plans them, numbered from WP56. They carry `MOD-11`, decided by the author's ruling of the sessions'
-findings (H2), and any cost WP49 measured over its threshold that one pull request could not fix.
-The rules of the refactor packages apply: VER-61, VER-62, `CHANGELOG.md` breaks, the shell following,
-schema moves under `nanopnp/case/v0.5` (G6), and their tests follow N1.
+Planned ([plan](wp56-command-line-read-by-a-person.md)). It fixes UT-01 to UT-09, UT-11 and UT-12 at their
+causes: `inspect` reads a record by its schema and compares two runs (W2); `nanopnp plot` draws a
+stage's figure to a file, FR-44 (W3); `run` and `stage` report each stage and rung as it starts (W4);
+the wall-distance gate names a setting the run reads, and a field document whose two charges disagree
+is refused naming both, in sign when it is read (W5; REV-154); the help and the field document's reference say what
+a user needs (W6); and UT-09's cost is measured into REV-156 (W8). No schema moves; `--json` is
+unchanged. Tag `v0.5.0-alpha.22`.
+
+### WP57 — The Python interface designed for its user (§8.2.21 W4, W7)
+
+Planned by `/np-plan wp 57` after WP56 merges. It fixes UT-10 and `MOD-11` (H2): `Case.run` passes on
+`progress`, `cancel` and the walk's hooks; `Case` edits a section and takes a path naming more than one
+field as a mapping (REV-145); a stage of one's own is a function registered by a public call that keys
+and hashes it, with `core.stages.register` and `StageDescription` internal; session 04 is rewritten on
+it, its variation included (REV-155). A change to `PUBLIC` is decided in `test_public_api.py` (F4) and
+listed in `CHANGELOG.md`. VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.23`.
 
 ### Documentation increment 4 (provisional)
 
 It waits on the fixes and delivers §8.1's documentation increment for Phase 4: the modularity report
 in the site; the user guide, the API reference and the CLI reference revised against both logs,
 including a hand-written Python API page if the sessions show it is needed; every break of the phase
-listed with its migration (F4). VER-45 and VER-46 gate it.
+listed with its migration (F4). From the sessions (§8.2.21 W1, W6): the getting-started page and the
+meshes page point to each command's help and say which settings shape the geometry and which the
+mesh, and that `numerics.mesh` is refused beside a supplied mesh (UT-02); the provenance page says
+when a run does not reproduce (UT-05); the fields page explains a field document's grid and its two
+conservation legs (UT-06); the running page states the cost of a solve per element (UT-09). VER-45 and
+VER-46 gate it.
 
 ### The close package (provisional)
 
@@ -245,8 +260,8 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | The notebooks on the documentation site: in documentation increment 4, or later | **Author, open**, at the second amendment. Default: on the site, after the sessions show which help |
 | WP53's aliases for the old command names, and the hook on a diverged checkout | **Settled** by WP53's plan: no aliases; a warning, and no write, unless a clean primary `main` can fast-forward |
 | WP54's scope | **Settled** (R8; §8.2.20 V1 to V17): the author's notes and the steering at its checkpoints |
-| Each `UT-nn`: fix or defer | **Author**, through the second amendment |
-| `MOD-11` | **Accepted, and decided after the sessions** (H2), by the author's ruling, in a fix package |
+| Each `UT-nn`: fix or defer | **Ruled** (§8.2.21): eleven accepted for WP56 and WP57; UT-09 deferred to Phase 6 as REV-156 |
+| `MOD-11` | **Ruled** (§8.2.21 W7): a designed interface, `register` internal; WP57 |
 | OPN-04, OPN-08 | **Author, open.** Not on this phase's path |
 | NUM-07 order; the archive-dependent legs | **Phase 6** (E1, E4, F1) |
 | Residual cycles, drift beyond a bound, a cost over its threshold | **Author**, only if a package reports one (H6, I4, M2) |
@@ -260,8 +275,8 @@ Everything else the phase decided is in *Design decisions*, with its ruling.
 |---|---|---|
 | The document of comments and notes on the notebooks and figures | WP54's plan | **Delivered** 28 October 2026 |
 | Steering at each of WP54's checkpoints (V5) | WP54's next item | **Delivered** at three checkpoints, 28 October 2026 (V6 to V13; V14 to V17 at `/np-ship wp 54`) |
-| The scripted sessions, run by the author, with findings logged | The second amendment, then the fix packages | The phase waits. No agent session substitutes (G7) |
-| A ruling on every `UT-nn`, and on `MOD-11` | The fix packages and the close | `MOD-11` stays `accepted` and the close does not read as closed |
+| The scripted sessions, run by the author, with findings logged | The fix packages | **Delivered**, UT-01 to UT-12, 29 October 2026 |
+| A ruling on every `UT-nn`, and on `MOD-11` | The fix packages and the close | **Delivered** at WP56's plan (§8.2.21) |
 | A ruling on a residual cycle, a drift beyond a bound or a cost over its threshold | The package that reports it | The package stops at the edge and carries it as a `REV-nn` row |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
@@ -284,7 +299,8 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP54, notebooks revised | 1, 2, nightly | Claimed by its plan; FR-30's tests kept |
 | WP55, protocol | nightly | VER-69 |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-65 kept green |
-| Fixes, from WP56 | 1, 2 | Claimed at the second amendment |
+| WP56, the command line | 1, 2 | FR-44; QR-03 and NUM-34's gates (W5); FR-25's deviations read back |
+| WP57, the Python interface | 1, 2 | Claimed by its plan; VER-61, VER-62 and VER-65 kept green |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | Both logs and the register read as closed |
 

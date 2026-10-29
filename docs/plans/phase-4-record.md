@@ -1416,3 +1416,28 @@ checkpoint. WP54's entry read, before this amendment:
 > figure-free. A change to `PUBLIC` is decided in `test_public_api.py` (F4) and listed in
 > `CHANGELOG.md`. VER-61, VER-62 and VER-65 stay green. Its plan claims its identifiers. Tag
 > `v0.5.0-alpha.20`.
+
+## Amended 29 October 2026 (§8.2.21 W1 to W8)
+
+At WP56's plan the author ruled the twelve findings of the user-testing sessions (§8.2.21). The
+provisional fix entry became WP56 and WP57, and the documentation increment gained the guide's prose
+for UT-02, UT-05, UT-06 and UT-09. The fix entry read, before this amendment:
+
+> ### Fix packages (provisional)
+>
+> They wait on the sessions and on the author's ruling of each `UT-nn`; a second `/np-plan amend 4`
+> plans them, numbered from WP56. They carry `MOD-11`, decided by the author's ruling of the sessions'
+> findings (H2), and any cost WP49 measured over its threshold that one pull request could not fix.
+> The rules of the refactor packages apply: VER-61, VER-62, `CHANGELOG.md` breaks, the shell following,
+> schema moves under `nanopnp/case/v0.5` (G6), and their tests follow N1.
+
+The documentation increment's paragraph read:
+
+> It waits on the fixes and delivers §8.1's documentation increment for Phase 4: the modularity report
+> in the site; the user guide, the API reference and the CLI reference revised against both logs,
+> including a hand-written Python API page if the sessions show it is needed; every break of the phase
+> listed with its migration (F4). VER-45 and VER-46 gate it.
+
+The status said that the fixes, the documentation increment and the close were provisional until the
+second `/np-plan amend 4`. The *Open decisions* rows on each `UT-nn` and on `MOD-11` read **Author**, and
+*What the author supplies* awaited the sessions and their rulings.
