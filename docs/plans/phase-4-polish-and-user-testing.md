@@ -195,10 +195,9 @@ and SICN with λ_D/5 marked, cutlines and a table of the quantities of interest,
 three checkpoints (V5 to V13); REV-147 and REV-148 were fixed at ship (V16), and REV-149 is deferred. WP51's rules
 carry: `plot/` imports no backend, and every notebook runs headless nightly.
 
-### WP55 — The user-testing protocol (provisional detail)
+### WP55 — The user-testing protocol
 
-[Plan](wp55-user-testing-protocol.md). It waits on WP54, whose notebooks session 04 is re-read
-against. It writes:
+[Plan](wp55-user-testing-protocol.md), re-grounded on WP54 as merged, 29 October 2026. It writes:
 
 - `docs/user-testing/protocol.md`, the protocol;
 - scripted sessions over the physics, the numerics, the Python API and the command line. Each
