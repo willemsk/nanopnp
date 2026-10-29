@@ -50,7 +50,7 @@ panels and two whole-workbench mockups, and writes the design document and its r
   REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
   restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
-## [0.5.0-alpha.21] - 2026-10-29
+## [0.5.0-alpha.21]
 
 WP55: the user-testing protocol. Five sessions that the author runs as a nanopore modeller would, a log for
 what they find, and a nightly test that keeps every session's commands working (`SPECIFICATION.md` §8.2.6 F3,

@@ -11,7 +11,7 @@ edit the case, and add a stage of your own to the pipeline.
 ## You start with
 
 - `notebook.py`: a [marimo](https://marimo.io) notebook that does each of these on a charged pore in
-  0.1 M NaCl, keeping what it computes in `store/` beside it.
+  0.1 M NaCl, keeping what it computes in `store/` beside it, which it empties each time it starts.
 - `selectivity.py`: a stage of your own. It reads the quantities of interest and says which ion
   carries more than half of the current.
 - `ring.field.yaml`: the fixed charge, a ring of negative charge inside the membrane.
