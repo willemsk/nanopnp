@@ -1689,3 +1689,24 @@ The gate is in `numerics/gates.py`, which does not know where the mesh came from
 
 Recommendation: let the pipeline's caller add the supplied-mesh sentence, or have the gate name both routes. Neither
 is in this package (no `src/` change); the author rules.
+
+## REV-155: WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser
+
+Left by the review of WP55 ([CODE_REVIEW_019](../code_reviews/CODE_REVIEW_019.md)); each needs the author or a
+`src/` change that WP55 rules out.
+
+- **The rectification sentence has no marker.** `knowledge/02-electrokinetics-background/07-ionic-current-rectification.md`
+  now says rectification needs an axial asymmetry of the geometry or of the fixed charge. Its only support is
+  session 05's dry run (0.91 at 50 mV, [plan Outcome](../plans/wp55-user-testing-protocol.md)); no test in scope
+  asserts it, so it carries neither `[tested]` nor `[verified]` with a source. It needs a literature source from the
+  author, or a Tier 2 case that is in the test scope.
+- **Session 04's "Then try" variation.** Editing `selectivity.py` alone to read `solve` fails: the notebook registers
+  the stage with `inputs=('case','qoi')`, and the `not in walk_order()` guard keeps the registration and the cached
+  module until the kernel restarts. This may be the friction the session exists to expose; if the author rules it
+  unintended, the README names the registration cell.
+- **The tagged-block grammar lives twice.** `tests/tier2/test_user_testing_sessions.py` parses console fences beside
+  `validation/examples.py`; the example READMEs get no untagged-command check. A helper next to `tagged_commands`
+  serves both and is a `src/` change.
+
+Recommendation: leave the variation until the sessions; source or test the sentence in the documentation increment;
+move the helper with the next change to `validation/examples.py`.

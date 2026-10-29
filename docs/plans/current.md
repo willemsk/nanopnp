@@ -6,7 +6,7 @@ unmerged branch is not shipped.
 ## In brief
 
 Phase 4 tidies the program before others rely on it: the revised notebooks are merged, and the
-protocol for the author's testing sessions is planned. Phase 5, a workbench in the browser, has its
+protocol for the author's testing sessions is delivered on its branch. Phase 5, a workbench in the browser, has its
 design study merged; nothing is built until Phase 4's release.
 
 **Your call:** should Phase 4's estimate grow to five to seven weeks? *Recommendation:* yes.

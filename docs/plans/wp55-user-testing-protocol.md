@@ -200,8 +200,8 @@ command does), *What to expect*, *Then try*, *Record*. Files and expectations:
 > **Outcome — the physics review (item 7).** A `physics-reviewer` pass over the five *What to expect* sections
 > found and this package fixed: session 04's stage called a pore "cation-selective" at t₊ above ½, though bulk
 > NaCl is already at about 0.4, so it now names the ion that carries more than half of the current and the README
-> expects only that its transport number is the result's; session 02 compared the cation share with the bulk
-> electrolyte's instead of with ½, and its flip-the-ring variation likewise; session 01 expects the mirror
+> expects only that its transport number is the result's; session 02 compared the cation share with ½
+> instead of with the bulk electrolyte's, and its flip-the-ring variation named no comparison; session 01 expects the mirror
 > symmetry to the accuracy of the mesh. The review confirmed session 05's claim that the departure from unity is
 > larger at 100 mV than at 50 mV, and found no session naming a known weakness. It also found that the knowledge
 > base said rectification needs a geometric asymmetry, which the cis ring in a symmetric cylinder contradicts;

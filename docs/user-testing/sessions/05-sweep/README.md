@@ -24,13 +24,15 @@ Work in this directory.
 ```console
 $ nanopnp mesh cylinder --out pore.msh
 $ nanopnp sweep plan grid.sweep.yaml --store store --directory iv-grid
-$ nanopnp sweep run iv-grid/plan.json --store store --workers 2 --csv
+$ nanopnp sweep run iv-grid/plan.json --store store --workers 2 --fail-fast --csv
 $ nanopnp sweep collect iv-grid/plan.json --csv
 $ nanopnp inspect iv-grid/dataset.json
 ```
 
 1. `sweep plan` checks every point and prints how they are grouped to run.
-2. `sweep run` solves the points on two worker processes and writes each point's record.
+2. `sweep run` solves the points on two worker processes and writes each point's record. With `--fail-fast` it
+   stops, with a non-zero exit, at the first point that does not converge; without it a point that fails is
+   only a gap in the table.
 3. `sweep collect` rebuilds the dataset from the records on disk.
 4. `inspect` reads the dataset: its points, and the rectification ratio of each opposite pair.
 

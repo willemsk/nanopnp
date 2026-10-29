@@ -5,6 +5,7 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
+    import shutil
     from pathlib import Path
 
     import marimo as mo
@@ -14,6 +15,9 @@ def _():
     from nanopnp.io.case_paths import with_section
 
     here = Path(__file__).resolve().parent
+    # A stage found in the store is not run, so a cancel cannot stop it: the account each section
+    # gives of what is computed and what is stored holds only from an empty store.
+    shutil.rmtree(here / "store", ignore_errors=True)
     store = Store(here / "store")
     return (
         CancelFlag,
@@ -224,11 +228,14 @@ def _(StageDescription, register, walk_order):
             ),
             "selectivity:SelectivityStage",
         )
-    return
+    registered = "selectivity" in walk_order()
+    return (registered,)
 
 
 @app.cell
-def _(case, dumps_case, mo, run_document):
+def _(case, dumps_case, mo, registered, run_document):
+    # Read from the cell above so that the walk below is ordered after the registration.
+    assert registered
     extended = run_document(
         case.document, case_text=dumps_case(case.document), store=case.store, write=False
     )

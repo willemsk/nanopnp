@@ -40,9 +40,18 @@ class SelectivityStage:
         check_cancelled(cancel, "the selectivity verdict")
         report(progress, 0.0, "reading the transport number")
         quantities = inputs.require("qoi")
-        t_plus = float(quantities.summary["transport_number"])
-        verdict = "cations" if t_plus > 0.5 else "anions" if t_plus < 0.5 else "neither"
-        report(progress, 1.0, f"more than half of the current is carried by: {verdict}")
+        recorded = quantities.summary["transport_number"]
+        t_plus = None if recorded is None else float(recorded)
+        if t_plus is None:
+            # At zero bias the extraction reports no transport number: there is no current to share.
+            verdict = "undefined"
+        elif t_plus > 0.5:
+            verdict = "cations"
+        elif t_plus < 0.5:
+            verdict = "anions"
+        else:
+            verdict = "neither"
+        report(progress, 1.0, f"the majority carrier: {verdict}")
         return Artefact(
             SCHEMA,
             parameters={},
