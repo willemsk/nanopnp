@@ -174,9 +174,9 @@ command does), *What to expect*, *Then try*, *Record*. Files and expectations:
 - [x] 3. 8cac812 `tests/tier2/test_user_testing_sessions.py`, `docs/user-testing/sessions/01-command-line/`,
   VER-69's row and Appendix A's note (D2, D5); done when `uv run pytest
   tests/tier2/test_user_testing_sessions.py` passes. **Executor:** main.
-- [ ] 4. `sessions/02-physics/`, `sessions/03-numerics/` (D2, D3); done when the same command
+- [x] 4. 3f2a6b0 `sessions/02-physics/`, `sessions/03-numerics/` (D2, D3); done when the same command
   passes. **Executor:** main.
-- [ ] 5. Compaction checkpoint. **Executor:** main.
+- [x] 5. Compaction checkpoint. **Executor:** main.
 - [ ] 6. `sessions/04-python-api/`, `sessions/05-sweep/` (D2, D3, H2); done when the same command
   passes. **Executor:** main.
 - [ ] 7. D6's broken-command check; a `physics-reviewer` pass on the five *What to expect*
