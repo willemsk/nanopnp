@@ -1,6 +1,6 @@
 # WP55 — The user-testing protocol
 
-**Status: planned, not started.** Re-planned 29 October 2026 on WP54 as merged, grounded in the code
+**Status: delivered, 2026-10-29.** Re-planned 29 October 2026 on WP54 as merged, grounded in the code
 at `aac6739` (§8.2.15 Q1); first written 19 October 2026. Inherits WP50's test scope (§8.2.13 N1 to
 N6), WP54's notebooks and figures (§8.2.20) and the protocol's rulings (§8.2.6 F3, §8.2.7 G7, §8.2.8
 H2).
@@ -177,12 +177,36 @@ command does), *What to expect*, *Then try*, *Record*. Files and expectations:
 - [x] 4. 3f2a6b0 `sessions/02-physics/`, `sessions/03-numerics/` (D2, D3); done when the same command
   passes. **Executor:** main.
 - [x] 5. Compaction checkpoint. **Executor:** main.
-- [ ] 6. `sessions/04-python-api/`, `sessions/05-sweep/` (D2, D3, H2); done when the same command
+- [x] 6. 7608f53 `sessions/04-python-api/`, `sessions/05-sweep/` (D2, D3, H2); done when the same command
   passes. **Executor:** main.
 - [ ] 7. D6's broken-command check; a `physics-reviewer` pass on the five *What to expect*
   sections; each session's nightly seconds on four cores in the Outcome; `CHANGELOG.md`
   `[Unreleased]`; `current.md` and the Phase 4 plan's WP55 section delivered; done when
   `.claude/hooks/gate.sh run` passes and the test passes. **Executor:** main.
+
+> **Outcome — the sessions run as written.** `uv run pytest tests/tier2/test_user_testing_sessions.py`
+> passes for all five on four cores, in 199 s in all (3.3 minutes, inside the "about four" of the
+> *In brief*): 01 command line 30.8 s, 02 physics 42.6 s, 03 numerics 64.5 s, 04 Python API 19.7 s,
+> 05 sweep 39.4 s. Session 04 differs from the plan in two small ways, both found by running it:
+> `case.run(upto="materials")` walks `case` and `materials` alone, so the notebook walks to `mesh` and to
+> `materials` separately, as example 04's tour does; and the stage is registered behind
+> `"selectivity" not in walk_order()`, because a marimo cell reruns and a second registration raises.
+>
+> **Outcome — the broken-command check (D6).** Once, by hand: a copy of session 01 with
+> `validate case pore.case.yaml` changed to `validate case pore-missing.case.yaml` was run with
+> `run_tagged(session, "run")` and raised `ExampleCommandError`, the command exiting 3 where a `run`
+> command must exit 0. It is not a test (N1).
+
+> **Outcome — the physics review (item 7).** A `physics-reviewer` pass over the five *What to expect* sections
+> found and this package fixed: session 04's stage called a pore "cation-selective" at t₊ above ½, though bulk
+> NaCl is already at about 0.4, so it now names the ion that carries more than half of the current and the README
+> expects only that its transport number is the result's; session 02 compared the cation share with the bulk
+> electrolyte's instead of with ½, and its flip-the-ring variation likewise; session 01 expects the mirror
+> symmetry to the accuracy of the mesh. The review confirmed session 05's claim that the departure from unity is
+> larger at 100 mV than at 50 mV, and found no session naming a known weakness. It also found that the knowledge
+> base said rectification needs a geometric asymmetry, which the cis ring in a symmetric cylinder contradicts;
+> the sentence is corrected (`knowledge/log.md`). The program's own defect it found, NUM-34's refusal naming a
+> setting a supplied mesh ignores, is REV-154, open, and session 03 is not rewritten around it (D6).
 
 ### Verification
 

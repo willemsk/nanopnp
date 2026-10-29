@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-10-29
+* **Update**: Rectification needs an axial asymmetry of the geometry or of the fixed charge, not of the geometry alone (WP55's physics review of the sweep session). ([7. Ionic current rectification](02-electrokinetics-background/07-ionic-current-rectification.md))
+
 ## 2026-10-24
 * **Update**: Added the offscreen Qt and headless Playwright section to 07-software-stack/05 and marked the libEGL shim as superseded (WP5.01). ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 

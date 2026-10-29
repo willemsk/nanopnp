@@ -19,8 +19,8 @@ One line per lane (§8.4.4).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress** (§8.2.7 to §8.2.16). WP35 to WP54 are merged, tagged to `v0.5.0-alpha.19`;
   `v0.5.0-alpha.20`, WP54's, is the author's step. [WP55](wp55-user-testing-protocol.md), the
-  protocol, is **planned**, re-grounded on WP54; next **`/np-implement wp 55`**; then the author's
-  sessions, the fixes from WP56, the documentation increment and the close.
+  protocol, is **delivered** on its branch, ready for `/np-ship wp 55`; then the author's sessions,
+  the fixes from WP56, the documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`. WP5.02, the spike, after `v0.5.0`.

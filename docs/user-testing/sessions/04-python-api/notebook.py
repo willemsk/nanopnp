@@ -197,8 +197,8 @@ def _(mo):
         ## 5 · Add a stage
 
         `selectivity.py` beside this file is a stage of one's own. It reads the
-        quantities of interest and says which ion the pore passes. Registered, it is
-        walked after the report.
+        quantities of interest and says which ion carries more than half of the current.
+        Registered, it is walked after the report.
         """
     )
     return
@@ -235,7 +235,7 @@ def _(case, dumps_case, mo, run_document):
     verdict = extended.artefacts["selectivity"].summary
     mo.md(
         f"The last two stages: {', '.join(r.name for r in extended.stages[-2:])}. "
-        f"t₊ = {verdict['transport_number']:.3f}: the pore passes the {verdict['verdict']}."
+        f"t₊ = {verdict['transport_number']:.3f}: the majority carrier: {verdict['verdict']}."
     )
     return
 

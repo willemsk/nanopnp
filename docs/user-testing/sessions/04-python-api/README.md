@@ -12,8 +12,8 @@ edit the case, and add a stage of your own to the pipeline.
 
 - `notebook.py`: a [marimo](https://marimo.io) notebook that does each of these on a charged pore in
   0.1 M NaCl, keeping what it computes in `store/` beside it.
-- `selectivity.py`: a stage of your own. It reads the quantities of interest and says which ion the
-  pore passes.
+- `selectivity.py`: a stage of your own. It reads the quantities of interest and says which ion
+  carries more than half of the current.
 - `ring.field.yaml`: the fixed charge, a ring of negative charge inside the membrane.
 
 Work in this directory.
@@ -47,8 +47,8 @@ $ python notebook.py
   it was.
 - Adding the `charge:` section changes no solve key: the solve is taken from the store, and what
   reads the case afterwards is computed again.
-- The stage you added comes after the report, and its verdict follows the sign of the fixed charge:
-  a negative ring passes the cation.
+- The stage you added comes after the report, and the transport number in its verdict is the one the
+  result reports.
 
 If what you see differs, that is a finding.
 

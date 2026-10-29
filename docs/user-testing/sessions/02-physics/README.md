@@ -40,8 +40,8 @@ The runs print the cation transport number, the share of the current the cations
 
 ## What to expect
 
-- At 0.1 M the cations carry more than half of the current under both models: a negative fixed
-  charge draws cations into the pore.
+- At 0.1 M the cations carry a larger share of the current than they do in the bulk electrolyte,
+  under both models: a negative fixed charge draws cations into the pore.
 - The classical run lists each `none` correction as a deviation from the validated model; the
   validated runs list none.
 - At 1 M the cation share falls towards that of an uncharged pore: the larger salt screens the
@@ -51,8 +51,8 @@ If what you see differs, that is a finding.
 
 ## Then try
 
-Flip the sign of the ring, in a copy of the field file, and run it at 0.1 M.
-The pore should now favour the other ion.
+Flip the sign of the ring in a copy of the field file, run it at 0.1 M, and compare the cation share
+with the bulk electrolyte's. The pore should now favour the other ion.
 
 ## Record
 

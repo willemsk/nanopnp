@@ -50,6 +50,22 @@ panels and two whole-workbench mockups, and writes the design document and its r
   REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
   restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
+## [0.5.0-alpha.21] - 2026-10-29
+
+WP55: the user-testing protocol. Five sessions that the author runs as a nanopore modeller would, a log for
+what they find, and a nightly test that keeps every session's commands working (`SPECIFICATION.md` §8.2.6 F3,
+§8.2.7 G7). No `src/` change. The [plan](docs/plans/wp55-user-testing-protocol.md) records the work.
+
+### Added
+
+- **`docs/user-testing/protocol.md`**: how to install the release into a fresh environment, copy one session
+  out, time-box it and record what happens. Sessions: the command line, the model's corrections and the salt,
+  mesh refinement and a refused mesh, the Python interface in a notebook with a stage of one's own, and a sweep
+  over voltage and salt. Each states a task and a property of the model to expect, never a number.
+- **`docs/user-testing/findings.md`**: the empty `UT-nn` log, ruled at the second `/np-plan amend 4`.
+- **VER-69**, `tests/tier2/test_user_testing_sessions.py` (nightly): each session's tagged commands run as
+  written on VER-46's runner, and none is left untagged.
+
 ## [0.5.0-alpha.20]
 
 WP54: the notebooks and figures revised, the library's cylinder and case factories, a one-axis sweep in Python,

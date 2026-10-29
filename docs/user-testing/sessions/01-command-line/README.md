@@ -38,8 +38,8 @@ $ nanopnp reproduce run-pore
 - The two ways the program extracts the current agree.
 - The run lists no deviation from the validated model.
 - `reproduce` agrees with the original run.
-- Reversing the bias reverses the current and leaves its magnitude where it was: an uncharged pore
-  is its own mirror image.
+- Reversing the bias reverses the current and leaves its magnitude where it was, to within the
+  accuracy of the mesh: an uncharged pore is its own mirror image.
 
 If what you see differs, that is a finding.
 

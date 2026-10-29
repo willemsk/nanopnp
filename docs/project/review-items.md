@@ -1675,3 +1675,17 @@ Found by the second `/np-ship wp 54` review ([CODE_REVIEW_018](../code_reviews/C
 
 Recommendation: leave all four. Each is a few lines against a failure no current caller reaches; the Debye length
 is covered by a test.
+
+## REV-154: NUM-34's refusal names a setting that a supplied mesh ignores
+
+Found while running user-testing session 03 (WP55, [plan](../plans/wp55-user-testing-protocol.md)) as a dry run; it
+is the program's, so the session is not rewritten around it (§8.2.7 G7, D6).
+
+`nanopnp run` of a case that reads a mesh file with a 1.0 nm wall exits 4 on the wall-distance gate, and the message
+ends "refine the mesh at the wall (`numerics.mesh.wall_h_nm`)". That case field sizes a mesh the program generates
+(stage 6); a case that supplies `inputs.mesh.path` never reads it, so a user who edits the setting changes nothing,
+and the mesh is refined where it was made (`nanopnp mesh cylinder --wall-h-nm`, or the mesher the file came from).
+The gate is in `numerics/gates.py`, which does not know where the mesh came from.
+
+Recommendation: let the pipeline's caller add the supplied-mesh sentence, or have the gate name both routes. Neither
+is in this package (no `src/` change); the author rules.
