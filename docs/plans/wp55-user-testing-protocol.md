@@ -179,7 +179,7 @@ command does), *What to expect*, *Then try*, *Record*. Files and expectations:
 - [x] 5. Compaction checkpoint. **Executor:** main.
 - [x] 6. 7608f53 `sessions/04-python-api/`, `sessions/05-sweep/` (D2, D3, H2); done when the same command
   passes. **Executor:** main.
-- [ ] 7. D6's broken-command check; a `physics-reviewer` pass on the five *What to expect*
+- [x] 7. 7bb72a7 D6's broken-command check; a `physics-reviewer` pass on the five *What to expect*
   sections; each session's nightly seconds on four cores in the Outcome; `CHANGELOG.md`
   `[Unreleased]`; `current.md` and the Phase 4 plan's WP55 section delivered; done when
   `.claude/hooks/gate.sh run` passes and the test passes. **Executor:** main.
