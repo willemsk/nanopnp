@@ -1,13 +1,13 @@
 # Current work
 
-Updated 28 October 2026 (§8.2.20). Navigation only; `SPECIFICATION.md` governs; an
+Updated 29 October 2026 (§8.2.20). Navigation only; `SPECIFICATION.md` governs; an
 unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it: the revised notebooks are built and wait for
-their review; the testing sessions follow. Phase 5, a workbench in the browser, is planned; its design study may run
-alongside, and nothing is built until Phase 4's release.
+Phase 4 tidies the program before others rely on it: the revised notebooks are merged, and the
+protocol for the author's testing sessions is planned. Phase 5, a workbench in the browser, has its
+design study merged; nothing is built until Phase 4's release.
 
 **Your call:** should Phase 4's estimate grow to five to seven weeks? *Recommendation:* yes.
 
@@ -17,13 +17,13 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress** (§8.2.7 to §8.2.16). WP35 to WP53 are merged and tagged to `v0.5.0-alpha.19`;
-  `v0.5.0-alpha.16` is the author's step. [WP54](wp54-notebooks-and-figures-revised.md), the
-  notebooks revised, is **implemented** (§8.2.20 V1 to V17); next **`/np-ship wp 54`**, then [WP55](wp55-user-testing-protocol.md), the protocol, **planned**; then
-  the author's sessions, the fixes from WP56, the documentation increment and the close.
+  **in progress** (§8.2.7 to §8.2.16). WP35 to WP54 are merged, tagged to `v0.5.0-alpha.19`;
+  `v0.5.0-alpha.20`, WP54's, is the author's step. [WP55](wp55-user-testing-protocol.md), the
+  protocol, is **planned**, re-grounded on WP54; next **`/np-implement wp 55`**; then the author's
+  sessions, the fixes from WP56, the documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
-  lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **implemented**, untagged
-  before `v0.5.0`; next: **`/np-ship wp 5.01`**. WP5.02, the spike, after `v0.5.0`.
+  lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
+  before `v0.5.0`. WP5.02, the spike, after `v0.5.0`.
 
 ## Not to be re-decided
 
@@ -57,7 +57,7 @@ One line per lane (§8.4.4).
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
 - **Phase 5's comments, design-round answers, framework ruling, colleague** (S8, S13, S21).
-- **Steering at WP54's checkpoints (V5).** **The user-testing sessions, and
+- **The install route of the sessions** (WP55's *Your call*). **The user-testing sessions, and
   the rulings on each `UT-nn`, `MOD-11`, any residual cycle (H6) and any WP41 drift (I4).** **The archived PQRs** for WP27–WP29's Tier 3.
 
 ## Dependencies To Read On Demand
@@ -68,7 +68,7 @@ One line per lane (§8.4.4).
 | The documents' record | `wp52-specification-and-plans-split.md`; `phase-4-record.md` for the phase plan's amendments |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
 | The notebooks revised | `wp54-notebooks-and-figures-revised.md`; §8.2.20; `wp51-plotting-and-notebooks.md`; FR-30, FR-37 |
-| The protocol | `wp55-user-testing-protocol.md`; §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46 |
+| The protocol | `wp55-user-testing-protocol.md`; §8.2.6 F3, §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46; `src/nanopnp/validation/examples.py` |
 | The workbench | `phase-5-workbench.md`; §8.2.17; M3; F5 |
 
 ## Handoff Rules
