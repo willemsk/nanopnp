@@ -31,6 +31,7 @@ within it (A1, B3, R10).
 * [8.2.18 The workbench design study's rulings, agreed 27 October 2026](18-the-workbench-design-studys-rulings-agreed-27-oct.md) - Records the author's rulings at the end of WP5.01: the review rows and modularity findings inherited by the Phase 5 shell, what partial protonation means, and the look-and-feel notes taken from the galleries.
 * [8.2.19 The workbench design study's open items, agreed 27 October 2026](19-the-workbench-design-studys-open-items-agreed-27.md) - Records the author's rulings on the review rows WP5.01 left open: the Qt Result tab, protonation before the density, the library capabilities and the sweep's design round, and the rows WP5.02 owns.
 * [8.2.20 WP54's notebooks and figures, agreed 28 October 2026](20-wp54s-notebooks-and-figures-agreed-28-october-2.md) - Records the author's rulings on WP54's scope: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint; then the steering of its second and third checkpoints.
+* [8.2.21 Phase 4 amended: the user-testing findings ruled, agreed 29 October 2026](21-phase-4-amended-the-user-testing-findings-ruled.md) - Records the author's rulings on the twelve user-testing findings, taken at WP56's plan: each valid and fixed at its cause, five generalised rules, and the fix packages WP56, the command line, and WP57, the Python interface.
 
 ## Where each ruling holds now
 
@@ -134,9 +135,9 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * N6 - spent
 * N7 - §8.3
 * P1 - superseded by R1
-* P2 - FR-30
+* P2 - FR-30; its FR-28 sentence superseded by W3
 * P3 - §5.1
-* P4 - FR-30
+* P4 - FR-30; its FR-28 sentence superseded by W3
 * P5 - amended by V2; FR-30
 * P6 - FR-30
 * P7 - §8.3
@@ -212,3 +213,11 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * V15 - REV-151
 * V16 - FR-30; REV-147, REV-148
 * V17 - REV-152
+* W1 - the Phase 4 plan; open: WP56, WP57
+* W2 - IF-02's NOTE on reading; open: WP56
+* W3 - FR-28, FR-44; open: WP56
+* W4 - open: WP56 (the command line), WP57 (`Case.run`)
+* W5 - QR-12's NOTE on the remedy; open: WP56
+* W6 - open: WP56; documentation increment 4
+* W7 - MOD-11, REV-145; open: WP57
+* W8 - REV-156; open: WP56

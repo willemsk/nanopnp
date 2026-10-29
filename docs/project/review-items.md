@@ -1545,6 +1545,9 @@ The author's notes for WP54 name builders by section, `with_density` and `with_n
 
 **Ruled** (§8.2.20 V3): deferred to Phase 5, with `MOD-11`.
 
+**Ruled** (§8.2.21 W7, after the user-testing sessions, UT-10): answered in WP57, which gives `Case` section edits
+and a mapping form for a path that names more than one field. V3's deferral is spent.
+
 ## REV-146: The cylinder's default wall size is coarser than NUM-30's first layer
 
 `nanopnp mesh cylinder` sizes the pore wall at 0.35 nm by default, and examples 02 and 03 solve on that
@@ -1690,6 +1693,9 @@ The gate is in `numerics/gates.py`, which does not know where the mesh came from
 Recommendation: let the pipeline's caller add the supplied-mesh sentence, or have the gate name both routes. Neither
 is in this package (no `src/` change); the author rules.
 
+**Ruled** (§8.2.21 W5): accepted, for WP56. The pipeline hands the gate its remedy from where the mesh came from,
+and QR-12's NOTE on the remedy states the rule for every gate.
+
 ## REV-155: WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser
 
 Left by the review of WP55 ([CODE_REVIEW_019](../code_reviews/CODE_REVIEW_019.md)); each needs the author or a
@@ -1710,3 +1716,18 @@ Left by the review of WP55 ([CODE_REVIEW_019](../code_reviews/CODE_REVIEW_019.md
 
 Recommendation: leave the variation until the sessions; source or test the sentence in the documentation increment;
 move the helper with the next change to `validation/examples.py`.
+
+**Ruled in part** (§8.2.21 W7): session 04's variation goes to WP57, whose stage of one's own is registered by a
+public call; the other two items stay open.
+
+## REV-156: A 16 562-element cylinder takes minutes to solve (UT-09)
+
+Found in user-testing session 03 (UT-09). `nanopnp mesh cylinder --maxh-nm 0.175` gives 16 562 elements, and the
+run of its case had not finished after five minutes. WP49's table gives 4.4 s for one serial UMFPACK factorisation
+at 1.43 × 10⁵ DOF (§6.6), and the NUM-18 ladder of that case takes 15 rungs and some 35 to 50 Newton steps, each
+factorising again (REV-60), so the time is about what the measured parts predict: a cost, not a defect.
+
+**Ruled** (§8.2.21 W8): deferred to Phase 6, with REV-60 (§8.2.9 I3), its fix to follow measurement against the
+registered thresholds (§8.2.12 M2). WP56 measures the time of each rung and the factorisation's share on that mesh
+and writes them here; its progress report shows each rung as it is solved.
+
