@@ -3,7 +3,7 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP54, below. Planned: WP55, the user-testing protocol ([plan](wp55-user-testing-protocol.md)). Provisional, and
+demand. Delivered: WP35 to WP55, below. Provisional, and
 planned by the second `/np-plan amend 4` once the author has run the sessions and ruled every
 `UT-nn`: the fixes from WP56, the documentation increment and the close, which take their numbers
 then. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
@@ -197,20 +197,15 @@ carry: `plot/` imports no backend, and every notebook runs headless nightly.
 
 ### WP55 — The user-testing protocol
 
-[Plan](wp55-user-testing-protocol.md), re-grounded on WP54 as merged, 29 October 2026. It writes:
-
-- `docs/user-testing/protocol.md`, the protocol;
-- scripted sessions over the physics, the numerics, the Python API and the command line. Each
-  session is a task that a nanopore modeller would set, with the outcome expected and where to
-  record surprise. Session 04, the Python API, is a marimo notebook in its own directory, using
-  WP51's figures and display; the tester installs the `notebook` extra. One task touches
-  `with_section` and stage registration, so the sessions inform `MOD-11`;
-- the findings log, `docs/user-testing/findings.md`, `UT-nn`, header `open`.
-
-Every script's commands and code run verbatim, by a test modelled on VER-46 (proposed VER-69), and
-nightly (G7, N4). An agent dry run debugs the scripts and records nothing. The package ends when the
-author has the protocol. **The sessions themselves are the author's**, and their findings are logged
-as they run. Tag `v0.5.0-alpha.21`.
+Delivered ([plan](wp55-user-testing-protocol.md); tag `v0.5.0-alpha.21`). `docs/user-testing/` holds the
+protocol, the empty `UT-nn` findings log and five self-contained sessions: the command line, the model's
+corrections and the salt, mesh refinement and a refused mesh, the Python interface in a marimo notebook with
+a stage of one's own (`with_section`, `core.stages.register`, for `MOD-11`), and a sweep over voltage and
+salt. Each states a task and a property of the model, never a number, and names no known weakness. Install
+is from the release tag into a fresh environment, with the `notebook` extra. VER-69 runs every session's
+tagged commands nightly on VER-46's runner (G7, N4); exit status is the oracle. No `src/` change. **The
+sessions themselves are the author's** (F3), and their findings are logged as they run; the second
+`/np-plan amend 4` rules them. Measured times and the broken-command check are in the plan's Outcome.
 
 ### Fix packages (provisional)
 
@@ -287,7 +282,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP52, documents | none kept | R10's line and identifier checks in the pull request; VER-45 |
 | WP53, workflow | none kept | None new |
 | WP54, notebooks revised | 1, 2, nightly | Claimed by its plan; FR-30's tests kept |
-| WP55, protocol | nightly | VER-69 (proposed) |
+| WP55, protocol | nightly | VER-69 |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-65 kept green |
 | Fixes, from WP56 | 1, 2 | Claimed at the second amendment |
 | Documentation | 1, 2 | VER-45, VER-46 |

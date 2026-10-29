@@ -1,4 +1,4 @@
-"""A stage of one's own: which ion the pore passes, read from the quantities of interest."""
+"""A stage of one's own: which ion carries most of the current, from the quantities of interest."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ SCHEMA = "nanopnp/selectivity-notebook/v1"
 
 
 class SelectivityStage:
-    """Stage 13 of the notebook: whether the pore favours cations, anions or neither."""
+    """Stage 13 of the notebook: which ion carries the larger share of the current."""
 
     name = "selectivity"
 
@@ -36,13 +36,13 @@ class SelectivityStage:
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
     ) -> Artefact:
-        """Read the cation's transport number and say which ion the pore passes."""
+        """Read the cation's transport number and name the ion that carries more than half."""
         check_cancelled(cancel, "the selectivity verdict")
         report(progress, 0.0, "reading the transport number")
         quantities = inputs.require("qoi")
         t_plus = float(quantities.summary["transport_number"])
-        verdict = "cation" if t_plus > 0.5 else "anion"
-        report(progress, 1.0, f"the pore passes the {verdict}")
+        verdict = "cations" if t_plus > 0.5 else "anions" if t_plus < 0.5 else "neither"
+        report(progress, 1.0, f"more than half of the current is carried by: {verdict}")
         return Artefact(
             SCHEMA,
             parameters={},
