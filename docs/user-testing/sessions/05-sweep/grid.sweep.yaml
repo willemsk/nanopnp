@@ -1,0 +1,13 @@
+# The charged pore over two axes: the bias, in two exactly-opposite pairs, and the salt.
+schema: nanopnp/sweep/v0.5
+name: iv-grid
+base: charged.case.yaml
+axes:
+  - name: bias
+    path: boundary_conditions.bias_V
+    origin: 2
+    values: [-0.1, -0.05, 0.05, 0.1]
+  - name: salt
+    path: electrolyte.concentration_M
+    origin: 0
+    values: [0.1, 1.0]

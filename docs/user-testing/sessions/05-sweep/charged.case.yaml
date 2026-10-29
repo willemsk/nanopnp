@@ -1,0 +1,40 @@
+# Session 05: the pore with a ring of negative charge in its cis half (cis-ring.field.yaml),
+# which breaks the z -> -z symmetry. The sweep beside this file varies the bias and the salt.
+# `rectification` is a two-point quantity: the sweep strips it from each member and the
+# collector computes it from each exactly-opposite bias pair. Work in this directory.
+schema: nanopnp/case/v0.5
+name: iv-charged
+
+inputs:
+  mesh:
+    path: pore.msh
+    format: msh41
+    groups: {default: interface}
+  charge: {path: cis-ring.field.yaml, format: field1}
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.1
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+
+boundary_conditions:
+  bias_V: 0.05
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2}
+
+numerics:
+  continuation: default_ladder
+  stabilisation: none
+
+outputs: [current, transport_numbers, eof_rate, rectification]
