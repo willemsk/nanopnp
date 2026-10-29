@@ -1,0 +1,36 @@
+# Session 03: the quickstart pore on the mesh wall-0175.msh. Work in this directory.
+schema: nanopnp/case/v0.5
+name: wall-0175
+
+inputs:
+  mesh:
+    path: wall-0175.msh
+    format: msh41
+    groups: {default: interface}   # as `nanopnp mesh cylinder` printed it
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 0.1
+  temperature_K: 298.15
+  parameters: willems2020_nacl
+  corrections:
+    diffusivity:  {model: willems2020_nacl}
+    mobility:     {model: willems2020_nacl}
+    viscosity:    {model: willems2020_nacl}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov}
+
+boundary_conditions:
+  bias_V: 0.05
+  ground: cis
+
+physics:
+  model: epnp-ns
+  solid_permittivities: {membrane: 3.2}
+
+numerics:
+  continuation: default_ladder
+  stabilisation: none
+
+outputs: [current, transport_numbers, eof_rate]

@@ -171,7 +171,7 @@ command does), *What to expect*, *Then try*, *Record*. Files and expectations:
   strict documentation build pass. **Executor:** `general-purpose` on Haiku.
 - [x] 2. 9388f9c `docs/user-testing/protocol.md` (D3); done when the code and review say so. **Executor:**
   main.
-- [ ] 3. `tests/tier2/test_user_testing_sessions.py`, `docs/user-testing/sessions/01-command-line/`,
+- [x] 3. 8cac812 `tests/tier2/test_user_testing_sessions.py`, `docs/user-testing/sessions/01-command-line/`,
   VER-69's row and Appendix A's note (D2, D5); done when `uv run pytest
   tests/tier2/test_user_testing_sessions.py` passes. **Executor:** main.
 - [ ] 4. `sessions/02-physics/`, `sessions/03-numerics/` (D2, D3); done when the same command
