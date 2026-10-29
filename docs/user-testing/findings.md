@@ -24,6 +24,8 @@ rules it.
 | UT-05 | docs | low | open | | Unclear motivation and user use-case for the `reproduce` command |
 | UT-06 | docs | low | open | | Redundant charge definition in `field.yaml` and undocumented grid `shape` |
 | UT-07 | cli | low | open | | `nanopnp run` lacks progress feedback or live status during long solves |
+| UT-08 | docs | low | open | | Inconsistent case naming in session 03 (`coarse.case.yaml` vs `wall-100.msh`) |
+| UT-09 | numerics | medium | open | | Severe runtime scaling on moderate meshes (~16k elements) due to serial UMFPACK and multi-rung ladder |
 
 ## UT-01 · No documented way to visually inspect a generated mesh from the CLI
 
@@ -197,6 +199,56 @@ During this period:
 2. Users have no indication of whether the solver is making progress through continuation rungs, stuck in heavily damped Newton steps, or hanging.
 3. Although `run_case` in the core pipeline accepts a `progress: Progress | None` callback, the CLI `_run` handler does not connect it to any terminal progress bar, spinner, or rung ticker.
 4. While passing `-v` (INFO level) logs continuation rungs to stderr, and `--log-file <path>` allows tailing a log, these flags are not mentioned in the session tutorials or getting-started guide, and log output to stderr is mixed with other diagnostic messages rather than providing clean progress reporting.
+
+## UT-08 · Inconsistent case naming in session 03 (`coarse.case.yaml` vs `wall-100.msh`)
+
+**Area:** `docs`. **Severity:** `low`. **Session:** `03-numerics`.
+
+### Context and expectation
+
+In Session 03, the mesh files written by the user are systematically named by wall size:
+- `wall-035.msh`
+- `wall-025.msh`
+- `wall-0175.msh`
+- `wall-100.msh`
+
+The case files for the first three follow the same naming scheme (`wall-035.case.yaml`, `wall-025.case.yaml`, `wall-0175.case.yaml`). However, the case file for `wall-100.msh` is named `coarse.case.yaml`.
+
+This naming divergence creates minor friction and confusion:
+1. It breaks the parallel correspondence between case files and mesh files.
+2. Naming it `wall-100.case.yaml` (or providing an explicit note explaining why it is singled out as `coarse`) would maintain consistency.
+
+## UT-09 · Severe runtime scaling on moderate meshes (~16k elements) due to serial UMFPACK and multi-rung ladder
+
+**Area:** `numerics`. **Severity:** `medium`. **Session:** `03-numerics`.
+
+### Command and output
+
+```console
+$ nanopnp mesh cylinder --maxh-nm 0.175 --out wall-0175-maxh.msh
+mesh      wall-0175-maxh.msh
+elements  16562 (8471 vertices)
+...
+$ nanopnp run wall-0175-maxh.case.yaml
+# Exceeded 5 minutes without completion; killed by user
+```
+
+### Context and expectation
+
+When testing domain-wide refinement with `--maxh-nm 0.175`, the mesh contains 16,562 triangular elements. While this is a modest mesh count in continuum modeling (which COMSOL solves in a few seconds), the solve in `nanopnp` exceeded 5 minutes without completing.
+
+Root causes in `nanopnp`:
+1. **Coupled DOF explosion:** 2D axisymmetric ePNP-NS solves 6 coupled fields ($\phi$, $c_{\mathrm{Na}^+}$, $c_{\mathrm{Cl}^-}$, $u_r$, $u_z$, $p$) using $P_2/P_1$ Taylor-Hood elements. On 16,562 elements, the number of coupled degrees of freedom reaches $\approx 1.5 \times 10^5$.
+2. **Serial direct solver bottleneck (`NUM-21`):** The default sparse direct solver in the pip wheel is SuiteSparse `umfpack` (NGSolve lacks built-in parallel PARDISO/MUMPS in its wheels). As benchmarked in `SPECIFICATION.md §6.4`, a single UMFPACK factorization at $1.5 \times 10^5$ DOFs takes $\approx 4.4\text{ s}$ on a modern CPU. Unlike COMSOL, which uses multi-threaded Intel MKL PARDISO across all cores, UMFPACK is strictly single-threaded.
+3. **Full continuation ladder execution:** The default continuation strategy (`default_ladder`) runs 7–8 distinct rungs (PB-linear $\to$ PB $\to$ equilibrium PNP $\to$ bias ramp $\to$ Navier-Stokes flow $\to$ non-steric corrections $\to$ steric corrections), taking 35–50 total Newton iterations.
+4. **No Jacobian reuse:** At $\approx 4.5\text{ s}$ per factorization plus matrix assembly and damping checks, 50 Newton iterations require $\approx 250 - 350\text{ s}$ (> 5 minutes). COMSOL mitigates this through parallel direct solvers and holding the Jacobian constant across iterations (modified Newton).
+
+Suggested remedies:
+- Allow configurable continuation strategies (e.g. bypassing intermediate PB/ramp rungs for simple uncharged cases).
+- Support modified Newton steps (freezing the LU factorization across iterations when convergence is rapid).
+- Explore multi-threaded or iterative linear solver backends where available.
+
+
 
 
 
