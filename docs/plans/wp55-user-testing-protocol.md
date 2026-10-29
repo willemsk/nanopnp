@@ -169,7 +169,7 @@ command does), *What to expect*, *Then try*, *Record*. Files and expectations:
 - [x] 1. ba542be `docs/user-testing/findings.md`, `docs/user-testing/sessions/.gitignore`, `mkdocs.yml`,
   `pyproject.toml` (D1, D4); done when the code and review say so, and `uv run ruff check .` and the
   strict documentation build pass. **Executor:** `general-purpose` on Haiku.
-- [ ] 2. `docs/user-testing/protocol.md` (D3); done when the code and review say so. **Executor:**
+- [x] 2. 9388f9c `docs/user-testing/protocol.md` (D3); done when the code and review say so. **Executor:**
   main.
 - [ ] 3. `tests/tier2/test_user_testing_sessions.py`, `docs/user-testing/sessions/01-command-line/`,
   VER-69's row and Appendix A's note (D2, D5); done when `uv run pytest
