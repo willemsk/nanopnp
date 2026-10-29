@@ -23,6 +23,7 @@ docs_dir: docs
 # scripts are not pages.
 exclude_docs: |
   plans/
+  user-testing/
   code_reviews/
   superpowers/
   scripts/

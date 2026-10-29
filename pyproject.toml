@@ -177,6 +177,7 @@ convention = "numpy"
 "!src/nanopnp/**" = ["D101", "D102", "D103", "D106"]
 # A marimo notebook is cells of bare names and a trailing expression, which is what it displays.
 "notebooks/*" = ["D100", "ANN001", "ANN202", "B018"]
+"docs/user-testing/sessions/*/notebook.py" = ["D100", "ANN001", "ANN202", "B018"]
 
 [tool.marimo.runtime]
 # Editing a cell marks the cells after it stale instead of re-running them, so a changed
