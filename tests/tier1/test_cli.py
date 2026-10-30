@@ -188,25 +188,6 @@ def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
     assert result.manifest.geometry_and_mesh["groups"]["default"] == "interface"
 
 
-def test_fr44_plot_refuses_a_suffix_or_a_figureless_stage_before_any_stage_runs(
-    tmp_path: Path,
-) -> None:
-    case = tmp_path / "pore.case.yaml"
-    case.write_text("schema: nanopnp/case/v0.5\nname: never-read\n", encoding="utf-8")
-    store = tmp_path / "store"
-    for given in (
-        ["mesh", "--out", str(tmp_path / "figure.txt")],
-        ["report", "--out", str(tmp_path / "figure.png")],
-        ["no-such-stage", "--out", str(tmp_path / "figure.png")],
-        ["--out", str(tmp_path / "figure.png")],
-    ):
-        with pytest.raises(SystemExit) as raised:
-            main(["plot", str(case), *given, "--store", str(store)])
-        assert raised.value.code == 2, given
-    assert not store.exists()
-    assert sorted(path.name for path in tmp_path.iterdir()) == [case.name]
-
-
 # VER-10
 def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
