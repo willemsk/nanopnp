@@ -13,7 +13,7 @@ import yaml
 from nanopnp.api.case import Case
 from nanopnp.io.artefact import SWEEP_SCHEMA, SweepArtefact
 from nanopnp.io.case import FieldValue
-from nanopnp.io.case_paths import field_path, input_paths
+from nanopnp.io.case_paths import correction_paths, field_path, input_paths
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.sweep.collect import collect
 from nanopnp.sweep.document import loads_sweep
@@ -84,7 +84,7 @@ def sweep(
     case = case.with_()
     relative = [
         f"{dotted} = {value}"
-        for dotted, value in input_paths(case).items()
+        for dotted, value in {**input_paths(case), **correction_paths(case)}.items()
         if not Path(value).is_absolute()
     ]
     if relative:

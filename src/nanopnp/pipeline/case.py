@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from nanopnp.core.paths import correction_source, names_a_path
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -19,12 +21,14 @@ from nanopnp.density.map import GRID_SPACING_RANGE_NM
 from nanopnp.io import case as schema
 from nanopnp.io.artefact import CaseArtefact, StageInputs
 from nanopnp.io.case import (
+    CORRECTION_PROPERTIES,
     CaseDocument,
     CaseValidationError,
     Charge,
     Contour,
     Density,
     Geometry,
+    SuppliedArtefact,
     read_case,
     read_case_text,
 )
@@ -60,23 +64,58 @@ def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
     return check_document(read_case_text(text, source=source), source=source)
 
 
-def _choice(spec: schema.CorrectionChoice) -> CorrectionChoice:
-    return CorrectionChoice(model=spec.model, concentration=spec.concentration, wall=spec.wall)
+def _choice(spec: schema.CorrectionChoice, files: Mapping[str, Path], key: str) -> CorrectionChoice:
+    model = str(files[key]) if key in files else spec.model
+    return CorrectionChoice(model=model, concentration=spec.concentration, wall=spec.wall)
 
 
-def _switches(document: CaseDocument) -> CorrectionSwitches:
+def _switches(document: CaseDocument, files: Mapping[str, Path]) -> CorrectionSwitches:
     corrections = document.electrolyte.corrections
+
+    def choice(name: str) -> CorrectionChoice:
+        return _choice(getattr(corrections, name), files, f"electrolyte.corrections.{name}.model")
+
     return CorrectionSwitches(
-        diffusivity=_choice(corrections.diffusivity),
-        mobility=_choice(corrections.mobility),
-        viscosity=_choice(corrections.viscosity),
-        permittivity=_choice(corrections.permittivity),
-        density=_choice(corrections.density),
+        diffusivity=choice("diffusivity"),
+        mobility=choice("mobility"),
+        viscosity=choice("viscosity"),
+        permittivity=choice("permittivity"),
+        density=choice("density"),
         steric=corrections.steric.model != "none",
     )
 
 
-def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
+def _absolute(path: Path, base: Path) -> Path:
+    return (base / path).resolve()
+
+
+def _rebased(supplied: SuppliedArtefact | None, base: Path) -> SuppliedArtefact | None:
+    if supplied is None or supplied.path is None:
+        return supplied
+    return supplied.model_copy(update={"path": _absolute(supplied.path, base)})
+
+
+def _correction_files(document: CaseDocument, base: Path) -> dict[str, Path]:
+    # Every correction named by a path, found against the case's directory; resolution refuses
+    # a file that is not there, naming the key.
+    electrolyte = document.electrolyte
+    named = {"electrolyte.parameters": electrolyte.parameters}
+    for name in CORRECTION_PROPERTIES:
+        named[f"electrolyte.corrections.{name}.model"] = getattr(
+            electrolyte.corrections, name
+        ).model
+    found: dict[str, Path] = {}
+    for key, value in named.items():
+        if not names_a_path(value):
+            continue
+        try:
+            found[key] = correction_source(value, base=base)
+        except FileNotFoundError as error:
+            raise CaseValidationError(f"{key}: {error}") from None
+    return found
+
+
+def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure | None:
     spec = document.structure
     if spec is None:
         return None
@@ -121,6 +160,15 @@ def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
         raise CaseValidationError(
             f"structure.ensemble.frames.count is {frames.count}; it is at least 1"
         )
+    trajectory = spec.ensemble.trajectory
+    spec = spec.model_copy(
+        update={
+            "source": spec.source.model_copy(update={"path": _absolute(spec.source.path, base)}),
+            "ensemble": spec.ensemble.model_copy(
+                update={"trajectory": None if trajectory is None else _absolute(trajectory, base)}
+            ),
+        }
+    )
     return ResolvedStructure(spec=spec, n=n, chains=chains)
 
 
@@ -190,18 +238,32 @@ def _model_options(
     return {key: value for key, value in candidates.items() if key in declared}
 
 
-def resolve(document: CaseDocument) -> ResolvedCase:
-    """Turn a validated case document into the objects the solver takes."""
+def resolve(document: CaseDocument, *, base: Path | None = None) -> ResolvedCase:
+    """Turn a validated case document into the objects the solver takes.
+
+    Parameters
+    ----------
+    base
+        The directory every relative path the case names is taken against: the case file's, or
+        the working directory when ``None``. The resolved case holds each absolute.
+
+    Raises
+    ------
+    CaseValidationError
+        If the case names a correction file that is not there.
+    """
     check_document(document)
-    mesh = require_runnable(document)
-    structure = _resolve_structure(document)
+    where = (base if base is not None else Path.cwd()).resolve()
+    files = _correction_files(document, where)
+    mesh = _rebased(require_runnable(document), where)
+    structure = _resolve_structure(document, where)
     density = _resolve_density(document)
     contour = _resolve_contour(document, density)
     geometry = document.geometry if document.geometry is not None else Geometry()
 
     electrolyte = Electrolyte.from_parameter_file(
-        document.electrolyte.parameters,
-        switches=_switches(document),
+        str(files.get("electrolyte.parameters", document.electrolyte.parameters)),
+        switches=_switches(document, files),
         species=[species.name for species in document.electrolyte.species],
         driver=document.electrolyte.driver,
     )
@@ -249,24 +311,25 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         wall_distance_sources=document.numerics.wall_distance.sources,
         wall_distance_max_nm=document.numerics.wall_distance.max_distance_nm,
         mesh=mesh,
-        charge=document.inputs.charge,
-        eps_r=document.inputs.eps_r,
+        charge=_rebased(document.inputs.charge, where),
+        eps_r=_rebased(document.inputs.eps_r, where),
         outputs=tuple(document.outputs),
         declaration=declaration(physics.model),
         essential_boundaries=dict(model.essential_boundaries(DEFAULT_BOUNDARIES)),
         structure=structure,
         density=density,
         contour=contour,
-        profile=document.inputs.profile,
+        profile=_rebased(document.inputs.profile, where),
         membrane=geometry.membrane if mesh is None else None,
         reservoir=geometry.reservoir if mesh is None else None,
-        pqr=document.inputs.pqr,
+        pqr=_rebased(document.inputs.pqr, where),
         protonation=_resolve_protonation(document),
         smearing=(document.charge if document.charge is not None else Charge()).smearing,
         exclusion_offset_nm=(document.charge or Charge()).exclusion_offset_nm,
         dielectric_transition_nm=(document.charge or Charge()).dielectric_transition_nm,
         pore=geometry.pore if mesh is None else None,
         wall_charge_C_m2=document.boundary_conditions.wall_charge_C_m2,
+        correction_files=files,
     )
     return resolved
 

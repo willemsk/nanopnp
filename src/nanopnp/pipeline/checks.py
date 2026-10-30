@@ -952,25 +952,28 @@ def check_operating_point(document: CaseDocument) -> None:
         )
 
 
-def check_referenced_files(document: CaseDocument) -> None:
-    """Verify that every external file a case document references exists on disk."""
+def check_referenced_files(document: CaseDocument, *, base: Path | None = None) -> None:
+    """Verify that every external file a case document references exists on disk.
+
+    Parameters
+    ----------
+    base
+        The directory a relative path is taken against; the working directory when ``None``.
+    """
+    where = base if base is not None else Path.cwd()
+
+    def check(key: str, path: Path | None) -> None:
+        if path is not None and not (where / path).is_file():
+            raise FileNotFoundError(f"{key} '{where / path}' does not exist")
+
     # Every ``inputs:`` key, read from the schema: a key added later is checked too.
     for leaf in type(document.inputs).model_fields:
         supplied = getattr(document.inputs, leaf)
-        if supplied is not None and supplied.path is not None:
-            path = Path(supplied.path)
-            if not path.is_file():
-                raise FileNotFoundError(f"inputs.{leaf}.path '{path}' does not exist")
+        if supplied is not None:
+            check(f"inputs.{leaf}.path", supplied.path)
 
     if document.structure is not None:
-        if document.structure.source is not None and document.structure.source.path is not None:
-            path = Path(document.structure.source.path)
-            if not path.is_file():
-                raise FileNotFoundError(f"structure.source.path '{path}' does not exist")
-        if (
-            document.structure.ensemble is not None
-            and document.structure.ensemble.trajectory is not None
-        ):
-            path = Path(document.structure.ensemble.trajectory)
-            if not path.is_file():
-                raise FileNotFoundError(f"structure.ensemble.trajectory '{path}' does not exist")
+        if document.structure.source is not None:
+            check("structure.source.path", document.structure.source.path)
+        if document.structure.ensemble is not None:
+            check("structure.ensemble.trajectory", document.structure.ensemble.trajectory)

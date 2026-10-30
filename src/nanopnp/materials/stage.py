@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import file_hash
-from nanopnp.core.paths import available_corrections, correction_file
+from nanopnp.core.paths import correction_source, reads_a_file
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -49,11 +49,11 @@ class MaterialsStage:
         electrolyte = resolved.electrolyte
         parameter_file = electrolyte.parameter_file
         # the documents carry no version field, so the content hash is the version
-        digest = file_hash(correction_file(parameter_file)) if parameter_file else ""
+        digest = file_hash(correction_source(parameter_file)) if parameter_file else ""
         # a model may name a file other than the reference one; it is an input too
         named = {model.name for model in electrolyte.corrections.values()}
-        read = named.intersection(available_corrections()) - {parameter_file}
-        others = {name: file_hash(correction_file(name)) for name in sorted(read)}
+        read = {name for name in named if reads_a_file(name)} - {parameter_file}
+        others = {name: file_hash(correction_source(name)) for name in sorted(read)}
         return MaterialsArtefact(
             electrolyte,
             concentration_M=resolved.concentration_M,

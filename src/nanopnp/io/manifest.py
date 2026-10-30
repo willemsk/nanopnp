@@ -16,7 +16,7 @@ from nanopnp.core.hashing import (
     decode_floats,
     file_hash,
 )
-from nanopnp.core.paths import available_corrections, correction_file
+from nanopnp.core.paths import correction_source, reads_a_file
 from nanopnp.io.artefact import timestamp
 from nanopnp.io.defaults import ContributedDeviation, Deviation, deviations
 from nanopnp.io.store import atomic_write_bytes
@@ -145,11 +145,11 @@ def materials_group(
     name = str(provenance.get("parameter_file", "") or "")
     # Every file the models read, as MaterialsStage keys them; a correction model may name another.
     named = {model.name for model in electrolyte.corrections.values()}
-    read = sorted(({name} if name else set()) | (named & set(available_corrections())))
+    read = sorted(({name} if name else set()) | {each for each in named if reads_a_file(each)})
     files: dict[str, Canonicalisable] = {}
     for each in read:
         try:
-            path = correction_file(each)
+            path = correction_source(each)
         except FileNotFoundError:
             files[each] = None
         else:

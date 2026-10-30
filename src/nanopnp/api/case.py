@@ -21,6 +21,7 @@ from nanopnp.io.case import (
 from nanopnp.io.case_paths import (
     UnknownCasePathError,
     _entry_annotation,
+    correction_paths,
     field_at,
     field_path,
     input_paths,
@@ -59,11 +60,19 @@ class Case(CaseDocument):
     _base: Path | None = PrivateAttr(default=None)
 
     @classmethod
-    def load(cls, path: str | Path) -> Case:
-        """Read a case file; a relative path it names is read beside it."""
+    def load(cls, path: str | Path, *, base: str | Path | None = None) -> Case:
+        """Read a case file; a relative path it names is read beside it.
+
+        Parameters
+        ----------
+        base
+            The directory to read relative paths against instead of the file's own.
+        """
         source = Path(path)
         text = source.read_bytes().decode("utf-8")
-        case = cls.loads(text, base=source.resolve().parent, source=str(source))
+        case = cls.loads(
+            text, base=source.resolve().parent if base is None else base, source=str(source)
+        )
         case._path = source
         return case
 
@@ -129,7 +138,7 @@ class Case(CaseDocument):
             assignments.update(
                 {
                     dotted: str((self._base / value).resolve())
-                    for dotted, value in input_paths(self).items()
+                    for dotted, value in {**input_paths(self), **correction_paths(self)}.items()
                     if not Path(value).is_absolute()
                 }
             )

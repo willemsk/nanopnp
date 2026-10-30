@@ -818,9 +818,10 @@ def _validate_case(args: argparse.Namespace) -> int:
     from nanopnp.pipeline.run import selected_stages
 
     document = load_case(args.case)
+    base = Path(args.case).resolve().parent
     if not getattr(args, "schema_only", False):
-        check_referenced_files(document)
-    resolved = resolve(document)
+        check_referenced_files(document, base=base)
+    resolved = resolve(document, base=base)
     stages = selected_stages(resolved, None)
     payload: dict[str, Canonicalisable] = {
         "case": document.name,
@@ -872,7 +873,7 @@ def _validate_case_hash(args: argparse.Namespace) -> int:
     from nanopnp.validation.comsol import case_identity
 
     document = load_case(args.case)
-    identity = case_identity(resolve(document))
+    identity = case_identity(resolve(document, base=Path(args.case).resolve().parent))
     payload: dict[str, Canonicalisable] = {"case": document.name, "case_hash": identity}
     _emit(payload, [f"case      {document.name}", f"case_hash {identity}"], as_json=args.json)
     return EXIT_OK

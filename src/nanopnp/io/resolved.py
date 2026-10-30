@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 from nanopnp.io.case import (
@@ -85,6 +86,7 @@ class ResolvedCase:
     dielectric_transition_nm: float = 0.0
     pore: Pore | None = None
     wall_charge_C_m2: float = 0.0
+    correction_files: Mapping[str, Path] = dataclass_field(default_factory=dict)
 
     @property
     def contour_spacing_nm(self) -> float:

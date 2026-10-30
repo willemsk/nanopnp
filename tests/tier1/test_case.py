@@ -49,11 +49,8 @@ def test_fr27_a_leaf_name_resolves_to_its_one_field_and_two_fields_are_refused()
 
 
 def test_fr25_an_unedited_loaded_case_records_its_file_and_an_edited_one_does_not(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
-    # Until a case's paths are read beside it (D12), the charge file is read from the working
-    # directory.
-    monkeypatch.chdir(CASE.parent)
     store = tmp_path / "store"
     assert main(["run", str(CASE), "--upto", "case", "--store", str(store), "--json"]) == 0
     loaded = Case.load(CASE)
@@ -99,3 +96,30 @@ def test_fr27_a_session_stores_in_its_store_not_the_default(tmp_path: Path) -> N
     session = Session(tmp_path / "held", write=False)
     assert isinstance(session.store, Store)
     assert session.store.root == tmp_path / "held"
+
+
+def test_fr25_a_relative_input_path_is_read_beside_the_case_file(
+    cylindrical_pore_case: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from nanopnp.io.artefact import CaseArtefact
+
+    folder = tmp_path / "case"
+    folder.mkdir()
+    (folder / "pore.vol").write_bytes((cylindrical_pore_case.parent / "pore.vol").read_bytes())
+    text = cylindrical_pore_case.read_text(encoding="utf-8").replace(
+        str(cylindrical_pore_case.parent / "pore.vol"), "pore.vol"
+    )
+    (folder / "case.yaml").write_text(text, encoding="utf-8")
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    loaded = Case.load(folder / "case.yaml")
+    session = Session(tmp_path / "store", write=False)
+    unedited = session.run(loaded, upto="mesh")
+    edited = session.run(loaded.with_(bias_V=0.07), upto="mesh")
+    expected = str((folder / "pore.vol").resolve())
+    assert unedited.manifest.inputs["files"]["mesh"]["path"] == expected
+    assert edited.manifest.inputs["files"]["mesh"]["path"] == expected
+    # The case hash covers the paths as written, so moving a case and its files moves no key.
+    assert unedited.manifest.case_hash == CaseArtefact(loaded).hash
+    assert loaded.inputs.mesh is not None and loaded.inputs.mesh.path == Path("pore.vol")

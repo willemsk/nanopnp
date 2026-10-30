@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Literal, Protocol, TypeAlias
 
-from nanopnp.core.paths import available_corrections
+from nanopnp.core.paths import available_corrections, names_a_path
 from nanopnp.materials.corrections import (
     CorrectionDocument,
     FitBlock,
@@ -162,6 +162,9 @@ def _resolve(name: str) -> ModelBuilder:
     builder = _REGISTRY.get(name)
     if builder is not None:
         return builder
+    if names_a_path(name):
+        # A file read by path is read afresh, never held under its name for the process.
+        return _file_backed_builder(name)
     if name in available_corrections():
         builder = _file_backed_builder(name)
         _REGISTRY[name] = builder

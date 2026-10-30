@@ -41,6 +41,38 @@ def correction_file(name: str) -> Path:
     return path
 
 
+def names_a_path(name: str) -> bool:
+    """Return whether a correction name is a file path rather than an installed file's name."""
+    return name.endswith(".yaml")
+
+
+def reads_a_file(name: str) -> bool:
+    """Return whether a correction model name is read from a file: a path, or an installed one."""
+    return names_a_path(name) or name in available_corrections()
+
+
+def correction_source(name: str, *, base: Path | None = None) -> Path:
+    """Return the file a correction name stands for.
+
+    A name ending in ``.yaml`` is a path, relative to ``base`` (the working directory when
+    ``None``) or absolute; any other is an installed file's name.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no such file exists.
+    """
+    if not names_a_path(name):
+        return correction_file(name)
+    path = Path(name)
+    if not path.is_absolute():
+        path = (base if base is not None else Path.cwd()) / path
+    path = path.resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"no correction file at {path}")
+    return path
+
+
 def profile_file(name: str) -> Path:
     """Return the path of a named pore-profile fixture; FileNotFoundError if not installed."""
     path = GEOMETRY_DIR / f"{name}.yaml"
