@@ -55,7 +55,7 @@ LADDER = ("solve/continuation.py", "default_ladder")
 """The one function outside ``physics/`` that names models (WP26 D14, section 6.5)."""
 
 DECLARED_DEFAULTS = (
-    ("io/case.py", "PhysicsSpec"),
+    ("io/case.py", "Physics"),
     ("io/defaults.py", "_VALIDATED_DEFAULTS"),
 )
 """Where the validated model is *written down* as the default, which is data rather

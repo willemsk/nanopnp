@@ -15,8 +15,8 @@ from nanopnp.io.case import (
     PROFILE_FORMAT,
     CaseDocument,
     CaseValidationError,
-    ContourSpec,
-    DensitySpec,
+    Contour,
+    Density,
     FieldType,
     FieldValue,
     _keys_of,
@@ -107,8 +107,8 @@ def field_at(path: str) -> FieldReference:
     walked: list[str] = []
 
     for component in components:
-        # Container first: a ``list[SpeciesSpec]`` carries a model and is indexed; asking the block
-        # first would report ``0`` as an unknown field of ``SpeciesSpec``.
+        # Container first: a ``list[Species]`` carries a model and is indexed; asking the block
+        # first would report ``0`` as an unknown field of ``Species``.
         entry = _entry_annotation(annotation)
         if entry is not None and entry[1] == "sequence" and not _is_index(component):
             # A list is reached only by index; else ``electrolyte.species.name`` reads ``name`` as
@@ -415,8 +415,8 @@ def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
     payload.pop("structure", None)
     geometry = payload.get("geometry")
     if isinstance(geometry, dict):
-        geometry["density"] = DensitySpec().model_dump(mode="json")
-        geometry["contour"] = ContourSpec().model_dump(mode="json")
+        geometry["density"] = Density().model_dump(mode="json")
+        geometry["contour"] = Contour().model_dump(mode="json")
     inputs = payload.setdefault("inputs", {})
     inputs["profile"] = {"path": str(path), "format": PROFILE_FORMAT}
     try:

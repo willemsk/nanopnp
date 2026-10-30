@@ -44,8 +44,8 @@ from nanopnp.geometry.profile import (
 )
 from nanopnp.io.artefact import ProfileArtefact
 from nanopnp.io.case import (
-    ContourSpec,
-    DensitySpec,
+    Contour,
+    Density,
     UnsupportedCaseSection,
 )
 from nanopnp.io.workspace import scratch_directory
@@ -645,9 +645,7 @@ def gate(
     return measured.record
 
 
-def condition_map(
-    reduced: ReducedMap, contour: ContourSpec, density: DensitySpec
-) -> ConditionedContour:
+def condition_map(reduced: ReducedMap, contour: Contour, density: Density) -> ConditionedContour:
     """Condition a stage-3 map's mean as stage 4 does, with the case's own parameters."""
     return condition(
         reduced.mean,
@@ -664,7 +662,7 @@ def gate_inputs(
     loop: np.ndarray,
     z_nm: np.ndarray,
     ensemble: AlignedEnsemble,
-    density: DensitySpec,
+    density: Density,
     *,
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
@@ -712,7 +710,7 @@ PAYLOAD_NAME = PROFILE_PAYLOAD
 CITATION = "nanopnp stage 4, SPECIFICATION.md section 5.2.1"
 
 
-def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
+def _specs(inputs: StageInputs) -> tuple[Contour, Density]:
     resolved = inputs.resolved
     if resolved.contour is None or resolved.density is None:
         raise UnsupportedCaseSection(
@@ -722,7 +720,7 @@ def _specs(inputs: StageInputs) -> tuple[ContourSpec, DensitySpec]:
     return resolved.contour, resolved.density
 
 
-def contour_parameters(contour: ContourSpec, density: DensitySpec) -> dict[str, Canonicalisable]:
+def contour_parameters(contour: Contour, density: Density) -> dict[str, Canonicalisable]:
     """Return the stage-4 key's parameters: the block, h, the constants and the radius set."""
     name = KERNEL_RADII[density.kernel]
     return {
@@ -750,9 +748,7 @@ class ContourStage:
         """Return the artefact key from the block, h, the constants and stages 1 and 3."""
         return self._key(inputs, *_specs(inputs))
 
-    def _key(
-        self, inputs: StageInputs, contour: ContourSpec, density: DensitySpec
-    ) -> ProfileArtefact:
+    def _key(self, inputs: StageInputs, contour: Contour, density: Density) -> ProfileArtefact:
         return ProfileArtefact(
             parameters=contour_parameters(contour, density),
             inputs={

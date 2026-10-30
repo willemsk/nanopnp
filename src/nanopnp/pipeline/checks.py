@@ -20,12 +20,12 @@ from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
     Charge,
-    ContourSpec,
-    DensitySpec,
-    MembraneSpec,
-    PhysicsSpec,
-    ReservoirSpec,
-    SmearingSpec,
+    Contour,
+    Density,
+    Membrane,
+    Physics,
+    Reservoir,
+    Smearing,
     SuppliedArtefact,
     UnsupportedCaseSection,
     render_problems,
@@ -445,7 +445,7 @@ def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
         )
 
 
-def _check_smearing(document: CaseDocument, smearing: SmearingSpec, defaults: SmearingSpec) -> None:
+def _check_smearing(document: CaseDocument, smearing: Smearing, defaults: Smearing) -> None:
     if smearing.axis_cutoff_nm != defaults.axis_cutoff_nm:
         raise CaseValidationError(
             f"charge.smearing.axis_cutoff_nm is {smearing.axis_cutoff_nm}; it is refused away "
@@ -519,7 +519,7 @@ def _check_profile(document: CaseDocument) -> None:
     geometry = document.geometry
     if geometry is None:
         return
-    for key, default in (("density", DensitySpec()), ("contour", ContourSpec())):
+    for key, default in (("density", Density()), ("contour", Contour())):
         if getattr(geometry, key) != default:
             raise CaseValidationError(
                 f"geometry.{key} is set beside inputs.profile. Stages 2 to 4 read it and a "
@@ -541,8 +541,8 @@ def _check_generation(document: CaseDocument) -> None:
             f"geometry.analyte is a {geometry.analyte.shape}; an analyte in a generated region "
             "is FR-21, v0.7. The benchmark geometries embed one (PHY-11)"
         )
-    membrane = geometry.membrane if geometry is not None else MembraneSpec()
-    reservoir = geometry.reservoir if geometry is not None else ReservoirSpec()
+    membrane = geometry.membrane if geometry is not None else Membrane()
+    reservoir = geometry.reservoir if geometry is not None else Reservoir()
     for key, value in (
         ("geometry.membrane.thickness_nm", membrane.thickness_nm),
         ("geometry.reservoir.radius_nm", reservoir.radius_nm),
@@ -580,7 +580,7 @@ _LADDER_PHYSICS: dict[str, bool] = {
 }
 
 
-def _check_ladder_can_honour(physics: PhysicsSpec) -> None:
+def _check_ladder_can_honour(physics: Physics) -> None:
     mismatched = [
         name for name, fixed in _LADDER_PHYSICS.items() if getattr(physics, name) != fixed
     ]

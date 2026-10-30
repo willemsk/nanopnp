@@ -16,14 +16,14 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.density.map import GRID_SPACING_RANGE_NM
+from nanopnp.io import case as schema
 from nanopnp.io.artefact import CaseArtefact, StageInputs
 from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
     Charge,
-    ContourSpec,
-    CorrectionChoiceSpec,
-    DensitySpec,
+    Contour,
+    Density,
     Geometry,
     read_case,
     read_case_text,
@@ -60,7 +60,7 @@ def loads_case(text: str, *, source: str = "<string>") -> CaseDocument:
     return check_document(read_case_text(text, source=source), source=source)
 
 
-def _choice(spec: CorrectionChoiceSpec) -> CorrectionChoice:
+def _choice(spec: schema.CorrectionChoice) -> CorrectionChoice:
     return CorrectionChoice(model=spec.model, concentration=spec.concentration, wall=spec.wall)
 
 
@@ -124,10 +124,10 @@ def _resolve_structure(document: CaseDocument) -> ResolvedStructure | None:
     return ResolvedStructure(spec=spec, n=n, chains=chains)
 
 
-def _resolve_density(document: CaseDocument) -> DensitySpec | None:
+def _resolve_density(document: CaseDocument) -> Density | None:
     if document.structure is None:
         return None
-    spec = document.geometry.density if document.geometry is not None else DensitySpec()
+    spec = document.geometry.density if document.geometry is not None else Density()
     low, high = GRID_SPACING_RANGE_NM
     if not low <= spec.grid_spacing_nm <= high:
         raise CaseValidationError(
@@ -144,10 +144,10 @@ def _resolve_density(document: CaseDocument) -> DensitySpec | None:
     return spec
 
 
-def _resolve_contour(document: CaseDocument, density: DensitySpec | None) -> ContourSpec | None:
+def _resolve_contour(document: CaseDocument, density: Density | None) -> Contour | None:
     if document.structure is None or density is None:
         return None
-    spec = document.geometry.contour if document.geometry is not None else ContourSpec()
+    spec = document.geometry.contour if document.geometry is not None else Contour()
     if not (math.isfinite(spec.isolevel) and 0.0 < spec.isolevel < 1.0):
         raise CaseValidationError(
             f"geometry.contour.isolevel is {spec.isolevel}; it is a level of a density in "

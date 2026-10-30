@@ -517,13 +517,11 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
 
     from nanopnp.geometry.profile import load_profile
     from nanopnp.geometry.region import derive_region, write_region
-    from nanopnp.io.case import MembraneSpec, ReservoirSpec
+    from nanopnp.io.case import Membrane, Reservoir
 
     profile_yaml = Path("data/geometry/clya_reference_profile.yaml")
     region_yaml = tmp_path / "region.yaml"
-    write_region(
-        derive_region(load_profile(profile_yaml), MembraneSpec(), ReservoirSpec()), region_yaml
-    )
+    write_region(derive_region(load_profile(profile_yaml), Membrane(), Reservoir()), region_yaml)
 
     dummy = Artefact(schema="dummy/v1", parameters={}, inputs={})
     dummy_prof = ProfileArtefact(parameters={}, inputs={}, payload={"profile": profile_yaml})

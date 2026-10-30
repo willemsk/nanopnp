@@ -43,8 +43,8 @@ from nanopnp.geometry.region import (
 from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.case import (
     CaseValidationError,
-    MembraneSpec,
-    ReservoirSpec,
+    Membrane,
+    Reservoir,
 )
 from nanopnp.io.store import Store
 from nanopnp.mesh.reference import ReferenceGeometry
@@ -56,8 +56,8 @@ from nanopnp.pipeline.run import selected_stages
 
 FIXTURE = "clya_reference_profile"
 
-MEMBRANE = MembraneSpec()
-RESERVOIR = ReservoirSpec()
+MEMBRANE = Membrane()
+RESERVOIR = Reservoir()
 
 
 def _profile(points: list[tuple[float, float]], name: str = "synthetic") -> PoreProfile:
@@ -183,7 +183,7 @@ def test_ver52_a_translated_profile_registered_by_its_shift_is_the_same_region(
         [(r, z + shift) for r, z in fixture_profile.vertices],
         name="moved",
     )
-    record = derive_region(moved, MembraneSpec(centre_z_nm=shift), RESERVOIR)
+    record = derive_region(moved, Membrane(centre_z_nm=shift), RESERVOIR)
     assert np.allclose(record.points(), fixture_region.points(), atol=1e-12)
     assert record.membrane.inner_trans_nm == pytest.approx(
         fixture_region.membrane.inner_trans_nm, abs=1e-12
@@ -225,7 +225,7 @@ def _gate_message(error: pytest.ExceptionInfo[RegionGateError]) -> str:
 
 def test_ver52_a_bilayer_that_misses_the_profile_names_the_extent_and_centre() -> None:
     with pytest.raises(RegionGateError) as caught:
-        derive_region(_parallelogram(0.0), MembraneSpec(centre_z_nm=-5.0), RESERVOIR)
+        derive_region(_parallelogram(0.0), Membrane(centre_z_nm=-5.0), RESERVOIR)
     message = _gate_message(caught)
     assert "bilayer plane crossings" in message
     assert "z = [2.0000, 8.0000] nm" in message
@@ -243,7 +243,7 @@ def test_ver52_a_body_too_thin_for_a_chord_names_the_clearance() -> None:
 
 def test_ver52_a_profile_outside_the_reservoir_names_the_vertex() -> None:
     with pytest.raises(RegionGateError) as caught:
-        derive_region(_parallelogram(0.0), MEMBRANE, ReservoirSpec(radius_nm=3.5))
+        derive_region(_parallelogram(0.0), MEMBRANE, Reservoir(radius_nm=3.5))
     message = _gate_message(caught)
     assert "profile inside the reservoir" in message
     assert "(r, z) = (3.0000, -3.0000)" in message
@@ -303,7 +303,7 @@ def test_ver52_a_supplied_profile_is_read_by_stage_5(tmp_path: Path) -> None:
     resolved = resolve(loads_case(profile_case(profile_file(FIXTURE))))
     assert resolved.profile is not None
     assert resolved.generates_mesh
-    assert resolved.membrane == MembraneSpec()
+    assert resolved.membrane == Membrane()
     assert selected_stages(resolved, None) == (
         "case",
         "region",
@@ -423,7 +423,7 @@ def test_ver52_to_model_frame_shifts_z_only() -> None:
 def test_ver52_an_edge_lying_on_a_bilayer_plane_extends_the_interval_along_it(
     points: list[tuple[float, float]], junction: dict[str, float]
 ) -> None:
-    reservoir = ReservoirSpec(radius_nm=30.0)
+    reservoir = Reservoir(radius_nm=30.0)
     assert derive_region(_profile(points), MEMBRANE, reservoir).junction_nm == junction
 
 

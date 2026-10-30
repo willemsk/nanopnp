@@ -29,8 +29,8 @@ from nanopnp.geometry.region import (
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import (
     CaseValidationError,
-    MembraneSpec,
-    ReservoirSpec,
+    Membrane,
+    Reservoir,
 )
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.generate import sizing_parameters, wall_statistics
@@ -384,7 +384,7 @@ def test_ver59_derive_region_at_zero_offset_runs_none_of_the_shell(
     parallelogram_profile: Path, plain
 ) -> None:
     profile = load_profile(parallelogram_profile)
-    record = derive_region(profile, MembraneSpec(), ReservoirSpec(radius_nm=30.0))
+    record = derive_region(profile, Membrane(), Reservoir(radius_nm=30.0))
     assert record.exclusion is None
     assert record == _record(plain)
     shape = build_region(record)

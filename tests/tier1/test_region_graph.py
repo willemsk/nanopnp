@@ -27,7 +27,7 @@ from nanopnp.geometry.region import (
     derive_region,
     region_graph,
 )
-from nanopnp.io.case import MembraneSpec, ReservoirSpec
+from nanopnp.io.case import Membrane, Reservoir
 
 PARALLELOGRAM = [(2.0, -3.0), (3.0, -3.0), (6.0, 3.0), (5.0, 3.0)]
 
@@ -54,13 +54,13 @@ def _profile(points: list[tuple[float, float]]) -> PoreProfile:
 
 @pytest.fixture(scope="module")
 def fixture_region() -> RegionRecord:
-    return derive_region(load_profile("clya_reference_profile"), MembraneSpec(), ReservoirSpec())
+    return derive_region(load_profile("clya_reference_profile"), Membrane(), Reservoir())
 
 
 @pytest.fixture(scope="module", params=["counter-clockwise", "clockwise"])
 def parallelogram_region(request: pytest.FixtureRequest) -> RegionRecord:
     points = PARALLELOGRAM if request.param == "counter-clockwise" else PARALLELOGRAM[::-1]
-    return derive_region(_profile(points), MembraneSpec(), ReservoirSpec(radius_nm=30.0))
+    return derive_region(_profile(points), Membrane(), Reservoir(radius_nm=30.0))
 
 
 def _check_graph(record: RegionRecord, graph: RegionGraph) -> None:
@@ -140,10 +140,10 @@ def test_ver54_a_graph_that_is_not_the_record_s_region_is_refused(
 GRAPH_IN_A_FRESH_PROCESS = """
 import sys
 from nanopnp.geometry.region import build_region, derive_region, region_graph
-from nanopnp.io.case import MembraneSpec, ReservoirSpec
+from nanopnp.io.case import Membrane, Reservoir
 from nanopnp.geometry.profile import load_profile
 
-record = derive_region(load_profile("clya_reference_profile"), MembraneSpec(), ReservoirSpec())
+record = derive_region(load_profile("clya_reference_profile"), Membrane(), Reservoir())
 region_graph(build_region(record), record)
 print("gmsh" in sys.modules)
 """
