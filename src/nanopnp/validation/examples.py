@@ -8,7 +8,7 @@ import shlex
 import shutil
 import subprocess
 import sys
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -22,6 +22,7 @@ __all__ = [
     "copy_example",
     "run_tagged",
     "tagged_commands",
+    "untagged_commands",
 ]
 
 logger = logging.getLogger(__name__)
@@ -29,6 +30,8 @@ logger = logging.getLogger(__name__)
 TAGGED_BLOCK = re.compile(
     r"<!--\s*example:\s*(?P<tag>[\w-]+)\s*-->\s*\n```console\n(?P<body>.*?)\n```", re.DOTALL
 )
+
+CONSOLE_FENCE = re.compile(r"```console\n(?P<body>.*?)\n```", re.DOTALL)
 
 PROGRAMS: tuple[str, ...] = ("nanopnp", "python")
 
@@ -76,6 +79,23 @@ def tagged_commands(readme: Path, tag: str) -> list[list[str]]:
                 )
             commands.append(argv)
     return commands
+
+
+def untagged_commands(readme: Path, tested: Iterable[str]) -> list[list[str]]:
+    """Return the program lines of ``readme``'s console fences that no ``tested`` block runs."""
+    tags = frozenset(tested)
+    # A tested block is cut out whole, so what the console fences still hold is what no test runs.
+    text = TAGGED_BLOCK.sub(
+        lambda block: "" if block.group("tag") in tags else block.group(0),
+        readme.read_text(encoding="utf-8"),
+    )
+    lines: list[list[str]] = []
+    for fence in CONSOLE_FENCE.finditer(text):
+        for line in fence.group("body").splitlines():
+            words = shlex.split(line[2:]) if line.startswith("$ ") else []
+            if words and words[0] in PROGRAMS:
+                lines.append(words)
+    return lines
 
 
 def _program(name: str) -> str:

@@ -461,13 +461,13 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   (D4); done when `uv run pytest tests/tier2/test_user_testing_sessions.py` passes for them.
   **Executor:** `general-purpose` on Sonnet
 - [x] 0a27e08 18. Compaction checkpoint. **Executor:** main
-- [x] 19. `post/forces.py`, `tests/tier1/test_forces.py`: REV-120 (D13); done when the REV-120 row
+- [x] dce0209 19. `post/forces.py`, `tests/tier1/test_forces.py`: REV-120 (D13); done when the REV-120 row
   passes. **Executor:** main
-- [ ] 20. `validation/runs.py`, `cli/__init__.py`, `io/manifest.py`: REV-157's reader, single read and
+- [x] 38fa0cf 20. `validation/runs.py`, `cli/__init__.py`, `io/manifest.py`: REV-157's reader, single read and
   cached hash (D11); `physics/models.py`, `post/export.py`, `structure/orient.py`, `plot/data.py`:
   REV-153 (D13); done when Tier 1 passes and the code and review say so. **Executor:**
   `general-purpose` on Sonnet
-- [ ] 21. `validation/examples.py`, `tests/tier2/test_user_testing_sessions.py`, the example tests:
+- [x] 21. `validation/examples.py`, `tests/tier2/test_user_testing_sessions.py`, the example tests:
   `untagged_commands` (D13); done when the example and session tests pass. **Executor:**
   `general-purpose` on Sonnet
 - [ ] 22. The two knowledge sentences (REV-111, REV-155), the two concepts naming the old route (D14)
