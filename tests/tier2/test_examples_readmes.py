@@ -23,8 +23,13 @@ def test_ver46_an_untagged_console_command_is_found_and_a_tested_one_is_not(tmp_
     readme.write_text(
         "<!-- example: run -->\n```console\n$ nanopnp run a.yaml\n```\n\n"
         "```console\n$ nanopnp plot a.yaml --out a.png\n$ ls\n```\n"
-        "<!-- example: other -->\n```console\n$ python go.py\n```\n",
+        "<!-- example: other -->\n```console\n$ python go.py\n```\n"
+        "```console\n$ uv run nanopnp inspect run\n```\n",
         encoding="utf-8",
     )
     found = untagged_commands(readme, EXPECTED_EXIT)
-    assert found == [["nanopnp", "plot", "a.yaml", "--out", "a.png"], ["python", "go.py"]]
+    assert found == [
+        ["nanopnp", "plot", "a.yaml", "--out", "a.png"],
+        ["python", "go.py"],
+        ["nanopnp", "inspect", "run"],
+    ]

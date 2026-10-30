@@ -132,12 +132,13 @@ def test_ver77_gauss_balance_in_a_long_charged_lumen(tmp_path: Path) -> None:
                 for name, component in components.items()
             )
             total += weight * 2.0 * math.pi * r_nm * density
-        return total
+        # The density is C m^-3 and the r measure nm^2, so 1e-18 m^2 per nm^2 gives C m^-1.
+        return total * 1e-18
 
     half_length = 0.5 * 10.0 * radius - max(5.0 * lam, 2.0 * radius)
     planes = np.linspace(-half_length, half_length, 17)
-    # C m^-3 nm^3 integrated over r and z: 1e-27 m^3 per nm^3, against the wall's C m^-2 nm^2 x nm.
-    ionic_C = simpson([charge_per_length_C_m(z) for z in planes], x=planes) * 1e-27
+    # C m^-1 integrated over z in nm: 1e-9 m per nm, against the wall's C m^-2 x nm^2.
+    ionic_C = simpson([charge_per_length_C_m(z) for z in planes], x=planes) * 1e-9
     wall_C = sigma * 2.0 * math.pi * radius * 2.0 * half_length * 1e-18
     assert ionic_C == pytest.approx(-wall_C, rel=1e-3)
 

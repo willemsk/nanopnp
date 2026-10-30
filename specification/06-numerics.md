@@ -111,9 +111,13 @@ NOTE (the `r` weight and the default order; WP26): NGSolve estimates
 an integrand's order from its trial and test functions and does not count the coordinate, so a form
 that is not singular is integrated one order short of its degree in `r`: at P2 the axisymmetric
 stiffness `ε ∇u·∇v r` and the source `ρ v r` are of degree 3 and are integrated at order 2. It is a
-consistency error, not a NaN, and it converges with the mesh. `poisson` assembles both terms with
+consistency error, not a NaN, and it converges with the mesh. `poisson` assembles those terms, and
+the prescribed surface charge `σ_s v r ds` of PHY-09, with
 one extra order: on the three-layer capacitor of VER-56, whose exact solution the P2 space contains,
-the error is 0.38 `V_T` (3 %) next to the axis at the default and 1.1 × 10⁻¹³ with it. The coupled
+the error is 0.38 `V_T` (3 %) next to the axis at the default and 1.1 × 10⁻¹³ with it. The surface
+term is of degree 3 in `r` at P2 for the same reason, and the segment rule at the default order is
+exact to that degree, so the extra order moves no number at P2 and keeps the model consistent at a
+higher element order. The coupled
 models keep the default here, and whether their forms should gain the same order is open: it moves
 every number they produce, so it is a decision with a measurement, not a side effect of WP26
 (`knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`). A supplied field's source term is assembled at order 8

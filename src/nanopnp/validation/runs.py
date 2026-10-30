@@ -62,7 +62,7 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
     from nanopnp.io.store import Store
     from nanopnp.physics.coefficients import mesh_unit_scales
     from nanopnp.pipeline.case import resolve
-    from nanopnp.pipeline.run import read_run
+    from nanopnp.pipeline.run import read_run, recorded_base
     from nanopnp.solve.state import restore, warm_start_payload
 
     source = Path(directory)
@@ -82,7 +82,9 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
         )
 
     document = recorded.document
-    resolved = resolve(document)
+    # Against the directory of the case file the run read, as ``open_run`` reads it: a relative
+    # path of the case would otherwise be read against whatever directory the reader stands in.
+    resolved = resolve(document, base=recorded_base(recorded.manifest.inputs))
     mesh = record.get("artefacts", {}).get("mesh")
     # A generated mesh is read from the run's own stage-6 payload, never
     # regenerated; a supplied one is re-read from inputs.mesh.

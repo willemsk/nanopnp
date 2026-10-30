@@ -74,7 +74,12 @@ from nanopnp.physics.pb import (
     nonlinear_pb_residual,
     solve_pb_recorded,
 )
-from nanopnp.physics.poisson import charge_source, poisson_operator, surface_charge_source
+from nanopnp.physics.poisson import (
+    charge_source,
+    poisson_operator,
+    surface_charge_region,
+    surface_charge_source,
+)
 from nanopnp.physics.spaces import set_boundary_values
 from nanopnp.physics.stabilisation import (
     FlowState,
@@ -892,7 +897,7 @@ class CoupledModel:
                 surface_charge,
                 potential_test,
                 measures,
-                definedon=mesh.Boundaries(surface_charge_boundary),
+                definedon=surface_charge_region(mesh, surface_charge_boundary),
             )
 
         for name in self.species:
@@ -1345,7 +1350,7 @@ class ElectrostaticModel(_SingleFieldModel):
                 surface_charge,
                 test,
                 measures,
-                definedon=space.mesh.Boundaries(surface_charge_boundary),
+                definedon=surface_charge_region(space.mesh, surface_charge_boundary),
             )
         return residual
 
@@ -1513,7 +1518,8 @@ class PoissonModel(_SingleFieldModel):
                 surface_charge,
                 test,
                 measures,
-                definedon=space.mesh.Boundaries(surface_charge_boundary),
+                definedon=surface_charge_region(space.mesh, surface_charge_boundary),
+                extra_order=RADIAL_WEIGHT_ORDER,
             )
         return residual
 

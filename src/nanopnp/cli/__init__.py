@@ -222,12 +222,14 @@ def _stage(args: argparse.Namespace) -> int:
         if args.export is not None:
             args.parser.error("--list writes no artefact; --export needs a stage and a case file")
         # Answered from the registry alone: no stage module, NGSolve or netgen is imported.
+        descriptions = registered_stages()
         payload: dict[str, Canonicalisable] = {
-            "stages": [description.summary() for description in registered_stages()]
+            "stages": [description.summary() for description in descriptions]
         }
         lines = [
-            f"{info.number:>2}  {info.name:<11} {info.title:<28} {info.schema}"
-            for info in Session().stages
+            f"{description.number:>2}  {description.name:<11} {description.title:<28} "
+            f"{description.artefact_schema}"
+            for description in descriptions
         ]
         _emit(payload, lines, as_json=args.json)
         return EXIT_OK

@@ -93,6 +93,10 @@ def untagged_commands(readme: Path, tested: Iterable[str]) -> list[list[str]]:
     for fence in CONSOLE_FENCE.finditer(text):
         for line in fence.group("body").splitlines():
             words = shlex.split(line[2:]) if line.startswith("$ ") else []
+            # Every README tells the reader to put `uv run` in front, so the prefix is dropped
+            # before the program is read: without that, such a line escapes the check.
+            if words[:2] == ["uv", "run"]:
+                words = words[2:]
             if words and words[0] in PROGRAMS:
                 lines.append(words)
     return lines

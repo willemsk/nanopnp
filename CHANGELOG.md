@@ -108,6 +108,14 @@ REV-120, REV-122, REV-144, REV-145, REV-153, REV-155, REV-157). The
 - **The nightly walks of examples 06 and 07** (the failure of the `v0.5.0-alpha.22` release run): example 07's
   step 3 reads the manifest's `charge` group with `inspect run --section charge`, since `inspect` prints a
   reading; the tests of examples 06 and 07 compare the absolute path a manifest records.
+- **The review's fixes** ([CODE_REVIEW_021](docs/code_reviews/CODE_REVIEW_021.md)): `poisson` adds the `r`-weight
+  quadrature order to its surface-charge term as it does to its stiffness and its volumetric source (NUM-07's
+  NOTE; no number moves at P2); a surface charge applied to a boundary matching nothing is refused on every
+  model, through one guard (NUM-06, QR-12); `register_stage` refuses a name outside `[a-z][a-z0-9_-]*` and a
+  keyword-only or variadic parameter, as §5.5's NOTE lists; `untagged_commands` reads a command written with a
+  `uv run` prefix, which VER-46's check had passed over; `reopen` and `sweep_isolevels` read a relative path
+  beside the case file, as the walk does; `stage --list` answers from the registry alone; and
+  `check_force_surface` matches boundary edges in one pass and refuses a surface no element owns.
 
 ### Removed
 

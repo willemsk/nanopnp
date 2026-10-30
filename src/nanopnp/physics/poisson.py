@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from nanopnp.core.typing import Expression, IntegralTerm, Numeric
+from nanopnp.core.typing import Expression, IntegralTerm, Mesh, Numeric
 from nanopnp.numerics.measures import Measures
 
 
@@ -40,3 +40,23 @@ def surface_charge_source(
 ) -> IntegralTerm:
     """Return the prescribed surface charge term ``int_Gamma sigma_s v r ds``."""
     return measures.surface(surface_density * test, **kwargs)
+
+
+def surface_charge_region(mesh: Mesh, boundary: str) -> Expression:
+    """Return the boundary a prescribed surface charge is applied to.
+
+    Parameters
+    ----------
+    boundary
+        The boundary name or pattern the charge is applied to. A name matching nothing is
+        refused: the term would vanish and the solve would converge on the uncharged answer.
+    """
+    region = mesh.Boundaries(boundary)
+    if region.Mask().NumSet() == 0:
+        carried = ", ".join(sorted(set(mesh.GetBoundaries())))
+        raise ValueError(
+            f"surface_charge_boundary={boundary!r} matches no boundary of the mesh; it carries "
+            f"{carried}. A charge applied to nothing leaves the wall uncharged and the solve "
+            "converges (NUM-06, QR-12)"
+        )
+    return region

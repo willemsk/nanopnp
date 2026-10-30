@@ -1804,3 +1804,181 @@ with the next change to `validation/runs.py`; take the last two items with whate
 **Ruled** (§8.2.22 X6): all four items go to WP57; the end-of-rung call goes with `Case.run`'s hooks.
 
 **Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `SolveHook.rung_solved` gives a rung's seconds, which the progress line prints; `validation/runs.py:reopen` reads through `read_run`; `inspect` reads the manifest once and `Manifest.hash` is cached; `wall_distance_remedy` has no unreachable branch.
+
+
+## REV-158: A correction file named by path puts its absolute path in the stage-8 and stage-10 keys
+
+Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+`pipeline/case.py` absolutises `electrolyte.parameters` before it reaches the electrolyte's
+provenance, so the absolute path lands in `MaterialsArtefact.parameters["electrolyte"]` and in
+`ResolvedCase.solve_provenance["electrolyte"]`. A case copied to `/a` and `/b` with a byte-identical
+correction file beside each keys its materials and solve artefacts differently: two artefacts exist
+for one calculation, nothing is shared between two checkouts of the same work, and artefact identity
+stops being a function of content — although the file's `sha256` is already in the manifest's
+`inputs`, which is what FR-25 needs to reconstruct the run.
+
+The same is true of the other paths a case names, so this is not special to corrections; the
+difference is that corrections were readable by name before this package and the name keyed the
+artefact.
+
+Recommendation: key the artefact by the correction file's content hash and keep the path in the
+manifest's `inputs` alone, where it already is. That is a change to the artefact-key contract, not a
+local edit, so it is the author's to rule.
+
+**Question for the author:** should a file a case names key an artefact by its content rather than by
+its path, so the same calculation in two folders shares one artefact? This is the other half of the
+"read every file beside the case file" decision the package's In brief puts to you.
+
+## REV-159: Three in-memory routes read a relative path against the working directory, not beside the case
+
+Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+A case read from a file now resolves its relative input paths beside that file (§5.3.1's NOTE,
+§8.2.23 D12). Three routes do not, so one string means two different files depending on how the case
+reaches the walk:
+
+- **A sweep member.** `api/sweep.py:313` walks with `base=None`, although `plan.base_path.parent` is
+  at hand. `nanopnp run examples/03-iv-sweep/charged.case.yaml` from the repository root finds
+  `cis-ring.field.yaml`; `nanopnp sweep run` on the plan built from the same case does not.
+- **An edited case.** `api/case.py:145` applies the caller's edits after the absolutisation, so
+  `Case.load(...).with_(**{"inputs.charge.path": "ring.field.yaml"})` leaves the edited path relative
+  while every other path of the same case is absolute, and the copy keeps no base to read it against.
+- **A factory-built case.** `Case.cylinder` and `Case.from_structure` absolutise `charge` and
+  `source` but leave a path-named `parameters` as given, so a factory case is half portable and
+  `plan_sweep` refuses it outright for naming a relative correction path.
+
+`CHANGELOG.md` states the sweep behaviour deliberately ("a case held in memory (a sweep member, a
+window document) reads against the working directory"), so the first item is documented intent and
+changing it is a decision, not a fix. The second and third read as oversights of the same change.
+
+Recommendation: give a sweep member `plan.base_path.parent`; absolutise after the caller's edits, not
+before; and treat `parameters` as `charge` and `source` are treated. All three make one rule of what
+is now three.
+
+**Question for the author:** should a case held in memory carry the base of the file it came from, so
+that a sweep member, an edited copy and a factory case all read a relative path the way the case file
+does?
+
+## REV-160: StageInputs.options is unreachable, so three QoI settings and their deviation are dead
+
+Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+`run_document`'s `options` parameter and `_Walk.options` were deleted with `run_case`, but
+`StageInputs.options` and its three readers in `post/stage.py` were kept. `QoIStage._prepare` still
+reads `inputs.options.get("check_routes", True)`, `_shell(data, inputs.options)` and
+`_band(data, inputs.options)`, and `QoIStage.deviations` reports the `check_routes` deviation from the
+same mapping. `_Walk.inputs` now builds `StageInputs(resolved=..., upstream=...)` only, so `options`
+is permanently `{}`: the force-route skip, the custom indicator band and the custom extension shell
+cannot be set from the command line, the `Session` or the sweep runner, and the `ContributedDeviation`
+they feed can never be recorded.
+
+Nothing gives a wrong answer — the defaults are the validated ones — but a capability and a
+manifest deviation are silently gone, and dead configuration in a QoI stage is the kind of thing a
+later reader will wire up by guessing.
+
+Recommendation: decide which it is. Either the three settings are configurable, in which case the
+plumbing is restored and a case key or a `Session.run` argument reaches them; or they are not, in
+which case `StageInputs.options`, the three readers and the deviation go, and §5.3.2's deviation list
+loses `check_routes`.
+
+**Question for the author:** should `check_routes`, the indicator band and the extension shell stay
+configurable, or be fixed at their validated defaults and the dead plumbing removed?
+
+## REV-161: The manifest records a null hash for a correction file it cannot find
+
+Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+`io/manifest.py:153` resolves each correction file with `correction_source(each)` and no base, and
+records `None` when the lookup raises. An `Electrolyte` built from a relative path by any route that
+does not go through `resolve`, which absolutises, therefore reaches `materials_group` with a bare
+name: if the file is not in the working directory the `FileNotFoundError` is swallowed and the
+manifest records `parameter_file_hashes[name] = None`; if a *different* file of that name is there,
+the manifest records that file's hash. Either way the manifest cannot reconstruct the run, which is
+what FR-25 requires of it, and nothing refuses.
+
+Not reachable from a case file today, because `resolve` absolutises first. It is reachable from the
+public `Electrolyte`, and it is the manifest — the one record whose job is to be trustworthy.
+
+Recommendation: pass the base through to `materials_group`, and refuse rather than record a null
+hash: a manifest that cannot name the file it read is not a manifest. Take it with REV-158, which
+decides what the key is made of.
+
+## REV-162: The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each
+
+Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+PHY-09's NOTE has the surface term added once. Its measure and `r` weight are shared through one
+helper, and the boundary guard is now shared too, but its **sign** is written at four sites:
+`physics/models.py:891` (coupled), `:1344` (PB), `:1512` (`poisson`), and `physics/pb.py:149`, where
+it is a `sign` parameter that is `+1.0` in the linear branch and `-1.0` in the nonlinear one. Two of
+the four are covered by a test — the coupled model by VER-77 (b), `pb` by VER-77 (a) and VER-31 —
+and `PoissonModel`'s by none. A flipped sign at the uncovered site diverges or gives the mirror
+answer with no other symptom.
+
+Two oracles are also written twice and agree: Grahame's σ at `tests/tier2/test_stern_layer.py:37`
+and `tests/tier2/test_wall_surface_charge.py:28`; and the surface-charge scale at
+`core/scaling.py:131` (`ε V_T / a`) and `physics/pb.py:41` (`dimensionless_surface_charge`, the same
+number by another route, read only by `test_stern_layer.py`). This package moved the `pb` term onto
+the shared measure helper and left the second scale in place.
+
+Recommendation: put the signed term behind one helper, so the sign is written once and every model
+inherits it; drop `dimensionless_surface_charge` in favour of `Scales`; and let the two tests share
+one Grahame expression. None of it moves a number. Take it with whatever next touches the surface
+term.
+
+## REV-163: check_force_surface refuses a legitimate body straddling the lumen and reservoir seam
+
+Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+`post/forces.py:check_force_surface` implements NUM-29's NOTE as written: it refuses a force surface
+that does not lie between one pair of materials, because the traction normal is oriented by one pair
+and part of the force would otherwise be negated. On a mesh this codebase builds it cannot
+false-positive — `geometry/analyte.py:239` already refuses a body crossing a pore mouth. On a
+**supplied** mesh it refuses an on-axis body straddling the lumen and reservoir seam, which is
+physically legitimate: `electrolyte`, `cis` and `trans` are three names for one fluid, as the
+codebase's own `ELECTROLYTE_DOMAINS` says, and `_oriented_normal` orients by a centroid star-shape
+test that needs no single material pair. The gate is stricter than the failure it names.
+
+Recommendation: compare the fluid domains by `ELECTROLYTE_DOMAINS` rather than by name, so a surface
+meeting two names of one fluid passes and a surface meeting a fluid and a solid still refuses. That
+changes what NUM-29's NOTE refuses, so it is an amendment, not a fix.
+
+## REV-164: default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic
+
+Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+`solve/continuation.py:605` puts `wall` into the Dirichlet set for the two PB rungs when
+`wall_potential_V != 0`, while `:671` ramps `surface_charge_C_m2` on the same boundary from stage 4.
+Nothing refuses both: a ladder given both would solve a ζ-Dirichlet wall and a σ_s wall in one
+continuation, two wall models for one wall, with no diagnostic. Unreachable from a case file —
+`io/case.py` has no `wall_potential_V` key and `solve/state.py` never passes one — so it is reachable
+only by calling `default_ladder` directly.
+
+Correct and checked, beside it: the PB rungs carry no surface charge, so a charged case warm-starts
+from the uncharged PB field and stage 4 ramps the charge in, the same treatment the fixed charge
+gets.
+
+Recommendation: refuse the two together in `default_ladder`, naming both settings. A numerical gate,
+so it takes a test when it is done.
+
+## REV-165: The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves
+
+Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
+
+`tests/tier2/test_wall_surface_charge.py`'s Gauss-balance test asserts `rel=1e-3`, which is VER-77's
+and QR-03's number, not a guessed one, and its geometry satisfies the clause's conditions — radius
+5 λ, thickness 10 R, planes 10 λ from the mouths, a coaxial leakage estimate of 2.2 × 10⁻⁵ against
+the clause's 1 × 10⁻⁴. What is unbounded is the test's **own** quadrature: a 48-node Gauss–Legendre
+rule in `r` over a C⁰ piecewise-quadratic field with about 25 elements across the radius, and
+Simpson over 17 planes. Neither error is estimated nor compared with the 2.2 × 10⁻⁵ physics bound
+the assertion is meant to resolve, so the margin between "the balance holds" and "the quadrature
+landed inside 1e-3" is unknown. The assertion is also not keyed to a mesh hash, while
+`tests/tier2/data/number_stability.json` shows this walk class deploying different meshes per
+platform.
+
+The test does pin the physics it was written for: a flipped sign or a factor of two fails it by a
+wide margin. The gap is in knowing how much headroom it has.
+
+Recommendation: measure the two quadrature errors once by refining each rule and record the numbers
+in the test's comment, as the other Tier 2 benchmarks do. No tolerance changes.

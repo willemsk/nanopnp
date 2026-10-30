@@ -6,6 +6,7 @@ import json
 import logging
 import math
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -16,11 +17,9 @@ from nanopnp.core.hashing import Canonicalisable, decode_floats, file_hash
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, environment
 from nanopnp.io.manifest import read as read_manifest
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import RUN_RECORD_FILENAME
+from nanopnp.pipeline.run import RUN_RECORD_FILENAME, recorded_base
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Mapping
-
     from nanopnp.core.stages import CancelToken, Progress
     from nanopnp.pipeline.run import RunResult
 
@@ -212,11 +211,8 @@ def _recorded_directory(manifest: Mapping[str, Canonicalisable]) -> Path:
     # the reproduction reads the files the run read (QR-08); a case held in memory read the
     # working directory.
     inputs = manifest.get("inputs")
-    files = inputs.get("files", {}) if isinstance(inputs, dict) else {}
-    record = files.get("case") if isinstance(files, dict) else None
-    if isinstance(record, dict):
-        return Path(str(record["path"])).parent
-    return Path.cwd()
+    found = recorded_base(inputs) if isinstance(inputs, Mapping) else None
+    return found if found is not None else Path.cwd()
 
 
 def check_mesh(manifest: Mapping[str, Canonicalisable], result: RunResult, *, where: Path) -> None:
