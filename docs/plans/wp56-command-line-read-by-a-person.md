@@ -158,7 +158,7 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
 - [x] 1. 61e63b3 `io/manifest.py`, `pipeline/run.py`, `sweep/collect.py`: `Manifest.from_document`,
   `RecordedRun`, `read_run`, `open_run`, `read_dataset` (D1); done when
   `test_qr08_a_manifest_read_back_keeps_its_hash` passes. **Executor:** main
-- [ ] 2. `cli/reading.py`, `cli/__init__.py:_inspect`: the summary, the tables, `--section` (D2); done
+- [x] 2. f6d3a8c `cli/reading.py`, `cli/__init__.py:_inspect`: the summary, the tables, `--section` (D2); done
   when `test_fr25_inspect_reads_back_every_deviation_and_compares_the_runs`' reading half passes.
   **Executor:** main
 - [ ] 3. `cli/reading.py`, `cli/__init__.py`: `inspect A B` (D3); `examples/02-charged-pore/README.md`
