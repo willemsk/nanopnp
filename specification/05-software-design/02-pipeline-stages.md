@@ -337,6 +337,20 @@ None of these touches a netgen mesh, which already meets them. On the fixture, t
 gives conductances 1.25e-4 apart on the two backends' meshes at `size_scale` 2. Refining netgen to
 `size_scale` 1 moves its own value by 2.0e-4 (WP23 plan, Design §4).
 
+NOTE (an idealised pore's size field; FR-10, VER-62; §8.2.22 X1, X4; WP57): the table above sizes
+a structure's region, whose protein and lumen it was set on. An idealised pore (§5.3.1, `geometry.pore`)
+has neither, and stage 6 meshes it with netgen alone under two sizes: `numerics.mesh.maxh_nm`
+(§5.2.2's global 10 nm where it is none) as the global maximum and the resolved wall size on `wall`,
+each times `size_scale`, at netgen's grading 0.2 and three optimisation passes (`optsteps2d` 3),
+with no other size and no other pass. That is the recipe of the earlier cylinder generator: on the
+examples' pore (`radius_nm` 2, `thickness_nm` 6, `radius_nm` 10 for the reservoir, `maxh_nm` 4,
+`wall_h_nm` 0.35) it gives the 392-element mesh VER-62's walks were recorded on, bit for bit, while
+five passes keep the 392 elements and move every vertex (WP57 plan, Grounding). The quality gate
+and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` apply as on any generated mesh; that
+mesh's wall segments measure 1.071 × the target on average and 1.139 × at most. `nanopnp mesh` meshes
+a geometry file by the same recipe (IF-02's generators NOTE), its `--maxh-nm` and `--wall-h-nm`
+in the place of the two keys.
+
 #### 5.2.3 Embedded analyte
 
 | Approach | Verdict |

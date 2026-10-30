@@ -226,7 +226,9 @@ takes first. No schema moves.
 
 ### WP57 — An idealised pore as geometry, and the Python interface designed for its user (§8.2.21 W4, W7; §8.2.22 X1 to X8)
 
-Planned by `/np-plan wp 57` after WP56 merges; its plan is exempt from the size cap (X5). It carries:
+Planned ([plan](wp57-idealised-pore-and-python-interface.md)), exempt from the size cap (X5). Its
+plan measured that stage 6 can mesh the declared cylinder to VER-62's recorded mesh bit for bit, and
+amends §5.2.2, §5.3.1, §5.5 and IF-02's generators NOTE to say how. It carries:
 
 - **The geometry split (UT-02; X1, X2).** A case declares an idealised cylinder as `geometry.pore`;
   stage 5 builds its region and stage 6 meshes it under `numerics.mesh` (§5.3.1's NOTE on an

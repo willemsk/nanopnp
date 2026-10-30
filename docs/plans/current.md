@@ -6,9 +6,9 @@ unmerged branch is not shipped.
 ## In brief
 
 Phase 4 tidies the program before others rely on it: the author has run the testing sessions and ruled
-what they found; the first of two fixes, a readable command line, is reviewed and awaits its merge,
-and the second is widened to set a pore's shape apart from its mesh. Phase 5, a browser workbench,
-has its design study merged; nothing is built until Phase 4's release.
+what they found; the first of two fixes, a readable command line, is merged, and the second, which
+sets a pore's shape apart from its mesh and redesigns the Python interface, is planned. Phase 5, a
+browser workbench, has its design study merged; nothing is built until Phase 4's release.
 
 **Your call:** should the later speed-up of a fine-mesh solve go after building the equations first?
 *Recommendation:* yes.
@@ -19,12 +19,12 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress**. WP35 to WP55 are merged, tagged to `v0.5.0-alpha.21`. The sessions' findings
-  are ruled (§8.2.21). [WP56](wp56-command-line-read-by-a-person.md), the command
-  line, is **reviewed** on PR #137, green and awaiting the merge; its UT-09 measurement puts REV-156's
-  question to the author. The third amendment (§8.2.22) widens WP57: an idealised cylinder declared
-  in the case and meshed by stage 6, a wall surface charge, the Python interface (`MOD-11`) and the
-  open review items. Then the documentation increment and the close.
+  **in progress**. WP35 to WP56 are merged, tagged to `v0.5.0-alpha.22`. The sessions' findings
+  are ruled (§8.2.21); WP56's UT-09 measurement puts REV-156's question to the author.
+  [WP57](wp57-idealised-pore-and-python-interface.md) is **planned**: an idealised cylinder
+  declared in the case and meshed by stage 6 (measured to keep VER-62's mesh), a wall surface charge
+  (VER-77), the Python interface (`MOD-11`) and the open review items (§8.2.22). Then the
+  documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`. WP5.02, the spike, after `v0.5.0`.
@@ -74,7 +74,7 @@ One line per lane (§8.4.4).
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
 | The notebooks revised | `wp54-notebooks-and-figures-revised.md`; §8.2.20; `wp51-plotting-and-notebooks.md`; FR-30, FR-37 |
 | The protocol | `wp55-user-testing-protocol.md`; §8.2.6 F3, §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46; `src/nanopnp/validation/examples.py` |
-| The fixes | `wp56-command-line-read-by-a-person.md`; `docs/user-testing/findings.md`; §8.2.21 |
+| The fixes | `wp56-command-line-read-by-a-person.md`, `wp57-idealised-pore-and-python-interface.md`; `docs/user-testing/findings.md`; §8.2.21, §8.2.22 |
 | The workbench | `phase-5-workbench.md`; §8.2.17; M3; F5 |
 
 ## Handoff Rules

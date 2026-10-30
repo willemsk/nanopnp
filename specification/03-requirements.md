@@ -88,7 +88,10 @@ run a case. The geometry flags shape the geometry file and the mesh flags (`--ma
 `--wall-h-nm`) its mesh, and a run that later consumes the mesh records it by content hash through
 `inputs.mesh` (§5.3.1, §5.3.2), exactly as it would any externally supplied mesh. So they do not
 change what a run solves, and the configuration NOTE above is not breached. `mesh reference` takes
-no geometric flag, since its preset is fixed by §5.2.2 and the geometry of record. Both mesh
+no geometric flag and no mesh flag, since its preset is fixed by §5.2.2 and the geometry of record,
+and either is refused as a usage error. `nanopnp mesh` meshes an idealised pore's geometry file by
+the size field of the §5.2.2 NOTE on an idealised pore; a structure's region file is refused as a
+usage error, since stage 6 of its case meshes it under the §5.2.2 table. Both mesh
 commands print the written mesh's content hash and the `inputs.mesh.groups` mapping a case needs to
 read it. Both are subject to the mesh quality gate of VER-10. A case that declares `geometry.pore`
 needs neither: stage 6 meshes it, and `nanopnp stage mesh --export` writes its mesh where a file is

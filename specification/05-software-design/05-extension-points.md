@@ -12,8 +12,24 @@ backends of the discretisation are registries as well (§8.2.8 H7): a mesher (`n
 stabilisation mode (`numerics.stabilisation`, `physics/stabilisation.py`) are each added by one
 registration, and each key is a string checked against its registry when a case is loaded, as
 `physics.model` is. Registering the Gmsh mesher imports nothing (CON-10), and `sparsecholesky`
-cannot be registered (NUM-21). Whether the registering functions are public waits for `MOD-11`'s
-ruling (§8.2.8 H2).
+cannot be registered (NUM-21). Whether those registering functions are public is REV-67's, with the
+composer phase (§8.2.18 T3). A pipeline stage is extended through one public call, below;
+`core.stages.register` and `StageDescription` are internal (§8.2.21 W7).
+
+NOTE (FR-27, a stage of one's own; QR-14; §8.2.21 W7, UT-10): a stage of one's own is a Python
+function registered by `nanopnp.register_stage(function, *, name=None)`, its name the function's
+own unless given. Each parameter of the function names a stage registered before it, `case`
+included, and receives that stage's artefact; the function returns a summary, a mapping the
+canonical encoding of §5.3.2 accepts. The call builds and registers the stage: it is walked after
+every stage registered before it, takes no workspace and no store, is checked for cancellation
+before the function runs, and emits an artefact of schema `nanopnp/stage/<name>/v1` whose summary
+is what the function returned. Its key is the hashes of the artefacts it reads and a digest of the
+function's code object (its bytecode, constants and names, nested code included), so an edited
+function misses the cache rather than serving its old result, and registering a function again
+under its name replaces the earlier one. What the function reads besides its parameters, a global,
+a closure or a file, is not keyed. A name that is a built-in stage's, or not of the form
+`[a-z][a-z0-9_-]*`, a parameter naming no registered stage, a keyword-only or variadic parameter,
+and a return value that is not such a mapping are each refused naming it.
 
 | Level | Unit of extension | Requires | Obtained free |
 |---|---|---|---|
