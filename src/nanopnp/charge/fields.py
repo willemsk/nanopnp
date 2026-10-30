@@ -277,8 +277,9 @@ class FieldDocument(_Strict):
         default=None,
         allow_inf_nan=False,
         description=(
-            "Declared net charge in e: the planar integral of the field over r >= 0, which the "
-            "grid is checked against. Unset: the grid integral is used."
+            "Declared net charge in e: the field's integral over r >= 0, planar for an areal "
+            "density and 2 pi r-weighted for a volume density, which the grid is checked against. "
+            "Unset: the grid integral is used."
         ),
     )
     model_frame_centre_z_nm: float | None = Field(
@@ -1055,8 +1056,9 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
                 ""
                 if report.charge_key is None
                 else f". The form states its charge as {report.charge_key}; q_net_e is the "
-                "planar integral over r >= 0, half of it for a ring on the axis: set q_net_e to "
-                "that integral, or omit it"
+                "field's integral over r >= 0, planar for an areal density and 2 pi r-weighted "
+                "for a volume density, so an areal ring on the axis carries half its charge: set "
+                "q_net_e to that integral, or omit it"
             ),
         )
     if not abs(report.consumer_error) <= CONSERVATION_TOL:

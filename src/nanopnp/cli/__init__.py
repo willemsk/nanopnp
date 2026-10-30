@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import importlib.util
 import json
 import logging
 import os
@@ -216,10 +217,7 @@ def _run(args: argparse.Namespace) -> int:
 
     payload = dict(result.record())
     lines = [f"run      {result.directory}", f"record   {record}"]
-    lines += [
-        stage_line(entry.number, entry.name, entry.cached, entry.hash, entry.seconds)
-        for entry in result.stages
-    ]
+    lines += [stage_line(entry) for entry in result.stages]
     lines += [
         f"{name:<20} {format_value(value)}" for name, value in sorted(result.quantities.items())
     ]
@@ -301,9 +299,10 @@ def _stage(args: argparse.Namespace) -> int:
 def _inspect(args: argparse.Namespace) -> int:
     from nanopnp.cli import reading
     from nanopnp.core.hashing import decode_floats
-    from nanopnp.io.manifest import MANIFEST_FILENAME
+    from nanopnp.io.artefact import SWEEP_SCHEMA
+    from nanopnp.io.manifest import MANIFEST_FILENAME, MANIFEST_SCHEMA
     from nanopnp.io.manifest import read as read_manifest
-    from nanopnp.pipeline.run import RUN_RECORD_FILENAME, read_run
+    from nanopnp.pipeline.run import RUN_RECORD_FILENAME, RUN_SCHEMA, read_run
     from nanopnp.sweep.collect import DATASET_FILENAME, read_dataset
 
     if args.other is not None:
@@ -331,17 +330,11 @@ def _inspect(args: argparse.Namespace) -> int:
                 f"{DATASET_FILENAME}; give a run directory, a stored artefact directory, a sweep "
                 "directory, or one of those files"
             )
-    is_run = target.name in (MANIFEST_FILENAME, RUN_RECORD_FILENAME) and (
-        target.with_name(RUN_RECORD_FILENAME).is_file()
-    )
-    if args.section is not None:
-        if not is_run:
-            args.parser.error(f"--section reads a run directory's manifest; {target} is not one")
-        if args.section not in reading.SECTIONS:
-            args.parser.error(
-                f"--section {args.section!r} names no manifest group; give one of "
-                f"{', '.join(reading.SECTIONS)}"
-            )
+    if args.section is not None and args.section not in reading.SECTIONS:
+        args.parser.error(
+            f"--section {args.section!r} names no manifest group; give one of "
+            f"{', '.join(reading.SECTIONS)}"
+        )
     # Undo canonical's {"__f__": hex} float wrapper so the printed and --json values are
     # plain numbers.
     if target.name == MANIFEST_FILENAME:
@@ -350,6 +343,26 @@ def _inspect(args: argparse.Namespace) -> int:
         raw = json.loads(target.read_text(encoding="utf-8"))
     # cast, not a check: both files are JSON objects by construction.
     document = cast("dict[str, Canonicalisable]", decode_floats(raw))
+    # A record of another schema, such as an older build's, is listed key by key (IF-02).
+    expected = {
+        MANIFEST_FILENAME: MANIFEST_SCHEMA,
+        RUN_RECORD_FILENAME: RUN_SCHEMA,
+        DATASET_FILENAME: SWEEP_SCHEMA,
+    }.get(target.name)
+    readable = expected is not None and document.get("schema") == expected
+    is_run = (
+        readable
+        and target.name in (MANIFEST_FILENAME, RUN_RECORD_FILENAME)
+        and target.with_name(RUN_RECORD_FILENAME).is_file()
+    )
+    if args.section is not None and not is_run:
+        args.parser.error(
+            f"--section reads a run directory's manifest of this build; {target} is not one"
+        )
+    if args.json and args.section is None:
+        # The record as written, whatever its reading would make of it (IF-02).
+        _emit(document, [], as_json=True)
+        return EXIT_OK
 
     if is_run:
         recorded = read_run(target.parent)
@@ -363,7 +376,7 @@ def _inspect(args: argparse.Namespace) -> int:
             )
             return EXIT_OK
         lines = reading.run_lines(recorded)
-    elif target.name == DATASET_FILENAME:
+    elif readable and target.name == DATASET_FILENAME:
         lines = reading.dataset_lines(target, read_dataset(target.parent))
     elif target.name == "meta.json":
         lines = reading.artefact_lines(target, document)
@@ -392,6 +405,8 @@ def _plot_refusal(stage: str) -> str | None:
 
 
 def _plot(args: argparse.Namespace) -> int:
+    from nanopnp.core.stages import MissingExtraError
+    from nanopnp.io.manifest import MANIFEST_FILENAME
     from nanopnp.pipeline.run import RUN_RECORD_FILENAME
     from nanopnp.sweep.collect import DATASET_FILENAME
 
@@ -401,8 +416,15 @@ def _plot(args: argparse.Namespace) -> int:
             f"--out {out} has suffix {out.suffix or 'none'!r}; a figure is written as "
             f"{', '.join(_FIGURE_SUFFIXES)}"
         )
+    if importlib.util.find_spec("matplotlib") is None:
+        # Refused here, not by draw(): a case is drawn after its walk, which may be a long solve.
+        raise MissingExtraError(
+            "nanopnp plot needs the 'plot' extra: 'matplotlib' is not installed. Install the "
+            "extras with `uv sync --all-extras`",
+            name="matplotlib",
+        )
     target = Path(args.target)
-    if target.name == DATASET_FILENAME:
+    if target.name in (DATASET_FILENAME, RUN_RECORD_FILENAME, MANIFEST_FILENAME):
         target = target.parent
     if (target / DATASET_FILENAME).is_file():
         kind = "sweep"

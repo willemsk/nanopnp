@@ -219,8 +219,9 @@ run reads. The wall-distance gate of NUM-34 names `numerics.mesh.wall_h_nm` for 
 generates, and for a supplied mesh the file it reads and its generator (`nanopnp mesh cylinder
 --wall-h-nm`), `numerics.mesh` being refused beside `inputs.mesh`. Where a document states one quantity
 twice, a refusal of their disagreement SHALL name both keys. An analytic form that carries a charge
-(`gaussian_ring`'s `charge_e`) need not equal `q_net_e`, the planar integral over `r ≥ 0`: a ring on
-the axis integrates to half its charge. A charge and a `q_net_e` of opposite sign, or one of them zero
+(`gaussian_ring`'s `charge_e`) need not equal `q_net_e`, the field's integral over `r ≥ 0`, planar for
+an areal density and `2πr`-weighted for a volume density: an areal ring on the axis integrates to half
+its charge. A charge and a `q_net_e` of opposite sign, or one of them zero
 and the other not, are refused when the document is read, before its grid is built; a disagreement in
 size is the producer leg's of PHY-19, whose refusal names `q_net_e` and the form's charge parameter.
 
