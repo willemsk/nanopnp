@@ -10,34 +10,13 @@ def _():
 
     import marimo as mo
 
-    from nanopnp import Case, Store
-    from nanopnp.mesh.defaults import DEFAULT_CYLINDER_WALL_H_NM
-    from nanopnp.plot import (
-        plot_axial_cutline,
-        plot_field,
-        plot_iv,
-        plot_radial_cutline,
-    )
-    from nanopnp.plot.data import default_potential_range_mV, field_menu
-    from nanopnp.sweep import sweep
+    from nanopnp import Case, Session, Store
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
+    session = Session(store, write=False)
     ring = here.parents[1] / "examples" / "03-iv-sweep" / "cis-ring.field.yaml"
-    return (
-        Case,
-        DEFAULT_CYLINDER_WALL_H_NM,
-        default_potential_range_mV,
-        field_menu,
-        mo,
-        plot_axial_cutline,
-        plot_field,
-        plot_iv,
-        plot_radial_cutline,
-        ring,
-        store,
-        sweep,
-    )
+    return Case, mo, ring, session
 
 
 @app.cell
@@ -67,8 +46,8 @@ def _(mo):
         ring sits 2.6 nm from the axis, and a wider pore would hold it in the lumen. The
         figure shows the whole domain by element size and, beside it, the lumen by element
         quality, with the double-layer target λ_D/5 drawn to scale. The wall is sized either
-        at the mesh command's fixed 0.35 nm, as examples 02 and 03 are, or as stage 6 sizes
-        a generated mesh, at λ_D/5 of the salt below but at most 0.05 nm; the second
+        at a fixed 0.35 nm, as examples 02 and 03 are, or as stage 6 sizes
+        an idealised pore's mesh, at λ_D/5 of the salt below but at most 0.05 nm; the second
         resolves the ion wall function's decay length, and meshes again only where λ_D/5
         falls below 0.05 nm, above about 1.5 M.
         """
@@ -77,16 +56,17 @@ def _(mo):
 
 
 @app.cell
-def _(DEFAULT_CYLINDER_WALL_H_NM, mo):
+def _(mo):
+    FIXED_WALL_H_NM = 0.35
     WALLS = {
-        f"fixed, {DEFAULT_CYLINDER_WALL_H_NM:g} nm": DEFAULT_CYLINDER_WALL_H_NM,
-        "stage 6's target, at most 0.05 nm": "debye",
+        f"fixed, {FIXED_WALL_H_NM:g} nm": FIXED_WALL_H_NM,
+        "stage 6's target, at most 0.05 nm": "auto",
     }
     MESH_DEFAULTS = {
         "pore_radius_nm": 2.0,
         "membrane_thickness_nm": 6.0,
         "reservoir_radius_nm": 10.0,
-        "wall_h_nm": DEFAULT_CYLINDER_WALL_H_NM,
+        "wall_h_nm": FIXED_WALL_H_NM,
     }
     mesh_form = mo.ui.dictionary(
         {
@@ -113,9 +93,9 @@ def _(MESH_DEFAULTS, mesh_form):
 
 
 @app.cell
-def _(case, mo):
+def _(case, mo, session):
     # The λ_D/5 bar follows the salt of the solve below.
-    mo.mpl.interactive(case.run(upto="mesh").figure("mesh"))
+    mo.mpl.interactive(session.run(case, upto="mesh").figure("mesh"))
     return
 
 
@@ -151,7 +131,7 @@ def _(mo):
 
 
 @app.cell
-def _(Case, SOLVE_DEFAULTS, geometry, ring, solve_form, store):
+def _(Case, SOLVE_DEFAULTS, geometry, ring, session, solve_form):
     settings = solve_form.value or SOLVE_DEFAULTS
     case = Case.cylinder(
         **geometry,
@@ -159,10 +139,8 @@ def _(Case, SOLVE_DEFAULTS, geometry, ring, solve_form, store):
         bias_V=settings["bias_mV"] * 1e-3,
         charge=ring,
         name="cylinder-end-to-end",
-        store=store,
-        write=False,
     )
-    run = case.run()
+    run = session.run(case)
     return case, run, settings
 
 
@@ -179,20 +157,20 @@ def _(mo, run):
 
 
 @app.cell
-def _(field_menu, run):
+def _(run):
     fields = run.fields
-    quantities = field_menu(fields, radial=False)
+    quantities = run.field_choices(radial=False)
     return fields, quantities
 
 
 @app.cell
-def _(default_potential_range_mV, mo, settings):
+def _(mo, settings):
     # The ring's charge sits in the membrane; a range from the bias keeps the pore's drop in view.
     potential_range = mo.ui.slider(
         5.0,
         1000.0,
         5.0,
-        default_potential_range_mV(settings["bias_mV"]),
+        max(10.0, 2.0 * abs(settings["bias_mV"])),
         debounce=True,
         show_value=True,
         label="potential colour range ± (mV)",
@@ -202,12 +180,11 @@ def _(default_potential_range_mV, mo, settings):
 
 
 @app.cell
-def _(fields, mo, plot_field, potential_range, quantities):
+def _(mo, potential_range, quantities, run):
     mo.ui.tabs(
         {
             label: mo.mpl.interactive(
-                plot_field(
-                    fields,
+                run.plot_field(
                     quantity,
                     relative=True,
                     halfrange=potential_range.value if quantity == "potential" else None,
@@ -260,22 +237,15 @@ def _(fields, geometry, mo, quantities):
 
 
 @app.cell
-def _(
-    cutline_quantity,
-    fields,
-    mo,
-    plot_axial_cutline,
-    plot_radial_cutline,
-    quantities,
-    r_nm,
-    z_nm,
-):
+def _(cutline_quantity, mo, quantities, r_nm, run, z_nm):
     profile = quantities[cutline_quantity.value]
     mo.hstack(
         [
-            mo.mpl.interactive(plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative=True)),
             mo.mpl.interactive(
-                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative=True)
+                run.plot_cutline(profile, along="z", at_nm=r_nm.value, relative=True)
+            ),
+            mo.mpl.interactive(
+                run.plot_cutline(profile, along="r", at_nm=z_nm.value, relative=True)
             ),
         ],
         widths="equal",
@@ -309,7 +279,7 @@ def _(mo):
 
 
 @app.cell
-def _(SWEEP_DEFAULTS, case, settings, sweep, sweep_form):
+def _(SWEEP_DEFAULTS, case, session, settings, sweep_form):
     biases_V = [
         float(text) * 1e-3 for text in (sweep_form.value or SWEEP_DEFAULTS)["biases_mV"].split(",")
     ]
@@ -318,16 +288,16 @@ def _(SWEEP_DEFAULTS, case, settings, sweep, sweep_form):
         bias_V=biases_V[first],
         outputs=["current", "transport_numbers", "eof_rate", "rectification"],
     )
-    dataset = sweep(swept, axis="bias_V", values=biases_V, origin=first).run()
-    return (dataset,)
+    swept = session.sweep(swept, axis="bias_V", values=biases_V, origin=first)
+    return (swept,)
 
 
 @app.cell
-def _(dataset, mo, plot_iv):
+def _(mo, swept):
     mo.vstack(
         [
-            mo.mpl.interactive(plot_iv(dataset)),
-            mo.ui.table(dataset.summary["rows"], selection=None),
+            mo.mpl.interactive(swept.plot_iv()),
+            mo.ui.table(swept.rows, selection=None),
         ]
     )
     return

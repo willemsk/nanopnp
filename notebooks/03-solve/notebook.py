@@ -10,31 +10,13 @@ def _():
 
     import marimo as mo
 
-    from nanopnp import Case, Store
-    from nanopnp.plot import plot_axial_cutline, plot_field, plot_radial_cutline
-    from nanopnp.plot.data import (
-        default_potential_range_mV,
-        field_menu,
-        fields_lumen_nm,
-        qoi_rows,
-    )
+    from nanopnp import Case, Session, Store
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
+    session = Session(store, write=False)
     ring = here.parents[1] / "examples" / "02-charged-pore" / "ring.field.yaml"
-    return (
-        Case,
-        default_potential_range_mV,
-        field_menu,
-        fields_lumen_nm,
-        mo,
-        plot_axial_cutline,
-        plot_field,
-        plot_radial_cutline,
-        qoi_rows,
-        ring,
-        store,
-    )
+    return Case, mo, ring, session
 
 
 @app.cell
@@ -90,7 +72,7 @@ def _(mo):
 
 
 @app.cell
-def _(Case, SOLVE_DEFAULTS, ring, solve_form, store):
+def _(Case, SOLVE_DEFAULTS, ring, session, solve_form):
     settings = solve_form.value or SOLVE_DEFAULTS
     case = Case.cylinder(
         pore_radius_nm=settings["pore_radius_nm"],
@@ -99,10 +81,8 @@ def _(Case, SOLVE_DEFAULTS, ring, solve_form, store):
         bias_V=settings["bias_mV"] * 1e-3,
         charge=ring,
         name="charged-cylinder",
-        store=store,
-        write=False,
     ).with_(stabilisation=settings["stabilisation"])
-    run = case.run()
+    run = session.run(case)
     return run, settings
 
 
@@ -119,11 +99,11 @@ def _(mo, run):
 
 
 @app.cell
-def _(default_potential_range_mV, field_menu, fields_lumen_nm, mo, run, settings):
+def _(mo, run, settings):
     fields = run.fields
-    quantities = field_menu(fields)
+    quantities = run.field_choices()
     window = mo.ui.radio(
-        {"around the pore": None, "the lumen": fields_lumen_nm(fields)},
+        {"around the pore": None, "the lumen": "lumen"},
         value="around the pore",
         inline=True,
         label="window",
@@ -133,7 +113,7 @@ def _(default_potential_range_mV, field_menu, fields_lumen_nm, mo, run, settings
         5.0,
         1000.0,
         5.0,
-        default_potential_range_mV(settings["bias_mV"]),
+        max(10.0, 2.0 * abs(settings["bias_mV"])),
         debounce=True,
         show_value=True,
         label="potential colour range ± (mV)",
@@ -143,13 +123,12 @@ def _(default_potential_range_mV, field_menu, fields_lumen_nm, mo, run, settings
 
 
 @app.cell
-def _(fields, mo, plot_field, potential_range, quantities, window):
+def _(mo, potential_range, quantities, run, window):
     # One figure per field; a concentration is drawn as log10(c / c_bulk), so depletion shows.
     mo.ui.tabs(
         {
             label: mo.mpl.interactive(
-                plot_field(
-                    fields,
+                run.plot_field(
                     quantity,
                     zoom_nm=window.value,
                     relative=True,
@@ -189,22 +168,15 @@ def _(fields, mo, quantities, settings):
 
 
 @app.cell
-def _(
-    cutline_quantity,
-    fields,
-    mo,
-    plot_axial_cutline,
-    plot_radial_cutline,
-    quantities,
-    r_nm,
-    z_nm,
-):
+def _(cutline_quantity, mo, quantities, r_nm, run, z_nm):
     profile = quantities[cutline_quantity.value]
     mo.hstack(
         [
-            mo.mpl.interactive(plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative=True)),
             mo.mpl.interactive(
-                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative=True)
+                run.plot_cutline(profile, along="z", at_nm=r_nm.value, relative=True)
+            ),
+            mo.mpl.interactive(
+                run.plot_cutline(profile, along="r", at_nm=z_nm.value, relative=True)
             ),
         ],
         widths="equal",
@@ -213,11 +185,11 @@ def _(
 
 
 @app.cell
-def _(mo, qoi_rows, run):
+def _(mo, run):
     mo.vstack(
         [
             mo.md("**Every quantity of interest**"),
-            mo.ui.table(qoi_rows(run.quantities), selection=None),
+            mo.ui.table(run.quantity_rows(), selection=None),
         ]
     )
     return

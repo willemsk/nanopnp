@@ -10,26 +10,13 @@ def _():
 
     import marimo as mo
 
-    from nanopnp import Case, Store
-    from nanopnp.core.paths import structure_file
-    from nanopnp.core.stages import describe
-    from nanopnp.plot.data import charge_grids
-    from nanopnp.plot.panels import plot_charge
-    from nanopnp.structure import prepared_pore
+    from nanopnp import Case, Session, Store
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
-    entry = structure_file("2wcd.pdb.gz")
-    return (
-        Case,
-        charge_grids,
-        describe,
-        entry,
-        mo,
-        prepared_pore,
-        plot_charge,
-        store,
-    )
+    session = Session(store, write=False)
+    stages = {info.name: info for info in session.stages}
+    return Case, mo, session, stages, store
 
 
 @app.cell
@@ -49,34 +36,24 @@ def _(mo):
 
 
 @app.cell
-def _(Case, entry, mo, prepared_pore, store):
+def _(Case, mo, session, store):
     # Notebook 01's preparation at its defaults, and the same case: stages 1 to 6 are shared.
-    preparation = {
-        "chains": "A,B,C,D,E,F,G,H,I,J,K,L",
-        "cis_end": "wider",
-        "first_residue": 8,
-        "last_residue": 292,
-        "centroid_z_nm": 5.655,
-    }
-    prepared = prepared_pore(
-        entry,
-        directory=store.root / "structures",
-        chains=preparation["chains"],
-        cis_end=preparation["cis_end"],
-        registration_residues=(preparation["first_residue"], preparation["last_residue"]),
-        centroid_z_nm=preparation["centroid_z_nm"],
-    )
     case = Case.from_structure(
-        prepared,
+        "2wcd.pdb.gz",
+        orient={
+            "chains": "A,B,C,D,E,F,G,H,I,J,K,L",
+            "cis_end": "wider",
+            "registration_residues": (8, 292),
+            "centroid_z_nm": 5.655,
+        },
+        structures=store.root / "structures",
         point_group="C12",
         concentration_M=0.15,
         bias_V=0.05,
         size_scale=4.0,
         name="2wcd",
-        store=store,
-        write=False,
     )
-    meshed = case.run(upto="mesh")
+    meshed = session.run(case, upto="mesh")
     mo.md(
         f"**Stages 1 to 6**, the structure to the mesh: "
         f"{sum(record.cached for record in meshed.stages)} of {len(meshed.stages)} from the store."
@@ -117,20 +94,20 @@ def _(mo):
 
 
 @app.cell
-def _(CHARGE_DEFAULTS, case, charge_form):
+def _(CHARGE_DEFAULTS, case, charge_form, session):
     charging = charge_form.value or CHARGE_DEFAULTS
-    charged = case.run(
+    charged = session.run(
+        case.with_({"charge.ph": charging["ph"], "charge.forcefield": charging["forcefield"]}),
         upto="charge",
-        **{"charge.ph": charging["ph"], "charge.forcefield": charging["forcefield"]},
     )
     return (charged,)
 
 
 @app.cell
-def _(charge_grids, charged, describe, mo, plot_charge):
+def _(charged, mo, stages):
     def where(name):
         record = next(item for item in charged.stages if item.name == name)
-        stage = describe(name)
+        stage = stages[name]
         found = "from the store" if record.cached else f"computed in {record.seconds:.1f} s"
         return mo.md(f"*Stage {stage.number}, {stage.title}:* `{record.hash[:12]}`, {found}")
 
@@ -139,13 +116,9 @@ def _(charge_grids, charged, describe, mo, plot_charge):
             "protonation": mo.vstack(
                 [where("protonation"), mo.mpl.interactive(charged.figure("protonation"))]
             ),
-            "deposited charge": mo.vstack(
-                [
-                    where("charge"),
-                    mo.mpl.interactive(plot_charge(charge_grids(charged.artefacts["charge"]))),
-                ]
+            "deposited charge and solid fraction": mo.vstack(
+                [where("charge"), mo.mpl.interactive(charged.figure("charge"))]
             ),
-            "charge and solid fraction": mo.mpl.interactive(charged.figure("charge")),
         }
     )
     return
@@ -181,9 +154,9 @@ def _(mo):
 
 
 @app.cell
-def _(MATERIALS_DEFAULTS, case, materials_form, mo):
+def _(MATERIALS_DEFAULTS, case, materials_form, mo, session):
     salt = materials_form.value or MATERIALS_DEFAULTS
-    materials = case.run(upto="materials", concentration_M=salt["concentration_M"])
+    materials = session.run(case.with_(concentration_M=salt["concentration_M"]), upto="materials")
     mo.mpl.interactive(materials.figure("materials"))
     return
 

@@ -43,6 +43,7 @@ edges:
   - {from: api, to: materials, relation: static, finding: null}
   - {from: api, to: mesh, relation: static, finding: null}
   - {from: api, to: pipeline, relation: static, finding: null}
+  - {from: api, to: plot, relation: static, finding: null}
   - {from: api, to: structure, relation: static, finding: null}
   - {from: api, to: solve, relation: static, finding: null}
   - {from: api, to: sweep, relation: static, finding: null}
@@ -118,6 +119,7 @@ edges:
   - {from: pipeline, to: numerics, relation: static, finding: null}
   - {from: pipeline, to: physics, relation: static, finding: null}
   - {from: pipeline, to: post, relation: static, finding: null}
+  - {from: pipeline, to: plot, relation: static, finding: null}
   - {from: plot, to: charge, relation: static, finding: null}
   - {from: plot, to: core, relation: static, finding: null}
   - {from: plot, to: density, relation: static, finding: null}

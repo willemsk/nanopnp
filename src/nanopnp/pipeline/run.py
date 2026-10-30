@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, decode_floats
 from nanopnp.core.stages import (
@@ -54,6 +54,7 @@ from nanopnp.pipeline.extension import FunctionStage
 from nanopnp.post.export import SolutionFields, solution_fields
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from matplotlib.axes import Axes
     from matplotlib.figure import Figure
 
     from nanopnp.io.case import CaseDocument
@@ -179,6 +180,97 @@ class RunResult:
                 resolved=self.resolved, upstream=offered(stage, self.artefacts, own=False)
             )
         return draw(artefact, inputs, scale=scale)
+
+    def plot_field(
+        self,
+        quantity: str,
+        *,
+        zoom_nm: tuple[float, float] | Literal["lumen"] | None = None,
+        relative: bool = False,
+        halfrange: float | None = None,
+        ax: Axes | None = None,
+    ) -> Axes:
+        """Draw one solved field over ``(r, z)``; a signed field is coloured about zero.
+
+        Parameters
+        ----------
+        quantity
+            A name from :meth:`field_choices`, or a key of the solved fields.
+        zoom_nm
+            The ``(r, |z|)`` window in nm, ``"lumen"`` for the close-up of the pore, or ``None``
+            for the surroundings of the pore.
+        relative
+            Draw a concentration as ``log₁₀(c / c_bulk)``.
+        halfrange
+            The colour scale's reach either side of zero, in the panel's unit.
+
+        Raises
+        ------
+        KeyError
+            The run did not reach the solve, or holds no such field.
+        MissingExtraError
+            Matplotlib is not installed.
+        """
+        from nanopnp.plot import data, panels
+
+        fields = self.fields
+        window = data.fields_lumen_nm(fields) if zoom_nm == "lumen" else zoom_nm
+        return panels.plot_field(
+            fields, quantity, ax=ax, zoom_nm=window, relative=relative, halfrange=halfrange
+        )
+
+    def plot_cutline(
+        self,
+        quantity: str,
+        *,
+        along: Literal["z", "r"] = "z",
+        at_nm: float = 0.0,
+        relative: bool = False,
+        ax: Axes | None = None,
+    ) -> Axes:
+        """Draw one solved field along ``z`` at ``r = at_nm``, or along ``r`` at ``z = at_nm``.
+
+        Raises
+        ------
+        KeyError
+            The run did not reach the solve, or holds no such field.
+        ValueError
+            ``along`` is neither ``"z"`` nor ``"r"``.
+        MissingExtraError
+            Matplotlib is not installed.
+        """
+        from nanopnp.plot import panels
+
+        if along == "z":
+            return panels.plot_axial_cutline(
+                self.fields, quantity, r_nm=at_nm, ax=ax, relative=relative
+            )
+        if along == "r":
+            return panels.plot_radial_cutline(
+                self.fields, quantity, z_nm=at_nm, ax=ax, relative=relative
+            )
+        raise ValueError(f"along is 'z' or 'r', not {along!r}")
+
+    def field_choices(self, *, radial: bool = True) -> dict[str, str]:
+        """Return the solved fields by label, each the ``quantity`` that :meth:`plot_field` takes.
+
+        A model without flow offers neither velocity nor pressure; ``radial=False`` leaves out the
+        radial velocity.
+
+        Raises
+        ------
+        KeyError
+            The run did not reach the solve.
+        """
+        from nanopnp.plot import data
+
+        return data.field_menu(self.fields, radial=radial)
+
+    def quantity_rows(self) -> list[dict[str, str]]:
+        """Return :attr:`quantities` as table rows of name, value and unit."""
+        from nanopnp.plot import data
+
+        return data.qoi_rows(self.quantities)
 
     def _repr_mimebundle_(self, include: object = None, exclude: object = None) -> dict[str, str]:
         rows: dict[str, Canonicalisable] = {

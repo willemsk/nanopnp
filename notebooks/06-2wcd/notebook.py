@@ -10,34 +10,12 @@ def _():
 
     import marimo as mo
 
-    from nanopnp import Case, Store
-    from nanopnp.core.paths import structure_file
-    from nanopnp.plot import plot_axial_cutline, plot_field, plot_radial_cutline
-    from nanopnp.plot.data import (
-        default_potential_range_mV,
-        field_menu,
-        fields_lumen_nm,
-        qoi_rows,
-    )
-    from nanopnp.structure import prepared_pore
+    from nanopnp import Case, Session, Store
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
-    entry = structure_file("2wcd.pdb.gz")
-    return (
-        Case,
-        default_potential_range_mV,
-        field_menu,
-        fields_lumen_nm,
-        entry,
-        mo,
-        prepared_pore,
-        plot_axial_cutline,
-        plot_field,
-        plot_radial_cutline,
-        qoi_rows,
-        store,
-    )
+    session = Session(store, write=False)
+    return Case, mo, session, store
 
 
 @app.cell
@@ -58,32 +36,22 @@ def _(mo):
 
 
 @app.cell
-def _(Case, entry, prepared_pore, store):
+def _(Case, store):
     # Notebook 01's preparation at its defaults, and the same case: stages 1 to 8 are shared.
-    preparation = {
-        "chains": "A,B,C,D,E,F,G,H,I,J,K,L",
-        "cis_end": "wider",
-        "first_residue": 8,
-        "last_residue": 292,
-        "centroid_z_nm": 5.655,
-    }
-    prepared = prepared_pore(
-        entry,
-        directory=store.root / "structures",
-        chains=preparation["chains"],
-        cis_end=preparation["cis_end"],
-        registration_residues=(preparation["first_residue"], preparation["last_residue"]),
-        centroid_z_nm=preparation["centroid_z_nm"],
-    )
     case = Case.from_structure(
-        prepared,
+        "2wcd.pdb.gz",
+        orient={
+            "chains": "A,B,C,D,E,F,G,H,I,J,K,L",
+            "cis_end": "wider",
+            "registration_residues": (8, 292),
+            "centroid_z_nm": 5.655,
+        },
+        structures=store.root / "structures",
         point_group="C12",
         concentration_M=0.15,
         bias_V=0.05,
         size_scale=4.0,
         name="2wcd",
-        store=store,
-        write=False,
     )
     return (case,)
 
@@ -146,13 +114,15 @@ def _(mo):
 
 
 @app.cell
-def _(SOLVE_DEFAULTS, case, solve_form):
+def _(SOLVE_DEFAULTS, case, session, solve_form):
     settings = solve_form.value or SOLVE_DEFAULTS
-    run = case.run(
-        concentration_M=settings["concentration_M"],
-        bias_V=settings["bias_mV"] * 1e-3,
-        stabilisation=settings["stabilisation"],
-        **{"numerics.mesh.size_scale": settings["size_scale"]},
+    run = session.run(
+        case.with_(
+            {"numerics.mesh.size_scale": settings["size_scale"]},
+            concentration_M=settings["concentration_M"],
+            bias_V=settings["bias_mV"] * 1e-3,
+            stabilisation=settings["stabilisation"],
+        )
     )
     return run, settings
 
@@ -196,11 +166,11 @@ def _(mo):
 
 
 @app.cell
-def _(default_potential_range_mV, field_menu, fields_lumen_nm, mo, run, settings):
+def _(mo, run, settings):
     fields = run.fields
-    quantities = field_menu(fields)
+    quantities = run.field_choices()
     window = mo.ui.radio(
-        {"around the pore": None, "the lumen": fields_lumen_nm(fields)},
+        {"around the pore": None, "the lumen": "lumen"},
         value="around the pore",
         inline=True,
         label="window",
@@ -209,7 +179,7 @@ def _(default_potential_range_mV, field_menu, fields_lumen_nm, mo, run, settings
         5.0,
         1000.0,
         5.0,
-        default_potential_range_mV(settings["bias_mV"]),
+        max(10.0, 2.0 * abs(settings["bias_mV"])),
         debounce=True,
         show_value=True,
         label="potential colour range ± (mV)",
@@ -219,12 +189,11 @@ def _(default_potential_range_mV, field_menu, fields_lumen_nm, mo, run, settings
 
 
 @app.cell
-def _(fields, mo, plot_field, potential_range, quantities, window):
+def _(mo, potential_range, quantities, run, window):
     mo.ui.tabs(
         {
             label: mo.mpl.interactive(
-                plot_field(
-                    fields,
+                run.plot_field(
                     quantity,
                     zoom_nm=window.value,
                     relative=True,
@@ -258,22 +227,15 @@ def _(fields, mo, quantities):
 
 
 @app.cell
-def _(
-    cutline_quantity,
-    fields,
-    mo,
-    plot_axial_cutline,
-    plot_radial_cutline,
-    quantities,
-    r_nm,
-    z_nm,
-):
+def _(cutline_quantity, mo, quantities, r_nm, run, z_nm):
     profile = quantities[cutline_quantity.value]
     mo.hstack(
         [
-            mo.mpl.interactive(plot_axial_cutline(fields, profile, r_nm=r_nm.value, relative=True)),
             mo.mpl.interactive(
-                plot_radial_cutline(fields, profile, z_nm=z_nm.value, relative=True)
+                run.plot_cutline(profile, along="z", at_nm=r_nm.value, relative=True)
+            ),
+            mo.mpl.interactive(
+                run.plot_cutline(profile, along="r", at_nm=z_nm.value, relative=True)
             ),
         ],
         widths="equal",
@@ -282,11 +244,11 @@ def _(
 
 
 @app.cell
-def _(mo, qoi_rows, run):
+def _(mo, run):
     mo.vstack(
         [
             mo.md("**Every quantity of interest**"),
-            mo.ui.table(qoi_rows(run.quantities), selection=None),
+            mo.ui.table(run.quantity_rows(), selection=None),
         ]
     )
     return

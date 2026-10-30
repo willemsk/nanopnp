@@ -1,6 +1,6 @@
 # 01 · Geometry
 
-The cytolysin A pore as deposited in the Protein Data Bank (2WCD), prepared with `nanopnp.structure.orient_pore`
+The cytolysin A pore as deposited in the Protein Data Bank (2WCD), prepared by `Case.from_structure(..., orient=...)`
 and taken through the geometry stages with `Case.from_structure(...)`: the structure, the density, the symmetry
 reduction, the contour, the region and the mesh. The preparation's choices are yours and sit in a form: the
 chains, which end faces *cis*, and the residues whose C-alpha centroid places the membrane. Two sliders set the

@@ -10,6 +10,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
@@ -35,6 +36,10 @@ from nanopnp.sweep.plan import (
     write_plan,
 )
 from nanopnp.sweep.run import MEMBERS_DIRNAME, MemberResult, member_from_row, pin_threads
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +72,32 @@ class SweepResult:
         """The dataset's rows, one per point, in plan order."""
         rows = self.dataset.summary.get("rows")
         return list(rows) if isinstance(rows, list) else []
+
+    def plot_iv(self, *, ax: Axes | None = None, annotate: bool = True) -> Axes:
+        """Draw the current against the bias, with the rectification and conductance of the sweep.
+
+        Raises
+        ------
+        ValueError
+            No row reports a current, or the sweep is not over the bias.
+        MissingExtraError
+            Matplotlib is not installed.
+        """
+        from nanopnp.plot import panels
+
+        return panels.plot_iv(self.dataset, ax=ax, annotate=annotate)
+
+    def figure(self) -> Figure:
+        """Draw the sweep's dataset as the stored figure of its schema.
+
+        Raises
+        ------
+        MissingExtraError
+            Matplotlib is not installed.
+        """
+        from nanopnp.plot import figure
+
+        return figure(self.dataset)
 
 
 @dataclass(frozen=True)

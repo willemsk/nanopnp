@@ -10,15 +10,13 @@ def _():
 
     import marimo as mo
 
-    from nanopnp import Case, Store
-    from nanopnp.core.paths import structure_file
-    from nanopnp.core.stages import describe
-    from nanopnp.structure import prepared_pore
+    from nanopnp import Case, Session, Store
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
-    entry = structure_file("2wcd.pdb.gz")
-    return Case, describe, entry, mo, prepared_pore, store
+    session = Session(store, write=False)
+    stages = {info.name: info for info in session.stages}
+    return Case, mo, session, stages, store
 
 
 @app.cell
@@ -85,31 +83,23 @@ def _(mo):
 
 
 @app.cell
-def _(PREPARE_DEFAULTS, entry, prepared_pore, prepare_form, store):
-    preparation = prepare_form.value or PREPARE_DEFAULTS
-    prepared = prepared_pore(
-        entry,
-        directory=store.root / "structures",
-        chains=preparation["chains"],
-        cis_end=preparation["cis_end"],
-        registration_residues=(preparation["first_residue"], preparation["last_residue"]),
-        centroid_z_nm=preparation["centroid_z_nm"],
-    )
-    return (prepared,)
-
-
-@app.cell
-def _(Case, prepared, store):
+def _(Case, PREPARE_DEFAULTS, prepare_form, store):
     # The same call in notebooks 01, 02 and 06, so the three share stages 1 to 8.
+    preparation = prepare_form.value or PREPARE_DEFAULTS
     case = Case.from_structure(
-        prepared,
+        "2wcd.pdb.gz",
+        orient={
+            "chains": preparation["chains"],
+            "cis_end": preparation["cis_end"],
+            "registration_residues": (preparation["first_residue"], preparation["last_residue"]),
+            "centroid_z_nm": preparation["centroid_z_nm"],
+        },
+        structures=store.root / "structures",
         point_group="C12",
         concentration_M=0.15,
         bias_V=0.05,
         size_scale=4.0,
         name="2wcd",
-        store=store,
-        write=False,
     )
     return (case,)
 
@@ -130,12 +120,12 @@ def _(mo):
 
 
 @app.cell
-def _(case, describe, mo):
-    reduced = case.run(upto="symmetry")
+def _(case, mo, session, stages):
+    reduced = session.run(case, upto="symmetry")
 
     def stage_tab(result, name):
         record = next(item for item in result.stages if item.name == name)
-        stage = describe(name)
+        stage = stages[name]
         where = "from the store" if record.cached else f"computed in {record.seconds:.1f} s"
         return mo.vstack(
             [
@@ -186,14 +176,16 @@ def _(mo):
 
 
 @app.cell
-def _(case, isolevel, mo, size_scale, stage_tab):
+def _(case, isolevel, mo, session, size_scale, stage_tab):
     try:
-        meshed = case.run(
+        meshed = session.run(
+            case.with_(
+                {
+                    "geometry.contour.isolevel": isolevel.value,
+                    "numerics.mesh.size_scale": size_scale.value,
+                }
+            ),
             upto="mesh",
-            **{
-                "geometry.contour.isolevel": isolevel.value,
-                "numerics.mesh.size_scale": size_scale.value,
-            },
         )
     except ValueError as refusal:
         shown = mo.callout(mo.md(f"**The walk stopped.** {refusal}"), kind="warn")

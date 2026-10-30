@@ -1,7 +1,7 @@
 # 04 · The sweep
 
 A charged cylindrical pore, its fixed charge the cis ring of example 03, solved at four biases with one call,
-`sweep(case, axis="bias_V", values=...)`. Each point warm-starts from a converged neighbour one step nearer
+`session.sweep(case, axis="bias_V", values=...)`. Each point warm-starts from a converged neighbour one step nearer
 the bias solved first, and opposite biases pair into a rectification ratio. The notebook shows each quantity
 against the bias, with the row of every point beside it. Edit the salt or the biases and press **Sweep**;
 the sweep's files and every point's artefacts go to the store the six notebooks share, `notebooks/.store`

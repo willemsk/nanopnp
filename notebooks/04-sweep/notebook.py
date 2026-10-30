@@ -10,15 +10,13 @@ def _():
 
     import marimo as mo
 
-    from nanopnp import Case, Store
-    from nanopnp.plot import figure as draw
-    from nanopnp.plot import plot_iv
-    from nanopnp.sweep import sweep
+    from nanopnp import Case, Session, Store
 
     here = Path(__file__).resolve().parent
     store = Store(os.environ.get("NANOPNP_STORE") or here.parent / ".store")
+    session = Session(store, write=False)
     ring = here.parents[1] / "examples" / "03-iv-sweep" / "cis-ring.field.yaml"
-    return Case, draw, mo, plot_iv, ring, store, sweep
+    return Case, mo, ring, session
 
 
 @app.cell
@@ -61,7 +59,7 @@ def _(mo):
 
 
 @app.cell
-def _(Case, SWEEP_DEFAULTS, ring, store, sweep, sweep_form):
+def _(Case, SWEEP_DEFAULTS, ring, session, sweep_form):
     settings = sweep_form.value or SWEEP_DEFAULTS
     biases_V = [float(text) * 1e-3 for text in settings["biases_mV"].split(",")]
     first = min(range(len(biases_V)), key=lambda i: abs(biases_V[i] - settings["first_mV"] * 1e-3))
@@ -71,20 +69,18 @@ def _(Case, SWEEP_DEFAULTS, ring, store, sweep, sweep_form):
         charge=ring,
         outputs=("current", "transport_numbers", "eof_rate", "rectification"),
         name="iv-cylinder",
-        store=store,
-        write=False,
     )
-    dataset = sweep(case, axis="bias_V", values=biases_V, origin=first).run()
-    return (dataset,)
+    swept = session.sweep(case, axis="bias_V", values=biases_V, origin=first)
+    return (swept,)
 
 
 @app.cell
-def _(dataset, draw, mo, plot_iv):
+def _(mo, swept):
     mo.vstack(
         [
-            mo.mpl.interactive(plot_iv(dataset)),
-            mo.ui.table(dataset.summary["rows"], selection=None),
-            mo.accordion({"Every quantity against the bias": draw(dataset)}),
+            mo.mpl.interactive(swept.plot_iv()),
+            mo.ui.table(swept.rows, selection=None),
+            mo.accordion({"Every quantity against the bias": swept.figure()}),
         ]
     )
     return
