@@ -50,6 +50,46 @@ panels and two whole-workbench mockups, and writes the design document and its r
   REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
   restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
+## [0.5.0-alpha.22]
+
+WP56: the command line read by a person, the fix of the first user-testing round's command-line findings
+(`SPECIFICATION.md` §8.2.21 W2 to W6, W8; UT-01 to UT-09, UT-11, UT-12; REV-154). The
+[plan](docs/plans/wp56-command-line-read-by-a-person.md) records the work.
+
+### Added
+
+- **`nanopnp plot TARGET [STAGE] --out PATH`**: draws a stage's figure of a case, of a finished run directory
+  (default `solve`) or of a sweep, to `.png`, `.svg` or `.pdf`. A wrong suffix, an unknown stage, a stage with no
+  figure, or a case file without a stage is refused before anything runs (FR-44).
+- **`nanopnp inspect A B`**: two run directories compared, the case fields that differ, each run's deviations
+  from the validated model, and each quantity side by side with `(B − A)/|A|`; `--json` gives the same.
+- **`--progress/--no-progress` on `run` and `stage`**: each stage and continuation rung on standard error as it
+  starts, with each rung's accepted Newton steps and seconds; on by default when standard error is a terminal.
+  Standard output and `--json` do not change.
+- **`reference/field-document.md`**: the field document's keys, generated from the models, beside the case-file
+  reference.
+- `pipeline.run.read_run` and `open_run`, and `sweep.collect.read_dataset`: one reader of a run directory and of
+  a sweep dataset. `Manifest.from_document` rebuilds a manifest and refuses one whose hash no longer matches,
+  exiting 3 (`ManifestHashError`; QR-08).
+
+### Changed
+
+- **`nanopnp inspect` reads by schema**: a run as a summary (model, stages, rungs with their Newton steps and
+  seconds, quantities, every deviation, or the reason a group did not run), a sweep dataset as a table with its
+  rectification ratios, a stored artefact as its schema, key, parameters and summary. `--section GROUP` prints
+  one group of a manifest. `--json` prints what it printed before (IF-02).
+- **The wall-distance refusal names a setting the run reads**: `numerics.mesh.wall_h_nm` for a mesh the case
+  generates, and for a supplied mesh its file and `nanopnp mesh cylinder --wall-h-nm` (NUM-34, QR-12; REV-154).
+- **Help**: `mesh cylinder` groups its flags as geometry and mesh; `reproduce` says when a run fails to
+  reproduce; `sweep run` says how workers are pinned to threads.
+- Session 03's coarse case is `wall-100.case.yaml`, after its mesh (UT-08).
+
+### Fixed
+
+- **A field document that states its charge twice with opposite signs is refused when read**: a form's charge
+  parameter (`gaussian_ring`'s `charge_e`) and `q_net_e` of opposite sign, or one zero beside the other, exit 4
+  naming both keys, and the producer leg of the conservation check names both for a form (QR-03, PHY-19, QR-12).
+
 ## [0.5.0-alpha.21]
 
 WP55: the user-testing protocol. Five sessions that the author runs as a nanopore modeller would, a log for
