@@ -726,6 +726,13 @@ def _check_physics_switches(document: CaseDocument) -> None:
             "membrane and a protein; supply inputs.mesh with no solid domain. Models carrying "
             f"solids: {_admitting(lambda other: declaration(other).solids)}"
         )
+    wall_charge = document.boundary_conditions.wall_charge_C_m2
+    if wall_charge != 0.0 and "surface_charge" not in declared.coefficients:
+        raise CaseValidationError(
+            f"physics.model {model!r} takes no surface charge, so "
+            f"boundary_conditions.wall_charge_C_m2 = {wall_charge} would be recorded and never "
+            f"applied (PHY-09). Models accepting it: {_accepting('surface_charge')}"
+        )
     if document.inputs.pqr is not None and "fixed_charge" not in declared.coefficients:
         raise CaseValidationError(
             f"physics.model {model!r} takes no fixed-charge source, so inputs.pqr would be "

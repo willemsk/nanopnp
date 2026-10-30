@@ -400,20 +400,21 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
 - [x] dddbebe 1. `io/case.py` and every importer in `src/` and `tests/`: the blocks without `Spec`, frozen,
   the root titled `Case` (D6); done when `uv run pytest -m tier1` passes. **Executor:**
   `general-purpose` on Sonnet
-- [ ] 2. `io/case.py`, `pipeline/checks.py`, `pipeline/case.py`, `io/resolved.py`, `io/defaults.py`,
+- [x] 72cf920 2. `io/case.py`, `pipeline/checks.py`, `pipeline/case.py`, `io/resolved.py`, `io/defaults.py`,
   `validation/case_leaves.py`: the three keys, `ResolvedCase.pore`, and the refusals of §5.3.1's
   `geometry.pore` NOTE and `maxh_nm` (D1, D2, D5); done when `test_phy09_*` of *Verification* and
   `test_case_leaves.py`, `test_case_json_schema.py`, `test_case_fields.py` pass. **Executor:** main
-- [ ] 3. `geometry/pore.py` (new), `geometry/region.py`, `mesh/primitives.py`, `plot/data.py`,
+- [x] 72cf920 3. `geometry/pore.py` (new), `geometry/region.py`, `mesh/primitives.py`, `plot/data.py`,
   `plot/figures.py`, `gui/geometry.py`, `charge/stage.py`: the idealised region in stage 5 and every
   reader (D1); done when `test_primitives.py`, `test_region.py`, `test_figures.py` pass and the code
   and review say so. **Executor:** main
-- [ ] 4. `mesh/idealised.py` (new), `mesh/generate.py`, `mesh/ingest.py`: stage 6 (D2); done when
+- [x] 72cf920 4. `mesh/idealised.py` (new), `mesh/generate.py`, `mesh/ingest.py`: stage 6 (D2); done when
   `test_ver62_a_declared_cylinder_meshes_to_the_recorded_mesh` passes. **Executor:** main
-- [ ] 5. `cli/__init__.py`, `core/public.py`, `nanopnp/__init__.py`, `mesh/__init__.py`,
+- [x] 0189045 5. `cli/__init__.py`, `core/public.py`, `nanopnp/__init__.py`, `mesh/__init__.py`,
   `solve/state.py`, `docs/project/modularity-layering.yaml`, `tests/tier1/test_cli.py`; delete
   `mesh/cylinder.py` (D3); done when VER-32's rows pass with VER-61 and VER-65. **Executor:** main
-- [ ] 6. `physics/models.py`, `physics/pb.py`, `solve/state.py`, `mesh/primitives.py`,
+> **Outcome — item 5.** `mesh/cylinder.py`, `PUBLIC["mesh_cylinder"]` and `mesh/__init__.py`'s export stay until item 8: `pipeline/handle.py` calls `mesh_cylinder` until the `Case` replaces it, and Tier 1 must pass at each commit. Items 2 to 4 are one commit (`72cf920`): the VER-71 stage-key probe needs stages 5 and 6 together.
+- [x] SHA6 6. `physics/models.py`, `physics/pb.py`, `solve/state.py`, `mesh/primitives.py`,
   `tests/tier2/test_wall_surface_charge.py` (new): the wall charge (D5); done when VER-77's rows and
   `test_electrostatic_benchmarks.py` pass. **Executor:** main
 - [ ] 7. Compaction checkpoint. **Executor:** main

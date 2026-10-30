@@ -251,6 +251,13 @@ def single_rung(
         supplied["fixed_charge"] = fields.charge.assemble(model.scales)
     if fields.eps_r is not None and "solid_fraction" in declared.coefficients:
         supplied["solid_fraction"] = fields.eps_r.chi()
+    if resolved.wall_charge_C_m2 != 0.0 and "surface_charge" in declared.coefficients:
+        import ngsolve as ngs
+
+        supplied["surface_charge"] = ngs.CF(
+            resolved.wall_charge_C_m2 / model.scales.surface_charge_C_m2
+        )
+        supplied["surface_charge_boundary"] = "wall"
     if declared.wall_distance:
         supplied["wall_distance_nm"] = distance
     # From the temperature, so every model nondimensionalises by the same V_T (NUM-09).
@@ -298,6 +305,7 @@ def ladder(
         solid_permittivities=dict(resolved.document.physics.solid_permittivities),
         fixed_charge_field=(None if fields.charge is None else fields.charge.fixed_charge_C_m3()),
         solid_fraction=None if fields.eps_r is None else fields.eps_r.chi(),
+        surface_charge_C_m2=resolved.wall_charge_C_m2,
         # From ``model_options`` so the ladder and ``single_rung`` cannot differ in order
         # or mode (NUM-03, NUM-13).
         stabilisation=resolved.stabilisation,
