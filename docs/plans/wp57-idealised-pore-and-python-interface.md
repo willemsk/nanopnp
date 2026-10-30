@@ -444,7 +444,7 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
 - [x] 018ec22 12. `core/stages.py`, `solve/continuation.py`, `solve/stage.py`, `cli/__init__.py`,
   `gui/solver.py`: the end of a rung (D11); done when the D11 row passes. **Executor:** main
 - [x] 368e0e1 13. Compaction checkpoint. **Executor:** main
-- [ ] 14. Every test file and `tests/conftest.py` naming `run_case` or `run_plan`, then
+- [x] 3f6d5be 14. Every test file and `tests/conftest.py` naming `run_case` or `run_plan`, then
   `pipeline/run.py` (delete `run_case`), `core/public.py`, `nanopnp/__init__.py`, `cli/reference.py`
   (D14); done when `uv run pytest` passes and `git grep -n "run_case" src tests` is empty.
   **Executor:** `general-purpose` on Sonnet
@@ -460,8 +460,8 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
 - [x] 3f7940c 17. Sessions 01 to 03 and 05 (READMEs, cases), `docs/guide/meshes.md`, `docs/guide/running.md`
   (D4); done when `uv run pytest tests/tier2/test_user_testing_sessions.py` passes for them.
   **Executor:** `general-purpose` on Sonnet
-- [x] 18. Compaction checkpoint. **Executor:** main
-- [ ] 19. `post/forces.py`, `tests/tier1/test_forces.py`: REV-120 (D13); done when the REV-120 row
+- [x] 0a27e08 18. Compaction checkpoint. **Executor:** main
+- [x] 19. `post/forces.py`, `tests/tier1/test_forces.py`: REV-120 (D13); done when the REV-120 row
   passes. **Executor:** main
 - [ ] 20. `validation/runs.py`, `cli/__init__.py`, `io/manifest.py`: REV-157's reader, single read and
   cached hash (D11); `physics/models.py`, `post/export.py`, `structure/orient.py`, `plot/data.py`:

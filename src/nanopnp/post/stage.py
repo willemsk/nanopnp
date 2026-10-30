@@ -318,7 +318,11 @@ class QoIStage:
             report(progress, 0.8, "extracting the NUM-28 force")
             check_cancelled(cancel, "the force extraction")
             summary["analyte_force"] = self._force(
-                solution, measures, shell=prepared.shell, check_routes=prepared.check_routes
+                solution,
+                measures,
+                data=prepared.data,
+                shell=prepared.shell,
+                check_routes=prepared.check_routes,
             )
             summary["extension_shell_nm"] = list(prepared.shell)
 
@@ -338,6 +342,7 @@ class QoIStage:
         solution: ModelSolution,
         measures: Measures,
         *,
+        data: MeshData,
         shell: tuple[float, float],
         check_routes: bool,
     ) -> dict[str, Canonicalisable]:
@@ -354,6 +359,7 @@ class QoIStage:
             extension,
             boundary=ANALYTE_BOUNDARY,
             check_routes=check_routes,
+            data=data,
         ).summary()
         return record
 

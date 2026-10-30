@@ -2,10 +2,12 @@
 
 import math
 
+import numpy as np
 import pytest
 
 from nanopnp.core.scaling import Scales
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, PoreWithAnalyte, SphereBody
+from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
@@ -18,8 +20,10 @@ from nanopnp.post.forces import (
     ForceAgreement,
     ForceComponents,
     ForceDisagreementError,
+    ForceSurfaceError,
     axial_extension,
     check_extension,
+    check_force_surface,
     hydrodynamic_stress,
     maxwell_stress,
     reaction_force,
@@ -268,3 +272,31 @@ def test_qr12_the_boundary_checks_of_the_force_routes_refuse_what_a_nan_would_pa
         _oriented_normal(mesh, region, float("nan"))
     with pytest.raises(ValueError, match="solid side"):
         _check_fluid_side(mesh, ngs.CF(1.0), ngs.CF(1.0), region, float("nan"))
+
+
+def _body_in(*neighbours: str) -> MeshData:
+    # A square body of two triangles whose bottom, right, top and left edges each meet one triangle.
+    vertices = [(1, 1), (2, 1), (2, 2), (1, 2), (1.5, 0), (3, 1.5), (1.5, 3), (0.5, 1.5)]
+    triangles = [(0, 1, 2), (0, 2, 3), (0, 4, 1), (1, 5, 2), (2, 6, 3), (3, 7, 0)]
+    names = sorted({"analyte", *neighbours})
+    material = [names.index("analyte")] * 2 + [names.index(n) for n in neighbours]
+    return MeshData(
+        vertices=np.array(vertices, dtype=float),
+        triangles=np.array(triangles),
+        triangle_material=np.array(material),
+        materials=tuple(names),
+        edges=np.array([(0, 1), (1, 2), (2, 3), (3, 0)]),
+        edge_group=np.zeros(4, dtype=int),
+        boundaries=("analyte",),
+    )
+
+
+def test_num29_a_force_surface_meeting_two_fluids_is_refused() -> None:
+    one_fluid = _body_in("electrolyte", "electrolyte", "electrolyte", "electrolyte")
+    assert check_force_surface(one_fluid) == ("analyte", "electrolyte")
+    with pytest.raises(ForceSurfaceError) as raised:
+        check_force_surface(_body_in("cis", "electrolyte", "electrolyte", "electrolyte"))
+    message = str(raised.value)
+    assert "analyte | cis" in message and "analyte | electrolyte" in message
+    with pytest.raises(ForceSurfaceError, match="no boundary matching"):
+        check_force_surface(one_fluid, "wall")
