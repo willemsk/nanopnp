@@ -121,7 +121,7 @@ ElementKind: TypeAlias = Literal["h1", "vector_h1", "number"]
 
 SWITCHES: tuple[str, ...] = ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
 
-COEFFICIENTS: tuple[str, ...] = ("fixed_charge", "solid_fraction")
+COEFFICIENTS: tuple[str, ...] = ("fixed_charge", "solid_fraction", "surface_charge")
 
 LADDER_STRATEGY = "default_ladder"
 
@@ -1315,6 +1315,8 @@ class ElectrostaticModel(_SingleFieldModel):
         measures: Measures,
         *,
         debye_length_nm: float | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
         state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
@@ -1324,13 +1326,24 @@ class ElectrostaticModel(_SingleFieldModel):
         ----------
         debye_length_nm
             Overrides the case's Debye length.
+        surface_charge, surface_charge_boundary
+            A uniform surface charge, dimensionless, and the boundary carrying it.
         """
         _reject_unknown(kwargs, f"{self.name!r}.residual_form")
         trial, test = space.TnT()
         screening_nm = self.debye_length_nm if debye_length_nm is None else debye_length_nm
         if self.screening == "linear":
-            return linear_pb_operator(trial, test, measures, debye_length_nm=screening_nm)
-        return nonlinear_pb_residual(trial, test, measures, debye_length_nm=screening_nm)
+            residual = linear_pb_operator(trial, test, measures, debye_length_nm=screening_nm)
+        else:
+            residual = nonlinear_pb_residual(trial, test, measures, debye_length_nm=screening_nm)
+        if surface_charge is not None:
+            residual -= surface_charge_source(
+                surface_charge,
+                test,
+                measures,
+                definedon=space.mesh.Boundaries(surface_charge_boundary),
+            )
+        return residual
 
     def solve(
         self,
@@ -1340,6 +1353,8 @@ class ElectrostaticModel(_SingleFieldModel):
         boundaries: CoupledBoundaries = DEFAULT_BOUNDARIES,
         potential_values: Expression = 0.0,
         debye_length_nm: float | None = None,
+        surface_charge: float = 0.0,
+        surface_charge_boundary: str = "wall",
         initial: ModelSolution | None = None,
         settings: NewtonSettings = DEFAULT_SETTINGS,
         solver: str = DEFAULT_SOLVER,
@@ -1356,6 +1371,8 @@ class ElectrostaticModel(_SingleFieldModel):
             debye_length_nm=screening_nm,
             dirichlet=boundaries.potential,
             boundary_values=potential_values,
+            surface_charge=surface_charge,
+            surface_charge_boundary=surface_charge_boundary,
             nonlinear=self.screening == "sinh",
             order=self.order,
             solver=solver,
@@ -1366,7 +1383,13 @@ class ElectrostaticModel(_SingleFieldModel):
         # owns its own; it is written in the same trial function and on the same
         # space, so the two are the same operator.
         residual = ngs.BilinearForm(state.space)
-        residual += self.residual_form(state.space, measures, debye_length_nm=screening_nm)
+        residual += self.residual_form(
+            state.space,
+            measures,
+            debye_length_nm=screening_nm,
+            surface_charge=None if surface_charge == 0.0 else ngs.CF(surface_charge),
+            surface_charge_boundary=surface_charge_boundary,
+        )
         return ModelSolution(
             model=self, space=state.space, state=state, newton=record, residual=residual
         )
@@ -1457,6 +1480,8 @@ class PoissonModel(_SingleFieldModel):
         *,
         fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
         state: GridFunction | None = None,
         **kwargs: Option,
     ) -> IntegralTerm:
@@ -1479,6 +1504,13 @@ class PoissonModel(_SingleFieldModel):
                 rule_order=fixed_charge.rule_order,
                 extra_order=0 if fixed_charge.rule_order is not None else RADIAL_WEIGHT_ORDER,
             )
+        if surface_charge is not None:
+            residual -= surface_charge_source(
+                surface_charge,
+                test,
+                measures,
+                definedon=space.mesh.Boundaries(surface_charge_boundary),
+            )
         return residual
 
     def solve(
@@ -1490,6 +1522,8 @@ class PoissonModel(_SingleFieldModel):
         potential_values: Expression = 0.0,
         fixed_charge: FixedCharge | None = None,
         solid_fraction: Expression | None = None,
+        surface_charge: Expression | None = None,
+        surface_charge_boundary: str = "wall",
         initial: ModelSolution | None = None,
         settings: NewtonSettings = DEFAULT_SETTINGS,
         solver: str = DEFAULT_SOLVER,
@@ -1511,6 +1545,8 @@ class PoissonModel(_SingleFieldModel):
             measures,
             fixed_charge=fixed_charge,
             solid_fraction=solid_fraction,
+            surface_charge=surface_charge,
+            surface_charge_boundary=surface_charge_boundary,
         )
         # Linear, so one undamped step from any state with the right essential
         # data is the solution: J delta = -R(u), with R(u) = A u - f.

@@ -20,7 +20,7 @@ from nanopnp.numerics.newton import (
     NewtonSettings,
     damped_newton,
 )
-from nanopnp.physics.poisson import poisson_operator
+from nanopnp.physics.poisson import poisson_operator, surface_charge_source
 from nanopnp.physics.spaces import set_boundary_values
 
 __all__ = [
@@ -149,7 +149,7 @@ def solve_pb_recorded(
     def _charge_term(test: Expression, *, sign: float) -> IntegralTerm | None:
         if charged is None:
             return None
-        return measures.surface(sign * surface_charge * test, definedon=charged)
+        return surface_charge_source(sign * surface_charge, test, measures, definedon=charged)
 
     if not nonlinear:
         trial, test = space.TnT()

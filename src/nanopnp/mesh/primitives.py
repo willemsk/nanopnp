@@ -174,6 +174,38 @@ class CylinderGeometry:
 
 
 @dataclass(frozen=True)
+class AxialSlabGeometry:
+    """A disc of electrolyte: the wall at ``z = 0``, the far end at ``z = length_nm``."""
+
+    radius_nm: float
+    length_nm: float
+
+    def generate(
+        self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
+    ) -> Mesh:
+        """Return a meshed slab cross-section in ``(r, z)``, graded towards the wall."""
+        import netgen.occ as occ
+        import ngsolve as ngs
+
+        face = occ.Rectangle(self.radius_nm, self.length_nm).Face()
+        face.name = "electrolyte"
+        for edge in face.edges:
+            r_c, z_c = edge.center[0], edge.center[1]
+            if abs(r_c) < TOL_NM:
+                edge.name = "axis"
+            elif abs(r_c - self.radius_nm) < TOL_NM:
+                edge.name = "lateral"
+            elif abs(z_c) < TOL_NM:
+                edge.name = "wall"
+                if wall_h_nm is not None:
+                    edge.maxh = wall_h_nm
+            else:
+                edge.name = "bulk"
+        mesh = ngs.Mesh(occ.OCCGeometry(face, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))
+        return _gated(mesh, check=check_quality, where=f"a {self.length_nm:g} nm axial slab")
+
+
+@dataclass(frozen=True)
 class CylindricalPoreGeometry:
     """A cylindrical pore through a membrane, with a reservoir on each side.
 
