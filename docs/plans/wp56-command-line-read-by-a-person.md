@@ -1,6 +1,6 @@
 # WP56 — The command line read by a person
 
-**Status: planned, not started.** Written 29 October 2026, grounded in the code at `597818c` (§8.2.15
+**Status: delivered, 2026-10-30.** Written 29 October 2026, grounded in the code at `597818c` (§8.2.15
 Q1). Inherits §8.2.21 W1 to W8, the test scope (§8.2.13 N1 to N6) and FR-30's figures (§8.2.14, §8.2.20).
 
 The [Phase 4 plan](phase-4-polish-and-user-testing.md) owns the phase. `SPECIFICATION.md` governs;
@@ -196,7 +196,7 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
   > runs on one thread. A rung's seconds in `--progress` run to the next stage's start, so the last rung's
   > (136.5 s) includes the Péclet report; the record's 120.4 s is the rung's.
 - [x] 10. Compaction checkpoint. **Executor:** main
-- [ ] 11. `CHANGELOG.md` (`plot`, `inspect`'s reading and comparison, `--progress`, the field-document
+- [x] 11. 1756fec `CHANGELOG.md` (`plot`, `inspect`'s reading and comparison, `--progress`, the field-document
   refusal), Appendix A's FR-44 row to the test names, REV-154 `fixed`, the WP56 UT rows `fixed`; gate
   and push. **Executor:** main
 
