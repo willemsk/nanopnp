@@ -26,7 +26,7 @@ is `$NANOPNP_STORE` or `./nanopnp-store`, the *process* default, never the `Stor
 handed the run. Running the test suite from a checkout therefore left a `nanopnp-store/tmp/mesh-*`
 behind while every artefact lived in a `tmp_path` store.
 
-`pipeline.run.run_case` now names a fresh workspace under the store in use when the caller gives none.
+`Session.run` (through `pipeline.run.run_document`) now names a fresh workspace under the store in use when the caller gives none.
 Fresh per run and not a fixed `tmp/mesh`: two runs into one store hold different meshes, and a
 deterministic name has the second overwrite a file the first's artefact still points at.
 

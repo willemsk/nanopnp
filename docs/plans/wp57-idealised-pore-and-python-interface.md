@@ -467,10 +467,10 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   cached hash (D11); `physics/models.py`, `post/export.py`, `structure/orient.py`, `plot/data.py`:
   REV-153 (D13); done when Tier 1 passes and the code and review say so. **Executor:**
   `general-purpose` on Sonnet
-- [x] 21. `validation/examples.py`, `tests/tier2/test_user_testing_sessions.py`, the example tests:
+- [x] 7e0bd6f 21. `validation/examples.py`, `tests/tier2/test_user_testing_sessions.py`, the example tests:
   `untagged_commands` (D13); done when the example and session tests pass. **Executor:**
   `general-purpose` on Sonnet
-- [ ] 22. The two knowledge sentences (REV-111, REV-155), the two concepts naming the old route (D14)
+- [x] 22. The two knowledge sentences (REV-111, REV-155), the two concepts naming the old route (D14)
   and their `knowledge/log.md` lines; `CLAUDE.md`'s project structure gains `api/`; done when the code
   and review say so. **Executor:** `general-purpose` on Haiku
 - [ ] 23. Records: `CHANGELOG.md` (each break with its migration), the REV rows and sections set

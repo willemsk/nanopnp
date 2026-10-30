@@ -2,6 +2,10 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-10-30
+* **Update**: The no-MPI claim is narrowed to the lock file and the build configuration, and the rectification sentence no longer asserts that a fixed-charge asymmetry alone rectifies (WP57; REV-111, REV-155). ([1. FEM backend](07-software-stack/01-fem-backend-ngsolvenetgen.md), [7. Ionic current rectification](02-electrokinetics-background/07-ionic-current-rectification.md))
+* **Update**: The notes on the import cost and on the stage workspace name the Python interface, `Case` and `Session`, in place of `load_case`, `resolve` and `run_case` (WP57). ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md), [A stage's workspace](07-software-stack/11-a-stages-workspace-falls-back-to-the.md))
+
 ## 2026-10-29
 * **Update**: Rectification needs an axial asymmetry of the geometry or of the fixed charge, not of the geometry alone (WP55's physics review of the sweep session). ([7. Ionic current rectification](02-electrokinetics-background/07-ionic-current-rectification.md))
 

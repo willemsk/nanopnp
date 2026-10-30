@@ -401,7 +401,7 @@ spirit, with NGSolve imported only in whatever process actually solves. `io/case
 `core` at run time: the registry checks that need `materials` and `physics` live in
 `pipeline/checks.py`. After `import nanopnp.io.case` the only `nanopnp` subpackages in
 `sys.modules` are `core` and `io` **[tested: tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing]**, 6 October 2026. `import nanopnp.pipeline.case`,
-which `load_case` and `resolve` come from, also loads `charge`, `density`, `geometry`, `materials`,
+which holds the case loader and the resolver that `Case.load` and `Session.run` call, also loads `charge`, `density`, `geometry`, `materials`,
 `mesh`, `numerics` and `physics`, and still leaves `ngsolve` and `numpy` out of `sys.modules`; that
 holds because those modules defer their own NGSolve and NumPy imports.
 
