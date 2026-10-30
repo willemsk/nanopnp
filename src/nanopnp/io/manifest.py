@@ -9,7 +9,13 @@ from dataclasses import dataclass, field
 from importlib import metadata
 from typing import TYPE_CHECKING
 
-from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, file_hash
+from nanopnp.core.hashing import (
+    Canonicalisable,
+    canonical,
+    content_hash,
+    decode_floats,
+    file_hash,
+)
 from nanopnp.core.paths import available_corrections, correction_file
 from nanopnp.io.artefact import timestamp
 from nanopnp.io.defaults import ContributedDeviation, Deviation, deviations
@@ -65,6 +71,10 @@ DISTRIBUTIONS: tuple[str, ...] = (
     "PySide6",
     "gmsh",
 )
+
+
+class ManifestHashError(ValueError):
+    """A manifest read back does not reproduce the hash it records."""
 
 
 def not_run(reason: str) -> dict[str, Canonicalisable]:
@@ -282,6 +292,65 @@ class Manifest:
             "case": {"hash": self.case_hash, "text": self.case_text},
             **self.groups(),
         }
+
+    @classmethod
+    def from_document(cls, document: Mapping[str, Canonicalisable]) -> Manifest:
+        """Rebuild a manifest from its serialised document.
+
+        Raises
+        ------
+        ManifestHashError
+            The document is not a manifest of this schema, or its groups do not hash to its hash.
+        """
+        parsed = decode_floats(dict(document))
+        decoded: dict[str, Canonicalisable] = parsed if isinstance(parsed, dict) else {}
+        if decoded.get("schema") != MANIFEST_SCHEMA:
+            found = decoded.get("schema")
+            raise ManifestHashError(
+                f"the document declares schema {found!r}; this build reads {MANIFEST_SCHEMA!r}, "
+                "and recomputes the hash only under it"
+            )
+        try:
+            case = decoded["case"]
+            block = decoded[DEVIATIONS_GROUP]
+            manifest = cls(
+                case_text=str(case["text"]),
+                case_hash=str(case["hash"]),
+                inputs=decoded["inputs"],
+                environment=decoded["environment"],
+                geometry_and_mesh=decoded["geometry_and_mesh"],
+                charge=decoded["charge"],
+                materials=decoded["materials"],
+                solver=decoded["solver"],
+                stabilisation=decoded["stabilisation"],
+                deviations=tuple(
+                    Deviation(
+                        path=str(entry["path"]),
+                        validated=entry["validated_default"],
+                        value=entry["value"],
+                    )
+                    for entry in block["switches"]
+                ),
+                contributed_deviations=tuple(
+                    ContributedDeviation(
+                        source=str(entry["source"]), description=str(entry["description"])
+                    )
+                    for entry in block["contributed"]
+                ),
+                created_at=str(decoded["created_at"]),
+            )
+        except (KeyError, TypeError) as error:
+            raise ManifestHashError(
+                f"the document lacks the manifest field {error}, so its hash cannot be recomputed"
+            ) from None
+        recorded = decoded.get("hash")
+        if recorded != manifest.hash:
+            raise ManifestHashError(
+                f"the document records hash {str(recorded)[:12]} but its case and groups hash to "
+                f"{manifest.hash[:12]}: it was edited after the run wrote it, and is not that "
+                "run's record"
+            )
+        return manifest
 
     def write(self, directory: Path) -> Path:
         """Write the manifest and case file into a run directory; return the manifest path."""

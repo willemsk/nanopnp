@@ -60,6 +60,8 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.sweep.plan:SweepPlanError": EXIT_CASE,
     # the path is as wrong on a retry, and a job array retries "unexpected"
     "builtins:FileNotFoundError": EXIT_CASE,
+    # 3 not 4: the fix is the run directory as written, or a re-run, as for a file the case named
+    "nanopnp.io.manifest:ManifestHashError": EXIT_CASE,
     # -- 4, the gates --------------------------------------------------------
     "nanopnp.numerics.gates:GateViolationError": EXIT_GATE,
     "nanopnp.post.qoi:RouteDisagreementError": EXIT_GATE,

@@ -11,7 +11,7 @@ from pathlib import Path
 from nanopnp.core.hashing import Canonicalisable, canonical, decode_floats
 from nanopnp.io.artefact import SWEEP_SCHEMA, SweepArtefact
 from nanopnp.io.store import atomic_write_bytes
-from nanopnp.sweep.plan import SweepPlan
+from nanopnp.sweep.plan import PLAN_FILENAME, SweepPlan, read_plan
 from nanopnp.sweep.run import MEMBERS_DIRNAME, MemberResult, member_from_row
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ __all__ = [
     "DATASET_FILENAME",
     "SweepCollectionError",
     "collect",
+    "read_dataset",
     "read_members",
     "write_csv",
 ]
@@ -187,6 +188,47 @@ def collect(
         path,
         ", ".join(f"{count} {status}" for status, count in sorted(counts.items())),
     )
+    return SweepArtefact(
+        plan_hash=plan.hash,
+        base_hash=plan.base_hash,
+        name=plan.name,
+        points=len(plan.points),
+        payload={"dataset": path},
+        summary=summary,
+    )
+
+
+def read_dataset(directory: Path) -> SweepArtefact:
+    """Read a collected dataset back, with the plan beside it.
+
+    Raises
+    ------
+    FileNotFoundError
+        The directory lacks ``dataset.json`` or ``plan.json``.
+    SweepCollectionError
+        The dataset is not of this schema, or was collected from another plan.
+    """
+    source = Path(directory)
+    path = source / DATASET_FILENAME
+    for needed in (path, source / PLAN_FILENAME):
+        if not needed.is_file():
+            raise FileNotFoundError(
+                f"{source} is not a sweep directory as nanopnp sweep writes it: it holds no "
+                f"{needed.name}"
+            )
+    plan = read_plan(source / PLAN_FILENAME)
+    parsed = decode_floats(json.loads(path.read_text(encoding="utf-8")))
+    if not isinstance(parsed, dict) or parsed.get("schema") != SWEEP_SCHEMA:
+        found = parsed.get("schema") if isinstance(parsed, dict) else type(parsed).__name__
+        raise SweepCollectionError(
+            f"{path} declares schema {found!r}; this build reads {SWEEP_SCHEMA!r}"
+        )
+    summary = {key: value for key, value in parsed.items() if key != "schema"}
+    if summary.get("plan") != plan.hash:
+        raise SweepCollectionError(
+            f"{path} was collected from plan {str(summary.get('plan'))[:12]}, but the plan "
+            f"beside it is {plan.hash[:12]}: the dataset belongs to another sweep; collect it again"
+        )
     return SweepArtefact(
         plan_hash=plan.hash,
         base_hash=plan.base_hash,
