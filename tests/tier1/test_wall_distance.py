@@ -229,13 +229,16 @@ def test_num34_threshold_is_one_named_constant_between_the_root_and_the_residual
     assert WallDistanceGate.minimum_nm == MINIMUM_WALL_DISTANCE_NM
 
 
+REMEDY = "refine the mesh at the wall (numerics.mesh.wall_h_nm)"
+
+
 def _measure(wall_h_nm: float) -> WallDistanceGate:
     from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
     from nanopnp.numerics.gates import FieldSampler, WallDistanceGate
 
     mesh = CLAMPED_PORE.generate(maxh_nm=4.0, wall_h_nm=wall_h_nm)
     distance = wall_distance(mesh, "wall", order=2, max_distance_nm=3.0)
-    return WallDistanceGate(FieldSampler(mesh, materials=ELECTROLYTE_DOMAINS), distance)
+    return WallDistanceGate(FieldSampler(mesh, materials=ELECTROLYTE_DOMAINS), distance, REMEDY)
 
 
 def test_num34_an_admissible_mesh_passes_and_reports_what_it_measured() -> None:
@@ -349,10 +352,10 @@ def test_num34_the_gate_reads_the_mollified_field_where_smoothing_is_on() -> Non
     plain = wall_distance(mesh, "wall", order=2, max_distance_nm=3.0)
     smoothed = mollify(plain, 0.2, sources="wall")
     sampler = FieldSampler(mesh, materials=ELECTROLYTE_DOMAINS)
-    on_plain = WallDistanceGate(sampler, plain).measure().minimum_nm
-    on_smoothed = WallDistanceGate(sampler, smoothed).measure().minimum_nm
+    on_plain = WallDistanceGate(sampler, plain, "refine").measure().minimum_nm
+    on_smoothed = WallDistanceGate(sampler, smoothed, "refine").measure().minimum_nm
     assert on_plain != on_smoothed, "the two fields must differ, or this asserts nothing"
-    assert WallDistanceGate(sampler, smoothed).measure().minimum_nm == on_smoothed
+    assert WallDistanceGate(sampler, smoothed, "refine").measure().minimum_nm == on_smoothed
 
 
 # VER-70

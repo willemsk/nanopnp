@@ -251,9 +251,32 @@ class FieldDocument(_Strict):
             )
         if self.axis_cutoff_nm < 0.0:
             problems.append(f"axis_cutoff_nm is {self.axis_cutoff_nm} and cannot be negative")
+        stated = self._form_charge()
+        if stated is not None and self.q_net_e is not None:
+            key, charge = stated
+            if _sign(charge) != _sign(self.q_net_e):
+                problems.append(
+                    f"{key} is {charge:g} and q_net_e is {self.q_net_e:g}: the charge is stated "
+                    "twice, and the two must have one sign (a zero beside a non-zero is refused); "
+                    "correct one of them, or omit q_net_e"
+                )
         if problems:
             raise ValueError("; ".join(problems))
         return self
+
+    def _form_charge(self) -> tuple[str, float] | None:
+        if self.form is None:
+            return None
+        parameter = form_charge_parameter(self.form.name)
+        if parameter is None or parameter not in self.form.parameters:
+            return None
+        return f"form.parameters.{parameter}", self.form.parameters[parameter]
+
+    @property
+    def form_charge_key(self) -> str | None:
+        """Return the document key of the charge its form states, or None if it states none."""
+        stated = self._form_charge()
+        return None if stated is None else stated[0]
 
     @property
     def q_net_C(self) -> float | None:
@@ -365,13 +388,31 @@ FormBuilder: TypeAlias = "Callable[[np.ndarray, np.ndarray, Mapping[str, float]]
 """A named form: the two axes in nm and its parameters, to SI values ``[i_z, i_r]``."""
 
 _FORMS: dict[str, FormBuilder] = {}
+_CHARGE_PARAMETERS: dict[str, str] = {}
 
 
-def register_form(name: str, builder: FormBuilder) -> None:
-    """Register an analytic field form under name; refuse a name already taken."""
+def _sign(value: float) -> int:
+    return (value > 0.0) - (value < 0.0)
+
+
+def register_form(name: str, builder: FormBuilder, *, charge_parameter: str | None = None) -> None:
+    """Register an analytic field form under name; refuse a name already taken.
+
+    Parameters
+    ----------
+    charge_parameter
+        The parameter that states the form's total charge in e, if one does.
+    """
     if name in _FORMS:
         raise ValueError(f"field form {name!r} is already registered")
     _FORMS[name] = builder
+    if charge_parameter is not None:
+        _CHARGE_PARAMETERS[name] = charge_parameter
+
+
+def form_charge_parameter(name: str) -> str | None:
+    """Return the parameter of a registered form that states its charge, or None."""
+    return _CHARGE_PARAMETERS.get(name)
 
 
 def registered_forms() -> tuple[str, ...]:
@@ -431,7 +472,7 @@ def _slab(r_nm: np.ndarray, z_nm: np.ndarray, parameters: Mapping[str, float]) -
 
 
 register_form("uniform", _uniform)
-register_form("gaussian_ring", _gaussian_ring)
+register_form("gaussian_ring", _gaussian_ring, charge_parameter="charge_e")
 register_form("slab", _slab)
 
 
@@ -569,6 +610,8 @@ class ConservationReport:
     ----------
     q_net_C
         Declared net charge in C, or None when none was declared.
+    charge_key
+        The document key of the charge the field's form states, if it states one.
     """
 
     q_net_C: float | None
@@ -582,6 +625,7 @@ class ConservationReport:
     grid_cumulative_C: tuple[float, ...]
     mesh_cumulative_C: tuple[float, ...]
     ramp_nm: float
+    charge_key: str | None = None
 
     @property
     def reference_C(self) -> float:
@@ -685,6 +729,7 @@ def conservation(
         grid_cumulative_C=field.grid_cumulative_C(planes, ramp_nm=ramp_nm),
         mesh_cumulative_C=field.mesh_cumulative_C(mesh, measures, planes, ramp_nm=ramp_nm),
         ramp_nm=ramp_nm,
+        charge_key=field.document.form_charge_key,
     )
 
 
@@ -935,7 +980,14 @@ def check_conservation(report: ConservationReport) -> ConservationReport:
             f"its grid integrates to {report.q_grid_C / ELEMENTARY_CHARGE:.6g} e against a "
             f"declared q_net_e of {declared_C / ELEMENTARY_CHARGE:.6g}"
             f", a relative error of {producer:.3g} against {CONSERVATION_TOL:g}. This leg is the "
-            "producer's: smearing, projection and the annular volumes",
+            "producer's: smearing, projection and the annular volumes"
+            + (
+                ""
+                if report.charge_key is None
+                else f". The form states its charge as {report.charge_key}; q_net_e is the "
+                "planar integral over r >= 0, half of it for a ring on the axis: set q_net_e to "
+                "that integral, or omit it"
+            ),
         )
     if not abs(report.consumer_error) <= CONSERVATION_TOL:
         raise ChargeFieldError(

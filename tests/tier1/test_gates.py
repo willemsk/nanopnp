@@ -7,7 +7,10 @@ import logging
 import ngsolve as ngs
 import pytest
 
+from nanopnp.core.paths import profile_file
+from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.mesh.primitives import SlabGeometry
+from nanopnp.mesh.reference import REFERENCE_PROFILE
 from nanopnp.numerics.gates import (
     ION_DIAMETER_NM,
     WATER_DIAMETER_NM,
@@ -21,6 +24,8 @@ from nanopnp.numerics.gates import (
     excluded_volume_m3_per_mol,
     maximum_packing_M,
 )
+from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.solve.state import wall_distance_remedy
 
 SLAB_WIDTH_NM = 4.0
 
@@ -171,7 +176,49 @@ def test_qr12_a_nan_anywhere_fails_the_packing_increment_and_wall_distance_gates
     distance.Set(ngs.CF(1.0))
     distance.vec[3] = float("nan")
     with pytest.raises(GateViolationError, match="min d"):
-        WallDistanceGate(sampler, distance).check()
+        WallDistanceGate(sampler, distance, "refine").check()
+
+
+REMEDY_CASE = (
+    f"schema: {CASE_SCHEMA}\n"
+    """name: remedy
+inputs:
+  {source}
+electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.1
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: pnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+"""
+)
+
+
+def test_num34_refusal_names_a_setting_the_run_reads(sampler: FieldSampler) -> None:
+    generated = resolve(
+        loads_case(
+            REMEDY_CASE.format(source=f"profile: {{path: {profile_file(REFERENCE_PROFILE)}}}")
+        )
+    )
+    supplied = resolve(
+        loads_case(
+            REMEDY_CASE.format(
+                source="mesh: {path: wall-100.msh, format: msh41, groups: {default: interface}}"
+            )
+        )
+    )
+    assert generated.generates_mesh and not supplied.generates_mesh
+
+    assert "numerics.mesh.wall_h_nm" in wall_distance_remedy(generated)
+    remedy = wall_distance_remedy(supplied)
+    assert "wall-100.msh" in remedy
+    assert "nanopnp mesh cylinder --wall-h-nm" in remedy
+    assert "numerics.mesh" not in remedy, "numerics.mesh is refused beside inputs.mesh"
+
+    distance = ngs.GridFunction(_space(sampler))
+    distance.Set(ngs.CF(-0.5))
+    with pytest.raises(GateViolationError) as raised:
+        WallDistanceGate(sampler, distance, remedy).check()
+    assert remedy in str(raised.value)
 
 
 def test_sampler_covers_the_p2_nodal_set(sampler: FieldSampler) -> None:
