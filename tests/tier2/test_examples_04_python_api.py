@@ -37,17 +37,26 @@ def tour(tmp_path_factory: pytest.TempPathFactory) -> dict[str, object]:
     return record
 
 
-def test_ver46_a_substituted_mesh_moves_exactly_the_keys_that_read_it(
+def test_ver46_a_changed_element_size_moves_exactly_the_keys_that_read_the_mesh(
     tour: dict[str, object],
 ) -> None:
     stages = tour["stages"]
     substituted = tour["substituted"]
     assert isinstance(stages, dict) and isinstance(substituted, dict)
-    finer, renamed = substituted["finer.msh"], substituted["renamed.msh"]
+    finer = substituted["finer"]
     assert finer["mesh"] != stages["mesh"]
     assert finer["materials"] == stages["materials"]
-    assert renamed["mesh"] == stages["mesh"]
-    assert renamed["materials"] == stages["materials"]
+
+
+def test_ver46_a_supplied_mesh_is_identified_by_its_content_not_its_name(
+    tour: dict[str, object],
+) -> None:
+    substituted = tour["substituted"]
+    assert isinstance(substituted, dict)
+    renamed, supplied = substituted["renamed"], substituted["supplied"]
+    assert renamed["case"] != supplied["case"]  # the case hash keeps the path as written
+    for stage in ("mesh", "materials"):
+        assert renamed[stage] == supplied[stage]
 
 
 def test_ver46_exported_fields_carry_the_if07_attribute_names(tour: dict[str, object]) -> None:
