@@ -9,30 +9,17 @@ def _():
     from pathlib import Path
 
     import marimo as mo
+    from selectivity import selectivity
 
-    from nanopnp import CancelFlag, Cancelled, Case, Store, dumps_case, run_document
-    from nanopnp.core.stages import StageDescription, register, walk_order
-    from nanopnp.io.case_paths import with_section
+    from nanopnp import CancelFlag, Cancelled, Case, Session, Store
+    from nanopnp.case import Charge
 
     here = Path(__file__).resolve().parent
     # A stage found in the store is not run, so a cancel cannot stop it: the account each section
     # gives of what is computed and what is stored holds only from an empty store.
     shutil.rmtree(here / "store", ignore_errors=True)
-    store = Store(here / "store")
-    return (
-        CancelFlag,
-        Cancelled,
-        Case,
-        StageDescription,
-        dumps_case,
-        here,
-        mo,
-        register,
-        run_document,
-        store,
-        walk_order,
-        with_section,
-    )
+    session = Session(Store(here / "store"), write=False)
+    return CancelFlag, Cancelled, Case, Charge, here, mo, selectivity, session
 
 
 @app.cell
@@ -51,15 +38,13 @@ def _(mo):
 
 
 @app.cell
-def _(Case, here, store):
+def _(Case, here):
     case = Case.cylinder(
         concentration_M=0.1,
         bias_V=0.05,
         charge=here / "ring.field.yaml",
         outputs=["current", "transport_numbers"],
         name="notebook-pore",
-        store=store,
-        write=False,
     )
     return (case,)
 
@@ -71,7 +56,7 @@ def _(mo):
 
 
 @app.cell
-def _(CancelFlag, Cancelled, case, dumps_case, mo, run_document):
+def _(CancelFlag, Cancelled, case, mo, session):
     # The flag is set as the solve is about to start, so the run ends there.
     flag = CancelFlag()
 
@@ -80,14 +65,7 @@ def _(CancelFlag, Cancelled, case, dumps_case, mo, run_document):
             flag.cancel()
 
     try:
-        run_document(
-            case.document,
-            case_text=dumps_case(case.document),
-            store=case.store,
-            cancel=flag,
-            on_stage=at_solve,
-            write=False,
-        )
+        session.run(case, cancel=flag, on_stage=at_solve)
         stopped = "The run was not stopped."
     except Cancelled as reason:
         stopped = f"The run stopped: {reason}."
@@ -102,14 +80,10 @@ def _(mo):
 
 
 @app.cell
-def _(case, dumps_case, run_document):
+def _(case, session):
     reports = []
-    result = run_document(
-        case.document,
-        case_text=dumps_case(case.document),
-        store=case.store,
-        progress=lambda fraction, message: reports.append((fraction, message)),
-        write=False,
+    result = session.run(
+        case, progress=lambda fraction, message: reports.append((fraction, message))
     )
     result
     return reports, result
@@ -135,29 +109,28 @@ def _(mo):
         """
         ## 3 · Substitute a stage's input
 
-        A finer mesh in place of the case's own. A stage's key moves when one of its
-        inputs does, so the mesh key moves and the materials key, which never reads the
-        mesh, does not.
+        A finer mesh in place of the case's own: the element size of the pore's mesh, set
+        from 4 nm to 2 nm. A stage's key moves when one of its inputs does, so the mesh key
+        moves and the materials key, which never reads the mesh, does not.
         """
     )
     return
 
 
 @app.cell
-def _(Case, case, mo, store):
-    finer = Case.cylinder(concentration_M=0.1, bias_V=0.05, maxh_nm=2.0, store=store, write=False)
-    swapped = case.with_(**{"inputs.mesh.path": finer["inputs.mesh.path"]})
+def _(case, mo, session):
+    finer = case.with_(maxh_nm=2.0)
 
-    def keys(handle):
+    def keys(candidate):
         # A walk to a stage runs that stage's inputs alone, so each stage is walked to.
         return {
             r.name: r.hash[:12]
             for stop in ("mesh", "materials")
-            for r in handle.run(upto=stop).stages
+            for r in session.run(candidate, upto=stop).stages
         }
 
     before = keys(case)
-    after = keys(swapped)
+    after = keys(finer)
     mo.md(
         "| stage | with its mesh | with the finer mesh |\n|---|---|---|\n"
         + "\n".join(
@@ -181,9 +154,8 @@ def _(mo):
 
 
 @app.cell
-def _(case, dumps_case, mo, result, run_document, with_section):
-    edited = with_section(case.document, "charge")
-    again = run_document(edited, case_text=dumps_case(edited), store=case.store, write=False)
+def _(Charge, case, mo, result, session):
+    again = session.run(case.with_(charge=Charge()))
     mo.md(
         " ".join(
             f"{record.name}: {'stored' if record.cached else 'computed'}"
@@ -200,45 +172,27 @@ def _(mo):
         """
         ## 5 · Add a stage
 
-        `selectivity.py` beside this file is a stage of one's own. It reads the
-        quantities of interest and says which ion carries more than half of the current.
-        Registered, it is walked after the report.
+        `selectivity.py` beside this file is a stage of one's own: a function whose
+        parameter names the stage it reads. It reads the quantities of interest and says
+        which ion carries more than half of the current. Registered on the session, it is
+        walked after the report.
         """
     )
     return
 
 
 @app.cell
-def _(StageDescription, register, walk_order):
-    if "selectivity" not in walk_order():
-        register(
-            StageDescription(
-                name="selectivity",
-                number=13,
-                title="Selectivity",
-                inputs=("case", "qoi"),
-                outputs=("a verdict",),
-                artefact_schema="nanopnp/selectivity-notebook/v1",
-                takes_workspace=False,
-                takes_store=False,
-                key_is_artefact=False,
-                weight=0.01,
-                needs_section=None,
-                optional_inputs=(),
-            ),
-            "selectivity:SelectivityStage",
-        )
-    registered = "selectivity" in walk_order()
+def _(selectivity, session):
+    session.register_stage(selectivity)
+    registered = "selectivity" in {info.name for info in session.stages}
     return (registered,)
 
 
 @app.cell
-def _(case, dumps_case, mo, registered, run_document):
+def _(case, mo, registered, session):
     # Read from the cell above so that the walk below is ordered after the registration.
     assert registered
-    extended = run_document(
-        case.document, case_text=dumps_case(case.document), store=case.store, write=False
-    )
+    extended = session.run(case)
     verdict = extended.artefacts["selectivity"].summary
     mo.md(
         f"The last two stages: {', '.join(r.name for r in extended.stages[-2:])}. "
