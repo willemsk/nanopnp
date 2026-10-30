@@ -6,6 +6,7 @@ import importlib
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -17,7 +18,7 @@ from nanopnp.core.stages import (
     create,
     describe,
 )
-from nanopnp.io.artefact import StageInputs
+from nanopnp.io.artefact import Artefact, StageInputs
 from nanopnp.pipeline.case import loads_case, resolve
 
 MINIMAL = """
@@ -187,3 +188,47 @@ def test_ver25_a_cancelled_stage_returns_no_artefact() -> None:
     flag.cancel()
     with pytest.raises(Cancelled):
         create("materials").run(StageInputs(resolved=resolve(loads_case(MINIMAL))), cancel=flag)
+
+
+def test_fr27_a_function_stage_is_keyed_by_its_code_and_its_inputs(tmp_path: Path) -> None:
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
+
+    quickstart = (
+        Path(__file__).resolve().parents[2] / "examples" / "01-quickstart" / "quickstart.case.yaml"
+    )
+    case = Case.load(quickstart)
+
+    def elements(mesh: Artefact) -> dict[str, object]:
+        return {"keys": sorted(mesh.summary)}
+
+    def edited(mesh: Artefact) -> dict[str, object]:
+        return {"keys": sorted(mesh.summary), "extra": 1}
+
+    session = Session(tmp_path / "store", write=False)
+    assert session.register_stage(elements) == "elements"
+    first = session.run(case, upto="elements")
+    again = session.run(case, upto="elements")
+    assert first.artefacts["elements"].summary["keys"]
+    assert again.stages[-1].cached
+    assert again.artefacts["elements"].hash == first.artefacts["elements"].hash
+    assert [info.name for info in session.stages][-1] == "elements"
+
+    session.register_stage(edited, name="elements")
+    replaced = session.run(case, upto="elements")
+    assert replaced.artefacts["elements"].hash != first.artefacts["elements"].hash
+    assert len([info for info in session.stages if info.name == "elements"]) == 1
+
+    other = Session(tmp_path / "store", write=False)
+    assert "elements" not in [info.name for info in other.stages]
+    assert "elements" not in other.run(case, upto="mesh").artefacts
+
+    with pytest.raises(ValueError, match="stage of the pipeline"):
+        session.register_stage(elements, name="mesh")
+    with pytest.raises(ValueError, match="'nonsense'"):
+        session.register_stage(lambda nonsense: {}, name="bad")
+    session.register_stage(lambda mesh: [1], name="listing")
+    with pytest.raises(TypeError, match="mapping"):
+        session.run(case, upto="listing")
+    with pytest.raises(ValueError, match="elements"):
+        session.sweep(case, axis="bias_V", values=[0.0, 0.1], workers=2)

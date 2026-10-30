@@ -22,6 +22,7 @@ from nanopnp.core.stages import (
     SolveHook,
     SolveReporting,
     Stage,
+    StageDescription,
     StageHook,
     StageOption,
     check_cancelled,
@@ -49,6 +50,7 @@ from nanopnp.io.manifest import (
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.mesh.sizing import case_debye_record
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.extension import FunctionStage
 from nanopnp.post.export import SolutionFields, solution_fields
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -173,7 +175,7 @@ class RunResult:
             held = ", ".join(self.artefacts) or "none"
             raise KeyError(f"this run holds no {stage!r} artefact; it holds {held}") from None
         inputs = None
-        if self.resolved is not None:
+        if self.resolved is not None and stage in walk_order():
             inputs = StageInputs(
                 resolved=self.resolved, upstream=offered(stage, self.artefacts, own=False)
             )
@@ -433,14 +435,21 @@ class _Walk:
     contributed: list[ContributedDeviation] = field(default_factory=list)
     scratch: Path | None = None
     overwrite_workspace: bool = False
+    own: Mapping[str, FunctionStage] = field(default_factory=dict)
+
+    def describe(self, name: str) -> StageDescription:
+        found = self.own.get(name)
+        return found.describe() if found is not None else describe(name)
 
     def inputs(self, name: str, *, own: bool = False) -> StageInputs:
         return StageInputs(
             resolved=self.resolved,
-            upstream=offered(name, self.artefacts, own=own),
+            upstream=offered(name, self.artefacts, own=own, description=self.describe(name)),
         )
 
     def construct(self, name: str) -> Stage:
+        if name in self.own:
+            return self.own[name]
         extra = dict(self.arguments.get(name, {}))
         description = describe(name)
         if description.takes_store:
@@ -460,21 +469,37 @@ class _Walk:
 
 
 def offered(
-    name: str, artefacts: Mapping[str, Artefact], *, own: bool = False
+    name: str,
+    artefacts: Mapping[str, Artefact],
+    *,
+    own: bool = False,
+    description: StageDescription | None = None,
 ) -> dict[str, Artefact]:
     """Return the artefacts a stage is handed: those its description declares."""
-    declared = set(describe(name).inputs) | ({name} if own else set())
+    declared = set((description or describe(name)).inputs) | ({name} if own else set())
     return {key: artefact for key, artefact in artefacts.items() if key in declared}
 
 
-def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]:
+def selected_stages(
+    resolved: ResolvedCase,
+    upto: str | None,
+    *,
+    stages: Mapping[str, FunctionStage] | None = None,
+) -> tuple[str, ...]:
     """Return the stages this case runs: every one, or the inputs of upto and upto.
 
     Parameters
     ----------
     upto
         The stage to walk to, or None for every stage.
+    stages
+        Stages of one's own, which follow every stage of the pipeline.
     """
+    own = stages or {}
+
+    def described(name: str) -> StageDescription:
+        return own[name].describe() if name in own else describe(name)
+
     supplied = resolved.charge is not None or resolved.eps_r is not None or resolved.derives_eps_r
     deposits = resolved.deposits_charge
     dropped = set() if supplied or deposits else {"charge"}
@@ -482,11 +507,11 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
         # Protonation feeds nothing unless a deposition reads it, and costs about a
         # minute per frame, so it runs only as a walk's named target.
         dropped.add("protonation")
-    order = walk_order()
+    order = (*walk_order(), *own)
     sections = type(resolved.document).model_fields
     absent: dict[str, str] = {}
     for name in order:
-        section = describe(name).needs_section
+        section = described(name).needs_section
         if section is None:
             continue
         if section not in sections:
@@ -509,21 +534,21 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
     for name in order:
         if name in dropped:
             continue
-        description = describe(name)
+        description = described(name)
         for needed in description.inputs:
             if needed not in description.optional_inputs and needed in dropped:
                 unfed[name] = needed
                 dropped.add(name)
                 break
-    stages = tuple(name for name in order if name not in dropped)
+    walked = tuple(name for name in order if name not in dropped)
     if upto is None:
-        return stages
-    if upto in stages:
+        return walked
+    if upto in walked:
         closure = {upto}
-        for name in reversed(stages[: stages.index(upto) + 1]):
+        for name in reversed(walked[: walked.index(upto) + 1]):
             if name in closure:
-                closure.update(describe(name).inputs)
-        return tuple(name for name in stages if name in closure)
+                closure.update(described(name).inputs)
+        return tuple(name for name in walked if name in closure)
     if upto in absent:
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} carries no "
@@ -555,7 +580,7 @@ def selected_stages(resolved: ResolvedCase, upto: str | None) -> tuple[str, ...]
             "inputs.charge nor inputs.eps_r and deposits no charge, so there is nothing for it "
             "to read"
         )
-    raise UnknownStageError(f"no stage {upto!r} in the pipeline; it walks {', '.join(stages)}")
+    raise UnknownStageError(f"no stage {upto!r} in the pipeline; it walks {', '.join(walked)}")
 
 
 def _contributed(stage: Stage, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
@@ -590,7 +615,7 @@ def _resolve_stage(
 ) -> Artefact:
     if on_solve is not None and isinstance(stage, SolveReporting):
         stage = stage.with_solve_hook(on_solve)
-    if describe(name).key_is_artefact:
+    if walk.describe(name).key_is_artefact:
         # The key is the whole artefact. Running the stage as well would be its
         # whole work twice for an artefact that carries no file, so the key is
         # the answer; it still goes into the store, so the run record points
@@ -857,6 +882,7 @@ def run_document(
     on_stage: StageHook | None = None,
     on_solve: SolveHook | None = None,
     on_artefact: ArtefactHook | None = None,
+    stages: Mapping[str, FunctionStage] | None = None,
 ) -> RunResult:
     """Walk the pipeline for one validated case and return what it produced.
 
@@ -891,6 +917,8 @@ def run_document(
         Called with each continuation rung and accepted Newton step of the solve.
     on_artefact
         Called after each stage with its artefact's schema, hash and whether the store held it.
+    stages
+        Stages of one's own, by name, walked after every stage of the pipeline.
 
     Raises
     ------
@@ -908,6 +936,7 @@ def run_document(
         workspace=Path(workspace) if workspace is not None else None,
         only=only,
         overwrite_workspace=overwrite_workspace,
+        own=dict(stages or {}),
     )
     try:
         return _walk(
@@ -974,8 +1003,8 @@ def _walk(
     on_artefact: ArtefactHook | None,
 ) -> RunResult:
     document = walk.document
-    stages = selected_stages(walk.resolved, upto)
-    weights = [describe(name).weight for name in stages]
+    stages = selected_stages(walk.resolved, upto, stages=walk.own)
+    weights = [walk.describe(name).weight for name in stages]
     total = sum(weights)
     offsets = [sum(weights[:index]) / total for index in range(len(stages) + 1)]
 
@@ -1009,7 +1038,7 @@ def _walk(
         walk.records.append(
             StageRecord(
                 name=name,
-                number=describe(name).number,
+                number=walk.describe(name).number,
                 schema=artefact.schema,
                 hash=artefact.hash,
                 cached=walk.store.hits > hits,
@@ -1036,7 +1065,7 @@ def _walk(
     # Complete when it walks every stage this case walks. Reaching the last one is
     # not enough: a walk runs its target's input closure, so a target
     # walked last that reads only some of the stages before it is still truncated.
-    complete = stages == selected_stages(walk.resolved, None)
+    complete = stages == selected_stages(walk.resolved, None, stages=walk.own)
     label = document.name if complete else f"{document.name}-upto-{stages[-1]}"
     result = RunResult(
         directory=walk.store.run_directory(label, _run_key(manifest)),

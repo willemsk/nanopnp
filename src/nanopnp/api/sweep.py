@@ -279,7 +279,7 @@ def run_point(
         "warm from " + warm.short_hash if warm is not None else "cold",
     )
     try:
-        result = Session(session.store)._walk(
+        result = session._member()._walk(
             document,
             case_text=case_text,
             arguments={"solve": {"warm_start": warm, "cold_reason": reason}},

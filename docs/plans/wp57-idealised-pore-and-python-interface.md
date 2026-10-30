@@ -434,12 +434,13 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   read against the base, and a correction file by path (D12); done when the D12 rows pass.
   **Executor:** main
 > **Outcome — item 9.** `resolve(document, *, base=None)` holds every named path absolute in `ResolvedCase` and refuses a missing correction file naming its key; an input file that is missing is still refused by the stage that reads it (`FileNotFoundError`), as before. A sweep member and a GUI document, both held in memory, read against the working directory (§5.3.4). `core/paths.py:reads_a_file` and `correction_source` serve stage 8, the manifest and the models; `pipeline/run.py:recorded_base` gives a recorded run its case file's directory.
-- [x] SHA10 10. `api/sweep.py`, `api/session.py`, `sweep/run.py`, `sweep/collect.py`, `cli/__init__.py`: the
+- [x] 96a2a07 10. `api/sweep.py`, `api/session.py`, `sweep/run.py`, `sweep/collect.py`, `cli/__init__.py`: the
   executor through the Session and `SweepResult` (D8); done when `test_sweep_cli.py`,
   `test_sweep_plan.py` and `uv run pytest tests/tier2/test_sweep.py` pass. **Executor:** main
 > **Outcome — item 10.** `api/sweep.py` holds the executor (`run_point`, `run_plan`, `_pool`, `_worker`, `_parent_artefact`) and `plan_sweep`, which plans without running; `sweep` and `Session.sweep` plan, run and collect into a `SweepResult` (`dataset`, `plan`, `directory`, `rows`). A member walks through `Session(session.store)`, so it writes its run directory and takes no workspace of the session's. `PUBLIC["run_plan"]` points at `api.sweep` until item 14 removes it. The plotting methods of `SweepResult` are item 15's.
-- [ ] 11. `pipeline/extension.py` (new), `pipeline/run.py`, `api/session.py`: `register_stage` (D9); done
+- [x] SHA11 11. `pipeline/extension.py` (new), `pipeline/run.py`, `api/session.py`: `register_stage` (D9); done
   when the D9 row passes. **Executor:** main
+> **Outcome — item 11.** An own stage is keyed by the digest of its code and defaults and the hashes of the artefacts it reads; a parameter must name a pipeline stage or one registered earlier on that Session. A sweep member walks the Session's own stages at `workers=1`; `workers > 1` is refused naming them. `RunResult.figure` of an own stage returns `None` (no figure is declared for its schema).
 - [ ] 12. `core/stages.py`, `solve/continuation.py`, `solve/stage.py`, `cli/__init__.py`,
   `gui/solver.py`: the end of a rung (D11); done when the D11 row passes. **Executor:** main
 - [ ] 13. Compaction checkpoint. **Executor:** main

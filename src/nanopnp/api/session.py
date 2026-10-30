@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from nanopnp.core.hashing import Canonicalisable
 from nanopnp.core.stages import (
     ArtefactHook,
     CancelToken,
@@ -23,6 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; the run imports them w
     from nanopnp.api.case import Case
     from nanopnp.api.sweep import SweepResult
     from nanopnp.io.case import CaseDocument, FieldValue
+    from nanopnp.pipeline.extension import FunctionStage
     from nanopnp.pipeline.run import RunResult
 
 __all__ = ["Session", "StageInfo"]
@@ -69,6 +71,7 @@ class Session:
         self.write = write
         self.workspace = Path(workspace) if workspace is not None else None
         self.overwrite_workspace = overwrite_workspace
+        self._own: dict[str, FunctionStage] = {}
 
     def run(
         self,
@@ -158,6 +161,7 @@ class Session:
             on_stage=on_stage,
             on_solve=on_solve,
             on_artefact=on_artefact,
+            stages=self._own,
         )
 
     def open(self, directory: str | Path) -> RunResult:
@@ -168,7 +172,12 @@ class Session:
 
     @property
     def stages(self) -> tuple[StageInfo, ...]:
-        """Every stage, in pipeline order."""
+        """Every stage, in pipeline order, then the stages of one's own in registration order."""
+        built_in = [
+            (description, figure_target(description.artefact_schema) is not None)
+            for description in registered_stages()
+        ]
+        own = [(stage.describe(), False) for stage in self._own.values()]
         return tuple(
             StageInfo(
                 name=description.name,
@@ -177,10 +186,54 @@ class Session:
                 inputs=description.inputs,
                 outputs=description.outputs,
                 schema=description.artefact_schema,
-                figure=figure_target(description.artefact_schema) is not None,
+                figure=figure,
             )
-            for description in registered_stages()
+            for description, figure in (*built_in, *own)
         )
+
+    def register_stage(
+        self, function: Callable[..., Mapping[str, Canonicalisable]], *, name: str | None = None
+    ) -> str:
+        """Add a stage of one's own to this session's walk and return its name.
+
+        The function is called with one artefact for each parameter, each named for the stage it
+        reads, and returns a mapping that becomes the stage's artefact. It walks after every
+        stage of the pipeline and is keyed by its code and the artefacts it reads, so an edited
+        body is another artefact. Registering a name again on this session replaces the stage.
+
+        Raises
+        ------
+        ValueError
+            If the name is a stage of the pipeline, or a parameter names no stage registered
+            before it.
+        """
+        from nanopnp.core.stages import walk_order
+        from nanopnp.pipeline.extension import FunctionStage
+
+        label = name if name is not None else function.__name__
+        if label in walk_order():
+            raise ValueError(
+                f"{label!r} is a stage of the pipeline; name the stage of your own differently"
+            )
+        earlier = list(self._own)
+        if label in self._own:
+            earlier = earlier[: earlier.index(label)]
+        known = {*walk_order(), *earlier}
+        number = (
+            self._own[label].number
+            if label in self._own
+            else 1 + max(d.number for d in registered_stages()) + len(self._own)
+        )
+        stage = FunctionStage(function, name=label, number=number)
+        unknown = [parameter for parameter in stage.parameters if parameter not in known]
+        if unknown:
+            raise ValueError(
+                f"stage {label!r} reads {', '.join(map(repr, unknown))}, which is no stage "
+                f"registered before it; its parameters are named for the stages it reads: "
+                f"{', '.join(sorted(known))}"
+            )
+        self._own[label] = stage
+        return label
 
     def sweep(
         self,
@@ -209,6 +262,12 @@ class Session:
         """
         from nanopnp.api.sweep import sweep
 
+        if workers > 1 and self._own:
+            raise ValueError(
+                f"workers={workers} runs the members in other processes, which do not hold this "
+                f"session's stages of its own ({', '.join(self._own)}); run the sweep with "
+                "workers=1"
+            )
         return sweep(
             case,
             session=self,
@@ -218,3 +277,10 @@ class Session:
             workers=workers,
             check_meshes=check_meshes,
         )
+
+    def _member(self) -> Session:
+        # A sweep member writes its run directory and takes no workspace of this session's, but
+        # walks the stages of one's own.
+        member = Session(self.store)
+        member._own = dict(self._own)
+        return member
