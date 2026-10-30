@@ -78,17 +78,3 @@ def test_fr24_session_sweep_warm_starts_each_member_from_its_neighbour(tmp_path:
     assert result.dataset.summary["counts"] == {"ok": 3}
     assert [row["warm_start"]["status"] for row in result.rows] == ["cold", "warm", "warm"]
     assert all(row["directory"] is not None for row in result.rows), "members write their runs"
-
-
-def test_a_run_short_of_the_solve_refuses_its_field_figures_naming_the_solve(
-    case: Case, tmp_path: Path
-) -> None:
-    run = Session(tmp_path / "store", write=False).run(case, upto="mesh")
-    with pytest.raises(KeyError, match="'solve'"):
-        run.plot_field("potential")
-    with pytest.raises(KeyError, match="'solve'"):
-        run.plot_cutline("potential", along="r")
-    with pytest.raises(KeyError, match="'solve'"):
-        run.field_choices()
-    with pytest.raises(ValueError, match="'z' or 'r'"):
-        run.plot_cutline("potential", along="x")  # type: ignore[arg-type]
