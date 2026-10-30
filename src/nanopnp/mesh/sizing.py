@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from nanopnp.core.scaling import debye_length_nm
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.core.typing import Shape
@@ -24,6 +24,18 @@ WALL_CEILING_NM = 0.05
 
 DEBYE_FRACTION = 5.0
 """NUM-30's wall target is ``lambda_D`` divided by this."""
+
+WALL_MEAN_BOUND = 1.15
+"""The ``wall`` segments' mean length may be at most this times the target."""
+
+WALL_MAX_BOUND = 2.0
+"""The longest ``wall`` segment may be at most this times the target."""
+
+GATE_CONSTANTS: Mapping[str, Canonicalisable] = {
+    "wall_mean_bound": WALL_MEAN_BOUND,
+    "wall_max_bound": WALL_MAX_BOUND,
+}
+"""The wall-size gate's thresholds, which key the stage-6 artefact."""
 
 GRADING = 0.2
 """Netgen grading. Smaller grades faster; 0.2 is what the Phase-0 shapes use."""

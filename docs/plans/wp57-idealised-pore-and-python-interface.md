@@ -397,7 +397,7 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
 
 ### Work items
 
-- [ ] 1. `io/case.py` and every importer in `src/` and `tests/`: the blocks without `Spec`, frozen,
+- [x] dddbebe 1. `io/case.py` and every importer in `src/` and `tests/`: the blocks without `Spec`, frozen,
   the root titled `Case` (D6); done when `uv run pytest -m tier1` passes. **Executor:**
   `general-purpose` on Sonnet
 - [ ] 2. `io/case.py`, `pipeline/checks.py`, `pipeline/case.py`, `io/resolved.py`, `io/defaults.py`,

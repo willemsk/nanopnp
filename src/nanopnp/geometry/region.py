@@ -23,6 +23,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
+from nanopnp.geometry.pore import MOUTH, IdealisedRegionRecord
 from nanopnp.geometry.profile import (
     PoreProfile,
     load_profile,
@@ -35,6 +36,7 @@ from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.io.artefact import REGION_SCHEMA, RegionArtefact
 from nanopnp.io.case import (
     Membrane,
+    Pore,
     Reservoir,
     UnsupportedCaseSection,
 )
@@ -222,22 +224,23 @@ class RegionRecord(_Strict):
         return summary
 
 
-def write_region(record: RegionRecord, path: Path) -> Path:
+def write_region(record: RegionRecord | IdealisedRegionRecord, path: Path) -> Path:
     """Write ``record`` as ``nanopnp/region/v0.5`` YAML that :func:`read_region` reads back."""
     document = record.model_dump(by_alias=True, mode="json")
-    document["profile"] = [[float(r), float(z)] for r, z in record.profile]
-    if record.exclusion is None:
-        del document["exclusion"]
-    else:
-        document["exclusion"]["loop"] = [[float(r), float(z)] for r, z in record.exclusion.loop]
+    if isinstance(record, RegionRecord):
+        document["profile"] = [[float(r), float(z)] for r, z in record.profile]
+        if record.exclusion is None:
+            del document["exclusion"]
+        else:
+            document["exclusion"]["loop"] = [[float(r), float(z)] for r, z in record.exclusion.loop]
     path.parent.mkdir(parents=True, exist_ok=True)
     text = yaml.safe_dump(document, sort_keys=False, default_flow_style=None, width=100)
     path.write_text(text, encoding="utf-8")
     return path
 
 
-def read_region(path: Path) -> RegionRecord:
-    """Read a ``nanopnp/region/v0.5`` record.
+def read_region(path: Path) -> RegionRecord | IdealisedRegionRecord:
+    """Read a ``nanopnp/region/v0.5`` record; one with a ``pore`` key is an idealised pore's.
 
     Raises
     ------
@@ -248,6 +251,8 @@ def read_region(path: Path) -> RegionRecord:
     schema = raw.get("schema") if isinstance(raw, dict) else None
     if schema != REGION_SCHEMA:
         raise ValueError(f"{path}: expected schema {REGION_SCHEMA!r}, found {schema!r}")
+    if "pore" in raw:
+        return IdealisedRegionRecord.model_validate(raw)
     return RegionRecord.model_validate(raw)
 
 
@@ -989,6 +994,30 @@ def derive_region(
     return record.model_copy(update={"face_areas_nm2": areas, "edge_counts": counts})
 
 
+def derive_idealised_region(
+    pore: Pore, membrane: Membrane, reservoir: Reservoir
+) -> IdealisedRegionRecord:
+    """Build an idealised pore's region and return its record.
+
+    Raises
+    ------
+    ValueError
+        If the pore's radius is not below the reservoir's.
+    """
+    if not pore.radius_nm < reservoir.radius_nm:
+        raise ValueError(
+            f"geometry.pore.radius_nm {pore.radius_nm} nm is not below "
+            f"geometry.reservoir.radius_nm {reservoir.radius_nm} nm"
+        )
+    record = IdealisedRegionRecord(
+        pore=pore,
+        membrane_thickness_nm=membrane.thickness_nm,
+        reservoir_radius_nm=reservoir.radius_nm,
+    )
+    areas, counts = measure(record.geometry().shape())
+    return record.model_copy(update={"face_areas_nm2": areas, "edge_counts": counts})
+
+
 def _profile_input(inputs: StageInputs, resolved: ResolvedCase) -> tuple[str, Path]:
     if resolved.profile is not None:
         path = resolved.profile.path
@@ -1041,8 +1070,23 @@ class RegionStage:
     def key(self, inputs: StageInputs) -> RegionArtefact:
         """Return the key: the membrane, the reservoir, the constants and the profile."""
         resolved = inputs.resolved
+        if resolved.pore is not None:
+            return self._idealised_key(resolved)
         identity, _ = _profile_input(inputs, resolved)
         return self._key(resolved, identity)
+
+    def _idealised_key(self, resolved: ResolvedCase) -> RegionArtefact:
+        assert resolved.pore is not None
+        assert resolved.membrane is not None and resolved.reservoir is not None
+        return RegionArtefact(
+            parameters={
+                "pore": resolved.pore.model_dump(mode="json"),
+                "membrane": resolved.membrane.model_dump(mode="json"),
+                "reservoir": resolved.reservoir.model_dump(mode="json"),
+                "constants": {"junction_tolerance_nm": TOL_NM, "mouth": MOUTH},
+            },
+            inputs={},
+        )
 
     def _key(self, resolved: ResolvedCase, identity: str) -> RegionArtefact:
         assert resolved.membrane is not None and resolved.reservoir is not None
@@ -1071,9 +1115,11 @@ class RegionStage:
             At the first junction criterion the region fails.
         """
         directory = scratch_directory(self._workspace, self.name, overwrite=self._overwrite)
+        resolved = inputs.resolved
+        if resolved.pore is not None:
+            return self._run_idealised(resolved, directory, progress=progress, cancel=cancel)
         check_cancelled(cancel, "reading the profile")
         report(progress, 0.0, "reading the profile")
-        resolved = inputs.resolved
         identity, path = _profile_input(inputs, resolved)
         key = self._key(resolved, identity)
         assert resolved.membrane is not None and resolved.reservoir is not None
@@ -1101,6 +1147,29 @@ class RegionStage:
             record.membrane.centre_z_nm,
         )
         report(progress, 1.0, "region written")
+        return RegionArtefact(
+            parameters=key.parameters,
+            inputs=key.inputs,
+            payload={PAYLOAD_NAME: written},
+            summary=record.summary(),
+        )
+
+    def _run_idealised(
+        self,
+        resolved: ResolvedCase,
+        directory: Path,
+        *,
+        progress: Progress | None,
+        cancel: CancelToken | None,
+    ) -> RegionArtefact:
+        assert resolved.pore is not None
+        assert resolved.membrane is not None and resolved.reservoir is not None
+        check_cancelled(cancel, "assembling the region")
+        report(progress, 0.0, f"assembling the {resolved.pore.shape} pore")
+        record = derive_idealised_region(resolved.pore, resolved.membrane, resolved.reservoir)
+        written = write_region(record, directory / f"{PAYLOAD_NAME}.yaml")
+        report(progress, 1.0, "region written")
+        key = self._idealised_key(resolved)
         return RegionArtefact(
             parameters=key.parameters,
             inputs=key.inputs,

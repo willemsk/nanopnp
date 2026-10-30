@@ -12,6 +12,7 @@ from nanopnp.io.case import (
     Contour,
     Density,
     Membrane,
+    Pore,
     Reservoir,
     Smearing,
     Structure,
@@ -82,6 +83,8 @@ class ResolvedCase:
     smearing: Smearing = dataclass_field(default_factory=Smearing)
     exclusion_offset_nm: float = 0.0
     dielectric_transition_nm: float = 0.0
+    pore: Pore | None = None
+    wall_charge_C_m2: float = 0.0
 
     @property
     def contour_spacing_nm(self) -> float:
@@ -125,7 +128,7 @@ class ResolvedCase:
     @property
     def provenance(self) -> dict[str, Any]:
         """Return what the manifest must record about the resolved case."""
-        return {
+        recorded: dict[str, Any] = {
             "name": self.document.name,
             "schema": self.document.schema_id,
             "model": self.model,
@@ -162,6 +165,10 @@ class ResolvedCase:
             },
             "outputs": list(self.outputs),
         }
+        if self.wall_charge_C_m2 != 0.0:
+            # Only a charged wall is named, so no solve key of a case without one moves.
+            recorded["wall_charge_C_m2"] = self.wall_charge_C_m2
+        return recorded
 
 
 def parse_chains(chains: str) -> tuple[str, ...] | None:

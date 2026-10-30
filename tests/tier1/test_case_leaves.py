@@ -43,6 +43,9 @@ UNREAD: dict[str, frozenset[str]] = {
 }
 """WP42 D3: the leaves each shipped model declares it does not read."""
 
+WALL_CHARGE = "boundary_conditions.wall_charge_C_m2"
+"""A solve leaf the supplied-mesh base cannot carry: it is read beside geometry.pore only."""
+
 SOLVE_PROBES: tuple[tuple[str, tuple[Any, ...]], ...] = (
     ("electrolyte.concentration_M", (0.2,)),
     ("electrolyte.driver", ("ionic_strength",)),
@@ -496,6 +499,32 @@ def test_ver71_a_provenance_leaf_moves_no_solve_key(meshes: dict[str, Path]) -> 
     assert left.solve_provenance == right.solve_provenance
 
 
+def test_ver71_a_wall_charge_moves_the_solve_key_and_a_zero_one_moves_nothing() -> None:
+    from nanopnp.pipeline.case import loads_case, resolve
+
+    document = {
+        "schema": "nanopnp/case/v0.5",
+        "name": "pore",
+        "geometry": {
+            "pore": {"shape": "cylinder", "radius_nm": 2.0},
+            "reservoir": {"radius_nm": 9},
+        },
+        "electrolyte": {
+            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+            "concentration_M": 0.1,
+            "parameters": WILLEMS,
+        },
+        "boundary_conditions": {"bias_V": 0.05},
+        "physics": {"solid_permittivities": {"membrane": 3.2}},
+    }
+    absent = resolve(loads_case(yaml.safe_dump(document)))
+    zero = resolve(loads_case(yaml.safe_dump(put(document, WALL_CHARGE, 0.0))))
+    charged = resolve(loads_case(yaml.safe_dump(put(document, WALL_CHARGE, -0.02))))
+    assert zero.solve_provenance == absent.solve_provenance
+    assert charged.solve_provenance != absent.solve_provenance
+    assert charged.solve_provenance["wall_charge_C_m2"] == -0.02
+
+
 def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     from nanopnp.core.stages import create, describe
     from nanopnp.io.artefact import Artefact, ProfileArtefact, StageInputs
@@ -516,7 +545,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         return seen
 
     from nanopnp.geometry.profile import load_profile
-    from nanopnp.geometry.region import derive_region, write_region
+    from nanopnp.geometry.region import derive_region, read_region, write_region
     from nanopnp.io.case import Membrane, Reservoir
 
     profile_yaml = Path("data/geometry/clya_reference_profile.yaml")
@@ -810,10 +839,58 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
             with pytest.raises(CaseValidationError):
                 resolve(loads_case(yaml.safe_dump(doc)))
 
+    pore_base = {
+        "schema": "nanopnp/case/v0.5",
+        "name": "pore",
+        "geometry": {
+            "pore": {"shape": "cylinder", "radius_nm": 2.0},
+            "membrane": {"thickness_nm": 6.0},
+            "reservoir": {"radius_nm": 10.0},
+        },
+        "electrolyte": {
+            "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+            "concentration_M": 0.1,
+            "parameters": "willems2020_nacl",
+        },
+        "boundary_conditions": {"bias_V": 0.05, "ground": "cis"},
+        "physics": {"model": "epnp-ns", "solid_permittivities": {"membrane": 3.2}},
+        "numerics": {"mesh": {"maxh_nm": 4.0, "wall_h_nm": 0.35}},
+    }
+    from nanopnp.geometry.pore import IdealisedRegionRecord
+    from nanopnp.geometry.region import derive_idealised_region
+    from nanopnp.io.case import Pore
+
+    idealised_yaml = tmp_path / "idealised.yaml"
+    write_region(
+        derive_idealised_region(Pore(shape="cylinder", radius_nm=2.0), Membrane(), Reservoir()),
+        idealised_yaml,
+    )
+    assert isinstance(read_region(idealised_yaml), IdealisedRegionRecord)
+    idealised_region = Artefact(
+        schema="nanopnp/region/v0.5", parameters={}, inputs={}, payload={"region": idealised_yaml}
+    )
+
+    def pore_mesh_key(res: object) -> str:
+        inputs = StageInputs(resolved=res, upstream={"region": idealised_region})
+        return create("mesh").key(inputs).hash
+
+    res_pore = resolve(loads_case(yaml.safe_dump(pore_base)))
+    pore_region = stage_key("region", res_pore)
+    pore_mesh = pore_mesh_key(res_pore)
+    assert create("region").key(StageInputs(resolved=res_pore)).parameters["pore"]["shape"] == (
+        "cylinder"
+    )
+    res_radius = resolve(loads_case(yaml.safe_dump(put(pore_base, "geometry.pore.radius_nm", 1.5))))
+    assert stage_key("region", res_radius) != pore_region
+    res_maxh = resolve(loads_case(yaml.safe_dump(put(pore_base, "numerics.mesh.maxh_nm", 3.0))))
+    assert stage_key("region", res_maxh) == pore_region
+    assert pore_mesh_key(res_maxh) != pore_mesh
+
     covered = (
         set(live_pdb)
         | set(refused)
         | {"numerics.mesh.wall_for_concentration_M"}
+        | {"geometry.pore.shape", "geometry.pore.radius_nm", "numerics.mesh.maxh_nm"}
         | {"inputs.profile.path", "inputs.pqr.path"}
         | {f"inputs.mesh.{k}" for k in ("path", "format", "groups")}
         | {f"inputs.charge.{k}" for k in ("path", "format", "groups")}
@@ -836,7 +913,10 @@ def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
         if leaf.kind == "stage":
             assert leaf.consumer in {stage.name for stage in registered_stages()}, path
     solve = {path for path, leaf in LEAVES.items() if leaf.kind == "solve"}
-    assert solve == {path for path, _ in SOLVE_PROBES} | {"physics.model"}
+    assert solve == {path for path, _ in SOLVE_PROBES} | {
+        "physics.model",
+        WALL_CHARGE,
+    }
     assert {path for path, leaf in LEAVES.items() if leaf.kind == "solver"} == {
         "numerics.nonlinear.max_iter",
         "numerics.nonlinear.rtol",

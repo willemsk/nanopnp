@@ -286,6 +286,7 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
             "it, so the structure would be recorded as an input to a run that never read it "
             "(section 5.3.1 NOTE on inputs:); remove one of them"
         )
+    _check_pore(document)
     if document.geometry is not None and document.inputs.mesh is not None:
         raise CaseValidationError(
             f"case {document.name!r} carries a geometry: section and supplies inputs.mesh. A "
@@ -298,10 +299,12 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
         document.inputs.mesh is None
         and document.structure is None
         and document.inputs.profile is None
+        and (document.geometry is None or document.geometry.pore is None)
     ):
         raise CaseValidationError(
             f"case {document.name!r} names no geometry: it supplies neither inputs.mesh nor "
-            "inputs.profile and carries no structure: section, so there is nothing to mesh and "
+            "inputs.profile, declares no geometry.pore and carries no structure: section, so "
+            "there is nothing to mesh and "
             "no mesh to solve on (section 5.3.1 NOTE on inputs:)"
         )
     if document.inputs.mesh is None:
@@ -345,6 +348,66 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
         _check_ladder_can_honour(document.physics)
     _check_outputs(document)
     return mesh
+
+
+def _check_pore(document: CaseDocument) -> None:
+    geometry = document.geometry
+    pore = geometry.pore if geometry is not None else None
+    note = "section 5.3.1 NOTE on geometry.pore"
+    if pore is None:
+        charge = document.boundary_conditions.wall_charge_C_m2
+        if charge != 0.0:
+            raise CaseValidationError(
+                f"boundary_conditions.wall_charge_C_m2 is {charge} with no geometry.pore; it is "
+                f"the surface charge of an idealised pore's wall, and nothing else has one ({note})"
+            )
+        if document.numerics.mesh.maxh_nm is not None:
+            raise CaseValidationError(
+                f"numerics.mesh.maxh_nm is {document.numerics.mesh.maxh_nm} with no "
+                f"geometry.pore; it is the global element size of an idealised pore ({note})"
+            )
+        return
+    for name, present in (
+        ("structure:", document.structure is not None),
+        ("inputs.profile", document.inputs.profile is not None),
+        ("inputs.mesh", document.inputs.mesh is not None),
+    ):
+        if present:
+            raise CaseValidationError(
+                f"geometry.pore and {name} are both given; an idealised pore is the geometry, "
+                f"and {name} would be a second one ({note}); remove one of them"
+            )
+    assert geometry is not None
+    if pore.radius_nm >= geometry.reservoir.radius_nm:
+        raise CaseValidationError(
+            f"geometry.pore.radius_nm is {pore.radius_nm} nm, not below "
+            f"geometry.reservoir.radius_nm {geometry.reservoir.radius_nm} nm; the lumen opens "
+            f"into a larger reservoir ({note})"
+        )
+    if "membrane" not in document.physics.solid_permittivities:
+        raise CaseValidationError(
+            "physics.solid_permittivities.membrane is not set; the solid around an idealised "
+            "pore is the membrane domain, and an unlisted solid is taken as ion-free water "
+            f"({note}); set its relative permittivity"
+        )
+    if geometry.membrane.centre_z_nm != 0.0:
+        raise CaseValidationError(
+            f"geometry.membrane.centre_z_nm is {geometry.membrane.centre_z_nm} with "
+            f"geometry.pore; it is a position in a structure's frame, and the pore sits at 0 "
+            f"({note})"
+        )
+    for key, default in (("density", Density()), ("contour", Contour())):
+        if getattr(geometry, key) != default:
+            raise CaseValidationError(
+                f"geometry.{key} is set beside geometry.pore; stages 2 to 4 read it and an "
+                f"idealised pore skips them ({note})"
+            )
+    backend = document.numerics.mesh.backend
+    if backend != "netgen":
+        raise CaseValidationError(
+            f"numerics.mesh.backend is {backend!r} beside geometry.pore; the idealised pore's "
+            f"size field is posed for netgen only ({note})"
+        )
 
 
 def _check_charge(document: CaseDocument) -> None:
