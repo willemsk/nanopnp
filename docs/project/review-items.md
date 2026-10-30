@@ -1748,3 +1748,24 @@ Question for the author: does the Phase 6 fix stay REV-60's factorisation reuse,
 threaded assembly, and the cost of the correction coefficients per step), measured against the thresholds of
 §8.2.12 M2?
 
+
+## REV-157: WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice
+
+Left by the review of WP56 ([CODE_REVIEW_020](../code_reviews/CODE_REVIEW_020.md)). Each item needs a change that WP56
+did not plan.
+
+- **The last rung's time on stderr includes the solve's work after the ladder.** `cli/__init__.py`'s `_Progress`
+  closes a rung only when the next rung or stage starts. The top rung's printed seconds therefore include the Péclet
+  measurement and the write of the state to the store, and they disagree with the manifest's rung `seconds`, which
+  REV-156's measurement reads. A fix is an end-of-rung call on `core.stages.SolveHook`, which `gui/solver.py`'s
+  `QueueSolve` also implements.
+- **Two readers of a run directory remain.** `validation/runs.py` reads `run.json` with its own `_record` and
+  resolves the store in `reopen`, beside `pipeline.run.read_run` and `open_run`. Moving `reopen` onto `read_run`
+  would also bring it the manifest-hash and case-text checks.
+- **`inspect` of a run reads the manifest twice**, once raw and once through `read_run`, and `Manifest.hash` is
+  recomputed on every `document()` call. The cost is small, kilobytes per call.
+- **`solve/state.py:wall_distance_remedy` keeps a `None` branch that cannot be reached.** `generates_mesh` is
+  `resolved.mesh is None`, so the else branch always has a supplied mesh.
+
+Recommendation: add the end-of-rung hook with WP57's `Case.run` hooks (§8.2.21 W4); move `reopen` onto `read_run`
+with the next change to `validation/runs.py`; take the last two items with whatever next touches those lines.

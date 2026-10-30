@@ -33,9 +33,12 @@ $ nanopnp reproduce run
    artefact goes into `store/`, keyed by its content hash, and the run directory `run/` gets
    three files: `manifest.json`, the provenance record; `case.yaml`, the case verbatim; and
    `run.json`, the run record.
-3. **`nanopnp inspect run`** reads the manifest back: input hashes, library versions, the mesh
-   and its quality, the solver settings, the stabilisation mode, and the deviations from the
-   validated model. This case has none.
+3. **`nanopnp inspect run`** reads the run back: its model and stabilisation mode, each stage,
+   each continuation rung with its Newton iterations and seconds, the quantities, and the
+   deviations from the validated model. This case has none. `--section` prints one group of the
+   manifest in full (`inputs` for the input hashes, `environment` for the library versions,
+   `geometry_and_mesh` for the mesh and its quality, `solver` for its settings); `--json` prints
+   the whole manifest.
 4. **`nanopnp reproduce run`** solves the archived case again, in a throwaway store so nothing
    is served from cache, and compares every recorded scalar. It exits `0` only if all of them
    agree to the tolerance. Differences in library, interpreter or platform are reported, not

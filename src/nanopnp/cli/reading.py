@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.artefact import SweepArtefact
-    from nanopnp.pipeline.run import RecordedRun
+    from nanopnp.pipeline.run import RecordedRun, StageRecord
 
 __all__ = [
     "DATASET_QUANTITIES",
@@ -46,11 +46,11 @@ def format_value(value: object) -> str:
     return str(value)
 
 
-def stage_line(number: int, name: str, cached: bool, digest: str, seconds: float) -> str:
+def stage_line(record: StageRecord) -> str:
     """Return one stage's line, as `nanopnp run` prints it."""
     return (
-        f"stage {number:>2} {name:<11} {'cached' if cached else 'computed':<8} "
-        f"{digest[:12]} {seconds:8.3f} s"
+        f"stage {record.number:>2} {record.name:<11} "
+        f"{'cached' if record.cached else 'computed':<8} {record.hash[:12]} {record.seconds:8.3f} s"
     )
 
 
@@ -105,10 +105,7 @@ def run_lines(recorded: RecordedRun) -> list[str]:
         _label("case", f"{recorded.document.name} {recorded.manifest.case_hash[:12]}"),
         _label("model", f"{solver['model']}, stabilisation {stabilisation['mode']}"),
     ]
-    lines += [
-        stage_line(stage.number, stage.name, stage.cached, stage.hash, stage.seconds)
-        for stage in recorded.stages
-    ]
+    lines += [stage_line(stage) for stage in recorded.stages]
     ladder = solver["run"]
     reason = _not_run(ladder)
     if reason is not None:

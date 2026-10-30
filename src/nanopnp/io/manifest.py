@@ -339,15 +339,21 @@ class Manifest:
                 ),
                 created_at=str(decoded["created_at"]),
             )
-        except (KeyError, TypeError) as error:
+            computed = manifest.hash
+        except KeyError as error:
             raise ManifestHashError(
                 f"the document lacks the manifest field {error}, so its hash cannot be recomputed"
             ) from None
+        except (TypeError, ValueError) as error:
+            raise ManifestHashError(
+                f"the document holds a manifest field of the wrong shape ({error}), so its hash "
+                "cannot be recomputed"
+            ) from None
         recorded = decoded.get("hash")
-        if recorded != manifest.hash:
+        if recorded != computed:
             raise ManifestHashError(
                 f"the document records hash {str(recorded)[:12]} but its case and groups hash to "
-                f"{manifest.hash[:12]}: it was edited after the run wrote it, and is not that "
+                f"{computed[:12]}: it was edited after the run wrote it, and is not that "
                 "run's record"
             )
         return manifest

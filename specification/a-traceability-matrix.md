@@ -64,7 +64,7 @@ needed.
 | FR-41 | None yet; the structural-mutator phase |
 | FR-42 | None yet; the sketcher phase |
 | FR-43 | None yet; a later phase, its library package writing its physics first (§8.2.18 T6) |
-| FR-44 | `test_fr44_plot_draws_each_figure_of_the_run_from_its_directory` (example 01, per push), `test_fr44_plot_refuses_a_suffix_or_a_figureless_stage_before_any_stage_runs` |
+| FR-44 | `test_fr44_plot_draws_each_figure_of_the_run_from_its_directory` (example 01, per push); the refusals before any stage runs are verified at review (§7.1, the test scope) |
 | QR-01 | VER-12 to VER-22, in particular VER-17 and VER-18 |
 | QR-02 | VAL-16, VAL-17 (gating v0.7); VAL-01, VAL-02 (kept, not required) |
 | QR-03 | VER-01, VER-29, VER-58, VAL-15 |

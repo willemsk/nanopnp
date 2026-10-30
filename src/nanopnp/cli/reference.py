@@ -80,8 +80,12 @@ def _type_name(annotation: object) -> str:
         return f"{text}, optional" if len(present) < len(arguments) else text
     if isinstance(annotation, type) and issubclass(annotation, BaseModel):
         return annotation.__name__
+    if origin is tuple and len(arguments) == 2 and arguments[1] is Ellipsis:
+        return f"tuple of {_type_name(arguments[0])}s"
+    if origin is tuple and len(arguments) == 2 and arguments[0] == arguments[1]:
+        return f"pair of {_type_name(arguments[0])}s"
     if origin is tuple and arguments:
-        return f"pair of {_type_name(arguments[0])}s" if len(arguments) == 2 else "tuple"
+        return "tuple"
     if origin is dict and len(arguments) == 2:
         return f"mapping of {_type_name(arguments[0])} to {_type_name(arguments[1])}"
     if origin is list and len(arguments) == 1:
@@ -273,6 +277,8 @@ def render_cli_reference() -> str:
         lines += [f"## `{command}`", ""]
         if text:
             lines += [text[0].upper() + text[1:] + ("" if text.endswith(".") else "."), ""]
+        if parser.description and parser.description != text:
+            lines += [parser.description, ""]
         lines += ["```text", _usage(parser), "```", ""]
         rows = []
         for action in parser._actions:

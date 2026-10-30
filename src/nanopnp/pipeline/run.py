@@ -48,7 +48,7 @@ from nanopnp.io.manifest import (
 )
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.mesh.sizing import case_debye_record
-from nanopnp.pipeline.case import load_case, loads_case, resolve
+from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.post.export import SolutionFields, solution_fields
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -330,7 +330,10 @@ def _json_file(path: Path, what: str) -> dict[str, Canonicalisable]:
             f"{path.parent} is not a run directory as nanopnp run writes it: it holds no "
             f"{path.name}, the {what}"
         )
-    parsed = decode_floats(json.loads(path.read_text(encoding="utf-8")))
+    try:
+        parsed = decode_floats(json.loads(path.read_text(encoding="utf-8")))
+    except json.JSONDecodeError as error:
+        raise ManifestHashError(f"{path} is not JSON, so it is not the {what}: {error}") from None
     if not isinstance(parsed, dict):
         raise ManifestHashError(f"{path} holds a {type(parsed).__name__}, not the {what}")
     return parsed
@@ -344,7 +347,8 @@ def read_run(directory: str | Path) -> RecordedRun:
     FileNotFoundError
         The directory lacks ``run.json``, ``manifest.json`` or ``case.yaml``.
     ManifestHashError
-        The manifest does not reproduce its hash, or the run record names another manifest.
+        The manifest does not reproduce its hash, the run record names another manifest, or
+        ``case.yaml`` is not the case the manifest embeds.
     """
     source = Path(directory)
     record = _json_file(source / RUN_RECORD_FILENAME, "run record")
@@ -365,8 +369,18 @@ def read_run(directory: str | Path) -> RecordedRun:
             f"{source} is not a run directory as nanopnp run writes it: it holds no "
             f"{CASE_FILENAME}, the case the manifest records"
         )
+    # The manifest's hash does not cover its case text, so the two copies are compared instead.
+    text = case_path.read_bytes().decode("utf-8")
+    if text != manifest.case_text:
+        raise ManifestHashError(
+            f"{case_path} differs from the case text embedded in {source / MANIFEST_FILENAME}. "
+            "They are written from one string, so one of them was edited after the run"
+        )
     return RecordedRun(
-        directory=source, document=load_case(case_path), manifest=manifest, record=record
+        directory=source,
+        document=loads_case(text, source=str(case_path)),
+        manifest=manifest,
+        record=record,
     )
 
 
