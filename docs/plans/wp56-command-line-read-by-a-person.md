@@ -183,6 +183,18 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
   **Executor:** `general-purpose` on Sonnet
 - [ ] 9. The UT-09 measurement (W8; *Implementation details*); done when the Outcome and REV-156 hold the
   numbers. **Executor:** main
+  > **Outcome — UT-09 measured: assembly, not the factorisation, dominates.** `nanopnp mesh cylinder --maxh-nm
+  > 0.175` gives 16 444 elements (8 404 vertices; P2 c, phi, u, P1 p), session 03's case with its validated
+  > ePNP-NS corrections, stabilisation `none`, one process on a 4-core container. Total 761 s, of which the solve
+  > is 754 s; 60 Newton steps over 15 rungs. Per rung (`inspect --section solver`): `1-pb-linear` 0.29 s, `2-pb`
+  > 0.02 s, `3-equilibrium-pnp` 2.5 s (1 step), the five bias rungs 8.3 to 9.6 s (5 steps each), `6-flow` 22.9 s
+  > (4), `7-corrections` 88.2 s, `8-steric` 115.6 s and the four salt rungs 111.6 to 120.4 s (5 each). Under
+  > cProfile: `AssembleLinearization` 473 s (62 %, 60 calls, 7.9 s each), `UmfpackSolver.solve` 184 s (24 %; its
+  > `Inverse` 164 s), the residual's `Apply` 74 s (10 %), the gates' sampling 25 s, the Péclet report 16 s. The
+  > share is below the plan's 50 %, and the six `epnp-ns` rungs are 10 to 14 times the bias rungs at the same
+  > step count, so it goes to the author (REV-156). No `src/` file enters NGSolve's `TaskManager`, so assembly
+  > runs on one thread. A rung's seconds in `--progress` run to the next stage's start, so the last rung's
+  > (136.5 s) includes the Péclet report; the record's 120.4 s is the rung's.
 - [ ] 10. Compaction checkpoint. **Executor:** main
 - [ ] 11. `CHANGELOG.md` (`plot`, `inspect`'s reading and comparison, `--progress`, the field-document
   refusal), Appendix A's FR-44 row to the test names, REV-154 `fixed`, the WP56 UT rows `fixed`; gate
