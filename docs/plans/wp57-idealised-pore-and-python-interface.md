@@ -414,10 +414,10 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   `solve/state.py`, `docs/project/modularity-layering.yaml`, `tests/tier1/test_cli.py`; delete
   `mesh/cylinder.py` (D3); done when VER-32's rows pass with VER-61 and VER-65. **Executor:** main
 > **Outcome — item 5.** `mesh/cylinder.py`, `PUBLIC["mesh_cylinder"]` and `mesh/__init__.py`'s export stay until item 8: `pipeline/handle.py` calls `mesh_cylinder` until the `Case` replaces it, and Tier 1 must pass at each commit. Items 2 to 4 are one commit (`72cf920`): the VER-71 stage-key probe needs stages 5 and 6 together.
-- [x] SHA6 6. `physics/models.py`, `physics/pb.py`, `solve/state.py`, `mesh/primitives.py`,
+- [x] 3d2a7a7 6. `physics/models.py`, `physics/pb.py`, `solve/state.py`, `mesh/primitives.py`,
   `tests/tier2/test_wall_surface_charge.py` (new): the wall charge (D5); done when VER-77's rows and
   `test_electrostatic_benchmarks.py` pass. **Executor:** main
-- [ ] 7. Compaction checkpoint. **Executor:** main
+- [x] CHK7 7. Compaction checkpoint. **Executor:** main
 - [ ] 8. `api/__init__.py`, `api/case.py`, `api/session.py` (new), `nanopnp/case.py` (new),
   `api/reproduce.py` (moved from `pipeline/reproduce.py`), `api/sweep.py` (moved from
   `sweep/inmemory.py`, taking the Session's store), `io/case_paths.py`, `pipeline/run.py`,
