@@ -14,7 +14,7 @@ import time
 import traceback
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, TextIO, cast
+from typing import TYPE_CHECKING, NoReturn, TextIO, cast
 
 from nanopnp.cli.export import EXPORTS, export_artefact, refusal
 from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED, EXIT_USAGE, classify
@@ -404,6 +404,14 @@ def _plot_refusal(stage: str) -> str | None:
     return None
 
 
+def _is_region_file(path: Path) -> bool:
+    from nanopnp.io.artefact import REGION_SCHEMA
+
+    with path.open("rb") as handle:
+        head = handle.read(4096).decode("utf-8", errors="replace")
+    return any(line.strip() == f"schema: {REGION_SCHEMA}" for line in head.splitlines())
+
+
 def _plot(args: argparse.Namespace) -> int:
     from nanopnp.core.stages import MissingExtraError
     from nanopnp.io.manifest import MANIFEST_FILENAME
@@ -432,6 +440,10 @@ def _plot(args: argparse.Namespace) -> int:
             args.parser.error(f"{target} is a sweep, drawn as one figure; give no STAGE")
     elif (target / RUN_RECORD_FILENAME).is_file():
         kind = "run"
+    elif target.is_file() and _is_region_file(target):
+        kind = "region"
+        if args.stage is not None:
+            args.parser.error(f"{target} is a region file, drawn as one figure; give no STAGE")
     elif target.is_file():
         kind = "case"
         if args.stage is None:
@@ -439,7 +451,7 @@ def _plot(args: argparse.Namespace) -> int:
     else:
         args.parser.error(f"{target} is neither a case file, a run directory nor a sweep directory")
     stage = args.stage if args.stage is not None else "solve"
-    if kind != "sweep":
+    if kind not in ("sweep", "region"):
         why = _plot_refusal(stage)
         if why is not None:
             args.parser.error(why)
@@ -452,6 +464,11 @@ def _plot(args: argparse.Namespace) -> int:
         from nanopnp.sweep.collect import read_dataset
 
         figure = draw(read_dataset(target))
+    elif kind == "region":
+        from nanopnp.io.artefact import RegionArtefact
+
+        figure = draw(RegionArtefact(parameters={}, inputs={}, payload={"region": target}))
+        stage = "region"
     elif kind == "run":
         from nanopnp.pipeline.run import open_run
 
@@ -524,35 +541,89 @@ def _reproduce(args: argparse.Namespace) -> int:
     return EXIT_OK if finding.reproduced else 1
 
 
-def _mesh(args: argparse.Namespace) -> int:
-    from nanopnp.mesh.cylinder import generate_cylinder
-    from nanopnp.mesh.idealised import write_gated_msh
+def _refuse(args: argparse.Namespace, message: str) -> NoReturn:
+    args.parser.error(message)
+    raise AssertionError("ArgumentParser.error returns no value")  # pragma: no cover
 
-    # Refused before the mesher runs: left to the write, a bad destination would exit 3 or 1
+
+def _destination(args: argparse.Namespace, suffix: str) -> Path:
+    # Refused before anything is built: left to the write, a bad destination would exit 3 or 1
     # instead of 2.
     out = Path(args.out)
     if not out.name or out.is_dir():
-        args.parser.error(f"--out {out} is a directory; name the .msh file to write")
+        args.parser.error(f"--out {out} is a directory; name the {suffix} file to write")
     if not out.parent.is_dir():
         args.parser.error(f"--out {out}: the directory {out.parent} does not exist")
+    return out
 
-    if args.shape == "cylinder":
-        if args.pore_radius_nm >= args.reservoir_radius_nm:
-            args.parser.error(
-                f"--pore-radius-nm {args.pore_radius_nm:g} must be smaller than "
-                f"--reservoir-radius-nm {args.reservoir_radius_nm:g}"
-            )
-        generated = generate_cylinder(
-            pore_radius_nm=args.pore_radius_nm,
-            membrane_thickness_nm=args.membrane_thickness_nm,
-            reservoir_radius_nm=args.reservoir_radius_nm,
-            maxh_nm=args.maxh_nm,
-            wall_h_nm=args.wall_h_nm,
+
+def _geometry(args: argparse.Namespace) -> int:
+    from nanopnp.geometry.region import derive_idealised_region, write_region
+    from nanopnp.io.case import Membrane, Pore, Reservoir
+
+    out = _destination(args, ".yaml")
+    if args.pore_radius_nm >= args.reservoir_radius_nm:
+        args.parser.error(
+            f"--pore-radius-nm {args.pore_radius_nm:g} must be smaller than "
+            f"--reservoir-radius-nm {args.reservoir_radius_nm:g}"
         )
-    else:
+    record = derive_idealised_region(
+        Pore(shape="cylinder", radius_nm=args.pore_radius_nm),
+        Membrane(thickness_nm=args.membrane_thickness_nm),
+        Reservoir(radius_nm=args.reservoir_radius_nm),
+    )
+    write_region(record, out)
+    faces = ", ".join(
+        f"{name} {area:.4g} nm^2" for name, area in sorted(record.face_areas_nm2.items())
+    )
+    payload: dict[str, Canonicalisable] = {"path": str(out), **record.summary()}
+    lines = [
+        f"region    {out}",
+        f"faces     {faces}",
+        "",
+        "geometry:",
+        f"  pore: {{shape: cylinder, radius_nm: {args.pore_radius_nm:g}}}",
+        f"  membrane: {{thickness_nm: {args.membrane_thickness_nm:g}}}",
+        f"  reservoir: {{radius_nm: {args.reservoir_radius_nm:g}}}",
+    ]
+    _emit(payload, lines, as_json=args.json)
+    return EXIT_OK
+
+
+def _mesh(args: argparse.Namespace) -> int:
+    from nanopnp.mesh.idealised import write_gated_msh
+
+    out = _destination(args, ".msh")
+    if args.source == "reference":
+        for flag, value in (("--maxh-nm", args.maxh_nm), ("--wall-h-nm", args.wall_h_nm)):
+            if value is not None:
+                args.parser.error(
+                    f"{flag} sizes an idealised pore's mesh; the reference geometry is meshed "
+                    "at the section 5.2.2 preset, which these flags do not move"
+                )
         from nanopnp.mesh.reference import ReferenceGeometry
 
         generated = ReferenceGeometry.from_fixture().generate(check_quality=False)
+    else:
+        from nanopnp.geometry.pore import IdealisedRegionRecord
+        from nanopnp.geometry.region import read_region
+        from nanopnp.mesh.idealised import generate_idealised
+
+        try:
+            record = read_region(Path(args.source))
+        except (OSError, ValueError, KeyError) as error:
+            _refuse(args, f"{args.source} is not a geometry file `nanopnp geometry` wrote: {error}")
+        if not isinstance(record, IdealisedRegionRecord):
+            _refuse(
+                args,
+                f"{args.source} is the region of a structure; only an idealised pore's geometry "
+                "file is meshed here, and a structure's region is meshed by running its case",
+            )
+        generated = generate_idealised(
+            record,
+            maxh_nm=args.maxh_nm if args.maxh_nm is not None else DEFAULT_MAXH_NM,
+            wall_h_nm=args.wall_h_nm if args.wall_h_nm is not None else DEFAULT_CYLINDER_WALL_H_NM,
+        )
     mapped, quality, groups = write_gated_msh(generated, out)
     flow = "{" + ", ".join(f"{key}: {value}" for key, value in sorted(groups.items())) + "}"
     payload: dict[str, Canonicalisable] = {
@@ -1254,22 +1325,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     check.set_defaults(handler=_reproduce)
 
-    mesh = subparsers.add_parser("mesh", help="write a gated MSH 4.1 mesh for a case to read")
-    shapes = mesh.add_subparsers(dest="shape", required=True)
-
-    # Defaults: the coarsest mesh the NUM-34 gate admits with wall corrections on (392 elements).
-    cylinder = _common(
-        shapes.add_parser("cylinder", help="an idealised cylindrical pore through a membrane")
+    geometry_command = subparsers.add_parser(
+        "geometry", help="write an idealised pore's geometry as a file a case or a mesh reads"
     )
-    geometry = cylinder.add_argument_group("geometry: the shape of the pore")
-    mesh_sizes = cylinder.add_argument_group("mesh: the element sizes")
-    geometry.add_argument(
+    shapes = geometry_command.add_subparsers(dest="shape", required=True)
+    cylinder = _common(shapes.add_parser("cylinder", help="a cylindrical pore through a membrane"))
+    cylinder.add_argument(
         "--pore-radius-nm",
         type=_positive_nm,
         default=DEFAULT_PORE_RADIUS_NM,
         help=f"lumen radius (default {DEFAULT_PORE_RADIUS_NM:g})",
     )
-    geometry.add_argument(
+    cylinder.add_argument(
         "--membrane-thickness-nm",
         type=_positive_nm,
         default=DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
@@ -1278,7 +1345,7 @@ def build_parser() -> argparse.ArgumentParser:
             f"(default {DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM:g})"
         ),
     )
-    geometry.add_argument(
+    cylinder.add_argument(
         "--reservoir-radius-nm",
         type=_positive_nm,
         default=DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM,
@@ -1287,29 +1354,37 @@ def build_parser() -> argparse.ArgumentParser:
             f"(default {DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM:g})"
         ),
     )
-    mesh_sizes.add_argument(
-        "--maxh-nm",
-        type=_positive_nm,
-        default=DEFAULT_MAXH_NM,
-        help=f"global maximum element size (default {DEFAULT_MAXH_NM:g})",
-    )
-    mesh_sizes.add_argument(
-        "--wall-h-nm",
-        type=_positive_nm,
-        default=DEFAULT_CYLINDER_WALL_H_NM,
-        help=f"element size on the pore wall (default {DEFAULT_CYLINDER_WALL_H_NM:g})",
-    )
-    cylinder.add_argument("--out", type=Path, required=True, help="the .msh file to write")
-    cylinder.set_defaults(handler=_mesh, parser=cylinder)
+    cylinder.add_argument("--out", type=Path, required=True, help="the .yaml file to write")
+    cylinder.set_defaults(handler=_geometry, parser=cylinder)
 
-    reference = _common(
-        shapes.add_parser(
-            "reference",
-            help="the ClyA reference geometry at the section 5.2.2 preset",
+    # Defaults: the coarsest mesh the NUM-34 gate admits with wall corrections on (392 elements).
+    mesh = _common(
+        subparsers.add_parser(
+            "mesh", help="write a gated MSH 4.1 mesh of a geometry file, or of the reference"
         )
     )
-    reference.add_argument("--out", type=Path, required=True, help="the .msh file to write")
-    reference.set_defaults(handler=_mesh, parser=reference)
+    mesh.add_argument(
+        "source",
+        metavar="SOURCE",
+        help="a geometry file `nanopnp geometry` wrote, or `reference` for the ClyA preset",
+    )
+    mesh.add_argument(
+        "--maxh-nm",
+        type=_positive_nm,
+        default=None,
+        help=f"global maximum element size (default {DEFAULT_MAXH_NM:g}); not for `reference`",
+    )
+    mesh.add_argument(
+        "--wall-h-nm",
+        type=_positive_nm,
+        default=None,
+        help=(
+            f"element size on the pore wall (default {DEFAULT_CYLINDER_WALL_H_NM:g}); "
+            "not for `reference`"
+        ),
+    )
+    mesh.add_argument("--out", type=Path, required=True, help="the .msh file to write")
+    mesh.set_defaults(handler=_mesh, parser=mesh)
 
     sweep = subparsers.add_parser("sweep", help="plan, run or collect a parameter sweep (FR-24)")
     actions = sweep.add_subparsers(dest="action", required=True)

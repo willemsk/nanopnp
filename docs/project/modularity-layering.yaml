@@ -48,6 +48,7 @@ edges:
   - {from: cli, to: charge, relation: static, finding: null}
   - {from: cli, to: core, relation: static, finding: null}
   - {from: cli, to: density, relation: static, finding: null}
+  - {from: cli, to: geometry, relation: static, finding: null}
   - {from: cli, to: io, relation: static, finding: null}
   - {from: cli, to: mesh, relation: static, finding: null}
   - {from: cli, to: pipeline, relation: static, finding: null}

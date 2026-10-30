@@ -209,7 +209,7 @@ def wall_distance_remedy(resolved: ResolvedCase) -> str:
     path = supplied.path if supplied is not None else None
     return (
         f"regenerate the supplied mesh {str(path)!r} finer at the wall "
-        "(nanopnp mesh cylinder --wall-h-nm)"
+        "(nanopnp mesh <geometry file> --wall-h-nm)"
     )
 
 
