@@ -55,7 +55,7 @@ API_SECTIONS: dict[str, str] = {
     "nanopnp.structure.orient": "Structures and meshes",
     "nanopnp.physics.models": "Physics models",
     "nanopnp.sweep.plan": "Sweeps",
-    "nanopnp.sweep.run": "Sweeps",
+    "nanopnp.api.sweep": "Sweeps",
     "nanopnp.core.stages": "Stages, progress and cancellation",
 }
 

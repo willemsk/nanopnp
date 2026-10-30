@@ -52,3 +52,29 @@ def test_fr27_only_refuses_an_upstream_the_store_does_not_hold(case: Case, tmp_p
     session.run(case, upto="mesh")
     again = session.run(case, upto="mesh", only=True)
     assert all(record.cached for record in again.stages)
+
+
+def test_fr24_session_sweep_warm_starts_each_member_from_its_neighbour(tmp_path: Path) -> None:
+    case = Case.cylinder(
+        concentration_M=0.1, bias_V=0.0, maxh_nm=4.0, wall_h_nm=1.0, outputs=("current",)
+    ).with_(
+        **{
+            "physics.model": "pnp",
+            "physics.flow": False,
+            "physics.variable_density": False,
+            "physics.inertia": False,
+            "physics.dielectric_gradient_forces": False,
+            "numerics.continuation": "none",
+            "electrolyte.corrections": {
+                name: {"model": "none"}
+                for name in ("diffusivity", "mobility", "viscosity", "permittivity", "density")
+            }
+            | {"steric": {"model": "none"}},
+        }
+    )
+    result = Session(tmp_path / "store", write=False).sweep(
+        case, axis="bias_V", values=[0.0, 0.05, 0.1], check_meshes=False
+    )
+    assert result.dataset.summary["counts"] == {"ok": 3}
+    assert [row["warm_start"]["status"] for row in result.rows] == ["cold", "warm", "warm"]
+    assert all(row["directory"] is not None for row in result.rows), "members write their runs"

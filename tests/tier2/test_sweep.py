@@ -8,13 +8,15 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp.api.session import Session
+from nanopnp.api.sweep import run_plan, run_point
 from nanopnp.core.hashing import decode_floats
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.post.qoi import rectification_ratio
 from nanopnp.sweep.collect import DATASET_FILENAME, collect
 from nanopnp.sweep.plan import SweepPlan, plan_from_document, write_plan
-from nanopnp.sweep.run import MemberResult, run_plan, run_point
+from nanopnp.sweep.run import MemberResult
 
 logger = logging.getLogger(__name__)
 
@@ -92,12 +94,12 @@ def swept(tmp_path_factory: pytest.TempPathFactory) -> Swept:
     plan = plan_from_document(work / "sweep.yaml")
     directory = work / "warm"
     write_plan(plan, directory)
-    warm = run_plan(plan, directory, store=Store(work / "warm-store"))
+    warm = run_plan(plan, directory, session=Session(Store(work / "warm-store")))
 
     cold_directory = work / "cold"
     cold_store = Store(work / "cold-store")
     cold = tuple(
-        run_point(plan, index, store=cold_store, directory=cold_directory)
+        run_point(plan, index, session=Session(cold_store), directory=cold_directory)
         for index in reversed(range(len(plan.points)))
     )
     return Swept(plan, warm, cold, directory)

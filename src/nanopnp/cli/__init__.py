@@ -730,11 +730,12 @@ def _refuse_another_plan(directory: Path, digest: str) -> None:
 
 
 def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, store: Store) -> int:
+    from nanopnp.api.session import Session
+    from nanopnp.api.sweep import run_plan, run_point
     from nanopnp.sweep.plan import SweepPlanError
-    from nanopnp.sweep.run import run_plan, run_point
 
     if args.index is not None:
-        member = run_point(plan, args.index, store=store, directory=directory)
+        member = run_point(plan, args.index, session=Session(store), directory=directory)
         _emit(
             member.row(),
             [f"point {member.index} {member.point_id} {member.status}"],
@@ -759,7 +760,7 @@ def _sweep_run(args: argparse.Namespace, plan: SweepPlan, directory: Path, *, st
     members = run_plan(
         plan,
         directory,
-        store=store,
+        session=Session(store),
         workers=workers,
         indices=indices,
         fail_fast=args.fail_fast,

@@ -44,6 +44,7 @@ edges:
   - {from: api, to: mesh, relation: static, finding: null}
   - {from: api, to: pipeline, relation: static, finding: null}
   - {from: api, to: structure, relation: static, finding: null}
+  - {from: api, to: solve, relation: static, finding: null}
   - {from: api, to: sweep, relation: static, finding: null}
   - {from: charge, to: core, relation: static, finding: null}
   - {from: charge, to: density, relation: static, finding: null}

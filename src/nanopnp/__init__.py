@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     # ``X as X`` marks a re-export; the type checker cannot read ``__all__`` through ``PUBLIC``.
     from nanopnp.api.case import Case as Case
     from nanopnp.api.session import Session as Session
+    from nanopnp.api.sweep import run_plan as run_plan
     from nanopnp.core.stages import ArtefactHook as ArtefactHook
     from nanopnp.core.stages import CancelFlag as CancelFlag
     from nanopnp.core.stages import Cancelled as Cancelled
@@ -37,7 +38,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.pipeline.run import run_document as run_document
     from nanopnp.structure.orient import orient_pore as orient_pore
     from nanopnp.sweep.plan import plan_from_document as plan_from_document
-    from nanopnp.sweep.run import run_plan as run_plan
 
 __all__ = ["__version__", *PUBLIC]
 

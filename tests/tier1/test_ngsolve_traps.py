@@ -17,6 +17,7 @@ import pytest
 from netgen.geom2d import unit_square
 from ngsolve.meshes import MakeStructured2DMesh
 
+from nanopnp.api import sweep as sweep_run
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.primitives import CylindricalPoreGeometry, SlabGeometry
 from nanopnp.numerics.gates import (
@@ -29,7 +30,6 @@ from nanopnp.numerics.linear import create_solver, to_scipy
 from nanopnp.numerics.measures import AXISYMMETRIC, PLANAR
 from nanopnp.physics.pb import debye_length_nm, nonlinear_pb_residual, solve_pb_recorded
 from nanopnp.post.reaction_flux import boundary_reaction_flux
-from nanopnp.sweep import run as sweep_run
 
 
 def test_ngsolve_traps_1_2_and_7_trial_function_p2_indicator_and_components() -> None:

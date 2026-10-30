@@ -428,15 +428,16 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   `Session`, every caller on it (D6, D7); done when the D6 and D7 rows, `test_cli.py`,
   `test_reproduce_diagnostics.py`, `test_sweep_cli.py` and VER-61 pass. **Executor:** main
 > **Outcome — item 8.** `run_case` stays until item 14, so tests walk it unchanged; `run_document` lost `options` (no caller passed one). `Session.sweep` returns `api/sweep.py:Sweep` until item 10 brings `SweepResult`. `api/session.py` imports the pipeline inside its methods, which VER-72 allows for a `nanopnp` module, so `Session().stages` and `nanopnp stage --list` import no stage module. `nanopnp/case.py` is a root module: `validation/modularity.py:ROOT_MODULES` names it so `node_of` reads it as node `nanopnp`, not a subpackage `case`. A case file's relative paths are still read from the working directory until item 9, so `test_case.py` and `test_session.py` change into the example's directory. Notebooks 01 to 06, session 04 and example 04's tour still call `Case.cylinder(..., store=)` and `.run`; items 15 and 16 move them.
-- [x] SHA9 9. `core/paths.py`, `io/case.py`, `pipeline/case.py`, `pipeline/checks.py`, `pipeline/run.py`,
+- [x] b77488f 9. `core/paths.py`, `io/case.py`, `pipeline/case.py`, `pipeline/checks.py`, `pipeline/run.py`,
   `materials/stage.py`, `materials/models.py`, `io/manifest.py`, `sweep/plan.py`, `api/case.py`,
   `api/session.py`, `api/reproduce.py`, `gui/assess.py`, `gui/render.py`, `cli/__init__.py`: paths
   read against the base, and a correction file by path (D12); done when the D12 rows pass.
   **Executor:** main
 > **Outcome — item 9.** `resolve(document, *, base=None)` holds every named path absolute in `ResolvedCase` and refuses a missing correction file naming its key; an input file that is missing is still refused by the stage that reads it (`FileNotFoundError`), as before. A sweep member and a GUI document, both held in memory, read against the working directory (§5.3.4). `core/paths.py:reads_a_file` and `correction_source` serve stage 8, the manifest and the models; `pipeline/run.py:recorded_base` gives a recorded run its case file's directory.
-- [ ] 10. `api/sweep.py`, `api/session.py`, `sweep/run.py`, `sweep/collect.py`, `cli/__init__.py`: the
+- [x] SHA10 10. `api/sweep.py`, `api/session.py`, `sweep/run.py`, `sweep/collect.py`, `cli/__init__.py`: the
   executor through the Session and `SweepResult` (D8); done when `test_sweep_cli.py`,
   `test_sweep_plan.py` and `uv run pytest tests/tier2/test_sweep.py` pass. **Executor:** main
+> **Outcome — item 10.** `api/sweep.py` holds the executor (`run_point`, `run_plan`, `_pool`, `_worker`, `_parent_artefact`) and `plan_sweep`, which plans without running; `sweep` and `Session.sweep` plan, run and collect into a `SweepResult` (`dataset`, `plan`, `directory`, `rows`). A member walks through `Session(session.store)`, so it writes its run directory and takes no workspace of the session's. `PUBLIC["run_plan"]` points at `api.sweep` until item 14 removes it. The plotting methods of `SweepResult` are item 15's.
 - [ ] 11. `pipeline/extension.py` (new), `pipeline/run.py`, `api/session.py`: `register_stage` (D9); done
   when the D9 row passes. **Executor:** main
 - [ ] 12. `core/stages.py`, `solve/continuation.py`, `solve/stage.py`, `cli/__init__.py`,

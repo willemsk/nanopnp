@@ -9,10 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp.api.session import Session
+from nanopnp.api.sweep import run_plan
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.sweep.plan import plan_from_document, write_plan
-from nanopnp.sweep.run import THREAD_VARIABLES, run_plan
+from nanopnp.sweep.run import THREAD_VARIABLES
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +103,7 @@ def test_ver39_the_scaling_curve_is_measured_and_recorded(
         directory = work / "sweep"
         write_plan(plan, directory)
         started = time.perf_counter()
-        members = run_plan(plan, directory, store=Store(work / "store"), workers=workers)
+        members = run_plan(plan, directory, session=Session(Store(work / "store")), workers=workers)
         elapsed = time.perf_counter() - started
         seconds[workers] = elapsed
 
