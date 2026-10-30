@@ -70,7 +70,8 @@ marker. A hook pass never stands in for `run`.
   ladder, warm start; `post/` QoI (current, transport number, EOF, forces); `plot/` figures of the
   artefacts (Matplotlib, the `plot` extra); `sweep/` sweeps
 - `io/` case schema, artefact and resolved-case types, result store, manifests; the base layer,
-  importing only `core` at run time; `pipeline/` case resolution, the walk, the assembler; `cli/`,
+  importing only `core` at run time; `pipeline/` case resolution, the walk, the assembler; `api/` the
+  Python interface (`Case`, `Session`, sweeps, reproduction), above `sweep/`; `cli/`,
   `gui/` thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL comparison
 
 Outside it: `data/corrections/*.yaml` (fitted parameters, shipped in the wheel), `specification/`, `knowledge/`,

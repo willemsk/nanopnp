@@ -34,7 +34,10 @@ verified:
 
 **Known limitations, both verified:**
 
-1. **No MPI in the wheels** — no MPI symbols in any shipped `.so`, no mpi4py. Parallel
+1. **No MPI in the wheels, as far as the lock file and the build configuration show** — `mpi4py`
+   is not a locked package, and `ngsolve.config` reports no MUMPS, PARDISO or MKL
+   **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]**.
+   The shipped binaries are not scanned for MPI symbols. Parallel
    mesh generation, parallel adaptive refinement and parallel multigrid are documented as
    unsupported. Irrelevant for 2D axisymmetric v1 (direct solves; sweeps parallelise at job level);
    becomes real in 3D. Mitigations: ngsPETSc, or a DOLFINx backend for HPC only.
