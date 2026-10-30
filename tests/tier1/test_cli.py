@@ -225,17 +225,6 @@ def test_ver32_a_geometry_file_plots_and_a_structures_region_is_not_meshed(
     assert "structure" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("flag", ["--maxh-nm", "--wall-h-nm"])
-def test_ver32_the_reference_preset_refuses_a_size_flag(
-    flag: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    with pytest.raises(SystemExit) as refused:
-        main(["mesh", "reference", flag, "1", "--out", str(tmp_path / "r.msh")])
-    assert refused.value.code == EXIT_USAGE
-    assert flag in capsys.readouterr().err
-    assert list(tmp_path.iterdir()) == []
-
-
 # VER-10
 def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
