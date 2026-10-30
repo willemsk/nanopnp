@@ -311,15 +311,22 @@ NOTE (`geometry.pore`, an idealised pore, IF-02, FR-09, FR-10; §8.2.22 X1): a c
 read from `geometry.membrane` and `geometry.reservoir`. Stage 5 builds the region from it: the lumen
 surface `r = R`, `|z| < h/2` with `h` the membrane's thickness, is named `wall`, PHY-02's distance source set and the surface PHY-09's
 `σ_s` is set on, and the membrane's cis and trans faces are excluded from it, as the bilayer's are in
-the reference model. Stage 6 meshes it under `numerics.mesh` and its gates, as it
-meshes a structure's region; stages 1 to 4 and the charge stages do not run unless `inputs.charge`
+the reference model. Each reservoir is the quarter disc of radius `geometry.reservoir.radius_nm`
+centred on its mouth, the lumen is the domain `electrolyte` and the reservoirs are `cis` and
+`trans`, and the two mouths are `interface`. Stage 6 meshes it under `numerics.mesh` and its gates,
+with the size field of the §5.2.2 NOTE on an idealised pore; stages 1 to 4 and the charge stages do not run unless `inputs.charge`
 supplies a field. `geometry.pore` beside `structure:`, `inputs.profile` or `inputs.mesh` SHALL be
 refused naming both, and `radius_nm` not below `geometry.reservoir.radius_nm` SHALL be refused
 naming both values. The solid around the lumen is the `membrane` domain, so a case declaring
 `geometry.pore` SHALL set `physics.solid_permittivities.membrane` and is refused naming the key
 otherwise, rather than taking ion-free water as an unlisted solid does; `geometry.membrane.thickness_nm`
-defaults to the bilayer's 2.8 nm, so a solid-state pore sets it. `boundary_conditions.wall_charge_C_m2`
-(PHY-09) is read only beside `geometry.pore`, and is refused elsewhere naming the key.
+defaults to the bilayer's 2.8 nm, so a solid-state pore sets it. Beside `geometry.pore`, keys that
+only a structure's stages read are refused naming each: `geometry.membrane.centre_z_nm` away from 0,
+which is a position in a structure's frame, and `geometry.density` or `geometry.contour` away from
+their defaults; so is `numerics.mesh.backend` other than `netgen`, since the Gmsh backend's size
+field is posed on a structure's region (WP57). `boundary_conditions.wall_charge_C_m2`
+(PHY-09) and `numerics.mesh.maxh_nm` are read only beside `geometry.pore`, and each is refused
+elsewhere naming the key.
 
 `kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the `sharpness`. R_i is the
 atom's CHARMM van der Waals radius (Rmin/2) by residue and atom name, from the radius set of
@@ -504,6 +511,10 @@ version is recorded beside the key (WP23 D8, D9). The key's wall entry is the re
 its source and `size_scale`, never λ_D: λ_D moves the mesh only through the wall size, so below
 the 1.4741 M at which the ceiling binds a salt sweep meshes once. λ_D stays in the manifest's
 sizing record beside the key (REV-16; WP46).
+`maxh_nm`, default none, is the global element size of an idealised pore, finite and positive
+and refused naming its value otherwise; none takes §5.2.2's global 10 nm. It is multiplied by
+`size_scale` as the wall size is, and it enters the stage-6 key (the §5.2.2 NOTE on an idealised
+pore).
 `boundary_layer: true` is refused naming FR-11. `geometry.analyte` on a generated mesh is refused naming FR-21.
 Beside `inputs.mesh`, any `numerics.mesh` key away from its default is refused naming it, because
 nothing meshes and the key would change nothing.
@@ -527,7 +538,11 @@ and each `electrolyte.corrections.*.model` MAY name a file by a path, relative t
 absolute, as well as by the name of an installed file. A file read by path is not pinned by the
 package's version, so its content hash SHALL enter the stage-8 key and the FR-25 manifest, and the
 file SHALL be listed as a deviation from the validated default; an edit of the file then misses the
-cache rather than serving a stale result.
+cache rather than serving a stale result. A name ending in `.yaml` is a path; any other is an
+installed file's name. A relative path is taken against the directory of the case file the run read,
+or the working directory for a case held in memory; the manifest records the file among the run's
+inputs by its absolute path and hash, and a reproduction takes a relative path against the
+directory the original case was read from, so that it reads the file the run read (QR-08).
 
 NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings — the monolithic
 damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the
