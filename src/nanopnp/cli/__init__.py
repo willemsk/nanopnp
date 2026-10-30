@@ -9,10 +9,11 @@ import logging
 import os
 import platform
 import sys
+import time
 import traceback
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TextIO, cast
 
 from nanopnp.cli.export import EXPORTS, export_artefact, refusal
 from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED, EXIT_USAGE, classify
@@ -138,17 +139,76 @@ def _env(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+class _Progress:
+    def __init__(self, stream: TextIO) -> None:
+        self._stream = stream
+        self._rung: float | None = None
+        self._reporting = False
+        self._steps = 0
+
+    def _print(self, line: str) -> None:
+        print(line, file=self._stream, flush=True)
+
+    def _close_rung(self) -> None:
+        if self._rung is not None:
+            seconds = time.perf_counter() - self._rung
+            steps = f"{self._steps} Newton steps, " if self._reporting else ""
+            self._print(f"    {steps}{seconds:.3f} s")
+            self._rung = None
+
+    def __call__(self, name: str, index: int, total: int) -> None:
+        from nanopnp.core.stages import describe
+
+        self._close_rung()
+        self._print(f"stage {describe(name).number:>2} {name}")
+
+    def rung(
+        self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
+    ) -> None:
+        self._close_rung()
+        self._print(f"  rung {index + 1}/{total} {name}")
+        self._rung = time.perf_counter()
+        self._reporting = reporting
+        self._steps = 0
+
+    def step(
+        self,
+        iteration: int,
+        residual: float,
+        update: float,
+        damping: float,
+        trials: int,
+        forced: bool,
+    ) -> None:
+        self._steps += 1
+
+    def close(self) -> None:
+        self._close_rung()
+
+
+def _progress(args: argparse.Namespace) -> _Progress | None:
+    shown = sys.stderr.isatty() if args.progress is None else args.progress
+    return _Progress(sys.stderr) if shown else None
+
+
 def _run(args: argparse.Namespace) -> int:
     from nanopnp.cli.reading import format_value, stage_line
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
-    result = run_case(
-        args.case,
-        store=Store(args.store),
-        upto=args.upto,
-        write=False,
-    )
+    progress = _progress(args)
+    try:
+        result = run_case(
+            args.case,
+            store=Store(args.store),
+            upto=args.upto,
+            write=False,
+            on_stage=progress,
+            on_solve=progress,
+        )
+    finally:
+        if progress is not None:
+            progress.close()
     if args.run_dir is not None:
         # --run-dir moves the output files only, so it is applied after the walk, not fed into it.
         result = dataclasses.replace(result, directory=Path(args.run_dir))
@@ -199,13 +259,20 @@ def _stage(args: argparse.Namespace) -> int:
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
-    result = run_case(
-        args.case,
-        store=Store(args.store),
-        upto=args.name,
-        only=args.only,
-        write=False,
-    )
+    progress = _progress(args)
+    try:
+        result = run_case(
+            args.case,
+            store=Store(args.store),
+            upto=args.name,
+            only=args.only,
+            write=False,
+            on_stage=progress,
+            on_solve=progress,
+        )
+    finally:
+        if progress is not None:
+            progress.close()
     artefact = result.artefacts[args.name]
     found: dict[str, Canonicalisable] = {
         "stage": args.name,
@@ -1008,6 +1075,16 @@ def _sampled_run(
     return document, _sample(resolved, grid), resolved
 
 
+def _progress_flag(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--progress",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="print each stage and solver rung to stderr as it starts; "
+        "by default when stderr is a terminal",
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Return the argument parser, importing nothing a subcommand does not need."""
     parser = argparse.ArgumentParser(prog="nanopnp", description=__doc__.splitlines()[0])
@@ -1052,6 +1129,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="worker thread count for OpenMP and linear algebra",
     )
+    _progress_flag(run)
     run.set_defaults(handler=_run)
 
     stage = _common(subparsers.add_parser("stage", help="list the registry, or run one stage"))
@@ -1073,6 +1151,7 @@ def build_parser() -> argparse.ArgumentParser:
         + "; ".join(f"{name} {', '.join(suffixes)}" for name, suffixes in EXPORTS.items())
         + ". Lengths in the .pdb, .dcd, .dx, .ccp4, .mrc and .map files are in angstroms",
     )
+    _progress_flag(stage)
     stage.set_defaults(handler=_stage, parser=stage)
 
     inspect = _common(subparsers.add_parser("inspect", help="read an artefact or run back"))
