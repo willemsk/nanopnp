@@ -68,6 +68,7 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.post.forces:ForceDisagreementError": EXIT_GATE,
     "nanopnp.post.indicator:IndicatorError": EXIT_GATE,
     "nanopnp.post.forces:ExtensionError": EXIT_GATE,
+    "nanopnp.post.forces:ForceSurfaceError": EXIT_GATE,
     "nanopnp.mesh.ingest:MeshVocabularyError": EXIT_GATE,
     "nanopnp.mesh.quality:MeshQualityError": EXIT_GATE,
     "nanopnp.mesh.adapter:MeshFormatError": EXIT_GATE,

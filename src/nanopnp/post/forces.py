@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from nanopnp.core.typing import (
     AssembledForm,
@@ -33,6 +35,9 @@ from nanopnp.post.indicator import smoothstep
 from nanopnp.post.qoi import TWO_PI
 from nanopnp.post.reaction_flux import boundary_reaction_flux
 
+if TYPE_CHECKING:
+    from nanopnp.mesh.adapter import MeshData
+
 __all__ = [
     "FORCE_ROUTE_TOLERANCE_N",
     "AnalyteForces",
@@ -40,8 +45,10 @@ __all__ = [
     "ForceAgreement",
     "ForceComponents",
     "ForceDisagreementError",
+    "ForceSurfaceError",
     "axial_extension",
     "check_extension",
+    "check_force_surface",
     "domain_force",
     "electrostatic_domain_force",
     "electrostatic_surface_force",
@@ -65,6 +72,10 @@ class ExtensionError(ValueError):
 
 class ForceDisagreementError(RuntimeError):
     """Two force routes disagree beyond tolerance, so no force is reported."""
+
+
+class ForceSurfaceError(ValueError):
+    """The force surface does not lie between one pair of materials all along it."""
 
 
 def axial_extension(
@@ -653,6 +664,55 @@ def _oriented_normal(mesh: Mesh, region: Option, arc: float) -> Expression:
     return normal if sense > 0.0 else -normal
 
 
+def check_force_surface(data: MeshData, boundary: str = ANALYTE_BOUNDARY) -> tuple[str, str]:
+    """Return the material pair on the two sides of the force surface; refuse a surface of several.
+
+    Parameters
+    ----------
+    data
+        The mesh the surface belongs to.
+    boundary
+        Boundary-name regular expression of the surface.
+
+    Raises
+    ------
+    ForceSurfaceError
+        If no boundary matches, or the edges meet more than one pair of materials; the side
+        beyond the domain counts as ``outside``.
+    """
+    import numpy as np
+
+    wanted = [i for i, name in enumerate(data.boundaries) if re.fullmatch(boundary, name)]
+    if not wanted:
+        known = ", ".join(sorted(data.boundaries))
+        raise ForceSurfaceError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
+    edges = data.edges[np.isin(data.edge_group, wanted)]
+    count = data.vertices.shape[0]
+    surface = np.sort(edges, axis=1)
+    surface_keys = set((surface[:, 0] * count + surface[:, 1]).tolist())
+
+    sides: dict[int, set[str]] = {key: set() for key in surface_keys}
+    for triangle, material in zip(data.triangles, data.triangle_material, strict=True):
+        for start, end in ((0, 1), (1, 2), (2, 0)):
+            low, high = sorted((int(triangle[start]), int(triangle[end])))
+            if low * count + high in sides:
+                sides[low * count + high].add(data.materials[int(material)])
+    pairs: dict[tuple[str, ...], int] = {}
+    for found in sides.values():
+        pair = tuple(sorted(found if len(found) == 2 else found | {"outside"}))
+        pairs[pair] = pairs.get(pair, 0) + 1
+    if len(pairs) != 1:
+        meets = "; ".join(f"{' | '.join(pair)} on {n} edges" for pair, n in sorted(pairs.items()))
+        raise ForceSurfaceError(
+            f"the force surface {boundary!r} does not lie between one pair of materials: it "
+            f"meets {meets}. The traction normal is oriented by one pair, so part of the force "
+            "would be negated with no other symptom; give the body a surface that touches one "
+            "fluid domain"
+        )
+    first, second = next(iter(pairs))
+    return first, second
+
+
 def reaction_force(
     solution: ModelSolution,
     *,
@@ -701,6 +761,7 @@ def extract(
     load_form: AssembledForm | None = None,
     tolerance_N: float = FORCE_ROUTE_TOLERANCE_N,
     check_routes: bool = True,
+    data: MeshData | None = None,
 ) -> AnalyteForces:
     """Return the force on the body, with every route checked.
 
@@ -708,6 +769,9 @@ def extract(
     ----------
     boundary
         The body's surface.
+    data
+        The mesh as ingested; given, the surface is refused unless one pair of materials lies
+        on its two sides all along it.
     check_routes
         Whether to check the other two routes; False skips them, a recorded deviation.
 
@@ -715,7 +779,11 @@ def extract(
     ------
     ForceDisagreementError
         If the routes disagree beyond tolerance.
+    ForceSurfaceError
+        If ``data`` is given and the surface meets more than one pair of materials.
     """
+    if data is not None:
+        check_force_surface(data, boundary)
     # One rebuild of the coefficients for all three routes.
     terms = _integrands(solution, wall_distance_nm)
     forces, korteweg_work = _domain_force(terms, measures, extension)

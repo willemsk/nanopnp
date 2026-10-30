@@ -95,7 +95,7 @@ def test_ver70_the_gate_classes_are_the_exit_tables_class_four() -> None:
     from nanopnp.validation.modularity import gate_classes
 
     names = gate_classes((PACKAGE / "core" / "errors.py").read_text(encoding="utf-8"))
-    assert len(names) == 39
+    assert len(names) == 40
     for name in (
         "GateViolationError",
         "MeshQualityError",
