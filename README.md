@@ -101,7 +101,6 @@ This is [example 01](examples/01-quickstart/README.md):
 
 ```bash
 cd examples/01-quickstart
-uv run nanopnp mesh cylinder --out pore.msh
 uv run nanopnp run quickstart.case.yaml --store store --run-dir run
 uv run nanopnp inspect run
 uv run nanopnp reproduce run

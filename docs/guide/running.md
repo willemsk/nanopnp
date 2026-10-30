@@ -9,7 +9,8 @@
 | `nanopnp stage --list` | Lists the stages, without importing any of them |
 | `nanopnp inspect <path>` | Reads a run directory, a stored artefact or a record back |
 | `nanopnp reproduce <run>` | Re-solves an archived run in a fresh store and compares every scalar (QR-08) |
-| `nanopnp mesh cylinder\|reference` | Writes a gated mesh ([Meshes](meshes.md)) |
+| `nanopnp geometry cylinder` | Writes an idealised pore as a geometry file ([Meshes](meshes.md)) |
+| `nanopnp mesh <geometry file>\|reference` | Writes a gated mesh ([Meshes](meshes.md)) |
 | `nanopnp sweep plan\|run\|collect` | Plans, dispatches and collects a sweep ([Sweeps](sweeps.md)) |
 | `nanopnp validate case case.yaml` | Checks a case as a run would, without meshing or solving it |
 | `nanopnp validate …` | The Tier-3 COMSOL comparison harness |

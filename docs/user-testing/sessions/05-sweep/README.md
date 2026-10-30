@@ -22,7 +22,6 @@ Work in this directory.
 
 <!-- example: run -->
 ```console
-$ nanopnp mesh cylinder --out pore.msh
 $ nanopnp sweep plan grid.sweep.yaml --store store --directory iv-grid
 $ nanopnp sweep run iv-grid/plan.json --store store --workers 2 --fail-fast --csv
 $ nanopnp sweep collect iv-grid/plan.json --csv
