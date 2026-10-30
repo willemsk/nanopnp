@@ -4,3 +4,4 @@ run-*/
 iv-*/
 __pycache__/
 __marimo__/
+*.png
