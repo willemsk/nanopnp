@@ -171,35 +171,65 @@ class _Strict(BaseModel):
 class GridSpec(_Strict):
     """The grid descriptor the header declares, checked against the data."""
 
-    origin_nm: tuple[float, float]
-    spacing_nm: tuple[float, float]
-    shape: tuple[int, int]
+    origin_nm: tuple[float, float] = Field(
+        description="Coordinates (r, z) of the first sample, in nm; checked against the data."
+    )
+    spacing_nm: tuple[float, float] = Field(
+        description="Sample spacing (dr, dz), in nm; checked against the data."
+    )
+    shape: tuple[int, int] = Field(
+        description="Sample counts (n_r, n_z); checked against the data."
+    )
 
 
 class DataSpec(_Strict):
     """The data file a header refers to, and how to read it."""
 
-    path: Path
-    format: str | None = None
-    sha256: str | None = None
+    path: Path = Field(
+        description="Data file; a relative path is read from the directory of this document."
+    )
+    format: str | None = Field(
+        default=None,
+        description=(
+            "Grid file format: npz, dx, mrc or comsolgrid. Unset: read from the file suffix."
+        ),
+    )
+    sha256: str | None = Field(
+        default=None,
+        description="SHA-256 of the data file; when set, the file is refused if it differs.",
+    )
 
 
 class FormSpec(_Strict):
     """A named analytic form standing in for a data file, with typed parameters."""
 
-    name: str
-    parameters: dict[str, float] = Field(default_factory=dict)
-    origin_nm: tuple[float, float]
-    spacing_nm: tuple[float, float]
-    shape: tuple[int, int]
+    name: str = Field(description="Name of a registered analytic form, such as gaussian_ring.")
+    parameters: dict[str, float] = Field(
+        default_factory=dict,
+        description=(
+            "Numeric parameters the form reads, by name. A charge parameter such as "
+            "gaussian_ring's charge_e (in e) and q_net_e must have one sign."
+        ),
+    )
+    origin_nm: tuple[float, float] = Field(
+        description="Coordinates (r, z) of the first sample the form is evaluated at, in nm."
+    )
+    spacing_nm: tuple[float, float] = Field(
+        description="Sample spacing (dr, dz) of the form's grid, in nm."
+    )
+    shape: tuple[int, int] = Field(description="Sample counts (n_r, n_z) of the form's grid.")
 
 
 class FieldProvenance(_Strict):
     """Where a field came from, for the manifest."""
 
-    source: str
-    citation: str | None = None
-    notes: str | None = None
+    source: str = Field(description="What produced the field, such as a tool, a model or a paper.")
+    citation: str | None = Field(
+        default=None, description="Reference for the field, recorded in the manifest."
+    )
+    notes: str | None = Field(
+        default=None, description="Free text recorded with the field's provenance."
+    )
 
 
 class FieldDocument(_Strict):
@@ -207,18 +237,58 @@ class FieldDocument(_Strict):
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    schema_id: str = Field(alias="schema")
-    name: str
-    quantity: str
-    units: str
-    provenance: FieldProvenance
-    data: DataSpec | None = None
-    form: FormSpec | None = None
-    grid: GridSpec | None = None
+    schema_id: str = Field(
+        alias="schema",
+        description=f"Schema identifier; must be {FIELD_SCHEMA}.",
+    )
+    name: str = Field(description="Label for the field, recorded in the manifest.")
+    quantity: str = Field(
+        description=(
+            "What the field holds: areal_charge_density, volume_charge_density or solid_fraction."
+        )
+    )
+    units: str = Field(
+        description=(
+            "Unit of the data: C/m^2 or e/m^2 (areal charge), C/m^3 or e/m^3 (volume charge), "
+            "1 (solid fraction). An analytic form must use the SI unit."
+        )
+    )
+    provenance: FieldProvenance = Field(description="Where the field came from.")
+    data: DataSpec | None = Field(
+        default=None, description="Data file to read; give exactly one of data and form."
+    )
+    form: FormSpec | None = Field(
+        default=None, description="Analytic form to evaluate; give exactly one of data and form."
+    )
+    grid: GridSpec | None = Field(
+        default=None,
+        description="Grid the data file is declared to have; a mismatch is refused.",
+    )
     # Finite, or every ``> tol`` conservation test downstream passes on NaN.
-    axis_cutoff_nm: float = Field(default=DEFAULT_AXIS_CUTOFF_NM, allow_inf_nan=False)
-    q_net_e: float | None = Field(default=None, allow_inf_nan=False)
-    model_frame_centre_z_nm: float | None = Field(default=None, allow_inf_nan=False)
+    axis_cutoff_nm: float = Field(
+        default=DEFAULT_AXIS_CUTOFF_NM,
+        allow_inf_nan=False,
+        description=(
+            "Axis cutoff (PHY-18) in nm: an areal charge density is set to zero for r below "
+            "it. Not negative."
+        ),
+    )
+    q_net_e: float | None = Field(
+        default=None,
+        allow_inf_nan=False,
+        description=(
+            "Declared net charge in e: the planar integral of the field over r >= 0, which the "
+            "grid is checked against. Unset: the grid integral is used."
+        ),
+    )
+    model_frame_centre_z_nm: float | None = Field(
+        default=None,
+        allow_inf_nan=False,
+        description=(
+            "z of the membrane centre in the frame the field was written in, in nm. On a generated "
+            "mesh, a value other than geometry.membrane.centre_z_nm is refused."
+        ),
+    )
 
     @model_validator(mode="after")
     def _check(self) -> FieldDocument:
