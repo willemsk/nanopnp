@@ -1696,6 +1696,10 @@ is in this package (no `src/` change); the author rules.
 **Ruled** (§8.2.21 W5): accepted, for WP56. The pipeline hands the gate its remedy from where the mesh came from,
 and QR-12's NOTE on the remedy states the rule for every gate.
 
+**Fixed** (WP56, [plan](../plans/wp56-command-line-read-by-a-person.md)): `solve/state.py:wall_distance_remedy` gives
+the gate `numerics.mesh.wall_h_nm` for a generated mesh, and the supplied file with `nanopnp mesh cylinder
+--wall-h-nm` otherwise (`test_num34_refusal_names_a_setting_the_run_reads`).
+
 ## REV-155: WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser
 
 Left by the review of WP55 ([CODE_REVIEW_019](../code_reviews/CODE_REVIEW_019.md)); each needs the author or a
@@ -1730,4 +1734,17 @@ factorising again (REV-60), so the time is about what the measured parts predict
 **Ruled** (§8.2.21 W8): deferred to Phase 6, with REV-60 (§8.2.9 I3), its fix to follow measurement against the
 registered thresholds (§8.2.12 M2). WP56 measures the time of each rung and the factorisation's share on that mesh
 and writes them here; its progress report shows each rung as it is solved.
+
+**Measured** (WP56, [plan](../plans/wp56-command-line-read-by-a-person.md), item 9's Outcome): the mesh of
+`--maxh-nm 0.175` has 16 444 elements and 8 404 vertices; session 03's case (validated ePNP-NS, stabilisation
+`none`) takes 761 s on a 4-core container, 754 s in the solve, 60 Newton steps over 15 rungs. The five bias rungs
+take 8 to 10 s each and `6-flow` 23 s; the six `epnp-ns` rungs take 88 to 120 s each, at the same five steps. Of
+the 761 s, Jacobian assembly (`AssembleLinearization`) is 473 s (62 %), `UmfpackSolver.solve` 184 s (24 %) and the
+residual 74 s (10 %). The premise above, that the factorisation is the cost, does not hold on this mesh: REV-60's
+symbolic reuse would save at most a quarter. Assembly runs on one thread (no `src/` file enters NGSolve's
+`TaskManager`), and the corrected model's coefficients are what make each step 13 times dearer.
+
+Question for the author: does the Phase 6 fix stay REV-60's factorisation reuse, or turn to assembly first (a
+threaded assembly, and the cost of the correction coefficients per step), measured against the thresholds of
+§8.2.12 M2?
 
