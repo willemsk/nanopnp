@@ -128,9 +128,9 @@ def test_ver46_07_the_prepared_entry_walks_every_stage_to_a_charged_solve(ran: R
     assert isinstance(group, dict)
     assert group["charge"]["source"] == "deposited"  # type: ignore[index]
     assert group["protonation"]["source"] == "pdb2pqr"  # type: ignore[index]
-    # The path as the platform writes it: ``run\\manifest.json`` on Windows.
-    assert str(Path("run") / "manifest.json") in walked[2].stdout
-    assert '"conservation"' in walked[2].stdout
+    # The reading of one group, not the run's summary: the README's step 3 names `--section charge`.
+    assert walked[2].stdout.startswith("charge:")
+    assert "conservation:" in walked[2].stdout
 
 
 def test_ver46_07_q_net_is_the_integer_the_exported_pqr_sums_to(ran: Ran) -> None:
@@ -192,7 +192,8 @@ def test_ver46_07_the_exported_pqr_deposits_the_same_charge(ran: Ran) -> None:
     store = Store(example / "store")
     left, right = _artefacts(example, "run"), _artefacts(example, "run-pqr")
     files = _read(example / "run-pqr" / "manifest.json")["inputs"]["files"]  # type: ignore[index]
-    assert Path(files["pqr"]["path"]) == Path("2wcd.pqr")  # type: ignore[index]
+    # A path in a case is read beside the case file, and the manifest records it absolute.
+    assert Path(files["pqr"]["path"]).resolve() == (example / "2wcd.pqr").resolve()  # type: ignore[index]
     protonation = _read(example / "run-pqr" / "manifest.json")["charge"]["protonation"]  # type: ignore[index]
     assert protonation["source"] == "inputs.pqr"  # type: ignore[index]
 

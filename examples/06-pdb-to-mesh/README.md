@@ -78,8 +78,9 @@ $ nanopnp inspect run-profile
 8. **`run from-profile.case.yaml`** supplies that document through `inputs.profile`. Stages 1
    to 4 do not run, and stage 5 starts from the file. The mesh is the same mesh, with the same
    content hash, but it is filed under a different key, because it came from a different input.
-9. **`inspect run-profile`** reads that run's manifest back. Its `inputs.files` records the
-   profile by its hash, and no stage 1 to 4 artefact appears.
+9. **`inspect run-profile`** lists that run's stages: the case, the region and the mesh, and no
+   stage 1 to 4. `nanopnp inspect run-profile --section inputs` prints the manifest's `inputs`
+   group, whose `files` record the profile by its hash.
 
 The four case files differ only in `structure:` or `inputs.profile`, and in their names. They share
 one electrolyte on purpose: the automatic wall element size of the mesh reads the Debye length,

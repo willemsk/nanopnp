@@ -107,7 +107,9 @@ def test_ver46_06_the_prepared_entry_walks_stages_1_to_6(
     inputs = _read(example / "run" / "manifest.json")["inputs"]
     assert isinstance(inputs, dict)
     assert set(inputs["artefacts"]) == STAGES
-    assert Path(inputs["files"]["structure"]["path"]) == Path("2wcd-prepared.pdb")
+    # A path in a case is read beside the case file, and the manifest records it absolute.
+    recorded = Path(inputs["files"]["structure"]["path"]).resolve()
+    assert recorded == (example / "2wcd-prepared.pdb").resolve()
     assert not any(inputs["artefacts"][name]["hand_substituted"] for name in STAGES)
 
 
@@ -203,7 +205,8 @@ def test_ver46_06_the_profile_meshes_to_the_same_mesh_under_another_key(
     left, right = structure["inputs"], profile["inputs"]
     assert isinstance(left, dict) and isinstance(right, dict)
     assert set(right["artefacts"]) == {"case", "region", "mesh"}
-    assert Path(right["files"]["profile"]["path"]) == Path("contour.profile.yaml")
+    recorded = Path(right["files"]["profile"]["path"]).resolve()
+    assert recorded == (example / "contour.profile.yaml").resolve()
     for name in ("region", "mesh"):
         assert right["artefacts"][name]["hash"] != left["artefacts"][name]["hash"], name
     meshes = structure["geometry_and_mesh"], profile["geometry_and_mesh"]

@@ -23,7 +23,7 @@ command.
 ```console
 $ python ../06-pdb-to-mesh/prepare.py ../../tests/data/structures/2wcd.pdb.gz 2wcd-prepared.pdb
 $ nanopnp run 2wcd.case.yaml --store store --run-dir run
-$ nanopnp inspect run
+$ nanopnp inspect run --section charge
 $ nanopnp stage protonation 2wcd.case.yaml --store store --export 2wcd.pqr
 $ nanopnp stage charge 2wcd.case.yaml --store store --export charge.field.yaml
 $ nanopnp run from-pqr.case.yaml --store store --run-dir run-pqr --upto charge
@@ -42,8 +42,9 @@ $ nanopnp inspect run-switches
    checks that the charge on the mesh is the charge of the atoms, and stops the run if it is not.
    Stages 8 to 12 solve the validated ePNP-NS model at +50 mV in 0.15 M NaCl and report the
    current and the transport numbers.
-3. **`inspect run`** reads the manifest back. Its `charge` group holds the protonation record and
-   the conservation report, and its `deviations` group is empty: the run is the validated model.
+3. **`inspect run --section charge`** reads the manifest's `charge` group back: the protonation
+   record and the conservation report. `nanopnp inspect run` alone lists the run and ends with its
+   deviations, none: the run is the validated model.
 4. **`stage protonation … --export 2wcd.pqr`** writes stage 7's charges and radii as a PQR file,
    from the store. Its charge column sums to the run's `Q_net`, a whole number of elementary
    charges.
