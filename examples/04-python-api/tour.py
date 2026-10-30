@@ -1,13 +1,13 @@
 """A tour of the nanopnp Python API (IF-01): run, inspect, substitute, read back.
 
-Run from this directory, after ``nanopnp mesh cylinder --out pore.msh`` and
-``nanopnp mesh cylinder --maxh-nm 2 --out finer.msh``::
+Run from this directory::
 
     python tour.py
 
-Everything here is the stable public surface: ``from nanopnp import ...``. The
-tour writes ``tour.json``, the record the example's test reads, and ``fields.csv``;
-it plots ``potential.png`` when matplotlib is installed (the ``examples`` extra).
+Everything here is the stable public surface: ``from nanopnp import ...`` and the
+case schema in ``nanopnp.case``. The tour writes ``tour.json``, the record the example's
+test reads, and ``fields.csv``; it plots ``potential.png`` when matplotlib is installed
+(the ``examples`` extra).
 """
 
 from __future__ import annotations
@@ -20,15 +20,8 @@ from pathlib import Path
 
 import meshio
 
-from nanopnp import (
-    CaseDocument,
-    Store,
-    dumps_case,
-    load_case,
-    registered_stages,
-    run_case,
-    run_document,
-)
+from nanopnp import Case, Session, Store
+from nanopnp.case import Mesh
 
 log = logging.getLogger("tour")
 
@@ -36,19 +29,18 @@ log = logging.getLogger("tour")
 def main() -> None:
     """Walk the tour, one step per section of the README."""
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    store = Store(Path("store"))
+    session = Session(Store(Path("store")))
+    case = Case.load("tour.case.yaml")
 
     # 1. Every stage describes itself without importing its implementation.
-    for stage in registered_stages():
-        log.info("stage %2d  %-10s %s", stage.number, stage.name, stage.artefact_schema)
+    for stage in session.stages:
+        log.info("stage %2d  %-10s %s", stage.number, stage.name, stage.schema)
 
     # 2. Run the case through the solve and the field export. Progress arrives
     #    as a fraction and a caption; a GUI would draw a bar from it.
     captions: list[str] = []
-    result = run_case(
-        Path("tour.case.yaml"),
-        store=store,
-        progress=lambda fraction, message: captions.append(f"{fraction:.2f} {message}"),
+    result = session.run(
+        case, progress=lambda fraction, message: captions.append(f"{fraction:.2f} {message}")
     )
     log.info("run directory %s, %d progress reports", result.directory, len(captions))
     for record in result.stages:
@@ -58,20 +50,24 @@ def main() -> None:
     mesh = result.artefacts["mesh"]
     log.info("mesh artefact %s: %s", mesh.hash[:12], dict(mesh.summary))
 
-    # 4. Substitute the mesh by hand (FR-27): the same document with one input
-    #    changed. A stage's key moves exactly when one of its inputs does, so the
-    #    mesh artefact moves and the materials artefact, which never reads the
-    #    mesh, does not. A walk to a stage runs that stage's inputs and nothing
-    #    else, so one walk to the mesh and one to the materials cost no solve.
+    # 4. Change an input by hand (FR-27). A stage's key moves exactly when one of
+    #    its inputs does. A finer element size moves the mesh artefact and not the
+    #    materials artefact, which never reads the mesh. The generated mesh, supplied
+    #    as a file instead of the pore that made it, is a mesh like any other: a
+    #    byte-identical copy under another name keeps its key. A walk to a stage
+    #    runs that stage's inputs and nothing else, so the walks cost no solve.
     before = {record.name: record.hash for record in result.stages}
+    shutil.copyfile(mesh.payload["mesh"], "pore.msh")
     shutil.copyfile("pore.msh", "renamed.msh")
-    after = {
-        path: _substituted(Path("tour.case.yaml"), path, store)
-        for path in ("finer.msh", "renamed.msh")
+    variants = {
+        "finer": case.with_(maxh_nm=2.0),
+        "supplied": _supplied(case, "pore.msh"),
+        "renamed": _supplied(case, "renamed.msh"),
     }
-    for path, hashes in after.items():
-        for name in ("mesh", "materials"):
-            log.info("%-12s %-10s %s -> %s", path, name, before[name][:12], hashes[name][:12])
+    after = {name: _walked(session, variant) for name, variant in variants.items()}
+    for name, hashes in after.items():
+        for stage in ("mesh", "materials"):
+            log.info("%-9s %-10s %s -> %s", name, stage, before[stage][:12], hashes[stage][:12])
 
     # 5. Read the exported fields back (IF-07): XDMF with HDF5 heavy data, in SI
     #    with the unit in each attribute's name. Omega is the whole domain and
@@ -94,7 +90,7 @@ def main() -> None:
                 "stages": before,
                 "substituted": after,
                 "field_names": names,
-                "species": _species(Path("tour.case.yaml")),
+                "species": [species.name for species in case.electrolyte.species],
             },
             indent=2,
         ),
@@ -102,26 +98,23 @@ def main() -> None:
     )
 
 
-def _species(case: Path) -> list[str]:
-    """Return the names of the species a case solves for."""
-    return [species.name for species in load_case(case).electrolyte.species]
+def _supplied(case: Case, mesh: str) -> Case:
+    """Return ``case`` with the mesh file ``mesh`` in the place of the pore it meshes."""
+    return case.with_(
+        {
+            "geometry": None,
+            "numerics.mesh": Mesh(),
+            "inputs.mesh.path": mesh,
+            "inputs.mesh.format": "msh41",
+        }
+    )
 
 
-def _substituted(case: Path, mesh: str, store: Store) -> dict[str, str]:
-    """Return each stage's hash for the case with ``inputs.mesh.path`` replaced.
-
-    Walked to the mesh and to the materials: each walk runs its target's inputs
-    alone, and neither runs the solve.
-    """
-    data = load_case(case).model_dump(mode="json", by_alias=True, exclude_none=True)
-    data["inputs"]["mesh"]["path"] = mesh
-    variant = CaseDocument.model_validate(data)
+def _walked(session: Session, case: Case) -> dict[str, str]:
+    """Return each stage's hash for ``case`` walked to the mesh and to the materials."""
     hashes: dict[str, str] = {}
     for upto in ("mesh", "materials"):
-        result = run_document(
-            variant, case_text=dumps_case(variant), store=store, upto=upto, write=False
-        )
-        hashes.update({record.name: record.hash for record in result.stages})
+        hashes.update({record.name: record.hash for record in session.run(case, upto=upto).stages})
     return hashes
 
 

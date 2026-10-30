@@ -448,10 +448,11 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   `pipeline/run.py` (delete `run_case`), `core/public.py`, `nanopnp/__init__.py`, `cli/reference.py`
   (D14); done when `uv run pytest` passes and `git grep -n "run_case" src tests` is empty.
   **Executor:** `general-purpose` on Sonnet
-- [ ] 15. `pipeline/run.py` (`RunResult`'s four methods), `api/sweep.py` (`SweepResult.plot_iv`,
+- [x] 52118fa 15. `pipeline/run.py` (`RunResult`'s four methods), `api/sweep.py` (`SweepResult.plot_iv`,
   `figure`), notebooks 01 to 06, session 04 (`notebook.py`, `selectivity.py`, `README.md`), its
   variation re-registering an edited function (D10); done when `test_notebooks.py` and the session's
   test pass. **Executor:** main
+> **Outcome — item 15.** `RunResult` plots a field and a cutline and lists its field choices and quantity rows; `SweepResult` plots the current against the bias and draws its dataset. The panels are imported inside the methods, so `pipeline/run.py` and `api/sweep.py` import no Matplotlib and no stage module at load; the two edges are `pipeline → plot` and `api → plot` in `modularity-layering.yaml`. `charge_figure` draws the deposited charge and the solid fraction, so notebook 02 shows one tab for both. A session-04 stage of one's own is a function, `selectivity(qoi)`, registered on the session. All six notebooks run headless (380 s) and the session's test passes.
 - [ ] 16. Examples 01 to 04 (cases, READMEs, `tour.py`) and `tests/tier2/test_examples_04_python_api.py`
   (D4); done when `uv run pytest --nightly tests/tier2/test_examples_0[1-4]*.py` passes with VER-62
   unchanged, or X4's gate is met and reported. **Executor:** main
