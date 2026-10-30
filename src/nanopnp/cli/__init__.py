@@ -138,24 +138,8 @@ def _env(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-def _format_quantity_value(value: object) -> str:
-    if isinstance(value, float):
-        if value == 0.0:
-            return "0.0"
-        formatted = f"{value:.6g}"
-        return formatted
-    if isinstance(value, (list, tuple)):
-        return "[" + ", ".join(_format_quantity_value(x) for x in value) + "]"
-    if isinstance(value, Mapping):
-        return (
-            "{"
-            + ", ".join(f"{k!r}: {_format_quantity_value(v)}" for k, v in sorted(value.items()))
-            + "}"
-        )
-    return str(value)
-
-
 def _run(args: argparse.Namespace) -> int:
+    from nanopnp.cli.reading import format_value, stage_line
     from nanopnp.io.store import Store
     from nanopnp.pipeline.run import run_case
 
@@ -173,13 +157,11 @@ def _run(args: argparse.Namespace) -> int:
     payload = dict(result.record())
     lines = [f"run      {result.directory}", f"record   {record}"]
     lines += [
-        f"stage {entry.number:>2} {entry.name:<11} {'cached' if entry.cached else 'computed':<8} "
-        f"{entry.hash[:12]} {entry.seconds:8.3f} s"
+        stage_line(entry.number, entry.name, entry.cached, entry.hash, entry.seconds)
         for entry in result.stages
     ]
     lines += [
-        f"{name:<20} {_format_quantity_value(value)}"
-        for name, value in sorted(result.quantities.items())
+        f"{name:<20} {format_value(value)}" for name, value in sorted(result.quantities.items())
     ]
     lines += [f"file     {path}" for path in result.files]
     _emit(payload, lines, as_json=args.json)
@@ -250,21 +232,35 @@ def _stage(args: argparse.Namespace) -> int:
 
 
 def _inspect(args: argparse.Namespace) -> int:
+    from nanopnp.cli import reading
     from nanopnp.core.hashing import decode_floats
     from nanopnp.io.manifest import MANIFEST_FILENAME
     from nanopnp.io.manifest import read as read_manifest
-    from nanopnp.pipeline.run import RUN_RECORD_FILENAME
+    from nanopnp.pipeline.run import RUN_RECORD_FILENAME, read_run
+    from nanopnp.sweep.collect import DATASET_FILENAME, read_dataset
 
     target = Path(args.target)
     if target.is_dir():
-        for candidate in (MANIFEST_FILENAME, "meta.json", RUN_RECORD_FILENAME):
+        for candidate in (MANIFEST_FILENAME, "meta.json", RUN_RECORD_FILENAME, DATASET_FILENAME):
             if (target / candidate).is_file():
                 target = target / candidate
                 break
         else:
             raise FileNotFoundError(
-                f"{args.target} holds no {MANIFEST_FILENAME}, meta.json or {RUN_RECORD_FILENAME}; "
-                "give a run directory, a stored artefact directory, or one of those files"
+                f"{args.target} holds no {MANIFEST_FILENAME}, meta.json, {RUN_RECORD_FILENAME} or "
+                f"{DATASET_FILENAME}; give a run directory, a stored artefact directory, a sweep "
+                "directory, or one of those files"
+            )
+    is_run = target.name in (MANIFEST_FILENAME, RUN_RECORD_FILENAME) and (
+        target.with_name(RUN_RECORD_FILENAME).is_file()
+    )
+    if args.section is not None:
+        if not is_run:
+            args.parser.error(f"--section reads a run directory's manifest; {target} is not one")
+        if args.section not in reading.SECTIONS:
+            args.parser.error(
+                f"--section {args.section!r} names no manifest group; give one of "
+                f"{', '.join(reading.SECTIONS)}"
             )
     # Undo canonical's {"__f__": hex} float wrapper so the printed and --json values are
     # plain numbers.
@@ -275,10 +271,27 @@ def _inspect(args: argparse.Namespace) -> int:
     # cast, not a check: both files are JSON objects by construction.
     document = cast("dict[str, Canonicalisable]", decode_floats(raw))
 
-    lines = [f"{target}"]
-    lines += [
-        f"{key:<20} {json.dumps(value, default=str)}" for key, value in sorted(document.items())
-    ]
+    if is_run:
+        recorded = read_run(target.parent)
+        if args.section is not None:
+            group = recorded.manifest.document()[args.section]
+            payload = cast("dict[str, Canonicalisable]", group)
+            _emit(
+                {args.section: payload},
+                reading.section_lines(recorded, args.section),
+                as_json=args.json,
+            )
+            return EXIT_OK
+        lines = reading.run_lines(recorded)
+    elif target.name == DATASET_FILENAME:
+        lines = reading.dataset_lines(target, read_dataset(target.parent))
+    elif target.name == "meta.json":
+        lines = reading.artefact_lines(target, document)
+    else:
+        lines = [f"{target}"]
+        lines += [
+            f"{key:<20} {json.dumps(value, default=str)}" for key, value in sorted(document.items())
+        ]
     _emit(document, lines, as_json=args.json)
     return EXIT_OK
 
@@ -955,8 +968,18 @@ def build_parser() -> argparse.ArgumentParser:
     stage.set_defaults(handler=_stage, parser=stage)
 
     inspect = _common(subparsers.add_parser("inspect", help="read an artefact or run back"))
-    inspect.add_argument("target", type=Path, help="a run directory, artefact directory or record")
-    inspect.set_defaults(handler=_inspect)
+    inspect.add_argument(
+        "target",
+        type=Path,
+        help="a run directory, a sweep directory, a stored artefact directory, or a record",
+    )
+    inspect.add_argument(
+        "--section",
+        default=None,
+        metavar="GROUP",
+        help="print one group of a run's manifest (inputs, solver, deviations, ...) or its case",
+    )
+    inspect.set_defaults(handler=_inspect, parser=inspect)
 
     check = _common(subparsers.add_parser("reproduce", help="re-run an archived run (QR-08)"))
     check.add_argument("directory", type=Path, help="the run directory to reproduce")

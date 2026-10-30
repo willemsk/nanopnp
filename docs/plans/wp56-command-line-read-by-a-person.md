@@ -139,7 +139,7 @@ reason. `--section` takes a name of `GROUPS` or `case`, and prints that group as
 `status`, each assignment by its last component (the full path where two share one), then each scalar
 quantity present among `current_A`, `conductance_S`, `transport_number`, `eof_m3_s`, values `.4g`;
 then `rectification`, one row per entry: the forward row's assignments other than
-`operating_conditions.bias_V`, `bias_V`, the ratio; then each note as `note  <text>`.
+`boundary_conditions.bias_V` (the sweep axis's path; corrected from `operating_conditions`), `bias_V`, the ratio; then each note as `note  <text>`.
 
 **Item 3, `--json`**: `{"left": A, "right": B, "case": [{"path", "left", "right"}], "deviations":
 {"left": [...], "right": [...]}, "quantities": [{"name", "left", "right", "relative_difference"}]}`;
@@ -155,7 +155,7 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
 
 ### Work items
 
-- [ ] 1. `io/manifest.py`, `pipeline/run.py`, `sweep/collect.py`: `Manifest.from_document`,
+- [x] 1. 61e63b3 `io/manifest.py`, `pipeline/run.py`, `sweep/collect.py`: `Manifest.from_document`,
   `RecordedRun`, `read_run`, `open_run`, `read_dataset` (D1); done when
   `test_qr08_a_manifest_read_back_keeps_its_hash` passes. **Executor:** main
 - [ ] 2. `cli/reading.py`, `cli/__init__.py:_inspect`: the summary, the tables, `--section` (D2); done
