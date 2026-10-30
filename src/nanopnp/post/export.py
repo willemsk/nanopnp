@@ -20,6 +20,7 @@ from nanopnp.io.vocabulary import (
 )
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.physics.models import (
+    DIRICHLET_BULK,
     ModelSolution,
     PhysicsModel,
     concentration_field_name,
@@ -378,9 +379,6 @@ class SolutionFields:
     wall_extent_nm: tuple[float, float] | None = None
     bulk_mol_m3: dict[str, float] = dataclasses.field(default_factory=dict)
 
-
-DIRICHLET_BULK = 1.0
-"""The dimensionless concentration the solve imposes on ``cis`` and ``trans``: 1, bulk."""
 
 _RESTORED_FIELDS: dict[str, SolutionFields] = {}
 _RESTORE_LOCK = threading.Lock()

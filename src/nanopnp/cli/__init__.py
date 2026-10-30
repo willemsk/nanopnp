@@ -350,7 +350,11 @@ def _inspect(args: argparse.Namespace) -> int:
         return EXIT_OK
 
     if is_run:
-        recorded = read_run(target.parent)
+        recorded = read_run(
+            target.parent,
+            manifest_document=document if target.name == MANIFEST_FILENAME else None,
+            record_document=document if target.name == RUN_RECORD_FILENAME else None,
+        )
         if args.section is not None:
             group = recorded.manifest.document()[args.section]
             payload = cast("dict[str, Canonicalisable]", group)

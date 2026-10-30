@@ -6,6 +6,7 @@ import json
 import platform
 import sys
 from dataclasses import dataclass, field
+from functools import cached_property
 from importlib import metadata
 from typing import TYPE_CHECKING
 
@@ -275,9 +276,12 @@ class Manifest:
             "deviations": _deviations_payload(self.deviations, self.contributed_deviations),
         }
 
-    @property
+    @cached_property
     def hash(self) -> str:
-        """Content hash over the case and the eight groups, excluding the timestamp."""
+        """Content hash over the case and the eight groups, excluding the timestamp.
+
+        Computed on first use: a manifest is not edited after it is built.
+        """
         return content_hash(
             MANIFEST_SCHEMA,
             {"case": self.case_hash, "groups": self.groups()},

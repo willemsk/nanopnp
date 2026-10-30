@@ -485,3 +485,17 @@ def test_run_result_current_and_conductance_in_nano_units(tmp_path: Path) -> Non
     assert unbiased.conductance_nS is None
     with pytest.raises(KeyError, match="qoi"):
         _ = RunResult(tmp_path, cast("Any", None), {}).current_nA
+
+
+def test_ver32_reopen_refuses_a_run_whose_case_file_was_edited_after_the_run(
+    cylindrical_pore_case: Path, tmp_path: Path
+) -> None:
+    from nanopnp.io.manifest import ManifestHashError
+    from nanopnp.validation.runs import reopen
+
+    result = Session(Store(tmp_path / "store")).run(Case.load(cylindrical_pore_case), upto="mesh")
+    case_file = result.directory / CASE_FILENAME
+    case_file.write_text(case_file.read_text(encoding="utf-8") + "# edited\n", encoding="utf-8")
+
+    with pytest.raises(ManifestHashError, match="differs from the case text"):
+        reopen(result.directory)

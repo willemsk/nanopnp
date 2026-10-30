@@ -91,6 +91,7 @@ if TYPE_CHECKING:
 __all__ = [
     "COEFFICIENTS",
     "DEFAULT_BOUNDARIES",
+    "DIRICHLET_BULK",
     "LADDER_STRATEGY",
     "LADDER_TARGETS",
     "SWITCHES",
@@ -122,6 +123,9 @@ ElementKind: TypeAlias = Literal["h1", "vector_h1", "number"]
 SWITCHES: tuple[str, ...] = ("flow", "variable_density", "inertia", "dielectric_gradient_forces")
 
 COEFFICIENTS: tuple[str, ...] = ("fixed_charge", "solid_fraction", "surface_charge")
+
+DIRICHLET_BULK = 1.0
+"""The dimensionless concentration the solve imposes on ``cis`` and ``trans``: 1, bulk."""
 
 LADDER_STRATEGY = "default_ladder"
 
@@ -1199,7 +1203,7 @@ class CoupledModel:
         )
         values = concentration_values or {}
         for name in self.species:
-            bulk = values.get(name, 1.0)
+            bulk = values.get(name, DIRICHLET_BULK)
             target = ngs.log(ngs.CF(bulk)) if self.log_variables else ngs.CF(bulk)
             set_boundary_values(
                 fields[concentration_field_name(name)],
