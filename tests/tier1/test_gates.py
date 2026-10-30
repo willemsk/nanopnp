@@ -211,7 +211,7 @@ def test_num34_refusal_names_a_setting_the_run_reads(sampler: FieldSampler) -> N
     assert "numerics.mesh.wall_h_nm" in wall_distance_remedy(generated)
     remedy = wall_distance_remedy(supplied)
     assert "wall-100.msh" in remedy
-    assert "nanopnp mesh cylinder --wall-h-nm" in remedy
+    assert "nanopnp mesh <geometry file> --wall-h-nm" in remedy
     assert "numerics.mesh" not in remedy, "numerics.mesh is refused beside inputs.mesh"
 
     distance = ngs.GridFunction(_space(sampler))

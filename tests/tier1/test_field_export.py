@@ -335,12 +335,15 @@ def test_if07_the_report_exports_the_fixed_charge_it_read_for_the_restore(
     example = Path(__file__).resolve().parents[2] / "examples" / "02-charged-pore"
     field = Path(shutil.copy(example / "ring.field.yaml", tmp_path))
     mesh_path = tmp_path / "pore.msh"
-    assert main(["mesh", "cylinder", "--out", str(mesh_path)]) == 0
+    geometry_path = tmp_path / "pore.yaml"
+    assert main(["geometry", "cylinder", "--out", str(geometry_path)]) == 0
+    assert main(["mesh", str(geometry_path), "--out", str(mesh_path)]) == 0
     case = tmp_path / "charged.case.yaml"
     case.write_text(
         (example / "classical.case.yaml")
         .read_text(encoding="utf-8")
         .replace("path: pore.msh", f"path: {mesh_path}")
+        .replace("groups: {default: interface}", "groups: {}")
         .replace("path: ring.field.yaml", f"path: {field}")
         .replace("outputs: [current, transport_numbers, eof_rate]", "outputs: [current, fields]"),
         encoding="utf-8",

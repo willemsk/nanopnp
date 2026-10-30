@@ -15,10 +15,28 @@ from nanopnp.core.errors import (
     EXIT_CODES,
     EXIT_GATE,
     EXIT_OK,
+    EXIT_USAGE,
 )
+from nanopnp.mesh.defaults import DEFAULT_CYLINDER_WALL_H_NM, DEFAULT_MAXH_NM
 from nanopnp.pipeline.run import (
     RUN_RECORD_FILENAME,
 )
+
+IDEALISED_CASE = """\
+schema: nanopnp/case/v0.5
+name: idealised
+geometry:
+  pore: {{shape: cylinder, radius_nm: 2}}
+  membrane: {{thickness_nm: 6}}
+  reservoir: {{radius_nm: 10}}
+electrolyte:
+  species: [{{name: Na+, z: 1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.1
+  parameters: willems2020_nacl
+boundary_conditions: {{bias_V: 0.05}}
+physics: {{solid_permittivities: {{membrane: 3.2}}}}
+numerics: {{mesh: {{maxh_nm: {maxh}, wall_h_nm: {wall}}}}}
+"""
 
 
 def test_ver32_classifying_imports_no_exception_module() -> None:
@@ -158,26 +176,23 @@ def test_val03_validate_case_hash_matches_every_rung_of_the_ladder(
 
 
 # VER-27, FR-25
-def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
-    cylindrical_pore_case: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+def test_ver32_mesh_of_a_geometry_file_writes_the_mesh_a_case_declaring_it_records(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    geometry = tmp_path / "pore.yaml"
+    assert main(["geometry", "cylinder", "--out", str(geometry), "--json"]) == EXIT_OK
+    assert json.loads(capsys.readouterr().out)["pore"] == {"shape": "cylinder", "radius_nm": 2.0}
     out = tmp_path / "pore.msh"
-    assert main(["mesh", "cylinder", "--out", str(out), "--json"]) == EXIT_OK
+    assert main(["mesh", str(geometry), "--out", str(out), "--json"]) == EXIT_OK
     printed = json.loads(capsys.readouterr().out)
     assert out.is_file()
-    assert printed["path"] == str(out)
-    assert printed["groups"] == {"default": "interface"}
-    assert printed["elements"] > 0
+    assert printed["groups"] == {}
     assert printed["min_sicn"] > 0.3 and printed["min_gamma"] > 0.3
     assert not list(tmp_path.glob(".*partial*")), "the staging file was left behind"
 
-    groups = ", ".join(f"{key}: {value}" for key, value in printed["groups"].items())
     case = tmp_path / "case.yaml"
     case.write_text(
-        cylindrical_pore_case.read_text(encoding="utf-8")
-        .replace(str(cylindrical_pore_case.parent / "pore.vol"), str(out))
-        .replace("format: vol", "format: msh41")
-        .replace("groups: {default: interface}", f"groups: {{{groups}}}"),
+        IDEALISED_CASE.format(maxh=DEFAULT_MAXH_NM, wall=DEFAULT_CYLINDER_WALL_H_NM),
         encoding="utf-8",
     )
     from nanopnp.io.store import Store
@@ -185,30 +200,69 @@ def test_ver32_mesh_cylinder_writes_a_mesh_its_printed_groups_ingest(
 
     result = run_case(case, store=Store(tmp_path / "store"), upto="mesh")
     assert result.manifest.geometry_and_mesh["content_hash"] == printed["content_hash"]
-    assert result.manifest.geometry_and_mesh["groups"]["default"] == "interface"
+
+
+def test_ver32_a_geometry_file_plots_and_a_structures_region_is_not_meshed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    geometry = tmp_path / "pore.yaml"
+    assert main(["geometry", "cylinder", "--out", str(geometry)]) == EXIT_OK
+    figure = tmp_path / "pore.png"
+    assert main(["plot", str(geometry), "--out", str(figure)]) == EXIT_OK
+    assert figure.stat().st_size > 0
+    capsys.readouterr()
+
+    from nanopnp.geometry.profile import load_profile
+    from nanopnp.geometry.region import derive_region, write_region
+    from nanopnp.io.case import Membrane, Reservoir
+
+    region = tmp_path / "region.yaml"
+    profile = Path("data/geometry/clya_reference_profile.yaml")
+    write_region(derive_region(load_profile(profile), Membrane(), Reservoir()), region)
+    with pytest.raises(SystemExit) as refused:
+        main(["mesh", str(region), "--out", str(tmp_path / "x.msh")])
+    assert refused.value.code == EXIT_USAGE
+    assert "structure" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("flag", ["--maxh-nm", "--wall-h-nm"])
+def test_ver32_the_reference_preset_refuses_a_size_flag(
+    flag: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    with pytest.raises(SystemExit) as refused:
+        main(["mesh", "reference", flag, "1", "--out", str(tmp_path / "r.msh")])
+    assert refused.value.code == EXIT_USAGE
+    assert flag in capsys.readouterr().err
+    assert list(tmp_path.iterdir()) == []
 
 
 # VER-10
 def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    geometry = tmp_path / "sliver.yaml"
+    assert (
+        main(["geometry", "cylinder", "--membrane-thickness-nm", "0.01", "--out", str(geometry)])
+        == EXIT_OK
+    )
+    capsys.readouterr()
     out = tmp_path / "sliver.msh"
-    code = main(["mesh", "cylinder", "--membrane-thickness-nm", "0.01", "--out", str(out)])
+    code = main(["mesh", str(geometry), "--out", str(out)])
     assert code == EXIT_GATE
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "SICN" in captured.err or "gamma" in captured.err
     assert "Traceback" not in captured.err
-    assert list(tmp_path.iterdir()) == []
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["sliver.yaml"]
 
 
-@pytest.mark.parametrize("shape", ["cylinder", "reference"])
-def test_ver32_mesh_help_imports_no_netgen(shape: str) -> None:
+@pytest.mark.parametrize("command", [["geometry", "cylinder"], ["mesh"]])
+def test_ver32_geometry_and_mesh_help_import_no_netgen(command: list[str]) -> None:
     code = (
         "import sys, json\n"
         "from nanopnp.cli import main\n"
         "try:\n"
-        f"    main(['mesh', {shape!r}, '--help'])\n"
+        f"    main([*{command!r}, '--help'])\n"
         "except SystemExit:\n"
         "    pass\n"
         "loaded = sorted(m for m in sys.modules if m.startswith(('ngsolve', 'netgen')))\n"
