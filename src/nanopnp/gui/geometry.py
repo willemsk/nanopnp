@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from nanopnp.core.stages import describe, walk_order
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
+from nanopnp.geometry.pore import IdealisedRegionRecord
 from nanopnp.geometry.profile import (
     HAND_EDIT_SOURCE,
     PROFILE_SCHEMA,
@@ -613,6 +614,17 @@ def load_view(
         )
     if event.name == "region":
         record = read_region(artefact.payload[REGION_PAYLOAD])
+        if isinstance(record, IdealisedRegionRecord):
+            radius = record.pore.radius_nm
+            half = 0.5 * record.membrane_thickness_nm
+            return OutlineView(
+                name=event.name,
+                loop=((0.0, -half), (radius, -half), (radius, half), (0.0, half)),
+                chord=((radius, -half), (radius, half)),
+                slab=(-half, half),
+                reservoir_nm=record.reservoir_radius_nm,
+                lines=_lines(summary, tuple(summary)),
+            )
         points = record.points()
         half = record.membrane.half_thickness_nm
         return OutlineView(

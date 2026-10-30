@@ -74,6 +74,7 @@ from nanopnp.core.stages import (
 from nanopnp.density.grid import read_grid, write_grid
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import (
+    RegionRecord,
     build_region,
     distance_to_segments,
     protein_water_edges,
@@ -92,7 +93,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.typing import Expression, Mesh
     from nanopnp.density.grid import RadialGrid
-    from nanopnp.geometry.region import RegionRecord
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.io.store import Store
 
@@ -749,9 +749,12 @@ class FieldStage:
         region = _region(resolved, inputs)
         derived: tuple[DerivedSolidFraction, tuple[MaterialMean, ...]] | None = None
         if region is not None:
+            record = read_region(Path(region.payload[REGION_PAYLOAD]))
+            # An idealised pore cannot derive a dielectric: the case refuses its transition.
+            assert isinstance(record, RegionRecord)
             derived = derive_fields(
                 resolved,
-                read_region(Path(region.payload[REGION_PAYLOAD])),
+                record,
                 ingested.mesh,
                 measures=self._measures(resolved),
                 cancel=cancel,

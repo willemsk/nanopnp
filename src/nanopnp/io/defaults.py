@@ -82,6 +82,10 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "a mesh size in nm, or 'auto'; a discretisation choice like the two above, and "
         "the only reason it reads as a switch at all is the 'auto' literal"
     ),
+    "geometry.pore.shape": (
+        "the idealised pore's shape is geometry the case declares (section 5.3.1 NOTE on "
+        "geometry.pore); it is recorded with the region, not a model switch"
+    ),
     "structure.symmetry.axis": (
         "how stage 1 finds the axis, not a model term: z is admitted only inside the 0.01 nm "
         "displacement budget from the detected axis (section 5.3.1 NOTE on structure:)"

@@ -46,6 +46,9 @@ LEAVES: dict[str, Leaf] = {
     "boundary_conditions.bias_V": Leaf(
         "solve", "solve", "sets the electrostatic potential on the cis boundary"
     ),
+    "boundary_conditions.wall_charge_C_m2": Leaf(
+        "solve", "solve", "sets the surface charge density on an idealised pore's wall"
+    ),
     "boundary_conditions.ground": Leaf(
         "solve", "solve", "sets the grounded boundary for the electrostatic potential"
     ),
@@ -252,6 +255,12 @@ LEAVES: dict[str, Leaf] = {
     "geometry.analyte.charge_e": Leaf(
         "stage", "region", "analyte total charge refused in generated regions by stage 5"
     ),
+    "geometry.pore.shape": Leaf(
+        "stage", "region", "idealised pore shape built by stage 5 in place of a structure's region"
+    ),
+    "geometry.pore.radius_nm": Leaf(
+        "stage", "region", "idealised pore lumen radius built into the region in stage 5"
+    ),
     "charge.exclusion_offset_nm": Leaf(
         "stage", "region", "exclusion shell standoff distance built into CAD region in stage 5"
     ),
@@ -273,6 +282,9 @@ LEAVES: dict[str, Leaf] = {
     ),
     "numerics.mesh.wall_for_concentration_M": Leaf(
         "stage", "mesh", "concentration whose Debye length sizes the auto wall target in stage 6"
+    ),
+    "numerics.mesh.maxh_nm": Leaf(
+        "stage", "mesh", "global element size of an idealised pore's mesh in stage 6"
     ),
     "numerics.mesh.size_scale": Leaf(
         "stage", "mesh", "global mesh resolution scaling factor applied in stage 6"

@@ -15,6 +15,7 @@ from nanopnp.core.hashing import decode_floats
 from nanopnp.density.grid import read_grid
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
+from nanopnp.geometry.pore import IdealisedRegionRecord
 from nanopnp.geometry.profile import PAYLOAD_NAME as PROFILE_PAYLOAD
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
@@ -192,7 +193,7 @@ class RegionDrawing:
     membrane_half_thickness_m: float
     reservoir_radius_m: float
     z_extent_m: tuple[float, float]
-    record: RegionRecord
+    record: RegionRecord | IdealisedRegionRecord
 
 
 def region_drawing(artefact: Artefact) -> RegionDrawing | None:
@@ -203,6 +204,20 @@ def region_drawing(artefact: Artefact) -> RegionDrawing | None:
     record = read_region(path)
     import numpy as np
 
+    if isinstance(record, IdealisedRegionRecord):
+        radius = record.pore.radius_nm
+        half = 0.5 * record.membrane_thickness_nm
+        outer = record.reservoir_radius_nm
+        return RegionDrawing(
+            pore_m=np.array([(0.0, -half), (radius, -half), (radius, half), (0.0, half)]) * _NM,
+            membrane_m=np.array([(radius, -half), (outer, -half), (outer, half), (radius, half)])
+            * _NM,
+            exclusion_m=None,
+            membrane_half_thickness_m=half * _NM,
+            reservoir_radius_m=outer * _NM,
+            z_extent_m=(-half * _NM, half * _NM),
+            record=record,
+        )
     exclusion = None if record.exclusion is None else record.exclusion.points() * _NM
     membrane = record.membrane
     half = membrane.half_thickness_nm

@@ -9,15 +9,20 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable
+from nanopnp.geometry.pore import IdealisedRegionRecord
 from nanopnp.geometry.region import RegionRecord
 from nanopnp.io.case import SuppliedArtefact
 from nanopnp.mesh.adapter import write_msh41
+from nanopnp.mesh.idealised import idealised_parameters, mesh_idealised
 from nanopnp.mesh.ingest import IngestedMesh, ingest
 from nanopnp.mesh.meshers import create_mesher
 from nanopnp.mesh.sizing import (
     EXCLUSION_SIZE,
+    GATE_CONSTANTS,
     GRADING,
     SIZES,
+    WALL_MAX_BOUND,
+    WALL_MEAN_BOUND,
     SizeTable,
     WallSize,
     corrected_debye_ratio,
@@ -30,18 +35,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.mesh.adapter import MeshData
 
 logger = logging.getLogger(__name__)
-
-WALL_MEAN_BOUND = 1.15
-"""The ``wall`` segments' mean length may be at most this times the target."""
-
-WALL_MAX_BOUND = 2.0
-"""The longest ``wall`` segment may be at most this times the target."""
-
-GATE_CONSTANTS: Mapping[str, Canonicalisable] = {
-    "wall_mean_bound": WALL_MEAN_BOUND,
-    "wall_max_bound": WALL_MAX_BOUND,
-}
-"""The wall-size gate's thresholds, which key the stage-6 artefact."""
 
 COMMON_RECIPE_KEYS: frozenset[str] = frozenset(
     {"backend", "wall", "table", "grading", "gate", "exclusion"}
@@ -185,11 +178,17 @@ class GeneratedMesh:
     backend: str
     backend_version: str
     exclusion: bool = False
+    recipe: Mapping[str, Canonicalisable] | None = None
 
     def sizing(self) -> dict[str, Canonicalisable]:
         """Return the manifest's ``sizing`` block, the mesher's version beside it."""
+        recipe = (
+            dict(self.recipe)
+            if self.recipe is not None
+            else sizing_parameters(self.wall, self.sizes, self.backend, exclusion=self.exclusion)
+        )
         return {
-            **sizing_parameters(self.wall, self.sizes, self.backend, exclusion=self.exclusion),
+            **recipe,
             **debye_record(self.wall, self.corrected_ratio),
             "backend_version": self.backend_version,
             "wall_statistics": self.statistics.summary(),
@@ -210,7 +209,17 @@ class GeneratedMesh:
         return summary
 
 
-def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> GeneratedMesh:
+def idealised_recipe(resolved: ResolvedCase) -> tuple[WallSize, float, dict[str, Canonicalisable]]:
+    """Return an idealised pore's wall size, its scaled global size and its stage-6 recipe."""
+    wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
+    declared = resolved.document.numerics.mesh.maxh_nm
+    maxh_nm = (declared if declared is not None else SIZES.global_nm) * wall.size_scale
+    return wall, maxh_nm, idealised_parameters(wall, maxh_nm)
+
+
+def generate(
+    record: RegionRecord | IdealisedRegionRecord, resolved: ResolvedCase, directory: Path
+) -> GeneratedMesh:
     """Mesh the region, write it, read it back through the gate and check its wall.
 
     Raises
@@ -218,7 +227,13 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
     MeshVocabularyError, MeshQualityError, WallSizeGateError
         On the naming, quality and wall-size gates.
     """
-    wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
+    recipe: Mapping[str, Canonicalisable] | None = None
+    if isinstance(record, IdealisedRegionRecord):
+        wall, maxh_nm, recipe = idealised_recipe(resolved)
+    else:
+        wall = resolve_wall_size(
+            resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
+        )
     sizes = SIZES.scaled(wall.size_scale)
     backend = resolved.document.numerics.mesh.backend
     if wall.coarser_than_num30:
@@ -228,7 +243,13 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
             wall.wall_h_nm,
             wall.debye_target_nm,
         )
-    data, version = mesh_region(record, wall.wall_h_nm, sizes, backend)
+    if isinstance(record, IdealisedRegionRecord):
+        from netgen import config
+
+        data = mesh_idealised(record, maxh_nm=maxh_nm, wall_h_nm=wall.wall_h_nm)
+        version = str(config.version).lstrip("v").split("-")[0]
+    else:
+        data, version = mesh_region(record, wall.wall_h_nm, sizes, backend)
 
     directory.mkdir(parents=True, exist_ok=True)
     path = write_msh41(data, directory / MESH_FILENAME)
@@ -254,5 +275,6 @@ def generate(record: RegionRecord, resolved: ResolvedCase, directory: Path) -> G
         corrected_ratio=corrected_debye_ratio(resolved, wall),
         backend=backend,
         backend_version=version,
-        exclusion=record.exclusion is not None,
+        exclusion=isinstance(record, RegionRecord) and record.exclusion is not None,
+        recipe=recipe,
     )

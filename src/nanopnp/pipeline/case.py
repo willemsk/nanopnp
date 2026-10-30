@@ -265,6 +265,8 @@ def resolve(document: CaseDocument) -> ResolvedCase:
         smearing=(document.charge if document.charge is not None else Charge()).smearing,
         exclusion_offset_nm=(document.charge or Charge()).exclusion_offset_nm,
         dielectric_transition_nm=(document.charge or Charge()).dielectric_transition_nm,
+        pore=geometry.pore if mesh is None else None,
+        wall_charge_C_m2=document.boundary_conditions.wall_charge_C_m2,
     )
     return resolved
 

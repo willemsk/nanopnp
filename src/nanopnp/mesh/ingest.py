@@ -18,6 +18,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
+from nanopnp.geometry.pore import IdealisedRegionRecord
 from nanopnp.geometry.region import PAYLOAD_NAME, read_region
 from nanopnp.io.artefact import MeshArtefact
 from nanopnp.io.case import SuppliedArtefact, stored_artefact_refused
@@ -588,24 +589,28 @@ class MeshStage:
         payload: dict[str, Path] | None = None,
         summary: dict[str, object] | None = None,
     ) -> MeshArtefact:
-        from nanopnp.mesh.generate import sizing_parameters
+        from nanopnp.mesh.generate import idealised_recipe, sizing_parameters
 
         region = inputs.require("region")
         record = read_region(region.payload[PAYLOAD_NAME])
-        wall = resolve_wall_size(
-            resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
-        )
+        if isinstance(record, IdealisedRegionRecord):
+            sizing = idealised_recipe(resolved)[2]
+        else:
+            wall = resolve_wall_size(
+                resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
+            )
+            sizing = sizing_parameters(
+                wall,
+                SIZES.scaled(wall.size_scale),
+                resolved.document.numerics.mesh.backend,
+                exclusion=record.exclusion is not None,
+            )
         return MeshArtefact(
             region=region.hash,
             materials=tuple(sorted(record.face_areas_nm2)),
             boundaries=tuple(sorted(record.edge_counts)),
             groups={},
-            sizing=sizing_parameters(
-                wall,
-                SIZES.scaled(wall.size_scale),
-                resolved.document.numerics.mesh.backend,
-                exclusion=record.exclusion is not None,
-            ),
+            sizing=sizing,
             payload=payload,
             summary=summary,
         )

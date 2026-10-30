@@ -525,7 +525,8 @@ def _reproduce(args: argparse.Namespace) -> int:
 
 
 def _mesh(args: argparse.Namespace) -> int:
-    from nanopnp.mesh.cylinder import generate_cylinder, write_gated_msh
+    from nanopnp.mesh.cylinder import generate_cylinder
+    from nanopnp.mesh.idealised import write_gated_msh
 
     # Refused before the mesher runs: left to the write, a bad destination would exit 3 or 1
     # instead of 2.

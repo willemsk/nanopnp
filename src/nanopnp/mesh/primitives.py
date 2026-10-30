@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nanopnp.core.typing import Mesh, Shape
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.mesh.adapter import from_ngsolve
 from nanopnp.mesh.defaults import DEFAULT_PORE_RADIUS_NM
@@ -188,69 +189,24 @@ class CylindricalPoreGeometry:
         """Half the membrane thickness, in nm."""
         return 0.5 * self.membrane_thickness_nm
 
+    def _cylinder(self) -> CylinderPore:
+        return CylinderPore(
+            pore_radius_nm=self.pore_radius_nm,
+            membrane_thickness_nm=self.membrane_thickness_nm,
+            reservoir_radius_nm=self.reservoir_radius_nm,
+        )
+
     def faces(self) -> tuple[Shape, Shape, Shape, Shape]:
         """Return the four named faces (lumen, membrane, cis, trans), unglued."""
-        import netgen.occ as occ
-
-        half = self.half_thickness_nm
-        radius = self.reservoir_radius_nm
-        lumen = (
-            occ.MoveTo(0, -half).Rectangle(self.pore_radius_nm, self.membrane_thickness_nm).Face()
-        )
-        lumen.name = "electrolyte"
-        membrane = (
-            occ.MoveTo(self.pore_radius_nm, -half)
-            .Rectangle(radius - self.pore_radius_nm, self.membrane_thickness_nm)
-            .Face()
-        )
-        membrane.name = "membrane"
-        reservoirs = []
-        for side, sign in (("cis", 1.0), ("trans", -1.0)):
-            centre_z = sign * half
-            disc = occ.WorkPlane().Circle(0.0, centre_z, radius).Face()
-            box = (
-                occ.MoveTo(0, centre_z).Rectangle(radius, radius).Face()
-                if sign > 0
-                else occ.MoveTo(0, centre_z - radius).Rectangle(radius, radius).Face()
-            )
-            half_disc = disc * box
-            half_disc.name = side
-            reservoirs.append(half_disc)
-        return lumen, membrane, reservoirs[0], reservoirs[1]
+        return self._cylinder().faces()
 
     def name_edges(self, shape: Shape, *, wall_h_nm: float | None = None) -> None:
         """Name every unnamed edge of ``shape`` by its centre of mass, in place."""
-        half = self.half_thickness_nm
-        radius = self.reservoir_radius_nm
-        for edge in shape.edges:
-            if edge.name is not None:
-                continue
-            centre = edge.center
-            r_c, z_c = centre[0], centre[1]
-            on_axis = abs(r_c) < TOL_NM
-            inside_membrane_span = abs(z_c) < half - TOL_NM
-            if on_axis:
-                edge.name = "axis"
-            elif abs(r_c - self.pore_radius_nm) < TOL_NM and inside_membrane_span:
-                edge.name = "wall"
-                if wall_h_nm is not None:
-                    edge.maxh = wall_h_nm
-            elif abs(abs(z_c) - half) < TOL_NM and r_c > self.pore_radius_nm + TOL_NM:
-                edge.name = "membrane"
-            elif abs(r_c - radius) < TOL_NM and inside_membrane_span:
-                edge.name = "membrane_outer"
-            elif z_c > half:
-                edge.name = "cis"
-            elif z_c < -half:
-                edge.name = "trans"
+        self._cylinder().name_edges(shape, wall_h_nm=wall_h_nm)
 
     def shape(self, *, wall_h_nm: float | None = None) -> Shape:
-        """Return the glued, fully named shape, unmeshed."""
-        import netgen.occ as occ
-
-        glued = occ.Glue(list(self.faces()))
-        self.name_edges(glued, wall_h_nm=wall_h_nm)
-        return glued
+        """Return the glued, fully named shape, unmeshed; the mouths stay unnamed."""
+        return self._cylinder().shape(wall_h_nm=wall_h_nm, name_mouths=False)
 
     def generate(
         self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True

@@ -249,6 +249,13 @@ class Reservoir(_Strict):
     radius_nm: float = 250.0
 
 
+class Pore(_Strict):
+    """An idealised pore declared in the case: its shape and lumen radius."""
+
+    shape: Literal["cylinder"]
+    radius_nm: float = Field(gt=0.0, allow_inf_nan=False)
+
+
 class Analyte(_Strict):
     """An axisymmetric analyte body in the pore."""
 
@@ -267,6 +274,7 @@ class Geometry(_Strict):
     membrane: Membrane = Field(default_factory=Membrane)
     reservoir: Reservoir = Field(default_factory=Reservoir)
     analyte: Analyte | None = None
+    pore: Pore | None = None
 
 
 class Smearing(_Strict):
@@ -389,6 +397,14 @@ class BoundaryConditions(_Strict):
     bias_V: float
     ground: Literal["cis", "trans"] = "cis"
     walls: Wall = Field(default_factory=Wall)
+    wall_charge_C_m2: float = Field(
+        default=0.0,
+        allow_inf_nan=False,
+        description=(
+            "The uniform surface charge density of an idealised pore's wall, in C/m^2; read "
+            "only beside geometry.pore."
+        ),
+    )
 
 
 class Physics(_Strict):
@@ -428,6 +444,15 @@ class Mesh(_Strict):
         description=(
             "The concentration, in mol/L, at whose Debye length `wall_h_nm: auto` is sized; "
             "none sizes it at the case's own."
+        ),
+    )
+    maxh_nm: float | None = Field(
+        default=None,
+        gt=0.0,
+        allow_inf_nan=False,
+        description=(
+            "The global element size of an idealised pore, in nm; none takes the global size "
+            "of the size field. Read only beside geometry.pore."
         ),
     )
     size_scale: float = Field(default=1.0, gt=0.0, allow_inf_nan=False)
