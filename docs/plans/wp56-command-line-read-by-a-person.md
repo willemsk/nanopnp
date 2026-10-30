@@ -170,9 +170,9 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
 - [x] 5. Compaction checkpoint. **Executor:** main
 - [x] 6. 4cf6c22 `cli/__init__.py`: the progress object, `--progress` on `run` and `stage` (D5); done when the
   code and review say so. **Executor:** main
-- [ ] 7. `numerics/gates.py`, `solve/state.py`, `sweep/plan.py`, `charge/fields.py` (D6); done when the
+- [x] 7. 042d6c9 `numerics/gates.py`, `solve/state.py`, `sweep/plan.py`, `charge/fields.py` (D6); done when the
   NUM-34 and QR-03 tests pass. **Executor:** main
-- [ ] 8. Help and reference (W6): `mesh cylinder`'s flags in a `geometry` and a `mesh` group;
+- [x] 8. 709070c Help and reference (W6): `mesh cylinder`'s flags in a `geometry` and a `mesh` group;
   `description=` for `reproduce` (a run fails to reproduce when an input file changed, the libraries or
   platform moved the numbers past the tolerance, or the store served a stale artefact; it solves in a
   fresh store) and for `sweep run` (each worker is pinned to one thread; `--workers` sets the cores);
