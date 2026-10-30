@@ -3,22 +3,21 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP56, below. The author ran the sessions and ruled every `UT-nn` on
-29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, is delivered; planned, WP57, the
-second, widened on 30 October 2026 to carry the geometry split and the open review items (§8.2.22),
-its Python interface rebuilt on a `Case` and a `Session` the same day (§8.2.23);
-provisional, the documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
+demand. Delivered: WP35 to WP57, below. The author ran the sessions and ruled every `UT-nn` on
+29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, and WP57, the second (widened on 30 October 2026 to carry the geometry
+split and the open review items, §8.2.22, and its Python interface rebuilt on a `Case` and a `Session`,
+§8.2.23), are delivered; provisional, the documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the trimmed code and
 tests, the notebooks, the split specification, the working commands and the testing protocol are
-done, the author has run the sessions, and the first fix, a readable command line, is merged.
+done, the author has run the sessions, the first fix, a readable command line, is merged, and the second fix is delivered.
 
 **What changes.** The second fix lets a simple cylindrical pore be described in the case file and
 meshed like any other, so its shape and its mesh are set apart; gives its wall a fixed charge;
 rebuilds the Python interface on two objects, a case and the session that runs it, which every tool
-then uses; and clears the review notes still open. Then the guide is revised, and the phase closes.
+then uses; and clears the review notes still open. Next the guide is revised, and the phase closes.
 
 **Cost.** More than two weeks for the second fix, now that the interface is rebuilt; the phase keeps
 its four to six weeks, and that package's size is reported at the close.
@@ -225,37 +224,17 @@ takes first. No schema moves.
 
 ### WP57 — An idealised pore as geometry, and the Python interface rebuilt on a Case and a Session (§8.2.21 W4; §8.2.22 X1 to X4, X6 to X8; §8.2.23 Y1 to Y11)
 
-Planned ([plan](wp57-idealised-pore-and-python-interface.md)) on its open PR, re-planned after
-§8.2.23 with no plan cap (Y11). Its plan measured that stage 6 can mesh the declared cylinder to
-VER-62's recorded mesh bit for bit, and amends §5.2.2, §5.3.1, §5.5 and IF-02's generators NOTE to
-say how; its re-plan places the `Case` and the `Session` in a new `api/` module above `sweep/`
-(§5.1) and reads a case's relative paths beside the case file (§5.3.1). It carries:
-
-- **The geometry split (UT-02; X1, X2).** A case declares an idealised cylinder as `geometry.pore`;
-  stage 5 builds its region and stage 6 meshes it under `numerics.mesh` (§5.3.1's NOTE on an
-  idealised pore). `nanopnp geometry cylinder` writes the region as a file, `nanopnp plot` draws it,
-  and `nanopnp mesh <geometry file>` meshes it; `mesh cylinder` is removed (IF-02's generators NOTE,
-  VER-32). `Case.cylinder` builds a case with `geometry.pore`. Examples 01 to 04 and sessions 01 to
-  03 and 05 move to it. VER-62 is re-pinned only as X4 bounds it.
-- **A wall surface charge (REV-144; X3)**: `boundary_conditions.wall_charge_C_m2`, a surface term of
-  the one weak form (PHY-09's NOTE), checked by the new Tier 2 benchmark VER-77.
-- **The Python interface (UT-10, `MOD-11`, REV-145; Y1 to Y10)**, as IF-01's NOTE on the interface
-  states: a `Case` is the case document, built from the public blocks of `nanopnp.case` and edited by
-  copy through `with_`, remembering its file while unedited; a `Session` holds the store and its own
-  stages and runs every case, the command line, the shell, the sweep runner and `reproduce` moved onto
-  it, each run taking its own controls and the end-of-rung call of REV-157; a stage of one's own is a
-  function registered by `session.register_stage` (§5.5); figures are drawn from the results, and
-  `Case.from_structure` orients a shipped structure. `run_case`, `run_document` and the other names
-  of Y5 leave `PUBLIC`. Session 04 and notebooks 01 to 06 are rewritten on it, session 04's variation
-  included (REV-155).
-- **The open review items (X6 to X8)**: REV-157's other three items; REV-155's shared tagged-block
-  parser and its rectification sentence softened; REV-122, a correction file read by path, hashed
-  and listed as a deviation; REV-120, a force surface refused unless one pair of materials lies on
-  its sides; REV-111's claim narrowed; REV-153's four couplings fixed.
-
-A change to `PUBLIC` is decided in `test_public_api.py` (F4); each break, `mesh cylinder`, the names
-of Y5 and the case schema's move under `nanopnp/case/v0.5` (G6) included, is listed in
-`CHANGELOG.md` with its migration. VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.23`.
+Delivered ([plan](wp57-idealised-pore-and-python-interface.md); tag `v0.5.0-alpha.23`). A case declares an
+idealised cylinder as `geometry.pore`; stage 5 builds its region and stage 6 meshes it under `numerics.mesh`,
+to VER-62's recorded mesh `546c34f4…` bit for bit, so no number was re-pinned (X4). `nanopnp geometry
+cylinder` and `nanopnp mesh` replace `mesh cylinder` (UT-02; VER-32). `boundary_conditions.wall_charge_C_m2`
+is a surface term of the one weak form (REV-144; VER-77). `Case` and `Session` in a new `api/` module are the
+Python interface: the command line, the window, the sweep and `reproduce` run through the session, a stage
+of one's own is `session.register_stage`, and `RunResult` and `SweepResult` draw their figures (UT-10,
+`MOD-11`, REV-145; Y1 to Y10). A case's relative paths are read beside the case file, and a correction file
+may be named by path (REV-122). REV-111, REV-120, REV-153, REV-155 and REV-157 are fixed. Each break and its
+migration is in `CHANGELOG.md`. The nightly walk of example 07 was repaired (its step read a manifest the
+command no longer prints).
 
 ### Documentation increment 4 (provisional)
 

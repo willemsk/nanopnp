@@ -1,6 +1,6 @@
 # WP57 — An idealised pore as geometry, and the Python interface rebuilt on a Case and a Session
 
-**Status: planned, not started.** Written 30 October 2026, re-planned the same day after §8.2.23 and
+**Status: delivered, 30 October 2026.** Written 30 October 2026, re-planned the same day after §8.2.23 and
 grounded in the code at `ec2a266` (§8.2.15 Q1). Inherits §8.2.21 W4 and W7, §8.2.22 X1 to X8,
 §8.2.23 Y1 to Y11, the test scope (§8.2.13 N1 to N6) and FR-30's figures (§8.2.14, §8.2.20). Its
 plan carries no word or decision cap and keeps its compaction checkpoints (Y11).
@@ -470,13 +470,14 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
 - [x] 7e0bd6f 21. `validation/examples.py`, `tests/tier2/test_user_testing_sessions.py`, the example tests:
   `untagged_commands` (D13); done when the example and session tests pass. **Executor:**
   `general-purpose` on Sonnet
-- [x] 22. The two knowledge sentences (REV-111, REV-155), the two concepts naming the old route (D14)
+- [x] 5bc4819 22. The two knowledge sentences (REV-111, REV-155), the two concepts naming the old route (D14)
   and their `knowledge/log.md` lines; `CLAUDE.md`'s project structure gains `api/`; done when the code
   and review say so. **Executor:** `general-purpose` on Haiku
-- [ ] 23. Records: `CHANGELOG.md` (each break with its migration), the REV rows and sections set
+- [x] 23. Records: `CHANGELOG.md` (each break with its migration), the REV rows and sections set
   `fixed`, UT-02 and UT-10 in `docs/user-testing/findings.md`, `MOD-11` in
   `docs/project/modularity-findings.md`, the Phase 4 plan's WP57 entry, `current.md`; the strict
   documentation build. **Executor:** main
+> **Outcome — the release run of `v0.5.0-alpha.22`.** That run (Release 41053380507, on `e775c29`) failed one test on every job, `test_ver46_07_the_prepared_entry_walks_every_stage_to_a_charged_solve`: example 07's step 3 expected `run/manifest.json` in the output of `nanopnp inspect run`, which has printed a reading since WP56 (`0b46e79`). The step now asks for `--section charge`, and the example 06 step 9 prose follows. Running examples 05 to 07 nightly after item 9 found three more assertions that expected a path as written (`2wcd.pqr`, `2wcd-prepared.pdb`, `contour.profile.yaml`); the manifest records them absolute, as D12 states, and the tests compare resolved paths. Examples 05 to 07 pass nightly (17 tests, 333 s). The ordinary push gate does not run them, so a nightly or a release run is where such a drift shows.
 
 ### Verification
 

@@ -50,6 +50,83 @@ panels and two whole-workbench mockups, and writes the design document and its r
   REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
   restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
+## [0.5.0-alpha.23]
+
+WP57: an idealised pore as geometry, and the Python interface rebuilt on a `Case` and a `Session`
+(`SPECIFICATION.md` §8.2.21 W4, W7; §8.2.22 X1 to X8; §8.2.23 Y1 to Y11; UT-02, UT-10; `MOD-11`; REV-111,
+REV-120, REV-122, REV-144, REV-145, REV-153, REV-155, REV-157). The
+[plan](docs/plans/wp57-idealised-pore-and-python-interface.md) records the work.
+
+### Added
+
+- **`geometry.pore` and `numerics.mesh.maxh_nm`**: a cylindrical pore is declared in the case (radius) and
+  meshed by stage 6 under `numerics.mesh` (`maxh_nm`, `wall_h_nm`), like any other pore. It meshes to VER-62's
+  recorded mesh (`546c34f4…`) bit for bit. `maxh_nm` and `wall_h_nm` are refused beside `inputs.mesh`.
+- **`nanopnp geometry cylinder --out FILE.yaml`** writes the geometry as a region file that `nanopnp plot` draws;
+  **`nanopnp mesh FILE|reference`** meshes a geometry file and prints its groups and hash (VER-32).
+- **`boundary_conditions.wall_charge_C_m2`**: a uniform fixed surface charge on the lumen wall, a boundary condition of the
+  Poisson equation, checked against Grahame's relation and the Gauss balance (PHY-09, VER-77).
+- **`Case` and `Session`** (`nanopnp.api`). A `Case` is the case document: `Case.load`, `loads`, `cylinder`,
+  `from_structure(..., orient=...)` and `with_`, which edits by copy and takes dotted keys, unique leaf names
+  or a whole typed block. The blocks are public in `nanopnp.case` (`Charge`, `Mesh`, ...) and frozen.
+  A `Session(store, write=..., workspace=...)` holds the store and runs, opens, sweeps and describes every case,
+  the command line's, the sweep runner's and the window's included; each run takes its own `progress`,
+  `cancel`, `on_stage`, `on_solve` and `on_artefact`.
+- **`session.register_stage(function)`**: a function whose parameters name stages is a stage of one's own, keyed
+  by the digest of its code and its inputs; it belongs to that session.
+- **`RunResult.plot_field`, `plot_cutline`, `field_choices`, `quantity_rows`** and **`SweepResult.plot_iv`,
+  `figure`** draw from what a run or a sweep returns; `SweepResult` also holds `dataset`, `plan`, `directory`
+  and `rows`.
+- **`SolveHook.rung_solved(name, seconds, iterations)`**: the end of a continuation rung; the progress line
+  prints the manifest's seconds for the last rung (REV-157).
+- **A correction file by path**: `electrolyte.parameters` and a correction's `model` may name a file by an
+  absolute or case-relative path; its hash enters the stage-8 key and the manifest, and it is listed as a
+  deviation (REV-122).
+- **`post.forces.check_force_surface`** refuses a force surface whose two sides are not one pair of materials,
+  exit 4 (NUM-29, QR-12; REV-120). **`validation.examples.untagged_commands`** finds a console command that no
+  test runs (REV-155).
+
+### Changed
+
+- **A relative path in a case is read beside the case file**, as a correction file already was, so a case runs
+  the same from any folder. A case held in memory (a sweep member, a window document) reads against the working
+  directory. Migration: run from the case's folder no longer matters; a case written for another working
+  directory needs its paths made relative to the file.
+- **The case schema** (`nanopnp/case/v0.5`) gains `geometry.pore`, `numerics.mesh.maxh_nm` and
+  `boundary_conditions.wall_charge_C_m2`; the definition titles of its JSON Schema change (the root is `Case`).
+- **`Session.sweep`** returns a `SweepResult`; sweep members walk through the session's store.
+- **`MOD-11`**: `with_section` and `register` stay internal; the API page names `Case.with_` and
+  `session.register_stage`.
+- **Notebooks 01 to 06, examples 01 to 04 and sessions 01 to 05** import only `nanopnp` and declare the pore
+  in the case instead of meshing it first.
+- **The knowledge base**: the no-MPI claim keeps what the lock file and the configuration show; the
+  rectification sentence no longer asserts that a fixed-charge asymmetry alone rectifies (REV-111, REV-155).
+  `inspect run --section charge` is example 07's reading of the manifest's charge group.
+
+### Fixed
+
+- **The nightly walks of examples 06 and 07** (the failure of the `v0.5.0-alpha.22` release run): example 07's
+  step 3 reads the manifest's `charge` group with `inspect run --section charge`, since `inspect` prints a
+  reading; the tests of examples 06 and 07 compare the absolute path a manifest records.
+
+### Removed
+
+Each break, with its migration:
+
+- **`nanopnp mesh cylinder`**. Declare the pore (`geometry.pore`, `numerics.mesh`) in the case; or write the
+  geometry with `nanopnp geometry cylinder --out FILE.yaml` and mesh it with `nanopnp mesh FILE.yaml`.
+  `mesh_cylinder` leaves the public names with it.
+- **`run_case`**. `Session(store).run(Case.load(path), upto=..., only=...)`; the hooks are arguments of `run`.
+- **The public names `run_document`, `resolve`, `load_case`, `loads_case`, `dump_case`, `dumps_case`,
+  `CaseDocument`, `plan_from_document`, `run_plan`, `Stage` and `registered_stages`.** They stay importable
+  from their modules (`nanopnp.pipeline.run`, `nanopnp.pipeline.case`, `nanopnp.io.case`,
+  `nanopnp.core.stages`, `nanopnp.api.sweep`); for a case use `Case.load`, `Case.loads` and `Case.dumps`.
+- **`Case.cylinder(..., store=...)`, `Case.run` and the `"debye"` wall**. Build the case, then
+  `Session(store, write=...).run(case)`; `wall_h_nm` is a number or `"auto"`.
+- **`nanopnp.sweep.sweep`**. `session.sweep(case, axis=..., values=...)`, or `nanopnp.api.sweep.sweep`.
+- **`nanopnp.pipeline.reproduce`**. `nanopnp.api.reproduce.reproduce`.
+- **`SolveHook` gains a method.** An implementation adds `rung_solved`; a no-op is enough.
+
 ## [0.5.0-alpha.22]
 
 WP56: the command line read by a person, the fix of the first user-testing round's command-line findings

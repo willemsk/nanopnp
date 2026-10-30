@@ -1130,6 +1130,8 @@ The pending claims include numerical sweeps no current fixture runs and aliasing
 
 **Ruled** (§8.2.22 X7): the claim is narrowed to what is tested, `mpi4py` not locked and the configuration flags showing no MPI; no binary is scanned. WP57.
 
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): The claim in `knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md` is narrowed to the lock file and the build configuration, with the test that shows the flags; no binary is scanned.
+
 
 ### REV-112 — Three suspected costs were never measured
 
@@ -1264,6 +1266,8 @@ into the force stage.
 
 **Ruled** (§8.2.22 X6): accepted as recommended. NUM-29's NOTE on the force surface states the refusal. WP57.
 
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `post/forces.py:check_force_surface` names the pair of materials on the two sides of the force surface and refuses a surface of several, exit 4; `extract` calls it with the ingested mesh, and the QoI stage passes it.
+
 ## REV-121: Stage 1 checks no axis for a monomeric or hetero-oligomeric pore
 
 `symmetry.axis: auto` finds the axis by cyclic chain permutation, so it needs n ≥ 2 chains that agree
@@ -1292,6 +1296,8 @@ hash enters the stage-8 key and the FR-25 manifest, and the manifest lists it as
 validated default; otherwise a cached result survives an edit of the file.
 
 **Ruled** (§8.2.22 X6): accepted as recommended. §5.3.1's NOTE on a correction file outside the package states it. WP57.
+
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): A correction file named by an absolute or case-relative path is read, its content hash enters the stage-8 key and the manifest, and it is listed as a deviation.
 
 ## REV-123: The library has no plotting helpers or notebook display
 
@@ -1547,6 +1553,8 @@ wall charge is a boundary condition or a field form.
 
 **Ruled** (§8.2.22 X3): a boundary condition, `boundary_conditions.wall_charge_C_m2` beside `geometry.pore`, a surface term of the one weak form (PHY-09's NOTE), checked by VER-77; `Case.cylinder` takes it. WP57.
 
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `Case.cylinder` takes `wall_charge_C_m2`, a uniform surface charge on the lumen wall as a boundary condition (VER-77).
+
 ## REV-145: No case builders by section before Phase 5
 
 The author's notes for WP54 name builders by section, `with_density` and `with_numerics`, beside the leaf edits of
@@ -1560,6 +1568,8 @@ and a mapping form for a path that names more than one field. V3's deferral is s
 
 **Ruled** (§8.2.23 Y1, Y2, superseding W7): a `Case` is built from the public typed blocks of `nanopnp.case`, and
 `with_` takes a whole block, as a typed block or a mapping, creating an absent one. WP57.
+
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): A case is built from the typed blocks of `nanopnp.case` and edited by copy through `Case.with_`; no builder by section is added.
 
 ## REV-146: The cylinder's default wall size is coarser than NUM-30's first layer
 
@@ -1694,6 +1704,8 @@ is covered by a test.
 
 **Ruled** (§8.2.22 X6): the four couplings are fixed in WP57, against the recommendation to leave them.
 
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): The bulk is one constant, `physics.models.DIRICHLET_BULK`, shared with `post/export.py`; the Debye length is read once (the `"debye"` wall is gone); `prepared_pore`'s digest reads `structure/read.py` as well as `orient.py`, and the mesher's list goes with `mesh/cylinder.py`; the triangulation cache holds weak references.
+
 ## REV-154: NUM-34's refusal names a setting that a supplied mesh ignores
 
 Found while running user-testing session 03 (WP55, [plan](../plans/wp55-user-testing-protocol.md)) as a dry run; it
@@ -1740,6 +1752,8 @@ move the helper with the next change to `validation/examples.py`.
 public call; the other two items stay open.
 
 **Ruled** (§8.2.22 X6, X8): the rectification sentence is softened to session 05's observation, with no general claim; the tagged-block parser becomes one helper for the example and session checks. WP57.
+
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `validation/examples.py:untagged_commands` serves the session and the example tests; the rectification sentence no longer asserts that a fixed-charge asymmetry alone rectifies; session 04's variation re-registers an edited function under the same name.
 
 ## REV-156: A 16 562-element cylinder takes minutes to solve (UT-09)
 
@@ -1788,3 +1802,5 @@ Recommendation: add the end-of-rung hook with WP57's `Case.run` hooks (§8.2.21 
 with the next change to `validation/runs.py`; take the last two items with whatever next touches those lines.
 
 **Ruled** (§8.2.22 X6): all four items go to WP57; the end-of-rung call goes with `Case.run`'s hooks.
+
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `SolveHook.rung_solved` gives a rung's seconds, which the progress line prints; `validation/runs.py:reopen` reads through `read_run`; `inspect` reads the manifest once and `Manifest.hash` is cached; `wall_distance_remedy` has no unreachable branch.
