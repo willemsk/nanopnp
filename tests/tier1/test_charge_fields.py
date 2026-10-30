@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 
 from nanopnp.charge.fields import (
     CONSERVATION_TOL,
@@ -20,6 +22,7 @@ from nanopnp.charge.fields import (
     check_conservation,
     conservation,
     create_form,
+    load_document,
     load_field,
 )
 from nanopnp.core.constants import ELEMENTARY_CHARGE
@@ -327,6 +330,31 @@ def test_ver29_a_field_with_no_declared_charge_still_gates_the_consumer_leg(mesh
     }
     assert report.reference_C == pytest.approx(abs(report.q_grid_C))
     assert abs(report.consumer_error) < CONSERVATION_TOL
+
+
+def test_qr03_a_charge_stated_twice_with_opposite_signs_is_refused_when_read(tmp_path, mesh):
+    def written(charge_e: float, **overrides: float) -> Path:
+        path = tmp_path / "ring.field.yaml"
+        payload = _document(_ring(charge_e=charge_e)).model_dump(by_alias=True, mode="json")
+        payload.pop("q_net_e")
+        path.write_text(yaml.safe_dump({**payload, **overrides}), encoding="utf-8")
+        return path
+
+    for charge_e, q_net_e in ((6.0, -6.0), (0.0, -6.0), (-6.0, 0.0)):
+        with pytest.raises(FieldDocumentError) as raised:
+            load_document(written(charge_e, q_net_e=q_net_e))
+        assert "form.parameters.charge_e" in str(raised.value)
+        assert "q_net_e" in str(raised.value)
+    assert load_document(written(-6.0, q_net_e=-3.0)).q_net_e == -3.0
+    assert load_document(written(6.0)).q_net_e is None
+
+    field = _field(_ring(charge_e=-12.0), q_net_e=-6.0)
+    report = conservation(field, mesh, AXISYMMETRIC, planes_nm=[2.0, 4.0, 6.0])
+    with pytest.raises(ChargeFieldError) as raised:
+        check_conservation(report)
+    assert raised.value.gate.startswith("the supplied field does not carry the charge it declares")
+    assert "form.parameters.charge_e" in str(raised.value)
+    assert "q_net_e" in str(raised.value)
 
 
 def _report(**overrides: object) -> ConservationReport:

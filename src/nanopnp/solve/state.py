@@ -60,6 +60,7 @@ __all__ = [
     "save",
     "single_rung",
     "wall_distance_field",
+    "wall_distance_remedy",
     "warm_start_payload",
 ]
 
@@ -200,6 +201,18 @@ def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Ex
     )
 
 
+def wall_distance_remedy(resolved: ResolvedCase) -> str:
+    """Return what refines the wall of this run's mesh: a case setting, or the supplied file."""
+    if resolved.generates_mesh:
+        return "refine the mesh at the wall (numerics.mesh.wall_h_nm)"
+    supplied = resolved.document.inputs.mesh
+    path = supplied.path if supplied is not None else None
+    return (
+        f"regenerate the supplied mesh {str(path)!r} finer at the wall "
+        "(nanopnp mesh cylinder --wall-h-nm)"
+    )
+
+
 def check_wall_distance(
     resolved: ResolvedCase,
     mesh: Mesh,
@@ -217,7 +230,7 @@ def check_wall_distance(
     if not reads_distance(resolved):
         return None
     sampler = FieldSampler.shared(mesh, coordinates=coordinates, materials=ELECTROLYTE_DOMAINS)
-    return WallDistanceGate(sampler, distance).checked()
+    return WallDistanceGate(sampler, distance, wall_distance_remedy(resolved)).checked()
 
 
 def single_rung(

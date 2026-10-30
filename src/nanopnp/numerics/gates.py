@@ -317,10 +317,17 @@ class WallDistanceMeasurement:
 
 @dataclass
 class WallDistanceGate:
-    """``min d >= -1e-3 nm`` over the fluid, wherever a wall correction is active."""
+    """``min d >= -1e-3 nm`` over the fluid, wherever a wall correction is active.
+
+    Parameters
+    ----------
+    remedy
+        What to change, naming a setting or file the run reads.
+    """
 
     sampler: FieldSampler
     distance: Expression
+    remedy: str
     minimum_nm: float = MINIMUM_WALL_DISTANCE_NM
     name: str = "wall-distance admissibility"
 
@@ -356,8 +363,8 @@ class WallDistanceGate:
                     f"correction is active, and {found.negative_fraction:.3%} of the "
                     f"{found.samples} fluid samples are negative. The ion wall function's root "
                     "is at d = -0.01 nm, so a field this far below zero reverses the sign of "
-                    "the diffusivity and mobility rather than attenuating them: refine the mesh "
-                    "at the wall (numerics.mesh.wall_h_nm), do not widen this gate"
+                    f"the diffusivity and mobility rather than attenuating them: {self.remedy}, "
+                    "do not widen this gate"
                 ),
             )
         logger.debug(
