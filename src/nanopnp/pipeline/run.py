@@ -433,8 +433,18 @@ def _json_file(path: Path, what: str) -> dict[str, Canonicalisable]:
     return parsed
 
 
-def read_run(directory: str | Path) -> RecordedRun:
+def read_run(
+    directory: str | Path,
+    *,
+    manifest_document: Mapping[str, Canonicalisable] | None = None,
+    record_document: Mapping[str, Canonicalisable] | None = None,
+) -> RecordedRun:
     """Read a run directory's case, manifest and run record.
+
+    Parameters
+    ----------
+    manifest_document, record_document
+        The file's content already parsed and float-decoded by the caller, so it is read once.
 
     Raises
     ------
@@ -445,8 +455,16 @@ def read_run(directory: str | Path) -> RecordedRun:
         ``case.yaml`` is not the case the manifest embeds.
     """
     source = Path(directory)
-    record = _json_file(source / RUN_RECORD_FILENAME, "run record")
-    written = _json_file(source / MANIFEST_FILENAME, "provenance manifest")
+    record = (
+        _json_file(source / RUN_RECORD_FILENAME, "run record")
+        if record_document is None
+        else record_document
+    )
+    written = (
+        _json_file(source / MANIFEST_FILENAME, "provenance manifest")
+        if manifest_document is None
+        else manifest_document
+    )
     try:
         manifest = Manifest.from_document(written)
     except ManifestHashError as error:

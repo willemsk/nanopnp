@@ -192,8 +192,9 @@ def prepared_pore(
 ) -> Path:
     """Return ``orient_pore``'s file for these choices, written under ``directory`` once.
 
-    The file is named by a digest of the source file's bytes, the choices and this module's
-    code, so a changed source or preparation is a new file; it is written whole or not at all.
+    The file is named by a digest of the source file's bytes, the choices and the code of this
+    module and of the reader, so a changed source or preparation is a new file; it is written
+    whole or not at all.
     """
     origin = Path(source)
     choices = {
@@ -204,7 +205,8 @@ def prepared_pore(
     }
     digest = hashlib.sha256(origin.read_bytes())
     digest.update(json.dumps(choices, sort_keys=True).encode())
-    digest.update(Path(__file__).read_bytes())
+    for code in (Path(__file__), Path(__file__).with_name("read.py")):
+        digest.update(code.read_bytes())
     prepared = Path(directory) / f"{origin.name.split('.')[0]}-{digest.hexdigest()[:12]}.pdb"
     if not prepared.is_file():
         prepared.parent.mkdir(parents=True, exist_ok=True)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import importlib
 
 import numpy as np
@@ -142,6 +143,23 @@ def _fields(
         fluid=(points_m, cells, fluid),
         bulk_mol_m3=bulk_mol_m3 or {},
     )
+
+
+def test_triangulation_cache_does_not_keep_the_field_arrays_alive() -> None:
+    # A cache that held the arrays would keep every figure's mesh in memory for the process.
+    pytest.importorskip("matplotlib")
+    import weakref
+
+    points_m, cells = _p2_square()
+    first = data.field_triangulation(points_m, cells)
+    assert data.field_triangulation(points_m, cells) is first
+    gone = weakref.ref(points_m)
+    del points_m
+    gc.collect()
+    assert gone() is None
+    kept_points, kept_cells = _p2_square()
+    data.field_triangulation(kept_points, kept_cells)
+    assert [entry[0]() is kept_points for entry in data._TRIANGULATIONS] == [True]
 
 
 def test_radial_cutline_is_masked_outside_the_fluid() -> None:

@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.core.hashing import Canonicalisable, decode_floats
-from nanopnp.io.manifest import CASE_FILENAME
-from nanopnp.pipeline.run import RUN_RECORD_FILENAME
+from nanopnp.core.hashing import Canonicalisable
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.scaling import Scales
@@ -48,22 +45,29 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
     Parameters
     ----------
     directory
-        A run directory holding ``run.json``, ``manifest.json`` and ``case.yaml``.
+        A run directory holding ``run.json``, ``manifest.json`` and ``case.yaml``, read as
+        :func:`nanopnp.pipeline.run.read_run` reads it.
     store
         Artefact store overriding the one the run record names.
 
     Raises
     ------
     RunError
-        Not a run directory, the run stopped before the solve, or the store lacks its artefact.
+        The run stopped before the solve, or the store lacks its artefact.
+    FileNotFoundError
+        Not a run directory.
+    ManifestHashError
+        The manifest, the run record or the case file was edited after the run wrote it.
     """
     from nanopnp.io.store import Store
     from nanopnp.physics.coefficients import mesh_unit_scales
-    from nanopnp.pipeline.case import load_case, resolve
+    from nanopnp.pipeline.case import resolve
+    from nanopnp.pipeline.run import read_run
     from nanopnp.solve.state import restore, warm_start_payload
 
     source = Path(directory)
-    record = _record(source)
+    recorded = read_run(source)
+    record = recorded.record
     entry = _solve_entry(source, record)
 
     configured = record.get("store")
@@ -77,13 +81,7 @@ def reopen(directory: str | Path, *, store: Store | None = None) -> ReopenedRun:
             "one the run used, or re-run the member"
         )
 
-    case_path = source / CASE_FILENAME
-    if not case_path.is_file():
-        raise RunError(
-            f"{case_path} is not there, so the state cannot be restored: the space its "
-            "coefficients live on is built from the case's own mesh and element orders"
-        )
-    document = load_case(case_path)
+    document = recorded.document
     resolved = resolve(document)
     mesh = record.get("artefacts", {}).get("mesh")
     # A generated mesh is read from the run's own stage-6 payload, never
@@ -165,19 +163,6 @@ def _upstream(
             )
         found[name] = artefact
     return found
-
-
-def _record(directory: Path) -> Mapping[str, Canonicalisable]:
-    path = directory / RUN_RECORD_FILENAME
-    if not path.is_file():
-        raise RunError(
-            f"{path} is not there, so {directory} is not a run directory. A run written by "
-            "'nanopnp run' or by a sweep member carries one beside its manifest"
-        )
-    decoded = decode_floats(json.loads(path.read_text(encoding="utf-8")))
-    if not isinstance(decoded, dict):
-        raise RunError(f"{path} does not hold a run record object")
-    return decoded
 
 
 def _solve_entry(directory: Path, record: Mapping[str, Canonicalisable]) -> Mapping[str, str]:

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import threading
+import weakref
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -603,7 +605,10 @@ def field_values(
     raise KeyError(f"no field {quantity!r}; the run holds {', '.join(known)}")
 
 
-_TRIANGULATIONS: list[tuple[np.ndarray, np.ndarray, Triangulation]] = []
+_TRIANGULATIONS: list[
+    tuple[weakref.ReferenceType[np.ndarray], weakref.ReferenceType[np.ndarray], Triangulation]
+] = []
+_TRIANGULATION_LOCK = threading.Lock()
 _KEPT_TRIANGULATIONS = 4
 
 
@@ -641,16 +646,22 @@ def field_triangulation(points_m: np.ndarray, cells: np.ndarray) -> Triangulatio
     """Return the mesh in nm as the four linear triangles of each P2 cell; the last few are kept.
 
     A cutline is exact at the P2 nodes only on this split. The arrays are matched by identity, so
-    a figure and a slider that read the same fields build it once.
+    a figure and a slider that read the same fields build it once. An entry never keeps its arrays
+    alive: it is dropped when either is collected.
     """
     from matplotlib.tri import Triangulation
 
-    for held_points, held_cells, held in _TRIANGULATIONS:
-        if held_points is points_m and held_cells is cells:
-            return held
+    with _TRIANGULATION_LOCK:
+        _TRIANGULATIONS[:] = [
+            entry for entry in _TRIANGULATIONS if entry[0]() is not None and entry[1]() is not None
+        ]
+        for held_points, held_cells, held in _TRIANGULATIONS:
+            if held_points() is points_m and held_cells() is cells:
+                return held
     built = Triangulation(points_m[:, 0] / _NM, points_m[:, 1] / _NM, subdivided(cells))
-    _TRIANGULATIONS.append((points_m, cells, built))
-    del _TRIANGULATIONS[:-_KEPT_TRIANGULATIONS]
+    with _TRIANGULATION_LOCK:
+        _TRIANGULATIONS.append((weakref.ref(points_m), weakref.ref(cells), built))
+        del _TRIANGULATIONS[:-_KEPT_TRIANGULATIONS]
     return built
 
 

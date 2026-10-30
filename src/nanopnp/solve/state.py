@@ -203,12 +203,11 @@ def wall_distance_field(resolved: ResolvedCase, mesh: Mesh, *, order: int) -> Ex
 
 def wall_distance_remedy(resolved: ResolvedCase) -> str:
     """Return what refines the wall of this run's mesh: a case setting, or the supplied file."""
-    if resolved.generates_mesh:
+    supplied = resolved.mesh
+    if supplied is None:
         return "refine the mesh at the wall (numerics.mesh.wall_h_nm)"
-    supplied = resolved.document.inputs.mesh
-    path = supplied.path if supplied is not None else None
     return (
-        f"regenerate the supplied mesh {str(path)!r} finer at the wall "
+        f"regenerate the supplied mesh {str(supplied.path)!r} finer at the wall "
         "(nanopnp mesh <geometry file> --wall-h-nm)"
     )
 
