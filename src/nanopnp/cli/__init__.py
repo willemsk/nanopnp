@@ -239,6 +239,19 @@ def _inspect(args: argparse.Namespace) -> int:
     from nanopnp.pipeline.run import RUN_RECORD_FILENAME, read_run
     from nanopnp.sweep.collect import DATASET_FILENAME, read_dataset
 
+    if args.other is not None:
+        for given in (args.target, args.other):
+            if not (Path(given) / RUN_RECORD_FILENAME).is_file():
+                args.parser.error(
+                    f"two targets are compared as runs, and {given} is not a run directory "
+                    f"(it holds no {RUN_RECORD_FILENAME})"
+                )
+        if args.section is not None:
+            args.parser.error("--section reads one run; give one target")
+        payload, lines = reading.comparison(read_run(args.target), read_run(args.other))
+        _emit(payload, lines, as_json=args.json)
+        return EXIT_OK
+
     target = Path(args.target)
     if target.is_dir():
         for candidate in (MANIFEST_FILENAME, "meta.json", RUN_RECORD_FILENAME, DATASET_FILENAME):
@@ -972,6 +985,13 @@ def build_parser() -> argparse.ArgumentParser:
         "target",
         type=Path,
         help="a run directory, a sweep directory, a stored artefact directory, or a record",
+    )
+    inspect.add_argument(
+        "other",
+        type=Path,
+        nargs="?",
+        default=None,
+        help="a second run directory, compared with the first",
     )
     inspect.add_argument(
         "--section",

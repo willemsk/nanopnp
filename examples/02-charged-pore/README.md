@@ -46,6 +46,11 @@ consequence. The manifest's `deviations` block lists every switch that differs f
 model, with the value this run used and the validated default beside it (FR-25). The ePNP-NS run's
 list is empty.
 
+To see the two runs side by side, give `nanopnp inspect` both directories:
+`nanopnp inspect run-epnpns run-classical`. It lists the case fields that differ (the six
+corrections and the name), each run's deviations, and every quantity of the two runs with their
+relative difference. A comparison is a reading, not a test: it exits 0 however far apart they are.
+
 ## What the test asserts
 
 `tests/tier2/test_examples_02_epnpns.py` (every push) runs the mesh and ePNP-NS commands above,

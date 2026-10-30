@@ -18,6 +18,7 @@ __all__ = [
     "DATASET_QUANTITIES",
     "SECTIONS",
     "artefact_lines",
+    "comparison",
     "dataset_lines",
     "format_value",
     "run_lines",
@@ -247,3 +248,97 @@ def artefact_lines(path: Path, meta: Mapping[str, Canonicalisable]) -> list[str]
         lines.append(f"{name}:")
         lines += _yaml_lines(meta.get(name) or {}, 1)
     return lines
+
+
+def _flatten(value: object, prefix: str, into: dict[str, Canonicalisable], *, lists: bool) -> None:
+    if isinstance(value, Mapping) and value:
+        for key, item in value.items():
+            _flatten(item, f"{prefix}.{key}" if prefix else str(key), into, lists=lists)
+    elif lists and isinstance(value, (list, tuple)) and value:
+        for index, item in enumerate(value):
+            _flatten(item, f"{prefix}.{index}", into, lists=lists)
+    else:
+        into[prefix] = value
+
+
+def _number(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return float(value)
+
+
+def _relative(left: object, right: object) -> float | None:
+    a, b = _number(left), _number(right)
+    if a is None or b is None or a == 0.0:
+        return None
+    return (b - a) / abs(a)
+
+
+def comparison(
+    left: RecordedRun, right: RecordedRun
+) -> tuple[dict[str, Canonicalisable], list[str]]:
+    """Return two runs compared: the case fields that differ, each one's deviations, the quantities.
+
+    Returns
+    -------
+    The ``--json`` payload and the text lines.
+    """
+    cases: list[dict[str, Canonicalisable]] = []
+    flat_left: dict[str, Canonicalisable] = {}
+    flat_right: dict[str, Canonicalisable] = {}
+    _flatten(left.document.model_dump(mode="json"), "", flat_left, lists=True)
+    _flatten(right.document.model_dump(mode="json"), "", flat_right, lists=True)
+    for path in sorted(set(flat_left) | set(flat_right)):
+        a, b = flat_left.get(path), flat_right.get(path)
+        if a != b:
+            cases.append({"path": path, "left": a, "right": b})
+
+    def listed(run: RecordedRun) -> list[Canonicalisable]:
+        block = run.manifest.document()["deviations"]
+        return [*block["switches"], *block["contributed"]]
+
+    quantities_left: dict[str, Canonicalisable] = {}
+    quantities_right: dict[str, Canonicalisable] = {}
+    _flatten(dict(left.quantities), "", quantities_left, lists=False)
+    _flatten(dict(right.quantities), "", quantities_right, lists=False)
+    quantities = [
+        {
+            "name": name,
+            "left": quantities_left.get(name),
+            "right": quantities_right.get(name),
+            "relative_difference": _relative(quantities_left.get(name), quantities_right.get(name)),
+        }
+        for name in sorted(set(quantities_left) | set(quantities_right))
+    ]
+    payload: dict[str, Canonicalisable] = {
+        "left": str(left.directory),
+        "right": str(right.directory),
+        "case": cases,
+        "deviations": {"left": listed(left), "right": listed(right)},
+        "quantities": quantities,
+    }
+
+    lines = [_label("left", str(left.directory)), _label("right", str(right.directory))]
+    lines += [
+        _label(
+            "case",
+            f"{entry['path']}: {format_value(entry['left'])} -> {format_value(entry['right'])}",
+        )
+        for entry in cases
+    ] or [_label("case", "identical")]
+    for side, run in (("left", left), ("right", right)):
+        found = _deviation_lines(run.manifest.document()["deviations"], f"deviation {side}")
+        lines += found or [_label("deviations", f"{side} none")]
+    lines += _table(
+        ["quantity", "left", "right", "(right - left)/|left|"],
+        [
+            [
+                str(entry["name"]),
+                _cell(entry["left"]),
+                _cell(entry["right"]),
+                _cell(entry["relative_difference"]),
+            ]
+            for entry in quantities
+        ],
+    )
+    return payload, lines

@@ -82,6 +82,15 @@ def test_fr25_inspect_reads_back_every_deviation_and_compares_the_runs(
     assert main(["inspect", str(run), "--json"]) == 0
     assert json.loads(capsys.readouterr().out) == manifest
 
+    assert main(["inspect", str(example / "run-epnpns"), str(run), "--json"]) == 0
+    compared = json.loads(capsys.readouterr().out)
+    corrections = {f"electrolyte.corrections.{name}.model" for name in CORRECTION_PROPERTIES}
+    corrections.add("electrolyte.corrections.steric.model")
+    assert {entry["path"] for entry in compared["case"]} - {"name"} == corrections
+    assert compared["deviations"]["left"] == []
+    assert sorted(entry["path"] for entry in compared["deviations"]["right"]) == sorted(corrections)
+    assert {entry["name"] for entry in compared["quantities"]} >= {"current_A", "transport_number"}
+
 
 def _mesh_hash(run: Path) -> str:
     group = _read(run / "manifest.json")["geometry_and_mesh"]
