@@ -24,6 +24,7 @@ $ nanopnp mesh cylinder --out pore.msh
 $ nanopnp validate case pore.case.yaml
 $ nanopnp run pore.case.yaml --store store --run-dir run-pore
 $ nanopnp inspect run-pore
+$ nanopnp plot run-pore solve --out fields.png
 $ nanopnp reproduce run-pore
 ```
 
@@ -31,7 +32,8 @@ $ nanopnp reproduce run-pore
 2. `validate case` checks the case file without solving.
 3. `run` walks the pipeline, keeps every artefact in `store/` and writes a run directory.
 4. `inspect` reads the run directory back.
-5. `reproduce` solves the archived case again, from nothing, and compares what it recorded.
+5. `plot` draws the solved fields and the solver's convergence to `fields.png`.
+6. `reproduce` solves the archived case again, from nothing, and compares what it recorded.
 
 ## What to expect
 

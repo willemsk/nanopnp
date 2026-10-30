@@ -161,7 +161,7 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
 - [x] 2. f6d3a8c `cli/reading.py`, `cli/__init__.py:_inspect`: the summary, the tables, `--section` (D2); done
   when `test_fr25_inspect_reads_back_every_deviation_and_compares_the_runs`' reading half passes.
   **Executor:** main
-- [ ] 3. `cli/reading.py`, `cli/__init__.py`: `inspect A B` (D3); `examples/02-charged-pore/README.md`
+- [x] 3. 954cb47 `cli/reading.py`, `cli/__init__.py`: `inspect A B` (D3); `examples/02-charged-pore/README.md`
   names the command in prose (a tagged one would match `only=("run-epnpns",)` per push); done when the
   same test passes. **Executor:** main
 - [ ] 4. `cli/__init__.py:_plot` and its parser (D4); session 01's README gains `$ nanopnp plot

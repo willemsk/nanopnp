@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from nanopnp.cli.export import EXPORTS, export_artefact, refusal
-from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED, classify
+from nanopnp.core.errors import EXIT_OK, EXIT_UNEXPECTED, EXIT_USAGE, classify
 from nanopnp.core.paths import (
     CORRECTIONS_DIR,
     DATA_DIR,
@@ -306,6 +306,101 @@ def _inspect(args: argparse.Namespace) -> int:
             f"{key:<20} {json.dumps(value, default=str)}" for key, value in sorted(document.items())
         ]
     _emit(document, lines, as_json=args.json)
+    return EXIT_OK
+
+
+_FIGURE_SUFFIXES: tuple[str, ...] = (".png", ".svg", ".pdf")
+
+
+def _plot_refusal(stage: str) -> str | None:
+    from nanopnp.core.stages import FIGURE_FREE, describe, figure_target
+
+    try:
+        schema = describe(stage).artefact_schema
+    except KeyError as error:
+        return str(error.args[0])
+    if stage in FIGURE_FREE or figure_target(schema) is None:
+        return f"stage {stage!r} declares no figure; it writes {schema}, which is not drawn"
+    return None
+
+
+def _plot(args: argparse.Namespace) -> int:
+    from nanopnp.pipeline.run import RUN_RECORD_FILENAME
+    from nanopnp.sweep.collect import DATASET_FILENAME
+
+    out = Path(args.out)
+    if out.suffix.lower() not in _FIGURE_SUFFIXES:
+        args.parser.error(
+            f"--out {out} has suffix {out.suffix or 'none'!r}; a figure is written as "
+            f"{', '.join(_FIGURE_SUFFIXES)}"
+        )
+    target = Path(args.target)
+    if target.name == DATASET_FILENAME:
+        target = target.parent
+    if (target / DATASET_FILENAME).is_file():
+        kind = "sweep"
+        if args.stage is not None:
+            args.parser.error(f"{target} is a sweep, drawn as one figure; give no STAGE")
+    elif (target / RUN_RECORD_FILENAME).is_file():
+        kind = "run"
+    elif target.is_file():
+        kind = "case"
+        if args.stage is None:
+            args.parser.error(f"{target} is a case file; name the STAGE whose figure to draw")
+    else:
+        args.parser.error(f"{target} is neither a case file, a run directory nor a sweep directory")
+    stage = args.stage if args.stage is not None else "solve"
+    if kind != "sweep":
+        why = _plot_refusal(stage)
+        if why is not None:
+            args.parser.error(why)
+
+    from nanopnp.core.stages import draw
+    from nanopnp.io.store import Store, StoreError
+
+    store = Store(args.store) if args.store is not None else None
+    if kind == "sweep":
+        from nanopnp.sweep.collect import read_dataset
+
+        figure = draw(read_dataset(target))
+    elif kind == "run":
+        from nanopnp.pipeline.run import open_run
+
+        result = open_run(target, store=store)
+        if stage not in result.artefacts:
+            if stage not in {record.name for record in result.stages}:
+                args.parser.error(
+                    f"the run in {target} did not walk stage {stage!r}; it walked "
+                    f"{', '.join(record.name for record in result.stages)}"
+                )
+            holding = result.store.root if result.store is not None else None
+            raise StoreError(
+                f"the store at {holding} no longer holds the {stage!r} artefact of the run in "
+                f"{target}; point --store at the store the run used, or run it again"
+            )
+        figure = result.figure(stage)
+    else:
+        from nanopnp.pipeline.run import run_case
+
+        figure = run_case(target, store=Store(args.store), upto=stage, write=False).figure(stage)
+    if figure is None:
+        args.parser.error(f"stage {stage!r} declares no figure")
+        return EXIT_USAGE
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    # Not mkstemp: its file is private (0600), and a figure takes the user's umask.
+    staged = out.with_name(f".{out.stem}.{os.getpid()}{out.suffix}")
+    try:
+        figure.savefig(staged)
+        staged.replace(out)
+    finally:
+        staged.unlink(missing_ok=True)
+    payload: dict[str, Canonicalisable] = {
+        "target": str(target),
+        "stage": None if kind == "sweep" else stage,
+        "figure": str(out),
+    }
+    _emit(payload, [f"figure   {out}"], as_json=args.json)
     return EXIT_OK
 
 
@@ -1000,6 +1095,39 @@ def build_parser() -> argparse.ArgumentParser:
         help="print one group of a run's manifest (inputs, solver, deviations, ...) or its case",
     )
     inspect.set_defaults(handler=_inspect, parser=inspect)
+
+    plot = _common(
+        subparsers.add_parser(
+            "plot",
+            help="draw a stage's figure to a file",
+            description="Draw the figure of a stage of a case file, of a completed run, or of a "
+            "sweep's collected dataset, to a PNG, SVG or PDF file. Needs the 'plot' extra.",
+        )
+    )
+    plot.add_argument(
+        "target", type=Path, help="a case file, a run directory, or a sweep directory"
+    )
+    plot.add_argument(
+        "stage",
+        nargs="?",
+        default=None,
+        help="the stage whose figure to draw: required for a case file, 'solve' for a run by "
+        "default, none for a sweep",
+    )
+    plot.add_argument(
+        "--out",
+        type=Path,
+        required=True,
+        metavar="PATH",
+        help=f"the figure file; its suffix names the format: {', '.join(_FIGURE_SUFFIXES)}",
+    )
+    plot.add_argument(
+        "--store",
+        type=Path,
+        default=None,
+        help="artefact store root; for a run, overrides the one its record names",
+    )
+    plot.set_defaults(handler=_plot, parser=plot)
 
     check = _common(subparsers.add_parser("reproduce", help="re-run an archived run (QR-08)"))
     check.add_argument("directory", type=Path, help="the run directory to reproduce")

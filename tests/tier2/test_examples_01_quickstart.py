@@ -11,9 +11,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp.cli import main
 from nanopnp.core.hashing import decode_floats
+from nanopnp.core.stages import figure_target
 from nanopnp.io.artefact import StageInputs
-from nanopnp.pipeline.run import offered
+from nanopnp.pipeline.run import offered, open_run
 from nanopnp.post.export import (
     attribute_name,
     field_scale,
@@ -54,6 +56,30 @@ def test_ver46_quickstart_runs_and_reproduces(ran: tuple[Path, list[CommandResul
     assert [result.argv[1] for result in results] == ["mesh", "run", "inspect", "reproduce"]
     assert "reproduced" in results[-1].stdout
     assert (example / "run" / "manifest.json").is_file()
+
+
+def test_fr44_plot_draws_each_figure_of_the_run_from_its_directory(
+    ran: tuple[Path, list[CommandResult]], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The case's inputs are relative paths, read from the directory the run was made in.
+    monkeypatch.chdir(ran[0])
+    run = ran[0] / "run"
+    record = _read(run / "run.json")
+    opened = open_run(run)
+    stages = record["stages"]
+    assert isinstance(stages, list)
+    assert {entry["stage"]: entry["hash"] for entry in stages} == {
+        stage.name: opened.artefacts[stage.name].hash for stage in opened.stages
+    }
+    assert dict(opened.quantities) == record["quantities"]
+
+    drawn = [str(entry["stage"]) for entry in stages if figure_target(str(entry["schema"]))]
+    assert {"mesh", "solve"} <= set(drawn)
+    for stage in drawn:
+        out = tmp_path / f"{stage}.png"
+        assert main(["plot", str(run), stage, "--out", str(out)]) == 0
+        assert out.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n", stage
+    assert sorted(path.name for path in tmp_path.iterdir()) == sorted(f"{s}.png" for s in drawn)
 
 
 # FR-23, NUM-26, QR-04
