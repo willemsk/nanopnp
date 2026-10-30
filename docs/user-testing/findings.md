@@ -19,7 +19,7 @@ ruling names) or `fixed`. The first round was ruled on 29 October 2026, at WP56'
 | ID | Area | Severity | Status | Ruling | Finding |
 |---|---|---|---|---|---|
 | UT-01 | cli | low | fixed | §8.2.21 W3, WP56 | [No CLI command to visually inspect a generated mesh](#ut-01-no-cli-command-to-visually-inspect-a-generated-mesh) |
-| UT-02 | cli | medium | fixed | §8.2.21 W5, W6, WP56 | [Geometric and meshing parameters conflated in `mesh cylinder`; undocumented parameter discovery and lack of separate geometry inspection](#ut-02-geometric-and-meshing-parameters-conflated-in-mesh-cylinder-undocumented-parameter-discovery-and-lack-of-separate-geometry-inspection) |
+| UT-02 | cli | medium | accepted | §8.2.21 W5, W6, WP56; §8.2.22 X1, X2, WP57 | [Geometric and meshing parameters conflated in `mesh cylinder`; undocumented parameter discovery and lack of separate geometry inspection](#ut-02-geometric-and-meshing-parameters-conflated-in-mesh-cylinder-undocumented-parameter-discovery-and-lack-of-separate-geometry-inspection) |
 | UT-03 | cli | medium | fixed | §8.2.21 W2, WP56 | [`nanopnp inspect` default output dumps raw manifest, unusable for targeted queries (e.g. deviations)](#ut-03-nanopnp-inspect-default-output-dumps-raw-manifest-unusable-for-targeted-queries-eg-deviations) |
 | UT-04 | cli | low | fixed | §8.2.21 W3, WP56 | [No CLI command to plot field heatmaps from a completed run directory](#ut-04-no-cli-command-to-plot-field-heatmaps-from-a-completed-run-directory) |
 | UT-05 | docs | low | fixed | §8.2.21 W6, WP56 | [Unclear motivation and user use-case for the `reproduce` command](#ut-05-unclear-motivation-and-user-use-case-for-the-reproduce-command) |
@@ -103,6 +103,8 @@ Two distinct issues emerge:
 2. **Conflation of Geometry and Meshing (`IF-02`):** In FEA modelling, CAD/geometry definition is logically distinct from discretisation/meshing. While `nanopnp` separates them for protein structures (Stage 5 `region` CAD assembly vs Stage 6 `mesh` under `FR-10`), `nanopnp mesh cylinder` is designed under the `IF-02` generators NOTE as a standalone one-shot `.msh` input generator so idealised pores bypass the 6-stage structural pipeline (see also `REV-41`, ruled in `§8.2.18 T3`, and `REV-154`, where a supplied `.msh` ignores `numerics.mesh.wall_h_nm`). From a modeller's perspective, bundling geometry and meshing into a single CLI generator obscures:
    - How to define or inspect an idealised geometry object (diameter, length, reservoir size) independently of its mesh.
    - How `numerics.mesh.*` settings in `case.yaml` interact with (or are ignored by) a pre-generated `.msh` file supplied via `inputs.mesh.path`.
+
+**Ruled** (§8.2.22 X1, X2): WP56 grouped the help's flags; the split itself is WP57's. An idealised pore is declared in the case as `geometry.pore` and meshed by stage 6 under `numerics.mesh`; `nanopnp geometry cylinder` writes the geometry as a file that `nanopnp plot` draws and `nanopnp mesh` meshes; `mesh cylinder` is removed.
 
 ## UT-03 · `nanopnp inspect` default output dumps raw manifest, unusable for targeted queries (e.g. deviations)
 

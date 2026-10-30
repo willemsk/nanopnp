@@ -5,7 +5,8 @@ current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment sinc
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
 demand. Delivered: WP35 to WP56, below. The author ran the sessions and ruled every `UT-nn` on
 29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, is delivered; planned, WP57, the
-second; provisional, the documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
+second, widened on 30 October 2026 to carry the geometry split and the open review items (§8.2.22);
+provisional, the documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
@@ -16,16 +17,20 @@ the three working commands and the testing protocol are done, and the author has
 **What changes.** Two packages fix what the sessions found. The first makes the command line readable:
 a short account of a run in place of its whole record, two runs compared, a picture drawn to a file,
 a line for each step of a long solve, and messages that name what the user can change. The second
-makes the Python interface one designed for its user. Then the guide is revised, and the phase closes.
+lets a simple cylindrical pore be described in the case file and meshed like any other, so its shape
+and its mesh are set apart; gives its wall a fixed charge; makes the Python interface one designed
+for its user; and clears the review notes still open. Then the guide is revised, and the phase closes.
 
-**Cost.** About a week for the two packages.
+**Cost.** About a week for the first package and about two for the second; the phase keeps its four
+to six weeks.
 
 **What could go wrong.** A shorter account could leave out what a user needs; the full record stays one
-flag away, and a test reads the deviations back. A new interface could break a notebook; each one runs
-every night.
+flag away, and a test reads the deviations back. Moving the examples onto the new cylinder could shift
+the reference numbers the project holds fixed; they may be reset only if they still agree to the
+tolerance already argued. A new interface could break a notebook; each one runs every night.
 
-**Your call.** Should the phase estimate grow from four to six weeks to five to seven?
-*Recommendation:* yes; the sessions matter more than the date.
+**Your call.** Should the later speed-up of a fine-mesh solve go after building the equations first,
+rather than after reusing the solve? *Recommendation:* yes; building them is the larger cost.
 
 ## Context
 
@@ -219,14 +224,31 @@ The help and a field-document reference say what a user needs (W6). UT-09 was me
 62 % of a 761 s solve and the factorisation 24 %, so REV-156 asks the author which cost the Phase 6 fix
 takes first. No schema moves.
 
-### WP57 — The Python interface designed for its user (§8.2.21 W4, W7)
+### WP57 — An idealised pore as geometry, and the Python interface designed for its user (§8.2.21 W4, W7; §8.2.22 X1 to X8)
 
-Planned by `/np-plan wp 57` after WP56 merges. It fixes UT-10 and `MOD-11` (H2): `Case.run` passes on
-`progress`, `cancel` and the walk's hooks; `Case` edits a section and takes a path naming more than one
-field as a mapping (REV-145); a stage of one's own is a function registered by a public call that keys
-and hashes it, with `core.stages.register` and `StageDescription` internal; session 04 is rewritten on
-it, its variation included (REV-155). A change to `PUBLIC` is decided in `test_public_api.py` (F4) and
-listed in `CHANGELOG.md`. VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.23`.
+Planned by `/np-plan wp 57` after WP56 merges; its plan is exempt from the size cap (X5). It carries:
+
+- **The geometry split (UT-02; X1, X2).** A case declares an idealised cylinder as `geometry.pore`;
+  stage 5 builds its region and stage 6 meshes it under `numerics.mesh` (§5.3.1's NOTE on an
+  idealised pore). `nanopnp geometry cylinder` writes the region as a file, `nanopnp plot` draws it,
+  and `nanopnp mesh <geometry file>` meshes it; `mesh cylinder` is removed (IF-02's generators NOTE,
+  VER-32). `Case.cylinder` builds a case with `geometry.pore`. Examples 01 to 04 and sessions 01 to
+  03 and 05 move to it. VER-62 is re-pinned only as X4 bounds it.
+- **A wall surface charge (REV-144; X3)**: `boundary_conditions.wall_charge_C_m2`, a surface term of
+  the one weak form (PHY-09's NOTE), checked by the new Tier 2 benchmark VER-77.
+- **The Python interface (UT-10, `MOD-11`, REV-145; W4, W7)**: `Case.run` passes on `progress`,
+  `cancel` and the walk's hooks, with the end-of-rung call of REV-157; `Case` edits a section and
+  takes a path naming more than one field as a mapping; a stage of one's own is a function
+  registered by a public call that keys and hashes it, with `core.stages.register` and
+  `StageDescription` internal; session 04 is rewritten on it, its variation included (REV-155).
+- **The open review items (X6 to X8)**: REV-157's other three items; REV-155's shared tagged-block
+  parser and its rectification sentence softened; REV-122, a correction file read by path, hashed
+  and listed as a deviation; REV-120, a force surface refused unless one pair of materials lies on
+  its sides; REV-111's claim narrowed; REV-153's four couplings fixed.
+
+A change to `PUBLIC` is decided in `test_public_api.py` (F4); each break, `mesh cylinder` and the
+case schema's move under `nanopnp/case/v0.5` (G6) included, is listed in `CHANGELOG.md` with its
+migration. VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.23`.
 
 ### Documentation increment 4 (provisional)
 
@@ -259,12 +281,13 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 
 | Decision | Owner and status |
 |---|---|
-| The phase estimate after R1: 4–6 weeks stands (P7), or 5–7 | **Author, open.** Recommendation: 5–7 weeks |
+| The phase estimate after R1: 4–6 weeks stands (P7), or 5–7 | **Ruled** (§8.2.22 X9): 4–6 weeks stands; WP57's size is reported at the close |
 | The notebooks on the documentation site: in documentation increment 4, or later | **Author, open**, at the second amendment. Default: on the site, after the sessions show which help |
 | WP53's aliases for the old command names, and the hook on a diverged checkout | **Settled** by WP53's plan: no aliases; a warning, and no write, unless a clean primary `main` can fast-forward |
 | WP54's scope | **Settled** (R8; §8.2.20 V1 to V17): the author's notes and the steering at its checkpoints |
 | Each `UT-nn`: fix or defer | **Ruled** (§8.2.21): eleven accepted for WP56 and WP57; UT-09 deferred to Phase 6 as REV-156 |
 | `MOD-11` | **Ruled** (§8.2.21 W7): a designed interface, `register` internal; WP57 |
+| UT-02's split and the open review items | **Ruled** (§8.2.22): the cylinder declared in the case, a geometry file and a mesh command, a wall charge as a boundary condition, and REV-111, REV-120, REV-122, REV-144, REV-153, REV-155 and REV-157, all in WP57. REV-121 stays open, without a package |
 | OPN-04, OPN-08 | **Author, open.** Not on this phase's path |
 | NUM-07 order; the archive-dependent legs | **Phase 6** (E1, E4, F1) |
 | Residual cycles, drift beyond a bound, a cost over its threshold | **Author**, only if a package reports one (H6, I4, M2) |
@@ -303,7 +326,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP55, protocol | nightly | VER-69 |
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-65 kept green |
 | WP56, the command line | 1, 2 | FR-44; QR-03 and NUM-34's gates (W5); FR-25's deviations read back |
-| WP57, the Python interface | 1, 2 | Claimed by its plan; VER-61, VER-62 and VER-65 kept green |
+| WP57, the geometry split and the Python interface | 1, 2 | VER-32, VER-77 (new), NUM-29's force-surface refusal, the correction file's key (REV-122), and those its plan claims; VER-62 re-pinned only within X4; VER-61 and VER-65 kept green |
 | Documentation | 1, 2 | VER-45, VER-46 |
 | Close | 1, 2 | Both logs and the register read as closed |
 

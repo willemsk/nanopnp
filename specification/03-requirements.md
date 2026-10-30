@@ -79,16 +79,20 @@ output is written, which stages run and how much is logged; every quantity that 
 lives in the case file (IF-03). A flag duplicating a case-file setting would make the FR-25 manifest
 describe one of two disagreeing sources of truth.
 
-NOTE (IF-02, generators): `nanopnp mesh cylinder` and
-`nanopnp mesh reference` write an *input artefact*, a Gmsh MSH 4.1 mesh (IF-06), rather than run a
-case. The geometric flags of `mesh cylinder` shape that file, and a run that later consumes it
-records it by content hash through `inputs.mesh` (§5.3.1, §5.3.2), exactly as it would any
-externally supplied mesh. So they do not change what a run solves, and the configuration NOTE above
-is not breached. `mesh reference` takes no geometric flag, since its preset is fixed by §5.2.2 and
-the geometry of record. Both commands print the written mesh's content hash and the
-`inputs.mesh.groups` mapping a case needs to read it. Both are subject to the mesh quality gate of
-VER-10. These commands are the v0.2 means of producing a mesh without Python, and they are not the
-meshing pipeline of FR-10, which is v0.3.
+NOTE (IF-02, generators): an idealised cylindrical pore is geometry a case declares
+(`geometry.pore`, §5.3.1), meshed by stage 6 under `numerics.mesh` as any region is (FR-10).
+`nanopnp geometry cylinder` writes that geometry as a standalone file, stage 5's region interchange
+document, which `nanopnp plot` draws and `nanopnp mesh` meshes. `nanopnp mesh <geometry file>`
+and `nanopnp mesh reference` write an *input artefact*, a Gmsh MSH 4.1 mesh (IF-06), rather than
+run a case. The geometry flags shape the geometry file and the mesh flags (`--maxh-nm`,
+`--wall-h-nm`) its mesh, and a run that later consumes the mesh records it by content hash through
+`inputs.mesh` (§5.3.1, §5.3.2), exactly as it would any externally supplied mesh. So they do not
+change what a run solves, and the configuration NOTE above is not breached. `mesh reference` takes
+no geometric flag, since its preset is fixed by §5.2.2 and the geometry of record. Both mesh
+commands print the written mesh's content hash and the `inputs.mesh.groups` mapping a case needs to
+read it. Both are subject to the mesh quality gate of VER-10. A case that declares `geometry.pore`
+needs neither: stage 6 meshes it, and `nanopnp stage mesh --export` writes its mesh where a file is
+wanted (§8.2.22 X1, X2).
 
 NOTE (IF-02, export; WP25): `nanopnp stage <name> <case> --export
 PATH` writes the artefact that stage stored, in an interchange format chosen by the suffix of
@@ -216,7 +220,7 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 
 NOTE (QR-12, the remedy; §8.2.21 W5): a diagnostic that names a remedy SHALL name a setting the
 run reads. The wall-distance gate of NUM-34 names `numerics.mesh.wall_h_nm` for a mesh stage 6
-generates, and for a supplied mesh the file it reads and its generator (`nanopnp mesh cylinder
+generates, and for a supplied mesh the file it reads and its generator (`nanopnp mesh
 --wall-h-nm`), `numerics.mesh` being refused beside `inputs.mesh`. Where a document states one quantity
 twice, a refusal of their disagreement SHALL name both keys. An analytic form that carries a charge
 (`gaussian_ring`'s `charge_e`) need not equal `q_net_e`, the field's integral over `r ≥ 0`, planar for

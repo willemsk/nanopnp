@@ -305,6 +305,17 @@ it SHALL be refused naming both, by the upstream rule of the `inputs:` NOTE. `gr
 SHALL lie in [0.025, 0.05] nm (FR-04) and `sharpness` SHALL be finite and positive, and each is refused naming
 its value rather than narrowed in the schema.
 
+NOTE (`geometry.pore`, an idealised pore, IF-02, FR-09, FR-10; §8.2.22 X1): a case without
+`structure:`, `inputs.profile` or `inputs.mesh` MAY declare an idealised pore,
+`geometry.pore: {shape: cylinder, radius_nm}`, the membrane's thickness and the reservoir's radius
+read from `geometry.membrane` and `geometry.reservoir`. Stage 5 builds the region from it, with a
+pore wall named `wall` (PHY-02), and stage 6 meshes it under `numerics.mesh` and its gates, as it
+meshes a structure's region; stages 1 to 4 and the charge stages do not run unless `inputs.charge`
+supplies a field. `geometry.pore` beside `structure:`, `inputs.profile` or `inputs.mesh` SHALL be
+refused naming both, and `radius_nm` not below `geometry.reservoir.radius_nm` SHALL be refused
+naming both values. `boundary_conditions.wall_charge_C_m2` (PHY-09) is read only beside
+`geometry.pore`, and is refused elsewhere naming the key.
+
 `kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the `sharpness`. R_i is the
 atom's CHARMM van der Waals radius (Rmin/2) by residue and atom name, from the radius set of
 PDB2PQR's `CHARMM.DAT`, held as data under `data/radii/`. This is an **author ruling**: it is the set carried by the per-frame PQR files of the reference ensemble
@@ -505,6 +516,13 @@ concentration corrections are evaluated at: `average`, `⟨c⟩ = (1/n)Σc_i` (P
 both values when it differs: every reference property, every scale and `V_T` are taken from the
 file, whose fits are temperature-specific, so a case at another temperature would be solved at the
 file's while its manifest recorded the case's (code review CR-1).
+
+NOTE (a correction file outside the package, FR-16, FR-25; §8.2.22 X6, REV-122): `electrolyte.parameters`
+and each `electrolyte.corrections.*.model` MAY name a file by a path, relative to the case file or
+absolute, as well as by the name of an installed file. A file read by path is not pinned by the
+package's version, so its content hash SHALL enter the stage-8 key and the FR-25 manifest, and the
+file SHALL be listed as a deviation from the validated default; an edit of the file then misses the
+cache rather than serving a stale result.
 
 NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings — the monolithic
 damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the

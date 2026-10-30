@@ -40,7 +40,7 @@ needed.
 | FR-17 | VER-08, VER-16, VER-18 |
 | FR-18 | VER-13, VAL-10 |
 | FR-19 | VER-12, VER-13 |
-| FR-20 | VER-56 (a model defined as one class in the test tree, registered at run time, runs from a case file through stages 10 to 12; no layer outside `physics/` names a model) |
+| FR-20 | VER-56 (a model defined as one class in the test tree, registered at run time, runs from a case file through stages 10 to 12; no layer outside `physics/` names a model); VER-77 (a wall surface charge in the one weak form, PHY-09's NOTE; WP57) |
 | FR-21 | VER-20, VER-22 |
 | FR-22 | VER-19, VER-21, VER-22 |
 | FR-23 | VER-11, VER-38 (the two-point ratio), VAL-16 (the published currents, transport numbers, rectification and flow rate) |

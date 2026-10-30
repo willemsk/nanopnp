@@ -1441,3 +1441,23 @@ The documentation increment's paragraph read:
 The status said that the fixes, the documentation increment and the close were provisional until the
 second `/np-plan amend 4`. The *Open decisions* rows on each `UT-nn` and on `MOD-11` read **Author**, and
 *What the author supplies* awaited the sessions and their rulings.
+
+## Amended 30 October 2026 (§8.2.22 X1 to X10)
+
+After WP56's review the author ruled that an idealised cylinder's geometry and its mesh be split
+(UT-02), that a wall surface charge be a boundary condition (REV-144), and that WP57 carry the
+split, the Python interface and the open review items, its plan exempt from the size cap. The
+estimate stayed 4–6 weeks, closing its open decision. The WP57 entry read, before this amendment:
+
+> ### WP57 — The Python interface designed for its user (§8.2.21 W4, W7)
+>
+> Planned by `/np-plan wp 57` after WP56 merges. It fixes UT-10 and `MOD-11` (H2): `Case.run` passes on
+> `progress`, `cancel` and the walk's hooks; `Case` edits a section and takes a path naming more than one
+> field as a mapping (REV-145); a stage of one's own is a function registered by a public call that keys
+> and hashes it, with `core.stages.register` and `StageDescription` internal; session 04 is rewritten on
+> it, its variation included (REV-155). A change to `PUBLIC` is decided in `test_public_api.py` (F4) and
+> listed in `CHANGELOG.md`. VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.23`.
+
+The *Open decisions* row on the estimate read **Author, open**, with the recommendation 5–7 weeks,
+and the Verification row for WP57 read "Claimed by its plan; VER-61, VER-62 and VER-65 kept green".
+
