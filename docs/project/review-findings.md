@@ -165,7 +165,7 @@ is a rolling register, and its header stays `open`.
 | REV-142 | interface | medium | fixed | §8.2.19 U6 | [FR-38 drops the charge and radius edits of the charge-level mutator](review-items.md#rev-142-fr-38-drops-the-charge-and-radius-edits-of-the-charge-level-mutator) |
 | REV-143 | interface | low | accepted | §8.2.19 U7 | [The light theme's control edge is under 3:1 on a selected row](review-items.md#rev-143-the-light-themes-control-edge-is-under-31-on-a-selected-row) |
 | REV-144 | interface | low | accepted | §8.2.22 X3 | [Case.cylinder takes a charge field, not a uniform wall surface charge](review-items.md#rev-144-casecylinder-takes-a-charge-field-not-a-uniform-wall-surface-charge) |
-| REV-145 | interface | low | accepted | §8.2.21 W7 | [No case builders by section before Phase 5](review-items.md#rev-145-no-case-builders-by-section-before-phase-5) |
+| REV-145 | interface | low | accepted | §8.2.21 W7; §8.2.23 Y2 | [No case builders by section before Phase 5](review-items.md#rev-145-no-case-builders-by-section-before-phase-5) |
 | REV-146 | numerics | high | fixed | §8.2.20 V9 | [The cylinder's default wall size is coarser than NUM-30's first layer](review-items.md#rev-146-the-cylinders-default-wall-size-is-coarser-than-num-30s-first-layer) |
 | REV-147 | interface | low | fixed | §8.2.20 V16 | [The lumen window is fixed, not read from the region](review-items.md#rev-147-the-lumen-window-is-fixed-not-read-from-the-region) |
 | REV-148 | physics | low | fixed | §8.2.20 V16 | [A concentration panel's bulk is the case's salt for every species](review-items.md#rev-148-a-concentration-panels-bulk-is-the-cases-salt-for-every-species) |

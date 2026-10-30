@@ -1,6 +1,8 @@
 # WP57 — An idealised pore as geometry, and the Python interface designed for its user
 
-**Status: planned, not started.** Written 30 October 2026, grounded in the code at `e775c29` (§8.2.15
+**Status: planned, not started; to be re-planned after §8.2.23**, which rebuilds the Python
+interface on a `Case` and a `Session` and supersedes D6 to D8's interface and the plan cap below.
+Written 30 October 2026, grounded in the code at `e775c29` (§8.2.15
 Q1). Inherits §8.2.21 W4 and W7, §8.2.22 X1 to X8, the test scope (§8.2.13 N1 to N6) and FR-30's
 figures (§8.2.14, §8.2.20). Exempt from the plan cap: at most 6,000 words outside its Outcomes, 2,500
 of them outside Grounding and Implementation details, and ten decisions (§8.2.22 X5).

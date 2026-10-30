@@ -31,7 +31,7 @@ refuses any row that is not terminal.
 | MOD-08 | extension | low | post-1.0 | §8.2.8 H5 | [Five registries in four shapes](modularity.md#mod-08-five-registries-in-four-shapes) |
 | MOD-09 | extension | low | deferred | §8.2.18 T4 | [Outputs and steric models are closed enumerations in the assembler](modularity.md#mod-09-outputs-and-steric-models-are-closed-enumerations-in-the-assembler) |
 | MOD-10 | extension | high | deferred | §8.2.8 H3 | [The backend interface of section 5.4.1 does not exist](modularity.md#mod-10-the-backend-interface-of-section-541-does-not-exist) |
-| MOD-11 | surface | low | accepted | §8.2.8 H2; §8.2.21 W7 | [with_section and register are outside PUBLIC](modularity.md#mod-11-with_section-and-register-are-outside-public) |
+| MOD-11 | surface | low | accepted | §8.2.8 H2; §8.2.23 Y5 | [with_section and register are outside PUBLIC](modularity.md#mod-11-with_section-and-register-are-outside-public) |
 | MOD-12 | surface | low | fixed | [WP36](../plans/wp36-stage-protocol-and-walk.md) | [PUBLIC is mirrored by hand for the type checker](modularity.md#mod-12-public-is-mirrored-by-hand-for-the-type-checker) |
 | MOD-13 | surface | low | fixed | [WP38](../plans/wp38-io-split.md) | [Three modules and two functions are past review size](modularity.md#mod-13-three-modules-and-two-functions-are-past-review-size) |
 | MOD-14 | surface | medium | fixed | [WP40](../plans/wp40-stale-refusals.md) | [Refusals name releases that have shipped](modularity.md#mod-14-refusals-name-releases-that-have-shipped) |

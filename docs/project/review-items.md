@@ -1558,6 +1558,9 @@ The author's notes for WP54 name builders by section, `with_density` and `with_n
 **Ruled** (§8.2.21 W7, after the user-testing sessions, UT-10): answered in WP57, which gives `Case` section edits
 and a mapping form for a path that names more than one field. V3's deferral is spent.
 
+**Ruled** (§8.2.23 Y1, Y2, superseding W7): a `Case` is built from the public typed blocks of `nanopnp.case`, and
+`with_` takes a whole block, as a typed block or a mapping, creating an absent one. WP57.
+
 ## REV-146: The cylinder's default wall size is coarser than NUM-30's first layer
 
 `nanopnp mesh cylinder` sizes the pore wall at 0.35 nm by default, and examples 02 and 03 solve on that

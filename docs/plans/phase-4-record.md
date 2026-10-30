@@ -1461,3 +1461,41 @@ estimate stayed 4–6 weeks, closing its open decision. The WP57 entry read, bef
 The *Open decisions* row on the estimate read **Author, open**, with the recommendation 5–7 weeks,
 and the Verification row for WP57 read "Claimed by its plan; VER-61, VER-62 and VER-65 kept green".
 
+## Amended 30 October 2026 (§8.2.23 Y1 to Y11)
+
+After WP57's plan was written, the author read its Python interface as bolted onto `Case` rather than
+built under it, and ruled the interface rebuilt on two objects: a `Case` that is the case document,
+built from public typed blocks, and a `Session` that runs it for every caller. WP57 keeps it, with
+no plan cap. The WP57 entry read, before this amendment:
+
+> ### WP57 — An idealised pore as geometry, and the Python interface designed for its user (§8.2.21 W4, W7; §8.2.22 X1 to X8)
+>
+> Planned ([plan](wp57-idealised-pore-and-python-interface.md)), exempt from the size cap (X5). Its
+> plan measured that stage 6 can mesh the declared cylinder to VER-62's recorded mesh bit for bit, and
+> amends §5.2.2, §5.3.1, §5.5 and IF-02's generators NOTE to say how. It carries:
+>
+> - **The geometry split (UT-02; X1, X2).** A case declares an idealised cylinder as `geometry.pore`;
+>   stage 5 builds its region and stage 6 meshes it under `numerics.mesh` (§5.3.1's NOTE on an
+>   idealised pore). `nanopnp geometry cylinder` writes the region as a file, `nanopnp plot` draws it,
+>   and `nanopnp mesh <geometry file>` meshes it; `mesh cylinder` is removed (IF-02's generators NOTE,
+>   VER-32). `Case.cylinder` builds a case with `geometry.pore`. Examples 01 to 04 and sessions 01 to
+>   03 and 05 move to it. VER-62 is re-pinned only as X4 bounds it.
+> - **A wall surface charge (REV-144; X3)**: `boundary_conditions.wall_charge_C_m2`, a surface term of
+>   the one weak form (PHY-09's NOTE), checked by the new Tier 2 benchmark VER-77.
+> - **The Python interface (UT-10, `MOD-11`, REV-145; W4, W7)**: `Case.run` passes on `progress`,
+>   `cancel` and the walk's hooks, with the end-of-rung call of REV-157; `Case` edits a section and
+>   takes a path naming more than one field as a mapping; a stage of one's own is a function
+>   registered by a public call that keys and hashes it, with `core.stages.register` and
+>   `StageDescription` internal; session 04 is rewritten on it, its variation included (REV-155).
+> - **The open review items (X6 to X8)**: REV-157's other three items; REV-155's shared tagged-block
+>   parser and its rectification sentence softened; REV-122, a correction file read by path, hashed
+>   and listed as a deviation; REV-120, a force surface refused unless one pair of materials lies on
+>   its sides; REV-111's claim narrowed; REV-153's four couplings fixed.
+>
+> A change to `PUBLIC` is decided in `test_public_api.py` (F4); each break, `mesh cylinder` and the
+> case schema's move under `nanopnp/case/v0.5` (G6) included, is listed in `CHANGELOG.md` with its
+> migration. VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.23`.
+
+The *Open decisions* row on `MOD-11` read "**Ruled** (§8.2.21 W7): a designed interface, `register`
+internal; WP57", and the In brief gave the second package about two weeks.
+

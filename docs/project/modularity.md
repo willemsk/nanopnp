@@ -318,6 +318,9 @@ internal module that may change before v1.0 without a `CHANGELOG.md` break entry
 **Recommendation.** Fix in Phase 4: add both, or rule them internal and say so in the API page.
 The user-testing sessions (G7) would show which, so the ruling may wait for them.
 
+**Ruled** (§8.2.23 Y2, Y5, Y10, superseding §8.2.21 W7): both stay internal. A section is edited by `Case.with_`
+with a whole block, and a stage of one's own is registered by `session.register_stage`; the API page says so.
+
 **User-visible.** API: added names are additive.
 
 ### MOD-12 — PUBLIC is mirrored by hand for the type checker
