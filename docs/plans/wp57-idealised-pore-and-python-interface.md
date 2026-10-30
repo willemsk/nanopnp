@@ -441,9 +441,9 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
 - [x] ddcc1a0 11. `pipeline/extension.py` (new), `pipeline/run.py`, `api/session.py`: `register_stage` (D9); done
   when the D9 row passes. **Executor:** main
 > **Outcome — item 11.** An own stage is keyed by the digest of its code and defaults and the hashes of the artefacts it reads; a parameter must name a pipeline stage or one registered earlier on that Session. A sweep member walks the Session's own stages at `workers=1`; `workers > 1` is refused naming them. `RunResult.figure` of an own stage returns `None` (no figure is declared for its schema).
-- [x] SHA12 12. `core/stages.py`, `solve/continuation.py`, `solve/stage.py`, `cli/__init__.py`,
+- [x] 018ec22 12. `core/stages.py`, `solve/continuation.py`, `solve/stage.py`, `cli/__init__.py`,
   `gui/solver.py`: the end of a rung (D11); done when the D11 row passes. **Executor:** main
-- [ ] 13. Compaction checkpoint. **Executor:** main
+- [x] SHA13 13. Compaction checkpoint. **Executor:** main
 - [ ] 14. Every test file and `tests/conftest.py` naming `run_case` or `run_plan`, then
   `pipeline/run.py` (delete `run_case`), `core/public.py`, `nanopnp/__init__.py`, `cli/reference.py`
   (D14); done when `uv run pytest` passes and `git grep -n "run_case" src tests` is empty.
