@@ -8,11 +8,12 @@ unmerged branch is not shipped.
 Phase 4 tidies the program before others rely on it: the author has run the testing sessions and ruled
 what they found; the first of two fixes, a readable command line, is merged, and the second, which
 sets a pore's shape apart from its mesh and rebuilds the Python interface on a case and the session
-that runs it, is planned and is being re-planned for the rebuilt interface. Phase 5, a
-browser workbench, has its design study merged; nothing is built until Phase 4's release.
+that runs it, is planned. Phase 5, a browser workbench, has its design study merged; nothing is
+built until Phase 4's release.
 
-**Your call:** should the later speed-up of a fine-mesh solve go after building the equations first?
-*Recommendation:* yes.
+**Your call:** should every file a case names be read beside the case file, as correction files
+already are? *Recommendation:* yes; a case then runs the same from any folder. And should the later
+speed-up of a fine-mesh solve go after building the equations first? *Recommendation:* yes.
 
 ## Position
 
@@ -22,10 +23,11 @@ One line per lane (§8.4.4).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress**. WP35 to WP56 are merged, tagged to `v0.5.0-alpha.22`. The sessions' findings
   are ruled (§8.2.21); WP56's UT-09 measurement puts REV-156's question to the author.
-  [WP57](wp57-idealised-pore-and-python-interface.md) is **planned**, to be re-planned by
-  `/np-plan wp 57` on its open PR: an idealised cylinder declared in the case and meshed by stage 6
+  [WP57](wp57-idealised-pore-and-python-interface.md) is **planned** on its open PR, re-planned
+  after §8.2.23: an idealised cylinder declared in the case and meshed by stage 6
   (measured to keep VER-62's mesh), a wall surface charge (VER-77), the open review items (§8.2.22),
-  and the Python interface rebuilt on a `Case` and a `Session` (§8.2.23). Then the documentation
+  and the Python interface rebuilt on a `Case` and a `Session` in a new `api/` module (§8.2.23).
+  Next: `/np-implement wp 57`. Then the documentation
   increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged

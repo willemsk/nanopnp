@@ -173,6 +173,16 @@ A supplied artefact is read by `path`. `artefact:`, a store hash, on `inputs.mes
 `inputs.eps_r` SHALL be refused as an unsupported section when the case is resolved, naming the key:
 no release schedules the store form of the two fields, and the mesh's is REV-62, deferred to
 Phase 5 (§8.2.9 I3) (WP40).
+
+NOTE (a relative path in a case, FR-25, QR-08; §8.2.23 Y3): every file a case names by a relative
+path (`inputs.*.path`, `structure.source.path`, `structure.ensemble.trajectory` and a correction file
+read by path, below) is taken against the directory of the case file the run read, or the working
+directory for a case held in memory, so a case reads the same files from any working directory. A
+case read in Python keeps that directory, and an edit makes each relative path absolute against it,
+so the edited case, recorded as a case in memory, reads the files the unedited one did. The FR-25
+manifest records each input file, the case file included, by its absolute path and content hash;
+the case hash covers the paths as written, so moving a case and its files together moves no key. A
+reproduction takes a relative path against the directory the original case was read from (QR-08).
 A supplied `inputs.charge` or `inputs.eps_r` is in the model frame, beside a moved structure as
 anywhere else (the NOTE on `inputs.charge`, `inputs.eps_r`; WP41).
 `inputs.profile` is consumed by stage 5 (WP21). It is named by `path`
