@@ -121,6 +121,9 @@ class SolveHook(Protocol):
     ) -> None:
         """Report one accepted Newton step of the rung most recently announced."""
 
+    def rung_solved(self, name: str, seconds: float, iterations: int) -> None:
+        """Report that the rung most recently announced is solved, in ``seconds``."""
+
 
 class ArtefactHook(Protocol):
     """Called after each stage of a pipeline walk, once its artefact is in the store."""

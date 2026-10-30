@@ -438,10 +438,10 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   executor through the Session and `SweepResult` (D8); done when `test_sweep_cli.py`,
   `test_sweep_plan.py` and `uv run pytest tests/tier2/test_sweep.py` pass. **Executor:** main
 > **Outcome — item 10.** `api/sweep.py` holds the executor (`run_point`, `run_plan`, `_pool`, `_worker`, `_parent_artefact`) and `plan_sweep`, which plans without running; `sweep` and `Session.sweep` plan, run and collect into a `SweepResult` (`dataset`, `plan`, `directory`, `rows`). A member walks through `Session(session.store)`, so it writes its run directory and takes no workspace of the session's. `PUBLIC["run_plan"]` points at `api.sweep` until item 14 removes it. The plotting methods of `SweepResult` are item 15's.
-- [x] SHA11 11. `pipeline/extension.py` (new), `pipeline/run.py`, `api/session.py`: `register_stage` (D9); done
+- [x] ddcc1a0 11. `pipeline/extension.py` (new), `pipeline/run.py`, `api/session.py`: `register_stage` (D9); done
   when the D9 row passes. **Executor:** main
 > **Outcome — item 11.** An own stage is keyed by the digest of its code and defaults and the hashes of the artefacts it reads; a parameter must name a pipeline stage or one registered earlier on that Session. A sweep member walks the Session's own stages at `workers=1`; `workers > 1` is refused naming them. `RunResult.figure` of an own stage returns `None` (no figure is declared for its schema).
-- [ ] 12. `core/stages.py`, `solve/continuation.py`, `solve/stage.py`, `cli/__init__.py`,
+- [x] SHA12 12. `core/stages.py`, `solve/continuation.py`, `solve/stage.py`, `cli/__init__.py`,
   `gui/solver.py`: the end of a rung (D11); done when the D11 row passes. **Executor:** main
 - [ ] 13. Compaction checkpoint. **Executor:** main
 - [ ] 14. Every test file and `tests/conftest.py` naming `run_case` or `run_plan`, then

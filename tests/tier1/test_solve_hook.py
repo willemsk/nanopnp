@@ -32,6 +32,9 @@ class Recorder:
     ) -> None:
         self.events.append(("step", (iteration, residual, update, damping, trials, forced)))
 
+    def rung_solved(self, name: str, seconds: float, iterations: int) -> None:
+        self.events.append(("solved", (name, seconds, iterations)))
+
     @property
     def rungs(self) -> list[tuple[object, ...]]:
         return [payload for kind, payload in self.events if kind == "rung"]
@@ -41,7 +44,7 @@ class Recorder:
         for kind, payload in self.events:
             if kind == "rung":
                 bands.append((payload, []))
-            else:
+            elif kind == "step":
                 assert bands, "a Newton step arrived before any rung was announced"
                 bands[-1][1].append(payload)
         return bands
@@ -101,6 +104,24 @@ def test_ver44_the_hook_sees_every_rung_and_the_steps_inside_it(
         assert len(steps) == newton["iterations"], (name, len(steps), newton)
         if steps:
             assert steps[-1][1] == float(newton["residual"])
+
+
+def test_ver44_the_end_of_rung_call_carries_the_manifests_seconds(
+    cylindrical_pore_case: Path, tmp_path: Path
+) -> None:
+    hook = Recorder()
+    result = run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), on_solve=hook)
+    solved = [payload for kind, payload in hook.events if kind == "solved"]
+    ladder = result.artefacts["solve"].summary["rungs"]
+    assert isinstance(ladder, list)
+    assert [name for name, _, _ in solved] == [entry["rung"] for entry in ladder]
+    assert [seconds for _, seconds, _ in solved] == [entry["seconds"] for entry in ladder]
+    assert [iterations for _, _, iterations in solved] == [
+        0 if entry["newton"] is None else entry["newton"]["iterations"] for entry in ladder
+    ]
+    # Each rung is announced, then solved, before the next is announced.
+    order = [kind for kind, _ in hook.events if kind in {"rung", "solved"}]
+    assert order == ["rung", "solved"] * len(ladder)
 
 
 def test_ver44_watching_a_run_moves_no_hash_and_a_cached_solve_is_silent(

@@ -10,7 +10,6 @@ import logging
 import os
 import platform
 import sys
-import time
 import traceback
 from collections.abc import Mapping
 from pathlib import Path
@@ -143,32 +142,21 @@ def _env(args: argparse.Namespace) -> int:
 class _Progress:
     def __init__(self, stream: TextIO) -> None:
         self._stream = stream
-        self._rung: float | None = None
         self._reporting = False
         self._steps = 0
 
     def _print(self, line: str) -> None:
         print(line, file=self._stream, flush=True)
 
-    def _close_rung(self) -> None:
-        if self._rung is not None:
-            seconds = time.perf_counter() - self._rung
-            steps = f"{self._steps} Newton steps, " if self._reporting else ""
-            self._print(f"    {steps}{seconds:.3f} s")
-            self._rung = None
-
     def __call__(self, name: str, index: int, total: int) -> None:
         from nanopnp.core.stages import describe
 
-        self._close_rung()
         self._print(f"stage {describe(name).number:>2} {name}")
 
     def rung(
         self, name: str, stage: int, index: int, total: int, reporting: bool, tolerance: float
     ) -> None:
-        self._close_rung()
         self._print(f"  rung {index + 1}/{total} {name}")
-        self._rung = time.perf_counter()
         self._reporting = reporting
         self._steps = 0
 
@@ -183,8 +171,12 @@ class _Progress:
     ) -> None:
         self._steps += 1
 
+    def rung_solved(self, name: str, seconds: float, iterations: int) -> None:
+        steps = f"{self._steps} Newton steps, " if self._reporting else ""
+        self._print(f"    {steps}{seconds:.3f} s")
+
     def close(self) -> None:
-        self._close_rung()
+        return None
 
 
 def _progress(args: argparse.Namespace) -> _Progress | None:

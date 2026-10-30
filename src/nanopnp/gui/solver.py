@@ -220,6 +220,9 @@ class QueueSolve:
             )
         )
 
+    def rung_solved(self, name: str, seconds: float, iterations: int) -> None:
+        """Post nothing: the shell reads the rung's time from the manifest."""
+
     def step(
         self,
         iteration: int,
