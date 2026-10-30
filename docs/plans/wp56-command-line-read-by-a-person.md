@@ -181,7 +181,7 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
   `reference/field-document.md`; session 03's `coarse.case.yaml` renamed `wall-100.case.yaml`, with
   every reference; done when the code and review say so and the strict documentation build passes.
   **Executor:** `general-purpose` on Sonnet
-- [ ] 9. The UT-09 measurement (W8; *Implementation details*); done when the Outcome and REV-156 hold the
+- [x] 9. 73ec6a0 The UT-09 measurement (W8; *Implementation details*); done when the Outcome and REV-156 hold the
   numbers. **Executor:** main
   > **Outcome — UT-09 measured: assembly, not the factorisation, dominates.** `nanopnp mesh cylinder --maxh-nm
   > 0.175` gives 16 444 elements (8 404 vertices; P2 c, phi, u, P1 p), session 03's case with its validated
@@ -195,7 +195,7 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
   > step count, so it goes to the author (REV-156). No `src/` file enters NGSolve's `TaskManager`, so assembly
   > runs on one thread. A rung's seconds in `--progress` run to the next stage's start, so the last rung's
   > (136.5 s) includes the Péclet report; the record's 120.4 s is the rung's.
-- [ ] 10. Compaction checkpoint. **Executor:** main
+- [x] 10. Compaction checkpoint. **Executor:** main
 - [ ] 11. `CHANGELOG.md` (`plot`, `inspect`'s reading and comparison, `--progress`, the field-document
   refusal), Appendix A's FR-44 row to the test names, REV-154 `fixed`, the WP56 UT rows `fixed`; gate
   and push. **Executor:** main
