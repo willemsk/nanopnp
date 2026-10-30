@@ -323,6 +323,8 @@ with a whole block, and a stage of one's own is registered by `session.register_
 
 **User-visible.** API: added names are additive.
 
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): both stay internal; the API page names `Case.with_` and `session.register_stage`.
+
 ### MOD-12 — PUBLIC is mirrored by hand for the type checker
 
 *Area:* surface. *Severity:* low.

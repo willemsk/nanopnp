@@ -19,7 +19,7 @@ ruling names) or `fixed`. The first round was ruled on 29 October 2026, at WP56'
 | ID | Area | Severity | Status | Ruling | Finding |
 |---|---|---|---|---|---|
 | UT-01 | cli | low | fixed | §8.2.21 W3, WP56 | [No CLI command to visually inspect a generated mesh](#ut-01-no-cli-command-to-visually-inspect-a-generated-mesh) |
-| UT-02 | cli | medium | accepted | §8.2.21 W5, W6, WP56; §8.2.22 X1, X2, WP57 | [Geometric and meshing parameters conflated in `mesh cylinder`; undocumented parameter discovery and lack of separate geometry inspection](#ut-02-geometric-and-meshing-parameters-conflated-in-mesh-cylinder-undocumented-parameter-discovery-and-lack-of-separate-geometry-inspection) |
+| UT-02 | cli | medium | fixed | §8.2.21 W5, W6, WP56; §8.2.22 X1, X2, WP57 | [Geometric and meshing parameters conflated in `mesh cylinder`; undocumented parameter discovery and lack of separate geometry inspection](#ut-02-geometric-and-meshing-parameters-conflated-in-mesh-cylinder-undocumented-parameter-discovery-and-lack-of-separate-geometry-inspection) |
 | UT-03 | cli | medium | fixed | §8.2.21 W2, WP56 | [`nanopnp inspect` default output dumps raw manifest, unusable for targeted queries (e.g. deviations)](#ut-03-nanopnp-inspect-default-output-dumps-raw-manifest-unusable-for-targeted-queries-eg-deviations) |
 | UT-04 | cli | low | fixed | §8.2.21 W3, WP56 | [No CLI command to plot field heatmaps from a completed run directory](#ut-04-no-cli-command-to-plot-field-heatmaps-from-a-completed-run-directory) |
 | UT-05 | docs | low | fixed | §8.2.21 W6, WP56 | [Unclear motivation and user use-case for the `reproduce` command](#ut-05-unclear-motivation-and-user-use-case-for-the-reproduce-command) |
@@ -27,7 +27,7 @@ ruling names) or `fixed`. The first round was ruled on 29 October 2026, at WP56'
 | UT-07 | cli | low | fixed | §8.2.21 W4, WP56 | [`nanopnp run` lacks progress feedback or live status during long solves](#ut-07-nanopnp-run-lacks-progress-feedback-or-live-status-during-long-solves) |
 | UT-08 | docs | low | fixed | §8.2.21 W6, WP56 | [Inconsistent case naming in session 03 (`coarse.case.yaml` vs `wall-100.msh`)](#ut-08-inconsistent-case-naming-in-session-03-coarsecaseyaml-vs-wall-100msh) |
 | UT-09 | numerics | medium | deferred | §8.2.21 W8, REV-156 | [Severe runtime scaling on moderate meshes (~16k elements) due to serial UMFPACK and 15-rung continuation ladder](#ut-09-severe-runtime-scaling-on-moderate-meshes-16k-elements-due-to-serial-umfpack-and-15-rung-continuation-ladder) |
-| UT-10 | api | medium | accepted | §8.2.21 W4, W7; §8.2.23 Y1 to Y10, WP57 | [Python API exposes internal pipeline plumbing (`run_document`, `with_section`, `StageDescription`; `MOD-11`, `REV-145`)](#ut-10-python-api-exposes-internal-pipeline-plumbing-run_document-with_section-stagedescription-mod-11-rev-145) |
+| UT-10 | api | medium | fixed | §8.2.21 W4, W7; §8.2.23 Y1 to Y10, WP57 | [Python API exposes internal pipeline plumbing (`run_document`, `with_section`, `StageDescription`; `MOD-11`, `REV-145`)](#ut-10-python-api-exposes-internal-pipeline-plumbing-run_document-with_section-stagedescription-mod-11-rev-145) |
 | UT-11 | docs | low | fixed | §8.2.21 W6, WP56 | [Undocumented thread-pinning behaviour in `sweep run` causes oversubscription concerns](#ut-11-undocumented-thread-pinning-behaviour-in-sweep-run-causes-oversubscription-concerns) |
 | UT-12 | cli | medium | fixed | §8.2.21 W2, WP56 | [`nanopnp inspect` on a sweep dataset dumps raw JSON instead of tabular results and rectification ratios](#ut-12-nanopnp-inspect-on-a-sweep-dataset-dumps-raw-json-instead-of-tabular-results-and-rectification-ratios) |
 
@@ -105,6 +105,8 @@ Two distinct issues emerge:
    - How `numerics.mesh.*` settings in `case.yaml` interact with (or are ignored by) a pre-generated `.msh` file supplied via `inputs.mesh.path`.
 
 **Ruled** (§8.2.22 X1, X2): WP56 grouped the help's flags; the split itself is WP57's. An idealised pore is declared in the case as `geometry.pore` and meshed by stage 6 under `numerics.mesh`; `nanopnp geometry cylinder` writes the geometry as a file that `nanopnp plot` draws and `nanopnp mesh` meshes; `mesh cylinder` is removed.
+
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): the pore is declared as `geometry.pore` and meshed by stage 6; `nanopnp geometry cylinder` writes the geometry file and `nanopnp mesh` meshes it; `mesh cylinder` is gone.
 
 ## UT-03 · `nanopnp inspect` default output dumps raw manifest, unusable for targeted queries (e.g. deviations)
 
@@ -408,6 +410,8 @@ Specific points of friction where internal implementation details leak into the 
 Conclusion: These findings directly inform the author's `/np-plan amend 4` ruling on `MOD-11` (§8.2.8 H2) and `REV-145` (§8.2.20 V3), as well as forwarding `progress`/`cancel` on `Case.run`.
 
 **Ruled** (§8.2.23 Y1 to Y10, superseding §8.2.21 W7): a `Case` is the case document, built from the public typed blocks of `nanopnp.case` and edited by copy through `with_`, which takes a whole block; a `Session` holds the store and its own stages and runs every case, the command line's included, each run taking its own controls; a stage of one's own is a function registered by `session.register_stage`. `run_document`, `with_section`, `StageDescription` and `register` stay internal. WP57.
+
+**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `Case` and `Session` are the interface; `run_document`, `with_section` and `register` are internal; a stage of one's own is `session.register_stage`.
 
 ## UT-11 · Undocumented thread-pinning behaviour in `sweep run` causes oversubscription concerns
 
