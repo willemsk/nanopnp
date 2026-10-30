@@ -12,20 +12,20 @@ The subject of each requirement is the product unless stated otherwise.
 
 | ID | Requirement |
 |---|---|
-| **IF-01** | SHALL expose a Python API in which every pipeline stage is a separately importable, invocable object, stable from v1.0 onward (§8.2.6 F4). |
-| **IF-02** | SHALL provide a CLI over the same stage objects, able to execute a case file, run one stage, and dispatch a sweep. |
+| **IF-01** | SHALL expose a Python API through which every pipeline stage is separately invocable and introspectable, stable from v1.0 onward (§8.2.6 F4; §8.2.23 Y8). |
+| **IF-02** | SHALL provide a CLI over the same interface, able to execute a case file, run one stage, and dispatch a sweep. |
 | **IF-03** | SHALL accept one declarative YAML case file, identified by `schema: nanopnp/case/v0.5`, as the complete run specification, rejecting unknown keys with a diagnostic naming the key (§5.3.1). |
 | **IF-04** | SHALL read structures in PDB and mmCIF, and trajectories in DCD, XTC, TRR and NetCDF. |
 | **IF-05** | SHALL read and write volumetric density and charge grids in OpenDX and CCP4. |
 | **IF-06** | SHALL write meshes in Gmsh MSH 4.1 as the archival format, and SHOULD read any format meshio supports. |
 | **IF-07** | SHALL write solution fields in XDMF with HDF5 heavy data. |
 | **IF-08** | SHALL accompany every result artefact with a machine-readable provenance manifest (FR-25). |
-| **IF-09** | SHALL provide a desktop graphical interface covering case editing, run control, convergence monitoring and field visualisation, as a thin shell over the IF-01 stage objects. |
+| **IF-09** | SHALL provide a desktop graphical interface covering case editing, run control, convergence monitoring and field visualisation, as a thin shell over the IF-01 interface. |
 
 NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, IF-09 reads:
 "SHALL provide a graphical workbench, served by a local server and opened in the browser by
 `nanopnp gui`, covering the four suites of the workbench design (Molecular, Continuum, Study and
-Analysis), the run queue and the project folder, as a thin shell over the IF-01 stage objects that
+Analysis), the run queue and the project folder, as a thin shell over the IF-01 interface that
 speaks to its server through a network API." Until then the text above gates the Qt shell (§8.2.17
 S12, S17; `docs/design/workbench.md`, WB-01, WB-29).
 
@@ -121,6 +121,27 @@ change is a decision made in review (§8.2.13 N3), and each break is listed in
 resolved lazily (PEP 562 `__getattr__`), so `import nanopnp` imports neither NGSolve, Netgen nor
 numpy. The command line, the shell and the sweep runner import the package purely to introspect
 it, and an eager re-export would charge every one of them for a solver it never assembles.
+
+NOTE (IF-01, the shape of the interface; §8.2.23 Y1 to Y8): two objects carry the Python
+interface. A `Case` is the case document: one immutable class, built in Python from the case
+schema's block models, which `nanopnp.case` makes public (`Geometry`, `Pore`, `Electrolyte`, `Mesh`,
+…), or by its presets `Case.cylinder` and `Case.from_structure`, the latter taking a path or a
+shipped structure's name and orienting it on `orient=`. `Case.load`, `Case.loads`, `dump` and
+`dumps` read and write it. `with_` returns an edited copy: it takes a leaf name, a dotted path, or a
+whole block as a typed block or a mapping, creates an absent block, and validates the whole case
+once. A case loaded from a file keeps the file's path and text, and a run of a case still equal to
+what was read records them as a run of the file does; an edited case is recorded as a case in
+memory. A `Session` runs cases. It holds where artefacts go (the store, whether a run writes its run
+directory, the workspace and `overwrite_workspace`) and which stages exist, its own included (§5.5);
+each run takes its own controls. `session.run(case, upto=, only=, progress=, cancel=, on_stage=,
+on_solve=, on_artefact=)` walks the pipeline, and with `only` runs one stage alone on its stored
+inputs (FR-27); `session.sweep` sweeps a case as a sweep file does; `session.open(directory)` reads a
+recorded run back; `session.stages` describes each stage it walks by name, number, inputs and
+summary keys. The command line, the shell, the sweep runner and reproduction run through a
+`Session`, so no caller has a route of its own. A `RunResult` draws its figures (`figure`,
+`plot_field`, `plot_cutline`), and a sweep's result its current–voltage curve (`plot_iv`). Each job
+has one public object: running a case is the Session's and no free function's, and an `Artefact` is
+public read only, as what a run holds and a stage of one's own receives.
 
 NOTE (IF-07, field export): solution fields are written as XDMF with HDF5 heavy data at the P2 node
 set — the mesh vertices together with the edge midpoints, `ndof = nv + nedge` — with topology

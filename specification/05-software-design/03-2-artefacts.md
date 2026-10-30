@@ -51,7 +51,7 @@ it was given, and the walk gives every stage a fresh `<run scratch>/<stage>` dir
 of a case never share one. A stage SHALL refuse to write into a workspace that already holds files,
 naming them and the `overwrite_workspace` switch, because a second run would overwrite a file the
 first run's artefact still references; a caller that means to replace them constructs the stage with
-`overwrite_workspace=True`, or passes it to `run_case`. A stage constructed without a workspace
+`overwrite_workspace=True`, or sets it on the `Session` that runs the case (§8.2.23 Y4). A stage constructed without a workspace
 SHALL refuse to write scratch, naming the `workspace` argument, rather than choose a directory of
 its own; describing and keying it need none (REV-25, REV-55, REV-98; WP46). The store puts an
 artefact by building its whole directory beside the final one and renaming it into place, so

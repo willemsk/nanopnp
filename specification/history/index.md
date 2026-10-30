@@ -33,6 +33,7 @@ within it (A1, B3, R10).
 * [8.2.20 WP54's notebooks and figures, agreed 28 October 2026](20-wp54s-notebooks-and-figures-agreed-28-october-2.md) - Records the author's rulings on WP54's scope: structure preparation in the library, the notebooks reactive on the store, typed case factories with the schema unchanged, the field figures in physical units, and a published notebook at each checkpoint; then the steering of its second and third checkpoints.
 * [8.2.21 Phase 4 amended: the user-testing findings ruled, agreed 29 October 2026](21-phase-4-amended-the-user-testing-findings-ruled.md) - Records the author's rulings on the twelve user-testing findings, taken at WP56's plan: each valid and fixed at its cause, five generalised rules, and the fix packages WP56, the command line, and WP57, the Python interface.
 * [8.2.22 Phase 4 amended: the geometry split and WP57 widened, agreed 30 October 2026](22-phase-4-amended-the-geometry-split-and-wp57-wide.md) - Records the author's rulings at the third amendment of Phase 4: an idealised cylinder declared in the case and meshed by stage 6, a standalone geometry file and mesh command, a wall surface charge as a boundary condition, and WP57 carrying the split, the Python interface and the open review items.
+* [8.2.23 Phase 4 amended: the Python interface rebuilt on a Case and a Session, agreed 30 October 2026](23-phase-4-amended-the-python-interface-rebuilt-on-a.md) - Records the author's rulings at the fourth amendment of Phase 4: a Case is the case document built from public typed blocks, a Session runs it for every caller, each other public name follows one object per job, and WP57 carries it with no plan cap.
 
 ## Where each ruling holds now
 
@@ -217,18 +218,29 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * W1 - the Phase 4 plan; open: WP56, WP57
 * W2 - IF-02's NOTE on reading; open: WP56
 * W3 - FR-28, FR-44; open: WP56
-* W4 - open: WP56 (the command line), WP57 (`Case.run`)
+* W4 - open: WP56 (the command line); its `Case.run` clause superseded by Y4
 * W5 - QR-12's NOTE on the remedy; open: WP56
 * W6 - open: WP56; documentation increment 4
-* W7 - MOD-11, REV-145; open: WP57
+* W7 - superseded by Y1 to Y10
 * W8 - REV-156; open: WP56
 * X1 - IF-02's generators NOTE, QR-12's NOTE on the remedy, §5.3.1's NOTE on an idealised pore, VER-32; open: WP57
 * X2 - IF-02's generators NOTE, VER-32; open: WP57
 * X3 - PHY-09, VER-77; open: WP57
 * X4 - VER-62; open: WP57
-* X5 - §8.4.4; the Phase 4 plan
+* X5 - the Phase 4 plan; its cap superseded by Y11
 * X6 - §5.3.1's NOTE on `electrolyte.parameters`, NUM-29's NOTE on the force surface; open: WP57
 * X7 - open: WP57
 * X8 - open: WP57
 * X9 - the Phase 4 plan
 * X10 - spent
+* Y1 - IF-01's NOTE on the interface; open: WP57
+* Y2 - IF-01's NOTE on the interface; open: WP57
+* Y3 - IF-01's NOTE on the interface; open: WP57
+* Y4 - IF-01's NOTE on the interface, §5.3.2's workspace sentence; open: WP57
+* Y5 - IF-01's NOTE on the interface; open: WP57
+* Y6 - IF-01's NOTE on the interface; open: WP57
+* Y7 - IF-01's NOTE on the interface; open: WP57
+* Y8 - IF-01, IF-02, IF-09 and its NOTE on the browser shell; open: WP57
+* Y9 - §5.5's NOTE on a stage of one's own
+* Y10 - §5.5 and its NOTE on a stage of one's own; open: WP57
+* Y11 - §8.4.4; the Phase 4 plan; open: WP57's plan

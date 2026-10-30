@@ -91,8 +91,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   holds at most 3,500 words outside its Outcome annotations, and 1,500 of them outside its Grounding
   and its `### Implementation details`. The details hold at most 1,000 words and give a smaller model
   the exact steps. The plan has at most six decisions and no `## Design` heading. (§8.2.15 Q1;
-  §8.2.16 R11) WP57's plan alone is exempt: at most 6,000 words outside its Outcomes, 2,500 of
-  them outside its Grounding and its Implementation details, and ten decisions (§8.2.22 X5).
+  §8.2.16 R11) WP57's plan alone is exempt: it has no word or decision cap, and keeps its
+  compaction checkpoints (§8.2.23 Y11).
 * Each work item names its executor: the main session, or a sub-agent by type and model. The plan
   names the implementing session's model and effort. One commit per work item, ticked
   `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11)
