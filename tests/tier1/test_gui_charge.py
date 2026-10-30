@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.charge.stage import stored_lattice
 from nanopnp.gui.charge import (
     charge_image,
@@ -11,10 +12,7 @@ from nanopnp.gui.charge import (
 )
 from nanopnp.gui.solver import Produced
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import (
-    RunResult,
-    run_case,
-)
+from nanopnp.pipeline.run import RunResult
 
 
 def _produced(result: RunResult, store: Store, name: str) -> Produced:
@@ -33,7 +31,7 @@ def tube(charged_tube, tmp_path_factory: pytest.TempPathFactory):
     work = tmp_path_factory.mktemp("tube")
     store = Store(work / "store")
     case = charged_tube.write(work / "case")
-    return case, store, run_case(case, store=store, upto="charge", write=False)
+    return case, store, Session(store, write=False).run(Case.load(case), upto="charge")
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +39,7 @@ def two_frames(charged_tube, tmp_path_factory: pytest.TempPathFactory):
     work = tmp_path_factory.mktemp("frames")
     store = Store(work / "store")
     case = charged_tube.write(work / "case", frames=2)
-    return case, store, run_case(case, store=store, upto="charge", write=False)
+    return case, store, Session(store, write=False).run(Case.load(case), upto="charge")
 
 
 def _record(result: RunResult) -> dict[str, object]:

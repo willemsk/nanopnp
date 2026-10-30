@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.gui.render import (
     CHI_RANGE,
     VIEWER_DIRNAME,
@@ -16,7 +17,6 @@ from nanopnp.gui.render import (
     render_charge,
 )
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 DELTA_AND_SHELL = "{dielectric_transition_nm: 0.2, exclusion_offset_nm: 0.3}"
 
@@ -25,7 +25,7 @@ DELTA_AND_SHELL = "{dielectric_transition_nm: 0.2, exclusion_offset_nm: 0.3}"
 def charged_run(tmp_path_factory: pytest.TempPathFactory, charged_tube) -> Path:
     work = tmp_path_factory.mktemp("charge-picture")
     case = charged_tube.write(work / "case", charge_block=DELTA_AND_SHELL)
-    return run_case(case, store=Store(work / "store"), upto="charge").directory
+    return Session(Store(work / "store")).run(Case.load(case), upto="charge").directory
 
 
 def _charge_record(run: Path) -> dict[str, object]:

@@ -9,12 +9,12 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.hashing import content_hash
 from nanopnp.geometry.profile import load_profile
 from nanopnp.io.artefact import CHARGE_GRID_SCHEMA, StageInputs
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import run_case
 from nanopnp.solve.stage import SolveStage
 
 # Stage keys on bbca737, stage 7 at v1.
@@ -153,7 +153,7 @@ def test_ver59_with_both_keys_at_zero_every_key_and_the_record_are_unchanged(
     # so the charge and the materials are walked to in turn.
     artefacts = {}
     for upto in ("charge", "materials"):
-        result = run_case(case, store=store, workspace=tmp_path / "work", upto=upto)
+        result = Session(store, workspace=tmp_path / "work").run(Case.load(case), upto=upto)
         artefacts.update(result.artefacts)
     solve = SolveStage().key(
         StageInputs(resolved=resolve(load_case(case)), upstream=dict(artefacts))

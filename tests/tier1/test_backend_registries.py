@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.cli import main
 from nanopnp.core.errors import EXIT_CASE
 from nanopnp.core.paths import profile_file
@@ -29,7 +30,7 @@ from nanopnp.physics.stabilisation import (
     register as register_stabilisation,
 )
 from nanopnp.pipeline.case import loads_case
-from nanopnp.pipeline.run import run_case, run_document
+from nanopnp.pipeline.run import run_document
 
 if TYPE_CHECKING:
     from nanopnp.geometry.region import RegionRecord
@@ -185,15 +186,11 @@ numerics:
     plain_path.write_text(make_case("umfpack", "none"), encoding="utf-8")
     stub_path.write_text(make_case("stub-solver", "stub-mode"), encoding="utf-8")
 
-    plain_res = run_case(
-        plain_path,
-        store=Store(plain_dir / "store"),
-        workspace=plain_dir / "work",
+    plain_res = Session(Store(plain_dir / "store"), workspace=plain_dir / "work").run(
+        Case.load(plain_path)
     )
-    stub_res = run_case(
-        stub_path,
-        store=Store(stub_dir / "store"),
-        workspace=stub_dir / "work",
+    stub_res = Session(Store(stub_dir / "store"), workspace=stub_dir / "work").run(
+        Case.load(stub_path)
     )
 
     assert len(stub_solver.calls) > 0, "stub solver was not invoked"

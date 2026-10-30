@@ -20,6 +20,7 @@ import pytest
 import yaml
 from filelock import FileLock
 
+from nanopnp import Case, Session
 from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.pipeline.case import resolve
 
@@ -232,7 +233,6 @@ def _structure_case(directory: Path, pdb: Path, name: str = "seed.case.yaml") ->
 @pytest.fixture(scope="session")
 def structure_2wcd(prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPathFactory) -> Path:
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     shared = shared_directory(tmp_path_factory)
     seed = shared / "2wcd-structure"
@@ -241,7 +241,7 @@ def structure_2wcd(prepared_2wcd: Prepared2WCD, tmp_path_factory: pytest.TempPat
         if not ready.is_file():
             seed.mkdir(parents=True, exist_ok=True)
             case = _structure_case(seed, prepared_2wcd.path)
-            run_case(case, store=Store(seed / "store"), upto="structure", write=False)
+            Session(Store(seed / "store"), write=False).run(Case.load(case), upto="structure")
             ready.write_text("", encoding="utf-8")
     return seed / "store"
 
@@ -277,7 +277,6 @@ def seeded_2wcd(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Seed2WCD:
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     shared = shared_directory(tmp_path_factory)
     seed = shared / "2wcd-seed"
@@ -293,7 +292,7 @@ def seeded_2wcd(
                 structure_2wcd / "artefacts", store.root / "artefacts", dirs_exist_ok=True
             )
             case = _structure_case(seed, prepared_2wcd.path)
-            stage4 = run_case(case, store=store, upto="contour", write=False)
+            stage4 = Session(store, write=False).run(Case.load(case), upto="contour")
             centre = register_2wcd(stage4.artefacts["structure"])
             seeded = Seed2WCD(store=store.root, centre_z_nm=centre)
             meshed = seed / "mesh.case.yaml"
@@ -303,7 +302,7 @@ def seeded_2wcd(
                 ),
                 encoding="utf-8",
             )
-            walked = run_case(meshed, store=store, upto=SEED_UPTO, write=False)
+            walked = Session(store, write=False).run(Case.load(meshed), upto=SEED_UPTO)
             # The one place stages 4 to 6 of the default-size 2WCD are computed in a
             # session: the modules that read them log a store lookup, not this.
             logger.info(

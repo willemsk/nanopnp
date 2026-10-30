@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 import yaml
 
+from nanopnp import Case, Session
 from nanopnp.charge.fields import (
     ChargeFieldError,
     check_conservation,
@@ -26,10 +27,7 @@ from nanopnp.density.grid import read_grid
 from nanopnp.io.store import Store
 from nanopnp.mesh.reference import ReferenceGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
-from nanopnp.pipeline.run import (
-    RunResult,
-    run_case,
-)
+from nanopnp.pipeline.run import RunResult
 from nanopnp.post.qoi import transport_number
 from nanopnp.validation.charge import AreaComparison, compare_areal, reference_construction
 
@@ -175,7 +173,7 @@ def charged(
             source=f"inputs:\n  pqr: {{path: {bundle}, format: pqr}}\n{block}",
         ),
     )
-    result = run_case(case, store=ensemble_store, workspace=root / "pipeline")
+    result = Session(ensemble_store, workspace=root / "pipeline").run(Case.load(case))
     return bundle, case, result
 
 
@@ -265,29 +263,29 @@ def test_val15_the_charged_frozen_case_against_the_reference_mesh(
 ) -> None:
     bundle, _, pipeline = charged
     profile = f"  profile: {{path: {profile_file('clya_reference_profile')}}}\n"
-    reference = run_case(
-        _write(
-            tmp_path / "frozen-reference.case.yaml",
-            FROZEN_CASE.format(
-                name="clya-as-frozen-reference",
-                source=f"inputs:\n  pqr: {{path: {bundle}, format: pqr}}\n{profile}",
-            ),
-        ),
-        store=ensemble_store,
-        workspace=tmp_path / "reference",
+    reference = Session(ensemble_store, workspace=tmp_path / "reference").run(
+        Case.load(
+            _write(
+                tmp_path / "frozen-reference.case.yaml",
+                FROZEN_CASE.format(
+                    name="clya-as-frozen-reference",
+                    source=f"inputs:\n  pqr: {{path: {bundle}, format: pqr}}\n{profile}",
+                ),
+            )
+        )
     )
     document = _table_document(tmp_path / "rhoq_pore.yaml")
     try:
-        table = run_case(
-            _write(
-                tmp_path / "frozen-table.case.yaml",
-                FROZEN_CASE.format(
-                    name="clya-as-frozen-table",
-                    source=f"inputs:\n  charge: {{path: {document}}}\n{profile}",
-                ),
-            ),
-            store=ensemble_store,
-            workspace=tmp_path / "table",
+        table = Session(ensemble_store, workspace=tmp_path / "table").run(
+            Case.load(
+                _write(
+                    tmp_path / "frozen-table.case.yaml",
+                    FROZEN_CASE.format(
+                        name="clya-as-frozen-table",
+                        source=f"inputs:\n  charge: {{path: {document}}}\n{profile}",
+                    ),
+                )
+            )
         )
         table_record: dict[str, Any] | str = _frozen(table)
     except ChargeFieldError as error:

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.charge.stage import FieldStage
 from nanopnp.core.stages import CancelFlag, Cancelled, create, describe
 from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
@@ -274,12 +275,11 @@ def _producer_case(files: tuple[Path, Path], directory: Path, *, order: str = "P
 @pytest.fixture(scope="module")
 def produced(producer_files: tuple[Path, Path], tmp_path_factory: pytest.TempPathFactory):
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     work = tmp_path_factory.mktemp("produced")
     store = Store(work / "store")
     case = _producer_case(producer_files, work)
-    return case, store, run_case(case, store=store, upto="charge", write=False)
+    return case, store, Session(store, write=False).run(Case.load(case), upto="charge")
 
 
 def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced) -> None:
@@ -332,11 +332,10 @@ def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced)
 def test_ver01_a_new_element_order_redeposits_without_resumming(
     produced, producer_files: tuple[Path, Path], tmp_path: Path
 ) -> None:
-    from nanopnp.pipeline.run import run_case
 
     _, store, first = produced
     case = _producer_case(producer_files, tmp_path, order="P3")
-    again = run_case(case, store=store, upto="charge", write=False)
+    again = Session(store, write=False).run(Case.load(case), upto="charge")
     stage7 = again.artefacts["charge"]
     assert stage7.inputs["charge_grid"] == first.artefacts["charge"].inputs["charge_grid"]
     assert stage7.hash != first.artefacts["charge"].hash
@@ -423,10 +422,9 @@ def test_ver29_a_charged_walk_solves_and_exports_the_deposited_charge(
     producer_files: tuple[Path, Path], tmp_path: Path
 ) -> None:
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     case = _producer_case(producer_files, tmp_path)
-    result = run_case(case, store=Store(tmp_path / "store"), workspace=tmp_path / "work")
+    result = Session(Store(tmp_path / "store"), workspace=tmp_path / "work").run(Case.load(case))
     assert [record.name for record in result.stages][-5:] == [
         "charge",
         "materials",

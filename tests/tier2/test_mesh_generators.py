@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.cli import main
 from nanopnp.core.errors import EXIT_OK
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 FROZEN = REPOSITORY / "examples" / "05-clya-reference" / "clya-0.5M-plus50mV.case.yaml"
@@ -27,5 +27,5 @@ def test_ver32_mesh_reference_ingests_with_its_printed_groups(
     assert printed["min_sicn"] > 0.3 and printed["min_gamma"] > 0.3
 
     case = shutil.copy(FROZEN, tmp_path / FROZEN.name)
-    result = run_case(Path(case), store=Store(tmp_path / "store"), upto="mesh")
+    result = Session(Store(tmp_path / "store")).run(Case.load(Path(case)), upto="mesh")
     assert result.manifest.geometry_and_mesh["content_hash"] == printed["content_hash"]

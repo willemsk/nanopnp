@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.geometry.profile import (
     PROFILE_SCHEMA,
     PoreProfile,
@@ -28,7 +29,6 @@ from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.mesh.sizing import case_debye_record
 from nanopnp.pipeline.case import loads_case, resolve
-from nanopnp.pipeline.run import run_case
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -146,12 +146,8 @@ def test_ver53_a_shared_mesh_reports_each_run_its_own_debye_length(
         )
         path = tmp_path / f"case-{concentration_M}.yaml"
         path.write_text(text, encoding="utf-8")
-        result = run_case(
-            path,
-            store=store,
-            upto="mesh",
-            workspace=tmp_path / f"work-{concentration_M}",
-            write=False,
+        result = Session(store, workspace=tmp_path / f"work-{concentration_M}", write=False).run(
+            Case.load(path), upto="mesh"
         )
         sizing = result.manifest.geometry_and_mesh["sizing"]
         expected = case_debye_record(resolve(loads_case(text)))
@@ -300,12 +296,11 @@ def test_ver53_every_consumer_reads_the_generated_mesh_through_to_the_export(
     workspace: Path, tmp_path: Path
 ) -> None:
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     head = _case_text(workspace).split("electrolyte:")[0].replace("name: coarse", "name: walk")
     case = tmp_path / "walk.case.yaml"
     case.write_text(head + WALK.format(solids=SOLIDS), encoding="utf-8")
-    result = run_case(case, store=Store(tmp_path / "store"), workspace=tmp_path / "work")
+    result = Session(Store(tmp_path / "store"), workspace=tmp_path / "work").run(Case.load(case))
     assert [record.name for record in result.stages][-4:] == ["materials", "solve", "qoi", "report"]
     assert result.quantities["currents_A"]
     assert result.artefacts["report"].summary["exports"] == ["fields"]

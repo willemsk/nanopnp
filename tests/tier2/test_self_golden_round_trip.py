@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from nanopnp import Case, Session
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.post import qoi
@@ -216,7 +217,6 @@ patches:
 @pytest.fixture(scope="module")
 def archived_run(tmp_path_factory: pytest.TempPathFactory):
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     work = tmp_path_factory.mktemp("validate")
     mesh_path = work / "pore.vol"
@@ -225,7 +225,7 @@ def archived_run(tmp_path_factory: pytest.TempPathFactory):
     case_path.write_text(RUN_CASE.format(mesh_path=mesh_path), encoding="utf-8")
 
     store = Store(work / "store")
-    result = run_case(case_path, store=store, workspace=work / "fields")
+    result = Session(store, workspace=work / "fields").run(Case.load(case_path))
     probe_path = work / "probe.yaml"
     probe_path.write_text(RUN_PROBE_TEXT, encoding="utf-8")
     return result.directory, store, probe_path, work

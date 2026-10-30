@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 import yaml
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import radii_file
 from nanopnp.density.grid import GridFormatError
 from nanopnp.density.map import DensityMap
@@ -31,10 +32,7 @@ from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import (
-    run_case,
-    selected_stages,
-)
+from nanopnp.pipeline.run import selected_stages
 
 if TYPE_CHECKING:
     from conftest import Prepared2WCD
@@ -285,7 +283,7 @@ def test_ver49_radius_table_matches_charmm_dat() -> None:
 def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) -> None:
     case = _case(tmp_path, synthetic_c12)
     store = Store(tmp_path / "store")
-    result = run_case(case, store=store, upto="density", write=False)
+    result = Session(store, write=False).run(Case.load(case), upto="density")
     artefact = result.artefacts["density"]
     density = DensityMap.read(artefact.payload["density"])
     assert density.digest() == artefact.summary["payload_digest"]
@@ -325,10 +323,10 @@ def test_ver49_map_round_trip_and_export(synthetic_c12: Path, tmp_path: Path) ->
 
     script = (
         "from nanopnp.core.stages import create\n"
-        "from nanopnp.pipeline.run import run_case\n"
+        "from nanopnp import Case, Session\n"
         "from nanopnp.io.store import Store\n"
-        f"result = run_case({str(case)!r}, store=Store({str(tmp_path / 'store')!r}), "
-        "upto='density', write=False)\n"
+        f"result = Session(Store({str(tmp_path / 'store')!r}), write=False).run("
+        f"Case.load({str(case)!r}), upto='density')\n"
         "print(result.artefacts['density'].hash, result.stages[-1].cached)\n"
     )
     other = subprocess.run(
@@ -384,7 +382,7 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
 
     case = _case(tmp_path, synthetic_c12, geometry="geometry: {membrane: {thickness_nm: 2.8}}\n")
     store = Store(tmp_path / "store")
-    ran = run_case(case, store=store, upto="symmetry", write=False)
+    ran = Session(store, write=False).run(Case.load(case), upto="symmetry")
     assert [record.name for record in ran.stages] == ["case", "structure", "density", "symmetry"]
     group = ran.manifest.geometry_and_mesh
     assert {"structure", "density", "reduction"} <= set(group)
@@ -439,7 +437,7 @@ def test_ver49_a_bad_atom_aborts_stage_two_naming_it(synthetic_c12: Path, tmp_pa
     pdb = tmp_path / "bad.pdb"
     pdb.write_text("\n".join(lines) + "\n", encoding="utf-8")
     with pytest.raises(DensityInputError, match=r"atom 'CG' of residue ALA 1 in chain 'B'"):
-        run_case(_case(tmp_path, pdb), store=Store(tmp_path / "store"), upto="density")
+        Session(Store(tmp_path / "store")).run(Case.load(_case(tmp_path, pdb)), upto="density")
 
 
 def test_ver49_radius_refusal_names_the_first_atom_in_file_order() -> None:

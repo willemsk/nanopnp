@@ -11,13 +11,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.charge.dielectric import derive_solid_fraction, smooth_step, water_facing
 from nanopnp.geometry.region import distance_to_loop, distance_to_segments, read_region
 from nanopnp.io.store import Store
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.pipeline.case import resolve
-from nanopnp.pipeline.run import run_case
 
 pytestmark = pytest.mark.nightly
 
@@ -68,7 +68,7 @@ def meshed(registered, exclusion_2wcd: Exclusion2WCD):  # type: ignore[no-untype
         ),
         encoding="utf-8",
     )
-    return case, run_case(case, store=store, upto="mesh", write=False)
+    return case, Session(store, write=False).run(Case.load(case), upto="mesh")
 
 
 # VER-10
@@ -141,7 +141,7 @@ def test_ver59_2wcd_with_a_shell_meshes_at_3_m(registered, exclusion_2wcd: Exclu
         ).replace("concentration_M: 0.15", "concentration_M: 3.0"),
         encoding="utf-8",
     )
-    mesh = run_case(case, store=store, upto="mesh", write=False).artefacts["mesh"]
+    mesh = Session(store, write=False).run(Case.load(case), upto="mesh").artefacts["mesh"]
     sizing = mesh.summary["sizing"]
     statistics = sizing["wall_statistics"]
     quality = mesh.summary["quality"]

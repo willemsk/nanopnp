@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 import yaml
 
+from nanopnp import Case, Session
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import loads_case, resolve
-from nanopnp.pipeline.run import run_case
 
 GOLDEN = Path(__file__).parents[1] / "tier2" / "data" / "number_stability.json"
 
@@ -50,7 +50,7 @@ def test_ver62_a_declared_cylinder_meshes_to_the_recorded_mesh(tmp_path: Path) -
     recorded = json.loads(GOLDEN.read_text(encoding="utf-8"))["walks"]["example-01"]
     case = tmp_path / "case.yaml"
     case.write_text(_text(), encoding="utf-8")
-    result = run_case(case, store=Store(tmp_path / "store"), upto="mesh", write=False)
+    result = Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="mesh")
     mesh = result.artefacts["mesh"]
     assert mesh.summary["content_hash"] == recorded["reference_mesh"]
     assert "default" not in mesh.summary["boundaries"]

@@ -73,7 +73,6 @@ __all__ = [
     "open_run",
     "read_run",
     "recorded_base",
-    "run_case",
     "run_document",
     "selected_stages",
     "stored_upstream",
@@ -1089,41 +1088,3 @@ def _run_key(manifest: Manifest) -> str:
     if isinstance(files, Mapping):
         digests = {role: record["sha256"] for role, record in sorted(files.items())}
     return content_hash(_RUN_KEY_SCHEMA, {"case": manifest.case_hash, "files": digests})
-
-
-def run_case(
-    path: str | Path,
-    *,
-    store: Store | None = None,
-    upto: str | None = None,
-    only: bool = False,
-    arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
-    workspace: Path | None = None,
-    overwrite_workspace: bool = False,
-    write: bool = True,
-    progress: Progress | None = None,
-    cancel: CancelToken | None = None,
-    on_stage: StageHook | None = None,
-    on_solve: SolveHook | None = None,
-    on_artefact: ArtefactHook | None = None,
-) -> RunResult:
-    """Load a case file and run it; the keywords are those of :func:`run_document`."""
-    source = Path(path)
-    text = source.read_bytes().decode("utf-8")
-    return run_document(
-        loads_case(text, source=str(source)),
-        case_text=text,
-        case_path=source,
-        store=store,
-        upto=upto,
-        only=only,
-        arguments=arguments,
-        workspace=workspace,
-        overwrite_workspace=overwrite_workspace,
-        write=write,
-        progress=progress,
-        cancel=cancel,
-        on_stage=on_stage,
-        on_solve=on_solve,
-        on_artefact=on_artefact,
-    )

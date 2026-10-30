@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 import yaml
 
+from nanopnp import Case, Session
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.charge.stage import frame_shift_nm
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
@@ -18,7 +19,6 @@ from nanopnp.density.grid import read_grid
 from nanopnp.io.store import Store
 from nanopnp.physics.models import PoissonModel
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import run_case
 from nanopnp.solve.state import restore, warm_start_payload
 from nanopnp.validation.apbs import (
     GatedInputs,
@@ -103,7 +103,7 @@ def test_val06_the_ensemble_against_apbs_gated_construction_and_per_frame(
             CASE.format(name=f"clya-as-val06-p{order}", bundle=bundle, block=block, order=order),
             encoding="utf-8",
         )
-        result = run_case(case, store=ensemble_store, upto="solve", workspace=root / "work")
+        result = Session(ensemble_store, workspace=root / "work").run(Case.load(case), upto="solve")
         solution = restore(
             warm_start_payload(result.artefacts["solve"]),
             resolved=resolve(load_case(case)),

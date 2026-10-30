@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import (
     EXCLUSION,
@@ -366,12 +367,11 @@ def test_ver59_the_manifest_lists_the_switch_and_the_mesh_material_deviation(
     parallelogram_profile: Path, tmp_path: Path
 ) -> None:
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     case = tmp_path / "shell.case.yaml"
     case.write_text(case_text(parallelogram_profile, charge=_offset()), encoding="utf-8")
-    result = run_case(
-        case, store=Store(tmp_path / "store"), workspace=tmp_path / "work", upto="mesh"
+    result = Session(Store(tmp_path / "store"), workspace=tmp_path / "work").run(
+        Case.load(case), upto="mesh"
     )
     manifest = result.manifest
     paths = [deviation.path for deviation in manifest.deviations]

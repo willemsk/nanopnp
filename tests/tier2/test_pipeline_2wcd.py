@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.stages import walk_order
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
-from nanopnp.pipeline.run import run_case
 
 pytestmark = pytest.mark.nightly
 
@@ -87,7 +87,7 @@ def test_ver53_2wcd_meshes_at_the_default_sizes(registered) -> None:
     root, store, structure, geometry = registered
     case = root / "mesh.case.yaml"
     case.write_text(MESH_CASE.format(structure=structure, geometry=geometry), encoding="utf-8")
-    result = run_case(case, store=store, upto="mesh", write=False)
+    result = Session(store, write=False).run(Case.load(case), upto="mesh")
     cached = {record.name for record in result.stages if record.cached}
     assert {"structure", "density", "symmetry", "contour", "region", "mesh"} <= cached
 
@@ -136,7 +136,7 @@ def test_ver53_2wcd_walks_to_the_report_and_the_manifest_keys_every_stage(
     root, store, structure, geometry = registered
     case = root / "solve.case.yaml"
     case.write_text(SOLVE_CASE.format(structure=structure, geometry=geometry), encoding="utf-8")
-    result = run_case(case, store=store, workspace=root / "work")
+    result = Session(store, workspace=root / "work").run(Case.load(case))
 
     ran = [record.name for record in result.stages]
     assert ran == list(walk_order())

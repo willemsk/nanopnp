@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 from shapely.geometry import Point, Polygon, box
 
+from nanopnp import Case, Session
 from nanopnp.core.stages import create
 from nanopnp.geometry import contour
 from nanopnp.geometry.contour import (
@@ -41,10 +42,7 @@ from nanopnp.io.artefact import CASE_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import (
-    run_case,
-    selected_stages,
-)
+from nanopnp.pipeline.run import selected_stages
 
 H = 0.05
 
@@ -434,7 +432,7 @@ def test_ver51_artefact_and_key(
     tube: Path, tube_store: Store, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     case = _case(tmp_path, tube)
-    result = run_case(case, store=tube_store, upto="contour", write=False)
+    result = Session(tube_store, write=False).run(Case.load(case), upto="contour")
     artefact = result.artefacts["contour"]
     assert artefact.hash == _key(case)
     profile = load_profile(artefact.payload[PAYLOAD_NAME])
@@ -518,7 +516,7 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
     from nanopnp.sweep.plan import plan_from_document
 
     case = _case(tmp_path, tube)
-    ran = run_case(case, store=tube_store, upto="contour", write=False)
+    ran = Session(tube_store, write=False).run(Case.load(case), upto="contour")
     assert [record.name for record in ran.stages] == [
         "case",
         "structure",
@@ -559,7 +557,7 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
         "report",
     )
     with pytest.raises(RegionGateError, match=r"centre_z_nm = 0 nm"):
-        run_case(case, store=tube_store, upto="region", write=False)
+        Session(tube_store, write=False).run(Case.load(case), upto="region")
     sweep = tmp_path / "sweep.yaml"
     sweep.write_text(
         "schema: nanopnp/sweep/v0.5\n"
@@ -581,5 +579,5 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
 def test_ver51_gate_failure_aborts_the_walk(tube: Path, tube_store: Store, tmp_path: Path) -> None:
     case = _case(tmp_path, tube, geometry="geometry: {contour: {isolevel: 0.999}}\n", name="high")
     with pytest.raises(ContourGateError, match=r"loop topology: the map has no closed contour"):
-        run_case(case, store=tube_store, upto="contour", write=False)
+        Session(tube_store, write=False).run(Case.load(case), upto="contour")
     assert not tube_store.contains(_key_artefact(case))

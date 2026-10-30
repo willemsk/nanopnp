@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.stages import walk_order
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 pytestmark = pytest.mark.nightly
 
@@ -81,7 +81,7 @@ def test_ver59_2wcd_with_the_shell_and_a_derived_chi_walks_to_the_report(  # typ
         SOLVE_CASE.format(structure=structure, geometry=geometry, charge=charge),
         encoding="utf-8",
     )
-    result = run_case(case, store=store, workspace=root / "work")
+    result = Session(store, workspace=root / "work").run(Case.load(case))
     assert [record.name for record in result.stages] == list(walk_order())
     stage7 = result.artefacts["charge"]
     assert stage7.inputs["region"] == result.artefacts["region"].hash

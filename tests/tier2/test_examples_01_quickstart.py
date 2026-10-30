@@ -214,8 +214,8 @@ def test_default_import_and_walk_load_no_plotting(
         "import json, sys\n"
         "import nanopnp, nanopnp.plot\n"
         "from nanopnp.io.store import Store\n"
-        "from nanopnp.pipeline.run import run_case\n"
-        "run_case('quickstart.case.yaml', store=Store('store'), write=False)\n"
+        "from nanopnp import Case, Session\n"
+        "Session(Store('store'), write=False).run(Case.load('quickstart.case.yaml'))\n"
         "print(json.dumps([m for m in ('matplotlib', 'marimo') if m in sys.modules]))\n"
     )
     result = subprocess.run(

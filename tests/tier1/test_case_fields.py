@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from nanopnp import Case, Session
 from nanopnp.core.stages import create, describe
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import (
@@ -23,10 +24,7 @@ from nanopnp.io.case_paths import (
 from nanopnp.io.defaults import CONFIGURATION_PATHS, SWITCH_PATHS
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import (
-    run_case,
-    stored_upstream,
-)
+from nanopnp.pipeline.run import stored_upstream
 
 
 def test_fr25_switch_paths_are_the_same_walk() -> None:
@@ -110,7 +108,7 @@ def test_ver60_an_empty_charge_section_keys_every_physics_stage_as_its_absence(
     # The solve's inputs, without the solve: the charge and the materials walks
     # between them cover every stage the solve reads.
     for upto in ("charge", "materials"):
-        run_case(dump_case(absent, tmp_path / "absent.yaml"), store=store, upto=upto)
+        Session(store).run(Case.load(dump_case(absent, tmp_path / "absent.yaml")), upto=upto)
 
     def keys(document: CaseDocument) -> dict[str, str]:
         found = stored_upstream(document, store=store)

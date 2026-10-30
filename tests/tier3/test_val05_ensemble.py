@@ -11,13 +11,13 @@ import numpy as np
 import pytest
 import yaml
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, profile_file, reference_file
 from nanopnp.geometry.contour import PAYLOAD_NAME as CONTOUR_PAYLOAD
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import (
@@ -51,7 +51,9 @@ def reference() -> np.ndarray:
 def test_val05_ensemble_pins_z_md(
     tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
 ) -> None:
-    result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="structure", write=False)
+    result = Session(ensemble_store, write=False).run(
+        Case.load(ensemble_case(tmp_path)), upto="structure"
+    )
     summary = result.artefacts["structure"].summary
     assert summary["frames"]["indices"] == list(range(48, 98))  # type: ignore[index]
     ensemble = AlignedEnsemble.read(result.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
@@ -78,7 +80,7 @@ def test_val05_ensemble_against_the_reference_polygon(
     as_yaml: Callable[[object], str],
 ) -> None:
     case = ensemble_case(tmp_path, name="clya-as-val05", geometry=GEOMETRY)
-    result = run_case(case, store=ensemble_store, upto="region", write=False)
+    result = Session(ensemble_store, write=False).run(Case.load(case), upto="region")
     logger.info(
         "ClyA-AS stages 1-5: %s s; from the store: %s",
         {entry.name: round(entry.seconds, 1) for entry in result.stages},
@@ -156,8 +158,10 @@ def test_val05_ensemble_mesh_and_frozen_case_conductance(
         ),
         encoding="utf-8",
     )
-    generated = run_case(generated_case, store=ensemble_store, workspace=tmp_path / "generated")
-    fixture = run_case(fixture_case, store=ensemble_store, workspace=tmp_path / "fixture")
+    generated = Session(ensemble_store, workspace=tmp_path / "generated").run(
+        Case.load(generated_case)
+    )
+    fixture = Session(ensemble_store, workspace=tmp_path / "fixture").run(Case.load(fixture_case))
 
     mesh = generated.artefacts["mesh"].summary
     quality = mesh["quality"]
@@ -210,7 +214,7 @@ def test_val05_ensemble_mesh_on_both_backends(
         document.setdefault("numerics", {}).setdefault("mesh", {})["backend"] = backend
         case = tmp_path / f"mesh-{backend}.case.yaml"
         case.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
-        result = run_case(case, store=ensemble_store, upto="mesh", write=False)
+        result = Session(ensemble_store, write=False).run(Case.load(case), upto="mesh")
         mesh = result.artefacts["mesh"].summary
         quality = mesh["quality"]
         statistics = mesh["sizing"]["wall_statistics"]  # type: ignore[index]

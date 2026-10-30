@@ -12,16 +12,14 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry.contour import PAYLOAD_NAME as CONTOUR_PAYLOAD
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region, to_model_frame
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import (
-    RunResult,
-    run_case,
-)
+from nanopnp.pipeline.run import RunResult
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import (
@@ -108,7 +106,7 @@ def walked(
     case = _write(
         root / "contour.case.yaml", GEOMETRY_CASE.format(structure=structure, geometry="")
     )
-    stage1 = run_case(case, store=store, upto="contour", write=False)
+    stage1 = Session(store, write=False).run(Case.load(case), upto="contour")
     ensemble = AlignedEnsemble.read(stage1.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
     atoms = {"name": ensemble.name, "resid": ensemble.resid, "chain": ensemble.chain}
     centroid = calpha_centroid_z_nm(ensemble.positions_nm, **atoms)
@@ -119,7 +117,7 @@ def walked(
     case = _write(
         root / "region.case.yaml", GEOMETRY_CASE.format(structure=structure, geometry=geometry)
     )
-    region = run_case(case, store=store, upto="region", write=False)
+    region = Session(store, write=False).run(Case.load(case), upto="region")
     assert {"structure", "density", "symmetry", "contour", "region"} <= {
         record.name for record in region.stages if record.cached
     }
@@ -227,7 +225,7 @@ def test_val05_2wcd_mesh_against_the_reference_figures(
         walked.root / "mesh.case.yaml",
         GEOMETRY_CASE.format(structure=walked.structure, geometry=walked.geometry),
     )
-    result = run_case(case, store=walked.store, upto="mesh", write=False)
+    result = Session(walked.store, write=False).run(Case.load(case), upto="mesh")
     assert all(record.cached for record in result.stages if record.name != "case")
     mesh = result.artefacts["mesh"].summary
     quality = mesh["quality"]
@@ -264,7 +262,7 @@ def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walke
             GEOMETRY_CASE.format(structure=walked.structure, geometry=walked.geometry)
             + f"numerics: {{mesh: {{backend: {backend}}}}}\n",
         )
-        result = run_case(case, store=walked.store, upto="mesh", write=False)
+        result = Session(walked.store, write=False).run(Case.load(case), upto="mesh")
         recorded[backend] = result
     assert recorded["gmsh"].artefacts["region"].hash == recorded["netgen"].artefacts["region"].hash
     for backend, result in recorded.items():
@@ -292,44 +290,45 @@ def test_val05_2wcd_mesh_on_both_backends(gmsh_module: ModuleType, walked: Walke
 def test_val05_2wcd_frozen_case_conductance(walked: Walked, val05_frozen_case: str) -> None:
     # The model declares a fixed charge, so the generated leg reads the walked mesh through
     # inputs.mesh and stays uncharged; size_scale is refused beside inputs.mesh.
-    walk = run_case(
-        _write(
-            walked.root / "frozen-walk.case.yaml",
-            val05_frozen_case.format(
-                name="2wcd-frozen-walk",
-                source=walked.structure + walked.geometry,
-                size_scale=FROZEN_SIZE_SCALE,
-            ),
+    walk = Session(walked.store, write=False).run(
+        Case.load(
+            _write(
+                walked.root / "frozen-walk.case.yaml",
+                val05_frozen_case.format(
+                    name="2wcd-frozen-walk",
+                    source=walked.structure + walked.geometry,
+                    size_scale=FROZEN_SIZE_SCALE,
+                ),
+            )
         ),
-        store=walked.store,
         upto="mesh",
-        write=False,
     )
     mesh_file = walk.artefacts["mesh"].payload["mesh"]
-    generated = run_case(
-        _write(
-            walked.root / "frozen-generated.case.yaml",
-            val05_frozen_case.format(
-                name="2wcd-frozen",
-                source=f"inputs:\n  mesh: {{path: {mesh_file}, format: msh41}}\n",
-                size_scale=1.0,
-            ),
-        ),
-        store=walked.store,
-        workspace=walked.root / "frozen-generated",
+    generated = Session(walked.store, workspace=walked.root / "frozen-generated").run(
+        Case.load(
+            _write(
+                walked.root / "frozen-generated.case.yaml",
+                val05_frozen_case.format(
+                    name="2wcd-frozen",
+                    source=f"inputs:\n  mesh: {{path: {mesh_file}, format: msh41}}\n",
+                    size_scale=1.0,
+                ),
+            )
+        )
     )
     assert generated.manifest.charge["status"] == "not run", generated.manifest.charge
-    fixture = run_case(
-        _write(
-            walked.root / "frozen-fixture.case.yaml",
-            val05_frozen_case.format(
-                name="fixture-frozen",
-                source=f"inputs:\n  profile: {{path: {profile_file('clya_reference_profile')}}}\n",
-                size_scale=FROZEN_SIZE_SCALE,
-            ),
-        ),
-        store=walked.store,
-        workspace=walked.root / "frozen-fixture",
+    clya_profile = profile_file("clya_reference_profile")
+    fixture = Session(walked.store, workspace=walked.root / "frozen-fixture").run(
+        Case.load(
+            _write(
+                walked.root / "frozen-fixture.case.yaml",
+                val05_frozen_case.format(
+                    name="fixture-frozen",
+                    source=f"inputs:\n  profile: {{path: {clya_profile}}}\n",
+                    size_scale=FROZEN_SIZE_SCALE,
+                ),
+            )
+        )
     )
     g_generated = float(generated.quantities["conductance_S"])  # type: ignore[arg-type]
     g_fixture = float(fixture.quantities["conductance_S"])  # type: ignore[arg-type]

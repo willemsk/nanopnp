@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 import nanopnp.physics.models as models
+from nanopnp import Case, Session
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 
 def test_num17_gate_expressions_are_built_once_per_solve_and_evaluated_per_iterate(
@@ -30,12 +30,8 @@ def test_num17_gate_expressions_are_built_once_per_solve_and_evaluated_per_itera
 
     monkeypatch.setattr(models, "species_concentrations_SI", build)
     monkeypatch.setattr(models, "damped_newton", newton)
-    run_case(
-        cylindrical_pore_case,
-        store=Store(tmp_path / "store"),
-        upto="solve",
-        workspace=tmp_path / "work",
-        write=False,
+    Session(Store(tmp_path / "store"), workspace=tmp_path / "work", write=False).run(
+        Case.load(cylindrical_pore_case), upto="solve"
     )
 
     assert len(builds) == len(solves)

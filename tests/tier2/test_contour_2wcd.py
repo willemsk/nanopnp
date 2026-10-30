@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.geometry.contour import PAYLOAD_NAME
 from nanopnp.geometry.profile import PIPELINE_SOURCE, load_profile, min_feature_size
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 pytestmark = pytest.mark.nightly
 
@@ -43,11 +43,8 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
 def test_ver51_2wcd_contour(
     prepared_2wcd: Prepared2WCD, seeded_2wcd: Seed2WCD, tmp_path: Path
 ) -> None:
-    result = run_case(
-        _case(tmp_path, prepared_2wcd.path),
-        store=Store(seeded_2wcd(tmp_path / "store")),
-        upto="contour",
-        write=False,
+    result = Session(Store(seeded_2wcd(tmp_path / "store")), write=False).run(
+        Case.load(_case(tmp_path, prepared_2wcd.path)), upto="contour"
     )
     assert all(record.cached for record in result.stages if record.name != "case")
     seconds = {record.name: round(record.seconds, 2) for record in result.stages}
