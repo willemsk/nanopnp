@@ -10,15 +10,15 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.io.store import Store
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.pipeline.reproduce import (
+from nanopnp.api.reproduce import (
     DEFAULT_TOLERANCE,
     InputMovedError,
     ReproductionError,
     compare,
     reproduce,
 )
+from nanopnp.io.store import Store
+from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.pipeline.run import (
     RUN_RECORD_FILENAME,
     run_case,

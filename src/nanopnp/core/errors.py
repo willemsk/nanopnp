@@ -95,8 +95,8 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.pipeline.run:MissingUpstreamError": EXIT_GATE,
     # 4 not 3: the members already ran, and the fix is to re-run the missing ones
     "nanopnp.sweep.collect:SweepCollectionError": EXIT_GATE,
-    "nanopnp.pipeline.reproduce:InputMovedError": EXIT_GATE,
-    "nanopnp.pipeline.reproduce:ReproductionError": EXIT_GATE,
+    "nanopnp.api.reproduce:InputMovedError": EXIT_GATE,
+    "nanopnp.api.reproduce:ReproductionError": EXIT_GATE,
     "nanopnp.validation.probe:ProbeGridError": EXIT_GATE,
     "nanopnp.validation.comsol:GoldenError": EXIT_GATE,
     "nanopnp.validation.attribution:LadderError": EXIT_GATE,

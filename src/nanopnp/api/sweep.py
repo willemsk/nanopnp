@@ -6,17 +6,22 @@ import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
 
+from nanopnp.api.case import Case
 from nanopnp.io.artefact import SWEEP_SCHEMA, SweepArtefact
-from nanopnp.io.case import FieldValue, dumps_case
+from nanopnp.io.case import FieldValue
+from nanopnp.io.case_paths import field_path, input_paths
 from nanopnp.io.store import Store, atomic_write_bytes
-from nanopnp.pipeline.handle import Case, field_path, input_paths
 from nanopnp.sweep.collect import collect
 from nanopnp.sweep.document import loads_sweep
 from nanopnp.sweep.plan import SweepPlan, SweepPlanError, build_plan, write_plan
 from nanopnp.sweep.run import run_plan
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.api.session import Session
 
 __all__ = ["BASE_FILENAME", "SWEEP_FILENAME", "Sweep", "sweep"]
 
@@ -50,6 +55,7 @@ def _plain(value: FieldValue) -> FieldValue:
 def sweep(
     case: Case,
     *,
+    session: Session,
     axis: str,
     values: Sequence[FieldValue],
     origin: int = 0,
@@ -59,6 +65,8 @@ def sweep(
 
     Parameters
     ----------
+    session
+        Whose store the sweep's files and members are written into.
     axis
         The field swept: a dotted case path, or the leaf name one field ends in.
     origin
@@ -72,19 +80,21 @@ def sweep(
         The case names an input file by a relative path, which the store's copy of the case
         would read against another directory.
     """
+    # A file case reads its relative paths beside it; the store's copy would not.
+    case = case.with_()
     relative = [
         f"{dotted} = {value}"
-        for dotted, value in input_paths(case.document).items()
+        for dotted, value in input_paths(case).items()
         if not Path(value).is_absolute()
     ]
     if relative:
         raise SweepPlanError(
-            f"case {case.document.name!r} names {', '.join(relative)} by a relative path; its "
-            "copy in the store would read it against another directory. Build the case with "
-            "Case.load, or a Case factory, which write every input path absolute"
+            f"case {case.name!r} names {', '.join(relative)} by a relative path; its "
+            "copy in the store would read it against another directory. Load the case from a "
+            "file, or name the input by an absolute path"
         )
     dotted = field_path(axis)
-    name = case.document.name
+    name = case.name
     document = {
         "schema": SWEEP_SCHEMA,
         "name": name,
@@ -98,9 +108,9 @@ def sweep(
             }
         ],
     }
-    store = case.store or Store()
+    store = session.store
     text = yaml.safe_dump(document, sort_keys=False)
-    base_text = dumps_case(case.document).encode("utf-8")
+    base_text = case.dumps().encode("utf-8")
     # The directory is named by the plan's hash, as the sweep command names it, so the plan is
     # first built beside its files in a staging directory to read that hash. The hash does not
     # depend on where the base case lies, so the plan is built once and moved.

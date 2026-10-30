@@ -10,14 +10,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from nanopnp.api.case import Case
+from nanopnp.api.session import Session
 from nanopnp.core.hashing import Canonicalisable, decode_floats, file_hash
 from nanopnp.io.manifest import CASE_FILENAME, MANIFEST_FILENAME, environment
 from nanopnp.io.manifest import read as read_manifest
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import (
-    RUN_RECORD_FILENAME,
-    run_case,
-)
+from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
@@ -327,14 +326,8 @@ def reproduce(
 
     with tempfile.TemporaryDirectory(prefix="nanopnp-reproduce-") as scratch:
         target = store if store is not None else Store(Path(scratch) / "store")
-        result = run_case(
-            case_path,
-            store=target,
-            workspace=Path(scratch) / "work",
-            write=False,
-            progress=progress,
-            cancel=cancel,
-        )
+        session = Session(target, write=False, workspace=Path(scratch) / "work")
+        result = session.run(Case.load(case_path), progress=progress, cancel=cancel)
         solve = next((record for record in result.stages if record.name == "solve"), None)
         if solve is not None and solve.cached:
             raise ReproductionError(

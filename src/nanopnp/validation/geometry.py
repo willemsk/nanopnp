@@ -12,12 +12,13 @@ from typing import TYPE_CHECKING, Literal
 import yaml
 from pydantic import BaseModel, ConfigDict
 
+from nanopnp.api.case import Case
+from nanopnp.api.session import Session
 from nanopnp.geometry.profile import PoreProfile, load_profile, plane_crossings
 from nanopnp.geometry.region import to_model_frame
 from nanopnp.io.case import Geometry
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case
-from nanopnp.pipeline.run import run_case
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -568,7 +569,7 @@ def sweep_isolevels(
         text = yaml.safe_dump(_with_isolevel(document, isolevel), sort_keys=False)
         path.write_text(text, encoding="utf-8")
         try:
-            result = run_case(path, store=store, upto="contour", write=False)
+            result = Session(store, write=False).run(Case.load(path), upto="contour")
         except ContourGateError as refusal:
             logger.info("isolevel %g: stage 4 refused: %s", isolevel, refusal)
             points.append(IsolevelPoint(isolevel=isolevel, refusal=str(refusal)))

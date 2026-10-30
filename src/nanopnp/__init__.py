@@ -9,6 +9,8 @@ from nanopnp.core.public import PUBLIC, __version__
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     # ``X as X`` marks a re-export; the type checker cannot read ``__all__`` through ``PUBLIC``.
+    from nanopnp.api.case import Case as Case
+    from nanopnp.api.session import Session as Session
     from nanopnp.core.stages import ArtefactHook as ArtefactHook
     from nanopnp.core.stages import CancelFlag as CancelFlag
     from nanopnp.core.stages import Cancelled as Cancelled
@@ -22,7 +24,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.io.case import dump_case as dump_case
     from nanopnp.io.case import dumps_case as dumps_case
     from nanopnp.io.store import Store as Store
-    from nanopnp.mesh.cylinder import mesh_cylinder as mesh_cylinder
     from nanopnp.physics.models import ModelDeclaration as ModelDeclaration
     from nanopnp.physics.models import PhysicsModel as PhysicsModel
     from nanopnp.physics.models import TransportModel as TransportModel
@@ -31,7 +32,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     from nanopnp.pipeline.case import load_case as load_case
     from nanopnp.pipeline.case import loads_case as loads_case
     from nanopnp.pipeline.case import resolve as resolve
-    from nanopnp.pipeline.handle import Case as Case
     from nanopnp.pipeline.run import RunResult as RunResult
     from nanopnp.pipeline.run import run_case as run_case
     from nanopnp.pipeline.run import run_document as run_document

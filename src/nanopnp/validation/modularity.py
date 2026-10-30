@@ -19,6 +19,8 @@ LAYERING = PACKAGE.parents[1] / "docs" / "project" / "modularity-layering.yaml"
 
 ROOT_NODE = "nanopnp"
 
+ROOT_MODULES: frozenset[str] = frozenset({"case"})
+
 KINDS: tuple[str, ...] = ("top", "deferred", "typing", "string")
 
 STATIC_KINDS: frozenset[str] = frozenset({"top", "deferred", "typing"})
@@ -58,6 +60,7 @@ LAYER_ORDER: tuple[str, ...] = (
     "plot",
     "pipeline",
     "sweep",
+    "api",
     "validation",
     "cli",
     "gui",
@@ -91,7 +94,9 @@ class Module:
 def node_of(module: str) -> str:
     """Return the relation node of a dotted module name."""
     parts = module.split(".")
-    return parts[1] if len(parts) > 1 else ROOT_NODE
+    if len(parts) == 1 or (len(parts) == 2 and parts[1] in ROOT_MODULES):
+        return ROOT_NODE
+    return parts[1]
 
 
 def _module_name(relative: str) -> tuple[str, bool]:

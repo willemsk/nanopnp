@@ -642,12 +642,20 @@ def read_case(path: str | Path) -> CaseDocument:
     return _validate(yaml.safe_load(source.read_text(encoding="utf-8")), str(source))
 
 
-def read_case_text(text: str, *, source: str = "<string>") -> CaseDocument:
-    """Validate a case document held in memory against the schema; see :func:`read_case`."""
-    return _validate(yaml.safe_load(text), source)
+def read_case_text(
+    text: str, *, source: str = "<string>", model: type[CaseDocument] = CaseDocument
+) -> CaseDocument:
+    """Validate a case document held in memory against the schema; see :func:`read_case`.
+
+    Parameters
+    ----------
+    model
+        The class to build: ``CaseDocument``, or a subclass that adds methods and no field.
+    """
+    return _validate(yaml.safe_load(text), source, model)
 
 
-def _validate(raw: object, source: str) -> CaseDocument:
+def _validate(raw: object, source: str, model: type[CaseDocument] = CaseDocument) -> CaseDocument:
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
             f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
@@ -656,7 +664,7 @@ def _validate(raw: object, source: str) -> CaseDocument:
     if declared != SCHEMA:
         raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
     try:
-        return CaseDocument.model_validate(dict(raw))
+        return model.model_validate(dict(raw))
     except ValidationError as error:
         raise CaseValidationError(render_problems(source, error), error) from error
 

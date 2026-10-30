@@ -193,19 +193,15 @@ def _progress(args: argparse.Namespace) -> _Progress | None:
 
 
 def _run(args: argparse.Namespace) -> int:
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
     from nanopnp.cli.reading import format_value, stage_line
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     progress = _progress(args)
     try:
-        result = run_case(
-            args.case,
-            store=Store(args.store),
-            upto=args.upto,
-            write=False,
-            on_stage=progress,
-            on_solve=progress,
+        result = Session(Store(args.store), write=False).run(
+            Case.load(args.case), upto=args.upto, on_stage=progress, on_solve=progress
         )
     finally:
         if progress is not None:
@@ -227,20 +223,19 @@ def _run(args: argparse.Namespace) -> int:
 
 
 def _stage(args: argparse.Namespace) -> int:
+    from nanopnp.api.session import Session
     from nanopnp.core.stages import registered_stages
 
     if args.list:
         if args.export is not None:
             args.parser.error("--list writes no artefact; --export needs a stage and a case file")
         # Answered from the registry alone: no stage module, NGSolve or netgen is imported.
-        descriptions = registered_stages()
         payload: dict[str, Canonicalisable] = {
-            "stages": [description.summary() for description in descriptions]
+            "stages": [description.summary() for description in registered_stages()]
         }
         lines = [
-            f"{description.number:>2}  {description.name:<11} {description.title:<28} "
-            f"{description.artefact_schema}"
-            for description in descriptions
+            f"{info.number:>2}  {info.name:<11} {info.title:<28} {info.schema}"
+            for info in Session().stages
         ]
         _emit(payload, lines, as_json=args.json)
         return EXIT_OK
@@ -254,17 +249,15 @@ def _stage(args: argparse.Namespace) -> int:
         if why is not None:
             args.parser.error(why)
 
+    from nanopnp.api.case import Case
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     progress = _progress(args)
     try:
-        result = run_case(
-            args.case,
-            store=Store(args.store),
+        result = Session(Store(args.store), write=False).run(
+            Case.load(args.case),
             upto=args.name,
             only=args.only,
-            write=False,
             on_stage=progress,
             on_solve=progress,
         )
@@ -486,9 +479,12 @@ def _plot(args: argparse.Namespace) -> int:
             )
         figure = result.figure(stage)
     else:
-        from nanopnp.pipeline.run import run_case
+        from nanopnp.api.case import Case
+        from nanopnp.api.session import Session
 
-        figure = run_case(target, store=Store(args.store), upto=stage, write=False).figure(stage)
+        figure = (
+            Session(Store(args.store), write=False).run(Case.load(target), upto=stage).figure(stage)
+        )
     if figure is None:
         args.parser.error(f"stage {stage!r} declares no figure")
         return EXIT_USAGE
@@ -511,8 +507,8 @@ def _plot(args: argparse.Namespace) -> int:
 
 
 def _reproduce(args: argparse.Namespace) -> int:
+    from nanopnp.api.reproduce import reproduce
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.reproduce import reproduce
 
     finding = reproduce(
         args.directory,
@@ -1538,7 +1534,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # `-vv run -v` to one level.
     _configure_logging(args.verbose + getattr(args, "subcommand_verbose", 0), args.log_file)
     if args.command == "reproduce" and args.tolerance is None:
-        from nanopnp.pipeline.reproduce import DEFAULT_TOLERANCE
+        from nanopnp.api.reproduce import DEFAULT_TOLERANCE
 
         args.tolerance = DEFAULT_TOLERANCE
 
