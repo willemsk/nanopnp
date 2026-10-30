@@ -17,9 +17,7 @@ QUICKSTART = (
 
 
 @pytest.fixture
-def case(monkeypatch: pytest.MonkeyPatch) -> Case:
-    # Until a case's paths are read beside it (D12), its relative paths read from here.
-    monkeypatch.chdir(QUICKSTART.parent)
+def case() -> Case:
     return Case.load(QUICKSTART)
 
 

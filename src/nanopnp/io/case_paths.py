@@ -12,7 +12,9 @@ from typing import Any, Literal, TypeVar, get_args, get_origin
 from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic.fields import FieldInfo
 
+from nanopnp.core.paths import names_a_path
 from nanopnp.io.case import (
+    CORRECTION_PROPERTIES,
     PROFILE_FORMAT,
     CaseDocument,
     CaseValidationError,
@@ -495,6 +497,17 @@ def input_paths(document: CaseDocument) -> dict[str, str]:
         if isinstance(cursor, str):
             found[dotted] = cursor
     return found
+
+
+def correction_paths(document: CaseDocument) -> dict[str, str]:
+    """Return every correction file a case names by a path, by dotted case path, as written."""
+    electrolyte = document.electrolyte
+    named = {"electrolyte.parameters": electrolyte.parameters}
+    for name in CORRECTION_PROPERTIES:
+        named[f"electrolyte.corrections.{name}.model"] = getattr(
+            electrolyte.corrections, name
+        ).model
+    return {dotted: value for dotted, value in named.items() if names_a_path(value)}
 
 
 @cache

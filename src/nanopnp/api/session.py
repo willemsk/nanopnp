@@ -139,6 +139,7 @@ class Session:
             case,
             case_text=case._text if case._text is not None else case.dumps(),
             case_path=case._path,
+            base=case._base,
             store=self.store,
             upto=upto,
             only=only,

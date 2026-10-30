@@ -11,7 +11,7 @@ from typing import Annotated, Any, Literal, TypeAlias, get_args
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from nanopnp.core.paths import available_corrections
+from nanopnp.core.paths import available_corrections, names_a_path
 from nanopnp.io.artefact import CASE_SCHEMA
 
 SCHEMA: str = CASE_SCHEMA
@@ -501,6 +501,11 @@ class Numerics(_Strict):
     linear: Linear = Field(default_factory=Linear)
 
 
+def _installed(name: str, installed: Sequence[str]) -> bool:
+    # A name ending in .yaml is a path; resolution finds the file against the case's directory.
+    return names_a_path(name) or name in installed
+
+
 class CaseDocument(_Strict):
     """A validated case file (schema ``nanopnp/case/v0.5``)."""
 
@@ -523,12 +528,12 @@ class CaseDocument(_Strict):
         installed = available_corrections()
         for name in CORRECTION_PROPERTIES:
             choice: CorrectionChoice = getattr(self.electrolyte.corrections, name)
-            if choice.model != "none" and choice.model not in installed:
+            if choice.model != "none" and not _installed(choice.model, installed):
                 problems.append(
                     f"electrolyte.corrections.{name}.model {choice.model!r} is not installed; the "
                     f"correction files are {', '.join(installed) or 'none'}"
                 )
-        if self.electrolyte.parameters not in installed:
+        if not _installed(self.electrolyte.parameters, installed):
             problems.append(
                 f"electrolyte.parameters {self.electrolyte.parameters!r} is not installed; the "
                 f"correction files are {', '.join(installed) or 'none'}"

@@ -70,6 +70,7 @@ __all__ = [
     "offered",
     "open_run",
     "read_run",
+    "recorded_base",
     "run_case",
     "run_document",
     "selected_stages",
@@ -384,6 +385,13 @@ def read_run(directory: str | Path) -> RecordedRun:
     )
 
 
+def recorded_base(manifest: Manifest) -> Path | None:
+    """Return the directory of the case file a run read, or None for a case held in memory."""
+    files = manifest.inputs.get("files")
+    record = files.get("case") if isinstance(files, Mapping) else None
+    return Path(str(record["path"])).parent if isinstance(record, Mapping) else None
+
+
 def open_run(directory: str | Path, *, store: Store | None = None) -> RunResult:
     """Return a finished run with its artefacts from the store and its resolved case.
 
@@ -408,7 +416,7 @@ def open_run(directory: str | Path, *, store: Store | None = None) -> RunResult:
         artefacts=artefacts,
         stages=recorded.stages,
         store=holding,
-        resolved=resolve(recorded.document),
+        resolved=resolve(recorded.document, base=recorded_base(recorded.manifest)),
     )
 
 
@@ -611,7 +619,7 @@ def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pat
     """Return the run's input files by role, keeping only files that exist as paths."""
     files: dict[str, Path] = {}
     if case_path is not None:
-        files["case"] = case_path
+        files["case"] = case_path.resolve()
     for role, supplied in (
         ("mesh", resolved.mesh),
         ("profile", resolved.profile),
@@ -621,6 +629,8 @@ def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pat
     ):
         if supplied is not None and supplied.path is not None:
             files[role] = supplied.path
+    for key, path in resolved.correction_files.items():
+        files[key] = path
     if resolved.structure is not None:
         files["structure"] = resolved.structure.spec.source.path
         trajectory = resolved.structure.spec.ensemble.trajectory
@@ -834,6 +844,7 @@ def run_document(
     *,
     case_text: str,
     case_path: Path | None = None,
+    base: Path | None = None,
     store: Store | None = None,
     upto: str | None = None,
     only: bool = False,
@@ -855,6 +866,9 @@ def run_document(
         The case file verbatim, embedded in the manifest.
     case_path
         Where the case was read from; ``None`` for a case assembled in memory.
+    base
+        The directory a relative path of the case is read against; the working directory when
+        ``None``.
     upto
         Stop after this stage; ``None`` walks the whole pipeline.
     only
@@ -888,7 +902,7 @@ def run_document(
     target = store if store is not None else Store()
     walk = _Walk(
         document=document,
-        resolved=resolve(document),
+        resolved=resolve(document, base=base),
         store=target,
         arguments=dict(arguments or {}),
         workspace=Path(workspace) if workspace is not None else None,
@@ -918,7 +932,7 @@ def run_document(
 
 
 def stored_upstream(
-    document: CaseDocument, *, store: Store, feeding: str = "solve"
+    document: CaseDocument, *, store: Store, feeding: str = "solve", base: Path | None = None
 ) -> dict[str, Artefact]:
     """Return the artefacts a walk hands feeding, read from the store without running a stage.
 
@@ -926,9 +940,11 @@ def stored_upstream(
     ----------
     store
         Where the payload-writing stages' artefacts are looked up.
+    base
+        The directory a relative path of the case is read against.
     """
     artefacts: dict[str, Artefact] = {}
-    resolved = resolve(document)
+    resolved = resolve(document, base=base)
     for name in selected_stages(resolved, feeding)[:-1]:
         key = create(name).key(StageInputs(resolved=resolved, upstream=offered(name, artefacts)))
         if describe(name).key_is_artefact:

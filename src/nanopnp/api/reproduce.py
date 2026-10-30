@@ -207,6 +207,18 @@ def check_inputs(manifest: Mapping[str, Canonicalisable], *, where: Path) -> Non
             )
 
 
+def _recorded_directory(manifest: Mapping[str, Canonicalisable]) -> Path:
+    # A relative path of the case is read against the directory of the case file the run read, so
+    # the reproduction reads the files the run read (QR-08); a case held in memory read the
+    # working directory.
+    inputs = manifest.get("inputs")
+    files = inputs.get("files", {}) if isinstance(inputs, dict) else {}
+    record = files.get("case") if isinstance(files, dict) else None
+    if isinstance(record, dict):
+        return Path(str(record["path"])).parent
+    return Path.cwd()
+
+
 def check_mesh(manifest: Mapping[str, Canonicalisable], result: RunResult, *, where: Path) -> None:
     """Abort if the reproduced mesh is not the one the manifest recorded."""
     group = manifest.get("geometry_and_mesh")
@@ -327,7 +339,11 @@ def reproduce(
     with tempfile.TemporaryDirectory(prefix="nanopnp-reproduce-") as scratch:
         target = store if store is not None else Store(Path(scratch) / "store")
         session = Session(target, write=False, workspace=Path(scratch) / "work")
-        result = session.run(Case.load(case_path), progress=progress, cancel=cancel)
+        result = session.run(
+            Case.load(case_path, base=_recorded_directory(manifest)),
+            progress=progress,
+            cancel=cancel,
+        )
         solve = next((record for record in result.stages if record.name == "solve"), None)
         if solve is not None and solve.cached:
             raise ReproductionError(
