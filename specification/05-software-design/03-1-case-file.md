@@ -308,13 +308,18 @@ its value rather than narrowed in the schema.
 NOTE (`geometry.pore`, an idealised pore, IF-02, FR-09, FR-10; §8.2.22 X1): a case without
 `structure:`, `inputs.profile` or `inputs.mesh` MAY declare an idealised pore,
 `geometry.pore: {shape: cylinder, radius_nm}`, the membrane's thickness and the reservoir's radius
-read from `geometry.membrane` and `geometry.reservoir`. Stage 5 builds the region from it, with a
-pore wall named `wall` (PHY-02), and stage 6 meshes it under `numerics.mesh` and its gates, as it
+read from `geometry.membrane` and `geometry.reservoir`. Stage 5 builds the region from it: the lumen
+surface `r = R`, `|z| < h/2` with `h` the membrane's thickness, is named `wall`, PHY-02's distance source set and the surface PHY-09's
+`σ_s` is set on, and the membrane's cis and trans faces are excluded from it, as the bilayer's are in
+the reference model. Stage 6 meshes it under `numerics.mesh` and its gates, as it
 meshes a structure's region; stages 1 to 4 and the charge stages do not run unless `inputs.charge`
 supplies a field. `geometry.pore` beside `structure:`, `inputs.profile` or `inputs.mesh` SHALL be
 refused naming both, and `radius_nm` not below `geometry.reservoir.radius_nm` SHALL be refused
-naming both values. `boundary_conditions.wall_charge_C_m2` (PHY-09) is read only beside
-`geometry.pore`, and is refused elsewhere naming the key.
+naming both values. The solid around the lumen is the `membrane` domain, so a case declaring
+`geometry.pore` SHALL set `physics.solid_permittivities.membrane` and is refused naming the key
+otherwise, rather than taking ion-free water as an unlisted solid does; `geometry.membrane.thickness_nm`
+defaults to the bilayer's 2.8 nm, so a solid-state pore sets it. `boundary_conditions.wall_charge_C_m2`
+(PHY-09) is read only beside `geometry.pore`, and is refused elsewhere naming the key.
 
 `kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the `sharpness`. R_i is the
 atom's CHARMM van der Waals radius (Rmin/2) by residue and atom name, from the radius set of
