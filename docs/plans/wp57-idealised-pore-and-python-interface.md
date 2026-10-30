@@ -457,10 +457,10 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   (D4); done when `uv run pytest --nightly tests/tier2/test_examples_0[1-4]*.py` passes with VER-62
   unchanged, or X4's gate is met and reported. **Executor:** main
 > **Outcome — item 16.** Examples 01 to 04 and their tests pass (27 in 107 s) with VER-62's mesh `546c34f4…` unchanged, so X4's gate is not met and nothing is re-pinned. The tour's case is `geometry.pore` with `maxh_nm: 4`; `finer` moves `mesh` and not `materials`, and `supplied` and `renamed` agree on `mesh` and `materials`; their `case` keys differ, because the case hash keeps the path as written.
-- [ ] 17. Sessions 01 to 03 and 05 (READMEs, cases), `docs/guide/meshes.md`, `docs/guide/running.md`
+- [x] 3f7940c 17. Sessions 01 to 03 and 05 (READMEs, cases), `docs/guide/meshes.md`, `docs/guide/running.md`
   (D4); done when `uv run pytest tests/tier2/test_user_testing_sessions.py` passes for them.
   **Executor:** `general-purpose` on Sonnet
-- [ ] 18. Compaction checkpoint. **Executor:** main
+- [x] 18. Compaction checkpoint. **Executor:** main
 - [ ] 19. `post/forces.py`, `tests/tier1/test_forces.py`: REV-120 (D13); done when the REV-120 row
   passes. **Executor:** main
 - [ ] 20. `validation/runs.py`, `cli/__init__.py`, `io/manifest.py`: REV-157's reader, single read and
