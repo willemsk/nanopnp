@@ -26,7 +26,7 @@ from nanopnp.density.union import (
 )
 from nanopnp.io.artefact import DensityArtefact
 from nanopnp.io.case import (
-    DensitySpec,
+    Density,
     UnsupportedCaseSection,
 )
 from nanopnp.io.workspace import scratch_directory
@@ -39,7 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 
-def _density(inputs: StageInputs) -> DensitySpec:
+def _density(inputs: StageInputs) -> Density:
     resolved = inputs.resolved
     if resolved.density is None:
         raise UnsupportedCaseSection(
@@ -49,7 +49,7 @@ def _density(inputs: StageInputs) -> DensitySpec:
     return resolved.density
 
 
-def density_parameters(spec: DensitySpec) -> dict[str, Canonicalisable]:
+def density_parameters(spec: Density) -> dict[str, Canonicalisable]:
     """Return the stage-2 key's parameters."""
     name = KERNEL_RADII[spec.kernel]
     return {

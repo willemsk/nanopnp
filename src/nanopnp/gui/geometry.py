@@ -28,7 +28,7 @@ from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region
 from nanopnp.io.case import (
     CaseDocument,
-    MembraneSpec,
+    Membrane,
     dump_case,
 )
 from nanopnp.io.case_paths import (
@@ -199,7 +199,7 @@ def load_structure(editor: CaseEditor, path: str | Path) -> Path:
 
 def membrane_slab(document: CaseDocument) -> tuple[float, float]:
     """Return the bilayer's z extent in the stage-1 frame: ``centre ± thickness/2``."""
-    membrane = document.geometry.membrane if document.geometry is not None else MembraneSpec()
+    membrane = document.geometry.membrane if document.geometry is not None else Membrane()
     half = 0.5 * membrane.thickness_nm
     return membrane.centre_z_nm - half, membrane.centre_z_nm + half
 

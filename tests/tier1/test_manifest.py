@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Literal, get_args, get_origin
 
 import pytest
+from pydantic import BaseModel
 
 from nanopnp.charge.dielectric import SolidFractionField
 from nanopnp.charge.fields import (
@@ -124,14 +125,29 @@ def test_ver24_the_two_classifications_are_disjoint() -> None:
     assert not set(SWITCH_PATHS) & set(CONFIGURATION_PATHS)
 
 
+def _assigned(document: CaseDocument, assignments: dict[str, object]) -> CaseDocument:
+    # Unvalidated, so that a value the schema refuses can reach resolve().
+    def set_in(block: BaseModel, parts: list[str], value: object) -> BaseModel:
+        head, *rest = parts
+        inner = value if not rest else set_in(getattr(block, head), rest, value)
+        return block.model_copy(update={head: inner})
+
+    result: BaseModel = document
+    for path, value in assignments.items():
+        result = set_in(result, path.split("."), value)
+    assert isinstance(result, CaseDocument)
+    return result
+
+
 # PHY-22, PHY-23
 def test_ver24_the_validated_default_case_deviates_from_nothing() -> None:
     assert deviations(VALIDATED_DEFAULT_CASE) == ()
 
 
 def test_ver24_a_disabled_correction_is_recorded_as_a_deviation() -> None:
-    document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
-    document.electrolyte.corrections.viscosity.model = "none"
+    document = _assigned(
+        VALIDATED_DEFAULT_CASE, {"electrolyte.corrections.viscosity.model": "none"}
+    )
     found = {deviation.path: deviation for deviation in deviations(document)}
     assert "electrolyte.corrections.viscosity.model" in found
     recorded = found["electrolyte.corrections.viscosity.model"]
@@ -141,8 +157,7 @@ def test_ver24_a_disabled_correction_is_recorded_as_a_deviation() -> None:
 
 # FR-25, PHY-02
 def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
-    document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
-    document.numerics.wall_distance.max_distance_nm = 0.3
+    document = _assigned(VALIDATED_DEFAULT_CASE, {"numerics.wall_distance.max_distance_nm": 0.3})
     found = {deviation.path: deviation for deviation in deviations(document)}
     recorded = found["numerics.wall_distance.max_distance_nm"]
     assert recorded.value == 0.3
@@ -150,15 +165,19 @@ def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
 
 
 def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
-    document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
     # The validated default carries a charge: block so that every switch path reads off it;
     # resolve() refuses it in this release, and its absence reads as the same defaults.
-    document.charge = None
-    document.physics.inertia = False
-    document.physics.dielectric_gradient_forces = True
-    document.electrolyte.corrections.steric.model = "none"
-    # The NUM-18 ladder drops this deviation (pipeline/checks.py), so one rung is built directly.
-    document.numerics.continuation = "none"
+    # The NUM-18 ladder drops the continuation deviation (pipeline/checks.py), so one rung is
+    # built directly.
+    document = _assigned(
+        VALIDATED_DEFAULT_CASE.model_copy(update={"charge": None}),
+        {
+            "physics.inertia": False,
+            "physics.dielectric_gradient_forces": True,
+            "electrolyte.corrections.steric.model": "none",
+            "numerics.continuation": "none",
+        },
+    )
 
     resolved = resolve(document)
     model = CoupledModel(
@@ -406,9 +425,13 @@ def test_ver24_the_manifest_round_trips_with_the_case_beside_it(tmp_path: Path) 
 
 
 def test_qr08_a_manifest_read_back_keeps_its_hash(tmp_path: Path) -> None:
-    document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
-    document.electrolyte.corrections.viscosity.model = "none"
-    document.numerics.wall_distance.max_distance_nm = 0.3
+    document = _assigned(
+        VALIDATED_DEFAULT_CASE,
+        {
+            "electrolyte.corrections.viscosity.model": "none",
+            "numerics.wall_distance.max_distance_nm": 0.3,
+        },
+    )
     fields = ResolvedFields(
         charge=None, conservation=None, eps_r=_solid_fraction_field(), material_means=()
     )
@@ -459,12 +482,7 @@ def test_ver24_the_environment_group_names_versions_without_importing_ngsolve() 
 def test_ver24_resolve_refuses_an_operating_point_no_solve_could_use(
     path: str, value: float
 ) -> None:
-    document = loads_case(MINIMAL)
-    section, *middle, leaf = path.split(".")
-    target = getattr(document, section)
-    for part in middle:
-        target = getattr(target, part)
-    setattr(target, leaf, value)
+    document = _assigned(loads_case(MINIMAL), {path: value})
     with pytest.raises(CaseValidationError, match=re.escape(path)):
         resolve(document)
 

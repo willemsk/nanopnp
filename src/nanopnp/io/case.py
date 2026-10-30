@@ -60,7 +60,7 @@ class UnsupportedCaseSection(NotImplementedError):  # noqa: N818 - a release gap
 
 
 class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class SuppliedArtefact(_Strict):
@@ -176,7 +176,7 @@ class Ensemble(_Strict):
     frames: Frames = Field(default_factory=Frames)
 
 
-class SymmetrySpec(_Strict):
+class Symmetry(_Strict):
     """The expected point group and how the axis is found."""
 
     point_group: str = Field(description="C<n> with n >= 1, e.g. C12 for ClyA (FR-03)")
@@ -196,10 +196,10 @@ class Structure(_Strict):
 
     source: StructureSource
     ensemble: Ensemble = Field(default_factory=Ensemble)
-    symmetry: SymmetrySpec
+    symmetry: Symmetry
 
 
-class DensitySpec(_Strict):
+class Density(_Strict):
     """Stage 2: Gaussian smearing to a grid."""
 
     grid_spacing_nm: float = 0.05
@@ -207,7 +207,7 @@ class DensitySpec(_Strict):
     sharpness: float = 0.93
 
 
-class ContourSpec(_Strict):
+class Contour(_Strict):
     """Stage 4: contour extraction and conditioning."""
 
     isolevel: float = Field(
@@ -236,20 +236,20 @@ class ContourSpec(_Strict):
     )
 
 
-class MembraneSpec(_Strict):
+class Membrane(_Strict):
     """The bilayer, defined analytically; ``centre_z_nm`` is in the structure's frame."""
 
     thickness_nm: float = 2.8
     centre_z_nm: float = 0.0
 
 
-class ReservoirSpec(_Strict):
+class Reservoir(_Strict):
     """The reservoir half-disc."""
 
     radius_nm: float = 250.0
 
 
-class AnalyteSpec(_Strict):
+class Analyte(_Strict):
     """An axisymmetric analyte body in the pore."""
 
     shape: Literal["sphere", "prolate_spheroid", "oblate_spheroid"]
@@ -262,14 +262,14 @@ class AnalyteSpec(_Strict):
 class Geometry(_Strict):
     """Stages 2-5: density, contour, membrane, reservoir and analyte."""
 
-    density: DensitySpec = Field(default_factory=DensitySpec)
-    contour: ContourSpec = Field(default_factory=ContourSpec)
-    membrane: MembraneSpec = Field(default_factory=MembraneSpec)
-    reservoir: ReservoirSpec = Field(default_factory=ReservoirSpec)
-    analyte: AnalyteSpec | None = None
+    density: Density = Field(default_factory=Density)
+    contour: Contour = Field(default_factory=Contour)
+    membrane: Membrane = Field(default_factory=Membrane)
+    reservoir: Reservoir = Field(default_factory=Reservoir)
+    analyte: Analyte | None = None
 
 
-class SmearingSpec(_Strict):
+class Smearing(_Strict):
     """Stage 7: the kernel width and export lattice."""
 
     sharpness: float = 0.5
@@ -306,7 +306,7 @@ class Charge(_Strict):
             "standard state"
         ),
     )
-    smearing: SmearingSpec = Field(default_factory=SmearingSpec)
+    smearing: Smearing = Field(default_factory=Smearing)
     exclusion_offset_nm: float = Field(
         default=0.0,
         ge=0.0,
@@ -331,14 +331,14 @@ class Charge(_Strict):
     )
 
 
-class SpeciesSpec(_Strict):
+class Species(_Strict):
     """One solved ionic species, by the name the parameter file gives it."""
 
     name: str
     z: int
 
 
-class CorrectionChoiceSpec(_Strict):
+class CorrectionChoice(_Strict):
     """One property's correction: a registered model and its concentration and wall parts."""
 
     model: str = "none"
@@ -346,7 +346,7 @@ class CorrectionChoiceSpec(_Strict):
     wall: bool = True
 
 
-class StericSpec(_Strict):
+class Steric(_Strict):
     """The size-modified flux and the diameters it is built on."""
 
     model: Literal["none", "borukhov"] = "none"
@@ -354,29 +354,29 @@ class StericSpec(_Strict):
     a_water_nm: float | None = None
 
 
-class CorrectionsSpec(_Strict):
+class Corrections(_Strict):
     """The nine independently switchable corrections."""
 
-    diffusivity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
-    mobility: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
-    viscosity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
-    permittivity: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
-    density: CorrectionChoiceSpec = Field(default_factory=CorrectionChoiceSpec)
-    steric: StericSpec = Field(default_factory=StericSpec)
+    diffusivity: CorrectionChoice = Field(default_factory=CorrectionChoice)
+    mobility: CorrectionChoice = Field(default_factory=CorrectionChoice)
+    viscosity: CorrectionChoice = Field(default_factory=CorrectionChoice)
+    permittivity: CorrectionChoice = Field(default_factory=CorrectionChoice)
+    density: CorrectionChoice = Field(default_factory=CorrectionChoice)
+    steric: Steric = Field(default_factory=Steric)
 
 
-class ElectrolyteSpec(_Strict):
+class Electrolyte(_Strict):
     """Stage 8: the electrolyte, its reference parameter file and its corrections."""
 
-    species: list[SpeciesSpec]
+    species: list[Species]
     concentration_M: float
     temperature_K: float = 298.15
     parameters: str = "willems2020_nacl"
     driver: Literal["average", "ionic_strength"] = "average"
-    corrections: CorrectionsSpec = Field(default_factory=CorrectionsSpec)
+    corrections: Corrections = Field(default_factory=Corrections)
 
 
-class WallSpec(_Strict):
+class Wall(_Strict):
     """The conditions applied on the pore and membrane walls."""
 
     ion_flux: Literal["no_flux", "prescribed"] = "no_flux"
@@ -388,10 +388,10 @@ class BoundaryConditions(_Strict):
 
     bias_V: float
     ground: Literal["cis", "trans"] = "cis"
-    walls: WallSpec = Field(default_factory=WallSpec)
+    walls: Wall = Field(default_factory=Wall)
 
 
-class PhysicsSpec(_Strict):
+class Physics(_Strict):
     """The named physics model and its switches."""
 
     model: str = "epnp-ns"
@@ -404,7 +404,7 @@ class PhysicsSpec(_Strict):
     )
 
 
-class ElementsSpec(_Strict):
+class Elements(_Strict):
     """Element orders per field; an equal-order pair needs a stabilising flow mode."""
 
     phi: str = "P2"
@@ -413,7 +413,7 @@ class ElementsSpec(_Strict):
     p: str = "P1"
 
 
-class MeshSpec(_Strict):
+class Mesh(_Strict):
     """Stage 6: the mesher and its size field."""
 
     backend: str = Field(
@@ -434,7 +434,7 @@ class MeshSpec(_Strict):
     boundary_layer: bool = False
 
 
-class NonlinearSpec(_Strict):
+class Nonlinear(_Strict):
     """The damped-Newton policy; the defaults are the reference settings."""
 
     strategy: Literal["newton", "hybrid"] = "newton"
@@ -443,7 +443,7 @@ class NonlinearSpec(_Strict):
     rtol: float = Field(default=1.0e-6, gt=0.0, lt=1.0, allow_inf_nan=False)
 
 
-class LinearSpec(_Strict):
+class Linear(_Strict):
     """The direct linear solver."""
 
     solver: str = Field(
@@ -452,19 +452,19 @@ class LinearSpec(_Strict):
     )
 
 
-class WallDistanceSpec(_Strict):
+class WallDistance(_Strict):
     """The wall-distance field: its source boundaries, as a regular expression, and its cap."""
 
     sources: str = "wall"
     max_distance_nm: float = 3.0
 
 
-class NumericsSpec(_Strict):
+class Numerics(_Strict):
     """Discretisation, meshing, continuation, stabilisation and the solvers."""
 
-    elements: ElementsSpec = Field(default_factory=ElementsSpec)
-    mesh: MeshSpec = Field(default_factory=MeshSpec)
-    nonlinear: NonlinearSpec = Field(default_factory=NonlinearSpec)
+    elements: Elements = Field(default_factory=Elements)
+    mesh: Mesh = Field(default_factory=Mesh)
+    nonlinear: Nonlinear = Field(default_factory=Nonlinear)
     continuation: Literal["default_ladder", "none"] = "default_ladder"
     stabilisation: str = Field(
         default="none",
@@ -472,8 +472,8 @@ class NumericsSpec(_Strict):
             "Residual stabilisation mode, checked against the stabilisation registry (section 5.5)."
         ),
     )
-    wall_distance: WallDistanceSpec = Field(default_factory=WallDistanceSpec)
-    linear: LinearSpec = Field(default_factory=LinearSpec)
+    wall_distance: WallDistance = Field(default_factory=WallDistance)
+    linear: Linear = Field(default_factory=Linear)
 
 
 class CaseDocument(_Strict):
@@ -485,19 +485,19 @@ class CaseDocument(_Strict):
     structure: Structure | None = None
     geometry: Geometry | None = None
     charge: Charge | None = None
-    electrolyte: ElectrolyteSpec
+    electrolyte: Electrolyte
     boundary_conditions: BoundaryConditions
-    physics: PhysicsSpec = Field(default_factory=PhysicsSpec)
-    numerics: NumericsSpec = Field(default_factory=NumericsSpec)
+    physics: Physics = Field(default_factory=Physics)
+    numerics: Numerics = Field(default_factory=Numerics)
     outputs: list[str] = Field(default_factory=lambda: ["current"])
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+    model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True, title="Case")
 
     @model_validator(mode="after")
     def _check_installed(self) -> CaseDocument:
         problems: list[str] = []
         installed = available_corrections()
         for name in CORRECTION_PROPERTIES:
-            choice: CorrectionChoiceSpec = getattr(self.electrolyte.corrections, name)
+            choice: CorrectionChoice = getattr(self.electrolyte.corrections, name)
             if choice.model != "none" and choice.model not in installed:
                 problems.append(
                     f"electrolyte.corrections.{name}.model {choice.model!r} is not installed; the "
@@ -531,8 +531,8 @@ class CaseDocument(_Strict):
                     "to a run that never read it; supply one of them"
                 )
         if self.inputs.mesh is not None:
-            defaults = MeshSpec()
-            for key in MeshSpec.model_fields:
+            defaults = Mesh()
+            for key in Mesh.model_fields:
                 value = getattr(self.numerics.mesh, key)
                 if value == getattr(defaults, key):
                     continue

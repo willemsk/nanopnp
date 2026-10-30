@@ -27,13 +27,13 @@ def test_ver76_schema_leaves_equal_case_fields() -> None:
 
 def test_ver76_an_extra_schema_leaf_fails() -> None:
     schema = copy.deepcopy(case_json_schema())
-    schema["$defs"]["ElectrolyteSpec"]["properties"]["added"] = {"type": "number"}
+    schema["$defs"]["Electrolyte"]["properties"]["added"] = {"type": "number"}
     assert set(schema_leaves(schema)) - _field_paths() == {"electrolyte.added"}
 
 
 def test_ver76_a_missing_schema_leaf_fails() -> None:
     schema = copy.deepcopy(case_json_schema())
-    del schema["$defs"]["ElectrolyteSpec"]["properties"]["temperature_K"]
+    del schema["$defs"]["Electrolyte"]["properties"]["temperature_K"]
     assert _field_paths() - set(schema_leaves(schema)) == {"electrolyte.temperature_K"}
 
 

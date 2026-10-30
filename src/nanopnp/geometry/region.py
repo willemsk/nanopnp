@@ -34,8 +34,8 @@ from nanopnp.geometry.profile import (
 from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.io.artefact import REGION_SCHEMA, RegionArtefact
 from nanopnp.io.case import (
-    MembraneSpec,
-    ReservoirSpec,
+    Membrane,
+    Reservoir,
     UnsupportedCaseSection,
 )
 from nanopnp.io.workspace import scratch_directory
@@ -937,8 +937,8 @@ def check_junction(record: RegionRecord, shape: Shape) -> None:
 
 def derive_region(
     profile: PoreProfile,
-    membrane: MembraneSpec,
-    reservoir: ReservoirSpec,
+    membrane: Membrane,
+    reservoir: Reservoir,
     *,
     exclusion_offset_nm: float = 0.0,
     h_c_nm: float | None = None,
@@ -1004,8 +1004,8 @@ def _profile_input(inputs: StageInputs, resolved: ResolvedCase) -> tuple[str, Pa
 
 
 def region_parameters(
-    membrane: MembraneSpec,
-    reservoir: ReservoirSpec,
+    membrane: Membrane,
+    reservoir: Reservoir,
     *,
     exclusion_offset_nm: float = 0.0,
     h_c_nm: float | None = None,

@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from nanopnp.io.case import (
     CaseDocument,
-    ContourSpec,
-    DensitySpec,
-    MembraneSpec,
-    ReservoirSpec,
-    SmearingSpec,
+    Contour,
+    Density,
+    Membrane,
+    Reservoir,
+    Smearing,
     Structure,
     SuppliedArtefact,
 )
@@ -72,14 +72,14 @@ class ResolvedCase:
     declaration: ModelDeclaration
     essential_boundaries: Mapping[str, str]
     structure: ResolvedStructure | None = None
-    density: DensitySpec | None = None
-    contour: ContourSpec | None = None
+    density: Density | None = None
+    contour: Contour | None = None
     profile: SuppliedArtefact | None = None
-    membrane: MembraneSpec | None = None
-    reservoir: ReservoirSpec | None = None
+    membrane: Membrane | None = None
+    reservoir: Reservoir | None = None
     pqr: SuppliedArtefact | None = None
     protonation: ResolvedProtonation = dataclass_field(default_factory=ResolvedProtonation)
-    smearing: SmearingSpec = dataclass_field(default_factory=SmearingSpec)
+    smearing: Smearing = dataclass_field(default_factory=Smearing)
     exclusion_offset_nm: float = 0.0
     dielectric_transition_nm: float = 0.0
 
@@ -176,6 +176,6 @@ def contour_spacing_nm(document: CaseDocument) -> float:
     density = (
         document.geometry.density
         if document.geometry is not None and document.structure is not None
-        else DensitySpec()
+        else Density()
     )
     return density.grid_spacing_nm
