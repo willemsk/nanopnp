@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 from test_mms import BOUNDARIES, LENGTH_NM, MESH_SIZES_NM, RADIUS_NM, _model
 
+from nanopnp import Case, Session
 from nanopnp.cli import main
 from nanopnp.core.constants import AVOGADRO
 from nanopnp.geometry.contour import innermost_crossings
@@ -30,7 +31,6 @@ from nanopnp.io.vocabulary import (
 from nanopnp.mesh.primitives import CylinderGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics.models import ModelSolution
-from nanopnp.pipeline.run import run_case
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
 from nanopnp.solve import state as solve_state
 from nanopnp.validation.examples import copy_example
@@ -197,7 +197,7 @@ def _solve_example_05(root: Path, mesh: Path) -> tuple[dict[str, float], dict[st
     shutil.copyfile(mesh, example / mesh.name)
     store = Store(example / "store")
     with contextlib.chdir(example):
-        result = run_case(Path(CASE_NAME), store=store)
+        result = Session(store).run(Case.load(Path(CASE_NAME)))
         return _numbers(result.quantities), _in_pore(result.directory, store), example
 
 

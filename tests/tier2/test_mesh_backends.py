@@ -9,16 +9,14 @@ from types import ModuleType
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import read
 from nanopnp.mesh.quality import QUALITY_FLOOR
-from nanopnp.pipeline.run import (
-    RunResult,
-    run_case,
-)
+from nanopnp.pipeline.run import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +96,7 @@ def _mesh(
         ),
         encoding="utf-8",
     )
-    return run_case(case, store=store, upto="mesh", write=False)
+    return Session(store, write=False).run(Case.load(case), upto="mesh")
 
 
 def _seconds(result: RunResult, stage: str) -> float:
@@ -217,7 +215,9 @@ def test_ver54_the_frozen_case_conducts_alike_on_both_backends_meshes(
             ),
             encoding="utf-8",
         )
-        result = run_case(case, store=store, workspace=root / f"frozen-{backend}", write=False)
+        result = Session(store, workspace=root / f"frozen-{backend}", write=False).run(
+            Case.load(case)
+        )
         conductance[backend] = float(result.quantities["conductance_S"])  # type: ignore[arg-type]
         elements[backend] = result.artefacts["mesh"].summary["elements"]
         seconds[backend] = _seconds(result, "solve")

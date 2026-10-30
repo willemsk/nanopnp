@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import Expression, Mesh, Numeric, Option
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
@@ -330,7 +331,6 @@ def test_if07_the_report_exports_the_fixed_charge_it_read_for_the_restore(
     from nanopnp.charge.stage import read_fields
     from nanopnp.cli import main
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     example = Path(__file__).resolve().parents[2] / "examples" / "02-charged-pore"
     field = Path(shutil.copy(example / "ring.field.yaml", tmp_path))
@@ -361,7 +361,7 @@ def test_if07_the_report_exports_the_fixed_charge_it_read_for_the_restore(
     monkeypatch.setattr(post_stage, "read_fields", counting("post"))
     monkeypatch.setattr(solve_state, "read_fields", counting("restore"))
 
-    result = run_case(case, store=Store(tmp_path / "store"))
+    result = Session(Store(tmp_path / "store")).run(Case.load(case))
     assert reads == {"post": 1, "restore": 1}
     omega = next(path for path in result.files if path.name == f"{OMEGA_STEM}.xdmf")
     assert "rho_fixed_C_m3" in omega.read_text(encoding="utf-8")

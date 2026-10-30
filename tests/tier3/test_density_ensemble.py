@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,9 @@ def _session_peak_rss_GB() -> float | None:
 def test_ver50_clya_as_ensemble(
     tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
 ) -> None:
-    result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="symmetry", write=False)
+    result = Session(ensemble_store, write=False).run(
+        Case.load(ensemble_case(tmp_path)), upto="symmetry"
+    )
     structure = result.artefacts["structure"].summary
     density = result.artefacts["density"].summary
     reduction = result.artefacts["symmetry"].summary
@@ -71,7 +73,9 @@ def test_ver50_clya_as_ensemble(
 def test_ver51_clya_as_contour(
     tmp_path: Path, ensemble_store: Store, ensemble_case: Callable[..., Path]
 ) -> None:
-    result = run_case(ensemble_case(tmp_path), store=ensemble_store, upto="contour", write=False)
+    result = Session(ensemble_store, write=False).run(
+        Case.load(ensemble_case(tmp_path)), upto="contour"
+    )
     seconds = {record.name: round(record.seconds, 1) for record in result.stages}
     cached = [record.name for record in result.stages if record.cached]
     summary = result.artefacts["contour"].summary

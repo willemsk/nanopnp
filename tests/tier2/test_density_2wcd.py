@@ -13,10 +13,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.symmetry.annular import annular_weights
@@ -53,11 +53,8 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
 def test_ver49_ver50_2wcd_to_stage_three(
     prepared_2wcd: Prepared2WCD, seeded_2wcd: Callable[[Path], Path], tmp_path: Path
 ) -> None:
-    result = run_case(
-        _case(tmp_path, prepared_2wcd.path),
-        store=Store(seeded_2wcd(tmp_path / "store")),
-        upto="symmetry",
-        write=False,
+    result = Session(Store(seeded_2wcd(tmp_path / "store")), write=False).run(
+        Case.load(_case(tmp_path, prepared_2wcd.path)), upto="symmetry"
     )
     seconds = {record.name: record.seconds for record in result.stages}
     logger.info("2WCD stage times: %s s", {name: round(s, 2) for name, s in seconds.items()})
@@ -108,9 +105,9 @@ def test_ver49_ver50_2wcd_to_stage_three(
 
 _BUDGET_SCRIPT = """
 import json, resource, sys
-from nanopnp.pipeline.run import run_case
+from nanopnp import Case, Session
 from nanopnp.io.store import Store
-result = run_case(sys.argv[1], store=Store(sys.argv[2]), upto="symmetry", write=False)
+result = Session(Store(sys.argv[2]), write=False).run(Case.load(sys.argv[1]), upto="symmetry")
 print(json.dumps({
     "seconds": {record.name: record.seconds for record in result.stages},
     "peak_rss_GB": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6,

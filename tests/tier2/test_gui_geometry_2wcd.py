@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import read_region
 from nanopnp.gui.assess import AssessRequest, assess
@@ -17,7 +18,6 @@ from nanopnp.gui.geometry import ProfileEditor
 from nanopnp.gui.solver import Cancelled, Failed, Finished, Produced, RunRequest, SolverProcess
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case
-from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.validation.geometry import register_by_centroid
@@ -58,7 +58,7 @@ def registered(
     root = tmp_path_factory.mktemp("2wcd-geometry")
     probe = root / "probe.case.yaml"
     probe.write_text(CASE.format(pdb=prepared_2wcd.path, geometry=""), encoding="utf-8")
-    result = run_case(probe, store=Store(root / "scratch"), upto="structure", write=False)
+    result = Session(Store(root / "scratch"), write=False).run(Case.load(probe), upto="structure")
     ensemble = AlignedEnsemble.read(result.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
     centre = register_by_centroid(
         ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
@@ -105,7 +105,7 @@ def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
         assert store.get(event.schema, event.hash) is not None, event.name
         assert not event.cached, event.name
 
-    result = run_case(case, store=store, upto="mesh", write=False)
+    result = Session(store, write=False).run(Case.load(case), upto="mesh")
     assert all(record.cached for record in result.stages)
     assert [result.artefacts[name].hash for name in GEOMETRY_STAGES[1:]] == [
         event.hash for event in produced[1:]
@@ -125,7 +125,7 @@ def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
     editor = ProfileEditor.from_profile(profile)
     started = time.perf_counter()
     _, null_case = editor.save_case(original, case)
-    null = run_case(null_case, store=store, upto="mesh")
+    null = Session(store).run(Case.load(null_case), upto="mesh")
     null_s = time.perf_counter() - started
     region = read_region(result.artefacts["region"].payload["region"])
     null_region = read_region(null.artefacts["region"].payload["region"])
@@ -145,7 +145,7 @@ def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
     editor.move(index, r + 0.1, z)
     started = time.perf_counter()
     _, moved_case = editor.save_case(original, case)
-    moved = run_case(moved_case, store=store, upto="mesh")
+    moved = Session(store).run(Case.load(moved_case), upto="mesh")
     moved_s = time.perf_counter() - started
     assert moved.artefacts["region"].hash != null.artefacts["region"].hash
     assert (

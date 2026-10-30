@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.charge.dielectric import SolidFractionField
 from nanopnp.charge.fields import FieldDocument, FormSpec, create_form
 from nanopnp.charge.stage import (
@@ -31,7 +32,6 @@ from nanopnp.pipeline.run import (
     RUN_SCHEMA,
     WORKSPACE_DIRNAME,
     MissingUpstreamError,
-    run_case,
 )
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -189,11 +189,9 @@ def test_ver32_a_truncated_run_writes_its_directory_and_reports_monotone_progres
 ) -> None:
     seen: list[tuple[float, str]] = []
     store = Store(tmp_path / "store")
-    result = run_case(
-        cylindrical_pore_case,
-        store=store,
+    result = Session(store, workspace=tmp_path / "work").run(
+        Case.load(cylindrical_pore_case),
         upto="mesh",
-        workspace=tmp_path / "work",
         progress=lambda fraction, message: seen.append((fraction, message)),
     )
 
@@ -223,13 +221,13 @@ def test_qr08_a_truncated_walk_does_not_overwrite_the_record_of_the_full_run(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     store = Store(tmp_path / "store")
-    full = run_case(cylindrical_pore_case, store=store, workspace=tmp_path / "work")
+    full = Session(store, workspace=tmp_path / "work").run(Case.load(cylindrical_pore_case))
     assert full.quantities, "a full run records its quantities"
     recorded = (full.directory / RUN_RECORD_FILENAME).read_bytes()
     manifest = (full.directory / MANIFEST_FILENAME).read_bytes()
 
-    truncated = run_case(
-        cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work"
+    truncated = Session(store, workspace=tmp_path / "work").run(
+        Case.load(cylindrical_pore_case), upto="mesh"
     )
     assert truncated.directory != full.directory
     assert (full.directory / RUN_RECORD_FILENAME).read_bytes() == recorded
@@ -258,11 +256,8 @@ def test_qr08_a_complete_walk_is_complete_when_its_case_drops_the_last_registere
         ),
         "nanopnp.external:ExternalStage",
     )
-    result = run_case(
-        cylindrical_pore_case,
-        store=Store(tmp_path / "store"),
-        workspace=tmp_path / "work",
-        write=False,
+    result = Session(Store(tmp_path / "store"), workspace=tmp_path / "work", write=False).run(
+        Case.load(cylindrical_pore_case)
     )
     assert result.stages[-1].name == "report"
     assert not result.directory.name.startswith("run-probe-upto-"), result.directory.name
@@ -277,7 +272,7 @@ def test_qr08_the_run_directory_case_hashes_to_the_recorded_case_input(
     text = cylindrical_pore_case.read_text(encoding="utf-8").replace("\n", linesep)
     source.write_bytes(text.encode("utf-8"))
 
-    result = run_case(source, store=Store(tmp_path / "store"), upto="mesh")
+    result = Session(Store(tmp_path / "store")).run(Case.load(source), upto="mesh")
 
     recorded = result.manifest.document()["inputs"]["files"]["case"]["sha256"]  # type: ignore[index]
     assert file_hash(result.directory / CASE_FILENAME) == recorded == file_hash(source)
@@ -303,7 +298,7 @@ def test_ver32_a_run_writes_its_scratch_inside_the_store_it_was_given(
     monkeypatch.setattr(run_module, "_scratch", watched)
 
     store = Store(tmp_path / "store")
-    result = run_case(cylindrical_pore_case, store=store, upto="mesh")
+    result = Session(store).run(Case.load(cylindrical_pore_case), upto="mesh")
 
     assert list(elsewhere.iterdir()) == [], "a run leaked files outside the store it was given"
     assert len(made) == 1, made
@@ -319,12 +314,14 @@ def test_ver32_a_run_removes_its_scratch_once_the_store_holds_the_payloads(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     store = Store(tmp_path / "store")
-    result = run_case(cylindrical_pore_case, store=store, upto="mesh")
+    result = Session(store).run(Case.load(cylindrical_pore_case), upto="mesh")
     assert list((store.root / WORKSPACE_DIRNAME).glob("run-*")) == []
     assert Path(str(result.artefacts["mesh"].payload["mesh"])).is_file()
 
     named = tmp_path / "work"
-    run_case(cylindrical_pore_case, store=Store(tmp_path / "other"), upto="mesh", workspace=named)
+    Session(Store(tmp_path / "other"), workspace=named).run(
+        Case.load(cylindrical_pore_case), upto="mesh"
+    )
     assert (named / "mesh" / "mesh.msh").is_file()
 
 
@@ -332,8 +329,12 @@ def test_ver32_a_second_run_through_the_same_store_is_served_from_it(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     store = Store(tmp_path / "store")
-    first = run_case(cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work")
-    second = run_case(cylindrical_pore_case, store=store, upto="mesh", workspace=tmp_path / "work")
+    first = Session(store, workspace=tmp_path / "work").run(
+        Case.load(cylindrical_pore_case), upto="mesh"
+    )
+    second = Session(store, workspace=tmp_path / "work").run(
+        Case.load(cylindrical_pore_case), upto="mesh"
+    )
 
     assert all(record.cached for record in second.stages)
     assert [record.hash for record in second.stages] == [record.hash for record in first.stages]
@@ -344,12 +345,8 @@ def test_ver32_only_refuses_an_upstream_the_store_does_not_hold(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     with pytest.raises(MissingUpstreamError) as raised:
-        run_case(
-            cylindrical_pore_case,
-            store=Store(tmp_path / "store"),
-            upto="solve",
-            only=True,
-            workspace=tmp_path / "work",
+        Session(Store(tmp_path / "store"), workspace=tmp_path / "work").run(
+            Case.load(cylindrical_pore_case), upto="solve", only=True
         )
     message = str(raised.value)
     assert "'mesh'" in message
@@ -361,9 +358,13 @@ def test_ver32_upto_names_a_stage_this_case_does_not_walk(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     with pytest.raises(KeyError, match="nothing for it to read"):
-        run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), upto="charge", write=False)
+        Session(Store(tmp_path / "store"), write=False).run(
+            Case.load(cylindrical_pore_case), upto="charge"
+        )
     with pytest.raises(KeyError, match="no stage 'sovle'"):
-        run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), upto="sovle", write=False)
+        Session(Store(tmp_path / "store"), write=False).run(
+            Case.load(cylindrical_pore_case), upto="sovle"
+        )
 
 
 _MINIMAL = f"""
@@ -434,7 +435,7 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
 ) -> None:
     case = _pqr_case(cylindrical_pore_case, tmp_path)
     store = Store(tmp_path / "store")
-    result = run_case(case, store=store, upto="protonation", write=False)
+    result = Session(store, write=False).run(Case.load(case), upto="protonation")
     group = result.manifest.charge
     assert group["status"] == "not run"
     assert "stopped before stage 7" in str(group["reason"])
@@ -444,7 +445,7 @@ def test_ver57_a_walk_to_protonation_records_it_in_the_charge_group(
     assert record["source"] == "inputs.pqr"
     assert record["pqr_sha256"] == file_hash(tmp_path / "supplied.pqr")
     assert "pqr" in result.manifest.inputs["files"]  # type: ignore[operator]
-    truncated = run_case(case, store=store, upto="mesh", write=False)
+    truncated = Session(store, write=False).run(Case.load(case), upto="mesh")
     skipped = truncated.manifest.charge["protonation"]
     assert isinstance(skipped, dict)
     assert skipped["status"] == "not run"
@@ -455,7 +456,7 @@ def test_ver64_a_walk_past_stage_7_that_skips_it_says_so_in_the_charge_group(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     case = _pqr_case(cylindrical_pore_case, tmp_path)
-    result = run_case(case, store=Store(tmp_path / "store"), upto="materials", write=False)
+    result = Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="materials")
     assert [record.name for record in result.stages] == ["case", "materials"]
     group = result.manifest.charge
     assert group["status"] == "not run"

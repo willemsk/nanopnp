@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from nanopnp import Case, Session
 from nanopnp.core.stages import SolveReporting, create, walk_order
 from nanopnp.io.store import Store
 from nanopnp.numerics.newton import DEFAULT_SETTINGS
 from nanopnp.pipeline.case import resolve
-from nanopnp.pipeline.run import run_case
 
 
 @dataclass
@@ -59,7 +59,7 @@ def test_ver44_the_hook_sees_every_rung_and_the_steps_inside_it(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     hook = Recorder()
-    result = run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), on_solve=hook)
+    result = Session(Store(tmp_path / "store")).run(Case.load(cylindrical_pore_case), on_solve=hook)
 
     bands = hook.banded()
     assert bands, "the solve emitted no rung at all"
@@ -110,7 +110,7 @@ def test_ver44_the_end_of_rung_call_carries_the_manifests_seconds(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     hook = Recorder()
-    result = run_case(cylindrical_pore_case, store=Store(tmp_path / "store"), on_solve=hook)
+    result = Session(Store(tmp_path / "store")).run(Case.load(cylindrical_pore_case), on_solve=hook)
     solved = [payload for kind, payload in hook.events if kind == "solved"]
     ladder = result.artefacts["solve"].summary["rungs"]
     assert isinstance(ladder, list)
@@ -128,17 +128,19 @@ def test_ver44_watching_a_run_moves_no_hash_and_a_cached_solve_is_silent(
     cylindrical_pore_case: Path, tmp_path: Path
 ) -> None:
     store = Store(tmp_path / "store")
-    cold = run_case(cylindrical_pore_case, store=store)
+    cold = Session(store).run(Case.load(cylindrical_pore_case))
     assert not next(record for record in cold.stages if record.name == "solve").cached
 
     hook = Recorder()
-    warm = run_case(cylindrical_pore_case, store=store, on_solve=hook)
+    warm = Session(store).run(Case.load(cylindrical_pore_case), on_solve=hook)
 
     assert warm.artefacts["solve"].hash == cold.artefacts["solve"].hash
     assert next(record for record in warm.stages if record.name == "solve").cached
     assert hook.events == [], "a solve served from the store reported rungs it never climbed"
 
-    fresh = run_case(cylindrical_pore_case, store=Store(tmp_path / "second"), on_solve=Recorder())
+    fresh = Session(Store(tmp_path / "second")).run(
+        Case.load(cylindrical_pore_case), on_solve=Recorder()
+    )
     assert fresh.artefacts["solve"].hash == cold.artefacts["solve"].hash
 
 

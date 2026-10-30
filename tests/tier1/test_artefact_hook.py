@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.stages import ArtefactHook
 from nanopnp.geometry.profile import (
     PROFILE_SCHEMA,
@@ -19,7 +20,6 @@ from nanopnp.geometry.profile import (
     write_profile,
 )
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -86,7 +86,7 @@ def test_ver55_the_hook_fires_after_each_stage_is_stored(case_file: Path, tmp_pa
     store = Store(tmp_path / "store")
     recorder = Recorder(store)
     hook: ArtefactHook = recorder
-    result = run_case(case_file, store=store, upto="mesh", write=False, on_artefact=hook)
+    result = Session(store, write=False).run(Case.load(case_file), upto="mesh", on_artefact=hook)
 
     assert [call[0] for call in recorder.calls] == ["case", "region", "mesh"]
     assert recorder.calls == [
@@ -98,10 +98,10 @@ def test_ver55_the_hook_fires_after_each_stage_is_stored(case_file: Path, tmp_pa
 
 def test_ver55_a_rerun_reports_every_stage_cached(case_file: Path, tmp_path: Path) -> None:
     store = Store(tmp_path / "store")
-    first = run_case(case_file, store=store, upto="mesh", write=False)
+    first = Session(store, write=False).run(Case.load(case_file), upto="mesh")
     recorder = Recorder(store)
-    second = run_case(
-        case_file, store=Store(store.root), upto="mesh", write=False, on_artefact=recorder
+    second = Session(Store(store.root), write=False).run(
+        Case.load(case_file), upto="mesh", on_artefact=recorder
     )
 
     assert [call[3] for call in recorder.calls] == [True, True, True]
@@ -114,8 +114,10 @@ def test_ver55_a_watched_walk_keys_what_an_unwatched_one_keys(
 ) -> None:
     quiet = Store(tmp_path / "quiet")
     watched = Store(tmp_path / "watched")
-    unwatched_result = run_case(case_file, store=quiet, upto="mesh")
-    watched_result = run_case(case_file, store=watched, upto="mesh", on_artefact=Recorder(watched))
+    unwatched_result = Session(quiet).run(Case.load(case_file), upto="mesh")
+    watched_result = Session(watched).run(
+        Case.load(case_file), upto="mesh", on_artefact=Recorder(watched)
+    )
 
     def stripped(record: dict[str, object]) -> dict[str, object]:
         stages = [
@@ -138,7 +140,7 @@ def test_ver60_the_hook_reports_protonation_then_charge_after_each_is_stored(
     case = charged_tube.write(tmp_path / "case")
     store = Store(tmp_path / "store")
     recorder = Recorder(store)
-    result = run_case(case, store=store, upto="charge", write=False, on_artefact=recorder)
+    result = Session(store, write=False).run(Case.load(case), upto="charge", on_artefact=recorder)
 
     assert [call[0] for call in recorder.calls] == [
         "case",
@@ -153,7 +155,7 @@ def test_ver60_the_hook_reports_protonation_then_charge_after_each_is_stored(
     assert all(recorder.present), recorder.calls
 
     again = Recorder(store)
-    run_case(case, store=Store(store.root), upto="charge", write=False, on_artefact=again)
+    Session(Store(store.root), write=False).run(Case.load(case), upto="charge", on_artefact=again)
     assert [call[3] for call in again.calls] == [True] * 5
     assert [call[2] for call in again.calls] == [call[2] for call in recorder.calls]
 
@@ -165,9 +167,9 @@ def test_ver60_a_watched_charged_walk_keys_what_an_unwatched_one_keys(
     case = charged_tube.write(tmp_path / "case")
     quiet = Store(tmp_path / "quiet")
     watched = Store(tmp_path / "watched")
-    unwatched_result = run_case(case, store=quiet, upto="charge", write=False)
-    watched_result = run_case(
-        case, store=watched, upto="charge", write=False, on_artefact=Recorder(watched)
+    unwatched_result = Session(quiet, write=False).run(Case.load(case), upto="charge")
+    watched_result = Session(watched, write=False).run(
+        Case.load(case), upto="charge", on_artefact=Recorder(watched)
     )
     assert [record.hash for record in watched_result.stages] == [
         record.hash for record in unwatched_result.stages

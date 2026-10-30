@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.cli import build_parser, main
 from nanopnp.core.errors import (
     EXIT_CODES,
@@ -196,9 +197,8 @@ def test_ver32_mesh_of_a_geometry_file_writes_the_mesh_a_case_declaring_it_recor
         encoding="utf-8",
     )
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
-    result = run_case(case, store=Store(tmp_path / "store"), upto="mesh")
+    result = Session(Store(tmp_path / "store")).run(Case.load(case), upto="mesh")
     assert result.manifest.geometry_and_mesh["content_hash"] == printed["content_hash"]
 
 

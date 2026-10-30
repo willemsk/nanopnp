@@ -5,9 +5,10 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.stages import figure_target
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import RunResult, run_case
+from nanopnp.pipeline.run import RunResult
 
 _TIER_DIR = Path(__file__).parent
 
@@ -26,7 +27,7 @@ def cached_run(monkeypatch: pytest.MonkeyPatch) -> Callable[..., RunResult]:
 
     def walk(example: Path, case: str, upto: str | None = None) -> RunResult:
         monkeypatch.chdir(example)
-        return run_case(case, store=Store(example / "store"), upto=upto, write=False)
+        return Session(Store(example / "store"), write=False).run(Case.load(case), upto=upto)
 
     return walk
 

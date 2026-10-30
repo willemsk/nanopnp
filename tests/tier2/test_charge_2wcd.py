@@ -12,13 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.gui.charge import load_charge, load_protonation
 from nanopnp.gui.solver import Produced
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import (
-    RunResult,
-    run_case,
-)
+from nanopnp.pipeline.run import RunResult
 
 pytestmark = pytest.mark.nightly
 
@@ -74,7 +72,9 @@ def deposited(
     case.write_text(
         CASE.format(pdb=prepared_2wcd.path, geometry=seeded_2wcd.geometry), encoding="utf-8"
     )
-    result = run_case(case, store=store, upto="charge", workspace=root / "work", write=False)
+    result = Session(store, workspace=root / "work", write=False).run(
+        Case.load(case), upto="charge"
+    )
     cached = {record.name for record in result.stages if record.cached}
     assert {
         "structure",

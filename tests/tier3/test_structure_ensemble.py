@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def test_ver48_clya_as_ensemble(tmp_path: Path) -> None:
         "physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}\n",
         encoding="utf-8",
     )
-    result = run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
+    result = Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="structure")
     summary = result.artefacts["structure"].summary
     axis = summary["axis"]["file_frame"]
     frames = summary["frames"]

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.hashing import (
     CanonicalisationError,
     canonical,
@@ -227,13 +228,12 @@ def test_ver23_a_charged_walk_writes_the_same_bytes_into_two_stores(
     import numpy as np
 
     from nanopnp.charge.stage import DEPOSIT_FILE
-    from nanopnp.pipeline.run import run_case
 
     case = charged_tube.write(tmp_path / "case")
     roots = []
     for name in ("first", "second"):
         store = Store(tmp_path / name)
-        run_case(case, store=store, upto="charge", write=False)
+        Session(store, write=False).run(Case.load(case), upto="charge")
         roots.append(store.root / "artefacts")
 
     def files(root: Path) -> dict[str, Path]:

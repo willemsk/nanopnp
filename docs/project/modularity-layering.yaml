@@ -103,7 +103,6 @@ edges:
   - {from: nanopnp, to: physics, relation: static, finding: null}
   - {from: nanopnp, to: pipeline, relation: static, finding: null}
   - {from: nanopnp, to: structure, relation: static, finding: null}
-  - {from: nanopnp, to: sweep, relation: static, finding: null}
   - {from: numerics, to: core, relation: static, finding: null}
   - {from: physics, to: core, relation: static, finding: null}
   - {from: physics, to: io, relation: static, finding: null}
@@ -175,7 +174,6 @@ edges:
   - {from: cli, to: physics, relation: string, finding: null}
   - {from: cli, to: pipeline, relation: string, finding: null}
   - {from: cli, to: structure, relation: string, finding: null}
-  - {from: cli, to: sweep, relation: string, finding: null}
   - {from: core, to: charge, relation: string, finding: MOD-15}
   - {from: core, to: density, relation: string, finding: MOD-15}
   - {from: core, to: geometry, relation: string, finding: MOD-15}

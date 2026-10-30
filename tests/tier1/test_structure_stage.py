@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 from MDAnalysis.coordinates.memory import MemoryReader
 
+from nanopnp import Case, Session
 from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
@@ -24,11 +25,7 @@ from nanopnp.pipeline.case import (
     load_case,
     resolve,
 )
-from nanopnp.pipeline.run import (
-    UnknownStageError,
-    run_case,
-    selected_stages,
-)
+from nanopnp.pipeline.run import UnknownStageError, selected_stages
 from nanopnp.structure.axis import SymmetryGateError, measure_axis, minimal_rotation
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.structure.read import (
@@ -119,7 +116,7 @@ def prepared(prepared_2wcd: Prepared2WCD) -> Path:
 
 
 def _run(case: Path, store: Path) -> AlignedEnsemble:
-    result = run_case(case, store=Store(store), upto="structure", write=False)
+    result = Session(Store(store), write=False).run(Case.load(case), upto="structure")
     artefact = result.artefacts["structure"]
     return AlignedEnsemble.read(artefact.payload["ensemble"])
 
@@ -128,17 +125,13 @@ def test_ver48_relabelling_the_variant_is_a_cache_hit_and_the_manifest_keeps_the
     prepared: Path, tmp_path: Path
 ) -> None:
     store = Store(tmp_path / "store")
-    first = run_case(
-        _case(tmp_path, _block(prepared, variant="ClyA-AS"), name="first"),
-        store=store,
+    first = Session(store, write=False).run(
+        Case.load(_case(tmp_path, _block(prepared, variant="ClyA-AS"), name="first")),
         upto="structure",
-        write=False,
     )
-    second = run_case(
-        _case(tmp_path, _block(prepared, variant="ClyA-AS-relabelled"), name="second"),
-        store=store,
+    second = Session(store, write=False).run(
+        Case.load(_case(tmp_path, _block(prepared, variant="ClyA-AS-relabelled"), name="second")),
         upto="structure",
-        write=False,
     )
     assert not first.stages[-1].cached
     assert second.stages[-1].cached
@@ -153,14 +146,14 @@ def test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate(
 ) -> None:
     case = _case(tmp_path, _block(PDB, chains=DODECAMER))
     with pytest.raises(SymmetryGateError, match=r"orientation gate: the detected axis is 22\.9"):
-        run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
+        Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="structure")
 
 
 def test_ver48_2wcd_runs_as_stage_one(
     prepared: Path, prepared_2wcd: Prepared2WCD, tmp_path: Path
 ) -> None:
     case = _case(tmp_path, _block(prepared))
-    result = run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
+    result = Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="structure")
     artefact = result.artefacts["structure"]
     summary = artefact.summary
     ensemble = AlignedEnsemble.read(artefact.payload["ensemble"])
@@ -299,7 +292,7 @@ def test_ver48_the_last_ns_window_does_not_depend_on_the_float32_timestep(
 def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) -> None:
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
-    result = run_case(case, store=store, upto="structure", write=False)
+    result = Session(store, write=False).run(Case.load(case), upto="structure")
     artefact = result.artefacts["structure"]
     path = artefact.payload["ensemble"]
     ensemble = AlignedEnsemble.read(path)
@@ -320,7 +313,7 @@ def test_ver48_artefact_round_trip_and_export(prepared: Path, tmp_path: Path) ->
     )
     assert other.stdout.strip() == artefact.hash
 
-    assert run_case(case, store=store, upto="structure", write=False).stages[-1].cached
+    assert Session(store, write=False).run(Case.load(case), upto="structure").stages[-1].cached
     stored = store.get(artefact.schema, artefact.hash)
     assert stored is not None
     edited = AlignedEnsemble(
@@ -419,7 +412,7 @@ def test_ver48_rigid_move_superposes_to_zero(prepared: Path, tmp_path: Path) -> 
         frames.append(group.positions @ rotation.T + rng.uniform(-40.0, 40.0, 3))
     dcd = _write(group, np.stack(frames), tmp_path / "moved.dcd")
     case = _case(tmp_path, _block(prepared, trajectory=dcd))
-    result = run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
+    result = Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="structure")
     summary = result.artefacts["structure"].summary
     rmsd = summary["superposition"]["rmsd_nm"]
     logger.info("superposition RMSD per frame: %s nm", rmsd)
@@ -440,15 +433,15 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
         "materials",
         "solve",
     )
-    assert run_case(case, store=store, upto="case", write=False).stages[-1].name == "case"
-    ran = run_case(case, store=store, upto="structure", write=False)
+    assert Session(store, write=False).run(Case.load(case), upto="case").stages[-1].name == "case"
+    ran = Session(store, write=False).run(Case.load(case), upto="structure")
     assert [record.name for record in ran.stages] == ["case", "structure"]
     assert "structure" in ran.manifest.geometry_and_mesh
     assert set(ran.manifest.inputs["files"]) >= {"structure"}  # type: ignore[arg-type]
 
     plain = Path(__file__).parents[2] / "examples" / "01-quickstart" / "quickstart.case.yaml"
     with pytest.raises(UnknownStageError, match=r"carries no structure: section"):
-        run_case(plain, store=store, upto="structure", write=False)
+        Session(store, write=False).run(Case.load(plain), upto="structure")
 
 
 def test_ver48_a_sweep_over_a_structure_case_plans(prepared: Path, tmp_path: Path) -> None:
@@ -474,7 +467,7 @@ def test_ver48_axis_z_on_the_prepared_copy_is_refused_by_the_budget(
 ) -> None:
     case = _case(tmp_path, _block(prepared, axis="z"))
     with pytest.raises(SymmetryGateError, match=r"axis: z displacement gate: .* \(tilt 4\.000"):
-        run_case(case, store=Store(tmp_path / "store"), upto="structure", write=False)
+        Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="structure")
 
 
 def test_ver48_minimal_rotation_is_the_identity_on_z() -> None:

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.api.reproduce import (
     DEFAULT_TOLERANCE,
     InputMovedError,
@@ -19,10 +20,7 @@ from nanopnp.api.reproduce import (
 )
 from nanopnp.io.store import Store
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
-from nanopnp.pipeline.run import (
-    RUN_RECORD_FILENAME,
-    run_case,
-)
+from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +72,7 @@ def archived(tmp_path_factory: pytest.TempPathFactory) -> Archived:
     case_path.write_text(CASE.format(mesh_path=mesh_path), encoding="utf-8")
 
     store = Store(work / "store")
-    result = run_case(case_path, store=store, workspace=work / "fields")
+    result = Session(store, workspace=work / "fields").run(Case.load(case_path))
     logger.info(
         "archived %s: %d stages, quantities %s, stabilisation %s",
         result.directory,

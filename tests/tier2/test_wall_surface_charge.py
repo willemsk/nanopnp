@@ -10,6 +10,7 @@ import ngsolve as ngs
 import pytest
 import yaml
 
+from nanopnp import Case, Session
 from nanopnp.core.constants import (
     GAS_CONSTANT,
     REFERENCE_TEMPERATURE_K,
@@ -93,7 +94,7 @@ def test_ver77_gauss_balance_in_a_long_charged_lumen(tmp_path: Path) -> None:
     from nanopnp.io.artefact import StageInputs
     from nanopnp.io.store import Store
     from nanopnp.physics.models import concentration_field_name
-    from nanopnp.pipeline.run import offered, run_case
+    from nanopnp.pipeline.run import offered
     from nanopnp.post.export import restored
 
     lam = debye_length_nm(CONCENTRATION_M)
@@ -104,7 +105,7 @@ def test_ver77_gauss_balance_in_a_long_charged_lumen(tmp_path: Path) -> None:
     )
     case = tmp_path / "case.yaml"
     case.write_text(yaml.safe_dump(document), encoding="utf-8")
-    result = run_case(case, store=Store(tmp_path / "store"), upto="solve", write=False)
+    result = Session(Store(tmp_path / "store"), write=False).run(Case.load(case), upto="solve")
     assert result.resolved is not None
     inputs = StageInputs(
         resolved=result.resolved, upstream=offered("solve", result.artefacts, own=False)

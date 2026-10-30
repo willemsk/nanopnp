@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.charge.pqr import PQRFrame, parent_residue, read_pqr
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_file
@@ -17,7 +18,6 @@ from nanopnp.core.stages import create
 from nanopnp.io.artefact import Artefact, StageInputs
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import run_case
 from nanopnp.structure.ensemble import AlignedEnsemble
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def clya_structure(
     ensemble_case: Callable[..., Path],
 ) -> tuple[Path, Artefact]:
     case = ensemble_case(tmp_path_factory.mktemp("clya-as-protonation"), name="clya-as-protonation")
-    result = run_case(case, store=ensemble_store, upto="structure", write=False)
+    result = Session(ensemble_store, write=False).run(Case.load(case), upto="structure")
     return case, result.artefacts["structure"]
 
 

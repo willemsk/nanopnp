@@ -46,16 +46,14 @@ __all__ = [
 USAGE_WIDTH = 88
 
 API_SECTIONS: dict[str, str] = {
-    "nanopnp.pipeline.run": "Running a case",
     "nanopnp.api.case": "Running a case",
     "nanopnp.api.session": "Running a case",
-    "nanopnp.io.case": "Case files",
-    "nanopnp.pipeline.case": "Case files",
+    "nanopnp.pipeline.run": "Running a case",
+    "nanopnp.api.sweep": "Sweeps",
+    "nanopnp.io.artefact": "The artefact store",
     "nanopnp.io.store": "The artefact store",
     "nanopnp.structure.orient": "Structures and meshes",
     "nanopnp.physics.models": "Physics models",
-    "nanopnp.sweep.plan": "Sweeps",
-    "nanopnp.api.sweep": "Sweeps",
     "nanopnp.core.stages": "Stages, progress and cancellation",
 }
 
@@ -350,7 +348,7 @@ def render_api_reference() -> str:
         "# Python API",
         "",
         "The stable API is exactly the names below, each importable from the top-level",
-        "package (`from nanopnp import run_case`); the IF-01 public-surface NOTE. Every other",
+        "package (`from nanopnp import Session`); the IF-01 public-surface NOTE. Every other",
         "module is internal and may change before v1.0. `import nanopnp` is cheap: the names",
         "resolve on first use, so introspecting the package never imports the solver.",
         "",
@@ -362,4 +360,5 @@ def render_api_reference() -> str:
         lines += [f"## {section}", ""]
         for directive in directives:
             lines += [directive, ""]
+    lines += ["## The case schema", "", "::: nanopnp.case", ""]
     return "\n".join(lines)

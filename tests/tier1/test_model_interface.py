@@ -15,6 +15,7 @@ import pytest
 import yaml
 
 import nanopnp
+from nanopnp import Case, Session
 from nanopnp.charge.stage import ResolvedFields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import content_hash
@@ -32,7 +33,6 @@ from nanopnp.physics import models
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.models import ModelSolution, PhysicsModel
 from nanopnp.pipeline.case import loads_case, resolve
-from nanopnp.pipeline.run import run_case
 from nanopnp.solve.continuation import default_ladder
 from nanopnp.solve.state import WALL_DISTANCE_ENTRY, ladder, restore
 
@@ -474,7 +474,7 @@ def _run(text: str, directory: Path) -> RunResult:
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / "case.yaml"
     path.write_text(text, encoding="utf-8")
-    return run_case(path, store=Store(directory / "store"), workspace=directory / "work")
+    return Session(Store(directory / "store"), workspace=directory / "work").run(Case.load(path))
 
 
 def _state(result: RunResult) -> dict[str, np.ndarray]:

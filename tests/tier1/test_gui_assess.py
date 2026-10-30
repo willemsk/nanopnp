@@ -6,13 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.geometry.profile import load_profile
 from nanopnp.gui.assess import (
     AssessRequest,
     assess,
 )
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 
 CASE = """\
 schema: nanopnp/case/v0.5
@@ -44,7 +44,7 @@ def tube_store(tube_pdb: Path, tmp_path_factory: pytest.TempPathFactory):
 
 def test_ver55_an_accepted_loop_measures_to_its_gate_record(tube_store) -> None:
     _root, store, cases = tube_store
-    result = run_case(cases["accepted"], store=store, upto="contour", write=False)
+    result = Session(store, write=False).run(Case.load(cases["accepted"]), upto="contour")
     artefact = result.artefacts["contour"]
     loop = load_profile(artefact.payload["profile"]).vertices
 

@@ -14,12 +14,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import (
-    RunResult,
-    run_case,
-)
+from nanopnp.pipeline.run import RunResult
 from nanopnp.validation.apbs import (
     TOLERANCE,
     ApbsProblem,
@@ -106,8 +104,8 @@ def _walk(case: Path, store: Store, root: Path, order: int) -> Solved:
     from nanopnp.solve.state import restore, warm_start_payload
 
     started = time.perf_counter()
-    result = run_case(
-        case, store=store, upto="solve", workspace=root / f"work-p{order}", write=False
+    result = Session(store, workspace=root / f"work-p{order}", write=False).run(
+        Case.load(case), upto="solve"
     )
     seconds = time.perf_counter() - started
     artefacts = result.artefacts

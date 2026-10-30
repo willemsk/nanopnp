@@ -12,12 +12,12 @@ import numpy as np
 import pytest
 from scipy.special import ive
 
+from nanopnp import Case, Session
 from nanopnp.density.grid import read_grid, write_grid
 from nanopnp.density.map import DensityMap
 from nanopnp.density.radii import RadiusSet
 from nanopnp.density.union import DensityGrid, canonical_grid, deposit
 from nanopnp.io.store import Store
-from nanopnp.pipeline.run import run_case
 from nanopnp.symmetry.annular import annular_weights
 from nanopnp.symmetry.reduce import (
     ReducedMap,
@@ -230,7 +230,7 @@ def test_ver50_unresolved_region_and_artefact(synthetic_c12: Path, tmp_path: Pat
         encoding="utf-8",
     )
     store = Store(tmp_path / "store")
-    result = run_case(case, store=store, upto="symmetry", write=False)
+    result = Session(store, write=False).run(Case.load(case), upto="symmetry")
     artefact = result.artefacts["symmetry"]
     reduced = ReducedMap.read(artefact.payload["reduced"])
     assert reduced.digest() == artefact.summary["payload_digest"]
@@ -248,7 +248,7 @@ def test_ver50_unresolved_region_and_artefact(synthetic_c12: Path, tmp_path: Pat
             assert back.origin_nm == pytest.approx(grid.origin_nm, abs=1e-6)
             assert np.max(np.abs(back.values - grid.values)) <= 1e-6
 
-    assert run_case(case, store=store, upto="symmetry", write=False).stages[-1].cached
+    assert Session(store, write=False).run(Case.load(case), upto="symmetry").stages[-1].cached
     stored = store.get(artefact.schema, artefact.hash)
     assert stored is not None
     assert not stored.hand_substituted

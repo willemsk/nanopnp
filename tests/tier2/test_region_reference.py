@@ -7,6 +7,7 @@ import logging
 import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import profile_file
 from nanopnp.geometry.profile import PoreProfile, load_profile
 from nanopnp.geometry.region import build_region, read_region
@@ -14,10 +15,7 @@ from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import from_ngsolve, read
 from nanopnp.mesh.quality import QUALITY_FLOOR
-from nanopnp.pipeline.run import (
-    RunResult,
-    run_case,
-)
+from nanopnp.pipeline.run import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +72,7 @@ def _run(tmp_path_factory: pytest.TempPathFactory, concentration: float) -> RunR
         CASE.format(path=profile_file("clya_reference_profile"), concentration=concentration),
         encoding="utf-8",
     )
-    return run_case(case, store=Store(root / "store"), upto="mesh", write=False)
+    return Session(Store(root / "store"), write=False).run(Case.load(case), upto="mesh")
 
 
 @pytest.fixture(scope="module")

@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 from scipy.integrate import simpson
 
+from nanopnp import Case, Session
 from nanopnp.core.constants import FARADAY, VACUUM_PERMITTIVITY
 from nanopnp.core.hashing import file_hash
 from nanopnp.density.grid import RadialGrid, read_grid, write_grid
@@ -26,7 +27,6 @@ from nanopnp.geometry.profile import (
 from nanopnp.io.store import Store
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.pipeline.case import load_case, resolve
-from nanopnp.pipeline.run import run_case
 from nanopnp.solve.stage import warm_start_payload
 from nanopnp.solve.state import restore
 
@@ -137,7 +137,9 @@ def solved(tmp_path_factory: pytest.TempPathFactory):  # type: ignore[no-untyped
         encoding="utf-8",
     )
     started = time.perf_counter()
-    result = run_case(case, store=Store(work / "store"), workspace=work / "work", upto="solve")
+    result = Session(Store(work / "store"), workspace=work / "work").run(
+        Case.load(case), upto="solve"
+    )
     seconds = time.perf_counter() - started
     solution = restore(
         warm_start_payload(result.artefacts["solve"]),
