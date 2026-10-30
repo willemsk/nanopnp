@@ -2,16 +2,15 @@
 # solved with the validated ePNP-NS model (PHY-21, PHY-22). Every switch of the
 # model is at its validated default, so the manifest lists no deviation.
 #
-# `inputs.mesh.path` resolves against the working directory, so run this from the
-# directory it is in, after `nanopnp mesh cylinder --out pore.msh`.
+# `geometry.pore` is the idealised pore of `nanopnp geometry cylinder`, meshed by stage 6
+# under `numerics.mesh`.
 schema: nanopnp/case/v0.5
 name: quickstart
 
-inputs:
-  mesh:
-    path: pore.msh
-    format: msh41
-    groups: {default: interface}   # as `nanopnp mesh cylinder` printed it
+geometry:
+  pore: {shape: cylinder, radius_nm: 2}
+  membrane: {thickness_nm: 6}
+  reservoir: {radius_nm: 10}
 
 electrolyte:
   species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
@@ -37,5 +36,6 @@ physics:
 numerics:
   continuation: default_ladder
   stabilisation: none
+  mesh: {maxh_nm: 4, wall_h_nm: 0.35}
 
 outputs: [current, transport_numbers, eof_rate]

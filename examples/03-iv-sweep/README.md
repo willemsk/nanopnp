@@ -27,7 +27,6 @@ whole scheduler integration: see [example 05](../05-clya-reference/README.md).
 
 <!-- example: run -->
 ```console
-$ nanopnp mesh cylinder --out pore.msh
 $ nanopnp sweep plan charged.sweep.yaml --store store --directory iv-charged
 $ nanopnp sweep run iv-charged/plan.json --store store --workers 2 --csv
 $ nanopnp sweep plan uncharged.sweep.yaml --store store --directory iv-uncharged

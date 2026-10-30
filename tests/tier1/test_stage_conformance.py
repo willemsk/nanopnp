@@ -16,7 +16,7 @@ from nanopnp.core.stages import (
 )
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.resolved import ResolvedCase
-from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.case import load_case, loads_case, resolve
 from nanopnp.pipeline.run import (
     UnknownStageError,
     offered,
@@ -43,9 +43,13 @@ def _shipped_cases() -> dict[str, ResolvedCase]:
     pqr_profile = profile.model_copy(
         update={"inputs": profile.inputs.model_copy(update={"pqr": pqr.inputs.pqr})}
     )
+    classical = EXAMPLES / "02-charged-pore" / "classical.case.yaml"
+    supplied_charge = resolve(
+        loads_case(_with_supplied_mesh(classical.read_text(encoding="utf-8")))
+    )
     return {
         "quickstart": resolve(load_case(QUICKSTART)),
-        "supplied-charge": resolve(load_case(EXAMPLES / "02-charged-pore" / "classical.case.yaml")),
+        "supplied-charge": supplied_charge,
         "profile": resolve(profile),
         "pqr-profile": resolve(pqr_profile),
         "structure": resolve(pqr),
@@ -136,7 +140,7 @@ def test_ver64_each_optional_input_is_one_a_case_drops() -> None:
     walks = {name: selected_stages(case, None) for name, case in _shipped_cases().items()}
     tail = ("materials", "solve", "qoi", "report")
     assert walks == {
-        "quickstart": ("case", "mesh", *tail),
+        "quickstart": ("case", "region", "mesh", *tail),
         "supplied-charge": ("case", "mesh", "charge", *tail),
         "profile": ("case", "region", "mesh", *tail),
         "pqr-profile": ("case", "region", "mesh", "protonation", "charge", *tail),
@@ -236,3 +240,17 @@ def test_ver64_a_walk_to_a_stage_runs_its_input_closure_in_walk_order() -> None:
     assert selected_stages(structure, "contour") == WALK[: WALK.index("contour") + 1]
     assert selected_stages(structure, "mesh") == WALK[: WALK.index("mesh") + 1]
     assert selected_stages(structure, None) == WALK
+
+
+def _with_supplied_mesh(case: str) -> str:
+    """Return an example case text with its declared pore replaced by a supplied mesh file."""
+    declared = (
+        "geometry:\n  pore: {shape: cylinder, radius_nm: 2}\n  membrane: {thickness_nm: 6}\n"
+        "  reservoir: {radius_nm: 10}\n\n"
+    )
+    supplied = "  mesh:\n    path: pore.msh\n    format: msh41\n    groups: {default: interface}\n"
+    assert declared in case, "the example no longer declares its pore this way"
+    text = case.replace(declared, "").replace("  mesh: {maxh_nm: 4, wall_h_nm: 0.35}\n", "")
+    if "\ninputs:\n" in text:
+        return text.replace("\ninputs:\n", f"\ninputs:\n{supplied}", 1)
+    return text.replace("\nelectrolyte:\n", f"\ninputs:\n{supplied}\nelectrolyte:\n", 1)

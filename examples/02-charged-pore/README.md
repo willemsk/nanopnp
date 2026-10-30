@@ -30,13 +30,12 @@ refused.
 
 <!-- example: run -->
 ```console
-$ nanopnp mesh cylinder --out pore.msh
 $ nanopnp run epnpns.case.yaml --store store --run-dir run-epnpns
 $ nanopnp run classical.case.yaml --store store --run-dir run-classical
 $ nanopnp inspect run-classical
 ```
 
-Both runs share the mesh and the charge artefacts in `store/`. Each stage's key is the hash of its
+Both runs share the region, mesh and charge artefacts in `store/`. Each stage's key is the hash of its
 inputs, so the second run computes only what its corrections change.
 
 `classical.case.yaml` differs from `epnpns.case.yaml` only in `electrolyte.corrections`: each
@@ -53,7 +52,7 @@ relative difference. A comparison is a reading, not a test: it exits 0 however f
 
 ## What the test asserts
 
-`tests/tier2/test_examples_02_epnpns.py` (every push) runs the mesh and ePNP-NS commands above,
+`tests/tier2/test_examples_02_epnpns.py` (every push) runs the ePNP-NS command above,
 verbatim, from a copy of this directory, and `tests/tier2/test_examples_02_classical.py` (nightly)
 runs all of them. Between them they check properties of the model rather than numbers:
 
