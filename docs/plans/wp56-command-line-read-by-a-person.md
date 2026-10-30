@@ -164,10 +164,10 @@ REV-156. A share below 50 %, or a rung far above its neighbours, is put to the a
 - [x] 3. 954cb47 `cli/reading.py`, `cli/__init__.py`: `inspect A B` (D3); `examples/02-charged-pore/README.md`
   names the command in prose (a tagged one would match `only=("run-epnpns",)` per push); done when the
   same test passes. **Executor:** main
-- [ ] 4. `cli/__init__.py:_plot` and its parser (D4); session 01's README gains `$ nanopnp plot
+- [x] 4. 9a58574 `cli/__init__.py:_plot` and its parser (D4); session 01's README gains `$ nanopnp plot
   run-pore solve --out fields.png` in its `run` block; done when both FR-44 tests pass.
   **Executor:** main
-- [ ] 5. Compaction checkpoint. **Executor:** main
+- [x] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. `cli/__init__.py`: the progress object, `--progress` on `run` and `stage` (D5); done when the
   code and review say so. **Executor:** main
 - [ ] 7. `numerics/gates.py`, `solve/state.py`, `sweep/plan.py`, `charge/fields.py` (D6); done when the
