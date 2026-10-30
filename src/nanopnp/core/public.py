@@ -29,7 +29,7 @@ PUBLIC: dict[str, str] = {
     "register_model": "nanopnp.physics.models",
     "registered_models": "nanopnp.physics.models",
     "plan_from_document": "nanopnp.sweep.plan",
-    "run_plan": "nanopnp.sweep.run",
+    "run_plan": "nanopnp.api.sweep",
     "Stage": "nanopnp.core.stages",
     "registered_stages": "nanopnp.core.stages",
     "Progress": "nanopnp.core.stages",

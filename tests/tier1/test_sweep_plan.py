@@ -454,9 +454,15 @@ def test_ver36_the_reference_sweep_resolves_a_sample_of_its_members(
 def test_in_memory_sweep_matches_the_sweep_file_plan(base: Path, tmp_path: Path) -> None:
     from nanopnp.api.case import Case
     from nanopnp.api.session import Session
+    from nanopnp.api.sweep import plan_sweep
 
-    held = Session(tmp_path / "store", write=False).sweep(
-        Case.load(base), axis="bias_V", values=[-0.05, 0.05], origin=1, check_meshes=False
+    held = plan_sweep(
+        Case.load(base),
+        session=Session(tmp_path / "store", write=False),
+        axis="bias_V",
+        values=[-0.05, 0.05],
+        origin=1,
+        check_meshes=False,
     )
     filed = _plan(
         base,

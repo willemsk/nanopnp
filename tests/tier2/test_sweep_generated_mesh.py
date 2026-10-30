@@ -7,6 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from nanopnp.api.session import Session
+from nanopnp.api.sweep import run_plan
 from nanopnp.geometry.profile import (
     PROFILE_SCHEMA,
     PoreProfile,
@@ -18,7 +20,7 @@ from nanopnp.geometry.profile import (
 )
 from nanopnp.io.store import Store
 from nanopnp.sweep.plan import plan_from_document, write_plan
-from nanopnp.sweep.run import MemberResult, run_plan
+from nanopnp.sweep.run import MemberResult
 
 BASE = """\
 schema: nanopnp/case/v0.5
@@ -78,7 +80,7 @@ def members(tmp_path_factory: pytest.TempPathFactory) -> tuple[MemberResult, ...
     plan = plan_from_document(work / "sweep.yaml")
     directory = work / "sweep"
     write_plan(plan, directory)
-    return run_plan(plan, directory, store=Store(work / "store"))
+    return run_plan(plan, directory, session=Session(Store(work / "store")))
 
 
 def test_ver37_a_generated_mesh_sweep_warm_starts_from_its_parent(

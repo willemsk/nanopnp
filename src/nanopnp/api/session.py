@@ -21,8 +21,8 @@ from nanopnp.io.store import Store
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only; the run imports them when it needs them
     from nanopnp.api.case import Case
-    from nanopnp.api.sweep import Sweep
-    from nanopnp.io.case import FieldValue
+    from nanopnp.api.sweep import SweepResult
+    from nanopnp.io.case import CaseDocument, FieldValue
     from nanopnp.pipeline.run import RunResult
 
 __all__ = ["Session", "StageInfo"]
@@ -111,6 +111,9 @@ class Session:
         """
         return self._walk(
             case,
+            case_text=case._text if case._text is not None else case.dumps(),
+            case_path=case._path,
+            base=case._base,
             upto=upto,
             only=only,
             progress=progress,
@@ -122,8 +125,11 @@ class Session:
 
     def _walk(
         self,
-        case: Case,
+        document: CaseDocument,
         *,
+        case_text: str,
+        case_path: Path | None = None,
+        base: Path | None = None,
         upto: str | None = None,
         only: bool = False,
         progress: Progress | None = None,
@@ -136,10 +142,10 @@ class Session:
         from nanopnp.pipeline.run import run_document
 
         return run_document(
-            case,
-            case_text=case._text if case._text is not None else case.dumps(),
-            case_path=case._path,
-            base=case._base,
+            document,
+            case_text=case_text,
+            case_path=case_path,
+            base=base,
             store=self.store,
             upto=upto,
             only=only,
@@ -183,11 +189,32 @@ class Session:
         axis: str,
         values: Sequence[FieldValue],
         origin: int = 0,
+        workers: int = 1,
         check_meshes: bool = True,
-    ) -> Sweep:
-        """Plan a sweep of ``case`` over one field into this session's store."""
+    ) -> SweepResult:
+        """Plan, run and collect a sweep of ``case`` over one field, into this session's store.
+
+        Parameters
+        ----------
+        axis
+            The field swept: a dotted case path, or the leaf name one field ends in.
+        values
+            The values the field takes, one point each.
+        origin
+            Index into ``values`` of the point every other point warm-starts towards.
+        workers
+            Processes the points of a wave are spread over; 1 runs them in this one.
+        check_meshes
+            Whether to run the mesh gate once per distinct mesh with a wall correction.
+        """
         from nanopnp.api.sweep import sweep
 
         return sweep(
-            case, session=self, axis=axis, values=values, origin=origin, check_meshes=check_meshes
+            case,
+            session=self,
+            axis=axis,
+            values=values,
+            origin=origin,
+            workers=workers,
+            check_meshes=check_meshes,
         )
