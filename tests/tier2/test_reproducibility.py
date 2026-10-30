@@ -144,7 +144,7 @@ def test_ver35_an_input_whose_contents_moved_aborts_naming_it(
 def test_ver35_a_library_difference_is_reported_and_only_fatal_when_asked(
     archived: Archived, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from nanopnp.pipeline import reproduce as module
+    from nanopnp.api import reproduce as module
 
     # Captured before the patch: ``drifted`` reads through the same name it is
     # about to replace, so reaching for it through the module would recur.
