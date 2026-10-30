@@ -496,9 +496,15 @@ def read_run(
     )
 
 
-def recorded_base(manifest: Manifest) -> Path | None:
-    """Return the directory of the case file a run read, or None for a case held in memory."""
-    files = manifest.inputs.get("files")
+def recorded_base(inputs: Mapping[str, Canonicalisable]) -> Path | None:
+    """Return the directory of the case file a run read, or None for a case held in memory.
+
+    Parameters
+    ----------
+    inputs
+        A manifest's Inputs group, as :attr:`Manifest.inputs` or its document holds it.
+    """
+    files = inputs.get("files")
     record = files.get("case") if isinstance(files, Mapping) else None
     return Path(str(record["path"])).parent if isinstance(record, Mapping) else None
 
@@ -527,7 +533,7 @@ def open_run(directory: str | Path, *, store: Store | None = None) -> RunResult:
         artefacts=artefacts,
         stages=recorded.stages,
         store=holding,
-        resolved=resolve(recorded.document, base=recorded_base(recorded.manifest)),
+        resolved=resolve(recorded.document, base=recorded_base(recorded.manifest.inputs)),
     )
 
 

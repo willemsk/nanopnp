@@ -81,7 +81,7 @@ conda-constructor. The graphical surface grows from Phase 1 onward.
 | Alternative | Assessment |
 |---|---|
 | PyQt6 shell | Rejected: GPL-3 only |
-| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | **Rejected**, closing the deferral below. The stage interface did stay clean — `run_case` takes a `Progress` callback and a `CancelToken`, and every stage is introspectable without importing it (FR-27) — so the alternative remained available and was declined on its own merits: it buys a hosted future and an SSH port-forward this project has no requirement for, and pays in a second rendering path for the same webgui scene. Originally recorded as "on the table… the choice may wait until Phase 1", which is where it was made |
+| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | **Rejected**, closing the deferral below. The stage interface did stay clean — the walk takes a `Progress` callback and a `CancelToken`, and every stage is introspectable without importing it (FR-27) — so the alternative remained available and was declined on its own merits: it buys a hosted future and an SSH port-forward this project has no requirement for, and pays in a second rendering path for the same webgui scene. Originally recorded as "on the table… the choice may wait until Phase 1", which is where it was made |
 | Defer the interface to a terminal phase | Rejected on two failure modes: an interface bolted on at the end exposes the API's accidental structure rather than the user's workflow, and a nine-month gap before any non-programmer touches the tool is a nine-month gap in shaping feedback |
 
 NOTE (packaging). The redistributable bundle SHALL be built one-**dir**

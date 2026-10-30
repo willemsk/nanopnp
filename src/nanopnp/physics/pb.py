@@ -20,7 +20,11 @@ from nanopnp.numerics.newton import (
     NewtonSettings,
     damped_newton,
 )
-from nanopnp.physics.poisson import poisson_operator, surface_charge_source
+from nanopnp.physics.poisson import (
+    poisson_operator,
+    surface_charge_region,
+    surface_charge_source,
+)
 from nanopnp.physics.spaces import set_boundary_values
 
 __all__ = [
@@ -138,13 +142,9 @@ def solve_pb_recorded(
             f"{', '.join(sorted(set(mesh.GetMaterials())))}. A screening term restricted to "
             "nothing would solve Laplace's equation and converge"
         )
-    charged = None if surface_charge == 0.0 else mesh.Boundaries(surface_charge_boundary)
-    if charged is not None and charged.Mask().NumSet() == 0:
-        raise ValueError(
-            f"surface_charge_boundary={surface_charge_boundary!r} matches no boundary of the "
-            f"mesh; it carries {', '.join(sorted(set(mesh.GetBoundaries())))}. A charge applied "
-            "to nothing leaves the wall uncharged and the solve converges (NUM-06, QR-12)"
-        )
+    charged = (
+        None if surface_charge == 0.0 else surface_charge_region(mesh, surface_charge_boundary)
+    )
 
     def _charge_term(test: Expression, *, sign: float) -> IntegralTerm | None:
         if charged is None:

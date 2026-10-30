@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from inspect import signature
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -17,6 +19,7 @@ from nanopnp.core.stages import (
     StageOption,
     figure_target,
     registered_stages,
+    walk_order,
 )
 from nanopnp.io.store import Store
 
@@ -28,6 +31,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; the run imports them w
     from nanopnp.pipeline.run import RunResult
 
 __all__ = ["Session", "StageInfo"]
+
+_STAGE_NAME = re.compile(r"[a-z][a-z0-9_-]*")
 
 
 @dataclass(frozen=True)
@@ -172,7 +177,7 @@ class Session:
 
     @property
     def stages(self) -> tuple[StageInfo, ...]:
-        """Every stage, in pipeline order, then the stages of one's own in registration order."""
+        """Every stage, by stage number, then the stages of one's own in registration order."""
         built_in = [
             (description, figure_target(description.artefact_schema) is not None)
             for description in registered_stages()
@@ -204,16 +209,32 @@ class Session:
         Raises
         ------
         ValueError
-            If the name is a stage of the pipeline, or a parameter names no stage registered
-            before it.
+            If the name is a stage of the pipeline or not of the form ``[a-z][a-z0-9_-]*``, or a
+            parameter is variadic or names no stage registered before it.
         """
-        from nanopnp.core.stages import walk_order
         from nanopnp.pipeline.extension import FunctionStage
 
         label = name if name is not None else function.__name__
         if label in walk_order():
             raise ValueError(
                 f"{label!r} is a stage of the pipeline; name the stage of your own differently"
+            )
+        if _STAGE_NAME.fullmatch(label) is None:
+            raise ValueError(
+                f"{label!r} is not a stage name; it names the stage's artefact schema and its "
+                "place in the store, so it is of the form [a-z][a-z0-9_-]*"
+            )
+        variadic = [
+            parameter.name
+            for parameter in signature(function).parameters.values()
+            if parameter.kind
+            in (parameter.VAR_POSITIONAL, parameter.VAR_KEYWORD, parameter.KEYWORD_ONLY)
+        ]
+        if variadic:
+            raise ValueError(
+                f"stage {label!r} takes {', '.join(map(repr, variadic))} as a keyword-only or "
+                "variadic parameter; each parameter names one stage it reads and is passed that "
+                "stage's artefact, so it is an ordinary parameter"
             )
         earlier = list(self._own)
         if label in self._own:

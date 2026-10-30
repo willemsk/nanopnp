@@ -562,6 +562,9 @@ def sweep_isolevels(
 
     centre_z_nm = (load_case(case).geometry or Geometry()).membrane.centre_z_nm
     document = yaml.safe_load(case.read_text(encoding="utf-8"))
+    # The copies live in the workspace, so their relative paths are still read beside the case
+    # they were copied from, not beside a scratch directory that holds no input.
+    base = case.resolve().parent
     workspace.mkdir(parents=True, exist_ok=True)
     points: list[IsolevelPoint] = []
     for isolevel in isolevels:
@@ -569,7 +572,7 @@ def sweep_isolevels(
         text = yaml.safe_dump(_with_isolevel(document, isolevel), sort_keys=False)
         path.write_text(text, encoding="utf-8")
         try:
-            result = Session(store, write=False).run(Case.load(path), upto="contour")
+            result = Session(store, write=False).run(Case.load(path, base=base), upto="contour")
         except ContourGateError as refusal:
             logger.info("isolevel %g: stage 4 refused: %s", isolevel, refusal)
             points.append(IsolevelPoint(isolevel=isolevel, refusal=str(refusal)))

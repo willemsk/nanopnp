@@ -686,28 +686,52 @@ def check_force_surface(data: MeshData, boundary: str = ANALYTE_BOUNDARY) -> tup
     if not wanted:
         known = ", ".join(sorted(data.boundaries))
         raise ForceSurfaceError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
-    edges = data.edges[np.isin(data.edge_group, wanted)]
     count = data.vertices.shape[0]
-    surface = np.sort(edges, axis=1)
-    surface_keys = set((surface[:, 0] * count + surface[:, 1]).tolist())
 
-    sides: dict[int, set[str]] = {key: set() for key in surface_keys}
-    for triangle, material in zip(data.triangles, data.triangle_material, strict=True):
-        for start, end in ((0, 1), (1, 2), (2, 0)):
-            low, high = sorted((int(triangle[start]), int(triangle[end])))
-            if low * count + high in sides:
-                sides[low * count + high].add(data.materials[int(material)])
+    def keyed(ends: np.ndarray) -> np.ndarray:
+        # One integer per undirected edge, so a boundary edge and an element's edge compare.
+        low = np.minimum(ends[:, 0], ends[:, 1])
+        keys: np.ndarray = low * count + np.maximum(ends[:, 0], ends[:, 1])
+        return keys
+
+    surface = np.unique(keyed(data.edges[np.isin(data.edge_group, wanted)]))
+    if surface.size == 0:
+        raise ForceSurfaceError(
+            f"the force surface {boundary!r} names a boundary of this mesh that carries no edge, "
+            "so there is no surface to take the traction on"
+        )
+    triangles = data.triangles
+    element_keys = keyed(
+        np.concatenate((triangles[:, [0, 1]], triangles[:, [1, 2]], triangles[:, [2, 0]]))
+    )
+    owners = np.tile(data.triangle_material, 3)
+    # Matched in one pass over the elements rather than one Python loop per element edge.
+    place = np.searchsorted(surface, element_keys)
+    on_surface = (place < surface.size) & (
+        surface[np.minimum(place, surface.size - 1)] == element_keys
+    )
+    # Sorted by (edge, material), so one edge's materials are contiguous and repeats collapse.
+    touching = np.unique(np.stack((place[on_surface], owners[on_surface]), axis=1), axis=0)
+    edges_met, met = np.unique(touching[:, 0], return_counts=True)
+
     pairs: dict[tuple[str, ...], int] = {}
-    for found in sides.values():
-        pair = tuple(sorted(found if len(found) == 2 else found | {"outside"}))
+    at = 0
+    for number in met.tolist():
+        names = {data.materials[int(index)] for index in touching[at : at + number, 1]}
+        at += number
+        # One material means the other side is outside the domain, as an outer boundary is.
+        pair = tuple(sorted(names if len(names) == 2 else names | {"outside"}))
         pairs[pair] = pairs.get(pair, 0) + 1
-    if len(pairs) != 1:
+    unowned = int(surface.size) - int(edges_met.size)
+    if unowned:
+        pairs[("no element",)] = unowned
+    if len(pairs) != 1 or len(next(iter(pairs))) != 2:
         meets = "; ".join(f"{' | '.join(pair)} on {n} edges" for pair, n in sorted(pairs.items()))
         raise ForceSurfaceError(
             f"the force surface {boundary!r} does not lie between one pair of materials: it "
-            f"meets {meets}. The traction normal is oriented by one pair, so part of the force "
-            "would be negated with no other symptom; give the body a surface that touches one "
-            "fluid domain"
+            f"meets {meets or 'nothing'}. The traction normal is oriented by one pair, so part "
+            "of the force would be negated with no other symptom; give the body a surface that "
+            "touches one fluid domain"
         )
     first, second = next(iter(pairs))
     return first, second

@@ -96,7 +96,8 @@ Three conventions carry over to any model:
   state, which a stabilised coupled model needs and `poisson` ignores.
 - **Say what the quadrature is.** NGSolve estimates an integrand's order from its trial and test
   functions and does not see the `r` weight, so at P2 an axisymmetric stiffness term is integrated
-  one order short. `poisson` adds that order, `RADIAL_WEIGHT_ORDER`; without it the three-layer
+  one order short. `poisson` adds that order, `RADIAL_WEIGHT_ORDER`, to its stiffness, its
+  volumetric source and its surface charge alike; without it the three-layer
   capacitor is 3 % off next to the axis, and with it the error is round-off.
 
 `solve` assembles the Jacobian of that same residual and takes one exact step from the essential
