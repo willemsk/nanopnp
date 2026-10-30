@@ -39,7 +39,14 @@ from nanopnp.io.defaults import (
     deviations,
     value_at,
 )
-from nanopnp.io.manifest import GROUPS, MANIFEST_SCHEMA, build, read
+from nanopnp.io.manifest import (
+    GROUPS,
+    MANIFEST_SCHEMA,
+    Manifest,
+    ManifestHashError,
+    build,
+    read,
+)
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledModel
 from nanopnp.pipeline.case import loads_case, resolve
@@ -396,6 +403,31 @@ def test_ver24_the_manifest_round_trips_with_the_case_beside_it(tmp_path: Path) 
     # The case beside the manifest re-validates; a manifest whose case no longer parses
     # reconstructs nothing.
     assert loads_case(str(case["text"])).name == document.name
+
+
+def test_qr08_a_manifest_read_back_keeps_its_hash(tmp_path: Path) -> None:
+    document = VALIDATED_DEFAULT_CASE.model_copy(deep=True)
+    document.electrolyte.corrections.viscosity.model = "none"
+    document.numerics.wall_distance.max_distance_nm = 0.3
+    fields = ResolvedFields(
+        charge=None, conservation=None, eps_r=_solid_fraction_field(), material_means=()
+    )
+    built = _manifest(document, contributed_deviations=fields.deviations())
+    assert built.deviations and built.contributed_deviations
+
+    for document_read in (built.document(), read(built.write(tmp_path))):
+        restored = Manifest.from_document(document_read)
+        assert restored.hash == built.hash
+        assert restored.deviations == built.deviations
+        assert restored.contributed_deviations == built.contributed_deviations
+        assert restored.case_text == built.case_text
+
+    edited = read(tmp_path / "manifest.json")
+    solver = edited["solver"]
+    assert isinstance(solver, dict)
+    solver["model"] = "pnp"
+    with pytest.raises(ManifestHashError, match="edited after the run wrote it"):
+        Manifest.from_document(edited)
 
 
 def test_ver24_the_environment_group_names_versions_without_importing_ngsolve() -> None:

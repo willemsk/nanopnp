@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import shutil
 import tempfile
@@ -12,7 +13,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.core.hashing import Canonicalisable, canonical, content_hash
+from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, decode_floats
 from nanopnp.core.stages import (
     ArtefactHook,
     CancelToken,
@@ -38,10 +39,16 @@ from nanopnp.io.artefact import (
     figure_html,
     summary_html,
 )
-from nanopnp.io.manifest import Manifest, build
+from nanopnp.io.manifest import (
+    CASE_FILENAME,
+    MANIFEST_FILENAME,
+    Manifest,
+    ManifestHashError,
+    build,
+)
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.mesh.sizing import case_debye_record
-from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.case import load_case, loads_case, resolve
 from nanopnp.post.export import SolutionFields, solution_fields
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -55,11 +62,14 @@ __all__ = [
     "RUN_RECORD_FILENAME",
     "RUN_SCHEMA",
     "MissingUpstreamError",
+    "RecordedRun",
     "RunResult",
     "StageRecord",
     "UnknownStageError",
     "input_files",
     "offered",
+    "open_run",
+    "read_run",
     "run_case",
     "run_document",
     "selected_stages",
@@ -282,6 +292,110 @@ class RunResult:
         path = self.directory / RUN_RECORD_FILENAME
         atomic_write_bytes(path, canonical(self.record()) + b"\n")
         return path
+
+
+@dataclass(frozen=True)
+class RecordedRun:
+    """A run directory as written: its case, its manifest and its run record, without a store."""
+
+    directory: Path
+    document: CaseDocument
+    manifest: Manifest
+    record: Mapping[str, Canonicalisable]
+
+    @property
+    def stages(self) -> tuple[StageRecord, ...]:
+        """The stages the run record lists, in walk order."""
+        return tuple(
+            StageRecord(
+                name=str(entry["stage"]),
+                number=int(entry["number"]),
+                schema=str(entry["schema"]),
+                hash=str(entry["hash"]),
+                cached=bool(entry["cached"]),
+                seconds=float(entry["seconds"]),
+            )
+            for entry in self.record.get("stages", [])
+        )
+
+    @property
+    def quantities(self) -> Mapping[str, Canonicalisable]:
+        """The stage-11 quantities the run record lists; empty before stage 11."""
+        return dict(self.record.get("quantities") or {})
+
+
+def _json_file(path: Path, what: str) -> dict[str, Canonicalisable]:
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"{path.parent} is not a run directory as nanopnp run writes it: it holds no "
+            f"{path.name}, the {what}"
+        )
+    parsed = decode_floats(json.loads(path.read_text(encoding="utf-8")))
+    if not isinstance(parsed, dict):
+        raise ManifestHashError(f"{path} holds a {type(parsed).__name__}, not the {what}")
+    return parsed
+
+
+def read_run(directory: str | Path) -> RecordedRun:
+    """Read a run directory's case, manifest and run record.
+
+    Raises
+    ------
+    FileNotFoundError
+        The directory lacks ``run.json``, ``manifest.json`` or ``case.yaml``.
+    ManifestHashError
+        The manifest does not reproduce its hash, or the run record names another manifest.
+    """
+    source = Path(directory)
+    record = _json_file(source / RUN_RECORD_FILENAME, "run record")
+    written = _json_file(source / MANIFEST_FILENAME, "provenance manifest")
+    try:
+        manifest = Manifest.from_document(written)
+    except ManifestHashError as error:
+        raise ManifestHashError(f"{source / MANIFEST_FILENAME}: {error}") from None
+    if record.get("manifest") != manifest.hash:
+        raise ManifestHashError(
+            f"{source / RUN_RECORD_FILENAME} names manifest {str(record.get('manifest'))[:12]}, "
+            f"but the manifest beside it is {manifest.hash[:12]}: the two files are of "
+            "different runs"
+        )
+    case_path = source / CASE_FILENAME
+    if not case_path.is_file():
+        raise FileNotFoundError(
+            f"{source} is not a run directory as nanopnp run writes it: it holds no "
+            f"{CASE_FILENAME}, the case the manifest records"
+        )
+    return RecordedRun(
+        directory=source, document=load_case(case_path), manifest=manifest, record=record
+    )
+
+
+def open_run(directory: str | Path, *, store: Store | None = None) -> RunResult:
+    """Return a finished run with its artefacts from the store and its resolved case.
+
+    An artefact the store no longer holds is left out of ``artefacts``.
+
+    Parameters
+    ----------
+    store
+        Artefact store overriding the one the run record names.
+    """
+    recorded = read_run(directory)
+    configured = recorded.record.get("store")
+    holding = store if store is not None else Store(str(configured) if configured else None)
+    artefacts: dict[str, Artefact] = {}
+    for name, entry in dict(recorded.record.get("artefacts") or {}).items():
+        found = holding.get(str(entry["schema"]), str(entry["hash"]))
+        if found is not None:
+            artefacts[name] = found
+    return RunResult(
+        directory=recorded.directory,
+        manifest=recorded.manifest,
+        artefacts=artefacts,
+        stages=recorded.stages,
+        store=holding,
+        resolved=resolve(recorded.document),
+    )
 
 
 @dataclass
