@@ -32,7 +32,7 @@ from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.ingest import IngestedMesh, MeshStage, deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, declaration
-from nanopnp.solve.continuation import Rung, run_ladder
+from nanopnp.solve.continuation import Rung, RungResult, run_ladder
 from nanopnp.solve.state import (
     NEWTON_HISTORY_FILENAME,
     NEWTON_HISTORY_KEY,
@@ -202,11 +202,14 @@ class SolveStage:
             # neighbour already supplies.
             rungs = rungs[-1:]
         history: list[dict[str, Any]] = []
-        prepared, on_rung = self._instrumented(
+        prepared, on_rung, on_solved = self._instrumented(
             resolved, rungs, history, progress=progress, cancel=cancel
         )
         result = run_ladder(
-            prepared, initial=None if warm is None else warm.solution, on_rung=on_rung
+            prepared,
+            initial=None if warm is None else warm.solution,
+            on_rung=on_rung,
+            on_solved=on_solved,
         )
         report(progress, 1.0, f"converged in {result.iterations} Newton iterations")
 
@@ -270,7 +273,7 @@ class SolveStage:
         *,
         progress: Progress | None,
         cancel: CancelToken | None,
-    ) -> tuple[tuple[Rung, ...], Callable[[int, Rung], None]]:
+    ) -> tuple[tuple[Rung, ...], Callable[[int, Rung], None], Callable[[int, RungResult], None]]:
         settings = resolved.newton
         hook = self._solve_hook
         span = 1.0 - LOAD_FRACTION
@@ -295,6 +298,10 @@ class SolveStage:
                     reporting[index],
                     settings.relative_tolerance,
                 )
+
+        def on_solved(index: int, record: RungResult) -> None:
+            if hook is not None:
+                hook.rung_solved(record.name, record.seconds, record.iterations)
 
         def on_step(step: NewtonStep) -> None:
             history[-1]["steps"].append(
@@ -336,7 +343,7 @@ class SolveStage:
             )
             for rung, takes_callback in zip(rungs, reporting, strict=True)
         )
-        return prepared, on_rung
+        return prepared, on_rung, on_solved
 
     def _write(
         self,

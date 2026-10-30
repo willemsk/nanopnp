@@ -374,6 +374,7 @@ def run_ladder(
     *,
     initial: ModelSolution | None = None,
     on_rung: Callable[[int, Rung], None] | None = None,
+    on_solved: Callable[[int, RungResult], None] | None = None,
 ) -> LadderResult:
     """Solve every rung in order, each warm-started from the one before.
 
@@ -381,6 +382,8 @@ def run_ladder(
     ----------
     on_rung
         Called with the 0-based index and the rung; an exception from it cancels the ladder.
+    on_solved
+        Called with the 0-based index and the rung's record once the rung is solved.
 
     Raises
     ------
@@ -453,6 +456,8 @@ def run_ladder(
             deviations=tuple(rung.model.provenance.get("deviations_from_validated_default", ())),
         )
         records.append(record)
+        if on_solved is not None:
+            on_solved(index, record)
         logger.info(
             "rung %-28s stage %d  %6.2f s  %2d iterations  damping >= %.3f",
             rung.name,
