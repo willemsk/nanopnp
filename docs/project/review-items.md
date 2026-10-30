@@ -426,6 +426,8 @@ no later owner.
 
 **Ruled** (§8.2.18 T3): `prepare` comes with structure preparation (FR-37); `upto` on reproduce with the workbench's Study package; the region export with FR-28, v0.7.
 
+**Ruled in part** (§8.2.22 X1): the region's interchange document comes forward to WP57, as the geometry file of `nanopnp geometry cylinder`; `prepare` and `upto` stay as T3 placed them.
+
 ### REV-42 — pnp carries inert flow keys
 
 *Area:* interface. *Severity:* low. *Found:* PR #53 (WP26).
@@ -1126,6 +1128,8 @@ The pending claims include numerical sweeps no current fixture runs and aliasing
 
 **Open:** the author rules whether to add a binary scan, or to narrow the claim to the lock file and the configuration flags.
 
+**Ruled** (§8.2.22 X7): the claim is narrowed to what is tested, `mpi4py` not locked and the configuration flags showing no MPI; no binary is scanned. WP57.
+
 
 ### REV-112 — Three suspected costs were never measured
 
@@ -1258,6 +1262,8 @@ another name that touches two fluid domains is not stopped.
 materials all along it, rather than orient it by name. Not done here: it widens a review-fix package
 into the force stage.
 
+**Ruled** (§8.2.22 X6): accepted as recommended. NUM-29's NOTE on the force surface states the refusal. WP57.
+
 ## REV-121: Stage 1 checks no axis for a monomeric or hetero-oligomeric pore
 
 `symmetry.axis: auto` finds the axis by cyclic chain permutation, so it needs n ≥ 2 chains that agree
@@ -1284,6 +1290,8 @@ into site-packages. Found by CODE_REVIEW_012 AR-15.
 reproducibility and a file outside the wheel is not pinned by its version, so the file's content
 hash enters the stage-8 key and the FR-25 manifest, and the manifest lists it as a deviation from the
 validated default; otherwise a cached result survives an edit of the file.
+
+**Ruled** (§8.2.22 X6): accepted as recommended. §5.3.1's NOTE on a correction file outside the package states it. WP57.
 
 ## REV-123: The library has no plotting helpers or notebook display
 
@@ -1537,6 +1545,8 @@ and the cylinder notebooks use the Gaussian rings of examples 02 and 03. Found w
 **Ruled** (§8.2.20 V3): deferred to the package that next changes the case schema, which decides whether a uniform
 wall charge is a boundary condition or a field form.
 
+**Ruled** (§8.2.22 X3): a boundary condition, `boundary_conditions.wall_charge_C_m2` beside `geometry.pore`, a surface term of the one weak form (PHY-09's NOTE), checked by VER-77; `Case.cylinder` takes it. WP57.
+
 ## REV-145: No case builders by section before Phase 5
 
 The author's notes for WP54 name builders by section, `with_density` and `with_numerics`, beside the leaf edits of
@@ -1679,6 +1689,8 @@ Found by the second `/np-ship wp 54` review ([CODE_REVIEW_018](../code_reviews/C
 Recommendation: leave all four. Each is a few lines against a failure no current caller reaches; the Debye length
 is covered by a test.
 
+**Ruled** (§8.2.22 X6): the four couplings are fixed in WP57, against the recommendation to leave them.
+
 ## REV-154: NUM-34's refusal names a setting that a supplied mesh ignores
 
 Found while running user-testing session 03 (WP55, [plan](../plans/wp55-user-testing-protocol.md)) as a dry run; it
@@ -1723,6 +1735,8 @@ move the helper with the next change to `validation/examples.py`.
 
 **Ruled in part** (§8.2.21 W7): session 04's variation goes to WP57, whose stage of one's own is registered by a
 public call; the other two items stay open.
+
+**Ruled** (§8.2.22 X6, X8): the rectification sentence is softened to session 05's observation, with no general claim; the tagged-block parser becomes one helper for the example and session checks. WP57.
 
 ## REV-156: A 16 562-element cylinder takes minutes to solve (UT-09)
 
@@ -1769,3 +1783,5 @@ did not plan.
 
 Recommendation: add the end-of-rung hook with WP57's `Case.run` hooks (§8.2.21 W4); move `reopen` onto `read_run`
 with the next change to `validation/runs.py`; take the last two items with whatever next touches those lines.
+
+**Ruled** (§8.2.22 X6): all four items go to WP57; the end-of-rung call goes with `Case.run`'s hooks.

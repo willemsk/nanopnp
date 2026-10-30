@@ -156,13 +156,23 @@ including one without the other is thermodynamically inconsistent.
 |---|---|---|---|
 | `Γ_w,c` (cis) | `φ = 0` | `c_i = c_bulk` | `σ·n = 0` (no normal stress) |
 | `Γ_w,t` (trans) | `φ = V_bias` | `c_i = c_bulk` | `σ·n = 0` |
-| `Γ_p+m` (fluid to protein, fluid to membrane) | continuity of `n·D`, `D = ε_0 ε_r ∇φ` | `n·J_i = 0` | `u = 0` (no-slip) |
+| `Γ_p+m` (fluid to protein, fluid to membrane) | continuity of `n·D`, `D = ε_0 ε_r ∇φ`; on the wall of an idealised pore, a jump of `σ_s` where one is set (NOTE below) | `n·J_i = 0` | `u = 0` (no-slip) |
 | `Γ_m` (exterior membrane boundary) | `n·D = 0` (zero charge) | not solved | not solved |
 | Analyte surface (when present) | dielectric interface, optional `σ_s` | `n·J_i = 0` | `u = 0` |
 | `r = 0` (axis) | natural | natural | `u_r = 0` (essential) |
 
 Rationale: `∂_r φ = ∂_r c_i = ∂_r u_z = 0` on the axis are natural conditions under the `r`-weighted
 axisymmetric forms. Imposing them as Dirichlet conditions is a modelling error.
+
+NOTE (a wall surface charge, PHY-09, FR-20, QR-13; §8.2.22 X3, REV-144): on the pore wall `wall` of
+an idealised pore (§5.3.1, `geometry.pore`), `boundary_conditions.wall_charge_C_m2` sets a uniform
+surface charge density `σ_s`. With `n` the unit normal from the solid into the electrolyte and the
+displacement `D = −ε_0 ε_r ∇φ`, Gauss's law across the wall is `n·(D_f − D_s) = σ_s`, that is
+`ε_0 ε_r,s ∂_n φ_s − ε_0 ε_r,f ∂_n φ_f = σ_s`. In the weak form of PHY-03 it is the surface term
+`+∫_wall σ_s v dS`, `dS` the axisymmetric surface measure (`2π r ds`), added once to the one
+expression of the forms. It is an input, not a correction (PHY-22): it is recorded with the case's
+inputs and is no deviation, and `0`, its default, adds no term, so a case without it solves exactly
+as before. The concentrations and the flow see it only through `φ`. VER-77 checks it.
 
 ### 4.3 Empirical corrections
 

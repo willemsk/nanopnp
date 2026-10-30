@@ -584,6 +584,12 @@ to `e_z` there is the traction integral itself, by the NUM-25 argument. It is in
 exactly, so it disagrees with the domain form precisely when a NUM-28 consistency term is missing or
 mis-signed, which no comparison of the two stress routes can detect.
 
+NOTE (the force surface, NUM-29, QR-12; §8.2.22 X6, REV-120): the surface routes orient the traction
+normal by the material on each side of the body's surface. A force surface whose two sides are not
+one pair of materials all along it SHALL be refused, naming the surface and the materials it meets,
+rather than oriented by a material's name, which would negate part of the traction without warning
+on a supplied mesh whose body touches two fluid domains.
+
 ### 6.8 Mesh resolution and adaptivity
 
 **NUM-30.** The mesh SHALL resolve the double layer to the following targets.
