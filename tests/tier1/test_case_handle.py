@@ -34,10 +34,10 @@ def test_case_load_rebases_relative_inputs_on_the_case_file(
     case = nanopnp.Case.load(CASE, write=False)
     inputs = case.document.inputs
     assert inputs is not None
-    for supplied in (inputs.mesh, inputs.charge):
-        assert supplied is not None and supplied.path is not None
-        assert supplied.path.is_absolute()
-        assert supplied.path.parent == CASE.parent
+    supplied = inputs.charge
+    assert supplied is not None and supplied.path is not None
+    assert supplied.path.is_absolute()
+    assert supplied.path.parent == CASE.parent
 
 
 @pytest.mark.parametrize(

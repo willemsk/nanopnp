@@ -53,7 +53,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, list[CommandRes
 
 def test_ver46_quickstart_runs_and_reproduces(ran: tuple[Path, list[CommandResult]]) -> None:
     example, results = ran
-    assert [result.argv[1] for result in results] == ["mesh", "run", "inspect", "reproduce"]
+    assert [result.argv[1] for result in results] == ["run", "inspect", "reproduce"]
     assert "reproduced" in results[-1].stdout
     assert (example / "run" / "manifest.json").is_file()
 

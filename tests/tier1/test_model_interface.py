@@ -338,7 +338,7 @@ print(sorted(name for name in ("ngsolve", "netgen") if name in sys.modules))
 
 
 def _quickstart_variants() -> dict[str, str]:
-    base = QUICKSTART.read_text(encoding="utf-8")
+    base = _with_supplied_mesh(QUICKSTART.read_text(encoding="utf-8"))
     corrections_block = (
         "  corrections:\n"
         "    diffusivity:  {model: willems2020_nacl}\n"
@@ -529,7 +529,7 @@ def test_ver56_pnp_ns_beside_corrections_it_overrides_runs_and_restores(
     import numpy as np
 
     quickstart = (
-        QUICKSTART.read_text(encoding="utf-8")
+        _with_supplied_mesh(QUICKSTART.read_text(encoding="utf-8"))
         .replace("model: epnp-ns", "model: pnp-ns")
         .replace("path: pore.msh", f"path: {pore_mesh}")
     )
@@ -595,7 +595,7 @@ def test_ver56_rerecorded_models_have_bit_identical_fingerprints(
     write_msh41(from_ngsolve(fluid), fluid_mesh)
 
     monkeypatch.setattr("nanopnp.pipeline.checks._check_unread", lambda document, model=None: None)
-    base_text = QUICKSTART.read_text(encoding="utf-8")
+    base_text = _with_supplied_mesh(QUICKSTART.read_text(encoding="utf-8"))
     base_pore = base_text.replace("path: pore.msh", f"path: {pore_mesh}")
     base_fluid = base_text.replace("path: pore.msh", f"path: {fluid_mesh}")
     variants_pore = {
@@ -832,3 +832,17 @@ def test_ver56_the_mesh_gate_refuses_a_solid_under_a_model_without_solids(
     ) as raised:
         ingest(resolved.mesh, resolved)
     assert "'pb'" in str(raised.value) and "'membrane'" in str(raised.value)
+
+
+def _with_supplied_mesh(case: str) -> str:
+    """Return an example case text with its declared pore replaced by a supplied mesh file."""
+    declared = (
+        "geometry:\n  pore: {shape: cylinder, radius_nm: 2}\n  membrane: {thickness_nm: 6}\n"
+        "  reservoir: {radius_nm: 10}\n\n"
+    )
+    supplied = "  mesh:\n    path: pore.msh\n    format: msh41\n    groups: {default: interface}\n"
+    assert declared in case, "the example no longer declares its pore this way"
+    text = case.replace(declared, "").replace("  mesh: {maxh_nm: 4, wall_h_nm: 0.35}\n", "")
+    if "\ninputs:\n" in text:
+        return text.replace("\ninputs:\n", f"\ninputs:\n{supplied}", 1)
+    return text.replace("\nelectrolyte:\n", f"\ninputs:\n{supplied}\nelectrolyte:\n", 1)

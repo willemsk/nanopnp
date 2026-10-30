@@ -34,7 +34,7 @@ def ran(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, list[CommandRes
         tmp_path_factory.mktemp("examples"),
         repository=REPOSITORY,
     )
-    return example, run_tagged(example, "run", only=("mesh", "run-epnpns"))
+    return example, run_tagged(example, "run", only=("run-epnpns",))
 
 
 # FR-23
