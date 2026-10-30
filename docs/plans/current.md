@@ -1,6 +1,6 @@
 # Current work
 
-Updated 29 October 2026 (§8.2.21). Navigation only; `SPECIFICATION.md` governs; an
+Updated 30 October 2026 (§8.2.21). Navigation only; `SPECIFICATION.md` governs; an
 unmerged branch is not shipped.
 
 ## In brief
@@ -19,8 +19,9 @@ One line per lane (§8.4.4).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress**. WP35 to WP55 are merged, tagged to `v0.5.0-alpha.21`. The sessions' findings
   are ruled (§8.2.21). [WP56](wp56-command-line-read-by-a-person.md), the command
-  line, is **planned**; then WP57, the Python interface (`MOD-11`), the
-  documentation increment and the close.
+  line, is **implemented** on PR #137, ready for `/np-ship`; its UT-09 measurement puts REV-156's
+  question to the author. Then WP57, the Python interface (`MOD-11`), the documentation increment
+  and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`. WP5.02, the spike, after `v0.5.0`.

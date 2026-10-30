@@ -3,9 +3,9 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP55, below. The author ran the sessions and ruled every `UT-nn` on
-29 October 2026, at WP56's plan (§8.2.21): planned, WP56 and WP57, the fix packages; provisional, the
-documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
+demand. Delivered: WP35 to WP56, below. The author ran the sessions and ruled every `UT-nn` on
+29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, is delivered; planned, WP57, the
+second; provisional, the documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
@@ -208,13 +208,16 @@ sessions themselves are the author's** (F3), and their findings are logged as th
 
 ### WP56 — The command line read by a person (§8.2.21 W1 to W6, W8)
 
-Planned ([plan](wp56-command-line-read-by-a-person.md)). It fixes UT-01 to UT-09, UT-11 and UT-12 at their
-causes: `inspect` reads a record by its schema and compares two runs (W2); `nanopnp plot` draws a
-stage's figure to a file, FR-44 (W3); `run` and `stage` report each stage and rung as it starts (W4);
-the wall-distance gate names a setting the run reads, and a field document whose two charges disagree
-is refused naming both, in sign when it is read (W5; REV-154); the help and the field document's reference say what
-a user needs (W6); and UT-09's cost is measured into REV-156 (W8). No schema moves; `--json` is
-unchanged. Tag `v0.5.0-alpha.22`.
+Delivered ([plan](wp56-command-line-read-by-a-person.md); tag `v0.5.0-alpha.22`). It fixes UT-01 to UT-08,
+UT-11 and UT-12 at their causes. `inspect` reads a run, a sweep dataset and an artefact by schema, prints one
+manifest group with `--section`, and compares two runs; `--json` is unchanged (W2; IF-02, FR-25). One
+reader, `Manifest.from_document`, refuses an edited record (QR-08). `nanopnp plot` draws a stage's figure
+to a file (W3; FR-44). `run` and `stage` print each stage and rung with its Newton steps and seconds under
+`--progress` (W4). The wall-distance gate names a setting the run reads (W5; NUM-34, REV-154 fixed), and a
+field document stating its charge twice with opposite signs is refused naming both keys (W5; QR-03, PHY-19).
+The help and a field-document reference say what a user needs (W6). UT-09 was measured (W8): assembly takes
+62 % of a 761 s solve and the factorisation 24 %, so REV-156 asks the author which cost the Phase 6 fix
+takes first. No schema moves.
 
 ### WP57 — The Python interface designed for its user (§8.2.21 W4, W7)
 
