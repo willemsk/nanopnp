@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp.cli import main
 from nanopnp.core.hashing import decode_floats
 from nanopnp.io.case import CORRECTION_PROPERTIES
 from nanopnp.post.qoi import ROUTE_AGREEMENT_TOLERANCE
@@ -61,6 +62,25 @@ def test_ver46_classical_pnp_ns_lists_every_none_as_a_deviation(
     expected.add("electrolyte.corrections.steric.model")
     assert set(listed) == expected
     assert all(entry["value"] == "none" for entry in listed.values())
+
+
+def test_fr25_inspect_reads_back_every_deviation_and_compares_the_runs(
+    ran: tuple[Path, list[CommandResult]], capsys: pytest.CaptureFixture[str]
+) -> None:
+    example, results = ran
+    run = example / "run-classical"
+    manifest = _read(run / "manifest.json")
+    block = manifest["deviations"]
+    assert isinstance(block, dict)
+    paths = sorted(str(entry["path"]) for entry in block["switches"])
+    assert paths, "the classical run must deviate, or this reads back nothing"
+
+    reading = next(result for result in results if result.argv[1] == "inspect").stdout
+    lines = [line.split() for line in reading.splitlines() if line.startswith("deviation ")]
+    assert sorted(words[1].rstrip(":") for words in lines) == paths
+
+    assert main(["inspect", str(run), "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == manifest
 
 
 def _mesh_hash(run: Path) -> str:
