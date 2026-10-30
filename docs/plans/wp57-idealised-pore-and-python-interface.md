@@ -417,7 +417,7 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
 - [x] 3d2a7a7 6. `physics/models.py`, `physics/pb.py`, `solve/state.py`, `mesh/primitives.py`,
   `tests/tier2/test_wall_surface_charge.py` (new): the wall charge (D5); done when VER-77's rows and
   `test_electrostatic_benchmarks.py` pass. **Executor:** main
-- [x] CHK7 7. Compaction checkpoint. **Executor:** main
+- [x] b17e9ff 7. Compaction checkpoint. **Executor:** main
 - [ ] 8. `api/__init__.py`, `api/case.py`, `api/session.py` (new), `nanopnp/case.py` (new),
   `api/reproduce.py` (moved from `pipeline/reproduce.py`), `api/sweep.py` (moved from
   `sweep/inmemory.py`, taking the Session's store), `io/case_paths.py`, `pipeline/run.py`,
