@@ -1,7 +1,7 @@
 # Meshes
 
-A mesh is either an input or built by the pipeline. You supply one through `inputs.mesh`, or
-generate an idealised pore or the ClyA reference geometry with `nanopnp mesh`. A case with a
+A mesh is either an input or built by the pipeline. You supply one through `inputs.mesh`, or write
+the ClyA reference geometry with `nanopnp mesh reference`. A case with a `geometry.pore`, a
 `structure:` section or an `inputs.profile` builds its own, through stages 5 and 6 (FR-10): see
 [From a structure to a mesh](geometry.md).
 
@@ -56,20 +56,36 @@ failure exits with code `4`. It names the measure, its value, and the element's 
 know where to refine. The wall-distance gate (NUM-34) runs later, once the model knows whether its
 wall corrections are on. It refuses a mesh too coarse at the wall to resolve the corrections.
 
-## Generating a mesh
+## An idealised pore
+
+A case declares a straight lumen through a membrane, with a quarter-disc reservoir on each side, as
+`geometry.pore`, and stage 6 meshes it under `numerics.mesh`:
+
+```yaml
+geometry:
+  pore: {shape: cylinder, radius_nm: 2}
+  membrane: {thickness_nm: 6}
+  reservoir: {radius_nm: 10}
+numerics:
+  mesh: {maxh_nm: 4, wall_h_nm: 0.35}
+```
+
+`maxh_nm` is the global element size and `wall_h_nm` the size at the wall, or `auto` to size it by
+the Debye length. Both are read only beside `geometry.pore`; a supplied mesh refuses them. The lumen
+is the domain `electrolyte`, the reservoirs are `cis` and `trans`, and the two pore mouths are the
+boundary `interface`. The defaults are quick to solve, but not converged.
+
+`nanopnp geometry cylinder --out pore.geometry.yaml` writes the same pore as a geometry file and
+prints the `geometry:` block that declares it.
+
+## Generating a mesh file
 
 ```console
-$ nanopnp mesh cylinder --out pore.msh
+$ nanopnp mesh pore.geometry.yaml --out pore.msh
 $ nanopnp mesh reference --out clya-reference.msh
 ```
 
-- **`mesh cylinder`** builds an idealised pore: a straight lumen through a membrane, with a
-  quarter-disc reservoir on each side. `--pore-radius-nm`, `--membrane-thickness-nm`,
-  `--reservoir-radius-nm`, `--maxh-nm` and `--wall-h-nm` shape it. The defaults give the smallest
-  mesh the wall-distance gate accepts with the wall corrections on. That is quick to solve, but not
-  converged. The lumen is the domain `electrolyte`, the reservoirs are `cis` and `trans`, and the
-  two pore mouths are left at Netgen's `default` name, which the printed mapping sends to
-  `interface`.
+- **`mesh <geometry file>`** meshes the pore of a geometry file at `--maxh-nm` and `--wall-h-nm`.
 - **`mesh reference`** builds the ClyA reference geometry at the published mesh preset (§5.2.2). It
   takes no geometric flag. Its groups are already in the vocabulary.
 

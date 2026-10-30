@@ -6,11 +6,12 @@ schema: nanopnp/case/v0.5
 name: iv-charged
 
 inputs:
-  mesh:
-    path: pore.msh
-    format: msh41
-    groups: {default: interface}
   charge: {path: cis-ring.field.yaml, format: field1}
+
+geometry:
+  pore: {shape: cylinder, radius_nm: 2}
+  membrane: {thickness_nm: 6}
+  reservoir: {radius_nm: 10}
 
 electrolyte:
   species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
@@ -36,5 +37,6 @@ physics:
 numerics:
   continuation: default_ladder
   stabilisation: none
+  mesh: {maxh_nm: 4, wall_h_nm: 0.35}
 
 outputs: [current, transport_numbers, eof_rate, rectification]

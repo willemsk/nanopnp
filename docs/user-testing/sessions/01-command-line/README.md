@@ -4,8 +4,7 @@
 
 ## The task
 
-You model a membrane pore and have a case file for it. Mesh the geometry, check the case,
-solve it, read back what was solved and with which settings, and show that someone else can
+You model a membrane pore and have a case file for it. Check the case, solve it, read back what was solved and with which settings, and show that someone else can
 reproduce your current.
 
 ## You start with
@@ -13,14 +12,12 @@ reproduce your current.
 - `pore.case.yaml`: an uncharged cylindrical pore through a membrane, in 0.1 M NaCl at a positive
   bias, with the model's corrections on.
 
-Work in this directory. `inputs.mesh.path` in the case file resolves against the working directory,
-not against the case file.
+Work in this directory. The case declares the pore's geometry, which the run meshes.
 
 ## Steps
 
 <!-- example: run -->
 ```console
-$ nanopnp mesh cylinder --out pore.msh
 $ nanopnp validate case pore.case.yaml
 $ nanopnp run pore.case.yaml --store store --run-dir run-pore
 $ nanopnp inspect run-pore
@@ -28,12 +25,12 @@ $ nanopnp plot run-pore solve --out fields.png
 $ nanopnp reproduce run-pore
 ```
 
-1. `mesh cylinder` writes the geometry as a mesh file and prints what a case needs to read it.
-2. `validate case` checks the case file without solving.
-3. `run` walks the pipeline, keeps every artefact in `store/` and writes a run directory.
-4. `inspect` reads the run directory back.
-5. `plot` draws the solved fields and the solver's convergence to `fields.png`.
-6. `reproduce` solves the archived case again, from nothing, and compares what it recorded.
+1. `validate case` checks the case file without solving.
+2. `run` meshes the pore, walks the pipeline, keeps every artefact in `store/` and writes a run
+   directory.
+3. `inspect` reads the run directory back.
+4. `plot` draws the solved fields and the solver's convergence to `fields.png`.
+5. `reproduce` solves the archived case again, from nothing, and compares what it recorded.
 
 ## What to expect
 

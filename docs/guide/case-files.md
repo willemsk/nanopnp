@@ -10,8 +10,10 @@ reference](../_generated/reference/case-file.md). This page explains how the doc
 schema: nanopnp/case/v0.5
 name: my-pore
 
-inputs:
-  mesh: {path: pore.msh, format: msh41, groups: {default: interface}}
+geometry:
+  pore: {shape: cylinder, radius_nm: 2}
+  membrane: {thickness_nm: 6}
+  reservoir: {radius_nm: 10}
 
 electrolyte:
   species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
@@ -41,7 +43,7 @@ by listing every correction as a deviation. To solve ePNP-NS, name the correctio
 | `physics` | The model (`epnp-ns`, `pnp-ns`, `pnp`, `pb`, `pb-linear`, `poisson`), the flow switches, and the solid permittivities, which are set here and nowhere else |
 | `numerics` | Element orders, the nonlinear and linear solvers, the continuation ladder, stabilisation, the wall-distance field, and the sizes of a generated mesh (`numerics.mesh`) |
 | `outputs` | Which quantities to report: `current`, `transport_numbers`, `eof_rate`, `rectification`, `analyte_force`, `fields` |
-| `structure`, `geometry` | The geometry pipeline: the structure file and its symmetry, the density map, the contour, the membrane and the reservoir. A `structure:` case walks every stage. See [Structures and trajectories](structures.md) and [From a structure to a mesh](geometry.md) |
+| `structure`, `geometry` | The geometry pipeline: the structure file and its symmetry, the density map, the contour, the membrane and the reservoir, or `geometry.pore`, an idealised pore that stage 6 meshes. A `structure:` case walks every stage. See [Structures and trajectories](structures.md) and [From a structure to a mesh](geometry.md) |
 | `charge` | Stage 7 on a structure: the pH, force field and titration of the protonation, the smearing of the deposit, and the two FR-15 switches, the ion-exclusion shell and the derived dielectric. See [From a structure to a charge](charge.md) |
 
 ## Validation

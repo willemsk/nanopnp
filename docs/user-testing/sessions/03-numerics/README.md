@@ -11,19 +11,15 @@ and see what the program says.
 ## You start with
 
 - `wall-035.case.yaml`, `wall-025.case.yaml`, `wall-0175.case.yaml`: the same uncharged pore in
-  0.1 M NaCl, each reading its own mesh.
-- `wall-100.case.yaml`: the same case, reading a mesh with a coarse wall (1 nm).
+  0.1 M NaCl, each with its own element size at the wall (`numerics.mesh.wall_h_nm`).
+- `wall-100.case.yaml`: the same case, with a coarse wall (1 nm).
 
-Work in this directory. The cases name `wall-*.msh` files, which the first block writes.
+Work in this directory.
 
 ## Steps
 
 <!-- example: run -->
 ```console
-$ nanopnp mesh cylinder --wall-h-nm 0.35 --out wall-035.msh
-$ nanopnp mesh cylinder --wall-h-nm 0.25 --out wall-025.msh
-$ nanopnp mesh cylinder --wall-h-nm 0.175 --out wall-0175.msh
-$ nanopnp mesh cylinder --wall-h-nm 1.0 --out wall-100.msh
 $ nanopnp run wall-035.case.yaml --store store --run-dir run-wall-035
 $ nanopnp run wall-025.case.yaml --store store --run-dir run-wall-025
 $ nanopnp run wall-0175.case.yaml --store store --run-dir run-wall-0175
@@ -37,10 +33,10 @@ The refusal:
 $ nanopnp run wall-100.case.yaml --store store --run-dir run-wall-100
 ```
 
-1. `--wall-h-nm` sets the element size at the pore wall. The first three meshes refine it.
-2. The three runs read one mesh each. Compare their currents.
+1. `numerics.mesh.wall_h_nm` sets the element size at the pore wall. The first three cases refine it.
+2. The three runs mesh the pore once each. Compare their currents.
 3. `inspect` reads the finest run back.
-4. The refused run reads the coarse mesh. Read what it says.
+4. The refused run has the coarse wall. Read what it says.
 
 ## What to expect
 
@@ -54,7 +50,7 @@ If what you see differs, that is a finding.
 
 ## Then try
 
-Refine the mesh away from the wall instead: make a mesh with a smaller `--maxh-nm` and the finest wall, point a copy of a case at it and run it. Decide whether the current is converged.
+Refine the mesh away from the wall instead: in a copy of the finest case, set a smaller `numerics.mesh.maxh_nm` and run it. Decide whether the current is converged.
 
 ## Record
 

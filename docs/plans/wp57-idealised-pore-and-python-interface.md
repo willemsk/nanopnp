@@ -453,9 +453,10 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   variation re-registering an edited function (D10); done when `test_notebooks.py` and the session's
   test pass. **Executor:** main
 > **Outcome — item 15.** `RunResult` plots a field and a cutline and lists its field choices and quantity rows; `SweepResult` plots the current against the bias and draws its dataset. The panels are imported inside the methods, so `pipeline/run.py` and `api/sweep.py` import no Matplotlib and no stage module at load; the two edges are `pipeline → plot` and `api → plot` in `modularity-layering.yaml`. `charge_figure` draws the deposited charge and the solid fraction, so notebook 02 shows one tab for both. A session-04 stage of one's own is a function, `selectivity(qoi)`, registered on the session. All six notebooks run headless (380 s) and the session's test passes.
-- [ ] 16. Examples 01 to 04 (cases, READMEs, `tour.py`) and `tests/tier2/test_examples_04_python_api.py`
+- [x] ee48c0d 16. Examples 01 to 04 (cases, READMEs, `tour.py`) and `tests/tier2/test_examples_04_python_api.py`
   (D4); done when `uv run pytest --nightly tests/tier2/test_examples_0[1-4]*.py` passes with VER-62
   unchanged, or X4's gate is met and reported. **Executor:** main
+> **Outcome — item 16.** Examples 01 to 04 and their tests pass (27 in 107 s) with VER-62's mesh `546c34f4…` unchanged, so X4's gate is not met and nothing is re-pinned. The tour's case is `geometry.pore` with `maxh_nm: 4`; `finer` moves `mesh` and not `materials`, and `supplied` and `renamed` agree on `mesh` and `materials`; their `case` keys differ, because the case hash keeps the path as written.
 - [ ] 17. Sessions 01 to 03 and 05 (READMEs, cases), `docs/guide/meshes.md`, `docs/guide/running.md`
   (D4); done when `uv run pytest tests/tier2/test_user_testing_sessions.py` passes for them.
   **Executor:** `general-purpose` on Sonnet
