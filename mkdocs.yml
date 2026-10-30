@@ -124,6 +124,7 @@ nav:
   - Reference:
       - reference/index.md
       - Case file: _generated/reference/case-file.md
+      - Field document: _generated/reference/field-document.md
       - Command line: _generated/reference/cli.md
       - Exit codes: _generated/reference/exit-codes.md
       - Python API: _generated/reference/api.md

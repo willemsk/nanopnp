@@ -8,7 +8,16 @@ from pathlib import Path
 from typing import Literal, Union, get_args, get_origin
 
 import yaml
+from pydantic import BaseModel
 
+from nanopnp.charge.fields import (
+    FIELD_SCHEMA,
+    DataSpec,
+    FieldDocument,
+    FieldProvenance,
+    FormSpec,
+    GridSpec,
+)
 from nanopnp.cli import build_parser
 from nanopnp.core.errors import EXCLUDED, EXIT_CODES, EXIT_MEANINGS
 from nanopnp.core.public import PUBLIC
@@ -31,6 +40,7 @@ __all__ = [
     "render_case_reference",
     "render_cli_reference",
     "render_exit_codes",
+    "render_field_reference",
 ]
 
 USAGE_WIDTH = 88
@@ -68,6 +78,10 @@ def _type_name(annotation: object) -> str:
         present = [argument for argument in arguments if argument is not type(None)]
         text = " or ".join(_type_name(argument) for argument in present)
         return f"{text}, optional" if len(present) < len(arguments) else text
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return annotation.__name__
+    if origin is tuple and arguments:
+        return f"pair of {_type_name(arguments[0])}s" if len(arguments) == 2 else "tuple"
     if origin is dict and len(arguments) == 2:
         return f"mapping of {_type_name(arguments[0])} to {_type_name(arguments[1])}"
     if origin is list and len(arguments) == 1:
@@ -168,6 +182,47 @@ def render_case_reference() -> str:
         ]
         if head in notes:
             lines += [*notes[head], ""]
+    return "\n".join(lines)
+
+
+FIELD_MODELS: tuple[tuple[type[BaseModel], str], ...] = (
+    (FieldDocument, "The header document: the top level of a supplied field's YAML file."),
+    (DataSpec, "The `data` block: a data file the header refers to."),
+    (FormSpec, "The `form` block: an analytic form standing in for a data file."),
+    (GridSpec, "The `grid` block: the grid the data file is declared to have."),
+    (FieldProvenance, "The `provenance` block: where the field came from."),
+)
+"""The field-document models in the order the reference lists them, each with its role."""
+
+
+def render_field_reference() -> str:
+    """Return the field-document reference: every key of a supplied field's header."""
+    lines = [
+        "# Field-document reference",
+        "",
+        f"Generated from the `{FIELD_SCHEMA}` models by `nanopnp.cli.reference`; every key of",
+        "a supplied field's header document is listed, and nothing here is written by hand.",
+        "A header names a data file or an analytic form, never both. A case file refers to it",
+        "from `inputs.charge` or `inputs.eps_r` (see the [case-file reference](case-file.md)).",
+        "",
+        "**Default** is what a header omitting the key is validated with.",
+        "",
+    ]
+    for model, role in FIELD_MODELS:
+        lines += [f"## `{model.__name__}`", "", role, ""]
+        rows = []
+        for name, info in model.model_fields.items():
+            key = info.alias or name
+            default = (
+                "**required**"
+                if info.is_required()
+                else _cell(_flow(info.get_default(call_default_factory=True)))
+            )
+            rows.append(
+                f"| `{key}` | {_cell(_type_name(info.annotation))} | {default} | "
+                f"{_cell(info.description or '')} |"
+            )
+        lines += ["| Key | Type | Default | Meaning |", "|---|---|---|---|", *rows, ""]
     return "\n".join(lines)
 
 

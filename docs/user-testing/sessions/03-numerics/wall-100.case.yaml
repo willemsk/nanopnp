@@ -1,6 +1,6 @@
 # Session 03: the quickstart pore on the mesh wall-100.msh. Work in this directory.
 schema: nanopnp/case/v0.5
-name: coarse
+name: wall-100
 
 inputs:
   mesh:

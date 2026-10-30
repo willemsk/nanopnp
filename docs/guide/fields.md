@@ -9,7 +9,8 @@ to a charge](charge.md).
 ## The field header
 
 A field is named by a header document, `schema: nanopnp/field/v0.5`, with `format: field1` in the
-case (the §5.3.1 `inputs.charge` NOTE). The header declares:
+case (the §5.3.1 `inputs.charge` NOTE). The [field-document reference](../_generated/reference/field-document.md) lists every key with its type,
+default and meaning. The header declares:
 
 - **`quantity`** and **`units`**: what the numbers are (below);
 - the **grid**: origin, spacing and shape;

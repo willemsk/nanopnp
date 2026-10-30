@@ -1208,7 +1208,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     plot.set_defaults(handler=_plot, parser=plot)
 
-    check = _common(subparsers.add_parser("reproduce", help="re-run an archived run (QR-08)"))
+    check = _common(
+        subparsers.add_parser(
+            "reproduce",
+            help="re-run an archived run (QR-08)",
+            description="Re-run an archived run in a fresh store and compare its quantities with "
+            "the recorded ones. A run fails to reproduce when an input file changed, when the "
+            "libraries or the platform moved the numbers past the tolerance, or when the store "
+            "served a stale artefact; it solves in a fresh store (a scratch one unless --store "
+            "names a store that does not hold the run), so no recorded artefact is reused.",
+        )
+    )
     check.add_argument("directory", type=Path, help="the run directory to reproduce")
     check.add_argument("--store", type=Path, default=None, help="store to reproduce into")
     check.add_argument(
@@ -1228,13 +1238,15 @@ def build_parser() -> argparse.ArgumentParser:
     cylinder = _common(
         shapes.add_parser("cylinder", help="an idealised cylindrical pore through a membrane")
     )
-    cylinder.add_argument(
+    geometry = cylinder.add_argument_group("geometry: the shape of the pore")
+    mesh_sizes = cylinder.add_argument_group("mesh: the element sizes")
+    geometry.add_argument(
         "--pore-radius-nm",
         type=_positive_nm,
         default=DEFAULT_PORE_RADIUS_NM,
         help=f"lumen radius (default {DEFAULT_PORE_RADIUS_NM:g})",
     )
-    cylinder.add_argument(
+    geometry.add_argument(
         "--membrane-thickness-nm",
         type=_positive_nm,
         default=DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
@@ -1243,7 +1255,7 @@ def build_parser() -> argparse.ArgumentParser:
             f"(default {DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM:g})"
         ),
     )
-    cylinder.add_argument(
+    geometry.add_argument(
         "--reservoir-radius-nm",
         type=_positive_nm,
         default=DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM,
@@ -1252,13 +1264,13 @@ def build_parser() -> argparse.ArgumentParser:
             f"(default {DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM:g})"
         ),
     )
-    cylinder.add_argument(
+    mesh_sizes.add_argument(
         "--maxh-nm",
         type=_positive_nm,
         default=DEFAULT_MAXH_NM,
         help=f"global maximum element size (default {DEFAULT_MAXH_NM:g})",
     )
-    cylinder.add_argument(
+    mesh_sizes.add_argument(
         "--wall-h-nm",
         type=_positive_nm,
         default=DEFAULT_CYLINDER_WALL_H_NM,
@@ -1297,7 +1309,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     planner.set_defaults(handler=_sweep)
 
-    runner = _common(actions.add_parser("run", help="dispatch a plan's members"))
+    runner = _common(
+        actions.add_parser(
+            "run",
+            help="dispatch a plan's members",
+            description="Run the members of a sweep plan. With --workers above 1, each worker is "
+            "pinned to one thread (sweep/run.py pin_threads sets OMP_NUM_THREADS, "
+            "OPENBLAS_NUM_THREADS and MKL_NUM_THREADS to 1 in each worker), so --workers sets "
+            "how many cores are used.",
+        )
+    )
     runner.add_argument("plan", type=Path, help="the plan file written by 'sweep plan'")
     runner.add_argument("--store", type=Path, default=None, help="artefact store root")
     target = runner.add_mutually_exclusive_group()

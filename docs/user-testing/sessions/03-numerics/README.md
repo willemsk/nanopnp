@@ -12,7 +12,7 @@ and see what the program says.
 
 - `wall-035.case.yaml`, `wall-025.case.yaml`, `wall-0175.case.yaml`: the same uncharged pore in
   0.1 M NaCl, each reading its own mesh.
-- `coarse.case.yaml`: the same case, reading a mesh with a coarse wall.
+- `wall-100.case.yaml`: the same case, reading a mesh with a coarse wall (1 nm).
 
 Work in this directory. The cases name `wall-*.msh` files, which the first block writes.
 
@@ -34,7 +34,7 @@ The refusal:
 
 <!-- example: refused -->
 ```console
-$ nanopnp run coarse.case.yaml --store store --run-dir run-coarse
+$ nanopnp run wall-100.case.yaml --store store --run-dir run-wall-100
 ```
 
 1. `--wall-h-nm` sets the element size at the pore wall. The first three meshes refine it.

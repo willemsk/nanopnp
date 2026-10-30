@@ -14,7 +14,7 @@ Six kinds of file, all derived:
   text whose tagged commands VER-46 executes.
 - **The release notes.** ``CHANGELOG.md``, copied verbatim, as the versions it records are the
   git tags themselves (``SPECIFICATION.md`` section 2.7, Versioning).
-- **The references.** The case-file, command-line, exit-code and API pages, rendered
+- **The references.** The case-file, field-document, command-line, exit-code and API pages, rendered
   from the live objects by :mod:`nanopnp.cli.reference`.
 - **The case schema.** ``reference/case.schema.json``, the case document's JSON Schema (VER-76).
 - **The modularity measurements.** The numbers the modularity report quotes, measured
@@ -41,6 +41,7 @@ from nanopnp.cli.reference import (
     render_case_reference,
     render_cli_reference,
     render_exit_codes,
+    render_field_reference,
 )
 from nanopnp.io.case_paths import case_json_schema
 from nanopnp.validation.modularity import render_measurements
@@ -156,6 +157,7 @@ def main() -> int:
     rendered = {
         "reference/correction-files.md": _correction_files(),
         "reference/case-file.md": render_case_reference(),
+        "reference/field-document.md": render_field_reference(),
         "reference/cli.md": render_cli_reference(),
         "reference/exit-codes.md": render_exit_codes(),
         "reference/api.md": render_api_reference(),
