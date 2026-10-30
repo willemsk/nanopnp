@@ -5,8 +5,9 @@ from __future__ import annotations
 import difflib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
-from typing import Any, Literal, get_args, get_origin
+from typing import Any, Literal, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic.fields import FieldInfo
@@ -23,6 +24,8 @@ from nanopnp.io.case import (
     _model_of,
     render_problems,
 )
+
+D = TypeVar("D", bound=CaseDocument)
 
 
 def _literal_options(annotation: FieldType) -> tuple[str, ...] | None:
@@ -379,7 +382,7 @@ def _sequence_entry(
         ) from None
 
 
-def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) -> CaseDocument:
+def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
     """Return a fresh, re-validated copy of ``document`` with each dotted path set to its value.
 
     Parameters
@@ -395,7 +398,7 @@ def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) ->
         reference.validate(value)
         _set_at(payload, path, value)
     try:
-        return CaseDocument.model_validate(payload)
+        return type(document).model_validate(payload)
     except ValidationError as error:
         listed = ", ".join(sorted(assignments)) or "nothing"
         raise CaseValidationError(
@@ -403,7 +406,7 @@ def substitute(document: CaseDocument, assignments: Mapping[str, FieldValue]) ->
         ) from None
 
 
-def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
+def with_profile(document: D, path: str | Path) -> D:
     """Return ``document`` rewritten to take its pore profile from ``path``, then re-validated.
 
     Parameters
@@ -420,7 +423,7 @@ def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
     inputs = payload.setdefault("inputs", {})
     inputs["profile"] = {"path": str(path), "format": PROFILE_FORMAT}
     try:
-        return CaseDocument.model_validate(payload)
+        return type(document).model_validate(payload)
     except ValidationError as error:
         raise CaseValidationError(
             render_problems(f"<{document.name} with inputs.profile {path}>", error), error
@@ -430,7 +433,7 @@ def with_profile(document: CaseDocument, path: str | Path) -> CaseDocument:
 NEUTRAL_SECTIONS: frozenset[str] = frozenset({"charge"})
 
 
-def with_section(document: CaseDocument, name: str) -> CaseDocument:
+def with_section(document: D, name: str) -> D:
     """Return ``document`` with the empty neutral section ``name`` added."""
     if name not in NEUTRAL_SECTIONS:
         raise ValueError(
@@ -443,7 +446,7 @@ def with_section(document: CaseDocument, name: str) -> CaseDocument:
     payload = document.model_dump(by_alias=True, mode="json")
     payload[name] = {}
     try:
-        return CaseDocument.model_validate(payload)
+        return type(document).model_validate(payload)
     except ValidationError as error:
         raise CaseValidationError(
             render_problems(f"<{document.name} with {name}: {{}}>", error), error
@@ -469,3 +472,64 @@ def _set_at(payload: dict[str, FieldValue], path: str, value: FieldValue) -> Non
         cursor[int(last)] = value
     else:
         cursor[last] = value
+
+
+@cache
+def path_fields() -> tuple[str, ...]:
+    """Return every case field that names a file, read off the schema so a new one is not missed."""
+    return tuple(
+        reference.path
+        for reference in case_fields()
+        if reference.annotation is Path or Path in get_args(reference.annotation)
+    )
+
+
+def input_paths(document: CaseDocument) -> dict[str, str]:
+    """Return every input file a case names, by dotted case path, as written."""
+    payload = document.model_dump(by_alias=True, mode="json")
+    found: dict[str, str] = {}
+    for dotted in path_fields():
+        cursor: Any = payload
+        for part in dotted.split("."):
+            cursor = cursor.get(part) if isinstance(cursor, dict) else None
+        if isinstance(cursor, str):
+            found[dotted] = cursor
+    return found
+
+
+@cache
+def block_paths() -> tuple[str, ...]:
+    """Return the dotted path of every block of the case schema, a list of blocks excluded."""
+    blocks: set[str] = set()
+    for reference in case_fields():
+        parts = reference.path.split(".")
+        for depth in range(1, len(parts)):
+            if not _is_index(parts[depth - 1]) and not _is_index(parts[depth]):
+                blocks.add(".".join(parts[:depth]))
+    return tuple(sorted(blocks))
+
+
+def field_path(name: str) -> str:
+    """Return the dotted case path ``name`` stands for.
+
+    A bare name is a top-level key of the case, or the last component of exactly one field or block.
+    """
+    if "." in name or name in CaseDocument.model_fields:
+        return name
+    named = [
+        path
+        for path in (*(reference.path for reference in case_fields()), *block_paths())
+        if path.rsplit(".", 1)[-1] == name
+    ]
+    matches = sorted(set(named))
+    if len(matches) == 1:
+        return matches[0]
+    if matches:
+        raise UnknownCasePathError(
+            f"{name!r} names more than one field: {', '.join(matches)}. Write the dotted path, "
+            "or pass the block as a mapping"
+        )
+    leaves = sorted({reference.path.rsplit(".", 1)[-1] for reference in case_fields()})
+    close = difflib.get_close_matches(name, leaves, n=3)
+    hint = f" Did you mean {', '.join(map(repr, close))}?" if close else ""
+    raise UnknownCasePathError(f"{name!r} is not a field of the case schema.{hint}")

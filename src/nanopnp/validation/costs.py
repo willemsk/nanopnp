@@ -464,11 +464,11 @@ def _write_dcd(  # pragma: no cover - writes the A1 leg's 2WCD trajectories; the
 def _a1_child(  # pragma: no cover - runs stages 1 and 2 on the protein; the script, not CI
     case: Path, store: Path, upto: str
 ) -> dict[str, object]:
-    from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
 
     started = time.perf_counter()
-    run_case(case, store=Store(store), upto=upto, write=False)
+    Session(store, write=False).run(Case.load(case), upto=upto)
     return {"peak_mb": _peak_rss_mb(), "seconds": time.perf_counter() - started}
 
 
@@ -541,8 +541,8 @@ def _charged_case(  # pragma: no cover - prepares 2WCD through example 06; the s
 def _walk(  # pragma: no cover - runs a full walk; the script, not CI, runs it
     case: Path, store: Path, legs: Sequence[str]
 ) -> dict[str, object]:
-    from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
 
     timer = CategoryTimer()
     with contextlib.ExitStack() as stack:
@@ -556,7 +556,7 @@ def _walk(  # pragma: no cover - runs a full walk; the script, not CI, runs it
                 instrument(timer, {"io-write": A16_WRITES, "io-read": A16_READS}, group="io")
             )
         started = time.perf_counter()
-        result = run_case(case, store=Store(store), write=False)
+        result = Session(store, write=False).run(Case.load(case))
         wall = time.perf_counter() - started
     solve_s = next(record.seconds for record in result.stages if record.name == "solve")
     return {"totals": dict(timer.totals), "wall_s": wall, "solve_s": solve_s}

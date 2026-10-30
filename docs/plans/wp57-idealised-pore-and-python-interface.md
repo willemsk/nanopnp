@@ -418,7 +418,7 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   `tests/tier2/test_wall_surface_charge.py` (new): the wall charge (D5); done when VER-77's rows and
   `test_electrostatic_benchmarks.py` pass. **Executor:** main
 - [x] b17e9ff 7. Compaction checkpoint. **Executor:** main
-- [ ] 8. `api/__init__.py`, `api/case.py`, `api/session.py` (new), `nanopnp/case.py` (new),
+- [x] SHA8 8. `api/__init__.py`, `api/case.py`, `api/session.py` (new), `nanopnp/case.py` (new),
   `api/reproduce.py` (moved from `pipeline/reproduce.py`), `api/sweep.py` (moved from
   `sweep/inmemory.py`, taking the Session's store), `io/case_paths.py`, `pipeline/run.py`,
   `cli/__init__.py`, `gui/solver.py`, `validation/costs.py`, `validation/geometry.py`, `sweep/__init__.py`,
@@ -427,6 +427,7 @@ walked to both (`supplied`, `renamed`); `tour.json` records all three; the test 
   `tests/tier1/test_session.py`, and the tests importing `nanopnp.sweep.sweep`: the `Case` and the
   `Session`, every caller on it (D6, D7); done when the D6 and D7 rows, `test_cli.py`,
   `test_reproduce_diagnostics.py`, `test_sweep_cli.py` and VER-61 pass. **Executor:** main
+> **Outcome — item 8.** `run_case` stays until item 14, so tests walk it unchanged; `run_document` lost `options` (no caller passed one). `Session.sweep` returns `api/sweep.py:Sweep` until item 10 brings `SweepResult`. `api/session.py` imports the pipeline inside its methods, which VER-72 allows for a `nanopnp` module, so `Session().stages` and `nanopnp stage --list` import no stage module. `nanopnp/case.py` is a root module: `validation/modularity.py:ROOT_MODULES` names it so `node_of` reads it as node `nanopnp`, not a subpackage `case`. A case file's relative paths are still read from the working directory until item 9, so `test_case.py` and `test_session.py` change into the example's directory. Notebooks 01 to 06, session 04 and example 04's tour still call `Case.cylinder(..., store=)` and `.run`; items 15 and 16 move them.
 - [ ] 9. `core/paths.py`, `io/case.py`, `pipeline/case.py`, `pipeline/checks.py`, `pipeline/run.py`,
   `materials/stage.py`, `materials/models.py`, `io/manifest.py`, `sweep/plan.py`, `api/case.py`,
   `api/session.py`, `api/reproduce.py`, `gui/assess.py`, `gui/render.py`, `cli/__init__.py`: paths

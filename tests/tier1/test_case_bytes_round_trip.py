@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from nanopnp.api.reproduce import check_inputs
 from nanopnp.io.manifest import CASE_FILENAME, Manifest, input_group, read
-from nanopnp.pipeline.reproduce import check_inputs
 from nanopnp.pipeline.run import _run_key
 
 CASE_HASH = "0" * 64

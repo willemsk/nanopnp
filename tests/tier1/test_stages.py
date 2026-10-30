@@ -107,6 +107,26 @@ def test_ver25_every_stage_describes_itself_without_importing_it() -> None:
     assert reported["post"] is False
 
 
+def test_ver25_session_stages_describe_without_importing() -> None:
+    script = (
+        "import sys, json;"
+        "from nanopnp.api.session import Session;"
+        "from nanopnp.core.stages import registered_stages;"
+        "info = Session().stages;"
+        "same = [(i.name, i.number, i.title, i.inputs, i.outputs, i.schema) for i in info]"
+        " == [(d.name, d.number, d.title, d.inputs, d.outputs, d.artefact_schema)"
+        " for d in registered_stages()];"
+        "print(json.dumps({'same': same, 'count': len(info),"
+        " 'loaded': sorted(m for m in sys.modules if m in {'ngsolve', 'nanopnp.solve.stage',"
+        " 'nanopnp.materials.stage', 'nanopnp.charge.stage', 'nanopnp.mesh.ingest',"
+        " 'nanopnp.geometry.region', 'nanopnp.geometry.contour'})}))"
+    )
+    found = _in_subprocess(script)
+    assert found["same"] is True
+    assert found["count"] == len(__import__("nanopnp.core.stages").core.stages.registered_stages())
+    assert found["loaded"] == []
+
+
 def test_ver25_a_stage_description_matches_the_stage_it_describes() -> None:
     for name, entry in _catalogue().items():
         module_name, _, attribute = entry.target.partition(":")

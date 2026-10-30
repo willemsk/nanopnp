@@ -255,7 +255,7 @@ def test_qr08_a_reproduced_mesh_with_another_content_hash_aborts_naming_both(
 ) -> None:
     from types import SimpleNamespace
 
-    from nanopnp.pipeline.reproduce import (
+    from nanopnp.api.reproduce import (
         InputMovedError,
         check_mesh,
     )

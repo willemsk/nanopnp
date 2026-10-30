@@ -267,18 +267,18 @@ def failure_event(error: BaseException) -> Failed:
 
 
 def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> None:
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
     from nanopnp.core.stages import Cancelled as CancelledError
     from nanopnp.io.store import Store
-    from nanopnp.pipeline.run import run_case
 
     events.put(Started(case=request.case, store=request.store))
     try:
-        # Resolved here rather than left to ``run_case``, so the root every
+        # Resolved here rather than left to the Session, so the root every
         # ``Produced`` names is the one the walk wrote into.
         store = Store(Path(request.store)) if request.store is not None else Store()
-        result = run_case(
-            Path(request.case),
-            store=store,
+        result = Session(store).run(
+            Case.load(request.case),
             upto=request.upto,
             progress=QueueProgress(events),
             cancel=EventCancel(cancel),

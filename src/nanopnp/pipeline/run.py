@@ -417,7 +417,6 @@ class _Walk:
     document: CaseDocument
     resolved: ResolvedCase
     store: Store
-    options: Mapping[str, Mapping[str, Canonicalisable]]
     arguments: Mapping[str, Mapping[str, StageOption]]
     workspace: Path | None
     only: bool
@@ -431,7 +430,6 @@ class _Walk:
         return StageInputs(
             resolved=self.resolved,
             upstream=offered(name, self.artefacts, own=own),
-            options=dict(self.options.get(name, {})),
         )
 
     def construct(self, name: str) -> Stage:
@@ -839,7 +837,6 @@ def run_document(
     store: Store | None = None,
     upto: str | None = None,
     only: bool = False,
-    options: Mapping[str, Mapping[str, Canonicalisable]] | None = None,
     arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
     workspace: Path | None = None,
     overwrite_workspace: bool = False,
@@ -862,8 +859,6 @@ def run_document(
         Stop after this stage; ``None`` walks the whole pipeline.
     only
         Take every upstream payload-writing stage from the store, aborting naming it if absent.
-    options
-        Per-stage options, by stage name.
     arguments
         Per-stage constructor arguments, by stage name; none enters an artefact key.
     workspace
@@ -895,7 +890,6 @@ def run_document(
         document=document,
         resolved=resolve(document),
         store=target,
-        options=dict(options or {}),
         arguments=dict(arguments or {}),
         workspace=Path(workspace) if workspace is not None else None,
         only=only,
@@ -1058,7 +1052,6 @@ def run_case(
     store: Store | None = None,
     upto: str | None = None,
     only: bool = False,
-    options: Mapping[str, Mapping[str, Canonicalisable]] | None = None,
     arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
     workspace: Path | None = None,
     overwrite_workspace: bool = False,
@@ -1079,7 +1072,6 @@ def run_case(
         store=store,
         upto=upto,
         only=only,
-        options=options,
         arguments=arguments,
         workspace=workspace,
         overwrite_workspace=overwrite_workspace,
