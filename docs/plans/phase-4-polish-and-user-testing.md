@@ -225,10 +225,11 @@ takes first. No schema moves.
 
 ### WP57 — An idealised pore as geometry, and the Python interface rebuilt on a Case and a Session (§8.2.21 W4; §8.2.22 X1 to X4, X6 to X8; §8.2.23 Y1 to Y11)
 
-Planned ([plan](wp57-idealised-pore-and-python-interface.md)), to be re-planned on its open PR after
-§8.2.23, with no plan cap (Y11). Its plan measured that stage 6 can mesh the declared cylinder to
+Planned ([plan](wp57-idealised-pore-and-python-interface.md)) on its open PR, re-planned after
+§8.2.23 with no plan cap (Y11). Its plan measured that stage 6 can mesh the declared cylinder to
 VER-62's recorded mesh bit for bit, and amends §5.2.2, §5.3.1, §5.5 and IF-02's generators NOTE to
-say how. It carries:
+say how; its re-plan places the `Case` and the `Session` in a new `api/` module above `sweep/`
+(§5.1) and reads a case's relative paths beside the case file (§5.3.1). It carries:
 
 - **The geometry split (UT-02; X1, X2).** A case declares an idealised cylinder as `geometry.pore`;
   stage 5 builds its region and stage 6 meshes it under `numerics.mesh` (§5.3.1's NOTE on an
