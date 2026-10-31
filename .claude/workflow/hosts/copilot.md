@@ -16,7 +16,7 @@ Seen in app 1.1.34 (runtime 1.0.102), 31 October 2026. A separate WSL shell repo
 | `.claude/skills/*/SKILL.md` | Listed as skills; `/np-plan`, `/np-implement`, `/np-ship`, `/np-gui`, `steward` |
 | `.claude/settings.json` hooks | The `Bash` and `Edit` matchers ran in the WSL probe; other tools and hook sources remain under REV-166 |
 | `.claude/settings.json` `permissions` | Not read. Tool approvals are the app's settings, per machine |
-| `.github/hooks/nanopnp.json` | Configured for Copilot only: gates `write_bash`, formats after `edit`, `create` and `apply_patch`, refuses the GitHub MCP write tools. A probe in this source fired in a fresh session; this file's write-tool paths and revised matcher remain unverified live under REV-166 |
+| `.github/hooks/nanopnp.json` | Configured for Copilot only: gates `write_bash`, formats after `edit` and `create`, refuses the GitHub MCP write tools. A probe in this source fired in a fresh session; this file's write-tool paths remain unverified under REV-166 |
 | `.githooks/pre-push` | Git's own hook, on either host and for the app's buttons, once the clone sets `core.hooksPath` |
 
 The WSL probe's shared shell and edit hooks had `COPILOT_CLI` and `CLAUDE_PROJECT_DIR` set;
@@ -56,12 +56,14 @@ nearest id of the same tier and say so.
 | `physics-reviewer` | Opus | `high` | |
 | `gui-reviewer` | Sonnet | `high` | |
 | `ci-log-classifier` | Haiku | — | `omitClaudeMd` has no Copilot equivalent, so it may see `CLAUDE.md` (REV-167) |
+| Built-in `code-review` | Sonnet | `xhigh` | Narrower than the Claude Code review (*Code review*) |
 
 ## Code review
 
 `code-review` is not a repository skill. On Copilot the name resolves to whatever skill the machine
 has installed, so never call a skill by that name there. Instead, `np-ship/wp.md` §4 calls the
-built-in `code-review` agent through `task` with `reasoning_effort: "xhigh"`, giving it the PR
+built-in `code-review` agent through `task` with `model: "claude-sonnet-5.5"` and
+`reasoning_effort: "xhigh"`, giving it the PR
 number, the base and head SHAs recorded under **Verification**, `git diff origin/main...HEAD` and
 §4's brief. The agent is read-only and reports only high-confidence bugs and logic errors. So this
 session writes `docs/code_reviews/CODE_REVIEW_NNN.md`: the reviewed base and head, the completed
@@ -72,11 +74,16 @@ to ship from Claude Code.
 
 ## CI
 
-Copilot has no PR subscription the workflow uses. At `np-ship/wp.md` §5 and in the steward: push,
-write the checkpoint into the PR's **Verification** (with `host: copilot`), report *automation
-limit: re-run `/np-ship wp <n>` when CI ends*, and stop (§8.2.25 AA3). Never wait on CI with
-`sleep` or a loop. `np-ship/wp.md` §0 step 3 resumes. The app's agent merge stays off on nanopnp
-pull requests: it would fix CI outside the steward's failure classes.
+Copilot has no PR subscription the workflow uses. After a push in `np-ship/wp.md` §5 or the
+steward, write the checkpoint into the PR's **Verification** (with `host: copilot`), report
+*automation limit: re-run `/np-ship wp <n>` when CI ends*, and stop (§8.2.25 AA3).
+
+On the §0.3 resume path, read the live PR state first. If CI is pending or mergeability is unknown,
+record any change and hand off again. If a new check fails or a conflict appears, apply the steward's
+failure classes; after gating and pushing a fix, checkpoint and stop. If CI is green and the PR
+mergeable, continue to §6; if it is blocked for another reason, report it and hand off. Handle a
+merged or closed PR as the steward says. Never wait on CI with `sleep` or a loop. The app's agent
+merge stays off on nanopnp pull requests: it would fix CI outside the steward's failure classes.
 
 ## Safety hooks
 
@@ -117,7 +124,7 @@ commits until fixed.
 - The Claude web environment's stop hook is absent; still end no turn on an unpushed commit.
 - The commit trailer is `Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>`.
 
-## GUI artifacts
+## GUI artefacts
 
 `np-gui render` and `review` work on Copilot. Artifact tools are unavailable: run `publish` and
 `collect` on Claude Code. `grill` needs publication before asking, so it cannot complete on
@@ -145,10 +152,10 @@ Copilot; hand it off to Claude Code rather than asking without the published boa
   generic reason; each also blocked after a 40-second sleep under a 60-second timeout. Sample
   ordering and tool shapes are in the REV record, not a guarantee of total order. The GitHub probe
   named patch calls `apply_patch`; the Claude source named them `Edit` with a raw patch string.
-  The shared formatter handles its multiple paths; the Copilot adapter and matcher now handle
-  `apply_patch` too, but that revised hook path has only been replayed offline. `write_bash`, GitHub
-  MCP write tools and a distinct create tool were unavailable, so their payloads, matchers and
-  actual adapter paths remain unverified. Sanitised payloads are in `.claude/hooks/fixtures/`.
+  The shared formatter handles its multiple paths; the GitHub `edit|create` entry does not match
+  `apply_patch`, so the shared hook is its only formatting path. `write_bash`, GitHub MCP write
+  tools and a distinct create tool were unavailable, so their payloads, matchers and actual adapter
+  paths remain unverified. Sanitised payloads are in `.claude/hooks/fixtures/`.
 - **REV-167**: the app's behaviour. Whether the Commit and Push buttons pass `--no-verify`; whether
   `$ARGUMENTS` is substituted; whether `/compact` can be called by hand; whether a coding session has
   the session-automation tool; whether `CLAUDE.md` can be turned off for Copilot alone; how

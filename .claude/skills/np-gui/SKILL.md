@@ -7,7 +7,7 @@ argument-hint: <render | review | publish | collect | grill> [target|topic|url]
 # GUI: `$ARGUMENTS`
 
 Read `.claude/workflow/hosts.md` and the selected host mapping; use it to resolve arguments, the
-skill directory, scratchpad and required artifact capabilities before routing. Stop and hand off a
+skill directory, scratchpad and required artefact capabilities before routing. Stop and hand off a
 level the host cannot complete.
 
 1. The first argument is the level, the second its target, topic or URL. A missing or unknown level:

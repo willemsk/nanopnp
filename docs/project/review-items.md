@@ -2141,11 +2141,16 @@ limit. No tested refusal or timeout triggered the stop rule.
 
 No `write_bash`, GitHub MCP write tool or distinct local create tool was offered. Their matcher
 names, payloads and actual gate/adapter paths remain unverified; no real GitHub write was attempted.
-The GitHub hook's `edit|create` matcher missed the observed `apply_patch` name. It now includes
-`apply_patch`, and its adapter passes the raw patch to the shared formatter; a sanitised fixture
-replay checks this change, but its revised live path remains unverified. The branch-workspace probe
-is not a linked-worktree control. The manual-gate rule remains in force, and REV-166 remains
-accepted. The safe procedure is in `docs/plans/workflow-host-seams.md`.
+The GitHub hook's `edit|create` matcher does not match the observed `apply_patch` name. The shared
+`Edit` hook formats that payload, keeping one formatting path. The branch-workspace probe is not a
+linked-worktree control.
+
+The shared gate selects its refusal protocol from `COPILOT_CLI` alone. A Claude Code hook that
+inherits that variable would receive Copilot's exit-0 protocol instead of the specified exit 2;
+that inherited-environment case has not been measured. Start Claude Code without the variable and
+run the gates by hand if its hook environment cannot be verified. The manual-gate rule for Copilot
+remains in force, and REV-166 remains accepted. The safe procedure is in
+`docs/plans/workflow-host-seams.md`.
 
 ## REV-167: Six Copilot app behaviours the substitutes assume are unchecked
 

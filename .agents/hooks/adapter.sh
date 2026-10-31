@@ -112,19 +112,6 @@ $(printf '%s\n%s' "$output" "$stderr_text" | tail -40)"
 
   post-tool)
     input=$(cat)
-    if [[ $dialect == copilot ]]; then
-      patch=$(printf '%s' "$input" | jq -r \
-        '.toolArgs | select(type == "string" and startswith("*** Begin Patch\n"))' 2>/dev/null)
-      if [[ -n "$patch" ]]; then
-        cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null || true)
-        cwd=$(normalise "$cwd")
-        [[ -n "$cwd" && -d "$cwd" ]] || cwd=$host_cwd
-        claude_payload=$(jq -n --arg patch "$patch" --arg cwd "$cwd" \
-          '{"tool_name": "Edit", "tool_input": $patch, "cwd": $cwd}')
-        printf '%s' "$claude_payload" | .claude/hooks/format.sh >/dev/null 2>&1 || true
-        exit 0
-      fi
-    fi
     # Antigravity (.toolCall.args.TargetFile), Claude (.tool_input.file_path) or Copilot (.toolArgs.path).
     if [[ $dialect == copilot ]]; then
       path_jq="$copilot_args"' | .path // .file_path // ""'

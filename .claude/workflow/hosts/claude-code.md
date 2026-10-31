@@ -19,14 +19,10 @@ literally, the arguments are the text after the command and the directory is
 
 ## Code review
 
-For `np-ship/wp.md` §4, call the skill directly in this session, never inside an `Agent`:
-
-```
-Skill(skill="code-review", args="xhigh --fix <pr-number> out=docs/code_reviews/ -- Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
-```
-
-The direct skill starts its own review agent; inside an `Agent` it returned no findings. The
-evidence, assessment and fix rules in `np-ship/wp.md` remain in force.
+For `np-ship/wp.md` §4, call `Skill` directly in this session, never inside an `Agent`, with
+`skill="code-review"` and arguments `xhigh --fix <pr-number> out=docs/code_reviews/`. Append
+`--` and the static-review brief from §4. The direct skill starts its own review agent; inside an
+`Agent` it returned no findings. The evidence, assessment and fix rules in §4 remain in force.
 
 ## CI
 
@@ -38,8 +34,11 @@ than polling.
 ## Safety hooks
 
 `.claude/settings.json` invokes `gate.sh` for `Bash` and `format.sh` after `Edit`, `Write` or
-`MultiEdit`. `gate.sh` emits its denial JSON, writes the reason on stderr and exits 2 on Claude
-Code (§8.2.26 AB1); inability to emit the JSON also exits 2. A timeout lets the command through;
+`MultiEdit`. With `COPILOT_CLI` unset, `gate.sh` emits its denial JSON, writes the reason on stderr
+and exits 2 (§8.2.26 AB1); inability to emit the JSON also exits 2. If a Claude Code session
+inherits `COPILOT_CLI`, the hook instead selects Copilot's exit-0 protocol; that case is unverified
+(REV-166). Start Claude Code without that variable, and run the gates by hand if the hook environment
+cannot be verified. A timeout lets the command through;
 the gate's settings use `timeout: 1800`. The hook reads one command: never commit or push by typing
 into an already running shell. The git-native `.githooks/pre-push` requires a passing push-gate stamp
 when the clone sets `core.hooksPath`.
@@ -55,9 +54,9 @@ Start the gate with Bash `run_in_background`:
 ten-minute limit. At a `/compact` checkpoint, complete and push the checkpoint, print its prompt
 and end the turn. Use the session's scratchpad as `<s>`.
 
-## GUI artifacts
+## GUI artefacts
 
 For `np-gui publish`, load `artifact-design` and `artifact-capabilities`, declare `db` as the
 latter says, publish the gallery and files with the Artifact tool, private by default. For
-`collect`, use `ArtifactData` (`list`) on the `verdicts` collection. If the required artifact tools
+`collect`, use `ArtifactData` (`list`) on the `verdicts` collection. If the required artefact tools
 are unavailable, stop and hand off; do not claim a gallery was published or collected.

@@ -18,7 +18,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "matcher": "edit|create|apply_patch",
+        "matcher": "edit|create",
         "bash": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" post-tool --dialect copilot",
         "timeoutSec": 60
       }
