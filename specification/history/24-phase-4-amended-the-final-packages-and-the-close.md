@@ -1,0 +1,27 @@
+---
+type: Ruling Record
+title: "8.2.24 Phase 4 amended: the final packages and the close, agreed 31 October 2026"
+description: "Records the author's rulings at the fifth amendment of Phase 4: documentation increment 4 and the close become WP58 and WP59, the notebooks are listed on the site rather than rendered, the increment spends its effort on currency and clarity in place of a migration page, the examples change in prose only, and REV-121 and REV-156 are given their destinations."
+---
+
+#### 8.2.24 Phase 4 amended: the final packages and the close, agreed 31 October 2026
+
+Rulings by the author on 31 October 2026, after WP57 was reviewed and its own review items closed,
+and before its merge. Phase 4's plan had carried two provisional entries since 5 October,
+documentation increment 4 and the close package, and one open decision from 22 October, whether the
+notebooks go on the documentation site. The registers were read first: all eighteen `MOD-nn` rows and
+all twelve `UT-nn` rows are terminal, all 423 `[tested: …]` markers of the knowledge base resolve to
+a surviving test, and two `REV-nn` rows were still `open` without an owner, of which REV-116 was
+already ruled on 18 October to be closed by the close package's own re-run. Six questions were put
+through `AskUserQuestion` in two calls: the sequence and the two scope decisions that set what the
+documentation package contains, then the two destinations. The author took the recommendation on
+five and ruled the third against it, cutting the migration page. The letter series continues at Z.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| Z1 | **The phase ends in two packages: WP58, documentation increment 4, then WP59, the close.** WP58 delivers §8.1's Phase 4 documentation increment; WP59 resolves the open decisions, closes both logs, re-runs the end-of-phase report's numbers and tags the release | The report's numbers are measured on the close's own tree, after the prose has landed, and `v0.5.0` sits on a commit that changes no documentation. WP58 takes `v0.5.0-alpha.24`; WP59 takes the release tag alone (§8.4.1) | None; the Phase 4 plan's WP58 and WP59 entries, in this commit |
+| Z2 | **The notebooks are listed on the documentation site, not rendered** (*closes the open decision carried from 22 October*). One guide page names the six notebooks, says what each shows, and gives the command that opens it | No export step enters the documentation job, so nothing new can fail VER-45's strict build before the release, and no page's figures depend on a case the build must keep cheap. The notebooks keep running headless each night (criterion 13), and the Python interface page carries in prose what the notebook session used a notebook for (UT-10) | None; the Phase 4 plan's WP58 entry, in this commit |
+| Z3 | **No migration page is written. Every break of the phase is listed with its migration in `CHANGELOG.md`, and documentation increment 4 spends that effort on currency, clarity and simplicity instead**: the guide and the examples' prose revised against both logs, every stale statement removed, and the language made plainer. In the author's words: "Let's not overdo these migrations. I am currently the only user, and will remain so for the time being. I would rather focus on keeping the docs up to date, remove anything stale, and improving examples, language clarity, and simplicity." | §8.2.6 F4's promise is kept by the changelog, which records each break with its migration in the entry of the package that made it; a reader upgrading reads the `[0.5.0]` section WP59 writes. The effort released pays for the staleness sweep: the live prose of the two findings logs names a withdrawn check and a deleted test, and the review register's area list lacks an area two of its own rows use | §8.1's Phase 4 documentation increment, in this commit |
+| Z4 | **The examples change in prose only.** Each example's README and its site page is revised; no case file, command, output or reference number changes | WP58 re-pins nothing and costs no gate time: every case hash, every documented number and VER-62's golden stand, and VER-46 walks the examples unchanged | None; the Phase 4 plan's WP58 entry, in this commit |
+| Z5 | **REV-121 is deferred to the Phase 5 package that surfaces structure preparation** (FR-37's v0.6 half), which must present a trustworthy axis for a single-chain or mixed-chain assembly before it can prepare one. `/np-plan amend 5` places it, with the changes to §5.3.1 and VER-48 that an axis estimate from the channel cavity needs | The register leaves no row `open` at the close (criterion 10). FR-37's v0.5 library half, `orient_pore`, is untouched: the gap is stage 1's `symmetry.axis` path, where `auto` needs two or more matching chains and `z` takes the file's own axis unchecked | REV-121's row and section, in this commit; §5.3.1 and VER-48, in the Phase 5 package |
+| Z6 | **Phase 6's speed-up builds the equations first** (*answers REV-156, deferred by W8*). WP56 measured a 761 s solve as 62 % assembly and 24 % factorisation; the assembly is this project's own weak forms and quadrature, so it can be measured and cut without touching the linear solver | The answer is Phase 6's input and no Phase 4 work: `/np-plan phase 6` reads it. Taking the factorisation first would be a backend swap, which risks the numbers in a way the assembly work does not | REV-156's row and section, in this commit |

@@ -1276,9 +1276,13 @@ complete chain (`structure/read.py`; VER-48 refuses `auto` on C1). A hetero-olig
 therefore refused, and a monomeric (C1) pore runs only under `symmetry.axis: z`, which takes the
 file's z axis through its origin unchecked (§5.3.1). Found by CODE_REVIEW_012 AR-09.
 
-**Open** (author's ruling, CODE_REVIEW_012 disposition, 20 October 2026): confirmed as a gap.
-*Recommendation:* an axis estimate from the channel cavity, gated like the permutation axis, for C1
-and hetero-oligomeric assemblies. It needs a specification change to §5.3.1 and VER-48 first.
+**Deferred** (§8.2.24 Z5, 31 October 2026) to the Phase 5 package that surfaces structure
+preparation, FR-37's v0.6 half, which must present a trustworthy axis for such an assembly before it
+can prepare one; `/np-plan amend 5` places it. The fix is an axis estimate from the channel cavity,
+gated like the permutation axis, for C1 and hetero-oligomeric assemblies, and it needs the changes to
+§5.3.1 and VER-48 in the same package. FR-37's v0.5 library half, `orient_pore`, is not affected:
+the gap is stage 1's `symmetry.axis` path. Confirmed as a gap by the author on 20 October 2026
+(CODE_REVIEW_012 disposition).
 
 ## REV-122: A case cannot load a correction file from outside the installed package
 
@@ -1775,9 +1779,10 @@ residual 74 s (10 %). The premise above, that the factorisation is the cost, doe
 symbolic reuse would save at most a quarter. Assembly runs on one thread (no `src/` file enters NGSolve's
 `TaskManager`), and the corrected model's coefficients are what make each step 13 times dearer.
 
-Question for the author: does the Phase 6 fix stay REV-60's factorisation reuse, or turn to assembly first (a
-threaded assembly, and the cost of the correction coefficients per step), measured against the thresholds of
-§8.2.12 M2?
+**Answered** (§8.2.24 Z6, 31 October 2026): the Phase 6 fix builds the equations first. The assembly is the larger
+share and is this project's own weak forms and quadrature, so a threaded assembly and the cost of the correction
+coefficients per step can be measured and cut against §8.2.12 M2's thresholds without touching the linear solver.
+REV-60's factorisation reuse follows it. `/np-plan phase 6` reads this row.
 
 
 ## REV-157: WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice

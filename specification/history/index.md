@@ -34,6 +34,7 @@ within it (A1, B3, R10).
 * [8.2.21 Phase 4 amended: the user-testing findings ruled, agreed 29 October 2026](21-phase-4-amended-the-user-testing-findings-ruled.md) - Records the author's rulings on the twelve user-testing findings, taken at WP56's plan: each valid and fixed at its cause, five generalised rules, and the fix packages WP56, the command line, and WP57, the Python interface.
 * [8.2.22 Phase 4 amended: the geometry split and WP57 widened, agreed 30 October 2026](22-phase-4-amended-the-geometry-split-and-wp57-wide.md) - Records the author's rulings at the third amendment of Phase 4: an idealised cylinder declared in the case and meshed by stage 6, a standalone geometry file and mesh command, a wall surface charge as a boundary condition, and WP57 carrying the split, the Python interface and the open review items.
 * [8.2.23 Phase 4 amended: the Python interface rebuilt on a Case and a Session, agreed 30 October 2026](23-phase-4-amended-the-python-interface-rebuilt-on-a.md) - Records the author's rulings at the fourth amendment of Phase 4: a Case is the case document built from public typed blocks, a Session runs it for every caller, each other public name follows one object per job, and WP57 carries it with no plan cap.
+* [8.2.24 Phase 4 amended: the final packages and the close, agreed 31 October 2026](24-phase-4-amended-the-final-packages-and-the-close.md) - Records the author's rulings at the fifth amendment of Phase 4: documentation increment 4 and the close become WP58 and WP59, the notebooks are listed on the site rather than rendered, the increment spends its effort on currency and clarity in place of a migration page, the examples change in prose only, and REV-121 and REV-156 are given their destinations.
 
 ## Where each ruling holds now
 
@@ -244,3 +245,9 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * Y9 - §5.5's NOTE on a stage of one's own
 * Y10 - §5.5 and its NOTE on a stage of one's own; open: WP57
 * Y11 - §8.4.4; the Phase 4 plan; open: WP57's plan
+* Z1 - the Phase 4 plan; open: WP58, WP59
+* Z2 - the Phase 4 plan; open: WP58
+* Z3 - §8.1's Phase 4 documentation increment; open: WP58
+* Z4 - the Phase 4 plan; open: WP58
+* Z5 - REV-121; open: the Phase 5 package that surfaces FR-37
+* Z6 - REV-156; open: Phase 6
