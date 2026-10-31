@@ -13,8 +13,8 @@ and the CI watch need no further prompt.
 2. If no PR is found and the branch has no commits beyond `origin/main`, stop. A plan on `main` does
    not show that the package was implemented.
 3. If the PR's **Verification** records a completed review, and the only commits after its reviewed
-   head are the recorded fix commits and the review's report commit, subscribe to the PR's activity
-   (§4) and go to §5. A review adds its own commits, so the current head is never the reviewed head.
+   head are the recorded fix commits and the review's report commit, use the host's CI mapping and
+   go to §5. A review adds its own commits, so the current head is never the reviewed head.
 
 ## 1. Preflight
 
@@ -44,10 +44,10 @@ the package's commits. This section starts no review and no monitoring.
 
 ## 4. Review pass
 
-Subscribe to the PR's activity (`subscribe_pr_activity`), so that CI results and review comments wake
-this session. Read `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` now. The review
-and your decisions on its fixes need them, and a path-scoped rule does not load while you read only
-the diff.
+Subscribe to the PR's activity if the selected host's CI mapping provides it; otherwise continue to
+the review and use that mapping's §5 hand-off. Read `.claude/rules/physics-numerics.md` and
+`.claude/rules/python.md` now. The review and your decisions on its fixes need them, and a
+path-scoped rule does not load while you read only the diff.
 
 **Test scope first.** Before the review, read the tests that the PR adds or changes
 (`git diff origin/main...HEAD -- tests/`) against the test scope (`CLAUDE.md`, *Testing*;
@@ -62,17 +62,12 @@ stays after a compaction.
 A PR that changes a screen runs `/np-gui review` and `/np-gui publish`, links the gallery under
 **Verification**, and runs `/np-gui collect` before the merge.
 
-Run the review from this session. Call the skill directly, never inside an `Agent`:
-
-```
-Skill(skill="code-review", args="xhigh --fix <pr-number> out=docs/code_reviews/ -- Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
-```
-
-Inside an `Agent`, the skill returned no findings. Called directly, it starts its own review agent.
-
-On a host other than Claude Code, `.claude/workflow/hosts.md`, *Code review*, replaces this call: the
-built-in review agent, and a report this session writes with its not-assessed line. The evidence rule
-below and steps 1 to 3 hold unchanged.
+Run the review from this session through the selected host's *Code review* mapping
+(`.claude/workflow/hosts.md`); record its scope and any work it cannot assess. Keep it static: a
+finding is never fixed by an off-category test (§8.2.13 N1); run no benchmark, sweep, cost study,
+`gate.sh` or `pytest --nightly` in the reviewer. `/np-ship` gates fixes afterwards. Run a reviewer
+command in the foreground only if it ends within 240 s; start longer commands in the background and
+poll with waits of at most 240 s, re-issuing a wait that ends.
 
 The review agent's prompt cache lives five minutes, against one hour here. Each longer pause in it,
 in a test run, a foreground command or a wait, writes its whole context again (about 300k tokens,
@@ -115,9 +110,8 @@ architectural or that would make the package wider: scope is the author's decisi
 
 Follow `.claude/skills/steward/SKILL.md`. It also applies when a PR event wakes the session later.
 Its *Bounded wakes* set the polling, the fallback check-ins and what counts as a new failure. Never
-wait on CI with `sleep`. Report a missing subscription or scheduler as an automation limit. On a host
-without PR subscriptions, `.claude/workflow/hosts.md`, *CI*, replaces this section and §4's
-subscription: push, record the checkpoint, report the automation limit, stop.
+wait on CI with `sleep`. Follow the selected host's *CI* mapping for subscription, checkpoint and
+hand-off; report a missing subscription or scheduler as an automation limit.
 
 ## 6. Report once
 

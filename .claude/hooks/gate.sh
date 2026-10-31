@@ -21,9 +21,9 @@
 #                  git's ref lines on stdin and refuses, exit 1, a branch whose tree lacks the
 #                  `push` stamp. Tags and deletions go through.
 #
-# A refusal in hook mode is the reason on stderr, one JSON object on stdout carrying the deny
-# both as `hookSpecificOutput` (Claude Code) and top-level (GitHub Copilot), and exit 2, which
-# both hosts document as a block (.claude/workflow/hosts.md).
+# A refusal in hook mode is the reason on stderr and one JSON object on stdout carrying the deny
+# both as `hookSpecificOutput` (Claude Code) and top-level (GitHub Copilot). Copilot receives the
+# reason with exit 0; Claude Code blocks on exit 2 (.claude/workflow/hosts.md).
 #
 # Every run appends one line to <git dir>/nanopnp-gate.log: time, mode, selection, seconds,
 # tree and result.
@@ -62,7 +62,8 @@ refuse() {
             permissionDecision: "deny",
             permissionDecisionReason: $reason
         }
-    }' 2>/dev/null
+    }' 2>/dev/null || exit 2
+    [[ -z ${COPILOT_CLI:-} ]] || exit 0
     exit 2
 }
 

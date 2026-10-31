@@ -52,13 +52,11 @@ with the reason. Also draft:
 
 ## Put it to the author
 
-Ask through `AskUserQuestion`, at most four questions in a call. Each question carries the clause at
-stake, the cost of each option and what is already ruled. First ask the decisions that change the
-package sequence, then the sequence, then the rest. Record a prose ruling in the author's words. If
-`AskUserQuestion` is not available, put the questions in one numbered message and end the turn. If
-the author volunteers a scope change, it is a ruling: record it, then check again what it moves. On
-Copilot, `ask_user` takes one question per call, so ask at most four calls in a row and use no
-numbered message (`.claude/workflow/hosts.md`).
+Ask at most four questions at a time through the selected host's question mapping
+(`.claude/workflow/hosts.md`). Each question carries the clause at stake, the cost of each option
+and what is already ruled. First ask the decisions that change the package sequence, then the
+sequence, then the rest. Record a prose ruling in the author's words. If the author volunteers a
+scope change, it is a ruling: record it, then check again what it moves.
 
 Stop when each decision is ruled, or left open with an owner. Never write the plan on a guess. Ask
 each unruled decision that affects correctness, or carry it into `## Open decisions` with the package

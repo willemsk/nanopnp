@@ -36,6 +36,7 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.23 Phase 4 amended: the Python interface rebuilt on a Case and a Session, agreed 30 October 2026](23-phase-4-amended-the-python-interface-rebuilt-on-a.md) - Records the author's rulings at the fourth amendment of Phase 4: a Case is the case document built from public typed blocks, a Session runs it for every caller, each other public name follows one object per job, and WP57 carries it with no plan cap.
 * [8.2.24 Phase 4 amended: the final packages and the close, agreed 31 October 2026](24-phase-4-amended-the-final-packages-and-the-close.md) - Records the author's rulings at the fifth amendment of Phase 4: documentation increment 4 and the close become WP58 and WP59, the notebooks are listed on the site rather than rendered, the increment spends its effort on currency and clarity in place of a migration page, the examples change in prose only, and REV-121 and REV-156 are given their destinations.
 * [8.2.25 The workflow on the GitHub Copilot app, agreed 31 October 2026](25-the-workflow-on-the-github-copilot-app.md) - Records the author's rulings on running the workflow in the GitHub Copilot app beside Claude Code: the hosts are interchangeable with `.claude/` the single source, Copilot runs on a WSL host and stops at CI, one host drives a branch at a time, the gate refuses with exit 2 and a git pre-push hook, the setup was built before its probes ran, the model tiers stay the same Claude models, and no Copilot file is generated.
+* [8.2.26 Copilot hook refusal, agreed 31 October 2026](26-copilot-hook-refusal.md) - Records the author's amendment to the Copilot hook refusal after a live WSL-host probe.
 
 ## Where each ruling holds now
 
@@ -256,7 +257,8 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AA2 - §8.4.4; `.claude/workflow/hosts.md`
 * AA3 - §8.4.4
 * AA4 - §8.4.4
-* AA5 - §8.4.2
+* AA5 - §8.4.2; its Copilot exit code amended by AB1
 * AA6 - REV-166 to REV-168; open: a live session in the Copilot app
 * AA7 - §8.4.5
 * AA8 - the Copilot host plan; `.claude/workflow/hosts.md`
+* AB1 - §8.4.2; REV-166

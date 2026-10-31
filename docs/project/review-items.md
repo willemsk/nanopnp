@@ -2068,7 +2068,7 @@ headroom that was unknown; the numbers are in the test's comment. The assertion 
 to a mesh hash, and that margin is why it need not be: a platform deploying another mesh of this
 class moves the balance far inside it.
 
-## REV-166: The Copilot hook probes have not run
+## REV-166: The Copilot hook probes are incomplete
 
 Raised by the implementation of [the Copilot host plan](../plans/copilot-host.md), which the author
 ruled to build before its Phase 0 probes ran (§8.2.25 AA6). The implementing session ran in the
@@ -2080,7 +2080,8 @@ Phase 3 of the plan changed `gate.sh`, `format.sh`, `session-start.sh` and
 the documented hook semantics. An offline replay in WSL passes: the exit-2 refusal with its reason on
 standard error and a top-level deny, a clean commit let through, `git -C . commit` gated, an
 unstamped push refused, a malformed `write_bash` payload refused, `format.sh` given a `path`, the
-session-start JSON, and the Antigravity shape unchanged. What no session has measured on a WSL host:
+session-start JSON, and the Antigravity shape unchanged. The implementing session had not measured
+these on a WSL host:
 
 - which hook sources fire for each event, and in what order;
 - the payload names: `write_bash`'s argument (assumed `.input`, with `{enter}` for the Enter key),
@@ -2095,9 +2096,56 @@ session-start JSON, and the Antigravity shape unchanged. What no session has mea
 
 Recommendation: run the plan's Phase 0 probes in a Copilot session opened as a WSL host, keep the
 payloads as fixtures for the replay, and fix what differs. Until then, run the gate by hand before
-each commit and push on Copilot (`.claude/workflow/hosts.md`, *Not yet checked*). If no refusal is
+each commit and push on Copilot (`.claude/workflow/hosts/copilot.md`, *Safety hooks*). If no refusal is
 obeyed, or the time limit is not honoured, the plan's stop rule holds: Copilot commits nothing on
 this project until it is fixed.
+
+**Partial probe (31 October 2026; still open).** In app 1.1.34 on a WSL worktree, the loaded
+Claude-style `PreToolUse` hook received `Bash` with object `tool_input.command`, and both it and
+the `PostToolUse` hook had `COPILOT_CLI` and `CLAUDE_PROJECT_DIR` set. `apply_patch` reached
+`PostToolUse` as `Edit`, with a raw patch string rather than a path object. `format.sh` now handles
+all added, updated and moved Python paths in that string; a live multi-file create and move
+formatted both files. Sanitised payloads are in `.claude/hooks/fixtures/`.
+
+A nested exit-0 denial and a top-level exit-0 denial each blocked the shell command and returned
+their reason. Exit 2 also blocked it, but returned only `hook exited with code 2`. The author chose
+an exit-0 structured denial for Copilot and retained exit 2 for Claude Code (§8.2.26 AB1); the
+revised shared hook returned the reason live. The loaded `timeout: 1800` hook completed a
+40-second denial, so it did not use a 30-second limit; this does not measure the full limit.
+
+The probe files added to `.github/hooks` and `.claude/settings.local.json` after session start
+did not fire. Their loading, order, payloads and Copilot-specific refusals remain unchecked in a
+fresh session. This session offered neither `write_bash` nor GitHub MCP write tools, and no
+separate `create` tool, so their payloads and matchers remain unchecked. The manual-gate rule
+remains in force; these partial results do not close REV-166.
+
+**Fresh-session probe (31 October 2026; still open).** The author opened a disposable clone as a
+WSL repository branch workspace. Its Git common directory was inside that clone, not the user's
+primary checkout. In app 1.1.34, recorder hooks installed in `.github/hooks/probe.json` and
+`.claude/settings.local.json` before startup both fired on pre and post shell, patch and GitHub MCP
+read events. Their environment had `COPILOT_CLI` and `CLAUDE_PROJECT_DIR` set. The GitHub source
+named the shell `bash` and the patch `apply_patch`; the Claude source named them `Bash` and `Edit`.
+Shell inputs were objects with string `command` and `description`; patch inputs were raw strings
+for create, update and move. GitHub's carriers were `toolName` and `toolArgs`; Claude's were
+`tool_name` and `tool_input`. Sanitised GitHub payload skeletons are in `.claude/hooks/fixtures/`.
+The MCP read was `github-mcp-server-search_code`, with a string
+`query`, numeric `perPage` and array `fields`. This measures probe hooks, not the actual
+write-tool adapter.
+
+In the sampled shell, patch and MCP calls, GitHub pre preceded Claude pre and GitHub post preceded
+Claude post. Concurrent calls interleaved, so this is not a total-order guarantee. On each source
+an exit-0 structured denial blocked a harmless sentinel and returned its reason; exit 2 blocked
+with only a generic reason. Each source configured for 60 seconds slept 40 seconds and blocked,
+with tool-call elapsed times 43.395 and 43.370 seconds. This does not measure the full 1,800-second
+limit. No tested refusal or timeout triggered the stop rule.
+
+No `write_bash`, GitHub MCP write tool or distinct local create tool was offered. Their matcher
+names, payloads and actual gate/adapter paths remain unverified; no real GitHub write was attempted.
+The GitHub hook's `edit|create` matcher missed the observed `apply_patch` name. It now includes
+`apply_patch`, and its adapter passes the raw patch to the shared formatter; a sanitised fixture
+replay checks this change, but its revised live path remains unverified. The branch-workspace probe
+is not a linked-worktree control. The manual-gate rule remains in force, and REV-166 remains
+accepted. The safe procedure is in `docs/plans/workflow-host-seams.md`.
 
 ## REV-167: Six Copilot app behaviours the substitutes assume are unchecked
 

@@ -53,10 +53,10 @@ What the Claude hooks do on Copilot today (from the hooks reference; Phase 0 con
 
 | Hook in `.claude/settings.json` | On Copilot |
 |---|---|
-| `PreToolUse` `Bash` → `gate.sh` | Fires. A PascalCase event gets the VS Code payload (`hook_event_name`, `session_id`, `cwd`, `tool_name`, `tool_input` parsed), which `gate.sh` reads as it is. Claude matcher semantics map `Bash` to Copilot's `bash` and `powershell`, but not `write_bash`. **The refusal does not land.** `gate.sh` refuses with `hookSpecificOutput.permissionDecision` and exit 0. Copilot documents only a top-level `permissionDecision`, and output without one "uses default behavior". So the gate can run, fail, and still let the commit through |
-| `PostToolUse` `Edit\|Write\|MultiEdit` → `format.sh` | A silent no-op. Copilot's `edit` and `create` tools name the file `path`, and `format.sh` reads only `.tool_input.file_path`. Whether Claude matcher semantics apply to `PostToolUse` is undocumented; the reference states them for `PreToolUse` |
+| `PreToolUse` `Bash` → `gate.sh` | Fires in the WSL probe with an object `tool_input.command`. Both nested and top-level exit-0 denials blocked and returned their reason; exit 2 blocked but hid it. The author amended the refusal in §8.2.26 AB1. Other shell tools remain unprobed |
+| `PostToolUse` `Edit\|Write\|MultiEdit` → `format.sh` | `apply_patch` reaches the matcher as `Edit` with a raw multi-file patch string. `format.sh` now handles that string as well as a path object. A separate `create` tool remains unprobed |
 | `SessionStart` → `session-start.sh` | Runs, with its side effects (fetch, fast-forward of `main`), but the summary is dropped: Copilot consumes only a JSON `{"additionalContext": …}` |
-| `timeout: 1800` | Read as an alias of `timeoutSec`. A timed-out command hook is **fail-open** on Copilot (and on Claude Code), so this must hold (Phase 0) |
+| `timeout: 1800` | The loaded shared hook completed a 40-second denial in the WSL probe, beyond the 30-second default. The full limit and the other hook sources remain unprobed. A timed-out command hook is **fail-open** |
 
 | Copilot needs its own file | Claude source |
 |---|---|
@@ -96,6 +96,18 @@ than wrapped a second time.
 > REV-167 and the live verification REV-168. Seen in that session: Copilot loads `.claude/rules/` by their
 > `paths:`, lists `.claude/agents/` as `task` agents and `.claude/skills/` as skills, and loads `CLAUDE.md`
 > twice; the agent's shell has `COPILOT_CLI=1`.
+>
+> **Partial WSL outcome, 31 October 2026.** The shared Bash and Edit hooks, their environment,
+> refusal shapes and a 40-second timeout probe ran; their sanitised payloads are in
+> `.claude/hooks/fixtures/`. The author amended the Copilot refusal in §8.2.26 AB1, and
+> `format.sh` handles the observed patch payload. Hooks added after session start were not loaded,
+> and `write_bash`, GitHub MCP write tools and a separate `create` tool were unavailable. REV-166
+> remains open and the manual-gate rule still applies; see its record for the remaining probes.
+>
+> **Fresh WSL outcome, 31 October 2026.** In an isolated clone, startup-installed recorder hooks in
+> both sources fired for shell, patch and MCP reads; each blocked structured and exit-2 denials and
+> completed a 40-second denial under its 60-second setting. The actual write-tool paths and a
+> linked-worktree control remain unverified. REV-166 stays open; its record holds the evidence.
 
 1. Update the app to version 1.1.14 or later, and turn on **Settings → WSL hosts (Preview)**. Open the WSL checkout
    (`~/nanopnp`) as a WSL host. This works in app 1.1.34 with an Arch distribution (2026-10-31). On a WSL host the
@@ -128,18 +140,18 @@ than wrapped a second time.
      buttons. Agent hooks do not, because a button is not a tool call.
 
    **To check:**
-   - **Probe the hooks.** Add throwaway entries for every event, in `.github/hooks/probe.json` and in an untracked
-     `.claude/settings.local.json`, that run `{ env; cat; } >> /tmp/copilot-hook-<source>-<event>.log`. Run a shell
-     command, an edit, a file create, a `write_bash` into an async shell and a GitHub MCP read. Save the payloads as
-     fixtures, then delete the probes. Record:
+   - **Probe the hooks.** Follow the isolated, startup-first procedure in
+     [the host-seams plan](workflow-host-seams.md#finish-the-rev-166-probe-safely). Record only
+     allowlisted environment flags and sanitised sentinel payloads, never the whole environment.
+     Exercise the available tools and keep the observed fixtures, then remove the probes. Record:
      - which sources fire and in which order, and whether Claude's `PostToolUse` matcher catches `edit` and `create`;
      - the argument names: `bash` `.command`, `edit` and `create` `.path`, `write_bash` (likely `.input`), and whether
        camelCase `toolArgs` arrives as a string or an object;
      - whether `CLAUDE_PROJECT_DIR` is set, and which variable tells Copilot from Claude Code;
      - the names the MCP tools carry in a hook payload.
-   - **Probe the refusal.** A `PreToolUse` probe that prints `gate.sh`'s current `hookSpecificOutput` deny and exits
-     0: is the command refused? Then one that prints the reason on stderr and a top-level deny on stdout and exits 2
-     (Phase 3's form): is it refused, and does the agent see the reason?
+   - **Probe the refusal.** Compare structured exit-0 and exit-2 denials on each loaded pre-tool source:
+     is the command refused, and does the agent see the reason? The WSL shared-hook result and the
+     author's amendment are §8.2.26 AB1; the Copilot-specific source remains to be checked.
    - **Probe the time limit.** A `PreToolUse` probe with `timeout: 60` that sleeps 40 s and then denies. Refused means
      `timeout` is honoured. Let through means the default 30 s applies, and the gate would fail open after 30 s.
    - Whether the session sees `CLAUDE.md` twice, and where the app lets one instruction file be turned off for
@@ -194,7 +206,8 @@ than wrapped a second time.
 > `edit|create` and the optional `permissions.deny`. The MCP matcher takes the `github-`,
 > `github-mcp-server-` and `mcp__github__` forms, and its deny also exits 2. The offline replay passes 23
 > cases; it found that `adapter.sh` refused a gate's pass note, which is fixed. `gate.sh run` passed on the
-> tree. The live checks are REV-166 and REV-168.
+> tree. The live checks are REV-166 and REV-168. The later WSL probe amended the refusal to exit 0
+> on Copilot (§8.2.26 AB1), and found the raw patch payload that `format.sh` now handles.
 
 One hook path, not two. Copilot already runs the three hooks in `.claude/settings.json`, so those scripts become
 host-neutral, and `.github/hooks` holds only what Claude Code has no equivalent of. A second `bash` gate in
@@ -202,18 +215,15 @@ host-neutral, and `.github/hooks` holds only what Claude Code has no equivalent 
 takes no lock, and the stamp spares the second run only after a pass. And the Claude path would still fail open on
 its own whenever the second file was not loaded.
 
-- **`gate.sh` refuses in a form both hosts document.** `deny()` writes the reason to stderr, prints one JSON object
-  carrying both `hookSpecificOutput` (as today) and a top-level `permissionDecision`/`permissionDecisionReason`, and
-  exits 2. Claude Code blocks on exit 2 whatever the JSON says, and uses the decision's reason or stderr. Copilot
-  denies on exit 2 and merges the stdout JSON. If Phase 0 shows Copilot already obeys today's shape, leave
-  `gate.sh` alone. The `jq … || exit 0` lines still let an unparseable payload through; Copilot passes `tool_input`
-  as a string when the arguments are not JSON. That is unchanged for Claude Code; note it in `hosts.md`.
+- **`gate.sh` refuses in a form both hosts document.** It writes the reason to stderr and a JSON object with
+  `hookSpecificOutput` and top-level `permissionDecision`/`permissionDecisionReason`. After the WSL probe and
+  §8.2.26 AB1 it exits 0 on Copilot so the reason reaches the agent, and 2 on Claude Code; if it cannot emit the
+  denial it exits 2. The `jq … || exit 0` lines still let an unparseable input payload through.
 - **`.agents/hooks/adapter.sh` keeps working.** It already treats any non-zero exit as a refusal. Have it read the
   reason from stdout alone, as `.permissionDecisionReason // .hookSpecificOutput.permissionDecisionReason`, because
   stderr now carries the reason too and the merged `2>&1` output no longer parses.
-- **`format.sh`** reads `.tool_input.file_path // .tool_input.path`. If Phase 0 shows Claude's `PostToolUse` matcher
-  does not catch `edit` and `create`, add a Copilot `postToolUse` entry for `edit|create` (below). Claude Code
-  never reads it, so nothing runs twice.
+- **`format.sh`** reads a path object or the added, updated and moved paths in an `apply_patch` string. The
+  Copilot `postToolUse` entry for `edit|create` remains pending its live source and payload probe.
 - **`session-start.sh`**, when not under Claude Code (the variable from Phase 0), prints its summary as one
   `{"additionalContext": …}` object. Its side effects are unchanged and still run once per session.
 - **`.github/hooks/nanopnp.json`**, Copilot-only tools:
@@ -327,13 +337,13 @@ Ship it all as **one PR**, `chore: run the workflow on the GitHub Copilot app to
 
 - **Hook replay, offline in WSL.** Pipe each Phase 0 fixture into the hook Copilot runs for it: the VS Code
   `PreToolUse` fixtures into `gate.sh`, and the `write_bash` fixtures into `adapter.sh pre-tool --dialect copilot`:
-  - `git commit -m x` on a dirty tree that fails ruff exits 2, with the reason on stderr and a top-level deny on
-    stdout.
+  - `git commit -m x` on a dirty tree that fails ruff exits 0 on Copilot and 2 on Claude Code, with the reason on
+    stderr and a top-level deny on stdout.
   - The same command on a clean, passing tree prints nothing and exits 0.
   - `git -C . commit` is gated.
   - `git push` without a stamp is refused.
   - `ls` is allowed.
-  - A malformed `write_bash` payload is refused.
+  - A malformed `write_bash` payload is refused with an exit-0 structured denial on Copilot.
   - `format.sh` formats a `.py` file given a `path` fixture.
   - `session-start.sh` prints one `{"additionalContext": …}` object off Claude Code, and plain text under it.
   - The Antigravity fixtures still give the old `{"decision":…}` shape, with the reason, which shows no regression.

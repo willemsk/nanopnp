@@ -6,7 +6,7 @@
 #
 # antigravity, the default (.agents/hooks.json), answers {"decision": ...} and exits 0. copilot
 # (.github/hooks/nanopnp.json) reads {toolName, toolArgs, cwd}, refuses with the reason on stderr, a
-# top-level permissionDecision on stdout and exit 2, and allows silently.
+# top-level permissionDecision on stdout and exit 0, and allows silently.
 set -uo pipefail
 
 event=${1:-}
@@ -42,8 +42,9 @@ normalise() {
 refuse() {
   if [[ $dialect == copilot ]]; then
     printf '%s\n' "$1" >&2
-    jq -n --arg reason "$1" '{permissionDecision: "deny", permissionDecisionReason: $reason}' 2>/dev/null
-    exit 2
+    jq -n --arg reason "$1" '{permissionDecision: "deny", permissionDecisionReason: $reason}' 2>/dev/null \
+      || exit 2
+    exit 0
   fi
   jq -n --arg reason "$1" '{"decision": "deny", "reason": $reason}' 2>/dev/null \
     || printf '%s\n' '{"decision": "deny", "reason": "The commit gate refused the call (is jq installed?)"}'
@@ -83,9 +84,9 @@ case "$event" in
     # Synthesize Claude Code PreToolUse payload for gate.sh
     claude_payload=$(jq -n --arg cmd "$cmd" --arg cwd "$cwd" '{"tool_name": "Bash", "tool_input": {"command": $cmd}, "cwd": $cwd}')
 
-    # gate.sh allows with no output or a {systemMessage} pass note, and refuses with exit 2
-    # and a deny object on stdout. Any other exit status, a deny, or stdout this shim cannot
-    # parse is a refusal: a gate that crashed or was not executable has not passed.
+    # gate.sh allows with no output or a {systemMessage} pass note, and refuses with a deny
+    # object on stdout. A non-zero exit, a deny, or stdout this shim cannot parse is a refusal:
+    # a gate that crashed or was not executable has not passed.
     exit_code=0
     errors=$(mktemp 2>/dev/null) || errors=""
     output=$(printf '%s' "$claude_payload" | .claude/hooks/gate.sh 2>"${errors:-/dev/null}") || exit_code=$?
@@ -111,6 +112,19 @@ $(printf '%s\n%s' "$output" "$stderr_text" | tail -40)"
 
   post-tool)
     input=$(cat)
+    if [[ $dialect == copilot ]]; then
+      patch=$(printf '%s' "$input" | jq -r \
+        '.toolArgs | select(type == "string" and startswith("*** Begin Patch\n"))' 2>/dev/null)
+      if [[ -n "$patch" ]]; then
+        cwd=$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null || true)
+        cwd=$(normalise "$cwd")
+        [[ -n "$cwd" && -d "$cwd" ]] || cwd=$host_cwd
+        claude_payload=$(jq -n --arg patch "$patch" --arg cwd "$cwd" \
+          '{"tool_name": "Edit", "tool_input": $patch, "cwd": $cwd}')
+        printf '%s' "$claude_payload" | .claude/hooks/format.sh >/dev/null 2>&1 || true
+        exit 0
+      fi
+    fi
     # Antigravity (.toolCall.args.TargetFile), Claude (.tool_input.file_path) or Copilot (.toolArgs.path).
     if [[ $dialect == copilot ]]; then
       path_jq="$copilot_args"' | .path // .file_path // ""'
