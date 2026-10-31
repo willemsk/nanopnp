@@ -146,6 +146,11 @@ pass `out=`.
 `docs/project/review-findings.md` with a section in `review-items.md`, until the commit that
 resolves one sets it `fixed` (§8.4.6; §8.2.8 H12). A PR body is never their only record.
 
+## Other hosts
+
+The workflow also runs on the GitHub Copilot app, as a WSL host (§8.4.4; §8.2.25). `.claude/` stays the single
+source; `.claude/workflow/hosts.md` maps each Claude Code tool to its substitute there. One host drives a branch at a time.
+
 ## Git
 
 - Conventional commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`), the identifier

@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 BUNDLE = Path(__file__).resolve().parents[2] / "specification"
-RULING_ROW = re.compile(r"^\|\s*([A-Z]\d+)\s*\|")
+RULING_ROW = re.compile(r"^\|\s*([A-Z]+\d+)\s*\|")
 PARAGRAPH_DEFINITION = re.compile(r"\*\*[A-Z]+-\d+\.\*\*")
 
 

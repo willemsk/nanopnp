@@ -7,8 +7,8 @@ okf_version: "0.2"
 The dated rulings of the author and the Phase 0 exit criteria, moved here verbatim from §8.2 of the
 specification. Read them when the reason behind a rule is wanted, not by default: every ruling's
 effect is in a current clause or in §8.4, unless the ruling is spent, superseded or still open, and `uv run .claude/scripts/clause.py <identifier>` prints a
-clause and, after it, every ruling row that names it. The rulings are lettered, one letter per dated record, and numbered
-within it (A1, B3, R10).
+clause and, after it, every ruling row that names it. The rulings are lettered, one letter per dated record and, after Z, one
+letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 
 * [8.2 Phase 0 exit criteria](00-phase-0-exit-criteria.md) - States the four Phase 0 exit criteria, all four of which SHALL be met.
 * [8.2.1 Amendments to Phase 0, agreed 19 August 2026](01-amendments-to-phase-0-agreed-19-august-2026.md) - Records the amendments to Phase 0 agreed on 19 August 2026, with the consequence of each.
@@ -35,6 +35,7 @@ within it (A1, B3, R10).
 * [8.2.22 Phase 4 amended: the geometry split and WP57 widened, agreed 30 October 2026](22-phase-4-amended-the-geometry-split-and-wp57-wide.md) - Records the author's rulings at the third amendment of Phase 4: an idealised cylinder declared in the case and meshed by stage 6, a standalone geometry file and mesh command, a wall surface charge as a boundary condition, and WP57 carrying the split, the Python interface and the open review items.
 * [8.2.23 Phase 4 amended: the Python interface rebuilt on a Case and a Session, agreed 30 October 2026](23-phase-4-amended-the-python-interface-rebuilt-on-a.md) - Records the author's rulings at the fourth amendment of Phase 4: a Case is the case document built from public typed blocks, a Session runs it for every caller, each other public name follows one object per job, and WP57 carries it with no plan cap.
 * [8.2.24 Phase 4 amended: the final packages and the close, agreed 31 October 2026](24-phase-4-amended-the-final-packages-and-the-close.md) - Records the author's rulings at the fifth amendment of Phase 4: documentation increment 4 and the close become WP58 and WP59, the notebooks are listed on the site rather than rendered, the increment spends its effort on currency and clarity in place of a migration page, the examples change in prose only, and REV-121 and REV-156 are given their destinations.
+* [8.2.25 The workflow on the GitHub Copilot app, agreed 31 October 2026](25-the-workflow-on-the-github-copilot-app.md) - Records the author's rulings on running the workflow in the GitHub Copilot app beside Claude Code: the hosts are interchangeable with `.claude/` the single source, Copilot runs on a WSL host and stops at CI, one host drives a branch at a time, the gate refuses with exit 2 and a git pre-push hook, the setup was built before its probes ran, the model tiers stay the same Claude models, and no Copilot file is generated.
 
 ## Where each ruling holds now
 
@@ -251,3 +252,11 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * Z4 - the Phase 4 plan; open: WP58
 * Z5 - REV-121; open: the Phase 5 package that surfaces FR-37
 * Z6 - REV-156; open: Phase 6
+* AA1 - §8.4.4
+* AA2 - §8.4.4; `.claude/workflow/hosts.md`
+* AA3 - §8.4.4
+* AA4 - §8.4.4
+* AA5 - §8.4.2
+* AA6 - REV-166 to REV-168; open: a live session in the Copilot app
+* AA7 - §8.4.5
+* AA8 - the Copilot host plan; `.claude/workflow/hosts.md`

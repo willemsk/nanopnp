@@ -90,6 +90,13 @@ than wrapped a second time.
 
 ## Phase 0: machine setup and discovery (manual, in the Copilot app; about 1 h)
 
+> **Outcome, 31 October 2026.** Not run. The implementing session ran in the native app on the
+> `\\wsl.localhost\` path, fallback B: the session is a folder with no git integration, and no repository
+> hook fires at all. The author ruled to build first (§8.2.25 AA6): the probes are REV-166, the app checks
+> REV-167 and the live verification REV-168. Seen in that session: Copilot loads `.claude/rules/` by their
+> `paths:`, lists `.claude/agents/` as `task` agents and `.claude/skills/` as skills, and loads `CLAUDE.md`
+> twice; the agent's shell has `COPILOT_CLI=1`.
+
 1. Update the app to version 1.1.14 or later, and turn on **Settings → WSL hosts (Preview)**. Open the WSL checkout
    (`~/nanopnp`) as a WSL host. This works in app 1.1.34 with an Arch distribution (2026-10-31). On a WSL host the
    agent's shell and every command hook run in Linux. The two fallbacks are **not supported for gated work**:
@@ -147,6 +154,12 @@ than wrapped a second time.
 
 ## Phase 1: instructions and rules (Copilot task, Sonnet)
 
+> **Outcome, 31 October 2026** (f20e52f). Phases 1 and 2 were not built as written (§8.2.25 AA8): the app
+> reads `.claude/rules/`, `.claude/agents/` and `.claude/skills/` itself, so `copilot_sync.py`,
+> `.github/instructions/`, `.github/agents/` and the session-start drift check were dropped, with the
+> *Drift check* of *Verification*. Only `.github/copilot-instructions.md` was written. Each agent's effort
+> is in `hosts.md`'s model table and is passed as `reasoning_effort` at the call.
+
 - Write `.claude/scripts/copilot_sync.py`. It generates, and with `--check` verifies:
   - `.github/instructions/<rule>.instructions.md` for each `.claude/rules/*.md`. Frontmatter
     `applyTo: "<paths joined by commas>"`; the body is one line: "Read and follow `.claude/rules/<rule>.md` in full
@@ -176,6 +189,12 @@ than wrapped a second time.
   warning, never a failure, matching its existing warn-only rule (§8.4.2).
 
 ## Phase 3: hooks (Copilot task, Sonnet; physics-free but gate-critical)
+
+> **Outcome, 31 October 2026** (6e3b8e1). Built as written, with the Copilot `postToolUse` entry for
+> `edit|create` and the optional `permissions.deny`. The MCP matcher takes the `github-`,
+> `github-mcp-server-` and `mcp__github__` forms, and its deny also exits 2. The offline replay passes 23
+> cases; it found that `adapter.sh` refused a gate's pass note, which is fixed. `gate.sh run` passed on the
+> tree. The live checks are REV-166 and REV-168.
 
 One hook path, not two. Copilot already runs the three hooks in `.claude/settings.json`, so those scripts become
 host-neutral, and `.github/hooks` holds only what Claude Code has no equivalent of. A second `bash` gate in
@@ -230,6 +249,9 @@ its own whenever the second file was not loaded.
 
 ## Phase 4: workflow portability (Copilot task, Sonnet; prose only)
 
+> **Outcome, 31 October 2026** (7b9a00c). Built as written. The `SKILL.md` line went into the four skills
+> that use `$ARGUMENTS` or `${CLAUDE_SKILL_DIR}`; the steward uses neither.
+
 - **New `.claude/workflow/hosts.md`** holds the gap table above as the normative mapping, the Phase 0 findings, the
   model-id table (tier, id per host, effort), and the CI rule: "on a host without PR subscriptions: push,
   checkpoint, report the automation limit, stop".
@@ -249,6 +271,9 @@ its own whenever the second file was not loaded.
 
 ## Phase 5: running both hosts concurrently (interchangeable)
 
+> **Outcome, 31 October 2026.** Written into `hosts.md`, *Two hosts at once*, and into §8.4.4 with Phase 6
+> (§8.2.25 AA4).
+
 These rules go into `hosts.md` and get one bullet in §8.4.4:
 
 - **One host per branch at a time.**
@@ -267,6 +292,11 @@ These rules go into `hosts.md` and get one bullet in §8.4.4:
 - Before each push, rebase onto or merge `origin/<head>`. Never force-push a branch the other host may hold.
 
 ## Phase 6: specification and docs (same PR as Phases 1–5)
+
+> **Outcome, 31 October 2026.** Built as written, without the `copilot_sync.py` line in `CLAUDE.md`. The
+> record is §8.2.25, AA1 to AA8. The letters had run out at Z, so the series continues at AA, and
+> `clause.py` and `duplicates.py` now read a letter pair. §8.4.2 gained the exit-2 form and the `pre-push`
+> check. Shipping from Claude Code with `/np-ship` is still to do.
 
 - §8.4.4 (`specification/08-implementation-plan/04-development-process.md`) gets a bullet saying that the workflow
   runs on Claude Code and on the GitHub Copilot app. `.claude/` is the single source. Both hosts run the hooks in

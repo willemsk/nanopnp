@@ -2067,3 +2067,63 @@ assertion therefore resolves a 2 x 10⁻⁵ total discrepancy with a factor of 4
 headroom that was unknown; the numbers are in the test's comment. The assertion is still not keyed
 to a mesh hash, and that margin is why it need not be: a platform deploying another mesh of this
 class moves the balance far inside it.
+
+## REV-166: The Copilot hook probes have not run
+
+Raised by the implementation of [the Copilot host plan](../plans/copilot-host.md), which the author
+ruled to build before its Phase 0 probes ran (§8.2.25 AA6). The implementing session ran in the
+Copilot app on the checkout's `\\wsl.localhost\` path, where the session is a folder and no
+repository hook fires, so no probe could run there.
+
+Phase 3 of the plan changed `gate.sh`, `format.sh`, `session-start.sh` and
+`.agents/hooks/adapter.sh`, and added `.github/hooks/nanopnp.json` and `.githooks/pre-push`, against
+the documented hook semantics. An offline replay in WSL passes: the exit-2 refusal with its reason on
+standard error and a top-level deny, a clean commit let through, `git -C . commit` gated, an
+unstamped push refused, a malformed `write_bash` payload refused, `format.sh` given a `path`, the
+session-start JSON, and the Antigravity shape unchanged. What no session has measured on a WSL host:
+
+- which hook sources fire for each event, and in what order;
+- the payload names: `write_bash`'s argument (assumed `.input`, with `{enter}` for the Enter key),
+  whether `toolArgs` arrives as a string or an object, and the names the GitHub MCP write tools
+  carry (the matcher takes the `github-`, `github-mcp-server-` and `mcp__github__` forms);
+- whether `COPILOT_CLI` reaches a hook's environment, which `session-start.sh` reads to choose its
+  output;
+- whether Claude's `PostToolUse` matcher takes `edit` and `create`; if it does, `format.sh` runs
+  twice, which is harmless;
+- whether the exit-2 refusal is obeyed and its reason reaches the agent;
+- whether `timeout: 1800` is honoured, or Copilot's 30 s default applies and the gate fails open.
+
+Recommendation: run the plan's Phase 0 probes in a Copilot session opened as a WSL host, keep the
+payloads as fixtures for the replay, and fix what differs. Until then, run the gate by hand before
+each commit and push on Copilot (`.claude/workflow/hosts.md`, *Not yet checked*). If no refusal is
+obeyed, or the time limit is not honoured, the plan's stop rule holds: Copilot commits nothing on
+this project until it is fixed.
+
+## REV-167: Six Copilot app behaviours the substitutes assume are unchecked
+
+Raised with REV-166 (§8.2.25 AA6). `.claude/workflow/hosts.md` gives a substitute for each Claude
+Code construct the workflow names; six of them rest on app behaviour no session has checked:
+
+- whether the app's Commit and Push buttons pass `--no-verify`, which would skip `.githooks/pre-push`;
+- whether `$ARGUMENTS` is substituted in a skill (each `SKILL.md` carries a line for when it is not);
+- whether `/compact` can be called by hand at a compaction checkpoint;
+- whether a coding session has the session-automation tool, the later upgrade of the CI rule (AA3);
+- whether `CLAUDE.md`, loaded twice through `AGENTS.md`, can be turned off for Copilot alone;
+- how `model:`, `effort:` and `omitClaudeMd` in `.claude/agents/` are treated; `hosts.md` passes
+  `model` and `reasoning_effort` at each call so that the tier holds either way (AA7, AA8).
+
+Recommendation: check each in the same session as REV-166 and write the answer into `hosts.md`.
+Only the first can let an ungated tree through; the rest change how a substitute is worded.
+
+## REV-168: The Copilot host has not been verified live
+
+Raised with REV-166 (§8.2.25 AA6). The plan's *Verification* has a live part in the Copilot app (a
+refused ruff violation that runs the gate once, a passing commit, a commit typed into a running
+shell refused, the GitHub MCP file tools refused, an unstamped push refused from the agent and from
+the Push button, a gated push let through, `format.sh` after an edit, the session-start text), a
+regression in Claude Code (a failing commit refused with its reason, an unstamped push refused, the
+session-start text and `format.sh`), the sub-agents called through `task`, and a dry run of
+`/np-plan wp` and `/np-implement`. None of it has run.
+
+Recommendation: run it after REV-166, on a WSL host, and ship the Copilot host's pull request from
+Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code regression.

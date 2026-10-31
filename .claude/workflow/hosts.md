@@ -99,6 +99,20 @@ limit: re-run `/np-ship wp <n>` when CI ends*, and stop (§8.2.25 AA3). Never wa
 `sleep` or a loop. `np-ship/wp.md` §0 step 3 resumes. The app's agent merge stays off on nanopnp
 pull requests: it would fix CI outside the steward's failure classes.
 
+## Two hosts at once
+
+- **One host drives a branch at a time** (§8.2.25 AA4). The lane line in `docs/plans/current.md`
+  and the PR's **Verification** checkpoint name it: `host: claude-code` or `host: copilot`. A host
+  that finds the other named, and the branch moved within the hour, asks before it writes.
+- **Never share a working tree.** The app gives each session its own worktree, its default; do not
+  use its "branch" workspace type on a checkout that Claude Code uses. Claude Code's cloud sessions
+  have their own clone.
+- **The fresh-session rule of §8.4.4 is per session, not per host.** Shipping on the other host
+  gives an independent review and is encouraged, not required.
+- The two-lane cap, the renumbering after a second-lane merge and `duplicates.py` are unchanged.
+- Before each push, merge or rebase onto `origin/<head>`. Never force-push a branch the other host
+  may hold.
+
 ## Machine setup
 
 1. The app at 1.1.14 or later, with **Settings → WSL hosts (Preview)** on. Open the WSL checkout as
