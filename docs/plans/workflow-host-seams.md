@@ -69,8 +69,8 @@ This is the route to a fresh session; it is not evidence that the unprobed hooks
    workspace if available. Unlike a new worktree, it sees the untracked probe files at startup;
    no Claude session shares this checkout. Confirm the app identifies it as a repository, not a
    folder. If that setup is unavailable, stop and report it rather than substituting a CLI probe
-   and calling it an app result. The ordinary linked-worktree path still needs its own control
-   once a safely gated snapshot can be made available to it.
+   and calling it an app result. Test the ordinary linked-worktree path with its own control once
+   a safely gated snapshot can be made available to it.
 3. Record only the event, source, ordering/timing, tool name, argument types and safe sentinel
    arguments, plus whether `COPILOT_CLI` and `CLAUDE_PROJECT_DIR` are set. Do **not** dump the
    environment or unrestricted payloads. Exercise harmless shell, patch create/update/move,
@@ -168,6 +168,8 @@ worktree coordination. The inventory and its destinations are:
 
 An independent scratch clone was opened as a WSL app repository branch workspace. Fresh-session
 recorder probes observed both sources' shell, patch and MCP-read events, refusal forms and a
-40-second denial under a 60-second timeout. The actual write-tool paths and a linked-worktree
-control remain unverified. REV-166 remains accepted with its manual-gate rule; its record gives the
-evidence and the limits.
+40-second denial under a 60-second timeout. A separate disposable linked-worktree control observed
+the actual shared gate deny an unstamped push despite a stamped primary. An isolated Claude Code
+mock-model probe found the inherited-variable exit-code mismatch. The actual write-tool paths
+remain unverified. REV-166 remains accepted with its manual-gate rule; its record gives the evidence
+and the limits.
