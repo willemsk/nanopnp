@@ -25,11 +25,13 @@ One line per lane (§8.4.4).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress**. WP35 to WP57 are delivered; WP57 ([plan](wp57-idealised-pore-and-python-interface.md))
   is reviewed ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)) and merged
-  ([PR 139](https://github.com/willemsk/nanopnp/pull/139), `8a3488c`); `v0.5.0-alpha.23` is not yet
-  pushed. The sessions' findings are ruled (§8.2.21), and the two packages that end the phase are
-  planned (§8.2.24): **WP58**, documentation increment 4, tagged `v0.5.0-alpha.24`, then **WP59**, the
-  close, tagged `v0.5.0` alone. `duplicates.py` passes on the merged `main`, both lanes in (§8.4.4).
-  Next: `/np-ship wp 57` pushes the tag, then `/np-plan wp 58`.
+  ([PR 139](https://github.com/willemsk/nanopnp/pull/139), `8a3488c`). **`v0.5.0-alpha.23` is the
+  author's to push**: `/np-ship wp 57` was refused on the tag ref (403, three attempts, while branch
+  pushes went through), as §8.4.1 allows; the commands are in that session's report. The sessions'
+  findings are ruled (§8.2.21), and the two packages that end the phase are planned (§8.2.24):
+  **WP58**, documentation increment 4, tagged `v0.5.0-alpha.24`, then **WP59**, the close, tagged
+  `v0.5.0` alone. `duplicates.py` passes on the merged `main`, both lanes in (§8.4.4). Next:
+  `/np-plan wp 58`; the tag does not block it.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`. WP5.02, the spike, after `v0.5.0`.
