@@ -30,7 +30,7 @@ remaining probes and the manual-gate rule are in `docs/project/review-items.md` 
 
 The project rules stay in `.claude/`, the specification remains normative, and one host drives a
 branch at a time (§8.4.4; §8.2.25 AA1 to AA4). Copilot's narrower review and CI hand-off remain
-explicit; unavailable artifact tools stay unavailable. No new executable host-adapter layer,
+explicit; unavailable artefact tools stay unavailable. No new executable host-adapter layer,
 third host, GUI port, application code or dependencies are in scope. Antigravity's existing
 adapter behaviour is a regression constraint, not a claim that it is a supported workflow host.
 
@@ -46,7 +46,7 @@ adapter behaviour is a regression constraint, not a claim that it is a supported
   hand-off. Copilot's built-in reviewer does not assess everything the other review covers.
 - The five `SKILL.md` entry points use `$ARGUMENTS` and `${CLAUDE_SKILL_DIR}` with host fallbacks.
   `hosts.md` also maps agent/model invocation, background processes, compaction, GitHub tools,
-  scratch space and artifact publishing.
+  scratch space and artefact publishing.
 - `.claude/hooks/gate.sh`, `.agents/hooks/adapter.sh` and `.github/hooks/nanopnp.json` are the
   existing refusal implementations. `session-start.sh` resolves the primary checkout from the
   Git common directory and can fetch or fast-forward it. A probe in an ordinary linked worktree
@@ -115,7 +115,7 @@ failure behaviour and evidence date, with links back to the shared contract.
 | Review and CI | Record the reviewed revisions, completed scope, findings and any unassessed work; hand off or monitor CI according to the ruling | Review invocation and coverage; subscription or Copilot's checkpoint-and-stop |
 | Safety hooks | Gate commits and pushes, deny with a reason, preserve timeout and failure rules | Payload and denial protocol, hook loading and git-native guard; explicit unverified paths |
 | Session operations | Preserve checkpoint, branch ownership and scratch isolation | Background wait, compaction, worktree restrictions and scratch location |
-| GUI artifacts | Publish and collect only when the required capability exists | Claude artifact tools; Copilot explicitly stops for unsupported levels |
+| GUI artefacts | Publish and collect only when the required capability exists | Claude artefact tools; Copilot explicitly stops for unsupported levels |
 
 These are instruction seams, not a promise that every harness can perform every operation. A
 capability matrix identifies **supported**, **partial**, **unavailable** or **unverified**, and
@@ -162,7 +162,7 @@ worktree coordination. The inventory and its destinations are:
 | `/np-plan` | Route the level; ask and record each author ruling | Questions and argument expansion in each host file; Copilot batching is limited to one question per call |
 | `/np-implement` | Execute each named work item and checkpoint | Agent/model dispatch, scratch and compaction in each host file; Copilot agent metadata remains REV-167 |
 | `/np-ship` | Record review scope and evidence, fix findings, hand off or monitor CI | Claude Code review skill and subscription; Copilot's narrower review and CI hand-off; live regression remains REV-168 |
-| `/np-gui` | Render, review, publish, collect and grill | GUI artifacts in each host file; Copilot cannot publish or collect, so grill cannot complete there |
+| `/np-gui` | Render, review, publish, collect and grill | GUI artefacts in each host file; Copilot cannot publish or collect, so grill cannot complete there |
 | Steward | Classify failures and keep a bounded checkpoint | Host CI mapping; Copilot checkpoints and stops instead of subscribing |
 | Safety | Gate commits and pushes, retain denial and timeout rules | Host safety sections; both sources' fresh-session probe evidence and remaining write-tool surfaces in REV-166 |
 

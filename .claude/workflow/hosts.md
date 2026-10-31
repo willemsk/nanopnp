@@ -18,6 +18,6 @@ instructions.
 | CI | Supported where subscription and scheduling exist; otherwise hand off | Partial: checkpoint and hand off |
 | Safety hooks | Supported by the shared configuration; live regression remains REV-168 | Partial: both probe sources observed; write-tool paths unverified (REV-166); gate manually |
 | Session operations | Supported where the named tools exist | Partial: checkpoint hand-off; some app behaviour is unverified (REV-167) |
-| GUI | Supported where artifact tools exist | Render and review supported; publish and collect unavailable; grill cannot complete |
+| GUI | Supported where artefact tools exist | Render and review supported; publish and collect unavailable; grill cannot complete |
 
 If a needed capability is unavailable or unverified, use the mapping's hand-off or stop rule.

@@ -59,7 +59,7 @@ or public API changes.
   unfinished hook evidence remain explicit (§8.4.4, §8.4.5;
   [seam plan](docs/plans/workflow-host-seams.md)).
 - **Added**: `.github/copilot-instructions.md`, `.github/hooks/nanopnp.json` (gates `write_bash`,
-  formats after Copilot's edits and patches, refuses the GitHub MCP write tools), the git hook
+  formats after Copilot's edits, refuses the GitHub MCP write tools), the git hook
   `.githooks/pre-push` with `gate.sh check-push`, and `.claude/workflow/hosts.md`, the map of each
   Claude Code tool to its Copilot substitute; ruling record §8.2.25 (AA1 to AA8) and REV-166 to
   REV-168, the probes and live checks still to run.
