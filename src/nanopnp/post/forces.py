@@ -664,6 +664,17 @@ def _oriented_normal(mesh: Mesh, region: Option, arc: float) -> Expression:
     return normal if sense > 0.0 else -normal
 
 
+_FLUID = re.compile(ELECTROLYTE_DOMAINS)
+
+
+def _one_fluid(sides: set[str]) -> tuple[str, ...]:
+    # electrolyte, cis and trans are three names for one fluid, so a surface meeting two of them
+    # meets one material and is orientable; the names are compared after the side beyond the
+    # domain has been settled, or a fluid on both sides would read as an outer boundary.
+    canonical = {"electrolyte" if _FLUID.fullmatch(name) else name for name in sides}
+    return tuple(sorted(canonical))
+
+
 def check_force_surface(data: MeshData, boundary: str = ANALYTE_BOUNDARY) -> tuple[str, str]:
     """Return the material pair on the two sides of the force surface; refuse a surface of several.
 
@@ -678,7 +689,8 @@ def check_force_surface(data: MeshData, boundary: str = ANALYTE_BOUNDARY) -> tup
     ------
     ForceSurfaceError
         If no boundary matches, or the edges meet more than one pair of materials; the side
-        beyond the domain counts as ``outside``.
+        beyond the domain counts as ``outside``, and the fluid's several domain names count as
+        one material.
     """
     import numpy as np
 
@@ -720,12 +732,12 @@ def check_force_surface(data: MeshData, boundary: str = ANALYTE_BOUNDARY) -> tup
         names = {data.materials[int(index)] for index in touching[at : at + number, 1]}
         at += number
         # One material means the other side is outside the domain, as an outer boundary is.
-        pair = tuple(sorted(names if len(names) == 2 else names | {"outside"}))
+        pair = _one_fluid(names if len(names) == 2 else names | {"outside"})
         pairs[pair] = pairs.get(pair, 0) + 1
     unowned = int(surface.size) - int(edges_met.size)
     if unowned:
         pairs[("no element",)] = unowned
-    if len(pairs) != 1 or len(next(iter(pairs))) != 2:
+    if len(pairs) != 1 or ("no element",) in pairs:
         meets = "; ".join(f"{' | '.join(pair)} on {n} edges" for pair, n in sorted(pairs.items()))
         raise ForceSurfaceError(
             f"the force surface {boundary!r} does not lie between one pair of materials: it "
@@ -733,7 +745,9 @@ def check_force_surface(data: MeshData, boundary: str = ANALYTE_BOUNDARY) -> tup
             "of the force would be negated with no other symptom; give the body a surface that "
             "touches one fluid domain"
         )
-    first, second = next(iter(pairs))
+    met_pair = next(iter(pairs))
+    # A surface with fluid on both sides meets one material under two names.
+    first, second = met_pair if len(met_pair) == 2 else (met_pair[0], met_pair[0])
     return first, second
 
 

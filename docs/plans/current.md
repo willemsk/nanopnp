@@ -1,6 +1,7 @@
 # Current work
 
-Updated 30 October 2026 (WP57 reviewed and shipped, awaiting its merge). Navigation only;
+Updated 31 October 2026 (WP57 reviewed, its review items ruled and closed, awaiting its merge).
+Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
@@ -10,11 +11,10 @@ what they found; both fixes are done, a readable command line and then a pore's 
 its mesh, with the Python interface rebuilt on a case and the session that runs it. Phase 5, a browser
 workbench, has its design study merged; nothing is built until Phase 4's release.
 
-**Your call:** should every file a case names be read beside the case file, as correction files
-already are? *Recommendation:* yes; a case then runs the same from any folder. Should such a file
-identify a saved result by what is in it rather than by where it sits, so one calculation in two
-folders reuses one result? *Recommendation:* yes. And should the later speed-up of a fine-mesh solve
-go after building the equations first? *Recommendation:* yes.
+**Your call:** should the later speed-up of a fine-mesh solve go after building the equations first?
+*Recommendation:* yes. Nothing else is waiting on you: every file a case names is now read beside
+the case file and identifies a saved result by what is in it, both as you ruled, and the review's
+eight items are closed in the package.
 
 ## Position
 
@@ -25,7 +25,8 @@ One line per lane (§8.4.4).
   **in progress**. WP35 to WP57 are delivered; WP57 ([plan](wp57-idealised-pore-and-python-interface.md))
   is reviewed ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)) and tagged `v0.5.0-alpha.23` at
   its merge. The sessions' findings are ruled (§8.2.21); WP56's UT-09 measurement puts REV-156's
-  question to the author, and the review puts REV-158 to REV-160. Next: the author merges
+  question to the author. The review's eight items, REV-158 to REV-165, are ruled and closed in the
+  package. Next: the author merges
   [PR 139](https://github.com/willemsk/nanopnp/pull/139), then `/np-ship wp 57` pushes the tag. Then
   the documentation increment and the close.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second

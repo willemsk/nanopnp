@@ -2,27 +2,18 @@
 
 from __future__ import annotations
 
-import math
+from collections.abc import Callable
 
 import ngsolve as ngs
 import numpy as np
 import pytest
 
-from nanopnp.core.constants import (
-    GAS_CONSTANT,
-    REFERENCE_TEMPERATURE_K,
-    VACUUM_PERMITTIVITY,
-    thermal_voltage,
-)
+from nanopnp.core.constants import VACUUM_PERMITTIVITY, thermal_voltage
+from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import GridFunction, Mesh
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.numerics.measures import PLANAR
-from nanopnp.physics.pb import (
-    ELECTROLYTE_PERMITTIVITY,
-    debye_length_nm,
-    dimensionless_surface_charge,
-    solve_pb_recorded,
-)
+from nanopnp.physics.pb import ELECTROLYTE_PERMITTIVITY, debye_length_nm, solve_pb_recorded
 
 CONCENTRATION_M = 0.1
 # zeta~_d: VER-12's own wall potential (SPECIFICATION.md VER-12).
@@ -33,11 +24,12 @@ STERN_THICKNESS_NM = 0.25
 
 PERMITTIVITY = VACUUM_PERMITTIVITY * ELECTROLYTE_PERMITTIVITY
 
-
-def _surface_charge_C_m2(zeta: float) -> float:
-    return math.sqrt(
-        8.0 * PERMITTIVITY * GAS_CONSTANT * REFERENCE_TEMPERATURE_K * CONCENTRATION_M * 1e3
-    ) * math.sinh(0.5 * zeta)
+# phi~ is scaled by V_T over a 1 nm length, which is what the planar measure's forms assume.
+_SCALES = Scales(
+    length_nm=1.0,
+    concentration_M=CONCENTRATION_M,
+    relative_permittivity=ELECTROLYTE_PERMITTIVITY,
+)
 
 
 def _solve(*, exclusion_nm: float, maxh_nm: float, sigma_C_m2: float) -> tuple[Mesh, GridFunction]:
@@ -54,26 +46,27 @@ def _solve(*, exclusion_nm: float, maxh_nm: float, sigma_C_m2: float) -> tuple[M
         # The mobile charge lives outside the shell and nowhere else; Poisson is
         # solved across the whole slab either way, at the fluid's own eps_r.
         ions="electrolyte" if exclusion_nm > 0.0 else None,
-        surface_charge=dimensionless_surface_charge(
-            sigma_C_m2, relative_permittivity=ELECTROLYTE_PERMITTIVITY
-        ),
+        surface_charge=sigma_C_m2 / _SCALES.surface_charge_C_m2,
         surface_charge_boundary="wall",
         nonlinear=True,
     )[0]
 
 
 @pytest.fixture(scope="module")
-def drawn_slab() -> tuple[Mesh, GridFunction]:
+def sigma_C_m2(grahame_sigma_C_m2: Callable[[float, float], float]) -> float:
+    return grahame_sigma_C_m2(DIFFUSE_ZETA, CONCENTRATION_M)
+
+
+@pytest.fixture(scope="module")
+def drawn_slab(sigma_C_m2: float) -> tuple[Mesh, GridFunction]:
     lam = debye_length_nm(CONCENTRATION_M)
-    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
-    return _solve(exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    return _solve(exclusion_nm=STERN_THICKNESS_NM, maxh_nm=lam / 8.0, sigma_C_m2=sigma_C_m2)
 
 
 def test_ver31_the_stern_layer_raises_the_wall_potential_by_the_closed_form(
-    drawn_slab: tuple[Mesh, GridFunction],
+    drawn_slab: tuple[Mesh, GridFunction], sigma_C_m2: float
 ) -> None:
-    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
-    offset_V = sigma * STERN_THICKNESS_NM * 1e-9 / PERMITTIVITY
+    offset_V = sigma_C_m2 * STERN_THICKNESS_NM * 1e-9 / PERMITTIVITY
     expected_V = DIFFUSE_ZETA * thermal_voltage() + offset_V
 
     lam = debye_length_nm(CONCENTRATION_M)
@@ -105,25 +98,23 @@ def test_ver31_the_shell_potential_drop_is_linear_in_the_thickness(
 
 
 # VER-12
-def test_ver31_a_zero_thickness_shell_reproduces_gouy_chapman() -> None:
+def test_ver31_a_zero_thickness_shell_reproduces_gouy_chapman(sigma_C_m2: float) -> None:
     lam = debye_length_nm(CONCENTRATION_M)
-    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
-    mesh, solution = _solve(exclusion_nm=0.0, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    mesh, solution = _solve(exclusion_nm=0.0, maxh_nm=lam / 8.0, sigma_C_m2=sigma_C_m2)
     wall = float(solution(mesh(0.0, 0.5 * lam)))
     assert wall == pytest.approx(DIFFUSE_ZETA, rel=1e-3)
 
 
 def test_ver31_a_shell_that_is_silently_fluid_fails_by_a_quarter(
-    drawn_slab: tuple[Mesh, GridFunction],
+    drawn_slab: tuple[Mesh, GridFunction], sigma_C_m2: float
 ) -> None:
     lam = debye_length_nm(CONCENTRATION_M)
-    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
     mesh, with_shell = drawn_slab
     stern_V = float(with_shell(mesh(0.0, 0.5 * lam))) * thermal_voltage()
 
     # The same geometry with the shell meshed but the ions left in it, which is
     # what "the material fell through to the fluid set" would produce.
-    ignored_mesh, ignored = _solve(exclusion_nm=0.0, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    ignored_mesh, ignored = _solve(exclusion_nm=0.0, maxh_nm=lam / 8.0, sigma_C_m2=sigma_C_m2)
     ignored_V = float(ignored(ignored_mesh(0.0, 0.5 * lam))) * thermal_voltage()
 
     assert (stern_V - ignored_V) / stern_V == pytest.approx(0.2344, rel=2e-2)
@@ -131,7 +122,7 @@ def test_ver31_a_shell_that_is_silently_fluid_fails_by_a_quarter(
 
 # VER-31
 def test_ver59_the_slabs_shell_generated_by_stage_5_is_the_drawn_shell(
-    drawn_slab: tuple[Mesh, GridFunction],
+    drawn_slab: tuple[Mesh, GridFunction], sigma_C_m2: float
 ) -> None:
     from shapely.geometry import MultiPoint, Point, Polygon, box
 
@@ -153,8 +144,7 @@ def test_ver59_the_slabs_shell_generated_by_stage_5_is_the_drawn_shell(
     width = float(vertices[:, 0].max()) - wall_nm
     assert abs(width - STERN_THICKNESS_NM) <= 1e-12
 
-    sigma = _surface_charge_C_m2(DIFFUSE_ZETA)
     drawn_mesh, drawn_solution = drawn_slab
-    mesh, solution = _solve(exclusion_nm=width, maxh_nm=lam / 8.0, sigma_C_m2=sigma)
+    mesh, solution = _solve(exclusion_nm=width, maxh_nm=lam / 8.0, sigma_C_m2=sigma_C_m2)
     drawn_wall = float(drawn_solution(drawn_mesh(0.0, 0.5 * lam)))
     assert float(solution(mesh(0.0, 0.5 * lam))) == pytest.approx(drawn_wall, rel=1e-10)

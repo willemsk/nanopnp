@@ -3,12 +3,8 @@
 from __future__ import annotations
 
 import logging
+from typing import Literal
 
-from nanopnp.core.constants import (
-    REFERENCE_TEMPERATURE_K,
-    VACUUM_PERMITTIVITY,
-    thermal_voltage,
-)
 from nanopnp.core.scaling import REFERENCE_PERMITTIVITY, debye_length_nm
 from nanopnp.core.typing import Expression, GridFunction, IntegralTerm, Mesh, Option
 from nanopnp.numerics.gates import FieldSampler, PotentialIncrementGate
@@ -23,7 +19,7 @@ from nanopnp.numerics.newton import (
 from nanopnp.physics.poisson import (
     poisson_operator,
     surface_charge_region,
-    surface_charge_source,
+    surface_charge_term,
 )
 from nanopnp.physics.spaces import set_boundary_values
 
@@ -40,28 +36,6 @@ logger = logging.getLogger(__name__)
 # eps_r,f0 after Gavish 2016, knowledge/01-physics-epnpns/03-the-corrections.md; held once in
 # core.scaling.
 ELECTROLYTE_PERMITTIVITY = REFERENCE_PERMITTIVITY
-
-
-def dimensionless_surface_charge(
-    surface_charge_C_m2: float,
-    *,
-    relative_permittivity: float,
-    temperature_K: float = REFERENCE_TEMPERATURE_K,
-    length_nm: float = 1.0,
-) -> float:
-    """Return the Neumann datum a surface charge imposes on phi~, by Gauss's law.
-
-    Parameters
-    ----------
-    relative_permittivity
-        The electrolyte's eps_r, the same one the Debye length was built from.
-    """
-    return (
-        surface_charge_C_m2
-        * length_nm
-        * 1e-9
-        / (VACUUM_PERMITTIVITY * relative_permittivity * thermal_voltage(temperature_K))
-    )
 
 
 def linear_pb_operator(
@@ -146,10 +120,10 @@ def solve_pb_recorded(
         None if surface_charge == 0.0 else surface_charge_region(mesh, surface_charge_boundary)
     )
 
-    def _charge_term(test: Expression, *, sign: float) -> IntegralTerm | None:
+    def _charge_term(test: Expression, *, side: Literal["load", "residual"]) -> IntegralTerm | None:
         if charged is None:
             return None
-        return surface_charge_source(sign * surface_charge, test, measures, definedon=charged)
+        return surface_charge_term(surface_charge, test, measures, side=side, definedon=charged)
 
     if not nonlinear:
         trial, test = space.TnT()
@@ -157,7 +131,7 @@ def solve_pb_recorded(
             linear_pb_operator(trial, test, measures, debye_length_nm=debye_length_nm, ions=region)
         ).Assemble()
         f = ngs.LinearForm(space)
-        term = _charge_term(test, sign=1.0)
+        term = _charge_term(test, side="load")
         if term is not None:
             f += term
         f.Assemble()
@@ -169,10 +143,7 @@ def solve_pb_recorded(
     residual += nonlinear_pb_residual(
         trial, test, measures, debye_length_nm=debye_length_nm, ions=region
     )
-    # The Poisson boundary term is +int_Gamma (dphi~/dn) v ds on the right-hand
-    # side, so it is subtracted from the residual exactly as
-    # CoupledModel.residual_form subtracts its own.
-    term = _charge_term(test, sign=-1.0)
+    term = _charge_term(test, side="residual")
     if term is not None:
         residual += term
 

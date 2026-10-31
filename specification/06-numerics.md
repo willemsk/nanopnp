@@ -591,8 +591,13 @@ mis-signed, which no comparison of the two stress routes can detect.
 NOTE (the force surface, NUM-29, QR-12; §8.2.22 X6, REV-120): the surface routes orient the traction
 normal by the material on each side of the body's surface. A force surface whose two sides are not
 one pair of materials all along it SHALL be refused, naming the surface and the materials it meets,
-rather than oriented by a material's name, which would negate part of the traction without warning
-on a supplied mesh whose body touches two fluid domains.
+rather than oriented by a material's name, which would negate part of the traction without warning.
+The sides SHALL be compared by material and not by domain name: `electrolyte`, `cis` and `trans`
+are three names for one fluid, so a body straddling the seam between the lumen and a reservoir on a
+supplied mesh meets one pair and SHALL pass, while a surface meeting a fluid on one side and a
+solid on the other, or two solids, is the pair the gate is for and SHALL be refused. Refusing the
+straddling body would refuse a configuration the reference model admits, the normal being oriented
+by a star-shape test about the body's centroid that needs no single material pair (REV-163).
 
 ### 6.8 Mesh resolution and adaptivity
 

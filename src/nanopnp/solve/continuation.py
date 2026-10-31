@@ -559,6 +559,14 @@ def default_ladder(
             "fixed_charge_field (a gridded one), not both: the ladder would ramp their sum and "
             "the FR-25 manifest would record two charges, neither of which the solve carried"
         )
+    if wall_potential_V != 0.0 and surface_charge_C_m2 != 0.0:
+        raise ValueError(
+            f"default_ladder takes either wall_potential_V ({wall_potential_V}) or "
+            f"surface_charge_C_m2 ({surface_charge_C_m2}) on {surface_charge_boundary!r}, not "
+            "both: the Poisson-Boltzmann rungs would hold that boundary at a Dirichlet zeta "
+            "while stage 4 ramped a surface charge onto it, which is two wall models for one "
+            "wall and converges on neither (NUM-18, QR-12)"
+        )
 
     solids = dict(solid_permittivities or {})
     build_M = concentration_M if start_concentration_M is None else start_concentration_M

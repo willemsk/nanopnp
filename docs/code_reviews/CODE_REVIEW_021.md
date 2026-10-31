@@ -90,8 +90,39 @@ Each was read as a diff against the specification and the plan before it was kep
 | REV-165 | The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves |
 
 Each has its row in [review-findings.md](../project/review-findings.md) and its section in
-[review-items.md](../project/review-items.md). REV-158, REV-159 and REV-160 need a ruling from the
-author and are `open`; the rest carry a recommendation.
+[review-items.md](../project/review-items.md). REV-158, REV-159 and REV-160 needed a ruling from the
+author; the rest carried a recommendation.
+
+## Closed in this package, after the author's rulings (31 October 2026)
+
+The author ruled the three open items and took all eight into WP57 rather than a later package, so
+every row above is now `fixed`. What was ruled, and what it cost:
+
+- **REV-158: by content.** The stage-8 key and the solve provenance carry the electrolyte's
+  *identity*, which names a correction file by its file name alone; `provenance`, which the
+  manifest records, keeps the path. §5.3.1's NOTE on a correction file outside the package carries
+  the rule. One new refusal fell out of it: two correction files of one file name named by
+  different paths cannot be told apart by such a key, so the case is refused rather than keyed as
+  one.
+- **REV-159: the base travels.** A case in memory carries the directory of the file it came from.
+  Two sites beyond the three the review named had to move with it — the sweep's parent-artefact
+  lookup and `build_plan`'s resolve of every point — because a member that walked against one base
+  and was keyed against another would never have started warm.
+- **REV-160: narrowed on inspection.** The review's premise was half wrong, and the narrowing was
+  put back to the author before anything was deleted. `StageInputs.options` is unreachable from the
+  walk but not unused: VER-11's band-independence benchmark sets `indicator_band_nm` through it,
+  which is what FR-27's independently-invocable stage is for. Deleting the field would have deleted
+  that benchmark's only lever. The field stays, documented; the `check_routes` option and
+  `QoIStage.deviations` go, the cross-check being always run. No specification edit was needed —
+  neither §5.3.2 nor §5.3.3 ever named these three as configurable.
+- **REV-161 to REV-165** went as recommended. REV-163 is an amendment to NUM-29's NOTE, made in the
+  same commit as the behaviour. REV-165 changed no tolerance: both quadrature errors were measured
+  by refining each rule, and the margin they leave — a factor of 48 under the `rel=1e-3` assertion —
+  is recorded in the test.
+
+Two things the review said it could not assess were measured here after all. The Gauss balance's own
+quadrature error is now bounded (REV-165), and the surface-charge sign, deduced to be right at four
+sites, is now written at one and exercised by two benchmarks (REV-162).
 
 ## What the review could not assess
 

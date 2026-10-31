@@ -291,12 +291,17 @@ def _body_in(*neighbours: str) -> MeshData:
     )
 
 
-def test_num29_a_force_surface_meeting_two_fluids_is_refused() -> None:
+def test_num29_a_force_surface_meeting_two_materials_is_refused() -> None:
     one_fluid = _body_in("electrolyte", "electrolyte", "electrolyte", "electrolyte")
     assert check_force_surface(one_fluid) == ("analyte", "electrolyte")
+    # The fluid's three domain names are one material, so a body straddling the seam between
+    # the lumen and a reservoir is orientable and is not refused.
+    straddling = _body_in("cis", "electrolyte", "trans", "electrolyte")
+    assert check_force_surface(straddling) == ("analyte", "electrolyte")
+    # A fluid on one side and a solid on the other is the pair the gate is for.
     with pytest.raises(ForceSurfaceError) as raised:
-        check_force_surface(_body_in("cis", "electrolyte", "electrolyte", "electrolyte"))
+        check_force_surface(_body_in("membrane", "electrolyte", "electrolyte", "electrolyte"))
     message = str(raised.value)
-    assert "analyte | cis" in message and "analyte | electrolyte" in message
+    assert "analyte | membrane" in message and "analyte | electrolyte" in message
     with pytest.raises(ForceSurfaceError, match="no boundary matching"):
         check_force_surface(one_fluid, "wall")

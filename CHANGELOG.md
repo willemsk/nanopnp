@@ -93,6 +93,10 @@ REV-120, REV-122, REV-144, REV-145, REV-153, REV-155, REV-157). The
   copy and a member of a sweep over it read what the case file read; only a case that never had a file reads
   against the working directory. Migration: run from the case's folder no longer matters; a case written for
   another working directory needs its paths made relative to the file.
+- **`post.forces.check_force_surface` compares the sides of a force surface by material, not by domain name**
+  (NUM-29's NOTE, amended; REV-163). `electrolyte`, `cis` and `trans` are three names for one fluid, so a body
+  straddling the seam between the lumen and a reservoir on a supplied mesh now passes; a surface meeting a
+  fluid on one side and a solid on the other is still refused.
 - **The case schema** (`nanopnp/case/v0.5`) gains `geometry.pore`, `numerics.mesh.maxh_nm` and
   `boundary_conditions.wall_charge_C_m2`; the definition titles of its JSON Schema change (the root is `Case`).
 - **`Session.sweep`** returns a `SweepResult`; sweep members walk through the session's store.
@@ -123,7 +127,13 @@ REV-120, REV-122, REV-144, REV-145, REV-153, REV-155, REV-157). The
   are refused rather than keyed as one; an edited case, a sweep member and the sweep's own plan read a relative
   path beside the case file, and a factory case resolves a path-named `parameters` as it already resolved
   `charge` (REV-159); the manifest refuses rather than records a null hash for a correction file it cannot find
-  (REV-161).
+  (REV-161). The surface charge's sign is written once, in `physics.poisson.surface_charge_term`, which takes
+  the side of the equation the term is added to; every model and both Poisson-Boltzmann branches go through it,
+  so `PoissonModel`'s sign is the one VER-77 and VER-31 exercise (REV-162). `default_ladder` refuses a
+  Dirichlet wall potential and a wall surface charge together, which are two wall models for one wall
+  (REV-164). The Gauss-balance benchmark records its own two quadrature errors, 8e-7 in the radial rule and
+  1.4e-5 in Simpson, measured by refining each: its `rel=1e-3` assertion has a factor of 48 in hand, and no
+  tolerance changed (REV-165).
 
 ### Removed
 

@@ -1,5 +1,6 @@
 """Apply the tier-2 marker to every test in this directory."""
 
+import math
 from collections.abc import Callable
 from pathlib import Path
 
@@ -50,3 +51,23 @@ def check_figures() -> Callable[[RunResult], None]:
         assert "data:image/png;base64," in result._repr_mimebundle_()["text/html"]
 
     return check
+
+
+@pytest.fixture(scope="session")
+def grahame_sigma_C_m2() -> Callable[[float, float], float]:
+    """Return Grahame's surface charge of a symmetric monovalent electrolyte, in C/m^2."""
+
+    def sigma(zeta: float, concentration_M: float) -> float:
+        from nanopnp.core.constants import (
+            GAS_CONSTANT,
+            REFERENCE_TEMPERATURE_K,
+            VACUUM_PERMITTIVITY,
+        )
+        from nanopnp.physics.pb import ELECTROLYTE_PERMITTIVITY
+
+        permittivity = VACUUM_PERMITTIVITY * ELECTROLYTE_PERMITTIVITY
+        return math.sqrt(
+            8.0 * permittivity * GAS_CONSTANT * REFERENCE_TEMPERATURE_K * concentration_M * 1e3
+        ) * math.sinh(0.5 * zeta)
+
+    return sigma

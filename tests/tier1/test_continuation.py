@@ -195,6 +195,28 @@ def test_qr12_a_fixed_charge_domain_the_mesh_does_not_carry_is_refused(mesh: obj
     assert "electrolyte" in str(raised.value)
 
 
+def test_num18_a_dirichlet_wall_and_a_surface_charge_on_one_wall_are_refused_together(
+    mesh: object,
+) -> None:
+    with pytest.raises(ValueError) as raised:
+        default_ladder(
+            mesh,
+            bias_V=0.05,
+            wall_potential_V=0.05,
+            surface_charge_C_m2=-0.02,
+            solid_permittivities=MEMBRANE_PERMITTIVITY,
+        )
+    message = str(raised.value)
+    assert "wall_potential_V" in message and "surface_charge_C_m2" in message
+    # Either alone builds a ladder; it is the pair that has no single wall model.
+    assert default_ladder(
+        mesh, bias_V=0.05, wall_potential_V=0.05, solid_permittivities=MEMBRANE_PERMITTIVITY
+    )
+    assert default_ladder(
+        mesh, bias_V=0.05, surface_charge_C_m2=-0.02, solid_permittivities=MEMBRANE_PERMITTIVITY
+    )
+
+
 @pytest.mark.parametrize("domain", [None, "electrolyte"])
 def test_num18_a_uniform_fixed_charge_rides_the_ramp_as_a_fixed_charge_with_no_rule(
     mesh: object, domain: str | None
