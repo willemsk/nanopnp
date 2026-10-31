@@ -88,10 +88,11 @@ merge stays off on nanopnp pull requests: it would fix CI outside the steward's 
 ## Safety hooks
 
 - `gate.sh` writes the reason on stderr and one JSON object with a top-level
-  `permissionDecision` beside `hookSpecificOutput`. It exits 0 on Copilot and 2 on Claude Code
-  (§8.2.26 AB1); inability to emit the JSON exits 2. In the WSL probe, both exit-0 decision
-  shapes blocked the shell command and gave the reason, whereas exit 2 blocked with only a generic
-  message. The Copilot-specific hook file's refusal is not yet verified live.
+  `permissionDecision` beside `hookSpecificOutput`. It selects exit 0 when `COPILOT_CLI` is set and
+  exit 2 otherwise; inability to emit the JSON exits 2. Claude Code must start without that variable
+  to meet §8.2.26 AB1 (REV-166). In the WSL probe, both exit-0 decision shapes blocked the shell
+  command and gave the reason, whereas exit 2 blocked with only a generic message. The
+  Copilot-specific hook file's refusal is not yet verified live.
 - A hook that times out lets the command through on both hosts. The gate's entries carry
   `timeout: 1800`. A fresh-session probe with each source configured for 60 seconds completed a
   40-second denial, beyond the 30-second default; the full 1,800-second limit was not measured.
@@ -155,7 +156,9 @@ Copilot; hand it off to Claude Code rather than asking without the published boa
   The shared formatter handles its multiple paths; the GitHub `edit|create` entry does not match
   `apply_patch`, so the shared hook is its only formatting path. `write_bash`, GitHub MCP write
   tools and a distinct create tool were unavailable, so their payloads, matchers and actual adapter
-  paths remain unverified. Sanitised payloads are in `.claude/hooks/fixtures/`.
+  paths remain unverified. In a separate linked-worktree control the actual shared gate denied an
+  unstamped push despite a stamp in the disposable primary clone. Sanitised payloads are in
+  `.claude/hooks/fixtures/`.
 - **REV-167**: the app's behaviour. Whether the Commit and Push buttons pass `--no-verify`; whether
   `$ARGUMENTS` is substituted; whether `/compact` can be called by hand; whether a coding session has
   the session-automation tool; whether `CLAUDE.md` can be turned off for Copilot alone; how

@@ -16,7 +16,7 @@ instructions.
 | Questions and agents | Supported | Supported, with host-specific call shapes |
 | Review | Supported | Partial: high-confidence bugs only; standards and specification are not assessed |
 | CI | Supported where subscription and scheduling exist; otherwise hand off | Partial: checkpoint and hand off |
-| Safety hooks | Supported by the shared configuration; live regression remains REV-168 | Partial: both probe sources observed; write-tool paths unverified (REV-166); gate manually |
+| Safety hooks | Supported with `COPILOT_CLI` unset; inherited variable and live regression are REV-166 and REV-168 | Partial: both probe sources observed; write-tool paths unverified (REV-166); gate manually |
 | Session operations | Supported where the named tools exist | Partial: checkpoint hand-off; some app behaviour is unverified (REV-167) |
 | GUI | Supported where artefact tools exist | Render and review supported; publish and collect unavailable; grill cannot complete |
 

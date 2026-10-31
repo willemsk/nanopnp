@@ -36,12 +36,12 @@ than polling.
 `.claude/settings.json` invokes `gate.sh` for `Bash` and `format.sh` after `Edit`, `Write` or
 `MultiEdit`. With `COPILOT_CLI` unset, `gate.sh` emits its denial JSON, writes the reason on stderr
 and exits 2 (§8.2.26 AB1); inability to emit the JSON also exits 2. If a Claude Code session
-inherits `COPILOT_CLI`, the hook instead selects Copilot's exit-0 protocol; that case is unverified
-(REV-166). Start Claude Code without that variable, and run the gates by hand if the hook environment
-cannot be verified. A timeout lets the command through;
-the gate's settings use `timeout: 1800`. The hook reads one command: never commit or push by typing
-into an already running shell. The git-native `.githooks/pre-push` requires a passing push-gate stamp
-when the clone sets `core.hooksPath`.
+inherits `COPILOT_CLI`, the hook instead selects Copilot's exit-0 protocol, contrary to AB1. A local
+Claude Code probe blocked the command in both cases (REV-166), but did not exercise an authenticated
+session. Start Claude Code without that variable, and run the gates by hand if the hook environment
+cannot be verified. A timeout lets the command through; the gate's settings use `timeout: 1800`.
+The hook reads one command: never commit or push by typing into an already running shell. The
+git-native `.githooks/pre-push` requires a passing push-gate stamp when the clone sets `core.hooksPath`.
 
 Run the gates in `CLAUDE.md` before committing and pushing. REV-168 still owns the live Claude
 Code regression; the Copilot Phase 0 stop rule and manual gate are in its host mapping.

@@ -107,7 +107,13 @@ than wrapped a second time.
 > **Fresh WSL outcome, 31 October 2026.** In an isolated clone, startup-installed recorder hooks in
 > both sources fired for shell, patch and MCP reads; each blocked structured and exit-2 denials and
 > completed a 40-second denial under its 60-second setting. The actual write-tool paths and a
-> linked-worktree control remain unverified. REV-166 stays open; its record holds the evidence.
+> linked-worktree control were still unverified.
+>
+> **Linked control, 31 October 2026.** In a separate disposable clone, the actual shared gate
+> denied an unstamped linked-worktree push despite a passing stamp in the primary. A local
+> mock-model Claude Code probe also found that an inherited `COPILOT_CLI` selects exit 0 instead of
+> AB1's exit 2, although Claude Code blocked the denial. REV-166 stays open; its record holds the
+> evidence and remaining limits.
 
 1. Update the app to version 1.1.14 or later, and turn on **Settings → WSL hosts (Preview)**. Open the WSL checkout
    (`~/nanopnp`) as a WSL host. This works in app 1.1.34 with an Arch distribution (2026-10-31). On a WSL host the

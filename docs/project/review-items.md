@@ -2145,11 +2145,27 @@ The GitHub hook's `edit|create` matcher does not match the observed `apply_patch
 `Edit` hook formats that payload, keeping one formatting path. The branch-workspace probe is not a
 linked-worktree control.
 
-The shared gate selects its refusal protocol from `COPILOT_CLI` alone. A Claude Code hook that
-inherits that variable would receive Copilot's exit-0 protocol instead of the specified exit 2;
-that inherited-environment case has not been measured. Start Claude Code without the variable and
-run the gates by hand if its hook environment cannot be verified. The manual-gate rule for Copilot
-remains in force, and REV-166 remains accepted. The safe procedure is in
+**Linked-worktree control (31 October 2026).** A fresh app 1.1.34 WSL repository session used an
+existing linked worktree of a disposable clone. The primary clone had a genuine passing push-gate
+stamp for the same committed tree; the linked worktree had no stamp. Both recorders observed the
+worktree `cwd` and project directory for a harmless shell call. The actual shared gate denied a
+separate push to a nonexistent remote with the no-passing-gate reason, despite the primary's stamp.
+The existing shell fixture, adapted with the observed command and each control directory, replayed
+the linked denial and the stamped-primary allowance. The write tools and a distinct create tool
+were again unavailable; the full 1,800-second timeout was not measured.
+
+**Inherited-variable control (31 October 2026).** Claude Code 2.1.314 ran in a synthetic repository
+with an isolated home, a synthetic credential and a local mock model endpoint. A synthetic
+`PreToolUse` configuration invoked the actual shared gate for an unstamped push. Without
+`COPILOT_CLI`, the gate exited 2 and Claude Code blocked the call with its reason. With the variable
+inherited, the gate exited 0 with its structured denial and Claude Code also blocked the call with
+its reason. A stderr-only exit-0 control reached Git, so stderr alone did not cause that denial.
+This confirms the inherited case violates AB1's exit-2 rule even though this probe blocked it; it
+does not replace a regression in an authenticated Claude Code session (REV-168).
+
+Start Claude Code without `COPILOT_CLI` and run the gates by hand if the hook environment cannot be
+verified. The manual-gate rule for Copilot remains in force. REV-166 remains accepted until the
+applicable write paths and the inherited-host protocol are resolved; the safe procedure is in
 `docs/plans/workflow-host-seams.md`.
 
 ## REV-167: Six Copilot app behaviours the substitutes assume are unchecked
