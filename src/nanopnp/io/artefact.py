@@ -269,7 +269,9 @@ class MaterialsArtefact(Artefact):
         super().__init__(
             schema=MATERIALS_SCHEMA,
             parameters={
-                "electrolyte": dict(electrolyte.provenance),
+                # Identity, not provenance: a file the case names by path keys this artefact by
+                # what it holds, not where it sits, and the path is in the manifest's inputs.
+                "electrolyte": dict(electrolyte.identity),
                 "concentration_M": concentration_M,
             },
             inputs={
@@ -441,7 +443,6 @@ class QoIArtefact(Artefact):
         solution_hash: str,
         outputs: tuple[str, ...],
         indicator_band_nm: tuple[float, float] | None,
-        check_routes: bool,
         extension_shell_nm: tuple[float, float] | None = None,
         payload: Mapping[str, Path] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
@@ -450,7 +451,9 @@ class QoIArtefact(Artefact):
         # Absent for a model without transport (no indicator); every other model's key is unchanged.
         if indicator_band_nm is not None:
             parameters["indicator_band_nm"] = list(indicator_band_nm)
-        parameters["check_routes"] = check_routes
+        # The NUM-26 cross-check is always run; recorded all the same, so that the key of every
+        # artefact extracted with it on is the one it has always had.
+        parameters["check_routes"] = True
         # Absent rather than null: "no force extracted" and "one, over no shell" are different runs.
         if extension_shell_nm is not None:
             parameters["extension_shell_nm"] = list(extension_shell_nm)
@@ -509,7 +512,15 @@ class SweepArtefact(Artefact):
 
 @dataclass(frozen=True)
 class StageInputs:
-    """What a stage is handed: the resolved case, its upstream artefacts and its options."""
+    """What a stage is handed: the resolved case, its upstream artefacts and its options.
+
+    Parameters
+    ----------
+    options
+        A stage's own settings, read by a caller that invokes it directly (FR-27). The walk sets
+        none of them: a setting a case, the session or the command line reaches belongs in the
+        case schema, not here.
+    """
 
     resolved: ResolvedCase
     upstream: Mapping[str, Artefact] = field(default_factory=dict)

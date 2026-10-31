@@ -552,7 +552,7 @@ def build_plan(
             "of this sweep differ only in 'boundary_conditions.bias_V' at exactly opposite "
             "values. Give the bias axis a symmetric set of values, or drop the output"
         )
-    resolved = _resolve_every_point(base, plan)
+    resolved = _resolve_every_point(base, plan, beside=base_path.parent)
     plan = replace(plan, files=_planned_files(resolved))
     if check_meshes:
         plan = _gate_meshes(plan, resolved)
@@ -561,11 +561,13 @@ def build_plan(
     return plan
 
 
-def _resolve_every_point(base: CaseDocument, plan: SweepPlan) -> tuple[ResolvedCase, ...]:
+def _resolve_every_point(
+    base: CaseDocument, plan: SweepPlan, *, beside: Path
+) -> tuple[ResolvedCase, ...]:
     cases: list[ResolvedCase] = []
     for point in plan.points:
         try:
-            cases.append(resolve(_member(base, point)))
+            cases.append(resolve(_member(base, point), base=beside))
         except (CaseValidationError, UnknownCasePathError, NotImplementedError) as error:
             raise SweepPlanError(
                 f"point {point.index} ({point.point_id}) is not a case this build can run.\n"

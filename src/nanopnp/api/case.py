@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 from pydantic import PrivateAttr
 
-from nanopnp.core.paths import store_root, structure_file
+from nanopnp.core.paths import names_a_path, store_root, structure_file
 from nanopnp.io.case import (
     SCHEMA,
     CaseDocument,
@@ -134,18 +134,19 @@ class Case(CaseDocument):
             repeated = ", ".join(sorted(set(edits or {}) & set(named)))
             raise ValueError(f"{repeated} is given both in the mapping and by keyword")
         assignments: dict[str, FieldValue] = {}
-        if self._base is not None:
-            assignments.update(
-                {
-                    dotted: str((self._base / value).resolve())
-                    for dotted, value in {**input_paths(self), **correction_paths(self)}.items()
-                    if not Path(value).is_absolute()
-                }
-            )
         for name, value in given.items():
             self._assign(field_path(name), value, assignments)
-        edited = check_document(substitute(self, assignments), source=f"<{self.name} edited>")
+        source = f"<{self.name} edited>"
+        edited = check_document(substitute(self, assignments), source=source)
         assert isinstance(edited, Case)
+        edited._base = self._base
+        # After the caller's edits, not before: a path an edit names is read beside the case
+        # the edit came from, as every path the case already named is.
+        rebased = _rebased_paths(edited, self._base)
+        if rebased:
+            edited = check_document(substitute(edited, rebased), source=source)
+            assert isinstance(edited, Case)
+            edited._base = self._base
         return edited
 
     def _absent(self, path: str) -> bool:
@@ -313,6 +314,16 @@ class Case(CaseDocument):
         return _built(cls, document, label)
 
 
+def _rebased_paths(case: CaseDocument, base: Path | None) -> dict[str, FieldValue]:
+    if base is None:
+        return {}
+    return {
+        dotted: str((base / value).resolve())
+        for dotted, value in {**input_paths(case), **correction_paths(case)}.items()
+        if not Path(value).is_absolute()
+    }
+
+
 def _merged(first: FieldValue, second: FieldValue) -> FieldValue:
     if isinstance(first, dict) and isinstance(second, dict):
         merged = dict(first)
@@ -324,6 +335,9 @@ def _merged(first: FieldValue, second: FieldValue) -> FieldValue:
 
 def _electrolyte(parameters: str, concentration_M: float) -> dict[str, Any]:
     corrections = load_corrections(parameters)
+    # As the factory treats charge and source: resolved here, where the caller's working
+    # directory is the one the name was written against, so the case runs from any folder.
+    parameters = str(Path(parameters).resolve()) if names_a_path(parameters) else parameters
     validated = VALIDATED_DEFAULT_CASE.electrolyte
     # The validated model: each correction fitted in the validated file is read from this one.
     choices = validated.corrections.model_dump(by_alias=True, mode="json")

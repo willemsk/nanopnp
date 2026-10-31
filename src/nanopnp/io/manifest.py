@@ -151,10 +151,15 @@ def materials_group(
     for each in read:
         try:
             path = correction_source(each)
-        except FileNotFoundError:
-            files[each] = None
-        else:
-            files[each] = file_hash(path)
+        except FileNotFoundError as error:
+            # A null hash here, or another file of that name's, is a manifest that cannot
+            # reconstruct the run it records, which is what FR-25 asks of it.
+            raise FileNotFoundError(
+                f"the manifest cannot record a hash for correction file {each!r}: {error}. "
+                "Name it by an absolute path, or by a path beside the case file, so the run and "
+                "its record read one file (FR-25)"
+            ) from None
+        files[each] = file_hash(path)
     provenance["parameter_file_hashes"] = files
     provenance["clamp_activations"] = (
         clamp_activations

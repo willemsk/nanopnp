@@ -176,10 +176,14 @@ Phase 5 (§8.2.9 I3) (WP40).
 
 NOTE (a relative path in a case, FR-25, QR-08; §8.2.23 Y3): every file a case names by a relative
 path (`inputs.*.path`, `structure.source.path`, `structure.ensemble.trajectory` and a correction file
-read by path, below) is taken against the directory of the case file the run read, or the working
-directory for a case held in memory, so a case reads the same files from any working directory. A
-case read in Python keeps that directory, and an edit makes each relative path absolute against it,
-so the edited case, recorded as a case in memory, reads the files the unedited one did. The FR-25
+read by path, below) is taken against the directory of the case file the run read, so a case reads
+the same files from any working directory. A case held in memory SHALL carry the directory of the
+file it came from, where it came from one, and take its relative paths against that: an edited
+copy, a member of a sweep over it and a reproduction of it read the files the case file read, and
+only a case that never had a file — one a factory or a caller's text built — reads against the
+working directory. A case read in Python keeps that directory, and an edit makes each relative path
+absolute against it, the caller's own edits included and *after* them, so a path the edit names is
+read where every other path of that case is read. The FR-25
 manifest records each input file, the case file included, by its absolute path and content hash;
 the case hash covers the paths as written, so moving a case and its files together moves no key. A
 reproduction takes a relative path against the directory the original case was read from (QR-08).
@@ -548,11 +552,17 @@ and each `electrolyte.corrections.*.model` MAY name a file by a path, relative t
 absolute, as well as by the name of an installed file. A file read by path is not pinned by the
 package's version, so its content hash SHALL enter the stage-8 key and the FR-25 manifest, and the
 file SHALL be listed as a deviation from the validated default; an edit of the file then misses the
-cache rather than serving a stale result. A name ending in `.yaml` is a path; any other is an
-installed file's name. A relative path is taken against the directory of the case file the run read,
-or the working directory for a case held in memory; the manifest records the file among the run's
-inputs by its absolute path and hash, and a reproduction takes a relative path against the
-directory the original case was read from, so that it reads the file the run read (QR-08).
+cache rather than serving a stale result. Its **path** SHALL NOT enter a key: a key carries the
+file's name alone, so one calculation run beside two copies of the same file keys one artefact and
+two checkouts of one piece of work share a cache, while an edit of either file still moves the key
+through the content hash. A case naming two correction files of one file name by different paths
+SHALL be refused, naming the file name, rather than keyed as though it named one (QR-12). A name
+ending in `.yaml` is a path; any other is an installed file's name. A relative path is taken
+against the directory of the case file the run read, as the NOTE on a relative path above has it;
+the manifest records the file among the run's inputs by its absolute path and hash, and SHALL
+refuse rather than record a null hash for a file it cannot find, and a reproduction takes a
+relative path against the directory the original case was read from, so that it reads the file the
+run read (QR-08).
 
 NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings — the monolithic
 damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the

@@ -8,6 +8,7 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from nanopnp.core.constants import thermal_voltage
+from nanopnp.core.paths import correction_identity
 from nanopnp.materials import models
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.forms import NUMPY_OPS, MathOps, Numeric
@@ -370,6 +371,17 @@ class Electrolyte:
                 key: dict(model.provenance) for key, model in sorted(self.corrections.items())
             },
         }
+
+    @property
+    def identity(self) -> Mapping[str, Any]:
+        """Return :attr:`provenance` with every file named by its name alone, not its path."""
+        record = dict(self.provenance)
+        record["parameter_file"] = correction_identity(self.parameter_file)
+        record["corrections"] = {
+            key: {**model, "model": correction_identity(str(model["model"]))}
+            for key, model in sorted(record["corrections"].items())
+        }
+        return record
 
 
 def log_clamp_activations(
