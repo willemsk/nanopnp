@@ -3,8 +3,8 @@
 `/np-gui publish <topic> [<r>]`. The author marks each shot on a private page; `collect` reads the
 marks back. One page per topic; a new round republishes to the same URL.
 
-1. Load the `artifact-design` and `artifact-capabilities` skills; declare the `db` capability as the
-   latter says.
+1. Prepare the gallery's storage and publication capabilities as the selected host mapping says
+   (`.claude/workflow/hosts.md`); stop if they are unavailable.
 2. Write `<s>/gallery/<topic>/index.html` and copy the PNGs beside it, published through `files`
    (a mockup page's `tokens.css` too). One card per shot: the picture, the shot id, its state, two
    lines on what it shows, and the reviewer's findings for it from `<r>/review.md`. On each card a
@@ -12,6 +12,6 @@ marks back. One page per topic; a new round republishes to the same URL.
    for a mockup; `prefer`, `borrow`, `reject` for a concept board; `A`, `B`, `either`, `neither` for a
    choice panel, whose card carries both variants' pictures side by side, stacked on a phone. Each change saves at once to the
    `verdicts` collection, document id the shot id, fields `verdict`, `note`, `round`.
-3. Publish with the Artifact tool (private by default). The first time, record the URL in
+3. Publish through the host mapping (private by default). The first time, record the URL in
    `<s>/gallery/<topic>/url`; later rounds pass it as `url` and bump `round`.
 4. Print the URL. `/np-ship` puts it under the PR's **Verification**.

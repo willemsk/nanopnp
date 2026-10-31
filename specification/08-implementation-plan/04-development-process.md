@@ -31,10 +31,11 @@ here once.
 * Before a push, `.claude/hooks/gate.sh run` passes on the tree being pushed. The session starts it in
   the background and waits for it in the same turn, and the push guard refuses a tree it has not
   passed. A pass of the commit hook never stands in for it. (§7.6; §8.2.11 L2, L3)
-* The gate refuses with exit 2, its reason on standard error and a top-level `permissionDecision`
-  beside `hookSpecificOutput`, a form both hosts of §8.4.4 obey. Once a clone sets `core.hooksPath`
-  to `.githooks`, git's own `pre-push` hook (`gate.sh check-push`) also refuses a push whose tree
-  has no `push` stamp, whichever host or button makes it. (§8.2.25 AA5)
+* The gate prints its reason on standard error and a top-level `permissionDecision` beside
+  `hookSpecificOutput`. On Copilot it refuses with that structured denial and exit 0; on Claude Code
+  it refuses with exit 2. A failure to produce the denial exits non-zero. Once a clone sets
+  `core.hooksPath` to `.githooks`, git's own `pre-push` hook (`gate.sh check-push`) also refuses a
+  push whose tree has no `push` stamp, whichever host or button makes it. (§8.2.25 AA5; §8.2.26 AB1)
 * The session-start hook fetches `origin/main` into the primary checkout and fast-forwards a clean
   `main` that is behind it. In any other state it writes nothing and prints a warning. A failed fetch
   or a failed `uv sync` is a warning and never fails the session. (§8.2.16 R7;
@@ -69,8 +70,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The workflow runs on Claude Code and on the GitHub Copilot app, either of them for any step on
   either lane; Copilot runs on Windows with the checkout opened in WSL as a WSL host. `.claude/` is
   the single source, which Copilot reads itself, beside `.github/copilot-instructions.md` and
-  `.github/hooks/nanopnp.json`. `.claude/workflow/hosts.md` maps each Claude Code construct to its
-  Copilot substitute. On Copilot, `/np-ship` pushes, writes the checkpoint, reports the automation
+  `.github/hooks/nanopnp.json`. `.claude/workflow/hosts.md` selects the host-specific mapping; the
+  shared workflow contract stays in `.claude/workflow/core.md`. On Copilot, `/np-ship` pushes,
+  writes the checkpoint, reports the automation
   limit and stops rather than waiting on CI, and the app's agent merge stays off. One host drives a
   branch at a time, named `host:` in the lane line and the pull request's checkpoint; the hosts never
   share a working tree, and the fresh-session rule below is per session, not per host. (§8.2.25 AA1
@@ -120,8 +122,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 * Implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and moves to
   Opus only after Sonnet has failed on the item. (§8.2.11 L6)
-* The tiers are the same Claude models on either host of §8.4.4. `.claude/workflow/hosts.md` gives
-  each tier's model id and each agent's effort on Copilot, which passes them at each sub-agent call.
+* The tiers are the same Claude models on either host of §8.4.4. The Copilot mapping selected by
+  `.claude/workflow/hosts.md` gives each tier's model id and each agent's effort, which Copilot passes
+  at each sub-agent call.
   (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
   classifier. The script

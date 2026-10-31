@@ -18,10 +18,9 @@ author the URL before the first question.
 
 ## Grill
 
-- One agenda point at a time, in the agenda's order. At most four questions per `AskUserQuestion`
-  call, two to four options each, the recommended option first with *(Recommended)*, each option's
-  consequence in its description. On Copilot, `ask_user` takes one question per call: at most four
-  calls in a row (`.claude/workflow/hosts.md`).
+- One agenda point at a time, in the agenda's order. Ask at most four questions at a time through
+  the host's question mapping (`.claude/workflow/hosts.md`): two to four options each, the
+  recommended option first with *(Recommended)*, and each option's consequence.
 - Walk a job through each answer before the next point: "where does the user click to change the
   salt, and what redraws?" A route that breaks is asked again.
 - Challenge an answer that contradicts an earlier ruling or a clause, quoting both.

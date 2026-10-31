@@ -1,0 +1,7 @@
+{
+  "toolName": "bash",
+  "toolArgs": {
+    "command": "printf REV166_SHELL",
+    "description": "REV166_SHELL"
+  }
+}

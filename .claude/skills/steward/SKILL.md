@@ -6,7 +6,8 @@ description: Repo conventions for driving a nanopnp pull request to green — ho
 # Stewarding a nanopnp PR
 
 Conventions, not permissions. This file says how failures are diagnosed **here** and which are
-evidence rather than chores.
+evidence rather than chores. Read `.claude/workflow/hosts.md` and the selected host mapping before
+starting; use its CI hand-off and safety rules.
 
 ## The environment
 
@@ -33,8 +34,8 @@ transitions only; an event caused by your own checkpoint edit is not new work.
   a queued wake a no-op. If nothing changed, reload and rerun nothing.
 - Once CI is green and the PR mergeable, report once, unsubscribe from the PR and cancel the
   check-in: a merge then wakes no session, and `/np-ship` resumes the package.
-- If subscription or scheduling is unavailable, say so and hand off; never poll in a loop. On a host
-  other than Claude Code, `.claude/workflow/hosts.md`, *CI*, gives the hand-off.
+- If subscription or scheduling is unavailable, say so and use the selected host's CI hand-off;
+  never poll in a loop.
 
 Source context for a failure starts with the WP's Execution brief.
 
