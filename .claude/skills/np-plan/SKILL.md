@@ -6,6 +6,9 @@ argument-hint: <project | phase n | amend n | wp n>
 
 # Plan: `$ARGUMENTS`
 
+If `$ARGUMENTS` or `${CLAUDE_SKILL_DIR}` appears literally, the arguments are the text after the
+command and the directory is `.claude/skills/np-plan/` (`.claude/workflow/hosts.md`).
+
 1. The first argument is the level, the second its number n (for `wp`, `54` or `5.01`). A missing or unknown level, or a
    level other than `project` without n: print `Usage: /np-plan <project | phase n | amend n | wp n>`
    and stop.

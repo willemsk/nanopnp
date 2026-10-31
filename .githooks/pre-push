@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Refuses a push whose tree the push gate has not passed, for the pushes no agent hook sees, such as
+# the GitHub Copilot app's Push button (.claude/workflow/hosts.md). Enabled per clone with
+# `git config core.hooksPath .githooks`; `git push --no-verify` skips it.
+exec "$(git rev-parse --show-toplevel)/.claude/hooks/gate.sh" check-push

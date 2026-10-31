@@ -1,0 +1,28 @@
+---
+type: Ruling Record
+title: "8.2.25 The workflow on the GitHub Copilot app, agreed 31 October 2026"
+description: "Records the author's rulings on running the workflow in the GitHub Copilot app beside Claude Code: the hosts are interchangeable with `.claude/` the single source, Copilot runs on a WSL host and stops at CI, one host drives a branch at a time, the gate refuses with exit 2 and a git pre-push hook, the setup was built before its probes ran, the model tiers stay the same Claude models, and no Copilot file is generated."
+---
+
+#### 8.2.25 The workflow on the GitHub Copilot app, agreed 31 October 2026
+
+Rulings by the author on 31 October 2026, outside the package sequence and beside Phase 4's close.
+The plan `docs/plans/copilot-host.md` carried three decisions the author had made before it was
+written, the host, the division of work and CI, and was amended after an adversarial review in the
+Copilot app. Three more were put to the author while the plan was implemented, from a Copilot app
+session opened on the checkout's `\\wsl.localhost\` path, the plan's unsupported fallback, in which
+no repository hook fires: whether to build before the plan's Phase 0 probes could run, whether
+Copilot needs generated copies of the rules and agents, and which letters this record takes. The
+author ruled each. The letter series continues at AA, the first pair after Z; `clause.py` and
+`duplicates.py` take a letter pair from this record.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| AA1 | **The workflow runs on Claude Code and on the GitHub Copilot app, and either runs any step on either lane.** `.claude/` stays the single source: Copilot reads `CLAUDE.md`, the rules, the agents, the skills and the hooks of `.claude/settings.json` from it, and adds only `.github/copilot-instructions.md` and `.github/hooks/nanopnp.json`. `.claude/workflow/hosts.md` maps each Claude Code construct the workflow names to its Copilot substitute | Nothing of the workflow is written twice, so a change to a skill or a rule reaches both hosts. A construct with no Copilot substitute, the artifact tools of `np-gui publish` and `collect`, stays on Claude Code | §8.4.4, in this commit |
+| AA2 | **Copilot runs on Windows with the checkout opened in WSL as a WSL host.** The Linux AppImage in WSLg and the native app on a `\\wsl.localhost\` path are not supported for gated work | On a WSL host the agent's shell and every hook run in Linux, as on Claude Code. On the `\\wsl.localhost\` path the session is a folder with no hooks, so both gates of `CLAUDE.md`'s *Commands* are run by hand in WSL | §8.4.4 and `.claude/workflow/hosts.md`, in this commit |
+| AA3 | **On Copilot, `/np-ship` pushes, writes the checkpoint into the pull request, reports the automation limit and stops**, rather than waiting on CI. The app's agent merge stays off on nanopnp pull requests | `np-ship/wp.md` §0 resumes when CI ends, and the steward's failure classes stay the only rule for fixing CI. A scheduled wake through a session automation is the later upgrade | §8.4.4, in this commit |
+| AA4 | **One host drives a branch at a time**, named `host: claude-code` or `host: copilot` in the lane line of `docs/plans/current.md` and in the pull request's checkpoint. The hosts never share a working tree, and the fresh-session rule of §8.4.4 is per session, not per host | Concurrency needs no new mechanism: the two-lane cap, the renumbering after a second-lane merge and `duplicates.py` already cover it. Shipping on the other host gives an independent review and is encouraged, not required | §8.4.4, in this commit |
+| AA5 | **The gate refuses with exit 2**, its reason on standard error and a top-level `permissionDecision` beside `hookSpecificOutput`, a form both hosts document. **A git `pre-push` hook**, `.githooks/pre-push` through `gate.sh check-push`, refuses a push whose tree has no `push` stamp once the clone sets `core.hooksPath` | The refusal lands on Copilot, which does not document `hookSpecificOutput` with exit 0, and the app's Commit and Push buttons, which run git's hooks and no agent hook, cannot push an ungated tree. `write_bash` is gated through `.agents/hooks/adapter.sh`, and the GitHub MCP write tools are refused on both hosts | §8.4.2, in this commit |
+| AA6 | **The setup is built before the plan's Phase 0 probes ran.** Each probe not run is an open item: REV-166 the hook probes, REV-167 the app's behaviour, REV-168 the live verification | Until REV-166 is closed, the gate is run by hand before each commit and push on Copilot. A probe that fails brings back the plan's stop rule: Copilot commits nothing on this project until it is fixed | REV-166 to REV-168, in this commit |
+| AA7 | **The model tiers of §8.4.5 are the same Claude models on either host.** `.claude/workflow/hosts.md` gives each tier's Copilot id and each agent's effort, and Copilot passes `model` and `reasoning_effort` at each `task` call | A plan's named executor means the same model whichever host runs it. An id missing from the author's Copilot plan is replaced by the nearest of the same tier, and the session says so | §8.4.5, in this commit |
+| AA8 | **No Copilot file is generated.** The plan's `copilot_sync.py`, `.github/instructions/` and `.github/agents/` are not written: the app reads `.claude/rules/`, `.claude/agents/` and `.claude/skills/` itself | No generated copy can drift, and session start runs no check for one. How Copilot treats `model:`, `effort:` and `omitClaudeMd` in an agent file is REV-167 | None; the plan's Phases 1 and 2 and `.claude/workflow/hosts.md`, in this commit |

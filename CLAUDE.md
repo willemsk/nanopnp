@@ -52,6 +52,8 @@ marker. A hook pass never stands in for `run`.
 3. Push when the log ends in `exit 0`; the hook refuses a push of a tree it has not passed. Only then end the
    turn: a turn that ends on an unpushed commit trips the environment's stop hook.
 
+On the GitHub Copilot app, start and wait for `run` as `.claude/workflow/hosts.md` says.
+
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
 - When only Markdown outside `packaging/`, `src/`, `data/` and `examples/` changed, the hook runs ruff alone
@@ -143,6 +145,11 @@ pass `out=`.
 **Open items** (a finding not fixed, a deferral, a question for the author) are `REV-nn` rows in
 `docs/project/review-findings.md` with a section in `review-items.md`, until the commit that
 resolves one sets it `fixed` (§8.4.6; §8.2.8 H12). A PR body is never their only record.
+
+## Other hosts
+
+The workflow also runs on the GitHub Copilot app, as a WSL host (§8.4.4; §8.2.25). `.claude/` stays the single
+source; `.claude/workflow/hosts.md` maps each Claude Code tool to its substitute there. One host drives a branch at a time.
 
 ## Git
 
