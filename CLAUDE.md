@@ -52,6 +52,8 @@ marker. A hook pass never stands in for `run`.
 3. Push when the log ends in `exit 0`; the hook refuses a push of a tree it has not passed. Only then end the
    turn: a turn that ends on an unpushed commit trips the environment's stop hook.
 
+On the GitHub Copilot app, start and wait for `run` as `.claude/workflow/hosts.md` says.
+
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
 - When only Markdown outside `packaging/`, `src/`, `data/` and `examples/` changed, the hook runs ruff alone
