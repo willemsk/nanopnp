@@ -70,6 +70,10 @@ Skill(skill="code-review", args="xhigh --fix <pr-number> out=docs/code_reviews/ 
 
 Inside an `Agent`, the skill returned no findings. Called directly, it starts its own review agent.
 
+On a host other than Claude Code, `.claude/workflow/hosts.md`, *Code review*, replaces this call: the
+built-in review agent, and a report this session writes with its not-assessed line. The evidence rule
+below and steps 1 to 3 hold unchanged.
+
 The review agent's prompt cache lives five minutes, against one hour here. Each longer pause in it,
 in a test run, a foreground command or a wait, writes its whole context again (about 300k tokens,
 twice in WP49); a poll every 240 s costs about a tenth of that. So the commit hook, `gate.sh run` and
@@ -111,7 +115,9 @@ architectural or that would make the package wider: scope is the author's decisi
 
 Follow `.claude/skills/steward/SKILL.md`. It also applies when a PR event wakes the session later.
 Its *Bounded wakes* set the polling, the fallback check-ins and what counts as a new failure. Never
-wait on CI with `sleep`. Report a missing subscription or scheduler as an automation limit.
+wait on CI with `sleep`. Report a missing subscription or scheduler as an automation limit. On a host
+without PR subscriptions, `.claude/workflow/hosts.md`, *CI*, replaces this section and §4's
+subscription: push, record the checkpoint, report the automation limit, stop.
 
 ## 6. Report once
 

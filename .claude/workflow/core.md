@@ -7,7 +7,8 @@ Each level of `/np-plan`, `/np-implement` and `/np-ship` reads this file, then i
 
 Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
 `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings. A stale `.venv`
-takes `uv sync --all-extras --frozen`.
+takes `uv sync --all-extras --frozen`. On a host other than Claude Code, read `hosts.md` beside this
+file and use its substitutes.
 
 ## The branch
 

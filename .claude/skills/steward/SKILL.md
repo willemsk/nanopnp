@@ -33,7 +33,8 @@ transitions only; an event caused by your own checkpoint edit is not new work.
   a queued wake a no-op. If nothing changed, reload and rerun nothing.
 - Once CI is green and the PR mergeable, report once, unsubscribe from the PR and cancel the
   check-in: a merge then wakes no session, and `/np-ship` resumes the package.
-- If subscription or scheduling is unavailable, say so and hand off; never poll in a loop.
+- If subscription or scheduling is unavailable, say so and hand off; never poll in a loop. On a host
+  other than Claude Code, `.claude/workflow/hosts.md`, *CI*, gives the hand-off.
 
 Source context for a failure starts with the WP's Execution brief.
 

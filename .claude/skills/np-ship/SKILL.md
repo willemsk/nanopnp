@@ -6,6 +6,9 @@ argument-hint: "[wp n | phase n]"
 
 # Ship: `$ARGUMENTS`
 
+If `$ARGUMENTS` or `${CLAUDE_SKILL_DIR}` appears literally, the arguments are the text after the
+command and the directory is `.claude/skills/np-ship/` (`.claude/workflow/hosts.md`).
+
 1. An argument other than `wp <n>` (`54` or `5.01`), `phase <n>` or none: print `Usage: /np-ship [wp n | phase n]`
    and stop.
 2. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
