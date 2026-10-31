@@ -46,6 +46,16 @@ def names_a_path(name: str) -> bool:
     return name.endswith(".yaml")
 
 
+def correction_identity(name: str) -> str:
+    """Return the identity a correction name carries into an artefact key.
+
+    An installed file's name is its own identity. A path is not: the same file beside two copies
+    of one case would key two artefacts for one calculation, so a path stands for its file's name
+    alone, and the file's content hash in the artefact's inputs carries what it holds.
+    """
+    return Path(name).name if names_a_path(name) else name
+
+
 def reads_a_file(name: str) -> bool:
     """Return whether a correction model name is read from a file: a path, or an installed one."""
     return names_a_path(name) or name in available_corrections()

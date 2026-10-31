@@ -240,12 +240,15 @@ def _parent_artefact(
 
     parent = plan.point(point.parent)
     document = plan.case(point.parent, base=base)
+    # The base the member's own walk reads against, or the parent's key would be taken from
+    # files read in another directory and no member would ever start warm.
+    beside = plan.base_path.parent
     try:
         # Keyed on the artefacts the parent's own walk handed its solve, not on
         # the bare case: a generated mesh exists only as stage 6's stored
         # artefact, and a bare-case key raised for every such sweep, which
         # silently made every member cold.
-        upstream = stored_upstream(document, store=session.store)
+        upstream = stored_upstream(document, store=session.store, base=beside)
     except MissingUpstreamError as error:
         # The parent has not run, which is a fallback rather than a failure. Any
         # other error is a defect and is left to raise.
@@ -253,7 +256,7 @@ def _parent_artefact(
             f"the store holds no converged state for parent point {parent.index} "
             f"({parent.point_id}); not even its upstream artefacts are stored: {error}"
         )
-    key = SolveStage().key(StageInputs(resolved=resolve(document), upstream=upstream))
+    key = SolveStage().key(StageInputs(resolved=resolve(document, base=beside), upstream=upstream))
     found = session.store.get(SOLUTION_SCHEMA, key.hash)
     if found is None:
         return None, (
@@ -313,6 +316,9 @@ def run_point(
         result = session._member()._walk(
             document,
             case_text=case_text,
+            # Beside the base case, which is the file the member was substituted from: a
+            # member is the same case at one point, so it reads the same files.
+            base=plan.base_path.parent,
             arguments={"solve": {"warm_start": warm, "cold_reason": reason}},
         )
     except Cancelled as error:

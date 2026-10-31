@@ -18,7 +18,6 @@ from nanopnp.core.stages import (
 )
 from nanopnp.geometry.analyte import ANALYTE_BOUNDARY, ANALYTE_DOMAIN
 from nanopnp.io.artefact import Artefact, CaseArtefact, QoIArtefact, ReportArtefact, StageInputs
-from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.mesh.ingest import deployed_mesh
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
@@ -170,7 +169,6 @@ class _Prepared:
     outputs: tuple[str, ...]
     band: tuple[float, float] | None
     shell: tuple[float, float] | None
-    check_routes: bool
 
 
 def _selected(
@@ -212,7 +210,6 @@ class QoIStage:
             solution_hash=prepared.solution.hash,
             outputs=prepared.outputs,
             indicator_band_nm=prepared.band,
-            check_routes=prepared.check_routes,
             extension_shell_nm=prepared.shell,
         )
 
@@ -221,7 +218,6 @@ class QoIStage:
         ingested = deployed_mesh(resolved, inputs.upstream.get("mesh"))
         outputs = tuple(resolved.outputs)
         _check_selection(outputs)
-        check_routes = bool(inputs.options.get("check_routes", True))
         shell = _shell(ingested.data, inputs.options) if "analyte_force" in outputs else None
         # A model without transport has no current to take, and its mesh may carry no membrane.
         transport = declaration(resolved.model).transport
@@ -237,7 +233,6 @@ class QoIStage:
             outputs=outputs,
             band=band,
             shell=shell,
-            check_routes=check_routes,
         )
 
     def run(
@@ -269,7 +264,6 @@ class QoIStage:
                 solution_hash=prepared.solution.hash,
                 outputs=prepared.outputs,
                 indicator_band_nm=None,
-                check_routes=prepared.check_routes,
                 summary={"bias_V": bias_V},
             )
 
@@ -307,7 +301,6 @@ class QoIStage:
             indicator,
             # With trans grounded the bias sits on cis, and the +z current responds to its negative.
             bias_V=bias_V,
-            check_routes=prepared.check_routes,
         )
 
         summary: dict[str, Canonicalisable] = {
@@ -322,7 +315,6 @@ class QoIStage:
                 measures,
                 data=prepared.data,
                 shell=prepared.shell,
-                check_routes=prepared.check_routes,
             )
             summary["extension_shell_nm"] = list(prepared.shell)
 
@@ -332,7 +324,6 @@ class QoIStage:
             solution_hash=prepared.solution.hash,
             outputs=prepared.outputs,
             indicator_band_nm=prepared.band,
-            check_routes=prepared.check_routes,
             extension_shell_nm=prepared.shell,
             summary=summary,
         )
@@ -344,7 +335,6 @@ class QoIStage:
         *,
         data: MeshData,
         shell: tuple[float, float],
-        check_routes: bool,
     ) -> dict[str, Canonicalisable]:
         inner, outer = shell
         extension = force_post.axial_extension(
@@ -358,25 +348,9 @@ class QoIStage:
             measures,
             extension,
             boundary=ANALYTE_BOUNDARY,
-            check_routes=check_routes,
             data=data,
         ).summary()
         return record
-
-    def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
-        """Return the departures this stage's options introduce."""
-        if bool(inputs.options.get("check_routes", True)):
-            return ()
-        return (
-            ContributedDeviation(
-                source="stage option 'check_routes'",
-                description=(
-                    "the NUM-26 cross-check between the NUM-24 indicator current and the NUM-25 "
-                    "reaction flux was not run, so the reported current has one route and no "
-                    "oracle (QR-04, RSK-03)"
-                ),
-            ),
-        )
 
 
 class ReportStage:

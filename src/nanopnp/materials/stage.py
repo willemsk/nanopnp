@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import file_hash
-from nanopnp.core.paths import correction_source, reads_a_file
+from nanopnp.core.paths import correction_identity, correction_source, reads_a_file
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -53,7 +53,17 @@ class MaterialsStage:
         # a model may name a file other than the reference one; it is an input too
         named = {model.name for model in electrolyte.corrections.values()}
         read = {name for name in named if reads_a_file(name)} - {parameter_file}
-        others = {name: file_hash(correction_source(name)) for name in sorted(read)}
+        others: dict[str, str] = {}
+        for name in sorted(read):
+            # By identity, so the same two files beside two copies of one case key one artefact.
+            identity = correction_identity(name)
+            if identity in others:
+                raise ValueError(
+                    f"this case names two correction files called {identity!r} by different "
+                    "paths, which the materials key cannot tell apart; give them distinct file "
+                    "names, or install them and name them without a path (FR-16, QR-12)"
+                )
+            others[identity] = file_hash(correction_source(name))
         return MaterialsArtefact(
             electrolyte,
             concentration_M=resolved.concentration_M,

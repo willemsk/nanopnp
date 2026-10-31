@@ -1830,6 +1830,15 @@ local edit, so it is the author's to rule.
 its path, so the same calculation in two folders shares one artefact? This is the other half of the
 "read every file beside the case file" decision the package's In brief puts to you.
 
+**Ruled by the author (31 October 2026): yes, by content.** `Electrolyte.identity` is
+:attr:`provenance` with every file named by its file name alone (`core/paths.correction_identity`),
+and it is what the stage-8 key and `ResolvedCase.solve_provenance` carry; `provenance`, which the
+manifest's Materials group records, keeps the path. The `corrections:<name>` input hashes are keyed
+by identity too, and a case naming two correction files of one file name by different paths is
+refused rather than keyed as though it named one. §5.3.1's NOTE on a correction file outside the
+package carries the rule; `tests/tier1/test_corrections.py` keys one case beside two copies of its
+files and gets one artefact. Resolved with REV-159 and REV-161.
+
 ## REV-159: Three in-memory routes read a relative path against the working directory, not beside the case
 
 Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
@@ -1860,6 +1869,16 @@ is now three.
 that a sweep member, an edited copy and a factory case all read a relative path the way the case file
 does?
 
+**Ruled by the author (31 October 2026): yes, it carries the base.** `Case.with_` applies the
+caller's edits first and rebases afterwards, and the copy keeps `_base`, so a path an edit names is
+read beside the case like every other. A sweep member walks with `plan.base_path.parent`, and so do
+the parent-artefact lookup that decides whether it starts warm and `build_plan`'s own resolve of
+every point — without those two the member would have read one base and been keyed against another,
+and no member would have started warm. `Case.cylinder` and `Case.from_structure` resolve a
+path-named `parameters` as they already resolved `charge` and `source`. Only a case that never had a
+file still reads against the working directory. §5.3.1's NOTE on a relative path carries the rule
+and `CHANGELOG.md`'s statement of the old behaviour is corrected.
+
 ## REV-160: StageInputs.options is unreachable, so three QoI settings and their deviation are dead
 
 Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
@@ -1885,6 +1904,24 @@ loses `check_routes`.
 **Question for the author:** should `check_routes`, the indicator band and the extension shell stay
 configurable, or be fixed at their validated defaults and the dead plumbing removed?
 
+**Ruled by the author (31 October 2026): the dead plumbing goes, but not the field.** On
+inspection the premise was only half right. `StageInputs.options` is unreachable from the walk, as
+above, but it is not unused: three Tier 1 tests set it by constructing `StageInputs` directly, which
+is what FR-27's independently-invocable stage is for, and one of them is physics evidence —
+`test_fr23_the_current_does_not_depend_on_where_the_band_sits` (VER-11) moves `indicator_band_nm` to
+three half-widths and bounds the shift in the current. Deleting the field would have deleted that
+benchmark's only lever, so the field stays, documented as a setting a direct caller reads and the
+walk never sets.
+
+What went is what claimed a capability no caller had: the `check_routes` option, `_Prepared`'s field
+for it, the five sites that threaded it, and `QoIStage.deviations`. The NUM-26 cross-check is now
+always run, which is what every walk has always done; `QoIArtefact` still records `check_routes` in
+its key, as the constant it now is, so the key of every artefact extracted with the check on is the
+one it has always had. The specification needed no edit: neither §5.3.2 nor §5.3.3 ever named these
+three as configurable, and the stage-contributed deviation channel itself stays, used by stages 6
+and 7. `tests/tier1/test_qoi_stage.py`'s deviation test is replaced by one asserting the check runs;
+the manifest's contributed-deviation channel keeps its cover in `tests/tier1/test_manifest.py`.
+
 ## REV-161: The manifest records a null hash for a correction file it cannot find
 
 Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
@@ -1903,6 +1940,13 @@ public `Electrolyte`, and it is the manifest — the one record whose job is to 
 Recommendation: pass the base through to `materials_group`, and refuse rather than record a null
 hash: a manifest that cannot name the file it read is not a manifest. Take it with REV-158, which
 decides what the key is made of.
+
+**Resolved (31 October 2026), with REV-158.** `materials_group` refuses, naming the file and what to
+do about it, rather than recording `None` or another file's hash — the same answer stage 8 has always
+given for the same file, so the manifest and the stage now agree. No base is threaded: every route a
+walk takes resolves the path before the electrolyte is built, and the one route that does not — the
+public `Electrolyte` given a bare relative name — is refused by stage 8 before a manifest is
+assembled at all. §5.3.1's NOTE on a correction file outside the package carries the refusal.
 
 ## REV-162: The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each
 

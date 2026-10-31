@@ -123,3 +123,8 @@ def test_fr25_a_relative_input_path_is_read_beside_the_case_file(
     # The case hash covers the paths as written, so moving a case and its files moves no key.
     assert unedited.manifest.case_hash == CaseArtefact(loaded).hash
     assert loaded.inputs.mesh is not None and loaded.inputs.mesh.path == Path("pore.vol")
+    # A path the edit itself names is read beside the case, not in the working directory.
+    renamed = folder / "other.vol"
+    renamed.write_bytes((folder / "pore.vol").read_bytes())
+    moved = session.run(loaded.with_(**{"inputs.mesh.path": "other.vol"}), upto="mesh")
+    assert moved.manifest.inputs["files"]["mesh"]["path"] == str(renamed.resolve())

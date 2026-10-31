@@ -389,29 +389,12 @@ def test_phy13_the_clamp_count_reaches_the_manifest_as_a_number(solved: Solved) 
     assert "no solution was sampled" in str(without["clamp_activations"])
 
 
-def test_fr25_check_routes_off_reaches_the_manifest_as_a_contributed_deviation(
+def test_num26_the_cross_check_between_the_two_current_routes_is_always_run(
     solved: Solved,
 ) -> None:
-    stage = QoIStage()
-    assert stage.deviations(solved.inputs()) == ()
-    contributed = stage.deviations(solved.inputs(check_routes=False))
-    assert len(contributed) == 1
-    assert "check_routes" in contributed[0].source
-    assert "NUM-26" in contributed[0].description
-
-    record = manifest_io.build(
-        solved.document,
-        case_text=solved.text,
-        case_hash="0" * 64,
-        contributed_deviations=contributed,
-    ).groups()["deviations"]
-    assert isinstance(record, dict)
-    assert record["count"] == len(record["switches"]) + 1
-    assert record["contributed"] == [contributed[0].summary()]
-
-    summary = QoIStage().run(solved.inputs(check_routes=False)).summary
-    assert summary["routes_checked"] is False
-    assert "route_agreement" not in summary
+    summary = QoIStage().run(solved.inputs()).summary
+    assert summary["routes_checked"] is True
+    assert "route_agreement" in summary
 
 
 # -- the artefact keys --------------------------------------------------------

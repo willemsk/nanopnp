@@ -89,9 +89,10 @@ REV-120, REV-122, REV-144, REV-145, REV-153, REV-155, REV-157). The
 ### Changed
 
 - **A relative path in a case is read beside the case file**, as a correction file already was, so a case runs
-  the same from any folder. A case held in memory (a sweep member, a window document) reads against the working
-  directory. Migration: run from the case's folder no longer matters; a case written for another working
-  directory needs its paths made relative to the file.
+  the same from any folder. A case held in memory carries the directory of the file it came from, so an edited
+  copy and a member of a sweep over it read what the case file read; only a case that never had a file reads
+  against the working directory. Migration: run from the case's folder no longer matters; a case written for
+  another working directory needs its paths made relative to the file.
 - **The case schema** (`nanopnp/case/v0.5`) gains `geometry.pore`, `numerics.mesh.maxh_nm` and
   `boundary_conditions.wall_charge_C_m2`; the definition titles of its JSON Schema change (the root is `Case`).
 - **`Session.sweep`** returns a `SweepResult`; sweep members walk through the session's store.
@@ -116,6 +117,13 @@ REV-120, REV-122, REV-144, REV-145, REV-153, REV-155, REV-157). The
   `uv run` prefix, which VER-46's check had passed over; `reopen` and `sweep_isolevels` read a relative path
   beside the case file, as the walk does; `stage --list` answers from the registry alone; and
   `check_force_surface` matches boundary edges in one pass and refuses a surface no element owns.
+- **The review's open items** ([CODE_REVIEW_021](docs/code_reviews/CODE_REVIEW_021.md), ruled by the author):
+  a correction file named by a path keys stage 8 and the solve by its content and its file name, not by where
+  it sits, so one calculation in two folders keys one artefact (REV-158); two correction files of one file name
+  are refused rather than keyed as one; an edited case, a sweep member and the sweep's own plan read a relative
+  path beside the case file, and a factory case resolves a path-named `parameters` as it already resolved
+  `charge` (REV-159); the manifest refuses rather than records a null hash for a correction file it cannot find
+  (REV-161).
 
 ### Removed
 
@@ -132,6 +140,10 @@ Each break, with its migration:
 - **`Case.cylinder(..., store=...)`, `Case.run` and the `"debye"` wall**. Build the case, then
   `Session(store, write=...).run(case)`; `wall_h_nm` is a number or `"auto"`.
 - **`nanopnp.sweep.sweep`**. `session.sweep(case, axis=..., values=...)`, or `nanopnp.api.sweep.sweep`.
+- **The `check_routes` stage option and `QoIStage.deviations`** (REV-160). The NUM-26 cross-check between the
+  two current routes is always run; no case, session or command line could ever turn it off, so the deviation
+  it contributed could never be recorded. `indicator_band_nm` and `extension_shell_nm` stay as what they are:
+  settings of stage 11 read when it is invoked directly, with no route from a case file.
 - **`nanopnp.pipeline.reproduce`**. `nanopnp.api.reproduce.reproduce`.
 - **`SolveHook` gains a method.** An implementation adds `rung_solved`; a no-op is enough.
 

@@ -140,7 +140,9 @@ class ResolvedCase:
             "bias_V": self.bias_V,
             "ground": self.ground,
             "walls": self.document.boundary_conditions.walls.model_dump(),
-            "electrolyte": dict(self.electrolyte.provenance),
+            # Named here by identity, hashed in stage 8's artefact: as for the fields below, a
+            # path in the key splits one calculation across two folders.
+            "electrolyte": dict(self.electrolyte.identity),
             "newton": {
                 "initial_damping": self.newton.initial_damping,
                 "minimum_damping": self.newton.minimum_damping,

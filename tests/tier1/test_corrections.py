@@ -363,3 +363,69 @@ def test_fr16_an_edited_correction_file_is_read_again_in_the_same_process(
     after = models.create("refitted_nacl", "viscosity")
     assert isinstance(after, models.FittedCorrection)
     assert after.concentration_params["P1"] == pytest.approx(0.008)
+
+
+PATH_NAMED_CASE = """
+schema: nanopnp/case/v0.5
+name: path-named-corrections
+inputs:
+  mesh: {path: pore.msh, format: msh41}
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 1.0
+  parameters: fits.yaml
+  corrections:
+    viscosity: {model: visc.yaml, wall: true, concentration: true}
+boundary_conditions: {bias_V: 0.1}
+physics: {model: epnp-ns, solid_permittivities: {membrane: 3.2}}
+numerics: {continuation: none}
+"""
+"""A case naming both of its correction files by a path relative to the case file."""
+
+
+def test_fr16_a_correction_file_named_by_path_keys_the_artefact_by_content_not_by_path(
+    tmp_path: Path,
+) -> None:
+    from nanopnp.core.hashing import content_hash
+    from nanopnp.io.artefact import SOLUTION_SCHEMA, StageInputs
+    from nanopnp.materials.stage import MaterialsStage
+    from nanopnp.pipeline.case import loads_case
+
+    shipped = correction_file("willems2020_nacl").read_text(encoding="utf-8")
+    keyed = []
+    for folder in ("a", "b"):
+        beside = tmp_path / folder
+        beside.mkdir()
+        for name in ("fits.yaml", "visc.yaml"):
+            (beside / name).write_text(shipped, encoding="utf-8")
+        resolved = resolve(loads_case(PATH_NAMED_CASE), base=beside)
+        materials = MaterialsStage().key(StageInputs(resolved=resolved))
+        assert set(materials.inputs) == {"corrections", "corrections:visc.yaml"}
+        keyed.append((materials.hash, content_hash(SOLUTION_SCHEMA, resolved.solve_provenance)))
+    assert keyed[0] == keyed[1]
+
+    (tmp_path / "b" / "visc.yaml").write_text(shipped + "\n# refitted\n", encoding="utf-8")
+    edited = resolve(loads_case(PATH_NAMED_CASE), base=tmp_path / "b")
+    assert MaterialsStage().key(StageInputs(resolved=edited)).hash != keyed[0][0]
+
+
+def test_fr16_two_correction_files_of_one_name_are_refused_rather_than_keyed_as_one(
+    tmp_path: Path,
+) -> None:
+    from nanopnp.io.artefact import StageInputs
+    from nanopnp.materials.stage import MaterialsStage
+    from nanopnp.pipeline.case import loads_case
+
+    shipped = correction_file("willems2020_nacl").read_text(encoding="utf-8")
+    for folder in ("one", "two"):
+        (tmp_path / folder).mkdir()
+        (tmp_path / folder / "visc.yaml").write_text(shipped, encoding="utf-8")
+    (tmp_path / "fits.yaml").write_text(shipped, encoding="utf-8")
+    text = PATH_NAMED_CASE.replace(
+        "viscosity: {model: visc.yaml, wall: true, concentration: true}",
+        "viscosity: {model: one/visc.yaml, wall: true, concentration: true}\n"
+        "    density: {model: two/visc.yaml, wall: true, concentration: true}",
+    )
+    resolved = resolve(loads_case(text), base=tmp_path)
+    with pytest.raises(ValueError, match=r"two correction files called 'visc\.yaml'"):
+        MaterialsStage().key(StageInputs(resolved=resolved))
