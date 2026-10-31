@@ -22,7 +22,7 @@ one file per section; this file holds the title block, the reading rule and the 
   requirement, design clause and numerical method is in them, and `SPECIFICATION.md` is normative
   through them.
 - **Read [`specification/history/`](specification/history/index.md) on demand.** It holds the Phase 0
-  exit criteria and the author's dated rulings (§8.2.1 to §8.2.23), verbatim, with the reasons. Read
+  exit criteria and the author's dated rulings (§8.2.1 to §8.2.25), verbatim, with the reasons. Read
   it when the reason behind a rule is wanted. Its index says where each ruling holds now.
 - **The rules of the development process** that no clause of its own carries are §8.4
   ([`specification/08-implementation-plan/04-development-process.md`](specification/08-implementation-plan/04-development-process.md)).
@@ -93,7 +93,7 @@ one file per section; this file holds the title block, the reading rule and the 
 | §8 Implementation plan: introduction | [`specification/08-implementation-plan/index.md`](specification/08-implementation-plan/index.md) |
 | §8.1 Phases and gates | [`specification/08-implementation-plan/01-phases-and-gates.md`](specification/08-implementation-plan/01-phases-and-gates.md) |
 | §8.2 Rulings by date (a stub pointing to the history) | [`specification/08-implementation-plan/02-rulings.md`](specification/08-implementation-plan/02-rulings.md) |
-| §8.2 Phase 0 exit criteria and §8.2.1 to §8.2.23, the dated rulings | [`specification/history/index.md`](specification/history/index.md) |
+| §8.2 Phase 0 exit criteria and §8.2.1 to §8.2.25, the dated rulings | [`specification/history/index.md`](specification/history/index.md) |
 | §8.3 Effort estimate | [`specification/08-implementation-plan/03-effort-estimate.md`](specification/08-implementation-plan/03-effort-estimate.md) |
 | §8.4 Development process | [`specification/08-implementation-plan/04-development-process.md`](specification/08-implementation-plan/04-development-process.md) |
 | §9 Risk register (RSK) | [`specification/09-risks.md`](specification/09-risks.md) |
