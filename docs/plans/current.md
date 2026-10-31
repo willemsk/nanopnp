@@ -1,6 +1,6 @@
 # Current work
 
-Updated 31 October 2026 (the last two packages of Phase 4 planned, §8.2.24; WP57 awaiting its merge).
+Updated 31 October 2026 (WP57 merged; the last two packages of Phase 4 planned, §8.2.24).
 Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
@@ -24,12 +24,12 @@ One line per lane (§8.4.4).
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress**. WP35 to WP57 are delivered; WP57 ([plan](wp57-idealised-pore-and-python-interface.md))
-  is reviewed ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)) and tagged `v0.5.0-alpha.23` at
-  its merge. The sessions' findings are ruled (§8.2.21), and the two packages that end the phase are
+  is reviewed ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)) and merged
+  ([PR 139](https://github.com/willemsk/nanopnp/pull/139), `8a3488c`); `v0.5.0-alpha.23` is not yet
+  pushed. The sessions' findings are ruled (§8.2.21), and the two packages that end the phase are
   planned (§8.2.24): **WP58**, documentation increment 4, tagged `v0.5.0-alpha.24`, then **WP59**, the
-  close, tagged `v0.5.0` alone. Next: the author merges
-  [PR 139](https://github.com/willemsk/nanopnp/pull/139), then `/np-ship wp 57` pushes the tag, then
-  `/np-plan wp 58`.
+  close, tagged `v0.5.0` alone. `duplicates.py` passes on the merged `main`, both lanes in (§8.4.4).
+  Next: `/np-ship wp 57` pushes the tag, then `/np-plan wp 58`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`. WP5.02, the spike, after `v0.5.0`.
