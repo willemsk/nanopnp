@@ -78,7 +78,7 @@ from nanopnp.physics.poisson import (
     charge_source,
     poisson_operator,
     surface_charge_region,
-    surface_charge_source,
+    surface_charge_term,
 )
 from nanopnp.physics.spaces import set_boundary_values
 from nanopnp.physics.stabilisation import (
@@ -890,13 +890,11 @@ class CoupledModel:
                 fixed_charge.density, potential_test, measures, rule_order=fixed_charge.rule_order
             )
         if surface_charge is not None:
-            # The Poisson boundary term is +int_Gamma sigma_s v r ds on the
-            # right-hand side, so it is subtracted from the residual exactly as
-            # the volumetric source is.
-            residual -= surface_charge_source(
+            residual += surface_charge_term(
                 surface_charge,
                 potential_test,
                 measures,
+                side="residual",
                 definedon=surface_charge_region(mesh, surface_charge_boundary),
             )
 
@@ -1346,10 +1344,11 @@ class ElectrostaticModel(_SingleFieldModel):
         else:
             residual = nonlinear_pb_residual(trial, test, measures, debye_length_nm=screening_nm)
         if surface_charge is not None:
-            residual -= surface_charge_source(
+            residual += surface_charge_term(
                 surface_charge,
                 test,
                 measures,
+                side="residual",
                 definedon=surface_charge_region(space.mesh, surface_charge_boundary),
             )
         return residual
@@ -1514,10 +1513,11 @@ class PoissonModel(_SingleFieldModel):
                 extra_order=0 if fixed_charge.rule_order is not None else RADIAL_WEIGHT_ORDER,
             )
         if surface_charge is not None:
-            residual -= surface_charge_source(
+            residual += surface_charge_term(
                 surface_charge,
                 test,
                 measures,
+                side="residual",
                 definedon=surface_charge_region(space.mesh, surface_charge_boundary),
                 extra_order=RADIAL_WEIGHT_ORDER,
             )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
 
@@ -11,28 +12,16 @@ import pytest
 import yaml
 
 from nanopnp import Case, Session
-from nanopnp.core.constants import (
-    GAS_CONSTANT,
-    REFERENCE_TEMPERATURE_K,
-    VACUUM_PERMITTIVITY,
-)
 from nanopnp.mesh.primitives import DEFAULT_BOUNDARIES, AxialSlabGeometry
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
-from nanopnp.physics.pb import ELECTROLYTE_PERMITTIVITY, debye_length_nm
+from nanopnp.physics.pb import debye_length_nm
 
 CONCENTRATION_M = 0.1
 ZETA = 2.0
 
 
-def _grahame_sigma_C_m2() -> float:
-    permittivity = VACUUM_PERMITTIVITY * ELECTROLYTE_PERMITTIVITY
-    return math.sqrt(
-        8.0 * permittivity * GAS_CONSTANT * REFERENCE_TEMPERATURE_K * CONCENTRATION_M * 1e3
-    ) * math.sinh(0.5 * ZETA)
-
-
-def _wall_potential(sign: float, divisions: int) -> float:
+def _wall_potential(sign: float, divisions: int, sigma_C_m2: float) -> float:
     lam = debye_length_nm(CONCENTRATION_M)
     model = models.create("pb", concentration_M=CONCENTRATION_M, order=2, debye_length_nm=lam)
     mesh = AxialSlabGeometry(radius_nm=lam, length_nm=20.0 * lam).generate(maxh_nm=lam / divisions)
@@ -40,18 +29,21 @@ def _wall_potential(sign: float, divisions: int) -> float:
         mesh,
         AXISYMMETRIC,
         boundaries=replace(DEFAULT_BOUNDARIES, potential="bulk"),
-        surface_charge=sign * _grahame_sigma_C_m2() / model.scales.surface_charge_C_m2,
+        surface_charge=sign * sigma_C_m2 / model.scales.surface_charge_C_m2,
         surface_charge_boundary="wall",
     )
     return float(solution.state(mesh(0.5 * lam, 0.0)))
 
 
-def test_ver77_grahame_zeta_from_a_wall_charge_on_an_axial_slab() -> None:
-    errors = [abs(_wall_potential(1.0, divisions) - ZETA) / ZETA for divisions in (2, 4, 8)]
+def test_ver77_grahame_zeta_from_a_wall_charge_on_an_axial_slab(
+    grahame_sigma_C_m2: Callable[[float, float], float],
+) -> None:
+    sigma = grahame_sigma_C_m2(ZETA, CONCENTRATION_M)
+    errors = [abs(_wall_potential(1.0, divisions, sigma) - ZETA) / ZETA for divisions in (2, 4, 8)]
     assert errors[0] > errors[1] > errors[2], f"errors {errors} do not fall with refinement"
     assert errors[-1] < 1e-4, f"finest-mesh error {errors[-1]:.3g}"
-    opposite = _wall_potential(-1.0, 8)
-    assert opposite == pytest.approx(-_wall_potential(1.0, 8), rel=1e-6)
+    opposite = _wall_potential(-1.0, 8, sigma)
+    assert opposite == pytest.approx(-_wall_potential(1.0, 8, sigma), rel=1e-6)
 
 
 def _pore_case(
@@ -140,6 +132,16 @@ def test_ver77_gauss_balance_in_a_long_charged_lumen(tmp_path: Path) -> None:
     # C m^-1 integrated over z in nm: 1e-9 m per nm, against the wall's C m^-2 x nm^2.
     ionic_C = simpson([charge_per_length_C_m(z) for z in planes], x=planes) * 1e-9
     wall_C = sigma * 2.0 * math.pi * radius * 2.0 * half_length * 1e-18
+    # This test's own two quadrature errors, measured once by refining each rule against the
+    # other held fine (REV-165). The 48-node Gauss-Legendre rule in r is worth 8e-7 relative
+    # against 192 nodes, and is settled by 48. Simpson over 17 planes is worth 1.4e-5 against
+    # 129 planes, and is the larger of the two: the integrand is sampled from a C0 piecewise
+    # quadratic field, so its error does not fall monotonically with the plane count (1.4e-5 at
+    # 17 planes, 1.2e-5 at 33, 1e-7 at 65) but with where the planes land in the elements. With
+    # both rules fine the balance closes to 6e-6, which is the physics leakage this geometry
+    # leaves, inside the 1e-4 of VER-77's conditions. The assertion below therefore resolves a
+    # 2e-5 total discrepancy with a factor of 48 in hand: a flipped sign or a factor of two
+    # fails it by three orders of magnitude.
     assert ionic_C == pytest.approx(-wall_C, rel=1e-3)
 
 

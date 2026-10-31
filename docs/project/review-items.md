@@ -1971,6 +1971,17 @@ inherits it; drop `dimensionless_surface_charge` in favour of `Scales`; and let 
 one Grahame expression. None of it moves a number. Take it with whatever next touches the surface
 term.
 
+**Resolved (31 October 2026).** `physics/poisson.surface_charge_term` takes `side`, `"load"` or
+`"residual"`, and is the only place the sign is written: Poisson's boundary term stands on the
+right-hand side, so it enters a linear form as written and a residual negated. The coupled, `pb` and
+`poisson` models and both branches of `solve_pb_recorded` go through it, so `PoissonModel`'s sign,
+which no test covered, is now the same expression VER-77 (b) and VER-31 exercise.
+`dimensionless_surface_charge` is gone; `test_stern_layer.py` divides by
+`Scales.surface_charge_C_m2`, which is the number it computed by the other route, and the two tests
+share one Grahame expression, the `grahame_sigma_C_m2` fixture of `tests/tier2/conftest.py`. No
+number moved: the Gauss balance, Grahame's zeta on the slab and the five Stern-layer assertions all
+hold unchanged.
+
 ## REV-163: check_force_surface refuses a legitimate body straddling the lumen and reservoir seam
 
 Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
@@ -1987,6 +1998,14 @@ test that needs no single material pair. The gate is stricter than the failure i
 Recommendation: compare the fluid domains by `ELECTROLYTE_DOMAINS` rather than by name, so a surface
 meeting two names of one fluid passes and a surface meeting a fluid and a solid still refuses. That
 changes what NUM-29's NOTE refuses, so it is an amendment, not a fix.
+
+**Resolved (31 October 2026) as an amendment.** `check_force_surface` maps every name matching
+`ELECTROLYTE_DOMAINS` to one material before it counts the pairs, after the side beyond the domain
+has been settled — the order matters, or a fluid on both sides would read as an outer boundary. A
+body straddling the lumen and a reservoir now passes and reports `("analyte", "electrolyte")`; a
+surface meeting a fluid and a solid still refuses. NUM-29's NOTE carries the amendment in the same
+commit, and `tests/tier1/test_forces.py`'s gate test now asserts both halves: the straddling body
+passes, a body meeting `membrane` is refused.
 
 ## REV-164: default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic
 
@@ -2005,6 +2024,11 @@ gets.
 
 Recommendation: refuse the two together in `default_ladder`, naming both settings. A numerical gate,
 so it takes a test when it is done.
+
+**Resolved (31 October 2026).** `default_ladder` refuses `wall_potential_V` and
+`surface_charge_C_m2` together, naming both values and the boundary, beside the refusal of the two
+fixed charges that is its precedent. `tests/tier1/test_continuation.py` asserts the refusal and that
+either setting alone still builds a ladder.
 
 ## REV-165: The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves
 
@@ -2026,3 +2050,15 @@ wide margin. The gap is in knowing how much headroom it has.
 
 Recommendation: measure the two quadrature errors once by refining each rule and record the numbers
 in the test's comment, as the other Tier 2 benchmarks do. No tolerance changes.
+
+**Resolved (31 October 2026); no tolerance changed.** Both rules were refined against the other
+held fine. The 48-node Gauss-Legendre rule in `r` is worth 8 x 10⁻⁷ relative against 192 nodes and
+is settled by 48. Simpson over 17 planes is worth 1.4 x 10⁻⁵ against 129 planes and is the larger of
+the two; because the integrand is sampled from a C⁰ piecewise-quadratic field its error does not
+fall monotonically with the plane count (1.4 x 10⁻⁵ at 17, 1.2 x 10⁻⁵ at 33, 1 x 10⁻⁷ at 65) but
+with where the planes land in the elements. With both rules fine the balance closes to 6 x 10⁻⁶,
+the physics leakage this geometry leaves, inside the 1 x 10⁻⁴ of VER-77's conditions. The `rel=1e-3`
+assertion therefore resolves a 2 x 10⁻⁵ total discrepancy with a factor of 48 in hand, which is the
+headroom that was unknown; the numbers are in the test's comment. The assertion is still not keyed
+to a mesh hash, and that margin is why it need not be: a platform deploying another mesh of this
+class moves the balance far inside it.
