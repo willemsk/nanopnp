@@ -42,7 +42,7 @@ by a restatement of their equations:
 | 1 | Documentation site and its build; user guide for the solver core, the case file, meshes and fields, runs, sweeps, provenance and the desktop shell; generated case-file, command-line and exit-code references; the API reference over the IF-01 public surface; worked examples on an idealised pore and on the reference geometry |
 | 2 | The geometry pipeline: structure and trajectory input, density, symmetry reduction, contour, meshing; an example from a PDB entry to a mesh |
 | 3 | The charge pipeline: protonation, force field, smearing, the conservation report; an example from a PDB entry to a charged run |
-| 4 | The modularity report; the user guide, the API reference and the command-line reference revised with the user-testing findings, and every break listed with its migration (§8.2.6 F4) |
+| 4 | The modularity report; the user guide, the API reference and the command-line reference revised with the user-testing findings, every stale statement removed and the language made plainer, with a hand-written page over the Python interface and one listing the notebooks; the examples revised in prose alone. Every break of the phase is listed with its migration in `CHANGELOG.md`, in the entry of the package that made it, and no migration page is written (§8.2.6 F4; §8.2.24 Z2 to Z4) |
 | 5 | The application guide rewritten against the Phase 5 browser workflow, with the screens the visual-feedback workflow renders |
 | 6 | Tutorials completed against the validated release, the JOSS paper, and the DOI-archived v0.7 (QR-15 in full; §8.2.5 E2, §8.2.6 F1) |
 | post-1.0 | In-application tutorials, with the GUI track |

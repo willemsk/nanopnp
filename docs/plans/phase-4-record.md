@@ -1499,3 +1499,43 @@ no plan cap. The WP57 entry read, before this amendment:
 The *Open decisions* row on `MOD-11` read "**Ruled** (§8.2.21 W7): a designed interface, `register`
 internal; WP57", and the In brief gave the second package about two weeks.
 
+
+## Amended 31 October 2026 (§8.2.24 Z1 to Z6)
+
+After WP57 was reviewed and its own review items closed, the author planned the two packages that
+end the phase. The provisional documentation increment becomes WP58 and the provisional close
+becomes WP59; the notebooks are listed on the site rather than rendered, closing the decision carried
+from 22 October; no migration page is written, the changelog keeping every break with its migration,
+and the effort goes to currency, clarity and simplicity; the examples change in prose alone; and
+REV-121 and REV-156 are given their destinations. The two entries read, before this amendment:
+
+> ### Documentation increment 4 (provisional)
+>
+> It waits on the fixes and delivers §8.1's documentation increment for Phase 4: the modularity report
+> in the site; the user guide, the API reference and the CLI reference revised against both logs,
+> including a hand-written Python API page if the sessions show it is needed; every break of the phase
+> listed with its migration (F4). From the sessions (§8.2.21 W1, W6): the getting-started page and the
+> meshes page point to each command's help and say which settings shape the geometry and which the
+> mesh, and that `numerics.mesh` is refused beside a supplied mesh (UT-02); the provenance page says
+> when a run does not reproduce (UT-05); the fields page explains a field document's grid and its two
+> conservation legs (UT-06); the running page states the cost of a solve per element (UT-09). VER-45 and
+> VER-46 gate it.
+>
+> ### The close package (provisional)
+>
+> It comes last. It:
+>
+> - resolves or carries each row of *Open decisions*;
+> - confirms that every `MOD-nn` and `UT-nn` row is terminal and sets both logs' headers to `closed`,
+>   recording their closure, and the register's, in the report (N3);
+> - confirms that every `REV-nn` row whose ruling places it in a Phase 4 package is `fixed`;
+> - re-runs the end-of-phase report's numbers on its own tree, never copying them from an Outcome;
+> - writes the report below, the `[0.5.0]` section of `CHANGELOG.md` and `CITATION.cff`'s version and
+>   date;
+> - updates `current.md` to point at Phase 5 (F5).
+>
+> Its last commit on `main` is tagged `v0.5.0` alone (G11).
+
+The §8.1 Phase 4 documentation increment read, before Z3 amended it:
+
+> | 4 | The modularity report; the user guide, the API reference and the command-line reference revised with the user-testing findings, and every break listed with its migration (§8.2.6 F4) |

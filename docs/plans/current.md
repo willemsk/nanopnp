@@ -1,6 +1,6 @@
 # Current work
 
-Updated 31 October 2026 (WP57 reviewed, its review items ruled and closed, awaiting its merge).
+Updated 31 October 2026 (the last two packages of Phase 4 planned, §8.2.24; WP57 awaiting its merge).
 Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
@@ -8,13 +8,14 @@ Navigation only;
 
 Phase 4 tidies the program before others rely on it: the author has run the testing sessions and ruled
 what they found; both fixes are done, a readable command line and then a pore's shape set apart from
-its mesh, with the Python interface rebuilt on a case and the session that runs it. Phase 5, a browser
+its mesh, with the Python interface rebuilt on a case and the session that runs it. Two packages are
+left and they end the phase: the written guide brought level with the program, then the close, which
+settles every finding, measures the report's numbers again and names the release. Phase 5, a browser
 workbench, has its design study merged; nothing is built until Phase 4's release.
 
-**Your call:** should the later speed-up of a fine-mesh solve go after building the equations first?
-*Recommendation:* yes. Nothing else is waiting on you: every file a case names is now read beside
-the case file and identifies a saved result by what is in it, both as you ruled, and the review's
-eight items are closed in the package.
+**Your call:** nothing waits on you. The six decisions of 31 October settled the last two packages,
+the notebooks' place on the site, and the two review notes that had no owner; Phase 6's speed-up will
+build the equations before it touches the solver, as you ruled.
 
 ## Position
 
@@ -24,11 +25,11 @@ One line per lane (§8.4.4).
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
   **in progress**. WP35 to WP57 are delivered; WP57 ([plan](wp57-idealised-pore-and-python-interface.md))
   is reviewed ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)) and tagged `v0.5.0-alpha.23` at
-  its merge. The sessions' findings are ruled (§8.2.21); WP56's UT-09 measurement puts REV-156's
-  question to the author. The review's eight items, REV-158 to REV-165, are ruled and closed in the
-  package. Next: the author merges
-  [PR 139](https://github.com/willemsk/nanopnp/pull/139), then `/np-ship wp 57` pushes the tag. Then
-  the documentation increment and the close.
+  its merge. The sessions' findings are ruled (§8.2.21), and the two packages that end the phase are
+  planned (§8.2.24): **WP58**, documentation increment 4, tagged `v0.5.0-alpha.24`, then **WP59**, the
+  close, tagged `v0.5.0` alone. Next: the author merges
+  [PR 139](https://github.com/willemsk/nanopnp/pull/139), then `/np-ship wp 57` pushes the tag, then
+  `/np-plan wp 58`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane. [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`. WP5.02, the spike, after `v0.5.0`.
@@ -45,19 +46,20 @@ One line per lane (§8.4.4).
   the stage registry; marimo notebooks, nightly. → §8.2.14 P2 to P6; FR-30.
 - **Cost fixes follow measurement against registered thresholds** (§8.2.12 M2). **Phase 5 is a
   browser workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15); **packages `WP5.01` on** (S16).
-- **Phase 4's shape:** refactors before the protocol (G2); findings only from the author's sessions
-  (G7); the VER-62 golden (G10). The `MOD-nn` rulings stand (§8.2.8).
-- **A moved edge edits `modularity-layering.yaml` in the same commit (VER-61)**; a VER-62 miss is
-  reverted, or ruled and re-pinned (G10, I4).
+- **Phase 4's shape:** the `MOD-nn` rulings stand (§8.2.8); findings only from the author's sessions
+  (G7). **A moved edge edits `modularity-layering.yaml` in the same commit (VER-61)**; a VER-62 miss
+  is reverted, or ruled and re-pinned (G10, I4).
 - **What a package leaves open is a `REV-nn` row** until resolved (H12; §8.4.6).
-- **An idealised pore is geometry the case declares; stage 6 meshes it; `mesh cylinder` goes; a wall
-  charge is a boundary condition** (§8.2.22 X1 to X4). **A `Case` is the case document, built from
-  public blocks; a `Session` runs it for every caller; one public object per job; WP57 carries it
-  all, its plan uncapped** (§8.2.23 Y1 to Y11).
+- **An idealised pore is geometry the case declares; stage 6 meshes it; a wall charge is a boundary
+  condition** (§8.2.22 X1 to X4). **A `Case` is the case document built from public blocks; a
+  `Session` runs it for every caller; one public object per job** (§8.2.23 Y1 to Y11).
 - **Text output is a reading, `--json` the record; a remedy names what the run reads** (§8.2.21 W2, W5).
+- **Phase 4 ends in WP58, the documentation increment, and WP59, the close; the notebooks are listed
+  on the site, not rendered; no migration page, the changelog carrying each break; the examples change
+  in prose alone** (§8.2.24 Z1 to Z4).
 - **Layers read a model's declaration, never its name** (VER-56). **A refusal names its requirement
-  and release** (VER-67). **Only `poisson` adds a quadrature order for `r`** (E4; NUM-07 NOTE).
-  **A golden carries the stage-7 recipe** (E3; VAL-03).
+  and release.** **Only `poisson` adds a quadrature order for `r`** (E4; NUM-07 NOTE). **A golden
+  carries the stage-7 recipe** (E3; VAL-03).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's
   identifier, `nanopnp/case/v0.5` (G6), and is listed in `CHANGELOG.md`.
 - **A callback is not an input** (VER-44). **A generated mesh is read only through
@@ -70,6 +72,8 @@ One line per lane (§8.4.4).
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
 - **Phase 5's comments, design-round answers, framework ruling, colleague** (S8, S13, S21).
 - **The rulings on any residual cycle (H6) and any WP41 drift (I4).** **The archived PQRs** for WP27–WP29's Tier 3.
+- **REV-121**, stage 1's axis for a single-chain or mixed-chain pore, is Phase 5's, with structure
+  preparation; **REV-156**'s speed-up is Phase 6's, the assembly first (§8.2.24 Z5, Z6).
 
 ## Dependencies To Read On Demand
 
@@ -78,9 +82,9 @@ One line per lane (§8.4.4).
 | The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The documents' record | `wp52-specification-and-plans-split.md`; `phase-4-record.md` for the phase plan's amendments |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
-| The notebooks revised | `wp54-notebooks-and-figures-revised.md`; §8.2.20; `wp51-plotting-and-notebooks.md`; FR-30, FR-37 |
-| The protocol | `wp55-user-testing-protocol.md`; §8.2.6 F3, §8.2.7 G7, §8.2.8 H2, §8.2.13 N4; VER-46; `src/nanopnp/validation/examples.py` |
+| The notebooks and the protocol | `wp54-notebooks-and-figures-revised.md`, `wp55-user-testing-protocol.md`; §8.2.20; FR-30, FR-37; VER-46 |
 | The fixes | `wp56-command-line-read-by-a-person.md`, `wp57-idealised-pore-and-python-interface.md`; `docs/user-testing/findings.md`; §8.2.21, §8.2.22 |
+| The last two packages | §8.2.24; the Phase 4 plan's WP58 and WP59 entries; §8.1's Phase 4 documentation increment |
 | The workbench | `phase-5-workbench.md`; §8.2.17; M3; F5 |
 
 ## Handoff Rules

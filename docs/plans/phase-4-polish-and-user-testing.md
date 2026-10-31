@@ -6,29 +6,30 @@ plan as it stood before this restatement, are in [phase-4-record.md](phase-4-rec
 demand. Delivered: WP35 to WP57, below. The author ran the sessions and ruled every `UT-nn` on
 29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, and WP57, the second (widened on 30 October 2026 to carry the geometry
 split and the open review items, §8.2.22, and its Python interface rebuilt on a `Case` and a `Session`,
-§8.2.23), are delivered; provisional, the documentation increment and the close. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
+§8.2.23), are delivered. The phase ends in two packages, planned on 31 October 2026 (§8.2.24 Z1):
+**WP58**, documentation increment 4, then **WP59**, the close. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the trimmed code and
-tests, the notebooks, the split specification, the working commands and the testing protocol are
-done, the author has run the sessions, the first fix, a readable command line, is merged, and the second fix is delivered.
+tests, the notebooks, the split specification, the working commands, the testing protocol and both
+fixes are done. Two packages remain, and they end the phase.
 
-**What changes.** The second fix lets a simple cylindrical pore be described in the case file and
-meshed like any other, so its shape and its mesh are set apart; gives its wall a fixed charge;
-rebuilds the Python interface on two objects, a case and the session that runs it, which every tool
-then uses; and clears the review notes still open. Next the guide is revised, and the phase closes.
+**What changes.** The written guide is brought level with the program as it now is: a page that
+teaches the rebuilt Python interface, a page that says what each notebook shows, the pages your
+sessions found wanting, every sentence that is no longer true taken out, and plainer language
+throughout, including in the worked examples. Then the phase closes: every finding read as settled,
+every number of the report measured again, and the release named.
 
-**Cost.** More than two weeks for the second fix, now that the interface is rebuilt; the phase keeps
-its four to six weeks, and that package's size is reported at the close.
+**Cost.** Under two weeks for the two together. Neither touches the program, so neither can move a
+result.
 
-**What could go wrong.** Moving the examples onto the new cylinder could shift the reference numbers
-the project holds fixed; they may be reset only if they still agree to the tolerance already argued.
-The rebuilt interface breaks existing scripts and notebooks; each break is listed with its
-replacement, and every notebook runs each night.
+**What could go wrong.** A sweep for stale text can miss a page, which a reader then trusts; what
+the sweep cannot fix is written down as a known gap rather than left silent. The report's numbers
+could be copied from an earlier package instead of measured afresh, which the close forbids.
 
-**Your call.** Should the later speed-up of a fine-mesh solve go after building the equations first,
-rather than after reusing the solve? *Recommendation:* yes; building them is the larger cost.
+**Your call.** Nothing waits on you. The six decisions of 31 October settle the last two packages,
+and the two review notes left without an owner now have one.
 
 ## Context
 
@@ -236,29 +237,54 @@ may be named by path (REV-122). REV-111, REV-120, REV-153, REV-155 and REV-157 a
 migration is in `CHANGELOG.md`. The nightly walk of example 07 was repaired (its step read a manifest the
 command no longer prints).
 
-### Documentation increment 4 (provisional)
+### WP58 — Documentation increment 4: the guide current, plainer and free of stale text (§8.1's Phase 4 documentation increment; §8.2.6 F4; §8.2.21 W1, W6; §8.2.24 Z1 to Z4)
 
-It waits on the fixes and delivers §8.1's documentation increment for Phase 4: the modularity report
-in the site; the user guide, the API reference and the CLI reference revised against both logs,
-including a hand-written Python API page if the sessions show it is needed; every break of the phase
-listed with its migration (F4). From the sessions (§8.2.21 W1, W6): the getting-started page and the
-meshes page point to each command's help and say which settings shape the geometry and which the
-mesh, and that `numerics.mesh` is refused beside a supplied mesh (UT-02); the provenance page says
-when a run does not reproduce (UT-05); the fields page explains a field document's grid and its two
-conservation legs (UT-06); the running page states the cost of a solve per element (UT-09). VER-45 and
-VER-46 gate it.
+Planned. It delivers §8.1's documentation increment and changes no `src/` file. It carries:
 
-### The close package (provisional)
+- **A page on the Python interface**, hand-written: build a case, run it through a session, read a
+  run result, draw its figures, sweep, register a stage of one's own, and reopen a recorded run
+  (UT-10; §8.2.23 Y1 to Y10). The generated API reference stays the list of names; this page is the
+  narrative.
+- **A page listing the notebooks** (Z2): the six under `notebooks/`, what each shows and the command
+  that opens it. Nothing is exported into the build.
+- **The guide revised against both logs** (W1, W6). Getting started and the meshes page point at each
+  command's help, separate the settings that shape the geometry from those that size the mesh, and
+  say that `numerics.mesh` beside a supplied mesh is refused (UT-02); the provenance page says when a
+  run does not reproduce (UT-05); the fields page explains a field document's grid and its two
+  conservation legs (UT-06); the running page gives the cost of a solve per element and the thread
+  pinning a sweep applies (UT-09, UT-11); the naming is made consistent (UT-08).
+- **Every stale statement removed** (Z3). Known on 31 October 2026: both findings logs say a deleted
+  test checks every row and name the withdrawn VER-63, the modularity log's closure sentence resting
+  on it, and the review register's area list lacks `provenance`, which two of its rows use. The sweep
+  is wider than this list, and what it cannot fix becomes a `REV-nn` row.
+- **The language made plainer** across the guide, and **the examples revised in prose alone** (Z4):
+  no case file, command, output or quoted number moves, so VER-46's walks and VER-62's golden stand
+  and the package costs no gate time.
+- The five references are generated and need no edit; the increment checks that `inspect`, `plot`,
+  `geometry cylinder`, `mesh` and `--progress` reach a reader through the guide (W2 to W4).
 
-It comes last. It:
+**No migration page** (Z3): each break is listed with its migration in `CHANGELOG.md`, in the entry
+of the package that made it, and WP59's `[0.5.0]` section gathers them. VER-45 and VER-46 gate the
+package. Tag `v0.5.0-alpha.24`.
+
+### WP59 — Phase 4 closed: the open items resolved, and the end-of-phase report (§8.2.7 G11; §8.2.24 Z1)
+
+Planned, and last. It:
 
 - resolves or carries each row of *Open decisions*;
 - confirms that every `MOD-nn` and `UT-nn` row is terminal and sets both logs' headers to `closed`,
-  recording their closure, and the register's, in the report (N3);
-- confirms that every `REV-nn` row whose ruling places it in a Phase 4 package is `fixed`;
-- re-runs the end-of-phase report's numbers on its own tree, never copying them from an Outcome;
-- writes the report below, the `[0.5.0]` section of `CHANGELOG.md` and `CITATION.cff`'s version and
-  date;
+  recording their closure, and the register's, in the report (N3). All eighteen `MOD-nn` and all
+  twelve `UT-nn` rows were terminal on 31 October 2026;
+- confirms that every `REV-nn` row whose ruling places it in a Phase 4 package is `fixed` and that no
+  row is left `open`. REV-116 closes here, by re-running `python -m nanopnp.validation.costs all` on
+  a clean tree and replacing `docs/project/cost-study.json` (ruled 18 October 2026); REV-121 is
+  deferred by Z5;
+- re-runs the end-of-phase report's numbers on its own tree, never copying them from an Outcome. The
+  two whose tests the test scope withdrew are re-measured through the library's own parser: the prose
+  share of `src/` and `tests/` (criterion 11; VER-75) and every `[tested: …]` marker against the
+  surviving tests (criterion 4; VER-63). All 423 markers resolved on 31 October 2026;
+- writes the report below, the `[0.5.0]` section of `CHANGELOG.md` gathering every break of the phase
+  with its migration (Z3), and `CITATION.cff`'s version and date;
 - updates `current.md` to point at Phase 5 (F5).
 
 Its last commit on `main` is tagged `v0.5.0` alone (G11).
@@ -268,12 +294,16 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | Decision | Owner and status |
 |---|---|
 | The phase estimate after R1: 4–6 weeks stands (P7), or 5–7 | **Ruled** (§8.2.22 X9): 4–6 weeks stands; WP57's size is reported at the close |
-| The notebooks on the documentation site: in documentation increment 4, or later | **Author, open**, at the second amendment. Default: on the site, after the sessions show which help |
+| The notebooks on the documentation site: in documentation increment 4, or later | **Ruled** (§8.2.24 Z2): listed, not rendered. One guide page names the six, what each shows and the command that opens it; nothing is exported into the build |
+| The last two packages, and what documentation increment 4 delivers | **Ruled** (§8.2.24 Z1, Z3, Z4): WP58 then WP59; no migration page, the changelog carrying every break with its migration, and the effort spent on currency, clarity and simplicity; the examples in prose alone |
+| REV-121, stage 1's axis for a single-chain or mixed-chain pore | **Ruled** (§8.2.24 Z5): deferred to the Phase 5 package that surfaces structure preparation, placed by `/np-plan amend 5` with the changes to §5.3.1 and VER-48 |
+| REV-156, which cost Phase 6's speed-up takes first | **Ruled** (§8.2.24 Z6): the assembly, 62 % of the measured solve, before the factorisation's 24 % |
 | WP53's aliases for the old command names, and the hook on a diverged checkout | **Settled** by WP53's plan: no aliases; a warning, and no write, unless a clean primary `main` can fast-forward |
 | WP54's scope | **Settled** (R8; §8.2.20 V1 to V17): the author's notes and the steering at its checkpoints |
 | Each `UT-nn`: fix or defer | **Ruled** (§8.2.21): eleven accepted for WP56 and WP57; UT-09 deferred to Phase 6 as REV-156 |
 | `MOD-11` | **Ruled** (§8.2.21 W7; §8.2.23 Y1 to Y11): the interface rebuilt on a `Case` and a `Session`, `register` and `with_section` internal; WP57, with no plan cap |
-| UT-02's split and the open review items | **Ruled** (§8.2.22): the cylinder declared in the case, a geometry file and a mesh command, a wall charge as a boundary condition, and REV-111, REV-120, REV-122, REV-144, REV-153, REV-155 and REV-157, all in WP57. REV-121 stays open, without a package |
+| UT-02's split and the open review items | **Ruled** (§8.2.22): the cylinder declared in the case, a geometry file and a mesh command, a wall charge as a boundary condition, and REV-111, REV-120, REV-122, REV-144, REV-153, REV-155 and REV-157, all in WP57. REV-121 now has its destination (§8.2.24 Z5) |
+| REV-116, the cost record written by the harness the review fixed | **Ruled** 18 October 2026: no re-run in WP49, since no verdict can change. WP59 re-runs the three measurements on a clean tree, replaces the record and sets the row `fixed` |
 | OPN-04, OPN-08 | **Author, open.** Not on this phase's path |
 | NUM-07 order; the archive-dependent legs | **Phase 6** (E1, E4, F1) |
 | Residual cycles, drift beyond a bound, a cost over its threshold | **Author**, only if a package reports one (H6, I4, M2) |
@@ -289,6 +319,7 @@ Everything else the phase decided is in *Design decisions*, with its ruling.
 | Steering at each of WP54's checkpoints (V5) | WP54's next item | **Delivered** at three checkpoints, 28 October 2026 (V6 to V13; V14 to V17 at `/np-ship wp 54`) |
 | The scripted sessions, run by the author, with findings logged | The fix packages | **Delivered**, UT-01 to UT-12, 29 October 2026 |
 | A ruling on every `UT-nn`, and on `MOD-11` | The fix packages and the close | **Delivered** at WP56's plan (§8.2.21) |
+| The scope of the last two packages, the notebooks' place, and the destinations of REV-121 and REV-156 | WP58's plan and the close | **Delivered** 31 October 2026 (§8.2.24 Z1 to Z6) |
 | A ruling on a residual cycle, a drift beyond a bound or a cost over its threshold | The package that reports it | The package stops at the edge and carries it as a `REV-nn` row |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
@@ -313,8 +344,8 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | Every refactor | 1, 2 | VER-61, VER-62 and VER-65 kept green |
 | WP56, the command line | 1, 2 | FR-44; QR-03 and NUM-34's gates (W5); FR-25's deviations read back |
 | WP57, the geometry split and the Python interface | 1, 2 | VER-32, VER-77 (new), NUM-29's force-surface refusal, the correction file's key (REV-122), FR-27 through the `Session` (Y8, Y10), VER-44's hooks per run (Y4), and those its plan claims; VER-62 re-pinned only within X4; VER-61 and VER-65 kept green |
-| Documentation | 1, 2 | VER-45, VER-46 |
-| Close | 1, 2 | Both logs and the register read as closed |
+| WP58, documentation increment 4 | 1, 2 | VER-45, VER-46; no identifier claimed and no test kept (N1), the package changing prose alone (Z4) |
+| WP59, the close | 1, 2 | Both logs and the register read as closed; the prose share and the `[tested: …]` markers re-measured; VER-61, VER-62 and VER-65 green on every platform |
 
 **The phase is complete when:**
 
