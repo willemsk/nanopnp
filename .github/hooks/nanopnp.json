@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "matcher": "write_bash",
+        "bash": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" pre-tool --dialect copilot",
+        "timeoutSec": 1800
+      },
+      {
+        "type": "command",
+        "matcher": "(mcp__)?github(-mcp-server)?[-/_]+(push_files|create_or_update_file|delete_file)",
+        "bash": "printf '%s\\n' '{\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"nanopnp: commit and push through the shell, so the gate runs (.claude/workflow/hosts.md).\"}'; exit 2",
+        "timeoutSec": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "matcher": "edit|create",
+        "bash": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/adapter.sh\" post-tool --dialect copilot",
+        "timeoutSec": 60
+      }
+    ]
+  }
+}

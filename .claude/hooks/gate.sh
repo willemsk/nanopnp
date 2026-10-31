@@ -16,6 +16,14 @@
 #                  run at a time: a second waits for the first. It stamps the tree
 #                  `push` only on a pass, and only if the tree did not change meanwhile.
 #                  What the skills start in the background before they push.
+#   gate.sh check-push
+#                  git's pre-push hook (.githooks/pre-push), for pushes no agent hook sees: reads
+#                  git's ref lines on stdin and refuses, exit 1, a branch whose tree lacks the
+#                  `push` stamp. Tags and deletions go through.
+#
+# A refusal in hook mode is the reason on stderr, one JSON object on stdout carrying the deny
+# both as `hookSpecificOutput` (Claude Code) and top-level (GitHub Copilot), and exit 2, which
+# both hosts document as a block (.claude/workflow/hosts.md).
 #
 # Every run appends one line to <git dir>/nanopnp-gate.log: time, mode, selection, seconds,
 # tree and result.
@@ -36,12 +44,51 @@ mode=hook
 case ${1:-} in
     "") ;;
     run) mode=run ;;
+    check-push) mode=check-push ;;
     *)
-        printf '%s\n' "gate.sh takes no argument (hook mode, payload on stdin) or \`run\`, not \`$1\`." >&2
+        printf '%s\n' "gate.sh takes no argument (hook mode, payload on stdin), \`run\` or \`check-push\`, not \`$1\`." >&2
         exit 2
         ;;
 esac
 target_dir=.
+
+refuse() {
+    printf '%s\n' "$1" >&2
+    jq -n --arg reason "$1" '{
+        permissionDecision: "deny",
+        permissionDecisionReason: $reason,
+        hookSpecificOutput: {
+            hookEventName: "PreToolUse",
+            permissionDecision: "deny",
+            permissionDecisionReason: $reason
+        }
+    }' 2>/dev/null
+    exit 2
+}
+
+# Whether the stamp file $1 names the tree $2 with the selection $3.
+has_stamp() {
+    [[ -n $2 && -f $1 ]] &&
+        awk -v t="$2" -v s="$3" '$1 == t && $2 == s { f = 1 } END { exit !f }' "$1"
+}
+
+if [[ $mode == check-push ]]; then
+    root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+    [[ -f $root/pyproject.toml && -d $root/src/nanopnp ]] || exit 0
+    stamp_path="$(git rev-parse --absolute-git-dir)/nanopnp-gate.pass"
+    zero='^0+$'
+    while read -r local_ref local_sha remote_ref _ || [[ -n ${local_ref:-} ]]; do
+        [[ -z ${local_sha:-} || $local_sha =~ $zero ]] && continue
+        [[ $local_ref == refs/tags/* || $remote_ref == refs/tags/* ]] && continue
+        tree=$(git rev-parse -q --verify "$local_sha^{tree}" 2>/dev/null) || tree=""
+        if ! has_stamp "$stamp_path" "$tree" push; then
+            printf '%s\n' "The push was not made: no passing push gate for ${local_ref}${tree:+ (tree ${tree:0:12})}." \
+                "Run .claude/hooks/gate.sh run, then push. --no-verify skips this." >&2
+            exit 1
+        fi
+    done
+    exit 0
+fi
 
 if [[ $mode == hook ]]; then
     payload=$(cat)
@@ -113,17 +160,6 @@ if [[ $mode == hook ]]; then
         moved=${moved%[\"\']}
         [[ $moved == "~" || $moved == "~/"* ]] && moved=$HOME${moved:1}
         return 0
-    }
-
-    deny() {
-        jq -n --arg reason "$1" '{
-            hookSpecificOutput: {
-                hookEventName: "PreToolUse",
-                permissionDecision: "deny",
-                permissionDecisionReason: $reason
-            }
-        }'
-        exit 0
     }
 
     # Whether a refspec's source $1 (destination $2) is a tag. A tag names a
@@ -198,8 +234,7 @@ push gate passes one tree. Push the branch by name. --no-verify skips this."
         stamp_path="$(git rev-parse --absolute-git-dir)/nanopnp-gate.pass"
         for rev in "${revs[@]}"; do
             tree=$(git rev-parse -q --verify "$rev^{tree}" 2>/dev/null) || tree=""
-            if [[ -z $tree || ! -f $stamp_path ]] ||
-                ! awk -v t="$tree" '$1 == t && $2 == "push" { f = 1 } END { exit !f }' "$stamp_path"; then
+            if ! has_stamp "$stamp_path" "$tree" push; then
                 what="HEAD's tree"
                 [[ $rev != HEAD ]] && what="the tree of $rev"
                 printf '%s' "The push was not made: no passing push gate for ${what}${tree:+ (${tree:0:12})}. Run
@@ -288,13 +323,13 @@ AWK
         case $verdict in
             "") ;;
             gated) pushes=$((pushes + 1)) ;;
-            *) deny "$verdict" ;;
+            *) refuse "$verdict" ;;
         esac
     done
     # A commit in the same command changes the tree the push then sends, which
     # no stamp read now can name: the two go in separate commands.
     if ((pushes > 0)) && [[ $scan =~ $commit_re ]]; then
-        deny "The push was not made: the command also commits, so the tree it would push is not
+        refuse "The push was not made: the command also commits, so the tree it would push is not
 the one any gate passed. Commit, run .claude/hooks/gate.sh run (in the background), then
 push in a separate command. --no-verify on the push skips this."
     fi
@@ -390,10 +425,7 @@ log() {
 
 # The stamp holds one "<tree> <selection>" line per selection, so a commit-hook pass never
 # overwrites the `push` line the push guard reads.
-stamped() {
-    [[ -f $stamp_file ]] &&
-        awk -v t="$1" -v s="$2" '$1 == t && $2 == s { f = 1 } END { exit !f }' "$stamp_file"
-}
+stamped() { has_stamp "$stamp_file" "$1" "$2"; }
 stamp() {
     {
         [[ -f $stamp_file ]] && awk -v s="$selection" '$2 != s' "$stamp_file"
@@ -469,14 +501,7 @@ fail() {
         printf '%s\n' "$reason" >&2
         exit 1
     fi
-    jq -n --arg reason "$reason" '{
-        hookSpecificOutput: {
-            hookEventName: "PreToolUse",
-            permissionDecision: "deny",
-            permissionDecisionReason: $reason
-        }
-    }'
-    exit 0
+    refuse "$reason"
 }
 
 budget=${NANOPNP_GATE_BUDGET_S:-1500}
