@@ -5,8 +5,9 @@
 #   adapter.sh <event> [--dialect antigravity|copilot]
 #
 # antigravity, the default (.agents/hooks.json), answers {"decision": ...} and exits 0. copilot
-# (.github/hooks/nanopnp.json) reads {toolName, toolArgs, cwd}, refuses with the reason on stderr, a
-# top-level permissionDecision on stdout and exit 0, and allows silently.
+# (.github/hooks/nanopnp.json, pre-tool only, for write_bash) reads {toolName, toolArgs, cwd},
+# refuses with the reason on stderr, a top-level permissionDecision on stdout and exit 0, and
+# allows silently.
 set -uo pipefail
 
 event=${1:-}
@@ -112,12 +113,8 @@ $(printf '%s\n%s' "$output" "$stderr_text" | tail -40)"
 
   post-tool)
     input=$(cat)
-    # Antigravity (.toolCall.args.TargetFile), Claude (.tool_input.file_path) or Copilot (.toolArgs.path).
-    if [[ $dialect == copilot ]]; then
-      path_jq="$copilot_args"' | .path // .file_path // ""'
-    else
-      path_jq='.toolCall.args.TargetFile // .tool_input.file_path // ""'
-    fi
+    # Antigravity (.toolCall.args.TargetFile) or Claude (.tool_input.file_path).
+    path_jq='.toolCall.args.TargetFile // .tool_input.file_path // ""'
     norm_path=$(printf '%s' "$input" | jq -r "$path_jq" 2>/dev/null) || exit 0
     norm_path=$(normalise "$norm_path")
     if [[ -z "$norm_path" ]]; then

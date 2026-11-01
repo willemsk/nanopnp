@@ -31,11 +31,10 @@ here once.
 * Before a push, `.claude/hooks/gate.sh run` passes on the tree being pushed. The session starts it in
   the background and waits for it in the same turn, and the push guard refuses a tree it has not
   passed. A pass of the commit hook never stands in for it. (§7.6; §8.2.11 L2, L3)
-* The gate prints its reason on standard error and a top-level `permissionDecision` beside
-  `hookSpecificOutput`. On Copilot it refuses with that structured denial and exit 0; on Claude Code
-  it refuses with exit 2. A failure to produce the denial exits non-zero. Once a clone sets
-  `core.hooksPath` to `.githooks`, git's own `pre-push` hook (`gate.sh check-push`) also refuses a
-  push whose tree has no `push` stamp, whichever host or button makes it. (§8.2.25 AA5; §8.2.26 AB1)
+* The gate refuses with its reason on standard error and one JSON object carrying the deny
+  top-level and as `hookSpecificOutput`, exit 0 on both hosts; failing to print it exits 2. Once a
+  clone sets `core.hooksPath .githooks`, git's `pre-push` (`gate.sh check-push`) also refuses a push
+  whose tree has no `push` stamp. (§8.2.25 AA5; §8.2.26 AB1)
 * The session-start hook fetches `origin/main` into the primary checkout and fast-forwards a clean
   `main` that is behind it. In any other state it writes nothing and prints a warning. A failed fetch
   or a failed `uv sync` is a warning and never fails the session. (§8.2.16 R7;

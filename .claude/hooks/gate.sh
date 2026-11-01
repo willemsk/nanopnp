@@ -22,8 +22,8 @@
 #                  `push` stamp. Tags and deletions go through.
 #
 # A refusal in hook mode is the reason on stderr and one JSON object on stdout carrying the deny
-# both as `hookSpecificOutput` (Claude Code) and top-level (GitHub Copilot). Copilot receives the
-# reason with exit 0; Claude Code blocks on exit 2 (.claude/workflow/hosts.md).
+# as `hookSpecificOutput` (Claude Code) and top-level (Copilot), with exit 0; exit 2 if it cannot
+# be printed (SPECIFICATION.md section 8.2.26, AB1).
 #
 # Every run appends one line to <git dir>/nanopnp-gate.log: time, mode, selection, seconds,
 # tree and result.
@@ -63,8 +63,7 @@ refuse() {
             permissionDecisionReason: $reason
         }
     }' 2>/dev/null || exit 2
-    [[ -z ${COPILOT_CLI:-} ]] || exit 0
-    exit 2
+    exit 0
 }
 
 # Whether the stamp file $1 names the tree $2 with the selection $3.
@@ -93,7 +92,7 @@ fi
 
 if [[ $mode == hook ]]; then
     payload=$(cat)
-    command=$(printf '%s' "$payload" | jq -r '.tool_input.command // ""' 2>/dev/null) || exit 0
+    command=$(printf '%s' "$payload" | jq -r '.tool_input | if type == "string" then . else .command // "" end' 2>/dev/null) || exit 0
 
     # The directory the command runs in is the payload's `cwd`, not this hook's:
     # the hook is started from the project directory, which in a worktree

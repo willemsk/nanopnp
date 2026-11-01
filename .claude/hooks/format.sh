@@ -3,7 +3,7 @@
 # never reaches the gate (.claude/hooks/gate.sh), where it costs a round trip.
 #
 # A PostToolUse hook on Edit|Write|MultiEdit, wired up in .claude/settings.json;
-# it accepts a file path or a Copilot apply_patch payload with multiple paths.
+# accepts a path object or a raw `apply_patch` string.
 # It runs `ruff format` and sorts imports (`--select I`) and nothing else: a
 # general `ruff check --fix` would delete an import added one edit before its
 # first use (F401), mid-change. It never blocks and never speaks; the gate is
@@ -25,14 +25,10 @@ while IFS= read -r -d '' path; do
 done < <(printf '%s' "$payload" | jq -j '
     def paths:
         if type == "object" then .file_path // .path // empty
-        elif type == "string" then
-            . as $raw | (try fromjson catch $raw) |
-            if type == "object" then .file_path // .path // empty
-            elif type == "string" and startswith("*** Begin Patch\n") then
-                split("\n")[] |
-                select(test("^\\*\\*\\* (Update File|Add File|Move to): ")) |
-                sub("^\\*\\*\\* (Update File|Add File|Move to): "; "")
-            else empty end
+        elif type == "string" and startswith("*** Begin Patch\n") then
+            split("\n")[] |
+            select(test("^\\*\\*\\* (Update File|Add File|Move to): ")) |
+            sub("^\\*\\*\\* (Update File|Add File|Move to): "; "")
         else empty end;
     .tool_input // empty | paths | select(type == "string" and length > 0) | . + "\u0000"
 ' 2>/dev/null)

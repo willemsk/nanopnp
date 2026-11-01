@@ -1,9 +1,0 @@
-{
-  "hook_event_name": "PreToolUse",
-  "cwd": "<WORKTREE>",
-  "tool_name": "Bash",
-  "tool_input": {
-    "command": "printf '%s\\n' REV166_FIXTURE",
-    "description": "Capture a harmless shell hook payload"
-  }
-}
