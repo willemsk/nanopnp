@@ -1,6 +1,6 @@
 # WP59 — The architecture review's fixes: the case owns its source, one route for every caller
 
-**Status: in progress (items 1 to 4 done).** Written 1 November 2026, grounded in the code at `dca78f1` (§8.2.15 Q1).
+**Status: delivered, 1 November 2026.** Written 1 November 2026, grounded in the code at `dca78f1` (§8.2.15 Q1).
 Inherits §8.2.27 AC1, AC2 and AC5, the verdicts of [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md) and the
 test scope (§8.2.13 N1, N3). Tag `v0.5.0-alpha.25`, after the merge.
 
@@ -222,18 +222,26 @@ becomes "the mesh command writes pore.msh here, beside the case file that names 
   tests/tier1/test_layering.py tests/tier2/test_examples_02_classical.py` passes and `grep -n "nanopnp.pipeline"
   src/nanopnp/cli/__init__.py` prints nothing. **Executor:** `general-purpose` on Sonnet
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. `src/nanopnp/numerics/newton.py`, `tests/tier1/test_newton.py`, `specification/06-numerics.md`,
+- [x] 57bc3b9 5. `src/nanopnp/numerics/newton.py`, `tests/tier1/test_newton.py`, `specification/06-numerics.md`,
   `knowledge/06-numerics-fem/14-tier-1-test-evidence-newtons.md`, `knowledge/log.md`: the guard, NUM-16's NOTE, the
   forced-NaN test replaced by *Verification*'s test, the knowledge line rewritten for it (D5); done when
   `uv run pytest tests/tier1/test_newton.py tests/tier1/test_newton_per_field.py` passes. **Executor:** main
-- [ ] 6. `src/nanopnp/mesh/generate.py`, the six case files, `docs/scripts/capture_gui.py` (D6); done when
+- [x] 10be441 6. `src/nanopnp/mesh/generate.py`, the six case files, `docs/scripts/capture_gui.py` (D6); done when
   `uv run pytest tests/tier1/test_mesh_generate.py tests/tier1/test_sweep_plan.py tests/tier1/test_cli.py` passes and
   the scratch script of *Verification* prints the five identities. **Executor:** `general-purpose` on Haiku
-- [ ] 7. `CHANGELOG.md` (`## [0.5.0-alpha.25]`: Added, the three names; Changed, the Newton abort; Fixed, the hash, the
+- [x] 7. `CHANGELOG.md` (`## [0.5.0-alpha.25]`: Added, the three names; Changed, the Newton abort; Fixed, the hash, the
   resolved path, the empty wall, REV-169), `docs/guide/python.md` (one paragraph on `session.check` and
   `session.read` beside *Reopen a recorded run*), REV-169 `fixed` in `docs/project/review-findings.md` and
   `review-items.md`, the Phase 4 plan's entry and `current.md`; done when the strict documentation build passes.
   **Executor:** main
+
+> **Outcome — item 5.** From `u = 4` the first undamped step lands at `u = −3.6`, where `√u` is NaN; at minimum damping 1 the
+> solve now raises and restores the state to the bit, and at minimum 10⁻² it takes damping 0.2 in two trials
+> (`tests/tier1/test_newton.py`).
+>
+> **Outcome — item 6.** The five frozen identities print `0128dd1854ff`, `4db46a9d821b`, `1b48e22b656c`, `0e263b472108`,
+> `1e26bf4a0c11`. The plan's wording for `capture_gui.py`'s comment said the case file names `pore.msh`; the quickstart
+> meshes under `numerics.mesh` and names none, so the comment says only that the mesh command writes it beside the case.
 
 ### Verification
 
