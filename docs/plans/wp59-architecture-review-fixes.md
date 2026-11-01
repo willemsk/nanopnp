@@ -1,6 +1,6 @@
 # WP59 — The architecture review's fixes: the case owns its source, one route for every caller
 
-**Status: planned, not started.** Written 1 November 2026, grounded in the code at `dca78f1` (§8.2.15 Q1).
+**Status: in progress (items 1 to 4 done).** Written 1 November 2026, grounded in the code at `dca78f1` (§8.2.15 Q1).
 Inherits §8.2.27 AC1, AC2 and AC5, the verdicts of [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md) and the
 test scope (§8.2.13 N1, N3). Tag `v0.5.0-alpha.25`, after the merge.
 
@@ -209,19 +209,19 @@ becomes "the mesh command writes pore.msh here, beside the case file that names 
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/api/case.py`, `src/nanopnp/api/session.py`: `CaseSource`, `Case.source`, the path resolved in
+- [x] f98b2ff 1. `src/nanopnp/api/case.py`, `src/nanopnp/api/session.py`: `CaseSource`, `Case.source`, the path resolved in
   `load`, the hash, the corrections loaded once, `Session.run` on `case.source` (D1, D2); done when
   `uv run pytest tests/tier1/test_case.py tests/tier1/test_session.py tests/tier1/test_materials_path.py` passes and the
   review says so. **Executor:** main
-- [ ] 2. `src/nanopnp/api/session.py`, `src/nanopnp/io/manifest.py`, `src/nanopnp/pipeline/run.py`,
+- [x] 60448e7 2. `src/nanopnp/api/session.py`, `src/nanopnp/io/manifest.py`, `src/nanopnp/pipeline/run.py`,
   `specification/03-requirements.md`: `Session.check`, `CaseCheck`, `Session.read`, the two constants moved, IF-01's
   NOTE (D3); done when `uv run pytest tests/tier1/test_public_api.py tests/tier1/test_session.py
   tests/tier1/test_layering.py` passes. **Executor:** main
-- [ ] 3. `src/nanopnp/cli/__init__.py`: `_validate_case`, `_validate_case_hash`, `_inspect` and `_plot`'s run branch on
+- [x] 8e75f10 3. `src/nanopnp/cli/__init__.py`: `_validate_case`, `_validate_case_hash`, `_inspect` and `_plot`'s run branch on
   `Case` and `Session` (D4); done when `uv run pytest tests/tier1/test_cli.py tests/tier1/test_backend_registries.py
   tests/tier1/test_layering.py tests/tier2/test_examples_02_classical.py` passes and `grep -n "nanopnp.pipeline"
   src/nanopnp/cli/__init__.py` prints nothing. **Executor:** `general-purpose` on Sonnet
-- [ ] 4. Compaction checkpoint. **Executor:** main
+- [x] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. `src/nanopnp/numerics/newton.py`, `tests/tier1/test_newton.py`, `specification/06-numerics.md`,
   `knowledge/06-numerics-fem/14-tier-1-test-evidence-newtons.md`, `knowledge/log.md`: the guard, NUM-16's NOTE, the
   forced-NaN test replaced by *Verification*'s test, the knowledge line rewritten for it (D5); done when
