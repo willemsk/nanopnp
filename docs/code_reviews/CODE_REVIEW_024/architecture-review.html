@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architecture review for willemsk/nanopnp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose" });
+    </script>
+    <style>
+      .seam { stroke-dasharray: 5 4; }
+      .leak { stroke: #dc2626; }
+      .deep { background: linear-gradient(135deg, #0f172a, #1e293b); }
+      .mermaid svg { max-height: 290px; width: 100%; height: auto; }
+    </style>
+  </head>
+  <body class="bg-stone-50 text-slate-900 font-sans antialiased">
+    <main class="max-w-6xl mx-auto px-6 py-12 space-y-12">
+      <header class="border-b border-stone-200 pb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-stone-500 font-mono">2026-10-31 · main @ 8a3488c · GUI excluded (Phase 5 replacement)</p>
+          <h1 class="text-3xl md:text-4xl font-serif font-bold tracking-tight text-slate-900 mt-1">
+            Architecture review for <span class="font-mono text-indigo-950">willemsk/nanopnp</span>
+          </h1>
+        </div>
+        <div class="flex flex-wrap items-center gap-4 text-xs font-mono bg-white border border-stone-200 rounded-lg px-4 py-3 shadow-sm">
+          <span class="flex items-center gap-2">
+            <span class="inline-block w-4 h-3 border border-slate-400 bg-white rounded-sm"></span>
+            module
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="inline-block w-5 h-0 border-t-2 border-dashed border-indigo-600"></span>
+            seam
+          </span>
+          <span class="flex items-center gap-2 text-red-700">
+            <span class="inline-block w-5 h-0 border-t-2 border-red-600"></span>
+            leakage
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="inline-block w-4 h-3 deep rounded-sm border border-slate-900"></span>
+            deep module
+          </span>
+        </div>
+      </header>
+
+      <section id="candidates" class="space-y-12">
+
+        <!-- Candidate 1 -->
+        <article id="candidate-1" class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl md:text-2xl font-serif font-bold text-slate-900">
+              1. Deepen the stage-5 region module across contour and idealised pores
+            </h2>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">Strong</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono bg-stone-100 text-stone-700 border border-stone-300">in-process</span>
+            </div>
+          </div>
+
+          <div class="font-mono text-xs md:text-sm text-slate-600 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
+            <span>src/nanopnp/geometry/region.py</span>
+            <span>src/nanopnp/geometry/pore.py</span>
+            <span>src/nanopnp/mesh/primitives.py</span>
+            <span>src/nanopnp/mesh/generate.py</span>
+            <span>src/nanopnp/mesh/idealised.py</span>
+            <span>src/nanopnp/mesh/ingest.py</span>
+            <span>src/nanopnp/plot/data.py</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Before: Call-graph collapse / branching -->
+            <div class="rounded-lg border border-stone-200 bg-stone-50/60 p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase tracking-wider font-mono text-red-700 font-semibold">Before — Union discrimination across 6 modules</span>
+                <span class="text-xs font-mono text-stone-500">Shallow seam</span>
+              </div>
+              <div class="space-y-2.5 my-auto">
+                <div class="border border-slate-300 bg-white rounded p-2.5 text-center">
+                  <div class="text-xs uppercase tracking-wider font-mono text-slate-700">read_region() -> RegionRecord | IdealisedRegionRecord</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div class="border border-red-300 bg-red-50/60 rounded p-2">
+                    <div class="text-[11px] uppercase tracking-wider text-red-800 font-semibold">mesh/generate.py</div>
+                    <div class="text-slate-600 mt-1">isinstance(..., Idealised) x2</div>
+                  </div>
+                  <div class="border border-red-300 bg-red-50/60 rounded p-2">
+                    <div class="text-[11px] uppercase tracking-wider text-red-800 font-semibold">mesh/ingest.py</div>
+                    <div class="text-slate-600 mt-1">isinstance(..., Idealised)</div>
+                  </div>
+                  <div class="border border-red-300 bg-red-50/60 rounded p-2">
+                    <div class="text-[11px] uppercase tracking-wider text-red-800 font-semibold">plot/data.py</div>
+                    <div class="text-slate-600 mt-1">isinstance(..., Idealised)</div>
+                  </div>
+                  <div class="border border-red-300 bg-red-50/60 rounded p-2">
+                    <div class="text-[11px] uppercase tracking-wider text-red-800 font-semibold">cli/__init__.py</div>
+                    <div class="text-slate-600 mt-1">isinstance(..., Idealised)</div>
+                  </div>
+                </div>
+                <div class="border border-red-300 bg-red-50/40 rounded p-2 text-center text-xs font-mono text-red-800">
+                  CylinderPore (geometry/pore.py) &lt;--duplicate--&gt; CylindricalPoreGeometry (mesh/primitives.py)
+                </div>
+              </div>
+              <p class="text-[11px] font-mono text-stone-500 mt-3">Every caller inspects concrete record representation and reconstructs topology.</p>
+            </div>
+
+            <!-- After: Deep module -->
+            <div class="rounded-lg border border-stone-200 bg-stone-50/60 p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase tracking-wider font-mono text-emerald-800 font-semibold">After — One region interface, two internal adapters</span>
+                <span class="text-xs font-mono text-stone-500">Deep module</span>
+              </div>
+              <div class="my-auto space-y-3">
+                <div class="border-2 border-dashed border-indigo-500 rounded-lg p-2 bg-indigo-50/40 text-center">
+                  <span class="text-xs uppercase tracking-wider font-mono text-indigo-900 font-semibold">
+                    Seam: Region interface (shape, sizing_recipe, drawing, summary, exclusion)
+                  </span>
+                </div>
+                <div class="deep text-white rounded-lg p-4 border-2 border-slate-900 space-y-3 shadow-inner">
+                  <div class="text-xs uppercase tracking-wider font-mono text-slate-300">Deep implementation: geometry/region + mesh/generate</div>
+                  <div class="grid grid-cols-2 gap-3 text-xs font-mono">
+                    <div class="bg-slate-800/80 border border-slate-700 rounded p-2.5 text-slate-300">
+                      <div class="text-white font-semibold">ContourRegion adapter</div>
+                      <div class="text-[11px] text-slate-400 mt-1">Spline profile, exclusion, OCC assembly, graded table</div>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700 rounded p-2.5 text-slate-300">
+                      <div class="text-white font-semibold">IdealisedRegion adapter</div>
+                      <div class="text-[11px] text-slate-400 mt-1">Single CylinderPore topology, wall sizing, cis/trans drawing</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="text-[11px] font-mono text-stone-500 mt-3">Callers in mesh, plot, and cli invoke the region interface without branching.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-sm">
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Problem</h3>
+              <p class="mt-1 text-slate-700">Stage 5 returns a raw union that forces six downstream modules to branch on concrete record types while duplicating cylinder construction between <code class="font-mono text-xs">CylinderPore</code> and <code class="font-mono text-xs">CylindricalPoreGeometry</code>.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Solution</h3>
+              <p class="mt-1 text-slate-700">Place a single region interface at the stage-5 seam with two adapters (contour and idealised) and consolidate cylinder topology into <code class="font-mono text-xs">CylinderPore</code> while moving mesh-edge sizing into <code class="font-mono text-xs">mesh/</code>.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Wins</h3>
+              <ul class="mt-1 space-y-1 text-slate-700 list-disc list-inside">
+                <li>Locality: kill 6 <code class="font-mono text-xs">isinstance</code> branches</li>
+                <li>Leverage: one region interface for stages 6 and 12</li>
+                <li>Delete duplicate cylinder dimensions in <code class="font-mono text-xs">primitives.py</code></li>
+                <li>Idealised region drawing includes cis/trans reservoirs</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Candidate 2 -->
+        <article id="candidate-2" class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl md:text-2xl font-serif font-bold text-slate-900">
+              2. Collapse Case provenance, path rebasing, and validation behind the Case interface
+            </h2>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">Strong</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono bg-stone-100 text-stone-700 border border-stone-300">local-substitutable</span>
+            </div>
+          </div>
+
+          <div class="font-mono text-xs md:text-sm text-slate-600 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
+            <span>src/nanopnp/api/case.py</span>
+            <span>src/nanopnp/api/session.py</span>
+            <span>src/nanopnp/io/case.py</span>
+            <span>src/nanopnp/io/case_paths.py</span>
+            <span>src/nanopnp/pipeline/case.py</span>
+            <span>src/nanopnp/pipeline/checks.py</span>
+          </div>
+
+          <!-- Cross-section diagram -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-lg border border-stone-200 bg-stone-50/60 p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase tracking-wider font-mono text-red-700 font-semibold">Before — 6 shallow cross-sections &amp; private leakage</span>
+                <span class="text-xs font-mono text-stone-500">Cross-section</span>
+              </div>
+              <div class="space-y-1.5 my-auto font-mono text-xs">
+                <div class="h-10 border-l-4 border-red-500 bg-white px-3 flex items-center justify-between rounded-r shadow-sm">
+                  <span class="uppercase tracking-wider">api/session.py</span>
+                  <span class="text-red-700">reads case._text, case._path, case._base</span>
+                </div>
+                <div class="h-10 border-l-4 border-red-500 bg-white px-3 flex items-center justify-between rounded-r shadow-sm">
+                  <span class="uppercase tracking-wider">api/case.py</span>
+                  <span class="text-red-700">__eq__ (model_dump) != __hash__ (dumps)</span>
+                </div>
+                <div class="h-10 border-l-4 border-amber-500 bg-white px-3 flex items-center justify-between rounded-r shadow-sm">
+                  <span class="uppercase tracking-wider">Case.with_()</span>
+                  <span class="text-slate-600">substitute + check_document x2 per edit</span>
+                </div>
+                <div class="h-10 border-l-4 border-amber-500 bg-white px-3 flex items-center justify-between rounded-r shadow-sm">
+                  <span class="uppercase tracking-wider">Case.cylinder / from_structure</span>
+                  <span class="text-slate-600">load_corrections(parameters) x2</span>
+                </div>
+                <div class="h-10 border-l-4 border-red-500 bg-white px-3 flex items-center justify-between rounded-r shadow-sm">
+                  <span class="uppercase tracking-wider">io/case_paths + pipeline/case</span>
+                  <span class="text-red-700">4 separate relative-path rebasers</span>
+                </div>
+              </div>
+              <p class="text-[11px] font-mono text-stone-500 mt-3">Private attributes cross the seam; editing validates and rebases twice.</p>
+            </div>
+
+            <div class="rounded-lg border border-stone-200 bg-stone-50/60 p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase tracking-wider font-mono text-emerald-800 font-semibold">After — Explicit Case source seam &amp; single-pass edit</span>
+                <span class="text-xs font-mono text-stone-500">Cross-section</span>
+              </div>
+              <div class="my-auto space-y-3 font-mono text-xs">
+                <div class="h-12 border-l-4 border-indigo-600 bg-indigo-50/50 px-3 flex items-center justify-between rounded-r border border-dashed border-indigo-400">
+                  <span class="uppercase tracking-wider font-semibold text-indigo-950">Seam: Case interface</span>
+                  <span class="text-indigo-800">source_context(), with_(), canonical hash</span>
+                </div>
+                <div class="deep text-white rounded-lg p-5 border-2 border-slate-900 space-y-2.5">
+                  <div class="text-xs uppercase tracking-wider text-slate-300">Deep implementation</div>
+                  <div class="grid grid-cols-1 gap-2 text-slate-200">
+                    <div class="bg-slate-800/90 px-3 py-2 rounded border border-slate-700">Single-pass rebase + substitute + check_document in with_()</div>
+                    <div class="bg-slate-800/90 px-3 py-2 rounded border border-slate-700">Resolved Path(path).resolve() &amp; cached canonical dump</div>
+                    <div class="bg-slate-800/90 px-3 py-2 rounded border border-slate-700">Single load_corrections() call in preset constructors</div>
+                  </div>
+                </div>
+              </div>
+              <p class="text-[11px] font-mono text-stone-500 mt-3">Preserves MOD-04 layering while hiding source tracking and rebasing inside Case.</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg bg-amber-50 border border-amber-300 px-4 py-2.5 text-xs font-mono text-amber-950">
+            Respects MOD-04 &amp; VER-61: <code class="font-bold">io/case.py</code> remains the base schema module importing only <code class="font-bold">core</code>; <code class="font-bold">api/case.py</code> owns the deepened public interface.
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1 text-sm">
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Problem</h3>
+              <p class="mt-1 text-slate-700"><code class="font-mono text-xs">Session.run</code> reads private <code class="font-mono text-xs">_text</code>, <code class="font-mono text-xs">_path</code>, and <code class="font-mono text-xs">_base</code> attributes across the seam, <code class="font-mono text-xs">Case.__hash__</code> disagrees with <code class="font-mono text-xs">__eq__</code>, and <code class="font-mono text-xs">Case.with_</code> validates and rebases twice.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Solution</h3>
+              <p class="mt-1 text-slate-700">Expose a public <code class="font-mono text-xs">CaseSource</code> method on <code class="font-mono text-xs">Case</code>, unify path rebasing before a single <code class="font-mono text-xs">substitute</code> and <code class="font-mono text-xs">check_document</code> pass, and align <code class="font-mono text-xs">__hash__</code> with canonical content.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Wins</h3>
+              <ul class="mt-1 space-y-1 text-slate-700 list-disc list-inside">
+                <li>Locality: path rebasing lives in one module</li>
+                <li>Eliminate private attribute leakage into <code class="font-mono text-xs">Session</code></li>
+                <li>Halve validation work per <code class="font-mono text-xs">Case.with_</code> call</li>
+                <li>Fix <code class="font-mono text-xs">__eq__</code>/<code class="font-mono text-xs">__hash__</code> contract</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Candidate 3 -->
+        <article id="candidate-3" class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl md:text-2xl font-serif font-bold text-slate-900">
+              3. Unify Poisson–Boltzmann and coupled residual assembly behind one model seam
+            </h2>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">Strong</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono bg-stone-100 text-stone-700 border border-stone-300">in-process</span>
+            </div>
+          </div>
+
+          <div class="font-mono text-xs md:text-sm text-slate-600 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
+            <span>src/nanopnp/physics/pb.py</span>
+            <span>src/nanopnp/physics/poisson.py</span>
+            <span>src/nanopnp/physics/models.py</span>
+            <span>src/nanopnp/numerics/newton.py</span>
+            <span>src/nanopnp/numerics/linear.py</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-lg border border-stone-200 bg-white p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs uppercase tracking-wider font-mono text-red-700 font-semibold">Before — PB residual built twice; NaN forced step</span>
+                <span class="text-xs font-mono text-stone-500">Mermaid flow</span>
+              </div>
+              <pre class="mermaid my-auto">
+flowchart TD
+  EM[ElectrostaticModel.solve] --> SPB[pb.py: solve_pb_recorded]
+  SPB --> H1A[Build H1 space + regions + PB residual]
+  H1A --> DN[numerics/newton.py: damped_newton]
+  DN -.leak: NaN accepted at min damping.-> SOL[Return potential + NewtonResult]
+  SOL -.leak: drops residual_form &amp; space.-> EM
+  EM --> H1B[Re-build H1 space + regions + PB residual]
+  classDef leak stroke:#dc2626,stroke-width:2px,fill:#fef2f2;
+  class H1A,H1B,DN leak
+              </pre>
+              <p class="text-[11px] font-mono text-stone-500 mt-2"><code class="font-mono">solve_pb_recorded</code> discards its assembled form; <code class="font-mono">models.py</code> rebuilds it.</p>
+            </div>
+
+            <div class="rounded-lg border border-stone-200 bg-white p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs uppercase tracking-wider font-mono text-emerald-800 font-semibold">After — Assembled PB solve returned once; finite Newton gate</span>
+                <span class="text-xs font-mono text-stone-500">Mermaid flow</span>
+              </div>
+              <pre class="mermaid my-auto">
+flowchart TD
+  EM[ElectrostaticModel.solve] --> SPB[pb.py: solve_pb_recorded]
+  subgraph DeepPB [Deep PB &amp; Newton Module]
+    H1[Build H1 space + surface_charge_region + residual once]
+    NG[damped_newton: reject non-finite trial residual]
+    H1 --> NG
+  end
+  SPB --> DeepPB
+  DeepPB --> MS[Return AssembledPBSolve: potential, residual_form, NewtonResult]
+  MS --> EM
+  classDef deep fill:#0f172a,color:#f8fafc,stroke:#0f172a,stroke-width:2px;
+  class H1,NG deep
+              </pre>
+              <p class="text-[11px] font-mono text-stone-500 mt-2">One weak-form assembly (QR-13) and strict non-finite residual rejection (QR-12).</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-sm">
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Problem</h3>
+              <p class="mt-1 text-slate-700"><code class="font-mono text-xs">solve_pb_recorded</code> discards its assembled space and residual form so <code class="font-mono text-xs">ElectrostaticModel.solve</code> reconstructs them a second time, and <code class="font-mono text-xs">damped_newton</code> accepts a <code class="font-mono text-xs">NaN</code> trial residual at minimum damping as a forced step.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Solution</h3>
+              <p class="mt-1 text-slate-700">Return the assembled residual form and space from <code class="font-mono text-xs">solve_pb_recorded</code>, and reject non-finite trial residuals in <code class="font-mono text-xs">damped_newton</code> before the minimum-damping fallback.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Wins</h3>
+              <ul class="mt-1 space-y-1 text-slate-700 list-disc list-inside">
+                <li>Locality: PB weak form assembled in one place (QR-13)</li>
+                <li>Eliminate post-solve form reconstruction cost</li>
+                <li>Close NaN forced-step loophole in Newton (QR-12)</li>
+                <li>Tests exercise one assembly path</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Candidate 4 -->
+        <article id="candidate-4" class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl md:text-2xl font-serif font-bold text-slate-900">
+              4. Deepen the sweep planner and executor to retain resolved point identities
+            </h2>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900 border border-emerald-300">Strong</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono bg-stone-100 text-stone-700 border border-stone-300">local-substitutable</span>
+            </div>
+          </div>
+
+          <div class="font-mono text-xs md:text-sm text-slate-600 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
+            <span>src/nanopnp/api/sweep.py</span>
+            <span>src/nanopnp/sweep/plan.py</span>
+            <span>src/nanopnp/sweep/run.py</span>
+            <span>src/nanopnp/sweep/collect.py</span>
+            <span>src/nanopnp/pipeline/case.py</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-lg border border-stone-200 bg-white p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs uppercase tracking-wider font-mono text-red-700 font-semibold">Before — 3 full resolutions per sweep member</span>
+                <span class="text-xs font-mono text-stone-500">Sequence</span>
+              </div>
+              <pre class="mermaid my-auto">
+sequenceDiagram
+  participant S as Session.sweep
+  participant P as sweep/plan.py
+  participant E as api/sweep.py
+  participant R as pipeline/case.py
+  S->>P: build_plan(base, values)
+  P->>R: resolve(point) x N (loads YAML + builds model)
+  R-->>P: ResolvedCase (discarded after mesh gate!)
+  S->>E: run_plan(plan)
+  E->>R: _parent_artefact -> resolve(parent) x N
+  E->>R: session.run(member) -> resolve(member) x N
+              </pre>
+              <p class="text-[11px] font-mono text-stone-500 mt-2">Planner resolves all points, discards them, and executor re-resolves parent and child.</p>
+            </div>
+
+            <div class="rounded-lg border border-stone-200 bg-white p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs uppercase tracking-wider font-mono text-emerald-800 font-semibold">After — Planned point keys retained across seam</span>
+                <span class="text-xs font-mono text-stone-500">Sequence</span>
+              </div>
+              <pre class="mermaid my-auto">
+sequenceDiagram
+  participant S as Session.sweep
+  participant P as Deep SweepPlanner
+  participant E as Deep SweepExecutor
+  S->>P: build_plan(base, values)
+  Note over P: Memoize invariant corrections &amp; record point solve keys
+  P-->>S: SweepPlan (with parent solve keys)
+  S->>E: run_plan(plan)
+  Note over E: Lookup warm-start directly in Store by planned key
+              </pre>
+              <p class="text-[11px] font-mono text-stone-500 mt-2">Parent warm-start lookup uses recorded key without reconstructing parent cases.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-sm">
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Problem</h3>
+              <p class="mt-1 text-slate-700"><code class="font-mono text-xs">build_plan</code> resolves every point (reloading corrections and rebuilding models) and discards the result, forcing <code class="font-mono text-xs">_parent_artefact</code> to re-resolve each parent point again during execution.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Solution</h3>
+              <p class="mt-1 text-slate-700">Memoize correction loading during sweep resolution and retain each point's resolved upstream/solve key on the in-memory plan so warm-start lookup queries <code class="font-mono text-xs">Store</code> directly.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Wins</h3>
+              <ul class="mt-1 space-y-1 text-slate-700 list-disc list-inside">
+                <li>Locality: warm-start key resolution in one place</li>
+                <li>Cut redundant parent case resolution in sweeps</li>
+                <li>Eliminate repeated YAML correction reads across points</li>
+                <li>Unify error handling across plan and run</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Candidate 5 -->
+        <article id="candidate-5" class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl md:text-2xl font-serif font-bold text-slate-900">
+              5. Consolidate QoI flux evaluation and mesh-region checks into one extraction module
+            </h2>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">Worth exploring</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono bg-stone-100 text-stone-700 border border-stone-300">in-process</span>
+            </div>
+          </div>
+
+          <div class="font-mono text-xs md:text-sm text-slate-600 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
+            <span>src/nanopnp/post/qoi.py</span>
+            <span>src/nanopnp/post/indicator.py</span>
+            <span>src/nanopnp/post/reaction_flux.py</span>
+            <span>src/nanopnp/post/forces.py</span>
+            <span>src/nanopnp/physics/coefficients.py</span>
+          </div>
+
+          <!-- Mass diagram -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-lg border border-stone-200 bg-stone-50/60 p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase tracking-wider font-mono text-red-700 font-semibold">Before — Wide interfaces, thin implementations</span>
+                <span class="text-xs font-mono text-stone-500">Mass diagram</span>
+              </div>
+              <div class="grid grid-cols-3 gap-3 my-auto font-mono text-xs">
+                <div class="space-y-1">
+                  <div class="h-24 border-2 border-red-400 bg-red-50 rounded p-2 flex flex-col justify-between">
+                    <span class="text-[10px] uppercase tracking-wider text-red-900 font-bold">Interface</span>
+                    <span class="text-[11px] text-slate-700">qoi.py (mesh, sol, measures, indicator, distance, stab)</span>
+                  </div>
+                  <div class="h-20 border border-slate-300 bg-white rounded p-2 flex flex-col justify-between">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-500">Impl</span>
+                    <span class="text-[11px] text-slate-600">Rebuilds coeffs &amp; fluxes</span>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div class="h-24 border-2 border-red-400 bg-red-50 rounded p-2 flex flex-col justify-between">
+                    <span class="text-[10px] uppercase tracking-wider text-red-900 font-bold">Interface</span>
+                    <span class="text-[11px] text-slate-700">reaction_flux.py (mesh, sol, residual,电极...)</span>
+                  </div>
+                  <div class="h-14 border border-slate-300 bg-white rounded p-2 flex flex-col justify-between">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-500">Impl</span>
+                    <span class="text-[11px] text-slate-600">InnerProduct</span>
+                  </div>
+                </div>
+                <div class="space-y-1">
+                  <div class="h-24 border-2 border-red-400 bg-red-50 rounded p-2 flex flex-col justify-between">
+                    <span class="text-[10px] uppercase tracking-wider text-red-900 font-bold">Interface</span>
+                    <span class="text-[11px] text-slate-700">indicator.py + forces.py</span>
+                  </div>
+                  <div class="h-16 border border-slate-300 bg-white rounded p-2 flex flex-col justify-between">
+                    <span class="text-[10px] uppercase tracking-wider text-slate-500">Impl</span>
+                    <span class="text-[11px] text-slate-600">Duplicate region checks</span>
+                  </div>
+                </div>
+              </div>
+              <p class="text-[11px] font-mono text-stone-500 mt-3">Callers pass 6+ coupled arguments; coefficients are rebuilt per species.</p>
+            </div>
+
+            <div class="rounded-lg border border-stone-200 bg-stone-50/60 p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase tracking-wider font-mono text-emerald-800 font-semibold">After — Narrow QoI interface, deep implementation</span>
+                <span class="text-xs font-mono text-stone-500">Mass diagram</span>
+              </div>
+              <div class="my-auto flex flex-col items-center space-y-2 font-mono text-xs">
+                <div class="w-3/4 h-12 border-2 border-dashed border-indigo-600 bg-indigo-50 rounded-lg px-4 flex items-center justify-between">
+                  <span class="uppercase tracking-wider font-bold text-indigo-950">Interface</span>
+                  <span class="text-indigo-900">extract_qoi(solution, measures, options)</span>
+                </div>
+                <div class="w-full h-40 deep text-white rounded-lg p-4 border-2 border-slate-900 flex flex-col justify-between">
+                  <span class="text-xs uppercase tracking-wider text-slate-300">Deep implementation</span>
+                  <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-200">
+                    <div class="bg-slate-800/90 p-2 rounded border border-slate-700">Cached property expressions in NondimensionalCoefficients</div>
+                    <div class="bg-slate-800/90 p-2 rounded border border-slate-700">Shared mesh-region lookup across indicator, reaction, forces</div>
+                  </div>
+                  <span class="text-[11px] text-slate-400">Indicator and reaction route cross-check hidden behind one seam</span>
+                </div>
+              </div>
+              <p class="text-[11px] font-mono text-stone-500 mt-3">Small surface area; symbolic coefficient expressions cached once per evaluation.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-sm">
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Problem</h3>
+              <p class="mt-1 text-slate-700">Extracting currents requires passing six coupled objects across three modules, rebuilding <code class="font-mono text-xs">NondimensionalCoefficients</code> symbolic trees per species, and repeating mesh-region existence checks in four files.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Solution</h3>
+              <p class="mt-1 text-slate-700">Cache derived symbolic property expressions on <code class="font-mono text-xs">NondimensionalCoefficients</code>, centralise mesh-region lookup, and bind QoI route evaluation behind one deep extraction interface.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Wins</h3>
+              <ul class="mt-1 space-y-1 text-slate-700 list-disc list-inside">
+                <li>Leverage: one region check across 4 modules</li>
+                <li>Locality: route cross-check behind one interface</li>
+                <li>Avoid repeated symbolic tree construction in QoI</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- Candidate 6 -->
+        <article id="candidate-6" class="bg-white rounded-xl border border-stone-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-xl md:text-2xl font-serif font-bold text-slate-900">
+              6. Route CLI inspection and validation subcommands through Session and Case
+            </h2>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300">Worth exploring</span>
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono bg-stone-100 text-stone-700 border border-stone-300">local-substitutable</span>
+            </div>
+          </div>
+
+          <div class="font-mono text-xs md:text-sm text-slate-600 bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
+            <span>src/nanopnp/cli/__init__.py</span>
+            <span>src/nanopnp/api/session.py</span>
+            <span>src/nanopnp/api/case.py</span>
+            <span>docs/project/modularity-layering.yaml</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="rounded-lg border border-stone-200 bg-white p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs uppercase tracking-wider font-mono text-red-700 font-semibold">Before — CLI bypasses api/ into 10 subpackages</span>
+                <span class="text-xs font-mono text-stone-500">Mermaid graph</span>
+              </div>
+              <pre class="mermaid my-auto">
+flowchart LR
+  CLI[cli/__init__.py] --> API[api: Case &amp; Session]
+  CLI -.leak.-> PIPE[pipeline.case / pipeline.run]
+  CLI -.leak.-> GEOM[geometry.region / pore]
+  CLI -.leak.-> MESH[mesh.idealised / reference]
+  CLI -.leak.-> IO[io.manifest / store]
+  classDef leak stroke:#dc2626,stroke-width:2px,fill:#fef2f2;
+  class PIPE,GEOM,MESH,IO leak
+              </pre>
+              <p class="text-[11px] font-mono text-stone-500 mt-2"><code class="font-mono">_check</code>, <code class="font-mono">_explain</code>, <code class="font-mono">_inspect</code>, and <code class="font-mono">_geometry</code> reach past <code class="font-mono">api/</code> into internal modules.</p>
+            </div>
+
+            <div class="rounded-lg border border-stone-200 bg-white p-4 flex flex-col justify-between min-h-[320px]">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs uppercase tracking-wider font-mono text-emerald-800 font-semibold">After — CLI formats output over Session &amp; Case seam</span>
+                <span class="text-xs font-mono text-stone-500">Mermaid graph</span>
+              </div>
+              <pre class="mermaid my-auto">
+flowchart LR
+  CLI[cli/__init__.py] --> API[Deep api: Case &amp; Session]
+  subgraph DeepAPI [Deep Session &amp; Case Module]
+    API --> PIPE[pipeline]
+    API --> GEOM[geometry &amp; mesh]
+    API --> SWEEP[sweep]
+  end
+  classDef deep fill:#0f172a,color:#f8fafc,stroke:#0f172a,stroke-width:2px;
+  class API deep
+              </pre>
+              <p class="text-[11px] font-mono text-stone-500 mt-2"><code class="font-mono">cli</code> becomes a pure text/JSON adapter over <code class="font-mono">Case</code> and <code class="font-mono">Session</code> (IF-02, §8.2.23 Y4).</p>
+            </div>
+          </div>
+
+          <div class="rounded-lg bg-amber-50 border border-amber-300 px-4 py-2.5 text-xs font-mono text-amber-950">
+            Note on VER-61: any removed <code class="font-bold">cli -&gt; *</code> edge updates <code class="font-bold">docs/project/modularity-layering.yaml</code> in the same commit.
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1 text-sm">
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Problem</h3>
+              <p class="mt-1 text-slate-700">While <code class="font-mono text-xs">run</code> and <code class="font-mono text-xs">stage</code> go through <code class="font-mono text-xs">Session</code>, <code class="font-mono text-xs">_check</code>, <code class="font-mono text-xs">_explain</code>, and <code class="font-mono text-xs">_inspect</code> import <code class="font-mono text-xs">pipeline.case</code> and <code class="font-mono text-xs">pipeline.run</code> directly.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Solution</h3>
+              <p class="mt-1 text-slate-700">Route case checking and stage selection through <code class="font-mono text-xs">Case</code> and <code class="font-mono text-xs">Session</code> so <code class="font-mono text-xs">cli/__init__.py</code> acts purely as a command-line adapter.</p>
+            </div>
+            <div>
+              <h3 class="text-xs uppercase tracking-wider font-mono text-stone-500 font-semibold">Wins</h3>
+              <ul class="mt-1 space-y-1 text-slate-700 list-disc list-inside">
+                <li>Leverage: CLI and Python callers share one path</li>
+                <li>Locality: case resolution stays inside <code class="font-mono text-xs">api/</code>+<code class="font-mono text-xs">pipeline/</code></li>
+                <li>Shrink <code class="font-mono text-xs">modularity-layering.yaml</code> edges</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+      <section id="top-recommendation" class="pt-4">
+        <div class="deep text-white rounded-2xl p-8 md:p-10 border-2 border-slate-900 shadow-lg space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs uppercase tracking-widest font-mono text-emerald-400 font-semibold">Top Recommendation</span>
+            <a href="#candidate-2" class="text-xs font-mono text-slate-300 underline hover:text-white">Jump to Candidate 2 ↑</a>
+          </div>
+          <h2 class="text-2xl md:text-3xl font-serif font-bold">
+            Start with Candidate 2 (Case provenance &amp; single-pass edit) paired with Candidate 1 (Stage-5 Region interface)
+          </h2>
+          <p class="text-slate-200 text-sm md:text-base leading-relaxed max-w-4xl">
+            WP57 just introduced <code class="font-mono text-emerald-300">Case</code>, <code class="font-mono text-emerald-300">Session</code>, and <code class="font-mono text-emerald-300">IdealisedRegionRecord</code>; sealing the private <code class="font-mono text-emerald-300">_path/_text/_base</code> leakage on <code class="font-mono text-emerald-300">Case</code>, fixing its <code class="font-mono text-emerald-300">__eq__/__hash__</code> mismatch, halving <code class="font-mono text-emerald-300">Case.with_</code> validation cost, and replacing the six <code class="font-mono text-emerald-300">isinstance(record, IdealisedRegionRecord)</code> branches with one stage-5 region interface gives immediate locality and leverage before Phase 4 closes as <code class="font-mono text-emerald-300">v0.5.0</code>.
+          </p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

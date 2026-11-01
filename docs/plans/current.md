@@ -1,23 +1,22 @@
 # Current work
 
-Updated 1 November 2026 (WP58 implemented, waiting for its review; then the close, WP59).
+Updated 1 November 2026 (Phase 4 amended: the architecture review's fixes become WP59; the close is WP60).
 Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it: the author has run the testing sessions and ruled
-what they found; both fixes are done, a readable command line and then a pore's shape set apart from
-its mesh, with the Python interface rebuilt on a case and the session that runs it. Two packages end
-the phase. The first is done and awaits its review: the written guide brought level with the
-program, every untrue statement in it corrected, a page on driving the program from Python and one
-listing the notebooks. Then the close, which settles every finding, measures the report's numbers
-again and names the release. Phase 5, a browser workbench, has its design study merged; nothing is
-built until that release is out.
+Phase 4 tidies the program before others rely on it. The guide has been brought level with the
+program. An outside review of the code was checked line by line: some of its findings held, and
+those are fixed next, before the release the browser workbench will build on. A case will keep its
+own record of where it came from, the command line and the workbench will check and explain a case
+the same way, a solve that produces an invalid number will stop at once, and six sample case files
+will find their mesh wherever they are run from. Then the close settles every finding, measures the
+report's numbers again, makes the coding sessions' instructions plainer and names the release.
+Phase 5, the browser workbench, has its design study merged; nothing is built until that release.
 
-**Your call:** nothing waits on you. One finding is open for your ruling: a sample sweep file writes
-its mesh location from the wrong place, and a later package corrects it. *Recommendation:* in the close,
-if it may touch a case file.
+**Your call:** nothing waits on you, except the guide's release tag, which is yours to push if
+no session has pushed it.
 
 ## Position
 
@@ -25,20 +24,12 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress**. WP35 to WP58 are delivered; WP57
-  ([plan](wp57-idealised-pore-and-python-interface.md),
-  [CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)) is merged at `8a3488c`.
-  **`v0.5.0-alpha.23` is the author's to push**: `/np-ship wp 57` was refused on the tag ref (403,
-  while branch pushes went through), as §8.4.1 allows; the commands are in that session's report.
-  The sessions' findings are ruled (§8.2.21), and the phase's last two packages are planned
-  (§8.2.24):
-  **WP58**, documentation increment 4, is **implemented** on its branch and waits for `/np-ship wp 58`, which
-  merges it and gets `v0.5.0-alpha.24`; then **WP59**, the close, tagged `v0.5.0` alone.
-  [WP58's plan](wp58-documentation-increment-4.md) is delivered: prose and navigation only, no `src/`
-  file and no number re-pinned, a currency sweep of six checks, a Python interface page and a notebooks
-  page; **REV-169**, a reference-sweep case file whose mesh path is written against the working
-  directory, is open. `duplicates.py` passes (§8.4.4). Next: `/np-ship wp 58`; the alpha.23 tag does
-  not block it.
+  **in progress**. WP35 to WP58 are merged, WP58 at `dd45e59`. **`v0.5.0-alpha.24`, WP58's, is the author's to
+  push** if no session has (origin holds up to alpha.23; §8.4.1). The sixth amendment (§8.2.27) takes the author's
+  architecture review, checked in [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md): **WP59**, its fixes and
+  REV-169, is **planned, provisional** (`v0.5.0-alpha.25`); then **WP60**, the close, `v0.5.0` alone. REV-170 is
+  Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4). Next: `/np-plan wp 59`, seeded by the
+  review's execution plan.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane: [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`; WP5.02, the spike, comes after it.
@@ -63,9 +54,10 @@ One line per lane (§8.4.4).
   condition** (§8.2.22 X1 to X4). **A `Case` is the case document built from public blocks; a
   `Session` runs it for every caller; one public object per job** (§8.2.23 Y1 to Y11).
 - **Text output is a reading, `--json` the record; a remedy names what the run reads** (§8.2.21 W2, W5).
-- **Phase 4 ends in WP58, the documentation increment, and WP59, the close; the notebooks are
-  listed, not rendered; no migration page, the changelog carrying each break; the examples change in
-  prose alone** (§8.2.24 Z1 to Z4).
+- **Phase 4 ends in WP58, the documentation increment, WP59, the review's fixes, and WP60, the close; the
+  notebooks are listed, not rendered; no migration page, the changelog carrying each break; the examples change
+  in prose alone** (§8.2.24 Z1 to Z4; §8.2.27 AC1). **A non-finite Newton trial residual aborts** (AC2). **The
+  region interface waits for the shell, the review's costs for Phase 6's measurement** (AC3, AC4).
 - **Layers read a model's declaration, never its name** (VER-56). **A refusal names its requirement
   and release.** **Only `poisson` adds a quadrature order for `r`** (E4; NUM-07 NOTE). **A golden
   carries the stage-7 recipe** (E3; VAL-03).
@@ -93,7 +85,7 @@ One line per lane (§8.4.4).
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
 | The notebooks and the protocol | `wp54-notebooks-and-figures-revised.md`, `wp55-user-testing-protocol.md`; §8.2.20; FR-30, FR-37 |
 | The fixes | `wp56-command-line-read-by-a-person.md`, `wp57-idealised-pore-and-python-interface.md`; `docs/user-testing/findings.md`; §8.2.21, §8.2.22 |
-| The last two packages | `wp58-documentation-increment-4.md`; §8.2.24; the Phase 4 plan's entries |
+| The last two packages | The Phase 4 plan's WP59 and WP60 entries; §8.2.27; `CODE_REVIEW_024.md` and its execution plan |
 | The workbench | `phase-5-workbench.md`; §8.2.17; M3; F5 |
 
 ## Handoff Rules
