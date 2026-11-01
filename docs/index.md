@@ -36,7 +36,7 @@ electro-osmotic flow rate. It is built around three rules:
 | Understand what a run is made of | [Concepts](guide/concepts.md) |
 | Write a case file | [Case files](guide/case-files.md) and the [case-file reference](_generated/reference/case-file.md) |
 | Run a sweep on a cluster | [Sweeps and HPC](guide/sweeps.md) and [example 05](_generated/examples/05-clya-reference.md) |
-| Script it from Python | [Example 04](_generated/examples/04-python-api.md) and the [API reference](_generated/reference/api.md) |
+| Script it from Python | [The Python interface](guide/python.md), [example 04](_generated/examples/04-python-api.md) and the [API reference](_generated/reference/api.md) |
 | Use the desktop application | [Desktop shell](guide/desktop.md) |
 | Know exactly what is solved | [The model](model/index.md): the specification and knowledge base, verbatim |
 

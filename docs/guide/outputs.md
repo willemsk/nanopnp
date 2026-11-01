@@ -59,4 +59,4 @@ The first argument is a run directory, a case file or a sweep directory. A run d
 default; a case file needs the stage named, and its upstream stages are served from the store or
 computed. A sweep directory draws its collected dataset and takes no stage. Every stage has a figure
 except `case` and `report`; `nanopnp stage --list` lists the stages. In Python the same figures are
-methods of the result.
+methods of the result ([The Python interface](python.md#draw-its-figures)).

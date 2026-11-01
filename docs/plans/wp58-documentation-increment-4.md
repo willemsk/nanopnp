@@ -258,6 +258,19 @@ Each item is outside the test scope: done when the strict build passes and the r
 - [ ] 5. `docs/guide/python.md`, its `mkdocs.yml` entry, its guide-index row and `docs/index.md`'s
   *Script it from Python* row (D2); done also when every snippet has been run and recorded and
   every name checked against `nanopnp.PUBLIC`. **Executor:** main
+
+  > **Outcome — the Python page, every snippet run.** Each snippet ran with `uv run --project
+  > /home/user/nanopnp python <file>.py` from a scratch copy of `examples/01-quickstart/`
+  > with its own store: build (`Case.load`, `loads`, `cylinder`, `with_`, `dumps`, a walk `upto="mesh"`),
+  > exit 0; run with `progress`, `cancel`, `on_stage`, `on_artefact`, result, quantities, manifest and
+  > files, exit 0; `figure`, `field_choices`, `plot_field`, `plot_cutline`, `register_stage`, `open`,
+  > exit 0; `sweep` over three biases with `plot_iv().figure.savefig`, exit 0; a set `CancelFlag`
+  > raises `Cancelled` before stage `case`, exit 0; `Case.from_structure("2wcd-a-18-26.pdb", ...)`,
+  > exit 0. Three first attempts failed and the page carries the corrected form: `on_stage` takes
+  > `(name, index, total)`, `on_artefact` takes `(name, schema, hash, cached)`, and a stage of one's
+  > own receives an `Artefact`, read through `.summary`. Every name on the page is a key of
+  > `nanopnp.PUBLIC` (`Case`, `Session`, `CancelFlag`, `Artefact`; `Cancelled`, `RunResult` and
+  > `SweepResult` are named in prose); the strict build passes.
 - [ ] 6. `docs/guide/notebooks.md`, its `mkdocs.yml` entry and its guide-index row (D3); done also
   when each of the six links resolves. **Executor:** `general-purpose`, Sonnet
 - [ ] 7. `docs/getting-started.md` and `docs/guide/{meshes,provenance}.md`: the help pointers, the
