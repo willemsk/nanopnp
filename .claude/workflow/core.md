@@ -7,8 +7,7 @@ Each level of `/np-plan`, `/np-implement` and `/np-ship` reads this file, then i
 
 Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
 `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings. A stale `.venv`
-takes `uv sync --all-extras --frozen`. Read `hosts.md` beside this file and the mapping it selects
-for this session; use that mapping for host tools and capability limits.
+takes `uv sync --all-extras --frozen`. On a host other than Claude Code, read `hosts.md` beside this file first.
 
 ## The branch
 
@@ -47,17 +46,11 @@ phase's release. While two package PRs are open:
 
 ## Host coordination
 
-One host drives a branch at a time (§8.2.25 AA4). The lane line in `docs/plans/current.md` and the
-PR's **Verification** checkpoint name it: `host: claude-code` or `host: copilot`. If the other host
-is named and the branch moved within the hour, ask before writing.
-
-Never share a working tree between hosts. The app's default worktrees and Claude Code's cloud clones
-are separate; do not use an app branch workspace on a checkout Claude Code uses. The fresh-session
-rule is per session, not per host: shipping on the other host gives an independent review and is
-encouraged, not required. The two-lane cap and renumbering above apply across hosts.
-
-Before each push, merge or rebase onto `origin/<head>`. Never force-push a branch the other host
-may hold.
+- One host drives a branch at a time (§8.2.25 AA4). It is named `host: claude-code|copilot` in the lane
+  line of `docs/plans/current.md` and in the PR's **Verification** checkpoint. If the other host is
+  named and the branch moved within the hour, ask before writing.
+- Hosts never share a working tree. The two-lane cap and the renumbering above apply across hosts.
+- Before each push, merge `origin/<head>`; never force-push a branch the other host may hold.
 
 ## Normativity
 

@@ -46,10 +46,11 @@ Tier 2 tests that neither walk the pipeline nor carry `slow`, example 01 while i
 makes (`--no-verify` skips it): the lock check, lint, format, types and the Tier 1 tests without the `nightly`
 marker. A hook pass never stands in for `run`.
 
-Start `run` and wait for it in the same turn as the host selected by `.claude/workflow/hosts.md`
-says. Push when the log ends in `exit 0`; the hook refuses a push of a tree it has not passed.
-Only then end the turn: a turn that ends on an unpushed commit trips the Claude Code environment's
-stop hook.
+1. Start `run` with Bash `run_in_background`: `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`.
+2. Wait for it in the same turn: `until grep -q '^exit ' <log>; do sleep 10; done` in the foreground. If the
+   10-minute limit ends the wait, run it again.
+3. Push when the log ends in `exit 0`; the hook refuses a push of a tree it has not passed. Only then end the
+   turn: a turn that ends on an unpushed commit trips the environment's stop hook.
 
 - `run` sets `NANOPNP_REQUIRE_GMSH=1` (and `NANOPNP_REQUIRE_APBS=1` where the wheel exists): a
   backend that cannot import fails, not skips.
@@ -146,7 +147,7 @@ resolves one sets it `fixed` (§8.4.6; §8.2.8 H12). A PR body is never their on
 ## Other hosts
 
 The workflow also runs on the GitHub Copilot app, as a WSL host (§8.4.4; §8.2.25). `.claude/` stays the single
-source; `.claude/workflow/hosts.md` selects the current host's tools and limits. One host drives a branch at a time.
+source; another host reads its map through `.claude/workflow/hosts.md`. One host drives a branch at a time.
 
 ## Git
 

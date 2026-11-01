@@ -6,9 +6,6 @@ argument-hint: "[wp n]"
 
 # Implement: `$ARGUMENTS`
 
-Read `.claude/workflow/hosts.md` and the selected host mapping; use it to resolve arguments and the
-skill directory before routing.
-
 1. An argument other than `wp <n>` (`54` or `5.01`) or none: print `Usage: /np-implement [wp n]` and stop.
 2. Read the core, `${CLAUDE_SKILL_DIR}/../../workflow/core.md` (`.claude/workflow/core.md`).
 3. Read the level's file beside this one, `${CLAUDE_SKILL_DIR}/wp.md`, and follow it. `wp <n>`
