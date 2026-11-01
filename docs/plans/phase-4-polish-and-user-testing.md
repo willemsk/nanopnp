@@ -281,7 +281,7 @@ package. Tag `v0.5.0-alpha.24`, after the merge.
 
 ### WP59 — The architecture review's fixes: the case owns its source, one route for every caller (§8.2.27 AC1, AC2, AC5)
 
-Planned, provisional until `/np-plan wp 59`. Its source is
+Planned ([plan](wp59-architecture-review-fixes.md)), not started. Its source is
 [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md): the author's architecture review, checked against `dd45e59`, with
 its execution plan kept beside it as the seed for this package's plan. Of that plan, items 1, 2 and 5, the Newton half
 of item 7 and the wall half of item 10 are taken; the rest are REV-170 (Phase 5) and REV-171 (Phase 6). It:
@@ -290,10 +290,11 @@ of item 7 and the wall half of item 10 are taken; the rest are REV-170 (Phase 5)
   records, so `Session` reads no private field; a hash that agrees with equality (`-0.0` and `0.0` hash apart today);
   `_path` resolved once on load; the corrections loaded once by `cylinder` and `from_structure`; and the
   relative-path rebasing in one place where the seam absorbs it;
-- **gives the command line and the workbench one route** (verdict 7): `check`, `explain` and `inspect` call `Case` and
-  `Session` instead of `pipeline.case` and `pipeline.run`. The plan names the public methods; each new name is decided
-  in `test_public_api.py`, listed in `CHANGELOG.md`, and stated in IF-01's NOTE on the interface. A `cli` edge removed
-  edits `modularity-layering.yaml` in the same commit (VER-61);
+- **gives the command line and the workbench one route** (verdict 7): `validate case`, `validate case-hash` and `inspect`
+  (the review's `check`, `explain` and `inspect`), and `plot` of a run, call `Case` and `Session` instead of
+  `pipeline.case` and `pipeline.run`. The plan names the public methods; each new name is decided in review
+  (§8.2.13 N3), listed in `CHANGELOG.md`, and stated in IF-01's NOTE on the interface. A `cli` edge removed edits
+  `modularity-layering.yaml` in the same commit (VER-61);
 - **stops a solve on a non-finite trial residual** (AC2; verdict 8): the last finite iterate is restored and
   `NewtonDivergenceError` names the residual, the iteration and the damping; NUM-16 gains the NOTE. One Tier 1 test in
   scope. The item stays in the main session (physics and numerics decisions);
@@ -387,7 +388,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP56, the command line | 1, 2 | FR-44; QR-03 and NUM-34's gates (W5); FR-25's deviations read back |
 | WP57, the geometry split and the Python interface | 1, 2 | VER-32, VER-77 (new), NUM-29's force-surface refusal, the correction file's key (REV-122), FR-27 through the `Session` (Y8, Y10), VER-44's hooks per run (Y4), and those its plan claims; VER-62 re-pinned only within X4; VER-61 and VER-65 kept green |
 | WP58, documentation increment 4 | 1, 2 | VER-45, VER-46; no identifier claimed and no test kept (N1), the package changing prose alone (Z4) |
-| WP59, the review's fixes | 1, 2 | NUM-16's NOTE (AC2), its Tier 1 test; the new public names in `test_public_api.py`; VER-61's `cli` edges; VER-62 at zero drift and VER-65 green |
+| WP59, the review's fixes | 1, 2 | NUM-16's NOTE (AC2), its Tier 1 test; the new public methods in IF-01's NOTE; VER-61's `cli` edges; VER-62 at zero drift and VER-65 green |
 | WP60, the close | 1, 2 | Both logs and the register read as closed; the prose share and the `[tested: …]` markers re-measured; VER-61, VER-62 and VER-65 green on every platform |
 
 **The phase is complete when:**
