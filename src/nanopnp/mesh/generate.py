@@ -88,6 +88,13 @@ def wall_statistics(data: MeshData, target_nm: float) -> WallStatistics:
     import numpy as np
 
     segments = data.edges_of("wall")
+    if len(segments) == 0:
+        raise WallSizeGateError(
+            "wall segments",
+            "none",
+            "at least one",
+            f"the mesh's wall group is empty; its groups are {list(data.boundaries)}",
+        )
     ends = data.vertices[segments]
     lengths = np.linalg.norm(ends[:, 1] - ends[:, 0], axis=1)
     longest = int(np.argmax(lengths))

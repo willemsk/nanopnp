@@ -53,7 +53,7 @@ def main() -> int:
         # Inputs only: a store left in the example by a manual run would serve
         # the solve from cache, and the plot would have no ladder to draw.
         work = copy_example(EXAMPLE, Path(scratch), repository=ROOT)
-        os.chdir(work)  # the case's mesh path resolves against the working directory
+        os.chdir(work)  # the mesh command writes pore.msh here, beside the case file that names it
         try:
             if cli(["mesh", "cylinder", "--out", "pore.msh"]) != 0:
                 return 1
