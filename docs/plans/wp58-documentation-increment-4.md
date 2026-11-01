@@ -123,9 +123,9 @@ Facts at `6111f46`.
   `--progress | --no-progress`; neither appears anywhere in `docs/` outside the generated
   reference. `docs/guide/running.md`'s command table has no `plot` row, and
   `docs/guide/outputs.md` has no figures section.
-- **The three logs rest on a withdrawn check.** `docs/project/modularity-findings.md`,
-  `docs/project/review-findings.md` and `docs/user-testing/findings.md` each say
-  `tests/tier1/test_findings_logs.py` checks every row (VER-63). That file is absent from
+- **The two logs rest on a withdrawn check.** `docs/project/modularity-findings.md` and
+  `docs/project/review-findings.md` each say `tests/tier1/test_findings_logs.py` checks every row
+  (VER-63); `docs/user-testing/findings.md` carries no such sentence (found at item 2). That file is absent from
   `tests/tier1/`, and §7.2 reads "**VER-63** | Withdrawn". The modularity log's next clause — that
   a `closed` header refuses a row that is not terminal — rests on the same absent test, and WP59
   sets that header, so the sentence has to say that review checks it.
@@ -244,7 +244,7 @@ its alias, and a case file named for what it sets.
 Each item is outside the test scope: done when the strict build passes and the review says so
 (N1, N3).
 
-- [ ] 1. The currency pass over `README.md`, `docs/{index,getting-started}.md`,
+- [x] 50f8aae 1. The currency pass over `README.md`, `docs/{index,getting-started}.md`,
   `docs/overrides/main.html`, `docs/guide/{case-files,sweeps,meshes,running,outputs}.md` and the
   index pages of `docs/examples/` and `docs/reference/`: every statement the six checks find, plus
   the `plot` row and `--progress` in the running page's table and a figures section in
