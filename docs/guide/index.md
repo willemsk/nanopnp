@@ -20,4 +20,5 @@ an equation.
 | [Provenance and deviations](provenance.md) | The manifest's eight groups, and deviations from the validated model |
 | [Stabilisation modes](stabilisation.md) | `none`, `supg` and `reference`, and why the default is `none` |
 | [The Python interface](python.md) | `Case`, `Session`, the result, its figures, sweeps, a stage of one's own, reopening a run |
+| [Notebooks](notebooks.md) | The six interactive notebooks, what each shows and the two commands that run one |
 | [Desktop shell](desktop.md) | The case editor, run control, convergence plot and field viewer |

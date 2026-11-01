@@ -17,7 +17,7 @@ Six optional extras:
 - `gui`, for the desktop shell;
 - `gmsh`, the optional mesher backend, which is GPL-licensed and never needed;
 - `plot`, for the figures of a run ([Outputs and quantities](guide/outputs.md#figures));
-- `notebook`, for the interactive notebooks, which adds marimo to `plot`;
+- `notebook`, for the [interactive notebooks](guide/notebooks.md), which adds marimo to `plot`;
 - `examples`, for the worked examples' plots.
 
 For example, `pip install "nanopnp[structure,gui] @ git+https://github.com/willemsk/nanopnp"`.

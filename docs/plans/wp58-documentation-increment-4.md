@@ -255,7 +255,7 @@ Each item is outside the test scope: done when the strict build passes and the r
 - [x] b717ae5 3. `docs/guide/running.md`: the three WP56 sections in the guide's voice, the cost a
   magnitude and the thread rule a rule (D4, D5). **Executor:** main
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. `docs/guide/python.md`, its `mkdocs.yml` entry, its guide-index row and `docs/index.md`'s
+- [x] ffa1cba 5. `docs/guide/python.md`, its `mkdocs.yml` entry, its guide-index row and `docs/index.md`'s
   *Script it from Python* row (D2); done also when every snippet has been run and recorded and
   every name checked against `nanopnp.PUBLIC`. **Executor:** main
 
