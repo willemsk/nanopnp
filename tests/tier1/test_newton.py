@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 
 import ngsolve as ngs
 import pytest
@@ -313,7 +314,7 @@ def test_num16_minimally_damped_step_is_accepted_not_aborted(
     assert result.minimum_damping_used == pytest.approx(0.5)
 
 
-def test_num16_a_nan_trial_residual_at_minimum_damping_is_a_forced_step() -> None:
+def test_num16_a_non_finite_trial_residual_aborts_at_minimum_damping_and_cuts_above_it() -> None:
     mesh = SlabGeometry(width_nm=1.0).generate(maxh_nm=1.0)
     space = ngs.H1(mesh, order=1)
     trial, test = space.TnT()
@@ -321,16 +322,32 @@ def test_num16_a_nan_trial_residual_at_minimum_damping_is_a_forced_step() -> Non
     form += (ngs.sqrt(trial) - 0.1) * test * ngs.dx
     state = ngs.GridFunction(space)
     state.Set(ngs.CF(4.0))
-    settings = NewtonSettings(
+    before = state.vec.CreateVector()
+    before.data = state.vec
+    pinned = NewtonSettings(
         initial_damping=1.0, minimum_damping=1.0, max_iterations=1, growth_factor=1.0
     )
 
-    result = damped_newton(form, state, raise_on_failure=False, settings=settings)
+    with pytest.raises(
+        NewtonDivergenceError, match=r"non-finite.*step 1|step 1.*non-finite"
+    ) as raised:
+        damped_newton(form, state, raise_on_failure=False, settings=pinned)
+
+    assert "damping 1" in str(raised.value)
+    assert ngs.Norm(state.vec - before) == 0.0, (
+        "the state is restored to the iterate it started from"
+    )
+
+    cutting = NewtonSettings(
+        initial_damping=1.0, minimum_damping=1.0e-2, max_iterations=1, growth_factor=1.0
+    )
+    result = damped_newton(form, state, raise_on_failure=False, settings=cutting)
 
     (step,) = result.history
-    assert step.residual != step.residual, "the trial residual is NaN"
-    assert step.forced
-    assert not result.converged
+    assert step.damping == pytest.approx(0.2)
+    assert step.trials == 2
+    assert math.isfinite(step.residual)
+    assert not step.forced
 
 
 def test_newton_result_summary_records_the_damping_for_the_manifest(
