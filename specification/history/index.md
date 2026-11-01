@@ -37,6 +37,7 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.24 Phase 4 amended: the final packages and the close, agreed 31 October 2026](24-phase-4-amended-the-final-packages-and-the-close.md) - Records the author's rulings at the fifth amendment of Phase 4: documentation increment 4 and the close become WP58 and WP59, the notebooks are listed on the site rather than rendered, the increment spends its effort on currency and clarity in place of a migration page, the examples change in prose only, and REV-121 and REV-156 are given their destinations.
 * [8.2.25 The workflow on the GitHub Copilot app, agreed 31 October 2026](25-the-workflow-on-the-github-copilot-app.md) - Records the author's rulings on running the workflow in the GitHub Copilot app beside Claude Code: the hosts are interchangeable with `.claude/` the single source, Copilot runs on a WSL host and stops at CI, one host drives a branch at a time, the gate refuses with exit 2 and a git pre-push hook, the setup was built before its probes ran, the model tiers stay the same Claude models, and no Copilot file is generated.
 * [8.2.26 The hook refusal, agreed 1 November 2026](26-copilot-hook-refusal.md) - Records the author's ruling that a hook refuses with an exit-0 structured denial on both hosts, replacing the exit-code switch on a host variable.
+* [8.2.27 Phase 4 amended: the architecture review's fixes, agreed 1 November 2026](27-phase-4-amended-the-architecture-reviews-fixes.md) - Records the author's rulings at the sixth amendment of Phase 4: the confirmed items of an architecture review become WP59, which also fixes REV-169, before the close, now WP60; a non-finite Newton trial residual aborts; the stage-5 region interface goes to Phase 5 and the unmeasured costs to Phase 6; and a plain-language pass of the workflow prose joins the close.
 
 ## Where each ruling holds now
 
@@ -247,7 +248,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * Y9 - §5.5's NOTE on a stage of one's own
 * Y10 - §5.5 and its NOTE on a stage of one's own; open: WP57
 * Y11 - §8.4.4; the Phase 4 plan; open: WP57's plan
-* Z1 - the Phase 4 plan; open: WP58, WP59
+* Z1 - the Phase 4 plan; amended by AC1; open: WP60
 * Z2 - the Phase 4 plan; open: WP58
 * Z3 - §8.1's Phase 4 documentation increment; open: WP58
 * Z4 - the Phase 4 plan; open: WP58
@@ -262,3 +263,9 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AA7 - §8.4.5
 * AA8 - the Copilot host plan; `.claude/workflow/hosts.md`
 * AB1 - §8.4.2
+* AC1 - IF-01's NOTE on the interface; the Phase 4 plan; open: WP59
+* AC2 - NUM-16's NOTE; open: WP59
+* AC3 - REV-170; open: `/np-plan amend 5`
+* AC4 - REV-171; open: Phase 6
+* AC5 - REV-169; open: WP59
+* AC6 - the Phase 4 plan; §8.4.4 if a rule's wording moves; open: WP60

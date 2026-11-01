@@ -2141,4 +2141,37 @@ WP58 changes no case file (D1: a case hash and VER-62's golden stand), and examp
 The fix is an edit of the case file's path to `clya-reference.msh` and of its comment, in a later package that may re-pin a
 hash; a tier 1 test that plans the sweep from another directory would be in the test scope only if it guards a mechanism.
 
-Recommendation: fix it in WP59 if the close may touch a case file, else in the first package of Phase 5.
+**Accepted** (§8.2.27 AC5, 1 November 2026): WP59, the review-fix package before the close, edits the six case files'
+path and comment and the comment in `docs/scripts/capture_gui.py`, so the close stays free of case edits.
+
+## REV-170: Five callers pick the stage-5 region's kind
+
+`geometry/region.py` `read_region` returns `RegionRecord | IdealisedRegionRecord`, and five callers outside the Qt
+shell branch on the kind: `mesh/generate.py` twice, `mesh/ingest.py`, `plot/data.py` and `cli/__init__.py`. The cylinder
+is described twice, by `geometry/pore.py` `CylinderPore` and `mesh/primitives.py` `CylindricalPoreGeometry`, and
+`CylinderPore.name_edges` sets an edge's mesh size (`maxh`) inside `geometry/`. Found by the architecture review of
+[CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md), candidate 1 (verdicts 12 and 13); its claim that the idealised
+drawing omits the reservoirs does not hold (verdict 11).
+
+**Accepted** (§8.2.27 AC3, 1 November 2026) for Phase 5's shell packages; `/np-plan amend 5` places it. The fix is one
+stage-5 region interface with an adapter per kind, the cylinder's two classes merged into `CylinderPore`, and the wall
+sizing moved into `mesh/`. It waits for the browser geometry suite and for the pore-shape sketcher's third kind of
+region, which shape the interface better than two kinds do; `plot/data.region_drawing` already gives the shell one
+drawing. VER-62's recorded mesh hash must not move, or the move is ruled and re-pinned (G10, I4).
+
+## REV-171: The architecture review's unmeasured costs
+
+The architecture review of [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md) names costs and checks that no one has
+measured (verdicts 14 to 18): `physics/models.py` builds a second, unassembled PB `BilinearForm` after the solve, from
+the same weak-form functions; `NondimensionalCoefficients` builds its symbolic expressions per species for the QoI, and
+four `post/` and `physics/` modules repeat a boundary's existence check; the sweep planner loads the correction files
+once per point; `geometry/contour.py` `enforce_spacing` is `O(n²)`; `density/union.py` scales the frame coordinates
+inside its slab loop; `symmetry/reduce.py` multiplies one harmonic at a time; and `charge/deposit.py` `locate` allocates
+a dense bucket grid. Internal arguments (`cell_nm`, `n`, a contour's axes, a zero-length loop) are not checked, though
+each comes from a validated field or a caller in the same subpackage. Measured: `Case.with_` costs 1.0 ms per edit and a
+`resolve` 1.5 ms. The review's proposal to keep each sweep point's solve key at plan time does not hold: a generated
+mesh's key depends on the parent's stage-6 artefact, which exists only after the parent runs (`api/sweep.py`).
+
+**Deferred** (§8.2.27 AC4, 1 November 2026) to Phase 6's speed-up, after the assembly (§8.2.24 Z6): each item is
+measured against a registered threshold before it is fixed (§8.2.12 M2), and an argument check is added only where it
+guards a public entry.

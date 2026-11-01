@@ -6,30 +6,32 @@ plan as it stood before this restatement, are in [phase-4-record.md](phase-4-rec
 demand. Delivered: WP35 to WP58, below. The author ran the sessions and ruled every `UT-nn` on
 29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, and WP57, the second (widened on 30 October 2026 to carry the geometry
 split and the open review items, §8.2.22, and its Python interface rebuilt on a `Case` and a `Session`,
-§8.2.23), are delivered. The phase ends in two packages, planned on 31 October 2026 (§8.2.24 Z1):
-**WP58**, documentation increment 4, is delivered; **WP59**, the close, remains. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
+§8.2.23), are delivered. The phase ends in three packages, planned on 31 October 2026 (§8.2.24 Z1) and amended
+on 1 November 2026 (§8.2.27 AC1): **WP58**, documentation increment 4, is delivered; **WP59**, the architecture
+review's fixes, and **WP60**, the close, remain. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the trimmed code and
-tests, the notebooks, the split specification, the working commands, the testing protocol and both
-fixes are done. Two packages remain, and they end the phase.
+tests, the notebooks, the split specification, the working commands, the testing protocol, both
+fixes and the revised guide are done. Two packages remain, and they end the phase.
 
-**What changes.** The written guide is brought level with the program as it now is: a page that
-teaches the rebuilt Python interface, a page that says what each notebook shows, the pages your
-sessions found wanting, every sentence that is no longer true taken out, and plainer language
-throughout, including in the worked examples. Then the phase closes: every finding read as settled,
-every number of the report measured again, and the release named.
+**What changes.** First, the fixes an outside review found and the checks confirmed: a case keeps
+its own record of where it came from, the command line and the coming browser workbench check and
+explain a case the same way, a solve that produces an invalid number stops at once, and six sample
+case files find their mesh wherever they are run from. Then the phase closes: every finding read as
+settled, every number of the report measured again, the instructions for the coding sessions made
+plainer, and the release named.
 
-**Cost.** Under two weeks for the two together. Neither touches the program, so neither can move a
-result.
+**Cost.** About two weeks for the two together, three to five days more than before, because the
+release now waits for the fixes.
 
-**What could go wrong.** A sweep for stale text can miss a page, which a reader then trusts; what
-the sweep cannot fix is written down as a known gap rather than left silent. The report's numbers
-could be copied from an earlier package instead of measured afresh, which the close forbids.
+**What could go wrong.** A fix could move a recorded result; the number-stability check stops it,
+and none is expected to move. The report's numbers could be copied from an earlier package instead
+of measured afresh, which the close forbids.
 
-**Your call.** Nothing waits on you. The six decisions of 31 October settle the last two packages,
-and the two review notes left without an owner now have one.
+**Your call.** Nothing waits on you. The six decisions of 1 November place every item of the
+review: the fixes now, the drawing interface with the workbench, the speed items after measurement.
 
 ## Context
 
@@ -245,8 +247,8 @@ plainer where a page left its voice. Two pages are new, `docs/guide/python.md` a
 relative path in a case file is stated as read beside it (§5.3.1); the banner, the front page and the README give the
 v0.5 scope as in progress, not yet tagged (D6). The examples changed in prose alone, so no case hash, tagged block or
 number moved (D1; VER-46 and VER-62 stand). No identifier is claimed and no test written (N1, N3). Live constraints:
-`[0.5.0]`, `CITATION.cff` and the `released` row are WP59's; **REV-169**, a reference-sweep case file that writes its
-mesh path against the working directory, is open and needs a case-file edit in a later package. Evidence: every
+`[0.5.0]`, `CITATION.cff` and the `released` row are WP60's; **REV-169**, a reference-sweep case file that writes its
+mesh path against the working directory, is WP59's (§8.2.27 AC5). Evidence: every
 snippet's command and exit status in the plan's Outcome for item 5; the build is `mkdocs build --strict`.
 
 Scope as planned. It delivers §8.1's documentation increment and changes no `src/` file. It carries:
@@ -274,10 +276,35 @@ Scope as planned. It delivers §8.1's documentation increment and changes no `sr
   `geometry cylinder`, `mesh` and `--progress` reach a reader through the guide (W2 to W4).
 
 **No migration page** (Z3): each break is listed with its migration in `CHANGELOG.md`, in the entry
-of the package that made it, and WP59's `[0.5.0]` section gathers them. VER-45 and VER-46 gate the
+of the package that made it, and WP60's `[0.5.0]` section gathers them. VER-45 and VER-46 gate the
 package. Tag `v0.5.0-alpha.24`, after the merge.
 
-### WP59 — Phase 4 closed: the open items resolved, and the end-of-phase report (§8.2.7 G11; §8.2.24 Z1)
+### WP59 — The architecture review's fixes: the case owns its source, one route for every caller (§8.2.27 AC1, AC2, AC5)
+
+Planned, provisional until `/np-plan wp 59`. Its source is
+[CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md): the author's architecture review, checked against `dd45e59`, with
+its execution plan kept beside it as the seed for this package's plan. Of that plan, items 1, 2 and 5, the Newton half
+of item 7 and the wall half of item 10 are taken; the rest are REV-170 (Phase 5) and REV-171 (Phase 6). It:
+
+- **makes `Case` own its source and its edits** (verdicts 1 to 6): a public read of the text, file and base a run
+  records, so `Session` reads no private field; a hash that agrees with equality (`-0.0` and `0.0` hash apart today);
+  `_path` resolved once on load; the corrections loaded once by `cylinder` and `from_structure`; and the
+  relative-path rebasing in one place where the seam absorbs it;
+- **gives the command line and the workbench one route** (verdict 7): `check`, `explain` and `inspect` call `Case` and
+  `Session` instead of `pipeline.case` and `pipeline.run`. The plan names the public methods; each new name is decided
+  in `test_public_api.py`, listed in `CHANGELOG.md`, and stated in IF-01's NOTE on the interface. A `cli` edge removed
+  edits `modularity-layering.yaml` in the same commit (VER-61);
+- **stops a solve on a non-finite trial residual** (AC2; verdict 8): the last finite iterate is restored and
+  `NewtonDivergenceError` names the residual, the iteration and the damping; NUM-16 gains the NOTE. One Tier 1 test in
+  scope. The item stays in the main session (physics and numerics decisions);
+- **refuses an empty `wall`** in `wall_statistics` by name (verdict 9);
+- **fixes REV-169** (AC5): the six reference case files and `docs/scripts/capture_gui.py`'s comment write the mesh
+  path beside the case file.
+
+No QoI moves: VER-62's golden holds at 10⁻⁸ on its recorded mesh, predicted zero drift, and VER-65's set stays at
+eleven. Implementing model: Sonnet, the Newton item in the main session. Tag `v0.5.0-alpha.25`, after the merge.
+
+### WP60 — Phase 4 closed: the open items resolved, and the end-of-phase report (§8.2.7 G11; §8.2.24 Z1; §8.2.27 AC1, AC6)
 
 Planned, and last. It:
 
@@ -288,11 +315,14 @@ Planned, and last. It:
 - confirms that every `REV-nn` row whose ruling places it in a Phase 4 package is `fixed` and that no
   row is left `open`. REV-116 closes here, by re-running `python -m nanopnp.validation.costs all` on
   a clean tree and replacing `docs/project/cost-study.json` (ruled 18 October 2026); REV-121 is
-  deferred by Z5;
+  deferred by Z5, REV-170 and REV-171 by AC3 and AC4; REV-169 is WP59's;
 - re-runs the end-of-phase report's numbers on its own tree, never copying them from an Outcome. The
   two whose tests the test scope withdrew are re-measured through the library's own parser: the prose
   share of `src/` and `tests/` (criterion 11; VER-75) and every `[tested: …]` marker against the
   surviving tests (criterion 4; VER-63). All 423 markers resolved on 31 October 2026;
+- revises the workflow prose (AC6): `CLAUDE.md` and the `np-*` skills in plainer, direct sentences, each repeated
+  rule stated once, every normative rule and word cap kept; a rule whose wording moves amends §8.4.4 in the same
+  commit;
 - writes the report below, the `[0.5.0]` section of `CHANGELOG.md` gathering every break of the phase
   with its migration (Z3), and `CITATION.cff`'s version and date;
 - updates `current.md` to point at Phase 5 (F5).
@@ -305,7 +335,7 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 |---|---|
 | The phase estimate after R1: 4–6 weeks stands (P7), or 5–7 | **Ruled** (§8.2.22 X9): 4–6 weeks stands; WP57's size is reported at the close |
 | The notebooks on the documentation site: in documentation increment 4, or later | **Ruled** (§8.2.24 Z2): listed, not rendered. One guide page names the six, what each shows and the command that opens it; nothing is exported into the build |
-| The last two packages, and what documentation increment 4 delivers | **Ruled** (§8.2.24 Z1, Z3, Z4): WP58 then WP59; no migration page, the changelog carrying every break with its migration, and the effort spent on currency, clarity and simplicity; the examples in prose alone |
+| The last two packages, and what documentation increment 4 delivers | **Ruled** (§8.2.24 Z1, Z3, Z4): WP58 then the close, numbered WP60 since §8.2.27 AC1; no migration page, the changelog carrying every break with its migration, and the effort spent on currency, clarity and simplicity; the examples in prose alone |
 | REV-121, stage 1's axis for a single-chain or mixed-chain pore | **Ruled** (§8.2.24 Z5): deferred to the Phase 5 package that surfaces structure preparation, placed by `/np-plan amend 5` with the changes to §5.3.1 and VER-48 |
 | REV-156, which cost Phase 6's speed-up takes first | **Ruled** (§8.2.24 Z6): the assembly, 62 % of the measured solve, before the factorisation's 24 % |
 | WP53's aliases for the old command names, and the hook on a diverged checkout | **Settled** by WP53's plan: no aliases; a warning, and no write, unless a clean primary `main` can fast-forward |
@@ -313,7 +343,8 @@ Its last commit on `main` is tagged `v0.5.0` alone (G11).
 | Each `UT-nn`: fix or defer | **Ruled** (§8.2.21): eleven accepted for WP56 and WP57; UT-09 deferred to Phase 6 as REV-156 |
 | `MOD-11` | **Ruled** (§8.2.21 W7; §8.2.23 Y1 to Y11): the interface rebuilt on a `Case` and a `Session`, `register` and `with_section` internal; WP57, with no plan cap |
 | UT-02's split and the open review items | **Ruled** (§8.2.22): the cylinder declared in the case, a geometry file and a mesh command, a wall charge as a boundary condition, and REV-111, REV-120, REV-122, REV-144, REV-153, REV-155 and REV-157, all in WP57. REV-121 now has its destination (§8.2.24 Z5) |
-| REV-116, the cost record written by the harness the review fixed | **Ruled** 18 October 2026: no re-run in WP49, since no verdict can change. WP59 re-runs the three measurements on a clean tree, replaces the record and sets the row `fixed` |
+| REV-116, the cost record written by the harness the review fixed | **Ruled** 18 October 2026: no re-run in WP49, since no verdict can change. WP60 re-runs the three measurements on a clean tree, replaces the record and sets the row `fixed` |
+| The architecture review of 1 November 2026: which of its items are taken, and where | **Ruled** (§8.2.27 AC1 to AC6; [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md)): WP59 takes the `Case` and `Session` seam, the command line's route, the Newton guard, the empty-wall refusal and REV-169; the region interface is Phase 5's (REV-170), the unmeasured costs Phase 6's (REV-171); WP60 revises the workflow prose |
 | OPN-04, OPN-08 | **Author, open.** Not on this phase's path |
 | NUM-07 order; the archive-dependent legs | **Phase 6** (E1, E4, F1) |
 | Residual cycles, drift beyond a bound, a cost over its threshold | **Author**, only if a package reports one (H6, I4, M2) |
@@ -330,6 +361,7 @@ Everything else the phase decided is in *Design decisions*, with its ruling.
 | The scripted sessions, run by the author, with findings logged | The fix packages | **Delivered**, UT-01 to UT-12, 29 October 2026 |
 | A ruling on every `UT-nn`, and on `MOD-11` | The fix packages and the close | **Delivered** at WP56's plan (§8.2.21) |
 | The scope of the last two packages, the notebooks' place, and the destinations of REV-121 and REV-156 | WP58's plan and the close | **Delivered** 31 October 2026 (§8.2.24 Z1 to Z6) |
+| The architecture review and its execution plan, and the rulings on them | WP59's plan | **Delivered** 1 November 2026 (§8.2.27 AC1 to AC6) |
 | A ruling on a residual cycle, a drift beyond a bound or a cost over its threshold | The package that reports it | The package stops at the edge and carries it as a `REV-nn` row |
 | The merge of every PR | Every package | — |
 | The tags, if the session cannot push them | After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) | The session prints the `git tag -a` and `git push` commands (G11) |
@@ -355,7 +387,8 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP56, the command line | 1, 2 | FR-44; QR-03 and NUM-34's gates (W5); FR-25's deviations read back |
 | WP57, the geometry split and the Python interface | 1, 2 | VER-32, VER-77 (new), NUM-29's force-surface refusal, the correction file's key (REV-122), FR-27 through the `Session` (Y8, Y10), VER-44's hooks per run (Y4), and those its plan claims; VER-62 re-pinned only within X4; VER-61 and VER-65 kept green |
 | WP58, documentation increment 4 | 1, 2 | VER-45, VER-46; no identifier claimed and no test kept (N1), the package changing prose alone (Z4) |
-| WP59, the close | 1, 2 | Both logs and the register read as closed; the prose share and the `[tested: …]` markers re-measured; VER-61, VER-62 and VER-65 green on every platform |
+| WP59, the review's fixes | 1, 2 | NUM-16's NOTE (AC2), its Tier 1 test; the new public names in `test_public_api.py`; VER-61's `cli` edges; VER-62 at zero drift and VER-65 green |
+| WP60, the close | 1, 2 | Both logs and the register read as closed; the prose share and the `[tested: …]` markers re-measured; VER-61, VER-62 and VER-65 green on every platform |
 
 **The phase is complete when:**
 

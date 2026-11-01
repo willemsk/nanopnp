@@ -1,0 +1,25 @@
+---
+type: Ruling Record
+title: "8.2.27 Phase 4 amended: the architecture review's fixes, agreed 1 November 2026"
+description: "Records the author's rulings at the sixth amendment of Phase 4: the confirmed items of an architecture review become WP59, which also fixes REV-169, before the close, now WP60; a non-finite Newton trial residual aborts; the stage-5 region interface goes to Phase 5 and the unmeasured costs to Phase 6; and a plain-language pass of the workflow prose joins the close."
+---
+
+#### 8.2.27 Phase 4 amended: the architecture review's fixes, agreed 1 November 2026
+
+Rulings by the author on 1 November 2026, after WP58 merged and before the close was planned. The author supplied an
+architecture review and an execution plan written against `8a3488c`, with the Qt shell left out, and asked how its
+changes weigh against Phase 5's workbench. The session checked each claim against `dd45e59` and recorded the verdicts in
+[CODE_REVIEW_024](../../docs/code_reviews/CODE_REVIEW_024.md): seven hold, five hold only in part or at negligible cost,
+and seven do not hold or are already spent by WP58. Six questions were put through `AskUserQuestion` in two calls: the
+placement, NUM-16, the region interface and the remainder; then REV-169 and the workflow prose. The author took the
+recommendation on five and ruled the sixth, the workflow prose, into the close instead of leaving it untaken. The
+letter series continues at AC.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| AC1 | **The review's confirmed fixes become WP59, before the close, which becomes WP60.** WP59 makes `Case` own its source and its edits: a public read of the text, file and base a run records, so `Session` reads no private field; a hash that agrees with equality; `_path` resolved once; the corrections loaded once. It routes the command line's `check`, `explain` and `inspect` through `Case` and `Session`, puts a non-finite guard in Newton (AC2), and refuses an empty `wall` in `wall_statistics` by name | `v0.5.0`, the release Phase 5 builds on (§8.2.17 S1, S15), carries the interface the workbench's server calls to check a case, show it resolved and read a run, so the shell packages start on it and no shell change breaks it after the release. The release moves by about three to five days. WP59 takes `v0.5.0-alpha.25`; WP60 takes `v0.5.0` alone (§8.4.1). VER-61 records each `cli` edge removed; VER-62 and VER-65 stay green | IF-01's NOTE on the interface, in WP59; the Phase 4 plan, in this commit |
+| AC2 | **A non-finite trial residual at minimum damping aborts the solve.** The solve restores the last finite iterate and raises `NewtonDivergenceError` naming the non-finite residual, its iteration and its damping; a finite residual that fails to fall is still accepted as a forced step | A non-finite residual is a broken state, not a step that fails to reduce the residual, so NUM-16's acceptance does not reach it. A PB solve stops at once instead of running 100 forced iterations, and a warm start keeps an admissible state. No recorded solve passes through a non-finite residual, so no golden moves | NUM-16's NOTE, in WP59 |
+| AC3 | **The stage-5 region interface is Phase 5's**: one interface over the contour and idealised region records, the cylinder's two classes merged into `CylinderPore`, and wall sizing moved into `mesh/`. `/np-plan amend 5` places it among the shell packages | `plot/data.region_drawing` already gives the shell one drawing for both kinds; the pore-shape sketcher, a later tool phase, adds a third kind, which shapes the interface better than two do. VER-62's mesh hash is checked when it lands | REV-170, in this commit |
+| AC4 | **The review's unmeasured costs and internal checks go to Phase 6's measured speed-up**: the second PB form object, the coefficient expressions, the QoI boundary checks, the sweep's resolutions, the contour spacing, the density loop, the harmonic products and the bucket grid. Each is measured against a registered threshold first (§8.2.12 M2), after the assembly (§8.2.24 Z6); an argument check is added only where it guards a public entry | No Phase 4 package spends time on a cost no one has measured. The sweep's key cannot be kept at plan time for a generated mesh, so that item is the correction loads alone | REV-171, in this commit |
+| AC5 | **WP59 fixes REV-169**: the Phase-1 reference sweep's base case, the five `clya-*` validation cases and the comment in `docs/scripts/capture_gui.py` write the mesh path beside the case file | The close stays free of case edits. No checked-in mesh is read through the path, so no golden or tagged block moves | REV-169's row, in WP59 |
+| AC6 | **The close revises the workflow prose**: `CLAUDE.md` and the `np-*` skills in plainer, direct sentences (Simplified Technical English), with repeated rules stated once, every normative rule and word cap kept | The pass runs after every Phase 4 change to the workflow, so it revises the text the Phase 5 sessions read. The close's own Verification adds no test | §8.4.4, if a rule's wording moves, in WP60; the Phase 4 plan, in this commit |

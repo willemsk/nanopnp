@@ -1539,3 +1539,33 @@ REV-121 and REV-156 are given their destinations. The two entries read, before t
 The §8.1 Phase 4 documentation increment read, before Z3 amended it:
 
 > | 4 | The modularity report; the user guide, the API reference and the command-line reference revised with the user-testing findings, and every break listed with its migration (§8.2.6 F4) |
+
+## Amended 1 November 2026 (§8.2.27 AC1 to AC6)
+
+After WP58 merged, the author supplied an architecture review and its execution plan, written against `8a3488c`; the
+session checked each claim against `dd45e59` ([CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md)). The confirmed
+fixes become WP59, which also fixes REV-169, and the close becomes WP60, which gains a plainer revision of the
+workflow prose; a non-finite Newton trial residual aborts (NUM-16's NOTE, in WP59); the stage-5 region interface goes
+to Phase 5 (REV-170) and the unmeasured costs to Phase 6 (REV-171). The close's entry read, before this amendment:
+
+> ### WP59 — Phase 4 closed: the open items resolved, and the end-of-phase report (§8.2.7 G11; §8.2.24 Z1)
+>
+> Planned, and last. It:
+>
+> - resolves or carries each row of *Open decisions*;
+> - confirms that every `MOD-nn` and `UT-nn` row is terminal and sets both logs' headers to `closed`,
+>   recording their closure, and the register's, in the report (N3). All eighteen `MOD-nn` and all
+>   twelve `UT-nn` rows were terminal on 31 October 2026;
+> - confirms that every `REV-nn` row whose ruling places it in a Phase 4 package is `fixed` and that no
+>   row is left `open`. REV-116 closes here, by re-running `python -m nanopnp.validation.costs all` on
+>   a clean tree and replacing `docs/project/cost-study.json` (ruled 18 October 2026); REV-121 is
+>   deferred by Z5;
+> - re-runs the end-of-phase report's numbers on its own tree, never copying them from an Outcome. The
+>   two whose tests the test scope withdrew are re-measured through the library's own parser: the prose
+>   share of `src/` and `tests/` (criterion 11; VER-75) and every `[tested: …]` marker against the
+>   surviving tests (criterion 4; VER-63). All 423 markers resolved on 31 October 2026;
+> - writes the report below, the `[0.5.0]` section of `CHANGELOG.md` gathering every break of the phase
+>   with its migration (Z3), and `CITATION.cff`'s version and date;
+> - updates `current.md` to point at Phase 5 (F5).
+>
+> Its last commit on `main` is tagged `v0.5.0` alone (G11).
