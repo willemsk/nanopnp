@@ -117,11 +117,12 @@ class Session:
         nanopnp.core.stages.Cancelled
             If ``cancel`` turns true; no run directory is written.
         """
+        source = case.source
         return self._walk(
             case,
-            case_text=case._text if case._text is not None else case.dumps(),
-            case_path=case._path,
-            base=case._base,
+            case_text=source.text,
+            case_path=source.path,
+            base=source.base,
             upto=upto,
             only=only,
             progress=progress,

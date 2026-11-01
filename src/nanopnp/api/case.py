@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Hashable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -29,7 +30,7 @@ from nanopnp.io.case_paths import (
     value_at,
 )
 from nanopnp.io.defaults import VALIDATED_DEFAULT_CASE
-from nanopnp.materials.corrections import load_corrections
+from nanopnp.materials.corrections import CorrectionDocument, load_corrections
 from nanopnp.mesh.defaults import (
     DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
     DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM,
@@ -40,11 +41,20 @@ from nanopnp.mesh.defaults import (
 from nanopnp.pipeline.checks import check_document
 from nanopnp.structure.orient import prepared_pore
 
-__all__ = ["DEFAULT_OUTPUTS", "Case"]
+__all__ = ["DEFAULT_OUTPUTS", "Case", "CaseSource"]
 
 DEFAULT_OUTPUTS: tuple[str, ...] = ("current", "transport_numbers", "eof_rate")
 
 _ORIENT_KEYS = ("chains", "cis_end", "registration_residues", "centroid_z_nm")
+
+
+@dataclass(frozen=True)
+class CaseSource:
+    """The text, file and base directory a run of a case records."""
+
+    text: str
+    path: Path | None
+    base: Path | None
 
 
 class Case(CaseDocument):
@@ -68,13 +78,18 @@ class Case(CaseDocument):
         base
             The directory to read relative paths against instead of the file's own.
         """
-        source = Path(path)
-        text = source.read_bytes().decode("utf-8")
-        case = cls.loads(
-            text, base=source.resolve().parent if base is None else base, source=str(source)
-        )
-        case._path = source
+        given = Path(path)
+        resolved = given.resolve()
+        text = resolved.read_bytes().decode("utf-8")
+        case = cls.loads(text, base=resolved.parent if base is None else base, source=str(given))
+        case._path = resolved
         return case
+
+    @property
+    def source(self) -> CaseSource:
+        """The text, file and base directory a run of this case records."""
+        text = self._text if self._text is not None else self.dumps()
+        return CaseSource(text, self._path, self._base)
 
     @classmethod
     def loads(cls, text: str, *, base: str | Path | None = None, source: str = "<string>") -> Case:
@@ -99,8 +114,8 @@ class Case(CaseDocument):
         return self.model_dump() == other.model_dump()
 
     def __hash__(self) -> int:
-        """Hash the document as it is dumped."""
-        return hash(self.dumps())
+        """Hash the document, so that cases that compare equal hash equal."""
+        return hash(_frozen(self.model_dump()))
 
     def dump(self, path: str | Path) -> Path:
         """Write the case to ``path`` as YAML and return it."""
@@ -215,6 +230,7 @@ class Case(CaseDocument):
         inputs: dict[str, Any] = {}
         if charge is not None:
             inputs["charge"] = {"path": str(Path(charge).resolve()), "format": "field1"}
+        corrections = load_corrections(parameters)
         document = {
             "schema": SCHEMA,
             "name": name,
@@ -224,13 +240,11 @@ class Case(CaseDocument):
                 "membrane": {"thickness_nm": membrane_thickness_nm},
                 "reservoir": {"radius_nm": reservoir_radius_nm},
             },
-            "electrolyte": _electrolyte(parameters, concentration_M),
+            "electrolyte": _electrolyte(parameters, concentration_M, corrections),
             "boundary_conditions": boundary,
             "physics": {
                 "model": VALIDATED_DEFAULT_CASE.physics.model,
-                "solid_permittivities": {
-                    "membrane": load_corrections(parameters).dielectrics.membrane
-                },
+                "solid_permittivities": {"membrane": corrections.dielectrics.membrane},
             },
             "numerics": {"mesh": {"maxh_nm": maxh_nm, "wall_h_nm": wall_h_nm}},
             "outputs": list(outputs),
@@ -288,7 +302,8 @@ class Case(CaseDocument):
                 **orient,
             )
         label = name if name is not None else path.name.split(".")[0]
-        dielectrics = load_corrections(parameters).dielectrics
+        corrections = load_corrections(parameters)
+        dielectrics = corrections.dielectrics
         document = {
             "schema": SCHEMA,
             "name": label,
@@ -299,7 +314,7 @@ class Case(CaseDocument):
             # The defaults, held as a block so that an edit can reach them (with_).
             "geometry": {},
             "charge": {},
-            "electrolyte": _electrolyte(parameters, concentration_M),
+            "electrolyte": _electrolyte(parameters, concentration_M, corrections),
             "boundary_conditions": {"bias_V": bias_V, "ground": "cis"},
             "physics": {
                 "model": VALIDATED_DEFAULT_CASE.physics.model,
@@ -324,6 +339,14 @@ def _rebased_paths(case: CaseDocument, base: Path | None) -> dict[str, FieldValu
     }
 
 
+def _frozen(value: object) -> Hashable:
+    if isinstance(value, dict):
+        return frozenset((key, _frozen(item)) for key, item in value.items())
+    if isinstance(value, list | tuple):
+        return tuple(_frozen(item) for item in value)
+    return value
+
+
 def _merged(first: FieldValue, second: FieldValue) -> FieldValue:
     if isinstance(first, dict) and isinstance(second, dict):
         merged = dict(first)
@@ -333,8 +356,9 @@ def _merged(first: FieldValue, second: FieldValue) -> FieldValue:
     return second
 
 
-def _electrolyte(parameters: str, concentration_M: float) -> dict[str, Any]:
-    corrections = load_corrections(parameters)
+def _electrolyte(
+    parameters: str, concentration_M: float, corrections: CorrectionDocument
+) -> dict[str, Any]:
     # As the factory treats charge and source: resolved here, where the caller's working
     # directory is the one the name was written against, so the case runs from any folder.
     parameters = str(Path(parameters).resolve()) if names_a_path(parameters) else parameters
