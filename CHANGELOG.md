@@ -76,7 +76,10 @@ number moves. It claims no identifier. The
   directory; the extras are listed in full; example 01 is three commands; the logs say that each row is read at
   review, the withdrawn VER-63 test being gone; the running page, the getting-started page, the meshes page and the
   provenance page point at each command's help and name the causes of a run that does not reproduce.
-- **Fixed**: the review register's `areas` lists `provenance` and `tooling`; the project index names all its pages;
+- **Fixed**: two Tier 1 tests that failed on macOS and Windows (the nightly and the main push): the idealised-pore
+  mesh test pinned the reference environment's mesh hash on every platform (VER-62 pins it there only; elsewhere it
+  holds the 392 elements), and the case-text test read the example with newline translation where `Case.load` keeps
+  the file's bytes; the review register's `areas` lists `provenance` and `tooling`; the project index names all its pages;
   the reference index no longer claims a test that is gone.
 
 ## [0.5.0-alpha.23]
