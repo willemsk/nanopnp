@@ -10,12 +10,14 @@ PyPI. Install it from the repository:
 pip install "nanopnp @ git+https://github.com/willemsk/nanopnp"
 ```
 
-Four optional extras:
+Six optional extras:
 
 - `structure`, for building a geometry from a protein structure (stages 1 to 4:
   [Structures and trajectories](guide/structures.md));
 - `gui`, for the desktop shell;
 - `gmsh`, the optional mesher backend, which is GPL-licensed and never needed;
+- `plot`, for the figures of a run ([Outputs and quantities](guide/outputs.md#figures));
+- `notebook`, for the interactive notebooks, which adds marimo to `plot`;
 - `examples`, for the worked examples' plots.
 
 For example, `pip install "nanopnp[structure,gui] @ git+https://github.com/willemsk/nanopnp"`.
@@ -29,7 +31,7 @@ versions the test suite runs against:
 git clone https://github.com/willemsk/nanopnp
 cd nanopnp
 uv sync --all-extras
-uv run nanopnp --env
+uv run nanopnp env
 ```
 
 The `gmsh` mesher backend remains in its optional extra (`nanopnp[gmsh]`, included by `uv sync --all-extras`)
@@ -47,18 +49,19 @@ case.yaml`.
 ## Check the installation
 
 ```bash
-nanopnp --env
+nanopnp env
 ```
 
-`nanopnp --env` prints the version and the Python interpreter. It also prints where the correction
+`nanopnp env` prints the version and the Python interpreter. It also prints where the correction
 data files are, and where artefacts will be stored: the directory `$NANOPNP_STORE` names, or
-`nanopnp-store/` in the working directory.
+`nanopnp-store/` in the working directory. `nanopnp --env` is the same command.
 
 ## Your first run
 
-[Example 01](_generated/examples/01-quickstart.md) is four commands: generate a mesh, run a case,
-inspect the run, and reproduce it. Copy `examples/01-quickstart/` from the repository and run them
-from inside it. Then read [Concepts](guide/concepts.md) for what those four commands did.
+[Example 01](_generated/examples/01-quickstart.md) is three commands: run a case, inspect the run,
+and reproduce it. The case declares its own pore, so the run generates the mesh. Copy
+`examples/01-quickstart/` from the repository and run them from inside it. Then read
+[Concepts](guide/concepts.md) for what those three commands did.
 
 ## Where results go
 

@@ -25,8 +25,8 @@ structure:
 ## The file
 
 `structure.source.path` names a PDB or mmCIF file, optionally gzipped (`.pdb`, `.ent`, `.cif`,
-`.mmcif`). MDAnalysis reads PDB and gemmi reads mmCIF. The path resolves against the working
-directory, like every path in a case.
+`.mmcif`). MDAnalysis reads PDB and gemmi reads mmCIF. A relative path is read beside the case
+file, like every path in a case.
 
 `source.selection` is an MDAnalysis selection string, `protein` by default. The density map is
 built from exactly the atoms it selects, so it decides what counts as the pore: whether hydrogens
