@@ -1426,7 +1426,7 @@ protonated structure, and so whether protonation moves before the geometry stage
 workbench. The workbench design places protonation in the molecular area, before the geometry builder, either way.
 WP5.01 changes no `src/` (§8.2.17 S1).
 
-**Ruled** (§8.2.19 U2): protonation moves before the geometry stages, and the density smeared from the protonated frames is the validated default; the hydrogens as loaded become a switch, set by the reference-reproduction cases. A Phase 5 library package that `/np-plan amend 5` sets lands it, before the charge mutator, with a Tier 1 test that a changed protonation state moves the density (the NOTE beside PHY-16 step 3).
+**Ruled** (§8.2.19 U2): protonation moves before the geometry stages, and the density smeared from the protonated frames is the validated default; the hydrogens as loaded become a switch, set by the reference-reproduction cases. WP5.03 lands it (§8.2.28 AD3), before the charge mutator, with a Tier 1 test that a changed protonation state moves the density (the NOTE beside PHY-16 step 3).
 
 ## REV-136: The organisation round's rulings need library capabilities v0.5 lacks
 
@@ -2159,6 +2159,9 @@ sizing moved into `mesh/`. It waits for the browser geometry suite and for the p
 region, which shape the interface better than two kinds do; `plot/data.region_drawing` already gives the shell one
 drawing. VER-62's recorded mesh hash must not move, or the move is ruled and re-pinned (G10, I4).
 
+**Placed** (§8.2.28 AD4, 1 November 2026): in the shell package that builds the Continuum suite's Geometry tool, library
+step first; the second `/np-plan amend 5` names the package.
+
 ## REV-171: The architecture review's unmeasured costs
 
 The architecture review of [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md) names costs and checks that no one has
@@ -2175,3 +2178,7 @@ mesh's key depends on the parent's stage-6 artefact, which exists only after the
 **Deferred** (§8.2.27 AC4, 1 November 2026) to Phase 6's speed-up, after the assembly (§8.2.24 Z6): each item is
 measured against a registered threshold before it is fixed (§8.2.12 M2), and an argument check is added only where it
 guards a public entry.
+
+**Amended** (§8.2.28 AD5, 1 November 2026): the QoI seam, one extraction interface and one boundary-existence check shared
+by `physics/distance.py`, `post/indicator.py`, `post/reaction_flux.py` and `post/forces.py`, moves to WP5.06 with
+MOD-09's outputs registry. The cost items, the coefficient expressions among them, stay here.

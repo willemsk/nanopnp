@@ -31,8 +31,10 @@ One line per lane (§8.4.4).
   Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4). Next: `/np-plan wp 59`, seeded by the
   review's execution plan.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
-  lane: [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
-  before `v0.5.0`; WP5.02, the spike, comes after it.
+  lane: [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged before `v0.5.0`. The
+  first amendment (§8.2.28) orders, after WP5.02's spike, four library packages: WP5.03 protonation before the
+  density, WP5.04 the mutator's library step, WP5.05 named models, WP5.06 the outputs registries. The shell
+  packages wait for a second `/np-plan amend 5` after the framework ruling.
 
 ## Not to be re-decided
 
@@ -86,7 +88,7 @@ One line per lane (§8.4.4).
 | The notebooks and the protocol | `wp54-notebooks-and-figures-revised.md`, `wp55-user-testing-protocol.md`; §8.2.20; FR-30, FR-37 |
 | The fixes | `wp56-command-line-read-by-a-person.md`, `wp57-idealised-pore-and-python-interface.md`; `docs/user-testing/findings.md`; §8.2.21, §8.2.22 |
 | The last two packages | The Phase 4 plan's WP59 and WP60 entries; §8.2.27; `CODE_REVIEW_024.md` and its execution plan |
-| The workbench | `phase-5-workbench.md`; §8.2.17; M3; F5 |
+| The workbench | `phase-5-workbench.md`; §8.2.17, §8.2.28; M3; F5 |
 
 ## Handoff Rules
 

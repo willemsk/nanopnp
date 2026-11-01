@@ -191,5 +191,5 @@ is a rolling register, and its header stays `open`.
 | REV-167 | process | low | accepted | §8.2.25 AA6 | [Six Copilot app behaviours the substitutes assume are unchecked](review-items.md#rev-167-six-copilot-app-behaviours-the-substitutes-assume-are-unchecked) |
 | REV-168 | process | medium | accepted | §8.2.25 AA6 | [The Copilot host has not been verified live](review-items.md#rev-168-the-copilot-host-has-not-been-verified-live) |
 | REV-169 | documentation | low | accepted | §8.2.27 AC5 | [The Phase-1 reference sweep's base case writes its mesh path against the working directory](review-items.md#rev-169-the-phase-1-reference-sweeps-base-case-writes-its-mesh-path-against-the-working-directory) |
-| REV-170 | coupling | low | accepted | §8.2.27 AC3 | [Five callers pick the stage-5 region's kind](review-items.md#rev-170-five-callers-pick-the-stage-5-regions-kind) |
-| REV-171 | performance | low | deferred | §8.2.27 AC4 | [The architecture review's unmeasured costs](review-items.md#rev-171-the-architecture-reviews-unmeasured-costs) |
+| REV-170 | coupling | low | accepted | §8.2.28 AD4 | [Five callers pick the stage-5 region's kind](review-items.md#rev-170-five-callers-pick-the-stage-5-regions-kind) |
+| REV-171 | performance | low | deferred | §8.2.27 AC4; §8.2.28 AD5 | [The architecture review's unmeasured costs](review-items.md#rev-171-the-architecture-reviews-unmeasured-costs) |

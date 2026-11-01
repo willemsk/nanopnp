@@ -35,3 +35,48 @@ The author named the workbench's areas and made the design document public. Repl
 *What the author supplies*:
 
 | Three to five concrete jobs | WP5.01's start | WP5.01 drafts from P1 to P3 and asks |
+
+## 1 November 2026: the library packages ordered (§8.2.28 AD1 to AD5)
+
+The first `/np-plan amend 5` planned WP5.03 to WP5.06 after the spike and placed REV-170 and REV-121; the shell packages wait for a second amendment after WP5.02. The replaced text read:
+
+The status paragraph:
+
+> **Status: in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended
+> the same day (S21 to S23; [the record](phase-5-record.md)). Planned:
+> WP5.01, beside Phase 4 (S1), and WP5.02, after `v0.5.0`. The shell packages from WP5.03 and their
+> estimate wait for `/np-plan amend 5` (S14); the close is last. Release: **v0.6** (`v0.6.0`).
+
+The In brief:
+
+> ## In brief
+>
+> **What changes.** The program gains a workbench in the web browser, combining molecular viewers
+> and continuum modelling suites. Each step of the work gets a tab, its tools linked both ways to live
+> pictures. This phase designs the whole workbench, then builds its frame over what the program
+> already does, plus a tool that changes a residue's charge. A physics builder, a 3D side-chain
+> mutator and a pore-shape drawing tool follow in phases of their own. Design can start now; building
+> waits for the current phase's release.
+>
+> **Cost.** The two design packages take about two to four weeks. The amendment after them prices
+> the rest.
+>
+> **What could go wrong.** The scope could pull effort from validation, so each new tool is its own
+> phase, ordered against validation later. The technology could fit poorly, so one hard screen is
+> built two ways and both are measured.
+>
+> **Your call.** Who is the lab colleague who will try the workbench unaided at the end?
+> *Recommendation:* name them during the design study, so the final test can be scheduled.
+
+The shell's entry:
+
+> ### WP5.03 onward — The shell (provisional)
+>
+> The workbench's frame, its four suites over today's capabilities and the four live views, the charge-level
+> mutator, the project folder, `nanopnp gui`, then Qt's removal and documentation increment 5. Before
+> the mutator, a library package moves protonation before the density, the protonated density the
+> validated default (REV-135; §8.2.19 U2). The amendment also runs the sweep's design round (REV-139,
+> U4) and orders REV-136's capabilities (U3). The mutator lands library first: a `charge/` function that sets a residue's charge state, with a Tier 1
+> test that the projected charge changes by that residue's alone, before its shell control (§8.1;
+> RSK-15). They wait on WP5.01's requirements and WP5.02's framework ruling; `/np-plan amend 5` plans
+> them from WP5.03.
