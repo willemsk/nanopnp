@@ -36,6 +36,10 @@ MANIFEST_FILENAME = "manifest.json"
 
 CASE_FILENAME = "case.yaml"
 
+RUN_SCHEMA = "nanopnp/run/v0.5"
+
+RUN_RECORD_FILENAME = "run.json"
+
 DEVIATIONS_GROUP = "deviations"
 
 GROUPS: tuple[str, ...] = (

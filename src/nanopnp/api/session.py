@@ -27,10 +27,11 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; the run imports them w
     from nanopnp.api.case import Case
     from nanopnp.api.sweep import SweepResult
     from nanopnp.io.case import CaseDocument, FieldValue
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.pipeline.extension import FunctionStage
-    from nanopnp.pipeline.run import RunResult
+    from nanopnp.pipeline.run import RecordedRun, RunResult
 
-__all__ = ["Session", "StageInfo"]
+__all__ = ["CaseCheck", "Session", "StageInfo"]
 
 _STAGE_NAME = re.compile(r"[a-z][a-z0-9_-]*")
 
@@ -46,6 +47,14 @@ class StageInfo:
     outputs: tuple[str, ...]
     schema: str
     figure: bool
+
+
+@dataclass(frozen=True)
+class CaseCheck:
+    """A case resolved as a run would resolve it, and the stages a run of it walks."""
+
+    resolved: ResolvedCase
+    stages: tuple[str, ...]
 
 
 class Session:
@@ -175,6 +184,42 @@ class Session:
         from nanopnp.pipeline.run import open_run
 
         return open_run(directory, store=self.store)
+
+    def check(self, case: Case, *, files: bool = True) -> CaseCheck:
+        """Resolve a case as a run would and list the stages a run walks, without running one.
+
+        Parameters
+        ----------
+        files
+            Whether to check that the files the case names exist first.
+        """
+        from nanopnp.pipeline.case import resolve
+        from nanopnp.pipeline.checks import check_referenced_files
+        from nanopnp.pipeline.run import selected_stages
+
+        base = case.source.base
+        if files:
+            check_referenced_files(case, base=base)
+        resolved = resolve(case, base=base)
+        return CaseCheck(resolved, selected_stages(resolved, None, stages=self._own))
+
+    def read(
+        self,
+        directory: str | Path,
+        *,
+        manifest: Mapping[str, Canonicalisable] | None = None,
+        record: Mapping[str, Canonicalisable] | None = None,
+    ) -> RecordedRun:
+        """Read a run directory's case, manifest and run record, without its store.
+
+        Parameters
+        ----------
+        manifest, record
+            The files' content already parsed and float-decoded by the caller, so it is read once.
+        """
+        from nanopnp.pipeline.run import read_run
+
+        return read_run(directory, manifest_document=manifest, record_document=record)
 
     @property
     def stages(self) -> tuple[StageInfo, ...]:

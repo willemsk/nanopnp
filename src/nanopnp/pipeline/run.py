@@ -43,6 +43,8 @@ from nanopnp.io.artefact import (
 from nanopnp.io.manifest import (
     CASE_FILENAME,
     MANIFEST_FILENAME,
+    RUN_RECORD_FILENAME,
+    RUN_SCHEMA,
     Manifest,
     ManifestHashError,
     build,
@@ -81,10 +83,7 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-RUN_SCHEMA = "nanopnp/run/v0.5"
 _RUN_KEY_SCHEMA = "nanopnp/run-key/v0.5"
-
-RUN_RECORD_FILENAME = "run.json"
 
 WORKSPACE_DIRNAME = "tmp"
 
