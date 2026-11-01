@@ -1,6 +1,6 @@
 # WP58 — Documentation increment 4: the guide current, plainer and free of stale text
 
-**Status: planned, not started.** Written 31 October 2026, grounded in the code and the prose at
+**Status: delivered, 1 November 2026.** Written 31 October 2026, grounded in the code and the prose at
 `6111f46` (§8.2.15 Q1). Inherits §8.2.24 Z1 to Z4, §8.2.21 W1 to W6 and the test scope (§8.2.13
 N1, N3). Tag `v0.5.0-alpha.24`. The [Phase 4 plan](phase-4-polish-and-user-testing.md)'s WP58
 entry sets this scope; `SPECIFICATION.md` governs, and where it and this plan disagree this plan
@@ -294,9 +294,16 @@ Each item is outside the test scope: done when the strict build passes and the r
   > members beside the base case (`sweep/plan.py`, `beside=base_path.parent`); a case file is outside
   > this package (D1).
 - [x] 9. Compaction checkpoint. **Executor:** main
-- [ ] 10. The release-scope prose at v0.5 (D6); a `REV-nn` row with its `review-items.md` section
+- [x] 10. The release-scope prose at v0.5 (D6); a `REV-nn` row with its `review-items.md` section
   for anything unfixed; `CHANGELOG.md`'s `[Unreleased]` entry; `current.md`'s position line; done
   also when `duplicates.py` and `.claude/hooks/gate.sh run` pass. **Executor:** main
+
+  > **Outcome — v0.5 scope, REV-169, the records.** The README, `docs/index.md` and the banner give v0.5 as in
+  > progress and not yet tagged (item 1). **REV-169** holds the one finding left open, the reference sweep's mesh
+  > path. The changelog entry is the `[0.5.0-alpha.24]` section: the package is Phase 4's own, whose previous
+  > phase is released, so it takes its alpha tag after the merge and not a place under `[Unreleased]`. The phase
+  > plan and `current.md` are updated; `duplicates.py` passes; no `src/`, `tests/`, `data/`, case file or tagged
+  > block changed (`git diff origin/main...HEAD`).
 
 ### Verification
 

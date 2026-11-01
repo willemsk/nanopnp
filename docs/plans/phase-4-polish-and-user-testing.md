@@ -3,11 +3,11 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP57, below. The author ran the sessions and ruled every `UT-nn` on
+demand. Delivered: WP35 to WP58, below. The author ran the sessions and ruled every `UT-nn` on
 29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, and WP57, the second (widened on 30 October 2026 to carry the geometry
 split and the open review items, §8.2.22, and its Python interface rebuilt on a `Case` and a `Session`,
 §8.2.23), are delivered. The phase ends in two packages, planned on 31 October 2026 (§8.2.24 Z1):
-**WP58**, documentation increment 4, then **WP59**, the close. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
+**WP58**, documentation increment 4, is delivered; **WP59**, the close, remains. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
@@ -239,7 +239,17 @@ command no longer prints).
 
 ### WP58 — Documentation increment 4: the guide current, plainer and free of stale text (§8.1's Phase 4 documentation increment; §8.2.6 F4; §8.2.21 W1, W6; §8.2.24 Z1 to Z4)
 
-Planned. It delivers §8.1's documentation increment and changes no `src/` file. It carries:
+**Delivered 1 November 2026** ([plan](wp58-documentation-increment-4.md)). The guide is current against six checks (commands
+and flags, names in `nanopnp.PUBLIC`, test files, withdrawn identifiers, extras, path and release scope) and
+plainer where a page left its voice. Two pages are new, `docs/guide/python.md` and `docs/guide/notebooks.md`; a
+relative path in a case file is stated as read beside it (§5.3.1); the banner, the front page and the README give the
+v0.5 scope as in progress, not yet tagged (D6). The examples changed in prose alone, so no case hash, tagged block or
+number moved (D1; VER-46 and VER-62 stand). No identifier is claimed and no test written (N1, N3). Live constraints:
+`[0.5.0]`, `CITATION.cff` and the `released` row are WP59's; **REV-169**, a reference-sweep case file that writes its
+mesh path against the working directory, is open and needs a case-file edit in a later package. Evidence: every
+snippet's command and exit status in the plan's Outcome for item 5; the build is `mkdocs build --strict`.
+
+Scope as planned. It delivers §8.1's documentation increment and changes no `src/` file. It carries:
 
 - **A page on the Python interface**, hand-written: build a case, run it through a session, read a
   run result, draw its figures, sweep, register a stage of one's own, and reopen a recorded run
@@ -265,7 +275,7 @@ Planned. It delivers §8.1's documentation increment and changes no `src/` file.
 
 **No migration page** (Z3): each break is listed with its migration in `CHANGELOG.md`, in the entry
 of the package that made it, and WP59's `[0.5.0]` section gathers them. VER-45 and VER-46 gate the
-package. Tag `v0.5.0-alpha.24`.
+package. Tag `v0.5.0-alpha.24`, after the merge.
 
 ### WP59 — Phase 4 closed: the open items resolved, and the end-of-phase report (§8.2.7 G11; §8.2.24 Z1)
 

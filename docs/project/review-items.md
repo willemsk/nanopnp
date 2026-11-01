@@ -2122,3 +2122,19 @@ session-start text and `format.sh`), the sub-agents called through `task`, and a
 
 Recommendation: run it after REV-166, on a WSL host, and ship the Copilot host's pull request from
 Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code regression.
+
+## REV-169: The Phase-1 reference sweep's base case writes its mesh path against the working directory
+
+Found by WP58 while it revised example 05's README ([plan](../plans/wp58-documentation-increment-4.md), item 8).
+`docs/sweeps/phase1-reference.case.yaml` names `inputs.mesh.path: docs/sweeps/clya-reference.msh`, and its header
+comment says the path resolves against the process working directory and not against the file, so it is written from
+the repository root. A relative path is read beside the case file (§5.3.1, the NOTE on a relative path), and
+`sweep plan` resolves each member with `beside=base_path.parent` (`src/nanopnp/sweep/plan.py`). By that reading a run of
+the sweep looks for `docs/sweeps/docs/sweeps/clya-reference.msh`. The mesh is not checked in, so no gate reads the path and
+this was read from the code, not run.
+
+WP58 changes no case file (D1: a case hash and VER-62's golden stand), and example 05's README no longer asserts either rule.
+The fix is an edit of the case file's path to `clya-reference.msh` and of its comment, in a later package that may re-pin a
+hash; a tier 1 test that plans the sweep from another directory would be in the test scope only if it guards a mechanism.
+
+Recommendation: fix it in WP59 if the close may touch a case file, else in the first package of Phase 5.
