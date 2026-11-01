@@ -50,25 +50,14 @@ panels and two whole-workbench mockups, and writes the design document and its r
   REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
   restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
-Outside the package sequence: the workflow also runs on the GitHub Copilot app, beside Claude Code
-(`SPECIFICATION.md` §8.2.25; [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, case schema
-or public API changes.
+Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
+[plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 
-- **Host instructions**: `.claude/workflow/hosts.md` selects a Claude Code or Copilot mapping;
-  shared workflow intent and coordination stay in the core, while host tool limits and the
-  unfinished hook evidence remain explicit (§8.4.4, §8.4.5;
-  [seam plan](docs/plans/workflow-host-seams.md)).
-- **Added**: `.github/copilot-instructions.md`, `.github/hooks/nanopnp.json` (gates `write_bash`,
-  formats after Copilot's edits, refuses the GitHub MCP write tools), the git hook
-  `.githooks/pre-push` with `gate.sh check-push`, and `.claude/workflow/hosts.md`, the map of each
-  Claude Code tool to its Copilot substitute; ruling record §8.2.25 (AA1 to AA8) and REV-166 to
-  REV-168, the probes and live checks still to run.
-- **Changed**: `gate.sh` refuses with a structured denial and exit 0 on Copilot, and exit 2 on
-  Claude Code (§8.2.26 AB1); `format.sh` reads path objects and Copilot's multi-file patch payload;
-  `session-start.sh` prints its summary as JSON under Copilot;
-  `.agents/hooks/adapter.sh` takes a Copilot dialect; Claude Code denies the GitHub MCP write tools;
-  §8.4.2, §8.4.4 and §8.4.5 name the second host; `clause.py` and `duplicates.py` read a ruling
-  letter pair.
+- **Added**: `.claude/workflow/hosts.md` and `hosts/copilot.md` (each Claude Code tool's Copilot
+  substitute), `.github/copilot-instructions.md`, `.github/hooks/nanopnp.json`, `.githooks/pre-push`
+  with `gate.sh check-push`; REV-166 to REV-168, the probes still to run.
+- **Changed**: `gate.sh` refuses with one exit-0 structured denial on both hosts and refuses a string
+  payload's push (§8.2.26 AB1); `format.sh`, `session-start.sh` and `adapter.sh` take Copilot's shapes.
 
 ## [0.5.0-alpha.23]
 
