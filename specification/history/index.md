@@ -38,6 +38,7 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.25 The workflow on the GitHub Copilot app, agreed 31 October 2026](25-the-workflow-on-the-github-copilot-app.md) - Records the author's rulings on running the workflow in the GitHub Copilot app beside Claude Code: the hosts are interchangeable with `.claude/` the single source, Copilot runs on a WSL host and stops at CI, one host drives a branch at a time, the gate refuses with exit 2 and a git pre-push hook, the setup was built before its probes ran, the model tiers stay the same Claude models, and no Copilot file is generated.
 * [8.2.26 The hook refusal, agreed 1 November 2026](26-copilot-hook-refusal.md) - Records the author's ruling that a hook refuses with an exit-0 structured denial on both hosts, replacing the exit-code switch on a host variable.
 * [8.2.27 Phase 4 amended: the architecture review's fixes, agreed 1 November 2026](27-phase-4-amended-the-architecture-reviews-fixes.md) - Records the author's rulings at the sixth amendment of Phase 4: the confirmed items of an architecture review become WP59, which also fixes REV-169, before the close, now WP60; a non-finite Newton trial residual aborts; the stage-5 region interface goes to Phase 5 and the unmeasured costs to Phase 6; and a plain-language pass of the workflow prose joins the close.
+* [8.2.28 Phase 5 amended: the library packages, agreed 1 November 2026](28-phase-5-amended-the-library-packages.md) - Records the author's rulings at the first amendment of Phase 5: the four library packages that need no front-end stack are ordered now, after the spike, while the shell packages, the sweep's design round and REV-136's cut line wait for a second amendment; the stage-5 region interface joins the Geometry tool's package, and the review's QoI seam joins the outputs registry.
 
 ## Where each ruling holds now
 
@@ -188,17 +189,17 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * S23 - the WP5.01 plan
 * S24 - the Phase 5 plan; the design document's *The areas*
 * T1 - spent
-* T2 - open: the workbench's packages, set by `/np-plan amend 5`
+* T2 - open: REV-62 in WP5.05 (AD3); the rest the second `/np-plan amend 5`
 * T3 - open: structure preparation's package, the Study package, FR-28 and the composer phase
-* T4 - open: a Phase 5 library package, set by `/np-plan amend 5`
+* T4 - open: WP5.06 (AD3)
 * T5 - spent
 * T6 - FR-43
 * T7 - spent
 * T8 - FR-34; the design document's WB-30 to WB-32
 * U1 - open: the package that removes Qt
-* U2 - the NOTE beside PHY-16 step 3; open: a Phase 5 library package, set by `/np-plan amend 5`
-* U3 - open: `/np-plan amend 5`
-* U4 - open: `/np-plan amend 5`
+* U2 - the NOTE beside PHY-16 step 3; open: WP5.03 (AD3)
+* U3 - open: the second `/np-plan amend 5`, after WP5.02 (AD1)
+* U4 - open: the second `/np-plan amend 5`, after WP5.02 (AD1)
 * U5 - open: WP5.02
 * U6 - FR-38
 * U7 - open: WP5.02
@@ -265,7 +266,12 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AB1 - §8.4.2
 * AC1 - IF-01's NOTE on the interface; the Phase 4 plan; open: WP59
 * AC2 - NUM-16's NOTE; open: WP59
-* AC3 - REV-170; open: `/np-plan amend 5`
-* AC4 - REV-171; open: Phase 6
+* AC3 - REV-170; placed by AD4; open: the Geometry tool's package
+* AC4 - REV-171; amended by AD5; open: Phase 6
 * AC5 - REV-169; open: WP59
 * AC6 - the Phase 4 plan; §8.4.4 if a rule's wording moves; open: WP60
+* AD1 - the Phase 5 plan; open: the second `/np-plan amend 5`
+* AD2 - the Phase 5 plan
+* AD3 - the Phase 5 plan; open: WP5.03 to WP5.06
+* AD4 - REV-170; open: the Geometry tool's package
+* AD5 - REV-171; open: WP5.06
