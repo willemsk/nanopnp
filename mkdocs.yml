@@ -112,6 +112,7 @@ nav:
       - Provenance and deviations: guide/provenance.md
       - Stabilisation modes: guide/stabilisation.md
       - The Python interface: guide/python.md
+      - Notebooks: guide/notebooks.md
       - Desktop shell: guide/desktop.md
   - Examples:
       - examples/index.md
