@@ -54,3 +54,7 @@ cache and Newton really runs again. It then compares every scalar the run record
 reproduction, to a relative tolerance (`--tolerance`), and exits `0` only if every scalar agrees
 (QR-08). Differences in library versions, interpreter or platform are reported beside the result;
 `--strict-environment` makes them failures. The input files must still be where the case names them.
+
+A run fails to reproduce when an input file changed, when the libraries or the platform moved the
+numbers past the tolerance, or when the store served a stale artefact. Solving in a fresh store
+reuses no recorded artefact; a store named with `--store` must not hold the run.

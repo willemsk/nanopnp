@@ -15,7 +15,7 @@ need the `notebook` extra, which brings in `plot` and marimo. They share one sto
 | `05-cylinder` | A cylindrical pore end to end: its mesh, its solve, its profiles and its I-V sweep. | [05-cylinder](https://github.com/willemsk/nanopnp/blob/main/notebooks/05-cylinder/README.md) |
 | `06-2wcd` | The 2WCD pore taken from the PDB entry to a solve, with the figures of every stage and the solved fields. | [06-2wcd](https://github.com/willemsk/nanopnp/blob/main/notebooks/06-2wcd/README.md) |
 
-Each README gives the notebook's settings and what a first run costs. The README links point to GitHub because
+Each README describes its notebook in full. The README links point to GitHub because
 `notebooks/` lies outside this site.
 
 ## Run a notebook

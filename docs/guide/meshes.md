@@ -76,7 +76,9 @@ is the domain `electrolyte`, the reservoirs are `cis` and `trans`, and the two p
 boundary `interface`. The defaults are quick to solve, but not converged.
 
 `nanopnp geometry cylinder --out pore.geometry.yaml` writes the same pore as a geometry file and
-prints the `geometry:` block that declares it.
+prints the `geometry:` block that declares it. Its flags (`--pore-radius-nm`,
+`--membrane-thickness-nm`, `--reservoir-radius-nm`) size the pore; the flags that size the mesh
+belong to `nanopnp mesh`, and `nanopnp geometry cylinder --help` and `nanopnp mesh --help` list them.
 
 ## Generating a mesh file
 
