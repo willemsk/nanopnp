@@ -2,7 +2,8 @@
 findings:
   prefix: REV
   status: open
-  areas: [coupling, performance, verification, documentation, physics, numerics, interface, process]
+  areas: [coupling, performance, verification, documentation, physics, numerics, interface, process,
+    provenance, tooling]
 ---
 
 # Review findings
@@ -16,7 +17,7 @@ ruling linking the plan that fixed it.
 `fixed`, or `deferred`, `post-1.0`, `declined` or `wontfix` (the ruling names the §8.2 row; `wontfix`
 for a row whose code or bundle leaves before it is fixed). **Severity** is
 `high` for a SHALL the code does not meet, `medium` for a property held only by convention, and
-`low` for size or tidiness. `tests/tier1/test_findings_logs.py` checks every row (VER-63). The log
+`low` for size or tidiness. No test checks the rows: each is read at review (§8.2.13 N3). The log
 is a rolling register, and its header stays `open`.
 
 | ID | Area | Severity | Status | Ruling | Finding |

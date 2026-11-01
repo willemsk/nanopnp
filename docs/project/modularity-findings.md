@@ -16,7 +16,7 @@ that fixes it.
 links the plan that fixed it), or `deferred`, `post-1.0`, `declined` or `wontfix` (the ruling names
 the §8.2 row; `wontfix` for a row whose code leaves before it is fixed). **Severity** is `high` for a SHALL the code does not meet, `medium` for a property held only
 by convention or an extension needing an edit outside its home, and `low` for size or tidiness.
-`tests/tier1/test_findings_logs.py` checks every row (VER-63), and once the header says `closed` it
+No test checks the rows: each is read at review (§8.2.13 N3). Once the header says `closed`, review
 refuses any row that is not terminal.
 
 | ID | Area | Severity | Status | Ruling | Finding |
