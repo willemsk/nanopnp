@@ -282,9 +282,18 @@ Each item is outside the test scope: done when the strict build passes and the r
   > Getting started; `docs/reference/corrections.md` said `nanopnp --env` for the command and now
   > says `nanopnp env`, one page beyond D1's list, for the same one-name rule. The notebooks page
   > lost a sentence that claimed every README states its cost; two of six do. The strict build passes.
-- [ ] 8. `examples/*/README.md` and `docs/examples/index.md`: prose, titles and index rows, no
+- [x] cddb4a7 8. `examples/*/README.md` and `docs/examples/index.md`: prose, titles and index rows, no
   tagged block and no number touched (D1, D4). **Executor:** `general-purpose` on Sonnet
-- [ ] 9. Compaction checkpoint. **Executor:** main
+
+  > **Outcome — titles and the path rule in the examples.** Example 01's title drops "mesh"; examples 06
+  > and 07 state that a relative path in a case file is read beside it; example 05 no longer says its
+  > base case reads its mesh from the repository root. `git diff origin/main...HEAD -- examples/
+  > notebooks/ docs/user-testing/` changes no tagged block and no number. **Found, not fixed (REV in
+  > item 10):** `docs/sweeps/phase1-reference.case.yaml` names `docs/sweeps/clya-reference.msh` and its
+  > comment says the path resolves against the process working directory, while `sweep plan` resolves
+  > members beside the base case (`sweep/plan.py`, `beside=base_path.parent`); a case file is outside
+  > this package (D1).
+- [x] 9. Compaction checkpoint. **Executor:** main
 - [ ] 10. The release-scope prose at v0.5 (D6); a `REV-nn` row with its `review-items.md` section
   for anything unfixed; `CHANGELOG.md`'s `[Unreleased]` entry; `current.md`'s position line; done
   also when `duplicates.py` and `.claude/hooks/gate.sh run` pass. **Executor:** main
