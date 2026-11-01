@@ -26,8 +26,8 @@ It gates the mesh on element quality before writing it and prints the content ha
 manifest will record. The reference geometry names every group in the solver's vocabulary, so
 the case maps nothing: `inputs.mesh.groups: {}`.
 
-Then, from the repository root — `inputs.mesh.path` in the base case resolves against the
-process working directory, because the sweep runner never changes directory:
+Then, from the repository root (a relative `inputs.mesh.path` is read beside the base case file,
+which REV-169 records for this case):
 
 ```bash
 uv run nanopnp sweep plan docs/sweeps/phase1-reference.sweep.yaml

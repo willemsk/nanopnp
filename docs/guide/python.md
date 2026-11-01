@@ -145,8 +145,8 @@ swept.plot_iv().figure.savefig("iv.png")
 
 A point warm-starts from its parent, a point one step nearer the origin, as the command-line sweep
 does, and `origin=` chooses the origin by its index in `values`. `workers=` spreads the points of a
-wave over processes, each pinned to one thread ([Sweeps and HPC](sweeps.md)). Each row holds the point's assignments, its status and exit class, its
-quantities, and the directory of its run. `plot_iv` draws the current against the bias with the
+wave over processes, each pinned to one thread ([Sweeps and HPC](sweeps.md)). Each row holds the
+point's assignments, its status and exit class, its quantities, and the directory of its run. `plot_iv` draws the current against the bias with the
 rectification and the conductance, and refuses a sweep that is not over the bias.
 
 ## A stage of one's own
