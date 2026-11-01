@@ -19,4 +19,5 @@ an equation.
 | [Outputs and quantities](outputs.md) | What a run reports, its sign convention, and the two current routes |
 | [Provenance and deviations](provenance.md) | The manifest's eight groups, and deviations from the validated model |
 | [Stabilisation modes](stabilisation.md) | `none`, `supg` and `reference`, and why the default is `none` |
+| [The Python interface](python.md) | `Case`, `Session`, the result, its figures, sweeps, a stage of one's own, reopening a run |
 | [Desktop shell](desktop.md) | The case editor, run control, convergence plot and field viewer |
