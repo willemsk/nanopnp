@@ -117,8 +117,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 * Implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and moves to
   Opus only after Sonnet has failed on the item. (§8.2.11 L6)
-* `.claude/workflow/hosts/copilot.md` gives each tier's id and each agent's effort, passed at each
-  sub-agent call. (§8.2.25 AA7)
+* The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
+  each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
   classifier. The script
   `.claude/scripts/clause.py` prints a clause by identifier. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17

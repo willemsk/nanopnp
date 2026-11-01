@@ -199,7 +199,7 @@ its own whenever the second file was not loaded.
 
 - **`gate.sh` refuses in a form both hosts document.** It writes the reason to stderr and a JSON object with
   `hookSpecificOutput` and top-level `permissionDecision`/`permissionDecisionReason`. After the WSL probe and
-  §8.2.26 AB1 it exits 0 on both hosts so the reason reaches the agent (§8.2.26 AB1); if it cannot emit the
+  §8.2.26 AB1 it exits 0 on both hosts so the reason reaches the agent; if it cannot emit the
   denial it exits 2.
 - **`.agents/hooks/adapter.sh` keeps working.** It already treats any non-zero exit as a refusal. Have it read the
   reason from stdout alone, as `.permissionDecisionReason // .hookSpecificOutput.permissionDecisionReason`, because
