@@ -8,16 +8,13 @@
 #
 # The mesh is not checked in: it is 44,316 triangles and is reproducible from the
 # checked-in ClyA profile by `nanopnp mesh reference`; see README.md beside this file.
-# `inputs.mesh.path` resolves against the *process working directory*
-# and not against this file -- the sweep runner deliberately never chdirs, so that
-# a member cannot silently read a different mesh -- which is why the path below is
-# written from the repository root, where the README's two commands are run.
+# A relative `inputs.mesh.path` is read beside this file (section 5.3.1).
 schema: nanopnp/case/v0.5
 name: phase1-reference
 
 inputs:
   mesh:
-    path: docs/sweeps/clya-reference.msh
+    path: clya-reference.msh
     format: msh41
     groups: {}                   # the generator names every group in the vocabulary
 
