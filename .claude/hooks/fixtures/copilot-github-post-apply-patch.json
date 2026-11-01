@@ -1,4 +1,0 @@
-{
-  "toolName": "apply_patch",
-  "toolArgs": "*** Begin Patch\n*** Add File: .claude/hooks/rev166-fixture-first.py\n+REV166_CREATE\n*** End Patch\n"
-}
