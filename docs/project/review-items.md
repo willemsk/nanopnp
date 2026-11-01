@@ -2144,6 +2144,12 @@ hash; a tier 1 test that plans the sweep from another directory would be in the 
 **Accepted** (§8.2.27 AC5, 1 November 2026): WP59, the review-fix package before the close, edits the six case files'
 path and comment and the comment in `docs/scripts/capture_gui.py`, so the close stays free of case edits.
 
+**Fixed** (WP59, item 6, 1 November 2026): the phase-1 reference case names `clya-reference.msh` and the five
+`docs/validation/cases/clya-*.case.yaml` files name `../../sweeps/clya-reference.msh`, each header reading "A relative
+`inputs.mesh.path` is read beside this file (section 5.3.1)"; `docs/scripts/capture_gui.py`'s comment is corrected. The
+five frozen case identities are unchanged (`0128dd1854ff`, `4db46a9d821b`, `1b48e22b656c`, `0e263b472108`,
+`1e26bf4a0c11`).
+
 ## REV-170: Five callers pick the stage-5 region's kind
 
 `geometry/region.py` `read_region` returns `RegionRecord | IdealisedRegionRecord`, and five callers outside the Qt

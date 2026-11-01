@@ -3,20 +3,20 @@
 **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP58, below. The author ran the sessions and ruled every `UT-nn` on
+demand. Delivered: WP35 to WP59, below. The author ran the sessions and ruled every `UT-nn` on
 29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, and WP57, the second (widened on 30 October 2026 to carry the geometry
 split and the open review items, §8.2.22, and its Python interface rebuilt on a `Case` and a `Session`,
 §8.2.23), are delivered. The phase ends in three packages, planned on 31 October 2026 (§8.2.24 Z1) and amended
-on 1 November 2026 (§8.2.27 AC1): **WP58**, documentation increment 4, is delivered; **WP59**, the architecture
-review's fixes, and **WP60**, the close, remain. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
+on 1 November 2026 (§8.2.27 AC1): **WP58**, documentation increment 4, and **WP59**, the architecture
+review's fixes, are delivered; **WP60**, the close, remains. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
 Phase 4 tidies the program before others rely on it. The rebuilt structure, the trimmed code and
 tests, the notebooks, the split specification, the working commands, the testing protocol, both
-fixes and the revised guide are done. Two packages remain, and they end the phase.
+fixes, the revised guide and the review's fixes are done. One package remains, and it ends the phase.
 
-**What changes.** First, the fixes an outside review found and the checks confirmed: a case keeps
+**What changes.** First, the fixes an outside review found and the checks confirmed (done): a case keeps
 its own record of where it came from, the command line and the coming browser workbench check and
 explain a case the same way, a solve that produces an invalid number stops at once, and six sample
 case files find their mesh wherever they are run from. Then the phase closes: every finding read as
@@ -91,7 +91,7 @@ Each package's `/np-plan wp` decides the rest in its own decisions table.
 | The case schema | It moves as needed; a move takes the release's identifier, `nanopnp/case/v0.5`, and earlier identifiers read as their upgrade (G6; the §5.3.1 NOTE) | The schema keeps step with the package until v1.0 |
 | Number stability | A golden recorded on `v0.4.0`'s tree and asserted by every later package at 10⁻⁸ relative on a recorded mesh. On an unseen mesh the tolerance is ten times the measured spread between recorded meshes, capped at 10⁻³, and an unseen mesh fails in the reference environment (G10, VER-62) | A polish phase must not move a result inside a benchmark's tolerance unnoticed |
 | An accuracy fix and the golden | A fix that moves a VER-62 QoI within a bound argued before the change re-pins the golden in the same commit as the amended clause; a drift beyond the bound stops the package for the author's ruling (I4) | G10's ruling, given in advance |
-| The public API | It may break (F4). Each break is decided in `test_public_api.py` and listed in `CHANGELOG.md` with its migration; the shell follows in the same PR (QR-11) | IF-01's promise starts at v1.0 |
+| The public API | It may break (F4). Each break is decided in review (§8.2.13 N3) and listed in `CHANGELOG.md` with its migration; the shell follows in the same PR (QR-11) | IF-01's promise starts at v1.0 |
 | Close and tags | `v0.5.0` alone on the close package's last commit; the session pushes each tag if it can, otherwise prints the commands (G11; §8.4.1) | As E5 did for Phase 3 |
 | The findings | Each `MOD-nn` as §8.2.8 H1 to H5 and H7 rule it. `MOD-11`, whether `with_section` and `core.stages.register` join `PUBLIC`, follows the sessions (H2) | The report's recommendations, except H7 |
 | The coupling target | The subpackage `top` relation acyclic in the report's layer order, which gained `numerics`, then `plot` and `pipeline` (H6, H11, P3) | Pre-registered, so the gate does not take whatever the refactors leave |
@@ -281,7 +281,15 @@ package. Tag `v0.5.0-alpha.24`, after the merge.
 
 ### WP59 — The architecture review's fixes: the case owns its source, one route for every caller (§8.2.27 AC1, AC2, AC5)
 
-Planned ([plan](wp59-architecture-review-fixes.md)), not started. Its source is
+**Delivered 1 November 2026** ([plan](wp59-architecture-review-fixes.md); §8.2.27 AC1, AC2, AC5). `Case.source` gives the
+text, file and base a run records; a case hash agrees with equality; `Case.load` resolves its path once. `Session.check`
+and `Session.read` are the one route the command line (`validate case`, `validate case-hash`, `inspect`, `plot`) takes,
+and `cli` imports nothing from `pipeline` (VER-61 unchanged). A non-finite Newton trial residual aborts at minimum
+damping with the iterate restored (NUM-16's NOTE; one Tier 1 test). An empty `wall` is refused by name. REV-169 is
+fixed: the six case files' identities are unchanged. No QoI moves. Live constraints: the three names are listed in
+`CHANGELOG.md` and IF-01's NOTE; `[0.5.0]` gathers them (WP60). Tag `v0.5.0-alpha.25`, after the merge.
+
+Scope as planned. Its source is
 [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md): the author's architecture review, checked against `dd45e59`, with
 its execution plan kept beside it as the seed for this package's plan. Of that plan, items 1, 2 and 5, the Newton half
 of item 7 and the wall half of item 10 are taken; the rest are REV-170 (Phase 5) and REV-171 (Phase 6). It:
@@ -463,7 +471,7 @@ Empty until the close package fills it. It reports:
 - **User testing:** the sessions and `UT-nn` findings by area and severity, and how many were fixed
   or deferred.
 - **Breaks:** the schema identifier at the release, the `PUBLIC` names added and removed, and the
-  CLI changes, each with its migration. Sources: `test_public_api.py`, VER-47 and `CHANGELOG.md`.
+  CLI changes, each with its migration. Sources: IF-01's NOTE, VER-47 and `CHANGELOG.md`.
 - **The suite:** test counts by tier and the push gate's duration, against the 1,764 collected by
   default at `v0.4.0`. Source: the gate run on the close package's tree.
 - **The cost study:** WP49's three measurements against their thresholds and predictions, and what

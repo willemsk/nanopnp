@@ -59,6 +59,28 @@ Outside the package sequence: the workflow also runs on the GitHub Copilot app (
 - **Changed**: `gate.sh` refuses with one exit-0 structured denial on both hosts and refuses a string
   payload's push (§8.2.26 AB1); `format.sh`, `session-start.sh` and `adapter.sh` take Copilot's shapes.
 
+## [0.5.0-alpha.25]
+
+WP59: the architecture review's fixes, Phase 4's last-but-one package (`SPECIFICATION.md` §8.2.27 AC1, AC2, AC5; the
+verdicts of [CODE_REVIEW_024](docs/code_reviews/CODE_REVIEW_024.md)). A case owns the record of where it came from, the
+command line checks and reads a run through the same two objects the workbench will use, and a solve that meets an
+invalid number stops. It discharges NUM-16's NOTE on a non-finite trial residual and IF-01's NOTE on the interface.
+No QoI moves (VER-62 holds). The [plan](docs/plans/wp59-architecture-review-fixes.md) records the work.
+
+- **Added**: `Case.source`, the text, file and base directory a run of the case records, as a frozen `CaseSource`;
+  `Session.check(case, files=True)`, which checks the files the case names, resolves it and lists the stages a run
+  walks, as a frozen `CaseCheck`; and `Session.read(directory)`, which reads a finished run's record without its stored
+  results. `RUN_SCHEMA` and `RUN_RECORD_FILENAME` now live in `nanopnp.io.manifest` and are still importable from
+  `nanopnp.pipeline.run`.
+- **Changed**: a non-finite Newton trial residual is no longer a forced step. Above the minimum damping the damping is
+  cut; at the minimum the solve restores the iterate the step started from and raises `NewtonDivergenceError`, naming
+  the residual, the iteration and the damping (NUM-16). `nanopnp validate case`, `validate case-hash`, `inspect` and
+  `plot` of a run go through `Case` and `Session`; `cli` imports nothing from `pipeline`. Their output is unchanged.
+- **Fixed**: equal cases hash equal (`-0.0` and `0.0` hashed apart); `Case.load` resolves its path once, so a run records
+  the file it read whatever the working directory; `cylinder` and `from_structure` read the corrections once; a mesh
+  whose `wall` group is empty is refused by name, not measured as an empty array; and REV-169: the Phase-1 reference
+  case and the five ClyA validation cases name their mesh beside the case file, as §5.3.1 reads a relative path.
+
 ## [0.5.0-alpha.24]
 
 WP58: documentation increment 4, Phase 4's penultimate package, a currency and plainness pass over the guide

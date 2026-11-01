@@ -185,3 +185,14 @@ print(reopened.current_nA == result.current_nA)
 
 The store must hold the run's artefacts. To compare the run with a fresh solve, use
 `nanopnp reproduce`, which re-solves in a store of its own.
+
+Two methods answer a question without a solve. `session.check(case)` checks the files the case names, resolves it and
+lists the stages a run of it would walk (`files=False` skips the file check); `session.read(directory)` reads a
+finished run's case, manifest and stage record, without opening the store. `nanopnp validate case` and
+`nanopnp inspect` call them.
+
+```python
+checked = session.check(case)
+print(checked.stages)
+print([stage.name for stage in session.read(result.directory).stages])
+```
