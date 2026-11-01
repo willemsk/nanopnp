@@ -27,7 +27,7 @@ A **compaction checkpoint** is a work item (§8.2.16 R11):
 3. End the turn. The author compacts and resumes. The next item starts from the plan and `git log`.
 
 **Sub-agent items** (§8.2.16 R6, R11). If an item's **Executor** names a sub-agent, give the item to
-a new agent of that type and model through the host mapping. Give it the item's text, its done-criterion, the
+a new agent of that type and model (Agent tool). Give it the item's text, its done-criterion, the
 plan's *Implementation details* for the item, the clauses the item cites, and this file's *How the
 work lands*. Items marked `main` stay in this session.
 
