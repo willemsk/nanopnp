@@ -57,7 +57,7 @@ def test_fr25_an_unedited_loaded_case_records_its_file_and_an_edited_one_does_no
     run = Session(store, write=False).run(loaded, upto="case")
     recorded = json.loads((next((store / "runs").iterdir()) / "manifest.json").read_text())
     assert run.manifest.case_hash == recorded["case"]["hash"]
-    assert run.manifest.case_text == CASE.read_text(encoding="utf-8")
+    assert run.manifest.case_text == CASE.read_bytes().decode("utf-8")
     assert run.manifest.inputs["files"]["case"]["path"] == str(CASE)
     edited = Session(store, write=False).run(loaded.with_(bias_V=0.1), upto="case")
     assert "case" not in edited.manifest.inputs["files"]
