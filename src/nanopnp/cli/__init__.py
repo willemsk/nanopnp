@@ -284,14 +284,20 @@ def _stage(args: argparse.Namespace) -> int:
 
 
 def _inspect(args: argparse.Namespace) -> int:
+    from nanopnp.api.session import Session
     from nanopnp.cli import reading
     from nanopnp.core.hashing import decode_floats
     from nanopnp.io.artefact import SWEEP_SCHEMA
-    from nanopnp.io.manifest import MANIFEST_FILENAME, MANIFEST_SCHEMA
+    from nanopnp.io.manifest import (
+        MANIFEST_FILENAME,
+        MANIFEST_SCHEMA,
+        RUN_RECORD_FILENAME,
+        RUN_SCHEMA,
+    )
     from nanopnp.io.manifest import read as read_manifest
-    from nanopnp.pipeline.run import RUN_RECORD_FILENAME, RUN_SCHEMA, read_run
     from nanopnp.sweep.collect import DATASET_FILENAME, read_dataset
 
+    session = Session(write=False)
     if args.other is not None:
         for given in (args.target, args.other):
             if not (Path(given) / RUN_RECORD_FILENAME).is_file():
@@ -301,7 +307,7 @@ def _inspect(args: argparse.Namespace) -> int:
                 )
         if args.section is not None:
             args.parser.error("--section reads one run; give one target")
-        payload, lines = reading.comparison(read_run(args.target), read_run(args.other))
+        payload, lines = reading.comparison(session.read(args.target), session.read(args.other))
         _emit(payload, lines, as_json=args.json)
         return EXIT_OK
 
@@ -352,10 +358,10 @@ def _inspect(args: argparse.Namespace) -> int:
         return EXIT_OK
 
     if is_run:
-        recorded = read_run(
+        recorded = session.read(
             target.parent,
-            manifest_document=document if target.name == MANIFEST_FILENAME else None,
-            record_document=document if target.name == RUN_RECORD_FILENAME else None,
+            manifest=document if target.name == MANIFEST_FILENAME else None,
+            record=document if target.name == RUN_RECORD_FILENAME else None,
         )
         if args.section is not None:
             group = recorded.manifest.document()[args.section]
@@ -405,8 +411,7 @@ def _is_region_file(path: Path) -> bool:
 
 def _plot(args: argparse.Namespace) -> int:
     from nanopnp.core.stages import MissingExtraError
-    from nanopnp.io.manifest import MANIFEST_FILENAME
-    from nanopnp.pipeline.run import RUN_RECORD_FILENAME
+    from nanopnp.io.manifest import MANIFEST_FILENAME, RUN_RECORD_FILENAME
     from nanopnp.sweep.collect import DATASET_FILENAME
 
     out = Path(args.out)
@@ -461,18 +466,21 @@ def _plot(args: argparse.Namespace) -> int:
         figure = draw(RegionArtefact(parameters={}, inputs={}, payload={"region": target}))
         stage = "region"
     elif kind == "run":
-        from nanopnp.pipeline.run import open_run
+        from nanopnp.api.session import Session
 
-        result = open_run(target, store=store)
+        recorded = Session(write=False).read(target)
+        named = recorded.record.get("store")
+        holding = store if store is not None else Store(str(named) if named else None)
+        result = Session(holding, write=False).open(target)
         if stage not in result.artefacts:
             if stage not in {record.name for record in result.stages}:
                 args.parser.error(
                     f"the run in {target} did not walk stage {stage!r}; it walked "
                     f"{', '.join(record.name for record in result.stages)}"
                 )
-            holding = result.store.root if result.store is not None else None
+            where = result.store.root if result.store is not None else None
             raise StoreError(
-                f"the store at {holding} no longer holds the {stage!r} artefact of the run in "
+                f"the store at {where} no longer holds the {stage!r} artefact of the run in "
                 f"{target}; point --store at the store the run used, or run it again"
             )
         figure = result.figure(stage)
@@ -812,25 +820,22 @@ def _validate(args: argparse.Namespace) -> int:
 
 
 def _validate_case(args: argparse.Namespace) -> int:
-    from nanopnp.pipeline.case import load_case, resolve
-    from nanopnp.pipeline.checks import check_referenced_files
-    from nanopnp.pipeline.run import selected_stages
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
 
-    document = load_case(args.case)
-    base = Path(args.case).resolve().parent
-    if not getattr(args, "schema_only", False):
-        check_referenced_files(document, base=base)
-    resolved = resolve(document, base=base)
-    stages = selected_stages(resolved, None)
+    case = Case.load(args.case)
+    checked = Session(write=False).check(case, files=not getattr(args, "schema_only", False))
+    resolved = checked.resolved
+    stages = checked.stages
     payload: dict[str, Canonicalisable] = {
-        "case": document.name,
+        "case": case.name,
         "valid": True,
         "model": resolved.model,
         "stabilisation": resolved.stabilisation,
         "stages": list(stages),
     }
     lines = [
-        f"case          {document.name}: valid",
+        f"case          {case.name}: valid",
         f"model         {resolved.model}",
         f"stabilisation {resolved.stabilisation}",
         f"stages        {' '.join(stages)}",
@@ -868,13 +873,14 @@ def _validate_export_grid(args: argparse.Namespace) -> int:
 
 
 def _validate_case_hash(args: argparse.Namespace) -> int:
-    from nanopnp.pipeline.case import load_case, resolve
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
     from nanopnp.validation.comsol import case_identity
 
-    document = load_case(args.case)
-    identity = case_identity(resolve(document, base=Path(args.case).resolve().parent))
-    payload: dict[str, Canonicalisable] = {"case": document.name, "case_hash": identity}
-    _emit(payload, [f"case      {document.name}", f"case_hash {identity}"], as_json=args.json)
+    case = Case.load(args.case)
+    identity = case_identity(Session(write=False).check(case, files=False).resolved)
+    payload: dict[str, Canonicalisable] = {"case": case.name, "case_hash": identity}
+    _emit(payload, [f"case      {case.name}", f"case_hash {identity}"], as_json=args.json)
     return EXIT_OK
 
 
