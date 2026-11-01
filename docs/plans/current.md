@@ -1,6 +1,6 @@
 # Current work
 
-Updated 1 November 2026 (Phase 4 amended: the architecture review's fixes become WP59; the close is WP60).
+Updated 1 November 2026 (WP59 planned: the architecture review's fixes; the close is WP60).
 Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
@@ -27,9 +27,9 @@ One line per lane (§8.4.4).
   **in progress**. WP35 to WP58 are merged, WP58 at `dd45e59`. **`v0.5.0-alpha.24`, WP58's, is the author's to
   push** if no session has (origin holds up to alpha.23; §8.4.1). The sixth amendment (§8.2.27) takes the author's
   architecture review, checked in [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md): **WP59**, its fixes and
-  REV-169, is **planned, provisional** (`v0.5.0-alpha.25`); then **WP60**, the close, `v0.5.0` alone. REV-170 is
-  Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4). Next: `/np-plan wp 59`, seeded by the
-  review's execution plan.
+  REV-169, is **planned** ([plan](wp59-architecture-review-fixes.md), its PR open; `v0.5.0-alpha.25`); then
+  **WP60**, the close, `v0.5.0` alone. REV-170 is Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4).
+  Next: `/np-implement wp 59`. host: claude-code.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane: [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged before `v0.5.0`. The
   first amendment (§8.2.28) orders, after WP5.02's spike, four library packages: WP5.03 protonation before the
@@ -87,7 +87,7 @@ One line per lane (§8.4.4).
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
 | The notebooks and the protocol | `wp54-notebooks-and-figures-revised.md`, `wp55-user-testing-protocol.md`; §8.2.20; FR-30, FR-37 |
 | The fixes | `wp56-command-line-read-by-a-person.md`, `wp57-idealised-pore-and-python-interface.md`; `docs/user-testing/findings.md`; §8.2.21, §8.2.22 |
-| The last two packages | The Phase 4 plan's WP59 and WP60 entries; §8.2.27; `CODE_REVIEW_024.md` and its execution plan |
+| The last two packages | `wp59-architecture-review-fixes.md`; the Phase 4 plan's WP60 entry; §8.2.27; `CODE_REVIEW_024.md` |
 | The workbench | `phase-5-workbench.md`; §8.2.17, §8.2.28; M3; F5 |
 
 ## Handoff Rules
