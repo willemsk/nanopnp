@@ -271,10 +271,17 @@ Each item is outside the test scope: done when the strict build passes and the r
   > own receives an `Artefact`, read through `.summary`. Every name on the page is a key of
   > `nanopnp.PUBLIC` (`Case`, `Session`, `CancelFlag`, `Artefact`; `Cancelled`, `RunResult` and
   > `SweepResult` are named in prose); the strict build passes.
-- [ ] 6. `docs/guide/notebooks.md`, its `mkdocs.yml` entry and its guide-index row (D3); done also
+- [x] 1584fe4 6. `docs/guide/notebooks.md`, its `mkdocs.yml` entry and its guide-index row (D3); done also
   when each of the six links resolves. **Executor:** `general-purpose`, Sonnet
 - [ ] 7. `docs/getting-started.md` and `docs/guide/{meshes,provenance}.md`: the help pointers, the
   causes of a run that does not reproduce, the naming consistent (D4). **Executor:** main
+
+  > **Outcome — help pointers, reproduce causes, one name.** Getting started and Meshes point at
+  > `nanopnp geometry cylinder --help` and `nanopnp mesh --help`; Provenance names the three causes
+  > as `nanopnp reproduce --help` states them. `nanopnp --env` is named once, as the alias, in
+  > Getting started; `docs/reference/corrections.md` said `nanopnp --env` for the command and now
+  > says `nanopnp env`, one page beyond D1's list, for the same one-name rule. The notebooks page
+  > lost a sentence that claimed every README states its cost; two of six do. The strict build passes.
 - [ ] 8. `examples/*/README.md` and `docs/examples/index.md`: prose, titles and index rows, no
   tagged block and no number touched (D1, D4). **Executor:** `general-purpose` on Sonnet
 - [ ] 9. Compaction checkpoint. **Executor:** main

@@ -54,7 +54,7 @@ nanopnp env
 
 `nanopnp env` prints the version and the Python interpreter. It also prints where the correction
 data files are, and where artefacts will be stored: the directory `$NANOPNP_STORE` names, or
-`nanopnp-store/` in the working directory. `nanopnp --env` is the same command.
+`nanopnp-store/` in the working directory. `nanopnp --env` is an alias of the same command.
 
 ## Your first run
 
@@ -77,3 +77,7 @@ A run writes two kinds of output:
 
 `nanopnp inspect <run directory>` reads a run back, and `nanopnp reproduce <run directory>`
 re-solves it and checks that every number comes back.
+
+To write a pore or a mesh of your own, `nanopnp geometry cylinder --help` lists the flags that size the
+pore, and `nanopnp mesh --help` lists the flags that size the mesh; the two sets are separate
+([Meshes](guide/meshes.md)).
