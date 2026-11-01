@@ -69,15 +69,21 @@ is a fixed path, a case that switches the flow or its terms off is refused under
 `numerics.continuation: none` for such an ablation (the NUM-18 NOTE). A sweep continues the same way
 across its points: each member starts from a converged neighbour.
 
-## Store and file resolution
+## The store and the case's files
 
-By default, the artefact store resides at `./nanopnp-store` relative to the current working directory, configurable via `--store` or the `NANOPNP_STORE` environment variable. Relative paths referenced within case files (such as `inputs.mesh.path` or structure paths) resolve relative to the current working directory from which `nanopnp` is invoked, rather than relative to the case file itself. Run `nanopnp env` to inspect the resolved store directory and data paths.
+The artefact store is `nanopnp-store/` in the working directory. `--store` or `$NANOPNP_STORE`
+names another. The files a case names by a relative path are read beside the case file, so the
+working directory chooses the store and nothing else ([Case files](case-files.md)). `nanopnp env`
+prints the store and the data locations a run would use.
 
-## Multithreading and CPU concurrency
+## Threads and cost
 
-NGSolve and underlying BLAS/LAPACK libraries use OpenMP and multithreading for linear algebra and finite-element assemblies. By default, NGSolve attempts to utilise all available CPU cores on the host, which can saturate shared compute nodes or container allocations.
+NGSolve and the linear algebra libraries under it use every core of the host unless told otherwise.
+`nanopnp run --threads <N>` sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` to
+`N` before those libraries start; setting the three in the shell or the submission script does the
+same. A sweep run with more than one worker pins each worker to one thread, so `--workers` sets how
+many cores a sweep uses.
 
-To restrict thread usage:
-- Pass `--threads <N>` to `nanopnp run` (e.g. `nanopnp run case.yaml --threads 4`). This sets `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, and `MKL_NUM_THREADS` before compute libraries initialise.
-- Alternatively, set the `OMP_NUM_THREADS` environment variable in your shell or submission script.
-- Parameter sweeps launched via `nanopnp sweep run` automatically pin worker thread counts to 1 to ensure linear scaling across independent processes.
+A solve takes seconds on the coarse meshes of the examples. On a fine mesh it takes minutes to
+tens of minutes, and most of that time goes to assembling and factorising the system. Measured
+timings are in [`cost-study.json`](../project/cost-study.json).
