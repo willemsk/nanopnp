@@ -7,7 +7,7 @@ each example asserts a property of the model rather than a transcribed number (V
 
 | Example | For | Shows |
 |---|---|---|
-| [01 Quick start](../_generated/examples/01-quickstart.md) | anyone new | mesh, run, inspect and reproduce one case |
+| [01 Quick start](../_generated/examples/01-quickstart.md) | anyone new | run, inspect and reproduce one case, which declares its own pore |
 | [02 A charged pore](../_generated/examples/02-charged-pore.md) | P2 | a supplied fixed-charge field; ePNP-NS against classical PNP-NS; deviations |
 | [03 An I–V sweep](../_generated/examples/03-iv-sweep.md) | P2 | sweeps, waves, rectification, and a symmetric control |
 | [04 The Python API](../_generated/examples/04-python-api.md) | P1 | the public API, hand substitution, and reading exported fields |
@@ -21,8 +21,8 @@ step runs on every push. Example 06 builds a mesh from a structure in about a mi
 nothing. Example 07 takes the same structure to a charged solve, on a mesh coarsened for runtime,
 in about five minutes on one core.
 
-To run one, copy its directory and run its commands from inside it. Case paths resolve against the
-working directory.
+To run one, copy its directory and run its commands from inside it. A case reads its files beside
+the case file, so the copy keeps each case next to the files it names.
 
 !!! note "No number here is a prediction"
     The idealised pore's meshes are the smallest the solver accepts, chosen to be quick, not

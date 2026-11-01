@@ -83,8 +83,8 @@ builds the dataset from the member records on disk, and any it cannot find are l
 dispatched. [Example 05](../_generated/examples/05-clya-reference.md) renders a complete SLURM
 submission for the Phase-1 reference sweep.
 
-The members' case paths resolve against the working directory (see [Case files](case-files.md)),
-so run the members from the directory the base case's paths are written relative to.
+A member reads its case paths beside the base case file (see [Case files](case-files.md)), so an
+array element can start in any directory.
 
 ## Rectification
 

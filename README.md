@@ -41,7 +41,7 @@ that can reconstruct the run.
   `nanopnp reproduce` re-solves a run and checks every number.
 - **Sweeps and clusters.** Any case field can be swept. Each point is an independent job that
   starts from a converged neighbour, so a sweep maps directly onto an HPC job array.
-- **Three ways in.** The `nanopnp` command line, a Python API of twenty stable names, and a PySide6
+- **Three ways in.** The `nanopnp` command line, a Python API of nineteen stable names, and a PySide6
   desktop shell with live convergence plots and a field viewer.
 - **Comparable with the reference.** A reference-matching stabilised mode, and a Tier-3
   comparison against the paper's published current–voltage relationships and in-pore averages.
@@ -53,7 +53,9 @@ desktop shell, and the user documentation with seven worked examples are impleme
 Meshes are supplied from outside, generated for an idealised pore or the ClyA reference geometry,
 or built from a PDB structure by the geometry pipeline (Phase 2). Fixed charge is supplied as a
 field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the charge pipeline
-(Phase 3, v0.4). Nothing is a validated release yet. The comparison against the paper's published results gates v0.7.
+(Phase 3, v0.4). The Python interface, built on a case and the session that runs it, and the
+figures and notebooks belong to v0.5 (Phase 4), which is in progress and not yet tagged. Nothing is
+a validated release yet. The comparison against the paper's published results gates v0.7.
 The case schema and the Python API may still change until the stable v1.0 (`SPECIFICATION.md` §8.2.6 F4).
 
 | Release | Phase | Scope | State |
@@ -62,7 +64,7 @@ The case schema and the Python API may still change until the stable v1.0 (`SPEC
 | v0.2 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.2.0`](CHANGELOG.md#020---2026-09-24) |
 | v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
 | v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | **released**, [`v0.4.0`](CHANGELOG.md#040---2026-10-04) |
-| v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | planned |
+| v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | **in progress**, not yet tagged |
 | v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the desktop application | planned |
 | v0.7 | 6 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 | v1.0 | — | Stable release: the API stability promise; its content is the author's to define | planned |
@@ -88,7 +90,9 @@ default install is the solver core and uses binary wheels only. The extras add:
 | Extra | Adds |
 |---|---|
 | `gui` | The PySide6 desktop shell, `nanopnp-gui` |
-| `examples` | Matplotlib, for the worked examples' plots |
+| `plot` | Matplotlib, for the figures of a run (`nanopnp plot`) |
+| `notebook` | The `plot` extra and marimo, for the [notebooks](notebooks/) |
+| `examples` | The `plot` extra, for the worked examples' plots |
 | `structure` | The structure-to-mesh pipeline's dependencies (v0.3), and PDB2PQR for the charge pipeline (v0.4) |
 | `gmsh` | The optional gmsh mesher backend (GPL-2+, never on the default path) |
 
@@ -117,7 +121,7 @@ naming only `--group docs` would uninstall the extras).
 
 ## Documentation
 
-The documentation covers a user guide, the five worked examples, and generated case-file,
+The documentation covers a user guide, the seven worked examples, and generated case-file,
 command-line and API references. It is built from [`docs/`](docs) with MkDocs and will be hosted at
 [nanopnp.readthedocs.io](https://nanopnp.readthedocs.io/) once that project is connected. The
 model pages render the specification and the knowledge base verbatim.
@@ -127,7 +131,7 @@ model pages render the specification and the knowledge base verbatim.
 | [`SPECIFICATION.md`](SPECIFICATION.md) | Requirements, physics, design, numerics and V&V plan |
 | [`CHANGELOG.md`](CHANGELOG.md) | Every tagged version, and what each work package delivered |
 | [`knowledge/`](knowledge/index.md) | Verified knowledge base: physics, numerics, biology, tooling |
-| [`examples/`](examples) | Five worked examples, each executed by a test |
+| [`examples/`](examples) | Seven worked examples, each executed by a test |
 | [`docs/`](docs) | The documentation site's sources (`mkdocs.yml` at the root) |
 | [`data/corrections/`](data/corrections) | Fitted correction parameters, one file per electrolyte |
 | [`docs/validation/`](docs/validation) | The COMSOL field-comparison surface, kept but not required: the frozen cases, the probe grid, and the export contract |

@@ -12,5 +12,5 @@ code it describes, so it cannot drift from it (VER-45):
 | [Python API](../_generated/reference/api.md) | the docstrings of the public surface, `nanopnp.__all__` |
 | [Shipped parameter files](../_generated/reference/correction-files.md) | `data/corrections/*.yaml`, verbatim |
 
-A Tier-1 test asserts each generated page against its source in both directions: a field, a
-command, an exit class or a public name the page omits fails it, and so does one the page invents.
+The pages are rendered from the live objects each time the site is built, and they are read against
+their sources at review (VER-45).

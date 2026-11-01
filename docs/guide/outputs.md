@@ -44,3 +44,19 @@ solid. Values are SI, at the P2 node set, with each unit in the attribute's name
 `c_<species>_mol_m3`, `u_m_s`, `p_Pa`, and `wall_distance_nm`. Coordinates are in nm. The
 azimuthal `2π` is not applied, because exported fields are pointwise (the IF-07 NOTE). ParaView and
 meshio read them; [example 04](../_generated/examples/04-python-api.md) does so from Python.
+
+## Figures
+
+`nanopnp plot` draws the figure of a stage to a PNG, SVG or PDF file; the suffix of `--out` names the
+format. It needs the `plot` extra.
+
+```console
+$ nanopnp plot run solve --out solve.png
+$ nanopnp plot quickstart.case.yaml mesh --out mesh.svg --store store
+```
+
+The first argument is a run directory, a case file or a sweep directory. A run draws its solve by
+default; a case file needs the stage named, and its upstream stages are served from the store or
+computed. A sweep directory draws its collected dataset and takes no stage. Every stage has a figure
+except `case` and `report`; `nanopnp stage --list` lists the stages. In Python the same figures are
+methods of the result.

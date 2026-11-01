@@ -68,17 +68,18 @@ Every field has a dotted path: `electrolyte.concentration_M`, `boundary_conditio
 from the same walk over the schema, so the reference, the editor and a sweep can never disagree about
 what a field is called.
 
-## Paths in a case resolve against the working directory
+## A case's paths are read beside the case file
 
-`inputs.mesh.path` and the other input paths are resolved against the **working directory of the
-process**, not the directory of the case file. The sweep runner never changes directory, so a
-member cannot silently read a different mesh from the one the plan was built against. Run a case
-from the directory its paths are written relative to, as every worked example does.
+A relative path in a case is read beside the case file, not in the directory the command runs from.
+That covers `inputs.*.path`, `structure.source.path`, `structure.ensemble.trajectory` and a
+correction file named by path. A case reads the same files from any working directory, and so do
+its edited copies, the members of a sweep over it and a reproduction of it.
 
-The Python `Case.load` is the exception: it makes each relative input path absolute beside the case
-file, so a script or notebook runs from any directory, and the case it holds, its hash and its manifest
-carry the absolute paths. A path set afterwards, with `Case.with_` or as an edit to `Case.run`, is read
-against the working directory as everywhere else, so write it absolute.
+`Case.load` keeps the directory of the file it read. An edit with `Case.with_` makes each relative
+path absolute against that directory, a path the edit sets included, so a path the edit names is
+read where every other path of that case is read. The manifest records the absolute paths. Only a
+case that never had a file, one built by `Case.cylinder` or `Case.loads`, reads a relative path
+against the working directory (§5.3.1).
 
 ## Correction parameter files
 

@@ -4,11 +4,12 @@
 
 | Command | Does |
 |---|---|
-| `nanopnp run case.yaml` | Walks the pipeline for one case and writes a run directory |
+| `nanopnp run case.yaml` | Walks the pipeline for one case and writes a run directory; `--progress` prints each stage and solver rung to standard error as it starts, which is the default on a terminal, and `--no-progress` stops it |
 | `nanopnp stage <name> case.yaml` | Runs one stage and the stages it reads, and prints its artefact; `--only` refuses to compute anything upstream |
 | `nanopnp stage --list` | Lists the stages, without importing any of them |
 | `nanopnp inspect <path>` | Reads a run directory, a stored artefact or a record back |
 | `nanopnp reproduce <run>` | Re-solves an archived run in a fresh store and compares every scalar (QR-08) |
+| `nanopnp plot <case, run or sweep> [stage] --out <file>` | Draws a stage's figure to a PNG, SVG or PDF file; needs the `plot` extra ([Outputs and quantities](outputs.md#figures)) |
 | `nanopnp geometry cylinder` | Writes an idealised pore as a geometry file ([Meshes](meshes.md)) |
 | `nanopnp mesh <geometry file>\|reference` | Writes a gated mesh ([Meshes](meshes.md)) |
 | `nanopnp sweep plan\|run\|collect` | Plans, dispatches and collects a sweep ([Sweeps](sweeps.md)) |
