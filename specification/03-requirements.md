@@ -136,7 +136,10 @@ directory, the workspace and `overwrite_workspace`) and which stages exist, its 
 each run takes its own controls. `session.run(case, upto=, only=, progress=, cancel=, on_stage=,
 on_solve=, on_artefact=)` walks the pipeline, and with `only` runs one stage alone on its stored
 inputs (FR-27); `session.sweep` sweeps a case as a sweep file does; `session.open(directory)` reads a
-recorded run back; `session.stages` describes each stage it walks by name, number, inputs and
+recorded run back; `session.check(case)` resolves a case as a run would, checking the files it names,
+and lists the stages a run walks, without running one; `session.read(directory)` reads a run
+directory's case, manifest and record, without its store; `case.source` is the text, file and base
+directory a run of the case records; `session.stages` describes each stage it walks by name, number, inputs and
 summary keys. The command line, the shell, the sweep runner and reproduction run through a
 `Session`, so no caller has a route of its own. A `RunResult` draws its figures (`figure`,
 `plot_field`, `plot_cutline`), and a sweep's result its current–voltage curve (`plot_iv`). Each job
