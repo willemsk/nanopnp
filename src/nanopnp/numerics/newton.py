@@ -125,7 +125,10 @@ class NewtonResult:
 
 
 class NewtonDivergenceError(RuntimeError):
-    """Newton reached its iteration cap without meeting the tolerance."""
+    """Newton stopped without converging.
+
+    It stops at its iteration cap, or on a non-finite trial residual at minimum damping.
+    """
 
 
 def _largest_update(ratios: Sequence[float]) -> float:
@@ -243,9 +246,18 @@ def damped_newton(
                 continue
 
             trial_residual = residual_norm()
+            if not math.isfinite(trial_residual):
+                if at_minimum:
+                    solution.vec.data = previous
+                    raise NewtonDivergenceError(
+                        f"damped Newton step {iteration} reached a non-finite trial residual "
+                        f"({trial_residual}) at the minimum damping {damping:.3g}; the state is "
+                        f"restored to the iterate the step started from, residual {current:.3e} "
+                        "(NUM-16)"
+                    )
+                damping = max(settings.minimum_damping, damping * settings.recovery_damping)
+                continue
             if trial_residual < current or at_minimum:
-                # ``not <``, not ``>=``: a NaN trial residual is a forced step,
-                # which can never be taken as convergence on the update alone.
                 forced = not trial_residual < current
                 break
             damping = max(settings.minimum_damping, damping * settings.recovery_damping)

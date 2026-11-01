@@ -304,6 +304,11 @@ REV-08). A step that failed to reduce the residual never counts as convergence. 
 be finite and lie in (0, 1) and `max_iter` SHALL be at least 1, because the update test can never pass
 for a NaN `rtol` and every rung would then report a divergence the case caused.
 
+NOTE on a non-finite trial residual (§8.2.27 AC2). A trial step whose residual is NaN or infinite is a broken
+state, not a step that fails to reduce the residual, so the acceptance above does not reach it. Above the minimum
+damping it cuts the damping as a rejected trial does; at the minimum the solve restores the iterate the step started
+from and raises a divergence naming the residual, the iteration and the damping.
+
 **NUM-17.** The following SHALL be asserted at every Newton step, and a violation SHALL abort the
 solve with a diagnostic naming the field and the spatial location:
 
