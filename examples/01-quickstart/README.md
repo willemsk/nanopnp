@@ -1,4 +1,4 @@
-# 01 · Quick start: mesh, run, inspect, reproduce
+# 01 · Quick start: run, inspect, reproduce
 
 **For:** anyone new to nanopnp; the collaborating computational scientist (P2) who runs
 case files from the command line.

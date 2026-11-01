@@ -56,8 +56,7 @@ $ python render_slurm.py phase1/plan.json --workdir ../.. --store store --out ph
   at or above its `MaxArraySize` (1001 by default) and this sweep's indices run to 3,674. A
   member's exit code is its own (the IF-02 exit NOTE). The dependency is `afterany`, because a member that fails to
   converge at a hard corner is a result, not a broken dispatch, and its children fall back to the
-  full ladder and record why. `--workdir` is where the members run. The base case names its mesh
-  from the repository root, so that is the working directory here.
+  full ladder and record why. `--workdir` is where the members run.
 - Review both files, set your account and partition, then `bash phase1.sh` on the login node.
   When the arrays finish, `nanopnp sweep collect phase1/plan.json --csv` builds the dataset from
   the member records.
