@@ -11,8 +11,8 @@ the geometry pipeline: structure, density, symmetry, contour, region and mesh. T
 the mesh, so nothing is solved. Along the way you export what the stages store, in formats other
 tools read, and feed the pore profile back in as an input.
 
-Run every command from this directory. Paths in the case files resolve against the working
-directory, not against the case file. In a development checkout, put `uv run` in front of each
+Run every command from this directory. A relative path in a case file is read beside the
+case file. In a development checkout, put `uv run` in front of each
 command.
 
 ## The deposited entry is refused

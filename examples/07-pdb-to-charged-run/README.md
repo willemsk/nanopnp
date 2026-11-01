@@ -13,8 +13,8 @@ and PROPKA and deposits its charge on the mesh, and then solves. Along the way y
 charges and the charge density, feed the charges back in, turn on the two FR-15 switches, and
 watch a gate refuse a shortcut.
 
-Run every command from this directory. Paths in the case files resolve against the working
-directory, not against the case file. In a development checkout, put `uv run` in front of each
+Run every command from this directory. A relative path in a case file is read beside the
+case file. In a development checkout, put `uv run` in front of each
 command.
 
 ## Walk the pipeline to a charged solve

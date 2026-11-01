@@ -273,7 +273,7 @@ Each item is outside the test scope: done when the strict build passes and the r
   > `SweepResult` are named in prose); the strict build passes.
 - [x] 1584fe4 6. `docs/guide/notebooks.md`, its `mkdocs.yml` entry and its guide-index row (D3); done also
   when each of the six links resolves. **Executor:** `general-purpose`, Sonnet
-- [ ] 7. `docs/getting-started.md` and `docs/guide/{meshes,provenance}.md`: the help pointers, the
+- [x] 28c6fa2 7. `docs/getting-started.md` and `docs/guide/{meshes,provenance}.md`: the help pointers, the
   causes of a run that does not reproduce, the naming consistent (D4). **Executor:** main
 
   > **Outcome — help pointers, reproduce causes, one name.** Getting started and Meshes point at
