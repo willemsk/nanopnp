@@ -2133,6 +2133,10 @@ the repository root. A relative path is read beside the case file (§5.3.1, the 
 the sweep looks for `docs/sweeps/docs/sweeps/clya-reference.msh`. The mesh is not checked in, so no gate reads the path and
 this was read from the code, not run.
 
+The five `docs/validation/cases/clya-*.case.yaml` files carry the same path and the same header comment, and the comment in
+`docs/scripts/capture_gui.py` (line 56) states the same stale rule; they belong to the same fix. `docs/sweeps/README.md` said
+the same and now points here.
+
 WP58 changes no case file (D1: a case hash and VER-62's golden stand), and example 05's README no longer asserts either rule.
 The fix is an edit of the case file's path to `clya-reference.msh` and of its comment, in a later package that may re-pin a
 hash; a tier 1 test that plans the sweep from another directory would be in the test scope only if it guards a mechanism.
