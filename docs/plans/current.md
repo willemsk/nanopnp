@@ -1,6 +1,6 @@
 # Current work
 
-Updated 31 October 2026 (WP58 planned; the last two packages of Phase 4 settled, §8.2.24).
+Updated 1 November 2026 (WP58 implemented, waiting for its review; then the close, WP59).
 Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
@@ -8,16 +8,16 @@ Navigation only;
 
 Phase 4 tidies the program before others rely on it: the author has run the testing sessions and ruled
 what they found; both fixes are done, a readable command line and then a pore's shape set apart from
-its mesh, with the Python interface rebuilt on a case and the session that runs it. Two packages are
-left and they end the phase. The first is planned: the written guide brought level with the
+its mesh, with the Python interface rebuilt on a case and the session that runs it. Two packages end
+the phase. The first is done and awaits its review: the written guide brought level with the
 program, every untrue statement in it corrected, a page on driving the program from Python and one
 listing the notebooks. Then the close, which settles every finding, measures the report's numbers
 again and names the release. Phase 5, a browser workbench, has its design study merged; nothing is
 built until that release is out.
 
-**Your call:** nothing waits on you. Two questions sit in the new plan for your awareness only,
-each with a recommendation: whether the site should stop calling itself pre-alpha now, and how wide
-the examples' prose revision should read.
+**Your call:** nothing waits on you. One finding is open for your ruling: a sample sweep file writes
+its mesh location from the wrong place, and a later package corrects it. *Recommendation:* in the close,
+if it may touch a case file.
 
 ## Position
 
@@ -25,18 +25,20 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress**. WP35 to WP57 are delivered; WP57
+  **in progress**. WP35 to WP58 are delivered; WP57
   ([plan](wp57-idealised-pore-and-python-interface.md),
   [CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)) is merged at `8a3488c`.
   **`v0.5.0-alpha.23` is the author's to push**: `/np-ship wp 57` was refused on the tag ref (403,
   while branch pushes went through), as §8.4.1 allows; the commands are in that session's report.
   The sessions' findings are ruled (§8.2.21), and the phase's last two packages are planned
   (§8.2.24):
-  **WP58**, documentation increment 4, tagged `v0.5.0-alpha.24`, then **WP59**, the close, tagged
-  `v0.5.0` alone. [WP58's plan](wp58-documentation-increment-4.md) is in: prose and navigation
-  only, no `src/` file and no number re-pinned, a currency sweep of six checks, a Python interface
-  page and a notebooks page. `duplicates.py` passes on the merged `main`, both lanes in (§8.4.4).
-  Next: `/np-implement wp 58`; the alpha.23 tag does not block it.
+  **WP58**, documentation increment 4, is **implemented** on its branch and waits for `/np-ship wp 58`, which
+  merges it and gets `v0.5.0-alpha.24`; then **WP59**, the close, tagged `v0.5.0` alone.
+  [WP58's plan](wp58-documentation-increment-4.md) is delivered: prose and navigation only, no `src/`
+  file and no number re-pinned, a currency sweep of six checks, a Python interface page and a notebooks
+  page; **REV-169**, a reference-sweep case file whose mesh path is written against the working
+  directory, is open. `duplicates.py` passes (§8.4.4). Next: `/np-ship wp 58`; the alpha.23 tag does
+  not block it.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane: [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged
   before `v0.5.0`; WP5.02, the spike, comes after it.

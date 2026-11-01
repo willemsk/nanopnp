@@ -59,6 +59,26 @@ Outside the package sequence: the workflow also runs on the GitHub Copilot app (
 - **Changed**: `gate.sh` refuses with one exit-0 structured denial on both hosts and refuses a string
   payload's push (§8.2.26 AB1); `format.sh`, `session-start.sh` and `adapter.sh` take Copilot's shapes.
 
+## [0.5.0-alpha.24]
+
+WP58: documentation increment 4, Phase 4's penultimate package, a currency and plainness pass over the guide
+(`SPECIFICATION.md` §8.2.24 Z1 to Z4; §8.2.21 W1, W6; UT-02, UT-05, UT-08, UT-09, UT-11). WP59 gathers its changes
+into `[0.5.0]`. No `src/`, `tests/`, `data/`, case file or tagged block changes, so no case hash and no recorded
+number moves. It claims no identifier. The
+[plan](docs/plans/wp58-documentation-increment-4.md) records the work.
+
+- **Added**: `docs/guide/python.md`, the narrative of the Python interface (build a case, run it through a session,
+  read the result, draw its figures, sweep, a stage of one's own, reopen a run), every snippet run once;
+  `docs/guide/notebooks.md`, the six notebooks with the command that opens each; a figures section in
+  `docs/guide/outputs.md`; the `plot` and `--progress` rows of the running page. REV-169 records one open item.
+- **Changed**: the site banner, `docs/index.md` and `README.md` give the v0.5 scope as in progress and not yet
+  tagged; the guide states that a relative path in a case file is read beside it (§5.3.1), not against the working
+  directory; the extras are listed in full; example 01 is three commands; the logs say that each row is read at
+  review, the withdrawn VER-63 test being gone; the running page, the getting-started page, the meshes page and the
+  provenance page point at each command's help and name the causes of a run that does not reproduce.
+- **Fixed**: the review register's `areas` lists `provenance` and `tooling`; the project index names all its pages;
+  the reference index no longer claims a test that is gone.
+
 ## [0.5.0-alpha.23]
 
 WP57: an idealised pore as geometry, and the Python interface rebuilt on a `Case` and a `Session`

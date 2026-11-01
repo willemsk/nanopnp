@@ -190,3 +190,4 @@ is a rolling register, and its header stays `open`.
 | REV-166 | process | medium | accepted | §8.2.25 AA6 | [The Copilot hook probes are incomplete](review-items.md#rev-166-the-copilot-hook-probes-are-incomplete) |
 | REV-167 | process | low | accepted | §8.2.25 AA6 | [Six Copilot app behaviours the substitutes assume are unchecked](review-items.md#rev-167-six-copilot-app-behaviours-the-substitutes-assume-are-unchecked) |
 | REV-168 | process | medium | accepted | §8.2.25 AA6 | [The Copilot host has not been verified live](review-items.md#rev-168-the-copilot-host-has-not-been-verified-live) |
+| REV-169 | documentation | low | open | [WP58](../plans/wp58-documentation-increment-4.md) | [The Phase-1 reference sweep's base case writes its mesh path against the working directory](review-items.md#rev-169-the-phase-1-reference-sweeps-base-case-writes-its-mesh-path-against-the-working-directory) |
