@@ -1204,6 +1204,13 @@ and 0.64 % (limit 10 %): every verdict holds. A1's method is unchanged and its 1
 The row stays open until the Phase 4 close re-runs `python -m nanopnp.validation.costs all` on a clean
 tree, replaces the record and sets it `fixed`.
 
+**Fixed in WP60:** the quick-start leg walked the removed `nanopnp mesh cylinder`, so the leg now walks
+the shipped case (`validation/costs.py`). `python -m nanopnp.validation.costs all` ran on the clean
+commit `db952e3`, four CPUs, threads unset (`"dirty": false` in every environment block), and replaced
+the record. A1 projects 1.15 GB of stage 1 at 1,000 frames (limit 4 GB). A8 is 0.69 % on the quick-start
+walk and 0.03 % on 2WCD (limit 5 %). A16 is 0.84 % and 0.70 % (limit 10 %). No share is over its
+threshold, so no cost fix follows (§8.2.12 M2).
+
 ## REV-117: Tooling left without tests by the test scope
 
 WP50 deleted the tests of the OKF checker (`validation/okf.py`), the findings-log reader, the plan

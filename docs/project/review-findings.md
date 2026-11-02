@@ -137,7 +137,7 @@ is a rolling register, and its header stays `open`.
 | REV-113 | interface | low | fixed | [WP49 plan](../plans/wp49-cost-study.md) | [The case schema has no JSON Schema export](review-items.md#rev-113-the-case-schema-has-no-json-schema-export) |
 | REV-114 | interface | medium | fixed | §8.2.18 T5 | [The shell moves from Qt to a browser](review-items.md#rev-114-the-shell-moves-from-qt-to-a-browser) |
 | REV-115 | process | low | declined | §8.2.12 M1 | [The architecture review's already-met claims](review-items.md#rev-115-the-architecture-reviews-already-met-claims) |
-| REV-116 | verification | low | open | — | [The cost record predates the harness fixes](review-items.md#rev-116-the-cost-record-predates-the-harness-fixes) |
+| REV-116 | verification | low | fixed | [WP60](../plans/wp60-phase-4-close.md) | [The cost record predates the harness fixes](review-items.md#rev-116-the-cost-record-predates-the-harness-fixes) |
 | REV-117 | process | low | fixed | — | [Tooling left without tests by the test scope](review-items.md#rev-117-tooling-left-without-tests-by-the-test-scope) |
 | REV-118 | verification | medium | fixed | §8.2.13 N1 | [Gate and mechanism tests the pruning removed](review-items.md#rev-118-gate-and-mechanism-tests-the-pruning-removed) |
 | REV-119 | verification | low | declined | [CODE_REVIEW_010](../code_reviews/CODE_REVIEW_010.md) | [The analyte benchmark meshes skip the quality gate](review-items.md#rev-119-the-analyte-benchmark-meshes-skip-the-quality-gate) |
