@@ -92,7 +92,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * G11 - §8.4.1
 * G12 - spent
 * H1 - spent
-* H2 - open: the user-testing sessions rule `MOD-11`
+* H2 - spent
 * H3 - QR-13, §5.4.1 NOTE, VER-65
 * H4 - spent (deferred to Phase 5)
 * H5 - spent (post-1.0)
@@ -204,56 +204,56 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * U5 - open: WP5.02
 * U6 - FR-38
 * U7 - open: WP5.02
-* V1 - FR-37; open: WP54
-* V2 - open: WP54
-* V3 - open: WP54
-* V4 - FR-30; open: WP54
+* V1 - FR-37
+* V2 - spent
+* V3 - spent
+* V4 - FR-30
 * V5 - the WP54 plan
-* V6 - FR-30; open: WP54
-* V7 - open: WP54
+* V6 - FR-30
+* V7 - spent
 * V8 - the WP54 plan
-* V9 - open: WP54
-* V10 - open: WP54
-* V11 - open: WP54
-* V12 - FR-30; open: WP54
+* V9 - spent
+* V10 - spent
+* V11 - spent
+* V12 - FR-30
 * V13 - REV-149
 * V14 - REV-150
 * V15 - REV-151
 * V16 - FR-30; REV-147, REV-148
 * V17 - REV-152
-* W1 - the Phase 4 plan; open: WP56, WP57
-* W2 - IF-02's NOTE on reading; open: WP56
-* W3 - FR-28, FR-44; open: WP56
-* W4 - open: WP56 (the command line); its `Case.run` clause superseded by Y4
-* W5 - QR-12's NOTE on the remedy; open: WP56
-* W6 - open: WP56; documentation increment 4
+* W1 - the Phase 4 plan
+* W2 - IF-02's NOTE on reading
+* W3 - FR-28, FR-44
+* W4 - spent; its `Case.run` clause superseded by Y4
+* W5 - QR-12's NOTE on the remedy
+* W6 - documentation increment 4
 * W7 - superseded by Y1 to Y10
-* W8 - REV-156; open: WP56
-* X1 - IF-02's generators NOTE, QR-12's NOTE on the remedy, §5.3.1's NOTE on an idealised pore, VER-32; open: WP57
-* X2 - IF-02's generators NOTE, VER-32; open: WP57
-* X3 - PHY-09, VER-77; open: WP57
-* X4 - VER-62; open: WP57
+* W8 - REV-156
+* X1 - IF-02's generators NOTE, QR-12's NOTE on the remedy, §5.3.1's NOTE on an idealised pore, VER-32
+* X2 - IF-02's generators NOTE, VER-32
+* X3 - PHY-09, VER-77
+* X4 - VER-62
 * X5 - the Phase 4 plan; its cap superseded by Y11
-* X6 - §5.3.1's NOTE on `electrolyte.parameters`, NUM-29's NOTE on the force surface; open: WP57
-* X7 - open: WP57
-* X8 - open: WP57
+* X6 - §5.3.1's NOTE on `electrolyte.parameters`, NUM-29's NOTE on the force surface
+* X7 - spent
+* X8 - spent
 * X9 - the Phase 4 plan
 * X10 - spent
-* Y1 - IF-01's NOTE on the interface; open: WP57
-* Y2 - IF-01's NOTE on the interface; open: WP57
-* Y3 - IF-01's NOTE on the interface; open: WP57
-* Y4 - IF-01's NOTE on the interface, §5.3.2's workspace sentence; open: WP57
-* Y5 - IF-01's NOTE on the interface; open: WP57
-* Y6 - IF-01's NOTE on the interface; open: WP57
-* Y7 - IF-01's NOTE on the interface; open: WP57
-* Y8 - IF-01, IF-02, IF-09 and its NOTE on the browser shell; open: WP57
+* Y1 - IF-01's NOTE on the interface
+* Y2 - IF-01's NOTE on the interface
+* Y3 - IF-01's NOTE on the interface
+* Y4 - IF-01's NOTE on the interface, §5.3.2's workspace sentence
+* Y5 - IF-01's NOTE on the interface
+* Y6 - IF-01's NOTE on the interface
+* Y7 - IF-01's NOTE on the interface
+* Y8 - IF-01, IF-02, IF-09 and its NOTE on the browser shell
 * Y9 - §5.5's NOTE on a stage of one's own
-* Y10 - §5.5 and its NOTE on a stage of one's own; open: WP57
-* Y11 - §8.4.4; the Phase 4 plan; open: WP57's plan
+* Y10 - §5.5 and its NOTE on a stage of one's own
+* Y11 - §8.4.4; the Phase 4 plan
 * Z1 - the Phase 4 plan; amended by AC1; open: WP60
-* Z2 - the Phase 4 plan; open: WP58
-* Z3 - §8.1's Phase 4 documentation increment; open: WP58
-* Z4 - the Phase 4 plan; open: WP58
+* Z2 - the Phase 4 plan
+* Z3 - §8.1's Phase 4 documentation increment
+* Z4 - the Phase 4 plan
 * Z5 - REV-121; open: the Phase 5 package that surfaces FR-37
 * Z6 - REV-156; open: Phase 6
 * AA1 - §8.4.4
@@ -265,19 +265,19 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AA7 - §8.4.5
 * AA8 - the Copilot host plan; `.claude/workflow/hosts.md`
 * AB1 - §8.4.2
-* AC1 - IF-01's NOTE on the interface; the Phase 4 plan; open: WP59
-* AC2 - NUM-16's NOTE; open: WP59
+* AC1 - IF-01's NOTE on the interface; the Phase 4 plan
+* AC2 - NUM-16's NOTE
 * AC3 - REV-170; placed by AD4; open: the Geometry tool's package
 * AC4 - REV-171; amended by AD5; open: Phase 6
-* AC5 - REV-169; open: WP59
+* AC5 - REV-169
 * AC6 - the Phase 4 plan; §8.4.4 if a rule's wording moves; open: WP60
 * AD1 - the Phase 5 plan; open: the second `/np-plan amend 5`
 * AD2 - the Phase 5 plan
 * AD3 - the Phase 5 plan; open: WP5.03 to WP5.06
 * AD4 - REV-170; open: the Geometry tool's package
 * AD5 - REV-171; open: WP5.06
-* AE1 - NUM-16's NOTE; REV-172; open: WP59
-* AE2 - NUM-16's NOTE; REV-172; open: WP59
-* AE3 - IF-01's NOTE; REV-173; open: WP59
+* AE1 - NUM-16's NOTE; REV-172
+* AE2 - NUM-16's NOTE; REV-172
+* AE3 - IF-01's NOTE; REV-173
 * AE4 - IF-01's NOTE; spent
 * AE5 - the Phase 4 plan's criterion 11
