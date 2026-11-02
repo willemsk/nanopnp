@@ -61,8 +61,8 @@ Outside the package sequence: the workflow also runs on the GitHub Copilot app (
 
 ## [0.5.0-alpha.25]
 
-WP59: the architecture review's fixes, Phase 4's last-but-one package (`SPECIFICATION.md` §8.2.27 AC1, AC2, AC5; the
-verdicts of [CODE_REVIEW_024](docs/code_reviews/CODE_REVIEW_024.md)). A case owns the record of where it came from, the
+WP59: the architecture review's fixes, Phase 4's last-but-one package (`SPECIFICATION.md` §8.2.27 AC1, AC2, AC5;
+§8.2.29 AE1 to AE4, its review's items; the verdicts of [CODE_REVIEW_024](docs/code_reviews/CODE_REVIEW_024.md)). A case owns the record of where it came from, the
 command line checks and reads a run through the same two objects the workbench will use, and a solve that meets an
 invalid number stops. It discharges NUM-16's NOTE on a non-finite trial residual and IF-01's NOTE on the interface.
 No QoI moves (VER-62 holds). The [plan](docs/plans/wp59-architecture-review-fixes.md) records the work.
@@ -70,13 +70,16 @@ No QoI moves (VER-62 holds). The [plan](docs/plans/wp59-architecture-review-fixe
 - **Added**: `Case.source`, the text, file and base directory a run of the case records, as a frozen `CaseSource`;
   `Session.check(case, files=True)`, which checks the files the case names, resolves it and lists the stages a run
   walks, as a frozen `CaseCheck`; and `Session.read(directory)`, which reads a finished run's record without its stored
-  results. `RUN_SCHEMA` and `RUN_RECORD_FILENAME` now live in `nanopnp.io.manifest` and are still importable from
+  results, a static method. `RUN_SCHEMA` and `RUN_RECORD_FILENAME` now live in `nanopnp.io.manifest` and are still importable from
   `nanopnp.pipeline.run`.
 - **Changed**: a non-finite Newton trial residual is no longer a forced step. Above the minimum damping the damping is
   cut; at the minimum the solve restores the iterate the step started from and raises `NewtonDivergenceError`, naming
-  the residual, the iteration and the damping (NUM-16). `nanopnp validate case`, `validate case-hash`, `inspect` and
-  `plot` of a run go through `Case` and `Session`; `cli/__init__.py` imports nothing from `pipeline`. Their output is
-  unchanged.
+  the residual, the iteration and the damping, unless a state gate refuses the trial first, naming the field and where
+  (NUM-16, NUM-17). A non-finite Newton direction raises `NewtonDivergenceError` naming the linear solve, before any
+  trial. `Session.open` reads a run's artefacts from the store its record names unless the session was given a store.
+  `nanopnp validate case`, `validate case-hash`, `inspect` and
+  `plot` of a run go through `Case` and `Session`, and `plot` reads the run once; `cli/__init__.py` imports nothing from
+  `pipeline`. Their output is unchanged.
 - **Fixed**: equal cases hash equal (`-0.0` and `0.0` hashed apart); `Case.load` resolves its path once, so a run records
   the file it read whatever the working directory; `cylinder` and `from_structure` read the corrections once; a
   generated mesh with no `wall` segment, which carries no `wall` group, is refused by the wall-size gate by name, not

@@ -159,16 +159,20 @@ def damped_newton(
     increment_gates
         Checked on the damped increment; a violation reduces the damping and retries.
     raise_on_failure
-        Raise NewtonDivergenceError at the iteration cap; a non-finite trial residual at minimum
-        damping raises it whatever this says.
+        Raise NewtonDivergenceError at the iteration cap; a non-finite direction, or a non-finite
+        trial residual at minimum damping, raises it whatever this says.
 
     Raises
     ------
     ValueError
         If ``increment_gates`` is given without ``increment``.
     NewtonDivergenceError
-        At the iteration cap if ``raise_on_failure``, and on a non-finite trial residual at
-        minimum damping, with the state restored to the iterate the step started from.
+        At the iteration cap if ``raise_on_failure``; on a non-finite Newton direction, with the
+        state unchanged; and on a non-finite trial residual at minimum damping that passes the
+        state gates, with the state restored to the iterate the step started from.
+    GateViolationError
+        If the state handed in violates a state gate, or a step's state does (an accepted one,
+        or a non-finite trial at minimum damping), the step's state restored to where it began.
     """
     import ngsolve as ngs
 
@@ -216,6 +220,11 @@ def damped_newton(
     for iteration in range(1, settings.max_iterations + 1):
         residual_form.AssembleLinearization(solution.vec)
         solve_correction(residual_form.mat, residual, direction, freedofs, solver=solver)
+        if not math.isfinite(float(ngs.Norm(direction))):
+            raise NewtonDivergenceError(
+                f"damped Newton step {iteration}: the linear solve returned a non-finite "
+                f"direction; the state is unchanged at residual {current:.3e} (NUM-16)"
+            )
         previous.data = solution.vec
 
         global_ref = max(float(ngs.Norm(solution.vec)), settings.reference_norm)
@@ -255,7 +264,10 @@ def damped_newton(
             trial_residual = residual_norm()
             if not math.isfinite(trial_residual):
                 if at_minimum:
-                    solution.vec.data = previous
+                    try:
+                        check_all(state_gates)  # a gate names the field and where it broke
+                    finally:
+                        solution.vec.data = previous
                     raise NewtonDivergenceError(
                         f"damped Newton step {iteration} reached a non-finite trial residual "
                         f"({trial_residual}) at the minimum damping {damping:.3g}; the state is "

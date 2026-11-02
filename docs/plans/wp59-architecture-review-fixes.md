@@ -242,6 +242,13 @@ becomes "the mesh command writes pore.msh here, beside the case file that names 
 > **Outcome — item 6.** The five frozen identities print `0128dd1854ff`, `4db46a9d821b`, `1b48e22b656c`, `0e263b472108`,
 > `1e26bf4a0c11`. The plan's wording for `capture_gui.py`'s comment said the case file names `pore.msh`; the quickstart
 > meshes under `numerics.mesh` and names none, so the comment says only that the mesh command writes it beside the case.
+>
+> **Outcome — the review's items (§8.2.29 AE1 to AE4).** [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) left
+> REV-172 and REV-173 open; the author ruled them into this package on 2 November 2026. The state gates now speak before
+> a non-finite trial's divergence (the NUM-16 test's positivity gate names `u` with its location, the state restored),
+> a non-finite direction raises naming the linear solve before any trial
+> (`test_num16_a_non_finite_newton_direction_aborts_before_any_trial`), and `Session.open` takes the record's store
+> unless given one, so `plot` reads the run once. The three public names stand.
 
 ### Verification
 
