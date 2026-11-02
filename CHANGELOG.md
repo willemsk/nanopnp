@@ -190,9 +190,11 @@ case file written for a release before this one first takes the schema change at
 **The Python interface**
 
 - **The public names `run_document`, `resolve`, `load_case`, `loads_case`, `dump_case`, `dumps_case`,
-  `CaseDocument`, `plan_from_document`, `run_plan`, `Stage`, `registered_stages` and `mesh_cylinder` are gone from
+  `CaseDocument`, `plan_from_document`, `run_plan`, `Stage` and `registered_stages` are gone from
   `nanopnp.PUBLIC`.** Build a case with `Case.load`, `Case.loads` or `Case.cylinder` and run it with
   `Session(store).run(case)`. The functions stay in their modules (`alpha.23`).
+- **`mesh_cylinder`**, public since `alpha.20`, is gone with `nanopnp mesh cylinder`. Declare the pore
+  (`geometry.pore`, `numerics.mesh`) in the case, and stage 6 meshes it (`alpha.23`).
 - **`run_case`** is gone. Use `Session(store).run(Case.load(path), upto=..., only=...)`; the hooks are arguments of
   `run` (`alpha.23`).
 - **`Case.cylinder(..., store=...)`, `Case.run` and the `"debye"` wall** are gone. Build the case, then run it with
