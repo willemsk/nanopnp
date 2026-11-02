@@ -1,8 +1,8 @@
 # Re-plan the project
 
 `/np-plan project` plans again the phases after the phase in flight: their order, scope, gates,
-estimates and releases. `/np-plan amend <n>` amends the phase in flight, and `/np-plan phase <n>`
-breaks a phase into packages. This level decides only what spans phases (§8.2.16 R5).
+estimates and releases. `/np-plan amend <n>` amends the phase in flight. `/np-plan phase <n>` breaks a
+phase into packages. This level decides only what spans phases (§8.2.16 R5).
 
 It has the same two turns as `phase.md`: the ruling round, then the write-up.
 

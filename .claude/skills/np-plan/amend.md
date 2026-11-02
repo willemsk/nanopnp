@@ -2,8 +2,8 @@
 
 `/np-plan amend <n>` keeps a phase plan true. It is the only route for these changes:
 
-- planning the provisional packages after an opening study reports: read its report and findings
-  log, put the decisions it raises to the author as `rulings.md` says, then replace the provisional
+- planning the provisional packages after an opening study reports. Read its report and findings log.
+  Put the decisions it raises to the author as `rulings.md` says. Then replace the provisional
   entries;
 - adding or dropping a package in mid-phase: the author's reason, its place, its identifiers;
 - planning the later phases again: the rulings, §8.1's rows, and the later plans or input notes.

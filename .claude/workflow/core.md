@@ -1,73 +1,77 @@
 # The workflow core
 
 Each level of `/np-plan`, `/np-implement` and `/np-ship` reads this file, then its own (§8.4.4;
-§8.2.16 R5, R12). Plans before WP53 name them `/phase-plan`, `/wp-plan`, `/wp-implement`, `/wp-ship`.
+§8.2.16 R5, R12). Plans before WP53 name the commands `/phase-plan`, `/wp-plan`, `/wp-implement` and
+`/wp-ship`.
 
 ## Reading order
 
-Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
-`uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings. A stale `.venv`
-takes `uv sync --all-extras --frozen`. On a host other than Claude Code, read `hosts.md` beside this file first.
+1. Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
+2. `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
+3. A stale `.venv` takes `uv sync --all-extras --frozen`.
+4. On a host other than Claude Code, read `hosts.md` beside this file first.
 
 ## The branch
 
-On `main`, switch to this session's development branch. With no such branch, stop and ask before
-you write.
+On `main`, switch to this session's development branch. With no such branch, stop and ask before you
+write.
 
 ## The package's PR and branch
 
-`/np-implement` and `/np-ship` work on the head of the package's PR, never on the session's own
-branch: do not infer the head from `git branch --show-current`. A package's n is `54` in Phase 4
-and `5.01` from Phase 5 (§8.4.4), so `WP<n>` reads `WP54` or `WP5.01`.
+`/np-implement` and `/np-ship` work on the head of the package's PR. Never infer the head from
+`git branch --show-current`. A package's n is `54` in Phase 4 and `5.01` from Phase 5 (§8.4.4), so
+`WP<n>` reads `WP54` or `WP5.01`.
 
-1. Take the open PR against `main` whose title has `WP<n>` and an em dash after it; with no
-   `wp <n>`, the one whose title names a package. If several match, ask. If none matches and the
-   plan is on `main`, `/np-implement` works on the session's branch; otherwise ask for the PR or
-   branch.
-2. Run `git fetch origin <head>`. If a local `<head>` has commits that `origin/<head>` lacks, check it
-   out, keep them, and gate and push them. Otherwise run `git checkout -B <head> origin/<head>`.
-   Never reset a branch that holds unpushed commits. Read `current.md` and the plan from this tree.
+1. Take the open PR against `main` whose title has `WP<n>` and an em dash after it. With no `wp <n>`,
+   take the one whose title names a package. If several match, ask. If none matches and the plan is on
+   `main`, `/np-implement` works on the session's branch. Otherwise ask for the PR or branch.
+2. Run `git fetch origin <head>`.
+   - If a local `<head>` has commits that `origin/<head>` lacks, check it out, keep them, and gate and
+     push them.
+   - Otherwise run `git checkout -B <head> origin/<head>`.
+   - Never reset a branch that holds unpushed commits.
+   - Read `current.md` and the plan from this tree.
 3. The command authorises pushes to that head, whatever a session instruction says about its own
    branch. If the harness refuses the push, stop and say so.
 
 ## Two lanes
 
-At most two lanes run (§8.4.4): the current phase, one package at a time, and the next phase's
-design study, which changes no `src/`, `tests/`, case schema or public API before the current
-phase's release. While two package PRs are open:
+At most two lanes run (§8.4.4): the current phase, one package at a time, and the next phase's design
+study. The study changes no `src/`, `tests/`, case schema or public API before the current phase's
+release. While two package PRs are open:
 
-- `/np-implement` and `/np-ship` take `wp <n>`; without it, ask which package.
+- `/np-implement` and `/np-ship` take `wp <n>`. Without it, ask which package.
 - `current.md` holds one position line per lane. Edit only your lane's line.
-- A package merged before its previous phase's release takes no alpha tag; its `CHANGELOG.md`
-  entry goes under `## [Unreleased]` (§8.4.1).
+- A package merged before its previous phase's release takes no alpha tag. Its `CHANGELOG.md` entry
+  goes under `## [Unreleased]` (§8.4.1).
 - A clause the study restates goes beside it, tagged for the study's release.
-- After merging `main`, renumber each new item of every register §8.4.4 lists, from one above the
-  highest on `main`, with every reference, until `uv run .claude/scripts/duplicates.py` passes.
+- After you merge `main`, renumber each new item of every register §8.4.4 lists. Start one above the
+  highest on `main`, change every reference, and repeat until `uv run .claude/scripts/duplicates.py`
+  passes.
 
 ## Host coordination
 
-- One host drives a branch at a time (§8.2.25 AA4). It is named `host: claude-code|copilot` in the lane
-  line of `docs/plans/current.md` and in the PR's **Verification** checkpoint. If the other host is
-  named and the branch moved within the hour, ask before writing.
+- One host drives a branch at a time (§8.2.25 AA4). It is named `host: claude-code|copilot` in the
+  lane line of `docs/plans/current.md` and in the PR's **Verification** checkpoint. If the other host
+  is named and the branch moved within the hour, ask before you write.
 - Hosts never share a working tree. The two-lane cap and the renumbering above apply across hosts.
-- Before each push, merge `origin/<head>`; never force-push a branch the other host may hold.
+- Before each push, merge `origin/<head>`. Never force-push a branch the other host may hold.
 
 ## Normativity
 
-`SPECIFICATION.md` is normative; the plan points into it and never restates it, and where they
-disagree the plan is wrong. Behaviour the specification does not permit is a **spec amendment,
-decided now and written in the same commit**. Never diverge quietly.
+`SPECIFICATION.md` is normative. The plan points into it and never restates it. Where they disagree,
+the plan is wrong. Behaviour the specification does not permit is a **spec amendment**: decide it now
+and write it in the same commit. Never diverge quietly.
 
 A change to what the finished software does changes `SPECIFICATION.md` **in the same commit**: the
-identifier, the NOTE, the amended tolerance and its derivation. Never slacken a tolerance to fit a
-number (the steward's *Tier 2 failures*). State each rule in the present tense; history goes in the
+identifier, the NOTE, and the amended tolerance with its derivation. Never slacken a tolerance to fit
+a number (the steward's *Tier 2 failures*). State each rule in the present tense. History goes in the
 log, `CHANGELOG.md`, the plans and §8.2.
 
 ## Models and executors
 
-Haiku for an easy mechanical item, Sonnet by default, Opus only after Sonnet fails on it
-(`CLAUDE.md`, *Models*). A survey goes to Haiku or Sonnet; read what it returns before using it.
-Physics and numerics decisions stay in this session.
+`CLAUDE.md` sets the models (*Models*). A survey goes to Haiku or Sonnet; read what it returns before
+you use it. Physics and numerics decisions stay in this session.
 
 ## Records
 
@@ -76,7 +80,7 @@ Physics and numerics decisions stay in this session.
 | `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances: normative changes only |
 | `specification/history/` | The table of a ruling round, with its lines in `history/index.md` (`np-plan/rulings.md`) |
 | `knowledge/<file>.md` | Durable findings (`CLAUDE.md`, *Durable learnings*) |
-| `docs/plans/wp<n>-*.md` | The current Execution brief; short `> **Outcome — <what changed>.**` annotations linking the evidence; the numbers the plan asks for |
+| `docs/plans/wp<n>-*.md` | The current Execution brief; short `> **Outcome — <what changed>.**` annotations that link the evidence; the numbers the plan asks for |
 | `docs/project/review-findings.md` | A `REV-nn` row for each item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12) |
 
 ## The In brief
@@ -97,29 +101,30 @@ At most 250 words, no backticks or identifiers; for a reader who does not code.
 ## Gate and push
 
 1. `git status` is clean.
-2. If the change touches a documentation source (`SPECIFICATION.md`, `specification/`,
-   `knowledge/`, `CHANGELOG.md`, `examples/*/README.md`, `data/corrections/`, `docs/` outside
-   `plans/` and `code_reviews/`, `mkdocs.yml`, docstrings in `src/`), run the strict documentation
-   build of `CLAUDE.md`'s *Commands* first, and commit the navigation it rewrites in `mkdocs.yml`.
-3. Run `.claude/hooks/gate.sh run` as `CLAUDE.md`'s *Commands* say, and wait for it in the same
-   turn. Never push a tree the gate has not passed: the push guard refuses it.
-4. `git push -u origin <branch>`; on a network failure, retry after 2, 4, 8 and 16 s.
+2. If the change touches a documentation source, run the strict documentation build of `CLAUDE.md`'s
+   *Commands* first, and commit the navigation it rewrites in `mkdocs.yml`. The sources are:
+   `SPECIFICATION.md`, `specification/`, `knowledge/`, `CHANGELOG.md`, `examples/*/README.md`,
+   `data/corrections/`, `docs/` outside `plans/` and `code_reviews/`, `mkdocs.yml`, and docstrings in
+   `src/`.
+3. Run `.claude/hooks/gate.sh run` as `CLAUDE.md`'s *Commands* say, and wait for it in the same turn.
+   Never push a tree the gate has not passed. The push guard refuses it.
+4. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
 
 ## The PR contract
 
-Open or reuse the branch's PR against `main` without asking. Reuse one only after verifying its
-repository, exact head and base `main`. Keep human edits and review evidence. If
-you cannot create the PR, report the blocker and the pushed branch.
+Open or reuse the branch's PR against `main` without asking. Reuse one only after you verify its
+repository, its exact head and its base `main`. Keep human edits and review evidence. If you cannot
+create the PR, report the blocker and the pushed branch.
 
-Titles: `feat: WP<n> — <what it delivers>`, or `fix:` for a package fixing findings; a plan level's
-PR takes its commit's subject.
+Titles: `feat: WP<n> — <what it delivers>`, or `fix:` for a package that fixes findings. A plan
+level's PR takes its commit's subject.
 
-The body starts with `## In brief`, then fills in `.github/pull_request_template.md`, its
-Verification checklist ticked only for what ran. Give numbers, not adjectives (rates with their
-meshes, route agreement, timings), each with its stabilisation mode. Never omit "Specification
-changes"; "None." is an answer. Link derivations and tables; do not copy them. End with this
-session's attribution footer. On a reused PR, bring the body to the tree's current state. If the
-review changes an author's decision, update the In brief.
+The body starts with `## In brief`. It then fills in `.github/pull_request_template.md`, and ticks the
+Verification checklist only for what ran. Give numbers, not adjectives: rates with their meshes, route
+agreement, timings, each with its stabilisation mode. Never omit "Specification changes"; "None." is
+an answer. Link derivations and tables; do not copy them. End with this session's attribution footer.
+On a reused PR, bring the body to the tree's current state. If the review changes an author's
+decision, update the In brief.
 
 ## Report and stop
 

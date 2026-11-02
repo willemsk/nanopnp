@@ -16,12 +16,17 @@
 3. `node .claude/scripts/gui/shoot.cjs <r>/webgui-manifest.json <r>/html`: the HTML documents the
    render children wrote, standing for the web views that draw nothing offscreen.
 
-**`mockups`**, every `docs/design/{concepts,style,choices,mockups}/**/*.html`. Write `<r>/manifest.json`, four
-entries per page: viewports `[1440, 900]` and `[1280, 800]`, schemes `light` and `dark`, `wait_ms:
-300`, `expand: "[data-screen]"`, id `<path>-<w>-<scheme>`, `<path>` the page's path under
-`docs/design/` without `.html`, `/` written `-` (`mockups-a-01-molecular`), `url` the page's `file://` URI. A
-choice panel is a fragment, small enough to judge on a phone: two entries, `[960, 640]`, light and dark.
-Then `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <r>`.
+**`mockups`**, every `docs/design/{concepts,style,choices,mockups}/**/*.html`. Write `<r>/manifest.json`
+with four entries per page:
+
+- viewports `[1440, 900]` and `[1280, 800]`, schemes `light` and `dark`;
+- `wait_ms: 300` and `expand: "[data-screen]"`;
+- id `<path>-<w>-<scheme>`. `<path>` is the page's path under `docs/design/` without `.html`, with `/`
+  written `-` (`mockups-a-01-molecular`);
+- `url`, the page's `file://` URI.
+
+A choice panel is a fragment, small enough to judge on a phone. It gets two entries, `[960, 640]`,
+light and dark. Then run `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <r>`.
 
 **`shell`**: added by WP5.02; until then say so and stop.
 
@@ -31,11 +36,14 @@ Then `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <r>`.
 ## Read and report
 
 1. Read the PNGs the change touched (`Read` shows an image), and each one named in a finding.
-2. From `index.json`, report per shot: `page_errors`, `console`, a `viewer` whose `ready` is false
-   (a host document whose scene did not draw, with its `error`), each `contrast` entry (selector,
-   ratio against 4.5 or 3), each `targets` entry (selector, size against 24 × 24 CSS px; an
-   `inline` link is excepted by WCAG 2.2 2.5.8 and noted, not failed), and the `unmeasured` text
-   (SVG labels, faded text) as not checked.
-3. A page error, a scene that did not draw, or a page that did not load (exit 2), stops the caller:
-   the item does not commit.
-   A failed contrast or target check stops it too, unless the item records why the check is wrong.
+2. From `index.json`, report per shot:
+   - `page_errors` and `console`;
+   - a `viewer` whose `ready` is false. That is a host document whose scene did not draw. Give its
+     `error`;
+   - each `contrast` entry: selector, and ratio against 4.5 or 3;
+   - each `targets` entry: selector, and size against 24 × 24 CSS px. An `inline` link is excepted by
+     WCAG 2.2 2.5.8: note it, do not fail it;
+   - the `unmeasured` text (SVG labels, faded text), as not checked.
+3. A page error, a scene that did not draw, or a page that did not load (exit 2) stops the caller. The
+   item does not commit. A failed contrast or target check stops it too, unless the item records why
+   the check is wrong.
