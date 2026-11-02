@@ -1,9 +1,9 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 delivered, WP5.02 planned, the library packages WP5.03 to WP5.06 planned after
+**Status: in progress; WP5.01 and WP5.02 delivered, the library packages WP5.03 to WP5.06 planned after
 it.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to S23); the library
-packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02 planned on 2 November
-2026 (§8.2.30 AF1 to AF3). The shell packages, the
+packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02 planned and delivered on 2 November
+2026 (§8.2.30 AF1 to AF4). The shell packages, the
 sweep's design round and the estimate wait for a second `/np-plan amend 5` after WP5.02's framework ruling (AD1); the
 close is last. Release: **v0.6** (`v0.6.0`).
 
@@ -108,20 +108,20 @@ only at `v0.6.0` (S17). It proposes a ruling on each inherited row.
 Tests: none kept; the strict documentation build (VER-45). Tag: none if it merges before `v0.5.0`,
 its entry under `## [Unreleased]`; otherwise `v0.6.0-alpha.1` (§8.4.1).
 
-### WP5.02 — The spike and the visual-feedback workflow (S8 to S10; §8.2.30 AF1 to AF3)
+### WP5.02 — The spike and the visual-feedback workflow (S8 to S10; §8.2.30 AF1 to AF4)
 
-**Planned** ([the plan](wp5.02-framework-spike.md)), 2 November 2026. One hard screen, the residue and charge-map
-link with a sketcher stub, is built twice under `spikes/`: in NiceGUI, and as a React application built by Vite, both
-over one FastAPI server (AF2). It measures code size, click-to-redraw time, headless drivability, the install, the
-front end's licences, and whether each runs inside a minimal Electron window: the workbench keeps a desktop wrapper
-possible, and the server's contract says how (AF1; ADR-004's NOTE). The author rules in ADR-004; both spikes then
-leave the tree, the report kept (AF3). Then, in the chosen stack: the server and its contract, the screen registry,
-fixture states, the `shell` render target and the local live loop, written into `CONTRIBUTING.md` and §8.4.4.
-**VER-78**: every fixture state loads every screen with its declared controls and no browser-console error; oracle,
-the screen registry. It names the commands that log the end-of-phase numbers: click-to-redraw time and the
-clean-environment install time. Tag `v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the
-explorer's controls against `webgui`), REV-138 (non-text contrast in `/np-gui render`), REV-141 (CON-08 and CON-11
-restated beside ADR-004) (§8.2.19 U5), and REV-143 (the light theme's control edge on a selected row) (U7).
+**Delivered** ([the plan](wp5.02-framework-spike.md); [the report](../design/spike/report.md)), 2 November 2026. The hard
+screen, a residue and its charge on the pore map, was built twice over one FastAPI server and measured; both passed the
+pre-set tests (front end 26 ms p95 for NiceGUI, 22 ms for React; install 86 MiB against 12 MiB), and the author ruled
+**NiceGUI** (AF4; ADR-004's NOTE, the front end). The spikes left the tree. Landed in `src/nanopnp/gui/web/`: the
+server and its contract (loopback, one ready line, a launch token, stops with its input; ADR-004's NOTE), `nanopnp gui`
+with `--state` and `--dev`, the screen registry (`home`, `st-charge`), the states `empty`, `charged-tube` and
+`refused`, Mol* vendored unmodified. VER-78 passes in Chromium; `gate.sh run` and CI's tier-1 leg require the browser.
+`/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
+constraints: the 200 ms line is unmeasured for the whole picture (Mol* alone takes about 800 ms on software GL; measure
+on a GPU in the package that builds the first Study screen); a screen is ready only after Mol* has drawn; the lock holds
+a uv override for docutils and pdb2pqr 3.7.1 (REV-175); the study's mockups fail the non-text measure (REV-176).
+Tag `v0.6.0-alpha.2` (S19).
 
 Each library package lands its capability with its Tier 1 and 2 tests before any screen surfaces it (§8.1; RSK-15;
 §8.2.17 S7), and each is planned by `/np-plan wp` after WP5.02 (AD2, AD3). None changes `src/` before `v0.5.0` (S1).

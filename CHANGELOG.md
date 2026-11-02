@@ -50,6 +50,32 @@ panels and two whole-workbench mockups, and writes the design document and its r
   REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
   restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
+WP5.02: the framework spike and the visual-feedback workflow, Phase 5's second package; tag `v0.6.0-alpha.2`
+once merged (`SPECIFICATION.md` §8.2.30 AF1 to AF4). The hard screen was built in NiceGUI and in React over one
+server and measured; the author ruled NiceGUI, and both trial builds left the tree, their report kept in
+[docs/design/spike/report.md](docs/design/spike/report.md). The [plan](docs/plans/wp5.02-framework-spike.md)
+records the work.
+
+- **Added**:
+  - **`nanopnp gui`**: serves the browser workbench on `127.0.0.1` with `[case]`, `--state`, `--port`,
+    `--no-browser` and `--dev` (reload on a change). It prints one `nanopnp-gui ready <url>` line, refuses a
+    foreign `Host` and a request without the launch token or its cookie, and stops when its standard input
+    closes or on SIGINT or SIGTERM (ADR-004's NOTEs). It needs the `gui` extra, which gains fastapi, uvicorn and
+    nicegui.
+  - **The first screens** under `nanopnp.gui.web`: a screen registry, the fixture states `empty`,
+    `charged-tube` and `refused`, the link between a residue and its charge on the pore map in both directions,
+    and Mol* served unmodified (MIT, with its notice).
+  - **VER-78** (Tier 1): every state loads every screen with its controls and no console error, and the server
+    keeps its contract. `gate.sh run` and CI's tier-1 leg require a browser (`NANOPNP_REQUIRE_BROWSER=1`).
+  - **`/np-gui render shell`** and the non-text contrast measure of WCAG 2.2 1.4.11 in `shoot.cjs`.
+  - **Notes** on CON-08 and CON-11 for the browser shell; the renderer table in `docs/design/workbench.md`.
+
+- **Changed**:
+  - The light theme's `--control-edge` is `#7c8290`, 3.2:1 on a selected row (REV-143).
+  - `write_charged_tube` and its constants live in `nanopnp.validation.charged_tube`.
+  - The lock carries a uv override of `docutils` for the `gui` extra (REV-175).
+  - **Open items**: REV-137, REV-138, REV-141, REV-143 and REV-174 are `fixed`; REV-175 and REV-176 are open.
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 
