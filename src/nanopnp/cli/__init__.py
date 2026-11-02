@@ -554,6 +554,8 @@ def _gui(args: argparse.Namespace) -> int:
     argv = ["--port", str(args.port)]
     if args.no_browser:
         argv.append("--no-browser")
+    if args.dev:
+        argv.append("--dev")
     if args.state is not None:
         argv += ["--state", args.state]
     if args.case is not None:
@@ -1549,6 +1551,7 @@ def build_parser() -> argparse.ArgumentParser:
     gui.add_argument("--state", default=None, help="a fixture state in place of a case")
     gui.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
     gui.add_argument("--no-browser", action="store_true", help="print the address, open nothing")
+    gui.add_argument("--dev", action="store_true", help="reload on a change to the screens' source")
     gui.set_defaults(handler=_gui)
 
     env = _common(subparsers.add_parser("env", help="report the environment and data locations"))

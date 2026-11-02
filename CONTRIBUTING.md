@@ -61,6 +61,20 @@ Windows run the per-push selection; nightly and before a release the whole of Ti
 Python 3.11 to 3.13 runs too (`SPECIFICATION.md` §7.6). `uv.lock` is committed and CI resolves nothing: if you edit
 `pyproject.toml`, run `uv lock` in the same commit.
 
+## The workbench's live loop
+
+The browser workbench needs the `gui` extra. `uv run nanopnp gui --dev --state charged-tube` serves it on
+`127.0.0.1` (`--port` fixes the port) and opens the browser; a change to a page, a style sheet or the bridge under
+`src/nanopnp/gui/web/` restarts the server, and the open page reconnects. `--state` takes `empty`,
+`charged-tube` or `refused`; a case file takes its place (`nanopnp gui --dev my.case.yaml`). The server prints
+`nanopnp-gui ready <url>` and stops when its standard input closes or on Ctrl-C.
+
+To see what a change drew, run `/np-gui render shell`: it shoots every screen in every state, light and dark,
+and reports contrast, non-text contrast, target sizes and console errors. VER-78 loads every screen of every
+state in Chromium; it needs a browser, which `gate.sh run` and CI require (`NANOPNP_REQUIRE_BROWSER=1`;
+`NANOPNP_CHROMIUM` names the executable where Playwright's own download is not used, and
+`uv run playwright install chromium` fetches one).
+
 ## The documentation
 
 The site is MkDocs with Material and mkdocstrings. Build it as CI does:

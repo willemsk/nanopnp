@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import hmac
+import os
 import re
 import secrets
+import signal
 import socket
 import sys
 import tempfile
@@ -169,9 +171,71 @@ class _Server(uvicorn.Server):
             webbrowser.open(url)
 
 
-def _watch_input(server: uvicorn.Server) -> None:
+_DEV_ENVIRONMENT = (
+    "NANOPNP_GUI_TOKEN",
+    "NANOPNP_GUI_WORK",
+    "NANOPNP_GUI_CASE",
+    "NANOPNP_GUI_STATE",
+)
+
+
+def _watch_input(server: uvicorn.Server | None) -> None:
     sys.stdin.read()
-    server.should_exit = True
+    if server is not None:
+        server.should_exit = True
+    else:
+        os.kill(os.getpid(), signal.SIGINT)  # the reloading supervisor stops on it
+
+
+def _boot(case: str | None, state: str | None, work: Path) -> Workbench:
+    if case:
+        return boot_case(Path(case), work)
+    return boot(state or "empty", work)
+
+
+def dev_app() -> Guard:
+    """Return the app of a ``--dev`` worker, which the reloading supervisor starts afresh.
+
+    The supervisor passes the launch token, the folder that keeps the store between reloads, and
+    the case or state in environment variables.
+    """
+    token, work, case, state = (os.environ.get(name) for name in _DEV_ENVIRONMENT)
+    assert token is not None and work is not None
+    guard = build_app(token, _boot(case, state, Path(work)))
+    port = int(os.environ["NANOPNP_GUI_PORT"])
+    guard.hosts = frozenset({f"{HOST}:{port}", f"localhost:{port}"})
+    return guard
+
+
+def _serve_dev(args: argparse.Namespace, token: str, work: Path) -> None:
+    """Serve with reload: a change to a page, a style sheet or the bridge restarts the worker."""
+    port = args.port
+    if port == 0:  # a reloading server keeps one address, so it is chosen before the first worker
+        with socket.socket() as probe:
+            probe.bind((HOST, 0))
+            port = probe.getsockname()[1]
+    os.environ.update(
+        NANOPNP_GUI_TOKEN=token,
+        NANOPNP_GUI_WORK=str(work),
+        NANOPNP_GUI_PORT=str(port),
+        NANOPNP_GUI_CASE=str(args.case or ""),
+        NANOPNP_GUI_STATE=args.state or "",
+    )
+    url = f"http://{HOST}:{port}/?token={token}"
+    print(f"nanopnp-gui ready {url}", flush=True)
+    if not args.no_browser:
+        webbrowser.open(url)
+    threading.Thread(target=_watch_input, args=(None,), daemon=True).start()
+    uvicorn.run(
+        "nanopnp.gui.web.server:dev_app",
+        factory=True,
+        host=HOST,
+        port=port,
+        reload=True,
+        reload_dirs=[str(Path(__file__).parent)],
+        reload_includes=["*.py", "*.css", "*.js"],
+        log_level="warning",
+    )
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -194,17 +258,21 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--no-browser", action="store_true", help="print the address and open nothing"
     )
+    parser.add_argument(
+        "--dev",
+        action="store_true",
+        help="reload on a change to the screens' source",
+    )
     args = parser.parse_args(argv)
     if args.case is not None and args.state is not None:
         parser.error("give a case file or --state, not both")
 
     token = secrets.token_urlsafe(32)
     with tempfile.TemporaryDirectory(prefix="nanopnp-gui-") as work:
-        if args.case is not None:
-            bench = boot_case(args.case, Path(work))
-        else:
-            bench = boot(args.state or "empty", Path(work))
-        guard = build_app(token, bench)
+        if args.dev:
+            _serve_dev(args, token, Path(work))
+            return 0
+        guard = build_app(token, _boot(str(args.case or ""), args.state, Path(work)))
         config = uvicorn.Config(guard, host=HOST, port=args.port, log_level="warning")
         server = _Server(config, guard, token, browser=not args.no_browser)
         threading.Thread(target=_watch_input, args=(server,), daemon=True).start()

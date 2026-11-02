@@ -28,10 +28,8 @@ TOKENS = (
 )
 MAP_WIDTH_PX = 330
 BLANK = Extent(0.0, 1.0, 0.0, 1.0, MAP_WIDTH_PX, 440)
-STYLE = (
-    "body{background:var(--bg);color:var(--ink);font-family:var(--font-ui)}"
-    "#mol{position:relative;width:560px;height:420px;background:var(--canvas-3d)}"
-    "[data-control=strip],[data-control=stages]{min-height:1.75rem}"
+STYLESHEETS = (
+    '<link rel="stylesheet" href="/tokens.css"><link rel="stylesheet" href="/workbench.css">'
 )
 
 
@@ -71,13 +69,14 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
     nicegui_app.add_static_file(local_file=TOKENS, url_path="/tokens.css")
     nicegui_app.add_static_file(local_file=ASSETS / "bridge.js", url_path="/bridge.js")
+    nicegui_app.add_static_file(local_file=ASSETS / "workbench.css", url_path="/workbench.css")
 
     async def ready() -> None:
         await ui.run_javascript("document.body.dataset.screenReady = '1'")
 
     @ui.page(screen("home").path)
     def home() -> None:
-        ui.add_head_html(f'<link rel="stylesheet" href="/tokens.css"><style>{STYLE}</style>')
+        ui.add_head_html(STYLESHEETS)
         ui.label("nanopnp workbench").classes("text-h5")
         ui.label(f"State: {bench.name}").props("data-control=state")
         with ui.row().props("data-control=stages"):
@@ -94,9 +93,8 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
     def charge(residue: str = "", linked: int = 1) -> None:
         ui.add_head_html(
             '<link rel="stylesheet" href="/vendor/molstar/molstar.css">'
-            '<link rel="stylesheet" href="/tokens.css">'
-            '<script src="/vendor/molstar/molstar.js"></script><script src="/bridge.js"></script>'
-            f"<style>{STYLE}</style>"
+            + STYLESHEETS
+            + '<script src="/vendor/molstar/molstar.js"></script><script src="/bridge.js"></script>'
         )
         extent = BLANK if link is None else link.extent
         state = {"key": "", "linked": bool(linked)}
@@ -106,10 +104,10 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
             if link is None or key not in link:
                 return
             if state["key"] in buttons:
-                buttons[state["key"]].props("color=grey-3 text-color=black")
+                buttons[state["key"]].props("aria-pressed=false")
             state["key"] = key
             if key in buttons:
-                buttons[key].props("color=primary text-color=white")
+                buttons[key].props("aria-pressed=true")
             image.content = _markers(extent, link.residue_markers(key))
             status.text = f"Residue {key}"
             await ui.run_javascript(f"nano.show({key!r})" if move_mol else "nano.drawn()")
@@ -136,9 +134,14 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
                 ui.element("div").props("id=mol data-control=molecule")
                 with ui.row().props("data-control=strip").style("width:560px;gap:2px"):
                     for key, name, _ in [] if link is None else link.residues():
-                        buttons[key] = ui.button(
-                            f"{key} {name}", on_click=lambda _, k=key: select(k)
-                        ).props(f"dense no-caps size=sm data-control=strip-item data-residue={key}")
+                        buttons[key] = (
+                            ui.button(f"{key} {name}", on_click=lambda _, k=key: select(k))
+                            .props(
+                                "flat dense no-caps size=sm aria-pressed=false "
+                                f"data-control=strip-item data-residue={key}"
+                            )
+                            .classes("strip-item")
+                        )
             with ui.column():
                 with ui.row().classes("items-center"):
                     chip = ui.badge("Linked" if linked else "Unlinked").props(

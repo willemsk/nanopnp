@@ -195,7 +195,7 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 - [x] 151b08e 5. `docs/design/spike/report.md`, published; the ruling; the history row and the ADR-004 NOTE (D3); done when the author has ruled. **Executor:** main
 - [x] 151b08e 6. Compaction checkpoint. **Executor:** main
 - [x] 14b2d6e 7. Delete `spikes/` (AF3), with the report linking the last commit that held them; `gui/web/server.py`, the `cli` subcommand, the extra, the layering row and REV-174 (D4); done when VER-61 passes and `nanopnp gui --no-browser --port 0` prints its ready line. **Executor:** main
-- [ ] 8. `gui/web/{screens,states}.py`, `st-charge` and `home` in the chosen stack, `tests/tier1/test_gui_screens.py`, VER-78 in §7.2 and Appendix A, `gate.sh`, `ci.yml` (D5); done when VER-78 passes. **Executor:** main
+- [x] 689ad9e 8. `gui/web/{screens,states}.py`, `st-charge` and `home` in the chosen stack, `tests/tier1/test_gui_screens.py`, VER-78 in §7.2 and Appendix A, `gate.sh`, `ci.yml` (D5); done when VER-78 passes. **Executor:** main
 - [ ] 9. `/np-gui render shell` (`render.md`, `render_shell.py`), `nontext` in `shoot.cjs`, the token, the mockups re-rendered, the live loop in `CONTRIBUTING.md` and §8.4.4 (D5, D6); done when `render shell` reports no failure on every state. **Executor:** main
 - [ ] 10. The REV-137 table in `workbench.md`; the CON-08 and CON-11 NOTEs; REV-137, -138, -141 and -143 set `fixed`; QR-16's Appendix A row (D6); done when the code and review say so. **Executor:** general-purpose on Sonnet
 - [ ] 11. `CHANGELOG.md` under `## [Unreleased]`, `current.md`, and the phase plan's WP5.02 entry delivered. **Executor:** main
@@ -215,7 +215,13 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 > `force-include`. Two things the plan did not foresee: NiceGUI needs `docutils>=0.19` where pdb2pqr 3.7.1 pins
 > 0.17.1, so the lock carries a uv override and REV-175 stays open; and an empty row is not visible to
 > Playwright, so VER-78 caught `stages` and `strip` and each now holds a placeholder or a width. The sketcher
-> stub of the spike is not carried: no screen of this package uses it.
+> stub of the spike is not carried: no screen of this package uses it. The tube's writers live in
+> `validation/charged_tube.py` and not in `states.py`, because the shell's option guard
+> (`test_gui_viewmodels`) forbids case values under `gui/`; the layering gains `gui -> validation`.
+> **Item 9.** Rendered, the first pages failed contrast against Quasar's own colours. `workbench.css` puts the
+> tokens over them, and the colour rules sit in the `theme` layer because NiceGUI's `!important` Quasar rules
+> are in its last layer, which an unlayered important rule does not outrank. `nontext` found 376 findings in
+> the study's mockups and none in the shell (REV-176).
 
 ### Verification
 

@@ -1,0 +1,58 @@
+/* The workbench's pages in the design's tokens (docs/design/tokens.css): Quasar's own colours and sizes
+   give way to them, so that the contrast pairs the tokens state hold on the rendered page. Quasar's
+   sheets load after this one, so a selector that must win starts at `body`. */
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+}
+/* Quasar's colour utilities are !important in the last layer NiceGUI declares; an important rule of the
+   first layer, `theme`, outranks them, and an unlayered one does not. */
+@layer theme {
+  body .bg-primary,
+  body .q-badge {
+    background: var(--accent) !important;
+    color: var(--accent-ink) !important;
+  }
+  body .text-primary {
+    color: var(--accent) !important;
+  }
+}
+body a.nicegui-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--accent);
+}
+body .q-btn {
+  min-height: var(--target-min);
+  min-width: var(--target-min);
+}
+/* A strip item: an edged button, and the selected one a filled row with the accent edge and a weight. */
+body .q-btn.strip-item {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius);
+}
+body .q-btn.strip-item[aria-pressed="true"] {
+  background: var(--sel);
+  border: 2px solid var(--accent);
+  font-weight: 600;
+}
+#mol {
+  position: relative;
+  width: 560px;
+  height: 420px;
+  background: var(--canvas-3d);
+}
+/* Mol*'s own logo link takes focus inside the canvas, where no ring of ours can be seen. */
+body .msp-plugin .msp-logo,
+body .msp-plugin .msp-logo-link {
+  display: none;
+}
+[data-control="strip"],
+[data-control="stages"] {
+  min-height: 1.75rem;
+}

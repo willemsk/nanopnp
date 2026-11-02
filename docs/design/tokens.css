@@ -12,7 +12,7 @@
   --panel: #ffffff;         /* panels, cards, menus */
   --sel: #ece7ff;           /* a selected row or tab, always with a marker (--accent edge or weight) */
   --line: #d9dce3;          /* dividers only; never the edge of a control */
-  --control-edge: #868c99;  /* inputs, secondary buttons, toggles: 3.4:1 on --panel, 3.2:1 on --bg */
+  --control-edge: #7c8290;  /* inputs, secondary buttons, toggles: 3.9:1 on --panel, 3.6:1 on --bg, 3.2:1 on --sel */
 
   /* Text */
   --ink: #16181d;           /* 17.8:1 on --panel */

@@ -64,7 +64,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
 * Beside them, `/np-gui <render | review | publish | collect | grill>` renders screens and mockups
   headless, has them reviewed, publishes them for the author's verdicts, collects the verdicts and
-  runs a design round. A package that changes a screen uses it. (§8.2.17 S21, S22;
+  runs a design round. A package that changes a screen uses it. Its `shell` target renders the browser
+  workbench in every fixture state, and `nanopnp gui --dev` is the local live loop: it serves the
+  workbench and restarts on a change to its source (`CONTRIBUTING.md`). (§8.2.17 S21, S22; §8.2.30 AF4;
   `.claude/skills/np-gui/`)
 * The workflow runs on Claude Code and on the GitHub Copilot app, either for any step on either lane;
   Copilot runs as a WSL host on Windows. `.claude/` is the single source.
