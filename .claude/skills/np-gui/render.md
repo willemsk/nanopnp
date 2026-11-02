@@ -28,7 +28,13 @@ with four entries per page:
 A choice panel is a fragment, small enough to judge on a phone. It gets two entries, `[960, 640]`,
 light and dark. Then run `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <r>`.
 
-**`shell`**: added by WP5.02; until then say so and stop.
+**`shell`**, the browser workbench: `uv run python .claude/scripts/gui/render_shell.py <r>`. It starts
+`nanopnp gui --no-browser --state <name>` for each state of `nanopnp.gui.web.states.STATES`, writes
+`<r>/manifest.json` with an entry for each screen of `nanopnp.gui.web.screens.SCREENS` in each state, light
+and dark (`[1280, 800]`; id `shell-<state>-<screen>-<scheme>`), runs `shoot.cjs` over it and stops the
+servers. Each entry waits for the screen's `data-screen-ready`, as the workbench sets it once Mol* has
+drawn. Needs Playwright through `NODE_PATH` and the `gui` extra. The first run in a container takes a few
+minutes: the states walk their cases.
 
 `shoot.cjs` finds Playwright through `NODE_PATH`; `node .claude/scripts/gui/shoot.cjs --self-check
 <s>/selfcheck` checks the browser renders a WebGL page.
@@ -41,9 +47,12 @@ light and dark. Then run `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <
    - a `viewer` whose `ready` is false. That is a host document whose scene did not draw. Give its
      `error`;
    - each `contrast` entry: selector, and ratio against 4.5 or 3;
+   - each `nontext` entry (WCAG 2.2 1.4.11): the kind (a control's `edge` or `fill`, a `focus ring`, a
+     `selected fill`, a `colour bar` end), selector, and ratio against 3. A control with neither edge nor
+     fill is identified by its text and is not measured;
    - each `targets` entry: selector, and size against 24 × 24 CSS px. An `inline` link is excepted by
      WCAG 2.2 2.5.8: note it, do not fail it;
    - the `unmeasured` text (SVG labels, faded text), as not checked.
 3. A page error, a scene that did not draw, or a page that did not load (exit 2) stops the caller. The
-   item does not commit. A failed contrast or target check stops it too, unless the item records why
+   item does not commit. A failed contrast, non-text or target check stops it too, unless the item records why
    the check is wrong.

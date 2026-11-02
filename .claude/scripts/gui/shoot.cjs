@@ -4,8 +4,10 @@
 //   node .claude/scripts/gui/shoot.cjs --self-check <out-dir>
 //
 // The manifest is a JSON list of {id, url, viewport: [w, h], scheme: "light"|"dark", wait_ms,
-// expand}. With `expand`, a CSS selector, the page is shot once per matching element's
-// `data-screen` value, after setting `location.hash` to it, as `<id>-<screen>`. Writes
+// expand, via, ready}. With `expand`, a CSS selector, the page is shot once per matching element's
+// `data-screen` value, after setting `location.hash` to it, as `<id>-<screen>`. `via` lists
+// addresses to load first, so that a server's token cookie is set; `ready` is a selector awaited
+// (90 s) after the load, as the workbench's `body[data-screen-ready="1"]`. Writes
 // `<out>/<id>.png` and `<out>/index.json`; a shot's `viewer` is the shell's host-document flag, or
 // null on another page, and `unmeasured` lists the text the contrast check could not measure.
 // Exits 0, or 2 if a page failed to load.
@@ -155,6 +157,75 @@ function checkPage() {
     }
   }
 
+
+  // 1.4.11: a control's edge or fill, its focus ring, a selected item's fill and a colour bar's
+  // ends each need 3:1 against the surface behind them. A control with neither edge nor fill is
+  // identified by its text and is not measured; a native checkbox, radio or range draws itself.
+  const NON_TEXT = 3;
+  const nontext = [];
+  const surface = (element) => background(element.parentElement || document.body);
+  const nontextFinding = (element, kind, fore, back) => {
+    const measured = ratio(fore, back);
+    if (measured >= NON_TEXT) return;
+    nontext.push({
+      selector: selector(element),
+      kind,
+      ratio: Math.round(measured * 100) / 100,
+      needed: NON_TEXT,
+      foreground: hex(fore),
+      background: hex(back),
+    });
+  };
+  const edge = (style) => {
+    const width = parseFloat(style.borderTopWidth);
+    const colour = parse(style.borderTopColor);
+    if (width > 0 && style.borderTopStyle !== "none" && colour && colour.a > 0) return colour;
+    const outline = parse(style.outlineColor);
+    if (parseFloat(style.outlineWidth) > 0 && style.outlineStyle !== "none" && outline) return outline;
+    return null;
+  };
+  const edged = "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea, button, [role=switch]";
+  for (const element of document.body.querySelectorAll(edged)) {
+    if (!visible(element)) continue;
+    const back = surface(element);
+    const style = getComputedStyle(element);
+    const line = edge(style);
+    const fill = parse(style.backgroundColor);
+    const filled = fill && fill.a > 0;
+    if (line) nontextFinding(element, "edge", over(line, back), back);
+    else if (filled) nontextFinding(element, "fill", over(fill, back), back);
+  }
+  for (const element of document.body.querySelectorAll("[aria-selected=true]")) {
+    if (!visible(element)) continue;
+    const fill = parse(getComputedStyle(element).backgroundColor);
+    if (fill && fill.a > 0) {
+      const back = surface(element);
+      nontextFinding(element, "selected fill", over(fill, back), back);
+    }
+  }
+  for (const element of document.body.querySelectorAll("[data-colorbar]")) {
+    if (!visible(element)) continue;
+    const stops = (getComputedStyle(element).backgroundImage.match(/rgba?\([^)]+\)/g) || []).map(parse);
+    if (stops.length < 2) continue;
+    const back = surface(element);
+    for (const [name, stop] of [["colour bar start", stops[0]], ["colour bar end", stops[stops.length - 1]]]) {
+      nontextFinding(element, name, over(stop, back), back);
+    }
+  }
+  // The focus ring, after the pass above: focusing changes the page, so it is last, and undone.
+  for (const element of document.body.querySelectorAll(edged + ", a[href], [tabindex]")) {
+    if (!visible(element) || element.disabled) continue;
+    element.focus({ preventScroll: true });
+    if (document.activeElement !== element) continue;
+    const style = getComputedStyle(element);
+    const back = surface(element);
+    let ring = null;
+    if (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0) ring = parse(style.outlineColor);
+    else if (style.boxShadow !== "none") ring = parse(style.boxShadow);
+    if (ring && ring.a > 0) nontextFinding(element, "focus ring", over(ring, back), back);
+    element.blur();
+  }
+
   const targets = [];
   const controls = "a, button, input:not([type=hidden]), select, textarea, [role=button]";
   for (const element of document.body.querySelectorAll(controls)) {
@@ -180,7 +251,7 @@ function checkPage() {
       });
     }
   }
-  return { contrast, targets, unmeasured };
+  return { contrast, nontext, targets, unmeasured };
 }
 
 // The shell's host document reports whether its scene initialised (gui/render.py, READY_FLAG): a
@@ -208,7 +279,9 @@ async function shootOne(browser, entry, out) {
   const records = [];
   let loaded = true;
   try {
+    for (const address of entry.via || []) await page.goto(address, { waitUntil: "load", timeout: 60000 });
     await page.goto(entry.url, { waitUntil: "load", timeout: 60000 });
+    if (entry.ready) await page.waitForSelector(entry.ready, { timeout: 90000 });
   } catch (error) {
     loaded = false;
     pageErrors.push(`load failed: ${error.message}`);
@@ -227,6 +300,7 @@ async function shootOne(browser, entry, out) {
       page_errors: pageErrors.slice(seenPage),
       viewer: null,
       contrast: [],
+      nontext: [],
       targets: [],
       unmeasured: [],
     };
@@ -290,6 +364,7 @@ async function shoot(manifest, out) {
             page_errors: [`shoot failed: ${error.message}`],
             viewer: null,
             contrast: [],
+            nontext: [],
             targets: [],
             unmeasured: [],
           },
@@ -302,6 +377,7 @@ async function shoot(manifest, out) {
           r.page_errors.length +
           r.console.length +
           r.contrast.length +
+          r.nontext.length +
           r.targets.length +
           (r.viewer && !r.viewer.ready ? 1 : 0);
         console.log(`${r.id}: ${r.file || "not loaded"}${problems ? `, ${problems} findings` : ""}`);

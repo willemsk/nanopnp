@@ -165,6 +165,25 @@ def test_ver78_the_server_keeps_its_contract() -> None:
     assert terminated.returncode is not None
 
 
+def test_ver78_the_reloading_server_prints_its_line_and_stops_with_its_input() -> None:
+    process, found = _start("--dev", "--port", "0")
+    try:
+        token = found.group(1).split("token=")[1]
+        for _ in range(60):
+            try:
+                if _status(found.group(1), f"/api/health?token={token}")[0] == 200:
+                    break
+            except OSError:
+                time.sleep(0.5)
+        else:
+            raise AssertionError("the reloading server never answered")
+        assert process.stdin is not None
+        process.stdin.close()
+        assert process.wait(STOP_WITHIN_S) == 0
+    finally:
+        process.kill()
+
+
 def test_ver78_the_server_cancels_the_solves_it_started() -> None:
     class Solve:
         running = True

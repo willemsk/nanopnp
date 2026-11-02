@@ -2261,3 +2261,18 @@ Open: the author rules whether the `structure` extra is capped below 3.8 or the 
 and whether `pip install nanopnp[structure,gui]` is supported before 1.0.
 
 Found at WP5.02's item 7, 2 November 2026.
+
+## REV-176: The design mockups fail the non-text contrast measure
+
+`/np-gui render` measures non-text contrast from WP5.02 (REV-138). Rendered again, the design study's pages
+(`docs/design/{concepts,style,choices,mockups}`, 382 shots) show no text, target or page error, and 376 non-text
+findings in 54 shots: the colour-bar swatch fills of the diverging map on white (`#f4a582`, `#92c5de`), the
+accent focus ring on the near-black 3D canvas (`--focus` on `--canvas-3d`), and the style sheet's `--line` edges.
+None of them is the control edge of REV-143, which the new token (`#7c8290`) settles. The pages are WP5.01's
+evidence and are not shipped. The shipped screens, rendered by `/np-gui render shell`, report none.
+
+Open: the author rules whether the study's pages are corrected, or left as dated evidence, and the focus ring on
+the 3D canvas (a ring of `--focus` that reads at 3:1 on `--canvas-3d`) is decided when the first screen that
+draws a focusable control over it is built.
+
+Found at WP5.02's item 9, 2 November 2026.
