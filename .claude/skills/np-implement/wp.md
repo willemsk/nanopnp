@@ -67,7 +67,7 @@ The core's *Records* table says what each record gets.
   identifiers, live inherited constraints and links to evidence.
 - Update `docs/plans/current.md` in place. With two lanes open, update only your lane's position line
   (the core's *Two lanes*). Its word target is in its *Handoff Rules*.
-- Change both plans' **Status** lines with the summary. The WP plan's line becomes 
+- Change both plans' **Status** lines with the summary. The WP plan's line becomes
   `**Status: delivered, <date>.**`. The phase plan's roll-up moves `WP<n>` to the delivered list.
 
 ## Measurements are deliverables

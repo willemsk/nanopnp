@@ -539,4 +539,4 @@ names its command or its run.
 **What the phase carries.** `REV-121` (Phase 5), `REV-156` and `REV-171` (Phase 6), `REV-135` to `REV-139`,
 `REV-141`, `REV-143` and `REV-170` (Phase 5), `REV-166` to `REV-168` (the Copilot probes), `MOD-09`, `MOD-10`,
 `OPN-04` and `OPN-08`. The commit hook (6 to 30 % over) and the push gate (1 % over) miss their reported targets; the author
-may re-argue them or accept them.
+accepted both on 2 November 2026, and a later phase may re-argue them.

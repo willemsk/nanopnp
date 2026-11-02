@@ -65,7 +65,7 @@ The case schema and the Python API may still change until the stable v1.0 (`SPEC
 | v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
 | v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | **released**, [`v0.4.0`](CHANGELOG.md#040---2026-10-04) |
 | v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | **released**, [`v0.5.0`](CHANGELOG.md#050---2026-11-02) |
-| v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the desktop application | **in progress** |
+| v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the browser workbench that replaces the Qt shell | **in progress** |
 | v0.7 | 6 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 | v1.0 | — | Stable release: the API stability promise; its content is the author's to define | planned |
 
