@@ -107,3 +107,9 @@ in a desktop window. On the measures that could be run here it does both.
 
 The author chose **NiceGUI** on 2 November 2026 (§8.2.30 AF4; ADR-004's NOTE, the front end, v0.6). The
 NiceGUI candidate's page, bridge and server wiring are the model for the code that lands in `src/`.
+
+## Where the spike's code is
+
+Both candidates, the shared server, the fixture, the measures and the Electron wrapper last stood in the tree at
+commit `2344ef9` (`git show 2344ef9:spikes/wp5.02/`). WP5.02's item 7 removed them (§8.2.30 AF3); the NiceGUI
+candidate's page and bridge are the model for `src/nanopnp/gui/web/`.
