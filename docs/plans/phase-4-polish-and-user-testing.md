@@ -29,9 +29,9 @@ the commit check is 6 to 30 percent slower than hoped, and the check before a pu
 commit after the merge. A recorded result could drift on a platform nobody ran; the check on three
 platforms shows none beyond rounding.
 
-**Your call.** Whether to accept the two slow checks, and the two documents that grew past their
-word targets (the specification and this plan). Recommendation: accept; each is reported, not
-gated, and a cut would remove rules.
+**Your call.** Settled on 2 November 2026: the author accepted the two slow checks, and the two documents that
+grew past their word targets (the specification and this plan). Each is reported, not gated, and a cut would
+remove rules.
 
 ## Context
 
@@ -531,10 +531,10 @@ names its command or its run.
 | 8 | **Met** | Increment 4 merged in WP58; the strict documentation build passes (VER-45, VER-46); every break is in `[0.5.0]` |
 | 9 | **Met** | VER-65 passes at eleven subpackages |
 | 10 | **Met** | No `REV` row placed in a Phase 4 package is short of `fixed` (`REV-47` closed here); the prediction of 39 was exceeded, at 129 `fixed` in all |
-| 11 | **Met, with two reported misses** | Prose of `src/` is 11.89 % (6,573 of 55,299 lines), over the 10 % target and accepted as measured by §8.2.29 AE5; of `tests/` 2.75 % (1,127 of 41,020), under 3 %. Reported: the commit hook (95 to 117 s) against about 90 s, 6 to 30 % over, and the push gate (243 s) against under 4 minutes, 1 % over, both on a four-CPU container; the critical path (4 min 46 s) is inside 6 minutes. Plans from WP44 on: checked at review (N3) |
+| 11 | **Met, with two reported misses** | Prose of `src/` is 11.89 % (6,573 of 55,299 lines), over the 10 % target and accepted as measured by §8.2.29 AE5; of `tests/` 2.75 % (1,127 of 41,020), under 3 %. Reported: the commit hook (95 to 117 s) against about 90 s, 6 to 30 % over, and the push gate (243 s) against under 4 minutes, 1 % over, both on a four-CPU container; the critical path (4 min 46 s) is inside 6 minutes. The author accepted both misses on 2 November 2026. Plans from WP44 on: checked at review (N3) |
 | 12 | **Met** | No cost is over its threshold (above) |
 | 13 | **Met** | 11 of 13 stages declare a figure and 2 are listed figure-free; six notebooks pass headless; VER-61 records `plot` with no upward edge; VER-65 stays at eleven; VER-62 shows drift at round-off |
-| 14 | **Partly met, reported** | The line check and identifier check passed in WP52; VER-45 passes; the skills have levels. Reported, not gated: the current specification is 74,298 words against the 60,000 to 68,000 predicted, and this plan 6,869 words against under 6,000. The specification grew by 6,669 words after WP52, with the clauses of WP54 to WP59 and Phase 5's FR-31 to FR-43; the plan grew with the amendments it folds in. The author rules on both |
+| 14 | **Partly met, reported** | The line check and identifier check passed in WP52; VER-45 passes; the skills have levels. Reported, not gated: the current specification is 74,298 words against the 60,000 to 68,000 predicted, and this plan 6,869 words against under 6,000. The specification grew by 6,669 words after WP52, with the clauses of WP54 to WP59 and Phase 5's FR-31 to FR-43; the plan grew with the amendments it folds in. The author accepted both on 2 November 2026 |
 
 **What the phase carries.** `REV-121` (Phase 5), `REV-156` and `REV-171` (Phase 6), `REV-135` to `REV-139`,
 `REV-141`, `REV-143` and `REV-170` (Phase 5), `REV-166` to `REV-168` (the Copilot probes), `MOD-09`, `MOD-10`,
