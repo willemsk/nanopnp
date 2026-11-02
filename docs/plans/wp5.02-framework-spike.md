@@ -198,7 +198,7 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 - [x] 689ad9e 8. `gui/web/{screens,states}.py`, `st-charge` and `home` in the chosen stack, `tests/tier1/test_gui_screens.py`, VER-78 in §7.2 and Appendix A, `gate.sh`, `ci.yml` (D5); done when VER-78 passes. **Executor:** main
 - [x] a8af402 9. `/np-gui render shell` (`render.md`, `render_shell.py`), `nontext` in `shoot.cjs`, the token, the mockups re-rendered, the live loop in `CONTRIBUTING.md` and §8.4.4 (D5, D6); done when `render shell` reports no failure on every state. **Executor:** main
 - [x] d524842 10. The REV-137 table in `workbench.md`; the CON-08 and CON-11 NOTEs; REV-137, -138, -141 and -143 set `fixed`; QR-16's Appendix A row (D6); done when the code and review say so. **Executor:** general-purpose on Sonnet
-- [ ] 11. `CHANGELOG.md` under `## [Unreleased]`, `current.md`, and the phase plan's WP5.02 entry delivered. **Executor:** main
+- [x] fd77235 11. `CHANGELOG.md` under `## [Unreleased]`, `current.md`, and the phase plan's WP5.02 entry delivered. **Executor:** main
 
 > **Outcome — items 1 to 5.** The fixture is 53,760 charged atoms in 3,420 residues; the shared server
 > answers its routes. The author ruled NiceGUI (§8.2.30 AF4; ADR-004's NOTE, the front end, v0.6). Evidence:
