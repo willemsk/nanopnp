@@ -284,8 +284,8 @@ package. Tag `v0.5.0-alpha.24`, after the merge.
 **Delivered 1 November 2026** ([plan](wp59-architecture-review-fixes.md); §8.2.27 AC1, AC2, AC5). `Case.source` gives the
 text, file and base a run records; a case hash agrees with equality; `Case.load` resolves its path once. `Session.check`
 and `Session.read` are the one route the command line (`validate case`, `validate case-hash`, `inspect`, `plot`) takes,
-and `cli` imports nothing from `pipeline` (VER-61 unchanged). A non-finite Newton trial residual aborts at minimum
-damping with the iterate restored (NUM-16's NOTE; one Tier 1 test). An empty `wall` is refused by name. REV-169 is
+and `cli/__init__.py` imports nothing from `pipeline` (VER-61 unchanged). A non-finite Newton trial residual aborts at
+minimum damping with the iterate restored (NUM-16's NOTE; one Tier 1 test). A mesh with no `wall` is refused by name. REV-169 is
 fixed: the six case files' identities are unchanged. No QoI moves. Live constraints: the three names are listed in
 `CHANGELOG.md` and IF-01's NOTE; `[0.5.0]` gathers them (WP60). Tag `v0.5.0-alpha.25`, after the merge.
 

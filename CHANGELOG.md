@@ -75,11 +75,13 @@ No QoI moves (VER-62 holds). The [plan](docs/plans/wp59-architecture-review-fixe
 - **Changed**: a non-finite Newton trial residual is no longer a forced step. Above the minimum damping the damping is
   cut; at the minimum the solve restores the iterate the step started from and raises `NewtonDivergenceError`, naming
   the residual, the iteration and the damping (NUM-16). `nanopnp validate case`, `validate case-hash`, `inspect` and
-  `plot` of a run go through `Case` and `Session`; `cli` imports nothing from `pipeline`. Their output is unchanged.
+  `plot` of a run go through `Case` and `Session`; `cli/__init__.py` imports nothing from `pipeline`. Their output is
+  unchanged.
 - **Fixed**: equal cases hash equal (`-0.0` and `0.0` hashed apart); `Case.load` resolves its path once, so a run records
-  the file it read whatever the working directory; `cylinder` and `from_structure` read the corrections once; a mesh
-  whose `wall` group is empty is refused by name, not measured as an empty array; and REV-169: the Phase-1 reference
-  case and the five ClyA validation cases name their mesh beside the case file, as §5.3.1 reads a relative path.
+  the file it read whatever the working directory; `cylinder` and `from_structure` read the corrections once; a
+  generated mesh with no `wall` segment, which carries no `wall` group, is refused by the wall-size gate by name, not
+  raised as a bare `KeyError`; and REV-169: the Phase-1 reference case, the five ClyA validation cases and example 05's
+  header name their mesh beside the case file, as §5.3.1 reads a relative path.
 
 ## [0.5.0-alpha.24]
 

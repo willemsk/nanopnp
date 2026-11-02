@@ -159,12 +159,16 @@ def damped_newton(
     increment_gates
         Checked on the damped increment; a violation reduces the damping and retries.
     raise_on_failure
-        Raise NewtonDivergenceError at the iteration cap.
+        Raise NewtonDivergenceError at the iteration cap; a non-finite trial residual at minimum
+        damping raises it whatever this says.
 
     Raises
     ------
     ValueError
         If ``increment_gates`` is given without ``increment``.
+    NewtonDivergenceError
+        At the iteration cap if ``raise_on_failure``, and on a non-finite trial residual at
+        minimum damping, with the state restored to the iterate the step started from.
     """
     import ngsolve as ngs
 
@@ -190,6 +194,9 @@ def damped_newton(
         residual_form.Apply(solution.vec, residual)
         projector.Project(residual)
         return float(ngs.Norm(residual))
+
+    def cut(damping: float) -> float:
+        return max(settings.minimum_damping, damping * settings.recovery_damping)
 
     check_all(state_gates)  # NUM-17 also holds of the state the caller handed in
     initial = residual_norm()
@@ -242,7 +249,7 @@ def damped_newton(
                 if at_minimum:
                     solution.vec.data = previous
                     raise
-                damping = max(settings.minimum_damping, damping * settings.recovery_damping)
+                damping = cut(damping)
                 continue
 
             trial_residual = residual_norm()
@@ -255,12 +262,12 @@ def damped_newton(
                         f"restored to the iterate the step started from, residual {current:.3e} "
                         "(NUM-16)"
                     )
-                damping = max(settings.minimum_damping, damping * settings.recovery_damping)
+                damping = cut(damping)
                 continue
             if trial_residual < current or at_minimum:
                 forced = not trial_residual < current
                 break
-            damping = max(settings.minimum_damping, damping * settings.recovery_damping)
+            damping = cut(damping)
 
         if forced:
             logger.warning(
