@@ -394,13 +394,6 @@ def _emit(result: Mapping[str, object]) -> None:
     sys.stdout.write(json.dumps(result) + "\n")
 
 
-def _nanopnp() -> str:
-    found = shutil.which("nanopnp", path=str(Path(sys.executable).parent))
-    if found is None:
-        raise CostStudyError(f"no nanopnp command is installed beside {sys.executable}")
-    return found
-
-
 def _prepare_2wcd(  # pragma: no cover - runs example 06's preparation; the script, not CI, does
     repository: Path, directory: Path
 ) -> Path:
@@ -513,19 +506,8 @@ def measure_a1(  # pragma: no cover - runs six protein walks; the script, not CI
     }
 
 
-def _quickstart_case(  # pragma: no cover - runs the mesher through the CLI; the script, not CI
-    repository: Path, directory: Path
-) -> Path:
-    subprocess.run(
-        [_nanopnp(), "mesh", "cylinder", "--out", "pore.msh"],
-        check=True,
-        capture_output=True,
-        cwd=directory,
-    )
-    document = substitute(
-        read_case(repository / QUICKSTART_CASE), {"inputs.mesh.path": str(directory / "pore.msh")}
-    )
-    return dump_case(document, directory / "quickstart.case.yaml")
+def _quickstart_case(repository: Path, directory: Path) -> Path:
+    return dump_case(read_case(repository / QUICKSTART_CASE), directory / "quickstart.case.yaml")
 
 
 def _charged_case(  # pragma: no cover - prepares 2WCD through example 06; the script, not CI
