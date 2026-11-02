@@ -38,7 +38,7 @@ def markers_svg(markers: list[tuple[float, float, float]]) -> str:
 
 
 @ui.page("/")
-def index() -> None:
+def index(tab: str = "study", residue: str = "", linked: int = 1) -> None:
     ui.add_head_html(
         '<link rel="stylesheet" href="/vendor/molstar/molstar.css">'
         '<link rel="stylesheet" href="/tokens.css">'
@@ -47,7 +47,7 @@ def index() -> None:
         "#mol{position:relative;width:560px;height:420px;background:var(--canvas-3d)}</style>"
     )
     extent = link().extent
-    state = {"key": None, "linked": True}
+    state = {"key": None, "linked": bool(linked)}
     residues = link().residues()
     buttons: dict[str, ui.button] = {}
 
@@ -88,7 +88,7 @@ def index() -> None:
     with ui.tabs().props("data-control=tabs") as tabs:
         study = ui.tab("Charge on the mesh").props("data-control=tab-study")
         sketch = ui.tab("Sketcher").props("data-control=tab-sketcher")
-    with ui.tab_panels(tabs, value=study).props("keep-alive"):
+    with ui.tab_panels(tabs, value=sketch if tab == "sketcher" else study).props("keep-alive"):
         with ui.tab_panel(study):
             with ui.row().classes("items-start no-wrap"):
                 with ui.column():
@@ -102,8 +102,8 @@ def index() -> None:
                             )
                 with ui.column():
                     with ui.row().classes("items-center"):
-                        chip = ui.badge("Linked").props("data-control=link-chip")
-                        unlink = ui.button("Unlink", on_click=toggle_link).props("flat dense data-control=unlink")
+                        chip = ui.badge("Linked" if linked else "Unlinked").props("data-control=link-chip")
+                        unlink = ui.button("Unlink" if linked else "Link", on_click=toggle_link).props("flat dense data-control=unlink")
                         status = ui.label("")
                     image = (
                         ui.interactive_image("/api/map", on_mouse=on_map, events=["click"], cross=False)
@@ -114,7 +114,16 @@ def index() -> None:
             ui.label("The sketcher arrives in a later phase.").props("data-control=banner")
             ui.html('<canvas data-control="sketcher-canvas" width="400" height="200" '
                     'style="border:1px solid var(--control-edge)"></canvas>')
-    ui.timer(0.1, lambda: ui.run_javascript("nano.init()"), once=True)
+
+    async def start() -> None:
+        if tab == "sketcher":
+            await ui.run_javascript("document.body.dataset.screenReady = '1'")
+            return
+        await ui.run_javascript("nano.init()", timeout=60)
+        if residue:
+            await select(residue)
+
+    ui.timer(0.1, start, once=True)
 
 
 def main() -> None:

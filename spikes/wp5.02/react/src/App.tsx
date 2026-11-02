@@ -13,11 +13,13 @@ function bumpDrawn() {
   }));
 }
 
+const query = new URLSearchParams(window.location.search);
+
 function StudyScreen() {
   const molEl = useRef<HTMLDivElement>(null);
   const mol = useRef<Mol | null>(null);
-  const linked = useRef(true);
-  const [isLinked, setLinked] = useState(true);
+  const linked = useRef(query.get('linked') !== '0');
+  const [isLinked, setLinked] = useState(linked.current);
   const [residues, setResidues] = useState<Residue[]>([]);
   const [extent, setExtent] = useState<Extent | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -40,6 +42,8 @@ function StudyScreen() {
     createMol(molEl.current!, (key) => { if (linked.current) void pick(key, false); }).then((m) => {
       if (dead) { m.viewer.dispose(); return; }
       mol.current = m;
+      const first = query.get('residue');
+      if (first) void pick(first, true);
       document.body.dataset.screenReady = '1';
     });
     return () => { dead = true; mol.current?.viewer.dispose(); mol.current = null; };
@@ -107,14 +111,16 @@ function StudyScreen() {
 }
 
 export function App() {
-  const [tab, setTab] = useState<'study' | 'sketcher'>('study');
+  const [tab, setTab] = useState<'study' | 'sketcher'>(query.get('tab') === 'sketcher' ? 'sketcher' : 'study');
+  const [visited, setVisited] = useState(tab === 'study');
+  useEffect(() => { if (tab === 'study') setVisited(true); else if (!visited) document.body.dataset.screenReady = '1'; }, [tab, visited]);
   return (
     <div>
       <div role="tablist" data-control="tabs" className="tabs">
         <button role="tab" aria-selected={tab === 'study'} data-control="tab-study" onClick={() => setTab('study')}>Charge on the mesh</button>
         <button role="tab" aria-selected={tab === 'sketcher'} data-control="tab-sketcher" onClick={() => setTab('sketcher')}>Sketcher</button>
       </div>
-      <div hidden={tab !== 'study'}><StudyScreen /></div>
+      <div hidden={tab !== 'study'}>{visited && <StudyScreen />}</div>
       {tab === 'sketcher' && (
         <div className="panel">
           <p data-control="banner">The sketcher arrives in a later phase.</p>
