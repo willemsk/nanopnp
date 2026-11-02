@@ -238,10 +238,14 @@ jobs:
           version: "1"
       - if: env.CODE == 'true'
         run: uv sync --all-extras
+      # VER-78 drives the workbench in Chromium; the tier1 leg fails where none launches.
+      - if: env.CODE == 'true' && matrix.shard == 'tier1'
+        run: uv run playwright install --with-deps chromium
       - if: env.CODE == 'true'
         shell: bash
         env:
           SHARD: ${{ matrix.shard }}
+          NANOPNP_REQUIRE_BROWSER: ${{ matrix.shard == 'tier1' && '1' || '0' }}
         run: |
           start=$SECONDS
           status=0

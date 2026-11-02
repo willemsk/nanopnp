@@ -8,11 +8,13 @@ import re
 import secrets
 import socket
 import sys
+import tempfile
 import threading
 import webbrowser
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from http import cookies
+from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qs
 
@@ -20,6 +22,8 @@ import uvicorn
 from fastapi import FastAPI
 
 from nanopnp.core.public import __version__
+from nanopnp.gui.web.pages import install
+from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -120,8 +124,8 @@ class Guard:
         await self.app(scope, receive, with_cookie)
 
 
-def build_app(token: str) -> Guard:
-    """Return the FastAPI app behind its guard.
+def build_app(token: str, bench: Workbench) -> Guard:
+    """Return the FastAPI app, with the screens of ``bench`` installed, behind its guard.
 
     The guard learns its allowed Host values once the port is bound, so the caller sets
     ``guard.hosts`` before serving.
@@ -139,6 +143,7 @@ def build_app(token: str) -> Guard:
         """Say that the server is up, and which version of nanopnp runs it."""
         return {"status": "ok", "version": __version__}
 
+    install(app, bench, token)
     return Guard(app, token)
 
 
@@ -181,18 +186,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         "'nanopnp-gui ready <url>', and stops when its standard input closes or on "
         "SIGINT or SIGTERM.",
     )
+    parser.add_argument("case", nargs="?", type=Path, help="a case file, walked to its charge")
+    parser.add_argument(
+        "--state", choices=STATES, help="a fixture state in place of a case (the screens' tests)"
+    )
     parser.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
     parser.add_argument(
         "--no-browser", action="store_true", help="print the address and open nothing"
     )
     args = parser.parse_args(argv)
+    if args.case is not None and args.state is not None:
+        parser.error("give a case file or --state, not both")
 
     token = secrets.token_urlsafe(32)
-    guard = build_app(token)
-    config = uvicorn.Config(guard, host=HOST, port=args.port, log_level="warning")
-    server = _Server(config, guard, token, browser=not args.no_browser)
-    threading.Thread(target=_watch_input, args=(server,), daemon=True).start()
-    server.run()
+    with tempfile.TemporaryDirectory(prefix="nanopnp-gui-") as work:
+        if args.case is not None:
+            bench = boot_case(args.case, Path(work))
+        else:
+            bench = boot(args.state or "empty", Path(work))
+        guard = build_app(token, bench)
+        config = uvicorn.Config(guard, host=HOST, port=args.port, log_level="warning")
+        server = _Server(config, guard, token, browser=not args.no_browser)
+        threading.Thread(target=_watch_input, args=(server,), daemon=True).start()
+        server.run()
     return 0
 
 
