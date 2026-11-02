@@ -1,0 +1,26 @@
+const { chromium } = require('playwright');
+const url = process.argv[2], out = process.argv[3];
+(async () => {
+  const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader'] });
+  const p = await b.newPage({ viewport: { width: 1100, height: 960 } });
+  const errs = [];
+  p.on('pageerror', e => errs.push('pageerror ' + e.message));
+  p.on('console', m => { if (m.type() === 'error') errs.push('console ' + m.text()); });
+  await p.goto(url);
+  await p.waitForSelector('body[data-screen-ready="1"]', { timeout: 60000 });
+  const drawn = () => p.evaluate(() => Number(document.body.dataset.drawn || 0));
+  let d0 = await drawn();
+  await p.click('[data-residue="45"]');
+  await p.waitForFunction(n => Number(document.body.dataset.drawn || 0) > n, d0, { timeout: 10000 });
+  console.log('strip pick drawn', await drawn());
+  await p.waitForTimeout(800);
+  d0 = await drawn();
+  const map = await p.$('[data-control=map]');
+  const box = await map.boundingBox();
+  await p.mouse.click(box.x + box.width * 0.5, box.y + box.height * 0.4);
+  await p.waitForFunction(n => Number(document.body.dataset.drawn || 0) > n, d0, { timeout: 10000 }).catch(async () => { console.log('map click: no draw'); await p.screenshot({ path: out }); console.log(JSON.stringify(errs)); process.exit(1); });
+  console.log('map pick drawn', await drawn(), 'status', await p.evaluate(() => document.body.innerText.match(/Residue \S+/)?.[0]));
+  await p.screenshot({ path: out });
+  console.log('errors', JSON.stringify(errs.slice(0, 5)));
+  await b.close();
+})();
