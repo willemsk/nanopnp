@@ -59,6 +59,215 @@ Outside the package sequence: the workflow also runs on the GitHub Copilot app (
 - **Changed**: `gate.sh` refuses with one exit-0 structured denial on both hosts and refuses a string
   payload's push (§8.2.26 AB1); `format.sh`, `session-start.sh` and `adapter.sh` take Copilot's shapes.
 
+## [0.5.0] - 2026-11-02
+
+**Phase 4, polish and user testing.** The architecture's modularity was measured, and its findings were
+fixed or ruled. The subpackages no longer form an import cycle (the `top` relation, one component of ten
+subpackages at `v0.4.0`, has none), the backend is a registry, and the stages describe themselves. The case
+file's schema is `nanopnp/case/v0.5`, the Python interface is a `Case` and a `Session`, the figures and six
+notebooks stand on one plotting layer, and the command line was read by a person who ran five scripted
+sessions. The specification is a bundle, the knowledge base is an Open Knowledge Format bundle, the tests keep
+only what can fail silently, and the development loop is one commit hook and one push gate. The review register
+holds 173 rows; 129 are `fixed` and the others each carry a ruling that names their owner. No computed number
+moved beyond the bounds the number-stability golden records (VER-62), which holds on Linux, macOS and Windows.
+The end-of-phase report, with every number measured again on the close's own tree, is in
+[docs/plans/phase-4-polish-and-user-testing.md](docs/plans/phase-4-polish-and-user-testing.md).
+
+The release gathers 26 work packages. Package WP(34+N) is `v0.5.0-alpha.N`; the close is described here and
+tagged `v0.5.0` alone (§8.2.5 E5, §8.2.7 G11):
+
+- WP35, the modularity exploration (`v0.5.0-alpha.1`);
+- WP36, the stage protocol and the walk (`alpha.2`);
+- WP37, the cycle cuts, the exit codes and the backend guard (`alpha.3`);
+- WP38, the `io` split (`alpha.4`);
+- WP39, the backend registries (`alpha.5`);
+- WP40, the stale refusals (`alpha.6`);
+- WP41, the accuracy fixes (`alpha.7`);
+- WP42, the verification checks and the case schema `v0.5` (`alpha.8`);
+- WP43, the development loop (`alpha.9`);
+- WP44, the loop simplified (`alpha.10`);
+- WP45, the prose strip (`alpha.11`);
+- WP46, the small fixes (`alpha.12`);
+- WP47, the knowledge base as an OKF bundle (`alpha.13`);
+- WP48, the bundle backfilled and the pending ledger closed (`alpha.14`);
+- WP49, the cost study (`alpha.15`);
+- WP50, the test scope (`alpha.16`);
+- WP51, the plotting library and the notebooks (`alpha.17`);
+- WP52, the documents: the specification and the plans split (`alpha.18`);
+- WP53, the workflow: three commands with levels (`alpha.19`);
+- WP54, the notebooks and figures revised (`alpha.20`);
+- WP55, the user-testing protocol (`alpha.21`);
+- WP56, the command line read by a person (`alpha.22`);
+- WP57, an idealised pore as geometry, and the Python interface rebuilt on a `Case` and a `Session` (`alpha.23`);
+- WP58, documentation increment 4 (`alpha.24`);
+- WP59, the architecture review's fixes (`alpha.25`);
+- WP60, the close, described here and tagged `v0.5.0` alone.
+
+WP5.01, the workbench design study of Phase 5, merged in the second lane before this release. It takes no tag,
+and its entry waits under `[Unreleased]` (§8.4.1).
+
+### Added
+
+- **The close's own measurements** (WP60; §8.2.9 I3, §8.2.12 M2): the cost study re-run on a clean tree, the
+  report's numbers measured again, and the release named. No share is over its threshold: stage 1 projects to
+  1.15 GB at 1,000 frames (limit 4 GB), building forms is at most 0.69 % of stage 10 (limit 5 %), and store IO
+  is at most 0.84 % of a cold walk (limit 10 %) (REV-116).
+- **`SPECIFICATION.md` §8.2.29 AE5**: the source's prose share at the close, 11.9 % of `src/nanopnp`
+  and 2.7 % of `tests/`, is accepted as measured.
+
+### Changed
+
+- **The workflow prose is plainer** (WP60; §8.2.27 AC6). `CLAUDE.md`, `.claude/workflow/core.md` and the
+  `np-*` skills use shorter sentences (mean 14.3 to 11.6 words) and state each repeated rule once, in its owner.
+  Every normative rule and word cap is kept.
+- The two findings logs, `docs/project/modularity-findings.md` and `docs/user-testing/findings.md`, read
+  `closed`: every row is terminal. The ruling index has no `open:` marker for a package of Phase 4.
+- WP33's test-duration targets are retired (REV-47). §7.6's NOTE on the loop's timings replaces them, and the
+  close reports the measured durations.
+
+### Fixed
+
+- **The cost study's quick-start leg** (REV-116) walks `examples/01-quickstart/quickstart.case.yaml`. It meshed with
+  a command that WP57 removed, so the leg failed; the record in `docs/project/cost-study.json` was re-run on a clean
+  tree and shows `dirty: false`.
+
+### Breaks and their migration
+
+Each break of `v0.5.0-alpha.1` to `alpha.25`: what broke, the migration, and the pre-release that broke it. A
+case file written for a release before this one first takes the schema change at the head of the list.
+
+**The case file**
+
+- **The schema identifier.** `nanopnp/case/v1` and `v2` are retired. Write `schema: nanopnp/case/v0.5`
+  (`alpha.8`).
+- **Unread leaves.** A model refuses a leaf it does not read when the leaf is set away from its default. For
+  `pb`, `pb-linear` and `poisson`, omit the fluid and correction blocks; for `pnp`, omit the viscosity and
+  density blocks and leave `variable_density` and `inertia` `false` (`alpha.8`).
+- **Two settings that were recorded and never applied.** `physics.variable_density: false` beside a density
+  correction with no varying fit, and `physics.dielectric_gradient_forces: true` beside a permittivity
+  correction with no concentration fit, are refused. Remove the setting or the correction (`alpha.8`).
+- **The inf-sup check** runs only when the model reads `numerics.elements.u` and `physics.flow` is true. A case
+  that set an element pair for a model without flow now loads (`alpha.8`). `load_case` refuses an
+  inf-sup-unstable pair, an unregistered model, stabilisation mode or linear solver when it loads the case, not
+  when it resolves it. Choose a stable pair or a registered name (`alpha.4`).
+- **`inputs.mesh: artefact:`** is refused when the case is resolved, so `nanopnp validate case` exits 3 on it.
+  Supply the mesh as a file (`alpha.6`).
+- **The JSON schema of `numerics.mesh.backend`, `numerics.linear.solver` and `numerics.stabilisation`** is a
+  string, not an enumeration. Every valid document stays valid; a name that no registry holds is refused when the
+  case is checked (`alpha.5`).
+- **A mesher setting that names a shared entry** (`backend`, `wall`, `table`, `grading`, `gate`, `exclusion`) is
+  refused, not merged over. Rename the setting (`alpha.5`).
+- **A relative path in a case** is read beside the case file, not against the working directory. A case written
+  for another working directory needs its paths made relative to the file (`alpha.23`). A relative path in
+  `Case.load` was first made absolute against the file (`alpha.20`).
+- **Inputs now refused.** A trajectory with no frame, a second Cα at one residue, a chain split across the periodic
+  box (consecutive Cα over 1.0 nm apart) and a density map whose spacing lies outside 0.025 to 0.05 nm (it is
+  written in ångströms) are refused, naming the file, residue or chain. Repair the input (`alpha.12`).
+- **Two correction files of one file name** are refused, not keyed as one. Rename one (`alpha.23`).
+- **`default_ladder`** refuses a Dirichlet wall potential and a wall surface charge together, two models of one
+  wall. Choose one (`alpha.23`).
+
+**The numbers**
+
+- **A supplied fixed-charge field** is assembled at order 8. The golden moves within the bounds it records
+  (2.9 × 10⁻⁵ on `example-02-epnpns`, 1.1 × 10⁻⁵ on `example-03-charged`). Solve the case again; no case
+  file changes (`alpha.7`).
+- **Newton stops on per-field relative updates** or an absolute residual floor of 10⁻¹², not on the relative
+  residual alone. The golden moves by 1.6 × 10⁻⁶ at most (`2wcd-charged`). Solve the case again (`alpha.7`).
+- **Stage 10's key** carries `algorithm_revision` and the Newton record's `field_floor_ratio`, and a supplied
+  charge field's artefact carries its `quadrature_order`. A solution stored by an earlier build misses and is
+  solved again (`alpha.8`).
+- **Stage 6's key** leaves the Debye length out, and the charge-grid key names `lattice_record`. Stored stage-6
+  keys change once, so an existing store meshes again once, and stored charge grids are deposited again once
+  (`alpha.12`).
+- **A non-finite Newton trial residual** is no longer a forced step. The damping is cut; at the minimum the solve
+  restores the iterate and raises `NewtonDivergenceError`, naming the residual, the iteration and the damping.
+  Read the error and lower the bias step or change the ladder (`alpha.25`).
+- **The solve writes `newton_history.json`.** An artefact stored before `alpha.17` lacks it and draws "history not
+  recorded". Solve the case again to record it (`alpha.17`).
+
+**The Python interface**
+
+- **The public names `run_document`, `resolve`, `load_case`, `loads_case`, `dump_case`, `dumps_case`,
+  `CaseDocument`, `plan_from_document`, `run_plan`, `Stage`, `registered_stages` and `mesh_cylinder` are gone from
+  `nanopnp.PUBLIC`.** Build a case with `Case.load`, `Case.loads` or `Case.cylinder` and run it with
+  `Session(store).run(case)`. The functions stay in their modules (`alpha.23`).
+- **`run_case`** is gone. Use `Session(store).run(Case.load(path), upto=..., only=...)`; the hooks are arguments of
+  `run` (`alpha.23`).
+- **`Case.cylinder(..., store=...)`, `Case.run` and the `"debye"` wall** are gone. Build the case, then run it with
+  a `Session`; `wall_h_nm` is a number or `"auto"` (`alpha.23`).
+- **`nanopnp.sweep.sweep`** is gone. Use `session.sweep(case, axis=..., values=...)`, which returns a
+  `SweepResult` (`alpha.23`).
+- **`nanopnp.pipeline.reproduce`** moved to `nanopnp.api.reproduce.reproduce` (`alpha.23`).
+- **The `check_routes` stage option and `QoIStage.deviations`** are gone: NUM-26's cross-check of the two current
+  routes always runs (`alpha.23`).
+- **`SolveHook` gains `rung_solved(name, seconds, iterations)`.** An implementation adds the method; a no-op is
+  enough (`alpha.23`).
+- **`SolutionFields` and `solution_fields`** moved to `nanopnp.post.export` (`alpha.20`).
+- **A stage written outside the package defines `key(inputs)`.** A `StageDescription` built by hand gives its six
+  new keyword-only fields (`takes_workspace`, `takes_store`, `key_is_artefact`, `weight`, `needs_section`,
+  `optional_inputs`). `register()` refuses an input that is neither `case_path` nor an earlier stage, a weight that
+  is not finite and positive, and an optional input that is not one of the stage's inputs (`alpha.2`).
+- **The walk runs stages in registration order**, read by `walk_order()`. A stage registered later is walked after
+  the built-in ones (`alpha.2`).
+- **A stage that writes a payload and is built without `workspace=`** raises `MissingWorkspaceError`; a workspace
+  that already holds files raises `WorkspaceInUseError`. Pass an empty directory, or `overwrite_workspace=True`
+  (`alpha.12`).
+- **`StageInputs(case=...)` is `StageInputs(resolved=...)`**, a `ResolvedCase` that the assembler builds once.
+  `solve.state.restore` takes `resolved=` (`alpha.4`).
+- **`ResolvedCase.physics_model()` and `.model_declaration()`** are removed. Read the fields `declaration` and
+  `essential_boundaries`, and build the model with `physics.models.case_model(resolved)` (`alpha.4`).
+- **`pipeline.run.stored_upstream`** takes `feeding=`, the stage whose inputs it gathers (`alpha.4`).
+- **The models' `fixed_charge`** is a `FixedCharge`, a density with its integration rule, and
+  `fixed_charge_rule_order` is gone from the models and from `default_ladder`. A bare density raises `TypeError`
+  (`alpha.8`).
+- **`LadderResult.stabilisation*`** and the per-rung records raise `ValueError` on a missing or non-mapping entry,
+  and the electrostatic models record stabilisation `none` (`alpha.7`).
+- **`resolve_wall_size` and `case_debye_length_nm`** take the keyword `permittivity_0` (`alpha.3`).
+- **`Session.open`** reads a run's artefacts from the store its record names, unless the session was given a store.
+  `RUN_SCHEMA` and `RUN_RECORD_FILENAME` live in `nanopnp.io.manifest` and stay importable from
+  `nanopnp.pipeline.run` (`alpha.25`).
+
+**Internal modules** (`IF-01`: an internal path is not API; no old path is kept)
+
+- **Moved in `alpha.3`:** `solve.gates`, `solve.linear` and `solve.newton` to `numerics.gates`, `numerics.linear`
+  and `numerics.newton`; `physics.measures` to `numerics.measures`; `mesh.distance` to `physics.distance`;
+  `mesh.profile` to `geometry.profile`; `materials.fields` (except `blend` and `nearest_solid_permittivity`) to
+  `charge.dielectric`; `mesh.primitives.TOL_NM` to `geometry.tolerance.TOL_NM`; `cli.errors` to `core.errors`.
+- **Moved in `alpha.4`:** `io.case`'s loading, resolving and stage code to `pipeline.case`; its option helpers
+  to `pipeline.checks`; `ResolvedCase` and its parts to `io.resolved`; the field-path helpers to `io.case_paths`;
+  `io.case.build_model` to `physics.models.build_case_model`; `io.run` and `io.reproduce` to `pipeline.run` and
+  `pipeline.reproduce`; `io.fields` to `post.export`; the solution-field names to `io.vocabulary`
+  (`physics.models` no longer exports `VELOCITY_AXIS` or `PRESSURE_MEAN`).
+- **Moved or removed in `alpha.5`:** `numerics.linear.AVAILABLE_SOLVERS` and `mesh.generate.gmsh_backend` are
+  removed; `mesh.generate.mesh_shape` is `mesh.meshers.mesh_shape`. Use the registries
+  (`register_mesher`, `register_solver`).
+- **Removed in `alpha.2`:** `io.run`'s `PIPELINE`, `PAYLOAD_FREE`, `STRUCTURE_STAGES`, `WORKSPACE_STAGES` and
+  `STORE_STAGES`. Use `walk_order()` and `describe(name).<fact>`.
+
+**The command line and the repository**
+
+- **`nanopnp mesh cylinder`** is gone. Declare the pore (`geometry.pore`, `numerics.mesh`) in the case, or write it
+  with `nanopnp geometry cylinder --out FILE.yaml` and mesh it with `nanopnp mesh FILE.yaml` (`alpha.23`).
+- **`nanopnp run --upto X`** walks the stages X reads, and no others. `--upto materials` no longer meshes or builds
+  the charge; name the last stage you need (`alpha.4`).
+- **`nanopnp inspect`** reads by schema and prints a summary, not the raw manifest. `--json` prints what it
+  printed before; `--section GROUP` prints one group of a manifest (`alpha.22`).
+- **A refusal's text** names its requirement, not a release that has shipped; exit codes are unchanged
+  (`alpha.6`).
+- **Session 03's coarse case** is `wall-100.case.yaml`, after its mesh (`alpha.22`).
+- **The knowledge base** is `knowledge/`, no longer `.knowledge/`, and the old files `knowledge/0N-*.md` are gone.
+  Cite a concept by its bundle path (`alpha.13`).
+- **The specification** is `SPECIFICATION.md` as the entry point over `specification/`. A link to a section anchor
+  of the old single file follows the map in `SPECIFICATION.md` (`alpha.18`).
+- **The workflow commands** are `/np-plan`, `/np-implement` and `/np-ship`, with no alias for `/phase-plan`,
+  `/wp-plan`, `/wp-implement` and `/wp-ship` (`alpha.19`).
+- **For contributors:** `pytest --nightly` replaces `--extended` (`alpha.16`); the coverage job, `diff-cover` and
+  `pytest-cov` are gone (`alpha.16`); the commit hook runs the lock check, ruff, the format check, mypy and
+  Tier 1, and the impact recorder, selector, map, budget enforcer and agent guard are deleted (`alpha.10`); a pull
+  request runs lint, the documentation build and Tiers 1 and 2 in two shards on Ubuntu, and macOS, Windows and the
+  `nightly` walks run after a merge, nightly and before a release (`alpha.9`, `alpha.10`).
+
 ## [0.5.0-alpha.25]
 
 WP59: the architecture review's fixes, Phase 4's last-but-one package (`SPECIFICATION.md` §8.2.27 AC1, AC2, AC5;

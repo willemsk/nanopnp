@@ -54,7 +54,7 @@ Meshes are supplied from outside, generated for an idealised pore or the ClyA re
 or built from a PDB structure by the geometry pipeline (Phase 2). Fixed charge is supplied as a
 field, or protonated with PDB2PQR and PROPKA and deposited on the mesh by the charge pipeline
 (Phase 3, v0.4). The Python interface, built on a case and the session that runs it, and the
-figures and notebooks belong to v0.5 (Phase 4), which is in progress and not yet tagged. Nothing is
+figures and notebooks belong to v0.5 (Phase 4), released as `v0.5.0`. v0.6 (Phase 5, the graphical interface) is in progress. Nothing is
 a validated release yet. The comparison against the paper's published results gates v0.7.
 The case schema and the Python API may still change until the stable v1.0 (`SPECIFICATION.md` §8.2.6 F4).
 
@@ -64,8 +64,8 @@ The case schema and the Python API may still change until the stable v1.0 (`SPEC
 | v0.2 | 1 | Solver core: external meshes and fields, QoI extraction, frozen case schema, API, CLI, sweeps | **released**, [`v0.2.0`](CHANGELOG.md#020---2026-09-24) |
 | v0.3 | 2 | Geometry pipeline from a PDB structure: alignment, density, symmetry reduction, contour, mesh | **released**, [`v0.3.0`](CHANGELOG.md#030---2026-09-30) |
 | v0.4 | 3 | Charge pipeline: PDB2PQR charges, smeared fixed charge and dielectric; the paper's pipeline end to end | **released**, [`v0.4.0`](CHANGELOG.md#040---2026-10-04) |
-| v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | **in progress**, not yet tagged |
-| v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the desktop application | planned |
+| v0.5 | 4 | Polish and user testing: the architecture's modularity explored, then the physics, numerics, API and CLI tested by a user | **released**, [`v0.5.0`](CHANGELOG.md#050---2026-11-02) |
+| v0.6 | 5 | Graphical interface: a design and requirements document with mockups, then the desktop application | **in progress** |
 | v0.7 | 6 | Validated release: the published results reproduced, V&V suite in CI, tutorials, JOSS submission, DOI archive | planned |
 | v1.0 | — | Stable release: the API stability promise; its content is the author's to define | planned |
 

@@ -250,7 +250,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * Y9 - §5.5's NOTE on a stage of one's own
 * Y10 - §5.5 and its NOTE on a stage of one's own
 * Y11 - §8.4.4; the Phase 4 plan
-* Z1 - the Phase 4 plan; amended by AC1; open: WP60
+* Z1 - spent
 * Z2 - the Phase 4 plan
 * Z3 - §8.1's Phase 4 documentation increment
 * Z4 - the Phase 4 plan
@@ -270,7 +270,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AC3 - REV-170; placed by AD4; open: the Geometry tool's package
 * AC4 - REV-171; amended by AD5; open: Phase 6
 * AC5 - REV-169
-* AC6 - the Phase 4 plan; §8.4.4 if a rule's wording moves; open: WP60
+* AC6 - spent
 * AD1 - the Phase 5 plan; open: the second `/np-plan amend 5`
 * AD2 - the Phase 5 plan
 * AD3 - the Phase 5 plan; open: WP5.03 to WP5.06
