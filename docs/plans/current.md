@@ -1,6 +1,6 @@
 # Current work
 
-Updated 2 November 2026 (WP59 reviewed, its review's items ruled and fixed; the close is WP60).
+Updated 2 November 2026 (WP59 merged and tagged; WP60, the close, planned).
 Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
@@ -8,15 +8,15 @@ Navigation only;
 
 Phase 4 tidies the program before others rely on it. The guide has been brought level with the
 program. An outside review of the code was checked line by line: some of its findings held, and
-those are fixed, awaiting review, before the release the browser workbench will build on. A case now keeps its
+those are fixed, before the release the browser workbench will build on. A case now keeps its
 own record of where it came from, the command line and the workbench check and explain a case
 the same way, a solve that produces an invalid number stops at once, and six sample case files
 find their mesh wherever they are run from. Then the close settles every finding, measures the
 report's numbers again, makes the coding sessions' instructions plainer and names the release.
 Phase 5, the browser workbench, has its design study merged; nothing is built until that release.
 
-**Your call:** nothing waits on you, except the guide's release tag, which is yours to push if
-no session has pushed it.
+**Your call:** whether the plain-language pass of the close also covers the steward's instructions
+and the Copilot map; the recommendation is no.
 
 ## Position
 
@@ -24,12 +24,12 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress**. WP35 to WP58 are merged, WP58 at `dd45e59`; WP59 is reviewed (CODE_REVIEW_025; §8.2.29) and awaits the merge. **`v0.5.0-alpha.24`, WP58's, is the author's to
-  push** if no session has (origin holds up to alpha.23; §8.4.1). The sixth amendment (§8.2.27) takes the author's
-  architecture review, checked in [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md): **WP59**, its fixes and
-  REV-169, is **reviewed** ([plan](wp59-architecture-review-fixes.md); REV-172 and REV-173 fixed by §8.2.29;
-  `v0.5.0-alpha.25` after the merge); then **WP60**, the close, `v0.5.0` alone. REV-170 is Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4).
-  Next: the author merges WP59, `/np-ship wp 59` tags it, then `/np-plan wp 60`. host: claude-code.
+  **in progress**. WP35 to WP59 are merged, WP59 at `a800a45`, tagged `v0.5.0-alpha.25` (origin holds up to
+  alpha.25; §8.4.1). **WP60**, the close, is **planned** ([plan](wp60-phase-4-close.md)): the registers closed, the
+  cost record re-run (REV-116), REV-47, the end-of-phase report re-measured, the workflow prose made plainer (AC6),
+  the `[0.5.0]` changelog; the source's prose share accepted as measured (§8.2.29 AE5); `v0.5.0` alone after the
+  merge. REV-170 is Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4).
+  Next: `/np-implement wp 60`, then `/np-ship phase 4`. host: claude-code.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane: [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged before `v0.5.0`. The
   first amendment (§8.2.28) orders, after WP5.02's spike, four library packages: WP5.03 protonation before the
@@ -87,7 +87,7 @@ One line per lane (§8.4.4).
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
 | The notebooks and the protocol | `wp54-notebooks-and-figures-revised.md`, `wp55-user-testing-protocol.md`; §8.2.20; FR-30, FR-37 |
 | The fixes | `wp56-command-line-read-by-a-person.md`, `wp57-idealised-pore-and-python-interface.md`; `docs/user-testing/findings.md`; §8.2.21, §8.2.22 |
-| The last two packages | `wp59-architecture-review-fixes.md`; the Phase 4 plan's WP60 entry; §8.2.27; `CODE_REVIEW_024.md` |
+| The close | `wp60-phase-4-close.md`; the Phase 4 plan's WP60 entry and criteria; §8.2.27 AC6; §8.2.29 AE5 |
 | The workbench | `phase-5-workbench.md`; §8.2.17, §8.2.28; M3; F5 |
 
 ## Handoff Rules
