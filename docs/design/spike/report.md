@@ -102,3 +102,8 @@ Both candidates meet every pre-set test the spike has, so the ruling turns on wh
 language and no build step against a smaller install and the widest set of web components. The plan's
 recommendation, stated before the numbers were in, was Python-first if it met the redraw time and wrapped
 in a desktop window. On the measures that could be run here it does both.
+
+## The ruling
+
+The author chose **NiceGUI** on 2 November 2026 (§8.2.30 AF4; ADR-004's NOTE, the front end, v0.6). The
+NiceGUI candidate's page, bridge and server wiring are the model for the code that lands in `src/`.
