@@ -1,6 +1,6 @@
 # WP5.02 — The framework spike and the visual-feedback workflow
 
-**Status: in progress, items 1 to 5 done, 2 November 2026.** 2 November 2026, on `v0.5.0`. It inherits WP5.01's design
+**Status: in progress, items 1 to 6 done, 2 November 2026.** 2 November 2026, on `v0.5.0`. It inherits WP5.01's design
 (`docs/design/workbench.md`), its `/np-gui` loop and REV-137, REV-138, REV-141 and REV-143.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -192,8 +192,8 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 - [x] f1445e7 2. `spikes/wp5.02/nicegui/` (D1); done when both link directions and the stub work by mouse and keyboard. **Executor:** main
 - [x] 13cecfd 3. `spikes/wp5.02/react/` (D1); done as item 2. **Executor:** main
 - [x] 8554b1f 4. `spikes/wp5.02/{measure,electron}/` and the six measures run (D3); done when every cell of the report's table has a number or a verdict. **Executor:** main
-- [ ] 5. `docs/design/spike/report.md`, published; the ruling; the history row and the ADR-004 NOTE (D3); done when the author has ruled. **Executor:** main
-- [ ] 6. Compaction checkpoint. **Executor:** main
+- [x] 151b08e 5. `docs/design/spike/report.md`, published; the ruling; the history row and the ADR-004 NOTE (D3); done when the author has ruled. **Executor:** main
+- [x] 151b08e 6. Compaction checkpoint. **Executor:** main
 - [ ] 7. Delete `spikes/` (AF3), with the report linking the last commit that held them; `gui/web/server.py`, the `cli` subcommand, the extra, the layering row and REV-174 (D4); done when VER-61 passes and `nanopnp gui --no-browser --port 0` prints its ready line. **Executor:** main
 - [ ] 8. `gui/web/{screens,states}.py`, `st-charge` and `home` in the chosen stack, `tests/tier1/test_gui_screens.py`, VER-78 in §7.2 and Appendix A, `gate.sh`, `ci.yml` (D5); done when VER-78 passes. **Executor:** main
 - [ ] 9. `/np-gui render shell` (`render.md`, `render_shell.py`), `nontext` in `shoot.cjs`, the token, the mockups re-rendered, the live loop in `CONTRIBUTING.md` and §8.4.4 (D5, D6); done when `render shell` reports no failure on every state. **Executor:** main
