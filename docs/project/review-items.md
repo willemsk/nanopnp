@@ -2188,3 +2188,31 @@ guards a public entry.
 **Amended** (§8.2.28 AD5, 1 November 2026): the QoI seam, one extraction interface and one boundary-existence check shared
 by `physics/distance.py`, `post/indicator.py`, `post/reaction_flux.py` and `post/forces.py`, moves to WP5.06 with
 MOD-09's outputs registry. The cost items, the coefficient expressions among them, stay here.
+
+## REV-172: A non-finite trial residual at minimum damping is reported before the state gates name its location
+
+`numerics/newton.py` raises `NewtonDivergenceError` on a non-finite trial residual at minimum damping (NUM-16's NOTE;
+WP59 D5) before the NUM-17 state gates see the trial state. Before WP59 such a step was forced and a positivity or
+packing-fraction violation in it raised `GateViolationError`, naming the field and the location (QR-12, exit code
+`EXIT_GATE`); now it raises the divergence, with residual, iteration and damping but no location (`EXIT_CONVERGENCE`).
+It matters where log variables overflow `exp` to infinity, a state the packing gate would also refuse. A related case:
+a non-finite Newton direction from the linear solve is reported as a non-finite trial residual after the damping cuts,
+which points at the residual rather than at the solve. The NOTE asks only for residual, iteration and damping, so the
+code meets the text; no recorded solve reaches either path. The options are to run `check_all(state_gates)` on the
+trial state before raising, and to check the direction is finite after the linear solve.
+
+**Open**: the author rules whether a gate's diagnostic takes precedence over the divergence (found by the physics
+review of [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md), 2 November 2026).
+
+## REV-173: Plotting a run reads its record twice through the session
+
+`nanopnp plot <run>` calls `Session.read`, then `Session.open`, which reads and checks `run.json`, `manifest.json` and
+`case.yaml` again through `open_run`. Because `Session.open` always passes the session's own store, the command line
+repeats `open_run`'s rule for choosing the store a record names, so the rule lives in two places. `Session.read` uses
+nothing of the session, so `inspect` and `plot` build a throwaway `Session(write=False)` for it; and `Session.check`
+reads `case.source.base`, which dumps an edited case to YAML to obtain a directory. Each costs milliseconds; none
+changes a result. Removing the double read needs a store argument on `Session.open`, a change to the public interface
+that WP59's D3 and IF-01's NOTE fixed.
+
+**Open**: the author rules whether `Session.open` takes the recorded store, before `v0.5.0` fixes the interface
+([CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) findings 3, 7 and 11, 2 November 2026).

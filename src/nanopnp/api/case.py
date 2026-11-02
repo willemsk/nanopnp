@@ -80,7 +80,7 @@ class Case(CaseDocument):
         """
         given = Path(path)
         resolved = given.resolve()
-        text = resolved.read_bytes().decode("utf-8")
+        text = given.read_bytes().decode("utf-8")
         case = cls.loads(text, base=resolved.parent if base is None else base, source=str(given))
         case._path = resolved
         return case

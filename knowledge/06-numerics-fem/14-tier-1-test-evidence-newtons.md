@@ -14,7 +14,7 @@ verified:
 - by: process:tests/tier1/test_nernst_planck.py::test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_newton.py::test_num16_a_non_finite_trial_residual_aborts_at_minimum_damping_and_cuts_above_it
-  at: '2026-10-14T00:00:00Z'
+  at: '2026-11-01T00:00:00Z'
 - by: process:tests/tier1/test_newton.py::test_num16_minimally_damped_step_is_accepted_not_aborted
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_qoi_stage.py::test_fr23_the_current_does_not_depend_on_where_the_band_sits

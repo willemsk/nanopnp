@@ -87,14 +87,15 @@ def wall_statistics(data: MeshData, target_nm: float) -> WallStatistics:
     """Measure the ``wall`` segments of ``data`` against ``target_nm``."""
     import numpy as np
 
-    segments = data.edges_of("wall")
-    if len(segments) == 0:
+    # MeshData refuses a group no edge uses, so a mesh without wall segments has no wall group.
+    if "wall" not in data.boundaries:
         raise WallSizeGateError(
             "wall segments",
             "none",
             "at least one",
-            f"the mesh's wall group is empty; its groups are {list(data.boundaries)}",
+            f"the mesh has no wall group; its groups are {list(data.boundaries)}",
         )
+    segments = data.edges_of("wall")
     ends = data.vertices[segments]
     lengths = np.linalg.norm(ends[:, 1] - ends[:, 0], axis=1)
     longest = int(np.argmax(lengths))
