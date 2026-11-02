@@ -1,6 +1,6 @@
 # WP60 — Phase 4 closed: the open items resolved, and the end-of-phase report
 
-**Status: planned, not started.** Written 2 November 2026, grounded in the code at `a800a45` (WP59 merged, tagged
+**Status: delivered, 2 November 2026.** Written 2 November 2026, grounded in the code at `a800a45` (WP59 merged, tagged
 `v0.5.0-alpha.25`; CI run 41446908606 green). Inherits §8.2.24 Z1 and Z3, §8.2.27 AC1 and AC6, §8.2.29 AE5 (ruled at
 this plan) and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.5.0` alone (§8.4.1).
 
@@ -173,9 +173,9 @@ superseded by §7.6's NOTE on the loop's timings, with the three measured timing
   citation moves (D4); done when the token script prints nothing unexplained and every cited heading resolves.
   **Executor:** main
 - [x] 5. Compaction checkpoint. **Executor:** main
-- [ ] 6. The *End-of-phase report* and each criterion's verdict in the Phase 4 plan, REV-47 (D3); done when every
+- [x] 6. b40be15 The *End-of-phase report* and each criterion's verdict in the Phase 4 plan, REV-47 (D3); done when every
   number names its command and run. **Executor:** main
-- [ ] 7. `CHANGELOG.md`, `CITATION.cff`, `README.md`, `docs/index.md`, `docs/overrides/main.html`, the Phase 4 plan's
+- [x] 7. 9ed2fdc `CHANGELOG.md`, `CITATION.cff`, `README.md`, `docs/index.md`, `docs/overrides/main.html`, the Phase 4 plan's
   status and WP60 entry, `current.md`, Z1 and AC6 in the index (D5); done when the strict documentation build passes.
   **Executor:** main
 
@@ -186,6 +186,18 @@ superseded by §7.6's NOTE on the loop's timings, with the three measured timing
 > heading resolves. The files total 11,016 words (10,849 before): the sentences are shorter (mean 14.3 to 11.6
 > words; those over 25 words 56 to 18), but the pass moved rules to their owner rather than cutting words.
 > The gate-procedure steps live in `CLAUDE.md` alone, the plan caps in `np-plan/wp.md` alone.
+
+> **Outcome — items 6 and 7.** The report in the Phase 4 plan is measured on this tree: prose share 11.89 % of
+> `src/nanopnp` (6,573 of 55,299 lines) and 2.75 % of `tests/` (1,127 of 41,020); 442 `[tested: …]` spans, 438 naming
+> 315 tests, all present; VER-61 with no `top` component; VER-65 at eleven (38 modules); VER-62's drift at most
+> 1.5 × 10⁻¹³ on Linux, macOS and Windows (dispatched `ci.yml`, run 611 on `72b0689`: 1,652, 1,652 and 1,642 passed);
+> notebooks 6 of 6 in 445 s on four workers; the commit hook 95 to 117 s, the push gate 243 s, the pull request's
+> critical path 4 min 46 s. Two things the plan did not foresee: the commit of a findings log runs the full hook
+> (101 s), not ruff alone, and `current.md` was already 1,021 words against its 700 target (972 now); neither is
+> changed. Criterion 11's two timing targets and criterion 14's two word counts are reported misses for the author
+> (specification 74,298 words, phase plan 6,869). `[0.5.0]` lists 48 breaks (bullets), each with its migration. The platforms run
+> is on `72b0689`; the commits after it change Markdown, `CITATION.cff` and this plan only, so the tree under test is
+> unchanged.
 
 ### Verification
 
