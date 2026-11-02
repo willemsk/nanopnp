@@ -6,9 +6,14 @@ details*); a later round names its own.
 
 ## Prepare
 
-Read the inputs: the verdicts collected so far, the author's areas (§8.2.17 S24), the personas P1 to
-P3, S2, S6 and the design document so far. Write down the assumptions they leave open; each becomes
-an agenda point or a question.
+Read the inputs:
+
+- the verdicts collected so far;
+- the author's areas (§8.2.17 S24);
+- the personas P1 to P3, S2 and S6;
+- the design document so far.
+
+Write down the assumptions they leave open. Each becomes an agenda point or a question.
 
 ## Diverge
 
@@ -22,7 +27,7 @@ author the URL before the first question.
   call, two to four options each, the recommended option first with *(Recommended)*, each option's
   consequence in its description.
 - Walk a job through each answer before the next point: "where does the user click to change the
-  salt, and what redraws?" A route that breaks is asked again.
+  salt, and what redraws?" Ask again about a route that breaks.
 - Challenge an answer that contradicts an earlier ruling or a clause, quoting both.
 - Stop when every point has a ruling, or a deferral with its owner.
 
