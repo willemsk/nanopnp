@@ -82,6 +82,7 @@ class Session:
         overwrite_workspace: bool = False,
     ) -> None:
         self.store = store if isinstance(store, Store) else Store(store) if store else Store()
+        self._store_given = store is not None
         self.write = write
         self.workspace = Path(workspace) if workspace is not None else None
         self.overwrite_workspace = overwrite_workspace
@@ -180,10 +181,14 @@ class Session:
         )
 
     def open(self, directory: str | Path) -> RunResult:
-        """Open a run directory written by an earlier run, reading its artefacts from the store."""
+        """Open a run directory written by an earlier run, with its artefacts.
+
+        The artefacts are read from this session's store if it was given one, else from the
+        store the run's record names.
+        """
         from nanopnp.pipeline.run import open_run
 
-        return open_run(directory, store=self.store)
+        return open_run(directory, store=self.store if self._store_given else None)
 
     def check(self, case: Case, *, files: bool = True) -> CaseCheck:
         """Resolve a case as a run would and list the stages a run walks, without running one.
@@ -203,8 +208,8 @@ class Session:
         resolved = resolve(case, base=base)
         return CaseCheck(resolved, selected_stages(resolved, None, stages=self._own))
 
+    @staticmethod
     def read(
-        self,
         directory: str | Path,
         *,
         manifest: Mapping[str, Canonicalisable] | None = None,

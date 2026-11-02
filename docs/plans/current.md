@@ -1,6 +1,6 @@
 # Current work
 
-Updated 1 November 2026 (WP59 delivered: the architecture review's fixes; the close is WP60).
+Updated 2 November 2026 (WP59 reviewed, its review's items ruled and fixed; the close is WP60).
 Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
@@ -24,12 +24,12 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 3 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7) and `v0.4.0`.
 - **Phase 4** ([polish and user testing](phase-4-polish-and-user-testing.md)), `v0.5.0`, is
-  **in progress**. WP35 to WP58 are merged, WP58 at `dd45e59`; WP59 awaits review. **`v0.5.0-alpha.24`, WP58's, is the author's to
+  **in progress**. WP35 to WP58 are merged, WP58 at `dd45e59`; WP59 is reviewed (CODE_REVIEW_025; §8.2.29) and awaits the merge. **`v0.5.0-alpha.24`, WP58's, is the author's to
   push** if no session has (origin holds up to alpha.23; §8.4.1). The sixth amendment (§8.2.27) takes the author's
   architecture review, checked in [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md): **WP59**, its fixes and
-  REV-169, is **delivered** ([plan](wp59-architecture-review-fixes.md), its PR open for `/np-ship`; `v0.5.0-alpha.25`
-  after the merge); then **WP60**, the close, `v0.5.0` alone. REV-170 is Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4).
-  Next: `/np-ship wp 59`, then `/np-plan wp 60`. host: claude-code.
+  REV-169, is **reviewed** ([plan](wp59-architecture-review-fixes.md); REV-172 and REV-173 fixed by §8.2.29;
+  `v0.5.0-alpha.25` after the merge); then **WP60**, the close, `v0.5.0` alone. REV-170 is Phase 5's, REV-171 Phase 6's. `duplicates.py` passes (§8.4.4).
+  Next: the author merges WP59, `/np-ship wp 59` tags it, then `/np-plan wp 60`. host: claude-code.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress** in the second
   lane: [WP5.01](wp5.01-workbench-design-study.md), the design study, is **merged**, untagged before `v0.5.0`. The
   first amendment (§8.2.28) orders, after WP5.02's spike, four library packages: WP5.03 protonation before the

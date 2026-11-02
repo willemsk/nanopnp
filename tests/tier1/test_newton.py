@@ -9,7 +9,12 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.mesh.primitives import SlabGeometry
-from nanopnp.numerics.gates import FieldSampler, GateViolationError, PotentialIncrementGate
+from nanopnp.numerics.gates import (
+    FieldSampler,
+    GateViolationError,
+    PositivityGate,
+    PotentialIncrementGate,
+)
 from nanopnp.numerics.measures import PLANAR
 from nanopnp.numerics.newton import (
     DEFAULT_SETTINGS,
@@ -338,6 +343,13 @@ def test_num16_a_non_finite_trial_residual_aborts_at_minimum_damping_and_cuts_ab
         "the state is restored to the iterate it started from"
     )
 
+    positivity = PositivityGate(FieldSampler(mesh, coordinates=("x", "y")), {"u": state})
+    with pytest.raises(GateViolationError, match="u") as gated:
+        damped_newton(form, state, settings=pinned, state_gates=[positivity])
+
+    assert gated.value.location is not None, "the gate, not the divergence, names where"
+    assert ngs.Norm(state.vec - before) == 0.0
+
     cutting = NewtonSettings(
         initial_damping=1.0, minimum_damping=1.0e-2, max_iterations=1, growth_factor=1.0
     )
@@ -348,6 +360,21 @@ def test_num16_a_non_finite_trial_residual_aborts_at_minimum_damping_and_cuts_ab
     assert step.trials == 2
     assert math.isfinite(step.residual)
     assert not step.forced
+
+
+def test_num16_a_non_finite_newton_direction_aborts_before_any_trial() -> None:
+    mesh = SlabGeometry(width_nm=1.0).generate(maxh_nm=1.0)
+    space = ngs.H1(mesh, order=1)
+    trial, test = space.TnT()
+    form = ngs.BilinearForm(space)
+    form += trial * test * ngs.dx + ngs.CF(math.nan) * test * ngs.dx
+    state = ngs.GridFunction(space)
+    state.Set(ngs.CF(1.0))
+
+    with pytest.raises(NewtonDivergenceError, match="linear solve returned a non-finite direction"):
+        damped_newton(form, state)
+
+    assert all(value == 1.0 for value in state.vec), "the state is left as handed in"
 
 
 def test_newton_result_summary_records_the_damping_for_the_manifest(

@@ -2201,8 +2201,11 @@ which points at the residual rather than at the solve. The NOTE asks only for re
 code meets the text; no recorded solve reaches either path. The options are to run `check_all(state_gates)` on the
 trial state before raising, and to check the direction is finite after the linear solve.
 
-**Open**: the author rules whether a gate's diagnostic takes precedence over the divergence (found by the physics
-review of [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md), 2 November 2026).
+Found by the physics review of [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md), 2 November 2026.
+
+**Fixed** (§8.2.29 AE1, AE2, 2 November 2026, in WP59): at minimum damping the state gates are checked on the
+non-finite trial before the divergence is raised, and a non-finite direction raises a divergence naming the linear
+solve; NUM-16's NOTE says so, and two Tier 1 tests check it.
 
 ## REV-173: Plotting a run reads its record twice through the session
 
@@ -2214,5 +2217,8 @@ reads `case.source.base`, which dumps an edited case to YAML to obtain a directo
 changes a result. Removing the double read needs a store argument on `Session.open`, a change to the public interface
 that WP59's D3 and IF-01's NOTE fixed.
 
-**Open**: the author rules whether `Session.open` takes the recorded store, before `v0.5.0` fixes the interface
-([CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) findings 3, 7 and 11, 2 November 2026).
+Found as [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) findings 3, 7 and 11, 2 November 2026.
+
+**Fixed** (§8.2.29 AE3, 2 November 2026, in WP59): a session given no store opens a run from the store its record
+names, so `plot` reads the run once and the store rule lives in `open_run` alone; `Session.read` is a static method.
+The dump in `Session.check` is accepted. IF-01's NOTE says so.

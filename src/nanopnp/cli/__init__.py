@@ -297,7 +297,6 @@ def _inspect(args: argparse.Namespace) -> int:
     from nanopnp.io.manifest import read as read_manifest
     from nanopnp.sweep.collect import DATASET_FILENAME, read_dataset
 
-    session = Session(write=False)
     if args.other is not None:
         for given in (args.target, args.other):
             if not (Path(given) / RUN_RECORD_FILENAME).is_file():
@@ -307,7 +306,7 @@ def _inspect(args: argparse.Namespace) -> int:
                 )
         if args.section is not None:
             args.parser.error("--section reads one run; give one target")
-        payload, lines = reading.comparison(session.read(args.target), session.read(args.other))
+        payload, lines = reading.comparison(Session.read(args.target), Session.read(args.other))
         _emit(payload, lines, as_json=args.json)
         return EXIT_OK
 
@@ -358,7 +357,7 @@ def _inspect(args: argparse.Namespace) -> int:
         return EXIT_OK
 
     if is_run:
-        recorded = session.read(
+        recorded = Session.read(
             target.parent,
             manifest=document if target.name == MANIFEST_FILENAME else None,
             record=document if target.name == RUN_RECORD_FILENAME else None,
@@ -468,10 +467,7 @@ def _plot(args: argparse.Namespace) -> int:
     elif kind == "run":
         from nanopnp.api.session import Session
 
-        recorded = Session(write=False).read(target)
-        named = recorded.record.get("store")
-        holding = store if store is not None else Store(str(named) if named else None)
-        result = Session(holding, write=False).open(target)
+        result = Session(store, write=False).open(target)
         if stage not in result.artefacts:
             if stage not in {record.name for record in result.stages}:
                 args.parser.error(
