@@ -163,21 +163,29 @@ superseded by §7.6's NOTE on the loop's timings, with the three measured timing
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/validation/costs.py`: the quick-start leg on the shipped case (D2); done when the `walks` leg
+- [x] 1. db952e3 `src/nanopnp/validation/costs.py`: the quick-start leg on the shipped case (D2); done when the `walks` leg
   exits 0 and the code and review say so. **Executor:** main
-- [ ] 2. `docs/project/cost-study.json`, REV-116 in `docs/project/review-findings.md` and `review-items.md` (D2); done
+- [x] 2. d9f34f2 `docs/project/cost-study.json`, REV-116 in `docs/project/review-findings.md` and `review-items.md` (D2); done
   when the record shows `dirty: false` on every leg and each verdict is stated. **Executor:** main
-- [ ] 3. Both findings logs' headers; `specification/history/index.md`'s stale `open:` markers (D1); done when the
+- [x] 3. 021251c Both findings logs' headers; `specification/history/index.md`'s stale `open:` markers (D1); done when the
   item's `grep` prints nothing and the strict documentation build passes. **Executor:** `general-purpose` on Haiku
-- [ ] 4. `CLAUDE.md`, `.claude/workflow/core.md`, `.claude/skills/np-{plan,implement,ship,gui}/*.md`, §8.4 where a
+- [x] 4. fd4562b `CLAUDE.md`, `.claude/workflow/core.md`, `.claude/skills/np-{plan,implement,ship,gui}/*.md`, §8.4 where a
   citation moves (D4); done when the token script prints nothing unexplained and every cited heading resolves.
   **Executor:** main
-- [ ] 5. Compaction checkpoint. **Executor:** main
+- [x] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. The *End-of-phase report* and each criterion's verdict in the Phase 4 plan, REV-47 (D3); done when every
   number names its command and run. **Executor:** main
 - [ ] 7. `CHANGELOG.md`, `CITATION.cff`, `README.md`, `docs/index.md`, `docs/overrides/main.html`, the Phase 4 plan's
   status and WP60 entry, `current.md`, Z1 and AC6 in the index (D5); done when the strict documentation build passes.
   **Executor:** main
+
+> **Outcome — items 1 to 4.** The quick-start leg walks the shipped case; `walks` exits 0. The re-run on the clean
+> commit `db952e3` (four CPUs, threads unset, `dirty: false`) gives A1 1.15 GB of 4 GB, A8 0.69 % (quick-start) and
+> 0.03 % (2WCD) of 5 %, and A16 0.84 % and 0.70 % of 10 %: no share is over (REV-116 `fixed`). The prose pass
+> (`fd4562b`): the token script prints nothing that is not a removed duplicate or a pattern artefact, and every cited
+> heading resolves. The files total 11,016 words (10,849 before): the sentences are shorter (mean 14.3 to 11.6
+> words; those over 25 words 56 to 18), but the pass moved rules to their owner rather than cutting words.
+> The gate-procedure steps live in `CLAUDE.md` alone, the plan caps in `np-plan/wp.md` alone.
 
 ### Verification
 
