@@ -13,9 +13,8 @@ are plainer. The release is named: the author merges the pull request, and the c
 it. Phase 5, the browser workbench, has its design study merged. Its next package is the spike
 that picks the front-end framework; nothing of the workbench is built before the release.
 
-**Your call:** whether the plain-language pass also covers the steward's instructions and the
-Copilot map; the recommendation is no, because the pass already changed 14 files and those two
-carry rules that other tools read.
+**Settled:** the author ruled the plain-language pass also covers the steward's instructions and the Copilot
+map, and accepted the two slow checks and the two documents over their word targets.
 
 ## Position
 

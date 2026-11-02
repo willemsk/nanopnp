@@ -119,7 +119,8 @@ and its entry waits under `[Unreleased]` (§8.4.1).
 
 - **The workflow prose is plainer** (WP60; §8.2.27 AC6). `CLAUDE.md`, `.claude/workflow/core.md` and the
   `np-*` skills use shorter sentences (mean 14.3 to 11.6 words) and state each repeated rule once, in its owner.
-  Every normative rule and word cap is kept.
+  Every normative rule and word cap is kept. The steward skill and the Copilot host map follow at the author's call
+  (mean 16.4 to 10.4 words; sentences over 25 words 20 to 3), with every heading, number, identifier and command kept.
 - The two findings logs, `docs/project/modularity-findings.md` and `docs/user-testing/findings.md`, read
   `closed`: every row is terminal. The ruling index has no `open:` marker for a package of Phase 4.
 - WP33's test-duration targets are retired (REV-47). §7.6's NOTE on the loop's timings replaces them, and the

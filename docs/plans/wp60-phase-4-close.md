@@ -25,9 +25,8 @@ for the checks on three operating systems, and the usual checks before each push
 command and path before and after; the review reads the rest. A cost could come out over its limit; it is
 reported to you, not fixed here, since the rule is to measure before fixing.
 
-**Your call.** Should the plain-language pass also cover the review-steward instructions and the Copilot tool map?
-*Recommendation:* no; your ruling named the project instructions and the three commands, and those two files are
-reference tables.
+**Your call.** Settled on 2 November 2026: the plain-language pass also covers the review-steward instructions and
+the Copilot tool map, and you accepted the slow checks and the two oversized documents as reported.
 
 ## Execution brief
 
@@ -44,7 +43,7 @@ session; the history index goes to a Haiku sub-agent. One library API is named, 
 | **D1 The registers close** | Both findings logs take `status: closed`. REV-116 and REV-47 are set `fixed` (items 2, 6); no `REV-nn` row is `open`, the register's header stays `open`. In `specification/history/index.md`, each ruling line whose `open:` names a delivered Phase 4 package (WP54 to WP60, WP57's plan) keeps its clause, or reads `spent` if it names none; H2 reads `spent`. The *Open decisions* rows still open are carried: OPN-04 and OPN-08 to the author, NUM-07 to Phase 6; no residual cycle, drift or cost over threshold was reported (H6, I4, M2) | Criteria 2, 5, 10; H12; §8.2.9 I3 for REV-47. A delivered package can no longer land a ruling, so an `open:` naming one is stale (Z3) |
 | **D2 The cost record re-run** | `validation/costs.py`'s quick-start leg walks the shipped quick-start case, meshed by stage 6, instead of calling the removed `nanopnp mesh cylinder`. `python -m nanopnp.validation.costs all` runs on a committed, clean tree (`dirty: false`) and replaces `docs/project/cost-study.json`. A share over its threshold is reported as a `REV-nn` row for the author, never fixed here and never re-thresholded | REV-116 (ruled 18 October 2026); M2; WP49's thresholds 4 GB, 5 %, 10 % |
 | **D3 The report's numbers** | Each number of *End-of-phase report* comes from a command run on WP60's tree, named beside it: the prose share and the markers from the scripts of item 6; the layering from `render_measurements` and VER-61's test; the platforms from a CI run dispatched on the branch head; the suite from `pytest --collect-only`; the loop's timings from the gate log and the PR's CI run. The before-matrix is WP35's, read from `docs/project/modularity.md`. The source's prose share is accepted as measured (AE5) | Criteria 4, 11; Z1; N3 ("Phase 4's criteria that read a withdrawn check are verified by the close at review") |
-| **D4 The workflow prose** | `CLAUDE.md`, `.claude/workflow/core.md` and every file of `np-plan`, `np-implement`, `np-ship` and `np-gui` are rewritten in short, active, present-tense sentences (Simplified Technical English). A rule repeated across them is stated in its owner, and the others point to it: `CLAUDE.md` owns setup, commands, the gate procedure, testing, provenance, prose, git and the prohibitions; `core.md` owns what every level shares; a level file owns its level. No rule changes meaning, no cap or number is lost, and every heading another file cites keeps its name. §8.4 changes only where it cites a file for a rule that moved. `steward/SKILL.md` and `hosts/copilot.md` are out | AC6; §8.4.4 |
+| **D4 The workflow prose** | `CLAUDE.md`, `.claude/workflow/core.md` and every file of `np-plan`, `np-implement`, `np-ship` and `np-gui` are rewritten in short, active, present-tense sentences (Simplified Technical English). A rule repeated across them is stated in its owner, and the others point to it: `CLAUDE.md` owns setup, commands, the gate procedure, testing, provenance, prose, git and the prohibitions; `core.md` owns what every level shares; a level file owns its level. No rule changes meaning, no cap or number is lost, and every heading another file cites keeps its name. §8.4 changes only where it cites a file for a rule that moved. `steward/SKILL.md` and `hosts/copilot.md` follow, on the author's call of 2 November 2026 | AC6; §8.4.4 |
 | **D5 The release text** | `CHANGELOG.md` gains `## [0.5.0] - <date>` above `[0.5.0-alpha.25]` and below `[Unreleased]`, which keeps WP5.01's entry (§8.4.1): a summary, the 26 packages with their tags, *Breaks and their migration* gathering each break of alpha.1 to alpha.25, and WP60's own Added, Changed and Fixed. `CITATION.cff` names `0.5.0` and the date. README, `docs/index.md` and `docs/overrides/main.html` say `v0.5.0` is released and v0.6 is in progress. The phase plan reads **closed**; `current.md` points at Phase 5 | Criterion 8; Z3; F5; `release.yml` checks `CITATION.cff`'s version |
 
 ### Grounding
@@ -199,6 +198,11 @@ superseded by §7.6's NOTE on the loop's timings, with the three measured timing
 > is on `72b0689`; the commits after it change Markdown, `CITATION.cff` and this plan only, so the tree under test is
 > unchanged.
 
+> **Outcome — the author's call.** The pass also covers `steward/SKILL.md` and `hosts/copilot.md`: mean sentence
+> 16.4 to 10.4 words, those over 25 words 20 to 3, every heading, number, identifier and command kept (a token
+> comparison against the old text found none missing). `.github/copilot-instructions.md` and `hosts.md` were already
+> short. The author also accepted criterion 11's two timing misses and criterion 14's two word counts as reported.
+
 ### Verification
 
 No test is written (N1); the criteria that read a withdrawn check are verified at review (N3).
@@ -218,12 +222,11 @@ No test is written (N1); the criteria that read a withdrawn check are verified a
 | Deferred | Owner |
 |---|---|
 | The tag `v0.5.0` and the GitHub Release | `/np-ship phase 4`, after the merge |
-| `steward/SKILL.md`, `hosts/copilot.md` | Not ruled into AC6 |
 | A cost over its threshold, a drift or a residual cycle, if one appears | The author (M2, I4, H6) |
 | REV-121, REV-156, REV-170, REV-171 | Phase 5 and Phase 6 (Z5, Z6, AC3, AC4) |
 | OPN-04, OPN-08 | The author |
 
 ### Open questions
 
-None blocks. The source's prose share was ruled at this plan (AE5). The In brief's *Your call*, the prose pass's
-reach, is decided in review if the author does not answer first.
+None blocks. The source's prose share was ruled at this plan (AE5). The author answered the In brief's *Your call*
+on 2 November 2026 (see its Outcome).

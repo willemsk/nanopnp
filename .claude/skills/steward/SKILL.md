@@ -5,91 +5,110 @@ description: Repo conventions for driving a nanopnp pull request to green — ho
 
 # Stewarding a nanopnp PR
 
-Conventions, not permissions. This file says how failures are diagnosed **here** and which are
-evidence rather than chores.
+These are conventions, not permissions. This file says how to diagnose a failure **here**, and which
+failures are evidence rather than chores.
 
 ## The environment
 
 `uv` owns it (`CLAUDE.md`, *Setup*).
 
-The gate is `.claude/hooks/gate.sh run`. Run it on the committed fix as `CLAUDE.md`'s *Commands* say,
-waiting for it in the same turn, and push when it passes: the hook refuses a push of a tree it has
-not passed, and every fix is gated in full. `--no-verify` exists and is not for you.
+The gate is `.claude/hooks/gate.sh run`. Run it on the committed fix as `CLAUDE.md`'s *Commands* say.
+Wait for it in the same turn. Push when it passes. The hook refuses a push of a tree it has not
+passed, and every fix is gated in full. `--no-verify` exists. Do not use it.
 
 ## Bounded wakes
 
-Read live PR state before plans or logs. Keep one compact checkpoint in the PR's Verification
-section: base and head SHAs, check-run states, mergeability, last handled review and comment IDs,
-last action or blocker, the unchanged-fallback count and the check-in ID. Update it on meaningful
-transitions only; an event caused by your own checkpoint edit is not new work.
+Read the live PR state before plans or logs. Keep one compact checkpoint in the PR's Verification
+section. It holds:
 
-- A new failure or conflict needs a fix or an explicit diagnostic and handoff; never abandon a
-  new red check silently. Reuse the diagnosis of an unchanged, recorded blocker.
-- While CI is pending, schedule at most one fallback check-in, starting one hour out and backing off
-  to 2, 4, 8, 12 and 24 hours while nothing changes. After six unchanged fallbacks, cancel them
-  and tell the user the state and how to resume. Reset the counter only for a new base or head,
-  check-run state, conflict or actionable review.
-- Stop fallbacks when green and mergeable, merged, closed or handed off; cancel the timer, or make
-  a queued wake a no-op. If nothing changed, reload and rerun nothing.
-- Once CI is green and the PR mergeable, report once, unsubscribe from the PR and cancel the
-  check-in: a merge then wakes no session, and `/np-ship` resumes the package.
-- If subscription or scheduling is unavailable, say so and hand off; never poll in a loop.
+- the base and head SHAs;
+- the check-run states and the mergeability;
+- the last handled review and comment IDs;
+- the last action or blocker;
+- the unchanged-fallback count and the check-in ID.
 
-Source context for a failure starts with the WP's Execution brief.
+Update it on meaningful transitions only. An event caused by your own checkpoint edit is not new work.
+
+- A new failure or conflict needs a fix, or an explicit diagnosis and handoff. Never abandon a new red
+  check silently. Reuse the diagnosis of an unchanged, recorded blocker.
+- While CI is pending, schedule at most one fallback check-in. Start one hour out. Back off to 2, 4,
+  8, 12 and 24 hours while nothing changes. After six unchanged fallbacks, cancel them and tell the
+  user the state and how to resume. Reset the counter only for a new base or head, a new check-run
+  state, a conflict or an actionable review.
+- Stop the fallbacks when the PR is green and mergeable, merged, closed or handed off. Cancel the
+  timer, or make a queued wake a no-op. If nothing changed, reload and rerun nothing.
+- When CI is green and the PR mergeable, report once. Then unsubscribe from the PR and cancel the
+  check-in. A merge then wakes no session, and `/np-ship` resumes the package.
+- If subscription or scheduling is unavailable, say so and hand off. Never poll in a loop.
+
+A failure's source context starts with the WP's Execution brief.
 
 ## What CI runs
 
-`.github/workflows/ci.yml`, with `UV_LOCKED: "1"` throughout, so a `uv.lock` that no longer matches
-`pyproject.toml` fails every job at `uv sync`. pytest runs `-n auto --dist loadfile` with
-`OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` set to 1 (`knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`), and
-NumPy's SIMD dispatch capped at `X86_V3` by `NPY_DISABLE_CPU_FEATURES` (VER-62's reference environment,
-`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit`), except `tests/tier1/test_gui_widgets.py`. That module runs serially in its own step on Windows and
-macOS only, because it waits on a real QtWebEngine page by the wall clock and busy workers starved it
-(run 113). On ubuntu it skips itself, because PySide6 does not import there.
+The workflow is `.github/workflows/ci.yml`. It sets `UV_LOCKED: "1"` throughout, so a `uv.lock` that
+no longer matches `pyproject.toml` fails every job at `uv sync`.
 
-- **`changes`** — names the run's mode (`pr`, `main`, `full`, `nightly`) and diffs the whole PR
+pytest runs `-n auto --dist loadfile`. Three settings apply:
+
+- `OMP_NUM_THREADS`, `OPENBLAS_NUM_THREADS` and `MKL_NUM_THREADS` are 1
+  (`knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md`).
+- `NPY_DISABLE_CPU_FEATURES` caps NumPy's SIMD dispatch at `X86_V3`. This is VER-62's reference
+  environment
+  (`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit`).
+- `tests/tier1/test_gui_widgets.py` is the exception. It runs serially in its own step, on Windows and
+  macOS only. It waits on a real QtWebEngine page by the wall clock, and busy workers starved it
+  (run 113). On ubuntu it skips itself, because PySide6 does not import there.
+
+The jobs:
+
+- **`changes`** names the run's mode (`pr`, `main`, `full`, `nightly`). It diffs the whole PR
   (`base...head`), or the push range on `main`, through `.github/scripts/prose-only.sh`. When
   everything is prose, the test jobs skip their steps and report success.
-- **A pull request** (§7.6, §8.2.10 J4, §8.2.13 N4) — ubuntu, 3.14 only. **`lint`** (`ruff check`,
-  `ruff format --check`, `mypy src/`); **`docs`**; **`tests (tier1)`** and **`tests (tier2)`**, the
-  per-push selection (Tier 1, the non-walk Tier 2 tests, example 01 and example 02's charged leg;
-  no `nightly` tests), split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`); and
-  **`CI result`**, the one required check, which fails unless every one of those succeeded.
-  Reproduce a shard with `uv run pytest -m "tier1 and not slow"` (or `tier2`).
-  There is no coverage job (§8.2.13 N2).
-- **`docs`** — VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`, on
-  **every** push, prose-only ones included, because a broken link or anchor is exactly what a prose
-  edit introduces. Reproduce with `uv sync --all-extras --group docs && uv run
-  docs/scripts/generate.py && uv run mkdocs build --strict`.
-- **`platforms`** — after a merge: the per-push selection on ubuntu, macOS and Windows, 3.14, and
-  the GUI file serially on the last two. A platform-only failure surfaces here, on `main`, and is
-  fixed forward in a new PR.
-- **`full-matrix`** — `full: true` (a dispatch, or `release.yml` before it builds a tag): the three
-  platforms × 3.11 to 3.14, `--nightly` (the whole of Tiers 1 and 2; QR-09, CON-13).
-- **`nightly`** — the scheduled run: every Tier 1 and Tier 2 test outside the per-push selection,
-  under `--nightly`, on the three platforms (§8.2.13 N4), and 3.11 to 3.13 on the three platforms,
-  dependencies from wheels only, Tier 1. A failure opens an issue and blocks nothing; it is fixed
-  forward in a PR.
-- **`bundle`** — **gated**. Windows PyInstaller build of `packaging/nanopnp-probe.spec`, then the
-  bundle's own `--selftest` (RSK-13, §8.2.1 A4), after a merge, before a release and nightly, as the
-  runner-image drift probe.
-- **`tier3`** — nightly, on a dispatch and before a release, `continue-on-error`: recorded, never
-  gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA` every Tier 3 test skips visibly; a skip
-  there is missing evidence, not a defect.
+- **A pull request** (§7.6, §8.2.10 J4, §8.2.13 N4) runs on ubuntu, 3.14 only. Its jobs are:
+    - **`lint`**: `ruff check`, `ruff format --check`, `mypy src/`.
+    - **`docs`**.
+    - **`tests (tier1)`** and **`tests (tier2)`**. They run the per-push selection: Tier 1, the
+      non-walk Tier 2 tests, example 01 and example 02's charged leg, with no `nightly` tests. They
+      split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`).
+    - **`CI result`**, the one required check. It fails unless every job above succeeded.
 
-The default `pytest` selection is tiers 1 and 2 without the `nightly` tests, which the nightly run adds. Tier 4
-gates releases; `-m slow` is measured, never gated. Nothing in the suite reaches the network or
-needs a COMSOL licence, so a failure in `ruff`, `mypy` or `pytest` is always a real one — a lint, a
-type error, or a tier 1–2 assertion, never an environment excuse.
+  Reproduce a shard with `uv run pytest -m "tier1 and not slow"` (or `tier2`). There is no coverage
+  job (§8.2.13 N2).
+- **`docs`** is VER-45's strict build: `docs/scripts/generate.py`, then `mkdocs build --strict`. It
+  runs on **every** push, prose-only ones included, because a prose edit is what breaks a link or
+  anchor. Reproduce it with
+  `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict`.
+- **`platforms`** runs after a merge. It runs the per-push selection on ubuntu, macOS and Windows,
+  3.14, and the GUI file serially on the last two. A platform-only failure shows up here, on `main`.
+  Fix it forward in a new PR.
+- **`full-matrix`** runs when `full: true` (a dispatch, or `release.yml` before it builds a tag). It
+  covers the three platforms × 3.11 to 3.14, with `--nightly`: the whole of Tiers 1 and 2 (QR-09,
+  CON-13).
+- **`nightly`** is the scheduled run. It has two parts:
+    - every Tier 1 and Tier 2 test outside the per-push selection, under `--nightly`, on the three
+      platforms (§8.2.13 N4);
+    - Tier 1 on 3.11 to 3.13 on the three platforms, with dependencies from wheels only.
 
-The steps that do reach the network are `astral-sh/setup-uv`, `uv sync` and the artefact uploads. A
-failure there is infrastructure: re-run the job. Read the log and establish which of the two you
-have before changing a line — a stale `uv.lock` also fails at `uv sync`, and that one is a real
+  A failure opens an issue and blocks nothing. Fix it forward in a PR.
+- **`bundle`** is **gated**. It builds the Windows PyInstaller bundle of `packaging/nanopnp-probe.spec`,
+  then runs the bundle's own `--selftest` (RSK-13, §8.2.1 A4). It runs after a merge, before a release
+  and nightly, as the runner-image drift probe.
+- **`tier3`** runs nightly, on a dispatch and before a release, with `continue-on-error`. It is
+  recorded and never gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA`, every Tier 3 test skips
+  visibly. That skip is missing evidence, not a defect.
+
+The default `pytest` selection is tiers 1 and 2 without the `nightly` tests, which the nightly run
+adds. Tier 4 gates releases. `-m slow` is measured and never gated. Nothing in the suite reaches the
+network or needs a COMSOL licence. A failure in `ruff`, `mypy` or `pytest` is therefore always a real
+one: a lint, a type error or a tier 1–2 assertion, never an environment excuse.
+
+Three steps do reach the network: `astral-sh/setup-uv`, `uv sync` and the artefact uploads. A failure
+there is infrastructure, so re-run the job. Read the log first, and establish which of the two you
+have before you change a line. A stale `uv.lock` also fails at `uv sync`, and that one is a real
 failure with a real fix.
 
-Reproduce the failing job's exact command locally before changing anything. For a matrix-only
-failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
-
+Before you change anything, reproduce the failing job's exact command locally. For a failure in one
+matrix leg, reproduce it under that interpreter (`uv run --python 3.11 pytest …`).
 
 ## Failure classes
 
@@ -112,25 +131,31 @@ failure, reproduce under that interpreter (`uv run --python 3.11 pytest …`).
 
 ## Tier 2 failures are physics evidence
 
-An analytic benchmark localises an error to a single term; a failure is worth more than a green
-PR. Never make one pass by weakening it: never slacken a tolerance, `xfail`, skip or delete it,
-coarsen the assertion, swap the reference quantity, or re-run until it passes. A tolerance is specified (§7.3); changing one is a
-specification amendment arguing why the *reference* was the wrong quantity (§7.3's Henry versus
-Smoluchowski amendment is the precedent).
+An analytic benchmark localises an error to a single term. A failure is worth more than a green PR.
+Never make one pass by weakening it. That bans each of these:
 
-"Flake" is not a diagnosis: the benchmarks are deterministic. Name the mechanism (a thread count,
-an ordering, a seed) and fix it. If the physics or discretisation is wrong, stop and report the
-failing quantity, its location and what it implies. Diagnosis stays in the main session; a sub-agent
-may only read a long log (`ci-log-classifier`).
+- slackening a tolerance;
+- `xfail`, skip or delete;
+- coarsening the assertion;
+- swapping the reference quantity;
+- re-running until it passes.
+
+A tolerance is specified (§7.3). Changing one is a specification amendment, and it must argue why the
+*reference* was the wrong quantity. §7.3's Henry versus Smoluchowski amendment is the precedent.
+
+"Flake" is not a diagnosis, because the benchmarks are deterministic. Name the mechanism (a thread
+count, an ordering, a seed) and fix it. If the physics or the discretisation is wrong, stop and report
+the failing quantity, its location and what it implies. Diagnosis stays in the main session. A
+sub-agent may only read a long log (`ci-log-classifier`).
 
 ## Fixes stay in scope
 
-Fix what the failure needs. A behaviour change needs its `SPECIFICATION.md` edit in the same
-commit; one that widens the package, adds a dependency or trades off a `CON-`/`QR-` constraint
-goes to the user first. The standing constraints are `CLAUDE.md`'s *Do NOT* and the rule files.
+Fix what the failure needs. A behaviour change needs its `SPECIFICATION.md` edit in the same commit.
+A change that widens the package, adds a dependency or trades off a `CON-`/`QR-` constraint goes to
+the user first. The standing constraints are `CLAUDE.md`'s *Do NOT* and the rule files.
 
 ## Commits and reporting
 
-Conventional prefix, identifier in the body, gate green before each commit; review findings land
-as `fix: close the review gaps in <what>`. Report once per resolved round, naming the failing
-check, the cause and the change.
+Use a conventional prefix, name the identifier in the body, and gate green before each commit. Review
+findings land as `fix: close the review gaps in <what>`. Report once per resolved round. Name the
+failing check, the cause and the change.
