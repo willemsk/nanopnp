@@ -53,8 +53,14 @@ structure = [
     "pdb2pqr>=3.7",
     "gemmi>=0.7",
 ]
-# Desktop shell (ADR-004). PySide6 is LGPL-3; PyQt is forbidden by CON-09.
-gui = ["PySide6>=6.7"]
+# The workbench (ADR-004): the browser shell is NiceGUI over FastAPI (MIT, BSD-3);
+# PySide6 is the Qt shell, which leaves with Qt. PyQt is forbidden by CON-09.
+gui = [
+    "fastapi>=0.115",
+    "nicegui>=3.0",
+    "PySide6>=6.7",
+    "uvicorn>=0.30",
+]
 # OPTIONAL MESHER BACKEND ONLY. gmsh is GPLv2+; the default path must never
 # import it and the library must stay functional without it (CON-10, ADR-002).
 gmsh = ["gmsh>=4.13"]
@@ -146,14 +152,16 @@ default-groups = ["dev", "apbs"]
 # Rebuild the editable install's metadata when HEAD or a tag moves, so that
 # `nanopnp.__version__` and the manifest's recorded version follow the checkout.
 cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
+# pdb2pqr 3.7.1 pins docutils==0.17.1 and NiceGUI needs >=0.19 (REV-175). pdb2pqr never imports
+# docutils; the lock keeps 3.7.1, because 3.8.0 writes terminal residues the reader refuses.
+override-dependencies = ["docutils>=0.19"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
 # The design generators write throwaway HTML mockups; they are not the library's code.
-# spikes/ is WP5.02's throwaway comparison; item 7 deletes it and this entry (AF3).
-extend-exclude = ["docs/design/generators", "spikes"]
+extend-exclude = ["docs/design/generators"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "NPY", "RUF", "D", "ANN"]

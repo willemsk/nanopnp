@@ -539,6 +539,23 @@ def _reproduce(args: argparse.Namespace) -> int:
     return EXIT_OK if finding.reproduced else 1
 
 
+def _gui(args: argparse.Namespace) -> int:
+    from nanopnp.core.stages import MissingExtraError
+
+    for package in ("fastapi", "uvicorn", "nicegui"):
+        if importlib.util.find_spec(package) is None:
+            raise MissingExtraError(
+                f"nanopnp gui needs the 'gui' extra: {package!r} is not installed. Install the "
+                "extras with `uv sync --all-extras`",
+                name=package,
+            )
+    # Named by string: gui sits above cli in the layer order, so an import would point upward.
+    server = importlib.import_module("nanopnp.gui.web.server")
+    argv = ["--port", str(args.port), *(["--no-browser"] if args.no_browser else [])]
+    code: int = server.main(argv)
+    return code
+
+
 def _refuse(args: argparse.Namespace, message: str) -> NoReturn:
     args.parser.error(message)
     raise AssertionError("ArgumentParser.error returns no value")  # pragma: no cover
@@ -1514,6 +1531,17 @@ def build_parser() -> argparse.ArgumentParser:
     ladder.add_argument("--store", type=Path, default=None, help="artefact store root")
     ladder.add_argument("--output", type=Path, default=None, help="where to write the report")
     ladder.set_defaults(handler=_validate)
+
+    gui = subparsers.add_parser(
+        "gui",
+        help="serve the browser workbench on 127.0.0.1 (the 'gui' extra)",
+        description="Serve the workbench on 127.0.0.1. The server prints one line, "
+        "'nanopnp-gui ready <url>', and stops when its standard input closes or on "
+        "SIGINT or SIGTERM.",
+    )
+    gui.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
+    gui.add_argument("--no-browser", action="store_true", help="print the address, open nothing")
+    gui.set_defaults(handler=_gui)
 
     env = _common(subparsers.add_parser("env", help="report the environment and data locations"))
     env.set_defaults(handler=_env)

@@ -2235,3 +2235,29 @@ Found as [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) findings 3, 7 and
 **Fixed** (§8.2.29 AE3, 2 November 2026, in WP59): a session given no store opens a run from the store its record
 names, so `plot` reads the run once and the store rule lives in `open_run` alone; `Session.read` is a static method.
 The dump in `Session.check` is accepted. IF-01's NOTE says so.
+
+## REV-174: The command line names the workbench's server by string
+
+`nanopnp gui` starts the workbench's server, a module of `gui`. `gui` sits above `cli` in the layer order, so an
+import would be an upward edge. The command passes the module's name, `nanopnp.gui.web.server`, to
+`importlib.import_module` after it checks that the `gui` extra's packages import, and the edge is recorded as a
+`string` edge in `modularity-layering.yaml`, as the stage registry's and the exit-code table's are.
+
+Found at WP5.02's item 7, 2 November 2026.
+
+**Fixed** (§8.2.30 AF1, 2 November 2026, in WP5.02): the edge is recorded and named for this finding. The command
+imports nothing from `gui` at module scope, so a library install without the extra runs every other command.
+
+## REV-175: pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra
+
+The `structure` extra asks for `pdb2pqr>=3.7`. Resolved afresh, `uv add` took 3.8.0, which writes terminal residues
+under two names (`GLU`, `NTER`); the PQR reader refuses them, and eighteen Tier 1 tests of VER-57 and VER-60 fail.
+The lock holds 3.7.1, the version the tests were written against. 3.7.1 pins `docutils==0.17.1`, and NiceGUI, which
+the `gui` extra now carries (§8.2.30 AF4), needs `docutils>=0.19`. `[tool.uv] override-dependencies` lets the lock
+hold both; neither package imports the other's use of docutils. A `pip` install of both extras at once cannot take
+the override, so it resolves to an older NiceGUI or fails.
+
+Open: the author rules whether the `structure` extra is capped below 3.8 or the reader learns 3.8's terminal names,
+and whether `pip install nanopnp[structure,gui]` is supported before 1.0.
+
+Found at WP5.02's item 7, 2 November 2026.
