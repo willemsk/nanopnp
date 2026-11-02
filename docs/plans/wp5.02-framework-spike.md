@@ -196,7 +196,7 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 - [x] 151b08e 6. Compaction checkpoint. **Executor:** main
 - [x] 14b2d6e 7. Delete `spikes/` (AF3), with the report linking the last commit that held them; `gui/web/server.py`, the `cli` subcommand, the extra, the layering row and REV-174 (D4); done when VER-61 passes and `nanopnp gui --no-browser --port 0` prints its ready line. **Executor:** main
 - [x] 689ad9e 8. `gui/web/{screens,states}.py`, `st-charge` and `home` in the chosen stack, `tests/tier1/test_gui_screens.py`, VER-78 in §7.2 and Appendix A, `gate.sh`, `ci.yml` (D5); done when VER-78 passes. **Executor:** main
-- [ ] 9. `/np-gui render shell` (`render.md`, `render_shell.py`), `nontext` in `shoot.cjs`, the token, the mockups re-rendered, the live loop in `CONTRIBUTING.md` and §8.4.4 (D5, D6); done when `render shell` reports no failure on every state. **Executor:** main
+- [x] a8af402 9. `/np-gui render shell` (`render.md`, `render_shell.py`), `nontext` in `shoot.cjs`, the token, the mockups re-rendered, the live loop in `CONTRIBUTING.md` and §8.4.4 (D5, D6); done when `render shell` reports no failure on every state. **Executor:** main
 - [ ] 10. The REV-137 table in `workbench.md`; the CON-08 and CON-11 NOTEs; REV-137, -138, -141 and -143 set `fixed`; QR-16's Appendix A row (D6); done when the code and review say so. **Executor:** general-purpose on Sonnet
 - [ ] 11. `CHANGELOG.md` under `## [Unreleased]`, `current.md`, and the phase plan's WP5.02 entry delivered. **Executor:** main
 

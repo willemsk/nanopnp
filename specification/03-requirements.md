@@ -307,6 +307,24 @@ dependency of the workbench's front end SHALL be under a permissive licence, or 
 MPL-2.0 used unmodified as a separate file as the renderer is. PyQt SHALL NOT be used, being GPL-3 or
 commercial only." Until then the text above gates the Qt shell (§8.2.12 M3; §8.2.17 S17).
 
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, CON-08 reads: "The
+distributed wheels are serial-only and ship without MUMPS, and the reference model's PARDISO is
+equally unavailable; the installed workbench SHALL use UMFPACK, as NGSolve's wheel provides it, or
+scipy SuperLU." The browser shell ships no desktop path or bundle (§8.2.17 S12); the library's
+default is `numerics/linear.py:DEFAULT_SOLVER`, `"umfpack"`. Until then the text above gates the
+Qt shell (§8.2.19 U5; REV-141).
+
+NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, CON-11 reads:
+"SuiteSparse UMFPACK is GPL-2+, so an installation defaulting to UMFPACK carries GPL obligations even
+though the library does not. The core library SHALL remain BSD-3 and SHALL NOT itself depend on
+UMFPACK, which it reaches only through NGSolve's wheel; an installed workbench SHALL default to
+NGSolve's UMFPACK, scipy SuperLU remaining selectable at runtime, and `nanopnp --env` SHALL state the
+resulting GPL-2+ obligation. The default follows the §6.6 measurement: SuperLU did not factorise the
+reference-sized problem at all, so a SuperLU-default workbench could not run the published case."
+`nanopnp --env` prints the version, the Python and platform, and the data, store and reference
+locations, and does not yet state the obligation. Until the browser shell lands, the text above gates
+the bundle and its licence notice (VER-43) (§8.2.19 U5; REV-141).
+
 ### 3.5 Exclusions
 
 Outside the scope of v1. Identifiers retained from v0.4.

@@ -80,7 +80,7 @@ needed.
 | QR-13 | VER-65 (the subpackages reaching NGSolve or Netgen equal a recorded set, in both directions). The §5.4.1 interface is absent (`MOD-10`), deferred to Phase 6 by §8.2.8 H3, which restated QR-13 as the single statement of the weak forms plus this guard |
 | QR-14 | VER-03 (a correction is a data file), VER-56 (a physics model is one class), VER-66 (a backend registry is one registration) |
 | QR-15 | VER-45, VER-46 — the documentation part only, delivered incrementally by the §8.1 documentation track; the JOSS submission and the DOI-archived release remain unverified until v0.7 |
-| QR-16 | None yet; WP5.02 extends the render check to non-text contrast (REV-138), and each workbench package reviews its screens against it |
+| QR-16 | None yet as a test of its own. `/np-gui render shell` and `mockups` measure text contrast, non-text contrast (WCAG 2.2 1.4.11) and target size, and VER-78 loads every screen in every state; each workbench package reviews its screens against it |
 | CON-01 | None yet |
 | CON-02 | VER-20, VER-22 |
 | CON-03 | None yet |

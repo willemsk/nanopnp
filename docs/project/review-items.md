@@ -1481,6 +1481,13 @@ CON-09.
 
 **Ruled** (§8.2.19 U5): owned by WP5.02, as proposed.
 
+**Fixed** (§8.2.19 U5, 2 November 2026, in WP5.02): the renderer table in `docs/design/workbench.md` (*The
+renderers*): Mol* for the molecule, as its unmodified standalone bundle; `webgui` for meshes and fields; a canvas
+drawn from `plot/data.py` for maps and plots. The table checks the explorer's four controls against the shipped
+`webgui.js`: zoom and the mesh on or off are served, a colour scale for each quantity in part (one colour map per
+scene), and a framed opening view not at all. The front end is NiceGUI over FastAPI (ADR-004's NOTE). No second
+renderer needs a licence ruling under CON-09.
+
 ## REV-138: The render check measures text contrast but not the contrast of controls and graphics
 
 `.claude/scripts/gui/shoot.cjs` checks each visible text element against WCAG 2.2 1.4.3 and each native control's size
@@ -1495,6 +1502,11 @@ Until then a review states non-text contrast as not measured. `tokens.css` holds
 calculation.
 
 **Ruled** (§8.2.19 U5): owned by WP5.02, as proposed.
+
+**Fixed** (§8.2.19 U5, 2 November 2026, in WP5.02): `.claude/scripts/gui/shoot.cjs` has a `nontext` check: it measures
+the border, outline and fill of each control, and the ends of each colour bar, against the surface behind them at WCAG
+2.2 1.4.11's 3:1, beside the text and target-size checks. `/np-gui render shell` and `mockups` run it. The design
+study's pages fail it in places (REV-176).
 
 ## REV-139: The sweep needs a design round: any value, user-defined variables, rebuilds detected
 
@@ -1539,6 +1551,12 @@ clause, "the licence notice has a row for each payload", which names the bundle'
 
 **Ruled** (§8.2.19 U5): owned by WP5.02, as proposed.
 
+**Fixed** (§8.2.19 U5, 2 November 2026, in WP5.02): the NOTEs on CON-08 and CON-11 in
+`specification/03-requirements.md` restate both for an installed workbench: it uses UMFPACK, as NGSolve's wheel
+provides it, or scipy SuperLU; the core stays BSD-3 and depends on no UMFPACK of its own; the workbench defaults to
+NGSolve's UMFPACK, SuperLU selectable; and `nanopnp --env` states the GPL-2+ obligation. `nanopnp --env` does not
+state it yet, so the NOTE says it SHALL.
+
 ## REV-142: FR-38 drops the charge and radius edits of the charge-level mutator
 
 §8.2.17 S4 rules a charge-level mutation in which "a residue's protonation, charge or radius is edited at stage 7's
@@ -1556,6 +1574,10 @@ the rendered rounds did not see it. Found by `/np-ship`'s review of WP5.01 (`doc
 
 **Ruled** (§8.2.19 U7): owned by WP5.02, with REV-138's non-text measure: the token is darkened (`#7c8290` gives
 3.2:1 on `--sel`) and the pages rendered again there.
+
+**Fixed** (§8.2.19 U7, 2 November 2026, in WP5.02): the token `--control-edge` is `#7c8290` in
+`docs/design/tokens.css` (3.2:1 on `--sel`), and the pages are rendered again. The study's mockups show no finding at
+the control edge; REV-176 records the rest.
 
 ## REV-144: Case.cylinder takes a charge field, not a uniform wall surface charge
 

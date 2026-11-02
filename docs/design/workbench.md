@@ -8,7 +8,8 @@ author's words. The pictures it rests on are kept beside it and are not part of 
 the concept boards in `docs/design/concepts/`, the style tile in `docs/design/style/`, the choice
 panels in `docs/design/choices/`, the whole-workbench mockups in `docs/design/mockups/` (A, the one
 chosen, in `a/`), the scripts that write them in `docs/design/generators/`, and each round's verdicts
-and review in `docs/design/reviews/`. The tokens are `docs/design/tokens.css`.
+and review in `docs/design/reviews/`, and WP5.02's framework spike in `docs/design/spike/` (its report,
+`report.md`, and the two windows' pictures). The tokens are `docs/design/tokens.css`.
 
 ## Purpose and users
 
@@ -346,8 +347,34 @@ browser shell's pictures come from `plot/data.py` (`density_section`, `contour_p
 in `gui/` (`gui/geometry.py`'s `density_section`, `reduced_image` and `ImageModel`) retire with Qt. This
 settles Phase 5's open decision 4. Every number shown is read from its stage's artefact, floats decoded as
 the command line decodes them (REV-134), and a number no artefact supplies is not shown. Meshes and fields
-are drawn by the shipped renderer, unmodified and a separate file (CON-09); the molecule's renderer and the
-explorer's controls are REV-137, chosen by WP5.02's spike (S8).
+are drawn by the shipped renderer, unmodified and a separate file (CON-09). The front end is NiceGUI over
+FastAPI (ADR-004's NOTE, the front end, v0.6; §8.2.30 AF4).
+
+### The renderers
+
+One renderer draws each kind of picture (REV-137). Each ships as a separate file, unmodified where it is a
+third party's.
+
+| Picture | Renderer | Where it is | Licence |
+|---|---|---|---|
+| The molecule in 3D | Mol*, as its standalone bundle (`molstar.js`, `molstar.css`) | `src/nanopnp/gui/web/assets/molstar/` | MIT (CON-09) |
+| Meshes and fields | npm `webgui` 0.2.39 | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
+| Maps and plots in (r, z) | A canvas the page draws from the data of `plot/data.py` | `src/nanopnp/gui/web/` | BSD-3-Clause |
+
+The results explorer asks four controls of its field view: zoom, a colour scale for each quantity, the mesh
+on or off, and a framed opening view (the author's verdicts on today's shell). Read from the shipped
+`webgui.js`, `webgui` serves two of them whole and the rest in part:
+
+| Control | Served by `webgui` | How |
+|---|---|---|
+| Zoom | Yes | The mouse wheel and drag of the scene's orbit controls |
+| The mesh on or off | Yes | The *Objects* folder has one check box each for *Surface*, *Wireframe* and *Edges* |
+| A colour scale for each quantity | In part | One colour map per scene: *Colormap* sets its minimum, maximum and autoscale. A scene holds one quantity, so a scale for each quantity is one scene each; `gui/render.py` writes the range into the scene |
+| A framed opening view | No | The renderer sets the opening camera when the scene loads; no control re-frames it, and *reset settings* in the *Misc* folder restores the folder values only |
+
+The 200 ms line (WB-23) is not measured for the whole picture. On a container with no GPU, Mol* alone
+needs about 800 ms to repaint a selection, and the front end's own share is 14 to 26 ms
+(`docs/design/spike/report.md`).
 
 ## Restated clauses
 
