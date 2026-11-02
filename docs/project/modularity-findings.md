@@ -1,7 +1,7 @@
 ---
 findings:
   prefix: MOD
-  status: open
+  status: closed
   areas: [stages, coupling, extension, surface]
 ---
 
@@ -11,6 +11,8 @@ The findings log of the [modularity report](modularity.md) (§8.2.7 G1, G4). Eac
 finding; its section in the report gives what was measured, the consequence, the recommendation
 and whether a fix is visible to users. The author ruled `MOD-01` to `MOD-17` on 5 October 2026 and `MOD-18` on 6 October (§8.2.8), and a row moves to `fixed` in the commit
 that fixes it.
+
+Closed on 2 November 2026 by WP60: every row is terminal.
 
 **Status** is `open` until ruled; then `accepted` (to be fixed in this phase), `fixed` (the ruling
 links the plan that fixed it), or `deferred`, `post-1.0`, `declined` or `wontfix` (the ruling names
