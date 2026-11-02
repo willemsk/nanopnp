@@ -315,16 +315,17 @@ eleven. Implementing model: Sonnet, the Newton item in the main session. Tag `v0
 
 ### WP60 — Phase 4 closed: the open items resolved, and the end-of-phase report (§8.2.7 G11; §8.2.24 Z1; §8.2.27 AC1, AC6)
 
-Planned, and last. It:
+Planned, and last ([plan](wp60-phase-4-close.md)). It:
 
 - resolves or carries each row of *Open decisions*;
 - confirms that every `MOD-nn` and `UT-nn` row is terminal and sets both logs' headers to `closed`,
   recording their closure, and the register's, in the report (N3). All eighteen `MOD-nn` and all
   twelve `UT-nn` rows were terminal on 31 October 2026;
 - confirms that every `REV-nn` row whose ruling places it in a Phase 4 package is `fixed` and that no
-  row is left `open`. REV-116 closes here, by re-running `python -m nanopnp.validation.costs all` on
-  a clean tree and replacing `docs/project/cost-study.json` (ruled 18 October 2026); REV-121 is
-  deferred by Z5, REV-170 and REV-171 by AC3 and AC4; REV-169 is WP59's;
+  row is left `open`. REV-116 closes here, by re-running `python -m nanopnp.validation.costs all`, its quick-start leg
+  brought to the shipped case, on a clean tree and replacing `docs/project/cost-study.json` (ruled 18 October 2026); REV-121 is
+  deferred by Z5, REV-170 and REV-171 by AC3 and AC4; REV-169 is WP59's; REV-47
+  closes with the gate's durations measured on the close's tree, WP33's targets retired (§8.2.9 I3);
 - re-runs the end-of-phase report's numbers on its own tree, never copying them from an Outcome. The
   two whose tests the test scope withdrew are re-measured through the library's own parser: the prose
   share of `src/` and `tests/` (criterion 11; VER-75) and every `[tested: …]` marker against the
@@ -430,7 +431,8 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 11. **The loop is simple and the prose small.** The commit hook runs only the lock check, lint,
     format, types and Tier 1; the impact recorder, budget enforcer and agent framework are gone; a
     plan from WP44 on is within its word caps; the prose of `src/` is at most 10 % and of `tests/` at
-    most 3 %, with the accepted exception of L10. Reported, not gated: the commit hook (prediction
+    most 3 %, with the accepted exceptions of L10 and §8.2.29 AE5 (11.9 % of
+    `src/` at the close). Reported, not gated: the commit hook (prediction
     about 90 s), the push gate (under 4 minutes) and the pull-request critical path (under 6
     minutes). If a gated item misses, it is fixed; if a reported number misses, the cause is
     reported and the author rules. No tolerance is loosened and no oracle weakened.
