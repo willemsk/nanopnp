@@ -40,6 +40,7 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.27 Phase 4 amended: the architecture review's fixes, agreed 1 November 2026](27-phase-4-amended-the-architecture-reviews-fixes.md) - Records the author's rulings at the sixth amendment of Phase 4: the confirmed items of an architecture review become WP59, which also fixes REV-169, before the close, now WP60; a non-finite Newton trial residual aborts; the stage-5 region interface goes to Phase 5 and the unmeasured costs to Phase 6; and a plain-language pass of the workflow prose joins the close.
 * [8.2.28 Phase 5 amended: the library packages, agreed 1 November 2026](28-phase-5-amended-the-library-packages.md) - Records the author's rulings at the first amendment of Phase 5: the four library packages that need no front-end stack are ordered now, after the spike, while the shell packages, the sweep's design round and REV-136's cut line wait for a second amendment; the stage-5 region interface joins the Geometry tool's package, and the review's QoI seam joins the outputs registry.
 * [8.2.29 WP59's review items, agreed 2 November 2026](29-wp59-review-items.md) - Records the author's rulings on the items WP59's review left open: the state gates speak before a non-finite trial's divergence, a non-finite Newton direction is named as the linear solve's, a session opens a run from the store its record names unless it was given one, and WP59's three public names stand; and, at WP60's plan, the source's prose share at the close is accepted as measured.
+* [8.2.30 WP5.02's plan: the spike's candidates and the desktop wrapper, agreed 2 November 2026](30-wp502s-plan-the-spike-and-the-desktop-wrapper.md) - Records the author's rulings at WP5.02's plan: the workbench keeps a desktop wrapper such as Electron possible and the spike measures it; the two candidates are NiceGUI and a React application over one FastAPI server; and the spike's code leaves the tree once the framework is ruled, its report kept.
 
 ## Where each ruling holds now
 
@@ -281,3 +282,6 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AE3 - IF-01's NOTE; REV-173
 * AE4 - IF-01's NOTE; spent
 * AE5 - the Phase 4 plan's criterion 11
+* AF1 - ADR-004's NOTE (the desktop wrapper); open: WP5.02
+* AF2 - WP5.02's plan; open: WP5.02
+* AF3 - WP5.02's plan; open: WP5.02

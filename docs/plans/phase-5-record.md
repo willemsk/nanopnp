@@ -80,3 +80,23 @@ The shell's entry:
 > test that the projected charge changes by that residue's alone, before its shell control (§8.1;
 > RSK-15). They wait on WP5.01's requirements and WP5.02's framework ruling; `/np-plan amend 5` plans
 > them from WP5.03.
+
+## Amended 2 November 2026 (§8.2.30 AF1 to AF3)
+
+WP5.02's plan named the candidates, added the desktop-wrapper probe and the server's contract (AF1), and ruled that the
+spikes leave the tree after the ruling (AF3). The entry read:
+
+> ### WP5.02 — The spike and the visual-feedback workflow (S8 to S10)
+>
+> After `v0.5.0`. One hard screen, the residue and charge-map link with a sketcher stub, is built
+> twice outside the package, Python-first and as a Python server with a TypeScript application,
+> measuring code size, click-to-redraw time and headless drivability; the author rules in ADR-004.
+> Then, in the chosen stack: fixture states, a render-every-screen command and the local live loop,
+> written into `CONTRIBUTING.md` and §8.4.4.
+> Proposed: **VER-78**, every fixture state loads every screen with its declared controls and no
+> browser-console error; oracle, the screen registry. It names the commands that log the
+> end-of-phase numbers: click-to-redraw time and the clean-environment install time. Tag
+> `v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the explorer's controls
+> against `webgui`), REV-138 (non-text contrast in `/np-gui render`) and REV-141 (CON-08 and CON-11
+> restated beside ADR-004) (§8.2.19 U5), and REV-143 (the light theme's control edge on a selected row,
+> with REV-138) (U7).

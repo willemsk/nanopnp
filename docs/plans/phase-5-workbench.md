@@ -1,8 +1,9 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 delivered, WP5.02 and the library packages WP5.03 to WP5.06 planned after
-`v0.5.0`.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to S23); the library
-packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)). The shell packages, the
+**Status: in progress; WP5.01 delivered, WP5.02 planned, the library packages WP5.03 to WP5.06 planned after
+it.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to S23); the library
+packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02 planned on 2 November
+2026 (§8.2.30 AF1 to AF3). The shell packages, the
 sweep's design round and the estimate wait for a second `/np-plan amend 5` after WP5.02's framework ruling (AD1); the
 close is last. Release: **v0.6** (`v0.6.0`).
 
@@ -107,20 +108,20 @@ only at `v0.6.0` (S17). It proposes a ruling on each inherited row.
 Tests: none kept; the strict documentation build (VER-45). Tag: none if it merges before `v0.5.0`,
 its entry under `## [Unreleased]`; otherwise `v0.6.0-alpha.1` (§8.4.1).
 
-### WP5.02 — The spike and the visual-feedback workflow (S8 to S10)
+### WP5.02 — The spike and the visual-feedback workflow (S8 to S10; §8.2.30 AF1 to AF3)
 
-After `v0.5.0`. One hard screen, the residue and charge-map link with a sketcher stub, is built
-twice outside the package, Python-first and as a Python server with a TypeScript application,
-measuring code size, click-to-redraw time and headless drivability; the author rules in ADR-004.
-Then, in the chosen stack: fixture states, a render-every-screen command and the local live loop,
-written into `CONTRIBUTING.md` and §8.4.4.
-Proposed: **VER-78**, every fixture state loads every screen with its declared controls and no
-browser-console error; oracle, the screen registry. It names the commands that log the
-end-of-phase numbers: click-to-redraw time and the clean-environment install time. Tag
-`v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the explorer's controls
-against `webgui`), REV-138 (non-text contrast in `/np-gui render`) and REV-141 (CON-08 and CON-11
-restated beside ADR-004) (§8.2.19 U5), and REV-143 (the light theme's control edge on a selected row,
-with REV-138) (U7).
+**Planned** ([the plan](wp5.02-framework-spike.md)), 2 November 2026. One hard screen, the residue and charge-map
+link with a sketcher stub, is built twice under `spikes/`: in NiceGUI, and as a React application built by Vite, both
+over one FastAPI server (AF2). It measures code size, click-to-redraw time, headless drivability, the install, the
+front end's licences, and whether each runs inside a minimal Electron window: the workbench keeps a desktop wrapper
+possible, and the server's contract says how (AF1; ADR-004's NOTE). The author rules in ADR-004; both spikes then
+leave the tree, the report kept (AF3). Then, in the chosen stack: the server and its contract, the screen registry,
+fixture states, the `shell` render target and the local live loop, written into `CONTRIBUTING.md` and §8.4.4.
+**VER-78**: every fixture state loads every screen with its declared controls and no browser-console error; oracle,
+the screen registry. It names the commands that log the end-of-phase numbers: click-to-redraw time and the
+clean-environment install time. Tag `v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the
+explorer's controls against `webgui`), REV-138 (non-text contrast in `/np-gui render`), REV-141 (CON-08 and CON-11
+restated beside ADR-004) (§8.2.19 U5), and REV-143 (the light theme's control edge on a selected row) (U7).
 
 Each library package lands its capability with its Tier 1 and 2 tests before any screen surfaces it (§8.1; RSK-15;
 §8.2.17 S7), and each is planned by `/np-plan wp` after WP5.02 (AD2, AD3). None changes `src/` before `v0.5.0` (S1).
