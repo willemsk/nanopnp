@@ -34,6 +34,7 @@ exclude_docs: |
   design/mockups/
   design/generators/
   design/reviews/
+  design/spike/
 
 theme:
   name: material

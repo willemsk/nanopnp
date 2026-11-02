@@ -146,6 +146,15 @@ processes when its standard input closes or it receives an interrupt or terminat
 SHALL refuse a request whose `Host` is not a loopback name, and one that carries neither the
 per-launch token of the address it printed nor the cookie that token sets.
 
+NOTE (the front end, v0.6). The workbench's front end SHALL be written in Python with NiceGUI, on the
+FastAPI server of the desktop-wrapper NOTE; it has no build step, and NiceGUI's own Vue layer ships
+prebuilt (CON-07). JavaScript SHALL be the bridge to a renderer and nothing else. The renderers are Mol*
+for the molecule, as its unmodified standalone bundle served as separate files (CON-09); `webgui` for
+meshes and fields (VER-44); and a canvas for (r, z) maps and for plots drawn from `plot/data.py`. A call
+that starts the viewer from Python SHALL pass a timeout longer than the viewer's start, and a screen SHALL
+set `data-screen-ready` only when its viewer has built and drawn once. The author chose NiceGUI over
+a React application on the spike's six measures (`docs/design/spike/report.md`; §8.2.30 AF4).
+
 #### ADR-005 Two levels of pluggability
 
 Decision: correction models as data files (level 1) and physics models as classes (level 2), per

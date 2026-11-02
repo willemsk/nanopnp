@@ -1,6 +1,6 @@
 # WP5.02 — The framework spike and the visual-feedback workflow
 
-**Status: planned, not started.** 2 November 2026, on `v0.5.0`. It inherits WP5.01's design
+**Status: in progress, items 1 to 5 done, 2 November 2026.** 2 November 2026, on `v0.5.0`. It inherits WP5.01's design
 (`docs/design/workbench.md`), its `/np-gui` loop and REV-137, REV-138, REV-141 and REV-143.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -188,10 +188,10 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 
 ### Work items
 
-- [ ] 1. `spikes/wp5.02/{fixture,server}/`, plus a `.gitignore` for `fixture/out/` (D1, D2); done when the four routes answer on the fixture. **Executor:** main
-- [ ] 2. `spikes/wp5.02/nicegui/` (D1); done when both link directions and the stub work by mouse and keyboard. **Executor:** main
-- [ ] 3. `spikes/wp5.02/react/` (D1); done as item 2. **Executor:** main
-- [ ] 4. `spikes/wp5.02/{measure,electron}/` and the six measures run (D3); done when every cell of the report's table has a number or a verdict. **Executor:** main
+- [x] e95880a 1. `spikes/wp5.02/{fixture,server}/`, plus a `.gitignore` for `fixture/out/` (D1, D2); done when the four routes answer on the fixture. **Executor:** main
+- [x] f1445e7 2. `spikes/wp5.02/nicegui/` (D1); done when both link directions and the stub work by mouse and keyboard. **Executor:** main
+- [x] 13cecfd 3. `spikes/wp5.02/react/` (D1); done as item 2. **Executor:** main
+- [x] 8554b1f 4. `spikes/wp5.02/{measure,electron}/` and the six measures run (D3); done when every cell of the report's table has a number or a verdict. **Executor:** main
 - [ ] 5. `docs/design/spike/report.md`, published; the ruling; the history row and the ADR-004 NOTE (D3); done when the author has ruled. **Executor:** main
 - [ ] 6. Compaction checkpoint. **Executor:** main
 - [ ] 7. Delete `spikes/` (AF3), with the report linking the last commit that held them; `gui/web/server.py`, the `cli` subcommand, the extra, the layering row and REV-174 (D4); done when VER-61 passes and `nanopnp gui --no-browser --port 0` prints its ready line. **Executor:** main
@@ -199,6 +199,14 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 - [ ] 9. `/np-gui render shell` (`render.md`, `render_shell.py`), `nontext` in `shoot.cjs`, the token, the mockups re-rendered, the live loop in `CONTRIBUTING.md` and §8.4.4 (D5, D6); done when `render shell` reports no failure on every state. **Executor:** main
 - [ ] 10. The REV-137 table in `workbench.md`; the CON-08 and CON-11 NOTEs; REV-137, -138, -141 and -143 set `fixed`; QR-16's Appendix A row (D6); done when the code and review say so. **Executor:** general-purpose on Sonnet
 - [ ] 11. `CHANGELOG.md` under `## [Unreleased]`, `current.md`, and the phase plan's WP5.02 entry delivered. **Executor:** main
+
+> **Outcome — items 1 to 5.** The fixture is 53,760 charged atoms in 3,420 residues; the shared server
+> answers its routes. The author ruled NiceGUI (§8.2.30 AF4; ADR-004's NOTE, the front end, v0.6). Evidence:
+> [the report](../design/spike/report.md). Where the build differed from the plan: the NiceGUI directory is
+> `ngui/`, since `nicegui/` shadows the package; both candidates use Mol*'s standalone bundle, not an npm
+> import; the 200 ms line holds for the front end (26 ms p95) and is unmeasured for the whole picture, because
+> Mol* alone needs about 800 ms on this container's software GL. Carried to item 8: `data-screen-ready` means
+> Mol* has built and drawn once; calls that start the viewer pass a long timeout; a selection moves no camera.
 
 ### Verification
 
