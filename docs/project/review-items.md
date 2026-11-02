@@ -481,6 +481,12 @@ PR and the plan's Outcomes.
 
 **Resolves it.** Phase 4's close package, which reports the gate's durations on its own tree and re-argues or retires WP33's targets (§8.2.9 I3).
 
+**Fixed in WP60** (2 November 2026): WP33's targets, 180 s gated and 90 s per file, are retired. §7.6's NOTE on
+the loop's timings replaced them when the loop was simplified (WP44), and neither target is in the specification.
+The close reports the durations on its own tree instead, in the Phase 4 plan's end-of-phase report: the commit hook
+95 to 117 s on a commit that changes Python or a findings log (1 s for prose alone), the push gate 243 s (`gate.sh run`, four
+CPUs, `72b0689`), and the pull request's CI critical path 4 min 46 s.
+
 ### REV-48 — The 2WCD walk test copies its constants
 
 *Area:* verification. *Severity:* low. *Found:* PR #67 (WP33), review finding 13.

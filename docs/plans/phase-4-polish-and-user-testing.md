@@ -1,37 +1,37 @@
 # Phase 4 (Polish and user testing): a codebase whose seams are measured and whose surface has been used
 
-**Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
+**Status: delivered, 2 November 2026; closes at the merge and the `v0.5.0` tag.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its
 current scope on 22 October 2026 (§8.2.16 R4). The text of every amendment since 5 October, and the
 plan as it stood before this restatement, are in [phase-4-record.md](phase-4-record.md), read on
-demand. Delivered: WP35 to WP59, below. The author ran the sessions and ruled every `UT-nn` on
+demand. Delivered: WP35 to WP60, below. The author ran the sessions and ruled every `UT-nn` on
 29 October 2026, at WP56's plan (§8.2.21): WP56, the first fix package, and WP57, the second (widened on 30 October 2026 to carry the geometry
 split and the open review items, §8.2.22, and its Python interface rebuilt on a `Case` and a `Session`,
 §8.2.23), are delivered. The phase ends in three packages, planned on 31 October 2026 (§8.2.24 Z1) and amended
-on 1 November 2026 (§8.2.27 AC1): **WP58**, documentation increment 4, and **WP59**, the architecture
-review's fixes, are delivered; **WP60**, the close, remains. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
+on 1 November 2026 (§8.2.27 AC1): **WP58**, documentation increment 4, **WP59**, the architecture
+review's fixes, and **WP60**, the close, are delivered. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
 
 ## In brief
 
-Phase 4 tidies the program before others rely on it. The rebuilt structure, the trimmed code and
-tests, the notebooks, the split specification, the working commands, the testing protocol, both
-fixes, the revised guide and the review's fixes are done. One package remains, and it ends the phase.
+Phase 4 tidied the program before others rely on it, and it is done. The rebuilt structure, the
+trimmed code and tests, the notebooks, the split specification, the working commands, the testing
+protocol, both fixes, the revised guide, the review's fixes and the close are written.
 
-**What changes.** First, the fixes an outside review found and the checks confirmed (done): a case keeps
-its own record of where it came from, the command line and the coming browser workbench check and
-explain a case the same way, a solve that produces an invalid number stops at once, and six sample
-case files find their mesh wherever they are run from. Then the phase closes: every finding read as
-settled, every number of the report measured again, the instructions for the coding sessions made
-plainer, and the release named.
+**What changes.** The program is easier to read, change and trust. The parts no longer depend on each
+other in a circle, the commands and the Python interface were tried by a person and corrected, and a
+solve that produces an invalid number stops at once. Every finding of the structure review and of the
+testing sessions is settled. The close measured every number of this report again, and the coding
+sessions' instructions are in shorter sentences.
 
-**Cost.** About two weeks for the two together, three to five days more than before, because the
-release now waits for the fixes.
+**Cost.** About four weeks, inside the four to six planned. Two figures miss their reported targets:
+the commit check is 6 to 30 percent slower than hoped, and the check before a push 1 percent.
 
-**What could go wrong.** A fix could move a recorded result; the number-stability check stops it,
-and none is expected to move. The report's numbers could be copied from an earlier package instead
-of measured afresh, which the close forbids.
+**What could go wrong.** The released version is named but not yet tagged: the tag goes on the last
+commit after the merge. A recorded result could drift on a platform nobody ran; the check on three
+platforms shows none beyond rounding.
 
-**Your call.** Nothing waits on you. The six decisions of 1 November place every item of the
-review: the fixes now, the drawing interface with the workbench, the speed items after measurement.
+**Your call.** Whether to accept the two slow checks, and the two documents that grew past their
+word targets (the specification and this plan). Recommendation: accept; each is reported, not
+gated, and a cut would remove rules.
 
 ## Context
 
@@ -315,29 +315,16 @@ eleven. Implementing model: Sonnet, the Newton item in the main session. Tag `v0
 
 ### WP60 — Phase 4 closed: the open items resolved, and the end-of-phase report (§8.2.7 G11; §8.2.24 Z1; §8.2.27 AC1, AC6)
 
-Planned, and last ([plan](wp60-phase-4-close.md)). It:
-
-- resolves or carries each row of *Open decisions*;
-- confirms that every `MOD-nn` and `UT-nn` row is terminal and sets both logs' headers to `closed`,
-  recording their closure, and the register's, in the report (N3). All eighteen `MOD-nn` and all
-  twelve `UT-nn` rows were terminal on 31 October 2026;
-- confirms that every `REV-nn` row whose ruling places it in a Phase 4 package is `fixed` and that no
-  row is left `open`. REV-116 closes here, by re-running `python -m nanopnp.validation.costs all`, its quick-start leg
-  brought to the shipped case, on a clean tree and replacing `docs/project/cost-study.json` (ruled 18 October 2026); REV-121 is
-  deferred by Z5, REV-170 and REV-171 by AC3 and AC4; REV-169 is WP59's; REV-47
-  closes with the gate's durations measured on the close's tree, WP33's targets retired (§8.2.9 I3);
-- re-runs the end-of-phase report's numbers on its own tree, never copying them from an Outcome. The
-  two whose tests the test scope withdrew are re-measured through the library's own parser: the prose
-  share of `src/` and `tests/` (criterion 11; VER-75) and every `[tested: …]` marker against the
-  surviving tests (criterion 4; VER-63). All 423 markers resolved on 31 October 2026;
-- revises the workflow prose (AC6): `CLAUDE.md` and the `np-*` skills in plainer, direct sentences, each repeated
-  rule stated once, every normative rule and word cap kept; a rule whose wording moves amends §8.4.4 in the same
-  commit;
-- writes the report below, the `[0.5.0]` section of `CHANGELOG.md` gathering every break of the phase
-  with its migration (Z3), and `CITATION.cff`'s version and date;
-- updates `current.md` to point at Phase 5 (F5).
-
-Its last commit on `main` is tagged `v0.5.0` alone (G11).
+**Delivered 2 November 2026** ([plan](wp60-phase-4-close.md); tag `v0.5.0` alone, after the merge). Both findings
+logs read `closed`, the ruling index has no `open:` marker for a Phase 4 package, and no `REV-nn` row is `open`:
+`REV-116` closed by the cost record re-run on a clean tree (the quick-start leg repaired; no share over its
+threshold) and `REV-47` by the gate's durations on this tree, WP33's targets retired. The report below measures every
+number on this tree, the two withdrawn checks through the library's own parser (prose share 11.89 % of `src/`, 2.75 %
+of `tests/`; 438 markers naming 315 tests, all present). `CLAUDE.md`, `core.md` and the `np-*` skills are in shorter
+sentences (mean 14.3 to 11.6 words), each repeated rule stated in its owner. `[0.5.0]` of `CHANGELOG.md` gathers
+every break with its migration; `CITATION.cff` names 0.5.0. **Live for later packages:** `REV-170` (Phase 5),
+`REV-156` and `REV-171` (Phase 6); the commit hook (95 to 117 s) and push gate (243 s) targets are reported misses.
+No QoI moves; VER-61, VER-62 and VER-65 stay green on three platforms.
 
 ## Open decisions
 
@@ -455,33 +442,101 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 
 ## End-of-phase report
 
-Empty until the close package fills it. It reports:
+Measured on WP60's own tree, 2 November 2026 (`72b0689` for the dispatched CI run, whose `src/`, `tests/` and
+`data/` are those of the final tree; `db952e3` for the cost study), never copied from an Outcome. Every number
+names its command or its run.
 
-- **The modularity report:** the `MOD-nn` findings by area, and how many were fixed, deferred or sent
-  post-1.0, with the deferrals' destinations.
-- **The layering:** the subpackage import matrix before (`v0.4.0`) and after, the size of the
-  strongly connected set, whether H6's target was met and, if not, the ruled residual. Source:
-  WP35's script and VER-61.
-- **The backend's reach:** the subpackages importing NGSolve or Netgen, eleven at `97f2b3d`, and at
-  the close. Source: VER-65.
-- **Number stability:** the largest relative drift of each golden QoI on each platform, with the
-  golden's commit. Source: VER-62.
-- **The knowledge base:** the `[tested: …]` claims, their distinct tests, and the `[verified]` claims
-  that remain.
-- **The review register:** the `REV-nn` rows by status at the close, those fixed in Phase 4 by
-  package, and those deferred by destination.
-- **User testing:** the sessions and `UT-nn` findings by area and severity, and how many were fixed
-  or deferred.
-- **Breaks:** the schema identifier at the release, the `PUBLIC` names added and removed, and the
-  CLI changes, each with its migration. Sources: IF-01's NOTE, VER-47 and `CHANGELOG.md`.
-- **The suite:** test counts by tier and the push gate's duration, against the 1,764 collected by
-  default at `v0.4.0`. Source: the gate run on the close package's tree.
-- **The cost study:** WP49's three measurements against their thresholds and predictions, and what
-  was fixed. Source: WP49's script, re-run on the close's tree.
-- **Plotting and notebooks:** the stages with a figure and those on the figure-free list, the
-  notebooks, and their nightly runtime on four cores.
-- **The development loop:** the wall times of the commit hook, the push gate and CI's pull-request
-  critical path, against 11 October 2026's 199 s, 527 s and about 10.5 minutes. Sources: the gate log
-  (`<git dir>/nanopnp-gate.log`) and CI's job timings.
-- **The documents:** the word counts of the current specification, its history and §8.4, and of this
-  plan.
+- **The modularity report** (`docs/project/modularity-findings.md`, closed 2 November 2026). 18 rows, `MOD-01` to
+  `MOD-18`. By area: extension 8, coupling 4, surface 4, stages 2. By severity: high 2, medium 7, low 9. 13 are
+  `fixed`; 2 are `post-1.0` (`MOD-08`, `MOD-17`; §8.2.8 H5); 2 are `deferred` (`MOD-09`, §8.2.18 T4; `MOD-10`, the
+  backend interface, §8.2.8 H3); 1 is `wontfix` (`MOD-18`, §8.2.18 T1).
+- **The layering** (`validation.modularity.render_measurements()` on this tree; VER-61 passes). The `top` relation
+  had one strongly connected component of 10 subpackages at `97f2b3d` (`charge`, `density`, `geometry`, `io`,
+  `materials`, `mesh`, `physics`, `solve`, `structure`, `symmetry`; the runtime relation added `cli`, `sweep` and
+  `validation`). It has none now, nor does the runtime relation, and no two modules import each other at load time
+  (0 module cycles). **H6's target is met.** The static relation, which adds the 160 `typing` and 157 deferred import statements,
+  keeps one component of 10 (`core`, `density`, `geometry`, `io`, `materials`, `mesh`, `numerics`, `physics`,
+  `structure`, `symmetry`), and the static-and-string relation one of 19; the lightest cut of each is one import
+  statement per edge. Neither is gated. 1,038 import edges: top 602, deferred 157, typing 160, string 119. The
+  matrix before is in `docs/project/modularity.md`, at `97f2b3d`.
+- **The backend's reach** (VER-65, `test_backend_guard.py` at eleven; passes). 38 modules in 11 subpackages import
+  NGSolve or Netgen, against 33 modules in 11 subpackages at `97f2b3d`. `MOD-10` is deferred, so the set did not
+  shrink.
+- **Number stability** (VER-62; the golden recorded on `v0.4.0`'s tree and re-pinned within its rulings, last at
+  `7865324`; `ci.yml` dispatched on `72b0689`, [run 611](https://github.com/willemsk/nanopnp/actions/runs/41471801417)).
+  The per-push selection walks examples 01 and 02 (ePNP-NS), and each leg prints the largest relative drift:
+
+  | Platform | Mode | Example 01 | Example 02, ePNP-NS | Tests |
+  |---|---|---|---|---|
+  | linux-x86_64/X86_V3 | same mesh, against 10⁻⁸ | 6.9 × 10⁻¹⁴ (`eof_m3_s`) | 2.2 × 10⁻¹⁶ (`currents_A[Cl-]`) | 1,652 passed, 280 s |
+  | darwin-arm64/ASIMDDP | mesh moved, against ≤ 10⁻³ | 1.5 × 10⁻¹³ (`eof_m3_s`) | 1.1 × 10⁻¹⁵ (`eof_m3_s`) | 1,652 passed, 395 s |
+  | win32-AMD64/X86_V3 | mesh moved, against ≤ 10⁻³ | 7.9 × 10⁻¹⁴ (`eof_m3_s`) | 1.2 × 10⁻¹⁵ (`eof_m3_s`) | 1,642 passed, 10 skipped, 553 s |
+
+  Prediction: zero drift beyond round-off. Met. The ten skips are VAL-06's APBS legs, which have no wheel for
+  Windows (WP29 D11). The Windows bundle probe (RSK-13) and the COMSOL comparison also passed in the run.
+- **The knowledge base** (the markers parsed from `knowledge/` on this tree). 442 `[tested: …]` spans; four are not
+  tests (three are the format's `<test>` placeholder, one the log's `…`). The other 438 name 315 distinct tests,
+  and all 315 exist. 120 `[verified]` markers remain, each with a source footnote.
+- **The review register** (`docs/project/review-findings.md`, 173 rows, none `open`). `fixed` 129; `deferred` 20;
+  `accepted` 11; `declined` 7; `wontfix` 4; `post-1.0` 2. Of the `fixed` rows, 85 link a package's plan (WP37 4,
+  WP38 4, WP39 4, WP40 3, WP41 6, WP42 19, WP43 5, WP44 6, WP45 5, WP46 20, WP47 4, WP48 1, WP53 1, WP59 1, WP60 2:
+  `REV-47` and `REV-116`) and 44 a ruling or a review report. The 11 `accepted` rows belong to Phase 5 (`REV-135`
+  to `REV-139`, `REV-141`, `REV-143`, `REV-170`) and to the Copilot probes (`REV-166` to `REV-168`). The 20 `deferred`
+  rows are named by §8.2.18 T2 (6) and T3 (3), §8.2.9 I3 (4), §8.2.11 L10, §8.2.19 U1, §8.2.20 V13 and V15,
+  §8.2.24 Z5 (`REV-121`, Phase 5) and Z6 (`REV-156`, Phase 6), and §8.2.27 AC4 (`REV-171`, Phase 6), one each.
+- **User testing** (`docs/user-testing/findings.md`, closed 2 November 2026). Five scripted sessions, run by the
+  author; 12 findings, `UT-01` to `UT-12`. By area: cli 6, docs 4, api 1, numerics 1. By severity: medium 6, low 6,
+  high 0. 11 are `fixed` (WP56 and WP57); 1 is `deferred` (`UT-09` to `REV-156`, Phase 6).
+- **Breaks** (`CHANGELOG.md`, `[0.5.0]`, *Breaks and their migration*). The case schema is `nanopnp/case/v0.5`;
+  `v1` and `v2` are retired. `nanopnp.PUBLIC` has 19 names, against 26 at `v0.4.0`: five are added (`Artefact`,
+  `Case`, `Session`, `SweepResult`, `orient_pore`) and 12 removed (`CaseDocument`, `Stage`, `dump_case`,
+  `dumps_case`, `load_case`, `loads_case`, `plan_from_document`, `registered_stages`, `resolve`, `run_case`,
+  `run_document`, `run_plan`), each still importable from its module except `run_case`. The command line removes
+  `mesh cylinder` (now `geometry cylinder` and `mesh FILE|reference`), narrows `run --upto`, and reads `inspect` by
+  schema. Sources: `nanopnp.PUBLIC` at `v0.4.0` and now, IF-01's NOTE, VER-47.
+- **The suite** (`uv run pytest --collect-only -q`). 1,764 tests in all; 1,652 collected by default, 112 deselected
+  as `nightly` or `slow`. `-m tier1` selects 1,460, `-m tier2` 216. The push gate passed (`gate.sh run`, 243 s on
+  `72b0689`, four CPUs).
+- **The cost study** (`docs/project/cost-study.json`, commit `db952e3`, `dirty: false`, four CPUs, threads unset).
+  A1: stage 1 projects to 1.15 GB at 1,000 frames, against 4 GB and a prediction of 1.0 GB. A8: building forms is
+  0.69 % of stage 10 on the quick-start walk (12.1 s) and 0.03 % on 2WCD (275 s), against 5 %. A16: store IO is
+  0.84 % and 0.70 % of a cold walk (12.4 s and 394 s), against 10 %. **No share is over its threshold**, so
+  nothing was fixed (M2). The quick-start leg had failed since WP57 removed `mesh cylinder`; item 1 repaired it.
+- **Plotting and notebooks.** 13 registered stages; 11 declare a figure and 2 (`case`, `report`) are on the
+  figure-free list (`core.stages.FIGURE_FREE`). The six notebooks run headless
+  (`uv run pytest tests/tier2/test_notebooks.py -n 4 --durations=0`): 6 passed in 445 s wall on four workers
+  (06-2wcd 280 s, 02-charge 162 s, 04-sweep 73 s, 01-geometry 69 s, 03-solve 58 s, 05-cylinder 45 s). The latest
+  nightly, [run 606](https://github.com/willemsk/nanopnp/actions/runs/41423373272) on `main` (`dca78f1`, 2 November
+  2026), passed in 2 h 26 min.
+- **The development loop** (the gate log, `<git dir>/nanopnp-gate.log`; the job timings of
+  [run 610](https://github.com/willemsk/nanopnp/actions/runs/41464403957), the pull request's CI on `72b0689`).
+  The commit hook took 95 to 117 s on a commit that changes Python or a findings log (101 s for the commit of this
+  report) and 1 s on prose alone (ruff only); the push gate 243 s; the pull request's critical path 4 min 46 s (first job start 14:41:55 to last job end
+  14:46:41). Against 11 October 2026: 199 s, 527 s and about 10.5 min.
+- **The documents** (`wc -w`). The current specification, `SPECIFICATION.md` with `specification/` outside
+  `history/`, is 74,298 words (67,629 after WP52); the history 33,471; §8.4 1,656; this plan 6,869 before this
+  report.
+
+### Verdicts
+
+| # | Verdict | Evidence |
+|---|---|---|
+| 1 | **Met** | The push gate passed (243 s); CI run 610 on the pull request passed; run 611 passed on three platforms; the latest nightly passed |
+| 2 | **Met** | 13 of 18 `MOD` rows `fixed`, the other five each ruled (above); the log is `closed` |
+| 3 | **Met** | VER-61 passes; the `top` relation has no component of more than one subpackage |
+| 4 | **Met** | All 438 test-naming markers resolve to a surviving test; none is `pending` |
+| 5 | **Met** | 12 of 12 `UT` rows terminal, the log `closed`; the nightly runs every session (VER-69) and passed |
+| 6 | **Met** | Largest drift 1.5 × 10⁻¹³ in the two per-push walks on any platform, against 10⁻⁸ and 10⁻³ |
+| 7 | **Met** | VER-43, VER-44, VER-55 and VER-60 are Tier 1 and passed in the three legs of run 611 (the widgets file in its own step); the Windows bundle probe passed |
+| 8 | **Met** | Increment 4 merged in WP58; the strict documentation build passes (VER-45, VER-46); every break is in `[0.5.0]` |
+| 9 | **Met** | VER-65 passes at eleven subpackages |
+| 10 | **Met** | No `REV` row placed in a Phase 4 package is short of `fixed` (`REV-47` closed here); the prediction of 39 was exceeded, at 129 `fixed` in all |
+| 11 | **Met, with two reported misses** | Prose of `src/` is 11.89 % (6,573 of 55,299 lines), over the 10 % target and accepted as measured by §8.2.29 AE5; of `tests/` 2.75 % (1,127 of 41,020), under 3 %. Reported: the commit hook (95 to 117 s) against about 90 s, 6 to 30 % over, and the push gate (243 s) against under 4 minutes, 1 % over, both on a four-CPU container; the critical path (4 min 46 s) is inside 6 minutes. Plans from WP44 on: checked at review (N3) |
+| 12 | **Met** | No cost is over its threshold (above) |
+| 13 | **Met** | 11 of 13 stages declare a figure and 2 are listed figure-free; six notebooks pass headless; VER-61 records `plot` with no upward edge; VER-65 stays at eleven; VER-62 shows drift at round-off |
+| 14 | **Partly met, reported** | The line check and identifier check passed in WP52; VER-45 passes; the skills have levels. Reported, not gated: the current specification is 74,298 words against the 60,000 to 68,000 predicted, and this plan 6,869 words against under 6,000. The specification grew by 6,669 words after WP52, with the clauses of WP54 to WP59 and Phase 5's FR-31 to FR-43; the plan grew with the amendments it folds in. The author rules on both |
+
+**What the phase carries.** `REV-121` (Phase 5), `REV-156` and `REV-171` (Phase 6), `REV-135` to `REV-139`,
+`REV-141`, `REV-143` and `REV-170` (Phase 5), `REV-166` to `REV-168` (the Copilot probes), `MOD-09`, `MOD-10`,
+`OPN-04` and `OPN-08`. The commit hook (6 to 30 % over) and the push gate (1 % over) miss their reported targets; the author
+may re-argue them or accept them.

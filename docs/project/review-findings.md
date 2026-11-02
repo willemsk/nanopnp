@@ -68,7 +68,7 @@ is a rolling register, and its header stays `open`.
 | REV-44 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The Stern-layer test re-solves the drawn slab](review-items.md#rev-44-the-stern-layer-test-re-solves-the-drawn-slab) |
 | REV-45 | interface | low | deferred | §8.2.18 T3 | [The derived χ field has no export](review-items.md#rev-45-the-derived-field-has-no-export) |
 | REV-46 | verification | low | deferred | §8.2.9 I3 | [Example 07 is not run at default sizes or on the ensemble](review-items.md#rev-46-example-07-is-not-run-at-default-sizes-or-on-the-ensemble) |
-| REV-47 | process | low | accepted | §8.2.9 I3 | [The test-duration targets are missed](review-items.md#rev-47-the-test-duration-targets-are-missed) |
+| REV-47 | process | low | fixed | [WP60](../plans/wp60-phase-4-close.md); §8.2.9 I3 | [The test-duration targets are missed](review-items.md#rev-47-the-test-duration-targets-are-missed) |
 | REV-48 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The 2WCD walk test copies its constants](review-items.md#rev-48-the-2wcd-walk-test-copies-its-constants) |
 | REV-49 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [AXISYMMETRIC is replaced repeatedly](review-items.md#rev-49-axisymmetric-is-replaced-repeatedly) |
 | REV-50 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [_inner_wall_nm re-implements innermost_crossings](review-items.md#rev-50-_inner_wall_nm-re-implements-innermost_crossings) |
