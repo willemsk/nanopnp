@@ -551,7 +551,13 @@ def _gui(args: argparse.Namespace) -> int:
             )
     # Named by string: gui sits above cli in the layer order, so an import would point upward.
     server = importlib.import_module("nanopnp.gui.web.server")
-    argv = ["--port", str(args.port), *(["--no-browser"] if args.no_browser else [])]
+    argv = ["--port", str(args.port)]
+    if args.no_browser:
+        argv.append("--no-browser")
+    if args.state is not None:
+        argv += ["--state", args.state]
+    if args.case is not None:
+        argv.append(str(args.case))
     code: int = server.main(argv)
     return code
 
@@ -1539,6 +1545,8 @@ def build_parser() -> argparse.ArgumentParser:
         "'nanopnp-gui ready <url>', and stops when its standard input closes or on "
         "SIGINT or SIGTERM.",
     )
+    gui.add_argument("case", nargs="?", type=Path, default=None, help="a case file to show")
+    gui.add_argument("--state", default=None, help="a fixture state in place of a case")
     gui.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
     gui.add_argument("--no-browser", action="store_true", help="print the address, open nothing")
     gui.set_defaults(handler=_gui)

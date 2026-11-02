@@ -465,6 +465,15 @@ if [[ $mode == run ]]; then
     case "$(uname -s)/$(uname -m)" in
         Darwin/* | Linux/x86_64) export NANOPNP_REQUIRE_APBS=1 ;;
     esac
+    # VER-78 drives the workbench in a browser, and `run` fails where none launches. A machine
+    # that keeps Chromium outside Playwright's own cache names it in NANOPNP_CHROMIUM; this
+    # container's is under /opt/pw-browsers.
+    export NANOPNP_REQUIRE_BROWSER=1
+    if [[ -z ${NANOPNP_CHROMIUM:-} ]]; then
+        for candidate in /opt/pw-browsers/chromium-*/chrome-linux*/chrome; do
+            [[ -x $candidate ]] && export NANOPNP_CHROMIUM=$candidate
+        done
+    fi
 else
     lead="The commit was not made: the gate"
     requirement="CLAUDE.md requires lint, format, types and tests to pass before committing."

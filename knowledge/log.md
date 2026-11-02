@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-02
+* **Update**: What the framework spike taught about NiceGUI with Mol*: the ready flag, the long timeout, and no camera move under software GL (WP5.02). ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
+
 ## 2026-11-01
 * **Update**: A non-finite Newton trial residual aborts at minimum damping and cuts the damping above it; it is no longer a forced step (WP59 D5). ([Tier-1 test evidence: Newton's counterexamples](06-numerics-fem/14-tier-1-test-evidence-newtons.md))
 

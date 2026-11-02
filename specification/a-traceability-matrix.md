@@ -20,7 +20,7 @@ needed.
 | IF-06 | VER-27 |
 | IF-07 | VER-33 |
 | IF-08 | VER-24, VER-35 |
-| IF-09 | VER-43, VER-44, VER-55 (the geometry pipeline built, inspected and hand-edited from the shell), VER-60 (the charge pipeline built and inspected from the shell, every number read from its stage's artefact) |
+| IF-09 | VER-43, VER-44, VER-55 (the geometry pipeline built, inspected and hand-edited from the shell), VER-60 (the charge pipeline built and inspected from the shell, every number read from its stage's artefact), VER-78 (the browser workbench: every state loads every screen with its controls, and the server keeps its contract) |
 | FR-01 | VER-48 (frame window, superposition on the earliest frame's C-alpha, Kabsch against MDAnalysis) |
 | FR-02 | VER-48 (the permutation axis against a known axis, and against principal axes) |
 | FR-03 | VER-48 (missing, surplus and truncated chains, residue names and the point group refused) |
@@ -100,6 +100,6 @@ Coverage: 57 of the 67 requirements in §3 have a specified activity; 10 are rec
 predominantly interface, portability, licensing and documentation requirements whose demonstration
 is by inspection rather than by test. QR-07 is counted as "none yet", its entry
 naming §8.2 criterion 3 as the measurement it is still waiting for rather than as one it has. VER-61 and VER-62 verify Phase 4's gate (§8.1; §8.2.7 G1 and G10), VER-69 that the user-testing sessions still run as written, VER-72 the import guard, rather than a requirement
-of §3, so they leave the count unchanged. VER-76 checks the published case schema against the fields the editors walk and leaves it unchanged. VER-63, VER-67, VER-68, VER-73, VER-74 and VER-75 are withdrawn (§8.2.11 L2, L3; §8.2.13 N3).
+of §3, so they leave the count unchanged. VER-76 checks the published case schema against the fields the editors walk and leaves it unchanged. VER-78 checks the workbench's screens and its server's contract under IF-09 and leaves the count unchanged. VER-63, VER-67, VER-68, VER-73, VER-74 and VER-75 are withdrawn (§8.2.11 L2, L3; §8.2.13 N3).
 
 ---

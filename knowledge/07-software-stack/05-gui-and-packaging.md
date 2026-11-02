@@ -431,6 +431,24 @@ or `numpy` is in `sys.modules` — asserted in a subprocess by
 editor therefore enumerates and validates the whole schema at the cost of the schema, and a shell
 that is only browsing a case never pays for a solver or a toolkit.
 
+### A NiceGUI screen is ready when Mol* has built and drawn once, and a click before then is lost **[verified][^wp502-report]** {#a-nicegui-screen-is-ready-when-mol-has-built-and-drawn-once-and-a-click-before-then-is-lost}
+
+The workbench's pages are NiceGUI over the server's FastAPI app (`nanopnp/gui/web/`). The spike behind
+that choice (`docs/design/spike/report.md`, measured on 4 cores with software WebGL) taught four things
+that every screen keeps:
+
+- `ui.run_javascript` waits one second by default. A call that starts Mol* passes `timeout=60`, or the
+  page's deep-link state is never applied.
+- `data-screen-ready` is set after Mol* is idle and has drawn once. A click that arrives earlier is dropped.
+- A selection moves no camera. Software GL repaints a zoomed cartoon at about 2 frames a second.
+- Mol* alone repaints a selection in about 800 ms there, so a link's drawn time is bounded by the
+  renderer, and the front end's own share is 14 to 26 ms. The 200 ms line (WB-23) is measured on a machine
+  with a GPU.
+
+Mol* is served as its unmodified standalone bundle, `molstar.js` and `molstar.css`, from separate files
+(`assets/molstar/NOTICE.md`); the server's contract is ADR-004's NOTE (the desktop wrapper), kept by
+`tests/tier1/test_gui_screens.py::test_ver78_the_server_keeps_its_contract`.
+
 ---
 
 [^wp14-plan]: `docs/plans/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
@@ -438,3 +456,4 @@ that is only browsing a case never pays for a solver or a toolkit.
 [^wp24-plan]: `docs/plans/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).
 [^wp31-plan]: `git show 0ff2d619:docs/plans/wp31-gui-charge-pipeline.md`, D8 (scene colour limits and `gui_settings.autoscale`).
 [^wp501-plan]: `docs/plans/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).
+[^wp502-report]: `docs/design/spike/report.md` (the framework spike's six measures and what the build taught, WP5.02 items 1 to 5).

@@ -97,6 +97,7 @@ dev = [
     "pytest-xdist>=3.8.0",
     "filelock>=3.12",
     "markdown>=3.5",
+    "playwright>=1.49",
 ]
 # Bundle builders only (ADR-004, section 8.2 criterion 4). Not in
 # `default-groups`: PyInstaller is needed by the `bundle` CI job and by whoever
@@ -146,6 +147,8 @@ packages = ["src/nanopnp"]
 # and `probe.licence_notice()` refuses to start without the notice, so it has to
 # travel in the wheel as well as in the PyInstaller bundle.
 "packaging/LICENSES-BUNDLE.md" = "nanopnp/LICENSES-BUNDLE.md"
+# The workbench's colours are the design's own tokens (docs/design/tokens.css); pages.py reads either.
+"docs/design/tokens.css" = "nanopnp/gui/web/assets/tokens.css"
 
 [tool.uv]
 default-groups = ["dev", "apbs"]

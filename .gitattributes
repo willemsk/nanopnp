@@ -13,3 +13,6 @@ data/** -text
 # Vendored test structures are identified by the sha256 of their bytes: a
 # structure file's digest enters the stage-1 artefact key (WP18 D11, D16).
 tests/data/** -text
+
+# Vendored Mol*: checked byte for byte against the sha256 in its NOTICE.md.
+src/nanopnp/gui/web/assets/molstar/** -text

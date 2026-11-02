@@ -194,7 +194,7 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 - [x] 8554b1f 4. `spikes/wp5.02/{measure,electron}/` and the six measures run (D3); done when every cell of the report's table has a number or a verdict. **Executor:** main
 - [x] 151b08e 5. `docs/design/spike/report.md`, published; the ruling; the history row and the ADR-004 NOTE (D3); done when the author has ruled. **Executor:** main
 - [x] 151b08e 6. Compaction checkpoint. **Executor:** main
-- [ ] 7. Delete `spikes/` (AF3), with the report linking the last commit that held them; `gui/web/server.py`, the `cli` subcommand, the extra, the layering row and REV-174 (D4); done when VER-61 passes and `nanopnp gui --no-browser --port 0` prints its ready line. **Executor:** main
+- [x] 14b2d6e 7. Delete `spikes/` (AF3), with the report linking the last commit that held them; `gui/web/server.py`, the `cli` subcommand, the extra, the layering row and REV-174 (D4); done when VER-61 passes and `nanopnp gui --no-browser --port 0` prints its ready line. **Executor:** main
 - [ ] 8. `gui/web/{screens,states}.py`, `st-charge` and `home` in the chosen stack, `tests/tier1/test_gui_screens.py`, VER-78 in §7.2 and Appendix A, `gate.sh`, `ci.yml` (D5); done when VER-78 passes. **Executor:** main
 - [ ] 9. `/np-gui render shell` (`render.md`, `render_shell.py`), `nontext` in `shoot.cjs`, the token, the mockups re-rendered, the live loop in `CONTRIBUTING.md` and §8.4.4 (D5, D6); done when `render shell` reports no failure on every state. **Executor:** main
 - [ ] 10. The REV-137 table in `workbench.md`; the CON-08 and CON-11 NOTEs; REV-137, -138, -141 and -143 set `fixed`; QR-16's Appendix A row (D6); done when the code and review say so. **Executor:** general-purpose on Sonnet
@@ -207,6 +207,15 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 > import; the 200 ms line holds for the front end (26 ms p95) and is unmeasured for the whole picture, because
 > Mol* alone needs about 800 ms on this container's software GL. Carried to item 8: `data-screen-ready` means
 > Mol* has built and drawn once; calls that start the viewer pass a long timeout; a selection moves no camera.
+
+> **Outcome — items 7 and 8.** `nanopnp gui` takes `[case] --state --port --no-browser`; `--dev` arrives with the
+> live loop in item 9, since it has no meaning before it. The server's lifespan cancels the solves it tracks, and
+> NiceGUI keeps it. Mol* is vendored as its unmodified standalone bundle under `gui/web/assets/molstar/`, with a
+> NOTICE of its sha256 values (CON-09), and `tokens.css` is read from the design, travelling in the wheel through
+> `force-include`. Two things the plan did not foresee: NiceGUI needs `docutils>=0.19` where pdb2pqr 3.7.1 pins
+> 0.17.1, so the lock carries a uv override and REV-175 stays open; and an empty row is not visible to
+> Playwright, so VER-78 caught `stages` and `strip` and each now holds a placeholder or a width. The sketcher
+> stub of the spike is not carried: no screen of this package uses it.
 
 ### Verification
 
