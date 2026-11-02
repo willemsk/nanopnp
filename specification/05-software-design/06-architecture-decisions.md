@@ -136,6 +136,16 @@ has, and a forked child would inherit the server's event loop and its already-im
 libraries." Until then the packaging NOTE gates the Qt shell (§8.2.17 S17). The decision above is
 restated by WP5.02's spike, which records the front end chosen (§8.2.17 S8).
 
+NOTE (the desktop wrapper, v0.6). The browser shell SHALL NOT preclude a desktop wrapper, such as
+Electron, that spawns its server and loads its address; no wrapper is built before 1.0 (§8.2.17 S12;
+§8.2.30 AF1). The front end SHALL reach its server only through relative URLs, SHALL fetch nothing
+from a network at run time, and SHALL choose a file or folder through the server rather than by a
+browser upload. `nanopnp gui --no-browser --port 0` SHALL start the server on the loopback interface,
+write one ready line naming its address to standard output, and stop its builds and their child
+processes when its standard input closes or it receives an interrupt or termination signal. The server
+SHALL refuse a request whose `Host` is not a loopback name, and one that carries neither the
+per-launch token of the address it printed nor the cookie that token sets.
+
 #### ADR-005 Two levels of pluggability
 
 Decision: correction models as data files (level 1) and physics models as classes (level 2), per
