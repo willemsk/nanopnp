@@ -1,0 +1,458 @@
+"""Named molecular and continuum models: their files, their merge under a study, its overrides."""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal, TypeVar
+
+import yaml
+
+from nanopnp.core.hashing import file_hash
+from nanopnp.core.paths import names_a_path
+from nanopnp.io.case import (
+    CORRECTION_PROPERTIES,
+    SCHEMA,
+    CaseDocument,
+    CaseValidationError,
+    FieldValue,
+    validate_mapping,
+)
+from nanopnp.io.case_paths import block_paths, path_fields, schema_default
+
+MOLECULAR_SCHEMA = "nanopnp/molecular-model/v0.6"
+
+CONTINUUM_SCHEMA = "nanopnp/continuum-model/v0.6"
+
+Kind = Literal["molecular", "continuum", "study"]
+
+MODEL_KINDS: tuple[Literal["molecular", "continuum"], ...] = ("molecular", "continuum")
+
+SCHEMAS: dict[str, str] = {"molecular": MOLECULAR_SCHEMA, "continuum": CONTINUUM_SCHEMA}
+
+# The longest dotted prefix decides; a path with no row is the study's. A mixed block such as
+# `charge` is split below its own name (FR-39; the design document's WB-11).
+OWNERS: dict[str, Kind] = {
+    "structure": "molecular",
+    "charge.ph": "molecular",
+    "charge.forcefield": "molecular",
+    "charge.titration": "molecular",
+    "charge.edits": "molecular",
+    "inputs.pqr": "molecular",
+    "geometry": "continuum",
+    "charge.exclusion_offset_nm": "continuum",
+    "numerics.mesh": "continuum",
+    "inputs.mesh": "continuum",
+    "inputs.profile": "continuum",
+    "physics": "continuum",
+    "electrolyte": "continuum",
+    "boundary_conditions": "continuum",
+}
+
+D = TypeVar("D", bound=CaseDocument)
+
+Override = tuple[FieldValue, FieldValue]
+
+
+def owner_of(path: str) -> Kind:
+    """Return which model owns a dotted case path: the longest prefix in ``OWNERS``, else study."""
+    parts = path.split(".")
+    for depth in range(len(parts), 0, -1):
+        found = OWNERS.get(".".join(parts[:depth]))
+        if found is not None:
+            return found
+    return "study"
+
+
+@dataclass(frozen=True, eq=False)
+class ModelFile:
+    """One model file a study read: its kind, its name, its location and its digest."""
+
+    kind: Literal["molecular", "continuum"]
+    name: str
+    path: Path
+    sha256: str
+
+
+@dataclass(frozen=True, eq=False)
+class ModelRecord:
+    """What a study read: the files, the case the models make alone and the study's overrides.
+
+    Parameters
+    ----------
+    view
+        The case the models and the study's own keys give, without the study's overrides.
+    overrides
+        Dotted path to ``(model value, study value)``.
+    base
+        The directory a relative model path is read against.
+    """
+
+    files: tuple[ModelFile, ...]
+    view: CaseDocument
+    overrides: Mapping[str, Override]
+    base: Path
+
+    @property
+    def paths(self) -> dict[str, str]:
+        """The model files by kind, as the ``models:`` block of the document holds them."""
+        return {file.kind: str(file.path) for file in self.files}
+
+    @property
+    def kinds(self) -> frozenset[str]:
+        """The kinds of model the study names."""
+        return frozenset(file.kind for file in self.files)
+
+    def attached(self, document: D) -> D:
+        """Return ``document`` carrying this record, its overrides recomputed against the view."""
+        document._models = ModelRecord(
+            files=self.files,
+            view=self.view,
+            overrides=differences(document, self.view, self.kinds),
+            base=self.base,
+        )
+        return document
+
+    def carried(self, document: D, assignments: Mapping[str, FieldValue]) -> D:
+        """Return ``document`` with the model files in ``assignments`` read again under its study.
+
+        The study's own keys and its overrides stay.
+        """
+        paths: dict[str, Path] = {file.kind: file.path for file in self.files}
+        for path, value in assignments.items():
+            kind = path.removeprefix("models.")
+            if kind not in MODEL_KINDS:
+                raise CaseValidationError(f"{path}: models: accepts molecular, continuum")
+            if value is None:
+                raise CaseValidationError(f"{path}: a study cannot drop a model it names")
+            paths[kind] = (self.base / Path(str(value))).resolve()
+        study = study_layer(document, self)
+        study.pop("models")
+        return _resolve(study, paths, self.base, f"<{document.name} with models>", type(document))
+
+
+def read(path: str | Path, *, model: type[D] = CaseDocument) -> D:  # type: ignore[assignment]
+    """Read a case file that may name models, and resolve it to one case document."""
+    source = Path(path)
+    resolved = source.resolve()
+    return reads(
+        resolved.read_text(encoding="utf-8"), base=resolved.parent, source=str(source), model=model
+    )
+
+
+def reads(
+    text: str,
+    *,
+    base: str | Path | None = None,
+    source: str = "<string>",
+    model: type[D] = CaseDocument,  # type: ignore[assignment]
+) -> D:
+    """Resolve a case held in memory, reading the model files it names beside ``base``."""
+    raw = yaml.safe_load(text)
+    if not isinstance(raw, Mapping) or "models" not in raw or raw.get("schema") != SCHEMA:
+        document = validate_mapping(raw, source, model)
+        assert isinstance(document, model)
+        return document
+    directory = Path(base).resolve() if base is not None else Path.cwd()
+    paths = _named_files(raw["models"], directory, source)
+    study = {key: value for key, value in raw.items() if key != "models"}
+    return _resolve(study, paths, directory, source, model)
+
+
+def _named_files(raw: object, directory: Path, source: str) -> dict[str, Path]:
+    if not isinstance(raw, Mapping):
+        raise CaseValidationError(
+            f"{source}: models: is a mapping of molecular: and continuum: model file paths"
+        )
+    unknown = sorted(set(raw) - set(MODEL_KINDS))
+    if unknown:
+        raise CaseValidationError(
+            f"{source}: models.{unknown[0]}: unknown key; models: accepts molecular, continuum"
+        )
+    named: dict[str, Path] = {}
+    for kind in MODEL_KINDS:
+        value = raw.get(kind)
+        if value is None:
+            continue
+        if not isinstance(value, str):
+            raise CaseValidationError(f"{source}: models.{kind}: {value!r} is not a file path")
+        named[kind] = (directory / value).resolve()
+    if not named:
+        raise CaseValidationError(
+            f"{source}: models: names a molecular: file, a continuum: file or both"
+        )
+    return named
+
+
+def _resolve(
+    study: Mapping[str, Any],
+    paths: Mapping[str, Path],
+    directory: Path,
+    source: str,
+    model: type[D],
+) -> D:
+    files: list[ModelFile] = []
+    layers: list[tuple[str, Mapping[str, Any]]] = []
+    for kind in MODEL_KINDS:
+        if kind not in paths:
+            continue
+        found, mapping = _read_model_file(kind, paths[kind], source)
+        files.append(found)
+        layers.append((str(paths[kind]), mapping))
+    named = frozenset(file.kind for file in files)
+    pruned = _prune(study, "", named)
+    sources = [*reversed(layers), (source, study)]  # nearest to the study first, for origins
+
+    view_raw = _merge_all([mapping for _, mapping in layers], pruned)
+    try:
+        view = validate_mapping(view_raw, source, model)
+    except CaseValidationError as error:
+        raise _located(
+            error,
+            sources,
+            "the named models with the study's own keys do not form a case, so a model "
+            f"cannot be reused alone: {', '.join(str(path) for path in paths.values())}",
+        ) from None
+    merged_raw = _merge_all([mapping for _, mapping in layers], dict(study))
+    merged_raw["models"] = {file.kind: str(file.path) for file in files}
+    try:
+        document = validate_mapping(merged_raw, source, model)
+    except CaseValidationError as error:
+        raise _located(error, sources, None) from None
+    assert isinstance(document, model)
+    record = ModelRecord(
+        files=tuple(files),
+        view=view,
+        overrides=differences(document, view, named),
+        base=directory,
+    )
+    document._models = record
+    return document
+
+
+def _read_model_file(
+    kind: Literal["molecular", "continuum"], path: Path, source: str
+) -> tuple[ModelFile, dict[str, Any]]:
+    if not path.is_file():
+        raise CaseValidationError(f"{source}: models.{kind}: {path} is not a file")
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, Mapping):
+        raise CaseValidationError(f"{path}: a {kind} model is a YAML mapping")
+    if raw.get("schema") != SCHEMAS[kind]:
+        raise CaseValidationError(
+            f"{path}: expected schema {SCHEMAS[kind]!r}, found {raw.get('schema')!r}"
+        )
+    name = raw.get("name")
+    if not isinstance(name, str) or not name:
+        raise CaseValidationError(f"{path}: a {kind} model carries a name")
+    if "models" in raw:
+        raise CaseValidationError(f"{path}: a model names no model, so it holds no models: key")
+    body = {key: value for key, value in raw.items() if key not in ("schema", "name")}
+    for leaf in _leaves(body, ""):
+        if owner_of(leaf) != kind:
+            raise CaseValidationError(
+                f"{path}: {leaf}: belongs to the {owner_of(leaf)}, not to a {kind} model"
+            )
+    return ModelFile(kind, name, path, file_hash(path)), _rebased(body, path.parent)
+
+
+def _leaves(mapping: Mapping[str, Any], path: str) -> Iterator[str]:
+    blocks = _blocks()
+    for key, value in mapping.items():
+        here = f"{path}.{key}" if path else str(key)
+        if isinstance(value, Mapping) and here in blocks:
+            yield from _leaves(value, here)
+        else:
+            yield here
+
+
+def _blocks() -> frozenset[str]:
+    return frozenset(block_paths())
+
+
+def _correction_leaves() -> tuple[str, ...]:
+    return (
+        "electrolyte.parameters",
+        *(f"electrolyte.corrections.{name}.model" for name in CORRECTION_PROPERTIES),
+    )
+
+
+def _rebased(body: dict[str, Any], directory: Path) -> dict[str, Any]:
+    for dotted in (*path_fields(), *_correction_leaves()):
+        parent, last = _cursor(body, dotted)
+        value = parent.get(last) if parent is not None else None
+        if not isinstance(value, str):
+            continue
+        if dotted in _correction_leaves() and not names_a_path(value):
+            continue
+        if not Path(value).is_absolute():
+            assert parent is not None
+            parent[last] = str((directory / value).resolve())
+    return body
+
+
+def _cursor(body: dict[str, Any], dotted: str) -> tuple[dict[str, Any] | None, str]:
+    *parents, last = dotted.split(".")
+    cursor: Any = body
+    for part in parents:
+        cursor = cursor.get(part) if isinstance(cursor, dict) else None
+    return (cursor if isinstance(cursor, dict) else None), last
+
+
+def _merge(base: Mapping[str, Any], over: Mapping[str, Any], path: str) -> dict[str, Any]:
+    blocks = _blocks()
+    merged = dict(base)
+    for key, value in over.items():
+        here = f"{path}.{key}" if path else str(key)
+        current = merged.get(key)
+        if isinstance(current, Mapping) and isinstance(value, Mapping) and here in blocks:
+            merged[key] = _merge(current, value, here)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _merge_all(models: list[Mapping[str, Any]], study: Mapping[str, Any]) -> dict[str, Any]:
+    merged: dict[str, Any] = {}
+    for layer in (*models, study):
+        merged = _merge(merged, layer, "")
+    return merged
+
+
+def _prune(mapping: Mapping[str, Any], path: str, named: frozenset[str]) -> dict[str, Any]:
+    blocks = _blocks()
+    kept: dict[str, Any] = {}
+    for key, value in mapping.items():
+        here = f"{path}.{key}" if path else str(key)
+        if isinstance(value, Mapping) and here in blocks:
+            kept[key] = _prune(value, here, named)
+        elif owner_of(here) not in named:
+            kept[key] = value
+    return kept
+
+
+_PROBLEM = re.compile(r"^  ([^\s:]+): ")
+
+
+def _located(
+    error: CaseValidationError,
+    sources: list[tuple[str, Mapping[str, Any]]],
+    context: str | None,
+) -> CaseValidationError:
+    lines: list[str] = []
+    for line in str(error).splitlines():
+        match = _PROBLEM.match(line)
+        origin = _origin(match.group(1), sources) if match else None
+        lines.append(f"{line} [from {origin}]" if origin else line)
+    if context is not None:
+        lines.insert(1 if len(lines) > 1 else len(lines), f"  ({context})")
+    return CaseValidationError("\n".join(lines), error.errors)
+
+
+def _origin(dotted: str, sources: list[tuple[str, Mapping[str, Any]]]) -> str | None:
+    best: tuple[int, str] | None = None
+    for label, mapping in sources:
+        depth = _depth(mapping, dotted.split("."))
+        if depth and (best is None or depth > best[0]):
+            best = (depth, label)
+    return best[1] if best else None
+
+
+def _depth(mapping: object, parts: list[str]) -> int:
+    cursor: Any = mapping
+    for depth, part in enumerate(parts):
+        if isinstance(cursor, Mapping) and part in cursor:
+            cursor = cursor[part]
+        elif isinstance(cursor, list) and part.isdigit() and int(part) < len(cursor):
+            cursor = cursor[int(part)]
+        else:
+            return depth
+    return len(parts)
+
+
+def _dump(document: CaseDocument) -> dict[str, Any]:
+    return document.model_dump(by_alias=True, mode="json")
+
+
+def differences(
+    document: CaseDocument, view: CaseDocument, kinds: frozenset[str]
+) -> dict[str, Override]:
+    """Return ``{path: (view value, document value)}`` for each differing leaf of a named model."""
+    found: dict[str, Override] = {}
+    _compare(_dump(view), _dump(document), "", kinds, found)
+    return found
+
+
+def _compare(
+    first: FieldValue,
+    second: FieldValue,
+    path: str,
+    named: frozenset[str],
+    found: dict[str, Override],
+) -> None:
+    blocks = _blocks()
+    is_block = path == "" or path in blocks
+    mixed = owner_of(path) == "study" if path else True
+    both = isinstance(first, dict) and isinstance(second, dict)
+    one = isinstance(first, dict) or isinstance(second, dict)
+    if is_block and (both or (one and mixed and (first is None or second is None))):
+        left = first if isinstance(first, dict) else {}
+        right = second if isinstance(second, dict) else {}
+        for key in (*right, *(key for key in left if key not in right)):
+            _compare(
+                left.get(key),
+                right.get(key),
+                f"{path}.{key}" if path else str(key),
+                named,
+                found,
+            )
+        return
+    if first == second or owner_of(path) not in named:
+        return
+    if first is None and _is_default(path, second):
+        return
+    found[path] = (first, second)
+
+
+def _is_default(path: str, value: FieldValue) -> bool:
+    try:
+        has_default, default = schema_default(path)
+    except KeyError:
+        return False
+    return has_default and default == value
+
+
+def study_layer(document: CaseDocument, record: ModelRecord) -> dict[str, Any]:
+    """Return the study as a mapping: the keys no model owns, its overrides and the model paths."""
+    layer: dict[str, Any] = {}
+    for path, value in _flat(_dump(document)):
+        if owner_of(path) not in record.kinds and value is not None:
+            _put(layer, path, value)
+    for path, (_, study) in record.overrides.items():
+        _put(layer, path, study)
+    layer["models"] = record.paths
+    return layer
+
+
+def _flat(mapping: Mapping[str, Any]) -> Iterator[tuple[str, Any]]:
+    blocks = _blocks()
+
+    def walk(value: Mapping[str, Any], path: str) -> Iterator[tuple[str, Any]]:
+        for key, item in value.items():
+            here = f"{path}.{key}" if path else str(key)
+            if isinstance(item, dict) and here in blocks:
+                yield from walk(item, here)
+            else:
+                yield here, item
+
+    yield from walk(mapping, "")
+
+
+def _put(layer: dict[str, Any], path: str, value: FieldValue) -> None:
+    *parents, last = path.split(".")
+    cursor = layer
+    for part in parents:
+        cursor = cursor.setdefault(part, {})
+    cursor[last] = value
