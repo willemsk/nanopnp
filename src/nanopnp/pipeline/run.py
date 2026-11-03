@@ -50,7 +50,7 @@ from nanopnp.io.manifest import (
     build,
 )
 from nanopnp.io.store import Store, atomic_write_bytes
-from nanopnp.mesh.sizing import case_debye_record
+from nanopnp.mesh.sizing import case_debye_record, run_debye_record
 from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.pipeline.extension import FunctionStage
 from nanopnp.post.export import SolutionFields, solution_fields
@@ -881,6 +881,10 @@ def _mesh_record(walk: _Walk, mesh: Artefact | None) -> dict[str, Canonicalisabl
         sizing = record["sizing"]
         assert isinstance(sizing, dict)  # a generated mesh's summary carries its sizing block
         record["sizing"] = {**sizing, **case_debye_record(walk.resolved)}
+    elif isinstance(record.get("sizing"), dict):
+        # A stored generated mesh keeps the sizing it was made with; this run's own Debye length
+        # sits beside it, so neither is read for the other.
+        record["run_debye"] = run_debye_record(walk.resolved)
     return record
 
 

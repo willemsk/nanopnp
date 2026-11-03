@@ -80,7 +80,13 @@ from nanopnp.geometry.region import (
     protein_water_edges,
     read_region,
 )
-from nanopnp.io.artefact import Artefact, ChargeGridArtefact, FieldsArtefact, StageInputs
+from nanopnp.io.artefact import (
+    REGION_SCHEMA,
+    Artefact,
+    ChargeGridArtefact,
+    FieldsArtefact,
+    StageInputs,
+)
 from nanopnp.io.case import UnsupportedCaseSection, stored_artefact_refused
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.store import atomic_write_bytes
@@ -250,22 +256,77 @@ def read_fields(resolved: ResolvedCase) -> ResolvedFields:
         if resolved.eps_r is None
         else load_solid_fraction(_field_path(resolved.eps_r, key="eps_r"))
     )
+    fields = ResolvedFields(charge=charge, conservation=None, eps_r=eps_r, material_means=())
     if resolved.generates_mesh and resolved.membrane is not None:
-        centre = resolved.membrane.centre_z_nm
-        for key, field in (("charge", charge), ("eps_r", eps_r)):
-            if field is not None and field.document.model_frame_centre_z_nm is not None:
-                declared = field.document.model_frame_centre_z_nm
-                if declared != centre:
-                    offset = centre - declared
-                    raise FieldDocumentError(
-                        f"inputs.{key} declares model_frame_centre_z_nm {declared:g} nm and "
-                        f"geometry.membrane.centre_z_nm is {centre:g} nm: the field was written in "
-                        f"another model frame than the mesh stage 5 generates, so every feature "
-                        f"would sit {offset:+g} nm along z from where it was written "
-                        f"(section 5.3.1 NOTE on inputs.charge, inputs.eps_r); export the field "
-                        f"from this case, or correct the declaration"
-                    )
-    return ResolvedFields(charge=charge, conservation=None, eps_r=eps_r, material_means=())
+        _check_frames(
+            fields,
+            resolved.membrane.centre_z_nm,
+            frame="geometry.membrane.centre_z_nm is",
+            mesh="the mesh stage 5 generates",
+            remedy="export the field from this case, or correct the declaration",
+        )
+    return fields
+
+
+def _declared_frames(fields: ResolvedFields) -> list[tuple[str, float]]:
+    declared: list[tuple[str, float]] = []
+    for key, field in (("charge", fields.charge), ("eps_r", fields.eps_r)):
+        if isinstance(field, ChargeField | SolidFractionField):
+            centre = field.document.model_frame_centre_z_nm
+            if centre is not None:
+                declared.append((key, centre))
+    return declared
+
+
+def _check_frames(
+    fields: ResolvedFields, centre: float, *, frame: str, mesh: str, remedy: str
+) -> None:
+    for key, declared in _declared_frames(fields):
+        if declared != centre:
+            offset = centre - declared
+            raise FieldDocumentError(
+                f"inputs.{key} declares model_frame_centre_z_nm {declared:g} nm and {frame} "
+                f"{centre:g} nm: the field was written in another model frame than {mesh}, so "
+                f"every feature would sit {offset:+g} nm along z from where it was written "
+                f"(section 5.3.1 NOTE on inputs.charge, inputs.eps_r); {remedy}"
+            )
+
+
+def check_stored_frame(
+    resolved: ResolvedCase, fields: ResolvedFields, mesh: Artefact, store: Store | None
+) -> None:
+    """Refuse a supplied field declaring another frame than the stored generated mesh's region.
+
+    Raises
+    ------
+    FieldDocumentError
+        A declared ``model_frame_centre_z_nm`` differs from the region's membrane centre.
+    FileNotFoundError
+        The store holds no region for the stored mesh, so the declaration cannot be checked.
+    """
+    region_hash = mesh.inputs.get("region")
+    if resolved.mesh is None or resolved.mesh.artefact is None or region_hash is None:
+        return
+    if not _declared_frames(fields):
+        return
+    found = store.get(REGION_SCHEMA, region_hash) if store is not None else None
+    if found is None:
+        where = f"the store at {store.root}" if store is not None else "no store"
+        raise FileNotFoundError(
+            f"inputs.mesh.artefact {resolved.mesh.artefact[:12]} was generated from the region "
+            f"{region_hash[:12]}, which {where} holds, so the model frame a supplied field "
+            "declares cannot be checked against it; run the generating case through 'region' "
+            "against this store, or drop model_frame_centre_z_nm from the field"
+        )
+    record = read_region(Path(found.payload[REGION_PAYLOAD]))
+    centre = record.membrane.centre_z_nm if isinstance(record, RegionRecord) else 0.0
+    _check_frames(
+        fields,
+        centre,
+        frame=f"the stored mesh {resolved.mesh.artefact[:12]} was generated centred at",
+        mesh="that mesh's",
+        remedy="export the field from the case that generated the mesh, or correct the declaration",
+    )
 
 
 def gate_fields(
@@ -729,6 +790,7 @@ class FieldStage:
         resolved, ingested, mesh_artefact = self._prepare(inputs, ingest_mesh=False)
         del ingested
         supplied = read_fields(resolved)
+        check_stored_frame(resolved, supplied, mesh_artefact, self._store)
         if resolved.deposits_charge:
             return self._produced_artefact(resolved, supplied, inputs, mesh_artefact.hash)
         return self.artefact(
@@ -767,6 +829,7 @@ class FieldStage:
                 cancel=cancel,
                 progress=progress,
             )
+            check_stored_frame(resolved, fields, mesh_artefact, self._store)
             if derived is not None:
                 fields = replace(fields, eps_r=derived[0], material_means=derived[1])
             check_cancelled(cancel, "writing the archival field copies")

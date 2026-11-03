@@ -18,7 +18,7 @@ record what it was resolved from.
 |---|---|
 | Inputs | Content hash of every input file and every upstream artefact. A case that names a model (§5.3.1 NOTE on `models:`) adds the files `models.molecular` and `models.continuum` to the input files, each by path and content hash, and `overrides`: every value the study sets in a named model's keys, by dotted path, as `{model: <the model's value>, study: <the study's>}`; a case that names no model has no `overrides` key (FR-39, FR-25) |
 | Environment | Package version, version of every library in §2.6, Python version, operating system |
-| Geometry and mesh | Mesh hash, element counts, quality statistics, size-field settings |
+| Geometry and mesh | Mesh hash, element counts, quality statistics, size-field settings. A generated mesh's sizing carries this run's Debye length and NUM-30 ratios; a generated mesh named by its store hash keeps the sizing it was made with, and this run's own Debye lengths sit beside it as `run_debye` (REV-192) |
 | Charge | Q_net, force field, pH, titration method, conservation residual; with `charge.edits`, the variant's own record `variant_of`: its parent's protonation key, the edits, each residue that differs from the parent with its charges before and after, and `Q_net` of both. An edit is configuration and never a deviation (FR-38; §8.2.31 AG11) |
 | Materials | Correction model names, version of each parameter data file, clamp activations |
 | Solver | Physics model, element orders, continuation rungs, nonlinear and linear settings, iteration counts |

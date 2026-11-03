@@ -2487,6 +2487,11 @@ whole has no single override to write. Found by code review 030.
 Open: the author rules whether a study may drop a block that a named model and the study share, and if so how its
 study form writes it, or whether the substitution is refused.
 
+Ruled by the author: refused. `ModelRecord.check_dropped`, called from `io/case_paths.py:substitute`, refuses
+setting to `None` a block the study owns that holds a key a named model sets, naming those keys and the two
+remedies (set them in the model file, or substitute the block's keys one by one). §5.3.1's NOTE on `models:` says
+so. Verified at review (§8.2.13 N3).
+
 ## REV-188: The COMSOL comparison keys a stored mesh without a store
 
 `validation/comsol.py:_upstream` builds each stage with `create(name)` when no recorded artefacts are given. Since
@@ -2496,6 +2501,10 @@ the store as the walk does; `_upstream` has none to pass. Found by code review 0
 
 Open: no frozen COMSOL case names a stored mesh, so nothing fails today. Either the comparison takes a store, or it
 refuses a stored mesh naming the key.
+
+Ruled by the author: refused. `validation/comsol.py:_upstream`, keying a case without recorded artefacts,
+refuses one naming `inputs.mesh.artefact`, naming the hash, and points at comparing a finished run of it or
+supplying `inputs.mesh.path`. §5.2's stage table says so. Verified at review (§8.2.13 N3).
 
 ## REV-189: A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep`
 
@@ -2507,6 +2516,10 @@ values read beside its base case (§5.3.4), which is a third rule. Found by code
 
 Open: the author rules which directory a relative model path in the Python sweep reads against.
 
+Fixed: beside the study. `api/sweep.py:plan_sweep` reads a relative `models.*` axis value against the study's
+`ModelRecord.base`, as `Case.with_` does, and writes it absolute into the plan. §5.3.4 says so. Verified at review
+(§8.2.13 N3).
+
 ## REV-190: `CaseDocument` equality counts `models` and the model record
 
 §5.3.1's NOTE on `models:` leaves `models` out of every dump, hash and equality of a case. `Case` compares dumps, so
@@ -2516,6 +2529,10 @@ study compare unequal, and so do a study and its twin. Nothing in `src/` compare
 review 030.
 
 Open: whether `CaseDocument` takes `Case`'s equality (and a hash to match it), or the NOTE narrows to `Case`.
+
+Ruled by the author: `CaseDocument` takes `Case`'s equality. `__eq__` and `__hash__` move from `api/case.py` to
+`io/case.py:CaseDocument` and compare and hash the dump, which leaves out `models` and the record; `Case` inherits
+them. §5.3.1's NOTE on `models:` names both. Verified at review (§8.2.13 N3).
 
 ## REV-191: A stored generated mesh skips the field-frame check
 
@@ -2529,6 +2546,13 @@ the same field. The quick-start, whose centre is 0, does not reach it. Found by 
 Open: the author rules whether the check reads the stored region's frame for a stored generated mesh, or a supplied
 field beside a stored mesh is refused, as a structure beside one is (REV-186).
 
+Ruled by the author: the stored region's frame is read. `charge/stage.py:check_stored_frame`, called from the
+stage-7 key and run, reads the region the stored mesh was generated from (its `region` input) from the store and
+refuses a supplied field whose `model_frame_centre_z_nm` differs from that region's membrane centre, as a
+generated mesh does; a store without that region refuses the declaration, which it cannot check. A field that
+declares no frame is read as before. §5.3.1's NOTE on `inputs.charge`, `inputs.eps_r` says so. Tier 1:
+`test_fr27_a_field_beside_a_stored_generated_mesh_is_checked_against_its_region`.
+
 ## REV-192: A run on a stored mesh records the generating case's Debye sizing
 
 `pipeline/run.py:_mesh_record` lays the run's own Debye record over the mesh summary's sizing only when the case
@@ -2538,3 +2562,7 @@ reader can take that λ_D for this run's (§5.3.3). Found by the WP5.05 physics 
 
 Open: whether the record keeps the mesh's sizing and adds this run's Debye length beside it, marked, or overlays it
 as a generated mesh does.
+
+Fixed: kept and marked. `pipeline/run.py:_mesh_record` keeps a stored generated mesh's sizing as it was made and
+adds this run's own Debye lengths beside it as `run_debye` (`mesh/sizing.py:run_debye_record`: the
+uncorrected and the corrected `λ_D`). §5.3.3's Geometry-and-mesh row says so. Verified at review (§8.2.13 N3).

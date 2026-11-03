@@ -414,6 +414,9 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
         assignments = {k: v for k, v in assignments.items() if k not in named}
         if not assignments:
             return document
+    record = document.models_record
+    if record is not None:
+        record.check_dropped(document.name, assignments)
     payload = document.model_dump(by_alias=True, mode="json")
     for path, value in assignments.items():
         reference = field_at(path)

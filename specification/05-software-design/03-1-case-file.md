@@ -252,9 +252,12 @@ sweep, and `Case.overrides` maps each path to the model's value and the study's.
 study does not name, or drops one, SHALL be refused, since the study's document holds a value, its
 default included, for every key of a model it does not name, and each would override the new model.
 A substitution that gives `models:` to a case naming no model SHALL be refused likewise, naming the
-readers that resolve it. A study overrides
+readers that resolve it. A substitution that drops whole (sets to null) a block a named model and
+the study share, such as `charge` beside a molecular model, SHALL be refused naming the keys the model
+sets, since the study form writes overrides leaf by leaf and could not write the drop (REV-187). A study overrides
 any value of the models it names; the Study suite offers the continuum model's physics defaults
-first (WB-16). `models` is left out of every dump, hash and equality of the case, so a study equals
+first (WB-16). `models` is left out of every dump, hash and equality of the case, `Case` and the document
+`pipeline.case.load_case` returns alike (REV-190), so a study equals
 and keys as the case it resolves to, written inline: the artefact keys, the stage keys and the
 cache are those of that case, and a stage a model built is reused by every study that names the
 model. A reader that does not resolve models, `read_case`, SHALL refuse a document carrying
@@ -525,7 +528,10 @@ and exports in; beside a supplied mesh it is that mesh's own. The header MAY dec
 was written in as `model_frame_centre_z_nm`, the `centre_z_nm` of the case it belongs to, and stage
 7's export SHALL declare it. Beside a case that generates its mesh, a declared value other than the
 case's `geometry.membrane.centre_z_nm` SHALL be refused, naming both values and the offset every
-feature would be applied at (QR-12). A header that declares none is read in the model frame, as
+feature would be applied at (QR-12). Beside a generated mesh named by its store hash
+(`inputs.mesh.artefact`), the declared value SHALL be checked against the membrane centre of the
+region that mesh was generated from, read from the store, and refused alike; a store that lacks
+that region SHALL refuse the declaration, since it cannot be checked (REV-191). A header that declares none is read in the model frame, as
 before the key existed, so no document that ran is refused (WP41 D1, REV-06).
 
 NOTE (`inputs.mesh.groups`, IF-06, QR-12): the mapping reads **file group name → vocabulary name**.

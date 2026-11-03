@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Hashable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
@@ -109,16 +109,6 @@ class Case(CaseDocument):
         case._text = text if case.models_record is None else None
         case._base = Path(base).resolve() if base is not None else None
         return case
-
-    def __eq__(self, other: object) -> bool:
-        """Compare the documents; the text and file a case was read from do not count."""
-        if not isinstance(other, CaseDocument):
-            return NotImplemented
-        return self.model_dump() == other.model_dump()
-
-    def __hash__(self) -> int:
-        """Hash the document, so that cases that compare equal hash equal."""
-        return hash(_frozen(self.model_dump()))
 
     def dump(self, path: str | Path, *, study: bool = False) -> Path:
         """Write the case to ``path`` as YAML and return it; see :meth:`dumps`."""
@@ -366,14 +356,6 @@ def _rebased_paths(case: CaseDocument, base: Path | None) -> dict[str, FieldValu
         for dotted, value in {**input_paths(case), **correction_paths(case)}.items()
         if not Path(value).is_absolute()
     }
-
-
-def _frozen(value: object) -> Hashable:
-    if isinstance(value, dict):
-        return frozenset((key, _frozen(item)) for key, item in value.items())
-    if isinstance(value, list | tuple):
-        return tuple(_frozen(item) for item in value)
-    return value
 
 
 def _merged(first: FieldValue, second: FieldValue) -> FieldValue:

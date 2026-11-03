@@ -116,6 +116,34 @@ class ModelRecord:
         )
         return document
 
+    def check_dropped(self, name: str, assignments: Mapping[str, FieldValue]) -> None:
+        """Refuse dropping a block that a named model and the study share.
+
+        Raises
+        ------
+        CaseValidationError
+            A path set to ``None`` holds a key a named model sets, so the study form, which
+            writes overrides leaf by leaf, could not drop the block whole.
+        """
+        dumped = _dump(self.view)
+        for path, value in assignments.items():
+            if value is not None or owner_of(path) != "study":
+                continue
+            cursor, last = _cursor(dumped, path)
+            if cursor is None or cursor.get(last) is None:
+                continue
+            owned = sorted(
+                key
+                for key, kind in OWNERS.items()
+                if key.startswith(f"{path}.") and kind in self.kinds
+            )
+            if owned:
+                raise CaseValidationError(
+                    f"<{name}>: {path}: None: the block holds {', '.join(owned)}, which a named "
+                    f"model sets, so a study cannot drop it whole; set those keys in the model "
+                    f"file, or substitute the block's own keys one by one"
+                )
+
     def carried(self, document: D, assignments: Mapping[str, FieldValue]) -> D:
         """Return ``document`` with the model files in ``assignments`` read again under its study.
 

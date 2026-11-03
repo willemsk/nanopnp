@@ -226,6 +226,19 @@ def debye_record(wall: WallSize, corrected_ratio: float) -> dict[str, Canonicali
     }
 
 
+def run_debye_record(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    """Return a case's own Debye lengths, recorded beside a stored mesh's sizing."""
+    wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
+    corrected = debye_length_nm(
+        ionic_strength_M(resolved.document),
+        relative_permittivity=float(
+            resolved.electrolyte.relative_permittivity(resolved.concentration_M)
+        ),
+        temperature_K=resolved.temperature_K,
+    )
+    return {"debye_length_nm": wall.debye_length_nm, "debye_length_corrected_nm": corrected}
+
+
 def case_debye_record(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
     """Return ``debye_record`` for a case, from its own concentration and permittivity."""
     wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
