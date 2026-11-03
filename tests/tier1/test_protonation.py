@@ -30,7 +30,7 @@ from nanopnp.charge.protonation import (
     pqr_frames,
 )
 from nanopnp.core.stages import CancelFlag, Cancelled
-from nanopnp.io.artefact import StageInputs, StructureArtefact
+from nanopnp.io.artefact import ProtonationArtefact, StageInputs, StructureArtefact
 from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
@@ -100,6 +100,17 @@ def _inputs(tmp_path: Path, ensemble: AlignedEnsemble, case: CaseDocument) -> St
     return StageInputs(resolved=resolve(case), upstream={"structure": structure})
 
 
+def _artefact(
+    tmp_path: Path,
+    ensemble: AlignedEnsemble,
+    *,
+    charge: str = "",
+    store: Store | None = None,
+) -> ProtonationArtefact:
+    stage = ProtonationStage(workspace=tmp_path / "workspace", store=store)
+    return stage.run(_inputs(tmp_path, ensemble, _case(tmp_path, charge=charge)))
+
+
 def _run(
     tmp_path: Path,
     ensemble: AlignedEnsemble,
@@ -107,8 +118,7 @@ def _run(
     charge: str = "",
     store: Store | None = None,
 ) -> tuple[ProtonationTable, dict[str, Any]]:
-    stage = ProtonationStage(workspace=tmp_path / "workspace", store=store)
-    artefact = stage.run(_inputs(tmp_path, ensemble, _case(tmp_path, charge=charge)))
+    artefact = _artefact(tmp_path, ensemble, charge=charge, store=store)
     return ProtonationTable.read(artefact.payload["protonation"]), dict(artefact.summary)
 
 
@@ -662,15 +672,43 @@ def _edit(residue: str, **edit: object) -> str:
     return f"edits: [{{residue: '{residue}', {body}}}]"
 
 
+def _atoms_outside(
+    table: ProtonationTable, listed: set[tuple[str, int]]
+) -> dict[tuple[str, int, str], tuple[Any, ...]]:
+    return {
+        (str(chain), int(number), str(name)): (*position.tolist(), float(charge), float(radius))
+        for chain, number, name, position, charge, radius in zip(
+            table.chain.tolist(),
+            table.resid.tolist(),
+            table.name.tolist(),
+            table.positions_nm,
+            table.charge_e,
+            table.radius_nm,
+            strict=True,
+        )
+        if (str(chain), int(number)) not in listed
+    }
+
+
 @pytest.mark.parametrize(("ph", "state", "change"), [(7.5, "neutral", 1.0), (2.0, "charged", -1.0)])
 def test_fr38_a_pinned_state_holds_and_changes_that_residue_alone(
     tmp_path: Path, fragment_2wcd: Fragment, ph: float, state: str, change: float
 ) -> None:
     ensemble = _two_chains(fragment_2wcd)
     parent, _ = _run(tmp_path / "parent", ensemble, charge=f"ph: {ph}")
-    variant, _ = _run(
+    variant, summary = _run(
         tmp_path / "variant", ensemble, charge=f"ph: {ph}, {_edit('ASP 21', state=state)}"
     )
+    # PDB2PQR's hydrogen network responds to the pinned state, so a neighbour may move; the
+    # record lists it, and every residue it does not list is the parent's, atom by atom.
+    rows = summary["variant_of"]["residues"]
+    listed = {(row["chain"], row["residue"]) for row in rows}
+    assert {("A", "ASP 21"), ("B", "ASP 21")} <= listed
+    for row in rows:
+        if row["residue"] != "ASP 21":
+            assert row["charge_e"]["parent"] == row["charge_e"]["variant"]
+    outside = {(chain, int(residue.split(" ")[1])) for chain, residue in listed}
+    assert _atoms_outside(variant, outside) == _atoms_outside(parent, outside)
     moved = variant.residue_charge_e - parent.residue_charge_e
     owned = variant.residue_resid == 21
     assert owned.sum() == 2
@@ -695,3 +733,67 @@ def test_fr38_a_pin_that_takes_no_effect_is_refused(
             _two_chains(fragment_2wcd),
             charge=f"ph: 7.5, {_edit('ASP 21', state='neutral')}",
         )
+
+
+def _kept_as_parent(artefact: ProtonationArtefact) -> ProtonationTable:
+    return ProtonationTable.read(artefact.payload["parent"])
+
+
+def test_fr38_a_charge_change_moves_the_projected_charge_by_that_residue_alone(
+    tmp_path: Path, fragment_2wcd: Fragment
+) -> None:
+    from nanopnp.charge.kernel import source_atoms, sum_kernel
+
+    ensemble = _two_chains(fragment_2wcd)
+    artefact = _artefact(tmp_path, ensemble, charge=_edit("ASP 25", charge_change_e=1))
+    variant = ProtonationTable.read(artefact.payload["protonation"])
+    parent = _kept_as_parent(artefact)
+    plain, _ = _run(tmp_path / "plain", ensemble)
+    np.testing.assert_array_equal(parent.charge_e, plain.charge_e)
+    delta = variant.charge_e - parent.charge_e
+    group = np.isin(variant.name, ["OD1", "OD2"]) & (variant.resid == 25)
+    np.testing.assert_allclose(delta[group], 0.5, atol=1e-12)
+    np.testing.assert_array_equal(delta[~group], 0.0)
+    moved = variant.residue_charge_e - parent.residue_charge_e
+    np.testing.assert_allclose(moved[0, variant.residue_resid == 25], 1.0, atol=1e-12)
+    assert np.count_nonzero(moved) == 2
+
+    h, sharpness = 0.005, 0.5
+    kernels = {
+        "variant": sum_kernel(source_atoms(variant, sharpness=sharpness), h).grid,
+        "parent": sum_kernel(source_atoms(parent, sharpness=sharpness), h).grid,
+    }
+    only = dataclasses.replace(variant, charge_e=delta)
+    difference = sum_kernel(source_atoms(only, sharpness=sharpness), h).grid
+    expected = np.zeros_like(kernels["variant"].values)
+    offset = round((difference.origin_nm[1] - kernels["variant"].origin_nm[1]) / h)
+    rows, columns = difference.values.shape
+    expected[offset : offset + rows, :columns] = difference.values
+    gap = kernels["variant"].values - kernels["parent"].values
+    assert np.abs(gap - expected).max() <= 1e-12 * np.abs(gap).max()
+
+
+def test_fr38_without_edits_every_key_is_unchanged(tmp_path: Path, fragment_2wcd: Fragment) -> None:
+    from nanopnp.charge import protonation
+
+    base = ProtonationStage().key(_inputs(tmp_path, fragment_2wcd(*FRAGMENT), _case(tmp_path)))
+    empty = ProtonationStage().key(
+        _inputs(tmp_path, fragment_2wcd(*FRAGMENT), _case(tmp_path, charge="edits: []"))
+    )
+    assert base.hash == empty.hash
+    assert "edits" not in base.parameters
+    settings = resolve(_case(tmp_path)).protonation
+    assert "pins" not in protonation._frame_parameters(settings)
+    assert protonation._frame_parameters(settings) == {
+        key: value for key, value in base.parameters.items() if key != "edits"
+    }
+
+    ensemble = _two_chains(fragment_2wcd)
+    store = Store(tmp_path / "store")
+    parent = _artefact(tmp_path / "parent", ensemble, store=store)
+    scaled = _artefact(
+        tmp_path / "scaled", ensemble, store=store, charge=_edit("LEU 24", radius_scale=1.2)
+    )
+    assert scaled.summary["cached_frames"] == scaled.summary["frames"]["count"]
+    assert scaled.hash != parent.hash
+    assert scaled.summary["variant_of"]["parent"] == parent.hash
