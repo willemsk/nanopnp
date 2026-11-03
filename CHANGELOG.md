@@ -102,6 +102,33 @@ contour and the mesh. The [plan](docs/plans/wp5.03-protonation-before-the-densit
     `geometry.density`.
   - **Open items**: REV-135 is `fixed`.
 
+WP5.04: the charge mutator's library step, Phase 5's fourth package; tag `v0.6.0-alpha.4` once merged
+(`SPECIFICATION.md` FR-38, PHY-16 step 3; §8.2.17 S4, §8.2.19 U6, §8.2.31 AG9 to AG11). A case's
+`charge.edits` pins a residue's protonation state, changes its charge by an integer on the titratable group,
+or scales its radii; the result is a variant table kept beside its parent, with a `variant_of` record and no
+deviation. The [plan](docs/plans/wp5.04-the-charge-mutators-library-step.md) records the work.
+
+- **Added**:
+  - **`charge.edits`**: each entry is a `residue` (`ASP 21`, `HIS 292A`) and one of `state` (`charged` or
+    `neutral`; ASP, GLU and HIS under CHARMM), `charge_change_e` (a non-zero integer, spread evenly over
+    PROPKA's charge-centre atoms of the residue, `data/charge/titratable_groups.yaml`) and `radius_scale`
+    (every atom radius of the residue, hydrogens included). Each applies on every chain and frame. A state is
+    pinned by wrapping PDB2PQR's `apply_pka_values` for the call, and a gate refuses a frame whose pinned residue
+    does not hold it.
+  - **`charge.protonation.variant_of`** in the manifest: the parent's protonation key, the edits, each residue
+    that differs (charges before and after, atoms added and removed, largest radius change and displacement)
+    and `Q_net` of both. The protonation artefact's payload gains `parent`, the unedited table.
+  - **FR-38** (Tier 1): a pinned state holds and changes that residue alone; a charge change moves the
+    projected charge by that residue alone; a radius scale moves stage 2's widths and the grid; every key is
+    unchanged without edits; the titratable-groups file equals PROPKA's configuration.
+- **Changed**:
+  - Stage 2 under `protonated` multiplies the CHARMM radii by the table's radius scales; under `as_loaded` its
+    key and map do not move. A charge or radius edit reuses the parent's stored frames; a state edit
+    protonates again with the residue pinned.
+  - **Amended**: FR-38 (AG9 to AG11), PHY-16 step 3's NOTE on `charge.edits`, §5.2's stage 2 and 7 rows and the
+    stage-7 note, §5.3.1's NOTE on `charge.edits`, §5.3.3's charge group, and Appendix A's FR-38 row.
+  - **Knowledge**: `knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md`.
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 

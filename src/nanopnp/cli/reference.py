@@ -156,7 +156,10 @@ def render_case_reference() -> str:
                 "`nanopnp stage protonation` runs alone. `smearing` is read by stage 7's",
                 "deposition, `exclusion_offset_nm` by stage 5 and `dielectric_transition_nm`",
                 "by stage 7. Beside `inputs.pqr` the three protonation keys are refused set",
-                "away from their defaults, naming both.",
+                "away from their defaults, naming both. `edits` pins a residue's protonation",
+                "state, changes its charge by an integer on its titratable group, or scales its",
+                "radii (FR-38); the result is a variant kept beside its parent and recorded as",
+                "`charge.protonation.variant_of`, never as a deviation.",
                 "",
             ]
         elif head == "structure":

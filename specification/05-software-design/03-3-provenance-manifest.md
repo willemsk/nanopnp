@@ -17,7 +17,7 @@ case file's bytes, verbatim.
 | Inputs | Content hash of every input file and every upstream artefact |
 | Environment | Package version, version of every library in §2.6, Python version, operating system |
 | Geometry and mesh | Mesh hash, element counts, quality statistics, size-field settings |
-| Charge | Q_net, force field, pH, titration method, conservation residual |
+| Charge | Q_net, force field, pH, titration method, conservation residual; with `charge.edits`, the variant's own record `variant_of`: its parent's protonation key, the edits, each residue that differs from the parent with its charges before and after, and `Q_net` of both. An edit is configuration and never a deviation (FR-38; §8.2.31 AG11) |
 | Materials | Correction model names, version of each parameter data file, clamp activations |
 | Solver | Physics model, element orders, continuation rungs, nonlinear and linear settings, iteration counts |
 | Stabilisation | The stabilisation mode that produced the number, its tuning parameters and the provenance of each, and — where a mode is active — its own contribution to the current and the largest cell Péclet number per species (§6.4, NUM-12, NUM-13) |

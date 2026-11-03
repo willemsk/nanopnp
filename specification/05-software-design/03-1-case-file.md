@@ -156,6 +156,33 @@ re-read. As with the protonation keys, `charge.smearing` set away from its defau
 `inputs.charge`, or in a case carrying neither `structure:` nor `inputs.pqr`, configures a step
 that does not run and SHALL be refused naming both keys.
 
+NOTE (`charge.edits`, FR-38, PHY-16 step 3; WP5.04; §8.2.31 AG9 to AG11): `charge.edits` is a list, empty by
+default. Each entry names a `residue` as the parent name, the number and an optional insertion code
+(`ASP 21`, `HIS 292A`), and holds exactly one of three edits, which apply on every chain and every frame:
+`state` (`charged` or `neutral`) pins a titratable residue's protonation state; `charge_change_e` (a
+non-zero integer) changes its net charge by that amount; `radius_scale` (finite, above 0) multiplies every
+atom radius of the residue, hydrogens included. A residue holds one edit of each kind, and `state` beside
+`charge_change_e` on one residue SHALL be refused. `state` SHALL be refused on a residue other than ASP, GLU
+and HIS, beside `titration: none`, under a force field other than `CHARMM` (which holds no `LYS⁰`, `ARG⁰`,
+`CYS⁻` or `TYR⁻`) and beside `inputs.pqr`. `charge_change_e` SHALL be refused on a residue with no
+titratable group. Every edit SHALL be refused beside `inputs.charge`, and any edit in a case with neither
+`structure:` nor `inputs.pqr`, naming both keys, because no step would apply it. A residue that a
+frame does not hold, or that has another parent name, SHALL be refused naming the frame and the chain.
+The change of `charge_change_e` is spread evenly over the atoms of the residue's titratable group that the
+frame holds, the charge-centre atoms of PROPKA 3.5.1 (`data/charge/titratable_groups.yaml`, held equal to
+PROPKA's configuration by a Tier 1 test), so `Q_net` stays an integer; a terminal residue's charge
+includes its terminus, which is why the edit is a change and not a target. A fractional state is FR-43's.
+The edits ride on stage 7's `protonation` step (PHY-16 NOTE on `charge.edits`) and enter its key, sorted
+by residue and kind; without edits no key of the pipeline differs from a case that never had the field.
+The radius scales also set stage 2's radii under `geometry.density.atoms: protonated`, so they move the
+density, the contour and the mesh; under `as_loaded` they move the charge's kernel width alone and the
+density key is the parent's. The edited table is a variant of its parent: the stage keeps the unedited
+table beside it and records `variant_of` in its summary, the parent's key, the edits, each residue whose
+atoms, charges, radii or positions differ (per chain, both charges per frame, atoms added and removed,
+the largest radius change and displacement) and `Q_net` of the parent and the variant per frame. None of
+it is a deviation (FR-25): `charge.edits` is configuration, so the manifest's list of switches away
+from the validated default does not change, and `charge.protonation.variant_of` carries the record.
+
 NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitution (FR-27) applied
 at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
 a dielectric field — by path and format. A stage whose output is supplied does not run, and neither
