@@ -392,6 +392,17 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
     assignments
         Dotted case-file path to value; an empty mapping returns an equal document.
     """
+    record = document.models_record
+    if record is not None:
+        moved = {path: value for path, value in assignments.items() if path.startswith("models.")}
+        if moved:
+            for path, value in moved.items():
+                field_at(path).validate(value)
+            document = record.carried(document, moved)
+            record = document.models_record
+            assignments = {k: v for k, v in assignments.items() if k not in moved}
+            if not assignments:
+                return document
     payload = document.model_dump(by_alias=True, mode="json")
     for path, value in assignments.items():
         reference = field_at(path)
@@ -399,13 +410,16 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
         # into the plain dict would come out of ``model_dump`` as an object YAML cannot write.
         reference.validate(value)
         _set_at(payload, path, value)
+    if record is not None:
+        payload["models"] = record.paths
     try:
-        return type(document).model_validate(payload)
+        result = type(document).model_validate(payload)
     except ValidationError as error:
         listed = ", ".join(sorted(assignments)) or "nothing"
         raise CaseValidationError(
             render_problems(f"<{document.name} with {listed} substituted>", error), error
         ) from None
+    return result if record is None else record.attached(result)
 
 
 def with_profile(document: D, path: str | Path) -> D:

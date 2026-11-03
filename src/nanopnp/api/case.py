@@ -6,8 +6,10 @@ import json
 from collections.abc import Hashable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Literal
 
+import yaml
 from pydantic import PrivateAttr
 
 from nanopnp.core.paths import names_a_path, store_root, structure_file
@@ -17,7 +19,6 @@ from nanopnp.io.case import (
     FieldValue,
     _model_of,
     dumps_case,
-    read_case_text,
 )
 from nanopnp.io.case_paths import (
     UnknownCasePathError,
@@ -30,6 +31,7 @@ from nanopnp.io.case_paths import (
     value_at,
 )
 from nanopnp.io.defaults import VALIDATED_DEFAULT_CASE
+from nanopnp.io.models import Override, reads, study_layer
 from nanopnp.materials.corrections import CorrectionDocument, load_corrections
 from nanopnp.mesh.defaults import (
     DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
@@ -101,9 +103,10 @@ class Case(CaseDocument):
             The directory a relative path of the case is read against; the working directory
             when ``None``.
         """
-        case = check_document(read_case_text(text, source=source, model=cls), source=source)
+        case = check_document(reads(text, base=base, source=source, model=cls), source=source)
         assert isinstance(case, cls)
-        case._text = text
+        # A study is run as the one complete case it resolves to (FR-39), so it keeps no text.
+        case._text = text if case.models_record is None else None
         case._base = Path(base).resolve() if base is not None else None
         return case
 
@@ -117,16 +120,42 @@ class Case(CaseDocument):
         """Hash the document, so that cases that compare equal hash equal."""
         return hash(_frozen(self.model_dump()))
 
-    def dump(self, path: str | Path) -> Path:
-        """Write the case to ``path`` as YAML and return it."""
+    def dump(self, path: str | Path, *, study: bool = False) -> Path:
+        """Write the case to ``path`` as YAML and return it; see :meth:`dumps`."""
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(self.dumps(), encoding="utf-8")
+        target.write_text(self.dumps(study=study), encoding="utf-8")
         return target
 
-    def dumps(self) -> str:
-        """Return the case as YAML text, under the keys a case file writes."""
-        return dumps_case(self)
+    def dumps(self, *, study: bool = False) -> str:
+        """Return the case as YAML text, under the keys a case file writes.
+
+        Parameters
+        ----------
+        study
+            Write the study as it names its models: its own keys, its overrides and the model
+            files by absolute path, instead of the one complete case it resolves to.
+
+        Raises
+        ------
+        ValueError
+            If ``study`` is set and the case names no model.
+        """
+        if not study:
+            return dumps_case(self)
+        record = self.models_record
+        if record is None:
+            raise ValueError(f"case {self.name!r} names no model, so it has no study form")
+        layer = study_layer(self, record)
+        ordered = {key: layer[key] for key in ("schema", "name", "models")}
+        ordered.update((key, value) for key, value in layer.items() if key not in ordered)
+        return str(yaml.safe_dump(ordered, sort_keys=False))
+
+    @property
+    def overrides(self) -> Mapping[str, Override]:
+        """The study's values over a named model: path to (model value, study value)."""
+        record = self.models_record
+        return MappingProxyType(dict(record.overrides) if record is not None else {})
 
     def __getitem__(self, name: str) -> FieldValue:
         """Return the value of one field or block of the case."""
