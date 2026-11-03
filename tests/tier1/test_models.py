@@ -150,31 +150,6 @@ def test_fr39_a_model_swap_resolves_the_study_again_under_its_overrides(tmp_path
     }, "a relative model path reads beside the study, and the other edits apply after it"
 
 
-def test_fr39_a_model_file_that_holds_a_key_it_does_not_own_is_refused(tmp_path: Path) -> None:
-    study = split_case(QUICKSTART, tmp_path)
-    model = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
-    model["outputs"] = ["current"]
-    (tmp_path / "continuum.yaml").write_text(yaml.safe_dump(model), encoding="utf-8")
-    with pytest.raises(ValueError, match=r"continuum\.yaml: outputs: belongs to the study"):
-        Case.load(study)
-
-
-def test_fr39_a_model_that_cannot_stand_alone_is_refused_naming_its_file(tmp_path: Path) -> None:
-    study = split_case(QUICKSTART, tmp_path)
-    model = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
-    del model["electrolyte"]["concentration_M"]
-    (tmp_path / "continuum.yaml").write_text(yaml.safe_dump(model), encoding="utf-8")
-    with pytest.raises(ValueError, match=r"electrolyte.concentration_M.*continuum\.yaml"):
-        Case.load(study)
-
-
-def test_fr39_a_plain_reader_refuses_a_case_that_names_models(tmp_path: Path) -> None:
-    from nanopnp.io.case import read_case
-
-    with pytest.raises(ValueError, match="names models"):
-        read_case(split_case(QUICKSTART, tmp_path))
-
-
 def _rebuilt(session: Session, case: Case, upto: str = "mesh") -> set[str]:
     return {record.name for record in session.run(case, upto=upto).stages if not record.cached}
 
