@@ -201,3 +201,4 @@ is a rolling register, and its header stays `open`.
 | REV-177 | interface | low | fixed | WP5.02 | [The workbench's link failures end the server at startup](review-items.md#rev-177-the-workbenchs-link-failures-end-the-server-at-startup) |
 | REV-178 | tooling | low | fixed | WP5.02 | [The selected-fill measure does not read the strip's pressed item](review-items.md#rev-178-the-selected-fill-measure-does-not-read-the-strips-pressed-item) |
 | REV-179 | verification | low | fixed | WP5.02 | [`nanopnp gui` has no smoke test and takes no common flags](review-items.md#rev-179-nanopnp-gui-has-no-smoke-test-and-takes-no-common-flags) |
+| REV-180 | physics | low | deferred | WP5.03 plan; §8.2.19 U2 | [The protonated density is refused under the SWANSON and PEOEPB force fields](review-items.md#rev-180-the-protonated-density-is-refused-under-the-swanson-and-peoepb-force-fields) |

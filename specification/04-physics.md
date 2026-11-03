@@ -306,8 +306,9 @@ default. Smearing the hydrogens as loaded, as the reference did from its MD fram
 away from it, recorded in the manifest (FR-25) and set by the reference-reproduction cases (VAL-03's
 golden, Tier 3). The package amends this clause, FR-04, §5.2's stage 2 and 7 rows and its stage-7
 design note; re-pins VER-62's golden for each walk whose mesh it moves, or sets the switch on that
-walk, by the author's ruling (§8.2.7 G10); and adds a Tier 1 test that a changed protonation state
-moves the density. Until then the text above holds.
+walk, by the author's ruling (§8.2.7 G10): example 07 is re-pinned, and `2wcd-charged`, `2wcd-shell`
+and the Tier 3 cases set the switch (§8.2.31 AG8); and adds a Tier 1 test that a changed protonation
+state moves the density. Until then the text above holds.
 
 NOTE (PHY-16 steps 4–6, the deposition as run; WP28): the closed form of
 step 5 SHALL be evaluated on the export lattice of step 6, whose spacing is

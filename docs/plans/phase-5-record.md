@@ -190,3 +190,19 @@ Open decision 7:
 The *Verification* row:
 
 | Shell, close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as restated; WP5.01's requirements; VER-78; the mutator's Tier 1 test |
+
+## Amended 3 November 2026 (§8.2.31 AG8)
+
+At WP5.03's plan the author ruled that examples 06 and 07 take the protonated density and that example 07's VER-62
+walk is re-pinned; the package also moves the case schema to `nanopnp/case/v0.6`. WP5.03's entry read:
+
+> **WP5.03 — Protonation before the density (§8.2.19 U2; REV-135)**
+>
+> Stage 2 smears the protonated frames, so a protonation state moves the density, the contour and the mesh; smearing the
+> hydrogens as loaded becomes a switch away from the validated default, set by the reference-reproduction cases. It
+> amends PHY-16, FR-04 and §5.2's stage 2 and 7 rows, writing the NOTE beside PHY-16 step 3 into their text. Tier 1: a
+> changed protonation state moves the density. The VAL-03 golden and the Tier 3 cases carry the switch, so their numbers
+> do not move; VER-62 holds at zero drift. A miss is investigated, then reverted or ruled and re-pinned (G10, I4). Tag
+> `v0.6.0-alpha.3`.
+
+Verification's WP5.03 row read: U2's Tier 1 test; VAL-03's golden and VER-62 unmoved.
