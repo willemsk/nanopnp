@@ -205,5 +205,5 @@ is a rolling register, and its header stays `open`.
 | REV-181 | provenance | low | open | WP5.03 review | [Stage 2's header counts frame 0's atoms and reads an element from the first letter of a name](review-items.md#rev-181-stage-2s-header-counts-frame-0s-atoms-and-reads-an-element-from-the-first-letter-of-a-name) |
 | REV-182 | numerics | low | open | WP5.03 review | [A polar hydrogen's kernel is narrower than the density grid's spacing](review-items.md#rev-182-a-polar-hydrogens-kernel-is-narrower-than-the-density-grids-spacing) |
 | REV-183 | physics | low | deferred | §8.2.31 AG9; FR-43 | [Fractional protonation through a customised PDB2PQR](review-items.md#rev-183-fractional-protonation-through-a-customised-pdb2pqr) |
-| REV-184 | numerics | medium | open | WP5.04 review | [Stage 4's probe-radius gate ignores a `charge.edits` radius scale](review-items.md#rev-184-stage-4s-probe-radius-gate-ignores-a-chargeedits-radius-scale) |
-| REV-185 | performance | low | open | WP5.04 review | [A charge-only edit moves stage 2's key and rebuilds the mesh](review-items.md#rev-185-a-charge-only-edit-moves-stage-2s-key-and-rebuilds-the-mesh) |
+| REV-184 | numerics | medium | fixed | WP5.04 review | [Stage 4's probe-radius gate ignores a `charge.edits` radius scale](review-items.md#rev-184-stage-4s-probe-radius-gate-ignores-a-chargeedits-radius-scale) |
+| REV-185 | performance | low | fixed | WP5.04 review | [A charge-only edit moves stage 2's key and rebuilds the mesh](review-items.md#rev-185-a-charge-only-edit-moves-stage-2s-key-and-rebuilds-the-mesh) |

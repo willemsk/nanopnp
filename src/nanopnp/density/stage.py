@@ -32,7 +32,7 @@ from nanopnp.density.union import (
     check_positions,
     deposit,
 )
-from nanopnp.io.artefact import DensityArtefact
+from nanopnp.io.artefact import Artefact, DensityArtefact, ProtonationArtefact
 from nanopnp.io.case import (
     Density,
     UnsupportedCaseSection,
@@ -80,8 +80,31 @@ def density_parameters(spec: Density) -> dict[str, Canonicalisable]:
 def _upstream(inputs: StageInputs, spec: Density) -> dict[str, str]:
     keyed = {"structure": inputs.require("structure").hash}
     if spec.atoms == "protonated":
-        keyed["protonation"] = inputs.require("protonation").hash
+        keyed["protonation"] = atoms_key(inputs.require("protonation"))
     return keyed
+
+
+def atoms_key(protonation: Artefact) -> str:
+    """Return the protonation key with its charge edits dropped: the part stage 2 reads.
+
+    A charge edit moves no atom, name or radius, so its variants share the parent's density,
+    contour and mesh. Without a charge edit this is the protonation artefact's own hash.
+    """
+    edits = protonation.parameters.get("edits")
+    if not isinstance(edits, list) or not any(_is_charge(edit) for edit in edits):
+        return protonation.hash
+    parameters = dict(protonation.parameters)
+    kept = [edit for edit in edits if not _is_charge(edit)]
+    if kept:
+        parameters["edits"] = kept
+    else:
+        del parameters["edits"]
+    return ProtonationArtefact(parameters=parameters, inputs=protonation.inputs).hash
+
+
+def _is_charge(edit: Canonicalisable) -> bool:
+    # The key's edit entry is [parent, resid, icode, kind, value].
+    return isinstance(edit, list) and len(edit) == 5 and edit[3] == "charge"
 
 
 class DensityStage:
@@ -200,7 +223,10 @@ class DensityStage:
             "structure_payload_digest": structure.summary.get("payload_digest"),
         }
         if table is not None:
-            header["atom_source"] = {"atoms": "protonated", "table_digest": table.digest()}
+            header["atom_source"] = {
+                "atoms": "protonated",
+                "atoms_key": atoms_key(inputs.require("protonation")),
+            }
         density = DensityMap(values=values, grid=grid, header=header)
         path = density.write(directory / f"{PAYLOAD_NAME}.npz")
         report(progress, 1.0, f"density on {grid.nz} z planes written")

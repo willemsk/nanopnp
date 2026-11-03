@@ -51,6 +51,7 @@ from nanopnp.io.case import (
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
+from nanopnp.structure.protonated import RadiusEdit, residue_radius_scales
 from nanopnp.symmetry.reduce import PAYLOAD_NAME as REDUCED_PAYLOAD
 from nanopnp.symmetry.reduce import ReducedMap
 
@@ -58,6 +59,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
     from nanopnp.io.artefact import StageInputs
+    from nanopnp.io.resolved import ResolvedCase
 
 logger = logging.getLogger(__name__)
 
@@ -664,10 +666,15 @@ def gate_inputs(
     ensemble: AlignedEnsemble,
     density: Density,
     *,
+    radius_edits: Sequence[RadiusEdit] = (),
     progress: Progress | None = None,
     cancel: CancelToken | None = None,
 ) -> tuple[np.ndarray, np.ndarray, ResolvedRadii]:
-    """Return the mid-planes and the probe radius on each, that :func:`gate` checks against."""
+    """Return the mid-planes and the probe radius on each, that :func:`gate` checks against.
+
+    ``radius_edits`` scale the atoms' radii as stage 2 scales them, so the probe measures the
+    atoms the density was deposited from.
+    """
     radii = resolve_radii(
         KERNEL_RADII[density.kernel],
         resname=ensemble.resname,
@@ -676,9 +683,12 @@ def gate_inputs(
         resid=ensemble.resid,
         icode=ensemble.icode,
     )
+    radii_nm = radii.radii_nm * residue_radius_scales(
+        ensemble.resname, ensemble.resid, ensemble.icode, radius_edits
+    )
     planes = mid_planes([loop], z_nm)
     probe = probe_radius_profile(
-        ensemble.positions_nm, radii.radii_nm, planes, progress=progress, cancel=cancel
+        ensemble.positions_nm, radii_nm, planes, progress=progress, cancel=cancel
     )
     return planes, probe, radii
 
@@ -720,15 +730,39 @@ def _specs(inputs: StageInputs) -> tuple[Contour, Density]:
     return resolved.contour, resolved.density
 
 
-def contour_parameters(contour: Contour, density: Density) -> dict[str, Canonicalisable]:
-    """Return the stage-4 key's parameters: the block, h, the constants and the radius set."""
+def contour_parameters(
+    contour: Contour, density: Density, radius_edits: Sequence[RadiusEdit] = ()
+) -> dict[str, Canonicalisable]:
+    """Return the stage-4 key's parameters: the block, h, the constants and the radius set.
+
+    The radius edits enter only where there are some.
+    """
     name = KERNEL_RADII[density.kernel]
-    return {
+    parameters: dict[str, Canonicalisable] = {
         "contour": contour.model_dump(mode="json"),
         "h_nm": density.grid_spacing_nm,
         **KEY_CONSTANTS,
         "radius_set": {"name": name, "sha256": radius_set_digest(name)},
     }
+    if radius_edits:
+        parameters["radius_edits"] = [list(edit) for edit in radius_edits]
+    return parameters
+
+
+def probe_radius_edits(resolved: ResolvedCase) -> tuple[RadiusEdit, ...]:
+    """Return the case's radius edits that stage 2 applied, and so the probe applies too.
+
+    Under ``geometry.density.atoms: as_loaded`` stage 2 does not scale, so there are none.
+    """
+    if resolved.density is None or resolved.density.atoms != "protonated":
+        return ()
+    return tuple(
+        (edit.parent, edit.resid, edit.icode, float(edit.value))
+        for edit in sorted(
+            resolved.protonation.edits, key=lambda edit: (edit.parent, edit.resid, edit.icode)
+        )
+        if edit.kind == "radius"
+    )
 
 
 class ContourStage:
@@ -750,7 +784,7 @@ class ContourStage:
 
     def _key(self, inputs: StageInputs, contour: Contour, density: Density) -> ProfileArtefact:
         return ProfileArtefact(
-            parameters=contour_parameters(contour, density),
+            parameters=contour_parameters(contour, density, probe_radius_edits(inputs.resolved)),
             inputs={
                 "structure": inputs.require("structure").hash,
                 "symmetry": inputs.require("symmetry").hash,
@@ -792,7 +826,13 @@ class ContourStage:
             report(progress, 0.15 + 0.8 * fraction, message)
 
         planes, probe, radii = gate_inputs(
-            loop, reduced.z_nm, ensemble, density, progress=scaled, cancel=cancel
+            loop,
+            reduced.z_nm,
+            ensemble,
+            density,
+            radius_edits=probe_radius_edits(inputs.resolved),
+            progress=scaled,
+            cancel=cancel,
         )
         checked = gate(loop, spacing_nm=h, planes_nm=planes, probe_nm=probe)
         change = lumen_change(conditioned.raw_loops, loop, planes)

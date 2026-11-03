@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import math
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -21,8 +21,10 @@ __all__ = [
     "PAYLOAD_NAME",
     "ProtonationTable",
     "ProtonationTableError",
+    "RadiusEdit",
     "parent_residue",
     "radius_scales",
+    "residue_radius_scales",
 ]
 
 PAYLOAD_NAME = "protonation"
@@ -62,28 +64,38 @@ class ProtonationTableError(ValueError):
     """A protonation table that lacks an array its schema requires."""
 
 
+RadiusEdit = tuple[str, int, str, float]
+"""A radius edit as (parent name, residue number, insertion code, factor)."""
+
+
 def radius_scales(table: ProtonationTable) -> np.ndarray:
     """Return the factor of each atom's radius that the table's radius edits set, 1 elsewhere."""
+    edits = table.header.get("edits")
+    radius_edits: list[RadiusEdit] = []
+    for edit in edits if isinstance(edits, list) else ():
+        if not (isinstance(edit, dict) and edit.get("kind") == "radius"):
+            continue
+        parent, number = str(edit["residue"]).split(" ")
+        icode = number[-1] if number[-1].isalpha() else ""
+        radius_edits.append(
+            (parent, int(number[: len(number) - len(icode)]), icode, float(str(edit["value"])))
+        )
+    return residue_radius_scales(table.resname, table.resid, table.icode, radius_edits)
+
+
+def residue_radius_scales(
+    resname: np.ndarray, resid: np.ndarray, icode: np.ndarray, edits: Sequence[RadiusEdit]
+) -> np.ndarray:
+    """Return each atom's radius factor under ``edits``, matched on the parent name, 1 elsewhere."""
     import numpy as np
 
-    scales = np.ones(len(table.name), dtype=np.float64)
-    edits = table.header.get("edits")
-    radius_edits = [
-        edit
-        for edit in (edits if isinstance(edits, list) else ())
-        if isinstance(edit, dict) and edit.get("kind") == "radius"
-    ]
-    if not radius_edits:
+    scales = np.ones(len(resname), dtype=np.float64)
+    if not edits:
         return scales
-    parents = np.array([parent_residue(str(name)) for name in table.resname.tolist()])
-    for edit in radius_edits:
-        label, value = str(edit["residue"]), float(str(edit["value"]))
-        parent, number = label.split(" ")
-        icode = number[-1] if number[-1].isalpha() else ""
-        resid = int(number[: len(number) - len(icode)])
-        scales[
-            (table.resid == resid) & (table.icode.astype(str) == icode) & (parents == parent)
-        ] *= value
+    parents = np.array([parent_residue(str(name)) for name in resname.tolist()])
+    codes = icode.astype(str)
+    for parent, number, code, value in edits:
+        scales[(resid == number) & (codes == code) & (parents == parent)] *= value
     return scales
 
 

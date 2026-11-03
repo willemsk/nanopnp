@@ -120,16 +120,20 @@ deviation. The [plan](docs/plans/wp5.04-the-charge-mutators-library-step.md) rec
     and `Q_net` of both. The protonation artefact's payload gains `parent`, the unedited table.
   - **FR-38** (Tier 1): a pinned state holds and changes that residue alone; a charge change moves the
     projected charge by that residue alone; a radius scale moves stage 2's widths and the grid; every key is
-    unchanged without edits; the titratable-groups file equals PROPKA's configuration.
+    unchanged without edits; the titratable-groups file equals PROPKA's configuration; a charge edit keeps
+    the parent's density key and a radius edit moves it; a radius edit scales stage 4's probe as it scales
+    stage 2's widths.
 - **Changed**:
   - Stage 2 under `protonated` multiplies the CHARMM radii by the table's radius scales; under `as_loaded` its
-    key and map do not move. A charge or radius edit reuses the parent's stored frames; a state edit
+    key and map do not move. Stage 4's probe-radius profile scales the same atoms by the same factors, and
+    its key carries the radius edits. Stage 2 keys on the protonation key with its charge edits dropped, so a
+    charge variant reuses its parent's density, contour and mesh. A charge or radius edit reuses the parent's stored frames; a state edit
     protonates again with the residue pinned.
   - **Amended**: FR-38 (AG9 to AG11), PHY-16 step 3's NOTE on `charge.edits`, §5.2's stage 2 and 7 rows and the
     stage-7 note, §5.3.1's NOTE on `charge.edits`, §5.3.3's charge group, and Appendix A's FR-38 row.
   - **Knowledge**: `knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md`.
-  - **Open items**: REV-184 (stage 4's probe-radius gate ignores a radius scale) and REV-185 (a charge-only edit
-    remeshes) are open, from the package's review ([code review 029](docs/code_reviews/CODE_REVIEW_029.md)).
+  - **Fixed**: REV-184 (stage 4's probe-radius gate ignored a radius scale) and REV-185 (a charge-only edit
+    remeshed), both from the package's review ([code review 029](docs/code_reviews/CODE_REVIEW_029.md)).
 
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
