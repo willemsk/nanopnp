@@ -1,29 +1,26 @@
 # Current work
 
-Updated 2 November 2026 (Phase 4 closed as `v0.5.0`; WP5.02 delivered). Navigation only;
+Updated 3 November 2026 (WP5.02 merged as `v0.6.0-alpha.2`; Phase 5 amended a second time). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5 builds the browser workbench, and its framework is chosen: the author picked the
-Python-first technology after both candidates passed every test. The workbench starts with one command, shows two
-screens, links a residue on the molecule to its charge on the pore map and back, and a headless render checks
-colours, contrast and sizes. One thing is unmeasured: whether a whole redraw meets the 200 ms line, which needs a
-graphics card. Next come four library packages, then a second planning round for the screens.
+Phase 4 is released, and the browser workbench's technology is chosen and merged. The rest of Phase 5 is now planned.
+Five library steps come first, the last giving a case variables, numbers with units or formulas, and a warning before
+a sweep of what each value rebuilds. Then one package per part of the screen: the frame and project folder, the four
+suites, then the guided route, the old desktop shell's removal and the guide. About four to five months part-time.
 
-**Your call.** None open. The version clash between the structure and interface extras is settled: the reader
-accepts the newer protonation tool's terminal names, so both extras install together (REV-175).
+**Your call.** None open. The colleague who tries the workbench is named by the close.
 
 ## Position
 
 One line per lane (§8.4.4).
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**:
-  [WP5.01](wp5.01-workbench-design-study.md), the design study, is merged.
-  [WP5.02](wp5.02-framework-spike.md), the framework spike, is **delivered** (§8.2.30 AF1 to AF4; NiceGUI);
-  next `/np-ship wp 5.02`, tag `v0.6.0-alpha.2` after the merge. After it, WP5.03 to WP5.06, the library packages
-  (§8.2.28), then a second `/np-plan amend 5`. host: claude-code.
+- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 and WP5.02 are merged
+  (`v0.6.0-alpha.2`). Amended on 3 November 2026 (§8.2.31 AG1 to AG7): the library packages WP5.03 to WP5.07, then the
+  shell, WP5.08 (frame and project folder) to WP5.13 (route, Qt's removal, documentation), and the close, WP5.14. Next
+  `/np-plan wp 5.03`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -41,6 +38,8 @@ One line per lane (§8.4.4).
 - **Text output is a reading, `--json` the record** (§8.2.21 W2). **A non-finite Newton trial residual aborts** (AC2).
 - **The workbench keeps a desktop wrapper possible; the server's contract is ADR-004's NOTE** (§8.2.30 AF1).
   **The front end is NiceGUI; Mol* draws the molecule** (AF4).
+- **One shell package per suite; variables may be expressions, units through `pint`, keyed by resolved values**
+  (§8.2.31 AG1 to AG5).
 - **Layers read a model's declaration, never its name** (VER-56). **Only `poisson` adds a quadrature
   order for `r`** (E4). **A golden carries the stage-7 recipe** (E3).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's
@@ -53,9 +52,9 @@ One line per lane (§8.4.4).
 - **The paper's figure data** for VAL-16 and VAL-17 (§8.2.4 D6); E1's ensemble legs.
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
-- **The 200 ms redraw of the whole picture**, on a machine with a GPU (§8.2.30 AF4).
+- **The 200 ms redraw**, on the author's GPU machine, in WP5.11 (AF4; AG7).
 - **The rulings on any residual cycle (H6) and any WP41 drift (I4).** **The archived PQRs** for WP27–WP29's Tier 3.
-- **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-170 are placed in the Phase 5 plan.
+- **REV-156**'s speed-up is Phase 6's (Z6); REV-121 is WP5.09's, REV-170 WP5.10's (AG1).
 
 ## Dependencies To Read On Demand
 
@@ -64,7 +63,7 @@ One line per lane (§8.4.4).
 | The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The phase's amendments | `phase-5-record.md` |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
-| The workbench | `phase-5-workbench.md`; `wp5.02-framework-spike.md`; `docs/design/workbench.md`; §8.2.17, §8.2.28, §8.2.30; M3; F5 |
+| The workbench | `phase-5-workbench.md`; `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30, §8.2.31; M3; F5 |
 
 ## Handoff Rules
 

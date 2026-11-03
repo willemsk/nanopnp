@@ -360,6 +360,8 @@ Phase 5: `cli/__init__.py` with the GUI's shell work, and `physics/models.py` an
 
 **Ruled** for its command-line part (§8.2.18 T2): `cli/__init__.py` is split by the package that adds `nanopnp gui`.
 
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.02 added `nanopnp gui` without the split, so WP5.08, which opens a project with it, splits `cli/__init__.py`.
+
 ### MOD-14 — Refusals name releases that have shipped
 
 *Area:* surface. *Severity:* medium.
