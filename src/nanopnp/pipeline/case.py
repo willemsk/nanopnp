@@ -34,6 +34,7 @@ from nanopnp.io.case import (
 )
 from nanopnp.io.resolved import (
     ResolvedCase,
+    ResolvedEdit,
     ResolvedProtonation,
     ResolvedStructure,
     parse_chains,
@@ -222,8 +223,16 @@ def _resolve_contour(document: CaseDocument, density: Density | None) -> Contour
 
 def _resolve_protonation(document: CaseDocument) -> ResolvedProtonation:
     charge = document.charge if document.charge is not None else Charge()
+    edits = []
+    for edit in charge.edits:
+        parent, resid, icode = edit.residue_parts
+        edits.append(ResolvedEdit(parent, resid, icode, edit.kind, edit.value))
+    edits.sort(key=lambda edit: (edit.resid, edit.icode, edit.kind))
     return ResolvedProtonation(
-        ph=charge.ph, forcefield=charge.forcefield, titration=charge.titration
+        ph=charge.ph,
+        forcefield=charge.forcefield,
+        titration=charge.titration,
+        edits=tuple(edits),
     )
 
 

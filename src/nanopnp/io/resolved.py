@@ -41,12 +41,24 @@ class ResolvedStructure:
 
 
 @dataclass(frozen=True)
+class ResolvedEdit:
+    """One residue edit of the charge block, with its residue split into parts."""
+
+    parent: str
+    resid: int
+    icode: str
+    kind: Literal["state", "charge", "radius"]
+    value: str | int | float
+
+
+@dataclass(frozen=True)
 class ResolvedProtonation:
     """What the protonation stage is configured with; defaults if there is no charge block."""
 
     ph: float = 7.5
     forcefield: str = "CHARMM"
     titration: str = "propka"
+    edits: tuple[ResolvedEdit, ...] = ()
 
 
 @dataclass(frozen=True)

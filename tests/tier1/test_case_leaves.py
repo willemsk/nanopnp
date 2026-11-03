@@ -730,6 +730,24 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         for u in upstream_of(consumer):
             assert stage_key(u, res) == stage_key(u, res_base), f"{path} moved upstream {u}"
 
+    edit_leaves = {
+        "charge.edits.0.state": {"state": "neutral"},
+        "charge.edits.0.charge_change_e": {"charge_change_e": 1},
+        "charge.edits.0.radius_scale": {"radius_scale": 1.2},
+    }
+    for path, edit in edit_leaves.items():
+        doc = put(pdb_base, "charge.edits", [{"residue": "ASP 21", **edit}])
+        res = resolve(loads_case(yaml.safe_dump(doc)))
+        assert stage_key("protonation", res) != stage_key("protonation", res_base), (
+            f"{path} did not move protonation"
+        )
+        for u in upstream_of("protonation"):
+            assert stage_key(u, res) == stage_key(u, res_base), f"{path} moved upstream {u}"
+    doc = put(pdb_base, "charge.edits", [{"residue": "ASP 25", "radius_scale": 1.2}])
+    moved = stage_key("protonation", resolve(loads_case(yaml.safe_dump(doc))))
+    other = put(pdb_base, "charge.edits", [{"residue": "ASP 21", "radius_scale": 1.2}])
+    assert moved != stage_key("protonation", resolve(loads_case(yaml.safe_dump(other))))
+
     # The explicit wall of the base case would refuse the design concentration, and below
     # 1.474 M the ceiling hides it: probe it where ``auto`` follows the Debye length.
     auto_base = put(
@@ -897,6 +915,8 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         | set(refused)
         | {"numerics.mesh.wall_for_concentration_M"}
         | {"geometry.pore.shape", "geometry.pore.radius_nm", "numerics.mesh.maxh_nm"}
+        | set(edit_leaves)
+        | {"charge.edits.0.residue"}
         | {"inputs.profile.path", "inputs.pqr.path"}
         | {f"inputs.mesh.{k}" for k in ("path", "format", "groups")}
         | {f"inputs.charge.{k}" for k in ("path", "format", "groups")}

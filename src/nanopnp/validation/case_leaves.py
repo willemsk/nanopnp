@@ -313,6 +313,18 @@ LEAVES: dict[str, Leaf] = {
         "atom charge and radius parameter set used by PDB2PQR in stage 7",
     ),
     "charge.titration": Leaf("stage", "protonation", "titration scheme applied in stage 7"),
+    "charge.edits.0.residue": Leaf(
+        "stage", "protonation", "residue a charge edit applies to, on every chain and frame"
+    ),
+    "charge.edits.0.state": Leaf(
+        "stage", "protonation", "protonation state pinned on the residue through PDB2PQR"
+    ),
+    "charge.edits.0.charge_change_e": Leaf(
+        "stage", "protonation", "integer charge change placed on the residue's titratable group"
+    ),
+    "charge.edits.0.radius_scale": Leaf(
+        "stage", "protonation", "factor on the residue's atom radii, read by stages 2 and 7"
+    ),
     "inputs.pqr.path": Leaf(
         "stage", "protonation", "supplied PQR atomic charge and radius file read by stage 7"
     ),

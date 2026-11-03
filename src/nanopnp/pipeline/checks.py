@@ -432,6 +432,7 @@ def _check_charge(document: CaseDocument) -> None:
     charge = document.charge
     if charge is None:
         return
+    _check_edits(document, charge)
     defaults = Charge()
     _check_profile_keys(document, charge)
     _check_smearing(document, charge.smearing, defaults.smearing)
@@ -468,6 +469,67 @@ def _check_charge(document: CaseDocument) -> None:
             "protonation stage they configure does not run, so they would change nothing "
             "(section 5.3.1 NOTE on the protonation keys)"
         )
+
+
+STATE_RESIDUES: frozenset[str] = frozenset({"ASP", "GLU", "HIS"})
+"""The parents whose protonation state a charge edit can fix (PDB2PQR's ASH, GLH and HIP)."""
+
+
+def _check_edits(document: CaseDocument, charge: Charge) -> None:
+    if not charge.edits:
+        return
+    from nanopnp.charge.edits import TitratableGroups
+
+    groups = TitratableGroups.load()
+    note = "section 5.3.1 NOTE on charge.edits"
+    where = (
+        "beside inputs.charge, which supplies the fixed charge the edit would change"
+        if document.inputs.charge is not None
+        else "in a case with neither a structure: section nor inputs.pqr, so there is no "
+        "protonation to edit"
+        if document.structure is None and document.inputs.pqr is None
+        else None
+    )
+    if where is not None:
+        raise CaseValidationError(f"charge.edits is set {where} ({note})")
+    seen: dict[tuple[str, str], int] = {}
+    for index, edit in enumerate(charge.edits):
+        name = f"charge.edits[{index}] ({edit.residue})"
+        parent = edit.residue.split(" ")[0]
+        if edit.state is not None:
+            reason = (
+                f"on {parent}, which has no ASH, GLH or HIP state to fix"
+                if parent not in STATE_RESIDUES
+                else "beside titration: none, which runs PDB2PQR without a titration method"
+                if charge.titration == "none"
+                else f"under the force field {charge.forcefield}, which holds no state to fix"
+                if charge.forcefield != "CHARMM"
+                else "beside inputs.pqr, which supplies the states PDB2PQR would compute"
+                if document.inputs.pqr is not None
+                else None
+            )
+            if reason is not None:
+                raise CaseValidationError(f"{name}: state is refused {reason} ({note})")
+        if edit.charge_change_e is not None and not groups.has_group(parent):
+            raise CaseValidationError(
+                f"{name}: charge_change_e is refused: {parent} has no titratable group to place "
+                f"the change on; the groups are {', '.join(sorted(groups.groups))} ({note})"
+            )
+        for kind in ("state", "charge", "radius"):
+            earlier = seen.get((edit.residue, kind))
+            same = kind == edit.kind
+            clash = {edit.kind, kind} == {"state", "charge"}
+            if earlier is not None and (same or clash):
+                raise CaseValidationError(
+                    f"{name} clashes with charge.edits[{earlier}]: "
+                    + (
+                        f"one {kind} edit per residue"
+                        if same
+                        else "state and charge_change_e on one residue"
+                    )
+                    + f" ({note})"
+                )
+        seen[(edit.residue, edit.kind)] = index
 
 
 def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:
