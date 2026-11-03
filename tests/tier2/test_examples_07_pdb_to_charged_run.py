@@ -206,7 +206,12 @@ def test_ver46_07_the_exported_pqr_deposits_the_same_charge(ran: Ran) -> None:
         assert (getattr(tables[0], name) == getattr(tables[1], name)).all(), name
 
     assert left["charge"]["hash"] != right["charge"]["hash"]
-    assert left["mesh"]["hash"] == right["mesh"]["hash"]
+    # The supplied table is the produced one's content under another provenance, so stage 2's key
+    # and every key below it differ, while the mesh they deploy is the same bytes.
+    meshes = [
+        _read(example / run / "manifest.json")["geometry_and_mesh"] for run in ("run", "run-pqr")
+    ]
+    assert meshes[0]["content_hash"] == meshes[1]["content_hash"]  # type: ignore[index]
     fields = [
         store.get(FIELDS_SCHEMA, str(artefacts["charge"]["hash"])) for artefacts in (left, right)
     ]

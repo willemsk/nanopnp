@@ -33,7 +33,7 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 # Half the PDB coordinate column's 0.001 Å resolution.
 PDB_ROUNDING_NM = 5e-5
 
-STAGES = {"case", "structure", "density", "symmetry", "contour", "region", "mesh"}
+STAGES = {"case", "structure", "protonation", "density", "symmetry", "contour", "region", "mesh"}
 
 
 def _read(path: Path) -> dict[str, object]:

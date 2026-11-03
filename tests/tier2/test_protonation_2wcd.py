@@ -81,6 +81,17 @@ def test_ver57_every_heavy_radius_is_the_charmm_tables(
     assert radii["compared"] > 0
 
 
+def test_ver49_protonated_radii_resolve_to_pdb2pqrs_on_every_atom_of_the_dodecamer(
+    protonated: tuple[ProtonationTable, dict[str, Any]],
+) -> None:
+    """A radius looked up by residue name would miss each proton of a state PDB2PQR renamed."""
+    from nanopnp.density.radii import resolve_protonated_radii
+
+    table, _ = protonated
+    radii = resolve_protonated_radii("pdb2pqr_charmm", table)
+    np.testing.assert_allclose(radii.radii_nm, table.radius_nm, rtol=0.0, atol=1e-12)
+
+
 def test_ver57_pdb2pqr_repairs_twelve_terminal_oxygens(
     protonated: tuple[ProtonationTable, dict[str, Any]],
 ) -> None:

@@ -35,7 +35,9 @@ $ nanopnp inspect run-switches
    example 06's own script: chains A to L, protein only, the pore axis on z with the *cis* cap up,
    and the bilayer centre at z = 0. That example's README says why each step is needed.
 2. **`nanopnp run 2wcd.case.yaml`** walks every stage. Stages 1 to 6 build the mesh, as in example
-   06. Stage 7 then runs in two halves. **Protonation** runs PDB2PQR on the structure, with PROPKA
+   06, except that the protonation runs before stage 2 and the density smears the protonated atoms,
+   hydrogens included (`geometry.density.atoms: protonated`, the default). Stage 7 runs in two halves.
+   **Protonation** runs PDB2PQR on the structure, with PROPKA
    choosing each titratable residue's state at pH 7.5, under the CHARMM force field. Each atom gets
    a partial charge and a radius. **The charge** smears each atom into a Gaussian, takes its exact
    average around the axis, and deposits the result on the mesh, element by element. Stage 7
@@ -53,8 +55,9 @@ $ nanopnp inspect run-switches
    declares `Q_net`.
 6. **`run from-pqr.case.yaml`** supplies the PQR back through `inputs.pqr`. PDB2PQR and PROPKA do
    not run: the protonation stage reads the file instead and records its hash. The atoms are the
-   same, so the deposit is the same, byte for byte, filed under a different key because it came
-   from a different input. It stops at stage 7, which is where the two runs could differ.
+   same, so the density, the mesh and the deposit are the same, byte for byte, each filed under a
+   different key because it came from a different input: the density now reads the protonated
+   atoms too. It stops at stage 7, which is where the two runs could differ.
 7. **`run switches.case.yaml`** turns on both FR-15 switches, which the published model leaves
    off. `exclusion_offset_nm` makes stage 5 build an ion-exclusion shell 0.25 nm thick around the
    protein, which ions cannot enter. `dielectric_transition_nm` makes stage 7 derive a

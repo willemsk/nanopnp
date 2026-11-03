@@ -310,32 +310,31 @@
       }
     },
     "example-07": {
-      "reference_mesh": "d45f1dd021f0471bd041e91f5aee28e236eb4d82c80136c38c219f3ef9773c35",
+      "reference_mesh": "fbe4c04c0351366de01b434d8db6e70d27dedce9409c15aefba9496ba7076ea6",
       "moved_tolerance": 1e-08,
       "meshes": {
-        "d45f1dd021f0471bd041e91f5aee28e236eb4d82c80136c38c219f3ef9773c35": {
+        "c1fdaab6a1936e60f1e0867b1074ce73e873bbde29597867d7922810de800142": {
           "values": {
-            "conductance_S": "0x1.0b9340f0f2e49p-30",
-            "current_A": "0x1.ac1ece4e516dcp-35",
-            "currents_A[Cl-]": "0x1.877bb2130991dp-36",
-            "currents_A[Na+]": "0x1.d0c1ea899949ap-36",
-            "transport_number": "0x1.15e85bb8bc31dp-1"
+            "conductance_S": "0x1.07d6164aed18cp-30",
+            "current_A": "0x1.a62356de4827ap-35",
+            "currents_A[Cl-]": "0x1.82954b5b12f2dp-36",
+            "currents_A[Na+]": "0x1.c9b162617d5c6p-36",
+            "transport_number": "0x1.158fd06653f7cp-1"
           },
           "seen_on": [
-            "linux-x86_64/X86_V2",
-            "linux-x86_64/X86_V3"
+            "linux-x86_64/AVX512_SPR"
           ]
         },
-        "e2030d0fd6e8c3ef47d069d5464822ce6a9cf6ed3fe2d2badcde32a862b81101": {
+        "fbe4c04c0351366de01b434d8db6e70d27dedce9409c15aefba9496ba7076ea6": {
           "values": {
-            "conductance_S": "0x1.0b9340f0f2e3dp-30",
-            "current_A": "0x1.ac1ece4e516c9p-35",
-            "currents_A[Cl-]": "0x1.877bb2130991cp-36",
-            "currents_A[Na+]": "0x1.d0c1ea8999476p-36",
-            "transport_number": "0x1.15e85bb8bc314p-1"
+            "conductance_S": "0x1.07d6164aed185p-30",
+            "current_A": "0x1.a62356de4826fp-35",
+            "currents_A[Cl-]": "0x1.82954b5b12e5cp-36",
+            "currents_A[Na+]": "0x1.c9b162617d682p-36",
+            "transport_number": "0x1.158fd06653ff5p-1"
           },
           "seen_on": [
-            "linux-x86_64/X86_V4"
+            "linux-x86_64/X86_V3"
           ]
         }
       }
