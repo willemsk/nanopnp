@@ -1,6 +1,6 @@
 # WP5.03 — Protonation before the density
 
-**Status: planned, not started.** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
+**Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
 §8.2.28 AD3, §8.2.31 AG8 and REV-135.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -194,10 +194,10 @@ refusal) and on the schema identifier; §5.3.1's IF-03 identifier wherever it is
 - [x] a8f2e40 4. `core/stages.py` registration order and stage 2's optional input; `pipeline/run.py:selected_stages`, `_protonation_reason`; `charge/protonation.py:_resolved` (D1). Done when the walk-order tests of *Verification* pass. **Executor:** main.
 - [x] a8f2e40 5. `density/radii.py:resolve_protonated_radii`; `density/union.py` ragged frames; `density/stage.py` key, run and header (D3, D4). Done when the VER-49 rows pass. **Executor:** main.
 - [x] 6. Compaction checkpoint. **Executor:** main.
-- [x] 7. `geometry.density.atoms: as_loaded` on each Tier 1 to 3 case of D5's list whose oracle was set on as-loaded atoms; a case that only checks the walk's mechanics keeps the default. Done when `uv run pytest -m tier1` passes. **Executor:** main.
+- [x] 7da3300 7. `geometry.density.atoms: as_loaded` on each Tier 1 to 3 case of D5's list whose oracle was set on as-loaded atoms; a case that only checks the walk's mechanics keeps the default. Done when `uv run pytest -m tier1` passes. **Executor:** main.
 - [ ] 8. The nightly files of D5's list, under `--nightly`, with the 2WCD walks at `as_loaded`, and VER-62 unmoved for them. Done when they pass. **Executor:** main.
-- [x] 9. Examples 06 and 07 under the default: their READMEs; the example-06 overlay test's atom set; example 07's re-pin (D5). Done when `test_examples_06_*` and `test_examples_07_*` pass under `--nightly`. **Executor:** main.
-- [ ] 10. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s `geometry` prose; a `knowledge/04-clya-geometry-and-charge/` note on PDB2PQR's residue and hydrogen names, `[tested]` by item 5's test; REV-135 `fixed`. Done when the code and review say so, and the strict documentation build passes. **Executor:** main.
+- [x] 42b6616 9. Examples 06 and 07 under the default: their READMEs; the example-06 overlay test's atom set; example 07's re-pin (D5). Done when `test_examples_06_*` and `test_examples_07_*` pass under `--nightly`. **Executor:** main.
+- [x] 4bb571e 10. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s `geometry` prose; a `knowledge/04-clya-geometry-and-charge/` note on PDB2PQR's residue and hydrogen names, `[tested]` by item 5's test; REV-135 `fixed`. Done when the code and review say so, and the strict documentation build passes. **Executor:** main.
 
 > **Outcome — items 1 to 5.** The table's missing-array error is `ProtonationTableError`, mapped to the case
 > exit code, and `PQRError` is left alone: nothing raised `PQRError` from `read` that a test caught. A walk to
