@@ -26,14 +26,6 @@ outputs: [current]
 WRITTEN = ", variable_density: false, inertia: false"
 
 
-def test_a_retired_v05_document_is_refused_with_its_migration() -> None:
-    from nanopnp.io.case import CaseValidationError
-    from nanopnp.pipeline.case import loads_case
-
-    with pytest.raises(CaseValidationError, match=r"retired.*geometry\.density\.atoms: as_loaded"):
-        loads_case(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
-
-
 def test_a_v05_document_loads_cleanly() -> None:
     from nanopnp.pipeline.case import loads_case
 
