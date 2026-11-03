@@ -14,6 +14,10 @@ One declarative YAML document is the unit of reproducibility (IF-03). Everything
 schema: nanopnp/case/v0.6
 name: clya-wt-1M-100mV
 
+# models:                           # optional; a study, WP5.05 (the NOTE on `models:`)
+#   molecular: clya-wt.molecular.yaml     # nanopnp/molecular-model/v0.6
+#   continuum: clya-pore.continuum.yaml   # nanopnp/continuum-model/v0.6
+
 inputs:                             # optional; supplied artefacts, §5.3.2
   mesh: {path: clya.msh, format: msh41,
          groups: {lumen: electrolyte, upper: cis, lower: trans,
@@ -205,10 +209,54 @@ of it on the same chain SHALL be refused, naming both. The upstream one would be
 manifest as an input to a run that never read it, and the same holds of every key: each key of
 `inputs:` SHALL be read by the stage that consumes it, so that no file is hashed into the manifest
 as an input to a run that never read it (FR-25, VER-47).
-A supplied artefact is read by `path`. `artefact:`, a store hash, on `inputs.mesh`, `inputs.charge` or
-`inputs.eps_r` SHALL be refused as an unsupported section when the case is resolved, naming the key:
-no release schedules the store form of the two fields, and the mesh's is REV-62, deferred to
-Phase 5 (§8.2.9 I3) (WP40).
+A supplied artefact is read by `path`. `inputs.mesh` alone also takes `artefact:`, the 64-character
+store hash of a stage-6 mesh artefact (REV-62; WP5.05). The mesh stage takes the store and its key is
+the stored artefact itself, so a mesh a run generated keeps its hash when a later case names it by
+that hash, and every stage downstream keys as it does for the generated mesh. A hash the store does
+not hold SHALL be refused, naming the hash and the store's root, and so SHALL `format` or `groups`
+beside `artefact:`, since the stored artefact has declared its groups already. A stored mesh passed
+its gates when it was made, so the sweep plan does not gate it again. `structure:` or `geometry:`
+beside `inputs.mesh`, a stored mesh included, stays refused (REV-186: a stored mesh's frame against
+a structure is unknown). `artefact:` on `inputs.charge` or `inputs.eps_r` SHALL be refused as an
+unsupported section when the case is resolved, naming the key: no release schedules the store form of
+the two fields (WP40).
+
+NOTE (`models:`, FR-39, FR-32, IF-03; WP5.05; §8.2.31 AG12, AG13): the optional top-level `models:`
+block, `{molecular: <path>, continuum: <path>}` with at least one of the two, names a case's
+**molecular model** and **continuum model**, each a YAML file of its own schema,
+`nanopnp/molecular-model/v0.6` or `nanopnp/continuum-model/v0.6`. A case that names a model is a
+**study**. A model file holds `schema`, `name` and only the keys its kind owns; it names no model; a
+file with another `schema`, no `name`, a `models:` key or a key of the other kind SHALL be refused,
+naming the file and the key. Ownership is one table, and the longest dotted prefix decides; every
+path with no row is the study's. The molecular model owns `structure`, `charge.ph`,
+`charge.forcefield`, `charge.titration`, `charge.edits` and `inputs.pqr`. The continuum model owns
+`geometry`, `charge.exclusion_offset_nm`, `numerics.mesh`, `inputs.mesh`, `inputs.profile`, `physics`,
+`electrolyte` and `boundary_conditions`, so the bias and the walls are the continuum model's
+defaults, which a study overrides for a sweep or a ramp (WB-16). The study owns the rest: `schema`,
+`name`, `outputs`, `models`, `charge.smearing`, `charge.dielectric_transition_nm`, `inputs.charge`,
+`inputs.eps_r` and every `numerics` key other than `numerics.mesh`.
+A relative path in a model file is read beside that file, and one in `models:` beside the case.
+
+The case resolves by merging the study over the molecular model, then the continuum model: a
+mapping merges key by key, and a list or a free mapping replaces whole. The result validates once as
+a case. The models and the study's own keys, taken without the study's values in a named model's
+keys (the *view*), SHALL validate alone as well, or the model is refused naming its file: a model
+that cannot stand alone cannot be reused. A refusal names the case path and, in brackets, the file
+its value came from.
+
+A value the study sets in a named model's keys that differs from the model's is an **override**. An
+override is a leaf, the deepest path at which both sides are blocks; a value equal to the model's is
+none. The resolved case recomputes its overrides on every substitution, so they survive an edit and a
+sweep, and `Case.overrides` maps each path to the model's value and the study's. A study overrides
+any value of the models it names; the Study suite offers the continuum model's physics defaults
+first (WB-16). `models` is left out of every dump, hash and equality of the case, so a study equals
+and keys as the case it resolves to, written inline: the artefact keys, the stage keys and the
+cache are those of that case, and a stage a model built is reused by every study that names the
+model. A reader that does not resolve models, `read_case`, SHALL refuse a document carrying
+`models:`, naming the readers that do (`Case.load`, `pipeline.case.load_case`). The run writes the
+one complete case it resolved to as `case.yaml`, with no `models:`, which the command line runs as
+it is (FR-25); `Case.dumps(study=True)` writes the study as written, with `models:` absolute and every
+override, and a sweep over a study writes that form as its base file (§5.3.4).
 
 NOTE (a relative path in a case, FR-25, QR-08; §8.2.23 Y3): every file a case names by a relative
 path (`inputs.*.path`, `structure.source.path`, `structure.ensemble.trajectory` and a correction file

@@ -83,7 +83,7 @@ is a rolling register, and its header stays `open`.
 | REV-59 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [attribute_to_construction raises the wrong error on a lax comparison](review-items.md#rev-59-attribute_to_construction-raises-the-wrong-error-on-a-lax-comparison) |
 | REV-60 | performance | low | deferred | §8.2.9 I3 | [UMFPACK repeats its symbolic analysis every Newton step](review-items.md#rev-60-umfpack-repeats-its-symbolic-analysis-every-newton-step) |
 | REV-61 | interface | low | deferred | §8.2.9 I3 | [No B-spline fit or HOLE cross-check of the contour](review-items.md#rev-61-no-b-spline-fit-or-hole-cross-check-of-the-contour) |
-| REV-62 | interface | low | deferred | §8.2.18 T2 | [A mesh named by store key is refused](review-items.md#rev-62-a-mesh-named-by-store-key-is-refused) |
+| REV-62 | interface | low | fixed | [WP5.05](../plans/wp5.05-named-models-and-study-overrides.md) | [A mesh named by store key is refused](review-items.md#rev-62-a-mesh-named-by-store-key-is-refused) |
 | REV-63 | performance | low | fixed | [WP38](../plans/wp38-io-split.md) | [The protonation stage walked through meshing](review-items.md#rev-63-the-protonation-stage-walked-through-meshing) |
 | REV-64 | verification | low | deferred | §8.2.9 I3 | [A sweep's plan-time NUM-34 gate skips generated meshes](review-items.md#rev-64-a-sweeps-plan-time-num-34-gate-skips-generated-meshes) |
 | REV-65 | interface | low | wontfix | §8.2.18 T1 | [The Windows bundle exposes no mesh command](review-items.md#rev-65-the-windows-bundle-exposes-no-mesh-command) |
@@ -207,3 +207,4 @@ is a rolling register, and its header stays `open`.
 | REV-183 | physics | low | deferred | §8.2.31 AG9; FR-43 | [Fractional protonation through a customised PDB2PQR](review-items.md#rev-183-fractional-protonation-through-a-customised-pdb2pqr) |
 | REV-184 | numerics | medium | fixed | WP5.04 review | [Stage 4's probe-radius gate ignores a `charge.edits` radius scale](review-items.md#rev-184-stage-4s-probe-radius-gate-ignores-a-chargeedits-radius-scale) |
 | REV-185 | performance | low | fixed | WP5.04 review | [A charge-only edit moves stage 2's key and rebuilds the mesh](review-items.md#rev-185-a-charge-only-edit-moves-stage-2s-key-and-rebuilds-the-mesh) |
+| REV-186 | interface | low | open | WP5.05; REV-62 | [A stored mesh beside a `structure:` section is refused](review-items.md#rev-186-a-stored-mesh-beside-a-structure-section-is-refused) |

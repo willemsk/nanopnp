@@ -14,7 +14,7 @@ needed.
 |---|---|
 | IF-01 | VER-25, VER-32, VER-45 (the public surface, the modules its mirror imports from, and its import cost) |
 | IF-02 | VER-32, VER-38, VER-45 (the generated command-line and exit-code references), VER-46 (every documented command executed) |
-| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (case schema v0.6, and the refusal of the retired v0.5), VER-71 (the v0.5 refusals of a value never applied), VER-57 (`inputs.pqr` read, registered and refused; the protonation keys' refusals); the registry and inf-sup refusals made at load (`tests/tier1/test_case_schema.py`); that `nanopnp validate case` and the shell's commit give them in a run's text is verified at review (§8.2.13 N3) |
+| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (case schema v0.6, and the refusal of the retired v0.5), VER-71 (the v0.5 refusals of a value never applied), VER-57 (`inputs.pqr` read, registered and refused; the protonation keys' refusals); the `models:` block (a plain reader refuses it; the model files' refusals naming the file and the key, `tests/tier1/test_models.py`); the registry and inf-sup refusals made at load (`tests/tier1/test_case_schema.py`); that `nanopnp validate case` and the shell's commit give them in a run's text is verified at review (§8.2.13 N3) |
 | IF-04 | VER-48 (PDB, mmCIF and each trajectory format read; PDB and mmCIF of one entry agree), VER-32 (the aligned ensemble exported as a PDB and a DCD) |
 | IF-05 | VER-29, VER-49 (the density map in `.npz`, OpenDX and CCP4, in ångströms at the file boundary), VER-50 (the reduced map exported as radial grids), VER-32 and VER-46 (the map exported from the command line and overlaid on its structure), VAL-15 |
 | IF-06 | VER-27 |
@@ -59,7 +59,7 @@ needed.
 | FR-36 | None yet; WP5.13 (§8.2.31 AG1); QR-10's observation at the close |
 | FR-37 | `test_orient_pore_puts_a_tilted_ring_on_z_with_the_named_end_cis`, `test_prepared_pore_is_keyed_by_the_source_and_the_choices` (the library, WP54); the workbench's surfacing and REV-121, WP5.09 (§8.2.31 AG1) |
 | FR-38 | `test_fr38_a_pinned_state_holds_and_changes_that_residue_alone`, `test_fr38_a_pin_that_takes_no_effect_is_refused`, `test_fr38_a_charge_change_moves_the_projected_charge_by_that_residue_alone`, `test_fr38_a_radius_scale_moves_the_density_and_the_kernel_width`, `test_fr38_without_edits_every_key_is_unchanged`, `test_fr38_the_titratable_groups_are_propkas` (the library step, WP5.04); the Charge edit tool, WP5.09 (§8.2.31 AG1) |
-| FR-39 | None yet; named models, overrides and the sweep over models, WP5.05; variables, units, resolved keys and the rebuild forecast, WP5.07; the Study suite, WP5.11 (§8.2.31 AG1 to AG5, AG12, AG13) |
+| FR-39 | Named models, overrides and the sweep over models (WP5.05): `tests/tier1/test_models.py` (a study resolves to its case written inline and shares its keys; reuses every stage its twin built; an override moves only the stages that read it; the run records its model files and overrides; a sweep over models resolves each member; every case leaf has one owner), `tests/tier1/test_mesh_ingest.py` (a mesh named by its store hash is the stored artefact), `tests/tier2/test_named_models.py` (a study rebuilds only what its override moves); none yet for variables, units, resolved keys and the rebuild forecast, WP5.07; the Study suite, WP5.11 (§8.2.31 AG1 to AG5, AG12, AG13) |
 | FR-40 | None yet; the composer phase |
 | FR-41 | None yet; the structural-mutator phase |
 | FR-42 | None yet; the sketcher phase |

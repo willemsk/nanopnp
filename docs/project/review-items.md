@@ -638,6 +638,12 @@ only as a file.
 
 **Ruled** (§8.2.18 T2): owned by the named-model capability (REV-136), which references a continuum model's mesh.
 
+**Fixed** (WP5.05, `e56d8a6`): `inputs.mesh.artefact` takes the 64-character store hash of a stage-6 mesh artefact.
+The mesh stage takes the store, and its key is the stored artefact unchanged, so a stored mesh keeps its hash; a
+hash the store does not hold is refused naming the hash and the store's root, and `format` or `groups` beside it
+are refused. `artefact:` on `inputs.charge` and `inputs.eps_r` stays refused (§5.3.1 NOTE on `inputs:`). Tier 1:
+`test_a_mesh_named_by_store_key_is_the_stored_artefact`.
+
 ### REV-63 — The protonation stage walked through meshing
 
 *Area:* performance. *Severity:* low. *Found:* PR #55 (WP27); verified open at `5559c7e`.
@@ -2455,3 +2461,15 @@ edit, so the unedited keys do not move. A charge variant then shares its parent'
 radius edit still moves them. Stage 2's summary records that key as `atom_source.atoms_key` in place of the
 table's digest, which a shared density would misreport. Tier 1:
 `test_fr38_a_charge_edit_keeps_the_parents_density_key_and_a_radius_edit_moves_it`.
+
+## REV-186: A stored mesh beside a `structure:` section is refused
+
+`inputs.mesh.artefact` (REV-62) names a stage-6 mesh in the store, and `structure:` or `geometry:` beside any
+`inputs.mesh` is refused naming both, by the upstream rule of the §5.3.1 NOTE on `inputs:`. The stored mesh's frame
+against a structure is unknown: nothing the case carries says where the structure sits in the frame the mesh was
+made in, so a `structure:` beside it could be applied at the wrong offset without a gate to see it. The refusal is
+safe, but a study cannot pair a molecular model that holds `structure` with a continuum model whose mesh is named
+by hash.
+
+Open: the author rules whether a stored mesh's frame is recorded and checked against the structure's, so that the
+pair is refused only on a mismatch, or whether the refusal stays.
