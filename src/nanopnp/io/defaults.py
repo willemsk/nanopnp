@@ -108,6 +108,11 @@ CONFIGURATION_PATHS: dict[str, str] = {
         "numerics.mesh.size_scale is, and refused above half the narrowest kernel width "
         "(section 5.3.1 NOTE on charge.smearing)"
     ),
+    "charge.edits.0.state": (
+        "a residue edit is a variant of the molecular model, recorded with its parent and its "
+        "difference from it (section 5.3.3, charge group), and never listed as a deviation "
+        "(section 8.2.31 AG11)"
+    ),
     "geometry.analyte.shape": (
         "the analyte body of stage 5 (FR-21): a generated region refuses it, so nothing reads "
         "it, and a supplied mesh carries its analyte already"

@@ -148,7 +148,16 @@ def pdb2pqr_arguments(settings: ResolvedProtonation) -> tuple[str, ...]:
 
 
 def protonation_parameters(settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
-    """Return the produced artefact's key parameters, which also key each frame."""
+    """Return the produced artefact's key parameters, with the edits only where there are some."""
+    parameters = _frame_parameters(settings)
+    if settings.edits:
+        parameters["edits"] = [
+            [edit.parent, edit.resid, edit.icode, edit.kind, edit.value] for edit in settings.edits
+        ]
+    return parameters
+
+
+def _frame_parameters(settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
     return {
         "source": "pdb2pqr",
         "ph": settings.ph,

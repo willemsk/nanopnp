@@ -297,6 +297,78 @@ class Smearing(_Strict):
     axis_cutoff_nm: float = 0.01
 
 
+class ChargeEdit(_Strict):
+    """One edit of one residue, applied on every chain and frame."""
+
+    residue: str = Field(
+        pattern=r"^[A-Z]{3} -?\d{1,4}[A-Z]?$",
+        description=(
+            "The residue by parent name, number and optional insertion code, as 'ASP 21' or "
+            "'HIS 292A'"
+        ),
+    )
+    state: Literal["charged", "neutral"] | None = Field(
+        default=None,
+        description=(
+            "Fixes the protonation state of an ASP, GLU or HIS whatever the pH would give; "
+            "refused beside titration: none, off CHARMM and beside inputs.pqr"
+        ),
+    )
+    charge_change_e: int | None = Field(
+        default=None,
+        description=(
+            "A non-zero integer change of the residue's net charge, spread evenly over its "
+            "titratable group's atoms; refused on a residue with no group"
+        ),
+    )
+    radius_scale: float | None = Field(
+        default=None,
+        gt=0.0,
+        allow_inf_nan=False,
+        description="A positive factor on every atom radius of the residue, hydrogens included",
+    )
+
+    @property
+    def kind(self) -> Literal["state", "charge", "radius"]:
+        """Which of the three edits this is."""
+        if self.state is not None:
+            return "state"
+        return "charge" if self.charge_change_e is not None else "radius"
+
+    @property
+    def value(self) -> str | int | float:
+        """The value of the one edit set."""
+        for given in (self.state, self.charge_change_e, self.radius_scale):
+            if given is not None:
+                return given
+        raise ValueError("a charge edit sets one of its three kinds")  # pragma: no cover
+
+    @property
+    def residue_parts(self) -> tuple[str, int, str]:
+        """The residue's parent name, number and insertion code (empty for none)."""
+        name, number = self.residue.split(" ")
+        icode = number[-1] if number[-1].isalpha() else ""
+        return name, int(number[: len(number) - len(icode)]), icode
+
+    @model_validator(mode="after")
+    def _one_kind(self) -> ChargeEdit:
+        given = [
+            name
+            for name in ("state", "charge_change_e", "radius_scale")
+            if getattr(self, name) is not None
+        ]
+        if len(given) != 1:
+            raise ValueError(
+                f"charge edit of {self.residue!r} sets {', '.join(given) or 'none of'} of state, "
+                "charge_change_e and radius_scale; it sets exactly one"
+            )
+        if self.charge_change_e == 0:
+            raise ValueError(
+                f"charge edit of {self.residue!r} sets charge_change_e 0, which changes nothing"
+            )
+        return self
+
+
 class Charge(_Strict):
     """Stage 7: charge assembly; the offsets are switches whose validated default is 0."""
 
@@ -324,6 +396,13 @@ class Charge(_Strict):
         description=(
             "propka: PROPKA's states at charge.ph. none: every residue keeps the force field's "
             "standard state"
+        ),
+    )
+    edits: list[ChargeEdit] = Field(
+        default_factory=list,
+        description=(
+            "Edits of single residues, saved as a variant of the molecular model beside its "
+            "parent and never as a deviation (section 5.3.1 NOTE on charge.edits)"
         ),
     )
     smearing: Smearing = Field(default_factory=Smearing)
