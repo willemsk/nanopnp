@@ -1,5 +1,5 @@
 # Session 03: the quickstart pore with a wall element size of 0.25 nm. Work in this directory.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: wall-025
 
 geometry:

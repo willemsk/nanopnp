@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def _case(tmp_path: Path, pdb: Path) -> Path:
     path = tmp_path / "2wcd.case.yaml"
     path.write_text(
-        "schema: nanopnp/case/v0.5\n"
+        "schema: nanopnp/case/v0.6\n"
         "name: 2wcd-contour\n"
         "structure:\n"
         f"  source: {{path: {pdb}}}\n"

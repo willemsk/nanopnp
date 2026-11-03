@@ -67,7 +67,7 @@ def case_text(
     numerics: str = "{continuation: none}",
 ) -> str:
     return f"""
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: ingest-probe
 inputs:
   mesh: {{path: {mesh_path}, format: gmsh, groups: {groups}}}

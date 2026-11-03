@@ -104,6 +104,11 @@ class ResolvedCase:
         return (self.structure is not None or self.pqr is not None) and self.charge is None
 
     @property
+    def density_protonated(self) -> bool:
+        """Whether stage 2 smears the protonation artefact's atoms rather than stage 1's."""
+        return self.density is not None and self.density.atoms == "protonated"
+
+    @property
     def deposits_charge(self) -> bool:
         """Whether stage 7 deposits a charge from the protonation artefact."""
         return self.protonates and "fixed_charge" in self.declaration.coefficients

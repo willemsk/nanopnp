@@ -445,7 +445,7 @@ no later owner.
 **Measured.** The `pnp` model accepts `variable_density` and `inertia` as given, though without flow
 they do nothing.
 
-**Resolved.** WP42 D5: `pnp` model restricts `variable_density` and `inertia` switch sets to `(False,)`; schema moves to `nanopnp/case/v0.5`.
+**Resolved.** WP42 D5: `pnp` model restricts `variable_density` and `inertia` switch sets to `(False,)`; schema moves to `nanopnp/case/v0.6`.
 
 ### REV-43 — chain_characters duplicates the export's mapping
 

@@ -1,4 +1,4 @@
-"""VER-47, G6 — the case schema ``nanopnp/case/v0.5``."""
+"""VER-47, G6 — the case schema ``nanopnp/case/v0.6``."""
 
 from __future__ import annotations
 
@@ -26,11 +26,19 @@ outputs: [current]
 WRITTEN = ", variable_density: false, inertia: false"
 
 
+def test_a_retired_v05_document_is_refused_with_its_migration() -> None:
+    from nanopnp.io.case import CaseValidationError
+    from nanopnp.pipeline.case import loads_case
+
+    with pytest.raises(CaseValidationError, match=r"retired.*geometry\.density\.atoms: as_loaded"):
+        loads_case(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
+
+
 def test_a_v05_document_loads_cleanly() -> None:
     from nanopnp.pipeline.case import loads_case
 
-    document = loads_case(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
-    assert document.schema_id == "nanopnp/case/v0.5"
+    document = loads_case(PNP.format(schema="nanopnp/case/v0.6", switches=WRITTEN))
+    assert document.schema_id == "nanopnp/case/v0.6"
     assert document.physics.model == "pnp"
     assert document.physics.variable_density is False
     assert document.physics.inertia is False
@@ -74,7 +82,7 @@ def test_ver47_value_range_refusals(path: str, bad_val: float) -> None:
     from nanopnp.io.case import CaseValidationError
     from nanopnp.pipeline.case import loads_case
 
-    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
+    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.6", switches=WRITTEN))
     parts = path.split(".")
     cur = raw
     for part in parts[:-1]:
@@ -109,7 +117,7 @@ def test_ver47_deviations_offset_and_transition() -> None:
 def test_ver47_pqr_input_sets_protonates() -> None:
     from nanopnp.pipeline.case import loads_case, resolve
 
-    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.5", switches=WRITTEN))
+    raw = yaml.safe_load(PNP.format(schema="nanopnp/case/v0.6", switches=WRITTEN))
     raw["inputs"]["pqr"] = {"path": "supplied.pqr", "format": "pqr"}
     resolved = resolve(loads_case(yaml.safe_dump(raw)))
     assert resolved.pqr is not None

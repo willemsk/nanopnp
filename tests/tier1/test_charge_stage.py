@@ -287,7 +287,7 @@ def test_ver01_the_producer_stage_deposits_keys_and_records_its_report(produced)
     from nanopnp.io.artefact import CHARGE_GRID_SCHEMA
 
     case, store, result = produced
-    assert [record.name for record in result.stages][-2:] == ["protonation", "charge"]
+    assert [record.name for record in result.stages][-3:] == ["protonation", "mesh", "charge"]
     stage7 = result.artefacts["charge"]
     assert set(stage7.inputs) == {"mesh", "protonation", "charge_grid"}
     assert stage7.inputs["protonation"] == result.artefacts["protonation"].hash

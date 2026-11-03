@@ -16,7 +16,7 @@ description: "Lists the artefact each stage emits and its format, native or inte
 | 5 | Tagged (r, z) region | `nanopnp/region/v0.5` YAML: a declarative record of the model-frame profile, the membrane with its derived inner edge, the reservoir and the tag counts, from which the OCC region is rebuilt deterministically (WP21): a record hashes by content, where a BRep's bytes need not be stable |
 | 6 | Mesh | Gmsh MSH 4.1 archival, any meshio (MIT) format on read (IF-06). A supplied mesh is keyed on its canonical contents; a generated one on its recipe, the stage-5 key and the resolved size fields, with its content hash recorded beside the key (WP21) |
 | 8 | Resolved material coefficient set | Correction file references and evaluated parameters |
-| 9 | Resolved case document | YAML, schema `nanopnp/case/v0.5` |
+| 9 | Resolved case document | YAML, schema `nanopnp/case/v0.6` |
 | 10 | Field set, iteration history | XDMF with HDF5 heavy data (IF-07) |
 | 11, 12 | Scalar QoIs, profiles, figures, dataset, manifest | Result store record, figure files, manifest |
 | — (a sweep, §5.3.4) | Collected dataset over the members of a sweep | Result store record, schema `nanopnp/sweep/v0.5` |

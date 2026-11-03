@@ -15,6 +15,7 @@ from nanopnp.core.stages import (
     walk_order,
 )
 from nanopnp.io.artefact import StageInputs
+from nanopnp.io.case import Density, Geometry
 from nanopnp.io.resolved import ResolvedCase
 from nanopnp.pipeline.case import load_case, loads_case, resolve
 from nanopnp.pipeline.run import (
@@ -47,8 +48,15 @@ def _shipped_cases() -> dict[str, ResolvedCase]:
     supplied_charge = resolve(
         loads_case(_with_supplied_mesh(classical.read_text(encoding="utf-8")))
     )
+    resupplied = load_case(EXAMPLES / "07-pdb-to-charged-run" / "resupplied.case.yaml")
+    as_loaded = resupplied.model_copy(
+        update={
+            "geometry": Geometry(density=Density(atoms="as_loaded")),
+        }
+    )
     return {
         "quickstart": resolve(load_case(QUICKSTART)),
+        "structure-as-loaded": resolve(as_loaded),
         "supplied-charge": supplied_charge,
         "profile": resolve(profile),
         "pqr-profile": resolve(pqr_profile),
@@ -59,12 +67,12 @@ def _shipped_cases() -> dict[str, ResolvedCase]:
 WALK = (
     "case",
     "structure",
+    "protonation",
     "density",
     "symmetry",
     "contour",
     "region",
     "mesh",
-    "protonation",
     "charge",
     "materials",
     "solve",
@@ -143,8 +151,19 @@ def test_ver64_each_optional_input_is_one_a_case_drops() -> None:
         "quickstart": ("case", "region", "mesh", *tail),
         "supplied-charge": ("case", "mesh", "charge", *tail),
         "profile": ("case", "region", "mesh", *tail),
-        "pqr-profile": ("case", "region", "mesh", "protonation", "charge", *tail),
+        "pqr-profile": ("case", "protonation", "region", "mesh", "charge", *tail),
         "structure": WALK,
+        "structure-as-loaded": (
+            "case",
+            "structure",
+            "density",
+            "symmetry",
+            "contour",
+            "region",
+            "mesh",
+            "charge",
+            *tail,
+        ),
     }
     declared = {
         (name, optional) for name in walk_order() for optional in describe(name).optional_inputs
@@ -153,6 +172,7 @@ def test_ver64_each_optional_input_is_one_a_case_drops() -> None:
         ("region", "contour"),
         ("mesh", "region"),
         ("protonation", "structure"),
+        ("density", "protonation"),
         ("charge", "protonation"),
         ("charge", "region"),
         # Stage 7's artefact, which a case with no field drops.

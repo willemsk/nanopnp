@@ -15,7 +15,7 @@ from nanopnp.gui.assess import (
 from nanopnp.io.store import Store
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: {name}
 structure:
   source: {{path: {pdb}}}

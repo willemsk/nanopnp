@@ -14,7 +14,7 @@ The subject of each requirement is the product unless stated otherwise.
 |---|---|
 | **IF-01** | SHALL expose a Python API through which every pipeline stage is separately invocable and introspectable, stable from v1.0 onward (§8.2.6 F4; §8.2.23 Y8). |
 | **IF-02** | SHALL provide a CLI over the same interface, able to execute a case file, run one stage, and dispatch a sweep. |
-| **IF-03** | SHALL accept one declarative YAML case file, identified by `schema: nanopnp/case/v0.5`, as the complete run specification, rejecting unknown keys with a diagnostic naming the key (§5.3.1). |
+| **IF-03** | SHALL accept one declarative YAML case file, identified by `schema: nanopnp/case/v0.6`, as the complete run specification, rejecting unknown keys with a diagnostic naming the key (§5.3.1). |
 | **IF-04** | SHALL read structures in PDB and mmCIF, and trajectories in DCD, XTC, TRR and NetCDF. |
 | **IF-05** | SHALL read and write volumetric density and charge grids in OpenDX and CCP4. |
 | **IF-06** | SHALL write meshes in Gmsh MSH 4.1 as the archival format, and SHOULD read any format meshio supports. |

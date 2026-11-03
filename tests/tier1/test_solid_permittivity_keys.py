@@ -7,7 +7,7 @@ from nanopnp.pipeline.case import loads_case
 from nanopnp.pipeline.checks import require_runnable
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: keys
 inputs:
   profile: {{path: profile.yaml}}

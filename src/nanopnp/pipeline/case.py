@@ -189,6 +189,14 @@ def _resolve_density(document: CaseDocument) -> Density | None:
             "its Gaussian width, so it is a positive number (section 5.3.1 NOTE on "
             "geometry.density)"
         )
+    forcefield = document.charge.forcefield if document.charge is not None else "CHARMM"
+    if spec.atoms == "protonated" and document.inputs.pqr is None and forcefield != "CHARMM":
+        raise CaseValidationError(
+            f"geometry.density.atoms is 'protonated' beside charge.forcefield {forcefield!r}; "
+            "stage 2 takes each protonated atom's radius from the CHARMM set, which does not "
+            "hold the hydrogen names of that force field. Use charge.forcefield: CHARMM, or "
+            "set geometry.density.atoms: as_loaded (section 5.3.1 NOTE on geometry.density)"
+        )
     return spec
 
 

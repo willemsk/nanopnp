@@ -64,7 +64,7 @@ OFFSET_NM = 0.25
 H_C_NM = 0.05
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: shell
 inputs:
   profile: {{path: {path}}}
@@ -394,7 +394,7 @@ def test_ver59_derive_region_at_zero_offset_runs_none_of_the_shell(
 
 def test_ver59_the_keys_beside_a_supplied_mesh_or_without_a_profile_are_refused() -> None:
     mesh_case = (
-        "schema: nanopnp/case/v0.5\nname: supplied\n"
+        "schema: nanopnp/case/v0.6\nname: supplied\n"
         "inputs:\n  mesh: {path: pore.msh, format: msh41}\n"
         "electrolyte:\n  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
         "  concentration_M: 1.0\n"

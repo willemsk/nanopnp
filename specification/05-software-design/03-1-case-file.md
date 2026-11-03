@@ -11,7 +11,7 @@ description: "Specifies the case file as one declarative YAML document, the unit
 One declarative YAML document is the unit of reproducibility (IF-03). Everything else is derived.
 
 ```yaml
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: clya-wt-1M-100mV
 
 inputs:                             # optional; supplied artefacts, §5.3.2
@@ -85,7 +85,7 @@ numerics:
 outputs: [current, transport_numbers, rectification, eof_rate, analyte_force, fields]
 ```
 
-NOTE (`nanopnp/case/v0.5`, and schema history; §8.2.2 B3, §8.2.7 G6): the
+NOTE (`nanopnp/case/v0.6`, and schema history; §8.2.2 B3, §8.2.7 G6): the
 schema moved from `nanopnp/case/v1` to carry every key Phases 2 and 3 needed. Against v1 it **adds**
 `inputs.profile`, `inputs.pqr`, `structure.source.selection`, `geometry.membrane.centre_z_nm`,
 `charge.exclusion_offset_nm`, `charge.dielectric_transition_nm` and `numerics.mesh.size_scale`;
@@ -95,7 +95,7 @@ schema moved from `nanopnp/case/v1` to carry every key Phases 2 and 3 needed. Ag
 parameter (PHY-20) with two sources of truth, and a default of 20 or 3.2 written in code would be a
 fitted parameter hard-coded in Python; the author ruled that the map is the one
 place they are set. The added keys default to the validated configuration.
-In v0.5, every case document must declare schema `nanopnp/case/v0.5` exactly, and any
+In v0.5, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
 other schema identifier is refused naming the expected schema and the declared identifier before
 any structural validation (§5.4.1). The earlier pre-release identifiers `nanopnp/case/v1` and
 `nanopnp/case/v2` are retired.
@@ -591,13 +591,13 @@ document that validated before still validates; adding, removing, renaming or na
 move it.** The mode a run actually solved is in its FR-25 manifest, so no artefact of an earlier
 revision becomes ambiguous under a widening. From Phase 4 the identifier that a move takes names
 the release that ships it (§8.2.7 G6): the first move inside v0.5 makes the schema
-`nanopnp/case/v0.5`, a move inside v0.6 makes it `nanopnp/case/v0.6`, and the stable schema of v1.0
+`nanopnp/case/v0.6`, a move inside v0.6 makes it `nanopnp/case/v0.6`, and the stable schema of v1.0
 is `nanopnp/case/v1.0`, which is distinct from the retired `nanopnp/case/v1`. A release whose
 packages move nothing keeps the identifier it inherited. Between that release's work packages, the
 schema under its identifier may change again without a new identifier, because a pre-release makes
 no compatibility promise. The manifest of every run records the package version (FR-25), and that
 version settles which revision the run read. The identifier is fixed when `vX.Y.0` is
-tagged. In v0.5, every case document must declare schema `nanopnp/case/v0.5` exactly, and any
+tagged. In v0.5, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
 other schema identifier is refused naming the expected schema and the declared identifier before
 any structural validation. The earlier identifiers `nanopnp/case/v1` and `nanopnp/case/v2` are retired.
 

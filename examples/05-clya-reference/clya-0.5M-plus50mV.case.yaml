@@ -5,7 +5,7 @@
 # a relative path is read beside the case file. The copy cannot drift: the
 # example's Tier-1 test asserts that this document and the frozen one have the same
 # case identity and differ in nothing but that path.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: clya-0.5M-plus50mV
 
 inputs:

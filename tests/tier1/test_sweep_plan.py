@@ -25,7 +25,7 @@ from nanopnp.sweep.plan import (
 REFERENCE_SWEEP = Path("docs/sweeps/phase1-reference.sweep.yaml")
 
 BASE = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: base
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}

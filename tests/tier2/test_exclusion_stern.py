@@ -47,7 +47,7 @@ PLANE_Z_NM = 12.0
 SIMPSON_INTERVALS = 400
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: stern-pipeline
 inputs:
   profile: {{path: {profile}}}

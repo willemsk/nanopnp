@@ -46,7 +46,7 @@ ARCHIVED = [
 GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: {name}
 inputs:
   pqr: {{path: {bundle}, format: pqr}}

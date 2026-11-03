@@ -22,7 +22,7 @@ from nanopnp.geometry.profile import (
 from nanopnp.io.store import Store
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: hooked
 inputs:
   profile: {{path: {path}}}
@@ -144,9 +144,9 @@ def test_ver60_the_hook_reports_protonation_then_charge_after_each_is_stored(
 
     assert [call[0] for call in recorder.calls] == [
         "case",
+        "protonation",
         "region",
         "mesh",
-        "protonation",
         "charge",
     ]
     assert recorder.calls == [

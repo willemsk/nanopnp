@@ -425,10 +425,9 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
     case = _case(tmp_path, _block(prepared))
     store = Store(tmp_path / "store")
     assert "region" in selected_stages(resolve(load_case(case)), None)
-    assert selected_stages(resolve(load_case(case)), "solve")[-6:] == (
+    assert selected_stages(resolve(load_case(case)), "solve")[-5:] == (
         "region",
         "mesh",
-        "protonation",
         "charge",
         "materials",
         "solve",

@@ -4,7 +4,7 @@
 # validated model (FR-25).
 #
 # Run from this directory.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: charged-classical
 
 inputs:

@@ -1,6 +1,6 @@
 # The case of session 01: an uncharged cylindrical pore in 0.1 M NaCl at +50 mV, with the
 # validated ePNP-NS model. `geometry.pore` is meshed by stage 6 under `numerics.mesh`.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: pore
 
 geometry:

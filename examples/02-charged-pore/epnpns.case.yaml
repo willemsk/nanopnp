@@ -4,7 +4,7 @@
 # by stage 7 and gated there on charge conservation (PHY-19).
 #
 # The pore is declared in `geometry:` and meshed by stage 6 under `numerics.mesh`.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: charged-epnpns
 
 inputs:

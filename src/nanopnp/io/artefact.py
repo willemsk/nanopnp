@@ -20,7 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only; io must not import at 
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.materials.electrolyte import Electrolyte
 
-CASE_SCHEMA = "nanopnp/case/v0.5"
+CASE_SCHEMA = "nanopnp/case/v0.6"
 
 
 STRUCTURE_SCHEMA = "nanopnp/structure/v0.5"

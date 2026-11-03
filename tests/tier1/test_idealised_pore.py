@@ -15,7 +15,7 @@ from nanopnp.validation.stability import environment
 GOLDEN = Path(__file__).parents[1] / "tier2" / "data" / "number_stability.json"
 
 CASE: dict[str, object] = {
-    "schema": "nanopnp/case/v0.5",
+    "schema": "nanopnp/case/v0.6",
     "name": "idealised",
     "geometry": {
         "pore": {"shape": "cylinder", "radius_nm": 2.0},

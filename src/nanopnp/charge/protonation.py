@@ -927,7 +927,7 @@ def export_pqr(payload: Path, path: Path) -> Path:
 
 def _resolved(inputs: StageInputs) -> ResolvedCase:
     resolved = inputs.resolved
-    if not resolved.protonates:
+    if not resolved.protonates and not resolved.density_protonated:
         raise UnsupportedCaseSection(
             f"case {inputs.resolved.name!r} has nothing for the protonation stage to read: it "
             + (

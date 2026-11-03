@@ -155,7 +155,7 @@ def test_ver66_forwarding_solver_and_mode_agree_with_plain_run(
 
     def make_case(solver_name: str, mode_name: str) -> str:
         return f"""\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: ver66-comparison
 inputs:
   mesh: {{path: {quickstart_pore_msh}, format: msh41, groups: {{default: interface}}}}
@@ -220,7 +220,7 @@ def test_ver66_forwarding_mesher_agrees_with_netgen_on_supplied_profile(
 
     def make_profile_case(backend_name: str) -> str:
         return f"""\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: ver66-profile
 inputs:
   profile: {{path: {fixture_path}}}
@@ -273,7 +273,7 @@ def test_ver66_an_unregistered_rejected_solver_is_refused_naming_num21(
 ) -> None:
     fixture_path = profile_file("clya_reference_profile")
     case_text = f"""\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: rejected-solver
 inputs:
   profile: {{path: {fixture_path}}}

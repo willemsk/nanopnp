@@ -4,7 +4,7 @@
 #
 # `geometry.pore` is the idealised pore of `nanopnp geometry cylinder`, meshed by stage 6
 # under `numerics.mesh`.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: quickstart
 
 geometry:

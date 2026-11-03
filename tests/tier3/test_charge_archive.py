@@ -52,7 +52,7 @@ PLANE_SMOOTHING_NM = 0.5
 GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
 
 FROZEN_CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: {name}
 {source}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]

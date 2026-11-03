@@ -412,7 +412,7 @@ def _register_builtins() -> None:
             title="Case assembly",
             inputs=("case_path",),
             outputs=("resolved case document",),
-            artefact_schema="nanopnp/case/v0.5",
+            artefact_schema="nanopnp/case/v0.6",
             takes_workspace=False,
             takes_store=False,
             key_is_artefact=True,
@@ -445,10 +445,36 @@ def _register_builtins() -> None:
     )
     register(
         StageDescription(
+            name=StageName.PROTONATION,
+            number=7,
+            title="Protonation",
+            inputs=("case", "structure"),
+            outputs=(
+                "per-frame atom table with charges and radii",
+                "Q_net per frame",
+                "titratable residue states",
+            ),
+            artefact_schema="nanopnp/protonation/v0.5",
+            takes_workspace=True,
+            # Each frame is stored under its own key, so a changed frame selection re-protonates
+            # only the added frames.
+            takes_store=True,
+            key_is_artefact=False,
+            # About a minute per frame of a ClyA dodecamer, PROPKA included.
+            weight=1.0,
+            needs_section=None,
+            optional_inputs=("structure",),
+        ),
+        # No extra: inputs.pqr runs without PDB2PQR, imported only when the stage protonates.
+        "nanopnp.charge.protonation:ProtonationStage",
+        figure="nanopnp.plot.figures:protonation_figure",
+    )
+    register(
+        StageDescription(
             name=StageName.DENSITY,
             number=2,
             title="Density map",
-            inputs=("case", "structure"),
+            inputs=("case", "structure", "protonation"),
             outputs=("ensemble-mean union density on a canonical 3D grid", "radius-set record"),
             artefact_schema="nanopnp/density/v0.5",
             takes_workspace=True,
@@ -457,7 +483,8 @@ def _register_builtins() -> None:
             # Stage 2 deposits every frame's atoms: seconds for a crystal, minutes for an ensemble.
             weight=0.2,
             needs_section="structure",
-            optional_inputs=(),
+            # Read only when geometry.density.atoms is protonated.
+            optional_inputs=("protonation",),
         ),
         "nanopnp.density.stage:DensityStage",
         figure="nanopnp.plot.figures:density_figure",
@@ -542,32 +569,6 @@ def _register_builtins() -> None:
         ),
         "nanopnp.mesh.ingest:MeshStage",
         figure="nanopnp.plot.figures:mesh_figure",
-    )
-    register(
-        StageDescription(
-            name=StageName.PROTONATION,
-            number=7,
-            title="Protonation",
-            inputs=("case", "structure"),
-            outputs=(
-                "per-frame atom table with charges and radii",
-                "Q_net per frame",
-                "titratable residue states",
-            ),
-            artefact_schema="nanopnp/protonation/v0.5",
-            takes_workspace=True,
-            # Each frame is stored under its own key, so a changed frame selection re-protonates
-            # only the added frames.
-            takes_store=True,
-            key_is_artefact=False,
-            # About a minute per frame of a ClyA dodecamer, PROPKA included.
-            weight=1.0,
-            needs_section=None,
-            optional_inputs=("structure",),
-        ),
-        # No extra: inputs.pqr runs without PDB2PQR, imported only when the stage protonates.
-        "nanopnp.charge.protonation:ProtonationStage",
-        figure="nanopnp.plot.figures:protonation_figure",
     )
     register(
         StageDescription(

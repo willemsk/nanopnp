@@ -9,6 +9,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 from shapely.geometry import Point, Polygon, box
 
 from nanopnp import Case, Session
@@ -368,6 +369,9 @@ def tube(tube_pdb: Path) -> Path:
 
 
 def _case(directory: Path, pdb: Path, *, geometry: str = "", name: str = "tube") -> Path:
+    block = yaml.safe_load(geometry) if geometry else {"geometry": {}}
+    block["geometry"].setdefault("density", {}).setdefault("atoms", "as_loaded")
+    geometry = yaml.safe_dump(block, default_flow_style=None)
     path = directory / f"{name}.case.yaml"
     path.write_text(
         f"schema: {CASE_SCHEMA}\n"
@@ -544,12 +548,12 @@ def test_ver51_case_values_and_walk(tube: Path, tube_store: Store, tmp_path: Pat
     assert selected_stages(resolve(load_case(case)), None) == (
         "case",
         "structure",
+        "protonation",
         "density",
         "symmetry",
         "contour",
         "region",
         "mesh",
-        "protonation",
         "charge",
         "materials",
         "solve",

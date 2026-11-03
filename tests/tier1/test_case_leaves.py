@@ -106,7 +106,7 @@ def meshes(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
 def base(model: str, meshes: dict[str, Path]) -> dict[str, Any]:
     electrostatic = model in ("pb", "pb-linear", "poisson")
     document: dict[str, Any] = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "leaves",
         "inputs": {
             "mesh": {
@@ -503,7 +503,7 @@ def test_ver71_a_wall_charge_moves_the_solve_key_and_a_zero_one_moves_nothing() 
     from nanopnp.pipeline.case import loads_case, resolve
 
     document = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "pore",
         "geometry": {
             "pore": {"shape": "cylinder", "radius_nm": 2.0},
@@ -563,7 +563,9 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     def stage_key(stage_name: str, res: object) -> str:
         inputs_map = {
             "structure": StageInputs(resolved=res),
-            "density": StageInputs(resolved=res, upstream={"structure": dummy}),
+            "density": StageInputs(
+                resolved=res, upstream={"structure": dummy, "protonation": dummy_prot}
+            ),
             "symmetry": StageInputs(resolved=res, upstream={"density": dummy}),
             "contour": StageInputs(resolved=res, upstream={"structure": dummy, "symmetry": dummy}),
             "region": StageInputs(resolved=res, upstream={"contour": dummy_prof}),
@@ -648,7 +650,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     )
 
     pdb_base = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "test",
         "structure": {"source": {"path": str(p1)}, "symmetry": {"point_group": "C12", "axis": "z"}},
         "geometry": {
@@ -695,6 +697,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         "structure.symmetry.axis": ("structure", "auto"),
         "geometry.density.grid_spacing_nm": ("density", 0.04),
         "geometry.density.sharpness": ("density", 1.2),
+        "geometry.density.atoms": ("density", "as_loaded"),
         "geometry.contour.isolevel": ("contour", 0.6),
         "geometry.contour.smoothing": ("contour", "none"),
         "geometry.contour.simplify_tol_nm": ("contour", 0.01),
@@ -717,6 +720,9 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         doc = put(pdb_base, path, val)
         if path == "charge.titration" and val == "none":
             del doc["charge"]["ph"]
+        if path == "charge.forcefield":
+            # A protonated density takes CHARMM radii, so another force field is refused beside it.
+            doc = put(doc, "geometry.density.atoms", "as_loaded")
         res = resolve(loads_case(yaml.safe_dump(doc)))
         assert stage_key(consumer, res) != stage_key(consumer, res_base), (
             f"{path} did not move {consumer}"
@@ -758,7 +764,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
             resolve(loads_case(yaml.safe_dump(doc)))
 
     prof_case1 = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "prof",
         "inputs": {"profile": {"path": str(prof1), "format": "profile1"}},
         "geometry": {"membrane": {"thickness_nm": 4.0}, "reservoir": {"radius_nm": 10.0}},
@@ -776,7 +782,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     assert stage_key("region", res_p1) != stage_key("region", res_p2)
 
     pqr_case1 = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "pqr",
         "inputs": {
             "mesh": {"path": str(m1), "format": "msh41"},
@@ -802,7 +808,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     assert stage_key("protonation", res_q1) != stage_key("protonation", res_q2)
 
     mesh_case = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "mesh",
         "inputs": {
             "mesh": {"path": str(m1), "format": "msh41", "groups": {"default": "interface"}}
@@ -840,7 +846,7 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
                 resolve(loads_case(yaml.safe_dump(doc)))
 
     pore_base = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "pore",
         "geometry": {
             "pore": {"shape": "cylinder", "radius_nm": 2.0},

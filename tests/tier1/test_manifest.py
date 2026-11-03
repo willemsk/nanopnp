@@ -54,7 +54,7 @@ from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.pipeline.checks import registry_options
 
 MINIMAL = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: minimal
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:
@@ -104,7 +104,7 @@ def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
     switches = {reference.path for reference in case_fields() if _is_switch(reference)}
     unclassified = switches - classified
     assert not unclassified, (
-        f"{sorted(unclassified)} are switch-typed fields of nanopnp/case/v0.5 that are "
+        f"{sorted(unclassified)} are switch-typed fields of nanopnp/case/v0.6 that are "
         "neither compared against the validated default (SWITCH_PATHS) nor exempted "
         "with a reason (CONFIGURATION_PATHS)"
     )
@@ -113,7 +113,7 @@ def test_ver24_every_switch_typed_field_of_the_schema_is_classified() -> None:
 def test_ver24_every_classified_path_still_names_a_field() -> None:
     walked = {reference.path for reference in case_fields()}
     stale = (set(SWITCH_PATHS) | set(CONFIGURATION_PATHS)) - walked
-    assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v0.5"
+    assert not stale, f"{sorted(stale)} name no field of nanopnp/case/v0.6"
 
 
 def test_ver24_every_switch_path_reads_off_the_validated_default() -> None:
@@ -165,12 +165,13 @@ def test_ver24_a_moved_wall_distance_cap_is_recorded_as_a_deviation() -> None:
 
 
 def test_ver24_the_model_and_the_case_agree_on_the_switches_they_share() -> None:
-    # The validated default carries a charge: block so that every switch path reads off it;
-    # resolve() refuses it in this release, and its absence reads as the same defaults.
+    # The validated default carries charge: and geometry: blocks so that every switch path reads
+    # off it; resolve() refuses them beside its supplied mesh, and their absence reads as the same
+    # defaults.
     # The NUM-18 ladder drops the continuation deviation (pipeline/checks.py), so one rung is
     # built directly.
     document = _assigned(
-        VALIDATED_DEFAULT_CASE.model_copy(update={"charge": None}),
+        VALIDATED_DEFAULT_CASE.model_copy(update={"charge": None, "geometry": None}),
         {
             "physics.inertia": False,
             "physics.dielectric_gradient_forces": True,
