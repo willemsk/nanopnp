@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 and WP5.02 merged, WP5.03 delivered; the library packages WP5.04 to WP5.07 and the shell packages
+**Status: in progress; WP5.01 to WP5.03 merged, WP5.04 planned; the library packages WP5.04 to WP5.07 and the shell packages
 WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
@@ -131,7 +131,7 @@ library opens with that library step, tested, before its screens (AG1).
 
 ### WP5.03 — Protonation before the density (§8.2.19 U2; REV-135)
 
-**Delivered 3 November 2026** ([the plan](wp5.03-protonation-before-the-density.md)). Stage 7's `protonation` walks
+**Merged** ([the plan](wp5.03-protonation-before-the-density.md)), delivered 3 November 2026. Stage 7's `protonation` walks
 after `structure` and before `density`, and stage 2 smears the protonated atoms of every frame, each with its CHARMM
 radius through its residue's state patch, so a protonation state moves the density, the contour and the mesh.
 `geometry.density.atoms: as_loaded` is the reference's way, a switch the manifest lists; the stage-2 key under it is
@@ -141,12 +141,14 @@ force field other than CHARMM is refused. PHY-16, FR-04, §5.2 and §5.3.1 are a
 `as_loaded` and did not move. REV-135 is `fixed`; REV-180 (SWANSON and PEOEPB names) is deferred. Live constraint: only
 the `X86_V3` and `AVX512_SPR` meshes of example 07 are folded. Tagged `v0.6.0-alpha.3`.
 
-### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6)
+### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6; §8.2.31 AG9 to AG11)
 
-A `charge/` function that sets a titratable residue's protonation state, or a residue's charge or radius, at stage 7's
-PQR step on every chain, saved as a variant of its molecular model and recorded as its difference from its parent.
-After WP5.03, so a variant moves the geometry too. Tier 1: the projected charge changes by that residue's alone. Tag
-`v0.6.0-alpha.4`.
+**Planned 3 November 2026** ([the plan](wp5.04-the-charge-mutators-library-step.md)). A case's `charge.edits` pin a
+titratable residue's protonation state, change its net charge by an integer placed on its titratable group (AG9), or
+scale its atom radii (AG10), at stage 7's `protonation` step on every chain and frame. The variant artefact carries its
+parent table, and its record names the parent and every residue that differs; no edit is a deviation (AG11). Under the
+protonated density a state or radius edit moves the wall too. Tier 1: a pin, a charge change and a radius scale each
+change that residue alone; a case without edits keeps every key. Tag `v0.6.0-alpha.4`.
 
 ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62)
 
@@ -272,7 +274,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.01 | none kept | VER-45 |
 | WP5.02 | 1 | VER-78 (proposed) |
 | WP5.03, protonation before the density | 1, 2 | U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) |
-| WP5.04, the mutator's library step | 1 | FR-38's Tier 1 test: the projected charge changes by the residue's alone |
+| WP5.04, the mutator's library step | 1 | FR-38's Tier 1 tests: a pin, a charge change and a radius scale change that residue alone; no key moves without edits (VER-62) |
 | WP5.05, named models | 1, 2 | FR-39's reuse and rebuild-only-what-moved; the schema's identifier (G6) |
 | WP5.06, the registries | 1, 2 | MOD-09; FR-23 and QR-04's route cross-check unchanged |
 | WP5.07, variables and the forecast | 1 | FR-39: the whitelist, the dimension check, unchanged keys without variables (VER-62), the forecast against the walk |

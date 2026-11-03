@@ -58,7 +58,7 @@ needed.
 | FR-35 | None yet; WP5.08 (the problems list), then each suite's package (§8.2.31 AG1) |
 | FR-36 | None yet; WP5.13 (§8.2.31 AG1); QR-10's observation at the close |
 | FR-37 | `test_orient_pore_puts_a_tilted_ring_on_z_with_the_named_end_cis`, `test_prepared_pore_is_keyed_by_the_source_and_the_choices` (the library, WP54); the workbench's surfacing and REV-121, WP5.09 (§8.2.31 AG1) |
-| FR-38 | None yet; the library step, WP5.04; the Charge edit tool, WP5.09 (§8.2.31 AG1) |
+| FR-38 | None yet; the library step, WP5.04, planned; the Charge edit tool, WP5.09 (§8.2.31 AG1) |
 | FR-39 | None yet; named models and overrides, WP5.05; variables, units, resolved keys and the rebuild forecast, WP5.07; the Study suite, WP5.11 (§8.2.31 AG1 to AG5) |
 | FR-40 | None yet; the composer phase |
 | FR-41 | None yet; the structural-mutator phase |
