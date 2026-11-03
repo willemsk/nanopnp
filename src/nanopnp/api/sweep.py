@@ -192,6 +192,9 @@ def plan_sweep(
             "file, or name the input by an absolute path"
         )
     dotted = field_path(axis)
+    if dotted.startswith("models."):
+        # Read against the working directory, which the store's copy of the study is not.
+        values = [str(Path(str(value)).resolve()) for value in values]
     name = case.name
     document = {
         "schema": SWEEP_SCHEMA,
@@ -208,7 +211,7 @@ def plan_sweep(
     }
     store = session.store
     text = yaml.safe_dump(document, sort_keys=False)
-    base_text = case.dumps().encode("utf-8")
+    base_text = case.dumps(study=case.models_record is not None).encode("utf-8")
     # The directory is named by the plan's hash, as the sweep command names it, so the plan is
     # first built beside its files in a staging directory to read that hash. The hash does not
     # depend on where the base case lies, so the plan is built once and moved.
