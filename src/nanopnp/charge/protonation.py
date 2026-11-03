@@ -19,6 +19,7 @@ from nanopnp.charge.edits import (
     EditError,
     TitratableGroups,
     apply_edits,
+    check_targets,
     difference,
     edit_records,
 )
@@ -41,7 +42,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.density.radii import RadiusSet, radius_set_digest
+from nanopnp.density.radii import ACID_PATCHES, RadiusSet, radius_set_digest
 from nanopnp.io.artefact import (
     PROTONATION_FRAME_SCHEMA,
     Artefact,
@@ -1115,6 +1116,11 @@ class ProtonationStage:
                 ensemble, parent_settings, directory, progress=progress, cancel=cancel
             )
             if pins:
+                # A residue the frames lack is refused here, before a minute per frame of PDB2PQR.
+                try:
+                    check_targets(frames[0].residues(), settings.edits)
+                except EditError as error:
+                    raise ProtonationError(str(error)) from error
                 pinned_frames_, pinned_pka, pinned_record = self._produced(
                     ensemble, settings, directory / "pinned", progress=progress, cancel=cancel
                 )
@@ -1167,6 +1173,25 @@ class ProtonationStage:
                 table = apply_edits(table, settings.edits, TitratableGroups.load())
             except EditError as error:
                 raise ProtonationError(str(error)) from error
+            # The assembled record holds the PQR's Q_net and states; a charge edit has moved them.
+            edited = table.q_net_e().tolist()
+            residues = list(
+                zip(
+                    table.residue_chain.tolist(),
+                    table.residue_resid.tolist(),
+                    table.residue_icode.tolist(),
+                    table.residue_name.tolist(),
+                    strict=True,
+                )
+            )
+            states = {
+                **states,
+                "q_net_e": [round(value) for value in edited],
+                "q_net_residual_e": max(abs(value - round(value)) for value in edited),
+                "unapplied": _unapplied(
+                    residues, table.residue_charge_e, table.expected_charge_e, table.unapplied
+                ),
+            }
             variant_record = {
                 "parent": ProtonationArtefact(
                     parameters=_parent_parameters(resolved), inputs=key.inputs
@@ -1187,7 +1212,6 @@ class ProtonationStage:
             "payload_digest": table.digest(),
         }
         if variant_record is not None:
-            summary["edits"] = edit_records(settings.edits)
             summary["variant_of"] = variant_record
         for message, count in sorted(_mapping(record.get("warnings")).items()):
             logger.warning("protonation: PDB2PQR or PROPKA warned %d times: %s", count, message)
@@ -1328,10 +1352,6 @@ class ProtonationStage:
         return self._store.put(produced) if self._store is not None else produced
 
 
-# The atom that marks the neutral form of an ASP or GLU: ASH holds HD2, GLH holds HE2.
-_NEUTRAL_HYDROGEN = {"ASP": "HD2", "GLU": "HE2"}
-
-
 def _check_pins(frames: Sequence[PQRFrame], pins: Sequence[ResolvedEdit]) -> None:
     # PDB2PQR's patching is reached by replacing a library method, so a release that stops
     # calling it would otherwise return the unpinned state without a word.
@@ -1347,7 +1367,7 @@ def _check_pins(frames: Sequence[PQRFrame], pins: Sequence[ResolvedEdit]) -> Non
                 if pin.parent == "HIS":
                     found = _tautomer(held) == "HSP"
                 else:
-                    found = _NEUTRAL_HYDROGEN[pin.parent] in held
+                    found = ACID_PATCHES[pin.parent][0] in held
                 wanted = pin.value == ("charged" if pin.parent == "HIS" else "neutral")
                 if found != wanted:
                     raise ProtonationError(

@@ -29,7 +29,7 @@ PAYLOAD_NAME = "protonation"
 """The artefact's payload key, and the ``.npz`` file's stem."""
 
 PARENT_PAYLOAD_NAME = "parent"
-"""The payload key of the unedited table beside an edited one (FR-38)."""
+"""The payload key of the unedited table beside an edited one."""
 
 PARENT_RESIDUE: Mapping[str, str] = {
     # The PHY-16 step-3 NOTE's table, verbatim: every protonation-variant residue
@@ -68,14 +68,19 @@ def radius_scales(table: ProtonationTable) -> np.ndarray:
 
     scales = np.ones(len(table.name), dtype=np.float64)
     edits = table.header.get("edits")
-    for edit in edits if isinstance(edits, list) else ():
-        if not isinstance(edit, dict) or edit.get("kind") != "radius":
-            continue
+    radius_edits = [
+        edit
+        for edit in (edits if isinstance(edits, list) else ())
+        if isinstance(edit, dict) and edit.get("kind") == "radius"
+    ]
+    if not radius_edits:
+        return scales
+    parents = np.array([parent_residue(str(name)) for name in table.resname.tolist()])
+    for edit in radius_edits:
         label, value = str(edit["residue"]), float(str(edit["value"]))
         parent, number = label.split(" ")
         icode = number[-1] if number[-1].isalpha() else ""
         resid = int(number[: len(number) - len(icode)])
-        parents = np.array([parent_residue(str(name)) for name in table.resname.tolist()])
         scales[
             (table.resid == resid) & (table.icode.astype(str) == icode) & (parents == parent)
         ] *= value

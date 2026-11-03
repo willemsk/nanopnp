@@ -186,7 +186,7 @@ def resolve_radii(
     )
 
 
-_ACID_PATCHES: Mapping[str, tuple[str, str]] = {"ASP": ("HD2", "ASPP"), "GLU": ("HE2", "GLUP")}
+ACID_PATCHES: Mapping[str, tuple[str, str]] = {"ASP": ("HD2", "ASPP"), "GLU": ("HE2", "GLUP")}
 """Per parent residue: the proton whose presence names its state patch, and the patch."""
 
 _DISULFIDE_PATCH = "DISU"
@@ -230,7 +230,7 @@ def resolve_protonated_radii(name: str, table: ProtonationTable) -> ResolvedRadi
         patches = np.full(len(names), "", dtype=object)
         histidines = (parents == "HIS") & (residues >= 0)
         patches[histidines] = table.tautomer[frame][residues[histidines]]
-        for parent, (proton, patch) in _ACID_PATCHES.items():
+        for parent, (proton, patch) in ACID_PATCHES.items():
             protonated = np.unique(residues[(parents == parent) & (names == proton)])
             patches[(parents == parent) & np.isin(residues, protonated[protonated >= 0])] = patch
         triples = np.char.add(

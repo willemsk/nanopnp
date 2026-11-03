@@ -2,14 +2,15 @@
 # charge stage's protonation edits (SPECIFICATION.md FR-38; ruling AG9).
 #
 # Transcribed from PROPKA 3.5.1: the `protein_group_mapping` entries of propka/propka.cfg (the
-# anchor atom of each residue's group) and the `setup_atoms` methods of propka/group.py (the
-# atoms of each group). tests/tier1/test_library_behaviour.py::test_fr38_the_titratable_groups_are_propkas
-# holds the anchors equal to the installed propka.cfg, and each group atom a name that
-# data/radii/pdb2pqr_charmm.yaml carries for the residue or its state patch.
+# anchor atom of each residue's group) and the `set_center` calls of propka/group.py's
+# `setup_atoms` (each group's charge centre: a carboxyl's oxygens, a histidine's five ring atoms,
+# the anchor alone otherwise). tests/tier1/test_library_behaviour.py::test_fr38_the_titratable_groups_are_propkas
+# holds the anchors equal to the installed propka.cfg, the groups equal to group.py's charge
+# centres, and each group atom a name that data/radii/pdb2pqr_charmm.yaml carries for the residue
+# or its state patch.
 #
 # The state patches are PDB2PQR's: ASH for ASP, GLH for GLU, HIP for HIS (propka/pdb2pqr
-# dat/PATCHES.xml). Groups name the atoms that carry the titratable proton or charge; the
-# patches add the protonated atoms.
+# dat/PATCHES.xml).
 
 schema: nanopnp/titratable-groups/v0.5
 source: {package: propka, version: 3.5.1, files: [propka/propka.cfg, propka/group.py]}
@@ -17,8 +18,8 @@ anchors: {ASP: CG, GLU: CD, HIS: CG, CYS: SG, TYR: OH, LYS: NZ, ARG: CZ}
 groups:
   ASP: [OD1, OD2]
   GLU: [OE1, OE2]
-  HIS: [ND1, NE2, HD1, HE2]
+  HIS: [CG, ND1, CD2, CE1, NE2]
   CYS: [SG]
   TYR: [OH]
   LYS: [NZ]
-  ARG: [NE, NH1, NH2, HE, HH11, HH12, HH21, HH22]
+  ARG: [CZ]
