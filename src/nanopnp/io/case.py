@@ -6,13 +6,16 @@ import difflib
 import itertools
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Annotated, Any, Literal, TypeAlias, get_args
+from typing import TYPE_CHECKING, Annotated, Any, Literal, TypeAlias, get_args
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, ValidationError, model_validator
 
 from nanopnp.core.paths import available_corrections, names_a_path
 from nanopnp.io.artefact import CASE_SCHEMA
+
+if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.io.models import ModelRecord
 
 SCHEMA: str = CASE_SCHEMA
 
@@ -641,6 +644,12 @@ class CaseDocument(_Strict):
     # case's keys and a case without models keeps every key (FR-39).
     models: Models | None = Field(default=None, exclude=True)
     model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True, title="Case")
+    _models: ModelRecord | None = PrivateAttr(default=None)
+
+    @property
+    def models_record(self) -> ModelRecord | None:
+        """The model files this document was resolved from; ``None`` for a case without models."""
+        return self._models
 
     @model_validator(mode="after")
     def _check_installed(self) -> CaseDocument:
