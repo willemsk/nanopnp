@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -35,7 +35,7 @@ from nanopnp.io.case import (
     CaseDocument,
     CaseValidationError,
 )
-from nanopnp.io.resolved import ResolvedProtonation
+from nanopnp.io.resolved import ResolvedEdit, ResolvedProtonation
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.structure.ensemble import AlignedEnsemble
@@ -308,8 +308,10 @@ def _stand_in(
     edit: Callable[[list[str]], list[str]],
     **record: list[str],
 ) -> None:
-    def fake(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
-        del settings
+    def fake(
+        pdb: Path, pqr: Path, settings: ResolvedProtonation, pins: object = ()
+    ) -> dict[str, Any]:
+        del settings, pins
         lines = [
             f"{line[:54]} 0.0000 1.5000"
             for line in pdb.read_text(encoding="ascii").splitlines()
@@ -513,9 +515,11 @@ def test_ver57_one_changed_frame_of_two_reprotonates_one(
     calls: list[Path] = []
     real = protonation.run_pdb2pqr
 
-    def counted(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
+    def counted(
+        pdb: Path, pqr: Path, settings: ResolvedProtonation, pins: Sequence[ResolvedEdit] = ()
+    ) -> dict[str, Any]:
         calls.append(pdb)
-        return real(pdb, pqr, settings)
+        return real(pdb, pqr, settings, pins)
 
     monkeypatch.setattr("nanopnp.charge.protonation.run_pdb2pqr", counted)
     store = Store(tmp_path / "store")
@@ -540,9 +544,11 @@ def test_ver57_a_cached_frame_records_the_versions_that_wrote_it(
     calls: list[Path] = []
     real = protonation.run_pdb2pqr
 
-    def counted(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Any]:
+    def counted(
+        pdb: Path, pqr: Path, settings: ResolvedProtonation, pins: Sequence[ResolvedEdit] = ()
+    ) -> dict[str, Any]:
         calls.append(pdb)
-        return real(pdb, pqr, settings)
+        return real(pdb, pqr, settings, pins)
 
     monkeypatch.setattr("nanopnp.charge.protonation.run_pdb2pqr", counted)
     store = Store(tmp_path / "store")
@@ -633,3 +639,59 @@ def test_ver57_each_protonation_refusal_names_its_keys(
         resolve(_case(tmp_path, charge=charge, pqr=pqr, **kwargs))
     message = str(raised.value)
     assert all(fragment in message for fragment in fragments), message
+
+
+# -- FR-38: a pinned state ---------------------------------------------------
+
+
+def _two_chains(fragment: Fragment) -> AlignedEnsemble:
+    first, second = fragment(*FRAGMENT, chain="A"), fragment(*FRAGMENT, chain="B")
+    fields = ("element", "name", "resname", "resid", "icode", "chain")
+    return dataclasses.replace(
+        first,
+        positions_nm=np.concatenate([first.positions_nm, second.positions_nm], axis=1),
+        **{
+            field: np.concatenate([getattr(first, field), getattr(second, field)])
+            for field in fields
+        },
+    )
+
+
+def _edit(residue: str, **edit: object) -> str:
+    body = ", ".join(f"{key}: {value}" for key, value in edit.items())
+    return f"edits: [{{residue: '{residue}', {body}}}]"
+
+
+@pytest.mark.parametrize(("ph", "state", "change"), [(7.5, "neutral", 1.0), (2.0, "charged", -1.0)])
+def test_fr38_a_pinned_state_holds_and_changes_that_residue_alone(
+    tmp_path: Path, fragment_2wcd: Fragment, ph: float, state: str, change: float
+) -> None:
+    ensemble = _two_chains(fragment_2wcd)
+    parent, _ = _run(tmp_path / "parent", ensemble, charge=f"ph: {ph}")
+    variant, _ = _run(
+        tmp_path / "variant", ensemble, charge=f"ph: {ph}, {_edit('ASP 21', state=state)}"
+    )
+    moved = variant.residue_charge_e - parent.residue_charge_e
+    owned = variant.residue_resid == 21
+    assert owned.sum() == 2
+    np.testing.assert_allclose(moved[0, owned], change, atol=1e-9)
+    np.testing.assert_allclose(moved[0, ~owned], 0.0, atol=1e-9)
+    np.testing.assert_allclose(variant.group_pka, parent.group_pka, equal_nan=True)
+    np.testing.assert_allclose(variant.q_net_e() - parent.q_net_e(), 2.0 * change, atol=1e-9)
+    assert not variant.unapplied[0, owned].any()
+
+
+def test_fr38_a_pin_that_takes_no_effect_is_refused(
+    tmp_path: Path, fragment_2wcd: Fragment, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import contextlib
+
+    from nanopnp.charge import protonation
+
+    monkeypatch.setattr(protonation, "_pinned", lambda pins: contextlib.nullcontext())
+    with pytest.raises(ProtonationError, match=r"frame 0.*ASP 21.*chain 'A'|chain 'A'.*ASP 21"):
+        _run(
+            tmp_path,
+            _two_chains(fragment_2wcd),
+            charge=f"ph: 7.5, {_edit('ASP 21', state='neutral')}",
+        )
