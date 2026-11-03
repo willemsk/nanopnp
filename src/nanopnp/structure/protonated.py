@@ -16,15 +16,20 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
 __all__ = [
+    "PARENT_PAYLOAD_NAME",
     "PARENT_RESIDUE",
     "PAYLOAD_NAME",
     "ProtonationTable",
     "ProtonationTableError",
     "parent_residue",
+    "radius_scales",
 ]
 
 PAYLOAD_NAME = "protonation"
 """The artefact's payload key, and the ``.npz`` file's stem."""
+
+PARENT_PAYLOAD_NAME = "parent"
+"""The payload key of the unedited table beside an edited one (FR-38)."""
 
 PARENT_RESIDUE: Mapping[str, str] = {
     # The PHY-16 step-3 NOTE's table, verbatim: every protonation-variant residue
@@ -55,6 +60,26 @@ PARENT_RESIDUE: Mapping[str, str] = {
 
 class ProtonationTableError(ValueError):
     """A protonation table that lacks an array its schema requires."""
+
+
+def radius_scales(table: ProtonationTable) -> np.ndarray:
+    """Return the factor of each atom's radius that the table's radius edits set, 1 elsewhere."""
+    import numpy as np
+
+    scales = np.ones(len(table.name), dtype=np.float64)
+    edits = table.header.get("edits")
+    for edit in edits if isinstance(edits, list) else ():
+        if not isinstance(edit, dict) or edit.get("kind") != "radius":
+            continue
+        label, value = str(edit["residue"]), float(str(edit["value"]))
+        parent, number = label.split(" ")
+        icode = number[-1] if number[-1].isalpha() else ""
+        resid = int(number[: len(number) - len(icode)])
+        parents = np.array([parent_residue(str(name)) for name in table.resname.tolist()])
+        scales[
+            (table.resid == resid) & (table.icode.astype(str) == icode) & (parents == parent)
+        ] *= value
+    return scales
 
 
 def parent_residue(name: str) -> str:

@@ -15,6 +15,13 @@ from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from nanopnp.charge.edits import (
+    EditError,
+    TitratableGroups,
+    apply_edits,
+    difference,
+    edit_records,
+)
 from nanopnp.charge.pqr import (
     PQRError,
     PQRFrame,
@@ -46,6 +53,7 @@ from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble, chain_characters
 from nanopnp.structure.protonated import (
+    PARENT_PAYLOAD_NAME,
     PARENT_RESIDUE,
     PAYLOAD_NAME,
     ProtonationTable,
@@ -151,10 +159,18 @@ def protonation_parameters(settings: ResolvedProtonation) -> dict[str, Canonical
     """Return the produced artefact's key parameters, with the edits only where there are some."""
     parameters = _frame_parameters(settings)
     if settings.edits:
-        parameters["edits"] = [
-            [edit.parent, edit.resid, edit.icode, edit.kind, edit.value] for edit in settings.edits
-        ]
+        parameters["edits"] = _edits_parameter(settings)
     return parameters
+
+
+def _parent_parameters(resolved: ResolvedCase) -> dict[str, Canonicalisable]:
+    if resolved.pqr is not None:
+        return supplied_parameters()
+    return protonation_parameters(dataclasses.replace(resolved.protonation, edits=()))
+
+
+def _edits_parameter(settings: ResolvedProtonation) -> list[Canonicalisable]:
+    return [[edit.parent, edit.resid, edit.icode, edit.kind, edit.value] for edit in settings.edits]
 
 
 def _pins(settings: ResolvedProtonation) -> tuple[ResolvedEdit, ...]:
@@ -1050,7 +1066,10 @@ class ProtonationStage:
             keyed = {"pqr": file_hash(resolved.pqr.path)}
             if resolved.structure is not None:
                 keyed["structure"] = inputs.require("structure").hash
-            return ProtonationArtefact(parameters=supplied_parameters(), inputs=keyed)
+            supplied = supplied_parameters()
+            if resolved.protonation.edits:
+                supplied["edits"] = _edits_parameter(resolved.protonation)
+            return ProtonationArtefact(parameters=supplied, inputs=keyed)
         return ProtonationArtefact(
             parameters=protonation_parameters(resolved.protonation),
             inputs={"structure": inputs.require("structure").hash},
@@ -1072,6 +1091,11 @@ class ProtonationStage:
             ensemble = AlignedEnsemble.read(inputs.require("structure").payload[ENSEMBLE_PAYLOAD])
         directory = self._directory()
         settings = resolved.protonation
+        parent_settings = dataclasses.replace(settings, edits=())
+        pins = _pins(settings)
+        frames: list[PQRFrame]
+        pka: list[list[dict[str, Canonicalisable]]] | None
+        pinned_frames: tuple[list[PQRFrame], list[list[dict[str, Canonicalisable]]]] | None = None
         if resolved.pqr is not None:
             assert resolved.pqr.path is not None
             frames, record = _supplied(
@@ -1088,8 +1112,14 @@ class ProtonationStage:
         else:
             assert ensemble is not None
             frames, pka, record = self._produced(
-                ensemble, settings, directory, progress=progress, cancel=cancel
+                ensemble, parent_settings, directory, progress=progress, cancel=cancel
             )
+            if pins:
+                pinned_frames_, pinned_pka, pinned_record = self._produced(
+                    ensemble, settings, directory / "pinned", progress=progress, cancel=cancel
+                )
+                pinned_frames = (pinned_frames_, pinned_pka)
+                record = pinned_record
             source = {
                 "source": "pdb2pqr",
                 "forcefield": settings.forcefield,
@@ -1117,15 +1147,37 @@ class ProtonationStage:
                 dict(chain_characters(ensemble.chain.tolist())) if ensemble is not None else None
             ),
         }
-        table, states = _assemble(
-            frames,
-            pka,
-            ph=settings.ph if pka is not None else float("nan"),
-            header=header,
-            compare_radii=resolved.pqr is not None or settings.forcefield == "CHARMM",
-            pins=_pins(settings),
-        )
+        compare_radii = resolved.pqr is not None or settings.forcefield == "CHARMM"
+        ph = settings.ph if pka is not None else float("nan")
+        table, states = _assemble(frames, pka, ph=ph, header=header, compare_radii=compare_radii)
+        parent: ProtonationTable | None = None
+        variant_record: dict[str, Canonicalisable] | None = None
+        if settings.edits:
+            parent = table
+            if pinned_frames is not None:
+                table, states = _assemble(
+                    pinned_frames[0],
+                    pinned_frames[1],
+                    ph=ph,
+                    header=header,
+                    compare_radii=compare_radii,
+                    pins=pins,
+                )
+            try:
+                table = apply_edits(table, settings.edits, TitratableGroups.load())
+            except EditError as error:
+                raise ProtonationError(str(error)) from error
+            variant_record = {
+                "parent": ProtonationArtefact(
+                    parameters=_parent_parameters(resolved), inputs=key.inputs
+                ).hash,
+                "edits": edit_records(settings.edits),
+                **difference(parent, table),
+            }
         path = table.write(directory / f"{PAYLOAD_NAME}.npz")
+        payload = {PAYLOAD_NAME: path}
+        if parent is not None:
+            payload[PARENT_PAYLOAD_NAME] = parent.write(directory / f"{PARENT_PAYLOAD_NAME}.npz")
         variant = resolved.structure.spec.source.variant if resolved.structure else None
         summary: dict[str, Canonicalisable] = {
             **header,
@@ -1134,6 +1186,9 @@ class ProtonationStage:
             **record,
             "payload_digest": table.digest(),
         }
+        if variant_record is not None:
+            summary["edits"] = edit_records(settings.edits)
+            summary["variant_of"] = variant_record
         for message, count in sorted(_mapping(record.get("warnings")).items()):
             logger.warning("protonation: PDB2PQR or PROPKA warned %d times: %s", count, message)
         q_net = [round(value) for value in table.q_net_e().tolist()]
@@ -1141,7 +1196,7 @@ class ProtonationStage:
         return ProtonationArtefact(
             parameters=key.parameters,
             inputs=key.inputs,
-            payload={PAYLOAD_NAME: path},
+            payload=payload,
             summary=summary,
         )
 
