@@ -560,7 +560,8 @@ def _register_builtins() -> None:
             outputs=("tagged mesh", "element-quality report", "size-field record"),
             artefact_schema="nanopnp/mesh/v0.5",
             takes_workspace=True,
-            takes_store=False,
+            # A mesh named by its store hash is the stored stage-6 artefact itself.
+            takes_store=True,
             key_is_artefact=False,
             # Generating a mesh takes 6-8 s on the reference profile.
             weight=0.05,

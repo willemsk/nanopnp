@@ -73,7 +73,7 @@ class SuppliedArtefact(_Strict):
     """One upstream stage output supplied from outside the pipeline, by path or hash."""
 
     path: Path | None = None
-    artefact: str | None = None
+    artefact: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     format: str | None = None
     groups: dict[str, str] = Field(default_factory=dict)
 
@@ -94,13 +94,10 @@ SUPPLIED_FIELDS: dict[str, str] = {
 
 
 def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
-    """Return the refusal of a hash-named output under ``inputs.<key>``: mesh, charge or eps_r."""
-    if key == "mesh":
-        return UnsupportedCaseSection(
-            "inputs.mesh: artefact: names a mesh by its store hash. FR-27's substitution reads "
-            "a supplied mesh by path only; the store form is REV-62, deferred to v0.6 (section "
-            "8.2.9 I3); supply inputs.mesh: path: instead"
-        )
+    """Return the refusal of a hash-named field under ``inputs.<key>``: charge or eps_r.
+
+    A mesh is the exception: ``inputs.mesh.artefact`` names a stage-6 artefact in the store.
+    """
     return UnsupportedCaseSection(
         f"inputs.{key}: artefact: names {SUPPLIED_FIELDS[key]} by its store hash. FR-27's "
         "substitution reads a supplied field by path only, and no release of SPECIFICATION.md "

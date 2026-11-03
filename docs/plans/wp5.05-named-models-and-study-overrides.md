@@ -181,7 +181,7 @@ Appendix A row, and the design document's WB-16 row and *Override* entry.
 - [x] 7492fbd 4. `input_files`, `input_group`, `_manifest`; rows 2 and 4 (D3). Done when those rows pass. **Executor:** main.
 - [x] 50059fc 5. `api/sweep.py`, `sweep/plan.py`; row 5 (D5). Done when row 5 passes. **Executor:** main.
 - [x] 6. Compaction checkpoint. **Executor:** main.
-- [ ] 7. REV-62: `SuppliedArtefact`, `require_runnable`, the mesh stage's store, `deployed_mesh`, `_gate_meshes`, `wall_distance_remedy`; `inputs.mesh.artefact` reclassified in `LEAVES`; row 7 (D6). Done when row 7 passes. **Executor:** main.
+- [x] 7. REV-62: `SuppliedArtefact`, `require_runnable`, the mesh stage's store, `deployed_mesh`, `_gate_meshes`, `wall_distance_remedy`; `inputs.mesh.artefact` reclassified in `LEAVES`; row 7 (D6). Done when row 7 passes. **Executor:** main.
 - [ ] 8. `tests/tier2/test_named_models.py`, row 8. Done when it passes. **Executor:** main.
 - [ ] 9. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s prose on `models:`; REV-62 `fixed`; a REV row for a stored mesh beside a structure (D6). Done when the code and review say so, and the strict documentation build passes. **Executor:** `general-purpose` on Sonnet.
 

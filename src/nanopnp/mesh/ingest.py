@@ -20,8 +20,8 @@ from nanopnp.core.stages import (
 )
 from nanopnp.geometry.pore import IdealisedRegionRecord
 from nanopnp.geometry.region import PAYLOAD_NAME, read_region
-from nanopnp.io.artefact import MeshArtefact
-from nanopnp.io.case import SuppliedArtefact, stored_artefact_refused
+from nanopnp.io.artefact import MESH_ARTEFACT_SCHEMA, MeshArtefact
+from nanopnp.io.case import SuppliedArtefact
 from nanopnp.io.defaults import ContributedDeviation
 from nanopnp.io.vocabulary import (
     POTENTIAL,
@@ -41,6 +41,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
     from nanopnp.io.artefact import Artefact, StageInputs
     from nanopnp.io.resolved import ResolvedCase
+    from nanopnp.io.store import Store
 
 logger = logging.getLogger(__name__)
 
@@ -480,7 +481,10 @@ class IngestedMesh:
 
 def _source_path(supplied: SuppliedArtefact) -> Path:
     if supplied.path is None:
-        raise stored_artefact_refused("mesh")
+        raise ValueError(
+            "inputs.mesh names a stored artefact; ingest reads a file, and the mesh stage reads "
+            "a stored mesh from the store"
+        )
     if not supplied.path.is_file():
         # Quoted rather than ``!r``, which doubles a Windows path's separators.
         raise FileNotFoundError(f"inputs.mesh.path '{supplied.path}' does not exist")
@@ -537,20 +541,20 @@ MESH_PAYLOAD = "mesh"
 
 
 def deployed_mesh(resolved: ResolvedCase, generated: Artefact | None) -> IngestedMesh:
-    """Return the mesh a run solves on: the supplied mesh, else the stage-6 payload.
+    """Return the mesh a run solves on: a supplied file, else the stage-6 payload.
 
     Raises
     ------
     KeyError
         If the case generates its mesh and no stage-6 artefact is given.
     """
-    if resolved.mesh is not None:
+    if resolved.mesh is not None and resolved.mesh.path is not None:
         return ingest(resolved.mesh, resolved)
     if generated is None or MESH_PAYLOAD not in generated.payload:
         raise KeyError(
-            f"case {resolved.name!r} generates its mesh, and this stage was handed no stage-6 "
-            "mesh artefact to read it from; run the pipeline through 'mesh' first. A consumer "
-            "reads the generated mesh and never regenerates it"
+            f"case {resolved.name!r} generates or names its mesh, and this stage was handed no "
+            "stage-6 mesh artefact to read it from; run the pipeline through 'mesh' first. A "
+            "consumer reads the stage-6 mesh and never regenerates it"
         )
     return ingest(SuppliedArtefact(path=generated.payload[MESH_PAYLOAD], format="msh41"), resolved)
 
@@ -560,9 +564,16 @@ class MeshStage:
 
     name = "mesh"
 
-    def __init__(self, *, workspace: Path | None = None, overwrite_workspace: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        workspace: Path | None = None,
+        overwrite_workspace: bool = False,
+        store: Store | None = None,
+    ) -> None:
         self._workspace = Path(workspace) if workspace is not None else None
         self._overwrite = overwrite_workspace
+        self._store = store
 
     def describe(self) -> StageDescription:
         """Return the registry's description of this stage."""
@@ -574,12 +585,29 @@ class MeshStage:
         assert isinstance(materials, list)  # MeshArtefact writes it as one
         return exclusion_deviations(str(name) for name in materials)
 
-    def key(self, inputs: StageInputs) -> MeshArtefact:
+    def key(self, inputs: StageInputs) -> Artefact:
         """Return the artefact key this mesh will produce, without writing it."""
         resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._recipe(inputs, resolved)
+        if resolved.mesh is not None and resolved.mesh.artefact is not None:
+            return self._stored(resolved.mesh.artefact)
         return self.artefact(self._ingest(inputs))
+
+    def _stored(self, digest: str) -> Artefact:
+        if self._store is None:
+            raise ValueError(
+                f"inputs.mesh.artefact names the stored mesh {digest[:12]}, and this stage was "
+                "built without a store to read it from"
+            )
+        found = self._store.get(MESH_ARTEFACT_SCHEMA, digest)
+        if found is None:
+            raise FileNotFoundError(
+                f"inputs.mesh.artefact {digest} is not in the store at {self._store.root}; run "
+                "the case that generated this mesh through 'mesh' there, or supply "
+                "inputs.mesh.path: instead"
+            )
+        return found
 
     def _recipe(
         self,
@@ -621,7 +649,7 @@ class MeshStage:
         *,
         progress: Progress | None = None,
         cancel: CancelToken | None = None,
-    ) -> MeshArtefact:
+    ) -> Artefact:
         """Ingest the mesh, write the archival copy and emit the stage-6 artefact.
 
         Raises
@@ -632,6 +660,8 @@ class MeshStage:
         resolved = inputs.resolved
         if resolved.generates_mesh:
             return self._generate(inputs, resolved, progress=progress, cancel=cancel)
+        if resolved.mesh is not None and resolved.mesh.artefact is not None:
+            return self._stored(resolved.mesh.artefact)
         check_cancelled(cancel, "reading the mesh")
         report(progress, 0.0, "reading and gating the mesh")
         ingested = self._ingest(inputs)

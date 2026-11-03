@@ -612,14 +612,13 @@ def _gate_meshes(plan: SweepPlan, members: Sequence[ResolvedCase]) -> SweepPlan:
         if not reads_distance(resolved):
             continue
         supplied = resolved.mesh
-        if supplied is None:
-            # A generated mesh does not exist until the member's stage 6 runs,
-            # and meshing every distinct region here would put stages 1 to 6 of
-            # the whole sweep in front of its first member. The member's solve
-            # gates NUM-34 on the mesh it generated, as every solve does.
+        if supplied is None or supplied.path is None:
+            # A stored mesh passed its gates when it was made. A generated mesh does not exist
+            # until the member's stage 6 runs, and meshing every distinct region here would put
+            # stages 1 to 6 of the whole sweep in front of its first member. The member's solve
+            # gates NUM-34 on the mesh it reads, as every solve does.
             continue
         order = int(resolved.model_options.get("order", AXISYMMETRIC.element_order))
-        assert supplied.path is not None  # resolve refuses artefact: on inputs.mesh
         source = (
             str(supplied.path),
             supplied.format,

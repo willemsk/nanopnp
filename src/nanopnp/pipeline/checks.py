@@ -258,12 +258,19 @@ def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
 def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
     """Reject every section this release does not run; return the supplied mesh, if any."""
     _check_charge(document)
-    for supplied in ("mesh", "charge", "eps_r"):
+    for supplied in ("charge", "eps_r"):
         given: SuppliedArtefact | None = getattr(document.inputs, supplied)
         if given is not None and given.path is None:
-            # Stage 6 and stage 7 read a supplied output by path only; refused here so
-            # that ``nanopnp validate case`` sees what ``run`` would.
+            # Stage 7 reads a supplied field by path only; refused here so that
+            # ``nanopnp validate case`` sees what ``run`` would.
             raise stored_artefact_refused(supplied)
+    stored = document.inputs.mesh
+    if stored is not None and stored.artefact is not None and (stored.format or stored.groups):
+        raise CaseValidationError(
+            "inputs.mesh.artefact names a stage-6 artefact already in the store, which carries "
+            "its own format and vocabulary mapping; remove inputs.mesh.format and "
+            "inputs.mesh.groups"
+        )
     for supplied, what in SUPPLIED_FIELDS.items():
         field: SuppliedArtefact | None = getattr(document.inputs, supplied)
         if field is None:
