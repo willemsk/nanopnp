@@ -1,10 +1,11 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.03 merged, WP5.04 delivered; the library packages WP5.05 to WP5.07 and the shell packages
+**Status: in progress; WP5.01 to WP5.04 merged, WP5.05 planned; the library packages WP5.06 and WP5.07 and the shell packages
 WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
-REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7). Release: **v0.6** (`v0.6.0`).
+REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
+AG13). Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -143,7 +144,7 @@ the `X86_V3` and `AVX512_SPR` meshes of example 07 are folded. Tagged `v0.6.0-al
 
 ### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6; §8.2.31 AG9 to AG11)
 
-**Delivered 3 November 2026** ([the plan](wp5.04-the-charge-mutators-library-step.md)). A case's `charge.edits` pin a
+**Merged 3 November 2026** ([the plan](wp5.04-the-charge-mutators-library-step.md)). A case's `charge.edits` pin a
 titratable residue's protonation state, change its net charge by an integer placed on its titratable group (AG9), or
 scale its atom radii (AG10), at stage 7's `protonation` step on every chain and frame. The variant artefact carries its
 parent table, and its record names the parent and every residue that differs; no edit is a deviation (AG11). Under the
@@ -153,14 +154,16 @@ change that residue alone; a case without edits keeps every key. A state is pinn
 stored frames; a state edit protonates again. Live constraints: a pin can reposition a neighbour's hydrogens and
 carboxyl oxygens through PDB2PQR's optimisation, so the variant's record lists such residues and tests match atoms by
 identity; a radius scale below 1 can breach the kernel-spacing gate (REV-182). FR-38, PHY-16's NOTE, §5.2, §5.3.1 and
-§5.3.3 are amended; the Charge edit tool and the changed count are WP5.09's. Tag `v0.6.0-alpha.4` once merged.
+§5.3.3 are amended; the Charge edit tool and the changed count are WP5.09's. Tagged `v0.6.0-alpha.4`.
 
-### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62)
+### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62; §8.2.31 AG12, AG13)
 
-A case references named molecular and continuum models and resolves into one complete case file; a study overrides
-any of its continuum model's physics defaults; a built model is reused by every study that names it, rebuilding only
-the stages a changed value moves. A case-schema change, under the release's identifier (G6). It owns REV-62, a mesh
-named by store key (§8.2.18 T2). It builds on WP59's public `Case` and `Session` route (§8.2.27 AC1). Tag
+**Planned 3 November 2026** ([the plan](wp5.05-named-models-and-study-overrides.md)). A case references named molecular
+and continuum models, each a file of its own schema holding only the values its kind owns, and resolves into one
+complete case file. A study overrides any value of the models it names (AG12), each override recorded beside the
+model's value; a built model is reused by every study that names it, rebuilding only the stages a changed value moves.
+A sweep ranges over the library's models (AG13). A case-schema change, under the release's identifier (G6). It owns
+REV-62, a mesh named by store key (§8.2.18 T2). It builds on WP59's public `Case` and `Session` route (§8.2.27 AC1). Tag
 `v0.6.0-alpha.5`.
 
 ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5)
@@ -280,7 +283,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.02 | 1 | VER-78 (proposed) |
 | WP5.03, protonation before the density | 1, 2 | U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) |
 | WP5.04, the mutator's library step | 1 | FR-38's Tier 1 tests: a pin, a charge change and a radius scale change that residue alone; no key moves without edits (VER-62) |
-| WP5.05, named models | 1, 2 | FR-39's reuse and rebuild-only-what-moved; the schema's identifier (G6) |
+| WP5.05, named models | 1, 2 | FR-39's reuse and rebuild-only-what-moved, the overrides recorded, the sweep over models; the schema's identifier (G6) |
 | WP5.06, the registries | 1, 2 | MOD-09; FR-23 and QR-04's route cross-check unchanged |
 | WP5.07, variables and the forecast | 1 | FR-39: the whitelist, the dimension check, unchanged keys without variables (VER-62), the forecast against the walk |
 | WP5.08, the frame | 1 | VER-78's frame states; the project folder's export read back; REV-52's protocol members |
