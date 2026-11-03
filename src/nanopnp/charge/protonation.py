@@ -41,7 +41,7 @@ from nanopnp.io.artefact import (
     ProtonationArtefact,
 )
 from nanopnp.io.case import UnsupportedCaseSection
-from nanopnp.io.resolved import ResolvedProtonation
+from nanopnp.io.resolved import ResolvedEdit, ResolvedProtonation
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble, chain_characters
@@ -157,7 +157,19 @@ def protonation_parameters(settings: ResolvedProtonation) -> dict[str, Canonical
     return parameters
 
 
+def _pins(settings: ResolvedProtonation) -> tuple[ResolvedEdit, ...]:
+    return tuple(edit for edit in settings.edits if edit.kind == "state")
+
+
 def _frame_parameters(settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
+    parameters = _base_parameters(settings)
+    pins = _pins(settings)
+    if pins:
+        parameters["pins"] = [[pin.parent, pin.resid, pin.icode, pin.value] for pin in pins]
+    return parameters
+
+
+def _base_parameters(settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
     return {
         "source": "pdb2pqr",
         "ph": settings.ph,
@@ -354,13 +366,64 @@ def restore_propka_annotations() -> bool:
     return True
 
 
-def run_pdb2pqr(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str, Canonicalisable]:
+# The patch PDB2PQR applies to reach a pinned state; the standard state takes none.
+_PIN_PATCHES: dict[tuple[str, str], str] = {
+    ("ASP", "neutral"): "ASH",
+    ("GLU", "neutral"): "GLH",
+    ("HIS", "charged"): "HIP",
+}
+
+
+@contextlib.contextmanager
+def _pinned(pins: Sequence[ResolvedEdit]) -> Iterator[None]:
+    # PROPKA's table stays whole: the wrapper holds each pinned residue's key out of the
+    # dictionary apply_pka_values reads, so the residue keeps the standard state, then patches it.
+    from pdb2pqr import aa
+    from pdb2pqr.biomolecule import Biomolecule, pka_key
+
+    original = Biomolecule.apply_pka_values
+
+    def apply_pka_values(self: Any, force_field: str, ph: float, pkadic: dict[str, float]) -> None:  # noqa: ANN401
+        patches = []
+        for residue in self.residues:
+            if not isinstance(residue, aa.Amino):
+                continue
+            icode = str(residue.ins_code or "").strip()
+            for pin in pins:
+                if (pin.parent, pin.resid, pin.icode) != (residue.name, residue.res_seq, icode):
+                    continue
+                pkadic.pop(
+                    pka_key(residue.name, residue.res_seq, residue.chain_id, residue.ins_code),
+                    None,
+                )
+                patch = _PIN_PATCHES.get((pin.parent, str(pin.value)))
+                if patch is not None:
+                    patches.append((patch, residue))
+        original(self, force_field, ph, pkadic)
+        for patch, residue in patches:
+            self.apply_patch(patch, residue)
+
+    Biomolecule.apply_pka_values = apply_pka_values
+    try:
+        yield
+    finally:
+        Biomolecule.apply_pka_values = original
+
+
+def run_pdb2pqr(
+    pdb: Path,
+    pqr: Path,
+    settings: ResolvedProtonation,
+    pins: Sequence[ResolvedEdit] = (),
+) -> dict[str, Canonicalisable]:
     """Run PDB2PQR in-process on one PDB file and return what it reported.
 
     Parameters
     ----------
     pdb
         The input file; it must exist, or PDB2PQR would fetch it from the network.
+    pins
+        Protonation states to fix whatever PROPKA gives, on every chain.
     """
     from pdb2pqr.main import run_pdb2pqr as pdb2pqr_main
 
@@ -368,7 +431,7 @@ def run_pdb2pqr(pdb: Path, pqr: Path, settings: ResolvedProtonation) -> dict[str
     source = pdb.resolve()
     if not source.is_file():
         raise FileNotFoundError(f"the frame PDB {source} is not a file")
-    with _quiet_libraries() as warnings:
+    with _quiet_libraries() as warnings, _pinned(pins) if pins else contextlib.nullcontext():
         missing, pka_rows, _ = pdb2pqr_main(
             [*pdb2pqr_arguments(settings), str(source), str(pqr.resolve())]
         )
@@ -824,6 +887,7 @@ def _assemble(
     ph: float,
     header: Mapping[str, Canonicalisable],
     compare_radii: bool = True,
+    pins: Sequence[ResolvedEdit] = (),
 ) -> tuple[ProtonationTable, dict[str, Canonicalisable]]:
     import numpy as np
 
@@ -867,6 +931,13 @@ def _assemble(
     for number, values in enumerate(group_values):
         for group, value in values.items():
             group_pka[number, group] = value
+    for residue, (_, resid, icode, name) in enumerate(residues):
+        if any(
+            (pin.parent, pin.resid, pin.icode) == (parent_residue(name), resid, icode)
+            for pin in pins
+        ):
+            # The state was set by the case, not by PROPKA's pKa, so there is no expectation.
+            expected[:, residue] = np.nan
     unapplied = ~np.isnan(expected) & (np.abs(residue_charge - np.nan_to_num(expected)) > 0.5)
     offsets = np.cumsum([0, *(frame.atoms for frame in frames)]).astype(np.int64)
     positions_A = np.round(
@@ -1052,6 +1123,7 @@ class ProtonationStage:
             ph=settings.ph if pka is not None else float("nan"),
             header=header,
             compare_radii=resolved.pqr is not None or settings.forcefield == "CHARMM",
+            pins=_pins(settings),
         )
         path = table.write(directory / f"{PAYLOAD_NAME}.npz")
         variant = resolved.structure.spec.source.variant if resolved.structure else None
@@ -1095,7 +1167,7 @@ class ProtonationStage:
         )
         chains = chain_characters(ensemble.chain.tolist())
         keys = {letter: chain for chain, letter in chains.items()}
-        parameters = protonation_parameters(settings)
+        parameters = _frame_parameters(settings)
         produced_by: list[Canonicalisable] = []
         frames: list[PQRFrame] = []
         pka: list[list[dict[str, Canonicalisable]]] = []
@@ -1169,6 +1241,7 @@ class ProtonationStage:
             check_same_residues(frames, source="the protonated ensemble")
         except PQRError as error:
             raise ProtonationError(str(error)) from error
+        _check_pins(frames, _pins(settings))
         return (
             frames,
             pka,
@@ -1187,7 +1260,7 @@ class ProtonationStage:
         source = directory / "frame.pdb"
         source.write_bytes(pdb)
         pqr = directory / "frame.pqr"
-        reported = run_pdb2pqr(source, pqr, settings)
+        reported = run_pdb2pqr(source, pqr, settings, _pins(settings))
         record = directory / "record.json"
         record.write_text(json.dumps(reported, sort_keys=True), encoding="utf-8")
         produced = Artefact(
@@ -1198,6 +1271,35 @@ class ProtonationStage:
             summary={"versions": _versions()},
         )
         return self._store.put(produced) if self._store is not None else produced
+
+
+# The atom that marks the neutral form of an ASP or GLU: ASH holds HD2, GLH holds HE2.
+_NEUTRAL_HYDROGEN = {"ASP": "HD2", "GLU": "HE2"}
+
+
+def _check_pins(frames: Sequence[PQRFrame], pins: Sequence[ResolvedEdit]) -> None:
+    # PDB2PQR's patching is reached by replacing a library method, so a release that stops
+    # calling it would otherwise return the unpinned state without a word.
+    for number, frame in enumerate(frames):
+        atoms: dict[tuple[str, int, str], set[str]] = {}
+        for key, name in zip(_residue_keys(frame), frame.name.tolist(), strict=True):
+            atoms.setdefault(key, set()).add(name)
+        for chain, resid, icode, resname in frame.residues():
+            for pin in pins:
+                if (pin.parent, pin.resid, pin.icode) != (parent_residue(resname), resid, icode):
+                    continue
+                held = atoms[(chain, resid, icode)]
+                if pin.parent == "HIS":
+                    found = _tautomer(held) == "HSP"
+                else:
+                    found = _NEUTRAL_HYDROGEN[pin.parent] in held
+                wanted = pin.value == ("charged" if pin.parent == "HIS" else "neutral")
+                if found != wanted:
+                    raise ProtonationError(
+                        f"frame {number}: {_residue_label(resname, resid, icode, chain)} was "
+                        f"pinned {pin.value} and PDB2PQR's PQR does not hold that state; the "
+                        "pin takes no effect in this PDB2PQR (FR-38)"
+                    )
 
 
 def _mapping(value: Canonicalisable) -> Mapping[str, int]:
