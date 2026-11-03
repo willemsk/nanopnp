@@ -48,7 +48,12 @@ def ensemble_case() -> Callable[..., Path]:
     if ENSEMBLE_TOPOLOGY is None or ENSEMBLE_TRAJECTORY is None:
         pytest.skip(f"prod5_clya_as.pdb and .dcd are not in ${REFERENCE_DATA_VARIABLE}")
 
-    def write(directory: Path, *, name: str = "clya-as-density", geometry: str = "") -> Path:
+    def write(
+        directory: Path,
+        *,
+        name: str = "clya-as-density",
+        geometry: str = "geometry: {density: {atoms: as_loaded}}\n",
+    ) -> Path:
         case = directory / f"{name}.case.yaml"
         case.write_text(
             ENSEMBLE_CASE.format(

@@ -39,6 +39,7 @@ def _case(tmp_path: Path, pdb: Path) -> Path:
         "structure:\n"
         f"  source: {{path: {pdb}}}\n"
         "  symmetry: {point_group: C12}\n"
+        "geometry: {density: {atoms: as_loaded}}\n"
         "electrolyte:\n"
         "  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
         "  concentration_M: 0.15\n"

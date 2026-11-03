@@ -57,14 +57,19 @@ def registered(
 ) -> tuple[Path, Path]:
     root = tmp_path_factory.mktemp("2wcd-geometry")
     probe = root / "probe.case.yaml"
-    probe.write_text(CASE.format(pdb=prepared_2wcd.path, geometry=""), encoding="utf-8")
+    probe.write_text(
+        CASE.format(pdb=prepared_2wcd.path, geometry="geometry: {density: {atoms: as_loaded}}\n"),
+        encoding="utf-8",
+    )
     result = Session(Store(root / "scratch"), write=False).run(Case.load(probe), upto="structure")
     ensemble = AlignedEnsemble.read(result.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
     centre = register_by_centroid(
         ensemble.positions_nm, name=ensemble.name, resid=ensemble.resid, chain=ensemble.chain
     )
     case = root / "2wcd.case.yaml"
-    geometry = f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
+    geometry = (
+        f"geometry: {{density: {{atoms: as_loaded}}, membrane: {{centre_z_nm: {centre!r}}}}}\n"
+    )
     case.write_text(CASE.format(pdb=prepared_2wcd.path, geometry=geometry), encoding="utf-8")
     return case, root / "store"
 
