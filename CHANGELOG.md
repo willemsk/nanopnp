@@ -77,6 +77,30 @@ records the work.
   - The `structure` extra asks for `pdb2pqr>=3.8`, and the PQR reader accepts 3.8's `NTER` and `CTER` terminal patches. 3.8 does not pin `docutils`, so `structure` and `gui` install together with `pip` (REV-175).
   - **Open items**: REV-137, REV-138, REV-141, REV-143, REV-174, REV-175 and REV-176 are `fixed`; the study's mockups stay as dated evidence (REV-176).
 
+WP5.03: protonation before the density, Phase 5's third package; tag `v0.6.0-alpha.3` once merged
+(`SPECIFICATION.md` §8.2.19 U2, §8.2.31 AG8; REV-135). Stage 7's protonation walks before stage 2, and stage 2
+smears the protonated atoms of every frame, hydrogens included, so a protonation state moves the density, the
+contour and the mesh. The [plan](docs/plans/wp5.03-protonation-before-the-density.md) records the work.
+
+- **Added**:
+  - **`geometry.density.atoms`**: `protonated` (the default) or `as_loaded`, the reference's way. It is a switch away from
+    the validated default, so the manifest lists it. Each protonated atom takes its CHARMM radius through its
+    residue's state patch (`resolve_protonated_radii`), as PDB2PQR does. `protonated` beside a produced protonation
+    under a force field other than CHARMM is refused, naming both keys.
+  - **VER-49** (Tier 1): a changed protonation state moves the density; the protonated radii equal PDB2PQR's on the
+    2WCD fragment at pH 2 and 8; the ragged-frame deposit keeps the uniform arithmetic.
+- **Changed**:
+  - **The case schema is `nanopnp/case/v0.6`.** A `v0.5` document is refused, the message naming the migration: declare
+    `nanopnp/case/v0.6`, and a case with `structure:` that keeps v0.5's density adds `geometry.density.atoms: as_loaded`.
+  - The walk order is `structure`, `protonation`, `density`, …; a walk to stage 2 under `as_loaded` does not protonate.
+    The stage 2 key under `as_loaded` is unchanged. `ProtonationTable` lives in `structure/protonated.py`.
+  - Examples 06 and 07 take the default. Example 07's VER-62 walk is re-pinned: conductance 0.9734 nS → 0.9598 nS
+    (−1.40 %), transport number 0.5428 → 0.5421, on 6059 elements against 6223. `2wcd-charged`, `2wcd-shell`, VAL-05,
+    VAL-06 and the Tier 3 cases set `as_loaded` and do not move.
+  - **Amended**: PHY-16 and its NOTE, FR-04, §5.2's stage 2 and 7 rows, and §5.3.1's NOTEs on `inputs:` and
+    `geometry.density`.
+  - **Open items**: REV-135 is `fixed`.
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 

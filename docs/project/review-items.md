@@ -1457,6 +1457,8 @@ WP5.01 changes no `src/` (§8.2.17 S1).
 
 **Ruled** (§8.2.19 U2): protonation moves before the geometry stages, and the density smeared from the protonated frames is the validated default; the hydrogens as loaded become a switch, set by the reference-reproduction cases. WP5.03 lands it (§8.2.28 AD3), before the charge mutator, with a Tier 1 test that a changed protonation state moves the density (the NOTE beside PHY-16 step 3).
 
+**Fixed** in WP5.03: `protonation` walks before `density`, stage 2 smears the protonated atoms by default (`geometry.density.atoms`), and a Tier 1 test shows that a changed protonation state moves the map (`test_ver49_a_changed_protonation_state_moves_the_density`).
+
 ## REV-136: The organisation round's rulings need library capabilities v0.5 lacks
 
 The design round of WP5.01 (`docs/design/workbench.md`, *Decision log*) rules a workbench whose suites rest on

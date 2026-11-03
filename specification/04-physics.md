@@ -258,7 +258,7 @@ ions whose hydrodynamic radius is comparable to a solvent molecule being questio
 |---|---|---|
 | 1 | Structure preparation | strip waters and ligands, verify oligomeric state, fill loops |
 | 2 | Ensemble | aligned MD frames (reference: 50, from the last 5 ns of a 30 ns run) |
-| 3 | Protonation, partial charges | PDB2PQR 3.8+ driving PROPKA at pH 7.5 with the CHARMM force field: `--ff=CHARMM --ffout=CHARMM --with-ph=7.5 --titration-state-method=propka --drop-water --keep-chain`; record `Q_net = Σ_i q_i` |
+| 3 | Protonation, partial charges, before stage 2 | PDB2PQR 3.8+ driving PROPKA at pH 7.5 with the CHARMM force field: `--ff=CHARMM --ffout=CHARMM --with-ph=7.5 --titration-state-method=propka --drop-water --keep-chain`; record `Q_net = Σ_i q_i` |
 | 4 | Per-atom smearing | normalised 3D Cartesian Gaussian `ρ_i(x) = q_i e π^(−3/2) w_i^(−3) exp(−\|x − x_i\|²/w_i²)`, width `w_i = 0.5 · R_i` (`R_i` from the PQR) |
 | 5 | Azimuthal projection | the exact azimuthal mean of step 4, in closed form: `ρ̄_i(r, z) = q_i e π^(−3/2) w_i^(−3) exp(−((r − r_i)² + (z − z_i)²)/w_i²) · Ĩ₀(2 r r_i/w_i²)`, with `Ĩ₀(x) = e^(−x) I₀(x)` and `r_i = (x_i² + y_i²)^(1/2)`; summed over the atoms and averaged over the frames. The Cₙ average is contained in the azimuthal mean |
 | 6 | Assembly | `ρ_pore = Σ_i ρ̄_i`, deposited onto an element-wise field on the deployed mesh by `r`-weighted L² projection, each atom's element integrals renormalised to `q_i e` (PHY-18). The areal density `2πr ρ_pore`, sampled on a 0.005 nm (r, z) grid extending ≥ 4 w_max beyond the protein, is the exported artefact and the producer leg's grid. A supplied areal density keeps the reference's assembly, `scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*π*r))` [C m⁻³] |
@@ -297,18 +297,17 @@ the N-terminus of `LYS 8` wherever its pKa, 7.48 to 7.50 across the chains, fall
 not gated. The protonation states of the chains of a homo-oligomer are not symmetrised: a residue
 whose charge differs between chains of identical sequence is recorded as a per-chain diagnostic.
 
-NOTE (protonation before the density, §8.2.19 U2). When the library package that `/np-plan amend 5`
-names lands, step 3's protonation runs on the aligned ensemble before stage 2, and stage 2 smears the
-protonated frames, PDB2PQR's atoms, each with the radius the §5.3.1 NOTE on `geometry.density` takes
-for it, so a protonation state or a charge-level
-variant moves the density, the contour and the mesh as well as the charge. That is the validated
-default. Smearing the hydrogens as loaded, as the reference did from its MD frames, becomes a switch
-away from it, recorded in the manifest (FR-25) and set by the reference-reproduction cases (VAL-03's
-golden, Tier 3). The package amends this clause, FR-04, §5.2's stage 2 and 7 rows and its stage-7
-design note; re-pins VER-62's golden for each walk whose mesh it moves, or sets the switch on that
-walk, by the author's ruling (§8.2.7 G10): example 07 is re-pinned, and `2wcd-charged`, `2wcd-shell`
-and the Tier 3 cases set the switch (§8.2.31 AG8); and adds a Tier 1 test that a changed protonation
-state moves the density. Until then the text above holds.
+NOTE (protonation before the density, §8.2.19 U2; §8.2.31 AG8). Step 3's protonation runs on the
+aligned ensemble before stage 2, and stage 2 smears the protonated frames: PDB2PQR's atoms, hydrogens
+included, at the positions it wrote, each with the radius the §5.3.1 NOTE on `geometry.density` takes
+for it. A protonation state or a charge-level variant therefore moves the density, the contour and the
+mesh as well as the charge. That is the validated default, `geometry.density.atoms: protonated`.
+Smearing the atoms as loaded, as the reference did from its MD frames, is the switch away from it,
+`atoms: as_loaded`; the manifest records it (FR-25), and the reference-reproduction cases set it (VAL-03's
+golden, VAL-05, VAL-06 and the Tier 3 cases), as do the walks `2wcd-charged` and `2wcd-shell` of VER-62.
+Worked example 07's VER-62 walk is re-pinned on the mesh the default deploys (§8.2.7 G10). A walk
+truncated at the mesh protonates, about a minute per frame of a ClyA dodecamer (WP27). A changed
+protonation state moves the density (Tier 1).
 
 NOTE (PHY-16 steps 4–6, the deposition as run; WP28): the closed form of
 step 5 SHALL be evaluated on the export lattice of step 6, whose spacing is

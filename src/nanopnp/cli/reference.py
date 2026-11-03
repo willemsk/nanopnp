@@ -169,8 +169,10 @@ def render_case_reference() -> str:
         elif head == "geometry":
             lines += [
                 "Of this section, `geometry.density` drives stages 2 and 3, the density map",
-                "and its reduction to (r, z) (FR-04 to FR-06), and `geometry.contour` drives",
-                "stage 4, the pore wall's contour and its gate (FR-07, FR-08), on a case",
+                "and its reduction to (r, z) (FR-04 to FR-06); its `atoms` key smears the",
+                "protonated atoms of stage 7 by default, or the atoms as loaded.",
+                "`geometry.contour` drives stage 4, the pore wall's contour and its gate",
+                "(FR-07, FR-08), on a case",
                 "carrying `structure:`. The membrane and reservoir keys are read by stage 5,",
                 "CAD assembly (FR-09); the analyte on a generated mesh is refused naming FR-21.",
                 "Beside `inputs.mesh` the section is refused, naming both.",
