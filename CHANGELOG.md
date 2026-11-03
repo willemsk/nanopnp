@@ -135,6 +135,43 @@ deviation. The [plan](docs/plans/wp5.04-the-charge-mutators-library-step.md) rec
   - **Fixed**: REV-184 (stage 4's probe-radius gate ignored a radius scale) and REV-185 (a charge-only edit
     remeshed), both from the package's review ([code review 029](docs/code_reviews/CODE_REVIEW_029.md)).
 
+WP5.05: named models and study overrides in the case, Phase 5's fifth package; tag `v0.6.0-alpha.5` once merged
+(`SPECIFICATION.md` FR-39, IF-03; §8.2.18 T2, §8.2.31 AG4, AG12, AG13; REV-62). A case can name a molecular model
+and a continuum model, each kept in its own file, and so become a study; the study may override any value of
+them, and resolves to the one complete case its run writes. The [plan](docs/plans/wp5.05-named-models-and-study-overrides.md)
+records the work.
+
+- **Added**:
+  - **`models:`**: `{molecular: <path>, continuum: <path>}`, at least one. A model file holds `schema`
+    (`nanopnp/molecular-model/v0.6` or `nanopnp/continuum-model/v0.6`), `name` and only the keys its kind owns
+    (`nanopnp.io.models.OWNERS`; the longest dotted prefix decides, and every other key is the study's). A model
+    names no model, and a relative path is read beside the file that names it. The study is merged over the molecular
+    model and then the continuum model; the models and the study's own keys must validate alone, or the model is
+    refused naming its file, and a problem line carries `[from <file>]`.
+  - **Overrides**: a value the study sets in a model's keys that differs from the model's. `Case.overrides` maps each
+    path to the model's value and the study's, is recomputed on every edit and survives `with_` and sweeps, and
+    `Case.dumps(study=True)` writes the study as written.
+  - **A sweep over models**: an axis over `models.molecular` or `models.continuum` resolves the study again at each
+    point, under its own values and overrides. Each value is its own warm-start root, the plan lists the model files,
+    and the API sweep writes the study form as its base file.
+  - **`inputs.mesh.artefact`** (REV-62): the 64-character store hash of a stage-6 mesh artefact. The mesh stage takes
+    the store and returns the stored artefact unchanged, so a stored mesh keeps its hash. A hash the store does not
+    hold is refused naming the hash and the store's root; `format` and `groups` beside it are refused.
+  - **Manifest**: `inputs.files` gains the roles `models.molecular` and `models.continuum`, and `inputs.overrides`
+    (`{path: {model, study}}`) appears when the case names a model.
+  - **FR-39** (Tier 1 and 2): a study resolves to its case written inline and shares its keys; it reuses every stage
+    its twin built; an override moves only the stages that read it; a run records its model files and overrides; a
+    sweep over models resolves each member; every case leaf has one owner.
+- **Changed**:
+  - `models` is left out of every dump, hash and equality of a case, so a study equals and keys as its resolved case
+    and a case without `models` keeps every key. A reader that does not resolve models (`read_case`) refuses a
+    document carrying `models:`; `Case.load` and `pipeline.case.load_case` resolve them.
+  - `inputs.mesh.artefact` is a `stage` leaf of the case (VER-71).
+  - **Amended**: FR-39 (AG12, AG13) and its Appendix A row, IF-03's Appendix A row, §5.3.1's NOTEs on `models:` and
+    on `inputs:`, §5.3.2's format table, §5.3.3's inputs group, §5.3.4, §5.2's stage-6 row, the workbench design's
+    WB-16 row and *Override* entry, and the case-file reference's prose on `models:` and `inputs`.
+  - **Open items**: REV-62 is `fixed`. REV-186 is open: a stored mesh beside `structure:` stays refused.
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 

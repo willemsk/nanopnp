@@ -162,6 +162,33 @@ def render_case_reference() -> str:
                 "`charge.protonation.variant_of`, never as a deviation.",
                 "",
             ]
+        elif head == "models":
+            lines += [
+                "A case that names a molecular model, a continuum model or both is a study.",
+                "Each model is a file of its own kind, `nanopnp/molecular-model/v0.6`",
+                "or `nanopnp/continuum-model/v0.6`, holding `schema`, `name` and only the keys",
+                "that kind owns. The molecular model owns `structure`, `charge.ph`,",
+                "`charge.forcefield`, `charge.titration`, `charge.edits` and `inputs.pqr`. The",
+                "continuum model owns `geometry`, `charge.exclusion_offset_nm`,",
+                "`numerics.mesh`, `inputs.mesh`, `inputs.profile`, `physics`, `electrolyte` and",
+                "`boundary_conditions`. Every other key is the study's. The study is merged over",
+                "the molecular model, then the continuum model, and a value it sets in a",
+                "model's keys is an override, recorded beside the model's value in the",
+                "manifest. A relative path is read beside the file that names it. The run",
+                "writes the one complete case it resolved to, which has no `models:` and runs",
+                "as it is; a reader that does not resolve models refuses the block. A sweep",
+                "axis may range over `models.molecular` and `models.continuum`.",
+                "",
+            ]
+        elif head == "inputs":
+            lines += [
+                "`inputs.mesh.artefact` names a mesh already in the store by its 64-digit",
+                "hash, the stage-6 artefact of an earlier run; the hash must be in the store,",
+                "and `format` and `groups` beside it are refused. A stored mesh beside",
+                "`structure:` is refused. `artefact:` on `inputs.charge` and `inputs.eps_r`",
+                "is refused.",
+                "",
+            ]
         elif head == "structure":
             lines += [
                 "This section drives stage 1, structure ingestion and alignment (FR-01 to",
