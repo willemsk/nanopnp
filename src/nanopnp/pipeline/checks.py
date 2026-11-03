@@ -448,11 +448,15 @@ def _check_charge(document: CaseDocument) -> None:
     ]
     if not changed:
         return
+    density = document.geometry.density if document.geometry is not None else Density()
+    # Under the protonated density the stage runs for stage 2 even where the charge is supplied.
+    feeds_density = document.structure is not None and density.atoms == "protonated"
     where = (
         "beside inputs.pqr, which supplies the charges and radii PDB2PQR would compute"
         if pqr is not None
-        else "beside inputs.charge, which supplies the field stage 7 would make of them"
-        if document.inputs.charge is not None
+        else "beside inputs.charge with geometry.density.atoms: as_loaded, which leave nothing "
+        "for the protonation to feed"
+        if document.inputs.charge is not None and not feeds_density
         else "in a case with neither a structure: section nor inputs.pqr, so there is nothing "
         "to protonate"
         if document.structure is None

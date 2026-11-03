@@ -630,3 +630,38 @@ def test_ver49_ragged_frames_deposit_as_the_stacked_call() -> None:
     ragged = deposit(list(positions), [widths, widths], grid)
     assert np.array_equal(stacked, ragged)
     assert canonical_grid(list(positions), [widths, widths], 0.05) == grid
+
+
+def test_ver49_a_disulfide_cysteine_takes_the_disu_radii() -> None:
+    """A CYS holding 1SG, looked up by its parent name alone, would be refused under the default."""
+    from nanopnp.density.radii import RadiusSet, resolve_protonated_radii
+    from nanopnp.structure.protonated import ProtonationTable
+
+    empty = np.zeros(0)
+    table = ProtonationTable(
+        frame_offsets=np.array([0, 3]),
+        positions_nm=np.zeros((3, 3)),
+        charge_e=np.zeros(3),
+        radius_nm=np.zeros(3),
+        name=np.array(["1CB", "1SG", "HB1"]),
+        resname=np.array(["CYS"] * 3),
+        chain=np.array(["A"] * 3),
+        resid=np.array([5] * 3),
+        icode=np.array([""] * 3),
+        residue_chain=np.array(["A"]),
+        residue_resid=np.array([5]),
+        residue_icode=np.array([""]),
+        residue_name=np.array(["CYS"]),
+        residue_charge_e=np.zeros(1),
+        tautomer=np.array([[""]]),
+        expected_charge_e=np.zeros((1, 1)),
+        unapplied=empty,
+        group_residue=empty,
+        group_type=empty,
+        group_label=empty,
+        group_pka=empty,
+        header={},
+    )
+    radii = resolve_protonated_radii("pdb2pqr_charmm", table)
+    cysteine = RadiusSet.load("pdb2pqr_charmm").radius_A("CYS", "HB1")
+    np.testing.assert_allclose(radii.radii_nm, np.array([2.175, 1.975, cysteine]) * 0.1, atol=1e-12)

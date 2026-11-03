@@ -189,6 +189,8 @@ def resolve_radii(
 _ACID_PATCHES: Mapping[str, tuple[str, str]] = {"ASP": ("HD2", "ASPP"), "GLU": ("HE2", "GLUP")}
 """Per parent residue: the proton whose presence names its state patch, and the patch."""
 
+_DISULFIDE_PATCH = "DISU"
+
 
 def resolve_protonated_radii(name: str, table: ProtonationTable) -> ResolvedRadii:
     """Resolve every atom of a protonation table against the named radius set.
@@ -259,8 +261,18 @@ def resolve_protonated_radii(name: str, table: ProtonationTable) -> ResolvedRadi
 
 
 def _patched_radius_A(radius_set: RadiusSet, parent: str, patch: str, atom: str) -> float:
-    if patch in radius_set.residues and atom in radius_set.residues[patch]:
-        return radius_set.residues[patch][atom]
+    if parent == "CYS" and atom in radius_set.residues.get(_DISULFIDE_PATCH, {}):
+        # PDB2PQR writes a disulfide's CB and SG as 1CB, 1SG, 2SG and 2CB under residue DISU.
+        patch = _DISULFIDE_PATCH
+    direct = radius_set.residues.get(patch, {})
+    if atom in direct:
+        radius = direct[atom]
+        if not radius > 0.0:
+            raise KeyError(
+                f"{patch} {atom} has radius {radius} Å in the {radius_set.name} set, and a "
+                "zero-width kernel deposits nothing"
+            )
+        return radius
     # A histidine's tautomer is a residue of its own in the set; ASPP and GLUP are side-chain
     # patches that leave the backbone to the parent.
     return radius_set.radius_A(patch if patch.startswith("HS") else parent, atom)

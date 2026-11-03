@@ -62,8 +62,7 @@ def _density(inputs: StageInputs) -> Density:
 def density_parameters(spec: Density) -> dict[str, Canonicalisable]:
     """Return the stage-2 key's parameters.
 
-    ``atoms`` is left out under ``as_loaded``, so that key is the one stage 2 had before the
-    protonated default.
+    ``atoms`` enters the key only under ``protonated``.
     """
     name = KERNEL_RADII[spec.kernel]
     block = spec.model_dump(mode="json", exclude={"atoms"})

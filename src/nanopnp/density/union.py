@@ -255,6 +255,12 @@ def deposit(
             )
         frame_widths = [np.asarray(w, dtype=np.float64) for w in widths_nm]
         frame_stencils = [_stencils(w, grid.spacing_nm) for w in frame_widths]
+    for frame, widths in enumerate(frame_widths):
+        if len(positions_nm[frame]) != len(widths):
+            raise DensityInputError(
+                f"frame {frame} holds {len(positions_nm[frame])} atoms and {len(widths)} widths, "
+                "so stage 2 cannot pair them"
+            )
     n = grid.n
     planes = max(1, SLAB_CELLS // (n * n))
     result = np.empty(grid.shape, dtype=np.float64 if float64 else np.float32)

@@ -2392,3 +2392,24 @@ naming both keys, and the case sets `as_loaded` or `CHARMM`.
 
 **Deferred**, owner unassigned: a protonated density under these force fields needs a radius set, or atom aliases,
 that holds their names, chosen as an author ruling as the CHARMM set was. Found at WP5.03's plan, 3 November 2026.
+
+## REV-181: Stage 2's header counts frame 0's atoms and reads an element from the first letter of a name
+
+Under `geometry.density.atoms: protonated` the frames of the protonation table differ in atoms where a tautomer or an
+acid state differs, yet `atoms.total`, `atoms.by_element` and `hydrogens` in stage 2's header count frame 0 only. The
+element of an atom is its name's first letter after any leading digits, which gives `F` for `FE` and `C` for `CL`; the
+table has no element column. The density is unaffected; the record understates the ensemble and misnames an ion.
+
+**Open**, found at WP5.03's review: the author rules whether the table carries an element column (a change to the
+artefact's schema) or the header lists every frame's counts.
+
+## REV-182: A polar hydrogen's kernel is narrower than the density grid's spacing
+
+The CHARMM radius of a polar hydrogen is 0.2245 Å, so its width at sharpness 0.93 is 0.0209 nm against the default grid
+spacing of 0.05 nm. The nearest-node deposit of such an atom is aliased: its term at its nearest node runs from near 0
+to 1 with where it sits in the cell. The atom lies about 0.1 nm from its N or O, whose own term there is already about
+0.71, so the 0.25 isolevel is not expected to move; WP5.03 did not measure it. The sharpness and the isolevel were set
+on a density without these hydrogens.
+
+**Open**, found at WP5.03's review: the author rules whether the polar hydrogens are measured against a finer grid
+before the protonated default is used outside the reference cases.
