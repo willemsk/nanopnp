@@ -336,6 +336,7 @@ nav:
               - "Tier-1 test evidence: import costs, trajectory precision and the gate's pipefail trap (WP45 item 24)": _generated/model/knowledge/07-software-stack/20-tier-1-test-evidence-import-costs.md
               - "Tier-2 test evidence: budgets, timings and reference checks (WP45 item 25)": _generated/model/knowledge/07-software-stack/21-tier-2-test-evidence-budgets-timings.md
               - "Tier-2 test evidence: analytic benchmarks and reference checks (WP45 item 26)": _generated/model/knowledge/07-software-stack/22-tier-2-test-evidence-analytic.md
+              - "23. Pinning a protonation state through PDB2PQR's apply_pka_values (WP5.04)": _generated/model/knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md
           - "Validation and verification — the benchmark ladder":
               - _generated/model/knowledge/08-validation-benchmarks/index.md
               - "Validation and verification — the benchmark ladder (overview)": _generated/model/knowledge/08-validation-benchmarks/00-overview.md

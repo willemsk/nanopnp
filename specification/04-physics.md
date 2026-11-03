@@ -297,6 +297,20 @@ the N-terminus of `LYS 8` wherever its pKa, 7.48 to 7.50 across the chains, fall
 not gated. The protonation states of the chains of a homo-oligomer are not symmetrised: a residue
 whose charge differs between chains of identical sequence is recorded as a per-chain diagnostic.
 
+NOTE (PHY-16 step 3, `charge.edits`; WP5.04): a `state` edit pins a titratable residue's state during
+PDB2PQR's call instead of leaving it to PROPKA's pKa at the pH. PDB2PQR 3.8 applies the state patch
+`ASH`, `GLH` or `HIP` to each residue whose pKa passes the pH, through
+`Biomolecule.apply_pka_values`; the stage wraps that call, drops each pinned residue's pKa from the
+dictionary it receives, so the residue keeps the force field's standard state, and applies the patch
+itself for `neutral` ASP, `neutral` GLU and `charged` HIS. Renaming the input residue cannot pin the
+charged state, since PDB2PQR titrates an input named `ASP`, and drops that residue's PROPKA row. After
+assembly a gate SHALL refuse a frame whose pinned residue does not hold its state, naming frame,
+chain and residue. A pinned residue is never recorded as an unapplied state. PDB2PQR's hydrogen
+optimisation can reposition a neighbour's hydrogens or carboxyl oxygens when a state changes (GLU 18
+beside ASP 21 on the 2WCD fragment at pH 2), so the variant's record lists a residue whose positions
+move, with its charges unchanged. A charge or radius edit acts on the assembled table, after the
+states and the radius comparison, and so on every residue alike.
+
 NOTE (protonation before the density, §8.2.19 U2; §8.2.31 AG8). Step 3's protonation runs on the
 aligned ensemble before stage 2, and stage 2 smears the protonated frames: PDB2PQR's atoms, hydrogens
 included, at the positions it wrote, each with the radius the §5.3.1 NOTE on `geometry.density` takes

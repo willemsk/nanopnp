@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-03
+* **Record**: Pinning a protonation state by holding a residue's key out of `apply_pka_values` and applying the patch, and the neighbour a pin can move (WP5.04). ([23. Pinning a protonation state](07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md))
 * **Update**: PDB2PQR's CHARMM residue and hydrogen names: a protonated GLU or ASP keeps its parent name, so the radius comes from the state patch, not the residue name (WP5.03). ([PDB2PQR's residue and hydrogen names, and the protonated density](04-clya-geometry-and-charge/14-pdb2pqrs-residue-and-hydrogen-names-and-the-protonated-density.md))
 * **Update**: PDB2PQR 3.8.0 writes terminal patches as `NTER` and `CTER`, has no `docutils` pin and keeps `CHARMM.DAT` unchanged; the `structure` extra takes 3.8 (REV-175). ([3. Charge and electrostatics](07-software-stack/03-charge-and-electrostatics.md))
 
