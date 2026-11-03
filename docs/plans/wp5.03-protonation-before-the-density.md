@@ -188,16 +188,23 @@ refusal) and on the schema identifier; §5.3.1's IF-03 identifier wherever it is
 
 ### Work items
 
-- [ ] 1. `structure/protonated.py`; `charge/protonation.py` and `charge/pqr.py` re-export; `pqr_frames(table)`; `docs/project/modularity-layering.yaml` if an edge appears (D3). Done when `uv run pytest -m tier1 -k "protonation or layering or charge"` passes. **Executor:** `general-purpose` on Sonnet.
-- [ ] 2. `io/case.py:Density.atoms`; `io/artefact.py:CASE_SCHEMA` and `core/stages.py` at `v0.6` with the refusal; `io/resolved.py:density_protonated`; `pipeline/case.py:_resolve_density`'s force-field refusal; `io/defaults.py` switch and validated default; `validation/case_leaves.py` (D2). Done when `test_case*.py` and `test_defaults*.py` pass. **Executor:** main.
-- [ ] 3. The identifier sweep of *Implementation details*. Done when Tier 1 collects and `test_case.py` passes. **Executor:** `general-purpose` on Haiku.
-- [ ] 4. `core/stages.py` registration order and stage 2's optional input; `pipeline/run.py:selected_stages`, `_protonation_reason`; `charge/protonation.py:_resolved` (D1). Done when the walk-order tests of *Verification* pass. **Executor:** main.
-- [ ] 5. `density/radii.py:resolve_protonated_radii`; `density/union.py` ragged frames; `density/stage.py` key, run and header (D3, D4). Done when the VER-49 rows pass. **Executor:** main.
-- [ ] 6. Compaction checkpoint. **Executor:** main.
+- [x] a0ac4ab 1. `structure/protonated.py`; `charge/protonation.py` and `charge/pqr.py` re-export; `pqr_frames(table)`; `docs/project/modularity-layering.yaml` if an edge appears (D3). Done when `uv run pytest -m tier1 -k "protonation or layering or charge"` passes. **Executor:** `general-purpose` on Sonnet.
+- [x] a8f2e40 2. `io/case.py:Density.atoms`; `io/artefact.py:CASE_SCHEMA` and `core/stages.py` at `v0.6` with the refusal; `io/resolved.py:density_protonated`; `pipeline/case.py:_resolve_density`'s force-field refusal; `io/defaults.py` switch and validated default; `validation/case_leaves.py` (D2). Done when `test_case*.py` and `test_defaults*.py` pass. **Executor:** main.
+- [x] a8f2e40 3. The identifier sweep of *Implementation details*. Done when Tier 1 collects and `test_case.py` passes. **Executor:** `general-purpose` on Haiku.
+- [x] a8f2e40 4. `core/stages.py` registration order and stage 2's optional input; `pipeline/run.py:selected_stages`, `_protonation_reason`; `charge/protonation.py:_resolved` (D1). Done when the walk-order tests of *Verification* pass. **Executor:** main.
+- [x] a8f2e40 5. `density/radii.py:resolve_protonated_radii`; `density/union.py` ragged frames; `density/stage.py` key, run and header (D3, D4). Done when the VER-49 rows pass. **Executor:** main.
+- [x] 6. Compaction checkpoint. **Executor:** main.
 - [ ] 7. `geometry.density.atoms: as_loaded` on each Tier 1 to 3 case of D5's list whose oracle was set on as-loaded atoms; a case that only checks the walk's mechanics keeps the default. Done when `uv run pytest -m tier1` passes. **Executor:** main.
 - [ ] 8. The nightly files of D5's list, under `--nightly`, with the 2WCD walks at `as_loaded`, and VER-62 unmoved for them. Done when they pass. **Executor:** main.
 - [ ] 9. Examples 06 and 07 under the default: their READMEs; the example-06 overlay test's atom set; example 07's re-pin (D5). Done when `test_examples_06_*` and `test_examples_07_*` pass under `--nightly`. **Executor:** main.
 - [ ] 10. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s `geometry` prose; a `knowledge/04-clya-geometry-and-charge/` note on PDB2PQR's residue and hydrogen names, `[tested]` by item 5's test; REV-135 `fixed`. Done when the code and review say so, and the strict documentation build passes. **Executor:** main.
+
+> **Outcome — items 1 to 5.** The table's missing-array error is `ProtonationTableError`, mapped to the case
+> exit code, and `PQRError` is left alone: nothing raised `PQRError` from `read` that a test caught. A walk to
+> `density` under `as_loaded` leaves `protonation` out of its closure (`pipeline/run.py:selected_stages`), because
+> the walk's own stage may be kept by a deposit. Every model that carries solids declares `fixed_charge`, and a
+> structure case always generates solids, so "an uncharged model" is not a reachable leg of the walk test; the
+> `inputs.charge` leg stands for it. Stage 2's header gains `atom_source` under `protonated` only.
 
 ### Verification
 
