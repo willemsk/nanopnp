@@ -1,6 +1,6 @@
 # Current work
 
-Updated 3 November 2026 (WP5.05 planned). Navigation only;
+Updated 3 November 2026 (WP5.05 delivered). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
@@ -9,10 +9,10 @@ Phase 4 is released, and the workbench's technology is chosen. The rest of Phase
 package per part of the screen, the guided route, the old shell's removal and the guide. The first library step is
 merged: the pore's shape is built from the protein as charged at the chosen pH. The second is merged too: a case can fix
 a residue's protonation state, change its charge by a whole unit, or scale its atoms, recording what differs. The third
-is planned: a case names a molecular and a continuum model kept in files of their own, overrides any of their values and
-reuses what they built.
+is delivered: a case names a molecular and a continuum model kept in files of their own, overrides any of their values and
+reuses what they built. It waits for its review.
 
-**Your call.** None open; you ruled the third step's two questions at its plan. The colleague who tries the workbench is
+**Your call.** None open. The colleague who tries the workbench is
 named by the close.
 
 ## Position
@@ -23,7 +23,7 @@ One line per lane (§8.4.4).
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.04 are merged
   (`v0.6.0-alpha.4`). Library WP5.05 to WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31).
   **WP5.05** ([named models and study overrides](wp5.05-named-models-and-study-overrides.md))
-  is planned; next `/np-implement wp 5.05`. host: claude-code.
+  is delivered on its branch, not merged; next `/np-ship wp 5.05`. host: claude-code.
 
 ## Not to be re-decided
 

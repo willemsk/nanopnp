@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.04 merged, WP5.05 planned; the library packages WP5.06 and WP5.07 and the shell packages
+**Status: in progress; WP5.01 to WP5.04 merged, WP5.05 delivered; the library packages WP5.06 and WP5.07 and the shell packages
 WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
@@ -158,13 +158,16 @@ identity; a radius scale below 1 can breach the kernel-spacing gate (REV-182). F
 
 ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62; §8.2.31 AG12, AG13)
 
-**Planned 3 November 2026** ([the plan](wp5.05-named-models-and-study-overrides.md)). A case references named molecular
-and continuum models, each a file of its own schema holding only the values its kind owns, and resolves into one
-complete case file. A study overrides any value of the models it names (AG12), each override recorded beside the
-model's value; a built model is reused by every study that names it, rebuilding only the stages a changed value moves.
-A sweep ranges over the library's models (AG13). A case-schema change, under the release's identifier (G6). It owns
-REV-62, a mesh named by store key (§8.2.18 T2). It builds on WP59's public `Case` and `Session` route (§8.2.27 AC1). Tag
-`v0.6.0-alpha.5`.
+**Delivered 3 November 2026** ([the plan](wp5.05-named-models-and-study-overrides.md)). A case names a molecular and a
+continuum model, each a file of its own schema (`nanopnp/molecular-model/v0.6`, `nanopnp/continuum-model/v0.6`) holding
+only the keys its kind owns (`io/models.py:OWNERS`), and resolves into one complete case. A study overrides any value of
+the models it names, each override recorded beside the model's value in the manifest (AG12); a study keys and equals its
+resolved case, so it rebuilds only the stages an override moves. A sweep axis may range over the models (AG13); each
+model is its own warm-start root. `inputs.mesh.artefact` names a stored mesh by its 64-character hash, and the mesh stage
+takes the store (REV-62 `fixed`; REV-186 keeps a stored mesh beside a `structure:` refused). FR-39, IF-03, FR-25, FR-27,
+§5.2, §5.3, §5.3.1, §5.3.3 and the design document's WB-16 are amended. Live constraints: `models` is outside every
+dump and hash, so a plain reader refuses a case that names it; read it with `Case.load` or `load_case`. Tier 1 and Tier 2
+tests cover the identity, the overrides, the sweep and the reuse. Tag `v0.6.0-alpha.5`.
 
 ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5)
 
