@@ -104,7 +104,10 @@ def walked(
     store = Store(seeded_2wcd(root / "store"))
     structure = STRUCTURE.format(pdb=prepared_2wcd.path)
     case = _write(
-        root / "contour.case.yaml", GEOMETRY_CASE.format(structure=structure, geometry="")
+        root / "contour.case.yaml",
+        GEOMETRY_CASE.format(
+            structure=structure, geometry="geometry: {density: {atoms: as_loaded}}\n"
+        ),
     )
     stage1 = Session(store, write=False).run(Case.load(case), upto="contour")
     ensemble = AlignedEnsemble.read(stage1.artefacts["structure"].payload[ENSEMBLE_PAYLOAD])
@@ -113,7 +116,9 @@ def walked(
     centre = register_by_centroid(ensemble.positions_nm, **atoms)
     assert centre == seeded_2wcd.centre_z_nm
 
-    geometry = f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
+    geometry = (
+        f"geometry: {{density: {{atoms: as_loaded}}, membrane: {{centre_z_nm: {centre!r}}}}}\n"
+    )
     case = _write(
         root / "region.case.yaml", GEOMETRY_CASE.format(structure=structure, geometry=geometry)
     )
