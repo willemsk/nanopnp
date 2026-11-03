@@ -56,7 +56,10 @@ $ nanopnp inspect run-profile
    case keeps `geometry.membrane.centre_z_nm` at its default. The script's docstring says why
    each choice is made.
 2. **`nanopnp run … --upto mesh`** walks stages 1 to 6 and stops. Stage 1 finds the exact axis
-   and aligns the structure. Stage 2 smears its atoms into a 3D density map. Stage 3 averages
+   and aligns the structure. Stage 7's protonation then runs PDB2PQR on it (about a minute),
+   because stage 2 smears the protonated atoms, hydrogens included, into a 3D density map.
+   `geometry.density.atoms: as_loaded` would smear the atoms as the file holds them, which have no
+   hydrogen here. Stage 3 averages
    the map about the axis to an (r, z) map. Stage 4 draws the pore's outline from it. Stage 5
    places the membrane and reservoirs around that outline, and stage 6 meshes the result. Every
    stage is gated, every artefact goes into `store/`, and `run/manifest.json` records each one.
@@ -92,8 +95,8 @@ so a different concentration can give a different mesh.
 this directory. It checks properties rather than transcribed numbers (SPECIFICATION.md VER-46):
 
 - the deposited entry is refused by the orientation gate, with an angle above its limit;
-- the prepared entry passes every gate of stages 1 to 6, and the manifest records exactly the
-  case and those six artefacts;
+- the prepared entry passes every gate of stages 1 to 6 and of the protonation that stage 2 reads, and the
+  manifest records exactly the case and those seven artefacts;
 - the aligned export passes stage 1 under `symmetry.axis: z`;
 - `density.mrc`, read in ångströms as a viewer reads it, contains every heavy atom of
   `aligned.pdb`, and reads at least the smallest value one atom's Gaussian can give at the grid

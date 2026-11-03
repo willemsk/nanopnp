@@ -196,7 +196,7 @@ refusal) and on the schema identifier; §5.3.1's IF-03 identifier wherever it is
 - [x] 6. Compaction checkpoint. **Executor:** main.
 - [x] 7. `geometry.density.atoms: as_loaded` on each Tier 1 to 3 case of D5's list whose oracle was set on as-loaded atoms; a case that only checks the walk's mechanics keeps the default. Done when `uv run pytest -m tier1` passes. **Executor:** main.
 - [ ] 8. The nightly files of D5's list, under `--nightly`, with the 2WCD walks at `as_loaded`, and VER-62 unmoved for them. Done when they pass. **Executor:** main.
-- [ ] 9. Examples 06 and 07 under the default: their READMEs; the example-06 overlay test's atom set; example 07's re-pin (D5). Done when `test_examples_06_*` and `test_examples_07_*` pass under `--nightly`. **Executor:** main.
+- [x] 9. Examples 06 and 07 under the default: their READMEs; the example-06 overlay test's atom set; example 07's re-pin (D5). Done when `test_examples_06_*` and `test_examples_07_*` pass under `--nightly`. **Executor:** main.
 - [ ] 10. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s `geometry` prose; a `knowledge/04-clya-geometry-and-charge/` note on PDB2PQR's residue and hydrogen names, `[tested]` by item 5's test; REV-135 `fixed`. Done when the code and review say so, and the strict documentation build passes. **Executor:** main.
 
 > **Outcome — items 1 to 5.** The table's missing-array error is `ProtonationTableError`, mapped to the case
@@ -205,6 +205,21 @@ refusal) and on the schema identifier; §5.3.1's IF-03 identifier wherever it is
 > the walk's own stage may be kept by a deposit. Every model that carries solids declares `fixed_charge`, and a
 > structure case always generates solids, so "an uncharged model" is not a reachable leg of the walk test; the
 > `inputs.charge` leg stands for it. Stage 2's header gains `atom_source` under `protonated` only.
+
+> **Outcome — items 7 to 9.** Eight Tier 2 and Tier 3 files built their own case text and gained `as_loaded`
+> (`test_contour_2wcd`, `test_density_2wcd`, `test_gui_geometry_2wcd`, `test_val05_2wcd`, the Tier 3 ensemble
+> conftest and the two Tier 3 `GEOMETRY` strings). The VER-62 walks `2wcd-charged` and `2wcd-shell` hold at
+> 3 × 10⁻¹², unmoved. Example 06's manifest now lists `protonation` (seven artefacts), and its overlay test held as
+> written, since heavy atoms stay in a map that now holds hydrogens too. Example 07's `from-pqr` run now shares the
+> mesh *content* with `run` (hash `fbe4c04c0351`, 6059 elements) but not its artefact keys, because the supplied
+> table's provenance differs; the test compares the content hash. **Re-pin of example 07** (reference environment
+> `X86_V3`, cap on): conductance 9.7343 × 10⁻¹⁰ S → 9.5983 × 10⁻¹⁰ S (−1.40 %), current 4.8672 × 10⁻¹¹ A →
+> 4.7992 × 10⁻¹¹ A (−1.40 %), `Cl⁻` current −1.25 %, `Na⁺` current −1.52 %, transport number 0.54279 → 0.54211
+> (−0.12 %); elements 6223 (mesh `d45f1dd021f0`) → 6059 (mesh `fbe4c04c0351`). The conductance fell, as AG8
+> predicted. The uncapped `AVX512_SPR` leg of this container deploys a second mesh (`c1fdaab6a193`) with the same
+> values to 10⁻¹⁴; both are folded, which derives the mesh-moved tolerance 10⁻⁸. Other platforms' meshes wait for
+> their nightly, as *Out of scope* says. The Tier 2 row `test_ver49_protonated_radii_resolve_to_pdb2pqrs_on_every_atom_of_the_dodecamer`
+> replaces the extended `test_ver57` row.
 
 ### Verification
 
