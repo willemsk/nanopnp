@@ -1,14 +1,15 @@
 # Current work
 
-Updated 3 November 2026 (WP5.02 merged as `v0.6.0-alpha.2`; Phase 5 amended a second time). Navigation only;
+Updated 3 November 2026 (WP5.02 merged as `v0.6.0-alpha.2`; Phase 5 amended a second time; WP5.03 planned). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 is released, and the browser workbench's technology is chosen and merged. The rest of Phase 5 is now planned.
-Five library steps come first, the last giving a case variables, numbers with units or formulas, and a warning before
-a sweep of what each value rebuilds. Then one package per part of the screen: the frame and project folder, the four
-suites, then the guided route, the old desktop shell's removal and the guide. About four to five months part-time.
+Phase 4 is released, and the browser workbench's technology is chosen and merged. The rest of Phase 5 is planned:
+five library steps, then one package per part of the screen, then the guided route, the old desktop shell's removal
+and the guide. About four to five months part-time. The first library step is planned in detail: the pore's shape is
+built from the protein as charged at the chosen pH, hydrogens included, with the reference's way kept as a switch.
+Worked example 07's recorded numbers are taken again, as you ruled.
 
 **Your call.** None open. The colleague who tries the workbench is named by the close.
 
@@ -18,13 +19,12 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 and WP5.02 are merged
-  (`v0.6.0-alpha.2`). Amended on 3 November 2026 (§8.2.31 AG1 to AG7): the library packages WP5.03 to WP5.07, then the
-  shell, WP5.08 (frame and project folder) to WP5.13 (route, Qt's removal, documentation), and the close, WP5.14. Next
-  `/np-plan wp 5.03`. host: claude-code.
+  (`v0.6.0-alpha.2`). Amended 3 November 2026 (§8.2.31): library WP5.03 to WP5.07, shell WP5.08 to WP5.13, close WP5.14.
+  **WP5.03** ([protonation before the density](wp5.03-protonation-before-the-density.md)) is planned (AG8); next
+  `/np-implement wp 5.03`. host: claude-code.
 
 ## Not to be re-decided
 
-- **Reading the specification:** `SPECIFICATION.md` maps it; `clause.py <ID>` prints a clause (R2, R3).
 - **The rules of process** are §8.4: versions (§8.4.1), the loop (§8.4.2), the test scope (§8.4.3),
   the commands (§8.4.4).
 - **Cost fixes follow measurement against registered thresholds** (§8.2.12 M2). **Phase 5 is a
@@ -39,11 +39,10 @@ One line per lane (§8.4.4).
 - **The workbench keeps a desktop wrapper possible; the server's contract is ADR-004's NOTE** (§8.2.30 AF1).
   **The front end is NiceGUI; Mol* draws the molecule** (AF4).
 - **One shell package per suite; variables may be expressions, units through `pint`, keyed by resolved values**
-  (§8.2.31 AG1 to AG5).
-- **Layers read a model's declaration, never its name** (VER-56). **Only `poisson` adds a quadrature
-  order for `r`** (E4). **A golden carries the stage-7 recipe** (E3).
-- **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's
-  identifier, `nanopnp/case/v0.5` (G6), and is listed in `CHANGELOG.md`.
+  (§8.2.31 AG1 to AG5). **Examples 06 and 07 take the protonated density; example 07 is re-pinned** (AG8).
+- **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
+- **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's identifier (G6):
+  WP5.03 makes it `nanopnp/case/v0.6`.
 - **A callback is not an input** (VER-44). **A generated mesh is read only through
   `deployed_mesh`.** **Stage 1's frame is fixed.**
 
@@ -63,6 +62,7 @@ One line per lane (§8.4.4).
 | The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The phase's amendments | `phase-5-record.md` |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
+| WP5.03 | its plan; §8.2.19 U2; PHY-16's NOTEs |
 | The workbench | `phase-5-workbench.md`; `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30, §8.2.31; M3; F5 |
 
 ## Handoff Rules

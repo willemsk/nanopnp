@@ -2379,3 +2379,14 @@ nanopnp.gui.web.server` (the desktop wrapper's entry, ADR-004) is a shim that pa
 ready line as `{"ready": <url>}`; the plain line stays the default, so the wrapper contract does not move. VER-78's
 state walk now launches through the command, which is the entry point's smoke test, and one test reads the JSON line.
 Found by the WP5.02 review (CODE_REVIEW_027, finding 14), 3 November 2026.
+
+## REV-180: The protonated density is refused under the SWANSON and PEOEPB force fields
+
+Stage 2 takes each atom's radius from the CHARMM set of the §5.3.1 NOTE on `geometry.density`, by residue and atom
+name. Under `charge.forcefield: SWANSON` PDB2PQR 3.8 writes AMBER hydrogen names (`H`, `HB3`, `H1`) that the set does
+not hold, and on 2WCD residues 18 to 26 fourteen hydrogens resolve to no radius. `PEOEPB` failed on the same fragment.
+WP5.03 therefore refuses `geometry.density.atoms: protonated` beside a produced protonation under either force field,
+naming both keys, and the case sets `as_loaded` or `CHARMM`.
+
+**Deferred**, owner unassigned: a protonated density under these force fields needs a radius set, or atom aliases,
+that holds their names, chosen as an author ruling as the CHARMM set was. Found at WP5.03's plan, 3 November 2026.

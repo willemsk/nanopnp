@@ -131,12 +131,14 @@ library opens with that library step, tested, before its screens (AG1).
 
 ### WP5.03 — Protonation before the density (§8.2.19 U2; REV-135)
 
-Stage 2 smears the protonated frames, so a protonation state moves the density, the contour and the mesh; smearing the
-hydrogens as loaded becomes a switch away from the validated default, set by the reference-reproduction cases. It
-amends PHY-16, FR-04 and §5.2's stage 2 and 7 rows, writing the NOTE beside PHY-16 step 3 into their text. Tier 1: a
-changed protonation state moves the density. The VAL-03 golden and the Tier 3 cases carry the switch, so their numbers
-do not move; VER-62 holds at zero drift. A miss is investigated, then reverted or ruled and re-pinned (G10, I4). Tag
-`v0.6.0-alpha.3`.
+Stage 7's protonation walks before stage 2, and stage 2 smears the protonated atoms of every frame, so a protonation
+state moves the density, the contour and the mesh. `geometry.density.atoms: as_loaded`, the reference's way, is a
+switch away from that default. The case schema moves to `nanopnp/case/v0.6` (G6). It amends PHY-16, FR-04, §5.2's
+stage 2 and 7 rows and §5.3.1's NOTEs, writing the NOTE beside PHY-16 step 3 into their text. Tier 1: a changed
+protonation state moves the density, and each protonated atom takes PDB2PQR's own CHARMM radius. Examples 06 and 07
+take the default, and example 07's VER-62 walk is re-pinned, its conductance predicted to fall; the 2WCD walks and
+the Tier 3 cases set the switch and do not move (§8.2.31 AG8). A miss elsewhere is investigated, then reverted or
+ruled and re-pinned (G10, I4). [Plan](wp5.03-protonation-before-the-density.md). Tag `v0.6.0-alpha.3`.
 
 ### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6)
 
@@ -268,7 +270,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 |---|---|---|
 | WP5.01 | none kept | VER-45 |
 | WP5.02 | 1 | VER-78 (proposed) |
-| WP5.03, protonation before the density | 1, 2 | U2's Tier 1 test; VAL-03's golden and VER-62 unmoved |
+| WP5.03, protonation before the density | 1, 2 | U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) |
 | WP5.04, the mutator's library step | 1 | FR-38's Tier 1 test: the projected charge changes by the residue's alone |
 | WP5.05, named models | 1, 2 | FR-39's reuse and rebuild-only-what-moved; the schema's identifier (G6) |
 | WP5.06, the registries | 1, 2 | MOD-09; FR-23 and QR-04's route cross-check unchanged |
