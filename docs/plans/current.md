@@ -1,13 +1,13 @@
 # Current work
 
-Updated 3 November 2026 (WP5.04 planned). Navigation only;
+Updated 3 November 2026 (WP5.04 delivered). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
 Phase 4 is released, and the workbench's technology is chosen. The rest of Phase 5 is planned: library steps, one
 package per part of the screen, the guided route, the old shell's removal and the guide. The first library step is
-merged: the pore's shape is built from the protein as charged at the chosen pH. The second is planned: a case can fix
+merged: the pore's shape is built from the protein as charged at the chosen pH. The second is built: a case can fix
 a residue's protonation state, change its charge by a whole unit on its acid or base group, or scale its atoms' size,
 on every copy in the ring, kept beside the original with a record of what differs.
 
@@ -19,9 +19,9 @@ One line per lane (§8.4.4).
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.03 are merged
-  (`v0.6.0-alpha.3`). Library WP5.03 to WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31).
+  (`v0.6.0-alpha.3`). Library WP5.04 to WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31).
   **WP5.04** ([the charge mutator's library step](wp5.04-the-charge-mutators-library-step.md))
-  is planned; next `/np-implement wp 5.04`. host: claude-code.
+  is delivered; next `/np-ship wp 5.04`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -51,7 +51,7 @@ One line per lane (§8.4.4).
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs. **The Read the Docs project**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
-- **The 200 ms redraw**, on the author's GPU machine, in WP5.11 (AF4; AG7).
+- **The 200 ms redraw**, on the author's GPU, in WP5.11 (AF4; AG7).
 - **Rulings on a residual cycle (H6) or WP41 drift (I4).** **The archived PQRs** for WP27–WP29's Tier 3.
 - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 is WP5.09's, REV-170 WP5.10's (AG1).
 
