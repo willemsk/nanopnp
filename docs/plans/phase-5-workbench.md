@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 and WP5.02 merged; the library packages WP5.03 to WP5.07 and the shell packages
+**Status: in progress; WP5.01 and WP5.02 merged, WP5.03 delivered; the library packages WP5.04 to WP5.07 and the shell packages
 WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
@@ -131,14 +131,15 @@ library opens with that library step, tested, before its screens (AG1).
 
 ### WP5.03 — Protonation before the density (§8.2.19 U2; REV-135)
 
-Stage 7's protonation walks before stage 2, and stage 2 smears the protonated atoms of every frame, so a protonation
-state moves the density, the contour and the mesh. `geometry.density.atoms: as_loaded`, the reference's way, is a
-switch away from that default. The case schema moves to `nanopnp/case/v0.6` (G6). It amends PHY-16, FR-04, §5.2's
-stage 2 and 7 rows and §5.3.1's NOTEs, writing the NOTE beside PHY-16 step 3 into their text. Tier 1: a changed
-protonation state moves the density, and each protonated atom takes PDB2PQR's own CHARMM radius. Examples 06 and 07
-take the default, and example 07's VER-62 walk is re-pinned, its conductance predicted to fall; the 2WCD walks and
-the Tier 3 cases set the switch and do not move (§8.2.31 AG8). A miss elsewhere is investigated, then reverted or
-ruled and re-pinned (G10, I4). [Plan](wp5.03-protonation-before-the-density.md). Tag `v0.6.0-alpha.3`.
+**Delivered 3 November 2026** ([the plan](wp5.03-protonation-before-the-density.md)). Stage 7's `protonation` walks
+after `structure` and before `density`, and stage 2 smears the protonated atoms of every frame, each with its CHARMM
+radius through its residue's state patch, so a protonation state moves the density, the contour and the mesh.
+`geometry.density.atoms: as_loaded` is the reference's way, a switch the manifest lists; the stage-2 key under it is
+unchanged. The case schema is `nanopnp/case/v0.6`, and v0.5 is refused with its migration. `protonated` beside a
+force field other than CHARMM is refused. PHY-16, FR-04, §5.2 and §5.3.1 are amended. Example 07 is re-pinned
+(conductance 0.9734 → 0.9598 nS, −1.40 %; 6223 → 6059 elements); the 2WCD walks, VAL-05/06 and Tier 3 set
+`as_loaded` and did not move. REV-135 is `fixed`; REV-180 (SWANSON and PEOEPB names) is deferred. Live constraint: only
+the `X86_V3` and `AVX512_SPR` meshes of example 07 are folded. Tagged `v0.6.0-alpha.3`.
 
 ### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6)
 
