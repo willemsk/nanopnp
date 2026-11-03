@@ -161,8 +161,9 @@ default. Each entry names a `residue` as the parent name, the number and an opti
 (`ASP 21`, `HIS 292A`), and holds exactly one of three edits, which apply on every chain and every frame:
 `state` (`charged` or `neutral`) pins a titratable residue's protonation state; `charge_change_e` (a
 non-zero integer) changes its net charge by that amount; `radius_scale` (finite, above 0) multiplies every
-atom radius of the residue, hydrogens included. A residue holds one edit of each kind, and `state` beside
-`charge_change_e` on one residue SHALL be refused. `state` SHALL be refused on a residue other than ASP, GLU
+atom radius of the residue, hydrogens included. A residue holds one edit of each kind, compared by name,
+number and insertion code (`ASP 021` is `ASP 21`), and `state` beside `charge_change_e` on one residue SHALL
+be refused. A `residue` named by a protonation-variant name (`HSD`, `ASH`) SHALL be refused naming its parent. `state` SHALL be refused on a residue other than ASP, GLU
 and HIS, beside `titration: none`, under a force field other than `CHARMM` (which holds no `LYS⁰`, `ARG⁰`,
 `CYS⁻` or `TYR⁻`) and beside `inputs.pqr`. `charge_change_e` SHALL be refused on a residue with no
 titratable group. Every edit SHALL be refused beside `inputs.charge`, and any edit in a case with neither

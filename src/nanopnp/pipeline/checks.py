@@ -9,6 +9,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from nanopnp.charge.edits import TitratableGroups, variant_parent
 from nanopnp.charge.fields import FIELD_FORMAT
 from nanopnp.core.paths import available_corrections
 from nanopnp.io.case import (
@@ -478,8 +479,6 @@ STATE_RESIDUES: frozenset[str] = frozenset({"ASP", "GLU", "HIS"})
 def _check_edits(document: CaseDocument, charge: Charge) -> None:
     if not charge.edits:
         return
-    from nanopnp.charge.edits import TitratableGroups
-
     groups = TitratableGroups.load()
     note = "section 5.3.1 NOTE on charge.edits"
     where = (
@@ -492,10 +491,18 @@ def _check_edits(document: CaseDocument, charge: Charge) -> None:
     )
     if where is not None:
         raise CaseValidationError(f"charge.edits is set {where} ({note})")
-    seen: dict[tuple[str, str], int] = {}
+    # Keyed on the parsed residue, so 'ASP 021' is the residue 'ASP 21' names.
+    seen: dict[tuple[tuple[str, int, str], str], int] = {}
     for index, edit in enumerate(charge.edits):
         name = f"charge.edits[{index}] ({edit.residue})"
-        parent = edit.residue.split(" ")[0]
+        residue = edit.residue_parts
+        parent = residue[0]
+        named = variant_parent(parent)
+        if named is not None:
+            raise CaseValidationError(
+                f"{name}: {parent} is a protonation-variant name; an edit names the residue by "
+                f"its parent, {named} ({note})"
+            )
         if edit.state is not None:
             reason = (
                 f"on {parent}, which has no ASH, GLH or HIP state to fix"
@@ -516,7 +523,7 @@ def _check_edits(document: CaseDocument, charge: Charge) -> None:
                 f"the change on; the groups are {', '.join(sorted(groups.groups))} ({note})"
             )
         for kind in ("state", "charge", "radius"):
-            earlier = seen.get((edit.residue, kind))
+            earlier = seen.get((residue, kind))
             same = kind == edit.kind
             clash = {edit.kind, kind} == {"state", "charge"}
             if earlier is not None and (same or clash):
@@ -529,7 +536,7 @@ def _check_edits(document: CaseDocument, charge: Charge) -> None:
                     )
                     + f" ({note})"
                 )
-        seen[(edit.residue, edit.kind)] = index
+        seen[(residue, edit.kind)] = index
 
 
 def _check_profile_keys(document: CaseDocument, charge: Charge) -> None:

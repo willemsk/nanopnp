@@ -2424,3 +2424,27 @@ using a custom version of PDB2PQR. This is something we can look into later, so 
 **Deferred** to FR-43's library package: it starts from the author's customised PDB2PQR, which the author supplies
 then, and writes the physics into §4 first (T6). Found at WP5.04's plan, 3 November 2026.
 
+
+## REV-184: Stage 4's probe-radius gate ignores a `charge.edits` radius scale
+
+Under `geometry.density.atoms: protonated` a `radius_scale` widens or narrows the residue's kernels in stage 2, so
+the contour moves (§5.3.1 NOTE on `charge.edits`). Stage 4's gate measures the lumen against the probe-radius
+profile, which `geometry/contour.py:gate_inputs` builds from the aligned ensemble and the unscaled radius set; its key
+does not read the protonation artefact. A scale above 1 on a lumen-lining residue pulls the contour inward against
+an unmoved probe, so `r_c - R_p >= -h_c` can refuse a legitimate variant; a scale below 1 moves it outward towards
+the upper band. Either way the gate compares the variant's wall with the parent's atoms.
+
+**Open**, found at WP5.04's review: the author rules whether the probe profile reads the table's radius scales
+(stage 4's key then takes the protonation artefact under `protonated`) or the band is posed on the parent alone.
+
+## REV-185: A charge-only edit moves stage 2's key and rebuilds the mesh
+
+Under `protonated`, stage 2 keys on the whole protonation artefact's hash. A `charge_change_e` edit changes no
+position, name or radius stage 2 reads, yet it moves the protonation key and with it stages 2 to 6, so each charge
+variant re-deposits the density and remeshes to the same map. WP5.03's review accepted that the whole-artefact key
+can miss a cache and never hit a wrong one; with `charge.edits` the miss is the cost of every charge variant on a
+full walk, against the plan's "a few seconds once the original has been built".
+
+**Open**, found at WP5.04's review: the author rules whether stage 2 keys on what it reads of the table (positions,
+names, tautomers, radius scales), which leaves the unedited keys of VER-62 unmoved only if the no-edit case keeps
+today's hash.

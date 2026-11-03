@@ -29,6 +29,7 @@ import yaml
 from MDAnalysis.analysis import align, density
 from pdb2pqr import biomolecule as pdb2pqr_biomolecule
 from pdb2pqr import main as pdb2pqr_main
+from propka import group as propka_group
 from propka import parameters as propka_parameters
 from shapely.geometry import LineString, box
 from skimage import measure
@@ -356,6 +357,29 @@ def test_fr38_the_titratable_groups_are_propkas() -> None:
     assert set(groups.anchors) == set(seven) == set(groups.groups)
     assert all(groups.has_group(residue) for residue in seven)
     assert not groups.has_group("SER")
+
+    # The charge centre each group class's setup_atoms sets, read from the installed PROPKA, and
+    # the atoms that centre names on each residue.
+    centres = {
+        "[self.atom]": None,
+        "the_oxygens": {"ASP": ["OD1", "OD2"], "GLU": ["OE1", "OE2"]},
+        "ring_atoms": {"HIS": ["CG", "ND1", "CD2", "CE1", "NE2"]},
+    }
+    classes = {
+        "ASP": propka_group.COOGroup,
+        "GLU": propka_group.COOGroup,
+        "HIS": propka_group.HISGroup,
+        "CYS": propka_group.CYSGroup,
+        "TYR": propka_group.TYRGroup,
+        "LYS": propka_group.LYSGroup,
+        "ARG": propka_group.ARGGroup,
+    }
+    for residue, cls in classes.items():
+        source = inspect.getsource(cls.setup_atoms)
+        centre = source.split("self.set_center(", 1)[1].split(")", 1)[0]
+        named = centres[centre]
+        expected = [mapping[residue]] if named is None else named[residue]
+        assert list(groups.groups[residue]) == expected, residue
 
     radii = yaml.safe_load(radii_file("pdb2pqr_charmm").read_text(encoding="utf-8"))
     entries = radii["residues"]

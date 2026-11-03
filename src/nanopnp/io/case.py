@@ -359,7 +359,7 @@ class ChargeEdit(_Strict):
         ]
         if len(given) != 1:
             raise ValueError(
-                f"charge edit of {self.residue!r} sets {', '.join(given) or 'none of'} of state, "
+                f"charge edit of {self.residue!r} sets {', '.join(given) or 'none'} of state, "
                 "charge_change_e and radius_scale; it sets exactly one"
             )
         if self.charge_change_e == 0:

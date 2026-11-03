@@ -139,12 +139,17 @@ charge group; PHY-16 step 3's NOTE. FR-38 and the Charge edit row are amended in
   groups:
     ASP: [OD1, OD2]
     GLU: [OE1, OE2]
-    HIS: [ND1, NE2, HD1, HE2]
+    HIS: [CG, ND1, CD2, CE1, NE2]
     CYS: [SG]
     TYR: [OH]
     LYS: [NZ]
-    ARG: [NE, NH1, NH2, HE, HH11, HH12, HH21, HH22]
+    ARG: [CZ]
   ```
+
+  > **Outcome — the HIS and ARG groups are PROPKA's charge centres.** The brief first listed their
+  > interaction atoms; `/np-ship`'s physics review found that PROPKA 3.5.1 centres HIS on its five
+  > ring atoms and ARG on CZ (`group.py`, `set_center`), which AG9 names. The test now reads each
+  > class's centre ([CODE_REVIEW_029](../code_reviews/CODE_REVIEW_029.md)).
   Put a comment header with the source, as `pdb2pqr_charmm.yaml` has.
 - Add `core/paths.py:charge_data_file(name)`, by `radii_file`'s pattern.
 - Add `charge/edits.py:TitratableGroups.load()`, a pydantic model.

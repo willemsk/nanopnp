@@ -128,6 +128,8 @@ deviation. The [plan](docs/plans/wp5.04-the-charge-mutators-library-step.md) rec
   - **Amended**: FR-38 (AG9 to AG11), PHY-16 step 3's NOTE on `charge.edits`, §5.2's stage 2 and 7 rows and the
     stage-7 note, §5.3.1's NOTE on `charge.edits`, §5.3.3's charge group, and Appendix A's FR-38 row.
   - **Knowledge**: `knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md`.
+  - **Open items**: REV-184 (stage 4's probe-radius gate ignores a radius scale) and REV-185 (a charge-only edit
+    remeshes) are open, from the package's review ([code review 029](docs/code_reviews/CODE_REVIEW_029.md)).
 
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.

@@ -1,4 +1,4 @@
-"""Titratable residue groups and their anchor atoms, read from the PROPKA data file (FR-38)."""
+"""Charge edits: PROPKA's titratable groups, an edited table, and its difference from its parent."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ RADIUS_TOLERANCE_NM = 1e-12
 """Below this a radius counts as unchanged."""
 
 POSITION_TOLERANCE_NM = 1e-9
-"""Below this a coordinate counts as unchanged: the table rounds them to 1e-4 angstrom."""
+"""Below this a coordinate counts as unchanged: the table rounds them to 1e-4 nm (0.001 Å)."""
 
 
 class EditError(ValueError):
@@ -51,6 +51,12 @@ class TitratableGroups(BaseModel):
     def has_group(self, residue: str) -> bool:
         """Return whether a parent residue name, such as ``ASP``, carries a titratable group."""
         return residue in self.groups
+
+
+def variant_parent(name: str) -> str | None:
+    """Return the parent that a protonation-variant name such as ``HSD`` stands for, or None."""
+    parent = parent_residue(name)
+    return parent if parent != name else None
 
 
 def edit_records(edits: Sequence[ResolvedEdit]) -> list[Canonicalisable]:
@@ -90,33 +96,52 @@ def _owner(table: ProtonationTable) -> np.ndarray:
     )
 
 
-def _targets(table: ProtonationTable, edit: ResolvedEdit) -> dict[str, int]:
+def _residues(table: ProtonationTable) -> list[tuple[str, int, str, str]]:
+    return list(
+        zip(
+            table.residue_chain.tolist(),
+            table.residue_resid.tolist(),
+            table.residue_icode.tolist(),
+            table.residue_name.tolist(),
+            strict=True,
+        )
+    )
+
+
+def _targets(residues: Sequence[tuple[str, int, str, str]], edit: ResolvedEdit) -> dict[str, int]:
     label = f"{edit.parent} {edit.resid}{edit.icode}"
     found = {
         str(chain): number
-        for number, (chain, resid, icode) in enumerate(
-            zip(
-                table.residue_chain.tolist(),
-                table.residue_resid.tolist(),
-                table.residue_icode.tolist(),
-                strict=True,
-            )
-        )
+        for number, (chain, resid, icode, _) in enumerate(residues)
         if (int(resid), str(icode)) == (edit.resid, edit.icode)
     }
-    for chain in sorted(set(table.residue_chain.tolist())):
+    for chain in sorted({str(chain) for chain, _, _, _ in residues}):
         if chain not in found:
             raise EditError(
                 f"frame 0: charge edit of {label}: chain {chain!r} holds no such residue (FR-38)"
             )
     for chain, number in found.items():
-        name = parent_residue(str(table.residue_name[number]))
+        name = parent_residue(str(residues[number][3]))
         if name != edit.parent:
             raise EditError(
                 f"frame 0: charge edit of {label}: the residue on chain {chain!r} is {name}, not "
                 f"{edit.parent} (FR-38)"
             )
     return found
+
+
+def check_targets(
+    residues: Sequence[tuple[str, int, str, str]], edits: Sequence[ResolvedEdit]
+) -> None:
+    """Refuse an edit whose residue a chain lacks, or holds under another parent name.
+
+    Parameters
+    ----------
+    residues
+        ``(chain, resid, icode, name)`` per residue, as a frame lists them.
+    """
+    for edit in edits:
+        _targets(residues, edit)
 
 
 def apply_edits(
@@ -130,11 +155,16 @@ def apply_edits(
 
     charge = table.charge_e.copy()
     radius = table.radius_nm.copy()
+    expected = table.expected_charge_e.copy()
     owner = _owner(table)
+    residues = _residues(table)
     for edit in edits:
-        targets = _targets(table, edit)
+        targets = _targets(residues, edit)
         if edit.kind == "state":
             continue
+        if edit.kind == "charge":
+            # The charge was set by the case, not by PROPKA's pKa, so there is no expectation.
+            expected[:, list(targets.values())] = np.nan
         for frame in range(table.frames):
             atoms = table.frame_slice(frame)
             names = table.name[atoms].astype(str)
@@ -166,6 +196,8 @@ def apply_edits(
         charge_e=charge,
         radius_nm=radius,
         residue_charge_e=residue_charge,
+        expected_charge_e=expected,
+        unapplied=~np.isnan(expected) & (np.abs(residue_charge - np.nan_to_num(expected)) > 0.5),
         header={**table.header, "edits": edit_records(edits)},
     )
 

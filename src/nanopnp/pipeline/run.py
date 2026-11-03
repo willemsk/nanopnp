@@ -857,6 +857,7 @@ PROTONATION_RECORD_KEYS: tuple[str, ...] = (
     "warnings",
     "pqr_sha256",
     "payload_digest",
+    "variant_of",
 )
 
 
