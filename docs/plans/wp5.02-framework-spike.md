@@ -151,7 +151,8 @@ Middleware:
 - `?token=` correct sets an `HttpOnly`, `SameSite=Strict` cookie named `nanopnp_token_` and a digest of the token, so two workbenches on one host keep their own;
 - neither the token nor the cookie gets 403.
 
-The `cli` subcommand `gui` passes the arguments through `importlib.import_module("nanopnp.gui.web.server").main`.
+The `cli` subcommand `gui` calls `importlib.import_module("nanopnp.gui.web.server").serve` with its parsed arguments (REV-179); `main` is the
+shim of `python -m nanopnp.gui.web.server`.
 
 Record the edge: `{from: cli, to: gui, relation: string, finding: REV-174}`. REV-174 is a new `fixed` row, "The
 command line names the workbench's server by string".
@@ -170,6 +171,8 @@ A missing `fastapi` is refused, naming the `gui` extra.
 
 - `charged-tube`: walks `upto="charge"`;
 - `refused`: the same case with `concentration_M: -1.0`;
+- `uncharged`: the tube with a derived dielectric (`dielectric_transition_nm`) and no `pqr`, which walks to stage 7
+  without a protonation artefact, so there is no residue to link (REV-177);
 - `empty`: no case.
 
 `st-charge` is the spike's screen. `home` lists the states' case and its stages. The test sets
@@ -177,8 +180,8 @@ A missing `fastapi` is refused, naming the `gui` extra.
 otherwise skips.
 
 **Item 9.** `checkPage` gains `nontext`. For each `input, select, textarea, button, [role=switch]` it compares border
-or outline to the surface behind. After `focus()` it compares the focus ring. For `[aria-selected=true]` it compares
-fill to the surface. For each `[data-colorbar]` it compares both end colours. Each needs at least 3. The text goes into
+or outline to the surface behind. After `focus()` it compares the focus ring. For a selected item (`aria-selected`, `aria-pressed`,
+`aria-current`) it compares the edge or the fill, whichever reads better, to the surface (REV-178). For each `[data-colorbar]` it compares both end colours. Each needs at least 3. The text goes into
 `render.md`'s report list.
 
 **Item 10.** The NOTEs (the browser shell, v0.6) are:

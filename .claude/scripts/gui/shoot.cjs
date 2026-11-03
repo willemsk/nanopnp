@@ -195,13 +195,25 @@ function checkPage() {
     if (line) nontextFinding(element, "edge", over(line, back), back);
     else if (filled) nontextFinding(element, "fill", over(fill, back), back);
   }
-  for (const element of document.body.querySelectorAll("[aria-selected=true]")) {
+  // A selected item (aria-selected, aria-pressed or aria-current) is told apart by a marker: its
+  // edge or its fill, whichever reaches 3:1 against the surface behind it. A selected item with
+  // neither drawn is told apart by weight or text alone, which 1.4.11 does not accept.
+  const SELECTED = "[aria-selected=true], [aria-pressed=true], [aria-current]:not([aria-current=false])";
+  for (const element of document.body.querySelectorAll(SELECTED)) {
     if (!visible(element)) continue;
-    const fill = parse(getComputedStyle(element).backgroundColor);
-    if (fill && fill.a > 0) {
-      const back = surface(element);
-      nontextFinding(element, "selected fill", over(fill, back), back);
+    const back = surface(element);
+    const style = getComputedStyle(element);
+    const line = edge(style);
+    const fill = parse(style.backgroundColor);
+    const markers = [];
+    if (line) markers.push(["selected edge", over(line, back)]);
+    if (fill && fill.a > 0) markers.push(["selected fill", over(fill, back)]);
+    if (markers.length === 0) {
+      nontext.push({ selector: selector(element), kind: "selected, no marker", ratio: 1, needed: NON_TEXT, foreground: hex(back), background: hex(back) });
+      continue;
     }
+    const [kind, colour] = markers.reduce((best, next) => (ratio(next[1], back) > ratio(best[1], back) ? next : best));
+    nontextFinding(element, kind, colour, back);
   }
   for (const element of document.body.querySelectorAll("[data-colorbar]")) {
     if (!visible(element)) continue;

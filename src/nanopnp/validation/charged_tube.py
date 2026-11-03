@@ -12,6 +12,7 @@ __all__ = [
     "CHARGED_TUBE_RADIUS_A",
     "CHARGED_TUBE_SECOND_FRAME_E",
     "write_charged_tube",
+    "write_dielectric_tube",
     "write_parallelogram_profile",
 ]
 
@@ -108,4 +109,14 @@ numerics: {{mesh: {{size_scale: {size_scale}}}}}
         + ("" if charge_block is None else f"charge: {charge_block}\n"),
         encoding="utf-8",
     )
+    return case
+
+
+def write_dielectric_tube(directory: Path) -> Path:
+    """Write the fixture tube with a derived dielectric and no charge input, as a case file."""
+    case = write_charged_tube(directory)
+    (directory / "atoms.pqr").unlink()
+    lines = [line for line in case.read_text(encoding="utf-8").splitlines() if "pqr:" not in line]
+    text = "\n".join(lines).replace("name: charged-tube", "name: dielectric-tube")
+    case.write_text(text + "\ncharge: {dielectric_transition_nm: 0.15}\n", encoding="utf-8")
     return case

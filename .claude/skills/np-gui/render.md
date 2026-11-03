@@ -48,8 +48,10 @@ minutes: the states walk their cases.
      `error`;
    - each `contrast` entry: selector, and ratio against 4.5 or 3;
    - each `nontext` entry (WCAG 2.2 1.4.11): the kind (a control's `edge` or `fill`, a `focus ring`, a
-     `selected fill`, a `colour bar` end), selector, and ratio against 3. A control with neither edge nor
-     fill is identified by its text and is not measured;
+     `selected edge` or `selected fill`, whichever reads better, a `selected, no marker` item, a `colour
+     bar` end), selector, and ratio against 3. A control with neither edge nor fill is identified by
+     its text and is not measured; a selected item (`aria-selected`, `aria-pressed`, `aria-current`) with
+     neither is a finding;
    - each `targets` entry: selector, and size against 24 × 24 CSS px. An `inline` link is excepted by
      WCAG 2.2 2.5.8: note it, do not fail it;
    - the `unmeasured` text (SVG labels, faded text), as not checked.

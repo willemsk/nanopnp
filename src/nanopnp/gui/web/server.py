@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import hmac
+import json
 import os
 import re
 import secrets
@@ -41,6 +42,7 @@ __all__ = [
     "Guard",
     "build_app",
     "main",
+    "serve",
     "track",
 ]
 
@@ -52,6 +54,11 @@ READY = re.compile(r"^nanopnp-gui ready (http://127\.0\.0\.1:\d+/\?token=[\w-]+)
 
 COOKIE = "nanopnp_token"
 """The prefix of the launch cookie's name, which ``Guard`` completes with a digest of the token."""
+
+
+def _ready_line(url: str, *, as_json: bool) -> str:
+    return json.dumps({"ready": url}) if as_json else f"nanopnp-gui ready {url}"
+
 
 _FORBIDDEN = b"forbidden: a foreign Host, or neither the launch token nor its cookie"
 _CHILDREN: list[SolverProcess] = []
@@ -161,8 +168,11 @@ def build_app(token: str, bench: Workbench) -> Guard:
 
 # A uvicorn server that announces the address it bound, once, on standard output.
 class _Server(uvicorn.Server):
-    def __init__(self, config: uvicorn.Config, guard: Guard, token: str, *, browser: bool) -> None:
+    def __init__(
+        self, config: uvicorn.Config, guard: Guard, token: str, *, browser: bool, as_json: bool
+    ) -> None:
         super().__init__(config)
+        self._json = as_json
         self._guard = guard
         self._token = token
         self._browser = browser
@@ -175,7 +185,7 @@ class _Server(uvicorn.Server):
         port = self.servers[0].sockets[0].getsockname()[1]
         self._guard.hosts = frozenset({f"{HOST}:{port}", f"localhost:{port}"})
         url = f"http://{HOST}:{port}/?token={self._token}"
-        print(f"nanopnp-gui ready {url}", flush=True)
+        print(_ready_line(url, as_json=self._json), flush=True)
         if self._browser:
             webbrowser.open(url)
 
@@ -219,7 +229,7 @@ def dev_app() -> Guard:
     return guard
 
 
-def _announce(url: str, port: int, *, browser: bool) -> None:
+def _announce(url: str, port: int, *, browser: bool, as_json: bool) -> None:
     # The reloading supervisor binds the port before its first worker has started, so the first
     # connection that succeeds is the earliest moment the address works; the ready line and the
     # browser wait for it, as the plain server's do for its bind.
@@ -230,15 +240,23 @@ def _announce(url: str, port: int, *, browser: bool) -> None:
         except OSError:
             time.sleep(0.1)
             continue
-        print(f"nanopnp-gui ready {url}", flush=True)
+        print(_ready_line(url, as_json=as_json), flush=True)
         if browser:
             webbrowser.open(url)
         return
 
 
 # Serve with reload: a change to a page, a style sheet or the bridge restarts the worker.
-def _serve_dev(args: argparse.Namespace, token: str, work: Path) -> None:
-    port = args.port
+def _serve_dev(
+    case: Path | None,
+    state: str | None,
+    port: int,
+    token: str,
+    work: Path,
+    *,
+    browser: bool,
+    as_json: bool,
+) -> None:
     if port == 0:  # a reloading server keeps one address, so it is chosen before the first worker
         with socket.socket() as probe:
             probe.bind((HOST, 0))
@@ -247,12 +265,15 @@ def _serve_dev(args: argparse.Namespace, token: str, work: Path) -> None:
         NANOPNP_GUI_TOKEN=token,
         NANOPNP_GUI_WORK=str(work),
         NANOPNP_GUI_PORT=str(port),
-        NANOPNP_GUI_CASE=str(args.case or ""),
-        NANOPNP_GUI_STATE=args.state or "",
+        NANOPNP_GUI_CASE=str(case or ""),
+        NANOPNP_GUI_STATE=state or "",
     )
     url = f"http://{HOST}:{port}/?token={token}"
     threading.Thread(
-        target=_announce, args=(url, port), kwargs={"browser": not args.no_browser}, daemon=True
+        target=_announce,
+        args=(url, port),
+        kwargs={"browser": browser, "as_json": as_json},
+        daemon=True,
     ).start()
     threading.Thread(target=_watch_input, args=(None,), daemon=True).start()
     uvicorn.run(
@@ -267,46 +288,57 @@ def _serve_dev(args: argparse.Namespace, token: str, work: Path) -> None:
     )
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def serve(
+    *,
+    case: Path | None = None,
+    state: str | None = None,
+    port: int = 0,
+    no_browser: bool = False,
+    dev: bool = False,
+    as_json: bool = False,
+) -> int:
     """Serve the workbench on the loopback interface until standard input closes or a signal.
 
-    A desktop wrapper starts this with ``--no-browser --port 0``, reads the ready line, loads
-    its address, and closes the standard input to stop the server.
+    The ready line goes to standard output once the address accepts a connection, as one JSON
+    object ``{"ready": url}`` where ``as_json`` is set. A desktop wrapper starts the server with
+    ``no_browser`` and port 0, reads that line, loads its address, and closes the standard input
+    to stop the server.
     """
-    parser = argparse.ArgumentParser(
-        prog="nanopnp gui",
-        description="Serve the workbench on 127.0.0.1. The server prints one line, "
-        "'nanopnp-gui ready <url>', and stops when its standard input closes or on "
-        "SIGINT or SIGTERM.",
-    )
-    parser.add_argument("case", nargs="?", type=Path, help="a case file, walked to its charge")
-    parser.add_argument(
-        "--state", choices=STATES, help="a fixture state in place of a case (the screens' tests)"
-    )
-    parser.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
-    parser.add_argument(
-        "--no-browser", action="store_true", help="print the address and open nothing"
-    )
-    parser.add_argument(
-        "--dev",
-        action="store_true",
-        help="reload on a change to the screens' source",
-    )
-    args = parser.parse_args(argv)
-    if args.case is not None and args.state is not None:
-        parser.error("give a case file or --state, not both")
-
     token = secrets.token_urlsafe(32)
     with tempfile.TemporaryDirectory(prefix="nanopnp-gui-") as work:
-        if args.dev:
-            _serve_dev(args, token, Path(work))
+        if dev:
+            _serve_dev(
+                case, state, port, token, Path(work), browser=not no_browser, as_json=as_json
+            )
             return 0
-        guard = build_app(token, _boot(str(args.case or ""), args.state, Path(work)))
-        config = uvicorn.Config(guard, host=HOST, port=args.port, log_level="warning")
-        server = _Server(config, guard, token, browser=not args.no_browser)
+        guard = build_app(token, _boot(str(case or ""), state, Path(work)))
+        config = uvicorn.Config(guard, host=HOST, port=port, log_level="warning")
+        server = _Server(config, guard, token, browser=not no_browser, as_json=as_json)
         threading.Thread(target=_watch_input, args=(server,), daemon=True).start()
         server.run()
     return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run ``python -m nanopnp.gui.web.server``, the entry a desktop wrapper starts."""
+    parser = argparse.ArgumentParser(prog="nanopnp gui", description=serve.__doc__)
+    parser.add_argument("case", nargs="?", type=Path, help="a case file, walked to its charge")
+    parser.add_argument("--state", choices=STATES, help="a fixture state in place of a case")
+    parser.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
+    parser.add_argument("--no-browser", action="store_true", help="open no browser")
+    parser.add_argument("--dev", action="store_true", help="reload on a change to the source")
+    parser.add_argument("--json", action="store_true", help="write the ready line as JSON")
+    args = parser.parse_args(argv)
+    if args.case is not None and args.state is not None:
+        parser.error("give a case file or --state, not both")
+    return serve(
+        case=args.case,
+        state=args.state,
+        port=args.port,
+        no_browser=args.no_browser,
+        dev=args.dev,
+        as_json=args.json,
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover - run as a script, never imported by a test

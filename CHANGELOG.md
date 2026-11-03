@@ -58,12 +58,13 @@ records the work.
 
 - **Added**:
   - **`nanopnp gui`**: serves the browser workbench on `127.0.0.1` with `[case]`, `--state`, `--port`,
-    `--no-browser` and `--dev` (reload on a change). It prints one `nanopnp-gui ready <url>` line, refuses a
+    `--no-browser`, `--dev` (reload on a change) and the common flags (`--json` writes the ready line as
+    `{"ready": <url>}`). It prints one `nanopnp-gui ready <url>` line, refuses a
     foreign `Host` and a request without the launch token or its cookie, and stops when its standard input
     closes or on SIGINT or SIGTERM (ADR-004's NOTEs). It needs the `gui` extra, which gains fastapi, uvicorn and
     nicegui.
   - **The first screens** under `nanopnp.gui.web`: a screen registry, the fixture states `empty`,
-    `charged-tube` and `refused`, the link between a residue and its charge on the pore map in both directions,
+    `charged-tube`, `uncharged` (a charge with no structure behind it) and `refused`, the link between a residue and its charge on the pore map in both directions,
     and Mol* served unmodified (MIT, with its notice).
   - **VER-78** (Tier 1): every state loads every screen with its controls and no console error, and the server
     keeps its contract. `gate.sh run` and CI's tier-1 leg require a browser (`NANOPNP_REQUIRE_BROWSER=1`).

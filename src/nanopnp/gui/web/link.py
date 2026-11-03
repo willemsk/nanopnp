@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from nanopnp.charge.kernel import source_atoms, volume_density
 from nanopnp.charge.protonation import PAYLOAD_NAME, ProtonationTable
-from nanopnp.charge.stage import frame_shift_nm, stored_lattice
+from nanopnp.charge.stage import CHARGE_PAYLOAD, frame_shift_nm, stored_lattice
 from nanopnp.gui.charge import charge_image
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -110,6 +110,15 @@ class Link:
     result
         A run walked to the ``charge`` stage.
     """
+
+    @classmethod
+    def from_run(cls, result: RunResult) -> Link | None:
+        """Return the link of a run, or None where its charge has no structure behind it."""
+        if "protonation" not in result.artefacts:
+            return None
+        if CHARGE_PAYLOAD not in result.artefacts["charge"].payload:
+            return None
+        return cls(result)
 
     def __init__(self, result: RunResult) -> None:
         import numpy as np

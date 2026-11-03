@@ -551,16 +551,18 @@ def _gui(args: argparse.Namespace) -> int:
             )
     # Named by string: gui sits above cli in the layer order, so an import would point upward.
     server = importlib.import_module("nanopnp.gui.web.server")
-    argv = ["--port", str(args.port)]
-    if args.no_browser:
-        argv.append("--no-browser")
-    if args.dev:
-        argv.append("--dev")
-    if args.state is not None:
-        argv += ["--state", args.state]
-    if args.case is not None:
-        argv.append(str(args.case))
-    code: int = server.main(argv)
+    if args.state is not None and args.state not in server.STATES:
+        _refuse(args, f"--state {args.state!r}: the states are {', '.join(server.STATES)}")
+    if args.case is not None and args.state is not None:
+        _refuse(args, "give a case file or --state, not both")
+    code: int = server.serve(
+        case=args.case,
+        state=args.state,
+        port=args.port,
+        no_browser=args.no_browser,
+        dev=args.dev,
+        as_json=bool(getattr(args, "json", False)),
+    )
     return code
 
 
@@ -1540,12 +1542,14 @@ def build_parser() -> argparse.ArgumentParser:
     ladder.add_argument("--output", type=Path, default=None, help="where to write the report")
     ladder.set_defaults(handler=_validate)
 
-    gui = subparsers.add_parser(
-        "gui",
-        help="serve the browser workbench on 127.0.0.1 (the 'gui' extra)",
-        description="Serve the workbench on 127.0.0.1. The server prints one line, "
-        "'nanopnp-gui ready <url>', and stops when its standard input closes or on "
-        "SIGINT or SIGTERM.",
+    gui = _common(
+        subparsers.add_parser(
+            "gui",
+            help="serve the browser workbench on 127.0.0.1 (the 'gui' extra)",
+            description="Serve the workbench on 127.0.0.1. The server prints one line, "
+            "'nanopnp-gui ready <url>' (with --json, {\"ready\": <url>}), and stops when its "
+            "standard input closes or on SIGINT or SIGTERM.",
+        )
     )
     gui.add_argument("case", nargs="?", type=Path, default=None, help="a case file to show")
     gui.add_argument("--state", default=None, help="a fixture state in place of a case")

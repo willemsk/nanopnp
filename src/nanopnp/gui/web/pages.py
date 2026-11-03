@@ -91,6 +91,8 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
                 ui.label("No stage has run.")
             if bench.refusal:
                 ui.label(f"Refused: {bench.refusal}")
+            if bench.notice:
+                ui.label(bench.notice)
         ui.link("Charge on the mesh", screen("st-charge").path).props("data-control=open-charge")
         ui.timer(0.1, ready, once=True)
 
@@ -156,7 +158,9 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
                         "flat dense data-control=unlink"
                     )
                     status = ui.label(
-                        bench.refusal or ("Pick a residue." if link else "No case is loaded.")
+                        bench.refusal
+                        or bench.notice
+                        or ("Pick a residue." if link else "No case is loaded.")
                     ).props("data-control=status")
                 image = (
                     ui.interactive_image("/api/map", on_mouse=on_map, events=["click"], cross=False)
