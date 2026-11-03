@@ -10,15 +10,20 @@ from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, classify
 from nanopnp.io.store import Store
-from nanopnp.validation.charged_tube import write_charged_tube
+from nanopnp.validation.charged_tube import write_charged_tube, write_dielectric_tube
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.gui.web.link import Link
 
 __all__ = ["STATES", "Workbench", "boot", "boot_case"]
 
-STATES: tuple[str, ...] = ("empty", "charged-tube", "refused")
-"""The names ``--state`` takes: no case, a case walked to its charge, and a case refused."""
+STATES: tuple[str, ...] = ("empty", "charged-tube", "uncharged", "refused")
+"""The names ``--state`` takes: no case, a case walked to its charge, one walked to a stage 7 that
+carries no charge from a structure, and a case refused."""
+
+NO_STRUCTURE_CHARGE = (
+    "The charge of this case does not come from a structure, so there is no residue to link."
+)
 
 
 @dataclass(frozen=True)
@@ -30,6 +35,7 @@ class Workbench:
     stages: tuple[str, ...] = ()
     link: Link | None = None
     refusal: str | None = None
+    notice: str | None = None
 
 
 def boot_case(case: Path, work: Path, *, name: str | None = None) -> Workbench:
@@ -45,7 +51,14 @@ def boot_case(case: Path, work: Path, *, name: str | None = None) -> Workbench:
         if classify(error) not in {EXIT_CASE, EXIT_GATE}:
             raise
         return Workbench(label, case=case, refusal=str(error))
-    return Workbench(label, case=case, stages=tuple(result.artefacts), link=Link(result))
+    link = Link.from_run(result)
+    return Workbench(
+        label,
+        case=case,
+        stages=tuple(result.artefacts),
+        link=link,
+        notice=None if link is not None else NO_STRUCTURE_CHARGE,
+    )
 
 
 def boot(state: str, work: Path) -> Workbench:
@@ -54,7 +67,8 @@ def boot(state: str, work: Path) -> Workbench:
         return Workbench("empty")
     if state not in STATES:
         raise ValueError(f"no state {state!r}; the states are {', '.join(STATES)}")
-    case = write_charged_tube(work / state)
+    write = write_dielectric_tube if state == "uncharged" else write_charged_tube
+    case = write(work / state)
     if state == "refused":
         case.write_text(
             case.read_text(encoding="utf-8").replace(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import http.client
+import json
 import os
 import re
 import signal
@@ -53,9 +54,15 @@ def browser() -> Iterator[Browser]:
     handle.stop()
 
 
-def _start(*arguments: str) -> tuple[subprocess.Popen[str], re.Match[str]]:
+CLI = ["-c", "import sys; from nanopnp.cli import main; sys.exit(main(sys.argv[1:]))", "gui"]
+MODULE = ["-m", "nanopnp.gui.web.server"]
+
+
+def _start(
+    *arguments: str, entry: list[str] = MODULE
+) -> tuple[subprocess.Popen[str], re.Match[str]]:
     process = subprocess.Popen(
-        [sys.executable, "-m", "nanopnp.gui.web.server", "--no-browser", *arguments],
+        [sys.executable, *entry, "--no-browser", *arguments],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
@@ -72,7 +79,7 @@ def _start(*arguments: str) -> tuple[subprocess.Popen[str], re.Match[str]]:
 
 @pytest.fixture(scope="module", params=STATES)
 def running(request: pytest.FixtureRequest) -> Iterator[tuple[str, str]]:
-    process, found = _start("--state", request.param)
+    process, found = _start("--state", request.param, entry=CLI)
     yield request.param, found.group(1)
     assert process.stdin is not None
     process.stdin.close()
@@ -167,6 +174,24 @@ def test_ver78_the_server_keeps_its_contract() -> None:
         terminated.wait(STOP_WITHIN_S)
     finally:
         terminated.kill()
+
+
+def test_ver78_the_command_line_entry_writes_its_ready_line_as_json() -> None:
+    process = subprocess.Popen(
+        [sys.executable, *CLI, "--no-browser", "--json"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    try:
+        assert process.stdout is not None and process.stdin is not None
+        record = json.loads(process.stdout.readline())
+        assert server.READY.match(f"nanopnp-gui ready {record['ready']}")
+        process.stdin.close()
+        assert process.wait(STOP_WITHIN_S) == 0
+    finally:
+        process.kill()
 
 
 def test_ver78_the_reloading_server_prints_its_line_and_stops_with_its_input() -> None:

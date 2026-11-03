@@ -66,7 +66,7 @@ Python 3.11 to 3.13 runs too (`SPECIFICATION.md` §7.6). `uv.lock` is committed 
 The browser workbench needs the `gui` extra. `uv run nanopnp gui --dev --state charged-tube` serves it on
 `127.0.0.1` (`--port` fixes the port) and opens the browser; a change to a page, a style sheet or the bridge under
 `src/nanopnp/gui/web/` restarts the server, and the open page reconnects. `--state` takes `empty`,
-`charged-tube` or `refused`; a case file takes its place (`nanopnp gui --dev my.case.yaml`). The server prints
+`charged-tube`, `uncharged` or `refused`; a case file takes its place (`nanopnp gui --dev my.case.yaml`). The server prints
 `nanopnp-gui ready <url>` and stops when its standard input closes or on Ctrl-C.
 
 To see what a change drew, run `/np-gui render shell`: it shoots every screen in every state, light and dark,

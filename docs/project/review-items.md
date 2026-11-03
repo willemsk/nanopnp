@@ -2318,6 +2318,13 @@ for a run with no charge lattice or no protonation artefact (a case with no `pqr
 Open: the author rules whether a case without charge shows as a state of its own, or as a refusal naming the missing
 stage. The fix is small once ruled.
 
+**Fixed** (author's ruling, 3 November 2026, in WP5.02): a charge with no structure behind it is a state of its own,
+not a refusal and not a fault. A case with no `pqr` at all is refused by the pipeline (exit 3) and already shows as
+`refused`; the case that failed was the one that walks to stage 7 with a derived dielectric or a supplied charge
+field, which has no protonation artefact or no stored lattice. `Link.from_run` returns None there, `Workbench`
+carries a `notice` beside `refusal`, and the Charge screen shows it. The state `uncharged` (the tube with
+`dielectric_transition_nm` and no `pqr`) joins `STATES`, so VER-78 loads every screen in it. An artefact that is
+present and unreadable still ends the server.
 Found by the WP5.02 review (CODE_REVIEW_027, finding 3), 3 November 2026.
 
 ## REV-178: The selected-fill measure does not read the strip's pressed item
@@ -2328,6 +2335,12 @@ against 3:1. Widening the selector changes what `/np-gui render` gates on (`--se
 
 Open: the author rules whether the selected strip item must reach 3:1 (the token changes) or the measure stays as it is.
 
+**Fixed** (author's ruling, 3 November 2026, in WP5.02): the measure reads the marker, not the fill. WCAG 1.4.11
+asks for the state indicator, and the selected strip item carries a 2px `--accent` edge (6.7:1 on `--panel`) and weight
+600, as `tokens.css` says a selection always does. `shoot.cjs` now takes every `aria-selected`, `aria-pressed` and
+`aria-current` item and passes it when its edge or its fill reaches 3:1; an item with neither is a finding
+(`selected, no marker`). No colour changes. Checked on a page of three selected buttons: edge and fill passes, a
+fill of 1.2:1 alone and weight alone are flagged. An earlier recommendation here, to darken `--sel`, was withdrawn.
 Found by the WP5.02 review (CODE_REVIEW_027, finding 9), 3 November 2026.
 
 ## REV-179: `nanopnp gui` has no smoke test and takes no common flags
@@ -2338,4 +2351,9 @@ CLAUDE.md asks each entry point for a thin smoke test. VER-78 launches `python -
 
 Open: the author rules whether the server accepts `--json` and `--traceback`, and the smoke test follows that shape.
 
+**Fixed** (author's ruling, 3 November 2026, in WP5.02): the server has one entry, `serve(case, state, port,
+no_browser, dev, as_json)`. `nanopnp gui` is built with the common flags and calls it; `python -m
+nanopnp.gui.web.server` (the desktop wrapper's entry, ADR-004) is a shim that parses and calls it. `--json` writes the
+ready line as `{"ready": <url>}`; the plain line stays the default, so the wrapper contract does not move. VER-78's
+state walk now launches through the command, which is the entry point's smoke test, and one test reads the JSON line.
 Found by the WP5.02 review (CODE_REVIEW_027, finding 14), 3 November 2026.
