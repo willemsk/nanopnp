@@ -220,3 +220,18 @@ recorded (AG11). WP5.04's entry read:
 > `v0.6.0-alpha.4`.
 
 Verification's WP5.04 row read: FR-38's Tier 1 test: the projected charge changes by the residue's alone.
+
+## Amended 3 November 2026 (§8.2.31 AG12, AG13)
+
+At WP5.05's plan the author ruled that a study may override any value of the models it names (AG12) and that the sweep
+over the library's models is WP5.05's (AG13). WP5.05's entry read:
+
+> **WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62)**
+>
+> A case references named molecular and continuum models and resolves into one complete case file; a study overrides
+> any of its continuum model's physics defaults; a built model is reused by every study that names it, rebuilding only
+> the stages a changed value moves. A case-schema change, under the release's identifier (G6). It owns REV-62, a mesh
+> named by store key (§8.2.18 T2). It builds on WP59's public `Case` and `Session` route (§8.2.27 AC1). Tag
+> `v0.6.0-alpha.5`.
+
+Verification's WP5.05 row read: FR-39's reuse and rebuild-only-what-moved; the schema's identifier (G6).

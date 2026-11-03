@@ -1,27 +1,29 @@
 # Current work
 
-Updated 3 November 2026 (WP5.04 delivered). Navigation only;
+Updated 3 November 2026 (WP5.05 planned). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
 Phase 4 is released, and the workbench's technology is chosen. The rest of Phase 5 is planned: library steps, one
 package per part of the screen, the guided route, the old shell's removal and the guide. The first library step is
-merged: the pore's shape is built from the protein as charged at the chosen pH. The second is built: a case can fix
-a residue's protonation state, change its charge by a whole unit on its acid or base group, or scale its atoms' size,
-on every copy in the ring, kept beside the original with a record of what differs.
+merged: the pore's shape is built from the protein as charged at the chosen pH. The second is merged too: a case can fix
+a residue's protonation state, change its charge by a whole unit, or scale its atoms, recording what differs. The third
+is planned: a case names a molecular and a continuum model kept in files of their own, overrides any of their values and
+reuses what they built.
 
-**Your call.** None open. The colleague who tries the workbench is named by the close.
+**Your call.** None open; you ruled the third step's two questions at its plan. The colleague who tries the workbench is
+named by the close.
 
 ## Position
 
 One line per lane (§8.4.4).
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.03 are merged
-  (`v0.6.0-alpha.3`). Library WP5.04 to WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31).
-  **WP5.04** ([the charge mutator's library step](wp5.04-the-charge-mutators-library-step.md))
-  is delivered; next `/np-ship wp 5.04`. host: claude-code.
+- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.04 are merged
+  (`v0.6.0-alpha.4`). Library WP5.05 to WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31).
+  **WP5.05** ([named models and study overrides](wp5.05-named-models-and-study-overrides.md))
+  is planned; next `/np-implement wp 5.05`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -40,7 +42,7 @@ One line per lane (§8.4.4).
   **The front end is NiceGUI; Mol* draws the molecule** (AF4).
 - **One shell package per suite; variables may be expressions, units through `pint`, keyed by resolved values**
   (§8.2.31 AG1 to AG5). **Example 07 is re-pinned** (AG8). **A charge edit sits on the titratable group;
-  a radius edit is a scale; a variant is never a deviation** (AG9 to AG11).
+  a radius edit is a scale; a variant is never a deviation** (AG9 to AG11). **A study overrides any model value** (AG12).
 - **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's identifier, `nanopnp/case/v0.6` (G6).
 - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
@@ -62,7 +64,7 @@ One line per lane (§8.4.4).
 | The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The phase's amendments | `phase-5-record.md` |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
-| WP5.04 | its plan; FR-38; §8.2.31 AG9 to AG11; PHY-16 step 3's NOTE; REV-183 |
+| WP5.05 | its plan; FR-39; WB-11 and WB-16 in the design document; §8.2.31 AG4, AG5, AG12, AG13; §8.2.18 T2; REV-62 |
 | The workbench | `phase-5-workbench.md`; `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30, §8.2.31; M3; F5 |
 
 ## Handoff Rules
