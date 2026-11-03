@@ -168,7 +168,7 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-01** | SHALL ingest a structure and optional trajectory ensemble and superpose all frames on a reference frame's Cα set. | v0.3 |
 | **FR-02** | SHALL determine the Cₙ axis by chain-permutation superposition, taking the eigenvector of eigenvalue 1 of the chain-to-chain rotation, and place it on z at r = 0. | v0.3 |
 | **FR-03** | SHALL verify the expected oligomeric state (ClyA 12, αHL 7, MspA 8) and abort on missing chains. | v0.3 |
-| **FR-04** | SHALL build an ensemble-averaged density map from per-atom Gaussians whose width is tied to each atom's van der Waals radius, on a 0.25–0.5 Å grid. | v0.3 |
+| **FR-04** | SHALL build an ensemble-averaged density map from per-atom Gaussians whose width is tied to each atom's van der Waals radius, on a 0.25–0.5 Å grid. The atoms are the protonated frames of stage 7 by default, hydrogens included, and the atoms as stage 1 loaded them under `geometry.density.atoms: as_loaded` (PHY-16; §5.3.1). | v0.3 |
 | **FR-05** | SHALL reduce the 3D map to (r, z) by averaging the n rotated copies before azimuthal averaging, with area-weighted binning over exact annular volumes. | v0.3 |
 | **FR-06** | SHALL report residual azimuthal variance as a first-class output of every reduced geometry. | v0.3 |
 | **FR-07** | SHALL extract the pore surface as a closed contour of the reduced map at a configurable isolevel, default 0.25, and condition it to a watertight, non-self-intersecting polyline. | v0.3 |

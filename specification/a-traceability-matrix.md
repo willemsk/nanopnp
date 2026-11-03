@@ -14,7 +14,7 @@ needed.
 |---|---|
 | IF-01 | VER-25, VER-32, VER-45 (the public surface, the modules its mirror imports from, and its import cost) |
 | IF-02 | VER-32, VER-38, VER-45 (the generated command-line and exit-code references), VER-46 (every documented command executed) |
-| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (case schema v0.5), VER-71 (the v0.5 refusals of a value never applied), VER-57 (`inputs.pqr` read, registered and refused; the protonation keys' refusals); the registry and inf-sup refusals made at load (`tests/tier1/test_case_schema.py`); that `nanopnp validate case` and the shell's commit give them in a run's text is verified at review (§8.2.13 N3) |
+| IF-03 | VER-09, VER-36 (dotted-path substitution against the schema), VER-47 (case schema v0.6, and the refusal of the retired v0.5), VER-71 (the v0.5 refusals of a value never applied), VER-57 (`inputs.pqr` read, registered and refused; the protonation keys' refusals); the registry and inf-sup refusals made at load (`tests/tier1/test_case_schema.py`); that `nanopnp validate case` and the shell's commit give them in a run's text is verified at review (§8.2.13 N3) |
 | IF-04 | VER-48 (PDB, mmCIF and each trajectory format read; PDB and mmCIF of one entry agree), VER-32 (the aligned ensemble exported as a PDB and a DCD) |
 | IF-05 | VER-29, VER-49 (the density map in `.npz`, OpenDX and CCP4, in ångströms at the file boundary), VER-50 (the reduced map exported as radial grids), VER-32 and VER-46 (the map exported from the command line and overlaid on its structure), VAL-15 |
 | IF-06 | VER-27 |
@@ -24,7 +24,7 @@ needed.
 | FR-01 | VER-48 (frame window, superposition on the earliest frame's C-alpha, Kabsch against MDAnalysis) |
 | FR-02 | VER-48 (the permutation axis against a known axis, and against principal axes) |
 | FR-03 | VER-48 (missing, surplus and truncated chains, residue names and the point group refused) |
-| FR-04 | VER-49 (the union density, its truncation bound, the frame average and the radius set) |
+| FR-04 | VER-49 (the union density, its truncation bound, the frame average, the radius set, and the protonated atoms with their state-patch radii) |
 | FR-05 | VER-01 (shared annular-volume integration), VER-50 (exact annular weights and the harmonic Cₙ average) |
 | FR-06 | VER-50 (the Cₙ and raw variance against closed forms), VAL-05 (the largest Cₙ and non-Cₙ variance and where, recorded on both legs: `tests/tier2/test_val05_2wcd.py`, `tests/tier3/test_val05_ensemble.py`) |
 | FR-07 | VER-51 (marching squares against exact and closed-form level sets, the morphology, Taubin and the conditioning), VAL-05 (the stage-4 polygon against the reference: `tests/tier1/test_val05_geometry.py`, the harness; `tests/tier2/test_val05_2wcd.py`; `tests/tier3/test_val05_ensemble.py`) |

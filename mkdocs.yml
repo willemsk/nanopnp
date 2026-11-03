@@ -274,6 +274,7 @@ nav:
               - "Tier-1 test evidence: the VAL-05 harness and its closed forms (WP45 item 24)": _generated/model/knowledge/04-clya-geometry-and-charge/11-tier-1-test-evidence-the-val-05-harness.md
               - "Tier-2 test evidence: quadrature gates, the exclusion shell and the contour (WP45 item 25)": _generated/model/knowledge/04-clya-geometry-and-charge/12-tier-2-test-evidence-quadrature-gates.md
               - "Tier-3 test evidence: the charged-tube sweep, the table's margin and the ClyA-AS prediction (WP45 item 27)": _generated/model/knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md
+              - "PDB2PQR's residue and hydrogen names, and the protonated density (WP5.03)": _generated/model/knowledge/04-clya-geometry-and-charge/14-pdb2pqrs-residue-and-hydrogen-names-and-the-protonated-density.md
           - "Analyte bodies and forces — what the thesis actually contains":
               - _generated/model/knowledge/05-analyte-and-forces/index.md
               - "Analyte bodies and forces — what the thesis actually contains (overview)": _generated/model/knowledge/05-analyte-and-forces/00-overview.md

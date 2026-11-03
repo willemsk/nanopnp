@@ -95,10 +95,12 @@ schema moved from `nanopnp/case/v1` to carry every key Phases 2 and 3 needed. Ag
 parameter (PHY-20) with two sources of truth, and a default of 20 or 3.2 written in code would be a
 fitted parameter hard-coded in Python; the author ruled that the map is the one
 place they are set. The added keys default to the validated configuration.
-In v0.5, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
+v0.6 **adds** `geometry.density.atoms` (`protonated` by default, or `as_loaded`; the NOTE on `geometry.density`), which moves
+the density of a case with `structure:` (WP5.03; §8.2.19 U2). In v0.6, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
 other schema identifier is refused naming the expected schema and the declared identifier before
-any structural validation (§5.4.1). The earlier pre-release identifiers `nanopnp/case/v1` and
-`nanopnp/case/v2` are retired.
+any structural validation (§5.4.1). The earlier pre-release identifiers `nanopnp/case/v1`, `nanopnp/case/v2` and
+`nanopnp/case/v0.5` are retired. The refusal of `v0.5` names the migration: declare `nanopnp/case/v0.6`, and a case
+with `structure:` that keeps v0.5's density adds `geometry.density.atoms: as_loaded`.
 
 NOTE (the added keys that change a number): `charge.exclusion_offset_nm`
 and `charge.dielectric_transition_nm` are the fitted exclusion offset of FR-15 and the width of
@@ -164,7 +166,10 @@ this way, which is what makes the solver core testable ahead of the meshing pipe
 (`format: profile1`), which is how a hand-edited contour enters a run (§8.1, GUI increment 2), and
 `inputs.pqr` supplies the per-atom charges and radii of stage 7's PDB2PQR step (`format: pqr`). The
 two chains are structure → density → profile → mesh and structure → PQR → charge field, and the
-dielectric field comes from the density (FR-15). Supplying an artefact together with one downstream
+dielectric field comes from the density (FR-15). Under `geometry.density.atoms: protonated`, the
+default, the chains share their first link: stage 7's protonation, or the supplied PQR, feeds the density
+as well as the charge field, so the density reads the supplied PQR's atoms, and beside `inputs.charge` the
+protonation runs for the density alone (WP5.03). Supplying an artefact together with one downstream
 of it on the same chain SHALL be refused, naming both. The upstream one would be hashed into the
 manifest as an input to a run that never read it, and the same holds of every key: each key of
 `inputs:` SHALL be read by the stage that consumes it, so that no file is hashed into the manifest
@@ -318,6 +323,18 @@ NOTE (`geometry.density`, stages 2 and 3, FR-04 to FR-06, CON-04, IF-05; WP19): 
 it SHALL be refused naming both, by the upstream rule of the `inputs:` NOTE. `grid_spacing_nm`
 SHALL lie in [0.025, 0.05] nm (FR-04) and `sharpness` SHALL be finite and positive, and each is refused naming
 its value rather than narrowed in the schema.
+
+`atoms` (`protonated` or `as_loaded`; WP5.03, PHY-16, §8.2.19 U2) says which atoms stage 2 smears. `protonated`, the
+validated default, deposits each frame's own atoms from stage 7's protonation table, hydrogens included, at the
+positions PDB2PQR wrote. Each atom's `R_i` comes from the CHARMM radius set: first from its residue's state patch
+(the table's tautomer for a histidine; `ASPP` for an aspartate holding `HD2`; `GLUP` for a glutamate holding `HE2`),
+by that patch's own entry, and otherwise from the residue's parent name. An atom without a radius is refused naming
+its frame, chain, residue and atom, as under `as_loaded`, with no fallback by element. `as_loaded` deposits the atoms as stage 1 read
+them, which is the reference's density; it is a switch away from the validated default, so the manifest lists it (FR-25).
+`protonated` beside a produced protonation under a `charge.forcefield` other than `CHARMM` SHALL be refused at
+resolution naming both keys, since another force field writes hydrogen names that the CHARMM set does not hold.
+`atoms` takes part in stage 2's key only when it is `protonated`: under `as_loaded` the key is the key
+of schema v0.5.
 
 NOTE (`geometry.pore`, an idealised pore, IF-02, FR-09, FR-10; §8.2.22 X1): a case without
 `structure:`, `inputs.profile` or `inputs.mesh` MAY declare an idealised pore,
@@ -591,15 +608,15 @@ document that validated before still validates; adding, removing, renaming or na
 move it.** The mode a run actually solved is in its FR-25 manifest, so no artefact of an earlier
 revision becomes ambiguous under a widening. From Phase 4 the identifier that a move takes names
 the release that ships it (§8.2.7 G6): the first move inside v0.5 makes the schema
-`nanopnp/case/v0.6`, a move inside v0.6 makes it `nanopnp/case/v0.6`, and the stable schema of v1.0
+`nanopnp/case/v0.5`, the first move inside v0.6 makes it `nanopnp/case/v0.6`, and the stable schema of v1.0
 is `nanopnp/case/v1.0`, which is distinct from the retired `nanopnp/case/v1`. A release whose
 packages move nothing keeps the identifier it inherited. Between that release's work packages, the
 schema under its identifier may change again without a new identifier, because a pre-release makes
 no compatibility promise. The manifest of every run records the package version (FR-25), and that
 version settles which revision the run read. The identifier is fixed when `vX.Y.0` is
-tagged. In v0.5, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
+tagged. In v0.6, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
 other schema identifier is refused naming the expected schema and the declared identifier before
-any structural validation. The earlier identifiers `nanopnp/case/v1` and `nanopnp/case/v2` are retired.
+any structural validation. The earlier identifiers `nanopnp/case/v1`, `nanopnp/case/v2` and `nanopnp/case/v0.5` are retired.
 
 NOTE (`numerics.wall_distance`): `sources` is the boundary-name pattern the PHY-02 distance field
 `d` is measured from, and its validated default is the pore wall alone. PHY-02 excludes the
