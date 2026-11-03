@@ -213,7 +213,7 @@ fill to the surface. For each `[data-colorbar]` it compares both end colours. Ea
 > NiceGUI keeps it. Mol* is vendored as its unmodified standalone bundle under `gui/web/assets/molstar/`, with a
 > NOTICE of its sha256 values (CON-09), and `tokens.css` is read from the design, travelling in the wheel through
 > `force-include`. Two things the plan did not foresee: NiceGUI needs `docutils>=0.19` where pdb2pqr 3.7.1 pins
-> 0.17.1, so the lock carries a uv override and REV-175 stays open; and an empty row is not visible to
+> 0.17.1, so the lock carried a uv override until the reader took pdb2pqr 3.8 (REV-175, fixed); and an empty row is not visible to
 > Playwright, so VER-78 caught `stages` and `strip` and each now holds a placeholder or a width. The sketcher
 > stub of the spike is not carried: no screen of this package uses it. The tube's writers live in
 > `validation/charged_tube.py` and not in `states.py`, because the shell's option guard

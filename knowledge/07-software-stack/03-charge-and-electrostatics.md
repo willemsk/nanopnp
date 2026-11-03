@@ -68,7 +68,7 @@ PDB2PQR ignores PROPKA's `chains` option (relevant for homo-oligomeric pores) bu
 warning — surface it rather than swallowing it.
 
 **Package facts, read from PyPI's metadata on 30 September 2026 [verified]:**[^wp17-plan] `pdb2pqr` 3.7.1 is
-BSD-3, a pure-Python wheel, and requires Python ≥ 3.11, < 4. `propka` 3.5.1 is **LGPL-2.1** by its
+BSD-3, a pure-Python wheel, and requires Python ≥ 3.11, < 4. 3.7.1 pins `docutils==0.17.1`, which NiceGUI 3 cannot take; 3.8.0 (Python ≥ 3.10) has no `docutils` requirement, and its `CHARMM.DAT` is byte-identical to 3.7.1's, so the radii of the stage-2 density map are unchanged **[verified]**, 3 November 2026 (REV-175). `propka` 3.5.1 is **LGPL-2.1** by its
 licence field and classifier, and is a pure-Python wheel. `SPECIFICATION.md` §2.6 called it BSD
 until that day. There is no `apbs` package on PyPI. `apbs-binary` 3.4.1.1 packages the BSD-3 APBS
 under Apache-2.0 and ships wheels for manylinux_2_28 x86_64, macOS 10.15 x86_64 and macOS 12
@@ -115,7 +115,7 @@ frame).
   up with a `RuntimeError`. `HIS` is titrated. A driver must therefore strip hydrogens and rename
   protonation variants to their parent before calling PDB2PQR.
 - **Output naming.** `--ffout=CHARMM` writes terminal-patch atoms under the residue name `TER`
-  (`N TER A 8`, `OT1 TER A 292`). It renames `ILE CD1` to `CD` and the C-terminal `O` and `OXT` to
+  (`N TER A 8`, `OT1 TER A 292`) in 3.7.1, and under `NTER` and `CTER` in 3.8.0 **[tested: tests/tier1/test_pqr.py::test_ver57_pdb2pqr_38_terminal_patches_name_no_residue]**, 3 November 2026. It renames `ILE CD1` to `CD` and the C-terminal `O` and `OXT` to
   `OT1` and `OT2`, and it writes histidines as `HIS` whatever their tautomer. PDB2PQR 2.1.1 had kept
   the real residue name (`GLU HT1`) and `HSE`. Identify a residue by chain, number and insertion code.
 - **Coordinates move by relabelling, and flipped groups move a little.** PDB2PQR renames heavy

@@ -27,13 +27,13 @@ __all__ = [
     "write_pqr",
 ]
 
-PATCH_RESIDUES: frozenset[str] = frozenset({"TER", "DISU"})
+PATCH_RESIDUES: frozenset[str] = frozenset({"TER", "NTER", "CTER", "DISU"})
 """The residue names ``--ffout=CHARMM`` gives patch atoms, which name no residue.
 
-``TER`` for a terminal patch (``knowledge/07-software-stack/03-charge-and-electrostatics.md``) and
-``DISU`` for the
+``TER`` (PDB2PQR 3.7.1) or ``NTER`` and ``CTER`` (3.8) for a terminal patch
+(``knowledge/07-software-stack/03-charge-and-electrostatics.md``) and ``DISU`` for the
 ``CB`` and ``SG`` of a disulfide-bonded cysteine, written ``1CB`` and ``1SG``
-(``CHARMM.names`` of PDB2PQR 3.7.1): without ``DISU``
+(``CHARMM.names``): without ``DISU``
 here every cysteine in a disulfide carries two names and is refused.
 """
 

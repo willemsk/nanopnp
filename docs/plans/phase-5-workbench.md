@@ -120,7 +120,7 @@ with `--state` and `--dev`, the screen registry (`home`, `st-charge`), the state
 `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
 constraints: the 200 ms line is unmeasured for the whole picture (Mol* alone takes about 800 ms on software GL; measure
 on a GPU in the package that builds the first Study screen); a screen is ready only after Mol* has drawn; the lock holds
-a uv override for docutils and pdb2pqr 3.7.1 (REV-175); the study's mockups fail the non-text measure (REV-176).
+pdb2pqr is at 3.8 and the lock needs no override (REV-175); the study's mockups fail the non-text measure and stay as dated evidence (REV-176).
 Tag `v0.6.0-alpha.2` (S19).
 
 Each library package lands its capability with its Tier 1 and 2 tests before any screen surfaces it (§8.1; RSK-15;

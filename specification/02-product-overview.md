@@ -78,7 +78,7 @@ the Qt shell (§8.2.17 S2, S12, S17).
 | Gmsh | GPLv2+ | Optional mesher backend (ADR-002) |
 | MDAnalysis 2.10+ | LGPLv3 | Structure and trajectory input, alignment |
 | gemmi 0.7+ | MPL-2.0 | mmCIF structure input, which MDAnalysis 2.10 does not read (WP18) |
-| PDB2PQR 3.7+ | BSD-3 | Protonation states and partial charges |
+| PDB2PQR 3.8+ | BSD-3 | Protonation states and partial charges |
 | PROPKA 3.5+ | LGPL-2.1 | pKa prediction, installed as a PDB2PQR dependency. Licensed LGPL-2.1 (its package metadata), acceptable under CON-09 |
 | APBS 3.4.1 | BSD-3 | Poisson-only cross-check (VAL-06), run from the `apbs-binary` wheels (Apache-2.0 packaging; Linux x86_64 and macOS) in a test-only dependency group, never on the end-user path (§8.2.4 D3) |
 | scikit-image, Shapely | BSD-3 | Contour extraction, polyline conditioning |

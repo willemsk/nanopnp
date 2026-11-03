@@ -11,9 +11,8 @@ screens, links a residue on the molecule to its charge on the pore map and back,
 colours, contrast and sizes. One thing is unmeasured: whether a whole redraw meets the 200 ms line, which needs a
 graphics card. Next come four library packages, then a second planning round for the screens.
 
-**Your call.** Must a plain pip install of both the structure and interface extras work before 1.0, or only the
-locked uv install (a version clash between two packages, REV-175)? *Recommendation:* the locked install only; the
-clash is outside our code.
+**Your call.** None open. The version clash between the structure and interface extras is settled: the reader
+accepts the newer protonation tool's terminal names, so both extras install together (REV-175).
 
 ## Position
 
@@ -54,7 +53,7 @@ One line per lane (§8.4.4).
 - **The paper's figure data** for VAL-16 and VAL-17 (§8.2.4 D6); E1's ensemble legs.
 - **The Read the Docs project**; **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, what v1.0 contains.
-- **The 200 ms redraw of the whole picture**, on a machine with a GPU (§8.2.30 AF4); **REV-175** and **REV-176**.
+- **The 200 ms redraw of the whole picture**, on a machine with a GPU (§8.2.30 AF4).
 - **The rulings on any residual cycle (H6) and any WP41 drift (I4).** **The archived PQRs** for WP27–WP29's Tier 3.
 - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-170 are placed in the Phase 5 plan.
 

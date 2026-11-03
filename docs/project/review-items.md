@@ -2282,6 +2282,12 @@ the override, so it resolves to an older NiceGUI or fails.
 Open: the author rules whether the `structure` extra is capped below 3.8 or the reader learns 3.8's terminal names,
 and whether `pip install nanopnp[structure,gui]` is supported before 1.0.
 
+**Fixed** (author's ruling, 3 November 2026, in WP5.02): the reader learns 3.8's names. 3.8.0 writes the terminal
+patch atoms under `NTER` and `CTER` where 3.7.1 wrote `TER`; `PATCH_RESIDUES` holds all three, and
+`test_ver57_pdb2pqr_38_terminal_patches_name_no_residue` reads them. PDB2PQR 3.8.0 does not require `docutils`, so
+the `structure` extra asks for `pdb2pqr>=3.8`, the uv override is removed, and a pip-style resolve of
+`.[structure,gui]` succeeds. `CHARMM.DAT` is byte-identical in 3.7.1 and 3.8.0, so the transcribed radii hold.
+
 Found at WP5.02's item 7, 2 November 2026.
 
 ## REV-176: The design mockups fail the non-text contrast measure
@@ -2296,5 +2302,9 @@ evidence and are not shipped. The shipped screens, rendered by `/np-gui render s
 Open: the author rules whether the study's pages are corrected, or left as dated evidence, and the focus ring on
 the 3D canvas (a ring of `--focus` that reads at 3:1 on `--canvas-3d`) is decided when the first screen that
 draws a focusable control over it is built.
+
+**Fixed** (author's ruling, 3 November 2026, in WP5.02): the study's pages stay as dated evidence of WP5.01 and are
+not corrected; the measure applies to the shipped screens, which report none. The focus ring on the 3D canvas is
+decided when the first screen that draws a focusable control over it is built.
 
 Found at WP5.02's item 9, 2 November 2026.

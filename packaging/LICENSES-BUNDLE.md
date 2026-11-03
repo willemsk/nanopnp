@@ -28,10 +28,10 @@ regardless of which solver a case selects. Gmsh, carried as the optional mesher 
 | GEOS (inside the Shapely wheel) | LGPL-2.1 | Shapely's geometry engine, dynamically linked |
 | Gmsh | **GPL-2+** | The optional mesher backend (`numerics.mesh.backend: gmsh`); never imported on the default path (CON-10). Its library sits at the bundle root and its licence text in `gmsh-licence/` |
 | The geometry payloads' pure-Python dependencies (NetworkX, imageio, tifffile, Pillow, lazy_loader, mmtf-python, mda-xdrlib, tqdm, threadpoolctl) | BSD / MIT / Apache-2.0 / PSF / MPL-2.0 | Imported by the readers above; unmodified |
-| PDB2PQR 3.7.1, with its `pdb2pqr/dat/` force-field files | BSD-3-Clause | Stage 7's protonation, partial charges and radii, unmodified, with its `dat/` tree beside it. Its notice and licence are below |
+| PDB2PQR 3.8.0, with its `pdb2pqr/dat/` force-field files | BSD-3-Clause | Stage 7's protonation, partial charges and radii, unmodified, with its `dat/` tree beside it. Its notice and licence are below |
 | PROPKA 3.5.1, with `propka.cfg` | LGPL-2.1 | The pKa calculation PDB2PQR titrates with, unmodified; collected as source files, with its parameter file beside them |
 | PDB2PQR's pure-Python dependencies (requests, urllib3, idna, charset-normalizer, certifi, mmcif-pdbx) | Apache-2.0 / MIT / BSD-3-Clause / MPL-2.0 / CC0-1.0 | Imported by PDB2PQR; unmodified. nanopnp never lets it reach the network: it is always given a file |
-| PDB2PQR 3.7.1 `CHARMM.DAT` (radius column only) | BSD-3-Clause | The stage-2 density map's van der Waals radii, transcribed as data into `nanopnp/data/radii/pdb2pqr_charmm.yaml`; its notice and licence are below |
+| PDB2PQR 3.8.0 `CHARMM.DAT` (radius column only) | BSD-3-Clause | The stage-2 density map's van der Waals radii, transcribed as data into `nanopnp/data/radii/pdb2pqr_charmm.yaml`; its notice and licence are below |
 
 ## Your rights under the LGPL components
 
@@ -50,10 +50,10 @@ replaced in place, and the bundle imports whatever is at that path.
 
 ## PDB2PQR, and its radius table
 
-The bundle carries PDB2PQR 3.7.1 itself, with its force-field files, and
+The bundle carries PDB2PQR 3.8.0 itself, with its force-field files, and
 `data/radii/pdb2pqr_charmm.yaml` carries the atomic radii of its `pdb2pqr/dat/CHARMM.DAT`, which the
 density map of `SPECIFICATION.md` §5.3.1 uses by an author ruling. Both are redistributed under
-PDB2PQR's licence, reproduced here verbatim from the 3.7.1 distribution:
+PDB2PQR's licence, reproduced here verbatim from the 3.8.0 distribution:
 
 > Copyright (c) 2002-2024, Jens Erik Nielsen; Nathan A. Baker; Battelle Memorial Institute, Developed at the Pacific Northwest National Laboratory, operated by Battelle Memorial Institute, Pacific Northwest Division for the U.S. Department Energy.; Paul Czodrowski & Gerhard Klebe, University of Marburg.
 >
