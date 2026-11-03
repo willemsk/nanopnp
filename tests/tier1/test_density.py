@@ -534,14 +534,18 @@ def _protonated_fragment(
 
 
 def _density_stage(
-    tmp_path: Path, atoms: str, structure: object, protonation: object | None
+    tmp_path: Path,
+    atoms: str,
+    structure: object,
+    protonation: object | None,
+    charge: str = "ph: 8.0",
 ) -> tuple[Any, StageInputs]:
     from nanopnp.density.stage import DensityStage
 
     upstream = {"structure": structure}
     if protonation is not None:
         upstream["protonation"] = protonation
-    resolved = _fragment_case(tmp_path, atoms)
+    resolved = _fragment_case(tmp_path, atoms, charge=charge)
     inputs = StageInputs(resolved=resolved, upstream=upstream)  # type: ignore[arg-type]
     stage = DensityStage(workspace=tmp_path / f"density-{atoms}")
     return stage, inputs
@@ -618,6 +622,66 @@ def test_ver49_the_protonated_map_deposits_the_tables_atoms(
     grid = canonical_grid(frames, widths, spec.grid_spacing_nm)
     assert grid == stored.grid
     assert np.array_equal(deposit(frames, widths, grid), stored.values)
+
+
+def test_fr38_a_radius_scale_moves_the_density_and_the_kernel_width(
+    tmp_path: Path, fragment_2wcd: object
+) -> None:
+    """A radius edit the density ignores would change the table and leave the contour unchanged."""
+    from nanopnp.structure.protonated import ProtonationTable
+
+    edit = "ph: 8.0, edits: [{residue: 'LEU 24', radius_scale: 1.2}]"
+    parent = _protonated_fragment(tmp_path / "parent", fragment_2wcd, 8.0)
+    pinned = _fragment_case(tmp_path / "edited", "protonated", charge=edit)
+    assert pinned.protonation.edits  # type: ignore[attr-defined]
+    structure = parent[0]
+    from nanopnp.charge.protonation import ProtonationStage
+
+    edited = ProtonationStage(workspace=tmp_path / "edited-workspace").run(
+        StageInputs(resolved=pinned, upstream={"structure": structure})  # type: ignore[arg-type]
+    )
+    variant = ProtonationTable.read(edited.payload["protonation"])
+    table = parent[2]
+    leu = (variant.resid == 24) & (variant.resname.astype(str) == "LEU")  # type: ignore[attr-defined]
+    assert leu.any()
+    expected = np.where(leu, 1.2, 1.0) * table.radius_nm  # type: ignore[attr-defined]
+    np.testing.assert_allclose(variant.radius_nm, expected, rtol=0.0, atol=1e-12)  # type: ignore[attr-defined]
+
+    maps, keys = {}, {}
+    for atoms in ("protonated", "as_loaded"):
+        for label, charge, protonation in (
+            ("parent", "ph: 8.0", parent[1]),
+            ("edited", edit, edited),
+        ):
+            stage, inputs = _density_stage(
+                tmp_path / f"{atoms}-{label}", atoms, structure, protonation, charge
+            )
+            keys[atoms, label] = stage.key(inputs)
+            maps[atoms, label] = DensityMap.read(stage.run(inputs).payload["density"])
+    assert keys["protonated", "parent"].hash != keys["protonated", "edited"].hash
+    # A wider kernel on LEU 24 widens the grid's margin, so the two maps are not the same shape.
+    assert maps["protonated", "parent"].grid != maps["protonated", "edited"].grid
+    assert (
+        maps["protonated", "parent"].header["radius_range_nm"][1]
+        < (maps["protonated", "edited"].header["radius_range_nm"][1])
+    )
+
+    # The deposit from the table's own edited radii is the third route to the stage's widths.
+    spec = inputs.resolved.density  # type: ignore[attr-defined]
+    frames = [variant.positions_nm[variant.frame_slice(f)] for f in range(variant.frames)]  # type: ignore[attr-defined]
+    widths = [
+        spec.sharpness * variant.radius_nm[variant.frame_slice(f)] for f in range(variant.frames)
+    ]  # type: ignore[attr-defined]
+    grid = canonical_grid(frames, widths, spec.grid_spacing_nm)
+    stored = maps["protonated", "edited"]
+    assert grid == stored.grid
+    assert np.array_equal(deposit(frames, widths, grid), stored.values)
+    assert stored.header["radius_range_nm"][1] == pytest.approx(
+        float(variant.radius_nm.max()), abs=1e-12
+    )  # type: ignore[attr-defined]
+
+    assert keys["as_loaded", "parent"].hash == keys["as_loaded", "edited"].hash
+    assert np.array_equal(maps["as_loaded", "parent"].values, maps["as_loaded", "edited"].values)
 
 
 def test_ver49_ragged_frames_deposit_as_the_stacked_call() -> None:

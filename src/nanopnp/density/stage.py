@@ -41,7 +41,7 @@ from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.structure.protonated import PAYLOAD_NAME as PROTONATION_PAYLOAD
-from nanopnp.structure.protonated import ProtonationTable
+from nanopnp.structure.protonated import ProtonationTable, radius_scales
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
@@ -137,11 +137,12 @@ class DensityStage:
                     f"ensemble {ensemble.frames}, so stage 2 cannot pair them"
                 )
             radii = resolve_protonated_radii(KERNEL_RADII[spec.kernel], table)
+            radii_nm = radii.radii_nm * radius_scales(table)
             positions: Frames = [
                 table.positions_nm[table.frame_slice(f)] for f in range(table.frames)
             ]
             widths: Widths = [
-                spec.sharpness * radii.radii_nm[table.frame_slice(f)] for f in range(table.frames)
+                spec.sharpness * radii_nm[table.frame_slice(f)] for f in range(table.frames)
             ]
             first = table.frame_slice(0)
             atom_total = first.stop - first.start
@@ -154,8 +155,9 @@ class DensityStage:
                 resid=ensemble.resid,
                 icode=ensemble.icode,
             )
+            radii_nm = radii.radii_nm
             positions = ensemble.positions_nm
-            widths = spec.sharpness * radii.radii_nm
+            widths = spec.sharpness * radii_nm
             atom_total = ensemble.atoms
         check_positions(positions)
         grid = canonical_grid(positions, widths, spec.grid_spacing_nm)
@@ -194,7 +196,7 @@ class DensityStage:
             },
             "atoms": {"total": atom_total, "by_element": by_element},
             "hydrogens": by_element.get("H", 0),
-            "radius_range_nm": [float(radii.radii_nm.min()), float(radii.radii_nm.max())],
+            "radius_range_nm": [float(radii_nm.min()), float(radii_nm.max())],
             "structure_payload_digest": structure.summary.get("payload_digest"),
         }
         if table is not None:
