@@ -1,6 +1,6 @@
 # WP5.05 — Named models and study overrides in the case
 
-**Status: planned, not started.** Planned 3 November 2026, on `v0.6.0-alpha.4`. It inherits §8.2.18 T2, §8.2.28 AD3,
+**Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.4`. It inherits §8.2.18 T2, §8.2.28 AD3,
 §8.2.31 AG4 and AG5, and AG12 and AG13, ruled at this plan.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -182,8 +182,8 @@ Appendix A row, and the design document's WB-16 row and *Override* entry.
 - [x] 50059fc 5. `api/sweep.py`, `sweep/plan.py`; row 5 (D5). Done when row 5 passes. **Executor:** main.
 - [x] 6. Compaction checkpoint. **Executor:** main.
 - [x] e56d8a6 7. REV-62: `SuppliedArtefact`, `require_runnable`, the mesh stage's store, `deployed_mesh`, `_gate_meshes`, `wall_distance_remedy`; `inputs.mesh.artefact` reclassified in `LEAVES`; row 7 (D6). Done when row 7 passes. **Executor:** main.
-- [x] 8. `tests/tier2/test_named_models.py`, row 8. Done when it passes. **Executor:** main.
-- [ ] 9. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s prose on `models:`; REV-62 `fixed`; a REV row for a stored mesh beside a structure (D6). Done when the code and review say so, and the strict documentation build passes. **Executor:** `general-purpose` on Sonnet.
+- [x] 5ad7886 8. `tests/tier2/test_named_models.py`, row 8. Done when it passes. **Executor:** main.
+- [x] 3cd2cc9 9. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s prose on `models:`; REV-62 `fixed`; a REV row for a stored mesh beside a structure (D6). Done when the code and review say so, and the strict documentation build passes. **Executor:** `general-purpose` on Sonnet.
 
 ### Verification
 
@@ -199,7 +199,7 @@ Fixtures: model files in `tmp_path`, split by `OWNERS` from `examples/01-quickst
 | `tests/tier1/test_models.py::test_fr39_a_sweep_over_models_resolves_each_member` | 1 | FR-39, FR-24 | `substitute(study, {"models.continuum": b})` equals the study naming `b`, overrides included; a sweep file's plan gives the same members and lists both files; `Case.loads(case.dumps(study=True), base=…)` equals `case`, `overrides` and `models` | same |
 | `tests/tier1/test_models.py::test_fr39_every_case_leaf_has_one_owner` | 1 | FR-39 | Every path of `case_fields()` and `block_paths()` has one owner. Every `OWNERS` row names a path of the schema | same |
 | `tests/tier1/test_mesh_ingest.py::test_a_mesh_named_by_store_key_is_the_stored_artefact` | 1 | FR-27 (REV-62) | After example 01 `upto="mesh"`, a case naming that mesh's hash, without `geometry:`, gets a `cached` mesh of that hash; `deployed_mesh` gives the generating case's element count and content hash | `uv run pytest tests/tier1/test_mesh_ingest.py -k store_key` |
-| `tests/tier2/test_named_models.py::test_fr39_a_study_rebuilds_only_what_its_override_moves` | 2 | FR-39, VER-26 | `wall_h_nm: 1.0`. After the base study: `bias_V: 0.1` leaves `region`, `mesh`, `materials` `cached` and computes `solve`, `qoi`, `report`; `outputs: [current]` leaves `solve` `cached`; a sweep over `models.continuum` [base, base at 0.1 V] leaves both members' `region` to `solve` `cached` | `uv run pytest tests/tier2/test_named_models.py` |
+| `tests/tier2/test_named_models.py::test_fr39_a_study_rebuilds_only_what_its_override_moves` | 2 | FR-39, VER-26 | The quick-start's own `wall_h_nm` (0.35 nm). After the base study: `bias_V: 0.1` leaves `region`, `mesh`, `materials` `cached` and computes `solve`, `qoi`, `report`; `outputs: [current]` leaves `solve` `cached`; a sweep over `models.continuum` [base, base at 0.1 V] leaves both members' `region` to `solve` `cached` | `uv run pytest tests/tier2/test_named_models.py` |
 | The VER-62 walks | 2 | VER-62 | Unmoved at 10⁻⁸, with no re-pin | `.claude/hooks/gate.sh run` |
 
 ### Out of scope
@@ -212,3 +212,15 @@ Fixtures: model files in `tmp_path`, split by `OWNERS` from `examples/01-quickst
 ### Open questions
 
 None. The author ruled AG12 and AG13 at this plan.
+
+> **Outcome — the plan's `wall_h_nm: 1.0` is refused (item 8).** The quick-start's wall corrections read the wall
+> distance, and NUM-34 refuses a mesh that coarse (min d = −0.94 nm, 9.7 % of the fluid samples negative). The Tier 2
+> test keeps the example's 0.35 nm and costs about 20 s.
+
+> **Outcome — a sweep member is named for its point (item 8).** A member over the models reuses `region` to `solve`,
+> and writes new `case`, `qoi` and `report` artefacts, which hash the case's name. The test asserts that set and no more.
+
+> **Outcome — `models` is kept out of identity by the field, not by the dump (items 1 to 3).** `CaseDocument.models` is
+> `Field(exclude=True)` and the record sits in a private attribute, so no hash, dump or `__eq__` needs a special case.
+> `io/case_paths.py` reaches the record by its methods (`carried`, `attached`) because `io` may not import `io/models`
+> at module scope (VER-61).
