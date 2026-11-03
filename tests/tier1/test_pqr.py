@@ -100,6 +100,16 @@ def test_ver57_a_patched_residue_is_named_by_its_variant() -> None:
         parse_pqr(text + text.splitlines()[1].replace("ASPP", "GLUP") + "\n")
 
 
+def test_ver57_pdb2pqr_38_terminal_patches_name_no_residue() -> None:
+    text = (
+        "ATOM      1  N  NTER A  18      -2.661   5.770 -35.426 -0.3000 1.8500\n"
+        "ATOM      2  CA  GLU A  18      -1.598   4.789 -35.571  0.2100 2.2750\n"
+        "ATOM      3  C  CTER A  18      -3.782  -7.885 -39.937  0.3400 2.0000\n"
+    )
+    (frame,) = parse_pqr(text)
+    assert frame.residues() == [("A", 18, "", "GLU")]
+
+
 def test_ver57_a_disulfide_patched_cysteine_is_named_by_its_residue() -> None:
     text = (
         "ATOM     32  CA  CYS A 285       4.676 -38.694-123.153  0.0700 2.2750\n"

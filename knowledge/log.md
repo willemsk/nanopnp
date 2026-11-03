@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-03
+* **Update**: PDB2PQR 3.8.0 writes terminal patches as `NTER` and `CTER`, has no `docutils` pin and keeps `CHARMM.DAT` unchanged; the `structure` extra takes 3.8 (REV-175). ([3. Charge and electrostatics](07-software-stack/03-charge-and-electrostatics.md))
+
 ## 2026-11-02
 * **Update**: What the framework spike taught about NiceGUI with Mol*: the ready flag, the long timeout, and no camera move under software GL (WP5.02). ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 

@@ -50,7 +50,7 @@ structure = [
     "GridDataFormats>=1.2",
     "scikit-image>=0.22",
     "shapely>=2.0",
-    "pdb2pqr>=3.7",
+    "pdb2pqr>=3.8",
     "gemmi>=0.7",
 ]
 # The workbench (ADR-004): the browser shell is NiceGUI over FastAPI (MIT, BSD-3);
@@ -155,9 +155,6 @@ default-groups = ["dev", "apbs"]
 # Rebuild the editable install's metadata when HEAD or a tag moves, so that
 # `nanopnp.__version__` and the manifest's recorded version follow the checkout.
 cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
-# pdb2pqr 3.7.1 pins docutils==0.17.1 and NiceGUI needs >=0.19 (REV-175). pdb2pqr never imports
-# docutils; the lock keeps 3.7.1, because 3.8.0 writes terminal residues the reader refuses.
-override-dependencies = ["docutils>=0.19"]
 
 [tool.ruff]
 line-length = 100

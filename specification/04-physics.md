@@ -258,7 +258,7 @@ ions whose hydrodynamic radius is comparable to a solvent molecule being questio
 |---|---|---|
 | 1 | Structure preparation | strip waters and ligands, verify oligomeric state, fill loops |
 | 2 | Ensemble | aligned MD frames (reference: 50, from the last 5 ns of a 30 ns run) |
-| 3 | Protonation, partial charges | PDB2PQR 3.7+ driving PROPKA at pH 7.5 with the CHARMM force field: `--ff=CHARMM --ffout=CHARMM --with-ph=7.5 --titration-state-method=propka --drop-water --keep-chain`; record `Q_net = Σ_i q_i` |
+| 3 | Protonation, partial charges | PDB2PQR 3.8+ driving PROPKA at pH 7.5 with the CHARMM force field: `--ff=CHARMM --ffout=CHARMM --with-ph=7.5 --titration-state-method=propka --drop-water --keep-chain`; record `Q_net = Σ_i q_i` |
 | 4 | Per-atom smearing | normalised 3D Cartesian Gaussian `ρ_i(x) = q_i e π^(−3/2) w_i^(−3) exp(−\|x − x_i\|²/w_i²)`, width `w_i = 0.5 · R_i` (`R_i` from the PQR) |
 | 5 | Azimuthal projection | the exact azimuthal mean of step 4, in closed form: `ρ̄_i(r, z) = q_i e π^(−3/2) w_i^(−3) exp(−((r − r_i)² + (z − z_i)²)/w_i²) · Ĩ₀(2 r r_i/w_i²)`, with `Ĩ₀(x) = e^(−x) I₀(x)` and `r_i = (x_i² + y_i²)^(1/2)`; summed over the atoms and averaged over the frames. The Cₙ average is contained in the azimuthal mean |
 | 6 | Assembly | `ρ_pore = Σ_i ρ̄_i`, deposited onto an element-wise field on the deployed mesh by `r`-weighted L² projection, each atom's element integrals renormalised to `q_i e` (PHY-18). The areal density `2πr ρ_pore`, sampled on a 0.005 nm (r, z) grid extending ≥ 4 w_max beyond the protein, is the exported artefact and the producer leg's grid. A supplied areal density keeps the reference's assembly, `scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*π*r))` [C m⁻³] |

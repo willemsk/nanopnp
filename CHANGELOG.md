@@ -73,8 +73,8 @@ records the work.
 - **Changed**:
   - The light theme's `--control-edge` is `#7c8290`, 3.2:1 on a selected row (REV-143).
   - `write_charged_tube` and its constants live in `nanopnp.validation.charged_tube`.
-  - The lock carries a uv override of `docutils` for the `gui` extra (REV-175).
-  - **Open items**: REV-137, REV-138, REV-141, REV-143 and REV-174 are `fixed`; REV-175 and REV-176 are open.
+  - The `structure` extra asks for `pdb2pqr>=3.8`, and the PQR reader accepts 3.8's `NTER` and `CTER` terminal patches. 3.8 does not pin `docutils`, so `structure` and `gui` install together with `pip` (REV-175).
+  - **Open items**: REV-137, REV-138, REV-141, REV-143, REV-174, REV-175 and REV-176 are `fixed`; the study's mockups stay as dated evidence (REV-176).
 
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
