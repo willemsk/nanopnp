@@ -242,9 +242,11 @@ criterion where they stand is not moved, so the stage's own export reads back ex
 stage exports. Beside `inputs.pqr`,
 `charge.ph`, `charge.forcefield` and `charge.titration` configure a step that does not run, so any
 of them set away from its default SHALL be refused naming both keys, as `geometry.density` is beside
-`inputs.profile`. The same holds beside `inputs.charge`, which supplies the field stage 7 would
-make of a protonation, and in a case carrying neither `structure:` nor `inputs.pqr`, which has
-nothing to protonate (WP27).
+`inputs.profile`. The same holds beside `inputs.charge` under `geometry.density.atoms: as_loaded`,
+where the supplied field replaces what stage 7 would make of a protonation and nothing else reads
+it; under the default the protonation runs for the density and these keys configure it. It holds
+also in a case carrying neither `structure:` nor `inputs.pqr`, which has nothing to protonate
+(WP27; WP5.03).
 
 NOTE (`structure:`, stage 1, FR-01 to FR-03, IF-04; WP18):
 `source.path` names a PDB or mmCIF file, optionally gzipped. MDAnalysis reads PDB and gemmi reads
@@ -327,7 +329,7 @@ its value rather than narrowed in the schema.
 `atoms` (`protonated` or `as_loaded`; WP5.03, PHY-16, §8.2.19 U2) says which atoms stage 2 smears. `protonated`, the
 validated default, deposits each frame's own atoms from stage 7's protonation table, hydrogens included, at the
 positions PDB2PQR wrote. Each atom's `R_i` comes from the CHARMM radius set: first from its residue's state patch
-(the table's tautomer for a histidine; `ASPP` for an aspartate holding `HD2`; `GLUP` for a glutamate holding `HE2`),
+(the table's tautomer for a histidine; `ASPP` for an aspartate holding `HD2`; `GLUP` for a glutamate holding `HE2`; `DISU` for the `1CB`, `1SG`, `2SG` and `2CB` of a disulfide-bonded cysteine),
 by that patch's own entry, and otherwise from the residue's parent name. An atom without a radius is refused naming
 its frame, chain, residue and atom, as under `as_loaded`, with no fallback by element. `as_loaded` deposits the atoms as stage 1 read
 them, which is the reference's density; it is a switch away from the validated default, so the manifest lists it (FR-25).

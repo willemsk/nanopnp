@@ -85,7 +85,8 @@ contour and the mesh. The [plan](docs/plans/wp5.03-protonation-before-the-densit
 - **Added**:
   - **`geometry.density.atoms`**: `protonated` (the default) or `as_loaded`, the reference's way. It is a switch away from
     the validated default, so the manifest lists it. Each protonated atom takes its CHARMM radius through its
-    residue's state patch (`resolve_protonated_radii`), as PDB2PQR does. `protonated` beside a produced protonation
+    residue's state patch (`resolve_protonated_radii`), as PDB2PQR does; a disulfide's `1CB`, `1SG`, `2SG` and
+    `2CB` take the set's `DISU` entries. `protonated` beside a produced protonation
     under a force field other than CHARMM is refused, naming both keys.
   - **VER-49** (Tier 1): a changed protonation state moves the density; the protonated radii equal PDB2PQR's on the
     2WCD fragment at pH 2 and 8; the ragged-frame deposit keeps the uniform arithmetic.
