@@ -4,10 +4,14 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
 
+from nanopnp.api.case import Case
+from nanopnp.api.session import Session
 from nanopnp.core.stages import CancelFlag, Cancelled
 from nanopnp.io.artefact import StageInputs
 from nanopnp.io.case import CaseDocument
+from nanopnp.io.store import Store
 from nanopnp.mesh.adapter import MeshData, read, write_msh41
 from nanopnp.mesh.ingest import (
     MeshStage,
@@ -309,12 +313,6 @@ def test_ver25_a_cancelled_mesh_stage_writes_nothing(mesh_file: Path, tmp_path: 
 
 
 def test_a_mesh_named_by_store_key_is_the_stored_artefact(tmp_path: Path) -> None:
-    import yaml
-
-    from nanopnp.api.case import Case
-    from nanopnp.api.session import Session
-    from nanopnp.io.store import Store
-
     quickstart = Path(__file__).resolve().parents[2] / "examples/01-quickstart/quickstart.case.yaml"
     session = Session(Store(tmp_path / "store"), write=False)
     generated = session.run(Case.load(quickstart), upto="mesh").artefacts["mesh"]

@@ -15,7 +15,7 @@ perform.
 
 An **axis** is a named, ordered list of **assignments**, an assignment being a mapping of dotted
 case-file paths to values; an axis varying one path may be written as a path and a list of values.
-An axis MAY range over `models.molecular` or `models.continuum` (FR-39; WP5.05): each value is a model file that exists beside the base case, and the point resolves the study again under that model, the study's own values and its overrides. A point on such an axis is its own warm-start component, since a model file may move any value a warm-start barrier names, and the plan lists the model files among its input files. A sweep over a study names the study as written, the form `Case.dumps(study=True)` gives, as its base case.
+An axis MAY range over `models.molecular` or `models.continuum` (FR-39; WP5.05): each value is a model file, of a kind the base study names (§5.3.1 NOTE on `models:`), that exists beside the base case, and the point resolves the study again under that model, the study's own values and its overrides. A point on such an axis is its own warm-start component, since a model file may move any value a warm-start barrier names, and the plan lists the model files among its input files. A sweep over a study names the study as written, the form `Case.dumps(study=True)` gives, as its base case.
 Axes combine as a Cartesian product in declaration order. Each axis MAY declare the index of its
 **origin**, defaulting to its first value. A dotted path SHALL be validated against the case schema's
 own field tree before any substitution, refusing an unknown component by naming it and the prefix

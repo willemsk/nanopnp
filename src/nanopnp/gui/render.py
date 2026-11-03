@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 
     from nanopnp.core.typing import Expression, Mesh
     from nanopnp.io.artefact import Artefact
+    from nanopnp.io.case import SuppliedArtefact
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.numerics.measures import Measures
 
@@ -309,6 +310,13 @@ def _recorded_artefact(run: Path, stage: str, *, needed: str | None) -> Artefact
     return artefact
 
 
+def _mesh_need(mesh: SuppliedArtefact | None) -> str | None:
+    # Only a mesh supplied as a file is read without the stage-6 artefact.
+    if mesh is None:
+        return "a generated mesh"
+    return "a stored mesh" if mesh.path is None else None
+
+
 def _stage7_need(resolved: ResolvedCase) -> str | None:
     if resolved.deposits_charge:
         return "a deposited charge"
@@ -372,9 +380,7 @@ def render(request: RenderRequest) -> Rendered:
     solution = restore(
         state,
         resolved=resolved,
-        mesh_artefact=_recorded_artefact(
-            run, "mesh", needed="a generated mesh" if case.inputs.mesh is None else None
-        ),
+        mesh_artefact=_recorded_artefact(run, "mesh", needed=_mesh_need(case.inputs.mesh)),
         charge_artefact=_recorded_artefact(run, "charge", needed=_stage7_need(resolved)),
     )
     # Any model: each reports the NUM-09 scale set that turns its state into SI numbers (§5.4.3).
@@ -435,12 +441,10 @@ def render_mesh(request: MeshRequest) -> RenderedMesh:
 
     run = Path(request.run)
     resolved = resolve(load_case(run / CASE_FILENAME))
-    artefact = _recorded_artefact(
-        run, "mesh", needed="a generated mesh" if resolved.mesh is None else None
-    )
-    if artefact is None and resolved.mesh is None:
+    artefact = _recorded_artefact(run, "mesh", needed=_mesh_need(resolved.mesh))
+    if artefact is None and _mesh_need(resolved.mesh) is not None:
         raise FileNotFoundError(
-            f"{run} records no stage-6 artefact, so there is no generated mesh to draw; run the "
+            f"{run} records no stage-6 artefact, so there is no stage-6 mesh to draw; run the "
             "build through 'mesh' first"
         )
     ingested = deployed_mesh(resolved, artefact)
@@ -502,10 +506,8 @@ def deployed_coefficient(run: Path, quantity: ChargeQuantity) -> DeployedCoeffic
     from nanopnp.post.export import FIXED_CHARGE_ATTRIBUTE
 
     resolved = resolve(load_case(run / CASE_FILENAME))
-    mesh_artefact = _recorded_artefact(
-        run, "mesh", needed="a generated mesh" if resolved.mesh is None else None
-    )
-    if mesh_artefact is None and resolved.mesh is None:
+    mesh_artefact = _recorded_artefact(run, "mesh", needed=_mesh_need(resolved.mesh))
+    if mesh_artefact is None and _mesh_need(resolved.mesh) is not None:
         raise FileNotFoundError(
             f"{run} records no stage-6 artefact, so there is no deployed mesh to draw on; run "
             "the build through 'charge' first"

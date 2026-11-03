@@ -1106,7 +1106,9 @@ def stored_upstream(
     artefacts: dict[str, Artefact] = {}
     resolved = resolve(document, base=base)
     for name in selected_stages(resolved, feeding)[:-1]:
-        key = create(name).key(StageInputs(resolved=resolved, upstream=offered(name, artefacts)))
+        # Built as the walk builds it: a mesh named by its store hash is keyed from the store.
+        stage = create(name, store=store) if describe(name).takes_store else create(name)
+        key = stage.key(StageInputs(resolved=resolved, upstream=offered(name, artefacts)))
         if describe(name).key_is_artefact:
             artefacts[name] = key
             continue

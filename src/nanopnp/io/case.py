@@ -638,7 +638,7 @@ class CaseDocument(_Strict):
     numerics: Numerics = Field(default_factory=Numerics)
     outputs: list[str] = Field(default_factory=lambda: ["current"])
     # Left out of every dump: a study is identified by the case it resolves to, so it shares that
-    # case's keys and a case without models keeps every key (FR-39).
+    # case's keys and a case without models keeps every key.
     models: Models | None = Field(default=None, exclude=True)
     model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True, title="Case")
     _models: ModelRecord | None = PrivateAttr(default=None)

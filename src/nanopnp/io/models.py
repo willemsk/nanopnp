@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 from typing import Any, Literal, TypeVar
 
@@ -33,7 +34,7 @@ MODEL_KINDS: tuple[Literal["molecular", "continuum"], ...] = ("molecular", "cont
 SCHEMAS: dict[str, str] = {"molecular": MOLECULAR_SCHEMA, "continuum": CONTINUUM_SCHEMA}
 
 # The longest dotted prefix decides; a path with no row is the study's. A mixed block such as
-# `charge` is split below its own name (FR-39; the design document's WB-11).
+# `charge` is split below its own name.
 OWNERS: dict[str, Kind] = {
     "structure": "molecular",
     "charge.ph": "molecular",
@@ -127,6 +128,13 @@ class ModelRecord:
                 raise CaseValidationError(f"{path}: models: accepts molecular, continuum")
             if value is None:
                 raise CaseValidationError(f"{path}: a study cannot drop a model it names")
+            if kind not in self.kinds:
+                # The study's document holds a default for every key of the new model, which
+                # cannot be told from a value it wrote, so each default would override it.
+                raise CaseValidationError(
+                    f"{path}: the study names no {kind} model, and a substitution swaps a model "
+                    f"the study names; write models.{kind} in the study file instead"
+                )
             paths[kind] = (self.base / Path(str(value))).resolve()
         study = study_layer(document, self)
         study.pop("models")
@@ -203,7 +211,9 @@ def _resolve(
         layers.append((str(paths[kind]), mapping))
     named = frozenset(file.kind for file in files)
     pruned = _prune(study, "", named)
-    sources = [*reversed(layers), (source, study)]  # nearest to the study first, for origins
+    # Nearest to the study first, as the merge's precedence runs: a tie goes to the layer whose
+    # value won. The view's study is the pruned one, so a model's value is never the study's.
+    models = list(reversed(layers))
 
     view_raw = _merge_all([mapping for _, mapping in layers], pruned)
     try:
@@ -211,7 +221,7 @@ def _resolve(
     except CaseValidationError as error:
         raise _located(
             error,
-            sources,
+            [(source, pruned), *models],
             "the named models with the study's own keys do not form a case, so a model "
             f"cannot be reused alone: {', '.join(str(path) for path in paths.values())}",
         ) from None
@@ -220,7 +230,7 @@ def _resolve(
     try:
         document = validate_mapping(merged_raw, source, model)
     except CaseValidationError as error:
-        raise _located(error, sources, None) from None
+        raise _located(error, [(source, study), *models], None) from None
     assert isinstance(document, model)
     record = ModelRecord(
         files=tuple(files),
@@ -259,19 +269,15 @@ def _read_model_file(
 
 
 def _leaves(mapping: Mapping[str, Any], path: str) -> Iterator[str]:
-    blocks = _blocks()
-    for key, value in mapping.items():
-        here = f"{path}.{key}" if path else str(key)
-        if isinstance(value, Mapping) and here in blocks:
-            yield from _leaves(value, here)
-        else:
-            yield here
+    return (here for here, _ in _flat(mapping, path))
 
 
+@cache
 def _blocks() -> frozenset[str]:
     return frozenset(block_paths())
 
 
+@cache
 def _correction_leaves() -> tuple[str, ...]:
     return (
         "electrolyte.parameters",
@@ -280,12 +286,13 @@ def _correction_leaves() -> tuple[str, ...]:
 
 
 def _rebased(body: dict[str, Any], directory: Path) -> dict[str, Any]:
-    for dotted in (*path_fields(), *_correction_leaves()):
+    corrections = _correction_leaves()
+    for dotted in (*path_fields(), *corrections):
         parent, last = _cursor(body, dotted)
         value = parent.get(last) if parent is not None else None
         if not isinstance(value, str):
             continue
-        if dotted in _correction_leaves() and not names_a_path(value):
+        if dotted in corrections and not names_a_path(value):
             continue
         if not Path(value).is_absolute():
             assert parent is not None
@@ -327,7 +334,11 @@ def _prune(mapping: Mapping[str, Any], path: str, named: frozenset[str]) -> dict
     for key, value in mapping.items():
         here = f"{path}.{key}" if path else str(key)
         if isinstance(value, Mapping) and here in blocks:
-            kept[key] = _prune(value, here, named)
+            inner = _prune(value, here, named)
+            # A named model's block the pruning emptied is the model's alone; left as `{}` it
+            # would build a block the model never holds, such as an `inputs.pqr` naming no file.
+            if inner or owner_of(here) not in named:
+                kept[key] = inner
         elif owner_of(here) not in named:
             kept[key] = value
     return kept
@@ -436,18 +447,14 @@ def study_layer(document: CaseDocument, record: ModelRecord) -> dict[str, Any]:
     return layer
 
 
-def _flat(mapping: Mapping[str, Any]) -> Iterator[tuple[str, Any]]:
+def _flat(mapping: Mapping[str, Any], path: str = "") -> Iterator[tuple[str, Any]]:
     blocks = _blocks()
-
-    def walk(value: Mapping[str, Any], path: str) -> Iterator[tuple[str, Any]]:
-        for key, item in value.items():
-            here = f"{path}.{key}" if path else str(key)
-            if isinstance(item, dict) and here in blocks:
-                yield from walk(item, here)
-            else:
-                yield here, item
-
-    yield from walk(mapping, "")
+    for key, item in mapping.items():
+        here = f"{path}.{key}" if path else str(key)
+        if isinstance(item, Mapping) and here in blocks:
+            yield from _flat(item, here)
+        else:
+            yield here, item
 
 
 def _put(layer: dict[str, Any], path: str, value: FieldValue) -> None:
