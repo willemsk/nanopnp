@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tomllib
 import warnings
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import gemmi
@@ -24,14 +25,18 @@ import ngsolve.webgui
 import numpy as np
 import pytest
 import shapely
+import yaml
 from MDAnalysis.analysis import align, density
+from pdb2pqr import biomolecule as pdb2pqr_biomolecule
 from pdb2pqr import main as pdb2pqr_main
 from propka import parameters as propka_parameters
 from shapely.geometry import LineString, box
 from skimage import measure
 
+from nanopnp.charge.edits import TitratableGroups
 from nanopnp.charge.protonation import restore_propka_annotations
 from nanopnp.core import errors, hashing, stages
+from nanopnp.core.paths import radii_file
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.validation import okf
 
@@ -334,3 +339,39 @@ def test_gitattributes_marks_data_binary_and_crlf_moves_file_hash(tmp_path: Path
     crlf = tmp_path / "willems2020_nacl.yaml"
     crlf.write_bytes(raw.replace(b"\n", b"\r\n"))
     assert hashing.file_hash(src) != hashing.file_hash(crlf)
+
+
+def test_fr38_the_titratable_groups_are_propkas() -> None:
+    groups = TitratableGroups.load()
+    seven = ("ASP", "GLU", "HIS", "CYS", "TYR", "LYS", "ARG")
+    cfg = Path(propka_parameters.__file__).with_name("propka.cfg")
+    mapping: dict[str, str] = {}
+    for line in cfg.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("protein_group_mapping"):
+            continue
+        residue, atom = line.split()[1].split("-", 1)
+        if residue in seven:
+            mapping[residue] = atom
+    assert mapping == groups.anchors
+    assert set(groups.anchors) == set(seven) == set(groups.groups)
+    assert all(groups.has_group(residue) for residue in seven)
+    assert not groups.has_group("SER")
+
+    radii = yaml.safe_load(radii_file("pdb2pqr_charmm").read_text(encoding="utf-8"))
+    entries = radii["residues"]
+    ambiguous = radii["rules"]["ambiguous"]["HIS"]
+    patch_file = Path(pdb2pqr_biomolecule.__file__).with_name("dat") / "PATCHES.xml"
+    patches = {node.findtext("name"): node for node in ET.parse(patch_file).getroot().iter("patch")}
+    assert {"ASH", "GLH", "HIP"} <= set(patches)
+    assert hasattr(pdb2pqr_biomolecule.Biomolecule, "apply_pka_values")
+    assert callable(pdb2pqr_biomolecule.pka_key)
+
+    state_patch = {"ASP": "ASH", "GLU": "GLH", "HIS": "HIP"}
+    for residue, names in groups.groups.items():
+        parents = [entries[name] for name in ambiguous] if residue == "HIS" else [entries[residue]]
+        known = set().union(*parents)
+        if residue in state_patch:
+            known |= {
+                node.findtext("name") or "" for node in patches[state_patch[residue]].iter("atom")
+            }
+        assert set(names) <= known, residue
