@@ -175,9 +175,9 @@ Appendix A row, and the design document's WB-16 row and *Override* entry.
 
 ### Work items
 
-- [ ] 1. `io/case.py:Models`, `CaseDocument.models`, `validate_mapping`, the `models:` refusal, `dumps_case` and `CaseArtefact` exclusions; `nanopnp/case.py`; `validation/case_leaves.py` (D1, D3). Done when `uv run pytest -m tier1 -k "case or manifest or leaves"` passes. **Executor:** main.
-- [ ] 2. `io/models.py`: `OWNERS`, the readers, `differences`, `carried`; row 6 (D1, D2, D4). Done when row 6 passes. **Executor:** main.
-- [ ] 3. The private record, `substitute`, the loaders, `Case.overrides`, `Case.dumps(study=)`; rows 1 and 3 (D2 to D4). Done when those rows pass. **Executor:** main.
+- [x] 32dee19 1. `io/case.py:Models`, `CaseDocument.models`, `validate_mapping`, the `models:` refusal, `dumps_case` and `CaseArtefact` exclusions; `nanopnp/case.py`; `validation/case_leaves.py` (D1, D3). Done when `uv run pytest -m tier1 -k "case or manifest or leaves"` passes. **Executor:** main.
+- [x] 22ac84c 2. `io/models.py`: `OWNERS`, the readers, `differences`, `carried`; row 6 (D1, D2, D4). Done when row 6 passes. **Executor:** main.
+- [x] f7c2456 3. The private record, `substitute`, the loaders, `Case.overrides`, `Case.dumps(study=)`; rows 1 and 3 (D2 to D4). Done when those rows pass. **Executor:** main.
 - [ ] 4. `input_files`, `input_group`, `_manifest`; rows 2 and 4 (D3). Done when those rows pass. **Executor:** main.
 - [ ] 5. `api/sweep.py`, `sweep/plan.py`; row 5 (D5). Done when row 5 passes. **Executor:** main.
 - [ ] 6. Compaction checkpoint. **Executor:** main.

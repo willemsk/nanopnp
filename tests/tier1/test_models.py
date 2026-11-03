@@ -9,9 +9,12 @@ import pytest
 import yaml
 
 from nanopnp.api.case import Case
+from nanopnp.api.session import Session
+from nanopnp.core.hashing import file_hash
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case_paths import block_paths, case_fields, substitute
 from nanopnp.io.models import MOLECULAR_SCHEMA, OWNERS, owner_of
+from nanopnp.io.store import Store
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 QUICKSTART = EXAMPLES / "01-quickstart" / "quickstart.case.yaml"
@@ -168,3 +171,44 @@ def test_fr39_a_plain_reader_refuses_a_case_that_names_models(tmp_path: Path) ->
 
     with pytest.raises(ValueError, match="names models"):
         read_case(split_case(QUICKSTART, tmp_path))
+
+
+def _rebuilt(session: Session, case: Case, upto: str = "mesh") -> set[str]:
+    return {record.name for record in session.run(case, upto=upto).stages if not record.cached}
+
+
+def test_fr39_a_study_reuses_every_stage_its_twin_built(tmp_path: Path) -> None:
+    session = Session(Store(tmp_path / "store"), write=False)
+    inline = session.run(Case.load(QUICKSTART), upto="mesh")
+    study = session.run(Case.load(split_case(QUICKSTART, tmp_path)), upto="mesh")
+    assert [record.name for record in study.stages] == [record.name for record in inline.stages]
+    assert all(record.cached for record in study.stages)
+    assert {name: a.hash for name, a in study.artefacts.items()} == {
+        name: a.hash for name, a in inline.artefacts.items()
+    }
+
+
+def test_fr39_an_override_moves_only_the_stages_that_read_it(tmp_path: Path) -> None:
+    session = Session(Store(tmp_path / "store"), write=False)
+    case = Case.load(split_case(QUICKSTART, tmp_path))
+    assert _rebuilt(session, case) == {"case", "region", "mesh"}
+    wider = case.with_({"geometry.pore.radius_nm": 2.5})
+    assert _rebuilt(session, wider) == {"case", "region", "mesh"}
+    assert _rebuilt(session, wider.with_(outputs=["current"])) == {"case"}
+    assert _rebuilt(session, case.with_({"bias_V": 0.1})) == {"case"}, "the bias reaches no mesh"
+    assert _rebuilt(session, case.with_({"bias_V": 0.05})) == set(), "a value at the model's"
+
+
+def test_fr39_a_run_records_its_model_files_and_overrides(tmp_path: Path) -> None:
+    session = Session(Store(tmp_path / "store"), write=False)
+    inline = session.run(Case.load(QUICKSTART), upto="mesh")
+    assert "overrides" not in inline.manifest.inputs
+    study_path = split_case(QUICKSTART, tmp_path)
+    case = Case.load(study_path).with_({"bias_V": 0.1})
+    result = session.run(case, upto="mesh")
+    files = result.manifest.inputs["files"]
+    assert files["models.continuum"]["sha256"] == file_hash(tmp_path / "continuum.yaml")
+    assert result.manifest.inputs["overrides"] == {
+        "boundary_conditions.bias_V": {"model": 0.05, "study": 0.1}
+    }
+    assert result.manifest.case_text == case.dumps()

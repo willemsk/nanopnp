@@ -780,6 +780,10 @@ def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pat
             files[role] = supplied.path
     for key, path in resolved.correction_files.items():
         files[key] = path
+    record = resolved.document.models_record
+    if record is not None:
+        for model_file in record.files:
+            files[f"models.{model_file.kind}"] = model_file.path
     if resolved.structure is not None:
         files["structure"] = resolved.structure.spec.source.path
         trajectory = resolved.structure.spec.ensemble.trajectory
@@ -892,6 +896,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     protonation = walk.artefacts.get("protonation")
     solve = walk.artefacts.get("solve")
     qoi = walk.artefacts.get("qoi")
+    record = walk.document.models_record
 
     solver = dict(solve.summary) if solve is not None else None
     stabilisation = str(solver["stabilisation"]) if solver and "stabilisation" in solver else None
@@ -919,6 +924,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         case_text=case_text,
         case_hash=case.hash if case is not None else CaseArtefact(walk.document).hash,
         input_files=input_files(walk.resolved, case_path),
+        overrides=None if record is None else record.overrides,
         upstream=dict(walk.artefacts),
         mesh=_mesh_record(walk, mesh),
         structure=_record(structure, STRUCTURE_RECORD_KEYS),
