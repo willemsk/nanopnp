@@ -37,7 +37,7 @@ needs_archive = pytest.mark.skipif(
     reason=f"prod5_clya_as.pdb and .dcd are not in ${REFERENCE_DATA_VARIABLE}",
 )
 
-GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
+GEOMETRY = "geometry: {density: {atoms: as_loaded}, membrane: {centre_z_nm: 0.0}}\n"
 
 FROZEN_SIZE_SCALE = 1.0
 

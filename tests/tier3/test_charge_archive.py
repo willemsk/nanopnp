@@ -49,7 +49,7 @@ SHARPNESS = 0.5
 
 PLANE_SMOOTHING_NM = 0.5
 
-GEOMETRY = "geometry: {membrane: {centre_z_nm: 0.0}}\n"
+GEOMETRY = "geometry: {density: {atoms: as_loaded}, membrane: {centre_z_nm: 0.0}}\n"
 
 FROZEN_CASE = """\
 schema: nanopnp/case/v0.6
