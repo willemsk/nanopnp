@@ -953,6 +953,8 @@ def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
         "schema",
         "name",
         "structure.source.variant",
+        "models.molecular",
+        "models.continuum",
     }
     assert {path for path, leaf in LEAVES.items() if leaf.kind == "checked"} == {
         "electrolyte.corrections.steric.a_ion_nm",

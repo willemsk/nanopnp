@@ -183,6 +183,12 @@ LEAVES: dict[str, Leaf] = {
         "fixed", "", "species valences fixed by the electrolyte parameter file"
     ),
     "inputs.mesh.artefact": Leaf("fixed", "", "supplied mesh by store hash deferred to v0.6"),
+    "models.molecular": Leaf(
+        "provenance", "", "molecular-model file merged under the study; the resolved case keys"
+    ),
+    "models.continuum": Leaf(
+        "provenance", "", "continuum-model file merged under the study; the resolved case keys"
+    ),
     "inputs.charge.artefact": Leaf(
         "fixed", "", "supplied charge field by store hash not scheduled"
     ),

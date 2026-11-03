@@ -597,6 +597,32 @@ def _installed(name: str, installed: Sequence[str]) -> bool:
     return names_a_path(name) or name in installed
 
 
+class Models(_Strict):
+    """The molecular and continuum model files a study names; at least one."""
+
+    molecular: Path | None = Field(
+        default=None,
+        description=(
+            "A molecular-model file (schema nanopnp/molecular-model/v0.6): the structure, the "
+            "protonation and the charge edits, read beside the file that names it"
+        ),
+    )
+    continuum: Path | None = Field(
+        default=None,
+        description=(
+            "A continuum-model file (schema nanopnp/continuum-model/v0.6): the geometry, the "
+            "mesh, the physics, the electrolyte and the boundary conditions, read beside the "
+            "file that names it"
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _names_one(self) -> Models:
+        if self.molecular is None and self.continuum is None:
+            raise ValueError("models: names a molecular: file, a continuum: file or both")
+        return self
+
+
 class CaseDocument(_Strict):
     """A validated case file (schema ``nanopnp/case/v0.6``)."""
 
@@ -611,6 +637,9 @@ class CaseDocument(_Strict):
     physics: Physics = Field(default_factory=Physics)
     numerics: Numerics = Field(default_factory=Numerics)
     outputs: list[str] = Field(default_factory=lambda: ["current"])
+    # Left out of every dump: a study is identified by the case it resolves to, so it shares that
+    # case's keys and a case without models keeps every key (FR-39).
+    models: Models | None = Field(default=None, exclude=True)
     model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True, title="Case")
 
     @model_validator(mode="after")
@@ -752,6 +781,18 @@ def read_case_text(
 
 
 def _validate(raw: object, source: str, model: type[CaseDocument] = CaseDocument) -> CaseDocument:
+    if isinstance(raw, Mapping) and "models" in raw:
+        raise CaseValidationError(
+            f"{source}: names models:; read it with nanopnp.case.Case.load or "
+            "nanopnp.pipeline.case.load_case, which resolve them"
+        )
+    return validate_mapping(raw, source, model)
+
+
+def validate_mapping(
+    raw: object, source: str, model: type[CaseDocument] = CaseDocument
+) -> CaseDocument:
+    """Validate a parsed case mapping against the schema, the `models:` key included."""
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
             f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
