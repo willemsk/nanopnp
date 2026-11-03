@@ -48,6 +48,7 @@ EXIT_CODES: Final[dict[str, int]] = {
     # -- 3, the case ---------------------------------------------------------
     "nanopnp.io.case:CaseValidationError": EXIT_CASE,
     "nanopnp.charge.pqr:PQRError": EXIT_CASE,
+    "nanopnp.structure.protonated:ProtonationTableError": EXIT_CASE,
     "nanopnp.io.case:UnsupportedCaseSection": EXIT_CASE,
     "pydantic_core._pydantic_core:ValidationError": EXIT_CASE,
     # no result is in doubt; the fix is an edit to the case file

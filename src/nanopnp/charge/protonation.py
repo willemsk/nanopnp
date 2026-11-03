@@ -13,20 +13,18 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from importlib import metadata
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 from nanopnp.charge.pqr import (
-    PARENT_RESIDUE,
     PQRError,
     PQRFrame,
     check_same_residues,
     is_hydrogen,
-    parent_residue,
     parse_pqr,
     read_pqr,
     write_pqr,
 )
-from nanopnp.core.hashing import Canonicalisable, content_hash, file_hash
+from nanopnp.core.hashing import Canonicalisable, file_hash
 from nanopnp.core.stages import (
     CancelToken,
     MissingExtraError,
@@ -39,7 +37,6 @@ from nanopnp.core.stages import (
 from nanopnp.density.radii import RadiusSet, radius_set_digest
 from nanopnp.io.artefact import (
     PROTONATION_FRAME_SCHEMA,
-    PROTONATION_SCHEMA,
     Artefact,
     ProtonationArtefact,
 )
@@ -48,6 +45,12 @@ from nanopnp.io.resolved import ResolvedProtonation
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble, chain_characters
+from nanopnp.structure.protonated import (
+    PARENT_RESIDUE,
+    PAYLOAD_NAME,
+    ProtonationTable,
+    parent_residue,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -64,14 +67,12 @@ __all__ = [
     "export_pqr",
     "frame_pdb",
     "pdb2pqr_arguments",
+    "pqr_frames",
     "protonation_parameters",
     "run_pdb2pqr",
 ]
 
 logger = logging.getLogger(__name__)
-
-PAYLOAD_NAME = "protonation"
-"""The artefact's payload key, and the ``.npz`` file's stem."""
 
 FIXED_FLAGS: tuple[str, ...] = ("--drop-water", "--keep-chain")
 """PHY-16 step 3's flags that no case key sets."""
@@ -192,143 +193,6 @@ def _residue_label(name: str, resid: int, icode: str, chain: str) -> str:
     return f"{name} {resid}{icode} of chain {chain!r}"
 
 
-@dataclass(frozen=True)
-class ProtonationTable:
-    """The protonation artefact's payload: the atoms of every frame and their states.
-
-    Parameters
-    ----------
-    frame_offsets
-        Frame f spans frame_offsets[f]:frame_offsets[f + 1].
-    positions_nm
-        (atoms, 3) float64, in nm in stage 1's frame.
-    expected_charge_e
-        (frames, residues) float64; NaN where the expectation was not computed.
-    """
-
-    frame_offsets: np.ndarray
-    positions_nm: np.ndarray
-    charge_e: np.ndarray
-    radius_nm: np.ndarray
-    name: np.ndarray
-    resname: np.ndarray
-    chain: np.ndarray
-    resid: np.ndarray
-    icode: np.ndarray
-    residue_chain: np.ndarray
-    residue_resid: np.ndarray
-    residue_icode: np.ndarray
-    residue_name: np.ndarray
-    residue_charge_e: np.ndarray
-    tautomer: np.ndarray
-    expected_charge_e: np.ndarray
-    unapplied: np.ndarray
-    group_residue: np.ndarray
-    group_type: np.ndarray
-    group_label: np.ndarray
-    group_pka: np.ndarray
-    header: Mapping[str, Canonicalisable]
-
-    ARRAYS: ClassVar[tuple[str, ...]] = (
-        "frame_offsets",
-        "positions_nm",
-        "charge_e",
-        "radius_nm",
-        "name",
-        "resname",
-        "chain",
-        "resid",
-        "icode",
-        "residue_chain",
-        "residue_resid",
-        "residue_icode",
-        "residue_name",
-        "residue_charge_e",
-        "tautomer",
-        "expected_charge_e",
-        "unapplied",
-        "group_residue",
-        "group_type",
-        "group_label",
-        "group_pka",
-    )
-    """Every array the ``.npz`` carries, beside ``header``."""
-
-    @property
-    def frames(self) -> int:
-        """Return the number of frames."""
-        return len(self.frame_offsets) - 1
-
-    def frame_slice(self, frame: int) -> slice:
-        """Return the atom range of one frame."""
-        return slice(int(self.frame_offsets[frame]), int(self.frame_offsets[frame + 1]))
-
-    def q_net_e(self) -> np.ndarray:
-        """Return the net charge per frame, in e."""
-        import numpy as np
-
-        return np.array(
-            [
-                math.fsum(self.charge_e[self.frame_slice(frame)].tolist())
-                for frame in range(self.frames)
-            ]
-        )
-
-    def digest(self) -> str:
-        """Return a content hash over every array and the header."""
-        return content_hash(
-            f"{PROTONATION_SCHEMA}/payload",
-            {**{key: getattr(self, key) for key in self.ARRAYS}, "header": dict(self.header)},
-        )
-
-    def write(self, path: Path) -> Path:
-        """Write the table to path as .npz, header included; return the path."""
-        import numpy as np
-
-        arrays: dict[str, Any] = {key: np.asarray(getattr(self, key)) for key in self.ARRAYS}
-        arrays["header"] = np.asarray(json.dumps(dict(self.header), sort_keys=True))
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("wb") as handle:
-            np.savez(handle, **arrays)
-        return path
-
-    @classmethod
-    def read(cls, path: Path) -> ProtonationTable:
-        """Read a table written by write, refusing one with a missing array."""
-        import numpy as np
-
-        with np.load(path, allow_pickle=False) as data:
-            missing = [key for key in (*cls.ARRAYS, "header") if key not in data.files]
-            if missing:
-                raise PQRError(
-                    f"{path.name!r} is not a protonation table: it lacks {', '.join(missing)}"
-                )
-            arrays = {key: np.asarray(data[key]) for key in cls.ARRAYS}
-            header = json.loads(str(data["header"]))
-        return cls(header=header, **arrays)
-
-    def pqr_frames(self) -> tuple[PQRFrame, ...]:
-        """Return the frames in angstrom, each value the one that reads back to this table."""
-        positions_A = _angstrom(self.positions_nm, COORDINATE_DECIMALS, lattice=True)
-        radius_A = _angstrom(self.radius_nm, 4, lattice=False)
-        frames = []
-        for frame in range(self.frames):
-            atoms = self.frame_slice(frame)
-            frames.append(
-                PQRFrame(
-                    name=self.name[atoms],
-                    resname=self.resname[atoms],
-                    chain=self.chain[atoms],
-                    resid=self.resid[atoms],
-                    icode=self.icode[atoms],
-                    positions_A=positions_A[atoms],
-                    charge_e=self.charge_e[atoms],
-                    radius_A=radius_A[atoms],
-                )
-            )
-        return tuple(frames)
-
-
 def _angstrom(values_nm: np.ndarray, decimals: int, *, lattice: bool) -> np.ndarray:
     import numpy as np
 
@@ -362,6 +226,28 @@ def _neighbours(up: np.ndarray, down: np.ndarray, steps: int = 4) -> Iterator[np
         down = np.nextafter(down, -np.inf)
         yield up
         yield down
+
+
+def pqr_frames(table: ProtonationTable) -> tuple[PQRFrame, ...]:
+    """Return the frames in angstrom, each value the one that reads back to this table."""
+    positions_A = _angstrom(table.positions_nm, COORDINATE_DECIMALS, lattice=True)
+    radius_A = _angstrom(table.radius_nm, 4, lattice=False)
+    frames = []
+    for frame in range(table.frames):
+        atoms = table.frame_slice(frame)
+        frames.append(
+            PQRFrame(
+                name=table.name[atoms],
+                resname=table.resname[atoms],
+                chain=table.chain[atoms],
+                resid=table.resid[atoms],
+                icode=table.icode[atoms],
+                positions_A=positions_A[atoms],
+                charge_e=table.charge_e[atoms],
+                radius_A=radius_A[atoms],
+            )
+        )
+    return tuple(frames)
 
 
 def frame_pdb(
@@ -1036,7 +922,7 @@ def export_pqr(payload: Path, path: Path) -> Path:
         if isinstance(recorded, Mapping)
         else chain_characters(table.chain.tolist())
     )
-    return write_pqr(path, table.pqr_frames(), chains=chains)
+    return write_pqr(path, pqr_frames(table), chains=chains)
 
 
 def _resolved(inputs: StageInputs) -> ResolvedCase:
