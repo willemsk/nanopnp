@@ -1,6 +1,6 @@
 # WP5.03 — Protonation before the density
 
-**Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
+**Status: merged, 3 November 2026 (`v0.6.0-alpha.3`).** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
 §8.2.28 AD3, §8.2.31 AG8 and REV-135.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An

@@ -2413,3 +2413,14 @@ on a density without these hydrogens.
 
 **Open**, found at WP5.03's review: the author rules whether the polar hydrogens are measured against a finer grid
 before the protonated default is used outside the reference cases.
+
+## REV-183: Fractional protonation through a customised PDB2PQR
+
+WP5.04's charge edit changes a residue's net charge by an integer, on its titratable group (§8.2.31 AG9). A partially
+(de)protonated state, a group carrying its charge averaged over its states at the pH, is FR-43's, a later phase
+(§8.2.18 T6). The author, at WP5.04's plan: "If this is about partial (de)protonated states, I solved this in the past
+using a custom version of PDB2PQR. This is something we can look into later, so write it down as such."
+
+**Deferred** to FR-43's library package: it starts from the author's customised PDB2PQR, which the author supplies
+then, and writes the physics into §4 first (T6). Found at WP5.04's plan, 3 November 2026.
+

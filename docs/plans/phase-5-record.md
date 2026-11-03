@@ -206,3 +206,17 @@ walk is re-pinned; the package also moves the case schema to `nanopnp/case/v0.6`
 > `v0.6.0-alpha.3`.
 
 Verification's WP5.03 row read: U2's Tier 1 test; VAL-03's golden and VER-62 unmoved.
+
+## Amended 3 November 2026 (§8.2.31 AG9 to AG11)
+
+At WP5.04's plan the author ruled where a charge edit goes (AG9), what a radius edit is (AG10) and how a variant is
+recorded (AG11). WP5.04's entry read:
+
+> **WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6)**
+>
+> A `charge/` function that sets a titratable residue's protonation state, or a residue's charge or radius, at stage 7's
+> PQR step on every chain, saved as a variant of its molecular model and recorded as its difference from its parent.
+> After WP5.03, so a variant moves the geometry too. Tier 1: the projected charge changes by that residue's alone. Tag
+> `v0.6.0-alpha.4`.
+
+Verification's WP5.04 row read: FR-38's Tier 1 test: the projected charge changes by the residue's alone.
