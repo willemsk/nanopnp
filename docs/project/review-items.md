@@ -306,6 +306,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Ruled** (§8.2.18 T2): owned by the workbench's Analysis package, which draws a field when a tile opens it.
 
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.12, the Analysis suite.
+
 ### REV-29 — The cylindrical-pore fixture is copied into four test modules
 
 *Area:* verification. *Severity:* low. *Found:* PR #32 (WP15).
@@ -323,6 +325,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 **Ruled** (§8.2.18 T2): owned by the workbench's Analysis package, which writes each scene once and serves it.
+
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.12, the Analysis suite.
 
 ### REV-31 — The bundle's size is not recorded
 
@@ -343,6 +347,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 **Ruled** (§8.2.18 T2): owned by the project-folder package: the library lists entries of an older schema and removes them on request.
+
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.08, the frame and the project folder, in its library step.
 
 ### REV-33 — writable_formats assumes the extra's floor
 
@@ -406,6 +412,8 @@ repository holds a logger.
 
 **Ruled** (§8.2.18 T2): owned by the workbench's Continuum package: the Contour tool opens on any profile, extracted or supplied.
 
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.10, the Continuum suite.
+
 ### REV-40 — DensityMap.read accepts a file written in nm
 
 *Area:* interface. *Severity:* low. *Found:* PR #50 (WP25).
@@ -427,6 +435,8 @@ no later owner.
 **Ruled** (§8.2.18 T3): `prepare` comes with structure preparation (FR-37); `upto` on reproduce with the workbench's Study package; the region export with FR-28, v0.7.
 
 **Ruled in part** (§8.2.22 X1): the region's interchange document comes forward to WP57, as the geometry file of `nanopnp geometry cylinder`; `prepare` and `upto` stay as T3 placed them.
+
+**Placed** (§8.2.31 AG1, 3 November 2026): `prepare` in WP5.09, which surfaces structure preparation; `upto` on reproduce in WP5.11, the Study suite.
 
 ### REV-42 — pnp carries inert flow keys
 
@@ -530,6 +540,8 @@ can drift apart.
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 **Ruled** (§8.2.18 T2): owned by the first shell package, library first: `deviations` and `SolveReporting` join the stage protocol as optional members.
+
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.08, the frame, library step first.
 
 ### REV-53 — Some walk rules stay as case logic
 
@@ -1297,6 +1309,8 @@ gated like the permutation axis, for C1 and hetero-oligomeric assemblies, and it
 the gap is stage 1's `symmetry.axis` path. Confirmed as a gap by the author on 20 October 2026
 (CODE_REVIEW_012 disposition).
 
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.09, the Molecular suite, library step first, with §5.3.1 and VER-48.
+
 ## REV-122: A case cannot load a correction file from outside the installed package
 
 `electrolyte.parameters` and every `electrolyte.corrections.*.model` must name a file in
@@ -1426,6 +1440,8 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Ruled** `deferred` (§8.2.19 U1): carried until Qt leaves. `v0.5.0` ships the wrapper on the Result tab, and the user-testing sessions read the numbers from the command line or the run record; the package that removes Qt closes the row, the browser shell reading the numbers through `plot/data.py`.
 
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.13, which removes Qt.
+
 ## REV-135: The density does not see the protonation chosen at the charge stage
 
 The density stage smears the atoms of the structure as loaded at stage 1 (`density/stage.py`, its record counting the
@@ -1466,6 +1482,8 @@ package with its tests before the shell surfaces it, or the author moves it to a
 (FR-37), which estimates the axis, keeps the chains named, points +z at the end the user names and places a
 registration centroid; the workbench surfaces it in Phase 5 (WB-14). The item stays accepted for the other
 capabilities.
+
+**Cut line ruled** (§8.2.31 AG1, AG6, 3 November 2026): v0.6 holds every capability FR-31 to FR-39 name, placed in WP5.05 to WP5.12, and the comparison's difference of two runs' fields over the overlap of their fluid domains, library step first in WP5.12. Hand-drawn refinement regions, the Python console, the ribbon, FR-43 and FR-28 stay later. The item stays accepted until WP5.12 lands.
 
 ## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 
@@ -1523,6 +1541,8 @@ are, in a package after WP5.02. Variables in a case are a case-schema change for
 The stages a value invalidates follow from the content hashes that key each stage's artefact (FR-27).
 
 **Ruled** (§8.2.19 U4): the design round runs in `/np-plan amend 5`, as a `/np-gui grill` after WP5.02 has chosen the stack; its library capabilities join REV-136's packages.
+
+**Design round held** (§8.2.31 AG2 to AG5, 3 November 2026), over mockup A's round-2 `st-sweep`: a variable is a value with its unit or an expression of others, parsed without running code; units are checked through `pint`; stages and identity are keyed by the resolved values, the variables recorded as written; and a forecast of the stages each swept value rebuilds is shown as a warning. WP5.07 lands the library step (FR-39); WP5.11 the Sweep tool.
 
 ## REV-140: Two of the author's marks on the mockups ask what is not yet said
 
@@ -2202,6 +2222,8 @@ drawing. VER-62's recorded mesh hash must not move, or the move is ruled and re-
 
 **Placed** (§8.2.28 AD4, 1 November 2026): in the shell package that builds the Continuum suite's Geometry tool, library
 step first; the second `/np-plan amend 5` names the package.
+
+**Named** (§8.2.31 AG1, 3 November 2026): WP5.10, the Continuum suite.
 
 ## REV-171: The architecture review's unmeasured costs
 

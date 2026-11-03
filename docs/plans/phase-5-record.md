@@ -100,3 +100,93 @@ spikes leave the tree after the ruling (AF3). The entry read:
 > against `webgui`), REV-138 (non-text contrast in `/np-gui render`) and REV-141 (CON-08 and CON-11
 > restated beside ADR-004) (§8.2.19 U5), and REV-143 (the light theme's control edge on a selected row,
 > with REV-138) (U7).
+
+## Amended 3 November 2026 (§8.2.31 AG1 to AG7)
+
+The second amendment, after WP5.02 merged: the shell cut one package per suite after the frame (WP5.08 to WP5.14), the
+sweep's variables and forecast as WP5.07, the comparison's difference field in v0.6, and criterion 6 on the 200 ms
+redraw. Replaced text follows.
+
+The status line:
+
+**Status: in progress; WP5.01 and WP5.02 delivered, the library packages WP5.03 to WP5.06 planned after
+it.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to S23); the library
+packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02 planned and delivered on 2 November
+2026 (§8.2.30 AF1 to AF4). The shell packages, the
+sweep's design round and the estimate wait for a second `/np-plan amend 5` after WP5.02's framework ruling (AD1); the
+close is last. Release: **v0.6** (`v0.6.0`).
+
+The *In brief*:
+
+**In brief**
+
+**What changes.** The program gains a workbench in the web browser, combining molecular viewers
+and continuum modelling suites. Each step of the work gets a tab, its tools linked both ways to live
+pictures. The design is done. After the current release, one hard screen is built two ways to choose
+the technology. Then four library steps come before any screen: protonation feeds the shape of the
+pore, a residue's charge can be changed, a project can name and reuse its models, and the quantities
+a run reports become a list that can grow. The screens are planned once the technology is chosen.
+
+**Cost.** The spike takes about two weeks and each library step about one, so roughly six weeks
+before the first screen. The screens are priced when they are planned.
+
+**What could go wrong.** Protonation before the shape moves the pore's geometry for structure
+cases; the reference cases keep the old way behind a switch, so their numbers do not move, and the
+number checks would show it if they did. The scope could pull effort from validation, so each new
+tool after this phase is its own phase.
+
+**Your call.** Who is the lab colleague who will try the workbench unaided at the end?
+*Recommendation:* name them before the shell packages are planned, so the final test can be scheduled.
+
+The *Design decisions* row:
+
+| Front end | WP5.02's spike decides | Evidence (S8) |
+
+WP5.01's status:
+
+**Delivered** ([the plan](wp5.01-workbench-design-study.md)), 27 October 2026, awaiting `/np-ship`.
+
+WP5.02's status:
+
+**Delivered** ([the plan](wp5.02-framework-spike.md); [the report](../design/spike/report.md)), 2 November 2026.
+
+The paragraph after WP5.02:
+
+Tag `v0.6.0-alpha.2` (S19).
+
+Each library package lands its capability with its Tier 1 and 2 tests before any screen surfaces it (§8.1; RSK-15;
+§8.2.17 S7), and each is planned by `/np-plan wp` after WP5.02 (AD2, AD3). None changes `src/` before `v0.5.0` (S1).
+
+The shell and the close:
+
+**The shell (provisional, planned after WP5.02)**
+
+The workbench's frame, its four suites over today's capabilities and the four live views, the charge mutator's
+control, the project folder, `nanopnp gui`, then Qt's removal and documentation increment 5. A second
+`/np-plan amend 5`, after WP5.02's framework ruling, plans them, runs the sweep's design round (REV-139, U4), rules
+REV-136's v0.6 cut line (U3) and carries T2's rows to their packages. Placed now: **REV-170**, the stage-5 region
+interface, lands in the package that builds the Continuum suite's Geometry tool, library step first, VER-62's mesh
+hash checked there (§8.2.28 AD4); **REV-121**, stage 1's axis for a single-chain or mixed-chain pore, lands in the
+package that surfaces structure preparation, with §5.3.1 and VER-48 (§8.2.24 Z5).
+
+**The close package (last)**
+
+It resolves or carries each open decision, records QR-10, confirms Qt and the bundle are gone with
+the capability list covered, orders the tool phases (S7), and writes the report, the changelog and
+`CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
+
+Open decision 7:
+
+| 7 | The shell packages, the sweep's design round (U4), REV-136's v0.6 cut line (U3) and the phase estimate | **Author**, at the second `/np-plan amend 5`, after WP5.02 (AD1) |
+
+*What the author supplies*, the framework ruling:
+
+| The framework ruling | WP5.02's end | The shell packages wait |
+
+*What the author supplies*, the sweep's answers:
+
+| The answers to the sweep's design round and the cut line | The second `/np-plan amend 5` | The shell packages wait |
+
+The *Verification* row:
+
+| Shell, close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as restated; WP5.01's requirements; VER-78; the mutator's Tier 1 test |

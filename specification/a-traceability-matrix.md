@@ -51,15 +51,15 @@ needed.
 | FR-28 | None yet |
 | FR-29 | None yet |
 | FR-30 | `test_figure_classification_both_ways`, `test_every_figure_draws_and_displays` (examples 01 and 02 per push; 03, 06 and 07 nightly), `test_field_on_a_grid_matches_sample_at`, `test_default_import_and_walk_load_no_plotting`, `test_notebook_runs_headless` (nightly), `test_case_leaf_name_shared_by_two_fields_is_refused` (P8), `test_sweep_figure_draws_current_in_nanoamperes_and_scales` (P9), `test_potential_panel_is_millivolts_centred_at_zero`, `test_concentration_panel_is_log_relative_to_each_species_bulk`, `test_cutline_matches_the_p2_nodes_on_the_axis`, `test_radial_cutline_is_masked_outside_the_fluid` (V4), `test_qoi_rows_show_each_quantity_in_its_display_unit`, `test_cylinder_debye_wall_is_num30s_first_layer_with_its_ceiling`, `test_cylinder_mesh_is_remade_when_the_mesher_changes` (V9), `test_fields_record_the_solvers_bulk_per_species_and_the_pore_wall` (V16), by §8.2.14 P4 |
-| FR-31 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
-| FR-32 | None yet; a Phase 5 library package before the workbench surfaces it (REV-136); then the workbench |
-| FR-33 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
-| FR-34 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
-| FR-35 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`) |
-| FR-36 | None yet; the workbench's packages after WP5.02 (`/np-plan amend 5`); QR-10's observation at the close |
-| FR-37 | `test_orient_pore_puts_a_tilted_ring_on_z_with_the_named_end_cis`, `test_prepared_pore_is_keyed_by_the_source_and_the_choices` (the library, WP54); the workbench's surfacing, a Phase 5 package (REV-136) |
-| FR-38 | None yet; the charge-level mutator, Phase 5 |
-| FR-39 | None yet; a Phase 5 library package before the workbench surfaces it (REV-136); REV-139 |
+| FR-31 | None yet; WP5.08 (the frame) and WP5.09 to WP5.12 (the suites) (§8.2.31 AG1) |
+| FR-32 | None yet; WP5.08's library step, then its frame; the difference field, WP5.12's library step (§8.2.31 AG1, AG6) |
+| FR-33 | None yet; WP5.10 (a geometry and its parameters), WP5.11 (a residue and the charge map), WP5.12 (a field and its probes and cuts; a run and its result) (§8.2.31 AG1) |
+| FR-34 | None yet; WP5.08, REV-52's library step first, then each suite's package (§8.2.31 AG1) |
+| FR-35 | None yet; WP5.08 (the problems list), then each suite's package (§8.2.31 AG1) |
+| FR-36 | None yet; WP5.13 (§8.2.31 AG1); QR-10's observation at the close |
+| FR-37 | `test_orient_pore_puts_a_tilted_ring_on_z_with_the_named_end_cis`, `test_prepared_pore_is_keyed_by_the_source_and_the_choices` (the library, WP54); the workbench's surfacing and REV-121, WP5.09 (§8.2.31 AG1) |
+| FR-38 | None yet; the library step, WP5.04; the Charge edit tool, WP5.09 (§8.2.31 AG1) |
+| FR-39 | None yet; named models and overrides, WP5.05; variables, units, resolved keys and the rebuild forecast, WP5.07; the Study suite, WP5.11 (§8.2.31 AG1 to AG5) |
 | FR-40 | None yet; the composer phase |
 | FR-41 | None yet; the structural-mutator phase |
 | FR-42 | None yet; the sketcher phase |

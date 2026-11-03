@@ -41,6 +41,7 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.28 Phase 5 amended: the library packages, agreed 1 November 2026](28-phase-5-amended-the-library-packages.md) - Records the author's rulings at the first amendment of Phase 5: the four library packages that need no front-end stack are ordered now, after the spike, while the shell packages, the sweep's design round and REV-136's cut line wait for a second amendment; the stage-5 region interface joins the Geometry tool's package, and the review's QoI seam joins the outputs registry.
 * [8.2.29 WP59's review items, agreed 2 November 2026](29-wp59-review-items.md) - Records the author's rulings on the items WP59's review left open: the state gates speak before a non-finite trial's divergence, a non-finite Newton direction is named as the linear solve's, a session opens a run from the store its record names unless it was given one, and WP59's three public names stand; and, at WP60's plan, the source's prose share at the close is accepted as measured.
 * [8.2.30 WP5.02's plan: the spike's candidates and the desktop wrapper, agreed 2 November 2026](30-wp502s-plan-the-spike-and-the-desktop-wrapper.md) - Records the author's rulings at WP5.02's plan: the workbench keeps a desktop wrapper such as Electron possible and the spike measures it; the two candidates are NiceGUI and a React application over one FastAPI server; the spike's code leaves the tree once the framework is ruled, its report kept; and, added at the spike's ruling, the workbench's front end is NiceGUI.
+* [8.2.31 Phase 5 amended: the shell packages and the sweep, agreed 3 November 2026](31-phase-5-amended-the-shell-packages-and-the-sweep.md) - Records the author's rulings at the second amendment of Phase 5: the shell is cut one package per suite after a frame package; the sweep gains variables that may be expressions, with units through pint, keyed by the values they resolve to, and a forecast of what each swept value rebuilds; the comparison offers the difference of two runs' fields over their overlap; and a miss of the 200 ms redraw line by the renderer binds the line to the front end's share.
 
 ## Where each ruling holds now
 
@@ -191,7 +192,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * S23 - the WP5.01 plan
 * S24 - the Phase 5 plan; the design document's *The areas*
 * T1 - spent
-* T2 - open: REV-62 in WP5.05 (AD3); the rest the second `/np-plan amend 5`
+* T2 - open: REV-62 in WP5.05 (AD3); REV-32, REV-52 and MOD-13's command-line part in WP5.08, REV-39 in WP5.10, REV-28 and REV-30 in WP5.12 (AG1)
 * T3 - open: structure preparation's package, the Study package, FR-28 and the composer phase
 * T4 - open: WP5.06 (AD3)
 * T5 - spent
@@ -200,8 +201,8 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * T8 - FR-34; the design document's WB-30 to WB-32
 * U1 - open: the package that removes Qt
 * U2 - the NOTE beside PHY-16 step 3; open: WP5.03 (AD3)
-* U3 - open: the second `/np-plan amend 5`, after WP5.02 (AD1)
-* U4 - open: the second `/np-plan amend 5`, after WP5.02 (AD1)
+* U3 - ruled by AG6; open: WP5.12
+* U4 - ruled by AG2 to AG5; open: WP5.07
 * U5 - open: WP5.02
 * U6 - FR-38
 * U7 - open: WP5.02
@@ -255,7 +256,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * Z2 - the Phase 4 plan
 * Z3 - §8.1's Phase 4 documentation increment
 * Z4 - the Phase 4 plan
-* Z5 - REV-121; open: the Phase 5 package that surfaces FR-37
+* Z5 - REV-121; open: WP5.09 (AG1)
 * Z6 - REV-156; open: Phase 6
 * AA1 - §8.4.4
 * AA2 - §8.4.4; `.claude/workflow/hosts.md`
@@ -272,17 +273,24 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AC4 - REV-171; amended by AD5; open: Phase 6
 * AC5 - REV-169
 * AC6 - spent
-* AD1 - the Phase 5 plan; open: the second `/np-plan amend 5`
+* AD1 - the Phase 5 plan; spent by AG1
 * AD2 - the Phase 5 plan
 * AD3 - the Phase 5 plan; open: WP5.03 to WP5.06
-* AD4 - REV-170; open: the Geometry tool's package
+* AD4 - REV-170; open: WP5.10 (AG1)
 * AD5 - REV-171; open: WP5.06
 * AE1 - NUM-16's NOTE; REV-172
 * AE2 - NUM-16's NOTE; REV-172
 * AE3 - IF-01's NOTE; REV-173
 * AE4 - IF-01's NOTE; spent
 * AE5 - the Phase 4 plan's criterion 11
-* AF1 - ADR-004's NOTE (the desktop wrapper); open: WP5.02
-* AF2 - WP5.02's plan; open: WP5.02
-* AF3 - WP5.02's plan; open: WP5.02
+* AF1 - ADR-004's NOTE (the desktop wrapper)
+* AF2 - spent
+* AF3 - spent
 * AF4 - ADR-004's NOTE (the front end, v0.6); spent
+* AG1 - §8.1's Phase 5 estimate; the Phase 5 plan; open: WP5.08 to WP5.14
+* AG2 - FR-39; open: WP5.07
+* AG3 - FR-39; open: WP5.07
+* AG4 - FR-39; open: WP5.07
+* AG5 - FR-39; open: WP5.07
+* AG6 - FR-32; REV-136; open: WP5.12
+* AG7 - the Phase 5 plan's criterion 6; open: WP5.11
