@@ -1,6 +1,6 @@
 # WP5.04 — The charge mutator's library step
 
-**Status: planned, not started.** Planned 3 November 2026, on `v0.6.0-alpha.3`. It inherits §8.2.17 S4, §8.2.19 U6,
+**Status: in progress; items 1 to 5 done.** Planned 3 November 2026, on `v0.6.0-alpha.3`. It inherits §8.2.17 S4, §8.2.19 U6,
 §8.2.28 AD3 and §8.2.31 AG9 to AG11, ruled at this plan.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -179,13 +179,21 @@ charge group; PHY-16 step 3's NOTE. FR-38 and the Charge edit row are amended in
 
 ### Work items
 
-- [ ] 1. `io/case.py:ChargeEdit`, `Charge.edits`; `io/resolved.py:ResolvedEdit`; `pipeline/case.py:_resolve_protonation`; `pipeline/checks.py:_check_edits`; `io/defaults.py:CONFIGURATION_PATHS`; `validation/case_leaves.py` (D1, D5). Done when `uv run pytest -m tier1 -k "case or manifest or defaults"` passes. **Executor:** main.
-- [ ] 2. `data/charge/titratable_groups.yaml`, `core/paths.py:charge_data_file`, `charge/edits.py:TitratableGroups`, and *Verification*'s row 6 (D3). Done when that row passes. **Executor:** `general-purpose` on Haiku.
-- [ ] 3. `charge/protonation.py`: `_pinned`, `run_pdb2pqr(pins)`, `_frame_parameters`, the pin gate, `unapplied` (D2, D6). Done when rows 1 and 5 pass. **Executor:** main.
-- [ ] 4. `structure/protonated.py:radius_scales`; `charge/edits.py:apply_edits`, `difference`; `ProtonationStage.run`'s parent, payload and `variant_of` (D3, D5, D6). Done when rows 2, 4 and 5 pass. **Executor:** main.
-- [ ] 5. Compaction checkpoint. **Executor:** main.
+- [x] f157d99 1. `io/case.py:ChargeEdit`, `Charge.edits`; `io/resolved.py:ResolvedEdit`; `pipeline/case.py:_resolve_protonation`; `pipeline/checks.py:_check_edits`; `io/defaults.py:CONFIGURATION_PATHS`; `validation/case_leaves.py` (D1, D5). Done when `uv run pytest -m tier1 -k "case or manifest or defaults"` passes. **Executor:** main.
+- [x] 55b2f5e 2. `data/charge/titratable_groups.yaml`, `core/paths.py:charge_data_file`, `charge/edits.py:TitratableGroups`, and *Verification*'s row 6 (D3). Done when that row passes. **Executor:** `general-purpose` on Haiku.
+- [x] 1c0a125 3. `charge/protonation.py`: `_pinned`, `run_pdb2pqr(pins)`, `_frame_parameters`, the pin gate, `unapplied` (D2, D6). Done when rows 1 and 5 pass. **Executor:** main.
+- [x] e81502e 4. `structure/protonated.py:radius_scales`; `charge/edits.py:apply_edits`, `difference`; `ProtonationStage.run`'s parent, payload and `variant_of` (D3, D5, D6). Done when rows 2, 4 and 5 pass. **Executor:** main.
+- [x] 5. Compaction checkpoint. **Executor:** main.
 - [ ] 6. `density/stage.py`: the radius scales under `protonated` (D4). Done when row 3 passes. **Executor:** main.
 - [ ] 7. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s `charge` prose; a `knowledge/07-software-stack/` note on pinning a state through `apply_pka_values`, `[tested]` by row 1; FR-38's Appendix A row. Done when the code and review say so, and the strict documentation build passes. **Executor:** main.
+
+> **Outcome — a pinned state moves a neighbour (items 3 and 4).** On the fragment at pH 2, pinning ASP 21
+> `charged` flips the carboxyl of GLU 18 on chain B: PDB2PQR's hydrogen optimisation puts `HE2` and the two
+> oxygens elsewhere, with every charge by name unchanged. So `difference` also compares positions
+> (`max_displacement_nm`, 10⁻⁹ nm), the record lists that neighbour, and row 1 asserts that every residue
+> the record does not list equals the parent's atom by atom, matched by identity because PDB2PQR may also
+> reorder a neighbour's atoms. `ChargeEdit`'s refusals sit in `_check_edits`; the stage keeps `unapplied`
+> false on a pinned residue by masking its expectation.
 
 ### Verification
 
