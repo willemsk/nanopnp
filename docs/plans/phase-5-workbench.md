@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.03 merged, WP5.04 planned; the library packages WP5.04 to WP5.07 and the shell packages
+**Status: in progress; WP5.01 to WP5.03 merged, WP5.04 delivered; the library packages WP5.05 to WP5.07 and the shell packages
 WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
@@ -143,12 +143,17 @@ the `X86_V3` and `AVX512_SPR` meshes of example 07 are folded. Tagged `v0.6.0-al
 
 ### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6; §8.2.31 AG9 to AG11)
 
-**Planned 3 November 2026** ([the plan](wp5.04-the-charge-mutators-library-step.md)). A case's `charge.edits` pin a
+**Delivered 3 November 2026** ([the plan](wp5.04-the-charge-mutators-library-step.md)). A case's `charge.edits` pin a
 titratable residue's protonation state, change its net charge by an integer placed on its titratable group (AG9), or
 scale its atom radii (AG10), at stage 7's `protonation` step on every chain and frame. The variant artefact carries its
 parent table, and its record names the parent and every residue that differs; no edit is a deviation (AG11). Under the
 protonated density a state or radius edit moves the wall too. Tier 1: a pin, a charge change and a radius scale each
-change that residue alone; a case without edits keeps every key. Tag `v0.6.0-alpha.4`.
+change that residue alone; a case without edits keeps every key. A state is pinned by wrapping PDB2PQR's
+`apply_pka_values`, and a gate refuses a frame that does not hold it. A charge or radius edit reuses the parent's
+stored frames; a state edit protonates again. Live constraints: a pin can reposition a neighbour's hydrogens and
+carboxyl oxygens through PDB2PQR's optimisation, so the variant's record lists such residues and tests match atoms by
+identity; a radius scale below 1 can breach the kernel-spacing gate (REV-182). FR-38, PHY-16's NOTE, §5.2, §5.3.1 and
+§5.3.3 are amended; the Charge edit tool and the changed count are WP5.09's. Tag `v0.6.0-alpha.4` once merged.
 
 ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62)
 

@@ -1,6 +1,6 @@
 # WP5.04 — The charge mutator's library step
 
-**Status: in progress; items 1 to 5 done.** Planned 3 November 2026, on `v0.6.0-alpha.3`. It inherits §8.2.17 S4, §8.2.19 U6,
+**Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.3`. It inherits §8.2.17 S4, §8.2.19 U6,
 §8.2.28 AD3 and §8.2.31 AG9 to AG11, ruled at this plan.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -183,9 +183,14 @@ charge group; PHY-16 step 3's NOTE. FR-38 and the Charge edit row are amended in
 - [x] 55b2f5e 2. `data/charge/titratable_groups.yaml`, `core/paths.py:charge_data_file`, `charge/edits.py:TitratableGroups`, and *Verification*'s row 6 (D3). Done when that row passes. **Executor:** `general-purpose` on Haiku.
 - [x] 1c0a125 3. `charge/protonation.py`: `_pinned`, `run_pdb2pqr(pins)`, `_frame_parameters`, the pin gate, `unapplied` (D2, D6). Done when rows 1 and 5 pass. **Executor:** main.
 - [x] e81502e 4. `structure/protonated.py:radius_scales`; `charge/edits.py:apply_edits`, `difference`; `ProtonationStage.run`'s parent, payload and `variant_of` (D3, D5, D6). Done when rows 2, 4 and 5 pass. **Executor:** main.
-- [x] 5. Compaction checkpoint. **Executor:** main.
-- [ ] 6. `density/stage.py`: the radius scales under `protonated` (D4). Done when row 3 passes. **Executor:** main.
-- [ ] 7. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s `charge` prose; a `knowledge/07-software-stack/` note on pinning a state through `apply_pka_values`, `[tested]` by row 1; FR-38's Appendix A row. Done when the code and review say so, and the strict documentation build passes. **Executor:** main.
+- [x] 7651239 5. Compaction checkpoint. **Executor:** main.
+- [x] 3163e94 6. `density/stage.py`: the radius scales under `protonated` (D4). Done when row 3 passes. **Executor:** main.
+- [x] e370c3f 7. The clauses of the Execution brief; `CHANGELOG.md`; `cli/reference.py`'s `charge` prose; a `knowledge/07-software-stack/` note on pinning a state through `apply_pka_values`, `[tested]` by row 1; FR-38's Appendix A row. Done when the code and review say so, and the strict documentation build passes. **Executor:** main.
+
+> **Outcome — a radius scale changes the grid (item 6).** A scaled LEU 24 widens the kernel and so the canonical
+> grid's margin, so the parent's and the variant's maps differ in shape and not only in value. Row 3 compares the
+> grids, then deposits the table's own edited radii (a third route to the stage's widths) and matches the stored map
+> exactly.
 
 > **Outcome — a pinned state moves a neighbour (items 3 and 4).** On the fragment at pH 2, pinning ASP 21
 > `charged` flips the carboxyl of GLU 18 on chain B: PDB2PQR's hydrogen optimisation puts `HE2` and the two
