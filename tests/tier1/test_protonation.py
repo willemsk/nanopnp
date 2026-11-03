@@ -27,6 +27,7 @@ from nanopnp.charge.protonation import (
     export_pqr,
     frame_pdb,
     pdb2pqr_arguments,
+    pqr_frames,
 )
 from nanopnp.core.stages import CancelFlag, Cancelled
 from nanopnp.io.artefact import StageInputs, StructureArtefact
@@ -142,7 +143,7 @@ def test_ver57_charges_are_charmm_dat_and_q_net_the_hand_count(
 ) -> None:
     table, summary = _run(tmp_path, fragment_2wcd(*FRAGMENT), charge=charge)
     charmm = _charmm()
-    (frame,) = table.pqr_frames()
+    (frame,) = pqr_frames(table)
     pqr = read_pqr(tmp_path / "workspace" / next(iter(_frame_pqrs(tmp_path))))[0]
     for name, resname, written, value in zip(
         pqr.name.tolist(), pqr.resname.tolist(), _written_names(tmp_path), pqr.charge_e, strict=True
@@ -263,7 +264,7 @@ def test_ver57_a_c_terminal_acid_keeps_both_carboxyl_groups(
 
 def _with_hydrogens(tmp_path: Path, ensemble: AlignedEnsemble) -> AlignedEnsemble:
     table, _ = _run(tmp_path / "hydrogens", ensemble)
-    (frame,) = table.pqr_frames()
+    (frame,) = pqr_frames(table)
     resname = np.where(frame.resname == "HIS", "HSE", frame.resname)
     return AlignedEnsemble(
         positions_nm=(frame.positions_A[None] / 10.0).astype(np.float32),

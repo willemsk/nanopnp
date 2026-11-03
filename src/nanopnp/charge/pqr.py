@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.structure.ensemble import chain_characters
+from nanopnp.structure.protonated import PARENT_RESIDUE, parent_residue
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -37,31 +38,6 @@ PATCH_RESIDUES: frozenset[str] = frozenset({"TER", "NTER", "CTER", "DISU"})
 here every cysteine in a disulfide carries two names and is refused.
 """
 
-PARENT_RESIDUE: Mapping[str, str] = {
-    # The PHY-16 step-3 NOTE's table, verbatim: every protonation-variant residue
-    # name a CHARMM- or AMBER-named frame may carry, written as the titratable
-    # parent PDB2PQR and PROPKA assign a state to.
-    "HSD": "HIS",
-    "HSE": "HIS",
-    "HSP": "HIS",
-    "HID": "HIS",
-    "HIE": "HIS",
-    "HIP": "HIS",
-    "ASH": "ASP",
-    "ASPP": "ASP",
-    "GLH": "GLU",
-    "GLUP": "GLU",
-    "LYN": "LYS",
-    "LSN": "LYS",
-    "CYM": "CYS",
-    "TYM": "TYR",
-    "ARN": "ARG",
-    # The disulfide-bonded cysteine of the AMBER-named force fields: PDB2PQR
-    # writes it under SWANSON and PEOEPB, whose frames would otherwise name a
-    # residue the ensemble calls CYS (PHY-16 step-3 NOTE).
-    "CYX": "CYS",
-}
-"""Protonation-variant residue names and the parent each is written as (PHY-16 step-3 NOTE)."""
 
 # The record types that carry an atom.
 _RECORDS = ("ATOM", "HETATM")
@@ -75,11 +51,6 @@ MIN_COORDINATE_A = -999.999
 
 class PQRError(ValueError):
     """A PQR file this release cannot read, or one that does not match its ensemble."""
-
-
-def parent_residue(name: str) -> str:
-    """Return the titratable parent of a protonation-variant residue name."""
-    return PARENT_RESIDUE.get(name, name)
 
 
 def is_hydrogen(atom: str) -> bool:
