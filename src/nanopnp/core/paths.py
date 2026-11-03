@@ -23,6 +23,9 @@ GEOMETRY_DIR: Path = DATA_DIR / "geometry"
 RADII_DIR: Path = DATA_DIR / "radii"
 
 
+CHARGE_DIR: Path = DATA_DIR / "charge"
+
+
 STRUCTURES_DIR: Path = DATA_DIR / "structures"
 
 
@@ -96,6 +99,14 @@ def radii_file(name: str) -> Path:
     path = RADII_DIR / f"{name}.yaml"
     if not path.is_file():
         raise FileNotFoundError(f"no radius set {name!r} in {RADII_DIR}")
+    return path
+
+
+def charge_data_file(name: str) -> Path:
+    """Return the path of a named charge data file; FileNotFoundError if not installed."""
+    path = CHARGE_DIR / name
+    if not path.is_file():
+        raise FileNotFoundError(f"no charge data file {name!r} in {CHARGE_DIR}")
     return path
 
 
