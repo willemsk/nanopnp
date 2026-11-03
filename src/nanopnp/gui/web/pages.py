@@ -37,8 +37,8 @@ def _blank_map() -> bytes:
     return png(b"\xe6\xe8\xec\xff" * BLANK.width * BLANK.height, BLANK.width, BLANK.height)
 
 
+# The SVG of a residue's charged atoms, drawn over the map's picture.
 def _markers(extent: Extent, markers: list[tuple[float, float, float]]) -> str:
-    """Return the SVG of a residue's charged atoms, drawn over the map's picture."""
     out = []
     for r_nm, z_nm, charge in markers:
         x, y = extent.pixel(r_nm, z_nm)
@@ -67,9 +67,14 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
         return Response(_blank_map() if link is None else link.map_png, media_type="image/png")
 
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
-    nicegui_app.add_static_file(local_file=TOKENS, url_path="/tokens.css")
-    nicegui_app.add_static_file(local_file=ASSETS / "bridge.js", url_path="/bridge.js")
-    nicegui_app.add_static_file(local_file=ASSETS / "workbench.css", url_path="/workbench.css")
+    # Our own small files are not cached (max-age 0): NiceGUI's hour of caching would hide an edit
+    # that `nanopnp gui --dev` restarted the server for.
+    for local, url in (
+        (TOKENS, "/tokens.css"),
+        (ASSETS / "bridge.js", "/bridge.js"),
+        (ASSETS / "workbench.css", "/workbench.css"),
+    ):
+        nicegui_app.add_static_file(local_file=local, url_path=url, max_cache_age=0)
 
     async def ready() -> None:
         await ui.run_javascript("document.body.dataset.screenReady = '1'")

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
-from nanopnp.io.case import CaseValidationError
+from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, classify
 from nanopnp.io.store import Store
 from nanopnp.validation.charged_tube import write_charged_tube
 
@@ -39,7 +39,11 @@ def boot_case(case: Path, work: Path, *, name: str | None = None) -> Workbench:
     label = name or case.stem
     try:
         result = Session(Store(work / "store"), write=False).run(Case.load(case), upto="charge")
-    except CaseValidationError as error:
+    except Exception as error:
+        # A case refused (exit 3) or a gate that aborted the walk (exit 4) is a state to show, as a
+        # schema refusal is; any other failure is a fault and ends the server.
+        if classify(error) not in {EXIT_CASE, EXIT_GATE}:
+            raise
         return Workbench(label, case=case, refusal=str(error))
     return Workbench(label, case=case, stages=tuple(result.artefacts), link=Link(result))
 

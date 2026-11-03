@@ -148,7 +148,7 @@ Record the ruling:
 Middleware:
 
 - a `Host` other than `127.0.0.1:<port>` or `localhost:<port>` gets 403;
-- `?token=` correct sets an `HttpOnly`, `SameSite=Strict` cookie `nanopnp_token`;
+- `?token=` correct sets an `HttpOnly`, `SameSite=Strict` cookie named `nanopnp_token_` and a digest of the token, so two workbenches on one host keep their own;
 - neither the token nor the cookie gets 403.
 
 The `cli` subcommand `gui` passes the arguments through `importlib.import_module("nanopnp.gui.web.server").main`.

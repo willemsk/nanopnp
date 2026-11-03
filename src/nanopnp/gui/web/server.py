@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import hmac
 import os
 import re
@@ -12,6 +13,7 @@ import socket
 import sys
 import tempfile
 import threading
+import time
 import webbrowser
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
@@ -49,6 +51,7 @@ READY = re.compile(r"^nanopnp-gui ready (http://127\.0\.0\.1:\d+/\?token=[\w-]+)
 """The one line a wrapper reads from standard output to learn the address."""
 
 COOKIE = "nanopnp_token"
+"""The prefix of the launch cookie's name, which ``Guard`` completes with a digest of the token."""
 
 _FORBIDDEN = b"forbidden: a foreign Host, or neither the launch token nor its cookie"
 _CHILDREN: list[SolverProcess] = []
@@ -70,26 +73,33 @@ class Guard:
     """ASGI middleware: refuse a foreign Host, and a request without the launch token.
 
     A page opened with ``?token=`` receives the token as an ``HttpOnly``, ``SameSite=Strict``
-    cookie, so that its later requests and its websocket carry it without the query.
+    cookie, so that its later requests and its websocket carry it without the query. The cookie's
+    name carries a digest of the token: a browser keeps one cookie per name for every port of
+    127.0.0.1, so two workbenches sharing a name would overwrite each other's token.
     """
 
     def __init__(self, app: ASGIApp, token: str) -> None:
         self.app = app
         self.token = token
+        self.cookie = f"{COOKIE}_{hashlib.sha256(token.encode()).hexdigest()[:12]}"
         self.hosts: frozenset[str] = frozenset()
 
+    def _is_token(self, candidate: str) -> bool:
+        # Bytes, because compare_digest refuses a str outside ASCII, and a request may send any.
+        return hmac.compare_digest(candidate.encode(), self.token.encode())
+
+    # Returns (allowed, set_cookie).
     def _allowed(self, scope: Scope) -> tuple[bool, bool]:
-        """Return ``(allowed, set_cookie)`` for a request."""
         headers = {key.lower(): value for key, value in scope["headers"]}
         if headers.get(b"host", b"").decode("latin-1") not in self.hosts:
             return False, False
         query = parse_qs(scope["query_string"].decode("latin-1")).get("token", [""])[0]
-        if hmac.compare_digest(query, self.token):
+        if self._is_token(query):
             return True, True
         jar: cookies.SimpleCookie = cookies.SimpleCookie()
         jar.load(headers.get(b"cookie", b"").decode("latin-1"))
-        morsel = jar.get(COOKIE)
-        return morsel is not None and hmac.compare_digest(morsel.value, self.token), False
+        morsel = jar.get(self.cookie)
+        return morsel is not None and self._is_token(morsel.value), False
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         """Pass an allowed request on; answer any other with 403."""
@@ -116,7 +126,7 @@ class Guard:
 
         async def with_cookie(message: Message) -> None:
             if message["type"] == "http.response.start":
-                value = f"{COOKIE}={self.token}; HttpOnly; SameSite=Strict; Path=/"
+                value = f"{self.cookie}={self.token}; HttpOnly; SameSite=Strict; Path=/"
                 message = {
                     **message,
                     "headers": [*message["headers"], (b"set-cookie", value.encode())],
@@ -149,17 +159,16 @@ def build_app(token: str, bench: Workbench) -> Guard:
     return Guard(app, token)
 
 
+# A uvicorn server that announces the address it bound, once, on standard output.
 class _Server(uvicorn.Server):
-    """A uvicorn server that announces the address it bound, once, on standard output."""
-
     def __init__(self, config: uvicorn.Config, guard: Guard, token: str, *, browser: bool) -> None:
         super().__init__(config)
         self._guard = guard
         self._token = token
         self._browser = browser
 
+    # Bind, then name the address (ADR-004's NOTE describes the wrapper that reads it).
     async def startup(self, sockets: list[socket.socket] | None = None) -> None:
-        """Bind, then name the address (see ADR-004's NOTE for the wrapper that reads it)."""
         await super().startup(sockets)
         if not self.started:
             return
@@ -170,6 +179,9 @@ class _Server(uvicorn.Server):
         if self._browser:
             webbrowser.open(url)
 
+
+ANNOUNCE_WAIT_S = 60.0
+"""How long ``--dev`` waits for its address to accept a connection before it prints nothing."""
 
 _DEV_ENVIRONMENT = (
     "NANOPNP_GUI_TOKEN",
@@ -207,8 +219,25 @@ def dev_app() -> Guard:
     return guard
 
 
+def _announce(url: str, port: int, *, browser: bool) -> None:
+    # The reloading supervisor binds the port before its first worker has started, so the first
+    # connection that succeeds is the earliest moment the address works; the ready line and the
+    # browser wait for it, as the plain server's do for its bind.
+    deadline = time.monotonic() + ANNOUNCE_WAIT_S
+    while time.monotonic() < deadline:
+        try:
+            socket.create_connection((HOST, port), timeout=1.0).close()
+        except OSError:
+            time.sleep(0.1)
+            continue
+        print(f"nanopnp-gui ready {url}", flush=True)
+        if browser:
+            webbrowser.open(url)
+        return
+
+
+# Serve with reload: a change to a page, a style sheet or the bridge restarts the worker.
 def _serve_dev(args: argparse.Namespace, token: str, work: Path) -> None:
-    """Serve with reload: a change to a page, a style sheet or the bridge restarts the worker."""
     port = args.port
     if port == 0:  # a reloading server keeps one address, so it is chosen before the first worker
         with socket.socket() as probe:
@@ -222,9 +251,9 @@ def _serve_dev(args: argparse.Namespace, token: str, work: Path) -> None:
         NANOPNP_GUI_STATE=args.state or "",
     )
     url = f"http://{HOST}:{port}/?token={token}"
-    print(f"nanopnp-gui ready {url}", flush=True)
-    if not args.no_browser:
-        webbrowser.open(url)
+    threading.Thread(
+        target=_announce, args=(url, port), kwargs={"browser": not args.no_browser}, daemon=True
+    ).start()
     threading.Thread(target=_watch_input, args=(None,), daemon=True).start()
     uvicorn.run(
         "nanopnp.gui.web.server:dev_app",

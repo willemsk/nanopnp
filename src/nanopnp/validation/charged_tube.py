@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
-
-import numpy as np
 
 from nanopnp.io.artefact import CASE_SCHEMA
 
@@ -19,6 +18,8 @@ __all__ = [
 
 def write_parallelogram_profile(path: Path, *, citation: str = "tests/conftest.py") -> Path:
     """Write the four-vertex profile of the fixture tube and return its path."""
+    import numpy as np
+
     from nanopnp.geometry.profile import (
         PROFILE_SCHEMA,
         PoreProfile,
@@ -58,6 +59,12 @@ CHARGED_TUBE_RADIUS_A = 1.5
 CHARGED_TUBE_SECOND_FRAME_E: tuple[float, float] = (1.0, -3.0)
 
 
+# A JSON string is a YAML flow scalar, so a folder with a space, a comma or a brace in its name
+# (the workbench writes this case under the user's temporary folder) still parses as one path.
+def _quoted(path: Path) -> str:
+    return json.dumps(str(path))
+
+
 # size_scale 5, not the 20 of the uncharged case: at 20 the deployed field's worst plane fails the
 # 1e-3 quadrature gate
 # (knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md).
@@ -88,8 +95,8 @@ def write_charged_tube(
         f"""schema: {CASE_SCHEMA}
 name: charged-tube
 inputs:
-  profile: {{path: {profile}}}
-  pqr: {{path: {pqr}, format: pqr}}
+  profile: {{path: {_quoted(profile)}}}
+  pqr: {{path: {_quoted(pqr)}, format: pqr}}
 geometry: {{reservoir: {{radius_nm: 30.0}}}}
 electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]

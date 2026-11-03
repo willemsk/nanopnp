@@ -2308,3 +2308,34 @@ not corrected; the measure applies to the shipped screens, which report none. Th
 decided when the first screen that draws a focusable control over it is built.
 
 Found at WP5.02's item 9, 2 November 2026.
+
+## REV-177: The workbench's link failures end the server at startup
+
+`boot_case` shows a refusal (exit 3 or 4) as the `refused` state. `Link.__init__` raises `ValueError` or `KeyError`
+for a run with no charge lattice or no protonation artefact (a case with no `pqr` input), and that ends the server
+(and the `--dev` reload loop) instead of showing a state.
+
+Open: the author rules whether a case without charge shows as a state of its own, or as a refusal naming the missing
+stage. The fix is small once ruled.
+
+Found by the WP5.02 review (CODE_REVIEW_027, finding 3), 3 November 2026.
+
+## REV-178: The selected-fill measure does not read the strip's pressed item
+
+`shoot.cjs`'s non-text check of a selected fill reads `[aria-selected=true]`; the workbench marks its selected
+strip item `aria-pressed=true`. A shot taken with a residue selected leaves that item's fill and edge unmeasured
+against 3:1. Widening the selector changes what `/np-gui render` gates on (`--sel` on `--panel` is about 1.2:1).
+
+Open: the author rules whether the selected strip item must reach 3:1 (the token changes) or the measure stays as it is.
+
+Found by the WP5.02 review (CODE_REVIEW_027, finding 9), 3 November 2026.
+
+## REV-179: `nanopnp gui` has no smoke test and takes no common flags
+
+CLAUDE.md asks each entry point for a thin smoke test. VER-78 launches `python -m nanopnp.gui.web.server`, so
+`_gui`'s forwarding of arguments is untested, and the subparser is not built with `_common`, so
+`nanopnp gui --traceback` is refused after the subcommand.
+
+Open: the author rules whether the server accepts `--json` and `--traceback`, and the smoke test follows that shape.
+
+Found by the WP5.02 review (CODE_REVIEW_027, finding 14), 3 November 2026.
