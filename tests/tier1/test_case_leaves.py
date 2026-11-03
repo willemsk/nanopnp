@@ -919,6 +919,8 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
         | {"charge.edits.0.residue"}
         | {"inputs.profile.path", "inputs.pqr.path"}
         | {f"inputs.mesh.{k}" for k in ("path", "format", "groups")}
+        # Its key is the stored artefact (test_mesh_ingest: a mesh named by store key).
+        | {"inputs.mesh.artefact"}
         | {f"inputs.charge.{k}" for k in ("path", "format", "groups")}
         | {f"inputs.eps_r.{k}" for k in ("path", "format", "groups")}
     )
@@ -971,7 +973,6 @@ def test_ver71_every_case_leaf_is_classified_once_in_both_directions() -> None:
         "electrolyte.parameters",
         "electrolyte.species.0.name",
         "electrolyte.species.0.z",
-        "inputs.mesh.artefact",
         "inputs.charge.artefact",
         "inputs.eps_r.artefact",
     }

@@ -182,7 +182,6 @@ LEAVES: dict[str, Leaf] = {
     "electrolyte.species.0.z": Leaf(
         "fixed", "", "species valences fixed by the electrolyte parameter file"
     ),
-    "inputs.mesh.artefact": Leaf("fixed", "", "supplied mesh by store hash deferred to v0.6"),
     "models.molecular": Leaf(
         "provenance", "", "molecular-model file merged under the study; the resolved case keys"
     ),
@@ -303,6 +302,9 @@ LEAVES: dict[str, Leaf] = {
     ),
     "inputs.mesh.path": Leaf(
         "stage", "mesh", "supplied external finite-element mesh file read by stage 6"
+    ),
+    "inputs.mesh.artefact": Leaf(
+        "stage", "mesh", "stored stage-6 mesh named by its store hash, which is the stage's key"
     ),
     "inputs.mesh.format": Leaf(
         "stage", "mesh", "format specification of supplied mesh file read by stage 6"

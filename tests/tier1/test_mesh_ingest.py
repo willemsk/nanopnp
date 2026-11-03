@@ -13,6 +13,7 @@ from nanopnp.mesh.ingest import (
     MeshStage,
     MeshVocabularyError,
     apply_groups,
+    deployed_mesh,
     ingest,
     required_names,
 )
@@ -305,3 +306,37 @@ def test_ver25_a_cancelled_mesh_stage_writes_nothing(mesh_file: Path, tmp_path: 
             StageInputs(resolved=resolve(loads_case(case_text(mesh_file)))), cancel=flag
         )
     assert not (tmp_path / "work").exists()
+
+
+def test_a_mesh_named_by_store_key_is_the_stored_artefact(tmp_path: Path) -> None:
+    import yaml
+
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
+    from nanopnp.io.store import Store
+
+    quickstart = Path(__file__).resolve().parents[2] / "examples/01-quickstart/quickstart.case.yaml"
+    session = Session(Store(tmp_path / "store"), write=False)
+    generated = session.run(Case.load(quickstart), upto="mesh").artefacts["mesh"]
+
+    raw = yaml.safe_load(quickstart.read_text(encoding="utf-8"))
+    del raw["geometry"]
+    raw["numerics"].pop("mesh")
+    raw["inputs"] = {"mesh": {"artefact": generated.hash}}
+    named = tmp_path / "named.case.yaml"
+    named.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    result = session.run(Case.load(named), upto="mesh")
+    assert result.artefacts["mesh"].hash == generated.hash
+    mesh_record = next(record for record in result.stages if record.name == "mesh")
+    assert mesh_record.cached
+    resolved = resolve(loads_case(named.read_text(encoding="utf-8")))
+    deployed = deployed_mesh(resolved, result.artefacts["mesh"])
+    twin = deployed_mesh(resolve(loads_case(quickstart.read_text(encoding="utf-8"))), generated)
+    assert deployed.data.element_count == twin.data.element_count
+    assert deployed.content_hash == twin.content_hash
+
+    missing = raw | {"inputs": {"mesh": {"artefact": "0" * 64}}}
+    named.write_text(yaml.safe_dump(missing), encoding="utf-8")
+    with pytest.raises(FileNotFoundError, match="0" * 64):
+        session.run(Case.load(named), upto="mesh")

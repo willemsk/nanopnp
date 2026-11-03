@@ -206,6 +206,11 @@ def wall_distance_remedy(resolved: ResolvedCase) -> str:
     supplied = resolved.mesh
     if supplied is None:
         return "refine the mesh at the wall (numerics.mesh.wall_h_nm)"
+    if supplied.path is None:
+        return (
+            f"regenerate the stored mesh {supplied.artefact} finer at the wall, from the case "
+            "that generated it (numerics.mesh.wall_h_nm)"
+        )
     return (
         f"regenerate the supplied mesh {str(supplied.path)!r} finer at the wall "
         "(nanopnp mesh <geometry file> --wall-h-nm)"
