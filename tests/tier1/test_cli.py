@@ -24,7 +24,7 @@ from nanopnp.pipeline.run import (
 )
 
 IDEALISED_CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: idealised
 geometry:
   pore: {{shape: cylinder, radius_nm: 2}}

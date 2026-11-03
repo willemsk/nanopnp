@@ -55,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 # PHY-20
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: 2wcd-val06
 structure:
   source: {{path: {pdb}}}

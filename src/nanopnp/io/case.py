@@ -1,4 +1,4 @@
-"""The ``nanopnp/case/v0.5`` case-file schema: its shape, its diagnostics, reading and writing."""
+"""The ``nanopnp/case/v0.6`` case-file schema: its shape, its diagnostics, reading and writing."""
 
 from __future__ import annotations
 
@@ -15,6 +15,9 @@ from nanopnp.core.paths import available_corrections, names_a_path
 from nanopnp.io.artefact import CASE_SCHEMA
 
 SCHEMA: str = CASE_SCHEMA
+
+RETIRED_SCHEMAS: tuple[str, ...] = ("nanopnp/case/v0.5",)
+"""Schema identifiers a refusal names the migration for, not just the mismatch."""
 
 
 FieldType: TypeAlias = Any
@@ -205,6 +208,15 @@ class Density(_Strict):
     grid_spacing_nm: float = 0.05
     kernel: Literal["gaussian_vdw"] = "gaussian_vdw"
     sharpness: float = 0.93
+    atoms: Literal["protonated", "as_loaded"] = Field(
+        default="protonated",
+        description=(
+            "`protonated`: smear the atoms of the protonation stage, hydrogens included, each "
+            "with its CHARMM radius, so a protonation state moves the density, the contour and "
+            "the mesh. `as_loaded`: smear the structure's atoms as stage 1 holds them, as the "
+            "published reference did (section 5.3.1 NOTE on geometry.density)"
+        ),
+    )
 
 
 class Contour(_Strict):
@@ -507,7 +519,7 @@ def _installed(name: str, installed: Sequence[str]) -> bool:
 
 
 class CaseDocument(_Strict):
-    """A validated case file (schema ``nanopnp/case/v0.5``)."""
+    """A validated case file (schema ``nanopnp/case/v0.6``)."""
 
     schema_id: str = Field(alias="schema")
     name: str
@@ -666,6 +678,11 @@ def _validate(raw: object, source: str, model: type[CaseDocument] = CaseDocument
             f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
         )
     declared = raw.get("schema")
+    if declared in RETIRED_SCHEMAS:
+        raise CaseValidationError(
+            f"{source}: schema {declared!r} is retired: declare {SCHEMA!r}; a case with "
+            "structure: that keeps its geometry adds geometry.density.atoms: as_loaded"
+        )
     if declared != SCHEMA:
         raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
     try:

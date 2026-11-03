@@ -9,7 +9,7 @@
 # The mesh is not checked in: it is 44,316 triangles and is reproducible from the
 # checked-in ClyA profile by `nanopnp mesh reference`; see README.md beside this file.
 # A relative `inputs.mesh.path` is read beside this file (section 5.3.1).
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: phase1-reference
 
 inputs:

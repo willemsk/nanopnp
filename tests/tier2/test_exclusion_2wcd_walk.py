@@ -28,7 +28,7 @@ structure:
 """
 
 SOLVE_CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: 2wcd-shell-solve
 {structure}{geometry}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]

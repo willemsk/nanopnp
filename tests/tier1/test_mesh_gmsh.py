@@ -53,7 +53,7 @@ ARC_DOMAINS = {"cis": "electrolyte", "trans": "electrolyte", "membrane_outer": "
 
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: coarse
 inputs:
   profile: {{path: {path}}}

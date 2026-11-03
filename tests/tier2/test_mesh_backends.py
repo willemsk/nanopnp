@@ -29,7 +29,7 @@ CONDUCTANCE_RTOL = 1e-3
 PROFILE_VERTICES = 185
 
 MESH_CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: backends-{backend}-{concentration}-{size_scale}
 inputs:
   profile: {{path: {profile}}}
@@ -43,7 +43,7 @@ numerics: {{mesh: {{backend: {backend}, size_scale: {size_scale}}}}}
 """
 
 FROZEN_CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: frozen-{backend}
 inputs:
   profile: {{path: {profile}}}

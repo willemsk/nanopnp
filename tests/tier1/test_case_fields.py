@@ -1,4 +1,4 @@
-"""VER-43 — the one walk over ``nanopnp/case/v0.5``, and what is built on it."""
+"""VER-43 — the one walk over ``nanopnp/case/v0.6``, and what is built on it."""
 
 from __future__ import annotations
 

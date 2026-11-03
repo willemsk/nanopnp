@@ -219,6 +219,9 @@ LEAVES: dict[str, Leaf] = {
     "geometry.density.kernel": Leaf(
         "stage", "density", "smearing kernel function for atomic density in stage 2"
     ),
+    "geometry.density.atoms": Leaf(
+        "stage", "density", "which atoms stage 2 smears: the protonated frames or the loaded ones"
+    ),
     "geometry.density.sharpness": Leaf(
         "stage", "density", "sharpness factor scaling atomic van der Waals radii in stage 2"
     ),

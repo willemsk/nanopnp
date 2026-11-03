@@ -34,7 +34,11 @@ def test_conftest_seed_and_stability_invariants(tmp_path: Path) -> None:
     assert "route_agreement" not in extracted
     pdb = tmp_path / "stub.pdb"
     pdb.write_text("END\n", encoding="utf-8")
-    base_text = root_conftest.SEED_CASE.format(pdb=pdb)  # type: ignore[attr-defined]
+    base_text = root_conftest.SEED_CASE.format(pdb=pdb).replace(  # type: ignore[attr-defined]
+        "electrolyte:",
+        f"geometry: {{{root_conftest.AS_LOADED_DENSITY}}}\nelectrolyte:",
+        1,  # type: ignore[attr-defined]
+    )
     base_resolved = resolve(loads_case(base_text))
     moved_electrolyte = resolve(
         loads_case(base_text.replace("concentration_M: 0.15", "concentration_M: 1.0"))

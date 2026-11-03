@@ -107,7 +107,7 @@ def graph():
     return window(PAGE, "study", "Study setup", body, "minmax(0,1fr) 340px", item=ITEM)
 
 
-YAML = """schema: nanopnp/case/v0.5
+YAML = """schema: nanopnp/case/v0.6
 name: i-v-nacl
 structure:
   source: {path: 2wcd-prepared.pdb}

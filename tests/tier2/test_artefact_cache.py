@@ -33,7 +33,7 @@ BIAS_V = 0.02
 # PHY-02, PHY-20
 def case_text(mesh_path: Path, *, bias_V: float = BIAS_V, mesh_format: str = "vol") -> str:
     return f"""
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: cache-probe
 inputs:
   mesh:

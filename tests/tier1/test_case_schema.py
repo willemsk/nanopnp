@@ -18,7 +18,7 @@ from nanopnp.pipeline.case import (
 )
 
 REFERENCE_CASE = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: clya-wt-1M-100mV
 
 inputs:
@@ -90,7 +90,7 @@ REFORMATTED_CASE = """
 # reference uses block, `1` for `1.0`, quoted scalars, and a comment on every line
 # that carries a decision. None of it changes the run.
 name: clya-wt-1M-100mV
-schema: 'nanopnp/case/v0.5'
+schema: 'nanopnp/case/v0.6'
 
 outputs:
   - current

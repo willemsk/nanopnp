@@ -30,7 +30,7 @@ WALL_H_NM = 0.35
 WORKER_COUNTS: tuple[int, ...] = (1, 2, 4)
 
 BASE = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: throughput
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}

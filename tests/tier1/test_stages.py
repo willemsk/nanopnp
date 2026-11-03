@@ -22,7 +22,7 @@ from nanopnp.io.artefact import Artefact, StageInputs
 from nanopnp.pipeline.case import loads_case, resolve
 
 MINIMAL = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: minimal
 inputs: {mesh: {path: pore.vol, format: vol}}
 electrolyte:

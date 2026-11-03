@@ -296,7 +296,7 @@ def test_every_form_declares_its_parameters() -> None:
 
 
 SECOND_FILE_CASE = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: two-correction-files
 inputs:
   mesh: {path: pore.msh, format: msh41}
@@ -366,7 +366,7 @@ def test_fr16_an_edited_correction_file_is_read_again_in_the_same_process(
 
 
 PATH_NAMED_CASE = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: path-named-corrections
 inputs:
   mesh: {path: pore.msh, format: msh41}

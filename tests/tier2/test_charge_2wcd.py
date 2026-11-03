@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 GOLDEN_Q_NET_E = -60
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: 2wcd-charge
 structure:
   source: {{path: {pdb}}}

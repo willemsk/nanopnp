@@ -7,7 +7,7 @@ import math
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pytest
@@ -28,10 +28,10 @@ from nanopnp.density.union import (
     deposit,
     gate_density,
 )
-from nanopnp.io.artefact import CASE_SCHEMA
+from nanopnp.io.artefact import CASE_SCHEMA, StageInputs
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
-from nanopnp.pipeline.case import load_case, resolve
+from nanopnp.pipeline.case import load_case, loads_case, resolve
 from nanopnp.pipeline.run import selected_stages
 
 if TYPE_CHECKING:
@@ -60,7 +60,12 @@ def _kept(g: np.ndarray) -> np.ndarray:
     return np.where(g >= EPSILON, g, 0.0)
 
 
-def _case(tmp_path: Path, pdb: Path, *, geometry: str = "", inputs: str = "") -> Path:
+def _case(
+    tmp_path: Path, pdb: Path, *, geometry: str = "", inputs: str = "", atoms: str = "as_loaded"
+) -> Path:
+    block = yaml.safe_load(geometry) if geometry else {"geometry": {}}
+    block["geometry"].setdefault("density", {}).setdefault("atoms", atoms)
+    geometry = yaml.safe_dump(block, default_flow_style=None)
     text = (
         f"schema: {CASE_SCHEMA}\n"
         "name: density\n"
@@ -392,12 +397,12 @@ def test_ver49_resolution_and_walk_rules(synthetic_c12: Path, tmp_path: Path) ->
     assert selected_stages(resolve(load_case(case)), None) == (
         "case",
         "structure",
+        "protonation",
         "density",
         "symmetry",
         "contour",
         "region",
         "mesh",
-        "protonation",
         "charge",
         "materials",
         "solve",
@@ -484,3 +489,144 @@ def test_ver49_nm_written_map_is_refused(tmp_path: Path) -> None:
         )
         with pytest.raises(GridFormatError, match=r"written in angstroms.*nm reads ten times"):
             DensityMap.read(path)
+
+
+FRAGMENT = (18, 26)
+
+
+def _fragment_case(tmp_path: Path, atoms: str, charge: str = "ph: 8.0") -> object:
+    text = (
+        f"schema: {CASE_SCHEMA}\n"
+        "name: fragment\n"
+        f"structure:\n  source: {{path: {tmp_path / 'fragment.pdb'}}}\n"
+        "  symmetry: {point_group: C1, axis: z}\n"
+        f"geometry: {{density: {{atoms: {atoms}}}}}\n"
+        f"charge: {{{charge}}}\n"
+        "electrolyte:\n"
+        "  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
+        "  concentration_M: 0.15\n"
+        "  parameters: willems2020_nacl\n"
+        "boundary_conditions: {bias_V: 0.05, ground: cis}\n"
+        "physics: {model: epnp-ns, solid_permittivities: {protein: 20.0, membrane: 3.2}}\n"
+    )
+    return resolve(loads_case(text))
+
+
+def _protonated_fragment(
+    tmp_path: Path, fragment_2wcd: object, ph: float
+) -> tuple[object, object, object]:
+    pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
+    from nanopnp.charge.protonation import ProtonationStage
+    from nanopnp.io.artefact import StructureArtefact
+    from nanopnp.structure.protonated import ProtonationTable
+
+    ensemble = fragment_2wcd(*FRAGMENT)  # type: ignore[operator]
+    path = ensemble.write(tmp_path / "ensemble.npz")
+    structure = StructureArtefact(
+        parameters={"ensemble": ensemble.digest()}, payload={"ensemble": path}
+    )
+    resolved = _fragment_case(tmp_path, "protonated", charge=f"ph: {ph}")
+    protonation = ProtonationStage(workspace=tmp_path / "workspace").run(
+        StageInputs(resolved=resolved, upstream={"structure": structure})  # type: ignore[arg-type]
+    )
+    table = ProtonationTable.read(protonation.payload["protonation"])
+    return structure, protonation, table
+
+
+def _density_stage(
+    tmp_path: Path, atoms: str, structure: object, protonation: object | None
+) -> tuple[Any, StageInputs]:
+    from nanopnp.density.stage import DensityStage
+
+    upstream = {"structure": structure}
+    if protonation is not None:
+        upstream["protonation"] = protonation
+    resolved = _fragment_case(tmp_path, atoms)
+    inputs = StageInputs(resolved=resolved, upstream=upstream)  # type: ignore[arg-type]
+    stage = DensityStage(workspace=tmp_path / f"density-{atoms}")
+    return stage, inputs
+
+
+def test_ver49_a_changed_protonation_state_moves_the_density(
+    tmp_path: Path, fragment_2wcd: object
+) -> None:
+    """A protonation state the density ignores would leave the contour and mesh stale."""
+    runs = {}
+    for ph in (2.0, 8.0):
+        structure, protonation, _ = _protonated_fragment(tmp_path / f"ph{ph}", fragment_2wcd, ph)
+        runs[ph] = (structure, protonation)
+    maps = {}
+    keys = {}
+    for atoms in ("protonated", "as_loaded"):
+        for ph, (structure, protonation) in runs.items():
+            stage, inputs = _density_stage(
+                tmp_path / f"{atoms}-{ph}", atoms, structure, protonation
+            )
+            keys[atoms, ph] = stage.key(inputs)
+            artefact = stage.run(inputs)
+            maps[atoms, ph] = DensityMap.read(artefact.payload["density"])
+    assert keys["protonated", 2.0].hash != keys["protonated", 8.0].hash
+    assert keys["protonated", 8.0].parameters["atoms"] == "protonated"
+    assert maps["protonated", 2.0].grid == maps["protonated", 8.0].grid
+    difference = np.abs(maps["protonated", 2.0].values - maps["protonated", 8.0].values)
+    assert float(difference.max()) > 1e-3
+
+    assert keys["as_loaded", 2.0].hash == keys["as_loaded", 8.0].hash
+    assert "atoms" not in keys["as_loaded", 2.0].parameters
+    assert set(keys["as_loaded", 2.0].inputs) == {"structure"}
+    structure = runs[8.0][0]
+    stage, inputs = _density_stage(tmp_path / "bare", "as_loaded", structure, None)
+    assert stage.key(inputs).hash == keys["as_loaded", 8.0].hash
+    assert np.array_equal(maps["as_loaded", 2.0].values, maps["as_loaded", 8.0].values)
+
+
+def test_ver49_protonated_radii_are_pdb2pqr_charmm_radii(
+    tmp_path: Path, fragment_2wcd: object
+) -> None:
+    """A radius looked up by the parent residue's name would give a state's new proton none."""
+    from nanopnp.density.radii import resolve_protonated_radii
+
+    for ph in (2.0, 8.0):
+        _, _, table = _protonated_fragment(tmp_path / f"ph{ph}", fragment_2wcd, ph)
+        radii = resolve_protonated_radii("pdb2pqr_charmm", table)  # type: ignore[arg-type]
+        np.testing.assert_allclose(
+            radii.radii_nm,
+            table.radius_nm,  # type: ignore[attr-defined]
+            rtol=0.0,
+            atol=1e-12,
+        )
+        if ph == 2.0:
+            names = list(zip(table.resid.tolist(), table.name.tolist(), strict=True))  # type: ignore[attr-defined]
+            assert (18, "HE2") in names
+            assert (21, "HD2") in names
+
+
+def test_ver49_the_protonated_map_deposits_the_tables_atoms(
+    tmp_path: Path, fragment_2wcd: object
+) -> None:
+    """A map built from stage 1's atoms beside the table's key would pass every key check."""
+    from nanopnp.density.radii import resolve_protonated_radii
+
+    structure, protonation, table = _protonated_fragment(tmp_path / "ph", fragment_2wcd, 2.0)
+    stage, inputs = _density_stage(tmp_path / "run", "protonated", structure, protonation)
+    artefact = stage.run(inputs)
+    stored = DensityMap.read(artefact.payload["density"])
+    spec = inputs.resolved.density  # type: ignore[attr-defined]
+    radii = resolve_protonated_radii("pdb2pqr_charmm", table)  # type: ignore[arg-type]
+    frames = [table.positions_nm[table.frame_slice(f)] for f in range(table.frames)]  # type: ignore[attr-defined]
+    widths = [spec.sharpness * radii.radii_nm[table.frame_slice(f)] for f in range(table.frames)]  # type: ignore[attr-defined]
+    grid = canonical_grid(frames, widths, spec.grid_spacing_nm)
+    assert grid == stored.grid
+    assert np.array_equal(deposit(frames, widths, grid), stored.values)
+
+
+def test_ver49_ragged_frames_deposit_as_the_stacked_call() -> None:
+    """The ragged route must keep the uniform route's arithmetic, or as-loaded maps would move."""
+    rng = np.random.default_rng(3)
+    positions = rng.uniform(-1.0, 1.0, (2, 40, 3))
+    widths = rng.uniform(0.1, 0.2, 40)
+    grid = canonical_grid(positions, widths, 0.05)
+    stacked = deposit(positions, widths, grid)
+    ragged = deposit(list(positions), [widths, widths], grid)
+    assert np.array_equal(stacked, ragged)
+    assert canonical_grid(list(positions), [widths, widths], 0.05) == grid

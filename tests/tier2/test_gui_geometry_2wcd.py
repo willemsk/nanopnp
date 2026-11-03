@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 # VER-53, VER-55
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: 2wcd-geometry
 structure:
   source: {{path: {pdb}}}

@@ -16,10 +16,18 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.density.map import PAYLOAD_NAME, DensityMap
-from nanopnp.density.radii import KERNEL_RADII, radius_set_digest, resolve_radii
+from nanopnp.density.radii import (
+    KERNEL_RADII,
+    DensityInputError,
+    radius_set_digest,
+    resolve_protonated_radii,
+    resolve_radii,
+)
 from nanopnp.density.union import (
     EPSILON,
     LOG_FLOOR,
+    Frames,
+    Widths,
     canonical_grid,
     check_positions,
     deposit,
@@ -32,6 +40,8 @@ from nanopnp.io.case import (
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
+from nanopnp.structure.protonated import PAYLOAD_NAME as PROTONATION_PAYLOAD
+from nanopnp.structure.protonated import ProtonationTable
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
@@ -50,14 +60,29 @@ def _density(inputs: StageInputs) -> Density:
 
 
 def density_parameters(spec: Density) -> dict[str, Canonicalisable]:
-    """Return the stage-2 key's parameters."""
+    """Return the stage-2 key's parameters.
+
+    ``atoms`` is left out under ``as_loaded``, so that key is the one stage 2 had before the
+    protonated default.
+    """
     name = KERNEL_RADII[spec.kernel]
-    return {
-        "density": spec.model_dump(mode="json"),
+    block = spec.model_dump(mode="json", exclude={"atoms"})
+    parameters: dict[str, Canonicalisable] = {
+        "density": block,
         "radius_set": {"name": name, "sha256": radius_set_digest(name)},
         "epsilon": EPSILON,
         "log_floor": LOG_FLOOR,
     }
+    if spec.atoms == "protonated":
+        parameters["atoms"] = "protonated"
+    return parameters
+
+
+def _upstream(inputs: StageInputs, spec: Density) -> dict[str, str]:
+    keyed = {"structure": inputs.require("structure").hash}
+    if spec.atoms == "protonated":
+        keyed["protonation"] = inputs.require("protonation").hash
+    return keyed
 
 
 class DensityStage:
@@ -77,7 +102,7 @@ class DensityStage:
         """Return the artefact key from the block, the radius set and stage 1's hash."""
         return DensityArtefact(
             parameters=density_parameters(_density(inputs)),
-            inputs={"structure": inputs.require("structure").hash},
+            inputs=_upstream(inputs, _density(inputs)),
         )
 
     def run(
@@ -103,20 +128,41 @@ class DensityStage:
         check_cancelled(cancel, "reading the aligned ensemble")
         report(progress, 0.0, "reading the aligned ensemble")
         ensemble = AlignedEnsemble.read(structure.payload[ENSEMBLE_PAYLOAD])
-        radii = resolve_radii(
-            KERNEL_RADII[spec.kernel],
-            resname=ensemble.resname,
-            atom=ensemble.name,
-            chain=ensemble.chain,
-            resid=ensemble.resid,
-            icode=ensemble.icode,
-        )
-        check_positions(ensemble.positions_nm)
-        widths = spec.sharpness * radii.radii_nm
-        grid = canonical_grid(ensemble.positions_nm, widths, spec.grid_spacing_nm)
+        table: ProtonationTable | None = None
+        if spec.atoms == "protonated":
+            protonation = inputs.require("protonation")
+            table = ProtonationTable.read(Path(protonation.payload[PROTONATION_PAYLOAD]))
+            if table.frames != ensemble.frames:
+                raise DensityInputError(
+                    f"the protonation table holds {table.frames} frames and the aligned "
+                    f"ensemble {ensemble.frames}, so stage 2 cannot pair them"
+                )
+            radii = resolve_protonated_radii(KERNEL_RADII[spec.kernel], table)
+            positions: Frames = [
+                table.positions_nm[table.frame_slice(f)] for f in range(table.frames)
+            ]
+            widths: Widths = [
+                spec.sharpness * radii.radii_nm[table.frame_slice(f)] for f in range(table.frames)
+            ]
+            first = table.frame_slice(0)
+            atom_total = first.stop - first.start
+        else:
+            radii = resolve_radii(
+                KERNEL_RADII[spec.kernel],
+                resname=ensemble.resname,
+                atom=ensemble.name,
+                chain=ensemble.chain,
+                resid=ensemble.resid,
+                icode=ensemble.icode,
+            )
+            positions = ensemble.positions_nm
+            widths = spec.sharpness * radii.radii_nm
+            atom_total = ensemble.atoms
+        check_positions(positions)
+        grid = canonical_grid(positions, widths, spec.grid_spacing_nm)
         logger.info(
             "density: %d atoms x %d frames on a %s grid (z, y, x) at %.3f nm",
-            ensemble.atoms,
+            atom_total,
             ensemble.frames,
             "x".join(str(size) for size in grid.shape),
             grid.spacing_nm,
@@ -125,9 +171,15 @@ class DensityStage:
         def scaled(fraction: float, message: str) -> None:
             report(progress, 0.05 + 0.9 * fraction, message)
 
-        values = deposit(ensemble.positions_nm, widths, grid, progress=scaled, cancel=cancel)
+        values = deposit(positions, widths, grid, progress=scaled, cancel=cancel)
 
-        elements, counts = np.unique(ensemble.element.astype(str), return_counts=True)
+        # A PDB2PQR atom name carries its element first, as stage 1's element column does.
+        symbols = (
+            np.array([name.lstrip("0123456789")[:1].upper() for name in table.name[first].tolist()])
+            if table is not None
+            else ensemble.element.astype(str)
+        )
+        elements, counts = np.unique(symbols, return_counts=True)
         by_element = {str(e): int(c) for e, c in zip(elements, counts, strict=True)}
         frames = ensemble.header.get("frames")
         header: dict[str, Canonicalisable] = {
@@ -141,17 +193,19 @@ class DensityStage:
                 "count": ensemble.frames,
                 "indices": frames.get("indices") if isinstance(frames, dict) else None,
             },
-            "atoms": {"total": ensemble.atoms, "by_element": by_element},
+            "atoms": {"total": atom_total, "by_element": by_element},
             "hydrogens": by_element.get("H", 0),
             "radius_range_nm": [float(radii.radii_nm.min()), float(radii.radii_nm.max())],
             "structure_payload_digest": structure.summary.get("payload_digest"),
         }
+        if table is not None:
+            header["atom_source"] = {"atoms": "protonated", "table_digest": table.digest()}
         density = DensityMap(values=values, grid=grid, header=header)
         path = density.write(directory / f"{PAYLOAD_NAME}.npz")
         report(progress, 1.0, f"density on {grid.nz} z planes written")
         return DensityArtefact(
             parameters=parameters,
-            inputs={"structure": structure.hash},
+            inputs=_upstream(inputs, spec),
             payload={PAYLOAD_NAME: path},
             summary={**header, "payload_digest": density.digest()},
         )

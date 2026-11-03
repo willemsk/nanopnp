@@ -11,9 +11,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from nanopnp.core.hashing import file_hash
 from nanopnp.core.paths import radii_file
+from nanopnp.structure.protonated import parent_residue
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
+
+    from nanopnp.structure.protonated import ProtonationTable
 
 RADII_SCHEMA = "nanopnp/radii/v0.5"
 
@@ -181,3 +184,83 @@ def resolve_radii(
         name=radius_set.name,
         sha256=radius_set_digest(name),
     )
+
+
+_ACID_PATCHES: Mapping[str, tuple[str, str]] = {"ASP": ("HD2", "ASPP"), "GLU": ("HE2", "GLUP")}
+"""Per parent residue: the proton whose presence names its state patch, and the patch."""
+
+
+def resolve_protonated_radii(name: str, table: ProtonationTable) -> ResolvedRadii:
+    """Resolve every atom of a protonation table against the named radius set.
+
+    A residue's state patch (the histidine tautomer, ``ASPP``, ``GLUP``) is looked up first, then
+    its parent, so a hydrogen the parent lacks has a radius.
+
+    Raises
+    ------
+    DensityInputError
+        For the first atom the set does not resolve, naming frame, chain, residue and atom.
+    """
+    import numpy as np
+
+    radius_set = RadiusSet.load(name)
+    residue_index = {
+        (str(chain), int(resid), str(icode)): index
+        for index, (chain, resid, icode) in enumerate(
+            zip(table.residue_chain, table.residue_resid, table.residue_icode, strict=True)
+        )
+    }
+    known: dict[tuple[str, str, str], float] = {}
+    radii_A = np.empty(len(table.name), dtype=np.float64)
+    for frame in range(table.frames):
+        atoms = table.frame_slice(frame)
+        names = table.name[atoms].astype(str)
+        parents = np.array([parent_residue(str(r)) for r in table.resname[atoms].tolist()])
+        residues = np.array(
+            [
+                residue_index.get((str(c), int(r), str(i)), -1)
+                for c, r, i in zip(
+                    table.chain[atoms], table.resid[atoms], table.icode[atoms], strict=True
+                )
+            ],
+            dtype=np.int64,
+        )
+        patches = np.full(len(names), "", dtype=object)
+        histidines = (parents == "HIS") & (residues >= 0)
+        patches[histidines] = table.tautomer[frame][residues[histidines]]
+        for parent, (proton, patch) in _ACID_PATCHES.items():
+            protonated = np.unique(residues[(parents == parent) & (names == proton)])
+            patches[(parents == parent) & np.isin(residues, protonated[protonated >= 0])] = patch
+        triples = np.char.add(
+            np.char.add(parents.astype(str), "\t"),
+            np.char.add(np.char.add(patches.astype(str), "\t"), names),
+        )
+        unique, first_seen, inverse = np.unique(triples, return_index=True, return_inverse=True)
+        values = np.empty(len(unique), dtype=np.float64)
+        for index in np.argsort(first_seen, kind="stable").tolist():
+            parent, patch, atom = str(unique[index]).split("\t")
+            key = (parent, patch, atom)
+            if key not in known:
+                try:
+                    known[key] = _patched_radius_A(radius_set, parent, patch, atom)
+                except KeyError as error:
+                    first = atoms.start + int(first_seen[index])
+                    number = f"{int(table.resid[first])}{str(table.icode[first]).strip()}"
+                    raise DensityInputError(
+                        f"stage 2 cannot place atom {atom!r} of residue {parent} {number} in "
+                        f"chain {str(table.chain[first])!r} of frame {frame}: {error.args[0]} "
+                        "(section 5.3.1 NOTE on geometry.density)"
+                    ) from None
+            values[index] = known[key]
+        radii_A[atoms] = values[inverse.reshape(-1)]
+    return ResolvedRadii(
+        radii_nm=radii_A * ANGSTROM_TO_NM, name=radius_set.name, sha256=radius_set_digest(name)
+    )
+
+
+def _patched_radius_A(radius_set: RadiusSet, parent: str, patch: str, atom: str) -> float:
+    if patch in radius_set.residues and atom in radius_set.residues[patch]:
+        return radius_set.residues[patch][atom]
+    # A histidine's tautomer is a residue of its own in the set; ASPP and GLUP are side-chain
+    # patches that leave the backbone to the parent.
+    return radius_set.radius_A(patch if patch.startswith("HS") else parent, atom)

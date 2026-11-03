@@ -237,7 +237,7 @@ def case_text(
 ) -> str:
     mapping = f", groups: {groups}" if groups else ""
     return f"""
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: {name}
 inputs:
   mesh: {{path: {mesh}, format: msh41{mapping}}}{inputs}

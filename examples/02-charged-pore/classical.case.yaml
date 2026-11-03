@@ -4,7 +4,7 @@
 # validated model (FR-25).
 #
 # The pore is declared in `geometry:` and meshed by stage 6 under `numerics.mesh`.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: charged-classical
 
 inputs:

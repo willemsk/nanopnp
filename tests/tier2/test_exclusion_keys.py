@@ -86,7 +86,7 @@ ATOMS: tuple[tuple[str, float, float, float, float, float], ...] = (
 )
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: wp30-golden
 inputs:
   profile: {{path: {profile}}}

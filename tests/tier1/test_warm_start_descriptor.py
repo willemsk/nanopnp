@@ -44,7 +44,7 @@ MAXH_NM = 4.0
 WALL_H_NM = 0.35
 
 CASE = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: warm-probe
 inputs:
   mesh:

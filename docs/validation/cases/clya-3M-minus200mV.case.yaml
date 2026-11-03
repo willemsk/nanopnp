@@ -23,7 +23,7 @@
 # in data/geometry/ by `nanopnp mesh reference` (docs/sweeps/README.md). A relative
 # `inputs.mesh.path` is read beside this file (section 5.3.1).
 
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: clya-3M-minus200mV
 
 inputs:

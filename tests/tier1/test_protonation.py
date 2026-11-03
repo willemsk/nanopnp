@@ -50,7 +50,7 @@ FRAGMENT = (18, 26)
 HISTIDINE = (285, 292)
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: {name}
 {inputs}{structure}{charge}electrolyte:
   species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from nanopnp.core.hashing import Canonicalisable
 from nanopnp.core.stages import CancelToken, Progress, check_cancelled, report
@@ -12,6 +13,12 @@ from nanopnp.density.radii import DensityInputError
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
+
+Frames: TypeAlias = "np.ndarray | Sequence[np.ndarray]"
+"""``(frames, atoms, 3)``, or one ``(atoms_f, 3)`` array per frame where frames differ in atoms."""
+
+Widths: TypeAlias = "np.ndarray | Sequence[np.ndarray]"
+"""One width per atom shared by every frame, or one array per frame."""
 
 # A term is kept iff g >= EPSILON; the truncation error bound is in
 # knowledge/07-software-stack/index.md.
@@ -97,27 +104,27 @@ def cutoff_nm(width_nm: np.ndarray) -> np.ndarray:
     return width_nm * CUTOFF_FACTOR
 
 
-def check_positions(positions_nm: np.ndarray) -> None:
+def check_positions(positions_nm: Frames) -> None:
     """Refuse an ensemble holding a coordinate that is not finite."""
     import numpy as np
 
-    bad = ~np.isfinite(positions_nm).all(axis=2)
-    if bad.any():
-        frame, atom = (int(value) for value in np.argwhere(bad)[0])
-        raise DensityInputError(
-            f"frame {frame} of the aligned ensemble holds a non-finite coordinate for atom "
-            f"{atom}, so stage 2 cannot place it"
-        )
+    for frame, xyz in enumerate(positions_nm):
+        bad = ~np.isfinite(xyz).all(axis=1)
+        if bad.any():
+            atom = int(np.flatnonzero(bad)[0])
+            raise DensityInputError(
+                f"frame {frame} of the aligned ensemble holds a non-finite coordinate for atom "
+                f"{atom}, so stage 2 cannot place it"
+            )
 
 
-def canonical_grid(
-    positions_nm: np.ndarray, widths_nm: np.ndarray, spacing_nm: float
-) -> DensityGrid:
+def canonical_grid(positions_nm: Frames, widths_nm: Widths, spacing_nm: float) -> DensityGrid:
     """Return the grid that holds every kept term of every frame, with a node to spare."""
     import numpy as np
 
     h = float(spacing_nm)
-    reach = float(np.max(cutoff_nm(widths_nm)))
+    wide = [widths_nm] if isinstance(widths_nm, np.ndarray) else list(widths_nm)
+    reach = max(float(np.max(cutoff_nm(w))) for w in wide)
     # One frame at a time: a float64 copy of the float32 ensemble plus radii is 2.7x its size.
     radius, z_min, z_max = 0.0, math.inf, -math.inf
     for frame in positions_nm:
@@ -219,8 +226,8 @@ def _accumulate(
 
 
 def deposit(
-    positions_nm: np.ndarray,
-    widths_nm: np.ndarray,
+    positions_nm: Frames,
+    widths_nm: Widths,
     grid: DensityGrid,
     *,
     float64: bool = False,
@@ -236,9 +243,18 @@ def deposit(
     """
     import numpy as np
 
-    frames = int(positions_nm.shape[0])
-    widths = np.asarray(widths_nm, dtype=np.float64)
-    stencils = _stencils(widths, grid.spacing_nm)
+    frames = len(positions_nm)
+    if isinstance(widths_nm, np.ndarray):
+        shared = np.asarray(widths_nm, dtype=np.float64)
+        frame_widths = [shared] * frames
+        frame_stencils = [_stencils(shared, grid.spacing_nm)] * frames
+    else:
+        if len(widths_nm) != frames:
+            raise DensityInputError(
+                f"stage 2 was given {len(widths_nm)} sets of widths for {frames} frames"
+            )
+        frame_widths = [np.asarray(w, dtype=np.float64) for w in widths_nm]
+        frame_stencils = [_stencils(w, grid.spacing_nm) for w in frame_widths]
     n = grid.n
     planes = max(1, SLAB_CELLS // (n * n))
     result = np.empty(grid.shape, dtype=np.float64 if float64 else np.float32)
@@ -266,7 +282,7 @@ def deposit(
             node = nearest.astype(np.int64) + shift
             fraction = scaled - nearest
             total = np.zeros_like(mean)
-            for stencil in stencils:
+            for stencil in frame_stencils[frame]:
                 plane = node[stencil.atoms, 2]
                 reached = (plane + stencil.m >= first) & (plane - stencil.m < last)
                 chosen = stencil.atoms[reached]
@@ -281,7 +297,7 @@ def deposit(
                         atoms=chosen[start : start + size],
                         node=node,
                         fraction=fraction,
-                        widths_nm=widths,
+                        widths_nm=frame_widths[frame],
                         grid=grid,
                         first=first,
                         last=last,

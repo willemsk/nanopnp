@@ -230,10 +230,16 @@ physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}
 
 SEED_UPTO = "mesh"
 
+AS_LOADED_DENSITY = "density: {atoms: as_loaded}"
+"""The ``geometry:`` entry that keeps the reference's density, from the atoms as stage 1 loaded."""
+
 
 def _structure_case(directory: Path, pdb: Path, name: str = "seed.case.yaml") -> Path:
     case = directory / name
-    case.write_text(SEED_CASE.format(pdb=pdb), encoding="utf-8")
+    text = SEED_CASE.format(pdb=pdb).replace(
+        "electrolyte:", f"geometry: {{{AS_LOADED_DENSITY}}}\nelectrolyte:", 1
+    )
+    case.write_text(text, encoding="utf-8")
     return case
 
 
@@ -260,7 +266,9 @@ class Seed2WCD:
 
     @property
     def geometry(self) -> str:
-        return f"geometry: {{membrane: {{centre_z_nm: {self.centre_z_nm!r}}}}}\n"
+        return (
+            f"geometry: {{{AS_LOADED_DENSITY}, membrane: {{centre_z_nm: {self.centre_z_nm!r}}}}}\n"
+        )
 
     def __call__(self, root: Path) -> Path:
         shutil.copytree(self.store / "artefacts", root / "artefacts", dirs_exist_ok=True)

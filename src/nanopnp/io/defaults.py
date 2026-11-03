@@ -54,6 +54,7 @@ SWITCH_PATHS: tuple[str, ...] = (
     # A float, classified by hand: below ~1 nm the wall functions no longer reach 1.
     "numerics.wall_distance.max_distance_nm",
     "numerics.linear.solver",
+    "geometry.density.atoms",
 )
 
 MODEL_SWITCH_PATHS: frozenset[str] = frozenset(
@@ -134,6 +135,8 @@ _VALIDATED_DEFAULTS: dict[str, Any] = {
             "steric": {"model": "borukhov"},
         },
     },
+    # At its defaults so geometry.density.atoms reads off this document, as without ``geometry:``.
+    "geometry": {"density": {"atoms": "protonated"}},
     "boundary_conditions": {
         "bias_V": 0.1,
         "ground": "cis",

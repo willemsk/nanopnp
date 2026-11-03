@@ -19,7 +19,7 @@ from nanopnp.pipeline.case import loads_case, resolve
 pytest.importorskip("pdb2pqr", reason="the structure extra carries PDB2PQR")
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: fragment
 structure:
   source: {{path: {path}}}

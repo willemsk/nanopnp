@@ -1,13 +1,13 @@
 # Case files
 
-A case file is YAML with `schema: nanopnp/case/v0.5` and a `name`. Every field is listed, with its
+A case file is YAML with `schema: nanopnp/case/v0.6` and a `name`. Every field is listed, with its
 type, default, accepted values and validated default, in the generated [case-file
 reference](../_generated/reference/case-file.md). This page explains how the document fits together.
 
 ## A minimal case
 
 ```yaml
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: my-pore
 
 geometry:

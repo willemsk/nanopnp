@@ -26,7 +26,7 @@ needs_archive = pytest.mark.skipif(
 def test_ver48_clya_as_ensemble(tmp_path: Path) -> None:
     case = tmp_path / "clya-as.case.yaml"
     case.write_text(
-        "schema: nanopnp/case/v0.5\n"
+        "schema: nanopnp/case/v0.6\n"
         "name: clya-as-ensemble\n"
         "structure:\n"
         f"  source: {{path: {TOPOLOGY}, variant: ClyA-AS}}\n"

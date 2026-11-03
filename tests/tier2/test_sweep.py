@@ -31,7 +31,7 @@ WALL_H_NM = 0.35
 TOLERANCE = 1.0e-6
 
 BASE = """
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: sweep-probe
 inputs:
   mesh: {{path: {mesh}, format: vol, groups: {{default: interface}}}}

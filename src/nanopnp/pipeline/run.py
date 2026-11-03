@@ -617,9 +617,13 @@ def selected_stages(
     supplied = resolved.charge is not None or resolved.eps_r is not None or resolved.derives_eps_r
     deposits = resolved.deposits_charge
     dropped = set() if supplied or deposits else {"charge"}
-    if not deposits and (upto != "protonation" or not resolved.protonates):
-        # Protonation feeds nothing unless a deposition reads it, and costs about a
-        # minute per frame, so it runs only as a walk's named target.
+    if (
+        not deposits
+        and not resolved.density_protonated
+        and (upto != "protonation" or not resolved.protonates)
+    ):
+        # Protonation feeds nothing unless a deposition or the protonated density reads it,
+        # and costs about a minute per frame, so it runs only as a walk's named target.
         dropped.add("protonation")
     order = (*walk_order(), *own)
     sections = type(resolved.document).model_fields
@@ -659,9 +663,15 @@ def selected_stages(
         return walked
     if upto in walked:
         closure = {upto}
+        # Stage 2 reads the protonation only under geometry.density.atoms: protonated; a walk
+        # to it under as_loaded must not pay for a protonation that another stage may have kept.
         for name in reversed(walked[: walked.index(upto) + 1]):
             if name in closure:
-                closure.update(described(name).inputs)
+                closure.update(
+                    needed
+                    for needed in described(name).inputs
+                    if (name, needed) != ("density", "protonation") or resolved.density_protonated
+                )
         return tuple(name for name in walked if name in closure)
     if upto in absent:
         raise UnknownStageError(
@@ -944,13 +954,13 @@ def _short_of_stage_7(walk: _Walk) -> str:
 
 def _protonation_reason(walk: _Walk) -> str:
     resolved = walk.resolved
-    if not resolved.protonates:
+    if not resolved.protonates and not resolved.density_protonated:
         return (
             "this case supplies inputs.charge, which replaces what stage 7 makes of a protonation"
             if resolved.charge is not None
             else "this case carries no structure: section and supplies no inputs.pqr"
         )
-    if not resolved.deposits_charge:
+    if not resolved.deposits_charge and not resolved.density_protonated:
         return (
             f"physics.model {resolved.model!r} declares no fixed_charge, so nothing deposits a "
             "protonation; it runs only when a walk names it, as `nanopnp stage protonation`"

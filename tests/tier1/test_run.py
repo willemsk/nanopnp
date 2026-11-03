@@ -414,8 +414,8 @@ def test_ver57_protonation_runs_before_the_deposit_it_feeds(
     assert supplied.deposits_charge
     assert selected_stages(supplied, "solve") == (
         "case",
-        "mesh",
         "protonation",
+        "mesh",
         "charge",
         "materials",
         "solve",
@@ -499,3 +499,23 @@ def test_ver32_reopen_refuses_a_run_whose_case_file_was_edited_after_the_run(
 
     with pytest.raises(ManifestHashError, match="differs from the case text"):
         reopen(result.directory)
+
+
+def test_protonation_walks_before_the_density_it_feeds() -> None:
+    """A protonation walked after stage 2 could not feed it, whatever the key claims."""
+    from nanopnp.io.case import Density, Geometry
+    from nanopnp.pipeline.case import load_case
+    from nanopnp.pipeline.run import selected_stages
+
+    examples = Path(__file__).parents[2] / "examples" / "07-pdb-to-charged-run"
+    charged = load_case(examples / "from-pqr.case.yaml")
+    supplied = load_case(examples / "resupplied.case.yaml")
+    as_loaded = Geometry(density=Density(atoms="as_loaded"))
+
+    for document in (charged, supplied):
+        for upto in (None, "mesh", "density"):
+            walked = selected_stages(resolve(document), upto)
+            assert walked.index("protonation") < walked.index("density"), (document.name, upto)
+    assert "protonation" not in selected_stages(
+        resolve(supplied.model_copy(update={"geometry": as_loaded})), "mesh"
+    )

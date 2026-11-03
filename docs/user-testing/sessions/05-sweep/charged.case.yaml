@@ -2,7 +2,7 @@
 # which breaks the z -> -z symmetry. The sweep beside this file varies the bias and the salt.
 # `rectification` is a two-point quantity: the sweep strips it from each member and the
 # collector computes it from each exactly-opposite bias pair. Work in this directory.
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: iv-charged
 
 inputs:

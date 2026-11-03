@@ -54,7 +54,7 @@ def _pore_case(
         for name in ("diffusivity", "mobility", "viscosity", "permittivity", "density", "steric")
     }
     document: dict[str, object] = {
-        "schema": "nanopnp/case/v0.5",
+        "schema": "nanopnp/case/v0.6",
         "name": "wall-charge",
         "geometry": {
             "pore": {"shape": "cylinder", "radius_nm": radius_nm},

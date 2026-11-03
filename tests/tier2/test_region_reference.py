@@ -40,7 +40,7 @@ EDGE_COUNTS = {
 }
 
 CASE = """\
-schema: nanopnp/case/v0.5
+schema: nanopnp/case/v0.6
 name: fixture-{concentration}
 inputs:
   profile: {{path: {path}}}
