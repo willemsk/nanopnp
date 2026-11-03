@@ -62,6 +62,9 @@ ID_LENGTH = 12
 RECTIFICATION = "rectification"
 
 WARM_START_BARRIERS: tuple[str, ...] = (
+    # A model file may move anything a barrier below names, so a point on a model axis is its
+    # own warm-start component (FR-39).
+    "models",
     # A cross-mesh transfer is a point evaluation outside the source domain,
     # which returns a plausible number rather than raising, and ``transfer``
     # refuses it. ``numerics.mesh`` is the same barrier one step earlier: the
@@ -412,6 +415,17 @@ def _depth(
     )
 
 
+def _check_model_files(document: SweepDocument, beside: Path) -> None:
+    for axis in document.axes:
+        for position, assignment in enumerate(axis.points()):
+            for path, value in assignment.items():
+                if path.startswith("models.") and not (beside / str(value)).is_file():
+                    raise SweepPlanError(
+                        f"axis {axis.name!r}, value {position}: {path} names {value!r}, which "
+                        f"is not a file beside {beside}"
+                    )
+
+
 def _check_axes(document: SweepDocument) -> None:
     for axis in document.axes:
         for position, assignment in enumerate(axis.points()):
@@ -483,6 +497,7 @@ def build_plan(
             f"the sweep names base case {base_path}, which is not there: {error}"
         ) from None
 
+    _check_model_files(document, base_path.parent)
     axes = list(document.axes)
     shape = document.shape()
     origins = document.origins()

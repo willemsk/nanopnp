@@ -10,11 +10,13 @@ import yaml
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
+from nanopnp.api.sweep import plan_sweep
 from nanopnp.core.hashing import file_hash
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case_paths import block_paths, case_fields, substitute
 from nanopnp.io.models import MOLECULAR_SCHEMA, OWNERS, owner_of
 from nanopnp.io.store import Store
+from nanopnp.sweep.plan import SweepPlanError, plan_from_document
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 QUICKSTART = EXAMPLES / "01-quickstart" / "quickstart.case.yaml"
@@ -212,3 +214,66 @@ def test_fr39_a_run_records_its_model_files_and_overrides(tmp_path: Path) -> Non
         "boundary_conditions.bias_V": {"model": 0.05, "study": 0.1}
     }
     assert result.manifest.case_text == case.dumps()
+
+
+def test_fr39_a_sweep_over_models_resolves_each_member(tmp_path: Path) -> None:
+    study_path = split_case(QUICKSTART, tmp_path)
+    case = Case.load(study_path).with_({"geometry.pore.radius_nm": 2.5})
+    other = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
+    other["name"] = "stronger"
+    other["boundary_conditions"]["bias_V"] = 0.1
+    (tmp_path / "stronger.yaml").write_text(yaml.safe_dump(other), encoding="utf-8")
+    models = [str(tmp_path / "continuum.yaml"), str(tmp_path / "stronger.yaml")]
+
+    session = Session(Store(tmp_path / "store"), write=False)
+    planned = plan_sweep(
+        case, session=session, axis="models.continuum", values=models, check_meshes=False
+    )
+    members = [planned.plan.case(point.index) for point in planned.plan.points]
+    assert [member.boundary_conditions.bias_V for member in members] == [0.05, 0.1]
+    assert all(
+        member.models_record is not None
+        and dict(member.models_record.overrides) == dict(case.overrides)
+        for member in members
+    )
+    assert planned.plan.files.keys() >= set(models)
+
+    (tmp_path / "base.case.yaml").write_text(case.dumps(study=True), encoding="utf-8")
+    (tmp_path / "sweep.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "schema": "nanopnp/sweep/v0.5",
+                "name": case.name,
+                "base": "base.case.yaml",
+                "axes": [{"name": "continuum", "path": "models.continuum", "values": models}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    from_file = plan_from_document(tmp_path / "sweep.yaml", check_meshes=False)
+    assert [dict(point.assignments) for point in from_file.points] == [
+        dict(point.assignments) for point in planned.plan.points
+    ]
+    assert from_file.files.keys() >= set(models)
+    assert all(point.parent is None for point in from_file.points), "each model is its own root"
+
+    with pytest.raises(SweepPlanError, match="not a file"):
+        plan_from_document(
+            _sweep_over(tmp_path, ["continuum.yaml", "absent.yaml"]), check_meshes=False
+        )
+
+
+def _sweep_over(directory: Path, values: list[str]) -> Path:
+    path = directory / "absent.sweep.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "schema": "nanopnp/sweep/v0.5",
+                "name": "absent",
+                "base": "base.case.yaml",
+                "axes": [{"name": "continuum", "path": "models.continuum", "values": values}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
