@@ -193,7 +193,13 @@ def measure_loop(loop: np.ndarray, context: _Context) -> Assessment:
     reduced = ReducedMap.read(context.symmetry.payload[REDUCED_PAYLOAD])
     ensemble = AlignedEnsemble.read(context.structure.payload[ENSEMBLE_PAYLOAD])
     points = np.asarray(loop, dtype=np.float64).reshape(-1, 2)
-    planes, probe, _ = contour.gate_inputs(points, reduced.z_nm, ensemble, density)
+    planes, probe, _ = contour.gate_inputs(
+        points,
+        reduced.z_nm,
+        ensemble,
+        density,
+        radius_edits=contour.probe_radius_edits(resolved),
+    )
     return _assessment(
         contour.measure(
             points, spacing_nm=density.grid_spacing_nm, planes_nm=planes, probe_nm=probe

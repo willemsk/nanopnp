@@ -2434,8 +2434,12 @@ does not read the protonation artefact. A scale above 1 on a lumen-lining residu
 an unmoved probe, so `r_c - R_p >= -h_c` can refuse a legitimate variant; a scale below 1 moves it outward towards
 the upper band. Either way the gate compares the variant's wall with the parent's atoms.
 
-**Open**, found at WP5.04's review: the author rules whether the probe profile reads the table's radius scales
-(stage 4's key then takes the protonation artefact under `protonated`) or the band is posed on the parent alone.
+**Fixed** (author's ruling, 3 November 2026, in WP5.04): under `protonated` the probe profile scales stage 1's
+atoms by the case's radius edits, matched on the parent name, number and insertion code as stage 2 matches
+them (`structure/protonated.py:residue_radius_scales`), so the gate compares the variant's wall with the
+variant's atoms. Stage 4's key carries the radius edits only where there are some, so no key moves without
+them; under `as_loaded` stage 2 does not scale and neither does the probe. Tier 1:
+`test_fr38_a_radius_edit_scales_the_stage_4_probe_as_it_scales_the_density`.
 
 ## REV-185: A charge-only edit moves stage 2's key and rebuilds the mesh
 
@@ -2445,6 +2449,9 @@ variant re-deposits the density and remeshes to the same map. WP5.03's review ac
 can miss a cache and never hit a wrong one; with `charge.edits` the miss is the cost of every charge variant on a
 full walk, against the plan's "a few seconds once the original has been built".
 
-**Open**, found at WP5.04's review: the author rules whether stage 2 keys on what it reads of the table (positions,
-names, tautomers, radius scales), which leaves the unedited keys of VER-62 unmoved only if the no-edit case keeps
-today's hash.
+**Fixed** (author's ruling, 3 November 2026, in WP5.04): stage 2 keys on the protonation key with its charge edits
+dropped (`density/stage.py:atoms_key`), which is the protonation artefact's own hash when there is no charge
+edit, so the unedited keys do not move. A charge variant then shares its parent's stages 2 to 6; a state or
+radius edit still moves them. Stage 2's summary records that key as `atom_source.atoms_key` in place of the
+table's digest, which a shared density would misreport. Tier 1:
+`test_fr38_a_charge_edit_keeps_the_parents_density_key_and_a_radius_edit_moves_it`.

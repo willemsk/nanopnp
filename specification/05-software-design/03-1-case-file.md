@@ -176,8 +176,11 @@ includes its terminus, which is why the edit is a change and not a target. A fra
 The edits ride on stage 7's `protonation` step (PHY-16 NOTE on `charge.edits`) and enter its key, sorted
 by residue and kind; without edits no key of the pipeline differs from a case that never had the field.
 The radius scales also set stage 2's radii under `geometry.density.atoms: protonated`, so they move the
-density, the contour and the mesh; under `as_loaded` they move the charge's kernel width alone and the
-density key is the parent's. The edited table is a variant of its parent: the stage keeps the unedited
+density, the contour and the mesh, and stage 4's probe-radius profile scales the same atoms by the same
+factors, its key carrying the radius edits where there are some; under `as_loaded` they move the charge's
+kernel width alone and the density key is the parent's. Stage 2 keys on the protonation key with its charge
+edits dropped: a charge edit moves no atom, name or radius, so a charge variant shares its parent's
+density, contour and mesh. The edited table is a variant of its parent: the stage keeps the unedited
 table beside it and records `variant_of` in its summary, the parent's key, the edits, each residue whose
 atoms, charges, radii or positions differ (per chain, both charges per frame, atoms added and removed,
 the largest radius change and displacement) and `Q_net` of the parent and the variant per frame. None of

@@ -797,3 +797,72 @@ def test_fr38_without_edits_every_key_is_unchanged(tmp_path: Path, fragment_2wcd
     assert scaled.summary["cached_frames"] == scaled.summary["frames"]["count"]
     assert scaled.hash != parent.hash
     assert scaled.summary["variant_of"]["parent"] == parent.hash
+
+
+def test_fr38_a_charge_edit_keeps_the_parents_density_key_and_a_radius_edit_moves_it(
+    tmp_path: Path, fragment_2wcd: Fragment
+) -> None:
+    from nanopnp.density.stage import DensityStage
+
+    ensemble = fragment_2wcd(*FRAGMENT)
+
+    def density_key(charge: str) -> str:
+        inputs = _inputs(tmp_path, ensemble, _case(tmp_path, charge=charge))
+        protonation = ProtonationStage().key(inputs)
+        upstream = {**inputs.upstream, "protonation": protonation}
+        return DensityStage().key(dataclasses.replace(inputs, upstream=upstream)).hash
+
+    charge = "{residue: 'ASP 25', charge_change_e: 1}"
+    radius = "{residue: 'LEU 24', radius_scale: 1.2}"
+    parent = density_key("")
+    assert density_key(f"edits: [{charge}]") == parent
+    assert density_key(f"edits: [{radius}]") != parent
+    assert density_key(f"edits: [{charge}, {radius}]") == density_key(f"edits: [{radius}]")
+    assert density_key("edits: [{residue: 'ASP 25', state: neutral}]") != parent
+
+
+def test_fr38_a_radius_edit_scales_the_stage_4_probe_as_it_scales_the_density(
+    tmp_path: Path, fragment_2wcd: Fragment
+) -> None:
+    from nanopnp.geometry.contour import gate_inputs, probe_radius_edits
+    from nanopnp.geometry.probe import probe_radius_profile
+    from nanopnp.structure.protonated import radius_scales, residue_radius_scales
+
+    ensemble = _two_chains(fragment_2wcd)
+    edit = _edit("ASP 25", radius_scale=1.2)
+    resolved = resolve(_case(tmp_path, charge=edit))
+    edits = probe_radius_edits(resolved)
+    assert edits == (("ASP", 25, "", 1.2),)
+    assert probe_radius_edits(resolve(_case(tmp_path))) == ()
+
+    table = ProtonationTable.read(_artefact(tmp_path, ensemble, charge=edit).payload["protonation"])
+    first = table.frame_slice(0)
+    by_atom = {
+        (str(c), int(r), str(n)): float(s)
+        for c, r, n, s in zip(
+            table.chain[first],
+            table.resid[first],
+            table.name[first],
+            radius_scales(table)[first],
+            strict=True,
+        )
+    }
+    scales = residue_radius_scales(ensemble.resname, ensemble.resid, ensemble.icode, edits)
+    keys = [
+        (str(c), int(r), str(n))
+        for c, r, n in zip(ensemble.chain, ensemble.resid, ensemble.name, strict=True)
+    ]
+    shared = [i for i, key in enumerate(keys) if key in by_atom]
+    assert len(shared) > 0.9 * len(keys)
+    assert [by_atom[keys[i]] for i in shared] == [float(scales[i]) for i in shared]
+    assert np.count_nonzero(scales == 1.2) > 0
+
+    assert resolved.density is not None
+    z = ensemble.positions_nm[..., 2]
+    loop = np.array([[0.0, z.min()], [5.0, z.min()], [5.0, z.max()], [0.0, z.max()]])
+    z_nm = np.linspace(float(z.min()), float(z.max()), 12)
+    planes, probe, radii = gate_inputs(loop, z_nm, ensemble, resolved.density, radius_edits=edits)
+    expected = probe_radius_profile(ensemble.positions_nm, radii.radii_nm * scales, planes)
+    np.testing.assert_allclose(probe, expected, rtol=0, atol=1e-12)
+    unscaled = probe_radius_profile(ensemble.positions_nm, radii.radii_nm, planes)
+    assert np.any(probe < unscaled - 1e-6)
