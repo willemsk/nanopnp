@@ -392,17 +392,28 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
     assignments
         Dotted case-file path to value; an empty mapping returns an equal document.
     """
-    record = document.models_record
-    if record is not None:
-        moved = {path: value for path, value in assignments.items() if path.startswith("models.")}
-        if moved:
-            for path, value in moved.items():
-                field_at(path).validate(value)
-            document = record.carried(document, moved)
-            record = document.models_record
-            assignments = {k: v for k, v in assignments.items() if k not in moved}
-            if not assignments:
-                return document
+    named = {
+        path: value
+        for path, value in assignments.items()
+        if path == "models" or path.startswith("models.")
+    }
+    if named:
+        record = document.models_record
+        if record is None:
+            # ``models`` is outside the dump, so set into the payload it would validate and be
+            # ignored: the document would claim a model it never read.
+            raise CaseValidationError(
+                f"<{document.name}>: {', '.join(sorted(named))}: the case names no model, so a "
+                "substitution cannot give it one; write models: in the case file and read it "
+                "with nanopnp.case.Case.load or nanopnp.pipeline.case.load_case"
+            )
+        moved = _model_assignments(named)
+        for path, value in moved.items():
+            field_at(path).validate(value)
+        document = record.carried(document, moved)
+        assignments = {k: v for k, v in assignments.items() if k not in named}
+        if not assignments:
+            return document
     payload = document.model_dump(by_alias=True, mode="json")
     for path, value in assignments.items():
         reference = field_at(path)
@@ -410,15 +421,39 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
         # into the plain dict would come out of ``model_dump`` as an object YAML cannot write.
         reference.validate(value)
         _set_at(payload, path, value)
+    listed = ", ".join(sorted(assignments)) or "nothing"
+    return _revalidated(document, payload, f"<{document.name} with {listed} substituted>")
+
+
+def _model_assignments(named: Mapping[str, FieldValue]) -> dict[str, FieldValue]:
+    moved: dict[str, FieldValue] = {}
+    for path, value in named.items():
+        if path != "models":
+            moved[path] = value
+            continue
+        block = (
+            value.model_dump(mode="json", exclude_none=True)
+            if isinstance(value, BaseModel)
+            else value
+        )
+        if not isinstance(block, Mapping):
+            raise CaseValidationError(
+                f"models: {value!r}: a study cannot drop the models it names; set "
+                "models.molecular or models.continuum to swap one"
+            )
+        moved.update((f"models.{kind}", item) for kind, item in block.items())
+    return moved
+
+
+def _revalidated(document: D, payload: dict[str, FieldValue], label: str) -> D:
+    # A study's record rides on every rebuilt copy, its overrides recomputed against its view.
+    record = document.models_record
     if record is not None:
         payload["models"] = record.paths
     try:
         result = type(document).model_validate(payload)
     except ValidationError as error:
-        listed = ", ".join(sorted(assignments)) or "nothing"
-        raise CaseValidationError(
-            render_problems(f"<{document.name} with {listed} substituted>", error), error
-        ) from None
+        raise CaseValidationError(render_problems(label, error), error) from None
     return result if record is None else record.attached(result)
 
 
@@ -438,12 +473,7 @@ def with_profile(document: D, path: str | Path) -> D:
         geometry["contour"] = Contour().model_dump(mode="json")
     inputs = payload.setdefault("inputs", {})
     inputs["profile"] = {"path": str(path), "format": PROFILE_FORMAT}
-    try:
-        return type(document).model_validate(payload)
-    except ValidationError as error:
-        raise CaseValidationError(
-            render_problems(f"<{document.name} with inputs.profile {path}>", error), error
-        ) from None
+    return _revalidated(document, payload, f"<{document.name} with inputs.profile {path}>")
 
 
 NEUTRAL_SECTIONS: frozenset[str] = frozenset({"charge"})
@@ -461,12 +491,7 @@ def with_section(document: D, name: str) -> D:
         raise ValueError(f"case {document.name!r} already carries a {name}: section")
     payload = document.model_dump(by_alias=True, mode="json")
     payload[name] = {}
-    try:
-        return type(document).model_validate(payload)
-    except ValidationError as error:
-        raise CaseValidationError(
-            render_problems(f"<{document.name} with {name}: {{}}>", error), error
-        ) from None
+    return _revalidated(document, payload, f"<{document.name} with {name}: {{}}>")
 
 
 def _set_at(payload: dict[str, FieldValue], path: str, value: FieldValue) -> None:

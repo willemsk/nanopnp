@@ -247,7 +247,12 @@ its value came from.
 A value the study sets in a named model's keys that differs from the model's is an **override**. An
 override is a leaf, the deepest path at which both sides are blocks; a value equal to the model's is
 none. The resolved case recomputes its overrides on every substitution, so they survive an edit and a
-sweep, and `Case.overrides` maps each path to the model's value and the study's. A study overrides
+sweep, and `Case.overrides` maps each path to the model's value and the study's. A substitution of
+`models.molecular` or `models.continuum` swaps a model the study names; one that names a model the
+study does not name, or drops one, SHALL be refused, since the study's document holds a value, its
+default included, for every key of a model it does not name, and each would override the new model.
+A substitution that gives `models:` to a case naming no model SHALL be refused likewise, naming the
+readers that resolve it. A study overrides
 any value of the models it names; the Study suite offers the continuum model's physics defaults
 first (WB-16). `models` is left out of every dump, hash and equality of the case, so a study equals
 and keys as the case it resolves to, written inline: the artefact keys, the stage keys and the

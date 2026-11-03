@@ -2473,3 +2473,68 @@ by hash.
 
 Open: the author rules whether a stored mesh's frame is recorded and checked against the structure's, so that the
 pair is refused only on a mismatch, or whether the refusal stays.
+
+## REV-187: A study that drops a mixed block writes a study form it cannot read
+
+`Case.with_({"charge": None})` on a study whose molecular model holds `charge.ph` gives a valid case with no
+`charge:` section, and `io/models.py:_compare` records each model-owned leaf of the block as an override to `None`
+(`charge.ph`, `charge.forcefield`, `charge.titration`, `charge.edits`, `charge.exclusion_offset_nm`).
+`Case.dumps(study=True)` then writes `charge: {ph: null, ...}`, which the merge lays over the model's block and the
+schema refuses, so the study form does not read back and a sweep over the study (§5.3.4, which writes that form as
+its base) cannot be planned. A mixed block is split below its own name (§5.3.1 NOTE on `models:`), so dropping it
+whole has no single override to write. Found by code review 030.
+
+Open: the author rules whether a study may drop a block that a named model and the study share, and if so how its
+study form writes it, or whether the substitution is refused.
+
+## REV-188: The COMSOL comparison keys a stored mesh without a store
+
+`validation/comsol.py:_upstream` builds each stage with `create(name)` when no recorded artefacts are given. Since
+WP5.05 the mesh stage takes the store, and a case naming `inputs.mesh.artefact` has no key without it, so the
+comparison raises `ValueError` ("built without a store") for such a case. `pipeline/run.py:stored_upstream` passes
+the store as the walk does; `_upstream` has none to pass. Found by code review 030.
+
+Open: no frozen COMSOL case names a stored mesh, so nothing fails today. Either the comparison takes a store, or it
+refuses a stored mesh naming the key.
+
+## REV-189: A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep`
+
+`ModelRecord.carried` reads a relative `models.molecular` or `models.continuum` beside the study file, so
+`Case.with_(models={"continuum": "b.yaml"})` reads `b.yaml` next to the study. `api/sweep.py:plan_sweep` resolves the
+same relative axis values against the working directory before it writes the plan. A script run from another
+directory sweeps other files than the edit it mirrors names, or is refused as "not a file". A sweep file's axis
+values read beside its base case (§5.3.4), which is a third rule. Found by code review 030.
+
+Open: the author rules which directory a relative model path in the Python sweep reads against.
+
+## REV-190: `CaseDocument` equality counts `models` and the model record
+
+§5.3.1's NOTE on `models:` leaves `models` out of every dump, hash and equality of a case. `Case` compares dumps, so
+a study equals its inline twin. `CaseDocument`, which `pipeline.case.load_case` returns, keeps pydantic's equality:
+it compares the `models` field and the private record, whose `ModelRecord` compares by identity. Two loads of one
+study compare unequal, and so do a study and its twin. Nothing in `src/` compares two documents today. Found by code
+review 030.
+
+Open: whether `CaseDocument` takes `Case`'s equality (and a hash to match it), or the NOTE narrows to `Case`.
+
+## REV-191: A stored generated mesh skips the field-frame check
+
+`charge/stage.py` checks a supplied field's `model_frame_centre_z_nm` against the mesh's frame only when
+`resolved.generates_mesh` and a membrane is set. A case that names a generated mesh by its store hash
+(`inputs.mesh.artefact`) has no `geometry:`, so the check never runs and the frame shift is taken as 0, although the
+stored region records the generator's shift (`geometry/region.py`). A case B that names case A's mesh (centre
+`c ≠ 0`) and supplies `inputs.charge` declaring `c'` places the charge `c − c'` nm off along z, where case A refuses
+the same field. The quick-start, whose centre is 0, does not reach it. Found by the WP5.05 physics review.
+
+Open: the author rules whether the check reads the stored region's frame for a stored generated mesh, or a supplied
+field beside a stored mesh is refused, as a structure beside one is (REV-186).
+
+## REV-192: A run on a stored mesh records the generating case's Debye sizing
+
+`pipeline/run.py:_mesh_record` lays the run's own Debye record over the mesh summary's sizing only when the case
+generates its mesh. A run on a stored mesh keeps the generating case's Debye length and ratio in its manifest's
+geometry-and-mesh group, without saying so. The mesh hash still reconstructs the run, so nothing is lost, but a
+reader can take that λ_D for this run's (§5.3.3). Found by the WP5.05 physics review.
+
+Open: whether the record keeps the mesh's sizing and adds this run's Debye length beside it, marked, or overlays it
+as a generated mesh does.

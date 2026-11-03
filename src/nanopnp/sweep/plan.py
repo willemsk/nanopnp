@@ -63,7 +63,7 @@ RECTIFICATION = "rectification"
 
 WARM_START_BARRIERS: tuple[str, ...] = (
     # A model file may move anything a barrier below names, so a point on a model axis is its
-    # own warm-start component (FR-39).
+    # own warm-start component.
     "models",
     # A cross-mesh transfer is a point evaluation outside the source domain,
     # which returns a plausible number rather than raising, and ``transfer``

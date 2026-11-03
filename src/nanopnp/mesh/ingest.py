@@ -546,7 +546,7 @@ def deployed_mesh(resolved: ResolvedCase, generated: Artefact | None) -> Ingeste
     Raises
     ------
     KeyError
-        If the case generates its mesh and no stage-6 artefact is given.
+        If the case generates its mesh or names a stored one, and no stage-6 artefact is given.
     """
     if resolved.mesh is not None and resolved.mesh.path is not None:
         return ingest(resolved.mesh, resolved)

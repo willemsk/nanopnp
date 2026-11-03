@@ -105,7 +105,7 @@ class Case(CaseDocument):
         """
         case = check_document(reads(text, base=base, source=source, model=cls), source=source)
         assert isinstance(case, cls)
-        # A study is run as the one complete case it resolves to (FR-39), so it keeps no text.
+        # A study is run as the one complete case it resolves to, so it keeps no text.
         case._text = text if case.models_record is None else None
         case._base = Path(base).resolve() if base is not None else None
         return case
