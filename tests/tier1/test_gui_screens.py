@@ -25,12 +25,12 @@ if TYPE_CHECKING:
     from playwright.sync_api import Browser, Playwright
 
 BROWSER_ARGS = ["--enable-unsafe-swiftshader", "--use-gl=angle", "--use-angle=swiftshader"]
-READY_WAIT_S = 90_000
+READY_WAIT_MS = 90_000
 STOP_WITHIN_S = 10
 
 
+# Returns (playwright, browser), or skips, or fails where the gate requires a browser.
 def _launch() -> tuple[Playwright, Browser]:
-    """Return ``(playwright, browser)``, or skip, or fail where the gate requires a browser."""
     sync = pytest.importorskip("playwright.sync_api")
     required = os.environ.get("NANOPNP_REQUIRE_BROWSER") == "1"
     handle = sync.sync_playwright().start()
@@ -98,7 +98,7 @@ def test_ver78_every_state_loads_every_screen_with_its_controls(
     )
     page.goto(url)  # the token in the address sets the cookie every later request carries
     page.goto(origin + screen.path)
-    page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_S)
+    page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
     hidden = [
         name
         for name in screen.controls
@@ -151,7 +151,9 @@ def test_ver78_the_server_keeps_its_contract() -> None:
         status, cookie = _status(url, f"/api/health?token={token}")
         assert status == 200
         assert cookie is not None and "HttpOnly" in cookie and "SameSite=Strict" in cookie
-        assert _status(url, "/api/health", cookie=f"{server.COOKIE}={token}")[0] == 200
+        assert cookie.startswith(f"{server.COOKIE}_")
+        assert _status(url, "/api/health", cookie=cookie.split(";")[0])[0] == 200
+        assert _status(url, "/api/health?token=%C3%A9")[0] == 403
         assert process.stdin is not None
         started = time.monotonic()
         process.stdin.close()
@@ -160,9 +162,11 @@ def test_ver78_the_server_keeps_its_contract() -> None:
     finally:
         process.kill()
     terminated, _ = _start()
-    terminated.send_signal(signal.SIGTERM)
-    terminated.wait(STOP_WITHIN_S)
-    assert terminated.returncode is not None
+    try:
+        terminated.send_signal(signal.SIGTERM)
+        terminated.wait(STOP_WITHIN_S)
+    finally:
+        terminated.kill()
 
 
 def test_ver78_the_reloading_server_prints_its_line_and_stops_with_its_input() -> None:
@@ -174,7 +178,8 @@ def test_ver78_the_reloading_server_prints_its_line_and_stops_with_its_input() -
                 if _status(found.group(1), f"/api/health?token={token}")[0] == 200:
                     break
             except OSError:
-                time.sleep(0.5)
+                pass
+            time.sleep(0.5)
         else:
             raise AssertionError("the reloading server never answered")
         assert process.stdin is not None

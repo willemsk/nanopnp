@@ -198,3 +198,6 @@ is a rolling register, and its header stays `open`.
 | REV-174 | coupling | low | fixed | [WP5.02](../plans/wp5.02-framework-spike.md) | [The command line names the workbench's server by string](review-items.md#rev-174-the-command-line-names-the-workbenchs-server-by-string) |
 | REV-175 | tooling | low | fixed | WP5.02 | [pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra](review-items.md#rev-175-pdb2pqr-38-is-not-read-and-371-pins-docutils-against-the-gui-extra) |
 | REV-176 | tooling | low | fixed | WP5.02 | [The design mockups fail the non-text contrast measure](review-items.md#rev-176-the-design-mockups-fail-the-non-text-contrast-measure) |
+| REV-177 | interface | low | open | WP5.02 | [The workbench's link failures end the server at startup](review-items.md#rev-177-the-workbenchs-link-failures-end-the-server-at-startup) |
+| REV-178 | tooling | low | open | WP5.02 | [The selected-fill measure does not read the strip's pressed item](review-items.md#rev-178-the-selected-fill-measure-does-not-read-the-strips-pressed-item) |
+| REV-179 | verification | low | open | WP5.02 | [`nanopnp gui` has no smoke test and takes no common flags](review-items.md#rev-179-nanopnp-gui-has-no-smoke-test-and-takes-no-common-flags) |
