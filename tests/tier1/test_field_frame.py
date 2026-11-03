@@ -123,3 +123,30 @@ def test_fr27_stage_7_declares_the_frame_its_lattice_was_exported_in(tmp_path: P
     data.write_bytes(b"probe")
     path = write_field_document(lattice, data, tmp_path / "charge.field.yaml")  # type: ignore[arg-type]
     assert load_document(path).model_frame_centre_z_nm == 1.5
+
+
+@pytest.mark.parametrize("key", ["charge", "eps_r"])
+def test_fr27_a_field_beside_a_stored_generated_mesh_is_checked_against_its_region(
+    tmp_path: Path, key: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from nanopnp.charge import stage
+    from nanopnp.charge.fields import FieldDocumentError
+    from nanopnp.geometry.region import RegionRecord
+
+    region = RegionRecord.model_construct(membrane=SimpleNamespace(centre_z_nm=2.0))
+    monkeypatch.setattr(stage, "read_region", lambda _path: region)
+    store = SimpleNamespace(
+        root=tmp_path, get=lambda _schema, _hash: SimpleNamespace(payload={"region": "r"})
+    )
+    mesh = SimpleNamespace(inputs={"region": "b" * 64})
+
+    def resolved(path: Path) -> object:
+        probe = _resolved(key, path, centre_z_nm=0.0, generates_mesh=False)
+        probe.mesh = SimpleNamespace(artefact="a" * 64)  # type: ignore[attr-defined]
+        return probe
+
+    wrong = resolved(_document(tmp_path, key, 0.0))
+    with pytest.raises(FieldDocumentError, match=r"\+2 nm along z"):
+        stage.check_stored_frame(wrong, stage.read_fields(wrong), mesh, store)  # type: ignore[arg-type]
+    right = resolved(_document(tmp_path, key, 2.0))
+    stage.check_stored_frame(right, stage.read_fields(right), mesh, store)  # type: ignore[arg-type]

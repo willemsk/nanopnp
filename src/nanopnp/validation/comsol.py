@@ -217,6 +217,12 @@ def _upstream(
     upstream: Mapping[str, Artefact],
 ) -> Artefact:
     if recorded is None:
+        if resolved.mesh is not None and resolved.mesh.artefact is not None:
+            raise ValueError(
+                f"case {resolved.name!r} names the stored mesh {resolved.mesh.artefact[:12]} "
+                "(inputs.mesh.artefact), and the COMSOL comparison keys a case without a store; "
+                "compare a finished run of it instead, or supply the mesh as inputs.mesh.path"
+            )
         return create(name).key(StageInputs(resolved=resolved, upstream=offered(name, upstream)))
     found = recorded.get(name)
     if found is None:

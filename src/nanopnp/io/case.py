@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import difflib
 import itertools
-from collections.abc import Mapping, Sequence
+from collections.abc import Hashable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Literal, TypeAlias, get_args
 
@@ -648,6 +648,16 @@ class CaseDocument(_Strict):
         """The model files this document was resolved from; ``None`` for a case without models."""
         return self._models
 
+    def __eq__(self, other: object) -> bool:
+        """Compare the documents as dumped; ``models`` and the model record do not count."""
+        if not isinstance(other, CaseDocument):
+            return NotImplemented
+        return self.model_dump() == other.model_dump()
+
+    def __hash__(self) -> int:
+        """Hash the document as dumped, so that documents that compare equal hash equal."""
+        return hash(_frozen(self.model_dump()))
+
     @model_validator(mode="after")
     def _check_installed(self) -> CaseDocument:
         problems: list[str] = []
@@ -828,3 +838,11 @@ def dump_case(document: CaseDocument, path: str | Path) -> Path:
 def dumps_case(document: CaseDocument) -> str:
     """Return a validated case document as YAML text, under the aliases a case file writes."""
     return str(yaml.safe_dump(document.model_dump(by_alias=True, mode="json"), sort_keys=False))
+
+
+def _frozen(value: object) -> Hashable:
+    if isinstance(value, dict):
+        return frozenset((key, _frozen(item)) for key, item in value.items())
+    if isinstance(value, list | tuple):
+        return tuple(_frozen(item) for item in value)
+    return value

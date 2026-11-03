@@ -192,9 +192,10 @@ def plan_sweep(
             "file, or name the input by an absolute path"
         )
     dotted = field_path(axis)
-    if dotted.startswith("models."):
-        # Read against the working directory, which the store's copy of the study is not.
-        values = [str(Path(str(value)).resolve()) for value in values]
+    if dotted.startswith("models.") and case.models_record is not None:
+        # Beside the study, as Case.with_ reads it; the store's copy of the study is elsewhere.
+        beside = case.models_record.base
+        values = [str((beside / Path(str(value))).resolve()) for value in values]
     name = case.name
     document = {
         "schema": SWEEP_SCHEMA,
