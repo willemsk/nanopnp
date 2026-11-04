@@ -1,6 +1,6 @@
 # WP5.06 — Outputs and steric models as registries
 
-**Status: in progress — items 1 to 6 done.** Planned 4 November 2026, on `main` after WP5.05's merge (`b5284c1`). It inherits
+**Status: delivered, 4 November 2026.** Planned 4 November 2026, on `main` after WP5.05's merge (`b5284c1`). It inherits
 §8.2.18 T4, §8.2.28 AD3 and AD5, and AH1, ruled at this plan (§8.2.32).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -181,12 +181,12 @@ field as "carries no degrees of freedom of this field".
   (`call:register_output`) and `physics/steric.py` (`call:register_steric_model`); `docs/project/modularity-layering.yaml`
   unchanged unless VER-61 measures a new edge. Done when `test_layering.py` and `test_backend_guard.py` pass.
   **Executor:** `general-purpose` on Haiku.
-- [ ] 7. §5.5's registry sentence and a NOTE: `borukhov` is PHY-05 and the validated default, `none` sets `β_i = 0`,
+- [x] ddbeece 7. §5.5's registry sentence and a NOTE: `borukhov` is PHY-05 and the validated default, `none` sets `β_i = 0`,
   another registered name is a deviation whose name enters the solve key (D4, D5); FR-23's and §6.7's pointers if they
   name the old list; MOD-09 `fixed` in `modularity-findings.md` and `modularity.md`; REV-171's seam part done;
   `CHANGELOG.md` (`ModelDeclaration.quantities` removed, F4). Done when the code and review say so, and the strict
   documentation build passes. **Executor:** main.
-- [ ] 8. `.claude/hooks/gate.sh run`: the VER-62 walks unmoved, no re-pin. **Executor:** main.
+- [x] 8. `.claude/hooks/gate.sh run`: the VER-62 walks unmoved, no re-pin. **Executor:** main.
 
 ### Verification
 
@@ -211,3 +211,13 @@ field as "carries no degrees of freedom of this field".
 ### Open questions
 
 None. The author ruled AH1 at this plan.
+
+> **Outcome — `fields` comes from the registry, not by name (item 4).** `_check_outputs` used to admit `fields` for
+> every model by name. `fields` now registers with no need, so `provided(declaration)` lists it for every model and
+> the refusal text names it among what a model provides. The refusal now reads "provides", and the old advice to write
+> `outputs: [fields]` is gone because no model provides nothing.
+>
+> **Outcome — the boundary helpers have no unit test of their own (item 2).** `tests/tier1` has no test file for
+> `numerics/measures.py`; the refusal tests of the wall distance, the indicator, the reaction flux and the forces
+> exercise both helpers and keep their exception types and text. No test was added: the helper is not physics,
+> numerics or a core mechanism on its own (§7.1).
