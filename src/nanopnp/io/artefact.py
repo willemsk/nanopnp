@@ -443,7 +443,7 @@ class QoIArtefact(Artefact):
         solution_hash: str,
         outputs: tuple[str, ...],
         indicator_band_nm: tuple[float, float] | None,
-        extension_shell_nm: tuple[float, float] | None = None,
+        output_parameters: Mapping[str, Canonicalisable] | None = None,
         payload: Mapping[str, Path] | None = None,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
@@ -454,9 +454,8 @@ class QoIArtefact(Artefact):
         # The NUM-26 cross-check is always run; recorded all the same, so that the key of every
         # artefact extracted with it on is the one it has always had.
         parameters["check_routes"] = True
-        # Absent rather than null: "no force extracted" and "one, over no shell" are different runs.
-        if extension_shell_nm is not None:
-            parameters["extension_shell_nm"] = list(extension_shell_nm)
+        # Each selected output's own parameters, absent unless it is selected.
+        parameters.update(output_parameters or {})
         super().__init__(
             schema=QOI_SCHEMA,
             parameters=parameters,

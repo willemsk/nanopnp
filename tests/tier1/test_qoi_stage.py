@@ -10,11 +10,12 @@ import pytest
 
 from nanopnp.io import manifest as manifest_io
 from nanopnp.io.artefact import QOI_SCHEMA, REPORT_SCHEMA, CaseArtefact, StageInputs
-from nanopnp.io.case import CaseDocument
+from nanopnp.io.case import CaseDocument, CaseValidationError
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.ingest import ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.post import outputs
 from nanopnp.post.export import (
     OMEGA_STEM,
     OMEGA_W_STEM,
@@ -254,6 +255,24 @@ def test_fr23_outputs_selects_exactly_the_quantities_asked_for(
         "routes_checked",
         "route_agreement",
     }
+
+
+def test_mod09_an_output_registered_at_run_time_is_extracted_with_no_schema_edit(
+    solved: Solved, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with monkeypatch.context() as patch:
+        patch.setattr(outputs, "_REGISTRY", dict(outputs._REGISTRY))
+        outputs.register_output(
+            "probe",
+            needs={"transport"},
+            extract=lambda extraction: {"probe_A": 2.0 * extraction.quantities.current_A},
+        )
+        artefact = QoIStage().run(solved.inputs("current, probe"))
+        assert artefact.summary["probe_A"] == 2.0 * artefact.summary["current_A"]  # type: ignore[operator]
+        assert artefact.hash != QoIStage().run(solved.inputs("current")).hash
+    with pytest.raises(CaseValidationError, match="probe") as refused:
+        solved.case("current, probe")
+    assert "current" in str(refused.value)
 
 
 def test_num27_grounding_trans_reports_the_quantities_of_the_same_state_grounded_at_cis(
