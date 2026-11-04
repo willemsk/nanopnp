@@ -1552,6 +1552,8 @@ The stages a value invalidates follow from the content hashes that key each stag
 
 **Design round held** (§8.2.31 AG2 to AG5, 3 November 2026), over mockup A's round-2 `st-sweep`: a variable is a value with its unit or an expression of others, parsed without running code; units are checked through `pint`; stages and identity are keyed by the resolved values, the variables recorded as written; and a forecast of the stages each swept value rebuilds is shown as a warning. WP5.07 lands the library step (FR-39); WP5.11 the Sweep tool.
 
+**Fixed** (WP5.07, [the plan](../plans/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.11's (FR-39's Appendix A row).
+
 ## REV-140: Two of the author's marks on the mockups ask what is not yet said
 
 Two of the author's marks on mockup A (WP5.01, `docs/design/reviews/2026-10-26-mockups.md`) could not be acted on:
@@ -2607,3 +2609,12 @@ registries (VER-61). Found by the WP5.06 review.
 
 Fixed: ruled by the author. `docs/scripts/generate.py` writes the registered steric models and outputs as enums into the
 published `case.schema.json`; `io` stays registry-free (VER-61).
+
+## REV-197: Rectification does not pair a bias set through a variable
+
+The sweep plan pairs the two points of a rectification ratio by `boundary_conditions.bias_V` in their assignments
+(`sweep/plan.py:_pairs`, §5.3.1 NOTE on `outputs:`). An axis over a variable that sets the bias (`bias_V: v` with an axis
+on `variables.v`) assigns no `bias_V`, so the plan finds no matched pair and refuses a sweep that asks for
+`rectification`. Found by WP5.07 (FR-39).
+
+**Accepted**: WP5.11, which builds the Sweep tool, pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.

@@ -43,6 +43,16 @@ a closure or a file, is not keyed. A name that is a built-in stage's, or not of 
 `[a-z][a-z0-9_-]*`, a parameter naming no registered stage, a keyword-only or variadic parameter,
 and a return value that is not such a mapping are each refused naming it.
 
+NOTE (the rebuild forecast, FR-39, FR-27, VER-64; WP5.07; §8.2.31 AG5): a stage MAY provide
+`forecast_parameters(inputs) -> Mapping`, the protocol `core.stages.Forecastable`, for the sweep's forecast
+(§5.3.4). A stage's key that reads an upstream payload the forecast has not built raises
+`core.stages.NotBuilt`. The stage is then identified by a hash of its name and its
+`forecast_parameters`, which SHALL include the hash of each upstream artefact the key reads and
+nothing of the case the key does not read (the mesh returns its region's hash and its sizing, so a
+bias does not move it). A stage without `forecast_parameters` is identified by the case's hash and its
+declared inputs' identities, so any change of the case moves it. The forecast never calls `run`.
+The method is optional, adds nothing to the key, and a stage of one's own needs none.
+
 | Level | Unit of extension | Requires | Obtained free |
 |---|---|---|---|
 | 1, correction models | A versioned data file naming a registered model and its coefficients | No code | Recording of the model version on every result; correction-by-correction switching as a configuration sweep |

@@ -203,7 +203,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * U1 - open: the package that removes Qt
 * U2 - the NOTE beside PHY-16 step 3; open: WP5.03 (AD3)
 * U3 - ruled by AG6; open: WP5.12
-* U4 - ruled by AG2 to AG5; open: WP5.07
+* U4 - ruled by AG2 to AG5
 * U5 - open: WP5.02
 * U6 - FR-38
 * U7 - open: WP5.02
@@ -289,10 +289,10 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AF3 - spent
 * AF4 - ADR-004's NOTE (the front end, v0.6); spent
 * AG1 - §8.1's Phase 5 estimate; the Phase 5 plan; open: WP5.08 to WP5.14
-* AG2 - FR-39; open: WP5.07
-* AG3 - FR-39; open: WP5.07
-* AG4 - FR-39; open: WP5.07
-* AG5 - FR-39; open: WP5.07
+* AG2 - FR-39; §5.3.1's NOTE on `variables:`
+* AG3 - FR-39; §5.3.1's NOTE on `variables:`
+* AG4 - FR-39; §5.3.1's NOTE on `variables:`; §5.3.3's inputs group
+* AG5 - FR-39; §5.3.4; §5.5's NOTE on the rebuild forecast
 * AG6 - FR-32; REV-136; open: WP5.12
 * AG7 - the Phase 5 plan's criterion 6; open: WP5.11
 * AG8 - VER-62; the NOTE beside PHY-16 step 3

@@ -197,6 +197,34 @@ extraction stage or a physics model. The [plan](docs/plans/wp5.06-outputs-and-st
   - **Amended**: §5.5's registry sentence and a NOTE on the steric model, §5.4.3 and §5.3.1's NOTEs and VER-56 (AH1).
   - **Open items**: MOD-09 is `fixed`. REV-171's seam part is done; its cost items stay in Phase 6.
 
+WP5.07: variables and the rebuild forecast, Phase 5's seventh package; tag `v0.6.0-alpha.7` once merged
+(`SPECIFICATION.md` FR-39, FR-24, FR-25, FR-27, IF-03, VER-24, VER-64, VER-72; §8.2.19 U4, §8.2.31 AG2 to AG5; REV-139). A
+case can name values with their units and write any number as an expression of them, and a sweep says before it runs which
+stages each swept value rebuilds. The [plan](docs/plans/wp5.07-variables-and-the-rebuild-forecast.md) records the work.
+
+- **Added**:
+  - **`variables:`** in the case (`nanopnp/case/v0.6` is unchanged): a name is `{value, unit}` or `{expression, unit}`, and
+    a string at a numeric field is an expression. `io/variables.py` parses it from Python's syntax tree against a whitelist
+    (numbers, names, `+ - * /`, `**`, six functions), so no code runs. A field's unit comes from its name's suffix; a
+    value of the same dimension is converted exactly, in fractions, and one of another dimension is refused at the field.
+  - **The dependency `pint`** (`>=0.25.3,<0.26`; BSD-3-Clause, pure Python), imported on first use (VER-72).
+  - **Keys by resolved values**: `L: 2*a` with `a` = 2 nm shares every key with `L: 4`. The variables as written stay
+    in the run's `case.yaml` and in the manifest's inputs group, which gains `variables` only for a case that has some.
+    `Case.variables` and `Case.expressions` give them.
+  - **A sweep axis over `variables.<name>`**: it moves every field the variable reaches, and the warm-start barriers and
+    wall-size warnings read it as those fields.
+  - **The forecast**: `sweep.forecast.forecast(plan, store=...)`, `Sweep.forecast()` and `Forecast`, built on
+    `pipeline.forecast.keyed_walk`, which keys each stage without running one. `core.stages.NotBuilt` and the optional
+    `Forecastable` protocol (`forecast_parameters`) let a stage be identified before its upstream exists; the mesh
+    provides it. `run_plan` logs the warnings and `nanopnp sweep plan` prints a `forecast` line, also in `--json`.
+    `Session.own_stages` gives a Session's registered stages.
+- **Changed**: the region and solve stages key without reading an upstream payload they discard. No key moves
+  (VER-62 unchanged at zero drift).
+- **Fixed**: REV-139. **Amended**: §5.3.1's NOTE on `variables:`, §5.3.3's inputs group, §5.3.4's axis over a variable
+  and the forecast, §5.5's NOTE on the rebuild forecast, VER-72's list of deferred libraries, and the Appendix A rows of
+  FR-39 and IF-03.
+- **Open items**: REV-197, rectification does not pair a bias set through a variable (WP5.11).
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 
