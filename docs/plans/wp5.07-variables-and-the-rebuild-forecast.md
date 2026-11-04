@@ -42,7 +42,7 @@ IF-03's and FR-39's Appendix A rows; REV-139 `fixed`.
 | D2 Expressions and units | A walker over `ast.parse(text, mode="eval")` admits numbers, variable names, the four operations, powers, unary signs and six functions; Python evaluates nothing. Units through one `pint.UnitRegistry(non_int_type=Fraction)`. A field's unit comes from its name's suffix (`SUFFIX_UNITS`), else it is dimensionless. Another dimension is refused at the field, naming field, expression and both units; the same dimension is converted. An integer field takes only an integral value | AG2, AG3; float pint gives 20 Å = 1.9999999999999998 nm |
 | D3 Resolution and records | `io/models.py` resolves the case's own mapping before it merges any model, so stages and identity see numbers only. `CaseDocument._variables`, a `VariableRecord`, is outside the dump, equality and every hash. `dumps_case` and `Case.dumps(study=True)` write the case as written; a file case keeps its text. The manifest's inputs group gains `variables` only when the case defines some | AG4; FR-25; VER-62 at zero drift |
 | D4 Substitution and sweeps | `substitute` sends `variables.<name>`, and every assignment to a document with a record, through `VariableRecord.carried`, which reads the case as written again with the assignments. A number at `variables.<name>` is in its declared unit; a number at a field drops its expression. The sweep's barrier and wall-size checks read a variable axis as the fields it reaches | AG2; §5.3.2's barriers |
-| D5 The forecast | `pipeline/forecast.py:keyed_walk` keys a member's stages without running one: an upstream is the stored artefact, else a stand-in whose payload raises `NotBuilt`. A key that raises it takes a forecast identity from the stage, its inputs' identities and its optional `forecast_parameters` (the mesh's), else the case hash. `sweep/forecast.py:forecast` runs it over the points in plan order | AG5, VER-64; a payload is fixed by its artefact's hash |
+| D5 The forecast | `pipeline/forecast.py:keyed_walk` keys a member's stages without running one: an upstream is the stored artefact, else a stand-in whose payload raises `NotBuilt`. A key that raises it takes a forecast identity: from the stage's `forecast_parameters` alone when it has them (the mesh's, which hold the hashes it reads), else from the case hash and its inputs' identities. `sweep/forecast.py:forecast` runs it over the points in plan order | AG5, VER-64; a payload is fixed by its artefact's hash |
 | D6 Where it shows | `Sweep.forecast()`; `run_plan` logs its warnings before the first wave and never refuses; `nanopnp sweep plan` prints them and adds `forecast` to `--json` | AG5; W2 |
 
 ### Grounding
@@ -138,7 +138,7 @@ with the model record's `base`. `CaseDocument` gains `_variables` and `variables
 **Item 6.** `core/stages.py`: `class NotBuilt(LookupError)`, raised with the stage name; `@runtime_checkable class
 Forecastable(Protocol)` with `forecast_parameters(self, inputs: StageInputs) -> Mapping[str, Canonicalisable]`.
 `MeshStage`: factor `_recipe`'s sizing into `_sizing(resolved, *, idealised, exclusion)`; `forecast_parameters` returns
-`{"sizing": ...}` for a generated mesh, with `idealised = resolved.pore is not None` and `exclusion =
+`{"region": <the region's hash>, "sizing": ...}` for a generated mesh, with `idealised = resolved.pore is not None` and `exclusion =
 charge.exclusion_offset_nm > 0`. `RegionStage.key` takes the contour's hash without its payload.
 `SolveStage._prepare` calls `deployed_mesh` only when `load` or no mesh artefact is given. No key value moves.
 
@@ -147,8 +147,9 @@ charge.exclusion_offset_nm > 0`. `RegionStage.key` takes the contour's hash with
 success the identity is the key's hash. It is built when neither the store (`store.get(schema, hash)`) nor `planned`
 holds it. The stage's upstream for later stages is the stored artefact, or the key with a `_NotBuiltPayload(name)`
 whose `__getitem__`, `__contains__`, `__iter__` and `__len__` raise `NotBuilt`. On `NotBuilt` the identity is
-`content_hash("nanopnp/forecast/v0.6", {"stage": name, "parameters": <forecast_parameters, else {"case":
-case_hash}>}, {input: identity})`, built unless planned. Its stand-in is `Artefact(schema=<the stage's schema>,
+`content_hash("nanopnp/forecast/v0.6", {"stage": name, "parameters": <forecast_parameters>}, {})` for a `Forecastable`
+stage, else `content_hash(..., {"stage": name, "parameters": {"case": case_hash}}, {input: identity})` over every
+declared input, built unless planned. Its stand-in is `Artefact(schema=<the stage's schema>,
 parameters={"forecast": identity}, inputs={}, payload=_NotBuiltPayload(name))`. Add each built identity to `planned`.
 The case hash is the `case` stage's identity. Build each stage as `stored_upstream` does, with no workspace, and never
 call `run`. `forecast(plan, *, store, stages=None)` resolves each point as `run_point` walks it:
@@ -199,7 +200,7 @@ Rows 1 to 6 and 9 are in `tests/tier1/test_variables.py`, rows 7 and 8 in `tests
 | 7 `test_fr39_the_forecast_equals_the_stages_the_walk_rebuilds` | 1 | FR-39, VER-64 | The `pnp` cylinder of `test_session.py::test_fr24_…`, swept over `geometry.pore.radius_nm` (2, 2.5) × `bias_V` (0, 0.05). Each point's forecast stages equal its walk's uncached stages (`run_plan`, then `Session.read` per member). Radius moves `case`, `region`, `mesh`, `solve`, `qoi`, `report`; bias moves `case`, `solve`, `qoi`, `report`; `builds["mesh"]` is 2. Forecast again: every count 0 | `equals` |
 | 8 `test_fr39_the_forecast_never_runs_a_stage` | 1 | FR-39 | With every stage's `run` patched to raise, row 7's forecast completes and the store gains nothing | `never` |
 | 9 `test_fr39_every_numeric_field_has_a_unit_or_is_dimensionless` | 1 | FR-39 | Each `numeric_paths()` entry has a `SUFFIX_UNITS` suffix or is listed dimensionless; a test-added `width_um` fails | `unit_or` |
-| 10 The VER-62 walks; `test_model_interface.py`, `test_layering.py`, `test_source_conventions.py` | 1, 2 | VER-62, VER-56, VER-61, VER-72 | Unmoved at 10⁻⁸, no re-pin; goldens and layering unchanged; pint imported at module top | `gate.sh run` |
+| 10 The VER-62 walks; `test_model_interface.py`, `test_layering.py`, `test_source_conventions.py` | 1, 2 | VER-62, VER-56, VER-61, VER-72 | Unmoved at 10⁻⁸, no re-pin; goldens and layering unchanged; pint imported on first use | `gate.sh run` |
 
 ### Out of scope
 
@@ -212,3 +213,33 @@ Rows 1 to 6 and 9 are in `tests/tier1/test_variables.py`, rows 7 and 8 in `tests
 ### Open questions
 
 None.
+
+> **Outcome — pint is pinned below 0.26 and imported on first use (items 1, 2).** pint 0.26 needs Python 3.12 and the
+> floor is 3.11, so the dependency is `pint>=0.25.3,<0.26`. pint imports NumPy, so `io/variables.py:_registry()` imports
+> it inside the function and builds the registry once; VER-72, `.claude/rules/python.md` and `DEFERRABLE` in
+> `test_source_conventions.py` list `pint` beside `numpy`. Item 10's "imported at module top" was wrong. Evidence:
+> [the concept](../../knowledge/07-software-stack/24-pint-with-a-fraction-registry-exact-units.md).
+>
+> **Outcome — row 1 forbids a compile that is not AST-only (item 2).** `ast.parse` itself calls `compile`, so the
+> test patches `compile` to refuse any call without the AST-only flag, beside `eval` and `exec`. A valid case still
+> resolves. `tests/tier1/test_variables.py`, `-k whitelist`.
+>
+> **Outcome — an unknown `variables.<name>` raised KeyError (item 5).** `VariableRecord.carried` evaluated the
+> redefinition before it checked the name. The name check now comes first and the sweep plan checks a variable axis
+> after the base loads (`_check_variable_axes`), so both refuse the unknown name by naming it. Row 6 covers it.
+>
+> **Outcome — a forecastable stage hashes its own parameters only (item 6).** D5 and the Implementation details had
+> every declared input enter a stage's forecast identity. The mesh declares `case` as an input, so the bias moved the
+> mesh in the forecast though it moves no mesh key. A stage with `forecast_parameters` is now identified by those alone,
+> and they carry the hashes it reads (`MeshStage` returns its region's hash and its sizing); a stage without them takes
+> the case hash and every input's identity. The plan's text is corrected above, and §5.5's NOTE says it. Row 7 asserts
+> the bias moves `case`, `solve`, `qoi` and `report` and the radius also `region` and `mesh`.
+>
+> **Outcome — the forecast is advisory and approximates one case (item 6).** The forecast's mesh identity is not the
+> mesh's real key, so a mesh in the store whose region is absent from it is reported as a build; the forecast
+> over-reports there and does not under-report. A failure to key a point only warns in `run_plan`, and `sweep plan` prints
+> `forecast  unavailable: <reason>` with `"forecast": null` in `--json`.
+>
+> **Outcome — rectification over a bias set through a variable (D4).** `_pairs` reads assignments only, so the plan finds
+> no pair and refuses. Not changed here; REV-197, owned by WP5.11.
+

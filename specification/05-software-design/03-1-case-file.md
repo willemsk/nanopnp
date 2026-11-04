@@ -18,6 +18,10 @@ name: clya-wt-1M-100mV
 #   molecular: clya-wt.molecular.yaml     # nanopnp/molecular-model/v0.6
 #   continuum: clya-pore.continuum.yaml   # nanopnp/continuum-model/v0.6
 
+# variables:                        # optional; named values, WP5.07 (the NOTE on `variables:`)
+#   a: {value: 20, unit: angstrom}
+#   L: {expression: "3 * a", unit: nanometer}
+
 inputs:                             # optional; supplied artefacts, §5.3.2
   mesh: {path: clya.msh, format: msh41,
          groups: {lumen: electrolyte, upper: cis, lower: trans,
@@ -265,6 +269,44 @@ model. A reader that does not resolve models, `read_case`, SHALL refuse a docume
 one complete case it resolved to as `case.yaml`, with no `models:`, which the command line runs as
 it is (FR-25); `Case.dumps(study=True)` writes the study as written, with `models:` absolute and every
 override, and a sweep over a study writes that form as its base file (§5.3.4).
+
+NOTE (`variables:`, FR-39, FR-25, IF-03; WP5.07; §8.2.31 AG2 to AG5): the optional top-level
+`variables:` block maps a name to `{value: <number>, unit: <text>}` or `{expression: <text>, unit:
+<text>}`, exactly one of the first two, the unit defaulting to `dimensionless`. A name matches
+`[A-Za-z][A-Za-z0-9_]*` and is neither `auto` nor a function of the list below. A string at a numeric
+leaf of the case is an **expression** of the variables, unless the field takes the string as a
+literal (`numerics.mesh.wall_h_nm: auto`). An expression is parsed from Python's syntax tree
+(`ast.parse`) and walked against a whitelist: numbers, variable names, `+ - * /`, `**`, parentheses,
+a unary sign and the functions `sqrt`, `exp`, `log`, `abs`, `min` and `max` with positional arguments.
+No code runs; an expression of more than 256 characters, any other construct, an unknown name, a
+cycle among the variables, a division by zero and a non-finite result SHALL be refused, naming the
+expression and the variables that cause it. `exp` and `log` take a dimensionless argument, and `min`
+and `max` arguments of one dimension. A number is read as its decimal text and arithmetic is exact in
+fractions (a conversion of 20 Å gives 2.0 nm, not 1.9999999999999998), except a power, which is
+taken in floating point and whose exponent is dimensionless.
+
+Units go through one `pint` registry (a runtime dependency, BSD-3-Clause, pure Python, CON-07). A
+field takes its unit from the suffix of its name: `_nm` nanometre, `_ns` nanosecond, `_V` volt, `_M`
+molar, `_K` kelvin, `_e` elementary charge, `_C_m2` coulomb per square metre; every other numeric
+field is dimensionless. A value or expression of the same dimension as the field SHALL be converted
+to the field's unit (50 mV at `bias_V` is 0.05; 25 °C at `temperature_K` is 298.15), and one of
+another dimension SHALL be refused at the field, naming the field, the expression and both units. A
+field of integer type takes only an integral value. A numeric field the case schema gains has a
+suffix of the table or is listed dimensionless in `io/variables.py`, and a test fails otherwise.
+
+The case resolves its own `variables:` and expressions to numbers before it merges any model, so
+every stage and every identity reads numbers only: `L: 2*a` with `a` = 2 nm keys as `L: 4`, the same
+`CaseArtefact` hash and the same stage keys, and a case without `variables:` keys as it did before.
+The variables as written are held beside the document, outside its dump, equality and every hash,
+as `models` is. The run's `case.yaml` and `Case.dumps()` write the case as written, with `variables:`
+first after `name` and each expression at its field, so a reader that does not resolve variables
+(`read_case`) never sees one; the manifest records the variables beside their numbers (§5.3.3). A
+study owns `variables:`, and a model file that holds it, or an expression at one of its leaves, SHALL
+be refused, naming the file and the key, since a model serves many studies. A substitution at
+`variables.<name>` sets the number, in the variable's declared unit, or replaces the definition; a
+substitution of a number at a field that was an expression drops the expression. The case is read
+again as written with each substitution, so every field the variable reaches moves. A substitution
+at `variables.<name>` of an unknown name SHALL be refused, naming it.
 
 NOTE (a relative path in a case, FR-25, QR-08; §8.2.23 Y3): every file a case names by a relative
 path (`inputs.*.path`, `structure.source.path`, `structure.ensemble.trajectory` and a correction file
