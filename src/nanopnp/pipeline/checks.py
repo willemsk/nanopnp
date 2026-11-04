@@ -40,7 +40,7 @@ from nanopnp.io.case_paths import (
     value_at,
 )
 from nanopnp.io.resolved import contour_spacing_nm
-from nanopnp.materials.electrolyte import Electrolyte
+from nanopnp.materials.electrolyte import NO_STERIC_MODEL, Electrolyte
 from nanopnp.materials.models import PropertyKind, applies_part
 from nanopnp.mesh.ingest import SOLID_MATERIALS, fluid_permittivity_refusal
 from nanopnp.mesh.meshers import registered_meshers
@@ -53,6 +53,7 @@ from nanopnp.physics.models import (
     registered_models,
     registered_stabilisations,
 )
+from nanopnp.physics.steric import registered_steric_models
 
 __all__ = [
     "check_document",
@@ -78,6 +79,8 @@ def registry_options(path: str) -> tuple[str, ...] | None:
         return registered_solvers()
     if path == "electrolyte.parameters":
         return available_corrections()
+    if path == _STERIC_MODEL_PATH:
+        return (NO_STERIC_MODEL, *registered_steric_models())
     if path in _CORRECTION_MODEL_PATHS:
         # ``none`` disables a correction by selecting the registered ``none``
         # model rather than by taking a code branch (PHY-22), so it is offered
@@ -86,6 +89,9 @@ def registry_options(path: str) -> tuple[str, ...] | None:
     if path == "outputs":
         return tuple(sorted(OUTPUTS))
     return None
+
+
+_STERIC_MODEL_PATH = "electrolyte.corrections.steric.model"
 
 
 _CORRECTION_MODEL_PATHS: frozenset[str] = frozenset(
@@ -112,6 +118,12 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
             f"mode; the available modes are {', '.join(registered_stabilisations())}. "
             "Recording a mode the solver does not apply would make the FR-25 manifest "
             "describe a run that never happened"
+        )
+    steric = document.electrolyte.corrections.steric.model
+    if steric not in (NO_STERIC_MODEL, *registered_steric_models()):
+        problems.append(
+            f"{_STERIC_MODEL_PATH} {steric!r} is not a registered steric model; the models are "
+            f"{', '.join((NO_STERIC_MODEL, *registered_steric_models()))}"
         )
     solver = document.numerics.linear.solver
     if solver not in registered_solvers():

@@ -38,7 +38,7 @@ BOUNDARIES = CoupledBoundaries(
 
 def _model() -> CoupledModel:
     electrolyte = Electrolyte.from_parameter_file(
-        switches=replace(CorrectionSwitches.classical(), steric=True)
+        switches=replace(CorrectionSwitches.classical(), steric="borukhov")
     )
     return CoupledModel(
         electrolyte=electrolyte,

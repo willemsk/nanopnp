@@ -29,7 +29,7 @@ from nanopnp.mesh.ingest import MeshVocabularyError, deployed_mesh, ingest
 from nanopnp.mesh.primitives import CylindricalPoreGeometry
 from nanopnp.mesh.sizing import case_debye_length_nm
 from nanopnp.numerics.measures import AXISYMMETRIC
-from nanopnp.physics import models
+from nanopnp.physics import models, steric
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.models import ModelSolution, PhysicsModel
 from nanopnp.pipeline.case import loads_case, resolve
@@ -393,6 +393,26 @@ def test_ver56_the_stage_ten_key_moves_with_the_algorithm_revision(
     monkeypatch.setattr("nanopnp.io.resolved.SOLVE_ALGORITHM_REVISION", 2)
     assert content_hash(SOLUTION_SCHEMA, resolved.solve_provenance) != before
     assert resolved.provenance["algorithm_revision"] == 2
+
+
+def test_ver56_a_registered_steric_model_moves_the_solve_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(steric, "_REGISTRY", dict(steric._REGISTRY))
+    steric.register_steric_model("borukhov-copy", steric.steric_form("borukhov"))
+    text = _quickstart_variants()["epnp-ns"]
+    base = resolve(loads_case(text)).solve_provenance
+    copy = resolve(
+        loads_case(
+            text.replace("steric:       {model: borukhov", "steric:       {model: borukhov-copy")
+        )
+    ).solve_provenance
+    assert copy["electrolyte"]["steric_model"] == "borukhov-copy"
+    assert {**copy, "electrolyte": {**copy["electrolyte"], "steric_model": None}} == {
+        **base,
+        "electrolyte": {**base["electrolyte"], "steric_model": None},
+    }
+    assert content_hash(SOLUTION_SCHEMA, copy) != content_hash(SOLUTION_SCHEMA, base)
 
 
 # NUM-16

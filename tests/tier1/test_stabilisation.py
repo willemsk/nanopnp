@@ -15,6 +15,7 @@ from nanopnp.physics.coefficients import (
     mesh_unit_scales,
 )
 from nanopnp.physics.nernst_planck import ConcentrationVariables, species_flux
+from nanopnp.physics.steric import steric_form
 
 CONCENTRATION_M = 1.0
 REGISTERED = ("none", "reference", "supg")
@@ -72,7 +73,7 @@ def _state(
         variables=variables,
         potential=potential,
         velocity=velocity,
-        steric=steric,
+        steric=steric_form("borukhov") if steric else None,
     )
 
 

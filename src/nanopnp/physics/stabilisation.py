@@ -10,7 +10,7 @@ from nanopnp.core.typing import Expression, IntegralTerm, Mesh, Numeric, Option
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.flow import axisymmetric_divergence
-from nanopnp.physics.nernst_planck import ConcentrationVariables, steric_flux
+from nanopnp.physics.nernst_planck import ConcentrationVariables, StericForm
 
 __all__ = [
     "CROSSWIND_BONUS_ORDER",
@@ -108,7 +108,7 @@ class TransportState:
     variables: ConcentrationVariables
     potential: Expression
     velocity: Expression | None
-    steric: bool = True
+    steric: StericForm | None = None
 
     @property
     def diffusivity(self) -> Expression:
@@ -159,11 +159,9 @@ def advective_velocity(state: TransportState) -> Expression:
     coefficients = state.coefficients
     ion = coefficients.electrolyte.ion(state.species)
     velocity = float(ion.valence) * coefficients.mobility(state.species) * ngs.grad(state.potential)
-    if state.steric:
-        velocity = velocity + state.diffusivity * steric_flux(
-            state.variables,
-            packing_coefficients=coefficients.packing_coefficients,
-            volume_ratio=coefficients.steric_volume_ratio(state.species),
+    if state.steric is not None:
+        velocity = velocity + state.diffusivity * state.steric(
+            state.variables, coefficients, state.species
         )
     if state.velocity is not None:
         velocity = velocity - coefficients.peclet * state.velocity

@@ -127,7 +127,7 @@ def indicator_currents(
             variables=variables,
             potential=functions[POTENTIAL],
             velocity=velocity,
-            steric=model.steric,
+            steric=model.steric_form,
             dielectric_gradient=model.dielectric_gradient_forces,
         )
         integral = measures.integrate(

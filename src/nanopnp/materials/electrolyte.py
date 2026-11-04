@@ -42,6 +42,10 @@ class CorrectionChoice:
         )
 
 
+NO_STERIC_MODEL = "none"
+VALIDATED_STERIC_MODEL = "borukhov"
+
+
 @dataclass(frozen=True)
 class CorrectionSwitches:
     """Which correction applies to each property; all off until a model is named."""
@@ -51,7 +55,7 @@ class CorrectionSwitches:
     viscosity: CorrectionChoice = CorrectionChoice()
     permittivity: CorrectionChoice = CorrectionChoice()
     density: CorrectionChoice = CorrectionChoice()
-    steric: bool = False
+    steric: str = NO_STERIC_MODEL
 
     @classmethod
     def for_model(cls, model: str) -> CorrectionSwitches:
@@ -63,7 +67,7 @@ class CorrectionSwitches:
             viscosity=choice,
             permittivity=choice,
             density=choice,
-            steric=True,
+            steric=VALIDATED_STERIC_MODEL,
         )
 
     @classmethod
@@ -89,7 +93,7 @@ class CorrectionSwitches:
             viscosity=off if "viscosity" in disabled else self.viscosity,
             permittivity=off if "permittivity" in disabled else self.permittivity,
             density=off if "density" in disabled else self.density,
-            steric=False if "steric" in disabled else self.steric,
+            steric=NO_STERIC_MODEL if "steric" in disabled else self.steric,
         )
 
 
@@ -360,12 +364,20 @@ class Electrolyte:
     @property
     def provenance(self) -> Mapping[str, Any]:
         """Return what a result manifest must record about the materials."""
+        steric_model = self.switches.steric
+        # A deviation's name enters the solve key; the validated pair stays as the bool.
+        named = (
+            {"steric_model": steric_model}
+            if steric_model not in (NO_STERIC_MODEL, VALIDATED_STERIC_MODEL)
+            else {}
+        )
         return {
             "parameter_file": self.parameter_file,
             "temperature_K": self.temperature_K,
             "driver": self.driver,
             "species": [ion.name for ion in self.species],
-            "steric": self.switches.steric,
+            "steric": self.switches.steric != NO_STERIC_MODEL,
+            **named,
             "validity_M": list(self.validity_M),
             "corrections": {
                 key: dict(model.provenance) for key, model in sorted(self.corrections.items())

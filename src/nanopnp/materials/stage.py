@@ -15,6 +15,7 @@ from nanopnp.core.stages import (
     report,
 )
 from nanopnp.io.artefact import MaterialsArtefact
+from nanopnp.materials.electrolyte import NO_STERIC_MODEL
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
@@ -77,6 +78,6 @@ class MaterialsStage:
                 "corrections": {
                     key: model.name for key, model in sorted(electrolyte.corrections.items())
                 },
-                "steric": electrolyte.switches.steric,
+                "steric": electrolyte.switches.steric != NO_STERIC_MODEL,
             },
         )

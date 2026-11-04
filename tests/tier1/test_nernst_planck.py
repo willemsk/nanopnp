@@ -8,6 +8,7 @@ import pytest
 from nanopnp.materials.electrolyte import CorrectionChoice, CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import SlabGeometry
 from nanopnp.numerics.gates import PackingFractionGate
+from nanopnp.physics import steric
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
     NondimensionalCoefficients,
@@ -20,6 +21,7 @@ from nanopnp.physics.nernst_planck import (
     species_flux,
     steric_flux,
 )
+from nanopnp.physics.steric import steric_form
 
 CONCENTRATION_M = 1.0
 SAMPLE = (0.5, 0.25)
@@ -103,14 +105,14 @@ def test_phy05_steric_flux_drives_ions_out_of_crowded_regions(mesh: ngs.Mesh) ->
         coefficients=coefficients,
         variables=variables,
         potential=potential,
-        steric=True,
+        steric=steric_form("borukhov"),
     )
     without = species_flux(
         "Na+",
         coefficients=coefficients,
         variables=variables,
         potential=potential,
-        steric=False,
+        steric=None,
     )
     point = mesh(*SAMPLE)
     radial_with, radial_without = with_steric(point)[0], without(point)[0]
@@ -231,3 +233,45 @@ def test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off(
         "Na+", coefficients=coefficients, variables=variables, potential=potential
     )
     assert tuple(gradient(point)) == (0.0, 0.0)
+
+
+def test_phy05_a_registered_steric_form_enters_the_bracket_with_borukhovs_sign(
+    mesh: ngs.Mesh, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    variables, coefficients = _build(mesh, {"Na+": 1.0 + 0.5 * ngs.x, "Cl-": 1.0 + 0.4 * ngs.x})
+    potential = ngs.GridFunction(ngs.H1(mesh, order=2))
+    potential.Set(ngs.CF(0.0))
+    point = mesh(*SAMPLE)
+    borukhov = steric_form("borukhov")
+    direct = steric_flux(
+        variables,
+        packing_coefficients=coefficients.packing_coefficients,
+        volume_ratio=coefficients.steric_volume_ratio("Na+"),
+    )
+    assert borukhov(variables, coefficients, "Na+")(point) == pytest.approx(direct(point), rel=0)
+
+    def doubled(
+        variables: ConcentrationVariables, coefficients: NondimensionalCoefficients, species: str
+    ) -> ngs.CoefficientFunction:
+        return 2.0 * borukhov(variables, coefficients, species)
+
+    monkeypatch.setattr(steric, "_REGISTRY", dict(steric._REGISTRY))
+    steric.register_steric_model("doubled", doubled)
+
+    def flux(form: steric.StericForm | None) -> tuple[float, ...]:
+        expression = species_flux(
+            "Na+",
+            coefficients=coefficients,
+            variables=variables,
+            potential=potential,
+            steric=form,
+        )
+        return tuple(expression(point))
+
+    plain, single, double = flux(None), flux(borukhov), flux(steric_form("doubled"))
+    for added_twice, added_once in zip(
+        (d - s for d, s in zip(double, single, strict=True)),
+        (s - p for s, p in zip(single, plain, strict=True)),
+        strict=True,
+    ):
+        assert added_twice == pytest.approx(added_once, rel=1e-12)

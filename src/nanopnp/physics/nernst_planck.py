@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from typing import TypeAlias
 
 from nanopnp.core.typing import Expression, IntegralTerm, Option
 from nanopnp.numerics.measures import Measures
@@ -11,6 +12,8 @@ from nanopnp.physics.coefficients import NondimensionalCoefficients
 
 __all__ = [
     "ConcentrationVariables",
+    "StericForm",
+    "borukhov_flux",
     "excess_potential_gradient",
     "nernst_planck_residual",
     "packing_fraction",
@@ -90,6 +93,22 @@ def steric_flux(
     return volume_ratio * gradient_sum / (1.0 - occupied)
 
 
+StericForm: TypeAlias = Callable[
+    [ConcentrationVariables, NondimensionalCoefficients, str], Expression
+]
+
+
+def borukhov_flux(
+    variables: ConcentrationVariables, coefficients: NondimensionalCoefficients, species: str
+) -> Expression:
+    """Return the steric flux of one species in the form PHY-05 gives."""
+    return steric_flux(
+        variables,
+        packing_coefficients=coefficients.packing_coefficients,
+        volume_ratio=coefficients.steric_volume_ratio(species),
+    )
+
+
 def excess_potential_gradient(
     species: str,
     *,
@@ -135,7 +154,7 @@ def species_flux(
     variables: ConcentrationVariables,
     potential: Expression,
     velocity: Expression | None = None,
-    steric: bool = True,
+    steric: StericForm | None = None,
     dielectric_gradient: bool = False,
 ) -> Expression:
     """Return the dimensionless total flux ``J~_i`` of one species.
@@ -145,7 +164,7 @@ def species_flux(
     velocity
         The dimensionless velocity, or None for a model with no flow.
     steric
-        Whether ``beta~_i`` is included; False gives the classical PNP flux.
+        The form of ``beta~_i``, or None for the classical PNP flux.
     dielectric_gradient
         Whether the dielectric-decrement term is included.
     """
@@ -159,12 +178,8 @@ def species_flux(
     bracket = bracket + float(ion.valence) * coefficients.mobility(
         species
     ) * concentration * ngs.grad(potential)
-    if steric:
-        bracket = bracket + diffusivity * concentration * steric_flux(
-            variables,
-            packing_coefficients=coefficients.packing_coefficients,
-            volume_ratio=coefficients.steric_volume_ratio(species),
-        )
+    if steric is not None:
+        bracket = bracket + diffusivity * concentration * steric(variables, coefficients, species)
     if dielectric_gradient:
         bracket = bracket + diffusivity * concentration * excess_potential_gradient(
             species, coefficients=coefficients, variables=variables, potential=potential
