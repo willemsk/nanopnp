@@ -901,6 +901,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
     solve = walk.artefacts.get("solve")
     qoi = walk.artefacts.get("qoi")
     record = walk.document.models_record
+    written = walk.document.variables_record
 
     solver = dict(solve.summary) if solve is not None else None
     stabilisation = str(solver["stabilisation"]) if solver and "stabilisation" in solver else None
@@ -929,6 +930,7 @@ def _manifest(walk: _Walk, *, case_text: str, case_path: Path | None) -> Manifes
         case_hash=case.hash if case is not None else CaseArtefact(walk.document).hash,
         input_files=input_files(walk.resolved, case_path),
         overrides=None if record is None else record.overrides,
+        variables=None if written is None else written.manifest(walk.document),
         upstream=dict(walk.artefacts),
         mesh=_mesh_record(walk, mesh),
         structure=_record(structure, STRUCTURE_RECORD_KEYS),

@@ -15,7 +15,7 @@ from nanopnp.core.paths import available_corrections, names_a_path
 from nanopnp.io.artefact import CASE_SCHEMA
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.io.models import ModelRecord
+    from nanopnp.io.models import ModelRecord, VariableRecord
 
 SCHEMA: str = CASE_SCHEMA
 
@@ -627,6 +627,14 @@ class CaseDocument(_Strict):
     models: Models | None = Field(default=None, exclude=True)
     model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True, title="Case")
     _models: ModelRecord | None = PrivateAttr(default=None)
+    # Outside the dump, equality and every hash, as `models` is: a case is identified by the
+    # numbers its variables resolve to, and the record keeps what was written (FR-39).
+    _variables: VariableRecord | None = PrivateAttr(default=None)
+
+    @property
+    def variables_record(self) -> VariableRecord | None:
+        """The variables and expressions this document was resolved from; ``None`` for none."""
+        return self._variables
 
     @property
     def models_record(self) -> ModelRecord | None:
@@ -776,11 +784,12 @@ def read_case_text(
 
 
 def _validate(raw: object, source: str, model: type[CaseDocument] = CaseDocument) -> CaseDocument:
-    if isinstance(raw, Mapping) and "models" in raw:
-        raise CaseValidationError(
-            f"{source}: names models:; read it with nanopnp.case.Case.load or "
-            "nanopnp.pipeline.case.load_case, which resolve them"
-        )
+    for key in ("models", "variables"):
+        if isinstance(raw, Mapping) and key in raw:
+            raise CaseValidationError(
+                f"{source}: names {key}:; read it with nanopnp.case.Case.load or "
+                "nanopnp.pipeline.case.load_case, which resolve them"
+            )
     return validate_mapping(raw, source, model)
 
 
@@ -815,8 +824,15 @@ def dump_case(document: CaseDocument, path: str | Path) -> Path:
 
 
 def dumps_case(document: CaseDocument) -> str:
-    """Return a validated case document as YAML text, under the aliases a case file writes."""
-    return str(yaml.safe_dump(document.model_dump(by_alias=True, mode="json"), sort_keys=False))
+    """Return a validated case document as YAML text, under the aliases a case file writes.
+
+    A case that defines variables or expressions writes them as written, beside the numbers.
+    """
+    payload = document.model_dump(by_alias=True, mode="json")
+    record = document.variables_record
+    if record is not None:
+        payload = record.written(payload)
+    return str(yaml.safe_dump(payload, sort_keys=False))
 
 
 def _frozen(value: object) -> Hashable:

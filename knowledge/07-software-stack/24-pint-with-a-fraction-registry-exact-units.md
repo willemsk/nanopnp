@@ -30,8 +30,10 @@ The case's variables and units (FR-39; §8.2.31 AG3) go through one
 
 **Version.** The project supports Python 3.11 to 3.14 (QR-09; §8.2.2 B4). pint 0.26 requires 3.12, so the
 dependency is `pint>=0.25.3,<0.26`. 0.25.3 is BSD-3-Clause, pure Python, and needs `flexcache`, `flexparser`,
-`platformdirs` and `typing-extensions`; it needs no NumPy. Import takes about 0.26 s cumulative and a registry
-about 0.2 s, built at first use.
+`platformdirs` and `typing-extensions`; it needs no NumPy, but imports it when it is installed. Import takes about
+0.26 s cumulative and a registry about 0.2 s, built at first use. So `io/variables.py` imports pint inside the
+function that builds the registry (VER-72 lists `pint` with the other costly imports), and a case without
+variables never loads either.
 
 **Why `Fraction`.** A float registry gives 20 Å → 1.9999999999999998 nm, a different key from the decimal
 `2.0`. With `Fraction` magnitudes entered as `Fraction(repr(value))`, each of these `==` the decimal:

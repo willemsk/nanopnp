@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import builtins
 import copy
+from pathlib import Path
 from typing import Any
 
 import pytest
 
+from nanopnp.api.case import Case
+from nanopnp.api.session import Session
 from nanopnp.io import variables
-from nanopnp.io.case import CaseValidationError, FieldValue
+from nanopnp.io.artefact import CaseArtefact
+from nanopnp.io.case import CaseValidationError, FieldValue, dumps_case
 from nanopnp.io.variables import field_unit, numeric_paths, resolve
 
 SOURCE = "<test>"
@@ -155,3 +159,61 @@ def test_fr39_a_case_without_variables_is_returned_as_given() -> None:
     raw: dict[str, Any] = {"geometry": {"pore": {"radius_nm": 2.0}}}
     same, found = resolve(raw, SOURCE)
     assert same is raw and found is None
+
+
+QUICKSTART = (
+    Path(__file__).resolve().parents[2] / "examples" / "01-quickstart" / "quickstart.case.yaml"
+)
+
+
+def _with_variable(text: str) -> str:
+    """Write the quick-start's pore radius as `2*a`, with `a` = 1 nm."""
+    return text.replace("radius_nm: 2}", "radius_nm: 2*a}").replace(
+        "name: quickstart\n", "name: quickstart\n\nvariables:\n  a: {value: 1, unit: nm}\n"
+    )
+
+
+def test_fr39_variables_key_by_the_values_they_resolve_to(tmp_path: Path) -> None:
+    """`2*a` with a = 1 nm must share every cache key with the case that says `2`."""
+    text = QUICKSTART.read_text(encoding="utf-8")
+    plain, written = Case.loads(text), Case.loads(_with_variable(text))
+    assert written == plain
+    assert CaseArtefact(written).hash == CaseArtefact(plain).hash
+    first = Session(tmp_path / "plain", write=False).run(plain, upto="mesh")
+    second = Session(tmp_path / "written", write=False).run(written, upto="mesh")
+    assert {name: a.hash for name, a in second.artefacts.items()} == {
+        name: a.hash for name, a in first.artefacts.items()
+    }
+    assert set(second.artefacts) == {"case", "region", "mesh"}
+    assert "variables:" in second.manifest.case_text and "2*a" in second.manifest.case_text
+    recorded = second.manifest.inputs["variables"]
+    assert recorded["fields"] == {"geometry.pore.radius_nm": {"expression": "2*a", "value": 2.0}}
+    assert recorded["definitions"]["a"]["value"] == 1.0
+
+
+def test_ver62_a_case_without_variables_writes_what_it_did(tmp_path: Path) -> None:
+    """A case with no variables must not gain a `variables` key in its text or its manifest."""
+    case = Case.loads(QUICKSTART.read_text(encoding="utf-8"))
+    assert case.variables_record is None
+    assert "variables" not in dumps_case(case)
+    run = Session(tmp_path / "store", write=False).run(case, upto="mesh")
+    assert "variables" not in run.manifest.inputs
+    assert "variables" not in run.manifest.case_text
+
+
+def test_fr39_an_edit_of_a_variable_moves_the_fields_that_use_it() -> None:
+    """A variable edited must re-resolve its fields; a field set whole must drop its formula."""
+    case = Case.loads(_with_variable(QUICKSTART.read_text(encoding="utf-8")))
+    moved = case.with_(**{"variables.a": 1.25})
+    assert moved.geometry is not None and moved.geometry.pore is not None
+    assert moved.geometry.pore.radius_nm == 2.5
+    converted = case.with_(**{"variables.a": {"value": 5, "unit": "angstrom"}})
+    assert converted.geometry is not None and converted.geometry.pore is not None
+    assert converted.geometry.pore.radius_nm == 1.0
+    kept = case.with_(bias_V=0.1)
+    assert kept.expressions == {"geometry.pore.radius_nm": "2*a"}
+    dropped = case.with_(**{"geometry.pore.radius_nm": 1.5})
+    assert dropped.expressions == {}
+    assert "2*a" not in dropped.dumps()
+    again = Case.loads(moved.dumps())
+    assert again == moved and again.expressions == moved.expressions
