@@ -277,7 +277,8 @@ class VariableRecord:
         changed = {p: v for p, v in assignments.items() if _is_variable(p)}
         definitions = dict(self.definitions)
         for path, value in changed.items():
-            definitions[_variable_name(path, self.definitions)] = _redefined(path, value, self)
+            name = _variable_name(path, self.definitions)
+            definitions[name] = _redefined(path, value, self)
         kept = {
             path: text
             for path, text in self.expressions.items()
