@@ -38,6 +38,7 @@ dependencies = [
     "meshio>=5.3",
     "h5py>=3.10",
     "sympy>=1.14.0",
+    "pint>=0.25.3,<0.26",
 ]
 
 [project.optional-dependencies]

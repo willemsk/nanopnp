@@ -60,8 +60,9 @@ IF-03's and FR-39's Appendix A rows; REV-139 `fixed`.
   `numerics.mesh.wall_h_nm` is `float | Literal["auto"]`.
 
 **D2.**
-- pint 0.26.2: BSD-3-Clause; needs `flexcache`, `flexparser`, `platformdirs`, `typing-extensions`, all pure Python;
-  no NumPy. Import 0.11 s; a registry 0.18 s, built at first use.
+- pint 0.25.3: BSD-3-Clause; needs `flexcache`, `flexparser`, `platformdirs`, `typing-extensions`, all pure Python;
+  no NumPy. Import 0.26 s; a registry 0.24 s, built at first use. 0.26 requires Python 3.12, and the floor is 3.11
+  (QR-09), so the dependency is `pint>=0.25.3,<0.26`.
 - Measured with the fraction registry: 20 Å → 2.0 nm, 3.5 Å → 0.35, 0.3 Å → 0.03, 50 mV → 0.05 V, 100 mM → 0.1 M,
   25 degC → 298.15 K, each `==` the decimal. Float pint gives 20 Å → 1.9999999999999998.
 - With the fraction registry, `str()` or `format()` of a unit or dimensionality with a power raises `ValueError`, and
@@ -162,7 +163,7 @@ report; 2 region and 2 mesh builds come before the solves".
 
 ### Work items
 
-- [ ] 1. Vet pint (`supermatt:dependency-vetting`); `uv add "pint>=0.26.2"`; a `knowledge/07-software-stack/` concept
+- [x] 1. Vet pint (`supermatt:dependency-vetting`); `uv add "pint>=0.25.3,<0.26"`; a `knowledge/07-software-stack/` concept
   with D2's measured facts, its index line, `knowledge/log.md` (D2). Done when the review says so. **Executor:** main.
 - [ ] 2. `src/nanopnp/io/variables.py` (D1, D2). Done when rows 1 to 3 and 9 pass. **Executor:** main.
 - [ ] 3. `io/models.py` (`read_mapping`, `VariableRecord`, the model-file refusal), `io/case.py` (`_variables`,
