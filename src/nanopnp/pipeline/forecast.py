@@ -1,4 +1,4 @@
-"""The keyed walk: every stage's identity for a case, without running a stage (FR-39)."""
+"""The keyed walk: every stage's identity for a case, without running a stage."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ class Identity(NamedTuple):
 
 
 class _NotBuiltPayload(Mapping[str, Path]):
-    """The payload of an artefact no stage has built: any read of it is a forecast's question."""
+    # The payload of an artefact no stage has built: any read of it is a forecast's question.
 
     def __init__(self, stage: str) -> None:
         self._stage = stage

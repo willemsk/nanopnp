@@ -22,7 +22,7 @@ SOURCE = "<test>"
 
 
 def _case(variables_block: dict[str, Any], **leaves: FieldValue) -> dict[str, Any]:
-    """Build a bare mapping with `variables:` and the given leaves; resolve reads no schema."""
+    # Build a bare mapping with `variables:` and the given leaves; resolve reads no schema.
     case: dict[str, Any] = {"variables": variables_block}
     for dotted, value in leaves.items():
         cursor = case
@@ -40,7 +40,7 @@ def _radius(expression: str, **definitions: dict[str, Any]) -> FieldValue:
 
 
 def test_fr39_an_expression_off_the_whitelist_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A formula that could run code, or read an attribute, is refused rather than evaluated."""
+    # A formula that could run code, or read an attribute, is refused rather than evaluated.
     a = {"a": {"value": 2, "unit": "nm"}}
     forbidden = [
         "a.real",
@@ -86,7 +86,7 @@ def test_fr39_an_expression_off_the_whitelist_is_refused(monkeypatch: pytest.Mon
 
 
 def test_fr39_a_variable_of_another_dimension_is_refused_at_the_field() -> None:
-    """A length where a voltage belongs is a wrong run, so the field refuses it by name."""
+    # A length where a voltage belongs is a wrong run, so the field refuses it by name.
     length = {"a": {"value": 2, "unit": "nm"}}
     voltage = {"V": {"value": 50, "unit": "mV"}}
 
@@ -116,7 +116,7 @@ def test_fr39_a_variable_of_another_dimension_is_refused_at_the_field() -> None:
 
 
 def test_fr39_a_conversion_of_the_same_dimension_is_exact() -> None:
-    """20 Å must be exactly 2.0 nm: a last-digit difference would key a different cache entry."""
+    # 20 Å must be exactly 2.0 nm: a last-digit difference would key a different cache entry.
     cases: list[tuple[str, dict[str, Any], str, float]] = [
         ("geometry__pore__radius_nm", {"value": 20, "unit": "angstrom"}, "a", 2.0),
         ("geometry__pore__radius_nm", {"value": 3.5, "unit": "angstrom"}, "a", 0.35),
@@ -137,7 +137,7 @@ def test_fr39_a_conversion_of_the_same_dimension_is_exact() -> None:
 
 
 def test_fr39_every_numeric_field_has_a_unit_or_is_dimensionless() -> None:
-    """A field added with no unit suffix must fail here, not accept a number of any dimension."""
+    # A field added with no unit suffix must fail here, not accept a number of any dimension.
     paths = numeric_paths()
     assert "geometry.pore.radius_nm" in paths and "physics.solid_permittivities" in paths
     assert "numerics.mesh.wall_h_nm" in paths
@@ -150,14 +150,14 @@ def test_fr39_every_numeric_field_has_a_unit_or_is_dimensionless() -> None:
 
 
 def test_fr39_a_literal_at_a_numeric_field_stays_a_literal() -> None:
-    """`wall_h_nm: auto` is the schema's word; reading it as a variable would refuse every case."""
+    # `wall_h_nm: auto` is the schema's word; reading it as a variable would refuse every case.
     case = _case({"a": {"value": 1, "unit": "nm"}}, numerics__mesh__wall_h_nm="auto")
     resolved, _ = resolve(copy.deepcopy(case), SOURCE)
     assert resolved["numerics"]["mesh"]["wall_h_nm"] == "auto"
 
 
 def test_fr39_a_case_without_variables_is_returned_as_given() -> None:
-    """The common case must not copy, change or record anything."""
+    # The common case must not copy, change or record anything.
     raw: dict[str, Any] = {"geometry": {"pore": {"radius_nm": 2.0}}}
     same, found = resolve(raw, SOURCE)
     assert same is raw and found is None
@@ -169,14 +169,14 @@ QUICKSTART = (
 
 
 def _with_variable(text: str) -> str:
-    """Write the quick-start's pore radius as `2*a`, with `a` = 1 nm."""
+    # Write the quick-start's pore radius as `2*a`, with `a` = 1 nm.
     return text.replace("radius_nm: 2}", "radius_nm: 2*a}").replace(
         "name: quickstart\n", "name: quickstart\n\nvariables:\n  a: {value: 1, unit: nm}\n"
     )
 
 
 def test_fr39_variables_key_by_the_values_they_resolve_to(tmp_path: Path) -> None:
-    """`2*a` with a = 1 nm must share every cache key with the case that says `2`."""
+    # `2*a` with a = 1 nm must share every cache key with the case that says `2`.
     text = QUICKSTART.read_text(encoding="utf-8")
     plain, written = Case.loads(text), Case.loads(_with_variable(text))
     assert written == plain
@@ -194,7 +194,7 @@ def test_fr39_variables_key_by_the_values_they_resolve_to(tmp_path: Path) -> Non
 
 
 def test_ver62_a_case_without_variables_writes_what_it_did(tmp_path: Path) -> None:
-    """A case with no variables must not gain a `variables` key in its text or its manifest."""
+    # A case with no variables must not gain a `variables` key in its text or its manifest.
     case = Case.loads(QUICKSTART.read_text(encoding="utf-8"))
     assert case.variables_record is None
     assert "variables" not in dumps_case(case)
@@ -204,7 +204,7 @@ def test_ver62_a_case_without_variables_writes_what_it_did(tmp_path: Path) -> No
 
 
 def test_fr39_an_edit_of_a_variable_moves_the_fields_that_use_it() -> None:
-    """A variable edited must re-resolve its fields; a field set whole must drop its formula."""
+    # A variable edited must re-resolve its fields; a field set whole must drop its formula.
     case = Case.loads(_with_variable(QUICKSTART.read_text(encoding="utf-8")))
     moved = case.with_(**{"variables.a": 1.25})
     assert moved.geometry is not None and moved.geometry.pore is not None
@@ -219,10 +219,21 @@ def test_fr39_an_edit_of_a_variable_moves_the_fields_that_use_it() -> None:
     assert "2*a" not in dropped.dumps()
     again = Case.loads(moved.dumps())
     assert again == moved and again.expressions == moved.expressions
+    # A field of a list entry is written back too, or an edit of its variable would not reach it.
+    listed = Case.loads(
+        QUICKSTART.read_text(encoding="utf-8")
+        .replace("{name: Na+, z: +1}, {name: Cl-, z: -1}", "{name: Na+, z: q}, {name: Cl-, z: -q}")
+        .replace(
+            "name: quickstart\n",
+            "name: quickstart\n\nvariables:\n  q: {value: 1, unit: dimensionless}\n",
+        )
+    )
+    assert Case.loads(listed.dumps()).expressions == listed.expressions
+    assert [ion.z for ion in listed.with_(**{"variables.q": 2}).electrolyte.species] == [2, -2]
 
 
 def test_fr39_a_sweep_over_a_variable_moves_every_field_that_uses_it(tmp_path: Path) -> None:
-    """An axis on `variables.a` must move each field written with `a`, and sever the warm start."""
+    # An axis on `variables.a` must move each field written with `a`, and sever the warm start.
     text = (
         QUICKSTART.read_text(encoding="utf-8")
         .replace("radius_nm: 2}", "radius_nm: a}")

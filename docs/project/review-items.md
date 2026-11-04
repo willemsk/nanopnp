@@ -2618,3 +2618,30 @@ on `variables.v`) assigns no `bias_V`, so the plan finds no matched pair and ref
 `rectification`. Found by WP5.07 (FR-39).
 
 **Accepted**: WP5.11, which builds the Sweep tool, pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.
+
+## REV-198: A sweep plan is not tied to the variables as written
+
+The plan reads barriers, warm-start parents and variable-axis reach from the variables as written, but `SweepPlan.base_case()` accepts a base case whose resolved numbers hash the same. A formula changed to a literal of equal value passes the check, and the plan's barriers are then stale. Found by the WP5.07 review (FR-39). The remedy is a plan identity that covers the variable record.
+
+**Open**: the author rules.
+
+
+## REV-199: The sweep forecast resolves every point again
+
+`forecast()` re-reads the base case, substitutes and resolves each point, which `build_plan` already did; `run_plan` repeats it through `_announce`. The cost grows with the points and with a stored mesh ingested at each point. Found by the WP5.07 review. The remedy is for the plan to carry its resolved members.
+
+**Open**: the author rules.
+
+
+## REV-200: `VariableRecord` repeats `io.variables.Resolution`
+
+The two dataclasses hold the same four fields, and `VariableRecord.of` only copies one into the other. They must stay in step by hand. Found by the WP5.07 review. The remedy is one type, which spans `io/variables.py`, `io/models.py` and their callers.
+
+**Open**: the author rules.
+
+
+## REV-201: `sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables
+
+When the forecast fails, the text output gives the reason and the JSON gives `forecast: null` alone. `case_json_schema` lists neither `variables:` nor a string at a numeric field, which the workbench forms will need. Found by the WP5.07 review. Both change a public shape, so the author rules.
+
+**Open**: the author rules.

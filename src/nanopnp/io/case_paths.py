@@ -471,6 +471,10 @@ def _revalidated(document: D, payload: dict[str, FieldValue], label: str) -> D:
         result = type(document).model_validate(payload)
     except ValidationError as error:
         raise CaseValidationError(render_problems(label, error), error) from None
+    # The variables ride on it too, or a rebuild would write the case without them.
+    variables = document.variables_record
+    if variables is not None:
+        result._variables = variables.following(document, result)
     return result if record is None else record.attached(result)
 
 

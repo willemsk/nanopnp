@@ -223,14 +223,30 @@ class VariableRecord:
         """Return ``mapping`` with each expression at its path and ``variables:`` after the name."""
         out: dict[str, Any] = copy.deepcopy(dict(mapping))
         for path, text in self.expressions.items():
-            parent, last = _cursor(out, path)
-            if parent is not None and last in parent:
+            *parents, last = path.split(".")
+            parent: Any = out
+            for part in parents:
+                parent = _child(parent, part)
+            # A list entry is a block (`electrolyte.species.0.z`), so the leaf's parent is a dict.
+            if isinstance(parent, dict) and last in parent:
                 parent[last] = text
         if not self.definitions:
             return out
         head: dict[str, Any] = {key: out.pop(key) for key in ("schema", "name") if key in out}
         block = {name: variable.written() for name, variable in self.definitions.items()}
         return {**head, "variables": block, **out}
+
+    def following(self, document: CaseDocument, edited: CaseDocument) -> VariableRecord:
+        """Return this record for ``edited``, keeping the expressions whose field it left alone."""
+        kept: dict[str, str] = {}
+        for path, text in self.expressions.items():
+            try:
+                unchanged = value_at(edited, path) == value_at(document, path)
+            except UnknownCasePathError:
+                unchanged = False
+            if unchanged:
+                kept[path] = text
+        return VariableRecord(self.definitions, self.values, kept, self.uses)
 
     def reaches(self, name: str) -> tuple[str, ...]:
         """Return the field paths a variable reaches, through other variables too."""
@@ -301,6 +317,14 @@ class VariableRecord:
             source=f"<{document.name} with {listed} substituted>",
             model=type(document),
         )
+
+
+def _child(node: object, part: str) -> object:
+    if isinstance(node, dict):
+        return node.get(part)
+    if isinstance(node, list) and part.isdigit() and int(part) < len(node):
+        return node[int(part)]
+    return None
 
 
 def _expanded(assignments: Mapping[str, FieldValue]) -> dict[str, FieldValue]:
@@ -384,7 +408,7 @@ def read_mapping(
     """Resolve a parsed case: its variables first, then the model files it names beside ``base``.
 
     The case's own mapping resolves to numbers before any model merges, so every stage and every
-    hash sees the numbers and the record keeps what was written (FR-39).
+    hash sees the numbers and the record keeps what was written.
     """
     resolved, resolution = resolve(raw, source)
     if (
@@ -676,10 +700,15 @@ def _is_default(path: str, value: FieldValue) -> bool:
 
 
 def study_layer(document: CaseDocument, record: ModelRecord) -> dict[str, Any]:
-    """Return the study as a mapping: the keys no model owns, its overrides and the model paths."""
+    """Return the study as a mapping: its own keys, expressions, overrides and model paths."""
     layer: dict[str, Any] = {}
+    variables = document.variables_record
+    written = tuple(variables.expressions) if variables is not None else ()
     for path, value in _flat(_dump(document)):
-        if owner_of(path) not in record.kinds and value is not None:
+        # A field the study writes as an expression is the study's own, even where its value
+        # equals the model's, or a variable edited later would no longer reach it.
+        pinned = any(field == path or field.startswith(f"{path}.") for field in written)
+        if (owner_of(path) not in record.kinds or pinned) and value is not None:
             _put(layer, path, value)
     for path, (_, study) in record.overrides.items():
         _put(layer, path, study)

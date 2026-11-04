@@ -486,6 +486,20 @@ def _warnings(
             f"this axis is therefore its own warm-start component, rooted and cold, so "
             f"{len(axis.points())} members of this sweep climb the full NUM-18 ladder"
         )
+    record = base.variables_record
+    for axis in document.axes:
+        unread = [
+            path
+            for path in axis.paths()
+            if path.startswith("variables.")
+            and record is not None
+            and not record.reaches(path.split(".")[1])
+        ]
+        if unread:
+            found.append(
+                f"axis {axis.name!r} varies {', '.join(repr(path) for path in unread)}, which no "
+                f"field of the base case reads, so its {len(axis.points())} members are one case"
+            )
     return tuple(found)
 
 
