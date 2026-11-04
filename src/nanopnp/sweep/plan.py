@@ -160,17 +160,21 @@ class SweepPlan:
     wall_distance: Mapping[str, Canonicalisable] = field(default_factory=dict)
     files: Mapping[str, str] = field(default_factory=dict)
     workers: int | None = None
+    variables: Mapping[str, Canonicalisable] = field(default_factory=dict)
 
     @cached_property
     def hash(self) -> str:
         """Return the plan's content hash: what it enumerates, not what it produced."""
+        payload: dict[str, Canonicalisable] = {
+            "name": self.name,
+            "document": dict(self.document),
+            "points": [point.summary() for point in self.points],
+        }
+        if self.variables:
+            payload["variables"] = dict(self.variables)
         return content_hash(
             SWEEP_SCHEMA,
-            {
-                "name": self.name,
-                "document": dict(self.document),
-                "points": [point.summary() for point in self.points],
-            },
+            payload,
             {"base_case": self.base_hash, **{f"file {path}": d for path, d in self.files.items()}},
         )
 
@@ -213,8 +217,23 @@ class SweepPlan:
                 "Every member would solve a case this plan never enumerated and report it under "
                 "the plan's own point identities; re-plan the sweep"
             )
+        written = _variables_as_written(base)
+        if written != dict(self.variables):
+            raise SweepPlanError(
+                f"this plan was built against other variables than {self.base_path} writes now:\n"
+                f"  planned against: {_shown(self.variables)}\n"
+                f"  on disk now:     {_shown(written)}\n"
+                "Its barriers, warm-start parents and variable axes were read from the variables "
+                "as written, and the resolved numbers alone do not show that they moved; "
+                "re-plan the sweep"
+            )
         self._check_files()
         return base
+
+    @cached_property
+    def resolved_members(self) -> tuple[ResolvedCase, ...]:
+        """Return every member resolved once, in plan order, for the forecast and the run."""
+        return _resolve_every_point(self.base_case(), self, beside=self.base_path.parent)
 
     def _check_files(self) -> None:
         for path, planned in self.files.items():
@@ -261,6 +280,7 @@ class SweepPlan:
             "wall_distance": dict(self.wall_distance),
             "files": dict(self.files),
             "workers": self.workers,
+            "variables": dict(self.variables),
             "waves": [list(span) for span in self.waves()],
             "points": [point.summary() for point in self.points],
         }
@@ -283,6 +303,16 @@ def _planned_files(resolved: Sequence[ResolvedCase]) -> dict[str, str]:
             if str(path) not in files and path.is_file():
                 files[str(path)] = _digest_of_file(path)
     return dict(sorted(files.items()))
+
+
+def _variables_as_written(base: CaseDocument) -> dict[str, Canonicalisable]:
+    record = base.variables_record
+    if record is None:
+        return {}
+    return {
+        "definitions": {name: variable.written() for name, variable in record.definitions.items()},
+        "expressions": dict(record.expressions),
+    }
 
 
 def _member(base: CaseDocument, point: Point) -> CaseDocument:
@@ -602,6 +632,7 @@ def build_plan(
         pairs=_pairs(points),
         warnings=_warnings(document, barriers, base),
         workers=document.workers,
+        variables=_variables_as_written(base),
     )
     # Before the resolve rather than after it: an asymmetric bias axis makes the
     # plan impossible whatever its points resolve to, and the point of checking
@@ -619,6 +650,8 @@ def build_plan(
         plan = _gate_meshes(plan, resolved)
     for warning in plan.warnings:
         logger.warning("%s", warning)
+    # The members are resolved already; the forecast and the run read them from here.
+    plan.__dict__["resolved_members"] = resolved
     return plan
 
 
@@ -747,6 +780,7 @@ def read_plan(path: Path) -> SweepPlan:
         wall_distance=dict(raw["wall_distance"]),
         files={str(name): str(digest) for name, digest in recorded.items()},
         workers=None if raw.get("workers") is None else int(raw["workers"]),
+        variables=dict(raw.get("variables") or {}),
     )
     # The file carries its own identities; a hand edit or a merge of two plans would
     # otherwise run other operating points under the recorded point ids (QR-12).

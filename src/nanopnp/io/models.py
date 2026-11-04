@@ -6,7 +6,7 @@ import copy
 import math
 import re
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from functools import cache
 from pathlib import Path
 from typing import Any, Literal, TypeVar
@@ -189,35 +189,17 @@ class ModelRecord:
 
 
 @dataclass(frozen=True, eq=False)
-class VariableRecord:
+class VariableRecord(Resolution):
     """What a case wrote as variables and expressions, kept beside the numbers they resolved to.
 
-    Parameters
-    ----------
-    definitions
-        Each variable as written.
-    values
-        Each variable's value as a float in its declared unit.
-    expressions
-        Dotted field path to the expression written there.
-    uses
-        Variable name or field path to the variable names its expression reads directly.
+    The fields are those of ``Resolution``, which it extends with the operations that need the
+    case's document types.
     """
-
-    definitions: Mapping[str, Variable]
-    values: Mapping[str, float]
-    expressions: Mapping[str, str]
-    uses: Mapping[str, frozenset[str]]
 
     @classmethod
     def of(cls, resolution: Resolution) -> VariableRecord:
         """Keep a resolution as a record."""
-        return cls(
-            definitions=dict(resolution.definitions),
-            values=dict(resolution.values),
-            expressions=dict(resolution.expressions),
-            uses=dict(resolution.uses),
-        )
+        return cls(**{field.name: getattr(resolution, field.name) for field in fields(Resolution)})
 
     def written(self, mapping: Mapping[str, Any]) -> dict[str, Any]:
         """Return ``mapping`` with each expression at its path and ``variables:`` after the name."""

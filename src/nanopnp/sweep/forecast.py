@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nanopnp.core.stages import describe, walk_order
-from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.forecast import Identity, keyed_walk
 
 if TYPE_CHECKING:
@@ -75,12 +74,11 @@ def forecast(
 
     No stage runs and the store gains nothing.
     """
-    base = plan.base_case()
     planned: set[str] = set()
-    walked: list[dict[str, Identity]] = []
-    for index in range(len(plan.points)):
-        resolved = resolve(plan.case(index, base=base), base=plan.base_path.parent)
-        walked.append(keyed_walk(resolved, store=store, stages=stages, planned=planned))
+    walked: list[dict[str, Identity]] = [
+        keyed_walk(resolved, store=store, stages=stages, planned=planned)
+        for resolved in plan.resolved_members
+    ]
     order = _order(walked, stages)
     builds = {
         name: sum(1 for point in walked if name in point and point[name].built) for name in order

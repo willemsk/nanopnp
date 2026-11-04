@@ -216,11 +216,13 @@ stages each swept value rebuilds. The [plan](docs/plans/wp5.07-variables-and-the
   - **The forecast**: `sweep.forecast.forecast(plan, store=...)`, `Sweep.forecast()` and `Forecast`, built on
     `pipeline.forecast.keyed_walk`, which keys each stage without running one. `core.stages.NotBuilt` and the optional
     `Forecastable` protocol (`forecast_parameters`) let a stage be identified before its upstream exists; the mesh
-    provides it. `run_plan` logs the warnings and `nanopnp sweep plan` prints a `forecast` line, also in `--json`.
-    `Session.own_stages` gives a Session's registered stages.
+    provides it. `run_plan` logs the warnings and `nanopnp sweep plan` prints a `forecast` line, also in `--json`, with
+    `forecast_unavailable` giving the reason where it cannot be made. `Session.own_stages` gives a Session's registered
+    stages. A plan records the variables as written and refuses a base case that moved them, and resolves each member once.
+  - **The case JSON Schema** declares `variables:` and admits a string at each numeric field (VER-76).
 - **Changed**: the region and solve stages key without reading an upstream payload they discard. No key moves
   (VER-62 unchanged at zero drift).
-- **Fixed**: REV-139. **Amended**: §5.3.1's NOTE on `variables:`, §5.3.3's inputs group, §5.3.4's axis over a variable
+- **Fixed**: REV-139, REV-198 to REV-201. **Amended**: §5.3.1's NOTE on `variables:`, §5.3.3's inputs group, §5.3.4's axis over a variable
   and the forecast, §5.5's NOTE on the rebuild forecast, VER-72's list of deferred libraries, and the Appendix A rows of
   FR-39 and IF-03.
 - **Open items**: REV-197, rectification does not pair a bias set through a variable (WP5.11).

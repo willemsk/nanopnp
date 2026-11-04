@@ -15,6 +15,7 @@ from nanopnp.io.case_paths import (
     case_json_schema,
     schema_leaves,
 )
+from nanopnp.io.variables import Variable
 
 
 def _field_paths() -> set[str]:
@@ -85,3 +86,19 @@ def test_ver76_every_literal_leaf_carries_its_choices() -> None:
         assert found == set(options), field.path
         checked += 1
     assert checked > 0
+
+
+def test_fr39_the_schema_lets_a_numeric_field_take_an_expression_and_declares_variables() -> None:
+    # A form built from the schema would reject a case that writes a formula or variables.
+    schema = case_json_schema()
+    leaves = schema_leaves(schema)
+    widened = {
+        path
+        for path, node in leaves.items()
+        if any(branch.get("type") == "string" for branch in node.get("anyOf", ()))
+        and any(branch.get("type") in ("number", "integer") for branch in node.get("anyOf", ()))
+    }
+    assert {"geometry.pore.radius_nm", "electrolyte.concentration_M"} <= widened
+    assert set(schema["properties"]["variables"]["additionalProperties"]["properties"]) == set(
+        Variable.model_json_schema()["properties"]
+    )
