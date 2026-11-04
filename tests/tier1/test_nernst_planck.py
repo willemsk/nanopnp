@@ -141,7 +141,13 @@ def test_phy04_flux_vanishes_on_a_uniform_state(mesh: ngs.Mesh) -> None:
     variables, coefficients = _build(mesh, {"Na+": ngs.CF(1.0), "Cl-": ngs.CF(1.0)})
     potential = ngs.GridFunction(ngs.H1(mesh, order=2))
     potential.Set(ngs.CF(0.7))
-    flux = species_flux("Na+", coefficients=coefficients, variables=variables, potential=potential)
+    flux = species_flux(
+        "Na+",
+        coefficients=coefficients,
+        variables=variables,
+        potential=potential,
+        steric=steric_form("borukhov"),
+    )
     point = mesh(*SAMPLE)
     assert flux(point)[0] == pytest.approx(0.0, abs=1e-12)
     assert flux(point)[1] == pytest.approx(0.0, abs=1e-12)
@@ -189,13 +195,18 @@ def test_num02_branches_agree_where_both_are_exact() -> None:
     point = mesh(*SAMPLE)
     for species in ("Na+", "Cl-"):
         expected = species_flux(
-            species, coefficients=coefficients, variables=primitive, potential=potential
+            species,
+            coefficients=coefficients,
+            variables=primitive,
+            potential=potential,
+            steric=steric_form("borukhov"),
         )(point)
         computed = species_flux(
             species,
             coefficients=log_coefficients,
             variables=logarithmic,
             potential=potential,
+            steric=steric_form("borukhov"),
         )(point)
         assert computed[0] == pytest.approx(expected[0], rel=1e-10)
         assert computed[1] == pytest.approx(expected[1], rel=1e-10)
@@ -235,7 +246,7 @@ def test_phy23_the_permittivity_sensitivity_is_zero_when_the_correction_is_off(
     assert tuple(gradient(point)) == (0.0, 0.0)
 
 
-def test_phy05_a_registered_steric_form_enters_the_bracket_with_borukhovs_sign(
+def test_phy05_a_registered_steric_form_is_added_once_to_the_bracket(
     mesh: ngs.Mesh, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     variables, coefficients = _build(mesh, {"Na+": 1.0 + 0.5 * ngs.x, "Cl-": 1.0 + 0.4 * ngs.x})

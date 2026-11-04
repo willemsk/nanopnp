@@ -57,6 +57,13 @@ class CorrectionSwitches:
     density: CorrectionChoice = CorrectionChoice()
     steric: str = NO_STERIC_MODEL
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.steric, str):
+            # A legacy steric=False would read as a model named differently from "none", i.e. on.
+            raise TypeError(
+                f"steric names a steric model or {NO_STERIC_MODEL!r}, not {self.steric!r}"
+            )
+
     @classmethod
     def for_model(cls, model: str) -> CorrectionSwitches:
         """Return every correction enabled against one named model."""

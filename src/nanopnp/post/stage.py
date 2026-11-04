@@ -232,6 +232,7 @@ class QoIStage:
                 solution_hash=prepared.solution.hash,
                 outputs=prepared.outputs,
                 indicator_band_nm=None,
+                output_parameters=prepared.parameters,
                 summary={"bias_V": bias_V},
             )
 
@@ -290,7 +291,14 @@ class QoIStage:
             if extract is not None:
                 report(progress, 0.8, f"extracting {word}")
                 check_cancelled(cancel, f"the {word} extraction")
-                summary.update(extract(extraction))
+                extracted = extract(extraction)
+                clash = sorted(set(extracted) & (_ALWAYS | {"indicator_band_nm"}))
+                if clash:
+                    raise ValueError(
+                        f"the output {word!r} would overwrite {', '.join(clash)} of the summary, "
+                        "which the stage always reports"
+                    )
+                summary.update(extracted)
 
         report(progress, 1.0, f"extracted {len(prepared.outputs)} selected outputs")
         return QoIArtefact(

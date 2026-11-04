@@ -83,7 +83,7 @@ def axial_indicator(
     indicator = ngs.GridFunction(space, name="psi")
     indicator.Set(smoothstep(ngs.y, lower_nm=lower_nm, upper_nm=upper_nm))
     if check and has_boundary(mesh, cis) and has_boundary(mesh, trans):
-        # Matched by measure: a regular-expression pattern is not itself a boundary name.
+        # Matched by the boundary mask: a regular-expression pattern is not itself a boundary name.
         check_indicator(indicator, mesh, cis=cis, trans=trans)
     return indicator
 
@@ -115,6 +115,9 @@ def check_indicator(
         require_boundary(mesh, boundary, error=IndicatorError)
         region = mesh.Boundaries(boundary)
         length = _boundary_length(mesh, boundary)
+        if not length > 0.0:
+            # A named boundary that carries no segment passes the mask but has nothing to average.
+            raise IndicatorError(f"the boundary {boundary!r} has no length in this mesh")
         deviation = float(ngs.Integrate((indicator - target) ** 2, mesh, definedon=region))
         return deviation / length
 

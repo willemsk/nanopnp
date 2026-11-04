@@ -108,7 +108,7 @@ class TransportState:
     variables: ConcentrationVariables
     potential: Expression
     velocity: Expression | None
-    steric: StericForm | None = None
+    steric: StericForm | None
 
     @property
     def diffusivity(self) -> Expression:

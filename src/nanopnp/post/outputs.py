@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING, Literal, TypeAlias, get_args
 
 from nanopnp.core.hashing import Canonicalisable
 from nanopnp.geometry.analyte import ANALYTE_BOUNDARY, ANALYTE_DOMAIN
@@ -100,6 +100,13 @@ def register_output(
     """
     if name in _REGISTRY:
         raise ValueError(f"the output {name!r} is already registered")
+    unknown = sorted(set(needs) - set(get_args(Need)))
+    if unknown:
+        # A misspelt need would be met by no model, and the output would never be offered.
+        raise ValueError(
+            f"the output {name!r} needs {', '.join(unknown)}, which a model never declares; "
+            f"the needs are {', '.join(get_args(Need))}"
+        )
     _REGISTRY[name] = Output(
         name=name,
         needs=frozenset(needs),

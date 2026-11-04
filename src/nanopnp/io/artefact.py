@@ -455,6 +455,11 @@ class QoIArtefact(Artefact):
         # artefact extracted with it on is the one it has always had.
         parameters["check_routes"] = True
         # Each selected output's own parameters, absent unless it is selected.
+        clash = sorted(set(output_parameters or {}) & set(parameters))
+        if clash:
+            raise ValueError(
+                f"an output's key parameters {', '.join(clash)} would replace the stage's own"
+            )
         parameters.update(output_parameters or {})
         super().__init__(
             schema=QOI_SCHEMA,

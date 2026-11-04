@@ -2570,3 +2570,40 @@ as a generated mesh does.
 Fixed: kept and marked. `pipeline/run.py:_mesh_record` keeps a stored generated mesh's sizing as it was made and
 adds this run's own Debye lengths beside it as `run_debye` (`mesh/sizing.py:run_debye_record`: the
 uncorrected and the corrected `λ_D`). §5.3.3's Geometry-and-mesh row says so. Verified at review (§8.2.13 N3).
+
+## REV-193: An output that needs nothing and extracts is skipped for a model with no transport
+
+`post/stage.py:QoIStage.run` returns before any `extract` runs when the model declares no transport. An output
+registered with `needs=∅` and an `extract` is offered by `outputs.provided` for every model, accepted by `_check_outputs`,
+and then missing from the summary of `pb`, `pb-linear` and `poisson`, with no refusal. The six shipped outputs cannot
+reach this: `fields` has no `extract`. Found by the WP5.06 review.
+
+Open: whether an output that extracts must need `transport`, or the no-transport branch runs the extractors that need
+nothing against an extraction without quantities. The author rules when the first such output is proposed.
+
+## REV-194: A registered steric form or output enters the key by name only
+
+The solve key carries a non-validated steric model's name (`electrolyte.steric_model`), and the stage-11 key an output's
+name and its parameters. Re-registering a name with a changed body returns the earlier cached artefact. §5.5's NOTE asks for the
+name only, and `borukhov` is versioned with the package. A user's own stage is keyed on a digest of its code object
+(§5.5). Found by the WP5.06 review.
+
+Open: whether a registered form and extractor are keyed on a digest of their code as a user stage is. It is a
+specification amendment.
+
+## REV-195: The manufactured source builds the Borukhov flux whatever steric model is named
+
+`validation/mms.py` switches on `model.steric`, a bool, and always manufactures the Borukhov source. A second registered
+form would fail the convergence test loudly but would not say why. Found by the WP5.06 review.
+
+Open: the package that ships a second steric model adds its manufactured form first (§8.2.28 AD5 leaves a second model
+out of WP5.06).
+
+## REV-196: The case JSON Schema no longer lists the steric models and the outputs
+
+`Steric.model` and `outputs` are strings in the case model, checked by `check_document` against the registries, so
+`case_json_schema()` and the published `case.schema.json` carry no enum for them. The `io` layer cannot import the
+registries (VER-61). Found by the WP5.06 review.
+
+Open: whether `docs/scripts/generate.py` adds the registered names to the schema it writes. Nothing validates against
+the schema; the documentation page loses the list of valid words.
