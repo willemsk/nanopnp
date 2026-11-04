@@ -6,6 +6,7 @@ import logging
 
 from nanopnp.core.typing import Expression, GridFunction, Mesh
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
+from nanopnp.numerics.measures import has_boundary, require_boundary
 
 __all__ = [
     "IndicatorError",
@@ -81,7 +82,7 @@ def axial_indicator(
     )
     indicator = ngs.GridFunction(space, name="psi")
     indicator.Set(smoothstep(ngs.y, lower_nm=lower_nm, upper_nm=upper_nm))
-    if check and _boundary_length(mesh, cis) > 0.0 and _boundary_length(mesh, trans) > 0.0:
+    if check and has_boundary(mesh, cis) and has_boundary(mesh, trans):
         # Matched by measure: a regular-expression pattern is not itself a boundary name.
         check_indicator(indicator, mesh, cis=cis, trans=trans)
     return indicator
@@ -111,11 +112,9 @@ def check_indicator(
     import ngsolve as ngs
 
     def _mean_square(target: float, boundary: str) -> float:
+        require_boundary(mesh, boundary, error=IndicatorError)
         region = mesh.Boundaries(boundary)
         length = _boundary_length(mesh, boundary)
-        if not length > 0.0:
-            known = ", ".join(sorted(set(mesh.GetBoundaries())))
-            raise IndicatorError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
         deviation = float(ngs.Integrate((indicator - target) ** 2, mesh, definedon=region))
         return deviation / length
 
