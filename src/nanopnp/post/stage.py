@@ -16,22 +16,21 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.geometry.analyte import ANALYTE_BOUNDARY
 from nanopnp.io.artefact import Artefact, CaseArtefact, QoIArtefact, ReportArtefact, StageInputs
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.mesh.ingest import deployed_mesh
-from nanopnp.numerics.measures import AXISYMMETRIC, Measures
+from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import declaration
-from nanopnp.post import forces as force_post
 from nanopnp.post import qoi as qoi_post
 from nanopnp.post.export import export_fields, restored
 from nanopnp.post.indicator import axial_indicator
 from nanopnp.post.outputs import (
     EXTENSION_INNER,
     EXTENSION_OUTER,
+    Extraction,
     SelectionError,
-    _shell,
     extension_shell,
+    output,
 )
 from nanopnp.solve.stage import SolveStage
 from nanopnp.solve.state import STATE_FILENAME, STATE_KEY, restore
@@ -42,7 +41,6 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.resolved import ResolvedCase
     from nanopnp.mesh.adapter import MeshData
-    from nanopnp.physics.models import ModelSolution
 
 __all__ = [
     "BAND_FRACTION",
@@ -123,12 +121,21 @@ def _solution(
 
 
 def _check_selection(outputs: tuple[str, ...]) -> None:
-    if "rectification" in outputs:
-        raise SelectionError(
-            "outputs asks for rectification, which is the two-point ratio I(+V)/I(-V); this run "
-            "has one operating point. The second bias can only come from a sweep (FR-24), and "
-            "inventing one would report a ratio the run did not measure"
-        )
+    for word in outputs:
+        refusal = output(word).refusal
+        if refusal is not None:
+            raise SelectionError(refusal)
+
+
+def _key_parameters(
+    data: MeshData, outputs: tuple[str, ...], options: Mapping[str, Canonicalisable]
+) -> dict[str, Canonicalisable]:
+    merged: dict[str, Canonicalisable] = {}
+    for word in outputs:
+        parameters = output(word).parameters
+        if parameters is not None:
+            merged.update(parameters(data, options))
+    return merged
 
 
 @dataclass(frozen=True)
@@ -139,14 +146,11 @@ class _Prepared:
     solution: Artefact
     outputs: tuple[str, ...]
     band: tuple[float, float] | None
-    shell: tuple[float, float] | None
+    parameters: Mapping[str, Canonicalisable]
 
 
-def _selected(
-    quantities: qoi_post.QuantitiesOfInterest, outputs: tuple[str, ...]
-) -> dict[str, Canonicalisable]:
-    record = quantities.summary()
-    always = {
+_ALWAYS = frozenset(
+    {
         "bias_V",
         "clamp_activations",
         "route_agreement",
@@ -154,14 +158,7 @@ def _selected(
         "stabilisation_currents_A",
         "two_pi_included",
     }
-    wanted = set(always)
-    if "current" in outputs:
-        wanted |= {"current_A", "currents_A", "conductance_S"}
-    if "transport_numbers" in outputs:
-        wanted |= {"transport_number", "currents_A"}
-    if "eof_rate" in outputs:
-        wanted.add("eof_m3_s")
-    return {key: value for key, value in record.items() if key in wanted}
+)
 
 
 class QoIStage:
@@ -181,7 +178,7 @@ class QoIStage:
             solution_hash=prepared.solution.hash,
             outputs=prepared.outputs,
             indicator_band_nm=prepared.band,
-            extension_shell_nm=prepared.shell,
+            output_parameters=prepared.parameters,
         )
 
     def _prepare(self, inputs: StageInputs, *, solving: bool) -> _Prepared:
@@ -189,7 +186,7 @@ class QoIStage:
         ingested = deployed_mesh(resolved, inputs.upstream.get("mesh"))
         outputs = tuple(resolved.outputs)
         _check_selection(outputs)
-        shell = _shell(ingested.data, inputs.options) if "analyte_force" in outputs else None
+        parameters = _key_parameters(ingested.data, outputs, inputs.options)
         # A model without transport has no current to take, and its mesh may carry no membrane.
         transport = declaration(resolved.model).transport
         band = _band(ingested.data, inputs.options) if transport else None
@@ -203,7 +200,7 @@ class QoIStage:
             solution=solution,
             outputs=outputs,
             band=band,
-            shell=shell,
+            parameters=parameters,
         )
 
     def run(
@@ -274,20 +271,26 @@ class QoIStage:
             bias_V=bias_V,
         )
 
+        extraction = Extraction(
+            solution=solution,
+            measures=measures,
+            data=prepared.data,
+            bias_V=bias_V,
+            band_nm=band,
+            quantities=quantities,
+            parameters=prepared.parameters,
+        )
+        record = quantities.summary()
         summary: dict[str, Canonicalisable] = {
             "indicator_band_nm": list(band),
-            **_selected(quantities, prepared.outputs),
+            **{key: value for key, value in record.items() if key in _ALWAYS},
         }
-        if prepared.shell is not None:
-            report(progress, 0.8, "extracting the NUM-28 force")
-            check_cancelled(cancel, "the force extraction")
-            summary["analyte_force"] = self._force(
-                solution,
-                measures,
-                data=prepared.data,
-                shell=prepared.shell,
-            )
-            summary["extension_shell_nm"] = list(prepared.shell)
+        for word in prepared.outputs:
+            extract = output(word).extract
+            if extract is not None:
+                report(progress, 0.8, f"extracting {word}")
+                check_cancelled(cancel, f"the {word} extraction")
+                summary.update(extract(extraction))
 
         report(progress, 1.0, f"extracted {len(prepared.outputs)} selected outputs")
         return QoIArtefact(
@@ -295,33 +298,9 @@ class QoIStage:
             solution_hash=prepared.solution.hash,
             outputs=prepared.outputs,
             indicator_band_nm=prepared.band,
-            extension_shell_nm=prepared.shell,
+            output_parameters=prepared.parameters,
             summary=summary,
         )
-
-    def _force(
-        self,
-        solution: ModelSolution,
-        measures: Measures,
-        *,
-        data: MeshData,
-        shell: tuple[float, float],
-    ) -> dict[str, Canonicalisable]:
-        inner, outer = shell
-        extension = force_post.axial_extension(
-            solution.space.mesh,
-            inner_nm=inner,
-            outer_nm=outer,
-            order=measures.element_order,
-        )
-        record: dict[str, Canonicalisable] = force_post.extract(
-            solution,
-            measures,
-            extension,
-            boundary=ANALYTE_BOUNDARY,
-            data=data,
-        ).summary()
-        return record
 
 
 class ReportStage:
@@ -348,7 +327,7 @@ class ReportStage:
         )
 
     def _exports(self, inputs: StageInputs) -> tuple[str, ...]:
-        return ("fields",) if "fields" in inputs.resolved.outputs else ()
+        return tuple(word for word in inputs.resolved.outputs if output(word).export)
 
     def _hashes(self, inputs: StageInputs, *, solving: bool) -> tuple[str, Artefact, Artefact]:
         qoi = inputs.require("qoi")
