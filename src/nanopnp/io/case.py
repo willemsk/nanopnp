@@ -38,18 +38,6 @@ CORRECTION_PROPERTIES: tuple[str, ...] = (
 )
 
 
-OUTPUTS: frozenset[str] = frozenset(
-    {
-        "current",
-        "transport_numbers",
-        "rectification",
-        "eof_rate",
-        "analyte_force",
-        "fields",
-    }
-)
-
-
 class CaseValidationError(ValueError):
     """A case document failed validation; the message names every offending key by dotted path."""
 
@@ -670,12 +658,6 @@ class CaseDocument(_Strict):
             problems.append(
                 f"electrolyte.parameters {self.electrolyte.parameters!r} is not installed; the "
                 f"correction files are {', '.join(installed) or 'none'}"
-            )
-        unknown = sorted(set(self.outputs) - OUTPUTS)
-        if unknown:
-            problems.append(
-                f"outputs {', '.join(unknown)} are not selectable; the outputs are "
-                f"{', '.join(sorted(OUTPUTS))}"
             )
         if problems:
             raise ValueError("; ".join(problems))

@@ -33,6 +33,7 @@ from nanopnp.physics import models, steric
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.models import ModelSolution, PhysicsModel
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.post import outputs
 from nanopnp.solve.continuation import default_ladder
 from nanopnp.solve.state import WALL_DISTANCE_ENTRY, ladder, restore
 
@@ -413,6 +414,28 @@ def test_ver56_a_registered_steric_model_moves_the_solve_key(
         "electrolyte": {**base["electrolyte"], "steric_model": None},
     }
     assert content_hash(SOLUTION_SCHEMA, copy) != content_hash(SOLUTION_SCHEMA, base)
+
+
+def test_ver56_each_model_provides_the_outputs_its_declaration_needs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    six = ["analyte_force", "current", "eof_rate", "fields", "rectification", "transport_numbers"]
+    offered = {name: list(outputs.provided(models.declaration(name))) for name in SOLVE_HASHES}
+    assert offered == {
+        "epnp-ns": six,
+        "pnp-ns": six,
+        "pnp": ["current", "fields", "rectification", "transport_numbers"],
+        "pb": ["fields"],
+        "pb-linear": ["fields"],
+    }
+    assert list(outputs.provided(models.declaration("poisson"))) == ["fields"]
+    monkeypatch.setattr(outputs, "_REGISTRY", dict(outputs._REGISTRY))
+    outputs.register_output("probe", needs={"transport"})
+    assert "probe" in outputs.provided(models.declaration("pnp"))
+    assert "probe" not in outputs.provided(models.declaration("pb"))
+    refusal = _refusal(case_text(physics=ELECTROSTATIC_PHYSICS % "pb", outputs="[probe]"))
+    assert "probe" in refusal
+    assert "'pb'" in refusal
 
 
 # NUM-16

@@ -277,7 +277,6 @@ class ModelDeclaration:
     coefficients: tuple[str, ...] = ()
     wall_distance: bool = False
     strategies: tuple[str, ...] = ("none",)
-    quantities: tuple[str, ...] = ()
     transport: bool = False
     reports_newton: bool = False
     unread: frozenset[str] = frozenset()
@@ -1832,14 +1831,6 @@ _COUPLED_OPTIONS: tuple[str, ...] = (
     "stabilisation",
 )
 
-_QUANTITIES: tuple[str, ...] = (
-    "current",
-    "transport_numbers",
-    "rectification",
-    "eof_rate",
-    "analyte_force",
-)
-
 CORRECTION_PROPERTIES_ALL = ("diffusivity", "mobility", "permittivity", "viscosity", "density")
 PARTS = ("model", "concentration", "wall")
 CORRECTION_LEAVES = frozenset(
@@ -1865,7 +1856,6 @@ _COUPLED = ModelDeclaration(
     coefficients=COEFFICIENTS,
     wall_distance=True,
     strategies=(LADDER_STRATEGY, "none"),
-    quantities=_QUANTITIES,
     transport=True,
     reports_newton=True,
 )
@@ -1904,7 +1894,6 @@ register_model(
             "inertia": (False,),
         },
         strategies=("none",),
-        quantities=("current", "transport_numbers", "rectification"),
         unread=frozenset(
             {f"electrolyte.corrections.{p}.{k}" for p in ("viscosity", "density") for k in PARTS}
             | VELOCITY_PRESSURE

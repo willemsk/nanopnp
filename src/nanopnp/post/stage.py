@@ -16,7 +16,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.geometry.analyte import ANALYTE_BOUNDARY, ANALYTE_DOMAIN
+from nanopnp.geometry.analyte import ANALYTE_BOUNDARY
 from nanopnp.io.artefact import Artefact, CaseArtefact, QoIArtefact, ReportArtefact, StageInputs
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.mesh.ingest import deployed_mesh
@@ -26,6 +26,13 @@ from nanopnp.post import forces as force_post
 from nanopnp.post import qoi as qoi_post
 from nanopnp.post.export import export_fields, restored
 from nanopnp.post.indicator import axial_indicator
+from nanopnp.post.outputs import (
+    EXTENSION_INNER,
+    EXTENSION_OUTER,
+    SelectionError,
+    _shell,
+    extension_shell,
+)
 from nanopnp.solve.stage import SolveStage
 from nanopnp.solve.state import STATE_FILENAME, STATE_KEY, restore
 
@@ -54,14 +61,6 @@ logger = logging.getLogger(__name__)
 MEMBRANE_MATERIAL = "membrane"
 
 BAND_FRACTION = 0.8
-
-EXTENSION_INNER = 1.2
-
-EXTENSION_OUTER = 3.0
-
-
-class SelectionError(ValueError):
-    """A word in ``outputs:`` that this run cannot produce; a ValueError."""
 
 
 def membrane_band(
@@ -98,26 +97,6 @@ def membrane_band(
     return (middle - half, middle + half)
 
 
-def extension_shell(data: MeshData, *, material: str = ANALYTE_DOMAIN) -> tuple[float, float]:
-    """Return the extension shell in nm, scaled to the body; SelectionError if absent."""
-    import numpy as np
-
-    if material not in data.materials:
-        known = ", ".join(data.materials) or "none"
-        raise SelectionError(
-            f"outputs asks for analyte_force, which requires the mesh to carry an {material!r} "
-            f"material; this mesh has {known}. The NUM-28 force is a force *on a body*, and "
-            "there is none in this domain to take it on"
-        )
-    index = data.materials.index(material)
-    selected = data.triangles[data.triangle_material == index]
-    points = data.vertices[np.unique(selected)]
-    radial = float(points[:, 0].max())
-    axial = 0.5 * float(points[:, 1].max() - points[:, 1].min())
-    semi_axis = max(radial, axial)
-    return (EXTENSION_INNER * semi_axis, EXTENSION_OUTER * semi_axis)
-
-
 def _band(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[float, float]:
     supplied = options.get("indicator_band_nm")
     if supplied is None:
@@ -129,14 +108,6 @@ def _band(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[float
             "band flips the sign of every current"
         )
     return (float(lower), float(upper))
-
-
-def _shell(data: MeshData, options: Mapping[str, Canonicalisable]) -> tuple[float, float]:
-    supplied = options.get("extension_shell_nm")
-    if supplied is None:
-        return extension_shell(data)
-    inner, outer = supplied
-    return (float(inner), float(outer))
 
 
 def _solution(

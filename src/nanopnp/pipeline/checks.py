@@ -14,7 +14,6 @@ from nanopnp.charge.fields import FIELD_FORMAT
 from nanopnp.core.paths import available_corrections
 from nanopnp.io.case import (
     CORRECTION_PROPERTIES,
-    OUTPUTS,
     PQR_FORMAT,
     PROFILE_FORMAT,
     SUPPLIED_FIELDS,
@@ -54,6 +53,7 @@ from nanopnp.physics.models import (
     registered_stabilisations,
 )
 from nanopnp.physics.steric import registered_steric_models
+from nanopnp.post.outputs import provided, registered_outputs
 
 __all__ = [
     "check_document",
@@ -87,7 +87,7 @@ def registry_options(path: str) -> tuple[str, ...] | None:
         # beside the installed parameter files and is not one of them.
         return ("none", *available_corrections())
     if path == "outputs":
-        return tuple(sorted(OUTPUTS))
+        return registered_outputs()
     return None
 
 
@@ -124,6 +124,12 @@ def check_document(document: CaseDocument, *, source: str | None = None) -> Case
         problems.append(
             f"{_STERIC_MODEL_PATH} {steric!r} is not a registered steric model; the models are "
             f"{', '.join((NO_STERIC_MODEL, *registered_steric_models()))}"
+        )
+    unknown = sorted(set(document.outputs) - set(registered_outputs()))
+    if unknown:
+        problems.append(
+            f"outputs {', '.join(unknown)} are not selectable; the outputs are "
+            f"{', '.join(registered_outputs())}"
         )
     solver = document.numerics.linear.solver
     if solver not in registered_solvers():
@@ -1010,19 +1016,16 @@ def _check_strategy(document: CaseDocument) -> None:
 
 def _check_outputs(document: CaseDocument) -> None:
     model = document.physics.model
-    declared = declaration(model).quantities
-    undeclared = [word for word in document.outputs if word != "fields" and word not in declared]
-    if not undeclared:
+    offered = provided(declaration(model))
+    unoffered = [
+        word for word in document.outputs if word in registered_outputs() and word not in offered
+    ]
+    if not unoffered:
         return
-    advice = (
-        f"remove {', '.join(undeclared)} from outputs"
-        if declared
-        else "write outputs: [] or outputs: [fields]"
-    )
     raise CaseValidationError(
-        f"outputs asks for {', '.join(undeclared)}, which physics.model {model!r} does not "
-        f"provide; it declares {', '.join(declared) or 'no quantity of interest'} (section 6.7), "
-        f"so {advice}. fields, the IF-07 export, is admitted for every model"
+        f"outputs asks for {', '.join(unoffered)}, which physics.model {model!r} does not "
+        f"provide; it provides {', '.join(offered)} (section 6.7), so remove "
+        f"{', '.join(unoffered)} from outputs"
     )
 
 
