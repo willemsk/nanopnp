@@ -874,7 +874,7 @@ EXTENSION_POINTS: tuple[_Point, ...] = (
     _Point("charge forms", "registry", "charge/fields.py", "call:register_form"),
     _Point("mesher", "registry", "mesh/meshers.py", "call:register_mesher"),
     _Point("linear solver", "registry", "numerics/linear.py", "call:register_solver"),
-    _Point("outputs", "branch", "io/case.py", "assign:OUTPUTS"),
+    _Point("outputs", "registry", "post/outputs.py", "call:register_output"),
     _Point("steric models", "registry", "physics/steric.py", "call:register_steric_model"),
     _Point("correction forms", "branch", "materials/forms.py", "assign:FORMS"),
 )
