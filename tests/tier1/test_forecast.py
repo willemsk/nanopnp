@@ -56,7 +56,7 @@ def _moved(found: Forecast, axis: str) -> set[str]:
 
 
 def test_fr39_the_forecast_equals_the_stages_the_walk_rebuilds(tmp_path: Path) -> None:
-    """A forecast that disagrees with the walk misleads the author about what a sweep costs."""
+    # A forecast that disagrees with the walk misleads the author about what a sweep costs.
     plan = _plan(tmp_path / "files")
     session = Session(tmp_path / "store", write=False)
     before = forecast(plan, store=session.store)
@@ -86,7 +86,7 @@ def test_fr39_the_forecast_equals_the_stages_the_walk_rebuilds(tmp_path: Path) -
 def test_fr39_the_forecast_never_runs_a_stage(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A forecast that built a mesh would cost what it exists to warn about."""
+    # A forecast that built a mesh would cost what it exists to warn about.
     plan = _plan(tmp_path / "files")
     store = Session(tmp_path / "store", write=False).store
 

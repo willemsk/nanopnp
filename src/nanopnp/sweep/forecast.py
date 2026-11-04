@@ -1,4 +1,4 @@
-"""What a sweep rebuilds, forecast from the plan before any member runs (FR-39, §5.3.4)."""
+"""What a sweep rebuilds, forecast from the plan before any member runs."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ class Forecast:
     axes: Mapping[str, tuple[str, ...]]
 
     def summary(self) -> dict[str, object]:
-        """Return the forecast as plain data, for the plan file, the CLI and the log."""
+        """Return the forecast as plain data, for the CLI's JSON."""
         return {
             "builds": dict(self.builds),
             "reused": dict(self.reused),

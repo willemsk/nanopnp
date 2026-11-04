@@ -302,7 +302,7 @@ def _carry(quantity: Quantity, where: str, text: str) -> Quantity:
 
 
 class _Evaluator:
-    """Evaluate a vetted tree over variables held in SI base units; nothing is run as code."""
+    # Evaluates a vetted tree over variables held in SI base units; nothing is run as code.
 
     def __init__(
         self, env: Mapping[str, Quantity], units: Mapping[str, str], where: str, text: str
@@ -417,7 +417,16 @@ class _Evaluator:
             return abs(argument)
         if name == "sqrt":
             return self._power(argument, _quantity(0.5, _DIMENSIONLESS))
-        number = float(self._dimensionless(argument, f"the argument of {name}"))
+        magnitude = self._dimensionless(argument, f"the argument of {name}")
+        try:
+            number = float(magnitude)
+        except OverflowError:
+            # An exact number beyond the range of a float still has a finite logarithm.
+            if name == "exp" or magnitude <= 0:
+                raise self.fail(f"{name} of a number beyond the range of a float") from None
+            assert isinstance(magnitude, Fraction)  # a float cannot overflow on conversion
+            logarithm = math.log(magnitude.numerator) - math.log(magnitude.denominator)
+            return _quantity(logarithm, _DIMENSIONLESS)
         try:
             result = math.exp(number) if name == "exp" else math.log(number)
         except (ValueError, OverflowError):
@@ -633,12 +642,13 @@ def _expression_sites(
 
 
 def _plain_number(text: str) -> bool:
-    # A numeral in a string is the schema's to read, as it was before variables existed.
+    # A numeral in a string is the schema's to read, as it was before variables existed. `inf` and
+    # `nan` convert too, but they are names a variable may take, so a numeral needs a digit.
     try:
         float(text)
     except ValueError:
         return False
-    return True
+    return any(character.isdigit() for character in text)
 
 
 def _copy(node: FieldValue) -> FieldValue:

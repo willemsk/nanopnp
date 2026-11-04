@@ -628,7 +628,7 @@ class CaseDocument(_Strict):
     model_config = ConfigDict(extra="forbid", frozen=True, populate_by_name=True, title="Case")
     _models: ModelRecord | None = PrivateAttr(default=None)
     # Outside the dump, equality and every hash, as `models` is: a case is identified by the
-    # numbers its variables resolve to, and the record keeps what was written (FR-39).
+    # numbers its variables resolve to, and the record keeps what was written.
     _variables: VariableRecord | None = PrivateAttr(default=None)
 
     @property
