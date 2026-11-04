@@ -65,7 +65,7 @@ A PR that changes a screen runs `/np-gui review` and `/np-gui publish`, links th
 Run the review from this session. Call the skill directly, never inside an `Agent`:
 
 ```
-Skill(skill="code-review", args="xhigh --fix <pr-number> out=docs/code_reviews/ -- Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
+Skill(skill="code-review", args="xhigh --fix --max-findings all <pr-number> out=docs/code_reviews/ -- Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
 ```
 
 Inside an `Agent`, the skill returned no findings. Called directly, it starts its own review agent.
