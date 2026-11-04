@@ -1,6 +1,6 @@
 # WP5.06 — Outputs and steric models as registries
 
-**Status: planned, not started.** Planned 4 November 2026, on `main` after WP5.05's merge (`b5284c1`). It inherits
+**Status: in progress — items 1 to 3 done.** Planned 4 November 2026, on `main` after WP5.05's merge (`b5284c1`). It inherits
 §8.2.18 T4, §8.2.28 AD3 and AD5, and AH1, ruled at this plan (§8.2.32).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -165,14 +165,14 @@ field as "carries no degrees of freedom of this field".
 
 ### Work items
 
-- [ ] 1. `physics/steric.py`, `physics/nernst_planck.py`, `physics/stabilisation.py`, `physics/models.py`,
+- [x] 939b525 1. `physics/steric.py`, `physics/nernst_planck.py`, `physics/stabilisation.py`, `physics/models.py`,
   `materials/electrolyte.py`, `materials/stage.py`, `pipeline/case.py`, `io/case.py:Steric`, `pipeline/checks.py`,
   `post/qoi.py`; the bool-passing tests of D4's grounding (D4, D5). Done when rows 3 and 4, `test_model_interface.py`,
   `test_case_leaves.py` and `uv run pytest -m tier1` pass. **Executor:** main.
-- [ ] 2. `numerics/measures.py:has_boundary`, `require_boundary`; the four call sites (D6). Done when
+- [x] 8c7e7d2 2. `numerics/measures.py:has_boundary`, `require_boundary`; the four call sites (D6). Done when
   `test_wall_distance.py`, `test_indicator.py`, `test_forces.py` and `test_qoi_stage.py` pass unchanged.
   **Executor:** `general-purpose` on Sonnet.
-- [ ] 3. Compaction checkpoint. **Executor:** main.
+- [x] 3. Compaction checkpoint. **Executor:** main.
 - [ ] 4. `post/outputs.py`; `ModelDeclaration.quantities` removed; `_check_outputs`, `check_document`,
   `registry_options`; `io/case.py:OUTPUTS` removed (D1, D2). Done when row 2 passes. **Executor:** main.
 - [ ] 5. `post/stage.py`, `io/artefact.py:QoIArtefact` (D3). Done when row 1 and `test_qoi_stage.py` pass.
