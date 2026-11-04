@@ -26,6 +26,7 @@ from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import MissingUpstreamError, stored_upstream
 from nanopnp.sweep.collect import collect
 from nanopnp.sweep.document import loads_sweep
+from nanopnp.sweep.forecast import Forecast, forecast
 from nanopnp.sweep.plan import (
     PLAN_FILENAME,
     Point,
@@ -107,6 +108,10 @@ class Sweep:
     plan: SweepPlan
     directory: Path
     session: Session
+
+    def forecast(self) -> Forecast:
+        """Return the stages a run of this sweep would build, keyed against the session's store."""
+        return forecast(self.plan, store=self.session.store, stages=self.session.own_stages)
 
     def run(self, *, workers: int = 1) -> SweepResult:
         """Run every point, warm-starting each from its parent, and collect the dataset."""
@@ -422,6 +427,8 @@ def run_plan(
     the first member that does not reach ``ok``.
     """
     selected = sorted(set(range(len(plan.points)) if indices is None else indices))
+    if indices is None:
+        _announce(plan, session)
     waves: dict[int, list[int]] = {}
     for index in selected:
         waves.setdefault(plan.point(index).wave, []).append(index)
@@ -448,6 +455,19 @@ def run_plan(
                 )
                 break
     return tuple(sorted(results, key=lambda member: member.index))
+
+
+def _announce(plan: SweepPlan, session: Session) -> None:
+    # Advisory: a forecast that cannot be made must not stop the run it describes.
+    try:
+        found = forecast(plan, store=session.store, stages=session.own_stages)
+    except Exception as error:
+        logger.warning("no forecast of the stages this sweep rebuilds: %s", error)
+        return
+    builds = ", ".join(f"{count} {name}" for name, count in found.builds.items() if count)
+    logger.info("forecast: %s builds of %d point(s)", builds or "no", len(plan.points))
+    for line in found.warnings():
+        logger.warning("forecast: %s", line)
 
 
 @contextmanager

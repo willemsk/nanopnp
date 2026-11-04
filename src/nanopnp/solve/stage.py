@@ -126,12 +126,19 @@ class SolveStage:
     def _prepare(
         self, inputs: StageInputs, *, load: bool
     ) -> tuple[
-        ResolvedCase, IngestedMesh, Artefact, Artefact, Artefact | None, ResolvedFields | None
+        ResolvedCase,
+        IngestedMesh | None,
+        Artefact,
+        Artefact,
+        Artefact | None,
+        ResolvedFields | None,
     ]:
         resolved = inputs.resolved
         mesh = inputs.upstream.get("mesh")
-        ingested = deployed_mesh(resolved, mesh)
+        # A key needs the mesh artefact's hash, not the mesh it points at.
+        ingested = deployed_mesh(resolved, mesh) if load or mesh is None else None
         if mesh is None:
+            assert ingested is not None
             mesh = MeshStage().artefact(ingested)
         materials = inputs.upstream.get("materials")
         if materials is None:
@@ -162,6 +169,7 @@ class SolveStage:
         resolved, ingested, mesh_artefact, materials, fields_artefact, supplied = self._prepare(
             inputs, load=True
         )
+        assert ingested is not None  # load=True ingests
 
         report(progress, 0.0, f"loading the mesh from {ingested.source.name}")
         check_cancelled(cancel, "loading the mesh")

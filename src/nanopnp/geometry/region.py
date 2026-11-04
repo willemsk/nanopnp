@@ -1018,18 +1018,27 @@ def derive_idealised_region(
     return record.model_copy(update={"face_areas_nm2": areas, "edge_counts": counts})
 
 
-def _profile_input(inputs: StageInputs, resolved: ResolvedCase) -> tuple[str, Path]:
+def _profile_identity(inputs: StageInputs, resolved: ResolvedCase) -> str:
+    # The contour's hash, not its payload: the key must not need the contour built.
     if resolved.profile is not None:
         path = resolved.profile.path
         assert path is not None  # the resolver refuses artefact: on inputs.profile
-        return profile_digest(load_profile(path)), path
+        return profile_digest(load_profile(path))
     if resolved.structure is None:
         raise UnsupportedCaseSection(
             f"case {inputs.resolved.name!r} supplies inputs.mesh, so there is no region for "
             "stage 5 to assemble"
         )
-    contour = inputs.require("contour")
-    return contour.hash, contour.payload["profile"]
+    return inputs.require("contour").hash
+
+
+def _profile_input(inputs: StageInputs, resolved: ResolvedCase) -> tuple[str, Path]:
+    identity = _profile_identity(inputs, resolved)
+    if resolved.profile is not None:
+        path = resolved.profile.path
+        assert path is not None
+        return identity, path
+    return identity, inputs.require("contour").payload["profile"]
 
 
 def region_parameters(
@@ -1072,8 +1081,7 @@ class RegionStage:
         resolved = inputs.resolved
         if resolved.pore is not None:
             return self._idealised_key(resolved)
-        identity, _ = _profile_input(inputs, resolved)
-        return self._key(resolved, identity)
+        return self._key(resolved, _profile_identity(inputs, resolved))
 
     def _idealised_key(self, resolved: ResolvedCase) -> RegionArtefact:
         assert resolved.pore is not None
