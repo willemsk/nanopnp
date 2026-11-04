@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.06 merged, WP5.07 planned; the shell packages WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+**Status: in progress; WP5.01 to WP5.06 merged, WP5.07 delivered, awaiting its review; the shell packages WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
@@ -182,18 +182,16 @@ registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. 
 
 ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
 
-**Planned 4 November 2026** ([the plan](wp5.07-variables-and-the-rebuild-forecast.md)).
-A case gains variables, each a value with its unit or an expression of other variables, parsed from Python's syntax
-tree against a whitelist (numbers, names, the four operations, powers, parentheses, a few functions), so no code runs.
-Units are checked through `pint`, vetted before it is added (AG3): a field takes its unit from its name's suffix, a
-variable of another dimension is refused at the field, one of the same dimension is converted. A case resolves its
-variables to numbers before any stage is keyed, so a case without variables keeps every key; the variables as written
-go to the resolved case file's provenance and the manifest (AG4; FR-25). Before a sweep runs, the library forecasts the
-stages each swept value rebuilds and the number of builds, from the stage keys and their declared inputs (AG5; FR-27,
-VER-64). A case-schema change under the release's identifier (G6), with §5.3.1, §5.3.3 and IF-03's Appendix A row.
-Tier 1: an expression off the whitelist is refused; a dimension mismatch is refused and a conversion is exact; a case
-without variables keeps its keys, VER-62 at zero drift; the forecast equals the stages the walk rebuilds. Tag
-`v0.6.0-alpha.7`.
+**Delivered 4 November 2026** ([the plan](wp5.07-variables-and-the-rebuild-forecast.md)). A case defines `variables:`, each
+a value with its unit or an expression of others. `io/variables.py` parses it from Python's syntax tree against a whitelist,
+so no code runs, and converts through `pint` (`>=0.25.3,<0.26`, imported on first use) exactly, in fractions; a field's
+unit is its name's suffix, and another dimension is refused at the field (AG2, AG3). A case resolves to numbers before any
+stage is keyed, so `2*a` keys as its value and a case without variables keeps every key (AG4; VER-62 unmoved). A sweep axis
+over `variables.<name>` moves every field the variable reaches. `sweep.forecast.forecast` and `Sweep.forecast()` key each
+point's stages without running one and warn which stages an axis rebuilds and how many builds precede the solves (AG5;
+VER-64); `sweep plan` prints it. Live constraints: the manifest gains `variables` only when a case has some; a
+`Forecastable` stage hashes its own `forecast_parameters`; REV-197 (rectification over a bias set through a variable) is
+WP5.11's. REV-139 `fixed`. Tier 1 holds the evidence. Tag `v0.6.0-alpha.7`.
 
 ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13)
 
