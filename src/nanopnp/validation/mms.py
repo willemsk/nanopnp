@@ -17,6 +17,7 @@ from nanopnp.io.vocabulary import (
     PRESSURE_MEAN,
     VELOCITY,
 )
+from nanopnp.materials.electrolyte import VALIDATED_STERIC_MODEL
 from nanopnp.materials.forms import NUMPY_OPS
 from nanopnp.numerics.measures import Measures
 from nanopnp.physics.coefficients import (
@@ -263,6 +264,13 @@ class ManufacturedSolution:
             for coordinate in (RADIAL, AXIAL)
         ]
         if self.model.steric:
+            named = self.model.electrolyte.switches.steric
+            if named != VALIDATED_STERIC_MODEL:
+                raise ValueError(
+                    f"the manufactured source builds the {VALIDATED_STERIC_MODEL!r} steric flux "
+                    f"only; the model names {named!r}, so a convergence rate would test a "
+                    "different flux from the one solved"
+                )
             steric = self._steric_flux(name, axisymmetric)
             bracket = [
                 term + diffusivity * concentration * s

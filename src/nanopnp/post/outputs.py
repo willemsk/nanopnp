@@ -107,6 +107,12 @@ def register_output(
             f"the output {name!r} needs {', '.join(unknown)}, which a model never declares; "
             f"the needs are {', '.join(get_args(Need))}"
         )
+    if extract is not None and "transport" not in needs:
+        # Stage 11 returns before any extractor runs for a model with no transport.
+        raise ValueError(
+            f"the output {name!r} extracts a quantity but does not need 'transport'; a model "
+            "with no transport would offer it and then leave it out of the summary"
+        )
     _REGISTRY[name] = Output(
         name=name,
         needs=frozenset(needs),
