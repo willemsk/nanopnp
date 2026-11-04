@@ -2633,9 +2633,9 @@ The plan reads barriers, warm-start parents and variable-axis reach from the var
 **Open**: the author rules.
 
 
-## REV-200: `VariableRecord` repeats `io.variables.Resolution`
+## REV-200: A second type repeats the variable resolution
 
-The two dataclasses hold the same four fields, and `VariableRecord.of` only copies one into the other. They must stay in step by hand. Found by the WP5.07 review. The remedy is one type, which spans `io/variables.py`, `io/models.py` and their callers.
+`VariableRecord` and `Resolution` hold the same four fields, and `VariableRecord.of` only copies one into the other. They must stay in step by hand. Found by the WP5.07 review. The remedy is one type, which spans `io/variables.py`, `io/models.py` and their callers.
 
 **Open**: the author rules.
 

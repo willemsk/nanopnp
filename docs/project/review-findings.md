@@ -221,5 +221,5 @@ is a rolling register, and its header stays `open`.
 | REV-197 | interface | low | accepted | WP5.07; WP5.11 | [Rectification does not pair a bias set through a variable](review-items.md#rev-197-rectification-does-not-pair-a-bias-set-through-a-variable) |
 | REV-198 | interface | low | open | WP5.07 review | [A sweep plan is not tied to the variables as written](review-items.md#rev-198-a-sweep-plan-is-not-tied-to-the-variables-as-written) |
 | REV-199 | performance | low | open | WP5.07 review | [The sweep forecast resolves every point again](review-items.md#rev-199-the-sweep-forecast-resolves-every-point-again) |
-| REV-200 | coupling | low | open | WP5.07 review | [`VariableRecord` repeats `io.variables.Resolution`](review-items.md#rev-200-variablerecord-repeats-io-variables-resolution) |
+| REV-200 | coupling | low | open | WP5.07 review | [A second type repeats the variable resolution](review-items.md#rev-200-a-second-type-repeats-the-variable-resolution) |
 | REV-201 | interface | low | open | WP5.07 review | [`sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables](review-items.md#rev-201-sweep-plan-json-drops-the-reason-a-forecast-could-not-be-made-and-the-case-json-schema-does-not-describe-variables) |
