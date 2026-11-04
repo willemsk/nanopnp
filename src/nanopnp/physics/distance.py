@@ -6,7 +6,7 @@ import math
 
 from nanopnp.core.typing import GridFunction, Mesh
 from nanopnp.numerics.linear import DEFAULT_SOLVER, solve_linear
-from nanopnp.numerics.measures import Measures
+from nanopnp.numerics.measures import Measures, require_boundary
 
 DEFAULT_MAX_DISTANCE_NM = 3.0
 
@@ -35,9 +35,7 @@ def wall_distance(
     """
     import ngsolve as ngs
 
-    if mesh.Boundaries(sources).Mask().NumSet() == 0:
-        known = ", ".join(sorted(set(mesh.GetBoundaries())))
-        raise ValueError(f"no boundary matching {sources!r} in this mesh; it has {known}")
+    require_boundary(mesh, sources)
 
     scale = diffusion_length_nm if diffusion_length_nm is not None else DEFAULT_DIFFUSION_LENGTH_NM
     # (r, z) distance without the r weight is the 3D distance to the revolved surface.

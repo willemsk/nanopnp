@@ -16,6 +16,18 @@ SINGULAR_MIN_ORDER = 3
 NGSOLVE_INTEGRATE_ORDER = 5
 
 
+def has_boundary(mesh: Mesh, pattern: str) -> bool:
+    """Return whether the boundary-name regular expression ``pattern`` matches a boundary."""
+    return bool(mesh.Boundaries(pattern).Mask().NumSet() != 0)
+
+
+def require_boundary(mesh: Mesh, pattern: str, *, error: type[Exception] = ValueError) -> None:
+    """Raise ``error`` naming the mesh's boundaries if ``pattern`` matches none of them."""
+    if not has_boundary(mesh, pattern):
+        known = ", ".join(sorted(set(mesh.GetBoundaries())))
+        raise error(f"no boundary matching {pattern!r} in this mesh; it has {known}")
+
+
 def _check_rule_order(rule_order: int, *, singular: bool, extra_order: int) -> None:
     if rule_order < SINGULAR_MIN_ORDER:
         raise ValueError(

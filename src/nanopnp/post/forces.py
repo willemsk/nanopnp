@@ -22,7 +22,7 @@ from nanopnp.io.vocabulary import (
     VELOCITY,
 )
 from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
-from nanopnp.numerics.measures import Measures
+from nanopnp.numerics.measures import Measures, require_boundary
 from nanopnp.physics.coefficients import NondimensionalCoefficients
 from nanopnp.physics.distance import wall_distance
 from nanopnp.physics.flow import permittivity_gradient
@@ -173,11 +173,9 @@ def check_extension(
     import ngsolve as ngs
 
     def _mean_square(target: Expression, boundary: str) -> float:
+        require_boundary(mesh, boundary, error=ExtensionError)
         region = mesh.Boundaries(boundary)
         length = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
-        if not length > 0.0:
-            known = ", ".join(sorted(set(mesh.GetBoundaries())))
-            raise ExtensionError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
         difference = extension - ngs.CF(target)
         deviation = float(
             ngs.Integrate(ngs.InnerProduct(difference, difference), mesh, definedon=region)
@@ -617,11 +615,9 @@ def _surface_force(terms: _Integrands, measures: Measures, boundary: str) -> For
 def _boundary_region(mesh: Mesh, boundary: str) -> tuple[Option, float]:
     import ngsolve as ngs
 
+    require_boundary(mesh, boundary)
     region = mesh.Boundaries(boundary)
     arc = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
-    if not arc > 0.0:
-        known = ", ".join(sorted(set(mesh.GetBoundaries())))
-        raise ValueError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
     return region, arc
 
 

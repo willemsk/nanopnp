@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from nanopnp.core.typing import AssembledForm, Expression, FESpace, GridFunction
+from nanopnp.numerics.measures import require_boundary
 
 
 def boundary_indicator(
@@ -52,17 +53,21 @@ def boundary_reaction_flux(
     Raises
     ------
     ValueError
-        If ``boundary`` matches nothing, or any of its degrees of freedom are free.
+        If ``boundary`` matches nothing, carries no degrees of freedom of the field, or any of
+        them are free.
     """
     import ngsolve as ngs
 
     space = solution.space
     mesh = space.mesh
     field_space = space if component is None else space.components[component]
+    require_boundary(mesh, boundary)
     on_boundary = field_space.GetDofs(mesh.Boundaries(boundary))
     if on_boundary.NumSet() == 0:
-        known = ", ".join(sorted(set(mesh.GetBoundaries())))
-        raise ValueError(f"no boundary matching {boundary!r} in this mesh; it has {known}")
+        raise ValueError(
+            f"boundary {boundary!r} carries no degrees of freedom of this field, so it has no "
+            "reaction flux"
+        )
     still_free = on_boundary & field_space.FreeDofs()
     if still_free.NumSet() != 0:
         raise ValueError(
