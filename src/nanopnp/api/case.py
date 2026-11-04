@@ -137,7 +137,12 @@ class Case(CaseDocument):
         if record is None:
             raise ValueError(f"case {self.name!r} names no model, so it has no study form")
         layer = study_layer(self, record)
-        ordered = {key: layer[key] for key in ("schema", "name", "models")}
+        variables = self.variables_record
+        if variables is not None:
+            layer = variables.written(layer)
+        ordered: dict[str, FieldValue] = {
+            key: layer[key] for key in ("schema", "name", "models", "variables") if key in layer
+        }
         ordered.update((key, value) for key, value in layer.items() if key not in ordered)
         return str(yaml.safe_dump(ordered, sort_keys=False))
 
@@ -146,6 +151,19 @@ class Case(CaseDocument):
         """The study's values over a named model: path to (model value, study value)."""
         record = self.models_record
         return MappingProxyType(dict(record.overrides) if record is not None else {})
+
+    @property
+    def variables(self) -> Mapping[str, Mapping[str, FieldValue]]:
+        """The case's variables as written: name to ``{value|expression, unit}``."""
+        record = self.variables_record
+        found = {} if record is None else {n: v.written() for n, v in record.definitions.items()}
+        return MappingProxyType(found)
+
+    @property
+    def expressions(self) -> Mapping[str, str]:
+        """The expressions the case writes at its fields: dotted path to the text written."""
+        record = self.variables_record
+        return MappingProxyType(dict(record.expressions) if record is not None else {})
 
     def __getitem__(self, name: str) -> FieldValue:
         """Return the value of one field or block of the case."""

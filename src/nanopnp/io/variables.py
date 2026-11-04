@@ -11,7 +11,6 @@ from fractions import Fraction
 from functools import cache
 from typing import Any, Literal, TypeAlias, get_args
 
-import pint
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from nanopnp.io.case import CaseValidationError, FieldType, FieldValue
@@ -78,6 +77,9 @@ Registry: TypeAlias = Any
 
 @cache
 def _registry() -> Registry:
+    # Deferred: importing pint imports NumPy, and a case without variables never needs either.
+    import pint
+
     # Exact fractions: 20 Å is 2 nm, not 1.9999999999999998, so equal cases share one key.
     return pint.UnitRegistry(non_int_type=Fraction)
 
@@ -602,6 +604,11 @@ def _as_field(
             )
         return int(value)
     return value
+
+
+def expression_paths(raw: FieldValue) -> tuple[str, ...]:
+    """Return the dotted path of every numeric field of a case mapping that holds an expression."""
+    return tuple(dotted for dotted, _, _ in _expression_sites(raw))
 
 
 def _expression_sites(

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import math
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
@@ -21,7 +23,16 @@ from nanopnp.io.case import (
     FieldValue,
     validate_mapping,
 )
-from nanopnp.io.case_paths import block_paths, path_fields, schema_default
+from nanopnp.io.case_paths import (
+    UnknownCasePathError,
+    _set_at,
+    block_paths,
+    field_at,
+    path_fields,
+    schema_default,
+    value_at,
+)
+from nanopnp.io.variables import Resolution, Variable, expression_paths, resolve
 
 MOLECULAR_SCHEMA = "nanopnp/molecular-model/v0.6"
 
@@ -166,7 +177,180 @@ class ModelRecord:
             paths[kind] = (self.base / Path(str(value))).resolve()
         study = study_layer(document, self)
         study.pop("models")
-        return _resolve(study, paths, self.base, f"<{document.name} with models>", type(document))
+        label = f"<{document.name} with models>"
+        record = document.variables_record
+        if record is None:
+            return _resolve(study, paths, self.base, label, type(document))
+        # The expressions go back in, so the swap re-reads the study as it was written.
+        resolved, resolution = resolve(record.written(study), label)
+        swapped = _resolve(resolved, paths, self.base, label, type(document))
+        swapped._variables = VariableRecord.of(resolution) if resolution is not None else None
+        return swapped
+
+
+@dataclass(frozen=True, eq=False)
+class VariableRecord:
+    """What a case wrote as variables and expressions, kept beside the numbers they resolved to.
+
+    Parameters
+    ----------
+    definitions
+        Each variable as written.
+    values
+        Each variable's value as a float in its declared unit.
+    expressions
+        Dotted field path to the expression written there.
+    uses
+        Variable name or field path to the variable names its expression reads directly.
+    """
+
+    definitions: Mapping[str, Variable]
+    values: Mapping[str, float]
+    expressions: Mapping[str, str]
+    uses: Mapping[str, frozenset[str]]
+
+    @classmethod
+    def of(cls, resolution: Resolution) -> VariableRecord:
+        """Keep a resolution as a record."""
+        return cls(
+            definitions=dict(resolution.definitions),
+            values=dict(resolution.values),
+            expressions=dict(resolution.expressions),
+            uses=dict(resolution.uses),
+        )
+
+    def written(self, mapping: Mapping[str, Any]) -> dict[str, Any]:
+        """Return ``mapping`` with each expression at its path and ``variables:`` after the name."""
+        out: dict[str, Any] = copy.deepcopy(dict(mapping))
+        for path, text in self.expressions.items():
+            parent, last = _cursor(out, path)
+            if parent is not None and last in parent:
+                parent[last] = text
+        if not self.definitions:
+            return out
+        head: dict[str, Any] = {key: out.pop(key) for key in ("schema", "name") if key in out}
+        block = {name: variable.written() for name, variable in self.definitions.items()}
+        return {**head, "variables": block, **out}
+
+    def reaches(self, name: str) -> tuple[str, ...]:
+        """Return the field paths a variable reaches, through other variables too."""
+        if name not in self.definitions:
+            known = ", ".join(self.definitions) or "none"
+            raise UnknownCasePathError(f"variables.{name} is not a variable of the case ({known})")
+        moved = {name}
+        grown = True
+        while grown:
+            grown = False
+            for variable in self.definitions:
+                if variable not in moved and self.uses.get(variable, frozenset()) & moved:
+                    moved.add(variable)
+                    grown = True
+        return tuple(
+            sorted(path for path in self.expressions if self.uses.get(path, frozenset()) & moved)
+        )
+
+    def manifest(self, document: CaseDocument) -> dict[str, Any]:
+        """Return the manifest's record: each variable as written and each field it reached."""
+        return {
+            "definitions": {
+                name: {
+                    "written": variable.written(),
+                    "value": self.values[name],
+                    "unit": variable.unit,
+                }
+                for name, variable in self.definitions.items()
+            },
+            "fields": {
+                path: {"expression": text, "value": value_at(document, path)}
+                for path, text in self.expressions.items()
+            },
+        }
+
+    def carried(self, document: D, assignments: Mapping[str, FieldValue]) -> D:
+        """Return ``document`` read again as written, with ``assignments`` set.
+
+        A path under ``variables.`` sets a variable: a number in its declared unit, or a
+        definition. A number at a field drops the expression written there.
+        """
+        assignments = _expanded(assignments)
+        edits = {p: v for p, v in assignments.items() if not _is_variable(p)}
+        changed = {p: v for p, v in assignments.items() if _is_variable(p)}
+        definitions = dict(self.definitions)
+        for path, value in changed.items():
+            definitions[_variable_name(path, self.definitions)] = _redefined(path, value, self)
+        kept = {
+            path: text
+            for path, text in self.expressions.items()
+            if not any(path == edit or path.startswith(f"{edit}.") for edit in edits)
+        }
+        record = VariableRecord(definitions, self.values, kept, self.uses)
+        mapping = _dump(document)
+        models = document.models_record
+        if models is not None:
+            models.check_dropped(document.name, edits)
+            mapping["models"] = models.paths
+        mapping = record.written(mapping)
+        for path, value in edits.items():
+            field_at(path).validate(value)
+            _set_at(mapping, path, value)
+        listed = ", ".join(sorted(assignments)) or "nothing"
+        return read_mapping(
+            mapping,
+            base=None if models is None else models.base,
+            source=f"<{document.name} with {listed} substituted>",
+            model=type(document),
+        )
+
+
+def _expanded(assignments: Mapping[str, FieldValue]) -> dict[str, FieldValue]:
+    # `Case.with_` nests a dotted path under an absent block, so `variables.a` arrives as
+    # `variables: {a: ...}`.
+    found: dict[str, FieldValue] = {}
+    for path, value in assignments.items():
+        if path != "variables":
+            found[path] = value
+        elif isinstance(value, Mapping):
+            found.update((f"variables.{name}", item) for name, item in value.items())
+        else:
+            raise CaseValidationError(
+                f"variables: {value!r}: set the variables by name, as variables.<name>"
+            )
+    return found
+
+
+def _is_variable(path: str) -> bool:
+    return path == "variables" or path.startswith("variables.")
+
+
+def _variable_name(path: str, known: Mapping[str, Variable]) -> str:
+    parts = path.split(".")
+    if len(parts) != 2:
+        raise CaseValidationError(
+            f"{path}: set a variable whole, as variables.<name>, with a number in its unit or a "
+            "definition"
+        )
+    if parts[1] not in known:
+        raise UnknownCasePathError(
+            f"{path!r} is not a variable of the case (it defines {', '.join(known) or 'none'})"
+        )
+    return parts[1]
+
+
+def _redefined(path: str, value: FieldValue, record: VariableRecord) -> Variable:
+    name = path.split(".")[1]
+    unit = record.definitions[name].unit
+    if isinstance(value, Variable):
+        return value
+    if isinstance(value, Mapping):
+        try:
+            return Variable.model_validate(dict(value))
+        except ValueError as error:
+            raise CaseValidationError(f"{path}: {value!r} is not a definition: {error}") from None
+    if isinstance(value, bool) or not isinstance(value, int | float) or not math.isfinite(value):
+        raise CaseValidationError(
+            f"{path}: {value!r} is neither a finite number in {unit!r} nor a definition"
+        )
+    return Variable(value=float(value), unit=unit)
 
 
 def read(path: str | Path, *, model: type[D] = CaseDocument) -> D:  # type: ignore[assignment]
@@ -186,15 +370,37 @@ def reads(
     model: type[D] = CaseDocument,  # type: ignore[assignment]
 ) -> D:
     """Resolve a case held in memory, reading the model files it names beside ``base``."""
-    raw = yaml.safe_load(text)
-    if not isinstance(raw, Mapping) or "models" not in raw or raw.get("schema") != SCHEMA:
-        document = validate_mapping(raw, source, model)
+    return read_mapping(yaml.safe_load(text), base=base, source=source, model=model)
+
+
+def read_mapping(
+    raw: object,
+    *,
+    base: str | Path | None = None,
+    source: str = "<string>",
+    model: type[D] = CaseDocument,  # type: ignore[assignment]
+) -> D:
+    """Resolve a parsed case: its variables first, then the model files it names beside ``base``.
+
+    The case's own mapping resolves to numbers before any model merges, so every stage and every
+    hash sees the numbers and the record keeps what was written (FR-39).
+    """
+    resolved, resolution = resolve(raw, source)
+    if (
+        not isinstance(resolved, Mapping)
+        or "models" not in resolved
+        or resolved.get("schema") != SCHEMA
+    ):
+        document = validate_mapping(resolved, source, model)
         assert isinstance(document, model)
-        return document
-    directory = Path(base).resolve() if base is not None else Path.cwd()
-    paths = _named_files(raw["models"], directory, source)
-    study = {key: value for key, value in raw.items() if key != "models"}
-    return _resolve(study, paths, directory, source, model)
+    else:
+        directory = Path(base).resolve() if base is not None else Path.cwd()
+        paths = _named_files(resolved["models"], directory, source)
+        study = {key: value for key, value in resolved.items() if key != "models"}
+        document = _resolve(study, paths, directory, source, model)
+    if resolution is not None:
+        document._variables = VariableRecord.of(resolution)
+    return document
 
 
 def _named_files(raw: object, directory: Path, source: str) -> dict[str, Path]:
@@ -288,6 +494,11 @@ def _read_model_file(
     if "models" in raw:
         raise CaseValidationError(f"{path}: a model names no model, so it holds no models: key")
     body = {key: value for key, value in raw.items() if key not in ("schema", "name")}
+    for expression in expression_paths(body):
+        raise CaseValidationError(
+            f"{path}: {expression}: an expression belongs to the study, not to a {kind} model; "
+            "a model file holds numbers"
+        )
     for leaf in _leaves(body, ""):
         if owner_of(leaf) != kind:
             raise CaseValidationError(

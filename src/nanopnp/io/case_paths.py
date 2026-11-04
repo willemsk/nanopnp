@@ -414,6 +414,20 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
         assignments = {k: v for k, v in assignments.items() if k not in named}
         if not assignments:
             return document
+    variables = document.variables_record
+    named_variables = sorted(
+        p for p in assignments if p == "variables" or p.startswith("variables.")
+    )
+    if variables is None and named_variables:
+        raise CaseValidationError(
+            f"<{document.name}>: {', '.join(named_variables)}: the case defines no variables, so a "
+            "substitution cannot set one; write variables: in the case file and read it with "
+            "nanopnp.case.Case.load or nanopnp.pipeline.case.load_case"
+        )
+    if variables is not None:
+        # Read again as written, so an expression a substitution leaves alone still follows the
+        # variables it names.
+        return variables.carried(document, assignments)
     record = document.models_record
     if record is not None:
         record.check_dropped(document.name, assignments)

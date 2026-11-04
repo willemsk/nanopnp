@@ -116,6 +116,7 @@ def input_group(
     files: Mapping[str, Path] | None = None,
     upstream: Mapping[str, Artefact] | None = None,
     overrides: Mapping[str, tuple[Canonicalisable, Canonicalisable]] | None = None,
+    variables: Mapping[str, Canonicalisable] | None = None,
 ) -> dict[str, Canonicalisable]:
     """Return the Inputs group: the content hash of every input, and each file's path.
 
@@ -124,6 +125,9 @@ def input_group(
     overrides
         A study's values over its models, by dotted path as (model value, study value); the
         group holds them only when the case names a model.
+    variables
+        The variables a case defines as written beside the numbers they resolved to; the group
+        holds them only when the case defines some.
     """
     group: dict[str, Canonicalisable] = {
         "case": case_hash,
@@ -145,6 +149,8 @@ def input_group(
             path: {"model": model, "study": study}
             for path, (model, study) in sorted(overrides.items())
         }
+    if variables is not None:
+        group["variables"] = dict(variables)
     return group
 
 
@@ -425,6 +431,7 @@ def build(
     wall_distance: Mapping[str, Canonicalisable] | None = None,
     contributed_deviations: tuple[ContributedDeviation, ...] = (),
     overrides: Mapping[str, tuple[Canonicalisable, Canonicalisable]] | None = None,
+    variables: Mapping[str, Canonicalisable] | None = None,
 ) -> Manifest:
     """Assemble a manifest from the run's outputs; absent stage outputs are recorded as not run.
 
@@ -432,6 +439,8 @@ def build(
     ----------
     overrides
         A study's values over its models; see :func:`input_group`.
+    variables
+        The case's variables as written; see :func:`input_group`.
     charge
         The resolved fields' summary; None when the run carried no field.
     """
@@ -439,7 +448,11 @@ def build(
         case_text=case_text,
         case_hash=case_hash,
         inputs=input_group(
-            case_hash=case_hash, files=input_files, upstream=upstream, overrides=overrides
+            case_hash=case_hash,
+            files=input_files,
+            upstream=upstream,
+            overrides=overrides,
+            variables=variables,
         ),
         environment=environment(),
         geometry_and_mesh=_geometry_group(

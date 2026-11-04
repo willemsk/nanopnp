@@ -24,7 +24,7 @@ paths:
 - Cite the source (`knowledge/` file or specification section) of every physical constant and fit
   coefficient in a comment.
 - **Imports at the top of the module.** Exceptions, imported inside the function that uses them:
-  `ngsolve`, `netgen`, `numpy`, `scipy`, `meshio`, `h5py` (import cost; stage modules are imported
+  `ngsolve`, `netgen`, `numpy`, `scipy`, `meshio`, `h5py`, `pint` (import cost; stage modules are imported
   just to introspect), and an optional extra's package in a module that must work without it (a
   missing extra is refused naming it). A module reached only through `create()`, such as
   `structure/read.py`, imports its extra at the top. Defer nothing else; VER-72 (a) checks it.
