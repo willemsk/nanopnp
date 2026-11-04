@@ -44,6 +44,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.artefact import SweepArtefact
     from nanopnp.io.store import Store
+    from nanopnp.sweep.forecast import Forecast
     from nanopnp.sweep.plan import SweepPlan
     from nanopnp.validation.comsol import Golden
     from nanopnp.validation.probe import ProbeDocument, ProbeGrid
@@ -703,6 +704,7 @@ def _positive_nm(text: str) -> float:
 
 def _sweep(args: argparse.Namespace) -> int:
     from nanopnp.io.store import Store
+    from nanopnp.sweep.forecast import forecast
     from nanopnp.sweep.plan import plan_from_document, read_plan, write_plan
 
     store = Store(args.store)
@@ -716,6 +718,15 @@ def _sweep(args: argparse.Namespace) -> int:
             directory = Path(args.directory)
             _refuse_another_plan(directory, plan.hash)
         path = write_plan(plan, directory)
+        # The forecast is advisory: a failure to key the points must not fail the plan.
+        rebuilds: Forecast | None
+        try:
+            rebuilds = forecast(plan, store=store)
+        except Exception as error:
+            rebuilds = None
+            rebuild_lines = [f"forecast  unavailable: {error}"]
+        else:
+            rebuild_lines = [f"forecast  {line}" for line in rebuilds.warnings()]
         payload: dict[str, Canonicalisable] = {
             "plan": str(path),
             "directory": str(directory),
@@ -723,6 +734,7 @@ def _sweep(args: argparse.Namespace) -> int:
             "points": len(plan.points),
             "waves": [list(span) for span in plan.waves()],
             "warnings": list(plan.warnings),
+            "forecast": None if rebuilds is None else rebuilds.summary(),
         }
         lines = [
             f"plan     {path}",
@@ -736,6 +748,7 @@ def _sweep(args: argparse.Namespace) -> int:
             for wave, (first, last) in enumerate(plan.waves())
         ]
         lines += [f"warning  {line}" for line in plan.warnings]
+        lines += rebuild_lines
         _emit(payload, lines, as_json=args.json)
         return EXIT_OK
 
