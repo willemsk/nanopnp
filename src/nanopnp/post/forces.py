@@ -176,6 +176,9 @@ def check_extension(
         require_boundary(mesh, boundary, error=ExtensionError)
         region = mesh.Boundaries(boundary)
         length = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
+        if not length > 0.0:
+            # A named boundary that carries no segment passes the mask but has nothing to average.
+            raise ExtensionError(f"the boundary {boundary!r} has no length in this mesh")
         difference = extension - ngs.CF(target)
         deviation = float(
             ngs.Integrate(ngs.InnerProduct(difference, difference), mesh, definedon=region)
@@ -618,6 +621,8 @@ def _boundary_region(mesh: Mesh, boundary: str) -> tuple[Option, float]:
     require_boundary(mesh, boundary)
     region = mesh.Boundaries(boundary)
     arc = float(ngs.Integrate(ngs.CF(1.0), mesh, definedon=region))
+    if not arc > 0.0:
+        raise ValueError(f"the boundary {boundary!r} has no length in this mesh")
     return region, arc
 
 

@@ -154,7 +154,7 @@ def species_flux(
     variables: ConcentrationVariables,
     potential: Expression,
     velocity: Expression | None = None,
-    steric: StericForm | None = None,
+    steric: StericForm | None,
     dielectric_gradient: bool = False,
 ) -> Expression:
     """Return the dimensionless total flux ``J~_i`` of one species.
