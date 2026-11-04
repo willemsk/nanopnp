@@ -48,8 +48,9 @@ together with a declaration that can be read without building it. The declaratio
 case-derived options its builder takes, which are the resolved `model_options`; the value set of each
 `physics:` switch it honours; whether it carries solid materials, and which supplied coefficients it
 accepts (the fixed charge, `χ`); whether it reads the PHY-02 distance field; the values of
-`numerics.continuation` it admits; the quantities of interest it provides (§6.7); and whether it
-solves ionic transport. Every built model reports its field set, boundary vocabulary, essential
+`numerics.continuation` it admits; and whether it solves ionic transport. It lists no quantities of
+interest: a registered output states what it needs of a declaration, ionic transport or the flow
+switch's `true`, and a model provides every output whose need its declaration meets (§6.7; §8.2.32 AH1). Every built model reports its field set, boundary vocabulary, essential
 boundaries, NUM-09 scale set and provenance. A layer outside `physics/` reads these, and SHALL NOT
 branch on a model's name or on its class: case validation refuses what the declaration does not
 admit, the mesh gate requires the boundaries the model declares, the solve passes the coefficients

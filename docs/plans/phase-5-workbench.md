@@ -1,11 +1,11 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.04 merged, WP5.05 delivered; the library packages WP5.06 and WP5.07 and the shell packages
+**Status: in progress; WP5.01 to WP5.05 merged; the library packages WP5.06 and WP5.07 and the shell packages
 WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-AG13). Release: **v0.6** (`v0.6.0`).
+AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1). Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -158,7 +158,7 @@ identity; a radius scale below 1 can breach the kernel-spacing gate (REV-182). F
 
 ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62; §8.2.31 AG12, AG13)
 
-**Delivered 3 November 2026** ([the plan](wp5.05-named-models-and-study-overrides.md)). A case names a molecular and a
+**Merged 3 November 2026** ([the plan](wp5.05-named-models-and-study-overrides.md)). A case names a molecular and a
 continuum model, each a file of its own schema (`nanopnp/molecular-model/v0.6`, `nanopnp/continuum-model/v0.6`) holding
 only the keys its kind owns (`io/models.py:OWNERS`), and resolves into one complete case. A study overrides any value of
 the models it names, each override recorded beside the model's value in the manifest (AG12); a study keys and equals its
@@ -169,12 +169,15 @@ takes the store (REV-62 `fixed`; REV-186 keeps a stored mesh beside a `structure
 dump and hash, so a plain reader refuses a case that names it; read it with `Case.load` or `load_case`. Tier 1 and Tier 2
 tests cover the identity, the overrides, the sweep and the reuse. Tag `v0.6.0-alpha.5`.
 
-### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5)
+### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
 
-The outputs and the steric models become registries, so a new quantity of interest needs no edit of the case schema
-(a case-schema change). With them, the review's QoI seam (CODE_REVIEW_024 candidate 5): one extraction interface and
-one boundary-existence check shared by `physics/distance.py` and the three `post/` modules. The indicator and reaction
-routes keep their cross-check (FR-23, QR-04). Before the Study suite offers outputs (T4). Tag `v0.6.0-alpha.6`.
+**Planned 4 November 2026** ([the plan](wp5.06-outputs-and-steric-registries.md)). The outputs and the steric models
+become registries, so a new quantity of interest needs no edit of the case schema, the extraction stage or a physics
+model: each output states what it needs of a model's declaration, ionic transport or flow, and a model provides every
+output whose need it meets; the declaration's own list of quantities goes (AH1). With them, the review's QoI seam: one
+extraction interface and one boundary-existence check shared by `physics/distance.py` and the three `post/` modules.
+The indicator and reaction routes keep their cross-check (FR-23, QR-04). No key and no VER-62 number moves. Before the
+Study suite offers outputs (T4). Tag `v0.6.0-alpha.6`.
 
 ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
 
@@ -287,7 +290,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.03, protonation before the density | 1, 2 | U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) |
 | WP5.04, the mutator's library step | 1 | FR-38's Tier 1 tests: a pin, a charge change and a radius scale change that residue alone; no key moves without edits (VER-62) |
 | WP5.05, named models | 1, 2 | FR-39's reuse and rebuild-only-what-moved, the overrides recorded, the sweep over models; the schema's identifier (G6) |
-| WP5.06, the registries | 1, 2 | MOD-09; FR-23 and QR-04's route cross-check unchanged |
+| WP5.06, the registries | 1, 2 | MOD-09; AH1's provided outputs equal the old lists; FR-23 and QR-04's route cross-check unchanged; VER-56's keys and VER-62 unmoved |
 | WP5.07, variables and the forecast | 1 | FR-39: the whitelist, the dimension check, unchanged keys without variables (VER-62), the forecast against the walk |
 | WP5.08, the frame | 1 | VER-78's frame states; the project folder's export read back; REV-52's protocol members |
 | WP5.09, Molecular | 1, 2 | REV-121's cavity axis against a known axis (VER-48); VER-78 |

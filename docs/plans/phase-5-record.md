@@ -235,3 +235,17 @@ over the library's models is WP5.05's (AG13). WP5.05's entry read:
 > `v0.6.0-alpha.5`.
 
 Verification's WP5.05 row read: FR-39's reuse and rebuild-only-what-moved; the schema's identifier (G6).
+
+## Amended 4 November 2026 (§8.2.32 AH1)
+
+At WP5.06's plan the author ruled that an output states what it needs of a model's declaration, and a model provides
+every output whose need it meets (AH1). WP5.06's entry read:
+
+> **WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5)**
+>
+> The outputs and the steric models become registries, so a new quantity of interest needs no edit of the case schema
+> (a case-schema change). With them, the review's QoI seam (CODE_REVIEW_024 candidate 5): one extraction interface and
+> one boundary-existence check shared by `physics/distance.py` and the three `post/` modules. The indicator and reaction
+> routes keep their cross-check (FR-23, QR-04). Before the Study suite offers outputs (T4). Tag `v0.6.0-alpha.6`.
+
+Verification's WP5.06 row read: MOD-09; FR-23 and QR-04's route cross-check unchanged.

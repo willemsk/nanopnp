@@ -729,10 +729,11 @@ applied would be a plausible wrong answer (code review CR-2).
 
 NOTE (`outputs:`): the list selects what the run produces, and each word is refused rather than
 silently ignored where it cannot be met. `current`, `transport_numbers` and `eof_rate` select scalar
-quantities of interest (§6.7). Each model declares the quantities it provides (§5.4.3), and a word
-the named model does not declare SHALL be refused when the case is resolved, naming the model and
-the quantities it declares, rather than when stage 11 reaches it (WP26); the electrostatic models declare none, so a case naming one of them writes `outputs: []` or
-`outputs: [fields]`. `fields` gates the IF-07 field export, which is off unless asked for:
+quantities of interest (§6.7). Each word names a registered output, and each output states what it
+needs of a model's declaration (§5.4.3; §8.2.32 AH1). A word the named model does not provide SHALL
+be refused when the case is resolved, naming the model and the outputs it provides, rather than when
+stage 11 reaches it (WP26); the electrostatic models provide `fields` alone, so a case naming one of
+them writes `outputs: []` or `outputs: [fields]`. `fields` gates the IF-07 field export, which is off unless asked for:
 the export is of order ten megabytes per solve and an envelope sweep of thousands of points would
 otherwise write tens of gigabytes nobody requested. `analyte_force` requires the mesh to carry an
 `analyte` material, and a case asking for it on a mesh without one SHALL abort naming the missing
