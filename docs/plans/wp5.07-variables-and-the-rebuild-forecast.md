@@ -166,10 +166,10 @@ report; 2 region and 2 mesh builds come before the solves".
 - [x] 33184dd 1. Vet pint (`supermatt:dependency-vetting`); `uv add "pint>=0.25.3,<0.26"`; a `knowledge/07-software-stack/` concept
   with D2's measured facts, its index line, `knowledge/log.md` (D2). Done when the review says so. **Executor:** main.
 - [x] ecfc1c2 2. `src/nanopnp/io/variables.py` (D1, D2). Done when rows 1 to 3 and 9 pass. **Executor:** main.
-- [x] 3. `io/models.py` (`read_mapping`, `VariableRecord`, the model-file refusal), `io/case.py` (`_variables`,
+- [x] 08194fc 3. `io/models.py` (`read_mapping`, `VariableRecord`, the model-file refusal), `io/case.py` (`_variables`,
   `dumps_case`), `io/case_paths.py:substitute`, `api/case.py` (`variables`, `expressions`, `dumps`), `io/manifest.py`,
   `pipeline/run.py:_manifest` (D3, D4). Done when rows 4 and 5 and `uv run pytest -m tier1` pass. **Executor:** main.
-- [ ] 4. Compaction checkpoint. **Executor:** main.
+- [x] 4. Compaction checkpoint. **Executor:** main.
 - [ ] 5. `sweep/plan.py`: `_check_axes` accepts a variable's number or definition; `_barriers` and
   `_wall_size_barriers` expand a variable axis by `reaches` (D4). Done when row 6 passes. **Executor:** main.
 - [ ] 6. `core/stages.py`, `mesh/ingest.py`, `geometry/region.py`, `solve/stage.py`, `pipeline/forecast.py`,
