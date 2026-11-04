@@ -20,7 +20,7 @@ colleague who tries the workbench is named by the close.
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.05 are merged
   (`v0.6.0-alpha.5`). Library WP5.06 and WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31). **WP5.06** ([outputs and steric models as registries](wp5.06-outputs-and-steric-registries.md)) is
-  planned on its branch; next `/np-implement wp 5.06`. host: claude-code.
+  delivered on its branch; next `/np-ship wp 5.06`. host: claude-code.
 
 ## Not to be re-decided
 

@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.05 merged; the library packages WP5.06 and WP5.07 and the shell packages
+**Status: in progress; WP5.01 to WP5.05 merged, WP5.06 delivered; the library package WP5.07 and the shell packages
 WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
@@ -171,13 +171,15 @@ tests cover the identity, the overrides, the sweep and the reuse. Tag `v0.6.0-al
 
 ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
 
-**Planned 4 November 2026** ([the plan](wp5.06-outputs-and-steric-registries.md)). The outputs and the steric models
-become registries, so a new quantity of interest needs no edit of the case schema, the extraction stage or a physics
-model: each output states what it needs of a model's declaration, ionic transport or flow, and a model provides every
-output whose need it meets; the declaration's own list of quantities goes (AH1). With them, the review's QoI seam: one
-extraction interface and one boundary-existence check shared by `physics/distance.py` and the three `post/` modules.
-The indicator and reaction routes keep their cross-check (FR-23, QR-04). No key and no VER-62 number moves. Before the
-Study suite offers outputs (T4). Tag `v0.6.0-alpha.6`.
+**Delivered 4 November 2026** ([the plan](wp5.06-outputs-and-steric-registries.md)). The outputs (`post/outputs.py`) and
+the steric models (`physics/steric.py`) are registries: a new quantity or crowding form is one registration, with no edit of
+the case schema, stage 11 or a physics model. An output states what it needs of a declaration, transport or flow, and a
+model provides every output whose need it meets (AH1), so `ModelDeclaration.quantities` and `io/case.py:OUTPUTS` are gone
+and the shipped models provide what they did. Stage 11 builds one `Extraction` and calls each selected output, and
+`QoIArtefact` takes `output_parameters`; `numerics/measures.py:require_boundary` is the one boundary-existence check
+(AD5). A steric name other than `borukhov` enters the solve key as `electrolyte.steric_model`; no shipped key, golden or
+case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
+registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. Tag `v0.6.0-alpha.6`.
 
 ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
 
