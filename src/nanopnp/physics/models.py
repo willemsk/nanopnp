@@ -25,7 +25,12 @@ from nanopnp.io.vocabulary import (
     VELOCITY,
     VELOCITY_AXIS,
 )
-from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
+from nanopnp.materials.electrolyte import (
+    NO_STERIC_MODEL,
+    VALIDATED_STERIC_MODEL,
+    CorrectionSwitches,
+    Electrolyte,
+)
 from nanopnp.materials.fields import blend, nearest_solid_permittivity
 from nanopnp.mesh.primitives import (
     DEFAULT_BOUNDARIES,
@@ -66,6 +71,7 @@ from nanopnp.physics.flow import (
 )
 from nanopnp.physics.nernst_planck import (
     ConcentrationVariables,
+    StericForm,
     nernst_planck_residual,
     species_flux,
 )
@@ -89,6 +95,7 @@ from nanopnp.physics.stabilisation import (
 )
 from nanopnp.physics.stabilisation import cell_peclet as species_cell_peclet
 from nanopnp.physics.stabilisation import create as create_stabilisation
+from nanopnp.physics.steric import steric_form
 
 if TYPE_CHECKING:
     from nanopnp.io.resolved import ResolvedCase
@@ -400,6 +407,11 @@ class TransportModel(PhysicsModel, Protocol):
         ...
 
     @property
+    def steric_form(self) -> StericForm | None:
+        """The registered form of ``beta_i``, or None when it is off."""
+        ...
+
+    @property
     def log_variables(self) -> bool:
         """Whether the NUM-02 log branch is solved."""
         ...
@@ -571,7 +583,13 @@ class CoupledModel:
     @property
     def steric(self) -> bool:
         """Whether ``beta_i`` is active; owned by the electrolyte's switches."""
-        return self.electrolyte.switches.steric
+        return self.electrolyte.switches.steric != NO_STERIC_MODEL
+
+    @property
+    def steric_form(self) -> StericForm | None:
+        """The registered form of ``beta_i``, or None when it is off."""
+        name = self.electrolyte.switches.steric
+        return None if name == NO_STERIC_MODEL else steric_form(name)
 
     @property
     def species(self) -> tuple[str, ...]:
@@ -685,7 +703,7 @@ class CoupledModel:
             deviations.add("physics.inertia")
         if self.dielectric_gradient_forces:
             deviations.add("physics.dielectric_gradient_forces")
-        if not self.steric:
+        if self.electrolyte.switches.steric != VALIDATED_STERIC_MODEL:
             deviations.add("electrolyte.corrections.steric.model")
         return deviations
 
@@ -905,7 +923,7 @@ class CoupledModel:
                 variables=variables,
                 potential=potential,
                 velocity=velocity,
-                steric=self.steric,
+                steric=self.steric_form,
                 dielectric_gradient=self.dielectric_gradient_forces,
             )
             field_name = concentration_field_name(name)
@@ -964,7 +982,7 @@ class CoupledModel:
             variables=variables,
             potential=functions[POTENTIAL],
             velocity=functions[VELOCITY] if self.flow else None,
-            steric=self.steric,
+            steric=self.steric_form,
         )
 
     def _flow_state(

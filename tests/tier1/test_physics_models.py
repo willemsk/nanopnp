@@ -230,7 +230,7 @@ def test_unknown_keywords_are_rejected_rather_than_dropped() -> None:
 
 def test_electrolyte_owns_the_steric_switch() -> None:
     electrolyte = Electrolyte.from_parameter_file(
-        switches=replace(CorrectionSwitches.classical(), steric=True)
+        switches=replace(CorrectionSwitches.classical(), steric="borukhov")
     )
     model = CoupledModel(electrolyte=electrolyte)
     assert model.steric is True

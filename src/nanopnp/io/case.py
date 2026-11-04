@@ -38,9 +38,6 @@ CORRECTION_PROPERTIES: tuple[str, ...] = (
 )
 
 
-STERIC_MODELS: frozenset[str] = frozenset({"none", "borukhov"})
-
-
 OUTPUTS: frozenset[str] = frozenset(
     {
         "current",
@@ -448,7 +445,7 @@ class CorrectionChoice(_Strict):
 class Steric(_Strict):
     """The size-modified flux and the diameters it is built on."""
 
-    model: Literal["none", "borukhov"] = "none"
+    model: str = "none"
     a_ion_nm: float | None = None
     a_water_nm: float | None = None
 

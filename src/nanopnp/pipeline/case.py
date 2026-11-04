@@ -89,7 +89,7 @@ def _switches(document: CaseDocument, files: Mapping[str, Path]) -> CorrectionSw
         viscosity=choice("viscosity"),
         permittivity=choice("permittivity"),
         density=choice("density"),
-        steric=corrections.steric.model != "none",
+        steric=corrections.steric.model,
     )
 
 

@@ -229,7 +229,7 @@ def test_phy21_resolution_builds_the_named_model_s_configuration() -> None:
     resolved = resolve(loads_case(REFERENCE_CASE))
     assert resolved.model == "epnp-ns"
     assert resolved.electrolyte.parameter_file == "willems2020_nacl"
-    assert resolved.electrolyte.switches.steric is True
+    assert resolved.electrolyte.switches.steric == "borukhov"
     assert resolved.model_options["order"] == 2
     assert resolved.model_options["pressure_order"] == 1
     assert resolved.newton.max_iterations == 100
@@ -245,7 +245,7 @@ def test_phy21_a_classical_case_resolves_to_every_correction_off() -> None:
     assert "parameters: willems2020_nacl" in text
     resolved = resolve(loads_case(text))
     switches = resolved.electrolyte.switches
-    assert switches.steric is False
+    assert switches.steric == "none"
     assert {choice.model for choice in (switches.diffusivity, switches.mobility)} == {"none"}
     assert resolved.electrolyte.viscosity_0 > 0.0
 

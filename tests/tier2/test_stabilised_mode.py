@@ -67,7 +67,7 @@ MMS_GATED_MODE = "supg"
 # VER-18
 def _mms_model(mode: str) -> CoupledModel:
     electrolyte = Electrolyte.from_parameter_file(
-        switches=replace(CorrectionSwitches.classical(), steric=True)
+        switches=replace(CorrectionSwitches.classical(), steric="borukhov")
     )
     return CoupledModel(
         electrolyte=electrolyte,
