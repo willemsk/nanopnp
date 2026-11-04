@@ -35,6 +35,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from typing import Any
 
 from nanopnp.cli.reference import (
     render_api_reference,
@@ -44,6 +45,8 @@ from nanopnp.cli.reference import (
     render_field_reference,
 )
 from nanopnp.io.case_paths import case_json_schema
+from nanopnp.physics.steric import registered_steric_models
+from nanopnp.post.outputs import registered_outputs
 from nanopnp.validation.modularity import render_measurements
 from nanopnp.validation.okf import navigation, splice_navigation
 
@@ -144,6 +147,15 @@ def _correction_files() -> str:
     return "\n".join(lines)
 
 
+def _schema_with_registered_names() -> dict[str, Any]:
+    """Return the case schema with the registered steric models and outputs as enums."""
+    schema = case_json_schema()
+    steric = ("none", *registered_steric_models())
+    schema["$defs"]["Steric"]["properties"]["model"]["enum"] = list(steric)
+    schema["properties"]["outputs"]["items"]["enum"] = list(registered_outputs())
+    return schema
+
+
 def main() -> int:
     """Regenerate ``docs/_generated/`` from scratch."""
     logging.basicConfig(level=logging.INFO, format="%(name)s: %(message)s")
@@ -168,7 +180,9 @@ def main() -> int:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     schema = OUTPUT / "reference" / "case.schema.json"
-    schema.write_text(json.dumps(case_json_schema(), indent=2) + "\n", encoding="utf-8")
+    schema.write_text(
+        json.dumps(_schema_with_registered_names(), indent=2) + "\n", encoding="utf-8"
+    )
     config = ROOT / "mkdocs.yml"
     current = config.read_text(encoding="utf-8")
     knowledge = "_generated/model/knowledge"

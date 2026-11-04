@@ -2578,8 +2578,8 @@ registered with `needs=∅` and an `extract` is offered by `outputs.provided` fo
 and then missing from the summary of `pb`, `pb-linear` and `poisson`, with no refusal. The six shipped outputs cannot
 reach this: `fields` has no `extract`. Found by the WP5.06 review.
 
-Open: whether an output that extracts must need `transport`, or the no-transport branch runs the extractors that need
-nothing against an extraction without quantities. The author rules when the first such output is proposed.
+Fixed: ruled by the author. `register_output` refuses an output with an `extract` that does not need `transport`, naming
+the reason, so no model offers an output that stage 11 would then leave out. Verified at review (§8.2.13 N3).
 
 ## REV-194: A registered steric form or output enters the key by name only
 
@@ -2588,16 +2588,16 @@ name and its parameters. Re-registering a name with a changed body returns the e
 name only, and `borukhov` is versioned with the package. A user's own stage is keyed on a digest of its code object
 (§5.5). Found by the WP5.06 review.
 
-Open: whether a registered form and extractor are keyed on a digest of their code as a user stage is. It is a
-specification amendment.
+Fixed: ruled by the author. The name alone keys a registered form and extractor, as §5.5's NOTE says; `borukhov` and the
+shipped outputs are versioned with the package. A changed body is a new name. No digest, no amendment. No code change.
 
 ## REV-195: The manufactured source builds the Borukhov flux whatever steric model is named
 
 `validation/mms.py` switches on `model.steric`, a bool, and always manufactures the Borukhov source. A second registered
 form would fail the convergence test loudly but would not say why. Found by the WP5.06 review.
 
-Open: the package that ships a second steric model adds its manufactured form first (§8.2.28 AD5 leaves a second model
-out of WP5.06).
+Fixed: ruled by the author. `ManufacturedSolution` refuses a steric model other than `borukhov`, naming the model, so a
+second form fails with its reason; the package that ships one adds its manufactured form (§8.2.28 AD5).
 
 ## REV-196: The case JSON Schema no longer lists the steric models and the outputs
 
@@ -2605,5 +2605,5 @@ out of WP5.06).
 `case_json_schema()` and the published `case.schema.json` carry no enum for them. The `io` layer cannot import the
 registries (VER-61). Found by the WP5.06 review.
 
-Open: whether `docs/scripts/generate.py` adds the registered names to the schema it writes. Nothing validates against
-the schema; the documentation page loses the list of valid words.
+Fixed: ruled by the author. `docs/scripts/generate.py` writes the registered steric models and outputs as enums into the
+published `case.schema.json`; `io` stays registry-free (VER-61).
