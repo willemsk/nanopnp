@@ -720,10 +720,12 @@ def _sweep(args: argparse.Namespace) -> int:
         path = write_plan(plan, directory)
         # The forecast is advisory: a failure to key the points must not fail the plan.
         rebuilds: Forecast | None
+        unavailable: str | None = None
         try:
             rebuilds = forecast(plan, store=store)
         except Exception as error:
             rebuilds = None
+            unavailable = str(error)
             rebuild_lines = [f"forecast  unavailable: {error}"]
         else:
             rebuild_lines = [f"forecast  {line}" for line in rebuilds.warnings()]
@@ -735,6 +737,7 @@ def _sweep(args: argparse.Namespace) -> int:
             "waves": [list(span) for span in plan.waves()],
             "warnings": list(plan.warnings),
             "forecast": None if rebuilds is None else rebuilds.summary(),
+            "forecast_unavailable": unavailable,
         }
         lines = [
             f"plan     {path}",

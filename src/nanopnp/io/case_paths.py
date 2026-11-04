@@ -195,7 +195,73 @@ def _walk_fields(owner: type[BaseModel], prefix: str) -> list[FieldReference]:
 
 def case_json_schema() -> dict[str, Any]:
     """Return the case document's JSON Schema, generated from its own model."""
-    return CaseDocument.model_json_schema(by_alias=True, mode="validation")
+    schema = CaseDocument.model_json_schema(by_alias=True, mode="validation")
+    _admit_expressions(schema)
+    # `variables:` is read before the document validates, so the model does not declare it.
+    schema["properties"]["variables"] = {
+        "type": "object",
+        "description": "Named values and expressions that a numeric field can read by name.",
+        "additionalProperties": _VARIABLE_SCHEMA,
+    }
+    return schema
+
+
+_EXPRESSION_SCHEMA: dict[str, Any] = {
+    "type": "string",
+    "description": "An expression of the case's variables and a unit, resolved before the case "
+    "validates.",
+}
+
+_VARIABLE_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "value": {"type": "number"},
+        "expression": {"type": "string"},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 64},
+    },
+    "additionalProperties": False,
+    "oneOf": [{"required": ["value"]}, {"required": ["expression"]}],
+}
+
+
+def _numeric_node(node: Mapping[str, Any]) -> bool:
+    return node.get("type") in ("number", "integer") or any(
+        isinstance(branch, Mapping) and branch.get("type") in ("number", "integer")
+        for branch in node.get("anyOf", ())
+    )
+
+
+def _with_expression(node: dict[str, Any]) -> dict[str, Any]:
+    if "anyOf" in node:
+        return {**node, "anyOf": [*node["anyOf"], _EXPRESSION_SCHEMA]}
+    return {"anyOf": [node, _EXPRESSION_SCHEMA]}
+
+
+def _admit_expressions(node: object) -> None:
+    # A numeric field takes an expression where a number goes, so the schema lets a string stand.
+    if isinstance(node, list):
+        for item in node:
+            _admit_expressions(item)
+        return
+    if not isinstance(node, dict):
+        return
+    for key in ("properties", "$defs"):
+        block = node.get(key)
+        if isinstance(block, dict):
+            for name, declared in block.items():
+                if key == "properties" and isinstance(declared, dict) and _numeric_node(declared):
+                    block[name] = _with_expression(declared)
+                else:
+                    _admit_expressions(declared)
+    extra = node.get("additionalProperties")
+    if isinstance(extra, dict):
+        if _numeric_node(extra):
+            node["additionalProperties"] = _with_expression(extra)
+        else:
+            _admit_expressions(extra)
+    for key in ("anyOf", "items"):
+        if key in node:
+            _admit_expressions(node[key])
 
 
 def schema_leaves(schema: Mapping[str, Any]) -> dict[str, Mapping[str, Any]]:
@@ -234,6 +300,8 @@ def _collect_leaves(
     leaves: dict[str, Mapping[str, Any]],
 ) -> None:
     for name, declared in _dereference(root, node).get("properties", {}).items():
+        if not prefix and name == "variables":
+            continue  # not a field: a mapping of definitions
         path = f"{prefix}{name}"
         resolved = _dereference(root, declared)
         candidates = [

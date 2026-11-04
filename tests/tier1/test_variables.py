@@ -265,3 +265,50 @@ def test_fr39_a_sweep_over_a_variable_moves_every_field_that_uses_it(tmp_path: P
     unknown.write_text(sweep.replace("variables.a", "variables.b"), encoding="utf-8")
     with pytest.raises(SweepPlanError, match=r"variables\.b"):
         build_plan(load_sweep(unknown), source=unknown, check_meshes=False)
+
+
+def _variable_plan(tmp_path: Path) -> tuple[Path, Any]:
+    text = (
+        QUICKSTART.read_text(encoding="utf-8")
+        .replace("radius_nm: 2}", "radius_nm: a}")
+        .replace(
+            "name: quickstart\n", "name: quickstart\n\nvariables:\n  a: {value: 2, unit: nm}\n"
+        )
+    )
+    base = tmp_path / "base.case.yaml"
+    base.write_text(text, encoding="utf-8")
+    source = tmp_path / "radii.sweep.yaml"
+    source.write_text(
+        "schema: nanopnp/sweep/v0.5\nname: radii\nbase: base.case.yaml\n"
+        "axes:\n  - {name: a, path: variables.a, values: [1.5, 2]}\n",
+        encoding="utf-8",
+    )
+    return base, build_plan(load_sweep(source), source=source, check_meshes=False)
+
+
+def test_fr39_a_plan_refuses_a_formula_rewritten_as_its_equal_literal(tmp_path: Path) -> None:
+    # The resolved numbers hash the same, but the barriers were planned from the formula.
+    base, plan = _variable_plan(tmp_path)
+    base.write_text(
+        base.read_text(encoding="utf-8").replace("radius_nm: a}", "radius_nm: 2}"), encoding="utf-8"
+    )
+    assert CaseArtefact(Case.load(base)).hash == plan.base_hash
+    with pytest.raises(SweepPlanError, match="other variables"):
+        plan.base_case()
+
+
+def test_fr39_the_forecast_reads_the_members_the_plan_resolved(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A forecast that resolved every point again would repeat the cost of the plan.
+    from nanopnp.sweep import plan as plans
+    from nanopnp.sweep.forecast import forecast
+
+    _, plan = _variable_plan(tmp_path)
+
+    def refuse(*args: object, **kwargs: object) -> object:
+        raise AssertionError("a point was resolved again")
+
+    monkeypatch.setattr(plans, "resolve", refuse)
+    found = forecast(plan, store=Session(tmp_path / "store", write=False).store)
+    assert len(found.points) == len(plan.points)

@@ -2623,25 +2623,25 @@ on `variables.v`) assigns no `bias_V`, so the plan finds no matched pair and ref
 
 The plan reads barriers, warm-start parents and variable-axis reach from the variables as written, but `SweepPlan.base_case()` accepts a base case whose resolved numbers hash the same. A formula changed to a literal of equal value passes the check, and the plan's barriers are then stale. Found by the WP5.07 review (FR-39). The remedy is a plan identity that covers the variable record.
 
-**Open**: the author rules.
+**Fixed** in WP5.07: the plan records the variables and expressions as written, carries them in its digest, and `SweepPlan.base_case()` refuses a base case whose variables moved, naming both.
 
 
 ## REV-199: The sweep forecast resolves every point again
 
 `forecast()` re-reads the base case, substitutes and resolves each point, which `build_plan` already did; `run_plan` repeats it through `_announce`. The cost grows with the points and with a stored mesh ingested at each point. Found by the WP5.07 review. The remedy is for the plan to carry its resolved members.
 
-**Open**: the author rules.
+**Fixed** in WP5.07: the plan resolves each member once (`SweepPlan.resolved_members`, seeded by `build_plan`), and the forecast reads them. A plan read from disk resolves them on first use.
 
 
 ## REV-200: A second type repeats the variable resolution
 
 `VariableRecord` and `Resolution` hold the same four fields, and `VariableRecord.of` only copies one into the other. They must stay in step by hand. Found by the WP5.07 review. The remedy is one type, which spans `io/variables.py`, `io/models.py` and their callers.
 
-**Open**: the author rules.
+**Fixed** in WP5.07: `VariableRecord` extends `Resolution` and takes its fields from it, so the four fields are declared once. The record stays in `io/models.py` because its operations need the case's document types, which `io/variables.py` cannot import.
 
 
 ## REV-201: `sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables
 
 When the forecast fails, the text output gives the reason and the JSON gives `forecast: null` alone. `case_json_schema` lists neither `variables:` nor a string at a numeric field, which the workbench forms will need. Found by the WP5.07 review. Both change a public shape, so the author rules.
 
-**Open**: the author rules.
+**Fixed** in WP5.07: `sweep plan --json` carries `forecast_unavailable` with the reason, and `case_json_schema` declares `variables:` and admits a string at each numeric field (VER-76 (c)).
