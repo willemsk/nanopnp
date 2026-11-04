@@ -1,6 +1,6 @@
 # WP5.07 — Variables and the rebuild forecast
 
-**Status: planned, not started.** Planned 4 November 2026 on `main` (`4323c95`). It inherits
+**Status: delivered, 4 November 2026.** Planned 4 November 2026 on `main` (`4323c95`). It inherits
 §8.2.19 U4, §8.2.31 AG2 to AG5 and REV-139.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -180,9 +180,9 @@ report; 2 region and 2 mesh builds come before the solves".
   forecast.summary()` in the payload (D6). Done when `nanopnp sweep plan examples/03-iv-sweep/charged.sweep.yaml` prints
   them. **Executor:** `general-purpose` on Haiku.
 - [x] 8. Compaction checkpoint. **Executor:** main.
-- [ ] 9. The Execution brief's amendments; `CHANGELOG.md`; REV-139 `fixed`; Outcome notes. Done when the review says
+- [x] 2298915 9. The Execution brief's amendments; `CHANGELOG.md`; REV-139 `fixed`; Outcome notes. Done when the review says
   so and the strict documentation build passes. **Executor:** main.
-- [ ] 10. `.claude/hooks/gate.sh run`: the VER-62 walks unmoved, no re-pin. **Executor:** main.
+- [x] 10. `.claude/hooks/gate.sh run`: the VER-62 walks unmoved, no re-pin. **Executor:** main.
 
 ### Verification
 

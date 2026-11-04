@@ -1,6 +1,6 @@
 # Current work
 
-Updated 4 November 2026 (WP5.07 planned). Navigation only;
+Updated 4 November 2026 (WP5.07 delivered). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
@@ -9,8 +9,9 @@ Phase 4 is released, and the workbench's technology is chosen. The rest of Phase
 package per part of the screen, the guided route, the old shell's removal and the guide. Three library steps are merged:
 the pore's shape follows the protein's charge state; a case can change one residue's charge or size; a case names
 its models, overrides their values and reuses what they built; and the quantities a run reports, and the models of ion
-crowding, are lists that grow by one entry. The fifth is planned: a case defines named values with units and formulas
-of them, converted exactly or refused at the field, and a sweep warns beforehand of what each value will rebuild.
+crowding, are lists that grow by one entry. The fifth is built and waits for its review: a case defines named values
+with units and formulas of them, converted exactly or refused at the field, and a sweep warns beforehand of what each
+value will rebuild.
 
 **Your call.** None open. The colleague who tries the workbench is named by the close.
 
@@ -19,7 +20,7 @@ of them, converted exactly or refused at the field, and a sweep warns beforehand
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.06 are merged
   (`v0.6.0-alpha.6`). Library WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31). **WP5.07** ([variables and the rebuild forecast](wp5.07-variables-and-the-rebuild-forecast.md)) is
-  planned; next `/np-implement wp 5.07`. host: claude-code.
+  delivered and its PR is open; next `/np-ship wp 5.07`, then `/np-plan wp 5.08`. host: claude-code.
 
 ## Not to be re-decided
 
