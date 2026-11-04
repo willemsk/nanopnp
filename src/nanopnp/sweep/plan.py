@@ -36,7 +36,7 @@ from nanopnp.materials.corrections import load_corrections
 from nanopnp.mesh.sizing import resolve_wall_size
 from nanopnp.pipeline.case import load_case, resolve
 from nanopnp.pipeline.run import input_files
-from nanopnp.sweep.document import SweepDocument, load_sweep, merged
+from nanopnp.sweep.document import Axis, SweepDocument, load_sweep, merged
 
 logger = logging.getLogger(__name__)
 
@@ -317,11 +317,26 @@ def _identify(
     return digest
 
 
-def _barriers(document: SweepDocument) -> tuple[bool, ...]:
+def _moved_paths(axis: Axis, base: CaseDocument) -> tuple[str, ...]:
+    # A variable axis writes no field of its own; it moves every field its variable reaches.
+    record = base.variables_record
+    found: dict[str, None] = {}
+    for path in axis.paths():
+        if not path.startswith("variables."):
+            found.setdefault(path, None)
+            continue
+        if record is None:
+            continue
+        for reached in record.reaches(path.split(".")[1]):
+            found.setdefault(reached, None)
+    return tuple(found)
+
+
+def _barriers(document: SweepDocument, base: CaseDocument) -> tuple[bool, ...]:
     return tuple(
         any(
             path == barrier or path.startswith(f"{barrier}.")
-            for path in axis.paths()
+            for path in _moved_paths(axis, base)
             for barrier in WARM_START_BARRIERS
         )
         for axis in document.axes
@@ -348,7 +363,7 @@ def _wall_size_barriers(
         if not barriers[index]
         and any(
             path == entry or path.startswith(f"{entry}.")
-            for path in axis.paths()
+            for path in _moved_paths(axis, base)
             for entry in WALL_SIZE_PATHS
         )
     ]
@@ -430,20 +445,36 @@ def _check_axes(document: SweepDocument) -> None:
     for axis in document.axes:
         for position, assignment in enumerate(axis.points()):
             for path, value in assignment.items():
+                if path.startswith("variables."):
+                    continue  # needs the base case; _check_variable_axes
                 try:
                     field_at(path).validate(value)
                 except (UnknownCasePathError, CaseValidationError) as error:
                     raise SweepPlanError(f"axis {axis.name!r}, value {position}: {error}") from None
 
 
-def _warnings(document: SweepDocument, barriers: Sequence[bool]) -> tuple[str, ...]:
+def _check_variable_axes(document: SweepDocument, base: CaseDocument) -> None:
+    for axis in document.axes:
+        for position, assignment in enumerate(axis.points()):
+            for path, value in assignment.items():
+                if not path.startswith("variables."):
+                    continue
+                try:
+                    substitute(base, {path: value})
+                except (UnknownCasePathError, CaseValidationError) as error:
+                    raise SweepPlanError(f"axis {axis.name!r}, value {position}: {error}") from None
+
+
+def _warnings(
+    document: SweepDocument, barriers: Sequence[bool], base: CaseDocument
+) -> tuple[str, ...]:
     found: list[str] = []
     for axis, barrier in zip(document.axes, barriers, strict=True):
         if not barrier:
             continue
         crossed = sorted(
             path
-            for path in axis.paths()
+            for path in _moved_paths(axis, base)
             for entry in (*WARM_START_BARRIERS, *WALL_SIZE_PATHS)
             if path == entry or path.startswith(f"{entry}.")
         )
@@ -498,11 +529,12 @@ def build_plan(
         ) from None
 
     _check_model_files(document, base_path.parent)
+    _check_variable_axes(document, base)
     axes = list(document.axes)
     shape = document.shape()
     origins = document.origins()
     grid = list(product(*(range(length) for length in shape))) if shape else [()]
-    barriers = _wall_size_barriers(document, base, grid, _barriers(document))
+    barriers = _wall_size_barriers(document, base, grid, _barriers(document, base))
 
     seen: dict[str, Mapping[str, FieldValue]] = {}
     enumerated: list[tuple[int, tuple[int, ...], str, Mapping[str, FieldValue]]] = []
@@ -554,7 +586,7 @@ def build_plan(
         points=tuple(points),
         rectification=RECTIFICATION in base.outputs,
         pairs=_pairs(points),
-        warnings=_warnings(document, barriers),
+        warnings=_warnings(document, barriers, base),
         workers=document.workers,
     )
     # Before the resolve rather than after it: an asymmetric bias axis makes the

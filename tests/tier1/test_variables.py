@@ -15,6 +15,8 @@ from nanopnp.io import variables
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import CaseValidationError, FieldValue, dumps_case
 from nanopnp.io.variables import field_unit, numeric_paths, resolve
+from nanopnp.sweep.document import load_sweep
+from nanopnp.sweep.plan import SweepPlanError, build_plan
 
 SOURCE = "<test>"
 
@@ -217,3 +219,38 @@ def test_fr39_an_edit_of_a_variable_moves_the_fields_that_use_it() -> None:
     assert "2*a" not in dropped.dumps()
     again = Case.loads(moved.dumps())
     assert again == moved and again.expressions == moved.expressions
+
+
+def test_fr39_a_sweep_over_a_variable_moves_every_field_that_uses_it(tmp_path: Path) -> None:
+    """An axis on `variables.a` must move each field written with `a`, and sever the warm start."""
+    text = (
+        QUICKSTART.read_text(encoding="utf-8")
+        .replace("radius_nm: 2}", "radius_nm: a}")
+        .replace("thickness_nm: 6}", "thickness_nm: 3*a}")
+        .replace(
+            "name: quickstart\n", "name: quickstart\n\nvariables:\n  a: {value: 1, unit: nm}\n"
+        )
+    )
+    (tmp_path / "base.case.yaml").write_text(text, encoding="utf-8")
+    sweep = (
+        "schema: nanopnp/sweep/v0.5\nname: radii\nbase: base.case.yaml\n"
+        "axes:\n  - {name: a, path: variables.a, values: [1.5, 2]}\n"
+    )
+    source = tmp_path / "radii.sweep.yaml"
+    source.write_text(sweep, encoding="utf-8")
+    plan = build_plan(load_sweep(source), source=source, check_meshes=False)
+    base = plan.base_case()
+    members = [plan.case(index, base=base) for index in range(len(plan.points))]
+    sizes = [
+        (member.geometry.pore.radius_nm, member.geometry.membrane.thickness_nm)  # type: ignore[union-attr]
+        for member in members
+        if member.geometry is not None
+    ]
+    assert sizes == [(1.5, 4.5), (2.0, 6.0)]
+    assert [point.parent for point in plan.points] == [None, None]
+    assert [point.wave for point in plan.points] == [0, 0]
+    assert len(plan.warnings) == 1 and "geometry.pore.radius_nm" in plan.warnings[0]
+    unknown = tmp_path / "unknown.sweep.yaml"
+    unknown.write_text(sweep.replace("variables.a", "variables.b"), encoding="utf-8")
+    with pytest.raises(SweepPlanError, match=r"variables\.b"):
+        build_plan(load_sweep(unknown), source=unknown, check_meshes=False)
