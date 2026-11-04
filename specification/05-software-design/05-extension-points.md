@@ -13,10 +13,20 @@ stabilisation mode (`numerics.stabilisation`, `physics/stabilisation.py`) are ea
 registration, and each key is a string checked against its registry when a case is loaded, as
 `physics.model` is. Registering the Gmsh mesher imports nothing (CON-10), and `sparsecholesky`
 cannot be registered (NUM-21). Whether those registering functions are public is REV-67's, with the
-composer phase (§8.2.18 T3). A pipeline stage is extended through one call on a `Session`, below;
+composer phase (§8.2.18 T3). The outputs a case may select (`outputs:`, `post/outputs.py`) and the steric models
+(`electrolyte.corrections.steric.model`, `physics/steric.py`) are registries of the same kind, each added by one
+registration and checked against its registry when a case is loaded (MOD-09; §8.2.18 T4); an output states what it needs of a
+model's declaration, and a model provides every output whose need it meets (§5.4.3; §8.2.32 AH1). A pipeline stage is extended through one call on a `Session`, below;
 `core.stages.register` and `StageDescription` are internal (§8.2.23 Y10). A physics model's
 registry, unlike it, serves the whole process: a case names its model and is checked when it is
 loaded, before any `Session` exists (§8.2.23 Y9).
+
+NOTE (the steric model; PHY-05; PHY-22): a steric model is a form `(variables, coefficients, species) -> β̃_i`
+registered by name. `borukhov` is PHY-05 and the validated default; `none` sets `β_i = 0` and is the off value, offered beside
+the registry as a correction's `none` is, and it cannot be registered. Any other registered name is a deviation from the
+validated model (FR-25): it is listed among the model's deviations, and its name enters the solve key as
+`electrolyte.steric_model`, so a second form never shares a key with `borukhov`. The keys of `borukhov` and of `none` are
+those of a release that had no registry, and the case schema's identifier is unchanged.
 
 NOTE (FR-27, a stage of one's own; QR-14; §8.2.23 Y10, UT-10): a stage of one's own is a Python
 function registered on a `Session` by `session.register_stage(function, *, name=None)`, its name

@@ -2254,6 +2254,10 @@ guards a public entry.
 by `physics/distance.py`, `post/indicator.py`, `post/reaction_flux.py` and `post/forces.py`, moves to WP5.06 with
 MOD-09's outputs registry. The cost items, the coefficient expressions among them, stay here.
 
+**Done** (WP5.06): the seam part. `numerics/measures.py` holds `has_boundary` and `require_boundary`, which the wall
+distance, the indicator, the reaction flux and the force extension call; stage 11 builds one `Extraction` and calls each
+selected output. The cost items remain deferred to Phase 6.
+
 ## REV-172: A non-finite trial residual at minimum damping is reported before the state gates name its location
 
 `numerics/newton.py` raises `NewtonDivergenceError` on a non-finite trial residual at minimum damping (NUM-16's NOTE;

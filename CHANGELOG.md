@@ -172,6 +172,31 @@ records the work.
     WB-16 row and *Override* entry, and the case-file reference's prose on `models:` and `inputs`.
   - **Open items**: REV-62 is `fixed`. REV-186 is open: a stored mesh beside `structure:` stays refused.
 
+WP5.06: outputs and steric models as registries, Phase 5's sixth package; tag `v0.6.0-alpha.6` once merged
+(`SPECIFICATION.md` MOD-09, FR-23, QR-04, PHY-05, PHY-22, VER-56; §8.2.18 T4, §8.2.28 AD5, §8.2.32 AH1). A new quantity of
+interest, or a second way of modelling crowded ions, is one registration and needs no edit of the case schema, the
+extraction stage or a physics model. The [plan](docs/plans/wp5.06-outputs-and-steric-registries.md) records the work.
+
+- **Added**:
+  - **`post/outputs.py`**: `register_output(name, *, needs, extract, parameters, export, refusal)`, `registered_outputs()`,
+    `output(name)` and `provided(declaration)`. The six shipped words register there. An output's `needs` is a subset of
+    `{"transport", "flow"}`, read from a model's declaration; a model provides every output whose need it meets, so the
+    shipped models provide what they did before. An unregistered word is refused when the case is loaded, naming the
+    registered outputs.
+  - **`physics/steric.py`**: `register_steric_model(name, form)`, `registered_steric_models()` and `steric_form(name)`.
+    `borukhov` (PHY-05) is registered; `none` stays the off value. Another registered name is a deviation, and its
+    name enters the solve key as `electrolyte.steric_model`.
+  - **`numerics/measures.py`**: `has_boundary` and `require_boundary`, one check that a named boundary exists, now used
+    by the wall distance, the indicator, the reaction flux and the force extension.
+- **Changed**:
+  - Stage 11 builds one `Extraction` and calls each selected output's `extract`; `QoIArtefact` takes
+    `output_parameters` in place of `extension_shell_nm`. The stage-11 key parameters are the same dictionary.
+  - `electrolyte.corrections.steric.model` is any registered name, not `borukhov` alone. No key, golden number or case
+    document of the shipped registries changes (VER-62).
+  - **Removed**: `ModelDeclaration.quantities` (F4), `io/case.py:OUTPUTS` and `STERIC_MODELS`.
+  - **Amended**: §5.5's registry sentence and a NOTE on the steric model, §5.4.3 and §5.3.1's NOTEs and VER-56 (AH1).
+  - **Open items**: MOD-09 is `fixed`. REV-171's seam part is done; its cost items stay in Phase 6.
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 

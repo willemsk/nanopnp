@@ -279,6 +279,10 @@ user, and the enumeration's shape should follow that.
 
 **Ruled** (§8.2.18 T4): brought into v0.6. The outputs and the steric models become registries in a Phase 5 library package, set by `/np-plan amend 5`, so a new quantity of interest needs no schema edit.
 
+**Fixed** (WP5.06, `v0.6.0-alpha.6`): `post/outputs.py` and `physics/steric.py` hold the two registries, and
+`io/case.py` holds neither list. An output states what it needs of a model's declaration (§8.2.32 AH1), so
+`ModelDeclaration.quantities` is gone; `extension_points` reads both as `registry` rows.
+
 ### MOD-10 — The backend interface of section 5.4.1 does not exist
 
 *Area:* extension. *Severity:* high.
