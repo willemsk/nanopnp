@@ -170,15 +170,15 @@ report; 2 region and 2 mesh builds come before the solves".
   `dumps_case`), `io/case_paths.py:substitute`, `api/case.py` (`variables`, `expressions`, `dumps`), `io/manifest.py`,
   `pipeline/run.py:_manifest` (D3, D4). Done when rows 4 and 5 and `uv run pytest -m tier1` pass. **Executor:** main.
 - [x] 4. Compaction checkpoint. **Executor:** main.
-- [ ] 5. `sweep/plan.py`: `_check_axes` accepts a variable's number or definition; `_barriers` and
+- [x] 21242e5 5. `sweep/plan.py`: `_check_axes` accepts a variable's number or definition; `_barriers` and
   `_wall_size_barriers` expand a variable axis by `reaches` (D4). Done when row 6 passes. **Executor:** main.
-- [ ] 6. `core/stages.py`, `mesh/ingest.py`, `geometry/region.py`, `solve/stage.py`, `pipeline/forecast.py`,
+- [x] 12c93d3 6. `core/stages.py`, `mesh/ingest.py`, `geometry/region.py`, `solve/stage.py`, `pipeline/forecast.py`,
   `sweep/forecast.py`, `api/sweep.py` (`Sweep.forecast`, the log line in `run_plan`) (D5, D6). Done when rows 7 and 8,
   `test_model_interface.py` and `test_layering.py` pass. **Executor:** main.
-- [ ] 7. `cli/__init__.py:_sweep`: `forecast(plan, store=store)`; a `forecast  <line>` per warning; `"forecast":
+- [x] ac8ac80 7. `cli/__init__.py:_sweep`: `forecast(plan, store=store)`; a `forecast  <line>` per warning; `"forecast":
   forecast.summary()` in the payload (D6). Done when `nanopnp sweep plan examples/03-iv-sweep/charged.sweep.yaml` prints
   them. **Executor:** `general-purpose` on Haiku.
-- [ ] 8. Compaction checkpoint. **Executor:** main.
+- [x] 8. Compaction checkpoint. **Executor:** main.
 - [ ] 9. The Execution brief's amendments; `CHANGELOG.md`; REV-139 `fixed`; Outcome notes. Done when the review says
   so and the strict documentation build passes. **Executor:** main.
 - [ ] 10. `.claude/hooks/gate.sh run`: the VER-62 walks unmoved, no re-pin. **Executor:** main.
