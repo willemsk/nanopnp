@@ -15,7 +15,9 @@ __all__ = [
     "CancelFlag",
     "CancelToken",
     "Cancelled",
+    "Forecastable",
     "MissingExtraError",
+    "NotBuilt",
     "Progress",
     "SolveHook",
     "SolveReporting",
@@ -81,6 +83,7 @@ if TYPE_CHECKING:  # pragma: no cover - imported for annotations only
     # ``io`` depends on ``core``, never the reverse at run time
     from matplotlib.figure import Figure
 
+    from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.artefact import Artefact, StageInputs
 
 
@@ -173,6 +176,21 @@ def report(progress: Progress | None, fraction: float, message: str) -> None:
     """Call ``progress`` if there is one, clamping the fraction into [0, 1]."""
     if progress is not None:
         progress(min(1.0, max(0.0, fraction)), message)
+
+
+class NotBuilt(LookupError):  # noqa: N818 - a forecast's question, not a failure
+    """A forecast reached into the payload of an upstream artefact that no stage has built yet."""
+
+
+@runtime_checkable
+class Forecastable(Protocol):
+    """A stage that can say what moves its artefact before its upstream artefacts exist."""
+
+    def forecast_parameters(self, inputs: StageInputs) -> Mapping[str, Canonicalisable]:
+        """Return what the stage's key reads, with the hashes of the upstream artefacts it reads.
+
+        The key is read without any upstream payload, and nothing else of the case enters it.
+        """
 
 
 @dataclass(frozen=True)

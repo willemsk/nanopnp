@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from nanopnp.core.hashing import file_hash
+from nanopnp.core.hashing import Canonicalisable, file_hash
 from nanopnp.core.stages import (
     CancelToken,
     Progress,
@@ -617,22 +617,14 @@ class MeshStage:
         payload: dict[str, Path] | None = None,
         summary: dict[str, object] | None = None,
     ) -> MeshArtefact:
-        from nanopnp.mesh.generate import idealised_recipe, sizing_parameters
-
         region = inputs.require("region")
         record = read_region(region.payload[PAYLOAD_NAME])
-        if isinstance(record, IdealisedRegionRecord):
-            sizing = idealised_recipe(resolved)[2]
-        else:
-            wall = resolve_wall_size(
-                resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
-            )
-            sizing = sizing_parameters(
-                wall,
-                SIZES.scaled(wall.size_scale),
-                resolved.document.numerics.mesh.backend,
-                exclusion=record.exclusion is not None,
-            )
+        sizing = self._sizing(
+            resolved,
+            idealised=isinstance(record, IdealisedRegionRecord),
+            exclusion=not isinstance(record, IdealisedRegionRecord)
+            and record.exclusion is not None,
+        )
         return MeshArtefact(
             region=region.hash,
             materials=tuple(sorted(record.face_areas_nm2)),
@@ -642,6 +634,40 @@ class MeshStage:
             payload=payload,
             summary=summary,
         )
+
+    def _sizing(
+        self, resolved: ResolvedCase, *, idealised: bool, exclusion: bool
+    ) -> dict[str, Canonicalisable]:
+        from nanopnp.mesh.generate import idealised_recipe, sizing_parameters
+
+        if idealised:
+            return idealised_recipe(resolved)[2]
+        wall = resolve_wall_size(
+            resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
+        )
+        return sizing_parameters(
+            wall,
+            SIZES.scaled(wall.size_scale),
+            resolved.document.numerics.mesh.backend,
+            exclusion=exclusion,
+        )
+
+    def forecast_parameters(self, inputs: StageInputs) -> Mapping[str, Canonicalisable]:
+        """Return what a generated mesh keys by: its region's hash and its sizing.
+
+        The region's names follow from its hash, so the key reads nothing else of it.
+        """
+        resolved = inputs.resolved
+        if not resolved.generates_mesh:
+            return {}
+        return {
+            "region": inputs.require("region").hash,
+            "sizing": self._sizing(
+                resolved,
+                idealised=resolved.pore is not None,
+                exclusion=resolved.exclusion_offset_nm > 0.0,
+            ),
+        }
 
     def run(
         self,

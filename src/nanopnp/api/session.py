@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from inspect import signature
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from nanopnp.core.hashing import Canonicalisable
@@ -306,6 +307,11 @@ class Session:
             )
         self._own[label] = stage
         return label
+
+    @property
+    def own_stages(self) -> Mapping[str, FunctionStage]:
+        """The stages added to this session, by label."""
+        return MappingProxyType(self._own)
 
     def sweep(
         self,
