@@ -1,26 +1,25 @@
 # Current work
 
-Updated 4 November 2026 (WP5.06 planned). Navigation only;
+Updated 4 November 2026 (WP5.07 planned). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
 Phase 4 is released, and the workbench's technology is chosen. The rest of Phase 5 is planned: library steps, one
 package per part of the screen, the guided route, the old shell's removal and the guide. Three library steps are merged:
-the pore's shape follows the protein's charge state; a case can change one residue's charge or size; and a case names
-its models, overrides their values and reuses what they built. The fourth is
-planned: the quantities a run reports, and the models of ion crowding, become lists that grow by one entry, each quantity
-offered by every model that meets its need. No number moves.
+the pore's shape follows the protein's charge state; a case can change one residue's charge or size; a case names
+its models, overrides their values and reuses what they built; and the quantities a run reports, and the models of ion
+crowding, are lists that grow by one entry. The fifth is planned: a case defines named values with units and formulas
+of them, converted exactly or refused at the field, and a sweep warns beforehand of what each value will rebuild.
 
-**Your call.** None open. You ruled at the fourth step's plan that a quantity states what it needs of a model. The
-colleague who tries the workbench is named by the close.
+**Your call.** None open. The colleague who tries the workbench is named by the close.
 
 ## Position
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.05 are merged
-  (`v0.6.0-alpha.5`). Library WP5.06 and WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31). **WP5.06** ([outputs and steric models as registries](wp5.06-outputs-and-steric-registries.md)) is
-  delivered on its branch; next `/np-ship wp 5.06`. host: claude-code.
+- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.06 are merged
+  (`v0.6.0-alpha.6`). Library WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31). **WP5.07** ([variables and the rebuild forecast](wp5.07-variables-and-the-rebuild-forecast.md)) is
+  planned; next `/np-implement wp 5.07`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -57,7 +56,7 @@ colleague who tries the workbench is named by the close.
 | The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The phase's amendments | `phase-5-record.md` |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
-| WP5.06 | its plan; MOD-09 in `docs/project/modularity.md`; §5.4.3, §5.5, §6.7; §8.2.28 AD5; §8.2.32 AH1; REV-171; CODE_REVIEW_024 |
+| WP5.07 | its plan; FR-39; §5.3.1, §5.3.3, §5.3.4, §5.5; §8.2.31 AG2 to AG5; REV-139 |
 | The workbench | `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30, §8.2.31 |
 
 ## Handoff Rules

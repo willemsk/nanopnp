@@ -1,7 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.05 merged, WP5.06 delivered; the library package WP5.07 and the shell packages
-WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+**Status: in progress; WP5.01 to WP5.06 merged, WP5.07 planned; the shell packages WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
@@ -171,7 +170,7 @@ tests cover the identity, the overrides, the sweep and the reuse. Tag `v0.6.0-al
 
 ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
 
-**Delivered 4 November 2026** ([the plan](wp5.06-outputs-and-steric-registries.md)). The outputs (`post/outputs.py`) and
+**Merged 4 November 2026** ([the plan](wp5.06-outputs-and-steric-registries.md)). The outputs (`post/outputs.py`) and
 the steric models (`physics/steric.py`) are registries: a new quantity or crowding form is one registration, with no edit of
 the case schema, stage 11 or a physics model. An output states what it needs of a declaration, transport or flow, and a
 model provides every output whose need it meets (AH1), so `ModelDeclaration.quantities` and `io/case.py:OUTPUTS` are gone
@@ -183,6 +182,7 @@ registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. 
 
 ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
 
+**Planned 4 November 2026** ([the plan](wp5.07-variables-and-the-rebuild-forecast.md)).
 A case gains variables, each a value with its unit or an expression of other variables, parsed from Python's syntax
 tree against a whitelist (numbers, names, the four operations, powers, parentheses, a few functions), so no code runs.
 Units are checked through `pint`, vetted before it is added (AG3): a field takes its unit from its name's suffix, a
