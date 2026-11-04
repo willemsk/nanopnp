@@ -1,6 +1,6 @@
 # WP5.06 — Outputs and steric models as registries
 
-**Status: in progress — items 1 to 3 done.** Planned 4 November 2026, on `main` after WP5.05's merge (`b5284c1`). It inherits
+**Status: in progress — items 1 to 6 done.** Planned 4 November 2026, on `main` after WP5.05's merge (`b5284c1`). It inherits
 §8.2.18 T4, §8.2.28 AD3 and AD5, and AH1, ruled at this plan (§8.2.32).
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An
@@ -173,11 +173,11 @@ field as "carries no degrees of freedom of this field".
   `test_wall_distance.py`, `test_indicator.py`, `test_forces.py` and `test_qoi_stage.py` pass unchanged.
   **Executor:** `general-purpose` on Sonnet.
 - [x] 3. Compaction checkpoint. **Executor:** main.
-- [ ] 4. `post/outputs.py`; `ModelDeclaration.quantities` removed; `_check_outputs`, `check_document`,
+- [x] a92b0ef 4. `post/outputs.py`; `ModelDeclaration.quantities` removed; `_check_outputs`, `check_document`,
   `registry_options`; `io/case.py:OUTPUTS` removed (D1, D2). Done when row 2 passes. **Executor:** main.
-- [ ] 5. `post/stage.py`, `io/artefact.py:QoIArtefact` (D3). Done when row 1 and `test_qoi_stage.py` pass.
+- [x] 6788a64 5. `post/stage.py`, `io/artefact.py:QoIArtefact` (D3). Done when row 1 and `test_qoi_stage.py` pass.
   **Executor:** main.
-- [ ] 6. `validation/modularity.py:EXTENSION_POINTS`: both rows `registry`, homed in `post/outputs.py`
+- [x] e04d7c8 6. `validation/modularity.py:EXTENSION_POINTS`: both rows `registry`, homed in `post/outputs.py`
   (`call:register_output`) and `physics/steric.py` (`call:register_steric_model`); `docs/project/modularity-layering.yaml`
   unchanged unless VER-61 measures a new edge. Done when `test_layering.py` and `test_backend_guard.py` pass.
   **Executor:** `general-purpose` on Haiku.
