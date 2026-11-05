@@ -227,6 +227,43 @@ stages each swept value rebuilds. The [plan](docs/plans/wp5.07-variables-and-the
   FR-39 and IF-03.
 - **Open items**: REV-197, rectification does not pair a bias set through a variable (WP5.11).
 
+WP5.08: the frame and the project folder, Phase 5's eighth package; tag `v0.6.0-alpha.8` once merged
+(`SPECIFICATION.md` FR-31, FR-32, FR-34, FR-35, QR-16, VER-64, VER-78; §8.2.17 S11, S12; §8.2.18 T2, T8; §8.2.31 AG1; §8.2.33 AI1,
+AI9 to AI14; REV-32, REV-52, MOD-13). The workbench gets its document, a project folder of plain files, and its window, a frame
+with menus, a palette, the four suites, the queue, the changed and problem lists and the settings. **`nanopnp gui` takes a
+project, not a case**: it opens a folder, creates one in a missing or empty folder, and with none opens the last project. The
+[plan](docs/plans/wp5.08-the-frame-and-the-project-folder.md) records the work.
+
+- **Added**:
+  - **The project** (`nanopnp.Project`, `nanopnp/project/v0.6`): `nanopnp-project.yaml` with the item index, the open items,
+    the current item and each suite's layout, beside `models/`, `studies/`, `comparisons/`, `inputs/`, `runs/`, `sweeps/` and
+    `store/`. A case file imports split into its two models and its study and computes exactly what it did (every key but the
+    first is the original's); a case that names model files brings them along, a different file of a taken name stored as
+    `<name>-2`. Each input is copied in or linked where it lies, and `embed` copies a linked one in later. A project exports as
+    a portable copy of readable files, the store only on request.
+  - **The changed list and the problems list**: `Project.changes` gives each value away from its default and each study override
+    with a reset each; `Project.problems` gives each missing file, mismatched name and item refused on loading, with its suite.
+  - **The frame**: title bar with File, View and Help menus, the changed count and the palette; the four suites in the activity
+    bar; the project rail; the bottom panel with queue, log, changed values and problems; the status bar. One command registry
+    feeds the menus, the palette (`Ctrl+K`, `F1`) and the shortcuts, each rebindable; a chord bound twice, a chord the browser
+    keeps and a chord without a modifier are refused. The key listener runs in the page, the command on the server.
+  - **The settings**: theme (system, light, dark or your own, a plain file per user naming its base and the colours it changes),
+    density, spacing (`tight` is new in `tokens.css`), the 3D view's background and the shortcuts, per user under `NANOPNP_CONFIG`.
+    A theme you make sets its own contrast; the shipped ones are measured.
+  - **The command line**: `nanopnp project new|import [--link]|embed|export [--with-store]` and `nanopnp store prune [--remove]`,
+    which lists the entries an older release wrote with their count and size. `cli/` is split into a module per command family.
+- **Changed**: `nanopnp gui` takes a project folder where it took a case; the four `--state` fixtures boot as projects. The `home`
+  screen is gone: `/` goes to the current suite, and the stage badges and the charge screen's link are on the Study suite. The
+  3D view reads its background from the `--canvas-3d` token. `Store(root, runs=, sweeps=)` and `run_directory(..., upto=)` keep
+  every default path; VER-62's keys and walks do not move.
+- **Fixed**: REV-32, REV-52 and MOD-13's command-line part. `ContributesDeviations` joins `SolveReporting` and `Forecastable` as
+  an optional member the walk tests by `isinstance`.
+- **Amended**: NOTEs on FR-32 (§5.3.1), the older entries of a store (§5.3.2) and the optional members of a stage (§5.5); VER-64
+  and VER-78; the Appendix A rows of FR-31, FR-32, FR-34, FR-35 and QR-16; the design document's folder.
+- **Open items**: REV-202 to REV-205, from the screen review: the problems list leads to a suite and not yet to a field (WP5.09 to WP5.11),
+  the frame's accessibility and layout limits (WP5.13), the settings' guards and the changed list's units (WP5.09), and the Study
+  page's fixture names and the charge screen's colour bar (WP5.11).
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 

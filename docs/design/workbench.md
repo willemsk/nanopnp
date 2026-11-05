@@ -273,7 +273,9 @@ The workbench's document is a plain folder (S11), readable without the workbench
   models/continuum/<name>.yaml
   studies/<name>.yaml
   comparisons/<name>.yaml
-  runs/<study>/<run>/         each run's resolved case file and manifest
+  inputs/                     the input files copied in; a linked one stays where it lies
+  runs/<study>/<run>/         each run's resolved case file, manifest and results
+  sweeps/                     each sweep's records
   store/                      the artefact store
 ```
 
@@ -284,8 +286,15 @@ components and its values away from the defaults; a run resolves them to one com
 with its manifest, which the command line runs as it is (FR-25; WB-11). The references are a case-schema
 change for a shell package after `v0.5.0` (S1; REV-136).
 
+**Import and inputs.** A case file imports into the project, split into its two models and its study
+(`nanopnp project import`); the study computes exactly what the case did. A case that names model files
+brings them along under their names. Each input file is copied into `inputs/` or, with `--link`, kept where
+it lies, and a linked one is copied in later (`project embed`); a project with links works only where they
+resolve, and the problems list says which do not (FR-32; AI9, AI10).
+
 **The export** writes a portable copy of the folder: the project file, the models, studies and comparisons,
-and each run's case file, manifest and results, never an opaque archive (S11). The store's intermediate
+the inputs (a linked one copied in), and each run's case file, manifest and results, never an opaque archive
+(S11). The store's intermediate
 artefacts are left out unless asked for, each being rebuilt from its case. Exporting figures and fields
 from a run is FR-28, v0.7.
 

@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-05
+* **Record**: A workbench shortcut is matched in the page and the command runs on the server; Quasar paints its panels, cards and menus white whatever the theme (WP5.08). ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
+
 ## 2026-11-04
 * **Record**: pint with a `Fraction` registry converts units exactly; 0.25.3 is the newest release that supports Python 3.11 (WP5.07). ([24. pint with a Fraction registry](07-software-stack/24-pint-with-a-fraction-registry-exact-units.md))
 

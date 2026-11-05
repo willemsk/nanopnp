@@ -449,6 +449,24 @@ Mol* is served as its unmodified standalone bundle, `molstar.js` and `molstar.cs
 (`assets/molstar/NOTICE.md`); the server's contract is ADR-004's NOTE (the desktop wrapper), kept by
 `tests/tier1/test_gui_screens.py::test_ver78_the_server_keeps_its_contract`.
 
+### A shortcut is matched in the page, because only the page can stop the browser's own **[tested: tests/tier1/test_gui_screens.py::test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing]** {#a-shortcut-is-matched-in-the-page-because-only-the-page-can-stop-the-browsers-own}
+
+A server that hears a key press has heard it after the browser acted on it, so `Ctrl+W` has closed the tab by
+then. The workbench's `assets/frame.js` therefore listens for `keydown` in the capture phase, builds the chord
+from the event's `code` (so a layout or a held `Shift` does not change it), calls `preventDefault` and sends only
+the command's id to the server (`emitEvent`). The chords the browser keeps (`BROWSER_KEPT`: `Ctrl+T`, `Ctrl+W`,
+`Ctrl+N`, `Ctrl+Tab`, their `Shift` forms and `Ctrl+1` to `9`) cannot be taken from it by a page, so the settings
+refuse them, naming the holder. A key typed into a field is not a shortcut: only an F key may stand alone.
+
+### Quasar paints its tab panels, cards and menus white whatever the theme **[verified][^wp508-plan]** {#quasar-paints-its-tab-panels-cards-and-menus-white-whatever-the-theme}
+
+NiceGUI's Quasar components set their own background and text colour, so a dark workbench rendered with the
+design's tokens still showed white panels, cards and menus until `assets/frame.css` set `.q-tab-panels`,
+`.q-tab-panel`, `.q-card` and `.q-menu` from the tokens, and the buttons' and fields' text colour with them. A
+selector that must beat Quasar's starts at `body`. `/np-gui render shell` finds the miss as a text-contrast
+failure in the dark theme, not before. The 3D view's background is the same kind of token (`--canvas-3d`), which
+`bridge.js` reads and hands to Mol* as `renderer.backgroundColor`, so a theme changes it too.
+
 ---
 
 [^wp14-plan]: `docs/plans/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
@@ -457,3 +475,4 @@ Mol* is served as its unmodified standalone bundle, `molstar.js` and `molstar.cs
 [^wp31-plan]: `git show 0ff2d619:docs/plans/wp31-gui-charge-pipeline.md`, D8 (scene colour limits and `gui_settings.autoscale`).
 [^wp501-plan]: `docs/plans/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).
 [^wp502-report]: `docs/design/spike/report.md` (the framework spike's six measures and what the build taught, WP5.02 items 1 to 5).
+[^wp508-plan]: `docs/plans/wp5.08-the-frame-and-the-project-folder.md`, items 8 to 10 (the frame, its render findings and Outcome notes).

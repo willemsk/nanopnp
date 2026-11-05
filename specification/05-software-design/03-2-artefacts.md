@@ -135,3 +135,12 @@ test harness can exercise is not one a user holding an archived result can rely 
 calculation reported as the same one; drift in a recorded library version is reported and not fatal
 unless the caller asks for a strict environment, because a version that moved a number is caught by
 the quantity comparison, which is the assertion that matters.
+
+NOTE (older entries, FR-27, REV-32; WP5.08; §8.2.18 T2; §8.2.33 AI14): a store lists, and on request
+removes, the entries an older release wrote (`Store.stale`, `Store.remove`, `nanopnp store prune
+[--remove]`). An entry is **stale** when its schema's family (`nanopnp/<family>/`) is one a registered
+stage writes now or one of the two auxiliary schemas, and its version is lower, compared as numbers. An
+entry of a newer version, which a newer release wrote into a shared store, and every `nanopnp/stage/`
+entry of a stage of one's own, are never stale. Listing reports each entry's schema, key, path and
+size; the command prints the count and the total size, and removes nothing without `--remove`. Current
+entries that no run uses are not removed.
