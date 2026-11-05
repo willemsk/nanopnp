@@ -179,9 +179,9 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
 - [x] 4. Compaction checkpoint. **Executor:** main.
 - [x] bc83ad8 5. The `cli/` split (D5). Done when `test_cli.py`, `test_sweep_cli.py` and `test_layering.py` pass and the review
   finds the bounds held. **Executor:** `general-purpose` on Sonnet.
-- [ ] 6. `cli/workbench.py`: `gui [<project>]`, `project new|import|export`, `store prune [--remove]`, `--env`'s
+- [x] 62a52c4 6. `cli/workbench.py`: `gui [<project>]`, `project new|import|export`, `store prune [--remove]`, `--env`'s
   `config` (D5). Done when row 7 passes. **Executor:** main.
-- [ ] 7. Compaction checkpoint. **Executor:** main.
+- [x] 7. Compaction checkpoint. **Executor:** main.
 - [ ] 8. `gui/web/commands.py`, `frame.py`, `queue.py`, `screens.py`, `pages.py`, `assets/frame.js` (D6). Done when
   row 8 (a) to (d) passes. **Executor:** main.
 - [ ] 9. The changed list, its resets and the problems list (D3, D6). Done when row 8 (i) passes.
