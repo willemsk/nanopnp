@@ -1,7 +1,7 @@
 # WP5.08 — The frame and the project folder
 
 **Status: planned, not started.** Planned 5 November 2026 on `main` (`1e4497e`). It inherits §8.2.17 S11, S12,
-§8.2.18 T2, T8, §8.2.31 AG1, §8.2.33 AI1, REV-32, REV-52 and MOD-13's command-line part.
+§8.2.18 T2, T8, §8.2.31 AG1, §8.2.33 AI1 and AI9 to AI14, REV-32, REV-52 and MOD-13's command-line part.
 
 It belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a clause.
 
@@ -9,18 +9,20 @@ It belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` gover
 
 **What changes.** The workbench gets its document and its window. A project is a plain folder of models, studies,
 comparisons, input files, run records and stored results, with a project file holding no physics. A case file imports
-into a project, split into its two models and its study, and computes exactly what it did. A project exports as a
-portable copy of readable files. The window gains its frame: menus, a command palette and shortcuts, the four suites,
+into a project, split into its two models and its study, and computes exactly what it did; a case that names model
+files brings them along. Each input file is copied in or linked where it lies, and a linked one can be copied in later.
+A project exports as a portable copy of readable files. The window gains its frame: menus, a command palette and shortcuts you can change, the four suites,
 the project list, the queue and log, the changed values with a reset each, the problems list, and the settings, with
 light, dark and your own colour themes. The store can remove what an older release wrote.
 
-**Cost.** About two and a half weeks. No new library.
+**Cost.** About three weeks. No new library.
 
 **What could go wrong.** An imported case could compute something else; a test compares every step's key with the
 original's. An export could miss a file; it refuses an input outside the project, and a test reads the copy back. The
 store could remove a current entry; a test removes the old ones and walks again from the store.
 
-**Your call.** None open. You ruled the colour themes: they come now, and your own theme sets its own contrast.
+**Your call.** None open. At this plan you ruled the themes, case files, input files, named models, shortcuts,
+settings and the store's clean-up.
 
 ## Execution brief
 
@@ -29,7 +31,7 @@ FR-31, FR-32, FR-34, FR-35, FR-25, FR-27, IF-01, IF-02, IF-09, QR-16; VER-61, VE
 by:** ADR-004's NOTEs, CON-07, CON-09, VER-60, G6. **Implementing session:** Sonnet, high effort. Tag
 `v0.6.0-alpha.8`.
 
-**Amended in this commit:** QR-16 (AI1). **When it lands (item 13):** NOTEs on FR-32, FR-34, FR-35, §5.3.2 (older
+**Amended in this commit:** QR-16 (AI1); §8.4.4's caps, for this plan's seven decisions (AI11). **When it lands (item 13):** NOTEs on FR-32, FR-34, FR-35, §5.3.2 (older
 entries) and §5.5 (optional members); VER-64 and VER-78 as rows 4 and 8 state; Appendix A; the design document's folder;
 REV-32, REV-52 and MOD-13's command-line part `fixed`.
 
@@ -37,12 +39,13 @@ REV-32, REV-52 and MOD-13's command-line part `fixed`.
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| D1 The folder | `<project>/nanopnp-project.yaml` (`nanopnp/project/v0.6`, Item 1), `models/molecular/`, `models/continuum/`, `studies/`, `comparisons/`, `inputs/`, `runs/<study>/<run>/`, `sweeps/`, `store/`. An item's name is its file's stem and its `name:`. The folder is the truth: an unindexed file is appended on open, an indexed name without its file is a problem. A run is `runs/<study>/<short key>`, `upto-<stage>-<short key>` when truncated. Format in `io/project.py`; `api/project.py:Project`, in `PUBLIC` | S11; WB-11, WB-13; FR-32 |
-| D2 Import and export | `Project.import_case` splits a plain case by `owner_of` into the two models and the study, copying each input into `inputs/`, written relative; an expression stays in the study; a study is refused. `Project.export(destination, *, store=False)` copies the project file, the items, `inputs/`, each run's three files and results, each sweep's records; an input absolute or outside the project is refused before anything is written | FR-32; keys hash file contents, not paths (§5.3.2) |
-| D3 Changed and problems | `io/defaults.changes(document)` lists each leaf away from its default (validated for a switch, else the schema's) and each study override, with kind, value, default and the model's value. `Project.reset` deletes the key from the item setting it. `Project.problems()` lists each missing file, mismatched name and item refused on load, with the refusal's case path and its suite | FR-34, FR-35; VER-60: the shell computes nothing |
-| D4 REV-52 and REV-32 | `core/stages.py:ContributesDeviations`, runtime-checkable like `SolveReporting`; the walk tests it by `isinstance`; VER-64 checks each optional member's signature. `Store.stale()` lists each entry of an older version of a schema a stage writes now, never a newer one; `Store.remove` deletes them | T2; §5.3.2 |
-| D5 The command line | `cli/__init__.py` keeps `main` and re-exports `build_parser`; each command family is a module with `register(subparsers)`; no `cli/` module over 600 lines, no function over 100. `nanopnp gui [<project>]` opens a project, creates one in a missing or empty folder, refuses anything else; with none, the last project, else none open. New: `nanopnp project new|import|export`, `nanopnp store prune [--remove]` | MOD-13; IF-02 |
-| D6 The frame | Each suite a page in the frame; palette, changed list, problems and settings as overlays opened by a query; one command registry for menus, palette and shortcuts, keys taken by a client listener; the queue a server-side list; settings and user themes under `config_root()` (`NANOPNP_CONFIG`), a theme a base and its colour tokens, a shipped one read-only, none contrast-checked. The four states boot projects | FR-31, FR-34, FR-35; WB-03, WB-09, WB-13, WB-18, WB-19, WB-30, WB-31; AI1 |
+| D1 The folder | `<project>/nanopnp-project.yaml` (`nanopnp/project/v0.6`, Item 1), `models/molecular/`, `models/continuum/`, `studies/`, `comparisons/`, `inputs/`, `runs/<study>/<run>/`, `sweeps/`, `store/`. An item's name is its file's stem and its `name:`. The folder is the truth: an unindexed file is appended on open, an indexed name without its file is a problem. A run is `runs/<study>/<short key>`, `upto-<stage>-<short key>` when truncated. Format in `io/project.py`; `api/project.py:Project`, in `PUBLIC` | S11; WB-11, WB-13; FR-32; decided by the plan |
+| D2 Import and export | `Project.import_case(case, *, link=False)` splits a case by `owner_of` into the two models and the study; each input is copied into `inputs/` and written relative, or with `link` kept at its absolute path; `Project.embed(path)` copies a linked input in and rewrites each item naming it; an expression stays in the study. `Project.export(destination, *, store=False)` copies the project file, the items, `inputs/`, each linked input into the copy's `inputs/` with its items rewritten, each run's three files and results, each sweep's records; a missing input is refused before anything is written | FR-32; keys hash file contents, not paths (§5.3.2); copy or link ruled by the author, AI10 |
+| D3 Changed and problems | `io/defaults.changes(document)` lists each leaf away from its default (validated for a switch, else the schema's) and each study override, with kind, value, default and the model's value. `Project.reset` deletes the key from the item setting it. `Project.problems()` lists each missing file, mismatched name and item refused on load, with the refusal's case path and its suite | FR-34, FR-35; VER-60: the shell computes nothing; decided by the plan |
+| D4 REV-52 and REV-32 | `core/stages.py:ContributesDeviations`, runtime-checkable like `SolveReporting`; the walk tests it by `isinstance`; VER-64 checks each optional member's signature. `Store.stale()` lists each entry of an older version of a schema a stage writes now, never a newer one, with its size; `Store.remove` deletes them | T2; §5.3.2; older releases only, ruled by the author, AI14 |
+| D5 The command line | `cli/__init__.py` keeps `main` and re-exports `build_parser`; each command family is a module with `register(subparsers)`; no `cli/` module over 600 lines, no function over 100. `nanopnp gui [<project>]` opens a project, creates one in a missing or empty folder, refuses anything else; with none, the last project, else none open. New: `nanopnp project new|import [--link]|embed|export`, `nanopnp store prune [--remove]` | MOD-13; IF-02; a case file refused with the import named, ruled by the author, AI9 |
+| D6 The frame | Each suite a page in the frame; palette, changed list, problems and settings as overlays opened by a query; one command registry for menus, palette and shortcuts, each shortcut rebindable in the settings, a chord bound twice or kept by the browser refused, keys taken by a client listener; the queue a server-side list; settings, bindings and user themes per user under `config_root()` (`NANOPNP_CONFIG`), the layout per project; a theme a base and its colour tokens, a shipped one read-only, none contrast-checked. The four states boot projects | FR-31, FR-34, FR-35; WB-03, WB-09, WB-13, WB-18, WB-19, WB-30, WB-31; ruled by the author, AI1, AI12, AI13 |
+| D7 Named models | A case whose `models:` names model files imports them too: each is copied into `models/<kind>/` under its `name:`, its inputs copied or linked as D2's; a different file of a taken name is stored as `<name>-2`, an identical one is reused; the study names the copies | FR-32, FR-39; ruled by the author, AI11 |
 
 ### Grounding
 
@@ -65,10 +68,17 @@ REV-32, REV-52 and MOD-13's command-line part `fixed`.
   correction value is a file when `core/paths.py:names_a_path` holds; `correction_identity` keys it by its file name.
 - `io/models.py:owner_of` and `OWNERS` decide a leaf's kind; `_flat` walks a dump through `block_paths()`; `_rebased`
   reads a model's relative path beside its file.
+- `io/models.py:_rebased` resolves a relative input against its model file's folder and leaves an absolute one, so a
+  linked input is an absolute path in an item and needs no new field.
 - `validation/charged_tube.py:write_charged_tube` writes a case with `inputs.pqr` and `inputs.profile` at absolute
   paths, so its import exercises both models and the copy into `inputs/`.
 - A walk with `write=True` writes `case.yaml`, `manifest.json` and `run.json` (`RunResult.write`); `run.json`'s
   `files` lists the report's payload in the store. `pipeline/run.py:read_run` checks a run directory without a store.
+
+**D7.**
+- `CaseDocument.models_record.files` gives each `ModelFile(kind, name, path, sha256)` a study read; its `sha256` tells a
+  taken name's identical file from a different one.
+- `tests/tier1/test_models.py:split_case(case, directory)` writes a case as model files and a study: row 1's third case.
 
 **D3.**
 - `io/defaults.py:deviations` covers `SWITCH_PATHS` only; `io/case_paths.py:schema_default(path)` gives
@@ -101,6 +111,7 @@ REV-32, REV-52 and MOD-13's command-line part `fixed`.
   `data-theme="dark"`; `data-density="compact"` sets the compact sizes. Its colour tokens are the `--x: #rrggbb` lines.
 - `gui/web/states.py:boot_case` walks to `charge` with `write=False` and keeps a case or gate refusal as text;
   `.claude/scripts/gui/render_shell.py` reads `STATES` and `SCREENS`, so new screens render with no script change.
+- Chrome never hands a page Ctrl+T, Ctrl+W, Ctrl+N, Ctrl+Tab or Ctrl+1 to 9; Firefox keeps Ctrl+Shift+P.
 - `core/paths.py` has no configuration directory; `store_root()` with `NANOPNP_STORE` is the pattern.
 
 ### Implementation details
@@ -112,14 +123,14 @@ bottom_percent=25.0, rail_folded=False, bottom_folded=True)`; `ProjectFile(schem
 continuum, studies, comparisons: list[str]}, open: list[str], current: str | None, layout: dict[Literal["molecular",
 "continuum", "study", "analysis"], SuiteLayout])`, an item written `"<kind>/<name>"`. `read_project`, `write_project`
 (atomic). `io/store.py`: `Store(root, *, runs=None, sweeps=None)`; `run_directory(name, digest, *, upto=None)`; `sweep_directory`
-under `sweeps` when given; `StaleEntry(schema, hash, path)`; `stale()` walks `artefacts/*/*/*/meta.json`; the current
+under `sweeps` when given; `StaleEntry(schema, hash, path, size_bytes)`; `stale()` walks `artefacts/*/*/*/meta.json`; the current
 schemas are every registered stage's `artefact_schema` and the two auxiliary ones; an entry is stale when its schema's
 family (`nanopnp/<family>/`) is a current one's and its version is lower, compared as numbers, so a newer release's
 entries in a shared store, and every `nanopnp/stage/` entry, stay; `remove(entries) -> int`.
 
 **Item 3.** `api/project.py`: `ProjectError(ValueError)`; `Project.create(folder, name=None)`, `Project.open(folder)`,
-`import_case(case, name=None) -> str`, `add_input(path) -> Path` (a different file of a taken name is refused, naming
-both), `items(kind)`, `path(kind, name)`, `study(name) -> Case`, `changes(kind, name)`, `reset(kind, name, path)`,
+`import_case(case, name=None, *, link=False) -> str` (D7's model files included), `add_input(path, *, link=False) ->
+Path` (a different file of a taken name is refused, naming both), `embed(path) -> Path`, `linked() -> tuple[Path, ...]`, `items(kind)`, `path(kind, name)`, `study(name) -> Case`, `changes(kind, name)`, `reset(kind, name, path)`,
 `problems()`, `export(destination, *, store=False)`, `session() -> Session` over `Store(<project>/store,
 runs=<project>/runs, sweeps=<project>/sweeps)`, `runs(study)`, `save_layout(suite, layout)`, `open_item(item)`. `Problem(item, path, message,
 suite)`. Export writes into a missing or empty `destination`; a run's result files go to `runs/<study>/<run>/results/`.
@@ -128,9 +139,12 @@ suite)`. Export writes into a missing or empty `destination`; a run's result fil
 **Item 5.** `cli/common.py` (shared flags, logging, `_emit`, `_refuse`, `_destination`, `_Progress`, the positive
 parsers, `_store`), `cli/parser.py:build_parser`, `cli/running.py` (run, stage, inspect, plot, reproduce),
 `cli/building.py` (geometry, mesh), `cli/sweeping.py`, `cli/validating.py` (validate and its helpers),
-`cli/workbench.py` (gui, project, store, env). Move code unchanged; only imports change.
+`cli/workbench.py` (gui, project, store, env). Move code unchanged; only imports change. Item 6 adds
+`project import [--link] <case> <project>`, `project embed <project> <input>`, and `store prune`'s count and total size.
 
-**Item 8.** `gui/web/commands.py`: `Command(id, title, menu, shortcut)`. Menus File (New project…, Open project…,
+**Item 8.** `gui/web/commands.py`: `Command(id, title, menu, shortcut)`, `shortcut` the default; `BROWSER_KEPT` holds
+Ctrl+T, Ctrl+W, Ctrl+N, Ctrl+Tab, Ctrl+Shift+T, Ctrl+Shift+N, Ctrl+Shift+W, Ctrl+Shift+P and Ctrl+1 to 9;
+`bindings(settings) -> dict[str, str]` overlays the user's keys on the defaults. The page hands `frame.js` the map. Menus File (New project…, Open project…,
 Import case…, Export project…, Settings…, Quit), View (the four suites, Toggle the bottom panel, Changed values,
 Problems, Reset layout), Help (Glossary, About). Shortcuts: palette `Ctrl+K` and `F1`; suites `Alt+Shift+1` to `4`;
 bottom panel `Alt+Shift+J`; changed values `Alt+Shift+D`; problems `Alt+Shift+P`; settings `Ctrl+,`. Quit stops the
@@ -140,12 +154,14 @@ server as SIGTERM does. Frame controls: `menu-file`, `menu-view`, `menu-help`, `
 (`suite-body`, its tools listed as not built yet, no working control); `changes` at `/study?panel=changes`
 (`changes-list`); `problems` at `/study?panel=problems` (`problems-list`); `palette` at `/molecular?palette=1`
 (`palette-input`, `palette-list`); `settings` at `/molecular?dialog=settings` (`settings-theme`, `settings-density`,
-`settings-spacing`, `settings-background`, `theme-colours`, `theme-duplicate`); `st-charge` stays; `/` redirects to
+`settings-spacing`, `settings-background`, `theme-colours`, `theme-duplicate`, `settings-keys` with a `key-<id>` per
+command that takes the next chord, and refuses one bound to another command or in `BROWSER_KEPT`, naming the holder); `st-charge` stays; `/` redirects to
 the current suite.
 
 **Item 10.** `core/paths.py:config_root()`: `NANOPNP_CONFIG`, else `%APPDATA%\nanopnp`, `~/Library/Application
 Support/nanopnp`, or `$XDG_CONFIG_HOME/nanopnp` (`~/.config/nanopnp`). `gui/web/settings.py`: `Settings(theme="system",
-density="medium", spacing="default", viewer_background="near-black")` at `workbench.yaml`. `gui/web/theme.py`:
+density="medium", spacing="default", viewer_background="near-black", keys={})` at `workbench.yaml`, `keys` the user's
+chords by command id. `gui/web/theme.py`:
 `Theme(name, base, colours)` at `themes/<name>.yaml` (`nanopnp/workbench-theme/v0.6`); `shipped()` parses the two
 built-ins from `pages.TOKENS`, the wheel's copy or the checkout's; `css(theme)` writes the overrides on `:root[data-user-theme]`. Spacing `tight` is
 `data-spacing="tight"`, two thirds of `--gap` and `--pad`, added to `tokens.css`. `states.py`: each state but `empty`
@@ -158,7 +174,7 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
 - [ ] 2. `core/stages.py:ContributesDeviations`; `pipeline/run.py:_contributed`;
   `validation/modularity.py:stage_conformance` reads the three optional members (D4). Done when row 4 passes.
   **Executor:** main.
-- [ ] 3. `api/project.py`, `io/defaults.py:changes`, `core/errors.py`, `nanopnp/__init__.py` (D1 to D3). Done when rows
+- [ ] 3. `api/project.py`, `io/defaults.py:changes`, `core/errors.py`, `nanopnp/__init__.py` (D1 to D3, D7). Done when rows
   1 to 3 pass. **Executor:** main.
 - [ ] 4. Compaction checkpoint. **Executor:** main.
 - [ ] 5. The `cli/` split (D5). Done when `test_cli.py`, `test_sweep_cli.py` and `test_layering.py` pass and the review
@@ -171,7 +187,7 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
 - [ ] 9. The changed list, its resets and the problems list (D3, D6). Done when row 8 (i) passes.
   **Executor:** main.
 - [ ] 10. `core/paths.py:config_root`, `gui/web/settings.py`, `theme.py`, the settings overlay, `tokens.css`'s spacing,
-  `states.py` as projects, `server.py` (D6). Done when row 8 passes whole. **Executor:** main.
+  the key bindings, `states.py` as projects, `server.py` (D6). Done when row 8 passes whole. **Executor:** main.
 - [ ] 11. Compaction checkpoint. **Executor:** main.
 - [ ] 12. `/np-gui render shell` and `/np-gui review`; fix what they find. Done when the review says so. **Executor:** main.
 - [ ] 13. `CHANGELOG.md` (`nanopnp gui` takes a project, not a case); the brief's amendments; Outcome notes. Done when the strict documentation build passes. **Executor:** main.
@@ -184,21 +200,21 @@ In `tests/tier1/`: rows 1 to 3 `test_project.py`, 4 `test_stage_conformance.py`,
 
 | Test | Tier | Identifiers | Oracle and tolerance | `-k` |
 |---|---|---|---|---|
-| 1 `test_fr32_a_case_imported_into_a_project_keys_as_it_did` | 1 | FR-32, VER-62 | The charged tube and the quick-start, walked to `charge` into the project's store, imported, walked again: every stage but `case` has its original hash and is served from the store; the tube writes both models and two inputs | `imported` |
-| 2 `test_fr32_an_exported_project_reads_back` | 1 | FR-32, FR-25 | The imported tube with one run: the copy opens with the same index; `read_run` gives the original manifest hash; each copied file is byte-identical; no `store/`; with `store=True` a walk of the copy is served whole from its store | `exported` |
+| 1 `test_fr32_a_case_imported_into_a_project_keys_as_it_did` | 1 | FR-32, VER-62 | The charged tube and the quick-start, walked to `charge` into the project's store, imported, walked again: every stage but `case` has its original hash and is served from the store; the tube writes both models and two inputs; with `link=True` nothing is copied and the items name the originals, and `embed` then copies one in with every key unchanged; the quick-start written by `split_case` imports its two model files, and a second import reuses them | `imported` |
+| 2 `test_fr32_an_exported_project_reads_back` | 1 | FR-32, FR-25 | The imported tube with one run and one linked input: the copy opens with the same index and no problem; `read_run` gives the original manifest hash; each copied file is byte-identical but the items whose linked path is rewritten; the linked input is in the copy's `inputs/`; no `store/`; with `store=True` a walk of the copy is served whole from its store | `exported` |
 | 3 `test_fr34_the_changed_list_holds_every_value_away_from_its_default_and_every_override` | 1 | FR-34, FR-25 | A continuum model with `physics.flow: false`, `numerics.mesh.size_scale: 2` and a default written out; a study overriding the bias: exactly three changes with kind, value and default, the bias with the model's value; each reset removes its change and the study loads | `changed` |
 | 4 `test_ver64_each_optional_member_a_stage_defines_has_its_protocols_signature` | 1 | VER-64 | `charge` and `mesh` define `deviations(self, inputs)` and are `ContributesDeviations`; `solve` is `SolveReporting`; `mesh` is `Forecastable`; no other stage is any; a test stage with `deviations(self)` does not conform | `optional` |
-| 5 `test_rev32_the_store_lists_and_removes_only_entries_of_an_older_schema` | 1 | FR-27 | A walked quick-start and hand-written `nanopnp/case/v0.5`, `nanopnp/fields/v0.4`, `nanopnp/fields/v0.7` and `nanopnp/stage/x/v1` entries: `stale()` lists exactly the first two; `remove` deletes only them; the walk again is served whole from the store | `older` |
+| 5 `test_rev32_the_store_lists_and_removes_only_entries_of_an_older_schema` | 1 | FR-27 | A walked quick-start and hand-written `nanopnp/case/v0.5`, `nanopnp/fields/v0.4`, `nanopnp/fields/v0.7` and `nanopnp/stage/x/v1` entries: `stale()` lists exactly the first two, each with its files' size; `remove` deletes only them; the walk again is served whole from the store | `older` |
 | 6 `test_ver62_a_store_given_no_runs_root_writes_run_directories_where_it_did` | 1 | VER-62 | `run_directory("a", d)` and `run_directory("a", d, upto="mesh")` equal today's paths; with `runs=` they are `runs/a/<short>` and `runs/a/upto-mesh-<short>` | `runs_root` |
 | 7 `test_ver78_nanopnp_gui_opens_or_creates_a_project` | 1 | VER-78 | `nanopnp gui --no-browser <empty folder>` prints the ready line and writes `nanopnp-project.yaml` naming the folder | `creates` |
-| 8 VER-78's tests over the new `SCREENS` and the four states | 1 | VER-78, QR-16 | (a) to (h) over each frame screen in each state; (i) in `refused` the problems list holds the refusal, and choosing it opens `/continuum`; (j) a theme chosen in the settings sets `data-theme` on the root and holds after a reload; each test server's `NANOPNP_CONFIG` is a temporary folder | `ver78` |
+| 8 VER-78's tests over the new `SCREENS` and the four states | 1 | VER-78, QR-16 | (a) to (h) over each frame screen in each state; (i) in `refused` the problems list holds the refusal, and choosing it opens `/continuum`; (j) a theme chosen in the settings sets `data-theme` on the root and holds after a reload; (k) a shortcut rebound in the settings runs its command and the old chord nothing, after a reload, and binding Ctrl+W is refused; each test server's `NANOPNP_CONFIG` is a temporary folder | `ver78` |
 
 ### Out of scope
 
 - The suites' tools, WP5.09 to WP5.12; a queued build or study and its convergence, WP5.11.
 - The comparison's schema and difference field, WP5.12; the guided route and Qt's removal, WP5.13.
-- Importing a case that names models: later, if asked.
+- Removing current results that no run uses, and a project's own look: not planned (AI14, AI13).
 
 ### Open questions
 
-None. AI1 was ruled at this plan.
+None. AI1 and AI9 to AI14 were ruled at this plan.

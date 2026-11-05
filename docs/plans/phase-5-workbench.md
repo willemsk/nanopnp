@@ -193,17 +193,17 @@ VER-64); `sweep plan` prints it. Live constraints: the manifest gains `variables
 `Forecastable` stage hashes its own `forecast_parameters`; REV-197 (rectification over a bias set through a variable) is
 WP5.11's. REV-139 `fixed`. Tier 1 holds the evidence. Tag `v0.6.0-alpha.7`.
 
-### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1)
+### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
 
 [The plan](wp5.08-the-frame-and-the-project-folder.md). Library step first: the project folder of `docs/design/workbench.md`
 (*The project folder*), its project file holding no physics, a case file imported into it as its two models and its
-study, its export as readable files, and the store's entries of an older schema listed and removed on request (REV-32);
+study, with the model files it names, each input copied or linked (AI10, AI11), its export as readable files, and the store's entries of an older schema listed and removed on request (REV-32);
 `deviations` and `SolveReporting` join the stage protocol as optional members (REV-52), so the changed count and the
 queue read every stage. Then the frame in NiceGUI: the title bar with the menus, the command palette, the shortcuts
 and the changed count with its list (FR-34); the activity bar of the four suites; the project rail; the bottom panel
 with the run queue and the log; the problems list (FR-35); the theme, the density and the user's settings (WB-18,
 WB-19, WB-30, WB-31), with a theme selector and a colour modifier over the shipped themes and the user's own, a user's
-theme setting its own contrast (AI1). `nanopnp gui [<project>]` opens a project, and `cli/__init__.py` is split as it
+theme setting its own contrast (AI1), every shortcut rebindable (AI12). `nanopnp gui [<project>]` opens a project, and `cli/__init__.py` is split as it
 changes (MOD-13's command-line part). Q01 to Q08 move here. VER-78 gains the frame's states. Tag `v0.6.0-alpha.8`.
 
 ### WP5.09 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
