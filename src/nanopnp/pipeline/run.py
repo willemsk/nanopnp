@@ -1205,9 +1205,10 @@ def _walk(
     # not enough: a walk runs its target's input closure, so a target
     # walked last that reads only some of the stages before it is still truncated.
     complete = stages == selected_stages(walk.resolved, None, stages=walk.own)
-    label = document.name if complete else f"{document.name}-upto-{stages[-1]}"
     result = RunResult(
-        directory=walk.store.run_directory(label, _run_key(manifest)),
+        directory=walk.store.run_directory(
+            document.name, _run_key(manifest), upto=None if complete else stages[-1]
+        ),
         manifest=manifest,
         artefacts=dict(walk.artefacts),
         stages=tuple(walk.records),

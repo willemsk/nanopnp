@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import os
+import re
 import secrets
 import shutil
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from nanopnp.core.paths import store_root
-from nanopnp.io.artefact import Artefact, timestamp
+from nanopnp.core.stages import registered_stages
+from nanopnp.io.artefact import CHARGE_GRID_SCHEMA, PROTONATION_FRAME_SCHEMA, Artefact, timestamp
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.hashing import Canonicalisable
@@ -28,15 +32,43 @@ STALE_STAGING_SECONDS = 24 * 3600
 """Age after which a hidden staging directory is a killed put's, not a slow copy."""
 
 
+_SCHEMA_PATTERN = re.compile(r"^(?P<family>nanopnp/[a-z-]+/)v(?P<version>\d+(?:\.\d+)*)$")
+
+AUXILIARY_SCHEMAS = (PROTONATION_FRAME_SCHEMA, CHARGE_GRID_SCHEMA)
+"""Schemas that stages store besides the ones they register."""
+
+
 class StoreError(RuntimeError):
     """A stored artefact could not be read, or a write could not be completed."""
 
 
-class Store:
-    """A directory of content-addressed artefacts; the root is created on first write."""
+@dataclass(frozen=True)
+class StaleEntry:
+    """One stored artefact written under an older version of a schema this release writes."""
 
-    def __init__(self, root: str | Path | None = None) -> None:
+    schema: str
+    hash: str
+    path: Path
+    size_bytes: int
+
+
+class Store:
+    """A directory of content-addressed artefacts; the root is created on first write.
+
+    ``runs`` and ``sweeps`` place run and sweep directories outside the root, so that a project
+    keeps them beside its store; by default both stay under the root.
+    """
+
+    def __init__(
+        self,
+        root: str | Path | None = None,
+        *,
+        runs: str | Path | None = None,
+        sweeps: str | Path | None = None,
+    ) -> None:
         self._root = Path(root).expanduser().resolve() if root is not None else store_root()
+        self._runs = Path(runs).expanduser().resolve() if runs is not None else None
+        self._sweeps = Path(sweeps).expanduser().resolve() if sweeps is not None else None
         self.hits = 0
         self.misses = 0
 
@@ -50,17 +82,25 @@ class Store:
         slug = schema.replace("/", "-")
         return self._root / "artefacts" / slug / digest[:FANOUT] / digest
 
-    def run_directory(self, name: str, digest: str) -> Path:
-        """Return the directory a run's manifest, case and QoIs are written to."""
+    def run_directory(self, name: str, digest: str, *, upto: str | None = None) -> Path:
+        """Return the directory a run's manifest, case and QoIs are written to.
+
+        ``upto`` names the last stage of a walk that stopped before the end.
+        """
         from nanopnp.core.hashing import short
 
-        return self._root / "runs" / f"{name}-{short(digest)}"
+        if self._runs is not None:
+            leaf = f"upto-{upto}-{short(digest)}" if upto is not None else short(digest)
+            return self._runs / name / leaf
+        label = f"{name}-upto-{upto}" if upto is not None else name
+        return self._root / "runs" / f"{label}-{short(digest)}"
 
     def sweep_directory(self, name: str, digest: str) -> Path:
         """Return the directory one sweep's plan, member records and dataset live in."""
         from nanopnp.core.hashing import short
 
-        return self._root / "sweeps" / f"{name}-{short(digest)}"
+        base = self._sweeps if self._sweeps is not None else self._root / "sweeps"
+        return base / f"{name}-{short(digest)}"
 
     def contains(self, artefact: Artefact) -> bool:
         """Whether an artefact with this key is already stored."""
@@ -163,6 +203,67 @@ class Store:
                 "cache hit would return a different run's answer"
             )
         return self.put(produced)
+
+    def stale(self) -> tuple[StaleEntry, ...]:
+        """List the entries of an older version of a schema this release writes.
+
+        A newer version's entry, and any entry of a schema this release does not write, is kept:
+        a store may be shared with a newer release.
+        """
+        current = _current_schemas()
+        found: list[StaleEntry] = []
+        for meta_path in sorted((self._root / "artefacts").glob("*/*/*/" + META)):
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                schema = str(meta["schema"])
+                digest = str(meta["hash"])
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+            if not _is_older(schema, current):
+                continue
+            directory = meta_path.parent
+            size = sum(file.stat().st_size for file in directory.rglob("*") if file.is_file())
+            found.append(StaleEntry(schema, digest, directory, size))
+        return tuple(found)
+
+    def remove(self, entries: Iterable[StaleEntry]) -> int:
+        """Delete the given entries, and return how many were removed."""
+        removed = 0
+        root = (self._root / "artefacts").resolve()
+        for entry in entries:
+            directory = entry.path.resolve()
+            if root not in directory.parents:
+                raise StoreError(f"{directory} is not an entry of the store at {self._root}")
+            if directory.is_dir():
+                shutil.rmtree(directory)
+                removed += 1
+                with contextlib.suppress(OSError):  # the fan-out directory still holds others
+                    directory.parent.rmdir()
+        return removed
+
+
+def _current_schemas() -> tuple[str, ...]:
+    return tuple(d.artefact_schema for d in registered_stages()) + AUXILIARY_SCHEMAS
+
+
+def _version(text: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in text.split("."))
+
+
+def _is_older(schema: str, current: Iterable[str]) -> bool:
+    # Compared as numbers: v0.10 is newer than v0.9.
+    mine = _SCHEMA_PATTERN.match(schema)
+    if mine is None:
+        return False
+    for other in current:
+        theirs = _SCHEMA_PATTERN.match(other)
+        if (
+            theirs is not None
+            and theirs["family"] == mine["family"]
+            and _version(mine["version"]) < _version(theirs["version"])
+        ):
+            return True
+    return False
 
 
 def _sweep_staging(parent: Path) -> None:
