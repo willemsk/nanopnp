@@ -17,7 +17,8 @@ here once.
 * A version is a git tag, never a number in `pyproject.toml` or in the package. The procedure is
   `CONTRIBUTING.md`, *Versions and releases*. (§2.7; §8.2.4 D1)
 * Each merged work package takes `vX.Y.Z-alpha.N` on its last commit on `main`. The session pushes the
-  tag if its GitHub access allows it; otherwise it prints the commands and the author pushes them.
+  tag if its GitHub access allows it; a cloud session's does not. `/np-ship` ends with the full
+  commands either way. (§8.2.33 AI5)
   From Phase 5, N is the package's number within its phase: WP5.02 takes `v0.6.0-alpha.2`. (§8.2.7
   G11; §8.2.17 S19)
 * A phase's close package takes the release tag alone, with no alpha tag on the same commit; Phase 4's
@@ -78,8 +79,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   (`WP5.01`): its plan is `docs/plans/wp5.01-<slug>.md`, its pull request `feat: WP5.01 — …`, and the
   commands take `wp 5.01`. Phase 4 keeps its flat numbers to its close. (§8.2.17 S16)
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package of its lane
-  starts. `/np-implement` stops at the pull request; `/np-ship` starts in a fresh session that did
-  not make its decisions. (§8.2.11 L7; §8.2.16 R5; `CLAUDE.md`)
+  starts. `/np-implement` stops at the pull request and pauses for a compaction; `/np-ship` then runs
+  in the implementing session or in a fresh one, and puts to the author each review finding that
+  contradicts a decision the implementing session took. (§8.2.11 L7; §8.2.16 R5; §8.2.33 AI4;
+  `CLAUDE.md`)
 * At most two lanes are in flight. The current phase runs one package at a time; the second lane is
   the next phase's design study, which changes no `src/`, `tests/`, case schema or public API before
   the current phase's release. A clause that the study restates before that release is added beside

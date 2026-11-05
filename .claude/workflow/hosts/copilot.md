@@ -102,7 +102,7 @@ not honoured, the Phase 0 stop rule forbids Copilot commits until it is fixed.
 - Start `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>` with the shell tool's
   `mode: "async"`, and wait for its completion notice. Or run the `until grep` loop as a sync call
   with `initial_wait` up to 600 s, and issue it again until it ends. Never use `nohup`, `setsid` or `&`.
-- At a `/compact` checkpoint, or at `/np-plan`'s pause, tick, gate, push, print the prompt and end the
+- At a `/compact` checkpoint, or at the pause of `/np-plan` or `/np-implement`, tick, gate, push, print the prompt and end the
   turn. The author compacts or starts a new session with it.
 - The scratchpad `<s>` is the `files/` directory of the session folder, which the session context
   names. Without it, use `${TMPDIR:-/tmp}/nanopnp-scratch/<branch>/`.

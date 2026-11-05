@@ -1,6 +1,7 @@
 # Ship a work package
 
 `/np-ship [wp <n>]` runs steps 3 and 4 of the implementation workflow as one sequence, without a stop.
+It runs in the implementing session after its compaction, or in a fresh session (§8.2.33 AI4).
 Usually `/np-implement` has opened the PR: reuse it. If there is no PR and the author names the branch,
 this invocation authorises you to open the PR without asking again. The review, the fixes and the CI
 watch need no further prompt.
@@ -91,6 +92,10 @@ list is valid), and the findings it could not assess or fix. Compare it with the
 
 1. Read each applied fix as a diff. A finding is a hypothesis: confirm it against the specification and
    the plan. Revert a wrong fix, and give the reason in the PR thread. This step stays in this session.
+   In the implementing session, a finding you would reject because it contradicts a decision taken
+   while implementing, and not one the plan or the specification fixes, is not yours to reject: put it
+   to the author through `AskUserQuestion`, with the finding, the decision and a recommendation,
+   before the commit.
 2. For each finding that the pass could not fix, fix it here, or record a `REV-nn` row (`CLAUDE.md`,
    *Open items*) and list it in the PR body under **Deliberately not done**. A row the author has not
    ruled on is `open`: put it to the author before the report. Never leave a confirmed finding
@@ -117,7 +122,9 @@ When CI is green and the PR is mergeable, tell the user in one message:
 - the PR link and the checks that passed;
 - what the review changed, and what is left for them to decide;
 - the tag that the last commit on `main` gets after the merge, or that it gets none
-  (`CONTRIBUTING.md`).
+  (`CONTRIBUTING.md`);
+- the full tag commands, each in its own `bash` block, ending the message (§7.4), with
+  `origin/main` for the merge commit: they are right only if run before anything else merges.
 
 While the other lane has a PR open, say that whichever merges second needs `/np-ship` again on the new
 `main` before its merge (§8.4.4). The merge is theirs; `/np-ship` after the merge pushes the tag (§7).
@@ -134,6 +141,23 @@ core's *Two lanes*). Report that, and stop.
 
 1. Fetch `main`: a hosted clone is shallow. The merge sha is the `merge_commit_sha` of the merged PR.
 2. If `git ls-remote --tags origin <tag>` lists the tag, report it and stop.
-3. If the access of this session allows it (§8.4.1), run `git tag -a <tag> <merge sha> -m "<tag>"` and
-   `git push origin <tag>`. Otherwise print the two commands for the author.
-4. Report the tag, pushed or printed, and stop.
+3. In a cloud session (`CLAUDE_CODE_REMOTE` is `true`), do not try the push. Its git credentials push
+   only the session's branch, and GitHub refuses any `refs/tags/` push with HTTP 403 (probed 5 November
+   2026; §8.2.33 AI5). Otherwise, if the access of this session allows it (§8.4.1), run
+   `git tag -a <tag> <merge sha> -m "<tag>"` and `git push origin <tag>`.
+4. Report the tag: pushed, or not pushed and why. Always end the report with the full commands, the
+   merge sha written out, each in its own `bash` block, so that the author can copy them:
+
+   ```bash
+   git fetch origin main
+   ```
+
+   ```bash
+   git tag -a <tag> <merge sha> -m "<tag>"
+   ```
+
+   ```bash
+   git push origin <tag>
+   ```
+
+   Then stop.
