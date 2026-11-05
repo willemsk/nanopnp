@@ -27,6 +27,7 @@ class Overlay:
         self.dialog: ui.dialog
         self.theme_select: ui.select
         self.duplicate_button: ui.button
+        self.duplicate_hint: ui.label
         self.colours: ui.column
         self.keys: ui.column
 
@@ -51,6 +52,7 @@ class Overlay:
     def _choose_theme(self, name: str) -> None:
         self._change(theme=name)
         self.duplicate_button.set_enabled(name != SYSTEM)
+        self.duplicate_hint.set_visibility(name == SYSTEM)
         self._fill_colours()
 
     def _duplicate(self) -> None:
@@ -174,23 +176,27 @@ class Overlay:
                 "Duplicate this theme", on_click=self._duplicate
             ).props("flat dense no-caps data-control=theme-duplicate")
             self.duplicate_button.set_enabled(current.theme != SYSTEM)
+            self.duplicate_hint = ui.label("Pick Light or Dark above to duplicate it.").classes(
+                "muted"
+            )
+            self.duplicate_hint.set_visibility(current.theme == SYSTEM)
             with ui.expansion("Colours").props("data-control=theme-colours"):
                 with ui.column().classes("gap-1") as self.colours:
                     pass
             ui.label("Density").classes("rail-heading")
             ui.toggle(
                 DENSITIES, value=current.density, on_change=lambda e: self._change(density=e.value)
-            ).props("data-control=settings-density")
+            ).props("no-caps data-control=settings-density")
             ui.label("Spacing").classes("rail-heading")
             ui.toggle(
                 SPACINGS, value=current.spacing, on_change=lambda e: self._change(spacing=e.value)
-            ).props("data-control=settings-spacing")
+            ).props("no-caps data-control=settings-spacing")
             ui.label("3D view background").classes("rail-heading")
             ui.toggle(
                 BACKGROUNDS,
                 value=current.viewer_background,
                 on_change=lambda e: self._change(viewer_background=e.value),
-            ).props("data-control=settings-background")
+            ).props("no-caps data-control=settings-background")
             ui.label("Key bindings").classes("rail-heading")
             with (
                 ui.column().classes("gap-1 w-full").props("data-control=settings-keys") as self.keys

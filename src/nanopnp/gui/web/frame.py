@@ -297,7 +297,7 @@ class _Frame:
                                 ui.item_section(entry.title)
                                 if chord:
                                     ui.item_section(chord).props("side")
-            ui.label(bench.project.name if bench.project else bench.name).classes(
+            ui.label(bench.project.name if bench.project else "No project").classes(
                 "project-name"
             ).props("data-control=project-name")
             ui.space()
@@ -306,9 +306,9 @@ class _Frame:
             ):
                 ui.label("◆").classes("changed")
                 ui.label(f"{changed} changed")
-            ui.button("Command palette  Ctrl+K", on_click=self.open_palette).props(
-                "flat no-caps data-control=palette-open"
-            )
+            ui.button(
+                f"Command palette  {chords['palette']}".rstrip(), on_click=self.open_palette
+            ).props("flat no-caps data-control=palette-open")
 
     def activity_bar(self) -> None:
         with ui.column().classes("activitybar gap-0"):
@@ -409,7 +409,7 @@ class _Frame:
                     was = change.model if change.kind == "override" else change.default
                     with ui.row().classes("items-center no-wrap"):
                         ui.label(f"{mark} {change.path} = {change.value}").classes("changed")
-                        ui.label(f"{other}: {was}").classes("muted")
+                        ui.label(f"{other}: {'none' if was is None else was}").classes("muted")
                         ui.button(
                             "Reset",
                             on_click=lambda _, k=kind, n=name, p=change.path: self.reset(k, n, p),

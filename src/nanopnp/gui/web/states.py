@@ -84,7 +84,9 @@ def boot_project(project: Project, queue: Queue | None = None) -> Workbench:
         if classify(error) not in {EXIT_CASE, EXIT_GATE}:
             raise
         queue.set(entry, "failed")
-        return Workbench(project.name, project=project, refusal=str(error), queue=queue)
+        # The project's own folder is not shown: the problems list names the item relative to it.
+        said = str(error).replace(f"{project.root}/", "")
+        return Workbench(project.name, project=project, refusal=said, queue=queue)
     queue.set(entry, "done")
     from nanopnp.gui.web.link import Link
 
