@@ -126,3 +126,22 @@ body .q-btn.list-row .q-btn__content {
 .changed {
   color: var(--changed);
 }
+/* Quasar's cards and menus are white too. */
+body .q-card,
+body .q-menu {
+  background: var(--panel);
+  color: var(--ink);
+}
+body .q-field__label,
+body .q-field__native,
+body .q-field__marginal {
+  color: var(--ink);
+}
+.settings {
+  min-width: 34rem;
+  max-height: 85vh;
+  overflow: auto;
+}
+.key-title {
+  flex: 1;
+}

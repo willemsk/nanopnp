@@ -28,8 +28,8 @@ from fastapi import FastAPI
 
 from nanopnp.api.project import Project
 from nanopnp.core.public import __version__
-from nanopnp.gui.web.frame import Shell
 from nanopnp.gui.web.pages import install
+from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only

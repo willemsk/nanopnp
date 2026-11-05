@@ -2,29 +2,23 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from fastapi.responses import RedirectResponse, Response
 from nicegui import app as nicegui_app
 from nicegui import events, ui
 
-from nanopnp.gui.web.frame import Shell, frame
+from nanopnp.gui.web.assets import ASSETS, TOKENS
+from nanopnp.gui.web.frame import frame
 from nanopnp.gui.web.link import Extent, png
 from nanopnp.gui.web.screens import SUITES, Suite, screen
+from nanopnp.gui.web.shell import Shell
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from fastapi import FastAPI
 
 __all__ = ["install"]
 
-ASSETS = Path(__file__).resolve().parent / "assets"
-# The wheel carries tokens.css beside the assets; a checkout reads the design's own copy.
-TOKENS = (
-    ASSETS / "tokens.css"
-    if (ASSETS / "tokens.css").is_file()
-    else Path(__file__).resolve().parents[4] / "docs" / "design" / "tokens.css"
-)
 MAP_WIDTH_PX = 330
 BLANK = Extent(0.0, 1.0, 0.0, 1.0, MAP_WIDTH_PX, 440)
 STYLESHEETS = (
@@ -92,10 +86,12 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:
 
     def suite_page(suite: Suite) -> None:
         @ui.page(f"/{suite.id}")
-        def page(panel: str = "", palette: int = 0) -> None:
+        def page(panel: str = "", palette: int = 0, dialog: str = "") -> None:
             bench = shell.bench
             ui.add_head_html(STYLESHEETS)
-            with frame(shell, suite.id, panel=panel or None, palette=bool(palette)):
+            with frame(
+                shell, suite.id, panel=panel or None, palette=bool(palette), dialog=dialog or None
+            ):
                 with ui.column().props("data-control=suite-body"):
                     ui.label(suite.title).classes("text-h5")
                     ui.label(f"This suite builds {suite.builds}.")
