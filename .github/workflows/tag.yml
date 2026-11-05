@@ -1,0 +1,76 @@
+# Tags a merged work package's commit on the default branch and starts its
+# release (SPECIFICATION.md section 8.4.1; section 8.2.33 AI8). A cloud
+# session's git credentials push only its own branch, so `/np-ship` dispatches
+# this workflow after the merge instead of pushing the tag itself.
+#
+# A tag pushed with the workflow's own token starts no other workflow, so this
+# one dispatches release.yml with `test: true`, which runs the full matrix a tag
+# push would have run.
+name: Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The version tag, e.g. v0.6.0-alpha.8 or v0.6.0"
+        required: true
+        type: string
+      sha:
+        description: "The merge commit on the default branch, all 40 characters"
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: tag-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: tag ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      TAG: ${{ inputs.tag }}
+      SHA: ${{ inputs.sha }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-alpha\.[0-9]+)?$ ]]; then
+            echo "::error::$TAG is not a version tag (vX.Y.Z or vX.Y.Z-alpha.N)"
+            exit 1
+          fi
+          if [[ ! $SHA =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::$SHA is not a full commit sha"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$SHA" "origin/$DEFAULT_BRANCH"; then
+            echo "::error::$SHA is not on $DEFAULT_BRANCH"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+            echo "::error::$TAG exists already"
+            exit 1
+          fi
+          # The tagged commit carries its own changelog entry (CONTRIBUTING.md,
+          # Versions and releases).
+          if ! git show "$SHA:CHANGELOG.md" | grep -qF "## [${TAG#v}]"; then
+            echo "::error::CHANGELOG.md at $SHA has no section for [${TAG#v}]"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" "$SHA" -m "$TAG"
+          git push origin "refs/tags/$TAG"
+          gh workflow run release.yml --ref "$DEFAULT_BRANCH" -f tag="$TAG" -f test=true
+          echo "::notice::$TAG is on $SHA; release.yml is dispatched with the full matrix"

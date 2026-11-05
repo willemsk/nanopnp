@@ -52,6 +52,23 @@ decision moves. Then read the plan as its implementer. Can you write each work i
 file that the plan does not name, and without a choice between two behaviours? If not, the plan is not
 finished.
 
+## Putting the decisions to the author
+
+When the decisions are drafted and grounded, and before you write the plan, sort each one (§8.2.33
+AI6):
+
+- **Settled.** A clause, a ruling or the phase entry decides it. Cite it.
+- **Technical.** The code and the specification leave one defensible answer. Decide it; the grounding
+  is the reason.
+- **The author's.** It changes what an existing user sees or does; it fills a gap in the design
+  document or the phase entry rather than following them; it widens or narrows the package against its
+  phase entry; it deletes or moves a user's data; it trades time or a dependency against quality; or
+  two defensible options give the user different things. When in doubt, it is the author's.
+
+Put each of the author's to the author as the core's *Putting a choice to the author* says, the
+recommendation first, and record the rulings as `rulings.md` says. A package that changes what a user
+sees usually has two to four. A mechanical package may have none; the report then says why.
+
 ## Scope of one work package
 
 One PR, green on tiers 1 and 2 before the next package of its lane starts. If a package cannot be
@@ -68,7 +85,7 @@ localise an error to one term (§7.1).
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## In brief` | Before the Execution brief; the core's template |
 | `## Execution brief` | Current scope, dependencies, requirement pointers, the model and effort of the implementing session, and the subsections below. Link evidence; do not retell earlier packages |
-| `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve now each choice that affects correctness |
+| `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve now each choice that affects correctness; each *Why/source* ends with "ruled by the author" and the ruling, or "decided by the plan" |
 | `### Grounding` | The facts of *Grounding the plan*, grouped by decision (`D1`, `D2`, …), one bullet each: `path:symbol`, what it does today and what the change does to it. Facts only: no alternatives, no history, no restated specification. Cite symbols, not line numbers, which drift |
 | `### Implementation details` | Optional, at most 1,000 words: the exact steps, layouts, commands and file formats an item needs when a smaller model executes it, grouped by item. Steps, not design: a choice belongs in *Decisions* |
 | `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass. **Executor:** <main, or a sub-agent type on a model>`. For an item outside the test scope (`SPECIFICATION.md` §8.2.13 N1): done when the code and review say so. Name the files in backticks. After a group of items, a checkpoint item: `- [ ] 5. Compaction checkpoint. **Executor:** main` (§8.2.16 R11) |

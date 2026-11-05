@@ -94,8 +94,8 @@ list is valid), and the findings it could not assess or fix. Compare it with the
    the plan. Revert a wrong fix, and give the reason in the PR thread. This step stays in this session.
    In the implementing session, a finding you would reject because it contradicts a decision taken
    while implementing, and not one the plan or the specification fixes, is not yours to reject: put it
-   to the author through `AskUserQuestion`, with the finding, the decision and a recommendation,
-   before the commit.
+   to the author as the core's *Putting a choice to the author* says, with the finding, the decision
+   and a recommendation, before the commit.
 2. For each finding that the pass could not fix, fix it here, or record a `REV-nn` row (`CLAUDE.md`,
    *Open items*) and list it in the PR body under **Deliberately not done**. A row the author has not
    ruled on is `open`: put it to the author before the report. Never leave a confirmed finding
@@ -141,12 +141,22 @@ core's *Two lanes*). Report that, and stop.
 
 1. Fetch `main`: a hosted clone is shallow. The merge sha is the `merge_commit_sha` of the merged PR.
 2. If `git ls-remote --tags origin <tag>` lists the tag, report it and stop.
-3. In a cloud session (`CLAUDE_CODE_REMOTE` is `true`), do not try the push. Its git credentials push
-   only the session's branch, and GitHub refuses any `refs/tags/` push with HTTP 403 (probed 5 November
-   2026; §8.2.33 AI5). Otherwise, if the access of this session allows it (§8.4.1), run
-   `git tag -a <tag> <merge sha> -m "<tag>"` and `git push origin <tag>`.
-4. Report the tag: pushed, or not pushed and why. Always end the report with the full commands, the
-   merge sha written out, each in its own `bash` block, so that the author can copy them:
+3. Dispatch `.github/workflows/tag.yml` on `main` with `tag` and `sha` (`actions_run_trigger`, or
+   `gh workflow run tag.yml --ref main -f tag=<tag> -f sha=<merge sha>` on another host). It checks the
+   tag, the commit and its changelog section, pushes the annotated tag and starts `release.yml` with the
+   full matrix (§8.2.33 AI8). Wait for its run, as the steward's *Bounded wakes* say, and read its
+   result. A cloud session never pushes a tag itself: its git credentials push only its own branch, and
+   GitHub refuses a `refs/tags/` push with HTTP 403 (AI5). Only if the dispatch is refused, and the
+   session is not a cloud session (`CLAUDE_CODE_REMOTE` is not `true`), push the tag as the commands
+   below do.
+4. Report the tag: pushed by the workflow, by this session, or not pushed and why, with the run's link.
+   Always end the report with the full commands, the merge sha written out, each in its own `bash`
+   block, so that the author can copy them. The first dispatches the workflow; the other three push the
+   tag by hand from the author's own clone, if the workflow cannot:
+
+   ```bash
+   gh workflow run tag.yml --ref main -f tag=<tag> -f sha=<merge sha>
+   ```
 
    ```bash
    git fetch origin main

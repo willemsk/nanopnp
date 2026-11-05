@@ -64,8 +64,8 @@ recommendation first, with the reason. Also draft:
 
 ## Put it to the author
 
-Ask through `AskUserQuestion`, at most four questions in a call. Each question carries the clause at
-stake, the cost of each option and what is already ruled. Ask first the decisions that change the
+Ask through `AskUserQuestion`, as the core's *Putting a choice to the author* says. Each question also
+carries the clause at stake and what is already ruled. Ask first the decisions that change the
 package sequence, then the sequence, then the rest. Record a prose ruling in the author's words. If
 `AskUserQuestion` is not available, put the questions in one numbered message and end the turn. If the
 author volunteers a scope change, it is a ruling. Record it, then check again what it moves.
