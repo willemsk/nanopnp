@@ -77,6 +77,17 @@
   --radius: 3px;
 }
 
+/* Spacing is a user setting beside density (WB-31): tight is two thirds of the gap and the padding */
+:root[data-spacing="tight"] {
+  --gap: 0.25rem;
+  --pad: 0.3333rem;
+}
+
+:root[data-spacing="tight"][data-density="compact"] {
+  --gap: 0.1667rem;
+  --pad: 0.25rem;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;

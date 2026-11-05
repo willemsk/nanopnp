@@ -23,7 +23,7 @@ from nanopnp.gui.web.screens import SCREENS, Screen
 from nanopnp.gui.web.states import STATES
 
 if TYPE_CHECKING:
-    from playwright.sync_api import Browser, Playwright
+    from playwright.sync_api import Browser, Page, Playwright
 
 BROWSER_ARGS = ["--enable-unsafe-swiftshader", "--use-gl=angle", "--use-angle=swiftshader"]
 READY_WAIT_MS = 90_000
@@ -144,6 +144,61 @@ def test_ver78_a_refused_item_is_in_the_problems_list_and_opens_its_suite(
         assert process.stdin is not None
         process.stdin.close()
         process.wait(STOP_WITHIN_S)
+
+
+@pytest.fixture
+def workbench(browser: Browser, tmp_path: Path) -> Iterator[tuple[Page, str, Path]]:
+    process, found = _start("--state", "empty", entry=CLI, config=tmp_path)
+    url = found.group(1)
+    page = browser.new_page(viewport={"width": 1000, "height": 640})
+    page.goto(url)
+    yield page, url.split("/?")[0], tmp_path
+    page.close()
+    assert process.stdin is not None
+    process.stdin.close()
+    process.wait(STOP_WITHIN_S)
+
+
+def _ready(page: Page, url: str) -> None:
+    page.goto(url)
+    page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
+
+
+def test_ver78_a_theme_chosen_in_the_settings_holds_after_a_reload(
+    workbench: tuple[Page, str, Path],
+) -> None:
+    page, origin, config = workbench
+    _ready(page, origin + "/molecular?dialog=settings")
+    page.locator("[data-control=settings-theme]").click()
+    page.get_by_role("option", name="Dark").click()
+    page.wait_for_function("document.documentElement.dataset.theme === 'dark'")
+    _ready(page, origin + "/molecular")
+    assert page.evaluate("document.documentElement.dataset.theme") == "dark"
+    assert "theme: dark" in (config / "workbench.yaml").read_text(encoding="utf-8")
+
+
+def test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing(
+    workbench: tuple[Page, str, Path],
+) -> None:
+    page, origin, _ = workbench
+    _ready(page, origin + "/molecular?dialog=settings")
+    page.locator("[data-control=key-suite-molecular]").click()
+    page.wait_for_function("window.frame.capturing")
+    page.keyboard.press("Control+KeyW")  # a browser keeps it, so the settings refuse it
+    page.get_by_text("kept by the browser").wait_for()
+    assert "Alt+Shift+1" in page.locator("[data-control=key-suite-molecular]").inner_text()
+    page.locator("[data-control=key-suite-study]").click()
+    page.wait_for_function("window.frame.capturing")
+    page.keyboard.press("Control+Alt+KeyY")
+    page.wait_for_function(
+        "document.querySelector('[data-control=key-suite-study]').innerText.includes('Ctrl+Alt+Y')"
+    )
+    _ready(page, origin + "/molecular")
+    page.keyboard.press("Alt+Shift+Digit3")  # the old chord of the study suite
+    page.wait_for_timeout(1000)
+    assert page.url == origin + "/molecular"
+    page.keyboard.press("Control+Alt+KeyY")
+    page.wait_for_url(origin + "/study", timeout=READY_WAIT_MS)
 
 
 def _status(

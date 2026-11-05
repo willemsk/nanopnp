@@ -7,7 +7,6 @@ import os
 import signal
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass, field
 from pathlib import Path
 
 from nicegui import events, ui
@@ -16,14 +15,15 @@ from nanopnp.api.case import Case
 from nanopnp.api.project import Project
 from nanopnp.core.paths import remember_project
 from nanopnp.core.public import __version__
-from nanopnp.gui.web import commands
-from nanopnp.gui.web.queue import Queue
+from nanopnp.gui.web import commands, theme
+from nanopnp.gui.web.overlay import Overlay
 from nanopnp.gui.web.screens import SUITES
+from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench
 from nanopnp.io.defaults import Change
 from nanopnp.io.project import ItemKind, Suite, SuiteLayout
 
-__all__ = ["Shell", "counts", "frame"]
+__all__ = ["counts", "frame", "listed_changes"]
 
 KINDS: tuple[tuple[ItemKind, str, Suite], ...] = (
     ("molecular", "Molecular models", "molecular"),
@@ -42,19 +42,6 @@ GLOSSARY = (
     ("Override", "A value a study sets in place of its model's."),
     ("Queue", "The builds and runs waiting, running and done."),
 )
-
-
-@dataclass
-class Shell:
-    """What the pages share: the workbench now open, the queue, and the user's key bindings."""
-
-    bench: Workbench
-    keys: dict[str, str] = field(default_factory=dict)
-
-    @property
-    def queue(self) -> Queue:
-        """The queue of the workbench now open, which a switch of project keeps."""
-        return self.bench.queue
 
 
 def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
@@ -99,10 +86,12 @@ class _Frame:
         self.palette_input: ui.input
         self.palette_list: ui.column
         self.panel_root: ui.column
+        self.overlay = Overlay(shell)
         self.fold_button: ui.button
         self.toggle_button: ui.button
         self.actions: dict[str, Callable[[], object]] = {
             "palette": self.open_palette,
+            "settings": self.overlay.open,
             "panel-toggle": self.toggle_panel,
             "changes": lambda: self.show_panel("changes"),
             "problems": lambda: self.show_panel("problems"),
@@ -444,13 +433,19 @@ class _Frame:
 
 @contextmanager
 def frame(
-    shell: Shell, suite: Suite, *, panel: str | None = None, palette: bool = False
+    shell: Shell,
+    suite: Suite,
+    *,
+    panel: str | None = None,
+    palette: bool = False,
+    dialog: str | None = None,
 ) -> Iterator[None]:
     """Build the frame around a suite's page; the page's own content is the ``with`` body."""
     built = _Frame(shell, suite, panel)
     ui.add_head_html(
         '<script src="/frame.js"></script><link rel="stylesheet" href="/frame.css">'
-        f"<script>window.frameChords = {json.dumps(commands.chords(shell.keys))};</script>"
+        f"<script>window.frameChords = {json.dumps(commands.chords(shell.keys))};"
+        f"{theme.appearance(shell.settings)}</script>"
     )
     ui.on("command", built.on_command)
     with ui.element("div").classes("frame"):
@@ -478,6 +473,9 @@ def frame(
                             built.bottom_panel()
         built.status_bar()
     built.palette_dialog()
+    built.overlay.build()
     built.apply_layout()
     if palette:
         built.open_palette()
+    if dialog == "settings":
+        built.overlay.open()

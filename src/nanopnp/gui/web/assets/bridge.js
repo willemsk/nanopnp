@@ -40,7 +40,10 @@ window.nano = {
       });
     });
     await once(plugin.behaviors.state.isBusy, (busy) => !busy);
-    plugin.canvas3d.setProps({ postprocessing: { occlusion: { name: 'off', params: {} }, outline: { name: 'off', params: {} }, shadow: { name: 'off', params: {} } } });
+    // The 3D view's background is the --canvas-3d token, a setting of the user's (WB-30).
+    const token = getComputedStyle(document.documentElement).getPropertyValue('--canvas-3d').trim();
+    const background = /^#[0-9a-f]{6}$/i.test(token) ? { backgroundColor: parseInt(token.slice(1), 16) } : {};
+    plugin.canvas3d.setProps({ renderer: background, postprocessing: { occlusion: { name: 'off', params: {} }, outline: { name: 'off', params: {} }, shadow: { name: 'off', params: {} } } });
     const drawn = once(plugin.canvas3d.didDraw, () => true);
     plugin.canvas3d.requestDraw(true);
     await drawn;
