@@ -350,6 +350,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.08, the frame and the project folder, in its library step.
 
+**Fixed** in WP5.08: `Store.stale` lists each entry of an older version of a schema a stage writes now, never a newer one, and `Store.remove` deletes them; `nanopnp store prune [--remove]` prints the count and size. The workbench offers it in a later package.
+
 ### REV-33 — writable_formats assumes the extra's floor
 
 *Area:* interface. *Severity:* low. *Found:* PR #38 (WP17), a review finding not applied.
@@ -542,6 +544,8 @@ can drift apart.
 **Ruled** (§8.2.18 T2): owned by the first shell package, library first: `deviations` and `SolveReporting` join the stage protocol as optional members.
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.08, the frame, library step first.
+
+**Fixed** in WP5.08: `ContributesDeviations` joins `SolveReporting` and `Forecastable` as a runtime-checkable optional member of `core.stages`, the walk tests each by `isinstance`, and VER-64 checks each member's signature.
 
 ### REV-53 — Some walk rules stay as case logic
 
@@ -2645,3 +2649,34 @@ The plan reads barriers, warm-start parents and variable-axis reach from the var
 When the forecast fails, the text output gives the reason and the JSON gives `forecast: null` alone. `case_json_schema` lists neither `variables:` nor a string at a numeric field, which the workbench forms will need. Found by the WP5.07 review. Both change a public shape, so the author rules.
 
 **Fixed** in WP5.07: `sweep plan --json` carries `forecast_unavailable` with the reason, and `case_json_schema` declares `variables:` and admits a string at each numeric field (VER-76 (c)).
+
+
+## REV-202: The problems list leads to a suite, not to the field, and the suites' tools are not built
+
+A row of the problems list opens the suite that owns the item, and the suite lists its tools as text ("in a later package"), so no field is reachable and the job "see a refusal, fix the value, go on" cannot be finished (WB-12). Found by the WP5.08 `/np-gui review` (F4, F5). The frame is this package's scope; the tools are WP5.09 to WP5.11's.
+
+**Deferred** to WP5.09 to WP5.11: each suite's package makes its tools real, and the problem row then opens the tool at the field. The tool lists become disabled list items or controls as the tools land.
+
+
+
+## REV-203: The frame's accessibility and layout limits
+
+The WP5.08 `/np-gui review` found, in the frame as built: the bottom panel opens about 180 px high and clips the changed list and the problems list with no row count (F3); the frame has no landmarks, no heading and no `aria-live` region for the changed count, the problem count and the queue line (F15); the splitter has no keyboard resize beside the fold buttons (doubt 5); the activity bar has names and no icons (F14); the shortcuts `Alt+Shift+digit`, `Ctrl+K` and `Ctrl+,` may be claimed by a browser or an operating system (doubt 6); and the 3D view's background is read once when the viewer starts, so a change in the settings reaches an open viewer after a reload (doubt 4).
+
+**Deferred** to WP5.13, which carries the guided route and the keyboard pass over every canvas action (QR-16).
+
+
+
+## REV-204: The settings and the changed list lack some guards and units
+
+The WP5.08 review found: the settings dialog has no sticky footer and the colours sit in a collapsed section (F9); a shortcut has no per-row clear control (F7); Reset, Reset layout and Quit act at once with no confirmation or undo, and Quit does not warn of a running build (F12); the changed list shows a value with no unit beside it and a default of `None` (F12); an item that fails to load adds nothing to the changed count and says nothing (doubt 1); and a path set in a case counts as changed whether or not it differs from the validated default (doubt 2). A user's theme has no contrast display by the author's ruling (§8.2.33 AI1), so that part of F8 is answered and not open.
+
+**Deferred** to WP5.09, the next package that edits a value through the frame.
+
+
+
+## REV-205: The Study page shows fixture names, and the charge screen lacks a colour bar and axes
+
+The Study page prints `State: <fixture name>` and stage chips with no verdict word (F16), and the charge screen's map has no axes, no unit and no diverging colour bar, and its strip lists one residue while two charges are drawn (F17). Found by the WP5.08 review. The charge screen is WP5.02's spike screen, placed in the frame.
+
+**Deferred** to WP5.11, which builds the Charge on the mesh tool (WB-26; VER-60).

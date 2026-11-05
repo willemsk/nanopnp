@@ -53,6 +53,13 @@ bias does not move it). A stage without `forecast_parameters` is identified by t
 declared inputs' identities, so any change of the case moves it. The forecast never calls `run`.
 The method is optional, adds nothing to the key, and a stage of one's own needs none.
 
+NOTE (optional members, FR-27, VER-64; WP5.08; §8.2.18 T2): the optional members of a stage are the
+runtime-checkable protocols of `core.stages`, and the walk tests each by `isinstance`, never by
+`hasattr`: `ContributesDeviations` (`deviations(inputs)`, which a stage defines to add to the run's
+deviations list), `SolveReporting` (`with_solve_hook(hook)`) and `Forecastable` (`forecast_parameters(inputs)`).
+A member a stage defines SHALL have its protocol's signature, which VER-64 reads from the syntax tree,
+so a stage whose `deviations` takes no `inputs` is found by the test and not skipped by the walk.
+
 | Level | Unit of extension | Requires | Obtained free |
 |---|---|---|---|
 | 1, correction models | A versioned data file naming a registered model and its coefficients | No code | Recording of the model version on every result; correction-by-correction switching as a configuration sweep |

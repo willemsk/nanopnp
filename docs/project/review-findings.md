@@ -53,7 +53,7 @@ is a rolling register, and its header stays `open`.
 | REV-29 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [The cylindrical-pore fixture is copied into four test modules](review-items.md#rev-29-the-cylindrical-pore-fixture-is-copied-into-four-test-modules) |
 | REV-30 | performance | low | deferred | §8.2.18 T2 | [The viewer's scene is written twice](review-items.md#rev-30-the-viewers-scene-is-written-twice) |
 | REV-31 | documentation | low | wontfix | §8.2.18 T1 | [The bundle's size is not recorded](review-items.md#rev-31-the-bundles-size-is-not-recorded) |
-| REV-32 | interface | low | deferred | §8.2.18 T2 | [Old store entries are neither migrated nor removed](review-items.md#rev-32-old-store-entries-are-neither-migrated-nor-removed) |
+| REV-32 | interface | low | fixed | §8.2.18 T2 | [Old store entries are neither migrated nor removed](review-items.md#rev-32-old-store-entries-are-neither-migrated-nor-removed) |
 | REV-33 | interface | low | declined | §8.2.9 I3 | [writable_formats assumes the extra's floor](review-items.md#rev-33-writable_formats-assumes-the-extras-floor) |
 | REV-34 | verification | low | fixed | [WP42](../plans/wp42-verification-checks.md) | [Two reference tests duplicate the frozen case](review-items.md#rev-34-two-reference-tests-duplicate-the-frozen-case) |
 | REV-35 | performance | low | post-1.0 | §8.2.9 I3 | [_second_crossings loops in Python](review-items.md#rev-35-_second_crossings-loops-in-python) |
@@ -73,7 +73,7 @@ is a rolling register, and its header stays `open`.
 | REV-49 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [AXISYMMETRIC is replaced repeatedly](review-items.md#rev-49-axisymmetric-is-replaced-repeatedly) |
 | REV-50 | process | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [_inner_wall_nm re-implements innermost_crossings](review-items.md#rev-50-_inner_wall_nm-re-implements-innermost_crossings) |
 | REV-51 | performance | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [A redundant reopen and resolve in WP34's walk](review-items.md#rev-51-a-redundant-reopen-and-resolve-in-wp34s-walk) |
-| REV-52 | interface | low | deferred | §8.2.18 T2 | [deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol) |
+| REV-52 | interface | low | fixed | §8.2.18 T2 | [deviations and SolveReporting are off the stage protocol](review-items.md#rev-52-deviations-and-solvereporting-are-off-the-stage-protocol) |
 | REV-53 | interface | low | declined | §8.2.9 I3 | [Some walk rules stay as case logic](review-items.md#rev-53-some-walk-rules-stay-as-case-logic) |
 | REV-54 | verification | low | fixed | [WP38](../plans/wp38-io-split.md) | [The MOD-12 check compared names, not modules](review-items.md#rev-54-the-mod-12-check-compared-names-not-modules) |
 | REV-55 | interface | low | fixed | [WP46](../plans/wp46-small-fixes.md) | [Per-stage mkdtemp fallbacks](review-items.md#rev-55-per-stage-mkdtemp-fallbacks) |
@@ -223,3 +223,7 @@ is a rolling register, and its header stays `open`.
 | REV-199 | performance | low | fixed | WP5.07 review | [The sweep forecast resolves every point again](review-items.md#rev-199-the-sweep-forecast-resolves-every-point-again) |
 | REV-200 | coupling | low | fixed | WP5.07 review | [A second type repeats the variable resolution](review-items.md#rev-200-a-second-type-repeats-the-variable-resolution) |
 | REV-201 | interface | low | fixed | WP5.07 review | [`sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables](review-items.md#rev-201-sweep-plan-json-drops-the-reason-a-forecast-could-not-be-made-and-the-case-json-schema-does-not-describe-variables) |
+| REV-202 | interface | low | deferred | WP5.08 review | [The problems list leads to a suite, not to the field, and the suites' tools are not built](review-items.md#rev-202-the-problems-list-leads-to-a-suite-not-to-the-field-and-the-suites-tools-are-not-built) |
+| REV-203 | interface | low | deferred | WP5.08 review | [The frame's accessibility and layout limits](review-items.md#rev-203-the-frames-accessibility-and-layout-limits) |
+| REV-204 | interface | low | deferred | WP5.08 review | [The settings and the changed list lack some guards and units](review-items.md#rev-204-the-settings-and-the-changed-list-lack-some-guards-and-units) |
+| REV-205 | interface | low | deferred | WP5.08 review | [The Study page shows fixture names, and the charge screen lacks a colour bar and axes](review-items.md#rev-205-the-study-page-shows-fixture-names-and-the-charge-screen-lacks-a-colour-bar-and-axes) |
