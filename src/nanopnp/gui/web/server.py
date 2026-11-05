@@ -198,6 +198,7 @@ _DEV_ENVIRONMENT = (
     "NANOPNP_GUI_WORK",
     "NANOPNP_GUI_CASE",
     "NANOPNP_GUI_STATE",
+    "NANOPNP_GUI_PROJECT",
 )
 
 
@@ -209,7 +210,9 @@ def _watch_input(server: uvicorn.Server | None) -> None:
         os.kill(os.getpid(), signal.SIGINT)  # the reloading supervisor stops on it
 
 
-def _boot(case: str | None, state: str | None, work: Path) -> Workbench:
+def _boot(case: str | None, state: str | None, work: Path, project: str | None = None) -> Workbench:
+    if project:
+        return Workbench(Path(project).name)
     if case:
         return boot_case(Path(case), work)
     return boot(state or "empty", work)
@@ -221,9 +224,9 @@ def dev_app() -> Guard:
     The supervisor passes the launch token, the folder that keeps the store between reloads, and
     the case or state in environment variables.
     """
-    token, work, case, state = (os.environ.get(name) for name in _DEV_ENVIRONMENT)
+    token, work, case, state, project = (os.environ.get(name) for name in _DEV_ENVIRONMENT)
     assert token is not None and work is not None
-    guard = build_app(token, _boot(case, state, Path(work)))
+    guard = build_app(token, _boot(case, state, Path(work), project))
     port = int(os.environ["NANOPNP_GUI_PORT"])
     guard.hosts = frozenset({f"{HOST}:{port}", f"localhost:{port}"})
     return guard
@@ -250,6 +253,7 @@ def _announce(url: str, port: int, *, browser: bool, as_json: bool) -> None:
 def _serve_dev(
     case: Path | None,
     state: str | None,
+    project: Path | None,
     port: int,
     token: str,
     work: Path,
@@ -267,6 +271,7 @@ def _serve_dev(
         NANOPNP_GUI_PORT=str(port),
         NANOPNP_GUI_CASE=str(case or ""),
         NANOPNP_GUI_STATE=state or "",
+        NANOPNP_GUI_PROJECT=str(project or ""),
     )
     url = f"http://{HOST}:{port}/?token={token}"
     threading.Thread(
@@ -292,6 +297,7 @@ def serve(
     *,
     case: Path | None = None,
     state: str | None = None,
+    project: Path | None = None,
     port: int = 0,
     no_browser: bool = False,
     dev: bool = False,
@@ -308,10 +314,18 @@ def serve(
     with tempfile.TemporaryDirectory(prefix="nanopnp-gui-") as work:
         if dev:
             _serve_dev(
-                case, state, port, token, Path(work), browser=not no_browser, as_json=as_json
+                case,
+                state,
+                project,
+                port,
+                token,
+                Path(work),
+                browser=not no_browser,
+                as_json=as_json,
             )
             return 0
-        guard = build_app(token, _boot(str(case or ""), state, Path(work)))
+        opened = None if project is None else str(project)
+        guard = build_app(token, _boot(str(case or ""), state, Path(work), opened))
         config = uvicorn.Config(guard, host=HOST, port=port, log_level="warning")
         server = _Server(config, guard, token, browser=not no_browser, as_json=as_json)
         threading.Thread(target=_watch_input, args=(server,), daemon=True).start()

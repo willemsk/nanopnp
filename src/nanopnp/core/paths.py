@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 _PACKAGE_ROOT = Path(__file__).resolve().parent.parent
@@ -141,6 +142,42 @@ def store_root() -> Path:
     if configured:
         return Path(configured).expanduser().resolve()
     return (Path.cwd() / DEFAULT_STORE_DIRNAME).resolve()
+
+
+CONFIG_VARIABLE = "NANOPNP_CONFIG"
+
+LAST_PROJECT_FILENAME = "last-project"
+
+
+def config_root() -> Path:
+    """Return the per-user configuration directory: ``$NANOPNP_CONFIG``, else the platform's."""
+    configured = os.environ.get(CONFIG_VARIABLE)
+    if configured:
+        return Path(configured).expanduser().resolve()
+    if sys.platform == "win32":
+        base = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    else:
+        base = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+    return (base / "nanopnp").resolve()
+
+
+def last_project() -> Path | None:
+    """Return the project folder the workbench opened last, or None if it is gone or unrecorded."""
+    try:
+        text = (config_root() / LAST_PROJECT_FILENAME).read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    folder = Path(text) if text else None
+    return folder if folder is not None and folder.is_dir() else None
+
+
+def remember_project(folder: Path) -> None:
+    """Record ``folder`` as the project the workbench opens when given none."""
+    root = config_root()
+    root.mkdir(parents=True, exist_ok=True)
+    (root / LAST_PROJECT_FILENAME).write_text(f"{folder.resolve()}\n", encoding="utf-8")
 
 
 REFERENCE_DATA_VARIABLE = "NANOPNP_REFERENCE_DATA"

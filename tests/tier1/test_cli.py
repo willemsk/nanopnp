@@ -283,3 +283,56 @@ def test_ver32_stage_export_help_imports_no_stage_module() -> None:
     )
     assert json.loads(result.stderr) == []
     assert "--export" in result.stdout and ".mrc" in result.stdout
+
+
+GUI_ENTRY = ["-c", "import sys; from nanopnp.cli import main; sys.exit(main(sys.argv[1:]))", "gui"]
+
+
+# VER-78: the command a desktop wrapper starts makes a project in an empty folder it is given.
+def test_ver78_nanopnp_gui_opens_or_creates_a_project(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("NANOPNP_CONFIG", str(tmp_path / "config"))
+    folder = tmp_path / "fresh"
+    folder.mkdir()
+    process = subprocess.Popen(
+        [sys.executable, *GUI_ENTRY, "--no-browser", str(folder)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    assert process.stdin is not None and process.stdout is not None
+    try:
+        ready = process.stdout.readline().strip()
+        assert ready.startswith("nanopnp-gui ready http://127.0.0.1:"), ready
+        assert "name: fresh" in (folder / "nanopnp-project.yaml").read_text(encoding="utf-8")
+    finally:
+        process.stdin.close()
+        process.wait(30)
+    assert (tmp_path / "config" / "last-project").read_text(encoding="utf-8").strip() == str(
+        folder.resolve()
+    )
+
+    case = tmp_path / "idealised.case.yaml"
+    case.write_text(IDEALISED_CASE.format(maxh=2, wall=0.3), encoding="utf-8")
+    with pytest.raises(SystemExit) as refused:
+        main(["gui", "--no-browser", str(case)])
+    assert refused.value.code == EXIT_USAGE
+
+
+def test_ver32_project_and_store_commands_import_export_and_prune(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("NANOPNP_CONFIG", str(tmp_path / "config"))
+    case = tmp_path / "idealised.case.yaml"
+    case.write_text(IDEALISED_CASE.format(maxh=2, wall=0.3), encoding="utf-8")
+    project = tmp_path / "project"
+    assert main(["project", "import", str(case), str(project), "--json"]) == EXIT_OK
+    assert json.loads(capsys.readouterr().out)["study"] == "idealised"
+    copy = tmp_path / "copy"
+    assert main(["project", "export", str(project), str(copy)]) == EXIT_OK
+    capsys.readouterr()
+    assert (copy / "studies" / "idealised.yaml").is_file()
+    assert main(["store", "prune", "--store", str(project / "store"), "--json"]) == EXIT_OK
+    assert json.loads(capsys.readouterr().out)["count"] == 0
