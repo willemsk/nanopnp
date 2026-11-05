@@ -177,7 +177,7 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
 - [x] eb0d25d 3. `api/project.py`, `io/defaults.py:changes`, `core/errors.py`, `nanopnp/__init__.py` (D1 to D3, D7). Done when rows
   1 to 3 pass. **Executor:** main.
 - [x] 4. Compaction checkpoint. **Executor:** main.
-- [ ] 5. The `cli/` split (D5). Done when `test_cli.py`, `test_sweep_cli.py` and `test_layering.py` pass and the review
+- [x] bc83ad8 5. The `cli/` split (D5). Done when `test_cli.py`, `test_sweep_cli.py` and `test_layering.py` pass and the review
   finds the bounds held. **Executor:** `general-purpose` on Sonnet.
 - [ ] 6. `cli/workbench.py`: `gui [<project>]`, `project new|import|export`, `store prune [--remove]`, `--env`'s
   `config` (D5). Done when row 7 passes. **Executor:** main.

@@ -49,6 +49,7 @@ API_SECTIONS: dict[str, str] = {
     "nanopnp.api.case": "Running a case",
     "nanopnp.api.session": "Running a case",
     "nanopnp.pipeline.run": "Running a case",
+    "nanopnp.api.project": "Projects",
     "nanopnp.api.sweep": "Sweeps",
     "nanopnp.io.artefact": "The artefact store",
     "nanopnp.io.store": "The artefact store",
