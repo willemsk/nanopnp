@@ -5,17 +5,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fastapi import Response
+from fastapi.responses import RedirectResponse, Response
 from nicegui import app as nicegui_app
 from nicegui import events, ui
 
+from nanopnp.gui.web.frame import Shell, frame
 from nanopnp.gui.web.link import Extent, png
-from nanopnp.gui.web.screens import screen
+from nanopnp.gui.web.screens import SUITES, Suite, screen
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from fastapi import FastAPI
-
-    from nanopnp.gui.web.states import Workbench
 
 __all__ = ["install"]
 
@@ -51,19 +50,20 @@ def _markers(extent: Extent, markers: list[tuple[float, float, float]]) -> str:
     return "".join(out)
 
 
-def install(app: FastAPI, bench: Workbench, secret: str) -> None:
+def install(app: FastAPI, shell: Shell, secret: str) -> None:
     """Register the screens and their data routes on ``app``, and attach NiceGUI to it."""
-    link = bench.link
 
     @app.get("/api/structure")
     def structure() -> Response:
         """Serve the first frame as PDB text, which the viewer reads."""
+        link = shell.bench.link
         text = "" if link is None else link.structure_pdb
         return Response(text, media_type="chemical/x-pdb")
 
     @app.get("/api/map")
     def charge_map() -> Response:
         """Serve the charge map as a PNG."""
+        link = shell.bench.link
         return Response(_blank_map() if link is None else link.map_png, media_type="image/png")
 
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
@@ -73,28 +73,54 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
         (TOKENS, "/tokens.css"),
         (ASSETS / "bridge.js", "/bridge.js"),
         (ASSETS / "workbench.css", "/workbench.css"),
+        (ASSETS / "frame.js", "/frame.js"),
+        (ASSETS / "frame.css", "/frame.css"),
     ):
         nicegui_app.add_static_file(local_file=local, url_path=url, max_cache_age=0)
 
     async def ready() -> None:
-        await ui.run_javascript("document.body.dataset.screenReady = '1'")
+        await ui.run_javascript("document.body.dataset.screenReady = '1'", timeout=10)
 
-    @ui.page(screen("home").path)
-    def home() -> None:
-        ui.add_head_html(STYLESHEETS)
-        ui.label("nanopnp workbench").classes("text-h5")
-        ui.label(f"State: {bench.name}").props("data-control=state")
-        with ui.row().props("data-control=stages"):
-            for stage in bench.stages:
-                ui.badge(stage)
-            if not bench.stages:
-                ui.label("No stage has run.")
-            if bench.refusal:
-                ui.label(f"Refused: {bench.refusal}")
-            if bench.notice:
-                ui.label(bench.notice)
-        ui.link("Charge on the mesh", screen("st-charge").path).props("data-control=open-charge")
-        ui.timer(0.1, ready, once=True)
+    def current_suite() -> str:
+        current = shell.bench.project.current if shell.bench.project else None
+        kind = (current or "molecular/").split("/")[0]
+        return {"comparison": "analysis"}.get(kind, kind)
+
+    @ui.page("/")
+    def root() -> RedirectResponse:
+        return RedirectResponse(f"/{current_suite()}")
+
+    def suite_page(suite: Suite) -> None:
+        @ui.page(f"/{suite.id}")
+        def page(panel: str = "", palette: int = 0) -> None:
+            bench = shell.bench
+            ui.add_head_html(STYLESHEETS)
+            with frame(shell, suite.id, panel=panel or None, palette=bool(palette)):
+                with ui.column().props("data-control=suite-body"):
+                    ui.label(suite.title).classes("text-h5")
+                    ui.label(f"This suite builds {suite.builds}.")
+                    for tool in suite.tools:
+                        if tool == "Charge on the mesh":
+                            ui.link(tool, screen("st-charge").path).props(
+                                "data-control=open-charge"
+                            )
+                        else:
+                            ui.label(f"{tool}: not built yet").classes("later")
+                    if suite.id == "study":
+                        ui.label(f"State: {bench.name}").props("data-control=state")
+                        with ui.row().props("data-control=stages"):
+                            for stage in bench.stages:
+                                ui.badge(stage)
+                            if not bench.stages:
+                                ui.label("No stage has run.")
+                        if bench.refusal:
+                            ui.label(f"Refused: {bench.refusal}")
+                        if bench.notice:
+                            ui.label(bench.notice)
+            ui.timer(0.1, ready, once=True)
+
+    for suite in SUITES:
+        suite_page(suite)
 
     @ui.page(screen("st-charge").path)
     def charge(residue: str = "", linked: int = 1) -> None:
@@ -103,6 +129,8 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
             + STYLESHEETS
             + '<script src="/vendor/molstar/molstar.js"></script><script src="/bridge.js"></script>'
         )
+        bench = shell.bench
+        link = bench.link
         extent = BLANK if link is None else link.extent
         state = {"key": "", "linked": bool(linked)}
         buttons: dict[str, ui.button] = {}
@@ -136,37 +164,40 @@ def install(app: FastAPI, bench: Workbench, secret: str) -> None:
             unlink.text = "Unlink" if state["linked"] else "Link"
 
         ui.on("mol_pick", on_mol)
-        with ui.row().classes("items-start no-wrap"):
-            with ui.column():
-                ui.element("div").props("id=mol data-control=molecule")
-                with ui.row().props("data-control=strip").style("width:560px;gap:2px"):
-                    for key, name, _ in [] if link is None else link.residues():
-                        buttons[key] = (
-                            ui.button(f"{key} {name}", on_click=lambda _, k=key: select(k))
-                            .props(
-                                "flat dense no-caps size=sm aria-pressed=false "
-                                f"data-control=strip-item data-residue={key}"
+        with frame(shell, "study"):
+            with ui.row().classes("items-start no-wrap"):
+                with ui.column():
+                    ui.element("div").props("id=mol data-control=molecule")
+                    with ui.row().props("data-control=strip").style("width:560px;gap:2px"):
+                        for key, name, _ in [] if link is None else link.residues():
+                            buttons[key] = (
+                                ui.button(f"{key} {name}", on_click=lambda _, k=key: select(k))
+                                .props(
+                                    "flat dense no-caps size=sm aria-pressed=false "
+                                    f"data-control=strip-item data-residue={key}"
+                                )
+                                .classes("strip-item")
                             )
-                            .classes("strip-item")
+                with ui.column():
+                    with ui.row().classes("items-center"):
+                        chip = ui.badge("Linked" if linked else "Unlinked").props(
+                            "data-control=link-chip"
                         )
-            with ui.column():
-                with ui.row().classes("items-center"):
-                    chip = ui.badge("Linked" if linked else "Unlinked").props(
-                        "data-control=link-chip"
+                        unlink = ui.button(
+                            "Unlink" if linked else "Link", on_click=toggle_link
+                        ).props("flat dense data-control=unlink")
+                        status = ui.label(
+                            bench.refusal
+                            or bench.notice
+                            or ("Pick a residue." if link else "No case is loaded.")
+                        ).props("data-control=status")
+                    image = (
+                        ui.interactive_image(
+                            "/api/map", on_mouse=on_map, events=["click"], cross=False
+                        )
+                        .props("data-control=map")
+                        .style(f"width:{MAP_WIDTH_PX}px")
                     )
-                    unlink = ui.button("Unlink" if linked else "Link", on_click=toggle_link).props(
-                        "flat dense data-control=unlink"
-                    )
-                    status = ui.label(
-                        bench.refusal
-                        or bench.notice
-                        or ("Pick a residue." if link else "No case is loaded.")
-                    ).props("data-control=status")
-                image = (
-                    ui.interactive_image("/api/map", on_mouse=on_map, events=["click"], cross=False)
-                    .props("data-control=map")
-                    .style(f"width:{MAP_WIDTH_PX}px")
-                )
 
         async def start() -> None:
             # A long timeout: Mol* builds in seconds on a machine with no GPU.

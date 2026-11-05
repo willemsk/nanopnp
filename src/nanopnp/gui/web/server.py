@@ -26,7 +26,9 @@ from urllib.parse import parse_qs
 import uvicorn
 from fastapi import FastAPI
 
+from nanopnp.api.project import Project
 from nanopnp.core.public import __version__
+from nanopnp.gui.web.frame import Shell
 from nanopnp.gui.web.pages import install
 from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case
 
@@ -162,7 +164,7 @@ def build_app(token: str, bench: Workbench) -> Guard:
         """Say that the server is up, and which version of nanopnp runs it."""
         return {"status": "ok", "version": __version__}
 
-    install(app, bench, token)
+    install(app, Shell(bench), token)
     return Guard(app, token)
 
 
@@ -212,7 +214,8 @@ def _watch_input(server: uvicorn.Server | None) -> None:
 
 def _boot(case: str | None, state: str | None, work: Path, project: str | None = None) -> Workbench:
     if project:
-        return Workbench(Path(project).name)
+        opened = Project.open(project)
+        return Workbench(opened.name, project=opened)
     if case:
         return boot_case(Path(case), work)
     return boot(state or "empty", work)
