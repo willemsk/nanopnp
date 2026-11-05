@@ -123,6 +123,29 @@ def test_ver78_every_state_loads_every_screen_with_its_controls(
     assert foreign == [], f"{state}/{screen.id}: a request left the origin"
 
 
+def test_ver78_a_refused_item_is_in_the_problems_list_and_opens_its_suite(
+    browser: Browser, tmp_path: Path
+) -> None:
+    process, found = _start("--state", "refused", entry=CLI, config=tmp_path)
+    url = found.group(1)
+    origin = url.split("/?")[0]
+    page = browser.new_page(viewport={"width": 1000, "height": 640})
+    try:
+        page.goto(url)
+        page.goto(origin + "/study?panel=problems")
+        page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
+        entry = page.locator("[data-control=problem-item]", has_text="continuum/").first
+        assert "bias_V" in entry.inner_text()
+        assert "2 problems" in page.locator("[data-control=problems-count]").inner_text()
+        entry.click()
+        page.wait_for_url(origin + "/continuum", timeout=READY_WAIT_MS)
+    finally:
+        page.close()
+        assert process.stdin is not None
+        process.stdin.close()
+        process.wait(STOP_WITHIN_S)
+
+
 def _status(
     url: str, path: str, *, host: str | None = None, cookie: str | None = None
 ) -> tuple[int, str | None]:

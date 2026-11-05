@@ -76,6 +76,8 @@ FRAME_CONTROLS: tuple[str, ...] = (
 
 SCREENS: tuple[Screen, ...] = (
     *(Screen(suite.id, f"/{suite.id}", (*FRAME_CONTROLS, "suite-body")) for suite in SUITES),
+    Screen("changes", "/study?panel=changes", (*FRAME_CONTROLS, "changes-list")),
+    Screen("problems", "/study?panel=problems", (*FRAME_CONTROLS, "problems-list")),
     Screen("palette", "/molecular?palette=1", (*FRAME_CONTROLS, "palette-input", "palette-list")),
     Screen(
         "st-charge",
