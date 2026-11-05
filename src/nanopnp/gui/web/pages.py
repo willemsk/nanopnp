@@ -101,7 +101,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:
                                 "data-control=open-charge"
                             )
                         else:
-                            ui.label(f"{tool}: not built yet").classes("later")
+                            ui.label(f"{tool}: in a later package").classes("later")
                     if suite.id == "study":
                         ui.label(f"State: {bench.name}").props("data-control=state")
                         with ui.row().props("data-control=stages"):
@@ -110,7 +110,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:
                             if not bench.stages:
                                 ui.label("No stage has run.")
                         if bench.refusal:
-                            ui.label(f"Refused: {bench.refusal}")
+                            ui.label(f"✕ refused: {bench.refusal}").classes("refused")
                         if bench.notice:
                             ui.label(bench.notice)
             ui.timer(0.1, ready, once=True)

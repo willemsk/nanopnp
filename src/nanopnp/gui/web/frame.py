@@ -242,13 +242,21 @@ class _Frame:
         chords = commands.bindings(self.shell.keys)
         self.palette_list.clear()
         with self.palette_list:
-            for entry in commands.COMMANDS:
-                if wanted and wanted not in entry.title.lower():
-                    continue
-                label = entry.title + (f"    {chords[entry.id]}" if chords[entry.id] else "")
-                ui.button(label, on_click=lambda _, i=entry.id: self.choose(i)).props(
-                    "flat no-caps data-control=palette-item"
-                ).classes("w-full")
+            matching = [
+                entry
+                for entry in commands.COMMANDS
+                if entry.id != "palette" and (not wanted or wanted in entry.title.lower())
+            ]
+            if not matching:
+                ui.label("No command matches.").classes("muted")
+            for entry in matching:
+                with (
+                    ui.button(on_click=lambda _, i=entry.id: self.choose(i))
+                    .props("flat no-caps data-control=palette-item")
+                    .classes("w-full")
+                ):
+                    ui.label(entry.title).classes("key-title")
+                    ui.label(chords[entry.id]).classes("muted")
 
     def choose(self, identifier: str) -> None:
         self.palette.close()
@@ -256,8 +264,10 @@ class _Frame:
 
     def first_match(self) -> None:
         wanted = self.palette_input.value.strip().lower()
+        if not wanted:
+            return
         for entry in commands.COMMANDS:
-            if wanted in entry.title.lower():
+            if entry.id != "palette" and wanted in entry.title.lower():
                 self.choose(entry.id)
                 return
 
@@ -282,9 +292,11 @@ class _Frame:
                 "project-name"
             ).props("data-control=project-name")
             ui.space()
-            ui.button(f"◆ {changed} changed", on_click=lambda: self.run("changes")).props(
+            with ui.button(on_click=lambda: self.run("changes")).props(
                 "flat no-caps data-control=changed-count"
-            )
+            ):
+                ui.label("◆").classes("changed")
+                ui.label(f"{changed} changed")
             ui.button("Command palette  Ctrl+K", on_click=self.open_palette).props(
                 "flat no-caps data-control=palette-open"
             )
@@ -314,6 +326,10 @@ class _Frame:
                 return
             if project is None:
                 ui.label("No project open.").classes("muted")
+                for identifier in ("project-new", "project-open"):
+                    ui.button(
+                        commands.command(identifier).title, on_click=self.actions[identifier]
+                    ).props(f"flat dense no-caps data-control={identifier}").classes("w-full")
                 return
             ui.label(project.current or "No item open").classes("rail-open")
             for kind, title, suite in KINDS:
@@ -340,7 +356,9 @@ class _Frame:
                 "flat dense no-caps data-control=panel-toggle"
             )
             ui.button(
-                f"✕ {problems} problem{'' if problems == 1 else 's'}",
+                f"✕ {problems} problem{'' if problems == 1 else 's'}"
+                if problems
+                else "✓ No problems",
                 on_click=lambda: self.run("problems"),
             ).props("flat dense no-caps data-control=problems-count")
 
@@ -409,22 +427,28 @@ class _Frame:
         with ui.column().classes("w-full").props("data-control=problems-list"):
             found = () if project is None else project.problems()
             if project is None and bench.refusal:
-                ui.label(f"✕ {bench.refusal}")
+                ui.label(f"✕ refused: {bench.refusal}").classes("refused")
             elif not found:
                 ui.label("No problem.")
             for problem in found:
                 where = f" at {problem.path}" if problem.path else ""
-                ui.button(
-                    f"✕ {problem.item}{where}: {problem.message}",
-                    on_click=lambda _, i=problem.item, s=problem.suite: self.open_item(i, s),
-                ).props("flat dense no-caps data-control=problem-item").classes("w-full list-row")
+                with (
+                    ui.button(
+                        on_click=lambda _, i=problem.item, s=problem.suite: self.open_item(i, s),
+                    )
+                    .props("flat dense no-caps data-control=problem-item")
+                    .classes("w-full list-row")
+                ):
+                    ui.label(f"✕ refused: {problem.item}{where}: {problem.message}").classes(
+                        "refused"
+                    )
 
     def palette_dialog(self) -> None:
         with ui.dialog() as self.palette, ui.card().classes("palette"):
             self.palette_input = ui.input(
                 placeholder="Type a command",
                 on_change=lambda e: self.fill_palette(e.value or ""),
-            ).props("autofocus outlined dense data-control=palette-input")
+            ).props("autofocus outlined dense aria-label='Command' data-control=palette-input")
             self.palette_input.on("keydown.enter", self.first_match)
             with ui.column().classes("w-full gap-0").props("data-control=palette-list") as lst:
                 self.palette_list = lst
