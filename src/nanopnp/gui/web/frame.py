@@ -20,6 +20,7 @@ from nanopnp.gui.web import commands
 from nanopnp.gui.web.queue import Queue
 from nanopnp.gui.web.screens import SUITES
 from nanopnp.gui.web.states import Workbench
+from nanopnp.io.defaults import Change
 from nanopnp.io.project import ItemKind, Suite, SuiteLayout
 
 __all__ = ["Shell", "counts", "frame"]
@@ -48,22 +49,36 @@ class Shell:
     """What the pages share: the workbench now open, the queue, and the user's key bindings."""
 
     bench: Workbench
-    queue: Queue = field(default_factory=Queue)
     keys: dict[str, str] = field(default_factory=dict)
 
+    @property
+    def queue(self) -> Queue:
+        """The queue of the workbench now open, which a switch of project keeps."""
+        return self.bench.queue
 
-def counts(project: Project | None) -> tuple[int, int]:
-    """Return the project's changed values and its problems."""
-    if project is None:
-        return 0, 0
-    changed = 0
+
+def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
+    """Return each item's changed values, a study's own overrides but not its models' values."""
+    listed: list[tuple[str, tuple[Change, ...]]] = []
     for kind in ("molecular", "continuum", "study"):
         for name in project.items(kind):
             try:
-                changed += len(project.changes(kind, name))
-            except Exception:
+                found = project.changes(kind, name)
+                if kind == "study" and project.study(name).models_record is not None:
+                    found = tuple(c for c in found if c.kind == "override")
+            except Exception:  # an item that does not load is listed as a problem
                 continue
-    return changed, len(project.problems())
+            if found:
+                listed.append((f"{kind}/{name}", found))
+    return listed
+
+
+def counts(bench: Workbench) -> tuple[int, int]:
+    """Return the changed values and the problems of what is open."""
+    project = bench.project
+    if project is None:
+        return 0, 1 if bench.refusal else 0
+    return sum(len(found) for _, found in listed_changes(project)), len(project.problems())
 
 
 class _Frame:
@@ -139,7 +154,7 @@ class _Frame:
         dialog.open()
 
     def switch(self, project: Project) -> None:
-        self.shell.bench = Workbench(project.name, project=project)
+        self.shell.bench = Workbench(project.name, project=project, queue=self.shell.queue)
         remember_project(project.root)
         ui.navigate.to("/molecular")
 
@@ -243,7 +258,7 @@ class _Frame:
                     continue
                 label = entry.title + (f"    {chords[entry.id]}" if chords[entry.id] else "")
                 ui.button(label, on_click=lambda _, i=entry.id: self.choose(i)).props(
-                    "flat no-caps align=left data-control=palette-item"
+                    "flat no-caps data-control=palette-item"
                 ).classes("w-full")
 
     def choose(self, identifier: str) -> None:
@@ -261,7 +276,7 @@ class _Frame:
 
     def title_bar(self) -> None:
         bench = self.shell.bench
-        changed, _ = counts(bench.project)
+        changed, _ = counts(bench)
         with ui.row().classes("titlebar items-center no-wrap"):
             for menu in commands.MENUS:
                 with ui.button(menu.capitalize()).props(f"flat no-caps data-control=menu-{menu}"):
@@ -317,9 +332,9 @@ class _Frame:
                 for name in project.items(kind):
                     item = f"{kind}/{name}"
                     ui.button(name, on_click=lambda _, i=item, s=suite: self.open_item(i, s)).props(
-                        "flat dense no-caps align=left"
+                        "flat dense no-caps"
                         + (' aria-current="true"' if item == project.current else "")
-                    ).classes("rail-item w-full")
+                    ).classes("rail-item list-row w-full")
 
     def open_item(self, item: str, suite: str) -> None:
         project = self.shell.bench.project
@@ -328,20 +343,21 @@ class _Frame:
         ui.navigate.to(f"/{suite}")
 
     def status_bar(self) -> None:
-        _, problems = counts(self.shell.bench.project)
+        _, problems = counts(self.shell.bench)
         with ui.row().classes("statusbar items-center no-wrap"):
             ui.label(self.shell.queue.status_line()).props("data-control=queue-status")
             ui.space()
             self.toggle_button = ui.button("Queue and log", on_click=self.toggle_panel).props(
                 "flat dense no-caps data-control=panel-toggle"
             )
-            ui.button(f"✕ {problems} problems", on_click=lambda: self.run("problems")).props(
-                "flat dense no-caps data-control=problems-count"
-            )
+            ui.button(
+                f"✕ {problems} problem{'' if problems == 1 else 's'}",
+                on_click=lambda: self.run("problems"),
+            ).props("flat dense no-caps data-control=problems-count")
 
     def bottom_panel(self) -> None:
         with ui.column().classes("bottom-panel w-full gap-0") as self.panel_root:
-            with ui.tabs().classes("w-full") as self.tabs:
+            with ui.tabs().props("align=left").classes("w-full") as self.tabs:
                 for name in PANELS:
                     ui.tab(name, label=name.capitalize()).props(f"data-control=panel-tab-{name}")
             self.tabs.set_value(self.panel)
@@ -358,9 +374,61 @@ class _Frame:
                             for line in self.shell.queue.log or ["The log is empty."]:
                                 ui.label(line)
                     with ui.tab_panel("changes"):
-                        ui.label("Changed values are listed here.")
+                        self.changes_list()
                     with ui.tab_panel("problems"):
-                        ui.label("Problems are listed here.")
+                        self.problems_list()
+
+    def changes_list(self) -> None:
+        project = self.shell.bench.project
+        with ui.column().classes("w-full").props("data-control=changes-list"):
+            groups = [] if project is None else listed_changes(project)
+            if not groups:
+                ui.label("No value is away from its default.")
+            for item, found in groups:
+                kind, name = item.split("/")
+                ui.label(item).classes("rail-heading")
+                for change in found:
+                    mark = "◇" if change.kind == "override" else "◆"
+                    other = "model" if change.kind == "override" else "default"
+                    was = change.model if change.kind == "override" else change.default
+                    with ui.row().classes("items-center no-wrap"):
+                        ui.label(f"{mark} {change.path} = {change.value}").classes("changed")
+                        ui.label(f"{other}: {was}").classes("muted")
+                        ui.button(
+                            "Reset",
+                            on_click=lambda _, k=kind, n=name, p=change.path: self.reset(k, n, p),
+                        ).props(
+                            "flat dense no-caps data-control=reset "
+                            f"aria-label='Reset {change.path}'"
+                        )
+
+    def reset(self, kind: str, name: str, path: str) -> None:
+        project = self.shell.bench.project
+        if project is None:
+            return
+        try:
+            project.reset(kind, name, path)  # type: ignore[arg-type]
+        except ValueError as error:
+            ui.notify(str(error), type="negative")
+            return
+        self.shell.queue.log.append(f"reset {path} of {kind}/{name}")
+        ui.navigate.to(f"/{self.suite}?panel=changes")
+
+    def problems_list(self) -> None:
+        bench = self.shell.bench
+        project = bench.project
+        with ui.column().classes("w-full").props("data-control=problems-list"):
+            found = () if project is None else project.problems()
+            if project is None and bench.refusal:
+                ui.label(f"✕ {bench.refusal}")
+            elif not found:
+                ui.label("No problem.")
+            for problem in found:
+                where = f" at {problem.path}" if problem.path else ""
+                ui.button(
+                    f"✕ {problem.item}{where}: {problem.message}",
+                    on_click=lambda _, i=problem.item, s=problem.suite: self.open_item(i, s),
+                ).props("flat dense no-caps data-control=problem-item").classes("w-full list-row")
 
     def palette_dialog(self) -> None:
         with ui.dialog() as self.palette, ui.card().classes("palette"):

@@ -113,3 +113,16 @@ body .q-field__control {
   color: var(--muted);
   font-size: var(--text-sm);
 }
+/* Quasar's tab panels are white, whatever the theme. */
+body .q-tab-panels,
+body .q-tab-panel {
+  background: var(--panel);
+  color: var(--ink);
+}
+body .q-btn.list-row .q-btn__content {
+  justify-content: flex-start;
+  text-align: left;
+}
+.changed {
+  color: var(--changed);
+}
