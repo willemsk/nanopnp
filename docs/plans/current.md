@@ -1,26 +1,24 @@
 # Current work
 
-Updated 4 November 2026 (WP5.07 delivered). Navigation only;
+Updated 5 November 2026 (WP5.08 planned). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 is released, and the workbench's technology is chosen. The rest of Phase 5 is planned: library steps, one
-package per part of the screen, the guided route, the old shell's removal and the guide. Three library steps are merged:
-the pore's shape follows the protein's charge state; a case can change one residue's charge or size; a case names
-its models, overrides their values and reuses what they built; and the quantities a run reports, and the models of ion
-crowding, are lists that grow by one entry. The fifth is built and waits for its review: a case defines named values
-with units and formulas of them, converted exactly or refused at the field, and a sweep warns beforehand of what each
-value will rebuild.
+Phase 4 is released, and the workbench's technology is chosen. Phase 5's five library steps are merged: the pore's
+shape follows the protein's charge state; a residue's charge or size can change; a case names and reuses its models;
+the reported quantities and the crowding models are lists that grow; and a case defines named values with units, and a
+sweep warns of what each will rebuild. Next, planned: the window's frame and the project folder, a plain folder that
+exports as readable files, with settings that take your own colour themes.
 
 **Your call.** None open. The colleague who tries the workbench is named by the close.
 
 ## Position
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.06 are merged
-  (`v0.6.0-alpha.6`). Library WP5.07, shell WP5.08 to WP5.13, close WP5.14 (§8.2.31). **WP5.07** ([variables and the rebuild forecast](wp5.07-variables-and-the-rebuild-forecast.md)) is
-  delivered and its PR is open; next `/np-ship wp 5.07`, then `/np-plan wp 5.08`. host: claude-code.
+- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.07 are merged
+  (`v0.6.0-alpha.7`). Shell WP5.08 to WP5.13, close WP5.14 (§8.2.31). **WP5.08** ([the frame and the project folder](wp5.08-the-frame-and-the-project-folder.md)) is
+  planned and its PR is open; next `/np-implement wp 5.08`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -37,6 +35,7 @@ value will rebuild.
   (§8.2.31 AG1 to AG5). **Example 07 is re-pinned** (AG8). **A charge edit sits on the titratable group;
   a radius edit is a scale; a variant is never a deviation** (AG9 to AG11). **A study overrides any model value** (AG12).
   **An output states what it needs of a model; a model provides every output whose need it meets** (§8.2.32 AH1).
+  **The settings select and modify colour themes; a user's theme sets its own contrast** (§8.2.33 AI1).
 - **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's identifier, `nanopnp/case/v0.6` (G6).
 - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
@@ -57,7 +56,7 @@ value will rebuild.
 | The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The phase's amendments | `phase-5-record.md` |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
-| WP5.07 | its plan; FR-39; §5.3.1, §5.3.3, §5.3.4, §5.5; §8.2.31 AG2 to AG5; REV-139 |
+| WP5.08 | its plan; FR-31, FR-32, FR-34, FR-35, QR-16; §5.3.2, §5.5; VER-64, VER-78; REV-32, REV-52; MOD-13; §8.2.33 AI1 |
 | The workbench | `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30, §8.2.31 |
 
 ## Handoff Rules

@@ -1,10 +1,10 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.06 merged, WP5.07 delivered, awaiting its review; the shell packages WP5.08 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+**Status: in progress; WP5.01 to WP5.07 merged; WP5.08 planned in detail; the shell packages WP5.09 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1). Release: **v0.6** (`v0.6.0`).
+AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1). Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -182,7 +182,7 @@ registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. 
 
 ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
 
-**Delivered 4 November 2026** ([the plan](wp5.07-variables-and-the-rebuild-forecast.md)). A case defines `variables:`, each
+**Merged 4 November 2026** ([the plan](wp5.07-variables-and-the-rebuild-forecast.md)). A case defines `variables:`, each
 a value with its unit or an expression of others. `io/variables.py` parses it from Python's syntax tree against a whitelist,
 so no code runs, and converts through `pint` (`>=0.25.3,<0.26`, imported on first use) exactly, in fractions; a field's
 unit is its name's suffix, and another dimension is refused at the field (AG2, AG3). A case resolves to numbers before any
@@ -193,16 +193,18 @@ VER-64); `sweep plan` prints it. Live constraints: the manifest gains `variables
 `Forecastable` stage hashes its own `forecast_parameters`; REV-197 (rectification over a bias set through a variable) is
 WP5.11's. REV-139 `fixed`. Tier 1 holds the evidence. Tag `v0.6.0-alpha.7`.
 
-### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13)
+### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1)
 
-Library step first: the project folder of `docs/design/workbench.md` (*The project folder*), its project file holding no
-physics, its export as readable files, and the store's entries of an older schema listed and removed on request
-(REV-32); `deviations` and `SolveReporting` join the stage protocol as optional members (REV-52), so the changed count and
-the queue read every stage. Then the frame in NiceGUI: the title bar with the menus, the command palette, the shortcuts
+[The plan](wp5.08-the-frame-and-the-project-folder.md). Library step first: the project folder of `docs/design/workbench.md`
+(*The project folder*), its project file holding no physics, a case file imported into it as its two models and its
+study, its export as readable files, and the store's entries of an older schema listed and removed on request (REV-32);
+`deviations` and `SolveReporting` join the stage protocol as optional members (REV-52), so the changed count and the
+queue read every stage. Then the frame in NiceGUI: the title bar with the menus, the command palette, the shortcuts
 and the changed count with its list (FR-34); the activity bar of the four suites; the project rail; the bottom panel
 with the run queue and the log; the problems list (FR-35); the theme, the density and the user's settings (WB-18,
-WB-19, WB-30, WB-31). `nanopnp gui [<project>]` opens a project, and `cli/__init__.py` is split as it changes (MOD-13's
-command-line part). Q01 to Q08 move here. VER-78 gains the frame's states. Tag `v0.6.0-alpha.8`.
+WB-19, WB-30, WB-31), with a theme selector and a colour modifier over the shipped themes and the user's own, a user's
+theme setting its own contrast (AI1). `nanopnp gui [<project>]` opens a project, and `cli/__init__.py` is split as it
+changes (MOD-13's command-line part). Q01 to Q08 move here. VER-78 gains the frame's states. Tag `v0.6.0-alpha.8`.
 
 ### WP5.09 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
 
