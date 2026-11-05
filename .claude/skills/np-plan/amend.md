@@ -20,4 +20,4 @@ ruling round.
    each planned package that the change moves, and `docs/plans/current.md`.
 5. Gate, push and open its PR as `rulings.md`'s *Finishing* says. Report the paths, the PR, the
    rulings, the packages as they now are, the open decisions and their owners, and the next step.
-   Then stop.
+   Then pause as `review.md`'s *The pause* says.

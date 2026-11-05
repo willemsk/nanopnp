@@ -99,3 +99,4 @@ caps (§8.2.13 N3).
    - the open decisions and their owners;
    - **what the author must supply and when**;
    - the next step.
+4. Pause as `review.md`'s *The pause* says.

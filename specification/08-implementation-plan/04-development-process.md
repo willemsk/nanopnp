@@ -59,7 +59,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 #### 8.4.4 Plans and the workflow
 
-* The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n>`,
+* The workflow is three commands with levels: `/np-plan <project | phase n | amend n | wp n> [review]`,
   `/np-implement [wp n]` and `/np-ship [wp n | phase n]`, with no aliases. Each routes to a shared
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
 * Beside them, `/np-gui <render | review | publish | collect | grill>` renders screens and mockups
@@ -108,6 +108,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * Each work item names its executor: the main session, or a sub-agent by type and model. The plan
   names the implementing session's model and effort. One commit per work item, ticked
   `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11)
+* Each level of `/np-plan` pushes its plan, opens its pull request, reports and pauses for a
+  compaction. `/np-plan <level> [n] review` then reviews the plan with `/code-review medium --fix`, fixes
+  or records each finding, gates and pushes again, and ends with a summary for the person who approves
+  the plan, written for a reader who does not code. (§8.2.33 AI2, AI3; `.claude/skills/np-plan/review.md`)
 * A compaction checkpoint is a work item. The session ticks it, gates and pushes, prints a `/compact`
   prompt that names the next item and the values it needs, and ends its turn. (§8.2.11 L7; §8.2.16 R11)
 * A phase plan states each package's current scope. The text of each amendment goes to the phase's
