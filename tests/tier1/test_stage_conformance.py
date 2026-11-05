@@ -274,3 +274,34 @@ def _with_supplied_mesh(case: str) -> str:
     if "\ninputs:\n" in text:
         return text.replace("\ninputs:\n", f"\ninputs:\n{supplied}", 1)
     return text.replace("\nelectrolyte:\n", f"\ninputs:\n{supplied}\nelectrolyte:\n", 1)
+
+
+# -- the optional members -----------------------------------------------------
+
+
+def test_ver64_each_optional_member_a_stage_defines_has_its_protocols_signature() -> None:
+    from nanopnp.core.stages import ContributesDeviations, Forecastable, SolveReporting
+
+    found = {stage.name: dict(stage.optional) for stage in stage_conformance()}
+    assert {name: members for name, members in found.items() if members} == {
+        "charge": {"deviations": "(inputs)"},
+        "mesh": {"deviations": "(inputs)", "forecast_parameters": "(inputs)"},
+        "solve": {"with_solve_hook": "(hook)"},
+    }
+    protocols = {
+        "deviations": ContributesDeviations,
+        "with_solve_hook": SolveReporting,
+        "forecast_parameters": Forecastable,
+    }
+    for name in walk_order():
+        stage = create(name)
+        for member, protocol in protocols.items():
+            assert isinstance(stage, protocol) == (member in found[name]), (name, member)
+
+    text = (ROOT / "src/nanopnp/charge/stage.py").read_text(encoding="utf-8")
+    current = "def deviations(self, inputs: StageInputs)"
+    assert text.count(current) == 1
+    sources = {"charge/stage.py": text.replace(current, "def deviations(self)")}
+    broken = {stage.name: stage for stage in stage_conformance(sources=sources)}
+    assert not broken["charge"].conforms
+    assert broken["mesh"].conforms

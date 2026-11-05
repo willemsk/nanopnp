@@ -15,6 +15,7 @@ __all__ = [
     "CancelFlag",
     "CancelToken",
     "Cancelled",
+    "ContributesDeviations",
     "Forecastable",
     "MissingExtraError",
     "NotBuilt",
@@ -85,6 +86,7 @@ if TYPE_CHECKING:  # pragma: no cover - imported for annotations only
 
     from nanopnp.core.hashing import Canonicalisable
     from nanopnp.io.artefact import Artefact, StageInputs
+    from nanopnp.io.defaults import ContributedDeviation
 
 
 class Cancelled(RuntimeError):  # noqa: N818 - see the docstring: this is not a failure
@@ -141,6 +143,14 @@ class SolveReporting(Protocol):
 
     def with_solve_hook(self, hook: SolveHook) -> Stage:
         """Return a copy of this stage that reports through ``hook``."""
+
+
+@runtime_checkable
+class ContributesDeviations(Protocol):
+    """A stage that tells the departures from the validated model that its artefact carries."""
+
+    def deviations(self, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
+        """Return the departures, read from the stage's own artefact in ``inputs``."""
 
 
 @runtime_checkable
