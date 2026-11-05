@@ -502,9 +502,13 @@ def _read_model_file(
         raise CaseValidationError(f"{path}: a model names no model, so it holds no models: key")
     body = {key: value for key, value in raw.items() if key not in ("schema", "name")}
     for expression in expression_paths(body):
+        entered: object = body
+        for part in expression.split("."):
+            entered = entered[part] if isinstance(entered, Mapping) else entered
         raise CaseValidationError(
-            f"{path}: {expression}: an expression belongs to the study, not to a {kind} model; "
-            "a model file holds numbers"
+            f"{path}: {expression}: you entered {entered!r}, but an expression belongs to the "
+            f"study, not to a {kind} model; a model file holds numbers. Write a number here, "
+            "or give the expression as an override in the study"
         )
     for leaf in _leaves(body, ""):
         if owner_of(leaf) != kind:

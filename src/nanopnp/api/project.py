@@ -422,7 +422,16 @@ class Project:
         for kind in ITEM_KINDS:
             for name in self._file.names(kind):
                 found.extend(self._problems_of(kind, name))
-        return tuple(found)
+        shown: list[Problem] = []
+        for problem in found:
+            message = problem.message.replace(f"{self._root}/", "")
+            # A study refused for a model's file repeats that model's problem: list the cause once.
+            if problem.item.startswith("study/") and any(
+                other.message == message for other in shown
+            ):
+                continue
+            shown.append(Problem(problem.item, problem.path, message, problem.suite))
+        return tuple(shown)
 
     def _problems_of(self, kind: ItemKind, name: str) -> list[Problem]:
         item, suite = item_reference(kind, name), _SUITE_OF[kind]

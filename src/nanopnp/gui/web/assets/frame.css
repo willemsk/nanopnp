@@ -145,3 +145,21 @@ body .q-field__marginal {
 .key-title {
   flex: 1;
 }
+.refused {
+  color: var(--err);
+}
+body .q-btn.suite-button,
+body .q-btn.rail-item {
+  border: 2px solid transparent;
+}
+.palette .q-btn .q-btn__content {
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+}
+body .q-tab {
+  opacity: 1;
+}
+body .q-tab--inactive {
+  color: var(--muted);
+}

@@ -26,6 +26,7 @@ class Overlay:
         self.capturing: str | None = None
         self.dialog: ui.dialog
         self.theme_select: ui.select
+        self.duplicate_button: ui.button
         self.colours: ui.column
         self.keys: ui.column
 
@@ -49,6 +50,7 @@ class Overlay:
 
     def _choose_theme(self, name: str) -> None:
         self._change(theme=name)
+        self.duplicate_button.set_enabled(name != SYSTEM)
         self._fill_colours()
 
     def _duplicate(self) -> None:
@@ -98,11 +100,14 @@ class Overlay:
                 with ui.row().classes("items-center no-wrap w-full"):
                     ui.label(entry.title).classes("key-title")
                     ui.button(
-                        "Press a chord…"
+                        "Press a chord…, Escape cancels"
                         if self.capturing == entry.id
-                        else chords[entry.id] or "none",
+                        else chords[entry.id] or "Unbound",
                         on_click=lambda _, i=entry.id: self._capture(i),
-                    ).props(f"flat dense no-caps data-control=key-{entry.id}")
+                    ).props(
+                        f'flat dense no-caps data-control=key-{entry.id} aria-label="Rebind '
+                        f'{entry.title}, now {chords[entry.id] or "unbound"}"'
+                    )
             ui.button("Reset the keys", on_click=self._reset_keys).props("flat dense no-caps")
 
     def _capture(self, identifier: str) -> None:
@@ -115,6 +120,9 @@ class Overlay:
         if identifier is None:
             return
         chord = str(event.args["chord"])
+        if chord == "Escape":
+            self._fill_keys()
+            return
         why = commands.refusal(identifier, chord, self.shell.keys)
         if why is not None:
             ui.notify(why, type="negative")
@@ -157,9 +165,10 @@ class Overlay:
                 label="Theme",
                 on_change=lambda e: self._choose_theme(e.value),
             ).props("outlined dense data-control=settings-theme")
-            ui.button("Duplicate this theme", on_click=self._duplicate).props(
-                "flat dense no-caps data-control=theme-duplicate"
-            )
+            self.duplicate_button = ui.button(
+                "Duplicate this theme", on_click=self._duplicate
+            ).props("flat dense no-caps data-control=theme-duplicate")
+            self.duplicate_button.set_enabled(current.theme != SYSTEM)
             with ui.expansion("Colours").props("data-control=theme-colours"):
                 with ui.column().classes("gap-1") as self.colours:
                     pass

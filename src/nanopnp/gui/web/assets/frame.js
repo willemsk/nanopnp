@@ -8,12 +8,13 @@ window.frame = {
     else if (/^Digit[0-9]$/.test(e.code)) key = e.code.slice(5);
     else if (e.code === 'Comma') key = ',';
     else if (e.code === 'Tab') key = 'Tab';
+    else if (e.code === 'Escape') key = 'Escape';
     else if (/^F\d+$/.test(e.code)) key = e.code;
     if (key === null) return null;
     const modifiers = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift', e.metaKey && 'Meta'];
     const held = modifiers.filter(Boolean);
     // A key typed into a field is not a shortcut: only an F key may stand alone.
-    if (held.length === 0 && !/^F\d+$/.test(key)) return null;
+    if (held.length === 0 && !/^F\d+$/.test(key) && !(key === 'Escape' && window.frame.capturing)) return null;
     return [...held, key].join('+');
   },
   // While capturing, the next chord goes to the settings instead of running its command.
@@ -24,6 +25,7 @@ document.addEventListener('keydown', (e) => {
   if (chord === null) return;
   if (window.frame.capturing) {
     e.preventDefault();
+    e.stopPropagation();
     window.frame.capturing = false;
     emitEvent('chord', { chord });
     return;
