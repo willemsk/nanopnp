@@ -23,6 +23,7 @@ __all__ = [
     "duplicate",
     "load",
     "save",
+    "script_json",
     "shipped",
     "user_themes",
 ]
@@ -31,6 +32,7 @@ THEME_SCHEMA: Literal["nanopnp/workbench-theme/v0.6"] = "nanopnp/workbench-theme
 THEMES_FOLDER = "themes"
 NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+TOKEN_NAME = re.compile(r"^[a-z0-9-]+$")
 _TOKEN = re.compile(r"--([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;")
 
 logger = logging.getLogger(__name__)
@@ -77,7 +79,7 @@ def user_themes() -> dict[str, Theme]:
         except (OSError, yaml.YAMLError, ValidationError) as error:
             logger.warning("ignoring the theme %s: %s", path, error)
             continue
-        if theme.name == path.stem:
+        if theme.name == path.stem and NAME.match(theme.name):
             found[theme.name] = theme
     return found
 
@@ -120,9 +122,22 @@ def duplicate(source: Theme) -> Theme:
     return theme
 
 
+def script_json(value: object) -> str:
+    """Return ``value`` as JSON that is safe inside an inline ``<script>`` element."""
+    return json.dumps(value).replace("<", "\\u003c")
+
+
 def css(theme: Theme) -> str:
-    """Return the style rule that sets a user theme's colours on the root it is chosen for."""
-    lines = "".join(f"--{token}:{value};" for token, value in theme.colours.items())
+    """Return the style rule that sets a user theme's colours on the root it is chosen for.
+
+    A theme file is read from disk and may be hand-edited or shared, so only a token name and a
+    ``#rrggbb`` value, as ``save`` accepts, reach the page.
+    """
+    lines = "".join(
+        f"--{token}:{value};"
+        for token, value in theme.colours.items()
+        if TOKEN_NAME.match(token) and HEX.match(value)
+    )
     return f':root[data-user-theme="{theme.name}"][data-theme]{{{lines}}}'
 
 
@@ -154,9 +169,9 @@ def appearance(settings: Settings) -> str:
     }
     return (
         "(()=>{const r=document.documentElement;"
-        f"for(const [k,v] of Object.entries({json.dumps(attributes)}))"
+        f"for(const [k,v] of Object.entries({script_json(attributes)}))"
         "{if(v===null){r.removeAttribute(k)}else{r.setAttribute(k,v)}}"
         "let s=document.getElementById('user-theme');"
         "if(!s){s=document.createElement('style');s.id='user-theme';document.head.appendChild(s)}"
-        f"s.textContent={json.dumps(rules)};}})();"
+        f"s.textContent={script_json(rules)};}})();"
     )

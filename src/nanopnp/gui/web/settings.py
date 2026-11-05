@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import secrets
 from pathlib import Path
 from typing import Any, Literal
 
@@ -11,6 +10,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from nanopnp.core.paths import config_root
+from nanopnp.io.store import atomic_write_bytes
 
 __all__ = ["SETTINGS_FILENAME", "Settings", "load", "save", "write_atomically"]
 
@@ -34,12 +34,7 @@ class Settings(BaseModel):
 def write_atomically(target: Path, text: str) -> None:
     """Write ``text`` to ``target`` through a temporary file, so a reader never sees half of it."""
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary = target.with_name(f".{target.name}.{secrets.token_hex(4)}.tmp")
-    try:
-        temporary.write_text(text, encoding="utf-8")
-        temporary.replace(target)
-    finally:
-        temporary.unlink(missing_ok=True)
+    atomic_write_bytes(target, text.encode("utf-8"))
 
 
 def load() -> Settings:

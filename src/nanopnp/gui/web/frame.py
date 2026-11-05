@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 import signal
 from collections.abc import Callable, Iterator
@@ -12,7 +11,7 @@ from pathlib import Path
 from nicegui import events, ui
 
 from nanopnp.api.case import Case
-from nanopnp.api.project import Project
+from nanopnp.api.project import Problem, Project
 from nanopnp.core.paths import remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
@@ -23,7 +22,7 @@ from nanopnp.gui.web.states import Workbench
 from nanopnp.io.defaults import Change
 from nanopnp.io.project import ItemKind, Suite, SuiteLayout
 
-__all__ = ["counts", "frame", "listed_changes"]
+__all__ = ["frame", "listed_changes"]
 
 KINDS: tuple[tuple[ItemKind, str, Suite], ...] = (
     ("molecular", "Molecular models", "molecular"),
@@ -60,14 +59,6 @@ def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
     return listed
 
 
-def counts(bench: Workbench) -> tuple[int, int]:
-    """Return the changed values and the problems of what is open."""
-    project = bench.project
-    if project is None:
-        return 0, 1 if bench.refusal else 0
-    return sum(len(found) for _, found in listed_changes(project)), len(project.problems())
-
-
 class _Frame:
     def __init__(self, shell: Shell, suite: Suite, panel: str | None) -> None:
         self.shell = shell
@@ -87,6 +78,8 @@ class _Frame:
         self.palette_list: ui.column
         self.panel_root: ui.column
         self.overlay = Overlay(shell)
+        self._listed: list[tuple[str, tuple[Change, ...]]] | None = None
+        self._problems: tuple[Problem, ...] | None = None
         self.fold_button: ui.button
         self.toggle_button: ui.button
         self.actions: dict[str, Callable[[], object]] = {
@@ -105,6 +98,21 @@ class _Frame:
             "quit": lambda: os.kill(os.getpid(), signal.SIGTERM),
             **{f"suite-{suite.id}": self.go(f"/{suite.id}") for suite in SUITES},
         }
+
+    # -- what the page shows of the project ---------------------------------
+
+    # Loading every item is the costly part, so a page builds each list once.
+    def listed(self) -> list[tuple[str, tuple[Change, ...]]]:
+        project = self.shell.bench.project
+        if self._listed is None:
+            self._listed = [] if project is None else listed_changes(project)
+        return self._listed
+
+    def problems(self) -> tuple[Problem, ...]:
+        project = self.shell.bench.project
+        if self._problems is None:
+            self._problems = () if project is None else project.problems()
+        return self._problems
 
     # -- commands -----------------------------------------------------------
 
@@ -275,7 +283,8 @@ class _Frame:
 
     def title_bar(self) -> None:
         bench = self.shell.bench
-        changed, _ = counts(bench)
+        changed = sum(len(found) for _, found in self.listed())
+        chords = commands.bindings(self.shell.keys)
         with ui.row().classes("titlebar items-center no-wrap"):
             for menu in commands.MENUS:
                 with ui.button(menu.capitalize()).props(f"flat no-caps data-control=menu-{menu}"):
@@ -283,7 +292,7 @@ class _Frame:
                         for entry in commands.COMMANDS:
                             if entry.menu != menu:
                                 continue
-                            chord = commands.bindings(self.shell.keys)[entry.id]
+                            chord = chords[entry.id]
                             with ui.menu_item(on_click=lambda i=entry.id: self.run(i)):
                                 ui.item_section(entry.title)
                                 if chord:
@@ -348,7 +357,8 @@ class _Frame:
         ui.navigate.to(f"/{suite}")
 
     def status_bar(self) -> None:
-        _, problems = counts(self.shell.bench)
+        bench = self.shell.bench
+        problems = len(self.problems()) or (1 if bench.project is None and bench.refusal else 0)
         with ui.row().classes("statusbar items-center no-wrap"):
             ui.label(self.shell.queue.status_line()).props("data-control=queue-status")
             ui.space()
@@ -386,9 +396,8 @@ class _Frame:
                         self.problems_list()
 
     def changes_list(self) -> None:
-        project = self.shell.bench.project
         with ui.column().classes("w-full").props("data-control=changes-list"):
-            groups = [] if project is None else listed_changes(project)
+            groups = self.listed()
             if not groups:
                 ui.label("No value is away from its default.")
             for item, found in groups:
@@ -425,7 +434,7 @@ class _Frame:
         bench = self.shell.bench
         project = bench.project
         with ui.column().classes("w-full").props("data-control=problems-list"):
-            found = () if project is None else project.problems()
+            found = self.problems()
             if project is None and bench.refusal:
                 ui.label(f"✕ refused: {bench.refusal}").classes("refused")
             elif not found:
@@ -468,7 +477,7 @@ def frame(
     built = _Frame(shell, suite, panel)
     ui.add_head_html(
         '<script src="/frame.js"></script><link rel="stylesheet" href="/frame.css">'
-        f"<script>window.frameChords = {json.dumps(commands.chords(shell.keys))};"
+        f"<script>window.frameChords = {theme.script_json(commands.chords(shell.keys))};"
         f"{theme.appearance(shell.settings)}</script>"
     )
     ui.on("command", built.on_command)

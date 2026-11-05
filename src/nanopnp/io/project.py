@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-import secrets
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Literal
@@ -14,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from nanopnp.core.paths import names_a_path
 from nanopnp.io.case import CORRECTION_PROPERTIES
 from nanopnp.io.case_paths import path_fields
+from nanopnp.io.store import atomic_write_bytes
 
 PROJECT_SCHEMA = "nanopnp/project/v0.6"
 
@@ -131,12 +131,7 @@ def write_project(folder: str | Path, project: ProjectFile) -> Path:
     target = Path(folder) / PROJECT_FILENAME
     target.parent.mkdir(parents=True, exist_ok=True)
     text = yaml.safe_dump(project.model_dump(by_alias=True, mode="json"), sort_keys=False)
-    temporary = target.with_name(f".{target.name}.{secrets.token_hex(4)}.tmp")
-    try:
-        temporary.write_text(text, encoding="utf-8")
-        temporary.replace(target)
-    finally:
-        temporary.unlink(missing_ok=True)
+    atomic_write_bytes(target, text.encode("utf-8"))
     return target
 
 
