@@ -116,8 +116,8 @@ note raises a physics question, whether the density should see the protonation c
 ## The areas
 
 The author named the workbench's areas, the list left open (S24): "Molecular viewer/editor, geometry
-builder, mesh builder, physics assigner, results analyser, ...". The design round placed them in four
-suites (WB-01, WB-02, WB-29). Each area offers at v0.6 what the library verifies; its later parts carry a
+builder, mesh builder, physics assigner, results analyser, ...". The design round placed them in five
+suites (WB-01, WB-02, WB-29, WB-34). Each area offers at v0.6 what the library verifies; its later parts carry a
 later-phase banner and no working control (S7).
 
 | Area | Suite | Its tools | What it draws on at v0.6 | Later |
@@ -125,40 +125,53 @@ later-phase banner and no working control (S7).
 | Molecular viewer and editor | Molecular | Prepare structure, Ensemble, Protonation, Charge edit, View | The structure, its frames, ensemble and symmetry; stage 7's protonation and PQR; structure preparation, a Phase 5 library capability (WB-14) | The structural mutator (S4) |
 | Geometry builder | Continuum | Protein geometry, Contour, Region | Stages 2 to 5: the density, the reduction to (r, z), the contour and its hand edit (`inputs.profile`), the membrane and the reservoir | The sketcher (S5) |
 | Mesh builder | Continuum | Mesh: sizes, quality | Stage 6 and its quality report; the size scale and the per-part sizes | Refinement regions drawn by hand; boundary layers |
-| Physics assigner | Continuum | Physics defaults: boundaries, model and electrolyte | The registered models, the electrolyte and its corrections, the boundary conditions and walls, as the continuum model's defaults (WB-16) | The composer (S3) |
+| Physics assigner | Physics | Equations, Electrolyte, Conditions, Exposed values | A **physics model**: a registered model and its switches, the electrolyte and its corrections, the boundary conditions and walls, the solid permittivities, the element orders and the stabilisation (WB-34) | The composer (S3), in this suite |
 | (added by the round) | Study | Overview, Study setup, Sweep, Charge on the mesh, Runs | A study pairing a molecular and a continuum model, its overrides and sweep, stage 7's charge on the mesh, and its runs | Sweeps over variables (REV-139) |
 | Results analyser | Analysis | Results explorer, Comparison | The run record, the quantities of interest, the fields, the sweeps | Figure, field and case export (FR-28, v0.7) |
 
 ## Organisation
 
 **The principle** is "suites in a project" (WB-01): the project folder and its run queue are the frame,
-and the four suites, *Molecular*, *Continuum*, *Study* and *Analysis*, sit inside it (WB-02, WB-29). A suite
-builds one kind of thing: Molecular a **molecular model** (the prepared structure, its ensemble and
-protonation), Continuum a **continuum model** (the protein geometry, the region, the mesh and the physics
-defaults), Study a **study** that pairs one of each and runs it, Analysis the results and their comparisons
-(WB-11). Models are items of the project's library, so one molecular model serves many continuum runs
-without being rebuilt.
+and the five suites sit inside it, shown in two groups (WB-02, WB-29, WB-34). Three **build** the project's
+models: Molecular a **molecular model** (the prepared structure, its ensemble and protonation), Continuum a
+**continuum model** (the protein geometry, the region and the mesh), Physics a **physics model** (the
+equations, the electrolyte, the boundary conditions and their discretisation). Two **use** them: Study a
+**study** that pairs one model of each kind and runs it, Analysis the results and their comparisons (WB-11).
+Models are items of the project's library, so one molecular model serves many continuum runs, and one
+physics model many pores, without being rebuilt. Each model declares the values it exposes, with their
+units, ranges and defaults, which the Study suite lists first (WB-35).
 
 **The frame**, from the mockups (`docs/design/mockups/a/`):
 
-- the *title bar*: the menus, the project's name, the changed-from-default count and the command palette
-  (WB-09, WB-28);
-- the *activity bar* on the left: the four suites, each an icon with its name;
-- the *project rail*: the open item, then the library, the studies and the comparisons, folding to the open
-  item and unfolding to the project tree;
+- the *title bar*: the menus, the changed-from-default count and the command palette (WB-09, WB-28);
+- the *activity bar* on the left: the five suites in their two groups, *Build* and *Use*, each an icon with
+  its name (WB-34);
+- the *project rail*: the project's name at its head, as the tree's root and in the browser tab's title,
+  then the open item, the library of models, the studies and the comparisons, folding to the open item and
+  unfolding to the project tree (WB-36);
 - in each suite, the *tool list*, then the selected tool's *settings*, docked on the left of its *live view*
   (WB-05, WB-07). Every tool docks its settings the same way: in the author's words, marking the mockups,
   "Consistency is key here!";
 - the *bottom panel*: the run queue and the log, folded to one line, unfolding to a run's convergence
   (WB-02; RE2); the Python console a later phase (WB-10).
 
-**Always on screen** (WB-03): the project rail, at least folded; the changed count, opening the list of
-every value changed from its default and every study override, grouped by model (WB-28; FR6); and the
-queue's status line. The list stays open to additions as the design grows.
+**Always on screen** (WB-03): the project rail, at least folded; the changed count, opening one dense table of
+every value changed from its default and every study override, grouped by model and study, each with its
+value, default, unit and reset and leading to its field, while every tool pane and the settings filter to
+the changed values (WB-28, WB-36; FR-34); and the queue's status line. The list stays open to additions as the design grows.
 
 **State is never hidden** (WB-32): every setting of a tool is on its pane, none in a sub-menu; a setting
 is guarded against being changed by accident, the means left to the shell's package; and every value away
 from its default carries its mark.
+
+**The frame is built from the components NiceGUI ships through Quasar** (WB-33): the application layout and
+its drawers, the tree, the dense table, the searchable select, the icon font and NiceGUI's sub-pages, the
+tokens fed into Quasar's colour variables; a part is written by hand only where no component serves it.
+
+**The settings** are one declared list (WB-37): each setting has its section, its scope (the user's, or the
+project's, which overrides the user's where both are allowed), its default, its description and search words,
+and when it applies, and the settings page, its search and the palette's setting commands follow from it. A
+value that can change a result is never a setting; it belongs to a model or a study and its manifest.
 
 **Several items are open at once** (WB-04); a variant is derived from its parent and shown as its
 difference, and a comparison is a saved project item. **A refusal** shows at its field and in the problems
@@ -238,9 +251,12 @@ Each tool has its settings and its live view (S6). The mockup screen named is in
 | Continuum | Contour | The isolevel, the smoothing, the simplification; the vertices; the gate | (r, z) editor over the map; the radius against z | `g-contour` |
 | Continuum | Region | The membrane's thickness, the reservoir's radius; its centre read from Prepare | (r, z), each value typed on the drawing as in the pane | `g-region` |
 | Continuum | Mesh | The mesher, the elements, the size scale and the per-part sizes; *Build mesh* and its quality gate | (r, z) mesh; by quality, the histogram selecting the elements it outlines | `s-size`, `s-quality` |
-| Continuum | Physics defaults | Each boundary's condition; the model, the salt, the ions, the corrections and the permittivities | (r, z), a boundary picked in the view or the list | `p-boundaries`, `p-electrolyte` |
-| Study | Overview | The two models, the sweep, the overrides, the changed values, the runs, the physics run | The resolved case file | `st-overview` |
-| Study | Study setup | The models, the overrides, the outputs; *Run study* | A form, or the same study as a graph (RE1) | `st-form`, `st-graph` |
+| Physics | Equations | The registered model and its switches; the element orders and the stabilisation; the composer's place, with its later-phase banner (WB-34) | The model's equations and fields, as text | none yet |
+| Physics | Electrolyte | The ions, the concentration, the parameter set and the corrections | The corrections' curves against concentration | `p-electrolyte` |
+| Physics | Conditions | Each boundary role's condition, the bias, the ground, the walls; the solid permittivities | (r, z) of the open study's geometry, a role picked in the view or the list | `p-boundaries` |
+| Physics | Exposed values | The values the model exposes, each with its unit, range and default (WB-35) | The list as the Study suite shows it | none yet |
+| Study | Overview | The three models, the sweep, the overrides, the changed values, the runs, the physics run | The resolved case file | `st-overview` |
+| Study | Study setup | The models, their exposed values first and *More values* (WB-35), the overrides, the outputs; *Run study* | A form, or the same study as a graph (RE1) | `st-form`, `st-graph` |
 | Study | Sweep | The parameters, each with what it rebuilds; variables | The runs as a matrix, each cell a run | `st-sweep` |
 | Study | Charge on the mesh | The pair of models | 3D and (r, z) side by side, linked; the conservation checks | `st-charge` |
 | Study | Runs | Cancel, the log | A run unfolded in the queue, wherever the user is (RE2) | `st-runs` |
@@ -271,6 +287,7 @@ The workbench's document is a plain folder (S11), readable without the workbench
   nanopnp-project.yaml        the project file: no physics
   models/molecular/<name>.yaml
   models/continuum/<name>.yaml
+  models/physics/<name>.yaml
   studies/<name>.yaml
   comparisons/<name>.yaml
   inputs/                     the input files copied in; a linked one stays where it lies
@@ -280,8 +297,8 @@ The workbench's document is a plain folder (S11), readable without the workbench
 ```
 
 **The project file** holds the schema identifier, the project's name, the library's index (models, studies,
-comparisons by file), the open items, and the layout of each suite (its panels' sizes and folds). The
-density and the theme are the user's, not the project's (WB-18, WB-19). A model or study file names its
+comparisons by file), the open items, the layout of each suite (its panels' sizes and folds) and the project's own settings
+(WB-37). The density and the theme are the user's, not the project's (WB-18, WB-19). A model or study file names its
 components and its values away from the defaults; a run resolves them to one complete case file, written
 with its manifest, which the command line runs as it is (FR-25; WB-11). The references are a case-schema
 change for a shell package after `v0.5.0` (S1; REV-136).
@@ -319,7 +336,7 @@ the range. The route of the mockups (`docs/design/mockups/a/00-guided-route.html
 1. Load and prepare 2WCD: Molecular, Prepare structure.
 2. Build the molecular model with the defaults, pH 7.5 from PROPKA: Molecular, Protonation.
 3. Build the continuum model with the defaults, the mesh at the reference size: Continuum, Mesh.
-4. Set the salt, which has no default: Continuum, Physics defaults.
+4. Set the salt, which has no default: Physics, Electrolyte.
 5. Set the bias, the study's override: Study, Study setup.
 6. Pair the models in a study and run.
 7. Follow the run in the queue.
@@ -330,9 +347,9 @@ the range. The route of the mockups (`docs/design/mockups/a/00-guided-route.html
 Each later tool is a library capability and a phase of its own, ordered against validation when Phase 5
 closes (S7). The mockups draw where each will sit, with the later-phase banner and no working control.
 
-- **The physics composer** (S3) composes a model from registered building blocks: a field set, weak-form
+- **The physics composer** (S3), in the Physics suite (WB-34), composes a model from registered building blocks: a field set, weak-form
   contributions, boundary conditions and a solve strategy (FR-20), in `physics/` with its own tests. It opens
-  from Physics defaults, and the model it composes joins the registry the *Model* list reads. Its
+  from the Equations tool, and the model it composes joins the registry that tool's list reads. Its
   architecture leaves room for equations the user types: the model list stays the registry, a composed
   model is a project item like any other, and the composer's blocks are data. Typed equations would amend
   QR-13 and RSK-15, and no tier could verify them; that amendment is not scheduled.
@@ -450,12 +467,13 @@ WB-30 to WB-32 come from the author's notes on the concept boards and the style 
 the verdicts on the mockups, where a note contradicting a ruling reopened it; played back, the author
 restated them (§8.2.18 T8): "I think many of these should fall under user settings or even a "theme"
 approach. The mouse wheel not changing a field was not a literal constraint, just an annoyance that we
-should address in one way or another."
+should address in one way or another." WB-33 to WB-38 come from the third `/np-plan amend 5`, on 5 November 2026, after
+the author's verdicts on WP5.08's frame (`docs/design/reviews/2026-11-05-frame.md`; §8.2.34).
 
 | # | Question | Ruling (author's words) | Consequence |
 |---|---|---|---|
 | WB-01 | The organising principle | "Suites in a project": C3's project folder and run queue as the frame, the parts as suites inside it, each in C1's pattern of tool list, settings and live view, C4's routes over them | The workbench is neither one tab per pipeline stage nor one canvas; S2's "distinct tabs for each part of the workflow" becomes suites, and §8.1's Phase 5 row says so |
-| WB-02 | How many top-level parts | Three parts and a run queue | *Molecular*, *Continuum* (geometry, mesh, physics) and *Analysis* (the results explorer). Running is not a part: a queue present in every suite, from whose entries convergence and the log open. Amended by WB-29: four suites, *Study* the fourth |
+| WB-02 | How many top-level parts | Three parts and a run queue | *Molecular*, *Continuum* (geometry, mesh, physics) and *Analysis* (the results explorer). Running is not a part: a queue present in every suite, from whose entries convergence and the log open. Amended by WB-29: four suites, *Study* the fourth. Amended by WB-34: five suites, Physics the fifth |
 | WB-03 | What is always on screen | The project browser, the changed-from-default marks and the run queue with its status; "there will likely be other useful things to keep on the screen, but this should grow naturally as the design gets clearer" | FR-25's switches stay visible as a count that opens their list (agenda point 10); the list of what is always on screen stays open to additions |
 | WB-04 | Cases open at once, and comparison | Several open; a comparison is a saved document | A variant is derived from its parent and shown as a difference from it; a comparison is a project item pairing runs on one colour scale |
 | WB-05 | Where the live views live | A canvas per suite; "for certain tools a custom view (or maybe overlay or popup) would be more convenient" | Molecular draws in 3D, Continuum in (r, z), Analysis fields and plots; a tool may bring its own view, overlay or popup |
@@ -464,12 +482,12 @@ should address in one way or another."
 | WB-08 | Expert and guided use | One interface with routes | QR-10's guided run is a route through the suites, highlighting the next tool and filling defaults, left at any step; a value changed from its default is marked |
 | WB-09 | How commands are reached | Menus, a command palette and keyboard shortcuts, and a ribbon: "the approach [taken] by AutoCAD is quite comprehensive. Let's focus on getting 1 up and running, while making sure the plumbing for 3 is there" | v0.6 builds the menus, the palette and the shortcuts, every command reachable by keyboard; the ribbon is a later addition the frame allows |
 | WB-10 | A Python console for P1 | A later phase | The project folder stays plain files that scripts and notebooks read; the mockups show the console with a later-phase banner |
-| WB-11 | Running, reuse and the library | One component per suite; a case references them; each suite builds its own, and the solve runs in a study. The author: "a single molecular suite output can be used for multiple continuum runs without recomputing. This alludes again to building a library of components that can be re-used" | A **molecular model** (the prepared structure, its ensemble and protonation) and a **continuum model** (the protein geometry, the region and the mesh) are named items of the project library, each built by its suite. A **study** (in its own suite, WB-29) pairs one of each, assembles the charge on the mesh and solves; the queue holds builds and studies, and a sweep may range over components. A case names its components and resolves at run time to one complete case file, written with the run's manifest, which the command line still runs (FR-25); the references are a case-schema change for a shell package after `v0.5.0` (S1) |
+| WB-11 | Running, reuse and the library | One component per suite; a case references them; each suite builds its own, and the solve runs in a study. The author: "a single molecular suite output can be used for multiple continuum runs without recomputing. This alludes again to building a library of components that can be re-used" | A **molecular model** (the prepared structure, its ensemble and protonation) and a **continuum model** (the protein geometry, the region and the mesh) are named items of the project library, each built by its suite. A **study** (in its own suite, WB-29) pairs one of each, assembles the charge on the mesh and solves; the queue holds builds and studies, and a sweep may range over components. A case names its components and resolves at run time to one complete case file, written with the run's manifest, which the command line still runs (FR-25); the references are a case-schema change for a shell package after `v0.5.0` (S1). Amended by WB-34: a **physics model** is the third kind, and a study pairs one of each |
 | WB-12 | Where a refusal shows | At the field, and in a problems list | A field refused at entry turns red with a message naming the rule, the value entered and the case path; a build refused later marks its queue entry and lists the refusal, which jumps to the tool and field |
 | WB-13 | Who arranges the layout | A designed default per suite, saved | Panels resize and fold, and later dock (WB-07); the arrangement and the open cases are saved in the project file (S11), never in a case; *Reset layout* restores the default |
 | WB-14 | Preparing a structure | "Prepare tool in v0.6"; asked against S4's "structure preparation stays out of the library until its phase", "Amend: in Phase 5" | Structure preparation becomes a Phase 5 library capability first, in `structure/` with its Tier 1 tests: the axis estimated, the chains chosen, and the flip and the membrane's place set by the user in the 3D view, with no rule specific to one pore. The Molecular suite's *Prepare* tool surfaces it in v0.6. §8.1's Phase 5 deliverable says so; the Phase 5 plan's packages follow at `/np-plan amend 5` |
 | WB-15 | The author's unfinished notes on the contour and the region | "Region is separate" | Stages 1 to 4 fold into the protein geometry tool; the membrane and the reservoirs, stage 5's region, are a Continuum tool of their own |
-| WB-16 | Where the physics and the conditions belong | "a hybrid is in order here, much like in COMSOL. The default BCs should be defined in the continuum model, with potential overrides in the study (e.g., for sweeping or ramping)" | The continuum model holds the physics defaults: the model, the electrolyte and the boundary conditions. A study overrides any of them, for a sweep or a ramp, and marks each override as it marks a switch. A study may also override any other value of the models it names; the Study suite offers the physics defaults first (§8.2.31 AG12). The library keeps each override as the case's `Case.overrides` and in the manifest beside the model's value, and an override moves only the stages that read it (FR-39; WP5.05) |
+| WB-16 | Where the physics and the conditions belong | "a hybrid is in order here, much like in COMSOL. The default BCs should be defined in the continuum model, with potential overrides in the study (e.g., for sweeping or ramping)" | The continuum model holds the physics defaults: the model, the electrolyte and the boundary conditions. A study overrides any of them, for a sweep or a ramp, and marks each override as it marks a switch. A study may also override any other value of the models it names; the Study suite offers the physics defaults first (§8.2.31 AG12). The library keeps each override as the case's `Case.overrides` and in the manifest beside the model's value, and an override moves only the stages that read it (FR-39; WP5.05). Amended by WB-34: the physics defaults are the physics model's, which a study overrides |
 | WB-17 | References | COMSOL, ChimeraX and PyMOL, VS Code, AutoCAD and Fusion: "Given that the tool we are building will borrow features from all these tools, it makes sense that we borrow the looks/approach as well for [their] respective suites. The challenge will be to do this in a sleek, modern, and harmonized way" | Each suite borrows its idiom: ChimeraX's 3D view in Molecular, COMSOL's and AutoCAD's tree and graphics in Continuum, COMSOL's plot settings in Analysis, VS Code's palette and quiet chrome for the frame; one token set harmonises them |
 | WB-18 | Density | Medium, adjustable | 13.5 px type and 30 px rows by default; a compact setting of 12.5 px and 26 px, saved per user. Amended by WB-31: tighter spacing |
 | WB-19 | Theme and default | Both themes, following the system | Light and dark, both held to WCAG 2.2 AA; the default follows the operating system, with a switch |
@@ -482,10 +500,16 @@ should address in one way or another."
 | WB-26 | What the pictures are drawn on | Black for the 3D view, the theme for plots | The Molecular suite's 3D view is always near-black; (r, z) views and plots follow the theme and export on white; every colour bar is outlined at 3:1 so its low end never dissolves. Amended by WB-30: the 3D view's background is a user setting |
 | WB-27 | The direction the tokens start from | The molecular direction, with instrument's dark theme | `docs/design/tokens.css` |
 | WB-28 | The changed-from-default mark | Its own mark, on changed values only | A filled diamond in its own colour, never the accent, showing the default and a per-field reset; a study override (WB-16) an outlined diamond; the frame's count (WB-03) a button opening the list |
-| WB-29 | Where studies are made | Its own suite. The author, picking on the choice panels (RE1): "Now that I see the organisation, I think 'Study' should be its own fully fledged suite next to Molecular, Continuum, and Analysis" | Four suites and a run queue: *Molecular*, *Continuum*, *Study* (pairing the models, the overrides, the sweep, the charge on the mesh, a run's progress) and *Analysis* (the results explorer and the comparisons). Amends WB-02 and WB-11; §8.1's Phase 5 row says so |
+| WB-29 | Where studies are made | Its own suite. The author, picking on the choice panels (RE1): "Now that I see the organisation, I think 'Study' should be its own fully fledged suite next to Molecular, Continuum, and Analysis" | Four suites and a run queue: *Molecular*, *Continuum*, *Study* (pairing the models, the overrides, the sweep, the charge on the mesh, a run's progress) and *Analysis* (the results explorer and the comparisons). Amends WB-02 and WB-11; §8.1's Phase 5 row says so. Amended by WB-34: five suites, in two groups |
 | WB-30 | The 3D view's background, reopening WB-26 | The author, marking the style tile's *molecular* direction: "Maybe the always black viewer is not needed, better to be user adjustable" | The Molecular suite's 3D view is near-black by default; the View tool sets it to near-black, the theme or white, saved per user, as part of the user's theme (§8.2.18 T8). The colour bars stay outlined at 3:1 on each |
 | WB-31 | The spacing, reopening WB-18 | The author, on the same direction: "Spacings can be even tighter" | The default theme's gaps and padding tighten at both densities (`--gap` 6 px and `--pad` 8 px by default, 4 px and 6 px compact); the type and the row heights stay, the targets at least 24 px (WB-24). Spacing is a user setting of the theme (§8.2.18 T8); its tight value is `--gap` 4 px and `--pad` 5.3 px, 2.7 px and 4 px at compact density (`data-spacing="tight"` in `tokens.css`) |
 | WB-32 | Hidden state | The author, marking the *model builder* board: "One of my major gripes with COMSOL though, is the sheer amount of "state" a GUI-based run has, and that everything is hidden in menu's or sub-menus, where an accidental click or scroll may invertedly change a settings" | Every setting of a tool is on its pane, never in a sub-menu; a setting is guarded against an accidental change, the means (the mouse wheel among them) left to the shell's package, the wheel rule "not a literal constraint" (§8.2.18 T8); every value away from its default is marked (WB-28) and counted (WB-03), and a study's overrides are listed with it (FR-34) |
+| WB-33 | What the frame is built from | The author, asked whether the frame is rebuilt on the components NiceGUI ships through Quasar before the suites, after asking for "only long-term viable solutions and re-use of existing components/templates/frameworks where possible": "Rebuild on Quasar first" | The application layout and drawers, the tree, the dense table, the searchable select, the icon font and the sub-pages replace the hand-written layout; the tokens feed Quasar's colour variables; each suite reuses them (§8.2.34 AJ1; WP5.10) |
+| WB-34 | Building against using, and where physics lives | The author, marking the suites: "I wonder if we need to make a further distinction in the suites between those that build components (molecular, continuum, physics), those that use components (study, analysis?)". Asked, the author chose physics as a reusable model, then five suites in two groups, and on its contents: "I think the physics suite should allow you to build/edit the actual equations, the effectively build the physics part. It should then allow for exposing certain relevant knobs and parameters to the other suites (like concentrations, bias voltage, etc). Kind of like in COMSOL, but with an extra "interface" layer to the other suites." Put back against S3 and S7: "Suite now, composer next" | Five suites: *Molecular*, *Continuum* and *Physics* build models; *Study* and *Analysis* use them. A **physics model** holds the equations chosen from the registry, their switches, the electrolyte, the boundary conditions, the solid permittivities, the element orders and the stabilisation; the study keeps the Newton, continuation and linear-solver settings. The composer (FR-40) keeps its later phase and opens in this suite. Amends WB-02, WB-11, WB-16 and WB-29 (§8.2.34 AJ2 to AJ4) |
+| WB-35 | The "interface layer" between the suites | "Knobs first, rest reachable" | Every model declares the values it exposes, each with its name, unit, range and default; the Study suite lists them first and sweeps them, and any other value stays under *More values*, marked as reaching inside the model. AG12 stands (§8.2.34 AJ5) |
+| WB-36 | Showing what changed, and the project's name | The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?", and on the name: "looks like a menu item". Shown how VS Code, JetBrains and COMSOL do it: "Mark, filter and dense table" | The diamond at the field with its reset; a *Modified only* filter on every tool pane and the settings; one table of rows about 26 px high grouped by model and study, with value, default, unit and reset, each leading to its field. The project's name heads the rail and names the browser tab (§8.2.34 AJ7) |
+| WB-37 | Which settings, where they are kept, when they apply | The author, marking the settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." Asked: "One declared list, two scopes", with appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers, adding: "Compute settings, network settings, ... I think we need to do some research here." | Each setting is declared once with its section, scope (the user's, or the project's over the user's), default, description, search words and when it applies; the page, its search, the palette's setting commands and both files follow. A value that can change a result is never a setting. The full list, and the research on compute and network settings, are WP5.10's plan (§8.2.34 AJ9) |
+| WB-38 | How a suite is designed | The author, marking the charge screen: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." Asked: "Prototype on 2WCD, then build" | Each suite package opens with its tools prototyped over 2WCD's artefacts, rendered in their states for the author's verdicts and a design round, then builds them; the render set gains a 2WCD state (§8.2.34 AJ8) |
 
 ## Glossary
 
@@ -498,13 +522,15 @@ base's and the specification's; these are the workbench's own.
 | Case file | One complete description of a run, which the command line runs (`nanopnp/case`); the unit of reproducibility |
 | Changed mark | A filled diamond on a value set away from its default; an outlined one on a study's override (WB-28) |
 | Comparison | A saved project item pairing two runs on one colour scale, side by side or as their difference (WB-04) |
-| Continuum model | A library item built in the Continuum suite: the protein geometry, the region, the mesh and the physics defaults (WB-11) |
+| Continuum model | A library item built in the Continuum suite: the protein geometry, the region and the mesh (WB-11, WB-34) |
+| Exposed value | A value a model declares for the other suites, with its name, unit, range and default, such as a physics model's concentration and bias; the Study suite lists it first (WB-35) |
 | Gate | A check a stage passes before its artefact is used, such as the orientation gate or the mesh's quality gate |
 | Later phase | A tool drawn with its banner and no working control: designed, not built in v0.6 (S7) |
 | Library | The project's models, studies and comparisons, each reused without being rebuilt |
 | Live link | Two views that select together until unlinked (S6; WB-06) |
 | Molecular model | A library item built in the Molecular suite: the prepared structure, its ensemble and protonation (WB-11) |
-| Override | A value a study sets in place of a named model's, for a sweep or a ramp; any value of either model, the continuum model's physics defaults first. It is recorded in the manifest beside the model's value, and a value equal to the model's is none (WB-16; FR-39; §8.2.31 AG12) |
+| Override | A value a study sets in place of a named model's, for a sweep or a ramp; any value of the models it names, their exposed values first (WB-35). It is recorded in the manifest beside the model's value, and a value equal to the model's is none (WB-16; FR-39; §8.2.31 AG12) |
+| Physics model | A library item built in the Physics suite: the equations chosen from the registry, the electrolyte, the boundary conditions and their discretisation, reused across pores (WB-34) |
 | Project | The folder that holds the library, the runs, the store and the project file (S11) |
 | Queue | The builds and runs waiting, running and done, always on screen (WB-02, WB-03) |
 | Refusal | A value or a build the library declines, shown at its field with the rule, the value, the case path and a remedy (WB-12) |
@@ -513,8 +539,8 @@ base's and the specification's; these are the workbench's own.
 | Rung | One step of the continuation ladder, from an easy problem to the one asked for; a run shows "rung x of N" (WB-23) |
 | Schematic | A drawing that shows where a field lies, not its values |
 | Store | Where artefacts are kept, keyed by their hash |
-| Study | A Study-suite item pairing one molecular and one continuum model with its overrides and sweep, and running it (WB-11, WB-29) |
-| Suite | One of the four parts of the workbench: Molecular, Continuum, Study, Analysis (WB-02, WB-29) |
+| Study | A Study-suite item pairing one molecular, one continuum and one physics model with its overrides and sweep, and running it (WB-11, WB-29, WB-34) |
+| Suite | One of the five parts of the workbench: Molecular, Continuum and Physics, which build models, and Study and Analysis, which use them (WB-02, WB-29, WB-34) |
 | Switch | A setting away from its validated default, recorded in every result's manifest (FR-25) |
 | Tool | One task in a suite, with its settings docked beside its live view (WB-07) |
 | Variant | A model derived from a parent and shown as its difference from it, such as a residue's charge changed (WB-04) |
