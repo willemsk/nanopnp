@@ -181,7 +181,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:
                         )
                         unlink = ui.button(
                             "Unlink" if linked else "Link", on_click=toggle_link
-                        ).props("flat dense data-control=unlink")
+                        ).props("flat dense no-caps data-control=unlink")
                         status = ui.label(
                             bench.refusal
                             or bench.notice

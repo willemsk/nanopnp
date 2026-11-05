@@ -24,3 +24,14 @@ is put to the author in the report.
 
 Checked on the fixes: `ruff check`, `ruff format`, `mypy src/`, `tests/tier1/test_project.py`, `test_store.py`,
 `test_stage_conformance.py` and the VER-78 screen tests. `gate.sh run` follows in `/np-ship`.
+
+## Screen review of the final render
+
+A second `gui-reviewer` pass read about 25 of the 72 shots of `shell-b9eb22e` (13 findings, 5 doubts; the measured
+contrast, non-text, target and console checks were empty). Fixed in the commit that follows: the title bar read "empty"
+for no project (now "No project"); the changed list printed `default: None` (now "none"); the title bar's palette chord
+was a literal (now the bound chord); the settings' toggles and the Unlink button were upper case; the disabled
+"Duplicate this theme" had no reason beside it; the Study page's refusal named a server temporary path; WB-31 lacked the
+tight spacing values. Recorded: REV-208 (palette keywords, active row, commands that cannot run), REV-209 (the charge
+screen's link, map and doubts), REV-210 (icons, headings, states missing from the render set). Answered: opening a
+project runs no study; the `--state` fixtures alone do.

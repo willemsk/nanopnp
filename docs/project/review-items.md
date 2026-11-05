@@ -2693,3 +2693,21 @@ The WP5.08 code review found four limits of `Project.export`. Two result files o
 The WP5.08 code review found: a splitter's change event writes the project file at every step of a drag; `theme.shipped()` parses `tokens.css` and `user_themes()` every theme file at each call, several times to build one page and once per colour keystroke; the New, Open, Import, Export and Glossary dialogs are created at each use and never deleted, so a long session accumulates them; an empty folder field in those dialogs reads as the server's working folder; and the palette's filter is written twice, in `fill_palette` and `first_match`.
 
 **Deferred** to WP5.09, the next package that edits a value through the frame.
+
+## REV-208: The palette finds commands by title only, has no active row, and lists commands that cannot run
+
+The second WP5.08 screen review found: the palette matches a typed word against a command's title only, so "theme", "density", "spacing", "dark" and "shortcut" find nothing and "Settings…" is the only route to them; no row is highlighted and the arrow keys do not move through the list; and "Import case…" and "Export project…" are listed with no project open, where they only refuse.
+
+**Deferred** to WP5.09, the first package whose tools add commands to the palette. It gives each command keywords, adds the setting commands, the highlighted row and the arrow keys, and disables a command with the reason.
+
+## REV-209: The charge screen in the frame shows a link where none exists, and its map ignores the dark theme
+
+The charge screen is WP5.02's spike screen, placed in the frame. With no case or no structure charge it still shows "Linked" with an Unlink button beside two empty canvases and no caption; it says "case", a retired term; the Study page offers its link in the empty state; the map's background is light grey on the dark theme, against WB-26. The review doubted two things it could not check from the pictures: the Mol* toolbar icons may read below 3:1 (the harness measures no viewer control), and the 3D spheres and the map's dots may colour the same charges oppositely.
+
+**Deferred** to WP5.11, which builds the Charge on the mesh tool (WB-26; VER-60) with the colour bar of REV-205.
+
+## REV-210: The frame lacks icons, headings and some states in the render set
+
+The second WP5.08 screen review found: the activity bar has text only where the design document says an icon with its name; suite and dialog titles are labels, not headings; the changed diamond is read aloud by a screen reader; the settings' colour inputs carry raw token names with no swatch; the Glossary holds 5 of the document's 22 terms and About is a toast that disappears; and the New, Open, Import and Export dialogs are a free text path with no browse list. The render set shows none of: those dialogs, the File, View and Help menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density, tight spacing, the 3D background settings, a key being captured, or a typed palette query.
+
+**Deferred** to WP5.09 for the icons, headings and the render states, and to WP5.12 for the dialogs, which add a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
