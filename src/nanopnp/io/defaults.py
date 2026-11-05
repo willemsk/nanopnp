@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, TypeAlias
+from typing import Any, Literal, TypeAlias
+
+from pydantic_core import to_jsonable_python
 
 from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import CaseDocument
-from nanopnp.io.case_paths import UnknownCasePathError
+from nanopnp.io.case_paths import UnknownCasePathError, schema_default
 from nanopnp.io.case_paths import value_at as case_value_at
+from nanopnp.io.models import Kind, leaves, owner_of
 
 SwitchValue: TypeAlias = Any
 
@@ -237,3 +241,80 @@ def _block_absent(document: CaseDocument, path: str) -> bool:
         value_at(document, ".".join(components[:depth])) is None
         for depth in range(1, len(components))
     )
+
+
+@dataclass(frozen=True)
+class Change:
+    """One value set away from its default, or one study override of a model's value.
+
+    Parameters
+    ----------
+    kind
+        ``value`` for a leaf away from its default, ``override`` for a study value over a model's.
+    owner
+        The model that owns the leaf, or ``study``.
+    default
+        The validated default for a switch, else the schema's; ``None`` where the leaf has none.
+    model
+        The model's value an override replaces; ``None`` for a value.
+    """
+
+    path: str
+    kind: Literal["value", "override"]
+    owner: Kind
+    value: SwitchValue
+    default: SwitchValue
+    model: SwitchValue = None
+
+    def summary(self) -> dict[str, Any]:
+        """Return this change as plain data, for the workbench and ``--json``."""
+        return {
+            "path": self.path,
+            "kind": self.kind,
+            "owner": self.owner,
+            "value": self.value,
+            "default": self.default,
+            "model": self.model,
+        }
+
+
+def _default_of(path: str) -> tuple[bool, SwitchValue]:
+    if path in SWITCH_PATHS:
+        try:
+            return True, to_jsonable_python(value_at(VALIDATED_DEFAULT_CASE, path))
+        except UnknownSwitchPathError:
+            pass
+    try:
+        has_default, default = schema_default(path)
+    except (KeyError, UnknownCasePathError):
+        return False, None
+    return has_default, to_jsonable_python(default)
+
+
+def _away(path: str, value: SwitchValue) -> Change | None:
+    has_default, default = _default_of(path)
+    if value is None or not has_default or default == value:
+        return None
+    return Change(path, "value", owner_of(path), value, default)
+
+
+def mapping_changes(body: Mapping[str, Any]) -> tuple[Change, ...]:
+    """Return each leaf of a case or model mapping that is away from its default, by path."""
+    found = (_away(path, value) for path, value in leaves(body))
+    return tuple(sorted((c for c in found if c is not None), key=lambda c: c.path))
+
+
+def changes(document: CaseDocument) -> tuple[Change, ...]:
+    """Return each leaf of ``document`` away from its default, and each study override, by path.
+
+    A leaf that has no default is a change only where a study overrides it.
+    """
+    found = {c.path: c for c in mapping_changes(document.model_dump(by_alias=True, mode="json"))}
+    record = document.models_record
+    if record is not None:
+        for path, (model, study) in record.overrides.items():
+            _, default = _default_of(path)
+            found[path] = Change(
+                path, "override", owner_of(path), to_jsonable_python(study), default, model
+            )
+    return tuple(found[path] for path in sorted(found))
