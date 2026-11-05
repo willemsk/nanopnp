@@ -182,13 +182,26 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
 - [x] 62a52c4 6. `cli/workbench.py`: `gui [<project>]`, `project new|import|export`, `store prune [--remove]`, `--env`'s
   `config` (D5). Done when row 7 passes. **Executor:** main.
 - [x] 7. Compaction checkpoint. **Executor:** main.
-- [ ] 8. `gui/web/commands.py`, `frame.py`, `queue.py`, `screens.py`, `pages.py`, `assets/frame.js` (D6). Done when
+- [x] 6ec37d1 8. `gui/web/commands.py`, `frame.py`, `queue.py`, `screens.py`, `pages.py`, `assets/frame.js` (D6). Done when
   row 8 (a) to (d) passes. **Executor:** main.
-- [ ] 9. The changed list, its resets and the problems list (D3, D6). Done when row 8 (i) passes.
+  > **Outcome — frame built, with two modules the plan did not name.** `shell.py` (`Shell`: the open workbench and the
+  > user's settings) and `assets.py` (`ASSETS`, `TOKENS`, re-exported by `pages`) break an import cycle between `frame`,
+  > `overlay`, `theme` and `pages`; `assets/frame.css` holds the frame's styles. `ruff`'s SIM117 is ignored under
+  > `gui/web/` (a NiceGUI layout is nested `with` blocks). The `home` screen is gone: `/` redirects to the current suite
+  > and the stage badges, refusal and `open-charge` link moved to the Study suite's body. `/charge` sits in the frame.
+- [x] 64a237f 9. The changed list, its resets and the problems list (D3, D6). Done when row 8 (i) passes.
   **Executor:** main.
-- [ ] 10. `core/paths.py:config_root`, `gui/web/settings.py`, `theme.py`, the settings overlay, `tokens.css`'s spacing,
+  > **Outcome — `states.py` as projects moved here from item 10.** Row 8 (i) needs the `refused` state to be a project, so
+  > `boot` now imports each fixture into a project and `boot_project` walks its first study to `charge` with no run
+  > record, queueing the entry. `refused` writes a continuum model the schema refuses (`bias_V: fast`), because a
+  > concentration of -1 is refused at resolution, which `Project.problems()` does not run. A study lists only its own
+  > overrides when it names models. `nanopnp gui <project>` opens a project and walks nothing: its charge screen is empty.
+- [x] 69a2080 10. `core/paths.py:config_root`, `gui/web/settings.py`, `theme.py`, the settings overlay, `tokens.css`'s spacing,
   the key bindings, `states.py` as projects, `server.py` (D6). Done when row 8 passes whole. **Executor:** main.
-- [ ] 11. Compaction checkpoint. **Executor:** main.
+  > **Outcome — `config_root` landed with item 6; the overlay is `gui/web/overlay.py`.** The 3D view's background is the
+  > `--canvas-3d` token, which `bridge.js` hands Mol*, and the setting points the token at near-black, the theme or white.
+  > A user theme sets colours over its base on `:root[data-user-theme]`; none is contrast-checked.
+- [x] 11. Compaction checkpoint. **Executor:** main.
 - [ ] 12. `/np-gui render shell` and `/np-gui review`; fix what they find. Done when the review says so. **Executor:** main.
 - [ ] 13. `CHANGELOG.md` (`nanopnp gui` takes a project, not a case); the brief's amendments; Outcome notes. Done when the strict documentation build passes. **Executor:** main.
 - [ ] 14. `.claude/hooks/gate.sh run`: VER-62's walks unmoved. **Executor:** main.
