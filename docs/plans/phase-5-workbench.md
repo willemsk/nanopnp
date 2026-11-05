@@ -212,7 +212,10 @@ project has an empty charge screen until WP5.14; the frame is rebuilt in WP5.10 
 Library step, no screens. A third kind of model, `nanopnp/physics-model/v0.6`, named by `models.physics`: the ownership
 table of §5.3.1's `models:` NOTE gives it `physics` (the registered model, its switches and the solid permittivities),
 `electrolyte`, `boundary_conditions`, `numerics.elements` and `numerics.stabilisation`, and leaves the continuum model the
-geometry, the region and the mesh; the study keeps the Newton, continuation and linear-solver settings (AJ3). A case
+geometry, the region and the mesh; the study keeps the Newton, continuation and linear-solver settings (AJ3). AJ3 places
+neither `numerics.wall_distance`, the wall-distance field the corrections read, nor the coupling of `numerics.mesh`'s
+`wall_h_nm: auto` to the electrolyte's Debye length, which makes a continuum model's mesh follow the physics model's
+concentration unless `wall_for_concentration_M` pins it; the package's plan puts both to the author. A case
 imports split into three models and a study, a project gains `models/physics/`, a sweep may range over
 `models.physics`, and the manifest records the physics model (FR-32, FR-39; §5.3.2, §5.3.3). Every model declares the
 values it exposes, each with its name, case path, unit, range and default (AJ5); where the declaration lives, the model
@@ -254,7 +257,7 @@ VER-55 as restated. Tag `v0.6.0-alpha.12`.
 
 ### WP5.13 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5)
 
-After the prototype round on the KCl case (AJ8): Equations, the registered model with its switches, element orders and
+After the prototype round on example 01's NaCl case, NaCl being the only electrolyte a shipped correction file covers (AJ8): Equations, the registered model with its switches, element orders and
 stabilisation, and the composer's place with its later-phase banner (AJ4; FR-40 stays its phase); Electrolyte, the
 ions, the concentration, the parameter set and the corrections; Conditions, each boundary role's condition, the bias,
 the ground, the walls and the solid permittivities, a role picked in the (r, z) view of the open study's geometry or in
@@ -308,6 +311,7 @@ and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 | 9 | The frame's components, the suites that build and use models, the physics model and its exposed values, `impeccable`'s role, the changed list, the design loop, the settings and the sequence (REV-211 to REV-215) | **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to AJ10) |
 | 10 | Which settings exist beyond the four sections, compute and network among them | **Author**, at WP5.10's plan, from its survey of comparable tools (AJ9) |
 | 11 | Where a model's exposed values are declared: the model file, or a default list per kind | **WP5.09's plan** (AJ5) |
+| 12 | Which model owns `numerics.wall_distance`, and how a continuum model's Debye-sized wall mesh reads the physics model's concentration, or pins its own (`wall_for_concentration_M`) | **Author**, at WP5.09's plan (AJ3 places neither) |
 
 ## What the author supplies
 
@@ -342,7 +346,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.07, variables and the forecast | 1 | FR-39: the whitelist, the dimension check, unchanged keys without variables (VER-62), the forecast against the walk |
 | WP5.08, the frame | 1 | VER-78's frame states; the project folder's export read back; REV-52's protocol members |
 | WP5.09, the physics model | 1, 2 | FR-39: a study resolves and keys as before with three models (VER-62 unmoved); a case imports into three models and a study; every case leaf has one owner; a sweep over `models.physics` |
-| WP5.10, the frame | 1 | VER-78's frame states, the 2WCD state among them; a setting declared once reaches the page, its search, the palette and its file |
+| WP5.10, the frame | 1 | VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`, not a Tier 1 walk); a setting declared once reaches the page, its search, the palette and its file |
 | WP5.11, Molecular | 1, 2 | REV-121's cavity axis against a known axis (VER-48); VER-78 |
 | WP5.12, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 |
 | WP5.13, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |

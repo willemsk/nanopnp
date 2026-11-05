@@ -126,7 +126,7 @@ later-phase banner and no working control (S7).
 | Geometry builder | Continuum | Protein geometry, Contour, Region | Stages 2 to 5: the density, the reduction to (r, z), the contour and its hand edit (`inputs.profile`), the membrane and the reservoir | The sketcher (S5) |
 | Mesh builder | Continuum | Mesh: sizes, quality | Stage 6 and its quality report; the size scale and the per-part sizes | Refinement regions drawn by hand; boundary layers |
 | Physics assigner | Physics | Equations, Electrolyte, Conditions, Exposed values | A **physics model**: a registered model and its switches, the electrolyte and its corrections, the boundary conditions and walls, the solid permittivities, the element orders and the stabilisation (WB-34) | The composer (S3), in this suite |
-| (added by the round) | Study | Overview, Study setup, Sweep, Charge on the mesh, Runs | A study pairing a molecular and a continuum model, its overrides and sweep, stage 7's charge on the mesh, and its runs | Sweeps over variables (REV-139) |
+| (added by the round) | Study | Overview, Study setup, Sweep, Charge on the mesh, Runs | A study pairing one molecular, one continuum and one physics model, its overrides and sweep, stage 7's charge on the mesh, and its runs | Sweeps over variables (REV-139) |
 | Results analyser | Analysis | Results explorer, Comparison | The run record, the quantities of interest, the fields, the sweeps | Figure, field and case export (FR-28, v0.7) |
 
 ## Organisation
@@ -409,7 +409,7 @@ its clause, tagged for v0.6, and replaces it in the package that removes Qt (S17
 
 | Clause | Today | For the browser shell |
 |---|---|---|
-| IF-09 | A desktop graphical interface: case editing, run control, convergence, fields | A graphical workbench served locally and opened in the browser by `nanopnp gui`: the four suites, the run queue and the project folder, a thin shell over the IF-01 stage objects through a network API |
+| IF-09 | A desktop graphical interface: case editing, run control, convergence, fields | A graphical workbench served locally and opened in the browser by `nanopnp gui`: the five suites, the run queue and the project folder, a thin shell over the IF-01 stage objects through a network API |
 | P3 | A desktop application | The workbench, installed with one documented command: select a PDB, set salt and voltage, obtain a prediction and a picture |
 | QR-10 | Unaided in the desktop application | Unaided in the workbench, from the install to a conductance and a field picture, by the guided route or without it |
 | VER-43 | The schema walk, registry options, refusal at the field, spawned run control, cancellation, exit classes; PySide6 and the packaging probe | Kept for the workbench's forms and the server's run control; the view-models import no front-end framework and no NGSolve; the packaging probe's part is replaced by the server's self-test of every payload the walk needs, failing naming it |

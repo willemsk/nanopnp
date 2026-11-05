@@ -12,14 +12,14 @@ suites build models and two use them, and each model shows the few values others
 ready-made parts. Each suite is designed on a working prototype with a real pore before it is built. About three to
 four weeks more.
 
-**Your call.** Approve the amended plan after its review; which further settings exist is yours at the frame's plan.
+**Your call.** Approve the amended plan; which further settings exist is yours at the frame's plan.
 
 ## Position
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.08 are merged
   (`v0.6.0-alpha.8`). Amended 5 November 2026 (§8.2.34): WP5.09 the physics model, WP5.10 the frame, WP5.11 to
-  WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. Next `/np-plan amend 5 review`, then `/np-plan wp 5.09`. host: claude-code.
+  WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. Reviewed (CODE_REVIEW_034). Next `/np-plan wp 5.09`. host: claude-code.
 
 ## Not to be re-decided
 

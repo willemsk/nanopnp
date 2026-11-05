@@ -237,3 +237,4 @@ is a rolling register, and its header stays `open`.
 | REV-213 | interface | low | deferred | WP5.08 verdicts | [The suites may need to separate those that build models from those that use them](review-items.md#rev-213-the-suites-may-need-to-separate-those-that-build-models-from-those-that-use-them) |
 | REV-214 | interface | low | deferred | WP5.08 verdicts | [The changed list is loosely spaced, and the project name reads as a menu](review-items.md#rev-214-the-changed-list-is-loosely-spaced-and-the-project-name-reads-as-a-menu) |
 | REV-215 | interface | low | deferred | WP5.08 verdicts | [The charge screen needs its design and its function settled together](review-items.md#rev-215-the-charge-screen-needs-its-design-and-its-function-settled-together) |
+| REV-216 | process | low | open | [CODE_REVIEW_034](../code_reviews/CODE_REVIEW_034.md) | [The Phase 5 plan exceeds its word target again](review-items.md#rev-216-the-phase-5-plan-exceeds-its-word-target-again) |

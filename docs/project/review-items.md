@@ -308,6 +308,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.12, the Analysis suite.
 
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.15, the Analysis suite.
+
 ### REV-29 — The cylindrical-pore fixture is copied into four test modules
 
 *Area:* verification. *Severity:* low. *Found:* PR #32 (WP15).
@@ -327,6 +329,8 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 **Ruled** (§8.2.18 T2): owned by the workbench's Analysis package, which writes each scene once and serves it.
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.12, the Analysis suite.
+
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.15, the Analysis suite.
 
 ### REV-31 — The bundle's size is not recorded
 
@@ -416,6 +420,8 @@ repository holds a logger.
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.10, the Continuum suite.
 
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.12, the Continuum suite.
+
 ### REV-40 — DensityMap.read accepts a file written in nm
 
 *Area:* interface. *Severity:* low. *Found:* PR #50 (WP25).
@@ -439,6 +445,8 @@ no later owner.
 **Ruled in part** (§8.2.22 X1): the region's interchange document comes forward to WP57, as the geometry file of `nanopnp geometry cylinder`; `prepare` and `upto` stay as T3 placed them.
 
 **Placed** (§8.2.31 AG1, 3 November 2026): `prepare` in WP5.09, which surfaces structure preparation; `upto` on reproduce in WP5.11, the Study suite.
+
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): `prepare` in WP5.11, the Molecular suite; `upto` on reproduce in WP5.14, the Study suite.
 
 ### REV-42 — pnp carries inert flow keys
 
@@ -1321,6 +1329,8 @@ the gap is stage 1's `symmetry.axis` path. Confirmed as a gap by the author on 2
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.09, the Molecular suite, library step first, with §5.3.1 and VER-48.
 
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.11, the Molecular suite.
+
 ## REV-122: A case cannot load a correction file from outside the installed package
 
 `electrolyte.parameters` and every `electrolyte.corrections.*.model` must name a file in
@@ -1452,6 +1462,8 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.13, which removes Qt.
 
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.16, which removes Qt.
+
 ## REV-135: The density does not see the protonation chosen at the charge stage
 
 The density stage smears the atoms of the structure as loaded at stage 1 (`density/stage.py`, its record counting the
@@ -1496,6 +1508,8 @@ registration centroid; the workbench surfaces it in Phase 5 (WB-14). The item st
 capabilities.
 
 **Cut line ruled** (§8.2.31 AG1, AG6, 3 November 2026): v0.6 holds every capability FR-31 to FR-39 name, placed in WP5.05 to WP5.12, and the comparison's difference of two runs' fields over the overlap of their fluid domains, library step first in WP5.12. Hand-drawn refinement regions, the Python console, the ribbon, FR-43 and FR-28 stay later. The item stays accepted until WP5.12 lands.
+
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.10 to WP5.17, the difference field in WP5.15, the Analysis suite.
 
 ## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 
@@ -2239,6 +2253,8 @@ step first; the second `/np-plan amend 5` names the package.
 
 **Named** (§8.2.31 AG1, 3 November 2026): WP5.10, the Continuum suite.
 
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.12, the Continuum suite.
+
 ## REV-171: The architecture review's unmeasured costs
 
 The architecture review of [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md) names costs and checks that no one has
@@ -2734,3 +2750,9 @@ The author, marking the changed list: "Spacing seems very generous. How is this 
 The author, marking the charge screen: "Looks very poorly integrated. Maybe because we are still in early development phase for the GUI. Also hard to judge without an example molecule.", then: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." The screen is WP5.02's spike, placed in the frame (REV-205, REV-209). The render set's states are a charged and an uncharged tube, with no protein.
 
 **Deferred** to WP5.14, ruled by the author on 5 November 2026 (§8.2.34 AJ8; WB-38): the Study package opens with its tools prototyped over 2WCD's artefacts and rendered through their states, and the charge screen's design is settled with its function in that round, with REV-205's colour bar and axes and REV-209's link and dark map.
+
+## REV-216: The Phase 5 plan exceeds its word target again
+
+The Phase 5 plan holds about 5,100 words without its report, against `np-plan`'s 1,500 target for a phase plan, checked at review (§8.2.13 N3). REV-133 brought it to 1,500 on 24 October 2026; the amendments since grew it to about 4,200 and §8.2.34 to 5,100, each rewriting its package entries to their current scope as R4 asks. The delivered entries WP5.01 to WP5.08 hold about 1,770 words, so moving them to `phase-5-record.md` would still leave about 3,400. Found by CODE_REVIEW_034, finding 9.
+
+**Open** for the author: cut the plan to the target (delivered entries to one line each, the rest condensed), or restate the target for a phase amended in flight.
