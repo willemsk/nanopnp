@@ -97,19 +97,20 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   runs `.claude/scripts/duplicates.py` after merging `main`, and the author merges a second-lane pull
   request only after `/np-ship` has run on it against the current `main`. (§8.2.17 S1, S15 to S18,
   S20; §8.2.18 T5)
-* A phase plan, a work-package plan and a work-package pull request open with `## In brief`, at most
-  250 words and readable without code or identifiers. It says what changes and why, what it costs,
+* A phase plan, a work-package plan and a work-package pull request open with `## In brief`, about
+  250 words, up to 10% over, and readable without code or identifiers. It says what changes and why, what it costs,
   what could go wrong and how it would be noticed. Its *Your call* gives each decision that waits for
   the author, with a recommendation. (§8.2.10 J9)
 * A work-package plan is grounded in the code. Its `### Grounding` records, by symbol, what the code
   does today, the call path of the change, the shape of what it reads and writes, every variant of its
   input, the registry and layering rows it adds, and how each test gets the object it checks. The plan
-  holds at most 3,500 words outside its Outcome annotations, and 1,500 of them outside its Grounding
-  and its `### Implementation details`. The details hold at most 1,000 words and give a smaller model
-  the exact steps. The plan has at most six decisions and no `## Design` heading. (§8.2.15 Q1;
-  §8.2.16 R11) WP57's plan is exempt: it has no word or decision cap, and keeps its
-  compaction checkpoints (§8.2.23 Y11). WP5.08's plan holds seven decisions and the words they need
-  (§8.2.33 AI11).
+  holds 3,500 words outside its Outcome annotations, and 1,500 of them outside its Grounding and its
+  `### Implementation details`. The details hold 1,000 words and give a smaller model the exact steps.
+  Each count may run up to 10% over; beyond that the plan is trimmed or split. About six decisions is a
+  guideline, not a cap: a package that needs more holds them, and its plan's report says why. The plan
+  has no `## Design` heading. (§8.2.15 Q1; §8.2.16 R11; §8.2.33 AI15) WP57's plan is exempt: it has no
+  word or decision cap, and keeps its compaction checkpoints (§8.2.23 Y11). WP5.08's plan holds the
+  words its seven decisions need (§8.2.33 AI11).
 * Each work item names its executor: the main session, or a sub-agent by type and model. The plan
   names the implementing session's model and effort. One commit per work item, ticked
   `[x] <short sha>`. (§8.2.11 L7; §8.2.16 R11)

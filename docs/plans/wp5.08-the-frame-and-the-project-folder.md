@@ -31,7 +31,7 @@ FR-31, FR-32, FR-34, FR-35, FR-25, FR-27, IF-01, IF-02, IF-09, QR-16; VER-61, VE
 by:** ADR-004's NOTEs, CON-07, CON-09, VER-60, G6. **Implementing session:** Sonnet, high effort. Tag
 `v0.6.0-alpha.8`.
 
-**Amended in this commit:** QR-16 (AI1); §8.4.4's caps, for this plan's seven decisions (AI11). **When it lands (item 13):** NOTEs on FR-32, FR-34, FR-35, §5.3.2 (older
+**Amended in this commit:** QR-16 (AI1); §8.4.4's caps, for this plan's words (AI11) and as guidelines (AI15). **When it lands (item 13):** NOTEs on FR-32, FR-34, FR-35, §5.3.2 (older
 entries) and §5.5 (optional members); VER-64 and VER-78 as rows 4 and 8 state; Appendix A; the design document's folder;
 REV-32, REV-52 and MOD-13's command-line part `fixed`.
 
