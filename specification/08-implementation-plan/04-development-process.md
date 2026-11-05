@@ -68,8 +68,12 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   headless, has them reviewed, publishes them for the author's verdicts, collects the verdicts and
   runs a design round. A package that changes a screen uses it. Its `shell` target renders the browser
   workbench in every fixture state, and `nanopnp gui --dev` is the local live loop: it serves the
-  workbench and restarts on a change to its source (`CONTRIBUTING.md`). (§8.2.17 S21, S22; §8.2.30 AF4;
-  `.claude/skills/np-gui/`)
+  workbench and restarts on a change to its source (`CONTRIBUTING.md`). A suite's package opens with its
+  tools prototyped over 2WCD's artefacts and rendered in their states for the author's verdicts and a
+  design round, then builds them. `impeccable`, where the host has it, is a tool inside this workflow:
+  its critique a second opinion beside the GUI reviewer's, its quality floor read before a screen is
+  built; the design document and the tokens stay the authority, and the author's rulings win over its
+  rules. (§8.2.17 S21, S22; §8.2.30 AF4; §8.2.34 AJ6, AJ8; `.claude/skills/np-gui/`)
 * The workflow runs on Claude Code and on the GitHub Copilot app, either for any step on either lane;
   Copilot runs as a WSL host on Windows. `.claude/` is the single source.
   `.claude/workflow/hosts.md` indexes, for each host other than Claude Code, the map from each Claude

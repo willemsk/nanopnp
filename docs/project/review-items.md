@@ -2621,7 +2621,7 @@ The sweep plan pairs the two points of a rectification ratio by `boundary_condit
 on `variables.v`) assigns no `bias_V`, so the plan finds no matched pair and refuses a sweep that asks for
 `rectification`. Found by WP5.07 (FR-39).
 
-**Accepted**: WP5.11, which builds the Sweep tool, pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.
+**Accepted**: WP5.14, which builds the Sweep tool (§8.2.34 AJ10), pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.
 
 ## REV-198: A sweep plan is not tied to the variables as written
 
@@ -2655,89 +2655,82 @@ When the forecast fails, the text output gives the reason and the JSON gives `fo
 
 A row of the problems list opens the suite that owns the item, and the suite lists its tools as text ("in a later package"), so no field is reachable and the job "see a refusal, fix the value, go on" cannot be finished (WB-12). Found by the WP5.08 `/np-gui review` (F4, F5). The frame is this package's scope; the tools are WP5.09 to WP5.11's.
 
-**Deferred** to WP5.09 to WP5.11: each suite's package makes its tools real, and the problem row then opens the tool at the field. The tool lists become disabled list items or controls as the tools land.
-
-
+**Deferred** to WP5.11 to WP5.15 (§8.2.34 AJ10): each suite's package makes its tools real, and the problem row then opens the tool at the field. The tool lists become disabled list items or controls as the tools land.
 
 ## REV-203: The frame's accessibility and layout limits
 
 The WP5.08 `/np-gui review` found, in the frame as built: the bottom panel opens about 180 px high and clips the changed list and the problems list with no row count (F3); the frame has no landmarks, no heading and no `aria-live` region for the changed count, the problem count and the queue line (F15); the splitter has no keyboard resize beside the fold buttons (doubt 5); the activity bar has names and no icons (F14); the shortcuts `Alt+Shift+digit`, `Ctrl+K` and `Ctrl+,` may be claimed by a browser or an operating system (doubt 6); and the 3D view's background is read once when the viewer starts, so a change in the settings reaches an open viewer after a reload (doubt 4).
 
-**Deferred** to WP5.13, which carries the guided route and the keyboard pass over every canvas action (QR-16).
-
-
+**Deferred** to WP5.10, which rebuilds the frame on Quasar's components (§8.2.34 AJ1): the panel's height and row counts, the landmarks, heading and live regions, the splitter's keys, the icons and the reserved chords. The keyboard pass over every canvas action stays with the guided route, WP5.16 (QR-16).
 
 ## REV-204: The settings and the changed list lack some guards and units
 
 The WP5.08 review found: the settings dialog has no sticky footer and the colours sit in a collapsed section (F9); a shortcut has no per-row clear control (F7); Reset, Reset layout and Quit act at once with no confirmation or undo, and Quit does not warn of a running build (F12); the changed list shows a value with no unit beside it and a default of `None` (F12); an item that fails to load adds nothing to the changed count and says nothing (doubt 1); and a path set in a case counts as changed whether or not it differs from the validated default (doubt 2). A user's theme has no contrast display by the author's ruling (§8.2.33 AI1), so that part of F8 is answered and not open.
 
-**Deferred** to WP5.09, the next package that edits a value through the frame.
-
-
+**Deferred** to WP5.10, whose settings page follows one declared list (§8.2.34 AJ9) and whose changed table shows each unit (AJ7).
 
 ## REV-205: The Study page shows fixture names, and the charge screen lacks a colour bar and axes
 
 The Study page prints `State: <fixture name>` and stage chips with no verdict word (F16), and the charge screen's map has no axes, no unit and no diverging colour bar, and its strip lists one residue while two charges are drawn (F17). Found by the WP5.08 review. The charge screen is WP5.02's spike screen, placed in the frame.
 
-**Deferred** to WP5.11, which builds the Charge on the mesh tool (WB-26; VER-60).
-
+**Deferred** to WP5.14, which builds the Charge on the mesh tool (WB-26; VER-60) after its prototype round on 2WCD (§8.2.34 AJ8, AJ10).
 
 ## REV-206: An exported project can lose a result file of the same name, and keeps the run record's old paths
 
 The WP5.08 code review found four limits of `Project.export`. Two result files of one run that share a name, from different folders, are copied to `results/<name>` and the second replaces the first. The copied `run.json` still lists the result paths of the project it was copied from, so the copy's record points back at the original. An input file kept in a sub-folder of `inputs/` is copied flat while the item that names it is not rewritten, and an input in `inputs/` that no item names can share a name with a linked input and replace it. A failure part-way leaves a half-written destination that the next export refuses as not empty.
 
-**Deferred** to WP5.11, the package that writes run records into a project.
+**Deferred** to WP5.14, the package that writes run records into a project (§8.2.34 AJ10).
 
 ## REV-207: The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs
 
 The WP5.08 code review found: a splitter's change event writes the project file at every step of a drag; `theme.shipped()` parses `tokens.css` and `user_themes()` every theme file at each call, several times to build one page and once per colour keystroke; the New, Open, Import, Export and Glossary dialogs are created at each use and never deleted, so a long session accumulates them; an empty folder field in those dialogs reads as the server's working folder; and the palette's filter is written twice, in `fill_palette` and `first_match`.
 
-**Deferred** to WP5.09, the next package that edits a value through the frame.
+**Deferred** to WP5.10, which rebuilds the frame (§8.2.34 AJ1, AJ10).
 
 ## REV-208: The palette finds commands by title only, has no active row, and lists commands that cannot run
 
 The second WP5.08 screen review found: the palette matches a typed word against a command's title only, so "theme", "density", "spacing", "dark" and "shortcut" find nothing and "Settings…" is the only route to them; no row is highlighted and the arrow keys do not move through the list; and "Import case…" and "Export project…" are listed with no project open, where they only refuse.
 
-**Deferred** to WP5.09, the first package whose tools add commands to the palette. It gives each command keywords, adds the setting commands, the highlighted row and the arrow keys, and disables a command with the reason.
+**Deferred** to WP5.10, with REV-211 (§8.2.34 AJ1, AJ10). It gives each command keywords, adds the setting commands, the highlighted row and the arrow keys, and disables a command with the reason.
 
 ## REV-209: The charge screen in the frame shows a link where none exists, and its map ignores the dark theme
 
 The charge screen is WP5.02's spike screen, placed in the frame. With no case or no structure charge it still shows "Linked" with an Unlink button beside two empty canvases and no caption; it says "case", a retired term; the Study page offers its link in the empty state; the map's background is light grey on the dark theme, against WB-26. The review doubted two things it could not check from the pictures: the Mol* toolbar icons may read below 3:1 (the harness measures no viewer control), and the 3D spheres and the map's dots may colour the same charges oppositely.
 
-**Deferred** to WP5.11, which builds the Charge on the mesh tool (WB-26; VER-60) with the colour bar of REV-205.
+**Deferred** to WP5.14, which builds the Charge on the mesh tool (WB-26; VER-60) with the colour bar of REV-205, its design settled in its prototype round (§8.2.34 AJ8, AJ10).
 
 ## REV-210: The frame lacks icons, headings and some states in the render set
 
 The second WP5.08 screen review found: the activity bar has text only where the design document says an icon with its name; suite and dialog titles are labels, not headings; the changed diamond is read aloud by a screen reader; the settings' colour inputs carry raw token names with no swatch; the Glossary holds 5 of the document's 22 terms and About is a toast that disappears; and the New, Open, Import and Export dialogs are a free text path with no browse list. The render set shows none of: those dialogs, the File, View and Help menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density, tight spacing, the 3D background settings, a key being captured, or a typed palette query.
 
-**Deferred** to WP5.09 for the icons, headings and the render states, and to WP5.12 for the dialogs, which add a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
+**Deferred** to WP5.10, which rebuilds the frame (§8.2.34 AJ1, AJ10): the icons, headings, render states and the dialogs with a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
 
 ## REV-211: The palette opens as a full command list, not a bare input that suggests as you type
 
 The author, marking the frame's palette (`docs/design/reviews/2026-11-05-frame.md`): "This should far more sleek and subtle, not just a list of commands. Default should be just a box to type in, and suggestions should pop up once you start typing." The palette opens as an input over every command with its chord.
 
-**Deferred** to WP5.09, with REV-208. The palette opens as one input and lists no commands until a word is typed. The matches then appear under it, found by title and keyword, one row active and moved by the arrow keys. A command that cannot run is listed disabled with its reason.
+**Deferred** to WP5.10, with REV-208 (§8.2.34 AJ1, AJ10). The palette opens as one input and lists no commands until a word is typed. The matches then appear under it, found by title and keyword, one row active and moved by the arrow keys. A command that cannot run is listed disabled with its reason.
 
 ## REV-212: The settings need a searchable section list beside the panel, and which settings exist is undecided
 
 The author, marking the frame's settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." The settings are one dialog of stacked sections: theme, density, spacing, the 3D background, the colours and the shortcuts (§8.2.33 AI1; REV-204).
 
-**Open**, a question for the author. The layout is the author's: a section list with a search field on the left and the selected section's panel on the right. The settings themselves, where each is stored (the user, the project) and when each applies, are put to the author in a design round (`/np-gui grill`) before WP5.09's plan. REV-204's guards follow the new layout.
+**Deferred** to WP5.10, ruled by the author on 5 November 2026 (§8.2.34 AJ9; WB-37): the settings are one declared list, each setting with its section, its scope (the user's, or the project's over the user's), its default, its description and search words and when it applies; the page, its search, the palette's setting commands and both files follow. The sections are appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers; which settings beyond them exist, compute and network among them, is put to the author at WP5.10's plan after a survey of comparable tools.
 
 ## REV-213: The suites may need to separate those that build models from those that use them
 
 The author, marking the Molecular suite and then the Continuum, Study and Analysis suites with "See Molecular suite comments": "I wonder if we need to make a further distinction in the suites between those that build components (molecular, continuum, physics), those that use components (study, analysis?). I think we need to discuss this further to figure out what I mean." The frame has four suites side by side in the activity bar (WB-02, WB-29). The models are built in Molecular and Continuum (WB-11), and the physics defaults sit in the continuum model (WB-16).
 
-**Open**, a question for the author, put in a design round (`/np-gui grill`) before WP5.09's plan. The round asks whether the distinction is in the activity bar (two groups), in a suite's layout (a builder against a consumer of models), or in a separate *Physics* suite apart from Continuum. A ruling that changes the suites amends WB-02 and WB-29 and §8.1's Phase 5 row.
+**Deferred**, ruled by the author on 5 November 2026 (§8.2.34 AJ2 to AJ5; WB-34, WB-35): physics becomes a third reusable model, and five suites show as those that build models (Molecular, Continuum, Physics) and those that use them (Study, Analysis). The physics model is WP5.09's library step, the grouped suites WP5.10's, and the Physics suite WP5.13's.
 
 ## REV-214: The changed list is loosely spaced, and the project name reads as a menu
 
 The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?" Each changed value is a row of about 48 px: the path, the value, its default and *Reset*. Then, on the refused state: "Not sure the "refused" marker in the top bar is the best location, looks like a menu item." The word is the fixture project's name (`--state refused` opens a project named `refused`), not a refusal marker. The name sits in the menu row, after *Help*, in the menus' weight, so it reads as a menu.
 
-**Open**, a question for the author. The answer to the question is research for the round: how COMSOL, VS Code and the CAD tools of WB-17 list a changed setting. Candidates are a dense table grouped by model, the mark beside the field alone, and a diff view against the defaults. The round settles the list's density with REV-203's clipping and REV-204's units. The project name moves out of the menu row and takes its own style, the title bar's centre or the rail's head, in WP5.09 (REV-205).
+**Deferred** to WP5.10, ruled by the author on 5 November 2026 (§8.2.34 AJ7; WB-36): the mark at the field with its reset, a *Modified only* filter on each pane and the settings, and one dense table grouped by model and study with value, default, unit and reset. The project's name heads the project rail and names the browser tab.
 
 ## REV-215: The charge screen needs its design and its function settled together
 
 The author, marking the charge screen: "Looks very poorly integrated. Maybe because we are still in early development phase for the GUI. Also hard to judge without an example molecule.", then: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." The screen is WP5.02's spike, placed in the frame (REV-205, REV-209). The render set's states are a charged and an uncharged tube, with no protein.
 
-**Open**, a question for the author, put in a design round before WP5.11's plan. WP5.11 builds the Charge on the mesh tool. The round works from a structure, 2WCD as in the mockups, rendered through the tool's states. REV-205's colour bar and axes and REV-209's link and dark map are settled in the same tool.
+**Deferred** to WP5.14, ruled by the author on 5 November 2026 (§8.2.34 AJ8; WB-38): the Study package opens with its tools prototyped over 2WCD's artefacts and rendered through their states, and the charge screen's design is settled with its function in that round, with REV-205's colour bar and axes and REV-209's link and dark map.

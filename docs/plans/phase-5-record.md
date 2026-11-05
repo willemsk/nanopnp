@@ -283,3 +283,81 @@ files a case names imported (AI11) and every shortcut rebindable (AI12). WP5.08'
 > WB-19, WB-30, WB-31), with a theme selector and a colour modifier over the shipped themes and the user's own, a user's
 > theme setting its own contrast (AI1). `nanopnp gui [<project>]` opens a project, and `cli/__init__.py` is split as it
 > changes (MOD-13's command-line part). Q01 to Q08 move here. VER-78 gains the frame's states. Tag `v0.6.0-alpha.8`.
+
+## Amended 5 November 2026 (§8.2.34 AJ1 to AJ10)
+
+After the author's verdicts on WP5.08's frame, the third `/np-plan amend 5` ruled the frame rebuilt on Quasar's
+components, physics a third reusable model with a Physics suite of its own, the values each model exposes, `impeccable`
+inside `np-gui`, the changed table, each suite designed on a prototype over 2WCD, the settings as one declared list, and
+the shell's packages renumbered WP5.09 to WP5.17 (AJ1 to AJ10). The plan's status read:
+
+> **Status: in progress; WP5.01 to WP5.07 merged; WP5.08 delivered, awaiting its merge; the shell packages WP5.09 to WP5.14 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+
+The design decisions' rows read:
+
+> | The shell's slicing | A frame package, then one package per suite in the route's order | Each pull request reviews one suite's screens (AG1) |
+> | Working loop | Artifact mockups; a live local loop; `/np-gui` renders, reviews and collects verdicts | Both see and control it (S9, S22) |
+
+The shell's package entries read:
+
+> ### WP5.09 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
+>
+> Library step first: stage 1's axis estimated from the channel cavity for a single-chain or mixed-chain pore, gated like
+> the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
+> Then the tools Prepare structure, Ensemble, Protonation, Charge edit (FR-38's control over WP5.04's step) and View, the
+> molecule drawn by Mol*. Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.9`.
+>
+> ### WP5.10 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
+>
+> Library step first: one stage-5 region interface with an adapter per kind, the cylinder's two classes merged and the
+> wall sizing moved into `mesh/` (REV-170; AD4), VER-62's mesh hash unmoved or the move ruled and re-pinned (G10, I4).
+> Then Protein geometry, Contour (on any profile, extracted or supplied, REV-39; its check off the interface's thread,
+> asking before an edit is discarded, as T1 carries REV-56), Region, Mesh with its quality selection, and Physics
+> defaults; a geometry and its parameters linked both ways (FR-33). Q10 to Q12 and Q14 to Q23 move here; VER-55 as
+> restated. Tag `v0.6.0-alpha.10`.
+>
+> ### WP5.11 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; AG7)
+>
+> Overview; Study setup with the overrides of WP5.05; Sweep, with variables and the forecast's warning of WP5.07; Charge
+> on the mesh, a residue and the charge map linked both ways (FR-33; the spike's hard screen); Runs, a run's convergence
+> unfolded in the queue. `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's machine with a GPU
+> (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.11`.
+>
+> ### WP5.12 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+>
+> Library step first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
+> either lacks the point (AG6). Then the results explorer and its tiles: a field drawn by `webgui` when its tile opens it,
+> its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut. Probes and cuts are linked to their
+> field, and a run to its result (FR-33). Comparison shows two runs side by side on one scale or as their difference.
+> Q37 to Q41 move here. Tag `v0.6.0-alpha.12`.
+>
+> ### WP5.13 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
+>
+> The guided route over the suites (FR-36). Every row Q01 to Q41 is checked present (criterion 3); then PySide6, the Qt
+> widgets, the bundle and the packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55,
+> VER-60, CON-08, CON-09, CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1).
+> The application guide is rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag
+> `v0.6.0-alpha.13`.
+>
+> ### WP5.14 — The close
+>
+> It resolves or carries each open decision, records QR-10 with the colleague named by then (S24), confirms Qt and the
+> bundle are gone with the capability list covered, orders the tool phases (S7), and writes the report, the changelog
+> and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
+
+Open decision 7, the GPU row of *What the author supplies*, and the verification rows read:
+
+> | 7 | The shell packages, the sweep's design round (U4), REV-136's v0.6 cut line (U3) and the phase estimate | **Settled by the author, 3 November 2026** (§8.2.31 AG1 to AG7): one package per suite after the frame, WP5.08 to WP5.14; WP5.07 for the sweep's variables and forecast; the difference field in v0.6 |
+> | A machine with a GPU, in a local session | WP5.11 | The 200 ms line stays unmeasured; a `REV-nn` row carries it to the close |
+> | WP5.09, Molecular | 1, 2 | REV-121's cavity axis against a known axis (VER-48); VER-78 |
+> | WP5.10, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 |
+> | WP5.11, Study | 1 | VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) |
+> | WP5.12, Analysis | 1 | AG6's difference: exact for a linear field, zero for identical runs; VER-78 |
+> | WP5.13, route and Qt's removal; WP5.14, the close | 1, 2 | VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 |
+
+Criterion 6 read:
+
+> 6. **The redraw is measured** on the author's machine with a GPU, in WP5.11: a residue selected on the charge map
+>    redraws the whole picture within 200 ms (WB-23). Predicted: the front end's share met (26 ms p95 in the spike), the
+>    whole picture unknown. On a miss the redraw is profiled; where the renderer's own repaint is the cost, the line
+>    binds the front end's share and the renderer's time is recorded; a miss by the front end is fixed (§8.2.31 AG7).
