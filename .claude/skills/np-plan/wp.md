@@ -112,6 +112,8 @@ Link the planned package and its live dependencies. Its word target is in its *H
    core), so that another session on another machine can work from the branch.
 3. Open the PR by the core's *PR contract*. It is the package's PR, and `/np-implement` reuses it. The
    body's In brief is the plan's. *What this delivers* says that the plan is in and the implementation
-   follows. *Verification* ticks only the plan's gate, and says that the review waits for `/np-ship`.
+   follows. *Verification* ticks only the plan's gate, and says that the plan's review follows as
+   `/np-plan wp <n> review` and the code's review waits for `/np-ship`.
 4. Report the path, the PR, the close calls, what the grounding pass changed, each spec amendment and
-   the open questions. Then stop: implementation is `/np-implement`, in a separate turn.
+   the open questions. Then pause as `review.md`'s *The pause* says. Implementation is `/np-implement`,
+   in a separate turn after the review.

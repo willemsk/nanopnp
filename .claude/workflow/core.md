@@ -129,4 +129,6 @@ decision, update the In brief.
 ## Report and stop
 
 Each level ends with the report its file names, then stops. Implementing and shipping are separate
-sessions, so the review starts fresh.
+sessions, so the review starts fresh. A level of `/np-plan` pauses after its report for a compaction,
+and `/np-plan <level> [n] review` then reviews the plan and summarises it for approval
+(`np-plan/review.md`).

@@ -130,8 +130,9 @@ sections it cites. A brief never overrides a normative requirement.
 
 | Step | Command | What it does |
 |---|---|---|
-| 0 | `/np-plan project`, `/np-plan phase <n>`, `/np-plan amend <n>` | Puts the decisions to the author; writes the rulings into `specification/history/` and the plan; pushes; opens its PR |
-| 1 | `/np-plan wp <n>` | Writes and commits the WP plan; pushes; opens the package's PR |
+| 0 | `/np-plan project`, `/np-plan phase <n>`, `/np-plan amend <n>` | Puts the decisions to the author; writes the rulings into `specification/history/` and the plan; pushes; opens its PR; pauses for `/compact` |
+| 1 | `/np-plan wp <n>` | Writes and commits the WP plan; pushes; opens the package's PR; pauses for `/compact` |
+| 0–1 | `/np-plan <level> [n] review` | Reviews the plan (`/code-review medium --fix`); fixes it; gates; pushes; gives the summary for approval |
 | 2 | `/np-implement [wp <n>]` | Executes the plan; gates; pushes; opens or reuses the PR; stops |
 | 3–4 | `/np-ship [wp <n>]` | Gates; pushes; reviews (`/code-review xhigh --fix`); drives CI to green |
 | close | `/np-ship phase <n>` | Ships the close package and tags the release |

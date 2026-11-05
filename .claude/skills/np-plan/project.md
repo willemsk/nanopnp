@@ -37,4 +37,4 @@ Gate, push and open its PR as `rulings.md`'s *Finishing* says; its body names th
 again.
 
 Report the paths, the PR, the rulings, the phases as they now are, the open decisions and their
-owners, and the next step. Then stop.
+owners, and the next step. Then pause as `review.md`'s *The pause* says.
