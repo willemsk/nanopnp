@@ -79,6 +79,14 @@ STAGE_RUN = "(inputs, *, progress, cancel)"
 
 STAGE_KEY = "(inputs)"
 
+OPTIONAL_MEMBERS: dict[str, str] = {
+    "deviations": "(inputs)",
+    "with_solve_hook": "(hook)",
+    "forecast_parameters": "(inputs)",
+}
+"""The optional members of a stage (`ContributesDeviations`, `SolveReporting`, `Forecastable`) and
+the parameters their protocols give them."""
+
 
 @dataclass(frozen=True)
 class Module:
@@ -529,6 +537,8 @@ class StageConformance:
     has_describe: bool
     run_signature: str | None
     key_signature: str | None
+    optional: tuple[tuple[str, str], ...] = ()
+    """Each optional member the class defines, with its parameters."""
 
     @property
     def has_key(self) -> bool:
@@ -542,11 +552,12 @@ class StageConformance:
 
     @property
     def conforms(self) -> bool:
-        """Return whether ``describe``, ``key`` and ``run`` exist with the protocol's parameters."""
+        """Return whether every member exists with the protocol's parameters."""
         return (
             self.has_describe
             and self.key_signature == STAGE_KEY
             and self.run_signature == STAGE_RUN
+            and all(OPTIONAL_MEMBERS[name] == signature for name, signature in self.optional)
         )
 
 
@@ -678,6 +689,11 @@ def stage_conformance(
                 has_describe="describe" in methods,
                 run_signature=None if run is None else _signature(run),
                 key_signature=None if key is None else _signature(key),
+                optional=tuple(
+                    (member, _signature(methods[member]))
+                    for member in OPTIONAL_MEMBERS
+                    if member in methods
+                ),
             )
         )
     return tuple(found)

@@ -17,6 +17,7 @@ from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, decod
 from nanopnp.core.stages import (
     ArtefactHook,
     CancelToken,
+    ContributesDeviations,
     MissingExtraError,
     Progress,
     SolveHook,
@@ -708,11 +709,9 @@ def selected_stages(
 
 
 def _contributed(stage: Stage, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
-    contribute = getattr(stage, "deviations", None)
-    if contribute is None:
+    if not isinstance(stage, ContributesDeviations):
         return ()
-    found: tuple[ContributedDeviation, ...] = contribute(inputs)
-    return found
+    return stage.deviations(inputs)
 
 
 def _slice(progress: Progress | None, low: float, high: float, name: str) -> Progress | None:
