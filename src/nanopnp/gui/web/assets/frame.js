@@ -13,8 +13,10 @@ window.frame = {
     if (key === null) return null;
     const modifiers = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift', e.metaKey && 'Meta'];
     const held = modifiers.filter(Boolean);
-    // A key typed into a field is not a shortcut: only an F key may stand alone.
-    if (held.length === 0 && !/^F\d+$/.test(key) && !(key === 'Escape' && window.frame.capturing)) return null;
+    // A key typed into a field is not a shortcut, and Shift only capitalises it: a chord needs Ctrl,
+    // Alt or Meta, except an F key, which may stand alone.
+    const strong = e.ctrlKey || e.altKey || e.metaKey;
+    if (!strong && !/^F\d+$/.test(key) && !(key === 'Escape' && window.frame.capturing)) return null;
     return [...held, key].join('+');
   },
   // While capturing, the next chord goes to the settings instead of running its command.

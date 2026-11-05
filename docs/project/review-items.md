@@ -2680,3 +2680,16 @@ The WP5.08 review found: the settings dialog has no sticky footer and the colour
 The Study page prints `State: <fixture name>` and stage chips with no verdict word (F16), and the charge screen's map has no axes, no unit and no diverging colour bar, and its strip lists one residue while two charges are drawn (F17). Found by the WP5.08 review. The charge screen is WP5.02's spike screen, placed in the frame.
 
 **Deferred** to WP5.11, which builds the Charge on the mesh tool (WB-26; VER-60).
+
+
+## REV-206: An exported project can lose a result file of the same name, and keeps the run record's old paths
+
+The WP5.08 code review found four limits of `Project.export`. Two result files of one run that share a name, from different folders, are copied to `results/<name>` and the second replaces the first. The copied `run.json` still lists the result paths of the project it was copied from, so the copy's record points back at the original. An input file kept in a sub-folder of `inputs/` is copied flat while the item that names it is not rewritten, and an input in `inputs/` that no item names can share a name with a linked input and replace it. A failure part-way leaves a half-written destination that the next export refuses as not empty.
+
+**Deferred** to WP5.11, the package that writes run records into a project.
+
+## REV-207: The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs
+
+The WP5.08 code review found: a splitter's change event writes the project file at every step of a drag; `theme.shipped()` parses `tokens.css` and `user_themes()` every theme file at each call, several times to build one page and once per colour keystroke; the New, Open, Import, Export and Glossary dialogs are created at each use and never deleted, so a long session accumulates them; an empty folder field in those dialogs reads as the server's working folder; and the palette's filter is written twice, in `fill_palette` and `first_match`.
+
+**Deferred** to WP5.09, the next package that edits a value through the frame.

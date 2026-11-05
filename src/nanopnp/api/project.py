@@ -283,6 +283,8 @@ class Project:
                 "with a letter or a digit; name the study with name="
             )
         written: list[Path] = []
+        index = self._file.library.model_copy(deep=True)
+        kept = set((self._root / INPUTS_FOLDER).glob("*"))
         try:
             record = case.models_record
             if record is None:
@@ -291,8 +293,12 @@ class Project:
                 study = self._carry(case, label, link=link, written=written)
             self._verify(case, study, label)
         except Exception:
+            # A refused import leaves the folder and the index as they were.
             for target in written:
                 target.unlink(missing_ok=True)
+            for copied in set((self._root / INPUTS_FOLDER).glob("*")) - kept:
+                copied.unlink(missing_ok=True)
+            self._file.library = index
             raise
         self._index()
         write_project(self._root, self._file)
@@ -442,7 +448,7 @@ class Project:
             return []
         try:
             body = _body(location, keep=True)
-        except (OSError, yaml.YAMLError, ProjectError) as error:
+        except (OSError, yaml.YAMLError, ValueError) as error:  # ValueError: not UTF-8, not a map
             return [Problem(item, None, f"{location} is not readable: {error}", suite)]
         found: list[Problem] = []
         if body.get("name") != name:

@@ -142,10 +142,15 @@ class Overlay:
     def _send_chords(self) -> None:
         ui.run_javascript(f"window.frameChords = {json.dumps(commands.chords(self.shell.keys))}")
 
-    def _close(self) -> None:
+    def _release(self) -> None:
+        # A dialog dismissed by its backdrop must not leave the next chord to be taken as a binding.
         if self.capturing is not None:
             self.capturing = None
             ui.run_javascript("window.frame.capturing = false")
+            self._fill_keys()
+
+    def _close(self) -> None:
+        self._release()
         self.dialog.close()
 
     # -- the dialog ---------------------------------------------------------
@@ -192,5 +197,6 @@ class Overlay:
             ):
                 pass
             ui.button("Close", on_click=self._close).props("flat no-caps")
+        self.dialog.on("hide", self._release)
         self._fill_colours()
         self._fill_keys()
