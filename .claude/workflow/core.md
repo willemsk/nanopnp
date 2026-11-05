@@ -90,7 +90,7 @@ A phase plan, a work-package plan and a pull request start with this section:
 ```markdown
 ## In brief
 
-At most 250 words, no backticks or identifiers; for a reader who does not code.
+About 250 words, up to 10% over (275), no backticks or identifiers; for a reader who does not code.
 
 **What changes.** What the reader will notice, and why it matters.
 **Cost.** Time, money or speed, in plain units.

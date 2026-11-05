@@ -37,8 +37,9 @@ before the level's own next step. After the level's report:
      plan's open questions if it blocks the implementation.
    - A fix that changes specified behaviour amends the specification in the same commit (the core's
      *Normativity*).
-   - Count the plan's words again against its level's caps. Trim prose to meet them; never drop a
-     required check or a grounding fact. If the caps cannot hold the fixes, split the package.
+   - Count the plan's words again against its level's caps, each with its 10% allowance. Trim prose
+     only beyond it; never drop a required check or a grounding fact. If the caps cannot hold the
+     fixes, split the package.
 4. **The commit.** Commit `docs: <the level's commit subject>, review fixes`, with the identifiers in
    the body. `docs/plans/current.md` names the level's own next step. Gate and push (the core). Bring
    the PR's body to the tree's state (the core's *PR contract*): its In brief if a decision moved, and

@@ -85,21 +85,23 @@ localise an error to one term (§7.1).
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
 | `## In brief` | Before the Execution brief; the core's template |
 | `## Execution brief` | Current scope, dependencies, requirement pointers, the model and effort of the implementing session, and the subsections below. Link evidence; do not retell earlier packages |
-| `### Decisions` | A table `Decision \| Choice \| Why/source`, **at most six rows**. **This is the deliverable.** Resolve now each choice that affects correctness; each *Why/source* ends with "ruled by the author" and the ruling, or "decided by the plan" |
+| `### Decisions` | A table `Decision \| Choice \| Why/source`, **about six rows, a guideline**: more when the package needs them, each one a choice and not a detail. **This is the deliverable.** Resolve now each choice that affects correctness; each *Why/source* ends with "ruled by the author" and the ruling, or "decided by the plan" |
 | `### Grounding` | The facts of *Grounding the plan*, grouped by decision (`D1`, `D2`, …), one bullet each: `path:symbol`, what it does today and what the change does to it. Facts only: no alternatives, no history, no restated specification. Cite symbols, not line numbers, which drift |
-| `### Implementation details` | Optional, at most 1,000 words: the exact steps, layouts, commands and file formats an item needs when a smaller model executes it, grouped by item. Steps, not design: a choice belongs in *Decisions* |
+| `### Implementation details` | Optional, about 1,000 words (*The caps*): the exact steps, layouts, commands and file formats an item needs when a smaller model executes it, grouped by item. Steps, not design: a choice belongs in *Decisions* |
 | `### Work items` | A checklist in dependency order, one commit per item: `- [ ] 3. <files and deliverable> (D4); done when <tests> pass. **Executor:** <main, or a sub-agent type on a model>`. For an item outside the test scope (`SPECIFICATION.md` §8.2.13 N1): done when the code and review say so. Name the files in backticks. After a group of items, a checkpoint item: `- [ ] 5. Compaction checkpoint. **Executor:** main` (§8.2.16 R11) |
 | `### Verification` | Test file, tier, identifiers, oracle, tolerance source and command, for in-scope tests only (§8.2.13 N1). Each claimed in-scope `VER-`/`VAL-` is here. The done-criterion of an out-of-scope item is "the code and review say so" (N3) |
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation; ask the blocking ones before you commit |
 
-**The caps.** The plan holds at most 3,500 words outside its Outcome annotations. At most 1,500 of them
-are outside `### Grounding` and `### Implementation details`. A longer plan is a review finding, and
-review checks each plan from WP44 on against these caps (§8.2.13 N3; §8.2.15 Q1; §8.2.16 R11).
+**The caps.** The plan holds about 3,500 words outside its Outcome annotations, about 1,500 of them
+outside `### Grounding` and `### Implementation details`, and the details about 1,000. Each count may run
+up to 10% over (3,850, 1,650 and 1,100) with no rewording; beyond that, trim prose or split the
+package. The six decisions are a guideline: a plan that needs more holds them, and its report says why
+(§8.2.13 N3; §8.2.15 Q1; §8.2.16 R11; §8.2.33 AI15).
 
 The plan is an index and an execution contract. It has no per-item design and no `## Design` heading. A
-new derivation that carries load goes into the specification, and the plan links it. If the word caps
-and six decisions cannot hold the correctness-critical choices and their facts, split the package.
+new derivation that carries load goes into the specification, and the plan links it. If the caps with
+their allowance cannot hold the correctness-critical choices and their facts, split the package.
 Never omit a required check or a grounding fact to meet a count.
 
 ### Work items
