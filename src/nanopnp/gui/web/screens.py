@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-__all__ = ["SCREENS", "Screen", "screen"]
+from nanopnp.io.project import Suite as SuiteId
+
+__all__ = ["FRAME_CONTROLS", "SCREENS", "SUITES", "Screen", "Suite", "screen"]
 
 
 @dataclass(frozen=True)
@@ -24,9 +26,62 @@ class Screen:
     controls: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class Suite:
+    """One suite of the frame: what it builds and its tools (docs/design/workbench.md)."""
+
+    id: SuiteId
+    title: str
+    builds: str
+    tools: tuple[str, ...]
+
+
+SUITES: tuple[Suite, ...] = (
+    Suite(
+        "molecular",
+        "Molecular",
+        "a molecular model",
+        ("Prepare structure", "Ensemble", "Protonation", "Charge edit", "View"),
+    ),
+    Suite(
+        "continuum",
+        "Continuum",
+        "a continuum model",
+        ("Protein geometry", "Contour", "Region", "Mesh: sizes, quality", "Physics defaults"),
+    ),
+    Suite(
+        "study",
+        "Study",
+        "a study",
+        ("Overview", "Study setup", "Sweep", "Charge on the mesh", "Runs"),
+    ),
+    Suite("analysis", "Analysis", "results and comparisons", ("Results explorer", "Comparison")),
+)
+
+FRAME_CONTROLS: tuple[str, ...] = (
+    "menu-file",
+    "menu-view",
+    "menu-help",
+    "project-name",
+    "changed-count",
+    "palette-open",
+    *(f"suite-{suite.id}" for suite in SUITES),
+    "rail",
+    "rail-fold",
+    "queue-status",
+    "panel-toggle",
+    "problems-count",
+)
+"""The controls of the frame, which every screen carries in every state."""
+
 SCREENS: tuple[Screen, ...] = (
-    Screen("home", "/", ("state", "stages", "open-charge")),
-    Screen("st-charge", "/charge", ("molecule", "strip", "map", "link-chip", "unlink", "status")),
+    *(Screen(suite.id, f"/{suite.id}", (*FRAME_CONTROLS, "suite-body")) for suite in SUITES),
+    Screen("palette", "/molecular?palette=1", (*FRAME_CONTROLS, "palette-input", "palette-list")),
+    Screen(
+        "st-charge",
+        "/charge",
+        (*FRAME_CONTROLS, "molecule", "strip", "map", "link-chip", "unlink", "status"),
+    ),
 )
 
 

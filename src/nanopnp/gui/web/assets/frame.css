@@ -1,0 +1,115 @@
+/* The frame of the workbench: title bar, activity bar, project rail, suite, bottom panel and status bar,
+   in the design's tokens (docs/design/tokens.css). A selector that must beat Quasar's starts at `body`. */
+body .nicegui-content {
+  padding: 0;
+  gap: 0;
+  height: 100vh;
+}
+.frame {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+}
+.frame-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.frame-split {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+.titlebar,
+.statusbar {
+  background: var(--panel);
+  border-color: var(--line);
+  border-style: solid;
+  border-width: 0 0 1px;
+  padding: 0 var(--pad);
+  gap: var(--gap);
+  min-height: calc(var(--row) + var(--gap));
+}
+.statusbar {
+  border-width: 1px 0 0;
+}
+.project-name {
+  font-weight: 600;
+  padding: 0 var(--pad);
+}
+.activitybar {
+  width: 6.5rem;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: var(--gap);
+}
+body .q-btn.suite-button {
+  justify-content: flex-start;
+  width: 100%;
+}
+body .q-btn.suite-button[aria-current="page"],
+body .q-btn.rail-item[aria-current="true"] {
+  background: var(--sel);
+  border: 2px solid var(--accent);
+  font-weight: 600;
+}
+body .q-tab--active {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.rail {
+  width: 100%;
+  padding: var(--pad);
+  min-width: 0;
+  overflow: auto;
+  height: 100%;
+  background: var(--panel);
+}
+.rail-heading {
+  margin-top: var(--pad);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.rail-open {
+  font-weight: 600;
+}
+.muted {
+  color: var(--muted);
+}
+.suite-main {
+  height: 100%;
+  overflow: auto;
+  padding: var(--pad);
+}
+.bottom-panel {
+  height: 100%;
+  overflow: auto;
+  background: var(--panel);
+}
+.palette {
+  min-width: 28rem;
+  background: var(--panel);
+  color: var(--ink);
+}
+body .q-btn {
+  color: var(--ink);
+}
+body .q-tab {
+  color: var(--ink);
+}
+body .q-tab--active {
+  color: var(--accent);
+}
+body .q-field__control {
+  color: var(--ink);
+}
+.suite-tools li {
+  min-height: var(--target-min);
+}
+.later {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}

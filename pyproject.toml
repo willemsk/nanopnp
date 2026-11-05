@@ -185,6 +185,8 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["D100", "D103", "ANN201", "ANN001"]
 "!src/nanopnp/**" = ["D101", "D102", "D103", "D106"]
+# A NiceGUI layout is nested `with` blocks, one container in another.
+"src/nanopnp/gui/web/*" = ["SIM117"]
 # A marimo notebook is cells of bare names and a trailing expression, which is what it displays.
 "notebooks/*" = ["D100", "ANN001", "ANN202", "B018"]
 "docs/user-testing/sessions/*/notebook.py" = ["D100", "ANN001", "ANN202", "B018"]

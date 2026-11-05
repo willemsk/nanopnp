@@ -59,14 +59,17 @@ MODULE = ["-m", "nanopnp.gui.web.server"]
 
 
 def _start(
-    *arguments: str, entry: list[str] = MODULE
+    *arguments: str, entry: list[str] = MODULE, config: Path | None = None
 ) -> tuple[subprocess.Popen[str], re.Match[str]]:
+    # The settings and the last project are the user's, so a test server keeps its own.
+    environment = {**os.environ, **({} if config is None else {"NANOPNP_CONFIG": str(config)})}
     process = subprocess.Popen(
         [sys.executable, *entry, "--no-browser", *arguments],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,
+        env=environment,
     )
     assert process.stdout is not None
     line = process.stdout.readline().strip()
@@ -78,8 +81,11 @@ def _start(
 
 
 @pytest.fixture(scope="module", params=STATES)
-def running(request: pytest.FixtureRequest) -> Iterator[tuple[str, str]]:
-    process, found = _start("--state", request.param, entry=CLI)
+def running(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> Iterator[tuple[str, str]]:
+    config = tmp_path_factory.mktemp(f"config-{request.param}")
+    process, found = _start("--state", request.param, entry=CLI, config=config)
     yield request.param, found.group(1)
     assert process.stdin is not None
     process.stdin.close()

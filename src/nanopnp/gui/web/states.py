@@ -13,6 +13,7 @@ from nanopnp.io.store import Store
 from nanopnp.validation.charged_tube import write_charged_tube, write_dielectric_tube
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from nanopnp.api.project import Project
     from nanopnp.gui.web.link import Link
 
 __all__ = ["STATES", "Workbench", "boot", "boot_case"]
@@ -28,7 +29,7 @@ NO_STRUCTURE_CHARGE = (
 
 @dataclass(frozen=True)
 class Workbench:
-    """What a screen shows: a case walked to its charge, or the reason it was not."""
+    """What a screen shows: a project, or a case walked to its charge, or the reason it was not."""
 
     name: str
     case: Path | None = None
@@ -36,6 +37,7 @@ class Workbench:
     link: Link | None = None
     refusal: str | None = None
     notice: str | None = None
+    project: Project | None = None
 
 
 def boot_case(case: Path, work: Path, *, name: str | None = None) -> Workbench:
