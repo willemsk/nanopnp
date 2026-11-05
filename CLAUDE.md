@@ -133,12 +133,13 @@ sections it cites. A brief never overrides a normative requirement.
 | 0 | `/np-plan project`, `/np-plan phase <n>`, `/np-plan amend <n>` | Puts the decisions to the author; writes the rulings into `specification/history/` and the plan; pushes; opens its PR; pauses for `/compact` |
 | 1 | `/np-plan wp <n>` | Writes and commits the WP plan; pushes; opens the package's PR; pauses for `/compact` |
 | 0–1 | `/np-plan <level> [n] review` | Reviews the plan (`/code-review medium --fix`); fixes it; gates; pushes; gives the summary for approval |
-| 2 | `/np-implement [wp <n>]` | Executes the plan; gates; pushes; opens or reuses the PR; stops |
-| 3–4 | `/np-ship [wp <n>]` | Gates; pushes; reviews (`/code-review xhigh --fix`); drives CI to green |
+| 2 | `/np-implement [wp <n>]` | Executes the plan; gates; pushes; opens or reuses the PR; pauses for `/compact` |
+| 3–4 | `/np-ship [wp <n>]` | Gates; pushes; reviews (`/code-review xhigh --fix`); drives CI to green; prints the tag commands |
 | close | `/np-ship phase <n>` | Ships the close package and tags the release |
 
-Step 2 does not chain into step 3. `/np-ship` starts in a fresh session (`.claude/workflow/core.md`,
-*Report and stop*). The steward skill governs a PR in flight. `/np-gui <render | review | publish | collect | grill>`
+Step 2 pauses for `/compact`; `/np-ship` then runs in that session or a fresh one, and puts to the
+author each finding against a decision the implementing session took (`.claude/workflow/core.md`,
+*Report and stop*). A cloud session cannot push a tag; `/np-ship` prints the commands. The steward skill governs a PR in flight. `/np-gui <render | review | publish | collect | grill>`
 renders screens and mockups headless, reviews them, publishes them for the author's verdicts, and runs
 a design round (§8.4.4).
 

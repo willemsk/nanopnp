@@ -93,6 +93,11 @@ Confirm these yourself:
 Then open or reuse the PR by the core's *PR contract*. A new PR states under **Verification** that the
 review waits for `/np-ship`.
 
-Stop. Report the PR link, the identifiers discharged, the tag that the last commit gets after the merge
+Report the PR link, the identifiers discharged, the tag that the last commit gets after the merge
 (or that it gets none), and that the package is ready for `/np-ship`. Do not start the review or
-monitor CI. A fresh session that did not make these decisions does the review.
+monitor CI in this turn. Then pause (§8.2.33 AI4):
+
+1. Print a prompt in a `text` block. It holds `/compact`, the package, the PR, its head, each decision
+   this session took that the plan does not hold, the values the review needs that the plan and
+   `git log` do not hold, and "resume with `/np-ship wp <n>`".
+2. End the turn. The author compacts and resumes here, or starts `/np-ship` in a fresh session.
