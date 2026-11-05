@@ -2711,3 +2711,33 @@ The charge screen is WP5.02's spike screen, placed in the frame. With no case or
 The second WP5.08 screen review found: the activity bar has text only where the design document says an icon with its name; suite and dialog titles are labels, not headings; the changed diamond is read aloud by a screen reader; the settings' colour inputs carry raw token names with no swatch; the Glossary holds 5 of the document's 22 terms and About is a toast that disappears; and the New, Open, Import and Export dialogs are a free text path with no browse list. The render set shows none of: those dialogs, the File, View and Help menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density, tight spacing, the 3D background settings, a key being captured, or a typed palette query.
 
 **Deferred** to WP5.09 for the icons, headings and the render states, and to WP5.12 for the dialogs, which add a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
+
+## REV-211: The palette opens as a full command list, not a bare input that suggests as you type
+
+The author, marking the frame's palette (`docs/design/reviews/2026-11-05-frame.md`): "This should far more sleek and subtle, not just a list of commands. Default should be just a box to type in, and suggestions should pop up once you start typing." The palette opens as an input over every command with its chord.
+
+**Deferred** to WP5.09, with REV-208. The palette opens as one input and lists no commands until a word is typed. The matches then appear under it, found by title and keyword, one row active and moved by the arrow keys. A command that cannot run is listed disabled with its reason.
+
+## REV-212: The settings need a searchable section list beside the panel, and which settings exist is undecided
+
+The author, marking the frame's settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." The settings are one dialog of stacked sections: theme, density, spacing, the 3D background, the colours and the shortcuts (§8.2.33 AI1; REV-204).
+
+**Open**, a question for the author. The layout is the author's: a section list with a search field on the left and the selected section's panel on the right. The settings themselves, where each is stored (the user, the project) and when each applies, are put to the author in a design round (`/np-gui grill`) before WP5.09's plan. REV-204's guards follow the new layout.
+
+## REV-213: The suites may need to separate those that build models from those that use them
+
+The author, marking the Molecular suite and then the Continuum, Study and Analysis suites with "See Molecular suite comments": "I wonder if we need to make a further distinction in the suites between those that build components (molecular, continuum, physics), those that use components (study, analysis?). I think we need to discuss this further to figure out what I mean." The frame has four suites side by side in the activity bar (WB-02, WB-29). The models are built in Molecular and Continuum (WB-11), and the physics defaults sit in the continuum model (WB-16).
+
+**Open**, a question for the author, put in a design round (`/np-gui grill`) before WP5.09's plan. The round asks whether the distinction is in the activity bar (two groups), in a suite's layout (a builder against a consumer of models), or in a separate *Physics* suite apart from Continuum. A ruling that changes the suites amends WB-02 and WB-29 and §8.1's Phase 5 row.
+
+## REV-214: The changed list is loosely spaced, and the project name reads as a menu
+
+The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?" Each changed value is a row of about 48 px: the path, the value, its default and *Reset*. Then, on the refused state: "Not sure the "refused" marker in the top bar is the best location, looks like a menu item." The word is the fixture project's name (`--state refused` opens a project named `refused`), not a refusal marker. The name sits in the menu row, after *Help*, in the menus' weight, so it reads as a menu.
+
+**Open**, a question for the author. The answer to the question is research for the round: how COMSOL, VS Code and the CAD tools of WB-17 list a changed setting. Candidates are a dense table grouped by model, the mark beside the field alone, and a diff view against the defaults. The round settles the list's density with REV-203's clipping and REV-204's units. The project name moves out of the menu row and takes its own style, the title bar's centre or the rail's head, in WP5.09 (REV-205).
+
+## REV-215: The charge screen needs its design and its function settled together
+
+The author, marking the charge screen: "Looks very poorly integrated. Maybe because we are still in early development phase for the GUI. Also hard to judge without an example molecule.", then: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." The screen is WP5.02's spike, placed in the frame (REV-205, REV-209). The render set's states are a charged and an uncharged tube, with no protein.
+
+**Open**, a question for the author, put in a design round before WP5.11's plan. WP5.11 builds the Charge on the mesh tool. The round works from a structure, 2WCD as in the mockups, rendered through the tool's states. REV-205's colour bar and axes and REV-209's link and dark map are settled in the same tool.

@@ -11,7 +11,10 @@ named values with units, and a sweep warns of what each will rebuild. The window
 project is a plain folder that exports as readable files, and the window has menus, a command palette, shortcuts you can
 change, the changed and problems lists, and your own colour themes. The suites' tools follow.
 
-**Your call.** None open. The colleague who tries the workbench is named by the close.
+**Your call.** Your verdicts on the frame (`docs/design/reviews/2026-11-05-frame.md`) leave four questions for a
+design round before WP5.09's plan: the settings' layout and contents (REV-212); whether the suites that build models
+should stand apart from those that use them (REV-213); the changed list's density and the project name's place
+(REV-214); and the charge screen (REV-215). The colleague who tries the workbench is named by the close.
 
 ## Position
 
