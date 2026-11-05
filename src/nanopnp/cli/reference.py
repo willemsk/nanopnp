@@ -104,6 +104,65 @@ def _cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
+_SECTION_INTRO: dict[str, list[str]] = {
+    "charge": [
+        "Of this section, `ph`, `forcefield` and `titration` drive the `protonation`",
+        "stage, the first half of stage 7 (FR-12, PHY-16 step 3), which runs PDB2PQR",
+        "and PROPKA on every frame of a `structure:` case, and which",
+        "`nanopnp stage protonation` runs alone. `smearing` is read by stage 7's",
+        "deposition, `exclusion_offset_nm` by stage 5 and `dielectric_transition_nm`",
+        "by stage 7. Beside `inputs.pqr` the three protonation keys are refused set",
+        "away from their defaults, naming both. `edits` pins a residue's protonation",
+        "state, changes its charge by an integer on its titratable group, or scales its",
+        "radii (FR-38); the result is a variant kept beside its parent and recorded as",
+        "`charge.protonation.variant_of`, never as a deviation.",
+        "",
+    ],
+    "models": [
+        "A case that names a molecular model, a continuum model or both is a study.",
+        "Each model is a file of its own kind, `nanopnp/molecular-model/v0.6`",
+        "or `nanopnp/continuum-model/v0.6`, holding `schema`, `name` and only the keys",
+        "that kind owns. The molecular model owns `structure`, `charge.ph`,",
+        "`charge.forcefield`, `charge.titration`, `charge.edits` and `inputs.pqr`. The",
+        "continuum model owns `geometry`, `charge.exclusion_offset_nm`,",
+        "`numerics.mesh`, `inputs.mesh`, `inputs.profile`, `physics`, `electrolyte` and",
+        "`boundary_conditions`. Every other key is the study's. The study is merged over",
+        "the molecular model, then the continuum model, and a value it sets in a",
+        "model's keys is an override, recorded beside the model's value in the",
+        "manifest. A relative path is read beside the file that names it. The run",
+        "writes the one complete case it resolved to, which has no `models:` and runs",
+        "as it is; a reader that does not resolve models refuses the block. A sweep",
+        "axis may range over `models.molecular` and `models.continuum`.",
+        "",
+    ],
+    "inputs": [
+        "`inputs.mesh.artefact` names a mesh already in the store by its 64-digit",
+        "hash, the stage-6 artefact of an earlier run; the hash must be in the store,",
+        "and `format` and `groups` beside it are refused. A stored mesh beside",
+        "`structure:` is refused. `artefact:` on `inputs.charge` and `inputs.eps_r`",
+        "is refused.",
+        "",
+    ],
+    "structure": [
+        "This section drives stage 1, structure ingestion and alignment (FR-01 to",
+        "FR-03). A case carrying it walks every stage: stages 1 to 4 derive a pore",
+        "profile, and stages 5 and 6 assemble and mesh it.",
+        "",
+    ],
+    "geometry": [
+        "Of this section, `geometry.density` drives stages 2 and 3, the density map",
+        "and its reduction to (r, z) (FR-04 to FR-06); its `atoms` key smears the",
+        "protonated atoms of stage 7 by default, or the atoms as loaded.",
+        "`geometry.contour` drives stage 4, the pore wall's contour and its gate",
+        "(FR-07, FR-08), on a case",
+        "carrying `structure:`. The membrane and reservoir keys are read by stage 5,",
+        "CAD assembly (FR-09); the analyte on a generated mesh is refused naming FR-21.",
+        "Beside `inputs.mesh` the section is refused, naming both.",
+        "",
+    ],
+}
+
+
 def render_case_reference() -> str:
     """Return the case-file reference: every editable field of the case schema."""
     lines = [
@@ -148,66 +207,7 @@ def render_case_reference() -> str:
 
     for head, rows in sections.items():
         lines += [f"## `{head}`" if head != "document" else "## Top level", ""]
-        if head == "charge":
-            lines += [
-                "Of this section, `ph`, `forcefield` and `titration` drive the `protonation`",
-                "stage, the first half of stage 7 (FR-12, PHY-16 step 3), which runs PDB2PQR",
-                "and PROPKA on every frame of a `structure:` case, and which",
-                "`nanopnp stage protonation` runs alone. `smearing` is read by stage 7's",
-                "deposition, `exclusion_offset_nm` by stage 5 and `dielectric_transition_nm`",
-                "by stage 7. Beside `inputs.pqr` the three protonation keys are refused set",
-                "away from their defaults, naming both. `edits` pins a residue's protonation",
-                "state, changes its charge by an integer on its titratable group, or scales its",
-                "radii (FR-38); the result is a variant kept beside its parent and recorded as",
-                "`charge.protonation.variant_of`, never as a deviation.",
-                "",
-            ]
-        elif head == "models":
-            lines += [
-                "A case that names a molecular model, a continuum model or both is a study.",
-                "Each model is a file of its own kind, `nanopnp/molecular-model/v0.6`",
-                "or `nanopnp/continuum-model/v0.6`, holding `schema`, `name` and only the keys",
-                "that kind owns. The molecular model owns `structure`, `charge.ph`,",
-                "`charge.forcefield`, `charge.titration`, `charge.edits` and `inputs.pqr`. The",
-                "continuum model owns `geometry`, `charge.exclusion_offset_nm`,",
-                "`numerics.mesh`, `inputs.mesh`, `inputs.profile`, `physics`, `electrolyte` and",
-                "`boundary_conditions`. Every other key is the study's. The study is merged over",
-                "the molecular model, then the continuum model, and a value it sets in a",
-                "model's keys is an override, recorded beside the model's value in the",
-                "manifest. A relative path is read beside the file that names it. The run",
-                "writes the one complete case it resolved to, which has no `models:` and runs",
-                "as it is; a reader that does not resolve models refuses the block. A sweep",
-                "axis may range over `models.molecular` and `models.continuum`.",
-                "",
-            ]
-        elif head == "inputs":
-            lines += [
-                "`inputs.mesh.artefact` names a mesh already in the store by its 64-digit",
-                "hash, the stage-6 artefact of an earlier run; the hash must be in the store,",
-                "and `format` and `groups` beside it are refused. A stored mesh beside",
-                "`structure:` is refused. `artefact:` on `inputs.charge` and `inputs.eps_r`",
-                "is refused.",
-                "",
-            ]
-        elif head == "structure":
-            lines += [
-                "This section drives stage 1, structure ingestion and alignment (FR-01 to",
-                "FR-03). A case carrying it walks every stage: stages 1 to 4 derive a pore",
-                "profile, and stages 5 and 6 assemble and mesh it.",
-                "",
-            ]
-        elif head == "geometry":
-            lines += [
-                "Of this section, `geometry.density` drives stages 2 and 3, the density map",
-                "and its reduction to (r, z) (FR-04 to FR-06); its `atoms` key smears the",
-                "protonated atoms of stage 7 by default, or the atoms as loaded.",
-                "`geometry.contour` drives stage 4, the pore wall's contour and its gate",
-                "(FR-07, FR-08), on a case",
-                "carrying `structure:`. The membrane and reservoir keys are read by stage 5,",
-                "CAD assembly (FR-09); the analyte on a generated mesh is refused naming FR-21.",
-                "Beside `inputs.mesh` the section is refused, naming both.",
-                "",
-            ]
+        lines += _SECTION_INTRO.get(head, [])
         lines += [
             "| Path | Type | Default | Accepts | Validated default |",
             "|---|---|---|---|---|",
