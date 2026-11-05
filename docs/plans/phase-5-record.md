@@ -249,3 +249,19 @@ every output whose need it meets (AH1). WP5.06's entry read:
 > routes keep their cross-check (FR-23, QR-04). Before the Study suite offers outputs (T4). Tag `v0.6.0-alpha.6`.
 
 Verification's WP5.06 row read: MOD-09; FR-23 and QR-04's route cross-check unchanged.
+
+## Amended 5 November 2026 (§8.2.33 AI1)
+
+At WP5.08's plan the author ruled that the settings offer a theme selector and a colour modifier, a user's theme setting
+its own contrast (AI1). WP5.08's entry read:
+
+> **WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13)**
+>
+> Library step first: the project folder of `docs/design/workbench.md` (*The project folder*), its project file holding no
+> physics, its export as readable files, and the store's entries of an older schema listed and removed on request
+> (REV-32); `deviations` and `SolveReporting` join the stage protocol as optional members (REV-52), so the changed count and
+> the queue read every stage. Then the frame in NiceGUI: the title bar with the menus, the command palette, the shortcuts
+> and the changed count with its list (FR-34); the activity bar of the four suites; the project rail; the bottom panel
+> with the run queue and the log; the problems list (FR-35); the theme, the density and the user's settings (WB-18,
+> WB-19, WB-30, WB-31). `nanopnp gui [<project>]` opens a project, and `cli/__init__.py` is split as it changes (MOD-13's
+> command-line part). Q01 to Q08 move here. VER-78 gains the frame's states. Tag `v0.6.0-alpha.8`.

@@ -244,7 +244,7 @@ cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
 | **QR-13** | The ePNP-NS weak forms SHALL be expressed once and SHALL NOT be duplicated per backend. Until a second backend is planned they are expressed against NGSolve directly, and the subpackages that import NGSolve or Netgen SHALL stay within a recorded set, which may shrink and grows only by the author's ruling (§5.4.1 NOTE; §8.2.8 H3). | Maintainability |
 | **QR-14** | Adding a correction parameterisation SHALL require only a data file; adding a physics model SHALL require only one class (FR-20); adding a mesher, a linear solver or a stabilisation mode SHALL require only a registration, with no file of the package edited (§5.5; §8.2.8 H7). | Maintainability |
 | **QR-15** | v0.7 (Phase 6; §8.2.5 E2, §8.2.6 F1) SHALL ship user documentation, tutorials, a JOSS submission and a DOI-archived release. | Maintainability |
-| **QR-16** | The workbench SHALL meet WCAG 2.2 AA in both its themes, the contrast of controls, focus rings and colour bars included, and SHALL be operable by keyboard alone, every action on a canvas having a keyboard path (WB-19, WB-24). | Usability |
+| **QR-16** | The workbench SHALL meet WCAG 2.2 AA in its shipped light and dark themes, the contrast of controls, focus rings and colour bars included, a theme a user makes setting its own contrast, and SHALL be operable by keyboard alone, every action on a canvas having a keyboard path (WB-19, WB-24; §8.2.33 AI1). | Usability |
 
 NOTE (QR-12, the remedy; §8.2.21 W5): a diagnostic that names a remedy SHALL name a setting the
 run reads. The wall-distance gate of NUM-34 names `numerics.mesh.wall_h_nm` for a mesh stage 6
