@@ -59,6 +59,9 @@ EXIT_CODES: Final[dict[str, int]] = {
     "nanopnp.core.stages:MissingExtraError": EXIT_CASE,
     "nanopnp.io.case_paths:UnknownCasePathError": EXIT_CASE,
     "nanopnp.sweep.plan:SweepPlanError": EXIT_CASE,
+    # the project folder or the file named is wrong; a retry fails identically
+    "nanopnp.api.project:ProjectError": EXIT_CASE,
+    "nanopnp.io.project:ProjectFormatError": EXIT_CASE,
     # the path is as wrong on a retry, and a job array retries "unexpected"
     "builtins:FileNotFoundError": EXIT_CASE,
     # 3 not 4: the fix is the run directory as written, or a re-run, as for a file the case named

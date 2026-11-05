@@ -10,6 +10,7 @@ from nanopnp.core.public import PUBLIC, __version__
 if TYPE_CHECKING:  # pragma: no cover - annotations only; resolved lazily below
     # ``X as X`` marks a re-export; the type checker cannot read ``__all__`` through ``PUBLIC``.
     from nanopnp.api.case import Case as Case
+    from nanopnp.api.project import Project as Project
     from nanopnp.api.session import Session as Session
     from nanopnp.api.sweep import SweepResult as SweepResult
     from nanopnp.core.stages import ArtefactHook as ArtefactHook

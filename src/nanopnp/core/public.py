@@ -12,6 +12,7 @@ except PackageNotFoundError:  # pragma: no cover - only when running from a bare
 PUBLIC: dict[str, str] = {
     "Case": "nanopnp.api.case",
     "Session": "nanopnp.api.session",
+    "Project": "nanopnp.api.project",
     "RunResult": "nanopnp.pipeline.run",
     "SweepResult": "nanopnp.api.sweep",
     "Artefact": "nanopnp.io.artefact",

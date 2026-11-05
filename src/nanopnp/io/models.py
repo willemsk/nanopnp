@@ -514,6 +514,16 @@ def _read_model_file(
     return ModelFile(kind, name, path, file_hash(path)), _rebased(body, path.parent)
 
 
+def check_model_file(kind: Literal["molecular", "continuum"], path: str | Path) -> ModelFile:
+    """Read a model file as a study would, refusing it as a study does; return its record."""
+    return _read_model_file(kind, Path(path), str(path))[0]
+
+
+def leaves(mapping: Mapping[str, Any]) -> Iterator[tuple[str, Any]]:
+    """Yield each dotted leaf of a case or model mapping, with its value; blocks are descended."""
+    return _flat(mapping)
+
+
 def _leaves(mapping: Mapping[str, Any], path: str) -> Iterator[str]:
     return (here for here, _ in _flat(mapping, path))
 
