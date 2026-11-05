@@ -1,15 +1,15 @@
 # Current work
 
-Updated 5 November 2026 (WP5.08 planned). Navigation only;
+Updated 5 November 2026 (WP5.08 delivered). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
-Phase 4 is released, and the workbench's technology is chosen. Phase 5's five library steps are merged: the pore's
-shape follows the protein's charge state; a residue's charge or size can change; a case names and reuses its models;
-the reported quantities and the crowding models are lists that grow; and a case defines named values with units, and a
-sweep warns of what each will rebuild. Next, planned: the window's frame and the project folder, a plain folder that
-exports as readable files, with settings that take your own colour themes.
+Phase 4 is released, and the workbench's technology is chosen. Phase 5's library steps are merged: the pore follows the
+protein's charge state; a residue's charge or size can change; a case names and reuses its models; and a case defines
+named values with units, and a sweep warns of what each will rebuild. The window now has its frame and its document: a
+project is a plain folder that exports as readable files, and the window has menus, a command palette, shortcuts you can
+change, the changed and problems lists, and your own colour themes. The suites' tools follow.
 
 **Your call.** None open. The colleague who tries the workbench is named by the close.
 
@@ -18,7 +18,7 @@ exports as readable files, with settings that take your own colour themes.
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.07 are merged
   (`v0.6.0-alpha.7`). Shell WP5.08 to WP5.13, close WP5.14 (§8.2.31). **WP5.08** ([the frame and the project folder](wp5.08-the-frame-and-the-project-folder.md)) is
-  planned and its PR is open; next `/np-implement wp 5.08`. host: claude-code.
+  delivered, its PR open; next `/np-ship wp 5.08`, then WP5.09. host: claude-code.
 
 ## Not to be re-decided
 

@@ -1,6 +1,6 @@
 # WP5.08 — The frame and the project folder
 
-**Status: planned, not started.** Planned 5 November 2026 on `main` (`1e4497e`). It inherits §8.2.17 S11, S12,
+**Status: delivered, 5 November 2026.** Planned 5 November 2026 on `main` (`1e4497e`). It inherits §8.2.17 S11, S12,
 §8.2.18 T2, T8, §8.2.31 AG1, §8.2.33 AI1 and AI9 to AI14, REV-32, REV-52 and MOD-13's command-line part.
 
 It belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs; an identifier points to a clause.
@@ -202,9 +202,23 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
   > `--canvas-3d` token, which `bridge.js` hands Mol*, and the setting points the token at near-black, the theme or white.
   > A user theme sets colours over its base on `:root[data-user-theme]`; none is contrast-checked.
 - [x] 11. Compaction checkpoint. **Executor:** main.
-- [ ] 12. `/np-gui render shell` and `/np-gui review`; fix what they find. Done when the review says so. **Executor:** main.
-- [ ] 13. `CHANGELOG.md` (`nanopnp gui` takes a project, not a case); the brief's amendments; Outcome notes. Done when the strict documentation build passes. **Executor:** main.
-- [ ] 14. `.claude/hooks/gate.sh run`: VER-62's walks unmoved. **Executor:** main.
+- [x] dd4638b 12. `/np-gui render shell` and `/np-gui review`; fix what they find. Done when the review says so. **Executor:** main.
+  > **Outcome — the review found 17 things and 8 doubts; 9 are fixed, the rest are `REV-202` to `REV-205`.** The render had no
+  > page error, contrast, non-text or target finding; 16 shots left the inactive tab labels unmeasured (opacity), now solid.
+  > Fixed: the refusal says the value entered and the remedy, with a project-relative path, in the refused colour with its
+  > word; a study refused for its model's file is listed once; the empty rail offers New and Open; the palette has a label,
+  > aligned chords, no self-entry, a no-match line and no run on Enter with nothing typed; a key button has an accessible
+  > name and Escape cancels the capture; Duplicate is off under *Follow the system*; "✓ No problems" replaces "✕ 0 problems";
+  > the changed diamond takes `--changed`; the activity bar no longer jumps. Answered: F8, a user's theme sets its own
+  > contrast (AI1). Open: the problem row's field (REV-202), the frame's accessibility and layout limits (REV-203), the
+  > settings' guards and units (REV-204), the Study page and the charge screen (REV-205).
+- [x] f8e81f8 13. `CHANGELOG.md` (`nanopnp gui` takes a project, not a case); the brief's amendments; Outcome notes. Done when the strict documentation build passes. **Executor:** main.
+  > **Outcome — what the plan did not say.** D7's `<name>-2` rule is built as written. A run's `results/` is copied from the
+  > files `run.json` names. `API_SECTIONS` gained "Projects", and `_SECTION_INTRO` was extracted to keep `_inspect` at exactly
+  > 100 lines. `nanopnp gui <project>` walks nothing, so a user's project has an empty charge screen until WP5.11. The
+  > `refused` state is a continuum model with `bias_V: fast`. MOD-13's command-line part has no `REV` row; it is recorded here and
+  > in the changelog.
+- [x] 14. `.claude/hooks/gate.sh run`: VER-62's walks unmoved. **Executor:** main.
 
 ### Verification
 
