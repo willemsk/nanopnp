@@ -169,14 +169,14 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
 
 ### Work items
 
-- [ ] 1. `io/project.py`; `io/store.py` (`runs`, `upto`, `stale`, `remove`); `pipeline/run.py:run_document`'s call
+- [x] cd92596 1. `io/project.py`; `io/store.py` (`runs`, `upto`, `stale`, `remove`); `pipeline/run.py:run_document`'s call
   (D1, D4). Done when rows 5 and 6 pass. **Executor:** main.
-- [ ] 2. `core/stages.py:ContributesDeviations`; `pipeline/run.py:_contributed`;
+- [x] 92f4da2 2. `core/stages.py:ContributesDeviations`; `pipeline/run.py:_contributed`;
   `validation/modularity.py:stage_conformance` reads the three optional members (D4). Done when row 4 passes.
   **Executor:** main.
-- [ ] 3. `api/project.py`, `io/defaults.py:changes`, `core/errors.py`, `nanopnp/__init__.py` (D1 to D3, D7). Done when rows
+- [x] eb0d25d 3. `api/project.py`, `io/defaults.py:changes`, `core/errors.py`, `nanopnp/__init__.py` (D1 to D3, D7). Done when rows
   1 to 3 pass. **Executor:** main.
-- [ ] 4. Compaction checkpoint. **Executor:** main.
+- [x] 4. Compaction checkpoint. **Executor:** main.
 - [ ] 5. The `cli/` split (D5). Done when `test_cli.py`, `test_sweep_cli.py` and `test_layering.py` pass and the review
   finds the bounds held. **Executor:** `general-purpose` on Sonnet.
 - [ ] 6. `cli/workbench.py`: `gui [<project>]`, `project new|import|export`, `store prune [--remove]`, `--env`'s
