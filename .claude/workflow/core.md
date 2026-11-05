@@ -98,6 +98,33 @@ At most 250 words, no backticks or identifiers; for a reader who does not code.
 **Your call.** Each decision the author owns, as a question, with *Recommendation:* and one reason.
 ```
 
+## Putting a choice to the author
+
+Every choice the workflow puts to the author carries what a reader who does not code needs to judge
+its impact: a ruling round, a work-package decision, a disputed review finding (§8.2.33 AI7). The
+question dialog may be all the author sees, so the context lives in it, not in the chat.
+
+- **The question** says, in the reader's words, what is decided, what happens today, and why it is
+  open: what the specification, the phase or the design leaves undecided. An identifier only follows
+  its words, in brackets.
+- **Each option's description**, one or two sentences: what the user will see or do differently.
+- **Each option's preview**, short lines in Markdown:
+  - **You get:** the change for the user, with a concrete example: a command, a screen, a file;
+  - **It costs:** time in days, and what it adds, delays or leaves out;
+  - **Undo:** easy (a setting, or one later package), costly (a re-plan or a migration) or one-way
+    (a file format users write, deleted data, a published release);
+  - **It touches:** the later packages, other users and the clauses it moves, in words;
+  - for the recommended option, **Why:** the one reason, and **It would change if:** what would make
+    another option better.
+  A layout or a screen gets a small text sketch in the preview.
+- **At most three questions in a call**, the ones that change others first. Before the first call,
+  the chat gets a short brief of the round: what is decided, what is settled already, and what each
+  answer feeds.
+- **When the author asks for more,** with a question back, a free answer that picks nothing, or
+  "explain": give what was asked (an example, a sketch, the cost, what comparable tools do), then ask
+  again. Never record a ruling the author did not make. If the context asked for is of a kind this
+  list lacks, add it here in the same commit, so the next round gives it unprompted.
+
 ## Gate and push
 
 1. `git status` is clean.

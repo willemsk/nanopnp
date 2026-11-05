@@ -30,8 +30,9 @@ before the level's own next step. After the level's report:
    review wrote no report, write `docs/code_reviews/CODE_REVIEW_NNN.md` in the shape of the latest one,
    with NNN one above the highest present.
 3. **The fixes.**
-   - A fix keeps every ruling of the author. A finding that would change one goes to the author
-     through `AskUserQuestion`, as `rulings.md` says, before the commit; the ruling is recorded there.
+   - A fix keeps every ruling of the author. A finding that would change one goes to the author as
+     the core's *Putting a choice to the author* says, before the commit; the ruling is recorded as
+     `rulings.md` says.
    - A finding not fixed is a `REV-nn` row with its section (`CLAUDE.md`, *Open items*), or one of the
      plan's open questions if it blocks the implementation.
    - A fix that changes specified behaviour amends the specification in the same commit (the core's
@@ -56,8 +57,8 @@ is. About 1,000 words; never drop a decision, ruling or risk to meet the count.
 2. **What you get.** What the reader will be able to do or will notice when the work lands.
 3. **What it builds on.** What must be in place first, and what the plan satisfies or closes, in words,
    with the identifier in brackets.
-4. **The decisions.** One short paragraph each, in plain words: what was chosen and why. Mark in bold
-   each one that changes what an existing user sees.
+4. **The decisions.** One short paragraph each, in plain words: what was chosen and why, and whether
+   you ruled it or the plan decided it. Mark in bold each one that changes what an existing user sees.
 5. **The rulings and the specification.** Each ruling taken in this round, in the author's terms, and
    each clause the plan amends.
 6. **What the checks changed.** What reading the code and the review moved in the plan, one line each.

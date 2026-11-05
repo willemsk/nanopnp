@@ -174,7 +174,10 @@ v0.5 Phase 4 (polish and user testing), v0.6 Phase 5 (the graphical interface) a
   publishes a GitHub Release, whose notes are that version's section of
   [`CHANGELOG.md`](CHANGELOG.md). The workflow refuses a milestone whose `CITATION.cff` names a
   different version.
-- Tags are annotated: `git tag -a v0.2.0 -m "…"`, then `git push origin v0.2.0`.
+- Tags are annotated: `git tag -a v0.2.0 -m "…"`, then `git push origin v0.2.0`. Or dispatch
+  `.github/workflows/tag.yml` with the tag and the merge commit: it checks them and the changelog
+  section, pushes the tag and starts the release with the full matrix, as a tag push would. A cloud
+  session cannot push a tag itself, so `/np-ship` uses it.
 
 A shallow clone (`--depth 1`, or a hosted session that clones shallow) has no tag in reach and
 installs under a meaningless development version. `git fetch --unshallow --tags` puts that right,

@@ -17,8 +17,9 @@ here once.
 * A version is a git tag, never a number in `pyproject.toml` or in the package. The procedure is
   `CONTRIBUTING.md`, *Versions and releases*. (§2.7; §8.2.4 D1)
 * Each merged work package takes `vX.Y.Z-alpha.N` on its last commit on `main`. The session pushes the
-  tag if its GitHub access allows it; a cloud session's does not. `/np-ship` ends with the full
-  commands either way. (§8.2.33 AI5)
+  tag if its GitHub access allows it; a cloud session's does not, so after the merge `/np-ship`
+  dispatches `.github/workflows/tag.yml`, which pushes the tag and starts the release with the full
+  matrix. `/np-ship` ends with the full commands either way. (§8.2.33 AI5, AI8)
   From Phase 5, N is the package's number within its phase: WP5.02 takes `v0.6.0-alpha.2`. (§8.2.7
   G11; §8.2.17 S19)
 * A phase's close package takes the release tag alone, with no alpha tag on the same commit; Phase 4's
@@ -115,6 +116,12 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   compaction. `/np-plan <level> [n] review` then reviews the plan with `/code-review medium --fix`, fixes
   or records each finding, gates and pushes again, and ends with a summary for the person who approves
   the plan, written for a reader who does not code. (§8.2.33 AI2, AI3; `.claude/skills/np-plan/review.md`)
+* A choice put to the author carries what a reader who does not code needs to judge it: what is
+  decided and why it is open, and for each option what the user gets, what it costs, how hard it is
+  to undo and what it touches, with the recommendation's reason and what would change it. A
+  work-package plan puts to the author each decision that changes what a user sees or does, fills a
+  gap in the design or the phase entry, moves the package's scope, deletes or moves a user's data, or
+  trades time against quality. (§8.2.33 AI6, AI7; `.claude/workflow/core.md`)
 * A compaction checkpoint is a work item. The session ticks it, gates and pushes, prints a `/compact`
   prompt that names the next item and the values it needs, and ends its turn. (§8.2.11 L7; §8.2.16 R11)
 * A phase plan states each package's current scope. The text of each amendment goes to the phase's

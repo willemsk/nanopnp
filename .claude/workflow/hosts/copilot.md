@@ -21,7 +21,8 @@ the only form Copilot reads. Open probes: REV-166 to REV-168.
 ## Questions
 
 Use `ask_user`, one question per call, and at most four calls in a row. Put the recommended option
-first and mark it *(Recommended)*. Put each option's consequence in the question. Copilot always
+first and mark it *(Recommended)*. `ask_user` has no preview, so put each option's lines of the core's
+*Putting a choice to the author* (you get, it costs, undo, it touches) in the question. Copilot always
 offers a free answer, so add no "Other". Never ask in plain text.
 
 ## Agents and models
