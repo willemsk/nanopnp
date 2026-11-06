@@ -20,8 +20,8 @@ four weeks more. The physics model's plan is written.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.08 are merged
   (`v0.6.0-alpha.8`). Amended 5 November 2026 (§8.2.34): WP5.09 the physics model, WP5.10 the frame, WP5.11 to
   WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. Reviewed (CODE_REVIEW_034). **WP5.09**
-  ([plan](wp5.09-the-physics-model.md)) planned 6 November 2026 (§8.2.35). Next
-  `/np-plan wp 5.09 review`, then `/np-implement wp 5.09`. host: claude-code.
+  ([plan](wp5.09-the-physics-model.md)) planned 6 November 2026 (§8.2.35), reviewed
+  (CODE_REVIEW_035). Next `/np-implement wp 5.09`. host: claude-code.
 
 ## Not to be re-decided
 
