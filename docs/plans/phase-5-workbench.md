@@ -4,7 +4,7 @@
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 to WP5.17 ruled the same day (§8.2.34 AJ1 to AJ10). Release: **v0.6** (`v0.6.0`).
+AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 to WP5.17 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3). Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -214,12 +214,13 @@ table of §5.3.1's `models:` NOTE gives it `physics` (the registered model, its 
 `electrolyte`, `boundary_conditions`, `numerics.elements` and `numerics.stabilisation`, and leaves the continuum model the
 geometry, the region and the mesh; the study keeps the Newton, continuation and linear-solver settings (AJ3). AJ3 places
 neither `numerics.wall_distance`, the wall-distance field the corrections read, nor the coupling of `numerics.mesh`'s
-`wall_h_nm: auto` to the electrolyte's Debye length, which makes a continuum model's mesh follow the physics model's
-concentration unless `wall_for_concentration_M` pins it; the package's plan puts both to the author. A case
+`wall_h_nm: auto` to the electrolyte's Debye length; the author ruled both at the package's plan: the physics model
+owns the wall-distance field, and a continuum model's mesh follows the paired physics model's concentration unless
+`wall_for_concentration_M` pins it (§8.2.35 AK1, AK2). A case
 imports split into three models and a study, a project gains `models/physics/`, a sweep may range over
 `models.physics`, and the manifest records the physics model (FR-32, FR-39; §5.3.2, §5.3.3). Every model declares the
-values it exposes, each with its name, case path, unit, range and default (AJ5); where the declaration lives, the model
-file or a default list per kind, is the package's decision. A study resolves to the case it resolved to before: VER-62's
+values it exposes, each with its name, case path, unit, range and default (AJ5): a default list per kind, which a model
+file's `exposes:` replaces (AK3). A study resolves to the case it resolved to before: VER-62's
 keys unmoved, and a case naming no model unchanged. Tag `v0.6.0-alpha.9`.
 
 ### WP5.10 — The frame on Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)
@@ -310,8 +311,8 @@ and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 | 8 | Who observes QR-10 | **Author**, by the close (S24) |
 | 9 | The frame's components, the suites that build and use models, the physics model and its exposed values, `impeccable`'s role, the changed list, the design loop, the settings and the sequence (REV-211 to REV-215) | **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to AJ10) |
 | 10 | Which settings exist beyond the four sections, compute and network among them | **Author**, at WP5.10's plan, from its survey of comparable tools (AJ9) |
-| 11 | Where a model's exposed values are declared: the model file, or a default list per kind | **WP5.09's plan** (AJ5) |
-| 12 | Which model owns `numerics.wall_distance`, and how a continuum model's Debye-sized wall mesh reads the physics model's concentration, or pins its own (`wall_for_concentration_M`) | **Author**, at WP5.09's plan (AJ3 places neither) |
+| 11 | Where a model's exposed values are declared: the model file, or a default list per kind | **Settled by the author, 6 November 2026** (§8.2.35 AK3): a default list per kind, which a model file may replace |
+| 12 | Which model owns `numerics.wall_distance`, and how a continuum model's Debye-sized wall mesh reads the physics model's concentration, or pins its own (`wall_for_concentration_M`) | **Settled by the author, 6 November 2026** (§8.2.35 AK1, AK2): the physics model; the mesh follows the paired salt unless pinned |
 
 ## What the author supplies
 

@@ -1,6 +1,6 @@
 # Current work
 
-Updated 5 November 2026 (Phase 5 amended after the frame's verdicts). Navigation only;
+Updated 6 November 2026 (WP5.09 planned). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
@@ -10,16 +10,18 @@ menus, a palette, shortcuts, the changed and problems lists, and your own colour
 the phase was re-planned. The physics (equations, salt, voltages) becomes a reusable model with its own suite, so three
 suites build models and two use them, and each model shows the few values others change. The frame is rebuilt on
 ready-made parts. Each suite is designed on a working prototype with a real pore before it is built. About three to
-four weeks more.
+four weeks more. The physics model's plan is written.
 
-**Your call.** Approve the amended plan; which further settings exist is yours at the frame's plan.
+**Your call.** Approve the physics model's plan after its review.
 
 ## Position
 
 - Phases 1 to 4 are **closed** as `v0.2.0`, `v0.3.0` (§8.2.4 D7), `v0.4.0` and `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, is **in progress**: WP5.01 to WP5.08 are merged
   (`v0.6.0-alpha.8`). Amended 5 November 2026 (§8.2.34): WP5.09 the physics model, WP5.10 the frame, WP5.11 to
-  WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. Reviewed (CODE_REVIEW_034). Next `/np-plan wp 5.09`. host: claude-code.
+  WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. Reviewed (CODE_REVIEW_034). **WP5.09**
+  ([plan](wp5.09-the-physics-model.md)) planned 6 November 2026 (§8.2.35). Next
+  `/np-plan wp 5.09 review`, then `/np-implement wp 5.09`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -59,7 +61,7 @@ four weeks more.
 | The specification | `SPECIFICATION.md`, then the file it maps; `specification/history/index.md` |
 | The phase's amendments | `phase-5-record.md` |
 | The workflow | `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5 |
-| WP5.09 | its phase entry; FR-32, FR-39; §5.3.1's NOTE on `models:`, §5.3.2, §5.3.3; `io/models.py`'s ownership table; VER-62; §8.2.34 AJ2, AJ3, AJ5 |
+| WP5.09 | [its plan](wp5.09-the-physics-model.md); FR-32, FR-39; §5.3.1's NOTEs on `models:` and the project; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to AK3 |
 | The workbench | `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30, §8.2.31, §8.2.34; `docs/design/reviews/2026-11-05-frame.md` |
 
 ## Handoff Rules

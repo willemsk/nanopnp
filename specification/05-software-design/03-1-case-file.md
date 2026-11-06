@@ -225,23 +225,38 @@ a structure is unknown). `artefact:` on `inputs.charge` or `inputs.eps_r` SHALL 
 unsupported section when the case is resolved, naming the key: no release schedules the store form of
 the two fields (WP40).
 
-NOTE (`models:`, FR-39, FR-32, IF-03; WP5.05; §8.2.31 AG12, AG13): the optional top-level `models:`
-block, `{molecular: <path>, continuum: <path>}` with at least one of the two, names a case's
-**molecular model** and **continuum model**, each a YAML file of its own schema,
-`nanopnp/molecular-model/v0.6` or `nanopnp/continuum-model/v0.6`. A case that names a model is a
-**study**. A model file holds `schema`, `name` and only the keys its kind owns; it names no model; a
-file with another `schema`, no `name`, a `models:` key or a key of the other kind SHALL be refused,
-naming the file and the key. Ownership is one table, and the longest dotted prefix decides; every
-path with no row is the study's. The molecular model owns `structure`, `charge.ph`,
-`charge.forcefield`, `charge.titration`, `charge.edits` and `inputs.pqr`. The continuum model owns
-`geometry`, `charge.exclusion_offset_nm`, `numerics.mesh`, `inputs.mesh`, `inputs.profile`, `physics`,
-`electrolyte` and `boundary_conditions`, so the bias and the walls are the continuum model's
-defaults, which a study overrides for a sweep or a ramp (WB-16). The study owns the rest: `schema`,
-`name`, `outputs`, `models`, `charge.smearing`, `charge.dielectric_transition_nm`, `inputs.charge`,
-`inputs.eps_r` and every `numerics` key other than `numerics.mesh`.
+NOTE (`models:`, FR-39, FR-32, IF-03; WP5.05, WP5.09; §8.2.31 AG12, AG13; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to
+AK3): the optional top-level `models:` block, `{molecular: <path>, continuum: <path>, physics: <path>}` with at least
+one of the three, names a case's **molecular model**, **continuum model** and **physics model**, each a YAML file of
+its own schema, `nanopnp/molecular-model/v0.6`, `nanopnp/continuum-model/v0.6` or `nanopnp/physics-model/v0.6`. A case
+that names a model is a **study**. A model file holds `schema`, `name`, an optional `exposes:` list and only the keys
+its kind owns; it names no model; a file with another `schema`, no `name`, a `models:` key or a key of another kind
+SHALL be refused, naming the file, the key and the kind that owns it. Ownership is one table, and the longest dotted
+prefix decides; every path with no row is the study's. The molecular model owns `structure`, `charge.ph`,
+`charge.forcefield`, `charge.titration`, `charge.edits` and `inputs.pqr`. The continuum model owns `geometry`,
+`charge.exclusion_offset_nm`, `numerics.mesh`, `inputs.mesh` and `inputs.profile`. The physics model owns `physics`
+(the registered model, its switches and the solid permittivities), `electrolyte`, `boundary_conditions`,
+`numerics.elements`, `numerics.stabilisation` and `numerics.wall_distance`, the PHY-02 field the wall corrections
+read, so the bias and the walls are the physics model's defaults, which a study overrides for a sweep or a ramp
+(WB-16). The study owns the rest: `schema`, `name`, `outputs`, `models`, `charge.smearing`,
+`charge.dielectric_transition_nm`, `inputs.charge`, `inputs.eps_r` and the Newton, continuation and linear-solver
+settings (`numerics.nonlinear`, `numerics.continuation`, `numerics.linear`). `numerics.mesh.wall_h_nm: auto` reads the
+resolved case's electrolyte, so a continuum model's wall size follows the salt of the physics model its study pairs it
+with, as a case written inline does; `numerics.mesh.wall_for_concentration_M`, a continuum key, pins it.
+
+A model's **exposed values** are the few its study lists first and sweeps directly (WB-35). Each kind has a default
+list: `concentration` (`electrolyte.concentration_M`) and `bias` (`boundary_conditions.bias_V`) on a physics model,
+`pH` (`charge.ph`) on a molecular model, `size_scale` (`numerics.mesh.size_scale`) on a continuum model. A model
+file's `exposes:`, a list of `{name, path, range}` with `range: [low, high]` optional, replaces its kind's list. An
+entry's unit is its field's (the `variables:` NOTE's suffixes), its range the declared one, else the field's schema
+bounds, and its default the model's own value at the path, else the schema's default. An entry SHALL be refused,
+naming the file and the entry, when its name repeats or does not match `[A-Za-z][A-Za-z0-9_]*`, when its path is not
+a numeric field of the case or is owned by another kind, when its range is not two finite numbers in increasing
+order, or when the model's own value lies outside it. A range guides the suites and the sweep and refuses no study's
+override. `exposes:` keys nothing: it is left out of the merge, so no artefact or stage key reads it.
 A relative path in a model file is read beside that file, and one in `models:` beside the case.
 
-The case resolves by merging the study over the molecular model, then the continuum model: a
+The case resolves by merging the study over the molecular model, then the continuum model, then the physics model: a
 mapping merges key by key, and a list or a free mapping replaces whole. The result validates once as
 a case. The models and the study's own keys, taken without the study's values in a named model's
 keys (the *view*), SHALL validate alone as well, or the model is refused naming its file: a model
@@ -252,15 +267,14 @@ A value the study sets in a named model's keys that differs from the model's is 
 override is a leaf, the deepest path at which both sides are blocks; a value equal to the model's is
 none. The resolved case recomputes its overrides on every substitution, so they survive an edit and a
 sweep, and `Case.overrides` maps each path to the model's value and the study's. A substitution of
-`models.molecular` or `models.continuum` swaps a model the study names; one that names a model the
+`models.molecular`, `models.continuum` or `models.physics` swaps a model the study names; one that names a model the
 study does not name, or drops one, SHALL be refused, since the study's document holds a value, its
 default included, for every key of a model it does not name, and each would override the new model.
 A substitution that gives `models:` to a case naming no model SHALL be refused likewise, naming the
 readers that resolve it. A substitution that drops whole (sets to null) a block a named model and
 the study share, such as `charge` beside a molecular model, SHALL be refused naming the keys the model
 sets, since the study form writes overrides leaf by leaf and could not write the drop (REV-187). A study overrides
-any value of the models it names; the Study suite offers the continuum model's physics defaults
-first (WB-16). `models` is left out of every dump, hash and equality of the case, `Case` and the document
+any value of the models it names; the Study suite lists each model's exposed values first (WB-16, WB-35). `models` is left out of every dump, hash and equality of the case, `Case` and the document
 `pipeline.case.load_case` returns alike (REV-190), so a study equals
 and keys as the case it resolves to, written inline: the artefact keys, the stage keys and the
 cache are those of that case, and a stage a model built is reused by every study that names the
@@ -792,14 +806,14 @@ when the plan is built, naming the axis, rather than collecting a column of abse
 NOTE (the project, FR-32, FR-34, FR-35, IF-02; WP5.08; §8.2.17 S11; §8.2.33 AI9 to AI14): a workbench
 **project** is a folder: `nanopnp-project.yaml` (`nanopnp/project/v0.6`, which holds the item index, the
 open items, the current item and each suite's layout, and no physics), `models/molecular/`,
-`models/continuum/`, `studies/`, `comparisons/`, `inputs/`, `runs/<study>/<run>/`, `sweeps/` and
+`models/continuum/`, `models/physics/`, `studies/`, `comparisons/`, `inputs/`, `runs/<study>/<run>/`, `sweeps/` and
 `store/`. An item's name is its file's stem and its `name:`, and matches `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
 The folder is the truth: a file the index lacks is appended on opening, and an indexed name without its
 file is a problem, never a refusal to open. A run is `runs/<study>/<short key>`, and
 `upto-<stage>-<short key>` when its walk stopped early. `api.Project` is the library's whole interface
 to it; the command line and the workbench add none.
 A case file **imports** into a project (`Project.import_case`, `nanopnp project import`) split by the
-ownership table of the `models:` NOTE into a molecular model, a continuum model and a study, and the
+ownership table of the `models:` NOTE into a molecular model, a continuum model, a physics model and a study, and the
 study resolves to the case it was split from, so every stage's key but the first is the original's.
 A case whose `models:` names files imports those files too, each under its `name:`: an identical file
 is reused, a different file of a taken name is stored as `<name>-2`, and the study names the copies. An
