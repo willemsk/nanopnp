@@ -2756,3 +2756,33 @@ The author, marking the charge screen: "Looks very poorly integrated. Maybe beca
 The Phase 5 plan holds about 5,100 words without its report, against `np-plan`'s 1,500 target for a phase plan, checked at review (§8.2.13 N3). REV-133 brought it to 1,500 on 24 October 2026; the amendments since grew it to about 4,200 and §8.2.34 to 5,100, each rewriting its package entries to their current scope as R4 asks. The delivered entries WP5.01 to WP5.08 hold about 1,770 words, so moving them to `phase-5-record.md` would still leave about 3,400. Found by CODE_REVIEW_034, finding 9.
 
 **Open** for the author: cut the plan to the target (delivered entries to one line each, the rest condensed), or restate the target for a phase amended in flight.
+
+## REV-217: Case reading, substitution and input-path discovery are split across five modules
+
+Reading a case is split between `io/case.py:read_case`, which refuses `models:` and `variables:`, and `io/models.py:read`, which resolves them. `Case.with_` substitutes twice, once for the edits and once for the relative paths `_rebased_paths` finds. Input-file discovery is written four times: `io/case_paths.py:input_paths` with `correction_paths`, `io/models.py:_rebased`, `io/project.py:item_inputs`, and the merges in `api/case.py` and `api/sweep.py`. Found by CODE_REVIEW_036, candidate 1, with its corrections C1.1 to C1.5.
+
+**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+
+## REV-218: Effective atom radii and atom-to-residue indexing are split across four subpackages
+
+`density/radii.py:resolve_protonated_radii` returns CHARMM radii without the table's radius edits, so `density/stage.py` must multiply by `radius_scales(table)` itself. Atom-to-residue indexing is written twice, in `charge/edits.py:_owner` and in `resolve_protonated_radii`, and the two differ on an atom with no residue row. Found by CODE_REVIEW_036, candidate 4, with its corrections C4.1 and C4.2.
+
+**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+
+## REV-219: A model file's validated body is discarded and parsed again by the project
+
+`io/models.py:_read_model_file` validates and rebases a model file's body and then drops it from `ModelFile`. `api/project.py` reads the YAML again (`_body`), strips `schema` and `name` by hand for `mapping_changes`, and repeats `io/models.py:_put` and the layer split (`Project._split`). Found by CODE_REVIEW_036, candidate 5; its sketches are re-read against the code as WP5.09 leaves it (C5.1).
+
+**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+
+## REV-220: The upstream lookup and the forecast re-implement the walk's stage keying
+
+`pipeline/run.py:stored_upstream` and `pipeline/forecast.py:keyed_walk` each look up the stage description, build the stage, filter `offered()` and query the store on their own, beside `_Walk.describe`, `_Walk.inputs` and `_Walk.construct`, which serve the run. `stored_upstream` ignores a session's own stages. Keying must not use `_Walk.construct`, which makes scratch workspaces. Found by CODE_REVIEW_036, candidate 6, with its correction C6.1.
+
+**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+
+## REV-221: Planning a sweep from a case drops the members it resolved
+
+`sweep/plan.py:build_plan` keeps the members it resolved as `plan.__dict__["resolved_members"]`, and `api/sweep.py:plan_sweep` moves the plan out of its staging directory with `replace(staged, base_path=...)`, which builds a fresh `SweepPlan` without them. `plan_sweep(...).forecast()` therefore resolves every member again, which REV-199 set out to stop. The staged members were resolved beside the deleted staging directory, so the fix keys held members on their directory rather than carrying them. Found by CODE_REVIEW_036, candidate 2, with its corrections C2.1 to C2.3.
+
+**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
