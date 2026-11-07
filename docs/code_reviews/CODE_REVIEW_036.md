@@ -15,27 +15,34 @@ Six shallow seams were identified, explored and settled with the author through 
 5. **Candidate 5 — Type Model files and absorb metadata stripping into `io/models.py`** (`io/models.py`, `io/defaults.py`, `api/project.py`)
 6. **Candidate 6 — Merge dry-run rebuild forecasting into the pipeline stage walker** (`pipeline/run.py`, `pipeline/forecast.py`, `sweep/forecast.py`)
 
+### Sequencing
+
+None of the six candidates changes code before WP5.09 (the physics model) is merged. The author directed on 7 November 2026 that the changes this review settles land **after WP5.09, following from a Phase 5 amendment** (`/np-plan amend 5`). The amendment rules D1.1's change to a normative clause (`specification/05-software-design/03-1-case-file.md`, the `read_case` refusals of `models:` and `variables:`) in `specification/history/`, and places the candidates in packages after WP5.09. REV-170 stays accepted for WP5.12 (§8.2.34 AJ10) unless the amendment moves it. Each design below is re-read against the code as WP5.09 leaves it, which adds `physics` to `MODEL_KINDS`, a `models.physics` path and `exposes:`. The corrections in the last section bind the amendment.
+
 ---
 
-## Provisional findings and `REV` / `MOD` updates
+## Findings and `REV` / `MOD` updates
 
 ### Updates to existing findings
 
 | ID | Area | Status change | Summary of update |
 |---|---|---|---|
-| **REV-170** | coupling | `open` → settled design ready for WP5.12 (or earlier structural pass) | Unifies `RegionRecord` and `IdealisedRegionRecord` behind a `Stage5Region` protocol and `RegionOutlines` value object in `geometry/region.py`, moves `edge.maxh = wall_h_nm` out of `geometry/pore.py` into `mesh/`, deletes `mesh/primitives.py:CylindricalPoreGeometry` in favour of `geometry/pore.py:CylinderPore` + `mesh/primitives.py:mesh_cylinder_pore()`, and removes all five `isinstance(record, IdealisedRegionRecord)` branches outside Qt. |
+| **REV-170** | coupling | `accepted` (WP5.12, §8.2.34 AJ10); unchanged until the post-WP5.09 amendment rules | Unifies `RegionRecord` and `IdealisedRegionRecord` behind a `Stage5Region` protocol and `RegionOutlines` value object in `geometry/region.py`, moves `edge.maxh = wall_h_nm` out of `geometry/pore.py` into `mesh/`, deletes `mesh/primitives.py:CylindricalPoreGeometry` in favour of `geometry/pore.py:CylinderPore` + `mesh/primitives.py:mesh_cylinder_pore()`, and removes all six `isinstance(record, IdealisedRegionRecord)` branches outside Qt (five in the library and `gui/geometry.py:617` in the workbench). |
 | **MOD-03** | layering | `accepted` static edge (`geometry -> mesh`) → **removed** | Deleting `CylindricalPoreGeometry` and typing `PoreWithAnalyte.pore` as `CylinderPore` in `geometry/analyte.py` removes the sole `if TYPE_CHECKING:` import from `geometry` up to `mesh`, shrinking `edges:` in `docs/project/modularity-layering.yaml`. |
-| **REV-199** | performance | `fixed` → regression on `api.sweep.plan_sweep` identified and closed | `build_plan` seeded `plan.__dict__["resolved_members"]` on a `frozen=True` dataclass, which `dataclasses.replace(staged, base_path=...)` in `api/sweep.py:plan_sweep` silently dropped when moving the plan out of its `.staging-*` folder. Replaced by an explicit `_resolved_members: tuple[ResolvedCase, ...] | None = field(default=None, repr=False, compare=False)` field on `SweepPlan` plus in-memory planning (`base: CaseDocument | None = None`), and extended to `run_point` and `_parent_artefact` so sweep execution reuses the resolved members too. |
-| **REV-200** | coupling | `fixed` → completed by moving `VariableRecord` to `io/variables.py` | Moving `VariableRecord` from `io/models.py` into `io/variables.py` beside `Resolution` and `Variable` places the variable resolution and its record in one module while keeping the top-level `io` import graph strictly acyclic (`case.py -> case_paths.py -> variables.py -> models.py`). |
+| **REV-199** | performance | `fixed`, unchanged; its regression in `plan_sweep` is recorded as **REV-221**, open | `build_plan` seeded `plan.__dict__["resolved_members"]` on a `frozen=True` dataclass, which `dataclasses.replace(staged, base_path=...)` in `api/sweep.py:plan_sweep` silently dropped when moving the plan out of its `.staging-*` folder. `plan_sweep(...).forecast()` therefore resolves every member again. Candidate 2 settles the fix; see its corrections. |
+| **REV-200** | coupling | `fixed`, unchanged | Moving `VariableRecord` into `io/variables.py` was considered and is withdrawn: `VariableRecord.carried` calls `io/models.py:read_mapping`, and `models.py` imports `variables.py`, so the move adds a cycle (see the corrections, C1.5). |
 
-### Provisional new findings (`REV-217` to `REV-220`)
+### New findings (`REV-217` to `REV-221`)
 
-| Provisional ID | Area | Severity | Location | Finding |
+Registered in `docs/project/review-findings.md` and `docs/project/review-items.md`, open until the post-WP5.09 amendment rules.
+
+| ID | Area | Severity | Location | Finding |
 |---|---|---|---|---|
-| **REV-217** | coupling | low | `src/nanopnp/io/case.py`, `src/nanopnp/io/models.py`, `src/nanopnp/io/case_paths.py`, `src/nanopnp/io/project.py`, `src/nanopnp/api/case.py` | **Case reading, substitution and input-path discovery are split across four `io` modules and `api/case.py`.** `io.case.read_case` refuses `models:` and `variables:` while `io.models.read` resolves them; `Case.with_` calls `substitute()` twice and re-implements path rebasing (`_rebased_paths`); and input-file discovery is implemented three times (`io/case_paths.py`, `io/models.py:_rebased`, `io/project.py:item_inputs`). |
+| **REV-217** | coupling | low | `src/nanopnp/io/case.py`, `src/nanopnp/io/models.py`, `src/nanopnp/io/case_paths.py`, `src/nanopnp/io/project.py`, `src/nanopnp/api/case.py` | **Case reading, substitution and input-path discovery are split across four `io` modules and `api/case.py`.** `io.case.read_case` refuses `models:` and `variables:` while `io.models.read` resolves them; `Case.with_` calls `substitute()` twice and re-implements path rebasing (`_rebased_paths`); and input-file discovery is implemented four times (`io/case_paths.py:input_paths` + `correction_paths`, `io/models.py:_rebased`, `io/project.py:item_inputs`, and their merge in `api/case.py:_rebased_paths` and `api/sweep.py:plan_sweep`). |
 | **REV-218** | coupling | low | `src/nanopnp/structure/protonated.py`, `src/nanopnp/charge/edits.py`, `src/nanopnp/density/radii.py`, `src/nanopnp/density/stage.py`, `src/nanopnp/geometry/contour.py` | **Effective atom radii and atom-to-residue indexing are split across `structure`, `charge`, `density` and `geometry`.** `resolve_protonated_radii` returns unscaled CHARMM radii that `density/stage.py` must manually multiply by `radius_scales(table)`; atom-to-residue indexing is duplicated between `charge/edits.py:_owner` and `density/radii.py:resolve_protonated_radii`; and `RadiusEdit` scaling is assembled separately in `protonated.py`, `charge/edits.py` and `geometry/contour.py`. |
 | **REV-219** | interface | low | `src/nanopnp/io/models.py`, `src/nanopnp/io/defaults.py`, `src/nanopnp/api/project.py` | **`ModelFile` discards its validated body, leaving `api/project.py` to re-parse YAML and strip `schema`/`name` by hand.** `_read_model_file` validates and rebases a model file's body and then discards it from `ModelFile`; `api/project.py` re-loads model YAML via `_body(keep=...)` and duplicates `io/models.py:_put` and layer splitting (`_split`). |
-| **REV-220** | coupling | low | `src/nanopnp/pipeline/run.py`, `src/nanopnp/pipeline/forecast.py`, `src/nanopnp/sweep/forecast.py` | **Pipeline stage keying is implemented three times (`_walk`, `stored_upstream`, `keyed_walk`).** Each loop independently resolves `StageDescription`, constructs store-aware stages, filters `offered()` upstream artefacts and queries `Store` for `key_is_artefact` vs payload-bearing artefacts, while `stored_upstream` omits custom `stages`. |
+| **REV-220** | coupling | low | `src/nanopnp/pipeline/run.py`, `src/nanopnp/pipeline/forecast.py`, `src/nanopnp/sweep/forecast.py` | **`stored_upstream` and `keyed_walk` re-implement the keying that `_Walk` already holds.** `_Walk.describe`, `_Walk.inputs` and `_Walk.construct` serve the run; `stored_upstream` and `pipeline/forecast.py:keyed_walk` each resolve the description, build the stage, filter `offered()` and query the `Store` on their own, and `stored_upstream` omits custom `stages`. |
+| **REV-221** | performance | low | `src/nanopnp/api/sweep.py`, `src/nanopnp/sweep/plan.py` | **`plan_sweep` drops the members `build_plan` resolved.** `build_plan` stores them as `plan.__dict__["resolved_members"]`, and `plan_sweep`'s `replace(staged, base_path=...)` builds a fresh `SweepPlan` without them, so `plan_sweep(...).forecast()` resolves every member again. The staged members were resolved beside the `.staging-*` directory, so the fix re-resolves or re-keys them beside the final directory rather than carrying them. |
 
 ---
 
@@ -45,21 +52,22 @@ Six shallow seams were identified, explored and settled with the author through 
 
 Today, reading a case, substituting assignments into it, and discovering or rebasing the input file paths it names are spread across five modules:
 
-- **Two competing `io` reader pairs**: `io/case.py` defines `read_case(path)` and `read_case_text(text)`, which explicitly refuse `models:` and `variables:` (`io/case.py:2178-2199`), while `io/models.py` defines `read(path)` and `reads(text)`, which resolve `variables:` and `models:` and then call `validate_mapping`. Every production caller (`pipeline/case.py`, `api/case.py`, `sweep/plan.py`) wants a case reader that resolves variables and models; only tests that specifically test the refusal call `read_case` on a study or variable-bearing file.
-- **Double `substitute()` and duplicate rebasing in `Case.with_`**: `api/case.py:Case.with_` (`lines 256-288`) splits `assignments` into `models.*` vs other keys, calls `substitute()` once for `models.*` and a second time for the remaining keys, and when `self._source.base` is set and `self.models_record is None`, runs its own `_rebased_paths()` helper to resolve relative input paths against `self._source.base` and mutates the result via `model_copy(update=...)`.
-- **Three copies of input-path discovery**:
-  1. `io/case_paths.py` has `path_fields()` + `correction_paths(document)` (which takes a `CaseDocument`).
+- **Two competing `io` reader pairs**: `io/case.py` defines `read_case(path)` and `read_case_text(text)`, which explicitly refuse `models:` and `variables:` (`io/case.py:_validate`, lines 786-793), while `io/models.py` defines `read(path)` and `reads(text)`, which resolve `variables:` and `models:` and then call `validate_mapping`. Every production caller except `validation/costs.py` (`pipeline/case.py`, `api/case.py`, and `sweep/plan.py` through `load_case`) wants a case reader that resolves variables and models; only tests that specifically test the refusal call `read_case` on a study or variable-bearing file.
+- **Double `substitute()` and duplicate rebasing in `Case.with_`**: `api/case.py:Case.with_` (lines 172-202) normalises each edit through `_assign`, calls `substitute()` and `check_document` once for the edits, then computes `_rebased_paths(edited, self._base)` (every relative input and correction path of the copy, resolved against `self._base`) and calls `substitute()` and `check_document` a second time to apply them, setting `_base` on each copy.
+- **Four copies of input-path discovery**:
+  1. `io/case_paths.py` has `path_fields()` + `input_paths(document)` (lines 617-627, `Path` fields only) + `correction_paths(document)` (lines 630-638), both taking a `CaseDocument`; `api/case.py:_rebased_paths` and `api/sweep.py:plan_sweep` (line 190) each merge the two.
   2. `io/models.py:540-560` has `_correction_leaves()` + `_rebased(body, directory)` (which walks a raw `dict[str, Any]`).
   3. `io/project.py:139-189` has `_correction_leaves()` + `item_inputs(body)` + `rewrite_inputs(body, rewrite)` (which walks a `Mapping[str, Any]` and skips `models.*`).
+  4. The `_cursor` helper these walks share lives in `io/models.py:563`, above `io/case_paths.py` in the import order.
 - **`VariableRecord` misplaced in `io/models.py`**: `VariableRecord` (`io/models.py:191-301`) is a subclass of `io/variables.py:Resolution`, placed in `io/models.py` only because `VariableRecord.carried` calls `read_mapping`.
 
 ### 2. Settled decisions
 
-- **D1.1 (`io` Case reader seam)**: Fold `io.models.read` and `reads` into `io/case.py:read_case(path, *, model=CaseDocument)` and `read_case_text(text, *, base=None, source="<string>", model=CaseDocument)` so every `io` reader resolves `variables:` and `models:` directly. Amend `specification/05-software-design/03-1-case-file.md` lines 281–282 and 316–317 to remove the refusal of `models:` and `variables:` on `read_case`.
+- **D1.1 (`io` Case reader seam)**: One reader pair, `read_case(path, *, model=CaseDocument)` and `read_case_text(text, *, base=None, source="<string>", model=CaseDocument)`, resolves `variables:` and `models:` directly. It lives at the top of the `io` case stack, in `io/models.py` (corrected by C1.5): `io/case.py` keeps `validate_mapping` and loses its refusing readers, so no import runs upward. Amend `specification/05-software-design/03-1-case-file.md` lines 281–282 and 316–317 to remove the refusal of `models:` and `variables:` on `read_case`.
 - **D1.2 (`pipeline/case.py` seam)**: Keep `load_case` and `loads_case` in `pipeline/case.py` as thin registry-checked seams (`read_case` / `read_case_text` + `check_document`).
 - **D1.3 (Single-pass `substitute` with `base`)**: Add `base: Path | None = None` to `io/case_paths.py:substitute(document, assignments, *, base=None)` so model swaps, variable resolution, field edits and relative input-path rebasing happen in a single pass. Simplify the two `substitute()` refusal messages when a case has no `models:` or `variables:` to `"write models:/variables: in the case file"`.
-- **D1.4 (Unified input-path seam in `io/case_paths.py`)**: Consolidate input-file discovery, rebasing and rewriting in `io/case_paths.py` as `input_paths(source: CaseDocument | Mapping[str, Any]) -> dict[str, str]`, `rewrite_inputs(body: dict[str, Any], rewrite: Callable[[str, str], str | None]) -> bool`, and `rebase_inputs(body: dict[str, Any], base: Path) -> dict[str, Any]`. Delete `correction_paths()`, `io/project.py:item_inputs()`, `io/models.py:_rebased()` and `api/case.py:_rebased_paths()`.
-- **D1.5 (`VariableRecord` home and acyclic `io` imports)**: Move `VariableRecord` to `io/variables.py` beside `Resolution` and `Variable`. Keep the top-level `io` module import graph strictly acyclic (`case.py -> case_paths.py -> variables.py -> models.py`) under `VER-61` and `VER-72` by using function-level imports where `case.py` or `case_paths.py` delegates to `models.py`.
+- **D1.4 (Unified input-path seam in `io/case_paths.py`)**: Consolidate input-file discovery, rebasing and rewriting in `io/case_paths.py`, with `_cursor` moved down from `io/models.py`, as `input_paths(source: CaseDocument | Mapping[str, Any]) -> dict[str, str]` (today's `input_paths` widened to correction files; every caller that merges `correction_paths` into it drops the merge in the same commit), `rewrite_inputs(body: dict[str, Any], rewrite: Callable[[str, str], str | None]) -> bool`, and `rebase_inputs(body: dict[str, Any], base: Path) -> dict[str, Any]`. Delete `correction_paths()`, `io/project.py:item_inputs()`, `io/models.py:_rebased()` and `api/case.py:_rebased_paths()`.
+- **D1.5 (acyclic `io` imports)**: The `io` case modules import one way, `models.py -> variables.py -> case_paths.py -> case.py` (each imports the one after it), with every import at the top of the module (`.claude/rules/python.md`). `VariableRecord` stays in `io/models.py`, since its `carried` calls `read_mapping` there; the earlier proposal to move it into `io/variables.py` is withdrawn (C1.5).
 
 ### 3. Concrete code changes
 
@@ -67,12 +75,14 @@ Today, reading a case, substituting assignments into it, and discovering or reba
 
 ```python
 # Before (scattered across io/case_paths.py, io/models.py, io/project.py, and api/case.py):
-# - io/case_paths.py: correction_paths(document: CaseDocument) -> dict[str, Path]
+# - io/case_paths.py: input_paths(document: CaseDocument) -> dict[str, str]  (Path fields only)
+# - io/case_paths.py: correction_paths(document: CaseDocument) -> dict[str, str]
 # - io/models.py: _rebased(body: dict[str, Any], directory: Path) -> dict[str, Any]
 # - io/project.py: item_inputs(body: Mapping[str, Any]) -> dict[str, str]
-# - api/case.py: _rebased_paths(base: Path, values: Mapping[str, FieldValue]) -> dict[str, FieldValue]
+# - api/case.py: _rebased_paths(case: CaseDocument, base: Path | None) -> dict[str, FieldValue]
+# - api/sweep.py:plan_sweep merges input_paths and correction_paths to refuse relative paths
 
-# After (in src/nanopnp/io/case_paths.py):
+# After (in src/nanopnp/io/case_paths.py; _cursor moves here from io/models.py):
 @cache
 def _input_leaves() -> tuple[tuple[str, bool], ...]:
     """Return (dotted_path, is_correction) for every leaf that may name an input file."""
@@ -126,7 +136,7 @@ def rebase_inputs(body: dict[str, Any], base: Path) -> dict[str, Any]:
     return body
 ```
 
-And `substitute` in `src/nanopnp/io/case_paths.py` handles model swaps, variable assignments, leaf edits and optional `base` rebasing in one pass:
+And `substitute` in `src/nanopnp/io/case_paths.py` handles model swaps, variable assignments, leaf edits and optional `base` rebasing in one pass. The model-swap step keeps today's `_model_assignments` expansion of a whole `models:` block and the `field_at(path).validate` check of each swap, and both refusals stay `CaseValidationError`, which `Case.with_` documents:
 
 ```python
 # After (in src/nanopnp/io/case_paths.py):
@@ -137,28 +147,31 @@ def substitute(
     base: Path | None = None,
 ) -> D:
     """Return a validated copy of ``document`` with ``assignments`` applied at their dotted paths."""
-    model_swaps = {p: v for p, v in assignments.items() if p == "models" or p.startswith("models.")}
-    rest = {p: v for p, v in assignments.items() if p not in model_swaps}
+    named = {p: v for p, v in assignments.items() if p == "models" or p.startswith("models.")}
+    rest = {p: v for p, v in assignments.items() if p not in named}
     current = document
-    if model_swaps:
+    if named:
         record = current.models_record
         if record is None:
-            bad = next(iter(model_swaps))
             raise CaseValidationError(
-                f"{bad}: this case names no model files; write models: in the case file"
+                f"<{document.name}>: {', '.join(sorted(named))}: the case names no model; "
+                "write models: in the case file"
             )
-        current = record.carried(current, model_swaps)
+        moved = _model_assignments(named)
+        for path, value in moved.items():
+            field_at(path).validate(value)
+        current = record.carried(current, moved)
     if not rest:
         return current
     variables = current.variables_record
-    if any(p == "variables" or p.startswith("variables.") for p in rest):
-        if variables is None:
-            bad = next(p for p in rest if p == "variables" or p.startswith("variables."))
-            raise UnknownCasePathError(
-                f"{bad!r}: this case defines no variables; write variables: in the case file"
-            )
-        return variables.carried(current, rest, base=base)
+    named_variables = sorted(p for p in rest if p == "variables" or p.startswith("variables."))
+    if variables is None and named_variables:
+        raise CaseValidationError(
+            f"<{document.name}>: {', '.join(named_variables)}: the case defines no variables; "
+            "write variables: in the case file"
+        )
     if variables is not None:
+        # VariableRecord.carried gains the same keyword-only ``base``.
         return variables.carried(current, rest, base=base)
     # Plain document without variables: validate, apply edits, rebase if base is given, re-attach models.
     ...
@@ -167,30 +180,38 @@ def substitute(
 #### `src/nanopnp/api/case.py` — `Case.with_` collapses to a single `substitute` call
 
 ```python
-# Before (src/nanopnp/api/case.py:256-288):
-        if self._source.base is not None and self.models_record is None:
-            values = _rebased_paths(self._source.base, values)
-        models = {k: v for k, v in values.items() if k == "models" or k.startswith("models.")}
-        rest = {k: v for k, v in values.items() if k not in models}
-        updated = substitute(self, models) if models else self
-        if rest:
-            updated = substitute(updated, rest)
-        if self._source.base is not None and updated.models_record is None:
-            rebased = _rebased_paths(
-                self._source.base, {p: value_at(updated, p) for p in rest if p in updated.expressions}
-            )
-            for path, value in rebased.items():
-                ...
+# Before (src/nanopnp/api/case.py:185-202):
+        assignments: dict[str, FieldValue] = {}
+        for name, value in given.items():
+            self._assign(field_path(name), value, assignments)
+        source = f"<{self.name} edited>"
+        edited = check_document(substitute(self, assignments), source=source)
+        assert isinstance(edited, Case)
+        edited._base = self._base
+        rebased = _rebased_paths(edited, self._base)
+        if rebased:
+            edited = check_document(substitute(edited, rebased), source=source)
+            assert isinstance(edited, Case)
+            edited._base = self._base
+        return edited
 
 # After (src/nanopnp/api/case.py):
-        updated = substitute(self, values, base=self._source.base)
+        assignments: dict[str, FieldValue] = {}
+        for name, value in given.items():
+            self._assign(field_path(name), value, assignments)
+        edited = check_document(
+            substitute(self, assignments, base=self._base), source=f"<{self.name} edited>"
+        )
+        assert isinstance(edited, Case)
+        edited._base = self._base
+        return edited
 ```
 
 ### 4. Why this improves the architecture & overall impact
 
-- **Maintainability**: Adding a new path-bearing field or a new model kind (such as WP5.09's `models.physics`) no longer requires updating three separate path-discovery functions (`case_paths.py`, `models.py`, `project.py`) and two `substitute` callers.
+- **Maintainability**: Adding a new path-bearing field or a new model kind (such as WP5.09's `models.physics`) no longer requires updating four separate path-discovery sites (`case_paths.py`, `models.py`, `project.py` and the `api` merges) and two `substitute` calls.
 - **Extensibility**: `input_paths`, `rewrite_inputs` and `rebase_inputs` form a single deep seam in `io/case_paths.py` that works identically on a `CaseDocument` or an unvalidated YAML mapping (`study`, `molecular`, `continuum`, or `physics` model file).
-- **Simplicity**: Eliminates `io.models.read` / `reads` in favour of `io.case.read_case` / `read_case_text`, removes `_rebased_paths` and the double-substitution dance from `Case.with_`, and places `VariableRecord` in `io/variables.py` alongside `Resolution`.
+- **Simplicity**: Leaves one reader pair, `read_case` / `read_case_text` in `io/models.py`, in place of two, and removes `_rebased_paths` and the second substitution from `Case.with_`.
 
 ---
 
@@ -200,126 +221,116 @@ def substitute(
 
 In the current codebase, planning and executing a sweep across `api/sweep.py`, `sweep/plan.py` and `api/session.py` crosses the disk boundary unnecessarily and loses cached work at the seam:
 
-1. **Staging directory round-trip in `api/sweep.py:plan_sweep`**: When `plan_sweep(case, ...)` is called on an in-memory `Case` (`api/sweep.py:166-210`), it creates a temporary `.staging-*` folder inside `sweeps/`, writes `base.case.yaml` there, calls `build_plan(base_path, ...)` so `build_plan` can read `base.case.yaml` back from disk, moves the staged files to `sweeps/<name>-<hash[:8]>/`, and then calls `dataclasses.replace(staged, base_path=target / BASE_CASE_FILENAME)`.
-2. **Silent loss of `resolved_members` (`REV-199` regression)**: `build_plan` attaches the resolved members to the frozen `SweepPlan` via `plan.__dict__["resolved_members"] = tuple(resolved)` (`sweep/plan.py:258`). Because `resolved_members` is a `@cached_property` and not a dataclass field, `dataclasses.replace(staged, base_path=...)` in `plan_sweep` constructs a fresh `SweepPlan` instance **without** `"resolved_members"` in `__dict__`. Calling `plan_sweep(...).forecast()` immediately re-reads `base.case.yaml`, re-substitutes every point and re-resolves every member!
-3. **Re-substitution and re-resolution during `run_point` and `_parent_artefact`**: Even when `plan.resolved_members` is populated, `api/sweep.py:run_point` calls `plan.case(index)` (re-substituting from `base_case()`) and passes the `CaseDocument` to `Session._member` -> `Session._walk` -> `run_document`, which calls `resolve(document)` again. Worse, `_parent_artefact` (`api/sweep.py:296-310`) calls `plan.case(point.parent)` and `stored_upstream(parent_case, ...)`, which calls `resolve(parent_case)` yet again for every warm-started point!
-4. **Shallow pass-throughs `Session._member` and `Session._walk`**: `Session._member` and `Session._walk` (`api/session.py:224-279`) exist only to forward arguments to `pipeline.run.run_document`.
+1. **Staging directory round-trip in `api/sweep.py:plan_sweep`**: When `plan_sweep(case, ...)` is called (`api/sweep.py:155-240`), it opens a `tempfile.TemporaryDirectory(prefix=".staging-")` inside `sweeps/`, writes the base case and the sweep file there, calls `build_plan(loads_sweep(text, ...), source=staging / SWEEP_FILENAME)` so `build_plan` can read the base case back from disk, writes both files again into `store.sweep_directory(name, staged.hash)`, and then calls `replace(staged, base_path=(directory / BASE_FILENAME).resolve())`.
+2. **Silent loss of `resolved_members` (`REV-221`, a regression of `REV-199`)**: `build_plan` attaches the resolved members to the frozen `SweepPlan` via `plan.__dict__["resolved_members"] = resolved` (`sweep/plan.py:654`). Because `resolved_members` is a `@cached_property` and not a dataclass field, `dataclasses.replace(staged, base_path=...)` in `plan_sweep` constructs a fresh `SweepPlan` instance **without** `"resolved_members"` in `__dict__`. Calling `plan_sweep(...).forecast()` re-reads the base case, re-substitutes every point and re-resolves every member. The dropped members were resolved beside the staging directory, which is deleted by then, so they are not safe to carry over either.
+3. **Re-substitution and re-resolution during `run_point` and `_parent_artefact`**: Even when `plan.resolved_members` is populated, `api/sweep.py:run_point` calls `plan.case(index, base=base)` (re-substituting from `base_case()`) and passes the `CaseDocument` to `Session._member` -> `Session._walk` -> `run_document`, which calls `resolve(document)` again. `_parent_artefact` (`api/sweep.py:243-275`) calls `plan.case(point.parent, base=base)` and `stored_upstream(document, ..., base=beside)`, which calls `resolve(parent_case)` yet again for every warm-started point!
+4. **`Session._member` and `Session._walk`**: `Session._walk` (`api/session.py:146-181`) forwards to `pipeline.run.run_document` with the session's `store`, `workspace`, `overwrite_workspace`, `write` and own stages; `Session._member` (lines 359-364) builds a session with no workspace that keeps the own stages, so a sweep member writes its run directory and shares no stage workspace.
 
 ### 2. Settled decisions
 
-- **D2.1 (In-memory `build_plan`)**: Allow `sweep/plan.py:build_plan` to accept `base: CaseDocument | None = None` alongside `base_path: str | Path` so `api/sweep.py:plan_sweep` plans directly in memory and writes `base.case.yaml` and `sweep.yaml` once to the final `sweeps/<name>-<hash[:8]>/` directory without a `.staging-*` directory.
-- **D2.2 (First-class `_resolved_members` field on `SweepPlan`)**: Replace `plan.__dict__["resolved_members"]` with a non-compared dataclass field `_resolved_members: tuple[ResolvedCase, ...] | None = field(default=None, repr=False, compare=False)` on `SweepPlan`, populated on construction and preserved across `dataclasses.replace()`.
-- **D2.3 (Reuse `plan.resolved_members` in `run_point` and `_parent_artefact`)**: Keep the disk tamper check in `plan.base_case()`, then index `plan.resolved_members[index]` and `plan.resolved_members[point.parent]` in `run_point` and `_parent_artefact`. Allow `pipeline/run.py:run_document` and `stored_upstream` to accept `CaseDocument | ResolvedCase` (or an optional `resolved: ResolvedCase | None = None`) so neither the point nor its warm-start parent is re-substituted or re-resolved.
-- **D2.4 (Delete `Session._member` and `Session._walk`)**: Have `Session.run` and `api/sweep.py:run_point` call `pipeline.run.run_document` directly (passing `store=session.store, stages=session.own_stages`), and delete `Session._member` and `Session._walk`.
+- **D2.1 (In-memory `build_plan`)**: `sweep/plan.py:build_plan(document, *, source=None, base: CaseDocument | None = None, check_meshes=True)` takes the base case in memory. Given `base`, it neither reads `base_path` nor checks model files beside it: the model files are checked beside the case's own directory. `api/sweep.py:plan_sweep` builds the plan in memory (its hash does not depend on where the base lies), writes the base case and the sweep file once into `store.sweep_directory(name, plan.hash)`, and points `base_path` there, without a `.staging-*` directory.
+- **D2.2 (Resolved members keyed on their directory)**: Replace `plan.__dict__["resolved_members"]` with two non-compared fields, `_resolved_members: tuple[ResolvedCase, ...] | None` and `_resolved_beside: Path | None` (the directory they were resolved beside). `resolved_members` returns the held members only while `_resolved_beside == base_path.parent`; otherwise it runs `base_case()`'s tamper check once, resolves, and caches. A `replace(base_path=...)` therefore never serves members resolved beside another directory.
+- **D2.3 (Reuse the resolved members where they are held)**: `run_point` and `_parent_artefact` take a member from `plan.resolved_members` only when the plan already holds them for its directory (an in-process `run_plan`). `_worker`, which reads the plan from disk, resolves only its own point and its parent; it never fills the whole tuple to run one point. `pipeline/run.py:run_document` and `stored_upstream` accept a `resolved: ResolvedCase | None = None` beside the document, so a held member is not resolved again.
+- **D2.4 (Keep `Session._walk` and `Session._member`)**: Withdrawn. `Session._walk` carries the session's `workspace`, `overwrite_workspace` and `write` into `run_document`, and `Session._member` holds the rule that a sweep member takes no workspace of its session's. Calling `run_document` with `store=` and `stages=` alone would drop both.
 
 ### 3. Concrete code changes
 
-#### `src/nanopnp/sweep/plan.py` — preserve `_resolved_members` and support in-memory `base`
+#### `src/nanopnp/sweep/plan.py` — members keyed on their directory, and an in-memory `base`
 
 ```python
-# Before (src/nanopnp/sweep/plan.py:59-106, 250-259):
+# Before (src/nanopnp/sweep/plan.py:151-236, 647-655):
 @dataclass(frozen=True)
 class SweepPlan:
-    schema: str
-    base_name: str
-    base_sha256: str
+    name: str
+    base_path: Path
+    base_hash: str
     ...
-    base_variables: Mapping[str, Any] | None = None
+    variables: Mapping[str, Canonicalisable] = field(default_factory=dict)
 
     @cached_property
     def resolved_members(self) -> tuple[ResolvedCase, ...]:
-        base = self.base_case()
-        return tuple(
-            resolve_case(_substituted(base, self.points[index].assignments), base=self._base_dir)
-            for index in range(self.size)
-        )
+        return _resolve_every_point(self.base_case(), self, beside=self.base_path.parent)
 ...
-    plan = SweepPlan(...)
-    plan.__dict__["resolved_members"] = tuple(resolved)
+    resolved = _resolve_every_point(base, plan, beside=base_path.parent)
+    ...
+    plan.__dict__["resolved_members"] = resolved
     return plan
 
 # After (src/nanopnp/sweep/plan.py):
 @dataclass(frozen=True)
 class SweepPlan:
-    schema: str
-    base_name: str
-    base_sha256: str
+    name: str
+    base_path: Path
+    base_hash: str
     ...
-    base_variables: Mapping[str, Any] | None = None
+    variables: Mapping[str, Canonicalisable] = field(default_factory=dict)
     _resolved_members: tuple[ResolvedCase, ...] | None = field(
         default=None, repr=False, compare=False
     )
+    _resolved_beside: Path | None = field(default=None, repr=False, compare=False)
 
     @property
     def resolved_members(self) -> tuple[ResolvedCase, ...]:
-        """Return every member's resolved case, checked against ``base_path`` when on disk."""
-        base = self.base_case()
-        if self._resolved_members is not None:
+        """Return every member resolved once beside the base case, in plan order."""
+        beside = self.base_path.parent
+        if self._resolved_members is not None and self._resolved_beside == beside:
             return self._resolved_members
-        built = tuple(
-            resolve_case(_substituted(base, self.points[index].assignments), base=self._base_dir)
-            for index in range(self.size)
-        )
+        built = _resolve_every_point(self.base_case(), self, beside=beside)
         object.__setattr__(self, "_resolved_members", built)
+        object.__setattr__(self, "_resolved_beside", beside)
         return built
 ```
 
-#### `src/nanopnp/api/sweep.py` — direct in-memory planning and zero re-resolution in `run_point`
+#### `src/nanopnp/api/sweep.py` — in-memory planning
 
 ```python
-# Before (src/nanopnp/api/sweep.py:194-210):
-    staging = Path(tempfile.mkdtemp(prefix=".staging-", dir=sweeps))
-    try:
-        staged_base = staging / BASE_CASE_FILENAME
-        staged_base.write_text(case.dumps(), encoding="utf-8")
-        staged = build_plan(staged_base, axes=axes, where=where, ...)
-        target = session.store.sweep_directory(staged.base_name, staged.content_hash)
-        ...
-        plan = dataclasses.replace(staged, base_path=target / BASE_CASE_FILENAME)
-        write_plan(plan, target / PLAN_FILENAME)
-        return Sweep(plan, session=session, directory=target)
-    finally:
-        shutil.rmtree(staging, ignore_errors=True)
+# Before (src/nanopnp/api/sweep.py:224-240):
+    with tempfile.TemporaryDirectory(dir=sweeps, prefix=".staging-") as scratch:
+        staging = Path(scratch)
+        atomic_write_bytes(staging / BASE_FILENAME, base_text)
+        atomic_write_bytes(staging / SWEEP_FILENAME, text.encode("utf-8"))
+        staged = build_plan(
+            loads_sweep(text, source=str(staging / SWEEP_FILENAME)),
+            source=staging / SWEEP_FILENAME,
+            check_meshes=check_meshes,
+        )
+    directory = store.sweep_directory(name, staged.hash)
+    directory.mkdir(parents=True, exist_ok=True)
+    atomic_write_bytes(directory / BASE_FILENAME, base_text)
+    atomic_write_bytes(directory / SWEEP_FILENAME, text.encode("utf-8"))
+    plan = replace(staged, base_path=(directory / BASE_FILENAME).resolve())
+    return Sweep(plan, directory, session)
 
 # After (src/nanopnp/api/sweep.py):
-    planned = build_plan(
-        base_path=case.source.path or Path(BASE_CASE_FILENAME),
-        base=case,
-        base_text=case.dumps(),
-        axes=axes,
-        where=where,
-        ...,
-    )
-    target = session.store.sweep_directory(planned.base_name, planned.content_hash)
-    target.mkdir(parents=True, exist_ok=True)
-    base_file = target / BASE_CASE_FILENAME
-    if not base_file.exists():
-        atomic_write_bytes(base_file, case.dumps().encode("utf-8"))
-    plan = dataclasses.replace(planned, base_path=base_file)
-    if not (target / PLAN_FILENAME).exists():
-        write_plan(plan, target / PLAN_FILENAME)
-    return Sweep(plan, session=session, directory=target)
+    planned = build_plan(loads_sweep(text), base=case, check_meshes=check_meshes)
+    directory = store.sweep_directory(name, planned.hash)
+    directory.mkdir(parents=True, exist_ok=True)
+    atomic_write_bytes(directory / BASE_FILENAME, base_text)
+    atomic_write_bytes(directory / SWEEP_FILENAME, text.encode("utf-8"))
+    # Members resolve again beside the final directory, on first use (D2.2).
+    plan = replace(planned, base_path=(directory / BASE_FILENAME).resolve())
+    return Sweep(plan, directory, session)
 ```
 
-And in `run_point` / `_parent_artefact` (`src/nanopnp/api/sweep.py`):
+And in `_parent_artefact` (`src/nanopnp/api/sweep.py`), for a plan that holds its members:
 
 ```python
 # After (src/nanopnp/api/sweep.py):
-def _parent_artefact(
-    plan: SweepPlan, point: SweepPoint, session: Session
-) -> tuple[Artefact | None, str | None]:
-    if point.parent is None:
-        return None, None
     parent_resolved = plan.resolved_members[point.parent]
-    upstream = stored_upstream(parent_resolved, store=session.store, feeding="solve")
-    ...
+    upstream = stored_upstream(
+        parent_resolved.document,
+        resolved=parent_resolved,
+        store=session.store,
+        base=plan.base_path.parent,
+    )
+    key = SolveStage().key(StageInputs(resolved=parent_resolved, upstream=upstream))
 ```
 
 ### 4. Why this improves the architecture & overall impact
 
-- **Maintainability**: `_resolved_members` is an explicit dataclass field rather than a hidden `__dict__` mutation on a frozen dataclass, eliminating a subtle state-loss bug across `dataclasses.replace`.
-- **Extensibility**: `stored_upstream` and `run_document` accepting `CaseDocument | ResolvedCase` lets any caller that has already resolved a case (such as `SweepPlan`, `keyed_walk` or the GUI runner) pass it straight into the pipeline without repeating `pipeline.case.resolve()`.
-- **Simplicity**: Removes temporary `.staging-*` directories from `plan_sweep`, deletes `Session._member` and `Session._walk`, and cuts member resolution during a sweep from $3N$ times (build + forecast + run/warm-start) to $1N$.
+- **Maintainability**: The resolved members are explicit fields keyed on the directory they were resolved beside, rather than a hidden `__dict__` entry on a frozen dataclass that `replace` drops (REV-221).
+- **Extensibility**: `stored_upstream` and `run_document` accepting a `resolved` case lets any caller that has already resolved one (such as `SweepPlan`, `keyed_walk` or the GUI runner) pass it into the pipeline without repeating `pipeline.case.resolve()`.
+- **Simplicity**: Removes the `.staging-*` directory from `plan_sweep`. An in-process sweep resolves each member once for the forecast and the run; a pooled worker resolves its own point and parent only.
 
 ---
 
@@ -329,23 +340,24 @@ def _parent_artefact(
 
 As recorded in `REV-170` (`docs/project/review-items.md:2236-2257`), Stage 5's region payload and idealised cylinder geometry suffer from three coupled structural defects:
 
-1. **Five `isinstance(record, IdealisedRegionRecord)` branches outside Qt**: `geometry/region.py:read_region` returns `RegionRecord | IdealisedRegionRecord`, and every consumer has to branch on the concrete type:
+1. **Six `isinstance(record, IdealisedRegionRecord)` branches outside Qt**: `geometry/region.py:read_region` returns `RegionRecord | IdealisedRegionRecord`, and every consumer has to branch on the concrete type:
    - `mesh/generate.py:239` (`idealised_recipe` vs `resolve_wall_size`)
    - `mesh/generate.py:254` (`mesh_idealised` vs `mesh_region`)
-   - `mesh/ingest.py:624-626` (`_sizing` checking `isinstance(record, IdealisedRegionRecord)` and `record.exclusion is not None`)
+   - `mesh/ingest.py:624-625` (`_sizing` setting `idealised=` and `exclusion=` from `isinstance(record, IdealisedRegionRecord)`)
    - `plot/data.py:209` (`region_drawing` building `RegionDrawing` differently for `IdealisedRegionRecord` vs `RegionRecord`)
    - `cli/building.py:80` (`_mesh` checking `if not isinstance(record, IdealisedRegionRecord):`)
-2. **Mesh sizing leaked into `geometry/pore.py`**: `CylinderPore.name_edges` (`geometry/pore.py:83`) sets `edge.maxh = wall_h_nm` on `"wall"` edges, mixing stage-6 Netgen mesh sizing into stage-5 geometry construction.
+   - `gui/geometry.py:617` (the NiceGUI workbench's region view; the five above are in the library)
+2. **Mesh sizing leaked into `geometry/pore.py`**: `CylinderPore.name_edges` (`geometry/pore.py:83`) sets `edge.maxh = wall_h_nm` on `"wall"` edges, mixing stage-6 Netgen mesh sizing into stage-5 geometry construction. `CylinderPore.shape(wall_h_nm=...)` forwards it, and `geometry/analyte.py:PoreWithAnalyte.shape` calls `self.pore.name_edges(glued, wall_h_nm=wall_h_nm)` (line 256).
 3. **Duplicate cylinder class and the `MOD-03` (`geometry -> mesh`) upward import edge**:
-   - `geometry/pore.py:CylinderPore` (`radius_nm`, `membrane_thickness_nm`, `reservoir_radius_nm`) builds the OCC shape.
-   - `mesh/primitives.py:CylindricalPoreGeometry` (`pore_radius_nm = 2.0`, `membrane_thickness_nm = 13.0`, `reservoir_radius_nm = 50.0`) wraps `CylinderPore` just to add `.generate(maxh_nm=..., wall_h_nm=..., check_quality=...)`.
+   - `geometry/pore.py:CylinderPore` (`pore_radius_nm`, `membrane_thickness_nm`, `reservoir_radius_nm`, no defaults) builds the OCC shape; `shape(name_mouths=True)` names the lumen-reservoir seams `interface` by default.
+   - `mesh/primitives.py:CylindricalPoreGeometry` (`pore_radius_nm = DEFAULT_PORE_RADIUS_NM`, `membrane_thickness_nm = 13.0`, `reservoir_radius_nm = 50.0`) wraps `CylinderPore` to add defaults, `.generate(maxh_nm=..., wall_h_nm=..., check_quality=...)`, and `shape(name_mouths=False)`, which leaves the seams in netgen's `default` group.
    - `geometry/analyte.py:14` imports `CylindricalPoreGeometry` from `nanopnp.mesh.primitives` under `if TYPE_CHECKING:`, which is the **only** import keeping the upward edge `- {from: geometry, to: mesh, relation: static, finding: MOD-03}` in `docs/project/modularity-layering.yaml`!
 
 ### 2. Settled decisions
 
-- **D3.1 (Shared `Stage5Region` interface and `RegionOutlines` in `geometry/region.py`)**: Define `RegionOutlines` (`pore_nm`, `membrane_nm`, `exclusion_nm`, `membrane_half_thickness_nm`, `reservoir_radius_nm`, `z_extent_nm`) and a `Stage5Region` protocol in `geometry/region.py`. Implement `.outlines_nm() -> RegionOutlines`, `.has_exclusion -> bool`, and `.is_idealised -> bool` on both `RegionRecord` and `IdealisedRegionRecord` so `plot/data.py`, `mesh/ingest.py`, and `cli/building.py` never call `isinstance(record, IdealisedRegionRecord)`.
-- **D3.2 (Move `edge.maxh = wall_h_nm` from `geometry/pore.py` to `mesh/`)**: `CylinderPore.shape()` and `CylinderPore.name_edges()` in `geometry/pore.py` only name OCC faces and edges (`"axis"`, `"wall"`, `"membrane"`, `"membrane_outer"`, `"cis"`, `"trans"`, `"interface"`). `mesh/idealised.py` sets `edge.maxh = wall_h_nm` on `"wall"` edges before Netgen meshing, preserving identical OCC topology and `VER-62` mesh hashes.
-- **D3.3 (Delete `CylindricalPoreGeometry` and drop `MOD-03`)**: Give `CylinderPore` in `geometry/pore.py` default dimensions (`radius_nm: float = 2.0`, `membrane_thickness_nm: float = 13.0`, `reservoir_radius_nm: float = 50.0`), provide `mesh_cylinder_pore(pore: CylinderPore = CylinderPore(), *, maxh_nm: float = DEFAULT_MAXH_NM, wall_h_nm: float = DEFAULT_CYLINDER_WALL_H_NM, check_quality: bool = True) -> GeneratedMesh` in `mesh/primitives.py` (delegating to `mesh/idealised.py`), update `geometry/analyte.py:PoreWithAnalyte`, `post/indicator.py:lumen_band`, and test callers, and remove `- {from: geometry, to: mesh, relation: static, finding: MOD-03}` from `docs/project/modularity-layering.yaml`.
+- **D3.1 (Shared `Stage5Region` interface and `RegionOutlines` in `geometry/region.py`)**: Define `RegionOutlines` (`pore_nm`, `membrane_nm`, `exclusion_nm`, `membrane_half_thickness_nm`, `reservoir_radius_nm`, `z_extent_nm`) and a `Stage5Region` protocol in `geometry/region.py`. Implement `.outlines_nm() -> RegionOutlines`, `.has_exclusion -> bool`, and `.is_idealised -> bool` on both `RegionRecord` and `IdealisedRegionRecord` so `plot/data.py`, `mesh/ingest.py`, `cli/building.py` and `gui/geometry.py` never call `isinstance(record, IdealisedRegionRecord)`.
+- **D3.2 (Move `edge.maxh = wall_h_nm` from `geometry/pore.py` to `mesh/`)**: `CylinderPore.shape()` and `CylinderPore.name_edges()` in `geometry/pore.py` only name OCC faces and edges (`"axis"`, `"wall"`, `"membrane"`, `"membrane_outer"`, `"cis"`, `"trans"`, `"interface"`). `mesh/idealised.py` and the analyte mesher set the wall size through `mesh/sizing.py`'s existing `apply_sizes` / `edge_size` (no new sizing loop) before Netgen meshing, preserving identical OCC topology. `PoreWithAnalyte.shape` drops its `wall_h_nm` argument to `name_edges` in the same commit.
+- **D3.3 (Delete `CylindricalPoreGeometry` and drop `MOD-03`)**: Give `CylinderPore` in `geometry/pore.py` default dimensions (`pore_radius_nm: float = 2.0`, `membrane_thickness_nm: float = 13.0`, `reservoir_radius_nm: float = 50.0`), provide `mesh_cylinder_pore(pore: CylinderPore = CylinderPore(), *, maxh_nm: float = DEFAULT_MAXH_NM, wall_h_nm: float = DEFAULT_CYLINDER_WALL_H_NM, name_mouths: bool = False, check_quality: bool = True) -> GeneratedMesh` in `mesh/primitives.py` (delegating to `mesh/idealised.py`; `name_mouths=False` keeps today's boundary groups for every caller of `CylindricalPoreGeometry`), update `geometry/analyte.py:PoreWithAnalyte`, `post/indicator.py:lumen_band`, and test callers, and remove `- {from: geometry, to: mesh, relation: static, finding: MOD-03}` from `docs/project/modularity-layering.yaml`.
 - **D3.4 (Single entry point in `mesh/generate.py`)**: Have `mesh_region(record, sizing)` and `region_recipe(record, sizing)` in `mesh/generate.py` dispatch polymorphically on `record.is_idealised` / `Stage5Region` so `MeshStage.key` and `MeshStage.run` call one function for both region kinds.
 
 ### 3. Concrete code changes
@@ -354,7 +366,7 @@ As recorded in `REV-170` (`docs/project/review-items.md:2236-2257`), Stage 5's r
 
 ```python
 # In src/nanopnp/geometry/region.py:
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class RegionOutlines:
     """The 2D (r, z) polygon outlines of a stage-5 region in nm."""
 
@@ -402,7 +414,7 @@ def region_drawing(artefact: Artefact) -> RegionDrawing | None:
 
 ```python
 # Before (src/nanopnp/geometry/pore.py:55-84):
-    def shape(self, *, wall_h_nm: float | None = None) -> TopoDS_Shape:
+    def shape(self, *, wall_h_nm: float | None = None, name_mouths: bool = True) -> Shape:
         ...
         self.name_edges(glued, wall_h_nm=wall_h_nm)
         return glued
@@ -415,16 +427,17 @@ def region_drawing(artefact: Artefact) -> RegionDrawing | None:
                     edge.maxh = wall_h_nm
 
 # After (src/nanopnp/geometry/pore.py):
-    def shape(self) -> TopoDS_Shape:
+    def shape(self, *, name_mouths: bool = True) -> Shape:
         ...
         self.name_edges(glued)
         return glued
 
-# And in src/nanopnp/mesh/idealised.py:
-def _set_wall_maxh(shape: TopoDS_Shape, wall_h_nm: float) -> None:
+# And in src/nanopnp/mesh/idealised.py, through the sizing mesh/ already has:
+    shape = record.geometry().shape(name_mouths=name_mouths)
     for edge in shape.edges:
-        if edge.name == "wall":
-            edge.maxh = wall_h_nm
+        size = edge_size(str(edge.name), z_mid(edge), wall_h_nm=wall_h_nm, ...)
+        if size is not None:
+            edge.maxh = size
 ```
 
 #### `src/nanopnp/geometry/analyte.py` & `docs/project/modularity-layering.yaml` — eliminate `MOD-03`
@@ -456,7 +469,7 @@ class PoreWithAnalyte:
 
 - **Maintainability**: Closes `REV-170` and `MOD-03` in one stroke. `geometry` no longer imports `mesh` even under `if TYPE_CHECKING:`, shrinking `docs/project/modularity-layering.yaml`.
 - **Extensibility**: Adding a second idealised pore shape (e.g. a conical or hourglass pore) only requires implementing the `Stage5Region` methods in `geometry/pore.py`; `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py` and `cli/building.py` work without new `isinstance` branches.
-- **Simplicity**: Deletes `CylindricalPoreGeometry` as a duplicate class, keeps CAD topology in `geometry/` and Netgen sizing in `mesh/`, and leaves `VER-62`'s golden mesh hashes untouched.
+- **Simplicity**: Deletes `CylindricalPoreGeometry` as a duplicate class and keeps CAD topology in `geometry/` and Netgen sizing in `mesh/`. With `name_mouths=False` carried into `mesh_cylinder_pore` and the wall size set before meshing, the meshes and `VER-62`'s golden hashes are unchanged; the implementing package confirms that with the VER-62 test, not by argument.
 
 ---
 
@@ -467,17 +480,17 @@ class PoreWithAnalyte:
 `ProtonationTable` (`structure/protonated.py`) is the stage-7 protonation payload read by stage 2 (`density`), stage 4 (`geometry/contour.py` via `RadiusEdit`), and stage 7 (`charge/edits.py`, `charge/kernel.py`). Currently, operations that belong to `ProtonationTable` and its radius edits leak across four subpackages:
 
 1. **Unscaled radii returned by `resolve_protonated_radii`**: `density/radii.py:resolve_protonated_radii(name, table)` resolves CHARMM van der Waals radii for `table` but ignores the table's own radius edits (`table.header["edits"]`), forcing `density/stage.py:162-163` to remember to call `radii = resolve_protonated_radii(...)` and then multiply `radii_nm = radii.radii_nm * radius_scales(table)`. Any caller of `resolve_protonated_radii` that forgets the second step silently gets unedited radii.
-2. **Duplicated atom-to-residue indexing**: Both `charge/edits.py:_owner(table)` (`lines 74-96`) and `density/radii.py:resolve_protonated_radii` (`lines 209-229`) build a `(chain, resid, icode) -> residue_index` dictionary from `table.residue_chain`, `table.residue_resid`, `table.residue_icode` and map every atom's `(chain, resid, icode)` to its residue index in `0 .. len(table.residue_name) - 1`.
+2. **Duplicated atom-to-residue indexing**: Both `charge/edits.py:_owner(table)` (lines 74-96) and `density/radii.py:resolve_protonated_radii` (lines 209-229) build a `(chain, resid, icode) -> residue_index` dictionary from `table.residue_chain`, `table.residue_resid`, `table.residue_icode` and map every atom's `(chain, resid, icode)` to its residue index. They differ on an atom with no residue row: `_owner` raises `KeyError`, while `resolve_protonated_radii` maps it to `-1` and leaves it unpatched (`residues >= 0`).
 3. **Scattered `RadiusEdit` conversion**: `structure/protonated.py:radius_scales(table)` parses `table.header["edits"]` into `RadiusEdit = (parent, resid, icode, factor)` tuples; `geometry/contour.py:probe_radius_edits(resolved)` converts `resolved.protonation.edits` (`ResolvedEdit`) into `RadiusEdit` tuples; and `geometry/contour.py:gate_inputs` calls `residue_radius_scales(ensemble.resname, ensemble.resid, ensemble.icode, radius_edits)`.
 
 ### 2. Settled decisions
 
-- **D4.1 (Methods on `ProtonationTable` and scaled `resolve_protonated_radii`)**: Add `table.atom_residue_index() -> np.ndarray` and `table.radius_scales() -> np.ndarray` as methods on `ProtonationTable` in `structure/protonated.py`. Have `density/radii.py:resolve_protonated_radii(name, table)` apply `table.radius_scales()` internally so its returned `ResolvedRadii.radii_nm` are already the effective radii (and `density/stage.py` simply uses `radii.radii_nm`). Use `table.atom_residue_index()` in both `charge/edits.py` (replacing `_owner(table)`) and `density/radii.py:resolve_protonated_radii`.
-- **D4.2 (Unified `radius_scales_for` and `probe_radius_edits` in `structure/protonated.py`)**: Provide a unified `radius_scales_for(resname, resid, icode, edits)` (and `radius_edits_of(edits)`) in `structure/protonated.py` that accepts either `RadiusEdit` tuples, `ResolvedEdit` objects, or header edit dicts, so `ProtonationTable.radius_scales()`, `density/radii.py`, and `geometry/contour.py` share one edit-to-scale path. Also update `charge/kernel.py:20` to import `ProtonationTable` from `nanopnp.structure.protonated`.
+- **D4.1 (Methods on `ProtonationTable` and scaled `resolve_protonated_radii`)**: Add `table.atom_residue_index() -> np.ndarray` and `table.radius_scales() -> np.ndarray` as methods on `ProtonationTable` in `structure/protonated.py`. Have `density/radii.py:resolve_protonated_radii(name, table)` apply `table.radius_scales()` internally so its returned `ResolvedRadii.radii_nm` are already the effective radii (and `density/stage.py` simply uses `radii.radii_nm`). Use `table.atom_residue_index()` in both `charge/edits.py` (replacing `_owner(table)`) and `density/radii.py:resolve_protonated_radii`. It maps an atom with no residue row to `-1`, as `resolve_protonated_radii` does today; `charge/edits.py` refuses a `-1` it would edit, naming the atom, where `_owner` raised a bare `KeyError`.
+- **D4.2 (One edit-to-scale path in `structure/protonated.py`)**: Keep `residue_radius_scales(resname, resid, icode, edits: Sequence[RadiusEdit])` as the one scaling function, typed on `RadiusEdit` alone. Each other encoding converts to `RadiusEdit` at its own boundary: the table's header edits in `ProtonationTable.radius_edits()` (today's parsing in `radius_scales`), and a case's `ResolvedEdit`s in `geometry/contour.py:probe_radius_edits`. `ProtonationTable.radius_scales()`, `density/radii.py` and `geometry/contour.py` then share one path, with no function that tells three edit shapes apart. Also update `charge/kernel.py:20` to import `ProtonationTable` from `nanopnp.structure.protonated`.
 
 ### 3. Concrete code changes
 
-#### `src/nanopnp/structure/protonated.py` — `atom_residue_index()`, `radius_scales()`, and `radius_scales_for()`
+#### `src/nanopnp/structure/protonated.py` — `atom_residue_index()` and `radius_scales()`
 
 ```python
 # In src/nanopnp/structure/protonated.py:
@@ -485,7 +498,7 @@ class ProtonationTable:
     ...
 
     def atom_residue_index(self) -> np.ndarray:
-        """Return each atom's index into ``residue_*`` (0 .. len(residue_name) - 1)."""
+        """Return each atom's index into ``residue_*``, -1 for an atom with no residue row."""
         import numpy as np
 
         index = {
@@ -501,7 +514,7 @@ class ProtonationTable:
         }
         return np.array(
             [
-                index[(str(chain), int(resid), str(icode))]
+                index.get((str(chain), int(resid), str(icode)), -1)
                 for chain, resid, icode in zip(
                     self.chain.tolist(), self.resid.tolist(), self.icode.tolist(), strict=True
                 )
@@ -511,13 +524,7 @@ class ProtonationTable:
 
     def radius_scales(self) -> np.ndarray:
         """Return the factor of each atom's radius that the table's radius edits set, 1 elsewhere."""
-        edits = self.header.get("edits")
-        return radius_scales_for(
-            self.resname,
-            self.resid,
-            self.icode,
-            edits if isinstance(edits, list) else (),
-        )
+        return residue_radius_scales(self.resname, self.resid, self.icode, self.radius_edits())
 ```
 
 #### `src/nanopnp/density/radii.py` & `src/nanopnp/density/stage.py` — `resolve_protonated_radii` returns effective scaled radii
@@ -562,7 +569,7 @@ Because `ModelFile` discards `body` and `_read_model_file` is private:
 
 ### 2. Settled decisions
 
-- **D5.1 (`ModelFile.body` and `read_model_file` in `io/models.py`)**: Add `body: Mapping[str, Any]` (the validated model content without metadata keys) to `ModelFile` and expose `read_model_file(kind, path, *, rebase=True, source=None) -> ModelFile` in `io/models.py` (replacing `check_model_file`).
+- **D5.1 (`ModelFile.body` and `read_model_file` in `io/models.py`)**: Add `body: Mapping[str, Any]` (the validated model content without metadata keys) to `ModelFile` and expose `read_model_file(kind, path, *, rebase=True, source=None) -> ModelFile` in `io/models.py` (replacing `check_model_file`). The sketches assume the code as WP5.09 leaves it: `ModelKind` names the literal type of `MODEL_KINDS` once it holds `physics` (today `Literal["molecular", "continuum"]`, with no alias), and `exposes` is the key WP5.09 adds to a model file.
 - **D5.2 (`split_case_layers` in `io/models.py` and metadata filtering in `io/defaults.py:mapping_changes`)**: Move `split_case_layers` (splitting a case mapping into owned model layers and the `study` layer, keeping `expressions` pinned to `study`) into `io/models.py`, sharing `_put`. Have `io/defaults.py:mapping_changes` ignore metadata keys (`"schema"`, `"name"`, `"models"`, `"exposes"`) directly, eliminating the `keep: bool = False` flag on `_body` in `api/project.py`.
 
 ### 3. Concrete code changes
@@ -650,7 +657,7 @@ def mapping_changes(body: Mapping[str, Any]) -> tuple[Change, ...]:
 
 ### 1. Architectural diagnosis
 
-Walking the selected stages of a `ResolvedCase` to compute their `StageInputs`, construct each `Stage` (passing `store=store` when `description.takes_store` is true), compute `stage.key(inputs)` and check whether the `Store` already holds the artefact is written three times:
+Walking the selected stages of a `ResolvedCase` to compute their `StageInputs`, construct each `Stage` (passing `store=store` when `description.takes_store` is true), compute `stage.key(inputs)` and check whether the `Store` already holds the artefact is written three times. The run's walk already has the shared pieces as `_Walk.describe`, `_Walk.inputs` and `_Walk.construct` (`pipeline/run.py:554-582`); the other two loops do not use them:
 
 1. `pipeline/run.py:_Walk` + `_walk` + `_resolve_stage` (`lines 541-584, 727-763, 1130-1198`)
 2. `pipeline/run.py:stored_upstream` (`lines 1099-1127`) — which also forgot to accept `stages: Mapping[str, FunctionStage] | None = None`
@@ -658,7 +665,7 @@ Walking the selected stages of a `ResolvedCase` to compute their `StageInputs`, 
 
 ### 2. Settled decisions
 
-- **D6.1 (Unify stage keying in `pipeline/run.py`)**: Extract a shared stage-keying helper on `_Walk` in `pipeline/run.py` (handling stage description, store-aware stage construction, `offered()` `StageInputs`, and store lookup for both `key_is_artefact` and payload-bearing stages) and use it across `_walk()`, `stored_upstream()`, and `keyed_walk()`.
+- **D6.1 (Unify stage keying in `pipeline/run.py`)**: Use `_Walk.describe` and `_Walk.inputs` in `stored_upstream()` and `keyed_walk()`, and add `_Walk.keyed(name)`, which builds a stage for keying only: `create(name, store=...)` when the description takes the store, and no workspace. `_Walk.construct` makes a scratch workspace for a `takes_workspace` stage, so a forecast or an upstream lookup that called it would write directories to the store. Add `_Walk.stored(name, key)` for the payload-bearing lookup; a `key_is_artefact` stage keeps returning its key with no store I/O in `stored_upstream`.
 - **D6.2 (Delete `src/nanopnp/pipeline/forecast.py`)**: Move `FORECAST_SCHEMA`, `Identity`, `_NotBuiltPayload`, and `keyed_walk` into `src/nanopnp/pipeline/run.py`, update `src/nanopnp/sweep/forecast.py` to import `Identity` and `keyed_walk` from `nanopnp.pipeline.run`, and delete `src/nanopnp/pipeline/forecast.py`.
 
 ### 3. Concrete code changes
@@ -671,15 +678,22 @@ Walking the selected stages of a `ResolvedCase` to compute their `StageInputs`, 
 class _Walk:
     ...
 
+    def keyed(self, name: str) -> Stage:
+        # Built to compute a key only: no workspace, so no scratch directory is made.
+        if name in self.own:
+            return self.own[name]
+        if self.describe(name).takes_store:
+            return create(name, store=self.store)
+        return create(name)
+
     def stored(self, name: str, key: Artefact) -> tuple[bool, Artefact | None]:
-        """Return (is_in_store, stored_artefact_or_key) without running ``name``."""
         if self.describe(name).key_is_artefact:
             return self.store.contains(key), key
         found = self.store.get(key.schema, key.hash)
         return (found is not None), found
 ```
 
-With `_Walk.describe(name)`, `_Walk.inputs(name)`, `_Walk.construct(name)` and `_Walk.stored(name, key)` shared in `pipeline/run.py`:
+With `_Walk.describe(name)`, `_Walk.inputs(name)`, `_Walk.keyed(name)` and `_Walk.stored(name, key)` shared in `pipeline/run.py`:
 
 ```python
 # stored_upstream in src/nanopnp/pipeline/run.py:
@@ -703,15 +717,16 @@ def stored_upstream(
         own=dict(stages or {}),
     )
     for name in selected_stages(resolved, feeding, stages=walk.own)[:-1]:
-        stage = walk.construct(name)
-        key = stage.key(walk.inputs(name))
-        held, stored = walk.stored(name, key)
-        if not held and not walk.describe(name).key_is_artefact:
+        key = walk.keyed(name).key(walk.inputs(name))
+        if walk.describe(name).key_is_artefact:
+            walk.artefacts[name] = key
+            continue
+        _, stored = walk.stored(name, key)
+        if stored is None:
             raise MissingUpstreamError(
                 f"stage {name!r} of case {walk.document.name!r} produces {key.schema} "
                 f"{key.short_hash}, which is not in the store at {store.root}"
             )
-        assert stored is not None
         walk.artefacts[name] = stored
     return walk.artefacts
 ```
@@ -740,7 +755,7 @@ def keyed_walk(
     identities: dict[str, Identity] = {}
     for name in selected_stages(resolved, None, stages=walk.own):
         description = walk.describe(name)
-        stage = walk.construct(name)
+        stage = walk.keyed(name)
         inputs = walk.inputs(name)
         try:
             key = stage.key(inputs)
@@ -766,7 +781,7 @@ def keyed_walk(
 
 ### 4. Why this improves the architecture & overall impact
 
-- **Maintainability**: Stage construction, `StageInputs` assembly, and store-hit semantics (`key_is_artefact` vs `store.get`) are defined once on `_Walk` in `pipeline/run.py`. Any change to how stages are constructed or keyed automatically applies to live runs, warm-start parent lookups, and dry-run sweep forecasts.
+- **Maintainability**: Stage description, `StageInputs` assembly, keying-only construction and store-hit semantics (`key_is_artefact` vs `store.get`) are defined once on `_Walk` in `pipeline/run.py`. Any change to how stages are constructed or keyed automatically applies to live runs, warm-start parent lookups, and dry-run sweep forecasts.
 - **Extensibility**: `stored_upstream` gains support for custom `FunctionStage` extensions (`stages=`) and `ResolvedCase` inputs for free.
 - **Simplicity**: Deletes `src/nanopnp/pipeline/forecast.py` (124 lines) and removes duplicated stage-walking boilerplate.
 
@@ -776,7 +791,29 @@ def keyed_walk(
 
 | Dimension | Architectural effect across all 6 candidates |
 |---|---|
-| **Layering (`VER-61`, `VER-72`)** | Eliminates the `MOD-03` (`geometry -> mesh`) static upward edge from `docs/project/modularity-layering.yaml`; keeps top-level imports in `io` (`case.py -> case_paths.py -> variables.py -> models.py`) strictly acyclic with zero new `upward` or `deferred_upward` edges. |
-| **Modules deleted / consolidated** | Deletes `src/nanopnp/pipeline/forecast.py` and `mesh/primitives.py:CylindricalPoreGeometry`; moves `VariableRecord` into `src/nanopnp/io/variables.py`; folds `io.models.read`/`reads` into `io.case.read_case`/`read_case_text`; deletes `Session._member` and `Session._walk`. |
-| **Locality of change (WP5.09+ readiness)** | Concentrating input-path discovery in `io/case_paths.py` and model-file reading / layer splitting in `io/models.py` means WP5.09 (`The physics model`) and future workbench suites (WP5.10–WP5.15) extend a single seam rather than patching parallel walkers in `io/`, `api/`, `mesh/`, and `plot/`. |
-| **Performance & correctness** | Fixes the `REV-199` `dataclasses.replace` cache drop on `SweepPlan._resolved_members`, eliminates `.staging-*` disk round-trips in `plan_sweep`, prevents unscaled CHARMM radii in `resolve_protonated_radii`, and preserves all `VER-62` golden hashes. |
+| **Layering (`VER-61`, `VER-72`)** | Eliminates the `MOD-03` (`geometry -> mesh`) static upward edge from `docs/project/modularity-layering.yaml`; keeps the `io` case modules importing one way (`models.py -> variables.py -> case_paths.py -> case.py`), all at the top of the module, with zero new `upward` or `deferred_upward` edges. |
+| **Modules deleted / consolidated** | Deletes `src/nanopnp/pipeline/forecast.py` and `mesh/primitives.py:CylindricalPoreGeometry`; replaces `io.models.read`/`reads` and the refusing `io.case.read_case`/`read_case_text` with one resolving pair in `io/models.py`; moves `_cursor` into `io/case_paths.py`. `VariableRecord`, `Session._member` and `Session._walk` stay. |
+| **Locality of change (after WP5.09)** | The candidates land after WP5.09 (`The physics model`), by a Phase 5 amendment. Concentrating input-path discovery in `io/case_paths.py` and model-file reading / layer splitting in `io/models.py` then lets the later workbench suites extend a single seam rather than patching parallel walkers in `io/`, `api/`, `mesh/`, and `plot/`; the refactor itself covers the `physics` kind WP5.09 adds. |
+| **Performance & correctness** | Fixes the `REV-221` `dataclasses.replace` cache drop on `SweepPlan` by keying the held members on their directory, eliminates the `.staging-*` round-trip in `plan_sweep`, and prevents unscaled CHARMM radii in `resolve_protonated_radii`; the `VER-62` golden hashes are to be confirmed unchanged by their test. |
+
+## Corrections from the review of this report (7 November 2026)
+
+`/code-review high` of this report against the code found the following; each is folded into the candidate above and binds the post-WP5.09 amendment.
+
+| # | Candidate | Correction |
+|---|---|---|
+| C1.1 | 1 | The `substitute` sketch keeps `_model_assignments` (a whole `models:` block expands to `models.<kind>`, a non-mapping is refused) and `field_at(path).validate` for each model swap. Both refusals stay `CaseValidationError`, not `UnknownCasePathError` (a `KeyError`). The duplicated `variables.carried` branch is one call; `VariableRecord.carried` gains `base`. |
+| C1.2 | 1 | `Case.with_` keeps `_assign`, `check_document` and `_base` on the copy. `Case` has no `_source`; the base is `self._base`. The quoted Before is the code at `api/case.py:185-202`. |
+| C1.3 | 1 | `input_paths` already exists (Path fields only). Widening it to correction files removes the `correction_paths` merges in `api/case.py` and `api/sweep.py` in the same commit. `_cursor` moves down into `io/case_paths.py`. |
+| C1.5 | 1 | The `io` imports run `models.py -> variables.py -> case_paths.py -> case.py`. Moving `VariableRecord` into `variables.py`, or the resolving reader into `case.py`, would need an upward import that `.claude/rules/python.md` forbids deferring. The resolving `read_case` pair lives in `io/models.py`, and `VariableRecord` stays there. |
+| C2.1 | 2 | `build_plan` takes the base in memory and, given it, reads no file at `base_path`. The earlier sketch's `case.source.path or Path(...)` read the unedited file or the working directory. |
+| C2.2 | 2 | The held members are keyed on the directory they were resolved beside, and `base_case()` runs once when the cache fills. Carrying them across `replace(base_path=...)` served members resolved beside the deleted staging directory. |
+| C2.3 | 2 | A pooled `_worker` reads the plan from disk and resolves only its point and parent. Indexing `resolved_members` there resolved all N members per point, O(N²) per sweep. |
+| C2.4 | 2 | `Session._walk` and `Session._member` stay: they carry the workspace, `write` and `overwrite_workspace` settings and the member's no-workspace rule. |
+| C3.1 | 3 | Six branches, not five: `gui/geometry.py:617` is in the NiceGUI workbench. |
+| C3.2 | 3 | `CylinderPore`'s field is `pore_radius_nm`. `mesh_cylinder_pore` passes `name_mouths=False`, as `CylindricalPoreGeometry.shape` does; otherwise the mouth seams become `interface` boundaries and the meshes change. `PoreWithAnalyte.shape` drops `wall_h_nm` with `name_edges`. The wall size goes through `mesh/sizing.py`, not a new loop. `RegionOutlines` takes `eq=False`, since its fields are arrays. |
+| C4.1 | 4 | `atom_residue_index` maps an atom without a residue row to `-1`, as `resolve_protonated_radii` does; `charge/edits.py` refuses such an atom by name. |
+| C4.2 | 4 | `residue_radius_scales` stays typed on `RadiusEdit`; each other encoding converts at its own boundary. |
+| C5.1 | 5 | `ModelKind` and `exposes` are post-WP5.09 names; the sketches are re-read against WP5.09's code. |
+| C6.1 | 6 | `_Walk.describe`, `inputs` and `construct` already exist. Keying uses a new `_Walk.keyed`, never `construct`, which makes scratch workspaces. `stored_upstream` does no store I/O for a `key_is_artefact` stage. |
+| C0 | all | Line references and Before blocks are corrected to the code at `8a9b5ce`. REV-217 to REV-221 are registered open, to land after WP5.09 by a Phase 5 amendment. REV-170 stays accepted for WP5.12 until that amendment rules. |

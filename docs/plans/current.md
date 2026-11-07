@@ -22,6 +22,8 @@ four weeks more. The physics model's plan is written.
   WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. Reviewed (CODE_REVIEW_034). **WP5.09**
   ([plan](wp5.09-the-physics-model.md)) planned 6 November 2026 (§8.2.35), reviewed
   (CODE_REVIEW_035). Next `/np-implement wp 5.09`. host: claude-code.
+- **CODE_REVIEW_036**'s six refactors (REV-217 to REV-221; REV-170) land **after WP5.09**, by a Phase 5
+  amendment (`/np-plan amend 5`), with the review's corrections C0 to C6.1.
 
 ## Not to be re-decided
 
