@@ -67,12 +67,12 @@ Totals: 5 files, 8,541 words, about 13,698 tokens (54,794 bytes ÷ 4).
 |---|---|---|---|---|
 | 1 | docs/plans/current.md | 699 | start | In brief, Position, standing rulings, "On demand" list. |
 
-Stalls: none that blocked the answer. The file does not say whether the CODE_REVIEW_036 refactors or WP5.10 comes first after WP5.09. Only "after WP5.09, through `/np-plan amend 5`" is stated. I did not open `phase-5-workbench.md`, because the question was answered from this file.
+Stalls: none that blocked the answer. The file does not say whether the CODE_REVIEW_036 refactors or WP5.15 comes first after WP5.09. Only "after WP5.09, through `/np-plan amend 5`" is stated. I did not open `phase-5-workbench.md`, because the question was answered from this file.
 
 Answer, as of 8 Nov 2026:
 - Merged: Phases 1 to 4, closed and released as v0.2.0, v0.3.0, v0.4.0 and v0.5.0. In Phase 5 (v0.6.0, in progress), WP5.01 to WP5.08 are merged (`v0.6.0-alpha.8`): the library steps and the window frame.
 - Being built now: WP5.09, the physics model, is delivered on branch `claude/keen-turing-g32u0j`, planned, reviewed (CODE_REVIEW_035) and not yet merged. The next command is `/np-ship wp 5.09`. The file's In brief says it "awaits review".
-- Next after it: the six refactors from CODE_REVIEW_036 (REV-217 to REV-221 and REV-170) land after WP5.09 through `/np-plan amend 5`, with corrections C0 to C6.1. Then come the remaining amended packages: WP5.10 the frame, WP5.11 to WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. The file says three to four weeks remain.
+- Next after it: the six refactors from CODE_REVIEW_036 (REV-217 to REV-221 and REV-170) land after WP5.09 through `/np-plan amend 5`, with corrections C0 to C6.1. Then come the remaining amended packages: WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the route and Qt's removal, WP5.22 the close. The file says three to four weeks remain.
 
 Totals: 1 file, 699 words, about 1,209 tokens (4,837 bytes ÷ 4).
 

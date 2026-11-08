@@ -225,7 +225,7 @@ stages each swept value rebuilds. The [plan](docs/plans/wp5.07-variables-and-the
 - **Fixed**: REV-139, REV-198 to REV-201. **Amended**: §5.3.1's NOTE on `variables:`, §5.3.3's inputs group, §5.3.4's axis over a variable
   and the forecast, §5.5's NOTE on the rebuild forecast, VER-72's list of deferred libraries, and the Appendix A rows of
   FR-39 and IF-03.
-- **Open items**: REV-197, rectification does not pair a bias set through a variable (WP5.11).
+- **Open items**: REV-197, rectification does not pair a bias set through a variable (WP5.19).
 
 WP5.08: the frame and the project folder, Phase 5's eighth package; tag `v0.6.0-alpha.8` once merged
 (`SPECIFICATION.md` FR-31, FR-32, FR-34, FR-35, QR-16, VER-64, VER-78; §8.2.17 S11, S12; §8.2.18 T2, T8; §8.2.31 AG1; §8.2.33 AI1,
@@ -260,9 +260,9 @@ project, not a case**: it opens a folder, creates one in a missing or empty fold
   an optional member the walk tests by `isinstance`.
 - **Amended**: NOTEs on FR-32 (§5.3.1), the older entries of a store (§5.3.2) and the optional members of a stage (§5.5); VER-64
   and VER-78; the Appendix A rows of FR-31, FR-32, FR-34, FR-35 and QR-16; the design document's folder.
-- **Open items**: REV-202 to REV-205, from the screen review: the problems list leads to a suite and not yet to a field (WP5.09 to WP5.11),
-  the frame's accessibility and layout limits (WP5.13), the settings' guards and the changed list's units (WP5.09), and the Study
-  page's fixture names and the charge screen's colour bar (WP5.11).
+- **Open items**: REV-202 to REV-205, from the screen review: the problems list leads to a suite and not yet to a field (WP5.16 to WP5.19),
+  the frame's accessibility and layout limits (WP5.21), the settings' guards and the changed list's units (WP5.16), and the Study
+  page's fixture names and the charge screen's colour bar (WP5.19).
 
 WP5.09: the physics model, Phase 5's ninth package; tag `v0.6.0-alpha.9` once merged (`SPECIFICATION.md` FR-25, FR-32,
 FR-39; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to AK3). The equations, the salt and the voltages become a model of their own,

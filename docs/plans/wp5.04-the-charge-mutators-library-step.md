@@ -219,7 +219,7 @@ charge group; PHY-16 step 3's NOTE. FR-38 and the Charge edit row are amended in
 
 ### Out of scope
 
-- The Charge edit tool, and the changed count reading `variant_of`: WP5.09 (AG1; AG11).
+- The Charge edit tool, and the changed count reading `variant_of`: WP5.16 (AG1; AG11).
 - Fractional protonation, and the author's customised PDB2PQR route to it: FR-43, a later phase
   (REV-183).
 - A histidine's tautomer pin, and a pin beside `titration: none` or under SWANSON and PEOEPB: refused by D1.

@@ -204,9 +204,9 @@ Rows 1 to 6 and 9 are in `tests/tier1/test_variables.py`, rows 7 and 8 in `tests
 
 ### Out of scope
 
-- The Sweep tool's warning: WP5.11.
+- The Sweep tool's warning: WP5.19.
 - Rectification over a bias set through a variable: `_pairs` reads assignments, so the plan refuses it (no matched
-  pair). A `REV-nn` row for WP5.11.
+  pair). A `REV-nn` row for WP5.19.
 - Variables in model files (D1): a later ruling.
 - A forecast for a single run: the shell needs the sweep's.
 
@@ -241,5 +241,5 @@ None.
 > `forecast  unavailable: <reason>` with `"forecast": null` in `--json`.
 >
 > **Outcome — rectification over a bias set through a variable (D4).** `_pairs` reads assignments only, so the plan finds
-> no pair and refuses. Not changed here; REV-197, owned by WP5.11.
+> no pair and refuses. Not changed here; REV-197, owned by WP5.19.
 

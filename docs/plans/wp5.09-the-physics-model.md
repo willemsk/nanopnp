@@ -44,7 +44,7 @@ group (AJ2, AJ3, AK1 to AK3). **Amended when it lands (item 7):** FR-39's and FR
 | D1 The physics kind | Schema `nanopnp/physics-model/v0.6`, named by `models.physics`. `OWNERS` moves `physics`, `electrolyte` and `boundary_conditions` from continuum to physics, and adds `numerics.elements`, `numerics.stabilisation` and `numerics.wall_distance` to physics. The merge reads molecular, continuum, then physics | AJ3; AK1, ruled by the author; decided by the plan for the order, which no disjoint table can feel |
 | D2 The wall mesh | No code: `resolve_wall_size` already reads the resolved case's electrolyte. A test pins that a continuum model's mesh follows the paired physics' salt, and that `wall_for_concentration_M` pins it | AK2, ruled by the author |
 | D3 Exposed values | `EXPOSED`, a default list per kind in `io/models.py`; a model file's optional `exposes:` replaces it. `ExposedValue(name, path, unit, low, high, default)`, carried on `ModelFile.exposed`; unit from `field_unit`, bounds from the declared range else `schema_bounds`, default from the model's own value else `schema_default`. `exposes:` never enters the merge | AJ5; AK3, ruled by the author; decided by the plan for the record's shape |
-| D4 The project | `ITEM_KINDS`, `FOLDERS` (`models/physics`), `Library.physics` and `LIBRARY_FIELDS` gain physics; `_split` writes three models. A physics item or path points to the Continuum suite (`_SUITE_OF["physics"] = "continuum"`), which holds *Physics defaults* until WP5.10 adds the Physics suite. The frame's rail and changed list read physics models | AJ2; FR-32, FR-34; decided by the plan |
+| D4 The project | `ITEM_KINDS`, `FOLDERS` (`models/physics`), `Library.physics` and `LIBRARY_FIELDS` gain physics; `_split` writes three models. A physics item or path points to the Continuum suite (`_SUITE_OF["physics"] = "continuum"`), which holds *Physics defaults* until WP5.15 adds the Physics suite. The frame's rail and changed list read physics models | AJ2; FR-32, FR-34; decided by the plan |
 | D5 Earlier model files | A continuum file holding a physics key is refused by the existing ownership check, which now names the owning kind; no migration | F4, G6: no release holds the format; decided by the plan |
 | D6 Records and sweeps | `models.physics` reaches the manifest's input files, the sweep axis and `Case.with_` through the existing generic paths; VER-71's `LEAVES` gains `models.physics` as provenance | FR-39, FR-25, VER-71; decided by the plan |
 
@@ -140,7 +140,7 @@ as closed, since it only guides. `_body` drops `exposes`.
 
 **Item 3.** `ItemKind`, `ITEM_KINDS` and `LIBRARY_FIELDS` gain physics; `FOLDERS["physics"] = "models/physics"`;
 `Library.physics: list[str]`; `_SUITE_OF["physics"] =
-"continuum"`, with the comment that WP5.10 gives it its own suite. `_split`'s layers and `_bodies` loop over
+"continuum"`, with the comment that WP5.15 gives it its own suite. `_split`'s layers and `_bodies` loop over
 `MODEL_KINDS`. `frame.py:KINDS` gains `("physics", "Physics models", "continuum")`; `listed_changes` loops
 over molecular, continuum, physics and study; the glossary's *Model* names three kinds. `states.py` replaces
 `radius_nm: 30.0` with `radius_nm: wide` and raises if the text is absent.
@@ -209,9 +209,9 @@ Rows 1 to 6 are in `tests/tier1/test_models.py`, row 7 in `tests/tier1/test_proj
 
 ### Out of scope
 
-- The Physics suite, its *Exposed values* tool and the suite id `physics`: WP5.13 and WP5.10.
-- The Study suite's list of exposed values, and the Sweep tool's use of a range: WP5.14.
-- A concentration range drawn from the electrolyte file's validity: WP5.13, when the suite shows it.
+- The Physics suite, its *Exposed values* tool and the suite id `physics`: WP5.18 and WP5.15.
+- The Study suite's list of exposed values, and the Sweep tool's use of a range: WP5.19.
+- A concentration range drawn from the electrolyte file's validity: WP5.18, when the suite shows it.
 - Migrating model files written before this package: none (D5).
 
 ### Open questions

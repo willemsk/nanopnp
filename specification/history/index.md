@@ -44,8 +44,9 @@ letter pair from §8.2.25 on, and numbered within it (A1, B3, R10, AA2).
 * [8.2.31 Phase 5 amended: the shell packages and the sweep, agreed 3 November 2026](31-phase-5-amended-the-shell-packages-and-the-sweep.md) - Records the author's rulings at the second amendment of Phase 5: the shell is cut one package per suite after a frame package; the sweep gains variables that may be expressions, with units through pint, keyed by the values they resolve to, and a forecast of what each swept value rebuilds; the comparison offers the difference of two runs' fields over their overlap; and a miss of the 200 ms redraw line by the renderer binds the line to the front end's share; at WP5.03's plan, example 07 is re-pinned on the protonated density; and, at WP5.04's plan, a charge edit sits on the titratable group, a radius edit is a scale factor, and a variant is recorded as its parent and its difference, never as a deviation; and, at WP5.05's plan, a study may override any value of the models it names, and the sweep over the library's models is WP5.05's.
 * [8.2.32 WP5.06's plan: what an output needs of a model, agreed 4 November 2026](32-wp506s-plan-what-an-output-needs-of-a-model.md) - Records the author's ruling at WP5.06's plan: a registered output states what it needs of a model's declaration, a model provides every output whose need its declaration meets, and the declaration's own list of quantities goes, so one registration reaches every capable model.
 * [8.2.33 WP5.08's plan: a user's colour themes and the plan's review, agreed 5 November 2026](33-wp508s-plan-a-users-colour-themes.md) - Records the author's ruling at WP5.08's plan: the workbench's settings offer a theme selector and a colour modifier, as a modern code editor's do, so a user chooses among the shipped light and dark themes and themes of their own and edits each colour of one; a user's theme sets its own contrast; and, added after the plan, every level of the planning command ends with a review after a compaction and a summary for the person who approves the plan; shipping may run in the implementing session after a compaction; the ship step always prints the tag commands, which a cloud session cannot push, and a workflow tags the merged package; a work-package plan puts the author's decisions to the author, and every choice put to the author carries the context to judge it; and WP5.08's own choices: a case file refused with the import named, inputs copied or linked, named models imported, rebindable shortcuts, settings per user and the store pruned of older releases only; and a plan's six decisions become a guideline, its word caps allowing 10% over.
-* [8.2.34 Phase 5 amended: the frame on Quasar's components, the physics model and the design loop, agreed 5 November 2026](34-phase-5-amended-the-frame-the-physics-model-and-the-design-loop.md) - Records the author's rulings at the third /np-plan amend 5, after the verdicts on WP5.08's frame: the frame rebuilt on Quasar's components; physics a third reusable model with a suite of its own, five suites shown as those that build models and those that use them; the values each model exposes; impeccable a tool inside np-gui; changed values marked, filtered and tabled; each suite designed on a working prototype over 2WCD; the settings one declared list; and the shell's packages renumbered WP5.09 to WP5.17.
+* [8.2.34 Phase 5 amended: the frame on Quasar's components, the physics model and the design loop, agreed 5 November 2026](34-phase-5-amended-the-frame-the-physics-model-and-the-design-loop.md) - Records the author's rulings at the third /np-plan amend 5, after the verdicts on WP5.08's frame: the frame rebuilt on Quasar's components; physics a third reusable model with a suite of its own, five suites shown as those that build models and those that use them; the values each model exposes; impeccable a tool inside np-gui; changed values marked, filtered and tabled; each suite designed on a working prototype over 2WCD; the settings one declared list; and the shell's packages renumbered WP5.09 and WP5.15 to WP5.22.
 * [8.2.35 WP5.09's plan: the physics model's boundaries and the exposed values, agreed 6 November 2026](35-wp509s-plan-the-physics-models-boundaries-and-exposed-values.md) - Records the author's rulings at WP5.09's plan: the physics model owns the wall-distance field the corrections read; a continuum model's automatic wall size follows the salt of the physics model its study pairs it with, the design-concentration pin staying optional; and each kind of model has a default list of exposed values, which a model file may replace with its own.
+* [8.2.36 Phase 5 amended: the written knowledge's follow-up, the architecture clean-ups and the renumbering, agreed 8 November 2026](36-phase-5-amended-the-written-knowledge-and-the-architecture-clean-ups.md) - Records the author's rulings on the 21 decisions of the written-knowledge audit (CODE_REVIEW_039) and at the fourth /np-plan amend 5: the follow-up is three packages, WP5.10 to WP5.12; four of CODE_REVIEW_036's clean-ups are WP5.13 and WP5.14, the other two open the Molecular and Continuum suites; the written knowledge runs first, then the clean-ups, then the frame; the planned packages are renumbered WP5.15 to WP5.22, records included; and the case reader resolves models and variables.
 
 ## Where each ruling holds now
 
@@ -196,7 +197,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * S23 - the WP5.01 plan
 * S24 - the Phase 5 plan; the design document's *The areas*
 * T1 - spent
-* T2 - open: REV-62 in WP5.05 (AD3); REV-32, REV-52 and MOD-13's command-line part in WP5.08, REV-39 in WP5.12, REV-28 and REV-30 in WP5.15 (AG1; AJ10)
+* T2 - open: REV-62 in WP5.05 (AD3); REV-32, REV-52 and MOD-13's command-line part in WP5.08, REV-39 in WP5.17, REV-28 and REV-30 in WP5.20 (AG1; AJ10)
 * T3 - open: structure preparation's package, the Study package, FR-28 and the composer phase
 * T4 - open: WP5.06 (AD3)
 * T5 - spent
@@ -205,7 +206,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * T8 - FR-34; the design document's WB-30 to WB-32
 * U1 - open: the package that removes Qt
 * U2 - the NOTE beside PHY-16 step 3; open: WP5.03 (AD3)
-* U3 - ruled by AG6; open: WP5.15 (AJ10)
+* U3 - ruled by AG6; open: WP5.20 (AJ10)
 * U4 - ruled by AG2 to AG5
 * U5 - open: WP5.02
 * U6 - FR-38
@@ -260,7 +261,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * Z2 - the Phase 4 plan
 * Z3 - §8.1's Phase 4 documentation increment
 * Z4 - the Phase 4 plan
-* Z5 - REV-121; open: WP5.11 (AG1; AJ10)
+* Z5 - REV-121; open: WP5.16 (AG1; AJ10)
 * Z6 - REV-156; open: Phase 6
 * AA1 - §8.4.4
 * AA2 - §8.4.4; `.claude/workflow/hosts.md`
@@ -280,7 +281,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AD1 - the Phase 5 plan; spent by AG1
 * AD2 - the Phase 5 plan
 * AD3 - the Phase 5 plan; open: WP5.03 to WP5.06
-* AD4 - REV-170; open: WP5.12 (AG1; AJ10)
+* AD4 - REV-170; open: WP5.17 (AG1; AJ10)
 * AD5 - REV-171; open: WP5.06
 * AE1 - NUM-16's NOTE; REV-172
 * AE2 - NUM-16's NOTE; REV-172
@@ -296,8 +297,8 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AG3 - FR-39; §5.3.1's NOTE on `variables:`
 * AG4 - FR-39; §5.3.1's NOTE on `variables:`; §5.3.3's inputs group
 * AG5 - FR-39; §5.3.4; §5.5's NOTE on the rebuild forecast
-* AG6 - FR-32; REV-136; open: WP5.15 (AJ10)
-* AG7 - the Phase 5 plan's criterion 6; open: WP5.14 (AJ10)
+* AG6 - FR-32; REV-136; open: WP5.20 (AJ10)
+* AG7 - the Phase 5 plan's criterion 6; open: WP5.19 (AJ10)
 * AG8 - VER-62; the NOTE beside PHY-16 step 3
 * AG9 - FR-38; REV-183
 * AG10 - FR-38
@@ -320,16 +321,43 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AI13 - its per-user rule amended by AJ9; WP5.08 spent
 * AI14 - open: WP5.08
 * AI15 - §8.4.4
-* AJ1 - the design document's WB-33; open: WP5.10
+* AJ1 - the design document's WB-33; open: WP5.15
 * AJ2 - FR-31; FR-32; §8.1's Phase 5 row; the design document's WB-34; open: WP5.09 (§5.3.1's NOTE on `models:`, §5.3.2, §5.3.3)
 * AJ3 - FR-39; open: WP5.09 (§5.3.1's NOTE on `models:`)
 * AJ4 - the design document's WB-34; S3, S7 and FR-40 stand
-* AJ5 - FR-39; the design document's WB-35; open: WP5.09, WP5.14
-* AJ6 - §8.4.4; open: WP5.10
-* AJ7 - FR-34; the design document's WB-36; open: WP5.10
-* AJ8 - §8.4.4; the design document's WB-38; open: WP5.10 to WP5.15
-* AJ9 - the design document's WB-37; open: WP5.10
-* AJ10 - §8.1's Phase 5 row; the Phase 5 plan; open: WP5.09 to WP5.17
+* AJ5 - FR-39; the design document's WB-35; open: WP5.09, WP5.19
+* AJ6 - §8.4.4; open: WP5.15
+* AJ7 - FR-34; the design document's WB-36; open: WP5.15
+* AJ8 - §8.4.4; the design document's WB-38; open: WP5.15 to WP5.20
+* AJ9 - the design document's WB-37; open: WP5.15
+* AJ10 - §8.1's Phase 5 row; the Phase 5 plan; open: WP5.09 and WP5.15 to WP5.22; its sequence amended by AL25, its numbers by AL26
 * AK1 - §5.3.1's NOTE on `models:`; open: WP5.09
 * AK2 - §5.3.1's NOTE on `models:`; open: WP5.09
-* AK3 - §5.3.1's NOTE on `models:`; open: WP5.09, WP5.13, WP5.14
+* AK3 - §5.3.1's NOTE on `models:`; open: WP5.09, WP5.18, WP5.19
+* AL1 - §4 and §6's NOTE labels; spent
+* AL2 - §8.4.5; spent
+* AL3 - §8.4.4; open: WP5.10
+* AL4 - §8.4.4; open: WP5.10
+* AL5 - §8.4.4; open: WP5.10
+* AL6 - §5.1; open: WP5.10
+* AL7 - open: WP5.10
+* AL8 - open: WP5.11
+* AL9 - CON-05; §2; open: WP5.11
+* AL10 - §5.1; §5.2; open: WP5.11
+* AL11 - §5.3.1; open: WP5.11
+* AL12 - §5.4.1; ADR-001; open: WP5.11
+* AL13 - open: WP5.12
+* AL14 - §8.4.1; open: WP5.10, WP5.11
+* AL15 - open: WP5.12
+* AL16 - open: WP5.11, WP5.12
+* AL17 - open: WP5.11, WP5.12
+* AL18 - open: WP5.11, WP5.12
+* AL19 - open: WP5.12
+* AL20 - open: WP5.12 (the author's checklist)
+* AL21 - open: WP5.11, WP5.12
+* AL22 - §8.1's Phase 5 row; the Phase 5 plan; open: WP5.13, WP5.14, WP5.16, WP5.17
+* AL23 - §5.3.1's NOTEs on `models:` and `variables:`; open: WP5.13
+* AL24 - the Phase 5 plan; open: WP5.10 to WP5.12
+* AL25 - §8.1's Phase 5 row; the Phase 5 plan
+* AL26 - §8.1's Phase 5 row; the Phase 5 plan; spent
+* AL27 - open: WP5.10 (the report)

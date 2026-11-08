@@ -306,9 +306,9 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Ruled** (§8.2.18 T2): owned by the workbench's Analysis package, which draws a field when a tile opens it.
 
-**Placed** (§8.2.31 AG1, 3 November 2026): WP5.12, the Analysis suite.
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.20, the Analysis suite.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.15, the Analysis suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.20, the Analysis suite.
 
 ### REV-29 — The cylindrical-pore fixture is copied into four test modules
 
@@ -328,9 +328,9 @@ walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
 
 **Ruled** (§8.2.18 T2): owned by the workbench's Analysis package, which writes each scene once and serves it.
 
-**Placed** (§8.2.31 AG1, 3 November 2026): WP5.12, the Analysis suite.
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.20, the Analysis suite.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.15, the Analysis suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.20, the Analysis suite.
 
 ### REV-31 — The bundle's size is not recorded
 
@@ -418,9 +418,9 @@ repository holds a logger.
 
 **Ruled** (§8.2.18 T2): owned by the workbench's Continuum package: the Contour tool opens on any profile, extracted or supplied.
 
-**Placed** (§8.2.31 AG1, 3 November 2026): WP5.10, the Continuum suite.
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.17, the Continuum suite.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.12, the Continuum suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.17, the Continuum suite.
 
 ### REV-40 — DensityMap.read accepts a file written in nm
 
@@ -444,9 +444,9 @@ no later owner.
 
 **Ruled in part** (§8.2.22 X1): the region's interchange document comes forward to WP57, as the geometry file of `nanopnp geometry cylinder`; `prepare` and `upto` stay as T3 placed them.
 
-**Placed** (§8.2.31 AG1, 3 November 2026): `prepare` in WP5.09, which surfaces structure preparation; `upto` on reproduce in WP5.11, the Study suite.
+**Placed** (§8.2.31 AG1, 3 November 2026): `prepare` in WP5.16, which surfaces structure preparation; `upto` on reproduce in WP5.19, the Study suite.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): `prepare` in WP5.11, the Molecular suite; `upto` on reproduce in WP5.14, the Study suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): `prepare` in WP5.16, the Molecular suite; `upto` on reproduce in WP5.19, the Study suite.
 
 ### REV-42 — pnp carries inert flow keys
 
@@ -1327,9 +1327,9 @@ gated like the permutation axis, for C1 and hetero-oligomeric assemblies, and it
 the gap is stage 1's `symmetry.axis` path. Confirmed as a gap by the author on 20 October 2026
 (CODE_REVIEW_012 disposition).
 
-**Placed** (§8.2.31 AG1, 3 November 2026): WP5.09, the Molecular suite, library step first, with §5.3.1 and VER-48.
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.16, the Molecular suite, library step first, with §5.3.1 and VER-48.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.11, the Molecular suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.16, the Molecular suite.
 
 ## REV-122: A case cannot load a correction file from outside the installed package
 
@@ -1460,9 +1460,9 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Ruled** `deferred` (§8.2.19 U1): carried until Qt leaves. `v0.5.0` ships the wrapper on the Result tab, and the user-testing sessions read the numbers from the command line or the run record; the package that removes Qt closes the row, the browser shell reading the numbers through `plot/data.py`.
 
-**Placed** (§8.2.31 AG1, 3 November 2026): WP5.13, which removes Qt.
+**Placed** (§8.2.31 AG1, 3 November 2026): WP5.21, which removes Qt.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.16, which removes Qt.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.21, which removes Qt.
 
 ## REV-135: The density does not see the protonation chosen at the charge stage
 
@@ -1507,9 +1507,9 @@ package with its tests before the shell surfaces it, or the author moves it to a
 registration centroid; the workbench surfaces it in Phase 5 (WB-14). The item stays accepted for the other
 capabilities.
 
-**Cut line ruled** (§8.2.31 AG1, AG6, 3 November 2026): v0.6 holds every capability FR-31 to FR-39 name, placed in WP5.05 to WP5.12, and the comparison's difference of two runs' fields over the overlap of their fluid domains, library step first in WP5.12. Hand-drawn refinement regions, the Python console, the ribbon, FR-43 and FR-28 stay later. The item stays accepted until WP5.12 lands.
+**Cut line ruled** (§8.2.31 AG1, AG6, 3 November 2026): v0.6 holds every capability FR-31 to FR-39 name, placed in WP5.05 to WP5.08 and WP5.16 to WP5.20, and the comparison's difference of two runs' fields over the overlap of their fluid domains, library step first in WP5.20. Hand-drawn refinement regions, the Python console, the ribbon, FR-43 and FR-28 stay later. The item stays accepted until WP5.20 lands.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.10 to WP5.17, the difference field in WP5.15, the Analysis suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.15 to WP5.22, the difference field in WP5.20, the Analysis suite.
 
 ## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 
@@ -1568,9 +1568,9 @@ The stages a value invalidates follow from the content hashes that key each stag
 
 **Ruled** (§8.2.19 U4): the design round runs in `/np-plan amend 5`, as a `/np-gui grill` after WP5.02 has chosen the stack; its library capabilities join REV-136's packages.
 
-**Design round held** (§8.2.31 AG2 to AG5, 3 November 2026), over mockup A's round-2 `st-sweep`: a variable is a value with its unit or an expression of others, parsed without running code; units are checked through `pint`; stages and identity are keyed by the resolved values, the variables recorded as written; and a forecast of the stages each swept value rebuilds is shown as a warning. WP5.07 lands the library step (FR-39); WP5.11 the Sweep tool.
+**Design round held** (§8.2.31 AG2 to AG5, 3 November 2026), over mockup A's round-2 `st-sweep`: a variable is a value with its unit or an expression of others, parsed without running code; units are checked through `pint`; stages and identity are keyed by the resolved values, the variables recorded as written; and a forecast of the stages each swept value rebuilds is shown as a warning. WP5.07 lands the library step (FR-39); WP5.19 the Sweep tool.
 
-**Fixed** (WP5.07, [the plan](../plans/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.11's (FR-39's Appendix A row).
+**Fixed** (WP5.07, [the plan](../plans/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.16's (FR-39's Appendix A row).
 
 ## REV-140: Two of the author's marks on the mockups ask what is not yet said
 
@@ -2251,9 +2251,11 @@ drawing. VER-62's recorded mesh hash must not move, or the move is ruled and re-
 **Placed** (§8.2.28 AD4, 1 November 2026): in the shell package that builds the Continuum suite's Geometry tool, library
 step first; the second `/np-plan amend 5` names the package.
 
-**Named** (§8.2.31 AG1, 3 November 2026): WP5.10, the Continuum suite.
+**Named** (§8.2.31 AG1, 3 November 2026): WP5.17, the Continuum suite.
 
-**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.12, the Continuum suite.
+**Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.17, the Continuum suite.
+
+**Design** (§8.2.36 AL22, 8 November 2026): WP5.17's library step takes CODE_REVIEW_036's candidate 3 with its corrections C3.1 and C3.2, which also remove MOD-03's edge from `modularity-layering.yaml`.
 
 ## REV-171: The architecture review's unmeasured costs
 
@@ -2637,7 +2639,7 @@ The sweep plan pairs the two points of a rectification ratio by `boundary_condit
 on `variables.v`) assigns no `bias_V`, so the plan finds no matched pair and refuses a sweep that asks for
 `rectification`. Found by WP5.07 (FR-39).
 
-**Accepted**: WP5.14, which builds the Sweep tool (§8.2.34 AJ10), pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.
+**Accepted**: WP5.19, which builds the Sweep tool (§8.2.34 AJ10), pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.
 
 ## REV-198: A sweep plan is not tied to the variables as written
 
@@ -2669,87 +2671,87 @@ When the forecast fails, the text output gives the reason and the JSON gives `fo
 
 ## REV-202: The problems list leads to a suite, not to the field, and the suites' tools are not built
 
-A row of the problems list opens the suite that owns the item, and the suite lists its tools as text ("in a later package"), so no field is reachable and the job "see a refusal, fix the value, go on" cannot be finished (WB-12). Found by the WP5.08 `/np-gui review` (F4, F5). The frame is this package's scope; the tools are WP5.09 to WP5.11's.
+A row of the problems list opens the suite that owns the item, and the suite lists its tools as text ("in a later package"), so no field is reachable and the job "see a refusal, fix the value, go on" cannot be finished (WB-12). Found by the WP5.08 `/np-gui review` (F4, F5). The frame is this package's scope; the tools are WP5.16 to WP5.19's.
 
-**Deferred** to WP5.11 to WP5.15 (§8.2.34 AJ10): each suite's package makes its tools real, and the problem row then opens the tool at the field. The tool lists become disabled list items or controls as the tools land.
+**Deferred** to WP5.16 to WP5.20 (§8.2.34 AJ10): each suite's package makes its tools real, and the problem row then opens the tool at the field. The tool lists become disabled list items or controls as the tools land.
 
 ## REV-203: The frame's accessibility and layout limits
 
 The WP5.08 `/np-gui review` found, in the frame as built: the bottom panel opens about 180 px high and clips the changed list and the problems list with no row count (F3); the frame has no landmarks, no heading and no `aria-live` region for the changed count, the problem count and the queue line (F15); the splitter has no keyboard resize beside the fold buttons (doubt 5); the activity bar has names and no icons (F14); the shortcuts `Alt+Shift+digit`, `Ctrl+K` and `Ctrl+,` may be claimed by a browser or an operating system (doubt 6); and the 3D view's background is read once when the viewer starts, so a change in the settings reaches an open viewer after a reload (doubt 4).
 
-**Deferred** to WP5.10, which rebuilds the frame on Quasar's components (§8.2.34 AJ1): the panel's height and row counts, the landmarks, heading and live regions, the splitter's keys, the icons and the reserved chords. The keyboard pass over every canvas action stays with the guided route, WP5.16 (QR-16).
+**Deferred** to WP5.15, which rebuilds the frame on Quasar's components (§8.2.34 AJ1): the panel's height and row counts, the landmarks, heading and live regions, the splitter's keys, the icons and the reserved chords. The keyboard pass over every canvas action stays with the guided route, WP5.21 (QR-16).
 
 ## REV-204: The settings and the changed list lack some guards and units
 
 The WP5.08 review found: the settings dialog has no sticky footer and the colours sit in a collapsed section (F9); a shortcut has no per-row clear control (F7); Reset, Reset layout and Quit act at once with no confirmation or undo, and Quit does not warn of a running build (F12); the changed list shows a value with no unit beside it and a default of `None` (F12); an item that fails to load adds nothing to the changed count and says nothing (doubt 1); and a path set in a case counts as changed whether or not it differs from the validated default (doubt 2). A user's theme has no contrast display by the author's ruling (§8.2.33 AI1), so that part of F8 is answered and not open.
 
-**Deferred** to WP5.10, whose settings page follows one declared list (§8.2.34 AJ9) and whose changed table shows each unit (AJ7).
+**Deferred** to WP5.15, whose settings page follows one declared list (§8.2.34 AJ9) and whose changed table shows each unit (AJ7).
 
 ## REV-205: The Study page shows fixture names, and the charge screen lacks a colour bar and axes
 
 The Study page prints `State: <fixture name>` and stage chips with no verdict word (F16), and the charge screen's map has no axes, no unit and no diverging colour bar, and its strip lists one residue while two charges are drawn (F17). Found by the WP5.08 review. The charge screen is WP5.02's spike screen, placed in the frame.
 
-**Deferred** to WP5.14, which builds the Charge on the mesh tool (WB-26; VER-60) after its prototype round on 2WCD (§8.2.34 AJ8, AJ10).
+**Deferred** to WP5.19, which builds the Charge on the mesh tool (WB-26; VER-60) after its prototype round on 2WCD (§8.2.34 AJ8, AJ10).
 
 ## REV-206: An exported project can lose a result file of the same name, and keeps the run record's old paths
 
 The WP5.08 code review found four limits of `Project.export`. Two result files of one run that share a name, from different folders, are copied to `results/<name>` and the second replaces the first. The copied `run.json` still lists the result paths of the project it was copied from, so the copy's record points back at the original. An input file kept in a sub-folder of `inputs/` is copied flat while the item that names it is not rewritten, and an input in `inputs/` that no item names can share a name with a linked input and replace it. A failure part-way leaves a half-written destination that the next export refuses as not empty.
 
-**Deferred** to WP5.14, the package that writes run records into a project (§8.2.34 AJ10).
+**Deferred** to WP5.19, the package that writes run records into a project (§8.2.34 AJ10).
 
 ## REV-207: The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs
 
 The WP5.08 code review found: a splitter's change event writes the project file at every step of a drag; `theme.shipped()` parses `tokens.css` and `user_themes()` every theme file at each call, several times to build one page and once per colour keystroke; the New, Open, Import, Export and Glossary dialogs are created at each use and never deleted, so a long session accumulates them; an empty folder field in those dialogs reads as the server's working folder; and the palette's filter is written twice, in `fill_palette` and `first_match`.
 
-**Deferred** to WP5.10, which rebuilds the frame (§8.2.34 AJ1, AJ10).
+**Deferred** to WP5.15, which rebuilds the frame (§8.2.34 AJ1, AJ10).
 
 ## REV-208: The palette finds commands by title only, has no active row, and lists commands that cannot run
 
 The second WP5.08 screen review found: the palette matches a typed word against a command's title only, so "theme", "density", "spacing", "dark" and "shortcut" find nothing and "Settings…" is the only route to them; no row is highlighted and the arrow keys do not move through the list; and "Import case…" and "Export project…" are listed with no project open, where they only refuse.
 
-**Deferred** to WP5.10, with REV-211 (§8.2.34 AJ1, AJ10). It gives each command keywords, adds the setting commands, the highlighted row and the arrow keys, and disables a command with the reason.
+**Deferred** to WP5.15, with REV-211 (§8.2.34 AJ1, AJ10). It gives each command keywords, adds the setting commands, the highlighted row and the arrow keys, and disables a command with the reason.
 
 ## REV-209: The charge screen in the frame shows a link where none exists, and its map ignores the dark theme
 
 The charge screen is WP5.02's spike screen, placed in the frame. With no case or no structure charge it still shows "Linked" with an Unlink button beside two empty canvases and no caption; it says "case", a retired term; the Study page offers its link in the empty state; the map's background is light grey on the dark theme, against WB-26. The review doubted two things it could not check from the pictures: the Mol* toolbar icons may read below 3:1 (the harness measures no viewer control), and the 3D spheres and the map's dots may colour the same charges oppositely.
 
-**Deferred** to WP5.14, which builds the Charge on the mesh tool (WB-26; VER-60) with the colour bar of REV-205, its design settled in its prototype round (§8.2.34 AJ8, AJ10).
+**Deferred** to WP5.19, which builds the Charge on the mesh tool (WB-26; VER-60) with the colour bar of REV-205, its design settled in its prototype round (§8.2.34 AJ8, AJ10).
 
 ## REV-210: The frame lacks icons, headings and some states in the render set
 
 The second WP5.08 screen review found: the activity bar has text only where the design document says an icon with its name; suite and dialog titles are labels, not headings; the changed diamond is read aloud by a screen reader; the settings' colour inputs carry raw token names with no swatch; the Glossary holds 5 of the document's 22 terms and About is a toast that disappears; and the New, Open, Import and Export dialogs are a free text path with no browse list. The render set shows none of: those dialogs, the File, View and Help menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density, tight spacing, the 3D background settings, a key being captured, or a typed palette query.
 
-**Deferred** to WP5.10, which rebuilds the frame (§8.2.34 AJ1, AJ10): the icons, headings, render states and the dialogs with a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
+**Deferred** to WP5.15, which rebuilds the frame (§8.2.34 AJ1, AJ10): the icons, headings, render states and the dialogs with a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
 
 ## REV-211: The palette opens as a full command list, not a bare input that suggests as you type
 
 The author, marking the frame's palette (`docs/design/reviews/2026-11-05-frame.md`): "This should far more sleek and subtle, not just a list of commands. Default should be just a box to type in, and suggestions should pop up once you start typing." The palette opens as an input over every command with its chord.
 
-**Deferred** to WP5.10, with REV-208 (§8.2.34 AJ1, AJ10). The palette opens as one input and lists no commands until a word is typed. The matches then appear under it, found by title and keyword, one row active and moved by the arrow keys. A command that cannot run is listed disabled with its reason.
+**Deferred** to WP5.15, with REV-208 (§8.2.34 AJ1, AJ10). The palette opens as one input and lists no commands until a word is typed. The matches then appear under it, found by title and keyword, one row active and moved by the arrow keys. A command that cannot run is listed disabled with its reason.
 
 ## REV-212: The settings need a searchable section list beside the panel, and which settings exist is undecided
 
 The author, marking the frame's settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." The settings are one dialog of stacked sections: theme, density, spacing, the 3D background, the colours and the shortcuts (§8.2.33 AI1; REV-204).
 
-**Deferred** to WP5.10, ruled by the author on 5 November 2026 (§8.2.34 AJ9; WB-37): the settings are one declared list, each setting with its section, its scope (the user's, or the project's over the user's), its default, its description and search words and when it applies; the page, its search, the palette's setting commands and both files follow. The sections are appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers; which settings beyond them exist, compute and network among them, is put to the author at WP5.10's plan after a survey of comparable tools.
+**Deferred** to WP5.15, ruled by the author on 5 November 2026 (§8.2.34 AJ9; WB-37): the settings are one declared list, each setting with its section, its scope (the user's, or the project's over the user's), its default, its description and search words and when it applies; the page, its search, the palette's setting commands and both files follow. The sections are appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers; which settings beyond them exist, compute and network among them, is put to the author at WP5.15's plan after a survey of comparable tools.
 
 ## REV-213: The suites may need to separate those that build models from those that use them
 
 The author, marking the Molecular suite and then the Continuum, Study and Analysis suites with "See Molecular suite comments": "I wonder if we need to make a further distinction in the suites between those that build components (molecular, continuum, physics), those that use components (study, analysis?). I think we need to discuss this further to figure out what I mean." The frame has four suites side by side in the activity bar (WB-02, WB-29). The models are built in Molecular and Continuum (WB-11), and the physics defaults sit in the continuum model (WB-16).
 
-**Deferred**, ruled by the author on 5 November 2026 (§8.2.34 AJ2 to AJ5; WB-34, WB-35): physics becomes a third reusable model, and five suites show as those that build models (Molecular, Continuum, Physics) and those that use them (Study, Analysis). The physics model is WP5.09's library step, the grouped suites WP5.10's, and the Physics suite WP5.13's.
+**Deferred**, ruled by the author on 5 November 2026 (§8.2.34 AJ2 to AJ5; WB-34, WB-35): physics becomes a third reusable model, and five suites show as those that build models (Molecular, Continuum, Physics) and those that use them (Study, Analysis). The physics model is WP5.09's library step, the grouped suites WP5.15's, and the Physics suite WP5.18's.
 
 ## REV-214: The changed list is loosely spaced, and the project name reads as a menu
 
 The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?" Each changed value is a row of about 48 px: the path, the value, its default and *Reset*. Then, on the refused state: "Not sure the "refused" marker in the top bar is the best location, looks like a menu item." The word is the fixture project's name (`--state refused` opens a project named `refused`), not a refusal marker. The name sits in the menu row, after *Help*, in the menus' weight, so it reads as a menu.
 
-**Deferred** to WP5.10, ruled by the author on 5 November 2026 (§8.2.34 AJ7; WB-36): the mark at the field with its reset, a *Modified only* filter on each pane and the settings, and one dense table grouped by model and study with value, default, unit and reset. The project's name heads the project rail and names the browser tab.
+**Deferred** to WP5.15, ruled by the author on 5 November 2026 (§8.2.34 AJ7; WB-36): the mark at the field with its reset, a *Modified only* filter on each pane and the settings, and one dense table grouped by model and study with value, default, unit and reset. The project's name heads the project rail and names the browser tab.
 
 ## REV-215: The charge screen needs its design and its function settled together
 
 The author, marking the charge screen: "Looks very poorly integrated. Maybe because we are still in early development phase for the GUI. Also hard to judge without an example molecule.", then: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." The screen is WP5.02's spike, placed in the frame (REV-205, REV-209). The render set's states are a charged and an uncharged tube, with no protein.
 
-**Deferred** to WP5.14, ruled by the author on 5 November 2026 (§8.2.34 AJ8; WB-38): the Study package opens with its tools prototyped over 2WCD's artefacts and rendered through their states, and the charge screen's design is settled with its function in that round, with REV-205's colour bar and axes and REV-209's link and dark map.
+**Deferred** to WP5.19, ruled by the author on 5 November 2026 (§8.2.34 AJ8; WB-38): the Study package opens with its tools prototyped over 2WCD's artefacts and rendered through their states, and the charge screen's design is settled with its function in that round, with REV-205's colour bar and axes and REV-209's link and dark map.
 
 ## REV-216: The Phase 5 plan exceeds its word target again
 
@@ -2763,11 +2765,15 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 
 **Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
 
+**Placed** (§8.2.36 AL22, 8 November 2026): WP5.13, case and model files, with CODE_REVIEW_036's candidate 1; the case reader then resolves `models:` and `variables:` (AL23).
+
 ## REV-218: Effective atom radii and atom-to-residue indexing are split across four subpackages
 
 `density/radii.py:resolve_protonated_radii` returns CHARMM radii without the table's radius edits, so `density/stage.py` must multiply by `radius_scales(table)` itself. Atom-to-residue indexing is written twice, in `charge/edits.py:_owner` and in `resolve_protonated_radii`, and the two differ on an atom with no residue row. Found by CODE_REVIEW_036, candidate 4, with its corrections C4.1 and C4.2.
 
 **Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+
+**Placed** (§8.2.36 AL22, 8 November 2026): WP5.16, the Molecular suite's library step, with CODE_REVIEW_036's candidate 4.
 
 ## REV-219: A model file's validated body is discarded and parsed again by the project
 
@@ -2775,17 +2781,23 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 
 **Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
 
+**Placed** (§8.2.36 AL22, 8 November 2026): WP5.13, case and model files, with CODE_REVIEW_036's candidate 5.
+
 ## REV-220: The upstream lookup and the forecast re-implement the walk's stage keying
 
 `pipeline/run.py:stored_upstream` and `pipeline/forecast.py:keyed_walk` each look up the stage description, build the stage, filter `offered()` and query the store on their own, beside `_Walk.describe`, `_Walk.inputs` and `_Walk.construct`, which serve the run. `stored_upstream` ignores a session's own stages. Keying must not use `_Walk.construct`, which makes scratch workspaces. Found by CODE_REVIEW_036, candidate 6, with its correction C6.1.
 
 **Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
 
+**Placed** (§8.2.36 AL22, 8 November 2026): WP5.14, sweep planning and the walk's keying, with CODE_REVIEW_036's candidate 6.
+
 ## REV-221: Planning a sweep from a case drops the members it resolved
 
 `sweep/plan.py:build_plan` keeps the members it resolved as `plan.__dict__["resolved_members"]`, and `api/sweep.py:plan_sweep` moves the plan out of its staging directory with `replace(staged, base_path=...)`, which builds a fresh `SweepPlan` without them. `plan_sweep(...).forecast()` therefore resolves every member again, which REV-199 set out to stop. The staged members were resolved beside the deleted staging directory, so the fix keys held members on their directory rather than carrying them. Found by CODE_REVIEW_036, candidate 2, with its corrections C2.1 to C2.3.
 
 **Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+
+**Placed** (§8.2.36 AL22, 8 November 2026): WP5.14, sweep planning and the walk's keying, with CODE_REVIEW_036's candidate 2.
 
 ## REV-222: The agentic instructions cite identifiers without their words and state two procedures in several places
 
