@@ -37,6 +37,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from architecture import render as render_architecture
+
 from nanopnp.cli.reference import (
     render_api_reference,
     render_case_reference,
@@ -174,6 +176,7 @@ def main() -> int:
         "reference/exit-codes.md": render_exit_codes(),
         "reference/api.md": render_api_reference(),
         "project/modularity-measurements.md": render_measurements(),
+        "project/architecture.md": render_architecture(),
     }
     for name, text in rendered.items():
         path = OUTPUT / name
