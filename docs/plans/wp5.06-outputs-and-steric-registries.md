@@ -204,7 +204,7 @@ field as "carries no degrees of freedom of this field".
 
 - A second steric model itself: none ships; one would be a deviation verified against COMSOL first.
 - Generalising the sweep's collection of `rectification`: §5.3.1's NOTE names it; it stays in `sweep/plan.py`.
-- `MOD-18`'s Geometry views and how the Study suite offers outputs: WP5.11 (T4).
+- `MOD-18`'s Geometry views and how the Study suite offers outputs: WP5.19 (T4).
 - The coefficient caching and the other cost items: REV-171, Phase 6.
 - Making the registering functions public: REV-67, the composer phase.
 

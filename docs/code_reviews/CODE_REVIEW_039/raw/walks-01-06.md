@@ -183,19 +183,19 @@ How I read: I used Bash `cat`/`sed` and the Read tool. A clause printout counts 
 | # | File | Words | Pointer | Gave |
 |---|---|---|---|---|
 | 1 | SPECIFICATION.md | 1017 | start | Row "§8.1, §8.4, then docs/plans/current.md" |
-| 2 | specification/08-implementation-plan/01-phases-and-gates.md | 1395 | §8.1 via the map | Phase 5 table: library packages WP5.03-5.07 and WP5.09, shell WP5.08 and WP5.10-5.17 |
+| 2 | specification/08-implementation-plan/01-phases-and-gates.md | 1395 | §8.1 via the map | Phase 5 table: library packages WP5.03-5.07 and WP5.09, shell WP5.08 and WP5.15-5.22 |
 | 3 | specification/08-implementation-plan/04-development-process.md | 2069 | §8.4 via the map | §8.4.4 plan rules and `/np-plan` levels |
-| 4 | docs/plans/current.md | 699 | Link in the row | Position: WP5.09 delivered 8 Nov 2026, "Next `/np-ship wp 5.09`"; WP5.10 is the frame; CODE_REVIEW_036's six refactors land after WP5.09 through `/np-plan amend 5` |
+| 4 | docs/plans/current.md | 699 | Link in the row | Position: WP5.09 delivered 8 Nov 2026, "Next `/np-ship wp 5.09`"; WP5.15 is the frame; CODE_REVIEW_036's six refactors land after WP5.09 through `/np-plan amend 5` |
 
 (2) Stalls
-- "Which package is next" is ambiguous in `current.md`. "Next `/np-ship wp 5.09`" is the next step. The next package to plan is WP5.10, and an amendment (`/np-plan amend 5`) is queued before or beside it. The order is not stated.
+- "Which package is next" is ambiguous in `current.md`. "Next `/np-ship wp 5.09`" is the next step. The next package to plan is WP5.15, and an amendment (`/np-plan amend 5`) is queued before or beside it. The order is not stated.
 - §8.4.4 gives the plan caps but no path to the file that holds the full plan template. `.claude/skills/np-plan/wp.md` and `review.md` appear only in the project notes, not on this path. `review.md` is named in the §8.4.4 text. I did not open it.
 - Two statements of the In brief length differ: §8.4.4 says "about 250 words, up to 10% over", while `current.md`'s Handoff Rules say "at most 250 (no backticks or identifiers)". They concern different documents.
 - The links to `phase-5-workbench.md`, `phase-5-record.md` and `wp5.09-the-physics-model.md` were not followed.
 
 (3) Answer
-- Next work package: WP5.09 (the physics model) is delivered and awaits `/np-ship wp 5.09`. After it, WP5.10 (the frame) is next in Phase 5. CODE_REVIEW_036's six refactors (REV-217 to REV-221 and REV-170) are planned through `/np-plan amend 5` after WP5.09, ahead of or alongside WP5.10.
-- Planning command: `/np-plan wp 5.10` (§8.4.4: `/np-plan <project | phase n | amend n | wp n> [review]`; a work package is named `WP<phase>.<nn>`; the plan file is `docs/plans/wp5.10-<slug>.md`). `/np-plan wp 5.10 review` reviews it afterwards.
+- Next work package: WP5.09 (the physics model) is delivered and awaits `/np-ship wp 5.09`. After it, WP5.15 (the frame) is next in Phase 5. CODE_REVIEW_036's six refactors (REV-217 to REV-221 and REV-170) are planned through `/np-plan amend 5` after WP5.09, ahead of or alongside WP5.15.
+- Planning command: `/np-plan wp 5.15` (§8.4.4: `/np-plan <project | phase n | amend n | wp n> [review]`; a work package is named `WP<phase>.<nn>`; the plan file is `docs/plans/wp5.15-<slug>.md`). `/np-plan wp 5.15 review` reviews it afterwards.
 - A plan must contain:
   - `## In brief`, about 250 words and at most 10% over, readable without code or identifiers: what changes and why, what it costs, what could go wrong and how it would be noticed, then *Your call* with each decision that waits for the author and a recommendation.
   - `### Grounding`: by symbol, what the code does today, the call path, what it reads and writes, every variant of its input, the registry and layering rows it adds, and how each test gets the object it checks.

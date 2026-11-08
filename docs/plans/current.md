@@ -1,29 +1,25 @@
 # Current work
 
-Updated 8 November 2026 (WP5.09 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 8 November 2026 (Phase 5 amended, §8.2.36). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5's library steps and window frame are merged: plain-folder projects, menus, palette,
-shortcuts, changed and problems lists, colour themes. Your look at the frame prompted a re-plan: three
-suites build models (molecule, pore, physics), two use them, the frame is rebuilt on ready-made parts, and each
-suite is prototyped on a real pore. The physics model is built: a study pairs a molecule, a pore and a
-physics, and nothing it computes moved. It awaits review. Three or four weeks remain.
+Phase 4 is released. Phase 5's library steps, the physics model and the window frame are merged. Two reviews
+come next: three packages correct the project's written knowledge where an audit found it drifting, and two take four of the six library tidy-ups an architecture review settled; the other two open the suites
+that use them. The screens follow, renumbered. About four to five months part-time remain.
 
-**Your call.** None until the review puts the build's contested choices to you.
+**Your call.** Approve the amendment after its review; later, two measuring tools to adopt or not, and eight audit
+findings to check.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.08 merged
-  (`v0.6.0-alpha.8`). Amended 5 November 2026 (§8.2.34): WP5.09 the physics model, WP5.10 the frame, WP5.11 to
-  WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close; reviewed, CODE_REVIEW_034. **WP5.09**
-  ([plan](wp5.09-the-physics-model.md)) planned 6 November 2026 (§8.2.35), reviewed
-  (CODE_REVIEW_035), delivered 8 November 2026 on `claude/keen-turing-g32u0j`. Next `/np-ship wp 5.09`.
+- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.09 merged
+  (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36 AL1 to AL27): WP5.10 to WP5.12
+  CODE_REVIEW_039's follow-up, WP5.13 and WP5.14 four of CODE_REVIEW_036's clean-ups, WP5.15 the frame, WP5.16 to
+  WP5.20 the suites, WP5.21 the route and Qt's removal, WP5.22 the close. On `ccr-ffafd419-mwhw6f`. Next `/np-plan amend 5 review`, then `/np-plan wp 5.10`.
   host: claude-code.
-- **CODE_REVIEW_036**'s six refactors (REV-217 to REV-221; REV-170) land **after WP5.09**, through
-  `/np-plan amend 5`, with its corrections C0 to C6.1.
 
 ## Not to be re-decided
 
@@ -46,23 +42,25 @@ physics, and nothing it computes moved. It awaits review. Three or four weeks re
 - **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's identifier, `nanopnp/case/v0.6` (G6).
 - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
+- **Written knowledge, then clean-ups, then the frame; packages renumbered; plans archived by phase** (§8.2.36 AL5,
+  AL22 to AL26).
 
 ## Somebody else's
 
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
-- **The 200 ms redraw** on the author's GPU, WP5.14 (AF4; AG7; AJ10).
+- **The 200 ms redraw** on the author's GPU, WP5.19 (AF4; AG7; AJ10).
+- **The eight `unchecked` audit findings**, the author's checklist, WP5.12 (AL20).
 - **Rulings on a residual cycle (H6) or drift (I4)**; **Tier 3's archived PQRs**.
-- **REV-156**'s speed-up is Phase 6's (Z6); REV-121 WP5.11's, REV-170 WP5.12's (AG1; AJ10).
+- **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-218 WP5.16's, REV-170 WP5.17's (AG1; AJ10; AL22).
 
 ## On demand
 
 - **Specification:** `SPECIFICATION.md` and the file it maps; `specification/history/index.md`.
 - **Amendments:** `phase-5-record.md`.
+- **The follow-ups:** CODE_REVIEW_039 with `findings.md`; CODE_REVIEW_036's designs and corrections; §8.2.36.
 - **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5.
-- **WP5.09:** [plan](wp5.09-the-physics-model.md); FR-32, FR-39; §5.3.1's NOTEs on `models:` and the
-  project; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to AK3.
 - **Workbench:** `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30,
   §8.2.31, §8.2.34; `docs/design/reviews/2026-11-05-frame.md`.
 

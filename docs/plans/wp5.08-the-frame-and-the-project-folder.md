@@ -56,7 +56,7 @@ REV-32, REV-52 and MOD-13's command-line part `fixed`.
   `<root>/sweeps/<name>-<short>`, so a project's sweeps need their own root to leave `store/` with it.
 - `api/session.py:Session(store)` takes a `Store` as is and sets `_store_given`; `Session.open` then reads that store.
 - `io/models.py` already reads `models: {molecular, continuum}` beside the study and `MOLECULAR_SCHEMA`,
-  `CONTINUUM_SCHEMA`; a model file holds `schema`, `name` and its kind's keys. Comparisons have no schema until WP5.12:
+  `CONTINUUM_SCHEMA`; a model file holds `schema`, `name` and its kind's keys. Comparisons have no schema until WP5.20:
   the project indexes and exports their files unread.
 - `io` imports only `core` outside itself at run time (`docs/project/modularity-layering.yaml`); `api` may import
   `io`, `pipeline` and `sweep`. `nanopnp.PUBLIC` and its `TYPE_CHECKING` mirror are checked by `test_layering.py`.
@@ -215,7 +215,7 @@ writes its fixture, imports it, walks the study to `charge` and records the queu
 - [x] f8e81f8 13. `CHANGELOG.md` (`nanopnp gui` takes a project, not a case); the brief's amendments; Outcome notes. Done when the strict documentation build passes. **Executor:** main.
   > **Outcome — what the plan did not say.** D7's `<name>-2` rule is built as written. A run's `results/` is copied from the
   > files `run.json` names. `API_SECTIONS` gained "Projects", and `_SECTION_INTRO` was extracted to keep `_inspect` at exactly
-  > 100 lines. `nanopnp gui <project>` walks nothing, so a user's project has an empty charge screen until WP5.11. The
+  > 100 lines. `nanopnp gui <project>` walks nothing, so a user's project has an empty charge screen until WP5.19. The
   > `refused` state is a continuum model with `bias_V: fast`. MOD-13's command-line part has no `REV` row; it is recorded here and
   > in the changelog.
 - [x] 14. `.claude/hooks/gate.sh run`: VER-62's walks unmoved. **Executor:** main.
@@ -238,8 +238,8 @@ In `tests/tier1/`: rows 1 to 3 `test_project.py`, 4 `test_stage_conformance.py`,
 
 ### Out of scope
 
-- The suites' tools, WP5.09 to WP5.12; a queued build or study and its convergence, WP5.11.
-- The comparison's schema and difference field, WP5.12; the guided route and Qt's removal, WP5.13.
+- The suites' tools, WP5.16 to WP5.20; a queued build or study and its convergence, WP5.19.
+- The comparison's schema and difference field, WP5.20; the guided route and Qt's removal, WP5.21.
 - Removing current results that no run uses, and a project's own look: not planned (AI14, AI13).
 
 ### Open questions

@@ -8927,7 +8927,7 @@
   "date": "",
   "package": "WP5.07",
   "decided": "[Rectification does not pair a bias set through a variable](review-items.md#rev-197-rectification-does-not-pair-a-bias-set-through-a-variable)",
-  "holds_now": "WP5.07; WP5.14",
+  "holds_now": "WP5.07; WP5.19",
   "status": "accepted",
   "kind": "REV row"
  },
@@ -11061,7 +11061,7 @@
   "date": "27 October 2026",
   "package": "phase ruling",
   "decided": "The rows the workbench's packages fix keep the owners the design document proposed**: REV-28 and REV-30 the Analysis package; REV-32 the project-folder package; REV-39 the Continuum package; REV-52 the first shell packa…",
-  "holds_now": "open: REV-62 in WP5.05 (AD3); REV-32, REV-52 and MOD-13's command-line part in WP5.08, REV-39 in WP5.12, REV-28 and REV-30 in WP5.15 (AG1; AJ10)",
+  "holds_now": "open: REV-62 in WP5.05 (AD3); REV-32, REV-52 and MOD-13's command-line part in WP5.08, REV-39 in WP5.17, REV-28 and REV-30 in WP5.20 (AG1; AJ10)",
   "status": "open",
   "kind": "history ruling"
  },
@@ -11160,7 +11160,7 @@
   "date": "27 October 2026",
   "package": "phase ruling",
   "decided": "REV-136's library capabilities are ordered by `/np-plan amend 5`**, as proposed: each becomes a library package with its Tier 1 and 2 tests before the shell surfaces it, or moves to a later phase, the author ruling the…",
-  "holds_now": "ruled by AG6; open: WP5.15 (AJ10)",
+  "holds_now": "ruled by AG6; open: WP5.20 (AJ10)",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -11765,7 +11765,7 @@
   "date": "31 October 2026",
   "package": "phase ruling",
   "decided": "REV-121 is deferred to the Phase 5 package that surfaces structure preparation** (FR-37's v0.6 half), which must present a trustworthy axis for a single-chain or mixed-chain assembly before it can prepare one. `/np-plan…",
-  "holds_now": "REV-121; open: WP5.11 (AG1; AJ10)",
+  "holds_now": "REV-121; open: WP5.16 (AG1; AJ10)",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -11985,7 +11985,7 @@
   "date": "1 November 2026",
   "package": "phase ruling",
   "decided": "REV-170, the stage-5 region interface, lands in the shell package that builds the Continuum suite's Geometry tool, library step first** (*places AC3*). REV-121 stays with the package that surfaces structure preparation,…",
-  "holds_now": "REV-170; open: WP5.12 (AG1; AJ10)",
+  "holds_now": "REV-170; open: WP5.17 (AG1; AJ10)",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12105,7 +12105,7 @@
   "where": "specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:20",
   "date": "3 November 2026",
   "package": "WP5.08",
-  "decided": "The shell is cut one package per suite, after a frame package, in the order of the guided route**: WP5.08, the frame and the project folder; WP5.09, the Molecular suite; WP5.10, the Continuum suite; WP5.11, the Study su…",
+  "decided": "The shell is cut one package per suite, after a frame package, in the order of the guided route**: WP5.08, the frame and the project folder; WP5.09, the Molecular suite; WP5.15, the Continuum suite; WP5.16, the Study su…",
   "holds_now": "its sequence superseded by AJ10; WP5.08 spent (*Its sequence is superseded by AJ10.*)",
   "status": "in force",
   "kind": "history ruling"
@@ -12159,9 +12159,9 @@
   "decided_by": "author",
   "where": "specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:25",
   "date": "3 November 2026",
-  "package": "WP5.12",
+  "package": "WP5.17",
   "decided": "REV-136's v0.6 cut line: v0.6 holds every capability FR-31 to FR-39 name, and the comparison's difference of two runs' fields over the overlap of their fluid domains.** A library function in `post/` samples both runs on…",
-  "holds_now": "FR-32; REV-136; open: WP5.15 (AJ10)",
+  "holds_now": "FR-32; REV-136; open: WP5.20 (AJ10)",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12170,9 +12170,9 @@
   "decided_by": "author",
   "where": "specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:26",
   "date": "3 November 2026",
-  "package": "WP5.11",
-  "decided": "The 200 ms redraw line (WB-23; AF4) is measured on the author's machine with a GPU, in a local session, in WP5.11.** On a miss the package profiles the redraw; where the renderer's own repaint is the cost, the line bind…",
-  "holds_now": "the Phase 5 plan's criterion 6; open: WP5.14 (AJ10)",
+  "package": "WP5.16",
+  "decided": "The 200 ms redraw line (WB-23; AF4) is measured on the author's machine with a GPU, in a local session, in WP5.16.** On a miss the package profiles the redraw; where the renderer's own repaint is the cost, the line bind…",
+  "holds_now": "the Phase 5 plan's criterion 6; open: WP5.19 (AJ10)",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12425,7 +12425,7 @@
   "date": "5 November 2026",
   "package": "phase ruling",
   "decided": "The frame is rebuilt on the components NiceGUI ships through Quasar before any suite is built.** The application layout with its header, side drawers and footer, the tree, dense tables, the searchable select with keyboa…",
-  "holds_now": "the design document's WB-33; open: WP5.10",
+  "holds_now": "the design document's WB-33; open: WP5.15",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12469,7 +12469,7 @@
   "date": "5 November 2026",
   "package": "phase ruling",
   "decided": "Every model declares the values it exposes, each with its name, unit, range and default; a study lists those first and sweeps them directly, and any other value stays reachable as reaching inside the model.** The author…",
-  "holds_now": "FR-39; the design document's WB-35; open: WP5.09, WP5.14",
+  "holds_now": "FR-39; the design document's WB-35; open: WP5.09, WP5.19",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12480,7 +12480,7 @@
   "date": "5 November 2026",
   "package": "phase ruling",
   "decided": "`impeccable` is a tool inside the `np-gui` workflow, never its authority.** `np-gui`'s review adds the plugin's critique beside the GUI reviewer's, and a session reads its quality floor for working applications before i…",
-  "holds_now": "§8.4.4; open: WP5.10",
+  "holds_now": "§8.4.4; open: WP5.15",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12491,7 +12491,7 @@
   "date": "5 November 2026",
   "package": "phase ruling",
   "decided": "A changed value is marked at its field, filtered on its pane and listed in one dense table, and the project's name heads the project rail.** Every tool pane and the settings filter to modified values; the changed count…",
-  "holds_now": "FR-34; the design document's WB-36; open: WP5.10",
+  "holds_now": "FR-34; the design document's WB-36; open: WP5.15",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12502,7 +12502,7 @@
   "date": "5 November 2026",
   "package": "phase ruling",
   "decided": "Each suite is designed on a working prototype over 2WCD, then built.** A suite package opens with its tools prototyped over 2WCD's artefacts and rendered in their states (empty, building, built, refused) for the author'…",
-  "holds_now": "§8.4.4; the design document's WB-38; open: WP5.10 to WP5.15",
+  "holds_now": "§8.4.4; the design document's WB-38; open: WP5.15 to WP5.20",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12513,7 +12513,7 @@
   "date": "5 November 2026",
   "package": "phase ruling",
   "decided": "The settings are one declared list.** Each setting is declared once with its section, its scope, the user's or the project's, which overrides the user's where both are allowed, its default, its description and search wo…",
-  "holds_now": "the design document's WB-37; open: WP5.10",
+  "holds_now": "the design document's WB-37; open: WP5.15",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12523,8 +12523,8 @@
   "where": "specification/history/34-phase-5-amended-the-frame-the-physics-model-and-the-design-loop.md:30",
   "date": "5 November 2026",
   "package": "WP5.09",
-  "decided": "The shell's packages are renumbered:** WP5.09 the physics model, the library step; WP5.10 the frame on Quasar's components, the settings, the palette, the changed table, the five suites, the 2WCD state and `impeccable`…",
-  "holds_now": "§8.1's Phase 5 row; the Phase 5 plan; open: WP5.09 to WP5.17",
+  "decided": "The shell's packages are renumbered:** WP5.09 the physics model, the library step; WP5.15 the frame on Quasar's components, the settings, the palette, the changed table, the five suites, the 2WCD state and `impeccable`…",
+  "holds_now": "§8.1's Phase 5 row; the Phase 5 plan; open: WP5.09 and WP5.15 to WP5.22",
   "status": "in force",
   "kind": "history ruling"
  },
@@ -12557,7 +12557,7 @@
   "date": "6 November 2026",
   "package": "WP5.09",
   "decided": "Each kind of model has a default list of exposed values, and a model file may replace it with its own `exposes:` list** (*the recommendation*, against a list written into every model file and against a fixed list per ki…",
-  "holds_now": "§5.3.1's NOTE on `models:`; open: WP5.09, WP5.13, WP5.14",
+  "holds_now": "§5.3.1's NOTE on `models:`; open: WP5.09, WP5.18, WP5.19",
   "status": "in force",
   "kind": "history ruling"
  }

@@ -205,7 +205,7 @@ Fixtures: model files in `tmp_path`, split by `OWNERS` from `examples/01-quickst
 ### Out of scope
 
 - The project folder, its index and writing model files from the library: WP5.08 (FR-32).
-- The suites that edit models and mark overrides: WP5.09 to WP5.11.
+- The suites that edit models and mark overrides: WP5.16 to WP5.19.
 - Variables in a model file, and the forecast over a model axis: WP5.07 (AG2 to AG5).
 - A stored mesh beside a structure: refused (D6); a REV row.
 

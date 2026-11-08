@@ -23,16 +23,16 @@
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:112` — **not a tag**: its entry under `## [Unreleased]`; otherwise `v0.6.0-alpha.1` (§8.4.1).
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:127` — **not a tag**: Tagged `v0.6.0-alpha.2` (S19).
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:143` — **not a tag**: the `X86_V3` and `AVX512_SPR` meshes of example 07 are folded. Tagged `v0.6.0-alpha.3`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:157` — **not a tag**: §5.3.3 are amended; the Charge edit tool is WP5.11's (AJ10). Tagged `v0.6.0-alpha.4`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:157` — **not a tag**: §5.3.3 are amended; the Charge edit tool is WP5.16's (AJ10). Tagged `v0.6.0-alpha.4`.
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:170` — **not a tag**: tests cover the identity, the overrides, the sweep and the reuse. Tag `v0.6.0-alpha.5`.
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:182` — **not a tag**: registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. Tag `v0.6.0-alpha.6`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:237` — **not a tag**: `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.10`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:245` — **not a tag**: declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.11`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:254` — **not a tag**: VER-55 as restated. Tag `v0.6.0-alpha.12`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:263` — **not a tag**: `v0.6.0-alpha.13`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:273` — **not a tag**: `v0.6.0-alpha.14`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:281` — **not a tag**: one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.15`.
-## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.16`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:237` — **not a tag**: `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:245` — **not a tag**: declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:254` — **not a tag**: VER-55 as restated. Tag `v0.6.0-alpha.17`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:263` — **not a tag**: `v0.6.0-alpha.18`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:273` — **not a tag**: `v0.6.0-alpha.19`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:281` — **not a tag**: one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
+## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.21`.
 ## version named (is it a tag?) — live (70) :: - `docs/plans/phase-5-workbench.md:295` — **not a tag (a prefix of tags)**: and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 ## version named (is it a tag?) — live (70) :: - `docs/project/modularity.md:282` — **not a tag**: **Fixed** (WP5.06, `v0.6.0-alpha.6`): `post/outputs.py` and `physics/steric.py` hold the two registries, and
 ## version named (is it a tag?) — live (70) :: - `docs/project/review-findings.md:151` — **not a tag (a prefix of tags)**: …17 \| [WP57 may restate the Qt shell's gating clauses before v0.5.0](review-items.md#rev-127-wp57-may-restate-the-qt-shells-gating-clauses-be…

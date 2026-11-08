@@ -19,7 +19,7 @@ Written by `.claude/scripts/audit/index_records.py`; re-run it when a file is ad
 - [Phase 4 (Polish and user testing): a codebase whose seams are measured and whose surface has been used](phase-4-polish-and-user-testing.md): delivered, 2 November 2026; closes at the merge and the `v0.5.0` tag.
 - [Phase 4 plan: the record](phase-4-record.md): in progress.
 - [Phase 5 plan: the record](phase-5-record.md): in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.
-- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5-workbench.md): in progress; WP5.01 to WP5.08 merged; WP5.09, the physics model, delivered, awaiting its merge; the shell packages WP5.10 to WP5.17 planned.
+- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5-workbench.md): in progress; WP5.01 to WP5.09 merged; the written knowledge's follow-up WP5.10 to WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.
 - [WP10 — Case-driven runs, the CLI, field output](wp10-cli-runs-field-output.md): delivered, 7 September 2026.
 - [WP11 — Sweep runner](wp11-sweep-runner.md): delivered, 8 September 2026.
 - [WP12 — Reference-matching stabilised mode](wp12-reference-stabilised-mode.md): delivered, 14 September 2026; the three questions it opened were closed by author ruling, 13 September 2026.

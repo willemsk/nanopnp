@@ -215,8 +215,8 @@ carefully hedged. Consider a one-line banner at its top saying that status, so a
 session that lands on it does not treat the Copilot substitutes as tested.
 
 **C5 (Low). `render.md`'s `qt` target says "today's shell (removed with it)"** while
-`current.md` places Qt's removal in WP5.16. Accurate, but "removed with it" needs the reader to
-know what "it" is; say "removed in WP5.16".
+`current.md` places Qt's removal in WP5.21. Accurate, but "removed with it" needs the reader to
+know what "it" is; say "removed in WP5.21".
 
 ## 4. What checked out
 
