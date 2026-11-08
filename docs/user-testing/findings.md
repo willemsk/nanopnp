@@ -108,7 +108,7 @@ Two distinct issues emerge:
 
 **Ruled** (§8.2.22 X1, X2): WP56 grouped the help's flags; the split itself is WP57's. An idealised pore is declared in the case as `geometry.pore` and meshed by stage 6 under `numerics.mesh`; `nanopnp geometry cylinder` writes the geometry as a file that `nanopnp plot` draws and `nanopnp mesh` meshes; `mesh cylinder` is removed.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): the pore is declared as `geometry.pore` and meshed by stage 6; `nanopnp geometry cylinder` writes the geometry file and `nanopnp mesh` meshes it; `mesh cylinder` is gone.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): the pore is declared as `geometry.pore` and meshed by stage 6; `nanopnp geometry cylinder` writes the geometry file and `nanopnp mesh` meshes it; `mesh cylinder` is gone.
 
 ## UT-03 · `nanopnp inspect` default output dumps raw manifest, unusable for targeted queries (e.g. deviations)
 
@@ -181,7 +181,7 @@ However, a nanopore modeller often wants to visualise spatial field distribution
 
 Currently:
 1. Adding `fields` to `outputs:` in the case YAML (`outputs: [summary, fields]`) exports `fields_omega.xdmf`/`.h5` and `fields_omega_w.xdmf`/`.h5` for external visualisation (`IF-07`), and `nanopnp.plot` provides `result.figure("solve")` in Python/notebooks (`FR-30`, requiring the optional `plot` extra per `CON-07` and `QR-09`).
-2. However, the CLI provides no command (such as `nanopnp plot run-pore` or `nanopnp export`) to render or export figures from a completed run directory (`FR-28` is scheduled for `v0.7` in Phase 6 and was excluded from Phase 4 in `docs/plans/phase-4-polish-and-user-testing.md`, while interactive field visualisation is scheduled for Phase 5 under `§8.2.6 F5`).
+2. However, the CLI provides no command (such as `nanopnp plot run-pore` or `nanopnp export`) to render or export figures from a completed run directory (`FR-28` is scheduled for `v0.7` in Phase 6 and was excluded from Phase 4 in `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, while interactive field visualisation is scheduled for Phase 5 under `§8.2.6 F5`).
 3. Session 01 ("The command line: from a case file to a reproduced current") does not mention `outputs: [fields]` (`IF-07`) or how to view spatial solutions in Python/notebooks (`FR-30`).
 
 ## UT-05 · Unclear motivation and user use-case for the `reproduce` command
@@ -376,7 +376,7 @@ edited = with_section(case.document, "charge")
 
 ### Context and expectation
 
-In Session 04, the user walks through driving `nanopnp` via Python in `notebook.py` (stopping a run, progress reporting, swapping a mesh, editing sections, and adding a custom stage). Per `SPECIFICATION.md` §8.2.8 H2 and `docs/plans/wp55-user-testing-protocol.md` (D2), Session 04 was specifically designed to test `with_section` and `core.stages.register` to inform the author's ruling on **`MOD-11`** (`with_section and register are outside PUBLIC`) and **`REV-145`** (`No case builders by section before Phase 5`, deferred to Phase 5 with `MOD-11` under `§8.2.20 V3`).
+In Session 04, the user walks through driving `nanopnp` via Python in `notebook.py` (stopping a run, progress reporting, swapping a mesh, editing sections, and adding a custom stage). Per `SPECIFICATION.md` §8.2.8 H2 and `docs/plans/phase-4/wp55-user-testing-protocol.md` (D2), Session 04 was specifically designed to test `with_section` and `core.stages.register` to inform the author's ruling on **`MOD-11`** (`with_section and register are outside PUBLIC`) and **`REV-145`** (`No case builders by section before Phase 5`, deferred to Phase 5 with `MOD-11` under `§8.2.20 V3`).
 
 User feedback summarises the core design friction:
 > *"This example seems to do what it is supposed to do, but the current implementation of the API is anything but intuitive... most sections (basically all except 02) which I either do not readily understand by reading the code, or which seem very convoluted. Like the code was forced into an API role rather than native to it."*
@@ -413,7 +413,7 @@ Conclusion: These findings directly inform the author's `/np-plan amend 4` rulin
 
 **Ruled** (§8.2.23 Y1 to Y10, superseding §8.2.21 W7): a `Case` is the case document, built from the public typed blocks of `nanopnp.case` and edited by copy through `with_`, which takes a whole block; a `Session` holds the store and its own stages and runs every case, the command line's included, each run taking its own controls; a stage of one's own is a function registered by `session.register_stage`. `run_document`, `with_section`, `StageDescription` and `register` stay internal. WP57.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `Case` and `Session` are the interface; `run_document`, `with_section` and `register` are internal; a stage of one's own is `session.register_stage`.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `Case` and `Session` are the interface; `run_document`, `with_section` and `register` are internal; a stage of one's own is `session.register_stage`.
 
 ## UT-11 · Undocumented thread-pinning behaviour in `sweep run` causes oversubscription concerns
 

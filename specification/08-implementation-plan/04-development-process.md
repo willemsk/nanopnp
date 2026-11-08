@@ -81,8 +81,11 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   stops at CI, and agent merge stays off. One host drives a branch at a time and the hosts never share
   a working tree; the fresh-session rule below is per session. (§8.2.25 AA1 to AA4)
 * From Phase 5, a work package is named `WP<phase>.<nn>`, numbered from 01 within its phase
-  (`WP5.01`): its plan is `docs/plans/wp5.01-<slug>.md`, its pull request `feat: WP5.01 — …`, and the
-  commands take `wp 5.01`. Phase 4 keeps its flat numbers to its close. (§8.2.17 S16)
+  (`WP5.01`): its plan is `docs/plans/phase-5/wp5.01-<slug>.md`, its pull request `feat: WP5.01 — …`,
+  and the commands take `wp 5.01`. Phase 4 keeps its flat numbers to its close. (§8.2.17 S16)
+* A plan is written in its phase's folder, `docs/plans/phase-<n>/`, from the commit that adds it, and
+  a standalone brief or review in `docs/plans/sessions/`; `current.md` and `index.md` stay at the
+  top, and a phase close moves nothing. (§8.2.36 AL5, AL28)
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package of its lane
   starts. `/np-implement` stops at the pull request and pauses for a compaction; `/np-ship` then runs
   in the implementing session or in a fresh one, and puts to the author each review finding that

@@ -6,7 +6,7 @@ description: "Records the author's rulings on WP54's scope, taken in the review 
 
 #### 8.2.20 WP54's notebooks and figures, agreed 28 October 2026
 
-Rulings by the author, written in `docs/plans/notebooks-review-for-wp54.md` §7.1 as A1 to A4 on
+Rulings by the author, written in `docs/plans/sessions/notebooks-review-for-wp54.md` §7.1 as A1 to A4 on
 28 October 2026, where they settle four conflicts between the author's notes and the specification
 (§8.2.16 R8 left WP54's scope to that document). V5 was given the same day, while the package was
 planned. The letter series continues at V; V1 to V4 are the document's A1 to A4. V6 to V9 were given the

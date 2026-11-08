@@ -27,7 +27,7 @@ merges before `v0.5.0` and takes no tag, so its entry waits here (`SPECIFICATION
 S19). It critiques the Qt shell, holds a design round with the author, draws the areas as choice
 panels and two whole-workbench mockups, and writes the design document and its requirements. No
 `src/`, `tests/`, case schema or public API changes (S1). The
-[plan](docs/plans/wp5.01-workbench-design-study.md) records the work.
+[plan](docs/plans/phase-5/wp5.01-workbench-design-study.md) records the work.
 
 ### Added
 
@@ -53,7 +53,7 @@ panels and two whole-workbench mockups, and writes the design document and its r
 WP5.02: the framework spike and the visual-feedback workflow, Phase 5's second package; tag `v0.6.0-alpha.2`
 once merged (`SPECIFICATION.md` §8.2.30 AF1 to AF4). The hard screen was built in NiceGUI and in React over one
 server and measured; the author ruled NiceGUI, and both trial builds left the tree, their report kept in
-[docs/design/spike/report.md](docs/design/spike/report.md). The [plan](docs/plans/wp5.02-framework-spike.md)
+[docs/design/spike/report.md](docs/design/spike/report.md). The [plan](docs/plans/phase-5/wp5.02-framework-spike.md)
 records the work.
 
 - **Added**:
@@ -80,7 +80,7 @@ records the work.
 WP5.03: protonation before the density, Phase 5's third package; tag `v0.6.0-alpha.3` once merged
 (`SPECIFICATION.md` §8.2.19 U2, §8.2.31 AG8; REV-135). Stage 7's protonation walks before stage 2, and stage 2
 smears the protonated atoms of every frame, hydrogens included, so a protonation state moves the density, the
-contour and the mesh. The [plan](docs/plans/wp5.03-protonation-before-the-density.md) records the work.
+contour and the mesh. The [plan](docs/plans/phase-5/wp5.03-protonation-before-the-density.md) records the work.
 
 - **Added**:
   - **`geometry.density.atoms`**: `protonated` (the default) or `as_loaded`, the reference's way. It is a switch away from
@@ -106,7 +106,7 @@ WP5.04: the charge mutator's library step, Phase 5's fourth package; tag `v0.6.0
 (`SPECIFICATION.md` FR-38, PHY-16 step 3; §8.2.17 S4, §8.2.19 U6, §8.2.31 AG9 to AG11). A case's
 `charge.edits` pins a residue's protonation state, changes its charge by an integer on the titratable group,
 or scales its radii; the result is a variant table kept beside its parent, with a `variant_of` record and no
-deviation. The [plan](docs/plans/wp5.04-the-charge-mutators-library-step.md) records the work.
+deviation. The [plan](docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md) records the work.
 
 - **Added**:
   - **`charge.edits`**: each entry is a `residue` (`ASP 21`, `HIS 292A`) and one of `state` (`charged` or
@@ -138,7 +138,7 @@ deviation. The [plan](docs/plans/wp5.04-the-charge-mutators-library-step.md) rec
 WP5.05: named models and study overrides in the case, Phase 5's fifth package; tag `v0.6.0-alpha.5` once merged
 (`SPECIFICATION.md` FR-39, IF-03; §8.2.18 T2, §8.2.31 AG4, AG12, AG13; REV-62). A case can name a molecular model
 and a continuum model, each kept in its own file, and so become a study; the study may override any value of
-them, and resolves to the one complete case its run writes. The [plan](docs/plans/wp5.05-named-models-and-study-overrides.md)
+them, and resolves to the one complete case its run writes. The [plan](docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md)
 records the work.
 
 - **Added**:
@@ -175,7 +175,7 @@ records the work.
 WP5.06: outputs and steric models as registries, Phase 5's sixth package; tag `v0.6.0-alpha.6` once merged
 (`SPECIFICATION.md` MOD-09, FR-23, QR-04, PHY-05, PHY-22, VER-56; §8.2.18 T4, §8.2.28 AD5, §8.2.32 AH1). A new quantity of
 interest, or a second way of modelling crowded ions, is one registration and needs no edit of the case schema, the
-extraction stage or a physics model. The [plan](docs/plans/wp5.06-outputs-and-steric-registries.md) records the work.
+extraction stage or a physics model. The [plan](docs/plans/phase-5/wp5.06-outputs-and-steric-registries.md) records the work.
 
 - **Added**:
   - **`post/outputs.py`**: `register_output(name, *, needs, extract, parameters, export, refusal)`, `registered_outputs()`,
@@ -200,7 +200,7 @@ extraction stage or a physics model. The [plan](docs/plans/wp5.06-outputs-and-st
 WP5.07: variables and the rebuild forecast, Phase 5's seventh package; tag `v0.6.0-alpha.7` once merged
 (`SPECIFICATION.md` FR-39, FR-24, FR-25, FR-27, IF-03, VER-24, VER-64, VER-72; §8.2.19 U4, §8.2.31 AG2 to AG5; REV-139). A
 case can name values with their units and write any number as an expression of them, and a sweep says before it runs which
-stages each swept value rebuilds. The [plan](docs/plans/wp5.07-variables-and-the-rebuild-forecast.md) records the work.
+stages each swept value rebuilds. The [plan](docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md) records the work.
 
 - **Added**:
   - **`variables:`** in the case (`nanopnp/case/v0.6` is unchanged): a name is `{value, unit}` or `{expression, unit}`, and
@@ -232,7 +232,7 @@ WP5.08: the frame and the project folder, Phase 5's eighth package; tag `v0.6.0-
 AI9 to AI14; REV-32, REV-52, MOD-13). The workbench gets its document, a project folder of plain files, and its window, a frame
 with menus, a palette, the four suites, the queue, the changed and problem lists and the settings. **`nanopnp gui` takes a
 project, not a case**: it opens a folder, creates one in a missing or empty folder, and with none opens the last project. The
-[plan](docs/plans/wp5.08-the-frame-and-the-project-folder.md) records the work.
+[plan](docs/plans/phase-5/wp5.08-the-frame-and-the-project-folder.md) records the work.
 
 - **Added**:
   - **The project** (`nanopnp.Project`, `nanopnp/project/v0.6`): `nanopnp-project.yaml` with the item index, the open items,
@@ -267,7 +267,7 @@ project, not a case**: it opens a folder, creates one in a missing or empty fold
 WP5.09: the physics model, Phase 5's ninth package; tag `v0.6.0-alpha.9` once merged (`SPECIFICATION.md` FR-25, FR-32,
 FR-39; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to AK3). The equations, the salt and the voltages become a model of their own,
 which a study pairs with a molecule and a pore, so one physics serves many pores and a pore many salts. No key, golden
-number or case written inline changes (VER-62). The [plan](docs/plans/wp5.09-the-physics-model.md) records the work.
+number or case written inline changes (VER-62). The [plan](docs/plans/phase-5/wp5.09-the-physics-model.md) records the work.
 
 - **Added**:
   - **The physics model** (`nanopnp/physics-model/v0.6`), named by `models.physics`. It owns `physics`, `electrolyte`,
@@ -289,7 +289,7 @@ number or case written inline changes (VER-62). The [plan](docs/plans/wp5.09-the
   Appendix A rows of FR-32 and FR-39.
 
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
-[plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
+[plan](docs/plans/sessions/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 
 - **Added**: `.claude/workflow/hosts.md` and `hosts/copilot.md` (each Claude Code tool's Copilot
   substitute), `.github/copilot-instructions.md`, `.github/hooks/nanopnp.json`, `.githooks/pre-push`
@@ -309,7 +309,7 @@ only what can fail silently, and the development loop is one commit hook and one
 holds 173 rows; 129 are `fixed` and the others each carry a ruling that names their owner. No computed number
 moved beyond the bounds the number-stability golden records (VER-62), which holds on Linux, macOS and Windows.
 The end-of-phase report, with every number measured again on the close's own tree, is in
-[docs/plans/phase-4-polish-and-user-testing.md](docs/plans/phase-4-polish-and-user-testing.md).
+[docs/plans/phase-4/phase-4-polish-and-user-testing.md](docs/plans/phase-4/phase-4-polish-and-user-testing.md).
 
 The release gathers 26 work packages. Package WP(34+N) is `v0.5.0-alpha.N`; the close is described here and
 tagged `v0.5.0` alone (§8.2.5 E5, §8.2.7 G11):
@@ -515,7 +515,7 @@ WP59: the architecture review's fixes, Phase 4's last-but-one package (`SPECIFIC
 §8.2.29 AE1 to AE4, its review's items; the verdicts of [CODE_REVIEW_024](docs/code_reviews/CODE_REVIEW_024.md)). A case owns the record of where it came from, the
 command line checks and reads a run through the same two objects the workbench will use, and a solve that meets an
 invalid number stops. It discharges NUM-16's NOTE on a non-finite trial residual and IF-01's NOTE on the interface.
-No QoI moves (VER-62 holds). The [plan](docs/plans/wp59-architecture-review-fixes.md) records the work.
+No QoI moves (VER-62 holds). The [plan](docs/plans/phase-4/wp59-architecture-review-fixes.md) records the work.
 
 - **Added**: `Case.source`, the text, file and base directory a run of the case records, as a frozen `CaseSource`;
   `Session.check(case, files=True)`, which checks the files the case names, resolves it and lists the stages a run
@@ -542,7 +542,7 @@ WP58: documentation increment 4, Phase 4's penultimate package, a currency and p
 (`SPECIFICATION.md` §8.2.24 Z1 to Z4; §8.2.21 W1, W6; UT-02, UT-05, UT-08, UT-09, UT-11). WP59 gathers its changes
 into `[0.5.0]`. No `src/`, `tests/`, `data/`, case file or tagged block changes, so no case hash and no recorded
 number moves. It claims no identifier. The
-[plan](docs/plans/wp58-documentation-increment-4.md) records the work.
+[plan](docs/plans/phase-4/wp58-documentation-increment-4.md) records the work.
 
 - **Added**: `docs/guide/python.md`, the narrative of the Python interface (build a case, run it through a session,
   read the result, draw its figures, sweep, a stage of one's own, reopen a run), every snippet run once;
@@ -564,7 +564,7 @@ number moves. It claims no identifier. The
 WP57: an idealised pore as geometry, and the Python interface rebuilt on a `Case` and a `Session`
 (`SPECIFICATION.md` §8.2.21 W4, W7; §8.2.22 X1 to X8; §8.2.23 Y1 to Y11; UT-02, UT-10; `MOD-11`; REV-111,
 REV-120, REV-122, REV-144, REV-145, REV-153, REV-155, REV-157). The
-[plan](docs/plans/wp57-idealised-pore-and-python-interface.md) records the work.
+[plan](docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md) records the work.
 
 ### Added
 
@@ -670,7 +670,7 @@ Each break, with its migration:
 
 WP56: the command line read by a person, the fix of the first user-testing round's command-line findings
 (`SPECIFICATION.md` §8.2.21 W2 to W6, W8; UT-01 to UT-09, UT-11, UT-12; REV-154). The
-[plan](docs/plans/wp56-command-line-read-by-a-person.md) records the work.
+[plan](docs/plans/phase-4/wp56-command-line-read-by-a-person.md) records the work.
 
 ### Added
 
@@ -710,7 +710,7 @@ WP56: the command line read by a person, the fix of the first user-testing round
 
 WP55: the user-testing protocol. Five sessions that the author runs as a nanopore modeller would, a log for
 what they find, and a nightly test that keeps every session's commands working (`SPECIFICATION.md` §8.2.6 F3,
-§8.2.7 G7). No `src/` change. The [plan](docs/plans/wp55-user-testing-protocol.md) records the work.
+§8.2.7 G7). No `src/` change. The [plan](docs/plans/phase-4/wp55-user-testing-protocol.md) records the work.
 
 ### Added
 
@@ -726,7 +726,7 @@ what they find, and a nightly test that keeps every session's commands working (
 
 WP54: the notebooks and figures revised, the library's cylinder and case factories, a one-axis sweep in Python,
 and the notebooks and stage figures rebuilt on one plotting layer (`SPECIFICATION.md` §8.2.20 V1 to V17). The
-[plan](docs/plans/wp54-notebooks-and-figures-revised.md) records the work.
+[plan](docs/plans/phase-4/wp54-notebooks-and-figures-revised.md) records the work.
 
 ### Added
 
@@ -838,7 +838,7 @@ WP52: the documents, the specification and the plans split (`SPECIFICATION.md` �
   labelled with its file and line range. The site copies the bundle, its navigation is generated from
   the bundle's index pages as the knowledge base's is, and the guide's anchored links point into it.
 - **The Phase 4 plan states its current scope.** Its amendments and its earlier text are in
-  `docs/plans/phase-4-record.md`.
+  `docs/plans/phase-4/phase-4-record.md`.
 
 ## [0.5.0-alpha.17] - 2026-10-22
 
@@ -1442,7 +1442,7 @@ from a structure to a current. VAL-06 compares our Poisson with APBS on 2WCD: ma
 0.10 % and axis 0.23 %, against 3 %, 1 % and 1.5 %. The phase closes on its Tier 1 and Tier 2
 evidence. The ensemble legs that need the author's archive are carried to Phase 6
 (`SPECIFICATION.md` §8.2.5 E1, §8.2.6 F1). The end-of-phase report is in
-[docs/plans/phase-3-charge-pipeline.md](docs/plans/phase-3-charge-pipeline.md).
+[docs/plans/phase-3/phase-3-charge-pipeline.md](docs/plans/phase-3/phase-3-charge-pipeline.md).
 
 The release gathers nine work packages, each tagged except the last:
 
@@ -1823,7 +1823,7 @@ generated ClyA geometry with the published reference polygon. The 2WCD leg passe
 The ensemble leg passes on the constriction radius (−0.039 nm) and the rms (0.089 nm), and misses
 ε_G at −5.56 % against 5 %. The author waived that miss (`SPECIFICATION.md` §8.2.4 D7), and the
 tolerance is unchanged. The end-of-phase report is in
-[docs/plans/phase-2-geometry-pipeline.md](docs/plans/phase-2-geometry-pipeline.md).
+[docs/plans/phase-2/phase-2-geometry-pipeline.md](docs/plans/phase-2/phase-2-geometry-pipeline.md).
 
 The release gathers nine work packages, each tagged, each with its own entry in this file:
 
@@ -1840,7 +1840,7 @@ The release gathers nine work packages, each tagged, each with its own entry in 
 ### Added
 
 - The Phase 2 end-of-phase report, and `SPECIFICATION.md` §8.2.4 D7, which closes the phase.
-- The Phase 3 delivery plan, `docs/plans/phase-3-charge-pipeline.md` (WP26–WP32), with the author's
+- The Phase 3 delivery plan, `docs/plans/phase-3/phase-3-charge-pipeline.md` (WP26–WP32), with the author's
   rulings recorded as §8.2.4 D2–D5. These cover the closed-form charge kernel deposited on the
   deployed mesh, VAL-06 against APBS, per-frame protonation and the exclusion shell.
 - VAL-16 and VAL-17: Tier 3 compares the paper's published current–voltage relationships and
@@ -2315,7 +2315,7 @@ externally supplied mesh and charge field. It has full quantity-of-interest extr
 documentation site. Tiers 1 and 2 pass, and Tier 3 is enabled and verified. Under
 `SPECIFICATION.md` §8.2.3, the attribution of differences against COMSOL is outstanding until the
 author's reference exports exist. The end-of-phase report is in
-[docs/plans/phase-1-solver-core.md](docs/plans/phase-1-solver-core.md).
+[docs/plans/phase-1/phase-1-solver-core.md](docs/plans/phase-1/phase-1-solver-core.md).
 
 The release gathers ten work packages, each tagged, each with its own entry in this file:
 
@@ -2334,7 +2334,7 @@ The release gathers ten work packages, each tagged, each with its own entry in t
 ### Added
 
 - The Phase 1 end-of-phase report, and the §8.2.3 amendment that closes the phase.
-- The Phase 2 delivery plan, `docs/plans/phase-2-geometry-pipeline.md`
+- The Phase 2 delivery plan, `docs/plans/phase-2/phase-2-geometry-pipeline.md`
   ([#36](https://github.com/willemsk/nanopnp/pull/36)), with the author's rulings recorded as
   `SPECIFICATION.md` §8.2.2. QR-09 is amended to Python 3.11–3.14, taking effect in the code with
   WP17.

@@ -10,13 +10,13 @@ generated:
   at: '2026-10-14T00:00:00Z'
 sources:
 - id: wp33-plan
-  resource: docs/plans/wp33-test-durations.md
+  resource: docs/plans/phase-3/wp33-test-durations.md
   title: WP33 test durations plan (suite timing and BLAS thread measurements)
 - id: wp43-plan
-  resource: docs/plans/wp43-development-loop.md
+  resource: docs/plans/phase-4/wp43-development-loop.md
   title: WP43 development loop plan, D8 (3.14 timings and coverage sysmon)
 - id: wp44-plan
-  resource: docs/plans/wp44-simplify-the-loop.md
+  resource: docs/plans/phase-4/wp44-simplify-the-loop.md
   title: WP44 simplify the loop plan (test-impact selection removal)
 tested_with:
   pytest: 9.1.1
@@ -162,7 +162,7 @@ ordering conftest (the order's re-measurement, below, on a quiet machine). Each 
   item so that the walks did not pay the tracer in their calls; WP50 removed pytest-cov, the
   marker and the coverage gate (§8.2.13 N2), so nothing in the suite measures coverage now.
 
-[^wp33-plan]: `docs/plans/wp33-test-durations.md` (suite BLAS thread and extended-test timing measurements).
-[^wp43-plan]: `docs/plans/wp43-development-loop.md`, D8 and item 10 (CPython 3.14.6 suite timings and `COVERAGE_CORE=sysmon`).
-[^wp44-plan]: `docs/plans/wp44-simplify-the-loop.md` and `SPECIFICATION.md` §8.2.11 L2 (test-impact selection measurements and removal).
+[^wp33-plan]: `docs/plans/phase-3/wp33-test-durations.md` (suite BLAS thread and extended-test timing measurements).
+[^wp43-plan]: `docs/plans/phase-4/wp43-development-loop.md`, D8 and item 10 (CPython 3.14.6 suite timings and `COVERAGE_CORE=sysmon`).
+[^wp44-plan]: `docs/plans/phase-4/wp44-simplify-the-loop.md` and `SPECIFICATION.md` §8.2.11 L2 (test-impact selection measurements and removal).
 

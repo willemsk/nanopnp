@@ -8,7 +8,7 @@ tags:
 - test-evidence
 sources:
 - id: wp5.03-plan
-  resource: docs/plans/wp5.03-protonation-before-the-density.md
+  resource: docs/plans/phase-5/wp5.03-protonation-before-the-density.md
   title: WP5.03 plan, Grounding for D3
 generated:
   by: claude-code/0.6.0-alpha.3

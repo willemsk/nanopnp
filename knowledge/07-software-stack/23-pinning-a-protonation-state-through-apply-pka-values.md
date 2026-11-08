@@ -8,7 +8,7 @@ tags:
 - charge
 sources:
 - id: wp5.04-plan
-  resource: docs/plans/wp5.04-the-charge-mutators-library-step.md
+  resource: docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md
   title: WP5.04 plan, Grounding for D2
 generated:
   by: claude-code/0.6.0-alpha.4

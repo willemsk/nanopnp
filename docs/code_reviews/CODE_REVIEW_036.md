@@ -4,7 +4,7 @@
 
 ## Summary
 
-A full architectural review of `src/nanopnp` examined the subpackage boundaries against the recorded layering (`docs/project/modularity-layering.yaml`, `VER-61`), the deferred-import guard (`VER-72`), the Phase 5 workbench architecture (`docs/plans/phase-5-workbench.md`, `docs/plans/wp5.09-the-physics-model.md`) and the review register (`docs/project/review-items.md`).
+A full architectural review of `src/nanopnp` examined the subpackage boundaries against the recorded layering (`docs/project/modularity-layering.yaml`, `VER-61`), the deferred-import guard (`VER-72`), the Phase 5 workbench architecture (`docs/plans/phase-5/phase-5-workbench.md`, `docs/plans/phase-5/wp5.09-the-physics-model.md`) and the review register (`docs/project/review-items.md`).
 
 Six shallow seams were identified, explored and settled with the author through interactive design rounds:
 
@@ -648,7 +648,7 @@ def mapping_changes(body: Mapping[str, Any]) -> tuple[Change, ...]:
 ### 4. Why this improves the architecture & overall impact
 
 - **Maintainability**: Model-file parsing, ownership checking and case-to-model splitting live in one place (`io/models.py`), rather than being split between `io/models.py` and `api/project.py`.
-- **Extensibility**: Directly supports WP5.09 (`The physics model`), which adds `physics` to `MODEL_KINDS` and `exposes:` to `physics` model files (`docs/plans/wp5.09-the-physics-model.md`). With `split_case_layers` and `_METADATA_KEYS` in `io/`, `Project.import_case` and `Project.changes` automatically generalize across all `MODEL_KINDS`.
+- **Extensibility**: Directly supports WP5.09 (`The physics model`), which adds `physics` to `MODEL_KINDS` and `exposes:` to `physics` model files (`docs/plans/phase-5/wp5.09-the-physics-model.md`). With `split_case_layers` and `_METADATA_KEYS` in `io/`, `Project.import_case` and `Project.changes` automatically generalize across all `MODEL_KINDS`.
 - **Simplicity**: Removes duplicate `_put` and `_body(..., keep=False)` from `api/project.py` and makes `ModelFile` carry the validated body it already parsed.
 
 ---

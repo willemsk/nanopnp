@@ -7,7 +7,7 @@ description: "Records the author's rulings on running the workflow in the GitHub
 #### 8.2.25 The workflow on the GitHub Copilot app, agreed 31 October 2026
 
 Rulings by the author on 31 October 2026, outside the package sequence and beside Phase 4's close.
-The plan `docs/plans/copilot-host.md` carried three decisions the author had made before it was
+The plan `docs/plans/sessions/copilot-host.md` carried three decisions the author had made before it was
 written, the host, the division of work and CI, and was amended after an adversarial review in the
 Copilot app. Three more were put to the author while the plan was implemented, from a Copilot app
 session opened on the checkout's `\\wsl.localhost\` path, the plan's unsupported fallback, in which

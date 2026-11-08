@@ -10,10 +10,10 @@ generated:
   at: '2026-10-14T00:00:00Z'
 sources:
 - id: wp17-plan
-  resource: docs/plans/wp17-case-schema-v2.md
+  resource: docs/plans/phase-2/wp17-case-schema-v2.md
   title: WP17 case schema v2 plan (Python 3.11 floor and wheel resolution)
 - id: wp43-plan
-  resource: docs/plans/wp43-development-loop.md
+  resource: docs/plans/phase-4/wp43-development-loop.md
   title: WP43 development loop plan, D12 (CPython 3.14 VER-62 check)
 tested_with:
   mdanalysis: 2.10.0
@@ -91,6 +91,6 @@ documentation builds on ubuntu. PROPKA needs the 3.14 shim of §3 there as every
 
 ---
 
-[^wp17-plan]: `docs/plans/wp17-case-schema-v2.md` and `SPECIFICATION.md` §8.2.2 B4 (Python 3.11 floor and pre-floor 3.10 observations).
-[^wp43-plan]: `docs/plans/wp43-development-loop.md`, D12 (CPython 3.14.6 VER-62 golden drift check).
+[^wp17-plan]: `docs/plans/phase-2/wp17-case-schema-v2.md` and `SPECIFICATION.md` §8.2.2 B4 (Python 3.11 floor and pre-floor 3.10 observations).
+[^wp43-plan]: `docs/plans/phase-4/wp43-development-loop.md`, D12 (CPython 3.14.6 VER-62 golden drift check).
 

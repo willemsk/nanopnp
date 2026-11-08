@@ -72,7 +72,7 @@ The systemic pattern is values that are validated, or at least accepted, but nev
 
 The consequences:
 - Every non-root member of a generated-mesh sweep climbs the full NUM-18 ladder (tens of rungs) instead of solving one warm rung.
-- The WP21 D15 barrier logic in `sweep/plan.py`, which exists so that "ordinary salt sweeps keep their warm starts" on a generated mesh (`docs/plans/wp21-cad-assembly-and-meshing.md:86`), is moot.
+- The WP21 D15 barrier logic in `sweep/plan.py`, which exists so that "ordinary salt sweeps keep their warm starts" on a generated mesh (`docs/plans/phase-2/wp21-cad-assembly-and-meshing.md:86`), is moot.
 - For supplied-mesh sweeps the same call costs a mesh ingest and gate per member just to compute a hash.
 
 The only warm-path test (`tests/tier2/test_sweep.py`) uses a supplied `.vol` mesh, so it cannot see this.

@@ -1,16 +1,17 @@
-"""Move the delivered plans to ``docs/plans/archive/`` and rewrite the links that can be rewritten.
+"""Move every plan of ``docs/plans/`` into its phase's folder once, and rewrite every path to it.
 
-A proposal of CODE_REVIEW_039, never applied to ``main``: run it on a scratch branch, verify,
-delete the branch. History-prose-review item I allows the move ("optionally move delivered plans
-to ``docs/plans/archive/``").
+The one move of §8.2.36 AL5 as amended by AL28; run once by WP5.10 and not kept among the
+scripts. A plan goes by phase membership: ``wp1`` to ``wp6`` and the Phase 0 plans to
+``phase-0/``, ``wp7`` to ``wp16`` to ``phase-1/``, ``wp17`` to ``wp25`` to ``phase-2/``, ``wp26``
+to ``wp34`` to ``phase-3/``, ``wp35`` to ``wp60`` to ``phase-4/``, ``wp5.<nn>`` to ``phase-5/``; a
+phase plan or record by its number; the six standalone briefs and reviews to ``sessions/``;
+``current.md`` and ``index.md`` stay. A file it cannot place stops it.
 
-Reads ``docs/plans/*.md``: a ``wp*.md`` or ``phase-*.md`` whose first bold status line begins
-with *delivered* or *closed* is moved; every other file stays (``current.md``, the live phase plan,
-the input notes, the records of amended plans). Writes: ``git mv`` of each moved plan; the
-relative links to a moved plan rewritten in every live file (the brief's scope) and in the record
-indexes, never in a record, which stays byte for byte; ``.claude/scripts/duplicates.py``'s plan
-glob widened to the archive. Prints what it moved, what it rewrote, and what it leaves broken:
-every link to a moved plan from a record, by file. ``--dry-run`` prints the same and writes nothing.
+In every tracked file that decodes as UTF-8: in Markdown, each relative link (``links.py``'s
+``LINK``, code masked) whose source or target moved is written again relative to the source's new
+folder, its anchor kept; then, everywhere, code included, each written ``docs/plans/<name>`` of a
+moved plan becomes its new path, unless ``<commit>:`` pins it to a revision where the old path
+holds. Nothing else changes. ``--dry-run`` prints the counts, by folder, and writes nothing.
 
 Run it as ``uv run .claude/scripts/audit/migrate_plans_archive.py [--dry-run]``.
 """
@@ -18,114 +19,154 @@ Run it as ``uv run .claude/scripts/audit/migrate_plans_archive.py [--dry-run]``.
 from __future__ import annotations
 
 import argparse
+import posixpath
 import re
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from scope import ROOT, live_files, record_files
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from links import CODE, LINK, SCHEME
 
-PLANS = ROOT / "docs" / "plans"
-ARCHIVE = PLANS / "archive"
-STATUS = re.compile(r"\*\*Status:\s*(delivered|closed)\b", re.I)
-LINK = re.compile(r"(\]\()([^)\s#]+)((?:#[^)]*)?\))")
-DUPLICATES = ROOT / ".claude" / "scripts" / "duplicates.py"
-INDEXES = (
-    PLANS / "index.md",
-    ROOT / "docs" / "code_reviews" / "index.md",
-    ROOT / "docs" / "design" / "reviews" / "index.md",
+ROOT = Path(__file__).resolve().parents[3]
+PLANS = "docs/plans"
+STAY = frozenset({"current.md", "index.md"})
+SESSIONS = frozenset(
+    {
+        "copilot-host.md",
+        "history-prose-review.md",
+        "kb-audit-brief.md",
+        "notebooks-review-for-wp54.md",
+        "okf-converter-rules.md",
+        "okf-knowledge-bundle.md",
+    }
 )
+WP = re.compile(r"^wp(\d+)-")
+WP_PHASE_5 = re.compile(r"^wp5\.\d+-")
+PHASE = re.compile(r"^phase-(\d+)-")
+# The first and last package of each phase before Phase 5's numbering.
+PHASE_OF_WP = ((0, 1, 6), (1, 7, 16), (2, 17, 25), (3, 26, 34), (4, 35, 60))
 
 
-def _moved() -> list[Path]:
-    found = []
-    for path in sorted(PLANS.glob("*.md")):
-        if not (path.name.startswith("wp") or path.name.startswith("phase-")):
-            continue
-        if STATUS.search(path.read_text(encoding="utf-8")):
-            found.append(path)
-    return found
+def _folder(name: str) -> str:
+    if name in SESSIONS:
+        return "sessions"
+    if WP_PHASE_5.match(name):
+        return "phase-5"
+    if match := WP.match(name):
+        number = int(match.group(1))
+        for phase, first, last in PHASE_OF_WP:
+            if first <= number <= last:
+                return f"phase-{phase}"
+    if match := PHASE.match(name):
+        return f"phase-{match.group(1)}"
+    raise SystemExit(f"{PLANS}/{name}: no phase folder")
 
 
-def _rewrite(path: Path, moved: set[Path]) -> tuple[str, int]:
-    """Return ``path``'s text with every link to a moved plan rewritten, and the count."""
-    text = path.read_text(encoding="utf-8")
-    count = 0
+def _tracked() -> list[str]:
+    result = subprocess.run(
+        ["git", "ls-files", "-z"], cwd=ROOT, check=True, capture_output=True, text=True
+    )
+    return [name for name in result.stdout.split("\0") if name]
 
-    def replace(match: re.Match[str]) -> str:
-        nonlocal count
+
+def moved_plans(tracked: list[str]) -> dict[str, str]:
+    """Map each moved plan's repository path to its new one."""
+    moved = {}
+    for path in tracked:
+        folder, name = posixpath.split(path)
+        if folder == PLANS and path.endswith(".md") and name not in STAY:
+            moved[path] = f"{PLANS}/{_folder(name)}/{name}"
+    return moved
+
+
+def _area(path: str) -> str:
+    parts = path.split("/")
+    if len(parts) == 1:
+        return path
+    if parts[0] == "docs":
+        return "/".join(parts[:2])
+    return parts[0]
+
+
+def _links(text: str, old: str, new: str, moved: dict[str, str]) -> tuple[str, int]:
+    masked = CODE.sub(lambda match: " " * len(match.group(0)), text)
+    pieces: list[str] = []
+    cursor = count = 0
+    for match in LINK.finditer(masked):
         target = match.group(2)
-        if target.startswith(("http:", "https:", "mailto:")):
-            return match.group(0)
-        resolved = (path.parent / target).resolve()
-        if resolved not in moved:
-            return match.group(0)
-        new = ARCHIVE / resolved.name
-        relative = Path(new).relative_to(path.parent.resolve(), walk_up=True).as_posix()
-        count += 1
-        return f"{match.group(1)}{relative}{match.group(3)}"
-
-    return LINK.sub(replace, text), count
-
-
-def _record_links(moved: set[Path]) -> dict[Path, int]:
-    """Return, per record, the number of links to a moved plan it holds; these stay broken."""
-    found: dict[Path, int] = {}
-    for path in record_files():
-        if path.suffix != ".md" or path in moved or path in INDEXES:
+        if SCHEME.match(target) or target.startswith("#"):
             continue
-        text = path.read_text(encoding="utf-8")
-        count = sum(
-            1
-            for match in LINK.finditer(text)
-            if not match.group(2).startswith(("http:", "https:"))
-            and (path.parent / match.group(2)).resolve() in moved
-        )
-        if count:
-            found[path] = count
-    return found
+        path, hash_, anchor = target.partition("#")
+        if not path:
+            continue
+        old_target = posixpath.normpath(posixpath.join(posixpath.dirname(old), path))
+        new_target = moved.get(old_target, old_target)
+        if old_target not in moved and old not in moved:
+            continue
+        written = posixpath.relpath(new_target, posixpath.dirname(new) or ".")
+        if path.endswith("/") and not written.endswith("/"):
+            written += "/"
+        rewritten = f"{written}{hash_}{anchor}"
+        if rewritten == target:
+            continue
+        pieces += [text[cursor : match.start(2)], rewritten]
+        cursor = match.end(2)
+        count += 1
+    pieces.append(text[cursor:])
+    return "".join(pieces), count
 
 
 def main(argv: list[str] | None = None) -> int:
     """Perform or rehearse the move and return the process exit status."""
-    parser = argparse.ArgumentParser(description="Move the delivered plans to docs/plans/archive/.")
-    parser.add_argument("--dry-run", action="store_true", help="print the plan and write nothing")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--dry-run", action="store_true", help="print the counts, write nothing")
     arguments = parser.parse_args(argv)
-    moved_list = _moved()
-    moved = {path.resolve() for path in moved_list}
-    sys.stdout.write(f"plans to move: {len(moved_list)} of {len(list(PLANS.glob('*.md')))}\n")
-    rewrites: list[tuple[Path, str, int]] = []
-    for path in [*live_files(), *INDEXES]:
-        if path.suffix != ".md" or not path.exists():
-            continue
-        text, count = _rewrite(path, moved)
-        if count:
-            rewrites.append((path, text, count))
-    for path, _, count in rewrites:
-        sys.stdout.write(f"rewrite {path.relative_to(ROOT).as_posix()}: {count} links\n")
-    broken = _record_links(moved)
-    sys.stdout.write(
-        f"links left broken in records (byte for byte): {sum(broken.values())} "
-        f"in {len(broken)} files\n"
+    tracked = _tracked()
+    moved = moved_plans(tracked)
+    names = sorted((posixpath.basename(path) for path in moved), key=len, reverse=True)
+    written_path = re.compile(
+        rf"(?<![0-9a-f]{{7}}:){re.escape(PLANS)}/({'|'.join(map(re.escape, names))})(?![\w.-])"
     )
-    for path, count in sorted(broken.items()):
-        sys.stdout.write(f"  {path.relative_to(ROOT).as_posix()}: {count}\n")
+    links: Counter[str] = Counter()
+    written: Counter[str] = Counter()
+    changed: dict[str, str] = {}
+    for path in tracked:
+        source = ROOT / path
+        if source.is_symlink() or not source.is_file():
+            continue
+        try:
+            text = source.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        new = moved.get(path, path)
+        result = text
+        if path.endswith(".md"):
+            result, count = _links(result, path, new, moved)
+            links[_area(path)] += count
+        result, count = written_path.subn(lambda match: moved[f"{PLANS}/{match.group(1)}"], result)
+        written[_area(path)] += count
+        if result != text:
+            changed[path] = result
+    folders = Counter(posixpath.dirname(new) for new in moved.values())
+    sys.stdout.write(f"plans moved: {len(moved)}\n")
+    for folder, count in sorted(folders.items()):
+        sys.stdout.write(f"  {folder}: {count}\n")
+    for label, counts in (("relative links", links), ("written paths", written)):
+        sys.stdout.write(f"{label} rewritten: {sum(counts.values())}\n")
+        for area, count in counts.most_common():
+            if count:
+                sys.stdout.write(f"  {area}: {count}\n")
+    sys.stdout.write(f"files changed: {len(changed)}\n")
     if arguments.dry_run:
         return 0
-    ARCHIVE.mkdir(exist_ok=True)
-    for path in moved_list:
-        subprocess.run(["git", "mv", str(path), str(ARCHIVE / path.name)], check=True, cwd=ROOT)
-    for path, text, _ in rewrites:
-        path.write_text(text, encoding="utf-8")
-    duplicates = DUPLICATES.read_text(encoding="utf-8")
-    widened = duplicates.replace(
-        '(ROOT / "docs/plans").glob("wp*.md")', '(ROOT / "docs/plans").rglob("wp*.md")'
-    )
-    if widened != duplicates:
-        DUPLICATES.write_text(widened, encoding="utf-8")
-        sys.stdout.write("duplicates.py: plan glob widened to docs/plans/**\n")
-    sys.stdout.write("moved; re-run index_records.py for docs/plans/index.md\n")
+    for path, text in changed.items():
+        (ROOT / path).write_text(text, encoding="utf-8")
+    for old, new in moved.items():
+        (ROOT / new).parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "mv", old, new], cwd=ROOT, check=True)
+    subprocess.run(["git", "add", "--", *(moved.get(p, p) for p in changed)], cwd=ROOT, check=True)
     return 0
 
 

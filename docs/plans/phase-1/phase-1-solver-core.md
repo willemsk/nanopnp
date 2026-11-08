@@ -1,0 +1,1015 @@
+# Phase 1 (Solver core): the production solver on an externally supplied mesh
+
+**Status: WP7–WP16 delivered; end-of-phase report written 24 September 2026; released as `v0.2.0`**
+(§8.2.3). Written 2 September 2026, after Phase 0
+(WP1–WP6) and its consolidation (WP-A1, WP-B1, WP-B2, WP-C1). It inherited a verified physics core
+and a bare pipeline: tiers 1 and 2 green, `mypy --strict` and `ruff` clean, and `io/`, `sweep/`,
+`charge/`, `structure/`, `density/`, `symmetry/`, `gui/` still empty reserved slots. `io/` is filled
+and `mesh/` is complete for ingestion as of WP8, `sweep/` as of WP11; `charge/`, `structure/`,
+`density/`, `symmetry/` and `gui/` are still empty.
+
+This is the delivery plan for Phase 1 of `SPECIFICATION.md` §8.1 — release v0.2. The specification
+remains normative: where this file and the specification disagree, the specification governs and
+this file is wrong. Requirement identifiers here are pointers into it, never restatements of it.
+
+## Context
+
+Phase 0 answered "does the physics come out right?" against closed forms. Phase 1 answers a
+different question: **can somebody other than the author run it, reproduce it, and compare it to
+COMSOL?** The physics does not change. What changes is that the run stops being a Python script and
+becomes an artefact chain — a case file in, a manifest and a dataset out, every stage separately
+invocable — and that the solver stops meshing its own geometry and starts consuming one.
+
+Four things are true of the codebase today that shape every package below.
+
+- **The solver core exists and is verified.** `physics/`, `solve/`, `post/` and `materials/` carry
+  VER-03 … VER-22. Nothing in Phase 1 should touch a weak form except WP12, which adds a
+  *configuration* (stabilisation) rather than a term.
+- **There is no serialisation layer at all.** The only serialisation boundary in the package is the
+  correction file, which WP-B2 gave a typed pydantic schema. That schema is the template the case
+  file copies, deliberately: it rejects an unknown key by naming it, which is exactly IF-03.
+- **`mesh/` builds geometry; it cannot read one.** `mesh/primitives.py` constructs `netgen.occ`
+  shapes and names their edges. Ingesting a mesh means inverting that: a file arrives carrying
+  physical groups, and something must decide which group is the no-flux wall and which is the open
+  boundary. That decision is where a silently wrong answer enters this phase.
+- **The gate the phase must clear is `Tier 1 and Tier 2 pass; Tier 3 enabled and differences
+  attributed`.** Attribution, not agreement — §7.4 makes agreement conditional on the stabilised
+  mode existing and the meshes being convergence-matched, and Phase 1 is where both preconditions
+  are built.
+
+Risks this phase is scheduled to retire or move: **RSK-13** (desktop packaging defeated by a binary
+dependency, open since amendment A2 deferred Phase-0 criterion 4), **RSK-14** (COMSOL licence lapses
+before the reference set is archived — the author has confirmed access, so VAL-03 is live work this
+phase), and **RSK-09** (the reference carries no mesh convergence study, so a Tier-3 discrepancy may
+originate in the reference; VAL-04 bounds it while the licence lasts). **RSK-15** (GUI scope drawing
+effort from validation) becomes live for the first time: the GUI increment is the largest single
+piece of work here, and is split into WP14 and WP15 for that reason.
+
+Deliberately excluded: the structure → density → contour → CAD pipeline (Phase 2), the PDB2PQR
+charge pipeline (Phase 3), and everything tagged v1.0 or post-1.0 in §3.2. Phase 1 *consumes*
+meshes and charge fields; it does not produce them.
+
+## Decisions taken before implementation
+
+Everything an implementer would otherwise settle at 2 a.m., settled here.
+
+| Decision | Choice | Why |
+|---|---|---|
+| Case-file layering | `io/case.py` holds pydantic models mirroring §5.3.1 verbatim; `resolve()` turns a validated case into the Phase-0 objects (`Electrolyte`, `CoupledModel`, `Rung` ladder, `CoupledBoundaries`, `Measures`). **No stage ever reads YAML.** | Keeps IF-03 in one file and leaves every stage callable from Python with typed arguments (IF-01). A stage that parses its own config cannot be driven by the GUI without re-parsing. |
+| Unknown keys | `extra="forbid"` on every model, and the error message names the key and its path (`electrolyte.corrections.diffusivty`) | IF-03 requires the diagnostic to name the key. WP-B2's `CorrectionDocument` established the pattern; copying it is cheaper than inventing a second one. |
+| Round-trip semantics (FR-26, VER-09) | Semantic identity is asserted on the **resolved objects' provenance**, not on YAML text | A YAML text comparison passes on a file that resolves to a different run (comment loss, key order, `1.0` vs `1`), and fails on one that resolves identically. The provenance dict is what FR-25 already declares to be the run's identity. |
+| Artefact identity | `sha256` over canonical JSON: sorted keys, floats emitted as `float.hex()`, arrays hashed as their C-contiguous bytes plus dtype and shape, prefixed by the artefact's schema name and the hashes of its inputs | Content hash is the cache key (§5.3.2), so it must be stable across platforms and Python versions. `repr()` of a float is round-trip exact but formatting has changed between versions; `float.hex()` has not. |
+| Mesh hash | Over vertices, elements and tag maps in file order — **not** over the file bytes | A mesh rewritten by meshio with a different header is the same mesh; a mesh whose `wall` group gained an edge is not. Hashing bytes gets both cases wrong. |
+| Manifest assembly | `io/manifest.py` collects component `.provenance` / `.summary` dicts; the *Deviations* group is computed by diffing the resolved case against the canonical validated-default case | §5.3.3 requires "every switch set away from the validated default". Computing the diff means a switch added in a later phase is recorded without anybody remembering to extend the manifest writer — the failure mode WP-B1 found for the stabilisation mode. |
+| Mesh vocabulary | Materials `electrolyte`/`cis`/`trans`, `membrane`, `pore`, `analyte`; boundaries `axis`, `wall`, `cis`, `trans`, `membrane_outer`. An ingested mesh carries an explicit group→name mapping in the case file | The names the solver already speaks (`mesh/primitives.py`, `DEFAULT_BOUNDARIES`, the `ELECTROLYTE_DOMAINS` regex). Everything downstream keeps working unchanged. |
+| Unmapped groups | Ingestion **aborts**, naming every unmapped group and every required name that no group supplies (QR-12) | An unmapped boundary silently becomes a natural condition: a no-flux wall turns into an open boundary and the current is wrong with no diagnostic. This is the single highest-value gate in the phase. |
+| Quality metric | SICN and gamma computed in project code from vertex coordinates, gate `min > 0.3`, worst element reported with its centroid and metric value; an *optional* Tier-1 test cross-checks our values against `gmsh.model.mesh.getElementQualities` and skips when the GPL extra is absent | Reverses the WP-B3 deferral on the ground that made it: the threshold is only meaningful against the measure it was calibrated for, so we implement the measure *and* calibrate it, rather than inventing a metric or linking gmsh on the default path (CON-10). Derivation in §Design. |
+| External charge/dielectric fields | One typed `FieldArtefact` with two admissible sources — a named analytic expression, or a gridded (r, z) table with documented interpolation — plus an OpenDX/CCP4 reader behind the `structure` extra (IF-05, import inside the function) | "Externally supplied material and charge fields" is the v0.2 release text. Reading is the consumer side and belongs here; *writing* those grids belongs with the producers in Phases 2–3. |
+| Conservation on ingest | If the artefact declares `Q_net`, assert `\|∫ρ 2πr dr dz − Q_net\|/\|Q_net\| < 10⁻³` on the deployed mesh and abort on failure. If it does not, **record that the check could not run** in the manifest | QR-03 / PHY-19's mesh half. Silently skipping an assertion because its reference is absent is how a conservation failure reaches a published number. The per-z-slice check against a sorted PQR (VER-02) needs the charge pipeline and stays Phase 3. |
+| Stage protocol | `core/stages.py`: `run(inputs, *, progress=None, cancel=None) -> Artefact`. Cancellation is **cooperative**, checked between Newton iterations (the existing `damped_newton` callback) and between rungs — never mid-factorisation | FR-27 asks for cancellable and progress-reporting. A cancel that must interrupt a UMFPACK factorisation means a subprocess and a kill signal; a cancel between iterations is a boolean. The GUI runs the solver in a background process anyway (ADR-004), so a hard kill remains available above this layer. |
+| Sweep dispatch | A sweep is a base case plus substitutions on dotted schema paths, validated against the schema so a typo names the key. The runner writes an index file; `nanopnp sweep run --index i` executes one point, which is what a SLURM/PBS array calls. Local execution is `multiprocessing` over the same entry point | FR-24 says "dispatch the points as independent jobs" and QR-06 wants linear scaling in independent workers. Depending on a scheduler library would put a scheduler on the end-user path (CON-07); an index file and an integer do not. |
+| Warm-start ordering | Points sorted by concentration then by \|bias\|, each warm-started from its converged predecessor's stored solution artefact; a point whose predecessor failed falls back to the full ladder and records that it did | NUM-18's ladder is the cold path and it is expensive; §8.3's 3,675-solve datum is only reachable warm. Recording the fallback is what keeps a sweep's timings interpretable. |
+| Field IO | XDMF + HDF5 for fields (IF-07) via meshio, plus a solver-native round-trip of the raw coefficient vector for warm starts | XDMF is the archival, viewer-readable format; a warm start needs the exact vector on the exact space, and interpolating through XDMF would perturb a converged state. Two formats, two purposes, both hashed. |
+| Stabilisation | `stabilisation: none | reference` resolving through a registry, exactly as corrections do; `none` stays the production default (NUM-11) | PHY-22's rule generalised: "off" is a named model, not a code branch. `CoupledModel.stabilisation` and its `SUPPORTED_STABILISATIONS` gate already exist from WP-B1 and were built for this. |
+| Tier-3 comparison surface | Our probe grid, shipped with the frozen case; COMSOL interpolates onto it. Goldens are `.npz` with a manifest naming the model file, COMSOL version, export date and the case hash | §7.4 asks for "a common probe grid". Making it *ours* means the comparison does not depend on COMSOL's mesh, and re-exporting later cannot silently move the sample points. |
+| Attribution, not agreement | WP13's report decomposes any discrepancy by re-running our solver in the matching configuration, each rung against the same golden. **Amended 18 September 2026 from three rungs to four**: `none`+P2/P1 → `supg`+P2/P1 → `reference`+P2/P1 → `reference`+P1/P1, reporting `Δ_total`, `Δ_transport`, `Δ_flow`, `Δ_pair` and `Δ_resid` | The phase gate is "differences attributed". A single number against a golden attributes nothing. The three-rung form was written before WP12 measured `reference` converging at **0.98** on a Taylor–Hood pair where `supg` converges at **2.01** — so its middle delta summed the transport stabilisation with a first-order flow operator and attributed neither. Splitting the rung at `supg`, which is second order on that pair, costs one solve per case and makes `Δ_transport` a clean number. `Δ_resid` remains the only part that can be a defect. Derivation: `wp13-tier3-comsol-comparison.md` §Design 1. |
+| GUI construction | The case editor is **generated from the pydantic schema**, not hand-laid-out; the field viewer is `webgui` in a `QWebEngineView`; the solver runs in a background process and reports through the existing `damped_newton` callback | QR-11 demands a graphical surface at every release from v0.2 onward, so the editor has to survive schema changes without GUI work. Generating it is what makes that true. RSK-15 is managed by keeping the GUI a shell with no physics in it (IF-09, ADR-004). |
+| Bundle linear solver | UMFPACK, with the GPL-2+ obligation accepted and stated (**CON-11 amended in this commit**) | The §6.6 measurement: SuperLU was OOM-killed on the reference-sized factorisation. A bundle that cannot run the published case is not a product. The library itself stays BSD-3 and depends on neither. |
+
+## Design
+
+The derivations the packages above lean on, written out.
+
+### Element quality: what the 0.3 threshold means
+
+VER-10 and §5.2.2 gate on `min SICN/gamma > 0.3`. Both are gmsh's names, and the Phase-0
+consolidation deferred the gate because netgen exposes no per-element quality and inventing a metric
+makes the threshold a property of the metric rather than of the mesh. Both measures are, however,
+defined quantities computable from the vertex coordinates alone, and Phase 1 ingests meshes from
+outside — which is precisely when a quality gate earns its keep.
+
+For a straight-sided triangle with vertices `p₀, p₁, p₂`, let `A = [p₁ − p₀, p₂ − p₀]` be the
+Jacobian of the affine map from the *unit* triangle, and let `E` be the same matrix for the
+equilateral reference triangle of unit edge, `E = [[1, ½], [0, √3/2]]`. The Jacobian relative to the
+equilateral reference is `J = A E⁻¹`, and
+
+```
+SICN = sign(det J) · 2 / κ_F(J) ,    κ_F(J) = ‖J‖_F ‖J⁻¹‖_F
+```
+
+For any real 2 × 2 matrix `κ_F ≥ 2`, with equality iff `J` is a scaled rotation — that is, iff the
+element is equilateral — so `SICN ∈ [−1, 1]` with 1 exactly on the equilateral element and a
+negative value on an inverted one. The companion measure is the normalised inradius-to-circumradius
+ratio `gamma = 2 r_in / R_circ`, which is likewise 1 on the equilateral element (`R = 2r`) and 0 on a
+degenerate one.
+
+The threshold is inherited, not derived, so it must be calibrated against the implementation that
+set it: a Tier-1 test compares our per-element values against
+`gmsh.model.mesh.getElementQualities(..., "minSICN")` on a mesh carrying a deliberate sliver, and
+skips when the optional GPL extra is not installed. That satisfies both halves of the Phase-0
+objection — the measure is the one the threshold was calibrated for, and the default path never
+imports gmsh (CON-10, ADR-002).
+
+Reference figures the gate is checked against, from the COMSOL model report: minimum element quality
+0.6378, average 0.9765 on 120,917 triangles (§5.2.2, VER-10).
+
+### Why mesh ingestion is where a wrong answer enters
+
+The solver's boundary conditions are selected by *name*: `DEFAULT_BOUNDARIES` maps `cis`/`trans` to
+Dirichlet φ and `c_bulk`, `wall` to no-slip, and everything unnamed falls through to the natural
+condition. Under the `r`-weighted axisymmetric forms the natural condition is `n·J_i = 0` and
+`n·D = 0` on the axis (NUM-06) — which is *correct* on the axis and *silently wrong* on a mismatched
+wall, where it turns a no-flux protein surface into a free boundary. There is no residual, no gate
+and no diagnostic for that error: the solve converges and the current is wrong by whatever leaks.
+
+Hence the ingestion rule above: the mapping is explicit in the case file, every group must be
+claimed, every required name must be supplied, and the abort names both sides of the mismatch. The
+test that matters is the negative one — a mesh whose `wall` group is misspelt must abort, not solve.
+
+### The Tier-3 attribution ladder
+
+§7.4 forbids gating until the stabilised mode exists and the meshes are convergence-matched, and
+`knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` lists what can never be matched: COMSOL's stabilisation operators are not
+exported, "approximate residual" is internal, the element sets differ, and the reference's own
+discretisation error is unquantified (RSK-09). So the deliverable is a decomposition:
+
+```
+Δ_total = [ our unstabilised P2/P1 ]      → the number Phase 0 would have produced
+Δ_stab  = [ our stabilised   P2/P1 ]      → how much of Δ_total the stabilisation accounts for
+Δ_pair  = [ our stabilised   P1/P1 ]      → how much the equal-order flow pair accounts for
+Δ_resid = golden − stabilised P1/P1       → the unattributed remainder
+```
+
+`Δ_resid` is the only quantity that can indicate a defect, and VAL-04 (the reference re-solved at two
+refinement levels while the licence lasts) is what bounds the part of it that belongs to the
+reference rather than to us. The phase reports all four for every frozen case; §7.4's 1 % / 0.5 %
+targets apply to `Δ_resid` alone and only once both preconditions hold.
+
+### What the stabilised mode must not do
+
+NUM-14's mode is for comparison, never for production (NUM-11: SUPG biases the current QoI and
+destroys Jacobian symmetry). Two properties are asserted rather than assumed:
+
+- **Consistency.** SUPG is residual-based, so the manufactured solution of VER-18 must still
+  converge in the stabilised mode. The *rate* is measured and reported rather than predicted — the
+  crosswind term is not a Galerkin-consistent perturbation in the same sense, and asserting an
+  unmeasured order would be asserting something untrue.
+- **Vanishing difference.** The stabilised and unstabilised currents on the same case must approach
+  each other under refinement, at a measured rate. This is the quantitative form of the "irreducible
+  systematic bounded only by mesh refinement" of
+  `knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md` (§F), and it is
+  what licenses the attribution ladder above.
+
+NUM-15 fixes the quadrature: crosswind at integration order 6, streamline at 4 — both above the
+NUM-07 floor, and both requested through `Measures` rather than by passing `bonus_intorder` behind
+its guarantee.
+
+## Conventions established by Phase 0
+
+Carried into every package below; they are recorded in `docs/plans/phase-0/phase-0-spike.md` in full.
+
+- `ngsolve`, `netgen` and `numpy` are imported **inside the function that uses them**; everything
+  else at module scope. The CLI, the GUI and the sweep runner exist to introspect stages without
+  assembling anything, and a job array pays that import cost per process — which is why the rule
+  matters more in this phase than it did in Phase 0.
+- `physics/measures.Measures` is the only route to an integration measure, and it owns the NUM-07
+  order guarantee. New integrals in `post/` or `validation/` go through it.
+- `materials/models.py` is the registry template: `register` / `registered_models` / `create`, with
+  `none` a registered model rather than a code branch. The stabilisation registry follows it.
+- A configuration that names itself must *be* itself: `Electrolyte.with_switches` rebuilds the
+  resolved correction models because `replace(...)` once produced an object that reported PNP-NS and
+  evaluated ePNP-NS. Any Phase-1 code that derives a variant case must go through the same discipline
+  — the sweep runner is the obvious place to repeat that mistake.
+- A converged solution carries the residual form it solves and the discrete wall-distance field it
+  was assembled with. Warm-start serialisation must carry both; a residual reassembled against a
+  freshly solved distance field is a *different operator*.
+- The `2π` is restored once, in `post/qoi.py`. Nothing in `io/`, `sweep/` or `gui/` may re-apply it.
+- Tests are named for the requirement they discharge, and the tier is decided by the directory.
+
+## Work packages
+
+One PR per package, green on tiers 1 and 2 before the next starts. WP7 first because everything else
+produces or consumes artefacts; WP8 before WP13 because the comparison needs the reference geometry;
+WP12 before WP13 because attribution needs the stabilised mode.
+
+### WP7 — Case-file schema, artefacts, provenance manifest — **delivered**
+
+`io/case.py`, `io/artefact.py`, `io/manifest.py`, `io/store.py`, `io/defaults.py`, `core/hashing.py`,
+`core/stages.py`, and — beyond the plan — `materials/stage.py`, `solve/stage.py`, with changes to
+`solve/continuation.py`, `physics/models.py` and `core/paths.py`; spec amendments adding VER-23 …
+VER-26 and six Appendix A rows.
+
+Delivered: the `nanopnp/case/v1` schema of §5.3.1 as pydantic models with `extra="forbid"`
+everywhere, rejecting an unknown key by naming the key *and* the block it appeared in, and refusing
+a v0.3 or v0.4 section (`structure:`, `geometry:`, `charge:`) with `UnsupportedCaseSection` rather than
+ignoring it; `resolve()` onto the Phase-0 electrolyte, model and solver objects, going through the
+WP1 resolution discipline rather than `replace(...)`; the content-addressed artefact base of §5.3.2
+with one canonical digest over schema, parameters and input hashes; the result store with
+`get_or_compute`, hit/miss counters and payload-file hashes; the §5.3.3 manifest writer with all
+eight groups always present and the Deviations group computed by diff against an explicit
+validated-default case document; and the `Stage` protocol of FR-27 with a registry, progress
+reporting and cooperative cancellation. Discharges **IF-03, IF-08, FR-25, FR-26, FR-27, VER-09**,
+adds **VER-23, VER-24, VER-25, VER-26**, begins **IF-01**, and carries **QR-08** in part. The schema
+is frozen: from here on a change to it is a schema version, not an edit.
+
+Beyond the plan, two stages exist because the manifest and the cache had to be tested against a real
+run rather than a fixture: `materials/stage.py` (stage 8) and `solve/stage.py` (stage 10), the latter
+with a public `key(inputs)` beside `run(inputs)` so the key the store is asked about and the key the
+solve produces are built by one code path (`_prepare`). `solve/continuation.py` gained an `on_rung`
+hook and a `Cancelled` clause; `physics/models.py` gained its own deviation enumeration.
+
+Six things settled by the work that WP8 onwards inherit.
+
+- **The validated default is a document, not a `model_dump(exclude_defaults=True)`.** The schema's
+  `CorrectionChoiceSpec.model` defaults to `none` — the *classical* configuration — so a default-diff
+  reports validated ePNP-NS as nine deviations and classical PNP-NS as none, exactly backwards.
+  `io/defaults.py` spells the PHY-21/PHY-22 configuration out as a case document and diffs against
+  it along an enumerated list of dotted paths.
+- **Every switch-typed field must be classified, in both directions.** `SWITCH_PATHS` (31 paths) and
+  `CONFIGURATION_PATHS` (9, each with a written reason) partition the schema's switches, and the
+  Tier-1 test walks the schema tree *and* the two lists, so a switch added later without a validated
+  default fails Tier 1 rather than vanishing from the manifest, and a path left behind by a renamed
+  field fails too. That reverse walk is what found three wrong rows in the plan's own table.
+- **A stage must be introspectable without importing its implementation.** `core/stages.py` carries
+  the name, number, inputs, outputs and artefact schema in the registry, asserted in a subprocess on
+  `sys.modules`: describing all three stages imports neither `ngsolve` nor the stage modules. That is
+  what FR-27 buys the CLI, the GUI and the sweep runner, and it is why the deferred-import rule is
+  not negotiable.
+- **An electrostatic rung rejects a Newton callback.** `ElectrostaticModel.solve` ends in
+  `_reject_unknown(kwargs, ...)`, so passing `callback=` down the ladder aborts on stages 1–2.
+  Cancellation therefore hangs off `run_ladder`'s `on_rung` hook for the between-rungs granularity
+  and off the Newton callback only for coupled rungs.
+- **`default_ladder` had two manifest-integrity bugs, both found by writing the manifest.** It
+  re-enabled corrections the case had switched off when resolving the canonical models, and it
+  ignored `boundary_conditions.ground`. A manifest is only evidence if the thing it describes is the
+  thing that ran.
+- **Netgen `.vol` round-trips boundary and material names [tested]**, so a mesh can enter the digest
+  as a file hash rather than a path; a payload file edited on disk loads as `hand_substituted`
+  rather than aborting, which FR-27 requires.
+- **The NUM-18 ladder reads none of the four physics switches from the case, and `resolve()` now
+  refuses the combination.** `default_ladder` builds its own rungs: it passes `flow` explicitly (off
+  for the early rungs, on from stage 6) and leaves `variable_density`, `inertia` and
+  `dielectric_gradient_forces` at the `CoupledModel` defaults, so a case setting any of them and
+  still selecting the ladder converged while the FR-25 Deviations group recorded a deviation the
+  solve never carried. `physics.model: pnp` was the worse case — the ladder would have solved
+  `pnp-ns` under a manifest naming `pnp`. Found by the WP7 review pass, not by the implementation.
+  §6.5 gains a NOTE making the ladder's fixed path normative, and single-rung runs
+  (`continuation: none`) remain the way an ablation asks for a configuration the ladder cannot
+  express. Threading the switches into the ladder is solver-numerics work with its own verification
+  burden and is deliberately not attempted here.
+- **`numerics.stabilisation` is safe from the same trap only because `SUPPORTED_STABILISATIONS` is
+  `{"none"}`.** The ladder does not pass `stabilisation` to its rungs either; the schema refuses
+  anything but `none` this phase, so nothing is silently dropped today. WP12 adds the reference mode
+  and must thread it through `default_ladder` in the same package, or inherit this bug.
+
+Reference measurement, stabilisation `none`: `CylindricalPoreGeometry(pore_radius_nm=2.0,
+membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)` at `maxh_nm=4.0`, `wall_h_nm=1.0` → 124
+elements, 75 vertices; 0.1 M, 20 mV, `epnp-ns`, `default_ladder` → 12 rungs over stages
+[1, 2, 3, 5, 6, 7, 8, 9] (stage 4 empty — Phase 1 is uncharged), 36 Newton iterations, minimum
+damping 0.2, ≈ 0.7 s.
+
+### WP8 — Mesh ingestion, tagging, quality gates, reference geometry — **delivered**
+
+`mesh/adapter.py`, `mesh/ingest.py`, `mesh/quality.py`, `mesh/profile.py`, `mesh/reference.py`,
+`data/geometry/` (the delivered 185-vertex ClyA table, its README and the fixture derived from it),
+with changes to `mesh/primitives.py`, `mesh/distance.py`, `solve/stage.py`, `core/stages.py`,
+`core/paths.py` and `io/manifest.py`; spec amendments A–G adding VER-27 and VER-28, the `protein`
+and `interface` vocabulary names, and the corrected 190/196 vertex composition.
+
+Delivered: `MeshData` as the mesher-adapter seam of §5.1 — vertices, triangles with a material
+index, edge blocks with a boundary index, both name tables and a content hash taken over a
+canonical form, because a 4.1 round trip permutes nodes and cells and a byte-identical mesh would
+otherwise hash differently twice; MSH 4.1 read and write through meshio with one cell block per
+(group, element type) and a node-ownership rule that guarantees every entity owns a node, the two
+constructions meshio's writer needs to stop failing silently; MSH 2.2 as the archival format netgen
+can still read; `to_ngsolve`/`from_ngsolve` identity on the tag maps; the group → vocabulary mapping
+with the reversed-map, unclaimed-group and unsupplied-name diagnostics, each naming both sides; the
+SICN and gamma gates at `QUALITY_FLOOR = 0.3` with worst-element index, `(r, z)` centroid and both
+metrics in the message, inverted elements reported under their own name; `MeshStage` as stage 6 with
+`key(inputs)` beside `run(inputs)`; the `PoreProfile` fixture and its one-way derivation from the
+delivered CSV, re-checked against the file in the tree; and `ReferenceGeometry`, which assembles the
+ClyA region — the 185-vertex profile, the slanted-edge membrane quadrilateral, the 250 nm reservoir
+half-disc — names every edge into the vocabulary and meshes it at the §5.2.2 size fields. Discharges
+**IF-06, VER-10, QR-12**, adds **VER-27** and **VER-28**, re-verifies **VER-06** and **NUM-31** on
+an ingested mesh, carries the CAD half of **FR-09**, and lands the §5.2.1 regression fixture.
+
+Beyond the plan: `interface` joins the boundary vocabulary beside amendment G's `protein`, because a
+fragmented region carries interior fluid-to-fluid and solid-to-solid seams that nothing selects on;
+`required_names` reads `wall_distance.sources` and the flow model as well as the boundary
+selections, so a case widening either aborts at ingestion rather than at form assembly;
+`check_solid_permittivities` turns `models.py`'s warning into an abort on an ingested mesh (PHY-03);
+`MeshData._snap_to_axis` snaps `|r| < 10⁻⁹` nm to zero on every route in; `mesh/primitives.py`
+routes all three Phase-0 geometries through the gate with a keyword-only `check_quality`;
+`io/manifest.py`'s `geometry_and_mesh` group gains the quality statistics, the mapping actually
+applied and the fixture's provenance; and `solve/stage.py` now takes its mesh from the ingestion
+artefact's content hash rather than a file hash, so a mesh rewritten with a different header is a
+store hit and a mesh with one edge moved to another group is a miss.
+
+Reference measurement, stabilisation `none`: the ClyA region at §5.2.2's size fields (global 10 nm,
+pore boundary 0.05 nm, pore domain 0.1 nm, reservoir domain 2.8 nm, reservoir arc 5 nm, axis-in-pore
+0.075 nm), `grading = 0.2`, `optsteps2d = 5` → **44,316 triangles in 6.5 s, minimum SICN 0.6559,
+mean 0.9870, minimum gamma 0.6157, mean 0.9852**, no inverted elements, against COMSOL's 120,917
+triangles at minimum quality 0.6378 and average 0.9765 — a third of the elements in the same band,
+by isotropic grading alone. The gate costs ≈1.1 s on a 121k-element mesh.
+
+Six things settled by the work that WP9 onwards inherit.
+
+- **An unmapped boundary is silent, and that is the whole argument for the ingestion gate.** Under
+  the `r`-weighted forms the natural condition is the free one (NUM-06), so a wall no name claims is
+  an open boundary that raises nothing and converges. Every file group must be claimed and every
+  name the resolved case selects on must be supplied, or the run aborts naming both lists.
+- **A fragmented region has seams, and they need a name.** Without `interface`, an ingested
+  fragmented mesh either fails the gate or has its seams mapped onto a boundary that *is* selected
+  on — the failure the gate exists to prevent, arriving through the gate itself.
+- **The quality gate is cheap and unconditional, and it found a degenerate mesh on its first run.**
+  VER-16's Gouy–Chapman slab is 2000 nm × 0.5 nm at `maxh = 50 nm`: a chain of 100:1 triangles at
+  minimum SICN 0.019. The anisotropy is deliberate — the stretched direction is the one the solution
+  is constant in — so the exemption is one keyword-only `check_quality=False` at that call site with
+  its reasoning beside it, and the floor is untouched. A gate is only worth having if the answer to
+  a failure is a reason, not a lower number.
+- **SICN and gamma are both gated because neither subsumes the other.** Gamma is blind to inversion
+  (it returns +1 on a clockwise element, where SICN returns −1), and the two thresholds differ by a
+  factor of **1.6208** in element height on the isoceles family — not the 1.56 the plan and §5.2.2
+  carried, both corrected. In an axisymmetric mesh the sign is load-bearing: a negative-Jacobian
+  element contributes negative area under the `r` weight and nothing else complains.
+- **The kernel adds vertices the geometry does not.** The assembled reference region has 193
+  vertices and 195 edges against the 190/192 §5.2.1 derives: two of each from breaking the axis into
+  three collinear segments, so that the 0.075 nm axis-in-pore size can be applied at all, and one of
+  each from the seam OCC places at parameter zero on a closed circle, at `(250, 0)`, which halves
+  `membrane_outer` into two arcs. Both are asserted rather than tolerated (VER-28).
+- **The membrane's inner edge is buried in the pore body**, so the assembled membrane is the
+  quadrilateral *minus* the pore and there is nothing to make coincide: the junction gate asserts
+  `r_out(−1.4) = 2.7524` and `r_out(+1.4) = 4.88` on the pore's own outer surface, one shared edge
+  chain rather than two coincident ones, and exactly three domains — the cleft under the cap must
+  not fragment off as a fourth.
+
+**OPN-05 is closed.** §2.2's "196-vertex pore polygon" was the geometry-wide count attached to
+the wrong object; the model report's 190 for the polygon and 196/198 for the assembly both stand,
+and the delivered table's 185 assembles consistently to 190/192 by the same arithmetic. The author
+settled the remaining question on 5 September 2026: **the delivered 185-vertex table is the geometry
+of record** — what the fixture ships, what `mesh/reference.py` assembles, and what VAL-05 and any
+Tier-3 comparison cite. The report's 190 is the count after COMSOL's import conditioning and the
+five vertices are not chased. The fixture's `source: author-supplied` and `REFERENCE_SOURCES` were
+already written for this answer, so nothing in the code moves.
+
+### WP9 — External material and charge fields — **delivered**
+
+`density/grid.py`, `charge/fields.py`, `charge/stage.py`, `materials/fields.py`, with changes to
+`core/paths.py`, `core/stages.py`, `io/artefact.py`, `io/case.py`, `io/defaults.py`,
+`io/manifest.py`, `mesh/ingest.py`, `mesh/primitives.py`, `physics/models.py`, `physics/pb.py`,
+`solve/continuation.py` and `solve/stage.py`; spec amendments A–H from the plan commit, plus five
+that implementation forced (§7.1's reference archive, §5.3.1's `comsolgrid` format, §4.4's NOTE on
+the consumer leg, VAL-15 in §7.4, and §3.1's NOTE narrowing IF-05's CCP4 *write* side to the
+interpreters whose GridDataFormats carries the writer).
+
+Delivered: `RadialGrid` as the seam behind every gridded field — origin, uniform spacing checked to
+`10⁻⁹` nm, `values[i_z, i_r]` float64, planar integral, ramped cumulative, boundary-ring maximum,
+zero padding and a content hash — read and written over `.npz` natively, OpenDX and MRC behind the
+`structure` extra with `writable_formats()` reporting which of them this install can actually write,
+and the reference model's own `%Grid`/`%Data` table read-only; `FieldDocument`
+(`nanopnp/field/v1`, `extra="forbid"`) carrying quantity, units, grid descriptor, axis cutoff,
+declared `Q_net` and provenance, with an absolute `ε_r` refused naming PHY-11; the named analytic
+form registry (`uniform`, `gaussian_ring`, `slab`); `ChargeField.assemble` applying the `1/(2πr)`
+projection and PHY-18's axis guard to `areal_charge_density` alone; `conservation` and
+`check_conservation` reporting the producer and consumer legs separately with the quadrature
+agreement, ring ratio, guard deficit and worst ramped plane beside them; `SolidFractionField` and
+the §4.4 blend with its range and per-material-mean gates; `FieldStage` as stage 7 over
+`("case", "mesh")` with `key(inputs)` beside `run(inputs)`; the `exclusion` material, exempt from
+`check_solid_permittivities` and contributed to the manifest as a deviation through a new
+stage-contributed channel; `default_ladder(..., fixed_charge_field=…)` on the stage-4 ramp; and the
+manifest's `charge` group populated from the conservation report. Discharges the consumer halves of
+**FR-14**, **FR-15**, **QR-03**, **PHY-18** and **PHY-19**, the read side of **IF-05**, and adds
+**VER-29**, **VER-30**, **VER-31** and **VAL-15**. VER-01's producer side and VER-02 stay Phase 3.
+
+Beyond the plan: the `comsolgrid` reader, once the author delivered the real table; `core/paths.py`
+gained `reference_data_root()`/`reference_file()` over `$NANOPNP_REFERENCE_DATA`, because that table
+is 77 MB and no reduction of it is a fair reference — a `10⁻⁶`-threshold crop still costs 28 MB and
+subsampling by four moves the planar integral by 1.5 %, fifteen times the budget it would check; and
+a Tier-3 file that skips rather than fails where the archive is absent.
+
+Reference measurements, stabilisation `none`, on the WP8 reference mesh (44,316 elements, §5.2.2
+size fields, 7.4 s to generate, 1.6 s to check):
+
+| Field | `Q_grid` vs `Q_net` | `Q_mesh` vs `Q_grid` | Quadrature agreement | Worst ramped plane |
+|---|---|---|---|---|
+| Gaussian rings on the contour, `w = 0.085 nm` (VER-29, Tier 2) | 0.0 | **1.37e-05** | 2.13e-05 | 1.37e-05 |
+| The delivered `prod5_clya_charge` (VAL-15, Tier 3) | 4.68e-12 | **9.87e-03** | 9.27e-03 | 2.03e-02 |
+
+The two rows are the package's most useful result, and they are the same mesh. QR-03's `10⁻³` is
+met with a factor of 73 to spare on a field smeared at the reference's own width; it is missed by a
+factor of ten on the reference's own table. VER-31: the Stern shell raises the wall potential from
+51.3852 mV to 67.1139 mV, a ratio of **1.30606** against the closed form to `10⁻⁵`, and `λ_S = 0`
+returns `ζ̃ = 2` to `10⁻³` on the same mesh.
+
+Seven things settled by the work that WP10 onwards inherit.
+
+- **A mesh integral of a sub-element-scale field converges in neither `h` nor quadrature order.**
+  The delivered table alternates sign 49 times along its densest `z`, extrema a median 0.035 nm
+  apart. Refining to 3,463,372 elements made the consumer leg *worse* (−1.06e-2, non-monotone in
+  between, 669 s to mesh); raising the order from 8 to 37 oscillated at the 1e-3 to 1e-2 level
+  without settling. This is aliasing, not inaccuracy, and it is why the conservation gate reports
+  the quadrature agreement beside the number rather than the number alone. The remedy is the
+  producer's — deposit onto the FE space and rescale to `Q_net` — and it belongs to v0.4's stage 7.
+- **OPN-06 is closed, and the answer is "the consumer's".** The delivered table's planar integral is
+  the integer −72 e to 4.7e-12, so the published `−72.9 e` is COMSOL's own quadrature of its own
+  table, not a smearing error; our own leg by the same route is −0.99 % — same size, opposite sign.
+  WP13's Tier-3 comparison of pore charge is therefore two consumer legs, with ours gated ten times
+  more strictly than the reference achieved.
+- **The `2πr` cancels, so a single conservation number attributes nothing.** Under `dV = 2πr dr dz`
+  the Jacobian and PHY-16 step 6's `1/(2πr)` cancel identically for an areal source, which is
+  exactly the compensating error PHY-19's rationale warns of. Two legs, gated separately, is the
+  only form of the check that names which side of the interface failed.
+- **`extra_order=3` on a singular form is not a refinement**, because `Measures.bonus_order` takes
+  `max(extra, 3)` for NUM-07's floor. The agreement gate as the plan specified it would have
+  compared a value with itself and passed unconditionally. Any future route-agreement gate on a
+  form carrying `1/r` has to clear the floor explicitly.
+- **A ramped plane indicator is not a refinement of a step, it is the only workable one.** A step is
+  integrated by quadrature inside every element the plane crosses; measured on the reference mesh
+  the ramp is inside `10⁻³` at every plane while a near-step indicator is outside it, so the check
+  would have been measuring its own discretisation.
+- **A test that asserts a quadrature-error magnitude must run on a structured mesh.** The corollary
+  of the aliasing above, and it only showed up on the CI matrix: netgen's unstructured triangulation
+  of the same box at the same `maxh` gave 2.3e-4 on Linux, 7.8e-5 on Windows and 2.2e-5 on macOS for
+  the same field — a factor of ten, straddling the 1e-4 gate three ways. Coarsening re-rolls the
+  dice, because the quantity is non-monotone in `h`. `MakeStructured2DMesh` places every vertex
+  arithmetically, so the number is the same everywhere; the gate now runs at `(27, 70)` divisions.
+  A test asserting a *converged physical* quantity is the opposite case and should keep the
+  unstructured mesh the pipeline deploys.
+- **The optional dependency's version is part of the interface, and 3.10 is where it bites.**
+  GridDataFormats 1.2 needs Python ≥ 3.11, so on 3.10 the resolver takes 1.0.2, which reads MRC and
+  CCP4 and writes neither. "Is the module importable?" is therefore the wrong guard for anything
+  that writes: ask the capability. Every optional-dependency guard added from here should be a
+  capability probe with the refusal asserted on the other branch, not a skip — one of the two
+  branches then runs on every row of the matrix.
+
+**No boundary layers** (the author, 5 September 2026). WP8 measured the reference region into the
+published quality band — 44,316 triangles at minimum SICN 0.6559 — by isotropic grading alone, which
+is what the reference model did (§5.2.2), so a Debye-layer resolution study here does not reopen
+FR-11. It stays a post-1.0 element-count optimisation, and WP9 posed no anisotropic meshing.
+
+### WP10 — Case-driven runs, the CLI, field output — **delivered**
+
+`cli/__init__.py`, `cli/errors.py`, `io/run.py`, `io/fields.py`, `io/reproduce.py`,
+`post/stage.py`, `solve/state.py`, with changes to `core/hashing.py`, `core/stages.py`,
+`io/artefact.py` and `solve/stage.py`; the plan's seven spec amendments plus three that
+implementation forced (§5.3.2's canonical-serialisation NOTE extended to say the encoding is the
+on-disk format and a decoder SHALL exist beside it; a new §5.3.2 workspace-locality NOTE; and
+§5.3.2's QR-08 NOTE extended to require the reproduction check be reachable as a command).
+
+Delivered: stages 11 (`qoi`, `nanopnp/qoi/v1`) and 12 (`report`, `nanopnp/report/v1`) registered, so
+`run` is a walk over the stage graph rather than physics inside the CLI, with the indicator band
+derived from the `membrane` material's z-extent and asserted identical to `lumen_band(fraction=0.8)`;
+`io/run.py` as the driver — `PIPELINE` in dependency order, `PAYLOAD_FREE` and `WORKSPACE_STAGES`
+both enumerated with tests against the constructors themselves, `Progress`/`CancelToken` threaded
+through, the FR-25 manifest and a third run-directory file `run.json` carrying what the run
+*produced*, and a `deviations(inputs)` protocol extension letting each stage report the deviations
+its own artefact records; `solve/state.py` as the `nanopnp/solution/v2` `.npz` payload — one
+coefficient array per component plus the stored wall-distance vector plus a descriptor gate that
+aborts naming the first differing key — where `restore` reassembles the *operator* and not only the
+state, because NUM-25 is the assembled residual and a restored solution without one can answer only
+half of QR-04; `io/fields.py` as the IF-07 export, `Triangle_6` at the P2 node set with midside nodes
+matched by vertex pair, split into an Ω pair and a fluid-only Ω_w pair, SI units in the attribute
+names and gzip on the heavy data; `cli/errors.py` as the IF-02 exit enumeration, keyed on
+`"module:qualname"` strings and walked over the MRO so that classifying an error imports no exception
+module; five subcommands over the IF-01 objects, none of whose flags changes what is solved; and
+`io/reproduce.py` making QR-08 a callable check rather than only a test assertion. Discharges
+**IF-01**, **IF-02**, **IF-07**, **FR-27** and **QR-08**, and adds **VER-32**, **VER-33**, **VER-34**
+and **VER-35**.
+
+Beyond the plan: `core/hashing.py` gained `decode_floats`, the inverse of the `{"__f__": x.hex()}`
+float encoding — `canonical()` is the on-disk format of `manifest.json` and `run.json` as well as the
+hash input, and without a decoder the recorded and live sides of QR-08's comparison speak different
+encodings and a present number reads as a missing one; and `io/run.py` gained a workspace under the
+store in use, because all four file-writing stages fall back to `store_root()` — the *process*
+default — when constructed without one, so a run into a caller's store left its scratch mesh
+somewhere the caller never named. `nanopnp-store/` is gitignored besides.
+
+Reference measurements, stabilisation `none`, on `CylindricalPoreGeometry(2, 6, 10)` at `maxh` 4 nm /
+`wall_h` 1 nm (124 elements, min SICN 0.7138), 0.1 M NaCl at +20 mV, `ground: cis`,
+`solid_permittivities: {membrane: 3.2}`, `default_ladder`:
+
+| Quantity | Value |
+|---|---|
+| `current_A` | 3.6170916294619195e-11 |
+| `currents_A["Na+"]` / `["Cl-"]` | 1.4334969520459997e-11 / 2.18359467741592e-11 |
+| `transport_number` | 0.3963120370990567 |
+| `conductance_S` | 1.8085458147309597e-09 |
+| `eof_m3_s` | 4.484668242351342e-25 |
+| Route agreement, relative | **3.25861342399385e-10** |
+| QR-08 reproduction, worst relative | **0.0**, 0 store hits / 6 misses |
+
+The route figure is four orders inside NUM-26's `1e-3` and does not depend on the band: over
+half-widths 0.6, 1.5, 2.4 and 2.9 nm it stays ≤ 6.7e-10. `import nanopnp.cli` costs 55.6 ms
+cumulative and 0.082 s as a cold process, against `import ngsolve`'s ~370 ms — which is what the
+string-keyed exit table and the target-string registry buy.
+
+Inherited by WP11: a latent defect, recorded and deliberately not fixed here. The P2 Varadhan
+distance field undershoots to −0.99 nm at the re-entrant pore-mouth corner, and
+`FittedCorrection.evaluate` clamps the concentration driver but not `wall_distance_nm` — so
+`1 − exp(−6.2(d + 0.01))` returns a **negative** diffusivity and mobility factor there. It does not
+move the numbers above, the corner being one quadrature neighbourhood, but it is a wrong sign in a
+correction and belongs to whichever package owns the distance field's boundary behaviour
+(`knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`).
+
+### WP11 — Sweep runner — **delivered**
+
+`sweep/document.py`, `sweep/plan.py`, `sweep/run.py`, `sweep/collect.py`, with changes to
+`io/case.py`, `io/artefact.py`, `io/store.py`, `io/manifest.py`, `io/run.py`, `solve/state.py`,
+`solve/stage.py`, `solve/gates.py`, `materials/models.py`, `materials/forms.py`, `cli/__init__.py`
+and `cli/errors.py`; the plan's nine spec amendments (A–I), all written with the plan.
+
+Delivered: a sweep is specified by its **own** document, `nanopnp/sweep/v1`, naming a base case and
+axes of *assignments* — dotted case paths to values — that combine as a Cartesian product. Nothing
+was added to the frozen `nanopnp/case/v1`. `io/case.py` gained the walker FR-24 needs and did not
+have: `field_at(path)` walks `CaseDocument.model_fields` through nested models, mappings and
+sequences and returns the declared type; `substitute(document, assignments)` dumps by alias, sets,
+and **re-validates the whole document**, so a typo hits `extra="forbid"` and the existing "did you
+mean" diagnostic for free; `value_at` is the same walk over an instance, and
+`io/defaults.value_at` is now a four-line translation over it rather than a second implementation.
+
+FR-24's contradiction — *independent jobs* and *warm-started from a neighbour* — is reconciled by
+the forest of §5.3.4: each axis declares an origin, a point's parent is that point with the **last**
+index differing from its origin moved one step towards it, and the plan is ordered by depth so a
+wave is a contiguous index range. Every point is substituted, validated and `resolve()`d at plan
+time, and NUM-34 runs once per distinct mesh there, so a 3,675-point plan whose two-thousandth point
+is inadmissible fails in seconds. A member resolves its parent's stage-10 artefact from the shared
+store by *computing* its key, and falls back to the full NUM-18 ladder with the reason recorded when
+the store has not got it — which is what makes a member runnable alone, in any order, on a machine
+that has seen nothing else. `solve/state.py` gained `SPACE_KEYS`/`OPERATOR_KEYS`, the §5.3.2
+partition of the stage-10 descriptor, and `load_initial`, which gates the space keys exactly as
+`restore` does, permits and records every operator key that differed, reads no stored distance
+vector and returns no residual. `SolveStage` takes the neighbour's artefact and solves the target
+rung alone; **`key(inputs)` is unchanged**, so warm and cold key one artefact.
+
+Collection produces one dataset row per point — status, §3.1 exit class, the diagnostic verbatim,
+the quantities or `null`, the warm-start record, the NUM-34 minimum and the NUM-26 route agreement —
+plus `rectification` from matched exactly-opposite bias pairs, the one derived quantity a single
+operating point cannot give. Three sub-subcommands (`plan`, `run`, `collect`), none of whose flags
+changes a case-file field; `--index` exits with the member's own class, `--workers` exits 0 with a
+failed member because non-convergence at a hard corner is a *result*. Workers are `spawn`ed with the
+three BLAS thread counts pinned to 1 before the first deferred import, and one pool is held open for
+the whole plan. Discharges **FR-24**, measures **QR-06**, and adds **VER-36**, **VER-37**,
+**VER-38**, **VER-39** and **VER-40**.
+
+Beyond the plan: the WP10 defect below is **closed**, and closing it took two changes and not one.
+`FittedCorrection.evaluate` now clamps `d̄` at zero before either wall form reads it (PHY-02,
+amendment H) — the ion form's root is at `d̄ = −P₂`, so a negative sample reversed the sign of `D_i`
+and `μ_i` rather than attenuating them — and `WallDistanceGate` refuses a field sampling below
+`−1 × 10⁻³` nm anywhere a wall correction is active (NUM-34, amendment I). The measurement that
+justifies needing *both* is in `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md#711-measured-with-the-wall-corrections-on-route-agreement-is-a-mesh-statement`: with the clamp alone, a `wall_h` 0.5 nm mesh
+whose distance field reaches −1.2 nm **passes NUM-26 forty times inside tolerance** and returns a
+current 13 % low, where unclamped it disagreed between the routes by 9.6 × 10⁻⁵ and at 1.0 nm by
+40 %. The clamp turns loudly wrong into quietly wrong; the gate turns it into refused.
+`MathOps.clip` gained a one-sided form for it, `run_document` an `arguments` parameter so an
+*artefact* can reach a stage constructor without entering a digest, and `cli/errors.py` two more
+classifications than the plan foresaw (`UnknownCasePathError` → 3, `WarmStartError` → 4).
+
+Measurements, stabilisation `none`, on `CylindricalPoreGeometry(2, 6, 10)` at `maxh` 4 nm /
+`wall_h` 0.35 nm (392 elements — the coarsest NUM-34 admits), 0.1 M NaCl, every correction active:
+
+| Measurement | Value |
+|---|---|
+| Warm against cold, worst relative over every scalar | **3.367 × 10⁻⁹** (against `1 × 10⁻⁶`) |
+| Warm pass against cold pass, 4 points | **77 Newton iterations against 216 — 2.81×** (10.5 s against 22.3 s) |
+| Operator keys differing across a bias step / a salt step | `solve_hash` / `solve_hash`, `model.scales` |
+| Parallel efficiency, 25 points on 4 cores, N = 1, 2, 4 | **1.00, 0.76, 0.50** (33.5 → 22.1 → 16.8 s) |
+| Throughput over uncached members, N = 1, 2, 4 | 2 686 → 2 034 → 1 337 points per worker-hour |
+| §8.3 reference grid, planned | **3,675 points, 42 waves**, mean width 87.5, peak 174 |
+| `min d̄` at `wall_h` 0.4 nm / 0.35 nm | −1.08 nm / **+9.5 × 10⁻⁶ nm** — a regime change, not a gradient |
+
+`docs/sweeps/phase1-reference.sweep.yaml` and its base case are checked in, so the deferred
+twelve-core run of §8.3 is two commands against a commit; Tier 1 asserts the half of it that can be
+verified without spending the day.
+
+Inherited by WP12: **NUM-26's relative route check is inapplicable at exactly zero bias, and
+aborts.** The current is zero, both routes return round-off — `I_ψ = 2.288 × 10⁻²⁷` A against
+`I_reaction = 4.606 × 10⁻²⁵` A — and the relative difference is 0.995 on a converged solve at the
+one operating point whose answer is known exactly. The reference sweep's bias axis is rooted at
++5 mV rather than 0 V to keep its 3,675 points runnable; making the check *inapplicable* rather
+than failing means deciding what "no current" is, which is a scale the extraction does not carry.
+Recorded in `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias`, deliberately not fixed here.
+
+### WP12 — Reference-matching stabilised mode — **delivered**
+
+`physics/stabilisation.py` (new, 1 093 lines), with changes to `physics/models.py`, `solve/gates.py`,
+`solve/continuation.py`, `solve/state.py`, `io/case.py`, `io/manifest.py`, `io/run.py`, `post/qoi.py`
+and `post/stage.py`; the plan's seven spec amendments — six written with the plan, the seventh
+(VER-41 and VER-42 themselves) with the tests that discharge them — plus two the implementation
+found: the NUM-14 NOTE requiring the magnitude floor, a NUM-14 bullet recording that the flow row's
+equation residual is approximated by this project's choice and what that costs, and two sharpenings
+of VER-42 — its crosswind and current-convergence clauses to the forms that are actually assertable,
+and its MMS clause to the mode that isolates the term the prediction is about.
+
+Delivered: stabilisation is a **registry of named models**, the shape `materials/models.py` already
+uses — `none` assembles nothing, `supg` the transport streamline term, `reference` the streamline and
+crosswind terms *and* the flow GLS and grad-div pair. "Off" is a registered entry, so
+`CoupledModel.residual_form` carries no `if` on the mode and §7.4's ablation is a sweep over mode
+names rather than three code paths (PHY-22 generalised). The streamline parameter is
+`τ_i = (h_K/2‖b̃_i‖)·min(Pe_K, 1)` on the whole non-diffusive flux bracket
+`b̃_i = z_i μ̃_i ∇φ̃ + D̃_i β̃_i − Pe ũ`; the crosswind is Do Carmo–Galeão-type with `C_cw = 1`, which
+by Cauchy–Schwarz makes it **identically zero wherever `Pe_K ≤ 1`**. Every parameter is evaluated at
+the lagged iterate, which is COMSOL's `nojac()` in one line and keeps `max(0, ·)` and `1/‖∇c̃‖` out
+of the Jacobian. `CoupledModel` gained a third element order (`velocity_order`, defaulting to
+`order`), so the reference's φ P2 / c P2 / u P1 / p P1 configuration is expressible at all, and the
+inf-sup refusal became **one predicate with two callers** (`physics.models.inf_sup_problem`) naming
+both the problem and the mode that would permit it. `numerics.stabilisation` widened to admit `supg`
+under a compatibility rule written into §5.3.1 in the same commit: widening the accepted value set of
+an existing key does not move the schema version; adding, removing, renaming or narrowing a key does.
+
+The two things the mode changes about *results* are both recorded rather than absorbed. NUM-24's
+indicator functional now carries the stabilisation form evaluated with `ψ` as its test function,
+because NUM-25's reaction flux **is** the assembled residual and the assembled residual contains it
+— the two routes would otherwise differ by exactly that term on every stabilised solve, for the one
+reason that is not a bug. One `StabilisationIntegrand` is produced by `transport_contributions` and
+consumed twice, by the residual and by the functional, which is what makes NUM-26 an identity rather
+than two constructions that agree. And `2π F z_i S_I S_i(ψ)` is reported per species as
+`stabilisation_current_A`, from **one** run rather than a difference of two — WP13's `Δ_stab` input.
+NUM-12's `Pe_h` runs on the converged top rung in **every** mode, `none` included, evaluated from
+`‖b̃_i‖h_K/(2D̃_i)` rather than the printed `½|z_i|‖∇φ̃‖h̃` because that form assumes the Einstein
+relation PHY-14 and VER-05 forbid at finite concentration; it warns naming the species, the value and
+its `(r, z)`, and it is a warning and not a gate.
+
+Discharges **NUM-03, NUM-12, NUM-14, NUM-15** and the unfinished half of **NUM-11**; adds **VER-41**
+(Tier 1) and **VER-42** (Tier 2).
+
+Beyond the plan, five things. **On a stable element pair the flow terms are not asymptotically
+inert: they cost an order of accuracy and 20× the time.** The decisions table justified assembling
+them on a Taylor–Hood pair with "the flow terms are consistent", which §Design's own text contradicts
+— the momentum residual drops the viscous second derivative on the same rule as the transport one.
+Measured on VER-18's problem, where `max Pe_K ≤ 0.084` so the crosswind viscosity is identically zero
+and `reference` minus `supg` **is** the flow pair: the concentration rate falls from 2.01 to 0.98,
+Newton goes from 5 iterations to 31, and the velocity error — which no transport term can reach,
+`supg` moving it by 0.2 % — rises by a factor of 125. PSPG's consistency error enters the continuity
+equation weighted by `τ_m ≈ h̃²/4η̃` against a test *gradient*, which is `O(h)`. The decision stands:
+NUM-14 records the flow row's equation residual as *not recorded in the report*, so the
+approximation is ours rather than the reference's, and RSK-18 records that the reference ran its flow
+stabilisation on a **P1/P1** pair where the term is what makes the pair admissible — no configuration
+the reference itself ran loses an order. What changed is the claim, and where VER-42's MMS rate is
+gated: in `supg`, the mode that isolates the term NUM-14's prediction is about, with `reference`'s
+measured, attributed and recorded as `slow`.
+
+And four more. **A term whose value is exactly zero made the Jacobian singular**:
+`reference` aborted on the first linearisation of ladder stage 4 with `UmfpackInverse: Numeric
+factorization failed`, naming no form, because NGSolve evaluates `d/du ‖g‖ = (g·∂g/∂u)/‖g‖`
+numerically and never folds away the structural zero — at `g = 0` the entry is `0/0` and the `NaN`
+survives multiplication by that zero. `b̃_i` is exactly zero at every rung below stage 4, so this is
+the ordinary path. The guard is `MAGNITUDE_FLOOR = 1 × 10⁻⁶⁰` inside every root, gated on the
+**assembled Jacobian entries** because a residual-norm check reports zero and not `NaN`; `Assemble`
+is clean and only `AssembleLinearization` carries it, which is why the zero-wind residual test passed
+in all three modes and caught none of it. Recorded as trap 19 in `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`. **The two GLS
+rows do not share an orientation**: the velocity row takes a `+` and the pressure-test piece a `−`,
+giving `[[A, B], [Bᵀ, −C]]`; one signed term for both stabilises one row and destabilises the other.
+**`solve/state.py` gained three `SPACE_KEYS` entries, not zero** — the mode *name* alone would let a
+warm start cross between `reference` at `C_cw = 1` and `reference` at `C_cw = 0.35`, which are
+different operators — and `RungResult` gained `stabilisation`, so the per-rung record says which mode
+each rung was assembled in. **`specialcf.mesh_size` evaluates pointwise** as well as inside a
+quadrature loop, which is what lets the `Pe_h` diagnostic be a `FieldSampler` pass over the P2 nodal
+set rather than an element loop; it is exactly `sqrt(2|K|)` on triangles, measured to
+2.4 × 10⁻¹⁵ relative, so the `τ` definitions are pinned to a measured convention.
+
+Measurements. The transport stabilisation's added streamline diffusivity over the physical `D̃_i` is
+exactly `Pe_K²`, independent of every material parameter — on a mesh meeting NUM-30 that is
+`ζ̃²/100`, and `Pe_h = 0.300` at both 1 M and 0.05 M. At `Re = 6 × 10⁻⁴` the flow GLS term is pure
+PSPG in practice: the convective branch of `τ_m` is five orders below the viscous one and
+`τ_c ≈ 9 × 10⁻⁶`. Both are assembled anyway, so the mode is not silently specific to this Reynolds
+number. On the VER-11 benchmark pore (2 nm lumen, 13 nm membrane, 0.5 M, +50 mV, −0.05 C/m²,
+`maxh` 5.0 nm, `wall_h` 0.4 nm) in `reference`, where `max Pe_K = 0.775`:
+
+| Measurement | Value |
+|---|---|
+| `stabilisation_current_A`, summed | **−1.9059 × 10⁻¹¹ A, −8.14 % of the current** |
+| The same bias from two solves (`none` against `reference`) | **7.38 %**, agreeing with the single-run number to `1.55 × 10⁻³` of the current |
+| The *bare* `∫ J̃_i·∇ψ` integral, `reference` against `none` | 2.5327 × 10⁻¹⁰ A against 2.5288 × 10⁻¹⁰ A — **0.15 % apart** |
+| MMS L² rate, `supg` on VER-18's solution, `maxh` 0.4/0.2/0.1 nm | **2.012, 2.040** (§Design predicts 2, floor 1.8), 152 s |
+| The same meshes in `none` | 3.553, 3.111 (VER-18's 3, unchanged), 31 s |
+| The same meshes in `reference` (`maxh` 0.4/0.2) | **0.984** for `Na+` and 0.702 for `Cl−`, 31 Newton iterations against 5, 126 s and 436 s |
+| Velocity L² at `maxh` 0.4 nm, `none` / `supg` / `reference` | 2.7567e−04 / 2.7617e−04 / **3.4483e−02** |
+| Footprint `error/error(none) − 1`, intact against source withheld | 4.83 vs 0.065, 15.97 vs 0.67, 2.99 vs 0.014, 15.77 vs 0.20 |
+| Plain Galerkin at `wall_h` 1.0 nm, −0.12 C/m², `max Pe_K = 4.712` | `none` aborts on `Na+ = −72.9` at `(1.001, −4.376)` nm; `reference` converges in **126** Newton iterations |
+| Crosswind activation on that mesh | 125 of 1 344 fluid samples for `Na+`, 123 for `Cl−`, peak `ν_K` 3.71 / 5.61; **zero** samples active at `Pe_K ≤ 1` |
+| Crosswind at `wall_h` 0.2 nm, `max Pe_K = 0.457` | assembled linear form `max \|entry\| = 0.000 × 10⁰`, both species |
+| `\|I_ref − I_none\|/\|I_none\|` at `wall_h` 0.8 / 0.4 / 0.2 nm | 2.00 × 10⁻¹, 7.38 × 10⁻², 1.99 × 10⁻² — rates **1.441**, **1.889** |
+| Equal-order P1/P1 in `reference`, `wall_h` 0.4 nm | velocity **6.86 × 10⁻² relative *r*-weighted L²** from Taylor–Hood, 34 Newton iterations either way |
+
+The 8 % is larger than the per-cent §Design predicts and consistently so: that estimate is for a mesh
+meeting NUM-30 where `Pe_K² = 0.09`, and this benchmark's mesh is sized for the solve and no finer,
+`Pe_K² = 0.60` at `Pe_K = 0.775`. The closed form survives; only the substitution changes.
+
+Inherited by WP13, three things. **The middle rung of the attribution ladder is first-order
+accurate.** `reference` on a Taylor–Hood pair converges at 0.98 where `supg` converges at 2.01, so
+the `Δ_stab` measured there is the flow pair's contribution rather than the transport term's, and the
+like-for-like comparison against the reference's own runs is the **P1/P1** rung, not the middle one.
+Any §7.4 number from the middle rung has to say which of the two it is measuring.
+
+**The coarse-mesh positivity result is true of a *band*, not of the coarse-mesh
+regime.** `Pe_K > 1` is necessary and nowhere near sufficient for plain Galerkin to lose positivity —
+below about −0.10 C/m² on the 313-element mesh both modes converge and the comparison measures
+nothing, and well above it (a 1.5 nm pore at 0.05 M, −0.30 C/m², `wall_h` 1.0 nm) *both* modes lose it, `reference`
+merely reaching −0.385 where `none` reaches −0.826. The attribution ladder's middle rung therefore
+has to name its charge density as carefully as its mesh.
+
+Two smaller ones: the
+`|I_ref − I_none|` sequence reaches `O(h²)` **from below**, so a fixed rate floor fails its coarsest
+interval for no defect and the gate is the monotone fall plus 1.5 on the finest; and `C_cw` is a
+module constant by author ruling, so a sensitivity study over it is a second registered mode rather
+than a swept number — which is what the registry is for.
+
+### WP13 — Tier 3 harness and the COMSOL comparison — **delivered**
+
+Delivered: the machinery by which a COMSOL export becomes evidence. `nanopnp/probe/v1` is **our**
+comparison surface — named tensor-product patches, content-hashed into every golden, every patch
+refusing `n_r = n_z` so a transposed `%Data` read is a shape error rather than a field that is right
+only on `r = z`, and a per-field mask retaining a point only where its four `±0.05 nm` neighbours
+are also inside, with the radial neighbour mirrored so the near-axis line survives.
+`nanopnp/golden/v1` refuses a manifest that leaves the unit, the evaluation boundary or the sign
+reference unstated, refuses `mol/L` rather than scaling it, and flips a `trans`-referenced current
+onto §6.7's convention *and prints that it did*. `%Grid` text stays the transport format and `.npz`
+plus a typed manifest is the archival one. Comparison reports three numbers per field — the
+`r`-weighted relative L² (the VAL-01 quantity), the unweighted one, and the located maximum — with
+the pressure gauge-free. The four-rung ladder reports `Δ_total`, `Δ_transport`, `Δ_flow`, `Δ_pair`,
+`Δ_resid`, `Δ_ref` and a *reference-limited* verdict. `nanopnp validate` has six actions and the
+nightly Tier-3 job is enabled, `continue-on-error`.
+
+Discharges **VAL-01, VAL-02, VAL-03, VAL-04**; retires **RSK-14**; bounds **RSK-09**. VAL-01 and
+VAL-02 remain **recorded, not gated** — §7.4's second precondition (convergence-matched meshes) is
+not this package's to achieve, and WP13 measures whether it holds rather than assuming it.
+
+Amended `SPECIFICATION.md` §7.4 twice: VAL-03's criterion now requires the declarations above, and a
+new NOTE fixes the comparison surface and says which relative L² VAL-01's 1 % is about.
+
+**Inherited by WP14 and beyond, three things.** The COMSOL exports themselves are the author's,
+against [`docs/validation/comsol-export-contract.md`](../../validation/comsol-export-contract.md);
+until they land the harness runs against a self-golden, whose report carries `golden_source: self`
+and which tests the machinery and nothing else. `sweep/plan.py` now **severs** the warm-start forest
+on any axis over a path a warm start cannot cross (`WARM_START_BARRIERS`), so a sweep over element
+orders or stabilisation modes plans as separate components rather than building edges the run then
+refuses — VAL-04's own mesh-refinement study is a sweep of that shape. And the decision row above
+claiming the telescoping identity catches a rung run against a stale golden is **wrong**: the sum
+telescopes for any four numbers, and the gate that does that job is the hash and point-count
+comparison in `attribute()`. Evidence:
+[`wp13-tier3-comsol-comparison.md`](wp13-tier3-comsol-comparison.md) Outcomes;
+`knowledge/08-validation-benchmarks/index.md` for the measured ladder and the two-norm contrast;
+`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#841-a-sweep-axis-over-a-space-key-severs-the-forest-and-the-gate-that-fires-is-fields` for the forest severing.
+
+### WP14 — The packaging probe and the desktop shell — **delivered**
+
+Delivered: the RSK-13 detector and the first half of the §8.1 GUI increment. `gui/probe.py` imports
+PySide6 `QtWidgets`, `QtWebEngineWidgets`, `ngsolve`, `netgen` and `ngsolve.webgui` in one process
+and shows a real webgui scene in a `QWebEngineView`; `packaging/nanopnp-probe.spec` builds it
+one-dir, carrying `packaging/LICENSES-BUNDLE.md`, and a **gated** `windows-latest` job builds and
+`--selftest`s it on every push and uploads the artefact for the author's double-click. `io/case.py`
+gained `case_fields()` — 94 editable dotted paths, frozen in the test — plus `registry_options` and
+`options_at`, so the editor's every enumeration is the schema's `Literal` intersected with a live
+registry and `tests/tier1/test_manifest.py`'s two local schema walks are gone. `gui/case_model.py`,
+`gui/run_model.py` and `gui/solver.py` import no PySide6 and no NGSolve, asserted on `sys.modules`
+in a fresh process; `gui/widgets/` and `gui/app.py` are the Qt half and decide nothing.
+
+Discharges the case-editing and run-control halves of **IF-09** and **VER-43**; discharges **CON-09**
+mechanically and carries **CON-11**'s notice into the bundle. **§8.2 criterion 4 and RSK-13 stay
+open** until the author double-clicks an uploaded bundle, exactly as amendment A4 leaves them.
+
+Amended `SPECIFICATION.md` VER-43 to name the structural stage hook (below). The package invented
+one thing: `core/stages.py`'s `StageHook` and `run_document`'s `on_stage`, because the only prior
+signal of a stage transition was a caption inside a progress message, and recovering data from a
+display format is what the WP14 plan's own Design 2 forbids.
+
+**Inherited by WP15, four things.** The probe answers the bundling question the viewer is built on.
+The Qt-free view-model discipline applies to the convergence and viewer models too — measured,
+`from PySide6 import QtWidgets` raises `ImportError: libEGL.so.1` in the development container and
+on `ubuntu-latest`, so a rule implemented in a widget is a rule asserted on two of seven matrix
+jobs. The `RunEvent` union in `gui/solver.py` is the channel a `NewtonStep` variant joins, beside
+`Stage`; WP15 adds the variant and must not parse the residual out of a progress message. And
+`MainWindow` is a `QTabWidget` laid out to take the plot and the viewer as further tabs. Evidence:
+[`wp14-gui-shell-packaging-probe.md`](wp14-gui-shell-packaging-probe.md) Outcomes;
+`knowledge/07-software-stack/05-gui-and-packaging.md`.
+
+### WP15 — Live convergence and the field viewer — **delivered**
+
+Delivered: the second half of the §8.1 GUI increment, completing **IF-09** and discharging
+**QR-11**. `core/stages.py` gained `SolveHook` — the rung and the accepted Newton step as plain
+scalars — and `SolveReporting`, a capability protocol so that only stage 10 grows a keyword and the
+twelve-stage `Stage.run` does not widen. `io/run.py` threads `on_solve` and rebinds the stage
+*after* its artefact key is taken, so a watched run and an unwatched one key one artefact and one
+store entry, asserted both ways. `NewtonStep` gained the undamped relative update, already computed
+at `newton.py:308`, because a residual-only plot shows a warm-started rung converging while its
+curve is flat; `NewtonResult.summary()` gains no key, so no manifest, run record or artefact hash
+moves. `gui/convergence.py`, `gui/scene.py` and `gui/render.py` import neither PySide6 nor NGSolve
+at module scope, asserted on `sys.modules` in a fresh process; `gui/widgets/convergence.py` strokes
+the plot with `QPainter` and no new dependency, and `gui/widgets/viewer.py` loads a **file** URL and
+never `setHtml`. The viewer renders a solution restored through the stage-10 gate in a separate
+spawned child, on the field's own material region, named by `io/fields.attribute_name()`.
+
+Amended **VER-44** in the implementation commit, for two things the plan had wrong. A rung reports
+no Newton step for **two** reasons, not one — two of twelve take no callback and three more are
+coupled rungs that converged on entry — so the hook carries the distinction and the band names
+which silence it is. And "which NUM-16 test closed the rung" is not knowable, the two tests not
+being exclusive and the residual test short-circuiting, so the band reports only the exclusion it
+can prove.
+
+**Inherited by whatever follows, three things.** **OQ-1 is open**: the `webgui` renderer is fetched
+from a CDN, and whether the LGPL-2.1-or-later file may be shipped as package data so a bundle draws
+offline is the author's ruling — it is one constant, `render.renderer_source()`, plus WP15's work
+item 15. It could not be settled here in any case: `cdn.jsdelivr.net` answers this container's
+proxy with 403. **§8.2 criterion 4 and RSK-13 remain open** on the author's double-click, unchanged
+by this package. And the viewer opens the run just finished; opening an arbitrary stored run is a
+file chooser away and belongs to Phase 4's result browser. Evidence:
+[`wp15-live-convergence-and-viewer.md`](wp15-live-convergence-and-viewer.md) Outcomes;
+`knowledge/06-numerics-fem/05-nonlinear-solution.md#51-continuation-ladder` and `knowledge/07-software-stack/05-gui-and-packaging.md`.
+
+### WP16 — User documentation and worked examples — **delivered**
+
+Delivered 23 September 2026: the Phase-1 increment of §8.1's documentation track. **Two seams**:
+`nanopnp mesh cylinder|reference`, which gate the file by the route a run reads it (VER-32, the IF-02
+generators NOTE), and a lazy `nanopnp.__all__` of twenty names (IF-01, VER-45). **The site**:
+MkDocs + Material + mkdocstrings, with a strict build on every push. The case-file, CLI, exit-code
+and API references are generated from their sources, and the specification and `knowledge/` are
+rendered verbatim. **Five examples**, each README's commands executed by a test against a model
+property (VER-46); 05's solve is `slow`.
+
+Found on the way, and fixed: every checked-in reference case mapped a `default` group the reference
+mesh does not carry, and meshio leaked a blank line into the CLI's stdout. Inherited: the Read the
+Docs project is the author's to create; the Tier-2 examples cost 129 s serial against a 120 s
+target. Evidence: [`wp16-user-docs-and-examples.md`](wp16-user-docs-and-examples.md) Outcomes;
+`knowledge/07-software-stack/04-geometry-meshing-and-io.md`, §13.
+
+## Open decisions
+
+| # | Decision | Status |
+|---|---|---|
+| OPN-05 | Pore-polygon vertex count: the specification says 196, the model report's geometry section says 190 for the pore and 196 for the whole geometry | **Closed, 5 September 2026.** The two counts count two objects (§5.2.1); the author designated the delivered 185-vertex table the geometry of record. §10 of the specification records it. |
+| VAL-03 export scope | Which frozen cases the reference set covers — the envelope corners at minimum, and whether the analyte case of §7.5.1 joins them | **Closed, 18 September 2026.** Five cases: 0.05 M and 3 M × ±200 mV, plus 0.5 M / +50 mV, in the validated ePNP-NS configuration. The §7.5.1 analyte case is excluded. VAL-04's pair is the published mesh and one uniform refinement, on the centre case. `SPECIFICATION.md` §7.4 is amended to it in the same commit as the WP13 plan. |
+| GUI packaging target | Whether the Windows bundle is built on the author's machine or on a Windows CI runner | **Closed, 20 September 2026.** A gated `windows-latest` CI job builds it on every push and uploads the artefact; the author double-clicks it once, and that observation closes Phase-0 criterion 4 and retires RSK-13. `SPECIFICATION.md` §8.2.1 gains amendment A4 in the same commit as the WP14 plan. The job is delivered in WP14; the **double-click is outstanding**, and criterion 4 and RSK-13 stay open until it is recorded. |
+| GUI shell technology | ADR-004 left the FastAPI + `pywebview` local web application "on the table… the choice may wait until Phase 1" | **Closed, 20 September 2026: PySide6 native.** ADR-004 is amended in the same commit; the packaging tool is PyInstaller, one-dir. |
+| CON-11 / ADR-003 | Bundle default linear solver | **Closed, 2 September 2026.** UMFPACK, GPL-2+ obligation accepted and stated; the library stays BSD-3. `SPECIFICATION.md` CON-11, ADR-003 and §6.6 amended in this commit. |
+
+## Verification
+
+Every package leaves `uv run pytest` green before the next starts — tiers 1 and 2, which is the
+phase's acceptance gate.
+
+```bash
+uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
+uv run pytest -m tier2 -v                       # the analytic ladder, unchanged from Phase 0
+uv run pytest -m tier3 -v                       # the COMSOL comparison: recorded, never gated
+uv run pytest -m slow --log-cli-level=INFO      # envelope, factorisation, sweep throughput
+```
+
+New verification activities this phase, each named for the requirement it discharges:
+
+| Test file | Tier | Identifiers | What it asserts |
+|---|---|---|---|
+| `tests/tier1/test_case_schema.py` | 1 | VER-09, IF-03, FR-26 | A written and re-read case resolves to identical provenance; an unknown key is rejected with the key named in the message |
+| `tests/tier1/test_artefact_hashing.py` | 1 | FR-27, §5.3.2 | The hash is stable across processes, changes with any payload or parameter change, and a hand-substituted artefact registers as a changed input |
+| `tests/tier1/test_manifest.py` | 1 | FR-25, IF-08, §5.3.3 | Every field group of §5.3.3 is present; a switch moved off its validated default appears under Deviations without the writer being told about it |
+| `tests/tier1/test_mesh_ingest.py` | 1 | IF-06, QR-12 | A misspelt or unmapped group aborts, naming the group and the missing vocabulary name; a correct mapping round-trips through MSH 4.1 with tags intact |
+| `tests/tier1/test_mesh_quality.py` | 1 | VER-10, QR-12 | The gate fires on a known-bad mesh, reports the worst element and its location, and our SICN matches gmsh's on the same elements (skipped without the optional extra) |
+| `tests/tier1/test_charge_fields.py` | 1 | QR-03, PHY-19 | Conservation holds to 10⁻³ of a declared `Q_net` on the deployed mesh; a field with no declared `Q_net` records that the check could not run |
+| `tests/tier2/test_reproducibility.py` | 2 | QR-08 | A case re-run from its manifest reproduces every scalar QoI to solver tolerance |
+| `tests/tier2/test_stabilised_mode.py` | 2 | NUM-14, NUM-15, VER-18 | MMS converges in the stabilised mode at a measured rate; the stabilised and unstabilised currents approach each other under refinement |
+| `tests/tier2/test_sweep.py` | 2 | FR-24 | A two-axis sweep warm-starts, collects, and reproduces the same QoIs as the same points run cold |
+| `tests/tier3/test_comsol_comparison.py` | 3 | VAL-01, VAL-02, VAL-04 | Relative L² per field and relative error per QoI against the archived goldens, decomposed by the §Design attribution ladder; recorded, not gated |
+| `tests/tier1/test_case_fields.py` | 1 | IF-09, IF-03, FR-25 | The schema walk enumerates exactly the editable dotted paths of the case schema, in both directions, and is the same walk the FR-25 switch classification is checked against |
+| `tests/tier1/test_gui_viewmodels.py` | 1 | VER-43, IF-09 | The editor's model round-trips a case through the schema and offers only what the schema and the live registries name; the run view-model's fraction is monotone and its failures carry the CLI's exit class; the layer imports no PySide6 and no NGSolve. No test asserts pixels |
+| `tests/tier1/test_gui_solver_process.py` | 1 | VER-43, FR-27 | A spawned run reports progress and finishes; a cancelled one writes no artefact |
+| `tests/tier1/test_gui_widgets.py` | 1 | VER-43, QR-11 | Widgets construct under `QT_QPA_PLATFORM=offscreen` and bind every schema field; skipped where Qt cannot be imported |
+| `tests/tier1/test_gui_probe.py`, CI job `bundle` | 1, — | VER-43, RSK-13 | The probe names the four binary payloads and the licence notice; a `windows-latest` job builds the bundle and launches it headlessly |
+| `tests/tier1/test_solve_hook.py` | 1 | VER-44, FR-27, §5.3.2 | The structural solve hook sees every rung in ladder order and every step inside the rung that scopes it; a rung whose model takes no Newton callback yields a rung and no steps; the artefact hash is identical watched and unwatched, and a cached solve emits nothing |
+| `tests/tier1/test_gui_render.py` | 1 | VER-44, IF-09 | The render child restores a finished run through the stage-10 gate and writes a scene whose JSON round-trips; its field names come from the IF-07 attribute vocabulary; a missing or mismatched state produces a named diagnostic rather than an empty scene |
+| `tests/tier1/test_public_api.py`, `tests/tier1/test_doc_reference.py`, CI job `docs` | 1, — | VER-45, IF-01, IF-02, IF-03 | The public surface equals `nanopnp.__all__` and imports no solver; the generated case-file, CLI and exit-code references cover their sources in both directions; the site builds strictly on every push |
+| `tests/tier2/test_examples.py`, `tests/tier1/test_examples_plan.py` | 2 (reference solve `slow`), 1 | VER-46, VER-32 | Every documented example command runs verbatim from a copy of its directory and meets a model-property oracle; `nanopnp mesh` output ingests through the VER-27 gate |
+
+The phase is complete when:
+
+1. **Tiers 1 and 2 pass**, including everything Phase 0 gated, on an *ingested* mesh as well as a
+   constructed one.
+2. **A case file drives a full run end to end** from the CLI, emits a manifest sufficient to
+   reconstruct it, and the reconstruction reproduces every scalar QoI (QR-08).
+3. **Tier 3 is enabled and the differences are attributed** by the four-way decomposition, with the
+   archived reference set independent of continued licence access (VAL-03).
+4. **A sweep of the published shape runs** as independent jobs with warm starts and collects into one
+   dataset, with a measured throughput figure against QR-06.
+5. **The GUI increment runs a case unaided** on the author's platform, and the packaging probe has
+   either produced a double-clickable Windows bundle or named the binary dependency that defeats it
+   (RSK-13). Delivered across WP14 and WP15: WP14 closes the packaging half and the case-editing and
+   run-control halves of IF-09, WP15 the convergence and visualisation halves.
+
+## End-of-phase report
+
+To be written at the end of the phase, naming numbers rather than adjectives:
+
+- The four-way Tier-3 attribution for every frozen case: `Δ_total`, `Δ_stab`, `Δ_pair`, `Δ_resid`,
+  and what fraction of `Δ_resid` VAL-04 bounds to the reference's own discretisation error.
+- The measured MMS rate in the stabilised mode, and the rate at which the stabilised and
+  unstabilised currents converge on each other.
+- Sweep throughput: points per worker-hour, and how far from linear the scaling to N workers falls.
+- Quality statistics of the reference-geometry mesh against the reference figures (0.6378 minimum,
+  0.9765 average on 120,917 triangles), and whether our mesh needed more elements to reach them.
+- Any Tier-1 or Tier-2 tolerance that had to be argued rather than met — the one thing Phase 0's
+  report flagged as most consequential for this phase's comparison.
+- Whether the Windows bundle built, and on what.
+
+Written 24 September 2026, on `main` at `b2ab533` (the `v0.2.0-alpha.10` code plus the Phase 2 plan).
+Every number below is quoted from the Outcome, test or knowledge entry it cites. None is
+re-derived here.
+
+**Verdict.** Tiers 1 and 2 pass, and Tier 3 is enabled, with its attribution machinery verified.
+**No difference against COMSOL has been attributed**, because the author's reference exports do
+not exist yet (WP13; `docs/validation/comsol-export-contract.md`). The §8.1 gate's last clause is
+therefore not met as written. By the author's ruling it is closed by `SPECIFICATION.md` §8.2.3 C1,
+in the manner of Phase 0's A2 and A4. v0.2.0 is released with the COMSOL attribution outstanding,
+and that attribution is reported as an addendum here when the exports land. Phase 0 criterion 4,
+the double-click, is still open as §8.2.1 leaves it. It is the author's, and Phase 2's ruling B1
+requires it before WP17.
+
+> **Outcome — criterion 4 closed, 24 September 2026.** The author double-clicked the
+> `nanopnp-probe-windows` bundle of CI run 36045057612 (commit `52fd531`) and it opened, drawing a
+> mesh. RSK-13 is retired; the record is the NOTE to `SPECIFICATION.md` §8.2.1.
+
+**Tier-3 attribution: machinery measured, reference not.** Every Tier-3 report carries
+`golden_source: self`. The four-rung ladder ran against a self-golden on the VER-11 benchmark pore
+(708 elements, 0.5 M, +50 mV, −0.05 C/m²; four full-ladder solves in 75 s). The `none`-rung
+distance splits as expected. `Δ_transport` carries 88 % of the potential's `Δ_total` (4.01 × 10⁻²),
+and `Δ_flow` carries 90 % of the radial velocity's (8.53 × 10⁻¹). `Δ_resid` is zero by
+construction, and the telescoping identity holds to round-off (`knowledge/08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md`;
+`wp13-tier3-comsol-comparison.md` Outcomes). These numbers describe the ladder. They say
+nothing about the reference implementation, so no fraction of `Δ_resid` has been bounded by VAL-04:
+its `Δ_ref` needs the published mesh and one uniform refinement from COMSOL. One Tier-3 number
+*does* concern the reference. VAL-15 measured the delivered `rhoq_pore` table on our 44,316-element
+reference mesh. Its producer leg is exact, to 4.68 × 10⁻¹². Its consumer leg is off by
+**9.87 × 10⁻³**, missing QR-03's 10⁻³ by a factor of ten, with the quadrature-agreement gate at
+9.27 × 10⁻³. Aliasing of a sub-element field is the cause (OPN-06, `knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#32-the-references-125-is-the-consumers-and-it-is-aliasing`). The same
+gate meets QR-03 with a factor of 73 to spare on a field smeared at the reference's own width
+(WP9).
+
+**MMS in the stabilised modes (VER-42, WP12).** In `supg` mode, where the transport term acts
+alone, the rate on VER-18's manufactured solution is **2.012 and 2.040** at `maxh` 0.4/0.2/0.1 nm.
+That is the one order the approximate residual predicts, and it is gated from below at 1.8.
+`none` on the same meshes gives 3.553 and 3.111, VER-18's rate unchanged. The full `reference` mode
+is recorded and not gated: **0.984** for Na⁺ and 0.702 for Cl⁻. That shortfall is the flow pair's
+approximate residual costing an order on Taylor–Hood, and the velocity error, which moves from
+2.76 × 10⁻⁴ to 3.45 × 10⁻² at `maxh` 0.4 nm, is the evidence. The `reference` and `none` currents
+converge on each other: `|I_ref − I_none|/|I_none|` is 2.00 × 10⁻¹, 7.38 × 10⁻² and 1.99 × 10⁻² at
+`wall_h` 0.8/0.4/0.2 nm. The rates are **1.441, then 1.889**, approaching O(h²) from below.
+
+**Sweep throughput (VER-39, VER-37, WP11).** 25 points on the 4-core development machine, at
+N = 1, 2 and 4 workers, took 33.5, 22.1 and 16.8 s. The parallel efficiency is **1.00, 0.76 and
+0.50**, and the throughput 2,686, 2,034 and 1,337 points per worker-hour over uncached members.
+That is half of linear at four workers on four cores, on a sweep whose members take about a second
+each, so dispatch and import overhead are not amortised. Recorded, not gated (QR-06). The §8.3
+reference grid (3,675 points in 42 waves) is planned and checked in as
+`docs/sweeps/phase1-reference.sweep.yaml`, but **the twelve-core day-scale run has not been made**.
+QR-06's day-scale claim is therefore still unmeasured at scale. Warm against cold, the worst
+relative difference over every scalar is **3.367 × 10⁻⁹** against the 10⁻⁶ tolerance. The warm pass
+took 77 Newton iterations against 216 (2.81×).
+
+**The reference-geometry mesh (WP8).** At §5.2.2's size fields, with isotropic grading and no
+boundary layers, the mesh is **44,316 triangles** in 6.5 s. Minimum SICN is **0.6559** (mean
+0.9870), minimum gamma 0.6157 (mean 0.9852), with no inverted element. COMSOL reached 0.6378 and
+0.9765 with 120,917 triangles. Ours needed **about a third of the elements**, not more, to land in
+the same quality band. Element counts are a property of the netgen build, not of the geometry
+(`knowledge/07-software-stack/04-geometry-meshing-and-io.md`), so the count is asserted as a band.
+
+**Tolerances argued rather than met.** There are three, and none of them is a slackened Tier-1 or
+Tier-2 gate.
+- **NUM-26 at exactly zero bias.** Both current routes return round-off (`I_ψ = 2.288 × 10⁻²⁷` A
+  against `I_reaction = 4.606 × 10⁻²⁵` A, relative difference 0.995), so the relative check is
+  inapplicable there. The reference sweep's bias axis is rooted at +5 mV. Deciding what "no current"
+  means is left open (`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md#85-measured-num-26s-relative-route-check-is-inapplicable-at-exactly-zero-bias`).
+- **VER-42's full `reference` mode rate.** At 0.984 it is recorded, never gated, for the reason
+  above.
+- **VAL-15's consumer leg.** Ten times outside QR-03, attributed and not accommodated.
+
+Everything that *was* gated came in with margin. QR-08's reproduction differed by a worst relative
+**0.0** across six store misses (VER-35). NUM-26's routes agreed at every non-zero bias. Phase 0's
+one argued tolerance, VER-21's Henry-against-Smoluchowski, was flagged for this phase's COMSOL
+comparison. It remains unexamined, because that comparison has not run.
+
+**The Windows bundle (WP14, WP15).** The gated `bundle` job builds the PyInstaller one-dir bundle
+on `windows-latest` on every push, then runs `nanopnp-probe.exe --selftest` headlessly and uploads
+the artefact. On the last full run on `main`
+([run 35971212439](https://github.com/willemsk/nanopnp/actions/runs/35971212439)), PyInstaller took
+2 min 53 s and the selftest passed in 2 s. The selftest also fails when the bundled webgui renderer
+does not reach its page (VER-44). The bundle's size is not recorded. **The double-click is not yet
+observed**, so §8.2 criterion 4 and RSK-13 remain open.
+
+**Completion criteria.**
+1. Tiers 1 and 2 pass on ingested and constructed meshes. On `5458450`, the last code commit
+   before this report's, [CI run 35909281813](https://github.com/willemsk/nanopnp/actions/runs/35909281813)
+   passed lint, `mypy --strict`, and tiers 1–2. The tier runs covered Ubuntu on Python 3.10–3.14,
+   and macOS and Windows on 3.12, with the Qt widget module run serially where Qt imports.
+2. A case file drives a run from the CLI, and its manifest reconstructs it: QR-08 reproduced to
+   0.0 (VER-35).
+3. Tier 3 is enabled. Its attribution is verified on self-goldens, and the attribution against
+   COMSOL is outstanding (§8.2.3 C1).
+4. A sweep of the published shape is planned, and one of its own kind runs with warm starts and a
+   measured throughput. The full-scale run is deferred to the author's hardware (§8.2.3 C2).
+5. The desktop shell edits, runs, monitors and views a case (IF-09, VER-43, VER-44). The bundle
+   builds and self-tests on every push, and the double-click is outstanding.
+
+**What Phase 2 inherits.** No weak form changes in Phase 2, so the Tier-3 attribution can land at
+any point, independently of the geometry work. Its three pending inputs are the COMSOL exports, the
+two declarations of `tds.ntflux_i`'s boundary and the current's electrode, and `$NANOPNP_REFERENCE_DATA`
+on the nightly runner. Two further things carry a plausible-wrong-number risk into Phase 2. Every
+generated mesh must reach the reference mesh's quality band without boundary layers, which WP8
+showed isotropic grading does at a third of COMSOL's elements. And a supplied charge table sampled
+at quadrature points aliases (VAL-15), which is why Phase 3 deposits onto the finite-element space.

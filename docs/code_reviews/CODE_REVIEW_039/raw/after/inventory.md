@@ -67,7 +67,7 @@ Tokens are estimated as characters divided by four. `indexed by` lists the index
 | `docs/code_reviews/CODE_REVIEW_021.md` | 1654 | 2714 | record |  | excluded | `docs/code_reviews/index.md` | 7 | 0 |
 | `docs/code_reviews/CODE_REVIEW_022.md` | 381 | 676 | record |  | excluded | `docs/code_reviews/index.md` | 1 | 0 |
 | `docs/code_reviews/CODE_REVIEW_023.md` | 208 | 421 | record |  | excluded | `docs/code_reviews/index.md` | 1 | 0 |
-| `docs/code_reviews/CODE_REVIEW_024.md` | 1246 | 1959 | record |  | excluded | `docs/code_reviews/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 6 | 0 |
+| `docs/code_reviews/CODE_REVIEW_024.md` | 1246 | 1959 | record |  | excluded | `docs/code_reviews/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 6 | 0 |
 | `docs/code_reviews/CODE_REVIEW_024/execution-plan.md` | 3649 | 8239 | record |  | excluded | — | 3 | 0 |
 | `docs/code_reviews/CODE_REVIEW_025.md` | 855 | 1528 | record |  | excluded | `docs/code_reviews/index.md` | 7 | 0 |
 | `docs/code_reviews/CODE_REVIEW_026.md` | 468 | 797 | record |  | excluded | `docs/code_reviews/index.md` | 1 | 0 |
@@ -93,7 +93,7 @@ Tokens are estimated as characters divided by four. `indexed by` lists the index
 | `docs/design/reviews/2026-10-26-mockups.md` | 1942 | 2575 | record |  | excluded | `docs/design/reviews/index.md` | 5 | 0 |
 | `docs/design/reviews/2026-11-05-frame.md` | 1590 | 2244 | record |  | excluded | `docs/design/reviews/index.md` | 8 | 0 |
 | `docs/design/reviews/index.md` | 290 | 528 | record |  | excluded | — | 3 | 0 |
-| `docs/design/spike/report.md` | 1491 | 2108 | record |  | excluded | `docs/plans/phase-5-record.md`, `docs/plans/phase-5-workbench.md` | 12 | 0 |
+| `docs/design/spike/report.md` | 1491 | 2108 | record |  | excluded | `docs/plans/phase-5/phase-5-record.md`, `docs/plans/phase-5/phase-5-workbench.md` | 12 | 0 |
 | `docs/design/tokens.css` | 650 | 1228 | live |  | no | — | 19 | 0 |
 | `docs/design/workbench.md` | 10825 | 15665 | live |  | nav | `docs/project/index.md` | 45 | 1 |
 | `docs/examples/index.md` | 413 | 652 | live |  | nav | — | 8 | 0 |
@@ -116,94 +116,94 @@ Tokens are estimated as characters divided by four. `indexed by` lists the index
 | `docs/guide/sweeps.md` | 772 | 1198 | live |  | nav | `docs/guide/index.md`, `docs/index.md` | 16 | 0 |
 | `docs/index.md` | 501 | 881 | live |  | nav | — | 16 | 0 |
 | `docs/model/index.md` | 504 | 935 | live |  | nav | `docs/guide/index.md`, `docs/index.md` | 9 | 0 |
-| `docs/plans/copilot-host.md` | 4819 | 8252 | record |  | excluded | `docs/plans/index.md` | 6 | 0 |
+| `docs/plans/sessions/copilot-host.md` | 4819 | 8252 | record |  | excluded | `docs/plans/index.md` | 6 | 0 |
 | `docs/plans/current.md` | 699 | 1204 | live |  | excluded | `SPECIFICATION.md`, `docs/plans/index.md` | 76 | 0 |
-| `docs/plans/history-prose-review.md` | 2607 | 4353 | record |  | excluded | `docs/plans/index.md` | 8 | 0 |
+| `docs/plans/sessions/history-prose-review.md` | 2607 | 4353 | record |  | excluded | `docs/plans/index.md` | 8 | 0 |
 | `docs/plans/index.md` | 1287 | 2613 | record |  | excluded | — | 0 | 0 |
-| `docs/plans/kb-audit-brief.md` | 4954 | 8173 | record |  | excluded | `docs/plans/index.md` | 4 | 0 |
-| `docs/plans/notebooks-review-for-wp54.md` | 3012 | 6111 | record |  | excluded | `docs/plans/index.md` | 7 | 0 |
-| `docs/plans/okf-converter-rules.md` | 841 | 1351 | record |  | excluded | `docs/plans/index.md` | 4 | 0 |
-| `docs/plans/okf-knowledge-bundle.md` | 1164 | 1878 | record |  | excluded | `docs/plans/index.md` | 8 | 0 |
-| `docs/plans/phase-0-consolidation.md` | 3652 | 6555 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
-| `docs/plans/phase-0-spike.md` | 5880 | 9001 | record |  | excluded | `docs/plans/index.md` | 4 | 0 |
-| `docs/plans/phase-1-solver-core.md` | 13636 | 22434 | record |  | excluded | `docs/plans/index.md` | 19 | 0 |
-| `docs/plans/phase-2-geometry-pipeline.md` | 7293 | 11664 | record |  | excluded | `docs/plans/index.md` | 14 | 0 |
-| `docs/plans/phase-3-charge-pipeline.md` | 7550 | 11850 | record |  | excluded | `docs/plans/index.md` | 16 | 0 |
-| `docs/plans/phase-4-polish-and-user-testing.md` | 8112 | 12371 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-record.md` | 32 | 0 |
-| `docs/plans/phase-4-record.md` | 18859 | 29268 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md` | 9 | 0 |
-| `docs/plans/phase-5-record.md` | 3800 | 5738 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-workbench.md` | 9 | 0 |
-| `docs/plans/phase-5-workbench.md` | 5287 | 8202 | live |  | excluded | `docs/plans/current.md`, `docs/plans/index.md`, `docs/plans/phase-5-record.md` | 26 | 0 |
-| `docs/plans/wp10-cli-runs-field-output.md` | 7759 | 12262 | record |  | excluded | `docs/plans/index.md` | 2 | 0 |
-| `docs/plans/wp11-sweep-runner.md` | 11217 | 17199 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
-| `docs/plans/wp12-reference-stabilised-mode.md` | 9488 | 14720 | record |  | excluded | `docs/plans/index.md` | 5 | 0 |
-| `docs/plans/wp13-tier3-comsol-comparison.md` | 6126 | 10020 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1-solver-core.md` | 3 | 0 |
-| `docs/plans/wp14-gui-shell-packaging-probe.md` | 5983 | 10141 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1-solver-core.md` | 7 | 0 |
-| `docs/plans/wp15-live-convergence-and-viewer.md` | 5956 | 9282 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1-solver-core.md` | 5 | 0 |
-| `docs/plans/wp16-user-docs-and-examples.md` | 3172 | 5221 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1-solver-core.md` | 3 | 0 |
-| `docs/plans/wp17-case-schema-v2.md` | 3181 | 5169 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 6 | 0 |
-| `docs/plans/wp18-structure-ingestion.md` | 4897 | 7614 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 7 | 0 |
-| `docs/plans/wp19-density-and-reduction.md` | 5623 | 8627 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 4 | 0 |
-| `docs/plans/wp20-contour-extraction.md` | 5904 | 8879 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 5 | 0 |
-| `docs/plans/wp21-cad-assembly-and-meshing.md` | 4474 | 7264 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 7 | 0 |
-| `docs/plans/wp22-val05-reference-geometry.md` | 4556 | 7248 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 9 | 0 |
-| `docs/plans/wp23-gmsh-backend.md` | 4590 | 7134 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 4 | 0 |
-| `docs/plans/wp24-gui-geometry-pipeline.md` | 3943 | 6395 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 5 | 0 |
-| `docs/plans/wp25-geometry-docs-and-example.md` | 3303 | 5316 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2-geometry-pipeline.md` | 3 | 0 |
-| `docs/plans/wp26-physics-model-interface.md` | 2772 | 4622 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 3 | 0 |
-| `docs/plans/wp27-protonation.md` | 2958 | 4745 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 4 | 0 |
-| `docs/plans/wp28-charge-deposition.md` | 3785 | 5855 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 6 | 0 |
-| `docs/plans/wp29-val06-apbs.md` | 4416 | 6205 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 4 | 0 |
-| `docs/plans/wp30-dielectric-and-exclusion.md` | 4504 | 6464 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 5 | 0 |
-| `docs/plans/wp31-gui-charge-pipeline.md` | 4156 | 6483 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 5 | 0 |
-| `docs/plans/wp32-charge-docs-and-example.md` | 4334 | 7076 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 4 | 0 |
-| `docs/plans/wp33-test-durations.md` | 4160 | 6075 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 4 | 0 |
-| `docs/plans/wp34-phase-3-close.md` | 3425 | 5553 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3-charge-pipeline.md` | 5 | 0 |
-| `docs/plans/wp35-modularity-exploration.md` | 4536 | 7560 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 3 | 0 |
-| `docs/plans/wp36-stage-protocol-and-walk.md` | 2368 | 3866 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 4 | 0 |
-| `docs/plans/wp37-cycle-cuts-exit-codes-backend-guard.md` | 2631 | 4460 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 5 | 0 |
-| `docs/plans/wp38-io-split.md` | 3769 | 6591 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 6 | 0 |
-| `docs/plans/wp39-backend-registries.md` | 3055 | 5340 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 5 | 0 |
-| `docs/plans/wp40-stale-refusals.md` | 1988 | 3424 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 6 | 0 |
-| `docs/plans/wp41-accuracy-fixes.md` | 3904 | 6002 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 4 | 0 |
-| `docs/plans/wp42-verification-checks.md` | 4366 | 7882 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 5 | 0 |
-| `docs/plans/wp43-development-loop.md` | 10154 | 16020 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 7 | 0 |
-| `docs/plans/wp44-simplify-the-loop.md` | 1352 | 2207 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 7 | 0 |
-| `docs/plans/wp45-prose-strip.md` | 1724 | 2713 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 5 | 0 |
-| `docs/plans/wp46-small-fixes.md` | 1703 | 3015 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 6 | 0 |
-| `docs/plans/wp47-okf-bundle.md` | 1445 | 2431 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 5 | 0 |
-| `docs/plans/wp48-okf-backfill.md` | 3472 | 6757 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 4 | 0 |
-| `docs/plans/wp49-cost-study.md` | 1739 | 2809 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 4 | 0 |
-| `docs/plans/wp5-continuation-qoi-envelope.md` | 3153 | 4997 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
-| `docs/plans/wp5.01-workbench-design-study.md` | 6466 | 10916 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-record.md`, `docs/plans/phase-5-workbench.md` | 7 | 0 |
-| `docs/plans/wp5.02-framework-spike.md` | 3002 | 5232 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-record.md`, `docs/plans/phase-5-workbench.md` | 6 | 0 |
-| `docs/plans/wp5.03-protonation-before-the-density.md` | 2710 | 5058 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-workbench.md` | 6 | 0 |
-| `docs/plans/wp5.04-the-charge-mutators-library-step.md` | 2702 | 4856 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-workbench.md` | 4 | 0 |
-| `docs/plans/wp5.05-named-models-and-study-overrides.md` | 2690 | 5077 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-workbench.md` | 5 | 0 |
-| `docs/plans/wp5.06-outputs-and-steric-registries.md` | 2374 | 4881 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-workbench.md` | 5 | 0 |
-| `docs/plans/wp5.07-variables-and-the-rebuild-forecast.md` | 3213 | 5752 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-workbench.md` | 7 | 0 |
-| `docs/plans/wp5.08-the-frame-and-the-project-folder.md` | 3511 | 6498 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5-record.md`, `docs/plans/phase-5-workbench.md` | 4 | 0 |
-| `docs/plans/wp5.09-the-physics-model.md` | 2336 | 4458 | record |  | excluded | `docs/plans/current.md`, `docs/plans/index.md`, `docs/plans/phase-5-workbench.md` | 5 | 0 |
-| `docs/plans/wp50-test-scope.md` | 1599 | 2594 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 3 | 0 |
-| `docs/plans/wp51-plotting-and-notebooks.md` | 4083 | 6809 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 3 | 0 |
-| `docs/plans/wp52-specification-and-plans-split.md` | 3098 | 5312 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 7 | 0 |
-| `docs/plans/wp53-workflow-commands.md` | 4250 | 6879 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md` | 5 | 0 |
-| `docs/plans/wp54-notebooks-and-figures-revised.md` | 3464 | 6330 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md` | 7 | 0 |
-| `docs/plans/wp55-user-testing-protocol.md` | 2875 | 4910 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 8 | 0 |
-| `docs/plans/wp56-command-line-read-by-a-person.md` | 2619 | 4945 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md` | 4 | 0 |
-| `docs/plans/wp57-idealised-pore-and-python-interface.md` | 7312 | 14997 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4-record.md` | 7 | 0 |
-| `docs/plans/wp58-documentation-increment-4.md` | 3853 | 6696 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md` | 5 | 0 |
-| `docs/plans/wp59-architecture-review-fixes.md` | 2957 | 5715 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md` | 8 | 0 |
-| `docs/plans/wp6-analyte-and-forces.md` | 3764 | 6083 | record |  | excluded | `docs/plans/index.md` | 2 | 0 |
-| `docs/plans/wp60-phase-4-close.md` | 2978 | 4913 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4-polish-and-user-testing.md` | 4 | 0 |
-| `docs/plans/wp7-case-schema-artefacts-manifest.md` | 5308 | 8871 | record |  | excluded | `docs/plans/index.md` | 2 | 0 |
-| `docs/plans/wp8-mesh-ingestion-quality-reference.md` | 8541 | 13475 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
-| `docs/plans/wp9-external-fields.md` | 7324 | 11525 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
+| `docs/plans/sessions/kb-audit-brief.md` | 4954 | 8173 | record |  | excluded | `docs/plans/index.md` | 4 | 0 |
+| `docs/plans/sessions/notebooks-review-for-wp54.md` | 3012 | 6111 | record |  | excluded | `docs/plans/index.md` | 7 | 0 |
+| `docs/plans/sessions/okf-converter-rules.md` | 841 | 1351 | record |  | excluded | `docs/plans/index.md` | 4 | 0 |
+| `docs/plans/sessions/okf-knowledge-bundle.md` | 1164 | 1878 | record |  | excluded | `docs/plans/index.md` | 8 | 0 |
+| `docs/plans/phase-0/phase-0-consolidation.md` | 3652 | 6555 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
+| `docs/plans/phase-0/phase-0-spike.md` | 5880 | 9001 | record |  | excluded | `docs/plans/index.md` | 4 | 0 |
+| `docs/plans/phase-1/phase-1-solver-core.md` | 13636 | 22434 | record |  | excluded | `docs/plans/index.md` | 19 | 0 |
+| `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 7293 | 11664 | record |  | excluded | `docs/plans/index.md` | 14 | 0 |
+| `docs/plans/phase-3/phase-3-charge-pipeline.md` | 7550 | 11850 | record |  | excluded | `docs/plans/index.md` | 16 | 0 |
+| `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 8112 | 12371 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-record.md` | 32 | 0 |
+| `docs/plans/phase-4/phase-4-record.md` | 18859 | 29268 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 9 | 0 |
+| `docs/plans/phase-5/phase-5-record.md` | 3800 | 5738 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-workbench.md` | 9 | 0 |
+| `docs/plans/phase-5/phase-5-workbench.md` | 5287 | 8202 | live |  | excluded | `docs/plans/current.md`, `docs/plans/index.md`, `docs/plans/phase-5/phase-5-record.md` | 26 | 0 |
+| `docs/plans/phase-1/wp10-cli-runs-field-output.md` | 7759 | 12262 | record |  | excluded | `docs/plans/index.md` | 2 | 0 |
+| `docs/plans/phase-1/wp11-sweep-runner.md` | 11217 | 17199 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
+| `docs/plans/phase-1/wp12-reference-stabilised-mode.md` | 9488 | 14720 | record |  | excluded | `docs/plans/index.md` | 5 | 0 |
+| `docs/plans/phase-1/wp13-tier3-comsol-comparison.md` | 6126 | 10020 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1/phase-1-solver-core.md` | 3 | 0 |
+| `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md` | 5983 | 10141 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1/phase-1-solver-core.md` | 7 | 0 |
+| `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` | 5956 | 9282 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1/phase-1-solver-core.md` | 5 | 0 |
+| `docs/plans/phase-1/wp16-user-docs-and-examples.md` | 3172 | 5221 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-1/phase-1-solver-core.md` | 3 | 0 |
+| `docs/plans/phase-2/wp17-case-schema-v2.md` | 3181 | 5169 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 6 | 0 |
+| `docs/plans/phase-2/wp18-structure-ingestion.md` | 4897 | 7614 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 7 | 0 |
+| `docs/plans/phase-2/wp19-density-and-reduction.md` | 5623 | 8627 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 4 | 0 |
+| `docs/plans/phase-2/wp20-contour-extraction.md` | 5904 | 8879 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 5 | 0 |
+| `docs/plans/phase-2/wp21-cad-assembly-and-meshing.md` | 4474 | 7264 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 7 | 0 |
+| `docs/plans/phase-2/wp22-val05-reference-geometry.md` | 4556 | 7248 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 9 | 0 |
+| `docs/plans/phase-2/wp23-gmsh-backend.md` | 4590 | 7134 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 4 | 0 |
+| `docs/plans/phase-2/wp24-gui-geometry-pipeline.md` | 3943 | 6395 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 5 | 0 |
+| `docs/plans/phase-2/wp25-geometry-docs-and-example.md` | 3303 | 5316 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-2/phase-2-geometry-pipeline.md` | 3 | 0 |
+| `docs/plans/phase-3/wp26-physics-model-interface.md` | 2772 | 4622 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 3 | 0 |
+| `docs/plans/phase-3/wp27-protonation.md` | 2958 | 4745 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 4 | 0 |
+| `docs/plans/phase-3/wp28-charge-deposition.md` | 3785 | 5855 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 6 | 0 |
+| `docs/plans/phase-3/wp29-val06-apbs.md` | 4416 | 6205 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 4 | 0 |
+| `docs/plans/phase-3/wp30-dielectric-and-exclusion.md` | 4504 | 6464 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 5 | 0 |
+| `docs/plans/phase-3/wp31-gui-charge-pipeline.md` | 4156 | 6483 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 5 | 0 |
+| `docs/plans/phase-3/wp32-charge-docs-and-example.md` | 4334 | 7076 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 4 | 0 |
+| `docs/plans/phase-3/wp33-test-durations.md` | 4160 | 6075 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 4 | 0 |
+| `docs/plans/phase-3/wp34-phase-3-close.md` | 3425 | 5553 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-3/phase-3-charge-pipeline.md` | 5 | 0 |
+| `docs/plans/phase-4/wp35-modularity-exploration.md` | 4536 | 7560 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 3 | 0 |
+| `docs/plans/phase-4/wp36-stage-protocol-and-walk.md` | 2368 | 3866 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 4 | 0 |
+| `docs/plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md` | 2631 | 4460 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 5 | 0 |
+| `docs/plans/phase-4/wp38-io-split.md` | 3769 | 6591 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 6 | 0 |
+| `docs/plans/phase-4/wp39-backend-registries.md` | 3055 | 5340 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 5 | 0 |
+| `docs/plans/phase-4/wp40-stale-refusals.md` | 1988 | 3424 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 6 | 0 |
+| `docs/plans/phase-4/wp41-accuracy-fixes.md` | 3904 | 6002 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 4 | 0 |
+| `docs/plans/phase-4/wp42-verification-checks.md` | 4366 | 7882 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 5 | 0 |
+| `docs/plans/phase-4/wp43-development-loop.md` | 10154 | 16020 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 7 | 0 |
+| `docs/plans/phase-4/wp44-simplify-the-loop.md` | 1352 | 2207 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 7 | 0 |
+| `docs/plans/phase-4/wp45-prose-strip.md` | 1724 | 2713 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 5 | 0 |
+| `docs/plans/phase-4/wp46-small-fixes.md` | 1703 | 3015 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 6 | 0 |
+| `docs/plans/phase-4/wp47-okf-bundle.md` | 1445 | 2431 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 5 | 0 |
+| `docs/plans/phase-4/wp48-okf-backfill.md` | 3472 | 6757 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 4 | 0 |
+| `docs/plans/phase-4/wp49-cost-study.md` | 1739 | 2809 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 4 | 0 |
+| `docs/plans/phase-0/wp5-continuation-qoi-envelope.md` | 3153 | 4997 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
+| `docs/plans/phase-5/wp5.01-workbench-design-study.md` | 6466 | 10916 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-record.md`, `docs/plans/phase-5/phase-5-workbench.md` | 7 | 0 |
+| `docs/plans/phase-5/wp5.02-framework-spike.md` | 3002 | 5232 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-record.md`, `docs/plans/phase-5/phase-5-workbench.md` | 6 | 0 |
+| `docs/plans/phase-5/wp5.03-protonation-before-the-density.md` | 2710 | 5058 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-workbench.md` | 6 | 0 |
+| `docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md` | 2702 | 4856 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-workbench.md` | 4 | 0 |
+| `docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md` | 2690 | 5077 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-workbench.md` | 5 | 0 |
+| `docs/plans/phase-5/wp5.06-outputs-and-steric-registries.md` | 2374 | 4881 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-workbench.md` | 5 | 0 |
+| `docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md` | 3213 | 5752 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-workbench.md` | 7 | 0 |
+| `docs/plans/phase-5/wp5.08-the-frame-and-the-project-folder.md` | 3511 | 6498 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-5/phase-5-record.md`, `docs/plans/phase-5/phase-5-workbench.md` | 4 | 0 |
+| `docs/plans/phase-5/wp5.09-the-physics-model.md` | 2336 | 4458 | record |  | excluded | `docs/plans/current.md`, `docs/plans/index.md`, `docs/plans/phase-5/phase-5-workbench.md` | 5 | 0 |
+| `docs/plans/phase-4/wp50-test-scope.md` | 1599 | 2594 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 3 | 0 |
+| `docs/plans/phase-4/wp51-plotting-and-notebooks.md` | 4083 | 6809 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 3 | 0 |
+| `docs/plans/phase-4/wp52-specification-and-plans-split.md` | 3098 | 5312 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 7 | 0 |
+| `docs/plans/phase-4/wp53-workflow-commands.md` | 4250 | 6879 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 5 | 0 |
+| `docs/plans/phase-4/wp54-notebooks-and-figures-revised.md` | 3464 | 6330 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 7 | 0 |
+| `docs/plans/phase-4/wp55-user-testing-protocol.md` | 2875 | 4910 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 8 | 0 |
+| `docs/plans/phase-4/wp56-command-line-read-by-a-person.md` | 2619 | 4945 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 4 | 0 |
+| `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md` | 7312 | 14997 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md`, `docs/plans/phase-4/phase-4-record.md` | 7 | 0 |
+| `docs/plans/phase-4/wp58-documentation-increment-4.md` | 3853 | 6696 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 5 | 0 |
+| `docs/plans/phase-4/wp59-architecture-review-fixes.md` | 2957 | 5715 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 8 | 0 |
+| `docs/plans/phase-0/wp6-analyte-and-forces.md` | 3764 | 6083 | record |  | excluded | `docs/plans/index.md` | 2 | 0 |
+| `docs/plans/phase-4/wp60-phase-4-close.md` | 2978 | 4913 | record |  | excluded | `docs/plans/index.md`, `docs/plans/phase-4/phase-4-polish-and-user-testing.md` | 4 | 0 |
+| `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md` | 5308 | 8871 | record |  | excluded | `docs/plans/index.md` | 2 | 0 |
+| `docs/plans/phase-1/wp8-mesh-ingestion-quality-reference.md` | 8541 | 13475 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
+| `docs/plans/phase-1/wp9-external-fields.md` | 7324 | 11525 | record |  | excluded | `docs/plans/index.md` | 3 | 0 |
 | `docs/project/citing.md` | 107 | 197 | live |  | nav | `docs/project/index.md` | 4 | 0 |
 | `docs/project/contributing.md` | 555 | 917 | live |  | nav | `docs/project/index.md` | 8 | 0 |
 | `docs/project/index.md` | 251 | 446 | live |  | nav | — | 3 | 0 |
 | `docs/project/licence.md` | 139 | 268 | live |  | nav | `docs/project/index.md` | 3 | 0 |
-| `docs/project/modularity-findings.md` | 597 | 1241 | live |  | nav | `SPECIFICATION.md`, `docs/plans/phase-4-record.md`, `docs/project/index.md` | 24 | 0 |
-| `docs/project/modularity.md` | 3615 | 6196 | live |  | nav | `docs/plans/phase-4-record.md`, `docs/project/index.md` | 26 | 0 |
+| `docs/project/modularity-findings.md` | 597 | 1241 | live |  | nav | `SPECIFICATION.md`, `docs/plans/phase-4/phase-4-record.md`, `docs/project/index.md` | 24 | 0 |
+| `docs/project/modularity.md` | 3615 | 6196 | live |  | nav | `docs/plans/phase-4/phase-4-record.md`, `docs/project/index.md` | 26 | 0 |
 | `docs/project/physics-models.md` | 1426 | 2515 | live |  | nav | `docs/project/index.md` | 13 | 0 |
 | `docs/project/review-findings.md` | 5271 | 12855 | live |  | nav | `SPECIFICATION.md`, `docs/project/index.md` | 38 | 0 |
 | `docs/project/review-items.md` | 30721 | 51153 | live |  | nav | `docs/project/index.md` | 39 | 0 |
@@ -219,7 +219,7 @@ Tokens are estimated as characters divided by four. `indexed by` lists the index
 | `docs/user-testing/sessions/03-numerics/README.md` | 333 | 518 | record |  | excluded | — | 2 | 0 |
 | `docs/user-testing/sessions/04-python-api/README.md` | 441 | 614 | record |  | excluded | — | 2 | 0 |
 | `docs/user-testing/sessions/05-sweep/README.md` | 338 | 484 | record |  | excluded | — | 2 | 0 |
-| `docs/validation/comsol-export-contract.md` | 1647 | 2724 | out |  | nav | `docs/plans/phase-1-solver-core.md`, `docs/project/index.md` | 10 | 1 |
+| `docs/validation/comsol-export-contract.md` | 1647 | 2724 | out |  | nav | `docs/plans/phase-1/phase-1-solver-core.md`, `docs/project/index.md` | 10 | 1 |
 | `knowledge/00-orientation/00-overview.md` | 172 | 329 | live | Overview | generated | `knowledge/00-orientation/index.md` | 1 | 0 |
 | `knowledge/00-orientation/01-files.md` | 228 | 475 | live | Orientation | generated | `knowledge/00-orientation/index.md` | 7 | 0 |
 | `knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md` | 174 | 389 | live | Orientation | generated | `knowledge/00-orientation/index.md` | 8 | 0 |
@@ -262,8 +262,8 @@ Tokens are estimated as characters divided by four. `indexed by` lists the index
 | `knowledge/03-nanopore-biology/08-glossary.md` | 411 | 635 | live | Glossary | generated | `knowledge/03-nanopore-biology/index.md` | 6 | 0 |
 | `knowledge/03-nanopore-biology/index.md` | 156 | 315 | live |  | generated | `knowledge/index.md` | 6 | 0 |
 | `knowledge/04-clya-geometry-and-charge/00-overview.md` | 165 | 351 | live | Overview | generated | `knowledge/04-clya-geometry-and-charge/index.md` | 1 | 0 |
-| `knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md` | 4473 | 7502 | live | Pipeline | generated | `docs/plans/phase-2-geometry-pipeline.md`, `knowledge/04-clya-geometry-and-charge/index.md` | 26 | 3 |
-| `knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md` | 1329 | 2518 | live | Pipeline | generated | `docs/plans/phase-2-geometry-pipeline.md`, `knowledge/04-clya-geometry-and-charge/index.md` | 9 | 2 |
+| `knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md` | 4473 | 7502 | live | Pipeline | generated | `docs/plans/phase-2/phase-2-geometry-pipeline.md`, `knowledge/04-clya-geometry-and-charge/index.md` | 26 | 3 |
+| `knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md` | 1329 | 2518 | live | Pipeline | generated | `docs/plans/phase-2/phase-2-geometry-pipeline.md`, `knowledge/04-clya-geometry-and-charge/index.md` | 9 | 2 |
 | `knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md` | 1946 | 3195 | live | Pipeline | generated | `knowledge/04-clya-geometry-and-charge/index.md` | 20 | 2 |
 | `knowledge/04-clya-geometry-and-charge/04-mesh.md` | 338 | 625 | live | Pipeline | generated | `knowledge/04-clya-geometry-and-charge/index.md` | 7 | 0 |
 | `knowledge/04-clya-geometry-and-charge/05-solver-and-sweeps.md` | 202 | 360 | live | Pipeline | generated | `knowledge/04-clya-geometry-and-charge/index.md` | 1 | 0 |
@@ -300,7 +300,7 @@ Tokens are estimated as characters divided by four. `indexed by` lists the index
 | `knowledge/06-numerics-fem/05-nonlinear-solution.md` | 1893 | 3351 | live | Numerics | generated | `knowledge/06-numerics-fem/index.md` | 14 | 0 |
 | `knowledge/06-numerics-fem/06-linear-solvers.md` | 619 | 1043 | live | Numerics | generated | `knowledge/06-numerics-fem/index.md` | 9 | 0 |
 | `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md` | 3165 | 5661 | live | Numerics | generated | `knowledge/06-numerics-fem/index.md` | 18 | 2 |
-| `knowledge/06-numerics-fem/08-mesh-resolution-and-adaptivity.md` | 1085 | 1890 | live | Numerics | generated | `docs/plans/phase-2-geometry-pipeline.md`, `knowledge/06-numerics-fem/index.md` | 12 | 0 |
+| `knowledge/06-numerics-fem/08-mesh-resolution-and-adaptivity.md` | 1085 | 1890 | live | Numerics | generated | `docs/plans/phase-2/phase-2-geometry-pipeline.md`, `knowledge/06-numerics-fem/index.md` | 12 | 0 |
 | `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md` | 7875 | 16118 | live | Library Behaviour | generated | `knowledge/06-numerics-fem/index.md` | 26 | 4 |
 | `knowledge/06-numerics-fem/10-unverified-to-measure.md` | 76 | 132 | live | Open Item | generated | `knowledge/06-numerics-fem/index.md` | 4 | 0 |
 | `knowledge/06-numerics-fem/11-tier-1-test-evidence-norms-and-the.md` | 267 | 601 | live | Test Evidence | generated | `knowledge/06-numerics-fem/index.md` | 2 | 0 |

@@ -15,11 +15,11 @@ audit findings to check.
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.09 merged
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.09 merged
   (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36): WP5.10 to WP5.12 CODE_REVIEW_039's
   follow-up, WP5.13 and WP5.14 the clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the
   route, WP5.22 the close.
-  **WP5.10** [planned, reviewed](wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
+  **WP5.10** [planned, reviewed](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
   pages with VER-79, the plans archived, ruff's complexity rules, the changelog, the tools' trial.
   Next `/np-implement wp 5.10` once approved.
   host: claude-code.

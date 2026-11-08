@@ -62,7 +62,7 @@ def main() -> int:
         "history record": _scan(history, RECORD_HEADING),
         "review finding": _scan([ROOT / "docs/project/review-findings.md"], REV_ROW),
         "code-review report": _names(sorted((ROOT / "docs/code_reviews").glob("*.md")), REPORT),
-        "work package": _names(sorted((ROOT / "docs/plans").glob("wp*.md")), PLAN),
+        "work package": _names(sorted((ROOT / "docs/plans").rglob("wp*.md")), PLAN),
     }
     for key, places in _scan(current, DEFINITION_PARAGRAPH).items():
         registers["requirement identifier"].setdefault(key, []).extend(places)

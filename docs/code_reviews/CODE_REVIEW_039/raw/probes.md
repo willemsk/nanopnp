@@ -8,8 +8,8 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 
 ## nanopnp-kb — records (2)
 
-- `docs/plans/kb-audit-brief.md:414`: - §11 says the knowledge base ships as `nanopnp-kb/` and lists `knowledge/pending.yaml`; neither
-- `docs/plans/kb-audit-brief.md:444`: Run each over every file in scope and read each hit: `nanopnp-kb`, `pending.yaml`,
+- `docs/plans/sessions/kb-audit-brief.md:414`: - §11 says the knowledge base ships as `nanopnp-kb/` and lists `knowledge/pending.yaml`; neither
+- `docs/plans/sessions/kb-audit-brief.md:444`: Run each over every file in scope and read each hit: `nanopnp-kb`, `pending.yaml`,
 
 ## pending.yaml — live (4)
 
@@ -24,27 +24,27 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `CHANGELOG.md:923`: - **The ledger closed** (G3, G8): all 361 open claims from WP47 are resolved. `pending.yaml` is empty
 - `CHANGELOG.md:938`: WP47-ceiling wording replaced with empty `pending.yaml` and zero ceiling; (5) holds a package
 - `CHANGELOG.md:951`: `pending.yaml`. The old files `knowledge/0N-*.md` are gone: **a citation of one is a break**, and
-- `docs/plans/kb-audit-brief.md:414`: - §11 says the knowledge base ships as `nanopnp-kb/` and lists `knowledge/pending.yaml`; neither
-- `docs/plans/kb-audit-brief.md:444`: Run each over every file in scope and read each hit: `nanopnp-kb`, `pending.yaml`,
-- `docs/plans/okf-converter-rules.md:47`: - `knowledge/pending.yaml` holds, per concept path, `tested_pending` and `verified_unsourced`. The
-- `docs/plans/phase-4-record.md:811`: > an `index.md` per directory, `log.md` and `pending.yaml`. VER-68 is `test_okf_bundle.py` over
-- `docs/plans/phase-4-record.md:848`: > `test_library_behaviour.py`, `test_ngsolve_traps.py`). `pending.yaml` is empty (`{}`), `CEILING` is 0,
-- `docs/plans/phase-4-record.md:870`: > `pending.yaml` empty and `CEILING = 0` (G3, G8; REV-103).
-- `docs/plans/phase-4-record.md:913`: > `pending.yaml` are deleted; 31 knowledge markers are retargeted. The per-push run takes 201 s
-- `docs/plans/wp47-okf-bundle.md:48`: …urce reading stays `[verified]` with a footnote. `knowledge/pending.yaml` counts both kinds per concept and must equal the files; the ceilin…
-- `docs/plans/wp47-okf-bundle.md:63`: …2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows…
-- `docs/plans/wp48-okf-backfill.md:13`: and G8, emptying `knowledge/pending.yaml` and resolving REV-103.
-- `docs/plans/wp48-okf-backfill.md:45`: …\| D6 Closure \| Empty `pending.yaml`, set `CEILING = 0`, refuse pending markers even with a permissive caller ceiling, and retain unsourced-c…
-- `docs/plans/wp48-okf-backfill.md:125`: …05:L29`), synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `361` to `330`.…
-- `docs/plans/wp48-okf-backfill.md:128`: …ootnotes, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `330` to `230`.…
-- `docs/plans/wp48-okf-backfill.md:131`: …05:L29`), synchronised `verified` actor sets and `knowledge/pending.yaml` (zero `verified_unsourced` remaining), and lowered `CEILING` from…
-- `docs/plans/wp48-okf-backfill.md:140`: …2 suites, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `204` to `114`.…
-- `docs/plans/wp48-okf-backfill.md:143`: …597814`), synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `114` to `63`.…
-- `docs/plans/wp48-okf-backfill.md:146`: …, reduced pending claims across the entire bundle to zero (`pending.yaml` is `{}`), and lowered `CEILING` to 0 in `tests/tier1/test_okf_bund…
-- `docs/plans/wp48-okf-backfill.md:150`: …the ratchet in `validation/okf.py`, `test_okf_bundle.py`, `pending.yaml` and the specification; replace fixtures that accepted pending clai…
-- `docs/plans/wp48-okf-backfill.md:155`: `pending.yaml`, and lowers `CEILING` to the measured remainder. Inventory-derived counts replace
-- `docs/plans/wp50-test-scope.md:51`: …else `[verified]` on its footnote, else dropped. `knowledge/pending.yaml` goes \| N3 \|…
-- `docs/plans/wp50-test-scope.md:91`: - [x] 9. The knowledge base (D6): retarget the 380 markers, delete `knowledge/pending.yaml`, a line in
+- `docs/plans/sessions/kb-audit-brief.md:414`: - §11 says the knowledge base ships as `nanopnp-kb/` and lists `knowledge/pending.yaml`; neither
+- `docs/plans/sessions/kb-audit-brief.md:444`: Run each over every file in scope and read each hit: `nanopnp-kb`, `pending.yaml`,
+- `docs/plans/sessions/okf-converter-rules.md:47`: - `knowledge/pending.yaml` holds, per concept path, `tested_pending` and `verified_unsourced`. The
+- `docs/plans/phase-4/phase-4-record.md:811`: > an `index.md` per directory, `log.md` and `pending.yaml`. VER-68 is `test_okf_bundle.py` over
+- `docs/plans/phase-4/phase-4-record.md:848`: > `test_library_behaviour.py`, `test_ngsolve_traps.py`). `pending.yaml` is empty (`{}`), `CEILING` is 0,
+- `docs/plans/phase-4/phase-4-record.md:870`: > `pending.yaml` empty and `CEILING = 0` (G3, G8; REV-103).
+- `docs/plans/phase-4/phase-4-record.md:913`: > `pending.yaml` are deleted; 31 knowledge markers are retargeted. The per-push run takes 201 s
+- `docs/plans/phase-4/wp47-okf-bundle.md:48`: …urce reading stays `[verified]` with a footnote. `knowledge/pending.yaml` counts both kinds per concept and must equal the files; the ceilin…
+- `docs/plans/phase-4/wp47-okf-bundle.md:63`: …2, D3): real headers, markers, footnotes, `verified` sets, `pending.yaml`, the ceiling, the counts in an Outcome; done when the ledger rows…
+- `docs/plans/phase-4/wp48-okf-backfill.md:13`: and G8, emptying `knowledge/pending.yaml` and resolving REV-103.
+- `docs/plans/phase-4/wp48-okf-backfill.md:45`: …\| D6 Closure \| Empty `pending.yaml`, set `CEILING = 0`, refuse pending markers even with a permissive caller ceiling, and retain unsourced-c…
+- `docs/plans/phase-4/wp48-okf-backfill.md:125`: …05:L29`), synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `361` to `330`.…
+- `docs/plans/phase-4/wp48-okf-backfill.md:128`: …ootnotes, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `330` to `230`.…
+- `docs/plans/phase-4/wp48-okf-backfill.md:131`: …05:L29`), synchronised `verified` actor sets and `knowledge/pending.yaml` (zero `verified_unsourced` remaining), and lowered `CEILING` from…
+- `docs/plans/phase-4/wp48-okf-backfill.md:140`: …2 suites, synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `204` to `114`.…
+- `docs/plans/phase-4/wp48-okf-backfill.md:143`: …597814`), synchronised `verified` actor sets and `knowledge/pending.yaml`, and lowered `CEILING` from `114` to `63`.…
+- `docs/plans/phase-4/wp48-okf-backfill.md:146`: …, reduced pending claims across the entire bundle to zero (`pending.yaml` is `{}`), and lowered `CEILING` to 0 in `tests/tier1/test_okf_bund…
+- `docs/plans/phase-4/wp48-okf-backfill.md:150`: …the ratchet in `validation/okf.py`, `test_okf_bundle.py`, `pending.yaml` and the specification; replace fixtures that accepted pending clai…
+- `docs/plans/phase-4/wp48-okf-backfill.md:155`: `pending.yaml`, and lowers `CEILING` to the measured remainder. Inventory-derived counts replace
+- `docs/plans/phase-4/wp50-test-scope.md:51`: …else `[verified]` on its footnote, else dropped. `knowledge/pending.yaml` goes \| N3 \|…
+- `docs/plans/phase-4/wp50-test-scope.md:91`: - [x] 9. The knowledge base (D6): retarget the 380 markers, delete `knowledge/pending.yaml`, a line in
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:24`: 3. Knowledge claims tied to tests: §8.2 G3 (ledger of untested claims, `knowledge/pending.yaml`), G8
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:117`: footnote, else the marker is dropped **(my call)**. `knowledge/pending.yaml` and its rule go. Log the
 - `specification/history/13-phase-4-amended-the-test-scope-agreed-18-october-2.md:21`: …ified]` on its source footnote, else is dropped; `knowledge/pending.yaml` goes \| Supersedes G3's ratchet, G4's test, G8 and F6's "test-backe…
@@ -66,30 +66,30 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `CHANGELOG.md:1138`: Cases written for pre-release schemas update their schema identifier to `nanopnp/case/v0.5`:
 - `CHANGELOG.md:1140`: - **Schema identifier:** Change `schema: nanopnp/case/v2` (or `v1`) to `schema: nanopnp/case/v0.5`.
 - `docs/code_reviews/CODE_REVIEW_004.md:4`: …fault values a model never reads. The case schema moves to `nanopnp/case/v0.5` and v1/v2 are retired. Records, fixtures and docs follow.…
-- `docs/plans/kb-audit-brief.md:436`: `nanopnp/case/v0.5` appear in 5 current specification files and 1 knowledge file.
-- `docs/plans/phase-4-polish-and-user-testing.md:91`: …It moves as needed; a move takes the release's identifier, `nanopnp/case/v0.5`, and earlier identifiers read as their upgrade (G6; the §5.3.…
-- `docs/plans/phase-4-polish-and-user-testing.md:490`: - **Breaks** (`CHANGELOG.md`, `[0.5.0]`, *Breaks and their migration*). The case schema is `nanopnp/case/v0.5`;
-- `docs/plans/phase-4-record.md:241`: …eded. A move takes the release's identifier, starting with `nanopnp/case/v0.5`. It may change between alpha packages and is fixed at the tag…
-- `docs/plans/phase-4-record.md:357`: the rulings allow, so that one schema identifier, `nanopnp/case/v0.5`, and one list of breaks
-- `docs/plans/phase-4-record.md:615`: the schema takes `nanopnp/case/v0.5`, and `CHANGELOG.md` gives the migration (G6).
-- `docs/plans/phase-4-record.md:1094`: shell following, and schema moves under `nanopnp/case/v0.5` (G6).
-- `docs/plans/phase-4-record.md:1432`: > schema moves under `nanopnp/case/v0.5` (G6), and their tests follow N1.
-- `docs/plans/phase-4-record.md:1496`: > case schema's move under `nanopnp/case/v0.5` (G6) included, is listed in `CHANGELOG.md` with its
-- `docs/plans/wp40-stale-refusals.md:56`: …inor (`v0.2.0-alpha.3` names `v0.2`). A schema identifier (`nanopnp/case/v0.5`) is not a release name: the look-behind refuses a `/`. One ro…
-- `docs/plans/wp40-stale-refusals.md:92`: …0-alpha.3` at line 2 are found; a docstring naming `v0.2`, `nanopnp/case/v0.2`, `v0.20`, `v0.7` and `v1.0` are not; with `v0.7` and `v1.0` t…
-- `docs/plans/wp42-verification-checks.md:44`: \| — \| The narrowing moves the schema to `nanopnp/case/v0.5` \| D9, D10 \|
-- `docs/plans/wp42-verification-checks.md:51`: \| — \| 80+ test files hardcode `schema: nanopnp/case/v0.5` \| Shared `case_yaml_template`, `make_case_dict` in `tests/conftest.py` (D17) \|
-- `docs/plans/wp42-verification-checks.md:54`: document*): the case schema is `nanopnp/case/v0.5`; a case setting a value its model never applies
-- `docs/plans/wp42-verification-checks.md:77`: …\| D9 \| Identifier \| `CASE_SCHEMA = "nanopnp/case/v0.5"`, `CASE_SCHEMA_V2`, `CASE_SCHEMA_V1` in `io/artefact.py`; `core/stages.py`'s `artefac…
-- `docs/plans/wp42-verification-checks.md:115`: …`, `docs/`, `tests/`, `src/` docstrings and `CLAUDE.md` to `nanopnp/case/v0.5` (writing `variable_density: false, inertia: false` where `pnp…
-- `docs/plans/wp42-verification-checks.md:217`: Identifier: `<source>: expected schema 'nanopnp/case/v0.5', or 'nanopnp/case/v2' or
-- `docs/plans/wp5.03-protonation-before-the-density.md:83`: - `nanopnp/case/v0.5` occurs in 3 `src` files (`io/artefact.py:CASE_SCHEMA`, `io/case.py` twice,
-- `docs/plans/wp5.03-protonation-before-the-density.md:154`: - The refusal text: `schema 'nanopnp/case/v0.5' is retired: declare 'nanopnp/case/v0.6'; a case
-- `docs/plans/wp5.03-protonation-before-the-density.md:160`: …git grep -l "nanopnp/case/v0.5" -- . ':!specification/history' ':!CHANGELOG.md' ':!docs/plans' ':!docs/code_reviews' ':!docs/_generated' '…
-- `docs/plans/wp5.08-the-frame-and-the-project-folder.md:97`: `meta.json` records its `schema`; `io/case.py:RETIRED_SCHEMAS` names `nanopnp/case/v0.5`.
-- `docs/plans/wp5.08-the-frame-and-the-project-folder.md:234`: …chema` \| 1 \| FR-27 \| A walked quick-start and hand-written `nanopnp/case/v0.5`, `nanopnp/fields/v0.4`, `nanopnp/fields/v0.7` and `nanopnp/st…
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:53`: three new keys and its JSON Schema's definition titles under `nanopnp/case/v0.5`; a relative path in
-- `docs/plans/wp60-phase-4-close.md:116`: alpha.8's *Migrating a case file to nanopnp/case/v0.5*. `[0.4.0]` is the model: summary, package list, then the
+- `docs/plans/sessions/kb-audit-brief.md:436`: `nanopnp/case/v0.5` appear in 5 current specification files and 1 knowledge file.
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:91`: …It moves as needed; a move takes the release's identifier, `nanopnp/case/v0.5`, and earlier identifiers read as their upgrade (G6; the §5.3.…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:490`: - **Breaks** (`CHANGELOG.md`, `[0.5.0]`, *Breaks and their migration*). The case schema is `nanopnp/case/v0.5`;
+- `docs/plans/phase-4/phase-4-record.md:241`: …eded. A move takes the release's identifier, starting with `nanopnp/case/v0.5`. It may change between alpha packages and is fixed at the tag…
+- `docs/plans/phase-4/phase-4-record.md:357`: the rulings allow, so that one schema identifier, `nanopnp/case/v0.5`, and one list of breaks
+- `docs/plans/phase-4/phase-4-record.md:615`: the schema takes `nanopnp/case/v0.5`, and `CHANGELOG.md` gives the migration (G6).
+- `docs/plans/phase-4/phase-4-record.md:1094`: shell following, and schema moves under `nanopnp/case/v0.5` (G6).
+- `docs/plans/phase-4/phase-4-record.md:1432`: > schema moves under `nanopnp/case/v0.5` (G6), and their tests follow N1.
+- `docs/plans/phase-4/phase-4-record.md:1496`: > case schema's move under `nanopnp/case/v0.5` (G6) included, is listed in `CHANGELOG.md` with its
+- `docs/plans/phase-4/wp40-stale-refusals.md:56`: …inor (`v0.2.0-alpha.3` names `v0.2`). A schema identifier (`nanopnp/case/v0.5`) is not a release name: the look-behind refuses a `/`. One ro…
+- `docs/plans/phase-4/wp40-stale-refusals.md:92`: …0-alpha.3` at line 2 are found; a docstring naming `v0.2`, `nanopnp/case/v0.2`, `v0.20`, `v0.7` and `v1.0` are not; with `v0.7` and `v1.0` t…
+- `docs/plans/phase-4/wp42-verification-checks.md:44`: \| — \| The narrowing moves the schema to `nanopnp/case/v0.5` \| D9, D10 \|
+- `docs/plans/phase-4/wp42-verification-checks.md:51`: \| — \| 80+ test files hardcode `schema: nanopnp/case/v0.5` \| Shared `case_yaml_template`, `make_case_dict` in `tests/conftest.py` (D17) \|
+- `docs/plans/phase-4/wp42-verification-checks.md:54`: document*): the case schema is `nanopnp/case/v0.5`; a case setting a value its model never applies
+- `docs/plans/phase-4/wp42-verification-checks.md:77`: …\| D9 \| Identifier \| `CASE_SCHEMA = "nanopnp/case/v0.5"`, `CASE_SCHEMA_V2`, `CASE_SCHEMA_V1` in `io/artefact.py`; `core/stages.py`'s `artefac…
+- `docs/plans/phase-4/wp42-verification-checks.md:115`: …`, `docs/`, `tests/`, `src/` docstrings and `CLAUDE.md` to `nanopnp/case/v0.5` (writing `variable_density: false, inertia: false` where `pnp…
+- `docs/plans/phase-4/wp42-verification-checks.md:217`: Identifier: `<source>: expected schema 'nanopnp/case/v0.5', or 'nanopnp/case/v2' or
+- `docs/plans/phase-5/wp5.03-protonation-before-the-density.md:83`: - `nanopnp/case/v0.5` occurs in 3 `src` files (`io/artefact.py:CASE_SCHEMA`, `io/case.py` twice,
+- `docs/plans/phase-5/wp5.03-protonation-before-the-density.md:154`: - The refusal text: `schema 'nanopnp/case/v0.5' is retired: declare 'nanopnp/case/v0.6'; a case
+- `docs/plans/phase-5/wp5.03-protonation-before-the-density.md:160`: …git grep -l "nanopnp/case/v0.5" -- . ':!specification/history' ':!CHANGELOG.md' ':!docs/plans' ':!docs/code_reviews' ':!docs/_generated' '…
+- `docs/plans/phase-5/wp5.08-the-frame-and-the-project-folder.md:97`: `meta.json` records its `schema`; `io/case.py:RETIRED_SCHEMAS` names `nanopnp/case/v0.5`.
+- `docs/plans/phase-5/wp5.08-the-frame-and-the-project-folder.md:234`: …chema` \| 1 \| FR-27 \| A walked quick-start and hand-written `nanopnp/case/v0.5`, `nanopnp/fields/v0.4`, `nanopnp/fields/v0.7` and `nanopnp/st…
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:53`: three new keys and its JSON Schema's definition titles under `nanopnp/case/v0.5`; a relative path in
+- `docs/plans/phase-4/wp60-phase-4-close.md:116`: alpha.8's *Migrating a case file to nanopnp/case/v0.5*. `[0.4.0]` is the model: summary, package list, then the
 - `specification/history/07-phase-4-decisions-agreed-5-october-2026.md:20`: …e identifier a move takes names the release that ships it (`nanopnp/case/v0.5`, `v0.6`, `v0.7`, and all artefact schemas at `v0.5`), and the…
 - `specification/history/09-phase-4-amended-the-review-register-planned-agreed.md:18`: …cepts today. That is a narrowing, so the case schema takes `nanopnp/case/v0.5` (G6; the §5.3.1 NOTE) \| None. VER-70's and VER-71's rows are…
 - `specification/history/20-wp54s-notebooks-and-figures-agreed-28-october-2.md:19`: …th_density`, `with_numerics`) wait for Phase 5 \| IF-02 and `nanopnp/case/v0.5` do not move. A value the schema cannot say (a uniform wall su…
@@ -99,7 +99,7 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 
 - `.claude/scripts/clause.py:26`: BUNDLE = Path(__file__).resolve().parents[2] / "specification"
 - `.claude/scripts/duplicates.py:20`: ROOT = Path(__file__).resolve().parents[2]
-- `docs/plans/phase-5-workbench.md:169`: dump and hash, so a plain reader refuses a case that names it; read it with `Case.load` or `load_case`. Tier 1 and Tier 2
+- `docs/plans/phase-5/phase-5-workbench.md:169`: dump and hash, so a plain reader refuses a case that names it; read it with `Case.load` or `load_case`. Tier 1 and Tier 2
 - `docs/project/review-items.md:289`: **Measured.** The inf-sup check runs in `io.case.resolve()`, so `nanopnp validate` does not report
 - `docs/project/review-items.md:293`: check, and `load_case`, `resolve` and the desktop shell's commit all run it, with a run's refusal
 - `docs/project/review-items.md:1048`: …ce` switch; `overwrite_workspace=True` on the stage, or on `run_case`, replaces them. The workspace-locality NOTE and plan D4 say so.…
@@ -169,109 +169,109 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `docs/code_reviews/CODE_REVIEW_036.md:311`: plan = replace(planned, base_path=(directory / BASE_FILENAME).resolve())
 - `docs/code_reviews/CODE_REVIEW_036.md:332`: …pass it into the pipeline without repeating `pipeline.case.resolve()`.…
 - `docs/code_reviews/CODE_REVIEW_036.md:709`: resolved = case if isinstance(case, ResolvedCase) else resolve(case, base=base)
-- `docs/plans/kb-audit-brief.md:435`: - The retired names `load_case`, `run_case`, `/phase-plan`, `/wp-plan` and the schema
-- `docs/plans/kb-audit-brief.md:445`: `nanopnp/case/v0\.[0-5]`, `load_case\|run_case\|\bresolve\(`, `/phase-plan\|/wp-plan\|/wp-implement\|/wp-ship`,
-- `docs/plans/notebooks-review-for-wp54.md:125`: …ath` and `structure.source.path` values against `Path(path).resolve().parent`.…
-- `docs/plans/notebooks-review-for-wp54.md:256`: …- **C3 (Path Rebasing in `Case.load`):** `load_case` (`src/nanopnp/pipeline/case.py`) does not rebase relative paths in `CaseDocument`. Upda…
-- `docs/plans/phase-1-solver-core.md:58`: …/case.py` holds pydantic models mirroring §5.3.1 verbatim; `resolve()` turns a validated case into the Phase-0 objects (`Electrolyte`, `Coup…
-- `docs/plans/phase-1-solver-core.md:205`: ignoring it; `resolve()` onto the Phase-0 electrolyte, model and solver objects, going through the
-- `docs/plans/phase-1-solver-core.md:249`: - **The NUM-18 ladder reads none of the four physics switches from the case, and `resolve()` now
-- `docs/plans/phase-1-solver-core.md:533`: wave is a contiguous index range. Every point is substituted, validated and `resolve()`d at plan
-- `docs/plans/phase-2-geometry-pipeline.md:139`: is registered and `run_case` runs it. Adds **VER-48**: a synthetic Cₙ assembly about a known,
-- `docs/plans/phase-2-geometry-pipeline.md:240`: Stages 5 and 6 are registered, `_require_runnable` lifts, and `run_case` runs from structure to
-- `docs/plans/phase-4-polish-and-user-testing.md:493`: `dumps_case`, `load_case`, `loads_case`, `plan_from_document`, `registered_stages`, `resolve`, `run_case`,
-- `docs/plans/phase-4-polish-and-user-testing.md:494`: `run_document`, `run_plan`), each still importable from its module except `run_case`. The command line removes
-- `docs/plans/wp10-cli-runs-field-output.md:460`: >   behind. `run_case` now takes a fresh workspace under the store in use when the caller names none,
-- `docs/plans/wp11-sweep-runner.md:85`: …is validated \| **Every point is substituted, validated and `resolve()`d at plan time**, before a single solve \| `resolve()` is pure Python —…
-- `docs/plans/wp11-sweep-runner.md:481`: …its wave ordering; per-point substitution, validation and `resolve()`; the rectification-pair gate; the NUM-34 check once per distinct mesh…
-- `docs/plans/wp11-sweep-runner.md:523`: …wrong declared type is refused at plan time; a point that `resolve()` refuses (`physics.flow: false` with `default_ladder`) fails the plan…
-- `docs/plans/wp14-gui-shell-packaging-probe.md:10`: `run_case`, `run_document` and `SolveStage` (`core/stages.py`, `io/run.py`, `solve/stage.py`).
-- `docs/plans/wp14-gui-shell-packaging-probe.md:56`: …, `CancelToken`, `CancelFlag`, `Cancelled`); `io/run.py`'s `run_case`; `solve/stage.py`'s `_instrumented` \|…
-- `docs/plans/wp14-gui-shell-packaging-probe.md:100`: > `StageHook` protocol and `run_document`/`run_case` an `on_stage` parameter, called before each
-- `docs/plans/wp14-gui-shell-packaging-probe.md:123`: …`EventCancel`, `QueueProgress`, `_worker(payload)` calling `run_case`, and `SolverProcess` with `start()`, `cancel()`, `drain() -> tuple[Run…
-- `docs/plans/wp14-gui-shell-packaging-probe.md:284`: `run_case` already takes `progress: Progress \| None` and `cancel: CancelToken \| None`, and
-- `docs/plans/wp15-live-convergence-and-viewer.md:52`: …gress`, `CancelToken`, `StageHook`, `Stage`); `io/run.py` (`run_case`, `run_document`, `_resolve_stage`); `solve/stage.py` (`_instrumented`)…
-- `docs/plans/wp15-live-convergence-and-viewer.md:61`: …— threaded as a single optional `on_solve` keyword through `run_case` → `run_document` → the solve stage. Plain scalars only, so `core/stage…
-- `docs/plans/wp15-live-convergence-and-viewer.md:134`: …\| 3 \| `on_solve` threaded through `run_case`, `run_document` and `_resolve_stage`, rebinding only a `SolveReporting` stage, after the key is…
-- `docs/plans/wp16-user-docs-and-examples.md:61`: …r mypy. **Starting set** (the implementation confirms it): `run_case`, `run_document`, `RunResult` (`io.run`); `load_case`, `loads_case`, `d…
-- `docs/plans/wp16-user-docs-and-examples.md:127`: …api` \| P1 \| `tour.py`: mesh through the API, `loads_case`, `run_case(upto=…)`, inspect and substitute an artefact (FR-27), read the IF-07 XD…
-- `docs/plans/wp17-case-schema-v2.md:50`: - Code: `io/case.py` (models, `load_case`, `loads_case`, `_require_runnable`,
-- `docs/plans/wp17-case-schema-v2.md:62`: …transform that runs before `CaseDocument.model_validate`. `load_case` and `loads_case` dispatch on the declared schema, and `dumps_case` al…
-- `docs/plans/wp17-case-schema-v2.md:65`: …at does the upgrade would test the upgrade against itself. `resolve()` reads no file, so this runs in Tier 1 \|…
-- `docs/plans/wp17-case-schema-v2.md:93`: > **Outcome — D15's run directory keeps the file as read.** `run_case` writes the case text it
-- `docs/plans/wp17-case-schema-v2.md:96`: > and `docs/guide/case-files.md` says how to write a v2 copy (`dump_case(load_case(...))`).
-- `docs/plans/wp17-case-schema-v2.md:99`: > `resolve()` refuses in this release. The one test that resolved it
-- `docs/plans/wp18-structure-ingestion.md:66`: …ops `structure` when the case has no `structure:` section. `resolve()` accepts `structure:`, while `geometry:` and `charge:` stay refused. `…
-- `docs/plans/wp18-structure-ingestion.md:69`: …D/HIE/HIP` read as `HIS`. Every check here is a refusal in `resolve()` or the stage, **never** a pydantic narrowing \| §5.3.1 NOTE. Narrowing…
-- `docs/plans/wp18-structure-ingestion.md:105`: > "`all` or a comma-separated list", and `resolve()` refuses a list that is empty, repeats an
-- `docs/plans/wp18-structure-ingestion.md:106`: > identifier or does not number `n`. `resolve()` also refuses `auto` on C1, a non-positive
-- `docs/plans/wp18-structure-ingestion.md:110`: > refused naming both (a `CaseValidationError` in `resolve()`, by the `inputs:` NOTE's
-- `docs/plans/wp18-structure-ingestion.md:179`: …_ver48_2wcd_runs_as_stage_one` \| 1 \| VER-48, FR-01–FR-03 \| `run_case(upto="structure")` on the vendored entry: 12 chains, 285 common Cα, gat…
-- `docs/plans/wp19-density-and-reduction.md:73`: …either, the existing "describes no run" refusal stands. In `resolve()`: `grid_spacing_nm` outside [0.025, 0.05] is refused naming FR-04, and…
-- `docs/plans/wp19-density-and-reduction.md:210`: …st_ver49_ver50_2wcd_to_stage_three` \| 2 \| VER-49, VER-50 \| `run_case(upto="symmetry")` on `prepared_2wcd`: every atom resolves; bounds; cons…
-- `docs/plans/wp20-contour-extraction.md:70`: …\| D3 \| Case values \| No new key (WP17 D3). In `resolve()`: `isolevel` must be finite and in (0, 1). `simplify_tol_nm` must be finite and in…
-- `docs/plans/wp22-val05-reference-geometry.md:52`: model-frame vertices); `structure/ensemble.py` (`AlignedEnsemble`); `io/run.py` (`run_case`,
-- `docs/plans/wp24-gui-geometry-pipeline.md:82`: …`core/stages.py`. It is threaded as `on_artefact` through `run_case` → `run_document` → `_walk`, and fires **after** the artefact is in the…
-- `docs/plans/wp24-gui-geometry-pipeline.md:84`: …`run --upto` already writes a truncated walk (`io/run.py` `run_case`). A second driver would be a second pipeline \|…
-- `docs/plans/wp24-gui-geometry-pipeline.md:137`: …_profile`) has no `structure:`, loads and resolves through `load_case`, and is otherwise equal to the original, field by field over `case_fi…
-- `docs/plans/wp24-gui-geometry-pipeline.md:162`: > `run_case(on_artefact=)` needs its type. The hook fires for every stage the walk stores, so a
-- `docs/plans/wp38-io-split.md:34`: and builds the electrolyte. Every stage calls `resolve(inputs.case)` itself, so every stage
-- `docs/plans/wp38-io-split.md:53`: - `load_case` and `loads_case` refuse an inf-sup-unstable element pair at load (D8).
-- `docs/plans/wp38-io-split.md:76`: …\| D3 \| The assembler \| `pipeline/case.py`: `load_case` and `loads_case` (D7), `resolve` and its `_resolve_*` helpers, `_switches` (taking `C…
-- `docs/plans/wp38-io-split.md:77`: …weep, the shell, `validation/comsol.py` and the tests pass `resolve(document)`. `CaseStage.key` reads `inputs.resolved.document` and `.prove…
-- `docs/plans/wp38-io-split.md:80`: …`) move to `pipeline.checks.check_document`. `pipeline.case.load_case`/`loads_case` are `io.case.read_case`/`read_case_text` followed by `ch…
-- `docs/plans/wp38-io-split.md:85`: …`PUBLIC[name]` is that module, for every name. `resolve`, `load_case` and `loads_case` point at `nanopnp.pipeline.case`, and `run_case`, `r…
-- `docs/plans/wp38-io-split.md:158`: …QR-12 \| Each registry refusal's text is unchanged, through `load_case` and through `nanopnp run`. A P1/P1 flow case with `stabilisation: non…
-- `docs/plans/wp38-io-split.md:180`: which is the Tier-3 harness and checks no case. D8 makes a case's validation (`load_case` and
-- `docs/plans/wp42-verification-checks.md:78`: …`pipeline.checks.carry_upgrade(document, source)`, run by `load_case`/`loads_case` before `check_document`: for each `physics:` switch not…
-- `docs/plans/wp46-small-fixes.md:73`: …1 M NaCl, Python 3.14, the netgen mesh of the fixture) one `run_case(upto="solve")` makes ten solves, 36 Newton iterates and 46 positivity c…
-- `docs/plans/wp5.05-named-models-and-study-overrides.md:63`: - Readers of a case file: `pipeline/case.py:load_case` and `loads_case` (sweep plans, the Qt shell, run directories), and
-- `docs/plans/wp5.05-named-models-and-study-overrides.md:113`: nanopnp.case.Case.load or nanopnp.pipeline.case.load_case, which resolve them". Add public
-- `docs/plans/wp5.05-named-models-and-study-overrides.md:149`: - `pipeline/case.py:load_case` and `loads_case` call `io/models.py:read` and `reads`.
-- `docs/plans/wp5.06-outputs-and-steric-registries.md:56`: rendered as a document-level schema refusal. `pipeline/case.py:load_case`, `loads_case`, `resolve` and
-- `docs/plans/wp5.07-variables-and-the-rebuild-forecast.md:121`: longest suffix first; `field_unit(path)`, `numeric_paths()`, and `resolve(raw, source) -> (dict, Resolution \| None)`.
-- `docs/plans/wp5.07-variables-and-the-rebuild-forecast.md:156`: `resolve(plan.case(index, base=base), base=plan.base_path.parent)`, in plan order, sharing one `planned` set.
-- `docs/plans/wp51-plotting-and-notebooks.md:93`: …None)`, chdirs with `monkeypatch`, then calls `run_document(load_case(case), store=Store(example / "store"), upto=upto)`. For 06 the README'…
-- `docs/plans/wp51-plotting-and-notebooks.md:159`: > `cached_run` calls `run_case`, since `run_document` needs the case text; the Newton history of the
-- `docs/plans/wp54-notebooks-and-figures-revised.md:59`: …- `pipeline/handle.py:Case.load` calls `load_case(path)` and stores `Path(path)`; nothing rebases. Path-bearing fields: `inputs.{mesh,charge…
-- `docs/plans/wp54-notebooks-and-figures-revised.md:102`: here = Path(__file__).resolve().parent
-- `docs/plans/wp56-command-line-read-by-a-person.md:65`: `load_case(directory / CASE_FILENAME)`, then `pipeline/case.py:resolve`. An artefact absent from the
-- `docs/plans/wp56-command-line-read-by-a-person.md:99`: `cli/__init__.py:_run` and `_stage` call `run_case(..., write=False)`, which forwards `on_stage` and
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:49`: `nanopnp mesh cylinder`; the names of Y5 leaving `PUBLIC` (`run_case`, `run_document`, `resolve`,
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:50`: `load_case`, `loads_case`, `dump_case`, `dumps_case`, `CaseDocument`, `plan_from_document`,
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:66`: …loses `options`, and gains `base` and `stages` (D9, D12). `run_case` is deleted; `pipeline/reproduce.py` moves to `api/reproduce.py`. The c…
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:71`: …e run read, or the working directory for a case in memory. `resolve(document, *, base=None)` makes each `SuppliedArtefact.path`, `structure.…
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:73`: …ne names `from nanopnp import Session`. Every test calling `run_case`, `run_plan` or `nanopnp.sweep.sweep` moves to a `Session` \| Y5; F4; IF…
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:147`: - `examples/04-python-api/tour.py` imports `registered_stages` and `run_case` from `nanopnp`.
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:177`: - `pipeline/case.py:load_case`/`loads_case` are `read_case`/`read_case_text` then
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:207`: - Callers of `run_case`: `cli/__init__.py:_run`, `_stage`, `_plot` (a case target);
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:256`: - `validation/runs.py:reopen` reads `run.json` through its own `_record` and `load_case`;
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:291`: - Knowledge naming the old route: `knowledge/07-software-stack/05-gui-and-packaging.md` (`load_case`,
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:292`: `resolve`), `11-a-stages-workspace-falls-back-to-the.md` (`run_case`).
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:341`: `read_case_text`'s schema check, `_text = text`, `_base = base.resolve()` if given. A typed block value
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:368`: `session.store`; `Session.sweep` calls it until item 10. `run_case` stays until item 14.
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:372`: `resolve(document, *, base=None)` (`base` defaulting to `Path.cwd()`) checks every named file once
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:387`: **Item 14.** In each test and `tests/conftest.py`: `run_case(path, store=s, upto=u, only=o,
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:390`: `nanopnp.api.sweep.run_plan(plan, directory, session=Session(s), …)`. Then delete `run_case`, and apply D14 to `PUBLIC`, the mirror and
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:430`: …> **Outcome — item 8.** `run_case` stays until item 14, so tests walk it unchanged; `run_document` lost `options` (no caller passed one). `S…
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:436`: …> **Outcome — item 9.** `resolve(document, *, base=None)` holds every named path absolute in `ResolvedCase` and refuses a missing correction…
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:447`: - [x] 3f6d5be 14. Every test file and `tests/conftest.py` naming `run_case` or `run_plan`, then
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:448`: `pipeline/run.py` (delete `run_case`), `core/public.py`, `nanopnp/__init__.py`, `cli/reference.py`
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:449`: (D14); done when `uv run pytest` passes and `git grep -n "run_case" src tests` is empty.
-- `docs/plans/wp58-documentation-increment-4.md:113`: case with `base = Path(args.case).resolve().parent`, and §5.3.1's NOTE on a relative path makes
-- `docs/plans/wp59-architecture-review-fixes.md:56`: unresolved and passes `base=source.resolve().parent` to `loads`, which resolves `base` and sets `_text`.
-- `docs/plans/wp59-architecture-review-fixes.md:90`: - `cli/__init__.py:_validate_case` calls `load_case`, `check_referenced_files` (unless `--schema-only`), `resolve`
-- `docs/plans/wp59-architecture-review-fixes.md:91`: and `selected_stages`, all against `Path(args.case).resolve().parent`; `_validate_case_hash` calls `load_case`,
-- `docs/plans/wp59-architecture-review-fixes.md:94`: - `load_case` is `check_document(read_case(path))`; `Case.load` is `check_document(read_case_text(...))` over the
-- `docs/plans/wp59-architecture-review-fixes.md:97`: `case_identity(resolve(load_case(case)))`; `test_backend_registries.py` checks `validate case`'s exit code; the
-- `docs/plans/wp59-architecture-review-fixes.md:142`: self._base)`. In `load`: `given = Path(path)`, `resolved = given.resolve()`, read `resolved.read_bytes()`, call `loads`
-- `docs/plans/wp59-architecture-review-fixes.md:163`: `check_referenced_files(case, base=case.source.base)` first, then `resolved = resolve(case, base=case.source.base)` and
-- `docs/plans/wp59-architecture-review-fixes.md:263`: …ld \| — \| — \| *Grounding* D6's five prefixes, `case_identity(resolve(load_case(p), base=p.resolve().parent))` \| exact \| a scratch script \|…
-- `docs/plans/wp7-case-schema-artefacts-manifest.md:152`: c1 = load_case(p)                 # p written by hand
-- `docs/plans/wp7-case-schema-artefacts-manifest.md:154`: c2 = load_case(q)
-- `docs/plans/wp7-case-schema-artefacts-manifest.md:156`: assert resolve(c1).provenance == resolve(c2).provenance
-- `docs/plans/wp7-case-schema-artefacts-manifest.md:215`: > that only reads as a switch because of its `auto` literal), and the four v0.3 and v0.4 blocks `resolve()`
-- `docs/plans/wp7-case-schema-artefacts-manifest.md:312`: …aseDocument` and its nested models over §5.3.1 as amended; `load_case`, `dump_case`, `CaseValidationError`; `resolve() -> ResolvedCase`; `Un…
+- `docs/plans/sessions/kb-audit-brief.md:435`: - The retired names `load_case`, `run_case`, `/phase-plan`, `/wp-plan` and the schema
+- `docs/plans/sessions/kb-audit-brief.md:445`: `nanopnp/case/v0\.[0-5]`, `load_case\|run_case\|\bresolve\(`, `/phase-plan\|/wp-plan\|/wp-implement\|/wp-ship`,
+- `docs/plans/sessions/notebooks-review-for-wp54.md:125`: …ath` and `structure.source.path` values against `Path(path).resolve().parent`.…
+- `docs/plans/sessions/notebooks-review-for-wp54.md:256`: …- **C3 (Path Rebasing in `Case.load`):** `load_case` (`src/nanopnp/pipeline/case.py`) does not rebase relative paths in `CaseDocument`. Upda…
+- `docs/plans/phase-1/phase-1-solver-core.md:58`: …/case.py` holds pydantic models mirroring §5.3.1 verbatim; `resolve()` turns a validated case into the Phase-0 objects (`Electrolyte`, `Coup…
+- `docs/plans/phase-1/phase-1-solver-core.md:205`: ignoring it; `resolve()` onto the Phase-0 electrolyte, model and solver objects, going through the
+- `docs/plans/phase-1/phase-1-solver-core.md:249`: - **The NUM-18 ladder reads none of the four physics switches from the case, and `resolve()` now
+- `docs/plans/phase-1/phase-1-solver-core.md:533`: wave is a contiguous index range. Every point is substituted, validated and `resolve()`d at plan
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:139`: is registered and `run_case` runs it. Adds **VER-48**: a synthetic Cₙ assembly about a known,
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:240`: Stages 5 and 6 are registered, `_require_runnable` lifts, and `run_case` runs from structure to
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:493`: `dumps_case`, `load_case`, `loads_case`, `plan_from_document`, `registered_stages`, `resolve`, `run_case`,
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:494`: `run_document`, `run_plan`), each still importable from its module except `run_case`. The command line removes
+- `docs/plans/phase-1/wp10-cli-runs-field-output.md:460`: >   behind. `run_case` now takes a fresh workspace under the store in use when the caller names none,
+- `docs/plans/phase-1/wp11-sweep-runner.md:85`: …is validated \| **Every point is substituted, validated and `resolve()`d at plan time**, before a single solve \| `resolve()` is pure Python —…
+- `docs/plans/phase-1/wp11-sweep-runner.md:481`: …its wave ordering; per-point substitution, validation and `resolve()`; the rectification-pair gate; the NUM-34 check once per distinct mesh…
+- `docs/plans/phase-1/wp11-sweep-runner.md:523`: …wrong declared type is refused at plan time; a point that `resolve()` refuses (`physics.flow: false` with `default_ladder`) fails the plan…
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:10`: `run_case`, `run_document` and `SolveStage` (`core/stages.py`, `io/run.py`, `solve/stage.py`).
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:56`: …, `CancelToken`, `CancelFlag`, `Cancelled`); `io/run.py`'s `run_case`; `solve/stage.py`'s `_instrumented` \|…
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:100`: > `StageHook` protocol and `run_document`/`run_case` an `on_stage` parameter, called before each
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:123`: …`EventCancel`, `QueueProgress`, `_worker(payload)` calling `run_case`, and `SolverProcess` with `start()`, `cancel()`, `drain() -> tuple[Run…
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:284`: `run_case` already takes `progress: Progress \| None` and `cancel: CancelToken \| None`, and
+- `docs/plans/phase-1/wp15-live-convergence-and-viewer.md:52`: …gress`, `CancelToken`, `StageHook`, `Stage`); `io/run.py` (`run_case`, `run_document`, `_resolve_stage`); `solve/stage.py` (`_instrumented`)…
+- `docs/plans/phase-1/wp15-live-convergence-and-viewer.md:61`: …— threaded as a single optional `on_solve` keyword through `run_case` → `run_document` → the solve stage. Plain scalars only, so `core/stage…
+- `docs/plans/phase-1/wp15-live-convergence-and-viewer.md:134`: …\| 3 \| `on_solve` threaded through `run_case`, `run_document` and `_resolve_stage`, rebinding only a `SolveReporting` stage, after the key is…
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:61`: …r mypy. **Starting set** (the implementation confirms it): `run_case`, `run_document`, `RunResult` (`io.run`); `load_case`, `loads_case`, `d…
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:127`: …api` \| P1 \| `tour.py`: mesh through the API, `loads_case`, `run_case(upto=…)`, inspect and substitute an artefact (FR-27), read the IF-07 XD…
+- `docs/plans/phase-2/wp17-case-schema-v2.md:50`: - Code: `io/case.py` (models, `load_case`, `loads_case`, `_require_runnable`,
+- `docs/plans/phase-2/wp17-case-schema-v2.md:62`: …transform that runs before `CaseDocument.model_validate`. `load_case` and `loads_case` dispatch on the declared schema, and `dumps_case` al…
+- `docs/plans/phase-2/wp17-case-schema-v2.md:65`: …at does the upgrade would test the upgrade against itself. `resolve()` reads no file, so this runs in Tier 1 \|…
+- `docs/plans/phase-2/wp17-case-schema-v2.md:93`: > **Outcome — D15's run directory keeps the file as read.** `run_case` writes the case text it
+- `docs/plans/phase-2/wp17-case-schema-v2.md:96`: > and `docs/guide/case-files.md` says how to write a v2 copy (`dump_case(load_case(...))`).
+- `docs/plans/phase-2/wp17-case-schema-v2.md:99`: > `resolve()` refuses in this release. The one test that resolved it
+- `docs/plans/phase-2/wp18-structure-ingestion.md:66`: …ops `structure` when the case has no `structure:` section. `resolve()` accepts `structure:`, while `geometry:` and `charge:` stay refused. `…
+- `docs/plans/phase-2/wp18-structure-ingestion.md:69`: …D/HIE/HIP` read as `HIS`. Every check here is a refusal in `resolve()` or the stage, **never** a pydantic narrowing \| §5.3.1 NOTE. Narrowing…
+- `docs/plans/phase-2/wp18-structure-ingestion.md:105`: > "`all` or a comma-separated list", and `resolve()` refuses a list that is empty, repeats an
+- `docs/plans/phase-2/wp18-structure-ingestion.md:106`: > identifier or does not number `n`. `resolve()` also refuses `auto` on C1, a non-positive
+- `docs/plans/phase-2/wp18-structure-ingestion.md:110`: > refused naming both (a `CaseValidationError` in `resolve()`, by the `inputs:` NOTE's
+- `docs/plans/phase-2/wp18-structure-ingestion.md:179`: …_ver48_2wcd_runs_as_stage_one` \| 1 \| VER-48, FR-01–FR-03 \| `run_case(upto="structure")` on the vendored entry: 12 chains, 285 common Cα, gat…
+- `docs/plans/phase-2/wp19-density-and-reduction.md:73`: …either, the existing "describes no run" refusal stands. In `resolve()`: `grid_spacing_nm` outside [0.025, 0.05] is refused naming FR-04, and…
+- `docs/plans/phase-2/wp19-density-and-reduction.md:210`: …st_ver49_ver50_2wcd_to_stage_three` \| 2 \| VER-49, VER-50 \| `run_case(upto="symmetry")` on `prepared_2wcd`: every atom resolves; bounds; cons…
+- `docs/plans/phase-2/wp20-contour-extraction.md:70`: …\| D3 \| Case values \| No new key (WP17 D3). In `resolve()`: `isolevel` must be finite and in (0, 1). `simplify_tol_nm` must be finite and in…
+- `docs/plans/phase-2/wp22-val05-reference-geometry.md:52`: model-frame vertices); `structure/ensemble.py` (`AlignedEnsemble`); `io/run.py` (`run_case`,
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:82`: …`core/stages.py`. It is threaded as `on_artefact` through `run_case` → `run_document` → `_walk`, and fires **after** the artefact is in the…
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:84`: …`run --upto` already writes a truncated walk (`io/run.py` `run_case`). A second driver would be a second pipeline \|…
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:137`: …_profile`) has no `structure:`, loads and resolves through `load_case`, and is otherwise equal to the original, field by field over `case_fi…
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:162`: > `run_case(on_artefact=)` needs its type. The hook fires for every stage the walk stores, so a
+- `docs/plans/phase-4/wp38-io-split.md:34`: and builds the electrolyte. Every stage calls `resolve(inputs.case)` itself, so every stage
+- `docs/plans/phase-4/wp38-io-split.md:53`: - `load_case` and `loads_case` refuse an inf-sup-unstable element pair at load (D8).
+- `docs/plans/phase-4/wp38-io-split.md:76`: …\| D3 \| The assembler \| `pipeline/case.py`: `load_case` and `loads_case` (D7), `resolve` and its `_resolve_*` helpers, `_switches` (taking `C…
+- `docs/plans/phase-4/wp38-io-split.md:77`: …weep, the shell, `validation/comsol.py` and the tests pass `resolve(document)`. `CaseStage.key` reads `inputs.resolved.document` and `.prove…
+- `docs/plans/phase-4/wp38-io-split.md:80`: …`) move to `pipeline.checks.check_document`. `pipeline.case.load_case`/`loads_case` are `io.case.read_case`/`read_case_text` followed by `ch…
+- `docs/plans/phase-4/wp38-io-split.md:85`: …`PUBLIC[name]` is that module, for every name. `resolve`, `load_case` and `loads_case` point at `nanopnp.pipeline.case`, and `run_case`, `r…
+- `docs/plans/phase-4/wp38-io-split.md:158`: …QR-12 \| Each registry refusal's text is unchanged, through `load_case` and through `nanopnp run`. A P1/P1 flow case with `stabilisation: non…
+- `docs/plans/phase-4/wp38-io-split.md:180`: which is the Tier-3 harness and checks no case. D8 makes a case's validation (`load_case` and
+- `docs/plans/phase-4/wp42-verification-checks.md:78`: …`pipeline.checks.carry_upgrade(document, source)`, run by `load_case`/`loads_case` before `check_document`: for each `physics:` switch not…
+- `docs/plans/phase-4/wp46-small-fixes.md:73`: …1 M NaCl, Python 3.14, the netgen mesh of the fixture) one `run_case(upto="solve")` makes ten solves, 36 Newton iterates and 46 positivity c…
+- `docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md:63`: - Readers of a case file: `pipeline/case.py:load_case` and `loads_case` (sweep plans, the Qt shell, run directories), and
+- `docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md:113`: nanopnp.case.Case.load or nanopnp.pipeline.case.load_case, which resolve them". Add public
+- `docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md:149`: - `pipeline/case.py:load_case` and `loads_case` call `io/models.py:read` and `reads`.
+- `docs/plans/phase-5/wp5.06-outputs-and-steric-registries.md:56`: rendered as a document-level schema refusal. `pipeline/case.py:load_case`, `loads_case`, `resolve` and
+- `docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md:121`: longest suffix first; `field_unit(path)`, `numeric_paths()`, and `resolve(raw, source) -> (dict, Resolution \| None)`.
+- `docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md:156`: `resolve(plan.case(index, base=base), base=plan.base_path.parent)`, in plan order, sharing one `planned` set.
+- `docs/plans/phase-4/wp51-plotting-and-notebooks.md:93`: …None)`, chdirs with `monkeypatch`, then calls `run_document(load_case(case), store=Store(example / "store"), upto=upto)`. For 06 the README'…
+- `docs/plans/phase-4/wp51-plotting-and-notebooks.md:159`: > `cached_run` calls `run_case`, since `run_document` needs the case text; the Newton history of the
+- `docs/plans/phase-4/wp54-notebooks-and-figures-revised.md:59`: …- `pipeline/handle.py:Case.load` calls `load_case(path)` and stores `Path(path)`; nothing rebases. Path-bearing fields: `inputs.{mesh,charge…
+- `docs/plans/phase-4/wp54-notebooks-and-figures-revised.md:102`: here = Path(__file__).resolve().parent
+- `docs/plans/phase-4/wp56-command-line-read-by-a-person.md:65`: `load_case(directory / CASE_FILENAME)`, then `pipeline/case.py:resolve`. An artefact absent from the
+- `docs/plans/phase-4/wp56-command-line-read-by-a-person.md:99`: `cli/__init__.py:_run` and `_stage` call `run_case(..., write=False)`, which forwards `on_stage` and
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:49`: `nanopnp mesh cylinder`; the names of Y5 leaving `PUBLIC` (`run_case`, `run_document`, `resolve`,
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:50`: `load_case`, `loads_case`, `dump_case`, `dumps_case`, `CaseDocument`, `plan_from_document`,
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:66`: …loses `options`, and gains `base` and `stages` (D9, D12). `run_case` is deleted; `pipeline/reproduce.py` moves to `api/reproduce.py`. The c…
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:71`: …e run read, or the working directory for a case in memory. `resolve(document, *, base=None)` makes each `SuppliedArtefact.path`, `structure.…
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:73`: …ne names `from nanopnp import Session`. Every test calling `run_case`, `run_plan` or `nanopnp.sweep.sweep` moves to a `Session` \| Y5; F4; IF…
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:147`: - `examples/04-python-api/tour.py` imports `registered_stages` and `run_case` from `nanopnp`.
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:177`: - `pipeline/case.py:load_case`/`loads_case` are `read_case`/`read_case_text` then
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:207`: - Callers of `run_case`: `cli/__init__.py:_run`, `_stage`, `_plot` (a case target);
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:256`: - `validation/runs.py:reopen` reads `run.json` through its own `_record` and `load_case`;
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:291`: - Knowledge naming the old route: `knowledge/07-software-stack/05-gui-and-packaging.md` (`load_case`,
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:292`: `resolve`), `11-a-stages-workspace-falls-back-to-the.md` (`run_case`).
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:341`: `read_case_text`'s schema check, `_text = text`, `_base = base.resolve()` if given. A typed block value
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:368`: `session.store`; `Session.sweep` calls it until item 10. `run_case` stays until item 14.
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:372`: `resolve(document, *, base=None)` (`base` defaulting to `Path.cwd()`) checks every named file once
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:387`: **Item 14.** In each test and `tests/conftest.py`: `run_case(path, store=s, upto=u, only=o,
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:390`: `nanopnp.api.sweep.run_plan(plan, directory, session=Session(s), …)`. Then delete `run_case`, and apply D14 to `PUBLIC`, the mirror and
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:430`: …> **Outcome — item 8.** `run_case` stays until item 14, so tests walk it unchanged; `run_document` lost `options` (no caller passed one). `S…
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:436`: …> **Outcome — item 9.** `resolve(document, *, base=None)` holds every named path absolute in `ResolvedCase` and refuses a missing correction…
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:447`: - [x] 3f6d5be 14. Every test file and `tests/conftest.py` naming `run_case` or `run_plan`, then
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:448`: `pipeline/run.py` (delete `run_case`), `core/public.py`, `nanopnp/__init__.py`, `cli/reference.py`
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:449`: (D14); done when `uv run pytest` passes and `git grep -n "run_case" src tests` is empty.
+- `docs/plans/phase-4/wp58-documentation-increment-4.md:113`: case with `base = Path(args.case).resolve().parent`, and §5.3.1's NOTE on a relative path makes
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:56`: unresolved and passes `base=source.resolve().parent` to `loads`, which resolves `base` and sets `_text`.
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:90`: - `cli/__init__.py:_validate_case` calls `load_case`, `check_referenced_files` (unless `--schema-only`), `resolve`
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:91`: and `selected_stages`, all against `Path(args.case).resolve().parent`; `_validate_case_hash` calls `load_case`,
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:94`: - `load_case` is `check_document(read_case(path))`; `Case.load` is `check_document(read_case_text(...))` over the
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:97`: `case_identity(resolve(load_case(case)))`; `test_backend_registries.py` checks `validate case`'s exit code; the
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:142`: self._base)`. In `load`: `given = Path(path)`, `resolved = given.resolve()`, read `resolved.read_bytes()`, call `loads`
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:163`: `check_referenced_files(case, base=case.source.base)` first, then `resolved = resolve(case, base=case.source.base)` and
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:263`: …ld \| — \| — \| *Grounding* D6's five prefixes, `case_identity(resolve(load_case(p), base=p.resolve().parent))` \| exact \| a scratch script \|…
+- `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md:152`: c1 = load_case(p)                 # p written by hand
+- `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md:154`: c2 = load_case(q)
+- `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md:156`: assert resolve(c1).provenance == resolve(c2).provenance
+- `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md:215`: > that only reads as a switch because of its `auto` literal), and the four v0.3 and v0.4 blocks `resolve()`
+- `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md:312`: …aseDocument` and its nested models over §5.3.1 as amended; `load_case`, `dump_case`, `CaseValidationError`; `resolve() -> ResolvedCase`; `Un…
 - `docs/user-testing/findings.md:276`: …3. Although `run_case` and `run_document` in the core pipeline accept `progress: Progress \| None` and `on_stage` / `on_solve` callbacks, the…
 - `specification/history/23-phase-4-amended-the-python-interface-rebuilt-on-a.md:4`: …ks, a Session runs it and is the one route of every caller, run_case and run_document become internal, each other public name follows one ob…
 - `specification/history/23-phase-4-amended-the-python-interface-rebuilt-on-a.md:13`: called `run_case` or `run_document`. Seventeen questions were put through `AskUserQuestion` in six
@@ -294,7 +294,7 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `docs/project/review-items.md:1161`: *Area:* verification. *Severity:* low. *Found:* WP48 `/wp-ship` review.
 - `docs/project/review-items.md:1228`: *Area:* verification. *Severity:* low. *Found:* WP49 `/wp-ship` review
 - `knowledge/07-software-stack/15-an-npz-is-reproducible-bytes-only-if.md:45`: Source: the WP32 `/wp-ship` review.
-- `knowledge/07-software-stack/15-an-npz-is-reproducible-bytes-only-if.md:47`: …2d619:docs/plans/wp32-charge-docs-and-example.md`, D15 and `/wp-ship` review (`nanopnp/fields/v2` and `nanopnp/charge-grid/v2`).…
+- `knowledge/07-software-stack/15-an-npz-is-reproducible-bytes-only-if.md:47`: …2d619:docs/plans/phase-3/wp32-charge-docs-and-example.md`, D15 and `/wp-ship` review (`nanopnp/fields/v2` and `nanopnp/charge-grid/v2`).…
 
 ## old command names — records (102)
 
@@ -310,80 +310,80 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `docs/code_reviews/CODE_REVIEW_013.md:43`: …s does not edit `CLAUDE.md` on an agent's instruction. For `/wp-ship` or the author. \|…
 - `docs/code_reviews/CODE_REVIEW_013.md:57`: The push gate, the test suites and `--nightly` (the review pass's instructions). `/wp-ship` gates
 - `docs/code_reviews/CODE_REVIEW_013.md:60`: ## Disposition (`/wp-ship`)
-- `docs/plans/history-prose-review.md:5`: deposit tolerance stay). Written during WP34's `/wp-ship` at the request of the author, who finds
-- `docs/plans/history-prose-review.md:264`: \| `.claude/skills/wp-plan/SKILL.md:68` \| "preserve superseded reasoning as labelled history" \|
-- `docs/plans/history-prose-review.md:265`: \| `.claude/skills/wp-implement/SKILL.md:19` \| "…argument as labelled history (see **Keeping the record straight**)" \|
-- `docs/plans/history-prose-review.md:266`: \| `.claude/skills/wp-implement/SKILL.md:74` \| "Preserve existing historical summaries" \|
-- `docs/plans/kb-audit-brief.md:435`: - The retired names `load_case`, `run_case`, `/phase-plan`, `/wp-plan` and the schema
-- `docs/plans/kb-audit-brief.md:445`: `nanopnp/case/v0\.[0-5]`, `load_case\|run_case\|\bresolve\(`, `/phase-plan\|/wp-plan\|/wp-implement\|/wp-ship`,
-- `docs/plans/okf-knowledge-bundle.md:5`: It is not a work-package plan. `/phase-plan 4` puts the open questions at the end to the author and
-- `docs/plans/okf-knowledge-bundle.md:6`: lists the package as provisional behind the modularity report (F3); `/phase-plan amend` gives it its
-- `docs/plans/okf-knowledge-bundle.md:7`: identifiers once that report has merged, and `/wp-plan` writes its brief. `SPECIFICATION.md`
-- `docs/plans/okf-knowledge-bundle.md:73`: These went to the author through `/phase-plan 4` on 5 October 2026 (`SPECIFICATION.md` §8.2.7).
-- `docs/plans/okf-knowledge-bundle.md:77`: left to the bundle package's `/wp-plan` (G9). The text below is the questions as they were put.
-- `docs/plans/phase-0-consolidation.md:230`: Delivery is one work package per PR through `/wp-plan → /wp-implement → /wp-ship`, each green on
-- `docs/plans/phase-2-geometry-pipeline.md:60`: Settled before the first package is planned. Each package's own `/wp-plan` decides the rest, in
-- `docs/plans/phase-2-geometry-pipeline.md:104`: Each package gets its own `/wp-plan <n>` with a decisions table before implementation, and is green
-- `docs/plans/phase-3-charge-pipeline.md:65`: Settled before the first package is planned. Each package's own `/wp-plan` decides the rest in its
-- `docs/plans/phase-3-charge-pipeline.md:113`: Each package gets its own `/wp-plan <n>` with a decisions table before implementation, and is green
-- `docs/plans/phase-4-record.md:43`: Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
-- `docs/plans/phase-4-record.md:231`: Each package's `/wp-plan` decides the rest in its own decisions table: WP35 decides the report's
-- `docs/plans/phase-4-record.md:289`: Each package gets its own `/wp-plan <n>` before implementation, and is green on Tiers 1 and 2
-- `docs/plans/phase-4-record.md:341`: No Tier 3 leg. Ends with the author ruling every `MOD-nn`, through `/phase-plan amend 4`.
-- `docs/plans/phase-4-record.md:351`: > golden only by a G10 ruling. Next: the author rules each `MOD-nn` through `/phase-plan amend 4`.
-- `docs/plans/phase-4-record.md:355`: They wait on the rulings of `MOD-nn`. `/phase-plan amend 4` turns each accepted finding, or a
-- `docs/plans/phase-4-record.md:657`: - **the plain summaries** (J9): `## In brief` in `/phase-plan`, `/wp-plan` and `/wp-implement`,
-- `docs/plans/phase-4-record.md:678`: `/wp-implement` against WP42's, and reported in WP46's Outcomes. Until WP43's new hook is committed,
-- `docs/plans/phase-4-record.md:681`: Its `/wp-plan` decides the impact tool, the shard count, VER-73's margin, the roster's files and the
-- `docs/plans/phase-4-record.md:685`: > **Amended, 12 October 2026** (§8.2.10 J10 to J12), at its `/wp-plan`: [wp43-development-loop.md](wp43-development-loop.md).
-- `docs/plans/phase-4-record.md:826`: Its `/wp-plan` puts open questions 3 to 7 to the author (G9). `generate.py` has to recurse.
-- `docs/plans/phase-4-record.md:832`: > stay with this package's `/wp-plan` (G9).
-- `docs/plans/phase-4-record.md:908`: > the pull-request template and `tests/README.md` follow it; `/wp-ship` deletes off-scope tests before
-- `docs/plans/phase-4-record.md:928`: - adds N5's reviewer step to `/wp-ship`.
-- `docs/plans/phase-4-record.md:973`: move. Its `/wp-plan` decides the public names (`nanopnp.plot`, and whether a name joins `PUBLIC`,
-- `docs/plans/phase-4-record.md:1009`: script whose output goes into the Outcome. Its `/wp-plan` decides the file boundaries, the bundle's
-- `docs/plans/phase-4-record.md:1034`: implemented and shipped with the new skills, and its sessions are the check. Its `/wp-plan` decides
-- `docs/plans/phase-4-record.md:1092`: They wait on the sessions and on the author's ruling of each `UT-nn`. A second `/phase-plan amend 4`
-- `docs/plans/phase-4-record.md:1164`: …`, docs site \| **Open**, owned by the OKF bundle package's `/wp-plan` (G9) \|…
-- `docs/plans/phase-4-record.md:1179`: …— \| **Settled by the author, 12 October 2026**, at WP43's `/wp-plan` (§8.2.10 J10, J11): the `extended` walks run after a merge; the figure…
-- `docs/plans/phase-4-record.md:1194`: …hether any name joins `PUBLIC` \| **Open**, owned by WP51's `/wp-plan`; a change to `PUBLIC` is decided in `test_public_api.py` (F4) \|…
-- `docs/plans/wp20-contour-extraction.md:4`: `claude/wp-plan-19-19570b` (its PR becomes `v0.3.0-alpha.3`). This package inherits stage 3's
-- `docs/plans/wp25-geometry-docs-and-example.md:76`: > version renamed the DCD first. The `/wp-ship` review found that a failed PDB rename then left an
-- `docs/plans/wp28-charge-deposition.md:147`: > **Outcome — the golden identity does not see a deposited charge (OPN-07, open).** The `/wp-ship`
-- `docs/plans/wp32-charge-docs-and-example.md:114`: > - **D15, from the `/wp-ship` review: the schemas move to v2.** A store filled before WP32 kept
-- `docs/plans/wp34-phase-3-close.md:75`: …4 and 5 \| **Not planned in WP34.** `current.md` points at `/wp-plan phase-4` after `v0.4.0`, and the Phase 4 plan's first package is the mo…
-- `docs/plans/wp34-phase-3-close.md:153`: `current.md` points at Phase 4, the polish phase, and `/wp-plan phase-4` (D15).
-- `docs/plans/wp35-modularity-exploration.md:18`: §7.2 and §7.3, by `/wp-implement`, in the commit that implements them. **One correction to the
-- `docs/plans/wp35-modularity-exploration.md:39`: `/phase-plan amend 4`.
-- `docs/plans/wp35-modularity-exploration.md:168`: on `MOD-nn` and belong to the refactor packages (`/phase-plan amend 4`).
-- `docs/plans/wp36-stage-protocol-and-walk.md:12`: claimed by `/wp-implement`, with its §7.2 row, its Appendix A entry under FR-27 and VER-25's added
-- `docs/plans/wp36-stage-protocol-and-walk.md:113`: `/wp-implement` starts.
-- `docs/plans/wp37-cycle-cuts-exit-codes-backend-guard.md:20`: VER-65's row, VER-61's added clause and Appendix A's QR-13 entry are claimed by `/wp-implement`, in
-- `docs/plans/wp38-io-split.md:3`: **Status: delivered, 6 October 2026.** Written 6 October 2026 on `claude/wp-plan-38-gm0s7s` at
-- `docs/plans/wp38-io-split.md:21`: findings and register rows, are claimed by `/wp-implement` in the commit that implements them.
-- `docs/plans/wp39-backend-registries.md:20`: `/wp-implement` in the commit that implements them, as WP38's rows were.
-- `docs/plans/wp39-backend-registries.md:83`: …is `MOD-11`'s question, which waits for the sessions (H2). `/wp-implement` adds a REV row naming them for that ruling \| Adding them is addit…
-- `docs/plans/wp40-stale-refusals.md:18`: Appendix A's pointer are claimed by `/wp-implement` in the commit that implements them, as VER-66's
-- `docs/plans/wp40-stale-refusals.md:107`: None. The author ruled on 7 October 2026, in the `/wp-ship` review (REV-68 to REV-70): D5 and D8
-- `docs/plans/wp41-accuracy-fixes.md:60`: …ody. The darwin and win32 cylinder meshes are re-pinned by `/wp-ship` from CI's printed records, each checked against the same bound, before…
-- `docs/plans/wp41-accuracy-fixes.md:66`: …**Outcome (D6, `/wp-ship`, 9 October 2026).** Items 1 and 2 re-pinned the `X86_V2`/`X86_V3` meshes but not the `X86_V4` meshes of `2wcd-char…
-- `docs/plans/wp43-development-loop.md:74`: …tamped `impact`. Gmsh and the GUI file are handled as now. `/wp-implement`, `/wp-ship` and the steward start `gate.sh map` in the background…
-- `docs/plans/wp43-development-loop.md:83`: …rule loads only when a matching file is read or edited, so `/phase-plan`, `/wp-plan` and `/wp-ship` §4 read both explicitly. **J11's count i…
-- `docs/plans/wp46-small-fixes.md:75`: …- [x] 11. 5ee1176 `.claude/skills/wp-ship/SKILL.md` §6 and `.claude/skills/steward/SKILL.md` *Bounded wakes*: once CI is green and the PR me…
-- `docs/plans/wp46-small-fixes.md:77`: *Compaction checkpoint: after item 10; then the push gate and `/wp-implement`'s PR.*
-- `docs/plans/wp47-okf-bundle.md:78`: *Compaction checkpoint: after item 9; then the push gate and `/wp-implement`'s PR.*
-- `docs/plans/wp49-cost-study.md:3`: PR: [#107](https://github.com/willemsk/nanopnp/pull/107), branch claude/wp-implement-49-oejjuz
-- `docs/plans/wp49-cost-study.md:68`: > **Amended at `/wp-ship`.** The review found the harness missed calls through `from … import`
-- `docs/plans/wp52-specification-and-plans-split.md:267`: - Rewriting the skills to the new layout, beyond the PR step and R11, including where `/phase-plan` writes a ruling and R3's rule
-- `docs/plans/wp53-workflow-commands.md:138`: On *old* only, apply in this order: `/phase-plan amend`→`/np-plan amend`, `/phase-plan`→`/np-plan
-- `docs/plans/wp53-workflow-commands.md:139`: phase`, `/wp-plan`→`/np-plan wp`, `/wp-implement`→`/np-implement`, `/wp-ship`→`/np-ship`, then
-- `docs/plans/wp53-workflow-commands.md:171`: - *Testing*: `/wp-ship` → `/np-ship`.
-- `docs/plans/wp53-workflow-commands.md:177`: (`np-ship/wp.md`, *Review pass*). Plans before WP53 name these `/phase-plan`, `/wp-plan`,
-- `docs/plans/wp53-workflow-commands.md:178`: `/wp-implement` and `/wp-ship`."
-- `docs/plans/wp53-workflow-commands.md:249`: >   section's heading, its first sentence, naming `/phase-plan amend`, and "The same two turns
-- `docs/plans/wp7-case-schema-artefacts-manifest.md:372`: updated by `/wp-implement` in the commit that lands the tests, not here.
-- `docs/plans/wp7-case-schema-artefacts-manifest.md:421`: None blocking. Two rulings would be useful before `/wp-implement`, and the plan assumes an answer to
-- `docs/plans/wp8-mesh-ingestion-quality-reference.md:369`: 4.15.2 in this environment rather than by reading documentation, and `/wp-implement` SHALL write
+- `docs/plans/sessions/history-prose-review.md:5`: deposit tolerance stay). Written during WP34's `/wp-ship` at the request of the author, who finds
+- `docs/plans/sessions/history-prose-review.md:264`: \| `.claude/skills/wp-plan/SKILL.md:68` \| "preserve superseded reasoning as labelled history" \|
+- `docs/plans/sessions/history-prose-review.md:265`: \| `.claude/skills/wp-implement/SKILL.md:19` \| "…argument as labelled history (see **Keeping the record straight**)" \|
+- `docs/plans/sessions/history-prose-review.md:266`: \| `.claude/skills/wp-implement/SKILL.md:74` \| "Preserve existing historical summaries" \|
+- `docs/plans/sessions/kb-audit-brief.md:435`: - The retired names `load_case`, `run_case`, `/phase-plan`, `/wp-plan` and the schema
+- `docs/plans/sessions/kb-audit-brief.md:445`: `nanopnp/case/v0\.[0-5]`, `load_case\|run_case\|\bresolve\(`, `/phase-plan\|/wp-plan\|/wp-implement\|/wp-ship`,
+- `docs/plans/sessions/okf-knowledge-bundle.md:5`: It is not a work-package plan. `/phase-plan 4` puts the open questions at the end to the author and
+- `docs/plans/sessions/okf-knowledge-bundle.md:6`: lists the package as provisional behind the modularity report (F3); `/phase-plan amend` gives it its
+- `docs/plans/sessions/okf-knowledge-bundle.md:7`: identifiers once that report has merged, and `/wp-plan` writes its brief. `SPECIFICATION.md`
+- `docs/plans/sessions/okf-knowledge-bundle.md:73`: These went to the author through `/phase-plan 4` on 5 October 2026 (`SPECIFICATION.md` §8.2.7).
+- `docs/plans/sessions/okf-knowledge-bundle.md:77`: left to the bundle package's `/wp-plan` (G9). The text below is the questions as they were put.
+- `docs/plans/phase-0/phase-0-consolidation.md:230`: Delivery is one work package per PR through `/wp-plan → /wp-implement → /wp-ship`, each green on
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:60`: Settled before the first package is planned. Each package's own `/wp-plan` decides the rest, in
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:104`: Each package gets its own `/wp-plan <n>` with a decisions table before implementation, and is green
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:65`: Settled before the first package is planned. Each package's own `/wp-plan` decides the rest in its
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:113`: Each package gets its own `/wp-plan <n>` with a decisions table before implementation, and is green
+- `docs/plans/phase-4/phase-4-record.md:43`: Provisional, and planned by the second `/phase-plan amend 4` once the author has run the sessions
+- `docs/plans/phase-4/phase-4-record.md:231`: Each package's `/wp-plan` decides the rest in its own decisions table: WP35 decides the report's
+- `docs/plans/phase-4/phase-4-record.md:289`: Each package gets its own `/wp-plan <n>` before implementation, and is green on Tiers 1 and 2
+- `docs/plans/phase-4/phase-4-record.md:341`: No Tier 3 leg. Ends with the author ruling every `MOD-nn`, through `/phase-plan amend 4`.
+- `docs/plans/phase-4/phase-4-record.md:351`: > golden only by a G10 ruling. Next: the author rules each `MOD-nn` through `/phase-plan amend 4`.
+- `docs/plans/phase-4/phase-4-record.md:355`: They wait on the rulings of `MOD-nn`. `/phase-plan amend 4` turns each accepted finding, or a
+- `docs/plans/phase-4/phase-4-record.md:657`: - **the plain summaries** (J9): `## In brief` in `/phase-plan`, `/wp-plan` and `/wp-implement`,
+- `docs/plans/phase-4/phase-4-record.md:678`: `/wp-implement` against WP42's, and reported in WP46's Outcomes. Until WP43's new hook is committed,
+- `docs/plans/phase-4/phase-4-record.md:681`: Its `/wp-plan` decides the impact tool, the shard count, VER-73's margin, the roster's files and the
+- `docs/plans/phase-4/phase-4-record.md:685`: > **Amended, 12 October 2026** (§8.2.10 J10 to J12), at its `/wp-plan`: [wp43-development-loop.md](wp43-development-loop.md).
+- `docs/plans/phase-4/phase-4-record.md:826`: Its `/wp-plan` puts open questions 3 to 7 to the author (G9). `generate.py` has to recurse.
+- `docs/plans/phase-4/phase-4-record.md:832`: > stay with this package's `/wp-plan` (G9).
+- `docs/plans/phase-4/phase-4-record.md:908`: > the pull-request template and `tests/README.md` follow it; `/wp-ship` deletes off-scope tests before
+- `docs/plans/phase-4/phase-4-record.md:928`: - adds N5's reviewer step to `/wp-ship`.
+- `docs/plans/phase-4/phase-4-record.md:973`: move. Its `/wp-plan` decides the public names (`nanopnp.plot`, and whether a name joins `PUBLIC`,
+- `docs/plans/phase-4/phase-4-record.md:1009`: script whose output goes into the Outcome. Its `/wp-plan` decides the file boundaries, the bundle's
+- `docs/plans/phase-4/phase-4-record.md:1034`: implemented and shipped with the new skills, and its sessions are the check. Its `/wp-plan` decides
+- `docs/plans/phase-4/phase-4-record.md:1092`: They wait on the sessions and on the author's ruling of each `UT-nn`. A second `/phase-plan amend 4`
+- `docs/plans/phase-4/phase-4-record.md:1164`: …`, docs site \| **Open**, owned by the OKF bundle package's `/wp-plan` (G9) \|…
+- `docs/plans/phase-4/phase-4-record.md:1179`: …— \| **Settled by the author, 12 October 2026**, at WP43's `/wp-plan` (§8.2.10 J10, J11): the `extended` walks run after a merge; the figure…
+- `docs/plans/phase-4/phase-4-record.md:1194`: …hether any name joins `PUBLIC` \| **Open**, owned by WP51's `/wp-plan`; a change to `PUBLIC` is decided in `test_public_api.py` (F4) \|…
+- `docs/plans/phase-2/wp20-contour-extraction.md:4`: `claude/wp-plan-19-19570b` (its PR becomes `v0.3.0-alpha.3`). This package inherits stage 3's
+- `docs/plans/phase-2/wp25-geometry-docs-and-example.md:76`: > version renamed the DCD first. The `/wp-ship` review found that a failed PDB rename then left an
+- `docs/plans/phase-3/wp28-charge-deposition.md:147`: > **Outcome — the golden identity does not see a deposited charge (OPN-07, open).** The `/wp-ship`
+- `docs/plans/phase-3/wp32-charge-docs-and-example.md:114`: > - **D15, from the `/wp-ship` review: the schemas move to v2.** A store filled before WP32 kept
+- `docs/plans/phase-3/wp34-phase-3-close.md:75`: …4 and 5 \| **Not planned in WP34.** `current.md` points at `/wp-plan phase-4` after `v0.4.0`, and the Phase 4 plan's first package is the mo…
+- `docs/plans/phase-3/wp34-phase-3-close.md:153`: `current.md` points at Phase 4, the polish phase, and `/wp-plan phase-4` (D15).
+- `docs/plans/phase-4/wp35-modularity-exploration.md:18`: §7.2 and §7.3, by `/wp-implement`, in the commit that implements them. **One correction to the
+- `docs/plans/phase-4/wp35-modularity-exploration.md:39`: `/phase-plan amend 4`.
+- `docs/plans/phase-4/wp35-modularity-exploration.md:168`: on `MOD-nn` and belong to the refactor packages (`/phase-plan amend 4`).
+- `docs/plans/phase-4/wp36-stage-protocol-and-walk.md:12`: claimed by `/wp-implement`, with its §7.2 row, its Appendix A entry under FR-27 and VER-25's added
+- `docs/plans/phase-4/wp36-stage-protocol-and-walk.md:113`: `/wp-implement` starts.
+- `docs/plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md:20`: VER-65's row, VER-61's added clause and Appendix A's QR-13 entry are claimed by `/wp-implement`, in
+- `docs/plans/phase-4/wp38-io-split.md:3`: **Status: delivered, 6 October 2026.** Written 6 October 2026 on `claude/wp-plan-38-gm0s7s` at
+- `docs/plans/phase-4/wp38-io-split.md:21`: findings and register rows, are claimed by `/wp-implement` in the commit that implements them.
+- `docs/plans/phase-4/wp39-backend-registries.md:20`: `/wp-implement` in the commit that implements them, as WP38's rows were.
+- `docs/plans/phase-4/wp39-backend-registries.md:83`: …is `MOD-11`'s question, which waits for the sessions (H2). `/wp-implement` adds a REV row naming them for that ruling \| Adding them is addit…
+- `docs/plans/phase-4/wp40-stale-refusals.md:18`: Appendix A's pointer are claimed by `/wp-implement` in the commit that implements them, as VER-66's
+- `docs/plans/phase-4/wp40-stale-refusals.md:107`: None. The author ruled on 7 October 2026, in the `/wp-ship` review (REV-68 to REV-70): D5 and D8
+- `docs/plans/phase-4/wp41-accuracy-fixes.md:60`: …ody. The darwin and win32 cylinder meshes are re-pinned by `/wp-ship` from CI's printed records, each checked against the same bound, before…
+- `docs/plans/phase-4/wp41-accuracy-fixes.md:66`: …**Outcome (D6, `/wp-ship`, 9 October 2026).** Items 1 and 2 re-pinned the `X86_V2`/`X86_V3` meshes but not the `X86_V4` meshes of `2wcd-char…
+- `docs/plans/phase-4/wp43-development-loop.md:74`: …tamped `impact`. Gmsh and the GUI file are handled as now. `/wp-implement`, `/wp-ship` and the steward start `gate.sh map` in the background…
+- `docs/plans/phase-4/wp43-development-loop.md:83`: …rule loads only when a matching file is read or edited, so `/phase-plan`, `/wp-plan` and `/wp-ship` §4 read both explicitly. **J11's count i…
+- `docs/plans/phase-4/wp46-small-fixes.md:75`: …- [x] 11. 5ee1176 `.claude/skills/wp-ship/SKILL.md` §6 and `.claude/skills/steward/SKILL.md` *Bounded wakes*: once CI is green and the PR me…
+- `docs/plans/phase-4/wp46-small-fixes.md:77`: *Compaction checkpoint: after item 10; then the push gate and `/wp-implement`'s PR.*
+- `docs/plans/phase-4/wp47-okf-bundle.md:78`: *Compaction checkpoint: after item 9; then the push gate and `/wp-implement`'s PR.*
+- `docs/plans/phase-4/wp49-cost-study.md:3`: PR: [#107](https://github.com/willemsk/nanopnp/pull/107), branch claude/wp-implement-49-oejjuz
+- `docs/plans/phase-4/wp49-cost-study.md:68`: > **Amended at `/wp-ship`.** The review found the harness missed calls through `from … import`
+- `docs/plans/phase-4/wp52-specification-and-plans-split.md:267`: - Rewriting the skills to the new layout, beyond the PR step and R11, including where `/phase-plan` writes a ruling and R3's rule
+- `docs/plans/phase-4/wp53-workflow-commands.md:138`: On *old* only, apply in this order: `/phase-plan amend`→`/np-plan amend`, `/phase-plan`→`/np-plan
+- `docs/plans/phase-4/wp53-workflow-commands.md:139`: phase`, `/wp-plan`→`/np-plan wp`, `/wp-implement`→`/np-implement`, `/wp-ship`→`/np-ship`, then
+- `docs/plans/phase-4/wp53-workflow-commands.md:171`: - *Testing*: `/wp-ship` → `/np-ship`.
+- `docs/plans/phase-4/wp53-workflow-commands.md:177`: (`np-ship/wp.md`, *Review pass*). Plans before WP53 name these `/phase-plan`, `/wp-plan`,
+- `docs/plans/phase-4/wp53-workflow-commands.md:178`: `/wp-implement` and `/wp-ship`."
+- `docs/plans/phase-4/wp53-workflow-commands.md:249`: >   section's heading, its first sentence, naming `/phase-plan amend`, and "The same two turns
+- `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md:372`: updated by `/wp-implement` in the commit that lands the tests, not here.
+- `docs/plans/phase-1/wp7-case-schema-artefacts-manifest.md:421`: None blocking. Two rulings would be useful before `/wp-implement`, and the plan assumes an answer to
+- `docs/plans/phase-1/wp8-mesh-ingestion-quality-reference.md:369`: 4.15.2 in this environment rather than by reading documentation, and `/wp-implement` SHALL write
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:74`: - The reviewer step is part of `/wp-ship`, before `/code-review` **(my call on placement)**: read the
 - `specification/history/07-phase-4-decisions-agreed-5-october-2026.md:19`: …. Everything after the exploration stays provisional until `/phase-plan amend 4` plans it, once after the report and once after the sessions…
 - `specification/history/07-phase-4-decisions-agreed-5-october-2026.md:23`: …documentation site) **are left to the first OKF package's `/wp-plan`**, which puts them to the author \| They are package-level decisions, a…
@@ -417,9 +417,9 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 
 ## PyQt — records (3)
 
-- `docs/plans/kb-audit-brief.md:446`: `PyQt`, `coverage\|diff-cover\|pytest-cov`, `§8\.2\.(2[0-9]\|3[0-9])` (does the cited ruling exist?),
-- `docs/plans/wp14-gui-shell-packaging-probe.md:151`: …model`, `gui.run_model` and `gui.solver` leaves `PySide6`, `PyQt5`, `PyQt6`, `ngsolve` and `netgen` absent from `sys.modules` \| Exact (`sys.…
-- `docs/plans/wp14-gui-shell-packaging-probe.md:272`: > view-models, none of `PySide6`, `PyQt5`, `PyQt6`, `ngsolve`, `netgen` or `numpy` is in
+- `docs/plans/sessions/kb-audit-brief.md:446`: `PyQt`, `coverage\|diff-cover\|pytest-cov`, `§8\.2\.(2[0-9]\|3[0-9])` (does the cited ruling exist?),
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:151`: …model`, `gui.run_model` and `gui.solver` leaves `PySide6`, `PyQt5`, `PyQt6`, `ngsolve` and `netgen` absent from `sys.modules` \| Exact (`sys.…
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:272`: > view-models, none of `PySide6`, `PyQt5`, `PyQt6`, `ngsolve`, `netgen` or `numpy` is in
 
 ## coverage tooling — live (28)
 
@@ -468,87 +468,87 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `docs/code_reviews/CODE_REVIEW_005.md:30`: …ncern exit code propagation under `--traceback`, validation coverage for referenced input paths, and CLI option validation guards.…
 - `docs/code_reviews/CODE_REVIEW_008.md:83`: ### Q6. Wheel coverage exceeded the assertions (medium, fixed)
 - `docs/code_reviews/CODE_REVIEW_010.md:484`: ## Method and coverage
-- `docs/plans/kb-audit-brief.md:446`: `PyQt`, `coverage\|diff-cover\|pytest-cov`, `§8\.2\.(2[0-9]\|3[0-9])` (does the cited ruling exist?),
-- `docs/plans/kb-audit-brief.md:478`: `ruff`'s rule families not yet enabled in `pyproject.toml`, `mypy --html-report`'s coverage,
-- `docs/plans/phase-0-consolidation.md:87`: - **[observation]** Invariant coverage is complete for what Phase 0 solves: charge conservation is
-- `docs/plans/phase-4-polish-and-user-testing.md:102`: …core mechanisms and the licence and architecture guards; no coverage gate; the push gate runs the per-push selection and the rest runs night…
-- `docs/plans/phase-4-record.md:169`: - **The push gate's pytest stage took 395 s, and 527 s with branch coverage**, over 2,135 tests. The
-- `docs/plans/phase-4-record.md:255`: …core mechanisms and the licence and architecture guards; no coverage gate; walks nightly but for examples 01 and 02; a reviewer step deletes…
-- `docs/plans/phase-4-record.md:637`: pytest-testmon, or a map derived from coverage) is chosen by the plan from a measurement, and it
-- `docs/plans/phase-4-record.md:640`: follow-up fix re-runs the affected tests, with changed-line coverage over them. The suite is made
-- `docs/plans/phase-4-record.md:644`: - cheaper coverage collection;
-- `docs/plans/phase-4-record.md:687`: > because example 07 alone takes 5 to 8 minutes. Changed-line coverage is measured over the
-- `docs/plans/phase-4-record.md:706`: > gate runs the suite with `--extended`, once, without coverage (509 s), and the push guard stays;
-- `docs/plans/phase-4-record.md:718`: - **push gate** (L3): lint, types and the whole suite with `--extended`, no coverage, in the
-- `docs/plans/phase-4-record.md:721`: 300 lines; CI keeps its pull-request leg in two shards by the simplest split, and diff-cover
-- `docs/plans/phase-4-record.md:722`: enforces changed-line coverage there;
-- `docs/plans/phase-4-record.md:909`: > `/code-review` (N5). The coverage job and `diff-cover` are gone (N2). `nightly` replaces `extended`;
-- `docs/plans/phase-4-record.md:922`: - removes the coverage job and `diff-cover` (N2);
-- `docs/plans/phase-4-record.md:1180`: …Two packages first; commit hook = Tier 1; push gate without coverage; the prose rule; agents retired; models; plan caps; no dollar gate \| **…
-- `docs/plans/phase-4-record.md:1192`: …est scope, its place and the estimate \| What is tested, the coverage gate, the split, prevention, WP50 before the protocol \| **Settled by th…
-- `docs/plans/wp12-reference-stabilised-mode.md:513`: …lity matrix; no requirement moves out of "none yet", so the coverage count is unchanged \|…
-- `docs/plans/wp14-gui-shell-packaging-probe.md:222`: 4. **Appendix A** — `IF-09`, `QR-11` and `CON-09` move from "None yet" to VER-43, and the coverage
-- `docs/plans/wp14-gui-shell-packaging-probe.md:411`: user path needs a build step. If the Linux widget coverage is ever wanted, it belongs in a
-- `docs/plans/wp18-structure-ingestion.md:69`: …must carry at least half the Cα of the most complete chain (coverage ≥ 0.5). Residue names must agree at every shared residue number, with `…
-- `docs/plans/wp18-structure-ingestion.md:77`: …Error` covers files, elements, alternate locations, chains, coverage and frames. `SymmetryGateError` covers spacing, angle, orientation and…
-- `docs/plans/wp18-structure-ingestion.md:146`: FR-01, FR-02 and FR-03 to it in Appendix A and recount the coverage line. Add the `CHANGELOG.md`
-- `docs/plans/wp18-structure-ingestion.md:156`: - A missing chain, a coverage shortfall, a residue-name disagreement, an irregular spacing, a wrong
-- `docs/plans/wp18-structure-ingestion.md:225`: > The coverage line of Appendix A was recounted to 50 of 67. The line it replaced said 45/22, but
-- `docs/plans/wp18-structure-ingestion.md:307`: \| Chains / common Cα \| 12 / 285 \| 12 / 285 \| 12 / 286 \| — \| n; coverage ≥ 0.5 \| — \|
-- `docs/plans/wp19-density-and-reduction.md:155`: CON-04 → VER-50; IF-05 adds both. Recount the coverage line. Write `CHANGELOG.md`
-- `docs/plans/wp20-contour-extraction.md:126`: Appendix A: FR-07 → VER-51, VAL-05; FR-08 → VER-51. Recount the coverage line. Write
-- `docs/plans/wp33-test-durations.md:241`: coverage), 11 min 28 s on Windows, 11 min 19 s on macOS, and 7 min 30 s, 4 min 38 s and 8 min 16 s
-- `docs/plans/wp35-modularity-exploration.md:149`: coverage note.
-- `docs/plans/wp43-development-loop.md:71`: …r later; on 3.11 it refuses, naming the version \| Measured: coverage's per-test contexts cost +83 % (dev selection 363 s against 199 s) and…
-- `docs/plans/wp43-development-loop.md:76`: …e_extended=True` from P's map. It runs that selection under coverage and runs diff-cover on the lines changed since P, comparing against a c…
-- `docs/plans/wp43-development-loop.md:77`: …hanges. (b) **The `extended` tests carry `no_cover`** (J10: coverage is over the development selection). The walks no longer pay coverage's…
-- `docs/plans/wp43-development-loop.md:79`: …docs`; `tests (shard i/2)`, the development selection under coverage, files assigned to shards by longest-first bin-packing from `tests/dura…
-- `docs/plans/wp43-development-loop.md:80`: …asses inside the margin, and names an unfinished job. CI's `coverage` job reads the run's jobs through the API and fails past budget × 1.5.…
-- `docs/plans/wp43-development-loop.md:85`: …in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHANGELOG.md` under `v0.5.0-alpha.9`; a REV-…
-- `docs/plans/wp43-development-loop.md:161`: - [x] 5f5704b 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
-- `docs/plans/wp43-development-loop.md:164`: background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 and §7 first. Done when
-- `docs/plans/wp43-development-loop.md:171`: > in 50 files, 685 s, diff-cover against the pass's commit. It passed, and the map and the stamp
-- `docs/plans/wp43-development-loop.md:179`: > - The stamp's commit object has the merge base as its parent, and diff-cover runs two-dot
-- `docs/plans/wp43-development-loop.md:185`: > The coverage NOTE carries the follow-up only. Its J10 half, that coverage leaves out the
-- `docs/plans/wp43-development-loop.md:203`: - [x] 2e84650 5. [any] Suite order and coverage (D8): `tests/durations.json`, the longest-first order,
-- `docs/plans/wp43-development-loop.md:207`: > **Outcome — `sysmon` is already in effect, and faster.** coverage 7.15 defaults to it on
-- `docs/plans/wp43-development-loop.md:208`: > CPython 3.14 with branch coverage; on the development selection it took 292 s against
-- `docs/plans/wp43-development-loop.md:215`: > without coverage, 4 cores, load falling from about 5 to 1.8 over the run as the other agent
-- `docs/plans/wp43-development-loop.md:216`: > finished; 527 s was the figure at `d630f85` with coverage on the walks (Design §3).
-- `docs/plans/wp43-development-loop.md:230`: > refuses it for the project's own editable install; and **`coverage` needs `lint` and `docs`
-- `docs/plans/wp43-development-loop.md:239`: > `coverage` runs `ci_budget.py files` on the shards' junit reports and `ci_budget.py
-- `docs/plans/wp43-development-loop.md:244`: …> without coverage (`knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md#122-where-the-time-goes-on-314-and-coverages-sy…
-- `docs/plans/wp43-development-loop.md:280`: > passed, so D8's order only breaks ties. `--extended`, no coverage, back to back: 534 s and
-- `docs/plans/wp43-development-loop.md:355`: ### 2. The follow-up's coverage (D7)
-- `docs/plans/wp43-development-loop.md:357`: After a pass on P, diff-cover against main covered every changed line. A follow-up T needs, for each
-- `docs/plans/wp43-development-loop.md:358`: line changed since P, the coverage the full run would give.
-- `docs/plans/wp43-development-loop.md:363`: selected test under coverage.
-- `docs/plans/wp43-development-loop.md:364`: - **So for lines changed since P,** the subset's coverage equals the full run's.
-- `docs/plans/wp43-development-loop.md:367`: line's only coverage, and CI's full diff-cover catches that. Coverage is a union, so a subset never
-- `docs/plans/wp43-development-loop.md:375`: \| Dev selection with per-test coverage contexts \| 363 s (+83 %) \| Not used (D2) \|
-- `docs/plans/wp43-development-loop.md:378`: \| Push gate \| 527 s with coverage \| 6.5–8 min: walks without coverage, longest first; example 07 is the floor \|
-- `docs/plans/wp43-development-loop.md:381`: The selection estimates come from the coverage map of the first row's run: function-level selection
-- `docs/plans/wp43-development-loop.md:390`: └─ tests (shard 2/2) ─┴─ coverage ─┘    posts ci/tested-tree)
-- `docs/plans/wp43-development-loop.md:511`: diff-cover --compare-branch=<commitP>; on pass: impact.py merge; stamp "<state> extended <commit>"
-- `docs/plans/wp43-development-loop.md:514`: map:  pytest's development selection with -p impact --impact-record, no coverage; writes the map
-- `docs/plans/wp43-development-loop.md:532`: env: {COVERAGE_FILE: .coverage.shard${{ matrix.shard }}}
-- `docs/plans/wp43-development-loop.md:533`: - uses: actions/upload-artifact@v7      # .coverage.shard*, junit-*.xml; include-hidden-files: true
-- `docs/plans/wp43-development-loop.md:534`: # coverage: download both; uv run coverage combine; uv run coverage xml; diff-cover as today;
-- `docs/plans/wp43-development-loop.md:538`: needs: [changes, lint, docs, tests, coverage]
-- `docs/plans/wp43-development-loop.md:627`: - **The coverage NOTE (item 3)**:
-- `docs/plans/wp43-development-loop.md:628`: - coverage is measured over the development selection, not the extended one, and the `extended`
-- `docs/plans/wp43-development-loop.md:635`: - CI's coverage job fails a pull-request run whose critical path, from the first job's start to
-- `docs/plans/wp44-simplify-the-loop.md:22`: build under six minutes. These are reported, not enforced. Changed-line test coverage is now checked
-- `docs/plans/wp44-simplify-the-loop.md:43`: …rmat, mypy and `pytest --extended` over the whole suite, no coverage, with the Gmsh and APBS requirements set, once; it stamps the tree `ext…
-- `docs/plans/wp44-simplify-the-loop.md:53`: …ases of Verification. Edit §7.6's development-selection and coverage NOTEs, the VER-74 row and Appendix A's summary, `knowledge/07-software-…
-- `docs/plans/wp5.06-outputs-and-steric-registries.md:57`: `api/case.py:Case.loads`/`with_` call it. So the outputs check keeps its coverage.
-- `docs/plans/wp50-test-scope.md:48`: …ease run `--nightly` and `-m slow` as well. `no_cover` and `pytest-cov`, `diff-cover` go. Examples 01 and 02's `[run-epnpns]` leg with its V…
-- `docs/plans/wp50-test-scope.md:61`: skills name N1 and no longer name diff-cover or a VER-per-test check.
-- `docs/plans/wp50-test-scope.md:62`: - [x] 3. CI and the gate (D3, D5): `.github/workflows/ci.yml` (drop `coverage`, its `ci-result` input
-- `docs/plans/wp50-test-scope.md:67`: - [x] 4. The specification (D6): §7.1 to §7.3, §7.6's table and NOTEs (the coverage NOTE deleted),
-- `docs/plans/wp8-mesh-ingestion-quality-reference.md:470`: coverage sentence under the table is corrected in passing from "26 of the 67 … 41 recorded as
-- `docs/plans/wp9-external-fields.md:110`: interpolation of `rhoq_pore` onto the mesh, the mesh's coverage of the grid's support, and the
-- `docs/plans/wp9-external-fields.md:371`: coverage sentence under the table moves from 35 of 67 to 36.
+- `docs/plans/sessions/kb-audit-brief.md:446`: `PyQt`, `coverage\|diff-cover\|pytest-cov`, `§8\.2\.(2[0-9]\|3[0-9])` (does the cited ruling exist?),
+- `docs/plans/sessions/kb-audit-brief.md:478`: `ruff`'s rule families not yet enabled in `pyproject.toml`, `mypy --html-report`'s coverage,
+- `docs/plans/phase-0/phase-0-consolidation.md:87`: - **[observation]** Invariant coverage is complete for what Phase 0 solves: charge conservation is
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:102`: …core mechanisms and the licence and architecture guards; no coverage gate; the push gate runs the per-push selection and the rest runs night…
+- `docs/plans/phase-4/phase-4-record.md:169`: - **The push gate's pytest stage took 395 s, and 527 s with branch coverage**, over 2,135 tests. The
+- `docs/plans/phase-4/phase-4-record.md:255`: …core mechanisms and the licence and architecture guards; no coverage gate; walks nightly but for examples 01 and 02; a reviewer step deletes…
+- `docs/plans/phase-4/phase-4-record.md:637`: pytest-testmon, or a map derived from coverage) is chosen by the plan from a measurement, and it
+- `docs/plans/phase-4/phase-4-record.md:640`: follow-up fix re-runs the affected tests, with changed-line coverage over them. The suite is made
+- `docs/plans/phase-4/phase-4-record.md:644`: - cheaper coverage collection;
+- `docs/plans/phase-4/phase-4-record.md:687`: > because example 07 alone takes 5 to 8 minutes. Changed-line coverage is measured over the
+- `docs/plans/phase-4/phase-4-record.md:706`: > gate runs the suite with `--extended`, once, without coverage (509 s), and the push guard stays;
+- `docs/plans/phase-4/phase-4-record.md:718`: - **push gate** (L3): lint, types and the whole suite with `--extended`, no coverage, in the
+- `docs/plans/phase-4/phase-4-record.md:721`: 300 lines; CI keeps its pull-request leg in two shards by the simplest split, and diff-cover
+- `docs/plans/phase-4/phase-4-record.md:722`: enforces changed-line coverage there;
+- `docs/plans/phase-4/phase-4-record.md:909`: > `/code-review` (N5). The coverage job and `diff-cover` are gone (N2). `nightly` replaces `extended`;
+- `docs/plans/phase-4/phase-4-record.md:922`: - removes the coverage job and `diff-cover` (N2);
+- `docs/plans/phase-4/phase-4-record.md:1180`: …Two packages first; commit hook = Tier 1; push gate without coverage; the prose rule; agents retired; models; plan caps; no dollar gate \| **…
+- `docs/plans/phase-4/phase-4-record.md:1192`: …est scope, its place and the estimate \| What is tested, the coverage gate, the split, prevention, WP50 before the protocol \| **Settled by th…
+- `docs/plans/phase-1/wp12-reference-stabilised-mode.md:513`: …lity matrix; no requirement moves out of "none yet", so the coverage count is unchanged \|…
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:222`: 4. **Appendix A** — `IF-09`, `QR-11` and `CON-09` move from "None yet" to VER-43, and the coverage
+- `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md:411`: user path needs a build step. If the Linux widget coverage is ever wanted, it belongs in a
+- `docs/plans/phase-2/wp18-structure-ingestion.md:69`: …must carry at least half the Cα of the most complete chain (coverage ≥ 0.5). Residue names must agree at every shared residue number, with `…
+- `docs/plans/phase-2/wp18-structure-ingestion.md:77`: …Error` covers files, elements, alternate locations, chains, coverage and frames. `SymmetryGateError` covers spacing, angle, orientation and…
+- `docs/plans/phase-2/wp18-structure-ingestion.md:146`: FR-01, FR-02 and FR-03 to it in Appendix A and recount the coverage line. Add the `CHANGELOG.md`
+- `docs/plans/phase-2/wp18-structure-ingestion.md:156`: - A missing chain, a coverage shortfall, a residue-name disagreement, an irregular spacing, a wrong
+- `docs/plans/phase-2/wp18-structure-ingestion.md:225`: > The coverage line of Appendix A was recounted to 50 of 67. The line it replaced said 45/22, but
+- `docs/plans/phase-2/wp18-structure-ingestion.md:307`: \| Chains / common Cα \| 12 / 285 \| 12 / 285 \| 12 / 286 \| — \| n; coverage ≥ 0.5 \| — \|
+- `docs/plans/phase-2/wp19-density-and-reduction.md:155`: CON-04 → VER-50; IF-05 adds both. Recount the coverage line. Write `CHANGELOG.md`
+- `docs/plans/phase-2/wp20-contour-extraction.md:126`: Appendix A: FR-07 → VER-51, VAL-05; FR-08 → VER-51. Recount the coverage line. Write
+- `docs/plans/phase-3/wp33-test-durations.md:241`: coverage), 11 min 28 s on Windows, 11 min 19 s on macOS, and 7 min 30 s, 4 min 38 s and 8 min 16 s
+- `docs/plans/phase-4/wp35-modularity-exploration.md:149`: coverage note.
+- `docs/plans/phase-4/wp43-development-loop.md:71`: …r later; on 3.11 it refuses, naming the version \| Measured: coverage's per-test contexts cost +83 % (dev selection 363 s against 199 s) and…
+- `docs/plans/phase-4/wp43-development-loop.md:76`: …e_extended=True` from P's map. It runs that selection under coverage and runs diff-cover on the lines changed since P, comparing against a c…
+- `docs/plans/phase-4/wp43-development-loop.md:77`: …hanges. (b) **The `extended` tests carry `no_cover`** (J10: coverage is over the development selection). The walks no longer pay coverage's…
+- `docs/plans/phase-4/wp43-development-loop.md:79`: …docs`; `tests (shard i/2)`, the development selection under coverage, files assigned to shards by longest-first bin-packing from `tests/dura…
+- `docs/plans/phase-4/wp43-development-loop.md:80`: …asses inside the margin, and names an unfinished job. CI's `coverage` job reads the run's jobs through the API and fails past budget × 1.5.…
+- `docs/plans/phase-4/wp43-development-loop.md:85`: …in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHANGELOG.md` under `v0.5.0-alpha.9`; a REV-…
+- `docs/plans/phase-4/wp43-development-loop.md:161`: - [x] 5f5704b 3. [Opus] — the follow-up's coverage claim is a soundness argument. Make `gate.sh run`
+- `docs/plans/phase-4/wp43-development-loop.md:164`: background and push on its pass. Amend §7.6's coverage NOTE. Read Design §2 and §7 first. Done when
+- `docs/plans/phase-4/wp43-development-loop.md:171`: > in 50 files, 685 s, diff-cover against the pass's commit. It passed, and the map and the stamp
+- `docs/plans/phase-4/wp43-development-loop.md:179`: > - The stamp's commit object has the merge base as its parent, and diff-cover runs two-dot
+- `docs/plans/phase-4/wp43-development-loop.md:185`: > The coverage NOTE carries the follow-up only. Its J10 half, that coverage leaves out the
+- `docs/plans/phase-4/wp43-development-loop.md:203`: - [x] 2e84650 5. [any] Suite order and coverage (D8): `tests/durations.json`, the longest-first order,
+- `docs/plans/phase-4/wp43-development-loop.md:207`: > **Outcome — `sysmon` is already in effect, and faster.** coverage 7.15 defaults to it on
+- `docs/plans/phase-4/wp43-development-loop.md:208`: > CPython 3.14 with branch coverage; on the development selection it took 292 s against
+- `docs/plans/phase-4/wp43-development-loop.md:215`: > without coverage, 4 cores, load falling from about 5 to 1.8 over the run as the other agent
+- `docs/plans/phase-4/wp43-development-loop.md:216`: > finished; 527 s was the figure at `d630f85` with coverage on the walks (Design §3).
+- `docs/plans/phase-4/wp43-development-loop.md:230`: > refuses it for the project's own editable install; and **`coverage` needs `lint` and `docs`
+- `docs/plans/phase-4/wp43-development-loop.md:239`: > `coverage` runs `ci_budget.py files` on the shards' junit reports and `ci_budget.py
+- `docs/plans/phase-4/wp43-development-loop.md:244`: …> without coverage (`knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md#122-where-the-time-goes-on-314-and-coverages-sy…
+- `docs/plans/phase-4/wp43-development-loop.md:280`: > passed, so D8's order only breaks ties. `--extended`, no coverage, back to back: 534 s and
+- `docs/plans/phase-4/wp43-development-loop.md:355`: ### 2. The follow-up's coverage (D7)
+- `docs/plans/phase-4/wp43-development-loop.md:357`: After a pass on P, diff-cover against main covered every changed line. A follow-up T needs, for each
+- `docs/plans/phase-4/wp43-development-loop.md:358`: line changed since P, the coverage the full run would give.
+- `docs/plans/phase-4/wp43-development-loop.md:363`: selected test under coverage.
+- `docs/plans/phase-4/wp43-development-loop.md:364`: - **So for lines changed since P,** the subset's coverage equals the full run's.
+- `docs/plans/phase-4/wp43-development-loop.md:367`: line's only coverage, and CI's full diff-cover catches that. Coverage is a union, so a subset never
+- `docs/plans/phase-4/wp43-development-loop.md:375`: \| Dev selection with per-test coverage contexts \| 363 s (+83 %) \| Not used (D2) \|
+- `docs/plans/phase-4/wp43-development-loop.md:378`: \| Push gate \| 527 s with coverage \| 6.5–8 min: walks without coverage, longest first; example 07 is the floor \|
+- `docs/plans/phase-4/wp43-development-loop.md:381`: The selection estimates come from the coverage map of the first row's run: function-level selection
+- `docs/plans/phase-4/wp43-development-loop.md:390`: └─ tests (shard 2/2) ─┴─ coverage ─┘    posts ci/tested-tree)
+- `docs/plans/phase-4/wp43-development-loop.md:511`: diff-cover --compare-branch=<commitP>; on pass: impact.py merge; stamp "<state> extended <commit>"
+- `docs/plans/phase-4/wp43-development-loop.md:514`: map:  pytest's development selection with -p impact --impact-record, no coverage; writes the map
+- `docs/plans/phase-4/wp43-development-loop.md:532`: env: {COVERAGE_FILE: .coverage.shard${{ matrix.shard }}}
+- `docs/plans/phase-4/wp43-development-loop.md:533`: - uses: actions/upload-artifact@v7      # .coverage.shard*, junit-*.xml; include-hidden-files: true
+- `docs/plans/phase-4/wp43-development-loop.md:534`: # coverage: download both; uv run coverage combine; uv run coverage xml; diff-cover as today;
+- `docs/plans/phase-4/wp43-development-loop.md:538`: needs: [changes, lint, docs, tests, coverage]
+- `docs/plans/phase-4/wp43-development-loop.md:627`: - **The coverage NOTE (item 3)**:
+- `docs/plans/phase-4/wp43-development-loop.md:628`: - coverage is measured over the development selection, not the extended one, and the `extended`
+- `docs/plans/phase-4/wp43-development-loop.md:635`: - CI's coverage job fails a pull-request run whose critical path, from the first job's start to
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:22`: build under six minutes. These are reported, not enforced. Changed-line test coverage is now checked
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:43`: …rmat, mypy and `pytest --extended` over the whole suite, no coverage, with the Gmsh and APBS requirements set, once; it stamps the tree `ext…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:53`: …ases of Verification. Edit §7.6's development-selection and coverage NOTEs, the VER-74 row and Appendix A's summary, `knowledge/07-software-…
+- `docs/plans/phase-5/wp5.06-outputs-and-steric-registries.md:57`: `api/case.py:Case.loads`/`with_` call it. So the outputs check keeps its coverage.
+- `docs/plans/phase-4/wp50-test-scope.md:48`: …ease run `--nightly` and `-m slow` as well. `no_cover` and `pytest-cov`, `diff-cover` go. Examples 01 and 02's `[run-epnpns]` leg with its V…
+- `docs/plans/phase-4/wp50-test-scope.md:61`: skills name N1 and no longer name diff-cover or a VER-per-test check.
+- `docs/plans/phase-4/wp50-test-scope.md:62`: - [x] 3. CI and the gate (D3, D5): `.github/workflows/ci.yml` (drop `coverage`, its `ci-result` input
+- `docs/plans/phase-4/wp50-test-scope.md:67`: - [x] 4. The specification (D6): §7.1 to §7.3, §7.6's table and NOTEs (the coverage NOTE deleted),
+- `docs/plans/phase-1/wp8-mesh-ingestion-quality-reference.md:470`: coverage sentence under the table is corrected in passing from "26 of the 67 … 41 recorded as
+- `docs/plans/phase-1/wp9-external-fields.md:110`: interpolation of `rhoq_pore` onto the mesh, the mesh's coverage of the grid's support, and the
+- `docs/plans/phase-1/wp9-external-fields.md:371`: coverage sentence under the table moves from 35 of 67 to 36.
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:21`: 1. CI's changed-line branch coverage gate (`diff-cover --fail-under=100`).
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:49`: - **No coverage gate (author).** Remove the CI `coverage` job, `diff-cover`, the `# pragma: no cover -
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:101`: - §7.6: rewrite the CI table and NOTEs to the per-push / nightly split; delete the coverage NOTE; replace
@@ -581,43 +581,43 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `CHANGELOG.md:1024`: `--extended` once, without coverage, and the push guard stays; a pull request's two shards are Tier 1 and
 - `CHANGELOG.md:1079`: - `--strict-markers` knows `no_cover` without pytest-cov; the agent guard also reads `Task`; the
 - `CHANGELOG.md:1518`: `uv run pytest --extended` is the whole of Tiers 1–2. CI runs it on every push, on every leg, and
-- `docs/plans/kb-audit-brief.md:448`: `--extended\|no_cover\|test_plan_shape`, `tests/tier[0-9]/[a-z_]+\.py` (does the file exist?),
-- `docs/plans/phase-3-charge-pipeline.md:474`: **The criteria.** 1: the full gate, `--extended`, is green on WP34's head. 2: met on 2WCD and waived
-- `docs/plans/phase-4-record.md:706`: > gate runs the suite with `--extended`, once, without coverage (509 s), and the push guard stays;
-- `docs/plans/phase-4-record.md:718`: - **push gate** (L3): lint, types and the whole suite with `--extended`, no coverage, in the
-- `docs/plans/phase-4-record.md:1233`: .claude/hooks/gate.sh run          # the push gate, with --extended
-- `docs/plans/phase-4-record.md:1266`: > selection and no `--extended`; the rest runs nightly. Criterion 1 reads "Tiers 1 and 2 pass, per
-- `docs/plans/phase-4-record.md:1272`: 1. **Tiers 1 and 2 pass**, `--extended`, including every earlier phase's gate. If one misses, the
-- `docs/plans/wp33-test-durations.md:143`: >   commit hook leave them out. `--extended`, CI on every leg, and `gate.sh run` (which the skills
-- `docs/plans/wp33-test-durations.md:165`: > \| Tiers 1–2 as of the Outcome above (now `--extended`) \| 1,781 + 17 skipped \| 1,334.5 s \| 394 s \|
-- `docs/plans/wp34-phase-3-close.md:166`: \| the whole gate \| 1, 2 \| all \| Green, `--extended` \| `.claude/hooks/gate.sh run` \|
-- `docs/plans/wp43-development-loop.md:77`: …eduling: no test changes. (b) **The `extended` tests carry `no_cover`** (J10: coverage is over the development selection). The walks no long…
-- `docs/plans/wp43-development-loop.md:79`: …o `main`**: macOS-3.14 and Windows-3.14 run Tiers 1–2 with `--extended`, plus the GUI file serially and the bundle. Ubuntu runs the `extende…
-- `docs/plans/wp43-development-loop.md:173`: > source change selects every process-starting file. With `--extended`, those files include six
-- `docs/plans/wp43-development-loop.md:186`: > `extended` walks, describes item 5's `no_cover` and lands with it.
-- `docs/plans/wp43-development-loop.md:197`: > walk files under `--extended`, `-n 2 --dist loadfile`: 26 passed, none skipped, 423 s wall. All
-- `docs/plans/wp43-development-loop.md:204`: `no_cover` on `extended`, and the `sysmon` measurement. Done when `gate.sh run` passes and the
-- `docs/plans/wp43-development-loop.md:211`: > the ordered and path-ordered `--extended` runs took 937 s and 830 s back to back. Item 10
-- `docs/plans/wp43-development-loop.md:226`: > platforms' `--extended` legs**, because §8.2.10 J10 says the nightly runs the walks, which
-- `docs/plans/wp43-development-loop.md:280`: > passed, so D8's order only breaks ties. `--extended`, no coverage, back to back: 534 s and
-- `docs/plans/wp43-development-loop.md:302`: …as recorded; numbers at 10⁻⁸ \| `uv run --python 3.14 pytest --extended <the five files>` \|…
-- `docs/plans/wp43-development-loop.md:392`: ├─ macos-3.14, windows-3.14: --extended, GUI file serial
-- `docs/plans/wp43-development-loop.md:476`: - `uv run python tests/impact.py select --map M [--extended]` prints node ids, one per line.
-- `docs/plans/wp43-development-loop.md:507`: as now, plus -p impact --impact-record="$map.new"; extended items carry no_cover (conftest);
-- `docs/plans/wp43-development-loop.md:509`: follow-up: a stamp "<P> extended <commitP>" with P != state, the map's tree == P, and select --extended
-- `docs/plans/wp43-development-loop.md:510`: without a fallback -> run only those ids with --extended --cov ... and -p impact --impact-record="$part";
-- `docs/plans/wp43-development-loop.md:551`: `--shard i/N` lives in `tests/conftest.py`, beside `--extended`. Files are sorted by
-- `docs/plans/wp44-simplify-the-loop.md:43`: …sh run` takes the lock, runs ruff, format, mypy and `pytest --extended` over the whole suite, no coverage, with the Gmsh and APBS requiremen…
-- `docs/plans/wp44-simplify-the-loop.md:54`: …`tests/tier1/test_shard_packing.py` as a test of the kept `no_cover` marker, renamed off VER-73; in `.github/workflows/ci.yml` run the tier…
-- `docs/plans/wp44-simplify-the-loop.md:58`: …he clause, rule-loading and In brief checks to `tests/tier1/test_plan_shape.py` with D6's caps; edit the hook entry in `.claude/settings.jso…
-- `docs/plans/wp44-simplify-the-loop.md:63`: …ne) to match D1 to D6. Done when `uv run pytest tests/tier1/test_plan_shape.py` passes.…
-- `docs/plans/wp44-simplify-the-loop.md:68`: …ruff alone, an unchanged tree is not re-run, `run` passes `--extended` and no `--cov`, stamps only a pass and only an unchanged tree, takes…
-- `docs/plans/wp46-small-fixes.md:81`: Tier 1 unless stated; command `uv run pytest --extended`, then `.claude/hooks/gate.sh run`.
-- `docs/plans/wp47-okf-bundle.md:59`: …_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.…
-- `docs/plans/wp48-okf-backfill.md:51`: …g markers). Baseline verification of `test_okf_bundle.py`, `test_plan_shape.py`, `test_plan_records.py` and `test_prose_share.py` (70 tests)…
-- `docs/plans/wp49-cost-study.md:81`: …vered* line and replace `docs/plans/current.md`. Done when `test_plan_shape.py` and `test_plan_records.py` pass.…
-- `docs/plans/wp50-test-scope.md:48`: …kers \| `nightly` replaces `extended`; `--nightly` replaces `--extended`; `addopts` excludes `nightly` and `slow`. Nightly CI and the release…
-- `docs/plans/wp50-test-scope.md:73`: `test_plan_shape`, `test_plan_records`, `test_prose_share`, `test_same_tree`, `test_source_conventions`
+- `docs/plans/sessions/kb-audit-brief.md:448`: `--extended\|no_cover\|test_plan_shape`, `tests/tier[0-9]/[a-z_]+\.py` (does the file exist?),
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:474`: **The criteria.** 1: the full gate, `--extended`, is green on WP34's head. 2: met on 2WCD and waived
+- `docs/plans/phase-4/phase-4-record.md:706`: > gate runs the suite with `--extended`, once, without coverage (509 s), and the push guard stays;
+- `docs/plans/phase-4/phase-4-record.md:718`: - **push gate** (L3): lint, types and the whole suite with `--extended`, no coverage, in the
+- `docs/plans/phase-4/phase-4-record.md:1233`: .claude/hooks/gate.sh run          # the push gate, with --extended
+- `docs/plans/phase-4/phase-4-record.md:1266`: > selection and no `--extended`; the rest runs nightly. Criterion 1 reads "Tiers 1 and 2 pass, per
+- `docs/plans/phase-4/phase-4-record.md:1272`: 1. **Tiers 1 and 2 pass**, `--extended`, including every earlier phase's gate. If one misses, the
+- `docs/plans/phase-3/wp33-test-durations.md:143`: >   commit hook leave them out. `--extended`, CI on every leg, and `gate.sh run` (which the skills
+- `docs/plans/phase-3/wp33-test-durations.md:165`: > \| Tiers 1–2 as of the Outcome above (now `--extended`) \| 1,781 + 17 skipped \| 1,334.5 s \| 394 s \|
+- `docs/plans/phase-3/wp34-phase-3-close.md:166`: \| the whole gate \| 1, 2 \| all \| Green, `--extended` \| `.claude/hooks/gate.sh run` \|
+- `docs/plans/phase-4/wp43-development-loop.md:77`: …eduling: no test changes. (b) **The `extended` tests carry `no_cover`** (J10: coverage is over the development selection). The walks no long…
+- `docs/plans/phase-4/wp43-development-loop.md:79`: …o `main`**: macOS-3.14 and Windows-3.14 run Tiers 1–2 with `--extended`, plus the GUI file serially and the bundle. Ubuntu runs the `extende…
+- `docs/plans/phase-4/wp43-development-loop.md:173`: > source change selects every process-starting file. With `--extended`, those files include six
+- `docs/plans/phase-4/wp43-development-loop.md:186`: > `extended` walks, describes item 5's `no_cover` and lands with it.
+- `docs/plans/phase-4/wp43-development-loop.md:197`: > walk files under `--extended`, `-n 2 --dist loadfile`: 26 passed, none skipped, 423 s wall. All
+- `docs/plans/phase-4/wp43-development-loop.md:204`: `no_cover` on `extended`, and the `sysmon` measurement. Done when `gate.sh run` passes and the
+- `docs/plans/phase-4/wp43-development-loop.md:211`: > the ordered and path-ordered `--extended` runs took 937 s and 830 s back to back. Item 10
+- `docs/plans/phase-4/wp43-development-loop.md:226`: > platforms' `--extended` legs**, because §8.2.10 J10 says the nightly runs the walks, which
+- `docs/plans/phase-4/wp43-development-loop.md:280`: > passed, so D8's order only breaks ties. `--extended`, no coverage, back to back: 534 s and
+- `docs/plans/phase-4/wp43-development-loop.md:302`: …as recorded; numbers at 10⁻⁸ \| `uv run --python 3.14 pytest --extended <the five files>` \|…
+- `docs/plans/phase-4/wp43-development-loop.md:392`: ├─ macos-3.14, windows-3.14: --extended, GUI file serial
+- `docs/plans/phase-4/wp43-development-loop.md:476`: - `uv run python tests/impact.py select --map M [--extended]` prints node ids, one per line.
+- `docs/plans/phase-4/wp43-development-loop.md:507`: as now, plus -p impact --impact-record="$map.new"; extended items carry no_cover (conftest);
+- `docs/plans/phase-4/wp43-development-loop.md:509`: follow-up: a stamp "<P> extended <commitP>" with P != state, the map's tree == P, and select --extended
+- `docs/plans/phase-4/wp43-development-loop.md:510`: without a fallback -> run only those ids with --extended --cov ... and -p impact --impact-record="$part";
+- `docs/plans/phase-4/wp43-development-loop.md:551`: `--shard i/N` lives in `tests/conftest.py`, beside `--extended`. Files are sorted by
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:43`: …sh run` takes the lock, runs ruff, format, mypy and `pytest --extended` over the whole suite, no coverage, with the Gmsh and APBS requiremen…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:54`: …`tests/tier1/test_shard_packing.py` as a test of the kept `no_cover` marker, renamed off VER-73; in `.github/workflows/ci.yml` run the tier…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:58`: …he clause, rule-loading and In brief checks to `tests/tier1/test_plan_shape.py` with D6's caps; edit the hook entry in `.claude/settings.jso…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:63`: …ne) to match D1 to D6. Done when `uv run pytest tests/tier1/test_plan_shape.py` passes.…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:68`: …ruff alone, an unchanged tree is not re-run, `run` passes `--extended` and no `--cov`, stamps only a pass and only an unchanged tree, takes…
+- `docs/plans/phase-4/wp46-small-fixes.md:81`: Tier 1 unless stated; command `uv run pytest --extended`, then `.claude/hooks/gate.sh run`.
+- `docs/plans/phase-4/wp47-okf-bundle.md:59`: …_ver68_repository_citations_all_resolve`; done when it and `test_plan_shape.py` pass.…
+- `docs/plans/phase-4/wp48-okf-backfill.md:51`: …g markers). Baseline verification of `test_okf_bundle.py`, `test_plan_shape.py`, `test_plan_records.py` and `test_prose_share.py` (70 tests)…
+- `docs/plans/phase-4/wp49-cost-study.md:81`: …vered* line and replace `docs/plans/current.md`. Done when `test_plan_shape.py` and `test_plan_records.py` pass.…
+- `docs/plans/phase-4/wp50-test-scope.md:48`: …kers \| `nightly` replaces `extended`; `--nightly` replaces `--extended`; `addopts` excludes `nightly` and `slow`. Nightly CI and the release…
+- `docs/plans/phase-4/wp50-test-scope.md:73`: `test_plan_shape`, `test_plan_records`, `test_prose_share`, `test_same_tree`, `test_source_conventions`
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:14`: code against 50,000 lines of `src/`. Full tiers 1–2 with `--extended` take about 8 minutes on all cores.
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:130`: default `addopts` excludes it; `--extended` is removed and `-m nightly` (or a `--nightly` flag) selects
 - `specification/history/10-phase-4-amended-the-development-loop-agreed-11-oct.md:21`: …ubuntu on Python 3.14 runs lint, types, Tiers 1 and 2 with `--extended`, coverage sharded by recorded durations, diff-cover and the document…
@@ -667,30 +667,30 @@ Live files: 244. Records: 173. A hit in a record is context, not a finding.
 - `docs/plans/current.md:66` — **exists**: - **Workbench:** `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30,
 - `docs/plans/current.md:67` — **exists**: §8.2.31, §8.2.34; `docs/design/reviews/2026-11-05-frame.md`.
 - `docs/plans/current.md:67` — **exists**: §8.2.31, §8.2.34; `docs/design/reviews/2026-11-05-frame.md`.
-- `docs/plans/phase-5-workbench.md:4` — **exists**: S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
-- `docs/plans/phase-5-workbench.md:5` — **exists**: planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
-- `docs/plans/phase-5-workbench.md:6` — **exists**: REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-- `docs/plans/phase-5-workbench.md:7` — **exists**: …needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (…
-- `docs/plans/phase-5-workbench.md:7` — **exists**: …'s colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the…
-- `docs/plans/phase-5-workbench.md:7` — **exists**: …loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026…
-- `docs/plans/phase-5-workbench.md:7` — **exists**: …WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3). Release: **v0.6** (`v0.6.0`).…
-- `docs/plans/phase-5-workbench.md:114` — **exists**: ### WP5.02 — The spike and the visual-feedback workflow (S8 to S10; §8.2.30 AF1 to AF4)
-- `docs/plans/phase-5-workbench.md:145` — **exists**: ### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6; §8.2.31 AG9 to AG11)
-- `docs/plans/phase-5-workbench.md:159` — **exists**: ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62; §8.2.31 AG12, AG13)
-- `docs/plans/phase-5-workbench.md:172` — **exists**: ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
-- `docs/plans/phase-5-workbench.md:172` — **exists**: ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
-- `docs/plans/phase-5-workbench.md:184` — **exists**: ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
-- `docs/plans/phase-5-workbench.md:197` — **exists**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
-- `docs/plans/phase-5-workbench.md:210` — **exists**: ### WP5.09 — The physics model (FR-32, FR-39; WB-34, WB-35; §8.2.34 AJ2, AJ3, AJ5)
-- `docs/plans/phase-5-workbench.md:223` — **exists**: …38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
-- `docs/plans/phase-5-workbench.md:242` — **exists**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
-- `docs/plans/phase-5-workbench.md:256` — **exists**: ### WP5.18 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5)
-- `docs/plans/phase-5-workbench.md:306` — **exists**: …d their order \| **Settled by the author, 1 November 2026** (§8.2.28 AD1 to AD5): the four library packages WP5.03 to WP5.06, after the spike…
-- `docs/plans/phase-5-workbench.md:307` — **exists**: …hase estimate \| **Settled by the author, 3 November 2026** (§8.2.31 AG1 to AG7): one package per suite after the frame; WP5.07 for the sweep…
-- `docs/plans/phase-5-workbench.md:309` — **exists**: …1 to REV-215) \| **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to AJ10) \|…
-- `docs/plans/phase-5-workbench.md:311` — **exists**: …list per kind \| **Settled by the author, 6 November 2026** (§8.2.35 AK3): a default list per kind, which a model file may replace \|…
-- `docs/plans/phase-5-workbench.md:312` — **exists**: …entration_M`) \| **Settled by the author, 6 November 2026** (§8.2.35 AK1, AK2): the physics model; the mesh follows the paired salt unless pi…
-- `docs/plans/phase-5-workbench.md:370` — **exists**: binds the front end's share and the renderer's time is recorded; a miss by the front end is fixed (§8.2.31 AG7).
+- `docs/plans/phase-5/phase-5-workbench.md:4` — **exists**: S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
+- `docs/plans/phase-5/phase-5-workbench.md:5` — **exists**: planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
+- `docs/plans/phase-5/phase-5-workbench.md:6` — **exists**: REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
+- `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (…
+- `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …'s colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the…
+- `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026…
+- `docs/plans/phase-5/phase-5-workbench.md:7` — **exists**: …WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3). Release: **v0.6** (`v0.6.0`).…
+- `docs/plans/phase-5/phase-5-workbench.md:114` — **exists**: ### WP5.02 — The spike and the visual-feedback workflow (S8 to S10; §8.2.30 AF1 to AF4)
+- `docs/plans/phase-5/phase-5-workbench.md:145` — **exists**: ### WP5.04 — The charge mutator's library step (FR-38; §8.2.17 S4; §8.2.19 U6; §8.2.31 AG9 to AG11)
+- `docs/plans/phase-5/phase-5-workbench.md:159` — **exists**: ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62; §8.2.31 AG12, AG13)
+- `docs/plans/phase-5/phase-5-workbench.md:172` — **exists**: ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
+- `docs/plans/phase-5/phase-5-workbench.md:172` — **exists**: ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
+- `docs/plans/phase-5/phase-5-workbench.md:184` — **exists**: ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
+- `docs/plans/phase-5/phase-5-workbench.md:197` — **exists**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
+- `docs/plans/phase-5/phase-5-workbench.md:210` — **exists**: ### WP5.09 — The physics model (FR-32, FR-39; WB-34, WB-35; §8.2.34 AJ2, AJ3, AJ5)
+- `docs/plans/phase-5/phase-5-workbench.md:223` — **exists**: …38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
+- `docs/plans/phase-5/phase-5-workbench.md:242` — **exists**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
+- `docs/plans/phase-5/phase-5-workbench.md:256` — **exists**: ### WP5.18 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5)
+- `docs/plans/phase-5/phase-5-workbench.md:306` — **exists**: …d their order \| **Settled by the author, 1 November 2026** (§8.2.28 AD1 to AD5): the four library packages WP5.03 to WP5.06, after the spike…
+- `docs/plans/phase-5/phase-5-workbench.md:307` — **exists**: …hase estimate \| **Settled by the author, 3 November 2026** (§8.2.31 AG1 to AG7): one package per suite after the frame; WP5.07 for the sweep…
+- `docs/plans/phase-5/phase-5-workbench.md:309` — **exists**: …1 to REV-215) \| **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to AJ10) \|…
+- `docs/plans/phase-5/phase-5-workbench.md:311` — **exists**: …list per kind \| **Settled by the author, 6 November 2026** (§8.2.35 AK3): a default list per kind, which a model file may replace \|…
+- `docs/plans/phase-5/phase-5-workbench.md:312` — **exists**: …entration_M`) \| **Settled by the author, 6 November 2026** (§8.2.35 AK1, AK2): the physics model; the mesh follows the paired salt unless pi…
+- `docs/plans/phase-5/phase-5-workbench.md:370` — **exists**: binds the front end's share and the renderer's time is recorded; a miss by the front end is fixed (§8.2.31 AG7).
 - `docs/project/modularity-findings.md:36` — **exists**: …\| MOD-11 \| surface \| low \| fixed \| §8.2.8 H2; §8.2.23 Y5 \| [with_section and register are outside PUBLIC](modularity.md#mod-11-with_section-…
 - `docs/project/modularity.md:283` — **exists**: `io/case.py` holds neither list. An output states what it needs of a model's declaration (§8.2.32 AH1), so
 - `docs/project/modularity.md:325` — **exists**: **Ruled** (§8.2.23 Y2, Y5, Y10, superseding §8.2.21 W7): both stay internal. A section is edited by `Case.with_`
@@ -1019,27 +1019,27 @@ none
 - `docs/plans/current.md:18` — **not a tag (a prefix of tags)**: - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
 - `docs/plans/current.md:19` — **not a tag (a prefix of tags)**: - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.08 merged
 - `docs/plans/current.md:20` — **tag**: (`v0.6.0-alpha.8`). Amended 5 November 2026 (§8.2.34): WP5.09 the physics model, WP5.15 the frame, WP5.16 to
-- `docs/plans/phase-5-workbench.md:7` — **not a tag (a prefix of tags)**: …n 6 November 2026 (§8.2.35 AK1 to AK3). Release: **v0.6** (`v0.6.0`).…
-- `docs/plans/phase-5-workbench.md:62` — **not a tag (a prefix of tags)**: \| Overlap \| Only WP5.01 before `v0.5.0` \| The API may still move (S1, S15) \|
-- `docs/plans/phase-5-workbench.md:109` — **not a tag (a prefix of tags)**: only at `v0.6.0` (S17). It proposes a ruling on each inherited row.
-- `docs/plans/phase-5-workbench.md:111` — **not a tag (a prefix of tags)**: Tests: none kept; the strict documentation build (VER-45). Tag: none if it merges before `v0.5.0`,
-- `docs/plans/phase-5-workbench.md:112` — **not a tag**: its entry under `## [Unreleased]`; otherwise `v0.6.0-alpha.1` (§8.4.1).
-- `docs/plans/phase-5-workbench.md:127` — **not a tag**: Tagged `v0.6.0-alpha.2` (S19).
-- `docs/plans/phase-5-workbench.md:143` — **not a tag**: the `X86_V3` and `AVX512_SPR` meshes of example 07 are folded. Tagged `v0.6.0-alpha.3`.
-- `docs/plans/phase-5-workbench.md:157` — **not a tag**: §5.3.3 are amended; the Charge edit tool is WP5.16's (AJ10). Tagged `v0.6.0-alpha.4`.
-- `docs/plans/phase-5-workbench.md:170` — **not a tag**: tests cover the identity, the overrides, the sweep and the reuse. Tag `v0.6.0-alpha.5`.
-- `docs/plans/phase-5-workbench.md:182` — **not a tag**: registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. Tag `v0.6.0-alpha.6`.
-- `docs/plans/phase-5-workbench.md:195` — **tag**: WP5.19's (AJ10). REV-139 `fixed`. Tier 1 holds the evidence. Tag `v0.6.0-alpha.7`.
-- `docs/plans/phase-5-workbench.md:208` — **tag**: `v0.6.0-alpha.8`.
-- `docs/plans/phase-5-workbench.md:221` — **tag**: the Study suite's list WP5.19's; REV-217 to REV-221 land next. Tag `v0.6.0-alpha.9`.
-- `docs/plans/phase-5-workbench.md:237` — **not a tag**: `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
-- `docs/plans/phase-5-workbench.md:245` — **not a tag**: declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
-- `docs/plans/phase-5-workbench.md:254` — **not a tag**: VER-55 as restated. Tag `v0.6.0-alpha.17`.
-- `docs/plans/phase-5-workbench.md:263` — **not a tag**: `v0.6.0-alpha.18`.
-- `docs/plans/phase-5-workbench.md:273` — **not a tag**: `v0.6.0-alpha.19`.
-- `docs/plans/phase-5-workbench.md:281` — **not a tag**: one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
-- `docs/plans/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.21`.
-- `docs/plans/phase-5-workbench.md:295` — **not a tag (a prefix of tags)**: and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
+- `docs/plans/phase-5/phase-5-workbench.md:7` — **not a tag (a prefix of tags)**: …n 6 November 2026 (§8.2.35 AK1 to AK3). Release: **v0.6** (`v0.6.0`).…
+- `docs/plans/phase-5/phase-5-workbench.md:62` — **not a tag (a prefix of tags)**: \| Overlap \| Only WP5.01 before `v0.5.0` \| The API may still move (S1, S15) \|
+- `docs/plans/phase-5/phase-5-workbench.md:109` — **not a tag (a prefix of tags)**: only at `v0.6.0` (S17). It proposes a ruling on each inherited row.
+- `docs/plans/phase-5/phase-5-workbench.md:111` — **not a tag (a prefix of tags)**: Tests: none kept; the strict documentation build (VER-45). Tag: none if it merges before `v0.5.0`,
+- `docs/plans/phase-5/phase-5-workbench.md:112` — **not a tag**: its entry under `## [Unreleased]`; otherwise `v0.6.0-alpha.1` (§8.4.1).
+- `docs/plans/phase-5/phase-5-workbench.md:127` — **not a tag**: Tagged `v0.6.0-alpha.2` (S19).
+- `docs/plans/phase-5/phase-5-workbench.md:143` — **not a tag**: the `X86_V3` and `AVX512_SPR` meshes of example 07 are folded. Tagged `v0.6.0-alpha.3`.
+- `docs/plans/phase-5/phase-5-workbench.md:157` — **not a tag**: §5.3.3 are amended; the Charge edit tool is WP5.16's (AJ10). Tagged `v0.6.0-alpha.4`.
+- `docs/plans/phase-5/phase-5-workbench.md:170` — **not a tag**: tests cover the identity, the overrides, the sweep and the reuse. Tag `v0.6.0-alpha.5`.
+- `docs/plans/phase-5/phase-5-workbench.md:182` — **not a tag**: registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. Tag `v0.6.0-alpha.6`.
+- `docs/plans/phase-5/phase-5-workbench.md:195` — **tag**: WP5.19's (AJ10). REV-139 `fixed`. Tier 1 holds the evidence. Tag `v0.6.0-alpha.7`.
+- `docs/plans/phase-5/phase-5-workbench.md:208` — **tag**: `v0.6.0-alpha.8`.
+- `docs/plans/phase-5/phase-5-workbench.md:221` — **tag**: the Study suite's list WP5.19's; REV-217 to REV-221 land next. Tag `v0.6.0-alpha.9`.
+- `docs/plans/phase-5/phase-5-workbench.md:237` — **not a tag**: `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
+- `docs/plans/phase-5/phase-5-workbench.md:245` — **not a tag**: declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
+- `docs/plans/phase-5/phase-5-workbench.md:254` — **not a tag**: VER-55 as restated. Tag `v0.6.0-alpha.17`.
+- `docs/plans/phase-5/phase-5-workbench.md:263` — **not a tag**: `v0.6.0-alpha.18`.
+- `docs/plans/phase-5/phase-5-workbench.md:273` — **not a tag**: `v0.6.0-alpha.19`.
+- `docs/plans/phase-5/phase-5-workbench.md:281` — **not a tag**: one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
+- `docs/plans/phase-5/phase-5-workbench.md:289` — **not a tag**: rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.21`.
+- `docs/plans/phase-5/phase-5-workbench.md:295` — **not a tag (a prefix of tags)**: and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 - `docs/project/modularity.md:282` — **not a tag**: **Fixed** (WP5.06, `v0.6.0-alpha.6`): `post/outputs.py` and `physics/steric.py` hold the two registries, and
 - `docs/project/review-findings.md:151` — **not a tag (a prefix of tags)**: …17 \| [WP57 may restate the Qt shell's gating clauses before v0.5.0](review-items.md#rev-127-wp57-may-restate-the-qt-shells-gating-clauses-be…
 - `docs/project/review-items.md:1399` — **not a tag (a prefix of tags)**: ## REV-127: WP57 may restate the Qt shell's gating clauses before v0.5.0
@@ -1186,263 +1186,263 @@ none
 - `docs/code_reviews/CODE_REVIEW_024/execution-plan.md:8` — **not a tag (a prefix of tags)**: …nd stale or wordy documentation before the phase closes as `v0.5.0`.…
 - `docs/code_reviews/CODE_REVIEW_024.md:49` — **not a tag (a prefix of tags)**: `v0.5.0`, the release Phase 5 builds on (§8.2.17 S1, S15), so the shell packages start on the interface they will use.
 - `docs/design/spike/report.md:3` — **not a tag (a prefix of tags)**: WP5.02, 2 November 2026, on `v0.5.0`. The screen is *Charge on the mesh* for 2WCD (example 07, 53,760
-- `docs/plans/history-prose-review.md:13` — **not a tag**: 2. Branch from `main` after WP34 has merged and been tagged `v0.4.0`; do not reuse the WP34 branch.
-- `docs/plans/history-prose-review.md:57` — **not a tag (a prefix of tags)**: on 30 September 2026, why `v0.5.0` was reused, and how to read an old manifest's version by its
-- `docs/plans/history-prose-review.md:67` — **not a tag**: \| `docs/plans/phase-3-charge-pipeline.md:4` \| "`v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`" (a delivered plan, see I) \|
-- `docs/plans/history-prose-review.md:67` — **not a tag**: \| `docs/plans/phase-3-charge-pipeline.md:4` \| "`v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`" (a delivered plan, see I) \|
-- `docs/plans/phase-1-solver-core.md:3` — **not a tag**: **Status: WP7–WP16 delivered; end-of-phase report written 24 September 2026; released as `v0.2.0`**
-- `docs/plans/phase-1-solver-core.md:911` — **not a tag**: Written 24 September 2026, on `main` at `b2ab533` (the `v0.2.0-alpha.10` code plus the Phase 2 plan).
-- `docs/plans/phase-1-solver-core.md:919` — **not a tag**: in the manner of Phase 0's A2 and A4. v0.2.0 is released with the COMSOL attribution outstanding,
-- `docs/plans/phase-2-geometry-pipeline.md:3` — **not a tag**: …**Status: closed, 30 September 2026, as `v0.3.0`, with criterion 3 waived (`SPECIFICATION.md` §8.2.4 D7; [End-of-phase report](#end-of-phase…
-- `docs/plans/phase-2-geometry-pipeline.md:4` — **not a tag**: solver core on an externally supplied mesh (main at `v0.2.0-alpha.10`). Two things come first:
-- `docs/plans/phase-2-geometry-pipeline.md:5` — **not a tag**: the Phase 1 end-of-phase report, which merges as tag `v0.2.0`, and the author's double-click
-- `docs/plans/phase-2-geometry-pipeline.md:11` — **not a tag**: this phase's packages were tagged `v0.9.0-alpha.N`.) The specification is normative: where this file and the specification disagree, the
-- `docs/plans/phase-2-geometry-pipeline.md:122` — **not a tag**: > **Delivered, 24 September 2026** ([plan](wp17-case-schema-v2.md), tag `v0.3.0-alpha.1`). The
-- `docs/plans/phase-2-geometry-pipeline.md:152` — **not a tag**: > `v0.3.0-alpha.2`). Stage 1, `structure`, reads PDB, mmCIF (through gemmi) and the four trajectory
-- `docs/plans/phase-2-geometry-pipeline.md:192` — **not a tag**: > `v0.3.0-alpha.3`). Stage 2, `density`, deposits each frame's probabilistic union on a canonical
-- `docs/plans/phase-2-geometry-pipeline.md:221` — **not a tag**: > `v0.3.0-alpha.4`). Stage 4, `contour`, runs marching squares on the reduced mean, placed by the
-- `docs/plans/phase-2-geometry-pipeline.md:254` — **not a tag**: > `v0.3.0-alpha.5`). Stage 5, `region`, turns a stage-4 or supplied profile into the glued,
-- `docs/plans/phase-2-geometry-pipeline.md:288` — **not a tag**: > `v0.3.0-alpha.6`). `nanopnp.validation.geometry` computes VAL-05 once for both legs and the
-- `docs/plans/phase-2-geometry-pipeline.md:323` — **not a tag**: > `v0.3.0-alpha.7`). `numerics.mesh.backend: gmsh` meshes stage 5's region through
-- `docs/plans/phase-2-geometry-pipeline.md:357` — **not a tag**: > `v0.3.0-alpha.8`). The desktop shell gains its **Geometry** tab. It builds stages 1 to 6 in the
-- `docs/plans/phase-2-geometry-pipeline.md:394` — **not a tag**: > `v0.3.0-alpha.9`). Phase criterion 5 is met. The guide gains *Structures and trajectories* and
-- `docs/plans/phase-2-geometry-pipeline.md:471` — **not a tag**: Written 30 September 2026, on `main` at `ba98f37` (`v0.3.0-alpha.9` and the review fixes) with this
-- `docs/plans/phase-2-geometry-pipeline.md:480` — **not a tag**: tolerance stands and the Tier-3 test keeps asserting it. v0.3.0 is released on that basis. The
-- `docs/plans/phase-3-charge-pipeline.md:3` — **not a tag**: …**Status: closed, 4 October 2026, as `v0.4.0` on WP34's merge (end-of-phase report below; §8.2.5 E1, E5). WP26 delivered, 30 September 2026;…
-- `docs/plans/phase-3-charge-pipeline.md:4` — **not a tag**: the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
-- `docs/plans/phase-3-charge-pipeline.md:4` — **not a tag**: the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
-- `docs/plans/phase-3-charge-pipeline.md:5` — **not a tag**: end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
-- `docs/plans/phase-3-charge-pipeline.md:7` — **not a tag**: it depends on the Phase 2 verdict, but **v0.4.0 is not tagged before v0.3.0**.
-- `docs/plans/phase-3-charge-pipeline.md:7` — **not a tag**: it depends on the Phase 2 verdict, but **v0.4.0 is not tagged before v0.3.0**.
-- `docs/plans/phase-3-charge-pipeline.md:116` — **not a tag**: implements them. Tags are `v0.4.0-alpha.N`.
-- `docs/plans/phase-3-charge-pipeline.md:134` — **not a tag**: > `v0.4.0-alpha.1`). `register_model` pairs each model with a `ModelDeclaration`, and case
-- `docs/plans/phase-3-charge-pipeline.md:164` — **not a tag**: > **Delivered, 1 October 2026** ([plan](wp27-protonation.md), to be tagged `v0.4.0-alpha.2`). The
-- `docs/plans/phase-3-charge-pipeline.md:205` — **not a tag**: > `v0.4.0-alpha.3`). Stage 7 sums PHY-16 step 5's kernel on the 0.005 nm export lattice, cached as
-- `docs/plans/phase-3-charge-pipeline.md:236` — **not a tag**: > **Delivered, 1 October 2026** ([plan](wp29-val06-apbs.md), to be tagged `v0.4.0-alpha.4`).
-- `docs/plans/phase-3-charge-pipeline.md:277` — **not a tag**: > `v0.4.0-alpha.5`). Stage 5 builds the `exclusion` shell from the profile's offset and moves
-- `docs/plans/phase-3-charge-pipeline.md:310` — **not a tag**: > `v0.4.0-alpha.6`). The seventh tab, **Charge**, builds stages 1–7 on the Geometry tab's run
-- `docs/plans/phase-3-charge-pipeline.md:343` — **not a tag**: > `v0.4.0-alpha.7`). The guide page *From a structure to a charge*, the D3 edits that link it, and
-- `docs/plans/phase-3-charge-pipeline.md:367` — **not a tag**: > **Delivered, 3 October 2026** ([plan](wp33-test-durations.md), to be tagged `v0.4.0-alpha.8`).
-- `docs/plans/phase-3-charge-pipeline.md:385` — **not a tag**: Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
-- `docs/plans/phase-3-charge-pipeline.md:395` — **not a tag**: > **Delivered, 4 October 2026** ([plan](wp34-phase-3-close.md), to be tagged `v0.4.0` alone).
-- `docs/plans/phase-3-charge-pipeline.md:400` — **not a tag**: > repository. The renumbering script is deleted, and the stray `v0.5.0-alpha.5` tag was deleted by
-- `docs/plans/phase-3-charge-pipeline.md:409` — **not a tag (a prefix of tags)**: …and was deleted by [WP34](wp34-phase-3-close.md) D10. The `v0.5.0` names are reused for Phase 4 (§8.2.5 E2, §8.2.6 F2) \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:3` — **not a tag (a prefix of tags)**: …s: delivered, 2 November 2026; closes at the merge and the `v0.5.0` tag.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and res…
-- `docs/plans/phase-4-polish-and-user-testing.md:3` — **not a tag**: ….0` tag.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its…
-- `docs/plans/phase-4-polish-and-user-testing.md:11` — **not a tag (a prefix of tags)**: review's fixes, and **WP60**, the close, are delivered. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
-- `docs/plans/phase-4-polish-and-user-testing.md:92` — **not a tag**: …\| Number stability \| A golden recorded on `v0.4.0`'s tree and asserted by every later package at 10⁻⁸ relative on a recorded mesh. On an uns…
-- `docs/plans/phase-4-polish-and-user-testing.md:95` — **not a tag (a prefix of tags)**: …\| Close and tags \| `v0.5.0` alone on the close package's last commit; the session pushes each tag if it can, otherwise prints the commands (…
-- `docs/plans/phase-4-polish-and-user-testing.md:135` — **not a tag (a prefix of tags)**: starts. Tags are `v0.5.0-alpha.N`.
-- `docs/plans/phase-4-polish-and-user-testing.md:141` — **not a tag**: …golden (VER-62) \| [plan](wp35-modularity-exploration.md) \| `v0.5.0-alpha.1` \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:142` — **not a tag (a prefix of tags)**: …02`, `MOD-12`) \| [plan](wp36-stage-protocol-and-walk.md) \| `v0.5.0-alpha.2` \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:143` — **not a tag**: …5) \| [plan](wp37-cycle-cuts-exit-codes-backend-guard.md) \| `v0.5.0-alpha.3` \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:144` — **not a tag**: …`MOD-04`, `MOD-13`, `MOD-15`) \| [plan](wp38-io-split.md) \| `v0.5.0-alpha.4` \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:145` — **not a tag**: …, `MOD-16`; VER-66) \| [plan](wp39-backend-registries.md) \| `v0.5.0-alpha.5` \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:146` — **not a tag**: \| WP40 \| The stale refusals (`MOD-14`) \| [plan](wp40-stale-refusals.md) \| `v0.5.0-alpha.6` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:147` — **not a tag**: \| WP41 \| The accuracy fixes (REV-06 to REV-09, REV-17, REV-26) \| [plan](wp41-accuracy-fixes.md) \| `v0.5.0-alpha.7` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:148` — **not a tag**: \| WP42 \| The verification checks (REV-11 to REV-13 and others) \| [plan](wp42-verification-checks.md) \| `v0.5.0-alpha.8` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:149` — **not a tag**: \| WP43 \| The development loop, since simplified by WP44 \| [plan](wp43-development-loop.md) \| `v0.5.0-alpha.9` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:150` — **not a tag**: …aps (L2, L3, L6, L7) \| [plan](wp44-simplify-the-loop.md) \| `v0.5.0-alpha.10` \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:151` — **not a tag**: \| WP45 \| The prose strip: one rule for in-code prose (L4) \| [plan](wp45-prose-strip.md) \| `v0.5.0-alpha.11` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:152` — **not a tag**: \| WP46 \| The small fixes (REV-14 to REV-16, REV-18, REV-19 and eleven low items) \| [plan](wp46-small-fixes.md) \| `v0.5.0-alpha.12` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:153` — **not a tag**: \| WP47 \| The OKF bundle and its checks for `knowledge/` \| [plan](wp47-okf-bundle.md) \| `v0.5.0-alpha.13` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:154` — **not a tag**: \| WP48 \| The OKF backfill: tested claims name their tests \| [plan](wp48-okf-backfill.md) \| `v0.5.0-alpha.14` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:155` — **not a tag**: …ema as JSON Schema (VER-76) \| [plan](wp49-cost-study.md) \| `v0.5.0-alpha.15` \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:156` — **not a tag**: \| WP50 \| The test scope (N1 to N5) \| [plan](wp50-test-scope.md) \| `v0.5.0-alpha.16` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:157` — **not a tag**: \| WP51 \| The plotting library and the notebooks (FR-30; P1 to P10) \| [plan](wp51-plotting-and-notebooks.md) \| `v0.5.0-alpha.17` \|
-- `docs/plans/phase-4-polish-and-user-testing.md:164` — **not a tag**: Delivered ([plan](wp52-specification-and-plans-split.md); tag `v0.5.0-alpha.18`). `specification/` is
-- `docs/plans/phase-4-polish-and-user-testing.md:176` — **not a tag**: Delivered ([plan](wp53-workflow-commands.md); tag `v0.5.0-alpha.19`). `/np-plan <project \| phase n
-- `docs/plans/phase-4-polish-and-user-testing.md:192` — **not a tag**: Delivered ([plan](wp54-notebooks-and-figures-revised.md); tag `v0.5.0-alpha.20`). The six notebooks
-- `docs/plans/phase-4-polish-and-user-testing.md:205` — **not a tag**: Delivered ([plan](wp55-user-testing-protocol.md); tag `v0.5.0-alpha.21`). `docs/user-testing/` holds the
-- `docs/plans/phase-4-polish-and-user-testing.md:217` — **not a tag**: Delivered ([plan](wp56-command-line-read-by-a-person.md); tag `v0.5.0-alpha.22`). It fixes UT-01 to UT-08,
-- `docs/plans/phase-4-polish-and-user-testing.md:290` — **not a tag**: `CHANGELOG.md` and IF-01's NOTE; `[0.5.0]` gathers them (WP60). Tag `v0.5.0-alpha.25`, after the merge.
-- `docs/plans/phase-4-polish-and-user-testing.md:314` — **not a tag**: eleven. Implementing model: Sonnet, the Newton item in the main session. Tag `v0.5.0-alpha.25`, after the merge.
-- `docs/plans/phase-4-polish-and-user-testing.md:318` — **not a tag (a prefix of tags)**: **Delivered 2 November 2026** ([plan](wp60-phase-4-close.md); tag `v0.5.0` alone, after the merge). Both findings
-- `docs/plans/phase-4-polish-and-user-testing.md:364` — **not a tag (a prefix of tags)**: …tags, if the session cannot push them \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -…
-- `docs/plans/phase-4-polish-and-user-testing.md:364` — **not a tag (a prefix of tags)**: …em \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -a` and `git push` commands (G11) \|…
-- `docs/plans/phase-4-polish-and-user-testing.md:405` — **not a tag**: 6. **VER-62 holds** on every CI platform, against the golden recorded on `v0.4.0`: at 10⁻⁸ relative
-- `docs/plans/phase-4-polish-and-user-testing.md:465` — **not a tag**: - **Number stability** (VER-62; the golden recorded on `v0.4.0`'s tree and re-pinned within its rulings, last at
-- `docs/plans/phase-4-polish-and-user-testing.md:491` — **not a tag**: `v1` and `v2` are retired. `nanopnp.PUBLIC` has 19 names, against 26 at `v0.4.0`: five are added (`Artefact`,
-- `docs/plans/phase-4-polish-and-user-testing.md:496` — **not a tag**: schema. Sources: `nanopnp.PUBLIC` at `v0.4.0` and now, IF-01's NOTE, VER-47.
-- `docs/plans/phase-4-record.md:9` — **not a tag**: **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`. Amended the
-- `docs/plans/phase-4-record.md:18` — **not a tag**: ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
-- `docs/plans/phase-4-record.md:20` — **not a tag (a prefix of tags)**: tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend guard
-- `docs/plans/phase-4-record.md:22` — **not a tag**: tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)),
-- `docs/plans/phase-4-record.md:23` — **not a tag**: tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.md](wp39-backend-registries.md)),
-- `docs/plans/phase-4-record.md:24` — **not a tag**: to be tagged `v0.5.0-alpha.5`; WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)),
-- `docs/plans/phase-4-record.md:25` — **not a tag**: to be tagged `v0.5.0-alpha.6`; WP41, the accuracy fixes ([wp41-accuracy-fixes.md](wp41-accuracy-fixes.md)),
-- `docs/plans/phase-4-record.md:26` — **not a tag**: to be tagged `v0.5.0-alpha.7`; WP42, the verification checks
-- `docs/plans/phase-4-record.md:27` — **not a tag**: ([wp42-verification-checks.md](wp42-verification-checks.md)), to be tagged `v0.5.0-alpha.8`;
-- `docs/plans/phase-4-record.md:29` — **not a tag**: `v0.5.0-alpha.9`; WP44, simplify the loop ([wp44-simplify-the-loop.md](wp44-simplify-the-loop.md)), to be
-- `docs/plans/phase-4-record.md:30` — **not a tag**: tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-prose-strip.md)), to be tagged
-- `docs/plans/phase-4-record.md:31` — **not a tag**: `v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
-- `docs/plans/phase-4-record.md:32` — **not a tag**: `v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
-- `docs/plans/phase-4-record.md:33` — **not a tag**: `v0.5.0-alpha.13`; WP48, the OKF backfill ([plan](wp48-okf-backfill.md)), to be tagged
-- `docs/plans/phase-4-record.md:34` — **not a tag**: `v0.5.0-alpha.14`; WP49, the cost study ([plan](wp49-cost-study.md)), to be tagged
-- `docs/plans/phase-4-record.md:35` — **not a tag**: `v0.5.0-alpha.15`; WP50, the test scope ([plan](wp50-test-scope.md)), to be tagged
-- `docs/plans/phase-4-record.md:36` — **not a tag**: `v0.5.0-alpha.16`.
-- `docs/plans/phase-4-record.md:38` — **not a tag**: `v0.5.0-alpha.17`.
-- `docs/plans/phase-4-record.md:46` — **not a tag (a prefix of tags)**: Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
-- `docs/plans/phase-4-record.md:242` — **not a tag**: …\| Number stability \| A golden recorded in WP35 on `v0.4.0`'s tree and asserted by every later package, at 10⁻⁸ relative on a recorded mesh (…
-- `docs/plans/phase-4-record.md:244` — **not a tag (a prefix of tags)**: …\| Close and tags \| `v0.5.0` alone on the close package's last commit. The session pushes each tag if its access allows, and otherwise prints…
-- `docs/plans/phase-4-record.md:291` — **not a tag (a prefix of tags)**: when it implements them. Tags are `v0.5.0-alpha.N`.
-- `docs/plans/phase-4-record.md:327` — **not a tag**: on `v0.4.0`'s tree. Among them are the 2WCD charged walk's Na⁺ and Cl⁻ currents. Example 05's
-- `docs/plans/phase-4-record.md:344` — **not a tag**: > `v0.5.0-alpha.1`). The [report](../project/modularity.md) logs 17 findings in
-- `docs/plans/phase-4-record.md:349` — **not a tag**: > seven walks, recorded on a tree D15 shows computes as `v0.4.0`, with zero drift on a Linux rerun.
-- `docs/plans/phase-4-record.md:393` — **not a tag (a prefix of tags)**: > `v0.5.0-alpha.2`). `MOD-01`, `MOD-02` and `MOD-12` are `fixed`. `Stage.key(inputs)` is on the
-- `docs/plans/phase-4-record.md:434` — **not a tag**: > `v0.5.0-alpha.3`). `MOD-05` is `fixed`; `MOD-03` stays `accepted` for WP38. `numerics/` holds
-- `docs/plans/phase-4-record.md:467` — **not a tag**: > **Delivered, 6 October 2026** ([plan](wp38-io-split.md), tagged `v0.5.0-alpha.4`).
-- `docs/plans/phase-4-record.md:507` — **not a tag**: > **Delivered, 6 October 2026** ([plan](wp39-backend-registries.md), to be tagged `v0.5.0-alpha.5`).
-- `docs/plans/phase-4-record.md:535` — **not a tag**: > **Delivered, 7 October 2026** ([plan](wp40-stale-refusals.md), to be tagged `v0.5.0-alpha.6`).
-- `docs/plans/phase-4-record.md:545` — **not a tag (a prefix of tags)**: >   text at `v0.6.0`, FR-21's at `v0.7.0`, unless each ships first;
-- `docs/plans/phase-4-record.md:545` — **not a tag**: >   text at `v0.6.0`, FR-21's at `v0.7.0`, unless each ships first;
-- `docs/plans/phase-4-record.md:583` — **not a tag**: > **Delivered, 8 October 2026** ([plan](wp41-accuracy-fixes.md), to be tagged `v0.5.0-alpha.7`).
-- `docs/plans/phase-4-record.md:683` — **not a tag**: under the third lever, and the soundness argument of the selection. Tagged `v0.5.0-alpha.9`.
-- `docs/plans/phase-4-record.md:695` — **not a tag**: > tagged `v0.5.0-alpha.9`. A commit runs the tests a recorded impact map selects (VER-74), the push
-- `docs/plans/phase-4-record.md:714` — **not a tag**: behaviour, and plans a session can afford. Tag `v0.5.0-alpha.10`. It does:
-- `docs/plans/phase-4-record.md:745` — **not a tag**: *Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
-- `docs/plans/phase-4-record.md:874` — **not a tag**: > **Delivered, 18 October 2026** ([plan](wp49-cost-study.md), to be tagged `v0.5.0-alpha.15`). Measured
-- `docs/plans/phase-4-record.md:902` — **not a tag**: The package claims VER-76 and sets REV-112 and REV-113 `fixed`. Tag `v0.5.0-alpha.15`.
-- `docs/plans/phase-4-record.md:906` — **not a tag**: > **Delivered, 19 October 2026** ([plan](wp50-test-scope.md), to be tagged `v0.5.0-alpha.16`). N1's
-- `docs/plans/phase-4-record.md:931` — **not a tag**: tests that remain. It claims no new identifier. Tag `v0.5.0-alpha.16`.
-- `docs/plans/phase-4-record.md:975` — **not a tag**: widgets. REV-123 becomes `fixed`. Tag `v0.5.0-alpha.17`.
-- `docs/plans/phase-4-record.md:978` — **not a tag**: > `v0.5.0-alpha.17`). `nanopnp.plot`, behind the `plot` extra, draws a figure of every stage's artefact
-- `docs/plans/phase-4-record.md:1011` — **not a tag**: Tag `v0.5.0-alpha.18`.
-- `docs/plans/phase-4-record.md:1036` — **not a tag**: detached or diverged checkout. Tag `v0.5.0-alpha.19`.
-- `docs/plans/phase-4-record.md:1047` — **not a tag**: plan claims its identifiers. Tag `v0.5.0-alpha.20`.
-- `docs/plans/phase-4-record.md:1056` — **not a tag**: > the tester installs the `notebook` extra. Tag `v0.5.0-alpha.18`.
-- `docs/plans/phase-4-record.md:1059` — **not a tag**: > notebooks session 04 is re-read against. Tag `v0.5.0-alpha.21`.
-- `docs/plans/phase-4-record.md:1084` — **not a tag**: > study, as well as the OKF backfill. Tag `v0.5.0-alpha.16`.
-- `docs/plans/phase-4-record.md:1088` — **not a tag**: > `v0.5.0-alpha.17`.
-- `docs/plans/phase-4-record.md:1137` — **not a tag (a prefix of tags)**: Its last commit on `main` is tagged `v0.5.0` alone (G11).
-- `docs/plans/phase-4-record.md:1163` — **not a tag (a prefix of tags)**: \| Close and tags \| `v0.5.0` alone; the session tags if it can \| **Settled by the author, 5 October 2026** (G11) \|
-- `docs/plans/phase-4-record.md:1219` — **not a tag**: \| The tag `v0.5.0-alpha.9` and CI result as the required check \| Now \| WP44's pull request waits on the old checks \|
-- `docs/plans/phase-4-record.md:1225` — **not a tag (a prefix of tags)**: …tags, if the session cannot push them \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -…
-- `docs/plans/phase-4-record.md:1225` — **not a tag (a prefix of tags)**: …em \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -a` and `git push` commands (G11) \|…
-- `docs/plans/phase-4-record.md:1290` — **not a tag**: 6. **VER-62 holds** on every CI platform, against the golden recorded on `v0.4.0`: at 10⁻⁸ relative
-- `docs/plans/phase-4-record.md:1347` — **not a tag**: - **The layering:** the subpackage import matrix before (`v0.4.0`) and after, the size of the
-- `docs/plans/phase-4-record.md:1364` — **not a tag**: 1,764 collected by default at `v0.4.0`. Source: the gate run on the close package's tree.
-- `docs/plans/phase-4-record.md:1399` — **not a tag**: > diverged checkout. Tag `v0.5.0-alpha.19`.
-- `docs/plans/phase-4-record.md:1418` — **not a tag**: > `v0.5.0-alpha.20`.
-- `docs/plans/phase-4-record.md:1537` — **not a tag (a prefix of tags)**: > Its last commit on `main` is tagged `v0.5.0` alone (G11).
-- `docs/plans/phase-4-record.md:1571` — **not a tag (a prefix of tags)**: > Its last commit on `main` is tagged `v0.5.0` alone (G11).
-- `docs/plans/phase-5-record.md:28` — **not a tag (a prefix of tags)**: `v0.6.0` (S17). It proposes a ruling on each inherited row.
-- `docs/plans/phase-5-record.md:45` — **not a tag (a prefix of tags)**: …ress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended…
-- `docs/plans/phase-5-record.md:47` — **not a tag (a prefix of tags)**: > WP5.01, beside Phase 4 (S1), and WP5.02, after `v0.5.0`. The shell packages from WP5.03 and their
-- `docs/plans/phase-5-record.md:48` — **not a tag (a prefix of tags)**: > estimate wait for `/np-plan amend 5` (S14); the close is last. Release: **v0.6** (`v0.6.0`).
-- `docs/plans/phase-5-record.md:91` — **not a tag (a prefix of tags)**: > After `v0.5.0`. One hard screen, the residue and charge-map link with a sketcher stub, is built
-- `docs/plans/phase-5-record.md:99` — **not a tag**: > `v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the explorer's controls
-- `docs/plans/phase-5-record.md:117` — **not a tag (a prefix of tags)**: close is last. Release: **v0.6** (`v0.6.0`).
-- `docs/plans/phase-5-record.md:155` — **not a tag**: Tag `v0.6.0-alpha.2` (S19).
-- `docs/plans/phase-5-record.md:158` — **not a tag (a prefix of tags)**: §8.2.17 S7), and each is planned by `/np-plan wp` after WP5.02 (AD2, AD3). None changes `src/` before `v0.5.0` (S1).
-- `docs/plans/phase-5-record.md:176` — **not a tag (a prefix of tags)**: `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
-- `docs/plans/phase-5-record.md:206` — **not a tag**: > `v0.6.0-alpha.3`.
-- `docs/plans/phase-5-record.md:220` — **not a tag**: > `v0.6.0-alpha.4`.
-- `docs/plans/phase-5-record.md:235` — **not a tag**: > `v0.6.0-alpha.5`.
-- `docs/plans/phase-5-record.md:249` — **not a tag**: > routes keep their cross-check (FR-23, QR-04). Before the Study suite offers outputs (T4). Tag `v0.6.0-alpha.6`.
-- `docs/plans/phase-5-record.md:317` — **not a tag**: > restated. Tag `v0.6.0-alpha.15`.
-- `docs/plans/phase-5-record.md:324` — **not a tag**: > (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.16`.
-- `docs/plans/phase-5-record.md:332` — **not a tag**: > Q37 to Q41 move here. Tag `v0.6.0-alpha.17`.
-- `docs/plans/phase-5-record.md:340` — **not a tag**: > `v0.6.0-alpha.18`.
-- `docs/plans/phase-5-record.md:346` — **not a tag (a prefix of tags)**: > and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
-- `docs/plans/wp17-case-schema-v2.md:6` — **not a tag**: implemented until ruling B1 is met.** The Phase 1 end-of-phase report has merged as `v0.2.0`, and the
-- `docs/plans/wp17-case-schema-v2.md:8` — **not a tag**: §8.2.1), so B1 is met. Its tag is `v0.3.0-alpha.1`.
-- `docs/plans/wp17-case-schema-v2.md:65` — **not a tag**: …me run" \| A frozen corpus of every v1 case file shipped at `v0.2.0`: 7 example case files, 5 validation cases and the sweep base case, 13 in…
-- `docs/plans/wp17-case-schema-v2.md:129` — **not a tag**: 6. **VER-47 tests** (see Verification). Add the `CHANGELOG.md` section `v0.3.0-alpha.1`. Update the
-- `docs/plans/wp18-structure-ingestion.md:4` — **not a tag**: 25 September 2026 as PR #38 and tagged `v0.3.0-alpha.1`. WP18 inherits:
-- `docs/plans/wp18-structure-ingestion.md:147` — **not a tag**: section `v0.3.0-alpha.2`. Add Outcomes here where a prediction moved, and update `current.md`.
-- `docs/plans/wp19-density-and-reduction.md:4` — **not a tag**: `v0.3.0-alpha.2` (PR [#39](https://github.com/willemsk/nanopnp/pull/39)). This package inherits
-- `docs/plans/wp20-contour-extraction.md:4` — **not a tag**: `claude/wp-plan-19-19570b` (its PR becomes `v0.3.0-alpha.3`). This package inherits stage 3's
-- `docs/plans/wp21-cad-assembly-and-meshing.md:4` — **not a tag**: [#41](https://github.com/willemsk/nanopnp/pull/41), to be tagged `v0.3.0-alpha.4`). This package
-- `docs/plans/wp21-cad-assembly-and-meshing.md:142` — **not a tag**: and CHANGELOG `v0.3.0-alpha.5` is written.
-- `docs/plans/wp22-val05-reference-geometry.md:4` — **not a tag**: `v0.3.0-alpha.5`), and so has the CODE_REVIEW_002 follow-up on `main`. This package inherits the
-- `docs/plans/wp22-val05-reference-geometry.md:89` — **not a tag**: CHANGELOG `v0.3.0-alpha.6`.
-- `docs/plans/wp23-gmsh-backend.md:4` — **not a tag**: (`32fecf1`, to be tagged `v0.3.0-alpha.6`). This package inherits stage 5's glued, adjacency-named
-- `docs/plans/wp23-gmsh-backend.md:87` — **not a tag**: CHANGELOG `v0.3.0-alpha.7`, and add the phase plan's *Delivered* note.
-- `docs/plans/wp24-gui-geometry-pipeline.md:4` — **not a tag**: (`4232eeb`, tagged `v0.3.0-alpha.7`). This package inherits the desktop shell of WP14 and WP15:
-- `docs/plans/wp24-gui-geometry-pipeline.md:126` — **not a tag**: 10. `docs/guide/desktop.md`: the Geometry tab. `CHANGELOG.md` under `v0.3.0-alpha.8`. The
-- `docs/plans/wp25-geometry-docs-and-example.md:4` — **not a tag**: `v0.3.0-alpha.8`). Stages 1–6 exist, run from the CLI and the Geometry tab, and are gated. But the
-- `docs/plans/wp25-geometry-docs-and-example.md:156` — **not a tag**: - **The Phase 2 end-of-phase report and the `v0.3.0` tag.** Both wait for criterion 3.
-- `docs/plans/wp26-physics-model-interface.md:137` — **not a tag**: worked example, in the nav; `CHANGELOG.md` under `v0.4.0-alpha.1`.
-- `docs/plans/wp27-protonation.md:4` — **not a tag**: tagged `v0.4.0-alpha.1`). The second package of Phase 3. It inherits stage 1's `AlignedEnsemble`
-- `docs/plans/wp27-protonation.md:128` — **not a tag**: `CHANGELOG.md` under `v0.4.0-alpha.2`. Any documented `stage --list` output. No public name is
-- `docs/plans/wp28-charge-deposition.md:4` — **not a tag**: tagged `v0.4.0-alpha.2`). The third package of Phase 3. It inherits WP27's `ProtonationTable` and
-- `docs/plans/wp28-charge-deposition.md:60` — **not a tag**: `CHANGELOG.md` under `v0.4.0-alpha.3`. No public name is added.
-- `docs/plans/wp29-val06-apbs.md:56` — **not a tag**: 5. `SPECIFICATION.md`: the VAL-06 NOTE's measured outcome. `CHANGELOG.md` under `v0.4.0-alpha.4`.
-- `docs/plans/wp30-dielectric-and-exclusion.md:168` — **not a tag**: - `CHANGELOG.md` gets a section under `v0.4.0-alpha.5`.
-- `docs/plans/wp31-gui-charge-pipeline.md:4` — **not a tag**: to be tagged `v0.4.0-alpha.5`). This package inherits the desktop shell of WP14, WP15 and WP24:
-- `docs/plans/wp31-gui-charge-pipeline.md:151` — **not a tag**: `v0.4.0-alpha.6`. The specification rows listed under [Pointers](#pointers).
-- `docs/plans/wp32-charge-docs-and-example.md:4` — **not a tag**: to be tagged `v0.4.0-alpha.6`). Stage 7 produces a charge from a structure, gates it and records it
-- `docs/plans/wp32-charge-docs-and-example.md:178` — **not a tag**: \| The Phase 3 end-of-phase report and the `v0.4.0` tag \| The phase close, after WP32 merges, as Phase 2's was \|
-- `docs/plans/wp34-phase-3-close.md:4` — **not a tag**: tagged `v0.4.0-alpha.8`). WP34 inherits everything the [current brief](current.md) lists as not to
-- `docs/plans/wp34-phase-3-close.md:41` — **not a tag**: 5. **The end-of-phase report**, written on the Tier 1–2 evidence (E1), and `v0.4.0` (E5).
-- `docs/plans/wp34-phase-3-close.md:71` — **not a tag (a prefix of tags)**: …pt ran once on 30 September 2026 and is gone, and that the `v0.5.0` names are now the polish phase's (F2) \| Re-run after Phase 4 tags `v0.5.…
-- `docs/plans/wp34-phase-3-close.md:71` — **not a tag**: …re now the polish phase's (F2) \| Re-run after Phase 4 tags `v0.5.0-alpha.1`, it would retire live tags. The mapping stays for `release.yml`…
-- `docs/plans/wp34-phase-3-close.md:72` — **not a tag**: …\| D11 \| The stray tag \| `git push origin :refs/tags/v0.5.0-alpha.5`, after confirming it resolves to `v0.2.0-alpha.5`'s commit, `5abcf42`. C…
-- `docs/plans/wp34-phase-3-close.md:72` — **not a tag**: …refs/tags/v0.5.0-alpha.5`, after confirming it resolves to `v0.2.0-alpha.5`'s commit, `5abcf42`. Confirm with the author before pushing \| E2…
-- `docs/plans/wp34-phase-3-close.md:75` — **not a tag**: …in WP34.** `current.md` points at `/wp-plan phase-4` after `v0.4.0`, and the Phase 4 plan's first package is the modularity exploration, who…
-- `docs/plans/wp34-phase-3-close.md:76` — **not a tag**: …\| D14 \| Release \| WP34's `CHANGELOG.md` section is `v0.4.0`, and `CITATION.cff` names `0.4.0` with its date. After merge, the last commit on…
-- `docs/plans/wp34-phase-3-close.md:76` — **not a tag**: …its date. After merge, the last commit on `main` is tagged `v0.4.0` alone (E5) \| `CONTRIBUTING.md` *Versions and releases*; `release.yml`'s…
-- `docs/plans/wp34-phase-3-close.md:129` — **not a tag (a prefix of tags)**: …> only, so the reused `v0.5.0` names in the second are never waived. **D11 is done, by the author.** The tag resolved to `5abcf42` as expect…
-- `docs/plans/wp34-phase-3-close.md:132` — **not a tag**: > :refs/tags/v0.5.0-alpha.5` on 4 October 2026; `git ls-remote --tags origin` lists no `v0.5.0`
-- `docs/plans/wp34-phase-3-close.md:132` — **not a tag (a prefix of tags)**: > :refs/tags/v0.5.0-alpha.5` on 4 October 2026; `git ls-remote --tags origin` lists no `v0.5.0`
-- `docs/plans/wp34-phase-3-close.md:154` — **not a tag**: 7. `CHANGELOG.md` `v0.4.0` and `CITATION.cff` (D14).
-- `docs/plans/wp35-modularity-exploration.md:4` — **not a tag**: closed as `v0.4.0`. WP35 inherits everything the [current brief](current.md) lists as not to be
-- `docs/plans/wp35-modularity-exploration.md:34` — **not a tag**: - **VER-62**, a number-stability golden recorded on a tree that is computationally `v0.4.0`, and
-- `docs/plans/wp35-modularity-exploration.md:70` — **not a tag**: …\| D15 \| "On `v0.4.0`'s tree" \| Before recording, an AST comparison with docstrings stripped shows that every file of `src/`, `data/` and `ex…
-- `docs/plans/wp35-modularity-exploration.md:70` — **not a tag**: …hows that every file of `src/`, `data/` and `examples/` at `v0.4.0` equals WP35's tree (the survey: `v0.4.0..e63a32e` touched docstrings and…
-- `docs/plans/wp35-modularity-exploration.md:70` — **not a tag**: …nd `examples/` at `v0.4.0` equals WP35's tree (the survey: `v0.4.0..e63a32e` touched docstrings and comments only). The result goes in an Ou…
-- `docs/plans/wp35-modularity-exploration.md:75` — **not a tag**: …`[0.5.0-alpha.1]`. After merge the author or session tags `v0.5.0-alpha.1` (G11). No `v0.5.0-*` tag exists locally or on `origin` (checked…
-- `docs/plans/wp35-modularity-exploration.md:75` — **not a tag (a prefix of tags)**: …erge the author or session tags `v0.5.0-alpha.1` (G11). No `v0.5.0-*` tag exists locally or on `origin` (checked 5 October 2026) \| §2.7; F2'…
-- `docs/plans/wp35-modularity-exploration.md:98` — **not a tag**: > **Outcome — D15, the tree computes as `v0.4.0`.** Every file of `src/`, `data/` and `examples/`
-- `docs/plans/wp35-modularity-exploration.md:99` — **not a tag**: > at `v0.4.0` was compared with WP35's tree, by bytes and then, for Python, by AST with every bare
-- `docs/plans/wp36-stage-protocol-and-walk.md:4` — **not a tag**: after WP35 merged as `v0.5.0-alpha.1` and the author ruled every `MOD-nn` (§8.2.8). It inherits
-- `docs/plans/wp36-stage-protocol-and-walk.md:54` — **not a tag (a prefix of tags)**: \| D12 \| Release \| `v0.5.0-alpha.2`, and a `CHANGELOG.md` section of that name \| §2.7; G11 \|
-- `docs/plans/wp37-cycle-cuts-exit-codes-backend-guard.md:81` — **not a tag**: \| D17 \| Release \| `v0.5.0-alpha.3`, with a `CHANGELOG.md` section of that name, listing the moves \| §2.7; G11 \|
-- `docs/plans/wp38-io-split.md:4` — **not a tag**: `fd4308f`, after WP37 merged as `v0.5.0-alpha.3` and the Phase 4 plan was amended for the review
-- `docs/plans/wp38-io-split.md:92` — **not a tag**: \| D19 \| Release \| `v0.5.0-alpha.4`, with a `CHANGELOG.md` section listing the breaks above and a table of moves \| §2.7; G11 \|
-- `docs/plans/wp39-backend-registries.md:4` — **not a tag**: after WP38 merged and was tagged `v0.5.0-alpha.4`. It inherits everything the
-- `docs/plans/wp39-backend-registries.md:86` — **not a tag**: \| D15 \| Release \| `v0.5.0-alpha.5`, with a `CHANGELOG.md` section listing D6's and D7's breaks and the moves of D2 and D9 \| §2.7; G11 \|
-- `docs/plans/wp40-stale-refusals.md:4` — **not a tag**: `v0.5.0-alpha.5`. It inherits everything the [current brief](current.md) lists as not to be
-- `docs/plans/wp40-stale-refusals.md:56` — **not a tag**: …)(?!\d)`: any `vX.Y`, with a pre-release naming its minor (`v0.2.0-alpha.3` names `v0.2`). A schema identifier (`nanopnp/case/v0.5`) is not…
-- `docs/plans/wp40-stale-refusals.md:56` — **not a tag (a prefix of tags)**: …the schema to `nanopnp/case/v0.5`, which must not fail at `v0.5.0` \|…
-- `docs/plans/wp40-stale-refusals.md:62` — **not a tag**: …" \| Both conform to D4. VER-67 fails the FR-21 text at the `v0.7.0` tag unless FR-21 ships, which is the ratchet working \|…
-- `docs/plans/wp40-stale-refusals.md:92` — **not a tag**: …`v0.1`, `v0.2`: an f-string piece "is v0.2" at line 4 and `v0.2.0-alpha.3` at line 2 are found; a docstring naming `v0.2`, `nanopnp/case/v0…
-- `docs/plans/wp40-stale-refusals.md:127` — **not a tag (a prefix of tags)**: which I3 defers REV-62 to; VER-67 fails it at `v0.6.0` unless REV-62 is resolved first.
-- `docs/plans/wp41-accuracy-fixes.md:6` — **not a tag**: `v0.5.0-alpha.6`. It inherits everything the [current brief](current.md) lists as not to be
-- `docs/plans/wp42-verification-checks.md:5` — **not a tag**: …ress (extension).** Items 1–9 delivered 10 October 2026 as `v0.5.0-alpha.8`. Extended 11 October 2026 with Items 10–13 (parameter and identi…
-- `docs/plans/wp42-verification-checks.md:6` — **not a tag**: `v0.5.0-alpha.7`. It inherits everything the [current brief](current.md) lists as not to be
-- `docs/plans/wp43-development-loop.md:6` — **not a tag**: `v0.5.0-alpha.9`; the budgets are measured below item 10. Planned 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
-- `docs/plans/wp43-development-loop.md:6` — **not a tag**: `v0.5.0-alpha.9`; the budgets are measured below item 10. Planned 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
-- `docs/plans/wp43-development-loop.md:85` — **not a tag**: …nd coverage NOTEs, and a budget NOTE; `CHANGELOG.md` under `v0.5.0-alpha.9`; a REV-nn row for each missed budget \| H12, J7 \|…
-- `docs/plans/wp43-development-loop.md:261` — **not a tag**: `CHANGELOG.md` (`v0.5.0-alpha.9`) and the Phase 4 plan's WP43 entry, and leave the REV-47 note.
-- `docs/plans/wp44-simplify-the-loop.md:5` — **not a tag**: **Status: delivered, 13 October 2026.** Inherits WP43's merged loop and the rulings of §8.2.11 L2, L3, L6, L7, L8. Tag `v0.5.0-alpha.10`.
-- `docs/plans/wp45-prose-strip.md:6` — **not a tag**: (§8.2.11 L4); the trial of a fresh worker per item (L9). Tag `v0.5.0-alpha.11`.
-- `docs/plans/wp5.02-framework-spike.md:3` — **not a tag (a prefix of tags)**: **Status: delivered, 2 November 2026.** Planned 2 November 2026, on `v0.5.0`. It inherits WP5.01's design
-- `docs/plans/wp5.02-framework-spike.md:36` — **not a tag (a prefix of tags)**: live loop, and the four REV rows. **Depends on:** `v0.5.0` (merged and tagged). **Requirements:** S8
-- `docs/plans/wp5.02-framework-spike.md:38` — **not a tag**: (the spike's link only). **Implementing session:** Sonnet, high effort. Tag `v0.6.0-alpha.2`.
-- `docs/plans/wp5.03-protonation-before-the-density.md:3` — **not a tag**: **Status: merged, 3 November 2026 (`v0.6.0-alpha.3`).** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
-- `docs/plans/wp5.03-protonation-before-the-density.md:3` — **not a tag**: **Status: merged, 3 November 2026 (`v0.6.0-alpha.3`).** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
-- `docs/plans/wp5.03-protonation-before-the-density.md:34` — **not a tag**: handled as AG8 rules. The clauses U2 names are amended. **Depends on:** `v0.6.0-alpha.2`.
-- `docs/plans/wp5.03-protonation-before-the-density.md:37` — **not a tag**: `main`. Tag `v0.6.0-alpha.3`.
-- `docs/plans/wp5.04-the-charge-mutators-library-step.md:3` — **not a tag**: **Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.3`. It inherits §8.2.17 S4, §8.2.19 U6,
-- `docs/plans/wp5.04-the-charge-mutators-library-step.md:33` — **not a tag**: …difference; stage 2 reading a radius edit. **Depends on:** `v0.6.0-alpha.3`. **Requirements:** FR-38, PHY-16 step 3, FR-12, FR-25, IF-03; VE…
-- `docs/plans/wp5.04-the-charge-mutators-library-step.md:35` — **not a tag**: Tag `v0.6.0-alpha.4`.
-- `docs/plans/wp5.05-named-models-and-study-overrides.md:3` — **not a tag**: **Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.4`. It inherits §8.2.18 T2, §8.2.28 AD3,
-- `docs/plans/wp5.05-named-models-and-study-overrides.md:31` — **not a tag**: sweep over models, and `inputs.mesh.artefact` (REV-62). **Depends on:** `v0.6.0-alpha.4`. **Requirements:** FR-39,
-- `docs/plans/wp5.05-named-models-and-study-overrides.md:33` — **not a tag**: session:** Sonnet, high effort; every item stays `main` except item 9. Tag `v0.6.0-alpha.5`.
-- `docs/plans/wp5.06-outputs-and-steric-registries.md:33` — **not a tag**: model's name). **Implementing session:** Sonnet, high effort. Tag `v0.6.0-alpha.6`.
-- `docs/plans/wp51-plotting-and-notebooks.md:35` — **not a tag**: `v0.5.0-alpha.17`. Models: Sonnet by default; Haiku for items 1 and 7. Item 3 touches `solve/` and
-- `docs/plans/wp54-notebooks-and-figures-revised.md:36` — **not a tag**: …-37's new tests; VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.20`. Implementing session: Sonnet, high effort. A `physics-reviewer…
-- `docs/plans/wp55-user-testing-protocol.md:41` — **not a tag**: `v0.5.0-alpha.21`. Implementing session: Sonnet, high effort. No `src/` change. A `physics-reviewer`
-- `docs/plans/wp56-command-line-read-by-a-person.md:35` — **not a tag**: written in this plan's commit. Tag `v0.5.0-alpha.22`. Implementing session: Sonnet, high effort. No
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:480` — **not a tag**: …> **Outcome — the release run of `v0.5.0-alpha.22`.** That run (Release 41053380507, on `e775c29`) failed one test on every job, `test_ver46…
-- `docs/plans/wp58-documentation-increment-4.md:49` — **not a tag (a prefix of tags)**: …eased` row and `CITATION.cff` are **WP59's** \| §8.2.24 Z1: `v0.5.0` sits on the close's commit (§8.4.1); a page claiming an absent tag is th…
-- `docs/plans/wp59-architecture-review-fixes.md:5` — **not a tag**: test scope (§8.2.13 N1, N3). Tag `v0.5.0-alpha.25`, after the merge.
-- `docs/plans/wp60-phase-4-close.md:4` — **not a tag**: `v0.5.0-alpha.25`; CI run 41446908606 green). Inherits §8.2.24 Z1 and Z3, §8.2.27 AC1 and AC6, §8.2.29 AE5 (ruled at
-- `docs/plans/wp60-phase-4-close.md:5` — **not a tag (a prefix of tags)**: this plan) and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.5.0` alone (§8.4.1).
-- `docs/plans/wp60-phase-4-close.md:47` — **not a tag (a prefix of tags)**: …README, `docs/index.md` and `docs/overrides/main.html` say `v0.5.0` is released and v0.6 is in progress. The phase plan reads **closed**; `c…
-- `docs/plans/wp60-phase-4-close.md:224` — **not a tag (a prefix of tags)**: \| The tag `v0.5.0` and the GitHub Release \| `/np-ship phase 4`, after the merge \|
+- `docs/plans/sessions/history-prose-review.md:13` — **not a tag**: 2. Branch from `main` after WP34 has merged and been tagged `v0.4.0`; do not reuse the WP34 branch.
+- `docs/plans/sessions/history-prose-review.md:57` — **not a tag (a prefix of tags)**: on 30 September 2026, why `v0.5.0` was reused, and how to read an old manifest's version by its
+- `docs/plans/sessions/history-prose-review.md:67` — **not a tag**: \| `docs/plans/phase-3/phase-3-charge-pipeline.md:4` \| "`v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`" (a delivered plan, see I) \|
+- `docs/plans/sessions/history-prose-review.md:67` — **not a tag**: \| `docs/plans/phase-3/phase-3-charge-pipeline.md:4` \| "`v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`" (a delivered plan, see I) \|
+- `docs/plans/phase-1/phase-1-solver-core.md:3` — **not a tag**: **Status: WP7–WP16 delivered; end-of-phase report written 24 September 2026; released as `v0.2.0`**
+- `docs/plans/phase-1/phase-1-solver-core.md:911` — **not a tag**: Written 24 September 2026, on `main` at `b2ab533` (the `v0.2.0-alpha.10` code plus the Phase 2 plan).
+- `docs/plans/phase-1/phase-1-solver-core.md:919` — **not a tag**: in the manner of Phase 0's A2 and A4. v0.2.0 is released with the COMSOL attribution outstanding,
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:3` — **not a tag**: …**Status: closed, 30 September 2026, as `v0.3.0`, with criterion 3 waived (`SPECIFICATION.md` §8.2.4 D7; [End-of-phase report](#end-of-phase…
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:4` — **not a tag**: solver core on an externally supplied mesh (main at `v0.2.0-alpha.10`). Two things come first:
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:5` — **not a tag**: the Phase 1 end-of-phase report, which merges as tag `v0.2.0`, and the author's double-click
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:11` — **not a tag**: this phase's packages were tagged `v0.9.0-alpha.N`.) The specification is normative: where this file and the specification disagree, the
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:122` — **not a tag**: > **Delivered, 24 September 2026** ([plan](wp17-case-schema-v2.md), tag `v0.3.0-alpha.1`). The
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:152` — **not a tag**: > `v0.3.0-alpha.2`). Stage 1, `structure`, reads PDB, mmCIF (through gemmi) and the four trajectory
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:192` — **not a tag**: > `v0.3.0-alpha.3`). Stage 2, `density`, deposits each frame's probabilistic union on a canonical
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:221` — **not a tag**: > `v0.3.0-alpha.4`). Stage 4, `contour`, runs marching squares on the reduced mean, placed by the
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:254` — **not a tag**: > `v0.3.0-alpha.5`). Stage 5, `region`, turns a stage-4 or supplied profile into the glued,
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:288` — **not a tag**: > `v0.3.0-alpha.6`). `nanopnp.validation.geometry` computes VAL-05 once for both legs and the
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:323` — **not a tag**: > `v0.3.0-alpha.7`). `numerics.mesh.backend: gmsh` meshes stage 5's region through
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:357` — **not a tag**: > `v0.3.0-alpha.8`). The desktop shell gains its **Geometry** tab. It builds stages 1 to 6 in the
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:394` — **not a tag**: > `v0.3.0-alpha.9`). Phase criterion 5 is met. The guide gains *Structures and trajectories* and
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:471` — **not a tag**: Written 30 September 2026, on `main` at `ba98f37` (`v0.3.0-alpha.9` and the review fixes) with this
+- `docs/plans/phase-2/phase-2-geometry-pipeline.md:480` — **not a tag**: tolerance stands and the Tier-3 test keeps asserting it. v0.3.0 is released on that basis. The
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:3` — **not a tag**: …**Status: closed, 4 October 2026, as `v0.4.0` on WP34's merge (end-of-phase report below; §8.2.5 E1, E5). WP26 delivered, 30 September 2026;…
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:4` — **not a tag**: the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:4` — **not a tag**: the geometry pipeline (`main` at `v0.3.0-alpha.9`, formerly `v0.9.0-alpha.9`). Phase 2's
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:5` — **not a tag**: end-of-phase report and its release, `v0.3.0`, wait for one Tier-3 run on the author's archive
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:7` — **not a tag**: it depends on the Phase 2 verdict, but **v0.4.0 is not tagged before v0.3.0**.
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:7` — **not a tag**: it depends on the Phase 2 verdict, but **v0.4.0 is not tagged before v0.3.0**.
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:116` — **not a tag**: implements them. Tags are `v0.4.0-alpha.N`.
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:134` — **not a tag**: > `v0.4.0-alpha.1`). `register_model` pairs each model with a `ModelDeclaration`, and case
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:164` — **not a tag**: > **Delivered, 1 October 2026** ([plan](wp27-protonation.md), to be tagged `v0.4.0-alpha.2`). The
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:205` — **not a tag**: > `v0.4.0-alpha.3`). Stage 7 sums PHY-16 step 5's kernel on the 0.005 nm export lattice, cached as
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:236` — **not a tag**: > **Delivered, 1 October 2026** ([plan](wp29-val06-apbs.md), to be tagged `v0.4.0-alpha.4`).
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:277` — **not a tag**: > `v0.4.0-alpha.5`). Stage 5 builds the `exclusion` shell from the profile's offset and moves
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:310` — **not a tag**: > `v0.4.0-alpha.6`). The seventh tab, **Charge**, builds stages 1–7 on the Geometry tab's run
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:343` — **not a tag**: > `v0.4.0-alpha.7`). The guide page *From a structure to a charge*, the D3 edits that link it, and
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:367` — **not a tag**: > **Delivered, 3 October 2026** ([plan](wp33-test-durations.md), to be tagged `v0.4.0-alpha.8`).
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:385` — **not a tag**: Phase 4 (E1). Its last commit on `main` is tagged `v0.4.0` (E5).
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:395` — **not a tag**: > **Delivered, 4 October 2026** ([plan](wp34-phase-3-close.md), to be tagged `v0.4.0` alone).
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:400` — **not a tag**: > repository. The renumbering script is deleted, and the stray `v0.5.0-alpha.5` tag was deleted by
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:409` — **not a tag (a prefix of tags)**: …and was deleted by [WP34](wp34-phase-3-close.md) D10. The `v0.5.0` names are reused for Phase 4 (§8.2.5 E2, §8.2.6 F2) \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:3` — **not a tag (a prefix of tags)**: …s: delivered, 2 November 2026; closes at the merge and the `v0.5.0` tag.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and res…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:3` — **not a tag**: ….0` tag.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`, and restated to its…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:11` — **not a tag (a prefix of tags)**: review's fixes, and **WP60**, the close, are delivered. Estimate: 4–6 weeks (§8.2.9 I5; §8.2.22 X9). Release: **v0.5** (`v0.5.0`).
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:92` — **not a tag**: …\| Number stability \| A golden recorded on `v0.4.0`'s tree and asserted by every later package at 10⁻⁸ relative on a recorded mesh. On an uns…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:95` — **not a tag (a prefix of tags)**: …\| Close and tags \| `v0.5.0` alone on the close package's last commit; the session pushes each tag if it can, otherwise prints the commands (…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:135` — **not a tag (a prefix of tags)**: starts. Tags are `v0.5.0-alpha.N`.
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:141` — **not a tag**: …golden (VER-62) \| [plan](wp35-modularity-exploration.md) \| `v0.5.0-alpha.1` \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:142` — **not a tag (a prefix of tags)**: …02`, `MOD-12`) \| [plan](wp36-stage-protocol-and-walk.md) \| `v0.5.0-alpha.2` \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:143` — **not a tag**: …5) \| [plan](wp37-cycle-cuts-exit-codes-backend-guard.md) \| `v0.5.0-alpha.3` \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:144` — **not a tag**: …`MOD-04`, `MOD-13`, `MOD-15`) \| [plan](wp38-io-split.md) \| `v0.5.0-alpha.4` \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:145` — **not a tag**: …, `MOD-16`; VER-66) \| [plan](wp39-backend-registries.md) \| `v0.5.0-alpha.5` \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:146` — **not a tag**: \| WP40 \| The stale refusals (`MOD-14`) \| [plan](wp40-stale-refusals.md) \| `v0.5.0-alpha.6` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:147` — **not a tag**: \| WP41 \| The accuracy fixes (REV-06 to REV-09, REV-17, REV-26) \| [plan](wp41-accuracy-fixes.md) \| `v0.5.0-alpha.7` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:148` — **not a tag**: \| WP42 \| The verification checks (REV-11 to REV-13 and others) \| [plan](wp42-verification-checks.md) \| `v0.5.0-alpha.8` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:149` — **not a tag**: \| WP43 \| The development loop, since simplified by WP44 \| [plan](wp43-development-loop.md) \| `v0.5.0-alpha.9` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:150` — **not a tag**: …aps (L2, L3, L6, L7) \| [plan](wp44-simplify-the-loop.md) \| `v0.5.0-alpha.10` \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:151` — **not a tag**: \| WP45 \| The prose strip: one rule for in-code prose (L4) \| [plan](wp45-prose-strip.md) \| `v0.5.0-alpha.11` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:152` — **not a tag**: \| WP46 \| The small fixes (REV-14 to REV-16, REV-18, REV-19 and eleven low items) \| [plan](wp46-small-fixes.md) \| `v0.5.0-alpha.12` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:153` — **not a tag**: \| WP47 \| The OKF bundle and its checks for `knowledge/` \| [plan](wp47-okf-bundle.md) \| `v0.5.0-alpha.13` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:154` — **not a tag**: \| WP48 \| The OKF backfill: tested claims name their tests \| [plan](wp48-okf-backfill.md) \| `v0.5.0-alpha.14` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:155` — **not a tag**: …ema as JSON Schema (VER-76) \| [plan](wp49-cost-study.md) \| `v0.5.0-alpha.15` \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:156` — **not a tag**: \| WP50 \| The test scope (N1 to N5) \| [plan](wp50-test-scope.md) \| `v0.5.0-alpha.16` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:157` — **not a tag**: \| WP51 \| The plotting library and the notebooks (FR-30; P1 to P10) \| [plan](wp51-plotting-and-notebooks.md) \| `v0.5.0-alpha.17` \|
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:164` — **not a tag**: Delivered ([plan](wp52-specification-and-plans-split.md); tag `v0.5.0-alpha.18`). `specification/` is
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:176` — **not a tag**: Delivered ([plan](wp53-workflow-commands.md); tag `v0.5.0-alpha.19`). `/np-plan <project \| phase n
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:192` — **not a tag**: Delivered ([plan](wp54-notebooks-and-figures-revised.md); tag `v0.5.0-alpha.20`). The six notebooks
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:205` — **not a tag**: Delivered ([plan](wp55-user-testing-protocol.md); tag `v0.5.0-alpha.21`). `docs/user-testing/` holds the
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:217` — **not a tag**: Delivered ([plan](wp56-command-line-read-by-a-person.md); tag `v0.5.0-alpha.22`). It fixes UT-01 to UT-08,
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:290` — **not a tag**: `CHANGELOG.md` and IF-01's NOTE; `[0.5.0]` gathers them (WP60). Tag `v0.5.0-alpha.25`, after the merge.
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:314` — **not a tag**: eleven. Implementing model: Sonnet, the Newton item in the main session. Tag `v0.5.0-alpha.25`, after the merge.
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:318` — **not a tag (a prefix of tags)**: **Delivered 2 November 2026** ([plan](wp60-phase-4-close.md); tag `v0.5.0` alone, after the merge). Both findings
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:364` — **not a tag (a prefix of tags)**: …tags, if the session cannot push them \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:364` — **not a tag (a prefix of tags)**: …em \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -a` and `git push` commands (G11) \|…
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:405` — **not a tag**: 6. **VER-62 holds** on every CI platform, against the golden recorded on `v0.4.0`: at 10⁻⁸ relative
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:465` — **not a tag**: - **Number stability** (VER-62; the golden recorded on `v0.4.0`'s tree and re-pinned within its rulings, last at
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:491` — **not a tag**: `v1` and `v2` are retired. `nanopnp.PUBLIC` has 19 names, against 26 at `v0.4.0`: five are added (`Artefact`,
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:496` — **not a tag**: schema. Sources: `nanopnp.PUBLIC` at `v0.4.0` and now, IF-01's NOTE, VER-47.
+- `docs/plans/phase-4/phase-4-record.md:9` — **not a tag**: **Status: in progress.** Written 5 October 2026, after Phase 3 closed as `v0.4.0`. Amended the
+- `docs/plans/phase-4/phase-4-record.md:18` — **not a tag**: ([wp35-modularity-exploration.md](wp35-modularity-exploration.md)), tagged `v0.5.0-alpha.1`;
+- `docs/plans/phase-4/phase-4-record.md:20` — **not a tag (a prefix of tags)**: tagged `v0.5.0-alpha.2`; WP37, the cycle cuts, the exit codes and the backend guard
+- `docs/plans/phase-4/phase-4-record.md:22` — **not a tag**: tagged `v0.5.0-alpha.3`; WP38, the `io` split ([wp38-io-split.md](wp38-io-split.md)),
+- `docs/plans/phase-4/phase-4-record.md:23` — **not a tag**: tagged `v0.5.0-alpha.4`; WP39, the backend registries ([wp39-backend-registries.md](wp39-backend-registries.md)),
+- `docs/plans/phase-4/phase-4-record.md:24` — **not a tag**: to be tagged `v0.5.0-alpha.5`; WP40, the stale refusals ([wp40-stale-refusals.md](wp40-stale-refusals.md)),
+- `docs/plans/phase-4/phase-4-record.md:25` — **not a tag**: to be tagged `v0.5.0-alpha.6`; WP41, the accuracy fixes ([wp41-accuracy-fixes.md](wp41-accuracy-fixes.md)),
+- `docs/plans/phase-4/phase-4-record.md:26` — **not a tag**: to be tagged `v0.5.0-alpha.7`; WP42, the verification checks
+- `docs/plans/phase-4/phase-4-record.md:27` — **not a tag**: ([wp42-verification-checks.md](wp42-verification-checks.md)), to be tagged `v0.5.0-alpha.8`;
+- `docs/plans/phase-4/phase-4-record.md:29` — **not a tag**: `v0.5.0-alpha.9`; WP44, simplify the loop ([wp44-simplify-the-loop.md](wp44-simplify-the-loop.md)), to be
+- `docs/plans/phase-4/phase-4-record.md:30` — **not a tag**: tagged `v0.5.0-alpha.10`; WP45, the prose strip ([wp45-prose-strip.md](wp45-prose-strip.md)), to be tagged
+- `docs/plans/phase-4/phase-4-record.md:31` — **not a tag**: `v0.5.0-alpha.11`; WP46, the small fixes ([wp46-small-fixes.md](wp46-small-fixes.md)), to be tagged
+- `docs/plans/phase-4/phase-4-record.md:32` — **not a tag**: `v0.5.0-alpha.12`; WP47, the OKF bundle ([plan](wp47-okf-bundle.md)), to be tagged
+- `docs/plans/phase-4/phase-4-record.md:33` — **not a tag**: `v0.5.0-alpha.13`; WP48, the OKF backfill ([plan](wp48-okf-backfill.md)), to be tagged
+- `docs/plans/phase-4/phase-4-record.md:34` — **not a tag**: `v0.5.0-alpha.14`; WP49, the cost study ([plan](wp49-cost-study.md)), to be tagged
+- `docs/plans/phase-4/phase-4-record.md:35` — **not a tag**: `v0.5.0-alpha.15`; WP50, the test scope ([plan](wp50-test-scope.md)), to be tagged
+- `docs/plans/phase-4/phase-4-record.md:36` — **not a tag**: `v0.5.0-alpha.16`.
+- `docs/plans/phase-4/phase-4-record.md:38` — **not a tag**: `v0.5.0-alpha.17`.
+- `docs/plans/phase-4/phase-4-record.md:46` — **not a tag (a prefix of tags)**: Estimate: 4–6 weeks (§8.2.9 I5). Release: **v0.5** (`v0.5.0`).
+- `docs/plans/phase-4/phase-4-record.md:242` — **not a tag**: …\| Number stability \| A golden recorded in WP35 on `v0.4.0`'s tree and asserted by every later package, at 10⁻⁸ relative on a recorded mesh (…
+- `docs/plans/phase-4/phase-4-record.md:244` — **not a tag (a prefix of tags)**: …\| Close and tags \| `v0.5.0` alone on the close package's last commit. The session pushes each tag if its access allows, and otherwise prints…
+- `docs/plans/phase-4/phase-4-record.md:291` — **not a tag (a prefix of tags)**: when it implements them. Tags are `v0.5.0-alpha.N`.
+- `docs/plans/phase-4/phase-4-record.md:327` — **not a tag**: on `v0.4.0`'s tree. Among them are the 2WCD charged walk's Na⁺ and Cl⁻ currents. Example 05's
+- `docs/plans/phase-4/phase-4-record.md:344` — **not a tag**: > `v0.5.0-alpha.1`). The [report](../project/modularity.md) logs 17 findings in
+- `docs/plans/phase-4/phase-4-record.md:349` — **not a tag**: > seven walks, recorded on a tree D15 shows computes as `v0.4.0`, with zero drift on a Linux rerun.
+- `docs/plans/phase-4/phase-4-record.md:393` — **not a tag (a prefix of tags)**: > `v0.5.0-alpha.2`). `MOD-01`, `MOD-02` and `MOD-12` are `fixed`. `Stage.key(inputs)` is on the
+- `docs/plans/phase-4/phase-4-record.md:434` — **not a tag**: > `v0.5.0-alpha.3`). `MOD-05` is `fixed`; `MOD-03` stays `accepted` for WP38. `numerics/` holds
+- `docs/plans/phase-4/phase-4-record.md:467` — **not a tag**: > **Delivered, 6 October 2026** ([plan](wp38-io-split.md), tagged `v0.5.0-alpha.4`).
+- `docs/plans/phase-4/phase-4-record.md:507` — **not a tag**: > **Delivered, 6 October 2026** ([plan](wp39-backend-registries.md), to be tagged `v0.5.0-alpha.5`).
+- `docs/plans/phase-4/phase-4-record.md:535` — **not a tag**: > **Delivered, 7 October 2026** ([plan](wp40-stale-refusals.md), to be tagged `v0.5.0-alpha.6`).
+- `docs/plans/phase-4/phase-4-record.md:545` — **not a tag (a prefix of tags)**: >   text at `v0.6.0`, FR-21's at `v0.7.0`, unless each ships first;
+- `docs/plans/phase-4/phase-4-record.md:545` — **not a tag**: >   text at `v0.6.0`, FR-21's at `v0.7.0`, unless each ships first;
+- `docs/plans/phase-4/phase-4-record.md:583` — **not a tag**: > **Delivered, 8 October 2026** ([plan](wp41-accuracy-fixes.md), to be tagged `v0.5.0-alpha.7`).
+- `docs/plans/phase-4/phase-4-record.md:683` — **not a tag**: under the third lever, and the soundness argument of the selection. Tagged `v0.5.0-alpha.9`.
+- `docs/plans/phase-4/phase-4-record.md:695` — **not a tag**: > tagged `v0.5.0-alpha.9`. A commit runs the tests a recorded impact map selects (VER-74), the push
+- `docs/plans/phase-4/phase-4-record.md:714` — **not a tag**: behaviour, and plans a session can afford. Tag `v0.5.0-alpha.10`. It does:
+- `docs/plans/phase-4/phase-4-record.md:745` — **not a tag**: *Added, 13 October 2026.* Tag `v0.5.0-alpha.11`. The rule itself (`python.md`, `pyproject.toml`'s docstring
+- `docs/plans/phase-4/phase-4-record.md:874` — **not a tag**: > **Delivered, 18 October 2026** ([plan](wp49-cost-study.md), to be tagged `v0.5.0-alpha.15`). Measured
+- `docs/plans/phase-4/phase-4-record.md:902` — **not a tag**: The package claims VER-76 and sets REV-112 and REV-113 `fixed`. Tag `v0.5.0-alpha.15`.
+- `docs/plans/phase-4/phase-4-record.md:906` — **not a tag**: > **Delivered, 19 October 2026** ([plan](wp50-test-scope.md), to be tagged `v0.5.0-alpha.16`). N1's
+- `docs/plans/phase-4/phase-4-record.md:931` — **not a tag**: tests that remain. It claims no new identifier. Tag `v0.5.0-alpha.16`.
+- `docs/plans/phase-4/phase-4-record.md:975` — **not a tag**: widgets. REV-123 becomes `fixed`. Tag `v0.5.0-alpha.17`.
+- `docs/plans/phase-4/phase-4-record.md:978` — **not a tag**: > `v0.5.0-alpha.17`). `nanopnp.plot`, behind the `plot` extra, draws a figure of every stage's artefact
+- `docs/plans/phase-4/phase-4-record.md:1011` — **not a tag**: Tag `v0.5.0-alpha.18`.
+- `docs/plans/phase-4/phase-4-record.md:1036` — **not a tag**: detached or diverged checkout. Tag `v0.5.0-alpha.19`.
+- `docs/plans/phase-4/phase-4-record.md:1047` — **not a tag**: plan claims its identifiers. Tag `v0.5.0-alpha.20`.
+- `docs/plans/phase-4/phase-4-record.md:1056` — **not a tag**: > the tester installs the `notebook` extra. Tag `v0.5.0-alpha.18`.
+- `docs/plans/phase-4/phase-4-record.md:1059` — **not a tag**: > notebooks session 04 is re-read against. Tag `v0.5.0-alpha.21`.
+- `docs/plans/phase-4/phase-4-record.md:1084` — **not a tag**: > study, as well as the OKF backfill. Tag `v0.5.0-alpha.16`.
+- `docs/plans/phase-4/phase-4-record.md:1088` — **not a tag**: > `v0.5.0-alpha.17`.
+- `docs/plans/phase-4/phase-4-record.md:1137` — **not a tag (a prefix of tags)**: Its last commit on `main` is tagged `v0.5.0` alone (G11).
+- `docs/plans/phase-4/phase-4-record.md:1163` — **not a tag (a prefix of tags)**: \| Close and tags \| `v0.5.0` alone; the session tags if it can \| **Settled by the author, 5 October 2026** (G11) \|
+- `docs/plans/phase-4/phase-4-record.md:1219` — **not a tag**: \| The tag `v0.5.0-alpha.9` and CI result as the required check \| Now \| WP44's pull request waits on the old checks \|
+- `docs/plans/phase-4/phase-4-record.md:1225` — **not a tag (a prefix of tags)**: …tags, if the session cannot push them \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -…
+- `docs/plans/phase-4/phase-4-record.md:1225` — **not a tag (a prefix of tags)**: …em \| After each merge (`v0.5.0-alpha.N`) and at the close (`v0.5.0`) \| The session prints the `git tag -a` and `git push` commands (G11) \|…
+- `docs/plans/phase-4/phase-4-record.md:1290` — **not a tag**: 6. **VER-62 holds** on every CI platform, against the golden recorded on `v0.4.0`: at 10⁻⁸ relative
+- `docs/plans/phase-4/phase-4-record.md:1347` — **not a tag**: - **The layering:** the subpackage import matrix before (`v0.4.0`) and after, the size of the
+- `docs/plans/phase-4/phase-4-record.md:1364` — **not a tag**: 1,764 collected by default at `v0.4.0`. Source: the gate run on the close package's tree.
+- `docs/plans/phase-4/phase-4-record.md:1399` — **not a tag**: > diverged checkout. Tag `v0.5.0-alpha.19`.
+- `docs/plans/phase-4/phase-4-record.md:1418` — **not a tag**: > `v0.5.0-alpha.20`.
+- `docs/plans/phase-4/phase-4-record.md:1537` — **not a tag (a prefix of tags)**: > Its last commit on `main` is tagged `v0.5.0` alone (G11).
+- `docs/plans/phase-4/phase-4-record.md:1571` — **not a tag (a prefix of tags)**: > Its last commit on `main` is tagged `v0.5.0` alone (G11).
+- `docs/plans/phase-5/phase-5-record.md:28` — **not a tag (a prefix of tags)**: `v0.6.0` (S17). It proposes a ruling on each inherited row.
+- `docs/plans/phase-5/phase-5-record.md:45` — **not a tag (a prefix of tags)**: …ress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended…
+- `docs/plans/phase-5/phase-5-record.md:47` — **not a tag (a prefix of tags)**: > WP5.01, beside Phase 4 (S1), and WP5.02, after `v0.5.0`. The shell packages from WP5.03 and their
+- `docs/plans/phase-5/phase-5-record.md:48` — **not a tag (a prefix of tags)**: > estimate wait for `/np-plan amend 5` (S14); the close is last. Release: **v0.6** (`v0.6.0`).
+- `docs/plans/phase-5/phase-5-record.md:91` — **not a tag (a prefix of tags)**: > After `v0.5.0`. One hard screen, the residue and charge-map link with a sketcher stub, is built
+- `docs/plans/phase-5/phase-5-record.md:99` — **not a tag**: > `v0.6.0-alpha.2` (S19). It also owns REV-137 (the renderer for each view, the explorer's controls
+- `docs/plans/phase-5/phase-5-record.md:117` — **not a tag (a prefix of tags)**: close is last. Release: **v0.6** (`v0.6.0`).
+- `docs/plans/phase-5/phase-5-record.md:155` — **not a tag**: Tag `v0.6.0-alpha.2` (S19).
+- `docs/plans/phase-5/phase-5-record.md:158` — **not a tag (a prefix of tags)**: §8.2.17 S7), and each is planned by `/np-plan wp` after WP5.02 (AD2, AD3). None changes `src/` before `v0.5.0` (S1).
+- `docs/plans/phase-5/phase-5-record.md:176` — **not a tag (a prefix of tags)**: `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
+- `docs/plans/phase-5/phase-5-record.md:206` — **not a tag**: > `v0.6.0-alpha.3`.
+- `docs/plans/phase-5/phase-5-record.md:220` — **not a tag**: > `v0.6.0-alpha.4`.
+- `docs/plans/phase-5/phase-5-record.md:235` — **not a tag**: > `v0.6.0-alpha.5`.
+- `docs/plans/phase-5/phase-5-record.md:249` — **not a tag**: > routes keep their cross-check (FR-23, QR-04). Before the Study suite offers outputs (T4). Tag `v0.6.0-alpha.6`.
+- `docs/plans/phase-5/phase-5-record.md:317` — **not a tag**: > restated. Tag `v0.6.0-alpha.15`.
+- `docs/plans/phase-5/phase-5-record.md:324` — **not a tag**: > (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag `v0.6.0-alpha.16`.
+- `docs/plans/phase-5/phase-5-record.md:332` — **not a tag**: > Q37 to Q41 move here. Tag `v0.6.0-alpha.17`.
+- `docs/plans/phase-5/phase-5-record.md:340` — **not a tag**: > `v0.6.0-alpha.18`.
+- `docs/plans/phase-5/phase-5-record.md:346` — **not a tag (a prefix of tags)**: > and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
+- `docs/plans/phase-2/wp17-case-schema-v2.md:6` — **not a tag**: implemented until ruling B1 is met.** The Phase 1 end-of-phase report has merged as `v0.2.0`, and the
+- `docs/plans/phase-2/wp17-case-schema-v2.md:8` — **not a tag**: §8.2.1), so B1 is met. Its tag is `v0.3.0-alpha.1`.
+- `docs/plans/phase-2/wp17-case-schema-v2.md:65` — **not a tag**: …me run" \| A frozen corpus of every v1 case file shipped at `v0.2.0`: 7 example case files, 5 validation cases and the sweep base case, 13 in…
+- `docs/plans/phase-2/wp17-case-schema-v2.md:129` — **not a tag**: 6. **VER-47 tests** (see Verification). Add the `CHANGELOG.md` section `v0.3.0-alpha.1`. Update the
+- `docs/plans/phase-2/wp18-structure-ingestion.md:4` — **not a tag**: 25 September 2026 as PR #38 and tagged `v0.3.0-alpha.1`. WP18 inherits:
+- `docs/plans/phase-2/wp18-structure-ingestion.md:147` — **not a tag**: section `v0.3.0-alpha.2`. Add Outcomes here where a prediction moved, and update `current.md`.
+- `docs/plans/phase-2/wp19-density-and-reduction.md:4` — **not a tag**: `v0.3.0-alpha.2` (PR [#39](https://github.com/willemsk/nanopnp/pull/39)). This package inherits
+- `docs/plans/phase-2/wp20-contour-extraction.md:4` — **not a tag**: `claude/wp-plan-19-19570b` (its PR becomes `v0.3.0-alpha.3`). This package inherits stage 3's
+- `docs/plans/phase-2/wp21-cad-assembly-and-meshing.md:4` — **not a tag**: [#41](https://github.com/willemsk/nanopnp/pull/41), to be tagged `v0.3.0-alpha.4`). This package
+- `docs/plans/phase-2/wp21-cad-assembly-and-meshing.md:142` — **not a tag**: and CHANGELOG `v0.3.0-alpha.5` is written.
+- `docs/plans/phase-2/wp22-val05-reference-geometry.md:4` — **not a tag**: `v0.3.0-alpha.5`), and so has the CODE_REVIEW_002 follow-up on `main`. This package inherits the
+- `docs/plans/phase-2/wp22-val05-reference-geometry.md:89` — **not a tag**: CHANGELOG `v0.3.0-alpha.6`.
+- `docs/plans/phase-2/wp23-gmsh-backend.md:4` — **not a tag**: (`32fecf1`, to be tagged `v0.3.0-alpha.6`). This package inherits stage 5's glued, adjacency-named
+- `docs/plans/phase-2/wp23-gmsh-backend.md:87` — **not a tag**: CHANGELOG `v0.3.0-alpha.7`, and add the phase plan's *Delivered* note.
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:4` — **not a tag**: (`4232eeb`, tagged `v0.3.0-alpha.7`). This package inherits the desktop shell of WP14 and WP15:
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:126` — **not a tag**: 10. `docs/guide/desktop.md`: the Geometry tab. `CHANGELOG.md` under `v0.3.0-alpha.8`. The
+- `docs/plans/phase-2/wp25-geometry-docs-and-example.md:4` — **not a tag**: `v0.3.0-alpha.8`). Stages 1–6 exist, run from the CLI and the Geometry tab, and are gated. But the
+- `docs/plans/phase-2/wp25-geometry-docs-and-example.md:156` — **not a tag**: - **The Phase 2 end-of-phase report and the `v0.3.0` tag.** Both wait for criterion 3.
+- `docs/plans/phase-3/wp26-physics-model-interface.md:137` — **not a tag**: worked example, in the nav; `CHANGELOG.md` under `v0.4.0-alpha.1`.
+- `docs/plans/phase-3/wp27-protonation.md:4` — **not a tag**: tagged `v0.4.0-alpha.1`). The second package of Phase 3. It inherits stage 1's `AlignedEnsemble`
+- `docs/plans/phase-3/wp27-protonation.md:128` — **not a tag**: `CHANGELOG.md` under `v0.4.0-alpha.2`. Any documented `stage --list` output. No public name is
+- `docs/plans/phase-3/wp28-charge-deposition.md:4` — **not a tag**: tagged `v0.4.0-alpha.2`). The third package of Phase 3. It inherits WP27's `ProtonationTable` and
+- `docs/plans/phase-3/wp28-charge-deposition.md:60` — **not a tag**: `CHANGELOG.md` under `v0.4.0-alpha.3`. No public name is added.
+- `docs/plans/phase-3/wp29-val06-apbs.md:56` — **not a tag**: 5. `SPECIFICATION.md`: the VAL-06 NOTE's measured outcome. `CHANGELOG.md` under `v0.4.0-alpha.4`.
+- `docs/plans/phase-3/wp30-dielectric-and-exclusion.md:168` — **not a tag**: - `CHANGELOG.md` gets a section under `v0.4.0-alpha.5`.
+- `docs/plans/phase-3/wp31-gui-charge-pipeline.md:4` — **not a tag**: to be tagged `v0.4.0-alpha.5`). This package inherits the desktop shell of WP14, WP15 and WP24:
+- `docs/plans/phase-3/wp31-gui-charge-pipeline.md:151` — **not a tag**: `v0.4.0-alpha.6`. The specification rows listed under [Pointers](#pointers).
+- `docs/plans/phase-3/wp32-charge-docs-and-example.md:4` — **not a tag**: to be tagged `v0.4.0-alpha.6`). Stage 7 produces a charge from a structure, gates it and records it
+- `docs/plans/phase-3/wp32-charge-docs-and-example.md:178` — **not a tag**: \| The Phase 3 end-of-phase report and the `v0.4.0` tag \| The phase close, after WP32 merges, as Phase 2's was \|
+- `docs/plans/phase-3/wp34-phase-3-close.md:4` — **not a tag**: tagged `v0.4.0-alpha.8`). WP34 inherits everything the [current brief](current.md) lists as not to
+- `docs/plans/phase-3/wp34-phase-3-close.md:41` — **not a tag**: 5. **The end-of-phase report**, written on the Tier 1–2 evidence (E1), and `v0.4.0` (E5).
+- `docs/plans/phase-3/wp34-phase-3-close.md:71` — **not a tag (a prefix of tags)**: …pt ran once on 30 September 2026 and is gone, and that the `v0.5.0` names are now the polish phase's (F2) \| Re-run after Phase 4 tags `v0.5.…
+- `docs/plans/phase-3/wp34-phase-3-close.md:71` — **not a tag**: …re now the polish phase's (F2) \| Re-run after Phase 4 tags `v0.5.0-alpha.1`, it would retire live tags. The mapping stays for `release.yml`…
+- `docs/plans/phase-3/wp34-phase-3-close.md:72` — **not a tag**: …\| D11 \| The stray tag \| `git push origin :refs/tags/v0.5.0-alpha.5`, after confirming it resolves to `v0.2.0-alpha.5`'s commit, `5abcf42`. C…
+- `docs/plans/phase-3/wp34-phase-3-close.md:72` — **not a tag**: …refs/tags/v0.5.0-alpha.5`, after confirming it resolves to `v0.2.0-alpha.5`'s commit, `5abcf42`. Confirm with the author before pushing \| E2…
+- `docs/plans/phase-3/wp34-phase-3-close.md:75` — **not a tag**: …in WP34.** `current.md` points at `/wp-plan phase-4` after `v0.4.0`, and the Phase 4 plan's first package is the modularity exploration, who…
+- `docs/plans/phase-3/wp34-phase-3-close.md:76` — **not a tag**: …\| D14 \| Release \| WP34's `CHANGELOG.md` section is `v0.4.0`, and `CITATION.cff` names `0.4.0` with its date. After merge, the last commit on…
+- `docs/plans/phase-3/wp34-phase-3-close.md:76` — **not a tag**: …its date. After merge, the last commit on `main` is tagged `v0.4.0` alone (E5) \| `CONTRIBUTING.md` *Versions and releases*; `release.yml`'s…
+- `docs/plans/phase-3/wp34-phase-3-close.md:129` — **not a tag (a prefix of tags)**: …> only, so the reused `v0.5.0` names in the second are never waived. **D11 is done, by the author.** The tag resolved to `5abcf42` as expect…
+- `docs/plans/phase-3/wp34-phase-3-close.md:132` — **not a tag**: > :refs/tags/v0.5.0-alpha.5` on 4 October 2026; `git ls-remote --tags origin` lists no `v0.5.0`
+- `docs/plans/phase-3/wp34-phase-3-close.md:132` — **not a tag (a prefix of tags)**: > :refs/tags/v0.5.0-alpha.5` on 4 October 2026; `git ls-remote --tags origin` lists no `v0.5.0`
+- `docs/plans/phase-3/wp34-phase-3-close.md:154` — **not a tag**: 7. `CHANGELOG.md` `v0.4.0` and `CITATION.cff` (D14).
+- `docs/plans/phase-4/wp35-modularity-exploration.md:4` — **not a tag**: closed as `v0.4.0`. WP35 inherits everything the [current brief](current.md) lists as not to be
+- `docs/plans/phase-4/wp35-modularity-exploration.md:34` — **not a tag**: - **VER-62**, a number-stability golden recorded on a tree that is computationally `v0.4.0`, and
+- `docs/plans/phase-4/wp35-modularity-exploration.md:70` — **not a tag**: …\| D15 \| "On `v0.4.0`'s tree" \| Before recording, an AST comparison with docstrings stripped shows that every file of `src/`, `data/` and `ex…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:70` — **not a tag**: …hows that every file of `src/`, `data/` and `examples/` at `v0.4.0` equals WP35's tree (the survey: `v0.4.0..e63a32e` touched docstrings and…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:70` — **not a tag**: …nd `examples/` at `v0.4.0` equals WP35's tree (the survey: `v0.4.0..e63a32e` touched docstrings and comments only). The result goes in an Ou…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:75` — **not a tag**: …`[0.5.0-alpha.1]`. After merge the author or session tags `v0.5.0-alpha.1` (G11). No `v0.5.0-*` tag exists locally or on `origin` (checked…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:75` — **not a tag (a prefix of tags)**: …erge the author or session tags `v0.5.0-alpha.1` (G11). No `v0.5.0-*` tag exists locally or on `origin` (checked 5 October 2026) \| §2.7; F2'…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:98` — **not a tag**: > **Outcome — D15, the tree computes as `v0.4.0`.** Every file of `src/`, `data/` and `examples/`
+- `docs/plans/phase-4/wp35-modularity-exploration.md:99` — **not a tag**: > at `v0.4.0` was compared with WP35's tree, by bytes and then, for Python, by AST with every bare
+- `docs/plans/phase-4/wp36-stage-protocol-and-walk.md:4` — **not a tag**: after WP35 merged as `v0.5.0-alpha.1` and the author ruled every `MOD-nn` (§8.2.8). It inherits
+- `docs/plans/phase-4/wp36-stage-protocol-and-walk.md:54` — **not a tag (a prefix of tags)**: \| D12 \| Release \| `v0.5.0-alpha.2`, and a `CHANGELOG.md` section of that name \| §2.7; G11 \|
+- `docs/plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md:81` — **not a tag**: \| D17 \| Release \| `v0.5.0-alpha.3`, with a `CHANGELOG.md` section of that name, listing the moves \| §2.7; G11 \|
+- `docs/plans/phase-4/wp38-io-split.md:4` — **not a tag**: `fd4308f`, after WP37 merged as `v0.5.0-alpha.3` and the Phase 4 plan was amended for the review
+- `docs/plans/phase-4/wp38-io-split.md:92` — **not a tag**: \| D19 \| Release \| `v0.5.0-alpha.4`, with a `CHANGELOG.md` section listing the breaks above and a table of moves \| §2.7; G11 \|
+- `docs/plans/phase-4/wp39-backend-registries.md:4` — **not a tag**: after WP38 merged and was tagged `v0.5.0-alpha.4`. It inherits everything the
+- `docs/plans/phase-4/wp39-backend-registries.md:86` — **not a tag**: \| D15 \| Release \| `v0.5.0-alpha.5`, with a `CHANGELOG.md` section listing D6's and D7's breaks and the moves of D2 and D9 \| §2.7; G11 \|
+- `docs/plans/phase-4/wp40-stale-refusals.md:4` — **not a tag**: `v0.5.0-alpha.5`. It inherits everything the [current brief](current.md) lists as not to be
+- `docs/plans/phase-4/wp40-stale-refusals.md:56` — **not a tag**: …)(?!\d)`: any `vX.Y`, with a pre-release naming its minor (`v0.2.0-alpha.3` names `v0.2`). A schema identifier (`nanopnp/case/v0.5`) is not…
+- `docs/plans/phase-4/wp40-stale-refusals.md:56` — **not a tag (a prefix of tags)**: …the schema to `nanopnp/case/v0.5`, which must not fail at `v0.5.0` \|…
+- `docs/plans/phase-4/wp40-stale-refusals.md:62` — **not a tag**: …" \| Both conform to D4. VER-67 fails the FR-21 text at the `v0.7.0` tag unless FR-21 ships, which is the ratchet working \|…
+- `docs/plans/phase-4/wp40-stale-refusals.md:92` — **not a tag**: …`v0.1`, `v0.2`: an f-string piece "is v0.2" at line 4 and `v0.2.0-alpha.3` at line 2 are found; a docstring naming `v0.2`, `nanopnp/case/v0…
+- `docs/plans/phase-4/wp40-stale-refusals.md:127` — **not a tag (a prefix of tags)**: which I3 defers REV-62 to; VER-67 fails it at `v0.6.0` unless REV-62 is resolved first.
+- `docs/plans/phase-4/wp41-accuracy-fixes.md:6` — **not a tag**: `v0.5.0-alpha.6`. It inherits everything the [current brief](current.md) lists as not to be
+- `docs/plans/phase-4/wp42-verification-checks.md:5` — **not a tag**: …ress (extension).** Items 1–9 delivered 10 October 2026 as `v0.5.0-alpha.8`. Extended 11 October 2026 with Items 10–13 (parameter and identi…
+- `docs/plans/phase-4/wp42-verification-checks.md:6` — **not a tag**: `v0.5.0-alpha.7`. It inherits everything the [current brief](current.md) lists as not to be
+- `docs/plans/phase-4/wp43-development-loop.md:6` — **not a tag**: `v0.5.0-alpha.9`; the budgets are measured below item 10. Planned 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
+- `docs/plans/phase-4/wp43-development-loop.md:6` — **not a tag**: `v0.5.0-alpha.9`; the budgets are measured below item 10. Planned 12 October 2026. Inherits WP42's tree (`v0.5.0-alpha.8`),
+- `docs/plans/phase-4/wp43-development-loop.md:85` — **not a tag**: …nd coverage NOTEs, and a budget NOTE; `CHANGELOG.md` under `v0.5.0-alpha.9`; a REV-nn row for each missed budget \| H12, J7 \|…
+- `docs/plans/phase-4/wp43-development-loop.md:261` — **not a tag**: `CHANGELOG.md` (`v0.5.0-alpha.9`) and the Phase 4 plan's WP43 entry, and leave the REV-47 note.
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:5` — **not a tag**: **Status: delivered, 13 October 2026.** Inherits WP43's merged loop and the rulings of §8.2.11 L2, L3, L6, L7, L8. Tag `v0.5.0-alpha.10`.
+- `docs/plans/phase-4/wp45-prose-strip.md:6` — **not a tag**: (§8.2.11 L4); the trial of a fresh worker per item (L9). Tag `v0.5.0-alpha.11`.
+- `docs/plans/phase-5/wp5.02-framework-spike.md:3` — **not a tag (a prefix of tags)**: **Status: delivered, 2 November 2026.** Planned 2 November 2026, on `v0.5.0`. It inherits WP5.01's design
+- `docs/plans/phase-5/wp5.02-framework-spike.md:36` — **not a tag (a prefix of tags)**: live loop, and the four REV rows. **Depends on:** `v0.5.0` (merged and tagged). **Requirements:** S8
+- `docs/plans/phase-5/wp5.02-framework-spike.md:38` — **not a tag**: (the spike's link only). **Implementing session:** Sonnet, high effort. Tag `v0.6.0-alpha.2`.
+- `docs/plans/phase-5/wp5.03-protonation-before-the-density.md:3` — **not a tag**: **Status: merged, 3 November 2026 (`v0.6.0-alpha.3`).** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
+- `docs/plans/phase-5/wp5.03-protonation-before-the-density.md:3` — **not a tag**: **Status: merged, 3 November 2026 (`v0.6.0-alpha.3`).** Planned 3 November 2026, on `v0.6.0-alpha.2`. It inherits §8.2.19 U2,
+- `docs/plans/phase-5/wp5.03-protonation-before-the-density.md:34` — **not a tag**: handled as AG8 rules. The clauses U2 names are amended. **Depends on:** `v0.6.0-alpha.2`.
+- `docs/plans/phase-5/wp5.03-protonation-before-the-density.md:37` — **not a tag**: `main`. Tag `v0.6.0-alpha.3`.
+- `docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md:3` — **not a tag**: **Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.3`. It inherits §8.2.17 S4, §8.2.19 U6,
+- `docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md:33` — **not a tag**: …difference; stage 2 reading a radius edit. **Depends on:** `v0.6.0-alpha.3`. **Requirements:** FR-38, PHY-16 step 3, FR-12, FR-25, IF-03; VE…
+- `docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md:35` — **not a tag**: Tag `v0.6.0-alpha.4`.
+- `docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md:3` — **not a tag**: **Status: delivered, 3 November 2026.** Planned 3 November 2026, on `v0.6.0-alpha.4`. It inherits §8.2.18 T2, §8.2.28 AD3,
+- `docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md:31` — **not a tag**: sweep over models, and `inputs.mesh.artefact` (REV-62). **Depends on:** `v0.6.0-alpha.4`. **Requirements:** FR-39,
+- `docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md:33` — **not a tag**: session:** Sonnet, high effort; every item stays `main` except item 9. Tag `v0.6.0-alpha.5`.
+- `docs/plans/phase-5/wp5.06-outputs-and-steric-registries.md:33` — **not a tag**: model's name). **Implementing session:** Sonnet, high effort. Tag `v0.6.0-alpha.6`.
+- `docs/plans/phase-4/wp51-plotting-and-notebooks.md:35` — **not a tag**: `v0.5.0-alpha.17`. Models: Sonnet by default; Haiku for items 1 and 7. Item 3 touches `solve/` and
+- `docs/plans/phase-4/wp54-notebooks-and-figures-revised.md:36` — **not a tag**: …-37's new tests; VER-61, VER-62 and VER-65 stay green. Tag `v0.5.0-alpha.20`. Implementing session: Sonnet, high effort. A `physics-reviewer…
+- `docs/plans/phase-4/wp55-user-testing-protocol.md:41` — **not a tag**: `v0.5.0-alpha.21`. Implementing session: Sonnet, high effort. No `src/` change. A `physics-reviewer`
+- `docs/plans/phase-4/wp56-command-line-read-by-a-person.md:35` — **not a tag**: written in this plan's commit. Tag `v0.5.0-alpha.22`. Implementing session: Sonnet, high effort. No
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:480` — **not a tag**: …> **Outcome — the release run of `v0.5.0-alpha.22`.** That run (Release 41053380507, on `e775c29`) failed one test on every job, `test_ver46…
+- `docs/plans/phase-4/wp58-documentation-increment-4.md:49` — **not a tag (a prefix of tags)**: …eased` row and `CITATION.cff` are **WP59's** \| §8.2.24 Z1: `v0.5.0` sits on the close's commit (§8.4.1); a page claiming an absent tag is th…
+- `docs/plans/phase-4/wp59-architecture-review-fixes.md:5` — **not a tag**: test scope (§8.2.13 N1, N3). Tag `v0.5.0-alpha.25`, after the merge.
+- `docs/plans/phase-4/wp60-phase-4-close.md:4` — **not a tag**: `v0.5.0-alpha.25`; CI run 41446908606 green). Inherits §8.2.24 Z1 and Z3, §8.2.27 AC1 and AC6, §8.2.29 AE5 (ruled at
+- `docs/plans/phase-4/wp60-phase-4-close.md:5` — **not a tag (a prefix of tags)**: this plan) and the test scope (§8.2.13 N1, N3). Its last commit on `main` takes `v0.5.0` alone (§8.4.1).
+- `docs/plans/phase-4/wp60-phase-4-close.md:47` — **not a tag (a prefix of tags)**: …README, `docs/index.md` and `docs/overrides/main.html` say `v0.5.0` is released and v0.6 is in progress. The phase plan reads **closed**; `c…
+- `docs/plans/phase-4/wp60-phase-4-close.md:224` — **not a tag (a prefix of tags)**: \| The tag `v0.5.0` and the GitHub Release \| `/np-ship phase 4`, after the merge \|
 - `docs/user-testing/protocol.md:21` — **not a tag**: `<tag>` is the release the author names for the round: `v0.5.0-alpha.21`, the first to carry
 - `specification/history/02-phase-2-decisions-agreed-24-september-2026.md:14` — **not a tag**: …only after the Phase 1 end-of-phase report has merged (tag `v0.2.0`) and the author has recorded the double-click observation of amendment A…
 - `specification/history/03-phase-1-exit-agreed-24-september-2026.md:14` — **not a tag**: …to the Phase 1 report, and it gates nothing retroactively. v0.2.0 is released on this basis \| Phase 1 closes without the one comparison tha…
@@ -2595,74 +2595,74 @@ none
 - `docs/code_reviews/CODE_REVIEW_024/execution-plan.md:147` — **NO FILE**: …/ exact \| `uv run pytest tests/tier1/test_charge_deposit.py tests/tier1/test_symmetry.py tests/tier1/test_density.py tests/tier1/test_contou…
 - `docs/code_reviews/CODE_REVIEW_024/execution-plan.md:148` — **NO FILE**: …r1/test_layering.py`, `tests/tier1/test_backend_guard.py`, `tests/tier2/test_number_stability.py` \| 1, 2 \| VER-61, VER-62, VER-65 \| Subpacka…
 - `docs/code_reviews/CODE_REVIEW_024/execution-plan.md:148` — **NO FILE**: …ts/tier1/test_layering.py tests/tier1/test_backend_guard.py tests/tier2/test_number_stability.py` \|…
-- `docs/plans/history-prose-review.md:246` — **NO FILE**: …: nanopnp/case/v1` documents and upgrades them. Covered by `tests/tier1/test_case_schema_v2.py`, `tests/tier1/data/case_v1/`, `docs/guide/ca…
-- `docs/plans/okf-converter-rules.md:41` — **NO FILE**: - A test node id is `tests/tier1/test_x.py::test_name` or `…::Class::test_name`, resolved from the
-- `docs/plans/okf-converter-rules.md:61` — **NO FILE**: `changes` job. A case for each goes into `tests/tier1/test_workflow_hooks.py`.
-- `docs/plans/phase-1-solver-core.md:878` — **NO FILE**: …\| `tests/tier1/test_public_api.py`, `tests/tier1/test_doc_reference.py`, CI job `docs` \| 1, — \| VER-45, IF-01, IF-02, IF-03 \| The public sur…
-- `docs/plans/phase-1-solver-core.md:879` — **NO FILE**: …\| `tests/tier2/test_examples.py`, `tests/tier1/test_examples_plan.py` \| 2 (reference solve `slow`), 1 \| VER-46, VER-32 \| Every documented ex…
-- `docs/plans/phase-1-solver-core.md:879` — **NO FILE**: …\| `tests/tier2/test_examples.py`, `tests/tier1/test_examples_plan.py` \| 2 (reference solve `slow`), 1 \| VER-46, VER-32 \| Every documented ex…
-- `docs/plans/phase-3-charge-pipeline.md:210` — **NO FILE**: > `test_charge_deposit.py`, `tests/tier2/test_charge_potential.py`, `test_charge_2wcd.py`,
-- `docs/plans/wp16-user-docs-and-examples.md:66` — **NO FILE**: …\| D11 \| Tiers and budget \| 01–04 go in `tests/tier2/test_examples.py`, with a **≤ 2 min serial** target, measured and recorded as an Outcome…
-- `docs/plans/wp16-user-docs-and-examples.md:157` — **NO FILE**: 6. `examples/01`–`05` and `tests/tier2/test_examples.py`, plus the Tier-1 parts in `tests/tier1/test_examples_plan.py`.
-- `docs/plans/wp16-user-docs-and-examples.md:157` — **NO FILE**: 6. `examples/01`–`05` and `tests/tier2/test_examples.py`, plus the Tier-1 parts in `tests/tier1/test_examples_plan.py`.
-- `docs/plans/wp16-user-docs-and-examples.md:167` — **NO FILE**: …\| `tests/tier1/test_doc_reference.py` \| 1 \| VER-45, IF-02, IF-03 \| The case reference covers exactly the `case_fields()` paths, both directi…
-- `docs/plans/wp16-user-docs-and-examples.md:168` — **NO FILE**: …\| `tests/tier1/test_examples_plan.py` \| 1 \| VER-46, FR-24 \| Example 05's `sweep plan --no-mesh-check` enumerates 3,675 points in 42 waves; e…
-- `docs/plans/wp16-user-docs-and-examples.md:169` — **NO FILE**: \| `tests/tier2/test_examples.py` \| 2 (05: `slow`) \| VER-46, FR-23, FR-25, QR-08 \| The per-example oracles in the table above \|
-- `docs/plans/wp16-user-docs-and-examples.md:183` — **NO FILE**: `uv run pytest tests/tier2/test_examples.py -v --durations=0` for the D11 budget.
-- `docs/plans/wp17-case-schema-v2.md:113` — **NO FILE**: `tests/tier1/test_case_schema_v2.py`, which passes on v1. Commit it as
-- `docs/plans/wp17-case-schema-v2.md:146` — **NO FILE**: Commands: `uv run pytest tests/tier1/test_case_schema_v2.py -v`, then the full gate
-- `docs/plans/wp24-gui-geometry-pipeline.md:148` — **NO FILE**: uv run pytest tests/tier1/test_artefact_hook.py tests/tier1/test_gui_geometry.py tests/tier1/test_gui_viewmodels.py -v
-- `docs/plans/wp24-gui-geometry-pipeline.md:192` — **NO FILE**: > tube builds to the mesh in about 2.7 s cold (`tests/tier1/test_gui_geometry.py`). A sabotaged
-- `docs/plans/wp25-geometry-docs-and-example.md:46` — **NO FILE**: …alidation/examples.py`; `tests/tier2/test_examples_0*.py`; `tests/tier1/test_examples_plan.py`; WP16 D8–D11 and Outcomes \|…
-- `docs/plans/wp25-geometry-docs-and-example.md:126` — **NO FILE**: `tests/tier1/test_examples_plan.py` for six examples and three tags.
-- `docs/plans/wp25-geometry-docs-and-example.md:138` — **NO FILE**: …\| `tests/tier1/test_examples_plan.py` \| 1 \| VER-46 \| Six examples; tags ⊂ {run, plan, refused}. A `refused` command exiting 0, or `run` exit…
-- `docs/plans/wp25-geometry-docs-and-example.md:171` — **NO FILE**: \| VER-46 \| `tests/tier1/test_examples_plan.py` \| six examples; tags {run, plan, refused}; a mismatch names both codes \|
-- `docs/plans/wp28-charge-deposition.md:69` — **NO FILE**: …\| `tests/tier2/test_charge_potential.py` \| 2 \| VER-58 \| `poisson`, one atom, grounded sphere, *Design* §4. `w = 0.25` nm, `r_i` ∈ {0, 1.5} n…
-- `docs/plans/wp28-charge-deposition.md:75` — **NO FILE**: …r1/test_charge_kernel.py tests/tier1/test_charge_deposit.py tests/tier2/test_charge_potential.py tests/tier2/test_charge_2wcd.py -v`,…
-- `docs/plans/wp32-charge-docs-and-example.md:55` — **NO FILE**: …\| Executed examples \| VER-46; `validation/examples.py`; `tests/tier1/test_examples_plan.py`; `tests/tier2/test_examples_0*.py`; WP25 D3–D10…
-- `docs/plans/wp32-charge-docs-and-example.md:126` — **NO FILE**: 1. **`validation/examples.py`** (D5): the `../` mirroring. Extend `tests/tier1/test_examples_plan.py`
-- `docs/plans/wp32-charge-docs-and-example.md:144` — **NO FILE**: …\| `tests/tier1/test_examples_plan.py` \| 1 \| VER-46 \| Seven examples. Tags ⊂ {run, plan, refused}. A scratch example whose command names `../…
-- `docs/plans/wp32-charge-docs-and-example.md:148` — **NO FILE**: …\| `tests/tier1/test_artefact_cache.py` (extend) \| 1 \| VER-23, §5.3.2, FR-14 \| A charged tube walked to `charge` into two empty stores writes…
-- `docs/plans/wp35-modularity-exploration.md:50` — **NO FILE**: \| Prose-only \| `.github/scripts/prose-only.sh`; `tests/tier1/test_workflow_hooks.py` \|
-- `docs/plans/wp35-modularity-exploration.md:138` — **NO FILE**: and status, for the end-of-phase report) and `tests/tier1/test_findings_logs.py`.
-- `docs/plans/wp35-modularity-exploration.md:156` — **NO FILE**: …\| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| Every real log passes. Constructed bad logs are each refused, naming the row: wrong col…
-- `docs/plans/wp37-cycle-cuts-exit-codes-backend-guard.md:149` — **NO FILE**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| `MOD-05` `fixed` with a plan link \|
-- `docs/plans/wp38-io-split.md:159` — **NO FILE**: …\| `tests/tier1/test_gui_case_model.py` (or its present home) \| 1 \| QR-11, VER-43 \| A commit naming an unregistered model, or an inf-sup-unst…
-- `docs/plans/wp38-io-split.md:160` — **NO FILE**: \| `tests/tier1/test_modularity_sizes.py` (new, or in `test_layering.py`) \| 1 \| `MOD-13` \| Each module of D14 is at most 1,266 lines \|
-- `docs/plans/wp38-io-split.md:162` — **NO FILE**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D18's rows `fixed`, each with this plan's link \|
-- `docs/plans/wp39-backend-registries.md:154` — **NO FILE**: …\| `tests/tier1/test_modularity_measurements.py` \| 1 \| VER-61 \| `extension_points` lists the mesher and the linear solver as registries, at t…
-- `docs/plans/wp39-backend-registries.md:156` — **NO FILE**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D14's rows are `fixed`, each linking this plan \|
-- `docs/plans/wp40-stale-refusals.md:92` — **NO FILE**: …\| `tests/tier1/test_stale_refusals.py` (new; planned in this commit) \| 1 \| VER-67, IF-02, FR-27, NUM-20, VER-24, VER-47 \| (a) A synthetic ch…
-- `docs/plans/wp40-stale-refusals.md:94` — **NO FILE**: \| `tests/tier1/test_case_schema_v2.py` \| 1 \| VER-47 \| D8's edit; `inputs.pqr` still read \|
-- `docs/plans/wp40-stale-refusals.md:97` — **NO FILE**: Command: `uv run pytest tests/tier1/test_stale_refusals.py -v`, then `.claude/hooks/gate.sh run`.
-- `docs/plans/wp43-development-loop.md:91` — **NO FILE**: the item stops for a re-plan. Done when every test in `tests/tier1/test_impact_selection.py`
-- `docs/plans/wp43-development-loop.md:297` — **NO FILE**: …ed for; xdist and serial maps select alike \| `uv run pytest tests/tier1/test_impact_selection.py` \|…
-- `docs/plans/wp43-development-loop.md:444` — **NO FILE**: "tests": {"tests/tier1/test_x.py::test_y[a]": {
-- `docs/plans/wp43-development-loop.md:483` — **NO FILE**: `{"schema": "nanopnp/durations/v1", "files": {"tests/tier2/test_x.py": 51.4}}`, with seconds from
-- `docs/plans/wp44-simplify-the-loop.md:53` — **NO FILE**: …aude/hooks/gate.sh` to D1 to D3. Delete `tests/impact.py`, `tests/tier1/test_impact_selection.py`, the map mode and the `gate.sh map` allowa…
-- `docs/plans/wp44-simplify-the-loop.md:53` — **NO FILE**: …he `gate.sh map` allowance in `.claude/settings.json`; cut `tests/tier1/test_workflow_hooks.py` and `tests/tier1/test_push_guard.py` to the…
-- `docs/plans/wp44-simplify-the-loop.md:53` — **NO FILE**: …ttings.json`; cut `tests/tier1/test_workflow_hooks.py` and `tests/tier1/test_push_guard.py` to the cases of Verification. Edit §7.6's develo…
-- `docs/plans/wp44-simplify-the-loop.md:54` — **NO FILE**: …`.github/scripts/ci_budget.py`, `tests/durations.json` and `tests/tier1/test_loop_budgets.py`; remove `--shard` and the packing from `tests/…
-- `docs/plans/wp44-simplify-the-loop.md:54` — **NO FILE**: …--shard` and the packing from `tests/conftest.py`; rewrite `tests/tier1/test_shard_packing.py` as a test of the kept `no_cover` marker, rena…
-- `docs/plans/wp44-simplify-the-loop.md:58` — **NO FILE**: …f D5; move the clause, rule-loading and In brief checks to `tests/tier1/test_plan_shape.py` with D6's caps; edit the hook entry in `.claude/…
-- `docs/plans/wp44-simplify-the-loop.md:63` — **NO FILE**: …the model line) to match D1 to D6. Done when `uv run pytest tests/tier1/test_plan_shape.py` passes.…
-- `docs/plans/wp45-prose-strip.md:58` — **NO FILE**: …- [x] 1. `.claude/scripts/same_tree.py` (D1) and `tests/tier1/test_same_tree.py`; done when the test passes and fails on each case of *Verif…
-- `docs/plans/wp45-prose-strip.md:101` — **NO FILE**: …- [x] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record un…
-- `docs/plans/wp45-prose-strip.md:107` — **NO FILE**: …qa`, a deleted file and a renamed function \| `uv run pytest tests/tier1/test_same_tree.py` \|…
-- `docs/plans/wp45-prose-strip.md:108` — **NO FILE**: …ee over its ceiling fails naming the share \| `uv run pytest tests/tier1/test_prose_share.py` \|…
-- `docs/plans/wp47-okf-bundle.md:50` — **NO FILE**: …ule; its slug function is tested against the docs build's. `tests/tier1/test_okf_bundle.py` is VER-68. A word-for-word comparison of the joi…
-- `docs/plans/wp47-okf-bundle.md:55` — **NO FILE**: …- [x] a0cf1a4 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workf…
-- `docs/plans/wp47-okf-bundle.md:55` — **NO FILE**: …ier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workflow_hooks.py` (D5, D6): the check on constructed bundles,…
-- `docs/plans/wp47-okf-bundle.md:82` — **NO FILE**: Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py tests/tier1/test_workflow_hooks.py`, then
-- `docs/plans/wp47-okf-bundle.md:82` — **NO FILE**: Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py tests/tier1/test_workflow_hooks.py`, then
-- `docs/plans/wp48-okf-backfill.md:137` — **NO FILE**: …g, non-mapping, empty, empty-version and stale metadata in `tests/tier1/test_okf_bundle.py`, and amended `VER-68` (5) in `SPECIFICATION.md`…
-- `docs/plans/wp48-okf-backfill.md:146` — **NO FILE**: …ro (`pending.yaml` is `{}`), and lowered `CEILING` to 0 in `tests/tier1/test_okf_bundle.py`.…
-- `docs/plans/wp48-okf-backfill.md:152` — **NO FILE**: …n/03-conventions-used-throughout.md`, replaced fixtures in `tests/tier1/test_okf_bundle.py` with tests asserting unconditional refusal of `[…
-- `docs/plans/wp48-okf-backfill.md:173` — **NO FILE**: …\| `tests/tier1/test_okf_bundle.py` \| VER-68, G3, K8 \| Empty ledger passes; pending fails even above zero ceiling; unsourced verified fails a…
-- `docs/plans/wp49-cost-study.md:55` — **NO FILE**: …writer and the linear projection, with no measurement yet. `tests/tier1/test_cost_study.py` is its tests. Done when the D1 rows of *Verifica…
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:426` — **NO FILE**: `pipeline/handle.py`; `tests/tier1/test_case_handle.py` → `tests/tier1/test_case.py`, new
-- `docs/plans/wp58-documentation-increment-4.md:127` — **NO FILE**: `docs/project/review-findings.md` each say `tests/tier1/test_findings_logs.py` checks every row
-- `docs/plans/wp58-documentation-increment-4.md:220` — **NO FILE**: - The three findings logs: replace "`tests/tier1/test_findings_logs.py` checks every row (VER-63)"
+- `docs/plans/sessions/history-prose-review.md:246` — **NO FILE**: …: nanopnp/case/v1` documents and upgrades them. Covered by `tests/tier1/test_case_schema_v2.py`, `tests/tier1/data/case_v1/`, `docs/guide/ca…
+- `docs/plans/sessions/okf-converter-rules.md:41` — **NO FILE**: - A test node id is `tests/tier1/test_x.py::test_name` or `…::Class::test_name`, resolved from the
+- `docs/plans/sessions/okf-converter-rules.md:61` — **NO FILE**: `changes` job. A case for each goes into `tests/tier1/test_workflow_hooks.py`.
+- `docs/plans/phase-1/phase-1-solver-core.md:878` — **NO FILE**: …\| `tests/tier1/test_public_api.py`, `tests/tier1/test_doc_reference.py`, CI job `docs` \| 1, — \| VER-45, IF-01, IF-02, IF-03 \| The public sur…
+- `docs/plans/phase-1/phase-1-solver-core.md:879` — **NO FILE**: …\| `tests/tier2/test_examples.py`, `tests/tier1/test_examples_plan.py` \| 2 (reference solve `slow`), 1 \| VER-46, VER-32 \| Every documented ex…
+- `docs/plans/phase-1/phase-1-solver-core.md:879` — **NO FILE**: …\| `tests/tier2/test_examples.py`, `tests/tier1/test_examples_plan.py` \| 2 (reference solve `slow`), 1 \| VER-46, VER-32 \| Every documented ex…
+- `docs/plans/phase-3/phase-3-charge-pipeline.md:210` — **NO FILE**: > `test_charge_deposit.py`, `tests/tier2/test_charge_potential.py`, `test_charge_2wcd.py`,
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:66` — **NO FILE**: …\| D11 \| Tiers and budget \| 01–04 go in `tests/tier2/test_examples.py`, with a **≤ 2 min serial** target, measured and recorded as an Outcome…
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:157` — **NO FILE**: 6. `examples/01`–`05` and `tests/tier2/test_examples.py`, plus the Tier-1 parts in `tests/tier1/test_examples_plan.py`.
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:157` — **NO FILE**: 6. `examples/01`–`05` and `tests/tier2/test_examples.py`, plus the Tier-1 parts in `tests/tier1/test_examples_plan.py`.
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:167` — **NO FILE**: …\| `tests/tier1/test_doc_reference.py` \| 1 \| VER-45, IF-02, IF-03 \| The case reference covers exactly the `case_fields()` paths, both directi…
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:168` — **NO FILE**: …\| `tests/tier1/test_examples_plan.py` \| 1 \| VER-46, FR-24 \| Example 05's `sweep plan --no-mesh-check` enumerates 3,675 points in 42 waves; e…
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:169` — **NO FILE**: \| `tests/tier2/test_examples.py` \| 2 (05: `slow`) \| VER-46, FR-23, FR-25, QR-08 \| The per-example oracles in the table above \|
+- `docs/plans/phase-1/wp16-user-docs-and-examples.md:183` — **NO FILE**: `uv run pytest tests/tier2/test_examples.py -v --durations=0` for the D11 budget.
+- `docs/plans/phase-2/wp17-case-schema-v2.md:113` — **NO FILE**: `tests/tier1/test_case_schema_v2.py`, which passes on v1. Commit it as
+- `docs/plans/phase-2/wp17-case-schema-v2.md:146` — **NO FILE**: Commands: `uv run pytest tests/tier1/test_case_schema_v2.py -v`, then the full gate
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:148` — **NO FILE**: uv run pytest tests/tier1/test_artefact_hook.py tests/tier1/test_gui_geometry.py tests/tier1/test_gui_viewmodels.py -v
+- `docs/plans/phase-2/wp24-gui-geometry-pipeline.md:192` — **NO FILE**: > tube builds to the mesh in about 2.7 s cold (`tests/tier1/test_gui_geometry.py`). A sabotaged
+- `docs/plans/phase-2/wp25-geometry-docs-and-example.md:46` — **NO FILE**: …alidation/examples.py`; `tests/tier2/test_examples_0*.py`; `tests/tier1/test_examples_plan.py`; WP16 D8–D11 and Outcomes \|…
+- `docs/plans/phase-2/wp25-geometry-docs-and-example.md:126` — **NO FILE**: `tests/tier1/test_examples_plan.py` for six examples and three tags.
+- `docs/plans/phase-2/wp25-geometry-docs-and-example.md:138` — **NO FILE**: …\| `tests/tier1/test_examples_plan.py` \| 1 \| VER-46 \| Six examples; tags ⊂ {run, plan, refused}. A `refused` command exiting 0, or `run` exit…
+- `docs/plans/phase-2/wp25-geometry-docs-and-example.md:171` — **NO FILE**: \| VER-46 \| `tests/tier1/test_examples_plan.py` \| six examples; tags {run, plan, refused}; a mismatch names both codes \|
+- `docs/plans/phase-3/wp28-charge-deposition.md:69` — **NO FILE**: …\| `tests/tier2/test_charge_potential.py` \| 2 \| VER-58 \| `poisson`, one atom, grounded sphere, *Design* §4. `w = 0.25` nm, `r_i` ∈ {0, 1.5} n…
+- `docs/plans/phase-3/wp28-charge-deposition.md:75` — **NO FILE**: …r1/test_charge_kernel.py tests/tier1/test_charge_deposit.py tests/tier2/test_charge_potential.py tests/tier2/test_charge_2wcd.py -v`,…
+- `docs/plans/phase-3/wp32-charge-docs-and-example.md:55` — **NO FILE**: …\| Executed examples \| VER-46; `validation/examples.py`; `tests/tier1/test_examples_plan.py`; `tests/tier2/test_examples_0*.py`; WP25 D3–D10…
+- `docs/plans/phase-3/wp32-charge-docs-and-example.md:126` — **NO FILE**: 1. **`validation/examples.py`** (D5): the `../` mirroring. Extend `tests/tier1/test_examples_plan.py`
+- `docs/plans/phase-3/wp32-charge-docs-and-example.md:144` — **NO FILE**: …\| `tests/tier1/test_examples_plan.py` \| 1 \| VER-46 \| Seven examples. Tags ⊂ {run, plan, refused}. A scratch example whose command names `../…
+- `docs/plans/phase-3/wp32-charge-docs-and-example.md:148` — **NO FILE**: …\| `tests/tier1/test_artefact_cache.py` (extend) \| 1 \| VER-23, §5.3.2, FR-14 \| A charged tube walked to `charge` into two empty stores writes…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:50` — **NO FILE**: \| Prose-only \| `.github/scripts/prose-only.sh`; `tests/tier1/test_workflow_hooks.py` \|
+- `docs/plans/phase-4/wp35-modularity-exploration.md:138` — **NO FILE**: and status, for the end-of-phase report) and `tests/tier1/test_findings_logs.py`.
+- `docs/plans/phase-4/wp35-modularity-exploration.md:156` — **NO FILE**: …\| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| Every real log passes. Constructed bad logs are each refused, naming the row: wrong col…
+- `docs/plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md:149` — **NO FILE**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| `MOD-05` `fixed` with a plan link \|
+- `docs/plans/phase-4/wp38-io-split.md:159` — **NO FILE**: …\| `tests/tier1/test_gui_case_model.py` (or its present home) \| 1 \| QR-11, VER-43 \| A commit naming an unregistered model, or an inf-sup-unst…
+- `docs/plans/phase-4/wp38-io-split.md:160` — **NO FILE**: \| `tests/tier1/test_modularity_sizes.py` (new, or in `test_layering.py`) \| 1 \| `MOD-13` \| Each module of D14 is at most 1,266 lines \|
+- `docs/plans/phase-4/wp38-io-split.md:162` — **NO FILE**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D18's rows `fixed`, each with this plan's link \|
+- `docs/plans/phase-4/wp39-backend-registries.md:154` — **NO FILE**: …\| `tests/tier1/test_modularity_measurements.py` \| 1 \| VER-61 \| `extension_points` lists the mesher and the linear solver as registries, at t…
+- `docs/plans/phase-4/wp39-backend-registries.md:156` — **NO FILE**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D14's rows are `fixed`, each linking this plan \|
+- `docs/plans/phase-4/wp40-stale-refusals.md:92` — **NO FILE**: …\| `tests/tier1/test_stale_refusals.py` (new; planned in this commit) \| 1 \| VER-67, IF-02, FR-27, NUM-20, VER-24, VER-47 \| (a) A synthetic ch…
+- `docs/plans/phase-4/wp40-stale-refusals.md:94` — **NO FILE**: \| `tests/tier1/test_case_schema_v2.py` \| 1 \| VER-47 \| D8's edit; `inputs.pqr` still read \|
+- `docs/plans/phase-4/wp40-stale-refusals.md:97` — **NO FILE**: Command: `uv run pytest tests/tier1/test_stale_refusals.py -v`, then `.claude/hooks/gate.sh run`.
+- `docs/plans/phase-4/wp43-development-loop.md:91` — **NO FILE**: the item stops for a re-plan. Done when every test in `tests/tier1/test_impact_selection.py`
+- `docs/plans/phase-4/wp43-development-loop.md:297` — **NO FILE**: …ed for; xdist and serial maps select alike \| `uv run pytest tests/tier1/test_impact_selection.py` \|…
+- `docs/plans/phase-4/wp43-development-loop.md:444` — **NO FILE**: "tests": {"tests/tier1/test_x.py::test_y[a]": {
+- `docs/plans/phase-4/wp43-development-loop.md:483` — **NO FILE**: `{"schema": "nanopnp/durations/v1", "files": {"tests/tier2/test_x.py": 51.4}}`, with seconds from
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:53` — **NO FILE**: …aude/hooks/gate.sh` to D1 to D3. Delete `tests/impact.py`, `tests/tier1/test_impact_selection.py`, the map mode and the `gate.sh map` allowa…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:53` — **NO FILE**: …he `gate.sh map` allowance in `.claude/settings.json`; cut `tests/tier1/test_workflow_hooks.py` and `tests/tier1/test_push_guard.py` to the…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:53` — **NO FILE**: …ttings.json`; cut `tests/tier1/test_workflow_hooks.py` and `tests/tier1/test_push_guard.py` to the cases of Verification. Edit §7.6's develo…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:54` — **NO FILE**: …`.github/scripts/ci_budget.py`, `tests/durations.json` and `tests/tier1/test_loop_budgets.py`; remove `--shard` and the packing from `tests/…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:54` — **NO FILE**: …--shard` and the packing from `tests/conftest.py`; rewrite `tests/tier1/test_shard_packing.py` as a test of the kept `no_cover` marker, rena…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:58` — **NO FILE**: …f D5; move the clause, rule-loading and In brief checks to `tests/tier1/test_plan_shape.py` with D6's caps; edit the hook entry in `.claude/…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:63` — **NO FILE**: …the model line) to match D1 to D6. Done when `uv run pytest tests/tier1/test_plan_shape.py` passes.…
+- `docs/plans/phase-4/wp45-prose-strip.md:58` — **NO FILE**: …- [x] 1. `.claude/scripts/same_tree.py` (D1) and `tests/tier1/test_same_tree.py`; done when the test passes and fails on each case of *Verif…
+- `docs/plans/phase-4/wp45-prose-strip.md:101` — **NO FILE**: …- [x] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record un…
+- `docs/plans/phase-4/wp45-prose-strip.md:107` — **NO FILE**: …qa`, a deleted file and a renamed function \| `uv run pytest tests/tier1/test_same_tree.py` \|…
+- `docs/plans/phase-4/wp45-prose-strip.md:108` — **NO FILE**: …ee over its ceiling fails naming the share \| `uv run pytest tests/tier1/test_prose_share.py` \|…
+- `docs/plans/phase-4/wp47-okf-bundle.md:50` — **NO FILE**: …ule; its slug function is tested against the docs build's. `tests/tier1/test_okf_bundle.py` is VER-68. A word-for-word comparison of the joi…
+- `docs/plans/phase-4/wp47-okf-bundle.md:55` — **NO FILE**: …- [x] a0cf1a4 1. `src/nanopnp/validation/okf.py`, `tests/tier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workf…
+- `docs/plans/phase-4/wp47-okf-bundle.md:55` — **NO FILE**: …ier1/test_okf_bundle.py`, `.github/scripts/prose-only.sh`, `tests/tier1/test_workflow_hooks.py` (D5, D6): the check on constructed bundles,…
+- `docs/plans/phase-4/wp47-okf-bundle.md:82` — **NO FILE**: Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py tests/tier1/test_workflow_hooks.py`, then
+- `docs/plans/phase-4/wp47-okf-bundle.md:82` — **NO FILE**: Tier 1; command `uv run pytest tests/tier1/test_okf_bundle.py tests/tier1/test_workflow_hooks.py`, then
+- `docs/plans/phase-4/wp48-okf-backfill.md:137` — **NO FILE**: …g, non-mapping, empty, empty-version and stale metadata in `tests/tier1/test_okf_bundle.py`, and amended `VER-68` (5) in `SPECIFICATION.md`…
+- `docs/plans/phase-4/wp48-okf-backfill.md:146` — **NO FILE**: …ro (`pending.yaml` is `{}`), and lowered `CEILING` to 0 in `tests/tier1/test_okf_bundle.py`.…
+- `docs/plans/phase-4/wp48-okf-backfill.md:152` — **NO FILE**: …n/03-conventions-used-throughout.md`, replaced fixtures in `tests/tier1/test_okf_bundle.py` with tests asserting unconditional refusal of `[…
+- `docs/plans/phase-4/wp48-okf-backfill.md:173` — **NO FILE**: …\| `tests/tier1/test_okf_bundle.py` \| VER-68, G3, K8 \| Empty ledger passes; pending fails even above zero ceiling; unsourced verified fails a…
+- `docs/plans/phase-4/wp49-cost-study.md:55` — **NO FILE**: …writer and the linear projection, with no measurement yet. `tests/tier1/test_cost_study.py` is its tests. Done when the D1 rows of *Verifica…
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:426` — **NO FILE**: `pipeline/handle.py`; `tests/tier1/test_case_handle.py` → `tests/tier1/test_case.py`, new
+- `docs/plans/phase-4/wp58-documentation-increment-4.md:127` — **NO FILE**: `docs/project/review-findings.md` each say `tests/tier1/test_findings_logs.py` checks every row
+- `docs/plans/phase-4/wp58-documentation-increment-4.md:220` — **NO FILE**: - The three findings logs: replace "`tests/tier1/test_findings_logs.py` checks every row (VER-63)"
 
 ## code review named (does the report exist?) — live (134)
 
@@ -2851,103 +2851,103 @@ none
 - `docs/plans/current.md:57` — **row: performance | medium | deferred | §8.2.21 W8; §8.2.24 Z6**: - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 WP5.16's, REV-170 WP5.17's (AG1; AJ10).
 - `docs/plans/current.md:57` — **row: interface | low | deferred | §8.2.24 Z5**: - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 WP5.16's, REV-170 WP5.17's (AG1; AJ10).
 - `docs/plans/current.md:57` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 WP5.16's, REV-170 WP5.17's (AG1; AJ10).
-- `docs/plans/phase-5-workbench.md:6` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-- `docs/plans/phase-5-workbench.md:69` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: \| The cut line \| FR-31 to FR-39 and the comparison's difference field in v0.6; the rest later, as tagged \| REV-136 (AG6) \|
-- `docs/plans/phase-5-workbench.md:88` — **row: interface | medium | deferred | §8.2.19 U1**: Qt shell's 41 capabilities are listed and critiqued (REV-134). The design round ruled "suites in a
-- `docs/plans/phase-5-workbench.md:93` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: §8.2.18, MOD-09 brought into v0.6, and the rows it left open in §8.2.19. **Live for later packages:**
-- `docs/plans/phase-5-workbench.md:94` — **row: interface | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
-- `docs/plans/phase-5-workbench.md:94` — **row: verification | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
-- `docs/plans/phase-5-workbench.md:94` — **row: coupling | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
-- `docs/plans/phase-5-workbench.md:94` — **row: interface | low | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
-- `docs/plans/phase-5-workbench.md:94` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
-- `docs/plans/phase-5-workbench.md:95` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: (U3) and MOD-09 (T4) before their screens, protonation before the density (REV-135, U2) and the sweep's
-- `docs/plans/phase-5-workbench.md:95` — **row: physics | medium | fixed | [WP5.03](../plans/wp5.03-protonation-before-the-densi**: (U3) and MOD-09 (T4) before their screens, protonation before the density (REV-135, U2) and the sweep's
-- `docs/plans/phase-5-workbench.md:96` — **row: interface | medium | fixed | [WP5.07](../plans/wp5.07-variables-and-the-rebuild-**: design round (REV-139, U4); REV-134 closes with Qt (U1); open decisions 3 and 4 settled.
-- `docs/plans/phase-5-workbench.md:96` — **row: interface | medium | deferred | §8.2.19 U1**: design round (REV-139, U4); REV-134 closes with Qt (U1); open decisions 3 and 4 settled.
-- `docs/plans/phase-5-workbench.md:123` — **row: interface | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
-- `docs/plans/phase-5-workbench.md:123` — **row: verification | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
-- `docs/plans/phase-5-workbench.md:123` — **row: coupling | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
-- `docs/plans/phase-5-workbench.md:123` — **row: interface | low | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
-- `docs/plans/phase-5-workbench.md:126` — **row: tooling | low | fixed | WP5.02**: …pdb2pqr is at 3.8 and the lock needs no override (REV-175); the study's mockups fail the non-text measure and stay as dated evidence (REV-17…
-- `docs/plans/phase-5-workbench.md:126` — **row: tooling | low | fixed | WP5.02**: …ckups fail the non-text measure and stay as dated evidence (REV-176).…
-- `docs/plans/phase-5-workbench.md:133` — **row: physics | medium | fixed | [WP5.03](../plans/wp5.03-protonation-before-the-densi**: ### WP5.03 — Protonation before the density (§8.2.19 U2; REV-135)
-- `docs/plans/phase-5-workbench.md:142` — **row: physics | medium | fixed | [WP5.03](../plans/wp5.03-protonation-before-the-densi**: `as_loaded` and did not move. REV-135 is `fixed`; REV-180 (SWANSON and PEOEPB names) is deferred. Live constraint: only
-- `docs/plans/phase-5-workbench.md:142` — **row: physics | low | deferred | WP5.03 plan; §8.2.19 U2**: `as_loaded` and did not move. REV-135 is `fixed`; REV-180 (SWANSON and PEOEPB names) is deferred. Live constraint: only
-- `docs/plans/phase-5-workbench.md:156` — **row: numerics | low | open | WP5.03 review**: identity; a radius scale below 1 can breach the kernel-spacing gate (REV-182). FR-38, PHY-16's NOTE, §5.2, §5.3.1 and
-- `docs/plans/phase-5-workbench.md:159` — **row: interface | low | fixed | [WP5.05](../plans/wp5.05-named-models-and-study-overri**: ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62; §8.2.31 AG12, AG13)
-- `docs/plans/phase-5-workbench.md:167` — **row: interface | low | fixed | [WP5.05](../plans/wp5.05-named-models-and-study-overri**: takes the store (REV-62 `fixed`; REV-186 keeps a stored mesh beside a `structure:` refused). FR-39, IF-03, FR-25, FR-27,
-- `docs/plans/phase-5-workbench.md:167` — **row: interface | low | open | WP5.05; REV-62**: takes the store (REV-62 `fixed`; REV-186 keeps a stored mesh beside a `structure:` refused). FR-39, IF-03, FR-25, FR-27,
-- `docs/plans/phase-5-workbench.md:172` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
-- `docs/plans/phase-5-workbench.md:181` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
-- `docs/plans/phase-5-workbench.md:181` — **row: performance | low | deferred | §8.2.27 AC4; §8.2.28 AD5**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
-- `docs/plans/phase-5-workbench.md:182` — **row: interface | low | deferred | §8.2.18 T3**: registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. Tag `v0.6.0-alpha.6`.
-- `docs/plans/phase-5-workbench.md:184` — **row: interface | medium | fixed | [WP5.07](../plans/wp5.07-variables-and-the-rebuild-**: ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
-- `docs/plans/phase-5-workbench.md:194` — **row: interface | low | accepted | WP5.07; WP5.19**: `Forecastable` stage hashes its own `forecast_parameters`; REV-197 (rectification over a bias set through a variable) is
-- `docs/plans/phase-5-workbench.md:195` — **row: interface | medium | fixed | [WP5.07](../plans/wp5.07-variables-and-the-rebuild-**: WP5.19's (AJ10). REV-139 `fixed`. Tier 1 holds the evidence. Tag `v0.6.0-alpha.7`.
-- `docs/plans/phase-5-workbench.md:197` — **row: interface | low | fixed | §8.2.18 T2**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
-- `docs/plans/phase-5-workbench.md:197` — **row: interface | low | fixed | §8.2.18 T2**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
-- `docs/plans/phase-5-workbench.md:197` — **row: surface | low | fixed | [WP38](../plans/wp38-io-split.md)**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
-- `docs/plans/phase-5-workbench.md:202` — **row: interface | low | fixed | §8.2.18 T2**: files, and `Store.stale` lists an older release's entries (REV-32). `ContributesDeviations` joins the optional members the
-- `docs/plans/phase-5-workbench.md:203` — **row: interface | low | fixed | §8.2.18 T2**: walk tests by `isinstance` (REV-52; VER-64). `cli/` is split per command family, and `nanopnp gui` takes a project and
-- `docs/plans/phase-5-workbench.md:204` — **row: surface | low | fixed | [WP38](../plans/wp38-io-split.md)**: walks nothing (MOD-13). The frame is a command registry feeding the menus, the palette and rebindable shortcuts, the four
-- `docs/plans/phase-5-workbench.md:207` — **row: interface | low | fixed | §8.2.18 T2**: …WP5.15 (AJ1); the 3D background is the `--canvas-3d` token. REV-32, REV-52 `fixed`. Tag…
-- `docs/plans/phase-5-workbench.md:207` — **row: interface | low | fixed | §8.2.18 T2**: …AJ1); the 3D background is the `--canvas-3d` token. REV-32, REV-52 `fixed`. Tag…
-- `docs/plans/phase-5-workbench.md:221` — **row: coupling | low | open | [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)**: the Study suite's list WP5.19's; REV-217 to REV-221 land next. Tag `v0.6.0-alpha.9`.
-- `docs/plans/phase-5-workbench.md:221` — **row: performance | low | open | [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)**: the Study suite's list WP5.19's; REV-217 to REV-221 land next. Tag `v0.6.0-alpha.9`.
-- `docs/plans/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …n Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
-- `docs/plans/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …s components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
-- `docs/plans/phase-5-workbench.md:223` — **row: efficiency | low | deferred | WP5.08 review**: …nts (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
-- `docs/plans/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …1, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
-- `docs/plans/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
-- `docs/plans/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 verdicts**: …36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
-- `docs/plans/phase-5-workbench.md:230` — **row: interface | low | deferred | WP5.08 review**: its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
-- `docs/plans/phase-5-workbench.md:230` — **row: interface | low | deferred | WP5.08 verdicts**: its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
-- `docs/plans/phase-5-workbench.md:231` — **row: interface | low | deferred | WP5.08 review**: searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212); the plan
-- `docs/plans/phase-5-workbench.md:231` — **row: interface | low | deferred | WP5.08 verdicts**: searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212); the plan
-- `docs/plans/phase-5-workbench.md:233` — **row: interface | low | deferred | WP5.08 verdicts**: list to the author. The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
-- `docs/plans/phase-5-workbench.md:234` — **row: interface | low | deferred | WP5.08 review**: landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
-- `docs/plans/phase-5-workbench.md:234` — **row: efficiency | low | deferred | WP5.08 review**: landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
-- `docs/plans/phase-5-workbench.md:234` — **row: interface | low | deferred | WP5.08 review**: landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
-- `docs/plans/phase-5-workbench.md:239` — **row: interface | low | deferred | §8.2.24 Z5**: ### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
-- `docs/plans/phase-5-workbench.md:239` — **row: interface | low | deferred | §8.2.18 T3**: ### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
-- `docs/plans/phase-5-workbench.md:242` — **row: interface | low | deferred | §8.2.24 Z5**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
-- `docs/plans/phase-5-workbench.md:242` — **row: interface | low | deferred | §8.2.18 T3**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
-- `docs/plans/phase-5-workbench.md:247` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: ### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
-- `docs/plans/phase-5-workbench.md:247` — **row: interface | low | deferred | §8.2.18 T2**: ### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
-- `docs/plans/phase-5-workbench.md:250` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: wall sizing moved into `mesh/` (REV-170; AD4), VER-62's mesh hash unmoved or the move ruled and re-pinned (G10, I4).
-- `docs/plans/phase-5-workbench.md:251` — **row: interface | low | deferred | §8.2.18 T2**: Then, after the prototype round on 2WCD (AJ8), Protein geometry, Contour (on any profile, extracted or supplied, REV-39;
-- `docs/plans/phase-5-workbench.md:252` — **row: performance | low | wontfix | §8.2.18 T1**: its check off the interface's thread, asking before an edit is discarded, as T1 carries REV-56), Region, and Mesh with
-- `docs/plans/phase-5-workbench.md:265` — **row: interface | low | deferred | §8.2.18 T3**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
-- `docs/plans/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 review**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
-- `docs/plans/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 review**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
-- `docs/plans/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 review**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
-- `docs/plans/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 verdicts**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
-- `docs/plans/phase-5-workbench.md:267` — **row: interface | low | deferred | WP5.08 verdicts**: The prototype round on 2WCD settles the charge screen's design with its function (AJ8; REV-215). Overview of the three
-- `docs/plans/phase-5-workbench.md:270` — **row: interface | low | deferred | WP5.08 review**: with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
-- `docs/plans/phase-5-workbench.md:270` — **row: interface | low | deferred | WP5.08 review**: with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
-- `docs/plans/phase-5-workbench.md:271` — **row: interface | low | deferred | WP5.08 review**: record written into the project (REV-206). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
-- `docs/plans/phase-5-workbench.md:271` — **row: interface | low | deferred | §8.2.18 T3**: record written into the project (REV-206). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
-- `docs/plans/phase-5-workbench.md:275` — **row: performance | low | deferred | §8.2.18 T2**: ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
-- `docs/plans/phase-5-workbench.md:275` — **row: performance | low | deferred | §8.2.18 T2**: ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
-- `docs/plans/phase-5-workbench.md:279` — **row: performance | low | deferred | §8.2.18 T2**: drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
-- `docs/plans/phase-5-workbench.md:279` — **row: performance | low | deferred | §8.2.18 T2**: drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
-- `docs/plans/phase-5-workbench.md:283` — **row: interface | medium | deferred | §8.2.19 U1**: ### WP5.21 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
-- `docs/plans/phase-5-workbench.md:285` — **row: interface | low | deferred | WP5.08 review**: The guided route over the five suites (FR-36), with the keyboard pass over every canvas action (REV-203's remainder;
-- `docs/plans/phase-5-workbench.md:288` — **row: interface | medium | deferred | §8.2.19 U1**: CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1). The application guide is
-- `docs/plans/phase-5-workbench.md:303` — **row: process | low | wontfix | §8.2.18 T1**: …\| 3 \| The inherited rows: REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part,…
-- `docs/plans/phase-5-workbench.md:303` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: …0, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) \| **Settled by the aut…
-- `docs/plans/phase-5-workbench.md:303` — **row: surface | low | fixed | [WP38](../plans/wp38-io-split.md)**: …2, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) \| **Settled by the author, 27 Oc…
-- `docs/plans/phase-5-workbench.md:303` — **row: extension | low | wontfix | §8.2.18 T1**: …2, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) \| **Settled by the author, 27 October 2026** (§8.2.18 T1 to T5…
-- `docs/plans/phase-5-workbench.md:303` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: …ettled by the author, 27 October 2026** (§8.2.18 T1 to T5): MOD-09 brought into v0.6, the rest as WP5.01 proposed; `/np-plan amend 5` carrie…
-- `docs/plans/phase-5-workbench.md:306` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: …he four library packages WP5.03 to WP5.06, after the spike; REV-170 with the Geometry tool, REV-121 with structure preparation \|…
-- `docs/plans/phase-5-workbench.md:306` — **row: interface | low | deferred | §8.2.24 Z5**: …to WP5.06, after the spike; REV-170 with the Geometry tool, REV-121 with structure preparation \|…
-- `docs/plans/phase-5-workbench.md:307` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: …\| 7 \| The shell packages, the sweep's design round (U4), REV-136's v0.6 cut line (U3) and the phase estimate \| **Settled by the author, 3 No…
-- `docs/plans/phase-5-workbench.md:309` — **row: interface | low | deferred | WP5.08 verdicts**: …anged list, the design loop, the settings and the sequence (REV-211 to REV-215) \| **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to…
-- `docs/plans/phase-5-workbench.md:309` — **row: interface | low | deferred | WP5.08 verdicts**: …the design loop, the settings and the sequence (REV-211 to REV-215) \| **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to AJ10) \|…
-- `docs/plans/phase-5-workbench.md:343` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: …\| WP5.06, the registries \| 1, 2 \| MOD-09; AH1's provided outputs equal the old lists; FR-23 and QR-04's route cross-check unchanged; VER-56'…
-- `docs/plans/phase-5-workbench.md:345` — **row: interface | low | fixed | §8.2.18 T2**: \| WP5.08, the frame \| 1 \| VER-78's frame states; the project folder's export read back; REV-52's protocol members \|
-- `docs/plans/phase-5-workbench.md:348` — **row: interface | low | deferred | §8.2.24 Z5**: \| WP5.16, Molecular \| 1, 2 \| REV-121's cavity axis against a known axis (VER-48); VER-78 \|
-- `docs/plans/phase-5-workbench.md:349` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:6` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
+- `docs/plans/phase-5/phase-5-workbench.md:69` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: \| The cut line \| FR-31 to FR-39 and the comparison's difference field in v0.6; the rest later, as tagged \| REV-136 (AG6) \|
+- `docs/plans/phase-5/phase-5-workbench.md:88` — **row: interface | medium | deferred | §8.2.19 U1**: Qt shell's 41 capabilities are listed and critiqued (REV-134). The design round ruled "suites in a
+- `docs/plans/phase-5/phase-5-workbench.md:93` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: §8.2.18, MOD-09 brought into v0.6, and the rows it left open in §8.2.19. **Live for later packages:**
+- `docs/plans/phase-5/phase-5-workbench.md:94` — **row: interface | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
+- `docs/plans/phase-5/phase-5-workbench.md:94` — **row: verification | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
+- `docs/plans/phase-5/phase-5-workbench.md:94` — **row: coupling | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
+- `docs/plans/phase-5/phase-5-workbench.md:94` — **row: interface | low | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
+- `docs/plans/phase-5/phase-5-workbench.md:94` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: REV-137, REV-138, REV-141 and REV-143 for WP5.02 (U5, U7); for `/np-plan amend 5`, the library capabilities of REV-136
+- `docs/plans/phase-5/phase-5-workbench.md:95` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: (U3) and MOD-09 (T4) before their screens, protonation before the density (REV-135, U2) and the sweep's
+- `docs/plans/phase-5/phase-5-workbench.md:95` — **row: physics | medium | fixed | [WP5.03](../plans/wp5.03-protonation-before-the-densi**: (U3) and MOD-09 (T4) before their screens, protonation before the density (REV-135, U2) and the sweep's
+- `docs/plans/phase-5/phase-5-workbench.md:96` — **row: interface | medium | fixed | [WP5.07](../plans/wp5.07-variables-and-the-rebuild-**: design round (REV-139, U4); REV-134 closes with Qt (U1); open decisions 3 and 4 settled.
+- `docs/plans/phase-5/phase-5-workbench.md:96` — **row: interface | medium | deferred | §8.2.19 U1**: design round (REV-139, U4); REV-134 closes with Qt (U1); open decisions 3 and 4 settled.
+- `docs/plans/phase-5/phase-5-workbench.md:123` — **row: interface | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
+- `docs/plans/phase-5/phase-5-workbench.md:123` — **row: verification | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
+- `docs/plans/phase-5/phase-5-workbench.md:123` — **row: coupling | medium | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
+- `docs/plans/phase-5/phase-5-workbench.md:123` — **row: interface | low | fixed | [WP5.02](../plans/wp5.02-framework-spike.md)**: `/np-gui render shell` and the `nontext` measure ran; REV-137, REV-138, REV-141 and REV-143 are `fixed`. Live
+- `docs/plans/phase-5/phase-5-workbench.md:126` — **row: tooling | low | fixed | WP5.02**: …pdb2pqr is at 3.8 and the lock needs no override (REV-175); the study's mockups fail the non-text measure and stay as dated evidence (REV-17…
+- `docs/plans/phase-5/phase-5-workbench.md:126` — **row: tooling | low | fixed | WP5.02**: …ckups fail the non-text measure and stay as dated evidence (REV-176).…
+- `docs/plans/phase-5/phase-5-workbench.md:133` — **row: physics | medium | fixed | [WP5.03](../plans/wp5.03-protonation-before-the-densi**: ### WP5.03 — Protonation before the density (§8.2.19 U2; REV-135)
+- `docs/plans/phase-5/phase-5-workbench.md:142` — **row: physics | medium | fixed | [WP5.03](../plans/wp5.03-protonation-before-the-densi**: `as_loaded` and did not move. REV-135 is `fixed`; REV-180 (SWANSON and PEOEPB names) is deferred. Live constraint: only
+- `docs/plans/phase-5/phase-5-workbench.md:142` — **row: physics | low | deferred | WP5.03 plan; §8.2.19 U2**: `as_loaded` and did not move. REV-135 is `fixed`; REV-180 (SWANSON and PEOEPB names) is deferred. Live constraint: only
+- `docs/plans/phase-5/phase-5-workbench.md:156` — **row: numerics | low | open | WP5.03 review**: identity; a radius scale below 1 can breach the kernel-spacing gate (REV-182). FR-38, PHY-16's NOTE, §5.2, §5.3.1 and
+- `docs/plans/phase-5/phase-5-workbench.md:159` — **row: interface | low | fixed | [WP5.05](../plans/wp5.05-named-models-and-study-overri**: ### WP5.05 — Named models and study overrides in the case (WB-11; FR-39; REV-62; §8.2.31 AG12, AG13)
+- `docs/plans/phase-5/phase-5-workbench.md:167` — **row: interface | low | fixed | [WP5.05](../plans/wp5.05-named-models-and-study-overri**: takes the store (REV-62 `fixed`; REV-186 keeps a stored mesh beside a `structure:` refused). FR-39, IF-03, FR-25, FR-27,
+- `docs/plans/phase-5/phase-5-workbench.md:167` — **row: interface | low | open | WP5.05; REV-62**: takes the store (REV-62 `fixed`; REV-186 keeps a stored mesh beside a `structure:` refused). FR-39, IF-03, FR-25, FR-27,
+- `docs/plans/phase-5/phase-5-workbench.md:172` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: ### WP5.06 — Outputs and steric models as registries (MOD-09; §8.2.18 T4; §8.2.28 AD5; §8.2.32 AH1)
+- `docs/plans/phase-5/phase-5-workbench.md:181` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
+- `docs/plans/phase-5/phase-5-workbench.md:181` — **row: performance | low | deferred | §8.2.27 AC4; §8.2.28 AD5**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
+- `docs/plans/phase-5/phase-5-workbench.md:182` — **row: interface | low | deferred | §8.2.18 T3**: registering functions stay out of `PUBLIC` (REV-67). Tier 1 holds the evidence. Tag `v0.6.0-alpha.6`.
+- `docs/plans/phase-5/phase-5-workbench.md:184` — **row: interface | medium | fixed | [WP5.07](../plans/wp5.07-variables-and-the-rebuild-**: ### WP5.07 — Variables and the rebuild forecast (FR-39; §8.2.19 U4; §8.2.31 AG2 to AG5; REV-139)
+- `docs/plans/phase-5/phase-5-workbench.md:194` — **row: interface | low | accepted | WP5.07; WP5.19**: `Forecastable` stage hashes its own `forecast_parameters`; REV-197 (rectification over a bias set through a variable) is
+- `docs/plans/phase-5/phase-5-workbench.md:195` — **row: interface | medium | fixed | [WP5.07](../plans/wp5.07-variables-and-the-rebuild-**: WP5.19's (AJ10). REV-139 `fixed`. Tier 1 holds the evidence. Tag `v0.6.0-alpha.7`.
+- `docs/plans/phase-5/phase-5-workbench.md:197` — **row: interface | low | fixed | §8.2.18 T2**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
+- `docs/plans/phase-5/phase-5-workbench.md:197` — **row: interface | low | fixed | §8.2.18 T2**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
+- `docs/plans/phase-5/phase-5-workbench.md:197` — **row: surface | low | fixed | [WP38](../plans/wp38-io-split.md)**: ### WP5.08 — The frame and the project folder (FR-31, FR-32, FR-34, FR-35; REV-32, REV-52; MOD-13; §8.2.33 AI1, AI9 to AI14)
+- `docs/plans/phase-5/phase-5-workbench.md:202` — **row: interface | low | fixed | §8.2.18 T2**: files, and `Store.stale` lists an older release's entries (REV-32). `ContributesDeviations` joins the optional members the
+- `docs/plans/phase-5/phase-5-workbench.md:203` — **row: interface | low | fixed | §8.2.18 T2**: walk tests by `isinstance` (REV-52; VER-64). `cli/` is split per command family, and `nanopnp gui` takes a project and
+- `docs/plans/phase-5/phase-5-workbench.md:204` — **row: surface | low | fixed | [WP38](../plans/wp38-io-split.md)**: walks nothing (MOD-13). The frame is a command registry feeding the menus, the palette and rebindable shortcuts, the four
+- `docs/plans/phase-5/phase-5-workbench.md:207` — **row: interface | low | fixed | §8.2.18 T2**: …WP5.15 (AJ1); the 3D background is the `--canvas-3d` token. REV-32, REV-52 `fixed`. Tag…
+- `docs/plans/phase-5/phase-5-workbench.md:207` — **row: interface | low | fixed | §8.2.18 T2**: …AJ1); the 3D background is the `--canvas-3d` token. REV-32, REV-52 `fixed`. Tag…
+- `docs/plans/phase-5/phase-5-workbench.md:221` — **row: coupling | low | open | [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)**: the Study suite's list WP5.19's; REV-217 to REV-221 land next. Tag `v0.6.0-alpha.9`.
+- `docs/plans/phase-5/phase-5-workbench.md:221` — **row: performance | low | open | [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md)**: the Study suite's list WP5.19's; REV-217 to REV-221 land next. Tag `v0.6.0-alpha.9`.
+- `docs/plans/phase-5/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …n Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
+- `docs/plans/phase-5/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …s components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
+- `docs/plans/phase-5/phase-5-workbench.md:223` — **row: efficiency | low | deferred | WP5.08 review**: …nts (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
+- `docs/plans/phase-5/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …1, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
+- `docs/plans/phase-5/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 review**: …WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
+- `docs/plans/phase-5/phase-5-workbench.md:223` — **row: interface | low | deferred | WP5.08 verdicts**: …36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)…
+- `docs/plans/phase-5/phase-5-workbench.md:230` — **row: interface | low | deferred | WP5.08 review**: its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
+- `docs/plans/phase-5/phase-5-workbench.md:230` — **row: interface | low | deferred | WP5.08 verdicts**: its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
+- `docs/plans/phase-5/phase-5-workbench.md:231` — **row: interface | low | deferred | WP5.08 review**: searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212); the plan
+- `docs/plans/phase-5/phase-5-workbench.md:231` — **row: interface | low | deferred | WP5.08 verdicts**: searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212); the plan
+- `docs/plans/phase-5/phase-5-workbench.md:233` — **row: interface | low | deferred | WP5.08 verdicts**: list to the author. The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
+- `docs/plans/phase-5/phase-5-workbench.md:234` — **row: interface | low | deferred | WP5.08 review**: landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
+- `docs/plans/phase-5/phase-5-workbench.md:234` — **row: efficiency | low | deferred | WP5.08 review**: landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
+- `docs/plans/phase-5/phase-5-workbench.md:234` — **row: interface | low | deferred | WP5.08 review**: landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
+- `docs/plans/phase-5/phase-5-workbench.md:239` — **row: interface | low | deferred | §8.2.24 Z5**: ### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
+- `docs/plans/phase-5/phase-5-workbench.md:239` — **row: interface | low | deferred | §8.2.18 T3**: ### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
+- `docs/plans/phase-5/phase-5-workbench.md:242` — **row: interface | low | deferred | §8.2.24 Z5**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
+- `docs/plans/phase-5/phase-5-workbench.md:242` — **row: interface | low | deferred | §8.2.18 T3**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
+- `docs/plans/phase-5/phase-5-workbench.md:247` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: ### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
+- `docs/plans/phase-5/phase-5-workbench.md:247` — **row: interface | low | deferred | §8.2.18 T2**: ### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
+- `docs/plans/phase-5/phase-5-workbench.md:250` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: wall sizing moved into `mesh/` (REV-170; AD4), VER-62's mesh hash unmoved or the move ruled and re-pinned (G10, I4).
+- `docs/plans/phase-5/phase-5-workbench.md:251` — **row: interface | low | deferred | §8.2.18 T2**: Then, after the prototype round on 2WCD (AJ8), Protein geometry, Contour (on any profile, extracted or supplied, REV-39;
+- `docs/plans/phase-5/phase-5-workbench.md:252` — **row: performance | low | wontfix | §8.2.18 T1**: its check off the interface's thread, asking before an edit is discarded, as T1 carries REV-56), Region, and Mesh with
+- `docs/plans/phase-5/phase-5-workbench.md:265` — **row: interface | low | deferred | §8.2.18 T3**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+- `docs/plans/phase-5/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 review**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+- `docs/plans/phase-5/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 review**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+- `docs/plans/phase-5/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 review**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+- `docs/plans/phase-5/phase-5-workbench.md:265` — **row: interface | low | deferred | WP5.08 verdicts**: ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+- `docs/plans/phase-5/phase-5-workbench.md:267` — **row: interface | low | deferred | WP5.08 verdicts**: The prototype round on 2WCD settles the charge screen's design with its function (AJ8; REV-215). Overview of the three
+- `docs/plans/phase-5/phase-5-workbench.md:270` — **row: interface | low | deferred | WP5.08 review**: with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
+- `docs/plans/phase-5/phase-5-workbench.md:270` — **row: interface | low | deferred | WP5.08 review**: with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
+- `docs/plans/phase-5/phase-5-workbench.md:271` — **row: interface | low | deferred | WP5.08 review**: record written into the project (REV-206). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
+- `docs/plans/phase-5/phase-5-workbench.md:271` — **row: interface | low | deferred | §8.2.18 T3**: record written into the project (REV-206). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
+- `docs/plans/phase-5/phase-5-workbench.md:275` — **row: performance | low | deferred | §8.2.18 T2**: ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+- `docs/plans/phase-5/phase-5-workbench.md:275` — **row: performance | low | deferred | §8.2.18 T2**: ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+- `docs/plans/phase-5/phase-5-workbench.md:279` — **row: performance | low | deferred | §8.2.18 T2**: drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
+- `docs/plans/phase-5/phase-5-workbench.md:279` — **row: performance | low | deferred | §8.2.18 T2**: drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
+- `docs/plans/phase-5/phase-5-workbench.md:283` — **row: interface | medium | deferred | §8.2.19 U1**: ### WP5.21 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
+- `docs/plans/phase-5/phase-5-workbench.md:285` — **row: interface | low | deferred | WP5.08 review**: The guided route over the five suites (FR-36), with the keyboard pass over every canvas action (REV-203's remainder;
+- `docs/plans/phase-5/phase-5-workbench.md:288` — **row: interface | medium | deferred | §8.2.19 U1**: CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1). The application guide is
+- `docs/plans/phase-5/phase-5-workbench.md:303` — **row: process | low | wontfix | §8.2.18 T1**: …\| 3 \| The inherited rows: REV-20, -28, -30, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part,…
+- `docs/plans/phase-5/phase-5-workbench.md:303` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: …0, -31, -32, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) \| **Settled by the aut…
+- `docs/plans/phase-5/phase-5-workbench.md:303` — **row: surface | low | fixed | [WP38](../plans/wp38-io-split.md)**: …2, -39, -41, -45, -52, -56, -62, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) \| **Settled by the author, 27 Oc…
+- `docs/plans/phase-5/phase-5-workbench.md:303` — **row: extension | low | wontfix | §8.2.18 T1**: …2, -65, -67, -114; `MOD-09`, `MOD-13`'s command-line part, `MOD-18` (H4, H10) \| **Settled by the author, 27 October 2026** (§8.2.18 T1 to T5…
+- `docs/plans/phase-5/phase-5-workbench.md:303` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: …ettled by the author, 27 October 2026** (§8.2.18 T1 to T5): MOD-09 brought into v0.6, the rest as WP5.01 proposed; `/np-plan amend 5` carrie…
+- `docs/plans/phase-5/phase-5-workbench.md:306` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: …he four library packages WP5.03 to WP5.06, after the spike; REV-170 with the Geometry tool, REV-121 with structure preparation \|…
+- `docs/plans/phase-5/phase-5-workbench.md:306` — **row: interface | low | deferred | §8.2.24 Z5**: …to WP5.06, after the spike; REV-170 with the Geometry tool, REV-121 with structure preparation \|…
+- `docs/plans/phase-5/phase-5-workbench.md:307` — **row: coupling | medium | accepted | §8.2.19 U3; §8.2.31 AG6**: …\| 7 \| The shell packages, the sweep's design round (U4), REV-136's v0.6 cut line (U3) and the phase estimate \| **Settled by the author, 3 No…
+- `docs/plans/phase-5/phase-5-workbench.md:309` — **row: interface | low | deferred | WP5.08 verdicts**: …anged list, the design loop, the settings and the sequence (REV-211 to REV-215) \| **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to…
+- `docs/plans/phase-5/phase-5-workbench.md:309` — **row: interface | low | deferred | WP5.08 verdicts**: …the design loop, the settings and the sequence (REV-211 to REV-215) \| **Settled by the author, 5 November 2026** (§8.2.34 AJ1 to AJ10) \|…
+- `docs/plans/phase-5/phase-5-workbench.md:343` — **row: extension | low | fixed | [WP5.06](../plans/wp5.06-outputs-and-steric-registries**: …\| WP5.06, the registries \| 1, 2 \| MOD-09; AH1's provided outputs equal the old lists; FR-23 and QR-04's route cross-check unchanged; VER-56'…
+- `docs/plans/phase-5/phase-5-workbench.md:345` — **row: interface | low | fixed | §8.2.18 T2**: \| WP5.08, the frame \| 1 \| VER-78's frame states; the project folder's export read back; REV-52's protocol members \|
+- `docs/plans/phase-5/phase-5-workbench.md:348` — **row: interface | low | deferred | §8.2.24 Z5**: \| WP5.16, Molecular \| 1, 2 \| REV-121's cavity axis against a known axis (VER-48); VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:349` — **row: coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
 - `docs/project/modularity-findings.md:12` — **row: stages | high | fixed | [WP36](../plans/wp36-stage-protocol-and-walk.md)**: …and whether a fix is visible to users. The author ruled `MOD-01` to `MOD-17` on 5 October 2026 and `MOD-18` on 6 October (§8.2.8), and a row…
 - `docs/project/modularity-findings.md:12` — **row: extension | low | post-1.0 | §8.2.8 H5**: …er a fix is visible to users. The author ruled `MOD-01` to `MOD-17` on 5 October 2026 and `MOD-18` on 6 October (§8.2.8), and a row moves to…
 - `docs/project/modularity-findings.md:12` — **row: extension | low | wontfix | §8.2.18 T1**: …he author ruled `MOD-01` to `MOD-17` on 5 October 2026 and `MOD-18` on 6 October (§8.2.8), and a row moves to `fixed` in the commit…
@@ -3650,61 +3650,61 @@ none
 - `docs/plans/current.md:48` — **defined**: - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
 - `docs/plans/current.md:52` — **defined**: - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
 - `docs/plans/current.md:52` — **defined**: - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
-- `docs/plans/phase-5-workbench.md:46` — **defined**: VER-44).
-- `docs/plans/phase-5-workbench.md:65` — **defined**: \| Physics editor \| Composition from registered blocks; room for equations later \| QR-13, VER-60 (S3) \|
-- `docs/plans/phase-5-workbench.md:77` — **defined**: - **The shell holds no physics**; every number comes from an artefact (VER-60; F5).
-- `docs/plans/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
-- `docs/plans/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
-- `docs/plans/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
-- `docs/plans/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
-- `docs/plans/phase-5-workbench.md:111` — **defined**: Tests: none kept; the strict documentation build (VER-45). Tag: none if it merges before `v0.5.0`,
-- `docs/plans/phase-5-workbench.md:122` — **defined**: `refused`, Mol* vendored unmodified. VER-78 passes in Chromium; `gate.sh run` and CI's tier-1 leg require the browser.
-- `docs/plans/phase-5-workbench.md:141` — **defined**: (conductance 0.9734 → 0.9598 nS, −1.40 %; 6223 → 6059 elements); the 2WCD walks, VAL-05/06 and Tier 3 set
-- `docs/plans/phase-5-workbench.md:181` — **defined**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
-- `docs/plans/phase-5-workbench.md:181` — **defined**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
-- `docs/plans/phase-5-workbench.md:190` — **defined**: stage is keyed, so `2*a` keys as its value and a case without variables keeps every key (AG4; VER-62 unmoved). A sweep axis
-- `docs/plans/phase-5-workbench.md:193` — **defined**: VER-64); `sweep plan` prints it. Live constraints: the manifest gains `variables` only when a case has some; a
-- `docs/plans/phase-5-workbench.md:203` — **defined**: walk tests by `isinstance` (REV-52; VER-64). `cli/` is split per command family, and `nanopnp gui` takes a project and
-- `docs/plans/phase-5-workbench.md:205` — **defined**: suites, the queue, the changed and problems lists, and settings with the user's themes (AI1, AI12); VER-78 loads ten
-- `docs/plans/phase-5-workbench.md:219` — **defined**: the manifest records the file, and the frame's rail lists physics models (FR-32, FR-39, FR-25). VER-62 unmoved
-- `docs/plans/phase-5-workbench.md:237` — **defined**: `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
-- `docs/plans/phase-5-workbench.md:242` — **defined**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
-- `docs/plans/phase-5-workbench.md:250` — **defined**: wall sizing moved into `mesh/` (REV-170; AD4), VER-62's mesh hash unmoved or the move ruled and re-pinned (G10, I4).
-- `docs/plans/phase-5-workbench.md:254` — **defined**: VER-55 as restated. Tag `v0.6.0-alpha.17`.
-- `docs/plans/phase-5-workbench.md:272` — **defined**: machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
-- `docs/plans/phase-5-workbench.md:272` — **defined**: machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
-- `docs/plans/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
-- `docs/plans/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
-- `docs/plans/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
-- `docs/plans/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
-- `docs/plans/phase-5-workbench.md:338` — **defined**: \| WP5.01 \| none kept \| VER-45 \|
-- `docs/plans/phase-5-workbench.md:339` — **defined**: \| WP5.02 \| 1 \| VER-78 (proposed) \|
-- `docs/plans/phase-5-workbench.md:340` — **defined**: …, protonation before the density \| 1, 2 \| U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) \|…
-- `docs/plans/phase-5-workbench.md:340` — **defined**: …fore the density \| 1, 2 \| U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) \|…
-- `docs/plans/phase-5-workbench.md:341` — **defined**: …cale change that residue alone; no key moves without edits (VER-62) \|…
-- `docs/plans/phase-5-workbench.md:343` — **defined**: …e old lists; FR-23 and QR-04's route cross-check unchanged; VER-56's keys and VER-62 unmoved \|…
-- `docs/plans/phase-5-workbench.md:343` — **defined**: …and QR-04's route cross-check unchanged; VER-56's keys and VER-62 unmoved \|…
-- `docs/plans/phase-5-workbench.md:344` — **defined**: …ist, the dimension check, unchanged keys without variables (VER-62), the forecast against the walk \|…
-- `docs/plans/phase-5-workbench.md:345` — **defined**: \| WP5.08, the frame \| 1 \| VER-78's frame states; the project folder's export read back; REV-52's protocol members \|
-- `docs/plans/phase-5-workbench.md:346` — **defined**: …-39: a study resolves and keys as before with three models (VER-62 unmoved); a case imports into three models and a study; every case leaf h…
-- `docs/plans/phase-5-workbench.md:347` — **defined**: …\| WP5.15, the frame \| 1 \| VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`,…
-- `docs/plans/phase-5-workbench.md:348` — **defined**: \| WP5.16, Molecular \| 1, 2 \| REV-121's cavity axis against a known axis (VER-48); VER-78 \|
-- `docs/plans/phase-5-workbench.md:348` — **defined**: \| WP5.16, Molecular \| 1, 2 \| REV-121's cavity axis against a known axis (VER-48); VER-78 \|
-- `docs/plans/phase-5-workbench.md:349` — **defined**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
-- `docs/plans/phase-5-workbench.md:349` — **defined**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
-- `docs/plans/phase-5-workbench.md:349` — **defined**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
-- `docs/plans/phase-5-workbench.md:350` — **defined**: \| WP5.18, Physics \| 1 \| A physics model edited in the suite resolves to the case it shows; VER-78 \|
-- `docs/plans/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
-- `docs/plans/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
-- `docs/plans/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
-- `docs/plans/phase-5-workbench.md:352` — **defined**: \| WP5.20, Analysis \| 1 \| AG6's difference: exact for a linear field, zero for identical runs; VER-78 \|
-- `docs/plans/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
-- `docs/plans/phase-5-workbench.md:358` — **defined**: 2. **The restated gating clauses and VER-78 pass** on every fixture state. A miss is fixed; a
-- `docs/plans/phase-5-workbench.md:375` — **defined**: against the browser shell; VER-78's screen and state counts; the time from a click to a redrawn
+- `docs/plans/phase-5/phase-5-workbench.md:46` — **defined**: VER-44).
+- `docs/plans/phase-5/phase-5-workbench.md:65` — **defined**: \| Physics editor \| Composition from registered blocks; room for equations later \| QR-13, VER-60 (S3) \|
+- `docs/plans/phase-5/phase-5-workbench.md:77` — **defined**: - **The shell holds no physics**; every number comes from an artefact (VER-60; F5).
+- `docs/plans/phase-5/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
+- `docs/plans/phase-5/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
+- `docs/plans/phase-5/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
+- `docs/plans/phase-5/phase-5-workbench.md:107` — **defined**: IF-09, VER-43, VER-44, VER-55, VER-60, ADR-004's packaging NOTE, CON-09's PySide6 clause, RSK-13, P3
+- `docs/plans/phase-5/phase-5-workbench.md:111` — **defined**: Tests: none kept; the strict documentation build (VER-45). Tag: none if it merges before `v0.5.0`,
+- `docs/plans/phase-5/phase-5-workbench.md:122` — **defined**: `refused`, Mol* vendored unmodified. VER-78 passes in Chromium; `gate.sh run` and CI's tier-1 leg require the browser.
+- `docs/plans/phase-5/phase-5-workbench.md:141` — **defined**: (conductance 0.9734 → 0.9598 nS, −1.40 %; 6223 → 6059 elements); the 2WCD walks, VAL-05/06 and Tier 3 set
+- `docs/plans/phase-5/phase-5-workbench.md:181` — **defined**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
+- `docs/plans/phase-5/phase-5-workbench.md:181` — **defined**: case document moves (VER-56, VER-62). MOD-09 is `fixed`; REV-171's cost items stay in Phase 6. Live constraints: the
+- `docs/plans/phase-5/phase-5-workbench.md:190` — **defined**: stage is keyed, so `2*a` keys as its value and a case without variables keeps every key (AG4; VER-62 unmoved). A sweep axis
+- `docs/plans/phase-5/phase-5-workbench.md:193` — **defined**: VER-64); `sweep plan` prints it. Live constraints: the manifest gains `variables` only when a case has some; a
+- `docs/plans/phase-5/phase-5-workbench.md:203` — **defined**: walk tests by `isinstance` (REV-52; VER-64). `cli/` is split per command family, and `nanopnp gui` takes a project and
+- `docs/plans/phase-5/phase-5-workbench.md:205` — **defined**: suites, the queue, the changed and problems lists, and settings with the user's themes (AI1, AI12); VER-78 loads ten
+- `docs/plans/phase-5/phase-5-workbench.md:219` — **defined**: the manifest records the file, and the frame's rail lists physics models (FR-32, FR-39, FR-25). VER-62 unmoved
+- `docs/plans/phase-5/phase-5-workbench.md:237` — **defined**: `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
+- `docs/plans/phase-5/phase-5-workbench.md:242` — **defined**: the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41).
+- `docs/plans/phase-5/phase-5-workbench.md:250` — **defined**: wall sizing moved into `mesh/` (REV-170; AD4), VER-62's mesh hash unmoved or the move ruled and re-pinned (G10, I4).
+- `docs/plans/phase-5/phase-5-workbench.md:254` — **defined**: VER-55 as restated. Tag `v0.6.0-alpha.17`.
+- `docs/plans/phase-5/phase-5-workbench.md:272` — **defined**: machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
+- `docs/plans/phase-5/phase-5-workbench.md:272` — **defined**: machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
+- `docs/plans/phase-5/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
+- `docs/plans/phase-5/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
+- `docs/plans/phase-5/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
+- `docs/plans/phase-5/phase-5-workbench.md:287` — **defined**: packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
+- `docs/plans/phase-5/phase-5-workbench.md:338` — **defined**: \| WP5.01 \| none kept \| VER-45 \|
+- `docs/plans/phase-5/phase-5-workbench.md:339` — **defined**: \| WP5.02 \| 1 \| VER-78 (proposed) \|
+- `docs/plans/phase-5/phase-5-workbench.md:340` — **defined**: …, protonation before the density \| 1, 2 \| U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) \|…
+- `docs/plans/phase-5/phase-5-workbench.md:340` — **defined**: …fore the density \| 1, 2 \| U2's Tier 1 test; VER-49's radii; VER-62: example 07 re-pinned, every other walk unmoved (AG8) \|…
+- `docs/plans/phase-5/phase-5-workbench.md:341` — **defined**: …cale change that residue alone; no key moves without edits (VER-62) \|…
+- `docs/plans/phase-5/phase-5-workbench.md:343` — **defined**: …e old lists; FR-23 and QR-04's route cross-check unchanged; VER-56's keys and VER-62 unmoved \|…
+- `docs/plans/phase-5/phase-5-workbench.md:343` — **defined**: …and QR-04's route cross-check unchanged; VER-56's keys and VER-62 unmoved \|…
+- `docs/plans/phase-5/phase-5-workbench.md:344` — **defined**: …ist, the dimension check, unchanged keys without variables (VER-62), the forecast against the walk \|…
+- `docs/plans/phase-5/phase-5-workbench.md:345` — **defined**: \| WP5.08, the frame \| 1 \| VER-78's frame states; the project folder's export read back; REV-52's protocol members \|
+- `docs/plans/phase-5/phase-5-workbench.md:346` — **defined**: …-39: a study resolves and keys as before with three models (VER-62 unmoved); a case imports into three models and a study; every case leaf h…
+- `docs/plans/phase-5/phase-5-workbench.md:347` — **defined**: …\| WP5.15, the frame \| 1 \| VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`,…
+- `docs/plans/phase-5/phase-5-workbench.md:348` — **defined**: \| WP5.16, Molecular \| 1, 2 \| REV-121's cavity axis against a known axis (VER-48); VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:348` — **defined**: \| WP5.16, Molecular \| 1, 2 \| REV-121's cavity axis against a known axis (VER-48); VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:349` — **defined**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:349` — **defined**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:349` — **defined**: \| WP5.17, Continuum \| 1, 2 \| VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:350` — **defined**: \| WP5.18, Physics \| 1 \| A physics model edited in the suite resolves to the case it shows; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
+- `docs/plans/phase-5/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
+- `docs/plans/phase-5/phase-5-workbench.md:351` — **defined**: \| WP5.19, Study \| 1 \| VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) \|
+- `docs/plans/phase-5/phase-5-workbench.md:352` — **defined**: \| WP5.20, Analysis \| 1 \| AG6's difference: exact for a linear field, zero for identical runs; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:353` — **defined**: \| WP5.21, route and Qt's removal; WP5.22, the close \| 1, 2 \| VER-43, VER-44, VER-55, VER-60 as their clauses; the capability list; VER-78 \|
+- `docs/plans/phase-5/phase-5-workbench.md:358` — **defined**: 2. **The restated gating clauses and VER-78 pass** on every fixture state. A miss is fixed; a
+- `docs/plans/phase-5/phase-5-workbench.md:375` — **defined**: against the browser shell; VER-78's screen and state counts; the time from a click to a redrawn
 - `docs/project/contributing.md:19` — **defined**: property tests; analytic benchmarks, with VAL-05's leg on the vendored 2WCD; the COMSOL comparison
 - `docs/project/contributing.md:20` — **defined**: and VAL-05's leg on the author's ClyA-AS ensemble, which is the Phase 2 gate (nightly, recorded, not
 - `docs/project/contributing.md:21` — **defined**: gated); and experimental reproduction (before a release). VAL-05 compares the geometry pipeline's
@@ -3869,7 +3869,7 @@ none
 - `knowledge/07-software-stack/04-geometry-meshing-and-io.md:209` — **defined**: `Threshold` sources and `Constant` domains, the minimum gamma is 0.3143 against VER-10's 0.3.
 - `knowledge/07-software-stack/08-python-version-floor-the-310-target-is.md:17` — **defined**: title: WP43 development loop plan, D12 (CPython 3.14 VER-62 check)
 - `knowledge/07-software-stack/08-python-version-floor-the-310-target-is.md:81` — **defined**: **The development interpreter is 3.14, and it computes VER-62's numbers as 3.12 does [verified][^wp43-plan].**
-- `knowledge/07-software-stack/08-python-version-floor-the-310-target-is.md:95` — **defined**: [^wp43-plan]: `docs/plans/wp43-development-loop.md`, D12 (CPython 3.14.6 VER-62 golden drift check).
+- `knowledge/07-software-stack/08-python-version-floor-the-310-target-is.md:95` — **defined**: [^wp43-plan]: `docs/plans/phase-4/wp43-development-loop.md`, D12 (CPython 3.14.6 VER-62 golden drift check).
 - `knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md:35` — **defined**: Tiers 1 and 2 were measured on four cores, 923 tests, after the VER-36 fix. Serially the suite takes
 - `knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md:55` — **defined**: write. Tests that assert a *cold* computation (VER-55's build, the example executors, the VER-49
 - `knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md:55` — **defined**: write. Tests that assert a *cold* computation (VER-55's build, the example executors, the VER-49
@@ -4400,210 +4400,210 @@ none
 - `docs/code_reviews/CODE_REVIEW_024/execution-plan.md:25` — **withdrawn**: **Guards kept green at every commit:** `VER-25`, `VER-44`, `VER-45`, `VER-46`, `VER-61`, `VER-62`, `VER-65`, `VER-72`, `VER-75`.
 - `docs/code_reviews/CODE_REVIEW_024/execution-plan.md:36` — **withdrawn**: …ish (ASD-STE100). \| User review scope; `VER-45`, `VER-46`, `VER-63`. \|…
 - `docs/code_reviews/CODE_REVIEW_024/execution-plan.md:149` — **withdrawn**: …\| Strict docs & push gate \| 1, 2 \| VER-45, VER-46, VER-63 \| `mkdocs build --strict` exits 0; all findings logs validate; `.claude/hooks/gate…
-- `docs/code_reviews/CODE_REVIEW_036.md:7` — **withdrawn**: …rity-layering.yaml`, `VER-61`), the deferred-import guard (`VER-72`), the Phase 5 workbench architecture (`docs/plans/phase-5-workbench.md`,…
+- `docs/code_reviews/CODE_REVIEW_036.md:7` — **withdrawn**: …rity-layering.yaml`, `VER-61`), the deferred-import guard (`VER-72`), the Phase 5 workbench architecture (`docs/plans/phase-5/phase-5-workbench.md`,…
 - `docs/code_reviews/CODE_REVIEW_036.md:794` — **withdrawn**: …\| **Layering (`VER-61`, `VER-72`)** \| Eliminates the `MOD-03` (`geometry -> mesh`) static upward edge from `docs/project/modularity-layering…
-- `docs/plans/notebooks-review-for-wp54.md:45` — **withdrawn**: 2. **Backend Isolation and Optional Extras (`VER-65`, `VER-72`)**
-- `docs/plans/notebooks-review-for-wp54.md:48` — **withdrawn**: …or` naming `structure` when `MDAnalysis` is not installed (`VER-72`).…
-- `docs/plans/notebooks-review-for-wp54.md:215` — **withdrawn**: …d and keeps `structure` free of solver backends (`VER-65`, `VER-72`). \|…
-- `docs/plans/notebooks-review-for-wp54.md:229` — **withdrawn**: …d `ngsolve`, `netgen`, `MDAnalysis`, or `numpy` (`VER-45`, `VER-72`).…
-- `docs/plans/notebooks-review-for-wp54.md:258` — **withdrawn**: …port `numpy` and `MDAnalysis` lazily inside `orient_pore` (`VER-72`). Use `nanopnp.core.paths.structure_file("2wcd.pdb.gz")` instead of crea…
-- `docs/plans/okf-converter-rules.md:5` — **withdrawn**: `SPECIFICATION.md` (G12, VER-68) governs, and where this note and the plan disagree the plan governs.
-- `docs/plans/okf-converter-rules.md:6` — **withdrawn**: It is held outside the plan because VER-72 (g) caps the plan's length.
-- `docs/plans/okf-converter-rules.md:60` — **withdrawn**: A prose-only edit that adds a bad citation therefore runs VER-68, in the commit hook and in CI's
-- `docs/plans/okf-converter-rules.md:70` — **withdrawn**: `modularity-layering.yaml` gains no edge; VER-72 and VER-75 apply to it.
-- `docs/plans/okf-converter-rules.md:70` — **withdrawn**: `modularity-layering.yaml` gains no edge; VER-72 and VER-75 apply to it.
-- `docs/plans/phase-4-polish-and-user-testing.md:269` — **withdrawn**: test checks every row and name the withdrawn VER-63, the modularity log's closure sentence resting
-- `docs/plans/phase-4-record.md:332` — **withdrawn**: - **VER-63, the findings-log check.** It is a Tier-1 parse of every findings log under `docs/`
-- `docs/plans/phase-4-record.md:348` — **withdrawn**: > `docs/project/modularity-layering.yaml`; VER-63 checks every findings log; VER-62's golden holds
-- `docs/plans/phase-4-record.md:530` — **withdrawn**: **VER-67, no stale release in a refusal** (proposed). A Tier-1 check over
-- `docs/plans/phase-4-record.md:536` — **withdrawn**: > VER-67 reads the tagged releases from `CHANGELOG.md`'s milestone headings, never git, refusing
-- `docs/plans/phase-4-record.md:544` — **withdrawn**: > - a string naming a release fails VER-67 once `CHANGELOG.md` records that release: REV-62's
-- `docs/plans/phase-4-record.md:630` — **withdrawn**: ### WP43 — The development loop (§8.2.10 J1 to J9; VER-73, VER-74 proposed)
-- `docs/plans/phase-4-record.md:630` — **withdrawn**: ### WP43 — The development loop (§8.2.10 J1 to J9; VER-73, VER-74 proposed)
-- `docs/plans/phase-4-record.md:662` — **withdrawn**: Proposed **VER-73**, the loop's budgets: CI's duration report holds each selection within its
-- `docs/plans/phase-4-record.md:664` — **withdrawn**: duration, which must fail. Proposed **VER-74**, the soundness of the test-impact selection:
-- `docs/plans/phase-4-record.md:681` — **withdrawn**: Its `/wp-plan` decides the impact tool, the shard count, VER-73's margin, the roster's files and the
-- `docs/plans/phase-4-record.md:695` — **withdrawn**: > tagged `v0.5.0-alpha.9`. A commit runs the tests a recorded impact map selects (VER-74), the push
-- `docs/plans/phase-4-record.md:708` — **withdrawn**: > guard, roster test, `model-policy.md` and two agents are deleted; VER-73 and VER-74 are withdrawn;
-- `docs/plans/phase-4-record.md:708` — **withdrawn**: > guard, roster test, `model-policy.md` and two agents are deleted; VER-73 and VER-74 are withdrawn;
-- `docs/plans/phase-4-record.md:709` — **withdrawn**: > VER-72 (g) caps plans at 1,500 words and six decisions. L4's rule is written down (D101 to D107,
-- `docs/plans/phase-4-record.md:717` — **withdrawn**: the map, `test_impact_selection.py` and VER-74;
-- `docs/plans/phase-4-record.md:720` — **withdrawn**: ordering, `ci_budget.py`, `budgets.yaml`, the file ceiling and VER-73; `gate.sh` falls to about
-- `docs/plans/phase-4-record.md:736` — **withdrawn**: ### WP45 — The prose strip (§8.2.11 L4, L5; VER-75)
-- `docs/plans/phase-4-record.md:741` — **withdrawn**: > keeps a condensed docstring (L4 as amended after item 19); tests keep none. VER-75 (a) and (b) are
-- `docs/plans/phase-4-record.md:751` — **withdrawn**: **VER-75**: the docstring and comment share of `src/` stays at or below its measured value plus
-- `docs/plans/phase-4-record.md:807` — **withdrawn**: ### WP47 — The OKF bundle and its checks (§8.2.7 G12; VER-68)
-- `docs/plans/phase-4-record.md:811` — **withdrawn**: > an `index.md` per directory, `log.md` and `pending.yaml`. VER-68 is `test_okf_bundle.py` over
-- `docs/plans/phase-4-record.md:829` — **withdrawn**: > as **VER-68**, with the six refusals of the input note, *What the package SHALL check*. Its
-- `docs/plans/phase-4-record.md:835` — **withdrawn**: > the test node ids that WP36 to WP43 leave. VER-68 stays its proposed identifier.
-- `docs/plans/phase-4-record.md:841` — **withdrawn**: > (§8.2.7 G12); VER-68 is in Appendix A.
-- `docs/plans/phase-4-record.md:849` — **withdrawn**: > `[tested: pending]` is refused unconditionally in `okf.py`, `VER-68` is amended, and `REV-103` is closed.
-- `docs/plans/phase-4-record.md:858` — **withdrawn**: > test is named for the claim it backs, and VER-68's list reaching empty is the package's end.
-- `docs/plans/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
-- `docs/plans/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
-- `docs/plans/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
-- `docs/plans/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
-- `docs/plans/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
-- `docs/plans/phase-4-record.md:1131` — **withdrawn**: `closed`, so that VER-63 asserts closure from then on;
-- `docs/plans/phase-4-record.md:1148` — **withdrawn**: > **Amended, 18 October 2026** (§8.2.13 N3). VER-63 is withdrawn: the close reads both logs and the
-- `docs/plans/phase-4-record.md:1177` — **withdrawn**: …\| The impact tool, the shard count, VER-73's margin, the roster's files \| — \| **Settled by WP43's plan, 12 October 2026** ([wp43-development…
-- `docs/plans/phase-4-record.md:1211` — **withdrawn**: \| The `MOD-11` choice \| The fix packages \| `MOD-11` stays `accepted`, and VER-63 refuses the close \|
-- `docs/plans/phase-4-record.md:1239` — **withdrawn**: \| WP35 \| 1, 2 \| VER-61, VER-62, VER-63 (proposed) \|
-- `docs/plans/phase-4-record.md:1244` — **withdrawn**: \| WP40 \| 1 \| VER-67 (proposed) \|
-- `docs/plans/phase-4-record.md:1247` — **withdrawn**: \| WP43, development loop \| 1 \| VER-73, VER-74 (proposed); VER-62 on Python 3.14; both withdrawn by WP44 \|
-- `docs/plans/phase-4-record.md:1247` — **withdrawn**: \| WP43, development loop \| 1 \| VER-73, VER-74 (proposed); VER-62 on Python 3.14; both withdrawn by WP44 \|
-- `docs/plans/phase-4-record.md:1248` — **withdrawn**: \| WP44, simplify the loop \| 1 \| Plan-shape test; VER-73 and VER-74 withdrawn; VER-62 unchanged \|
-- `docs/plans/phase-4-record.md:1248` — **withdrawn**: \| WP44, simplify the loop \| 1 \| Plan-shape test; VER-73 and VER-74 withdrawn; VER-62 unchanged \|
-- `docs/plans/phase-4-record.md:1249` — **withdrawn**: \| WP45, prose strip \| 1, 2 \| VER-75; syntax-tree equality; VER-45 \|
-- `docs/plans/phase-4-record.md:1251` — **withdrawn**: \| WP47, OKF bundle \| 1 \| VER-68, the F6 check \|
-- `docs/plans/phase-4-record.md:1260` — **withdrawn**: \| Every refactor \| 1, 2 \| VER-61, VER-62 and VER-63 kept green \|
-- `docs/plans/phase-4-record.md:1263` — **withdrawn**: \| Close \| 1, 2 \| VER-63 against closed logs \|
-- `docs/plans/phase-4-record.md:1267` — **withdrawn**: > push and nightly". Where criteria 2, 4, 5, 10 and 11 cite VER-63, VER-68, VER-75, the plan-shape test
-- `docs/plans/phase-4-record.md:1267` — **withdrawn**: > push and nightly". Where criteria 2, 4, 5, 10 and 11 cite VER-63, VER-68, VER-75, the plan-shape test
-- `docs/plans/phase-4-record.md:1267` — **withdrawn**: > push and nightly". Where criteria 2, 4, 5, 10 and 11 cite VER-63, VER-68, VER-75, the plan-shape test
-- `docs/plans/phase-4-record.md:1274` — **withdrawn**: 2. **The modularity report is merged and every `MOD-nn` is terminal**, asserted by VER-63 on the
-- `docs/plans/phase-4-record.md:1288` — **withdrawn**: 5. **The user-testing log is closed**: every `UT-nn` is terminal under VER-63, and every protocol
-- `docs/plans/phase-4-record.md:1303` — **withdrawn**: is `fixed`**, read from the register that VER-63 checks. The register stays `open`, because it is
-- `docs/plans/phase-4-record.md:1312` — **withdrawn**: WP44 on is within its word cap, checked by the plan-shape test; and VER-75 holds, with `src/`
-- `docs/plans/phase-4-record.md:1346` — **withdrawn**: deferred or sent post-1.0, with the deferrals' destinations. Source: VER-63 on the closed log.
-- `docs/plans/phase-4-record.md:1358` — **withdrawn**: package, and those deferred by destination. Source: VER-63 on the register.
-- `docs/plans/phase-4-record.md:1360` — **withdrawn**: were fixed or deferred. Source: VER-63.
-- `docs/plans/phase-4-record.md:1565` — **withdrawn**: >   share of `src/` and `tests/` (criterion 11; VER-75) and every `[tested: …]` marker against the
-- `docs/plans/phase-4-record.md:1566` — **withdrawn**: >   surviving tests (criterion 4; VER-63). All 423 markers resolved on 31 October 2026;
-- `docs/plans/wp35-modularity-exploration.md:17` — **withdrawn**: amendment** is made in this commit. VER-61, VER-62 and VER-63 are claimed, with their rows in
-- `docs/plans/wp35-modularity-exploration.md:36` — **withdrawn**: - **VER-63**, a Tier-1 check of every findings log under `docs/`.
-- `docs/plans/wp35-modularity-exploration.md:72` — **withdrawn**: …\| D17 \| Log format (VER-63) \| A log is any `docs/**/*findings.md`. It carries YAML front matter `findings: {prefix, status: open\\|closed, ar…
-- `docs/plans/wp35-modularity-exploration.md:74` — **withdrawn**: …md` as not prose, with a case in `test_workflow_hooks.py` \| VER-63 reads these files. Without this, a ruling edit to a log would skip the te…
-- `docs/plans/wp35-modularity-exploration.md:137` — **withdrawn**: 5. **VER-63**: `validation/findings.py` (`parse_log`, `check_log`, and counts by area, severity
-- `docs/plans/wp35-modularity-exploration.md:148` — **withdrawn**: `CHANGELOG.md` section, the spec rows of VER-61, VER-62 and VER-63, and the Appendix A
-- `docs/plans/wp35-modularity-exploration.md:156` — **withdrawn**: …\| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| Every real log passes. Constructed bad logs are each refused, naming the row: wrong col…
-- `docs/plans/wp35-modularity-exploration.md:170` — **withdrawn**: - The user-testing log. VER-63 already covers it by D17, and the protocol package writes it.
-- `docs/plans/wp36-stage-protocol-and-walk.md:13` — **withdrawn**: clause, in the commit that implements it, as WP35 claimed VER-61 to VER-63.
-- `docs/plans/wp36-stage-protocol-and-walk.md:53` — **withdrawn**: …d `MOD-12` become `fixed`, their ruling linking this plan \| VER-63: a `fixed` row's ruling links a plan \|…
-- `docs/plans/wp36-stage-protocol-and-walk.md:89` — **withdrawn**: \| `tests/tier1/test_layering.py`, `test_findings_logs.py` \| 1 \| VER-61, VER-63 \| Green; the log's three rows `fixed` \|
-- `docs/plans/wp37-cycle-cuts-exit-codes-backend-guard.md:55` — **withdrawn**: - VER-47, VER-61, VER-62, VER-63, VER-25 (introspection imports no solver);
-- `docs/plans/wp37-cycle-cuts-exit-codes-backend-guard.md:80` — **withdrawn**: …stays `deferred`: VER-65 is H3's guard, not the interface \| VER-63 \|…
-- `docs/plans/wp37-cycle-cuts-exit-codes-backend-guard.md:149` — **withdrawn**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| `MOD-05` `fixed` with a plan link \|
-- `docs/plans/wp38-io-split.md:62` — **withdrawn**: - VER-25, VER-43, VER-45, VER-46, VER-47, VER-55, VER-60, VER-61, VER-62, VER-63, VER-64,
-- `docs/plans/wp38-io-split.md:91` — **withdrawn**: …27's section records D8's reading of "`nanopnp validate`" \| VER-63; §8.2.8 H12 \|…
-- `docs/plans/wp38-io-split.md:162` — **withdrawn**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D18's rows `fixed`, each with this plan's link \|
-- `docs/plans/wp39-backend-registries.md:61` — **withdrawn**: - VER-24, VER-43, VER-45, VER-54, VER-61, VER-62, VER-63, VER-65, VER-66 (proposed);
-- `docs/plans/wp39-backend-registries.md:85` — **withdrawn**: …er`). The YAML's header loses its "WP39 removes" sentence \| VER-63; H12 \|…
-- `docs/plans/wp39-backend-registries.md:156` — **withdrawn**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D14's rows are `fixed`, each linking this plan \|
-- `docs/plans/wp40-stale-refusals.md:14` — **withdrawn**: `MOD-14` (§8.2.8 H1, H8) and claims VER-67. `SPECIFICATION.md` governs, and the identifiers below
-- `docs/plans/wp40-stale-refusals.md:17` — **withdrawn**: that the NUM-20 fallbacks are refused and that no release schedules them (D5, D6). VER-67's row and
-- `docs/plans/wp40-stale-refusals.md:46` — **withdrawn**: Pointers: IF-02, FR-27, FR-10, FR-21, NUM-16, NUM-20, VER-24, VER-47, VER-61, VER-67 (proposed),
-- `docs/plans/wp40-stale-refusals.md:47` — **withdrawn**: VER-72; §2.7 NOTE (Versioning); §5.3.1 NOTEs on `inputs:` and `numerics.nonlinear`; §8.2.8 H1, H8;
-- `docs/plans/wp40-stale-refusals.md:58` — **withdrawn**: …\| D3 \| What VER-67 checks \| `stale_release_literals(tagged, root=None, sources=None)` returns `(path, line, release, text)` for each non-doc…
-- `docs/plans/wp40-stale-refusals.md:62` — **withdrawn**: …erbatim; so does FR-11's "after v1.0" \| Both conform to D4. VER-67 fails the FR-21 text at the `v0.7.0` tag unless FR-21 ships, which is the…
-- `docs/plans/wp40-stale-refusals.md:65` — **withdrawn**: …Stage`'s "Figures are v0.4" (FR-28 is v0.7). Not checked by VER-67 (D3) \| Coverage cannot see a stale docstring; the four are the ones touch…
-- `docs/plans/wp40-stale-refusals.md:72` — **withdrawn**: …- [x] 6843283 4. [any] Records: VER-67's row in §7 and IF-02's Appendix A pointer; `MOD-14` `fixed` in `modularity-findings.md`; `CHANGELOG.…
-- `docs/plans/wp40-stale-refusals.md:72` — **withdrawn**: …ith the breaks; this plan's status and the brief. Done when VER-63, VER-72 and the strict docs build pass.…
-- `docs/plans/wp40-stale-refusals.md:72` — **withdrawn**: …breaks; this plan's status and the brief. Done when VER-63, VER-72 and the strict docs build pass.…
-- `docs/plans/wp40-stale-refusals.md:82` — **withdrawn**: > (REV-62's text), `v0.7` (FR-21) and `v1.0` twice, none tagged: VER-67 passes against
-- `docs/plans/wp40-stale-refusals.md:86` — **withdrawn**: …-70: D10's check and its tests; the §5.3.1 NOTE, VER-47 and VER-67 rows; `test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage`; REV-68…
-- `docs/plans/wp40-stale-refusals.md:92` — **withdrawn**: …test_stale_refusals.py` (new; planned in this commit) \| 1 \| VER-67, IF-02, FR-27, NUM-20, VER-24, VER-47 \| (a) A synthetic changelog with `0…
-- `docs/plans/wp40-stale-refusals.md:95` — **withdrawn**: …nventions.py`, `test_plan_records.py` \| 1 \| VER-47, VER-61, VER-72 \| Unchanged: no exit code, edge or private import moves (the three sites…
-- `docs/plans/wp40-stale-refusals.md:108` — **withdrawn**: stand, VER-67 states its rule instead of citing this plan, the `inputs:` rule is enforced by a
-- `docs/plans/wp40-stale-refusals.md:127` — **withdrawn**: which I3 defers REV-62 to; VER-67 fails it at `v0.6.0` unless REV-62 is resolved first.
-- `docs/plans/wp41-accuracy-fixes.md:12` — **withdrawn**: - WP40's rule that a refusal names its requirement, and VER-67;
-- `docs/plans/wp41-accuracy-fixes.md:76` — **withdrawn**: …s; this plan's status, the phase plan, the brief. Done when VER-63, VER-72 and the strict docs build pass.…
-- `docs/plans/wp41-accuracy-fixes.md:76` — **withdrawn**: …plan's status, the phase plan, the brief. Done when VER-63, VER-72 and the strict docs build pass.…
-- `docs/plans/wp42-verification-checks.md:8` — **withdrawn**: rule that a refusal names its requirement (VER-67); WP38's split (`pipeline/checks.py` refuses at
-- `docs/plans/wp42-verification-checks.md:62` — **withdrawn**: §8.2.7 G6, §8.2.9 I2, VER-24, VER-43, VER-47, VER-56, VER-62, VER-63, VER-67, VER-70, VER-71, VER-72.
-- `docs/plans/wp42-verification-checks.md:62` — **withdrawn**: §8.2.7 G6, §8.2.9 I2, VER-24, VER-43, VER-47, VER-56, VER-62, VER-63, VER-67, VER-70, VER-71, VER-72.
-- `docs/plans/wp42-verification-checks.md:62` — **withdrawn**: §8.2.7 G6, §8.2.9 I2, VER-24, VER-43, VER-47, VER-56, VER-62, VER-63, VER-67, VER-70, VER-71, VER-72.
-- `docs/plans/wp42-verification-checks.md:118` — **withdrawn**: …s; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.…
-- `docs/plans/wp42-verification-checks.md:118` — **withdrawn**: …plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.…
-- `docs/plans/wp42-verification-checks.md:118` — **withdrawn**: …tatus, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.…
-- `docs/plans/wp43-development-loop.md:57` — **withdrawn**: Requirements: **VER-74** (new, the selection's soundness), **VER-73** (new, the budgets), VER-46
-- `docs/plans/wp43-development-loop.md:57` — **withdrawn**: Requirements: **VER-74** (new, the selection's soundness), **VER-73** (new, the budgets), VER-46
-- `docs/plans/wp43-development-loop.md:58` — **withdrawn**: and VER-62 (their cadence moves; their assertions do not), VER-72 (d) (the planned markers), QR-09,
-- `docs/plans/wp43-development-loop.md:60` — **withdrawn**: Appendix A rows for VER-73 and VER-74, `CLAUDE.md` *Setup*, *Commands* and the gate lines,
-- `docs/plans/wp43-development-loop.md:60` — **withdrawn**: Appendix A rows for VER-73 and VER-74, `CLAUDE.md` *Setup*, *Commands* and the gate lines,
-- `docs/plans/wp43-development-loop.md:70` — **withdrawn**: …context work last \| J2: the fast hook is trusted only once VER-74 holds. Until item 2 lands, commits run the old hook \|…
-- `docs/plans/wp43-development-loop.md:75` — **withdrawn**: …im, as it is for CI \| `[Opus]`: a gap here passes silently. VER-74 enumerates the routes; CI's full run stays the authority (J3) \|…
-- `docs/plans/wp43-development-loop.md:79` — **withdrawn**: …verage combine`, then diff-cover against the base, then the VER-73 check); and **`CI result`**, which needs them all and is the one required…
-- `docs/plans/wp43-development-loop.md:80` — **withdrawn**: …\| D11 \| VER-73 \| `.github/budgets.yaml`: `commit_hook_s: 60`, `push_gate_s: 300`, `pull_request_critical_path_s: 360`, `file_ceiling_s: 90`,…
-- `docs/plans/wp43-development-loop.md:80` — **withdrawn**: …selection size and tree, and reported by the usage script. VER-73 supersedes WP33 D15's targets; REV-47's close reports both \| Margin from…
-- `docs/plans/wp43-development-loop.md:85` — **withdrawn**: …\| D16 \| Records \| VER-73 and VER-74 rows in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHAN…
-- `docs/plans/wp43-development-loop.md:85` — **withdrawn**: …\| D16 \| Records \| VER-73 and VER-74 rows in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHAN…
-- `docs/plans/wp43-development-loop.md:130` — **withdrawn**: development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A, from the
-- `docs/plans/wp43-development-loop.md:234` — **withdrawn**: - [x] 2035cd4 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
-- `docs/plans/wp43-development-loop.md:297` — **withdrawn**: …\| `tier1/test_impact_selection.py` \| 1 \| VER-74 \| Each route of D4 selects its tests, by node id; each fallback names its path; the walks ar…
-- `docs/plans/wp43-development-loop.md:299` — **withdrawn**: …\| `tier1/test_loop_budgets.py` \| 1 \| VER-73 \| The recorded budgets are J7's, the file ceiling 90 s and the margin 0.5. A budget below the me…
-- `docs/plans/wp43-development-loop.md:303` — **withdrawn**: \| The budgets \| — \| J7, VER-73 \| Item 10's measurements against D9 \| item 10 \|
-- `docs/plans/wp43-development-loop.md:345` — **withdrawn**: any source change. A source file read as text, as by VER-72's checks, is a file dependency. Any
-- `docs/plans/wp43-development-loop.md:353` — **withdrawn**: VER-74 plants one change per route. CI's full run on every pull request remains the authority (J3).
-- `docs/plans/wp43-development-loop.md:398` — **withdrawn**: ### 5. VER-73's margin
-- `docs/plans/wp43-development-loop.md:588` — **NO DEFINITION**: matches whole identifiers (`VER-6` never matches `VER-62`), exits non-zero on one with no
-- `docs/plans/wp43-development-loop.md:626` — **withdrawn**: (VER-74)".
-- `docs/plans/wp43-development-loop.md:632` — **withdrawn**: - **The budget NOTE (item 7)**: the four budgets of J7, the 50 % margin of VER-73 with Design §5's
-- `docs/plans/wp43-development-loop.md:634` — **withdrawn**: - **VER-73's row**:
-- `docs/plans/wp43-development-loop.md:640` — **withdrawn**: - **VER-74's row**:
-- `docs/plans/wp44-simplify-the-loop.md:35` — **withdrawn**: Scope: L2, L3, L4's rule edit, L6, L7, L8. The tree strip and VER-75 are WP45. Depends on WP43 as
-- `docs/plans/wp44-simplify-the-loop.md:36` — **withdrawn**: …merged. Clauses: §7.6, Appendix A (VER-72 to VER-74), §8.2.10 J2 to J11, §8.2.11, `knowledge/07-software-stack/12-the-suites-blas-threads-bu…
-- `docs/plans/wp44-simplify-the-loop.md:36` — **withdrawn**: …merged. Clauses: §7.6, Appendix A (VER-72 to VER-74), §8.2.10 J2 to J11, §8.2.11, `knowledge/07-software-stack/12-the-suites-blas-threads-bu…
-- `docs/plans/wp44-simplify-the-loop.md:47` — **withdrawn**: …\| Plan shape and prose rule \| VER-72 gains (g): a plan from WP44 on holds at most 1,500 words, at most six *Decisions* rows, no `## Design`…
-- `docs/plans/wp44-simplify-the-loop.md:47` — **withdrawn**: …, `pyproject.toml` and `CONTRIBUTING.md` here \| L4, L7, L8. VER-73 and VER-74 are withdrawn, numbers not reused; L8 withdraws J7's token fig…
-- `docs/plans/wp44-simplify-the-loop.md:47` — **withdrawn**: …t.toml` and `CONTRIBUTING.md` here \| L4, L7, L8. VER-73 and VER-74 are withdrawn, numbers not reused; L8 withdraws J7's token figure and J11…
-- `docs/plans/wp44-simplify-the-loop.md:53` — **withdrawn**: …. Edit §7.6's development-selection and coverage NOTEs, the VER-74 row and Appendix A's summary, `knowledge/07-software-stack/12-the-suites-…
-- `docs/plans/wp44-simplify-the-loop.md:54` — **withdrawn**: …ng.py` as a test of the kept `no_cover` marker, renamed off VER-73; in `.github/workflows/ci.yml` run the tiers as the two shards and drop t…
-- `docs/plans/wp44-simplify-the-loop.md:54` — **withdrawn**: …s as the two shards and drop the budget steps. Withdraw the VER-73 row and §7.6's budget NOTE. Done when `tests/tier1` passes and the workfl…
-- `docs/plans/wp44-simplify-the-loop.md:58` — **withdrawn**: …tings.json`, §8.2.10 J8 and J11 (pointers to L6 and L8) and VER-72 (g). Also edit `.github/scripts/prose-only.sh` where it names the roster…
-- `docs/plans/wp44-simplify-the-loop.md:68` — **withdrawn**: …the markers partition the selection); `test_plan_shape.py` (VER-72 g, with the four toy failures); the whole suite by `gate.sh run`; VER-62…
-- `docs/plans/wp44-simplify-the-loop.md:72` — **withdrawn**: The tree strip and VER-75 (WP45); any product test's assertion; CI's post-merge and nightly jobs; a cost figure.
-- `docs/plans/wp45-prose-strip.md:37` — **withdrawn**: Scope: L4's rule applied to `src/` and `tests/`, L5, L9's trial, VER-75. Depends on WP44 as merged.
-- `docs/plans/wp45-prose-strip.md:38` — **withdrawn**: Clauses: §8.2.11 L4, L5, L9; VER-72 (h); VER-75 (added in this commit); VER-45; `.claude/rules/python.md`.
-- `docs/plans/wp45-prose-strip.md:38` — **withdrawn**: Clauses: §8.2.11 L4, L5, L9; VER-72 (h); VER-75 (added in this commit); VER-45; `.claude/rules/python.md`.
-- `docs/plans/wp45-prose-strip.md:50` — **withdrawn**: …\| D4 VER-75 \| Appendix A gains VER-75 in this commit: (a) in `src/nanopnp` a function or class docstring only where D2 allows, in `tests/` n…
-- `docs/plans/wp45-prose-strip.md:50` — **withdrawn**: …\| D4 VER-75 \| Appendix A gains VER-75 in this commit: (a) in `src/nanopnp` a function or class docstring only where D2 allows, in `tests/` n…
-- `docs/plans/wp45-prose-strip.md:101` — **withdrawn**: …- [x] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record un…
-- `docs/plans/wp45-prose-strip.md:108` — **withdrawn**: …\| `test_prose_share.py` \| 1 \| VER-75 (a), (b) \| Tree passes; a docstring added to a private function, to a test, and a two-line module docst…
-- `docs/plans/wp45-prose-strip.md:109` — **withdrawn**: \| `test_public_docstrings.py` \| 1 \| VER-72 (h) \| Unchanged, passes after every item \| the commit hook \|
-- `docs/plans/wp46-small-fixes.md:94` — **withdrawn**: \| VER-61, VER-62, VER-63 \| — \| Layering, golden at 1e-8, the register's rows \|
-- `docs/plans/wp47-okf-bundle.md:10` — **withdrawn**: note's open questions 3 to 7 are written into §8.2.7 (G12) and VER-68 into Appendix A, in this plan's
-- `docs/plans/wp47-okf-bundle.md:35` — **withdrawn**: Scope: the bundle, the citation rewrite, VER-68 with G3's ratchet, the documentation build. Depends on
-- `docs/plans/wp47-okf-bundle.md:36` — **withdrawn**: WP46 as delivered. Amended here: §8.2.6 F6 ("collected"), §8.2.7 G12, Appendix A VER-68, and at item 9
-- `docs/plans/wp47-okf-bundle.md:50` — **withdrawn**: …ainst the docs build's. `tests/tier1/test_okf_bundle.py` is VER-68. A word-for-word comparison of the joined bodies against the ten old file…
-- `docs/plans/wp47-okf-bundle.md:50` — **withdrawn**: …runs once at item 2, its result in the commit message \| F6; VER-68 \|…
-- `docs/plans/wp47-okf-bundle.md:69` — **withdrawn**: …s a concept with a log line), the pending figure; done when VER-68 and the build pass.…
-- `docs/plans/wp47-okf-bundle.md:87` — **withdrawn**: …index_missing_a_concept`, `log_out_of_form` `_is_refused` \| VER-68 (1) \| Each names its file; a valid bundle gives no finding \|…
-- `docs/plans/wp47-okf-bundle.md:88` — **withdrawn**: …_section_form_is_refused`, `…slug_matches_the_docs_build` \| VER-68 (2) \| Each failure named; the slug on punctuation, accents and a repeat e…
-- `docs/plans/wp47-okf-bundle.md:89` — **withdrawn**: …re_tested_marker_is_refused`, `…class_test_name_resolves` \| VER-68 (3) \| Absent name and bare marker at their lines; `pending` and `Class::t…
-- `docs/plans/wp47-okf-bundle.md:90` — **withdrawn**: \| `…verified_set_must_equal_inline_tests_arithmetic_and_ruling` \| VER-68 (4) \| An extra and a missing entry each fail \|
-- `docs/plans/wp47-okf-bundle.md:91` — **withdrawn**: \| `…tested_with_older_than_lock_is_refused` \| VER-68 (5) \| Older fails, equal passes, an absent package is named \|
-- `docs/plans/wp47-okf-bundle.md:92` — **withdrawn**: \| `…footnote_without_source_is_refused` \| VER-68 (6) \| Unknown label fails \|
-- `docs/plans/wp47-okf-bundle.md:93` — **withdrawn**: \| `…pending_count_must_equal_the_committed_list`, `…ceiling` \| VER-68, G3 \| One more or fewer fails; above the ceiling fails \|
-- `docs/plans/wp47-okf-bundle.md:94` — **withdrawn**: \| `…repository_citations_all_resolve`, `…the_bundle_conforms` \| VER-68 \| The real tree: no finding \|
-- `docs/plans/wp48-okf-backfill.md:6` — **withdrawn**: check VER-68), WP45's prose rule (§8.2.11 L4) and the input note `okf-knowledge-bundle.md` (K5 to K8;
-- `docs/plans/wp48-okf-backfill.md:42` — **withdrawn**: …reproductions only for properties they establish \| F6, K8, VER-68; do not stamp an untested version \|…
-- `docs/plans/wp48-okf-backfill.md:45` — **withdrawn**: …caller ceiling, and retain unsourced-claim refusals. Amend VER-68 (3), (5) and its trailing WP47-ceiling wording; close REV-103 only after…
-- `docs/plans/wp48-okf-backfill.md:119` — **withdrawn**: …y Behaviour` concepts (`06-09` and `07-01`..`07-16`), plus `VER-68` (5) enforcement and negative fixtures (`CEILING` stays `204`).…
-- `docs/plans/wp48-okf-backfill.md:135` — **withdrawn**: …t in `validation/okf.py` and `test_okf_bundle.py`, amending VER-68 (5) together (D3). Done when each negative fixture fails for its intended…
-- `docs/plans/wp48-okf-backfill.md:137` — **withdrawn**: …metadata in `tests/tier1/test_okf_bundle.py`, and amended `VER-68` (5) in `SPECIFICATION.md` (`CEILING` remains `204`).…
-- `docs/plans/wp48-okf-backfill.md:152` — **withdrawn**: …efusal of unsourced `[verified]` at `CEILING = 0`, amended `VER-68` (3) and trailing ceiling text in `SPECIFICATION.md`, closed `REV-103` in…
-- `docs/plans/wp48-okf-backfill.md:173` — **withdrawn**: …\| `tests/tier1/test_okf_bundle.py` \| VER-68, G3, K8 \| Empty ledger passes; pending fails even above zero ceiling; unsourced verified fails a…
-- `docs/plans/wp48-okf-backfill.md:175` — **withdrawn**: …t_library_behaviour.py`, `test_ngsolve_traps.py` (Tier 1) \| VER-68, K8 \| Each current property and workaround reproduced; exercised versions…
-- `docs/plans/wp48-okf-backfill.md:176` — **withdrawn**: …\| Tiers 1-2 and affected existing tests \| VER-61, VER-62, VER-63 \| Existing oracles unchanged; number-stability golden unchanged; measured a…
-- `docs/plans/wp48-okf-backfill.md:177` — **withdrawn**: \| Generator and `mkdocs build --strict` \| VER-45, VER-68 \| Sources, footnotes and links render without warnings \|
-- `docs/plans/wp49-cost-study.md:83` — **withdrawn**: wheels ship no `__init__.pyi`; the stub check runs only where it ships (VER-72).
-- `docs/plans/wp5.01-workbench-design-study.md:375` — **withdrawn**: > mockups, and the checker's missing non-text measure is REV-138. The plan's agenda cited VER-67 for
-- `docs/plans/wp5.01-workbench-design-study.md:376` — **withdrawn**: > refusals; VER-67 is withdrawn, so point 9 and WB-12 name no identifier.
-- `docs/plans/wp5.07-variables-and-the-rebuild-forecast.md:29` — **withdrawn**: **Requirements:** FR-39, FR-24, FR-25, FR-27, IF-03; VER-24, VER-56, VER-61, VER-62, VER-64, VER-72. **Constrained
-- `docs/plans/wp5.07-variables-and-the-rebuild-forecast.md:203` — **withdrawn**: …est_source_conventions.py` \| 1, 2 \| VER-62, VER-56, VER-61, VER-72 \| Unmoved at 10⁻⁸, no re-pin; goldens and layering unchanged; pint import…
-- `docs/plans/wp5.07-variables-and-the-rebuild-forecast.md:219` — **withdrawn**: > it inside the function and builds the registry once; VER-72, `.claude/rules/python.md` and `DEFERRABLE` in
-- `docs/plans/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
-- `docs/plans/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
-- `docs/plans/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
-- `docs/plans/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
-- `docs/plans/wp50-test-scope.md:51` — **withdrawn**: …and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict documentation b…
-- `docs/plans/wp55-user-testing-protocol.md:105` — **withdrawn**: legend cites VER-63, withdrawn, which `findings.md` does not copy.
-- `docs/plans/wp55-user-testing-protocol.md:110` — **withdrawn**: - VER-69's row goes between VER-68 and VER-70 in `specification/07-verification/02-tier-1.md`, where
-- `docs/plans/wp57-idealised-pore-and-python-interface.md:430` — **withdrawn**: …/session.py` imports the pipeline inside its methods, which VER-72 allows for a `nanopnp` module, so `Session().stages` and `nanopnp stage -…
-- `docs/plans/wp58-documentation-increment-4.md:128` — **withdrawn**: (VER-63); `docs/user-testing/findings.md` carries no such sentence (found at item 2). That file is absent from
-- `docs/plans/wp58-documentation-increment-4.md:129` — **withdrawn**: `tests/tier1/`, and §7.2 reads "**VER-63** \| Withdrawn". The modularity log's next clause — that
-- `docs/plans/wp58-documentation-increment-4.md:220` — **withdrawn**: - The three findings logs: replace "`tests/tier1/test_findings_logs.py` checks every row (VER-63)"
+- `docs/plans/sessions/notebooks-review-for-wp54.md:45` — **withdrawn**: 2. **Backend Isolation and Optional Extras (`VER-65`, `VER-72`)**
+- `docs/plans/sessions/notebooks-review-for-wp54.md:48` — **withdrawn**: …or` naming `structure` when `MDAnalysis` is not installed (`VER-72`).…
+- `docs/plans/sessions/notebooks-review-for-wp54.md:215` — **withdrawn**: …d and keeps `structure` free of solver backends (`VER-65`, `VER-72`). \|…
+- `docs/plans/sessions/notebooks-review-for-wp54.md:229` — **withdrawn**: …d `ngsolve`, `netgen`, `MDAnalysis`, or `numpy` (`VER-45`, `VER-72`).…
+- `docs/plans/sessions/notebooks-review-for-wp54.md:258` — **withdrawn**: …port `numpy` and `MDAnalysis` lazily inside `orient_pore` (`VER-72`). Use `nanopnp.core.paths.structure_file("2wcd.pdb.gz")` instead of crea…
+- `docs/plans/sessions/okf-converter-rules.md:5` — **withdrawn**: `SPECIFICATION.md` (G12, VER-68) governs, and where this note and the plan disagree the plan governs.
+- `docs/plans/sessions/okf-converter-rules.md:6` — **withdrawn**: It is held outside the plan because VER-72 (g) caps the plan's length.
+- `docs/plans/sessions/okf-converter-rules.md:60` — **withdrawn**: A prose-only edit that adds a bad citation therefore runs VER-68, in the commit hook and in CI's
+- `docs/plans/sessions/okf-converter-rules.md:70` — **withdrawn**: `modularity-layering.yaml` gains no edge; VER-72 and VER-75 apply to it.
+- `docs/plans/sessions/okf-converter-rules.md:70` — **withdrawn**: `modularity-layering.yaml` gains no edge; VER-72 and VER-75 apply to it.
+- `docs/plans/phase-4/phase-4-polish-and-user-testing.md:269` — **withdrawn**: test checks every row and name the withdrawn VER-63, the modularity log's closure sentence resting
+- `docs/plans/phase-4/phase-4-record.md:332` — **withdrawn**: - **VER-63, the findings-log check.** It is a Tier-1 parse of every findings log under `docs/`
+- `docs/plans/phase-4/phase-4-record.md:348` — **withdrawn**: > `docs/project/modularity-layering.yaml`; VER-63 checks every findings log; VER-62's golden holds
+- `docs/plans/phase-4/phase-4-record.md:530` — **withdrawn**: **VER-67, no stale release in a refusal** (proposed). A Tier-1 check over
+- `docs/plans/phase-4/phase-4-record.md:536` — **withdrawn**: > VER-67 reads the tagged releases from `CHANGELOG.md`'s milestone headings, never git, refusing
+- `docs/plans/phase-4/phase-4-record.md:544` — **withdrawn**: > - a string naming a release fails VER-67 once `CHANGELOG.md` records that release: REV-62's
+- `docs/plans/phase-4/phase-4-record.md:630` — **withdrawn**: ### WP43 — The development loop (§8.2.10 J1 to J9; VER-73, VER-74 proposed)
+- `docs/plans/phase-4/phase-4-record.md:630` — **withdrawn**: ### WP43 — The development loop (§8.2.10 J1 to J9; VER-73, VER-74 proposed)
+- `docs/plans/phase-4/phase-4-record.md:662` — **withdrawn**: Proposed **VER-73**, the loop's budgets: CI's duration report holds each selection within its
+- `docs/plans/phase-4/phase-4-record.md:664` — **withdrawn**: duration, which must fail. Proposed **VER-74**, the soundness of the test-impact selection:
+- `docs/plans/phase-4/phase-4-record.md:681` — **withdrawn**: Its `/wp-plan` decides the impact tool, the shard count, VER-73's margin, the roster's files and the
+- `docs/plans/phase-4/phase-4-record.md:695` — **withdrawn**: > tagged `v0.5.0-alpha.9`. A commit runs the tests a recorded impact map selects (VER-74), the push
+- `docs/plans/phase-4/phase-4-record.md:708` — **withdrawn**: > guard, roster test, `model-policy.md` and two agents are deleted; VER-73 and VER-74 are withdrawn;
+- `docs/plans/phase-4/phase-4-record.md:708` — **withdrawn**: > guard, roster test, `model-policy.md` and two agents are deleted; VER-73 and VER-74 are withdrawn;
+- `docs/plans/phase-4/phase-4-record.md:709` — **withdrawn**: > VER-72 (g) caps plans at 1,500 words and six decisions. L4's rule is written down (D101 to D107,
+- `docs/plans/phase-4/phase-4-record.md:717` — **withdrawn**: the map, `test_impact_selection.py` and VER-74;
+- `docs/plans/phase-4/phase-4-record.md:720` — **withdrawn**: ordering, `ci_budget.py`, `budgets.yaml`, the file ceiling and VER-73; `gate.sh` falls to about
+- `docs/plans/phase-4/phase-4-record.md:736` — **withdrawn**: ### WP45 — The prose strip (§8.2.11 L4, L5; VER-75)
+- `docs/plans/phase-4/phase-4-record.md:741` — **withdrawn**: > keeps a condensed docstring (L4 as amended after item 19); tests keep none. VER-75 (a) and (b) are
+- `docs/plans/phase-4/phase-4-record.md:751` — **withdrawn**: **VER-75**: the docstring and comment share of `src/` stays at or below its measured value plus
+- `docs/plans/phase-4/phase-4-record.md:807` — **withdrawn**: ### WP47 — The OKF bundle and its checks (§8.2.7 G12; VER-68)
+- `docs/plans/phase-4/phase-4-record.md:811` — **withdrawn**: > an `index.md` per directory, `log.md` and `pending.yaml`. VER-68 is `test_okf_bundle.py` over
+- `docs/plans/phase-4/phase-4-record.md:829` — **withdrawn**: > as **VER-68**, with the six refusals of the input note, *What the package SHALL check*. Its
+- `docs/plans/phase-4/phase-4-record.md:835` — **withdrawn**: > the test node ids that WP36 to WP43 leave. VER-68 stays its proposed identifier.
+- `docs/plans/phase-4/phase-4-record.md:841` — **withdrawn**: > (§8.2.7 G12); VER-68 is in Appendix A.
+- `docs/plans/phase-4/phase-4-record.md:849` — **withdrawn**: > `[tested: pending]` is refused unconditionally in `okf.py`, `VER-68` is amended, and `REV-103` is closed.
+- `docs/plans/phase-4/phase-4-record.md:858` — **withdrawn**: > test is named for the claim it backs, and VER-68's list reaching empty is the package's end.
+- `docs/plans/phase-4/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
+- `docs/plans/phase-4/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
+- `docs/plans/phase-4/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
+- `docs/plans/phase-4/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
+- `docs/plans/phase-4/phase-4-record.md:911` — **withdrawn**: > nightly run opens an issue (N4). VER-63, VER-67, VER-68 and VER-75 are withdrawn, VER-72 keeps its
+- `docs/plans/phase-4/phase-4-record.md:1131` — **withdrawn**: `closed`, so that VER-63 asserts closure from then on;
+- `docs/plans/phase-4/phase-4-record.md:1148` — **withdrawn**: > **Amended, 18 October 2026** (§8.2.13 N3). VER-63 is withdrawn: the close reads both logs and the
+- `docs/plans/phase-4/phase-4-record.md:1177` — **withdrawn**: …\| The impact tool, the shard count, VER-73's margin, the roster's files \| — \| **Settled by WP43's plan, 12 October 2026** ([wp43-development…
+- `docs/plans/phase-4/phase-4-record.md:1211` — **withdrawn**: \| The `MOD-11` choice \| The fix packages \| `MOD-11` stays `accepted`, and VER-63 refuses the close \|
+- `docs/plans/phase-4/phase-4-record.md:1239` — **withdrawn**: \| WP35 \| 1, 2 \| VER-61, VER-62, VER-63 (proposed) \|
+- `docs/plans/phase-4/phase-4-record.md:1244` — **withdrawn**: \| WP40 \| 1 \| VER-67 (proposed) \|
+- `docs/plans/phase-4/phase-4-record.md:1247` — **withdrawn**: \| WP43, development loop \| 1 \| VER-73, VER-74 (proposed); VER-62 on Python 3.14; both withdrawn by WP44 \|
+- `docs/plans/phase-4/phase-4-record.md:1247` — **withdrawn**: \| WP43, development loop \| 1 \| VER-73, VER-74 (proposed); VER-62 on Python 3.14; both withdrawn by WP44 \|
+- `docs/plans/phase-4/phase-4-record.md:1248` — **withdrawn**: \| WP44, simplify the loop \| 1 \| Plan-shape test; VER-73 and VER-74 withdrawn; VER-62 unchanged \|
+- `docs/plans/phase-4/phase-4-record.md:1248` — **withdrawn**: \| WP44, simplify the loop \| 1 \| Plan-shape test; VER-73 and VER-74 withdrawn; VER-62 unchanged \|
+- `docs/plans/phase-4/phase-4-record.md:1249` — **withdrawn**: \| WP45, prose strip \| 1, 2 \| VER-75; syntax-tree equality; VER-45 \|
+- `docs/plans/phase-4/phase-4-record.md:1251` — **withdrawn**: \| WP47, OKF bundle \| 1 \| VER-68, the F6 check \|
+- `docs/plans/phase-4/phase-4-record.md:1260` — **withdrawn**: \| Every refactor \| 1, 2 \| VER-61, VER-62 and VER-63 kept green \|
+- `docs/plans/phase-4/phase-4-record.md:1263` — **withdrawn**: \| Close \| 1, 2 \| VER-63 against closed logs \|
+- `docs/plans/phase-4/phase-4-record.md:1267` — **withdrawn**: > push and nightly". Where criteria 2, 4, 5, 10 and 11 cite VER-63, VER-68, VER-75, the plan-shape test
+- `docs/plans/phase-4/phase-4-record.md:1267` — **withdrawn**: > push and nightly". Where criteria 2, 4, 5, 10 and 11 cite VER-63, VER-68, VER-75, the plan-shape test
+- `docs/plans/phase-4/phase-4-record.md:1267` — **withdrawn**: > push and nightly". Where criteria 2, 4, 5, 10 and 11 cite VER-63, VER-68, VER-75, the plan-shape test
+- `docs/plans/phase-4/phase-4-record.md:1274` — **withdrawn**: 2. **The modularity report is merged and every `MOD-nn` is terminal**, asserted by VER-63 on the
+- `docs/plans/phase-4/phase-4-record.md:1288` — **withdrawn**: 5. **The user-testing log is closed**: every `UT-nn` is terminal under VER-63, and every protocol
+- `docs/plans/phase-4/phase-4-record.md:1303` — **withdrawn**: is `fixed`**, read from the register that VER-63 checks. The register stays `open`, because it is
+- `docs/plans/phase-4/phase-4-record.md:1312` — **withdrawn**: WP44 on is within its word cap, checked by the plan-shape test; and VER-75 holds, with `src/`
+- `docs/plans/phase-4/phase-4-record.md:1346` — **withdrawn**: deferred or sent post-1.0, with the deferrals' destinations. Source: VER-63 on the closed log.
+- `docs/plans/phase-4/phase-4-record.md:1358` — **withdrawn**: package, and those deferred by destination. Source: VER-63 on the register.
+- `docs/plans/phase-4/phase-4-record.md:1360` — **withdrawn**: were fixed or deferred. Source: VER-63.
+- `docs/plans/phase-4/phase-4-record.md:1565` — **withdrawn**: >   share of `src/` and `tests/` (criterion 11; VER-75) and every `[tested: …]` marker against the
+- `docs/plans/phase-4/phase-4-record.md:1566` — **withdrawn**: >   surviving tests (criterion 4; VER-63). All 423 markers resolved on 31 October 2026;
+- `docs/plans/phase-4/wp35-modularity-exploration.md:17` — **withdrawn**: amendment** is made in this commit. VER-61, VER-62 and VER-63 are claimed, with their rows in
+- `docs/plans/phase-4/wp35-modularity-exploration.md:36` — **withdrawn**: - **VER-63**, a Tier-1 check of every findings log under `docs/`.
+- `docs/plans/phase-4/wp35-modularity-exploration.md:72` — **withdrawn**: …\| D17 \| Log format (VER-63) \| A log is any `docs/**/*findings.md`. It carries YAML front matter `findings: {prefix, status: open\\|closed, ar…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:74` — **withdrawn**: …md` as not prose, with a case in `test_workflow_hooks.py` \| VER-63 reads these files. Without this, a ruling edit to a log would skip the te…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:137` — **withdrawn**: 5. **VER-63**: `validation/findings.py` (`parse_log`, `check_log`, and counts by area, severity
+- `docs/plans/phase-4/wp35-modularity-exploration.md:148` — **withdrawn**: `CHANGELOG.md` section, the spec rows of VER-61, VER-62 and VER-63, and the Appendix A
+- `docs/plans/phase-4/wp35-modularity-exploration.md:156` — **withdrawn**: …\| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| Every real log passes. Constructed bad logs are each refused, naming the row: wrong col…
+- `docs/plans/phase-4/wp35-modularity-exploration.md:170` — **withdrawn**: - The user-testing log. VER-63 already covers it by D17, and the protocol package writes it.
+- `docs/plans/phase-4/wp36-stage-protocol-and-walk.md:13` — **withdrawn**: clause, in the commit that implements it, as WP35 claimed VER-61 to VER-63.
+- `docs/plans/phase-4/wp36-stage-protocol-and-walk.md:53` — **withdrawn**: …d `MOD-12` become `fixed`, their ruling linking this plan \| VER-63: a `fixed` row's ruling links a plan \|…
+- `docs/plans/phase-4/wp36-stage-protocol-and-walk.md:89` — **withdrawn**: \| `tests/tier1/test_layering.py`, `test_findings_logs.py` \| 1 \| VER-61, VER-63 \| Green; the log's three rows `fixed` \|
+- `docs/plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md:55` — **withdrawn**: - VER-47, VER-61, VER-62, VER-63, VER-25 (introspection imports no solver);
+- `docs/plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md:80` — **withdrawn**: …stays `deferred`: VER-65 is H3's guard, not the interface \| VER-63 \|…
+- `docs/plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md:149` — **withdrawn**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| `MOD-05` `fixed` with a plan link \|
+- `docs/plans/phase-4/wp38-io-split.md:62` — **withdrawn**: - VER-25, VER-43, VER-45, VER-46, VER-47, VER-55, VER-60, VER-61, VER-62, VER-63, VER-64,
+- `docs/plans/phase-4/wp38-io-split.md:91` — **withdrawn**: …27's section records D8's reading of "`nanopnp validate`" \| VER-63; §8.2.8 H12 \|…
+- `docs/plans/phase-4/wp38-io-split.md:162` — **withdrawn**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D18's rows `fixed`, each with this plan's link \|
+- `docs/plans/phase-4/wp39-backend-registries.md:61` — **withdrawn**: - VER-24, VER-43, VER-45, VER-54, VER-61, VER-62, VER-63, VER-65, VER-66 (proposed);
+- `docs/plans/phase-4/wp39-backend-registries.md:85` — **withdrawn**: …er`). The YAML's header loses its "WP39 removes" sentence \| VER-63; H12 \|…
+- `docs/plans/phase-4/wp39-backend-registries.md:156` — **withdrawn**: \| `tests/tier1/test_findings_logs.py` \| 1 \| VER-63 \| D14's rows are `fixed`, each linking this plan \|
+- `docs/plans/phase-4/wp40-stale-refusals.md:14` — **withdrawn**: `MOD-14` (§8.2.8 H1, H8) and claims VER-67. `SPECIFICATION.md` governs, and the identifiers below
+- `docs/plans/phase-4/wp40-stale-refusals.md:17` — **withdrawn**: that the NUM-20 fallbacks are refused and that no release schedules them (D5, D6). VER-67's row and
+- `docs/plans/phase-4/wp40-stale-refusals.md:46` — **withdrawn**: Pointers: IF-02, FR-27, FR-10, FR-21, NUM-16, NUM-20, VER-24, VER-47, VER-61, VER-67 (proposed),
+- `docs/plans/phase-4/wp40-stale-refusals.md:47` — **withdrawn**: VER-72; §2.7 NOTE (Versioning); §5.3.1 NOTEs on `inputs:` and `numerics.nonlinear`; §8.2.8 H1, H8;
+- `docs/plans/phase-4/wp40-stale-refusals.md:58` — **withdrawn**: …\| D3 \| What VER-67 checks \| `stale_release_literals(tagged, root=None, sources=None)` returns `(path, line, release, text)` for each non-doc…
+- `docs/plans/phase-4/wp40-stale-refusals.md:62` — **withdrawn**: …erbatim; so does FR-11's "after v1.0" \| Both conform to D4. VER-67 fails the FR-21 text at the `v0.7.0` tag unless FR-21 ships, which is the…
+- `docs/plans/phase-4/wp40-stale-refusals.md:65` — **withdrawn**: …Stage`'s "Figures are v0.4" (FR-28 is v0.7). Not checked by VER-67 (D3) \| Coverage cannot see a stale docstring; the four are the ones touch…
+- `docs/plans/phase-4/wp40-stale-refusals.md:72` — **withdrawn**: …- [x] 6843283 4. [any] Records: VER-67's row in §7 and IF-02's Appendix A pointer; `MOD-14` `fixed` in `modularity-findings.md`; `CHANGELOG.…
+- `docs/plans/phase-4/wp40-stale-refusals.md:72` — **withdrawn**: …ith the breaks; this plan's status and the brief. Done when VER-63, VER-72 and the strict docs build pass.…
+- `docs/plans/phase-4/wp40-stale-refusals.md:72` — **withdrawn**: …breaks; this plan's status and the brief. Done when VER-63, VER-72 and the strict docs build pass.…
+- `docs/plans/phase-4/wp40-stale-refusals.md:82` — **withdrawn**: > (REV-62's text), `v0.7` (FR-21) and `v1.0` twice, none tagged: VER-67 passes against
+- `docs/plans/phase-4/wp40-stale-refusals.md:86` — **withdrawn**: …-70: D10's check and its tests; the §5.3.1 NOTE, VER-47 and VER-67 rows; `test_ver47_every_inputs_key_is_hashed_and_read_by_a_stage`; REV-68…
+- `docs/plans/phase-4/wp40-stale-refusals.md:92` — **withdrawn**: …test_stale_refusals.py` (new; planned in this commit) \| 1 \| VER-67, IF-02, FR-27, NUM-20, VER-24, VER-47 \| (a) A synthetic changelog with `0…
+- `docs/plans/phase-4/wp40-stale-refusals.md:95` — **withdrawn**: …nventions.py`, `test_plan_records.py` \| 1 \| VER-47, VER-61, VER-72 \| Unchanged: no exit code, edge or private import moves (the three sites…
+- `docs/plans/phase-4/wp40-stale-refusals.md:108` — **withdrawn**: stand, VER-67 states its rule instead of citing this plan, the `inputs:` rule is enforced by a
+- `docs/plans/phase-4/wp40-stale-refusals.md:127` — **withdrawn**: which I3 defers REV-62 to; VER-67 fails it at `v0.6.0` unless REV-62 is resolved first.
+- `docs/plans/phase-4/wp41-accuracy-fixes.md:12` — **withdrawn**: - WP40's rule that a refusal names its requirement, and VER-67;
+- `docs/plans/phase-4/wp41-accuracy-fixes.md:76` — **withdrawn**: …s; this plan's status, the phase plan, the brief. Done when VER-63, VER-72 and the strict docs build pass.…
+- `docs/plans/phase-4/wp41-accuracy-fixes.md:76` — **withdrawn**: …plan's status, the phase plan, the brief. Done when VER-63, VER-72 and the strict docs build pass.…
+- `docs/plans/phase-4/wp42-verification-checks.md:8` — **withdrawn**: rule that a refusal names its requirement (VER-67); WP38's split (`pipeline/checks.py` refuses at
+- `docs/plans/phase-4/wp42-verification-checks.md:62` — **withdrawn**: §8.2.7 G6, §8.2.9 I2, VER-24, VER-43, VER-47, VER-56, VER-62, VER-63, VER-67, VER-70, VER-71, VER-72.
+- `docs/plans/phase-4/wp42-verification-checks.md:62` — **withdrawn**: §8.2.7 G6, §8.2.9 I2, VER-24, VER-43, VER-47, VER-56, VER-62, VER-63, VER-67, VER-70, VER-71, VER-72.
+- `docs/plans/phase-4/wp42-verification-checks.md:62` — **withdrawn**: §8.2.7 G6, §8.2.9 I2, VER-24, VER-43, VER-47, VER-56, VER-62, VER-63, VER-67, VER-70, VER-71, VER-72.
+- `docs/plans/phase-4/wp42-verification-checks.md:118` — **withdrawn**: …s; this plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.…
+- `docs/plans/phase-4/wp42-verification-checks.md:118` — **withdrawn**: …plan's status, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.…
+- `docs/plans/phase-4/wp42-verification-checks.md:118` — **withdrawn**: …tatus, the phase plan, the brief. Done when VER-63, VER-67, VER-72 and the strict docs build pass.…
+- `docs/plans/phase-4/wp43-development-loop.md:57` — **withdrawn**: Requirements: **VER-74** (new, the selection's soundness), **VER-73** (new, the budgets), VER-46
+- `docs/plans/phase-4/wp43-development-loop.md:57` — **withdrawn**: Requirements: **VER-74** (new, the selection's soundness), **VER-73** (new, the budgets), VER-46
+- `docs/plans/phase-4/wp43-development-loop.md:58` — **withdrawn**: and VER-62 (their cadence moves; their assertions do not), VER-72 (d) (the planned markers), QR-09,
+- `docs/plans/phase-4/wp43-development-loop.md:60` — **withdrawn**: Appendix A rows for VER-73 and VER-74, `CLAUDE.md` *Setup*, *Commands* and the gate lines,
+- `docs/plans/phase-4/wp43-development-loop.md:60` — **withdrawn**: Appendix A rows for VER-73 and VER-74, `CLAUDE.md` *Setup*, *Commands* and the gate lines,
+- `docs/plans/phase-4/wp43-development-loop.md:70` — **withdrawn**: …context work last \| J2: the fast hook is trusted only once VER-74 holds. Until item 2 lands, commits run the old hook \|…
+- `docs/plans/phase-4/wp43-development-loop.md:75` — **withdrawn**: …im, as it is for CI \| `[Opus]`: a gap here passes silently. VER-74 enumerates the routes; CI's full run stays the authority (J3) \|…
+- `docs/plans/phase-4/wp43-development-loop.md:79` — **withdrawn**: …verage combine`, then diff-cover against the base, then the VER-73 check); and **`CI result`**, which needs them all and is the one required…
+- `docs/plans/phase-4/wp43-development-loop.md:80` — **withdrawn**: …\| D11 \| VER-73 \| `.github/budgets.yaml`: `commit_hook_s: 60`, `push_gate_s: 300`, `pull_request_critical_path_s: 360`, `file_ceiling_s: 90`,…
+- `docs/plans/phase-4/wp43-development-loop.md:80` — **withdrawn**: …selection size and tree, and reported by the usage script. VER-73 supersedes WP33 D15's targets; REV-47's close reports both \| Margin from…
+- `docs/plans/phase-4/wp43-development-loop.md:85` — **withdrawn**: …\| D16 \| Records \| VER-73 and VER-74 rows in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHAN…
+- `docs/plans/phase-4/wp43-development-loop.md:85` — **withdrawn**: …\| D16 \| Records \| VER-73 and VER-74 rows in Appendix A; §7.6's table, its development-selection and coverage NOTEs, and a budget NOTE; `CHAN…
+- `docs/plans/phase-4/wp43-development-loop.md:130` — **withdrawn**: development-selection NOTE and `CLAUDE.md` *Commands*, and add VER-74 to Appendix A, from the
+- `docs/plans/phase-4/wp43-development-loop.md:234` — **withdrawn**: - [x] 2035cd4 7. [any] VER-73 (D11): `.github/budgets.yaml`, `.github/scripts/ci_budget.py`, the CI step,
+- `docs/plans/phase-4/wp43-development-loop.md:297` — **withdrawn**: …\| `tier1/test_impact_selection.py` \| 1 \| VER-74 \| Each route of D4 selects its tests, by node id; each fallback names its path; the walks ar…
+- `docs/plans/phase-4/wp43-development-loop.md:299` — **withdrawn**: …\| `tier1/test_loop_budgets.py` \| 1 \| VER-73 \| The recorded budgets are J7's, the file ceiling 90 s and the margin 0.5. A budget below the me…
+- `docs/plans/phase-4/wp43-development-loop.md:303` — **withdrawn**: \| The budgets \| — \| J7, VER-73 \| Item 10's measurements against D9 \| item 10 \|
+- `docs/plans/phase-4/wp43-development-loop.md:345` — **withdrawn**: any source change. A source file read as text, as by VER-72's checks, is a file dependency. Any
+- `docs/plans/phase-4/wp43-development-loop.md:353` — **withdrawn**: VER-74 plants one change per route. CI's full run on every pull request remains the authority (J3).
+- `docs/plans/phase-4/wp43-development-loop.md:398` — **withdrawn**: ### 5. VER-73's margin
+- `docs/plans/phase-4/wp43-development-loop.md:588` — **NO DEFINITION**: matches whole identifiers (`VER-6` never matches `VER-62`), exits non-zero on one with no
+- `docs/plans/phase-4/wp43-development-loop.md:626` — **withdrawn**: (VER-74)".
+- `docs/plans/phase-4/wp43-development-loop.md:632` — **withdrawn**: - **The budget NOTE (item 7)**: the four budgets of J7, the 50 % margin of VER-73 with Design §5's
+- `docs/plans/phase-4/wp43-development-loop.md:634` — **withdrawn**: - **VER-73's row**:
+- `docs/plans/phase-4/wp43-development-loop.md:640` — **withdrawn**: - **VER-74's row**:
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:35` — **withdrawn**: Scope: L2, L3, L4's rule edit, L6, L7, L8. The tree strip and VER-75 are WP45. Depends on WP43 as
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:36` — **withdrawn**: …merged. Clauses: §7.6, Appendix A (VER-72 to VER-74), §8.2.10 J2 to J11, §8.2.11, `knowledge/07-software-stack/12-the-suites-blas-threads-bu…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:36` — **withdrawn**: …merged. Clauses: §7.6, Appendix A (VER-72 to VER-74), §8.2.10 J2 to J11, §8.2.11, `knowledge/07-software-stack/12-the-suites-blas-threads-bu…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:47` — **withdrawn**: …\| Plan shape and prose rule \| VER-72 gains (g): a plan from WP44 on holds at most 1,500 words, at most six *Decisions* rows, no `## Design`…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:47` — **withdrawn**: …, `pyproject.toml` and `CONTRIBUTING.md` here \| L4, L7, L8. VER-73 and VER-74 are withdrawn, numbers not reused; L8 withdraws J7's token fig…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:47` — **withdrawn**: …t.toml` and `CONTRIBUTING.md` here \| L4, L7, L8. VER-73 and VER-74 are withdrawn, numbers not reused; L8 withdraws J7's token figure and J11…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:53` — **withdrawn**: …. Edit §7.6's development-selection and coverage NOTEs, the VER-74 row and Appendix A's summary, `knowledge/07-software-stack/12-the-suites-…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:54` — **withdrawn**: …ng.py` as a test of the kept `no_cover` marker, renamed off VER-73; in `.github/workflows/ci.yml` run the tiers as the two shards and drop t…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:54` — **withdrawn**: …s as the two shards and drop the budget steps. Withdraw the VER-73 row and §7.6's budget NOTE. Done when `tests/tier1` passes and the workfl…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:58` — **withdrawn**: …tings.json`, §8.2.10 J8 and J11 (pointers to L6 and L8) and VER-72 (g). Also edit `.github/scripts/prose-only.sh` where it names the roster…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:68` — **withdrawn**: …the markers partition the selection); `test_plan_shape.py` (VER-72 g, with the four toy failures); the whole suite by `gate.sh run`; VER-62…
+- `docs/plans/phase-4/wp44-simplify-the-loop.md:72` — **withdrawn**: The tree strip and VER-75 (WP45); any product test's assertion; CI's post-merge and nightly jobs; a cost figure.
+- `docs/plans/phase-4/wp45-prose-strip.md:37` — **withdrawn**: Scope: L4's rule applied to `src/` and `tests/`, L5, L9's trial, VER-75. Depends on WP44 as merged.
+- `docs/plans/phase-4/wp45-prose-strip.md:38` — **withdrawn**: Clauses: §8.2.11 L4, L5, L9; VER-72 (h); VER-75 (added in this commit); VER-45; `.claude/rules/python.md`.
+- `docs/plans/phase-4/wp45-prose-strip.md:38` — **withdrawn**: Clauses: §8.2.11 L4, L5, L9; VER-72 (h); VER-75 (added in this commit); VER-45; `.claude/rules/python.md`.
+- `docs/plans/phase-4/wp45-prose-strip.md:50` — **withdrawn**: …\| D4 VER-75 \| Appendix A gains VER-75 in this commit: (a) in `src/nanopnp` a function or class docstring only where D2 allows, in `tests/` n…
+- `docs/plans/phase-4/wp45-prose-strip.md:50` — **withdrawn**: …\| D4 VER-75 \| Appendix A gains VER-75 in this commit: (a) in `src/nanopnp` a function or class docstring only where D2 allows, in `tests/` n…
+- `docs/plans/phase-4/wp45-prose-strip.md:101` — **withdrawn**: …- [x] 28. VER-75 in `tests/tier1/test_prose_share.py` (D4), ceilings from the tree as it stands; run VER-45's documentation build. Record un…
+- `docs/plans/phase-4/wp45-prose-strip.md:108` — **withdrawn**: …\| `test_prose_share.py` \| 1 \| VER-75 (a), (b) \| Tree passes; a docstring added to a private function, to a test, and a two-line module docst…
+- `docs/plans/phase-4/wp45-prose-strip.md:109` — **withdrawn**: \| `test_public_docstrings.py` \| 1 \| VER-72 (h) \| Unchanged, passes after every item \| the commit hook \|
+- `docs/plans/phase-4/wp46-small-fixes.md:94` — **withdrawn**: \| VER-61, VER-62, VER-63 \| — \| Layering, golden at 1e-8, the register's rows \|
+- `docs/plans/phase-4/wp47-okf-bundle.md:10` — **withdrawn**: note's open questions 3 to 7 are written into §8.2.7 (G12) and VER-68 into Appendix A, in this plan's
+- `docs/plans/phase-4/wp47-okf-bundle.md:35` — **withdrawn**: Scope: the bundle, the citation rewrite, VER-68 with G3's ratchet, the documentation build. Depends on
+- `docs/plans/phase-4/wp47-okf-bundle.md:36` — **withdrawn**: WP46 as delivered. Amended here: §8.2.6 F6 ("collected"), §8.2.7 G12, Appendix A VER-68, and at item 9
+- `docs/plans/phase-4/wp47-okf-bundle.md:50` — **withdrawn**: …ainst the docs build's. `tests/tier1/test_okf_bundle.py` is VER-68. A word-for-word comparison of the joined bodies against the ten old file…
+- `docs/plans/phase-4/wp47-okf-bundle.md:50` — **withdrawn**: …runs once at item 2, its result in the commit message \| F6; VER-68 \|…
+- `docs/plans/phase-4/wp47-okf-bundle.md:69` — **withdrawn**: …s a concept with a log line), the pending figure; done when VER-68 and the build pass.…
+- `docs/plans/phase-4/wp47-okf-bundle.md:87` — **withdrawn**: …index_missing_a_concept`, `log_out_of_form` `_is_refused` \| VER-68 (1) \| Each names its file; a valid bundle gives no finding \|…
+- `docs/plans/phase-4/wp47-okf-bundle.md:88` — **withdrawn**: …_section_form_is_refused`, `…slug_matches_the_docs_build` \| VER-68 (2) \| Each failure named; the slug on punctuation, accents and a repeat e…
+- `docs/plans/phase-4/wp47-okf-bundle.md:89` — **withdrawn**: …re_tested_marker_is_refused`, `…class_test_name_resolves` \| VER-68 (3) \| Absent name and bare marker at their lines; `pending` and `Class::t…
+- `docs/plans/phase-4/wp47-okf-bundle.md:90` — **withdrawn**: \| `…verified_set_must_equal_inline_tests_arithmetic_and_ruling` \| VER-68 (4) \| An extra and a missing entry each fail \|
+- `docs/plans/phase-4/wp47-okf-bundle.md:91` — **withdrawn**: \| `…tested_with_older_than_lock_is_refused` \| VER-68 (5) \| Older fails, equal passes, an absent package is named \|
+- `docs/plans/phase-4/wp47-okf-bundle.md:92` — **withdrawn**: \| `…footnote_without_source_is_refused` \| VER-68 (6) \| Unknown label fails \|
+- `docs/plans/phase-4/wp47-okf-bundle.md:93` — **withdrawn**: \| `…pending_count_must_equal_the_committed_list`, `…ceiling` \| VER-68, G3 \| One more or fewer fails; above the ceiling fails \|
+- `docs/plans/phase-4/wp47-okf-bundle.md:94` — **withdrawn**: \| `…repository_citations_all_resolve`, `…the_bundle_conforms` \| VER-68 \| The real tree: no finding \|
+- `docs/plans/phase-4/wp48-okf-backfill.md:6` — **withdrawn**: check VER-68), WP45's prose rule (§8.2.11 L4) and the input note `okf-knowledge-bundle.md` (K5 to K8;
+- `docs/plans/phase-4/wp48-okf-backfill.md:42` — **withdrawn**: …reproductions only for properties they establish \| F6, K8, VER-68; do not stamp an untested version \|…
+- `docs/plans/phase-4/wp48-okf-backfill.md:45` — **withdrawn**: …caller ceiling, and retain unsourced-claim refusals. Amend VER-68 (3), (5) and its trailing WP47-ceiling wording; close REV-103 only after…
+- `docs/plans/phase-4/wp48-okf-backfill.md:119` — **withdrawn**: …y Behaviour` concepts (`06-09` and `07-01`..`07-16`), plus `VER-68` (5) enforcement and negative fixtures (`CEILING` stays `204`).…
+- `docs/plans/phase-4/wp48-okf-backfill.md:135` — **withdrawn**: …t in `validation/okf.py` and `test_okf_bundle.py`, amending VER-68 (5) together (D3). Done when each negative fixture fails for its intended…
+- `docs/plans/phase-4/wp48-okf-backfill.md:137` — **withdrawn**: …metadata in `tests/tier1/test_okf_bundle.py`, and amended `VER-68` (5) in `SPECIFICATION.md` (`CEILING` remains `204`).…
+- `docs/plans/phase-4/wp48-okf-backfill.md:152` — **withdrawn**: …efusal of unsourced `[verified]` at `CEILING = 0`, amended `VER-68` (3) and trailing ceiling text in `SPECIFICATION.md`, closed `REV-103` in…
+- `docs/plans/phase-4/wp48-okf-backfill.md:173` — **withdrawn**: …\| `tests/tier1/test_okf_bundle.py` \| VER-68, G3, K8 \| Empty ledger passes; pending fails even above zero ceiling; unsourced verified fails a…
+- `docs/plans/phase-4/wp48-okf-backfill.md:175` — **withdrawn**: …t_library_behaviour.py`, `test_ngsolve_traps.py` (Tier 1) \| VER-68, K8 \| Each current property and workaround reproduced; exercised versions…
+- `docs/plans/phase-4/wp48-okf-backfill.md:176` — **withdrawn**: …\| Tiers 1-2 and affected existing tests \| VER-61, VER-62, VER-63 \| Existing oracles unchanged; number-stability golden unchanged; measured a…
+- `docs/plans/phase-4/wp48-okf-backfill.md:177` — **withdrawn**: \| Generator and `mkdocs build --strict` \| VER-45, VER-68 \| Sources, footnotes and links render without warnings \|
+- `docs/plans/phase-4/wp49-cost-study.md:83` — **withdrawn**: wheels ship no `__init__.pyi`; the stub check runs only where it ships (VER-72).
+- `docs/plans/phase-5/wp5.01-workbench-design-study.md:375` — **withdrawn**: > mockups, and the checker's missing non-text measure is REV-138. The plan's agenda cited VER-67 for
+- `docs/plans/phase-5/wp5.01-workbench-design-study.md:376` — **withdrawn**: > refusals; VER-67 is withdrawn, so point 9 and WB-12 name no identifier.
+- `docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md:29` — **withdrawn**: **Requirements:** FR-39, FR-24, FR-25, FR-27, IF-03; VER-24, VER-56, VER-61, VER-62, VER-64, VER-72. **Constrained
+- `docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md:203` — **withdrawn**: …est_source_conventions.py` \| 1, 2 \| VER-62, VER-56, VER-61, VER-72 \| Unmoved at 10⁻⁸, no re-pin; goldens and layering unchanged; pint import…
+- `docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md:219` — **withdrawn**: > it inside the function and builds the registry once; VER-72, `.claude/rules/python.md` and `DEFERRABLE` in
+- `docs/plans/phase-4/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
+- `docs/plans/phase-4/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
+- `docs/plans/phase-4/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
+- `docs/plans/phase-4/wp50-test-scope.md:51` — **withdrawn**: …\| D6 Withdrawals and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict…
+- `docs/plans/phase-4/wp50-test-scope.md:51` — **withdrawn**: …and markers \| VER-63, VER-67, VER-68 and VER-75 withdrawn; VER-72 keeps only (a), the import guard; VER-45 keeps the strict documentation b…
+- `docs/plans/phase-4/wp55-user-testing-protocol.md:105` — **withdrawn**: legend cites VER-63, withdrawn, which `findings.md` does not copy.
+- `docs/plans/phase-4/wp55-user-testing-protocol.md:110` — **withdrawn**: - VER-69's row goes between VER-68 and VER-70 in `specification/07-verification/02-tier-1.md`, where
+- `docs/plans/phase-4/wp57-idealised-pore-and-python-interface.md:430` — **withdrawn**: …/session.py` imports the pipeline inside its methods, which VER-72 allows for a `nanopnp` module, so `Session().stages` and `nanopnp stage -…
+- `docs/plans/phase-4/wp58-documentation-increment-4.md:128` — **withdrawn**: (VER-63); `docs/user-testing/findings.md` carries no such sentence (found at item 2). That file is absent from
+- `docs/plans/phase-4/wp58-documentation-increment-4.md:129` — **withdrawn**: `tests/tier1/`, and §7.2 reads "**VER-63** \| Withdrawn". The modularity log's next clause — that
+- `docs/plans/phase-4/wp58-documentation-increment-4.md:220` — **withdrawn**: - The three findings logs: replace "`tests/tier1/test_findings_logs.py` checks every row (VER-63)"
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:105` — **withdrawn**: - VER rows that are pure repository self-checks are withdrawn, the way VER-73/74 were: VER-63
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:105` — **withdrawn**: - VER rows that are pure repository self-checks are withdrawn, the way VER-73/74 were: VER-63
 - `docs/superpowers/specs/2026-10-18-test-pruning-design.md:106` — **withdrawn**: (findings logs), VER-67 (release strings), VER-68 (knowledge bundle), VER-72 (source conventions,

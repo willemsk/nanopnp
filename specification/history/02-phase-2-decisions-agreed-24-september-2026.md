@@ -6,7 +6,7 @@ description: "Records the author's Phase 2 rulings, agreed 24 September 2026, an
 
 #### 8.2.2 Phase 2 decisions, agreed 24 September 2026
 
-Rulings by the author, taken while planning Phase 2 (`docs/plans/phase-2-geometry-pipeline.md`).
+Rulings by the author, taken while planning Phase 2 (`docs/plans/phase-2/phase-2-geometry-pipeline.md`).
 Where a ruling changes a clause, the clause is amended in the commit named in the last column.
 
 | # | Decision | Consequence | Clause changed, and when |

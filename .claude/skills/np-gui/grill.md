@@ -1,7 +1,7 @@
 # Run a design round with the author
 
 `/np-gui grill <organisation | look-and-feel>`. The author must be present. The agendas and the
-boards are WP5.01's (`docs/plans/wp5.01-workbench-design-study.md`, D2 and *Implementation
+boards are WP5.01's (`docs/plans/phase-5/wp5.01-workbench-design-study.md`, D2 and *Implementation
 details*); a later round names its own.
 
 ## Prepare

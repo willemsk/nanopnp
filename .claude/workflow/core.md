@@ -84,7 +84,7 @@ you use it. Physics and numerics decisions stay in this session.
 | `SPECIFICATION.md` | Amendments, NOTEs, argued tolerances: normative changes only |
 | `specification/history/` | The table of a ruling round, with its lines in `history/index.md` (`np-plan/rulings.md`) |
 | `knowledge/<file>.md` | Durable findings (`CLAUDE.md`, *Durable learnings*) |
-| `docs/plans/wp<n>-*.md` | The current Execution brief; short `> **Outcome — <what changed>.**` annotations that link the evidence; the numbers the plan asks for |
+| `docs/plans/phase-<p>/wp<n>-*.md` | The current Execution brief; short `> **Outcome — <what changed>.**` annotations that link the evidence; the numbers the plan asks for |
 | `docs/project/review-findings.md` | A `REV-nn` row for each item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12) |
 
 ## The In brief

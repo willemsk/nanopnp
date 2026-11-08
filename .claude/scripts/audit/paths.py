@@ -143,7 +143,7 @@ FIVE: Group = {
     "the current state of the work: what is merged and what is next "
     "(current.md → the phase plan)": [
         "docs/plans/current.md",
-        "docs/plans/phase-5-workbench.md",
+        "docs/plans/phase-5/phase-5-workbench.md",
     ],
     "which rule governs an action: a push from a Copilot host "
     "(CLAUDE.md → §8.4 → hosts.md → copilot.md → record 25)": [

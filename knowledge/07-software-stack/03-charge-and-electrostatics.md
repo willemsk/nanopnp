@@ -36,10 +36,10 @@ verified:
   at: '2026-11-08T00:00:00Z'
 sources:
 - id: wp17-plan
-  resource: docs/plans/wp17-case-schema-v2.md
+  resource: docs/plans/phase-2/wp17-case-schema-v2.md
   title: WP17 case schema v2 plan (PyPI wheel metadata)
 - id: wp27-plan
-  resource: docs/plans/wp27-protonation.md
+  resource: docs/plans/phase-3/wp27-protonation.md
   title: WP27 protonation stage plan, Design §1 (PDB2PQR 3.7.1 source)
 - id: case-identity-record
   resource: git:1761f15c:src/nanopnp/validation/comsol.py
@@ -305,6 +305,6 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
 
 ---
 
-[^wp17-plan]: `docs/plans/wp17-case-schema-v2.md` and `uv.lock` (PyPI metadata for `pdb2pqr` 3.7.1 and `propka` 3.5.1).
-[^wp27-plan]: `docs/plans/wp27-protonation.md`, Design §1 (`pdb2pqr` 3.7.1 `get_common_string_rep` and `get_pqr_string`).
+[^wp17-plan]: `docs/plans/phase-2/wp17-case-schema-v2.md` and `uv.lock` (PyPI metadata for `pdb2pqr` 3.7.1 and `propka` 3.5.1).
+[^wp27-plan]: `docs/plans/phase-3/wp27-protonation.md`, Design §1 (`pdb2pqr` 3.7.1 `get_common_string_rep` and `get_pqr_string`).
 [^case-identity-record]: `git show 1761f15c:src/nanopnp/validation/comsol.py`, `case_identity` docstring (84 MB charge-table hashing and the 9.2 MB deposited-structure recipe, WP34 D6).

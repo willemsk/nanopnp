@@ -39,14 +39,14 @@ verified:
   at: '2026-10-18T00:00:00Z'
 sources:
 - id: wp17-plan
-  resource: docs/plans/wp17-case-schema-v2.md
+  resource: docs/plans/phase-2/wp17-case-schema-v2.md
   title: WP17 case schema v2 plan (GridDataFormats 1.0.2 vs 1.2.0)
 - id: wp18-plan
-  resource: docs/plans/wp18-structure-ingestion.md
+  resource: docs/plans/phase-2/wp18-structure-ingestion.md
   title: WP18 structure ingestion plan, Design §2 (ClyA-AS principal vs permutation
     axes)
 - id: wp19-plan
-  resource: docs/plans/wp19-density-and-reduction.md
+  resource: docs/plans/phase-2/wp19-density-and-reduction.md
   title: WP19 density and reduction plan, Design §1–§5 (prototype measurements)
 tested_with:
   mdanalysis: 2.10.0
@@ -291,7 +291,7 @@ with scratch prototypes while planning WP19. They are not the implementation, an
 
 ---
 
-[^wp17-plan]: `docs/plans/wp17-case-schema-v2.md` and `SPECIFICATION.md` §8.2.2 B4 (GridDataFormats 1.0.2 vs 1.2.0).
-[^wp18-plan]: `docs/plans/wp18-structure-ingestion.md`, Design §2 (principal vs permutation axes on the standalone `prod5_clya_as` ensemble).
-[^wp19-plan]: `docs/plans/wp19-density-and-reduction.md`, Design §1–§5 (scratch prototype measurements before stage 2/3 implementation).
+[^wp17-plan]: `docs/plans/phase-2/wp17-case-schema-v2.md` and `SPECIFICATION.md` §8.2.2 B4 (GridDataFormats 1.0.2 vs 1.2.0).
+[^wp18-plan]: `docs/plans/phase-2/wp18-structure-ingestion.md`, Design §2 (principal vs permutation axes on the standalone `prod5_clya_as` ensemble).
+[^wp19-plan]: `docs/plans/phase-2/wp19-density-and-reduction.md`, Design §1–§5 (scratch prototype measurements before stage 2/3 implementation).
 
