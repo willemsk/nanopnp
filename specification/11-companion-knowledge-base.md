@@ -27,7 +27,8 @@ first commit, so that agents and people working on the codebase read from local,
 | `data/corrections/willems2020_nacl.yaml` | Fitted correction parameters, transcribed and verified |
 | `SPECIFICATION.md` | The specification's entry point: how to read it, and the map from section and identifier to file |
 | `specification/index.md` | The specification bundle's root index, declaring `okf_version` and listing the sections |
-| `specification/history/index.md` | The Phase 0 exit criteria and the dated rulings, read on demand, and where each ruling holds now |
+| `specification/history/index.md` | The Phase 0 exit criteria and the dated rulings, read on demand |
+| `specification/history/holds-now.yaml` | Where each ruling holds now, one line per ruling, read by the decisions register |
 
 The knowledge base is an Open Knowledge Format v0.2 bundle (§8.2.6 F6, §8.2.7 G12): a
 directory per note, a concept per `##` section with a header (a `type` from a closed list, its

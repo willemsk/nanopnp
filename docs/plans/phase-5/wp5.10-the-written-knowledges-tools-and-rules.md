@@ -261,7 +261,7 @@ Record each command, its result and the commit.
   passes and the strict build passes. **Executor:** main
 - [x] 626d9f6 3. `git mv` of `audit/index_records.py`; folder sections; the three indexes rewritten (D5); done
   when each section's count equals its folder's. **Executor:** `general-purpose` on Sonnet
-- [x] 4. Compaction checkpoint: the archive and the indexes stand. **Executor:** main
+- [x] f3bcf17 4. Compaction checkpoint: the archive and the indexes stand. **Executor:** main
 - [ ] 5. `git mv` of `audit/decisions.py`; `holds-now.yaml`; the index's pointer; `docs/project/decisions.md`;
   the pointers in `SPECIFICATION.md`, `specification/index.md` and §11; `rulings.md`, `core.md`,
   `project.md`; the page's navigation (D1, D5); done

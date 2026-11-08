@@ -13,7 +13,8 @@ Commit nothing in this turn.
 1. Read these:
    - `docs/plans/current.md`; each row of §8.1; §2.7 and its Versioning NOTE; §3's Release column;
      §8.3; §8.4;
-   - `specification/history/index.md`, and a record only where a ruling bears on a later phase;
+   - `specification/history/holds-now.yaml`, with the history index for the records, and a record
+     only where a ruling bears on a later phase;
    - §10's open `OPN-` items and §9's `RSK-` register;
    - the phase plan in flight, its *Open decisions*, and the end-of-phase report of the last closed
      phase;

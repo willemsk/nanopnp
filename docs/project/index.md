@@ -13,6 +13,7 @@ against a written specification. It is pre-alpha and single-maintainer.
 | [Modularity measurements](../_generated/project/modularity-measurements.md) | The report's measurements, run on the tree this site was built from |
 | [Review register](review-items.md) | Every item a work package's implementation or review left open, with what was measured and how it was resolved |
 | [Review findings](review-findings.md) | The register's log: each `REV-nn`, its status and the ruling behind it |
+| [Decisions register](decisions.md) | Every decision the records hold, one row each, with where it holds now: generated from the tree |
 | [Workbench design](../design/workbench.md) | The design of the Phase 5 browser workbench, and the rulings behind it |
 | [Citing](citing.md) | How to cite the software and the paper it implements |
 | [Release notes](../_generated/project/changelog.md) | Every tagged version, and what each work package delivered |

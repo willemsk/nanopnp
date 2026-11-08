@@ -23,7 +23,8 @@ one file per section; this file holds the title block, the reading rule and the 
   through them.
 - **Read [`specification/history/`](specification/history/index.md) on demand.** It holds the Phase 0
   exit criteria and the author's dated rulings (§8.2.1 to §8.2.36), verbatim, with the reasons. Read
-  it when the reason behind a rule is wanted. Its index says where each ruling holds now.
+  it when the reason behind a rule is wanted. The [decisions register](docs/project/decisions.md)
+  says where each ruling holds now.
 - **The rules of the development process** that no clause of its own carries are §8.4
   ([`specification/08-implementation-plan/04-development-process.md`](specification/08-implementation-plan/04-development-process.md)).
 - **Print a clause by its identifier** with `uv run .claude/scripts/clause.py VER-62 §7.6 J8`: it prints
@@ -58,8 +59,9 @@ one file per section; this file holds the title block, the reading rule and the 
 
 - A change of specified behaviour edits the clause in its current file, in the same commit as the code.
 - An author's ruling is recorded verbatim as a new file in `specification/history/`, listed in
-  [`specification/history/index.md`](specification/history/index.md) with where it holds now; the site's navigation is
-  generated from the index pages. A ruling that sets a standing rule of process with no clause of its
+  [`specification/history/index.md`](specification/history/index.md), and where each ruling holds now
+  is one line of `specification/history/holds-now.yaml`, which the decisions register reads; the
+  site's navigation is generated from the index pages. A ruling that sets a standing rule of process with no clause of its
   own is also restated in §8.4.
 - A new file in the bundle opens with the front matter `type`, `title` and `description`, and is listed
   in its directory's `index.md`.
