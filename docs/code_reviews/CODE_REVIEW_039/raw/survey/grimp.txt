@@ -1,0 +1,19 @@
+$ uv run --with grimp python -c 
+import grimp
+g = grimp.build_graph('nanopnp', include_external_packages=False)
+print('modules', len(g.modules))
+print('imports', g.count_imports())
+chains = g.find_shortest_chains('nanopnp.physics', 'nanopnp.mesh')
+print('shortest chains physics->mesh', len(chains)); print(sorted(chains)[:5])
+print('downstream of nanopnp.physics', len(g.find_downstream_modules('nanopnp.physics', as_package=True)))
+
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Installed 1 package in 1ms
+modules 191
+imports 922
+shortest chains physics->mesh 1
+[('nanopnp.physics.models', 'nanopnp.mesh.primitives')]
+downstream of nanopnp.physics 127
+
+[exit 0]

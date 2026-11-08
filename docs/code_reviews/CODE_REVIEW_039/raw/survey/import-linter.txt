@@ -1,0 +1,64 @@
+$ uv run --with import-linter lint-imports --config /tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/importlinter.ini --no-cache
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Downloading grimp (2.2MiB)
+ Downloaded grimp
+Installed 7 packages in 7ms
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲ 
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 191 files, 922 dependencies.
+-------------------------------------
+
+Layers in the order of docs/project/modularity.md BROKEN
+
+Contracts: 0 kept, 1 broken.
+
+
+----------------
+Broken contracts
+----------------
+
+Layers in the order of docs/project/modularity.md
+-------------------------------------------------
+
+nanopnp.core is not allowed to import nanopnp.io:
+
+- nanopnp.core.stages -> nanopnp.io.artefact (l.88)
+
+- nanopnp.core.stages -> nanopnp.io.defaults (l.89)
+
+
+nanopnp.io is not allowed to import nanopnp.materials:
+
+- nanopnp.io.manifest -> nanopnp.materials.electrolyte (l.31)
+
+- nanopnp.io.artefact -> nanopnp.materials.electrolyte (l.21)
+
+- nanopnp.io.resolved -> nanopnp.materials.electrolyte (l.24)
+
+
+nanopnp.io is not allowed to import nanopnp.physics:
+
+- nanopnp.io.resolved -> nanopnp.physics.models (l.26)
+
+
+nanopnp.geometry is not allowed to import nanopnp.mesh:
+
+- nanopnp.geometry.analyte -> nanopnp.mesh.primitives (l.14)
+
+
+
+[exit 0]

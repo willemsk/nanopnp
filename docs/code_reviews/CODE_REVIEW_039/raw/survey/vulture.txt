@@ -1,0 +1,11 @@
+$ uvx vulture src/nanopnp --min-confidence 80
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Installed 1 package in 3ms
+src/nanopnp/io/artefact.py:128: unused variable 'exclude' (100% confidence)
+src/nanopnp/io/artefact.py:128: unused variable 'include' (100% confidence)
+src/nanopnp/pipeline/run.py:275: unused variable 'exclude' (100% confidence)
+src/nanopnp/pipeline/run.py:275: unused variable 'include' (100% confidence)
+src/nanopnp/sweep/plan.py:290: unused variable 'mtime_ns' (100% confidence)
+
+[exit 0]

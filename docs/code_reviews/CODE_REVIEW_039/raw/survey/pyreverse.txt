@@ -1,0 +1,7 @@
+$ bash -c uv run --with pylint pyreverse -o dot -p nanopnp -d '/tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/pyreverse' src/nanopnp && ls -la '/tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/pyreverse' && grep -c -- '->' '/tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/pyreverse/packages_nanopnp.dot'
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Analysed 191 modules with a total of 942 imports
+ls: cannot access '/tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/pyreverse': No such file or directory
+
+[exit 0]

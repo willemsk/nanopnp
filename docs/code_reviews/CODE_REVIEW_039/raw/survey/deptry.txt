@@ -1,0 +1,139 @@
+$ uvx deptry src
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Downloading deptry (1.8MiB)
+ Downloaded deptry
+Installed 5 packages in 4ms
+Assuming the corresponding module name of package 'ngsolve' is 'ngsolve'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'numpy' is 'numpy'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'scipy' is 'scipy'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'pyyaml' is 'pyyaml'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'pydantic' is 'pydantic'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'meshio' is 'meshio'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'h5py' is 'h5py'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'sympy' is 'sympy'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'pint' is 'pint'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'MDAnalysis' is 'mdanalysis'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'GridDataFormats' is 'griddataformats'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'scikit-image' is 'scikit_image'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'shapely' is 'shapely'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'pdb2pqr' is 'pdb2pqr'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'gemmi' is 'gemmi'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'fastapi' is 'fastapi'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'nicegui' is 'nicegui'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'PySide6' is 'pyside6'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'uvicorn' is 'uvicorn'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'gmsh' is 'gmsh'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'matplotlib' is 'matplotlib'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'nanopnp' is 'nanopnp'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'marimo' is 'marimo'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'nanopnp' is 'nanopnp'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'pytest' is 'pytest'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'ruff' is 'ruff'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'mypy' is 'mypy'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'types-PyYAML' is 'types_pyyaml'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'pytest-xdist' is 'pytest_xdist'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'filelock' is 'filelock'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'markdown' is 'markdown'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'playwright' is 'playwright'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'pyinstaller' is 'pyinstaller'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'mkdocs' is 'mkdocs'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'mkdocs-material' is 'mkdocs_material'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'mkdocstrings' is 'mkdocstrings'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Assuming the corresponding module name of package 'apbs-binary' is 'apbs_binary'. Install the package or configure a package_module_name_map entry to override this behaviour.
+Scanning 191 files...
+
+[1mpyproject.toml[m[36m:[m [1m[31mDEP002[m 'pyyaml' defined as a dependency but not used in the codebase
+[1mpyproject.toml[m[36m:[m [1m[31mDEP002[m 'MDAnalysis' defined as a dependency but not used in the codebase
+[1mpyproject.toml[m[36m:[m [1m[31mDEP002[m 'GridDataFormats' defined as a dependency but not used in the codebase
+[1mpyproject.toml[m[36m:[m [1m[31mDEP002[m 'scikit-image' defined as a dependency but not used in the codebase
+[1mpyproject.toml[m[36m:[m [1m[31mDEP002[m 'PySide6' defined as a dependency but not used in the codebase
+[1mpyproject.toml[m[36m:[m [1m[31mDEP002[m 'marimo' defined as a dependency but not used in the codebase
+[1msrc/nanopnp/api/case.py[m[36m:[m12[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/api/project.py[m[36m:[m12[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/api/sweep.py[m[36m:[m15[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/charge/edits.py[m[36m:[m10[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/charge/fields.py[m[36m:[m10[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/charge/protonation.py[m[36m:[m359[36m:[m16[36m:[m [1m[31mDEP001[m 'propka' imported but missing from the dependency definitions
+[1msrc/nanopnp/charge/protonation.py[m[36m:[m378[36m:[m5[36m:[m [1m[31mDEP001[m 'propka' imported but missing from the dependency definitions
+[1msrc/nanopnp/charge/stage.py[m[36m:[m11[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/cli/reference.py[m[36m:[m10[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/density/grid.py[m[36m:[m408[36m:[m16[36m:[m [1m[31mDEP001[m 'gridData' imported but missing from the dependency definitions
+[1msrc/nanopnp/density/radii.py[m[36m:[m9[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/analyte.py[m[36m:[m65[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/analyte.py[m[36m:[m118[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/analyte.py[m[36m:[m159[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/analyte.py[m[36m:[m197[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/analyte.py[m[36m:[m214[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/analyte.py[m[36m:[m249[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/analyte.py[m[36m:[m261[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/contour.py[m[36m:[m17[36m:[m1[36m:[m [1m[31mDEP001[m 'skimage' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/pore.py[m[36m:[m39[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/pore.py[m[36m:[m102[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/profile.py[m[36m:[m9[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/region.py[m[36m:[m13[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/region.py[m[36m:[m513[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/region.py[m[36m:[m523[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/region.py[m[36m:[m542[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/geometry/region.py[m[36m:[m701[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/app.py[m[36m:[m12[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/app.py[m[36m:[m13[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m115[36m:[m12[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m133[36m:[m12[36m:[m [1m[31mDEP001[m 'skimage' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m134[36m:[m12[36m:[m [1m[31mDEP001[m 'skimage' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m192[36m:[m16[36m:[m [1m[31mDEP001[m 'propka' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m276[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m278[36m:[m5[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m291[36m:[m12[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m299[36m:[m5[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m320[36m:[m5[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m321[36m:[m5[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m348[36m:[m5[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m349[36m:[m5[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/probe.py[m[36m:[m449[36m:[m5[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/web/settings.py[m[36m:[m9[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/web/theme.py[m[36m:[m11[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/case_editor.py[m[36m:[m8[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/case_editor.py[m[36m:[m9[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/charge.py[m[36m:[m11[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/charge.py[m[36m:[m12[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/convergence.py[m[36m:[m5[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/geometry.py[m[36m:[m11[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/geometry.py[m[36m:[m12[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/result.py[m[36m:[m5[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/run_control.py[m[36m:[m5[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/viewer.py[m[36m:[m8[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/gui/widgets/viewer.py[m[36m:[m9[36m:[m1[36m:[m [1m[31mDEP001[m 'PySide6' imported but missing from the dependency definitions
+[1msrc/nanopnp/io/case.py[m[36m:[m11[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/io/defaults.py[m[36m:[m9[36m:[m1[36m:[m [1m[31mDEP001[m 'pydantic_core' imported but missing from the dependency definitions
+[1msrc/nanopnp/io/models.py[m[36m:[m14[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/io/project.py[m[36m:[m10[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/materials/corrections.py[m[36m:[m11[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/adapter.py[m[36m:[m511[36m:[m5[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/adapter.py[m[36m:[m512[36m:[m5[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/generate.py[m[36m:[m255[36m:[m9[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/idealised.py[m[36m:[m44[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/meshers.py[m[36m:[m53[36m:[m12[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/meshers.py[m[36m:[m81[36m:[m9[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/primitives.py[m[36m:[m125[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/primitives.py[m[36m:[m157[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/primitives.py[m[36m:[m187[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/mesh/primitives.py[m[36m:[m253[36m:[m16[36m:[m [1m[31mDEP001[m 'netgen' imported but missing from the dependency definitions
+[1msrc/nanopnp/structure/ensemble.py[m[36m:[m139[36m:[m16[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/structure/ensemble.py[m[36m:[m141[36m:[m9[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/structure/orient.py[m[36m:[m122[36m:[m16[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/structure/read.py[m[36m:[m14[36m:[m8[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/structure/read.py[m[36m:[m15[36m:[m1[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/structure/read.py[m[36m:[m16[36m:[m1[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/structure/read.py[m[36m:[m17[36m:[m1[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/sweep/document.py[m[36m:[m8[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/validation/apbs.py[m[36m:[m125[36m:[m16[36m:[m [1m[31mDEP004[m 'apbs_binary' imported but declared as a dev dependency
+[1msrc/nanopnp/validation/apbs.py[m[36m:[m677[36m:[m9[36m:[m [1m[31mDEP001[m 'gridData' imported but missing from the dependency definitions
+[1msrc/nanopnp/validation/apbs.py[m[36m:[m893[36m:[m12[36m:[m [1m[31mDEP004[m 'apbs_binary' imported but declared as a dev dependency
+[1msrc/nanopnp/validation/comsol.py[m[36m:[m11[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/validation/costs.py[m[36m:[m434[36m:[m12[36m:[m [1m[31mDEP001[m 'MDAnalysis' imported but missing from the dependency definitions
+[1msrc/nanopnp/validation/findings.py[m[36m:[m9[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/validation/geometry.py[m[36m:[m12[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/validation/modularity.py[m[36m:[m14[36m:[m8[36m:[m [1m[31mDEP001[m 'yaml' imported but missing from the dependency definitions
+[1msrc/nanopnp/validation/
+[exit 0]

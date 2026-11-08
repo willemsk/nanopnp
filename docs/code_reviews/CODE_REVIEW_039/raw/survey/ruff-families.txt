@@ -1,0 +1,39 @@
+$ uv run ruff check src --select C90,PL,PERF,FBT,A,ARG,PTH,ERA,T20,TRY,FURB,S --statistics --no-fix
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+952	TRY003 	[ ] raise-vanilla-args
+690	PLC0415	[ ] import-outside-top-level
+ 99	PLR2004	[ ] magic-value-comparison
+ 92	PLR0913	[ ] too-many-arguments
+ 51	S101   	[ ] assert
+ 30	FBT001 	[ ] boolean-type-hint-positional-argument
+ 26	FBT003 	[ ] boolean-positional-value-in-call
+ 25	C901   	[ ] complex-structure
+ 21	ARG002 	[ ] unused-method-argument
+ 19	PLR0402	[*] manual-from-import
+ 18	T201   	[ ] print
+ 16	PLR0917	[ ] too-many-positional-arguments
+ 14	ARG001 	[ ] unused-function-argument
+ 11	PERF401	[ ] manual-list-comprehension
+ 11	PLR0912	[ ] too-many-branches
+ 11	PLR0915	[ ] too-many-statements
+  5	A002   	[ ] builtin-argument-shadowing
+  5	PLR0911	[ ] too-many-return-statements
+  5	PLW0108	[ ] unnecessary-lambda
+  4	S603   	[ ] subprocess-without-shell-equals-true
+  3	PLW2901	[ ] redefined-loop-name
+  3	TRY004 	[ ] type-check-without-type-error
+  1	FURB136	[*] if-expr-min-max
+  1	FURB188	[*] slice-to-remove-prefix-or-suffix
+  1	PERF402	[ ] manual-list-copy
+  1	PERF403	[ ] manual-dict-comprehension
+  1	PLE0604	[ ] invalid-all-object
+  1	PLR1704	[ ] redefined-argument-from-local
+  1	S112   	[ ] try-except-continue
+  1	S607   	[ ] start-process-with-partial-path
+  1	TRY301 	[ ] raise-within-try
+  1	TRY400 	[ ] error-instead-of-exception
+Found 2121 errors.
+[*] 21 fixable with the `--fix` option (24 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+[exit 0]

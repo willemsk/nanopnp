@@ -1,0 +1,54 @@
+$ uvx lizard src/nanopnp -l python -w -C 15
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Installed 3 packages in 5ms
+src/nanopnp/structure/read.py:133: warning: _universe_from_mmcif has 66 NLOC, 19 CCN, 605 token, 1 PARAM, 77 length, 0 ND
+src/nanopnp/structure/read.py:255: warning: select has 123 NLOC, 38 CCN, 950 token, 4 PARAM, 138 length, 0 ND
+src/nanopnp/structure/stage.py:114: warning: align has 133 NLOC, 16 CCN, 1070 token, 4 PARAM, 152 length, 0 ND
+src/nanopnp/mesh/gmsh_backend.py:267: warning: _size_field has 37 NLOC, 16 CCN, 341 token, 7 PARAM, 37 length, 0 ND
+src/nanopnp/mesh/adapter.py:178: warning: _validate has 44 NLOC, 20 CCN, 494 token, 1 PARAM, 45 length, 0 ND
+src/nanopnp/charge/edits.py:239: warning: difference has 60 NLOC, 17 CCN, 552 token, 2 PARAM, 61 length, 0 ND
+src/nanopnp/charge/protonation.py:900: warning: _assemble has 104 NLOC, 39 CCN, 1229 token, 6 PARAM, 111 length, 0 ND
+src/nanopnp/charge/protonation.py:1079: warning: run has 140 NLOC, 21 CCN, 987 token, 4 PARAM, 147 length, 0 ND
+src/nanopnp/charge/pqr.py:247: warning: parse_pqr has 46 NLOC, 17 CCN, 319 token, 2 PARAM, 54 length, 0 ND
+src/nanopnp/gui/widgets/case_editor.py:97: warning: _build has 56 NLOC, 18 CCN, 484 token, 2 PARAM, 60 length, 0 ND
+src/nanopnp/gui/widgets/case_editor.py:158: warning: _present has 36 NLOC, 18 CCN, 331 token, 3 PARAM, 38 length, 0 ND
+src/nanopnp/pipeline/case.py:126: warning: _resolve_structure has 55 NLOC, 17 CCN, 350 token, 2 PARAM, 55 length, 0 ND
+src/nanopnp/pipeline/run.py:598: warning: selected_stages has 89 NLOC, 37 CCN, 532 token, 3 PARAM, 111 length, 0 ND
+src/nanopnp/pipeline/checks.py:276: warning: require_runnable has 92 NLOC, 27 CCN, 458 token, 1 PARAM, 101 length, 0 ND
+src/nanopnp/pipeline/checks.py:439: warning: _check_charge has 58 NLOC, 19 CCN, 275 token, 1 PARAM, 59 length, 0 ND
+src/nanopnp/pipeline/checks.py:504: warning: _check_edits has 60 NLOC, 21 CCN, 369 token, 2 PARAM, 61 length, 0 ND
+src/nanopnp/pipeline/checks.py:788: warning: _check_physics_switches has 62 NLOC, 18 CCN, 385 token, 1 PARAM, 64 length, 0 ND
+src/nanopnp/pipeline/checks.py:854: warning: _check_unread has 45 NLOC, 17 CCN, 275 token, 1 PARAM, 45 length, 0 ND
+src/nanopnp/physics/models.py:824: warning: residual_form has 123 NLOC, 20 CCN, 740 token, 11 PARAM, 146 length, 0 ND
+src/nanopnp/sweep/plan.py:384: warning: _wall_size_barriers has 52 NLOC, 18 CCN, 373 token, 4 PARAM, 52 length, 0 ND
+src/nanopnp/sweep/plan.py:742: warning: read_plan has 52 NLOC, 16 CCN, 477 token, 1 PARAM, 57 length, 0 ND
+src/nanopnp/sweep/collect.py:136: warning: collect has 54 NLOC, 16 CCN, 453 token, 3 PARAM, 63 length, 0 ND
+src/nanopnp/sweep/collect.py:281: warning: write_csv has 40 NLOC, 18 CCN, 358 token, 2 PARAM, 45 length, 0 ND
+src/nanopnp/geometry/region.py:400: warning: exclusion_shell has 95 NLOC, 16 CCN, 904 token, 4 PARAM, 110 length, 0 ND
+src/nanopnp/geometry/region.py:617: warning: name_region has 62 NLOC, 21 CCN, 338 token, 2 PARAM, 69 length, 0 ND
+src/nanopnp/numerics/newton.py:138: warning: damped_newton has 154 NLOC, 26 CCN, 814 token, 10 PARAM, 204 length, 0 ND
+src/nanopnp/validation/stability.py:236: warning: fold has 53 NLOC, 22 CCN, 472 token, 3 PARAM, 62 length, 0 ND
+src/nanopnp/validation/attribution.py:335: warning: markdown has 86 NLOC, 16 CCN, 447 token, 1 PARAM, 87 length, 0 ND
+src/nanopnp/validation/runs.py:42: warning: reopen has 71 NLOC, 18 CCN, 538 token, 2 PARAM, 100 length, 0 ND
+src/nanopnp/validation/modularity.py:623: warning: _class_methods has 33 NLOC, 18 CCN, 285 token, 4 PARAM, 35 length, 0 ND
+src/nanopnp/validation/modularity.py:899: warning: _members has 44 NLOC, 32 CCN, 384 token, 3 PARAM, 44 length, 0 ND
+src/nanopnp/validation/modularity.py:1126: warning: surface has 32 NLOC, 21 CCN, 335 token, 2 PARAM, 35 length, 0 ND
+src/nanopnp/validation/modularity.py:1317: warning: render_measurements has 142 NLOC, 26 CCN, 790 token, 1 PARAM, 143 length, 0 ND
+src/nanopnp/cli/reference.py:62: warning: _type_name has 31 NLOC, 22 CCN, 283 token, 1 PARAM, 31 length, 0 ND
+src/nanopnp/cli/reference.py:303: warning: render_cli_reference has 39 NLOC, 18 CCN, 272 token, 0 PARAM, 43 length, 0 ND
+src/nanopnp/cli/running.py:53: warning: _stage has 59 NLOC, 17 CCN, 472 token, 1 PARAM, 67 length, 0 ND
+src/nanopnp/cli/running.py:122: warning: _inspect has 92 NLOC, 26 CCN, 648 token, 1 PARAM, 100 length, 0 ND
+src/nanopnp/cli/running.py:247: warning: _plot has 88 NLOC, 28 CCN, 699 token, 1 PARAM, 98 length, 0 ND
+src/nanopnp/cli/reading.py:190: warning: dataset_lines has 44 NLOC, 23 CCN, 423 token, 2 PARAM, 45 length, 0 ND
+src/nanopnp/plot/data.py:752: warning: sweep_curves has 31 NLOC, 25 CCN, 417 token, 1 PARAM, 37 length, 0 ND
+src/nanopnp/plot/figures.py:404: warning: sweep_figure has 48 NLOC, 19 CCN, 560 token, 2 PARAM, 51 length, 0 ND
+src/nanopnp/io/variables.py:240: warning: _admit has 31 NLOC, 20 CCN, 296 token, 3 PARAM, 36 length, 0 ND
+src/nanopnp/io/variables.py:401: warning: _call has 33 NLOC, 16 CCN, 337 token, 2 PARAM, 34 length, 0 ND
+src/nanopnp/io/variables.py:524: warning: resolve has 59 NLOC, 20 CCN, 594 token, 2 PARAM, 74 length, 0 ND
+src/nanopnp/io/case_paths.py:476: warning: substitute has 43 NLOC, 19 CCN, 308 token, 2 PARAM, 56 length, 0 ND
+src/nanopnp/io/models.py:141: warning: exposed_values has 42 NLOC, 19 CCN, 362 token, 3 PARAM, 54 length, 0 ND
+src/nanopnp/io/models.py:817: warning: _compare has 29 NLOC, 21 CCN, 232 token, 5 PARAM, 29 length, 0 ND
+src/nanopnp/solve/continuation.py:495: warning: default_ladder has 202 NLOC, 29 CCN, 1181 token, 26 PARAM, 285 length, 0 ND
+
+[exit 0]

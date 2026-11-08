@@ -1,0 +1,31 @@
+$ bash -c cd '/tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/tach' && uvx tach sync && cat tach.toml | head -60 && uvx tach check; uvx tach report nanopnp.physics | head -40
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Downloading networkx (2.0MiB)
+Downloading tach (4.4MiB)
+ Downloaded networkx
+ Downloaded tach
+Installed 15 packages in 8ms
+✅ Synced dependencies.
+source_roots = ["src"]
+exclude = []
+[[modules]]
+path = "nanopnp.physics"
+depends_on = []
+[[modules]]
+path = "nanopnp.mesh"
+depends_on = []
+[[modules]]
+path = "nanopnp.io"
+depends_on = []
+[[modules]]
+path = "nanopnp.core"
+depends_on = []
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Configuration
+[WARN] Warning: No first-party imports were found. You may need to use 'tach mod' to update your Python source roots. Docs: https://docs.gauge.sh/usage/configuration#source-roots
+✅ All modules validated!
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Report failed: The path 'nanopnp.physics' does not exist.
+
+[exit 0]

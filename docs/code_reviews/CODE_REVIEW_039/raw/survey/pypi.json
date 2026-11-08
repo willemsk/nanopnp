@@ -1,0 +1,311 @@
+{
+ "code2flow": {
+  "author": "Scott Rogowski",
+  "classifiers_license": [
+   "License :: OSI Approved :: MIT License"
+  ],
+  "first_release": "2020-07-11T15:28:11",
+  "home": "https://github.com/scottrogowski/code2flow",
+  "latest": "2.5.1",
+  "latest_upload": "2023-01-08T22:56:44",
+  "license": "MIT",
+  "license_expression": null,
+  "project_urls": {
+   "Download": "https://github.com/scottrogowski/code2flow/archive/code2flow-2.5.1.tar.gz",
+   "Homepage": "https://github.com/scottrogowski/code2flow"
+  },
+  "releases": 8,
+  "requires_python": ">=3.6"
+ },
+ "deptry": {
+  "author": "Florian Maas <fpgmaas@gmail.com>, Mathieu Kniewallner <mathieu.kniewallner@gmail.com>",
+  "classifiers_license": [],
+  "first_release": "2022-09-02T06:24:54",
+  "home": null,
+  "latest": "0.25.1",
+  "latest_upload": "2026-03-18T23:22:30",
+  "license": "",
+  "license_expression": "MIT",
+  "project_urls": {
+   "changelog": "https://github.com/osprey-oss/deptry/blob/main/CHANGELOG.md",
+   "documentation": "https://deptry.com",
+   "homepage": "https://deptry.com",
+   "repository": "https://github.com/osprey-oss/deptry"
+  },
+  "releases": 85,
+  "requires_python": ">=3.10"
+ },
+ "grimp": {
+  "author": "David Seddon <david@seddonym.me>",
+  "classifiers_license": [
+   "License :: OSI Approved :: BSD License"
+  ],
+  "first_release": "2018-12-10T14:58:21",
+  "home": null,
+  "latest": "3.19",
+  "latest_upload": "2026-11-06T10:41:15",
+  "license": "BSD 2-Clause License",
+  "license_expression": null,
+  "project_urls": {
+   "Documentation": "https://grimp.readthedocs.io/",
+   "Source-code": "https://github.com/python-grimp/grimp/"
+  },
+  "releases": 54,
+  "requires_python": ">=3.11"
+ },
+ "import-linter": {
+  "author": "David Seddon <david@seddonym.me>",
+  "classifiers_license": [
+   "License :: OSI Approved :: BSD License"
+  ],
+  "first_release": "2019-01-27T11:12:14",
+  "home": null,
+  "latest": "2.16",
+  "latest_upload": "2026-11-06T13:48:21",
+  "license": "BSD 2-Clause License",
+  "license_expression": null,
+  "project_urls": {
+   "Documentation": "https://import-linter.readthedocs.io/",
+   "Source-code": "https://github.com/seddonym/import-linter/"
+  },
+  "releases": 52,
+  "requires_python": ">=3.11"
+ },
+ "interrogate": {
+  "author": "Lynn Root",
+  "classifiers_license": [
+   "License :: OSI Approved :: MIT License"
+  ],
+  "first_release": "2020-04-24T02:43:43",
+  "home": "https://interrogate.readthedocs.io",
+  "latest": "1.7.0",
+  "latest_upload": "2024-04-07T22:30:46",
+  "license": "",
+  "license_expression": null,
+  "project_urls": {
+   "Bug Tracker": "https://github.com/econchick/interrogate/issues",
+   "Documentation": "https://interrogate.readthedocs.io",
+   "Homepage": "https://interrogate.readthedocs.io",
+   "Source Code": "https://github.com/econchick/interrogate"
+  },
+  "releases": 16,
+  "requires_python": ">=3.8"
+ },
+ "lizard": {
+  "author": "Terry Yin",
+  "classifiers_license": [
+   "License :: Freeware"
+  ],
+  "first_release": "2013-09-16T12:44:57",
+  "home": "http://www.lizard.ws",
+  "latest": "1.25.1",
+  "latest_upload": "2026-11-07T06:16:30",
+  "license": "MIT",
+  "license_expression": null,
+  "project_urls": {
+   "Download": "https://pypi.python.org/lizard/",
+   "Homepage": "http://www.lizard.ws",
+   "Source": "https://github.com/terryyin/lizard"
+  },
+  "releases": 134,
+  "requires_python": null
+ },
+ "mypy": {
+  "author": "Jukka Lehtosalo <jukka.lehtosalo@iki.fi>",
+  "classifiers_license": [],
+  "first_release": "2009-09-09T17:34:48",
+  "home": "https://www.mypy-lang.org/",
+  "latest": "2.4.1",
+  "latest_upload": "2026-10-28T19:23:13",
+  "license": "",
+  "license_expression": "MIT",
+  "project_urls": {
+   "Changelog": "https://github.com/python/mypy/blob/master/CHANGELOG.md",
+   "Documentation": "https://mypy.readthedocs.io/en/stable/index.html",
+   "Homepage": "https://www.mypy-lang.org/",
+   "Issues": "https://github.com/python/mypy/issues",
+   "Repository": "https://github.com/python/mypy"
+  },
+  "releases": 143,
+  "requires_python": ">=3.10"
+ },
+ "pyan3": {
+  "author": "Juha Jeronen <juha.m.jeronen@gmail.com>",
+  "classifiers_license": [],
+  "first_release": "2019-06-25T09:55:57",
+  "home": "https://github.com/Technologicat/pyan",
+  "latest": "2.9.0",
+  "latest_upload": "2026-10-06T14:24:54",
+  "license": "",
+  "license_expression": "GPL-2.0-or-later",
+  "project_urls": {
+   "Bug Tracker": "https://github.com/Technologicat/pyan/issues",
+   "Documentation": "https://github.com/Technologicat/pyan",
+   "Homepage": "https://github.com/Technologicat/pyan",
+   "Repository": "https://github.com/Technologicat/pyan"
+  },
+  "releases": 23,
+  "requires_python": "<3.16,>=3.10"
+ },
+ "pydeps": {
+  "author": "bjorn",
+  "classifiers_license": [],
+  "first_release": "2014-12-20T01:24:33",
+  "home": "https://github.com/thebjorn/pydeps",
+  "latest": "3.0.9",
+  "latest_upload": "2026-10-01T16:15:27",
+  "license": "BSD-2-Clause",
+  "license_expression": null,
+  "project_urls": {
+   "Homepage": "https://github.com/thebjorn/pydeps"
+  },
+  "releases": 125,
+  "requires_python": ">=3.10"
+ },
+ "pylint": {
+  "author": "Python Code Quality Authority <code-quality@python.org>",
+  "classifiers_license": [],
+  "first_release": "2009-01-27T15:25:57",
+  "home": null,
+  "latest": "4.1.3",
+  "latest_upload": "2026-10-11T07:49:10",
+  "license": "",
+  "license_expression": "GPL-2.0-or-later",
+  "project_urls": {
+   "Bug Tracker": "https://github.com/pylint-dev/pylint/issues",
+   "Discord Server": "https://discord.com/invite/Egy6P8AMB5",
+   "Docs: Contributor Guide": "https://pylint.readthedocs.io/en/latest/development_guide/contributor_guide/index.html",
+   "Docs: User Guide": "https://pylint.readthedocs.io/en/latest/",
+   "Source Code": "https://github.com/pylint-dev/pylint",
+   "What's New": "https://pylint.readthedocs.io/en/latest/whatsnew/4/",
+   "homepage": "https://github.com/pylint-dev/pylint"
+  },
+  "releases": 219,
+  "requires_python": ">=3.10.0"
+ },
+ "radon": {
+  "author": "Michele Lacchia",
+  "classifiers_license": [
+   "License :: OSI Approved :: MIT License"
+  ],
+  "first_release": "2012-10-11T13:57:15",
+  "home": "https://radon.readthedocs.org/",
+  "latest": "6.0.1",
+  "latest_upload": "2023-03-26T06:24:38",
+  "license": "MIT",
+  "license_expression": null,
+  "project_urls": {
+   "Download": "https://pypi.python.org/radon/",
+   "Homepage": "https://radon.readthedocs.org/",
+   "Source": "https://github.com/rubik/radon"
+  },
+  "releases": 55,
+  "requires_python": ""
+ },
+ "ruff": {
+  "author": "\"Astral Software Inc.\" <hey@astral.sh>",
+  "classifiers_license": [],
+  "first_release": "2022-08-27T22:26:24",
+  "home": "https://docs.astral.sh/ruff",
+  "latest": "0.17.4",
+  "latest_upload": "2026-11-05T18:52:17",
+  "license": "",
+  "license_expression": "MIT",
+  "project_urls": {
+   "Changelog": "https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md",
+   "Documentation": "https://docs.astral.sh/ruff/",
+   "Homepage": "https://docs.astral.sh/ruff",
+   "Repository": "https://github.com/astral-sh/ruff"
+  },
+  "releases": 431,
+  "requires_python": ">=3.7"
+ },
+ "sourcery": {
+  "author": "Sourcery AI",
+  "classifiers_license": [],
+  "first_release": "2023-01-31T17:12:02",
+  "home": "https://github.com/sourcery-ai/sourcery",
+  "latest": "1.46.0",
+  "latest_upload": "2026-09-17T14:19:24",
+  "license": "Proprietary",
+  "license_expression": null,
+  "project_urls": {
+   "Homepage": "https://github.com/sourcery-ai/sourcery"
+  },
+  "releases": 23,
+  "requires_python": null
+ },
+ "tach": {
+  "author": "Caelean Barnes <caeleanb@gmail.com>, Evan Doyle <evanmdoyle@gmail.com>",
+  "classifiers_license": [
+   "License :: OSI Approved :: MIT License"
+  ],
+  "first_release": "2024-04-29T23:06:02",
+  "home": "https://github.com/gauge-sh/tach",
+  "latest": "0.35.3",
+  "latest_upload": "2026-10-06T09:57:53",
+  "license": "",
+  "license_expression": null,
+  "project_urls": {
+   "Homepage": "https://github.com/gauge-sh/tach",
+   "Issues": "https://github.com/gauge-sh/tach/issues"
+  },
+  "releases": 109,
+  "requires_python": ">=3.10"
+ },
+ "vulture": {
+  "author": "Jendrik Seipp <jendrikseipp@gmail.com>",
+  "classifiers_license": [
+   "License :: OSI Approved :: MIT License"
+  ],
+  "first_release": "2012-03-17T21:04:56",
+  "home": "https://github.com/jendrikseipp/vulture",
+  "latest": "2.16",
+  "latest_upload": "2026-03-25T14:41:27",
+  "license": "The MIT License (MIT)  Copyright (c) 2012-2020 Jendrik Seipp (jendrikseipp@gmail",
+  "license_expression": null,
+  "project_urls": {
+   "Changelog": "https://github.com/jendrikseipp/vulture/blob/main/CHANGELOG.md",
+   "Homepage": "https://github.com/jendrikseipp/vulture",
+   "Repository": "https://github.com/jendrikseipp/vulture"
+  },
+  "releases": 56,
+  "requires_python": ">=3.9"
+ },
+ "wily": {
+  "author": "Anthony Shaw <anthonyshaw@apache.org>",
+  "classifiers_license": [
+   "License :: OSI Approved :: Apache Software License"
+  ],
+  "first_release": "2018-10-15T13:41:10",
+  "home": "https://github.com/tonybaloney/wily",
+  "latest": "1.25.0",
+  "latest_upload": "2023-10-11T03:49:10",
+  "license": "",
+  "license_expression": null,
+  "project_urls": {
+   "Documentation": "https://wily.readthedocs.io/en/latest/",
+   "Homepage": "https://github.com/tonybaloney/wily"
+  },
+  "releases": 50,
+  "requires_python": ">=3.6"
+ },
+ "xenon": {
+  "author": "Michele Lacchia",
+  "classifiers_license": [
+   "License :: OSI Approved :: MIT License"
+  ],
+  "first_release": "2014-08-05T06:45:07",
+  "home": "https://xenon.readthedocs.org/",
+  "latest": "0.9.3",
+  "latest_upload": "2024-10-21T10:27:53",
+  "license": "MIT",
+  "license_expression": null,
+  "project_urls": {
+   "Download": "https://pypi.python.org/xenon/",
+   "Homepage": "https://xenon.readthedocs.org/"
+  },
+  "releases": 23,
+  "requires_python": null
+ }
+}
