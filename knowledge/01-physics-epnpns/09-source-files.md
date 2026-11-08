@@ -15,7 +15,7 @@ generated:
 
 ## 9. Source files
 
-Cloned locally at `thesis/` from `github.com/willemsk/phdthesis-text` (CC-BY-4.0):
+The thesis source, `github.com/willemsk/phdthesis-text` (CC-BY-4.0), is not in this repository; clone it beside the checkout to read it:
 
 | File | Contents |
 |---|---|
