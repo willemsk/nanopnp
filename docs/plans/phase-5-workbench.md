@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.08 merged; the physics model's library step WP5.09 and the shell packages WP5.10 to WP5.17 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+**Status: in progress; WP5.01 to WP5.08 merged; WP5.09, the physics model, delivered, awaiting its merge; the shell packages WP5.10 to WP5.17 planned.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
@@ -209,19 +209,16 @@ project has an empty charge screen until WP5.14; the frame is rebuilt in WP5.10 
 
 ### WP5.09 — The physics model (FR-32, FR-39; WB-34, WB-35; §8.2.34 AJ2, AJ3, AJ5)
 
-Library step, no screens. A third kind of model, `nanopnp/physics-model/v0.6`, named by `models.physics`: the ownership
-table of §5.3.1's `models:` NOTE gives it `physics` (the registered model, its switches and the solid permittivities),
-`electrolyte`, `boundary_conditions`, `numerics.elements` and `numerics.stabilisation`, and leaves the continuum model the
-geometry, the region and the mesh; the study keeps the Newton, continuation and linear-solver settings (AJ3). AJ3 places
-neither `numerics.wall_distance`, the wall-distance field the corrections read, nor the coupling of `numerics.mesh`'s
-`wall_h_nm: auto` to the electrolyte's Debye length; the author ruled both at the package's plan: the physics model
-owns the wall-distance field, and a continuum model's mesh follows the paired physics model's concentration unless
-`wall_for_concentration_M` pins it (§8.2.35 AK1, AK2). A case
-imports split into three models and a study, a project gains `models/physics/`, a sweep may range over
-`models.physics`, and the manifest records the physics model (FR-32, FR-39; §5.3.2, §5.3.3). Every model declares the
-values it exposes, each with its name, case path, unit, range and default (AJ5): a default list per kind, which a model
-file's `exposes:` replaces (AK3). A study resolves to the case it resolved to before: VER-62's
-keys unmoved, and a case naming no model unchanged. Tag `v0.6.0-alpha.9`.
+**Delivered 8 November 2026** ([the plan](wp5.09-the-physics-model.md)). A third model kind,
+`nanopnp/physics-model/v0.6`, named by `models.physics`, owns `physics`, `electrolyte`, `boundary_conditions`,
+`numerics.elements`, `numerics.stabilisation` and `numerics.wall_distance` (AJ3, AK1); the merge reads molecular,
+continuum, then physics, and a continuum file holding a physics key is refused naming the physics model, with no
+migration. Each model carries its exposed values, a default list per kind that a file's `exposes:` replaces, which
+keys nothing (AJ5, AK3). A continuum model's `wall_h_nm: auto` follows the paired physics salt, pinned by
+`wall_for_concentration_M` (AK2). A case imports into three models and a study, a sweep ranges over `models.physics`,
+the manifest records the file, and the frame's rail lists physics models (FR-32, FR-39, FR-25). VER-62 unmoved
+(at most 6.9 × 10⁻¹⁴). Live constraints: the Physics suite and its *Exposed values* tool are WP5.10 and WP5.13's,
+the Study suite's list WP5.14's; REV-217 to REV-221 land next. Tag `v0.6.0-alpha.9`.
 
 ### WP5.10 — The frame on Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)
 

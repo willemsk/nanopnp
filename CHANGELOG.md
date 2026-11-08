@@ -264,6 +264,30 @@ project, not a case**: it opens a folder, creates one in a missing or empty fold
   the frame's accessibility and layout limits (WP5.13), the settings' guards and the changed list's units (WP5.09), and the Study
   page's fixture names and the charge screen's colour bar (WP5.11).
 
+WP5.09: the physics model, Phase 5's ninth package; tag `v0.6.0-alpha.9` once merged (`SPECIFICATION.md` FR-25, FR-32,
+FR-39; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to AK3). The equations, the salt and the voltages become a model of their own,
+which a study pairs with a molecule and a pore, so one physics serves many pores and a pore many salts. No key, golden
+number or case written inline changes (VER-62). The [plan](docs/plans/wp5.09-the-physics-model.md) records the work.
+
+- **Added**:
+  - **The physics model** (`nanopnp/physics-model/v0.6`), named by `models.physics`. It owns `physics`, `electrolyte`,
+    `boundary_conditions`, `numerics.elements`, `numerics.stabilisation` and `numerics.wall_distance`; the continuum
+    model keeps the geometry, the region and the mesh, and the study the Newton, continuation and linear-solver settings.
+    A sweep may range over `models.physics`, and the manifest's input files gain the role `models.physics`.
+  - **Exposed values**: each model lists the values a study shows first, each with its name, case path, unit, range and
+    default (`ModelFile.exposed`, `ExposedValue`). Each kind has a default list (the salt and the bias for physics, the pH
+    for a molecule, the mesh's size scale for a pore), and a file's `exposes:` list replaces it. `exposes:` keys nothing.
+  - **The project**: `models/physics/`; a case imports split into three models and a study. The frame's rail lists
+    *Physics models*, and the changed list covers them.
+- **Changed**:
+  - A continuum model holding a key the physics model now owns is refused, naming the key and the model it belongs
+    to. A model file written since WP5.05 with the salt or the bias in a continuum model moves those keys to a
+    physics model by hand; no release holds the format, so there is no migration.
+  - A continuum model's `wall_h_nm: auto` follows the paired physics model's concentration, so a stronger salt can build
+    a new mesh, as the sweep's forecast already warns; `numerics.mesh.wall_for_concentration_M` pins it (AK2).
+- **Amended**: §5.3.1's NOTE on `models:` and the project NOTE, §5.3.2's model row, §5.3.3's inputs group, and the
+  Appendix A rows of FR-32 and FR-39.
+
 Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
 [plan](docs/plans/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 

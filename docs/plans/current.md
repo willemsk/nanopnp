@@ -1,18 +1,17 @@
 # Current work
 
-Updated 6 November 2026 (WP5.09 planned). Navigation only;
+Updated 8 November 2026 (WP5.09 delivered). Navigation only;
 `SPECIFICATION.md` governs; an unmerged branch is not shipped.
 
 ## In brief
 
 Phase 4 is released. Phase 5's library steps and the window's frame are merged: a project is a plain folder, with
 menus, a palette, shortcuts, the changed and problems lists, and your own colour themes. After your look at the frame,
-the phase was re-planned. The physics (equations, salt, voltages) becomes a reusable model with its own suite, so three
-suites build models and two use them, and each model shows the few values others change. The frame is rebuilt on
-ready-made parts. Each suite is designed on a working prototype with a real pore before it is built. About three to
-four weeks more. The physics model's plan is written.
+the phase was re-planned: three suites build models (molecule, pore, physics) and two use them, the frame is rebuilt on
+ready-made parts, and each suite is prototyped on a real pore first. About three to four weeks more. The physics model
+is built: a study now pairs a molecule, a pore and a physics, and nothing it computes moved. It waits for its review.
 
-**Your call.** Approve the physics model's plan after its review.
+**Your call.** None until the review; it puts to you any finding against a choice the build made.
 
 ## Position
 
@@ -21,7 +20,8 @@ four weeks more. The physics model's plan is written.
   (`v0.6.0-alpha.8`). Amended 5 November 2026 (§8.2.34): WP5.09 the physics model, WP5.10 the frame, WP5.11 to
   WP5.15 the suites, WP5.16 the route and Qt's removal, WP5.17 the close. Reviewed (CODE_REVIEW_034). **WP5.09**
   ([plan](wp5.09-the-physics-model.md)) planned 6 November 2026 (§8.2.35), reviewed
-  (CODE_REVIEW_035). Next `/np-implement wp 5.09`. host: claude-code.
+  (CODE_REVIEW_035), delivered 8 November 2026 on `claude/keen-turing-g32u0j`. Next `/np-ship wp 5.09`.
+  host: claude-code.
 - **CODE_REVIEW_036**'s six refactors (REV-217 to REV-221; REV-170) land **after WP5.09**, by a Phase 5
   amendment (`/np-plan amend 5`), with the review's corrections C0 to C6.1.
 
