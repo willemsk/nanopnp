@@ -4,7 +4,7 @@ What a work package's implementation or review left open, one numbered item each
 until it is resolved (§8.2.8 H12). `/np-implement` and `/np-ship` add an item in the commit that
 leaves it open: a confirmed review finding not fixed, a deferral to a later package, or a question
 put to the author. The commit that resolves one sets its row `fixed`. The status of each item is in
-[the findings log](review-findings.md), which VER-63 checks; this page says what each one is.
+[the findings log](review-findings.md), read at review (§8.2.13 N3); this page says what each one is.
 
 Each item gives where it was found, what was measured, and what resolves it. Unlike the
 [modularity findings](modularity-findings.md), the register is never closed: it is not one of the
