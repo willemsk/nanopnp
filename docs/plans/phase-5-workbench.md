@@ -45,7 +45,7 @@ True of the codebase today:
 - **The field viewer is the pinned `webgui.js`**, loaded unmodified by `gui/render.py` (CON-09,
   VER-44).
 - **`plot/data.py` turns artefacts into arrays** a browser front end could read (§8.2.14 P3).
-- **The tools' foundations are partial.** `mesh/primitives.py` has three geometries; `inputs.profile`
+- **The tools' foundations are partial.** `mesh/primitives.py` has four geometries; `inputs.profile`
   and `inputs.pqr` take a hand-edited contour and PQR; `physics/models.py` registers six models. The
   library has no residue mutation and no free-form (r, z) domain.
 
@@ -65,7 +65,7 @@ analytes (N4, N5).
 | Physics editor | Composition from registered blocks; room for equations later | QR-13, VER-60 (S3) |
 | Front end | NiceGUI over FastAPI; Mol* draws the molecule | The spike's evidence (S8; AF4) |
 | The shell's slicing | The physics model's library step; the frame rebuilt on Quasar's components; then one package per suite in the route's order | The case settles before a screen is built on it; each pull request reviews one suite's screens (AG1; AJ1, AJ10) |
-| Before the frame | Three packages for the written knowledge (tools, the specification, the knowledge base), then two of the six architecture clean-ups; the other two open the Molecular and Continuum suites | The audit's references are exact now; a change that must move nothing reviews best alone; the suites build on settled seams (AL22, AL24, AL25) |
+| Before the frame | Three packages for the written knowledge (tools, the specification, the knowledge base), then four of the six architecture clean-ups in two packages; the other two open the Molecular and Continuum suites | The audit's references are exact now; a change that must move nothing reviews best alone; the suites build on settled seams (AL22, AL24, AL25) |
 | The sweep | Variables as values or expressions, units through `pint`, keyed by the values they resolve to; rebuilds forecast as a warning | The author's design round (AG2 to AG5) |
 | The cut line | FR-31 to FR-39 and the comparison's difference field in v0.6; the rest later, as tagged | REV-136 (AG6) |
 | Working loop | Artifact mockups; a live local loop; `/np-gui` renders, reviews and collects verdicts; each suite prototyped on 2WCD before it is built; `impeccable` a tool inside `np-gui` | Both see and control it (S9, S22; AJ6, AJ8) |
@@ -226,7 +226,9 @@ the Study suite's list WP5.19's; REV-217 and REV-219 land in WP5.13, REV-220 and
 
 The three follow-up packages take CODE_REVIEW_039's findings as `findings.md` gives them, each marking in its register
 the findings it lands (the report's section 11). An edit that changes no meaning lands without asking; one that touches
-a rule, a number or a decision goes to the author (AL21). This one builds what keeps the text level with the tree. The
+a rule, a number or a decision goes to the author (AL21). This one builds what keeps the text level with the tree,
+starting from the audit's prototypes in `.claude/scripts/audit/` (`decisions.py`, `index_records.py`, `architecture.py`,
+`migrate_plans_archive.py`, `links.py`), which it promotes or replaces rather than writes again. The
 decisions register: `docs/project/decisions.md` written from the tree, the history index's *Where each ruling holds now*
 folded into it, and `/np-plan` and `/np-ship` re-running it in each commit that adds a decision (AL3). The record indexes,
 re-run by `/np-plan wp` and `/np-ship` (AL4). The architecture page generated on the site beside the modularity
@@ -235,7 +237,8 @@ rows equal the subpackages. Ruff's `C901` and `PLR0913`, thresholds set from the
 and import-linter would add, neither adopted (AL27). The delivered plans archived by phase, the finished briefs and
 reviews under `archive/sessions/`, every link and written path rewritten, records included, and `/np-ship phase` moving a
 closing phase (AL5). `/np-ship`'s preflight names the changelog heading `tag.yml` reads, and the eight Phase 5 entries
-under `## [Unreleased]` move to their versions (AL14). §8.4.4 and §8.4.5 state the rules and the kept scripts. Tag
+under `## [Unreleased]` move to their versions (AL14). §8.4.4, §8.4.5 and `CLAUDE.md`'s list of three scripts state the
+rules and the kept scripts. Tag
 `v0.6.0-alpha.10`.
 
 ### WP5.11 — The specification's text and the agent instructions (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21)
@@ -246,7 +249,7 @@ two stages numbered 7 told apart (AL10); §5.3.1's worked example becomes a stru
 each valid (AL11); §5.4.1 and ADR-001 state H3 (AL12); `modularity.md` becomes a dated report pointing at the live page
 (AL8); `CLAUDE.md` says §4 governs the equations (AL16); the changelog rule's five restatements point at
 `CONTRIBUTING.md` (AL14). The redundancy and sediment rows whose live home is here, AUD-113's §5.3.1 NOTEs and AUD-244's
-delivered narratives in this plan among them (AL17, AL18). No test. Tag `v0.6.0-alpha.11`.
+delivered narratives in this plan among them (AL17, AL18; REV-216). No test. Tag `v0.6.0-alpha.11`.
 
 ### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21)
 
@@ -384,7 +387,7 @@ and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 | The workbench's areas | WP5.01's start | **Supplied 24 October 2026** (S24) |
 | The framework ruling | WP5.02's end | **Supplied 2 November 2026** (AF4) |
 | The answers to the sweep's design round and the cut line | The second `/np-plan amend 5` | **Supplied 3 November 2026** (AG1 to AG7) |
-| Verdicts on each suite's prototype round on 2WCD | WP5.16 to WP5.20 | The suite is built on the prototype's design as it stands, and the verdicts move to its screen review |
+| Verdicts on each suite's prototype round, on 2WCD or, for Physics, example 01 | WP5.16 to WP5.20 | The suite is built on the prototype's design as it stands, and the verdicts move to its screen review |
 | A machine with a GPU, in a local session | WP5.19 | The 200 ms line stays unmeasured; a `REV-nn` row carries it to the close |
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
 | The eight-row checklist against the ESI and the COMSOL report (AL20) | WP5.12 | Each finding stays `unchecked`, a `REV-nn` row carried to the close |
@@ -410,9 +413,9 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.07, variables and the forecast | 1 | FR-39: the whitelist, the dimension check, unchanged keys without variables (VER-62), the forecast against the walk |
 | WP5.08, the frame | 1 | VER-78's frame states; the project folder's export read back; REV-52's protocol members |
 | WP5.09, the physics model | 1, 2 | FR-39: a study resolves and keys as before with three models (VER-62 unmoved); a case imports into three models and a study; every case leaf has one owner; a sweep over `models.physics` |
-| WP5.10, the tools | 1 | The decisions page and §5.1's module rows equal the tree (the two new guards); ruff's `C901` and `PLR0913`; the strict build and the link check after the archive move; `duplicates.py` |
+| WP5.10, the tools | 1 | The decisions page and §5.1's module rows equal the tree (the two new guards); ruff's `C901` and `PLR0913`; the strict build and `links.py` after the archive move; `duplicates.py` |
 | WP5.11, the specification's text | none kept | VER-45; `clause.py` resolves every identifier; no SHALL, tolerance or default moves but AL9's wording |
-| WP5.12, the knowledge base | none kept | VER-45; the marker check names no missing test; each `[verified]` claim names its source |
+| WP5.12, the knowledge base | none kept | VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source |
 | WP5.13, case and model files | 1, 2 | VER-62 unmoved; VER-61 and VER-72 with no new edge; FR-39's study, model and variable tests through the one reader |
 | WP5.14, sweeps and keying | 1, 2 | VER-62 unmoved; VER-64's forecast against the walk; a planned sweep resolves each member once (REV-221) |
 | WP5.15, the frame | 1 | VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`, not a Tier 1 walk); a setting declared once reaches the page, its search, the palette and its file |

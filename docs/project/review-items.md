@@ -1570,7 +1570,7 @@ The stages a value invalidates follow from the content hashes that key each stag
 
 **Design round held** (§8.2.31 AG2 to AG5, 3 November 2026), over mockup A's round-2 `st-sweep`: a variable is a value with its unit or an expression of others, parsed without running code; units are checked through `pint`; stages and identity are keyed by the resolved values, the variables recorded as written; and a forecast of the stages each swept value rebuilds is shown as a warning. WP5.07 lands the library step (FR-39); WP5.19 the Sweep tool.
 
-**Fixed** (WP5.07, [the plan](../plans/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.16's (FR-39's Appendix A row).
+**Fixed** (WP5.07, [the plan](../plans/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.19's (FR-39's Appendix A row).
 
 ## REV-140: Two of the author's marks on the mockups ask what is not yet said
 
@@ -2758,6 +2758,8 @@ The author, marking the charge screen: "Looks very poorly integrated. Maybe beca
 The Phase 5 plan holds about 5,100 words without its report, against `np-plan`'s 1,500 target for a phase plan, checked at review (§8.2.13 N3). REV-133 brought it to 1,500 on 24 October 2026; the amendments since grew it to about 4,200 and §8.2.34 to 5,100, each rewriting its package entries to their current scope as R4 asks. The delivered entries WP5.01 to WP5.08 hold about 1,770 words, so moving them to `phase-5-record.md` would still leave about 3,400. Found by CODE_REVIEW_034, finding 9.
 
 **Open** for the author: cut the plan to the target (delivered entries to one line each, the rest condensed), or restate the target for a phase amended in flight.
+
+**Grown** (CODE_REVIEW_040, 8 November 2026): the fourth amendment (§8.2.36) brings the plan to about 6,500 words, of which about 2,500 are the delivered entries WP5.01 to WP5.09. WP5.11 moves delivered narratives out of the live plan (AL18; AUD-244), which takes the first half of the cut; the choice between the rest of the cut and a restated target stays the author's.
 
 ## REV-217: Case reading, substitution and input-path discovery are split across five modules
 

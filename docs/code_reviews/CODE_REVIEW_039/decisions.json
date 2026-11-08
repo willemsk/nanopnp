@@ -12105,7 +12105,7 @@
   "where": "specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:20",
   "date": "3 November 2026",
   "package": "WP5.08",
-  "decided": "The shell is cut one package per suite, after a frame package, in the order of the guided route**: WP5.08, the frame and the project folder; WP5.09, the Molecular suite; WP5.15, the Continuum suite; WP5.16, the Study su…",
+  "decided": "The shell is cut one package per suite, after a frame package, in the order of the guided route**: WP5.08, the frame and the project folder; WP5.16, the Molecular suite; WP5.17, the Continuum suite; WP5.19, the Study su…",
   "holds_now": "its sequence superseded by AJ10; WP5.08 spent (*Its sequence is superseded by AJ10.*)",
   "status": "in force",
   "kind": "history ruling"
@@ -12159,7 +12159,7 @@
   "decided_by": "author",
   "where": "specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:25",
   "date": "3 November 2026",
-  "package": "WP5.17",
+  "package": "WP5.20",
   "decided": "REV-136's v0.6 cut line: v0.6 holds every capability FR-31 to FR-39 name, and the comparison's difference of two runs' fields over the overlap of their fluid domains.** A library function in `post/` samples both runs on…",
   "holds_now": "FR-32; REV-136; open: WP5.20 (AJ10)",
   "status": "in force",
@@ -12170,8 +12170,8 @@
   "decided_by": "author",
   "where": "specification/history/31-phase-5-amended-the-shell-packages-and-the-sweep.md:26",
   "date": "3 November 2026",
-  "package": "WP5.16",
-  "decided": "The 200 ms redraw line (WB-23; AF4) is measured on the author's machine with a GPU, in a local session, in WP5.16.** On a miss the package profiles the redraw; where the renderer's own repaint is the cost, the line bind…",
+  "package": "WP5.19",
+  "decided": "The 200 ms redraw line (WB-23; AF4) is measured on the author's machine with a GPU, in a local session, in WP5.19.** On a miss the package profiles the redraw; where the renderer's own repaint is the cost, the line bind…",
   "holds_now": "the Phase 5 plan's criterion 6; open: WP5.19 (AJ10)",
   "status": "in force",
   "kind": "history ruling"
