@@ -322,18 +322,18 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AI14 - open: WP5.08
 * AI15 - §8.4.4
 * AJ1 - the design document's WB-33; open: WP5.15
-* AJ2 - FR-31; FR-32; §8.1's Phase 5 row; the design document's WB-34; open: WP5.09 (§5.3.1's NOTE on `models:`, §5.3.2, §5.3.3)
-* AJ3 - FR-39; open: WP5.09 (§5.3.1's NOTE on `models:`)
+* AJ2 - FR-31; FR-32; §8.1's Phase 5 row; the design document's WB-34; §5.3.1's NOTE on `models:`, §5.3.2, §5.3.3; open: WP5.18 (the Physics suite)
+* AJ3 - FR-39; §5.3.1's NOTE on `models:`
 * AJ4 - the design document's WB-34; S3, S7 and FR-40 stand
-* AJ5 - FR-39; the design document's WB-35; open: WP5.09, WP5.19
+* AJ5 - FR-39; the design document's WB-35; §5.3.1's NOTE on `models:`; open: WP5.19
 * AJ6 - §8.4.4; open: WP5.15
 * AJ7 - FR-34; the design document's WB-36; open: WP5.15
 * AJ8 - §8.4.4; the design document's WB-38; open: WP5.15 to WP5.20
 * AJ9 - the design document's WB-37; open: WP5.15
-* AJ10 - §8.1's Phase 5 row; the Phase 5 plan; open: WP5.09 and WP5.15 to WP5.22; its sequence amended by AL25, its numbers by AL26
-* AK1 - §5.3.1's NOTE on `models:`; open: WP5.09
-* AK2 - §5.3.1's NOTE on `models:`; open: WP5.09
-* AK3 - §5.3.1's NOTE on `models:`; open: WP5.09, WP5.18, WP5.19
+* AJ10 - §8.1's Phase 5 row; the Phase 5 plan; open: WP5.15 to WP5.22; its sequence amended by AL25, its numbers by AL26
+* AK1 - §5.3.1's NOTE on `models:`
+* AK2 - §5.3.1's NOTE on `models:`
+* AK3 - §5.3.1's NOTE on `models:`; open: WP5.18, WP5.19
 * AL1 - §4 and §6's NOTE labels; spent
 * AL2 - §8.4.5; spent
 * AL3 - §8.4.4; open: WP5.10

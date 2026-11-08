@@ -9,7 +9,7 @@ Phase 4 is released. Phase 5's library steps, the physics model and the window f
 come next: three packages correct the project's written knowledge where an audit found it drifting, and two take four of the six library tidy-ups an architecture review settled; the other two open the suites
 that use them. The screens follow, renumbered. About four to five months part-time remain.
 
-**Your call.** Approve the amendment after its review; later, two measuring tools to adopt or not, and eight audit
+**Your call.** Approve the amendment; later, two measuring tools to adopt or not, and eight audit
 findings to check.
 
 ## Position
@@ -18,7 +18,7 @@ findings to check.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.09 merged
   (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36 AL1 to AL27): WP5.10 to WP5.12
   CODE_REVIEW_039's follow-up, WP5.13 and WP5.14 four of CODE_REVIEW_036's clean-ups, WP5.15 the frame, WP5.16 to
-  WP5.20 the suites, WP5.21 the route and Qt's removal, WP5.22 the close. On `ccr-ffafd419-mwhw6f`. Next `/np-plan amend 5 review`, then `/np-plan wp 5.10`.
+  WP5.20 the suites, WP5.21 the route and Qt's removal, WP5.22 the close; reviewed, CODE_REVIEW_040. Next `/np-plan wp 5.10`.
   host: claude-code.
 
 ## Not to be re-decided
