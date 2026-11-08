@@ -119,15 +119,40 @@ def _definitions(
     return found
 
 
+def _paragraph_stop(lines: list[str], end: int) -> int:
+    while end < len(lines) and lines[end].strip():
+        end += 1
+    return end
+
+
 def _notes(lines: list[str]) -> list[tuple[int, int]]:
     """Return the line ranges of every NOTE paragraph."""
+    # A fenced block after a NOTE is an equation set apart inside its sentence, so the block
+    # and the paragraph that finishes the sentence belong to the NOTE.
     found: list[tuple[int, int]] = []
     start = 0
     while start < len(lines):
         if lines[start].startswith("NOTE"):
-            end = start
-            while end < len(lines) and lines[end].strip():
-                end += 1
+            end = _paragraph_stop(lines, start)
+            while True:
+                fence = end
+                while fence < len(lines) and not lines[fence].strip():
+                    fence += 1
+                if fence == len(lines) or not lines[fence].startswith("```"):
+                    break
+                close = fence + 1
+                while close < len(lines) and not lines[close].startswith("```"):
+                    close += 1
+                end = close + 1
+                after = end
+                while after < len(lines) and not lines[after].strip():
+                    after += 1
+                if after < len(lines) and not (
+                    _heading_level(lines[after])
+                    or lines[after].startswith(("NOTE", "|"))
+                    or PARAGRAPH_DEFINITION.match(lines[after])
+                ):
+                    end = _paragraph_stop(lines, after)
             found.append((start, end))
             start = end
         else:
