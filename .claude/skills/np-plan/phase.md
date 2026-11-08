@@ -26,16 +26,13 @@ Commit nothing in this turn.
 
 Read what `rulings.md`'s *What a phase inherits* lists. Keep a list of each item that needs a decision.
 
-### 3. Survey the codebase
+### 3. Survey the codebase and put the decisions to the author
 
-Give a survey (the core, *Models and executors*) of what the phase builds on. It covers what exists,
-what is refused today with the name of a later phase, and which seams take what the phase needs. From
-it, write the **"true of the codebase today"** list yourself: about five facts, each with its file and
-function.
-
-### 4 and 5. Draft the decisions and put them to the author
-
-As `rulings.md` says.
+1. Give a survey (the core, *Models and executors*) of what the phase builds on. It covers what
+   exists, what is refused today with the name of a later phase, and which seams take what the phase
+   needs. From it, write the **"true of the codebase today"** list yourself: about five facts, each
+   with its file and function.
+2. Draft the decisions and put them to the author, as `rulings.md` says.
 
 ## Turn 2 — the write-up
 

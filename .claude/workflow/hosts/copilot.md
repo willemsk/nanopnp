@@ -1,5 +1,8 @@
 # GitHub Copilot app host map
 
+> This host has not been verified live. REV-166 to REV-168 record the open probes, accepted. Treat no
+> substitute below as tested.
+
 This file maps each Claude Code tool the workflow names to its Copilot substitute. Contract: [core](../core.md).
 
 ## What Copilot reads
@@ -88,7 +91,9 @@ steward's failure classes.
 
 ## Safety hooks
 
-- The gate refuses with an exit-0 structured denial (§8.2.26 AB1).
+- The gate refuses with an exit-0 structured denial (§8.2.26 AB1). `refuse()` in `gate.sh` prints
+  `permissionDecision` top-level beside `hookSpecificOutput` on purpose: Copilot documents only the
+  top-level form. Keep both.
 - A timed-out hook lets the command through. The entries carry 1800 s.
 - The gate reads one command. Never commit or push by typing into a running shell.
 - The Commit and Push buttons run only git's hooks. Never use them.

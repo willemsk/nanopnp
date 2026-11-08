@@ -1,6 +1,6 @@
 # GitHub Copilot on nanopnp
 
-You are not Claude Code. Follow CLAUDE.md, which is normative, and read
+You are not Claude Code. Follow CLAUDE.md, the working instructions, and read
 `.claude/workflow/hosts/copilot.md` before a workflow command (`/np-plan`, `/np-implement`,
 `/np-ship`, `/np-gui`, the steward), a commit or a push: it maps each Claude Code tool those files
 name to its substitute here.

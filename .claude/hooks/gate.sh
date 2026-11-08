@@ -7,10 +7,11 @@
 #
 #   gate.sh        hook mode, payload on stdin. On a `git commit`: uv lock --check, ruff
 #                  check, ruff format --check, mypy, then every Tier 1 test without the
-#                  `nightly` marker (the GUI file serially, apart). On a `git push`: runs
-#                  nothing and goes through only when the stamp names the pushed tree with
-#                  `push`, the pass of `gate.sh run`. Text that only names a push, in a
-#                  commit message or a pull request body, is no push.
+#                  `nightly` marker (the GUI file serially, apart, where QtWidgets
+#                  imports). On a `git push`: runs nothing and goes through only when
+#                  the stamp names the pushed tree with `push`, the pass of `gate.sh run`.
+#                  Text that only names a push, in a commit message or a pull request
+#                  body, is no push.
 #   gate.sh run    the push gate: the same four checks, then `pytest` over the
 #                  per-push selection (Tier 1, Tier 2 without `nightly` or `slow`), with the Gmsh and APBS requirements set. One
 #                  run at a time: a second waits for the first. It stamps the tree
@@ -579,9 +580,12 @@ else
         check "pytest (tier 1)" uv run pytest -q -rsfE -n auto --dist loadfile \
             --ignore=tests/tier1/test_gui_widgets.py -m "tier1 and not slow"
     fi
-    # Exit 5 ("no tests ran") is the module skipping itself where PySide6 cannot import, the
-    # usual Linux case (no libEGL); CI's desktop runners, where it must run, treat 5 as failure.
-    check "pytest (GUI)"    bash -c 'uv run pytest -q -rsfE tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
+    # Where QtWidgets cannot import, the usual Linux case (no libEGL), the module skips itself,
+    # so pytest is not started for it. Exit 5 ("no tests ran") is any other self-skip; CI's
+    # desktop runners, where it must run, treat 5 as failure.
+    if uv run python -c 'from PySide6 import QtWidgets' >/dev/null 2>&1; then
+        check "pytest (GUI)" bash -c 'uv run pytest -q -rsfE tests/tier1/test_gui_widgets.py; s=$?; ((s == 5)) && s=0; exit $s'
+    fi
 fi
 
 if [[ $mode == run && -n $state ]]; then

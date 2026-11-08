@@ -2,7 +2,7 @@
 Delete the sections that do not apply — except "Specification changes", where
 "None." is the answer and silence is not.
 
-A work package delivered through /np-ship fills this in automatically.
+/np-implement fills this in for a work package, and /np-ship keeps it current.
 -->
 
 ## What this delivers

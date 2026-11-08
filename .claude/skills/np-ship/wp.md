@@ -13,10 +13,10 @@ watch need no further prompt.
    merged, go to §7.
 2. If no PR is found and the branch has no commits beyond `origin/main`, stop. A plan on `main` does
    not show that the package was implemented.
-3. Suppose the PR's **Verification** records a completed review, and the only commits after its
-   reviewed head are the recorded fix commits and the review's report commit. Then subscribe to the
-   PR's activity (§4) and go to §5. A review adds its own commits, so the current head is never the
-   reviewed head.
+3. **Resuming after a review.** Suppose the PR's **Verification** records a completed review, and
+   the only commits after its reviewed head are the recorded fix commits and the review's report
+   commit. Then subscribe to the PR's activity (§4) and go to §5. A review adds its own commits, so
+   the current head is never the reviewed head.
 
 ## 1. Preflight
 
@@ -66,17 +66,12 @@ A PR that changes a screen runs `/np-gui review` and `/np-gui publish`, links th
 Run the review from this session. Call the skill directly, never inside an `Agent`:
 
 ```
-Skill(skill="code-review", args="xhigh --fix --max-findings all <pr-number> out=docs/code_reviews/ -- Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
+Skill(skill="code-review", args="xhigh --fix --max-findings all <pr-number> -- Write the report to docs/code_reviews/CODE_REVIEW_NNN.md, NNN one above the highest present. Static review. A finding is never fixed by adding an off-category test (§8.2.13 N1). Run no benchmark, sweep, cost study, gate.sh or pytest --nightly; /np-ship gates the fixes afterwards. Run a command in the foreground only if it ends within 240 s. Start any longer command in the background and poll it with waits of at most 240 s each, re-issuing a wait that ends.")
 ```
 
-Inside an `Agent`, the skill returned no findings. Called directly, it starts its own review agent.
-
-The review agent's prompt cache lives five minutes, against one hour here. Each longer pause in it
-writes its whole context again, whether the pause is a test run, a foreground command or a wait. That
-is about 300k tokens, twice in WP49. A poll every 240 s costs about a tenth of that. So the commit
-hook, `gate.sh run` and full test runs stay in this session, never in the reviewer. Keep the review
-without gaps. Do not lengthen the cache life: a one-hour write costs more, and pays only when a long
-pause cannot be avoided. The gate in step 3 below, not the reviewer, verifies the fixes.
+Observed 2026-11: inside an `Agent` the skill returned no findings. Called directly, it starts its
+own review agent. Keep the review without gaps. The commit hook, `gate.sh run` and full test runs stay
+in this session, never in the reviewer. The gate in step 3 below, not the reviewer, verifies the fixes.
 
 **The pass must give evidence that it completed, not that it edited files.** Wait for the review
 skill's final report. It must give the reviewed revision, the completed status, the findings (an empty

@@ -97,14 +97,16 @@ The jobs:
   recorded and never gated (§7.1, §7.6). Without `$NANOPNP_REFERENCE_DATA`, every Tier 3 test skips
   visibly. That skip is missing evidence, not a defect.
 
-The default `pytest` selection is tiers 1 and 2 without the `nightly` tests, which the nightly run
-adds. Tier 4 gates releases. `-m slow` is measured and never gated. Nothing in the suite reaches the
-network or needs a COMSOL licence. A failure in `ruff`, `mypy` or `pytest` is therefore always a real
-one: a lint, a type error or a tier 1–2 assertion, never an environment excuse.
+The default `pytest` selection is tiers 1 and 2 without the `nightly` and without the `slow` tests,
+both of which the nightly run adds. Tier 4 gates releases. `-m slow` is measured and never gated.
+Nothing in the suite reaches the network or needs a COMSOL licence. A failure in `ruff`, `mypy` or
+`pytest` is therefore always a real one: a lint, a type error or a tier 1–2 assertion, never an
+environment excuse.
 
-Three steps do reach the network: `astral-sh/setup-uv`, `uv sync` and the artefact uploads. A failure
-there is infrastructure, so re-run the job. Read the log first, and establish which of the two you
-have before you change a line. A stale `uv.lock` also fails at `uv sync`, and that one is a real
+These steps do reach the network: `actions/checkout`, `astral-sh/setup-uv`, the apt cache action
+(`awalsh128/cache-apt-pkgs-action`), `uv sync`, `playwright install` and the artefact uploads. A
+failure there is infrastructure, so re-run the job. Read the log first, and establish which of the
+two you have before you change a line. A stale `uv.lock` also fails at `uv sync`, and that one is a real
 failure with a real fix.
 
 Before you change anything, reproduce the failing job's exact command locally. For a failure in one

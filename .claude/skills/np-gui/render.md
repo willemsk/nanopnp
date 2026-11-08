@@ -4,7 +4,7 @@
 
 ## Targets
 
-**`qt`**, today's shell (removed with it):
+**`qt`**, the Qt shell (removed in WP5.16):
 
 1. Install the system libraries Qt needs offscreen, once per container:
    `apt-get install -y --no-install-recommends libegl1 libgl1 libxkbcommon0 libnss3 libxcomposite1
