@@ -259,9 +259,9 @@ Record each command, its result and the commit.
   rewritten and run; `duplicates.py`, `audit/scope.py`, the skills' paths; §8.4.4 (D4); done when the
   dry run's counts match Grounding D4's, `links.py` names nothing outside `KNOWN`, `duplicates.py`
   passes and the strict build passes. **Executor:** main
-- [ ] 3. `git mv` of `audit/index_records.py`; folder sections; the three indexes rewritten (D5); done
+- [x] 626d9f6 3. `git mv` of `audit/index_records.py`; folder sections; the three indexes rewritten (D5); done
   when each section's count equals its folder's. **Executor:** `general-purpose` on Sonnet
-- [ ] 4. Compaction checkpoint. **Executor:** main
+- [x] 4. Compaction checkpoint: the archive and the indexes stand. **Executor:** main
 - [ ] 5. `git mv` of `audit/decisions.py`; `holds-now.yaml`; the index's pointer; `docs/project/decisions.md`;
   the pointers in `SPECIFICATION.md`, `specification/index.md` and §11; `rulings.md`, `core.md`,
   `project.md`; the page's navigation (D1, D5); done
