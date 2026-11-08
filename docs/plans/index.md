@@ -70,6 +70,7 @@ Written by `.claude/scripts/audit/index_records.py`; re-run it when a file is ad
 - [WP5.07 — Variables and the rebuild forecast](wp5.07-variables-and-the-rebuild-forecast.md): delivered, 4 November 2026.
 - [WP5.08 — The frame and the project folder](wp5.08-the-frame-and-the-project-folder.md): delivered, 5 November 2026.
 - [WP5.09 — The physics model](wp5.09-the-physics-model.md): delivered, 8 November 2026.
+- [WP5.10 — The written knowledge's tools and rules](wp5.10-the-written-knowledges-tools-and-rules.md): planned, not started.
 - [WP50 — The test scope](wp50-test-scope.md): delivered, 19 October 2026.
 - [WP51 — The plotting library and the notebooks](wp51-plotting-and-notebooks.md): delivered, 22 October 2026.
 - [WP52 — The documents: the specification and the plans split](wp52-specification-and-plans-split.md): delivered, 2026-10-22.
