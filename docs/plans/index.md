@@ -1,0 +1,87 @@
+# The plans
+
+Planning, not requirements: `SPECIFICATION.md` governs. `current.md` is the live navigation; every other file is a record. Each line quotes the file's own status line.
+
+Written by `.claude/scripts/audit/index_records.py`; re-run it when a file is added or its status line changes.
+
+- [Plan: run the nanopnp workflow in the GitHub Copilot app beside Claude Code](copilot-host.md): no status line
+- [Current work](current.md): no status line
+- [Historical prose in nanopnp: keep or remove](history-prose-review.md): decided and done, 4 October 2026.
+- [Audit nanopnp's written knowledge](kb-audit-brief.md): brief, not started.
+- [WP54 Review and Specification: Notebooks and Scientific Plots](notebooks-review-for-wp54.md): no status line
+- [WP47 — converter, ledger and gate rules](okf-converter-rules.md): planned, 14 October 2026.
+- [The knowledge base as an Open Knowledge Format bundle — evaluation and decisions](okf-knowledge-bundle.md): decided, not planned.
+- [Phase 0 consolidation: audit and remediation plan](phase-0-consolidation.md): remediation delivered, 2 September 2026. WP-A1, WP-B1, WP-B2 and WP-C1 are implemented and green on tiers 1 and 2; the optional WP-B3 is deferred to Phase 2 with the reason recorded below. The audit (below) stands as wr…
+- [Phase 0 (Spike): coupled ePNP-NS on an analytic cylindrical pore](phase-0-spike.md): WP1–WP6 merged. Phase 0 complete on criteria 1–3; criterion 4 is out of scope by amendment A2.
+- [Phase 1 (Solver core): the production solver on an externally supplied mesh](phase-1-solver-core.md): WP7–WP16 delivered; end-of-phase report written 24 September 2026; released as `v0.2.0`
+- [Phase 2 (Geometry pipeline): from a structure to a gated mesh](phase-2-geometry-pipeline.md): closed, 30 September 2026, as `v0.3.0`, with criterion 3 waived (`SPECIFICATION.md` §8.2.4 D7; [End-of-phase report](#end-of-phase-report)). WP17 delivered, 24 September 2026; WP18 delivered, 25 September 2026; WP19 del…
+- [Phase 3 (Charge pipeline): from a structure to a charged run](phase-3-charge-pipeline.md): closed, 4 October 2026, as `v0.4.0` on WP34's merge (end-of-phase report below; §8.2.5 E1, E5). WP26 delivered, 30 September 2026; WP27 delivered, 1 October 2026 ([plan](wp27-protonation.md)); WP28 delivered, 1 October…
+- [Phase 4 (Polish and user testing): a codebase whose seams are measured and whose surface has been used](phase-4-polish-and-user-testing.md): delivered, 2 November 2026; closes at the merge and the `v0.5.0` tag.
+- [Phase 4 plan: the record](phase-4-record.md): in progress.
+- [Phase 5 plan: the record](phase-5-record.md): in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.
+- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5-workbench.md): in progress; WP5.01 to WP5.08 merged; WP5.09, the physics model, delivered, awaiting its merge; the shell packages WP5.10 to WP5.17 planned.
+- [WP10 — Case-driven runs, the CLI, field output](wp10-cli-runs-field-output.md): delivered, 7 September 2026.
+- [WP11 — Sweep runner](wp11-sweep-runner.md): delivered, 8 September 2026.
+- [WP12 — Reference-matching stabilised mode](wp12-reference-stabilised-mode.md): delivered, 14 September 2026; the three questions it opened were closed by author ruling, 13 September 2026.
+- [WP13 — Tier 3 harness and the COMSOL comparison](wp13-tier3-comsol-comparison.md): delivered, 18 September 2026.
+- [WP14 — The packaging probe and the desktop shell](wp14-gui-shell-packaging-probe.md): delivered, 20 September 2026.
+- [WP15 — Live convergence and the field viewer](wp15-live-convergence-and-viewer.md): delivered, 21 September 2026.
+- [WP16 — User documentation and worked examples](wp16-user-docs-and-examples.md): delivered, 23 September 2026.
+- [WP17 — Case schema v2 and the 3.11 floor](wp17-case-schema-v2.md): delivered, 24 September 2026.
+- [WP18 — Structure ingestion, alignment and the Cₙ axis (stage 1)](wp18-structure-ingestion.md): delivered, 25 September 2026.
+- [WP19 — Density map and symmetry reduction (stages 2 and 3)](wp19-density-and-reduction.md): delivered, 25 September 2026.
+- [WP20 — Contour extraction, conditioning and its gate (stage 4)](wp20-contour-extraction.md): delivered, 26 September 2026.
+- [WP21 — CAD assembly and graded meshing from a profile (stages 5 and 6)](wp21-cad-assembly-and-meshing.md): delivered, 26 September 2026.
+- [WP22 — VAL-05: the pipeline against the reference geometry](wp22-val05-reference-geometry.md): delivered, 28 September 2026.
+- [WP23 — The Gmsh mesher backend](wp23-gmsh-backend.md): delivered, 29 September 2026.
+- [WP24 — GUI increment 2: the geometry pipeline surfaced](wp24-gui-geometry-pipeline.md): delivered, 29 September 2026.
+- [WP25 — Documentation increment 2: the geometry pipeline and example 06](wp25-geometry-docs-and-example.md): delivered, 29 September 2026.
+- [WP26 — The physics-model interface (FR-20)](wp26-physics-model-interface.md): delivered, 30 September 2026.
+- [WP27 — Protonation: the PDB2PQR driver and the PQR artefact (FR-12)](wp27-protonation.md): delivered, 1 October 2026.
+- [WP28 — Fixed-charge deposition on the deployed mesh and its gates (FR-13, FR-14)](wp28-charge-deposition.md): delivered, 1 October 2026.
+- [WP29 — VAL-06: Poisson against APBS (the phase gate)](wp29-val06-apbs.md): delivered, 1 October 2026.
+- [WP30 — The dielectric field and the ion-exclusion shell (FR-15)](wp30-dielectric-and-exclusion.md): delivered, 2 October 2026.
+- [WP31 — GUI increment 3: the charge pipeline surfaced](wp31-gui-charge-pipeline.md): delivered, 2 October 2026.
+- [WP32 — Documentation increment 3: the charge pipeline and example 07](wp32-charge-docs-and-example.md): delivered, 3 October 2026.
+- [WP33 — The test suite's duration, cut without losing a check](wp33-test-durations.md): delivered, 3 October 2026.
+- [WP34 — Phase 3 closed: the open items resolved, and the end-of-phase report](wp34-phase-3-close.md): delivered, 4 October 2026.
+- [WP35 — The modularity exploration: report, findings log, guard and golden](wp35-modularity-exploration.md): delivered, 5 October 2026.
+- [WP36 — The stage protocol and the walk](wp36-stage-protocol-and-walk.md): delivered, 5 October 2026.
+- [WP37 — The cycle cuts outside `io`, the exit codes, and the backend guard](wp37-cycle-cuts-exit-codes-backend-guard.md): delivered, 6 October 2026.
+- [WP38 — The `io` split](wp38-io-split.md): delivered, 6 October 2026.
+- [WP39 — The backend registries](wp39-backend-registries.md): delivered, 6 October 2026.
+- [WP40 — The stale refusals](wp40-stale-refusals.md): delivered, 7 October 2026.
+- [WP41 — The accuracy fixes](wp41-accuracy-fixes.md): delivered, 8 October 2026.
+- [WP42 — The verification checks](wp42-verification-checks.md): in progress (extension).
+- [WP43 — The development loop](wp43-development-loop.md): implemented, in review.
+- [WP44 — Simplify the loop](wp44-simplify-the-loop.md): delivered, 13 October 2026.
+- [WP45 — The prose strip](wp45-prose-strip.md): delivered, 14 October 2026.
+- [WP46 — The small fixes](wp46-small-fixes.md): delivered, 14 October 2026.
+- [WP47 — The knowledge base as an OKF bundle](wp47-okf-bundle.md): delivered, 14 October 2026.
+- [WP48 — The OKF backfill](wp48-okf-backfill.md): delivered, 17 October 2026.
+- [WP49 — The cost study](wp49-cost-study.md): delivered, 18 October 2026.
+- [WP5 — Continuation ladder, QoI extraction, the envelope](wp5-continuation-qoi-envelope.md): delivered.
+- [WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written](wp5.01-workbench-design-study.md): delivered, 27 October 2026.
+- [WP5.02 — The framework spike and the visual-feedback workflow](wp5.02-framework-spike.md): delivered, 2 November 2026.
+- [WP5.03 — Protonation before the density](wp5.03-protonation-before-the-density.md): merged, 3 November 2026 (`v0.6.0-alpha.3`).
+- [WP5.04 — The charge mutator's library step](wp5.04-the-charge-mutators-library-step.md): delivered, 3 November 2026.
+- [WP5.05 — Named models and study overrides in the case](wp5.05-named-models-and-study-overrides.md): delivered, 3 November 2026.
+- [WP5.06 — Outputs and steric models as registries](wp5.06-outputs-and-steric-registries.md): delivered, 4 November 2026.
+- [WP5.07 — Variables and the rebuild forecast](wp5.07-variables-and-the-rebuild-forecast.md): delivered, 4 November 2026.
+- [WP5.08 — The frame and the project folder](wp5.08-the-frame-and-the-project-folder.md): delivered, 5 November 2026.
+- [WP5.09 — The physics model](wp5.09-the-physics-model.md): delivered, 8 November 2026.
+- [WP50 — The test scope](wp50-test-scope.md): delivered, 19 October 2026.
+- [WP51 — The plotting library and the notebooks](wp51-plotting-and-notebooks.md): delivered, 22 October 2026.
+- [WP52 — The documents: the specification and the plans split](wp52-specification-and-plans-split.md): delivered, 2026-10-22.
+- [WP53 — The workflow: three commands with levels, and a current checkout](wp53-workflow-commands.md): delivered, 22 October 2026.
+- [WP54 — The notebooks and figures revised](wp54-notebooks-and-figures-revised.md): delivered, 28 October 2026.
+- [WP55 — The user-testing protocol](wp55-user-testing-protocol.md): delivered, 2026-10-29.
+- [WP56 — The command line read by a person](wp56-command-line-read-by-a-person.md): delivered, 2026-10-30.
+- [WP57 — An idealised pore as geometry, and the Python interface rebuilt on a Case and a Session](wp57-idealised-pore-and-python-interface.md): delivered, 30 October 2026.
+- [WP58 — Documentation increment 4: the guide current, plainer and free of stale text](wp58-documentation-increment-4.md): delivered, 1 November 2026.
+- [WP59 — The architecture review's fixes: the case owns its source, one route for every caller](wp59-architecture-review-fixes.md): delivered, 1 November 2026.
+- [WP6 — Analyte body and force benchmarks](wp6-analyte-and-forces.md): delivered.
+- [WP60 — Phase 4 closed: the open items resolved, and the end-of-phase report](wp60-phase-4-close.md): delivered, 2 November 2026.
+- [WP7 — Case-file schema, artefacts, and the provenance manifest](wp7-case-schema-artefacts-manifest.md): delivered.
+- [WP8 — Mesh ingestion, tagging, quality gates, and the reference geometry](wp8-mesh-ingestion-quality-reference.md): delivered, 5 September 2026.
+- [WP9 — External material and charge fields](wp9-external-fields.md): delivered, 6 September 2026.
