@@ -44,3 +44,7 @@ CLI and the desktop shell drive the same stage objects (IF-01, IF-02, IF-09).
 | `cli/` | Command-line entry points |
 | `gui/` | Desktop application |
 | `validation/` | Benchmarks, MMS, COMSOL comparison harness, regression fixtures |
+
+NOTE (the module table; §8.2.36 AL6): the site's *Architecture* page is generated from the tree at
+each build. VER-79 holds this table's module rows equal to the subpackages; the responsibilities
+are written here.

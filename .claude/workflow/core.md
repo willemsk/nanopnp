@@ -131,15 +131,19 @@ question dialog may be all the author sees, so the context lives in it, not in t
 
 ## Gate and push
 
-1. `git status` is clean.
-2. If the change touches a documentation source, run the strict documentation build of `CLAUDE.md`'s
+1. Before each commit that adds or changes a decision (a ruling, a plan's `Dn` row, a `REV`, `MOD`,
+   `OPN` or `WB` row), run `uv run .claude/scripts/decisions.py`; before each that adds a plan or a
+   review, run `uv run .claude/scripts/index_records.py`. Commit what they write with the change.
+   The gate refuses a decisions page that differs from the records (§8.4.4).
+2. `git status` is clean.
+3. If the change touches a documentation source, run the strict documentation build of `CLAUDE.md`'s
    *Commands* first, and commit the navigation it rewrites in `mkdocs.yml`. The sources are:
    `SPECIFICATION.md`, `specification/`, `knowledge/`, `CHANGELOG.md`, `examples/*/README.md`,
    `data/corrections/`, `docs/` outside `plans/` and `code_reviews/`, `mkdocs.yml`, and docstrings in
    `src/`.
-3. Run `.claude/hooks/gate.sh run` as `CLAUDE.md`'s *Commands* say, and wait for it in the same turn.
+4. Run `.claude/hooks/gate.sh run` as `CLAUDE.md`'s *Commands* say, and wait for it in the same turn.
    Never push a tree the gate has not passed. The push guard refuses it.
-4. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
+5. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
 
 ## The PR contract
 

@@ -20,7 +20,7 @@ NOTE (the test scope; §8.2.13 N1, N3): a test is written only for code that cou
 wrong answer or that drives a core mechanism: physics and numerics, content hashing and cache keys,
 the store, case resolution, the stage walk and cancellation, warm start, reproducibility, the
 manifest's deviations, the solution state and the number-stability goldens, and the licence and
-architecture guards (CON-10, CON-12, VER-61, VER-65, a module importing no backend). A refusal is
+architecture guards (CON-10, CON-12, VER-61, VER-65, VER-79, a module importing no backend). A refusal is
 tested only where it is a numerical or physical gate. Each entry point keeps a thin smoke test. A
 `VER-` or `VAL-` row outside that scope stays normative and is verified at review; a row that says
 so in its text is not discharged by a test, and no test is added to discharge it. Deleting a test

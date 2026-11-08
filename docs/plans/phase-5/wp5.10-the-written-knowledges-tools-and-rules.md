@@ -262,11 +262,11 @@ Record each command, its result and the commit.
 - [x] 626d9f6 3. `git mv` of `audit/index_records.py`; folder sections; the three indexes rewritten (D5); done
   when each section's count equals its folder's. **Executor:** `general-purpose` on Sonnet
 - [x] f3bcf17 4. Compaction checkpoint: the archive and the indexes stand. **Executor:** main
-- [ ] 5. `git mv` of `audit/decisions.py`; `holds-now.yaml`; the index's pointer; `docs/project/decisions.md`;
+- [x] 6226387 5. `git mv` of `audit/decisions.py`; `holds-now.yaml`; the index's pointer; `docs/project/decisions.md`;
   the pointers in `SPECIFICATION.md`, `specification/index.md` and §11; `rulings.md`, `core.md`,
   `project.md`; the page's navigation (D1, D5); done
   when `--check` passes, item 5's counts hold and the strict build passes. **Executor:** main
-- [ ] 6. `git mv` of `audit/architecture.py` to `docs/scripts/architecture.py`; `generate.py`, `mkdocs.yml`,
+- [x] fbc0899 6. `git mv` of `audit/architecture.py` to `docs/scripts/architecture.py`; `generate.py`, `mkdocs.yml`,
   `docs/project/index.md` (D3); done when the strict build shows the page with 20 module rows.
   **Executor:** `general-purpose` on Sonnet
 - [ ] 7. `tests/tier1/test_written_architecture.py`; §7.1, §7.2, §7.6, Appendix A; `gate.sh`, `ci.yml`;
