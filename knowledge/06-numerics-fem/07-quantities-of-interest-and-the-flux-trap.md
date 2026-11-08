@@ -165,7 +165,7 @@ with `wall: true` on diffusivity, mobility and viscosity, `default_ladder`, stab
 | 1.0 / 0.25 | 793 | 7 357 | 2.61972 × 10⁻¹¹ | 2.61972 × 10⁻¹¹ | 1.56 × 10⁻⁶ |
 
 The coarsest row converges — Newton reports no complaint, the gates pass, and both routes return a
-plausible current — and the two routes disagree by 40 %, five hundred times NUM-26's 10⁻³. The cause
+plausible current — and the two routes disagree by 40 %, four hundred times NUM-26's 10⁻³. The cause
 is resolution of the wall functions, not of the fields: `1 − exp(−6.2(d̄ + 0.01))` rises over a
 tenth of the pore radius, and on the 124-element mesh the PHY-02 distance field carries 273 degrees
 of freedom in total. The reaction flux and the indicator form disagree because they sample that
