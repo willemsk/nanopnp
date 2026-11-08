@@ -82,7 +82,7 @@ pytest`, which resolves and installs a separate 3.10 environment in about a minu
 `uv.lock` splits its resolution only at 3.12, so 3.12 and 3.14 install the same version of every
 package (NumPy 2.5.2, SciPy 1.18.0, NGSolve 6.2.2606), each from a wheel (cp314, abi3 or pure Python; none built from source). On CPython
 3.14.6, `linux-x86_64` with NumPy's dispatch capped at `X86_V3` (`NPY_DISABLE_CPU_FEATURES`, as CI
-and the gate set it), the six walk files of the number-stability golden pass under `--extended`:
+and the gate set it), the six walk files of the number-stability golden passed under `--extended` (now `--nightly`):
 all seven walks deploy their recorded reference mesh, and the largest relative drift against the
 golden recorded on 3.12 is 6.9 × 10⁻¹⁴ (example 01's `eof_m3_s`; every other walk at or below
 2.7 × 10⁻¹⁵), 12 October 2026 (WP43, D12). Every locked package has a cp314 wheel on Linux, macOS
