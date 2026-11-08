@@ -52,14 +52,14 @@ order, on a machine that has seen nothing else, and the warm start is an optimis
 or may not be able to supply.
 
 Members SHALL share one artefact store, which is what makes a neighbour's converged state reachable
-at all, and the workspace-locality NOTE above applies to each member individually. Independent
+at all, and the workspace-locality NOTE of §5.3.2 applies to each member individually. Independent
 workers SHALL be independent: each worker SHALL be started with the thread counts of the underlying
 linear-algebra libraries pinned to one before those libraries are imported, and the pinning SHALL be
 recorded, because N workers sharing one thread pool are not N independent workers and QR-06's scaling
 claim would otherwise measure the pool.
 
 The collected **dataset** is an artefact, `schema: nanopnp/sweep/v0.5`, written through the canonical
-serialisation above, carrying one record per point: its index and identity, its assignments, its
+serialisation of §5.3.2, carrying one record per point: its index and identity, its assignments, its
 status and — where it failed — the exit class of §3.1, the scalar quantities of interest or their
 explicit absence, the run directory, the manifest and solution hashes, the elapsed time, whether it
 was served from cache, and the warm-start record. The quantities of a member that did not succeed
