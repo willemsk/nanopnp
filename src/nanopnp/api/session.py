@@ -143,7 +143,7 @@ class Session:
             on_artefact=on_artefact,
         )
 
-    def _walk(
+    def _walk(  # noqa: PLR0913
         self,
         document: CaseDocument,
         *,

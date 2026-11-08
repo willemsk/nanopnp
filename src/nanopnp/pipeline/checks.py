@@ -273,7 +273,7 @@ def check_species(document: CaseDocument, electrolyte: Electrolyte) -> None:
         raise CaseValidationError("; ".join(problems))
 
 
-def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:
+def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa: C901
     """Reject every section this release does not run; return the supplied mesh, if any."""
     _check_charge(document)
     for supplied in ("charge", "eps_r"):

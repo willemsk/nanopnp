@@ -78,7 +78,7 @@ class ForceSurfaceError(ValueError):
     """The force surface does not lie between one pair of materials all along it."""
 
 
-def axial_extension(
+def axial_extension(  # noqa: PLR0913
     mesh: Mesh,
     *,
     inner_nm: float,
@@ -790,7 +790,7 @@ def reaction_force(
     return force
 
 
-def extract(
+def extract(  # noqa: PLR0913
     solution: ModelSolution,
     measures: Measures,
     extension: GridFunction,

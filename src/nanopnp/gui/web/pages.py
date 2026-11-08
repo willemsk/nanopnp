@@ -45,7 +45,7 @@ def _markers(extent: Extent, markers: list[tuple[float, float, float]]) -> str:
     return "".join(out)
 
 
-def install(app: FastAPI, shell: Shell, secret: str) -> None:
+def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     """Register the screens and their data routes on ``app``, and attach NiceGUI to it."""
 
     @app.get("/api/structure")

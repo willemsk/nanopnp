@@ -402,7 +402,7 @@ class Manifest:
         return path
 
 
-def build(
+def build(  # noqa: PLR0913
     document: CaseDocument,
     *,
     case_text: str,
