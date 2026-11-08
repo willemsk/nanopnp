@@ -73,7 +73,7 @@ electrolyte properties near the bilayer do not affect the pore's figures of meri
 unsmoothed. Mollification is an implementation change, not a model change, and is required because
 `D`, `μ` and `η` all depend on `d`, so a kinked `d` enters the Jacobian.
 
-NOTE (the driver clamp): the wall functions of PHY-11 are stated for `d̄ ≥ 0`, and the ion form
+NOTE (PHY-02, the driver clamp): the wall functions of PHY-11 are stated for `d̄ ≥ 0`, and the ion form
 `1 − exp(−P₁(d̄ + P₂))` has its root at `d̄ = −P₂`. A negative sample of a discrete distance field
 therefore does not attenuate `D_i` and `μ_i`, it reverses their sign, giving an anti-diffusion
 operator in the one neighbourhood where the wall correction is supposed to hold ions back. The
@@ -217,7 +217,7 @@ auxiliary, not evaluated at solve time: it derives per-ion mobilities from molar
 SHALL reproduce: `f^w_D(0) = 0.06`, `f^w_D(0.75 nm) = 0.99`, `η⁰/η^w(0) = 0.37`,
 `η⁰/η^w(1.45 nm) = 0.99`.
 
-NOTE: the density coefficients differ from the thesis table by more than rounding, `P₁ = 0.04047`
+NOTE (PHY-12): the density coefficients differ from the thesis table by more than rounding, `P₁ = 0.04047`
 (thesis 4.06 × 10⁻²) and `P₂ = −6.149 × 10⁻⁴` (thesis −6.39 × 10⁻⁴, 3.8 % apart). The COMSOL values
 govern.
 
@@ -311,7 +311,7 @@ beside ASP 21 on the 2WCD fragment at pH 2), so the variant's record lists a res
 move, with its charges unchanged. A charge or radius edit acts on the assembled table, after the
 states and the radius comparison, and so on every residue alike.
 
-NOTE (protonation before the density, §8.2.19 U2; §8.2.31 AG8). Step 3's protonation runs on the
+NOTE (PHY-16, protonation before the density, §8.2.19 U2; §8.2.31 AG8). Step 3's protonation runs on the
 aligned ensemble before stage 2, and stage 2 smears the protonated frames: PDB2PQR's atoms, hydrogens
 included, at the positions it wrote, each with the radius the §5.3.1 NOTE on `geometry.density` takes
 for it. A protonation state or a charge-level variant therefore moves the density, the contour and the
@@ -403,7 +403,7 @@ nearest solid material, whose solid fraction `χ` there is. A single `ε_p` for 
 blend the fluid beside the membrane towards the protein. With `χ` the sharp material indicator every
 one of these choices drops out, and PHY-20's piecewise assignment is recovered exactly.
 
-NOTE (the `2πr` cancels, PHY-16, PHY-19): under the axisymmetric volume element `dV = 2πr dr dz`,
+NOTE (PHY-20, the `2πr` cancels, PHY-16, PHY-19): under the axisymmetric volume element `dV = 2πr dr dz`,
 the Jacobian and the `1/(2πr)` of PHY-16 step 6 cancel identically, so
 
 ```
@@ -422,7 +422,7 @@ stated width rather than a step, applied identically to both sides, since a step
 inside every element the plane crosses and its quadrature error exceeds the tolerance it is meant to
 enforce.
 
-NOTE (the consumer leg is a resolution question, not a tolerance one, QR-03, PHY-19): measured on
+NOTE (PHY-20, the consumer leg is a resolution question, not a tolerance one, QR-03, PHY-19): measured on
 the delivered ClyA `rhoq_pore` table — 1401 x 3401 at 0.005 nm, `r` in [0, 7] nm, `z` in
 [-3.5, 13.5] nm — the producer leg is `4.7 x 10^-12` (`Q_grid = -71.999999999663 e` against a
 declared `-72 e`) while the consumer leg on the WP8 reference mesh, 44 316 elements graded to
@@ -453,7 +453,7 @@ mesh resolves it put the solved charge 1.2 × 10⁻² from the grid's while the 
 2 × 10⁻⁵ (WP41 D2, REV-07). A deposited charge keeps the model's default: its total is exact there,
 and its per-entry order is NUM-07's open question.
 
-NOTE (the producer path's conservation report, PHY-19, FR-14, QR-03; WP28): for a deposited charge, the producer leg compares the trapezoid integral of the exported
+NOTE (PHY-20, the producer path's conservation report, PHY-19, FR-14, QR-03; WP28): for a deposited charge, the producer leg compares the trapezoid integral of the exported
 lattice with `Q_net`, the mean over frames of `Σ q_i`. The consumer leg compares the deployed field,
 integrated at the solve's order, with the lattice. Both are exact by construction, the first by
 per-atom renormalisation and the second because each element carries its lattice charge, so they
@@ -518,7 +518,7 @@ Classical PNP-NS SHALL be recovered exactly by setting `β_i = 0` and
 `ε_r,f^c = D_i^c = μ_i^c = η^c = ϱ^c = 1` and `D_i^w = μ_i^w = η^w = 1`; no separate code path is
 permitted for it.
 
-NOTE (the electrostatic models as case-file models, PHY-20, PHY-24, FR-19, FR-20; WP26): `poisson` solves `∇·(ε_0 ε_r ∇φ) = −ρ_pore` over all of Ω, with the fixed
+NOTE (PHY-21, the electrostatic models as case-file models, PHY-20, PHY-24, FR-19, FR-20; WP26): `poisson` solves `∇·(ε_0 ε_r ∇φ) = −ρ_pore` over all of Ω, with the fixed
 charge, `physics.solid_permittivities` and the §4.4 `χ` taken as the coupled models take them. It
 carries no mobile ions, so the fluid is ion-free water at `ε_r,f⁰` whatever the permittivity
 correction (author ruling 13, `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md`), and `ρ_ion` is none: the case schema (`nanopnp/case/v0.6`) has no key that prescribes one.
@@ -545,7 +545,7 @@ the correction registry, with "off" a named model rather than a code branch.
 | `inertia` | on | Stokes flow (reference model retained inertia; Re ≈ 10⁻⁴) |
 | `dielectric_gradient_forces` | off | no Korteweg–Helmholtz body force, no dielectric-decrement term in the NP flux |
 
-NOTE (a switch with nothing to switch; WP42): `concentration: false` or `wall: false` on a property
+NOTE (PHY-22, a switch with nothing to switch; WP42): `concentration: false` or `wall: false` on a property
 whose selected correction model applies no such fit SHALL be refused, naming each such part and its
 model, because the FR-25 manifest would record a deviation the solve never applies. `none` applies
 neither fit, and `willems2020_nacl` has no wall fit for the permittivity or the density. For the
