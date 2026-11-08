@@ -172,7 +172,7 @@ check_meshes=False).forecast().builds["mesh"]` over two files at a time, against
   > asserts `radius_nm`. Item 3 keeps the frame.
 - [x] 34b5f14 2. `src/nanopnp/io/models.py`, `src/nanopnp/io/case_paths.py`, `src/nanopnp/api/project.py:_body`,
   `tests/tier1/test_models.py`: exposed values (D3); done when row 4 passes. **Executor:** main.
-- [ ] 3. `src/nanopnp/io/project.py`, `src/nanopnp/api/project.py`, `src/nanopnp/gui/web/frame.py`,
+- [x] b09cf2c 3. `src/nanopnp/io/project.py`, `src/nanopnp/api/project.py`, `src/nanopnp/gui/web/frame.py`,
   `src/nanopnp/gui/web/states.py`, `tests/tier1/test_project.py`: the project and the frame (D4); done when rows 7
   and 9 pass. **Executor:** main.
 - [ ] 4. `tests/tier1/test_models.py`: row 5, the wall following the physics salt (D2); done when it passes.
