@@ -676,7 +676,7 @@ def _body(location: Path, *, keep: bool = False) -> dict[str, Any]:
         raise ProjectError(f"{location} is not a YAML mapping")
     if keep:
         return raw
-    return {key: value for key, value in raw.items() if key not in ("schema", "name")}
+    return {key: value for key, value in raw.items() if key not in ("schema", "name", "exposes")}
 
 
 def _delete(body: dict[str, Any], dotted: str) -> bool:

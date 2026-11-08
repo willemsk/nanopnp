@@ -29,10 +29,18 @@ from nanopnp.io.case_paths import (
     block_paths,
     field_at,
     path_fields,
+    schema_bounds,
     schema_default,
     value_at,
 )
-from nanopnp.io.variables import Resolution, Variable, expression_paths, resolve
+from nanopnp.io.variables import (
+    Resolution,
+    Variable,
+    expression_paths,
+    field_unit,
+    numeric_paths,
+    resolve,
+)
 
 MOLECULAR_SCHEMA = "nanopnp/molecular-model/v0.6"
 
@@ -75,6 +83,21 @@ OWNERS: dict[str, Kind] = {
     "numerics.wall_distance": "physics",
 }
 
+# The values a model lists first when its file has no `exposes:`, as (name, path).
+EXPOSED: dict[ModelKind, tuple[tuple[str, str], ...]] = {
+    "molecular": (("pH", "charge.ph"),),
+    "continuum": (("size_scale", "numerics.mesh.size_scale"),),
+    "physics": (
+        ("concentration", "electrolyte.concentration_M"),
+        ("bias", "boundary_conditions.bias_V"),
+    ),
+}
+
+_EXPOSED_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
+
+# Keys a model file holds beside the keys its kind owns; none of them enters the merge.
+_HEADER_KEYS = ("schema", "name", "exposes")
+
 D = TypeVar("D", bound=CaseDocument)
 
 Override = tuple[FieldValue, FieldValue]
@@ -90,18 +113,125 @@ def owner_of(path: str) -> Kind:
     return "study"
 
 
-def _holder(owner: Kind) -> str:
-    return "the study" if owner == "study" else f"the {owner} model"
+@dataclass(frozen=True)
+class ExposedValue:
+    """A value a model lists first for its studies: its name, field, unit, range and default."""
+
+    name: str
+    path: str
+    unit: str
+    low: float | None
+    high: float | None
+    default: FieldValue
 
 
 @dataclass(frozen=True, eq=False)
 class ModelFile:
-    """One model file a study read: its kind, its name, its location and its digest."""
+    """One model file a study read: its kind, its name, its location, its digest, its exposed."""
 
     kind: ModelKind
     name: str
     path: Path
     sha256: str
+    exposed: tuple[ExposedValue, ...] = ()
+
+
+def exposed_values(
+    kind: ModelKind, raw: Mapping[str, Any], source: str
+) -> tuple[ExposedValue, ...]:
+    """Return the values a model file exposes: its ``exposes:`` list, else its kind's default.
+
+    ``raw`` is the file's whole mapping. Each entry takes its unit from its field, its range from
+    the entry, else the field's schema bounds, and its default from the model, else the schema.
+
+    Raises
+    ------
+    CaseValidationError
+        An entry's name repeats or is not a name, its path is not a numeric field of the case or
+        belongs to another kind, its range is not two finite increasing numbers, or the model's
+        own value lies outside its range.
+    """
+    declared = raw.get("exposes")
+    entries: list[tuple[str, str, object]]
+    if declared is None:
+        entries = [(name, path, None) for name, path in EXPOSED[kind]]
+    elif isinstance(declared, list):
+        entries = [_exposed_entry(entry, source) for entry in declared]
+    else:
+        raise CaseValidationError(
+            f"{source}: exposes: {declared!r} is not a list of {{name, path, range}}"
+        )
+    numeric = frozenset(numeric_paths())
+    found: list[ExposedValue] = []
+    for name, path, span in entries:
+        where = f"{source}: exposes: {name}"
+        if not isinstance(name, str) or not _EXPOSED_NAME.match(name):
+            raise CaseValidationError(f"{where}: the name is not [A-Za-z][A-Za-z0-9_]*")
+        if any(value.name == name for value in found):
+            raise CaseValidationError(f"{where}: the name is exposed twice")
+        generic = ".".join("0" if part.isdigit() else part for part in path.split("."))
+        if generic not in numeric:
+            raise CaseValidationError(f"{where}: {path} is not a numeric field of the case")
+        if owner_of(path) != kind:
+            raise CaseValidationError(
+                f"{where}: {path} belongs to {_holder(owner_of(path))}, not to a {kind} model"
+            )
+        own = _value_in(raw, path)
+        if own is None:
+            has_default, own = schema_default(generic)
+            own = own if has_default else None
+        if span is None:
+            low, high = schema_bounds(generic)
+        else:
+            low, high = _range(span, where)
+            if isinstance(own, int | float) and not low <= own <= high:
+                raise CaseValidationError(
+                    f"{where}: the model's value {own!r} lies outside its range [{low}, {high}]"
+                )
+        found.append(ExposedValue(name, path, field_unit(generic), low, high, own))
+    return tuple(found)
+
+
+def _exposed_entry(entry: object, source: str) -> tuple[str, str, object]:
+    if not isinstance(entry, Mapping):
+        raise CaseValidationError(f"{source}: exposes: {entry!r} is not {{name, path, range}}")
+    unknown = sorted(set(entry) - {"name", "path", "range"})
+    if unknown:
+        raise CaseValidationError(
+            f"{source}: exposes: {entry.get('name')}: {unknown[0]}: unknown key; an entry "
+            "holds name, path and an optional range"
+        )
+    name, path = entry.get("name"), entry.get("path")
+    if not isinstance(path, str):
+        raise CaseValidationError(f"{source}: exposes: {name}: {path!r} is not a case path")
+    return str(name) if isinstance(name, str) else repr(name), path, entry.get("range")
+
+
+def _range(span: object, where: str) -> tuple[float, float]:
+    if (
+        isinstance(span, list)
+        and len(span) == 2
+        and all(
+            isinstance(bound, int | float) and not isinstance(bound, bool) and math.isfinite(bound)
+            for bound in span
+        )
+        and span[0] < span[1]
+    ):
+        return float(span[0]), float(span[1])
+    raise CaseValidationError(
+        f"{where}: range: {span!r} is not two finite numbers in increasing order"
+    )
+
+
+def _value_in(raw: Mapping[str, Any], path: str) -> FieldValue:
+    cursor: object = raw
+    for part in path.split("."):
+        cursor = _child(cursor, part)
+    return cursor
+
+
+def _holder(owner: Kind) -> str:
+    return "the study" if owner == "study" else f"the {owner} model"
 
 
 @dataclass(frozen=True, eq=False)
@@ -517,7 +647,7 @@ def _read_model_file(kind: ModelKind, path: Path, source: str) -> tuple[ModelFil
         raise CaseValidationError(f"{path}: a {kind} model carries a name")
     if "models" in raw:
         raise CaseValidationError(f"{path}: a model names no model, so it holds no models: key")
-    body = {key: value for key, value in raw.items() if key not in ("schema", "name")}
+    body = {key: value for key, value in raw.items() if key not in _HEADER_KEYS}
     for expression in expression_paths(body):
         entered: object = body
         for part in expression.split("."):
@@ -532,7 +662,8 @@ def _read_model_file(kind: ModelKind, path: Path, source: str) -> tuple[ModelFil
             raise CaseValidationError(
                 f"{path}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
             )
-    return ModelFile(kind, name, path, file_hash(path)), _rebased(body, path.parent)
+    exposed = exposed_values(kind, raw, str(path))
+    return ModelFile(kind, name, path, file_hash(path), exposed), _rebased(body, path.parent)
 
 
 def check_model_file(kind: ModelKind, path: str | Path) -> ModelFile:

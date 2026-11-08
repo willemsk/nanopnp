@@ -359,6 +359,27 @@ def schema_default(path: str) -> tuple[bool, FieldValue]:
     return True, info.get_default(call_default_factory=True)
 
 
+def schema_bounds(path: str) -> tuple[float | None, float | None]:
+    """Return the ``(low, high)`` bounds a numeric field declares, ``None`` where it has none.
+
+    An open bound is given as its limit: a range only guides, so it reads as closed.
+    """
+    field_at(path)  # the named diagnostic for a path that is wrong
+    declared = _declaration(path)
+    low: float | None = None
+    high: float | None = None
+    for constraint in () if declared is None else declared.metadata:
+        for name in ("ge", "gt"):
+            bound = getattr(constraint, name, None)
+            if isinstance(bound, int | float):
+                low = float(bound)
+        for name in ("le", "lt"):
+            bound = getattr(constraint, name, None)
+            if isinstance(bound, int | float):
+                high = float(bound)
+    return low, high
+
+
 def _is_index(component: str) -> bool:
     return component.removeprefix("-").isdigit()
 
