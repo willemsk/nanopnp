@@ -74,3 +74,6 @@ SPC-07	your call	its "§8.2.9" citation is ORC-08, fixed; the rest (two schemas 
 DOC-06	your call	its quantities row is ORC-15, fixed; the snippets stay the author's	
 KST-20	your call	its thesis/ row is fixed with SPB-46; the author's home-directory row and the yaml row stay	
 SPA-22	your call		
+SPB-01	fix:note-labels	the author's answer to section 9, item 1: migrate_note_labels.py run as rehearsed	
+ORC-11	fix:clause-notes	the author's answer to section 9, item 2: a NOTE runs on through a fenced block and the paragraph after it	
+ORC-13	fix:clause-notes	the author's answer to section 9, item 2: §8.4.5 names the three kept scripts	

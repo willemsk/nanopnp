@@ -1,6 +1,6 @@
 # CODE_REVIEW_039: the sediment list
 
-Written by `.claude/scripts/audit/maps.py` at `c1f60ca` from `findings.md`. One row per live finding on the efficiency axis (34 rows): text on a live reading path that a dated event made history, that restates a record, or that a reader of the path does not need, with where the finding would move it or whether it goes, ordered by the token delta the finding states. The stated deltas sum to about 22,505 tokens; a row with no figure counts as nought. The author rules each; none is applied here.
+Written by `.claude/scripts/audit/maps.py` at `0d21ac2` from `findings.md`. One row per live finding on the efficiency axis (34 rows): text on a live reading path that a dated event made history, that restates a record, or that a reader of the path does not need, with where the finding would move it or whether it goes, ordered by the token delta the finding states. The stated deltas sum to about 22,505 tokens; a row with no figure counts as nought. The author rules each; none is applied here.
 
 | Finding | Severity | Where | What is sediment | Move or delete | Token delta | Status |
 |---|---|---|---|---|---|---|
