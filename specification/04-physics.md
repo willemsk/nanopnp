@@ -521,7 +521,7 @@ permitted for it.
 NOTE (the electrostatic models as case-file models, PHY-20, PHY-24, FR-19, FR-20; WP26): `poisson` solves `∇·(ε_0 ε_r ∇φ) = −ρ_pore` over all of Ω, with the fixed
 charge, `physics.solid_permittivities` and the §4.4 `χ` taken as the coupled models take them. It
 carries no mobile ions, so the fluid is ion-free water at `ε_r,f⁰` whatever the permittivity
-correction (author ruling 13), and `ρ_ion` is none: case schema v2 has no key that prescribes one.
+correction (author ruling 13), and `ρ_ion` is none: the case schema (`nanopnp/case/v0.6`) has no key that prescribes one.
 This is the configuration VAL-06 compares with APBS. `pb` and `pb-linear` take `λ_D` from the case,
 at `ε_r,f⁰`, the case temperature and `c_0` with unit valence (NUM-09), and SHALL be refused for any
 electrolyte other than a symmetric monovalent salt, for which that `λ_D` and the `sinh` form are

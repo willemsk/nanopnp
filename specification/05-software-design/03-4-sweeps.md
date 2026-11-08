@@ -8,7 +8,7 @@ description: "Specifies sweeps, sets of runs described by their own declarative 
 
 A sweep (FR-24) is a set of runs, not a pipeline stage: it produces no field, and a stage keyed on
 thousands of upstream artefacts has no meaningful key. It is specified by its own declarative
-document, `schema: nanopnp/sweep/v1`, which names a base case by path and the axes to vary. Nothing
+document, `schema: nanopnp/sweep/v0.5`, which names a base case by path and the axes to vary. Nothing
 is added to the case schema for it: a sweep block inside a case would make that case's
 content hash — and every artefact key derived from it — a function of a sweep the run does not
 perform.
@@ -58,7 +58,7 @@ linear-algebra libraries pinned to one before those libraries are imported, and 
 recorded, because N workers sharing one thread pool are not N independent workers and QR-06's scaling
 claim would otherwise measure the pool.
 
-The collected **dataset** is an artefact, `schema: nanopnp/sweep/v1`, written through the canonical
+The collected **dataset** is an artefact, `schema: nanopnp/sweep/v0.5`, written through the canonical
 serialisation above, carrying one record per point: its index and identity, its assignments, its
 status and — where it failed — the exit class of §3.1, the scalar quantities of interest or their
 explicit absence, the run directory, the manifest and solution hashes, the elapsed time, whether it

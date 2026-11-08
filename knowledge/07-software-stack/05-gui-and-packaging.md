@@ -49,7 +49,7 @@ tested_with:
 
 | Tool | Licence | Note |
 |---|---|---|
-| **PySide6** 6.11.1 | LGPL-3 OR GPL-2 OR GPL-3 | **Use this.** LGPL option means no licence conflict |
+| **PySide6** 6.11.2 | LGPL-3 OR GPL-2 OR GPL-3 | **Use this.** LGPL option means no licence conflict |
 | PyQt6 | **GPL-3 only** | Avoid unless the project is GPL |
 | `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[verified][^wp14-plan]**. The earlier "imports cleanly" held on a machine with the GL libraries present; see the caveat below, which is a property of the machine and not of the wheel |
 | PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026). `collect_all` over `ngsolve`, `netgen` and `ngsolve_openblas`, plus the `netgen-occt` libraries collected by hand (below); `upx=False`, which mangles Qt WebEngine's helper executable |
@@ -393,7 +393,7 @@ sending `QMouseEvent`s through `QApplication.sendEvent`: press, move, release. T
 
 Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,
 `"ngsolve" in sys.modules` and `"numpy" in sys.modules` are both `False`. The cost is pydantic and
-PyYAML building the `nanopnp/case/v1` model tree, paid once.
+PyYAML building the case model tree (`nanopnp/case/v1` then, `nanopnp/case/v0.6` now), paid once.
 
 So a caller can enumerate, display and validate an entire case document without the solver — which
 is what lets a schema-generated editor stay near the CLI's 56 ms stage-introspection budget in
@@ -418,7 +418,7 @@ Measured 20 September 2026, best of three on an idle container, warm cache:
 
 | Module | Cost | What it pulls in |
 |---|---|---|
-| `nanopnp.io.case` | 253 ms | pydantic and PyYAML building the `nanopnp/case/v1` model tree |
+| `nanopnp.io.case` | 253 ms | pydantic and PyYAML building the case model tree (`nanopnp/case/v1` then, `nanopnp/case/v0.6` now) |
 | `nanopnp.gui.case_model` | 251 ms | the above, and about a millisecond of its own |
 | `nanopnp.gui.run_model` | 273 ms | the above, plus `io/manifest.py` and `pipeline/run.py` |
 | `nanopnp.gui.solver` | 73 ms | `core/errors.py` and `multiprocessing`; everything else is deferred into the child |

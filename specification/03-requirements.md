@@ -101,7 +101,7 @@ NOTE (IF-02, export; WP25): `nanopnp stage <name> <case> --export
 PATH` writes the artefact that stage stored, in an interchange format chosen by the suffix of
 `PATH`: the aligned ensemble as a PDB of its first frame with a DCD of every frame beside it
 (IF-04); the density map as `.npz`, OpenDX or CCP4/MRC (IF-05, in the units of the IF-05 NOTE on
-length units); the reduced map as `.npz`; the stage-4 profile as its stored `nanopnp/profile/v1`
+length units); the reduced map as `.npz`; the stage-4 profile as its stored `nanopnp/profile/v0.5`
 document; a stage-6 mesh as its stored MSH 4.1 file (IF-06); and the protonation artefact as a
 `.pqr`, in stage 1's frame and in ångströms, one `MODEL` per frame where there is more than one
 (WP27). The profile and the mesh are copied byte for byte, and the PQR
@@ -182,8 +182,8 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-15** | SHALL build the dielectric field and the ion-exclusion surface from the same density field, with independently configurable protein permittivity and exclusion offset. | v0.4 |
 | **FR-16** | SHALL implement each empirical correction as a named component registered by string, its fit coefficients held in versioned data files, so a new electrolyte or surface is a data file rather than a code change. | v0.2 |
 | **FR-17** | SHALL solve the steady 2D-axisymmetric ePNP-NS system across 0.005–5 M and ±200 mV with all corrections active, via a continuation ladder, without negative concentrations at any nonlinear iterate. | v0.2 |
-| **FR-18** | SHALL provide physics models `ePNP-NS`, `PNP-NS`, `PNP` and `Poisson`, selected by name in the case file, `PNP-NS` being a configuration of `ePNP-NS` with corrections disabled rather than separate code. | v0.2 |
-| **FR-19** | SHALL provide nonlinear Poisson–Boltzmann (`PB`) and Debye–Hückel (`PB-linear`) as separate equilibrium physics models. | v0.4 |
+| **FR-18** | SHALL provide physics models `epnp-ns`, `pnp-ns`, `pnp` and `poisson`, selected by name in the case file, `pnp-ns` being a configuration of `epnp-ns` with corrections disabled rather than separate code. | v0.2 |
+| **FR-19** | SHALL provide nonlinear Poisson–Boltzmann (`pb`) and Debye–Hückel (`pb-linear`) as separate equilibrium physics models. | v0.4 |
 | **FR-20** | SHALL admit a new physics model as one implementation of a documented interface (field set, weak-form contributions, boundary-condition vocabulary, default solve strategy), with no change to the mesh, geometry, charge, sweep, provenance or interface layers. | v0.4 |
 | **FR-21** | SHALL support a rigid analyte body of revolution on the pore axis, subtracted from the fluid domain and treated as a hard dielectric with no ion flux, no-slip and a dielectric jump, charged as either a surface density or a smeared volumetric charge. | v0.7 |
 | **FR-22** | SHALL compute F^em(z), F^hd(z), their sum, and ΔU(z) = −∫F dz with barriers and minima in kT, over a series of axial analyte positions. | v0.7 |

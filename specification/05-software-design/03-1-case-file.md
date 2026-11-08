@@ -30,7 +30,7 @@ inputs:                             # optional; supplied artefacts, §5.3.2
                   symmetry_axis: axis}}
   charge: {path: clya_charge.yaml, format: field1}
   eps_r:  {path: clya_solid_fraction.yaml, format: field1}
-  # profile: {path: clya_profile.yaml, format: profile1}   # stage 4, nanopnp/profile/v1
+  # profile: {path: clya_profile.yaml, format: profile1}   # stage 4, nanopnp/profile/v0.5
   # pqr:     {path: clya.pqr, format: pqr}                 # stage 7's PDB2PQR step
 
 structure:
@@ -201,7 +201,7 @@ a dielectric field — by path and format. A stage whose output is supplied does
 does anything upstream of it; the substituted file is hashed by content and enters the FR-25
 manifest as an input like any other. Releases before v0.3 accept an externally generated mesh
 this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
-`inputs.profile` supplies stage 4's conditioned polyline as a `nanopnp/profile/v1` document
+`inputs.profile` supplies stage 4's conditioned polyline as a `nanopnp/profile/v0.5` document
 (`format: profile1`), which is how a hand-edited contour enters a run (§8.1, GUI increment 2), and
 `inputs.pqr` supplies the per-atom charges and radii of stage 7's PDB2PQR step (`format: pqr`). The
 two chains are structure → density → profile → mesh and structure → PQR → charge field, and the
@@ -545,13 +545,13 @@ density grid spacing h, because a larger tolerance discards resolved geometry an
 of the §5.2.1 NOTE on the contour's size target. Each is refused naming its value, and the second
 names h as well. `smoothing` is `taubin` or `none`. No other contour parameter and no gate
 threshold is a case key: they are the constants of §5.2.1, and they key the stage-4 artefact.
-Stage 4 emits a `nanopnp/profile/v1` document with `provenance.source: pipeline`, and its `sha256`
+Stage 4 emits a `nanopnp/profile/v0.5` document with `provenance.source: pipeline`, and its `sha256`
 is the digest of the stage-3 payload it was drawn from. The loop runs clockwise from its lowest
 vertex and stays in the stage-1 frame, so stage 5 applies `geometry.membrane.centre_z_nm` to it
 exactly as to a supplied profile. The document read back through `inputs.profile` is a supplied
 profile (the §5.2.1 NOTE on a supplied fixture). The conditioning and gate records belong to the
 stage-4 artefact, not to the document, so a hand edit cannot carry a stale one.
-A hand edit written by the desktop shell (§8.1, GUI increment 2) is a `nanopnp/profile/v1`
+A hand edit written by the desktop shell (§8.1, GUI increment 2) is a `nanopnp/profile/v0.5`
 document with `provenance.source: hand-edit`, which is never a reference source. Its `sha256` is the
 canonical digest of the profile it was edited from, or, where it was started from a loop stage 4's
 gate refused (§8.2.2 B9), the digest of the stage-3 payload that loop was drawn from, as stage 4
@@ -559,7 +559,7 @@ records it. Its measurements are re-derived from its own vertices. It enters a r
 `inputs.profile`, and is gated as a supplied profile (WP24 D5).
 
 NOTE (`inputs.charge`, `inputs.eps_r`, IF-05, IF-03): a supplied field is named by a
-pydantic-validated header document, `schema: nanopnp/field/v1`, which carries the `quantity`, its
+pydantic-validated header document, `schema: nanopnp/field/v0.5`, which carries the `quantity`, its
 units, the grid descriptor (origin, spacing, shape), the axis cutoff of PHY-18 (default 0.01 nm),
 the declared `Q_net` where the producer knows one, the provenance of the file, and the data file it
 refers to. `format: field1` names that document; the *data* format is read from it, `.npz` on the

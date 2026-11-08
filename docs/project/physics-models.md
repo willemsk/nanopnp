@@ -25,7 +25,6 @@ what they admit.
 | `coefficients` | `resolve`, the solve | Whether `inputs.charge` (`fixed_charge`) and `inputs.eps_r` (`solid_fraction`) are accepted and passed |
 | `wall_distance` | the mesh gate, the solve | Whether the PHY-02 distance field is computed, gated and passed |
 | `strategies` | `resolve` | The values of `numerics.continuation` the model admits; `default_ladder` only for `epnp-ns` and `pnp-ns`, the models NUM-18 ends at, which `register_model` enforces |
-| `quantities` | `resolve`, stage 11 | The `outputs:` words it provides; `fields` is admitted for every model |
 | `transport` | stage 11, the ladder, the GUI | Whether it is reached as a `TransportModel` |
 | `reports_newton` | stage 10 | Whether its `solve` takes a Newton `callback` |
 | `unread` | `resolve`, `require_runnable` | The case paths the model does not read; setting any of these to a non-default value is refused (PHY-21, §5.4.3) |
