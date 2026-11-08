@@ -27,6 +27,7 @@ __all__ = ["frame", "listed_changes"]
 KINDS: tuple[tuple[ItemKind, str, Suite], ...] = (
     ("molecular", "Molecular models", "molecular"),
     ("continuum", "Continuum models", "continuum"),
+    ("physics", "Physics models", "continuum"),
     ("study", "Studies", "study"),
     ("comparison", "Comparisons", "analysis"),
 )
@@ -36,7 +37,11 @@ RAIL_LIMITS = (RAIL_FOLDED_PERCENT, 40.0)
 BOTTOM_LIMITS = (40.0, 100.0)
 GLOSSARY = (
     ("Project", "A folder of models, studies, comparisons, inputs, runs and stored results."),
-    ("Model", "A molecular or a continuum model: the prepared structure, or the pore and physics."),
+    (
+        "Model",
+        "A molecular, a continuum or a physics model: the prepared structure, the pore and its "
+        "mesh, or the equations, the salt and the voltage.",
+    ),
     ("Study", "Pairs one model of each kind, overrides any of their values, and is run."),
     ("Override", "A value a study sets in place of its model's."),
     ("Queue", "The builds and runs waiting, running and done."),
@@ -46,7 +51,8 @@ GLOSSARY = (
 def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
     """Return each item's changed values, a study's own overrides but not its models' values."""
     listed: list[tuple[str, tuple[Change, ...]]] = []
-    for kind in ("molecular", "continuum", "study"):
+    kinds: tuple[ItemKind, ...] = ("molecular", "continuum", "physics", "study")
+    for kind in kinds:
         for name in project.items(kind):
             try:
                 found = project.changes(kind, name)

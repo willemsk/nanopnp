@@ -170,7 +170,7 @@ check_meshes=False).forecast().builds["mesh"]` over two files at a time, against
   > model and `problems()` walks every item kind, so Tier 1 needed `io/project.py`'s kinds, `_SUITE_OF`, `_split`
   > and `_bodies` in this commit; `test_gui_screens.py` also asserted `bias_V` in the refused problem, and now
   > asserts `radius_nm`. Item 3 keeps the frame.
-- [ ] 2. `src/nanopnp/io/models.py`, `src/nanopnp/io/case_paths.py`, `src/nanopnp/api/project.py:_body`,
+- [x] 34b5f14 2. `src/nanopnp/io/models.py`, `src/nanopnp/io/case_paths.py`, `src/nanopnp/api/project.py:_body`,
   `tests/tier1/test_models.py`: exposed values (D3); done when row 4 passes. **Executor:** main.
 - [ ] 3. `src/nanopnp/io/project.py`, `src/nanopnp/api/project.py`, `src/nanopnp/gui/web/frame.py`,
   `src/nanopnp/gui/web/states.py`, `tests/tier1/test_project.py`: the project and the frame (D4); done when rows 7
