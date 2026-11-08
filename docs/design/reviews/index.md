@@ -2,7 +2,7 @@
 
 The author's verdicts and the GUI reviewer's findings on each design round of the workbench (`docs/design/workbench.md`). Each line quotes the review's first sentence.
 
-Written by `.claude/scripts/audit/index_records.py`; re-run it when a file is added or its status line changes.
+Written by `.claude/scripts/index_records.py`; re-run it when a file is added or its status line changes.
 
 - [The choice panels: the review, round 1](2026-10-25-choices.md): The choice panels of `docs/design/choices/`, two variants A and B of each open choice of the workbench, drawn after the author's comment on the style gallery of 25 October 2026: "perhaps next panels could start with A/B…
 - [The concept boards: the author's verdicts and the review, round 1](2026-10-25-concepts.md): The four organisation boards of `docs/design/concepts/`, published for the author's verdicts at `https://claude.ai/artifact/AvMfguwdYb6731NmZvhSRa` on 25 October 2026 (WP5.01 item 7) and reviewed by the GUI reviewer on…
