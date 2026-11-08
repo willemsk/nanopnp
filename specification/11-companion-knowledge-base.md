@@ -6,7 +6,7 @@ description: "Describes the companion knowledge base shipped alongside the speci
 
 ## 11. Companion knowledge base
 
-Shipped alongside this specification as `nanopnp-kb/` and held in the repository root from the
+Shipped alongside this specification as `knowledge/` and held in the repository root from the
 first commit, so that agents and people working on the codebase read from local, verified sources.
 
 | Path | Content |
@@ -14,7 +14,7 @@ first commit, so that agents and people working on the codebase read from local,
 | `CLAUDE.md` | Agent instructions; points at the index; carries the maintenance rule |
 | `knowledge/index.md` | The bundle's root index, declaring `okf_version` and listing the notes |
 | `knowledge/00-orientation/index.md` | Traps, conventions, provenance, author rulings, open questions |
-| `knowledge/log.md`, `knowledge/pending.yaml` | The dated log of the notes; the ledger of claims no test backs, which is empty |
+| `knowledge/log.md` | The dated log of the notes |
 | `knowledge/01-physics-epnpns/index.md` | Normative equations, corrections, parameters, errata |
 | `knowledge/02-electrokinetics-background/index.md` | EDL, Poisson–Boltzmann, electro-osmosis, selectivity, rectification |
 | `knowledge/03-nanopore-biology/index.md` | Biological nanopores, ClyA, electrophysiology, glossary |

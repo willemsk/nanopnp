@@ -66,7 +66,7 @@ from PySide6 import QtWebEngineWidgets   -> ImportError: libEGL.so.1: cannot ope
 
 `QtWidgets` itself, not only WebEngine. The wheel installs perfectly and `import PySide6` succeeds;
 a GL-dependent payload then dlopens and fails. This is the same failure class the gmsh wheel has
-(`OSError: libGLU.so.1`, handled at `tests/tier1/test_mesh_quality.py`), which is why the skip idiom
+(`OSError: libGLU.so.1`, handled by `import_gmsh` in `tests/conftest.py`), which is why the skip idiom
 for either is `except (ImportError, OSError)` and never `pytest.importorskip`.
 
 Consequence for testing a GUI: anything that must run on the push gate has to be Qt-free. Widget

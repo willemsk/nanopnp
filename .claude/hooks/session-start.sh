@@ -10,7 +10,7 @@
 set -euo pipefail
 
 # GitHub Copilot takes a session-start hook's context only as one {"additionalContext": …}
-# object (.claude/workflow/hosts.md), Claude Code as plain stdout: under Copilot the summary
+# object (.claude/workflow/hosts/copilot.md), Claude Code as plain stdout: under Copilot the summary
 # is collected and printed as that object on exit.
 if [ -n "${COPILOT_CLI:-}" ] && command -v jq >/dev/null 2>&1 && summary_file=$(mktemp 2>/dev/null); then
     exec 3>&1 >"$summary_file"
