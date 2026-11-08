@@ -10,7 +10,7 @@ Read the inputs:
 
 - the verdicts collected so far;
 - the author's areas (§8.2.17 S24);
-- the personas P1 to P3, S2 and S6;
+- the personas P1 to P3 (§2.4) and the rulings §8.2.17 S2 and S6;
 - the design document so far.
 
 Write down the assumptions they leave open. Each becomes an agenda point or a question.

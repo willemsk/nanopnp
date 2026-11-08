@@ -73,7 +73,7 @@ estimate moved.
 | `## End-of-phase report` | Only the list of numbers it must report, each with the test that logs it; the close fills it |
 
 Target 1,500 words, without the report. Review checks each phase plan from Phase 4 on against these
-caps (§8.2.13 N3).
+caps (§8.2.11 L7).
 
 **`docs/plans/current.md`**:
 

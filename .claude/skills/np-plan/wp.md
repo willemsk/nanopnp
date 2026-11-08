@@ -102,8 +102,8 @@ localise an error to one term (§7.1).
 | `### Implementation details` | 1,000 | 1,100 |
 
 A count within its 10% needs no rewording; beyond that, trim prose or split the package. The six
-decisions are a guideline: a plan that needs more holds them, and its report says why (§8.2.13 N3;
-§8.2.15 Q1; §8.2.16 R11; §8.2.33 AI15).
+decisions are a guideline: a plan that needs more holds them, and its report says why (§8.2.15 Q1;
+§8.2.16 R11; §8.2.33 AI15).
 
 The plan is an index and an execution contract. It has no per-item design and no `## Design` heading. A
 new derivation that carries load goes into the specification, and the plan links it. If the caps with
