@@ -255,7 +255,7 @@ Record each command, its result and the commit.
 
 - [x] 037f14b 1. `pyproject.toml`; the 26 `noqa` lines (D6); done when `uv run ruff check .` passes and the
   diff adds those 26 comments and nothing else. **Executor:** `general-purpose` on Haiku
-- [ ] 2. `git mv` of `audit/links.py` to `.claude/scripts/links.py`; `migrate_plans_archive.py`
+- [x] 64f5d43 2. `git mv` of `audit/links.py` to `.claude/scripts/links.py`; `migrate_plans_archive.py`
   rewritten and run; `duplicates.py`, `audit/scope.py`, the skills' paths; §8.4.4 (D4); done when the
   dry run's counts match Grounding D4's, `links.py` names nothing outside `KNOWN`, `duplicates.py`
   passes and the strict build passes. **Executor:** main
