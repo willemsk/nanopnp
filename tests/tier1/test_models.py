@@ -316,3 +316,37 @@ def test_fr39_a_model_exposes_its_kinds_list_unless_its_file_replaces_it(tmp_pat
     }
     assert CaseArtefact(declared).hash == CaseArtefact(case).hash, "exposes: keys nothing"
     assert declared.overrides == {}
+
+
+def test_fr39_a_continuum_models_wall_follows_the_physics_salt_unless_pinned(
+    tmp_path: Path,
+) -> None:
+    split_case(QUICKSTART, tmp_path)
+    continuum = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
+    assert continuum["numerics"]["mesh"]["wall_h_nm"] == 0.35
+    continuum["numerics"]["mesh"]["wall_h_nm"] = "auto"
+    (tmp_path / "continuum.yaml").write_text(yaml.safe_dump(continuum), encoding="utf-8")
+    physics = yaml.safe_load((tmp_path / "physics.yaml").read_text(encoding="utf-8"))
+    salts: dict[float, str] = {}
+    for molar in (0.1, 0.5, 3.0, 5.0):
+        physics["name"] = f"salt-{molar}"
+        physics["electrolyte"]["concentration_M"] = molar
+        location = tmp_path / f"salt-{molar}.yaml"
+        location.write_text(yaml.safe_dump(physics), encoding="utf-8")
+        salts[molar] = str(location)
+    case = Case.load(tmp_path / "study.case.yaml")
+
+    def meshes(base: Case, *molars: float) -> int:
+        session = Session(Store(tmp_path / "store"), write=False)
+        values = [salts[molar] for molar in molars]
+        planned = plan_sweep(
+            base, session=session, axis="models.physics", values=values, check_meshes=False
+        )
+        return planned.forecast().builds["mesh"]
+
+    assert meshes(case, 0.1, 0.5) == 1, "below the wall's threshold the salts share a mesh"
+    assert meshes(case, 3.0, 5.0) == 2, "above it the wall size follows each salt"
+    continuum["numerics"]["mesh"]["wall_for_concentration_M"] = 3.0
+    (tmp_path / "continuum.yaml").write_text(yaml.safe_dump(continuum), encoding="utf-8")
+    pinned = Case.load(tmp_path / "study.case.yaml")
+    assert meshes(pinned, 3.0, 5.0) == 1, "a pinned continuum model keeps one wall size"
