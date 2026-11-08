@@ -24,7 +24,9 @@ from nanopnp.io.case import (
     validate_mapping,
 )
 from nanopnp.io.case_paths import (
+    SEQUENCE_INDEX,
     UnknownCasePathError,
+    _entry_annotation,
     _set_at,
     block_paths,
     field_at,
@@ -93,10 +95,10 @@ EXPOSED: dict[ModelKind, tuple[tuple[str, str], ...]] = {
     ),
 }
 
-_EXPOSED_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
+_EXPOSED_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 
 # Keys a model file holds beside the keys its kind owns; none of them enters the merge.
-_HEADER_KEYS = ("schema", "name", "exposes")
+HEADER_KEYS = ("schema", "name", "exposes")
 
 D = TypeVar("D", bound=CaseDocument)
 
@@ -152,7 +154,7 @@ def exposed_values(
         own value lies outside its range.
     """
     declared = raw.get("exposes")
-    entries: list[tuple[str, str, object]]
+    entries: list[tuple[object, str, object]]
     if declared is None:
         entries = [(name, path, None) for name, path in EXPOSED[kind]]
     elif isinstance(declared, list):
@@ -161,15 +163,15 @@ def exposed_values(
         raise CaseValidationError(
             f"{source}: exposes: {declared!r} is not a list of {{name, path, range}}"
         )
-    numeric = frozenset(numeric_paths())
+    numeric = _exposable_paths()
     found: list[ExposedValue] = []
     for name, path, span in entries:
         where = f"{source}: exposes: {name}"
-        if not isinstance(name, str) or not _EXPOSED_NAME.match(name):
+        if not isinstance(name, str) or not _EXPOSED_NAME.fullmatch(name):
             raise CaseValidationError(f"{where}: the name is not [A-Za-z][A-Za-z0-9_]*")
         if any(value.name == name for value in found):
             raise CaseValidationError(f"{where}: the name is exposed twice")
-        generic = ".".join("0" if part.isdigit() else part for part in path.split("."))
+        generic = ".".join(SEQUENCE_INDEX if part.isdigit() else part for part in path.split("."))
         if generic not in numeric:
             raise CaseValidationError(f"{where}: {path} is not a numeric field of the case")
         if owner_of(path) != kind:
@@ -192,10 +194,19 @@ def exposed_values(
     return tuple(found)
 
 
-def _exposed_entry(entry: object, source: str) -> tuple[str, str, object]:
+@cache
+def _exposable_paths() -> frozenset[str]:
+    # A mapping of numbers is one numeric field to a variable, but it is not one value to expose.
+    return frozenset(
+        path for path in numeric_paths() if _entry_annotation(field_at(path).annotation) is None
+    )
+
+
+def _exposed_entry(entry: object, source: str) -> tuple[object, str, object]:
     if not isinstance(entry, Mapping):
         raise CaseValidationError(f"{source}: exposes: {entry!r} is not {{name, path, range}}")
-    unknown = sorted(set(entry) - {"name", "path", "range"})
+    # YAML reads `yes:` or `1:` as a key that is not a string.
+    unknown = sorted(str(key) for key in set(entry) - {"name", "path", "range"})
     if unknown:
         raise CaseValidationError(
             f"{source}: exposes: {entry.get('name')}: {unknown[0]}: unknown key; an entry "
@@ -204,7 +215,7 @@ def _exposed_entry(entry: object, source: str) -> tuple[str, str, object]:
     name, path = entry.get("name"), entry.get("path")
     if not isinstance(path, str):
         raise CaseValidationError(f"{source}: exposes: {name}: {path!r} is not a case path")
-    return str(name) if isinstance(name, str) else repr(name), path, entry.get("range")
+    return name, path, entry.get("range")
 
 
 def _range(span: object, where: str) -> tuple[float, float]:
@@ -310,7 +321,7 @@ class ModelRecord:
         for path, value in assignments.items():
             kind = path.removeprefix("models.")
             if kind not in MODEL_KINDS:
-                raise CaseValidationError(f"{path}: models: accepts molecular, continuum, physics")
+                raise CaseValidationError(f"{path}: models: accepts {', '.join(MODEL_KINDS)}")
             if value is None:
                 raise CaseValidationError(f"{path}: a study cannot drop a model it names")
             if kind not in self.kinds:
@@ -565,8 +576,7 @@ def _named_files(raw: object, directory: Path, source: str) -> dict[str, Path]:
     unknown = sorted(set(raw) - set(MODEL_KINDS))
     if unknown:
         raise CaseValidationError(
-            f"{source}: models.{unknown[0]}: unknown key; models: accepts molecular, continuum, "
-            "physics"
+            f"{source}: models.{unknown[0]}: unknown key; models: accepts {', '.join(MODEL_KINDS)}"
         )
     named: dict[str, Path] = {}
     for kind in MODEL_KINDS:
@@ -647,7 +657,7 @@ def _read_model_file(kind: ModelKind, path: Path, source: str) -> tuple[ModelFil
         raise CaseValidationError(f"{path}: a {kind} model carries a name")
     if "models" in raw:
         raise CaseValidationError(f"{path}: a model names no model, so it holds no models: key")
-    body = {key: value for key, value in raw.items() if key not in _HEADER_KEYS}
+    body = {key: value for key, value in raw.items() if key not in HEADER_KEYS}
     for expression in expression_paths(body):
         entered: object = body
         for part in expression.split("."):

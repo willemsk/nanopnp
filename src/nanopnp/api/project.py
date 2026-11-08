@@ -17,6 +17,7 @@ from nanopnp.core.hashing import file_hash
 from nanopnp.io.case import SCHEMA, CaseValidationError
 from nanopnp.io.defaults import Change, changes, mapping_changes
 from nanopnp.io.models import (
+    HEADER_KEYS,
     MODEL_KINDS,
     SCHEMAS,
     ModelFile,
@@ -28,6 +29,7 @@ from nanopnp.io.project import (
     FOLDERS,
     INPUTS_FOLDER,
     ITEM_KINDS,
+    ITEM_SUITES,
     PROJECT_FILENAME,
     RUNS_FOLDER,
     STORE_FOLDER,
@@ -51,15 +53,6 @@ from nanopnp.io.store import Store
 __all__ = ["Problem", "Project", "ProjectError"]
 
 _RUN_FILES = ("case.yaml", "manifest.json", "run.json")
-
-_SUITE_OF: dict[str, Suite] = {
-    "molecular": "molecular",
-    "continuum": "continuum",
-    # The Continuum suite holds the physics defaults until the frame gives physics its own suite.
-    "physics": "continuum",
-    "study": "study",
-    "comparison": "analysis",
-}
 
 
 class ProjectError(ValueError):
@@ -267,7 +260,7 @@ class Project:
     # -- import -------------------------------------------------------------
 
     def import_case(self, case: Case, name: str | None = None, *, link: bool = False) -> str:
-        """Import a case as a study and the two models it is made of; return the study's name.
+        """Import a case as a study and the models it is made of; return the study's name.
 
         A case that names model files brings them along. Each input file is copied into
         ``inputs/``, or with ``link`` is left where it lies.
@@ -442,7 +435,7 @@ class Project:
         return tuple(shown)
 
     def _problems_of(self, kind: ItemKind, name: str) -> list[Problem]:
-        item, suite = item_reference(kind, name), _SUITE_OF[kind]
+        item, suite = item_reference(kind, name), ITEM_SUITES[kind]
         location = self.path(kind, name)
         if not location.is_file():
             return [Problem(item, None, f"{location} is indexed but does not exist", suite)]
@@ -465,7 +458,7 @@ class Project:
         for dotted, value in item_inputs(body).items():
             resolved = self._resolved(kind, value)
             if not resolved.is_file():
-                where = _SUITE_OF[kind] if kind != "study" else _owner_suite(dotted)
+                where = ITEM_SUITES[kind] if kind != "study" else _owner_suite(dotted)
                 found.append(Problem(item, dotted, f"{resolved} does not exist", where))
         try:
             if kind == "study":
@@ -676,7 +669,7 @@ def _body(location: Path, *, keep: bool = False) -> dict[str, Any]:
         raise ProjectError(f"{location} is not a YAML mapping")
     if keep:
         return raw
-    return {key: value for key, value in raw.items() if key not in ("schema", "name", "exposes")}
+    return {key: value for key, value in raw.items() if key not in HEADER_KEYS}
 
 
 def _delete(body: dict[str, Any], dotted: str) -> bool:
@@ -713,4 +706,4 @@ def _error_path(error: Exception) -> str | None:
 
 
 def _owner_suite(path: str | None) -> Suite:
-    return _SUITE_OF[owner_of(path)] if path else "study"
+    return ITEM_SUITES[owner_of(path)] if path else "study"

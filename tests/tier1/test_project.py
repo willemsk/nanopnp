@@ -171,7 +171,6 @@ def test_fr34_the_changed_list_holds_every_value_away_from_its_default_and_every
 ) -> None:
     project = Project.create(tmp_path / "project")
     (project.root / "models/continuum/tube.yaml").write_text(CONTINUUM, encoding="utf-8")
-    (project.root / "models/physics").mkdir(parents=True, exist_ok=True)
     (project.root / "models/physics/tube.yaml").write_text(PHYSICS, encoding="utf-8")
     (project.root / "studies/tube-study.yaml").write_text(STUDY, encoding="utf-8")
     project = Project.open(project.root)
