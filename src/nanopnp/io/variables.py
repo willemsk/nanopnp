@@ -237,7 +237,7 @@ def _parse(text: str, where: str) -> ast.Expression:
     return tree
 
 
-def _admit(node: ast.AST, text: str, where: str) -> None:
+def _admit(node: ast.AST, text: str, where: str) -> None:  # noqa: C901
     def refuse(what: str) -> CaseValidationError:
         return CaseValidationError(
             f"{where}: {text!r}: {what} is not allowed; an expression holds numbers, variable "

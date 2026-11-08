@@ -135,7 +135,7 @@ def _largest_update(ratios: Sequence[float]) -> float:
     return max(ratios, key=lambda ratio: math.inf if math.isnan(ratio) else ratio)
 
 
-def damped_newton(
+def damped_newton(  # noqa: C901, PLR0913
     residual_form: Expression,
     solution: GridFunction,
     *,

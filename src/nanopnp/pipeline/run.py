@@ -595,7 +595,7 @@ def offered(
     return {key: artefact for key, artefact in artefacts.items() if key in declared}
 
 
-def selected_stages(
+def selected_stages(  # noqa: C901
     resolved: ResolvedCase,
     upto: str | None,
     *,
@@ -724,7 +724,7 @@ def _slice(progress: Progress | None, low: float, high: float, name: str) -> Pro
     return scaled
 
 
-def _resolve_stage(
+def _resolve_stage(  # noqa: PLR0913
     walk: _Walk,
     stage: Stage,
     name: str,
@@ -1000,7 +1000,7 @@ def _charge_reason(walk: _Walk) -> str:
     )
 
 
-def run_document(
+def run_document(  # noqa: PLR0913
     document: CaseDocument,
     *,
     case_text: str,
@@ -1127,7 +1127,7 @@ def stored_upstream(
     return artefacts
 
 
-def _walk(
+def _walk(  # noqa: PLR0913
     walk: _Walk,
     *,
     upto: str | None,

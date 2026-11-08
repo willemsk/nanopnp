@@ -252,7 +252,7 @@ def chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
     return keys, "chainID, segid where blank"
 
 
-def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Selection:
+def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Selection:  # noqa: C901
     """Select the pore's atoms and check the oligomeric state.
 
     Raises

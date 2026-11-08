@@ -230,7 +230,7 @@ class Case(CaseDocument):
                 self._assign(f"{path}.{key}", item, found)
 
     @classmethod
-    def cylinder(
+    def cylinder(  # noqa: PLR0913
         cls,
         *,
         concentration_M: float,
@@ -289,7 +289,7 @@ class Case(CaseDocument):
         return _built(cls, document, name)
 
     @classmethod
-    def from_structure(
+    def from_structure(  # noqa: PLR0913
         cls,
         source: str | Path,
         *,

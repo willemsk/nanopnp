@@ -74,7 +74,7 @@ def nonlinear_pb_residual(
     )
 
 
-def solve_pb_recorded(
+def solve_pb_recorded(  # noqa: PLR0913
     mesh: Mesh,
     measures: Measures,
     *,

@@ -89,7 +89,7 @@ def _all_markdown() -> list[Path]:
     )
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     """Print the inventory."""
     live = {relative(p): "live" for p in live_files()}
     records = {relative(p): "record" for p in record_files()}

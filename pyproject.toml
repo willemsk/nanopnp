@@ -165,7 +165,7 @@ src = ["src", "tests"]
 extend-exclude = ["docs/design/generators"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM", "NPY", "RUF", "D", "ANN"]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "NPY", "RUF", "D", "ANN", "C901", "PLR0913"]
 ignore = [
     "D203",   # incompatible with D211
     "D213",   # incompatible with D212
@@ -182,8 +182,14 @@ ignore = [
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.pylint]
+max-args = 8
+
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D100", "D103", "ANN201", "ANN001"]
+"tests/*" = ["D100", "D103", "ANN201", "ANN001", "C901", "PLR0913"]
 "!src/nanopnp/**" = ["D101", "D102", "D103", "D106"]
 # A NiceGUI layout is nested `with` blocks, one container in another.
 "src/nanopnp/gui/web/*" = ["SIM117"]

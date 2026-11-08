@@ -119,7 +119,7 @@ def _stage(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-def _inspect(args: argparse.Namespace) -> int:
+def _inspect(args: argparse.Namespace) -> int:  # noqa: C901
     from nanopnp.api.session import Session
     from nanopnp.cli import reading
     from nanopnp.core.hashing import decode_floats
@@ -244,7 +244,7 @@ def _is_region_file(path: Path) -> bool:
     return any(line.strip() == f"schema: {REGION_SCHEMA}" for line in head.splitlines())
 
 
-def _plot(args: argparse.Namespace) -> int:
+def _plot(args: argparse.Namespace) -> int:  # noqa: C901
     from nanopnp.core.stages import MissingExtraError
     from nanopnp.io.manifest import MANIFEST_FILENAME, RUN_RECORD_FILENAME
     from nanopnp.sweep.collect import DATASET_FILENAME

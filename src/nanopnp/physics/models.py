@@ -821,7 +821,7 @@ class CoupledModel:
             solution.space.mesh, coefficients, solid_fraction=solution.solid_fraction
         )
 
-    def residual_form(
+    def residual_form(  # noqa: PLR0913
         self,
         space: FESpace,
         measures: Measures,
@@ -1105,7 +1105,7 @@ class CoupledModel:
         potential_increment = self._split(list(increment.components))[POTENTIAL]
         return state_gates, [PotentialIncrementGate(potential_sampler, potential_increment)]
 
-    def solve(
+    def solve(  # noqa: PLR0913
         self,
         mesh: Mesh,
         measures: Measures,
@@ -1370,7 +1370,7 @@ class ElectrostaticModel(_SingleFieldModel):
             )
         return residual
 
-    def solve(
+    def solve(  # noqa: PLR0913
         self,
         mesh: Mesh,
         measures: Measures,
@@ -1540,7 +1540,7 @@ class PoissonModel(_SingleFieldModel):
             )
         return residual
 
-    def solve(
+    def solve(  # noqa: PLR0913
         self,
         mesh: Mesh,
         measures: Measures,

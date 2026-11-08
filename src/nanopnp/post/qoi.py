@@ -395,7 +395,7 @@ class QuantitiesOfInterest:
         return record
 
 
-def extract(
+def extract(  # noqa: PLR0913
     solution: ModelSolution,
     measures: Measures,
     indicator: GridFunction,

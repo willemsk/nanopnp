@@ -492,7 +492,7 @@ def _report_peclet(solution: ModelSolution, measures: Measures) -> PecletMeasure
     ).report()
 
 
-def default_ladder(
+def default_ladder(  # noqa: C901, PLR0913
     mesh: Mesh,
     *,
     concentration_M: float = 1.0,

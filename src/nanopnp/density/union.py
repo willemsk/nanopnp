@@ -166,7 +166,7 @@ def _stencils(widths_nm: np.ndarray, spacing_nm: float) -> list[_Stencil]:
     return stencils
 
 
-def _accumulate(
+def _accumulate(  # noqa: PLR0913
     total: np.ndarray,
     *,
     stencil: _Stencil,
