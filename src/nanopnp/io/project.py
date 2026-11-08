@@ -47,6 +47,16 @@ Suite = Literal["molecular", "continuum", "study", "analysis"]
 
 SUITES: tuple[Suite, ...] = ("molecular", "continuum", "study", "analysis")
 
+ITEM_SUITES: dict[ItemKind, Suite] = {
+    "molecular": "molecular",
+    "continuum": "continuum",
+    # The Continuum suite holds the physics defaults until the frame gives physics its own suite.
+    "physics": "continuum",
+    "study": "study",
+    "comparison": "analysis",
+}
+"""The suite whose tools edit each kind of item."""
+
 
 class ProjectFormatError(ValueError):
     """A project file is not a project file of this release."""

@@ -20,16 +20,16 @@ from nanopnp.gui.web.screens import SUITES
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench
 from nanopnp.io.defaults import Change
-from nanopnp.io.project import ItemKind, Suite, SuiteLayout
+from nanopnp.io.project import ITEM_SUITES, ItemKind, Suite, SuiteLayout
 
 __all__ = ["frame", "listed_changes"]
 
-KINDS: tuple[tuple[ItemKind, str, Suite], ...] = (
-    ("molecular", "Molecular models", "molecular"),
-    ("continuum", "Continuum models", "continuum"),
-    ("physics", "Physics models", "continuum"),
-    ("study", "Studies", "study"),
-    ("comparison", "Comparisons", "analysis"),
+KINDS: tuple[tuple[ItemKind, str], ...] = (
+    ("molecular", "Molecular models"),
+    ("continuum", "Continuum models"),
+    ("physics", "Physics models"),
+    ("study", "Studies"),
+    ("comparison", "Comparisons"),
 )
 PANELS = ("queue", "log", "changes", "problems")
 RAIL_FOLDED_PERCENT = 4.0
@@ -51,8 +51,7 @@ GLOSSARY = (
 def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
     """Return each item's changed values, a study's own overrides but not its models' values."""
     listed: list[tuple[str, tuple[Change, ...]]] = []
-    kinds: tuple[ItemKind, ...] = ("molecular", "continuum", "physics", "study")
-    for kind in kinds:
+    for kind, _ in KINDS:
         for name in project.items(kind):
             try:
                 found = project.changes(kind, name)
@@ -347,8 +346,9 @@ class _Frame:
                     ).props(f"flat dense no-caps data-control={identifier}").classes("w-full")
                 return
             ui.label(project.current or "No item open").classes("rail-open")
-            for kind, title, suite in KINDS:
+            for kind, title in KINDS:
                 ui.label(title).classes("rail-heading")
+                suite = ITEM_SUITES[kind]
                 for name in project.items(kind):
                     item = f"{kind}/{name}"
                     ui.button(name, on_click=lambda _, i=item, s=suite: self.open_item(i, s)).props(

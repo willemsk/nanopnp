@@ -15,7 +15,6 @@ PHYSICS_KEYS = ("electrolyte", "boundary_conditions", "physics")
 
 
 def _study(directory: Path, *, bias_V: float = 0.05, name: str = "physics") -> Path:
-    """Write the quick-start case as a continuum model, a physics model and a study."""
     raw = yaml.safe_load(QUICKSTART.read_text(encoding="utf-8"))
     pore = {"geometry": raw.pop("geometry"), "numerics": {"mesh": raw["numerics"].pop("mesh")}}
     physics = {key: raw.pop(key) for key in PHYSICS_KEYS}

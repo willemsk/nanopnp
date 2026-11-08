@@ -13,6 +13,7 @@ from nanopnp.gui.web.frame import frame
 from nanopnp.gui.web.link import Extent, png
 from nanopnp.gui.web.screens import SUITES, Suite, screen
 from nanopnp.gui.web.shell import Shell
+from nanopnp.io.project import ITEM_SUITES, split_reference
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from fastapi import FastAPI
@@ -77,8 +78,11 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:
 
     def current_suite() -> str:
         current = shell.bench.project.current if shell.bench.project else None
-        kind = (current or "molecular/").split("/")[0]
-        return {"comparison": "analysis"}.get(kind, kind)
+        try:
+            kind, _ = split_reference(current or "")
+        except ValueError:
+            return "molecular"
+        return ITEM_SUITES[kind]
 
     @ui.page("/")
     def root() -> RedirectResponse:

@@ -232,7 +232,7 @@ def _register_project(subparsers: Subparsers) -> None:
     imported = _common(
         actions.add_parser(
             "import",
-            help="import a case file as a study and the two models it is made of",
+            help="import a case file as a study and the models it is made of",
             description="Import a case file into a project. The project is created in a missing "
             "or empty folder. Each input file is copied into the project's inputs/ folder, or "
             "with --link is left where it lies.",

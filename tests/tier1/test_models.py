@@ -14,7 +14,7 @@ from nanopnp.api.sweep import plan_sweep
 from nanopnp.core.hashing import file_hash
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case_paths import block_paths, case_fields, substitute
-from nanopnp.io.models import CONTINUUM_SCHEMA, MOLECULAR_SCHEMA, OWNERS, PHYSICS_SCHEMA, owner_of
+from nanopnp.io.models import OWNERS, SCHEMAS, owner_of
 from nanopnp.io.store import Store
 from nanopnp.sweep.plan import SweepPlanError, plan_from_document
 
@@ -63,15 +63,10 @@ def split_case(
         if path == "structure.source.path":
             value = str(case.parent / value)
         _put(layers[kind], path, value)
-    schemas = {
-        "molecular": MOLECULAR_SCHEMA,
-        "continuum": CONTINUUM_SCHEMA,
-        "physics": PHYSICS_SCHEMA,
-    }
     for kind in models:
         if layers[kind]:
             (directory / f"{kind}.yaml").write_text(
-                yaml.safe_dump({"schema": schemas[kind], "name": f"my-{kind}", **layers[kind]}),
+                yaml.safe_dump({"schema": SCHEMAS[kind], "name": f"my-{kind}", **layers[kind]}),
                 encoding="utf-8",
             )
     study = {

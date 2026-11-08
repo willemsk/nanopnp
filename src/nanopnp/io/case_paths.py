@@ -364,20 +364,7 @@ def schema_bounds(path: str) -> tuple[float | None, float | None]:
 
     An open bound is given as its limit: a range only guides, so it reads as closed.
     """
-    field_at(path)  # the named diagnostic for a path that is wrong
-    declared = _declaration(path)
-    low: float | None = None
-    high: float | None = None
-    for constraint in () if declared is None else declared.metadata:
-        for name in ("ge", "gt"):
-            bound = getattr(constraint, name, None)
-            if isinstance(bound, int | float):
-                low = float(bound)
-        for name in ("le", "lt"):
-            bound = getattr(constraint, name, None)
-            if isinstance(bound, int | float):
-                high = float(bound)
-    return low, high
+    return _bounds(path, ("ge", "gt"), ("le", "lt"))
 
 
 def _is_index(component: str) -> bool:
@@ -418,13 +405,26 @@ def field_description(path: str) -> str | None:
 
 def field_bounds(path: str) -> tuple[float | None, float | None]:
     """Return the inclusive bounds ``(ge, le)`` a field declares; None where undeclared."""
-    field_at(path)
+    return _bounds(path, ("ge",), ("le",))
+
+
+def _bounds(
+    path: str, lower: tuple[str, ...], upper: tuple[str, ...]
+) -> tuple[float | None, float | None]:
+    field_at(path)  # the named diagnostic for a path that is wrong
     field = _declaration(path)
-    if field is None:
-        return None, None
-    lower = [float(item.ge) for item in field.metadata if getattr(item, "ge", None) is not None]
-    upper = [float(item.le) for item in field.metadata if getattr(item, "le", None) is not None]
-    return (max(lower) if lower else None), (min(upper) if upper else None)
+    metadata = () if field is None else field.metadata
+
+    def declared(names: tuple[str, ...]) -> list[float]:
+        return [
+            float(bound)
+            for item in metadata
+            for name in names
+            if (bound := getattr(item, name, None)) is not None
+        ]
+
+    lows, highs = declared(lower), declared(upper)
+    return (max(lows) if lows else None), (min(highs) if highs else None)
 
 
 def value_at(document: CaseDocument, path: str) -> FieldValue:
