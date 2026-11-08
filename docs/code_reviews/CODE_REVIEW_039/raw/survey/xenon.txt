@@ -1,0 +1,27 @@
+$ uvx xenon src/nanopnp --max-absolute C --max-modules B --max-average A
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Installed 11 packages in 4ms
+ERROR:xenon:block "src/nanopnp/structure/read.py:255 select" has a rank of E
+ERROR:xenon:block "src/nanopnp/charge/protonation.py:900 _assemble" has a rank of E
+ERROR:xenon:block "src/nanopnp/charge/protonation.py:1079 run" has a rank of D
+ERROR:xenon:block "src/nanopnp/pipeline/run.py:598 selected_stages" has a rank of E
+ERROR:xenon:block "src/nanopnp/pipeline/checks.py:276 require_runnable" has a rank of D
+ERROR:xenon:block "src/nanopnp/pipeline/checks.py:504 _check_edits" has a rank of D
+ERROR:xenon:block "src/nanopnp/geometry/region.py:617 name_region" has a rank of D
+ERROR:xenon:block "src/nanopnp/numerics/newton.py:138 damped_newton" has a rank of D
+ERROR:xenon:block "src/nanopnp/validation/stability.py:236 fold" has a rank of D
+ERROR:xenon:block "src/nanopnp/validation/modularity.py:899 _members" has a rank of E
+ERROR:xenon:block "src/nanopnp/validation/modularity.py:1317 render_measurements" has a rank of D
+ERROR:xenon:block "src/nanopnp/validation/modularity.py:1126 surface" has a rank of D
+ERROR:xenon:block "src/nanopnp/cli/reference.py:62 _type_name" has a rank of D
+ERROR:xenon:block "src/nanopnp/cli/running.py:122 _inspect" has a rank of D
+ERROR:xenon:block "src/nanopnp/cli/running.py:247 _plot" has a rank of D
+ERROR:xenon:block "src/nanopnp/cli/reading.py:190 dataset_lines" has a rank of D
+ERROR:xenon:block "src/nanopnp/plot/data.py:752 sweep_curves" has a rank of D
+ERROR:xenon:block "src/nanopnp/io/variables.py:524 resolve" has a rank of D
+ERROR:xenon:block "src/nanopnp/io/models.py:817 _compare" has a rank of D
+ERROR:xenon:block "src/nanopnp/solve/continuation.py:495 default_ladder" has a rank of D
+ERROR:xenon:module 'src/nanopnp/cli/__init__.py' has a rank of C
+
+[exit 0]

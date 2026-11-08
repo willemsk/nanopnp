@@ -1,0 +1,245 @@
+$ uv run --with pylint pylint src/nanopnp --disable=all --enable=design --reports=y --score=n --max-line-length=100
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Downloading isort (1.6MiB)
+ Downloaded isort
+Installed 8 packages in 5ms
+************* Module nanopnp.post.forces
+src/nanopnp/post/forces.py:81:0: R0913: Too many arguments (9/5) (too-many-arguments)
+src/nanopnp/post/forces.py:157:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/post/forces.py:228:0: R0913: Too many arguments (7/5) (too-many-arguments)
+src/nanopnp/post/forces.py:251:0: R0913: Too many arguments (7/5) (too-many-arguments)
+src/nanopnp/post/forces.py:409:0: R0902: Too many instance attributes (13/7) (too-many-instance-attributes)
+src/nanopnp/post/forces.py:500:0: R0914: Too many local variables (17/15) (too-many-locals)
+src/nanopnp/post/forces.py:679:0: R0914: Too many local variables (26/15) (too-many-locals)
+src/nanopnp/post/forces.py:793:0: R0913: Too many arguments (9/5) (too-many-arguments)
+************* Module nanopnp.post.outputs
+src/nanopnp/post/outputs.py:77:0: R0913: Too many arguments (6/5) (too-many-arguments)
+************* Module nanopnp.post.reaction_flux
+src/nanopnp/post/reaction_flux.py:37:0: R0913: Too many arguments (6/5) (too-many-arguments)
+************* Module nanopnp.post.export
+src/nanopnp/post/export.py:135:0: R0914: Too many local variables (17/15) (too-many-locals)
+src/nanopnp/post/export.py:178:0: R0913: Too many arguments (7/5) (too-many-arguments)
+src/nanopnp/post/export.py:320:0: R0914: Too many local variables (16/15) (too-many-locals)
+src/nanopnp/post/export.py:461:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/post/export.py:461:0: R0914: Too many local variables (19/15) (too-many-locals)
+************* Module nanopnp.post.indicator
+src/nanopnp/post/indicator.py:56:0: R0913: Too many arguments (8/5) (too-many-arguments)
+************* Module nanopnp.post.qoi
+src/nanopnp/post/qoi.py:85:0: R0914: Too many local variables (20/15) (too-many-locals)
+src/nanopnp/post/qoi.py:360:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+src/nanopnp/post/qoi.py:398:0: R0913: Too many arguments (9/5) (too-many-arguments)
+src/nanopnp/post/qoi.py:398:0: R0914: Too many local variables (18/15) (too-many-locals)
+************* Module nanopnp.post.stage
+src/nanopnp/post/stage.py:206:4: R0914: Too many local variables (24/15) (too-many-locals)
+************* Module nanopnp.structure.protonated
+src/nanopnp/structure/protonated.py:108:0: R0902: Too many instance attributes (22/7) (too-many-instance-attributes)
+************* Module nanopnp.structure.ensemble
+src/nanopnp/structure/ensemble.py:50:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+src/nanopnp/structure/ensemble.py:131:4: R0914: Too many local variables (19/15) (too-many-locals)
+************* Module nanopnp.structure.axis
+src/nanopnp/structure/axis.py:157:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+************* Module nanopnp.structure.read
+src/nanopnp/structure/read.py:133:0: R0914: Too many local variables (25/15) (too-many-locals)
+src/nanopnp/structure/read.py:255:0: R0914: Too many local variables (37/15) (too-many-locals)
+src/nanopnp/structure/read.py:255:0: R0912: Too many branches (20/12) (too-many-branches)
+src/nanopnp/structure/read.py:255:0: R0915: Too many statements (60/50) (too-many-statements)
+src/nanopnp/structure/read.py:513:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module nanopnp.structure.orient
+src/nanopnp/structure/orient.py:83:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/structure/orient.py:83:0: R0914: Too many local variables (31/15) (too-many-locals)
+src/nanopnp/structure/orient.py:184:0: R0913: Too many arguments (6/5) (too-many-arguments)
+************* Module nanopnp.structure.stage
+src/nanopnp/structure/stage.py:114:0: R0914: Too many local variables (34/15) (too-many-locals)
+src/nanopnp/structure/stage.py:114:0: R0915: Too many statements (58/50) (too-many-statements)
+************* Module nanopnp.materials.electrolyte
+src/nanopnp/materials/electrolyte.py:138:0: R0902: Too many instance attributes (13/7) (too-many-instance-attributes)
+************* Module nanopnp.materials.fields
+src/nanopnp/materials/fields.py:31:0: R0914: Too many local variables (19/15) (too-many-locals)
+************* Module nanopnp.materials.models
+src/nanopnp/materials/models.py:75:0: R0902: Too many instance attributes (12/7) (too-many-instance-attributes)
+************* Module nanopnp.mesh.gmsh_backend
+src/nanopnp/mesh/gmsh_backend.py:241:0: R0914: Too many local variables (16/15) (too-many-locals)
+src/nanopnp/mesh/gmsh_backend.py:267:0: R0913: Too many arguments (7/5) (too-many-arguments)
+src/nanopnp/mesh/gmsh_backend.py:267:0: R0917: Too many positional arguments (7/5) (too-many-positional-arguments)
+src/nanopnp/mesh/gmsh_backend.py:267:0: R0914: Too many local variables (18/15) (too-many-locals)
+************* Module nanopnp.mesh.quality
+src/nanopnp/mesh/quality.py:96:0: R0914: Too many local variables (18/15) (too-many-locals)
+************* Module nanopnp.mesh.adapter
+src/nanopnp/mesh/adapter.py:130:4: R0914: Too many local variables (22/15) (too-many-locals)
+src/nanopnp/mesh/adapter.py:370:0: R0914: Too many local variables (22/15) (too-many-locals)
+src/nanopnp/mesh/adapter.py:461:0: R0914: Too many local variables (16/15) (too-many-locals)
+src/nanopnp/mesh/adapter.py:508:0: R0914: Too many local variables (17/15) (too-many-locals)
+************* Module nanopnp.mesh.generate
+src/nanopnp/mesh/generate.py:170:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+************* Module nanopnp.charge.edits
+src/nanopnp/charge/edits.py:147:0: R0914: Too many local variables (19/15) (too-many-locals)
+src/nanopnp/charge/edits.py:239:0: R0914: Too many local variables (19/15) (too-many-locals)
+************* Module nanopnp.charge.deposit
+src/nanopnp/charge/deposit.py:133:0: R0914: Too many local variables (44/15) (too-many-locals)
+src/nanopnp/charge/deposit.py:133:0: R0915: Too many statements (53/50) (too-many-statements)
+src/nanopnp/charge/deposit.py:236:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/deposit.py:236:0: R0914: Too many local variables (19/15) (too-many-locals)
+src/nanopnp/charge/deposit.py:263:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+src/nanopnp/charge/deposit.py:376:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/deposit.py:376:0: R0914: Too many local variables (28/15) (too-many-locals)
+src/nanopnp/charge/deposit.py:493:0: R0914: Too many local variables (17/15) (too-many-locals)
+************* Module nanopnp.charge.dielectric
+src/nanopnp/charge/dielectric.py:297:0: R0914: Too many local variables (21/15) (too-many-locals)
+src/nanopnp/charge/dielectric.py:344:0: R0914: Too many local variables (16/15) (too-many-locals)
+src/nanopnp/charge/dielectric.py:362:0: R0914: Too many local variables (23/15) (too-many-locals)
+src/nanopnp/charge/dielectric.py:391:0: R0914: Too many local variables (22/15) (too-many-locals)
+************* Module nanopnp.charge.protonation
+src/nanopnp/charge/protonation.py:291:0: R0914: Too many local variables (16/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:537:0: R0914: Too many local variables (18/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:637:0: R0914: Too many local variables (23/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:655:4: R0914: Too many local variables (17/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:767:0: R0914: Too many local variables (17/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:841:0: R0914: Too many local variables (24/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:900:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/protonation.py:900:0: R0914: Too many local variables (40/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:1079:4: R0914: Too many local variables (38/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:1079:4: R0915: Too many statements (63/50) (too-many-statements)
+src/nanopnp/charge/protonation.py:1230:4: R0914: Too many local variables (32/15) (too-many-locals)
+src/nanopnp/charge/protonation.py:1230:4: R0915: Too many statements (53/50) (too-many-statements)
+src/nanopnp/charge/protonation.py:1386:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module nanopnp.charge.fields
+src/nanopnp/charge/fields.py:677:0: R0902: Too many instance attributes (12/7) (too-many-instance-attributes)
+src/nanopnp/charge/fields.py:808:0: R0902: Too many instance attributes (12/7) (too-many-instance-attributes)
+src/nanopnp/charge/fields.py:903:0: R0913: Too many arguments (7/5) (too-many-arguments)
+************* Module nanopnp.charge.pqr
+src/nanopnp/charge/pqr.py:62:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+src/nanopnp/charge/pqr.py:94:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+src/nanopnp/charge/pqr.py:247:0: R0912: Too many branches (15/12) (too-many-branches)
+************* Module nanopnp.charge.kernel
+src/nanopnp/charge/kernel.py:78:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+src/nanopnp/charge/kernel.py:219:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/kernel.py:219:0: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+src/nanopnp/charge/kernel.py:237:0: R0913: Too many arguments (7/5) (too-many-arguments)
+src/nanopnp/charge/kernel.py:237:0: R0917: Too many positional arguments (7/5) (too-many-positional-arguments)
+src/nanopnp/charge/kernel.py:237:0: R0914: Too many local variables (31/15) (too-many-locals)
+src/nanopnp/charge/kernel.py:383:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/kernel.py:383:0: R0914: Too many local variables (36/15) (too-many-locals)
+src/nanopnp/charge/kernel.py:456:0: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module nanopnp.charge.stage
+src/nanopnp/charge/stage.py:332:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/stage.py:468:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/stage.py:568:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/stage.py:871:4: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/charge/stage.py:893:4: R0913: Too many arguments (7/5) (too-many-arguments)
+src/nanopnp/charge/stage.py:893:4: R0914: Too many local variables (38/15) (too-many-locals)
+src/nanopnp/charge/stage.py:1009:4: R0913: Too many arguments (6/5) (too-many-arguments)
+************* Module nanopnp.gui.convergence
+src/nanopnp/gui/convergence.py:141:4: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/gui/convergence.py:141:4: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+src/nanopnp/gui/convergence.py:160:4: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/gui/convergence.py:160:4: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+************* Module nanopnp.gui.render
+src/nanopnp/gui/render.py:229:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+src/nanopnp/gui/render.py:361:0: R0914: Too many local variables (31/15) (too-many-locals)
+src/nanopnp/gui/render.py:436:0: R0914: Too many local variables (20/15) (too-many-locals)
+src/nanopnp/gui/render.py:493:0: R0914: Too many local variables (21/15) (too-many-locals)
+************* Module nanopnp.gui.run_model
+src/nanopnp/gui/run_model.py:90:0: R0902: Too many instance attributes (10/7) (too-many-instance-attributes)
+************* Module nanopnp.gui.charge
+src/nanopnp/gui/charge.py:131:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+src/nanopnp/gui/charge.py:161:0: R0914: Too many local variables (25/15) (too-many-locals)
+src/nanopnp/gui/charge.py:281:4: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module nanopnp.gui.case_model
+src/nanopnp/gui/case_model.py:43:0: R0903: Too few public methods (1/2) (too-few-public-methods)
+************* Module nanopnp.gui.geometry
+src/nanopnp/gui/geometry.py:254:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+src/nanopnp/gui/geometry.py:445:0: R0914: Too many local variables (18/15) (too-many-locals)
+src/nanopnp/gui/geometry.py:542:0: R0914: Too many local variables (18/15) (too-many-locals)
+src/nanopnp/gui/geometry.py:542:0: R0911: Too many return statements (7/6) (too-many-return-statements)
+************* Module nanopnp.gui.solver
+src/nanopnp/gui/solver.py:208:4: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/gui/solver.py:208:4: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+src/nanopnp/gui/solver.py:226:4: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/gui/solver.py:226:4: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+************* Module nanopnp.gui.scene
+src/nanopnp/gui/scene.py:23:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+************* Module nanopnp.gui.app
+src/nanopnp/gui/app.py:41:0: R0902: Too many instance attributes (10/7) (too-many-instance-attributes)
+************* Module nanopnp.gui.probe
+src/nanopnp/gui/probe.py:188:0: R0914: Too many local variables (18/15) (too-many-locals)
+************* Module nanopnp.gui.web.states
+src/nanopnp/gui/web/states.py:32:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+************* Module nanopnp.gui.web.pages
+src/nanopnp/gui/web/pages.py:126:4: R0914: Too many local variables (18/15) (too-many-locals)
+src/nanopnp/gui/web/pages.py:48:0: R0915: Too many statements (75/50) (too-many-statements)
+************* Module nanopnp.gui.web.link
+src/nanopnp/gui/web/link.py:105:0: R0902: Too many instance attributes (10/7) (too-many-instance-attributes)
+src/nanopnp/gui/web/link.py:123:4: R0914: Too many local variables (21/15) (too-many-locals)
+************* Module nanopnp.gui.web.frame
+src/nanopnp/gui/web/frame.py:67:0: R0902: Too many instance attributes (20/7) (too-many-instance-attributes)
+src/nanopnp/gui/web/frame.py:67:0: R0904: Too many public methods (32/20) (too-many-public-methods)
+************* Module nanopnp.gui.web.server
+src/nanopnp/gui/web/server.py:81:0: R0903: Too few public methods (1/2) (too-few-public-methods)
+src/nanopnp/gui/web/server.py:256:0: R0913: Too many arguments (8/5) (too-many-arguments)
+src/nanopnp/gui/web/server.py:256:0: R0917: Too many positional arguments (6/5) (too-many-positional-arguments)
+src/nanopnp/gui/web/server.py:299:0: R0913: Too many arguments (7/5) (too-many-arguments)
+************* Module nanopnp.gui.web.overlay
+src/nanopnp/gui/web/overlay.py:21:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+************* Module nanopnp.gui.widgets.charge
+src/nanopnp/gui/widgets/charge.py:90:0: R0902: Too many instance attributes (35/7) (too-many-instance-attributes)
+src/nanopnp/gui/widgets/charge.py:101:4: R0915: Too many statements (75/50) (too-many-statements)
+src/nanopnp/gui/widgets/charge.py:301:12: R0916: Too many boolean expressions in if statement (7/5) (too-many-boolean-expressions)
+************* Module nanopnp.gui.widgets.geometry
+src/nanopnp/gui/widgets/geometry.py:67:0: R0902: Too many instance attributes (14/7) (too-many-instance-attributes)
+src/nanopnp/gui/widgets/geometry.py:197:4: R0914: Too many local variables (21/15) (too-many-locals)
+src/nanopnp/gui/widgets/geometry.py:345:0: R0902: Too many instance attributes (37/7) (too-many-instance-attributes)
+src/nanopnp/gui/widgets/geometry.py:358:4: R0915: Too many statements (83/50) (too-many-statements)
+************* Module nanopnp.gui.widgets.viewer
+src/nanopnp/gui/widgets/viewer.py:24:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+************* Module nanopnp.gui.widgets.case_editor
+src/nanopnp/gui/widgets/case_editor.py:55:4: R0914: Too many local variables (16/15) (too-many-locals)
+************* Module nanopnp.gui.widgets.run_control
+src/nanopnp/gui/widgets/run_control.py:14:0: R0902: Too many instance attributes (9/7) (too-many-instance-attributes)
+************* Module nanopnp.density.union
+src/nanopnp/density/union.py:169:0: R0913: Too many arguments (9/5) (too-many-arguments)
+src/nanopnp/density/union.py:169:0: R0914: Too many local variables (30/15) (too-many-locals)
+src/nanopnp/density/union.py:228:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/density/union.py:228:0: R0914: Too many local variables (32/15) (too-many-locals)
+************* Module nanopnp.density.radii
+src/nanopnp/density/radii.py:148:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/density/radii.py:148:0: R0914: Too many local variables (19/15) (too-many-locals)
+src/nanopnp/density/radii.py:195:0: R0914: Too many local variables (29/15) (too-many-locals)
+************* Module nanopnp.density.map
+src/nanopnp/density/map.py:110:4: R0914: Too many local variables (18/15) (too-many-locals)
+************* Module nanopnp.density.stage
+src/nanopnp/density/stage.py:130:4: R0914: Too many local variables (29/15) (too-many-locals)
+************* Module nanopnp.pipeline.case
+src/nanopnp/pipeline/case.py:265:0: R0914: Too many local variables (19/15) (too-many-locals)
+************* Module nanopnp.pipeline.run
+src/nanopnp/pipeline/run.py:541:0: R0902: Too many instance attributes (12/7) (too-many-instance-attributes)
+src/nanopnp/pipeline/run.py:598:0: R0914: Too many local variables (18/15) (too-many-locals)
+src/nanopnp/pipeline/run.py:598:0: R0912: Too many branches (19/12) (too-many-branches)
+src/nanopnp/pipeline/run.py:727:0: R0913: Too many arguments (9/5) (too-many-arguments)
+src/nanopnp/pipeline/run.py:890:0: R0914: Too many local variables (25/15) (too-many-locals)
+src/nanopnp/pipeline/run.py:1003:0: R0913: Too many arguments (17/5) (too-many-arguments)
+src/nanopnp/pipeline/run.py:1003:0: R0914: Too many local variables (19/15) (too-many-locals)
+src/nanopnp/pipeline/run.py:1130:0: R0913: Too many arguments (10/5) (too-many-arguments)
+src/nanopnp/pipeline/run.py:1130:0: R0914: Too many local variables (27/15) (too-many-locals)
+************* Module nanopnp.pipeline.forecast
+src/nanopnp/pipeline/forecast.py:51:0: R0914: Too many local variables (19/15) (too-many-locals)
+************* Module nanopnp.pipeline.checks
+src/nanopnp/pipeline/checks.py:70:0: R0911: Too many return statements (9/6) (too-many-return-statements)
+src/nanopnp/pipeline/checks.py:276:0: R0912: Too many branches (15/12) (too-many-branches)
+src/nanopnp/pipeline/checks.py:504:0: R0914: Too many local variables (17/15) (too-many-locals)
+src/nanopnp/pipeline/checks.py:854:0: R0914: Too many local variables (17/15) (too-many-locals)
+************* Module nanopnp.api.case
+src/nanopnp/api/case.py:233:4: R0913: Too many arguments (12/5) (too-many-arguments)
+src/nanopnp/api/case.py:233:4: R0914: Too many local variables (17/15) (too-many-locals)
+src/nanopnp/api/case.py:292:4: R0913: Too many arguments (11/5) (too-many-arguments)
+src/nanopnp/api/case.py:292:4: R0914: Too many local variables (19/15) (too-many-locals)
+************* Module nanopnp.api.project
+src/nanopnp/api/project.py:302:4: R0914: Too many local variables (19/15) (too-many-locals)
+src/nanopnp/api/project.py:91:0: R0904: Too many public methods (22/20) (too-many-public-methods)
+************* Module nanopnp.api.reproduce
+src/nanopnp/api/reproduce.py:83:0: R0902: Too many instance attributes (8/7) (too-many-instance-attributes)
+src/nanopnp/api/reproduce.py:283:0: R0913: Too many arguments (6/5) (too-many-arguments)
+src/nanopnp/api/reproduce.py:283:0: R0914: Too many local variables (23/15) (too-many-locals)
+************* Module nanopnp.api.session
+src/nanopnp/api/session.py:92:4: R0913: Too many a
+[exit 0]

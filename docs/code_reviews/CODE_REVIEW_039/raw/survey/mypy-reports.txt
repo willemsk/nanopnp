@@ -1,0 +1,33 @@
+$ uv run --with lxml mypy src/ --linecount-report /tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/mypy --html-report /tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/mypy-html
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Downloading lxml (5.0MiB)
+ Downloaded lxml
+Installed 1 package in 2ms
+Generated HTML report (via XSLT): /tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/mypy-html/index.html
+Success: no issues found in 191 source files
+
+[exit 0]
+linecount.txt head
+  63024   63024   3579   3579 total
+   1933    1933    123    123 nanopnp.physics.models
+   1683    1683    122    122 nanopnp.validation.modularity
+   1456    1456     58     58 nanopnp.charge.protonation
+   1446    1446     76     76 nanopnp.validation.apbs
+   1230    1230     53     53 nanopnp.pipeline.run
+   1186    1186     67     67 nanopnp.geometry.region
+   1092    1092     54     54 nanopnp.charge.stage
+   1082    1082     67     67 nanopnp.charge.fields
+   1074    1074     28     28 nanopnp.pipeline.checks
+    937     937     62     62 nanopnp.gui.widgets.geometry
+    894     894     35     35 nanopnp.geometry.contour
+    888     888     57     57 nanopnp.io.models
+    852     852     94     94 nanopnp.io.case
+    841     841     40     40 nanopnp.post.forces
+    838     838     64     64 nanopnp.gui.geometry
+    816     816     51     51 nanopnp.plot.data
+    804     804     36     36 nanopnp.sweep.plan
+    779     779     31     31 nanopnp.solve.continuation
+    777     777     36     36 nanopnp.validation.comsol
+
+html index exists: yes

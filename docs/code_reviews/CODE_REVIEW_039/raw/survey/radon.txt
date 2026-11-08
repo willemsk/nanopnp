@@ -1,0 +1,235 @@
+$ uvx radon cc src/nanopnp -s -a --total-average -nC
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Installed 4 packages in 3ms
+src/nanopnp/post/forces.py
+    F 679:0 check_force_surface - C (14)
+src/nanopnp/post/export.py
+    F 135:0 p2_nodes - C (14)
+src/nanopnp/structure/ensemble.py
+    M 131:4 AlignedEnsemble.export - C (12)
+src/nanopnp/structure/read.py
+    F 255:0 select - E (38)
+    F 133:0 _universe_from_mmcif - C (19)
+    F 513:0 check_chains_whole - C (12)
+src/nanopnp/structure/orient.py
+    F 83:0 orient_pore - C (12)
+src/nanopnp/structure/stage.py
+    F 114:0 align - C (16)
+src/nanopnp/mesh/gmsh_backend.py
+    F 267:0 _size_field - C (16)
+    F 154:0 _build - C (12)
+    F 85:0 _session - C (11)
+    F 241:0 short_curve_sources - C (11)
+src/nanopnp/mesh/ingest.py
+    F 370:0 check_solid_permittivities - C (15)
+    F 276:0 apply_groups - C (12)
+src/nanopnp/mesh/adapter.py
+    M 178:4 MeshData._validate - C (20)
+    F 370:0 _read_meshio - C (14)
+    F 461:0 from_ngsolve - C (12)
+src/nanopnp/charge/edits.py
+    F 239:0 difference - C (17)
+src/nanopnp/charge/protonation.py
+    F 900:0 _assemble - E (39)
+    M 1079:4 ProtonationStage.run - D (23)
+    M 1230:4 ProtonationStage._produced - C (14)
+    F 841:0 _radii - C (13)
+    F 637:0 _register - C (12)
+    F 767:0 _chain_differences - C (12)
+src/nanopnp/charge/fields.py
+    M 295:4 FieldDocument._check - C (13)
+    F 1017:0 check_conservation - C (11)
+src/nanopnp/charge/pqr.py
+    F 247:0 parse_pqr - C (17)
+    F 210:0 _frame - C (15)
+    F 131:0 _fields - C (13)
+    F 348:0 format_pqr - C (13)
+    F 308:0 check_same_residues - C (12)
+src/nanopnp/gui/render.py
+    F 361:0 render - C (14)
+src/nanopnp/gui/run_model.py
+    M 109:4 RunModel._apply - C (11)
+src/nanopnp/gui/charge.py
+    C 272:0 ConservationView - C (12)
+    M 281:4 ConservationView.from_record - C (11)
+src/nanopnp/gui/geometry.py
+    F 542:0 load_view - C (13)
+src/nanopnp/gui/probe.py
+    F 188:0 _exercise_protonation - C (13)
+src/nanopnp/gui/web/frame.py
+    M 327:4 _Frame.rail - C (11)
+src/nanopnp/gui/widgets/charge.py
+    M 245:4 ChargeWidget.refresh - C (12)
+    M 485:4 ChargeWidget._show_field - C (12)
+    M 424:4 ChargeWidget._show_frame - C (11)
+    M 520:4 ChargeWidget._show_conservation - C (11)
+src/nanopnp/gui/widgets/geometry.py
+    M 712:4 GeometryWidget._show_row - C (14)
+    M 874:4 GeometryWidget._show_buttons - C (14)
+    M 596:4 GeometryWidget._drain_assess - C (13)
+    M 197:4 GeometryCanvas.paintEvent - C (11)
+src/nanopnp/gui/widgets/case_editor.py
+    M 97:4 CaseEditorWidget._build - C (18)
+    M 158:4 CaseEditorWidget._present - C (17)
+src/nanopnp/density/union.py
+    F 228:0 deposit - C (13)
+src/nanopnp/density/grid.py
+    F 470:0 _read_comsol - C (13)
+src/nanopnp/density/radii.py
+    M 81:4 RadiusSet.radius_A - C (13)
+src/nanopnp/density/stage.py
+    M 130:4 DensityStage.run - C (11)
+src/nanopnp/pipeline/case.py
+    F 126:0 _resolve_structure - C (17)
+    F 265:0 resolve - C (11)
+src/nanopnp/pipeline/run.py
+    F 598:0 selected_stages - E (37)
+    F 890:0 _manifest - C (14)
+    M 275:4 RunResult._repr_mimebundle_ - C (11)
+src/nanopnp/pipeline/forecast.py
+    F 51:0 keyed_walk - C (14)
+src/nanopnp/pipeline/checks.py
+    F 276:0 require_runnable - D (27)
+    F 504:0 _check_edits - D (21)
+    F 439:0 _check_charge - C (19)
+    F 788:0 _check_physics_switches - C (18)
+    F 854:0 _check_unread - C (17)
+    F 609:0 _check_smearing - C (15)
+    F 692:0 _check_generation - C (15)
+    F 379:0 _check_pore - C (14)
+    F 567:0 _check_profile_keys - C (12)
+    F 943:0 _check_switch_partners - C (11)
+src/nanopnp/api/project.py
+    M 437:4 Project._problems_of - C (12)
+    M 476:4 Project.export - C (12)
+    M 574:4 Project._export_runs - C (12)
+src/nanopnp/api/reproduce.py
+    F 283:0 reproduce - C (15)
+src/nanopnp/api/session.py
+    M 251:4 Session.register_stage - C (13)
+src/nanopnp/api/sweep.py
+    F 278:0 run_point - C (11)
+src/nanopnp/physics/models.py
+    M 824:4 CoupledModel.residual_form - C (20)
+src/nanopnp/sweep/plan.py
+    F 384:0 _wall_size_barriers - C (18)
+    F 742:0 read_plan - C (16)
+    F 498:0 _warnings - C (15)
+    F 553:0 build_plan - C (14)
+src/nanopnp/sweep/collect.py
+    F 281:0 write_csv - C (18)
+    F 136:0 collect - C (16)
+    F 61:0 _rectification - C (15)
+src/nanopnp/sweep/run.py
+    F 98:0 member_from_row - C (11)
+src/nanopnp/sweep/forecast.py
+    F 67:0 forecast - C (14)
+    F 103:0 _moved - C (11)
+src/nanopnp/geometry/contour.py
+    F 479:0 measure - C (15)
+src/nanopnp/geometry/pore.py
+    M 67:4 CylinderPore.name_edges - C (13)
+src/nanopnp/geometry/region.py
+    F 617:0 name_region - D (21)
+    F 400:0 exclusion_shell - C (16)
+    F 826:0 region_graph - C (14)
+src/nanopnp/numerics/newton.py
+    F 138:0 damped_newton - D (25)
+src/nanopnp/validation/costs.py
+    F 571:0 main - C (13)
+    F 180:0 instrument - C (11)
+src/nanopnp/validation/stability.py
+    F 236:0 fold - D (22)
+    F 151:0 compare - C (11)
+src/nanopnp/validation/charge.py
+    F 121:0 compare_areal - C (12)
+src/nanopnp/validation/attribution.py
+    M 335:4 AttributionReport.markdown - C (16)
+    F 480:0 attribute - C (14)
+src/nanopnp/validation/examples.py
+    F 118:0 copy_example - C (11)
+src/nanopnp/validation/apbs.py
+    F 873:0 run_apbs - C (15)
+src/nanopnp/validation/runs.py
+    F 42:0 reopen - C (18)
+src/nanopnp/validation/findings.py
+    F 67:0 parse_log - C (14)
+src/nanopnp/validation/comsol.py
+    F 172:0 _stage7_recipe - C (14)
+    M 307:4 GoldenManifest._declared_and_not_blank - C (11)
+src/nanopnp/validation/modularity.py
+    F 899:0 _members - E (32)
+    F 1317:0 render_measurements - D (26)
+    F 1126:0 surface - D (21)
+    F 623:0 _class_methods - C (18)
+    F 314:0 components - C (15)
+    F 798:0 _upstream_literal - C (15)
+    F 1007:0 backend_imports - C (15)
+    F 764:0 _reads_reaching - C (14)
+    F 208:0 _resolve - C (13)
+    F 741:0 _registered_inputs - C (13)
+    F 1462:0 gate_classes - C (13)
+    F 190:0 _scoped_imports - C (12)
+    F 598:0 _registered_stages - C (11)
+    F 1207:0 tagged_releases - C (11)
+    F 1562:0 _has_open_ordering - C (11)
+    F 1596:0 _raises_or_appends_gate - C (11)
+src/nanopnp/cli/reference.py
+    F 62:0 _type_name - D (22)
+    F 303:0 render_cli_reference - C (18)
+    F 174:0 render_case_reference - C (11)
+src/nanopnp/cli/sweeping.py
+    F 93:0 _sweep_run - C (13)
+    F 21:0 _sweep - C (11)
+src/nanopnp/cli/__init__.py
+    F 22:0 main - C (11)
+src/nanopnp/cli/validating.py
+    F 223:0 _validate_report - C (14)
+src/nanopnp/cli/running.py
+    F 122:0 _inspect - D (27)
+    F 247:0 _plot - D (27)
+    F 53:0 _stage - C (16)
+src/nanopnp/cli/reading.py
+    F 190:0 dataset_lines - D (23)
+    F 128:0 _yaml_lines - C (13)
+src/nanopnp/plot/data.py
+    F 752:0 sweep_curves - D (25)
+src/nanopnp/plot/panels.py
+    F 388:0 plot_iv - C (15)
+src/nanopnp/plot/figures.py
+    F 404:0 sweep_figure - C (19)
+    F 313:0 solve_figure - C (15)
+src/nanopnp/io/variables.py
+    F 524:0 resolve - D (21)
+    F 240:0 _admit - C (20)
+    M 401:4 _Evaluator._call - C (18)
+    F 437:0 _definitions - C (13)
+    F 623:0 _expression_sites - C (13)
+    M 337:4 _Evaluator._visit - C (11)
+src/nanopnp/io/case_paths.py
+    F 476:0 substitute - C (19)
+    F 103:0 field_at - C (14)
+    F 240:0 _admit_expressions - C (14)
+    F 296:0 _collect_leaves - C (14)
+src/nanopnp/io/models.py
+    F 817:0 _compare - D (21)
+    F 141:0 exposed_values - C (19)
+    F 645:0 _read_model_file - C (14)
+    M 424:4 VariableRecord.carried - C (14)
+    F 597:0 _resolve - C (11)
+src/nanopnp/solve/continuation.py
+    F 495:0 default_ladder - D (29)
+    F 295:0 transfer - C (13)
+    F 372:0 run_ladder - C (13)
+src/nanopnp/solve/stage.py
+    M 126:4 SolveStage._prepare - C (12)
+src/nanopnp/core/stages.py
+    F 301:0 register - C (11)
+src/nanopnp/core/hashing.py
+    F 33:0 _encode - C (15)
+
+3330 blocks (classes, functions, methods) analyzed.
+Average complexity: A (3.2966966966966966)
+
+[exit 0]

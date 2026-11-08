@@ -1,0 +1,22 @@
+$ uvx radon mi src/nanopnp -s -n B
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+src/nanopnp/charge/protonation.py - C (0.00)
+src/nanopnp/charge/fields.py - B (17.56)
+src/nanopnp/charge/stage.py - B (15.88)
+src/nanopnp/gui/web/frame.py - B (14.05)
+src/nanopnp/gui/widgets/charge.py - B (11.26)
+src/nanopnp/gui/widgets/geometry.py - C (0.00)
+src/nanopnp/pipeline/run.py - B (13.85)
+src/nanopnp/pipeline/checks.py - C (0.00)
+src/nanopnp/api/project.py - B (13.03)
+src/nanopnp/physics/models.py - C (0.30)
+src/nanopnp/geometry/region.py - C (8.21)
+src/nanopnp/validation/apbs.py - B (9.48)
+src/nanopnp/validation/modularity.py - C (0.00)
+src/nanopnp/plot/figures.py - B (17.56)
+src/nanopnp/io/variables.py - B (10.25)
+src/nanopnp/io/case_paths.py - B (15.34)
+src/nanopnp/io/models.py - C (1.38)
+
+[exit 0]

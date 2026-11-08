@@ -1,0 +1,42 @@
+$ bash -c uvx wily --cache '/tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/wily' --path '/home/user/nanopnp' build src/nanopnp -n 3 && uvx wily --cache '/tmp/claude-0/-home-user-nanopnp/d44c53f3-b704-5705-84dd-6fa41c7e49a4/scratchpad/measure/survey/wily' --path '/home/user/nanopnp' rank src/nanopnp maintainability.mi --limit 10
+
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+Downloading plotly (18.2MiB)
+ Downloaded plotly
+Installed 26 packages in 139ms
+[32mFound 3 revisions from 'git' archiver in '/home/user/nanopnp'.[0m
+[32mRunning operators - cyclomatic,halstead,maintainability,raw[0m
+[33mIn revision a5039af28887e301fe39d565676d13fddf5a7bb9, for operator cyclomatic: No data collected[0m
+[33mIn revision a5039af28887e301fe39d565676d13fddf5a7bb9, for operator halstead: No data collected[0m
+[33mIn revision a5039af28887e301fe39d565676d13fddf5a7bb9, for operator maintainability: No data collected[0m
+[33mIn revision a5039af28887e301fe39d565676d13fddf5a7bb9, for operator raw: No data collected[0m
+[32mCompleted building wily history, run `wily report <file>` or `wily index` to see more.[0m
+warning: The `UV_NATIVE_TLS` environment variable is deprecated and will be removed in a future release. Use `UV_SYSTEM_CERTS` instead.
+[32m-----------Rank for Maintainability Index for e32521f by Claude on 2026-11-08.------------[0m
+╒══════════════════════════════════════╤═════════════════════════╕
+│ File                                 │   Maintainability Index │
+╞══════════════════════════════════════╪═════════════════════════╡
+│ src/nanopnp/charge/protonation.py    │                0        │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/gui/widgets/geometry.py  │                0        │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/pipeline/checks.py       │                0        │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/validation/modularity.py │                0        │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/physics/models.py        │                0.302036 │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/io/models.py             │                1.37907  │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/geometry/region.py       │                8.20896  │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/validation/apbs.py       │                9.47923  │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/io/variables.py          │               10.2505   │
+├──────────────────────────────────────┼─────────────────────────┤
+│ src/nanopnp/gui/widgets/charge.py    │               11.2561   │
+├──────────────────────────────────────┼─────────────────────────┤
+│ Total                                │                4.08759  │
+╘══════════════════════════════════════╧═════════════════════════╛
+
+[exit 0]
