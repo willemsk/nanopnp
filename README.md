@@ -41,7 +41,7 @@ that can reconstruct the run.
   `nanopnp reproduce` re-solves a run and checks every number.
 - **Sweeps and clusters.** Any case field can be swept. Each point is an independent job that
   starts from a converged neighbour, so a sweep maps directly onto an HPC job array.
-- **Three ways in.** The `nanopnp` command line, a Python API of nineteen stable names, and a PySide6
+- **Three ways in.** The `nanopnp` command line, a Python API of twenty stable names, and a PySide6
   desktop shell with live convergence plots and a field viewer.
 - **Comparable with the reference.** A reference-matching stabilised mode, and a Tier-3
   comparison against the paper's published current–voltage relationships and in-pore averages.

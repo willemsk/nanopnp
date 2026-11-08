@@ -25,7 +25,7 @@ verified:
 
 ## 8. Errata in the source, with the arithmetic
 
-All four were found by reproducing the thesis's own stated check values. Numbers below are
+All five were found by reproducing the thesis's own stated check values. Numbers below are
 computed, not asserted.
 
 **E1 — The D/μ wall function sign.** Thesis eq. 5.11 prints `1 − exp(−P₁(d − P₂))`; Table 5.1

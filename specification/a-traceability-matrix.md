@@ -96,7 +96,7 @@ needed.
 | CON-13 | VER-43 in part (the Windows bundle builds and launches headlessly on every push; widget construction is asserted on `windows-latest` and `macos-latest`). Linux *desktop* Qt is deliberately not asserted: the push gate installs no system packages, and PySide6 does not import on the runner image |
 | CON-14 | None yet |
 
-Coverage: 57 of the 67 requirements in §3 have a specified activity; 10 are recorded as "none yet",
+Coverage: 66 of the 83 requirements in §3 have a specified activity; 17 are recorded as "none yet",
 predominantly interface, portability, licensing and documentation requirements whose demonstration
 is by inspection rather than by test. QR-07 is counted as "none yet", its entry
 naming §8.2 criterion 3 as the measurement it is still waiting for rather than as one it has. VER-61 and VER-62 verify Phase 4's gate (§8.1; §8.2.7 G1 and G10), VER-69 that the user-testing sessions still run as written, VER-72 the import guard, rather than a requirement

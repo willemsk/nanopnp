@@ -166,7 +166,7 @@ tested_with:
 
 ## 8.1 NGSolve traps found by implementing this — all silent
 
-Nineteen ways this project's own code was wrong while raising nothing. All reproduced on NGSolve
+Twenty numbered ways, and one more below them, in which this project's own code was wrong while raising nothing. All reproduced on NGSolve
 6.2.2606. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_1_2_and_7_trial_function_p2_indicator_and_components]**
 
 **1. A nonlinear form must be written in the trial function, not the grid function.**
