@@ -338,7 +338,7 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AL2 - §8.4.5; spent
 * AL3 - §8.4.4; open: WP5.10
 * AL4 - §8.4.4; open: WP5.10
-* AL5 - §8.4.4; open: WP5.10
+* AL5 - §8.4.4, its folders and its move at each close amended by AL28; open: WP5.10
 * AL6 - §5.1; open: WP5.10
 * AL7 - open: WP5.10
 * AL8 - open: WP5.11
@@ -361,3 +361,5 @@ Each ruling is in a current clause (named), a rule of §8.4 (`§8.4.k`), `supers
 * AL25 - §8.1's Phase 5 row; the Phase 5 plan
 * AL26 - §8.1's Phase 5 row; the Phase 5 plan; spent
 * AL27 - open: WP5.10 (the report)
+* AL28 - §8.4.4; open: WP5.10
+* AL29 - §8.4.5

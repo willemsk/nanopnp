@@ -417,3 +417,12 @@ Two rows of *Verification* read:
 
 > | WP5.16, Molecular | 1, 2 | REV-121's cavity axis against a known axis (VER-48); VER-78 |
 > | WP5.17, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; VER-78 |
+
+## Amended 8 November 2026 (§8.2.36 AL28)
+
+At WP5.10's plan, the author ruled that each plan is written in its phase's folder from the start, so that WP5.10's
+move is the only one (AL28). WP5.10's entry read:
+
+> The delivered plans archived by phase, the finished briefs and
+> reviews under `archive/sessions/`, every link and written path rewritten, records included, and `/np-ship phase` moving a
+> closing phase (AL5).

@@ -1,7 +1,8 @@
 # WP5.10 — The written knowledge's tools and rules
 
-**Status: planned, not started.** 8 November 2026, at `da395a7`. Inherits §8.2.36 AL3 to AL7, AL14,
-AL24 and AL27, CODE_REVIEW_039's sections 5 to 7 and its prototypes in `.claude/scripts/audit/`.
+**Status: planned, not started.** 8 November 2026, at `da395a7`. Inherits §8.2.36 AL3 to AL7, AL14, AL24
+and AL27, AL28 and AL29 ruled at this plan, CODE_REVIEW_039's sections 5 to 7 and its prototypes in
+`.claude/scripts/audit/`.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md), entry WP5.10. `SPECIFICATION.md`
 governs; an identifier here is a pointer, never a restatement. Where the two disagree, this plan is
@@ -9,43 +10,44 @@ wrong.
 
 ## In brief
 
-**What changes.** The project's written record learns to keep itself level with the code. Every
-decision ever taken, about twelve hundred and fifty, becomes one searchable page on the documentation site,
-rebuilt by a script, and a check refuses a commit that leaves it out of date. A second page describes
-the program's parts as they stand, rebuilt with every site build, and a check keeps the design's list
-of parts equal to the code's. Finished plans move into an archive folder per phase, every link to them
-rewritten, so the plans folder shows the work in progress. A linter learns to flag new functions that
-grow too tangled or take too many settings. The release notes' Phase 5 entries move under the headings
-the release workflow reads. A short report says what two further measuring tools would add.
+**What changes.** The project's written record learns to keep itself level with the code. Every decision
+taken, about twelve hundred and fifty, becomes one searchable page on the documentation site, rebuilt by
+a script, and a check refuses a commit that leaves it out of date. A second page describes the program's
+parts as they stand, rebuilt with every site build, and a check keeps the design's list of parts equal
+to the code's. Every plan moves once into a folder for its phase, every link to it rewritten, and later
+plans are written there, so no move breaks a link again. A linter learns to flag new functions that grow
+too tangled or take too many settings. The release notes' Phase 5 entries move under the headings the
+release workflow reads. A short report says what two further measuring tools would add.
 
-**Cost.** About four days. Nothing the program computes changes, and no stored result moves.
+**Cost.** About four days, the main work on the more capable model, at twice the price. No result
+changes.
 
-**What could go wrong.** The move could break a link; a link check over every file, the archive
-included, and the strict site build would fail. The decisions page could drift; the new check refuses
+**What could go wrong.** The move could break a link; a link check over every file, run on every
+push, and the strict site build would fail. The decisions page could drift; the new check refuses
 the commit. The linter's limits could flag existing code; each of the 26 functions over them today is
 marked as known and listed, so only new code is held to them.
 
-**Your call.** Nothing before the work starts: the choices were yours at the amendment, and the rest
-have one sound answer each. After it, whether to adopt either measuring tool, on the report.
+**Your call.** Nothing before the work starts: you ruled the choices, and the rest have one sound
+answer each. After it, whether to adopt either measuring tool, on the report.
 *Recommendation:* read the report first; it names what each would catch that the current checks miss.
 
 ## Execution brief
 
-**Scope.** AL3 to AL7, AL14's check and entries, and AL27's trial; CODE_REVIEW_039's AUD-382 and
+**Scope.** AL3 to AL7 with AL28, AL14's check and entries, and AL27's trial; CODE_REVIEW_039's AUD-382 and
 AUD-251, marked in its register (section 11). **Depends on** WP5.09, merged (`v0.6.0-alpha.9`).
 **Pointers:** §5.1; §7.1's test-scope NOTE; §7.2 (VER-79, new); §7.6; §8.4.1; §8.4.4; §8.4.5;
-Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; judgement items stay
-`main`. Eight decisions, one per ruling's deliverable, against a guideline of six.
+Appendix A; open decision 14. **Implementing session:** Opus, high effort (AL29); sub-agents as each item
+names. Eight decisions: one per ruling's deliverable.
 
 ### Decisions
 
 | Decision | Choice | Why/source |
 |---|---|---|
 | D1. The decisions register | `.claude/scripts/decisions.py`, promoted from the prototype, writes `docs/project/decisions.md`, committed and in the site's Project section. Rows: each history ruling, plan `Dn` row, `REV`, `MOD`, `OPN` and `WB` row, knowledge-base ruling and *Not to be re-decided* bullet; no Outcome, mark, *Your call*, checklist or review-sentence rows. Appendix D's eight columns; *Where* a path with no line number; dates in ISO form; rows by date, undated last, then source; counts by source and decider on top; cells plain text. A history ruling's *holds now* is read from `specification/history/holds-now.yaml`, the index's list moved there; the index's section becomes a pointer. `--check` compares and writes nothing | Ruled by the author (AL3; section 6's proposal). Decided by the plan: a generated page cannot carry hand-written entries, so they move to one file beside the records; a line number would rewrite the page at every unrelated edit |
-| D2. The guards | VER-79, new in §7.2, in `tests/tier1/test_written_architecture.py`: §5.1's module rows equal the subpackages; the page equals what the script renders; the YAML's keys equal the ruling letters, both ways. §7.1's NOTE lists VER-79 among the architecture guards; Appendix A says it leaves the count unchanged. `gate.sh` runs `decisions.py --check` at every commit and push, prose-only included, and CI's `docs` job does too (§7.6's every-push row) | Ruled by the author (AL3, AL6). Decided by the plan: every source is Markdown, which the gate and CI otherwise only lint, so without the check a plan commit leaves the page stale until an unrelated code commit fails |
+| D2. The guards | VER-79, new in §7.2, in `tests/tier1/test_written_architecture.py`: §5.1's module rows equal the subpackages; the page equals what the script renders; the YAML's keys equal the ruling letters, both ways. §7.1's NOTE lists VER-79 among the architecture guards; Appendix A says it leaves the count unchanged. `gate.sh` runs `decisions.py --check` at every commit and push, prose-only included, and CI's `docs` job does too, with `links.py` (§7.6's every-push row) | Ruled by the author (AL3, AL6). Decided by the plan: every source is Markdown, which the gate otherwise only lints, so a plan commit would leave the page stale |
 | D3. The architecture page | `docs/scripts/architecture.py`, promoted, renders it; `generate.py` writes `_generated/project/architecture.md` beside the measurements, never committed; the Project navigation and `docs/project/index.md` list it. No commit hash: the page is the tree the site was built from. §5.1 gains a NOTE naming the page and VER-79; its responsibility column stays the author's | Ruled by the author (AL6; section 7's proposal) |
-| D4. The archive | `.claude/scripts/archive_plans.py`, promoted from `migrate_plans_archive.py`. `--initial` moves 69 files by phase membership: Phases 0 to 4 to `docs/plans/archive/phase-N/`, six finished briefs and reviews to `archive/sessions/`; `--phase N` moves `phase-N-*.md` and `wpN.*` at a close. In every tracked text file, records included, it rewrites each relative link into a moved file, each relative link out of one, and each written `docs/plans/<name>`, and nothing else. `links.py`, promoted, checks every tracked Markdown file. The plan readers recurse. `/np-ship phase` moves and checks before its review | Ruled by the author (AL5), read as covering each close's move, which AL5 names and which would otherwise break the strict build. Decided by the plan: membership by phase, since status lines are stale (wp42, wp43) and the live phase stays |
-| D5. Indexes and the commands' rule | `.claude/scripts/index_records.py`, promoted, lists `docs/plans/`'s top level, then one section per archive folder. The core's *Gate and push* runs `index_records.py` and `decisions.py` before each commit and commits what they write; §8.4.4 states it; `rulings.md` names the YAML. §8.4.5 and `CLAUDE.md` list seven kept scripts | Ruled by the author (AL3, AL4). Decided by the plan: every level reads the core, so one step serves `/np-plan`, `/np-implement` and `/np-ship` |
+| D4. Plans by phase | A plan is written in `docs/plans/phase-<n>/` from the commit that adds it, a standalone brief or review in `docs/plans/sessions/`; `current.md` and `index.md` stay at the top; a phase close moves nothing. `audit/migrate_plans_archive.py`, rewritten and not kept, moves the other 81 files once, by phase membership. It rewrites every relative link into or out of a moved file and every written `docs/plans/<name>`, in every tracked text file, records included, and nothing else. `links.py`, promoted, checks every tracked Markdown file. The plan readers recurse; the skills' path templates name the folder | Ruled by the author (AL5 as amended by AL28). Decided by the plan: membership by phase, since status lines are stale (wp42, wp43) |
+| D5. Indexes and the commands' rule | `.claude/scripts/index_records.py`, promoted, lists `docs/plans/`'s top level, then one section per folder. The core's *Gate and push* runs `index_records.py` and `decisions.py` before each commit and commits what they write; §8.4.4 states it; `rulings.md` names the YAML. §8.4.5 and `CLAUDE.md` list six kept scripts | Ruled by the author (AL3, AL4). Decided by the plan: every level reads the core, so one step serves all three commands |
 | D6. Function complexity | Ruff selects `C901` at `max-complexity = 15` and `PLR0913` at `max-args = 8`; `tests/*` ignores both. The 27 offences on 25 definitions in `src/` and one in `.claude/scripts/audit/` carry a `noqa` on the reported line; none is refactored | Ruled by the author (AL7). Decided by the plan, from the sample: the defaults (10, 5) flag 139 offences, these limits 29, one of them a test |
 | D7. The changelog | `/np-ship`'s preflight greps `## [X.Y.Z-alpha.N]` as `tag.yml` does. WP5.02 to WP5.09's paragraphs move under `## [0.6.0-alpha.N] - <tag date>`, WP5.01's into `[0.6.0-alpha.2]`; `## [Unreleased]` stays, empty. This package's entry is `[0.6.0-alpha.10]` | Ruled by the author (AL14); WP5.01's place is §8.4.1's |
 | D8. The trial | xenon and import-linter run from ephemeral environments as `survey.sh` runs them, import-linter's layers contract in `LAYER_ORDER` (AL8), with and without `TYPE_CHECKING` imports. A concept, `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, states what each adds over D6 and `test_layering.py`, and recommends; neither enters `pyproject.toml` | Ruled by the author (AL7, AL27); adoption is open decision 14. Decided by the plan: a measurement's home is a concept (AL17) |
@@ -100,19 +102,23 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
   map. It runs as a script, so `docs/scripts/` is on `sys.path`.
 
 **D4.**
-- Of 82 files in `docs/plans/`, 69 move: `phase-0/` 4 (`phase-0-spike`, `phase-0-consolidation`,
+- Of 83 files in `docs/plans/`, 81 move: `phase-0/` 4 (`phase-0-spike`, `phase-0-consolidation`,
   `wp5-*`, `wp6-*`); `phase-1/` 11 (its plan, `wp7` to `wp16`); `phase-2/` 10 (its plan, `wp17` to
   `wp25`); `phase-3/` 10 (its plan, `wp26` to `wp34`); `phase-4/` 28 (its plan, `phase-4-record`,
-  `wp35` to `wp60`); `sessions/` 6 (`copilot-host`, `history-prose-review`, `kb-audit-brief`,
-  `notebooks-review-for-wp54`, `okf-converter-rules`, `okf-knowledge-bundle`). Thirteen stay:
-  `current.md`, `index.md`, `phase-5-workbench.md`, `phase-5-record.md`, `wp5.01` to `wp5.09`.
-- `migrate_plans_archive.py:_moved` picks by status line: it would miss `wp42` and `wp43` and move
-  Phase 5's plans; it rewrites links only in live files and never a moved file's own.
-- At `da395a7`: 410 relative links into moved files (`docs/plans/` 272, `docs/project/` 125,
-  `CHANGELOG.md` 11, `docs/user-testing/` 2); 41 out of moved files to files that stay; 2,325 written
-  `docs/plans/<name>` paths (2,214 in `CODE_REVIEW_039/`, JSON and TSV included; `knowledge/` 58,
-  `CHANGELOG.md` 18, `docs/plans/` 21, `specification/history/` 10). No reference-style or HTML link,
-  and no `plans/<name>` without `docs/`.
+  `wp35` to `wp60`); `phase-5/` 12 (its plan, its record, `wp5.01` to `wp5.10`); `sessions/` 6
+  (`copilot-host`, `history-prose-review`, `kb-audit-brief`, `notebooks-review-for-wp54`,
+  `okf-converter-rules`, `okf-knowledge-bundle`). `current.md` and `index.md` stay.
+- `migrate_plans_archive.py:_moved` picks by status line: it would miss `wp42` and `wp43`; it rewrites
+  links only in live files and never a moved file's own.
+- At `1c4d463`, 300 relative links change: 243 into moved files, 51 out of them, 6 between folders
+  (`docs/plans/` 141, `docs/project/` 137, `CHANGELOG.md` 20, `docs/user-testing/` 2). 2,735 written
+  `docs/plans/<name>` paths change (`docs/code_reviews/` 2,604, JSON and TSV included; `knowledge/`
+  64, `CHANGELOG.md` 27, `docs/plans/` 22, `specification/` 10, `.claude/` 5, `docs/user-testing/` 2,
+  `docs/project/` 1). No reference-style or HTML link, and no `plans/<name>` without `docs/`.
+- The layout is named by `np-plan/wp.md` (`docs/plans/wp<n>-<slug>.md`), `np-plan/phase.md` (three
+  `docs/plans/phase-<n>-…` templates), `rulings.md` (`docs/plans/phase-<n>-record.md`),
+  `np-ship/phase.md` step 1, `core.md`'s *Records* row and §8.4.4's naming bullet; `session-start.sh`
+  names only `current.md`.
 - Two live skills name a moved plan bare: `np-plan/phase.md` (`phase-3-charge-pipeline.md`) and
   `rulings.md` (`phase-4-record.md`).
 - `audit/links.py` reads `scope.py`'s files and reports 58 broken without `docs/_generated/` and 2
@@ -120,8 +126,8 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
   `scope.py:_own_output` leaves out `docs/code_reviews/CODE_REVIEW_039/`, whose `decisions.md` holds 984
   relative links copied from other folders, all broken; `git ls-files '*.md'` includes it.
 - `duplicates.py:main` globs `docs/plans/wp*.md`; `audit/scope.py`'s `RECORD_GLOBS` has
-  `docs/plans/*.md`. `np-ship/phase.md` step 1 finds `docs/plans/phase-<n>-*.md`, still top-level
-  until its close.
+  `docs/plans/*.md`. CI's `docs` job runs `generate.py`, so `links.py` runs after it
+  there.
 
 **D5.**
 - `audit/index_records.py:render` globs `<folder>/*.md` and footers its own audit path. The core's
@@ -161,28 +167,28 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
 `numerics/newton.py` `damped_newton` and `solve/continuation.py` `default_ladder`. Paths are under
 `src/nanopnp/`.
 
-**Item 2.** `archive_plans.py`: build `moved: {old: new}` first, from a table (WP 1–6 → 0, 7–16 →
-1, 17–25 → 2, 26–34 → 3, 35–60 → 4, the number read by `^wp(\d+)-`, so `wp5.01` to `wp5.09` never
-match; phase plans and `phase-4-record.md` by their number, the six names → `sessions`) or from
-`--phase N`. For each file of `git ls-files` that decodes as UTF-8, with
-`new_self = moved.get(f, f)`: in a `*.md` file, for each link of `links.py`'s `LINK` whose target has
-no scheme and no leading `#`, resolve it against `f`'s old directory, map it through `moved`, and write
-it relative to `new_self`'s directory, anchor kept; leave it untouched when neither end moved. Mask
-code for links only, as `generate.py` does. In every such file, inside code too, replace
-`docs/plans/<name>` for each moved name with its new path. Write every file, then `git mv`; print the
-counts. Each promoted script sets `ROOT = Path(__file__).resolve().parents[2]` and imports nothing
-from `audit/`. `links.py` reads `git ls-files '*.md'` less `docs/code_reviews/CODE_REVIEW_039/`'s
-attachments, as `scope.py` leaves them out. Then: `duplicates.py` to `rglob("wp*.md")`;
-`scope.py` to `docs/plans/**/*.md`; the two bare names to full paths; `np-ship/phase.md` step 3 gains
-"The phase's plans are archived (`uv run .claude/scripts/archive_plans.py --phase <n>`), and
-`links.py` names no new broken link."; §8.4.4 gains "A closed phase's plans are under
-`docs/plans/archive/phase-<n>/`, finished briefs under `archive/sessions/`; `/np-ship phase` moves the
-phase with `archive_plans.py`, which rewrites every link and written path to a moved file, records
-included. (§8.2.36 AL5)"
+**Item 2.** `migrate_plans_archive.py`, in place: build `moved: {old: new}` from a table (WP 1–6 →
+0, 7–16 → 1, 17–25 → 2, 26–34 → 3, 35–60 → 4, read by `^wp(\d+)-`; `wp5.<nn>` → 5; a phase plan or
+record by its number; the six names → `sessions`). `--dry-run` prints the counts and writes nothing.
+For each file of `git ls-files` that decodes as UTF-8, with `new_self = moved.get(f, f)`: in a `*.md`
+file, for each link of `links.py`'s `LINK` whose target has no scheme and no leading `#`, resolve it
+against `f`'s old directory, map it through `moved`, and write it relative to `new_self`'s directory,
+anchor kept; leave it untouched when neither end moved. Mask code for links only, as `generate.py`
+does. Then, in every such file, inside code too, replace `docs/plans/<name>` for each moved name with
+its new path. Write every file, then `git mv`; print the counts. The dry run's counts equal Grounding
+D4's, each difference traced to a commit since `1c4d463`. `links.py`, promoted, sets
+`ROOT = Path(__file__).resolve().parents[2]`, imports nothing from `audit/`, reads `git ls-files
+'*.md'` less `CODE_REVIEW_039/`'s attachments, and passes the two broken links of today, named in a
+`KNOWN` set at their new paths. Then: `duplicates.py` to `rglob("wp*.md")`; `scope.py` to
+`docs/plans/**/*.md`; the two bare names and each template of Grounding D4 to `phase-<n>/`; §8.4.4's
+naming bullet to `docs/plans/phase-5/wp5.01-<slug>.md`, and a bullet: "A plan is written in its
+phase's folder, `docs/plans/phase-<n>/`, from the commit that adds it, and a standalone brief or review
+in `docs/plans/sessions/`; `current.md` and `index.md` stay at the top, and a phase close moves
+nothing. (§8.2.36 AL5, AL28)" This plan moves too; read it from `docs/plans/phase-5/`.
 
-**Item 3.** `index_records.py`: the plans index lists the top level, then `## Phase 0` to
-`## Phase 4` and `## Sessions`, each linking `archive/<folder>/<name>`; its footer names
-`.claude/scripts/index_records.py`.
+**Item 3.** `index_records.py`: the plans index lists `current.md`, then one section per folder,
+`## Phase 5` down to `## Phase 0`, then `## Sessions`, each linking `<folder>/<name>`, each section's
+count equal to its folder's files; its footer names `.claude/scripts/index_records.py`.
 
 **Item 5.** The YAML: one `<letter>: '<entry>'` line per ruling, in index order, written once by
 `yaml.safe_dump(..., sort_keys=False, allow_unicode=True, width=10**6)` from the index's list, under
@@ -202,13 +208,15 @@ undated as `9999`; the source kinds in D1's order; path; reading order). `--chec
 the first differing line and the command; the default writes. The guard and `--check` share
 `render() -> str`, `holds_now() -> dict[str, str]` and `ruling_letters() -> list[str]`. Under
 `--strict` the page needs `- Decisions register: project/decisions.md` after *Review findings* in
-`mkdocs.yml`, and a row in `docs/project/index.md`, in this item.
+`mkdocs.yml`, and a row in `docs/project/index.md`, in this item. Count checks: the history rows
+equal the YAML's entries (311 with AL29); the plan rows equal
+`git grep -hE '^\| *\**D[0-9]' -- 'docs/plans/**/*.md' | wc -l` (632 now).
 
 **Item 6.** In `generate.py`, `from architecture import render as render_architecture`, and
 `"project/architecture.md": render_architecture()` in `rendered`. `render()` takes no argument and
 reads no git, and it sets `ROOT` as item 2 says, without `scope` or `sys.path`; its title becomes `# Architecture` and its first sentence names
 `docs/scripts/architecture.py`, not the audit. Navigation: `- Architecture: _generated/project/architecture.md` after
-*Modularity measurements*, and a row in `docs/project/index.md`.
+*Modularity measurements*, and a row in `docs/project/index.md`. Its module table has 20 rows.
 
 **Item 7.** VER-79's row: "The written architecture and decisions | §5.1's `name/` rows equal the
 subpackages of `src/nanopnp` in both directions; `docs/project/decisions.md` equals what
@@ -221,7 +229,8 @@ that adds or changes a decision re-runs `.claude/scripts/decisions.py`, and one 
 review re-runs `index_records.py`; the gate refuses a decisions page that differs from the tree.
 (§8.2.36 AL3, AL4)" In `gate.sh`, after `ruff format --check`:
 `check "decisions page" uv run .claude/scripts/decisions.py --check`; in `ci.yml`'s `docs` job,
-before `generate.py`: `- run: uv run --no-sync .claude/scripts/decisions.py --check`.
+before `generate.py`: `- run: uv run --no-sync .claude/scripts/decisions.py --check`, and after it
+`- run: uv run --no-sync .claude/scripts/links.py`; §7.6's every-push row names both.
 
 **Item 9.** `git fetch origin 'refs/tags/v0.6.0-alpha.*:refs/tags/v0.6.0-alpha.*'`; each date is
 `git log -1 --format=%cs v0.6.0-alpha.N`. Move each paragraph unchanged, newest first. The preflight
@@ -238,20 +247,20 @@ Record each command, its result and the commit.
 ### Work items
 
 - [ ] 1. `pyproject.toml`; the 26 `noqa` lines (D6); done when `uv run ruff check .` passes and the
-  diff adds only those comments. **Executor:** `general-purpose` on Haiku
-- [ ] 2. `git mv` of `audit/links.py` and `audit/migrate_plans_archive.py` to `.claude/scripts/links.py`
-  and `archive_plans.py`; `--initial` run; `duplicates.py`, `audit/scope.py`, the two skills,
-  `np-ship/phase.md`; §8.4.4's archive bullet (D4); done when `links.py` names only the same two
-  links, `duplicates.py` passes and the strict build passes. **Executor:** main
-- [ ] 3. `git mv` of `audit/index_records.py`; archive sections; the three indexes rewritten (D5); done
-  when the code and review say so. **Executor:** `general-purpose` on Sonnet
+  diff adds those 26 comments and nothing else. **Executor:** `general-purpose` on Haiku
+- [ ] 2. `git mv` of `audit/links.py` to `.claude/scripts/links.py`; `migrate_plans_archive.py`
+  rewritten and run; `duplicates.py`, `audit/scope.py`, the skills' paths; §8.4.4 (D4); done when the
+  dry run's counts match Grounding D4's, `links.py` names nothing outside `KNOWN`, `duplicates.py`
+  passes and the strict build passes. **Executor:** main
+- [ ] 3. `git mv` of `audit/index_records.py`; folder sections; the three indexes rewritten (D5); done
+  when each section's count equals its folder's. **Executor:** `general-purpose` on Sonnet
 - [ ] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. `git mv` of `audit/decisions.py`; `holds-now.yaml`; the index's pointer; `docs/project/decisions.md`;
   the pointers in `SPECIFICATION.md`, `specification/index.md` and §11; `rulings.md`, `core.md`,
   `project.md`; the page's navigation (D1, D5); done
-  when `--check` passes and the strict build passes. **Executor:** main
+  when `--check` passes, item 5's counts hold and the strict build passes. **Executor:** main
 - [ ] 6. `git mv` of `audit/architecture.py` to `docs/scripts/architecture.py`; `generate.py`, `mkdocs.yml`,
-  `docs/project/index.md` (D3); done when the strict build shows the page.
+  `docs/project/index.md` (D3); done when the strict build shows the page with 20 module rows.
   **Executor:** `general-purpose` on Sonnet
 - [ ] 7. `tests/tier1/test_written_architecture.py`; §7.1, §7.2, §7.6, Appendix A; `gate.sh`, `ci.yml`;
   the core's *Gate and push*; §8.4.4; §5.1's NOTE (D2, D3, D5); done when VER-79's tests pass.
@@ -261,9 +270,10 @@ Record each command, its result and the commit.
   `0.6.0-alpha.2` to `.9` greps and the paragraphs are byte-identical. **Executor:** main
 - [ ] 10. The trial and `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, its
   index and `knowledge/log.md` (D8); done when the code and review say so. **Executor:** main
-- [ ] 11. §8.4.5, `CLAUDE.md` (seven scripts; the gate's prose check; VER-79 in *Testing*'s guards); `holds-now.yaml` for AL3
-  to AL7, AL14, AL24 and AL27; AUD-382 and AUD-251 in `raw/dispositions.tsv` and `raw/commits.tsv`,
-  `register.py` and `maps.py` re-run; done when the code and review say so. **Executor:** main
+- [ ] 11. §8.4.5, `CLAUDE.md` (six scripts; the gate's prose check; VER-79 in *Testing*'s guards);
+  `holds-now.yaml` for AL3 to AL7, AL14, AL24, AL27 and AL28; AUD-382 and AUD-251 in
+  `raw/dispositions.tsv` and `raw/commits.tsv`, `register.py` and `maps.py` re-run; done when no YAML
+  entry names WP5.10 as open. **Executor:** main
 - [ ] 12. The Outcome, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]`; done when the code and
   review say so. **Executor:** main
 

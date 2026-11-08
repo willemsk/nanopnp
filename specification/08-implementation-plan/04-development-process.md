@@ -138,7 +138,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 #### 8.4.5 Agents and models
 
 * Implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and moves to
-  Opus only after Sonnet has failed on the item. (§8.2.11 L6)
+  Opus only after Sonnet has failed on the item. (§8.2.11 L6) WP5.10's main session runs on Opus at high
+  effort, its sub-agents as its plan names them (§8.2.36 AL29).
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
