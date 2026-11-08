@@ -281,3 +281,38 @@ def _sweep_over(directory: Path, values: list[str]) -> Path:
         encoding="utf-8",
     )
     return path
+
+
+def _exposed(case: Case) -> dict[str, dict[str, tuple[object, ...]]]:
+    record = case.models_record
+    assert record is not None
+    return {
+        file.kind: {
+            value.name: (value.path, value.unit, value.low, value.high, value.default)
+            for value in file.exposed
+        }
+        for file in record.files
+    }
+
+
+def test_fr39_a_model_exposes_its_kinds_list_unless_its_file_replaces_it(tmp_path: Path) -> None:
+    study = split_case(QUICKSTART, tmp_path)
+    case = Case.load(study)
+    assert _exposed(case) == {
+        "continuum": {"size_scale": ("numerics.mesh.size_scale", "dimensionless", 0.0, None, 1.0)},
+        "physics": {
+            "concentration": ("electrolyte.concentration_M", "molar", None, None, 0.1),
+            "bias": ("boundary_conditions.bias_V", "volt", None, None, 0.05),
+        },
+    }
+    physics = yaml.safe_load((tmp_path / "physics.yaml").read_text(encoding="utf-8"))
+    physics["exposes"] = [
+        {"name": "salt", "path": "electrolyte.concentration_M", "range": [0.05, 3.0]}
+    ]
+    (tmp_path / "physics.yaml").write_text(yaml.safe_dump(physics), encoding="utf-8")
+    declared = Case.load(study)
+    assert _exposed(declared)["physics"] == {
+        "salt": ("electrolyte.concentration_M", "molar", 0.05, 3.0, 0.1)
+    }
+    assert CaseArtefact(declared).hash == CaseArtefact(case).hash, "exposes: keys nothing"
+    assert declared.overrides == {}

@@ -160,11 +160,16 @@ check_meshes=False).forecast().builds["mesh"]` over two files at a time, against
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/io/models.py`, `src/nanopnp/io/case.py`, `src/nanopnp/validation/case_leaves.py`,
+- [x] a03086f 1. `src/nanopnp/io/models.py`, `src/nanopnp/io/case.py`, `src/nanopnp/validation/case_leaves.py`,
   `src/nanopnp/cli/reference.py`, with the split fixtures of `tests/tier1/test_models.py`,
   `tests/tier1/test_project.py`, `tests/tier1/test_case_leaves.py` and `tests/tier2/test_named_models.py` in the same
   commit, since the hook runs Tier 1: the physics kind and its ownership (D1, D5, D6); done when rows 1 to 3, 6 and 8
   pass. **Executor:** main.
+
+  > **Outcome — item 1 carried the project's physics kind and the refused state.** `_split` writes a physics
+  > model and `problems()` walks every item kind, so Tier 1 needed `io/project.py`'s kinds, `_SUITE_OF`, `_split`
+  > and `_bodies` in this commit; `test_gui_screens.py` also asserted `bias_V` in the refused problem, and now
+  > asserts `radius_nm`. Item 3 keeps the frame.
 - [ ] 2. `src/nanopnp/io/models.py`, `src/nanopnp/io/case_paths.py`, `src/nanopnp/api/project.py:_body`,
   `tests/tier1/test_models.py`: exposed values (D3); done when row 4 passes. **Executor:** main.
 - [ ] 3. `src/nanopnp/io/project.py`, `src/nanopnp/api/project.py`, `src/nanopnp/gui/web/frame.py`,
