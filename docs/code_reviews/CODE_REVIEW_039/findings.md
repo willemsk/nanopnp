@@ -1,6 +1,6 @@
 # CODE_REVIEW_039: the findings register
 
-Written by `.claude/scripts/audit/register.py` at `81c913a` from the tables under `raw/`: the ten readers' returns (`reader-*.md`), the orchestrator's own findings and the task walks (`own-findings.md`), the dispositions (`dispositions.tsv`) and the fix commits (`commits.tsv`). 387 findings, 365 of them live; every one has one `AUD-nn` number and one state. The schema is the brief's: `fixed <sha>`, `your call` or `dismissed <reason>`; a `to fix (<category>)` state is a fix not yet committed. The line numbers in *Where* are those of the audited commit, a5039af.
+Written by `.claude/scripts/audit/register.py` at `86e647b` from the tables under `raw/`: the ten readers' returns (`reader-*.md`), the orchestrator's own findings and the task walks (`own-findings.md`), the dispositions (`dispositions.tsv`) and the fix commits (`commits.tsv`). 387 findings, 365 of them live; every one has one `AUD-nn` number and one state. The schema is the brief's: `fixed <sha>`, `your call` or `dismissed <reason>`; a `to fix (<category>)` state is a fix not yet committed. The line numbers in *Where* are those of the audited commit, a5039af.
 
 ## Counts
 
@@ -15,8 +15,8 @@ Written by `.claude/scripts/audit/register.py` at `81c913a` from the tables unde
 
 | State | Findings |
 |---|---|
-| fixed | 47 |
-| your call | 318 |
+| fixed | 48 |
+| your call | 317 |
 | dismissed | 22 |
 
 | Source | Findings | AUD range |
@@ -47,7 +47,7 @@ Written by `.claude/scripts/audit/register.py` at `81c913a` from the tables unde
 | AUD-07 | ORC-07 | accuracy | low | your call |
 | AUD-08 | ORC-08 | accuracy | low | fixed 0b26b9f |
 | AUD-09 | ORC-09 | accuracy | medium | fixed 81c913a |
-| AUD-10 | ORC-10 | organisation | low | your call |
+| AUD-10 | ORC-10 | organisation | low | fixed 4061c40 |
 | AUD-11 | ORC-11 | accuracy | medium | your call |
 | AUD-12 | ORC-12 | efficiency | medium | fixed d9c3eb5 |
 | AUD-13 | ORC-13 | redundancy | low | your call |
@@ -806,7 +806,7 @@ Ranked high, medium, low within each axis, then by number. A dismissed finding i
 | AUD-351 (KPH-24) | organisation | medium | src/nanopnp/physics/coefficients.py:26; 06-numerics-fem/12-tier-1-test-evidence-the-langevin.md:18; 01-physics-epnpns/index.md | Two citations send the reader to `knowledge/01-physics-epnpns/index.md` for a fact. The index is a list of links and holds neither fact (`f^w_D` within 1 % beyond 0.75 nm; the 3e-4 cutoff). | `grep -n '0.75\|3e-4' knowledge/01-physics-epnpns/index.md` returns nothing. The facts are at 04-rationale…:23 and 08-errata…:36, and 07-implementation-notes…:72. | coefficients.py:26 → `knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` (E1). 06/12 → `knowledge/01-physics-epnpns/07-implementation-notes-carried-forward.md`. | one wasted hop | a comment in `src/` (prose-only change) | your call |
 | AUD-371 (KPH-44) | organisation | medium | 00-orientation/06-still-open.md:17-19; 03-nanopore-biology/index.md:6; 03-nanopore-biology/03-clya-in-depth-the-reference-system.md:45-61 | The "still open" pointer for the ClyA-AS mutation list lands on an index, one hop from the material (03-03 §"ClyA-AS and the variant series"). That material treats the question as settled ("Both are correct for their starting point"). The item cites ruling 8, which is about net charge. | 06-still-open.md:17-19 "→ `knowledge/03-nanopore-biology/index.md`". 03-03:58 "Both are correct for their starting point". 05-author-rulings…:29 (ruling 8: "Net charge (−72.9 / −72 / −60 e)"). | Point to `knowledge/03-nanopore-biology/03-clya-in-depth-the-reference-system.md#clya-as-and-the-variant-series`. Either drop the item as settled, or state what is open (KPH-41's inconsistency). | one hop | none | your call |
 | AUD-381 (WLK-09) | organisation | medium | `specification/a-traceability-matrix.md`; `specification/07-verification/03-tier-2.md` | No pointer on the test path names the test file of a Tier 2 current benchmark (VER-16, VER-17, VER-62); Appendix A gives test paths only for the VAL rows and the later FR rows. | Walks 7 and 11. | A test-file column in §7.3's table, or in Appendix A for every VER row (SPD-17 relates). | none | none | your call |
-| AUD-10 (ORC-10) | organisation | low | `docs/code_reviews/CODE_REVIEW_014.md`, `022`, `023`, `026`, `027`, `028`, `030`, `031`, `032`, `033`, `035`; `docs/design/reviews/2026-10-25-concepts.md`, `2026-10-25-style.md` | Thirteen records are linked from no Markdown file and named by none; a reader reaches them only by listing the directory. | `raw/inventory.md`, "Files no other Markdown links to or names" (15 at a5039af; the other two are an agent file, which the host discovers by directory, and this report). DOC's reachability table. | An index for `docs/code_reviews/` with a status line per report, and a `docs/design/reviews/index.md`: structural proposals 1 and 3 of §5. | none | none | your call |
+| AUD-10 (ORC-10) | organisation | low | `docs/code_reviews/CODE_REVIEW_014.md`, `022`, `023`, `026`, `027`, `028`, `030`, `031`, `032`, `033`, `035`; `docs/design/reviews/2026-10-25-concepts.md`, `2026-10-25-style.md` | Thirteen records are linked from no Markdown file and named by none; a reader reaches them only by listing the directory. | `raw/inventory.md`, "Files no other Markdown links to or names" (15 at a5039af; the other two are an agent file, which the host discovers by directory, and this report). DOC's reachability table. | An index for `docs/code_reviews/` with a status line per report, and a `docs/design/reviews/index.md`: structural proposals 1 and 3 of §5. | none | none | fixed 4061c40 (the three record indexes, written by index_records.py) |
 | AUD-149 (SPD-26) | organisation | low | specification/07-verification/index.md:1; specification/08-implementation-plan/index.md:1 | The two section indexes have no front matter (no `type`, `title`, `description`). Every other file in the bundle starts with `---`. | The first line of each is `## 7. …` / `## 8. …`; 05-software-design/index.md is the same. specification/index.md and history/index.md carry `okf_version`. | Add front matter `type: Specification`, `title`, `description` to the section indexes, if the OKF rules require it. | none | none | your call |
 | AUD-150 (SPD-27) | organisation | low | specification/a-traceability-matrix.md (FR-21, FR-22, CON-02 rows) | VAL-11 to VAL-14 (analyte force validation targets) and VAL-03/04 appear nowhere in Appendix A. The analyte requirements trace to VER-19 to VER-22 only. | `grep -c VAL-11 a-traceability-matrix.md` gives 0. tests/tier2/test_force_convergence.py carries VAL-11. | Add VAL-11 (and VAL-12 to VAL-14 as unmet) to FR-21/FR-22. | none | none | your call |
 | AUD-186 (KGE-35) | organisation | low | front matter of 04/02, 03, 04-mesh, 06, 07, 08; 04/14 | Concepts that cite thesis lines do not list the thesis in `sources`. 14 lists `wp5.03-plan` with no footnote that uses it. | 02:9-18 (paper only, cites T/TA throughout). 03:29-32 (wp28 only, cites T L402-429). 04-mesh and 07 have no `sources`, yet cite T. | Add `thesis` to each `sources`. In 14, footnote the Grounding §D3 claims to `wp5.03-plan` or drop the source. | ≈0 | none | your call |

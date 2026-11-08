@@ -8,6 +8,7 @@ ORC-05	fix:dead-tests
 ORC-06	fix:front-matter		
 ORC-08	fix:citations		
 ORC-09	fix:present-tense		
+ORC-10	fix:indexes	the three record indexes, written by index_records.py	
 ORC-12	fix:pointers		
 ORC-15	fix:stale-names		
 SPA-01	fix:stale-counts	also SPD-02	
