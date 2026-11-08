@@ -2,12 +2,8 @@
 
 `[tested:]` markers: 448. `[verified]` markers: 123.
 
-## `[tested:]` markers whose test does not exist (5)
+## `[tested:]` markers whose test does not exist (1)
 
-- `knowledge/05-analyte-and-forces/12-tier-1-test-evidence-analyte-bodies.md:23` no function `TestAnalyteInBox::test_fr21_the_body_is_a_half_disc_of_the_right_size` in `tests/tier1/test_analyte.py`
-- `knowledge/05-analyte-and-forces/12-tier-1-test-evidence-analyte-bodies.md:24` no function `TestAnalyteInBox::test_fr21_the_analyte_boundary_is_the_bodys_meridian_arc` in `tests/tier1/test_analyte.py`
-- `knowledge/05-analyte-and-forces/12-tier-1-test-evidence-analyte-bodies.md:25` no function `TestPoreWithAnalyte::test_fr21_the_body_does_not_eat_the_pore_wall` in `tests/tier1/test_analyte.py`
-- `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md:613` no function `TestAxialExtension::test_num28_extension_is_ez_on_the_body_and_zero_on_the_outer_boundary` in `tests/tier1/test_forces.py`
 - `knowledge/log.md:38` unparseable marker `…`
 
 ## Files whose `verified:` list differs from the tests their markers name (6)

@@ -53,9 +53,8 @@ def _plan_decisions() -> dict[str, set[str]]:
         match = re.match(r"^wp(\d+(?:\.\d+)?)-", path.name)
         if not match:
             continue
-        rows = set(
-            re.findall(r"^\|\s*\*?\*?(D\d+)\*?\*?\s*\|", path.read_text(encoding="utf-8"), re.M)
-        )
+        # A plan's first cell is ``D1``, ``**D1**`` or ``D1 <a title>`` (wp46, wp59).
+        rows = set(re.findall(r"^\|\s*\*{0,2}(D\d+)\b", path.read_text(encoding="utf-8"), re.M))
         found[match.group(1)] = rows
     return found
 

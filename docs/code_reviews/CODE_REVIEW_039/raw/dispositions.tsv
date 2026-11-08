@@ -1,0 +1,75 @@
+# id	status	note	extra_where
+# status is one of: fix:<category> (planned; register.py prints it as "fixed <sha>" once the category's commit sha is in commits.tsv), your call, dismissed. Unlisted reader ids default to "your call". A dismissed duplicate names the finding that keeps it.
+ORC-01	fix:scripts	chore commit: clause.py and duplicates.py first-cell match	
+ORC-02	fix:stale-paths		
+ORC-03	fix:stale-paths		
+ORC-04	fix:present-tense		
+ORC-05	fix:dead-tests		
+ORC-06	fix:front-matter		
+ORC-08	fix:citations		
+ORC-09	fix:present-tense		
+ORC-12	fix:pointers		
+ORC-15	fix:stale-names		
+SPA-01	fix:stale-counts	also SPD-02	
+SPA-03	fix:stale-names	the registered names are the case-file names FR-18 says; the SHALL is unchanged	
+SPD-03	fix:stale-counts		
+SPD-04	fix:stale-counts	66 of 83; 17 none yet	
+SPD-10	fix:stale-names	VER-47 title v0.5 -> v0.6	
+SPD-16	fix:present-tense	bundle runs when mode != pr	
+SPC-06	fix:stale-names	profile/field/sweep v1 -> v0.5 (also 03-requirements.md:104, VER-60 row)	
+SPC-09	fix:citations		
+SPC-10	fix:citations		
+SPC-25	fix:pointers		
+SPB-32	fix:citations	PHY-13 -> PHY-01 at 04-physics.md:553	
+SPB-33	fix:stale-names	case schema v2 -> nanopnp/case/v0.6	
+SPB-41	fix:pointers	name the rulings file	
+SPB-45	fix:stale-counts	four -> five	
+SPB-46	fix:stale-paths	thesis/ path; also 07/07-local-assets.md:21 row (KST-20) and KPH-17	
+KPH-18	fix:stale-names	thesis chapter numbers verified against thesis.tex	
+KPH-42	fix:stale-names	ReFraC D10R/K159E verified in electrostatics.tex:291	
+KGE-13	fix:stale-paths	write_charged_tube and CHARGED_TUBE_ATOMS are in src/nanopnp/validation/charged_tube.py	
+KNU-05	fix:stale-counts	nineteen -> twenty numbered, and one unnumbered	
+KNU-18	fix:stale-names	stabilisation_currents_A	
+KNU-25	fix:stale-counts	four hundred	
+KST-02	fix:stale-names	tool table row and tested_with to 3.8.0; dated sentences stay	
+KST-03	fix:stale-names	PySide6 6.11.2	
+KST-04	fix:stale-names	case/v1 -> case/v0.6; fields/charge-grid v2 -> now v0.5 (G6)	
+KST-08	fix:present-tense	row 3 of 08/05: nightly, recorded not gated; row 4 stays (SPD-06)	
+KST-11	fix:present-tense	every push; tested or verified	
+KST-17	fix:stale-paths	import_gmsh in tests/conftest.py	
+KST-19	fix:stale-counts	07/13:45 names PUBLIC's twenty; the twelve-month sentence is the maintainers' statement and stands	
+DOC-04	fix:stale-counts	six rows in §4.6, five in the knowledge file	
+CLD-05	fix:citations	L7, Q1, R11, AI15 instead of N3	
+CLD-08	fix:citations	§8.2.17 S2, S6	
+CLD-10	fix:citations	workbench.md rules instead of VER-60	
+CLD-17	fix:stale-counts	twenty	
+CLD-19	fix:present-tense	gate.sh header: tier1 and not slow	
+CLD-20	fix:present-tense	gate.sh header: browser requirement	
+CLD-21	fix:stale-paths	hosts/copilot.md	
+CLD-25	fix:pointers	np-ship/wp.md §7 -> this file's 7. After the merge	
+SPD-01	dismissed	duplicate of ORC-02 and ORC-03	
+SPD-02	dismissed	duplicate of SPA-01	
+SPD-15	dismissed	history-prose-review H keeps the closed OPN rows and the §8.2.1 to §8.2.6 logs until v1.0	
+KPH-01	dismissed	duplicate of SPB-43	
+KPH-03	dismissed	duplicate of SPB-44	
+KPH-07	dismissed	duplicate of SPB-06	
+CLD-11	dismissed	duplicate of SPB-06	knowledge/00-orientation/02-the-five-things-most-likely-to-trip-you.md:25
+KPH-11	dismissed	duplicate of SPB-25	
+KPH-15	dismissed	duplicate of SPB-26	
+KPH-17	dismissed	duplicate of SPB-46	
+KNU-11	dismissed	duplicate of SPB-14	
+KNU-12	dismissed	duplicate of SPB-16	
+KNU-14	dismissed	duplicate of SPB-08	
+KNU-15	dismissed	duplicate of SPB-15	
+KST-07	dismissed	duplicate of SPD-13	specification/05-software-design/02-pipeline-stages.md:279-284
+KST-12	dismissed	duplicate of ORC-05; its fourth passage (07/19:32) already says the test was deleted	
+KST-15	dismissed	duplicate of ORC-06	
+KST-16	dismissed	duplicate of ORC-07	
+KGE-14	dismissed	duplicate of ORC-07	knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md:26 (second marker)
+KST-24	dismissed	duplicate of ORC-09 for 07/08:85; 07/12:103 and :162-163 state the renaming and the removal	
+KNU-33	dismissed	the footnotes resolve in a full clone; the hosted clone is shallow (50 commits)	
+KST-46	dismissed	the footnotes resolve in a full clone; the hosted clone is shallow (50 commits)	
+SPC-07	your call	its "§8.2.9" citation is ORC-08, fixed; the rest (two schemas not at v0.5) is the author's	
+DOC-06	your call	its quantities row is ORC-15, fixed; the snippets stay the author's	
+KST-20	your call	its thesis/ row is fixed with SPB-46; the author's home-directory row and the yaml row stay	
+SPA-22	your call		
