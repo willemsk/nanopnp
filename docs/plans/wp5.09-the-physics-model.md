@@ -175,9 +175,9 @@ check_meshes=False).forecast().builds["mesh"]` over two files at a time, against
 - [x] b09cf2c 3. `src/nanopnp/io/project.py`, `src/nanopnp/api/project.py`, `src/nanopnp/gui/web/frame.py`,
   `src/nanopnp/gui/web/states.py`, `tests/tier1/test_project.py`: the project and the frame (D4); done when rows 7
   and 9 pass. **Executor:** main.
-- [ ] 4. `tests/tier1/test_models.py`: row 5, the wall following the physics salt (D2); done when it passes.
+- [x] d039cdc 4. `tests/tier1/test_models.py`: row 5, the wall following the physics salt (D2); done when it passes.
   **Executor:** main.
-- [ ] 5. Compaction checkpoint. **Executor:** main.
+- [x] 5. Compaction checkpoint. **Executor:** main.
 - [ ] 6. `.claude/hooks/gate.sh run` and the strict documentation build, which item 1's reference text and
   `Models.physics` description regenerate: VER-62's walks unmoved, no re-pin. **Executor:** main.
 - [ ] 7. FR-39's and FR-32's Appendix A rows name the tests; `CHANGELOG.md`; Outcome notes; `current.md`. Done when
