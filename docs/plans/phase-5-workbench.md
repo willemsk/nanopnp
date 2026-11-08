@@ -4,7 +4,7 @@
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27). Release: **v0.6** (`v0.6.0`).
+AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27); how the plans are filed and WP5.10's model ruled at its plan the same day (AL28, AL29). Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -222,7 +222,7 @@ the manifest records the file, and the frame's rail lists physics models (FR-32,
 the Study suite's list WP5.19's; REV-217 and REV-219 land in WP5.13, REV-220 and REV-221 in WP5.14, REV-218 in WP5.16
 (AL22). Tagged `v0.6.0-alpha.9`.
 
-### WP5.10 — The written knowledge's tools and rules (CODE_REVIEW_039; §8.2.36 AL3 to AL7, AL14, AL24, AL27)
+### WP5.10 — The written knowledge's tools and rules (CODE_REVIEW_039; §8.2.36 AL3 to AL7, AL14, AL24, AL27, AL28)
 
 The three follow-up packages take CODE_REVIEW_039's findings as `findings.md` gives them, each marking in its register
 the findings it lands (the report's section 11). An edit that changes no meaning lands without asking; one that touches
@@ -234,9 +234,10 @@ folded into it, and `/np-plan` and `/np-ship` re-running it in each commit that 
 re-run by `/np-plan wp` and `/np-ship` (AL4). The architecture page generated on the site beside the modularity
 measurements (AL6). Two Tier 1 guards in the architecture family: the decisions page equals the tree, and §5.1's module
 rows equal the subpackages. Ruff's `C901` and `PLR0913`, thresholds set from the sample (AL7), and a report on what xenon
-and import-linter would add, neither adopted (AL27). The delivered plans archived by phase, the finished briefs and
-reviews under `archive/sessions/`, every link and written path rewritten, records included, and `/np-ship phase` moving a
-closing phase (AL5). `/np-ship`'s preflight names the changelog heading `tag.yml` reads, and the eight Phase 5 entries
+and import-linter would add, neither adopted (AL27). Every plan moved once into its phase's folder,
+`docs/plans/phase-<n>/`, and the finished briefs and reviews into `sessions/`, every link and written path rewritten,
+records included; later plans written there from the start, so a phase close moves nothing; a link check over every
+Markdown file in CI (AL5, AL28). `/np-ship`'s preflight names the changelog heading `tag.yml` reads, and the eight Phase 5 entries
 under `## [Unreleased]` move to their versions (AL14). §8.4.4, §8.4.5 and `CLAUDE.md`'s list of three scripts state the
 rules and the kept scripts. Tag
 `v0.6.0-alpha.10`.
