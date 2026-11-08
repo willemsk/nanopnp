@@ -21,7 +21,8 @@ ROOT = Path(__file__).resolve().parents[2]
 BUNDLE = ROOT / "specification"
 DEFINITION_ROW = re.compile(r"^\|\s*\*\*([A-Z]+-\d+)\*\*\s*\|")
 DEFINITION_PARAGRAPH = re.compile(r"^\*\*([A-Z]+-\d+)\.\*\*")
-RULING_ROW = re.compile(r"^\|\s*([A-Z]+\d+)\s*\|")
+# The letter is the first cell's first token: the cell may carry an italic annotation.
+RULING_ROW = re.compile(r"^\|\s*([A-Z]+\d+)(?=[\s|])[^|]*\|")
 RECORD_HEADING = re.compile(r"^#+\s+(8\.2\.\d+)\s")
 REV_ROW = re.compile(r"^\|\s*(REV-\d+)\s*\|")
 REPORT = re.compile(r"CODE_REVIEW_(\d+)")
