@@ -294,7 +294,7 @@ check, and `load_case`, `resolve` and the desktop shell's commit all run it, wit
 text. The author ruled that "`nanopnp validate`" means a new subcommand, `nanopnp validate case
 <file>`, beside the Tier-3 comparison harness: it loads and resolves the case, makes every check a
 run makes before it meshes, and prints the model, the stabilisation and the stages a run would
-walk (open question 1 of the [WP38 plan](../plans/wp38-io-split.md)).
+walk (open question 1 of the [WP38 plan](../plans/phase-4/wp38-io-split.md)).
 
 ### REV-28 — The viewer renders every finished run eagerly
 
@@ -838,7 +838,7 @@ sites in `physics/models.py`, not their callers.
 
 ### REV-80 — A source change selects every process-starting test file, so the commit hook misses its 60 s budget
 
-*Area:* performance. *Severity:* medium. *Found:* [WP43](../plans/wp43-development-loop.md) item 2.
+*Area:* performance. *Severity:* medium. *Found:* [WP43](../plans/phase-4/wp43-development-loop.md) item 2.
 
 **Measured.** On 4 cores, Python 3.14.6, with a map recorded on the commit's parent, a planted body
 change through the hook took 115 s in `rectification_ratio` (866 tests in 40 files; 8 tests call it)
@@ -864,12 +864,12 @@ into the child through its environment), so a child is a set of functions rather
 or move each process-starting test that does not need its file's module fixtures into a file of its
 own. A third, re-setting the budget, is the author's (J7).
 
-**Fixed.** By removal ([WP44](../plans/wp44-simplify-the-loop.md), §8.2.11 L2): the commit hook runs all of Tier 1, so no
+**Fixed.** By removal ([WP44](../plans/phase-4/wp44-simplify-the-loop.md), §8.2.11 L2): the commit hook runs all of Tier 1, so no
 process-starting test is selected or widened and no commit falls back. The recorder, selector and map are deleted.
 
 ### REV-81 — Most past commits would fall back to the development selection
 
-*Area:* performance. *Severity:* low. *Found:* [WP43](../plans/wp43-development-loop.md) item 2.
+*Area:* performance. *Severity:* low. *Found:* [WP43](../plans/phase-4/wp43-development-loop.md) item 2.
 
 **Measured.** Of the 15 latest non-merge commits touching `src/` whose parent this clone holds
 (`a93f5e3` to `d630f85`), D4's rules fall back on 12: another module-level change in 10, a changed
@@ -885,11 +885,11 @@ development selection: 234 s on 4 cores.
 function body does) would need its own soundness argument beside WP43 Design §1. Re-measure on the
 commits of WP46 before deciding whether it is worth one.
 
-**Fixed.** By removal ([WP44](../plans/wp44-simplify-the-loop.md), §8.2.11 L2): no selection exists to fall back from.
+**Fixed.** By removal ([WP44](../plans/phase-4/wp44-simplify-the-loop.md), §8.2.11 L2): no selection exists to fall back from.
 
 ### REV-82 — The push gate takes over 9 minutes against its 5-minute budget
 
-*Area:* performance. *Severity:* medium. *Found:* [WP43](../plans/wp43-development-loop.md) item 10.
+*Area:* performance. *Severity:* medium. *Found:* [WP43](../plans/phase-4/wp43-development-loop.md) item 10.
 
 **Measured.** `gate.sh run` on tree `4d9c306` (2,213 tests, the development selection under branch
 coverage and the `extended` walks without it, 4 cores, a quiet machine) took 555 s against
@@ -902,7 +902,7 @@ the same walk whenever the change reaches a process-starting test (REV-80).
 
 ### REV-83 — The longest-first test order is inert under xdist file scheduling
 
-*Area:* performance. *Severity:* low. *Found:* [WP43](../plans/wp43-development-loop.md) item 10.
+*Area:* performance. *Severity:* low. *Found:* [WP43](../plans/phase-4/wp43-development-loop.md) item 10.
 
 **Measured.** WP43 D8 collects files longest first so that `--dist loadfile` would start example 07
 first. pytest-xdist re-sorts the files by their number of tests unless `--no-loadscope-reorder` is
@@ -1166,7 +1166,7 @@ The pending claims include numerical sweeps no current fixture runs and aliasing
 
 **Ruled** (§8.2.22 X7): the claim is narrowed to what is tested, `mpi4py` not locked and the configuration flags showing no MPI; no binary is scanned. WP57.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): The claim in `knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md` is narrowed to the lock file and the build configuration, with the test that shows the flags; no binary is scanned.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): The claim in `knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md` is narrowed to the lock file and the build configuration, with the test that shows the flags; no binary is scanned.
 
 
 ### REV-112 — Three suspected costs were never measured
@@ -1309,7 +1309,7 @@ into the force stage.
 
 **Ruled** (§8.2.22 X6): accepted as recommended. NUM-29's NOTE on the force surface states the refusal. WP57.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `post/forces.py:check_force_surface` names the pair of materials on the two sides of the force surface and refuses a surface of several, exit 4; `extract` calls it with the ingested mesh, and the QoI stage passes it.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `post/forces.py:check_force_surface` names the pair of materials on the two sides of the force surface and refuses a surface of several, exit 4; `extract` calls it with the ingested mesh, and the QoI stage passes it.
 
 ## REV-121: Stage 1 checks no axis for a monomeric or hetero-oligomeric pore
 
@@ -1348,7 +1348,7 @@ validated default; otherwise a cached result survives an edit of the file.
 
 **Ruled** (§8.2.22 X6): accepted as recommended. §5.3.1's NOTE on a correction file outside the package states it. WP57.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): A correction file named by an absolute or case-relative path is read, its content hash enters the stage-8 key and the manifest, and it is listed as a deviation.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): A correction file named by an absolute or case-relative path is read, its content hash enters the stage-8 key and the manifest, and it is listed as a deviation.
 
 ## REV-123: The library has no plotting helpers or notebook display
 
@@ -1570,7 +1570,7 @@ The stages a value invalidates follow from the content hashes that key each stag
 
 **Design round held** (§8.2.31 AG2 to AG5, 3 November 2026), over mockup A's round-2 `st-sweep`: a variable is a value with its unit or an expression of others, parsed without running code; units are checked through `pint`; stages and identity are keyed by the resolved values, the variables recorded as written; and a forecast of the stages each swept value rebuilds is shown as a warning. WP5.07 lands the library step (FR-39); WP5.19 the Sweep tool.
 
-**Fixed** (WP5.07, [the plan](../plans/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.19's (FR-39's Appendix A row).
+**Fixed** (WP5.07, [the plan](../plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.19's (FR-39's Appendix A row).
 
 ## REV-140: Two of the author's marks on the mockups ask what is not yet said
 
@@ -1629,7 +1629,7 @@ the control edge; REV-176 records the rest.
 
 ## REV-144: Case.cylinder takes a charge field, not a uniform wall surface charge
 
-The author's notes for WP54 (`docs/plans/notebooks-review-for-wp54.md`, Area A) give `Case.cylinder` a
+The author's notes for WP54 (`docs/plans/sessions/notebooks-review-for-wp54.md`, Area A) give `Case.cylinder` a
 `surface_charge_C_m2` argument. The case schema has no surface charge: a fixed charge reaches a case only as a field
 under `inputs.charge` (`nanopnp/field/v0.5`, whose forms are `uniform`, `gaussian_ring` and `slab`), or deposited
 from a structure. §8.2.20 V3 keeps the schema unchanged, so `Case.cylinder` takes a field file (`charge=`) instead,
@@ -1640,7 +1640,7 @@ wall charge is a boundary condition or a field form.
 
 **Ruled** (§8.2.22 X3): a boundary condition, `boundary_conditions.wall_charge_C_m2` beside `geometry.pore`, a surface term of the one weak form (PHY-09's NOTE), checked by VER-77; `Case.cylinder` takes it. WP57.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `Case.cylinder` takes `wall_charge_C_m2`, a uniform surface charge on the lumen wall as a boundary condition (VER-77).
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `Case.cylinder` takes `wall_charge_C_m2`, a uniform surface charge on the lumen wall as a boundary condition (VER-77).
 
 ## REV-145: No case builders by section before Phase 5
 
@@ -1656,7 +1656,7 @@ and a mapping form for a path that names more than one field. V3's deferral is s
 **Ruled** (§8.2.23 Y1, Y2, superseding W7): a `Case` is built from the public typed blocks of `nanopnp.case`, and
 `with_` takes a whole block, as a typed block or a mapping, creating an absent one. WP57.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): A case is built from the typed blocks of `nanopnp.case` and edited by copy through `Case.with_`; no builder by section is added.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): A case is built from the typed blocks of `nanopnp.case` and edited by copy through `Case.with_`; no builder by section is added.
 
 ## REV-146: The cylinder's default wall size is coarser than NUM-30's first layer
 
@@ -1671,7 +1671,7 @@ of its parity with examples 02 and 03 and their VER-62 golden?
 
 **Ruled** (§8.2.20 V9): both. The fixed 0.35 nm stays the default, keeping the examples' mesh and golden, and
 `Case.cylinder(wall_h_nm="debye")` sizes the wall at `λ_D/5` of the case's salt; notebook 05 offers both
-([WP54 plan](../plans/wp54-notebooks-and-figures-revised.md)).
+([WP54 plan](../plans/phase-4/wp54-notebooks-and-figures-revised.md)).
 
 ## REV-147: The lumen window is fixed, not read from the region
 
@@ -1791,11 +1791,11 @@ is covered by a test.
 
 **Ruled** (§8.2.22 X6): the four couplings are fixed in WP57, against the recommendation to leave them.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): The bulk is one constant, `physics.models.DIRICHLET_BULK`, shared with `post/export.py`; the Debye length is read once (the `"debye"` wall is gone); `prepared_pore`'s digest reads `structure/read.py` as well as `orient.py`, and the mesher's list goes with `mesh/cylinder.py`; the triangulation cache holds weak references.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): The bulk is one constant, `physics.models.DIRICHLET_BULK`, shared with `post/export.py`; the Debye length is read once (the `"debye"` wall is gone); `prepared_pore`'s digest reads `structure/read.py` as well as `orient.py`, and the mesher's list goes with `mesh/cylinder.py`; the triangulation cache holds weak references.
 
 ## REV-154: NUM-34's refusal names a setting that a supplied mesh ignores
 
-Found while running user-testing session 03 (WP55, [plan](../plans/wp55-user-testing-protocol.md)) as a dry run; it
+Found while running user-testing session 03 (WP55, [plan](../plans/phase-4/wp55-user-testing-protocol.md)) as a dry run; it
 is the program's, so the session is not rewritten around it (§8.2.7 G7, D6).
 
 `nanopnp run` of a case that reads a mesh file with a 1.0 nm wall exits 4 on the wall-distance gate, and the message
@@ -1810,7 +1810,7 @@ is in this package (no `src/` change); the author rules.
 **Ruled** (§8.2.21 W5): accepted, for WP56. The pipeline hands the gate its remedy from where the mesh came from,
 and QR-12's NOTE on the remedy states the rule for every gate.
 
-**Fixed** (WP56, [plan](../plans/wp56-command-line-read-by-a-person.md)): `solve/state.py:wall_distance_remedy` gives
+**Fixed** (WP56, [plan](../plans/phase-4/wp56-command-line-read-by-a-person.md)): `solve/state.py:wall_distance_remedy` gives
 the gate `numerics.mesh.wall_h_nm` for a generated mesh, and the supplied file with `nanopnp mesh cylinder
 --wall-h-nm` otherwise (`test_num34_refusal_names_a_setting_the_run_reads`).
 
@@ -1821,7 +1821,7 @@ Left by the review of WP55 ([CODE_REVIEW_019](../code_reviews/CODE_REVIEW_019.md
 
 - **The rectification sentence has no marker.** `knowledge/02-electrokinetics-background/07-ionic-current-rectification.md`
   now says rectification needs an axial asymmetry of the geometry or of the fixed charge. Its only support is
-  session 05's dry run (0.91 at 50 mV, [plan Outcome](../plans/wp55-user-testing-protocol.md)); no test in scope
+  session 05's dry run (0.91 at 50 mV, [plan Outcome](../plans/phase-4/wp55-user-testing-protocol.md)); no test in scope
   asserts it, so it carries neither `[tested]` nor `[verified]` with a source. It needs a literature source from the
   author, or a Tier 2 case that is in the test scope.
 - **Session 04's "Then try" variation.** Editing `selectivity.py` alone to read `solve` fails: the notebook registers
@@ -1840,7 +1840,7 @@ public call; the other two items stay open.
 
 **Ruled** (§8.2.22 X6, X8): the rectification sentence is softened to session 05's observation, with no general claim; the tagged-block parser becomes one helper for the example and session checks. WP57.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `validation/examples.py:untagged_commands` serves the session and the example tests; the rectification sentence no longer asserts that a fixed-charge asymmetry alone rectifies; session 04's variation re-registers an edited function under the same name.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `validation/examples.py:untagged_commands` serves the session and the example tests; the rectification sentence no longer asserts that a fixed-charge asymmetry alone rectifies; session 04's variation re-registers an edited function under the same name.
 
 ## REV-156: A 16 562-element cylinder takes minutes to solve (UT-09)
 
@@ -1853,7 +1853,7 @@ factorising again (REV-60), so the time is about what the measured parts predict
 registered thresholds (§8.2.12 M2). WP56 measures the time of each rung and the factorisation's share on that mesh
 and writes them here; its progress report shows each rung as it is solved.
 
-**Measured** (WP56, [plan](../plans/wp56-command-line-read-by-a-person.md), item 9's Outcome): the mesh of
+**Measured** (WP56, [plan](../plans/phase-4/wp56-command-line-read-by-a-person.md), item 9's Outcome): the mesh of
 `--maxh-nm 0.175` has 16 444 elements and 8 404 vertices; session 03's case (validated ePNP-NS, stabilisation
 `none`) takes 761 s on a 4-core container, 754 s in the solve, 60 Newton steps over 15 rungs. The five bias rungs
 take 8 to 10 s each and `6-flow` 23 s; the six `epnp-ns` rungs take 88 to 120 s each, at the same five steps. Of
@@ -1891,7 +1891,7 @@ with the next change to `validation/runs.py`; take the last two items with whate
 
 **Ruled** (§8.2.22 X6): all four items go to WP57; the end-of-rung call goes with `Case.run`'s hooks.
 
-**Fixed** (WP57, [plan](../plans/wp57-idealised-pore-and-python-interface.md)): `SolveHook.rung_solved` gives a rung's seconds, which the progress line prints; `validation/runs.py:reopen` reads through `read_run`; `inspect` reads the manifest once and `Manifest.hash` is cached; `wall_distance_remedy` has no unreachable branch.
+**Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `SolveHook.rung_solved` gives a rung's seconds, which the progress line prints; `validation/runs.py:reopen` reads through `read_run`; `inspect` reads the manifest once and `Manifest.hash` is cached; `wall_distance_remedy` has no unreachable branch.
 
 
 ## REV-158: A correction file named by path puts its absolute path in the stage-8 and stage-10 keys
@@ -2153,7 +2153,7 @@ class moves the balance far inside it.
 
 ## REV-166: The Copilot hook probes are incomplete
 
-Raised by the implementation of [the Copilot host plan](../plans/copilot-host.md), built before its
+Raised by the implementation of [the Copilot host plan](../plans/sessions/copilot-host.md), built before its
 Phase 0 probes ran (§8.2.25 AA6).
 
 **Verified** (app 1.1.34, WSL host, disposable clones, 31 October 2026):
@@ -2208,7 +2208,7 @@ Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code
 
 ## REV-169: The Phase-1 reference sweep's base case writes its mesh path against the working directory
 
-Found by WP58 while it revised example 05's README ([plan](../plans/wp58-documentation-increment-4.md), item 8).
+Found by WP58 while it revised example 05's README ([plan](../plans/phase-4/wp58-documentation-increment-4.md), item 8).
 `docs/sweeps/phase1-reference.case.yaml` names `inputs.mesh.path: docs/sweeps/clya-reference.msh`, and its header
 comment says the path resolves against the process working directory and not against the file, so it is written from
 the repository root. A relative path is read beside the case file (§5.3.1, the NOTE on a relative path), and

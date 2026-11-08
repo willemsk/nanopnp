@@ -7,7 +7,7 @@ description: "Records the agreed Phase 1 exit gate of §8.1 and the end-of-phase
 #### 8.2.3 Phase 1 exit, agreed 24 September 2026
 
 The Phase 1 gate of §8.1 is "Tier 1 and Tier 2 pass; Tier 3 enabled and differences attributed".
-The end-of-phase report (`docs/plans/phase-1-solver-core.md`) measures the phase against it.
+The end-of-phase report (`docs/plans/phase-1/phase-1-solver-core.md`) measures the phase against it.
 
 | # | Amendment | Consequence |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 `/np-plan phase <n>` is the level above `/np-plan wp`. It turns a row of `SPECIFICATION.md` §8.1 into
 the author's rulings and a sequence of work packages, each small enough for one PR. It delivers a
-ruling record in `specification/history/` and `docs/plans/phase-<n>-<slug>.md`, in one commit. A
+ruling record in `specification/history/` and `docs/plans/phase-<n>/phase-<n>-<slug>.md`, in one commit. A
 package's own decisions belong to `/np-plan wp <n>`. This level decides only what spans packages.
 
 `/np-plan phase <n>` plans Phase n in **two turns**: a ruling round, then the write-up.
@@ -14,7 +14,7 @@ Commit nothing in this turn.
 
 ### 1. Preconditions
 
-1. If a `docs/plans/phase-<n>-*.md` exists, this is an amendment. Read `amend.md` beside this file and
+1. If a `docs/plans/phase-<n>/phase-<n>-*.md` exists, this is an amendment. Read `amend.md` beside this file and
    follow it.
 2. Phase n−1 is closed: its close package has merged, its end-of-phase report is written, and its
    `vX.Y.0` tag is published or is the author's next step. If not, say so **first**, and put the close
@@ -56,7 +56,7 @@ Read what `rulings.md`'s *What a phase inherits* lists. Keep a list of each item
 agreed <date>`. Amend each clause that the rulings change, and §8.1's row if the deliverable, gate or
 estimate moved.
 
-**`docs/plans/phase-<n>-<slug>.md`**, in the voice of `phase-3-charge-pipeline.md`:
+**`docs/plans/phase-<n>/phase-<n>-<slug>.md`**, in the voice of `phase-3/phase-3-charge-pipeline.md`:
 
 | Section | Content |
 |---|---|

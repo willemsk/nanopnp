@@ -35,7 +35,7 @@ verified:
   at: '2026-10-16T00:00:00Z'
 sources:
 - id: wp23-plan
-  resource: docs/plans/wp23-gmsh-backend.md
+  resource: docs/plans/phase-2/wp23-gmsh-backend.md
   title: WP23 Gmsh backend plan (ubuntu-latest runtime library packages)
 tested_with:
   scikit-image: 0.26.0
@@ -251,5 +251,5 @@ Outcomes):
 
 ---
 
-[^wp23-plan]: `docs/plans/wp23-gmsh-backend.md` (CI `ubuntu-latest` runtime library prerequisites for `gmsh`).
+[^wp23-plan]: `docs/plans/phase-2/wp23-gmsh-backend.md` (CI `ubuntu-latest` runtime library prerequisites for `gmsh`).
 

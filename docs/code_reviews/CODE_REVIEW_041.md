@@ -1,7 +1,7 @@
 # Code review 041: WP5.10's plan, the written knowledge's tools and rules
 
 2026-11-08 · branch `claude/admiring-ride-s11d6x`, the plan commit `2e44d14` on `da395a7` · scope:
-`docs/plans/wp5.10-the-written-knowledges-tools-and-rules.md`, `docs/plans/current.md`, `docs/plans/index.md` ·
+`docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md`, `docs/plans/current.md`, `docs/plans/index.md` ·
 focus: the plan's claims against the code, its decisions against §8.2.36 AL3 to AL7, AL14, AL24 and AL27, its
 verification rows, its caps and sections · status: completed.
 

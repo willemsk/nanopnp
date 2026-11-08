@@ -77,7 +77,7 @@ localise an error to one term (§7.1).
 
 ## What to write
 
-`docs/plans/wp<n>-<slug>.md`:
+`docs/plans/phase-<p>/wp<n>-<slug>.md`, in the folder of its phase p:
 
 | Section | Content |
 |---|---|

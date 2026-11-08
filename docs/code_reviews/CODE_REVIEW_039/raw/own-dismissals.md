@@ -16,7 +16,7 @@ Every hit of step 1 that is not a finding. The findings the hits produced are OR
 | `probes.md`, `pending.yaml`: `docs/project/review-items.md:1091,1093`, `knowledge/log.md:38` | REV-103's closed record and the log line that records the deletion. |
 | `probes.md`, `nanopnp/case/v0.5`: `specification/05-software-design/03-1-case-file.md:110,759,767` | Each names the identifier as retired (SPC-21 counts the second as a duplicate sentence). |
 | `probes.md`, `load_case`, `run_case`, `resolve(`: `.claude/scripts/clause.py:26`, `duplicates.py:20` | `Path.resolve()`. |
-| `probes.md`, `load_case`, `resolve(`: `docs/plans/phase-5-workbench.md:169`, `specification/05-software-design/03-1-case-file.md:278,282,776`, `docs/project/review-items.md:2552` | `pipeline.case.load_case` and `pipeline.case.resolve` exist (`src/nanopnp/pipeline/case.py:56,265`); not public, but the sentences do not say they are. |
+| `probes.md`, `load_case`, `resolve(`: `docs/plans/phase-5/phase-5-workbench.md:169`, `specification/05-software-design/03-1-case-file.md:278,282,776`, `docs/project/review-items.md:2552` | `pipeline.case.load_case` and `pipeline.case.resolve` exist (`src/nanopnp/pipeline/case.py:56,265`); not public, but the sentences do not say they are. |
 | `probes.md`, `run_case`, `resolve`: `docs/project/review-items.md:289,293,1048,1974`, `knowledge/log.md:24` | Closed items' *Measured* text and a log line that records the renaming (WP57). |
 | `probes.md`, old command names (16 live hits) | `core.md:4-5` states that plans before WP53 use them; the REV titles and *Found* lines name the review that found an item, as it was called; `knowledge/07-software-stack/15-…:45,47` cite "the WP32 `/wp-ship` review" as a dated source. |
 | `probes.md`, PyQt (11 live hits) | Every hit forbids PyQt or asserts its absence. |
@@ -26,7 +26,7 @@ Every hit of step 1 that is not a finding. The findings the hits produced are OR
 | `markers.md`, `knowledge/log.md:38` unparseable `[tested: …]` | The log line describes the marker form. |
 | `markers.md`, `[verified]` without footnote: `knowledge/00-orientation/03:19`, `04:32`, `08-validation-benchmarks/00:17`, `knowledge/log.md:38,53` | The convention's own text and two log lines. (The other fifteen are ORC-07.) |
 | `markers.md`, `[verified]` sources by kind (70 plan or review, 17 COMSOL report, 9 specification, 6 ESI, 5 code or test, 1 thesis) | A profile of the evidence, reported in §2; the one thesis-footnoted claim is KGE-10. |
-| `links.md`, broken paths: `docs/code_reviews/CODE_REVIEW_013.md:31`, `docs/plans/wp52-specification-and-plans-split.md:175` | Records stay byte for byte; both are reported here for reachability. |
+| `links.md`, broken paths: `docs/code_reviews/CODE_REVIEW_013.md:31`, `docs/plans/phase-4/wp52-specification-and-plans-split.md:175` | Records stay byte for byte; both are reported here for reachability. |
 | `links.md`, anchors `README.md:63-67` → `CHANGELOG.md#010---2026-09-02` and the like | GitHub's anchor for `## [0.1.0] - 2026-09-02`; `links.py` applies Python-Markdown's slug, and README is read on GitHub, not on the site. |
 | `links.md`, anchors `docs/plans/wp13-…:17`, `wp14-…:19` | Records. |
 | `inventory.md`, unreached `.claude/agents/physics-reviewer.md` | Claude Code discovers an agent by its directory; CLAUDE.md names it by name. |

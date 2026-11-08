@@ -20,7 +20,7 @@ sources:
   resource: git:0ff2d619:docs/plans/wp20-contour-extraction.md
   title: WP20 contour and probe plan, Design §1 pqr2grid audit
 - id: wp22-plan
-  resource: docs/plans/wp22-val05-reference-geometry.md
+  resource: docs/plans/phase-2/wp22-val05-reference-geometry.md
   title: WP22 VAL-05 reference geometry plan, Outcome — item 4
 generated:
   by: claude-code/0.5.0-alpha.13
@@ -314,4 +314,4 @@ MD frame (G9). It uses the same planes and metric as §1.4.
 [^thesis]: Willems, PhD thesis (LaTeX source).
 [^wp18-plan]: `git show 0ff2d619:docs/plans/wp18-structure-ingestion.md`, Design §4 and Outcomes (25 September 2026).
 [^wp20-plan]: `git show 0ff2d619:docs/plans/wp20-contour-extraction.md`, Design §1 (`pqr2grid` `create_polygon_contour`, commit `a8e2898`).
-[^wp22-plan]: `docs/plans/wp22-val05-reference-geometry.md`, Outcome — item 4 (30 September 2026).
+[^wp22-plan]: `docs/plans/phase-2/wp22-val05-reference-geometry.md`, Outcome — item 4 (30 September 2026).

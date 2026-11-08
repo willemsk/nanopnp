@@ -11,7 +11,7 @@ sources:
   resource: https://github.com/hgrecco/pint
   title: pint, upstream repository (BSD-3-Clause; `pip install pint`)
 - id: wp5.07-plan
-  resource: docs/plans/wp5.07-variables-and-the-rebuild-forecast.md
+  resource: docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md
   title: WP5.07 plan, Grounding for D2
 generated:
   by: claude-code/0.6.0-alpha.7

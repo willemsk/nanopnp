@@ -2,7 +2,7 @@
 
 `/np-ship phase <n>` ships the close package of Phase n and tags the release (§8.2.16 R5; §8.4.1).
 
-1. **Find the close package** in the phase plan, `docs/plans/phase-<n>-*.md`: its
+1. **Find the close package** in the phase plan, `docs/plans/phase-<n>/phase-<n>-*.md`: its
    `### The close package`, or else the last package of `## Work packages`. From here, `wp.md` works
    on its WP number.
 2. **Run `wp.md`** §0 to §3 on the close package's PR.

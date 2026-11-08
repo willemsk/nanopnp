@@ -7,7 +7,7 @@ description: "Records the author's rulings closing Phase 2 and planning Phase 3,
 #### 8.2.4 Phase 2 exit and Phase 3 decisions, agreed 30 September 2026
 
 Rulings by the author, taken while closing Phase 2 and planning Phase 3
-(`docs/plans/phase-3-charge-pipeline.md`). Where a ruling changes a clause, the clause is amended in
+(`docs/plans/phase-3/phase-3-charge-pipeline.md`). Where a ruling changes a clause, the clause is amended in
 the commit named in the last column.
 
 | # | Decision | Consequence | Clause changed, and when |

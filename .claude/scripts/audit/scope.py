@@ -1,6 +1,7 @@
-"""The files the written-knowledge audit reads, by the scope of ``docs/plans/kb-audit-brief.md``.
+"""The files the written-knowledge audit reads, by its brief's scope.
 
-Reads nothing but the tree; writes nothing. Every audit script imports its scope from here so
+The brief is ``docs/plans/sessions/kb-audit-brief.md``. Reads nothing but the tree; writes
+nothing. Every audit script imports its scope from here so
 that each measures the same files. ``live_files()`` are audited on all five axes;
 ``record_files()`` for reachability only; ``out_of_scope()`` names the Markdown the brief leaves
 out, so an inventory can say so rather than silently skip it.
@@ -28,7 +29,7 @@ LIVE_GLOBS: tuple[str, ...] = (
     "docs/design/workbench.md",
     "docs/design/tokens.css",
     "docs/plans/current.md",
-    "docs/plans/phase-5-workbench.md",
+    "docs/plans/phase-5/phase-5-workbench.md",
     ".claude/workflow/**/*.md",
     ".claude/skills/**/*.md",
     ".claude/agents/*.md",
@@ -39,7 +40,7 @@ LIVE_GLOBS: tuple[str, ...] = (
 
 RECORD_GLOBS: tuple[str, ...] = (
     "specification/history/*.md",
-    "docs/plans/*.md",
+    "docs/plans/**/*.md",
     "docs/code_reviews/**/*.md",
     "docs/design/reviews/**/*.md",
     "docs/design/spike/**/*.md",
@@ -60,7 +61,7 @@ OUT_GLOBS: tuple[str, ...] = (
     "docs/scripts/**/*",
 )
 
-LIVE_PLANS = frozenset({"docs/plans/current.md", "docs/plans/phase-5-workbench.md"})
+LIVE_PLANS = frozenset({"docs/plans/current.md", "docs/plans/phase-5/phase-5-workbench.md"})
 
 
 def _own_output(path: Path) -> bool:

@@ -23,22 +23,22 @@ verified:
   at: '2026-11-08T00:00:00Z'
 sources:
 - id: wp14-plan
-  resource: docs/plans/wp14-gui-shell-packaging-probe.md
+  resource: docs/plans/phase-1/wp14-gui-shell-packaging-probe.md
   title: WP14 GUI shell and packaging probe plan (PySide6 GL library and Playwright
     shim observations)
 - id: wp15-plan
-  resource: docs/plans/wp15-live-convergence-and-viewer.md
+  resource: docs/plans/phase-1/wp15-live-convergence-and-viewer.md
   title: WP15 GUI 3D view and packaging plan (`ngsolve_webgui_js` 0.2.39 and PyInstaller
     OCCT/OpenBLAS)
 - id: wp24-plan
-  resource: docs/plans/wp24-gui-geometry-pipeline.md
+  resource: docs/plans/phase-2/wp24-gui-geometry-pipeline.md
   title: WP24 GUI geometry pipeline plan, D16–D17 (geometry payload bundle and view-model
     costs)
 - id: wp31-plan
   resource: git:0ff2d619:docs/plans/wp31-gui-charge-pipeline.md
   title: WP31 charge viewer plan, D8 (fixed colour range and viewer settings)
 - id: wp501-plan
-  resource: docs/plans/wp5.01-workbench-design-study.md
+  resource: docs/plans/phase-5/wp5.01-workbench-design-study.md
   title: WP5.01 workbench design study plan (offscreen Qt and headless Playwright
     render checks)
 tested_with:
@@ -471,10 +471,10 @@ failure in the dark theme, not before. The 3D view's background is the same kind
 
 ---
 
-[^wp14-plan]: `docs/plans/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
-[^wp15-plan]: `docs/plans/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
-[^wp24-plan]: `docs/plans/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).
+[^wp14-plan]: `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
+[^wp15-plan]: `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
+[^wp24-plan]: `docs/plans/phase-2/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).
 [^wp31-plan]: `git show 0ff2d619:docs/plans/wp31-gui-charge-pipeline.md`, D8 (scene colour limits and `gui_settings.autoscale`).
-[^wp501-plan]: `docs/plans/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).
+[^wp501-plan]: `docs/plans/phase-5/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).
 [^wp502-report]: `docs/design/spike/report.md` (the framework spike's six measures and what the build taught, WP5.02 items 1 to 5).
-[^wp508-plan]: `docs/plans/wp5.08-the-frame-and-the-project-folder.md`, items 8 to 10 (the frame, its render findings and Outcome notes).
+[^wp508-plan]: `docs/plans/phase-5/wp5.08-the-frame-and-the-project-folder.md`, items 8 to 10 (the frame, its render findings and Outcome notes).

@@ -7,7 +7,7 @@ description: "Records the author's rulings on the Phase 3 exit and Phase 4 relea
 #### 8.2.5 Phase 3 exit and the Phase 4 release, agreed 3 October 2026
 
 Rulings by the author, taken while planning WP34, the last Phase 3 work package
-(`docs/plans/wp34-phase-3-close.md`). Where a ruling changes a clause, the clause is amended in the
+(`docs/plans/phase-3/wp34-phase-3-close.md`). Where a ruling changes a clause, the clause is amended in the
 commit named in the last column.
 
 | # | Decision | Consequence | Clause changed, and when |

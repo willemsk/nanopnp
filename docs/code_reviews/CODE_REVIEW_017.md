@@ -69,7 +69,7 @@ No benchmark, sweep, gate, documentation build or `--nightly` walk was run, and 
 | 12 | `src/nanopnp/plot/figures.py`, `solve_figure` | `assert fields is not None` inside the panel loop narrowed a type with a statement that `-O` removes, once per panel. | Fixed: the loop sits under `if fields is not None`. |
 | 13 | `src/nanopnp/core/paths.py`, `structure_file` | A name with any suffix was taken as a full file name, else `.pdb` was added. A stem with a dot (`model.v2`) could never be found. | Fixed: the name is tried as given, then with `.pdb`. |
 | 14 | `src/nanopnp/pipeline/run.py`, `RunResult.fields` | One message served two causes: a run that did not reach the solve, and a run with no resolved case (as one read back from disk). The second read "which this run did not reach". | Fixed: two messages. |
-| 15 | `docs/design/workbench.md`; `docs/plans/wp54-notebooks-and-figures-revised.md` item 3 | The design lists `solution_fields` among `plot/data.py`'s functions and the plan names `handle.py:_path_of`. Both moved in this branch. | Fixed in `workbench.md`. The plan's line is a record and stays. |
+| 15 | `docs/design/workbench.md`; `docs/plans/phase-4/wp54-notebooks-and-figures-revised.md` item 3 | The design lists `solution_fields` among `plot/data.py`'s functions and the plan names `handle.py:_path_of`. Both moved in this branch. | Fixed in `workbench.md`. The plan's line is a record and stays. |
 
 ## Checks that held
 
