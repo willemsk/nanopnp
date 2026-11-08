@@ -32,6 +32,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_protonation_2wcd.py::test_ver57_q_net_of_the_prepared_dodecamer_is_its_golden
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_pqr.py::test_ver57_pdb2pqr_38_terminal_patches_name_no_residue
+  at: '2026-11-08T00:00:00Z'
 sources:
 - id: wp17-plan
   resource: docs/plans/wp17-case-schema-v2.md

@@ -36,7 +36,7 @@ function that builds the registry (VER-72 lists `pint` with the other costly imp
 variables never loads either.
 
 **Why `Fraction`.** A float registry gives 20 Å → 1.9999999999999998 nm, a different key from the decimal
-`2.0`. With `Fraction` magnitudes entered as `Fraction(repr(value))`, each of these `==` the decimal:
+`2.0`. With `Fraction` magnitudes entered as `Fraction(repr(value))`, each of these `==` the decimal **[tested: tests/tier1/test_variables.py::test_fr39_a_conversion_of_the_same_dimension_is_exact]**:
 20 Å → 2.0 nm, 3.5 Å → 0.35, 0.3 Å → 0.03, 50 mV → 0.05 V, 100 mM → 0.1 M, 25 degC → 298.15 K.
 
 **What raises.**

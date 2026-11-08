@@ -19,6 +19,8 @@ tested_with:
 verified:
 - by: process:tests/tier1/test_protonation.py::test_fr38_a_pinned_state_holds_and_changes_that_residue_alone
   at: '2026-11-03T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_fr38_the_titratable_groups_are_propkas
+  at: '2026-11-08T00:00:00Z'
 ---
 
 ## 23. Pinning a protonation state through PDB2PQR's `apply_pka_values` (WP5.04)

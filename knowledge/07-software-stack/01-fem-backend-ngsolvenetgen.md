@@ -15,6 +15,8 @@ tested_with:
 verified:
 - by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts
+  at: '2026-11-08T00:00:00Z'
 ---
 
 ## 1. FEM backend — NGSolve/Netgen
