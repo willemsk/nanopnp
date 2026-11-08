@@ -142,9 +142,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
-  classifier. The script
-  `.claude/scripts/clause.py` prints a clause by identifier. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17
-  S22)
+  classifier. Three scripts are kept: `.claude/scripts/clause.py` prints a clause by identifier,
+  `duplicates.py` names a number that two items of one register share (§8.4.4), and `same_tree.py`
+  checks that changed Python files differ only in prose (§8.2.11 L5). (§8.2.11 L6, L9; §8.2.16 R6;
+  §8.2.17 S22)
 * A batch of independent, mechanical items, such as a sweep over many files, a rename or a per-module
   pass, goes item by item to a new Haiku or Sonnet sub-agent given the item and the clauses it cites.
   The main session keeps the plan and the git log and re-runs the item's check before the next. Items
