@@ -1,6 +1,6 @@
 # Current work
 
-Updated 8 November 2026 (WP5.10 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 8 November 2026 (WP5.10 reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -19,9 +19,9 @@ audit findings to check.
   (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36): WP5.10 to WP5.12 CODE_REVIEW_039's
   follow-up, WP5.13 and WP5.14 the clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the
   route, WP5.22 the close.
-  **WP5.10** [planned](wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
+  **WP5.10** [planned, reviewed](wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
   pages with VER-79, the plans archived, ruff's complexity rules, the changelog, the tools' trial.
-  Next `/np-plan wp 5.10 review`, then `/np-implement`.
+  Next `/np-implement wp 5.10` once approved.
   host: claude-code.
 
 ## Not to be re-decided

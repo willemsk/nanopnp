@@ -10,7 +10,7 @@ wrong.
 ## In brief
 
 **What changes.** The project's written record learns to keep itself level with the code. Every
-decision ever taken, about eleven hundred, becomes one searchable page on the documentation site,
+decision ever taken, about twelve hundred and fifty, becomes one searchable page on the documentation site,
 rebuilt by a script, and a check refuses a commit that leaves it out of date. A second page describes
 the program's parts as they stand, rebuilt with every site build, and a check keeps the design's list
 of parts equal to the code's. Finished plans move into an archive folder per phase, every link to them
@@ -55,10 +55,14 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
 **D1.**
 - `.claude/scripts/audit/decisions.py:main` writes 1,170 rows at `da395a7`: 309 history, 474 plan
   `Dn`, 222 `REV`, 38 `WB`, 18 `MOD`, 14 knowledge-base, 12 bullets, 9 `OPN`, and 74 evidence rows
-  (25 *Your call*, 24 Outcome, 13 marks, 11 checklist items, 1 review sentence). D1 keeps 1,096.
+  (25 *Your call*, 24 Outcome, 13 marks, 11 checklist items, 1 review sentence). D1 keeps 1,096,
+  about 1,250 with every `Dn` row.
 - `history()` reads `specification/history/index.md`'s `* <id> - <entry>` lines (`HOLDS`), the
   section *Where each ruling holds now* from line 51 to the end: 309 entries, one per ruling, none
   missing.
+- The prototype's `D_ROW` takes only `| D1 |`: of 632 plan rows that open `| D<n>`, it misses 158,
+  every plan from wp41 on and all of Phase 5's, which write `| D1 <name> |` or, as this plan does,
+  `| D1. <name> |`, and wp42's `| D14b |`. The 474 above is the narrow count.
 - `plans()` globs `docs/plans/*.md`, skipping only `current.md`; `where` is `path:line`;
   `registers()`, `workbench()`, `orientation()`, `current()` and `open_items()` read
   `docs/project/{review,modularity}-findings.md`, `docs/design/workbench.md`,
@@ -70,7 +74,9 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
   published. PyYAML is a runtime dependency.
 - The index's list is named by `SPECIFICATION.md` (two lines: the history bullet and the map's),
   `specification/index.md`'s History entry, §11's table row and `np-plan/rulings.md`'s *Where the rulings are
-  written*. `clause.py` reads ruling rows, not the list.
+  written*; `core.md`'s *Records* row says a ruling round writes "its lines in `history/index.md`", and
+  `rulings.md` step 2 and `project.md` step 1 read the index for the rulings that bind. `clause.py` reads
+  ruling rows, not the list.
 
 **D2.**
 - `.github/scripts/prose-only.sh` calls every `*.md` outside `packaging/`, `src/`, `data/` and
@@ -82,7 +88,8 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
   and `case.py`.
 - The highest identifier is VER-78. Tests reach the repository through
   `nanopnp.validation.findings.REPOSITORY` (`test_layering.py`); none loads a script by path, so the
-  guard uses `importlib.util.spec_from_file_location`.
+  guard loads `decisions.py` and `docs/scripts/architecture.py` with
+  `importlib.util.spec_from_file_location` and reads §5.1 with the latter's `TABLE_ROW`.
 
 **D3.**
 - `.claude/scripts/audit/architecture.py:render` imports `LAYER_ORDER`, `STATIC_KINDS`, `Module`,
@@ -110,6 +117,8 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
   `rulings.md` (`phase-4-record.md`).
 - `audit/links.py` reads `scope.py`'s files and reports 58 broken without `docs/_generated/` and 2
   after `generate.py`: `CODE_REVIEW_013.md:31` and `wp52-specification-and-plans-split.md:175`.
+  `scope.py:_own_output` leaves out `docs/code_reviews/CODE_REVIEW_039/`, whose `decisions.md` holds 984
+  relative links copied from other folders, all broken; `git ls-files '*.md'` includes it.
 - `duplicates.py:main` globs `docs/plans/wp*.md`; `audit/scope.py`'s `RECORD_GLOBS` has
   `docs/plans/*.md`. `np-ship/phase.md` step 1 finds `docs/plans/phase-<n>-*.md`, still top-level
   until its close.
@@ -153,15 +162,17 @@ Appendix A; open decision 14. **Implementing session:** Sonnet, high effort; jud
 `src/nanopnp/`.
 
 **Item 2.** `archive_plans.py`: build `moved: {old: new}` first, from a table (WP 1–6 → 0, 7–16 →
-1, 17–25 → 2, 26–34 → 3, 35–60 → 4, phase plans and `phase-4-record.md` by their number, the six
-names → `sessions`) or from `--phase N`. For each file of `git ls-files` that decodes as UTF-8, with
+1, 17–25 → 2, 26–34 → 3, 35–60 → 4, the number read by `^wp(\d+)-`, so `wp5.01` to `wp5.09` never
+match; phase plans and `phase-4-record.md` by their number, the six names → `sessions`) or from
+`--phase N`. For each file of `git ls-files` that decodes as UTF-8, with
 `new_self = moved.get(f, f)`: in a `*.md` file, for each link of `links.py`'s `LINK` whose target has
 no scheme and no leading `#`, resolve it against `f`'s old directory, map it through `moved`, and write
 it relative to `new_self`'s directory, anchor kept; leave it untouched when neither end moved. Mask
 code for links only, as `generate.py` does. In every such file, inside code too, replace
 `docs/plans/<name>` for each moved name with its new path. Write every file, then `git mv`; print the
 counts. Each promoted script sets `ROOT = Path(__file__).resolve().parents[2]` and imports nothing
-from `audit/`. `links.py` reads `git ls-files '*.md'`. Then: `duplicates.py` to `rglob("wp*.md")`;
+from `audit/`. `links.py` reads `git ls-files '*.md'` less `docs/code_reviews/CODE_REVIEW_039/`'s
+attachments, as `scope.py` leaves them out. Then: `duplicates.py` to `rglob("wp*.md")`;
 `scope.py` to `docs/plans/**/*.md`; the two bare names to full paths; `np-ship/phase.md` step 3 gains
 "The phase's plans are archived (`uv run .claude/scripts/archive_plans.py --phase <n>`), and
 `links.py` names no new broken link."; §8.4.4 gains "A closed phase's plans are under
@@ -177,17 +188,29 @@ included. (§8.2.36 AL5)"
 `yaml.safe_dump(..., sort_keys=False, allow_unicode=True, width=10**6)` from the index's list, under
 a two-line comment saying what it is and that `decisions.py` reads it. The index's section becomes:
 "Where each ruling holds now is the *Holds now* column of the
-[decisions register](../../docs/project/decisions.md), read from `holds-now.yaml` beside this file."
-The page: a title, a sentence naming the script and the command that rewrites it, the two count
+`[decisions register](../../docs/project/decisions.md)`, read from `holds-now.yaml` beside this file."
+`core.md`'s *Records* row, `rulings.md` step 2 and `project.md` step 1 name the YAML in place of the
+index's list. `plans()` reads `docs/plans/**/*.md`, skipping `index.md` and `current.md`; `D_ROW`
+becomes `^\|\s*\*{0,2}(D\d+[a-z]?)\b\.?[^|]*\|(.*)$`, so `| D1 |`, `| D14b |`, `| D1 <name> |` and `| D1. <name> |` all
+count. The page: a title, a sentence naming the script and the command that rewrites it, the two count
 lines, then `| Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |`.
-A cell: links reduced to their text, `<` and `>` as `&lt;` and `&gt;`, `|` as `\|`, whitespace
+A cell: links reduced to their text, `<` and `>` as `&lt;` and `&gt;` outside code spans (masked as
+`generate.py` masks them), `|` as `\|`, whitespace
 collapsed, clipped at 220 characters (160 for *Holds now*) with a backtick appended when an odd number
 remain. Dates: `8 November 2026` → `2026-11-08`, `August 2026` → `2026-08`. Rows sort by (ISO date,
 undated as `9999`; the source kinds in D1's order; path; reading order). `--check` exits 1, printing
 the first differing line and the command; the default writes. The guard and `--check` share
-`render() -> str`, `holds_now() -> dict[str, str]` and `ruling_letters() -> list[str]`.
+`render() -> str`, `holds_now() -> dict[str, str]` and `ruling_letters() -> list[str]`. Under
+`--strict` the page needs `- Decisions register: project/decisions.md` after *Review findings* in
+`mkdocs.yml`, and a row in `docs/project/index.md`, in this item.
 
-**Item 6.** VER-79's row: "The written architecture and decisions | §5.1's `name/` rows equal the
+**Item 6.** In `generate.py`, `from architecture import render as render_architecture`, and
+`"project/architecture.md": render_architecture()` in `rendered`. `render()` takes no argument and
+reads no git, and it sets `ROOT` as item 2 says, without `scope` or `sys.path`; its title becomes `# Architecture` and its first sentence names
+`docs/scripts/architecture.py`, not the audit. Navigation: `- Architecture: _generated/project/architecture.md` after
+*Modularity measurements*, and a row in `docs/project/index.md`.
+
+**Item 7.** VER-79's row: "The written architecture and decisions | §5.1's `name/` rows equal the
 subpackages of `src/nanopnp` in both directions; `docs/project/decisions.md` equals what
 `.claude/scripts/decisions.py` renders from the tree; and the keys of
 `specification/history/holds-now.yaml` equal the ruling letters of `specification/history/` in both
@@ -199,11 +222,6 @@ review re-runs `index_records.py`; the gate refuses a decisions page that differ
 (§8.2.36 AL3, AL4)" In `gate.sh`, after `ruff format --check`:
 `check "decisions page" uv run .claude/scripts/decisions.py --check`; in `ci.yml`'s `docs` job,
 before `generate.py`: `- run: uv run --no-sync .claude/scripts/decisions.py --check`.
-
-**Item 7.** In `generate.py`, `from architecture import render as render_architecture`, and
-`"project/architecture.md": render_architecture()` in `rendered`. `render()` takes no argument and
-reads no git. Navigation: `- Architecture: _generated/project/architecture.md` after
-*Modularity measurements*; `- Decisions register: project/decisions.md` after *Review findings*.
 
 **Item 9.** `git fetch origin 'refs/tags/v0.6.0-alpha.*:refs/tags/v0.6.0-alpha.*'`; each date is
 `git log -1 --format=%cs v0.6.0-alpha.N`. Move each paragraph unchanged, newest first. The preflight
@@ -229,20 +247,21 @@ Record each command, its result and the commit.
   when the code and review say so. **Executor:** `general-purpose` on Sonnet
 - [ ] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. `git mv` of `audit/decisions.py`; `holds-now.yaml`; the index's pointer; `docs/project/decisions.md`;
-  the pointers in `SPECIFICATION.md`, `specification/index.md` and §11; `rulings.md` (D1, D5); done
+  the pointers in `SPECIFICATION.md`, `specification/index.md` and §11; `rulings.md`, `core.md`,
+  `project.md`; the page's navigation (D1, D5); done
   when `--check` passes and the strict build passes. **Executor:** main
-- [ ] 6. `tests/tier1/test_written_architecture.py`; §7.1, §7.2, §7.6, Appendix A; `gate.sh`, `ci.yml`;
+- [ ] 6. `git mv` of `audit/architecture.py` to `docs/scripts/architecture.py`; `generate.py`, `mkdocs.yml`,
+  `docs/project/index.md` (D3); done when the strict build shows the page.
+  **Executor:** `general-purpose` on Sonnet
+- [ ] 7. `tests/tier1/test_written_architecture.py`; §7.1, §7.2, §7.6, Appendix A; `gate.sh`, `ci.yml`;
   the core's *Gate and push*; §8.4.4; §5.1's NOTE (D2, D3, D5); done when VER-79's tests pass.
   **Executor:** main
-- [ ] 7. `git mv` of `audit/architecture.py` to `docs/scripts/architecture.py`; `generate.py`, `mkdocs.yml`,
-  `docs/project/index.md` (D3); done when the strict build shows both pages.
-  **Executor:** `general-purpose` on Sonnet
 - [ ] 8. Compaction checkpoint. **Executor:** main
 - [ ] 9. `CHANGELOG.md`'s nine paragraphs; `np-ship/wp.md` §1; §8.4.1 (D7); done when each of
   `0.6.0-alpha.2` to `.9` greps and the paragraphs are byte-identical. **Executor:** main
 - [ ] 10. The trial and `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, its
   index and `knowledge/log.md` (D8); done when the code and review say so. **Executor:** main
-- [ ] 11. §8.4.5, `CLAUDE.md` (seven scripts; the gate's prose check); `holds-now.yaml` for AL3
+- [ ] 11. §8.4.5, `CLAUDE.md` (seven scripts; the gate's prose check; VER-79 in *Testing*'s guards); `holds-now.yaml` for AL3
   to AL7, AL14, AL24 and AL27; AUD-382 and AUD-251 in `raw/dispositions.tsv` and `raw/commits.tsv`,
   `register.py` and `maps.py` re-run; done when the code and review say so. **Executor:** main
 - [ ] 12. The Outcome, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]`; done when the code and
