@@ -15,6 +15,7 @@ Run it as ``uv run .claude/scripts/audit/markers.py``.
 
 from __future__ import annotations
 
+import ast
 import re
 import sys
 from collections import defaultdict
@@ -49,11 +50,17 @@ def _classify(definition: str) -> str:
 
 
 def _test_functions(path: Path) -> set[str]:
-    return set(
-        re.findall(
-            r"^\s*(?:async\s+)?def\s+(test_\w+)\s*\(", path.read_text(encoding="utf-8"), re.M
-        )
-    )
+    """Return every test name of a file, bare and as ``Class::method`` where it is a method."""
+    names: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.ClassDef):
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    names.add(f"{node.name}::{item.name}")
+                    names.add(item.name)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            names.add(node.name)
+    return names
 
 
 def _front_tests(text: str) -> set[str]:
