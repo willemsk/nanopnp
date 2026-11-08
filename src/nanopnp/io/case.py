@@ -583,7 +583,7 @@ def _installed(name: str, installed: Sequence[str]) -> bool:
 
 
 class Models(_Strict):
-    """The molecular and continuum model files a study names; at least one."""
+    """The molecular, continuum and physics model files a study names; at least one."""
 
     molecular: Path | None = Field(
         default=None,
@@ -596,15 +596,24 @@ class Models(_Strict):
         default=None,
         description=(
             "A continuum-model file (schema nanopnp/continuum-model/v0.6): the geometry, the "
-            "mesh, the physics, the electrolyte and the boundary conditions, read beside the "
-            "file that names it"
+            "region's exclusion offset and the mesh, read beside the file that names it"
+        ),
+    )
+    physics: Path | None = Field(
+        default=None,
+        description=(
+            "A physics-model file (schema nanopnp/physics-model/v0.6): the equations and their "
+            "switches, the electrolyte, the boundary conditions, the element orders, the "
+            "stabilisation and the wall distance, read beside the file that names it"
         ),
     )
 
     @model_validator(mode="after")
     def _names_one(self) -> Models:
-        if self.molecular is None and self.continuum is None:
-            raise ValueError("models: names a molecular: file, a continuum: file or both")
+        if self.molecular is None and self.continuum is None and self.physics is None:
+            raise ValueError(
+                "models: names at least one of a molecular:, a continuum: and a physics: file"
+            )
         return self
 
 

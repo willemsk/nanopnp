@@ -41,6 +41,7 @@ def test_fr32_a_case_imported_into_a_project_keys_as_it_did(tmp_path: Path) -> N
     assert study == "charged-tube"
     assert project.items("study") == ("charged-tube",)
     assert project.items("molecular") == project.items("continuum") == ("charged-tube",)
+    assert project.items("physics") == ("charged-tube",)
     assert sorted(path.name for path in (project.root / "inputs").iterdir()) == [
         "atoms.pqr",
         "profile.yaml",
@@ -74,11 +75,12 @@ def test_fr32_a_study_naming_model_files_imports_them_and_a_second_import_reuses
     assert written
     project = Project.create(tmp_path / "project")
     first = project.import_case(Case.load(study_file), name="first")
-    held = {kind: project.items(kind) for kind in ("molecular", "continuum")}
-    assert {kind for kind in held if held[kind]} == written
+    kinds = ("molecular", "continuum", "physics")
+    held = {kind: project.items(kind) for kind in kinds}
+    assert {kind for kind in held if held[kind]} == written == {"continuum", "physics"}
     assert all(held[kind] == (f"my-{kind}",) for kind in written)
     project.import_case(Case.load(study_file), name="second")
-    assert {kind: project.items(kind) for kind in ("molecular", "continuum")} == held
+    assert {kind: project.items(kind) for kind in kinds} == held
     assert project.study(first) == project.study("second").with_(name=first)
     assert project.problems() == ()
 
@@ -101,7 +103,7 @@ def test_fr32_an_exported_project_reads_back(tmp_path: Path) -> None:
     assert not (copy / "store").exists()
     reopened = Project.open(copy)
     assert reopened.problems() == ()
-    for kind in ("molecular", "continuum", "study", "comparison"):
+    for kind in ("molecular", "continuum", "physics", "study", "comparison"):
         assert reopened.items(kind) == project.items(kind)
     assert (copy / PROJECT_FILENAME).read_bytes() == (project.root / PROJECT_FILENAME).read_bytes()
 
@@ -135,6 +137,12 @@ geometry:
   pore: {shape: cylinder, radius_nm: 2}
   membrane: {thickness_nm: 2.8}
   reservoir: {radius_nm: 250.0}
+numerics: {mesh: {size_scale: 2}}
+"""
+
+PHYSICS = """\
+schema: nanopnp/physics-model/v0.6
+name: tube
 electrolyte:
   species: [{name: Na+, z: 1}, {name: Cl-, z: -1}]
   concentration_M: 0.1
@@ -148,13 +156,12 @@ electrolyte:
     steric: {model: borukhov}
 boundary_conditions: {bias_V: 0.05, ground: cis}
 physics: {model: epnp-ns, flow: false, inertia: true}
-numerics: {mesh: {size_scale: 2}}
 """
 
 STUDY = """\
 schema: nanopnp/case/v0.6
 name: tube-study
-models: {continuum: ../models/continuum/tube.yaml}
+models: {continuum: ../models/continuum/tube.yaml, physics: ../models/physics/tube.yaml}
 boundary_conditions: {bias_V: 0.3}
 """
 
@@ -164,6 +171,8 @@ def test_fr34_the_changed_list_holds_every_value_away_from_its_default_and_every
 ) -> None:
     project = Project.create(tmp_path / "project")
     (project.root / "models/continuum/tube.yaml").write_text(CONTINUUM, encoding="utf-8")
+    (project.root / "models/physics").mkdir(parents=True, exist_ok=True)
+    (project.root / "models/physics/tube.yaml").write_text(PHYSICS, encoding="utf-8")
     (project.root / "studies/tube-study.yaml").write_text(STUDY, encoding="utf-8")
     project = Project.open(project.root)
     assert project.problems() == ()
@@ -175,15 +184,15 @@ def test_fr34_the_changed_list_holds_every_value_away_from_its_default_and_every
         "boundary_conditions.bias_V",
     }
     flow = found["physics.flow"]
-    assert (flow.kind, flow.owner, flow.value, flow.default) == ("value", "continuum", False, True)
+    assert (flow.kind, flow.owner, flow.value, flow.default) == ("value", "physics", False, True)
     scale = found["numerics.mesh.size_scale"]
     assert (scale.kind, scale.value, scale.default) == ("value", 2.0, 1.0)
     bias = found["boundary_conditions.bias_V"]
     assert (bias.kind, bias.value, bias.model, bias.default) == ("override", 0.3, 0.05, None)
     assert {change.path for change in project.changes("continuum", "tube")} == {
-        "physics.flow",
         "numerics.mesh.size_scale",
     }
+    assert {change.path for change in project.changes("physics", "tube")} == {"physics.flow"}
 
     remaining = set(found)
     for path in sorted(found):

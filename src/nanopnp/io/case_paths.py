@@ -524,7 +524,7 @@ def _model_assignments(named: Mapping[str, FieldValue]) -> dict[str, FieldValue]
         if not isinstance(block, Mapping):
             raise CaseValidationError(
                 f"models: {value!r}: a study cannot drop the models it names; set "
-                "models.molecular or models.continuum to swap one"
+                "models.molecular, models.continuum or models.physics to swap one"
             )
         moved.update((f"models.{kind}", item) for kind, item in block.items())
     return moved

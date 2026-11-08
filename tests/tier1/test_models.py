@@ -14,14 +14,13 @@ from nanopnp.api.sweep import plan_sweep
 from nanopnp.core.hashing import file_hash
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case_paths import block_paths, case_fields, substitute
-from nanopnp.io.models import MOLECULAR_SCHEMA, OWNERS, owner_of
+from nanopnp.io.models import CONTINUUM_SCHEMA, MOLECULAR_SCHEMA, OWNERS, PHYSICS_SCHEMA, owner_of
 from nanopnp.io.store import Store
 from nanopnp.sweep.plan import SweepPlanError, plan_from_document
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 QUICKSTART = EXAMPLES / "01-quickstart" / "quickstart.case.yaml"
 CHARGED = EXAMPLES / "07-pdb-to-charged-run" / "2wcd.case.yaml"
-CONTINUUM_SCHEMA = "nanopnp/continuum-model/v0.6"
 
 
 def _leaves(mapping: dict[str, Any], path: str = "") -> list[tuple[str, Any]]:
@@ -44,11 +43,19 @@ def _put(target: dict[str, Any], path: str, value: object) -> None:
 
 
 def split_case(
-    case: Path, directory: Path, *, models: tuple[str, ...] = ("molecular", "continuum")
+    case: Path,
+    directory: Path,
+    *,
+    models: tuple[str, ...] = ("molecular", "continuum", "physics"),
 ):
     """Write ``case`` as model files by ownership and a study; return the study's path."""
     raw = yaml.safe_load(case.read_text(encoding="utf-8"))
-    layers: dict[str, dict[str, Any]] = {"molecular": {}, "continuum": {}, "study": {}}
+    layers: dict[str, dict[str, Any]] = {
+        "molecular": {},
+        "continuum": {},
+        "physics": {},
+        "study": {},
+    }
     for path, value in _leaves(raw):
         kind = owner_of(path)
         if kind not in models:
@@ -56,7 +63,11 @@ def split_case(
         if path == "structure.source.path":
             value = str(case.parent / value)
         _put(layers[kind], path, value)
-    schemas = {"molecular": MOLECULAR_SCHEMA, "continuum": CONTINUUM_SCHEMA}
+    schemas = {
+        "molecular": MOLECULAR_SCHEMA,
+        "continuum": CONTINUUM_SCHEMA,
+        "physics": PHYSICS_SCHEMA,
+    }
     for kind in models:
         if layers[kind]:
             (directory / f"{kind}.yaml").write_text(
@@ -77,13 +88,25 @@ def test_fr39_every_case_leaf_has_one_owner() -> None:
     for row in OWNERS:
         assert any(path == row or path.startswith(f"{row}.") for path in schema_paths), row
     for path in schema_paths:
-        assert owner_of(path) in {"molecular", "continuum", "study"}
+        assert owner_of(path) in {"molecular", "continuum", "physics", "study"}
     assert owner_of("charge.ph") == "molecular"
     assert owner_of("charge.exclusion_offset_nm") == "continuum"
     assert owner_of("charge.smearing.sharpness") == "study"
     assert owner_of("numerics.mesh.maxh_nm") == "continuum"
     assert owner_of("numerics.nonlinear.rtol") == "study"
     assert owner_of("outputs") == "study"
+    for path in (
+        "electrolyte.concentration_M",
+        "boundary_conditions.bias_V",
+        "physics.flow",
+        "numerics.elements.u",
+        "numerics.stabilisation",
+        "numerics.wall_distance.max_distance_nm",
+    ):
+        assert owner_of(path) == "physics", path
+    assert owner_of("numerics.mesh.wall_for_concentration_M") == "continuum"
+    assert owner_of("numerics.continuation") == "study"
+    assert owner_of("numerics.linear.solver") == "study"
 
 
 @pytest.mark.parametrize("example", [QUICKSTART, CHARGED])
@@ -105,10 +128,14 @@ def test_fr39_a_study_keeps_only_the_keys_no_model_owns(tmp_path: Path) -> None:
     study = split_case(QUICKSTART, tmp_path)
     written = yaml.safe_load(study.read_text(encoding="utf-8"))
     assert set(written) == {"schema", "name", "models", "outputs", "numerics"}
-    assert set(written["numerics"]) == {"continuation", "stabilisation"}
+    assert set(written["numerics"]) == {"continuation"}
     continuum = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
-    assert {"geometry", "electrolyte", "boundary_conditions", "physics"} <= set(continuum)
-    assert "outputs" not in continuum
+    assert {"geometry", "numerics"} <= set(continuum)
+    assert set(continuum["numerics"]) == {"mesh"}
+    physics = yaml.safe_load((tmp_path / "physics.yaml").read_text(encoding="utf-8"))
+    assert {"electrolyte", "boundary_conditions", "physics", "numerics"} <= set(physics)
+    assert set(physics["numerics"]) == {"stabilisation"}
+    assert "outputs" not in continuum and "outputs" not in physics
 
 
 def test_fr39_an_override_is_recorded_beside_the_model_value_and_survives_edits(
@@ -130,20 +157,21 @@ def test_fr39_an_override_is_recorded_beside_the_model_value_and_survives_edits(
 def test_fr39_a_model_swap_resolves_the_study_again_under_its_overrides(tmp_path: Path) -> None:
     study = split_case(QUICKSTART, tmp_path)
     case = Case.load(study).with_({"geometry.pore.radius_nm": 2.5})
-    other = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
+    other = yaml.safe_load((tmp_path / "physics.yaml").read_text(encoding="utf-8"))
     other["name"] = "stronger"
     other["boundary_conditions"]["bias_V"] = 0.1
     (tmp_path / "stronger.yaml").write_text(yaml.safe_dump(other), encoding="utf-8")
-    swapped = substitute(case, {"models.continuum": str(tmp_path / "stronger.yaml")})
+    swapped = substitute(case, {"models.physics": str(tmp_path / "stronger.yaml")})
     assert swapped.boundary_conditions.bias_V == 0.1
     assert swapped.geometry is not None and swapped.geometry.pore is not None
     assert swapped.geometry.pore.radius_nm == 2.5
     assert dict(swapped.overrides) == {"geometry.pore.radius_nm": (2.0, 2.5)}
     assert swapped.outputs == case.outputs
-    other["name"] = "named-again"
-    other["geometry"]["pore"]["radius_nm"] = 3.0
-    (tmp_path / "wider.yaml").write_text(yaml.safe_dump(other), encoding="utf-8")
-    both = case.with_({"models.continuum": "wider.yaml", "bias_V": 0.2})
+    pore = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
+    pore["name"] = "wider"
+    pore["geometry"]["pore"]["radius_nm"] = 3.0
+    (tmp_path / "wider.yaml").write_text(yaml.safe_dump(pore), encoding="utf-8")
+    both = swapped.with_({"models.continuum": "wider.yaml", "bias_V": 0.2})
     assert dict(both.overrides) == {
         "geometry.pore.radius_nm": (3.0, 2.5),
         "boundary_conditions.bias_V": (0.1, 0.2),
@@ -185,6 +213,7 @@ def test_fr39_a_run_records_its_model_files_and_overrides(tmp_path: Path) -> Non
     result = session.run(case, upto="mesh")
     files = result.manifest.inputs["files"]
     assert files["models.continuum"]["sha256"] == file_hash(tmp_path / "continuum.yaml")
+    assert files["models.physics"]["sha256"] == file_hash(tmp_path / "physics.yaml")
     assert result.manifest.inputs["overrides"] == {
         "boundary_conditions.bias_V": {"model": 0.05, "study": 0.1}
     }
@@ -194,15 +223,15 @@ def test_fr39_a_run_records_its_model_files_and_overrides(tmp_path: Path) -> Non
 def test_fr39_a_sweep_over_models_resolves_each_member(tmp_path: Path) -> None:
     study_path = split_case(QUICKSTART, tmp_path)
     case = Case.load(study_path).with_({"geometry.pore.radius_nm": 2.5})
-    other = yaml.safe_load((tmp_path / "continuum.yaml").read_text(encoding="utf-8"))
+    other = yaml.safe_load((tmp_path / "physics.yaml").read_text(encoding="utf-8"))
     other["name"] = "stronger"
     other["boundary_conditions"]["bias_V"] = 0.1
     (tmp_path / "stronger.yaml").write_text(yaml.safe_dump(other), encoding="utf-8")
-    models = [str(tmp_path / "continuum.yaml"), str(tmp_path / "stronger.yaml")]
+    models = [str(tmp_path / "physics.yaml"), str(tmp_path / "stronger.yaml")]
 
     session = Session(Store(tmp_path / "store"), write=False)
     planned = plan_sweep(
-        case, session=session, axis="models.continuum", values=models, check_meshes=False
+        case, session=session, axis="models.physics", values=models, check_meshes=False
     )
     members = [planned.plan.case(point.index) for point in planned.plan.points]
     assert [member.boundary_conditions.bias_V for member in members] == [0.05, 0.1]
@@ -220,7 +249,7 @@ def test_fr39_a_sweep_over_models_resolves_each_member(tmp_path: Path) -> None:
                 "schema": "nanopnp/sweep/v0.5",
                 "name": case.name,
                 "base": "base.case.yaml",
-                "axes": [{"name": "continuum", "path": "models.continuum", "values": models}],
+                "axes": [{"name": "physics", "path": "models.physics", "values": models}],
             }
         ),
         encoding="utf-8",
@@ -234,7 +263,7 @@ def test_fr39_a_sweep_over_models_resolves_each_member(tmp_path: Path) -> None:
 
     with pytest.raises(SweepPlanError, match="not a file"):
         plan_from_document(
-            _sweep_over(tmp_path, ["continuum.yaml", "absent.yaml"]), check_meshes=False
+            _sweep_over(tmp_path, ["physics.yaml", "absent.yaml"]), check_meshes=False
         )
 
 
@@ -246,7 +275,7 @@ def _sweep_over(directory: Path, values: list[str]) -> Path:
                 "schema": "nanopnp/sweep/v0.5",
                 "name": "absent",
                 "base": "base.case.yaml",
-                "axes": [{"name": "continuum", "path": "models.continuum", "values": values}],
+                "axes": [{"name": "physics", "path": "models.physics", "values": values}],
             }
         ),
         encoding="utf-8",

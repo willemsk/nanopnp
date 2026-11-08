@@ -55,6 +55,8 @@ _RUN_FILES = ("case.yaml", "manifest.json", "run.json")
 _SUITE_OF: dict[str, Suite] = {
     "molecular": "molecular",
     "continuum": "continuum",
+    # The Continuum suite holds the physics defaults until the frame gives physics its own suite.
+    "physics": "continuum",
     "study": "study",
     "comparison": "analysis",
 }
@@ -311,7 +313,7 @@ class Project:
         if not isinstance(raw, dict):
             raw = case.model_dump(by_alias=True, mode="json", exclude_defaults=True)
         pinned = set(case.expressions)
-        layers: dict[str, dict[str, Any]] = {"molecular": {}, "continuum": {}, "study": {}}
+        layers: dict[str, dict[str, Any]] = {kind: {} for kind in (*MODEL_KINDS, "study")}
         for path, value in leaves(raw):
             if value is None:
                 continue
@@ -611,7 +613,8 @@ class Project:
 
     def _bodies(self) -> list[tuple[ItemKind, str, dict[str, Any]]]:
         found: list[tuple[ItemKind, str, dict[str, Any]]] = []
-        for kind in ("molecular", "continuum", "study"):
+        kinds: tuple[ItemKind, ...] = (*MODEL_KINDS, "study")
+        for kind in kinds:
             for name in self._file.names(kind):
                 location = self.path(kind, name)
                 if location.is_file():

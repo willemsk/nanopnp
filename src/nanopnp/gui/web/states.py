@@ -114,8 +114,8 @@ def boot(state: str, work: Path) -> Workbench:
     if state == "refused":
         # A model file the schema refuses: the project holds it, and lists it as a problem.
         model = project.path("continuum", project.items("continuum")[0])
-        model.write_text(
-            model.read_text(encoding="utf-8").replace("bias_V: 0.05", "bias_V: fast"),
-            encoding="utf-8",
-        )
+        text = model.read_text(encoding="utf-8")
+        if "radius_nm: 30.0" not in text:
+            raise ValueError(f"{model} holds no radius_nm: 30.0 for the refused state to replace")
+        model.write_text(text.replace("radius_nm: 30.0", "radius_nm: wide"), encoding="utf-8")
     return boot_project(project)
