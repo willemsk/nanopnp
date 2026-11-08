@@ -10,7 +10,7 @@ watch need no further prompt.
 
 1. Find them as the core's *The package's PR and branch* says. If no open PR matches, list the closed
    PRs against `main` (the REST route `pulls?state=closed`) with the same title rule. If one of them is
-   merged, go to §7.
+   merged, go to *7. After the merge* below.
 2. If no PR is found and the branch has no commits beyond `origin/main`, stop. A plan on `main` does
    not show that the package was implemented.
 3. **Resuming after a review.** Suppose the PR's **Verification** records a completed review, and
@@ -118,11 +118,11 @@ When CI is green and the PR is mergeable, tell the user in one message:
 - what the review changed, and what is left for them to decide;
 - the tag that the last commit on `main` gets after the merge, or that it gets none
   (`CONTRIBUTING.md`);
-- the full tag commands, each in its own `bash` block, ending the message (§7.4), with
+- the full tag commands, each in its own `bash` block, ending the message (step 4 of *7. After the merge*, below), with
   `origin/main` for the merge commit: they are right only if run before anything else merges.
 
 While the other lane has a PR open, say that whichever merges second needs `/np-ship` again on the new
-`main` before its merge (§8.4.4). The merge is theirs; `/np-ship` after the merge pushes the tag (§7).
+`main` before its merge (§8.4.4). The merge is theirs; `/np-ship` after the merge pushes the tag (*7. After the merge*, below).
 Cancel each open fallback check-in and unsubscribe from the PR's activity, so that the merge does not
 wake a cold session. Then stop. A later `/np-ship` resumes, and subscribes again if the PR is still
 open.

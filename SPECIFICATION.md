@@ -27,7 +27,7 @@ one file per section; this file holds the title block, the reading rule and the 
 - **The rules of the development process** that no clause of its own carries are §8.4
   ([`specification/08-implementation-plan/04-development-process.md`](specification/08-implementation-plan/04-development-process.md)).
 - **Print a clause by its identifier** with `uv run .claude/scripts/clause.py VER-62 §7.6 J8`: it prints
-  the definition, then every NOTE and ruling that names it, each labelled with its file and lines.
+  the definition, then every NOTE and ruling that names it, each labelled with its file and lines; `--no-history` prints the definition and its NOTEs alone.
 - A reference to `SPECIFICATION.md §x` names the section of that number, wherever it lives. The map below
   gives its file.
 
