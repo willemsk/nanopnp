@@ -1,4 +1,4 @@
-"""Named molecular and continuum models: their files, their merge under a study, its overrides."""
+"""Named molecular, continuum and physics models: their files, their merge under a study."""
 
 from __future__ import annotations
 
@@ -38,11 +38,20 @@ MOLECULAR_SCHEMA = "nanopnp/molecular-model/v0.6"
 
 CONTINUUM_SCHEMA = "nanopnp/continuum-model/v0.6"
 
-Kind = Literal["molecular", "continuum", "study"]
+PHYSICS_SCHEMA = "nanopnp/physics-model/v0.6"
 
-MODEL_KINDS: tuple[Literal["molecular", "continuum"], ...] = ("molecular", "continuum")
+ModelKind = Literal["molecular", "continuum", "physics"]
 
-SCHEMAS: dict[str, str] = {"molecular": MOLECULAR_SCHEMA, "continuum": CONTINUUM_SCHEMA}
+Kind = ModelKind | Literal["study"]
+
+# The merge's order: the study goes over the molecular model, then the continuum, then the physics.
+MODEL_KINDS: tuple[ModelKind, ...] = ("molecular", "continuum", "physics")
+
+SCHEMAS: dict[str, str] = {
+    "molecular": MOLECULAR_SCHEMA,
+    "continuum": CONTINUUM_SCHEMA,
+    "physics": PHYSICS_SCHEMA,
+}
 
 # The longest dotted prefix decides; a path with no row is the study's. A mixed block such as
 # `charge` is split below its own name.
@@ -58,9 +67,12 @@ OWNERS: dict[str, Kind] = {
     "numerics.mesh": "continuum",
     "inputs.mesh": "continuum",
     "inputs.profile": "continuum",
-    "physics": "continuum",
-    "electrolyte": "continuum",
-    "boundary_conditions": "continuum",
+    "physics": "physics",
+    "electrolyte": "physics",
+    "boundary_conditions": "physics",
+    "numerics.elements": "physics",
+    "numerics.stabilisation": "physics",
+    "numerics.wall_distance": "physics",
 }
 
 D = TypeVar("D", bound=CaseDocument)
@@ -78,11 +90,15 @@ def owner_of(path: str) -> Kind:
     return "study"
 
 
+def _holder(owner: Kind) -> str:
+    return "the study" if owner == "study" else f"the {owner} model"
+
+
 @dataclass(frozen=True, eq=False)
 class ModelFile:
     """One model file a study read: its kind, its name, its location and its digest."""
 
-    kind: Literal["molecular", "continuum"]
+    kind: ModelKind
     name: str
     path: Path
     sha256: str
@@ -164,7 +180,7 @@ class ModelRecord:
         for path, value in assignments.items():
             kind = path.removeprefix("models.")
             if kind not in MODEL_KINDS:
-                raise CaseValidationError(f"{path}: models: accepts molecular, continuum")
+                raise CaseValidationError(f"{path}: models: accepts molecular, continuum, physics")
             if value is None:
                 raise CaseValidationError(f"{path}: a study cannot drop a model it names")
             if kind not in self.kinds:
@@ -413,12 +429,14 @@ def read_mapping(
 def _named_files(raw: object, directory: Path, source: str) -> dict[str, Path]:
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
-            f"{source}: models: is a mapping of molecular: and continuum: model file paths"
+            f"{source}: models: is a mapping of molecular:, continuum: and physics: model file "
+            "paths"
         )
     unknown = sorted(set(raw) - set(MODEL_KINDS))
     if unknown:
         raise CaseValidationError(
-            f"{source}: models.{unknown[0]}: unknown key; models: accepts molecular, continuum"
+            f"{source}: models.{unknown[0]}: unknown key; models: accepts molecular, continuum, "
+            "physics"
         )
     named: dict[str, Path] = {}
     for kind in MODEL_KINDS:
@@ -430,7 +448,8 @@ def _named_files(raw: object, directory: Path, source: str) -> dict[str, Path]:
         named[kind] = (directory / value).resolve()
     if not named:
         raise CaseValidationError(
-            f"{source}: models: names a molecular: file, a continuum: file or both"
+            f"{source}: models: names at least one of a molecular:, a continuum: and a physics: "
+            "file"
         )
     return named
 
@@ -483,9 +502,7 @@ def _resolve(
     return document
 
 
-def _read_model_file(
-    kind: Literal["molecular", "continuum"], path: Path, source: str
-) -> tuple[ModelFile, dict[str, Any]]:
+def _read_model_file(kind: ModelKind, path: Path, source: str) -> tuple[ModelFile, dict[str, Any]]:
     if not path.is_file():
         raise CaseValidationError(f"{source}: models.{kind}: {path} is not a file")
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -513,12 +530,12 @@ def _read_model_file(
     for leaf in _leaves(body, ""):
         if owner_of(leaf) != kind:
             raise CaseValidationError(
-                f"{path}: {leaf}: belongs to the {owner_of(leaf)}, not to a {kind} model"
+                f"{path}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
             )
     return ModelFile(kind, name, path, file_hash(path)), _rebased(body, path.parent)
 
 
-def check_model_file(kind: Literal["molecular", "continuum"], path: str | Path) -> ModelFile:
+def check_model_file(kind: ModelKind, path: str | Path) -> ModelFile:
     """Read a model file as a study would, refusing it as a study does; return its record."""
     return _read_model_file(kind, Path(path), str(path))[0]
 

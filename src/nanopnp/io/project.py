@@ -22,13 +22,14 @@ PROJECT_FILENAME = "nanopnp-project.yaml"
 ITEM_NAME = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
 """What an item's name may be: it is the item's file stem."""
 
-ItemKind = Literal["molecular", "continuum", "study", "comparison"]
+ItemKind = Literal["molecular", "continuum", "physics", "study", "comparison"]
 
-ITEM_KINDS: tuple[ItemKind, ...] = ("molecular", "continuum", "study", "comparison")
+ITEM_KINDS: tuple[ItemKind, ...] = ("molecular", "continuum", "physics", "study", "comparison")
 
 FOLDERS: dict[ItemKind, str] = {
     "molecular": "models/molecular",
     "continuum": "models/continuum",
+    "physics": "models/physics",
     "study": "studies",
     "comparison": "comparisons",
 }
@@ -69,6 +70,7 @@ class Library(_Strict):
 
     molecular: list[str] = Field(default_factory=list)
     continuum: list[str] = Field(default_factory=list)
+    physics: list[str] = Field(default_factory=list)
     studies: list[str] = Field(default_factory=list)
     comparisons: list[str] = Field(default_factory=list)
 
@@ -76,6 +78,7 @@ class Library(_Strict):
 LIBRARY_FIELDS: dict[ItemKind, str] = {
     "molecular": "molecular",
     "continuum": "continuum",
+    "physics": "physics",
     "study": "studies",
     "comparison": "comparisons",
 }

@@ -135,7 +135,7 @@ def test_ver78_a_refused_item_is_in_the_problems_list_and_opens_its_suite(
         page.goto(origin + "/study?panel=problems")
         page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
         entry = page.locator("[data-control=problem-item]", has_text="continuum/").first
-        assert "bias_V" in entry.inner_text()
+        assert "radius_nm" in entry.inner_text()
         assert "1 problem" in page.locator("[data-control=problems-count]").inner_text()
         entry.click()
         page.wait_for_url(origin + "/continuum", timeout=READY_WAIT_MS)

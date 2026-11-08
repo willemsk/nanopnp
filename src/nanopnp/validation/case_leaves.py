@@ -188,6 +188,9 @@ LEAVES: dict[str, Leaf] = {
     "models.continuum": Leaf(
         "provenance", "", "continuum-model file merged under the study; the resolved case keys"
     ),
+    "models.physics": Leaf(
+        "provenance", "", "physics-model file merged under the study; the resolved case keys"
+    ),
     "inputs.charge.artefact": Leaf(
         "fixed", "", "supplied charge field by store hash not scheduled"
     ),
