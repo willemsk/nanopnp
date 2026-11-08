@@ -56,7 +56,13 @@ Do not re-ask these; work within them.
    (R2 to R4, R9, R10), `specification/history/13-phase-4-amended-the-test-scope-agreed-18-october-2.md`
    (N1, N3), `docs/plans/history-prose-review.md` (the author's decisions A to L on historical
    prose), and *Not to be re-decided* in `docs/plans/current.md`.
-4. `docs/project/modularity.md` and `src/nanopnp/validation/modularity.py`'s docstrings: what the
+4. `docs/code_reviews/CODE_REVIEW_038.md` and REV-222 (`docs/project/review-items.md`): the audit of
+   `CLAUDE.md`, `.claude/` and the root entry points that PR 166 applied. Its changes are in force,
+   the `.claude/scripts/clause.py`, `settings.json`, `gate.sh` and skill edits included: treat them as
+   the current text, not as proposals to reopen. Start the `.claude/` sweep from its findings and the
+   four REV-222 items, confirming and extending rather than repeating. Its section 4, *What checked
+   out*, lists the probes already run at `1e7fa2e`.
+5. `docs/project/modularity.md` and `src/nanopnp/validation/modularity.py`'s docstrings: what the
    tree already measures about its own architecture.
 
 ## Who reads these documents
