@@ -1,6 +1,6 @@
 # Current work
 
-Updated 8 November 2026 (Phase 5 amended, §8.2.36). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 8 November 2026 (WP5.10 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -9,16 +9,19 @@ Phase 4 is released. Phase 5's library steps, the physics model and the window f
 come next: three packages correct the project's written knowledge where an audit found it drifting, and two take four of the six library tidy-ups an architecture review settled; the other two open the suites
 that use them. The screens follow, renumbered. About four to five months part-time remain.
 
-**Your call.** Approve the amendment; later, two measuring tools to adopt or not, and eight audit
-findings to check.
+**Your call.** Approve the tools package's plan; later, two measuring tools to adopt or not, and eight
+audit findings to check.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.09 merged
-  (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36 AL1 to AL27): WP5.10 to WP5.12
-  CODE_REVIEW_039's follow-up, WP5.13 and WP5.14 four of CODE_REVIEW_036's clean-ups, WP5.15 the frame, WP5.16 to
-  WP5.20 the suites, WP5.21 the route and Qt's removal, WP5.22 the close; reviewed, CODE_REVIEW_040. Next `/np-plan wp 5.10`.
+  (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36): WP5.10 to WP5.12 CODE_REVIEW_039's
+  follow-up, WP5.13 and WP5.14 the clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the
+  route, WP5.22 the close.
+  **WP5.10** [planned](wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
+  pages with VER-79, the plans archived, ruff's complexity rules, the changelog, the tools' trial.
+  Next `/np-plan wp 5.10 review`, then `/np-implement`.
   host: claude-code.
 
 ## Not to be re-decided
