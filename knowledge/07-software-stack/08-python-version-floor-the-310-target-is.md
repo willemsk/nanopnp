@@ -18,7 +18,7 @@ sources:
 tested_with:
   mdanalysis: 2.10.0
   griddataformats: 1.2.0
-  pdb2pqr: 3.7.1
+  pdb2pqr: 3.8.0
   ngsolve: 6.2.2606
   numpy: 2.5.2
   scipy: 1.18.0

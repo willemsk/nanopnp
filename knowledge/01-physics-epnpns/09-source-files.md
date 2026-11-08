@@ -23,6 +23,6 @@ The thesis source, `github.com/willemsk/phdthesis-text` (CC-BY-4.0), is not in t
 | `chapters/epnpns_appendix/epnpns_appendix.tex` | ch. 5 SI — weak forms, domains, BCs |
 | `chapters/transport/transport.tex` | ch. 6 — application to ClyA, geometry and charge pipeline |
 | `chapters/trapping/trapping.tex` | analyte trapping, force computation |
-| `chapters/electrostatics/electrostatics.tex` | background electrostatics/electrokinetics |
+| `chapters/electrostatics/electrostatics.tex` | the APBS electrostatics results (ch. 3) |
 | `chapters/nanopores/nanopores.tex` | background on biological nanopores |
 | `allpapers.bib`, `mypapers.bib` | full bibliography |

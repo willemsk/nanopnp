@@ -41,7 +41,7 @@ restoring one `seconds` entry breaks it. Source: WP32 plan D15 and its Outcomes.
 stored payload and summary unchanged, and the content hash covers the schema, the parameters and the
 input hashes, not the payload. An entry written before the change keeps its key, so it keeps being
 served with its old timings. Stage 7 therefore moved to `nanopnp/fields/v2` and
-`nanopnp/charge-grid/v2`, which makes every old entry a miss (§5.3.2 stage-7 row, amended for WP32).
+`nanopnp/charge-grid/v2` (now `nanopnp/fields/v0.5` and `nanopnp/charge-grid/v0.5`, §8.2.7 G6), which makes every old entry a miss (§5.3.2 stage-7 row, amended for WP32).
 Source: the WP32 `/wp-ship` review.
 
 [^wp32-plan]: `git show 0ff2d619:docs/plans/wp32-charge-docs-and-example.md`, D15 and `/wp-ship` review (`nanopnp/fields/v2` and `nanopnp/charge-grid/v2`).

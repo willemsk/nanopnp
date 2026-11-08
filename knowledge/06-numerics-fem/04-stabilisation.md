@@ -119,7 +119,7 @@ orders of magnitude. Applying PHY-14's `μ̃_i/D̃_i` (1.2–1.7 between 0.15 M 
 Under a stabilisation mode the assembled residual carries the stabilisation term, so the NUM-25
 reaction flux carries it too; the NUM-24 indicator form must therefore add
 `2π F z_i S_I S_i(c̃; ψ)` or the two routes differ by that quantity. That correction, reported per
-species as `stabilisation_current_A`, is also the **bias on the current**, and the two facts are not
+species as `stabilisation_currents_A`, is also the **bias on the current**, and the two facts are not
 independent: the *bare* `∫ J̃_i·∇ψ` integral turns out to be nearly mode-independent, so the whole
 difference between a stabilised and an unstabilised current lives in the added term.
 

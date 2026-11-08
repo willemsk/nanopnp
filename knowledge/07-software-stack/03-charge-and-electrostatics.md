@@ -43,7 +43,7 @@ sources:
   resource: git:1761f15c:src/nanopnp/validation/comsol.py
   title: Case identity hashing measurements in case_identity before WP45's prose strip
 tested_with:
-  pdb2pqr: 3.7.1
+  pdb2pqr: 3.8.0
   propka: 3.5.1
   apbs-binary: 3.4.1.1
   numpy: 2.5.2
@@ -54,7 +54,7 @@ tested_with:
 
 | Tool | Version | Licence | Notes |
 |---|---|---|---|
-| **PDB2PQR** | 3.7.1 (Dec 2024) | BSD-3 | Python API `pdb2pqr.main`. Produces protonated structure **+ per-atom partial charges + radii** |
+| **PDB2PQR** | 3.8.0 | BSD-3 | Python API `pdb2pqr.main`. Produces protonated structure **+ per-atom partial charges + radii** |
 | PROPKA3 | 3.5.1 | LGPL-2.1 | pKa only; shipped as a PDB2PQR dependency |
 | **APBS** | 3.4.1 | BSD-3 | Poisson–Boltzmann cross-check. Driven by input files; read `.dx` with `gridData`. `apbs-binary` pip wrapper exists |
 | pKAI / pKa-ANI / PypKa | — | MIT / — / LGPL-3 + proprietary DelPhi | ML or PB pKa. Not integrated with PDB2PQR |
