@@ -8,7 +8,7 @@ Each level of `/np-plan`, `/np-implement` and `/np-ship` reads this file, then i
 
 1. Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
 2. `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
-3. A stale `.venv` takes `uv sync --all-extras --frozen`.
+3. A stale `.venv` takes `uv sync --all-extras --frozen` (`CLAUDE.md`, *Setup*).
 4. On a host other than Claude Code, read `hosts.md` beside this file first.
 
 ## The branch
@@ -22,9 +22,13 @@ write.
 `git branch --show-current`. A package's n is `54` in Phase 4 and `5.01` from Phase 5 (§8.4.4), so
 `WP<n>` reads `WP54` or `WP5.01`.
 
-1. Take the open PR against `main` whose title has `WP<n>` and an em dash after it. With no `wp <n>`,
-   take the one whose title names a package. If several match, ask. If none matches and the plan is on
-   `main`, `/np-implement` works on the session's branch. Otherwise ask for the PR or branch.
+1. Find the PR among the open PRs against `main`:
+   1. With `wp <n>`, a match is a title that has `WP<n>` and an em dash after it. With no `wp <n>`,
+      it is a title that names a package.
+   2. One match: take it.
+   3. Several: ask.
+   4. None, and the plan is on `main`: `/np-implement` works on the session's branch.
+   5. None otherwise: ask for the PR or branch.
 2. Run `git fetch origin <head>`.
    - If a local `<head>` has commits that `origin/<head>` lacks, check it out, keep them, and gate and
      push them.
@@ -51,9 +55,9 @@ release. While two package PRs are open:
 
 ## Host coordination
 
-- One host drives a branch at a time (§8.2.25 AA4). It is named `host: claude-code|copilot` in the
-  lane line of `docs/plans/current.md` and in the PR's **Verification** checkpoint. If the other host
-  is named and the branch moved within the hour, ask before you write.
+- One host drives a branch at a time (§8.2.25 AA4). It is named `host: claude-code` or
+  `host: copilot` in the lane line of `docs/plans/current.md` and in the PR's **Verification**
+  checkpoint. If the other host is named and the branch moved within the hour, ask before you write.
 - Hosts never share a working tree. The two-lane cap and the renumbering above apply across hosts.
 - Before each push, merge `origin/<head>`. Never force-push a branch the other host may hold.
 

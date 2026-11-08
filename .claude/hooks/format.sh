@@ -2,7 +2,7 @@
 # Format a Python file as soon as an agent edits it, so formatting drift
 # never reaches the gate (.claude/hooks/gate.sh), where it costs a round trip.
 #
-# A PostToolUse hook on Edit|Write|MultiEdit, wired up in .claude/settings.json;
+# A PostToolUse hook on Edit|Write, wired up in .claude/settings.json;
 # accepts a path object or a raw `apply_patch` string.
 # It runs `ruff format` and sorts imports (`--select I`) and nothing else: a
 # general `ruff check --fix` would delete an import added one edit before its

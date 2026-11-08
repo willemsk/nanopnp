@@ -8,11 +8,15 @@
       "Bash(uv sync:*)",
       "Bash(uv lock --check)",
       "Bash(uv run nanopnp --env)",
-      "Bash(.claude/hooks/gate.sh run)",
+      "Bash(.claude/hooks/gate.sh run:*)",
+      "Bash(uv run .claude/scripts/clause.py:*)",
+      "Bash(uv run .claude/scripts/duplicates.py:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(git fetch:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [
       "mcp__github__push_files",
@@ -36,7 +40,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit",
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",

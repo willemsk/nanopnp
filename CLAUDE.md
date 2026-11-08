@@ -24,6 +24,9 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 `uv` owns the environment. Use no `pip`, no manual `activate`, no bare `python` or `pytest`.
 
 - `uv sync --all-extras` creates or refreshes `.venv` from `uv.lock`.
+- A stale `.venv` in a session takes `uv sync --all-extras --frozen`, as the session hook runs it.
+  `--frozen` installs `uv.lock` as it is and does not fail on a stale lock. `UV_LOCKED=1`, which the
+  gate and CI set, and `uv lock --check` fail on one.
 - `uv add [--group dev] <pkg>` adds a dependency.
 - `uv run <anything>` is the only way to run code.
 - After you edit `pyproject.toml` by hand, run `uv lock`. CI fails on a stale lock.
@@ -40,7 +43,12 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 | `uv run nanopnp --env` | The resolved environment and data locations |
 | `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation build, as CI's `docs` job (VER-45) |
 
-**The gate before a commit:** `uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest -m tier1`.
+**The gate before a commit** is the commit hook. `gate.sh` runs before each `git commit` that Claude
+Code makes (`--no-verify` skips it). It runs the lock check, lint, format, types and the Tier 1 tests
+without `slow` and without `nightly`. Do not run these checks by hand before a commit: a manual run
+writes no stamp, so the hook runs them all again. Run the hook itself by hand only to reproduce a
+refusal, or on a host where it does not fire (`.claude/workflow/hosts.md`):
+`echo '{"tool_input":{"command":"git commit"}}' | .claude/hooks/gate.sh`.
 
 **The gate before a push:** `.claude/hooks/gate.sh run`. It runs lint, format and types, then the
 per-push selection:
@@ -50,9 +58,7 @@ per-push selection:
 - example 01, while it solves in under 60 s;
 - example 02's charged ePNP-NS walk.
 
-No coverage is measured. `gate.sh` also runs before each `git commit` that Claude Code makes
-(`--no-verify` skips it). That run does the lock check, lint, format, types and the Tier 1 tests
-without the `nightly` marker. A hook pass never stands in for `run`.
+No coverage is measured. A commit-hook pass never stands in for `run`.
 
 1. Start `run` with Bash `run_in_background`: `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`.
 2. Wait for it in the same turn: `until grep -q '^exit ' <log>; do sleep 10; done` in the foreground.
@@ -60,8 +66,10 @@ without the `nightly` marker. A hook pass never stands in for `run`.
 3. Push when the log ends in `exit 0`. The hook refuses a push of a tree it has not passed. End the
    turn only then. A turn that ends on an unpushed commit trips the environment's stop hook.
 
-`run` sets `NANOPNP_REQUIRE_GMSH=1`, and `NANOPNP_REQUIRE_APBS=1` where the wheel exists. A backend
-that cannot import then fails; it does not skip.
+`run` sets `NANOPNP_REQUIRE_GMSH=1`, `NANOPNP_REQUIRE_BROWSER=1`, and `NANOPNP_REQUIRE_APBS=1` where
+the wheel exists. `tests/tier1/test_gui_screens.py` launches Chromium: the one `NANOPNP_CHROMIUM`
+names, which `run` sets to one under `/opt/pw-browsers/` where it finds one, or else Playwright's own.
+A backend or browser that cannot start then fails; it does not skip.
 
 When only Markdown outside `packaging/`, `src/`, `data/` and `examples/` changed, the hook runs ruff
 alone (`.github/scripts/prose-only.sh`). CI's documentation build still runs.
@@ -146,12 +154,14 @@ a design round (§8.4.4).
 
 **Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default. It
 moves to Opus only after Sonnet fails on the item. The kept helpers are the `physics-reviewer`,
-`gui-reviewer` and `ci-log-classifier` sub-agents and the `.claude/scripts/clause.py` script. The
+`gui-reviewer` and `ci-log-classifier` sub-agents and three scripts in `.claude/scripts/`:
+`clause.py` prints a clause, `duplicates.py` names a number that two items of one register share,
+and `same_tree.py` checks that changed Python files differ only in prose (§8.2.11 L5). The
 caps on a WP plan, and its executors, are in `.claude/skills/np-plan/wp.md` (§8.4.4; §8.2.15 Q1;
 §8.2.16 R11).
 
 **Code review reports** go to `docs/code_reviews/CODE_REVIEW_NNN.md`, with NNN one above the highest
-present. Pass `out=`.
+present. The skill that runs the review gives that path in the brief after `--`.
 
 **Open items** are a finding not fixed, a deferral, or a question for the author. Each is a `REV-nn`
 row in `docs/project/review-findings.md` with a section in `review-items.md`. It stays until the

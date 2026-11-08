@@ -8,6 +8,9 @@ it. The current files are searched before the history, each in path order with `
 Matching is on whole identifiers, so ``VER-6`` never matches ``VER-62``. An identifier with no
 definition is named on standard error and the exit status is non-zero.
 
+A ruling row whose text opens with *Superseded* is labelled ``ruling [superseded]``.
+``--no-history`` leaves the ruling rows out and prints the definitions and NOTEs only.
+
 Run it as ``uv run .claude/scripts/clause.py VER-62 §7.6``.
 """
 
@@ -15,12 +18,14 @@ from __future__ import annotations
 
 import argparse
 import io
+import os
 import re
 import sys
 from pathlib import Path
 
 BUNDLE = Path(__file__).resolve().parents[2] / "specification"
 RULING_ROW = re.compile(r"^\|\s*([A-Z]+\d+)\s*\|")
+SUPERSEDED_ROW = re.compile(r"^\|\s*[A-Z]+\d+\s*\|\s*\*?Superseded")
 PARAGRAPH_DEFINITION = re.compile(r"\*\*[A-Z]+-\d+\.\*\*")
 
 
@@ -146,7 +151,7 @@ def _emit(path: Path, lines: list[str], label: str, start: int, end: int) -> Non
     sys.stdout.write("\n".join(lines[start:end]) + "\n")
 
 
-def clause(texts: dict[Path, list[str]], identifier: str) -> bool:
+def clause(texts: dict[Path, list[str]], identifier: str, *, history: bool = True) -> bool:
     """Print every definition of ``identifier``, then the NOTEs and ruling rows that name it.
 
     Parameters
@@ -155,6 +160,8 @@ def clause(texts: dict[Path, list[str]], identifier: str) -> bool:
         The bundle's files in search order, each as its lines.
     identifier
         A requirement identifier, a ruling identifier or a section number with ``§``.
+    history
+        Whether to print the ruling rows that name ``identifier``.
 
     Returns
     -------
@@ -174,11 +181,12 @@ def clause(texts: dict[Path, list[str]], identifier: str) -> bool:
             inside = any(a <= start and end <= b for a, b in definitions[path])
             if not inside and pattern.search("\n".join(lines[start:end])):
                 _emit(path, lines, "NOTE", start, end)
-        if not _in_history(path):
+        if not history or not _in_history(path):
             continue
         for row in _rulings(lines):
             if not any(a <= row < b for a, b in definitions[path]) and pattern.search(lines[row]):
-                _emit(path, lines, "ruling", row, row + 1)
+                label = "ruling [superseded]" if SUPERSEDED_ROW.match(lines[row]) else "ruling"
+                _emit(path, lines, label, row, row + 1)
     return True
 
 
@@ -186,6 +194,11 @@ def main(argv: list[str] | None = None) -> int:
     """Run the command line and return the process exit status."""
     parser = argparse.ArgumentParser(description="Print specification clauses by identifier.")
     parser.add_argument("identifiers", nargs="+", help="e.g. VER-62, FR-16, PHY-11, §7.6, J8")
+    parser.add_argument(
+        "--no-history",
+        action="store_true",
+        help="print the definitions and NOTEs only, without the ruling rows of history/",
+    )
     arguments = parser.parse_args(argv)
     # Windows' console encoding (cp1252) cannot carry the specification's Greek and
     # mathematical characters; escape what the stream cannot encode rather than fail.
@@ -195,11 +208,19 @@ def main(argv: list[str] | None = None) -> int:
     texts = {path: path.read_text(encoding="utf-8").splitlines() for path in _files()}
     status = 0
     for identifier in arguments.identifiers:
-        if not clause(texts, identifier):
+        if not clause(texts, identifier, history=not arguments.no_history):
             sys.stderr.write(f"clause.py: no definition of {identifier} in {BUNDLE.name}/\n")
             status = 1
     return status
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        exit_status = main()
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # The reader closed the pipe, as `| head` does. Pointing stdout at the null device keeps
+        # the interpreter's own flush at exit from raising a second time.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        exit_status = 1
+    sys.exit(exit_status)

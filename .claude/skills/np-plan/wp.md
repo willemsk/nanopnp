@@ -93,11 +93,17 @@ localise an error to one term (§7.1).
 | `### Out of scope` | Deferrals and their owner |
 | `### Open questions` | Author rulings needed before implementation; ask the blocking ones before you commit |
 
-**The caps.** The plan holds about 3,500 words outside its Outcome annotations, about 1,500 of them
-outside `### Grounding` and `### Implementation details`, and the details about 1,000. Each count may run
-up to 10% over (3,850, 1,650 and 1,100) with no rewording; beyond that, trim prose or split the
-package. The six decisions are a guideline: a plan that needs more holds them, and its report says why
-(§8.2.13 N3; §8.2.15 Q1; §8.2.16 R11; §8.2.33 AI15).
+**The caps.** The plan holds these word counts:
+
+| What is counted | About | At most, with 10% |
+|---|---|---|
+| The plan, outside its Outcome annotations | 3,500 | 3,850 |
+| Of those, the words outside `### Grounding` and `### Implementation details` | 1,500 | 1,650 |
+| `### Implementation details` | 1,000 | 1,100 |
+
+A count within its 10% needs no rewording; beyond that, trim prose or split the package. The six
+decisions are a guideline: a plan that needs more holds them, and its report says why (§8.2.13 N3;
+§8.2.15 Q1; §8.2.16 R11; §8.2.33 AI15).
 
 The plan is an index and an execution contract. It has no per-item design and no `## Design` heading. A
 new derivation that carries load goes into the specification, and the plan links it. If the caps with
