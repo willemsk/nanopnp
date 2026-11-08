@@ -86,6 +86,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * A plan is written in its phase's folder, `docs/plans/phase-<n>/`, from the commit that adds it, and
   a standalone brief or review in `docs/plans/sessions/`; `current.md` and `index.md` stay at the
   top, and a phase close moves nothing. (§8.2.36 AL5, AL28)
+* A commit that adds or changes a decision re-runs `.claude/scripts/decisions.py`, and one that adds
+  a plan or a review re-runs `index_records.py`; the gate refuses a decisions page that differs from
+  the tree. (§8.2.36 AL3, AL4)
 * One work package makes one pull request, green on Tiers 1 and 2 before the next package of its lane
   starts. `/np-implement` stops at the pull request and pauses for a compaction; `/np-ship` then runs
   in the implementing session or in a fresh one, and puts to the author each review finding that

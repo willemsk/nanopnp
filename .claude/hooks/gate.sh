@@ -6,13 +6,14 @@
 # `git commit --no-verify` (or `-n`) skips the commit gate, matching git's own convention.
 #
 #   gate.sh        hook mode, payload on stdin. On a `git commit`: uv lock --check, ruff
-#                  check, ruff format --check, mypy, then every Tier 1 test without `slow` or
+#                  check, ruff format --check, the decisions page's check (prose-only too),
+#                  mypy, then every Tier 1 test without `slow` or
 #                  `nightly` (the GUI file serially, apart, where QtWidgets
 #                  imports). On a `git push`: runs nothing and goes through only when
 #                  the stamp names the pushed tree with `push`, the pass of `gate.sh run`.
 #                  Text that only names a push, in a commit message or a pull request
 #                  body, is no push.
-#   gate.sh run    the push gate: the same four checks, then `pytest` over the
+#   gate.sh run    the push gate: the same checks, then `pytest` over the
 #                  per-push selection (Tier 1, Tier 2 without `nightly` or `slow`), with the Gmsh, APBS and browser requirements set. One
 #                  run at a time: a second waits for the first. It stamps the tree
 #                  `push` only on a pass, and only if the tree did not change meanwhile.
@@ -567,6 +568,7 @@ $(printf '%s' "$output" | tail -40)${remedy}"
 $docs_only || check "uv lock --check" uv lock --check
 check "ruff check"          uv run ruff check .
 check "ruff format --check" uv run ruff format --check .
+check "decisions page"      uv run .claude/scripts/decisions.py --check
 if $docs_only; then
     say "gate: only prose changed; lock check, mypy and pytest skipped."
 else

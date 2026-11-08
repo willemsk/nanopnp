@@ -12,7 +12,7 @@ description: "Maps each CI trigger, a pull request, a push to main, or the night
 | A push to `main` | The per-push selection on ubuntu, macOS and Windows, Python 3.14 |
 | Nightly | 1 and 2 in full (`--nightly`, and the `slow` tests) on ubuntu, macOS and Windows, Python 3.14; 3, and 1 on Python 3.11 to 3.13 on the three platforms, recorded and not gated; a failed run opens an issue and blocks nothing |
 | Before a tagged release | 1, 2, 3 and 4, Python 3.11 to 3.14, on the three platforms |
-| Every push, prose-only pushes included | The strict documentation build of VER-45 |
+| Every push, prose-only pushes included | The strict documentation build of VER-45; `.claude/scripts/decisions.py --check`, which the gate also runs at every commit; and `.claude/scripts/links.py`, every relative link of the tracked Markdown |
 
 The per-push selection is Tier 1, the Tier 2 tests that neither walk the pipeline nor carry `slow`,
 example 01 while its solve takes under 60 s, and one charged walk, example 02's ePNP-NS pore with

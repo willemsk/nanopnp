@@ -187,7 +187,9 @@ jobs:
   # VER-45's strict documentation build (section 7.6). Its steps run on EVERY
   # push, prose-only ones included, and so read no `code`: a broken link is
   # exactly what a prose-only edit introduces. The generated pages are rendered
-  # first, from the live schema, parser and exit enumeration.
+  # first, from the live schema, parser and exit enumeration. The decisions
+  # page is checked against the records before, and every relative link of the
+  # tracked Markdown after (section 8.2.36 AL3, AL28).
   docs:
     name: documentation (strict build)
     needs: changes
@@ -204,7 +206,9 @@ jobs:
           enable-cache: true
           python-version: "3.14"
       - run: uv sync --no-default-groups --group docs
+      - run: uv run --no-sync .claude/scripts/decisions.py --check
       - run: uv run --no-sync docs/scripts/generate.py
+      - run: uv run --no-sync .claude/scripts/links.py
       - run: uv run --no-sync mkdocs build --strict
 
   # A pull request's tests: the per-push selection (Tiers 1 and 2 without the
