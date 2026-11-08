@@ -106,7 +106,7 @@ place they are set. The added keys default to the validated configuration.
 v0.6 **adds** `geometry.density.atoms` (`protonated` by default, or `as_loaded`; the NOTE on `geometry.density`), which moves
 the density of a case with `structure:` (WP5.03; §8.2.19 U2). In v0.6, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
 other schema identifier is refused naming the expected schema and the declared identifier before
-any structural validation (§5.4.1). The earlier pre-release identifiers `nanopnp/case/v1`, `nanopnp/case/v2` and
+any structural validation. The earlier pre-release identifiers `nanopnp/case/v1`, `nanopnp/case/v2` and
 `nanopnp/case/v0.5` are retired. The refusal of `v0.5` names the migration: declare `nanopnp/case/v0.6`, and a case
 with `structure:` that keeps v0.5's density adds `geometry.density.atoms: as_loaded`.
 
@@ -146,7 +146,7 @@ are `propka` and `CHARMM` (PHY-16 step 3); any other value is a deviation that t
 records. `ph` is a condition of the experiment, as `concentration_M` is, and not a deviation. The
 case's `structure.source.variant` is recorded beside `Q_net`, which it is the provenance of
 (OPN-04). `charge.exclusion_offset_nm` is read by stage 5 and `charge.dielectric_transition_nm`
-by stage 7 (WP30; see the NOTE on the v2 keys that change a number,
+by stage 7 (WP30; see the NOTE on the added keys that change a number,
 which says when each is refused). `charge.smearing` is read
 by stage 7's deposition (WP28; see the NOTE on `charge.smearing`).
 

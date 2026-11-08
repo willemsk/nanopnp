@@ -76,7 +76,7 @@ the store had just served that run. A coefficient vector loaded into a space tha
 is silently a different function and there is no residual it would fail to reduce. Because the
 payload is excluded from the content hash, a change to this payload contract has to move the key by
 another route, or a stale cache entry would read as a hit whose payload the loader cannot open. Every
-artefact schema is pinned at `nanopnp/*/v0.5` (§8.2.9 G6), so a schema bump is not that route: stage
+artefact schema is pinned at `nanopnp/*/v0.5` (§8.2.7 G6), so a schema bump is not that route: stage
 10's key carries an `algorithm_revision` (`SOLVE_ALGORITHM_REVISION`, in the case provenance and the
 manifest), which a change that moves a converged number or this payload SHALL bump (REV-71). The
 other stages' payloads have no such counter; a change to one is the author's ruling on a store

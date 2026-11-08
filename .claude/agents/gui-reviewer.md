@@ -18,7 +18,9 @@ Report findings, each with the shot id, the region of the screen, a severity (`b
 - WCAG 2.2 AA, taking `index.json`'s measured `contrast` and `targets` as evidence and quoting the
   value; an `inline` link is excepted by 2.5.8;
 - `SPECIFICATION.md` §8.2.17 S6's live links, where a screen should carry one;
-- VER-60 and RSK-15: a number shown that no artefact supplies, or a control for a capability Tiers 1
+- RSK-15 and the design document's rules (`docs/design/workbench.md`: a number no artefact
+  supplies is not shown; the later-phase banner of §8.2.17 S7): a number shown that no artefact
+  supplies, or a control for a capability Tiers 1
   and 2 do not verify that lacks its "later phase" banner;
 - CON-09's renderer clause.
 
