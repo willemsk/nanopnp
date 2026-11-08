@@ -24,8 +24,10 @@ import sys
 from pathlib import Path
 
 BUNDLE = Path(__file__).resolve().parents[2] / "specification"
-RULING_ROW = re.compile(r"^\|\s*([A-Z]+\d+)\s*\|")
-SUPERSEDED_ROW = re.compile(r"^\|\s*[A-Z]+\d+\s*\|\s*\*?Superseded")
+# A ruling row's first cell is its letter alone or the letter and an italic annotation
+# (`| P4 *Its FR-28 sentence is amended by W3.* |`), so the letter is the cell's first token.
+RULING_ROW = re.compile(r"^\|\s*([A-Z]+\d+)(?=[\s|])[^|]*\|")
+SUPERSEDED_ROW = re.compile(r"^\|\s*[A-Z]+\d+(?=[\s|])[^|]*\|\s*\*?Superseded")
 PARAGRAPH_DEFINITION = re.compile(r"\*\*[A-Z]+-\d+\.\*\*")
 
 
@@ -41,7 +43,10 @@ def _heading_level(line: str) -> int:
 
 def _first_cell(line: str) -> str:
     cells = line.split("|")
-    return cells[1].replace("*", "").strip() if line.startswith("|") and len(cells) > 2 else ""
+    if not line.startswith("|") or len(cells) < 3:
+        return ""
+    tokens = cells[1].replace("*", "").split()
+    return tokens[0] if tokens else ""
 
 
 def _section_end(lines: list[str], start: int, level: int) -> int:
