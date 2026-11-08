@@ -20,8 +20,9 @@ There is one minor version per phase. A disagreement goes into the round.
 1. `knowledge/index.md`, then `.claude/rules/physics-numerics.md` and `.claude/rules/python.md`. A
    path-scoped rule does not load while you write only Markdown.
 2. `SPECIFICATION.md` §8.1: Phase n's row and its GUI and documentation increments. Then §8.4 and
-   `specification/history/index.md`, for the rulings that already bind Phase n. Read a record only where
-   a ruling bears on the phase. Cite a ruling already taken; never ask it again.
+   `specification/history/holds-now.yaml`, for the rulings that already bind Phase n, with the index
+   for their records. Read a record only where a ruling bears on the phase. Cite a ruling already
+   taken; never ask it again.
 3. The previous phase plan. Read its `## End-of-phase report`, above all what it **carries**. Read its
    open `## Open decisions` rows. Read each **Live for later packages** line in its delivered summaries
    and WP Outcomes.
@@ -81,9 +82,10 @@ must settle it.
   Then come `#### 8.2.<k> <title>, agreed <date>`, a paragraph on how the round was taken, and the table
   `| # | Decision | Consequence | Clause changed, and when |`. Rulings continue the letter series,
   numbered from 1.
-- `specification/history/index.md` lists the record as `* [title](file) - description`. One
-  `* <id> - <where it holds now>` line per ruling follows. It gives the ruling's clause, `open: <the
-  package that lands it>`, `spent` or `superseded by <id>`.
+- `specification/history/index.md` lists the record as `* [title](file) - description`.
+  `specification/history/holds-now.yaml` gets one `<id>: <where it holds now>` line per ruling, in
+  order: the ruling's clause, `open: <the package that lands it>`, `spent` or `superseded by <id>`.
+  `uv run .claude/scripts/decisions.py` then rewrites the decisions register, in the same commit.
 - Each ruling amends its clause in the same commit. If a ruling sets a standing rule of process with no
   clause of its own, restate it in §8.4, with a pointer to the ruling (R3).
 - **A ruling taken at a package's plan, on a record's date, is a row added to that record.** Mark it
