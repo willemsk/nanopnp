@@ -1,6 +1,6 @@
 # WP5.09 — The physics model
 
-**Status: planned, not started.** Planned 6 November 2026 on `main` (`4de067b`). It inherits §8.2.34 AJ2, AJ3, AJ5
+**Status: delivered, 8 November 2026.** Planned 6 November 2026 on `main` (`4de067b`). It inherits §8.2.34 AJ2, AJ3, AJ5
 and AJ10, and the author's rulings at this plan, §8.2.35 AK1 to AK3.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to
@@ -178,9 +178,16 @@ check_meshes=False).forecast().builds["mesh"]` over two files at a time, against
 - [x] d039cdc 4. `tests/tier1/test_models.py`: row 5, the wall following the physics salt (D2); done when it passes.
   **Executor:** main.
 - [x] 5. Compaction checkpoint. **Executor:** main.
-- [ ] 6. `.claude/hooks/gate.sh run` and the strict documentation build, which item 1's reference text and
+- [x] 6. `.claude/hooks/gate.sh run` and the strict documentation build, which item 1's reference text and
   `Models.physics` description regenerate: VER-62's walks unmoved, no re-pin. **Executor:** main.
-- [ ] 7. FR-39's and FR-32's Appendix A rows name the tests; `CHANGELOG.md`; Outcome notes; `current.md`. Done when
+
+  > **Outcome — the gate passed and the walks did not move.** `gate.sh run` passed in 250 s at `3f6d7b7`, and the
+  > strict documentation build passed with no `mkdocs.yml` change. On the deployed meshes the golden holds, example
+  > 01's largest relative drift is 6.9 × 10⁻¹⁴ (`eof_m3_s`) and example 02's ePNP-NS walk's 1.1 × 10⁻¹⁶
+  > (`currents_A[Cl-]`), both well within 10⁻⁸; no re-pin. `np-gui render shell` showed no page error and no failed
+  > contrast, non-text or target check; the rail lists *Physics models*, and the refused state lists
+  > `continuum/charged-tube` at `geometry.reservoir.radius_nm`.
+- [x] 7. FR-39's and FR-32's Appendix A rows name the tests; `CHANGELOG.md`; Outcome notes; `current.md`. Done when
   the review says so. **Executor:** main.
 
 ### Verification
