@@ -1,29 +1,25 @@
-"""Describe the package's architecture from its source, for the written-knowledge audit.
+"""Render the architecture page of the documentation site from the source tree.
 
-Reads ``src/nanopnp/`` through ``nanopnp.validation.modularity`` (the syntax trees, the import
+``docs/scripts/generate.py`` writes the page beside the modularity measurements. It reads
+``src/nanopnp/`` through ``nanopnp.validation.modularity`` (the syntax trees, the import
 edges and the layer order), ``src/nanopnp/core/stages.py`` for the registered stages and
-``specification/05-software-design/01-architectural-overview.md`` for §5.1's module table.
-Writes one Markdown page: per subpackage, its modules with their lines, public names and
+``specification/05-software-design/01-architectural-overview.md`` for the module table of
+section 5.1. The page lists, per subpackage, its modules with their lines, public names and
 first docstring line, the pipeline stages it implements, and the measured subpackage edges in
-and out (static imports, and string references apart); then the diff of §5.1's table against
+and out (static imports, and string references apart); then the diff of that table against
 the tree. Read-only: nothing under ``src/`` changes, and nothing is imported but the measuring
-module. ``--at`` names the commit the counts belong to.
+module.
 
-Run it as ``uv run .claude/scripts/audit/architecture.py --at <sha>``.
+Run it as ``uv run docs/scripts/architecture.py`` to print the page.
 """
 
 from __future__ import annotations
 
-import argparse
 import ast
 import re
-import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from scope import ROOT
 
 from nanopnp.validation.modularity import (
     LAYER_ORDER,
@@ -35,10 +31,12 @@ from nanopnp.validation.modularity import (
     subpackage_relation,
 )
 
-ATTACHMENTS = ROOT / "docs" / "code_reviews" / "CODE_REVIEW_039"
+ROOT = Path(__file__).resolve().parents[2]
 OVERVIEW = ROOT / "specification" / "05-software-design" / "01-architectural-overview.md"
 STAGES = ROOT / "src" / "nanopnp" / "core" / "stages.py"
 TABLE_ROW = re.compile(r"^\|\s*`([a-z_]+)/`\s*\|\s*(.*?)\s*\|\s*$")
+
+Relation = dict[tuple[str, str], list]
 
 
 def _public_names(tree: ast.Module) -> list[str]:
@@ -106,7 +104,119 @@ def _escape(text: str) -> str:
     return text.replace("|", "\\|")
 
 
-def render(at: str) -> str:
+def _out_edges(node: str, relation: Relation) -> list[tuple[str, int]]:
+    return [(t, len(v)) for (s, t), v in relation.items() if s == node]
+
+
+def _in_edges(node: str, relation: Relation) -> list[tuple[str, int]]:
+    return [(s, len(v)) for (s, t), v in relation.items() if t == node]
+
+
+def _summary_table(
+    nodes: list[str],
+    by_node: dict[str, list[Module]],
+    stages: dict[str, list[tuple[int, str, str]]],
+    static: Relation,
+    strings: Relation,
+) -> list[str]:
+    lines = [
+        "| Subpackage | Modules | Lines | Public names | Stages | Static edges out | "
+        "Static edges in | String edges out |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for node in nodes:
+        mods = by_node[node]
+        public = sum(len(_public_names(m.tree)) for m in mods)
+        stage_text = ", ".join(f"{n} {name}" for n, name, _ in stages.get(node, [])) or "—"
+        counts = (
+            len(_out_edges(node, static)),
+            len(_in_edges(node, static)),
+            len(_out_edges(node, strings)),
+        )
+        total = sum(m.lines for m in mods)
+        lines.append(
+            f"| `{node}` | {len(mods)} | {total:,} | {public} | {stage_text} | "
+            f"{counts[0]} | {counts[1]} | {counts[2]} |"
+        )
+    return lines
+
+
+def _edge_text(label: str, pairs: list[tuple[str, int]]) -> str:
+    return f"{label}: " + (", ".join(f"`{t}` ({n})" for t, n in pairs) or "none") + "."
+
+
+def _module_table(mods: list[Module]) -> list[str]:
+    lines = [
+        "| Module | Lines | Public names | First docstring line |",
+        "|---|---|---|---|",
+    ]
+    for module in sorted(mods, key=lambda m: m.path):
+        names = _public_names(module.tree)
+        shown = ", ".join(f"`{n}`" for n in names[:8]) + (
+            f" and {len(names) - 8} more" if len(names) > 8 else ""
+        )
+        summary = _escape(_summary(module.tree))
+        lines.append(f"| `{module.path}` | {module.lines} | {shown or '—'} | {summary} |")
+    return lines
+
+
+def _subpackage_sections(
+    nodes: list[str],
+    by_node: dict[str, list[Module]],
+    stages: dict[str, list[tuple[int, str, str]]],
+    static: Relation,
+    strings: Relation,
+) -> list[str]:
+    lines: list[str] = []
+    for node in nodes:
+        lines += [f"### `{node}`", ""]
+        if node in stages:
+            lines.append(
+                "Stages: " + "; ".join(f"{n} `{name}` (`{t}`)" for n, name, t in stages[node]) + "."
+            )
+            lines.append("")
+        lines.append(
+            _edge_text("Static imports out", sorted(_out_edges(node, static)))
+            + " "
+            + _edge_text("Static imports in", sorted(_in_edges(node, static)))
+            + " "
+            + _edge_text("String references out", sorted(_out_edges(node, strings)))
+        )
+        lines += ["", *_module_table(by_node[node]), ""]
+    return lines
+
+
+def _overview_section(nodes: list[str], by_node: dict[str, list[Module]]) -> list[str]:
+    rows = _overview_rows()
+    tree_nodes = {node for node in nodes if node != "nanopnp"}
+    missing = sorted(tree_nodes - set(rows))
+    extra = sorted(set(rows) - tree_nodes)
+    lines = [
+        "## The module table of the architectural overview against the tree",
+        "",
+        f"The overview lists {len(rows)} modules; the tree has {len(tree_nodes)} subpackages.",
+        "",
+        "In the tree and not in the overview's table: "
+        + (", ".join(f"`{n}/`" for n in missing) or "none")
+        + ".",
+        "In the overview's table and not in the tree: "
+        + (", ".join(f"`{n}/`" for n in extra) or "none")
+        + ".",
+        "",
+        "| Module | The overview says | The package docstring says | Modules |",
+        "|---|---|---|---|",
+    ]
+    for node in nodes:
+        if node == "nanopnp":
+            continue
+        package = next((m for m in by_node[node] if m.is_package), None)
+        doc = _summary(package.tree) if package else "(no package module)"
+        says = _escape(rows.get(node, "(no row)"))
+        lines.append(f"| `{node}/` | {says} | {_escape(doc)} | {len(by_node[node])} |")
+    return lines
+
+
+def render() -> str:
     """Return the architecture page as Markdown."""
     modules = parse_package()
     edges = import_edges()
@@ -119,130 +229,32 @@ def render(at: str) -> str:
     nodes = [node for node in LAYER_ORDER if node in by_node]
     nodes += sorted(node for node in by_node if node not in LAYER_ORDER)
 
-    def out_edges(node: str, relation: dict) -> list[tuple[str, int]]:
-        return [(t, len(v)) for (s, t), v in relation.items() if s == node]
-
-    def in_edges(node: str, relation: dict) -> list[tuple[str, int]]:
-        return [(s, len(v)) for (s, t), v in relation.items() if t == node]
-
     lines = [
-        "# CODE_REVIEW_039: the architecture as the tree states it",
+        "# Architecture",
         "",
-        f"Written by `.claude/scripts/audit/architecture.py` at `{at}` from `src/nanopnp/` through "
-        "`nanopnp.validation.modularity`, from the stage registry of `core/stages.py` and from "
-        f"§5.1's module table. {len(modules)} modules, {sum(m.lines for m in modules):,} lines, "
+        "Written by `docs/scripts/architecture.py` from `src/nanopnp/` through "
+        "`nanopnp.validation.modularity`, from the stage registry of `core/stages.py` and "
+        "from the module table of the architectural overview, on the tree this site was "
+        f"built from. {len(modules)} modules, {sum(m.lines for m in modules):,} lines, "
         f"{len(edges)} module-to-module imports, {len(static)} static subpackage edges and "
         f"{len(strings)} string edges. Nodes are in the layer order of the measuring module, "
         "lowest first; `nanopnp` is the package's own `__init__` and `case.py`.",
         "",
         "## Summary",
         "",
-        "| Subpackage | Modules | Lines | Public names | Stages | Static edges out | "
-        "Static edges in | String edges out |",
-        "|---|---|---|---|---|---|---|---|",
-    ]
-    for node in nodes:
-        mods = by_node[node]
-        public = sum(len(_public_names(m.tree)) for m in mods)
-        stage_text = ", ".join(f"{n} {name}" for n, name, _ in stages.get(node, [])) or "—"
-        counts = (
-            len(out_edges(node, static)),
-            len(in_edges(node, static)),
-            len(out_edges(node, strings)),
-        )
-        total = sum(m.lines for m in mods)
-        lines.append(
-            f"| `{node}` | {len(mods)} | {total:,} | {public} | {stage_text} | "
-            f"{counts[0]} | {counts[1]} | {counts[2]} |"
-        )
-    lines += ["", "## Each subpackage", ""]
-    for node in nodes:
-        mods = sorted(by_node[node], key=lambda m: m.path)
-        lines += [f"### `{node}`", ""]
-        if node in stages:
-            lines.append(
-                "Stages: " + "; ".join(f"{n} `{name}` (`{t}`)" for n, name, t in stages[node]) + "."
-            )
-            lines.append("")
-        outs = sorted(out_edges(node, static))
-        ins = sorted(in_edges(node, static))
-        souts = sorted(out_edges(node, strings))
-        lines.append(
-            "Static imports out: " + (", ".join(f"`{t}` ({n})" for t, n in outs) or "none") + ". "
-            "Static imports in: " + (", ".join(f"`{s}` ({n})" for s, n in ins) or "none") + ". "
-            "String references out: "
-            + (", ".join(f"`{t}` ({n})" for t, n in souts) or "none")
-            + "."
-        )
-        lines += [
-            "",
-            "| Module | Lines | Public names | First docstring line |",
-            "|---|---|---|---|",
-        ]
-        for module in mods:
-            names = _public_names(module.tree)
-            shown = ", ".join(f"`{n}`" for n in names[:8]) + (
-                f" and {len(names) - 8} more" if len(names) > 8 else ""
-            )
-            summary = _escape(_summary(module.tree))
-            lines.append(f"| `{module.path}` | {module.lines} | {shown or '—'} | {summary} |")
-        lines.append("")
-    rows = _overview_rows()
-    tree_nodes = {node for node in nodes if node != "nanopnp"}
-    lines += [
-        "## §5.1's module table against the tree",
+        *_summary_table(nodes, by_node, stages, static, strings),
         "",
-        f"§5.1 lists {len(rows)} modules; the tree has {len(tree_nodes)} subpackages.",
+        "## Each subpackage",
         "",
+        *_subpackage_sections(nodes, by_node, stages, static, strings),
+        *_overview_section(nodes, by_node),
     ]
-    missing = sorted(tree_nodes - set(rows))
-    extra = sorted(set(rows) - tree_nodes)
-    lines.append(
-        "In the tree and not in §5.1's table: "
-        + (", ".join(f"`{n}/`" for n in missing) or "none")
-        + "."
-    )
-    lines.append(
-        "In §5.1's table and not in the tree: "
-        + (", ".join(f"`{n}/`" for n in extra) or "none")
-        + "."
-    )
-    lines += [
-        "",
-        "| Module | §5.1 says | The package docstring says | Modules |",
-        "|---|---|---|---|",
-    ]
-    for node in nodes:
-        if node == "nanopnp":
-            continue
-        package = next((m for m in by_node[node] if m.is_package), None)
-        doc = _summary(package.tree) if package else "(no package module)"
-        says = _escape(rows.get(node, "(no row)"))
-        lines.append(f"| `{node}/` | {says} | {_escape(doc)} | {len(by_node[node])} |")
     return "\n".join(lines) + "\n"
 
 
-def _head() -> str:
-    result = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=False,
-        cwd=ROOT,
-    )
-    return result.stdout.strip() or "unknown"
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Run the command line and return the process exit status."""
-    parser = argparse.ArgumentParser(
-        description="Describe the package's architecture from its source."
-    )
-    parser.add_argument("--at", default=None, help="the commit the counts name (default: HEAD)")
-    parser.add_argument("--out", type=Path, default=ATTACHMENTS / "architecture.md")
-    arguments = parser.parse_args(argv)
-    arguments.out.write_text(render(arguments.at or _head()), encoding="utf-8")
-    sys.stdout.write(f"written to {arguments.out.relative_to(ROOT).as_posix()}\n")
+def main() -> int:
+    """Print the architecture page to standard output and return the exit status."""
+    sys.stdout.write(render())
     return 0
 
 

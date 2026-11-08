@@ -372,6 +372,7 @@ nav:
       - Modularity report: project/modularity.md
       - Modularity findings: project/modularity-findings.md
       - Modularity measurements: _generated/project/modularity-measurements.md
+      - Architecture: _generated/project/architecture.md
       - Review register: project/review-items.md
       - Review findings: project/review-findings.md
       - Decisions register: project/decisions.md
