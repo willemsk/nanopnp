@@ -19,6 +19,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_gui_screens.py::test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing
+  at: '2026-11-08T00:00:00Z'
 sources:
 - id: wp14-plan
   resource: docs/plans/wp14-gui-shell-packaging-probe.md

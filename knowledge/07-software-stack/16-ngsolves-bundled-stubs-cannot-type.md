@@ -13,7 +13,6 @@ generated:
 tested_with:
   ngsolve: 6.2.2606
   mypy: 2.3.1
-verified:
 ---
 
 ## 16. NGSolve's bundled stubs cannot type-check, so the aliases in `core/typing.py` are `Any` {#16-ngsolves-bundled-stubs-cannot-type-check-so-the-aliases-in-coretypingpy-are-any}
