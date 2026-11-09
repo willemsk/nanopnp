@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-09
+* **Record**: xenon and import-linter trialled on the tree: import-linter's layers contract repeats VER-61 with less, xenon's radon measure disagrees with ruff's `C901` on 15 of 22 functions; neither is recommended (WP5.10). ([25. xenon and import-linter](07-software-stack/25-complexity-and-import-contract-tools.md))
+
 ## 2026-11-05
 * **Record**: A workbench shortcut is matched in the page and the command runs on the server; Quasar paints its panels, cards and menus white whatever the theme (WP5.08). ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 
