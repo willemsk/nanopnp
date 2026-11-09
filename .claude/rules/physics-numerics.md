@@ -39,6 +39,9 @@ paths:
 - **Integration order ≥ 3 on every form carrying `1/r`** (VER-07); order 2 samples `r = 0` and gives NaN.
 - **Never compute ionic current from a cross-section integral of the CG flux.** Use the indicator form
   or the variational reaction flux, and cross-check both (FR-23, QR-04; `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`).
+- **Read the NGSolve traps before an assembly or solver change**
+  (`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`): a zero or NaN Jacobian and
+  `Set` zeroing a field fail silently.
 - **Newton converges on the field-wise relative update of the undamped direction, or on the residual at its absolute floor** (NUM-16);
   a forced step never counts towards the update test, and a residual-only test breaks warm starts.
   Never call a step that raised the residual convergence.
