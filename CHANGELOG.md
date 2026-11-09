@@ -22,6 +22,40 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.11]
+
+WP5.11: the specification's text and the agent instructions, Phase 5's eleventh package; tag `v0.6.0-alpha.11` once
+merged (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21; §8.2.37 AM1 to AM12; CODE_REVIEW_039's 148 findings of its
+lists and AUD-67; REV-216, REV-222). The specification and the agents' instructions say what the program does and
+state each rule once. No code, case schema, public API or result changes. The
+[plan](docs/plans/phase-5/wp5.11-the-specifications-text-and-the-agent-instructions.md) records the work.
+
+- **Added**:
+  - **§5.3.5, the project folder**, `specification/05-software-design/03-5-project-folder.md`, which takes the
+    project's NOTE from §5.3.1.
+  - **`.claude/workflow/author.md`**, the author's page: *The In brief* and *Putting a choice to the author*, read
+    where a step writes an In brief or puts a choice to the author.
+  - **REV-223 to REV-225**, accepted for Phase 6: PHY-07's density continuity is not assembled (NUM-04's NOTE),
+    NUM-28's consistency terms omit the pore charge's force (NUM-28's NOTE), and three tolerances lack a derivation.
+- **Changed**:
+  - §5.1's diagram draws the stage registry's edges, the case stage first; §5.2's stage cells name each stage and
+    its requirement, so the two stages numbered 7 read apart.
+  - §5.3.1's example becomes two, a structure case and a case that takes a supplied mesh, each of which
+    `nanopnp validate case` accepts; the stage behaviour its NOTEs held moves to §5.2's design notes.
+  - Twelve passages of §4 and §6 follow the code a test pins (AM1); CON-05, CON-06, §5.4.1 and ADR-001 state that
+    the weak forms are written once against NGSolve (AL9, AL12).
+  - The specification's SHALLs number 517, from 526, each difference traced to a finding in the plan.
+  - The agent instructions state each procedure once: the changelog-and-tag rule in `CONTRIBUTING.md`, the push
+    gate's mechanics in `CLAUDE.md`'s *Commands*, the two-lane rule in §8.4.4; `/np-plan`'s pause sits in its
+    skill file; `AGENTS.md` points to `CLAUDE.md` and imports nothing (AM9).
+  - `/np-ship phase`'s close check accepts the review log's end states (AM4).
+  - The Phase 5 plan keeps each merged package's title, merged line and live constraints; the narratives move to
+    its record. `docs/project/modularity.md` is a dated report that points to the live measurements (AL8).
+  - The cost of the work is stated in sessions, agent hours and the author's touches, measured by
+    `.claude/scripts/usage.py` (AM10 to AM12, at this plan's review).
+- **Amended**: §1, §2, §3 (CON-05, CON-06), §4, §5.1 to §5.6, §6 (NUM-04, NUM-28), §7.1 to §7.6, §8.1, §8.3,
+  §8.4.4, §8.4.6, §9, §10 and Appendices A and B.
+
 ## [0.6.0-alpha.10]
 
 WP5.10: the written knowledge's tools and rules, Phase 5's tenth package; tag `v0.6.0-alpha.10` once merged
