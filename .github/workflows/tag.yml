@@ -63,8 +63,11 @@ jobs:
             exit 1
           fi
           # The tagged commit carries its own changelog entry (CONTRIBUTING.md,
-          # Versions and releases).
-          if ! git show "$SHA:CHANGELOG.md" | grep -qF "## [${TAG#v}]"; then
+          # Versions and releases). Captured, not piped: grep -q stops at the
+          # first match, git show then dies of SIGPIPE, and pipefail would turn
+          # the match into a failure.
+          changelog=$(git show "$SHA:CHANGELOG.md")
+          if ! grep -qF "## [${TAG#v}]" <<<"$changelog"; then
             echo "::error::CHANGELOG.md at $SHA has no section for [${TAG#v}]"
             exit 1
           fi

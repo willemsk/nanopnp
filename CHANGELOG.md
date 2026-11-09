@@ -53,6 +53,9 @@ state each rule once. No code, case schema, public API or result changes. The
     its record. `docs/project/modularity.md` is a dated report that points to the live measurements (AL8).
   - The cost of the work is stated in sessions, agent hours and the author's touches, measured by
     `.claude/scripts/usage.py` (AM10 to AM12, at this plan's review).
+- **Fixed**: `tag.yml` refused every tag, reporting a missing changelog section that was there. Its check piped
+  `git show` into `grep -q` under `pipefail`, so the match's early exit failed the pipeline; it now reads the
+  changelog first and greps it.
 - **Amended**: §1, §2, §3 (CON-05, CON-06), §4, §5.1 to §5.6, §6 (NUM-04, NUM-28), §7.1 to §7.6, §8.1, §8.3,
   §8.4.4, §8.4.6, §9, §10 and Appendices A and B.
 
