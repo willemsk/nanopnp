@@ -441,3 +441,12 @@ the entry now names. WP5.11's entry opened and ended:
 Its *Verification* row read:
 
 > | WP5.11, the specification's text | none kept | VER-45; `clause.py` resolves every identifier; no SHALL, tolerance or default moves but AL9's wording |
+
+## Amended 9 November 2026 (§8.2.37 AM12)
+
+At WP5.11's plan review, the author ruled that the work's cost is stated in sessions, agent hours and the author's
+touches, measured from each session's transcript (AM10, AM11), and that the live estimates are restated in them
+(AM12). The In brief's cost line read:
+
+> **Cost.** About seven weeks for the library steps, three and a half for the written knowledge and the tidying, and
+> thirteen to sixteen for the screens: about six months part-time.

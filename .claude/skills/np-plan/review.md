@@ -53,8 +53,8 @@ Name a file, command or identifier only where the reader acts on it or will meet
 is. About 1,000 words; never drop a decision, ruling or risk to meet the count.
 
 1. **Title and one line.** `# <the level and n> for approval: <name>`, then what the plan delivers in one
-   sentence. Then the cost in plain units, the release it lands in, and the decisions still open to
-   the author.
+   sentence. Then the cost in sessions, agent hours and your touches (§8.3), the release it lands in,
+   and the decisions still open to the author.
 2. **What you get.** What the reader will be able to do or will notice when the work lands.
 3. **What it builds on.** What must be in place first, and what the plan satisfies or closes, in words,
    with the identifier in brackets.

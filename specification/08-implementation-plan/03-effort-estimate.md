@@ -1,17 +1,37 @@
 ---
 type: Specification
 title: "8.3 Effort estimate"
-description: "Estimates effort to the validated release: 6 to 9 part-time months without the desktop GUI, 9 to 14 with it."
+description: "Estimates the work to the validated release in sessions, agent hours and the author's touches, from the measured cost of comparable packages."
 ---
 
 ### 8.3 Effort estimate
 
-Estimate to the validated release (v0.7, Phase 6; §8.2.5 E2, §8.2.6 F1) without the desktop GUI: 6–9
-months of part-time work. With the desktop GUI: 9–14 months. Both figures are for one person; the
-calendar halves at full-time effort. Since §8.2.6 F1 the GUI phase precedes the validated release, so
-the second figure is the one that applies, and Phase 4, which neither figure counts, adds 4–6 weeks
-(§8.2.9 I5). Neither figure counts the workbench's tool phases (§8.2.17 S7), whose estimates their
-own plans set.
+The work is done by agents in Claude Code, and its cost is stated in three units (§8.2.37 AM10):
+
+- **sessions**, the context windows it takes, each ended by a compaction the author runs. A package
+  takes at least four: its plan, the plan's review, its implementation and its shipping, and one more
+  for each compaction checkpoint of its implementation;
+- **agent hours**, the hours an agent works on it, waits for the gate and CI included and waits for
+  the author excluded;
+- **the author's touches**, each time the author acts: a command, a compaction, a question round, a
+  verdict, an approval, a merge or a tag.
+
+The calendar follows from when the author returns and is not estimated. An estimate is taken from
+the measured cost of comparable packages, which `.claude/scripts/usage.py` reads from each session's
+transcript (§8.4.5; AM11), never from a developer's days. Measured from the first commit to the
+last on `main`, waits for the author included, Phase 5's library steps WP5.03 to WP5.06 took 1 to 3
+hours each, and WP5.07, WP5.08 and WP5.10, which add a mechanism, a screen or the rules, 7 to 11.
+
+Estimate to the validated release (v0.7, Phase 6; §8.2.5 E2, §8.2.6 F1), from 9 November 2026
+(AM12):
+
+| Work | Sessions | Agent hours | Touches |
+|---|---|---|---|
+| Phase 5's text and clean-up packages, WP5.11 to WP5.14: about 5 sessions, 3 to 6 agent hours and 8 touches each | 20 | 12 to 24 | 32 |
+| Phase 5's shell and close, WP5.15 to WP5.22: about 6 sessions, 6 to 12 agent hours and 10 touches each, and the author's design rounds | 48 | 48 to 96 | 80 |
+| Phase 6, not yet in packages: about ten, as Phase 5's, and the machine time of its Tier 3 and Tier 4 runs (the datum below) | 50 to 60 | 50 to 100 | 100 |
+
+Neither phase counts the workbench's tool phases (§8.2.17 S7), whose estimates their own plans set.
 
 Factors making the work more tractable:
 

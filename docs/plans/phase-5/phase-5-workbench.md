@@ -4,7 +4,7 @@
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27); how the plans are filed and WP5.10's model ruled at its plan the same day (AL28, AL29); WP5.11's meaning changes, its open gaps and REV-222 ruled at its plan on 9 November 2026 (§8.2.37 AM1 to AM9). Release: **v0.6** (`v0.6.0`).
+AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27); how the plans are filed and WP5.10's model ruled at its plan the same day (AL28, AL29); WP5.11's meaning changes, its open gaps and REV-222 ruled at its plan on 9 November 2026 (§8.2.37 AM1 to AM9); the cost's units ruled at its review the same day (AM10 to AM12). Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -15,8 +15,8 @@ reusable model. Next, three packages correct the project's written knowledge whe
 it adrift, and two tidy the library's insides without moving a result. Then the screens: the frame, rebuilt on
 ready-made parts, and five suites, three that build models and two that use them, each first prototyped on a real pore. Last come the guided route, the old desktop shell's removal, and the guide.
 
-**Cost.** About seven weeks for the library steps, three and a half for the written knowledge and the tidying, and
-thirteen to sixteen for the screens: about six months part-time.
+**Cost.** Twelve packages remain: about 70 sessions, 60 to 120 hours of agent work and 110 times you act. Your
+time, not the work, sets the calendar.
 
 **What could go wrong.** A formula could carry a wrong unit; each is checked against its field's and refused on a
 mismatch. A tidying could move a stored result; each checks every stored fingerprint, and a move is undone. The molecule
