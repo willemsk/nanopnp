@@ -99,6 +99,7 @@ dev = [
     "filelock>=3.12",
     "markdown>=3.5",
     "playwright>=1.49",
+    "rust-just>=1.59.0",
 ]
 # Bundle builders only (ADR-004, section 8.2 criterion 4). Not in
 # `default-groups`: PyInstaller is needed by the `bundle` CI job and by whoever

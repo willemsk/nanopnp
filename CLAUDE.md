@@ -41,7 +41,8 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 | `uv run pytest -m tier1` / `-m tier3` / `-m slow` | Unit tests / reference comparison / benchmarks (the last two are not gated) |
 | `uv run ruff check . && uv run ruff format .`; `uv run mypy src/` | Lint and format; strict types |
 | `uv run nanopnp --env` | The resolved environment and data locations |
-| `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation build, as CI's `docs` job (VER-45) |
+| `uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict` | The documentation build; `uv run just docs` adds CI's `docs` checks (VER-45) |
+| `uv run just` | Lists the recipes of `justfile`: these commands, the record scripts and the gate's log. A recipe never commits or pushes |
 
 **The gate before a commit** is the commit hook. `gate.sh` runs before each `git commit` that Claude
 Code makes (`--no-verify` skips it). It runs the lock check, lint, format, types and the Tier 1 tests
@@ -60,7 +61,8 @@ per-push selection:
 
 No coverage is measured. A commit-hook pass never stands in for `run`.
 
-1. Start `run` with Bash `run_in_background`: `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`.
+1. Start `run` with Bash `run_in_background`: `.claude/hooks/gate.sh run > <log> 2>&1; echo "exit $?" >> <log>`,
+   or `uv run just gate <log>`.
 2. Wait for it in the same turn: `until grep -q '^exit ' <log>; do sleep 10; done` in the foreground.
    If the 10-minute limit ends the wait, wait again.
 3. Push when the log ends in `exit 0`. The hook refuses a push of a tree it has not passed. End the

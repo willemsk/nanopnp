@@ -33,6 +33,10 @@ uv run pytest            # tiers 1 and 2, without the `nightly` and `slow` tests
 uv run pytest --nightly  # adds the nightly walks; `-m "(tier1 or tier2) and slow"` adds the slow tests, as the nightly run does
 ```
 
+`uv run just` lists the recipes of the [`justfile`](justfile), which gathers these commands, the
+documentation build, the record scripts and the gate (`uv run just docs`, `uv run just gate`). `uv sync`
+installs `just` with the other development tools.
+
 A VS Code Dev Container and a GitHub Codespace configuration are in [`.devcontainer/`](.devcontainer)
 if you would rather not install anything locally.
 
@@ -84,6 +88,8 @@ uv sync --all-extras --group docs   # exact: without --all-extras it uninstalls 
 uv run docs/scripts/generate.py     # the generated references and verbatim model pages
 uv run mkdocs build --strict        # fails on any broken link or cross-reference
 ```
+
+`uv run just docs` runs the same three steps with CI's checks of the decisions page and the links.
 
 The case-file, command-line, exit-code and API references are rendered from the code, and the
 specification and the knowledge base are copied in verbatim. None of it is committed; do not edit
