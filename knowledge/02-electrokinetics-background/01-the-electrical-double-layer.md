@@ -1,7 +1,7 @@
 ---
 type: Background
 title: 1. The electrical double layer
-description: The electrical double layer.
+description: "The Bjerrum and Debye lengths, the Gouy-Chapman-Stern layers, surface and zeta potential, the Grahame equation, confinement and the timescale separation."
 tags:
 - electrokinetics
 - background

@@ -1,10 +1,14 @@
 ---
 type: Background
 title: 7. Ionic current rectification
-description: Ionic current rectification.
+description: "α(V) = G(+V)/G(−V): what makes a pore rectify, ClyA's strong rectification and its concentration dependence."
 tags:
 - electrokinetics
 - background
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

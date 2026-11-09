@@ -1,10 +1,14 @@
 ---
 type: Domain
 title: 6. What nanopores are used for
-description: What nanopores are used for.
+description: "Sequencing, proteomics, enzymology and biomarker detection, and why large pores such as ClyA hold whole folded proteins."
 tags:
 - biology
 - domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

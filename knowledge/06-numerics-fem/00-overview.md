@@ -14,8 +14,9 @@ generated:
 # Numerics — FEM formulation, solvers, and quantities of interest
 
 Reference for agents implementing or modifying the solver. Companion to
-`knowledge/01-physics-epnpns/index.md` (which holds the equations) and `knowledge/08-validation-benchmarks/index.md` (which holds
-the tests). Everything here has been verified against primary sources; see §8 for what has not.
+`SPECIFICATION.md` §4 and §6, which state the equations and the numerics, `knowledge/01-physics-epnpns/index.md` and
+`knowledge/08-validation-benchmarks/index.md` (which holds the tests). Everything here has been verified against
+primary sources; see `10-unverified-to-measure.md` for what has not.
 
 ---
 

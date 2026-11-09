@@ -1,7 +1,7 @@
 ---
 type: Domain
 title: 5. Single-channel electrophysiology
-description: Single-channel electrophysiology and how a conductance is measured.
+description: "How a single-channel conductance is measured in a planar bilayer, and resistive-pulse sensing."
 tags:
 - biology
 - domain

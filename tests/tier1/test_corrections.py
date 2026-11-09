@@ -63,7 +63,7 @@ def test_ver03_bulk_properties_at_the_validity_limit(epnpns: Electrolyte) -> Non
     assert epnpns.viscosity(c, d) == pytest.approx(1.752e-3, rel=1e-3)
     assert epnpns.mass_density(c) == pytest.approx(1194.0, rel=1e-3)
     assert epnpns.relative_permittivity(c) == pytest.approx(42.67, rel=1e-3)
-    assert epnpns.diffusivity("Na+", c, d) == pytest.approx(8.13e-10, rel=3e-3)
+    assert epnpns.diffusivity("Na+", c, d) == pytest.approx(8.113e-10, rel=1e-3)
     assert epnpns.diffusivity("Cl-", c, d) == pytest.approx(1.071e-9, rel=1e-3)
 
 

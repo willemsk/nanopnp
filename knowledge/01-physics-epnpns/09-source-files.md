@@ -1,7 +1,7 @@
 ---
 type: Physics
 title: 9. Source files
-description: The source files from which the physics was extracted.
+description: "Where the thesis source is and what each of its chapter files holds."
 tags:
 - physics
 sources:

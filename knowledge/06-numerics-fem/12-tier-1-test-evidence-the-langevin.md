@@ -15,5 +15,5 @@ verified:
 
 ## Tier-1 test evidence: the Langevin cutoff (WP45 item 21)
 
-- **[tested: tests/tier1/test_electrolyte.py::test_langevin_is_accurate_across_the_series_cutoff]** A Langevin series cutoff set too small hands the `coth` branch an argument with no significant digits left: at `x` = 1e-8 the `coth(x) - 1/x` form returned exactly zero, where the limit is `x/3`. The cutoff at `x = 3e-4` (`knowledge/01-physics-epnpns/index.md`) keeps both branches clear of that cancellation. Source: `tests/tier1/test_electrolyte.py` (`test_langevin_is_accurate_across_the_series_cutoff`).
-
+The Langevin cutoff, `x = 3e-4`, and why `L(1.1e-8)` evaluated to exactly zero at a cutoff of 1e-8:
+`knowledge/01-physics-epnpns/07-implementation-notes-carried-forward.md`, its last note. **[tested: tests/tier1/test_electrolyte.py::test_langevin_is_accurate_across_the_series_cutoff]**

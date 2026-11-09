@@ -1,14 +1,16 @@
 ---
 type: Physics
 title: 3. The corrections
-description: The concentration- and wall-distance-dependent corrections, the Einstein
-  ratio as measured, and the reduction to PNP-NS.
+description: "The infinite-dilution values and their sources, the data behind the fits and the measured Einstein ratio; §4.3 states the corrections."
 tags:
 - physics
 sources:
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C
   title: Willems et al., Nanoscale 12, 16775-16795 (2020)
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
@@ -19,19 +21,11 @@ verified:
 
 ## 3. The corrections
 
-Each property is `X(⟨c⟩, d) = X⁰ · f^c(c̄) · f^w(d̄)`, with `c̄ = ⟨c⟩/(1 M)` and `d̄ = d/(1 nm)`
-dimensionless. Numeric parameters live in `data/corrections/willems2020_nacl.yaml`.
-
-| Property | `f^c` | `f^w` |
-|---|---|---|
-| `D_i` | `(1 + P₁c̄^½ + P₂c̄ + P₃c̄^{3/2} + P₄c̄²)⁻¹` | `1 − exp(−P₁(d̄ + P₂))` |
-| `μ_i` | same form, own coefficients | `1 − exp(−P₁(d̄ + P₂))` |
-| `η` | `1 + P₁c̄^½ + P₂c̄ + P₃c̄² + P₄c̄^{7/2}` | `1 + exp(−P₁(d̄ − P₂))` |
-| `ϱ` | `1 + P₁c̄ + P₂c̄²` | — |
-| `ε_r,f` | `1 − (1 − P₁/P₀) · L(3P₂c̄/(P₀−P₁))`, `L(x) = coth x − 1/x` | — |
-
-**Note the two wall functions have opposite offset signs** — `(d̄ + P₂)` for D and μ,
-`(d̄ − P₂)` for η. This is not a typo in this file; both are verified in §8.
+`SPECIFICATION.md` §4.3 states them: the product form PHY-10, the forms PHY-11, the coefficients
+PHY-12 and `data/corrections/willems2020_nacl.yaml`, the capping PHY-13, the derived mobility PHY-14
+and the omission PHY-15. The ion wall function's `+` offset is §4.6's erratum 1, with its arithmetic in
+errata E1; the viscosity wall function's `−` offset is printed consistently and checked by PHY-12's
+`η⁰/η^w(0) = 0.379`.
 
 **Infinite-dilution values (298.15 K):**
 
@@ -44,19 +38,13 @@ dimensionless. Numeric parameters live in `data/corrections/willems2020_nacl.yam
 | `η⁰` | 8.904 × 10⁻⁴ Pa s | Hai-Lang 1996 |
 | `ϱ⁰` | 997 kg m⁻³ | Hai-Lang 1996 |
 | `ε_r,f⁰` | 78.15 | Gavish 2016 |
-| `ε_r,p` | 20 | Li/Li/Zhang/Alexov 2013 |
+| `ε_r,p` | 20 (default; a calibration parameter, PHY-20, ruling 5) | Li/Li/Zhang/Alexov 2013 |
 | `ε_r,m` | 3.2 | Gramse 2013 |
 | `t_Na⁰` | 0.3963 | Bianchi 1989 |
 
-**Validity and capping.** Fits cover 0–5.3 M NaCl. Above 5.3 M every property is **clamped** to
-its 5.3 M value. Diffusivities between 4 and 5.3 M are extrapolated (no experimental data beyond
-4 M). Implement clamping explicitly and log when it activates — a silently clamped run at high
-salt is a plausible source of confusion.
-
-**Deliberate omission.** Simakov and Pederson additionally reduce ion motility by the ratio of
-ion radius to pore radius. Willems et al. **chose not to include this**, on the grounds that
-extrapolating it to ions whose hydrodynamic radius is comparable to a solvent molecule is
-questionable. Do not add it silently; if ever added, it must be an opt-in experimental model.
+**The data behind the fits.** Fits cover 0–5.3 M NaCl, from data reaching 4 M for `D` and 5 M for
+`μ` (thesis `epnpns.tex`:640-642, 665-666). Both are extrapolated beyond their data (`epnpns.tex`:646,
+679-680).
 
 ### 3.0 The Einstein ratio, measured
 
@@ -70,20 +58,11 @@ questionable. Do not add it silently; if ever added, it must be an opt-in experi
 
 The frequently quoted "1.2–1.7 × kT/e between 0.15 and 3 M" describes **Na⁺**; Cl⁻ drifts far
 less, reaching only 1.28 at 3 M. Both rise monotonically with concentration, because `D` is fitted
-to self-diffusion data and `μ` to conductivity data and the two fits differ. A regression test
-should assert monotonicity plus per-ion bounds rather than a single shared range.
+to self-diffusion data and `μ` to conductivity data and the two fits differ.
 
 ### 3.1 ePNP-NS → PNP-NS
 
-The classical equations are recovered exactly by setting
-
-```
-β_i = 0  and  ε_r,f^c = D_i^c = μ_i^c = η^c = ϱ^c = 1  and  D_i^w = μ_i^w = η^w = 1
-```
-
-This is why the correction registry should treat "off" as just another named model: the
-PNP-vs-ePNP comparison, and the contribution of each individual correction, then becomes a
-configuration sweep rather than a code branch.
+PHY-21 states the reduction (thesis `epnpns.tex`:425-428).
 
 ### 3.2 Auxiliary: the transport-number fit
 

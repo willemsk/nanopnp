@@ -1,7 +1,7 @@
 ---
 type: Background
 title: 6. Selectivity, transport number, reversal potential
-description: Selectivity, the transport number and the reversal potential.
+description: "The transport number and permeability ratio, the reversal potential through Goldman-Hodgkin-Katz, and why that is not the simulated quantity."
 tags:
 - electrokinetics
 - background
