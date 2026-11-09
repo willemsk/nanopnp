@@ -1,26 +1,26 @@
 # Current work
 
-Updated 9 November 2026 (WP5.11 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 9 November 2026 (WP5.11 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 Phase 4 is released. Phase 5's library steps, the physics model, the frame and the first package on the written
-knowledge are merged. The second is planned: about 150 corrections to the specification and the agent instructions,
-and three possible program gaps recorded for Phase 6. Then the knowledge base, tidy-ups, the screens: about 70
-sessions and 60 to 120 agent hours remain.
+knowledge are merged. The second, about 150 corrections to the specification and the agent instructions, is built
+and awaits review; three possible program gaps are recorded for Phase 6. Then the knowledge base, tidy-ups,
+the screens: about 70 sessions and 60 to 120 agent hours remain.
 
-**Your call.** Approve the second package's reviewed plan; adopt two measuring tools or not (the trial
+**Your call.** Read the second package's review; adopt two measuring tools or not (the trial
 recommends neither); check eight audit findings.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.10 merged
-  (tag `v0.6.0-alpha.10` unpushed). Next WP5.11 and WP5.12 the written knowledge, WP5.13 and WP5.14 the
+  (tag `v0.6.0-alpha.10` unpushed). Next WP5.12 the written knowledge, WP5.13 and WP5.14 the
   clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the route, WP5.22 the close (§8.2.36).
-  **WP5.11** [planned](phase-5/wp5.11-the-specifications-text-and-the-agent-instructions.md): 148 audit findings
-  and REV-222 (§8.2.37), reviewed (CODE_REVIEW_043). Next `/np-implement wp 5.11`.
+  **WP5.11** [delivered](phase-5/wp5.11-the-specifications-text-and-the-agent-instructions.md): 148 audit findings,
+  REV-216 and REV-222 fixed (§8.2.37). Next `/np-ship wp 5.11`.
   host: claude-code.
 
 ## Not to be re-decided

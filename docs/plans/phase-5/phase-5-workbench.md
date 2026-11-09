@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.10 merged (`v0.6.0-alpha.10`); WP5.11 in implementation; the written knowledge's last package WP5.12 and the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.10 merged (`v0.6.0-alpha.10`); WP5.11 delivered, awaiting its merge; the written knowledge's last package WP5.12 and the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -139,17 +139,15 @@ Live constraints: A commit that adds a decision re-runs `decisions.py`. Open dec
 
 ### WP5.11 — The specification's text and the agent instructions (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21; §8.2.37 AM1 to AM9)
 
-**Planned 9 November 2026** ([the plan](wp5.11-the-specifications-text-and-the-agent-instructions.md)). The 148 findings
-whose edits change `specification/`, `.claude/`, `docs/plans/`, `modularity.md` or the root files. CON-05 and §2 name the mean
-concentration (AL9; the SHALL unchanged); §5.1's diagram starts at stage 9, each stage row with its registry name and the
-two stages numbered 7 told apart (AL10); §5.3.1's worked example becomes a structure-based case and a mesh-input case,
-each valid (AL11); §5.4.1 and ADR-001 state H3 (AL12); `modularity.md` becomes a dated report pointing at the live page
-(AL8); `CLAUDE.md` says §4 governs the equations (AL16); the changelog rule's five restatements point at
-`CONTRIBUTING.md` (AL14). The redundancy and sediment rows whose live home is here, AUD-113's §5.3.1 NOTEs and AUD-244's
-delivered narratives in this plan among them (AL17, AL18; REV-216). Twelve passages of §4 and §6 follow the program a
-test pins (AM1); three possible gaps become Phase 6's REV-223 to REV-225 (AM2); §7.6's Tier 4, the close check, a core
-count and two earlier rulings are settled (AM3 to AM7); REV-222's four items are taken (AM9). No test. Tag
-`v0.6.0-alpha.11`.
+**Delivered 9 November 2026** ([the plan](wp5.11-the-specifications-text-and-the-agent-instructions.md)). The 148
+findings of CODE_REVIEW_039's lists and AUD-67 are fixed, with REV-216 and REV-222. §5.1's diagram draws the stage
+registry's edges from stage 9; §5.2's stage cells name each stage and its requirement (AL10). §5.3.1's example is a
+structure case and a supplied-mesh case, each validated; its stage behaviour moves to §5.2, the project to §5.3.5
+(AL11, AL17). CON-05, CON-06, §5.4.1 and ADR-001 state the single NGSolve route (AL9, AL12); twelve passages of §4
+and §6 follow the tested code (AM1); NUM-04 and NUM-28 carry REV-223 and REV-224's NOTEs (AM2). SHALLs 526 to 517,
+each traced. The agent instructions state each procedure once; `.claude/workflow/author.md` holds the In brief and
+the author's choices (AM9). The merged entries above keep their title, merged line and live constraints (AL18). Live
+constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 are Phase 6's. Tag `v0.6.0-alpha.11`.
 
 ### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21)
 
