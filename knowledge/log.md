@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-09
+* **Record**: VAL-06's budget split, agreement margins, charge-zeroing check and ring results move here from §7.4's NOTE (WP5.11). ([3. Charge and electrostatics](07-software-stack/03-charge-and-electrostatics.md))
 * **Record**: The ion-exclusion shell's resampling bound, the division of its `wall` edges and the two alternatives set aside move here from §5.2 (WP5.11). ([2. Model geometry and conventions](04-clya-geometry-and-charge/02-model-geometry-and-conventions.md))
 * **Record**: The Einstein-ratio range is per ion, 1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 for Cl⁻, so the stabilisation's Péclet factor is 0.60–0.88 (WP5.11). ([4. Stabilisation](06-numerics-fem/04-stabilisation.md))
 * **Record**: xenon and import-linter trialled on the tree: import-linter's layers contract repeats VER-61 with less, xenon's radon measure disagrees with ruff's `C901` on 15 of 22 functions; neither is recommended (WP5.10). ([25. xenon and import-linter](07-software-stack/25-complexity-and-import-contract-tools.md))

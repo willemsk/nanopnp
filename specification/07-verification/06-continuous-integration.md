@@ -11,14 +11,14 @@ description: "Maps each CI trigger, a pull request, a push to main, or the night
 | A pull request | The per-push selection (Tier 1; Tier 2 without `nightly` or `slow`), on ubuntu, Python 3.14 |
 | A push to `main` | The per-push selection on ubuntu, macOS and Windows, Python 3.14 |
 | Nightly | 1 and 2 in full (`--nightly`, and the `slow` tests) on ubuntu, macOS and Windows, Python 3.14; 3, and 1 on Python 3.11 to 3.13 on the three platforms, recorded and not gated; a failed run opens an issue and blocks nothing |
-| Before a tagged release | 1, 2, 3 and 4, Python 3.11 to 3.14, on the three platforms |
+| Before a tagged release | 1, 2 and 3, Python 3.11 to 3.14, on the three platforms; Tier 4 has no job until experimental fixtures exist (§7.5) |
 | Every push, prose-only pushes included | The strict documentation build of VER-45; `.claude/scripts/decisions.py --check`, which the gate also runs at every commit; and `.claude/scripts/links.py`, every relative link of the tracked Markdown |
 
 The per-push selection is Tier 1, the Tier 2 tests that neither walk the pipeline nor carry `slow`,
 example 01 while its solve takes under 60 s, and one charged walk, example 02's ePNP-NS pore with
 its VER-62 golden (§8.2.13 N4).
 
-Every run SHALL emit a provenance manifest recording input hashes, library versions, mesh hash,
+Every solve SHALL write a provenance manifest recording input hashes, library versions, mesh hash,
 solver settings, stabilisation mode and correction parameter file versions (FR-25).
 
 NOTE (a gated test's runtime; WP33): every push pays for the tests of
@@ -31,12 +31,9 @@ A test moves to `slow` only if another test on every push gates the same claim o
 input.
 
 NOTE (the development loop's timings): the commit hook, the push gate and a pull request's CI run are
-reported, not enforced (§8.2.11 L2, L3, L8; §8.2.13 N4). Predicted: the commit hook about 90 s on four cores, the
-push gate under 4 minutes after the test scope, a pull request under 6 minutes from its first job's start to its last job's
-completion. Measured in the plan of WP44: the commit hook 187 to 220 s, the push gate 509 s, a pull
-request 194 s. The floor of the push gate is example
-07's walk (421 to 477 s), which the runtime NOTE above does not let the suite shorten. A slow loop is
-met by the four ways of the runtime NOTE, never by loosening a tolerance or weakening an oracle.
+reported, not enforced (§8.4.2). The floor of the nightly run is example 07's walk, which the runtime
+NOTE above does not let the suite shorten. A slow loop is met by the ways of the runtime NOTE, never
+by loosening a tolerance or weakening an oracle.
 
 NOTE (the per-push selection; §8.2.13 N4): a Tier-1 or Tier-2 test that walks the pipeline end to end
 carries the marker `nightly`: an executed worked example of VER-46 other than example 01, or the

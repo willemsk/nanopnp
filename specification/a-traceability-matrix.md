@@ -41,12 +41,12 @@ needed.
 | FR-18 | VER-13, VAL-10 |
 | FR-19 | VER-12, VER-13 |
 | FR-20 | VER-56 (a model defined as one class in the test tree, registered at run time, runs from a case file through stages 10 to 12; no layer outside `physics/` names a model); VER-77 (a wall surface charge in the one weak form, PHY-09's NOTE; WP57) |
-| FR-21 | VER-20, VER-22 |
-| FR-22 | VER-19, VER-21, VER-22 |
+| FR-21 | VER-20, VER-22, VAL-11; VAL-12 to VAL-14 (unmet) |
+| FR-22 | VER-19, VER-21, VER-22, VAL-11; VAL-12 to VAL-14 (unmet) |
 | FR-23 | VER-11, VER-38 (the two-point ratio), VAL-16 (the published currents, transport numbers, rectification and flow rate) |
 | FR-24 | VER-36, VER-37, VER-38 |
 | FR-25 | VER-24, VER-26 (manifest emitted per §7.6), VER-71 (no case leaf accepted and never applied) |
-| FR-26 | VER-09, VER-26, VER-47 (a v1 document and its v2 rewrite are one run) |
+| FR-26 | VER-09, VER-26 |
 | FR-27 | VER-23, VER-25, VER-26, VER-32, VER-34, VER-51 (the stage-4 payload is an `inputs.profile` document), VER-52, VER-53 (stages 5 and 6 keyed and walked to stage 12), VER-55 (each stage's artefact reported as it is stored, by a hook that keys nothing), VER-57 (the protonation stage cached per frame, its export read back exactly through `inputs.pqr`), VER-60 (both halves of stage 7 reported as each is stored, and a cancelled charge build writing no artefact), VER-64 (every stage keyed before it runs, the facts the walk reads and the upstream artefacts it reads declared by the stage, a walk running its target's input closure, and each optional member's signature) |
 | FR-28 | None yet |
 | FR-29 | None yet |

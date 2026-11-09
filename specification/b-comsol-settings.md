@@ -8,7 +8,8 @@ description: "Condenses the reference COMSOL model settings from the 162-page mo
 
 Condensed from the 162-page model report. Full detail is in
 `knowledge/09-comsol-reference-settings/index.md`; the mesh rows' home is
-`02-mesh-27.md` A.1 and A.2 there, and the solver and sweep rows' `03-solver-3-4.md`.
+`02-mesh-27.md` A.1 and A.2 there, and the solver and sweep rows' `03-solver-3-4.md`. A value marked
+(inactive) is printed in the report with its override cleared, so the global size applies.
 
 | Aspect | Setting |
 |---|---|
@@ -19,10 +20,10 @@ Condensed from the 162-page model report. Full detail is in
 | Mesh statistics | 120,917 triangles, 1,879 edge elements, 196 vertex elements; minimum element quality 0.6378, average 0.9765 |
 | Global size ("Finer") | max 10 nm, min 0.001 nm, curvature factor 0.25, growth rate 1.05 |
 | Pore boundary size | max 0.05 nm, min 0.001 nm, curvature factor 0.25, growth rate 1.05 |
-| Pore domain size ("Extremely fine") | max 0.1 nm, min 0.004 nm, curvature factor 0.2 |
-| Reservoir domain size | max 2.8 nm, min 0.04 nm, growth rate 1.04 |
-| Reservoir outer boundary size | max 5 nm, min 0.025 nm, growth rate 1.25 |
-| Symmetry axis inside pore | max 0.075 nm, min 0.04 nm |
+| Pore domain size ("Extremely fine") | max 0.1 nm; min 0.004 nm and curvature factor 0.2 (inactive) |
+| Reservoir domain size | growth rate 1.04; max 2.8 nm and min 0.04 nm (inactive) |
+| Reservoir outer boundary size | max 5 nm; min 0.025 nm and growth rate 1.25 (inactive) |
+| Symmetry axis inside pore | max 0.075 nm; min 0.04 nm (inactive) |
 | Linear solver | PARDISO, pivoting perturbation 1 × 10⁻¹³ |
 | Nonlinear solver | Fully coupled; initial damping 0.2, minimum damping 0.01, recovery damping 0.2; maximum 100 iterations; relative tolerance 1 × 10⁻⁶ |
 | Continuation | On `V_bias` |
@@ -33,5 +34,5 @@ Condensed from the 162-page model report. Full detail is in
 | Current extraction | Variational reaction flux at integration order 4: `F*(z_cpos*tds.ntflux_cpos + z_cneg*tds.ntflux_cneg)` over an electrode boundary |
 | Permittivity parameters | `epsr_ms = 30.08`, `epsr_alpha = 11.5` (Gavish NaCl) |
 | Sweep | Parameter switch over 5 physics cases × 35 bias values × 21 salt concentrations = 3,675 solves |
-| Runtime | 41 h on 12 cores |
+| Runtime | 41 h |
 | Mesh convergence study | None present in the report (RSK-09) |
