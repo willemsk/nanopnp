@@ -308,9 +308,19 @@ Record each command, its result and the commit.
   > `just` through the dev group's `rust-just` 1.59.0, a 2.4 MB binary wheel that `just`'s README lists,
   > so `uv sync` installs it. `uv run just` lists 14 recipes; none commits or pushes, because the gate
   > hook judges the command as typed.
-- [ ] 14. The automatic checkpoint: the hook script, its two environment variables, `.claude/settings.json`,
+- [x] d644381 14. The automatic checkpoint: the hook script, its two environment variables, `.claude/settings.json`,
   `np-implement/wp.md`'s checkpoint steps and `np-ship`'s pause (D10); done when the code and review say so.
   **Executor:** main
+
+  > **Outcome — the hooks carry the prompt; Claude Code's compaction does the rest.** No hook output
+  > starts a compaction or runs a slash command (the hooks reference, read 9 November 2026). A
+  > PreCompact hook's output becomes the compaction's instructions, and a SessionStart hook for
+  > `compact` adds its output to the compacted context. So with `NANOPNP_AUTO_CHECKPOINT=1` a checkpoint
+  > saves its prompt under `.git` and goes on; with `NANOPNP_AUTO_SHIP=1` the pause runs `/np-ship`.
+  > The Stop hook blocks once a turn that ends early (`stop_hook_active` then lets it end). The switch is
+  > read when the prompt is saved, since a hook may not see a settings file's `env`. Exercised by hand:
+  > save on and off, PreCompact, SessionStart for `compact` and `startup`, Stop with and without
+  > `stop_hook_active`, a fully ticked plan, and Copilot. A real compaction has not yet run with it.
 - [ ] 15. The kept task list: `np-implement/wp.md`'s *Load the brief* and *How the work lands*, and the
   session-start hook's reminder after a compaction (D11); done when the code and review say so. **Executor:** main
 - [ ] 16. The Outcome, both Status lines, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]` and PR #171's
