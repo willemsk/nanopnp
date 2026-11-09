@@ -7,7 +7,9 @@ description: "Specifies the provenance manifest emitted with every result, suffi
 #### 5.3.3 Provenance manifest
 
 Emitted with every result artefact (FR-25, IF-08) and sufficient alone to reconstruct the run
-(QR-08). The run directory holding it is `runs/<name>-<short hash>`, the hash covering the case
+(QR-08). The run directory holding it is `runs/<name>-<short hash>`, or
+`runs/<name>-upto-<stage>-<short hash>` for a walk stopped early (in a project, `runs/<study>/<short
+key>`, §5.3.5), the hash covering the case
 hash and the sha256 of every recorded input file, so an input regenerated at the same path yields a
 new directory rather than overwriting the earlier run. The directory's `case.yaml` is the source
 case file's bytes, verbatim; for a study (§5.3.1 NOTE on `models:`) it is the one complete case the study

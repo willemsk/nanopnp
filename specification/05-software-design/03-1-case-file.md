@@ -22,16 +22,9 @@ name: clya-wt-1M-100mV
 #   a: {value: 20, unit: angstrom}
 #   L: {expression: "3 * a", unit: nanometer}
 
-inputs:                             # optional; supplied artefacts, §5.3.2
-  mesh: {path: clya.msh, format: msh41,
-         groups: {lumen: electrolyte, upper: cis, lower: trans,
-                  clya: protein, bilayer: membrane,
-                  pore_wall: wall, outer_rim: membrane_outer,
-                  symmetry_axis: axis}}
-  charge: {path: clya_charge.yaml, format: field1}
-  eps_r:  {path: clya_solid_fraction.yaml, format: field1}
-  # profile: {path: clya_profile.yaml, format: profile1}   # stage 4, nanopnp/profile/v0.5
-  # pqr:     {path: clya.pqr, format: pqr}                 # stage 7's PDB2PQR step
+# inputs:                           # optional; supplied artefacts, §5.3.2
+#   profile: {path: clya_profile.yaml, format: profile1}   # stage 4, nanopnp/profile/v0.5
+#   pqr:     {path: clya.pqr, format: pqr}                 # stage 7's PDB2PQR step
 
 structure:
   source: {path: 2WCD.pdb, variant: ClyA-AS, chains: all, selection: protein}
@@ -43,7 +36,6 @@ geometry:
   contour:  {isolevel: 0.25, smoothing: taubin, simplify_tol_nm: 0.02}
   membrane: {thickness_nm: 2.8, centre_z_nm: 0.0}   # centre in the structure's frame, along the axis
   reservoir: {radius_nm: 250}
-  analyte:  {shape: prolate_spheroid, a_nm: 2.0, b_nm: 3.0, z_nm: 6.0, charge_e: -8}
 
 charge:
   ph: 7.5
@@ -90,25 +82,81 @@ numerics:
   wall_distance: {sources: wall, max_distance_nm: 3.0}                         # PHY-02
   linear: {solver: umfpack}          # see §6.6; MUMPS requires a source build
 
-outputs: [current, transport_numbers, rectification, eof_rate, analyte_force, fields]
+outputs: [current, transport_numbers, rectification, eof_rate, fields]
 ```
 
-NOTE (`nanopnp/case/v0.6`, and schema history; §8.2.2 B3, §8.2.7 G6): the
-schema moved from `nanopnp/case/v1` to carry every key Phases 2 and 3 needed. Against v1 it **adds**
-`inputs.profile`, `inputs.pqr`, `structure.source.selection`, `geometry.membrane.centre_z_nm`,
-`charge.exclusion_offset_nm`, `charge.dielectric_transition_nm` and `numerics.mesh.size_scale`;
-**renames** `structure.source.pdb` to `structure.source.path`, since IF-04 reads mmCIF as well; and
-**removes** `charge.eps_protein` and `geometry.membrane.eps_r`, whose values
-`physics.solid_permittivities` already carries. A permittivity set in two places is a calibration
-parameter (PHY-20) with two sources of truth, and a default of 20 or 3.2 written in code would be a
-fitted parameter hard-coded in Python; the author ruled that the map is the one
-place they are set. The added keys default to the validated configuration.
-v0.6 **adds** `geometry.density.atoms` (`protonated` by default, or `as_loaded`; the NOTE on `geometry.density`), which moves
-the density of a case with `structure:` (WP5.03; §8.2.19 U2). In v0.6, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
-other schema identifier is refused naming the expected schema and the declared identifier before
-any structural validation. The earlier pre-release identifiers `nanopnp/case/v1`, `nanopnp/case/v2` and
-`nanopnp/case/v0.5` are retired. The refusal of `v0.5` names the migration: declare `nanopnp/case/v0.6`, and a case
-with `structure:` that keeps v0.5's density adds `geometry.density.atoms: as_loaded`.
+A case that takes a supplied mesh names it, with the fields that mesh carries, under `inputs:`, and
+carries no `structure:` or `geometry:` (the NOTE on `inputs:`):
+
+```yaml
+schema: nanopnp/case/v0.6
+name: clya-mesh-1M-100mV
+
+inputs:                             # supplied artefacts, §5.3.2
+  mesh: {path: clya.msh, format: msh41,
+         groups: {lumen: electrolyte, upper: cis, lower: trans,
+                  clya: protein, bilayer: membrane,
+                  pore_wall: wall, outer_rim: membrane_outer,
+                  symmetry_axis: axis}}
+  charge: {path: clya_charge.yaml, format: field1}
+  eps_r:  {path: clya_solid_fraction.yaml, format: field1}
+
+electrolyte:
+  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]
+  concentration_M: 1.0
+  temperature_K: 298.15
+  parameters: willems2020_nacl      # reference D_i^0, eta^0, rho^0, eps_r,f^0, a_i, a_0
+  driver: average                   # PHY-01; `ionic_strength` is a deviation
+  corrections:                      # the pluggable registry, §5.5
+    diffusivity:  {model: willems2020_nacl, wall: true, concentration: true}
+    mobility:     {model: willems2020_nacl, wall: true, concentration: true}
+    viscosity:    {model: willems2020_nacl, wall: true, concentration: true}
+    permittivity: {model: willems2020_nacl}
+    density:      {model: willems2020_nacl}
+    steric:       {model: borukhov, a_ion_nm: 0.50, a_water_nm: 0.311}
+
+boundary_conditions:
+  bias_V: 0.100
+  ground: cis
+  walls: {ion_flux: no_flux, slip: no_slip}
+
+physics:                            # the named model of PHY-21
+  model: epnp-ns
+  flow: true
+  variable_density: true
+  inertia: true                      # PHY-22; the reference model retained it
+  dielectric_gradient_forces: false  # PHY-23; off in the validated model
+  solid_permittivities: {protein: 20.0, membrane: 3.2}   # PHY-20; the only place they are set
+
+numerics:
+  elements: {phi: P2, c: P2, u: P2, p: P1}
+  nonlinear: {strategy: newton, damping: residual, max_iter: 100, rtol: 1e-6}   # NUM-16
+  continuation: default_ladder
+  stabilisation: none                # NUM-11; `supg` is its flag, `reference` matches §6.4
+  wall_distance: {sources: wall, max_distance_nm: 3.0}                         # PHY-02
+  linear: {solver: umfpack}          # see §6.6; MUMPS requires a source build
+
+outputs: [current, transport_numbers, rectification, eof_rate, fields]
+```
+
+NOTE (the case schema: its identifier and the compatibility rule; §8.2.7 G6): every case document
+must declare schema `nanopnp/case/v0.6` exactly, and any other schema identifier is refused naming
+the expected schema and the declared identifier before any structural validation. The earlier
+pre-release identifiers `nanopnp/case/v1`, `nanopnp/case/v2` and `nanopnp/case/v0.5` are retired.
+The refusal of `v0.5` names the migration: declare `nanopnp/case/v0.6`, and a case with `structure:`
+that keeps v0.5's density adds `geometry.density.atoms: as_loaded`, since v0.6's default moves the
+density (the NOTE on `geometry.density`). **Widening the accepted
+value set of an existing key is compatible and SHALL NOT move the schema version, because every
+document that validated before still validates; adding, removing, renaming or narrowing a key SHALL
+move it.** What a run actually read is in its FR-25 manifest, so no artefact of an earlier revision becomes
+ambiguous under a widening. The identifier that a move takes names the release that ships it: the
+first move inside v0.6 makes the schema `nanopnp/case/v0.6`, and the stable schema of v1.0 is
+`nanopnp/case/v1.0`, which is distinct from the retired `nanopnp/case/v1`. A release whose
+packages move nothing keeps the identifier it inherited. Between that release's work packages, the
+schema under its identifier may change again without a new identifier, because a pre-release makes
+no compatibility promise. The manifest of every run records the package version (FR-25), and that
+version settles which revision the run read. The identifier is fixed when `vX.Y.0` is
+tagged.
 
 NOTE (the added keys that change a number): `charge.exclusion_offset_nm`
 and `charge.dielectric_transition_nm` are the fitted exclusion offset of FR-15 and the width of
@@ -139,9 +187,7 @@ also ships `AMBER`, `PARSE` and `TYL06`, but each gives charged atoms a zero rad
 of them on one chain of 2WCD, measured), and PHY-16 step 4's kernel width
 `w_i = 0.5 R_i` is then zero, so they are refused naming the atom count rather than admitted to
 fail at deposition; the stage refuses a charged atom with a radius that is not positive from any
-source, `inputs.pqr` included, naming the frame and the atom. The schema had admitted any string
-here, but no case carrying `charge:` was runnable before this package, so narrowing the value set
-breaks no document that ran. `titration` and `forcefield` are switches whose validated defaults
+source, `inputs.pqr` included, naming the frame and the atom. `titration` and `forcefield` are switches whose validated defaults
 are `propka` and `CHARMM` (PHY-16 step 3); any other value is a deviation that the FR-25 manifest
 records. `ph` is a condition of the experiment, as `concentration_M` is, and not a deviation. The
 case's `structure.source.variant` is recorded beside `Q_net`, which it is the provenance of
@@ -199,8 +245,8 @@ NOTE (`inputs:`, FR-27): the optional top-level `inputs:` block is hand substitu
 at stage granularity. Each key names a stage output supplied from outside — a mesh, a charge field,
 a dielectric field — by path and format. A stage whose output is supplied does not run, and neither
 does anything upstream of it; the substituted file is hashed by content and enters the FR-25
-manifest as an input like any other. Releases before v0.3 accept an externally generated mesh
-this way, which is what makes the solver core testable ahead of the meshing pipeline (§8.1).
+manifest as an input like any other. This is what makes the solver core testable without the
+meshing pipeline (§8.1).
 `inputs.profile` supplies stage 4's conditioned polyline as a `nanopnp/profile/v0.5` document
 (`format: profile1`), which is how a hand-edited contour enters a run (§8.1, GUI increment 2), and
 `inputs.pqr` supplies the per-atom charges and radii of stage 7's PDB2PQR step (`format: pqr`). The
@@ -224,6 +270,29 @@ beside `inputs.mesh`, a stored mesh included, stays refused (REV-186: a stored m
 a structure is unknown). `artefact:` on `inputs.charge` or `inputs.eps_r` SHALL be refused as an
 unsupported section when the case is resolved, naming the key: no release schedules the store form of
 the two fields (WP40).
+
+NOTE (`inputs.profile`): `inputs.profile` is consumed by stage 5. It is named by `path`
+with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
+hashed by the canonical digest of its validated payload. `structure:` beside it is refused naming
+both, by the upstream rule, and so are `geometry.density` and `geometry.contour` where either is
+set away from its default; `geometry.membrane` and `geometry.reservoir` are read. A section set to
+its defaults is not refused, because a case dumped from its resolved document writes every section
+out, and FR-26 requires that dump to load back.
+
+NOTE (`inputs.pqr`): `inputs.pqr` is consumed by the `protonation` stage, the first half of stage 7
+(§8.2.4 D4). It is named by `path` with `format: pqr`, and `artefact:` or `groups` beside it is
+refused. The file is a PQR of one frame, or one `MODEL` per frame; every frame SHALL hold the same
+residues, and every atom a charge and a radius. Unlike `inputs.profile`, `inputs.pqr` stands beside
+`structure:`, because stage 1 still runs for the geometry chain: there the PQR SHALL hold exactly the ensemble's frames, in order, each registered to
+its stage-1 frame (§5.2's NOTE on reading a supplied PQR). Without
+`structure:` the coordinates are taken to be in stage 1's frame already, which is the frame the
+stage exports. Beside `inputs.pqr`,
+`charge.ph`, `charge.forcefield` and `charge.titration` configure a step that does not run, so any
+of them set away from its default SHALL be refused naming both keys, as `geometry.density` is beside
+`inputs.profile`. The same holds beside `inputs.charge` under `geometry.density.atoms: as_loaded`,
+where the supplied field replaces what stage 7 would make of a protonation and nothing else reads
+it; under the default the protonation runs for the density and these keys configure it. It holds
+also in a case carrying neither `structure:` nor `inputs.pqr`, which has nothing to protonate.
 
 NOTE (`models:`, FR-39, FR-32, IF-03; WP5.05, WP5.09; §8.2.31 AG12, AG13; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to
 AK3): the optional top-level `models:` block, `{molecular: <path>, continuum: <path>, physics: <path>}` with at least
@@ -282,7 +351,7 @@ model. A reader that does not resolve models, `read_case`, SHALL refuse a docume
 `models:`, naming the readers that do (`Case.load`, `pipeline.case.load_case`). The run writes the
 one complete case it resolved to as `case.yaml`, with no `models:`, which the command line runs as
 it is (FR-25); `Case.dumps(study=True)` writes the study as written, with `models:` absolute and every
-override, and a sweep over a study writes that form as its base file (§5.3.4).
+override, and a sweep over a study writes that form as its base file (§5.3.4). A project holds a study's models and the study as files of one folder (§5.3.5).
 
 NOTE (`variables:`, FR-39, FR-25, IF-03; WP5.07; §8.2.31 AG2 to AG5): the optional top-level
 `variables:` block maps a name to `{value: <number>, unit: <text>}` or `{expression: <text>, unit:
@@ -337,132 +406,24 @@ the case hash covers the paths as written, so moving a case and its files togeth
 reproduction takes a relative path against the directory the original case was read from (QR-08).
 A supplied `inputs.charge` or `inputs.eps_r` is in the model frame, beside a moved structure as
 anywhere else (the NOTE on `inputs.charge`, `inputs.eps_r`; WP41).
-`inputs.profile` is consumed by stage 5 (WP21). It is named by `path`
-with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
-hashed by the canonical digest of its validated payload. `structure:` beside it is refused naming
-both, by the upstream rule, and so are `geometry.density` and `geometry.contour` where either is
-set away from its default; `geometry.membrane` and `geometry.reservoir` are read. A section set to
-its defaults is not refused, because a case dumped from its resolved document writes every section
-out, and FR-26 requires that dump to load back (WP21).
 
-`inputs.pqr` is consumed by the `protonation` stage, the first half of stage 7 (WP27, §8.2.4 D4). It is named by `path` with `format: pqr`, and `artefact:` or `groups`
-beside it is refused. The file is a PQR of one frame, or one `MODEL` per frame; every frame SHALL
-hold the same residues, and every atom a charge and a radius. ATOM and HETATM records are read by
-the PDB columns through the coordinates and then by the two whitespace-separated numbers after
-them, which is the layout PDB2PQR writes, whose coordinate fields may run together; a line those
-columns do not read is read as whitespace-separated fields, and a line read both ways with
-different values is refused naming its line number. A whitespace field that cannot be an atom
-name, a residue name or a chain (more than four, four and one characters) does not read the line:
-PDB2PQR writes a four-character residue name from the alternate-location column and runs a
-four-character atom field into it (`OD2ASPP`, measured, WP27), which the columns
-read. A record type run into a five-digit serial (`HETATM12345`, PDB2PQR's own layout) is split
-before the fields are read. A residue is identified by chain, number and insertion code, and its
-name is the one its atoms carry other than PDB2PQR's CHARMM patch names `TER` and `DISU` (a
-disulfide-bonded cysteine's `CB` and `SG`, written `1CB` and `1SG`; WP27
-review), or, where its atoms carry a parent and one of its
-protonation variants, the variant: PDB2PQR writes a patched residue's backbone under the parent and
-its side chain under the variant (`ASP` and `ASPP` in one residue). Unlike
-`inputs.profile`, `inputs.pqr` stands beside `structure:`, because stage 1 still runs for the
-geometry chain: there the PQR SHALL hold exactly the ensemble's frames, in order, and each frame is
-registered to its stage-1 frame by superposing its Cα atoms on the ensemble's, residue for residue,
-after which every heavy atom of the ensemble SHALL lie within 0.01 Å of a distinct heavy atom of the
-same residue of the PQR, other than the atoms PDB2PQR's hydrogen-bond optimisation may flip: the
-amide `OD1` and `ND2` of asparagine, `OE1` and `NE2` of glutamine, and the ring `ND1`, `CD2`,
-`CE1` and `NE2` of histidine. A flip turns the group through 180° about the bond to it, and the
-group is not symmetric about that bond, so a flipped atom lands 0.13–0.40 Å from every atom it was
-given (138 heavy atoms of the prepared 2WCD, measured, WP27; the criterion is not over every heavy atom, because a flip does not exchange positions exactly and
-such a criterion would refuse PDB2PQR's own output); they are not compared, their worst distance is recorded,
-and the rest of each residue fixes where it is. A flip moves atoms and never removes them or changes their
-element, so a residue of these three whose PQR holds fewer heavy atoms of an element than the
-ensemble's is refused (WP27 review: without it a PQR missing a flippable atom registered). 0.01 Å is about ten times the rounding of a PQR's coordinate columns
-and a hundredth of the shortest bond between heavy atoms, so a frame count that differs, a residue
-the two do not share, or a frame whose atoms have moved is refused naming the frame. Heavy atoms the PQR adds, as PDB2PQR
-adds a missing terminal oxygen, are counted, not refused; hydrogens are not compared. The
-registered coordinates are what the artefact carries, so a PQR written in another frame, as the
-reference's MD-frame PQRs are, lands in stage 1's. A frame whose heavy atoms already meet the
-criterion where they stand is not moved, so the stage's own export reads back exactly. Without
-`structure:` the coordinates are taken to be in stage 1's frame already, which is the frame the
-stage exports. Beside `inputs.pqr`,
-`charge.ph`, `charge.forcefield` and `charge.titration` configure a step that does not run, so any
-of them set away from its default SHALL be refused naming both keys, as `geometry.density` is beside
-`inputs.profile`. The same holds beside `inputs.charge` under `geometry.density.atoms: as_loaded`,
-where the supplied field replaces what stage 7 would make of a protonation and nothing else reads
-it; under the default the protonation runs for the density and these keys configure it. It holds
-also in a case carrying neither `structure:` nor `inputs.pqr`, which has nothing to protonate
-(WP27; WP5.03).
-
-NOTE (`structure:`, stage 1, FR-01 to FR-03, IF-04; WP18):
-`source.path` names a PDB or mmCIF file, optionally gzipped. MDAnalysis reads PDB and gemmi reads
-mmCIF. `source.selection` is an MDAnalysis selection applied to the file, and one MDAnalysis cannot
-parse SHALL be refused naming the key. The selected atoms are those of the selection in the chains
-`source.chains` lists. Every selected atom SHALL
-carry its element in the file, in the PDB element columns or the mmCIF `type_symbol`, and a file
-that leaves one blank SHALL be refused naming the atom: a guessed element is how a Cα becomes
-calcium. A selection carrying alternate locations SHALL be refused naming the first, because
-choosing between them is structure preparation, which the pipeline does not do. A trajectory that
-does not hold the structure's atoms, and an mmCIF model that does not list model 1's atoms in model
-1's order, SHALL be refused naming the file (WP18 review).
-
-A chain is identified by its chain identifier, or by its segment identifier where the chain column
-is blank. `source.chains` is `all` or a comma-separated list of chain identifiers, such as
-`A,B,C`, which SHALL number `n` (a string, so the key's type is unchanged: WP18). `symmetry.point_group` is `C<n>`
-with `n ≥ 1`, and any other group SHALL be refused naming the accepted form. The selected chains
-SHALL number exactly `n`, and a listed chain that is absent SHALL be named (FR-03). Each chain SHALL
-carry at least half the Cα atoms of the most complete chain. Chains SHALL agree in residue name at
-every residue number they share, with the histidine protonation variants read as one name. A
-failure of either SHALL be refused naming the chain.
-
-The ensemble is the frames of `ensemble.trajectory` when one is given, and otherwise the models of
-the source file. `frames.last_ns` keeps the frames within that many nanoseconds of the last one, by
-the times the file records. A value exceeding the recorded span by more than one frame interval
-SHALL be refused naming the span and the interval. A file written without a timestep reads as 1 ps
-or 0 ps per frame, and without this refusal it would yield the whole trajectory in silence.
-`frames.count` keeps `count` frames at the uniform stride `⌊N/count⌋`, ending on the last frame of
-the window of `N` frames. A count exceeding the window SHALL be refused naming both. The selected
-frame indices and their times are recorded as read. Every selected frame is superposed on the Cα
-set of the earliest selected frame (FR-01). A trajectory holding no frame SHALL be refused naming
-the file, and two Cα atoms at one residue number and insertion code of one chain SHALL be refused
-naming the chain and the residue, since one would silently replace the other. A chain split across
-the periodic box SHALL be refused naming the chain, the residue pair, the frame and the distance: in
-any selected frame, two Cα of one chain at consecutive residue numbers, neither with an insertion
-code, lie more than 1.0 nm apart, where a peptide-bonded pair lies 0.38 nm apart and a wrapped one
-is a box length apart (QR-12; REV-19, REV-57; WP46).
-
-`symmetry.axis: auto` takes the Cₙ axis from the ensemble-mean Cα structure by chain-permutation
-superposition (FR-02). The chains are ordered by azimuth, and the whole assembly is superposed on
-itself with each chain mapped to its neighbour. The axis is that rotation's eigenvector of
-eigenvalue 1, through the Cα centroid. It SHALL refuse the point group, naming the measured
-quantity, when the chains' azimuths are not spaced 360°/n to within a quarter of that spacing, or
-when the rotation angle differs from 360°/n by more than 1°. It SHALL refuse `C1`, which has no
-permutation to superpose.
-
-The axis carries no sign of its own. It is signed to agree with the file's +z, so the structure
-file SHALL point +z from the *trans* side to the *cis* side. A detected axis more than 10° from the
-file's z SHALL be refused, naming the angle, because such a frame does not name an end.
-`symmetry.axis: z` takes the file's z axis through its origin. Where `n ≥ 2`, it SHALL be refused
-when its lateral displacement from the detected axis exceeds 0.01 nm anywhere over the Cα axial
-extent, naming the tilt, the offset and the displacement. The detected axis it is measured
-against passes the spacing, angle and orientation refusals above first.
-
-The aligned frame puts the axis on z at r = 0 and keeps the file's axial coordinate, `z = â · x`. So
-`geometry.membrane.centre_z_nm` is read in the frame it is written in, and stage 5 applies that
-shift. The four thresholds above are constants of the code and never case keys. Their derivation
-and the margins measured on the author's aligned copy of 2WCD, on 6MRT and on the ClyA-AS ensemble
-are in the WP18 plan, Design §2–§4. The wwPDB entry 2WCD as deposited is not such a file: its
-asymmetric unit holds two dodecamers, chains A–L and M–X, in the crystal frame, with the pore axis
-22.9° from z and +z towards *trans*, so it SHALL be refused by the 10° rule like any other file. Its
-chains A–L are the author's copy moved rigidly (RMSD 1e-4 nm), and moving them is structure
-preparation (WP18 Outcomes).
-Until stage 2 is delivered, a walk that extends past stage 1 on a case carrying `structure:` SHALL be
-refused as an unsupported section naming stage 2. Once stages 2 and 3 are delivered, and until
-stage 4 is, a walk that extends past stage 3 SHALL be refused in the same way, naming stage 4
-(WP19). Once stage 4 is delivered, and until stage 5 is, a walk that
-extends past stage 4 SHALL be refused naming stage 5 (WP20). With
-stages 5 and 6 delivered, a walk runs the whole pipeline and no stage is refused on this ground
-(WP21). Stage 1
-alone runs through the stage command (IF-02). A case carrying `structure:` and `inputs.mesh` SHALL be refused naming both: a stage whose
-output is supplied does not run, and neither does anything upstream of it (the `inputs:` NOTE), so
-the structure would be recorded as an input to a run that never read it (WP18).
+NOTE (`structure:`, stage 1, FR-01 to FR-03, IF-04): `source.path` names a PDB or mmCIF file,
+optionally gzipped. MDAnalysis reads PDB and gemmi reads mmCIF. `source.selection` is an MDAnalysis
+selection applied to the file, and one MDAnalysis cannot parse SHALL be refused naming the key. The
+selected atoms are those of the selection in the chains `source.chains` lists. `source.chains` is
+`all` or a comma-separated list of chain identifiers, such as `A,B,C`, which SHALL number `n`.
+`symmetry.point_group` is `C<n>` with `n ≥ 1`, and any other group SHALL be refused naming the
+accepted form. The ensemble is the frames of `ensemble.trajectory` when one is given, and otherwise
+the models of the source file. `frames.last_ns` keeps the frames within that many nanoseconds of the
+last one, by the times the file records. `frames.count` keeps `count` frames at the uniform stride
+`⌊N/count⌋`, ending on the last frame of the window of `N` frames. `symmetry.axis: auto` detects the
+Cₙ axis (FR-02), and `symmetry.axis: z` takes the file's z axis through its origin. The structure
+file SHALL point +z from the *trans* side to the *cis* side, and `geometry.membrane.centre_z_nm` is
+read in the file's axial coordinate. Stage 1's behaviour, thresholds and refusals: §5.2's NOTE on
+stage 1. Stage 1 alone runs through the stage command (IF-02). A case carrying `structure:` and
+`inputs.mesh` SHALL be refused naming both: a stage whose output is supplied does not run, and
+neither does anything upstream of it (the `inputs:` NOTE), so the structure would be recorded as an
+input to a run that never read it.
 
 NOTE (`geometry.density`, stages 2 and 3, FR-04 to FR-06, CON-04, IF-05; WP19): the `geometry:` block is read on a case carrying `structure:`. Beside `inputs.mesh`
 it SHALL be refused naming both, by the upstream rule of the `inputs:` NOTE. `grid_spacing_nm`
@@ -478,8 +439,10 @@ its frame, chain, residue and atom, as under `as_loaded`, with no fallback by el
 them, which is the reference's density; it is a switch away from the validated default, so the manifest lists it (FR-25).
 `protonated` beside a produced protonation under a `charge.forcefield` other than `CHARMM` SHALL be refused at
 resolution naming both keys, since another force field writes hydrogen names that the CHARMM set does not hold.
-`atoms` takes part in stage 2's key only when it is `protonated`: under `as_loaded` the key is the key
-of schema v0.5.
+`atoms` takes part in stage 2's key only when it is `protonated`: under `as_loaded`, `atoms` does
+not enter stage 2's key. `kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the
+`sharpness` and R_i from the CHARMM radius set. The kernel, the radius set and the union are in
+§5.2's NOTE on stage 2, and stage 3's binning and Cₙ average in its NOTE on stage 3.
 
 NOTE (`geometry.pore`, an idealised pore, IF-02, FR-09, FR-10; §8.2.22 X1): a case without
 `structure:`, `inputs.profile` or `inputs.mesh` MAY declare an idealised pore,
@@ -503,41 +466,6 @@ their defaults; so is `numerics.mesh.backend` other than `netgen`, since the Gms
 field is posed on a structure's region (WP57). `boundary_conditions.wall_charge_C_m2`
 (PHY-09) and `numerics.mesh.maxh_nm` are read only beside `geometry.pore`, and each is refused
 elsewhere naming the key.
-
-`kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the `sharpness`. R_i is the
-atom's CHARMM van der Waals radius (Rmin/2) by residue and atom name, from the radius set of
-PDB2PQR's `CHARMM.DAT`, held as data under `data/radii/`. This is an **author ruling**: it is the set carried by the per-frame PQR files of the reference ensemble
-(`knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`). The histidine names `HID`, `HIE` and `HIP` read as CHARMM's `HSD`, `HSE`
-and `HSP`. `HIS` resolves only where every one of those three that names the atom gives the same
-radius. `ILE CD1` reads as `CD`, `OXT` as `OT2`,
-and terminal atoms resolve through the patch residues. An atom the set does not name SHALL be
-refused, naming its chain, residue number, residue and atom. There is no fallback by element: a
-guessed radius is a plausible wrong geometry. Which atoms are deposited, hydrogens included, is
-`structure.source.selection`'s to decide, and the count of each element is recorded.
-
-Each frame's density is the probabilistic union `ρ_f = 1 − Π_i (1 − g_i)` over that frame's atoms,
-with `g_i = exp(−d_i²/(σR_i)²)`. A term is kept where `g_i ≥ 10⁻⁶`. The ensemble map is the mean
-of the per-frame maps, not a union over frames. Grid nodes lie at integer multiples of the spacing
-in the stage-1 frame, so the axis is a column of nodes. The grid is square in (x, y) about the
-axis and holds every kept term with one cell to spare. The map SHALL be finite and within [0, 1],
-or the run aborts naming the voxel (QR-12).
-
-Stage 3 bins the map in (r, z) at `r_j = j·h`, each bin being the annulus of half-width h/2 about
-r_j. Its weights are the exact areas of overlap between each grid cell and each annulus, so an
-annulus's weights sum to its exact area, and each nonzero cell's to the cell's area. No bin is
-interpolated. FR-05's average over the n rotated copies SHALL be taken in the angular harmonic
-basis. There a rotation by α multiplies the m-th coefficient by `e^{−imα}`, so the average keeps
-exactly the harmonics with m ≡ 0 (mod n). The averaged map's azimuthal mean is then the map's own,
-and its azimuthal variance is `2Σ_{k≥1}|c_{kn}|²`. Both are computed from the unrotated map, with
-neither rotated deposition nor interpolation. That variance is FR-06's residual azimuthal variance.
-It SHALL be computed after the binned mean profile, interpolated at each cell's own radius, is
-subtracted, because otherwise the radial gradient across a bin reads as azimuthal variation. It
-uses only harmonics below the ring's sampling limit `π r_j/h`. Below `r = n h/π` no harmonic is
-resolved, and the artefact records that radius and each bin's harmonic count rather than
-presenting a measured zero. The variance of the map without the Cₙ average is reported beside it,
-and their difference is the part of the azimuthal variation that is not Cₙ-symmetric. Neither is
-gated: RSK-07 makes the variance a validity criterion to be documented, and no threshold is
-specified. The derivations and measurements are in the WP19 plan, Design §1–§4.
 
 NOTE (`geometry.contour`, stage 4, FR-07, FR-08; WP20): `isolevel`
 SHALL be finite and lie in (0, 1). `simplify_tol_nm` SHALL be finite, positive and below the
@@ -631,14 +559,9 @@ values are not is almost certainly written backwards, and the diagnostic SHALL s
 reporting every group unclaimed.
 
 NOTE (a group that claims itself, IF-06): a group whose own name is already a vocabulary name needs
-no entry in the mapping, and is claimed by that fact. The failure the gate exists to catch is a name
-the solver does *not* speak reaching a solve unnoticed, and a name it does speak is not one of
-those; requiring `wall: wall` of a mesh this implementation generated would be ceremony that a
-reader learns to write without reading. Which names the run selects on is derived from the resolved
-case — the model's boundary vocabulary, both electrodes, the species, the fluid material set and
-`numerics.wall_distance.sources` — and never from a constant list, so the diagnostic is exactly
-true of the run that produced it: *this run will select on this name, and no group supplies it*. A
-selection pattern that is not a flat `a|b|c` alternation of literal names SHALL be refused rather
+no entry in the mapping, and is claimed by that fact. Which names the run selects on is derived from
+the resolved case — the model's boundary vocabulary, both electrodes, the species, the fluid material
+set and `numerics.wall_distance.sources` — and never from a constant list. A selection pattern that is not a flat `a|b|c` alternation of literal names SHALL be refused rather
 than parsed heuristically, since a requirement derived from a mis-parsed pattern is a gate that can
 only pass.
 
@@ -651,17 +574,16 @@ inapplicable switches are; each value SHALL be finite and positive, and each key
 material of the vocabulary, because a key naming a fluid domain (`electrolyte`, `cis`, `trans`) would
 replace ε_r,f(⟨c⟩) in the electrolyte and a name outside the vocabulary would be recorded and never
 applied, so case resolution refuses both naming the key (a vocabulary solid the mesh lacks is allowed);
-`poisson` carries them as the coupled models do (WP26: the refusal covered all three electrostatic models, which left none of them runnable
-on any mesh with a membrane). On an **ingested** mesh, a material that is
+`poisson` carries them as the coupled models do. On an **ingested** mesh, a material that is
 neither in the fluid set nor named in `physics.solid_permittivities` SHALL abort the run, naming the
 material; for a model that carries no solids the abort SHALL say that the model cannot be posed on
 a mesh with a solid domain, rather than ask for an entry the case would then refuse. Poisson is
 solved over the whole domain, so the alternative is the electrolyte's ε_r about
 24 times too large in a solid — a plausible wrong answer with no solver diagnostic. Meshes built in
-process by the benchmark geometries keep the warning they have today; the difference is that an
-ingested mesh's material names were not written by this codebase. A mesh stage 6 generates from a
-profile is gated as an ingested one is: its `protein` is a structure's body, not a benchmark's, and
-the same wrong answer follows from a missing entry (WP21). Rationale: boundary conditions are selected by name and the natural condition under the
+process by the benchmark geometries take a warning instead, since an ingested mesh's material names
+were not written by this codebase. A mesh stage 6 generates from a profile is gated as an ingested
+one is: its `protein` is a structure's body, not a benchmark's, and the same wrong answer follows
+from a missing entry. Rationale: boundary conditions are selected by name and the natural condition under the
 `r`-weighted forms is the *free* one (§6.2, NUM-06), so an unmapped wall becomes an open boundary,
 the solve converges, and the current is wrong with no residual, no gate and no diagnostic.
 
@@ -736,8 +658,8 @@ relative path against the directory the original case was read from, so that it 
 run read (QR-08).
 
 NOTE (`numerics.nonlinear`): the values shown are the NUM-16 reference settings — the monolithic
-damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶, tested on the
-residual and on the relative update alike. `strategy: hybrid` and `damping: backtracking` select
+damped Newton of the reference model, 100 iterations, relative tolerance 10⁻⁶ on the per-field
+relative update of the undamped direction, or the residual at its absolute floor (NUM-16's NOTE). `strategy: hybrid` and `damping: backtracking` select
 the NUM-20 fallbacks, which no release schedules, so a case selecting either SHALL be refused as an
 unsupported section naming NUM-20 and its fallback (WP40).
 
@@ -750,27 +672,13 @@ would permit the pair. The refusal is made when the case is loaded, so `nanopnp 
 and the desktop shell's commit make it with the same text as a run. All three orders are recorded
 in the run provenance record (NUM-03).
 
-NOTE (`numerics.stabilisation`, and the compatibility rule for the case schema): the value set is
+NOTE (`numerics.stabilisation`): the value set is
 the registered modes, shipped as `none | supg | reference`; a mode registered at run time widens it
 (§5.5; §8.2.8 H7). `none` is the validated default and the production policy of NUM-11;
 `supg` is NUM-11's flag, the streamline term alone; `reference` is the mode of NUM-14, streamline
 and crosswind on the transport operator together with the flow stabilisation of §6.4.2, and is the
 only shipped value permitting an equal-order velocity–pressure pair; a registered mode permits
-one by declaring it (`permits_equal_order`). More generally: **widening the accepted
-value set of an existing key is compatible and SHALL NOT move the schema version, because every
-document that validated before still validates; adding, removing, renaming or narrowing a key SHALL
-move it.** The mode a run actually solved is in its FR-25 manifest, so no artefact of an earlier
-revision becomes ambiguous under a widening. From Phase 4 the identifier that a move takes names
-the release that ships it (§8.2.7 G6): the first move inside v0.5 makes the schema
-`nanopnp/case/v0.5`, the first move inside v0.6 makes it `nanopnp/case/v0.6`, and the stable schema of v1.0
-is `nanopnp/case/v1.0`, which is distinct from the retired `nanopnp/case/v1`. A release whose
-packages move nothing keeps the identifier it inherited. Between that release's work packages, the
-schema under its identifier may change again without a new identifier, because a pre-release makes
-no compatibility promise. The manifest of every run records the package version (FR-25), and that
-version settles which revision the run read. The identifier is fixed when `vX.Y.0` is
-tagged. In v0.6, every case document must declare schema `nanopnp/case/v0.6` exactly, and any
-other schema identifier is refused naming the expected schema and the declared identifier before
-any structural validation. The earlier identifiers `nanopnp/case/v1`, `nanopnp/case/v2` and `nanopnp/case/v0.5` are retired.
+one by declaring it (`permits_equal_order`).
 
 NOTE (`numerics.wall_distance`): `sources` is the boundary-name pattern the PHY-02 distance field
 `d` is measured from, and its validated default is the pore wall alone. PHY-02 excludes the
@@ -808,34 +716,3 @@ collection, from pairs of members whose case-file assignments are equal except a
 a tolerance on the pairing would report the ratio of two unrelated operating points as a
 rectification. A sweep asking for `rectification` whose axes produce no such pair SHALL be refused
 when the plan is built, naming the axis, rather than collecting a column of absent values (QR-12).
-
-NOTE (the project, FR-32, FR-34, FR-35, IF-02; WP5.08; §8.2.17 S11; §8.2.33 AI9 to AI14): a workbench
-**project** is a folder: `nanopnp-project.yaml` (`nanopnp/project/v0.6`, which holds the item index, the
-open items, the current item and each suite's layout, and no physics), `models/molecular/`,
-`models/continuum/`, `models/physics/`, `studies/`, `comparisons/`, `inputs/`, `runs/<study>/<run>/`, `sweeps/` and
-`store/`. An item's name is its file's stem and its `name:`, and matches `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
-The folder is the truth: a file the index lacks is appended on opening, and an indexed name without its
-file is a problem, never a refusal to open. A run is `runs/<study>/<short key>`, and
-`upto-<stage>-<short key>` when its walk stopped early. `api.Project` is the library's whole interface
-to it; the command line and the workbench add none.
-A case file **imports** into a project (`Project.import_case`, `nanopnp project import`) split by the
-ownership table of the `models:` NOTE into a molecular model, a continuum model, a physics model and a study, and the
-study resolves to the case it was split from, so every stage's key but the first is the original's.
-A case whose `models:` names files imports those files too, each under its `name:`: an identical file
-is reused, a different file of a taken name is stored as `<name>-2`, and the study names the copies. An
-input file is **copied** into `inputs/` and written relative to the item, or **linked** where it lies
-(`link=True`) and written absolute; `Project.embed` copies a linked input in and rewrites each item that
-names it. A different file of a taken input name is refused, naming both. A key hashes an input's
-contents and not its path (§5.3.2), so neither choice moves a key. A project
-**exports** (`Project.export`, `nanopnp project export`) into a missing or empty folder as readable
-files: the project file, the items, `inputs/` with each linked input copied in and its items rewritten,
-each run's record, resolved case and manifest with its `results/` copied from the files `run.json`
-names, and each sweep's records. The store goes only with `store=True`. An input the project cannot
-find is refused before anything is written.
-`Project.changes` lists each value of an item away from its default (the schema's, or a switch's
-validated one) and each study override, with its kind, value, default and the model's value;
-`Project.reset` removes the key from the item that sets it. `Project.problems` lists each missing file,
-mismatched name and item refused on loading, with the case path of the refusal and the suite that owns
-the item. The workbench shows both and computes neither (VER-60). A user's settings, key bindings and
-themes are per user, under `NANOPNP_CONFIG`, else the operating system's configuration folder; the
-layout is per project.
