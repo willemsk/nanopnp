@@ -164,7 +164,7 @@ inside a `try: import anywidget` and falls back to a stub with the same construc
 The returned dict is plain numbers and base64 strings, so it crosses a process boundary and
 serialises without help.
 
-### `netgen.webgui.GenerateHTML` ignores its `template` argument **[verified]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
+### `netgen.webgui.GenerateHTML` ignores its `template` argument **[verified][^wp15-plan]** {#netgenwebguigeneratehtml-ignores-its-template-argument}
 
 Read from the installed source, 21 September 2026:
 
@@ -190,7 +190,7 @@ page loads, `package/dist/webgui.js`, is **779,484 B**: a minified IIFE that def
 That build **bundles two further works**: three.js r152 (MIT, which keeps its `@license` banner)
 and dat.gui 0.7 (Apache-2.0, which keeps no banner). The tarball also carries `src/*.ts`, the
 shaders and the vite configuration, so it is the corresponding source of the LGPL part as it
-stands. **[verified]**, 22 September 2026.
+stands. **[verified][^wp15-plan]**, 22 September 2026.
 
 `cdn.jsdelivr.net` answers this development container's proxy with 403, but
 **`registry.npmjs.org` does not**. The tarball downloads here, and its SHA-512 matches the
@@ -203,7 +203,7 @@ the frozen probe bundle and in a plain `QWebEngineView`. With no GPU, `new webgu
 throws `TypeError: Cannot read properties of null (reading 'getExtension')`: WebGL has no
 context, which is a property of the machine and not of the renderer.
 
-### A webgui scene draws on a material *region*, not only on a whole mesh **[verified]** {#a-webgui-scene-draws-on-a-material-region-not-only-on-a-whole-mesh}
+### A webgui scene draws on a material *region*, not only on a whole mesh **[verified][^wp15-plan]** {#a-webgui-scene-draws-on-a-material-region-not-only-on-a-whole-mesh}
 
 Measured 21 September 2026 on a restored four-material ePNP-NS solution, 124 triangles.
 `Draw(cf, mesh.Materials("electrolyte|cis|trans"), show=False, order=2).GetData()` succeeds and
@@ -243,7 +243,7 @@ This is the §5 shim recorded above, used for the purpose that section already s
 widget code that would otherwise ship having never been executed. It stays off the push gate, where
 widget coverage remains `windows-latest` and `macos-latest`.
 
-### SIGTERM stops a child busy inside netgen in milliseconds **[verified]** {#sigterm-stops-a-child-busy-inside-netgen-in-milliseconds}
+### SIGTERM stops a child busy inside netgen in milliseconds **[verified][^cr002]** {#sigterm-stops-a-child-busy-inside-netgen-in-milliseconds}
 
 Neither netgen nor NGSolve installs a SIGTERM handler, so the signal's default action ends a
 `spawn` child at once even while it is inside compiled meshing code; only a Python-level handler
@@ -333,7 +333,7 @@ ndarray and raises `AttributeError: 'list' object has no attribute 'shape'` on a
 probe therefore builds its 3 × 3 input with `skimage.morphology.disk(1)`, so that it imports no
 undeclared NumPy.
 
-### PDB2PQR and PROPKA bundle through `collect_all`, and fail inside PDB2PQR's run **[verified]** {#pdb2pqr-and-propka-bundle-through-collect_all-and-fail-inside-pdb2pqrs-run}
+### PDB2PQR and PROPKA bundle through `collect_all`, and fail inside PDB2PQR's run **[verified][^wp31-probe]** {#pdb2pqr-and-propka-bundle-through-collect_all-and-fail-inside-pdb2pqrs-run}
 
 Measured 2 October 2026 on a Linux rebuild of the probe recipe in this container (WP31 D14, D15),
 with PyInstaller 6.22.3, PDB2PQR 3.7.1 and PROPKA 3.5.1. As with the geometry payloads, Windows
@@ -473,6 +473,8 @@ failure in the dark theme, not before. The 3D view's background is the same kind
 
 [^wp14-plan]: `docs/plans/phase-1/wp14-gui-shell-packaging-probe.md` (PySide6 GL system-library requirement and Playwright Chromium GL shim).
 [^wp15-plan]: `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
+[^cr002]: `docs/code_reviews/CODE_REVIEW_002.md` (28 September 2026), F-1's refutation: SIGTERM timed on a child busy in `GenerateMesh`.
+[^wp31-probe]: `docs/plans/phase-3/wp31-gui-charge-pipeline.md`, D14 and D15 (the probe's PDB2PQR and PROPKA payloads, built 2 October 2026).
 [^wp24-plan]: `docs/plans/phase-2/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).
 [^wp31-plan]: `git show 0ff2d619:docs/plans/wp31-gui-charge-pipeline.md`, D8 (scene colour limits and `gui_settings.autoscale`).
 [^wp501-plan]: `docs/plans/phase-5/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).

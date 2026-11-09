@@ -30,7 +30,7 @@ verified:
 
 ## 8. Python version floor — the 3.10 target is not free
 
-**Resolved, 24 September 2026 [verified]: the floor is now 3.11** (§8.2.2 B4, WP17). With
+**Resolved, 24 September 2026: the floor is now 3.11 [verified][^wp17-plan]** (§8.2.2 B4, WP17). With
 `requires-python = ">=3.11,<3.15"` and the `structure` extra at `MDAnalysis>=2.10`,
 `GridDataFormats>=1.2`, `pdb2pqr>=3.7`, `uv lock` resolves one version of each across the range:
 MDAnalysis 2.10.0, GridDataFormats 1.2.0, pdb2pqr 3.7.1. The 3.10 splits the lock carried for
@@ -61,7 +61,7 @@ the geometry pipeline needs an API that only MDAnalysis 2.10 has.
 Separately, and more happily: with all extras enabled (`structure`, `gui`, `gmsh`, dev group), the
 resolved lock contains **no sdist-only package** — every dependency, `ngsolve`, `PySide6`, `gmsh`,
 `pdb2pqr`, `MDAnalysis`, `scikit-image` and `h5py` included, installs from a binary wheel
-**[verified]**. Nothing in the current dependency set contradicts CON-07.
+**[verified][^wp17-plan]**. Nothing in the current dependency set contradicts CON-07.
 
 **The local gate cannot see a 3.10 floor break; only the CI matrix can [verified][^wp17-plan].** The gate of
 `CLAUDE.md` runs on the development interpreter — 3.14 — so a 3.11+ stdlib API compiles, typechecks
