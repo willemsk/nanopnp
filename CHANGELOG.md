@@ -31,7 +31,7 @@ against the code, every plan in its phase's folder. No case schema, public API o
 [plan](docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md) records the work.
 
 - **Added**:
-  - **The decisions register**, `docs/project/decisions.md`, in the site's Project section: 1,256 rows, one per
+  - **The decisions register**, `docs/project/decisions.md`, in the site's Project section: 1,259 rows, one per
     ruling, plan decision, review, modularity and workbench row, open item and knowledge-base ruling, each with its
     source, decider, date, package and where it holds now. `.claude/scripts/decisions.py` writes it and with
     `--check` compares it; the commit hook, the push gate and CI's documentation job run the check. Where each
@@ -43,6 +43,15 @@ against the code, every plan in its phase's folder. No case schema, public API o
     them; none is refactored.
   - **`.claude/scripts/links.py`**, which checks every relative link of the tracked Markdown, in CI's documentation
     job.
+  - **A `justfile`**, run with `uv run just`, which `uv sync` installs with the development tools (`rust-just`): it
+    lists and runs the documentation build with CI's checks, the record scripts, the tests, the push gate into a
+    log and gmsh's libraries. No recipe commits or pushes.
+  - **The automatic checkpoint**: with `NANOPNP_AUTO_CHECKPOINT=1` a compaction checkpoint of `/np-implement` goes
+    on instead of ending the turn, and with `NANOPNP_AUTO_SHIP=1` its pause runs `/np-ship`;
+    `.claude/hooks/checkpoint.sh` gives the saved prompt to the compaction Claude Code makes when the context fills,
+    and to the context after it.
+  - **The kept task list**: `/np-implement` builds the app's task list from the work items and rebuilds it from the
+    plan's ticks after each compaction; the session-start hook reminds it.
   - **The trial of xenon and import-linter**, `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`:
     it recommends neither, and the adoption is the author's.
 - **Changed**:

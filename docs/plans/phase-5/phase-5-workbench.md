@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.09 merged, WP5.10 in progress; the written knowledge's follow-up WP5.11 and WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+**Status: in progress; WP5.01 to WP5.09 merged, WP5.10 delivered; the written knowledge's follow-up WP5.11 and WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
@@ -224,16 +224,18 @@ the Study suite's list WP5.19's; REV-217 and REV-219 land in WP5.13, REV-220 and
 
 ### WP5.10 — The written knowledge's tools and rules (CODE_REVIEW_039; §8.2.36 AL3 to AL7, AL14, AL24, AL27, AL28)
 
-**In progress** ([the plan](wp5.10-the-written-knowledges-tools-and-rules.md)): items 1 to 12 delivered 9 November 2026;
-a command runner, an automatic checkpoint and a kept task list added the same day (D9 to D11). `docs/project/decisions.md`,
-written by `.claude/scripts/decisions.py` from the records, lists 1,256 decisions with where each holds now; the
+**Delivered 9 November 2026** ([the plan](wp5.10-the-written-knowledges-tools-and-rules.md)). `docs/project/decisions.md`,
+written by `.claude/scripts/decisions.py` from the records, lists 1,259 decisions with where each holds now; the
 history index's list moved to `specification/history/holds-now.yaml` (AL3). The site's *Architecture* page is generated
 (AL6). VER-79 checks §5.1's module rows against the subpackages, the page against the script and the YAML against the
 ruling letters; the commit hook, the push gate and CI run `decisions.py --check`, and CI runs `links.py`. The core's
 *Gate and push* re-runs `decisions.py` and `index_records.py` (AL4). Every plan sits in `docs/plans/phase-<n>/` or
 `sessions/` (AL5, AL28). Ruff selects `C901` at 15 and `PLR0913` at 8, with 26 definitions under `noqa` (AL7). The
 changelog's Phase 5 entries sit under their versions (AL14). The trial recommends neither xenon nor import-linter
-([the concept](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md); AL27). Live
+([the concept](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md); AL27). Added by the
+author the same day (D9 to D11): a `justfile`, run with `uv run just`; two switches,
+`NANOPNP_AUTO_CHECKPOINT` and `NANOPNP_AUTO_SHIP`, under which a pause goes on and `.claude/hooks/checkpoint.sh`
+carries its prompt across the next compaction (§8.4.4); and `/np-implement`'s task list, rebuilt from the ticks. Live
 constraints: a commit that adds a decision re-runs `decisions.py`; open decision 14 is the author's. AUD-251 and
 AUD-382 `fixed`. Tag `v0.6.0-alpha.10`.
 

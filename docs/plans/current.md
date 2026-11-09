@@ -1,6 +1,6 @@
 # Current work
 
-Updated 9 November 2026 (WP5.10 extended). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 9 November 2026 (WP5.10 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -20,8 +20,9 @@ check.
   (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36): WP5.10 to WP5.12 CODE_REVIEW_039's
   follow-up, WP5.13 and WP5.14 the clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the
   route, WP5.22 the close.
-  **WP5.10** [in progress](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): items 1 to 12 done; a command
-  runner, an automatic checkpoint and a kept task list to come. Next `/np-implement wp 5.10`.
+  **WP5.10** [delivered](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
+  pages (VER-79), plans by phase, complexity rules, a command runner, an automatic checkpoint. Next
+  `/np-ship wp 5.10`.
   host: claude-code.
 
 ## Not to be re-decided
