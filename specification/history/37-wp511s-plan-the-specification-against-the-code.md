@@ -1,0 +1,32 @@
+---
+type: Ruling Record
+title: "8.2.37 WP5.11's plan: the specification against the code, the open gaps and two earlier rulings, agreed 9 November 2026"
+description: "Records the author's rulings at WP5.11's plan on the CODE_REVIEW_039 findings that change a meaning: twelve passages of §4 and §6 follow the program a test pins; three possible gaps become Phase 6's open items; §7.6's release row, the phase-close check and an unsourced core count are corrected; two rulings of 19 October 2026 are transcribed from CODE_REVIEW_010; the package also takes REV-222's four items; and its main session runs on Opus at high effort."
+---
+
+#### 8.2.37 WP5.11's plan: the specification against the code, the open gaps and two earlier rulings, agreed 9 November 2026
+
+Rulings by the author on 9 November 2026, at `/np-plan wp 5.11`, after WP5.10's merge. AL21 sends to the
+author each finding of CODE_REVIEW_039 whose edit touches a rule, a number or a decision. The session
+checked the 148 findings WP5.11 takes against the tree at `69d961c` (every one still stands) and against
+the code, sorted out those that change a meaning, and put them through `AskUserQuestion` in three calls,
+each question with its context, options and previews. The first call bundled twelve text-against-code
+findings, three possible gaps and four process findings; the author took the first two recommendations
+and asked for the four one by one, which the second and third calls did, with the implementing model.
+A fourth call asked whether the package also takes REV-222, whose four items CODE_REVIEW_038 left for
+"the next package that edits the file concerned"; the author took all four, against the recommendation
+of two. The author took every other recommendation. AM6 and AM7 are rulings the author gave on 19 October 2026 in
+CODE_REVIEW_010, transcribed here at the author's ruling so that `clause.py` prints them beside their
+clauses. The letter series continues at AM.
+
+| # | Decision | Consequence | Clause changed, and when |
+|---|---|---|---|
+| AM1 | **Twelve passages of §4 and §6 are rewritten to state what the program does, where a test pins it** (AUD-50, 51, 53, 54, 55, 57, 58, 59, 72, 75, 77, 78), as recommended, against a round on each and against open items: NUM-16's settings name what the relative tolerance measures and add the absolute floor and the damping growth; NUM-17's increment cap is a damping cut that aborts at the minimum damping; NUM-09's length scale is the 1 nm mesh unit; NUM-26, NUM-30, PHY-12, PHY-13, PHY-14 and PHY-22 carry the tested values and the code's behaviour | No program behaviour and no result change; the text stops contradicting its tests | §4 (PHY-12, PHY-13, PHY-14, PHY-22), §6 (NUM-09, NUM-12, NUM-16, NUM-17, NUM-26, NUM-30), `.claude/rules/physics-numerics.md`; open: WP5.11 |
+| AM2 | **Three possible gaps in the program become open items owned by Phase 6** (AUD-56's density continuity, AUD-69, AUD-52), as recommended, against a package before the frame and against widening WP5.11 to code: PHY-07's density-continuity weak term, which the program does not assemble; NUM-28's fluid consistency term, which omits the pore charge's force `ρ_pore E`; and three §6 tolerances that have no written derivation. NUM-04 states the flow forms the program assembles, with a NOTE naming the open item | The gaps are visible from their clauses and measured in Phase 6's comparison against the published results; no stored result moves now | NUM-04, NUM-28; `docs/project/review-findings.md`; open: WP5.11 (the NOTEs and rows), Phase 6 (the measurement) |
+| AM3 | **§7.6's release row says Tier 4 has no job until experimental fixtures exist** (AUD-129), as recommended, against keeping the row with an open item | The table describes what CI runs before a tagged release | §7.6; open: WP5.11 |
+| AM4 | **The phase-close check accepts the review log's end states** (AUD-256), as recommended, against requiring every row `fixed`: each row the phase owns is `fixed`, or ruled `accepted` with its later package, `deferred`, `post-1.0`, `declined` or `wontfix`; a phase's own findings log closes, and `review-findings.md` stays `open` | A phase that carries a ruled item forward can close | `/np-ship phase`'s close check (§8.4.6); open: WP5.11 |
+| AM5 | **"On 12 cores" is dropped wherever the reference sweep's 41 h is quoted** (AUD-137), as recommended: no source gives the core count | Every quoted number has a source | §2.2, §3, §8.3, Appendix B; open: WP5.11 |
+| AM6 | *Ruled 19 October 2026 (CODE_REVIEW_010, "Mollification (ruling)"); recorded at WP5.11's plan.* **The validated wall-distance field is the unsmoothed C⁰ field; C¹ mollification is a deviation, off by default** | Mollification is an option a case switches on and the manifest records | PHY-02, NUM-31 (19 October 2026) |
+| AM7 | *Ruled 19 October 2026 (CODE_REVIEW_010, CR-3); recorded at WP5.11's plan.* **NUM-10 is discharged by the direct solvers' own row scaling**; the three unused scaling helpers and their tests are deleted | No row-scaling code of the project's own | NUM-10 (19 October 2026) |
+| AM8 | **WP5.11's main session runs on Opus at high effort**, as recommended, against §8.4.5's Sonnet: its edits to normative text fail silently, as AL29 found for WP5.10. The mechanical items stay on Sonnet sub-agents | The main session costs about twice Sonnet's price per token; §8.4.5's rule stands for every other package | The WP5.11 plan |
+| AM9 | **WP5.11 also takes REV-222's four items** (CODE_REVIEW_038 C2, C3, E5, E6), *against the recommendation* of C3 and E6 alone: "Take all four". Each identifier the skills and the workflow cite as the only cross-reference gains its words; the gate-and-push procedure and the two-lane rule are stated once and pointed at; the core's *The In brief* and *Putting a choice to the author* move to a file read at the steps that use them; `AGENTS.md` stops importing `CLAUDE.md` | The agent instructions are settled in one pass; WP5.11 grows by about a day | `CLAUDE.md`, `AGENTS.md`, `.claude/workflow/`, `.claude/skills/`; open: WP5.11 |

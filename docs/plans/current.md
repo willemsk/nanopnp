@@ -1,28 +1,26 @@
 # Current work
 
-Updated 9 November 2026 (WP5.10 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 9 November 2026 (WP5.11 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5's library steps, the physics model and the frame are merged. The first of
-three packages on the project's written knowledge is built: every decision on one page, the architecture drawn on
-the site, and checks that fail when either drifts. Then two correct the text, two take four library tidy-ups, two
-open the suites, and the screens follow. Four to five months part-time remain.
+Phase 4 is released. Phase 5's library steps, the physics model, the frame and the first package on the written
+knowledge are merged. The second is planned: about 150 corrections to the specification and the agent instructions,
+and three possible program gaps recorded for Phase 6. Then the knowledge base, tidy-ups, the screens. About four
+months part-time remain.
 
-**Your call.** Two measuring tools to adopt or not (the trial recommends neither), and eight audit findings to
-check.
+**Your call.** Approve the second package's plan after its review; adopt two measuring tools or not (the trial
+recommends neither); check eight audit findings.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.09 merged
-  (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36): WP5.10 to WP5.12 CODE_REVIEW_039's
-  follow-up, WP5.13 and WP5.14 the clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the
-  route, WP5.22 the close.
-  **WP5.10** [delivered](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
-  pages (VER-79), plans by phase, complexity rules, a command runner, an automatic checkpoint. Next
-  `/np-ship wp 5.10`.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.10 merged
+  (tag `v0.6.0-alpha.10` unpushed). Next WP5.11 and WP5.12 the written knowledge, WP5.13 and WP5.14 the
+  clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the route, WP5.22 the close (§8.2.36).
+  **WP5.11** [planned](phase-5/wp5.11-the-specifications-text-and-the-agent-instructions.md): 148 audit findings
+  and REV-222 (§8.2.37). Next `/np-plan wp 5.11 review`, then `/np-implement wp 5.11`.
   host: claude-code.
 
 ## Not to be re-decided
@@ -47,7 +45,7 @@ check.
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's identifier, `nanopnp/case/v0.6` (G6).
 - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
 - **Written knowledge, then clean-ups, then the frame; packages renumbered; plans archived by phase** (§8.2.36 AL5,
-  AL22 to AL26).
+  AL22 to AL26). **Text follows the tested program; its gaps, REV-223 to 225, are Phase 6's** (§8.2.37 AM1, AM2).
 
 ## Somebody else's
 
