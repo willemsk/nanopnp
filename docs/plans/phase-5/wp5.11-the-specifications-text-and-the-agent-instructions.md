@@ -1,6 +1,6 @@
 # WP5.11 — The specification's text and the agent instructions
 
-**Status: in progress, items 1 to 3 done.** Planned 9 November 2026, at `69d961c`. Inherits §8.2.36 AL8 to AL12, AL14 and
+**Status: in progress, items 1 to 8 done.** Planned 9 November 2026, at `69d961c`. Inherits §8.2.36 AL8 to AL12, AL14 and
 AL16 to AL18 and AL21, AM1 to AM12 ruled at this plan and its review (§8.2.37), CODE_REVIEW_039's register and its scripts in
 `.claude/scripts/audit/`, and REV-216 and REV-222.
 
@@ -205,7 +205,7 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
 - [x] 4d3efd8 6. §7 to §12 and the appendices (D2): list 6, AM3, AM5, and AM4's end states as a §8.4.6 bullet; done when
   the code and review say so.
   **Executor:** main
-- [ ] 7. The counts (D7); done when every SHALL difference is traced to a finding and the clause check exits 0.
+- [x] 9ff5f6e 7. The counts (D7); done when every SHALL difference is traced to a finding and the clause check exits 0.
   **Executor:** main
 
   > **Outcome — 526 SHALLs before, 517 after, each difference traced.** §3 −4: CON-06's reach clause +1
@@ -216,7 +216,7 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
   > spent Phase 2 SHALL (AUD-147). The clause check over Appendix A's identifiers and every ruling letter
   > exits 0; both §5.3.1 examples validate; `links.py`, `duplicates.py`, `decisions.py --check` and the
   > strict build pass.
-- [ ] 8. Compaction checkpoint. **Executor:** main
+- [x] 8. Compaction checkpoint. **Executor:** main
 - [ ] 9. `.claude/`, `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md` (D3, D4): list 9, AL14, AL16, AM4,
   REV-222's four; done when `links.py` passes and each changed procedure is stated in one file. **Executor:**
   main for AM4, AL16 and REV-222's four, which move and reword rules; list 9's fixed edits and AL14's pointers
