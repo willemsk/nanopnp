@@ -197,16 +197,25 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
   D5): list 2, AM1's twelve, the two NOTEs, REV-223 to REV-225; done when the code and review say so and each
   measurement cut from a NOTE stands in its concept. **Executor:** main
 - [x] 3. Compaction checkpoint. **Executor:** main
-- [ ] 4. §5.1, §5.2, §5.4 to §5.6, `knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md`,
+- [x] c9e43f4 4. §5.1, §5.2, §5.4 to §5.6, `knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md`,
   `knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md` (D3, D4): list 4, AL10, AL12; done when each diagram edge is a registry
   edge and VER-79 passes. **Executor:** main
-- [ ] 5. §5.3.1 to §5.3.4 and the new `03-5-project-folder.md` with its three listings (D3, D4): list 5, AL11,
+- [x] 8118ca8 5. §5.3.1 to §5.3.4 and the new `03-5-project-folder.md` with its three listings (D3, D4): list 5, AL11,
   AUD-113's moves; done when both examples validate and the strict build passes. **Executor:** main
-- [ ] 6. §7 to §12 and the appendices (D2): list 6, AM3, AM5, and AM4's end states as a §8.4.6 bullet; done when
+- [x] 4d3efd8 6. §7 to §12 and the appendices (D2): list 6, AM3, AM5, and AM4's end states as a §8.4.6 bullet; done when
   the code and review say so.
   **Executor:** main
 - [ ] 7. The counts (D7); done when every SHALL difference is traced to a finding and the clause check exits 0.
   **Executor:** main
+
+  > **Outcome — 526 SHALLs before, 517 after, each difference traced.** §3 −4: CON-06's reach clause +1
+  > (AUD-21), five SHALLs of the pending CON-08, CON-09 and CON-11 restatements −5, now stated as changes
+  > (AUD-32). §4 −4: step 3's three NOTEs to §5.2 (AUD-82), the producer-path SHALL (AUD-84). §5.2 +27:
+  > those three, and 24 moved from §5.3.1 (AUD-113). §5.3.1 −27: the 24, and three spent refusals of a walk
+  > past an undelivered stage (AUD-113). §6 0: NUM-16's cut +1 (AUD-51), NUM-31's −1 (AUD-65). §8.1 −1: the
+  > spent Phase 2 SHALL (AUD-147). The clause check over Appendix A's identifiers and every ruling letter
+  > exits 0; both §5.3.1 examples validate; `links.py`, `duplicates.py`, `decisions.py --check` and the
+  > strict build pass.
 - [ ] 8. Compaction checkpoint. **Executor:** main
 - [ ] 9. `.claude/`, `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md` (D3, D4): list 9, AL14, AL16, AM4,
   REV-222's four; done when `links.py` passes and each changed procedure is stated in one file. **Executor:**
