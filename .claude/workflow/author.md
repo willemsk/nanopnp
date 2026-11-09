@@ -39,7 +39,8 @@ question dialog may be all the author sees, so the context lives in it, not in t
   - for the recommended option, **Why:** the one reason, and **It would change if:** what would make
     another option better.
   A layout or a screen gets a small text sketch in the preview.
-- **At most three questions in a call**, the ones that change others first. Before the first call,
+- **At most three questions in a call**, the ones that change others first, two to four options
+  each, the recommended option first with *(Recommended)*. Before the first call,
   the chat gets a short brief of the round: what is decided, what is settled already, and what each
   answer feeds.
 - **When the author asks for more,** with a question back, a free answer that picks nothing, or

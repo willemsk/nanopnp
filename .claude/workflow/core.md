@@ -45,8 +45,8 @@ section is a session's conduct under it. While two package PRs are open:
 
 - `/np-implement` and `/np-ship` take `wp <n>`. Without it, ask which package.
 - `current.md` holds one position line per lane. Edit only your lane's line.
-- A package merged before its previous phase's release takes no tag. Its `CHANGELOG.md` entry goes
-  under `## [Unreleased]` (`CONTRIBUTING.md`, *Versions and releases*).
+- A package merged before its previous phase's release: its tag and its `CHANGELOG.md` entry follow
+  `CONTRIBUTING.md`, *Versions and releases*.
 - After you merge `main`, renumber each new item of every register §8.4.4 lists. Start one above the
   highest on `main`, change every reference, and repeat until `uv run .claude/scripts/duplicates.py`
   passes.
@@ -104,7 +104,7 @@ a choice to the author.
    `data/corrections/`, `docs/` outside `plans/` and `code_reviews/`, `mkdocs.yml`, and docstrings in
    `src/`.
 4. Run the gate before a push as `CLAUDE.md`'s *Commands* say (on Copilot, `hosts/copilot.md`), and
-   push only a tree it passed (§8.4.4).
+   push only a tree it passed (§8.4.2).
 5. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
 
 ## The PR contract

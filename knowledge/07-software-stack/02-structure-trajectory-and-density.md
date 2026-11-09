@@ -202,7 +202,7 @@ the scipy fallback suffices. The times are the trap:
   of production.
 - A "last *n* ns" selection trusted to that metadata silently takes the whole trajectory, or the
   wrong window. Gate a `last_ns` longer than the recorded span, and record the times as read
-  (`SPECIFICATION.md` §5.3.1 NOTE on `structure:`).
+  (`SPECIFICATION.md` §5.2 NOTE on stage 1).
 
 **Density deposition and the (r, z) reduction, measured [verified][^wp19-plan].** Measured on 25 September 2026
 with scratch prototypes while planning WP19. They are not the implementation, and the plan's Design

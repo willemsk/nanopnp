@@ -182,7 +182,7 @@ the quantity-of-interest extraction. Heavy data is compressed.
 | **FR-15** | SHALL build the dielectric field and the ion-exclusion surface from the same density field, with independently configurable protein permittivity and exclusion offset. | v0.4 |
 | **FR-16** | SHALL implement each empirical correction as a named component registered by string, its fit coefficients held in versioned data files, so a new electrolyte or surface is a data file rather than a code change. | v0.2 |
 | **FR-17** | SHALL solve the steady 2D-axisymmetric ePNP-NS system across 0.005–5 M and ±200 mV with all corrections active, via a continuation ladder, without negative concentrations at any nonlinear iterate. | v0.2 |
-| **FR-18** | SHALL provide the physics models of PHY-21, each selected by name in the case file. | v0.2 |
+| **FR-18** | SHALL provide PHY-21's models `epnp-ns`, `pnp-ns`, `pnp` and `poisson`, each selected by name in the case file. | v0.2 |
 | **FR-19** | SHALL provide PHY-21's equilibrium models `pb` and `pb-linear`. | v0.4 |
 | **FR-20** | SHALL admit a new physics model as one implementation of a documented interface (field set, weak-form contributions, boundary-condition vocabulary, default solve strategy), with no change to the mesh, geometry, charge, sweep, provenance or interface layers. | v0.4 |
 | **FR-21** | SHALL support a rigid analyte body of revolution on the pore axis, subtracted from the fluid domain and treated as a hard dielectric with no ion flux, no-slip and a dielectric jump, charged as either a surface density or a smeared volumetric charge. | v0.7 |

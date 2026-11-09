@@ -1,6 +1,6 @@
 # CODE_REVIEW_039: the findings register
 
-Written by `.claude/scripts/audit/register.py` at `HEAD` from the tables under `raw/`: the ten readers' returns (`reader-*.md`), the orchestrator's own findings and the task walks (`own-findings.md`), the dispositions (`dispositions.tsv`) and the fix commits (`commits.tsv`). 387 findings, 365 of them live; every one has one `AUD-nn` number and one state. The schema is the brief's: `fixed <sha>`, `your call` or `dismissed <reason>`; a `to fix (<category>)` state is a fix not yet committed. The line numbers in *Where* are those of the audited commit, a5039af.
+Written by `.claude/scripts/audit/register.py` at `20fb8bc` from the tables under `raw/`: the ten readers' returns (`reader-*.md`), the orchestrator's own findings and the task walks (`own-findings.md`), the dispositions (`dispositions.tsv`) and the fix commits (`commits.tsv`). 387 findings, 365 of them live; every one has one `AUD-nn` number and one state. The schema is the brief's: `fixed <sha>`, `your call` or `dismissed <reason>`; a `to fix (<category>)` state is a fix not yet committed. The line numbers in *Where* are those of the audited commit, a5039af.
 
 ## Counts
 

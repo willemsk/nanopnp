@@ -389,7 +389,7 @@ Phase 5: `cli/__init__.py` with the GUI's shell work, and `physics/models.py` an
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.02 added `nanopnp gui` without the split, so WP5.08, which opens a project with it, splits `cli/__init__.py`.
 
-**Outcome:** fixed, [WP38](../plans/phase-4/wp38-io-split.md).
+**Outcome:** fixed: `io/case.py` by [WP38](../plans/phase-4/wp38-io-split.md), `cli/__init__.py` by [WP5.08](../plans/phase-5/wp5.08-the-frame-and-the-project-folder.md).
 
 ### MOD-14 — Refusals name releases that have shipped
 

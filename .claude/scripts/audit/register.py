@@ -314,9 +314,10 @@ def render(register: Register, at: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _head() -> str:
+def commit(ref: str = "HEAD") -> str:
+    """Return the short sha a ref names, so that a record never says ``HEAD``."""
     result = subprocess.run(
-        ["git", "rev-parse", "--short", "HEAD"],
+        ["git", "rev-parse", "--short", ref],
         capture_output=True,
         text=True,
         check=False,
@@ -336,7 +337,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     arguments = parser.parse_args(argv)
     register = build()
-    arguments.out.write_text(render(register, arguments.at or _head()), encoding="utf-8")
+    arguments.out.write_text(render(register, commit(arguments.at or "HEAD")), encoding="utf-8")
     live = _live(register)
     sys.stdout.write(
         f"{len(register.findings)} findings ({len(live)} live, "

@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,281. By source: history ruling 323; plan decision row 642; REV row 225; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,282. By source: history ruling 323; plan decision row 642; REV row 226; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 493; open 5; session, own call 780; session, put to the author 3.
+By decider: author 494; open 5; session, own call 780; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1217,6 +1217,7 @@ By decider: author 493; open 5; session, own call 780; session, put to the autho
 | REV-223 | session, own call | `docs/project/review-findings.md` |  |  | PHY-07's density continuity is not assembled | CODE_REVIEW_039 | accepted |
 | REV-224 | session, own call | `docs/project/review-findings.md` |  |  | NUM-28's fluid consistency term omits the pore charge's force | CODE_REVIEW_039 | accepted |
 | REV-225 | session, own call | `docs/project/review-findings.md` |  |  | Three numerics tolerances have no written derivation | CODE_REVIEW_039 | accepted |
+| REV-226 | author | `docs/project/review-findings.md` |  |  | Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2 | ruled by the author, 9 November 2026 (CODE_REVIEW_044) | accepted |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
@@ -1229,7 +1230,7 @@ By decider: author 493; open 5; session, own call 780; session, put to the autho
 | MOD-10 | author | `docs/project/modularity-findings.md` |  |  | The backend interface of section 5.4.1 does not exist | §8.2.8 H3 | deferred |
 | MOD-11 | author | `docs/project/modularity-findings.md` |  |  | with_section and register are outside PUBLIC | §8.2.8 H2; §8.2.23 Y5 | fixed |
 | MOD-12 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | PUBLIC is mirrored by hand for the type checker | WP36 | fixed |
-| MOD-13 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Three modules and two functions are past review size | WP38 | fixed |
+| MOD-13 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Three modules and two functions are past review size | WP38; WP5.08 | fixed |
 | MOD-14 | session, own call | `docs/project/modularity-findings.md` |  | WP40 | Refusals name releases that have shipped | WP40 | fixed |
 | MOD-15 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | core reaches upward, once by an annotation and into ten subpackages by the registry | WP38 | fixed |
 | MOD-16 | session, own call | `docs/project/modularity-findings.md` |  | WP39 | The stabilisation registry is closed by a Literal in the schema | WP39 | fixed |

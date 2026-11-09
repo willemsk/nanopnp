@@ -1,6 +1,6 @@
 # CODE_REVIEW_039: the redundancy map
 
-Written by `.claude/scripts/audit/maps.py` at `HEAD` from `findings.md`. One row per live finding on the redundancy axis (48 rows): the meaning that has more than one home, its homes as the finding names them, and the home the finding proposes. The author rules each; none is applied here.
+Written by `.claude/scripts/audit/maps.py` at `20fb8bc` from `findings.md`. One row per live finding on the redundancy axis (48 rows): the meaning that has more than one home, its homes as the finding names them, and the home the finding proposes. The author rules each; none is applied here.
 
 | Finding | Severity | The meaning | Its homes | Proposed home | Saves | Status |
 |---|---|---|---|---|---|---|
