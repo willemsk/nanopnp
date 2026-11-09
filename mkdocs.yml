@@ -343,6 +343,7 @@ nav:
               - "Tier-2 test evidence: analytic benchmarks and reference checks (WP45 item 26)": _generated/model/knowledge/07-software-stack/22-tier-2-test-evidence-analytic.md
               - "23. Pinning a protonation state through PDB2PQR's apply_pka_values (WP5.04)": _generated/model/knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md
               - "24. pint with a Fraction registry converts exactly, and formats nothing (WP5.07)": _generated/model/knowledge/07-software-stack/24-pint-with-a-fraction-registry-exact-units.md
+              - "25. xenon and import-linter beside ruff's C901 and VER-61 (WP5.10)": _generated/model/knowledge/07-software-stack/25-complexity-and-import-contract-tools.md
           - "Validation and verification — the benchmark ladder":
               - _generated/model/knowledge/08-validation-benchmarks/index.md
               - "Validation and verification — the benchmark ladder (overview)": _generated/model/knowledge/08-validation-benchmarks/00-overview.md

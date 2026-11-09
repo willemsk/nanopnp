@@ -1,6 +1,6 @@
 # WP5.10 — The written knowledge's tools and rules
 
-**Status: planned, not started.** 8 November 2026, at `da395a7`. Inherits §8.2.36 AL3 to AL7, AL14, AL24
+**Status: delivered, 9 November 2026.** Planned 8 November 2026, at `da395a7`. Inherits §8.2.36 AL3 to AL7, AL14, AL24
 and AL27, AL28 and AL29 ruled at this plan, CODE_REVIEW_039's sections 5 to 7 and its prototypes in
 `.claude/scripts/audit/`.
 
@@ -277,12 +277,24 @@ Record each command, its result and the commit.
   `0.6.0-alpha.2` to `.9` greps and the paragraphs are byte-identical. **Executor:** main
 - [x] 18fae4a 10. The trial and `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, its
   index and `knowledge/log.md` (D8); done when the code and review say so. **Executor:** main
-- [ ] 11. §8.4.5, `CLAUDE.md` (six scripts; the gate's prose check; VER-79 in *Testing*'s guards);
+  > **Outcome — neither tool is recommended.** import-linter's layers contract in `LAYER_ORDER` breaks on
+  > 8 `TYPE_CHECKING` imports in 5 layer pairs that `modularity-layering.yaml` already accepts with their
+  > findings, and is kept without them, a subset of VER-61. xenon fails 20 blocks by radon's measure, which
+  > disagrees with ruff's `C901` on 15 of 22 functions and suppresses only by path.
+  > [The concept](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md) records
+  > the commands at `3427617`; open decision 14 is the author's.
+- [x] 9fa88dc 11. §8.4.5, `CLAUDE.md` (six scripts; the gate's prose check; VER-79 in *Testing*'s guards);
   `holds-now.yaml` for AL3 to AL7, AL14, AL24, AL27 and AL28; AUD-382 and AUD-251 in
   `raw/dispositions.tsv` and `raw/commits.tsv`, `register.py` and `maps.py` re-run; done when no YAML
   entry names WP5.10 as open. **Executor:** main
-- [ ] 12. The Outcome, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]`; done when the code and
+- [x] 12. The Outcome, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]`; done when the code and
   review say so. **Executor:** main
+  > **Outcome — 1,256 decisions on the page; one call taken beyond the plan.** The register holds 311
+  > rulings, 632 plan rows, 222 `REV`, 18 `MOD`, 9 `OPN`, 38 `WB`, 14 knowledge-base rulings and 12
+  > bullets; by decider, 473 the author's, 775 the session's own call, 3 put to the author and 5 open.
+  > `decisions.py` credits a plan row whose cell says "Ruled by the author" to the author, which the
+  > prototype credited to the session. VER-79's three tests pass, and each fails on the drift it names.
+  > `gate.sh run` passed in 251 s at the second checkpoint, `7190906`. AUD-251 and AUD-382 are `fixed`.
 
 ### Verification
 

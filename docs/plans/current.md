@@ -1,16 +1,17 @@
 # Current work
 
-Updated 8 November 2026 (WP5.10 reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 9 November 2026 (WP5.10 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5's library steps, the physics model and the window frame are merged. Two reviews
-come next: three packages correct the project's written knowledge where an audit found it drifting, and two take four of the six library tidy-ups an architecture review settled; the other two open the suites
-that use them. The screens follow, renumbered. About four to five months part-time remain.
+Phase 4 is released. Phase 5's library steps, the physics model and the frame are merged. The first of
+three packages on the project's written knowledge is built: every decision on one page, the architecture drawn on
+the site, and checks that fail when either drifts. Then two correct the text, two take four library tidy-ups, two
+open the suites, and the screens follow. Four to five months part-time remain.
 
-**Your call.** Approve the tools package's plan; later, two measuring tools to adopt or not, and eight
-audit findings to check.
+**Your call.** Two measuring tools to adopt or not (the trial recommends neither), and eight audit findings to
+check.
 
 ## Position
 
@@ -19,9 +20,9 @@ audit findings to check.
   (`v0.6.0-alpha.9`). Amended 8 November 2026 (§8.2.36): WP5.10 to WP5.12 CODE_REVIEW_039's
   follow-up, WP5.13 and WP5.14 the clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the
   route, WP5.22 the close.
-  **WP5.10** [planned, reviewed](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
-  pages with VER-79, the plans archived, ruff's complexity rules, the changelog, the tools' trial.
-  Next `/np-implement wp 5.10` once approved.
+  **WP5.10** [delivered](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): the decisions and architecture
+  pages with VER-79, plans by phase, ruff's complexity rules, the changelog by version, the tools' trial.
+  Next `/np-ship wp 5.10`.
   host: claude-code.
 
 ## Not to be re-decided
@@ -60,7 +61,7 @@ audit findings to check.
 
 ## On demand
 
-- **Specification:** `SPECIFICATION.md` and the file it maps; `specification/history/index.md`.
+- **Specification:** `SPECIFICATION.md` and the file it maps; `docs/project/decisions.md`.
 - **Amendments:** `phase-5-record.md`.
 - **The follow-ups:** CODE_REVIEW_039 with `findings.md`; CODE_REVIEW_036's designs and corrections; §8.2.36.
 - **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5.
