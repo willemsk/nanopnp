@@ -28,7 +28,7 @@ model report governs and §4.6 records the divergence.
 | `Γ_a` | analyte surface | dielectric continuity, no-flux, no-slip; the NUM-28 force is taken over it |
 | `r = 0` | symmetry axis | axis conditions |
 
-NOTE: reference geometry is a hemispherical reservoir of radius R = 250 nm on each side and a
+NOTE: reference geometry is a hemispherical reservoir of radius `R_res` = 250 nm on each side and a
 DPhPC bilayer of thickness 2.8 nm.
 
 #### 4.1.2 Symbols
@@ -70,8 +70,8 @@ NUM-31) is a deviation, off by default.
 
 Rationale: the reference model used a general-extrusion operator over the pore boundaries only;
 electrolyte properties near the bilayer do not affect the pore's figures of merit. That field was
-unsmoothed. Mollification is an implementation change, not a model change, and is required because
-`D`, `μ` and `η` all depend on `d`, so a kinked `d` enters the Jacobian.
+unsmoothed. A kinked `d` enters the Jacobian through `D`, `μ` and `η`, which is why mollification
+exists as an option.
 
 NOTE (PHY-02, the driver clamp): the wall functions of PHY-11 are stated for `d̄ ≥ 0`, and the ion form
 `1 − exp(−P₁(d̄ + P₂))` has its root at `d̄ = −P₂`. A negative sample of a discrete distance field
@@ -210,20 +210,22 @@ precision below.
 | `f^w` for `η` | — | 3.36 nm⁻¹ | 1.47 × 10⁻¹ nm | — | — | — |
 | `t_Na⁺` (auxiliary) | 0.3963 | 9.38 × 10⁻² | 2.86 × 10⁻³ | −1.88 × 10⁻² | 4.51 × 10⁻³ | — |
 
-Fit standard errors and R² (0.99 throughout, except 0.97 for the η wall function and 0.98 for
-`t_Na⁺`) are carried in `data/corrections/willems2020_nacl.yaml`. The transport-number fit is
+R² (0.99 throughout, except 0.97 for the η wall function and 0.98 for `t_Na⁺`) is carried in
+`data/corrections/willems2020_nacl.yaml`; the fit standard errors are in Table 5.2 of the thesis and,
+for `D`, `μ`, `η^w` and `t_Na⁺`, as comments in that file. The transport-number fit is
 auxiliary, not evaluated at solve time: it derives per-ion mobilities from molar conductivity via
 `μ_i(c) = Λ(c) t_i(c) / (z_i F)`, `t_Cl = 1 − t_Na`. Self-consistency values a conformance test
-SHALL reproduce: `f^w_D(0) = 0.06`, `f^w_D(0.75 nm) = 0.99`, `η⁰/η^w(0) = 0.37`,
-`η⁰/η^w(1.45 nm) = 0.99`.
+SHALL reproduce: `f^w_D(0) = 0.06`, `f^w_D(0.75 nm) = 0.99`, `η⁰/η^w(0) = 0.379` (thesis: 0.37),
+`η⁰/η^w(1.45 nm) = 0.99`. The wall coefficients are quoted in nm⁻¹ and nm; PHY-11 applies them to
+`d̄ = d/(1 nm)`, so they enter as their values in those units.
 
 NOTE (PHY-12): the density coefficients differ from the thesis table by more than rounding, `P₁ = 0.04047`
 (thesis 4.06 × 10⁻²) and `P₂ = −6.149 × 10⁻⁴` (thesis −6.39 × 10⁻⁴, 3.8 % apart). The COMSOL values
 govern.
 
-**PHY-13.** The fits are valid over 0–5.3 M. Above 5.3 M every property SHALL be clamped to its
-cap value from the table above, and each clamp activation SHALL be logged with the location and
-property. Diffusivities between 4 M and 5.3 M are extrapolated (no experimental data above 4 M)
+**PHY-13.** The fits are valid over 0–5.3 M. Above 5.3 M each concentration SHALL be clamped
+(PHY-01), so every property takes its fit value at 5.3 M, which the table's caps round; each clamp
+activation SHALL be logged with the location and species. Diffusivities between 4 M and 5.3 M are extrapolated (no experimental data above 4 M)
 and SHALL be documented as such.
 
 **PHY-14.** `μ_i` SHALL be derived from `D_i⁰`, not fitted independently. The reference model sets
@@ -239,8 +241,9 @@ an explicit factor F; multiplying by F recovers the tabulated `μ_i` in m² V⁻
 
 Rationale: `μ_i⁰ = D_i⁰/V_T` therefore holds at infinite dilution by construction. At finite
 concentration `D` and `μ` carry different concentration corrections (`cdf.D_*` fitted to
-self-diffusion data, `cdf.L_*` to conductivity data), so `D_i/μ_i` drifts to 1.2–1.7 × kT/e between
-0.15 M and 3 M. Poisson–Boltzmann is therefore a separate model, not the PNP solver at zero bias.
+self-diffusion data, `cdf.L_*` to conductivity data), so `D_i/μ_i` drifts upward with
+concentration, to 1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 × kT/e for Cl⁻ between 0.15 M and 3 M
+(`knowledge/01-physics-epnpns/03-the-corrections.md` §3.0). Poisson–Boltzmann is therefore a separate model, not the PNP solver at zero bias.
 Tests SHALL assert the expected drift profile rather than `D_i/μ_i = kT/e`.
 
 **PHY-15.** The implementation SHALL NOT apply a reduction of ion motility by the ratio of ion
@@ -269,7 +272,7 @@ grid to (r, z) by exact annular volume is not what the pipeline does. The closed
 that construction's limit as the spacing goes to zero, without its cost, which would be about 10¹³
 voxel updates for the 50-frame ClyA ensemble. Step 6 deposits onto the
 deployed mesh rather than sampling a grid there, which removes the aliasing of the consumer leg
-that the §4.4 NOTE measures on the delivered table. The reference built its table from a 2D Gaussian
+that the PHY-19 NOTE on the consumer leg measures on the delivered table. The reference built its table from a 2D Gaussian
 in (r, z) divided by `2πr` at the field point (`knowledge/04-clya-geometry-and-charge/08-gaps-and-ambiguities-questions-for-the.md`, gap G4). PHY-17 forbids that
 construction, so it is not reproduced. Off the axis the two carry the same charge and the same
 z-marginal, and differ pointwise by `(r − r_i)/(2 r_i)` of the local value: first order in
@@ -277,51 +280,8 @@ z-marginal, and differ pointwise by `(r − r_i)/(2 r_i)` of the local value: fi
 further out (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md#33-the-closed-form-kernel-on-the-0005-nm-lattice` [tested]). The difference on the ClyA
 ensemble is measured at Tier 3 rather than accommodated.
 
-NOTE (PHY-16 step 3, protonation as run; WP27): PDB2PQR SHALL be run
-once per selected frame (§8.2.4 D4) on that frame's heavy atoms, with every hydrogen and every water
-removed (PDB2PQR 3.7.1's `--drop-water` drops only `HOH` and `WAT`; WP27
-review) and every protonation-variant residue name (`HSD`, `HSE`, `HSP`, `HID`, `HIE`, `HIP`, `ASH`, `ASPP`,
-`GLH`, `GLUP`, `LYN`, `LSN`, `CYM`, `TYM`, `ARN`) written as its titratable parent, so that the
-states are PROPKA's at the case's pH and not the source file's. The disulfide name `CYX`, which
-PDB2PQR writes under `SWANSON` and `PEOEPB`, is read as `CYS` the same way (WP27 review: without it every disulfide-bonded cysteine named a residue the ensemble does
-not hold). PDB2PQR 3.7.1 treats `HSD` and
-`HSE` as fixed residues that PROPKA does not titrate, and refuses `HSE` with its hydrogens present,
-so a CHARMM-named MD frame passed through verbatim would pin every histidine. The reference passed
-its frames verbatim to PDB2PQR 2.1.1, and its PQRs keep `HSE`; the difference is measured at Tier 3
-rather than reproduced. Under CHARMM, PDB2PQR cannot represent a neutral terminus, `CYS⁻`, `LYS⁰`,
-`TYR⁻` or `ARG⁰`, and keeps the standard state where PROPKA prefers one of these; it never applies
-PROPKA's terminal pKa at all. Every such residue SHALL be recorded per frame as an unapplied state,
-derived by comparing each residue's applied charge with the sum of PROPKA's group states at the pH,
-never parsed from log text. On 2WCD at pH 7.5 these are `CYS 285` (pKa 6.25) in every chain, and
-the N-terminus of `LYS 8` wherever its pKa, 7.48 to 7.50 across the chains, falls below the pH. They are the validated model's states, so they are recorded and
-not gated. The protonation states of the chains of a homo-oligomer are not symmetrised: a residue
-whose charge differs between chains of identical sequence is recorded as a per-chain diagnostic.
-
-NOTE (PHY-16 step 3, `charge.edits`; WP5.04): a `state` edit pins a titratable residue's state during
-PDB2PQR's call instead of leaving it to PROPKA's pKa at the pH. PDB2PQR 3.8 applies the state patch
-`ASH`, `GLH` or `HIP` to each residue whose pKa passes the pH, through
-`Biomolecule.apply_pka_values`; the stage wraps that call, drops each pinned residue's pKa from the
-dictionary it receives, so the residue keeps the force field's standard state, and applies the patch
-itself for `neutral` ASP, `neutral` GLU and `charged` HIS. Renaming the input residue cannot pin the
-charged state, since PDB2PQR titrates an input named `ASP`, and drops that residue's PROPKA row. After
-assembly a gate SHALL refuse a frame whose pinned residue does not hold its state, naming frame,
-chain and residue. A pinned residue is never recorded as an unapplied state. PDB2PQR's hydrogen
-optimisation can reposition a neighbour's hydrogens or carboxyl oxygens when a state changes (GLU 18
-beside ASP 21 on the 2WCD fragment at pH 2), so the variant's record lists a residue whose positions
-move, with its charges unchanged. A charge or radius edit acts on the assembled table, after the
-states and the radius comparison, and so on every residue alike.
-
-NOTE (PHY-16, protonation before the density, §8.2.19 U2; §8.2.31 AG8). Step 3's protonation runs on the
-aligned ensemble before stage 2, and stage 2 smears the protonated frames: PDB2PQR's atoms, hydrogens
-included, at the positions it wrote, each with the radius the §5.3.1 NOTE on `geometry.density` takes
-for it. A protonation state or a charge-level variant therefore moves the density, the contour and the
-mesh as well as the charge. That is the validated default, `geometry.density.atoms: protonated`.
-Smearing the atoms as loaded, as the reference did from its MD frames, is the switch away from it,
-`atoms: as_loaded`; the manifest records it (FR-25), and the reference-reproduction cases set it (VAL-03's
-golden, VAL-05, VAL-06 and the Tier 3 cases), as do the walks `2wcd-charged` and `2wcd-shell` of VER-62.
-Worked example 07's VER-62 walk is re-pinned on the mesh the default deploys (§8.2.7 G10). A walk
-truncated at the mesh protonates, about a minute per frame of a ClyA dodecamer (WP27). A changed
-protonation state moves the density (Tier 1).
+NOTE (PHY-16 step 3): protonation runs per frame before the density (validated default
+`geometry.density.atoms: protonated`); the tool-level contract is §5.2's NOTEs on stage 7.
 
 NOTE (PHY-16 steps 4–6, the deposition as run; WP28): the closed form of
 step 5 SHALL be evaluated on the export lattice of step 6, whose spacing is
@@ -352,8 +312,7 @@ A Gaussian applied directly in (r, z) leaks charge across `r = 0` and SHALL NOT 
 `1/(2π r)` factor and the axis guard `r < 0.01 nm → 0` of the reference model. The closed form of
 PHY-16 step 5 is a volume density, regular on the axis, and needs neither. Deposition SHALL
 conserve charge by renormalising each atom's kernel to `q_i e` on the deployed mesh
-(§8.2.4 D2). The quintic B-spline partition of unity, the other
-option this clause first named, belongs to a Cartesian grid, and the producer no longer builds one.
+(§8.2.4 D2).
 
 **PHY-19.** The conservation assertion of step 7 SHALL be evaluated on the deployed finite-element
 mesh, not on the source Cartesian grid. Per-z-slice cumulative charge SHALL additionally be checked
@@ -362,6 +321,65 @@ against the PQR sorted by z.
 Rationale: the axis guard deletes charge, and bin-centre division by `2πr` near the axis can be
 wrong by orders of magnitude. A globally satisfied check can hide a compensating Jacobian error,
 which the per-slice check detects.
+
+NOTE (PHY-19, the `2πr` cancels, PHY-16): under the axisymmetric volume element `dV = 2πr dr dz`,
+the Jacobian and the `1/(2πr)` of PHY-16 step 6 cancel identically, so
+
+```
+∫_Ω ρ_pore · 2πr dr dz  =  ∫_{Ω, r ≥ r_guard} rhoq_pore(r, z) dr dz
+```
+
+and the conservation check of step 7 is **blind to the Jacobian** for an `areal_charge_density`
+source: an error in how `r` enters cancels against itself. This is the compensating error PHY-19's
+rationale names. Two consequences are normative. First, the check SHALL be reported as two legs — a
+producer leg comparing the planar integral of the source grid against the declared `Q_net`, and a
+consumer leg comparing the integral over the deployed mesh against that planar integral — each gated
+at QR-03's tolerance, so that a failure names which side of the interface it belongs to; where no
+`Q_net` is declared, the producer leg SHALL be recorded as not run and the consumer leg SHALL still
+gate. Second, the per-`z`-slice cumulative check SHALL be evaluated against a Lipschitz weight of
+stated width rather than a step, applied identically to both sides, since a step is integrated
+inside every element the plane crosses and its quadrature error exceeds the tolerance it is meant to
+enforce.
+
+NOTE (PHY-19, the consumer leg is a resolution question, not a tolerance one, QR-03): measured on the
+delivered ClyA `rhoq_pore` table, the producer leg is 4.7 × 10⁻¹² and the consumer leg on the reference
+mesh 9.9 × 10⁻³, ten times QR-03's budget, from a field the producer delivered essentially exactly.
+Neither refining `h` nor raising the quadrature order closes it: the table changes sign below element
+scale, so its quadrature is aliased, not inaccurate
+(`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md` §3.2).
+
+Three consequences are normative. First, **the tolerance SHALL NOT be slackened to accommodate
+this**: 10^-3 is what a conserved deposition achieves and the gate stays there, so a field whose
+structure the deployed mesh cannot carry is refused rather than integrated badly. Second, the
+quadrature-agreement gate is what SHALL name that case — on the delivered table it fires first, at
+`9.3 x 10^-3` against its own `10^-4`, and reports that the mesh under-resolves the supplied field
+rather than that charge was lost. Third, the remedy is on the **producer** side: the producer path of
+PHY-16 steps 4–6 deposits onto the finite-element space and conserves by construction, where
+sampling somebody else's interpolant at quadrature points cannot.
+
+A supplied field's source term and every leg of its conservation check SHALL be evaluated by one
+explicit integration rule, of order 8, so that the gate measures the charge the solve assembles.
+NGSolve's own estimate for the source was order 3, and on a 0.5 nm alternating field the deployed
+mesh resolves it put the solved charge 1.2 × 10⁻² from the grid's while the order-8 gate passed at
+2 × 10⁻⁵ (WP41 D2, REV-07). A deposited charge keeps the model's default: its total is exact there,
+and its per-entry order is NUM-07's open question.
+
+NOTE (PHY-19, the producer path's conservation report, FR-14, QR-03): for a deposited charge, the producer leg compares the trapezoid integral of the exported
+lattice with `Q_net`, the mean over frames of `Σ q_i`. The consumer leg compares the deployed field,
+integrated at the solve's order, with the lattice. Both are exact by construction, the first by
+per-atom renormalisation and the second because each element carries its lattice charge, so they
+guard the construction and SHALL be shown to fail on a broken one. The discriminating check is the
+per-plane one, and PHY-19 names its reference: **the source atoms**, not the lattice. Azimuthal
+averaging keeps each atom's z-marginal, a Gaussian of variance `w_i²/2`, so under the weight
+`½ erfc((z − p)/s)` atom `i` contributes `q_i · ½ erfc((z_i − p)/√(s² + w_i²))` below plane `p`
+exactly. On this path the weight SHALL be that Gaussian-smoothed step, with `s = 0.5 nm`, and both
+the lattice and the deployed field SHALL agree with the atoms at every plane to QR-03's tolerance.
+The consumer path keeps its linear ramp. The smoothed weight is Lipschitz, as the NOTE on the
+`2πr` requires, and smooth: a polynomial of the deposit's order approximates it to about `0.064 h³ |W'''|`
+on an element of size `h`, `6 × 10⁻⁴` on ClyA's 0.1 nm protein elements. A 0.2 nm ramp's kinks
+leave `h/(16 s) = 0.03` there, which is too little margin for a gate meant to discriminate. The
+planes span the atoms' z-extent. The guard deficit the exported lattice would suffer if re-read
+through `inputs.charge` is recorded beside the legs.
 
 **PHY-20.** Relative permittivities SHALL be:
 
@@ -402,73 +420,6 @@ transition reaches past the mesh boundary into the fluid or the shell, the permi
 nearest solid material, whose solid fraction `χ` there is. A single `ε_p` for the whole field would
 blend the fluid beside the membrane towards the protein. With `χ` the sharp material indicator every
 one of these choices drops out, and PHY-20's piecewise assignment is recovered exactly.
-
-NOTE (PHY-20, the `2πr` cancels, PHY-16, PHY-19): under the axisymmetric volume element `dV = 2πr dr dz`,
-the Jacobian and the `1/(2πr)` of PHY-16 step 6 cancel identically, so
-
-```
-∫_Ω ρ_pore · 2πr dr dz  =  ∫_{Ω, r ≥ r_guard} rhoq_pore(r, z) dr dz
-```
-
-and the conservation check of step 7 is **blind to the Jacobian** for an `areal_charge_density`
-source: an error in how `r` enters cancels against itself. This is the compensating error PHY-19's
-rationale names. Two consequences are normative. First, the check SHALL be reported as two legs — a
-producer leg comparing the planar integral of the source grid against the declared `Q_net`, and a
-consumer leg comparing the integral over the deployed mesh against that planar integral — each gated
-at QR-03's tolerance, so that a failure names which side of the interface it belongs to; where no
-`Q_net` is declared, the producer leg SHALL be recorded as not run and the consumer leg SHALL still
-gate. Second, the per-`z`-slice cumulative check SHALL be evaluated against a Lipschitz weight of
-stated width rather than a step, applied identically to both sides, since a step is integrated
-inside every element the plane crosses and its quadrature error exceeds the tolerance it is meant to
-enforce.
-
-NOTE (PHY-20, the consumer leg is a resolution question, not a tolerance one, QR-03, PHY-19): measured on
-the delivered ClyA `rhoq_pore` table — 1401 x 3401 at 0.005 nm, `r` in [0, 7] nm, `z` in
-[-3.5, 13.5] nm — the producer leg is `4.7 x 10^-12` (`Q_grid = -71.999999999663 e` against a
-declared `-72 e`) while the consumer leg on the WP8 reference mesh, 44 316 elements graded to
-0.05 nm at the pore wall, is `9.9 x 10^-3`: ten times QR-03's budget, from a field the producer
-delivered essentially exactly. Neither refinement route closes it. Refining `h` to 3 463 372
-elements leaves the leg at `-1.1 x 10^-2` — *worse* than at 44 316, and non-monotone in between —
-and raising the quadrature to order 37 on the fixed mesh oscillates through `+5.9 x 10^-4`,
-`-3.0 x 10^-3`, `+2.8 x 10^-3` without settling. The cause is that the field's own structure is
-below element scale: along the densest `z` the table changes sign 49 times, with extrema a median
-0.035 nm apart, so pointwise quadrature of the bilinear interpolant is aliased rather than
-inaccurate, and an aliased integral converges in neither `h` nor order.
-
-Three consequences are normative. First, **the tolerance SHALL NOT be slackened to accommodate
-this**: 10^-3 is what a conserved deposition achieves and the gate stays there, so a field whose
-structure the deployed mesh cannot carry is refused rather than integrated badly. Second, the
-quadrature-agreement gate is what SHALL name that case — on the delivered table it fires first, at
-`9.3 x 10^-3` against its own `10^-4`, and reports that the mesh under-resolves the supplied field
-rather than that charge was lost. Third, the remedy is on the **producer** side and is out of scope
-until it exists (FR-13, FR-14, Phase 3): a charge deposited onto the finite-element space and
-rescaled to `Q_net` conserves by construction, where sampling somebody else's interpolant at
-quadrature points cannot. Until then a supplied `areal_charge_density` of this character SHALL be
-ingested only with the gate's verdict recorded in the manifest.
-
-A supplied field's source term and every leg of its conservation check SHALL be evaluated by one
-explicit integration rule, of order 8, so that the gate measures the charge the solve assembles.
-NGSolve's own estimate for the source was order 3, and on a 0.5 nm alternating field the deployed
-mesh resolves it put the solved charge 1.2 × 10⁻² from the grid's while the order-8 gate passed at
-2 × 10⁻⁵ (WP41 D2, REV-07). A deposited charge keeps the model's default: its total is exact there,
-and its per-entry order is NUM-07's open question.
-
-NOTE (PHY-20, the producer path's conservation report, PHY-19, FR-14, QR-03; WP28): for a deposited charge, the producer leg compares the trapezoid integral of the exported
-lattice with `Q_net`, the mean over frames of `Σ q_i`. The consumer leg compares the deployed field,
-integrated at the solve's order, with the lattice. Both are exact by construction, the first by
-per-atom renormalisation and the second because each element carries its lattice charge, so they
-guard the construction and SHALL be shown to fail on a broken one. The discriminating check is the
-per-plane one, and PHY-19 names its reference: **the source atoms**, not the lattice. Azimuthal
-averaging keeps each atom's z-marginal, a Gaussian of variance `w_i²/2`, so under the weight
-`½ erfc((z − p)/s)` atom `i` contributes `q_i · ½ erfc((z_i − p)/√(s² + w_i²))` below plane `p`
-exactly. On this path the weight SHALL be that Gaussian-smoothed step, with `s = 0.5 nm`, and both
-the lattice and the deployed field SHALL agree with the atoms at every plane to QR-03's tolerance.
-The consumer path keeps its linear ramp. The smoothed weight is Lipschitz, as the NOTE above
-requires, and smooth: a polynomial of the deposit's order approximates it to about `0.064 h³ |W'''|`
-on an element of size `h`, `6 × 10⁻⁴` on ClyA's 0.1 nm protein elements. A 0.2 nm ramp's kinks
-leave `h/(16 s) = 0.03` there, which is too little margin for a gate meant to discriminate. The
-planes span the atoms' z-extent. The guard deficit the exported lattice would suffer if re-read
-through `inputs.charge` is recorded beside the legs.
 
 NOTE (the derived solid fraction, FR-15, PHY-20; WP30): a non-zero
 `charge.dielectric_transition_nm`, `δ`, makes stage 7 derive `χ` from the stage-4 profile as stage 5
@@ -533,17 +484,21 @@ domain (§5.3.1 NOTE on a solid without a permittivity).
 **PHY-22.** The corrections SHALL be independently switchable, each resolving to a named model in
 the correction registry, with "off" a named model rather than a code branch.
 
-| Switch | Default | Effect when off |
+| Switch (case key) | Validated default | Effect when off |
 |---|---|---|
-| `diffusivity_correction` | on | `f_D^c = f_D^w = 1` |
-| `mobility_correction` | on | `f_μ^c = f_μ^w = 1` |
-| `viscosity_correction` | on | `f_η^c = f_η^w = 1` |
-| `permittivity_correction` | on | `ε_r,f = 78.15` |
-| `density_correction` | on | `ϱ = 997.0 kg m⁻³` |
-| `steric` | on | `β_i = 0` |
-| `variable_density_flow` | on | constant-density Stokes/NS |
-| `inertia` | on | Stokes flow (reference model retained inertia; Re ≈ 10⁻⁴) |
-| `dielectric_gradient_forces` | off | no Korteweg–Helmholtz body force, no dielectric-decrement term in the NP flux |
+| `electrolyte.corrections.diffusivity` (`model`, `concentration`, `wall`) | on | `f_D^c = f_D^w = 1` |
+| `electrolyte.corrections.mobility` (`model`, `concentration`, `wall`) | on | `f_μ^c = f_μ^w = 1` |
+| `electrolyte.corrections.viscosity` (`model`, `concentration`, `wall`) | on | `f_η^c = f_η^w = 1` |
+| `electrolyte.corrections.permittivity` (`model`, `concentration`) | on | `ε_r,f = 78.15` |
+| `electrolyte.corrections.density` (`model`, `concentration`) | on | `ϱ = 997.0 kg m⁻³` |
+| `electrolyte.corrections.steric.model` | on | `β_i = 0` |
+| `physics.variable_density` | on | constant-density Stokes/NS |
+| `physics.inertia` | on | Stokes flow (reference model retained inertia; Re ≈ 6 × 10⁻⁴) |
+| `physics.dielectric_gradient_forces` | off | no Korteweg–Helmholtz body force, no dielectric-decrement term in the NP flux |
+
+"On" is the validated default of `io/defaults.py`: `willems2020_nacl` for each property and `borukhov`
+for the steric flux. A case that omits `electrolyte.corrections` selects `none` for each, and the
+manifest records that as a deviation (FR-25).
 
 NOTE (PHY-22, a switch with nothing to switch; WP42): `concentration: false` or `wall: false` on a property
 whose selected correction model applies no such fit SHALL be refused, naming each such part and its

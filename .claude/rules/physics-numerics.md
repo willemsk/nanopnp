@@ -24,8 +24,8 @@ paths:
   added mobility correction).
 - **`⟨c⟩` is `(1/n)Σcᵢ`, not the ionic strength**; they coincide only for a symmetric 1:1 salt. `d` is the distance to the nearest **pore**
   boundary; the membrane is excluded.
-- **Einstein holds only at infinite dilution.** `D_i/μ_i` drifts to 1.2–1.7 × kT/e between 0.15 M
-  and 3 M. Never assert `D_i/μ_i = kT/e` at finite concentration
+- **Einstein holds only at infinite dilution.** `D_i/μ_i` drifts upward with concentration, to
+  1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 for Cl⁻ between 0.15 M and 3 M. Never assert `D_i/μ_i = kT/e` at finite concentration
   (VER-05, PHY-14). Poisson–Boltzmann is not "PNP at zero bias" (PHY-24).
 - **Ion wall function: `1 − exp(−6.2(d̄ + 0.01))`** — plus, 6.2 nm⁻¹. The viscosity wall function takes
   a minus. Steric `β_i` enters the flux bracket with `+`, and the bracket is negated; a flipped sign

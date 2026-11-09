@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,278. By source: history ruling 323; plan decision row 642; REV row 222; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,281. By source: history ruling 323; plan decision row 642; REV row 225; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 493; open 5; session, own call 777; session, put to the author 3.
+By decider: author 493; open 5; session, own call 780; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1214,6 +1214,9 @@ By decider: author 493; open 5; session, own call 777; session, put to the autho
 | REV-220 | author | `docs/project/review-findings.md` |  |  | The upstream lookup and the forecast re-implement the walk's stage keying | §8.2.36 AL22 | accepted |
 | REV-221 | author | `docs/project/review-findings.md` |  |  | Planning a sweep from a case drops the members it resolved | §8.2.36 AL22 | accepted |
 | REV-222 | session, own call | `docs/project/review-findings.md` |  |  | The agentic instructions cite identifiers without their words and state two procedures in several places | CODE_REVIEW_038 | open |
+| REV-223 | session, own call | `docs/project/review-findings.md` |  |  | PHY-07's density continuity is not assembled | CODE_REVIEW_039 | accepted |
+| REV-224 | session, own call | `docs/project/review-findings.md` |  |  | NUM-28's fluid consistency term omits the pore charge's force | CODE_REVIEW_039 | accepted |
+| REV-225 | session, own call | `docs/project/review-findings.md` |  |  | Three numerics tolerances have no written derivation | CODE_REVIEW_039 | accepted |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

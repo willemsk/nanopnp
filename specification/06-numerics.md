@@ -1,14 +1,14 @@
 ---
 type: Specification
 title: "6. Numerical methods specification"
-description: "Fixes the discretisation and solution algorithm for the §4 model as NUM-nn requirements, and records where the reference implementation differs."
+description: "Fixes the discretisation, weak forms, scaling, stabilisation, Newton and continuation, linear solvers, current and force extraction and mesh resolution for the §4 model, and records where the reference differs."
 ---
 
 ## 6. Numerical methods specification
 
 This section fixes the discretisation and the solution algorithm for the model of §4. Requirements
 carry `NUM-nn` identifiers and use the keywords of §1.5; verification activities that exercise them
-are in §7. Settings of the reference implementation (§2.2) that differ from what is required here
+are in §7. Settings of the reference implementation (Appendix B) that differ from what is required here
 are recorded, so that the cross-implementation comparison of §7.4 can account for them.
 
 ### 6.1 Discretisation
@@ -77,6 +77,14 @@ Navier–Stokes / Stokes on `Ω_w`, test functions `(v, q)`:
 d̂iv u = ∂_r u_r + u_r/r + ∂_z u_z
 ```
 
+Under `physics.inertia` the left side gains `+ ∫ ϱ (u·∇)u·v r dr dz` (`ϱ = ϱ₀` with
+`physics.variable_density` off), and under `physics.variable_density` the continuity row reads
+`−∫ q ϱ d̂iv u r dr dz`; constant-density Stokes is both off.
+
+NOTE (NUM-04, PHY-07; §8.2.37 AM2): PHY-07's density continuity, the reference's hand-added
+`∫ (u·∇ϱ) q r dr dz`, is not assembled, so the assembled `ϱ (u·∇)u` is PHY-07's `(u·∇)(ϱu)` only where
+`u·∇ϱ = 0`. REV-223, measured in Phase 6.
+
 **NUM-05.** The cylindrical hoop-strain term `2η u_r v_r / r²` SHALL be assembled. After
 multiplication by the `r` weight it appears as `2η u_r v_r / r`, which is integrable because
 `u_r → 0` on the axis.
@@ -107,34 +115,13 @@ and SHALL fail on NaN or on deviation from the analytic value.
 NOTE (NUM-08): the reference assembled its flow momentum, continuity, stabilisation and density-continuity
 terms at integration order 2. NUM-07 governs here irrespective of that setting.
 
-NOTE (NUM-08, the `r` weight and the default order; WP26): NGSolve estimates
-an integrand's order from its trial and test functions and does not count the coordinate, so a form
-that is not singular is integrated one order short of its degree in `r`: at P2 the axisymmetric
-stiffness `ε ∇u·∇v r` and the source `ρ v r` are of degree 3 and are integrated at order 2. It is a
-consistency error, not a NaN, and it converges with the mesh. `poisson` assembles those terms, and
-the prescribed surface charge `σ_s v r ds` of PHY-09, with
-one extra order: on the three-layer capacitor of VER-56, whose exact solution the P2 space contains,
-the error is 0.38 `V_T` (3 %) next to the axis at the default and 1.1 × 10⁻¹³ with it. The surface
-term is of degree 3 in `r` at P2 for the same reason, and the segment rule at the default order is
-exact to that degree, so the extra order moves no number at P2 and keeps the model consistent at a
-higher element order. The coupled
-models keep the default here, and whether their forms should gain the same order is open: it moves
-every number they produce, so it is a decision with a measurement, not a side effect of WP26
-(`knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md#22-quadrature-verified-experimentally`). A supplied field's source term is assembled at order 8
-(PHY-19's NOTE on one rule), which settles that term and not this question. **Measured by WP34**, through `Measures.weight_extra_order`, a seam no case key,
-option or flag reaches (`tests/tier2/test_axis_weight_order.py`, `slow`, stabilisation `none`). On
-VER-18's coupled manufactured solution at `maxh` 0.4, 0.2 and 0.1 nm, one extra order leaves the
-finest-pair rates at about 3 for the P2 fields and 2.7 for the P1 pressure (`c_Cl−` 3.19 → 3.01,
-`c_Na+` 3.11 → 3.03), and lowers the error at fixed `h`. The coarse-pair rates of the
-concentrations fall, `c_Cl−` 3.98 → 3.65 and `c_Na+` 3.55 → 2.99: at 0 the quadrature error is a
-larger share of the coarse-mesh error, and its faster decay inflates the observed rate. At 0.1 nm the error ratio is 0.42 for `c_Cl−`, 0.77 for `c_Na+`, 0.98 for `φ` and `u`
-and 0.91 for `p`. So it is a consistency constant of the same order as the discretisation error, as
-this NOTE predicts. On example 05's frozen case, 0.5 M at +50 mV on the reference mesh, each state
-is a root of its own form (`|R|` about 2 × 10⁻¹¹) and violates the other's at 7.3 × 10⁻⁴. The
-states differ by 4.9 × 10⁻⁷ relative. The current, the conductance and `t₊` move by about 10⁻¹⁰
-relative or less, the electro-osmotic flow by 7.6 × 10⁻⁸, and the in-pore concentrations, mobile
-charge and mean potential by 10⁻⁹ or less. At the reference mesh, the order is invisible in every
-number VAL-16 and VAL-17 compare. Phase 6 decides (§8.2.5 E4, §8.2.6 F1).
+NOTE (NUM-07, NUM-08, the `r` weight and the default order): NGSolve's default order does not count
+the `r` weight, so non-singular P2 terms are integrated one order short; it is a consistency error, not
+a NaN, and it converges with the mesh. `poisson` assembles its stiffness, its source and PHY-09's
+prescribed surface charge with one extra order; the coupled models keep the default, and whether they
+gain it is decided in Phase 6 with VAL-16 and VAL-17. A supplied field's source term is assembled at
+order 8 (PHY-19's NOTE on the consumer leg), which settles that term and not this question.
+Measurements: `knowledge/06-numerics-fem/02-axisymmetric-weak-forms.md` §2.2.
 
 ### 6.3 Scaling
 
@@ -142,14 +129,14 @@ number VAL-16 and VAL-17 compare. Phase 6 decides (§8.2.5 E4, §8.2.6 F1).
 
 | Scale | Definition | Value or range |
 |---|---|---|
-| Length | `L₀ = a`, the pore radius | ≈ 2 nm |
+| Length | `L₀` = 1 nm, the mesh unit | — |
 | Potential | `φ̃ = φ/V_T`, `V_T = RT/F` | 25.693 mV at 298.15 K |
 | Concentration | `c̃ = c/c₀` | — |
 | Diffusivity | `D₀` | 1.334 × 10⁻⁹ m² s⁻¹ |
-| Velocity | `u₀ = ε V_T²/(η a)` | — |
-| Pressure | `p₀ = ε V_T²/a²` | — |
-| Debye parameter | `λ̃ = λ_D/a`, `λ_D² = ε RT/(2 F² c₀)` | `λ̃ ∈ [0.088, 0.679]` at a = 2 nm |
-| Péclet number | `Pe = ε V_T²/(η D₀)` | 0.386 at 298.15 K, η = 0.890 mPa·s |
+| Velocity | `u₀ = ε V_T²/(η L₀)` | — |
+| Pressure | `p₀ = ε V_T²/L₀²` | — |
+| Debye parameter | `λ̃ = λ_D/L₀`, `λ_D² = ε RT/(2 F² c₀)` | `λ̃ ∈ [0.175, 1.357]`; against a pore radius `a` = 2 nm, `λ_D/a ∈ [0.088, 0.679]` |
+| Péclet number | `Pe = ε V_T²/(η D₀)` | 0.385 at 298.15 K, ε_r = 78.15, η = 0.890 mPa·s |
 
 NOTE (NUM-09): the commonly quoted `Pe` = 0.34 corresponds to η = 1.00 mPa·s, that is ≈ 20 °C; the
 temperature SHALL be consistent across all material properties. At either value, convective
@@ -195,7 +182,7 @@ the element location when `Pe_h ≥ 1` anywhere in `Ω_w`.
 
 NOTE (NUM-12, which `Pe_h`): the form printed above assumes the Einstein relation, `μ_i = D_i/V_T`, which
 PHY-14 and VER-05 forbid at finite concentration — `D` and `μ` carry different concentration
-corrections and `D_i/μ_i` drifts to 1.2–1.7 × kT/e between 0.15 M and 3 M. The implementation SHALL
+corrections and `D_i/μ_i` drifts upward with concentration (PHY-14's rationale). The implementation SHALL
 therefore evaluate the cell Péclet as `Pe_K = ‖b_i‖ h_K / (2 D_i)` on the advective velocity it
 actually assembles, `b_i = z_i μ_i ∇φ̃ + D_i β_i − Pe u`, and SHALL record which expression produced
 the number. The printed form is the `c → 0` limit of that one and overestimates it by
@@ -289,22 +276,25 @@ than the solve aborted. The reference settings SHALL be the starting point for t
 | Minimum damping factor | 1.0 × 10⁻² |
 | Recovery damping factor | 0.2 |
 | Maximum iterations | 100 |
-| Relative tolerance | 1 × 10⁻⁶ |
+| Relative tolerance | 1 × 10⁻⁶, on the per-field relative update of the undamped direction |
+| Absolute residual floor | 1 × 10⁻¹² |
+| Damping growth on an accepted step | × 2 (this project's choice; the reference records none) |
+
+A damped step whose `‖δφ‖_∞` exceeds `V_T` SHALL be cut as a rejected trial; at the minimum damping
+the cap aborts the solve, naming the location.
 
 NOTE (NUM-16, on the relative tolerance). A criterion measured on the residual alone, relative to the
 residual on entry, makes a warm start onto an already-converged state demand a further six orders of
 magnitude from a residual already at its floor — which is the operation every rung of the ladder in
 NUM-18 performs. The implementation therefore converges on a relative-update test evaluated on the undamped
 Newton direction, field by field: for every field `f`, `‖δu_f‖ ≤ rtol · max(‖u_f‖, 10⁻⁶ · max(‖u‖, 1))`,
-or when the residual is at its absolute floor, 10⁻¹². One norm over all fields is dominated by the
-largest, and the residual relative to its entry value is one norm too: measured on the seven gated
-walks, it closed every rung but one, and on a warm-started rung of example 03 it left the velocity
-8.2 × 10⁻⁶ and the pressure 2.0 × 10⁻⁶ relatively unconverged with the ions at 2 × 10⁻⁸ (WP41 D4,
-REV-08). A step that failed to reduce the residual never counts as convergence. `numerics.nonlinear.rtol` SHALL
+or when the residual is at its absolute floor. One norm over all fields is dominated by the largest,
+and the residual relative to its entry value is one norm too
+(`knowledge/06-numerics-fem/05-nonlinear-solution.md`). A step that failed to reduce the residual never counts as convergence. `numerics.nonlinear.rtol` SHALL
 be finite and lie in (0, 1) and `max_iter` SHALL be at least 1, because the update test can never pass
 for a NaN `rtol` and every rung would then report a divergence the case caused.
 
-NOTE (NUM-16, on a non-finite trial residual (§8.2.27 AC2; §8.2.29 AE1, AE2)). A trial step whose residual is NaN or infinite
+NOTE (NUM-16, on a non-finite trial residual). A trial step whose residual is NaN or infinite
 is a broken state, not a step that fails to reduce the residual, so the acceptance above does not reach it. Above the
 minimum damping it cuts the damping as a rejected trial does. At the minimum the NUM-17 state gates are checked on the
 trial state first, so a broken field is named with its location; if they pass, the solve raises a divergence naming the
@@ -318,11 +308,14 @@ solve with a diagnostic naming the field and the spatial location:
 | Assertion | Condition |
 |---|---|
 | Concentration positivity | `min_i c_i > 0` |
-| Packing fraction | `Φ = Σ_j N_A a_j³ c_j < 1` |
-| Potential increment cap | `‖δφ‖_∞ ≤ V_T` |
+| Packing fraction | PHY-06 |
 
-Rationale: `β_i` is singular at `Φ = 1`. A silently negative concentration produces a plausible but
-wrong current.
+Rationale: a silently negative concentration produces a plausible but wrong current. The potential
+increment cap is NUM-16's damping cut.
+
+NOTE (NUM-08, NUM-16, NUM-17; §8.2.37 AM2): three tolerances have no written derivation: the absolute
+residual floor 10⁻¹², the increment cap `V_T`, and NUM-08's deviation from the analytic value, which
+names no tolerance. REV-225, Phase 6.
 
 **NUM-18.** The solve SHALL proceed along the continuation ladder below, each rung warm-started
 from the converged state of the previous one.
@@ -389,29 +382,9 @@ become impractical in 3D at 10⁵ to 10⁶ DOF. The NGSolve pip wheel reports `U
 `SparseMatrix::InverseMatrix: no inverse available for type mumps`, so MUMPS requires a source
 build with MPI.
 
-NOTE (NUM-21): measured on the development laptop (WSL2, 24 cores, 15 GB) on the five-field system of
-NUM-01 over the analytic cylindrical pore, one configuration per process. This discharges §8.2
-criterion 3 and closes the measurement RSK-10 asked for.
-
-| Cells | DOF | Nonzeros | UMFPACK | Peak RSS | scipy SuperLU | Peak RSS |
-|---|---|---|---|---|---|---|
-| 1.50 × 10⁴ | 1.43 × 10⁵ | 8.4 × 10⁶ | 4.4 s | 855 MB | 24.0 s | 2593 MB |
-| 3.84 × 10⁴ | 3.68 × 10⁵ | 2.2 × 10⁷ | 14.0 s | 2157 MB | 140.3 s | 8656 MB |
-| 1.09 × 10⁵ | 1.04 × 10⁶ | 6.2 × 10⁷ | 41.1 s | 6171 MB | OOM-killed | > 15.4 GB |
-
-UMFPACK meets criterion 3 with margin, at 41 s and 6.2 GB for the reference mesh size. scipy
-SuperLU costs about 3.4 × the memory and 6–10 × the time, both gaps widening with problem size, and
-**did not complete the reference-sized factorisation at all**, being killed by the kernel at
-15.4 GB on two separate runs.
-
-> **This conflicted with CON-11**, which said the bundled build SHOULD default to scipy SuperLU with
-> UMFPACK opt-in. On this evidence that default would ship a bundle unable to run the reference
-> problem. **Resolved** in favour of the measurement: the bundle defaults to
-> UMFPACK and accepts the GPL-2+ obligation, the alternatives — restricting the bundled build to
-> smaller meshes, or bringing NUM-22's iterative fallback forward as the BSD-licensed path — being
-> rejected as shipping less capability than the reference implementation. CON-11 and ADR-003 carry
-> the amended wording; the core library remains BSD-3 and depends on neither solver, UMFPACK being
-> built into the NGSolve wheel.
+NOTE (NUM-21): UMFPACK factorises the reference-sized system and SuperLU does not
+(`knowledge/06-numerics-fem/06-linear-solvers.md` §6.1); this discharges §8.2 criterion 3 and closes the
+measurement RSK-10 asked for. CON-11 and ADR-003 carry the consequence.
 
 NOTE (NUM-21): the reference used PARDISO with pivoting perturbation 1 × 10⁻¹³ and sparsity-pattern reuse.
 PARDISO is likewise absent from the NGSolve wheel, so the reference linear solver cannot be
@@ -445,8 +418,8 @@ NOTE (NUM-24, sign): with `ψ = 1` on cis, `∫_Ω J_i·∇ψ r dr dz` is by the
 `∇·J_i = 0` the flux of species `i` *out through the cis cap*, so the sign above references the
 current to the grounded cis electrode of §5.2.2 and a positive current flows trans → cis, in `+z`.
 That is the sign for which an uncharged ohmic pore has `G = I/V_bias > 0` at either sign of the
-bias, which is what VER-17 asserts; earlier revisions of this clause carried a minus, which
-references the trans electrode instead and negates every conductance. It is also the sign that
+bias, which is what VER-17 asserts; a minus would reference the trans electrode and negate every
+conductance. It is also the sign that
 makes this route agree with NUM-25 evaluated on `Γ_w,c`, whose reaction flux is the same
 `∮ ψ J_i·n` with the same outward normal — so a minus here would have made the NUM-26 agreement
 check fail on every solution.
@@ -456,7 +429,7 @@ on cis. The current is still referenced to cis, so every quantity SHALL be repor
 cis-referenced bias `φ_trans − φ_cis`, which is the negative of the case's `bias_V`, and that is the
 bias the quantities record. One physical state then reports one set of numbers whichever electrode
 is grounded, `G > 0` holds under either, and a sweep pairs its rectification members by the biases
-they recorded (code review CR-3).
+they recorded.
 
 NOTE (NUM-24, a stabilised mode, NUM-14): under a stabilisation mode the functional above SHALL carry the
 stabilisation form of the species evaluated with `ψ` as its test function, in addition to
@@ -482,18 +455,18 @@ asked to resolve, which is the rectification signal `|RR − 1|` at the lowest e
 a ceiling on a bug rather than a numerical budget: `ψ` differs from the NUM-25 boundary indicator by
 a function vanishing on both electrodes, hence by a legitimate test function of the converged
 residual, so the two routes are the *same* integral and what remains between them is quadrature and
-the residual Newton left behind. Measured: 6 × 10⁻⁶ on the VER-11 configuration (0.5 M,
-−0.05 C/m², ±50 mV, classical PNP) and 5 × 10⁻⁷ on VER-17's uncharged pore. The remainder does not
-fall with the mesh — it is unchanged from 3 400 to 7 300 degrees of freedom — because it is set by
-the residual Newton leaves behind and not by the discretisation.
+the residual Newton left behind. Measured: 4 × 10⁻⁶ on the VER-11 configuration (0.5 M,
+−0.05 C/m², ±50 mV, classical PNP) and 5 × 10⁻⁷ on VER-17's uncharged pore. On classical PNP the
+remainder does not fall with the mesh, because it is set by the residual Newton leaves behind; with
+a wall correction active the agreement is a resolution diagnostic
+(`knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md` §7.1.1).
 
 NOTE (NUM-26, a precondition, not a detail): the identity above holds only where `ψ` is *exactly* 1 and 0 on
 the two electrodes. Interpolated over the whole mesh it is not — the membrane spans the transition
 band, and an element straddling the band shares its corner vertex with a reservoir cap, smearing
 about 8 × 10⁻³ of `ψ` onto an electrode where it must vanish. `ψ` SHALL therefore be built on the
-fluid domain alone. Over the whole mesh the measured route agreement on the VER-11 configuration
-degrades by a factor of 170, from 4 × 10⁻⁶ to 6 × 10⁻⁴, which would pass this tolerance while being
-a real error.
+fluid domain alone. Over the whole mesh the route agreement degrades by a factor of about 170, which
+would pass this tolerance while being a real error (`knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md` §7).
 
 NOTE (NUM-26): the reference computed `F*(z_cpos*tds.ntflux_cpos + z_cneg*tds.ntflux_cneg)` at integration
 order 4, `ntflux` being the variational reaction flux from the assembled weak residual, so the
@@ -525,8 +498,7 @@ uncharged pore), so the transport number and the conductance, each a ratio to it
 reported as undefined (`null`) rather than computed, and the NUM-26 check SHALL NOT be applied,
 because a relative difference between two round-offs is of order one whatever the extraction does.
 The summary records `routes_checked: false`. The currents and `Q_EOF` are still reported, and a
-case asking only for `eof_rate` at zero bias SHALL run (code review
-CR-8).
+case asking only for `eof_rate` at zero bias SHALL run.
 
 **NUM-28.** The force on an embedded analyte SHALL be evaluated in domain form,
 
@@ -562,6 +534,9 @@ force on all the fluid inside that shell, a quantity of the same order as the co
 themselves — while leaving the total almost unaffected, which is exactly the plausible wrong answer
 RSK-04 describes.
 
+NOTE (NUM-28; §8.2.37 AM2): where PHY-16 deposits charge in the fluid, `∇·T_M` also carries `ρ_pore E`,
+which the consistency terms omit. REV-224, Phase 6.
+
 NOTE (NUM-28): the two consistency terms cancel in the sum only when the momentum equation carries every
 force the Maxwell tensor implies, that is when `f = f_ion + f_KH`. The validated model omits `f_KH`
 (PHY-23), so wherever the permittivity correction is active the printed form above differs from the
@@ -596,7 +571,7 @@ to `e_z` there is the traction integral itself, by the NUM-25 argument. It is in
 exactly, so it disagrees with the domain form precisely when a NUM-28 consistency term is missing or
 mis-signed, which no comparison of the two stress routes can detect.
 
-NOTE (the force surface, NUM-29, QR-12; §8.2.22 X6, REV-120): the surface routes orient the traction
+NOTE (the force surface, NUM-29, QR-12): the surface routes orient the traction
 normal by the material on each side of the body's surface. A force surface whose two sides are not
 one pair of materials all along it SHALL be refused, naming the surface and the materials it meets,
 rather than oriented by a material's name, which would negate part of the traction without warning.
@@ -605,7 +580,7 @@ are three names for one fluid, so a body straddling the seam between the lumen a
 supplied mesh meets one pair and SHALL pass, while a surface meeting a fluid on one side and a
 solid on the other, or two solids, is the pair the gate is for and SHALL be refused. Refusing the
 straddling body would refuse a configuration the reference model admits, the normal being oriented
-by a star-shape test about the body's centroid that needs no single material pair (REV-163).
+by a star-shape test about the body's centroid that needs no single material pair.
 
 ### 6.8 Mesh resolution and adaptivity
 
@@ -613,26 +588,20 @@ by a star-shape test about the body's centroid that needs no single material pai
 
 | Parameter | Value |
 |---|---|
-| First wall layer `h₁` | `λ_D/5`; 0.035 nm at 3 M, 0.27 nm at 0.05 M |
+| First wall layer `h₁` | `min(0.05 nm, λ_D/5)`, λ_D at `ε_r,f⁰`; 0.035 nm at 3 M, 0.05 nm at 0.05 M |
 | Geometric growth ratio | 1.15 to 1.2 over ≈ 15 layers |
 | Far-reservoir element size | 5 to 10 nm |
 | Expected element count | 5 × 10⁴ to 2 × 10⁵ |
 
-NOTE (NUM-30, the wall target and its ceiling; WP21): `h₁` is resolved as
-`min(0.05 nm, λ_D/5)`, so the table's 0.27 nm at 0.05 M is never used. It would be coarser than the
-ion wall function's decay length, 1/6.2 = 0.161 nm, and than stage 4's contour resolution, and
-five times the validated reference's pore-boundary size. λ_D is taken at `ε_r,f⁰`, as are the
-values above. The §5.3.1 NOTE on `numerics.mesh` is the contract.
+NOTE (NUM-30, the wall target and its ceiling): the 0.05 nm ceiling holds because `λ_D/5` at
+0.05 M, 0.27 nm, would be coarser than the ion wall function's decay length, 1/6.2 = 0.161 nm, and
+than stage 4's contour resolution, and five times the validated reference's pore-boundary size. The §5.3.1 NOTE on `numerics.mesh` is the contract.
 
 NOTE (NUM-30): the reference reached the published results with graded free triangular meshing and no
 boundary-layer node, at 120,917 triangles with minimum element quality 0.6378 and average 0.9765.
 
-**NUM-31.** The wall-distance field `d` SHALL be computed once per mesh (eikonal solve or
-screened-Poisson smoothing) as a continuous field, as required by PHY-02. A mollification pass to C¹
-MAY be applied; it is a deviation from the validated model and off by default.
-
-Rationale: `D`, `μ` and `η` depend on `d`, so a kinked distance field enters the Jacobian and
-degrades Newton convergence.
+**NUM-31.** The wall-distance field `d` is PHY-02's. Mollification to C¹ MAY be applied as that
+clause allows.
 
 **NUM-32.** Goal-oriented dual-weighted-residual adaptivity targeting the ionic current (Becker &
 Rannacher, *Acta Numerica* **10**, 1, 2001) MAY be provided as an optional refinement loop. It

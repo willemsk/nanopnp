@@ -111,8 +111,9 @@ at 1 M, `λ_D = 0.304 nm`, `h̃ = 0.0304`, `‖∇φ̃‖ = 19.7`, `Pe_h = 0.300
 therefore **`ζ̃²/100`** — 4 % at `ζ̃ = 2`, 9 % at `ζ̃ = 3`, 16 % at `ζ̃ = 4`. In the pore lumen the
 gradient is set by the bias over the pore length (`‖∇φ̃‖ ≈ 1.2` at 200 mV over 13 nm), so
 `Pe_h ≈ 0.03` and the added diffusion is 0.09 %: the stabilisation is a double-layer effect by three
-orders of magnitude. Applying PHY-14's `μ̃_i/D̃_i` (1.2–1.7 between 0.15 M and 3 M) scales every
-`Pe_h` by 0.59–0.83 and every added diffusion by its square.
+orders of magnitude. Applying PHY-14's `D_i/μ_i` (1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 for Cl⁻
+between 0.15 M and 3 M, `knowledge/01-physics-epnpns/03-the-corrections.md` §3.0) scales every `Pe_h`
+by 0.60–0.88 and every added diffusion by its square.
 
 ### 4.2.1 The SUPG bias on the current is `S_i(ψ)` almost exactly **[tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term]** **[tested: tests/tier2/test_current_routes.py::test_num11_the_stabilisation_current_is_the_bias_and_is_exactly_zero_in_none]** {#421-the-supg-bias-on-the-current-is-s_i-almost-exactly}
 

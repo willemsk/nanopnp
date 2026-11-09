@@ -2806,3 +2806,39 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 CODE_REVIEW_038 audited `CLAUDE.md`, the skills, the workflow files and the hooks. Four of its findings were left for a later commit. C2: the skills cite a ruling or clause identifier about 90 times as the only cross-reference, each costing a `clause.py` call to read, against `core.md`'s own rule that an identifier only follows its words. C3: the gate-and-push procedure is stated in `CLAUDE.md`, `core.md`, `steward/SKILL.md` and `hosts/copilot.md`, and the two-lane rule in five places; none contradicts another today, and the risk is drift. E5: `core.md`'s *Putting a choice to the author* and *The In brief* are read by `/np-implement` and `/np-ship`, which do not use them, about 450 words each. E6: `AGENTS.md` imports `CLAUDE.md` with `@`, so a Copilot session loads it twice.
 
 **Open.** Each is a wording change to agent text, with no specified behaviour behind it; take them in the next package that edits the file concerned, keeping each procedure stated in full in one place and pointed to from the others.
+
+## REV-223: PHY-07's density continuity is not assembled
+
+PHY-07 states three flow equations: density continuity `u·∇ϱ = 0`, momentum `(u·∇)(ϱu) + ∇·σ = f`, and
+velocity continuity. The reference supplies the first as the hand-added weak term
+`(u*d(spf.rho, r) + w*d(spf.rho, z))*test(p)`. The coupled flow residual of `physics/models.py`
+assembles the viscous and pressure terms, `continuity_term` with `mass_density` (velocity continuity)
+and `inertia_term`, `Re ∫ ϱ̃ (ũ·∇)ũ·v r`, but no term carries `u·∇ϱ`. The assembled `ϱ (u·∇)u` is
+PHY-07's `(u·∇)(ϱu)` only where `u·∇ϱ = 0`. Found by CODE_REVIEW_039 (AUD-56). NUM-04 states the forms
+the program assembles, with a NOTE naming this item.
+
+**Accepted** (§8.2.37 AM2, 9 November 2026): owned by Phase 6. Measure the term's effect on the
+quantities VAL-16 and VAL-17 compare, on the reference case at the envelope's corners, and add it if
+it moves one of them.
+
+## REV-224: NUM-28's fluid consistency term omits the pore charge's force
+
+NUM-28's consistency terms take `∇·T_M = ρ_ion E − ½|E|²∇ε` in the fluid. PHY-16 deposits `ρ_pore` on
+every material, the fluid included, so in the fluid `∇·T_M` also carries `ρ_pore E`, and the domain
+route loses `∫ ρ_pore E·w` wherever the shell of `w` overlaps a protein atom's Gaussian tail. Found by
+CODE_REVIEW_039 (AUD-69). NUM-28 carries a NOTE naming this item.
+
+**Accepted** (§8.2.37 AM2, 9 November 2026): owned by Phase 6. Measure `∫ ρ_pore E·w` against
+`F^em` on an analyte case with a deposited charge, and either add the term or state that the support
+of `w` excludes the deposit.
+
+## REV-225: Three numerics tolerances have no written derivation
+
+Three §6 tolerances give no derivation and no pointer: the absolute residual floor 10⁻¹² of NUM-16,
+the increment cap `‖δφ‖_∞ ≤ V_T` of NUM-16 and NUM-17, and NUM-08's "deviation from the analytic value",
+which names no tolerance. NUM-26 and NUM-34, by contrast, argue their numbers. Found by
+CODE_REVIEW_039 (AUD-52). §6 carries a NOTE naming this item.
+
+**Accepted** (§8.2.37 AM2, 9 November 2026): owned by Phase 6. Measure the residual of a converged solve
+in NUM-09's scaling, the largest accepted `‖δφ‖_∞` across the gated walks, and the error NUM-08's test
+sees, and write each number's derivation beside its clause.

@@ -15,7 +15,7 @@ and identifier to its file. The rules of the development process that no clause 
 * [3. Requirements](03-requirements.md) - Sets out the external interfaces, functional requirements, quality of service, design constraints and exclusions the product must meet.
 * [4. Physics specification (normative)](04-physics.md) - States the normative ePNP-NS physics: domains and symbols, governing equations, empirical corrections, fixed charge, dielectric model and switches.
 * [5. Software design description](05-software-design/index.md) - Opens the software design and lists its subsections, one file each.
-* [6. Numerical methods specification](06-numerics.md) - Fixes the discretisation and solution algorithm for the §4 model as NUM-nn requirements, and records where the reference implementation differs.
+* [6. Numerical methods specification](06-numerics.md) - Fixes the discretisation, weak forms, scaling, stabilisation, Newton and continuation, linear solvers, current and force extraction and mesh resolution for the §4 model, and records where the reference differs.
 * [7. Verification and validation plan](07-verification/index.md) - Distinguishes verification (VER-nn) from validation (VAL-nn) activities and lists the plan's subsections.
 * [8. Implementation plan](08-implementation-plan/index.md) - Opens the implementation plan and lists its subsections, one file each.
 * [9. Risk register](09-risks.md) - Lists the RSK-nn risk register, each risk with its severity, likelihood, mitigation and detection phase.

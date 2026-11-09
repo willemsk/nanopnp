@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-09
+* **Record**: The Einstein-ratio range is per ion, 1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 for Cl⁻, so the stabilisation's Péclet factor is 0.60–0.88 (WP5.11). ([4. Stabilisation](06-numerics-fem/04-stabilisation.md))
 * **Record**: xenon and import-linter trialled on the tree: import-linter's layers contract repeats VER-61 with less, xenon's radon measure disagrees with ruff's `C901` on 15 of 22 functions; neither is recommended (WP5.10). ([25. xenon and import-linter](07-software-stack/25-complexity-and-import-contract-tools.md))
 
 ## 2026-11-05

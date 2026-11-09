@@ -14,7 +14,7 @@ description: "Tabulates each pipeline stage with its inputs, outputs, tools and 
 | 4 | Contour extraction and conditioning | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile, scaled under `geometry.density.atoms: protonated` by the `charge.edits` radius scales as stage 2's radii are (§5.3.1 NOTE on `charge.edits`); isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v0.5` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (WP20) | §5.2.1 (FR-08) |
 | 5 | CAD assembly | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process). The optional Gmsh backend meshes this region at stage 6 and assembles none of its own (WP23 D1) | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09, WP21; §5.2.1 NOTE on the membrane junction on any profile) |
 | 6 | Meshing | Fragmented region, size fields; or a stage-6 mesh artefact named by its store hash in `inputs.mesh.artefact`, which the stage reads from the store and returns as its own artefact (REV-62; WP5.05) | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (WP21); a hash the store does not hold is refused naming the hash and the store's root. The COMSOL comparison, which keys a case without a store, refuses such a case naming the hash, and compares a finished run of it instead (REV-188) |
-| 7 | Protonation (`protonation`) | Stage 1's aligned ensemble, pH, force field, titration method, `charge.edits`; or a supplied `inputs.pqr` | Per-frame atom table in stage 1's frame (identity, coordinates, charge, radius), `Q_net` and every titratable residue's state per frame | PDB2PQR 3.8+ (BSD-3) driving PROPKA 3 (LGPL-2.1), one call per frame with the flags of PHY-16 step 3 (WP27); a pinned state is held through `Biomolecule.apply_pka_values` (PHY-16 NOTE on `charge.edits`) | Every atom carries a charge and a radius, and every charged atom a positive radius; `Q_net` an integer to 10⁻⁶ e on every frame; a pinned residue holds its state on every chain and frame; a supplied frame registered to its stage-1 frame to 0.01 Å (§5.3.1 NOTE on `inputs:`) |
+| 7 | Protonation (`protonation`) | Stage 1's aligned ensemble, pH, force field, titration method, `charge.edits`; or a supplied `inputs.pqr` | Per-frame atom table in stage 1's frame (identity, coordinates, charge, radius), `Q_net` and every titratable residue's state per frame | PDB2PQR 3.8+ (BSD-3) driving PROPKA 3 (LGPL-2.1), one call per frame with the flags of PHY-16 step 3 (WP27); a pinned state is held through `Biomolecule.apply_pka_values` (the NOTE on `charge.edits` below) | Every atom carries a charge and a radius, and every charged atom a positive radius; `Q_net` an integer to 10⁻⁶ e on every frame; a pinned residue holds its state on every chain and frame; a supplied frame registered to its stage-1 frame to 0.01 Å (§5.3.1 NOTE on `inputs:`) |
 | 7 | Charge assembly (`charge`) | The protonation artefact, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | The closed-form azimuthal kernel deposited on the deployed mesh (PHY-16, §8.2.4 D2); APBS 3.4.1 (BSD-3) cross-check through the test-only `apbs-binary` package; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
 | 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema 'nanopnp/case/v0.6' validates, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
@@ -32,6 +32,51 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
 | 5 | Reference geometry: reservoir half-disc R = 250 nm, membrane thickness 2.8 nm, `z_cis` = 12.25 nm, `z_trans` = −1.85 nm. The membrane is a quadrilateral, not a rectangle: vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm, inner edge slanted to meet the pore's outer surface. Code assuming a rectangle leaves a wedge of gap or overlap at the junction. CadQuery and build123d are 3D-solid-centric and unused; pythonocc serves BRep edge cases only. |
 | 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `structure` and before `density`, so that stage 2 smears the protonated atoms (PHY-16; §8.2.19 U2), and `charge` after `mesh`. `protonation` runs when stage 2 reads it (`geometry.density.atoms: protonated`, the default on a case with `structure:`), when stage 7's deposition reads it, or when it is the walk's target; a walk truncated at the mesh therefore protonates, and protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). Under `atoms: as_loaded` a walk to stage 2 does not protonate. With `charge.edits` the stage writes the edited table and, beside it, its parent, the unedited table, and records the variant (§5.3.1 NOTE on `charge.edits`); a charge or radius edit reuses the parent's stored frames, and a state edit protonates the frames again with the residue pinned. The protonation runs when the case has something to protonate (`structure:` or `inputs.pqr`, and no `inputs.charge`) and its model declares a fixed charge (§5.4.3), or when the density needs it, and is otherwise recorded as not run with the reason. `charge` runs when the model declares a fixed charge. A consumer of a deposited charge reads it from stage 7's artefact and from nowhere else (WP28). With a non-zero `charge.dielectric_transition_nm` the `charge` half also runs, reading stage 5's record, to derive `χ` (§4.4 NOTE on the derived solid fraction), whether or not it deposits a charge; the solve reads that `χ` from stage 7's artefact likewise (WP30). |
+
+NOTE (stage 7, protonation as run; PHY-16 step 3): PDB2PQR SHALL be run
+once per selected frame (§8.2.4 D4) on that frame's heavy atoms, with every hydrogen and every water
+removed (PDB2PQR's `--drop-water` drops only `HOH` and `WAT`, observed on 3.7.1) and every protonation-variant residue name (`HSD`, `HSE`, `HSP`, `HID`, `HIE`, `HIP`, `ASH`, `ASPP`,
+`GLH`, `GLUP`, `LYN`, `LSN`, `CYM`, `TYM`, `ARN`) written as its titratable parent, so that the
+states are PROPKA's at the case's pH and not the source file's. The disulfide name `CYX`, which
+PDB2PQR writes under `SWANSON` and `PEOEPB`, is read as `CYS` the same way: without it every disulfide-bonded cysteine named a residue the ensemble does
+not hold. PDB2PQR treats `HSD` and
+`HSE` as fixed residues that PROPKA does not titrate, and refuses `HSE` with its hydrogens present,
+so a CHARMM-named MD frame passed through verbatim would pin every histidine (observed on 3.7.1). The reference passed
+its frames verbatim to PDB2PQR 2.1.1, and its PQRs keep `HSE`; the difference is measured at Tier 3
+rather than reproduced. Under CHARMM, PDB2PQR cannot represent a neutral terminus, `CYS⁻`, `LYS⁰`,
+`TYR⁻` or `ARG⁰`, and keeps the standard state where PROPKA prefers one of these; it never applies
+PROPKA's terminal pKa at all. Every such residue SHALL be recorded per frame as an unapplied state,
+derived by comparing each residue's applied charge with the sum of PROPKA's group states at the pH,
+never parsed from log text. On 2WCD at pH 7.5 these are `CYS 285` (pKa 6.25) in every chain, and
+the N-terminus of `LYS 8` wherever its pKa, 7.48 to 7.50 across the chains, falls below the pH. They are the validated model's states, so they are recorded and
+not gated. The protonation states of the chains of a homo-oligomer are not symmetrised: a residue
+whose charge differs between chains of identical sequence is recorded as a per-chain diagnostic.
+
+NOTE (stage 7, `charge.edits`; PHY-16 step 3, FR-38): a `state` edit pins a titratable residue's state during
+PDB2PQR's call instead of leaving it to PROPKA's pKa at the pH. PDB2PQR 3.8 applies the state patch
+`ASH`, `GLH` or `HIP` to each residue whose pKa passes the pH, through
+`Biomolecule.apply_pka_values`; the stage wraps that call, drops each pinned residue's pKa from the
+dictionary it receives, so the residue keeps the force field's standard state, and applies the patch
+itself for `neutral` ASP, `neutral` GLU and `charged` HIS. Renaming the input residue cannot pin the
+charged state, since PDB2PQR titrates an input named `ASP`, and drops that residue's PROPKA row. After
+assembly a gate SHALL refuse a frame whose pinned residue does not hold its state, naming frame,
+chain and residue. A pinned residue is never recorded as an unapplied state. PDB2PQR's hydrogen
+optimisation can reposition a neighbour's hydrogens or carboxyl oxygens when a state changes (GLU 18
+beside ASP 21 on the 2WCD fragment at pH 2), so the variant's record lists a residue whose positions
+move, with its charges unchanged. A charge or radius edit acts on the assembled table, after the
+states and the radius comparison, and so on every residue alike.
+
+NOTE (stage 7, protonation before the density; PHY-16, §8.2.19 U2; §8.2.31 AG8). Step 3's protonation runs on the
+aligned ensemble before stage 2, and stage 2 smears the protonated frames: PDB2PQR's atoms, hydrogens
+included, at the positions it wrote, each with the radius the §5.3.1 NOTE on `geometry.density` takes
+for it. A protonation state or a charge-level variant therefore moves the density, the contour and the
+mesh as well as the charge. That is the validated default, `geometry.density.atoms: protonated`.
+Smearing the atoms as loaded, as the reference did from its MD frames, is the switch away from it,
+`atoms: as_loaded`; the manifest records it (FR-25), and the reference-reproduction cases set it (VAL-03's
+golden, VAL-05, VAL-06 and the Tier 3 cases), as do the walks `2wcd-charged` and `2wcd-shell` of VER-62.
+Worked example 07's VER-62 walk is re-pinned on the mesh the default deploys (§8.2.7 G10). A walk
+truncated at the mesh protonates, about a minute per frame of a ClyA dodecamer. A changed
+protonation state moves the density (Tier 1).
 
 #### 5.2.1 Contour conditioning and its gate
 

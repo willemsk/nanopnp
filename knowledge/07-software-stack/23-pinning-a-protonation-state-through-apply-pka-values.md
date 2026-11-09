@@ -49,4 +49,4 @@ whose key is absent keeps the force field's standard state.
   `apply_pka_values` and PROPKA's charge-centre atoms are checked on each upgrade.
   **[tested: tests/tier1/test_library_behaviour.py::test_fr38_the_titratable_groups_are_propkas]**
 
-The pipeline's use is PHY-16 step 3's NOTE on `charge.edits`.
+The pipeline's use is §5.2's NOTE on `charge.edits` (PHY-16 step 3).
