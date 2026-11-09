@@ -1,10 +1,10 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.09 merged, WP5.10 delivered; the written knowledge's follow-up WP5.11 and WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+**Status: in progress; WP5.01 to WP5.10 merged; WP5.11 planned; the written knowledge's last package WP5.12 and the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
-AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27); how the plans are filed and WP5.10's model ruled at its plan the same day (AL28, AL29). Release: **v0.6** (`v0.6.0`).
+AG13); what an output needs of a model ruled at WP5.06's plan on 4 November 2026 (§8.2.32 AH1); a user's colour themes ruled at WP5.08's plan on 5 November 2026 (§8.2.33 AI1); after the verdicts on WP5.08's frame, the frame's components, the physics model, the design loop and the packages WP5.09 and WP5.15 to WP5.22 ruled the same day (§8.2.34 AJ1 to AJ10); WP5.09's open points ruled at its plan on 6 November 2026 (§8.2.35 AK1 to AK3); the written knowledge's follow-up, the architecture clean-ups and the packages renumbered on 8 November 2026 (§8.2.36 AL1 to AL27); how the plans are filed and WP5.10's model ruled at its plan the same day (AL28, AL29); WP5.11's meaning changes, its open gaps and REV-222 ruled at its plan on 9 November 2026 (§8.2.37 AM1 to AM9). Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -239,15 +239,19 @@ carries its prompt across the next compaction (§8.4.4); and `/np-implement`'s t
 constraints: a commit that adds a decision re-runs `decisions.py`; open decision 14 is the author's. AUD-251 and
 AUD-382 `fixed`. Tag `v0.6.0-alpha.10`.
 
-### WP5.11 — The specification's text and the agent instructions (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21)
+### WP5.11 — The specification's text and the agent instructions (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21; §8.2.37 AM1 to AM9)
 
-The findings filed under `specification/`, `.claude/`, `docs/plans/` and the root files. CON-05 and §2 name the mean
+**Planned 9 November 2026** ([the plan](wp5.11-the-specifications-text-and-the-agent-instructions.md)). The 148 findings
+whose edits change `specification/`, `.claude/`, `docs/plans/`, `modularity.md` or the root files. CON-05 and §2 name the mean
 concentration (AL9; the SHALL unchanged); §5.1's diagram starts at stage 9, each stage row with its registry name and the
 two stages numbered 7 told apart (AL10); §5.3.1's worked example becomes a structure-based case and a mesh-input case,
 each valid (AL11); §5.4.1 and ADR-001 state H3 (AL12); `modularity.md` becomes a dated report pointing at the live page
 (AL8); `CLAUDE.md` says §4 governs the equations (AL16); the changelog rule's five restatements point at
 `CONTRIBUTING.md` (AL14). The redundancy and sediment rows whose live home is here, AUD-113's §5.3.1 NOTEs and AUD-244's
-delivered narratives in this plan among them (AL17, AL18; REV-216). No test. Tag `v0.6.0-alpha.11`.
+delivered narratives in this plan among them (AL17, AL18; REV-216). Twelve passages of §4 and §6 follow the program a
+test pins (AM1); three possible gaps become Phase 6's REV-223 to REV-225 (AM2); §7.6's Tier 4, the close check, a core
+count and two earlier rulings are settled (AM3 to AM7); REV-222's four items are taken (AM9). No test. Tag
+`v0.6.0-alpha.11`.
 
 ### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21)
 
@@ -412,7 +416,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.08, the frame | 1 | VER-78's frame states; the project folder's export read back; REV-52's protocol members |
 | WP5.09, the physics model | 1, 2 | FR-39: a study resolves and keys as before with three models (VER-62 unmoved); a case imports into three models and a study; every case leaf has one owner; a sweep over `models.physics` |
 | WP5.10, the tools | 1 | The decisions page and §5.1's module rows equal the tree (the two new guards); ruff's `C901` and `PLR0913`; the strict build and `links.py` after the archive move; `duplicates.py` |
-| WP5.11, the specification's text | none kept | VER-45; `clause.py` resolves every identifier; no SHALL, tolerance or default moves but AL9's wording |
+| WP5.11, the specification's text | none kept | VER-45; `clause.py` resolves every identifier; no SHALL, tolerance or default moves but those AL9, AL12 and §8.2.37 AM1 to AM5 rule |
 | WP5.12, the knowledge base | none kept | VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source |
 | WP5.13, case and model files | 1, 2 | VER-62 unmoved; VER-61 and VER-72 with no new edge; FR-39's study, model and variable tests through the one reader |
 | WP5.14, sweeps and keying | 1, 2 | VER-62 unmoved; VER-64's forecast against the walk; a planned sweep resolves each member once (REV-221) |

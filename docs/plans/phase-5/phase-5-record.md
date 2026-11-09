@@ -426,3 +426,18 @@ move is the only one (AL28). WP5.10's entry read:
 > The delivered plans archived by phase, the finished briefs and
 > reviews under `archive/sessions/`, every link and written path rewritten, records included, and `/np-ship phase` moving a
 > closing phase (AL5).
+
+## Amended 9 November 2026 (§8.2.37 AM9)
+
+At WP5.11's plan, the author ruled that WP5.11 also takes REV-222's four items (AM9), and the meaning changes AM1 to AM7
+the entry now names. WP5.11's entry opened and ended:
+
+> The findings filed under `specification/`, `.claude/`, `docs/plans/` and the root files. CON-05 and §2 name the mean
+>
+> …
+>
+> delivered narratives in this plan among them (AL17, AL18; REV-216). No test. Tag `v0.6.0-alpha.11`.
+
+Its *Verification* row read:
+
+> | WP5.11, the specification's text | none kept | VER-45; `clause.py` resolves every identifier; no SHALL, tolerance or default moves but AL9's wording |
