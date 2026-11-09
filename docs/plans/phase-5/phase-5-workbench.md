@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.09 merged; the written knowledge's follow-up WP5.10 to WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
+**Status: in progress; WP5.01 to WP5.09 merged, WP5.10 delivered; the written knowledge's follow-up WP5.11 and WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); WP5.01 amended the same day (S21 to
 S23); the library packages ordered on 1 November 2026 (§8.2.28 AD1 to AD5; [the record](phase-5-record.md)); WP5.02
 planned and delivered on 2 November 2026 (§8.2.30 AF1 to AF4); the shell packages, the sweep's design round and
 REV-136's cut line ruled on 3 November 2026 (§8.2.31 AG1 to AG7); WP5.05's overrides and model sweep ruled the same day (AG12,
@@ -224,23 +224,17 @@ the Study suite's list WP5.19's; REV-217 and REV-219 land in WP5.13, REV-220 and
 
 ### WP5.10 — The written knowledge's tools and rules (CODE_REVIEW_039; §8.2.36 AL3 to AL7, AL14, AL24, AL27, AL28)
 
-The three follow-up packages take CODE_REVIEW_039's findings as `findings.md` gives them, each marking in its register
-the findings it lands (the report's section 11). An edit that changes no meaning lands without asking; one that touches
-a rule, a number or a decision goes to the author (AL21). This one builds what keeps the text level with the tree,
-starting from the audit's prototypes in `.claude/scripts/audit/` (`decisions.py`, `index_records.py`, `architecture.py`,
-`migrate_plans_archive.py`, `links.py`), which it promotes or replaces rather than writes again. The
-decisions register: `docs/project/decisions.md` written from the tree, the history index's *Where each ruling holds now*
-folded into it, and `/np-plan` and `/np-ship` re-running it in each commit that adds a decision (AL3). The record indexes,
-re-run by `/np-plan wp` and `/np-ship` (AL4). The architecture page generated on the site beside the modularity
-measurements (AL6). Two Tier 1 guards in the architecture family: the decisions page equals the tree, and §5.1's module
-rows equal the subpackages. Ruff's `C901` and `PLR0913`, thresholds set from the sample (AL7), and a report on what xenon
-and import-linter would add, neither adopted (AL27). Every plan moved once into its phase's folder,
-`docs/plans/phase-<n>/`, and the finished briefs and reviews into `sessions/`, every link and written path rewritten,
-records included; later plans written there from the start, so a phase close moves nothing; a link check over every
-Markdown file in CI (AL5, AL28). `/np-ship`'s preflight names the changelog heading `tag.yml` reads, and the eight Phase 5 entries
-under `## [Unreleased]` move to their versions (AL14). §8.4.4, §8.4.5 and `CLAUDE.md`'s list of three scripts state the
-rules and the kept scripts. Tag
-`v0.6.0-alpha.10`.
+**Delivered 9 November 2026** ([the plan](wp5.10-the-written-knowledges-tools-and-rules.md)). `docs/project/decisions.md`,
+written by `.claude/scripts/decisions.py` from the records, lists 1,256 decisions with where each holds now; the
+history index's list moved to `specification/history/holds-now.yaml` (AL3). The site's *Architecture* page is generated
+(AL6). VER-79 checks §5.1's module rows against the subpackages, the page against the script and the YAML against the
+ruling letters; the commit hook, the push gate and CI run `decisions.py --check`, and CI runs `links.py`. The core's
+*Gate and push* re-runs `decisions.py` and `index_records.py` (AL4). Every plan sits in `docs/plans/phase-<n>/` or
+`sessions/` (AL5, AL28). Ruff selects `C901` at 15 and `PLR0913` at 8, with 26 definitions under `noqa` (AL7). The
+changelog's Phase 5 entries sit under their versions (AL14). The trial recommends neither xenon nor import-linter
+([the concept](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md); AL27). Live
+constraints: a commit that adds a decision re-runs `decisions.py`; open decision 14 is the author's. AUD-251 and
+AUD-382 `fixed`. Tag `v0.6.0-alpha.10`.
 
 ### WP5.11 — The specification's text and the agent instructions (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21)
 
@@ -377,7 +371,7 @@ and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 | 11 | Where a model's exposed values are declared: the model file, or a default list per kind | **Settled by the author, 6 November 2026** (§8.2.35 AK3): a default list per kind, which a model file may replace |
 | 12 | Which model owns `numerics.wall_distance`, and how a continuum model's Debye-sized wall mesh reads the physics model's concentration, or pins its own (`wall_for_concentration_M`) | **Settled by the author, 6 November 2026** (§8.2.35 AK1, AK2): the physics model; the mesh follows the paired salt unless pinned |
 | 13 | The written knowledge's follow-up, where the six architecture clean-ups land, the order, the numbering and the measuring tools' trial (CODE_REVIEW_039; CODE_REVIEW_036) | **Settled by the author, 8 November 2026** (§8.2.36 AL1 to AL27) |
-| 14 | Whether xenon or import-linter is adopted | **Author**, on WP5.10's report (AL7, AL27) |
+| 14 | Whether xenon or import-linter is adopted | **Author**, on WP5.10's report (AL7, AL27), [delivered](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md): it recommends neither |
 
 ## What the author supplies
 
