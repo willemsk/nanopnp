@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -49,22 +50,15 @@ def test_ver79_section_5_1_module_rows_equal_the_subpackages() -> None:
 
 
 def test_ver79_the_decisions_page_equals_what_the_script_renders() -> None:
-    expected = decisions.render().splitlines()
-    written = decisions.PAGE.read_text(encoding="utf-8").splitlines()
-    first = next(
-        (
-            number
-            for number, (want, have) in enumerate(zip(expected, written, strict=False), 1)
-            if want != have
-        ),
-        None if len(expected) == len(written) else min(len(expected), len(written)) + 1,
-    )
-    assert first is None, f"docs/project/decisions.md differs at line {first}; run `{COMMAND}`"
+    assert decisions.main(["--check"]) == 0, f"docs/project/decisions.md is stale; run `{COMMAND}`"
 
 
 def test_ver79_every_ruling_has_one_holds_now_entry() -> None:
     letters = decisions.ruling_letters()
     entries = decisions.holds_now()
+    keys = re.findall(r"^([A-Z]+\d+):", decisions.HOLDS_NOW.read_text(encoding="utf-8"), re.M)
+    assert len(letters) == len(set(letters)), "a ruling letter is used twice in the history"
+    assert len(keys) == len(entries), "holds-now.yaml names a ruling twice"
     assert not set(letters) - set(entries), (
         f"rulings without a holds-now entry: {sorted(set(letters) - set(entries))}"
     )

@@ -45,14 +45,14 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
 | `uv run just` | Lists the recipes of `justfile`: these commands, the record scripts and the gate's log. A recipe never commits or pushes |
 
 **The gate before a commit** is the commit hook. `gate.sh` runs before each `git commit` that Claude
-Code makes (`--no-verify` skips it). It runs the lock check, lint, format, types and the Tier 1 tests
-without `slow` and without `nightly`. Do not run these checks by hand before a commit: a manual run
+Code makes (`--no-verify` skips it). It runs the lock check, lint, format, the decisions page's check,
+types and the Tier 1 tests without `slow` and without `nightly`. Do not run these checks by hand before a commit: a manual run
 writes no stamp, so the hook runs them all again. Run the hook itself by hand only to reproduce a
 refusal, or on a host where it does not fire (`.claude/workflow/hosts.md`):
 `echo '{"tool_input":{"command":"git commit"}}' | .claude/hooks/gate.sh`.
 
-**The gate before a push:** `.claude/hooks/gate.sh run`. It runs lint, format and types, then the
-per-push selection:
+**The gate before a push:** `.claude/hooks/gate.sh run`. It runs lint, format, the decisions page's
+check and types, then the per-push selection:
 
 - Tier 1;
 - the Tier 2 tests that neither walk the pipeline nor carry `slow`;
@@ -154,7 +154,8 @@ author each finding against a decision the implementing session took (`.claude/w
 shell, the cloud environment's variables, or `env` in `.claude/settings.local.json`):
 `NANOPNP_AUTO_CHECKPOINT=1` for `/np-implement`'s compaction checkpoints, `NANOPNP_AUTO_SHIP=1` for its
 pause before `/np-ship`. No hook can compact: Claude Code's own compaction comes when the context fills,
-and `.claude/hooks/checkpoint.sh` carries the checkpoint's prompt across it. A cloud session cannot push a tag; after the merge `/np-ship` dispatches `tag.yml` and prints the
+and `.claude/hooks/checkpoint.sh` carries the checkpoint's prompt across it; `checkpoint.sh clear`
+drops a saved one. A cloud session cannot push a tag; after the merge `/np-ship` dispatches `tag.yml` and prints the
 commands. A choice put to the author follows the core's *Putting a choice to the author*. The steward skill governs a PR in flight. `/np-gui <render | review | publish | collect | grill>`
 renders screens and mockups headless, reviews them, publishes them for the author's verdicts, and runs
 a design round (§8.4.4).

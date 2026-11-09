@@ -85,6 +85,7 @@ must settle it.
 - `specification/history/index.md` lists the record as `* [title](file) - description`.
   `specification/history/holds-now.yaml` gets one `<id>: <where it holds now>` line per ruling, in
   order: the ruling's clause, `open: <the package that lands it>`, `spent` or `superseded by <id>`.
+  A value that holds `: ` is single-quoted, as YAML needs (`S8: 'open: WP5.02''s spike'`).
   `uv run .claude/scripts/decisions.py` then rewrites the decisions register, in the same commit.
 - Each ruling amends its clause in the same commit. If a ruling sets a standing rule of process with no
   clause of its own, restate it in §8.4, with a pointer to the ruling (R3).

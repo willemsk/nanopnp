@@ -139,10 +139,9 @@ def main() -> int:
     """Write the three indexes and return the process exit status."""
     for folder in FOLDERS:
         target = ROOT / folder / "index.md"
-        target.write_text(render(folder), encoding="utf-8")
-        count = sum(
-            1 for line in target.read_text(encoding="utf-8").splitlines() if line.startswith("- [")
-        )
+        text = render(folder)
+        target.write_text(text, encoding="utf-8")
+        count = sum(1 for line in text.splitlines() if line.startswith("- ["))
         sys.stdout.write(f"{target.relative_to(ROOT).as_posix()}: {count} files\n")
     return 0
 

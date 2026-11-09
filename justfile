@@ -25,7 +25,7 @@ test-parallel:
         uv run pytest -n auto --dist loadfile --ignore=tests/tier1/test_gui_widgets.py
     uv run pytest tests/tier1/test_gui_widgets.py
 
-# Lint, format check and strict types, as the gate runs them
+# Lint, format check and strict types; the gate adds the lock and decisions-page checks
 lint:
     uv run ruff check .
     uv run ruff format --check .
@@ -73,4 +73,6 @@ env:
 
 # Gmsh's system libraries, which the push gate needs (Debian or Ubuntu, as root)
 gmsh-libs:
-    apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1
+    libs="libglu1-mesa libxft2 libxinerama1 libxcursor1"; \
+        apt-get install -y --no-install-recommends $libs || \
+        { apt-get update && apt-get install -y --no-install-recommends $libs; }

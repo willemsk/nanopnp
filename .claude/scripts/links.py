@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
     for name in markdown_files():
         path = ROOT / name
         text = path.read_text(encoding="utf-8")
-        masked = CODE.sub(lambda m: " " * len(m.group(0)), text)
+        masked = CODE.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), text)
         for match in LINK.finditer(masked):
             target = match.group(2)
             if SCHEME.match(target) or target.startswith("#"):
