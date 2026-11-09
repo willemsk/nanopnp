@@ -19,7 +19,7 @@ viewer may redraw slower than 200 ms; it is timed on a computer with a graphics 
 cost, the line applies to the workbench's own share.
 
 **Your call.** Which settings exist beyond the four sections (appearance and accessibility; keyboard and editing guards; runs and storage; units and numbers), after the frame package's research. Whether to
-adopt either measuring tool the tools package tries, on its report. Eight audit findings to check against the source
+adopt either measuring tool the tools package tries, on its report. Six audit findings to check against the source
 papers, from a checklist. The colleague who tries the workbench, named by the close.
 
 ## Context
@@ -143,18 +143,18 @@ Live constraints: A commit that adds a decision re-runs `decisions.py`. Open dec
 
 Live constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 are Phase 6's.
 
-### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.38 AN1 to AN3)
+### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.37 AM13 to AM17)
 
-**Planned 9 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)). The 164 findings filed under
+**Planned 9 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)). The 164 findings WP5.11 left, most filed under
 `knowledge/` and `docs/`. The five concepts that state a method or rule wrongly are rewritten, AUD-339 first (AL15);
 `knowledge/01`'s overview says it backs §4 and §4 governs (AL16); the redundancy rows, the §6 and §4 mirrors in
 `knowledge/06` and `knowledge/01` first, each concept pointing at its clause (AL17); the sediment rows (AL18); each of
 the fifteen unsourced `[verified]` claims footnoted, marked "by arithmetic" or demoted, and the thesis transcriptions
 checked against the thesis or marked unverified (AL19); the guide says protonation runs before the density (AL13).
-The test of the sodium cap is tightened (AN1); three ideas with no requirement become one open item for after v1.0
-(AN2); the site's dead register links wait for WP5.21 (AN3); REV-226's citations in `src/` follow §5.2. The author
+The test of the sodium cap is tightened (AM13); three ideas with no requirement become one open item for after v1.0
+(AM14); the site's dead register links wait for WP5.21 (AM15); REV-226's citations in `src/` follow §5.2. The author
 receives the six findings that rest on the ESI or the COMSOL report as a checklist and confirms or dismisses each
-(AL20); a finding left open becomes a `REV-nn` row. Tag `v0.6.0-alpha.12`.
+(AL20; AM16); a finding left open becomes a `REV-nn` row. Tag `v0.6.0-alpha.12`.
 
 ### WP5.13 — Case and model files (REV-217, REV-219; CODE_REVIEW_036 candidates 1 and 5; §8.2.36 AL22, AL23)
 
@@ -247,7 +247,7 @@ QR-16). Every row Q01 to Q41 is checked present (criterion 3); then PySide6, the
 packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
 CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1). The application guide is
 rewritten against the browser workflow with the rendered screens (§8.1's increment 5), and the site's register pages
-link the plans and reviews it leaves out (REV-228; AN3). Tag `v0.6.0-alpha.21`.
+link the plans and reviews it leaves out (REV-228; AM15). Tag `v0.6.0-alpha.21`.
 
 ### WP5.22 — The close
 
@@ -273,7 +273,7 @@ Settled rows: see §8.2.17 to §8.2.37 and [the record](phase-5-record.md).
 | Verdicts on each suite's prototype round, on 2WCD or, for Physics, example 01 | WP5.16 to WP5.20 | The suite is built on the prototype's design as it stands, and the verdicts move to its screen review |
 | A machine with a GPU, in a local session | WP5.19 | The 200 ms line stays unmeasured; a `REV-nn` row carries it to the close |
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
-| The eight-row checklist against the ESI and the COMSOL report (AL20) | WP5.12 | Each finding stays `unchecked`, a `REV-nn` row carried to the close |
+| The six-row checklist against the ESI and the COMSOL report (AL20; REV-227) | WP5.12 | Each finding stays `unchecked` in REV-227, carried to the close |
 | The verdict on xenon and import-linter (AL27) | After WP5.10 | Neither is added; the layering test stays the guard |
 | An experimentalist new to nanopnp | The close | QR-10 is waived and carried (S13) |
 | Merges; tags a session cannot push | Each package | The session prints the commands |
@@ -298,7 +298,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.09, the physics model | 1, 2 | FR-39: a study resolves and keys as before with three models (VER-62 unmoved); a case imports into three models and a study; every case leaf has one owner; a sweep over `models.physics` |
 | WP5.10, the tools | 1 | The decisions page and §5.1's module rows equal the tree (the two new guards); ruff's `C901` and `PLR0913`; the strict build and `links.py` after the archive move; `duplicates.py` |
 | WP5.11, the specification's text | none kept | VER-45; `clause.py` resolves every identifier; no SHALL, tolerance or default moves but those AL9, AL12 and §8.2.37 AM1 to AM5 rule |
-| WP5.12, the knowledge base | 1 | VER-03's sodium cap at 10⁻³ (AN1); VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source; 517 SHALLs unchanged |
+| WP5.12, the knowledge base | 1 | VER-03's sodium cap at 10⁻³ (AM13); VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source; 517 SHALLs unchanged |
 | WP5.13, case and model files | 1, 2 | VER-62 unmoved; VER-61 and VER-72 with no new edge; FR-39's study, model and variable tests through the one reader |
 | WP5.14, sweeps and keying | 1, 2 | VER-62 unmoved; VER-64's forecast against the walk; a planned sweep resolves each member once (REV-221) |
 | WP5.15, the frame | 1 | VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`, not a Tier 1 walk); a setting declared once reaches the page, its search, the palette and its file |
