@@ -1,8 +1,8 @@
 ---
 type: Library Behaviour
 title: 1. FEM backend — NGSolve/Netgen
-description: 'The FEM backend NGSolve and Netgen: why not the alternatives, and prior
-  art.'
+description: 'The FEM backend NGSolve and Netgen: what the wheels hold and lack, and prior
+  art; the alternatives are ADR-001''s.'
 tags:
 - software
 - library-behaviour
@@ -34,18 +34,16 @@ verified:
 | Meshing | Netgen built in, with OpenCASCADE geometry — no external mesher needed |
 | API stability | remarkably stable for a decade |
 
-**Known limitations, both verified:**
+**Alternatives and consequences:** ADR-001 (`specification/05-software-design/06-architecture-decisions.md`)
+holds the alternatives, the second-backend argument and the MPI and MUMPS consequences. Tested here:
 
-1. **No MPI in the wheels, as far as the lock file and the build configuration show** — `mpi4py`
-   is not a locked package, and `ngsolve.config` reports no MUMPS, PARDISO or MKL
-   **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]**.
-   The shipped binaries are not scanned for MPI symbols. Parallel
-   mesh generation, parallel adaptive refinement and parallel multigrid are documented as
-   unsupported. Irrelevant for 2D axisymmetric v1 (direct solves; sweeps parallelise at job level);
-   becomes real in 3D. Mitigations: ngsPETSc, or a DOLFINx backend for HPC only.
-2. **No MUMPS/PARDISO/HYPRE/MKL in the wheels** — `ngsolve.config` reports all False.
-   See `knowledge/06-numerics-fem/06-linear-solvers.md`.
-3. **2D boundary layers are immature.** Python API is
+1. **No MPI and no MUMPS, PARDISO, HYPRE or MKL in the wheels, as far as the lock file and the
+   build configuration show** — `mpi4py` is not a locked package, and `ngsolve.config` reports
+   MUMPS, PARDISO and MKL False
+   **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]**,
+   and HYPRE False as well (ADR-001). The shipped binaries are not scanned for MPI symbols. The linear solvers:
+   `knowledge/06-numerics-fem/06-linear-solvers.md`.
+2. **2D boundary layers are immature.** Python API is
    `netgen.meshing.Mesh.BoundaryLayer2(domain, thicknesses, make_new_domain=True, boundaries=[])`
    (binding C++ `GenerateBoundaryLayer2`). The forum carries an unresolved Aug 2024 report of the
    generator failing to fill a zone adjacent to the new advancing front. Separately, the *3D*
@@ -54,16 +52,7 @@ verified:
 
 ### 1.1 Why not the alternatives
 
-| | Verdict |
-|---|---|
-| **DOLFINx 0.11.0** (9 Jun 2026, LGPL-3) | Best numerics, best docs, PETSc SNES, `MixedFunctionSpace`/`extract_blocks` for fieldsplit. **But it JIT-compiles.** README verbatim: *"PETSc and petsc4py are not available on Windows. Because FEniCS uses just-in-time compilation it necessary to install [Microsoft Visual Studio]"*. Structurally cannot become a double-clickable app. API breaks every ~8.5 months on average (0.8 Apr 2024 retired legacy `ufl.FiniteElement`; 0.9 Oct 2024 `Function.vector`→`Function.x.petsc_vec`; 0.10 Oct 2025 `io.gmshio`→`io.gmsh`). |
-| **Firedrake 2026.4.x** (LGPL-3) | Excellent solver composition; **EchemFEM** already exists on it. No native Windows, no binary wheels, PETSc from source. Disqualified by the desktop requirement. |
-| **scikit-fem 12.0.2** (BSD-3, 0.178 MB wheel) | Trivially bundleable, but you hand-roll Newton, block assembly, preconditioning, stabilisation; MPI is token. Good for prototyping. |
-| **SfePy 2026.2** (BSD-3) | Genuinely permissive, covers coupled multi-field, but PyPI ships **sdist only**, parallel is self-described WIP, effectively single-maintainer. Weakest 5-year bet. |
-| **PyMFEM 4.8 / deal.II** | No symbolic language, no AD — hand-coded Jacobian integrators for a five-field system. Non-starter. |
-
-**The decisive argument:** choosing DOLFINx or Firedrake means needing a *second* backend for the
-desktop app anyway, i.e. writing and maintaining the ePNP-NS weak forms twice, forever.
+ADR-001 holds the assessment of DOLFINx, Firedrake, scikit-fem, SfePy, PyMFEM and deal.II.
 
 ### 1.2 Prior art worth mining
 

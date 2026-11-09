@@ -1,15 +1,15 @@
 ---
 type: Specification
 title: "5.6 Architecture decisions"
-description: "Records the architecture decisions, beginning with NGSolve as the single production backend behind the abstraction of §5.4.1."
+description: "Records the architecture decisions, beginning with NGSolve as the single production backend against which the weak forms are stated once (§5.4.1)."
 ---
 
 ### 5.6 Architecture decisions
 
 #### ADR-001 FEM backend
 
-Decision: NGSolve 6.2.2606+ (LGPL-2.1) as the single production backend, behind the abstraction of
-§5.4.1.
+Decision: NGSolve 6.2.2606+ (LGPL-2.1) as the single production backend; the weak forms are stated
+once against it (§5.4.1).
 
 | Alternative | Assessment |
 |---|---|
@@ -19,7 +19,7 @@ Decision: NGSolve 6.2.2606+ (LGPL-2.1) as the single production backend, behind 
 | SfePy 2026.2 | BSD-3 and covers coupled multi-field, but PyPI ships sdist only, parallel support is self-described work-in-progress, and it is effectively single-maintainer |
 | PyMFEM, deal.II | No symbolic language, no automatic differentiation; Jacobian integrators for a five-field system must be hand-coded |
 
-Grounds: self-contained wheels (15 MB Windows, 44 MB macOS universal2) for Python 3.10–3.14 on all
+Grounds: self-contained wheels (15 MB Windows, 44 MB macOS universal2) for Python 3.11–3.14 on all
 three operating systems, no compiler at runtime; Netgen built in, so the default path never links
 GPL Gmsh; product spaces `X = V*Q` giving the five-field monolithic system and Taylor–Hood
 directly; symbolic differentiation giving `Newton(a, gfu, dampfactor=...)`; axisymmetric assembly
@@ -31,13 +31,13 @@ backend for the desktop path, so the weak forms would be maintained twice indefi
 | MPI | Pip wheels are serial-only (verified: no MPI symbols in any shipped `.so`, no mpi4py); parallel mesh generation, adaptive refinement and multigrid are unsupported. This costs v1 nothing: 2D axisymmetric solves are direct-solver territory and sweeps parallelise at the job level |
 | No MUMPS in the wheel | The wheel reports `USE_MUMPS: False` (also `USE_HYPRE`, `USE_PARDISO`, `USE_MKL`), and `inverse="mumps"` raises `SparseMatrix::InverseMatrix: no inverse available for type mumps`. MUMPS needs a source build with MPI, reintroducing the compiler dependency this decision exists to avoid. The desktop path uses UMFPACK or scipy SuperLU (CON-08); the reference COMSOL model used PARDISO, equally absent from the wheel |
 | Direct-solver performance | Whether UMFPACK factorises the coupled five-field system at production mesh size in acceptable time and memory is a Phase 0 exit criterion (§8.2, QR-07) |
-| 3D phase | Mitigations in order: prototype 3D scaling before committing; route parallel solves through ngsPETSc to reach PETSc fieldsplit and AMG; if 3D scaling proves fatal, add a DOLFINx backend for HPC only behind the existing abstraction, taking EchemFEM (LLNL, MIT, Firedrake) as the reference implementation of SUPG-stabilised Nernst–Planck |
+| 3D phase | Mitigations in order: prototype 3D scaling before committing; route parallel solves through ngsPETSc to reach PETSc fieldsplit and AMG; if 3D scaling proves fatal, add a DOLFINx backend for HPC only, through the interface shape of §5.4.1, taking EchemFEM (LLNL, MIT, Firedrake) as the reference implementation of SUPG-stabilised Nernst–Planck |
 
 #### ADR-002 Meshing backend and the Gmsh licence
 
-Decision: mesher adapters, Netgen (LGPL-2.1) as default and Gmsh (GPLv2+) as optional backend, with
-the geometric boundary-layer construction of §5.2.2 so the default path does not depend on Netgen's
-less-mature 2D boundary-layer generator.
+Decision: mesher adapters, Netgen (LGPL-2.1) as default and Gmsh (GPLv2+) as optional backend.
+Boundary layers, when FR-11 adds them after 1.0, take the geometric construction of §5.2.2, so that
+the default path does not depend on Netgen's less-mature 2D boundary-layer generator.
 
 | Alternative | Assessment |
 |---|---|
@@ -73,7 +73,11 @@ pointing at the Nanoscale paper and the software DOI (CON-14).
 
 #### ADR-004 Desktop application
 
-Decision: Python core, PySide6 (LGPL-3) shell, NGSolve webgui in a `QWebEngineView` for field
+Decision (§8.2.12 M3; §8.2.30 AF4): a browser workbench, NiceGUI on FastAPI in `gui/web/`,
+distributed as the `gui` extra. The PySide6 shell and its packaging NOTE stand until WP5.21, which
+removes Qt, lands (§8.2.17 S17). The consequences below hold for either shell.
+
+Superseded at WP5.21 (the Qt shell): Python core, PySide6 (LGPL-3) shell, NGSolve webgui in a `QWebEngineView` for field
 rendering, and a background solver process communicating over a queue so the interface stays
 responsive and can show live convergence. Packaged with PyInstaller, briefcase or
 conda-constructor. The graphical surface grows from Phase 1 onward.
@@ -81,10 +85,10 @@ conda-constructor. The graphical surface grows from Phase 1 onward.
 | Alternative | Assessment |
 |---|---|
 | PyQt6 shell | Rejected: GPL-3 only |
-| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | **Rejected**, closing the deferral below. The stage interface did stay clean — the walk takes a `Progress` callback and a `CancelToken`, and every stage is introspectable without importing it (FR-27) — so the alternative remained available and was declined on its own merits: it buys a hosted future and an SSH port-forward this project has no requirement for, and pays in a second rendering path for the same webgui scene. Originally recorded as "on the table… the choice may wait until Phase 1", which is where it was made |
+| Local web application: FastAPI plus browser frontend wrapped in `pywebview` | Superseded: rejected for the Qt shell, then chosen for Phase 5 as the decision above, without `pywebview` (§8.2.12 M3; the desktop-wrapper NOTE) |
 | Defer the interface to a terminal phase | Rejected on two failure modes: an interface bolted on at the end exposes the API's accidental structure rather than the user's workflow, and a nine-month gap before any non-programmer touches the tool is a nine-month gap in shaping feedback |
 
-NOTE (packaging). The redistributable bundle SHALL be built one-**dir**
+NOTE (packaging, the Qt shell until WP5.21). The redistributable bundle SHALL be built one-**dir**
 rather than one-file, for two independent reasons. PySide6 and Qt are used under the LGPL option
 (CON-09), which requires that a recipient be able to replace the covered libraries; a directory of
 shared libraries satisfies that plainly. And Qt WebEngine runs a separate helper executable, which a
@@ -115,15 +119,7 @@ is a thin shell over the stage objects the CLI drives (IF-09). Each release from
 a usable graphical surface over the functionality existing at that release (QR-11); the per-phase
 increments are in §8.1.
 
-NOTE (the browser shell, 18 October 2026). The author ruled that Phase 5 replaces the PySide6 shell
-with a browser shell: a local server in `gui/` over the existing view-models and a browser front end
-(§8.2.12 M3). The rejection of a local web application above is withdrawn. The decision and the
-packaging NOTE stand for the Qt shell until Phase 5's design document restates the shell's gating
-clauses and the browser shell meets them; then PySide6, the Qt widgets and the PyInstaller bundle
-leave. The consequences above hold for either shell.
-
-NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, the packaging
-NOTE above reads: "The workbench SHALL be distributed as the package with its `gui` extra, installed
+NOTE (packaging; lands with WP5.21, Qt's removal). When it lands, the packaging NOTE above reads: "The workbench SHALL be distributed as the package with its `gui` extra, installed
 by one documented `uv` command, with no bundle (§8.2.17 S12). Its front end SHALL ship prebuilt inside
 the wheel, so no user builds it (CON-07), and the shipped renderer SHALL stay an unmodified, separate
 file (CON-09). The server's self-test SHALL exercise once each, failing naming the payload: NGSolve,
@@ -133,8 +129,7 @@ is installed; PDB2PQR and PROPKA protonating a nine-residue peptide at two pH va
 charges it requires, so that PROPKA's parameter file out of reach fails naming PROPKA. The
 background solver process SHALL be started with the `spawn` start method: it is the only one Windows
 has, and a forked child would inherit the server's event loop and its already-imported numerical
-libraries." Until then the packaging NOTE gates the Qt shell (§8.2.17 S17). The decision above is
-restated by WP5.02's spike, which records the front end chosen (§8.2.17 S8).
+libraries." Until then the packaging NOTE gates the Qt shell (§8.2.17 S12, S17).
 
 NOTE (the desktop wrapper, v0.6). The browser shell SHALL NOT preclude a desktop wrapper, such as
 Electron, that spawns its server and loads its address; no wrapper is built before 1.0 (§8.2.17 S12;

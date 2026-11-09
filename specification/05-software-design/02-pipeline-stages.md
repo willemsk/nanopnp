@@ -1,26 +1,28 @@
 ---
 type: Specification
 title: "5.2 Pipeline stages"
-description: "Tabulates each pipeline stage with its inputs, outputs, tools and validation gate."
+description: "Each stage's inputs, outputs, tools and gate; contour conditioning (§5.2.1), meshing and its size fields (§5.2.2), the embedded analyte (§5.2.3)."
 ---
 
 ### 5.2 Pipeline stages
 
 | # | Stage | Inputs | Outputs | Tools | Validation gate |
 |---|---|---|---|---|---|
-| 1 | Structure ingestion and alignment | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3) for PDB and every trajectory format; gemmi 0.7+ (MPL-2.0) for mmCIF, which MDAnalysis 2.10 does not read; the Kabsch rotation for superposition, cross-checked against MDAnalysis `rotation_matrix`; MDTraj as alternative reader; PDBFixer or Modeller for missing loops | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
-| 2 | Density map | Aligned ensemble, or stage 7's protonation artefact under `geometry.density.atoms: protonated` (the default); grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the §5.3.1 NOTE on `geometry.density`, multiplied under `protonated` by the table's `charge.edits` radius scales, and keyed on the protonation key with its charge edits dropped (§5.3.1 NOTE on `charge.edits`), sharpness 0.93; the atoms are the protonated frames, hydrogens included, or the atoms as stage 1 loaded them under `as_loaded` (PHY-16); `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
-| 3 | Symmetry reduction to (r, z) | 3D map, n | (r, z) map; residual azimuthal variance, Cₙ-averaged and raw | numpy and `scipy.sparse`; exact cell–annulus overlap weights; the Cₙ average in the angular harmonic basis (WP19) | Variance emitted with the geometry (FR-06, CON-04); annular weights summing to the exact annulus areas. The radius profile against the probe-radius profile is stage 4's gate (§5.2.1, §8.2.2 B5) |
-| 4 | Contour extraction and conditioning | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile, scaled under `geometry.density.atoms: protonated` by the `charge.edits` radius scales as stage 2's radii are (§5.3.1 NOTE on `charge.edits`); isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v0.5` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (WP20) | §5.2.1 (FR-08) |
-| 5 | CAD assembly | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process). The optional Gmsh backend meshes this region at stage 6 and assembles none of its own (WP23 D1) | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09, WP21; §5.2.1 NOTE on the membrane junction on any profile) |
-| 6 | Meshing | Fragmented region, size fields; or a stage-6 mesh artefact named by its store hash in `inputs.mesh.artefact`, which the stage reads from the store and returns as its own artefact (REV-62; WP5.05) | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (WP21); a hash the store does not hold is refused naming the hash and the store's root. The COMSOL comparison, which keys a case without a store, refuses such a case naming the hash, and compares a finished run of it instead (REV-188) |
-| 7 | Protonation (`protonation`) | Stage 1's aligned ensemble, pH, force field, titration method, `charge.edits`; or a supplied `inputs.pqr` | Per-frame atom table in stage 1's frame (identity, coordinates, charge, radius), `Q_net` and every titratable residue's state per frame | PDB2PQR 3.8+ (BSD-3) driving PROPKA 3 (LGPL-2.1), one call per frame with the flags of PHY-16 step 3 (WP27); a pinned state is held through `Biomolecule.apply_pka_values` (the NOTE on `charge.edits` below) | Every atom carries a charge and a radius, and every charged atom a positive radius; `Q_net` an integer to 10⁻⁶ e on every frame; a pinned residue holds its state on every chain and frame; a supplied frame registered to its stage-1 frame to 0.01 Å (§5.3.1 NOTE on `inputs:`) |
-| 7 | Charge assembly (`charge`) | The protonation artefact, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | The closed-form azimuthal kernel deposited on the deployed mesh (PHY-16, §8.2.4 D2); APBS 3.4.1 (BSD-3) cross-check through the test-only `apbs-binary` package; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
-| 8 | Materials | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
-| 9 | Case assembly | Mesh, charge and dielectric fields, materials, boundary conditions, bias, analyte, numerics | Resolved case document, assembled discrete problem | `io/` schema validator, `physics/` model registry | Schema 'nanopnp/case/v0.6' validates, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
-| 10 | Solve | Assembled problem, continuation ladder, optional warm start | Converged fields, iteration history | NGSolve 6.2.2606+ (LGPL-2.1), damped Newton; UMFPACK (GPL-2+) or scipy SuperLU (BSD) (CON-08) | No negative concentration at any nonlinear iterate; ladder completed to the target rung (FR-17); §6.5, §6.6 govern |
-| 11 | QoI extraction | Converged fields | I, t₊, RR, EOF rate, F^em(z), F^hd(z), ΔU(z) | Domain/indicator form and variational reaction flux, both implemented | The two routes agree within the stated tolerance, checked in CI (FR-23, QR-04); §6.7 governs |
-| 12 | Reporting and export | Results, artefact hashes, environment | Figures, XDMF/HDF5 fields, dataset, case file, manifest | `io/`, `sweep/` result store | Manifest complete and sufficient to reconstruct the run (FR-25, QR-08) |
+| 1 | Structure ingestion and alignment (`structure`; FR-01 to FR-03) | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3) for PDB and every trajectory format; gemmi 0.7+ (MPL-2.0) for mmCIF, which MDAnalysis 2.10 does not read; the Kabsch rotation for superposition, cross-checked against MDAnalysis `rotation_matrix` | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
+| 2 | Density map (`density`; FR-04) | Aligned ensemble, or stage 7's protonation artefact under `geometry.density.atoms: protonated` (the default); grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the §5.3.1 NOTE on `geometry.density`, multiplied under `protonated` by the table's `charge.edits` radius scales, and keyed on the protonation key with its charge edits dropped (§5.3.1 NOTE on `charge.edits`), sharpness 0.93; the atoms are the protonated frames, hydrogens included, or the atoms as stage 1 loaded them under `as_loaded` (PHY-16); `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
+| 3 | Symmetry reduction to (r, z) (`symmetry`; FR-05, FR-06) | 3D map, n | (r, z) map; residual azimuthal variance, Cₙ-averaged and raw | numpy and `scipy.sparse`; exact cell–annulus overlap weights; the Cₙ average in the angular harmonic basis (WP19) | Variance emitted with the geometry (FR-06, CON-04); annular weights summing to the exact annulus areas. The radius profile against the probe-radius profile is stage 4's gate (§5.2.1, §8.2.2 B5) |
+| 4 | Contour extraction and conditioning (`contour`; FR-07, FR-08) | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile, scaled under `geometry.density.atoms: protonated` by the `charge.edits` radius scales as stage 2's radii are (§5.3.1 NOTE on `charge.edits`); isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v0.5` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (WP20) | §5.2.1 (FR-08) |
+| 5 | CAD assembly (`region`; FR-09) | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process). The optional Gmsh backend meshes this region at stage 6 and assembles none of its own (WP23 D1) | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09, WP21; §5.2.1 NOTE on the membrane junction on any profile) |
+| 6 | Meshing (`mesh`; FR-10) | Fragmented region, size fields; or a stage-6 mesh artefact named by its store hash in `inputs.mesh.artefact`, which the stage reads from the store and returns as its own artefact (REV-62; WP5.05) | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (WP21); a hash the store does not hold is refused naming the hash and the store's root. The COMSOL comparison, which keys a case without a store, refuses such a case naming the hash, and compares a finished run of it instead (REV-188) |
+| 7 | Protonation (`protonation`; FR-12, FR-38) | Stage 1's aligned ensemble, pH, force field, titration method, `charge.edits`; or a supplied `inputs.pqr` | Per-frame atom table in stage 1's frame (identity, coordinates, charge, radius), `Q_net` and every titratable residue's state per frame | PDB2PQR 3.8+ (BSD-3) driving PROPKA 3 (LGPL-2.1), one call per frame with the flags of PHY-16 step 3 (WP27); a pinned state is held through `Biomolecule.apply_pka_values` (the NOTE on `charge.edits` below) | Every atom carries a charge and a radius, and every charged atom a positive radius; `Q_net` an integer to 10⁻⁶ e on every frame; a pinned residue holds its state on every chain and frame; a supplied frame registered to its stage-1 frame to 0.01 Å (§5.3.1 NOTE on `inputs:`) |
+| 7 | Charge assembly (`charge`; FR-13 to FR-15) | The protonation artefact, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | The closed-form azimuthal kernel deposited on the deployed mesh (PHY-16, §8.2.4 D2); APBS 3.4.1 (BSD-3) cross-check through the test-only `apbs-binary` package; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
+| 8 | Materials (`materials`; FR-16) | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
+| 9 | Case assembly (`case`; FR-26) | The case file | Resolved, validated case document, read by every other stage | `io/` schema validator, `physics/` model registry | Schema 'nanopnp/case/v0.6' validates, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
+| 10 | Solve (`solve`; FR-17) | Resolved case, mesh, charge and dielectric fields, materials; continuation ladder, optional warm start | Converged fields, iteration history | NGSolve 6.2.2606+ (LGPL-2.1), damped Newton; UMFPACK (GPL-2+) or scipy SuperLU (BSD) (CON-08) | No negative concentration at any nonlinear iterate; ladder completed to the target rung (FR-17); §6.5, §6.6 govern |
+| 11 | QoI extraction (`qoi`; FR-22, FR-23) | Converged fields | I, t₊, RR, EOF rate, F^em(z), F^hd(z), ΔU(z) | Domain/indicator form and variational reaction flux, both implemented | The two routes agree within the stated tolerance, checked in CI (FR-23, QR-04); §6.7 governs |
+| 12 | Reporting and export (`report`; FR-25, FR-28) | Results, artefact hashes, environment | XDMF/HDF5 field export (when `outputs:` asks for `fields`), run record, case file, manifest | `post/`, `io/` | Manifest complete and sufficient to reconstruct the run (FR-25, QR-08) |
+
+Figures are drawn by `plot/` from stored artefacts; they are not a stage output.
 
 Design notes, recorded where an implementer would otherwise choose wrongly.
 
@@ -28,7 +30,7 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 |---|---|
 | 1 | The Cₙ axis comes from chain-permutation superposition: superpose chain A onto chain B, take the rotation's eigenvector of eigenvalue 1 (FR-02). Principal axes are unusable because they drift between frames. Over the 98 frames of the ClyA-AS ensemble, the largest-variance axis of the Cα set moved by up to 1.54° (rms 0.66°), while the chain-permutation axis moved by at most 0.010°. The cause is not degeneracy: the axial eigenvalue is well separated (1432 Å² against 801 and 881 Å² on the first frame). It is the chains' asymmetric fluctuation, which the permutation fit averages out by construction (measured; WP18 plan, Design §4). Stage 1 is specified in full in the §5.3.1 NOTE on `structure:`. |
 | 2 | Histogram plus uniform `gaussian_filter` is rejected: van der Waals-weighted smearing preserves the exclusion surface, uniform post-smoothing rounds the constriction. The grid is not coarsened, the *trans* constriction being about 3.3 nm across with a contour position that moves measurably with resolution. |
-| 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 6 cells per annulus of width h at r = h, about 630 at r = 5 nm, per slice at h = 0.05 nm). The overlap weights are exact, so no bin is interpolated (WP19 plan, Design §2–§3). The earlier "innermost 2–3 bins interpolated" compensated for centre-assigned binning, and against exact weights every interpolant tried was worse somewhere. The rotated copies are averaged in the angular harmonic basis, where the average keeps the harmonics m ≡ 0 (mod n): it is exact and costs one deposition. Depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. The binned mean is subtracted at each cell's own radius before any variance is taken, or the radial gradient across a bin reads as azimuthal variance. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
+| 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 6 cells per annulus of width h at r = h, about 630 at r = 5 nm, per slice at h = 0.05 nm). The overlap weights are exact, so no bin is interpolated (WP19 plan, Design §2–§3). The rotated copies are averaged in the angular harmonic basis, where the average keeps the harmonics m ≡ 0 (mod n): it is exact and costs one deposition. Depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. The binned mean is subtracted at each cell's own radius before any variance is taken, or the radial gradient across a bin reads as azimuthal variance. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
 | 5 | Reference geometry: reservoir half-disc R = 250 nm, membrane thickness 2.8 nm, `z_cis` = 12.25 nm, `z_trans` = −1.85 nm. The membrane is a quadrilateral, not a rectangle: vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm, inner edge slanted to meet the pore's outer surface. Code assuming a rectangle leaves a wedge of gap or overlap at the junction. CadQuery and build123d are 3D-solid-centric and unused; pythonocc serves BRep edge cases only. |
 | 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `structure` and before `density`, so that stage 2 smears the protonated atoms (PHY-16; §8.2.19 U2), and `charge` after `mesh`. `protonation` runs when stage 2 reads it (`geometry.density.atoms: protonated`, the default on a case with `structure:`), when stage 7's deposition reads it, or when it is the walk's target; a walk truncated at the mesh therefore protonates, and protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). Under `atoms: as_loaded` a walk to stage 2 does not protonate. With `charge.edits` the stage writes the edited table and, beside it, its parent, the unedited table, and records the variant (§5.3.1 NOTE on `charge.edits`); a charge or radius edit reuses the parent's stored frames, and a state edit protonates the frames again with the residue pinned. The protonation runs when the case has something to protonate (`structure:` or `inputs.pqr`, and no `inputs.charge`) and its model declares a fixed charge (§5.4.3), or when the density needs it, and is otherwise recorded as not run with the reason. `charge` runs when the model declares a fixed charge. A consumer of a deposited charge reads it from stage 7's artefact and from nowhere else (WP28). With a non-zero `charge.dielectric_transition_nm` the `charge` half also runs, reading stage 5's record, to derive `χ` (§4.4 NOTE on the derived solid fraction), whether or not it deposits a charge; the solve reads that `χ` from stage 7's artefact likewise (WP30). |
@@ -155,8 +157,7 @@ profile is first moved into the model frame, `z ← z − geometry.membrane.cent
 `z = ±t/2` the **lumen-adjacent body interval** `[r₁, r₂]` is bounded by the profile's two
 smallest crossings of that plane, an edge crossing it when `lower ≤ z < upper`. Where an edge of
 the profile lies exactly on the plane, `r₂` runs on to that edge's far end, because the body's
-section continues along it and the membrane meets the body there (CODE_REVIEW_003 CR-4; without it a valid step flush with a bilayer plane was refused by the
-junction criterion below). The inner edge of the membrane quadrilateral is the chord from
+section continues along it and the membrane meets the body there. The inner edge of the membrane quadrilateral is the chord from
 the lower plane's interval to the upper plane's that has the largest minimum distance to the
 profile. It is searched on the 63 × 63 interior points `r₁ + (r₂ − r₁)k/64` of the two intervals.
 Any chord with its ends in those intervals that lies inside the body yields the same region: a
@@ -166,7 +167,7 @@ connected. The widest-margin chord is taken because it is the choice furthest fr
 chord between the intervals' mid-points is **not** admissible in general. On the delivered fixture
 it runs from (2.2387, −1.4) to (3.92, +1.4) and crosses the cleft under the cap between
 (3.070, −0.016) and (3.235, 0.260), which splits the electrolyte in two. On the fixture the
-widest-margin chord is (1.982, 3.470) nm, with a clearance of 0.236 nm (WP21: the plan's prototype printed 3.464, a grid point the search does not visit). A plane
+widest-margin chord is (1.982, 3.470) nm, with a clearance of 0.236 nm. A plane
 that crosses the profile more than twice always splits a domain, and the one-face criterion below
 refuses it. The gap between the first two body intervals on the plane is a segment of fluid
 bounded by body at both ends. The body arms on either side of it join above the plane or below
@@ -198,7 +199,7 @@ profile `P`, with `h_c` as in the NOTE on the contour's size target:
 3. Every hole of `O` is filled and recorded with its centroid and area. A hole is fluid enclosed by
    the shell, which no ion can reach.
 4. `O`'s ring is resampled at uniform arc length `L/⌊L/(1.05 h_c)⌋`, and step 6 of §5.2.1 runs on
-   it (WP30 Outcomes; see below).
+   it (see below).
 5. §5.2.1's validity, simplicity and spacing criteria are applied to that ring, together with its
    clearance of `h_c` from the axis.
 
@@ -213,37 +214,12 @@ offset (0.01 nm at `a` = 0.25 nm), and stage 5 gates that on every edge of the r
 closing and the filled holes it never lies more than 10⁻⁶ nm outside the exact offset (WP30 plan,
 *Design* §2). The `exclusion` domain is meshed at the wall size. On netgen, each `wall` edge of the
 shell, of length `L`, is cut into `n = ⌈L/(1.1 h_wall)⌉` equal segments by a size of `L/n` where
-`n > 1`, and keeps `h_wall` where `n = 1`; Gmsh needs no such rule (WP30 review; see below).
+`n > 1`, and keeps `h_wall` where `n = 1`; Gmsh needs no such rule (see below).
 
-The resampling of step 4 is what makes the bound hold, and its argument is this. A ring at least
-`2πa > 4πh_c` long is cut into at least 11 arcs, so each chord `s` is below `1.15 h_c` and above
-`h_c`, and step 6 removes nothing. A chord then lies at most `a(1 − cos(π/32)) + s²/(8a)` inside
-the offset, the round join's own sagitta plus the chord's. That is at most 0.62 of the bound for
-every `a` [verified], and measured 0.16–0.53 of it on four bodies and nine offsets from 0.11 to
-2 nm [tested]. WP30 Outcomes. Without the resampling, the bound was
-first argued as twice the sagitta of the longest chord, on the premise that step 6 leaves no
-round-join chord longer than `2h_c`. That premise is false. At 8 segments a quarter circle's
-chords are `aπ/16`, 0.049 nm at `a` = 0.25 nm, and step 6 merges runs of them into chords near
-`3h_c`. The surface then reached 0.0106 nm inside the offset on a rectangle at `a` = 0.25 nm, which
-the gate refused [tested]. The resampling length is held near `h_c` because netgen meshes an edge of
-1.5 times its size target as one segment, which the wall-size gate refuses at the default wall
-target of 0.05 nm [tested].
-
-The same rounding is why stage 6 divides the shell's `wall` edges (WP30
-review). Netgen must keep a node at each end of every ring edge, and given only `h_wall` it cuts an
-edge into about `⌊L/h_wall + 0.4⌋` segments [tested]. With ring edges of 1.05–1.15 `h_c`, every wall
-target a little under `L`, or under `L/2`, therefore left segments up to 1.6 times it. On 2WCD at
-`a` = 0.25 nm the gate refused 0.045, 0.04, 0.035 and 0.0225 nm, which `auto` reaches between about
-1.5 and 1.9 M and at 3 M, while 0.05, 0.03 and 0.0272 nm passed [tested]. A shell-free profile is
-not affected: after step 6 its edges are long (2WCD's median is 0.22 nm), and it passed at every
-one of those targets. `⌈L/(1.1 h_wall)⌉` fixes the count whatever netgen's rounding, so the
-segments average at most 1.1 times the target, under the gate's 1.15. An edge needing one segment
-keeps `h_wall`, so the mesh is unchanged wherever no edge needed dividing, as at the 0.05 nm default
-on 2WCD. Gmsh already cuts each edge into `⌈L/h_wall⌉` segments, and passed at every target [tested].
-Two alternatives were measured and set aside. The shell's outer surface as one spline through the
-ring passed every target too, but bulges past `a + 10⁻⁶` nm between its vertices, and the `geo`
-kernel of the Gmsh backend cannot reproduce OCC's curve. An exact OCC offset of the body cannot be
-built through netgen's interface whenever the dilation encloses a pocket, which step 3 requires.
+Step 4's resampling keeps every chord between `h_c` and `1.15 h_c`, so step 6 removes nothing and the
+surface lies at most 0.62 of the bound inside the offset; netgen's rounding of an edge's segment count
+is why stage 6 divides the shell's `wall` edges. The argument and its measurements:
+`knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md` §2.2.
 
 Stage 5 SHALL abort, naming the criterion, the value, the threshold and the (r, z), on any of these:
 
@@ -260,33 +236,9 @@ is in the `structure` extra. Without the extra, the case SHALL be refused naming
 key. The record carries the offset loop, so stage 6 rebuilds the region without Shapely. With
 `a = 0` none of this NOTE runs, and the record, its key and the mesh are those of §5.2.1.
 
-NOTE (vertex counts): the model report's geometry section records **190 vertices for the pore
-polygon** and **3 domains, 198 boundaries and 196 vertices for the assembled region**. Earlier
-revisions of this document attached the geometry-wide 196 to the pore boundary, and identified the
-extra six as the membrane quadrilateral's own corners; both are corrected here against the delivered
-table. Assembling as above, the region adds to the 190-vertex polygon: the two points where the
-planes z = ±1.4 cut the pore's outer surface, each splitting a polygon edge (+2 vertices, +2 edges);
-the membrane's two outer corners on the reservoir arc at r = √(250² − 1.4²) = 249.99608 nm (+2, +2);
-and the arc's two endpoints on the axis at (0, ±250) (+2, +2). Closing the region takes six further
-edges — the axis, the `cis` and `trans` arc segments, the `membrane_outer` arc between the corners,
-and the membrane's two faces at z = ±1.4. That is 190 + 6 = **196 vertices** and
-190 + 2 + 6 = **198 boundaries**, both as reported; Euler closes it, 196 − 198 + 4 = 2 over the three
-domains and the unbounded face; and 196 is also the mesh's 196 vertex elements (§5.2.2), one per
-geometry vertex.
-
-The delivered table carries 185 vertices, five short of the report's 190, and — unlike the report's
-polygon, which the count above requires to be cut at both planes — it already has a vertex exactly on
-the cis plane at (4.88, +1.4), so under the same construction it assembles to 190 vertices and 192
-boundaries (190 − 192 + 4 = 2 likewise). The difference is recorded, not reconciled: it changes
-neither the geometry the table describes nor anything computed from it.
-
-DECISION (the author): **the delivered 185-vertex table is the geometry of
-record.** It is what the fixture ships, what `mesh/reference.py` assembles, and what VAL-05 and any
-Tier-3 comparison cite. The model report's 190 stays recorded above as the count of the polygon
-COMSOL held after its own import conditioning; no further reconciliation is sought, and the five
-vertices are not chased. This settles which of two tabulations of one curve to use and touches
-nothing the model report governs (`CLAUDE.md` §1.6) — not an equation, a correction or a fitted
-parameter. OPN-05 is closed.
+NOTE (vertex counts): the delivered 185-vertex table is the geometry of record (OPN-05); it assembles
+to 190 vertices and 192 boundaries. The model report's 190, 196 and 198 are COMSOL's counts after its
+import conditioning (§2.2's Geometry vertices row).
 
 NOTE (what `nanopnp.mesh.reference` assembles): 193 vertices and 195 edges, three more of each than
 the count above, and both deviations are deliberate. Two come from breaking the side on `r = 0` into
@@ -329,7 +281,8 @@ isotropic grading to 0.05 nm at the pore wall.
 | Symmetry axis inside pore | 0.075 nm | 0.04 nm | — | — |
 
 That mesh has 120,917 triangles, 1,879 edge elements and 196 vertex elements, minimum element
-quality 0.6378, average 0.9765, which set the target. Quality gate, enforced in code: minimum
+quality 0.6378, average 0.9765, which set the target (the table's and these counts' home:
+`knowledge/09-comsol-reference-settings/02-mesh-27.md` A.1, A.2). Quality gate, enforced in code: minimum
 SICN/gamma > 0.3, the mesher's own optimisation pass (netgen's `optsteps2d` 5, Gmsh's
 `Mesh.Smoothing` 5; WP23 D5), worst element and its location
 reported, run aborted on failure (QR-12).

@@ -73,7 +73,7 @@ Shipped physics models (PHY-21, FR-18, FR-19).
 | `pnp-ns` | φ, c_i, u, p | The same model with corrections off; a configuration, not code |
 | `pnp` | φ, c_i | No flow coupling |
 | `pb` | φ | Nonlinear Poisson–Boltzmann, equilibrium; a separate model, not the PNP solver at zero bias (PHY-14, PHY-24) |
-| `pb-linear` | φ | Debye–Hückel; an initialiser and the basis of the DWR error estimator |
+| `pb-linear` | φ | Debye–Hückel; an initialiser |
 | `poisson` | φ | Electrostatics only; the APBS cross-check target |
 
 Since ePNP-NS reduces exactly to PNP-NS at β_i = 0 with all f^c = f^w = 1, the PNP-against-ePNP
