@@ -1,7 +1,8 @@
 """Reconcile the knowledge base's claim markers with the tests and sources they name.
 
-Reads every Markdown file under ``knowledge/`` and the Python under ``tests/``. Writes one Markdown
-report to standard output with four sections: every ``[tested: <test>]`` marker whose test file or
+Reads every Markdown file under ``knowledge/`` and the Python under ``tests/``, skipping code spans
+and fenced blocks, where a marker is an example of its syntax. Writes one Markdown report to
+standard output with four sections: every ``[tested: <test>]`` marker whose test file or
 test function does not exist; every concept file whose front-matter ``verified:`` list of
 ``process:tests/...`` entries differs from the tests its markers name, in either direction; every
 ``[verified]`` claim with no footnote reference on its line, so that a reader can judge whether
@@ -30,6 +31,8 @@ FOOTREF = re.compile(r"\[\^([^\]]+)\](?!:)")
 FOOTDEF = re.compile(r"^\[\^([^\]]+)\]:\s*(.*)$")
 FRONT = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 TEST_REF = re.compile(r"^(tests/[\w/.-]+\.py)(?:::([\w\[\]().,:= -]+))?$")
+CODE_SPAN = re.compile(r"`[^`\n]*`")
+FENCE = re.compile(r"^\s*(```|~~~)")
 
 SOURCE_KINDS: tuple[tuple[str, str], ...] = (
     ("thesis", r"thesis|phdthesis"),
@@ -70,6 +73,23 @@ def _front_tests(text: str) -> set[str]:
     return set(re.findall(r"by:\s*process:(tests/\S+)", match.group(1)))
 
 
+def _prose_lines(lines: list[str]) -> list[str]:
+    """Return the lines with inline code spans and fenced blocks blanked, keeping their numbers.
+
+    A marker quoted in code is an example, not a claim: the knowledge base's own provenance pages
+    show the markers' syntax in code spans.
+    """
+    prose: list[str] = []
+    fenced = False
+    for line in lines:
+        if FENCE.match(line):
+            fenced = not fenced
+            prose.append("")
+            continue
+        prose.append("" if fenced else CODE_SPAN.sub("", line))
+    return prose
+
+
 def main() -> int:
     """Print the reconciliation report."""
     files = sorted(p for p in (ROOT / "knowledge").rglob("*.md"))
@@ -85,7 +105,7 @@ def main() -> int:
         lines = text.splitlines()
         definitions = {m.group(1): m.group(2) for line in lines if (m := FOOTDEF.match(line))}
         named: set[str] = set()
-        for number, line in enumerate(lines, 1):
+        for number, (line, shown) in enumerate(zip(_prose_lines(lines), lines, strict=True), 1):
             for match in TESTED.finditer(line):
                 ref = match.group(1)
                 total_tested += 1
@@ -113,7 +133,7 @@ def main() -> int:
                 total_verified += 1
                 refs = FOOTREF.findall(line)
                 if not refs:
-                    bare_verified.append(f"`{relative(path)}:{number}`: {line.strip()[:160]}")
+                    bare_verified.append(f"`{relative(path)}:{number}`: {shown.strip()[:160]}")
                     continue
                 kinds = []
                 for ref in refs:
@@ -122,7 +142,7 @@ def main() -> int:
                     kinds.append(f"`[^{ref}]` → {kind}")
                     by_kind[kind] += 1
                 classified.append(
-                    f"`{relative(path)}:{number}` {'; '.join(kinds)}: {line.strip()[:120]}"
+                    f"`{relative(path)}:{number}` {'; '.join(kinds)}: {shown.strip()[:120]}"
                 )
         front = _front_tests(text)
         marker_tests = {re.sub(r"\[.*$", "", n) for n in named}

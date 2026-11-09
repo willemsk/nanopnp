@@ -102,7 +102,7 @@ reader for the format IF-06 mandates cannot be the one netgen ships. `meshio` is
 optional bookkeeping — it is the only route in. CON-10 keeps `gmsh` itself off the default path for
 an unrelated reason (GPLv2+), and the two constraints agree.
 
-**meshio 5.3.5's MSH 4.1 writer gets entity bookkeeping wrong in two ways, both silent [verified].**
+**meshio 5.3.5's MSH 4.1 writer gets entity bookkeeping wrong in two ways, both silent [verified][^meshio-541].**
 
 - *One cell block is one entity.* `_write_elements` takes the **first** `gmsh:geometrical` tag of a
   block and writes the whole block under it. Four boundary groups packed into a single `line` block
@@ -251,5 +251,6 @@ Outcomes):
 
 ---
 
+[^meshio-541]: meshio 5.3.5, `meshio/gmsh/_gmsh41.py`: `_write_elements` writes a block under `tag_data["gmsh:geometrical"][ci][0]`, and `_write_entities` builds `$Entities` from `np.unique(point_data["gmsh:dim_tags"], axis=0)`; the cures are `src/nanopnp/mesh/adapter.py`'s `write_msh41` and `_node_entities`.
 [^wp23-plan]: `docs/plans/phase-2/wp23-gmsh-backend.md` (CI `ubuntu-latest` runtime library prerequisites for `gmsh`).
 

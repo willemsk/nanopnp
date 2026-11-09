@@ -36,7 +36,7 @@ The tree measures function size with ruff's `C901` (McCabe, `max-complexity = 15
 (`max-args = 8`), and guards its layering with VER-61 (`tests/tier1/test_layering.py`), which asserts
 that the live import relation equals `docs/project/modularity-layering.yaml` in both directions
 (§8.2.36 AL7, AL27). Both tools below were run on commit `3427617a` from ephemeral environments, so
-neither touched `uv.lock`.[^run]
+neither touched `uv.lock`. [verified][^run]
 
 ### import-linter: a subset of VER-61
 
@@ -52,7 +52,7 @@ The eight are all inside `if TYPE_CHECKING:`: `core.stages` to `io.artefact` and
 `geometry.analyte` to `mesh.primitives`; `io.artefact`, `io.manifest` and `io.resolved` to
 `materials.electrolyte`; `io.resolved` to `numerics.newton` and to `physics.models`. Each pair is
 already a row of `modularity-layering.yaml` with its finding (for example `core` to `io`, MOD-15;
-`geometry` to `mesh`, MOD-03).[^run]
+`geometry` to `mesh`, MOD-03). [verified][^run]
 
 - **It adds:** the file and line of each offending import, and a contract that can name independent
   siblings (`a | b`).
@@ -67,7 +67,7 @@ already a row of `modularity-layering.yaml` with its finding (for example `core`
 xenon asserts thresholds on radon's cyclomatic complexity. Run as the survey runs it
 (`--max-absolute C --max-modules B --max-average A`), it fails on 20 blocks of rank D or E (21 or
 more) and on the module `cli/__init__.py` (rank C). With `--max-absolute C` alone it fails on the same
-20 blocks.[^run]
+20 blocks. [verified][^run]
 
 radon and ruff's McCabe count differently. radon adds one for each boolean operator and each
 comprehension condition, and scores a nested function apart from its parent. So:
@@ -92,7 +92,7 @@ already bounds, by a rule that weights boolean operators, and cannot suppress on
 wants a second bound, ruff's `PLR0912` (branches) and `PLR0915` (statements) add one with no new
 dependency and the same `noqa` as `C901`.
 
-[^run]: [verified] `uv run --with import-linter lint-imports --config <ini> --no-cache` with the two
+[^run]: `uv run --with import-linter lint-imports --config <ini> --no-cache` with the two
     configurations above, `uvx xenon src/nanopnp --max-absolute C --max-modules B --max-average A`,
     `uvx xenon src/nanopnp --max-absolute C`, and `uvx radon cc -s -n D src/nanopnp` for the scores;
     ruff's McCabe scores by `ruff check --select C901` at `max-complexity = 1`. Run 9 November 2026.

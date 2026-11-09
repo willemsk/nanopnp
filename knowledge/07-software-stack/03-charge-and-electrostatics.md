@@ -70,7 +70,7 @@ PDB2PQR ignores PROPKA's `chains` option (relevant for homo-oligomeric pores) bu
 warning — surface it rather than swallowing it.
 
 **Package facts, read from PyPI's metadata on 30 September 2026 [verified]:**[^wp17-plan] `pdb2pqr` 3.7.1 is
-BSD-3, a pure-Python wheel, and requires Python ≥ 3.11, < 4. 3.7.1 pins `docutils==0.17.1`, which NiceGUI 3 cannot take; 3.8.0 (Python ≥ 3.10) has no `docutils` requirement, and its `CHARMM.DAT` is byte-identical to 3.7.1's, so the radii of the stage-2 density map are unchanged **[verified]**, 3 November 2026 (REV-175). `propka` 3.5.1 is **LGPL-2.1** by its
+BSD-3, a pure-Python wheel, and requires Python ≥ 3.11, < 4. 3.7.1 pins `docutils==0.17.1`, which NiceGUI 3 cannot take; 3.8.0 (Python ≥ 3.10) has no `docutils` requirement, and its `CHARMM.DAT` is byte-identical to 3.7.1's, so the radii of the stage-2 density map are unchanged **[verified][^rev175]**, 3 November 2026 (REV-175). `propka` 3.5.1 is **LGPL-2.1** by its
 licence field and classifier, and is a pure-Python wheel. `SPECIFICATION.md` §2.6 called it BSD
 until that day. There is no `apbs` package on PyPI. `apbs-binary` 3.4.1.1 packages the BSD-3 APBS
 under Apache-2.0 and ships wheels for manylinux_2_28 x86_64, macOS 10.15 x86_64 and macOS 12
@@ -229,7 +229,7 @@ the deck's `temp`.
   | 193³ | 44 s | 1.9 GB |
 
   This is about 250 B per node.
-  The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[verified]**.
+  The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[verified][^run-apbs]**.
 - **Case identity cost**, recorded before WP45's prose strip (`validation/comsol.py`): hashing the 84 MB reference charge table took about 1.6 s;
   hashing the 9.2 MB deposited 2WCD structure files takes 12 ms, plus 0.7 s on the first import of stage 1 and
   MDAnalysis **[verified][^case-identity-record]**. These are historical measurements, not performance guarantees.
@@ -312,4 +312,6 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
 
 [^wp17-plan]: `docs/plans/phase-2/wp17-case-schema-v2.md` and `uv.lock` (PyPI metadata for `pdb2pqr` 3.7.1 and `propka` 3.5.1).
 [^wp27-plan]: `docs/plans/phase-3/wp27-protonation.md`, Design §1 (`pdb2pqr` 3.7.1 `get_common_string_rep` and `get_pqr_string`).
+[^rev175]: `docs/project/review-items.md`, REV-175 (pdb2pqr 3.8.0's `CHARMM.DAT` compared byte for byte with 3.7.1's).
+[^run-apbs]: `src/nanopnp/validation/apbs.py`, `run_apbs` (each map unlinked once APBS has read it); the size measured while planning WP29, `docs/plans/phase-3/wp29-val06-apbs.md`.
 [^case-identity-record]: `git show 1761f15c:src/nanopnp/validation/comsol.py`, `case_identity` docstring (84 MB charge-table hashing and the 9.2 MB deposited-structure recipe, WP34 D6).

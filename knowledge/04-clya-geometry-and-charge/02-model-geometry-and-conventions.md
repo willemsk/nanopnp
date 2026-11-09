@@ -24,6 +24,12 @@ verified:
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_exclusion_shell_planar_chi_mean
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_exclusion_shell.py::test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset
+  at: '2026-11-09T00:00:00Z'
+- by: process:tests/tier1/test_exclusion_shell.py::test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h
+  at: '2026-11-09T00:00:00Z'
+- by: process:tests/tier1/test_exclusion_shell.py::test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed
+  at: '2026-11-09T00:00:00Z'
 - by: process:tests/tier1/test_region.py::test_ver52_a_body_cut_four_times_is_refused_naming_its_pocket
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_region.py::test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region

@@ -120,7 +120,7 @@ Two consequences for anything that writes these formats across versions of gridD
 - A test guarded on "is gridData importable?" passes on 3.10 and then fails inside the writer. Guard
   on **writer availability**.
 
-**The 3.11 floor makes this moot [verified].** With `requires-python = ">=3.11"` and
+**The 3.11 floor makes this moot [verified][^wp17-plan].** With `requires-python = ">=3.11"` and
 `GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and writes MRC, so the code has
 no writer-availability branch (§8.2.2 B4). The facts above describe 1.0.2, should an older
 environment turn up.
