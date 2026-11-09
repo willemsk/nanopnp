@@ -221,7 +221,7 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
   REV-222's four; done when `links.py` passes and each changed procedure is stated in one file. **Executor:**
   main for AM4, AL16 and REV-222's four, which move and reword rules; list 9's fixed edits and AL14's pointers
   go first to `general-purpose` on Sonnet, and main reads its diff
-- [ ] 10. `docs/plans/phase-5/`, `docs/project/modularity.md` (D3, D4): list 10, AL8, REV-216; done when
+- [x] c7fa329 10. `docs/plans/phase-5/`, `docs/project/modularity.md` (D3, D4): list 10, AL8, REV-216; done when
   WP5.01 to WP5.10 read as title, merged line and live constraints, the record holds each narrative
   byte-identical, and `links.py` passes. **Executor:** `general-purpose` on Sonnet
 - [ ] 11. The records (D5, D6): the dispositions, commits and register; `holds-now.yaml`; REV-216 and REV-222

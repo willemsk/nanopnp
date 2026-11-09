@@ -2761,6 +2761,9 @@ The Phase 5 plan holds about 5,100 words without its report, against `np-plan`'s
 
 **Grown** (CODE_REVIEW_040, 8 November 2026): the fourth amendment (§8.2.36) brings the plan to about 6,500 words, of which about 2,500 are the delivered entries WP5.01 to WP5.09. WP5.11 moves delivered narratives out of the live plan (AL18; AUD-244), which takes the first half of the cut; the choice between the rest of the cut and a restated target stays the author's.
 
+**Fixed** in WP5.11 (§8.2.36 AL18; AUD-244): WP5.01 to WP5.10 keep their title, merged line and live constraints, and their narratives move verbatim to `phase-5-record.md`; the dated status chain and the settled open decisions move with them. The plan holds 4,297 words, from 6,548; the rest is the live scope of the eleven packages still to run.
+
+
 ## REV-217: Case reading, substitution and input-path discovery are split across five modules
 
 Reading a case is split between `io/case.py:read_case`, which refuses `models:` and `variables:`, and `io/models.py:read`, which resolves them. `Case.with_` substitutes twice, once for the edits and once for the relative paths `_rebased_paths` finds. Input-file discovery is written four times: `io/case_paths.py:input_paths` with `correction_paths`, `io/models.py:_rebased`, `io/project.py:item_inputs`, and the merges in `api/case.py` and `api/sweep.py`. Found by CODE_REVIEW_036, candidate 1, with its corrections C1.1 to C1.5.
@@ -2806,6 +2809,9 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 CODE_REVIEW_038 audited `CLAUDE.md`, the skills, the workflow files and the hooks. Four of its findings were left for a later commit. C2: the skills cite a ruling or clause identifier about 90 times as the only cross-reference, each costing a `clause.py` call to read, against `core.md`'s own rule that an identifier only follows its words. C3: the gate-and-push procedure is stated in `CLAUDE.md`, `core.md`, `steward/SKILL.md` and `hosts/copilot.md`, and the two-lane rule in five places; none contradicts another today, and the risk is drift. E5: `core.md`'s *Putting a choice to the author* and *The In brief* are read by `/np-implement` and `/np-ship`, which do not use them, about 450 words each. E6: `AGENTS.md` imports `CLAUDE.md` with `@`, so a Copilot session loads it twice.
 
 **Open.** Each is a wording change to agent text, with no specified behaviour behind it; take them in the next package that edits the file concerned, keeping each procedure stated in full in one place and pointed to from the others.
+
+**Fixed** in WP5.11 (§8.2.37 AM9): C2, an identifier the skills cite alone gains its words; C3, the push gate's mechanics stay in `CLAUDE.md`'s *Commands* and `hosts/copilot.md`, the core keeps the order and points there, and the two-lane rule is §8.4.4's, with the core keeping a session's conduct; E5, *The In brief* and *Putting a choice to the author* move to `.claude/workflow/author.md`, read at the steps that write one or put one; E6, `AGENTS.md` points to `CLAUDE.md` and imports nothing.
+
 
 ## REV-223: PHY-07's density continuity is not assembled
 
