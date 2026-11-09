@@ -9,7 +9,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 ## Phase 5
 
 - [Phase 5 plan: the record](phase-5/phase-5-record.md): in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.
-- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.09 merged, WP5.10 in progress; the written knowledge's follow-up WP5.11 and WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.
+- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.09 merged, WP5.10 delivered; the written knowledge's follow-up WP5.11 and WP5.12 and the clean-ups WP5.13 and WP5.14 planned, then the shell packages WP5.15 to WP5.22.
 - [WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written](phase-5/wp5.01-workbench-design-study.md): delivered, 27 October 2026.
 - [WP5.02 — The framework spike and the visual-feedback workflow](phase-5/wp5.02-framework-spike.md): delivered, 2 November 2026.
 - [WP5.03 — Protonation before the density](phase-5/wp5.03-protonation-before-the-density.md): merged, 3 November 2026 (`v0.6.0-alpha.3`).
@@ -19,7 +19,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP5.07 — Variables and the rebuild forecast](phase-5/wp5.07-variables-and-the-rebuild-forecast.md): delivered, 4 November 2026.
 - [WP5.08 — The frame and the project folder](phase-5/wp5.08-the-frame-and-the-project-folder.md): delivered, 5 November 2026.
 - [WP5.09 — The physics model](phase-5/wp5.09-the-physics-model.md): delivered, 8 November 2026.
-- [WP5.10 — The written knowledge's tools and rules](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): in progress; items 1 to 12 delivered 9 November 2026, items 13 to 16 added the same day (D9 to D11).
+- [WP5.10 — The written knowledge's tools and rules](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): delivered, 9 November 2026.
 
 ## Phase 4
 

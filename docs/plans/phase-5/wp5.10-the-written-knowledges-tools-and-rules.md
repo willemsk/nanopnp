@@ -1,7 +1,7 @@
 # WP5.10 — The written knowledge's tools and rules
 
-**Status: in progress; items 1 to 12 delivered 9 November 2026, items 13 to 16 added the same day (D9 to D11).**
-Planned 8 November 2026, at `da395a7`. Inherits §8.2.36 AL3 to AL7, AL14, AL24
+**Status: delivered, 9 November 2026.** Planned 8 November 2026, at `da395a7`; items 13 to 16 added
+the same day (D9 to D11). Inherits §8.2.36 AL3 to AL7, AL14, AL24
 and AL27, AL28 and AL29 ruled at this plan, CODE_REVIEW_039's sections 5 to 7 and its prototypes in
 `.claude/scripts/audit/`.
 
@@ -321,9 +321,14 @@ Record each command, its result and the commit.
   > read when the prompt is saved, since a hook may not see a settings file's `env`. Exercised by hand:
   > save on and off, PreCompact, SessionStart for `compact` and `startup`, Stop with and without
   > `stop_hook_active`, a fully ticked plan, and Copilot. A real compaction has not yet run with it.
-- [ ] 15. The kept task list: `np-implement/wp.md`'s *Load the brief* and *How the work lands*, and the
+- [x] 9864b28 15. The kept task list: `np-implement/wp.md`'s *Load the brief* and *How the work lands*, and the
   session-start hook's reminder after a compaction (D11); done when the code and review say so. **Executor:** main
-- [ ] 16. The Outcome, both Status lines, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]` and PR #171's
+
+  > **Outcome — the list follows the ticks.** `np-implement/wp.md` names `TaskCreate`, `TaskUpdate` and
+  > `TaskList`, and rebuilds the list from the plan's ticks at the start, after each compaction and in a
+  > fresh session; the session-start hook reads its payload's `source` and, after a compaction, says so.
+  > This session built its list from items 13 to 16 and kept it through them.
+- [x] 16. The Outcome, both Status lines, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]` and PR #171's
   body (D9 to D11); done when the code and review say so. **Executor:** main
 
 ### Verification
