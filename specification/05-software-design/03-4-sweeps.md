@@ -63,6 +63,6 @@ serialisation of §5.3.2, carrying one record per point: its index and identity,
 status and — where it failed — the exit class of §3.1, the scalar quantities of interest or their
 explicit absence, the run directory, the manifest and solution hashes, the elapsed time, whether it
 was served from cache, and the warm-start record. The quantities of a member that did not succeed
-SHALL be absent rather than defaulted, QR-06 requiring that a failed member be distinguishable from a
-refused one and from one that was never dispatched. A flat tabular export MAY be written beside it
+SHALL be absent rather than defaulted, so that a failed member is distinguishable from a refused one
+and from one that was never dispatched (FR-24; §3.1's exit codes). A flat tabular export MAY be written beside it
 and is derived rather than normative.

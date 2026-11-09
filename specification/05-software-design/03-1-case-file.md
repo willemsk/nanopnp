@@ -589,6 +589,12 @@ feature would be applied at (QR-12). Beside a generated mesh named by its store 
 region that mesh was generated from, read from the store, and refused alike; a store that lacks
 that region SHALL refuse the declaration, since it cannot be checked (REV-191). A header that declares none is read in the model frame, as
 before the key existed, so no document that ran is refused (WP41 D1, REV-06).
+An analytic form that carries a charge (`gaussian_ring`'s `charge_e`) need not equal `q_net_e`, the
+field's integral over `r ≥ 0`, planar for an areal density and `2πr`-weighted for a volume density: an
+areal ring on the axis integrates to half its charge. A charge and a `q_net_e` of opposite sign, or one
+of them zero and the other not, are refused when the document is read, before its grid is built; a
+disagreement in size is the producer leg's of PHY-19, whose refusal names `q_net_e` and the form's
+charge parameter.
 
 NOTE (`inputs.mesh.groups`, IF-06, QR-12): the mapping reads **file group name → vocabulary name**.
 The key is the physical-group name the mesh file carries; the value is the name the solver selects

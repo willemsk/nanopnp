@@ -11,18 +11,17 @@ description: "Places nanopnp beside COMSOL in the source work, and describes the
 `nanopnp` occupies the position held by COMSOL Multiphysics in the source work and additionally
 automates the manual steps preceding the solve. The source Methods section records "manual removal
 of overlapping and superfluous vertices to improve the quality of the final computational mesh",
-and the ESI records a delivered ClyA boundary of 190 vertices after that conditioning. COMSOL is
+and the COMSOL model report tabulates the conditioned ClyA boundary as a 190-vertex polygon (§5.2.1). COMSOL is
 retained during development as a differential-testing oracle (§7.4), not as a runtime dependency.
 
 ### 2.2 Reference implementation
 
-The COMSOL model being replaced, as recorded in the model report and the ESI.
+The geometry and conditions of the COMSOL model being replaced, as recorded in the model report and the
+ESI; Appendix B gives its solver, mesh and sweep settings. The model is 2D axisymmetric, exploiting
+ClyA's C₁₂ symmetry.
 
 | Aspect | Value |
 |---|---|
-| Solver | COMSOL Multiphysics 5.4 build 388, FEM, coupled nonlinear, fully coupled PARDISO |
-| Model file | `npgrid_clya_v8_NaCl_report.mph`, 162-page report, 22 May 2020 |
-| Dimensionality | 2D axisymmetric (exploiting ClyA's C₁₂ symmetry), steady state |
 | Domains | Pore dielectric body, DPhPC bilayer, two electrolyte reservoirs |
 | Reservoirs | Hemispherical half-discs, R = 250 nm, one either side of the membrane |
 | Membrane | 2.8 nm thick; quadrilateral with vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm; the slanted inner edge lies *inside* the pore body over its whole length, so the assembled membrane meets the pore on the pore's own outer surface (§5.2.1) |
@@ -34,8 +33,6 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | Bias range | −200 to +200 mV; 0.05–3 M experimentally, 0.005–5 M simulated |
 | Temperature | 298.15 K (experiments at 25 ± 1 °C) |
 | Pore treatment | Dielectric body, impermeable to ions and to water |
-| Mesh | Free triangular, no boundary layers, 120,917 triangles, isotropic grading to 0.05 nm at the pore wall |
-| Sweep | 5 physics cases × 35 bias values × 21 salt concentrations = 3,675 solves, 41 h on 12 cores |
 
 ### 2.3 Product functions
 
@@ -54,7 +51,7 @@ The COMSOL model being replaced, as recorded in the model report and the ESI.
 | P2 | Collaborating computational scientists | Linux/macOS, Python-literate | Config-file-driven CLI runs, reproducible cases, sensible defaults |
 | P3 | Experimental nanopore laboratories | Windows/macOS laptop, no Python | Desktop application: select a PDB, set salt and voltage, obtain a prediction and a visualisation |
 
-NOTE (the browser shell, v0.6). When the package that removes the Qt shell lands, P3's primary need
+NOTE (P3; lands with WP5.21, Qt's removal). When it lands, P3's primary need
 reads: "The workbench, installed with one documented command and opened in the browser: select a
 PDB, set salt and voltage, obtain a prediction and a visualisation." Until then the text above gates
 the Qt shell (§8.2.17 S2, S12, S17).
@@ -87,6 +84,10 @@ the Qt shell (§8.2.17 S2, S12, S17).
 | scipy SuperLU | BSD | Direct linear solver, selectable fallback |
 | PySide6 | LGPL-3 | Desktop shell (ADR-004) |
 
+NOTE (§2.5, §2.6; lands with WP5.21, Qt's removal): §2.5's execution modes read "Headless library and
+CLI; HPC job arrays; the browser workbench"; the PySide6 row goes, and NiceGUI and FastAPI (MIT, BSD-3,
+the workbench's server and front end) join.
+
 Assumptions: the published physics, parameters and COMSOL implementation details are CC-BY-4.0 and
 suffice for reimplementation; a COMSOL licence remains available during development for
 reference-solution generation; MD trajectories are supplied as input.
@@ -96,17 +97,17 @@ reference-solution generation; MD trajectories are supplied as input.
 | Release | Phase | Content |
 |---|---|---|
 | v0.1 | 0 | Spike. Analytic cylindrical/conical pore, coupled steady axisymmetric ePNP-NS, continuation ladder, analytic benchmarks, one COMSOL comparison. No structure pipeline, no GUI. |
-| v0.2 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; frozen case-file schema; stable Python API; CLI; sweep runner. |
+| v0.2 | 1 | Solver core on an externally supplied mesh and material/charge fields; full QoI extraction; pluggable correction models; a versioned case-file schema; the Python API (stable from v1.0, IF-01); CLI; sweep runner. |
 | v0.3 | 2 | Geometry pipeline: structure and trajectory ingestion, density, symmetry reduction, contour, CAD, mesh. |
 | v0.4 | 3 | Charge pipeline: PDB2PQR to smeared ρ_fixed and dielectric field; the physics-model interface (FR-20). Runs the paper's pipeline end to end, from structure to current; the reproduction of the published results is measured at v0.7 (VAL-16, VAL-17; §8.2.4 D6). |
 | v0.5 | 4 | Polish and user testing (§8.2.6 F3): an exploration of the modularity of the implementation architecture, then a user-testing pass over the physics, the numerics, the Python API and the command line. No GUI increment. |
-| v0.6 | 5 | Graphical interface (§8.2.6 F5): a design and requirements document with mockups, a visual-feedback workflow, then the desktop application its plan sets: case builder, run control and live convergence monitoring, field visualisation. Absorbs the former v1.5 row. |
-| v0.7 | 6 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. Released before the stable version (§8.2.5 E2, from v1.0; §8.2.6 F1, from v0.5 and Phase 4). |
+| v0.6 | 5 | Graphical interface (§8.2.6 F5): a design and requirements document with mockups, a visual-feedback workflow, then the browser workbench its plan sets (FR-31 to FR-39): five suites over a project folder, a run queue, and the guided route of QR-10. |
+| v0.7 | 6 | Validated release: V&V suite in CI, the published current–voltage relationships and in-pore averages reproduced (VAL-16, VAL-17), documentation, tutorials, JOSS submission, DOI-archived. Released before v1.0. |
 | v1.0 | — | Stable release: the API stability promise of IF-01. Its content and gate are the author's to define (OPN-08). |
-| post-1.0 | — | Backlog: installers for all three platforms and in-application tutorials (the former v1.5 row's remainder, §8.2.6 F5); 3D; transient; ion-specific rather than ionic-strength-based property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
+| post-1.0 | — | Backlog: installers for all three platforms and in-application tutorials; 3D; transient; ion-specific rather than mean-concentration-driven property models; MD-fitting toolkit for corrections; solid-state pores; charge regulation; multi-species electrolytes beyond binary; non-axisymmetric analytes. |
 
-Release tags in §3 take five values: v0.2, v0.3, v0.4, v0.7, post-1.0. A
-requirement the Phase 5 design document adds is tagged v0.6 (§8.2.6 F5).
+A requirement's release in §3 is a release of the table above, or one of the tool phases of §8.1
+(composer, structural mutator, sketcher, or "a later phase"), which takes a number when Phase 5 closes.
 
 NOTE (Versioning; §8.2.4 D1): the
 releases above are git tags `vX.Y.Z`, one minor version per phase, on the commit that merges the
@@ -122,9 +123,8 @@ tags installs as a development version naming that commit, and the provenance ma
 `nanopnp` version identifies the code that produced a result (FR-25). The version enters no artefact
 key: the environment is recorded beside an artefact, never hashed into it (§5.3.2). `CHANGELOG.md`
 records every tag, and a milestone tag publishes a GitHub Release with its section as the notes. A tag name is never moved to another commit once published and never reused for
-another phase. The names `v0.5.0` and `v0.5.0-alpha.N` are Phase 4's; a manifest recording
-`0.5.0` or `0.5.0aN` from code that does not descend from `v0.4.0` is Phase 1's `0.2.0` or `0.2.0aN`,
-and a recorded `0.9.0aN` is Phase 2's `0.3.0aN` (`CHANGELOG.md`, head). A milestone tag's
+another phase. A manifest that records a version from before the renumbering of 30 September 2026 is
+decoded in `CHANGELOG.md`'s head. A milestone tag's
 release workflow enforces that `CITATION.cff` names its version only for the highest milestone
 tag, the release that *Cite this repository* shows; an older milestone's citation metadata is
 fixed in its commit and a re-release cannot change it.

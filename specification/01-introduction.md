@@ -1,7 +1,7 @@
 ---
 type: Specification
 title: "1. Introduction"
-description: "Specifies nanopnp, an open-source Python replacement for a COMSOL nanopore workflow, and maps the specification's sections."
+description: "States nanopnp's purpose and scope, its definitions, references and identifier conventions, and the provenance of its sources."
 ---
 
 ## 1. Introduction
@@ -40,6 +40,10 @@ in §3.5.
 | ESI | Electronic supplementary information of the Nanoscale paper |
 | Case file | Declarative YAML document that is the unit of reproducibility (§5.3) |
 
+Workbench terms (suite, project, molecular, continuum and physics model, study, variant, exposed value)
+are defined in the Glossary of [`docs/design/workbench.md`](../docs/design/workbench.md); a deviation is
+a switch away from the validated default (§5.3.3).
+
 ### 1.4 References
 
 References are collected in §12. The normative sources are the Nanoscale paper and its ESI, the
@@ -49,38 +53,22 @@ of §1.6.
 ### 1.5 Document conventions
 
 Requirements use RFC 2119 keywords: SHALL (mandatory), SHOULD (recommended), MAY (optional). Each
-carries a unique identifier, numbered within its class and zero-padded to two digits.
-
-| Prefix | Class | Location |
-|---|---|---|
-| `IF-nn` | External interface | §3.1 |
-| `FR-nn` | Functional | §3.2 |
-| `QR-nn` | Quality of service | §3.3 |
-| `CON-nn` | Design or implementation constraint | §3.4 |
-| `PHY-nn` | Physics/model | §4 |
-| `NUM-nn` | Numerical method | §6 |
-| `VER-nn` / `VAL-nn` | Verification / validation activity | §7 |
-| `ADR-nn` | Architecture decision record | §5.6 |
-| `RSK-nn` | Risk register entry | §9 |
-| `OPN-nn` | Open item | §10 |
+carries a unique identifier, numbered within its class and zero-padded to two digits. Identifiers carry
+a class prefix (IF, FR, QR, CON, PHY, NUM, VER, VAL, ADR, RSK, OPN); `SPECIFICATION.md`'s *Identifier to
+file* maps each to its file.
 
 Units are SI and explicit: nm, mol/L (M), K, V or mV, pN. Spelling is British.
 
 ### 1.6 Provenance and verification status
 
-Of 118 discrete claims in v0.1, ten were wrong and were corrected, including a factor-of-two error
-in the Maxwell–Hall access-conductance benchmark, an inverted sign in the steric flux, and the
-finding that the NGSolve pip wheel ships without MUMPS. Transcription of the ePNP-NS
-parameterisation from the CC-BY-4.0 thesis LaTeX source surfaced five further errata, one of which
-contradicted a correction supplied by the author from memory.
+The sources were checked claim by claim; their errata are §4.6, and the author's rulings on
+disagreements are
+[`knowledge/00-orientation/05-author-rulings-2026-08-these-override.md`](../knowledge/00-orientation/05-author-rulings-2026-08-these-override.md).
 
 The overriding authority is the 162-page COMSOL model report `npgrid_clya_v8_NaCl_report.mph`
 (COMSOL 5.4 build 388, dated 22 May 2020), read in full. Where it disagrees with the printed
 sources or with author recollection, the model file governs. It settles the mesh, solver and
-stabilisation questions, supplies full-precision fit coefficients, and reverses the earlier ruling
-on the permittivity parameters. It also resolves the "0.62" discrepancy: the ESI writes the wall
-coefficient as `0.62e1`, which is 6.2.
-
-Claims that could not be verified are marked in place. Errata in the source material are in §4.6.
+stabilisation questions, supplies full-precision fit coefficients and the permittivity parameters,
+and writes the wall coefficient as `0.62e1`, i.e. 6.2.
 
 ---

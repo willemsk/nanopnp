@@ -16,7 +16,7 @@ description: "Sets out the verification strategy: the four test tiers, their run
 Tiers 1 and 2 are the acceptance gate for Phases 0 and 1. Tier 3 runs only after Tier 2 passes.
 Tier 4 gates releases.
 
-NOTE (the test scope; §8.2.13 N1, N3): a test is written only for code that could silently give a
+NOTE (the test scope; §8.2.13 N1, N3; in force: §8.4.3): a test is written only for code that could silently give a
 wrong answer or that drives a core mechanism: physics and numerics, content hashing and cache keys,
 the store, case resolution, the stage walk and cancellation, warm start, reproducibility, the
 manifest's deviations, the solution state and the number-stability goldens, and the licence and

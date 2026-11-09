@@ -10,7 +10,7 @@ entry point, [SPECIFICATION.md](../SPECIFICATION.md), says how to read the bundl
 and identifier to its file. The rules of the development process that no clause of its own carries are
 §8.4, in [08-implementation-plan](08-implementation-plan/index.md).
 
-* [1. Introduction](01-introduction.md) - Specifies nanopnp, an open-source Python replacement for a COMSOL nanopore workflow, and maps the specification's sections.
+* [1. Introduction](01-introduction.md) - States nanopnp's purpose and scope, its definitions, references and identifier conventions, and the provenance of its sources.
 * [2. Product overview](02-product-overview.md) - Places nanopnp beside COMSOL in the source work, and describes the reference implementation, product functions, users, environment and release scope.
 * [3. Requirements](03-requirements.md) - Sets out the external interfaces, functional requirements, quality of service, design constraints and exclusions the product must meet.
 * [4. Physics specification (normative)](04-physics.md) - States the normative ePNP-NS physics: domains and symbols, governing equations, empirical corrections, fixed charge, dielectric model and switches.

@@ -38,7 +38,7 @@ one file per section; this file holds the title block, the reading rule and the 
   requirement carries a unique identifier (§1.5). A withdrawn `VER-` row stays, and its identifier is
   not reused (§7.2).
 - **Precedence.** This specification governs the plans in `docs/plans/`, the documentation and the
-  code. For the physics, §4 is backed by the normative concepts of
+  code. For the physics, §4 states the model's equations and governs them, backed by the concepts of
   [`knowledge/01-physics-epnpns/`](knowledge/01-physics-epnpns/index.md); where sources disagree, the
   COMSOL model report governs (§1.6), and the errata in the sources are §4.6.
 - **A NOTE** that names a clause belongs with it; `clause.py` prints it after the clause.
@@ -48,11 +48,12 @@ one file per section; this file holds the title block, the reading rule and the 
 
 | Task | Read |
 |---|---|
-| Implement or change a pipeline stage | §3.2 (its FR), §5.2, §5.3.2, then the PHY or NUM clauses it cites |
-| Change the case file | §5.3.1, §5.3.3, Appendix A |
-| Touch the physics or a correction | §4 and [`knowledge/01-physics-epnpns/`](knowledge/01-physics-epnpns/index.md), then §6 |
-| Touch the numerics, solver or mesh | §6, §7.3 |
-| Write or judge a test | §7.1 (tiers and the test scope), the VER or VAL row, Appendix A |
+| Implement or change a pipeline stage | §3.2 (its FR), §5.2, §5.3.2, then the PHY or NUM clauses it cites, and §5.4 and §5.5 for the stage protocol |
+| Change the case file | §5.3.1, §5.3.3, Appendix A, and [`docs/plans/current.md`](docs/plans/current.md) for the release in flight |
+| Touch the physics or a correction | §4 and [`knowledge/01-physics-epnpns/`](knowledge/01-physics-epnpns/index.md), then §6 where the change touches the discretisation or a tolerance |
+| Touch the numerics, solver or mesh | §6, §7.3, and the NGSolve traps of [`knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`](knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md) |
+| Write or judge a test | §7.1 (tiers and the test scope), §8.4.3 (its name and its place), the VER or VAL row by `clause.py`, Appendix A |
+| Change the workbench | FR-31 to FR-39, QR-10, QR-16, [`docs/design/workbench.md`](docs/design/workbench.md), §8.4.4 (`/np-gui`) |
 | Plan or ship a work package | §8.1, §8.4, then [`docs/plans/current.md`](docs/plans/current.md) |
 
 ### Changing the specification
@@ -119,9 +120,14 @@ one file per section; this file holds the title block, the reading rule and the 
 | `OPN-nn` | [`specification/10-open-items.md`](specification/10-open-items.md) |
 | `S1`–`S4`, `P1`–`P3` | [`specification/02-product-overview.md`](specification/02-product-overview.md) |
 | `N1`–`N7` (exclusions) | [`specification/03-requirements.md`](specification/03-requirements.md) |
-| A letter and a number (`A1`, `J8`, `R10`: a ruling) | [`specification/history/index.md`](specification/history/index.md) |
+| One or two letters and a number (`A1`, `J8`, `AJ2`: a ruling) | [`specification/history/index.md`](specification/history/index.md) |
 | A requirement's tracing to a test | [`specification/a-traceability-matrix.md`](specification/a-traceability-matrix.md) |
+
+S, P and N also letter the rulings of §8.2.17, §8.2.14 and §8.2.13. A ruling is always cited with its
+section (§8.2.13 N1); a bare `S1`–`S4`, `P1`–`P3` or `N1`–`N7` is §2's or §3.5's. A ruling is one or two
+letters and a number (`A1`, `AJ2`).
 
 Identifiers outside the specification: `REV-nn`, the open review items, are in
 [`docs/project/review-findings.md`](docs/project/review-findings.md); `MOD-nn`, the modularity findings, in
-[`docs/project/modularity-findings.md`](docs/project/modularity-findings.md).
+[`docs/project/modularity-findings.md`](docs/project/modularity-findings.md); `WB-nn`, the workbench design
+decisions, in [`docs/design/workbench.md`](docs/design/workbench.md).
