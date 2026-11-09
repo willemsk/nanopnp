@@ -147,7 +147,7 @@ nav:
               - _generated/model/specification/05-software-design/index.md
               - "5.1 Architectural overview": _generated/model/specification/05-software-design/01-architectural-overview.md
               - "5.2 Pipeline stages": _generated/model/specification/05-software-design/02-pipeline-stages.md
-              - "5.3 Data design": _generated/model/specification/05-software-design/03-1-case-file.md
+              - "5.3.1 Case file": _generated/model/specification/05-software-design/03-1-case-file.md
               - "5.3.2 Artefacts and interchange formats": _generated/model/specification/05-software-design/03-2-artefacts.md
               - "5.3.3 Provenance manifest": _generated/model/specification/05-software-design/03-3-provenance-manifest.md
               - "5.3.4 Sweep specification and dataset": _generated/model/specification/05-software-design/03-4-sweeps.md

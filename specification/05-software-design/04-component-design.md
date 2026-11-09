@@ -1,16 +1,18 @@
 ---
 type: Specification
 title: "5.4 Component design"
-description: "Specifies the physics/ design: weak forms written once against a thin internal interface, with one production NGSolve implementation."
+description: "Specifies the component interfaces: the weak forms stated once against NGSolve, the correction-model interface and the physics-model interface."
 ---
 
 ### 5.4 Component design
 
 #### 5.4.1 Backend abstraction layer
 
-`physics/` expresses the weak forms once against a thin internal interface, with one production
-implementation on NGSolve (QR-13, CON-06). Its purpose is to make a future DOLFINx backend for 3D
-and MPI bounded work.
+`physics/` states the weak forms once, directly against NGSolve, the single production backend
+(QR-13, CON-06). The backend's reach is confined to the subpackages that
+`docs/project/modularity-layering.yaml` lists under `backend:`, which VER-65 checks. The table below
+is the shape a second backend (DOLFINx, for 3D and MPI) would take when N4 is planned; it is not
+built.
 
 | In scope | Out of scope |
 |---|---|
@@ -22,12 +24,8 @@ and MPI bounded work.
 
 NOTE (QR-13, §8.2.8 H3): the interface above is not built for v1. With one backend it cannot be
 tested for the property it exists for, and a wrapper written now would wrap NGSolve without showing
-that it fits DOLFINx. QR-13 is met by the single statement of the weak forms, against NGSolve
-directly, and the backend's reach is pinned instead: the subpackages that import `ngsolve` or
-`netgen` are the `backend:` list of `docs/project/modularity-layering.yaml`, which VER-65 asserts
-in both directions: eleven, the eleven `MOD-10` measured and `numerics/` (§8.2.8 H11), less `io/`,
-whose field export is `post/export.py`. The table
-is the shape a second backend takes when N4 is planned, and Phase 6 or a later plan decides it.
+that it fits DOLFINx, so the backend's reach is pinned instead, as above; VER-65 asserts the
+`backend:` list in both directions. Phase 6 or a later plan decides the interface.
 
 #### 5.4.2 Correction-model interface
 

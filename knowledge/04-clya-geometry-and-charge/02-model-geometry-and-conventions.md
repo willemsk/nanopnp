@@ -125,6 +125,39 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 - **The shell does not reach the membrane's outer region.** It is carved against the unchanged
   quadrilateral and starts at the junction `r₂` on each plane, so the membrane, its chord and its
   junction are the shell-free region's, and so is the protein's area.
+- **Step 4's resampling is what bounds the surface's inset** (`specification/05-software-design/02-pipeline-stages.md`,
+  the NOTE on the ion-exclusion shell). A ring at least `2πa > 4πh_c` long is cut into at least 11
+  arcs, so each chord `s` is below `1.15 h_c` and above `h_c`, and step 6 removes nothing. A chord
+  then lies at most `a(1 − cos(π/32)) + s²/(8a)` inside the offset, the round join's own sagitta plus
+  the chord's. That is at most 0.62 of the bound for every `a`, and measured 0.16–0.53 of it on four
+  bodies and nine offsets from 0.11 to 2 nm **[verified][^wp30-plan]**; the deployed mesh's `wall`
+  nodes stay within the bound
+  **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_every_wall_node_lies_within_the_band_about_the_exact_offset]**. Without
+  the resampling, the bound was first argued as twice the sagitta of the longest chord, on the premise
+  that step 6 leaves no round-join chord longer than `2h_c`. That premise is false. At 8 segments a
+  quarter circle's chords are `aπ/16`, 0.049 nm at `a` = 0.25 nm, and step 6 merges runs of them into
+  chords near `3h_c`. The surface then reached 0.0106 nm inside the offset on a rectangle at
+  `a` = 0.25 nm, which the gate refused **[verified][^wp30-plan]**.
+  The resampling length is held near `h_c` because netgen meshes an edge of 1.5 times its size target
+  as one segment, which the wall-size gate refuses at the default wall target of 0.05 nm.
+- **The same rounding is why stage 6 divides the shell's `wall` edges.** Netgen must keep a node at
+  each end of every ring edge, and given only `h_wall` it cuts an edge into about
+  `⌊L/h_wall + 0.4⌋` segments. With ring edges of 1.05–1.15 `h_c`, every wall target a little under
+  `L`, or under `L/2`, therefore left segments up to 1.6 times it. On 2WCD at `a` = 0.25 nm the gate
+  refused 0.045, 0.04, 0.035 and 0.0225 nm, which `auto` reaches between about 1.5 and 1.9 M and at
+  3 M, while 0.05, 0.03 and 0.0272 nm passed. A shell-free profile is not affected: after step 6 its
+  edges are long (2WCD's median is 0.22 nm), and it passed at every one of those targets.
+  `⌈L/(1.1 h_wall)⌉` fixes the count whatever netgen's rounding, so the segments average at most 1.1
+  times the target, under the gate's 1.15. An edge needing one segment keeps `h_wall`, so the mesh is
+  unchanged wherever no edge needed dividing, as at the 0.05 nm default on 2WCD. Gmsh already cuts
+  each edge into `⌈L/h_wall⌉` segments, and passed at every target
+  **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_netgen_cuts_a_shell_wall_edge_into_equal_segments_of_at_most_1_1_h]**
+  **[tested: tests/tier1/test_exclusion_shell.py::test_ver59_the_shell_meshes_at_a_wall_target_its_whole_edges_failed]** **[verified][^wp30-plan]**.
+- **Two alternatives were measured and set aside.** The shell's outer surface as one spline through
+  the ring passed every target too, but bulges past `a + 10⁻⁶` nm between its vertices, and the `geo`
+  kernel of the Gmsh backend cannot reproduce OCC's curve. An exact OCC offset of the body cannot be
+  built through netgen's interface whenever the dilation encloses a pocket, which step 3 requires
+  **[verified][^wp30-plan]**.
 
 ---
 

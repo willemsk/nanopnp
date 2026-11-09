@@ -18,7 +18,7 @@ description: "Lists the artefact each stage emits and its format, native or inte
 | 8 | Resolved material coefficient set | Correction file references and evaluated parameters |
 | 9 | Resolved case document | YAML, schema `nanopnp/case/v0.6` |
 | 10 | Field set, iteration history | XDMF with HDF5 heavy data (IF-07) |
-| 11, 12 | Scalar QoIs, profiles, figures, dataset, manifest | Result store record, figure files, manifest |
+| 11, 12 | Scalar QoIs, profiles, field export, run record, manifest | Result store record, manifest |
 | — (a model, §5.3.1) | Molecular, continuum and physics model: the keys of one kind that a study names in `models:`, and the model's `exposes:` | YAML, schemas `nanopnp/molecular-model/v0.6`, `nanopnp/continuum-model/v0.6` and `nanopnp/physics-model/v0.6`; read, never written by the pipeline, and recorded in the manifest by content hash |
 | — (a sweep, §5.3.4) | Collected dataset over the members of a sweep | Result store record, schema `nanopnp/sweep/v0.5` |
 

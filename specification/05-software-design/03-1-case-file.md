@@ -1,7 +1,7 @@
 ---
 type: Specification
-title: "5.3 Data design"
-description: "Specifies the case file as one declarative YAML document, the unit of reproducibility from which everything else is derived."
+title: "5.3.1 Case file"
+description: "The case file: an annotated example, the schema identifier and compatibility rule, and one NOTE per key block."
 ---
 
 ### 5.3 Data design

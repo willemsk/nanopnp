@@ -7,7 +7,8 @@ description: "Condenses the reference COMSOL model settings from the 162-page mo
 ## Appendix B. Reference COMSOL model settings
 
 Condensed from the 162-page model report. Full detail is in
-`knowledge/09-comsol-reference-settings/index.md`.
+`knowledge/09-comsol-reference-settings/index.md`; the mesh rows' home is
+`02-mesh-27.md` A.1 and A.2 there, and the solver and sweep rows' `03-solver-3-4.md`.
 
 | Aspect | Setting |
 |---|---|
