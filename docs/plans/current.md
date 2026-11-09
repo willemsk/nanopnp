@@ -9,8 +9,8 @@ Phase 4 is released. Phase 5's library steps, the physics model, the frame and t
 knowledge are merged. The third, correcting the knowledge base and the guide, is planned and reviewed.
 Then the tidy-ups and the screens: about 70 sessions and 60 to 120 agent hours remain.
 
-**Your call.** Approve the third package's reviewed plan; check six audit findings against their
-sources; adopt two measuring tools or not (the trial recommends neither).
+**Your call.** Approve the third package's reviewed plan; answer six audit findings from their
+sources when asked; adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
 
@@ -19,7 +19,7 @@ sources; adopt two measuring tools or not (the trial recommends neither).
   (tags `.10` and `.11` unpushed). Next WP5.13 and WP5.14 the clean-ups, then the frame,
   the suites, the route and the close, WP5.15 to WP5.22 (§8.2.36).
   **WP5.12** [planned](phase-5/wp5.12-the-knowledge-base-and-the-guide.md): 164 audit findings, REV-226, AM13 to
-  AM17 (§8.2.37); reviewed. Next `/np-implement wp 5.12`, on Opus (AM17). host: claude-code.
+  AM18 (§8.2.37); reviewed. Next `/np-implement wp 5.12`, on Opus (AM17). host: claude-code.
 
 ## Not to be re-decided
 
@@ -51,7 +51,7 @@ sources; adopt two measuring tools or not (the trial recommends neither).
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw** on the author's GPU, WP5.19 (AF4; AG7; AJ10).
-- **Six audit findings against the ESI or the COMSOL report**, the author's checklist, REV-227 (AL20).
+- **Six audit findings against the ESI or the COMSOL report**, asked at WP5.12's item 11 (AM18).
 - **Rulings on a residual cycle (H6) or drift (I4)**; **Tier 3's archived PQRs**.
 - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-218 WP5.16's, REV-170 WP5.17's (AG1; AJ10; AL22).
 
