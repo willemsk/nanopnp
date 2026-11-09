@@ -1,7 +1,7 @@
 # WP5.12 — The knowledge base and the guide
 
-**Status: planned, not started.** Planned 9 November 2026, at `f8960d1`. Inherits §8.2.36 AL13 and AL15 to AL21, AN1
-to AN3 ruled at this plan (§8.2.38), CODE_REVIEW_039's register and its scripts in `.claude/scripts/audit/`, and
+**Status: planned, not started.** Planned 9 November 2026, at `f8960d1`. Inherits §8.2.36 AL13 and AL15 to AL21, §8.2.37
+AM13 to AM17 ruled at this plan and its review, CODE_REVIEW_039's register and its scripts in `.claude/scripts/audit/`, and
 REV-226.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md), entry WP5.12. `SPECIFICATION.md` governs; an
@@ -18,8 +18,8 @@ are checked against it or marked unverified. The guide says protonation runs bef
 the features added since the last release. As you ruled, one physics test is tightened, three
 ideas become an open item, and the site's dead register links wait for the guide package.
 
-**Cost.** About three sessions and two to four hours of agent work; you act about six times. The plan took one
-session.
+**Cost.** About three sessions and two to four hours of agent work, on the stronger model as you ruled; you act
+about six times.
 
 **What could go wrong.** A rewrite could change a statement's physics unnoticed: the physics reviewer reads those
 edits, and the specification's requirements are counted before and after. A move could break a link or drop a
@@ -32,24 +32,23 @@ ready to approve? *Recommendation:* yes; you ruled each choice that changes a me
 
 ## Execution brief
 
-**Scope.** The 164 findings of CODE_REVIEW_039 still `your call` at `f8960d1`, under AL13, AL15 to AL21 and AN1 to
-AN3; REV-226; the register's states. **Depends on** WP5.11, merged (PR #173); WP5.13 follows in this lane.
-**Pointers:** §4.6, §5.2, §6, §7.2 (VER-54), §8.4.6, Appendix B; `knowledge/00-orientation/03` and `04`.
-**Implementing session:** Sonnet, §8.4.5's default (AM8 kept it for every other package); the marker sweeps on Sonnet
-sub-agents, the heading levels on Haiku; the `physics-reviewer` reads items 2 and 3 before each commits. **Tests:**
-one Tier 1 test is tightened (AN1); every other item is done when the code and review say so, with D9's counts.
+**Scope.** The 164 findings of CODE_REVIEW_039 still `your call` at `f8960d1`, under AL13, AL15 to AL21 and AM13 to
+AM17; REV-226; the register's states. **Depends on** WP5.11, merged (PR #173); WP5.13 follows in this lane.
+**Pointers:** §4.6, §5.2, §6, §7.2 (VER-03, VER-54), §8.4.6, Appendix B; `knowledge/00-orientation/03` and `04`.
+**Implementing session:** Opus at high effort, the main session only (AM17); the marker sweeps on Sonnet sub-agents, the heading levels on Haiku; the `physics-reviewer` reads items 2 and 3 before each commits. **Tests:**
+one Tier 1 test is tightened (AM13); every other item is done when the code and review say so, with D9's counts.
 
 ### Decisions
 
 | Decision | Choice | Why/source |
 |---|---|---|
 | D1. The set | The 164 findings `your call` at `f8960d1`. All stand; AUD-07, 167, 235, 248, 300 and 308 in part, and only their remainder lands. One item per directory group (Grounding D1); in each, AL15's rewrite first (AUD-339, 356, 152, 281, 285), then AL17's §4 and §6 mirrors, then the rest | Ruled by the author (AL15, AL17, AL24). Decided by the plan: the grouping |
-| D2. Meaning | An edit lands without asking when it makes the text agree with the code, a test, a clause, a ruling or the source it cites; removes history, a spent statement or a duplicate; or adds a pointer, title, description or marker. AN1 to AN3 are the meaning changes. Any other change to a SHALL, a number the code or a test reads, or a decision stops the item and goes to the author. Where a finding's edit conflicts with a ruling or offers two, Grounding D2 picks | Ruled by the author (AL21; AN1 to AN3). Decided by the plan: the test of meaning, as WP5.11's D2 |
+| D2. Meaning | An edit lands without asking when it makes the text agree with the code, a test, a clause, a ruling or the source it cites; removes history, a spent statement or a duplicate; or adds a pointer, title, description or marker. AM13 to AM15 are the meaning changes. Any other change to a SHALL, a number the code or a test reads, or a decision stops the item and goes to the author. Where a finding's edit conflicts with a ruling or offers two, Grounding D2 picks | Ruled by the author (AL21; AM13 to AM15). Decided by the plan: the test of meaning, as WP5.11's D2 |
 | D3. Paths and data | No file is deleted, renamed or moved, and no anchor a link names changes (an explicit `{#id}` stays); a concept that would go is rewritten or reduced to a pointer. Nothing under `data/` changes: AUD-341's comment in the correction file waits as REV-230 | Decided by the plan: records link to concepts by path; the correction file's bytes key stage 8 (VER-62) |
 | D4. Markers | A thesis transcription takes `[verified][^thesis]`, its `.tex` locator kept inline, only where the thesis clone supports it; otherwise it says "(unverified)". A `[tested:]` marker stays on the sentence its test asserts; a measured number the test does not assert takes `[verified]` with its record's footnote. `markers.py` skips code spans; each of AL19's fifteen gets its footnote, "by arithmetic" with its source, or plain text | Ruled by the author (AL19). Decided by the plan: `knowledge/00-orientation/03` and `04` |
-| D5. The source checklist | The eight are the readers' eight `unchecked` rows. Six rest on the ESI or the COMSOL report (AUD-136, 225, 286, 327, 343, 346): REV-227, whose section is the checklist. Their edits wait for the verdict; a row open at the close stays in REV-227. AUD-226 and AUD-326 rest on git history: the session fetches it and records whether each hash resolves | Ruled by the author (AL20; the phase plan's *What the author supplies*). Decided by the plan: the eight, the form |
-| D6. Code and tests | REV-226: a citation changes where its rule moved to §5.2's NOTEs on stages 1 and 2. AUD-216 and AUD-351 repoint two comments. AN1's target. Nothing else under `src/` or `tests/` | Ruled by the author (REV-226's acceptance; AN1) |
-| D7. Open items | REV-226 `fixed`. New: REV-227 (D5); REV-228, the site links, WP5.21 (AN3); REV-229, the three ideas, `post-1.0` (AN2); REV-230, the correction file's comment, `accepted` for the next change to that file | Ruled by the author (AN2, AN3). Decided by the plan: REV-230 |
+| D5. The source checklist | Six rows, the findings that rest on the ESI or the COMSOL report (AUD-136, 225, 286, 327, 343, 346): REV-227, `open`, whose section is the checklist. Their edits wait for the verdict; a row open at the close stays in REV-227. AUD-316, 371 and 372, which CODE_REVIEW_039 listed, land in items 6 and 7. AUD-226 and AUD-326 rest on git history: the session fetches it and records whether each hash resolves | Ruled by the author (AL20; AM16, six rows against the eight CODE_REVIEW_039 named). Decided by the plan: the form |
+| D6. Code and tests | REV-226: a citation changes where its rule moved to §5.2's NOTEs on stages 1 and 2. AUD-216 and AUD-351 repoint two comments. AM13's target. Nothing else under `src/` or `tests/` | Ruled by the author (REV-226's acceptance; AM13) |
+| D7. Open items | REV-226 `fixed`. New, each section at item 9's `###`: REV-227 (D5); REV-228, the site links, `accepted`, WP5.21 (AM15); REV-229, the three ideas, `post-1.0` (AM14); REV-230, the correction file's comment, `open` until a package that changes that file is named | Ruled by the author (AM14, AM15). Decided by the plan: REV-230 |
 | D8. The records | One commit per item, its AUD ids in the body. Item 12 adds one `wp512-<category>` disposition per finding and one commit row per category, re-runs `register.py` and `maps.py`, sets `holds-now.yaml`, re-runs `decisions.py`. Changelog `[0.6.0-alpha.12]` | Decided by the plan: as WP5.11's D6 |
 | D9. The counts | 517 SHALLs before item 2 and after item 9. `markers.py`: no missing test, no unfootnoted claim, no `verified:` difference. `links.py --anchors`, `duplicates.py`, `decisions.py --check`, the strict build; `same_tree.py` at item 10 | Decided by the plan: a silent failure gets a count |
 
@@ -77,7 +76,9 @@ code are this package's own.
   +0.062 to +0.908 nm, the ensemble +0.170 to +0.916, against the NOTE's prototype +0.061/+0.908 and +0.173/+0.869).
   AUD-86, 340: the concept's errata renumber to §4.6's rows E1 to E6, E5 added; §4.6's Evidence cells link them.
 - Numbers: AUD-73 `D_Na = 8.11 × 10⁻¹⁰` in §4.6 row 4 and the concept (`Electrolyte.diffusivity("Na+", 5.3, 50.0)` is
-  8.1134e-10); AUD-341 "eq. 5.23" in §4.6 row 1 and the concept; AUD-302 VER-54's "1.25e-4", as
+  8.1134e-10); AM13 also moves VER-03's row in `specification/07-verification/02-tier-1.md` and
+  `knowledge/08-validation-benchmarks/01-…`'s `[tested:]` line, which both state `8.13 × 10⁻¹⁰` as the oracle, to
+  `8.113 × 10⁻¹⁰`; AUD-341 "eq. 5.23" in §4.6 row 1 and the concept; AUD-302 VER-54's "1.25e-4", as
   `tests/tier2/test_mesh_backends.py`'s comment. Two figures that disagree (AUD-301): the one a test asserts, else
   the newest dated record's, labelled with its run.
 - D3's rewrites: AUD-300 makes `07/07` the external sources and where they live (the thesis clone, the paper, the
@@ -118,8 +119,10 @@ code are this package's own.
   set and union, to §5.2's NOTEs "stage 1, ingestion and alignment" and "stage 2, the kernel, the radius set and the
   union"; their other rules stay. Citing files: `structure/axis.py`, `structure/read.py`, `density/union.py`,
   `density/radii.py` and two `io/defaults.py` `CONFIGURATION_PATHS` reasons.
-- `same_tree.py` drops docstrings and comments only, so a changed message or reason is a code difference. No code
-  reads the reasons; no test matches the changed text.
+- `same_tree.py` drops docstrings and comments only, so a changed message or reason is a code difference. REV-226's
+  acceptance expects `same_tree.py` to confirm a prose-only change, which it cannot for a string literal: item 10
+  checks the message files by `git diff` instead, and its PR body says so. No code reads the reasons; no test matches
+  the changed text.
 - `test_corrections.py::test_ver03_bulk_properties_at_the_validity_limit` asserts `8.13e-10` at `rel=3e-3`.
 
 ### Implementation details
@@ -133,9 +136,10 @@ its source, or plain text. `07/25`: the marker moves from the footnote to the th
 
 **Item 2.** First count: `for f in SPECIFICATION.md specification/*.md specification/0*/*.md; do echo "$f $(grep -o SHALL "$f" | wc -l)"; done > $S/shall-before.txt`.
 AUD-339 by its proposed edit, then AUD-90's overview text (AL16), then AUD-331 to 333 as pointers that keep headings
-2.1 to 2.4, §3.0 and ε_r,f⁰ = 78.15. §4.6's Evidence cell n reads
-`[En](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#…)`. AN1: the assertion reads
-`pytest.approx(8.113e-10, rel=1e-3)`. A moved fact keeps its marker and adds a `knowledge/log.md` line, here and at
+2.1 to 2.4, §3.0 and ε_r,f⁰ = 78.15. §4.6's Evidence cell n gives its arithmetic up for
+`[En](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#8-errata-in-the-source-with-the-arithmetic)`;
+row 4 keeps its cap values, `D_Na` = 8.11 × 10⁻¹⁰ (AM13). AM13: the assertion reads
+`pytest.approx(8.113e-10, rel=1e-3)`, and VER-03's row and `08/01`'s line read `8.113 × 10⁻¹⁰`. A moved fact keeps its marker and adds a `knowledge/log.md` line, here and at
 items 3 to 7. Before the commit: `physics-reviewer` on `git diff`, then fix what it reports.
 
 **Items 5 and 7, the marker sweeps.** `git clone --depth 1 https://github.com/willemsk/phdthesis-text $S/thesis`.
@@ -150,7 +154,7 @@ files, and lists `thesis` under `sources:`. It returns the claims it marked "(un
 
 **Item 10.** For each citation, grep the rule's sentence in §5.2 and §5.3.1 and cite the NOTE that holds it:
 "section 5.2 NOTE on stage 1" or "on stage 2". Then `uv run .claude/scripts/same_tree.py HEAD`: it lists the files
-whose messages or reasons changed, and no comment-only file.
+whose messages or reasons changed, and no comment-only file; `git diff -U0 -- src/` shows only those citations.
 
 **Item 11.** REV-227's section is a table `| Finding | The claim | What the audit found | Source to look up | Verdict |`,
 one row each for AUD-136, 225, 286, 327, 343 (and ruling 1's wording) and 346, the source section taken from the
@@ -162,14 +166,14 @@ AUD-226 and AUD-326 name; their disposition notes record the result.
 `wp512-knowledge-07-09`, 7 `wp512-knowledge-00-03`, 9 `wp512-docs`, 10 `wp512-src`. Item 11's five and AUD-14 stay
 `your call`, the note naming REV-227 or REV-228. Then `register.py --at HEAD` and `maps.py HEAD`. `holds-now.yaml`:
 AL13 the guide's three pages; AL15, AL18 and AL21 spent; AL16 `CLAUDE.md` and `01/00`; AL17 `00-orientation/04`,
-which item 7 gives the rule; AL19 `00-orientation/03`; AL20 `open: REV-227`; AN1 §4.6; AN2 REV-229.
+which item 7 gives the rule; AL19 `00-orientation/03`; AL20 `open: REV-227`; AM13 §4.6, VER-03; AM14 REV-229.
 
 ### Work items
 
 - [ ] 1. `.claude/scripts/audit/markers.py`, the fifteen claims, `04/02`'s front matter (D4): AUD-07, AL19; done when
   `markers.py` lists no missing test, no unfootnoted claim and no `verified:` difference. **Executor:** main
-- [ ] 2. `knowledge/01-physics-epnpns/`, §4.6, `knowledge/08-validation-benchmarks/02-…` §2.5,
-  `tests/tier1/test_corrections.py` (D1, D2, D6): AUD-339 first, AL16, AL17's §4 mirrors, AN1; done when the test
+- [ ] 2. `knowledge/01-physics-epnpns/`, §4.6, VER-03's row, `knowledge/08-validation-benchmarks/01-…` and `02-…`
+  §2.5, `tests/tier1/test_corrections.py` (D1, D2, D6): AUD-339 first, AL16, AL17's §4 mirrors, AM13; done when the test
   passes, §4's SHALLs are unchanged and the `physics-reviewer` reports nothing open. **Executor:** main
 - [ ] 3. `knowledge/06-numerics-fem/` (D1, D2): AL17's §6 mirrors first; done when the code, review and the
   `physics-reviewer` say so. **Executor:** main
@@ -179,7 +183,7 @@ which item 7 gives the rule; AL19 `00-orientation/03`; AL20 `open: REV-227`; AN1
   Sonnet
 - [ ] 6. `knowledge/07-…`, `08-…`, `09-…`, VER-54 (D1 to D3): AUD-281 and 285 first; done when the code and review
   say so. **Executor:** main
-- [ ] 7. `knowledge/00-…`, `02-…`, `03-…`, `knowledge/index.md` (D1, D2, D4): AUD-356 first, AN2's text, AL17's rule
+- [ ] 7. `knowledge/00-…`, `02-…`, `03-…`, `knowledge/index.md` (D1, D2, D4): AUD-356 first, AM14's text, AL17's rule
   in `00-orientation/04`, AUD-387 by its second option; done when `markers.py` is clean. **Executor:** main; AUD-365
   and 370's markers on `general-purpose`, Sonnet
 - [ ] 8. Compaction checkpoint. **Executor:** main
@@ -199,7 +203,7 @@ which item 7 gives the rule; AL19 `00-orientation/03`; AL20 `open: REV-227`; AN1
 
 | Test | Tier | Identifiers | Oracle | Tolerance | Command |
 |---|---|---|---|---|---|
-| `tests/tier1/test_corrections.py::test_ver03_bulk_properties_at_the_validity_limit` | 1 | VER-03; PHY-12, PHY-13 | 8.113 × 10⁻¹⁰ m² s⁻¹, the governing coefficients' cap | relative 10⁻³, its neighbours' (AN1) | `uv run pytest tests/tier1/test_corrections.py` |
+| `tests/tier1/test_corrections.py::test_ver03_bulk_properties_at_the_validity_limit` | 1 | VER-03; PHY-12, PHY-13 | 8.113 × 10⁻¹⁰ m² s⁻¹, the governing coefficients' cap, VER-03's row | relative 10⁻³, its neighbours' (AM13) | `uv run pytest tests/tier1/test_corrections.py` |
 
 No other test is in scope (§8.2.13 N1). The checks, at items 1, 2, 7, 9 and 12 and before the push:
 

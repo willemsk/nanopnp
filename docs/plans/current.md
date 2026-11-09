@@ -1,15 +1,15 @@
 # Current work
 
-Updated 9 November 2026 (WP5.12 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 9 November 2026 (WP5.12's plan reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 Phase 4 is released. Phase 5's library steps, the physics model, the frame and two packages on the written
-knowledge are merged. The third, correcting the knowledge base and the guide, is planned and awaits review.
+knowledge are merged. The third, correcting the knowledge base and the guide, is planned and reviewed.
 Then the tidy-ups and the screens: about 70 sessions and 60 to 120 agent hours remain.
 
-**Your call.** Approve the third package's plan after its review; check six audit findings against their
+**Your call.** Approve the third package's reviewed plan; check six audit findings against their
 sources; adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
@@ -18,8 +18,8 @@ sources; adopt two measuring tools or not (the trial recommends neither).
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.11 merged
   (tags `.10` and `.11` unpushed). Next WP5.13 and WP5.14 the clean-ups, then the frame,
   the suites, the route and the close, WP5.15 to WP5.22 (§8.2.36).
-  **WP5.12** [planned](phase-5/wp5.12-the-knowledge-base-and-the-guide.md): 164 audit findings, REV-226, AN1 to
-  AN3 (§8.2.38). Next `/np-plan wp 5.12 review`, then `/np-implement wp 5.12`. host: claude-code.
+  **WP5.12** [planned](phase-5/wp5.12-the-knowledge-base-and-the-guide.md): 164 audit findings, REV-226, AM13 to
+  AM17 (§8.2.37); reviewed. Next `/np-implement wp 5.12`, on Opus (AM17). host: claude-code.
 
 ## Not to be re-decided
 

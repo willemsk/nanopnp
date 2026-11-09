@@ -451,10 +451,16 @@ touches, measured from each session's transcript (AM10, AM11), and that the live
 > **Cost.** About seven weeks for the library steps, three and a half for the written knowledge and the tidying, and
 > thirteen to sixteen for the screens: about six months part-time.
 
-## Amended 9 November 2026 (§8.2.38 AN1 to AN3)
+## Amended 9 November 2026 (§8.2.37 AM13 to AM16)
 
-At WP5.12's plan, the author ruled that the sodium cap's test is tightened (AN1), that three ideas move to an open
-item (AN2), and that the site's register links wait for WP5.21 (AN3). WP5.12's entry read:
+At WP5.12's plan, the author ruled that the sodium cap's test is tightened (AM13), that three ideas move to an open
+item (AM14), and that the site's register links wait for WP5.21 (AM15); at its review, that the source checklist has
+six rows (AM16). The *In brief* read: "Eight audit findings to check against the source papers, from a checklist."
+The *What the author supplies* row read:
+
+> | The eight-row checklist against the ESI and the COMSOL report (AL20) | WP5.12 | Each finding stays `unchecked`, a `REV-nn` row carried to the close |
+
+WP5.12's entry read:
 
 > The findings filed under `knowledge/` and `docs/`. The five concepts that state a method or rule wrongly are rewritten,
 > AUD-339 first (AL15); `knowledge/01`'s overview says it backs §4 and §4 governs (AL16); the redundancy rows, the §6 and
