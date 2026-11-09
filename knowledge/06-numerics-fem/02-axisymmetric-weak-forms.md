@@ -23,40 +23,14 @@ verified:
 
 ## 2. Axisymmetric weak forms
 
-`dV = 2πr dr dz`; the `2π` cancels and is dropped. `∇ = (∂_r, ∂_z)`.
-
-**Poisson** (over all of `Ω`, including protein and membrane):
-```
-∫ ε ∇φ·∇v  r dr dz  =  ∫ (ρ_pore + F Σ z_i c_i) v  r dr dz  +  ∫_Γ σ_s v  r ds
-```
-
-**Nernst–Planck** (over `Ω_w` only), test `w`:
-```
-∫ [ −D_i∇c_i − z_i μ_i c_i ∇φ − D_i β_i c_i + u c_i ] · ∇w   r dr dz  =  0
-```
-
-**Stokes/NS** (over `Ω_w` only), with the cylindrical hoop-strain term:
-```
-∫ [ 2η ε̂(u):ε̂(v) + 2η u_r v_r / r²  −  p d̂iv v  −  q d̂iv u ]  r dr dz  =  ∫ f·v  r dr dz
-d̂iv u = ∂_r u_r + u_r/r + ∂_z u_z
-```
-
-Verified algebra: `2η ε_θθ(u) ε_θθ(v) = 2η u_r v_r / r²`, and multiplying by the `r` weight leaves
-`2η u_r v_r / r`, integrable because `u_r → 0` on the axis. The strong-form counterpart is the
-`−u_r/r²` term that COMSOL hides inside its axisymmetric interface. **Omitting it is a silent
-correctness bug** producing plausible but wrong flow fields.
-
-> The published model uses the **variable-density** Axelsson formulation (three equations — see
-> `knowledge/01-physics-epnpns/02-governing-equations.md#23-navierstokes-variable-density-and-viscosity`), not the constant-density Stokes above. Implement the variable-
-> density system as the default to match the validated model, and constant-density Stokes as a
-> flag. The `r`-weighting and hoop term apply identically.
+The forms are NUM-04 to NUM-07: the `r`-weighted Poisson, Nernst–Planck and Stokes forms (NUM-04),
+the hoop-strain term `2η u_r v_r / r²`, whose omission is a silent correctness bug (NUM-05), and the
+quadrature order of a `1/r` form (NUM-07). The published model's flow is the variable-density
+formulation of PHY-07; the `r` weighting and the hoop term apply to it identically.
 
 ### 2.1 The axis, `r = 0`
 
-Impose **only** `u_r = 0` as essential. `∂φ/∂r = ∂c_i/∂r = ∂u_z/∂r = 0` are **natural** — the `r`
-weight annihilates the boundary term. Imposing Dirichlet on `φ` or `c_i` at the axis is a common
-and fatal error. Analysis lives in weighted spaces `H¹_1(Ω)` (Mercier & Raugel 1982; Bernardi,
-Dauge & Maday) with standard convergence rates.
+NUM-06: `u_r = 0` is the only essential condition; the others are natural under the `r` weight.
 
 ### 2.2 Quadrature — verified experimentally
 
@@ -69,10 +43,9 @@ Integrate(gf*gf/(x*x)*x, mesh, order=2)  ->  nan
 Integrate(gf*gf/(x*x)*x, mesh, order=3)  ->  correct
 ```
 
-**Requirement:** assert integration order ≥ 3 on every form containing `1/r`, and keep a unit test
-that integrates a known `1/r`-weighted quantity on an axis-touching mesh.
+NUM-07 and NUM-08 state the requirement this measurement gives.
 
-**The default order does not count the `r` weight [tested: tests/tier2/test_poisson_layers.py::test_ver56_poisson_reproduces_the_three_layer_capacitor_to_round_off].** NGSolve estimates an integrand's
+**The default order does not count the `r` weight [verified][^wp26].** NGSolve estimates an integrand's
 order from its trial and test functions, not from coefficient functions such as `x`, so a
 non-singular `r`-weighted term is integrated one order below its degree. At P2 the stiffness
 `eps grad(u).grad(v) r` (degree 3) and the source `rho v r` (degree 3) are integrated at order 2.
@@ -83,8 +56,9 @@ piecewise-quadratic solution P2 contains: max error 0.38 `V_T` (3 % of `max |phi
 the axis inside the membrane; with `bonus_intorder=1` on both terms, 1.1e-13. The planar forms and
 a uniform-permittivity problem with no source are exact at the default. With uniform permittivity
 and the source the error is 3.4e-2 `V_T`: the source is short too. `poisson` assembles with
-`RADIAL_WEIGHT_ORDER = 1`; the coupled models keep the default (SPECIFICATION.md NUM-07 NOTE on the
-`r` weight). Source: WP26 implementation session, 30 September 2026.
+`RADIAL_WEIGHT_ORDER = 1`, and with it reproduces the capacitor to round-off **[tested: tests/tier2/test_poisson_layers.py::test_ver56_poisson_reproduces_the_three_layer_capacitor_to_round_off]**; the coupled
+models keep the default (`SPECIFICATION.md` NUM-07 NOTE on the `r` weight). The default-order errors
+above are a recorded measurement, which no test asserts.
 
 **What the extra order moves in the coupled models** **[tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_the_coupled_manufactured_solution]** **[tested: tests/tier2/test_axis_weight_order.py::test_num07_weight_order_on_example_05]**. Measured through
 `Measures.weight_extra_order` (0 against 1, added to every non-singular axisymmetric `volume` and
@@ -120,3 +94,4 @@ why `tests/tier1/test_stabilisation.py` measures it rather than assuming it (VER
 
 ---
 
+[^wp26]: The WP26 implementation session, 30 September 2026: `docs/plans/phase-3/wp26-physics-model-interface.md`.

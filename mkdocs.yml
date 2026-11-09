@@ -230,9 +230,9 @@ nav:
               - "Author rulings (2026-08) — these override the sources": _generated/model/knowledge/00-orientation/05-author-rulings-2026-08-these-override.md
               - "Still open": _generated/model/knowledge/00-orientation/06-still-open.md
               - "Glossary of project terminology and shorthands": _generated/model/knowledge/00-orientation/07-glossary.md
-          - "ePNP-NS — normative physics reference":
+          - "ePNP-NS — the physics behind §4":
               - _generated/model/knowledge/01-physics-epnpns/index.md
-              - "ePNP-NS — normative physics reference (overview)": _generated/model/knowledge/01-physics-epnpns/00-overview.md
+              - "ePNP-NS — the physics behind §4 (overview)": _generated/model/knowledge/01-physics-epnpns/00-overview.md
               - "1. Symbols": _generated/model/knowledge/01-physics-epnpns/01-symbols.md
               - "2. Governing equations": _generated/model/knowledge/01-physics-epnpns/02-governing-equations.md
               - "3. The corrections": _generated/model/knowledge/01-physics-epnpns/03-the-corrections.md
@@ -309,15 +309,15 @@ nav:
               - "6. Linear solvers": _generated/model/knowledge/06-numerics-fem/06-linear-solvers.md
               - "7. Quantities of interest — and the flux trap": _generated/model/knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md
               - "8. Mesh resolution and adaptivity": _generated/model/knowledge/06-numerics-fem/08-mesh-resolution-and-adaptivity.md
-              - "8.1 NGSolve traps found by implementing this — all silent": _generated/model/knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md
+              - "NGSolve traps and measured numerics facts": _generated/model/knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md
               - "9. Unverified / to measure": _generated/model/knowledge/06-numerics-fem/10-unverified-to-measure.md
-              - "Tier-1 test evidence: norms and the attribution identity (WP45 item 20)": _generated/model/knowledge/06-numerics-fem/11-tier-1-test-evidence-norms-and-the.md
-              - "Tier-1 test evidence: the Langevin cutoff (WP45 item 21)": _generated/model/knowledge/06-numerics-fem/12-tier-1-test-evidence-the-langevin.md
-              - "Tier-1 test evidence: the domain indicator and the quality measures (WP45 item 22)": _generated/model/knowledge/06-numerics-fem/13-tier-1-test-evidence-the-domain.md
-              - "Tier-1 test evidence: Newton's counterexamples, the band and the vector indicator (WP45 item 23)": _generated/model/knowledge/06-numerics-fem/14-tier-1-test-evidence-newtons.md
-              - "Tier-1 test evidence: scaling, the wall-distance clamp and the warm-start rationale (WP45 item 24)": _generated/model/knowledge/06-numerics-fem/15-tier-1-test-evidence-scaling-the-wall.md
-              - "Tier-2 test evidence: ladder walks, block systems and extraction routes (WP45 item 25)": _generated/model/knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md
-              - "Tier-3 test evidence: the mesh geometry digest (WP45 item 27)": _generated/model/knowledge/06-numerics-fem/17-tier-3-test-evidence-the-mesh-geometry.md
+              - "Tier-1 test evidence: norms and the attribution identity": _generated/model/knowledge/06-numerics-fem/11-tier-1-test-evidence-norms-and-the.md
+              - "Tier-1 test evidence: the Langevin cutoff": _generated/model/knowledge/06-numerics-fem/12-tier-1-test-evidence-the-langevin.md
+              - "Tier-1 test evidence: the domain indicator and the quality measures": _generated/model/knowledge/06-numerics-fem/13-tier-1-test-evidence-the-domain.md
+              - "Tier-1 test evidence: Newton's counterexamples, the band and the vector indicator": _generated/model/knowledge/06-numerics-fem/14-tier-1-test-evidence-newtons.md
+              - "Tier-1 test evidence: scaling, the wall-distance clamp and the warm-start rationale": _generated/model/knowledge/06-numerics-fem/15-tier-1-test-evidence-scaling-the-wall.md
+              - "Tier-2 test evidence: ladder walks, block systems and extraction routes": _generated/model/knowledge/06-numerics-fem/16-tier-2-test-evidence-ladder-walks-block.md
+              - "Test-suite fixtures: the pickled reference mesh, the stability golden, the seed case": _generated/model/knowledge/06-numerics-fem/17-tier-3-test-evidence-the-mesh-geometry.md
           - "Software stack — libraries, versions, licences, gotchas":
               - _generated/model/knowledge/07-software-stack/index.md
               - "Software stack — libraries, versions, licences, gotchas (overview)": _generated/model/knowledge/07-software-stack/00-overview.md
