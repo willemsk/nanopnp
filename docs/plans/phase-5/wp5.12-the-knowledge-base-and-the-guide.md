@@ -183,9 +183,9 @@ AM14 REV-229.
 - [x] 1d038bc 2. `knowledge/01-physics-epnpns/`, §4.6, VER-03's row, `knowledge/08-validation-benchmarks/01-…` and `02-…`
   §2.5, `tests/tier1/test_corrections.py` (D1, D2, D6): AUD-339 first, AL16, AL17's §4 mirrors, AM13; done when the test
   passes, §4's SHALLs are unchanged and the `physics-reviewer` reports nothing open. **Executor:** main
-- [ ] 3. `knowledge/06-numerics-fem/` (D1, D2): AL17's §6 mirrors first; done when the code, review and the
+- [x] a6bad31 3. `knowledge/06-numerics-fem/` (D1, D2): AL17's §6 mirrors first; done when the code, review and the
   `physics-reviewer` say so. **Executor:** main
-- [ ] 4. Compaction checkpoint. **Executor:** main
+- [x] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. `knowledge/04-…`, `knowledge/05-…`, §5.2's radius-band NOTE (D1 to D4): AUD-152 first; done when the code
   and review say so and `markers.py` is clean. **Executor:** main; AUD-187 and 188's markers on `general-purpose`,
   Sonnet
