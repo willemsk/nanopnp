@@ -150,7 +150,11 @@ sections it cites. A brief never overrides a normative requirement.
 
 Step 2 pauses for `/compact`; `/np-ship` then runs in that session or a fresh one, and puts to the
 author each finding against a decision the implementing session took (`.claude/workflow/core.md`,
-*Report and stop*). A cloud session cannot push a tag; after the merge `/np-ship` dispatches `tag.yml` and prints the
+*Report and stop*). Two switches make the pauses go on instead, for a session that inherits them (the
+shell, the cloud environment's variables, or `env` in `.claude/settings.local.json`):
+`NANOPNP_AUTO_CHECKPOINT=1` for `/np-implement`'s compaction checkpoints, `NANOPNP_AUTO_SHIP=1` for its
+pause before `/np-ship`. No hook can compact: Claude Code's own compaction comes when the context fills,
+and `.claude/hooks/checkpoint.sh` carries the checkpoint's prompt across it. A cloud session cannot push a tag; after the merge `/np-ship` dispatches `tag.yml` and prints the
 commands. A choice put to the author follows the core's *Putting a choice to the author*. The steward skill governs a PR in flight. `/np-gui <render | review | publish | collect | grill>`
 renders screens and mockups headless, reviews them, publishes them for the author's verdicts, and runs
 a design round (§8.4.4).
