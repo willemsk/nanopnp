@@ -35,8 +35,8 @@ Neither phase counts the workbench's tool phases (§8.2.17 S7), whose estimates 
 
 Factors making the work more tractable:
 
-- The reference implementation is retained as a differential-testing oracle, with reference
-  solutions available on demand.
+- The published results serve as the oracle (VAL-16, VAL-17); field-level reference solutions are
+  used where exports exist (VAL-01 to VAL-04, not required).
 - The v1 target is 2D axisymmetric and steady, so a direct sparse solve stays viable to about
   2–5 × 10⁶ DOF and MPI is off the critical path.
 - The parallelism required is many independent serial solves, which is job-array dispatch rather
@@ -59,7 +59,7 @@ Factors making the work less tractable:
 - A single maintainer.
 
 Throughput datum: the reference sweep of 3,675 solves (5 physics cases × 35 bias values × 21 salt
-concentrations) took 41 h on 12 cores. A full-envelope sweep is a day-scale job.
+concentrations) took 41 h. A full-envelope sweep is a day-scale job.
 
 NOTE (QR-06): the scaling claim is about *independent* workers. Processes sharing one linear-algebra
 thread pool are not independent, and a scaling curve measured without the thread counts pinned per

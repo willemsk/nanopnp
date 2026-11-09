@@ -1,3 +1,9 @@
+---
+type: Specification
+title: "5. Software design description"
+description: "The software design: the pipeline and its stages, the data design, the component interfaces, the extension points and the architecture decisions."
+---
+
 ## 5. Software design description
 
 The subsections, one file each:

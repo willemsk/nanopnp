@@ -6,6 +6,9 @@ description: "Lists the Tier 4 experimental reproduction activities (VAL-07 onwa
 
 ### 7.5 Tier 4 experimental reproduction
 
+No Tier 4 test exists before Phase 6; VAL-07 to VAL-10 and VAL-12 to VAL-14 are not yet discharged
+by a test (VAL-11 is gated at Tier 2: `tests/tier2/test_force_convergence.py`).
+
 | ID | Activity | Acceptance criterion |
 |---|---|---|
 | **VAL-07** | Conductance versus salt concentration | Experimental range 0.05–3 M, simulated range 0.005–5 M; agreement with experiment no worse than the source paper's own agreement |

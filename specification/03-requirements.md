@@ -234,7 +234,7 @@ cell–annulus overlaps. §5.2's NOTE on stage 3 is the contract.
 | **QR-03** | Assembled fixed charge SHALL be conserved to better than 0.1 % of Q_net on the deployed mesh. | Correctness |
 | **QR-04** | The two current-extraction routes of FR-23 SHALL agree within a stated tolerance, checked in CI. | Correctness |
 | **QR-05** | End-to-end reproduction of published conductance, transport-number and rectification data SHALL agree with experiment no worse than the source work's own agreement with experiment. | Correctness |
-| **QR-06** | A full-envelope sweep of 3,675 solves SHOULD complete within a day-scale wall-clock time on 12 cores, throughput scaling linearly with the number of independent workers. | Performance |
+| **QR-06** | A full-envelope sweep of 3,675 solves SHOULD complete within a day-scale wall-clock time, throughput scaling linearly with the number of independent workers. | Performance |
 | **QR-07** | A sparse direct factorisation of a production-sized problem (about 1.2 × 10⁵ cells, five fields) SHALL complete in acceptable time and memory on a laptop. | Performance |
 | **QR-08** | Re-running a case file with the recorded library versions SHALL reproduce every scalar QoI to within the solver tolerance, the FR-25 manifest sufficing to reconstruct the run. | Reproducibility |
 | **QR-09** | SHALL install from binary wheels on Windows, macOS and Linux for Python 3.11–3.14, with no compilation on the target machine. | Portability |

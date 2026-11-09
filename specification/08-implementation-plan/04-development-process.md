@@ -122,7 +122,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   `### Implementation details`. The details hold 1,000 words and give a smaller model the exact steps.
   Each count may run up to 10% over; beyond that the plan is trimmed or split. About six decisions is a
   guideline, not a cap: a package that needs more holds them, and its plan's report says why. The plan
-  has no `## Design` heading. (§8.2.15 Q1; §8.2.16 R11; §8.2.33 AI15) WP57's plan is exempt: it has no
+  has no `## Design` heading; `.claude/skills/np-plan/wp.md` holds the template. (§8.2.15 Q1;
+  §8.2.16 R11; §8.2.33 AI15) WP57's plan is exempt: it has no
   word or decision cap, and keeps its compaction checkpoints (§8.2.23 Y11). WP5.08's plan holds the
   words its seven decisions need (§8.2.33 AI11).
 * Each work item names its executor: the main session, or a sub-agent by type and model. The plan
@@ -179,6 +180,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   for the author, is a `REV-nn` row in `docs/project/review-findings.md` with a section in
   `docs/project/review-items.md`, added in the commit that leaves it open. The commit that resolves it
   sets it `fixed`. A pull request body is never its only record. (§8.2.8 H12)
+* A phase closes when each row it owns is `fixed`, or ruled `accepted` with its later package,
+  `deferred`, `post-1.0`, `declined` or `wontfix`. A phase's own findings log then closes;
+  `docs/project/review-findings.md` stays open. `/np-ship phase` checks it. (§8.2.37 AM4)
 * Findings of a user-testing session come only from the author's sessions. An agent may dry-run a
   script to debug it and records no finding. (§8.2.7 G7; §8.2.13 N4)
 * Review reports go to `docs/code_reviews/CODE_REVIEW_NNN.md`, numbered one above the highest present.

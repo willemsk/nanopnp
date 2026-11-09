@@ -285,8 +285,13 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
 - **The gated leg on 2WCD.** This is the protonated, prepared dodecamer at the default sizes
   (44,985 elements), solved with `poisson` and both electrodes grounded. The box is 193³ at 0.1 nm
   from (−9.6, −9.6, −4.35) nm, with 569,541 probes and 93 on the axis. The refinement estimates
-  and the agreement are in `SPECIFICATION.md` §7.4 (the NOTE on VAL-06): 0.41 %, 0.10 % and
-  0.23 %, inside a budget of 1.20 %, 0.18 % and 0.59 %. The largest difference, 0.080 `kT/e`
+  and the agreement, against the tolerance of `SPECIFICATION.md` §7.4's NOTE on VAL-06: the budget
+  is 1.20 %, 0.18 % and 0.59 % (APBS 0.95 %, 0.17 % and 0.58 %; ours 0.25 %, 0.010 % and 0.013 %),
+  and the agreement 0.41 %, 0.10 % and 0.23 %, seven, ten and six times inside the tolerance.
+  Zeroing the charge moves the probes by 45 % rms, where 10 `τ_rms` is required, so the charge and
+  not the faces carries the comparison. On the analytic ring (`tests/tier2/test_val06_ring.py`) APBS
+  and our `P2` are within 0.13 % and 0.010 % of the series in the max norm, and each of the eight
+  broken constructions exceeds half the tolerance. The largest difference, 0.080 `kT/e`
   where ours is −17.8, lies at r = 1.80 nm, z = 0.25 nm, beside the constriction.
 - **APBS's order on 2WCD.** A focused 193³ grid at 0.05 nm on the axis takes its faces from the
   0.1 nm solution, interpolated trilinearly, and the charge inside it, clipped. Over 34,637 probes,

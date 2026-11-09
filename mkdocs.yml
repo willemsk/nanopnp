@@ -160,7 +160,7 @@ nav:
               - _generated/model/specification/07-verification/index.md
               - "7.1 Strategy and ordering": _generated/model/specification/07-verification/01-strategy.md
               - "7.2 Tier 1 unit and property tests": _generated/model/specification/07-verification/02-tier-1.md
-              - "7.3 Tier 2 analytic benchmarks": _generated/model/specification/07-verification/03-tier-2.md
+              - "7.3 Tier 2 benchmarks and converged-solve tests": _generated/model/specification/07-verification/03-tier-2.md
               - "7.4 Tier 3 cross-implementation comparison": _generated/model/specification/07-verification/04-tier-3.md
               - "7.5 Tier 4 experimental reproduction": _generated/model/specification/07-verification/05-tier-4.md
               - "7.6 Continuous integration": _generated/model/specification/07-verification/06-continuous-integration.md

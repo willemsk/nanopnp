@@ -1,3 +1,9 @@
+---
+type: Specification
+title: "8. Implementation plan"
+description: "The implementation plan: phases and gates, the rulings by date, the effort estimate and the development process."
+---
+
 ## 8. Implementation plan
 
 The subsections, one file each:
