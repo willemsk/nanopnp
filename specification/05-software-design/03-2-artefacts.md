@@ -76,7 +76,8 @@ the store had just served that run. A coefficient vector loaded into a space tha
 is silently a different function and there is no residual it would fail to reduce. Because the
 payload is excluded from the content hash, a change to this payload contract has to move the key by
 another route, or a stale cache entry would read as a hit whose payload the loader cannot open. Every
-artefact schema is pinned at `nanopnp/*/v0.5` (§8.2.7 G6), so a schema bump is not that route: stage
+built-in stage's artefact schema other than the case is pinned at its release's identifier (§8.2.7
+G6), so a schema bump is not that route: stage
 10's key carries an `algorithm_revision` (`SOLVE_ALGORITHM_REVISION`, in the case provenance and the
 manifest), which a change that moves a converged number or this payload SHALL bump (REV-71). The
 other stages' payloads have no such counter; a change to one is the author's ruling on a store
@@ -112,15 +113,8 @@ carrying them re-solves a converged case because the run asked for one more quan
 reported — on the reference pore, minutes of work discarded for a question about post-processing.
 Both remain in the §5.3.3 manifest, which records what was asked for and not only what was
 computed, and both remain in the stage-11 key, where `outputs:` does change the artefact. The
-`schema:` string is excluded for the same reason: a v1 document and its
-lossless v2 upgrade describe one run (§5.3.1), and a key that told them apart would re-solve every
-converged case in a store because the loader, not the case, had changed. The v1 key **did** carry
-the string, so this exclusion moved the stage-10 key, the VER-34 restore digest and the Tier-3 case
-identity of every v1 case once, at the move to v2 (author ruling, correcting
-WP17 D6, which had assumed the three would survive): a solve stored under a v1 key is a miss and
-re-solves once, and a golden declaring a v1 `case_hash` is refused naming both hashes. The stage-8
-materials key never carried the schema and survives. The exclusion is what makes this the last move
-of the schema to re-key a solve.
+`schema:` string is excluded as well: a key that told two identifiers apart would re-solve every
+converged case in a store because the loader, not the case, had changed.
 
 NOTE (QR-08, reproduction): the check that a run reproduces its scalar quantities of interest from
 its manifest SHALL re-enter the solve rather than be served from the artefact store. Run against a

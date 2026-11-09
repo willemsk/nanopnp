@@ -9,12 +9,12 @@ description: "Each stage's inputs, outputs, tools and gate; contour conditioning
 | # | Stage | Inputs | Outputs | Tools | Validation gate |
 |---|---|---|---|---|---|
 | 1 | Structure ingestion and alignment (`structure`; FR-01 to FR-03) | PDB/mmCIF, optional trajectory, expected point group | Aligned ensemble; Cₙ axis on z at r = 0 | MDAnalysis 2.10+ (LGPLv3) for PDB and every trajectory format; gemmi 0.7+ (MPL-2.0) for mmCIF, which MDAnalysis 2.10 does not read; the Kabsch rotation for superposition, cross-checked against MDAnalysis `rotation_matrix` | Oligomeric state matches (ClyA 12, αHL 7, MspA 8); abort on missing chains (FR-03) |
-| 2 | Density map (`density`; FR-04) | Aligned ensemble, or stage 7's protonation artefact under `geometry.density.atoms: protonated` (the default); grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the §5.3.1 NOTE on `geometry.density`, multiplied under `protonated` by the table's `charge.edits` radius scales, and keyed on the protonation key with its charge edits dropped (§5.3.1 NOTE on `charge.edits`), sharpness 0.93; the atoms are the protonated frames, hydrogens included, or the atoms as stage 1 loaded them under `as_loaded` (PHY-16); `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
+| 2 | Density map (`density`; FR-04) | Aligned ensemble, or stage 7's protonation artefact under `geometry.density.atoms: protonated` (the default); grid spacing, kernel | 3D density map | Vectorised numpy Gaussian deposition over a spherical stencil truncated at 10⁻⁶, per-atom width σR_i from the CHARMM radius set of the NOTE on stage 2 below, multiplied under `protonated` by the table's `charge.edits` radius scales, and keyed on the protonation key with its charge edits dropped (§5.3.1 NOTE on `charge.edits`), sharpness 0.93; the atoms are the protonated frames, hydrogens included, or the atoms as stage 1 loaded them under `as_loaded` (PHY-16); `gridData` IO. MDAnalysis `DensityAnalysis` is histogram-only and is not used (WP19) | Grid spacing 0.25–0.5 Å (FR-04); every atom has a radius; the map is finite and within [0, 1] |
 | 3 | Symmetry reduction to (r, z) (`symmetry`; FR-05, FR-06) | 3D map, n | (r, z) map; residual azimuthal variance, Cₙ-averaged and raw | numpy and `scipy.sparse`; exact cell–annulus overlap weights; the Cₙ average in the angular harmonic basis (WP19) | Variance emitted with the geometry (FR-06, CON-04); annular weights summing to the exact annulus areas. The radius profile against the probe-radius profile is stage 4's gate (§5.2.1, §8.2.2 B5) |
 | 4 | Contour extraction and conditioning (`contour`; FR-07, FR-08) | Stage 3's (r, z) mean; the aligned ensemble and its radius set, for the probe-radius profile, scaled under `geometry.density.atoms: protonated` by the `charge.edits` radius scales as stage 2's radii are (§5.3.1 NOTE on `charge.edits`); isolevel, smoothing and simplification tolerance | Closed conditioned polyline, a `nanopnp/profile/v0.5` document | scikit-image, Shapely (both BSD-3) and numpy, per §5.2.1 (WP20) | §5.2.1 (FR-08) |
 | 5 | CAD assembly (`region`; FR-09) | Stage 4's polyline or a supplied `inputs.profile`, membrane specification with its `centre_z_nm` shift, reservoir radius, optional analyte | Fragmented (r, z) region, domains and boundaries tagged, as a declarative region record | `netgen.occ` (LGPL-2.1, OpenCASCADE, in-process). The optional Gmsh backend meshes this region at stage 6 and assembles none of its own (WP23 D1) | All bodies fragmented and imprinted, interfaces conformal, no gap or overlap at the membrane-to-pore junction, each domain one face, the membrane's inner edge strictly inside the body (FR-09, WP21; §5.2.1 NOTE on the membrane junction on any profile) |
 | 6 | Meshing (`mesh`; FR-10) | Fragmented region, size fields; or a stage-6 mesh artefact named by its store hash in `inputs.mesh.artefact`, which the stage reads from the store and returns as its own artefact (REV-62; WP5.05) | Graded triangular mesh | Netgen (LGPL-2.1) default, Gmsh (GPLv2+) optional, behind the mesh adapter | §5.2.2 (FR-10, QR-12): the VER-10 and VER-27 gates, as on an ingested mesh, and the wall-size gate of the §5.3.1 NOTE on `numerics.mesh` (WP21); a hash the store does not hold is refused naming the hash and the store's root. The COMSOL comparison, which keys a case without a store, refuses such a case naming the hash, and compares a finished run of it instead (REV-188) |
-| 7 | Protonation (`protonation`; FR-12, FR-38) | Stage 1's aligned ensemble, pH, force field, titration method, `charge.edits`; or a supplied `inputs.pqr` | Per-frame atom table in stage 1's frame (identity, coordinates, charge, radius), `Q_net` and every titratable residue's state per frame | PDB2PQR 3.8+ (BSD-3) driving PROPKA 3 (LGPL-2.1), one call per frame with the flags of PHY-16 step 3 (WP27); a pinned state is held through `Biomolecule.apply_pka_values` (the NOTE on `charge.edits` below) | Every atom carries a charge and a radius, and every charged atom a positive radius; `Q_net` an integer to 10⁻⁶ e on every frame; a pinned residue holds its state on every chain and frame; a supplied frame registered to its stage-1 frame to 0.01 Å (§5.3.1 NOTE on `inputs:`) |
+| 7 | Protonation (`protonation`; FR-12, FR-38) | Stage 1's aligned ensemble, pH, force field, titration method, `charge.edits`; or a supplied `inputs.pqr` | Per-frame atom table in stage 1's frame (identity, coordinates, charge, radius), `Q_net` and every titratable residue's state per frame | PDB2PQR 3.8+ (BSD-3) driving PROPKA 3 (LGPL-2.1), one call per frame with the flags of PHY-16 step 3 (WP27); a pinned state is held through `Biomolecule.apply_pka_values` (the NOTE on `charge.edits` below) | Every atom carries a charge and a radius, and every charged atom a positive radius; `Q_net` an integer to 10⁻⁶ e on every frame; a pinned residue holds its state on every chain and frame; a supplied frame registered to its stage-1 frame to 0.01 Å (the NOTE on reading a supplied PQR below) |
 | 7 | Charge assembly (`charge`; FR-13 to FR-15) | The protonation artefact, **and the deployed mesh** (its gate is evaluated there, PHY-19); on the consumer path, a supplied field document instead | ρ_pore(r, z), Q_net, dielectric field, ion-exclusion surface | The closed-form azimuthal kernel deposited on the deployed mesh (PHY-16, §8.2.4 D2); APBS 3.4.1 (BSD-3) cross-check through the test-only `apbs-binary` package; settings per PHY-16 | Charge conservation to 10⁻³ of Q_net on the deployed FE mesh, plus the per-z-slice cumulative check (FR-14, QR-03, PHY-19) |
 | 8 | Materials (`materials`; FR-16) | Electrolyte specification, correction model names, coefficient files | D_i, μ_i, η, ϱ, ε_r as fields in ⟨c⟩ and d | Correction registry, `data/corrections/willems2020_nacl.yaml` | Conformance values of §4.3 reproduced; clamps above 5.3 M logged with location and property (PHY-13) |
 | 9 | Case assembly (`case`; FR-26) | The case file | Resolved, validated case document, read by every other stage | `io/` schema validator, `physics/` model registry | Schema 'nanopnp/case/v0.6' validates, unknown keys rejected with a diagnostic naming the key (IF-03); round trip semantically identical (FR-26) |
@@ -28,12 +28,97 @@ Design notes, recorded where an implementer would otherwise choose wrongly.
 
 | Stage | Note |
 |---|---|
-| 1 | The Cₙ axis comes from chain-permutation superposition: superpose chain A onto chain B, take the rotation's eigenvector of eigenvalue 1 (FR-02). Principal axes are unusable because they drift between frames. Over the 98 frames of the ClyA-AS ensemble, the largest-variance axis of the Cα set moved by up to 1.54° (rms 0.66°), while the chain-permutation axis moved by at most 0.010°. The cause is not degeneracy: the axial eigenvalue is well separated (1432 Å² against 801 and 881 Å² on the first frame). It is the chains' asymmetric fluctuation, which the permutation fit averages out by construction (measured; WP18 plan, Design §4). Stage 1 is specified in full in the §5.3.1 NOTE on `structure:`. |
+| 1 | The Cₙ axis comes from chain-permutation superposition: superpose chain A onto chain B, take the rotation's eigenvector of eigenvalue 1 (FR-02). Principal axes are unusable because they drift between frames. Over the 98 frames of the ClyA-AS ensemble, the largest-variance axis of the Cα set moved by up to 1.54° (rms 0.66°), while the chain-permutation axis moved by at most 0.010°. The cause is not degeneracy: the axial eigenvalue is well separated (1432 Å² against 801 and 881 Å² on the first frame). It is the chains' asymmetric fluctuation, which the permutation fit averages out by construction (measured; WP18 plan, Design §4). Stage 1 is specified in full in the NOTE on stage 1 below and the §5.3.1 NOTE on `structure:`. |
 | 2 | Histogram plus uniform `gaussian_filter` is rejected: van der Waals-weighted smearing preserves the exclusion surface, uniform post-smoothing rounds the constriction. The grid is not coarsened, the *trans* constriction being about 3.3 nm across with a contour position that moves measurably with resolution. |
-| 3 | The n rotated copies are averaged before azimuthal averaging. Binning is area-weighted over exact annular volumes (about 6 cells per annulus of width h at r = h, about 630 at r = 5 nm, per slice at h = 0.05 nm). The overlap weights are exact, so no bin is interpolated (WP19 plan, Design §2–§3). The rotated copies are averaged in the angular harmonic basis, where the average keeps the harmonics m ≡ 0 (mod n): it is exact and costs one deposition. Depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. The binned mean is subtracted at each cell's own radius before any variance is taken, or the radial gradient across a bin reads as azimuthal variance. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
+| 3 | The rule is the NOTE on stage 3 below. Exact overlap weights put about 6 cells in an annulus of width h at r = h, and about 630 at r = 5 nm, per slice at h = 0.05 nm. The harmonic-basis average is exact and costs one deposition, where depositing n rotated copies costs n, and rotating the voxel map by interpolation smooths it, lowering the peak Cₙ variance of a C12 ring by 3–6 %. A 1° axis error adds about 0.2 nm of apparent radius to a 3.3 nm constriction. |
 | 3, 5 | The bilayer is absent from the density map. It is defined analytically in (r, z) over the hydrophobic belt and fragmented against the pore contour. |
 | 5 | Reference geometry: reservoir half-disc R = 250 nm, membrane thickness 2.8 nm, `z_cis` = 12.25 nm, `z_trans` = −1.85 nm. The membrane is a quadrilateral, not a rectangle: vertices (r = 2, z = −1.4), (3.5, +1.4), (250, +1.4), (250, −1.4) nm, inner edge slanted to meet the pore's outer surface. Code assuming a rectangle leaves a wedge of gap or overlap at the junction. CadQuery and build123d are 3D-solid-centric and unused; pythonocc serves BRep edge cases only. |
 | 7 | Stage 7 is two registered stages, `protonation` and then `charge`, sharing the number so that stages 8 to 12, which this specification, the CLI's output and every recorded manifest cite by number, do not move (WP27). The registry lists stages by number and then in registration order. A run walks `protonation` after `structure` and before `density`, so that stage 2 smears the protonated atoms (PHY-16; §8.2.19 U2), and `charge` after `mesh`. `protonation` runs when stage 2 reads it (`geometry.density.atoms: protonated`, the default on a case with `structure:`), when stage 7's deposition reads it, or when it is the walk's target; a walk truncated at the mesh therefore protonates, and protonating an ensemble costs about a minute per frame of a ClyA dodecamer (WP27 plan, *Design* §1). Under `atoms: as_loaded` a walk to stage 2 does not protonate. With `charge.edits` the stage writes the edited table and, beside it, its parent, the unedited table, and records the variant (§5.3.1 NOTE on `charge.edits`); a charge or radius edit reuses the parent's stored frames, and a state edit protonates the frames again with the residue pinned. The protonation runs when the case has something to protonate (`structure:` or `inputs.pqr`, and no `inputs.charge`) and its model declares a fixed charge (§5.4.3), or when the density needs it, and is otherwise recorded as not run with the reason. `charge` runs when the model declares a fixed charge. A consumer of a deposited charge reads it from stage 7's artefact and from nowhere else (WP28). With a non-zero `charge.dielectric_transition_nm` the `charge` half also runs, reading stage 5's record, to derive `χ` (§4.4 NOTE on the derived solid fraction), whether or not it deposits a charge; the solve reads that `χ` from stage 7's artefact likewise (WP30). |
+
+NOTE (stage 1, ingestion and alignment; `structure:`, FR-01 to FR-03): every selected atom SHALL
+carry its element in the file, in the PDB element columns or the mmCIF `type_symbol`, and a file
+that leaves one blank SHALL be refused naming the atom: a guessed element is how a Cα becomes
+calcium. A selection carrying alternate locations SHALL be refused naming the first, because
+choosing between them is structure preparation, which the pipeline does not do. A trajectory that
+does not hold the structure's atoms, and an mmCIF model that does not list model 1's atoms in model
+1's order, SHALL be refused naming the file.
+
+A chain is identified by its chain identifier, or by its segment identifier where the chain column
+is blank. The selected chains SHALL number exactly `n`, and a listed chain that is absent SHALL be
+named (FR-03). Each chain SHALL carry at least half the Cα atoms of the most complete chain. Chains
+SHALL agree in residue name at every residue number they share, with the histidine protonation
+variants read as one name. A failure of either SHALL be refused naming the chain.
+
+A `frames.last_ns` exceeding the recorded span by more than one frame interval SHALL be refused
+naming the span and the interval. A file written without a timestep reads as 1 ps or 0 ps per
+frame, and without this refusal it would yield the whole trajectory in silence. A `frames.count`
+exceeding the window SHALL be refused naming both. The selected frame indices and their times are
+recorded as read. Every selected frame is superposed on the Cα set of the earliest selected frame
+(FR-01). A trajectory holding no frame SHALL be refused naming the file, and two Cα atoms at one
+residue number and insertion code of one chain SHALL be refused naming the chain and the residue,
+since one would silently replace the other. A chain split across the periodic box SHALL be refused
+naming the chain, the residue pair, the frame and the distance: in any selected frame, two Cα of one
+chain at consecutive residue numbers, neither with an insertion code, lie more than 1.0 nm apart,
+where a peptide-bonded pair lies 0.38 nm apart and a wrapped one is a box length apart (QR-12).
+
+`symmetry.axis: auto` takes the Cₙ axis from the ensemble-mean Cα structure by chain-permutation
+superposition (FR-02). The chains are ordered by azimuth, and the whole assembly is superposed on
+itself with each chain mapped to its neighbour. The axis is that rotation's eigenvector of
+eigenvalue 1, through the Cα centroid. It SHALL refuse the point group, naming the measured
+quantity, when the chains' azimuths are not spaced 360°/n to within a quarter of that spacing, or
+when the rotation angle differs from 360°/n by more than 1°. It SHALL refuse `C1`, which has no
+permutation to superpose.
+
+The axis carries no sign of its own. It is signed to agree with the file's +z. A detected axis more
+than 10° from the file's z SHALL be refused, naming the angle, because such a frame does not name an
+end. Under `symmetry.axis: z`, where `n ≥ 2`, the axis SHALL be refused when its lateral displacement
+from the detected axis exceeds 0.01 nm anywhere over the Cα axial extent, naming the tilt, the
+offset and the displacement. The detected axis it is measured against passes the spacing, angle and
+orientation refusals above first.
+
+The aligned frame puts the axis on z at r = 0 and keeps the file's axial coordinate, `z = â · x`, so
+stage 5 applies `geometry.membrane.centre_z_nm` in the frame it is written in. The four thresholds
+above are constants of the code and never case keys. Their derivation and the margins measured on
+the author's aligned copy of 2WCD, on 6MRT and on the ClyA-AS ensemble are in the WP18 plan, Design
+§2–§4. The wwPDB entry 2WCD as deposited is not such a file: its asymmetric unit holds two
+dodecamers, chains A–L and M–X, in the crystal frame, with the pore axis 22.9° from z and +z towards
+*trans*, so it SHALL be refused by the 10° rule like any other file. Its chains A–L are the author's
+copy moved rigidly (RMSD 1e-4 nm), and moving them is structure preparation.
+
+NOTE (stage 2, the kernel, the radius set and the union; `geometry.density`, FR-04): `kernel: gaussian_vdw` takes each atom's width as `σ R_i`, with σ the `sharpness`. R_i is the
+atom's CHARMM van der Waals radius (Rmin/2) by residue and atom name, from the radius set of
+PDB2PQR's `CHARMM.DAT`, held as data under `data/radii/`. This is an **author ruling**: it is the set carried by the per-frame PQR files of the reference ensemble
+(`knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#11-the-authors-md-archive-measured`). The histidine names `HID`, `HIE` and `HIP` read as CHARMM's `HSD`, `HSE`
+and `HSP`. `HIS` resolves only where every one of those three that names the atom gives the same
+radius. `ILE CD1` reads as `CD`, `OXT` as `OT2`,
+and terminal atoms resolve through the patch residues. An atom the set does not name SHALL be
+refused, naming its chain, residue number, residue and atom. There is no fallback by element: a
+guessed radius is a plausible wrong geometry. Which atoms are deposited, hydrogens included, is
+`structure.source.selection`'s to decide, and the count of each element is recorded.
+
+Each frame's density is the probabilistic union `ρ_f = 1 − Π_i (1 − g_i)` over that frame's atoms,
+with `g_i = exp(−d_i²/(σR_i)²)`. A term is kept where `g_i ≥ 10⁻⁶`. The ensemble map is the mean
+of the per-frame maps, not a union over frames. Grid nodes lie at integer multiples of the spacing
+in the stage-1 frame, so the axis is a column of nodes. The grid is square in (x, y) about the
+axis and holds every kept term with one cell to spare. The map SHALL be finite and within [0, 1],
+or the run aborts naming the voxel (QR-12).
+
+NOTE (stage 3, binning and the Cₙ average; `geometry.density`, FR-05, FR-06): stage 3 bins the map in (r, z) at `r_j = j·h`, each bin being the annulus of half-width h/2 about
+r_j. Its weights are the exact areas of overlap between each grid cell and each annulus, so an
+annulus's weights sum to its exact area, and each nonzero cell's to the cell's area. No bin is
+interpolated. FR-05's average over the n rotated copies SHALL be taken in the angular harmonic
+basis. There a rotation by α multiplies the m-th coefficient by `e^{−imα}`, so the average keeps
+exactly the harmonics with m ≡ 0 (mod n). The averaged map's azimuthal mean is then the map's own,
+and its azimuthal variance is `2Σ_{k≥1}|c_{kn}|²`. Both are computed from the unrotated map, with
+neither rotated deposition nor interpolation. That variance is FR-06's residual azimuthal variance.
+It SHALL be computed after the binned mean profile, interpolated at each cell's own radius, is
+subtracted, because otherwise the radial gradient across a bin reads as azimuthal variation. It
+uses only harmonics below the ring's sampling limit `π r_j/h`. Below `r = n h/π` no harmonic is
+resolved, and the artefact records that radius and each bin's harmonic count rather than
+presenting a measured zero. The variance of the map without the Cₙ average is reported beside it,
+and their difference is the part of the azimuthal variation that is not Cₙ-symmetric. Neither is
+gated: RSK-07 makes the variance a validity criterion to be documented, and no threshold is
+specified. The derivations and measurements are in the WP19 plan, Design §1–§4.
 
 NOTE (stage 7, protonation as run; PHY-16 step 3): PDB2PQR SHALL be run
 once per selected frame (§8.2.4 D4) on that frame's heavy atoms, with every hydrogen and every water
@@ -79,6 +164,38 @@ golden, VAL-05, VAL-06 and the Tier 3 cases), as do the walks `2wcd-charged` and
 Worked example 07's VER-62 walk is re-pinned on the mesh the default deploys (§8.2.7 G10). A walk
 truncated at the mesh protonates, about a minute per frame of a ClyA dodecamer. A changed
 protonation state moves the density (Tier 1).
+
+NOTE (stage 7, reading a supplied PQR; `inputs.pqr`): ATOM and HETATM records are read by
+the PDB columns through the coordinates and then by the two whitespace-separated numbers after
+them, which is the layout PDB2PQR writes, whose coordinate fields may run together; a line those
+columns do not read is read as whitespace-separated fields, and a line read both ways with
+different values is refused naming its line number. A whitespace field that cannot be an atom
+name, a residue name or a chain (more than four, four and one characters) does not read the line:
+PDB2PQR writes a four-character residue name from the alternate-location column and runs a
+four-character atom field into it (`OD2ASPP`, measured), which the columns
+read. A record type run into a five-digit serial (`HETATM12345`, PDB2PQR's own layout) is split
+before the fields are read. A residue is identified by chain, number and insertion code, and its
+name is the one its atoms carry other than PDB2PQR's CHARMM patch names `TER` and `DISU` (a
+disulfide-bonded cysteine's `CB` and `SG`, written `1CB` and `1SG`), or, where its atoms carry a parent and one of its
+protonation variants, the variant: PDB2PQR writes a patched residue's backbone under the parent and
+its side chain under the variant (`ASP` and `ASPP` in one residue).
+Each frame is registered to its stage-1 frame by superposing its Cα atoms on the ensemble's, residue for residue,
+after which every heavy atom of the ensemble SHALL lie within 0.01 Å of a distinct heavy atom of the
+same residue of the PQR, other than the atoms PDB2PQR's hydrogen-bond optimisation may flip: the
+amide `OD1` and `ND2` of asparagine, `OE1` and `NE2` of glutamine, and the ring `ND1`, `CD2`,
+`CE1` and `NE2` of histidine. A flip turns the group through 180° about the bond to it, and the
+group is not symmetric about that bond, so a flipped atom lands 0.13–0.40 Å from every atom it was
+given (138 heavy atoms of the prepared 2WCD, measured; the criterion is not over every heavy atom, because a flip does not exchange positions exactly and
+such a criterion would refuse PDB2PQR's own output); they are not compared, their worst distance is recorded,
+and the rest of each residue fixes where it is. A flip moves atoms and never removes them or changes their
+element, so a residue of these three whose PQR holds fewer heavy atoms of an element than the
+ensemble's is refused, or a PQR missing a flippable atom would register. 0.01 Å is about ten times the rounding of a PQR's coordinate columns
+and a hundredth of the shortest bond between heavy atoms, so a frame count that differs, a residue
+the two do not share, or a frame whose atoms have moved is refused naming the frame. Heavy atoms the PQR adds, as PDB2PQR
+adds a missing terminal oxygen, are counted, not refused; hydrogens are not compared. The
+registered coordinates are what the artefact carries, so a PQR written in another frame, as the
+reference's MD-frame PQRs are, lands in stage 1's. A frame whose heavy atoms already meet the
+criterion where they stand is not moved, so the stage's own export reads back exactly.
 
 #### 5.2.1 Contour conditioning and its gate
 

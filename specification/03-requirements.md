@@ -223,7 +223,7 @@ instead of the schema (VER-09).
 NOTE (FR-05, FR-06): the n rotated copies are averaged in the
 angular harmonic basis. There the average keeps the harmonics that are multiples of n, so it leaves
 the azimuthal mean unchanged and defines FR-06's residual variance. The binning weights are exact
-cell–annulus overlaps. The §5.3.1 NOTE on `geometry.density` is the contract.
+cell–annulus overlaps. §5.2's NOTE on stage 3 is the contract.
 
 ### 3.3 Quality of service
 

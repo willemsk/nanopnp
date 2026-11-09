@@ -82,6 +82,7 @@ one file per section; this file holds the title block, the reading rule and the 
 | §5.3.2 Artefacts and interchange formats | [`specification/05-software-design/03-2-artefacts.md`](specification/05-software-design/03-2-artefacts.md) |
 | §5.3.3 Provenance manifest | [`specification/05-software-design/03-3-provenance-manifest.md`](specification/05-software-design/03-3-provenance-manifest.md) |
 | §5.3.4 Sweep specification and dataset | [`specification/05-software-design/03-4-sweeps.md`](specification/05-software-design/03-4-sweeps.md) |
+| §5.3.5 Project folder | [`specification/05-software-design/03-5-project-folder.md`](specification/05-software-design/03-5-project-folder.md) |
 | §5.4 Component design | [`specification/05-software-design/04-component-design.md`](specification/05-software-design/04-component-design.md) |
 | §5.5 Extension points | [`specification/05-software-design/05-extension-points.md`](specification/05-software-design/05-extension-points.md) |
 | §5.6 Architecture decisions (ADR) | [`specification/05-software-design/06-architecture-decisions.md`](specification/05-software-design/06-architecture-decisions.md) |
