@@ -109,7 +109,8 @@ not honoured, the Phase 0 stop rule forbids Copilot commits until it is fixed.
   `mode: "async"`, and wait for its completion notice. Or run the `until grep` loop as a sync call
   with `initial_wait` up to 600 s, and issue it again until it ends. Never use `nohup`, `setsid` or `&`.
 - At a `/compact` checkpoint, or at the pause of `/np-plan` or `/np-implement`, tick, gate, push, print the prompt and end the
-  turn. The author compacts or starts a new session with it.
+  turn. The author compacts or starts a new session with it. The automatic checkpoint is off here: its Stop,
+  PreCompact and `compact` hooks do not run, and `checkpoint.sh save` prints `off` under `COPILOT_CLI`.
 - The scratchpad `<s>` is the `files/` directory of the session folder, which the session context
   names. Without it, use `${TMPDIR:-/tmp}/nanopnp-scratch/<branch>/`.
 - Use the app's GitHub MCP for reads, or `gh` in WSL. Its file-write tools are refused, because they

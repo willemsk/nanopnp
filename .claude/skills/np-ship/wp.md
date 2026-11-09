@@ -8,6 +8,9 @@ watch need no further prompt.
 
 ## 0. Resolve the package's PR and branch
 
+Run `.claude/hooks/checkpoint.sh clear`: an automatic pause that led here is spent
+(`np-implement/wp.md`, *Finishing*).
+
 1. Find them as the core's *The package's PR and branch* says. If no open PR matches, list the closed
    PRs against `main` (the REST route `pulls?state=closed`) with the same title rule. If one of them is
    merged, go to *7. After the merge* below.

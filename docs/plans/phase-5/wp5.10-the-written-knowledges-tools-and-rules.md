@@ -299,8 +299,15 @@ Record each command, its result and the commit.
   > `decisions.py` credits a plan row whose cell says "Ruled by the author" to the author, which the
   > prototype credited to the session. VER-79's three tests pass, and each fails on the drift it names.
   > `gate.sh run` passed in 251 s at the second checkpoint, `7190906`. AUD-251 and AUD-382 are `fixed`.
-- [ ] 13. The command runner: its exploration, and if worthwhile its file at the root and `CLAUDE.md`'s
+- [x] 9ee5620 13. The command runner: its exploration, and if worthwhile its file at the root and `CLAUDE.md`'s
   *Commands* pointing at it (D9); done when the code and review say so. **Executor:** main
+
+  > **Outcome — `just`, chosen by the author.** The multi-step sequences were the documentation build,
+  > CI's docs checks, the record scripts, the gate's log and gmsh's libraries; the rest is one
+  > `uv run` line each. Put to the author against a Makefile, poethepoet and no runner, 9 November 2026:
+  > `just` through the dev group's `rust-just` 1.59.0, a 2.4 MB binary wheel that `just`'s README lists,
+  > so `uv sync` installs it. `uv run just` lists 14 recipes; none commits or pushes, because the gate
+  > hook judges the command as typed.
 - [ ] 14. The automatic checkpoint: the hook script, its two environment variables, `.claude/settings.json`,
   `np-implement/wp.md`'s checkpoint steps and `np-ship`'s pause (D10); done when the code and review say so.
   **Executor:** main

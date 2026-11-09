@@ -1,7 +1,7 @@
 # Implement a work package
 
 `/np-implement [wp <n>]` is step 2 of the implementation workflow. It executes the plan under
-`docs/plans/`, records what the execution taught, and opens the PR. It does not chain into `/np-ship`.
+`docs/plans/`, records what the execution taught, and opens the PR. It chains into `/np-ship` only when the author sets `NANOPNP_AUTO_SHIP=1` (*Finishing*).
 
 ## Load the brief
 
@@ -19,10 +19,16 @@ Make a task list from the work items. Start at the first unticked item.
 A **compaction checkpoint** is a work item (§8.2.16 R11):
 
 1. Tick it in its own commit. Gate and push as in *Finishing*.
-2. Print a prompt in a `text` block. It holds `/compact`, the package, the number of the next item, the
-   values that later items need and that the plan and `git log` do not hold, and "resume with
-   `/np-implement wp <n>`".
-3. End the turn. The author compacts and resumes. The next item starts from the plan and `git log`.
+2. Write a prompt. It holds `/compact`, the package, the number of the next item, the values that later
+   items need and that the plan and `git log` do not hold, and "resume with `/np-implement wp <n>`".
+   Pipe it to `.claude/hooks/checkpoint.sh save implement <plan> <n>`, and print it in a `text` block.
+3. If that printed `off`, end the turn. The author compacts and resumes. The next item starts from the
+   plan and `git log`.
+4. If it printed `on`, the author set `NANOPNP_AUTO_CHECKPOINT=1`: go on with the next item in this
+   turn. No hook can compact, so Claude Code's own compaction comes when the context fills. The hooks
+   give the saved prompt to that compaction as its instructions and to the context after it, and the
+   Stop hook blocks once a turn that ends while items remain. Nothing is left to the author unless a
+   question stops the turn.
 
 **Sub-agent items** (§8.2.16 R6, R11). If an item's **Executor** names a sub-agent, give the item to a
 new agent of that type and model (Agent tool). Give it:
@@ -97,7 +103,12 @@ Report the PR link, the identifiers discharged, the tag that the last commit get
 (or that it gets none), and that the package is ready for `/np-ship`. Do not start the review or
 monitor CI in this turn. Then pause (§8.2.33 AI4):
 
-1. Print a prompt in a `text` block. It holds `/compact`, the package, the PR, its head, each decision
-   this session took that the plan does not hold, the values the review needs that the plan and
-   `git log` do not hold, and "resume with `/np-ship wp <n>`".
-2. End the turn. The author compacts and resumes here, or starts `/np-ship` in a fresh session.
+1. Write a prompt. It holds `/compact`, the package, the PR, its head, each decision this session took
+   that the plan does not hold, the values the review needs that the plan and `git log` do not hold,
+   and "resume with `/np-ship wp <n>`". Pipe it to `.claude/hooks/checkpoint.sh save ship <plan> <n>`,
+   and print it in a `text` block.
+2. If that printed `off`, end the turn. The author compacts and resumes here, or starts `/np-ship` in a
+   fresh session.
+3. If it printed `on`, the author set `NANOPNP_AUTO_SHIP=1`: run the `np-ship` skill with `wp <n>` in
+   this turn. The hooks carry the prompt across the compaction that comes when the context fills, as at
+   a checkpoint. `/np-ship` still puts to the author each finding against this session's decisions.
