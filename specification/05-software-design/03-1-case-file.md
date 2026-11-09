@@ -181,7 +181,7 @@ The change of `charge_change_e` is spread evenly over the atoms of the residue's
 frame holds, the charge-centre atoms of PROPKA 3.5.1 (`data/charge/titratable_groups.yaml`, held equal to
 PROPKA's configuration by a Tier 1 test), so `Q_net` stays an integer; a terminal residue's charge
 includes its terminus, which is why the edit is a change and not a target. A fractional state is FR-43's.
-The edits ride on stage 7's `protonation` step (PHY-16 NOTE on `charge.edits`) and enter its key, sorted
+The edits ride on stage 7's `protonation` step (§5.2 NOTE on `charge.edits`) and enter its key, sorted
 by residue and kind; without edits no key of the pipeline differs from a case that never had the field.
 The radius scales also set stage 2's radii under `geometry.density.atoms: protonated`, so they move the
 density, the contour and the mesh, and stage 4's probe-radius profile scales the same atoms by the same
