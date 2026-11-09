@@ -273,7 +273,7 @@ Record each command, its result and the commit.
   the core's *Gate and push*; §8.4.4; §5.1's NOTE (D2, D3, D5); done when VER-79's tests pass.
   **Executor:** main
 - [x] 7190906 8. Compaction checkpoint. **Executor:** main
-- [ ] 9. `CHANGELOG.md`'s nine paragraphs; `np-ship/wp.md` §1; §8.4.1 (D7); done when each of
+- [x] 3427617 9. `CHANGELOG.md`'s nine paragraphs; `np-ship/wp.md` §1; §8.4.1 (D7); done when each of
   `0.6.0-alpha.2` to `.9` greps and the paragraphs are byte-identical. **Executor:** main
 - [ ] 10. The trial and `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, its
   index and `knowledge/log.md` (D8); done when the code and review say so. **Executor:** main
