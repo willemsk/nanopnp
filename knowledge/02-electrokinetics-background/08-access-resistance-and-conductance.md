@@ -1,10 +1,14 @@
 ---
 type: Background
 title: 8. Access resistance and conductance decomposition
-description: Access resistance and the decomposition of the conductance.
+description: "R_total = R_pore + 2 R_access, the potential and field profiles, and four decompositions of the conductance."
 tags:
 - electrokinetics
 - background
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

@@ -191,7 +191,8 @@ as before. The concentrations and the flow see it only through `φ`. VER-77 chec
 | `ε_r,f` | `1 − (1 − P₁/P₀)·L(3P₂c̄/(P₀ − P₁))`, `L(x) = coth x − 1/x` | — |
 
 The two wall functions carry opposite offset signs, `(d̄ + P₂)` for `D` and `μ` and `(d̄ − P₂)` for
-`η`; both are verified in §4.6.
+`η`; the first is §4.6's erratum 1, and the second is printed consistently and checked by PHY-12's
+`η⁰/η^w(0) = 0.379`.
 
 **PHY-12.** The coefficients SHALL be those of the COMSOL model report
 (`npgrid_clya_v8_NaCl_report.mph`, COMSOL 5.4 build 388, 2020-05-22) for NaCl at 298.15 K, at the
@@ -522,13 +523,13 @@ evaluated at zero bias (see PHY-14 and ADR-005).
 ### 4.6 Errata in the source material
 
 Each row records a statement in the published source that the implementation SHALL NOT follow.
-Evidence values are computed, not asserted.
+The errata concept holds each row's arithmetic, computed, not asserted, under the same number.
 
 | # | Source statement | Correct form | Evidence |
 |---|---|---|---|
-| 1 | Thesis eq. 5.11 prints the D/μ wall function as `1 − exp(−P₁(d̄ − P₂))` | offset is `(d̄ + P₂)`, as in Table 5.1 | `(d̄+P₂)`: f(0) = +0.0601, f(0.75) = +0.9910, matching the stated 0.06 and 0.99; `(d̄−P₂)`: f(0) = −0.0640, negative at the wall |
-| 2 | ESI writes the wall coefficient as `0.62e1`, read in circulation as 62 or 0.62 | `P₁ = 6.2 nm⁻¹` (Table 5.2, Simakov 2010) | f(0)/f(0.75): 62 → 0.4621/1.0000; 0.62 → 0.0062/0.3757; 6.2 → 0.0601/0.9910, the only match |
-| 3 | Table 5.1 lists `μ_Na⁰ = 5.192 × 10⁻⁴ m² V⁻¹ s⁻¹` | exponent is 10⁻⁸, per Table 5.2 note (b) | `μ = D⁰/V_T`, `V_T = 25.693 mV`: 5.1922 × 10⁻⁸ (Na⁺), 7.9089 × 10⁻⁸ (Cl⁻), matching Table 5.2 to four figures |
-| 4 | Text states `η(c > 5.3 M) = 1.75 × 10⁻⁴ Pa s` | cap is 1.75 × 10⁻³ Pa s | the fit at 5.3 M gives 1.752 × 10⁻³ Pa s; 1.75 × 10⁻⁴ is below pure water (8.904 × 10⁻⁴) while salt raises viscosity. Other caps verified: ϱ = 1194 kg m⁻³, `D_Na` = 8.13 × 10⁻¹⁰, `D_Cl` = 1.071 × 10⁻⁹ m² s⁻¹ |
-| 5 | Table 5.2 lists viscosity `P₀ = 0.8904` under a 10⁻⁴ scaling note, implying 8.904 × 10⁻⁵ Pa s | `η⁰ = 8.904 × 10⁻⁴ Pa s`; the scaling is 10⁻³ | Hai-Lang 1996 gives 8.904 × 10⁻⁴ Pa s for water at 298.15 K; 8.904 × 10⁻⁵ is an order of magnitude below any aqueous value |
-| 6 | Thesis prints the permittivity cap `ε_r(5.3 M) = 42.12`, reproducible only from the authors' own Buchner-1999 fit (29.50, 11.74) | the model used Gavish's NaCl parameters (30.08, 11.5); the cap is 42.67 | the model parameter table and the solver log both record `epsr_ms = 30.08`, `epsr_alpha = 11.5`; these give 42.67 at 5.3 M against the Buchner fit's 42.13, so the printed cap is stale. An earlier author recollection favouring the Buchner fit is superseded by the model file |
+| 1 | Thesis eq. 5.23 prints the D/μ wall function as `1 − exp(−P₁(d̄ − P₂))` | offset is `(d̄ + P₂)`, as in Table 5.1 | [E1](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#8-errata-in-the-source-with-the-arithmetic) |
+| 2 | ESI writes the wall coefficient as `0.62e1`, read in circulation as 62 or 0.62 | `P₁ = 6.2 nm⁻¹` (Table 5.2, Simakov 2010) | [E2](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#8-errata-in-the-source-with-the-arithmetic) |
+| 3 | Table 5.1 lists `μ_Na⁰ = 5.192 × 10⁻⁴ m² V⁻¹ s⁻¹` | exponent is 10⁻⁸, per Table 5.2 note (b) | [E3](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#8-errata-in-the-source-with-the-arithmetic) |
+| 4 | Text states `η(c > 5.3 M) = 1.75 × 10⁻⁴ Pa s` | cap is 1.75 × 10⁻³ Pa s | [E4](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#8-errata-in-the-source-with-the-arithmetic); the caps at 5.3 M: η = 1.752 × 10⁻³ Pa s, ϱ = 1194 kg m⁻³, `D_Na` = 8.11 × 10⁻¹⁰ m² s⁻¹, `D_Cl` = 1.071 × 10⁻⁹ m² s⁻¹ |
+| 5 | Table 5.2 lists viscosity `P₀ = 0.8904` under a 10⁻⁴ scaling note, implying 8.904 × 10⁻⁵ Pa s | `η⁰ = 8.904 × 10⁻⁴ Pa s`; the scaling is 10⁻³ | [E5](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#8-errata-in-the-source-with-the-arithmetic) |
+| 6 | Thesis prints the permittivity cap `ε_r(5.3 M) = 42.12`, reproducible only from the authors' own Buchner-1999 fit (29.50, 11.74) | the model used Gavish's NaCl parameters (30.08, 11.5); the cap is 42.67 | [E6](../knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md#8-errata-in-the-source-with-the-arithmetic) |

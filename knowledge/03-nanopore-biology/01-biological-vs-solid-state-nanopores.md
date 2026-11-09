@@ -1,10 +1,14 @@
 ---
 type: Domain
 title: 1. Biological vs solid-state nanopores
-description: How biological and solid-state nanopores differ.
+description: "What a nanopore is, and how biological and solid-state pores differ in material, fabrication, reproducibility, robustness and noise."
 tags:
 - biology
 - domain
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

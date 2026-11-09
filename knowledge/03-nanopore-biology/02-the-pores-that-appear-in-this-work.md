@@ -1,7 +1,7 @@
 ---
 type: Domain
 title: 2. The pores that appear in this work
-description: The pores that appear in this work.
+description: "αHL, ClyA, FraC, PlyAB, MspA, aerolysin and CsgG: class, oligomer, shape, interior, charge and PDB entry."
 tags:
 - biology
 - domain

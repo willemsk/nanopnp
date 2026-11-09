@@ -1,7 +1,7 @@
 ---
 type: Background
 title: 5. Electrophoresis and the force on a charged body
-description: Electrophoresis and the force on a charged body.
+description: "The electrophoretic, dielectrophoretic and exact Maxwell-stress forces on a charged body, and the electrophoretic mobility."
 tags:
 - electrokinetics
 - background

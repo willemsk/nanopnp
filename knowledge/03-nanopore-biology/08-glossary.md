@@ -1,10 +1,14 @@
 ---
 type: Glossary
 title: 8. Glossary
-description: Glossary of nanopore and electrophysiology terms.
+description: "Glossary of nanopore and electrophysiology terms: BNP, PFT, TMD, cis and trans, lumen, constriction, vestibule and more."
 tags:
 - biology
 - glossary
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'

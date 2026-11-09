@@ -1,7 +1,7 @@
 ---
 type: Background
 title: 4. Electro-osmosis
-description: Electro-osmosis in a charged pore.
+description: "The electro-osmotic body force and its analytic reference, ClyA-AS's simulated flow and its reversal, slip length and an independent water-flux estimate."
 tags:
 - electrokinetics
 - background

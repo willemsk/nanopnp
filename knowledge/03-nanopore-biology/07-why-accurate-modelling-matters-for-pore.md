@@ -1,7 +1,7 @@
 ---
 type: Domain
 title: 7. Why accurate modelling matters for pore engineering
-description: Why accurate modelling matters for pore engineering.
+description: "Why a blockade is hard to predict, what pore-engineering campaigns cost, and what a predictive model would replace."
 tags:
 - biology
 - domain

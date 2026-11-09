@@ -3,6 +3,9 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-09
+* **Update**: The ePNP-NS concepts back §4, which governs; their copies of §4's symbols, equations and correction forms become pointers, the reference's charge construction is labelled as the one nanopnp does not reproduce, and the errata are numbered as §4.6's six rows, E5 added (WP5.12; §8.2.36 AL15 to AL17). ([ePNP-NS — the physics behind §4](01-physics-epnpns/00-overview.md), [8. Errata in the source](01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md))
+* **Record**: The sodium diffusivity cap at 5.3 M is 8.113 × 10⁻¹⁰ m² s⁻¹ from the governing coefficients; the thesis's rounded ones give 8.127 × 10⁻¹⁰ (WP5.12; §8.2.37 AM13). ([8. Errata in the source](01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md))
+* **Update**: The limiting-current benchmark's two lessons move from the physics notes to the benchmark ladder's §2.5; the Langevin cutoff's evidence becomes a pointer to the physics note (WP5.12). ([Tier 2 — Analytic benchmarks](08-validation-benchmarks/02-tier-2-analytic-benchmarks-minutes.md), [Tier-1 test evidence: the Langevin cutoff](06-numerics-fem/12-tier-1-test-evidence-the-langevin.md))
 * **Record**: VAL-06's budget split, agreement margins, charge-zeroing check and ring results move here from §7.4's NOTE (WP5.11). ([3. Charge and electrostatics](07-software-stack/03-charge-and-electrostatics.md))
 * **Record**: The ion-exclusion shell's resampling bound, the division of its `wall` edges and the two alternatives set aside move here from §5.2 (WP5.11). ([2. Model geometry and conventions](04-clya-geometry-and-charge/02-model-geometry-and-conventions.md))
 * **Record**: The Einstein-ratio range is per ion, 1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 for Cl⁻, so the stabilisation's Péclet factor is 0.60–0.88 (WP5.11). ([4. Stabilisation](06-numerics-fem/04-stabilisation.md))

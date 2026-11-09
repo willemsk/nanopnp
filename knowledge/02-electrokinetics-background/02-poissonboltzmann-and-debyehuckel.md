@@ -1,7 +1,7 @@
 ---
 type: Background
 title: 2. Poisson–Boltzmann and Debye–Hückel
-description: Poisson-Boltzmann and Debye-Hückel theory.
+description: "The Poisson-Boltzmann equation, its APBS normalised form, the Debye-Hückel linearisation and its validity, and the electrostatic energy."
 tags:
 - electrokinetics
 - background

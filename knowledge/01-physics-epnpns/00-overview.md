@@ -1,7 +1,7 @@
 ---
 type: Overview
-title: ePNP-NS — normative physics reference (overview)
-description: The normative equations, corrections, parameters and errata of the ePNP-NS model.
+title: ePNP-NS — the physics behind §4 (overview)
+description: The status of the ePNP-NS concepts and how they relate to SPECIFICATION.md §4.
 tags:
 - physics
 - overview
@@ -17,16 +17,21 @@ generated:
   at: '2026-10-14T00:00:00Z'
 ---
 
-# ePNP-NS — normative physics reference
+# ePNP-NS — the physics behind §4
 
-**Status:** authoritative. Transcribed from Willems K. et al., *Nanoscale* **12**, 16775–16795
-(2020) and the CC-BY-4.0 thesis `willemsk/phdthesis-text`, ch. 5 + ch. 5 SI (`epnpns.tex`,
-`epnpns_appendix.tex`). Every numeric claim below has been checked numerically against the
-self-consistency values stated in the thesis. Where the thesis is internally inconsistent, the
-resolution and its arithmetic are given in **§8 Errata**.
+**Status:** the backing of `SPECIFICATION.md` §4, which states the model normatively; where they
+differ, §4 governs, and where the reference and the published text differ, the COMSOL model report
+governs (`SPECIFICATION.md` §1.6). Transcribed from Willems K. et al., *Nanoscale* **12**,
+16775–16795 (2020) and the CC-BY-4.0 thesis `willemsk/phdthesis-text`, ch. 5 + ch. 5 SI
+(`epnpns.tex`, `epnpns_appendix.tex`).
 
-Agents: this file is the single source of truth for the equations. Do **not** re-derive from the
-paper abstract or from web summaries — several widely-copied summaries of this model are wrong.
+§4 states the equations, the corrections and their coefficients. These concepts hold what §4 does
+not: the Poisson weak form (`02-governing-equations.md`), the infinite-dilution sources and the
+measured Einstein ratio (`03-the-corrections.md`), the rationale, the reference's charge
+construction, the implementation notes, and the errata with their arithmetic
+(`08-errata-in-the-source-with-the-arithmetic.md`, numbered as §4.6's rows).
+
+Agents: do **not** re-derive the model from the paper abstract or from web summaries — several
+widely-copied summaries of this model are wrong.
 
 ---
-

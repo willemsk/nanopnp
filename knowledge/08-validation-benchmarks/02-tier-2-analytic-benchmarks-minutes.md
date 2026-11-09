@@ -15,12 +15,16 @@ generated:
 verified:
 - by: process:tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios
+  at: '2026-11-09T00:00:00Z'
 - by: process:tests/tier2/test_exclusion_stern.py::test_ver59_the_drop_across_a_generated_shell_obeys_gausss_law
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_exclusion_stern.py::test_ver59_the_potential_is_logarithmic_across_the_shell
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_exclusion_stern.py::test_ver59_the_shell_drop_is_a_tenth_of_the_wall_potential_or_more
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_pnp_benchmarks.py::test_ver16_current_saturates_at_the_limiting_value
+  at: '2026-11-09T00:00:00Z'
 ---
 
 ## Tier 2 — Analytic benchmarks (minutes)
@@ -74,7 +78,21 @@ u_slip = −ε ζ E_t / η          as λ_D/a → 0
 Tests the asymptotic correctness of the coupled solve.
 
 ### 2.5 1D steady PNP with limiting current
-Bazant, Chu & Bayly, *SIAM J. Appl. Math.* **65**, 1463 (2005). Tests the full PNP system.
+Bazant, Chu & Bayly, *SIAM J. Appl. Math.* **65**, 1463 (2005). Tests the full PNP system. At the
+largest bias the current reaches the electroneutral limiting value to 3 %. **[tested: tests/tier2/test_pnp_benchmarks.py::test_ver16_current_saturates_at_the_limiting_value]**
+
+- **Two errors can cancel and hide both.** The benchmark passed for a while at the wrong film
+  length *because* of a second bug, an electrolyte whose correction switches said off while its
+  resolved models stayed on (`knowledge/01-physics-epnpns/07-implementation-notes-carried-forward.md`).
+  A 100 nm film is space-charge-limited and reads 14 % high against the electroneutral closed form
+  (not tested). The silently-active corrections broke the Einstein relation, `mu/mu0` = 0.63
+  against `D/D0` = 0.92 at 1 M, **[tested: tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios]**
+  and pulled the current down by about as much. Fixing either alone turns a passing benchmark red.
+- **The screening length that matters at a depleted electrode is not the bulk one.** `lambda_D` goes
+  as `c^(-1/2)`, so at 1e-3 of bulk it is thirty-two times larger — 9.6 nm at 1 M. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios]**
+  A benchmark that justifies its geometry with the bulk value can be an order of magnitude out. The
+  signature of a space-charge-limited film is that the plateau current stops depending on the
+  electrode concentration at all (not tested).
 
 ### 2.6 Maxwell–Hall access conductance
 ```

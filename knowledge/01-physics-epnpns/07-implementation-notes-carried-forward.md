@@ -1,9 +1,15 @@
 ---
 type: Physics
 title: 7. Implementation notes carried forward
-description: Implementation notes carried forward from the source work.
+description: "Implementation lessons for the physics, from the source work and from building nanopnp: the
+  unsmoothed d, damped Newton, the packing assert, a saturated d, switches versus resolved models, the
+  Langevin cutoff."
 tags:
 - physics
+sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
@@ -14,25 +20,16 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_electrolyte.py::test_phy21_with_switches_changes_the_behaviour_not_only_the_record
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_solution_state.py::test_ver34_the_wall_distance_field_is_restored_and_not_re_solved
-  at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier2/test_pnp_benchmarks.py::test_ver16_current_saturates_at_the_limiting_value
   at: '2026-10-16T00:00:00Z'
 ---
 
 ## 7. Implementation notes carried forward
 
-- **Mollify the wall-distance field.** The original used an unsmoothed COMSOL general-extrusion
-  distance. Because `D`, `μ` and `η` all depend on `d`, a kinked `d` propagates straight into the
-  Jacobian. Compute `d` once per mesh (eikonal or screened-Poisson) and smooth it to C¹. This is a
-  deviation from the original *implementation* but not from the *model*, and should improve Newton
-  behaviour rather than change the answer. Verify against COMSOL either way. **Superseded by the
-  author's ruling of 2026-10-19:** the validated default is the unsmoothed C⁰ field and the C¹
-  smoothing is an optional deviation, off by default (`SPECIFICATION.md` PHY-02, NUM-31).
+- **The wall-distance field is unsmoothed.** The original used an unsmoothed COMSOL
+  general-extrusion distance. The validated field is the unsmoothed C⁰ field; C¹ mollification is an
+  optional deviation, off by default (PHY-02, NUM-31). Because `D`, `μ` and `η` all depend on `d`, a
+  kinked `d` reaches the Jacobian, which is why the option exists.
 - **Direct solver + damped Newton is known to work.** The author reports efficient convergence in
   COMSOL using PARDISO with a Newton method and a **lower-bounded variable damping factor**. This
   is direct empirical evidence for this exact system and outweighs the general literature warning
@@ -54,21 +51,13 @@ verified:
   run that follows calls itself PNP-NS, converges, and is ePNP-NS. That makes the PHY-21 ablation
   compare a configuration against itself. Rebuild the resolved models whenever the switches change,
   and refuse a pair that disagrees. **[tested: tests/tier1/test_electrolyte.py::test_phy21_with_switches_changes_the_behaviour_not_only_the_record]** **[tested: tests/tier1/test_electrolyte.py::test_phy21_switches_and_corrections_cannot_disagree]**
-- **Two errors can cancel and hide both.** The 1D limiting-current benchmark passed for a while at
-  the wrong film length *because* of the bug above: a 100 nm film is space-charge-limited and reads
-  14 % high against the electroneutral closed form, while the silently-active corrections broke the
-  Einstein relation (`mu/mu0` = 0.63 against `D/D0` = 0.92 at 1 M) and pulled the current down by
-  about as much. Fixing either alone turns a passing benchmark red. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios]**
-- **The screening length that matters at a depleted electrode is not the bulk one.** `lambda_D` goes
-  as `c^(-1/2)`, so at 1e-3 of bulk it is thirty-two times larger — 9.6 nm at 1 M. A benchmark that
-  justifies its geometry with the bulk value can be an order of magnitude out. The signature of a
-  space-charge-limited film is that the plateau current stops depending on the electrode
-  concentration at all. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_limiting_current_depletion_debye_and_mobility_ratios]** **[tested: tests/tier2/test_pnp_benchmarks.py::test_ver16_current_saturates_at_the_limiting_value]**
-- **`d` is a discrete field, so it must travel with the solution, not be recomputed.** Two calls to
-  the same distance solver return grid functions that differ at round-off, and a residual reassembled
-  against the second is a *different operator* from the one that was solved. Any post-processing that
-  rebuilds the flux — the ψ-indicator current does — or any warm start that re-solves a converged
-  state must read `d` back off the solution. **[tested: tests/tier1/test_solution_state.py::test_ver34_the_wall_distance_field_is_restored_and_not_re_solved]** **[tested: tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing]**
+- **The limiting-current benchmark's two lessons** (two errors that cancel, and the screening
+  length at a depleted electrode) are under VER-16's benchmark,
+  `knowledge/08-validation-benchmarks/02-tier-2-analytic-benchmarks-minutes.md` §2.5.
+- **`d` travels with the solution and is not recomputed**: why is in
+  `knowledge/06-numerics-fem/15-tier-1-test-evidence-scaling-the-wall.md`, the restore. A warm start
+  that re-solves a converged rung, with `d` read off the solution, costs at most one Newton
+  iteration and moves nothing. **[tested: tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing]**
 - **The Langevin function switches to its `x/3` limit at `x = 3e-4`.** `coth(x) - 1/x` has relative
   error about `3 eps / x^2` and the series `x/3` has `x^2/15`; they cross near `3e-4`, both accurate to
   about 7e-9. A cutoff of 1e-8 is inside the cancellation region: `L(1.1e-8)` evaluates to exactly zero

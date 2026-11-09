@@ -5,7 +5,7 @@ okf_version: "0.2"
 # nanopnp knowledge base
 
 * [Orientation](00-orientation/index.md) - Where to start: the traps, the conventions, the author rulings and the open items.
-* [ePNP-NS — normative physics reference](01-physics-epnpns/index.md) - First for physics work. The normative equations, corrections, parameters and errata.
+* [ePNP-NS — the physics behind §4](01-physics-epnpns/index.md) - First for physics work. The concepts behind `SPECIFICATION.md` §4, which governs: the weak form, the measured Einstein ratio, the rationale and the errata.
 * [Electrokinetics background — double layers, PB, electro-osmosis, selectivity, conductance](02-electrokinetics-background/index.md) - Underlying theory: double layers, Poisson-Boltzmann, electro-osmosis, selectivity, rectification.
 * [Nanopore biology and electrophysiology — what the model is a model *of*](03-nanopore-biology/index.md) - Domain grounding: the pores, ClyA, electrophysiology, glossary.
 * [ClyA-AS — geometry, fixed charge, and validation targets](04-clya-geometry-and-charge/index.md) - The structure, geometry, mesh and charge pipelines; numeric validation targets.

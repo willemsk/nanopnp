@@ -178,7 +178,7 @@ AM14 REV-229.
 
 ### Work items
 
-- [ ] 1. `.claude/scripts/audit/markers.py`, the fifteen claims, `04/02`'s front matter (D4): AUD-07, AL19; done when
+- [x] c45fe94 1. `.claude/scripts/audit/markers.py`, the fifteen claims, `04/02`'s front matter (D4): AUD-07, AL19; done when
   `markers.py` lists no missing test, no unfootnoted claim and no `verified:` difference. **Executor:** main
 - [ ] 2. `knowledge/01-physics-epnpns/`, §4.6, VER-03's row, `knowledge/08-validation-benchmarks/01-…` and `02-…`
   §2.5, `tests/tier1/test_corrections.py` (D1, D2, D6): AUD-339 first, AL16, AL17's §4 mirrors, AM13; done when the test
