@@ -217,7 +217,7 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
   > exits 0; both §5.3.1 examples validate; `links.py`, `duplicates.py`, `decisions.py --check` and the
   > strict build pass.
 - [x] 8. Compaction checkpoint. **Executor:** main
-- [ ] 9. `.claude/`, `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md` (D3, D4): list 9, AL14, AL16, AM4,
+- [x] 119886b 9. `.claude/`, `CLAUDE.md`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md` (D3, D4): list 9, AL14, AL16, AM4,
   REV-222's four; done when `links.py` passes and each changed procedure is stated in one file. **Executor:**
   main for AM4, AL16 and REV-222's four, which move and reword rules; list 9's fixed edits and AL14's pointers
   go first to `general-purpose` on Sonnet, and main reads its diff
