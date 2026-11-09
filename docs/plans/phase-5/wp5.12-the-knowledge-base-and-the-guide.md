@@ -1,7 +1,7 @@
 # WP5.12 — The knowledge base and the guide
 
 **Status: planned, not started.** Planned 9 November 2026, at `f8960d1`. Inherits §8.2.36 AL13 and AL15 to AL21, §8.2.37
-AM13 to AM17 ruled at this plan and its review, CODE_REVIEW_039's register and its scripts in `.claude/scripts/audit/`, and
+AM13 to AM18 ruled at this plan and its review, CODE_REVIEW_039's register and its scripts in `.claude/scripts/audit/`, and
 REV-226.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md), entry WP5.12. `SPECIFICATION.md` governs; an
@@ -9,9 +9,9 @@ identifier here is a pointer, never a restatement. Where the two disagree, this 
 
 ## In brief
 
-**What changes.** The project's knowledge base and its user guide are corrected where last week's audit found them
+**What changes.** The project's knowledge base and its user guide are corrected where the audit found them
 adrift: about 160 passages. Five notes that state a method or a rule wrongly are rewritten, first one that
-described a charge construction the model forbids. Where a note repeats the
+described a forbidden charge construction. Where a note repeats the
 specification's equations or rules, it now points to them, so each rule is stated once. History and superseded
 measurements leave the notes. Every claim marked as checked names its source; claims copied from the thesis
 are checked against it or marked unverified. The guide says protonation runs before the density map and names
@@ -27,13 +27,14 @@ number: the link check, the strict site build and the claim-marker check would s
 change their wording: the unit tests run on that commit.
 
 **Your call.** Six findings rest on the paper's supplementary information or the COMSOL model report, which the
-agents cannot open: check each against the section the list names, and confirm or dismiss it. Is the reviewed plan
-ready to approve? *Recommendation:* yes; you ruled each choice that changes a meaning.
+agents cannot open: the session asks you all six in one round, with the section to look up; have
+both to hand. Is the reviewed plan ready to approve? *Recommendation:* yes; you ruled each choice
+that changes a meaning.
 
 ## Execution brief
 
 **Scope.** The 164 findings of CODE_REVIEW_039 still `your call` at `f8960d1`, under AL13, AL15 to AL21 and AM13 to
-AM17; REV-226; the register's states. **Depends on** WP5.11, merged (PR #173); WP5.13 follows in this lane.
+AM18; REV-226; the register's states. **Depends on** WP5.11, merged (PR #173); WP5.13 follows in this lane.
 **Pointers:** §4.6, §5.2, §6, §7.2 (VER-03, VER-54), §8.4.6, Appendix B; `knowledge/00-orientation/03` and `04`.
 **Implementing session:** Opus at high effort, the main session only (AM17); the marker sweeps on Sonnet sub-agents, the heading levels on Haiku; the `physics-reviewer` reads items 2 and 3 before each commits. **Tests:**
 one Tier 1 test is tightened (AM13); every other item is done when the code and review say so, with D9's counts.
@@ -46,14 +47,13 @@ one Tier 1 test is tightened (AM13); every other item is done when the code and 
 | D2. Meaning | An edit lands without asking when it makes the text agree with the code, a test, a clause, a ruling or the source it cites; removes history, a spent statement or a duplicate; or adds a pointer, title, description or marker. AM13 to AM15 are the meaning changes. Any other change to a SHALL, a number the code or a test reads, or a decision stops the item and goes to the author. Where a finding's edit conflicts with a ruling or offers two, Grounding D2 picks | Ruled by the author (AL21; AM13 to AM15). Decided by the plan: the test of meaning, as WP5.11's D2 |
 | D3. Paths and data | No file is deleted, renamed or moved, and no anchor a link names changes (an explicit `{#id}` stays); a concept that would go is rewritten or reduced to a pointer. Nothing under `data/` changes: AUD-341's comment in the correction file waits as REV-230 | Decided by the plan: records link to concepts by path; the correction file's bytes key stage 8 (VER-62) |
 | D4. Markers | A thesis transcription takes `[verified][^thesis]`, its `.tex` locator kept inline, only where the thesis clone supports it; otherwise it says "(unverified)". A `[tested:]` marker stays on the sentence its test asserts; a measured number the test does not assert takes `[verified]` with its record's footnote. `markers.py` skips code spans; each of AL19's fifteen gets its footnote, "by arithmetic" with its source, or plain text | Ruled by the author (AL19). Decided by the plan: `knowledge/00-orientation/03` and `04` |
-| D5. The source checklist | Six rows, the findings that rest on the ESI or the COMSOL report (AUD-136, 225, 286, 327, 343, 346): REV-227, `open`, whose section is the checklist. Their edits wait for the verdict; a row open at the close stays in REV-227. AUD-316, 371 and 372, which CODE_REVIEW_039 listed, land in items 6 and 7. AUD-226 and AUD-326 rest on git history: the session fetches it and records whether each hash resolves | Ruled by the author (AL20; AM16, six rows against the eight CODE_REVIEW_039 named). Decided by the plan: the form |
+| D5. The source checklist | Six rows, the findings that rest on the ESI or the COMSOL report (AUD-136, 225, 286, 327, 343, 346): REV-227, whose section is the checklist. Item 11 asks the author all six in one round; a confirmed row's edit lands there; a row not yet checked stays in REV-227 to the phase close. AUD-226 and AUD-326 rest on git history: the session fetches it and records whether each hash resolves | Ruled by the author (AL20; AM16, six rows; AM18, one round at item 11) |
 | D6. Code and tests | REV-226: a citation changes where its rule moved to §5.2's NOTEs on stages 1 and 2. AUD-216 and AUD-351 repoint two comments. AM13's target. Nothing else under `src/` or `tests/` | Ruled by the author (REV-226's acceptance; AM13) |
-| D7. Open items | REV-226 `fixed`. New, each section at item 9's `###`: REV-227 (D5); REV-228, the site links, `accepted`, WP5.21 (AM15); REV-229, the three ideas, `post-1.0` (AM14); REV-230, the correction file's comment, `open` until a package that changes that file is named | Ruled by the author (AM14, AM15). Decided by the plan: REV-230 |
+| D7. Open items | REV-226 `fixed`. New, each section at item 9's `###`: REV-227 (D5), `fixed` once each row has a verdict, else `open`; REV-228, the site links, `accepted`, WP5.21 (AM15); REV-229, the three ideas, `post-1.0` (AM14); REV-230, the correction file's comment, `open` until a package that changes that file is named | Ruled by the author (AM14, AM15). Decided by the plan: REV-230 |
 | D8. The records | One commit per item, its AUD ids in the body. Item 12 adds one `wp512-<category>` disposition per finding and one commit row per category, re-runs `register.py` and `maps.py`, sets `holds-now.yaml`, re-runs `decisions.py`. Changelog `[0.6.0-alpha.12]` | Decided by the plan: as WP5.11's D6 |
 | D9. The counts | 517 SHALLs before item 2 and after item 9. `markers.py`: no missing test, no unfootnoted claim, no `verified:` difference. `links.py --anchors`, `duplicates.py`, `decisions.py --check`, the strict build; `same_tree.py` at item 10 | Decided by the plan: a silent failure gets a count |
 
-Nine decisions: the set, the test of meaning and the records repeat WP5.11's; the markers, the checklist and the
-code are this package's own.
+Nine decisions: three repeat WP5.11's; the markers, the checklist and the code are new.
 
 ### Grounding
 
@@ -110,7 +110,7 @@ code are this package's own.
 - The readers' `unchecked` rows: KST-06 (AUD-286), KST-07 (AUD-287, a duplicate of AUD-136, whose inactive values
   WP5.11 marked), KST-47 (AUD-327), KPH-16 (AUD-343), KPH-19 (AUD-346), KNU-32 (AUD-225), KNU-33 (AUD-226) and KST-46
   (AUD-326), the last two dismissed on a shallow clone. Section 3's list (AUD-316, 371, 372) names rows that rest on
-  neither source.
+  neither source; they land in items 6 and 7.
 - A REV row is `| REV-nn | area | severity | status | source | [title](review-items.md#anchor) |`, with its section;
   the highest is REV-226. Dispositions take `fix:<category>`, `your call` or `dismissed`, with a note.
 
@@ -157,16 +157,24 @@ files, and lists `thesis` under `sources:`. It returns the claims it marked "(un
 whose messages or reasons changed, and no comment-only file; `git diff -U0 -- src/` shows only those citations.
 
 **Item 11.** REV-227's section is a table `| Finding | The claim | What the audit found | Source to look up | Verdict |`,
-one row each for AUD-136, 225, 286, 327, 343 (and ruling 1's wording) and 346, the source section taken from the
-finding and `09/01`'s page map. Then `git fetch --unshallow origin` and `git cat-file -e <hash>` for each hash
+one row each for AUD-136, 225, 286, 327, 343 and 346, the source section taken from the finding and `09/01`'s page
+map. Then the round (AM18), as `.claude/workflow/author.md` says: two `AskUserQuestion` calls of three questions.
+Each question gives the claim, what the audit found, the source section and the proposed edit; its options are
+*Confirmed* (the edit lands), *Dismissed* (the text stays; for AUD-136, WP5.11's "(inactive)" marking is reverted)
+and *Not checked yet*, none marked recommended, since the source decides. AUD-343 asks instead which source ruling
+1's "running text" means: the ESI's `0.62e1`, the thesis's 6.2 nm⁻¹, or not checked yet; the finding's wording
+follows the answer. The confirmed edits land in item 11's commit; the Verdict column records each answer and its
+date. Then `git fetch --unshallow origin` and `git cat-file -e <hash>` for each hash
 AUD-226 and AUD-326 name; their disposition notes record the result.
 
 **Item 12.** A disposition: `KPH-12<TAB>fix:wp512-knowledge-01<TAB>WP5.12 item 2 (§8.2.36 AL15)<TAB>`. Categories:
 1 `wp512-markers`, 2 `wp512-knowledge-01`, 3 `wp512-knowledge-06`, 5 `wp512-knowledge-04-05`, 6
-`wp512-knowledge-07-09`, 7 `wp512-knowledge-00-03`, 9 `wp512-docs`, 10 `wp512-src`. Item 11's five and AUD-14 stay
+`wp512-knowledge-07-09`, 7 `wp512-knowledge-00-03`, 9 `wp512-docs`, 10 `wp512-src`, 11 `wp512-checklist`. Item
+11's rows take `fix:wp512-checklist` or `dismissed`, the verdict in the note; a row not yet checked, and AUD-14, stay
 `your call`, the note naming REV-227 or REV-228. Then `register.py --at HEAD` and `maps.py HEAD`. `holds-now.yaml`:
 AL13 the guide's three pages; AL15, AL18 and AL21 spent; AL16 `CLAUDE.md` and `01/00`; AL17 `00-orientation/04`,
-which item 7 gives the rule; AL19 `00-orientation/03`; AL20 `open: REV-227`; AM13 §4.6, VER-03; AM14 REV-229.
+which item 7 gives the rule; AL19 `00-orientation/03`; AL20, AM16 and AM18 `spent`, or `open: REV-227` while a row waits; AM13 §4.6, VER-03;
+AM14 REV-229.
 
 ### Work items
 
@@ -191,8 +199,8 @@ which item 7 gives the rule; AL19 `00-orientation/03`; AL20 `open: REV-227`; AM1
   **Executor:** main; AUD-249's levels on `general-purpose`, Haiku
 - [ ] 10. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
   commit's gate passes. **Executor:** main
-- [ ] 11. The source checklist (D5): REV-227 and its section, the two git rows; done when each row names its source
-  section. **Executor:** main
+- [ ] 11. The source checklist (D5): REV-227 and its section, the author's round on the six (AM18), the confirmed
+  edits, the two git rows; done when each row records its verdict or "not checked yet". **Executor:** main
 - [ ] 12. The records (D7, D8): REV-226 `fixed`, REV-227 to REV-230, the register, `holds-now.yaml`, `decisions.py`,
   `CHANGELOG.md`; done when each finding reads `fixed` or names its REV row and `decisions.py --check` passes.
   **Executor:** main

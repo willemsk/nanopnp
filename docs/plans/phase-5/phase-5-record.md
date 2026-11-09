@@ -477,6 +477,14 @@ Its *Verification* row read:
 WP5.21's entry ended: "The application guide is rewritten against the browser workflow with the rendered screens
 (§8.1's increment 5). Tag `v0.6.0-alpha.21`."
 
+## Amended 9 November 2026 (§8.2.37 AM18)
+
+After the plan's review, the author ruled that the implementing session asks the six checklist findings in one round and lands the confirmed
+edits in WP5.12 (AM18). The *In brief* read: "Six audit findings to check against the source papers, from a checklist."
+WP5.12's entry ended: "The author receives the six findings that rest on the ESI or the COMSOL report as a checklist and confirms or dismisses each (AL20; AM16); a finding left open becomes a `REV-nn` row. Tag `v0.6.0-alpha.12`." The *What the author supplies* row read:
+
+> | The six-row checklist against the ESI and the COMSOL report (AL20; REV-227) | WP5.12 | Each finding stays `unchecked` in REV-227, carried to the close |
+
 ---
 
 ## 9 November 2026: the delivered entries leave the plan (§8.2.36 AL18; AUD-244)

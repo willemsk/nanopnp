@@ -20,7 +20,7 @@ cost, the line applies to the workbench's own share.
 
 **Your call.** Which settings exist beyond the four sections (appearance and accessibility; keyboard and editing guards; runs and storage; units and numbers), after the frame package's research. Whether to
 adopt either measuring tool the tools package tries, on its report. Six audit findings to check against the source
-papers, from a checklist. The colleague who tries the workbench, named by the close.
+papers, asked in one round during the knowledge package. The colleague who tries the workbench, named by the close.
 
 ## Context
 
@@ -143,7 +143,7 @@ Live constraints: A commit that adds a decision re-runs `decisions.py`. Open dec
 
 Live constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 are Phase 6's.
 
-### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.37 AM13 to AM17)
+### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.37 AM13 to AM18)
 
 **Planned 9 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)). The 164 findings WP5.11 left, most filed under
 `knowledge/` and `docs/`. The five concepts that state a method or rule wrongly are rewritten, AUD-339 first (AL15);
@@ -152,9 +152,9 @@ Live constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 a
 the fifteen unsourced `[verified]` claims footnoted, marked "by arithmetic" or demoted, and the thesis transcriptions
 checked against the thesis or marked unverified (AL19); the guide says protonation runs before the density (AL13).
 The test of the sodium cap is tightened (AM13); three ideas with no requirement become one open item for after v1.0
-(AM14); the site's dead register links wait for WP5.21 (AM15); REV-226's citations in `src/` follow §5.2. The author
-receives the six findings that rest on the ESI or the COMSOL report as a checklist and confirms or dismisses each
-(AL20; AM16); a finding left open becomes a `REV-nn` row. Tag `v0.6.0-alpha.12`.
+(AM14); the site's dead register links wait for WP5.21 (AM15); REV-226's citations in `src/` follow §5.2. The session asks
+the author the six findings that rest on the ESI or the COMSOL report in one round, and lands each confirmed edit
+(AL20; AM16; AM18); a finding not yet checked stays in REV-227. Tag `v0.6.0-alpha.12`.
 
 ### WP5.13 — Case and model files (REV-217, REV-219; CODE_REVIEW_036 candidates 1 and 5; §8.2.36 AL22, AL23)
 
@@ -273,7 +273,7 @@ Settled rows: see §8.2.17 to §8.2.37 and [the record](phase-5-record.md).
 | Verdicts on each suite's prototype round, on 2WCD or, for Physics, example 01 | WP5.16 to WP5.20 | The suite is built on the prototype's design as it stands, and the verdicts move to its screen review |
 | A machine with a GPU, in a local session | WP5.19 | The 200 ms line stays unmeasured; a `REV-nn` row carries it to the close |
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |
-| The six-row checklist against the ESI and the COMSOL report (AL20; REV-227) | WP5.12 | Each finding stays `unchecked` in REV-227, carried to the close |
+| Verdicts on the six findings against the ESI and the COMSOL report, asked in one round at WP5.12's item 11 (AL20; AM18; REV-227) | WP5.12 | A finding not yet checked stays `unchecked` in REV-227, carried to the close |
 | The verdict on xenon and import-linter (AL27) | After WP5.10 | Neither is added; the layering test stays the guard |
 | An experimentalist new to nanopnp | The close | QR-10 is waived and carried (S13) |
 | Merges; tags a session cannot push | Each package | The session prints the commands |
