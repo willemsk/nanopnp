@@ -28,7 +28,8 @@ Confirm these:
 - Each in-scope `VER-`/`VAL-` that the plan claims has its test (`SPECIFICATION.md` §8.2.13 N1, N3).
   The review checks each other claimed identifier against the code.
 - `SPECIFICATION.md`, `knowledge/` and the Outcome annotations are committed.
-- `CHANGELOG.md` has the package's section (`CONTRIBUTING.md`, *Versions and releases*).
+- `CHANGELOG.md` has `## [X.Y.Z-alpha.N]` for the package's tag, the heading `tag.yml` greps
+  (`grep -qF '## [X.Y.Z-alpha.N]' CHANGELOG.md`; `CONTRIBUTING.md`, *Versions and releases*).
 
 If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `main`, merge `main`
 into it and renumber as the core's *Two lanes* says. Then run `uv run .claude/scripts/duplicates.py`

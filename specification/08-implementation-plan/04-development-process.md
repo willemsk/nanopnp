@@ -19,7 +19,9 @@ here once.
 * Each merged work package takes `vX.Y.Z-alpha.N` on its last commit on `main`. The session pushes the
   tag if its GitHub access allows it; a cloud session's does not, so after the merge `/np-ship`
   dispatches `.github/workflows/tag.yml`, which pushes the tag and starts the release with the full
-  matrix. `/np-ship` ends with the full commands either way. (§8.2.33 AI5, AI8)
+  matrix. `/np-ship` ends with the full commands either way. Its `CHANGELOG.md` section is headed
+  `## [X.Y.Z-alpha.N]`, the line `tag.yml` reads and `/np-ship`'s preflight checks. (§8.2.33 AI5,
+  AI8; §8.2.36 AL14)
   From Phase 5, N is the package's number within its phase: WP5.02 takes `v0.6.0-alpha.2`. (§8.2.7
   G11; §8.2.17 S19)
 * A phase's close package takes the release tag alone, with no alpha tag on the same commit; Phase 4's
