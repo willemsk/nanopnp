@@ -10,7 +10,7 @@ knowledge are merged. The second is planned: about 150 corrections to the specif
 and three possible program gaps recorded for Phase 6. Then the knowledge base, tidy-ups, the screens. About four
 months part-time remain.
 
-**Your call.** Approve the second package's plan after its review; adopt two measuring tools or not (the trial
+**Your call.** Approve the second package's reviewed plan; adopt two measuring tools or not (the trial
 recommends neither); check eight audit findings.
 
 ## Position
@@ -20,7 +20,7 @@ recommends neither); check eight audit findings.
   (tag `v0.6.0-alpha.10` unpushed). Next WP5.11 and WP5.12 the written knowledge, WP5.13 and WP5.14 the
   clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the route, WP5.22 the close (§8.2.36).
   **WP5.11** [planned](phase-5/wp5.11-the-specifications-text-and-the-agent-instructions.md): 148 audit findings
-  and REV-222 (§8.2.37). Next `/np-plan wp 5.11 review`, then `/np-implement wp 5.11`.
+  and REV-222 (§8.2.37), reviewed (CODE_REVIEW_043). Next `/np-implement wp 5.11`.
   host: claude-code.
 
 ## Not to be re-decided

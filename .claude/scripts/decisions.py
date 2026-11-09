@@ -217,7 +217,7 @@ def history() -> list[Decision]:
             letter, annotation, rest = match.group(1), match.group(2).strip(), match.group(3)
             cells = _cells(rest)
             decided = cells[0] if cells else ""
-            row_date = _iso(decided) if re.match(r"\*Added", decided) else ""
+            row_date = _iso(decided) if re.match(r"\*(?:Added|Ruled)", decided) else ""
             entry = holds.get(letter, "")
             rows.append(
                 Decision(

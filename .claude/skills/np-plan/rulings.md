@@ -90,8 +90,10 @@ must settle it.
 - Each ruling amends its clause in the same commit. If a ruling sets a standing rule of process with no
   clause of its own, restate it in §8.4, with a pointer to the ruling (R3).
 - **A ruling taken at a package's plan, on a record's date, is a row added to that record.** Mark it
-  *Added <date>, at WP<n>'s plan.* A superseded ruling gets only a pointer in its first cell, such as
-  *Its command names are amended by R12.* Its text stays.
+  *Added <date>, at WP<n>'s plan.* An earlier ruling transcribed into a later record opens *Ruled <date>
+  (<source>); recorded at <where>.* Either row takes its own date on the decisions page. A superseded
+  ruling gets only a pointer in its first cell, such as *Its command names are amended by R12.* Its text
+  stays.
 - **A phase plan states its current scope** (R4). Rewrite an amended package entry to what holds now,
   with no `Amended` blockquote. Append the amendment's text to `docs/plans/phase-<n>/phase-<n>-record.md` as
   `## Amended <date> (§8.2.<k> <ids>)`, with the entry quoted as it was. If the record is missing,
