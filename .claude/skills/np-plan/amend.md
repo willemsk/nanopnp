@@ -5,8 +5,9 @@
 - planning the provisional packages after an opening study reports. Read its report and findings log.
   Put the decisions it raises to the author as `rulings.md` says. Then replace the provisional
   entries;
-- adding or dropping a package in mid-phase: the author's reason, its place, its identifiers;
-- planning the later phases again: the rulings, §8.1's rows, and the later plans or input notes.
+- adding or dropping a package in mid-phase: the author's reason, its place, its identifiers.
+
+Planning the later phases again is `/np-plan project`.
 
 It has the same two turns as `phase.md`: the ruling round, then the write-up. Commit nothing in the
 ruling round.
@@ -20,4 +21,4 @@ ruling round.
    each planned package that the change moves, and `docs/plans/current.md`.
 5. Gate, push and open its PR as `rulings.md`'s *Finishing* says. Report the paths, the PR, the
    rulings, the packages as they now are, the open decisions and their owners, and the next step.
-   Then pause as `review.md`'s *The pause* says.
+   Then pause as `SKILL.md`'s *The pause* says.

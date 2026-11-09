@@ -13,7 +13,7 @@ Before you name a new version, these agree:
 - `CHANGELOG.md` and `current.md`;
 - the published tags (`git ls-remote --tags origin 'v0.*'`; a hosted clone is shallow).
 
-There is one minor version per phase. A disagreement goes into the round.
+The rule for versions, tags and `CHANGELOG.md` entries is `CONTRIBUTING.md`, *Versions and releases*. A disagreement goes into the round.
 
 ## What a phase inherits
 
@@ -65,7 +65,7 @@ recommendation first, with the reason. Also draft:
 
 ## Put it to the author
 
-Ask through `AskUserQuestion`, as the core's *Putting a choice to the author* says. Each question also
+Ask through `AskUserQuestion`, as *Putting a choice to the author* in `.claude/workflow/author.md` says. Each question also
 carries the clause at stake and what is already ruled. Ask first the decisions that change the
 package sequence, then the sequence, then the rest. Record a prose ruling in the author's words. If
 `AskUserQuestion` is not available, put the questions in one numbered message and end the turn. If the
@@ -103,6 +103,6 @@ must settle it.
 ## Finishing
 
 Gate and push (the core). Open or reuse the branch's PR against `main`, and do not ask. Its base is
-`main` and its title is the commit's subject. Its body holds an In brief (the core's template), the
+`main` and its title is the commit's subject. Its body holds an In brief (`.claude/workflow/author.md`), the
 rulings, what the level names, the open decisions, the checks run, and the attribution footer. If you
 cannot create the PR, report the blocker and the pushed branch.

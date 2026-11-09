@@ -61,7 +61,7 @@ estimate moved.
 | Section | Content |
 |---|---|
 | Title + status | `# Phase <n> (<name>): <what it achieves>`, **Status: planned, not started**, packages as planned, the date, the release `v0.<n+1>` |
-| `## In brief` | Right after the status; the core's template |
+| `## In brief` | Right after the status; the template in `.claude/workflow/author.md` |
 | Normativity note | First paragraph of `## Context`, never in the In brief: `SPECIFICATION.md` governs, identifiers are pointers, the rulings are §8.2.<k> |
 | `## Context` | The question the phase answers; its gate; the "true of the codebase today" list; the `RSK-` it retires; what it excludes and where each goes |
 | `## Design decisions` | `Decision \| Choice \| Why`, each citing its §8.2.<k> ruling |
@@ -96,4 +96,4 @@ caps (§8.2.11 L7).
    - the open decisions and their owners;
    - **what the author must supply and when**;
    - the next step.
-4. Pause as `review.md`'s *The pause* says.
+4. Pause as `SKILL.md`'s *The pause* says.

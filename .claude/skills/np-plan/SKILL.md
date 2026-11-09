@@ -13,6 +13,15 @@ argument-hint: <project | phase n | amend n | wp n> [review]
 3. Read the level's file beside this one: `${CLAUDE_SKILL_DIR}/<level>.md`, one of `project.md`,
    `phase.md`, `amend.md` and `wp.md`. `project`, `phase` and `amend` also read `rulings.md` beside
    it.
-4. Read `${CLAUDE_SKILL_DIR}/review.md`. Without `review`, follow the level's file; it ends with
-   `review.md`'s *The pause*. With `review`, follow `review.md`'s *The review*, against the level's caps
-   and sections.
+4. Without `review`, follow the level's file; it ends with *The pause* below. With `review`, read
+   `${CLAUDE_SKILL_DIR}/review.md` and follow its *The review*, against the level's caps and sections.
+
+## The pause
+
+The level's commit names, in `docs/plans/current.md`, `/np-plan <level> [n] review` as the next step,
+before the level's own next step. After the level's report:
+
+1. Print a prompt in a `text` block. It holds `/compact`, the level and n, the plan's path, the PR, the
+   commit, the close calls that the plan's text does not hold, and "resume with
+   `/np-plan <level> [n] review`".
+2. End the turn. The author compacts and resumes. A skill cannot run `/compact` itself.

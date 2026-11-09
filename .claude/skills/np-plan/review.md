@@ -5,16 +5,6 @@ plan, opens its PR, reports and pauses. After the author compacts, `/np-plan <le
 the plan, fixes what the review finds, gates and pushes again, and ends with the manager's summary
 (§8.2.33 AI2, AI3). The review reads the plan after a compaction, not through the context that wrote it.
 
-## The pause
-
-The level's commit names, in `docs/plans/current.md`, `/np-plan <level> [n] review` as the next step,
-before the level's own next step. After the level's report:
-
-1. Print a prompt in a `text` block. It holds `/compact`, the level and n, the plan's path, the PR, the
-   commit, the close calls that the plan's text does not hold, and "resume with
-   `/np-plan <level> [n] review`".
-2. End the turn. The author compacts and resumes. A skill cannot run `/compact` itself.
-
 ## The review
 
 1. **The head.** For `wp`, take the package's PR as the core's *The package's PR and branch* says. For
@@ -31,7 +21,7 @@ before the level's own next step. After the level's report:
    with NNN one above the highest present.
 3. **The fixes.**
    - A fix keeps every ruling of the author. A finding that would change one goes to the author as
-     the core's *Putting a choice to the author* says, before the commit; the ruling is recorded as
+     *Putting a choice to the author* in `.claude/workflow/author.md` says, before the commit; the ruling is recorded as
      `rulings.md` says.
    - A finding not fixed is a `REV-nn` row with its section (`CLAUDE.md`, *Open items*), or one of the
      plan's open questions if it blocks the implementation.

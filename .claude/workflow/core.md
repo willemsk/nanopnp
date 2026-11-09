@@ -6,10 +6,10 @@ Each level of `/np-plan`, `/np-implement` and `/np-ship` reads this file, then i
 
 ## Reading order
 
-1. Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
-2. `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
-3. A stale `.venv` takes `uv sync --all-extras --frozen` (`CLAUDE.md`, *Setup*).
-4. On a host other than Claude Code, read `hosts.md` beside this file first.
+1. On a host other than Claude Code, read `hosts.md` beside this file before the rest.
+2. Read `docs/plans/current.md`, the plan of the level, then what the level's file lists.
+3. `uv run .claude/scripts/clause.py <ID>` prints a clause with its NOTEs and rulings.
+4. A stale `.venv` takes `uv sync --all-extras --frozen` (`CLAUDE.md`, *Setup*).
 
 ## The branch
 
@@ -40,15 +40,13 @@ write.
 
 ## Two lanes
 
-At most two lanes run (§8.4.4): the current phase, one package at a time, and the next phase's design
-study. The study changes no `src/`, `tests/`, case schema or public API before the current phase's
-release. While two package PRs are open:
+The rule of the two lanes, the current phase and the next phase's design study, is §8.4.4's; this
+section is a session's conduct under it. While two package PRs are open:
 
 - `/np-implement` and `/np-ship` take `wp <n>`. Without it, ask which package.
 - `current.md` holds one position line per lane. Edit only your lane's line.
-- A package merged before its previous phase's release takes no alpha tag. Its `CHANGELOG.md` entry
-  goes under `## [Unreleased]` (§8.4.1).
-- A clause the study restates goes beside it, tagged for the study's release.
+- A package merged before its previous phase's release takes no tag. Its `CHANGELOG.md` entry goes
+  under `## [Unreleased]` (`CONTRIBUTING.md`, *Versions and releases*).
 - After you merge `main`, renumber each new item of every register §8.4.4 lists. Start one above the
   highest on `main`, change every reference, and repeat until `uv run .claude/scripts/duplicates.py`
   passes.
@@ -85,51 +83,13 @@ you use it. Physics and numerics decisions stay in this session.
 | `specification/history/` | The table of a ruling round, its line in `history/index.md` and where each ruling holds now in `history/holds-now.yaml` (`np-plan/rulings.md`) |
 | `knowledge/<file>.md` | Durable findings (`CLAUDE.md`, *Durable learnings*) |
 | `docs/plans/phase-<p>/wp<n>-*.md` | The current Execution brief; short `> **Outcome — <what changed>.**` annotations that link the evidence; the numbers the plan asks for |
-| `docs/project/review-findings.md` | A `REV-nn` row for each item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12) |
+| `docs/project/review-findings.md` | A `REV-nn` row, with its section in `review-items.md`, for each item left open: a deferral, a known limitation, a question for the author (§8.2.8 H12) |
 
-## The In brief
+## The author's page
 
-A phase plan, a work-package plan and a pull request start with this section:
-
-```markdown
-## In brief
-
-About 250 words, up to 10% over (275), no backticks or identifiers; for a reader who does not code.
-
-**What changes.** What the reader will notice, and why it matters.
-**Cost.** The work in sessions, agent hours and your touches, from measured comparable packages (§8.3);
-a cost to a user of the program, such as speed, a dependency or money, in plain units.
-**What could go wrong.** Each risk, and how it would be noticed.
-**Your call.** Each decision the author owns, as a question, with *Recommendation:* and one reason.
-```
-
-## Putting a choice to the author
-
-Every choice the workflow puts to the author carries what a reader who does not code needs to judge
-its impact: a ruling round, a work-package decision, a disputed review finding (§8.2.33 AI7). The
-question dialog may be all the author sees, so the context lives in it, not in the chat.
-
-- **The question** says, in the reader's words, what is decided, what happens today, and why it is
-  open: what the specification, the phase or the design leaves undecided. An identifier only follows
-  its words, in brackets.
-- **Each option's description**, one or two sentences: what the user will see or do differently.
-- **Each option's preview**, short lines in Markdown:
-  - **You get:** the change for the user, with a concrete example: a command, a screen, a file;
-  - **It costs:** sessions, agent hours and your touches (§8.3), and what it adds, delays or leaves
-    out;
-  - **Undo:** easy (a setting, or one later package), costly (a re-plan or a migration) or one-way
-    (a file format users write, deleted data, a published release);
-  - **It touches:** the later packages, other users and the clauses it moves, in words;
-  - for the recommended option, **Why:** the one reason, and **It would change if:** what would make
-    another option better.
-  A layout or a screen gets a small text sketch in the preview.
-- **At most three questions in a call**, the ones that change others first. Before the first call,
-  the chat gets a short brief of the round: what is decided, what is settled already, and what each
-  answer feeds.
-- **When the author asks for more,** with a question back, a free answer that picks nothing, or
-  "explain": give what was asked (an example, a sketch, the cost, what comparable tools do), then ask
-  again. Never record a ruling the author did not make. If the context asked for is of a kind this
-  list lacks, add it here in the same commit, so the next round gives it unprompted.
+*The In brief*, the section a plan and a pull request start with, and *Putting a choice to the author*
+are in `author.md` beside this file (§8.2.33 AI7). Read it at a step that writes an In brief or puts
+a choice to the author.
 
 ## Gate and push
 
@@ -143,8 +103,8 @@ question dialog may be all the author sees, so the context lives in it, not in t
    `SPECIFICATION.md`, `specification/`, `knowledge/`, `CHANGELOG.md`, `examples/*/README.md`,
    `data/corrections/`, `docs/` outside `plans/` and `code_reviews/`, `mkdocs.yml`, and docstrings in
    `src/`.
-4. Run `.claude/hooks/gate.sh run` as `CLAUDE.md`'s *Commands* say, and wait for it in the same turn.
-   Never push a tree the gate has not passed. The push guard refuses it.
+4. Run the gate before a push as `CLAUDE.md`'s *Commands* say (on Copilot, `hosts/copilot.md`), and
+   push only a tree it passed (§8.4.4).
 5. Run `git push -u origin <branch>`. On a network failure, retry after 2, 4, 8 and 16 s.
 
 ## The PR contract
@@ -156,7 +116,7 @@ create the PR, report the blocker and the pushed branch.
 Titles: `feat: WP<n> — <what it delivers>`, or `fix:` for a package that fixes findings. A plan
 level's PR takes its commit's subject.
 
-The body starts with `## In brief`. It then fills in `.github/pull_request_template.md`, and ticks the
+The body starts with `## In brief` (`author.md`). It then fills in `.github/pull_request_template.md`, and ticks the
 Verification checklist only for what ran. Give numbers, not adjectives: rates with their meshes, route
 agreement, timings, each with its stabilisation mode. Never omit "Specification changes"; "None." is
 an answer. Link derivations and tables; do not copy them. End with this session's attribution footer.

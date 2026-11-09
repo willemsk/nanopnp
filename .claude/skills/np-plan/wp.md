@@ -65,7 +65,7 @@ AI6):
   phase entry; it deletes or moves a user's data; it trades time or a dependency against quality; or
   two defensible options give the user different things. When in doubt, it is the author's.
 
-Put each of the author's to the author as the core's *Putting a choice to the author* says, the
+Put each of the author's to the author as *Putting a choice to the author* in `.claude/workflow/author.md` says, the
 recommendation first, and record the rulings as `rulings.md` says. A package that changes what a user
 sees usually has two to four. A mechanical package may have none; the report then says why.
 
@@ -83,7 +83,7 @@ localise an error to one term (§7.1).
 |---|---|
 | Title + status | `# WP<n> — <name>`, then **Status: planned, not started**, the date, and what it inherits |
 | Normativity note | One paragraph: the phase plan it belongs to, that `SPECIFICATION.md` governs, that identifiers are pointers |
-| `## In brief` | Before the Execution brief; the core's template |
+| `## In brief` | Before the Execution brief; the template in `.claude/workflow/author.md` |
 | `## Execution brief` | Current scope, dependencies, requirement pointers, the model and effort of the implementing session, and the subsections below. Link evidence; do not retell earlier packages |
 | `### Decisions` | A table `Decision \| Choice \| Why/source`, **about six rows, a guideline**: more when the package needs them, each one a choice and not a detail. **This is the deliverable.** Resolve now each choice that affects correctness; each *Why/source* ends with "ruled by the author" and the ruling, or "decided by the plan" |
 | `### Grounding` | The facts of *Grounding the plan*, grouped by decision (`D1`, `D2`, …), one bullet each: `path:symbol`, what it does today and what the change does to it. Facts only: no alternatives, no history, no restated specification. Cite symbols, not line numbers, which drift |
@@ -140,5 +140,5 @@ Link the planned package and its live dependencies. Its word target is in its *H
    follows. *Verification* ticks only the plan's gate, and says that the plan's review follows as
    `/np-plan wp <n> review` and the code's review waits for `/np-ship`.
 4. Report the path, the PR, the close calls, what the grounding pass changed, each spec amendment and
-   the open questions. Then pause as `review.md`'s *The pause* says. Implementation is `/np-implement`,
+   the open questions. Then pause as `SKILL.md`'s *The pause* says. Implementation is `/np-implement`,
    in a separate turn after the review.
