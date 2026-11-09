@@ -20,6 +20,17 @@ fi
 root=${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
 cd "$root" || exit 0
 
+# The payload's `source` says why the session starts: `compact` after a compaction. Read with a
+# bound, so a host that leaves stdin open does not hold the session.
+session_source=""
+if [ ! -t 0 ]; then
+    read_timeout=""
+    command -v timeout >/dev/null 2>&1 && read_timeout="timeout 2"
+    # shellcheck disable=SC2086  # $read_timeout splits on purpose
+    payload=$($read_timeout cat 2>/dev/null || true)
+    session_source=$(printf '%s' "$payload" | grep -Eo '"source"[[:space:]]*:[[:space:]]*"[a-z]+"' | head -1 | grep -Eo '"[a-z]+"$' | tr -d '"' || true)
+fi
+
 # Bring the primary checkout's main up to origin/main before anything reads the skills and rules
 # from it (§8.2.16 R7). A linked worktree's primary is the parent of the common git directory.
 # Ancestry decides, not counts: a hosted clone is shallow. Nothing here may fail the session.
@@ -143,5 +154,9 @@ else
 fi
 
 echo "- workflow: /np-plan wp <n> -> /np-implement -> /np-ship, under a phase planned by /np-plan phase <n>; CLAUDE.md 'Implementation workflow'"
+
+if [ "$session_source" = compact ]; then
+    echo "- after a compaction: under /np-implement, call TaskList and rebuild the task list from the plan's ticks before the next item (.claude/skills/np-implement/wp.md, 'Load the brief')"
+fi
 
 exit 0

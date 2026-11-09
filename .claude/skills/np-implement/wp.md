@@ -14,7 +14,15 @@
 2. Read `knowledge/index.md`, then the sections of the files that the package touches.
 3. Read the `SPECIFICATION.md` sections and Appendix A rows that the plan cites (`clause.py`, the core).
 
-Make a task list from the work items. Start at the first unticked item.
+**The task list** is the one the app shows: Claude Code's `TaskCreate`, `TaskUpdate` and `TaskList`,
+loaded with `ToolSearch` where they are deferred; on another host, its own task tool if it has one.
+
+1. Call `TaskList`. If the list does not match the plan, delete the stale tasks and create one task per
+   work item, checkpoints included, with the subject `Item <k>: <what it delivers>`. A ticked item is
+   `completed`, the rest `pending`.
+2. Do this at the start, after each compaction and in a fresh session: the plan's ticks, not the
+   session's memory, say what is done. The session-start hook reminds you after a compaction.
+3. Start at the first unticked item.
 
 A **compaction checkpoint** is a work item (§8.2.16 R11):
 
@@ -51,7 +59,8 @@ Items marked `main` stay in this session.
 **One commit per work item.** An item is done when the tests of its done-criterion pass. Use a
 conventional prefix, and put the requirement identifier in the body. Tick each item
 `[x] <short sha>` in the next commit. A checkpoint ticks itself and the item before it. A later
-session then resumes from the first unticked item. The gate hook refuses a failing commit and
+session then resumes from the first unticked item. Set an item's task `in_progress` when you start it
+and `completed` when its commit lands; a deferred item's task is `deleted`, its reason in the plan. The gate hook refuses a failing commit and
 remembers a pass, so you can split a gated tree into several commits.
 
 An item that changes a screen (`src/nanopnp/gui/`, the front end, `docs/design/`) runs `/np-gui render
