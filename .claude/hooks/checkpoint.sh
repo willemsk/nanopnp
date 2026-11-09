@@ -102,7 +102,14 @@ stale="If $switch is not 1 in your environment, the checkpoint is stale: run .cl
 case $event in
     PreCompact)
         printf 'The automatic checkpoint (%s=1) saved this prompt for the compaction:\n\n' "$switch"
-        cat "$dir/prompt"
+        # The host keeps 10,000 characters of this output; a longer prompt keeps its head and the
+        # line to resume.
+        prompt=$(cat "$dir/prompt")
+        if [ "${#prompt}" -gt 9000 ]; then
+            printf '%s…\n\nResume with `%s`.\n' "${prompt:0:9000}" "$resume"
+        else
+            printf '%s\n' "$prompt"
+        fi
         ;;
     SessionStart)
         [ "$(printf '%s' "$payload" | jq -r '.source // ""' 2>/dev/null)" = compact ] || exit 0

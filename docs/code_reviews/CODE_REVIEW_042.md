@@ -15,7 +15,7 @@ under `set positional-arguments`; `tag.yml`'s and `release.yml`'s changelog grep
 `alpha.1` does not match `alpha.10`; `decisions.py --check` takes 0.26 s; the `src/` changes are `noqa` markers only.
 After the fixes: ruff and format clean, the three VER-79 tests pass, `links.py` reports 1,432 links, 0 broken and
 2 known, and the decisions page re-renders with 1,259 rows (WP5.03's five rows move from *plan in flight* to
-*delivered plan*).
+*delivered plan*, and eight plans' rows take their planning date).
 
 ## Findings
 
@@ -31,9 +31,9 @@ After the fixes: ruff and format clean, the three VER-79 tests pass, `links.py` 
 | 8 | Low | `CLAUDE.md` | The commit and push gate paragraphs omitted the decisions page check `gate.sh` now runs | Fixed |
 | 9 | Low | `decisions.py` `open_items()` | An OPN row was closed when "closed" appeared anywhere in it | Fixed: read from its Owner column; the page is unchanged |
 | 10 | Low | `decisions.py` `orientation()` | `next(glob(...))` took the rulings file in filesystem order | Fixed: `min(...)` |
-| 11 | Low | `decisions.py` `plans()` | A delivered plan's rows carry its delivery date, not the date its decisions were taken | Not fixed: the page dates a plan by its head; the headers do not name the planning date in one form |
-| 12 | Low | `session-start.sh` | Without `timeout` (stock macOS) the payload read is unbounded | Not fixed: Claude Code closes the hook's stdin; bash has no portable bounded read |
-| 13 | Low | `checkpoint.sh` PreCompact | The prompt is not capped at the host's 10,000 characters | Not fixed: prompts run to about 3,000; a cut would drop the resume line |
+| 11 | Low | `decisions.py` `plans()` | A delivered plan's rows carry its delivery date, not the date its decisions were taken | Fixed after the pass: a plan's rows take the date after *Planned* or *Written* in its head, else its first date; 86 rows move (eight plans) |
+| 12 | Low | `session-start.sh` | Without `timeout` (stock macOS) the payload read is unbounded | Fixed after the pass: `read -t 2 -d ''`, bounded in any bash, replaces `timeout cat` |
+| 13 | Low | `checkpoint.sh` PreCompact | The prompt is not capped at the host's 10,000 characters | Fixed after the pass: a prompt over 9,000 characters keeps its head and a resume line |
 | 14 | Low | `generate.py` | The docstring said six kinds of file and left out the architecture page | Fixed |
 | 15 | Low | `justfile` `lint` | "As the gate runs them" overstated: the gate adds the lock and decisions checks | Fixed |
 | 16 | Low | VER-79 decisions test | Re-implemented `decisions.py --check` | Fixed: calls `decisions.main(["--check"])` |

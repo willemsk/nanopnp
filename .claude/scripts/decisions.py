@@ -62,6 +62,10 @@ CLAUSE_ID = re.compile(
 )
 # A plan whose head says it was delivered, merged, implemented or closed is no longer in flight.
 PLAN_DONE = re.compile(r"\b(?:delivered|merged|implemented|closed)\b", re.I)
+# A plan's decisions date from when it was written, which its head names after its status.
+PLAN_WRITTEN = re.compile(
+    rf"\b(?:planned|written)(?: on)? ((?:\d{{1,2}} )?(?:{MONTHS}) \d{{4}})", re.I
+)
 PLAN_NAME = re.compile(r"^(wp(\d+(?:\.\d+)?)|phase-(\d)|[a-z0-9-]+)")
 LINK = re.compile(r"!?\[([^\]]*)\]\([^)\s]*(?:\s+\"[^\"]*\")?\)")
 CODE = re.compile(r"`[^`\n]*`")
@@ -255,7 +259,8 @@ def plans() -> list[Decision]:
         text = path.read_text(encoding="utf-8")
         lines = text.splitlines()
         head = "\n".join(lines[:6])
-        plan_date = _iso(head)
+        written = PLAN_WRITTEN.search(head)
+        plan_date = _iso(written.group(1) if written else head)
         package = _package_of(path)
         status = "delivered plan" if PLAN_DONE.search(head) else "plan in flight"
         your_call = re.search(r"\*\*Your call\.?\*\*(.*?)(?:\n\n|\Z)", text, re.S)

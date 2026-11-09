@@ -24,10 +24,8 @@ cd "$root" || exit 0
 # bound, so a host that leaves stdin open does not hold the session.
 session_source=""
 if [ ! -t 0 ]; then
-    read_timeout=""
-    command -v timeout >/dev/null 2>&1 && read_timeout="timeout 2"
-    # shellcheck disable=SC2086  # $read_timeout splits on purpose
-    payload=$($read_timeout cat 2>/dev/null || true)
+    payload=""
+    IFS= read -r -t 2 -d '' payload || true
     session_source=$(printf '%s' "$payload" | grep -Eo '"source"[[:space:]]*:[[:space:]]*"[a-z]+"' | head -1 | grep -Eo '"[a-z]+"$' | tr -d '"' || true)
 fi
 
