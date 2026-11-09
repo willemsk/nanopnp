@@ -1,6 +1,6 @@
 # WP5.11 — The specification's text and the agent instructions
 
-**Status: in progress, items 1 to 8 done.** Planned 9 November 2026, at `69d961c`. Inherits §8.2.36 AL8 to AL12, AL14 and
+**Status: delivered, 9 November 2026.** Planned 9 November 2026, at `69d961c`. Inherits §8.2.36 AL8 to AL12, AL14 and
 AL16 to AL18 and AL21, AM1 to AM12 ruled at this plan and its review (§8.2.37), CODE_REVIEW_039's register and its scripts in
 `.claude/scripts/audit/`, and REV-216 and REV-222.
 
@@ -224,11 +224,34 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
 - [x] c7fa329 10. `docs/plans/phase-5/`, `docs/project/modularity.md` (D3, D4): list 10, AL8, REV-216; done when
   WP5.01 to WP5.10 read as title, merged line and live constraints, the record holds each narrative
   byte-identical, and `links.py` passes. **Executor:** `general-purpose` on Sonnet
-- [ ] 11. The records (D5, D6): the dispositions, commits and register; `holds-now.yaml`; REV-216 and REV-222
+- [x] 20fb8bc 11. The records (D5, D6): the dispositions, commits and register; `holds-now.yaml`; REV-216 and REV-222
   `fixed`; `decisions.py`; `CHANGELOG.md`; done when no finding of the lists reads `your call` and
   `decisions.py --check` passes. **Executor:** main
-- [ ] 12. The Outcome, both Status lines, `current.md`, the PR body; done when the code and review say so.
+- [x] 12. The Outcome, both Status lines, `current.md`, the PR body; done when the code and review say so.
   **Executor:** main
+
+  > **Outcome — the 148 findings fixed, REV-216 and REV-222 fixed, 526 SHALLs to 517.** Every finding of the lists
+  > and AUD-67 reads `fixed <sha>` in [the register](../../code_reviews/CODE_REVIEW_039/findings.md). Decisions this
+  > session took that the plan does not hold, for `/np-ship` to check:
+  > - AUD-110: ADR-004's pending packaging text stays beside the decision, relabelled to land with WP5.21, by D4's
+  >   restated-clauses rule, rather than moving to history. AUD-143: VER-43's pending NOTE states its changes in place.
+  > - AUD-113 (6): the NOTE on a group that claims itself keeps its rule sentences and its SHALL; only the argument
+  >   goes. AUD-136: Appendix B marks the COMSOL report's inactive values; §5.2.2's size table is unchanged.
+  > - Beyond the two concepts the plan names, VAL-06's measurements move to `knowledge/07-software-stack/03`, and
+  >   two knowledge pointers (`00/05`, `04/01`) follow the moved text, each with its `knowledge/log.md` line.
+  > - Item 9: `/np-ship`'s preflight keeps the heading check `tag.yml` reads beside the changelog pointer (AL14's
+  >   check); `CONTRIBUTING.md` keeps its per-push list for contributors and points to §7.6 (AUD-280); C2's
+  >   identifiers cited alone were four (`grill.md`, `gui-reviewer.md`, the steward), the rest following their
+  >   words; §8.4.4's two bullets point to `author.md`.
+  > - Item 10: *Open decisions* keeps rows 5, 8, 10 and 14; row 2, settled by AF4, moves with the settled rows; the
+  >   phase plan's In brief drops two clauses to name the four settings sections within 275 words. The plan holds
+  >   4,297 words, from 6,548, against the phase plan's 1,500 target; REV-216's fix is the move AL18 rules, and the
+  >   rest is the live scope of the packages to come.
+  >
+  > Checks at the head: `links.py` (1,481 links, 0 broken), `duplicates.py`, `decisions.py --check`, the strict
+  > build, both §5.3.1 examples validated, VER-79 run (item 4), the clause check exits 0 (item 7). Measured
+  > (implement), by segment: items 1 to 3, 0.2 agent hours and 1 touch; items 4 to 8, 0.4 and 2; items 9 to 12, 0.2
+  > and 2; one session.
 
 ### Verification
 
