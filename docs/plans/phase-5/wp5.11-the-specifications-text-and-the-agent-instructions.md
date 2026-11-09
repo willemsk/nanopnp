@@ -1,7 +1,7 @@
 # WP5.11 — The specification's text and the agent instructions
 
 **Status: planned, not started.** Planned 9 November 2026, at `69d961c`. Inherits §8.2.36 AL8 to AL12, AL14 and
-AL16 to AL18 and AL21, AM1 to AM9 ruled at this plan (§8.2.37), CODE_REVIEW_039's register and its scripts in
+AL16 to AL18 and AL21, AM1 to AM12 ruled at this plan and its review (§8.2.37), CODE_REVIEW_039's register and its scripts in
 `.claude/scripts/audit/`, and REV-216 and REV-222.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md), entry WP5.11. `SPECIFICATION.md` governs; an
@@ -17,8 +17,9 @@ places where the program itself may fall short of the model are recorded as open
 compares against the published results. The agent instructions state each procedure once. History and
 measurements leave the reading paths for their records.
 
-**Cost.** About five days, the main work on the more capable model at about twice the price. No program change;
-no result moves.
+**Cost.** About four more sessions and four to seven hours of agent work, the main work on the more capable model at
+about twice the price; you act about ten times. The plan and its review took two sessions and an hour and a half.
+No program change; no result moves.
 
 **What could go wrong.** An edit could change a requirement's meaning unnoticed: each specification file's count
 of requirements is compared before and after, each difference traced to a ruled finding, and the review reads
@@ -26,13 +27,14 @@ every normative edit. A move could break a link or lose a number: the link check
 check that each moved measurement stands in its destination would show it. An example could stop being accepted:
 the program validates each.
 
-**Your call.** Is the plan ready to approve once its review has run? *Recommendation:* yes; you ruled the nine
-choices that change a meaning, and the rest follow the code or a ruling.
+**Your call.** Is the reviewed plan ready to approve? *Recommendation:* yes; you ruled each choice that changes a
+meaning, and the rest follow the code or a ruling.
 
 ## Execution brief
 
 **Scope.** The 148 findings of CODE_REVIEW_039, the 147 of *Grounding* D1's lists and AUD-67, under AL8 to AL12, AL14, AL16 to AL18,
-AL21 and AM1 to AM7; REV-222 (AM9); REV-216; the register's states. **Depends on** WP5.10, merged (PR #171).
+AL21 and AM1 to AM7; REV-222 (AM9); REV-216; the register's states. AM10 to AM12, the cost's units, landed
+with the plan's review; item 11's changelog entry names them. **Depends on** WP5.10, merged (PR #171).
 WP5.12 takes every other live finding. WP5.13 then edits §5.3.1's `models:` and `variables:` NOTEs (AL23), which
 stay in place here. **Pointers:** §2; §3 (CON-05, CON-06); §4; §5.1 to §5.6; §6; §7.1, §7.2, §7.6; §8.4.1,
 §8.4.4 to §8.4.6; Appendices A and B. **Implementing session:** Opus, high effort, main only (AM8); item 9's fixed edits and item 10

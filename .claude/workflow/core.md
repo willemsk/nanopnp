@@ -97,7 +97,8 @@ A phase plan, a work-package plan and a pull request start with this section:
 About 250 words, up to 10% over (275), no backticks or identifiers; for a reader who does not code.
 
 **What changes.** What the reader will notice, and why it matters.
-**Cost.** Time, money or speed, in plain units.
+**Cost.** The work in sessions, agent hours and your touches, from measured comparable packages (§8.3);
+a cost to a user of the program, such as speed, a dependency or money, in plain units.
 **What could go wrong.** Each risk, and how it would be noticed.
 **Your call.** Each decision the author owns, as a question, with *Recommendation:* and one reason.
 ```
@@ -114,7 +115,8 @@ question dialog may be all the author sees, so the context lives in it, not in t
 - **Each option's description**, one or two sentences: what the user will see or do differently.
 - **Each option's preview**, short lines in Markdown:
   - **You get:** the change for the user, with a concrete example: a command, a screen, a file;
-  - **It costs:** time in days, and what it adds, delays or leaves out;
+  - **It costs:** sessions, agent hours and your touches (§8.3), and what it adds, delays or leaves
+    out;
   - **Undo:** easy (a setting, or one later package), costly (a re-plan or a migration) or one-way
     (a file format users write, deleted data, a published release);
   - **It touches:** the later packages, other users and the clauses it moves, in words;
@@ -168,3 +170,8 @@ for a compaction; `/np-ship` then runs in that session or a fresh one, and a fin
 the implementing session took goes to the author (§8.2.33 AI4). A level of `/np-plan` pauses after its report for a compaction,
 and `/np-plan <level> [n] review` then reviews the plan and summarises it for approval
 (`np-plan/review.md`).
+
+Each report, and each pause for a compaction, ends with the line that
+`uv run .claude/scripts/usage.py --label <level>` prints: the session's cost since the level's command,
+in §8.3's units, with its tokens by model. The PR's **Measured** section gains the line (§8.4.5;
+§8.2.37 AM11).

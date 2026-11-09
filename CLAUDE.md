@@ -162,11 +162,12 @@ a design round (§8.4.4).
 
 **Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default. It
 moves to Opus only after Sonnet fails on the item. The kept helpers are the `physics-reviewer`,
-`gui-reviewer` and `ci-log-classifier` sub-agents and six scripts in `.claude/scripts/`:
+`gui-reviewer` and `ci-log-classifier` sub-agents and seven scripts in `.claude/scripts/`:
 `clause.py` prints a clause, `duplicates.py` names a number that two items of one register share,
 `same_tree.py` checks that changed Python files differ only in prose (§8.2.11 L5),
 `decisions.py` writes the decisions register, `index_records.py` writes the indexes of the plans
-and reviews, and `links.py` checks every relative link (§8.4.5). The
+and reviews, `links.py` checks every relative link, and `usage.py` measures a session's cost in
+sessions, agent hours, touches and tokens from its transcript (§8.4.5). The
 caps on a WP plan, and its executors, are in `.claude/skills/np-plan/wp.md` (§8.4.4; §8.2.15 Q1;
 §8.2.16 R11).
 

@@ -7,8 +7,8 @@ branch is not shipped.
 
 Phase 4 is released. Phase 5's library steps, the physics model, the frame and the first package on the written
 knowledge are merged. The second is planned: about 150 corrections to the specification and the agent instructions,
-and three possible program gaps recorded for Phase 6. Then the knowledge base, tidy-ups, the screens. About four
-months part-time remain.
+and three possible program gaps recorded for Phase 6. Then the knowledge base, tidy-ups, the screens: about 70
+sessions and 60 to 120 agent hours remain.
 
 **Your call.** Approve the second package's reviewed plan; adopt two measuring tools or not (the trial
 recommends neither); check eight audit findings.

@@ -101,7 +101,8 @@ list is valid), and the findings it could not assess or fix. Compare it with the
    unmentioned, or only in the PR body.
 3. Commit the accepted changes and the review's report as `fix: close the review gaps in <what>`, with
    the identifiers in the body. A clean review commits its report alone, as `docs: code review <NNN>`.
-   Gate and push (the core).
+   The commit adds to the plan's Outcome the package's measured cost: the PR's **Measured** lines and
+   this session's so far, summed, beside the In brief's estimate (§8.4.5). Gate and push (the core).
 
 Then record the pass under **Verification**: what you invoked, how many findings came back and how many
 survived step 1, the reviewed base and head SHAs, and the fix commits. Keep the independently reviewed
@@ -120,6 +121,7 @@ When CI is green and the PR is mergeable, tell the user in one message:
 
 - the PR link and the checks that passed;
 - what the review changed, and what is left for them to decide;
+- the package's measured cost beside its estimate, and this session's `usage.py` line;
 - the tag that the last commit on `main` gets after the merge, or that it gets none
   (`CONTRIBUTING.md`);
 - the full tag commands, each in its own `bash` block, ending the message (step 4 of *7. After the merge*, below), with

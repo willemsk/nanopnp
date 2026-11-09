@@ -112,7 +112,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * A phase plan, a work-package plan and a work-package pull request open with `## In brief`, about
   250 words, up to 10% over, and readable without code or identifiers. It says what changes and why, what it costs,
   what could go wrong and how it would be noticed. Its *Your call* gives each decision that waits for
-  the author, with a recommendation. (§8.2.10 J9)
+  the author, with a recommendation. The work's cost is in §8.3's units, sessions, agent hours and the
+  author's touches, from measured comparable packages; a cost to a user of the program, such as
+  speed or a dependency, is in its own. (§8.2.10 J9; §8.2.37 AM10)
 * A work-package plan is grounded in the code. Its `### Grounding` records, by symbol, what the code
   does today, the call path of the change, the shape of what it reads and writes, every variant of its
   input, the registry and layering rows it adds, and how each test gets the object it checks. The plan
@@ -154,12 +156,18 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
-  classifier. Six scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
+  classifier. Seven scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
   `duplicates.py` names a number that two items of one register share (§8.4.4), `same_tree.py`
   checks that changed Python files differ only in prose (§8.2.11 L5), `decisions.py` writes the
   decisions register and with `--check` compares it, `index_records.py` writes the indexes of the
-  plans and reviews (§8.4.4), and `links.py` checks every relative link of the tracked Markdown
-  (§7.6). (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3, AL4, AL28)
+  plans and reviews (§8.4.4), `links.py` checks every relative link of the tracked Markdown
+  (§7.6), and `usage.py` measures a session in §8.3's units, with its tokens by model, from its
+  Claude Code transcript. (§8.2.11 L6, L9; §8.2.16 R6; §8.2.17 S22; §8.2.36 AL3, AL4, AL28; §8.2.37
+  AM11)
+* Each level of `/np-plan`, `/np-implement` and `/np-ship` ends its report with `usage.py`'s line for
+  the level. The pull request's **Measured** section keeps one line per level, and `/np-ship` sums
+  them into the plan's Outcome beside its estimate. A host without a Claude Code transcript records
+  "not measured". (§8.2.37 AM11)
 * A batch of independent, mechanical items, such as a sweep over many files, a rename or a per-module
   pass, goes item by item to a new Haiku or Sonnet sub-agent given the item and the clauses it cites.
   The main session keeps the plan and the git log and re-runs the item's check before the next. Items

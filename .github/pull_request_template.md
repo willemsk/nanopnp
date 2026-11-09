@@ -33,7 +33,8 @@ None.
      the meshes they were measured on, route-agreement figures, timings and
      DOF counts, minimum damping factor and the rung that needed it, and the
      stabilisation mode every number was measured under. A rate quoted without
-     its meshes is not evidence. -->
+     its meshes is not evidence. Then the work's cost: one line of
+     `.claude/scripts/usage.py` per level and pause (SPECIFICATION.md §8.4.5). -->
 
 ## Deliberately not done
 
