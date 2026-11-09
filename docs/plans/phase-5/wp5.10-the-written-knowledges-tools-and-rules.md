@@ -275,7 +275,7 @@ Record each command, its result and the commit.
 - [x] 7190906 8. Compaction checkpoint. **Executor:** main
 - [x] 3427617 9. `CHANGELOG.md`'s nine paragraphs; `np-ship/wp.md` §1; §8.4.1 (D7); done when each of
   `0.6.0-alpha.2` to `.9` greps and the paragraphs are byte-identical. **Executor:** main
-- [ ] 10. The trial and `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, its
+- [x] 18fae4a 10. The trial and `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, its
   index and `knowledge/log.md` (D8); done when the code and review say so. **Executor:** main
 - [ ] 11. §8.4.5, `CLAUDE.md` (six scripts; the gate's prose check; VER-79 in *Testing*'s guards);
   `holds-now.yaml` for AL3 to AL7, AL14, AL24, AL27 and AL28; AUD-382 and AUD-251 in

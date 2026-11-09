@@ -77,3 +77,5 @@ SPA-22	your call
 SPB-01	fix:note-labels	the author's answer to section 9, item 1: migrate_note_labels.py run as rehearsed	
 ORC-11	fix:clause-notes	the author's answer to section 9, item 2: a NOTE runs on through a fenced block and the paragraph after it	
 ORC-13	fix:clause-notes	the author's answer to section 9, item 2: §8.4.5 names the three kept scripts	
+CLD-01	fix:changelog	WP5.10 item 9 (§8.2.36 AL14): the preflight greps the heading tag.yml reads, and the Phase 5 entries sit under their version headings	
+WLK-10	fix:decisions-register	WP5.10 item 5 (§8.2.36 AL3): docs/project/decisions.md, one row per decision with its source, date, decider and where it holds now	
