@@ -44,6 +44,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_current_routes.py::test_ver40_the_admissible_mesh_passes_the_gate_and_both_routes
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier2/test_current_routes.py::test_ver40_the_plausible_mesh_passes_num26_and_is_still_refused
+  at: '2026-11-09T00:00:00Z'
 - by: process:tests/tier2/test_force_convergence.py::test_num29_the_reaction_route_converges_to_the_domain_route
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_force_convergence.py::test_rsk04_the_omitted_korteweg_helmholtz_term_is_measured_not_assumed
@@ -62,31 +64,14 @@ verified:
 
 ## 7. Quantities of interest — and the flux trap
 
-**Do not compute the ionic current by integrating the CG flux over an interior cross-section.**
-CG fluxes are not pointwise conservative; the current differs between cross-sections by
-percent-level amounts, **which can exceed the physical rectification signal at low bias**. This is
-the most likely route to a subtly wrong published number.
-
-Two correct routes; implement both and CI-check that they agree.
-
-**(a) Domain/indicator form — recommended.** Smooth `ψ` with `ψ = 1` in cis, `0` in trans:
-```
-I     = F Σ_i z_i ∫_Ω J_i·∇ψ  r dr dz
-Q_EOF =           ∫_Ω u·∇ψ    r dr dz
-```
-Superconvergent and cross-section independent.
-
-**The sign is the one that references the current to the grounded cis electrode. [verified][^specification]**
-By the divergence theorem with `∇·J_i = 0`, `∫_Ω J_i·∇ψ r dr dz = ∮_{Γ_cis} J_i·n` with `n` the
-outward normal, so with `ψ = 1` on cis the integral *is* the efflux through the cis cap. With `φ = 0`
-on cis and `φ = V_bias` on trans (§5.2.2 of the specification), a positive bias drives positive
-charge trans → cis, i.e. out through cis, so the plus sign gives `G = I/V_bias > 0` — which VER-17
-asserts. A minus references the trans electrode instead, negates every conductance, *and* negates
-this route relative to (b) taken on the same electrode, so the two would never agree. Printed forms
-of this expression carry a minus; that pairs with the trans electrode, not with `ψ = 1` on cis.
+NUM-23 forbids the ionic current from a cross-section integral of the CG flux; NUM-24 states the
+domain-indicator form `I = F Σ_i z_i ∫_Ω J_i·∇ψ r dr dz`, `Q_EOF = ∫_Ω u·∇ψ r dr dz`, with `ψ = 1`
+in cis and 0 in trans, and its NOTE the sign that references the current to the grounded cis
+electrode; NUM-25 the variational reaction flux; NUM-26 that both are checked against each other.
+What follows is what building them measured.
 
 **ψ must be built on the fluid domain alone. [tested: tests/tier2/test_current_routes.py::test_num26_the_routes_agree_in_reference_only_because_psi_carries_the_term]** **[tested: tests/tier1/test_indicator.py::test_num24_the_indicator_is_built_on_the_fluid_and_that_is_load_bearing]** The two routes agree because `ψ` differs
-from the (b) boundary indicator by a function vanishing on both electrodes, hence by a legitimate
+from the reaction flux's boundary indicator by a function vanishing on both electrodes, hence by a legitimate
 test function of the converged residual — an identity that needs `ψ` to be *exactly* 1 and 0 there.
 Interpolated over the whole mesh it is not: the membrane spans the transition band, and an element
 straddling the band shares its corner vertex with a reservoir cap. Measured on a charged pore at
@@ -98,12 +83,8 @@ from the band to a cap; the leak is then identically zero.
 **Use a C¹ transition, not a linear ramp.** `S(t) = t²(3 − 2t)` has `S'(0) = S'(1) = 0`, so `∇ψ` is
 continuous at both ends of the band and the integrand has no jump inside an element.
 
-**(b) Variational reaction flux.** Evaluate the assembled residual against a test function equal
-to 1 on a Dirichlet electrode (Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.* **163**, 467,
-2000 — "the continuous Galerkin method is locally conservative").
-
-**Derived QoIs.** `t₊ = I₊/(I₊ + I₋)` from the same `ψ` integrals. Rectification
-`α = |I(+V)|/|I(−V)|`. Conductance `G = I/V_b`.
+The reaction flux rests on Hughes, Engel, Mazzei & Larson, *J. Comput. Phys.* **163**, 467 (2000):
+"the continuous Galerkin method is locally conservative". NUM-27 states the derived quantities.
 
 ### 7.1 Measured: the two routes agree, and the band does not matter **[tested: tests/tier2/test_current_routes.py::test_ver11_the_two_current_routes_agree_at_the_lowest_envelope_bias]** **[tested: tests/tier2/test_current_routes.py::test_num24_the_indicator_current_does_not_depend_on_the_band]** {#71-measured-the-two-routes-agree-and-the-band-does-not-matter}
 
@@ -191,7 +172,7 @@ on this toy pore, and WP8's ClyA reference mesh (44 316 triangles) is far finer 
 everywhere, so production runs are expected clean.
 
 **Closed out under WP11: PHY-02's clamp and NUM-34's gate, and neither alone.** **[tested: tests/tier1/test_wall_distance.py::test_ver40_both_wall_forms_return_their_wall_value_for_every_non_positive_sample]** **[tested: tests/tier1/test_wall_distance.py::test_num34_the_coarse_mesh_is_refused_naming_everything_it_measured]**
-`FittedCorrection.evaluate` now clips `d̄` at zero before either wall form reads it, and
+`FittedCorrection.evaluate` clips `d̄` at zero before either wall form reads it, and
 `solve/stage.py` gates `min d̄ ≥ −1 × 10⁻³ nm` over the fluid once per solve wherever a wall
 correction is active. The arithmetic behind the threshold is in `SPECIFICATION.md` NUM-34.
 
@@ -218,11 +199,11 @@ Measured on the same toy pore, sampling the fluid at the P2 nodal set the NUM-17
 leave `wall_h` alone.
 
 Note also that the residual `Set` leaves behind here is a few times `10⁻⁶` nm and *positive*, two
-orders inside NUM-34's threshold — the "few times `10⁻⁴` with a platform-dependent sign" of §8.1
-below is the unzeroed-projection case, which `physics/distance.py` does not produce.
+orders inside NUM-34's threshold — the "few times `10⁻⁴` with a platform-dependent sign" of
+NUM-34's rationale is the unzeroed-projection case, which `physics/distance.py` does not produce.
 
 **The clamp alone would have been worse than nothing, and this is the measurement that says so.
-[tested: tests/tier2/test_current_routes.py::test_ver40_the_admissible_mesh_passes_the_gate_and_both_routes]** With the driver clamped, the toy pore at 0.1 M and +20 mV gives:
+[tested: tests/tier2/test_current_routes.py::test_ver40_the_plausible_mesh_passes_num26_and_is_still_refused]** With the driver clamped, the toy pore at 0.1 M and +20 mV gives:
 
 | `maxh` / `wall_h` (nm) | min `d̄` (nm) | current (A) | NUM-26 route difference |
 |---|---|---|---|
@@ -236,7 +217,7 @@ below is the unzeroed-projection case, which `physics/distance.py` does not prod
 The `wall_h` 0.5 nm rows are the ones that matter. They **pass NUM-26 comfortably** — forty times
 inside the tolerance — and their current is 13 to 17 % below the resolved value. Removing the sign
 inversion removed the only signal an unresolved wall had: unclamped, the 124-element row disagreed
-between the routes by 40 % (§7.1.1's original table) and the 257-element row by 9.6 × 10⁻⁵. So the
+between the routes by 40 % (§7.1.1) and the 257-element row by 9.6 × 10⁻⁵. So the
 clamp turns "loudly wrong" into "quietly wrong" wherever the field is genuinely negative, and
 NUM-34 is what turns it back into "refused". `tests/tier2/test_current_routes.py` asserts exactly
 this pair of facts about the 0.5 nm mesh.

@@ -1,7 +1,7 @@
 ---
 type: Library Behaviour
-title: 8.1 NGSolve traps found by implementing this — all silent
-description: NGSolve traps found by implementing the model, all of them silent.
+title: NGSolve traps and measured numerics facts
+description: "The NGSolve traps found by implementing the model, all silent, then measured facts: the reaction flux, convergence and solver facts, sweep warm starts and parallel scaling, the zero-bias route check, the gate sampler and the gate constants."
 tags:
 - numerics
 - library-behaviour
@@ -352,7 +352,7 @@ that to 1e-6 M, and anything derived from them returns its value at the clamp fl
 diagnostic. Measured on `CoupledModel.permittivity` at 3 M with the permittivity correction on:
 ε_r = **78.1499885** in the `exclusion` shell against **51.09** in the electrolyte beside it. That
 number was near the right one only by accident: under author ruling 13 `⟨c⟩` has no meaning off the
-fluid, and water there is ion-free, `ε_r,f⁰` = 78.15, which the code now sets as such. The same trap
+fluid, and water there is ion-free, `ε_r,f⁰` = 78.15, which the code sets as such. The same trap
 made the fluid side of a χ blend discard χ, because its solid branch defaulted to the fluid value.
 Any expression evaluated on a material its inputs are not defined on has to be given a value there
 deliberately. (Codebase review of 2026-09-28, CR-2.) **[tested: tests/tier1/test_dielectric_field.py::test_ver30_water_off_the_fluid_is_ion_free_water]** **[tested: tests/tier1/test_dielectric_field.py::test_ver30_blend_takes_the_whole_solid_branch_not_one_constant]**
@@ -388,6 +388,26 @@ Second, the fix is on the producer side — deposit onto the finite-element spac
 `Q_net`, which conserves by construction — and no amount of consumer-side effort substitutes for it.
 **[tested: tests/tier2/test_charge_conservation.py::test_ver29_a_coarsened_mesh_fails_the_quadrature_gate_not_the_conservation_one]** **[tested: tests/tier1/test_charge_deposit.py::test_ver01_ver02_correct_deposit_passes_every_gate]**[^wp9-clya-aliasing]
 
+### 8.1.2 An unstructured netgen mesh is not a portable measurement
+
+A corollary of §8.1.1 that only shows up on a CI matrix. Because the aliased quadrature error is a
+function of where the vertices happen to fall, *any* assertion on its magnitude inherits the
+mesher's own arbitrariness. Netgen's unstructured triangulation of the same rectangle at the same
+`maxh = 0.2 nm` gave, for the same field, an order/order+3 agreement of **2.3e-4 on Linux, 7.8e-5 on
+Windows and 2.2e-5 on macOS** — a factor of ten, straddling a 1e-4 threshold three different ways
+**[verified][^wp9-clya-aliasing]**. Nothing about the physics differs; the meshes do.
+
+Coarsening is not the repair, because the quantity is non-monotone in `h` (§8.1.1) — it re-rolls the
+dice. `ngsolve.meshes.MakeStructured2DMesh` places every vertex arithmetically from `(nx, ny)` and a
+mapping, so the mesh, and therefore the number, is identical on every platform **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**. On the same box and
+field it reads 3.7e-4 at `(27, 70)`, 7.4e-5 at `(23, 59)` and 5.0e-6 at `(25, 65)` — one coarser and
+one finer than the first, both *below* what it exceeds, which is the non-monotonicity again and the
+reason the resolution has to be picked by measurement **[verified][^wp9-clya-aliasing]**.
+
+The rule: **a test that asserts a quadrature-error magnitude must run on a structured mesh.** A test
+that asserts a converged physical quantity may use whatever mesh the pipeline deploys, because that
+number is mesh-independent by construction and an unstructured mesh is then the more honest one.
+
 ### 8.1.3 An OCC-generated extent is one ulp off the number the geometry was given **[tested: tests/tier1/test_qoi_stage.py::test_fr23_the_generated_mesh_gives_the_same_band_to_mesh_round_off]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]** {#813-an-occ-generated-extent-is-one-ulp-off-the-number-the-geometry-was-given}
 
 `CylindricalPoreGeometry(membrane_thickness_nm=6.0, ...)` produces a mesh whose `membrane` vertices
@@ -408,7 +428,7 @@ at exactly `a`. So the raw offset lies inside the exact one only by its chords' 
 `a(1 − cos(π/32))` = 0.0048a. Each arc chord is `aπ/16` long: 0.0244 nm at `a` = 0.12 and 0.0491
 at 0.25, just under `h_c` = 0.05.
 
-§5.2.1's step 6 drops the cheapest endpoint of the shortest edge until no edge is shorter than
+`SPECIFICATION.md` §5.2.1's step 6 drops the cheapest endpoint of the shortest edge until no edge is shorter than
 `h_c`. On such a ring it merges **runs** of chords, not pairs: a sub-`h_c` chord left between two
 merged ones merges into one of them. The longest chord it leaves reaches about `3h_c`. Its sagitta
 exceeds the `h_c²/a` that a chord of `2h_c` would give, and the shell's thickness bound,
@@ -477,26 +497,6 @@ offset (`WorkPlane.Offset`) gives the exact dilation, lines and arcs at exactly 
 `Standard_TypeMismatch: TopoDS::Wire` whenever the dilation encloses a pocket, even at a single
 offset by `a`, which VER-59's necked pocket requires.
 
-### 8.1.2 An unstructured netgen mesh is not a portable measurement
-
-A corollary of §8.1.1 that only shows up on a CI matrix. Because the aliased quadrature error is a
-function of where the vertices happen to fall, *any* assertion on its magnitude inherits the
-mesher's own arbitrariness. Netgen's unstructured triangulation of the same rectangle at the same
-`maxh = 0.2 nm` gave, for the same field, an order/order+3 agreement of **2.3e-4 on Linux, 7.8e-5 on
-Windows and 2.2e-5 on macOS** — a factor of ten, straddling a 1e-4 threshold three different ways
-**[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**[^wp9-clya-aliasing]. Nothing about the physics differs; the meshes do.
-
-Coarsening is not the repair, because the quantity is non-monotone in `h` (§8.1.1) — it re-rolls the
-dice. `ngsolve.meshes.MakeStructured2DMesh` places every vertex arithmetically from `(nx, ny)` and a
-mapping, so the mesh, and therefore the number, is identical on every platform. On the same box and
-field it reads 3.7e-4 at `(27, 70)`, 7.4e-5 at `(23, 59)` and 5.0e-6 at `(25, 65)` — one coarser and
-one finer than the first, both *below* what it exceeds, which is the non-monotonicity again and the
-reason the resolution has to be picked by measurement.
-
-The rule: **a test that asserts a quadrature-error magnitude must run on a structured mesh.** A test
-that asserts a converged physical quantity may use whatever mesh the pipeline deploys, because that
-number is mesh-independent by construction and an unstructured mesh is then the more honest one.
-
 ### 8.1.5 Within one build, a deployed walk's quantities repeat bit for bit **[tested: tests/tier1/test_stability_golden.py::test_ver62_a_recorded_mesh_holds_round_off]** **[tested: tests/tier1/test_number_stability_file.py::test_ver62_every_golden_walk_is_asserted_by_exactly_one_test]**[^wp35-simd-dispatch] {#815-within-one-build-a-deployed-walks-quantities-repeat-bit-for-bit}
 
 The converse of §8.1.2, measured for VER-62 (WP35). On one Linux x86-64 build (Python 3.12,
@@ -537,7 +537,7 @@ levels, and every value agrees **bit for bit**. Against the `X86_V4` (AVX-512) r
 Three lessons for any golden. A content hash moves on a last-bit coordinate difference that changes
 no number, so it is the wrong thing to assert. The same mesh across dispatch levels agrees to round-off,
 not bit for bit, because the solve-side NumPy kernels dispatch too. And only the shell walk, whose
-offset surface adds a geometric construction downstream of the contour, moves materially. VER-62 now
+offset surface adds a geometric construction downstream of the contour, moves materially. VER-62
 uses the hash only to choose its tolerance: 10⁻⁸ on a recorded mesh, and ten times the measured
 spread between meshes on an unseen one (`nanopnp.validation.stability`; SPECIFICATION §7.6 NOTE).
 
@@ -569,10 +569,8 @@ gradient- or cross-section-based extraction.
   `maxh` 0.4 → 0.05 nm, i.e. rates 2.92, 2.90, 3.01. The axisymmetric weak form and the natural
   axis condition are correct. **[tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver13_debye_huckel_in_a_cylinder]** **[tested: tests/tier2/test_electrostatic_benchmarks.py::test_ver13_axis_condition_is_natural_not_dirichlet]**
 - **UMFPACK *is* built into the pip wheel**: `ngsolve.config.USE_UMFPACK` is True and
-  `mat.Inverse(freedofs, inverse="umfpack")` works. `USE_MUMPS`, `USE_PARDISO` and `USE_MKL` remain
-  False, and `inverse="pardiso"` raises "MKL Pardiso is not available". So the default direct path
-  of NUM-21 is available out of the box; only the GPL-2+ licensing of UMFPACK is at issue, not its
-  presence. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]** **[tested: tests/tier1/test_linear_solver.py::test_num21_both_licensed_paths_are_available]**
+  `mat.Inverse(freedofs, inverse="umfpack")` works, so NUM-21's default direct path is available out
+  of the box; `inverse="pardiso"` raises "MKL Pardiso is not available". **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]** **[tested: tests/tier1/test_linear_solver.py::test_num21_both_licensed_paths_are_available]**
 - **The coupled axisymmetric system converges at the Taylor-Hood rates under MMS.** Manufactured
   `φ, c_i, u, p` on a 2 × 4 nm cylinder, constant transport coefficients with the steric `β_i`
   retained, `maxh` 0.4 → 0.2 → 0.1 nm (2 × 10⁴ DOF at the finest). Relative `r`-weighted L² rates:
@@ -640,7 +638,7 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   `solve_hash` alone; a salt step differs in `solve_hash` **and** `model.scales`, the NUM-09 scale
   set being a function of `concentration_M`. Both are operator keys the §5.3.2 partition permits;
   a gate on either would refuse the axis outright.
-- **The §8.3 reference grid is 42 waves of mean width 87.5. [tested: tests/tier1/test_sweep_plan.py::test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid]** 5 physics cases × 35 biases ×
+- **The `SPECIFICATION.md` §8.3 reference grid is 42 waves of mean width 87.5. [tested: tests/tier1/test_sweep_plan.py::test_ver36_the_reference_sweep_parses_and_enumerates_the_section_8_3_grid]** 5 physics cases × 35 biases ×
   21 concentrations = 3,675 points, one root, deepest point at depth 41, peak wave width 174. The
   dependency structure is therefore not what limits QR-06 on twelve cores; the serial tail is the
   last few waves and it is short.
@@ -655,7 +653,7 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   `spawn` re-imports the package in each worker at about a second apiece. Creating the pool per
   wave put that cost into the measurement: on a nine-point grid in five waves it took
   `efficiency(4)` from 0.75 to **0.29**. **[verified][^wp11-sweep-timings]**
-  The pool is now held open across the whole plan.
+  The pool is held open across the whole plan.
 - **A single-axis grid caps the curve at N = 2 whatever the runner does.** A one-axis sweep rooted
   in its middle has waves two points wide, so a scaling measurement on one reports the *grid*. Two
   axes are the minimum for a curve that says anything about the dispatch.
@@ -663,7 +661,7 @@ Measured under WP11 on the toy pore (`a` = 2 nm, `L` = 6 nm, reservoir 10 nm) at
   key needs the mesh artefact, and a generated mesh exists only as stage 6's stored artefact, keyed
   on the stage-5 recipe. Keying the parent from its bare case raised for every such sweep, and the
   runner's broad `except` turned that into a cold start, so every member climbed the ladder:
-  44 Newton iterations instead of 5 on the Tier-1 synthetic profile. `pipeline.run.stored_upstream` now
+  44 Newton iterations instead of 5 on the Tier-1 synthetic profile. `pipeline.run.stored_upstream`
   keys the parent's walk through the solve's inputs with every payload taken from the store, and only a
   missing artefact is a cold fallback (CR-1, `tests/tier2/test_sweep_generated_mesh.py`).
 
@@ -697,39 +695,11 @@ that has no answer when there is no current.
 combination, with exit class 4 and a diagnostic about the extraction. The checked-in
 `docs/sweeps/phase1-reference.sweep.yaml` therefore roots its bias axis at **+5 mV** rather than at
 0 V and carries 17 exactly-opposite pairs plus that one unpaired value: 35 values, 3,675 points,
-1,785 rectification pairs, 42 waves — the §8.3 grid, with the degenerate point moved off it.
+1,785 rectification pairs, 42 waves — the `SPECIFICATION.md` §8.3 grid, with the degenerate point moved off it.
 
 Not fixed here. Making the check inapplicable rather than failing at zero current means deciding
 what "no current" is, which is a scale the extraction does not currently carry, and NUM-26 is a
 Phase-1 headline gate. Recorded for whoever owns it next.
-
-### 8.6 Measured: locating the gate sample points costs 100× evaluating on them **[tested: tests/tier1/test_gates.py::test_sampler_locates_its_points_once]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**[^wp45-numerics-strip] {#86-measured-locating-the-gate-sample-points-costs-100-evaluating-on-them}
-
-On a 144,628-element mesh, `FieldSampler` over the fluid holds 1,012,396 points (duplicates kept on
-purpose, so each stays inside its own element) and takes 2.7 s to build and **21.7 s** to locate;
-over the whole mesh, 434,885 points take 2.9 s and 9.4 s. Evaluating a field on the located points
-takes 0.23 s. Without sharing, each rung builds two samplers and each solve three more, about 36 s a
-rung at that size.
-`FieldSampler.shared` keeps one per mesh and material
-set, cached **on the mesh object**: `ngsolve.comp.Mesh` is unhashable, so a `WeakKeyDictionary`
-raises `TypeError`, but it takes attributes and weak references, and the mesh ↔ sampler reference
-cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**
-
-**Gate constants** (`numerics/gates.py`, `numerics/linear.py`). **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**
-
-- `INTERIOR_OFFSET = 1e-4`: sample points are pulled towards their element's centroid by this
-  fraction, because a vertex or midpoint on the fluid/solid interface can resolve into the solid
-  element, where a fluid-only concentration evaluates to 0, not positive. On the analytic pore at
-  `maxh` 6 nm and 2 nm, 1e-6 still resolves into the solid and 1e-5 is the first fraction that does
-  not; 1e-4 keeps an order of margin and moves a P2 sample by 1e-4 of the field's variation across
-  the element.
-- `PACKING_WARNING = 0.8` is not a specified threshold; it leaves a log trace before `Phi = 1`.
-- `MINIMUM_WALL_DISTANCE_NM = -1e-3` (NUM-34): zero would gate the rounding mode, since
-  `GridFunction.Set` leaves an interior residual of a few 1e-4 nm of platform-dependent sign;
-  `-P2 = -1e-2` nm is the ion wall function's root, so a gate there admits `D = 0` and restates a
-  fitted coefficient. At `d = -1e-3` the PHY-02 clamp absorbs 5.8e-3 (unclamped `1 - exp(-0.0558)
-  = 0.0543` against the clamped 0.0601).
-- The Poisson diagonal block scales as `1/lambda~^2`, 130 at 3 M and a 2 nm pore (NUM-10).
 
 ### 8.5.1 Small facts recorded from the `physics/` prose strip **[tested: tests/tier1/test_knowledge_arithmetic.py::test_ngsolve_physics_small_facts]** {#851-small-facts-recorded-from-the-physics-prose-strip}
 
@@ -750,6 +720,29 @@ cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::
 - `validation/mms.py` imports `sympy` at module scope (about 150 ms) because nothing on the CLI, GUI or
   sweep-dispatch path imports `nanopnp.validation`: `import nanopnp.cli` stays at 34 ms and
   `import nanopnp.physics.models` at 28 ms with the module present. Revisit if stage introspection reaches it.
+
+### 8.6 Measured: locating the gate sample points costs 100× evaluating on them **[tested: tests/tier1/test_gates.py::test_sampler_locates_its_points_once]** **[verified][^wp45-numerics-strip]** {#86-measured-locating-the-gate-sample-points-costs-100-evaluating-on-them}
+
+On a 144,628-element mesh, `FieldSampler` over the fluid holds 1,012,396 points (duplicates kept on
+purpose, so each stays inside its own element) and takes 2.7 s to build and **21.7 s** to locate;
+over the whole mesh, 434,885 points take 2.9 s and 9.4 s. Evaluating a field on the located points
+takes 0.23 s. Without sharing, each rung builds two samplers and each solve three more, about 36 s a
+rung at that size.
+`FieldSampler.shared` keeps one per mesh and material
+set, cached **on the mesh object**: `ngsolve.comp.Mesh` is unhashable, so a `WeakKeyDictionary`
+raises `TypeError`, but it takes attributes and weak references, and the mesh ↔ sampler reference
+cycle is collected with the mesh. **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**
+
+**Gate constants** (`numerics/gates.py`, `numerics/linear.py`). **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_structured_mesh_cpu_features_sampler_and_gate_constants]**
+
+- `INTERIOR_OFFSET = 1e-4` (trap 11).
+- `PACKING_WARNING = 0.8` is not a specified threshold; it leaves a log trace before `Phi = 1`.
+- `MINIMUM_WALL_DISTANCE_NM = -1e-3` (NUM-34): zero would gate the rounding mode, since
+  `GridFunction.Set` leaves an interior residual of platform-dependent sign (trap 3);
+  `-P2 = -1e-2` nm is the ion wall function's root, so a gate there admits `D = 0` and restates a
+  fitted coefficient. At `d = -1e-3` the PHY-02 clamp absorbs 5.8e-3 (unclamped `1 - exp(-0.0558)
+  = 0.0543` against the clamped 0.0601).
+- The Poisson diagonal block scales as `1/lambda~^2`, 130 at 3 M and a 2 nm pore (NUM-10).
 
 ---
 

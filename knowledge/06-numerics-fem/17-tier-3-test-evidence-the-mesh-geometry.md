@@ -1,8 +1,7 @@
 ---
-type: Test Evidence
-title: 'Tier-3 test evidence: the mesh geometry digest (WP45 item 27)'
-description: What the Tier-3 tests of the mesh geometry digest establish, recorded
-  at WP45 item 27.
+type: Test Fixture
+title: 'Test-suite fixtures: the pickled reference mesh, the stability golden, the seed case'
+description: "Why the reference mesh is pickled, why the stability golden takes no difference of two routes, and what the seeded stages 1 to 3 key on."
 tags:
 - numerics
 - test-evidence
@@ -20,7 +19,7 @@ verified:
   at: '2026-10-16T00:00:00Z'
 ---
 
-## Tier-3 test evidence: the mesh geometry digest (WP45 item 27)
+## Test-suite fixtures: the pickled reference mesh, the stability golden, the seed case
 
 - **[verified][^conftest-3782c43]** NGSolve's pickle round-trips a mesh's vertices to the bit, whereas its `.vol` text moves them by up to 5.6 × 10⁻¹⁷ nm, which changes the mesh's geometry digest. Hence the session's reference mesh is pickled **[tested: tests/tier1/test_reproduce_diagnostics.py::test_conftest_seed_and_stability_invariants]**. Source: `tests/conftest.py` (`clya_reference_mesh`); WP33 Outcomes.
 - **[tested: tests/tier1/test_reproduce_diagnostics.py::test_conftest_seed_and_stability_invariants]** A difference of two routes amplifies round-off by the inverse of its size, so the VER-62 number-stability golden leaves `route_agreement` out and holds the routes' own scalars. Source: `tests/conftest.py` (`STABILITY_QUANTITIES`).

@@ -12,19 +12,10 @@ generated:
 ## 1. Discretisation
 
 **Elements.** Continuous Galerkin: `P2` for `φ` and each `c_i`; Taylor–Hood `P2/P1` for `(u, p)`.
-Triangles. All measures `r`-weighted (§2).
+Triangles. All measures `r`-weighted (`02-axisymmetric-weak-forms.md`). NUM-01 and NUM-03 state them.
 
-**Nernst–Planck formulation: primitive concentrations `c_i`,** with a log-variable branch behind a
-flag as fallback.
-
-| Form | Positivity | Conditioning at ±200 mV | Verdict |
-|---|---|---|---|
-| Primitive `c_i` | not guaranteed | good | **default** |
-| Slotboom `c_i = c₀e^{−z_iφ̃}ρ_i` | yes | coefficient spread `e^{2φ̃}` ≈ 5.8 × 10⁶ | **reject** |
-| Log/entropy `c_i = e^{w_i}` | exact | moderate, needs damping | fallback branch |
-| Mixed / HDG | yes | locally conservative | later, if flux conservation demands |
-
-`φ̃ = φF/RT` spans ±7.78 at ±200 mV, which is what kills Slotboom.
+**Nernst–Planck formulation.** Primitive `c_i` by default, a log branch behind a flag, Slotboom
+rejected: NUM-02, with its table and the ±7.78 `φ̃` range that rules Slotboom out.
 
 ---
 

@@ -32,16 +32,9 @@ verified:
 
 ## 8. Mesh resolution and adaptivity
 
-- First wall layer `h₁ ≈ λ_D/5` — 0.035 nm at 3 M. Geometric ratio 1.15–1.2 over ~15 layers,
-  growing to 5–10 nm in the far reservoir. Expect 5 × 10⁴ – 2 × 10⁵ cells.
-- **Compute the wall-distance field once per mesh** (eikonal or screened-Poisson). `D`, `μ`, `η`
-  all depend on `d`, so a kinked `d` propagates into the Jacobian. The validated default is the
-  unsmoothed C⁰ field; a C¹ mollification is a deviation, off by default (`SPECIFICATION.md` PHY-02,
-  NUM-31; author ruling 2026-10-19).
-- Goal-oriented (DWR) adaptivity on the current QoI: Becker & Rannacher, *Acta Numerica* **10**, 1
-  (2001). Mitscha-Baude's economy — build the estimator from the **linear PB surrogate** rather
-  than the full coupled adjoint — is heuristic but empirically retains the optimal O(h²) rate in
-  the QoI at a fraction of the cost. Ship as an optional loop, not a v1 default.
+- NUM-30 states the resolution targets: the first wall layer at `min(0.05 nm, λ_D/5)`, the grading
+  and the cell count. PHY-02 and NUM-31 the wall-distance field, unsmoothed by default; NUM-32 and NUM-33 the
+  optional goal-oriented loop, with its estimator from the linear PB surrogate.
 - **The published results carry no discretisation error bar.** The *thesis* states only "COMSOL
   Multiphysics v5.4" and mentions "the final mesh" in passing: no element counts, no types, no
   refinement strategy, no tolerances, no convergence study. **[verified][^esi]** by grep over
@@ -55,12 +48,12 @@ verified:
 
 ### Measured: the reference region meshes to a third of COMSOL's element count **[tested: tests/tier2/test_reference_geometry.py::test_ver10_the_reference_mesh_is_in_the_published_quality_band]** **[tested: tests/tier2/test_region_reference.py::test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
 
-The ClyA region of §5.2.1 — the delivered 185-vertex profile, the membrane quadrilateral with its
-slanted inner edge, a 250 nm reservoir half-disc, glued — meshed by netgen at the §5.2.2 size fields
+The ClyA region of `SPECIFICATION.md` §5.2.1 — the delivered 185-vertex profile, the membrane quadrilateral with its
+slanted inner edge, a 250 nm reservoir half-disc, glued — meshed by netgen at the `SPECIFICATION.md` §5.2.2 size fields
 (global 10 nm, pore boundary 0.05 nm, pore domain 0.1 nm, reservoir domain 2.8 nm, reservoir arc
 5 nm, axis-in-pore 0.075 nm), `grading = 0.2`, `optsteps2d = 5`:
 
-| | netgen, here | COMSOL, §5.2.2 |
+| | netgen, here | COMSOL, `SPECIFICATION.md` §5.2.2 |
 |---|---|---|
 | triangles | 44,316 | 120,917 |
 | minimum element quality | 0.6559 (SICN), 0.6157 (gamma) | 0.6378 |
@@ -70,20 +63,20 @@ slanted inner edge, a 250 nm reservoir half-disc, glued — meshed by netgen at 
 A third of the elements in the same quality band. The counts are *not* comparable as a convergence
 statement — the two meshers' size fields are not the same knobs, and COMSOL's single "element
 quality" is not stated to be SICN — but the quality band is, and it is met without boundary layers,
-by isotropic grading alone, which is what §5.2.2 says the reference model did.
+by isotropic grading alone, which is what `SPECIFICATION.md` §5.2.2 says the reference model did.
 
 ### Measured: the wall-size field reaches the wall, and a gate can tell **[tested: tests/tier2/test_region_reference.py::test_ver53_the_wall_gate_passes_at_both_measured_sizes]** {#measured-the-wall-size-field-reaches-the-wall-and-a-gate-can-tell}
 
 Netgen treats a size as a target, not a bound. Stage 6 (WP21) measures the `wall` segment lengths
-over the resolved target, at the §5.2.2 sizes otherwise; netgen 6.2.2606, Linux, 26 September 2026:
+over the resolved target, at the `SPECIFICATION.md` §5.2.2 sizes otherwise; netgen 6.2.2606, Linux, 26 September 2026:
 
 | Region | Target (nm) | Segments | Mean | p95 | Max | Triangles | Min SICN, gamma |
 |---|---|---|---|---|---|---|---|
 | Fixture | 0.05 | 569 | 1.045 | 1.200 | 1.600 | 44,316 | 0.6559, 0.6157 |
 | Fixture | 0.03505 (3 M) | 792 | 1.071 | 1.194 | 1.614 | 48,986 | 0.7489, 0.6870 |
 | Fixture | 0.02715 (5 M) | 1003 | 1.092 | 1.218 | 1.519 | 54,256 | 0.6414, 0.5671 |
-| 2WCD, stage 4 | 0.05 | 582 | 1.062 | 1.233 | 1.485 | 44,688 | 0.7111, 0.6196 |
-| 2WCD, stage 4 | 0.03505 (3 M) | 826 | 1.067 | 1.180 | 1.250 | 49,878 | 0.7335, 0.6470 |
+| 2WCD, pipeline stage 4 | 0.05 | 582 | 1.062 | 1.233 | 1.485 | 44,688 | 0.7111, 0.6196 |
+| 2WCD, pipeline stage 4 | 0.03505 (3 M) | 826 | 1.067 | 1.180 | 1.250 | 49,878 | 0.7335, 0.6470 |
 | Fixture, **no wall field** | 0.05 | 301 | 1.976 | 2.691 | 3.200 | 38,908 | — |
 
 The gate's bounds, mean ≤ 1.15 × and max ≤ 2.0 ×, sit above every row with the field and below

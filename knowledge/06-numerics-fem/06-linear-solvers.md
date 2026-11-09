@@ -1,7 +1,7 @@
 ---
 type: Numerics
 title: 6. Linear solvers
-description: Linear solvers, with UMFPACK and SuperLU measured at production size.
+description: "UMFPACK and SuperLU measured at production size, which NUM-21's NOTE cites; NUM-21 and NUM-22 state the solver choices."
 tags:
 - numerics
 generated:
@@ -16,21 +16,8 @@ verified:
 
 ## 6. Linear solvers
 
-At 2D axisymmetric sizes **direct is correct**. 2D nested-dissection fill is O(N log N),
-factorisation O(N^1.5). It is 3D where direct collapses (~10⁵–10⁶ DOF).
-
-**Constraint verified during review:** the **NGSolve pip wheel ships without MUMPS**.
-`ngsolve.config` reports `USE_MUMPS: False` (also `USE_HYPRE`, `USE_PARDISO`, `USE_MKL` all
-False), and `inverse="mumps"` raises `SparseMatrix::InverseMatrix: no inverse available for type
-mumps`. Getting MUMPS needs a source build with MPI — reintroducing the compiler dependency the
-backend choice exists to avoid.
-
-| Path | Solver | Notes |
-|---|---|---|
-| Desktop / pip wheel | `umfpack`, or scipy `superlu` (BSD) | `sparsecholesky` is SPD-only and **cannot** be used for this unsymmetric system |
-| HPC / source build | MUMPS via ngsPETSc/PETSc, `icntl_14 = 40`, BLR via `icntl_35` | also unlocks `PCFIELDSPLIT` for 3D |
-
-SuiteSparse UMFPACK is GPL-2+ — relevant to what a redistributable bundle may contain.
+NUM-21 states the solver per path, why direct is right in 2D, and the wheel's missing MUMPS; §6.1
+below is the measurement its NOTE cites.
 
 ### 6.1 Measured: UMFPACK and SuperLU at production size **[tested: tests/tier2/test_factorisation_benchmark.py::test_criterion3_umfpack_factorises_a_production_sized_problem]** **[tested: tests/tier2/test_factorisation_benchmark.py::test_criterion3_superlu_is_a_licence_fallback_not_a_performance_one]** {#61-measured-umfpack-and-superlu-at-production-size}
 
@@ -62,10 +49,8 @@ works but is ten times slower; at the reference size it does not run on a 15 GB 
 the copyleft dependency has to go, the replacement is the iterative `PCFIELDSPLIT` path, not
 SuperLU.
 
-**Iterative path (held in reserve, required for 3D):** multiplicative `PCFIELDSPLIT` splitting
-`{(φ, c_±), (u, p)}` — multiplicative reflects the weak PNP→NS coupling — AMG per scalar block,
-Stokes Schur with `selfp` or the pressure mass matrix `S ≈ −μ⁻¹M_p`. See FEniCSx-pctools
-(arXiv:2402.02523) for how such nested specifications are automated.
+**Iterative path (held in reserve, required for 3D):** NUM-22. FEniCSx-pctools (arXiv:2402.02523)
+shows how such nested field-split specifications are automated.
 
 ---
 

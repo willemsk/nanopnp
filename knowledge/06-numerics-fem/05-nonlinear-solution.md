@@ -35,33 +35,11 @@ verified:
 
 ## 5. Nonlinear solution
 
-**Primary strategy: monolithic damped Newton.** The author reports efficient convergence in
-COMSOL for this exact system using **PARDISO direct + Newton with a lower-bounded variable damping
-factor**. That is direct empirical evidence and outranks the general literature warning.
-*Confirmed from the model report:* Fully Coupled, PARDISO (pivoting perturbation 1e-13), initial
-damping 0.2, **minimum damping 0.01**, recovery damping 0.2, max 100 iterations, relative tolerance
-1e-6, sparsity pattern reused. Continuation on `V_bias`. → `knowledge/09-comsol-reference-settings/03-solver-3-4.md`.
-
-Implement:
-1. Damped Newton, damping factor adapted on residual reduction, with a **lower bound** (COMSOL's
-   scheme: if the damped step still fails, accept the minimum damping rather than aborting).
-2. Cap `‖δφ‖_∞ ≤ V_T` per step.
-3. Monitor `min_i c_i` **every** Newton step; fail loudly on negativity with the location.
-4. Assert the packing fraction `Σ_j N_A a_j³ c_j < 1` every step — `β_i` is singular at 1.
-
-**Fallbacks, in order:**
-- *Pseudo-transient continuation* (Kelley & Keyes, *SIAM J. Numer. Anal.* **35**, 508, 1998): add
-  `M/Δt` to the Poisson and NP diagonal blocks, grow Δt by SER. Trivial to add to a steady code
-  and the most robust safety net.
-- *Hybrid segregated* (Mitscha-Baude et al., *J. Comput. Phys.* **338**, 452, 2017): Newton on the
-  PNP block, fixed point for Stokes, with a **corrected Poisson step** — add the linearised-PB
-  screening term `χ_F(2q²c₀/kT)φ^{k+1}` to the LHS, evaluated at `φ^k` on the RHS. This is the
-  semiconductor Gummel map. They report both segregated schemes clearly outperform monolithic
-  Newton *at high surface charge with constant properties*.
-- *PB initial guess.* Initialise from the Poisson–Boltzmann solution rather than
-  `φ=0, u=0, c_i=c₀`. Specifically cures the high-surface-charge failure mode. **Note:** because
-  ePNP-NS violates the Einstein relation (see `knowledge/02-electrokinetics-background/index.md`), PB is an
-  approximate initialiser here, not the exact zero-bias limit.
+NUM-16 states the strategy, monolithic damped Newton with a lower-bounded damping, and the
+reference's COMSOL settings (`knowledge/09-comsol-reference-settings/03-solver-3-4.md`); NUM-17 the
+checks at every step; NUM-20 the fallbacks in order. Mitscha-Baude et al. (2017), behind NUM-20's
+hybrid segregated fallback, report that segregated schemes outperform monolithic Newton at high
+surface charge with constant properties. What follows is what building it measured.
 
 **The convergence criterion must not be the residual alone.** A relative test measured against the
 residual on *entry* — `‖r‖ ≤ 1e-6 ‖r₀‖` — has a pathology that only shows up once continuation is
@@ -88,18 +66,8 @@ genuinely small rather than merely badly scaled; and the ratio `10⁻⁶` tests 
 
 ### 5.1 Continuation ladder
 
-```
-linear PB → nonlinear PB → equilibrium PNP (V=0, u=0)
-  → ramp ρ_pore 0 → target
-  → ramp V 0 → ±200 mV (≈10 mV steps near onset)
-  → enable Stokes coupling
-  → enable ⟨c⟩- and d-dependent D, μ, ε, ϱ    ← last, deliberately
-  → enable steric flux β_i                     ← last of the last
-  → sweep salt 0.05 → 3 M
-```
-
-Warm-start each rung from the previous. Adapt the mesh *between* rungs, never within them.
-Enabling corrections last isolates their contribution to any convergence failure.
+NUM-18 states the ladder and its order, the corrections and the steric flux last, and NUM-19 that
+the mesh adapts between rungs only.
 
 **A warm start across a *changed field set* is not free.** Three transitions change it — PB to
 equilibrium PNP adds the concentrations, the Stokes rung adds `u` and `p`, and any change of element
@@ -109,9 +77,9 @@ and the shared fields interpolated by name. Where the field sets match, copy the
 interpolating: interpolation of a function already in the space is the identity only to round-off,
 and most rungs of the ladder are same-space.
 
-**Re-solving a converged rung costs one Newton iteration, not zero. [tested: tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing]** The update-based
-criterion cannot be evaluated without assembling the Jacobian and solving once; the entry-side
-residual test is measured relative to the entry residual, so a converged warm start never passes it.
+**Re-solving a converged rung costs at most one Newton iteration: one, unless its residual already sits at the absolute floor, 10⁻¹². [tested: tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing]** The update-based
+criterion cannot be evaluated without assembling the Jacobian and solving once; the entry check is
+the absolute floor alone, so above it a converged warm start costs that one assembly and solve.
 The state then moves by ~5 × 10⁻⁹ relative. This is the property to test a cross-space transfer with:
 a transfer that scrambles a component needs many iterations to recover.
 
@@ -166,8 +134,9 @@ Measured 21 September 2026 on the default ladder of an `epnp-ns` case at 0.1 M a
 rungs on a cheap cylindrical pore. Two rungs (`1-pb-linear`, `2-pb`) are not coupled models, so
 `SolveStage._instrumented` injects no damped-Newton callback into them at all — a callback is a
 keyword their `solve` would reject. Three more (`3-equilibrium-pnp`, `7-corrections`, `8-steric`)
-*are* coupled and still record `iterations: 0`: `damped_newton` found the transferred state's
-residual already at or below `max(rtol * initial, atol)` and returned before its first step. Only
+*are* coupled and still record `iterations: 0`: `damped_newton` returned before its first step.
+In today's code the only such return is a transferred state whose residual is already at the
+absolute floor, 10⁻¹²; the record predates that criterion and is not re-measured. Only
 the remaining seven took steps, five each on the bias and salt rungs and four on the flow rung.
 
 So five of twelve rungs keep no Newton history, and a consumer told only "no steps" cannot say

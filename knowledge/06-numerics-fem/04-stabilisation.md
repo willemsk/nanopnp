@@ -47,31 +47,12 @@ verified:
 
 ## 4. Stabilisation
 
-Electromigration is advection with `b_i = z_i D_i ∇φ̃ / L₀`. Cell Péclet
-`Pe_h = ½ |z_i| |∇φ̃| h̃`. In the double layer `|∇φ̃| ≈ |ζ̃|/λ̃_D`, so resolving it with 5 elements
-(`h̃ = λ̃_D/5`) gives `Pe_h = |z_i||ζ̃|/10` — below 1 for a monovalent electrolyte whenever
-|ζ| ≲ 257 mV, comfortably satisfied here.
-
-Caveat: `Pe_h < 1` is a *heuristic sufficient condition* from 1D linear constant-coefficient
-advection–diffusion on a uniform mesh. It is a design rule, not a proof for this system.
-
-> **SETTLED: the reference ran WITH stabilisation.** From the COMSOL model report — Transport of
-> Diluted Species: streamline diffusion on, crosswind diffusion on, crosswind type *Do Carmo and
-> Galeão*, equation residual *Approximate residual*, isotropic diffusion off, convective term in
-> conservative form. Laminar Flow: streamline on, crosswind on, isotropic off, **P1+P1** elements
-> (which is why that interface needs it). Crosswind assembles at integration order 6, streamline
-> at 4. Pseudo-time stepping is present but gated off (`spf.usePseudoTimeStepping = 0`).
->
-> Consequence: an unstabilised solve is a *different discretisation of the same PDE*. Per-cent-level
-> disagreement with the published currents is an implementation difference, not a bug. Provide a
-> matching stabilised mode before setting any tight cross-comparison tolerance.
-> → `knowledge/09-comsol-reference-settings/index.md`.
-
-**Policy:** no stabilisation on the production mesh; SUPG available as a flag for coarse
-continuation meshes, off for the final solve (SUPG biases the current QoI and breaks Jacobian
-symmetry). If needed, use Chaudhry, Comer, Aksimentiev & Olson (*Commun. Comput. Phys.* **15**,
-93, 2014): `σ_± = (h_τ/2‖b_±‖)·ψ(Pe_τ)`, `ψ(q) = min(q,1)` — they report spurious *negative
-concentrations* near charged nanopore walls with plain Galerkin.
+`SPECIFICATION.md` §6.4.1 states the cell Péclet number `Pe_h = ½ |z_i| |∇φ̃| h̃`, its bound and
+why it is a heuristic; NUM-11 the production policy, no stabilisation with SUPG behind a flag;
+NUM-14 the reference's settings, streamline and crosswind on in both interfaces, which the COMSOL
+model report records (`knowledge/09-comsol-reference-settings/index.md`). An unstabilised solve is
+a different discretisation of the same PDE, so per-cent disagreement with the published currents is
+expected until the modes are matched. What follows is the mode as built and what it measured.
 
 ### 4.1 The mode as built
 
@@ -104,14 +85,16 @@ the physical `D̃_i` is
 τ_i‖b̃_i‖² / D̃_i  =  ( ‖b̃_i‖ h_K / 2D̃_i )²  =  Pe_K²
 ```
 
-— independent of every material parameter. Put NUM-30's `h = λ_D/5` into it with
-`‖∇φ̃‖ ≈ |ζ̃|/λ̃` inside the double layer and `Pe_h = |z_i||ζ̃|/10`, independently of concentration:
-at 1 M, `λ_D = 0.304 nm`, `h̃ = 0.0304`, `‖∇φ̃‖ = 19.7`, `Pe_h = 0.300`; at 0.05 M,
+— independent of every material parameter. Put a spacing `h = λ_D/5` into it (NUM-30's first layer
+is `min(0.05 nm, λ_D/5)`, so this is its spacing only above about 1.5 M; below, the 0.05 nm ceiling
+makes `Pe_h` smaller) with
+`‖∇φ̃‖ ≈ |ζ̃|/λ̃` inside the double layer and `Pe_h = |z_i||ζ̃|/10`, independently of concentration.
+With `ζ̃ = 3` and lengths in units of the pore radius `a` = 2 nm: at 1 M, `λ_D = 0.304 nm`, `h̃ = 0.0304`, `‖∇φ̃‖ = 19.7`, `Pe_h = 0.300`; at 0.05 M,
 `λ_D = 1.357 nm`, `h̃ = 0.1357`, `‖∇φ̃‖ = 4.42`, `Pe_h = 0.300`. The added artificial diffusion is
 therefore **`ζ̃²/100`** — 4 % at `ζ̃ = 2`, 9 % at `ζ̃ = 3`, 16 % at `ζ̃ = 4`. In the pore lumen the
 gradient is set by the bias over the pore length (`‖∇φ̃‖ ≈ 1.2` at 200 mV over 13 nm), so
-`Pe_h ≈ 0.03` and the added diffusion is 0.09 %: the stabilisation is a double-layer effect by three
-orders of magnitude. Applying PHY-14's `D_i/μ_i` (1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 for Cl⁻
+`Pe_h ≈ 0.03` and the added diffusion is 0.09 %: at the `λ_D/5` spacing the stabilisation is a
+double-layer effect by up to two orders of magnitude. Applying PHY-14's `D_i/μ_i` (1.21–1.67 × kT/e for Na⁺ and 1.13–1.28 for Cl⁻
 between 0.15 M and 3 M, `knowledge/01-physics-epnpns/03-the-corrections.md` §3.0) scales every `Pe_h`
 by 0.60–0.88 and every added diffusion by its square.
 
@@ -198,7 +181,7 @@ PHY-14's corrections are on.
 ### 4.3.2 The stabilisation bias falls at `O(h²)`, approaching it from below **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_two_modes_currents_converge_to_each_other_under_refinement]** {#432-the-stabilisation-bias-falls-at-oh2-approaching-it-from-below}
 
 `|I_reference − I_none| / |I_none|` on the pore above at 0.5 M, +50 mV, −0.05 C/m², refining only
-the wall spacing (the stabilisation is a double-layer effect by three orders of magnitude, §4.2, so
+the wall spacing (the stabilisation is a double-layer effect, §4.2, so
 `maxh` stays at 5 nm):
 
 | `wall_h` (nm) | elements | difference |
@@ -215,18 +198,18 @@ That the difference vanishes at all is the substantive result: a stabilisation b
 refinement would make `reference` a different model rather than a different discretisation, and the
 §7.4 attribution would be subtracting something that never goes away.
 
-### 4.3.3 On a stable element pair the flow terms cost an order, and 20× the time **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more]** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_unstabilised_mode_on_the_same_meshes_still_gives_ver18s_rate]** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_flow_pair_and_not_the_transport_term_sets_the_reference_rate]** {#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time}
+### 4.3.3 On a stable element pair the flow terms cost an order and six times the Newton steps **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more]** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_unstabilised_mode_on_the_same_meshes_still_gives_ver18s_rate]** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_flow_pair_and_not_the_transport_term_sets_the_reference_rate]** {#433-on-a-stable-element-pair-the-flow-terms-cost-an-order-and-20-the-time}
 
 Measured on VER-18's manufactured solution — a 2 × 4 nm cylinder, P2 potential, concentration and
 velocity, P1 pressure, `maxh` 0.4/0.2/0.1 nm, 0.1 M, every correction off. `max Pe_K ≤ 0.084` there,
 so by §4.3 the crosswind viscosity is **identically zero** (sampled, both species) and `supg` and
 `reference` differ by the flow GLS and grad-div pair alone.
 
-| Mode | `c_Na+` L² at 0.4 / 0.2 / 0.1 nm | rate | velocity L² at 0.4 nm | Newton | wall clock at 0.4 / 0.2 nm |
-|---|---|---|---|---|---|
-| `none` | 6.4131e−05 · 5.4653e−06 · 6.3266e−07 | 3.55, 3.11 | 2.7567e−04 | 5 | 0.8 s · 4.7 s |
-| `supg` | 3.7397e−04 · 9.2731e−05 · 2.2549e−05 | **2.01, 2.04** | 2.7617e−04 | 5 | 7.2 s · 25.1 s |
-| `reference` | 3.1107e−03 · 1.5722e−03 · — | **0.98** (`Cl−` 0.70) | 3.4483e−02 | 31 | 126 s · 436 s |
+| Mode | `c_Na+` L² at 0.4 / 0.2 / 0.1 nm | rate | velocity L² at 0.4 nm | Newton |
+|---|---|---|---|---|
+| `none` | 6.4131e−05 · 5.4653e−06 · 6.3266e−07 | 3.55, 3.11 | 2.7567e−04 | 5 |
+| `supg` | 3.7397e−04 · 9.2731e−05 · 2.2549e−05 | **2.01, 2.04** | 2.7617e−04 | 5 |
+| `reference` | 3.1107e−03 · 1.5722e−03 · — | **0.98** (`Cl−` 0.70) | 3.4483e−02 | 31 |
 
 Three things follow. The streamline term on its own hits NUM-14's predicted 2 to within 2 %, so the
 approximate-residual prediction is confirmed where it was made. The flow pair takes the mode to
@@ -236,47 +219,31 @@ gradient, which is `O(h)` rather than `O(h²)`. And the velocity error — which
 reach, `supg` moving it by 0.2 % — rises by a factor of **125**, which is what makes the attribution
 a measurement rather than an inference.
 
-The flow equation-residual setting is *not recorded* in the reference's model report (NUM-14's
+The flow equation-residual setting is not recorded in the reference's model report (NUM-14's
 table), so this approximation is ours; and the reference ran its flow stabilisation on a P1/P1 pair
 (RSK-18), where the term is what makes the pair admissible. No configuration the reference itself ran
 loses an order. The combination that does — the full mode on a Taylor–Hood pair — exists only as the
 middle rung of the §7.4 attribution ladder, and `Δ_stab` measured there is the flow pair's, not the
 transport term's.
 
-The 20× wall clock is two effects: the streamline term alone costs 8× per solve at unchanged Newton
-count, which is assembly, and the flow pair takes Newton from 5 iterations to 31, which is the lagged
-`τ_m` — relagging a large parameter at each iterate turns Newton into a fixed-point iteration in `τ`
-and the contraction weakens as `τ` grows.
+**The flow pair takes Newton from 5 iterations to 31** **[verified][^wp12-plan]**. That is the lagged `τ_m`: relagging a large
+parameter at each iterate turns Newton into a fixed-point iteration in `τ`, and the contraction
+weakens as `τ` grows.
 
-Most of that assembly cost is the **manufactured source**, not the streamline term itself **[verified][^fb4f9ae]**.
-With the setup above (5 Newton iterations in every case), a solve at `maxh` 0.4, 0.2 and 0.1 nm took
-0.4 s, 2.0 s and 8.0 s in `none` and 6.6 s, 27.6 s and 107.5 s in `supg`. At 0.2 nm, withholding
-`s̃_i` from `R̃_i` (§4.3.4) brings `supg` from 30 s down to 5.0 s. The sympy-generated source
-polynomial sits inside the nonlinear SUPG integrand, and `AssembleLinearization` carries that whole
-constant subtree through every quadrature point. `CoefficientFunction.Compile()` (graph flattening
-only, with no C++ JIT, so CON-07 is untouched) recovers only 20 % (37 s to 29.6 s at 0.4 plus 0.2 nm)
-and leaves the errors identical to 13 digits. This cost belongs to the MMS benchmark. A production
-run carries no manufactured source, so it does not pay it.
-
-**The cost is the source's *representation*, and it is removed in the harness.** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_the_stabilised_mode_loses_an_order_and_no_more]** **[verified]**[^fb4f9ae] `_reduce`
-puts each species source over one common denominator (`cancel(together(·))`) so the removable `1/r`
-cancels. The result is about 3,800 operations. `lambdify` writes it as a tree in which every
-repeated subexpression is its own node, so NGSolve evaluates all of them at every quadrature point:
-one `Integrate` of the `c_Na+` source at order 12 on the 0.1 nm mesh takes 1.08 s, against 0.001 s
-for the exact concentration. `CoefficientFunction.Freeze()` changes nothing, bitwise or in time, so
-automatic differentiation is not the cost. Built with `lambdify(..., cse=True)` and then
-`Compile()`, the repeated subexpressions are shared and each is evaluated once: 0.057 s (19×), with
-the source values moving by 1.5e-15 relative. `to_coefficient_function` does this. VER-42's
-three-level `supg` fixture went from 208 s to 26 s, and `none` from 11 s to 7.5 s (serial, one BLAS
-thread, NGSolve 6.2.2606). The errors equal the recorded ones to every printed digit (`supg`
-`c_Na+` 3.7396590029e-04, 9.2730603940e-05, 2.2549195484e-05; rates 2.0118, 2.0400), and every
-Tier-1 and Tier-2 test passes unchanged. The weak forms are untouched, so the §4.3.4 footprint test
-discriminates exactly as before. Source: test-suite timing work, 30 September 2026.
-
-Two things measured and rejected. First, `TaskManager()` makes the same solve 3.9× faster on four
-idle cores (158 s to 41 s at 0.1 nm). But the push gate runs four workers on four cores, so no core
-is idle. Second, the form's derivative of the source is identically zero, so freezing it is exact
-but buys nothing.
+**Most of the streamline term's cost on this benchmark is the manufactured source's representation**
+**[verified][^fb4f9ae]**.
+The sympy-generated source sits inside the nonlinear SUPG integrand, and `AssembleLinearization`
+evaluates it at every quadrature point. `_reduce` puts each species source over one common
+denominator (`cancel(together(·))`) so the removable `1/r` cancels, about 3,800 operations;
+`lambdify` writes it as a tree in which every repeated subexpression is its own node. Built with
+`lambdify(..., cse=True)` and then `Compile()` (graph flattening only, with no C++ JIT, so CON-07 is
+untouched), as `to_coefficient_function` does, the repeated subexpressions are shared: one
+`Integrate` of the `c_Na+` source at order 12 on the 0.1 nm mesh takes 0.057 s, with the source
+values moving by 1.5e-15 relative. `CoefficientFunction.Freeze()` changes nothing, bitwise or in
+time, so automatic differentiation is not the cost. VER-42's three-level fixture runs in 26 s in
+`supg` and 7.5 s in `none` (serial, one BLAS thread, NGSolve 6.2.2606), with the errors above to
+every printed digit; the remaining factor of about 3.5 is the streamline term itself. A production
+run carries no manufactured source, so it does not pay this cost.
 
 ### 4.3.4 A stabilisation residual missing its source switches the term **off** **[tested: tests/tier2/test_stabilised_mode.py::test_ver42_withholding_the_manufactured_source_switches_the_term_off]** {#434-a-stabilisation-residual-missing-its-source-switches-the-term-off}
 
@@ -324,4 +291,10 @@ other.
 
 ---
 
-[^fb4f9ae]: commit fb4f9ae, "test: cut the push gate from 353 s to 271 s with nothing de-gated".
+[^fb4f9ae]: commit fb4f9ae, "test: cut the push gate from 353 s to 271 s with nothing de-gated". Before the shared build, one `Integrate` of the source took 1.08 s and the fixture 208 s in `supg`
+    and 11 s in `none`; the streamline term cost 8× per solve at an unchanged Newton count, and
+    withholding the source brought `supg` at 0.2 nm from 30 s to 5.0 s. `Compile()` alone recovered
+    20 % (37 s to 29.6 s). `TaskManager()` made one solve 3.9× faster on four idle cores (158 s to
+    41 s) and was rejected: the push gate runs four workers on four cores, so no core is idle.
+[^wp12-plan]: `docs/plans/phase-1/wp12-reference-stabilised-mode.md`, the Outcome's table of the three
+    modes on VER-18's problem.
