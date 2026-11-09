@@ -1,6 +1,6 @@
 # WP5.11 — The specification's text and the agent instructions
 
-**Status: planned, not started.** Planned 9 November 2026, at `69d961c`. Inherits §8.2.36 AL8 to AL12, AL14 and
+**Status: in progress, items 1 to 3 done.** Planned 9 November 2026, at `69d961c`. Inherits §8.2.36 AL8 to AL12, AL14 and
 AL16 to AL18 and AL21, AM1 to AM12 ruled at this plan and its review (§8.2.37), CODE_REVIEW_039's register and its scripts in
 `.claude/scripts/audit/`, and REV-216 and REV-222.
 
@@ -190,13 +190,13 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
 
 ### Work items
 
-- [ ] 1. `SPECIFICATION.md`, `specification/01` to `03` (D1 to D3): list 1, CON-05, CON-06; the SHALL count
+- [x] 9c11662 1. `SPECIFICATION.md`, `specification/01` to `03` (D1 to D3): list 1, CON-05, CON-06; the SHALL count
   before; done when the code and review say so and the strict build passes. **Executor:** main
-- [ ] 2. `specification/04-physics.md`, `06-numerics.md`, `.claude/rules/physics-numerics.md`,
+- [x] 0c9e3d2 2. `specification/04-physics.md`, `06-numerics.md`, `.claude/rules/physics-numerics.md`,
   `knowledge/06-numerics-fem/04-stabilisation.md`, `docs/project/review-findings.md`, `review-items.md` (D2, D4,
   D5): list 2, AM1's twelve, the two NOTEs, REV-223 to REV-225; done when the code and review say so and each
   measurement cut from a NOTE stands in its concept. **Executor:** main
-- [ ] 3. Compaction checkpoint. **Executor:** main
+- [x] 3. Compaction checkpoint. **Executor:** main
 - [ ] 4. §5.1, §5.2, §5.4 to §5.6, `knowledge/04-clya-geometry-and-charge/02-model-geometry-and-conventions.md`,
   `knowledge/07-software-stack/01-fem-backend-ngsolvenetgen.md` (D3, D4): list 4, AL10, AL12; done when each diagram edge is a registry
   edge and VER-79 passes. **Executor:** main
