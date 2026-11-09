@@ -13,7 +13,8 @@ Open-source Python reimplementation of the **ePNP-NS** framework for biological 
   clause. Cite the identifier when you implement or test one. A change to specified behaviour changes
   the specification in the same commit.
 - **Never web-search the model equations, correction functions or parameters.** Popular summaries are
-  wrong. The concepts under `knowledge/01-physics-epnpns/` are normative. Where sources disagree, the
+  wrong. §4 of `SPECIFICATION.md` states the model's equations and governs them; the concepts under
+  `knowledge/01-physics-epnpns/` back it. Where sources disagree, the
   COMSOL model report governs (§1.6). Web search is fine for library versions and APIs (prefer
   Context7) and for literature newer than the knowledge base.
 - **Rules by path.** `.claude/rules/physics-numerics.md` and `.claude/rules/python.md` load when you
@@ -136,7 +137,7 @@ the validated default**. A result whose manifest cannot reconstruct the run is n
 ## Implementation workflow
 
 One work package per PR, green on tiers 1–2 before the next one in its lane (at most two lanes,
-§8.4.4). To plan or resume, read `docs/plans/current.md`, then the WP's Execution brief and the
+`.claude/workflow/core.md`, *Two lanes*). To plan or resume, read `docs/plans/current.md`, then the WP's Execution brief and the
 sections it cites. A brief never overrides a normative requirement.
 
 | Step | Command | What it does |
@@ -156,7 +157,7 @@ shell, the cloud environment's variables, or `env` in `.claude/settings.local.js
 pause before `/np-ship`. No hook can compact: Claude Code's own compaction comes when the context fills,
 and `.claude/hooks/checkpoint.sh` carries the checkpoint's prompt across it; `checkpoint.sh clear`
 drops a saved one. A cloud session cannot push a tag; after the merge `/np-ship` dispatches `tag.yml` and prints the
-commands. A choice put to the author follows the core's *Putting a choice to the author*. The steward skill governs a PR in flight. `/np-gui <render | review | publish | collect | grill>`
+commands. A choice put to the author follows *Putting a choice to the author* in `.claude/workflow/author.md`. The steward skill governs a PR in flight. `/np-gui <render | review | publish | collect | grill>`
 renders screens and mockups headless, reviews them, publishes them for the author's verdicts, and runs
 a design round (§8.4.4).
 
@@ -193,13 +194,7 @@ branch at a time.
 
 ## Prose in code
 
-- A public function, class or method of `src/` has a docstring. Public means no leading underscore; a
-  dunder method is public. The docstring has a summary line, and NumPy-style parameters only where
-  name and type do not say. It has no derivation and no history.
-- Every module has a one-line docstring. A test or private code has none.
-- A comment says why the code is so, where the code cannot say it, or gives the source of a physical
-  constant.
-- Identifiers live in test names and commit messages (`.claude/rules/python.md`; §8.4.2; §8.2.11 L4).
+In-code prose follows `.claude/rules/python.md`, which loads when you edit a `.py` file (§8.4.2).
 
 ## Durable learnings
 

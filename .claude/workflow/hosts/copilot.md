@@ -9,7 +9,7 @@ This file maps each Claude Code tool the workflow names to its Copilot substitut
 
 | Source | On Copilot |
 |---|---|
-| `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md` | All three load. `AGENTS.md` imports `CLAUDE.md`, so `CLAUDE.md` loads twice |
+| `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md` | All three load. `AGENTS.md` points to `CLAUDE.md` and imports nothing, so `CLAUDE.md` loads once |
 | `.claude/rules/*.md` | Path-scoped instructions by their `paths:` globs, read on demand as on Claude Code |
 | `.claude/agents/*.md` | Custom agents of the `task` tool. Pass `model` and `reasoning_effort` at the call (*Models*) |
 | `.claude/skills/*/SKILL.md` | Skills: `/np-plan`, `/np-implement`, `/np-ship`, `/np-gui`, `steward` |
@@ -24,8 +24,8 @@ the only form Copilot reads. Open probes: REV-166 to REV-168.
 ## Questions
 
 Use `ask_user`, one question per call, and at most four calls in a row. Put the recommended option
-first and mark it *(Recommended)*. `ask_user` has no preview, so put each option's lines of the core's
-*Putting a choice to the author* (you get, it costs, undo, it touches) in the question. Copilot always
+first and mark it *(Recommended)*. `ask_user` has no preview, so put each option's lines of
+*Putting a choice to the author* (`.claude/workflow/author.md`) (you get, it costs, undo, it touches) in the question. Copilot always
 offers a free answer, so add no "Other". Never ask in plain text.
 
 ## Agents and models
@@ -97,11 +97,13 @@ steward's failure classes.
 - A timed-out hook lets the command through. The entries carry 1800 s.
 - The gate reads one command. Never commit or push by typing into a running shell.
 - The Commit and Push buttons run only git's hooks. Never use them.
-- Hooks fire only on a WSL host. On a `\\wsl.localhost\` folder, run both gates of `CLAUDE.md`'s
-  *Commands* by hand.
+- Hooks fire only on a WSL host. A `\\wsl.localhost\` path from `git rev-parse --show-toplevel`
+  means both gates run by hand (`CLAUDE.md`, *Commands*).
 
-Until REV-166 closes, run the gate by hand before each commit and push. If a refusal or timeout is
-not honoured, the Phase 0 stop rule forbids Copilot commits until it is fixed.
+Until REV-166 closes (its row in `docs/project/review-findings.md` gives its state), run the gate by
+hand before each commit (`CLAUDE.md`'s hook-mode command, which stamps the tree) and `gate.sh run`
+before each push. If a refusal or timeout is not honoured, the stop rule of the Copilot plan (§8.2.25
+AA6) forbids Copilot commits until it is fixed.
 
 ## Session operations
 

@@ -12,9 +12,8 @@ failures are evidence rather than chores.
 
 `uv` owns it (`CLAUDE.md`, *Setup*).
 
-The gate is `.claude/hooks/gate.sh run`. Run it on the committed fix as `CLAUDE.md`'s *Commands* say.
-Wait for it in the same turn. Push when it passes. The hook refuses a push of a tree it has not
-passed, and every fix is gated in full. `--no-verify` exists. Do not use it.
+Gate and push each committed fix in full as the core's *Gate and push* says
+(`.claude/workflow/core.md`). `--no-verify` exists. Do not use it.
 
 ## Bounded wakes
 
@@ -67,9 +66,8 @@ The jobs:
 - **A pull request** (§7.6, §8.2.10 J4, §8.2.13 N4) runs on ubuntu, 3.14 only. Its jobs are:
     - **`lint`**: `ruff check`, `ruff format --check`, `mypy src/`.
     - **`docs`**.
-    - **`tests (tier1)`** and **`tests (tier2)`**. They run the per-push selection: Tier 1, the
-      non-walk Tier 2 tests, example 01 and example 02's charged leg, with no `nightly` tests. They
-      split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`).
+    - **`tests (tier1)`** and **`tests (tier2)`**. They run the per-push selection
+      (`CLAUDE.md`, *Commands*), split by marker (`-m "tier1 and not slow"`, `-m "tier2 and not slow"`).
     - **`CI result`**, the one required check. It fails unless every job above succeeded.
 
   Reproduce a shard with `uv run pytest -m "tier1 and not slow"` (or `tier2`). There is no coverage
@@ -89,7 +87,8 @@ The jobs:
       platforms (§8.2.13 N4);
     - Tier 1 on 3.11 to 3.13 on the three platforms, with dependencies from wheels only.
 
-  A failure opens an issue and blocks nothing. Fix it forward in a PR.
+  A failure of the first part, or of `bundle`, opens an issue and blocks nothing; the 3.11–3.13 legs
+  and `tier3` are recorded in the run only. Fix it forward in a PR.
 - **`bundle`** is **gated**. It builds the Windows PyInstaller bundle of `packaging/nanopnp-probe.spec`,
   then runs the bundle's own `--selftest` (RSK-13, §8.2.1 A4). It runs after a merge, before a release
   and nightly, as the runner-image drift probe.
@@ -128,7 +127,7 @@ matrix leg, reproduce it under that interpreter (`uv run --python 3.11 pytest �
 | `gmsh does not import` | The runner lacks the X and GL libraries | Install them (`knowledge/07-software-stack/04-geometry-meshing-and-io.md`); never unset the variable |
 | Fails under `-n`, passes serially | Order dependence or leaked state (a global, a patched attribute, a cwd) | Name the state and isolate it. Never drop `-n`, pin a worker or call it a flake |
 | A tier 2 analytic benchmark | **Evidence** | Read the next section first |
-| VER-62 number stability | The message decides: a recorded mesh or a moved mesh on the reference environment is G10 evidence; an unseen mesh on another leg is a platform deploying a mesh the golden has not seen | Investigate, then revert or rule and re-pin (§8.2.7 G10). For an unseen mesh, fold it in with `tests/tier2/data/merge_number_stability.py --entry` and say so in the PR; never fold a reference-environment record or edit `moved_tolerance` by hand |
+| VER-62 number stability | The message decides: a recorded mesh or a moved mesh on the reference environment is evidence of a moved physics number (§8.2.7 G10); an unseen mesh on another leg is a platform deploying a mesh the golden has not seen | Investigate, then revert or rule and re-pin (§8.2.7 G10). For an unseen mesh, fold it in with `tests/tier2/data/merge_number_stability.py --entry` and say so in the PR; never fold a reference-environment record or edit `moved_tolerance` by hand |
 | Timeout or OOM | A benchmark outgrew the budget | Reduce the *mesh*, never the assertion; else ask |
 
 ## Tier 2 failures are physics evidence

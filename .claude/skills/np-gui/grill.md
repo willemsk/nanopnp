@@ -1,8 +1,8 @@
 # Run a design round with the author
 
 `/np-gui grill <organisation | look-and-feel>`. The author must be present. The agendas and the
-boards are WP5.01's (`docs/plans/phase-5/wp5.01-workbench-design-study.md`, D2 and *Implementation
-details*); a later round names its own.
+boards are WP5.01's (`docs/plans/phase-5/wp5.01-workbench-design-study.md`: its design round (D2) and
+*Implementation details*); a later round names its own.
 
 ## Prepare
 
@@ -10,7 +10,8 @@ Read the inputs:
 
 - the verdicts collected so far;
 - the author's areas (§8.2.17 S24);
-- the personas P1 to P3 (§2.4) and the rulings §8.2.17 S2 and S6;
+- the personas P1 to P3 (§2.4), the ruling that the GUI is a workbench for every user (§8.2.17 S2)
+  and the ruling that its live views link both ways (§8.2.17 S6);
 - the design document so far.
 
 Write down the assumptions they leave open. Each becomes an agenda point or a question.
@@ -23,9 +24,8 @@ author the URL before the first question.
 
 ## Grill
 
-- One agenda point at a time, in the agenda's order. At most four questions per `AskUserQuestion`
-  call, two to four options each, the recommended option first with *(Recommended)*, each option's
-  consequence in its description.
+- One agenda point at a time, in the agenda's order, asked as *Putting a choice to the author* in
+  `.claude/workflow/author.md` says; read it before the first question.
 - Walk a job through each answer before the next point: "where does the user click to change the
   salt, and what redraws?" Ask again about a route that breaks.
 - Challenge an answer that contradicts an earlier ruling or a clause, quoting both.

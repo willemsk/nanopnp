@@ -72,7 +72,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   workbench in every fixture state, and `nanopnp gui --dev` is the local live loop: it serves the
   workbench and restarts on a change to its source (`CONTRIBUTING.md`). A suite's package opens with its
   tools prototyped over 2WCD's artefacts (Physics, which has no molecule, over example 01's NaCl case) and rendered in their states for the author's verdicts and a
-  design round, then builds them. `impeccable`, where the host has it, is a tool inside this workflow:
+  design round, then builds them. From WP5.15, `impeccable`, where the host has it, is a tool inside this workflow:
   its critique a second opinion beside the GUI reviewer's, its quality floor read before a screen is
   built; the design document and the tokens stay the authority, and the author's rulings win over its
   rules. (§8.2.17 S21, S22; §8.2.30 AF4; §8.2.34 AJ6, AJ8; `.claude/skills/np-gui/`)
@@ -114,7 +114,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   what could go wrong and how it would be noticed. Its *Your call* gives each decision that waits for
   the author, with a recommendation. The work's cost is in §8.3's units, sessions, agent hours and the
   author's touches, from measured comparable packages; a cost to a user of the program, such as
-  speed or a dependency, is in its own. (§8.2.10 J9; §8.2.37 AM10)
+  speed or a dependency, is in its own. (§8.2.10 J9; §8.2.37 AM10; `.claude/workflow/author.md`)
 * A work-package plan is grounded in the code. Its `### Grounding` records, by symbol, what the code
   does today, the call path of the change, the shape of what it reads and writes, every variant of its
   input, the registry and layering rows it adds, and how each test gets the object it checks. The plan
@@ -138,7 +138,7 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   to undo and what it touches, with the recommendation's reason and what would change it. A
   work-package plan puts to the author each decision that changes what a user sees or does, fills a
   gap in the design or the phase entry, moves the package's scope, deletes or moves a user's data, or
-  trades time against quality. (§8.2.33 AI6, AI7; `.claude/workflow/core.md`)
+  trades time against quality. (§8.2.33 AI6, AI7; `.claude/workflow/author.md`)
 * A compaction checkpoint is a work item. The session ticks it, gates and pushes, prints a `/compact`
   prompt that names the next item and the values it needs, and ends its turn. When the author sets
   `NANOPNP_AUTO_CHECKPOINT=1`, the session goes on instead, and the hooks give the prompt to the

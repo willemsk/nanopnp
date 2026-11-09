@@ -42,15 +42,13 @@ if you would rather not install anything locally.
 
 ## The gate
 
-Everything must pass before a commit:
+Before a commit: `uv lock --check`, lint, format, types and Tier 1
+(`uv run pytest -m 'tier1 and not slow'`). Under Claude Code the commit hook runs these, so do not run
+them by hand.
 
-```bash
-uv run ruff check . && uv run ruff format --check . && uv run mypy src/ && uv run pytest
-```
-
-and before a push, run `.claude/hooks/gate.sh run`: lint, format and types, then the per-push selection. That
-selection is Tier 1, the Tier 2 tests that neither walk the pipeline nor carry `slow`, example 01 while it solves
-in under 60 seconds, and the charged ePNP-NS walk of example 02. The tests marked `nightly` walk the pipeline end
+Before a push, run `.claude/hooks/gate.sh run`: lint, format and types, then the per-push selection
+(`SPECIFICATION.md` §7.6). That selection is Tier 1, the Tier 2 tests that neither walk the pipeline
+nor carry `slow`, example 01 while it solves in under 60 seconds, and the charged ePNP-NS walk of example 02. The tests marked `nightly` walk the pipeline end
 to end (the executed worked examples and the vendored 2WCD entry) and the rest of Tiers 1 and 2; the nightly run
 executes them, and a failed nightly run opens an issue and blocks nothing (`SPECIFICATION.md` §7.6). Naming one's
 file, `uv run pytest tests/tier2/test_charge_2wcd.py`, runs it without the flag. No coverage is measured.
@@ -101,8 +99,9 @@ may appear in the documentation as a result unless an example asserts it (VER-46
 `SPECIFICATION.md` is normative. Requirements (`FR-`, `QR-`, `CON-`), physics (`PHY-`), numerics
 (`NUM-`) and verification (`VER-`, `VAL-`) are identified there, and:
 
-- **Name the identifier your change discharges** — in the commit body, in the PR, and in the test
-  name (`test_ver03_ion_wall_function_check_values`). Appendix A traceability is then mechanical.
+- **Name the identifier your change discharges** in the commit body and the PR, and in the test name
+  where it is physics, numerics or a core mechanism (`test_ver03_ion_wall_function_check_values`).
+  Other identifiers are verified at review (§7.1).
 - **Changing specified behaviour means changing the specification in the same commit**, with the
   argument, not diverging from it quietly.
 - **A tolerance is never slackened to accommodate a number.** Either the number is wrong, or the
@@ -145,7 +144,7 @@ electrolyte should never require touching solver code.
 ## Style
 
 `from __future__ import annotations` at the top of every module; type hints on every signature
-(`mypy --strict` runs over `src/`); a docstring on the public API and a one-line docstring on every module, nothing on tests or private code, and a comment only where the code cannot say why; SI internally with units in the name at
+(`mypy --strict` runs over `src/`); a docstring on every public function, class and method of `src/` and a one-line docstring on every module, nothing on tests or private code, and a comment only where the code cannot say why; SI internally with units in the name at
 the boundary (`radius_nm`, `bias_V`); British spelling in prose and identifiers, matching the
 specification; `pathlib`, f-strings, `logging`; pydantic models at every serialisation boundary. Cite
 the source of every physical constant and fit coefficient in a comment.

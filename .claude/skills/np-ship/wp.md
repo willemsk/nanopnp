@@ -31,8 +31,8 @@ Confirm these:
 - Each in-scope `VER-`/`VAL-` that the plan claims has its test (`SPECIFICATION.md` §8.2.13 N1, N3).
   The review checks each other claimed identifier against the code.
 - `SPECIFICATION.md`, `knowledge/` and the Outcome annotations are committed.
-- `CHANGELOG.md` has `## [X.Y.Z-alpha.N]` for the package's tag, the heading `tag.yml` greps
-  (`grep -qF '## [X.Y.Z-alpha.N]' CHANGELOG.md`; `CONTRIBUTING.md`, *Versions and releases*).
+- `CHANGELOG.md` carries the package's entry as `CONTRIBUTING.md`'s *Versions and releases* says. A
+  package that takes a tag has the heading `tag.yml` greps (`grep -qF '## [X.Y.Z-alpha.N]' CHANGELOG.md`).
 
 If the branch is `main` or equals `origin/main`, stop and ask. If it is behind `main`, merge `main`
 into it and renumber as the core's *Two lanes* says. Then run `uv run .claude/scripts/duplicates.py`
@@ -93,7 +93,7 @@ list is valid), and the findings it could not assess or fix. Compare it with the
    the plan. Revert a wrong fix, and give the reason in the PR thread. This step stays in this session.
    In the implementing session, a finding you would reject because it contradicts a decision taken
    while implementing, and not one the plan or the specification fixes, is not yours to reject: put it
-   to the author as the core's *Putting a choice to the author* says, with the finding, the decision
+   to the author as *Putting a choice to the author* in `.claude/workflow/author.md` says, with the finding, the decision
    and a recommendation, before the commit.
 2. For each finding that the pass could not fix, fix it here, or record a `REV-nn` row (`CLAUDE.md`,
    *Open items*) and list it in the PR body under **Deliberately not done**. A row the author has not
@@ -135,10 +135,8 @@ open.
 
 ## 7. After the merge
 
-The package's last commit on `main` gets its tag: `vX.Y.Z-alpha.N` from its `CHANGELOG.md` section
-(`CONTRIBUTING.md`, *Versions and releases*), or the release tag for a close (`phase.md`). A package
-merged before its previous phase's release gets no tag, although its section names a release (the
-core's *Two lanes*). Report that, and stop.
+The tag is the one `CONTRIBUTING.md`'s *Versions and releases* gives, or none. With none, report that,
+and stop.
 
 1. Fetch `main`: a hosted clone is shallow. The merge sha is the `merge_commit_sha` of the merged PR.
 2. If `git ls-remote --tags origin <tag>` lists the tag, report it and stop.
