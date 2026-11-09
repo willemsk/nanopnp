@@ -21,7 +21,7 @@ check.
   follow-up, WP5.13 and WP5.14 the clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the
   route, WP5.22 the close.
   **WP5.10** [in progress](phase-5/wp5.10-the-written-knowledges-tools-and-rules.md): items 1 to 12 done; a command
-  runner and an automatic checkpoint to come. Next `/np-implement wp 5.10`.
+  runner, an automatic checkpoint and a kept task list to come. Next `/np-implement wp 5.10`.
   host: claude-code.
 
 ## Not to be re-decided

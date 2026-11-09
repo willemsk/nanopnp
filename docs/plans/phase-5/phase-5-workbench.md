@@ -225,7 +225,7 @@ the Study suite's list WP5.19's; REV-217 and REV-219 land in WP5.13, REV-220 and
 ### WP5.10 — The written knowledge's tools and rules (CODE_REVIEW_039; §8.2.36 AL3 to AL7, AL14, AL24, AL27, AL28)
 
 **In progress** ([the plan](wp5.10-the-written-knowledges-tools-and-rules.md)): items 1 to 12 delivered 9 November 2026;
-a command runner and an automatic checkpoint added the same day (D9, D10). `docs/project/decisions.md`,
+a command runner, an automatic checkpoint and a kept task list added the same day (D9 to D11). `docs/project/decisions.md`,
 written by `.claude/scripts/decisions.py` from the records, lists 1,256 decisions with where each holds now; the
 history index's list moved to `specification/history/holds-now.yaml` (AL3). The site's *Architecture* page is generated
 (AL6). VER-79 checks §5.1's module rows against the subpackages, the page against the script and the YAML against the
