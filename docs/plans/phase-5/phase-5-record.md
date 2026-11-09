@@ -451,6 +451,26 @@ touches, measured from each session's transcript (AM10, AM11), and that the live
 > **Cost.** About seven weeks for the library steps, three and a half for the written knowledge and the tidying, and
 > thirteen to sixteen for the screens: about six months part-time.
 
+## Amended 9 November 2026 (§8.2.38 AN1 to AN3)
+
+At WP5.12's plan, the author ruled that the sodium cap's test is tightened (AN1), that three ideas move to an open
+item (AN2), and that the site's register links wait for WP5.21 (AN3). WP5.12's entry read:
+
+> The findings filed under `knowledge/` and `docs/`. The five concepts that state a method or rule wrongly are rewritten,
+> AUD-339 first (AL15); `knowledge/01`'s overview says it backs §4 and §4 governs (AL16); the redundancy rows, the §6 and
+> §4 mirrors in `knowledge/06` and `knowledge/01` first, each concept pointing at its clause (AL17); the sediment rows
+> (AL18); each of the fifteen unsourced `[verified]` claims footnoted, marked "by arithmetic" or demoted (AL19); the guide
+> says protonation runs before the density (AL13). The author receives an eight-row checklist of the findings that rest on
+> the ESI or the COMSOL report and confirms or dismisses each (AL20). A finding left open becomes a `REV-nn` row. No test.
+> Tag `v0.6.0-alpha.12`.
+
+Its *Verification* row read:
+
+> | WP5.12, the knowledge base | none kept | VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source |
+
+WP5.21's entry ended: "The application guide is rewritten against the browser workflow with the rendered screens
+(§8.1's increment 5). Tag `v0.6.0-alpha.21`."
+
 ---
 
 ## 9 November 2026: the delivered entries leave the plan (§8.2.36 AL18; AUD-244)
@@ -613,6 +633,18 @@ author the same day (D9 to D11): a `justfile`, run with `uv run just`; two switc
 carries its prompt across the next compaction (§8.4.4); and `/np-implement`'s task list, rebuilt from the ticks. Live
 constraints: a commit that adds a decision re-runs `decisions.py`; open decision 14 is the author's. AUD-251 and
 AUD-382 `fixed`. Tag `v0.6.0-alpha.10`.
+
+### WP5.11 — The specification's text and the agent instructions (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21; §8.2.37 AM1 to AM9)
+
+**Delivered 9 November 2026** ([the plan](wp5.11-the-specifications-text-and-the-agent-instructions.md)). The 148
+findings of CODE_REVIEW_039's lists and AUD-67 are fixed, with REV-216 and REV-222. §5.1's diagram draws the stage
+registry's edges from stage 9; §5.2's stage cells name each stage and its requirement (AL10). §5.3.1's example is a
+structure case and a supplied-mesh case, each validated; its stage behaviour moves to §5.2, the project to §5.3.5
+(AL11, AL17). CON-05, CON-06, §5.4.1 and ADR-001 state the single NGSolve route (AL9, AL12); twelve passages of §4
+and §6 follow the tested code (AM1); NUM-04 and NUM-28 carry REV-223 and REV-224's NOTEs (AM2). SHALLs 526 to 517,
+each traced. The agent instructions state each procedure once; `.claude/workflow/author.md` holds the In brief and
+the author's choices (AM9). The merged entries above keep their title, merged line and live constraints (AL18). Live
+constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 are Phase 6's. Tag `v0.6.0-alpha.11`.
 
 The status line's dates:
 

@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.10 merged (`v0.6.0-alpha.10`); WP5.11 delivered, awaiting its merge; the written knowledge's last package WP5.12 and the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.11 merged (`v0.6.0-alpha.11`); the written knowledge's last package WP5.12 planned, the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -11,7 +11,7 @@ reusable model. Next, three packages correct the project's written knowledge whe
 it adrift, and two tidy the library's insides without moving a result. Then the screens: the frame, rebuilt on
 ready-made parts, and five suites, three that build models and two that use them. Last come the guided route, the old desktop shell's removal, and the guide.
 
-**Cost.** Twelve packages remain: about 70 sessions, 60 to 120 hours of agent work and 110 times you act.
+**Cost.** Eleven packages remain: about 70 sessions, 60 to 120 hours of agent work and 110 times you act.
 
 **What could go wrong.** A formula could carry a wrong unit; each is checked against its field's and refused on a
 mismatch. A tidying could move a stored result; each checks every stored fingerprint, and a move is undone. The molecule
@@ -139,25 +139,22 @@ Live constraints: A commit that adds a decision re-runs `decisions.py`. Open dec
 
 ### WP5.11 — The specification's text and the agent instructions (§8.2.36 AL8 to AL12, AL14, AL16 to AL18, AL21; §8.2.37 AM1 to AM9)
 
-**Delivered 9 November 2026** ([the plan](wp5.11-the-specifications-text-and-the-agent-instructions.md)). The 148
-findings of CODE_REVIEW_039's lists and AUD-67 are fixed, with REV-216 and REV-222. §5.1's diagram draws the stage
-registry's edges from stage 9; §5.2's stage cells name each stage and its requirement (AL10). §5.3.1's example is a
-structure case and a supplied-mesh case, each validated; its stage behaviour moves to §5.2, the project to §5.3.5
-(AL11, AL17). CON-05, CON-06, §5.4.1 and ADR-001 state the single NGSolve route (AL9, AL12); twelve passages of §4
-and §6 follow the tested code (AM1); NUM-04 and NUM-28 carry REV-223 and REV-224's NOTEs (AM2). SHALLs 526 to 517,
-each traced. The agent instructions state each procedure once; `.claude/workflow/author.md` holds the In brief and
-the author's choices (AM9). The merged entries above keep their title, merged line and live constraints (AL18). Live
-constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 are Phase 6's. Tag `v0.6.0-alpha.11`.
+**Merged 9 November 2026** ([the plan](wp5.11-the-specifications-text-and-the-agent-instructions.md)); tag `v0.6.0-alpha.11`.
 
-### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21)
+Live constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 are Phase 6's.
 
-The findings filed under `knowledge/` and `docs/`. The five concepts that state a method or rule wrongly are rewritten,
-AUD-339 first (AL15); `knowledge/01`'s overview says it backs §4 and §4 governs (AL16); the redundancy rows, the §6 and
-§4 mirrors in `knowledge/06` and `knowledge/01` first, each concept pointing at its clause (AL17); the sediment rows
-(AL18); each of the fifteen unsourced `[verified]` claims footnoted, marked "by arithmetic" or demoted (AL19); the guide
-says protonation runs before the density (AL13). The author receives an eight-row checklist of the findings that rest on
-the ESI or the COMSOL report and confirms or dismisses each (AL20). A finding left open becomes a `REV-nn` row. No test.
-Tag `v0.6.0-alpha.12`.
+### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.38 AN1 to AN3)
+
+**Planned 9 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)). The 164 findings filed under
+`knowledge/` and `docs/`. The five concepts that state a method or rule wrongly are rewritten, AUD-339 first (AL15);
+`knowledge/01`'s overview says it backs §4 and §4 governs (AL16); the redundancy rows, the §6 and §4 mirrors in
+`knowledge/06` and `knowledge/01` first, each concept pointing at its clause (AL17); the sediment rows (AL18); each of
+the fifteen unsourced `[verified]` claims footnoted, marked "by arithmetic" or demoted, and the thesis transcriptions
+checked against the thesis or marked unverified (AL19); the guide says protonation runs before the density (AL13).
+The test of the sodium cap is tightened (AN1); three ideas with no requirement become one open item for after v1.0
+(AN2); the site's dead register links wait for WP5.21 (AN3); REV-226's citations in `src/` follow §5.2. The author
+receives the six findings that rest on the ESI or the COMSOL report as a checklist and confirms or dismisses each
+(AL20); a finding left open becomes a `REV-nn` row. Tag `v0.6.0-alpha.12`.
 
 ### WP5.13 — Case and model files (REV-217, REV-219; CODE_REVIEW_036 candidates 1 and 5; §8.2.36 AL22, AL23)
 
@@ -249,7 +246,8 @@ The guided route over the five suites (FR-36), with the keyboard pass over every
 QR-16). Every row Q01 to Q41 is checked present (criterion 3); then PySide6, the Qt widgets, the bundle and the
 packaging probe leave, and the restated NOTEs of IF-09, P3, QR-10, VER-43, VER-44, VER-55, VER-60, CON-08, CON-09,
 CON-11, ADR-004's packaging NOTE and RSK-13 become their clauses (S17; T5). REV-134 closes (U1). The application guide is
-rewritten against the browser workflow with the rendered screens (§8.1's increment 5). Tag `v0.6.0-alpha.21`.
+rewritten against the browser workflow with the rendered screens (§8.1's increment 5), and the site's register pages
+link the plans and reviews it leaves out (REV-228; AN3). Tag `v0.6.0-alpha.21`.
 
 ### WP5.22 — The close
 
@@ -300,7 +298,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.09, the physics model | 1, 2 | FR-39: a study resolves and keys as before with three models (VER-62 unmoved); a case imports into three models and a study; every case leaf has one owner; a sweep over `models.physics` |
 | WP5.10, the tools | 1 | The decisions page and §5.1's module rows equal the tree (the two new guards); ruff's `C901` and `PLR0913`; the strict build and `links.py` after the archive move; `duplicates.py` |
 | WP5.11, the specification's text | none kept | VER-45; `clause.py` resolves every identifier; no SHALL, tolerance or default moves but those AL9, AL12 and §8.2.37 AM1 to AM5 rule |
-| WP5.12, the knowledge base | none kept | VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source |
+| WP5.12, the knowledge base | 1 | VER-03's sodium cap at 10⁻³ (AN1); VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source; 517 SHALLs unchanged |
 | WP5.13, case and model files | 1, 2 | VER-62 unmoved; VER-61 and VER-72 with no new edge; FR-39's study, model and variable tests through the one reader |
 | WP5.14, sweeps and keying | 1, 2 | VER-62 unmoved; VER-64's forecast against the walk; a planned sweep resolves each member once (REV-221) |
 | WP5.15, the frame | 1 | VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`, not a Tier 1 walk); a setting declared once reaches the page, its search, the palette and its file |

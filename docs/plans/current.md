@@ -1,27 +1,25 @@
 # Current work
 
-Updated 9 November 2026 (WP5.11 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 9 November 2026 (WP5.12 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5's library steps, the physics model, the frame and the first package on the written
-knowledge are merged. The second, about 150 corrections to the specification and the agent instructions, is built
-and awaits review; three possible program gaps are recorded for Phase 6. Then the knowledge base, tidy-ups,
-the screens: about 70 sessions and 60 to 120 agent hours remain.
+Phase 4 is released. Phase 5's library steps, the physics model, the frame and two packages on the written
+knowledge are merged. The third, correcting the knowledge base and the guide, is planned and awaits review.
+Then the tidy-ups and the screens: about 70 sessions and 60 to 120 agent hours remain.
 
-**Your call.** Read the second package's review; adopt two measuring tools or not (the trial
-recommends neither); check eight audit findings.
+**Your call.** Approve the third package's plan after its review; check six audit findings against their
+sources; adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.10 merged
-  (tag `v0.6.0-alpha.10` unpushed). Next WP5.12 the written knowledge, WP5.13 and WP5.14 the
-  clean-ups, WP5.15 the frame, WP5.16 to WP5.20 the suites, WP5.21 the route, WP5.22 the close (§8.2.36).
-  **WP5.11** [delivered](phase-5/wp5.11-the-specifications-text-and-the-agent-instructions.md): 148 audit findings,
-  REV-216 and REV-222 fixed (§8.2.37). Next `/np-ship wp 5.11`.
-  host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.11 merged
+  (tags `.10` and `.11` unpushed). Next WP5.13 and WP5.14 the clean-ups, then the frame,
+  the suites, the route and the close, WP5.15 to WP5.22 (§8.2.36).
+  **WP5.12** [planned](phase-5/wp5.12-the-knowledge-base-and-the-guide.md): 164 audit findings, REV-226, AN1 to
+  AN3 (§8.2.38). Next `/np-plan wp 5.12 review`, then `/np-implement wp 5.12`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -53,7 +51,7 @@ recommends neither); check eight audit findings.
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw** on the author's GPU, WP5.19 (AF4; AG7; AJ10).
-- **The eight `unchecked` audit findings**, the author's checklist, WP5.12 (AL20).
+- **Six audit findings against the ESI or the COMSOL report**, the author's checklist, REV-227 (AL20).
 - **Rulings on a residual cycle (H6) or drift (I4)**; **Tier 3's archived PQRs**.
 - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-218 WP5.16's, REV-170 WP5.17's (AG1; AJ10; AL22).
 
