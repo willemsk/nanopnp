@@ -4,7 +4,7 @@ Run before every build, and never committed (WP16 D4, D5)::
 
     uv run docs/scripts/generate.py && uv run mkdocs build --strict
 
-Six kinds of file, all derived:
+Seven kinds of file, all derived:
 
 - **The model.** ``SPECIFICATION.md``, the ``specification/`` bundle and the ``knowledge/``
   bundle, copied verbatim. The model is documented by rendering its normative records,
@@ -19,6 +19,8 @@ Six kinds of file, all derived:
 - **The case schema.** ``reference/case.schema.json``, the case document's JSON Schema (VER-76).
 - **The modularity measurements.** The numbers the modularity report quotes, measured
   on this tree by :func:`nanopnp.validation.modularity.render_measurements` (WP35 D1).
+- **The architecture.** ``project/architecture.md``, each subpackage's modules, stages and
+  import edges against section 5.1's module table, by ``docs/scripts/architecture.py``.
 
 Only links are touched in the copies. A relative link to another copied page is
 pointed at its copy, and one to any other repository file is pointed at the file on

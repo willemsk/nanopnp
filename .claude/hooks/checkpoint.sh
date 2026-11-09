@@ -9,7 +9,8 @@
 # the checkpoint's place. This script carries the checkpoint's prompt across it:
 #
 #   checkpoint.sh save <implement|ship> <plan> <wp n>   the prompt on stdin. With the switch on, saves
-#                  it under .git and prints `on`; with it off, clears any saved one and prints `off`.
+#                  it under .git and prints `on`; with it off, or without jq, clears any saved one
+#                  and prints `off`.
 #   checkpoint.sh clear                                  forgets the saved checkpoint.
 #   checkpoint.sh                                        hook mode, the payload on stdin:
 #     PreCompact              prints the saved prompt, which becomes the compaction's instructions;
@@ -26,9 +27,10 @@ dir=$(git rev-parse --path-format=absolute --git-path nanopnp-checkpoint 2>/dev/
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
 # Only Claude Code runs the three hooks (.claude/workflow/hosts/copilot.md), so another host's switch
-# is off whatever the environment says.
+# is off whatever the environment says. Hook mode needs jq: without it the switch is off too.
 switch_on() {
     [ -z "${COPILOT_CLI:-}" ] || return 1
+    command -v jq >/dev/null 2>&1 || return 1
     case $1 in
         implement) [ "${NANOPNP_AUTO_CHECKPOINT:-}" = 1 ] ;;
         ship) [ "${NANOPNP_AUTO_SHIP:-}" = 1 ] ;;
@@ -94,6 +96,8 @@ else
     resume="/np-ship wp $wp"
     switch=NANOPNP_AUTO_SHIP
 fi
+# A saved checkpoint outlives the session that saved it; this tells a later one how to drop it.
+stale="If $switch is not 1 in your environment, the checkpoint is stale: run .claude/hooks/checkpoint.sh clear and go on with what the author asked."
 
 case $event in
     PreCompact)
@@ -102,7 +106,7 @@ case $event in
         ;;
     SessionStart)
         [ "$(printf '%s' "$payload" | jq -r '.source // ""' 2>/dev/null)" = compact ] || exit 0
-        printf -- '- automatic checkpoint (%s=1): the compaction carried the prompt below. Go on with %s now, without waiting for the author.\n\n' "$switch" "$resume"
+        printf -- '- automatic checkpoint (%s=1): the compaction carried the prompt below. Go on with %s now, without waiting for the author. %s\n\n' "$switch" "$resume" "$stale"
         cat "$dir/prompt"
         ;;
     Stop)
@@ -113,9 +117,9 @@ case $event in
                 rm -rf "$dir"
                 exit 0
             fi
-            reason="The automatic checkpoint is on ($switch=1): a compaction checkpoint does not end the turn. Go on with item $item of $plan; Claude Code compacts when the context fills, and the hooks carry the checkpoint's prompt across. If the turn ends for something the author must answer, end it again."
+            reason="The automatic checkpoint is on ($switch=1): a compaction checkpoint does not end the turn. Go on with item $item of $plan; Claude Code compacts when the context fills, and the hooks carry the checkpoint's prompt across. If the turn ends for something the author must answer, end it again. $stale"
         else
-            reason="The automatic pause is on ($switch=1): go on into $resume now (the np-ship skill with \"wp $wp\"). If the turn ends for something the author must answer, end it again."
+            reason="The automatic pause is on ($switch=1): go on into $resume now (the np-ship skill with \"wp $wp\"). If the turn ends for something the author must answer, end it again. $stale"
         fi
         jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
         ;;

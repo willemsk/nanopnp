@@ -60,6 +60,8 @@ CLAUSE_ID = re.compile(
     r"\b(?:FR|QR|CON|IF|PHY|NUM|VER|VAL|ADR|RSK|OPN|REV|MOD|WB)-\d+\b"
     r"|§\d+(?:\.\d+)*(?: [A-Z]{1,2}\d+)?"
 )
+# A plan whose head says it was delivered, merged, implemented or closed is no longer in flight.
+PLAN_DONE = re.compile(r"\b(?:delivered|merged|implemented|closed)\b", re.I)
 PLAN_NAME = re.compile(r"^(wp(\d+(?:\.\d+)?)|phase-(\d)|[a-z0-9-]+)")
 LINK = re.compile(r"!?\[([^\]]*)\]\([^)\s]*(?:\s+\"[^\"]*\")?\)")
 CODE = re.compile(r"`[^`\n]*`")
@@ -109,16 +111,16 @@ def _cells(text: str) -> list[str]:
 
 def _escape(text: str) -> str:
     """Write ``<``, ``>`` and ``|`` so the site's table shows them, code spans left as they are."""
+
+    def plain(piece: str) -> str:
+        return re.sub(r"(?<!\\)\|", r"\\|", piece.replace("<", "&lt;").replace(">", "&gt;"))
+
     pieces: list[str] = []
     cursor = 0
     for match in CODE.finditer(text):
-        plain = text[cursor : match.start()]
-        pieces.append(re.sub(r"(?<!\\)\|", r"\\|", plain.replace("<", "&lt;").replace(">", "&gt;")))
-        pieces.append(match.group(0))
+        pieces += [plain(text[cursor : match.start()]), match.group(0)]
         cursor = match.end()
-    plain = text[cursor:]
-    pieces.append(re.sub(r"(?<!\\)\|", r"\\|", plain.replace("<", "&lt;").replace(">", "&gt;")))
-    return "".join(pieces)
+    return "".join([*pieces, plain(text[cursor:])])
 
 
 def _clean(text: str, limit: int = 220) -> str:
@@ -255,7 +257,7 @@ def plans() -> list[Decision]:
         head = "\n".join(lines[:6])
         plan_date = _iso(head)
         package = _package_of(path)
-        status = "delivered plan" if "delivered" in head.lower() else "plan in flight"
+        status = "delivered plan" if PLAN_DONE.search(head) else "plan in flight"
         your_call = re.search(r"\*\*Your call\.?\*\*(.*?)(?:\n\n|\Z)", text, re.S)
         put_to_author = (
             set(re.findall(r"\bD\d+[a-z]?\b", your_call.group(1))) if your_call else set()
@@ -324,7 +326,7 @@ def open_items() -> list[Decision]:
         if not match:
             continue
         cells = _cells(match.group(2))
-        closed = "closed" in match.group(2).lower()
+        closed = len(cells) > 1 and cells[1].strip(" *").lower().startswith("closed")
         rows.append(
             Decision(
                 source_id=match.group(1),
@@ -369,7 +371,7 @@ def workbench() -> list[Decision]:
 def orientation() -> list[Decision]:
     """Return the knowledge base's rulings by the author."""
     rows: list[Decision] = []
-    path = next((ROOT / "knowledge/00-orientation").glob("05-*.md"))
+    path = min((ROOT / "knowledge/00-orientation").glob("05-*.md"))
     for line in path.read_text(encoding="utf-8").splitlines():
         match = KB_ROW.match(line)
         if match:

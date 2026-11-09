@@ -328,7 +328,7 @@ Record each command, its result and the commit.
   > `TaskList`, and rebuilds the list from the plan's ticks at the start, after each compaction and in a
   > fresh session; the session-start hook reads its payload's `source` and, after a compaction, says so.
   > This session built its list from items 13 to 16 and kept it through them.
-- [x] 16. The Outcome, both Status lines, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]` and PR #171's
+- [x] aa81101 16. The Outcome, both Status lines, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]` and PR #171's
   body (D9 to D11); done when the code and review say so. **Executor:** main
 
 ### Verification
