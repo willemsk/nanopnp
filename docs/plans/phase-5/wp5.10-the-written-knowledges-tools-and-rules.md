@@ -1,6 +1,7 @@
 # WP5.10 — The written knowledge's tools and rules
 
-**Status: delivered, 9 November 2026.** Planned 8 November 2026, at `da395a7`. Inherits §8.2.36 AL3 to AL7, AL14, AL24
+**Status: in progress; items 1 to 12 delivered 9 November 2026, items 13 to 15 added the same day (D9, D10).**
+Planned 8 November 2026, at `da395a7`. Inherits §8.2.36 AL3 to AL7, AL14, AL24
 and AL27, AL28 and AL29 ruled at this plan, CODE_REVIEW_039's sections 5 to 7 and its prototypes in
 `.claude/scripts/audit/`.
 
@@ -51,6 +52,8 @@ names. Eight decisions: one per ruling's deliverable.
 | D6. Function complexity | Ruff selects `C901` at `max-complexity = 15` and `PLR0913` at `max-args = 8`; `tests/*` ignores both. The 27 offences on 25 definitions in `src/` and one in `.claude/scripts/audit/` carry a `noqa` on the reported line; none is refactored | Ruled by the author (AL7). Decided by the plan, from the sample: the defaults (10, 5) flag 139 offences, these limits 29, one of them a test |
 | D7. The changelog | `/np-ship`'s preflight greps `## [X.Y.Z-alpha.N]` as `tag.yml` does. WP5.02 to WP5.09's paragraphs move under `## [0.6.0-alpha.N] - <tag date>`, WP5.01's into `[0.6.0-alpha.2]`; `## [Unreleased]` stays, empty. This package's entry is `[0.6.0-alpha.10]` | Ruled by the author (AL14); WP5.01's place is §8.4.1's |
 | D8. The trial | xenon and import-linter run from ephemeral environments as `survey.sh` runs them, import-linter's layers contract in `LAYER_ORDER` (AL8), with and without `TYPE_CHECKING` imports. A concept, `knowledge/07-software-stack/25-complexity-and-import-contract-tools.md`, states what each adds over D6 and `test_layering.py`, and recommends; neither enters `pyproject.toml` | Ruled by the author (AL7, AL27); adoption is open decision 14. Decided by the plan: a measurement's home is a concept (AL17) |
+| D9. A command runner | Explore a command runner such as `just` that gathers the commands people and agents run (the gates, the documentation build, the record scripts, the tests) in one place, and adopt it if it earns its place. A tool every contributor installs is put to the author, with the exploration's report, before it is added | Ruled by the author, 9 November 2026, after item 12 |
+| D10. An automatic checkpoint | Explore making a compaction checkpoint automatic when the author opts in, for example through an environment variable that a Stop hook reads, and implement what the harness allows. Where a hook cannot compact, it does the rest (commit, gate, push, the prompt) and the skill says what is left to the author | Ruled by the author, 9 November 2026, after item 12 |
 
 ### Grounding
 
@@ -287,7 +290,7 @@ Record each command, its result and the commit.
   `holds-now.yaml` for AL3 to AL7, AL14, AL24, AL27 and AL28; AUD-382 and AUD-251 in
   `raw/dispositions.tsv` and `raw/commits.tsv`, `register.py` and `maps.py` re-run; done when no YAML
   entry names WP5.10 as open. **Executor:** main
-- [x] 12. The Outcome, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]`; done when the code and
+- [x] ac0d50e 12. The Outcome, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]`; done when the code and
   review say so. **Executor:** main
   > **Outcome — 1,256 decisions on the page; one call taken beyond the plan.** The register holds 311
   > rulings, 632 plan rows, 222 `REV`, 18 `MOD`, 9 `OPN`, 38 `WB`, 14 knowledge-base rulings and 12
@@ -295,6 +298,12 @@ Record each command, its result and the commit.
   > `decisions.py` credits a plan row whose cell says "Ruled by the author" to the author, which the
   > prototype credited to the session. VER-79's three tests pass, and each fails on the drift it names.
   > `gate.sh run` passed in 251 s at the second checkpoint, `7190906`. AUD-251 and AUD-382 are `fixed`.
+- [ ] 13. The command runner: its exploration, and if worthwhile its file at the root and `CLAUDE.md`'s
+  *Commands* pointing at it (D9); done when the code and review say so. **Executor:** main
+- [ ] 14. The automatic checkpoint: the hook script, its environment variable, `.claude/settings.json` and
+  `np-implement/wp.md`'s checkpoint steps (D10); done when the code and review say so. **Executor:** main
+- [ ] 15. The Outcome, both Status lines, `current.md`, `CHANGELOG.md`'s `[0.6.0-alpha.10]` and PR #171's
+  body (D9, D10); done when the code and review say so. **Executor:** main
 
 ### Verification
 

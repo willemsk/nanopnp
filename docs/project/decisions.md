@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,256. By source: history ruling 311; plan decision row 632; REV row 222; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,258. By source: history ruling 311; plan decision row 634; REV row 222; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 473; open 5; session, own call 775; session, put to the author 3.
+By decider: author 475; open 5; session, own call 775; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -970,6 +970,8 @@ By decider: author 473; open 5; session, own call 775; session, put to the autho
 | WP5.10 D6 | author | `docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md` | 2026-11-09 | WP5.10 | Ruff selects `C901` at `max-complexity = 15` and `PLR0913` at `max-args = 8`; `tests/*` ignores both. The 27 offences on 25 definitions in `src/` and one in `.claude/scripts/audit/` carry a `noqa` on the reported line;… | unstated | delivered plan |
 | WP5.10 D7 | author | `docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md` | 2026-11-09 | WP5.10 | `/np-ship`'s preflight greps `## [X.Y.Z-alpha.N]` as `tag.yml` does. WP5.02 to WP5.09's paragraphs move under `## [0.6.0-alpha.N] - <tag date>`, WP5.01's into `[0.6.0-alpha.2]`; `## [Unreleased]` stays, empty. This pack… | §8.4.1 | delivered plan |
 | WP5.10 D8 | author | `docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md` | 2026-11-09 | WP5.10 | xenon and import-linter run from ephemeral environments as `survey.sh` runs them, import-linter's layers contract in `LAYER_ORDER` (AL8), with and without `TYPE_CHECKING` imports. A concept, `knowledge/07-software-stack…` | unstated | delivered plan |
+| WP5.10 D9 | author | `docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md` | 2026-11-09 | WP5.10 | Explore a command runner such as `just` that gathers the commands people and agents run (the gates, the documentation build, the record scripts, the tests) in one place, and adopt it if it earns its place. A tool every… | unstated | delivered plan |
+| WP5.10 D10 | author | `docs/plans/phase-5/wp5.10-the-written-knowledges-tools-and-rules.md` | 2026-11-09 | WP5.10 | Explore making a compaction checkpoint automatic when the author opts in, for example through an environment variable that a Stop hook reads, and implement what the harness allows. Where a hook cannot compact, it does t… | unstated | delivered plan |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-findings.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
