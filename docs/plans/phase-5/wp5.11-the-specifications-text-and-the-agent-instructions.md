@@ -245,13 +245,17 @@ and 69 are fixed by their NOTE and REV row. Then `uv run .claude/scripts/audit/r
   >   words; §8.4.4's two bullets point to `author.md`.
   > - Item 10: *Open decisions* keeps rows 5, 8, 10 and 14; row 2, settled by AF4, moves with the settled rows; the
   >   phase plan's In brief drops two clauses to name the four settings sections within 275 words. The plan holds
-  >   4,297 words, from 6,548, against the phase plan's 1,500 target; REV-216's fix is the move AL18 rules, and the
+  >   4,243 words by `wc -w` (CODE_REVIEW_044), from 6,548, against the phase plan's 1,500 target; REV-216's fix is the move AL18 rules, and the
   >   rest is the live scope of the packages to come.
   >
   > Checks at the head: `links.py` (1,481 links, 0 broken), `duplicates.py`, `decisions.py --check`, the strict
   > build, both §5.3.1 examples validated, VER-79 run (item 4), the clause check exits 0 (item 7). Measured
   > (implement), by segment: items 1 to 3, 0.2 agent hours and 1 touch; items 4 to 8, 0.4 and 2; items 9 to 12, 0.2
   > and 2; one session.
+  >
+  > Measured (ship), to the review's fix commit: 0.8 agent hours and 4 touches. The package so far: 1.6 agent hours
+  > and 9 touches, against the In brief's four to seven hours and about ten touches (§8.4.5). CODE_REVIEW_044: 22
+  > findings, all kept; 21 fixed, REV-226 accepted for WP5.12 by the author.
 
 ### Verification
 

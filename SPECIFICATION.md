@@ -125,8 +125,7 @@ one file per section; this file holds the title block, the reading rule and the 
 | A requirement's tracing to a test | [`specification/a-traceability-matrix.md`](specification/a-traceability-matrix.md) |
 
 S, P and N also letter the rulings of §8.2.17, §8.2.14 and §8.2.13. A ruling is always cited with its
-section (§8.2.13 N1); a bare `S1`–`S4`, `P1`–`P3` or `N1`–`N7` is §2's or §3.5's. A ruling is one or two
-letters and a number (`A1`, `AJ2`).
+section (§8.2.13 N1); a bare `S1`–`S4`, `P1`–`P3` or `N1`–`N7` is §2's or §3.5's.
 
 Identifiers outside the specification: `REV-nn`, the open review items, are in
 [`docs/project/review-findings.md`](docs/project/review-findings.md); `MOD-nn`, the modularity findings, in

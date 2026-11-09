@@ -41,7 +41,7 @@ holds the alternatives, the second-backend argument and the MPI and MUMPS conseq
    build configuration show** — `mpi4py` is not a locked package, and `ngsolve.config` reports
    MUMPS, PARDISO and MKL False
    **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_trap_gouy_chapman_reaction_flux_and_solver_facts]**,
-   and HYPRE False as well (ADR-001). The shipped binaries are not scanned for MPI symbols. The linear solvers:
+   and HYPRE False as well (ADR-001). ADR-001 records the scan of the shipped binaries for MPI symbols. The linear solvers:
    `knowledge/06-numerics-fem/06-linear-solvers.md`.
 2. **2D boundary layers are immature.** Python API is
    `netgen.meshing.Mesh.BoundaryLayer2(domain, thicknesses, make_new_domain=True, boundaries=[])`

@@ -272,8 +272,6 @@ Settled rows: see §8.2.17 to §8.2.37 and [the record](phase-5-record.md).
 
 | Item | Needed by | If it does not arrive |
 |---|---|---|
-| Comments on the screens and mockups | WP5.01 | WP5.01 waits |
-| Answers in the design round on organisation and look (S21) | WP5.01 | WP5.01 waits |
 | Verdicts on each suite's prototype round, on 2WCD or, for Physics, example 01 | WP5.16 to WP5.20 | The suite is built on the prototype's design as it stands, and the verdicts move to its screen review |
 | A machine with a GPU, in a local session | WP5.19 | The 200 ms line stays unmeasured; a `REV-nn` row carries it to the close |
 | A local Claude Code session | WP5.02 onward | Work continues headless, on renders |

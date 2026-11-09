@@ -14,10 +14,10 @@ and identifier to its file. The rules of the development process that no clause 
 * [2. Product overview](02-product-overview.md) - Places nanopnp beside COMSOL in the source work, and describes the reference implementation, product functions, users, environment and release scope.
 * [3. Requirements](03-requirements.md) - Sets out the external interfaces, functional requirements, quality of service, design constraints and exclusions the product must meet.
 * [4. Physics specification (normative)](04-physics.md) - States the normative ePNP-NS physics: domains and symbols, governing equations, empirical corrections, fixed charge, dielectric model and switches.
-* [5. Software design description](05-software-design/index.md) - Opens the software design and lists its subsections, one file each.
+* [5. Software design description](05-software-design/index.md) - The software design: the pipeline and its stages, the data design, the component interfaces, the extension points and the architecture decisions.
 * [6. Numerical methods specification](06-numerics.md) - Fixes the discretisation, weak forms, scaling, stabilisation, Newton and continuation, linear solvers, current and force extraction and mesh resolution for the §4 model, and records where the reference differs.
-* [7. Verification and validation plan](07-verification/index.md) - Distinguishes verification (VER-nn) from validation (VAL-nn) activities and lists the plan's subsections.
-* [8. Implementation plan](08-implementation-plan/index.md) - Opens the implementation plan and lists its subsections, one file each.
+* [7. Verification and validation plan](07-verification/index.md) - The verification and validation plan: the test tiers, their VER and VAL activities, and continuous integration.
+* [8. Implementation plan](08-implementation-plan/index.md) - The implementation plan: phases and gates, the rulings by date, the effort estimate and the development process.
 * [9. Risk register](09-risks.md) - Lists the RSK-nn risk register, each risk with its severity, likelihood, mitigation and detection phase.
 * [10. Open items](10-open-items.md) - Lists the open items, OPN-nn, each with its owner and the work it blocks until settled.
 * [11. Companion knowledge base](11-companion-knowledge-base.md) - Describes the companion knowledge base shipped alongside the specification in the repository root, so that agents and people read verified sources.

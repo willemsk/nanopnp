@@ -11,14 +11,14 @@ description: "Maps each CI trigger, a pull request, a push to main, or the night
 | A pull request | The per-push selection (Tier 1; Tier 2 without `nightly` or `slow`), on ubuntu, Python 3.14 |
 | A push to `main` | The per-push selection on ubuntu, macOS and Windows, Python 3.14 |
 | Nightly | 1 and 2 in full (`--nightly`, and the `slow` tests) on ubuntu, macOS and Windows, Python 3.14; 3, and 1 on Python 3.11 to 3.13 on the three platforms, recorded and not gated; a failed run opens an issue and blocks nothing |
-| Before a tagged release | 1, 2 and 3, Python 3.11 to 3.14, on the three platforms; Tier 4 has no job until experimental fixtures exist (§7.5) |
+| Before a tagged release | 1 and 2 in full (`--nightly`, and the `slow` tests), Python 3.11 to 3.14, on the three platforms; 3 on ubuntu, Python 3.14, recorded and not gated; Tier 4 has no job until experimental fixtures exist (§7.5) |
 | Every push, prose-only pushes included | The strict documentation build of VER-45; `.claude/scripts/decisions.py --check`, which the gate also runs at every commit; and `.claude/scripts/links.py`, every relative link of the tracked Markdown |
 
 The per-push selection is Tier 1, the Tier 2 tests that neither walk the pipeline nor carry `slow`,
 example 01 while its solve takes under 60 s, and one charged walk, example 02's ePNP-NS pore with
 its VER-62 golden (§8.2.13 N4).
 
-Every solve SHALL write a provenance manifest recording input hashes, library versions, mesh hash,
+Every pipeline run, a walk stopped before the end included, SHALL write a provenance manifest recording input hashes, library versions, mesh hash,
 solver settings, stabilisation mode and correction parameter file versions (FR-25).
 
 NOTE (a gated test's runtime; WP33): every push pays for the tests of

@@ -82,7 +82,7 @@ still runs.
 
 `src/nanopnp/` has one subpackage per module of SPECIFICATION.md §5.1:
 
-- `core/` units, constants, provenance, caching; `structure/` PDB/mmCIF and trajectory IO;
+- `core/` units, constants, content hashing, errors, paths, the stage registry; `structure/` PDB/mmCIF and trajectory IO;
   `density/` smearing, ensemble averaging; `symmetry/` Cₙ averaging and reduction to (r, z)
 - `geometry/` contours, CAD assembly, analyte bodies; `mesh/` mesher adapters (netgen, gmsh), size
   fields, quality gates; `numerics/` linear solvers, damped Newton, gates, the axisymmetric measure
@@ -90,7 +90,7 @@ still runs.
   correction registry; `physics/` weak forms and the wall-distance field; `solve/` continuation
   ladder, warm start; `post/` QoI (current, transport number, EOF, forces); `plot/` figures of the
   artefacts (Matplotlib, the `plot` extra); `sweep/` sweeps
-- `io/` case schema, artefact and resolved-case types, result store, manifests. It is the base layer
+- `io/` case schema, artefact and resolved-case types, result store, provenance manifests. It is the base layer
   and imports only `core` at run time. `pipeline/` case resolution, the walk, the assembler; `api/`
   the Python interface (`Case`, `Session`, sweeps, reproduction), above `sweep/`; `cli/` and
   `gui/` are thin shells that hold no physics; `validation/` benchmarks, MMS, COMSOL comparison

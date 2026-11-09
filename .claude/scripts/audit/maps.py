@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from register import commit
 from scope import ROOT
 
 ATTACHMENTS = ROOT / "docs" / "code_reviews" / "CODE_REVIEW_039"
@@ -97,7 +98,7 @@ def _sediment(at: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     """Write both maps and return the process exit status."""
-    at = (argv or sys.argv[1:] or ["HEAD"])[0]
+    at = commit((argv or sys.argv[1:] or ["HEAD"])[0])
     (ATTACHMENTS / "redundancy-map.md").write_text(_redundancy(at), encoding="utf-8")
     (ATTACHMENTS / "sediment.md").write_text(_sediment(at), encoding="utf-8")
     sys.stdout.write("written redundancy-map.md and sediment.md\n")

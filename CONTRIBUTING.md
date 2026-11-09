@@ -42,11 +42,12 @@ if you would rather not install anything locally.
 
 ## The gate
 
-Before a commit: `uv lock --check`, lint, format, types and Tier 1
+Before a commit: `uv lock --check`, lint, format, the decisions page's check
+(`uv run .claude/scripts/decisions.py --check`), types and Tier 1
 (`uv run pytest -m 'tier1 and not slow'`). Under Claude Code the commit hook runs these, so do not run
 them by hand.
 
-Before a push, run `.claude/hooks/gate.sh run`: lint, format and types, then the per-push selection
+Before a push, run `.claude/hooks/gate.sh run`: lint, format, the decisions page's check and types, then the per-push selection
 (`SPECIFICATION.md` §7.6). That selection is Tier 1, the Tier 2 tests that neither walk the pipeline
 nor carry `slow`, example 01 while it solves in under 60 seconds, and the charged ePNP-NS walk of example 02. The tests marked `nightly` walk the pipeline end
 to end (the executed worked examples and the vendored 2WCD entry) and the rest of Tiers 1 and 2; the nightly run
@@ -173,7 +174,8 @@ v0.5 Phase 4 (polish and user testing), v0.6 Phase 5 (the graphical interface) a
   that the tagged commit already carries its own entry. A package of the next phase's design study
   that merges before the current phase's release takes no tag: its entry goes under
   `## [Unreleased]` at the top of the changelog, and the next tagged package of its phase moves it
-  into its own section (`SPECIFICATION.md` §8.4.1).
+  into its own section (`SPECIFICATION.md` §8.4.1). A phase's close package takes the release tag
+  `vX.Y.0` alone, with no alpha tag on the same commit, and its section is headed `## [X.Y.0]`.
 - **To cut a release** `vX.Y.Z`, commit the changelog section and `CITATION.cff`'s `version` and
   `date-released`, then tag and push the tag. `.github/workflows/release.yml` builds it and
   publishes a GitHub Release, whose notes are that version's section of

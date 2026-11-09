@@ -2761,7 +2761,7 @@ The Phase 5 plan holds about 5,100 words without its report, against `np-plan`'s
 
 **Grown** (CODE_REVIEW_040, 8 November 2026): the fourth amendment (§8.2.36) brings the plan to about 6,500 words, of which about 2,500 are the delivered entries WP5.01 to WP5.09. WP5.11 moves delivered narratives out of the live plan (AL18; AUD-244), which takes the first half of the cut; the choice between the rest of the cut and a restated target stays the author's.
 
-**Fixed** in WP5.11 (§8.2.36 AL18; AUD-244): WP5.01 to WP5.10 keep their title, merged line and live constraints, and their narratives move verbatim to `phase-5-record.md`; the dated status chain and the settled open decisions move with them. The plan holds 4,297 words, from 6,548; the rest is the live scope of the eleven packages still to run.
+**Fixed** in WP5.11 (§8.2.36 AL18; AUD-244): WP5.01 to WP5.10 keep their title, merged line and live constraints, and their narratives move verbatim to `phase-5-record.md`; the dated status chain and the settled open decisions move with them. The plan holds 4,243 words by `wc -w`, from 6,548; the rest is the live scope of the eleven packages still to run.
 
 
 ## REV-217: Case reading, substitution and input-path discovery are split across five modules
@@ -2848,3 +2848,17 @@ CODE_REVIEW_039 (AUD-52). §6 carries a NOTE naming this item.
 **Accepted** (§8.2.37 AM2, 9 November 2026): owned by Phase 6. Measure the residual of a converged solve
 in NUM-09's scaling, the largest accepted `‖δφ‖_∞` across the gated walks, and the error NUM-08's test
 sees, and write each number's derivation beside its clause.
+
+## REV-226: Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2
+
+WP5.11 moved stage 1's refusals and thresholds and stage 2's radius set and union from §5.3.1's NOTEs
+on `structure:` and `geometry.density` to §5.2's NOTEs on stages 1 and 2 (§8.2.36 AL11; AUD-113).
+Refusal messages and comments in `structure/axis.py`, `structure/read.py`, `io/defaults.py`,
+`density/union.py` and `density/radii.py` still cite the §5.3.1 NOTE, which now points on to §5.2: a
+user refused by the 10° axis rule takes one extra hop to the rule. WP5.11 changes nothing under
+`src/`. Found by CODE_REVIEW_044.
+
+**Accepted** (the author, 9 November 2026, at WP5.11's review): owned by WP5.12. The fix rewrites the
+citations in those messages and comments to §5.2's NOTEs, a prose-only change `same_tree.py` confirms
+(§8.2.11 L5).
+

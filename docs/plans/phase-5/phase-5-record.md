@@ -644,3 +644,5 @@ The supplied rows of *What the author supplies*:
 | The workbench's areas | WP5.01's start | **Supplied 24 October 2026** (S24) |
 | The framework ruling | WP5.02's end | **Supplied 2 November 2026** (AF4) |
 | The answers to the sweep's design round and the cut line | The second `/np-plan amend 5` | **Supplied 3 November 2026** (AG1 to AG7) |
+| Comments on the screens and mockups | WP5.01 | WP5.01 waits |
+| Answers in the design round on organisation and look (S21) | WP5.01 | WP5.01 waits |
