@@ -22,210 +22,42 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
-WP5.01: the workbench design study, Phase 5's first package, in the second lane beside Phase 4. It
-merges before `v0.5.0` and takes no tag, so its entry waits here (`SPECIFICATION.md` §8.2.17 S15,
-S19). It critiques the Qt shell, holds a design round with the author, draws the areas as choice
-panels and two whole-workbench mockups, and writes the design document and its requirements. No
-`src/`, `tests/`, case schema or public API changes (S1). The
-[plan](docs/plans/phase-5/wp5.01-workbench-design-study.md) records the work.
+## [0.6.0-alpha.9] - 2026-11-08
 
-### Added
-
-- **`/np-gui` with five levels**: `render`, `review`, `publish`, `collect` and `grill`; the
-  `gui-reviewer` agent; and the scripts `.claude/scripts/gui/shoot.cjs` and `capture_qt.py`
-  (§8.2.17 S22).
-- **The design document** `docs/design/workbench.md`, on the documentation site. It gives the Qt
-  shell's capability list and critique, four suites in a project (Molecular, Continuum, Study,
-  Analysis), the look and feel with its tokens in `docs/design/tokens.css`, the tools, the four live
-  links, the project folder, the guided route, the later tools, and the decision log WB-01 to WB-32.
-- **The concept boards, style tile, choice panels and mockups A and B** under `docs/design/`, with
-  their generators and review records. Mockup A is chosen and revised.
-- **`SPECIFICATION.md`**: FR-31 to FR-43 and QR-16; the browser shell's restatements of P3, IF-09,
-  QR-10, CON-09, the packaging NOTE of ADR-004, RSK-13, VER-43, VER-44, VER-55 and VER-60, each a
-  NOTE that replaces its clause when Qt leaves (S17); and the rulings of §8.2.18 on the inherited
-  review rows.
-- **Open items** REV-134 to REV-139 and REV-141, ruled in §8.2.19: REV-134 carried until Qt leaves;
-  protonation to move before the density, the protonated density the validated default (REV-135, a NOTE
-  beside PHY-16); REV-136 and the sweep's design round to `/np-plan amend 5`; REV-137, REV-138 and
-  REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
-  restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
-
-WP5.02: the framework spike and the visual-feedback workflow, Phase 5's second package; tag `v0.6.0-alpha.2`
-once merged (`SPECIFICATION.md` §8.2.30 AF1 to AF4). The hard screen was built in NiceGUI and in React over one
-server and measured; the author ruled NiceGUI, and both trial builds left the tree, their report kept in
-[docs/design/spike/report.md](docs/design/spike/report.md). The [plan](docs/plans/phase-5/wp5.02-framework-spike.md)
-records the work.
+WP5.09: the physics model, Phase 5's ninth package; tag `v0.6.0-alpha.9` once merged (`SPECIFICATION.md` FR-25, FR-32,
+FR-39; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to AK3). The equations, the salt and the voltages become a model of their own,
+which a study pairs with a molecule and a pore, so one physics serves many pores and a pore many salts. No key, golden
+number or case written inline changes (VER-62). The [plan](docs/plans/phase-5/wp5.09-the-physics-model.md) records the work.
 
 - **Added**:
-  - **`nanopnp gui`**: serves the browser workbench on `127.0.0.1` with `[case]`, `--state`, `--port`,
-    `--no-browser`, `--dev` (reload on a change) and the common flags (`--json` writes the ready line as
-    `{"ready": <url>}`). It prints one `nanopnp-gui ready <url>` line, refuses a
-    foreign `Host` and a request without the launch token or its cookie, and stops when its standard input
-    closes or on SIGINT or SIGTERM (ADR-004's NOTEs). It needs the `gui` extra, which gains fastapi, uvicorn and
-    nicegui.
-  - **The first screens** under `nanopnp.gui.web`: a screen registry, the fixture states `empty`,
-    `charged-tube`, `uncharged` (a charge with no structure behind it) and `refused`, the link between a residue and its charge on the pore map in both directions,
-    and Mol* served unmodified (MIT, with its notice).
-  - **VER-78** (Tier 1): every state loads every screen with its controls and no console error, and the server
-    keeps its contract. `gate.sh run` and CI's tier-1 leg require a browser (`NANOPNP_REQUIRE_BROWSER=1`).
-  - **`/np-gui render shell`** and the non-text contrast measure of WCAG 2.2 1.4.11 in `shoot.cjs`.
-  - **Notes** on CON-08 and CON-11 for the browser shell; the renderer table in `docs/design/workbench.md`.
-
+  - **The physics model** (`nanopnp/physics-model/v0.6`), named by `models.physics`. It owns `physics`, `electrolyte`,
+    `boundary_conditions`, `numerics.elements`, `numerics.stabilisation` and `numerics.wall_distance`; the continuum
+    model keeps the geometry, the region and the mesh, and the study the Newton, continuation and linear-solver settings.
+    A sweep may range over `models.physics`, and the manifest's input files gain the role `models.physics`.
+  - **Exposed values**: each model lists the values a study shows first, each with its name, case path, unit, range and
+    default (`ModelFile.exposed`, `ExposedValue`). Each kind has a default list (the salt and the bias for physics, the pH
+    for a molecule, the mesh's size scale for a pore), and a file's `exposes:` list replaces it. `exposes:` keys nothing.
+  - **The project**: `models/physics/`; a case imports split into three models and a study. The frame's rail lists
+    *Physics models*, and the changed list covers them.
 - **Changed**:
-  - The light theme's `--control-edge` is `#7c8290`, 3.2:1 on a selected row (REV-143).
-  - `write_charged_tube` and its constants live in `nanopnp.validation.charged_tube`.
-  - The `structure` extra asks for `pdb2pqr>=3.8`, and the PQR reader accepts 3.8's `NTER` and `CTER` terminal patches. 3.8 does not pin `docutils`, so `structure` and `gui` install together with `pip` (REV-175).
-  - **Open items**: REV-137, REV-138, REV-141, REV-143, REV-174, REV-175 and REV-176 are `fixed`; the study's mockups stay as dated evidence (REV-176).
+  - A continuum model holding a key the physics model now owns is refused, naming the key and the model it belongs
+    to. A model file written since WP5.05 with the salt or the bias in a continuum model moves those keys to a
+    physics model by hand; no release holds the format, so there is no migration.
+  - A continuum model's `wall_h_nm: auto` follows the paired physics model's concentration, so a stronger salt can build
+    a new mesh, as the sweep's forecast already warns; `numerics.mesh.wall_for_concentration_M` pins it (AK2).
+- **Amended**: §5.3.1's NOTE on `models:` and the project NOTE, §5.3.2's model row, §5.3.3's inputs group, and the
+  Appendix A rows of FR-32 and FR-39.
 
-WP5.03: protonation before the density, Phase 5's third package; tag `v0.6.0-alpha.3` once merged
-(`SPECIFICATION.md` §8.2.19 U2, §8.2.31 AG8; REV-135). Stage 7's protonation walks before stage 2, and stage 2
-smears the protonated atoms of every frame, hydrogens included, so a protonation state moves the density, the
-contour and the mesh. The [plan](docs/plans/phase-5/wp5.03-protonation-before-the-density.md) records the work.
+Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
+[plan](docs/plans/sessions/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
 
-- **Added**:
-  - **`geometry.density.atoms`**: `protonated` (the default) or `as_loaded`, the reference's way. It is a switch away from
-    the validated default, so the manifest lists it. Each protonated atom takes its CHARMM radius through its
-    residue's state patch (`resolve_protonated_radii`), as PDB2PQR does; a disulfide's `1CB`, `1SG`, `2SG` and
-    `2CB` take the set's `DISU` entries. `protonated` beside a produced protonation
-    under a force field other than CHARMM is refused, naming both keys.
-  - **VER-49** (Tier 1): a changed protonation state moves the density; the protonated radii equal PDB2PQR's on the
-    2WCD fragment at pH 2 and 8; the ragged-frame deposit keeps the uniform arithmetic.
-- **Changed**:
-  - **The case schema is `nanopnp/case/v0.6`.** A `v0.5` document is refused, the message naming the migration: declare
-    `nanopnp/case/v0.6`, and a case with `structure:` that keeps v0.5's density adds `geometry.density.atoms: as_loaded`.
-  - The walk order is `structure`, `protonation`, `density`, …; a walk to stage 2 under `as_loaded` does not protonate.
-    The stage 2 key under `as_loaded` is unchanged. `ProtonationTable` lives in `structure/protonated.py`.
-  - Examples 06 and 07 take the default. Example 07's VER-62 walk is re-pinned: conductance 0.9734 nS → 0.9598 nS
-    (−1.40 %), transport number 0.5428 → 0.5421, on 6059 elements against 6223. `2wcd-charged`, `2wcd-shell`, VAL-05,
-    VAL-06 and the Tier 3 cases set `as_loaded` and do not move.
-  - **Amended**: PHY-16 and its NOTE, FR-04, §5.2's stage 2 and 7 rows, and §5.3.1's NOTEs on `inputs:` and
-    `geometry.density`.
-  - **Open items**: REV-135 is `fixed`.
+- **Added**: `.claude/workflow/hosts.md` and `hosts/copilot.md` (each Claude Code tool's Copilot
+  substitute), `.github/copilot-instructions.md`, `.github/hooks/nanopnp.json`, `.githooks/pre-push`
+  with `gate.sh check-push`; REV-166 to REV-168, the probes still to run.
+- **Changed**: `gate.sh` refuses with one exit-0 structured denial on both hosts and refuses a string
+  payload's push (§8.2.26 AB1); `format.sh`, `session-start.sh` and `adapter.sh` take Copilot's shapes.
 
-WP5.04: the charge mutator's library step, Phase 5's fourth package; tag `v0.6.0-alpha.4` once merged
-(`SPECIFICATION.md` FR-38, PHY-16 step 3; §8.2.17 S4, §8.2.19 U6, §8.2.31 AG9 to AG11). A case's
-`charge.edits` pins a residue's protonation state, changes its charge by an integer on the titratable group,
-or scales its radii; the result is a variant table kept beside its parent, with a `variant_of` record and no
-deviation. The [plan](docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md) records the work.
-
-- **Added**:
-  - **`charge.edits`**: each entry is a `residue` (`ASP 21`, `HIS 292A`) and one of `state` (`charged` or
-    `neutral`; ASP, GLU and HIS under CHARMM), `charge_change_e` (a non-zero integer, spread evenly over
-    PROPKA's charge-centre atoms of the residue, `data/charge/titratable_groups.yaml`) and `radius_scale`
-    (every atom radius of the residue, hydrogens included). Each applies on every chain and frame. A state is
-    pinned by wrapping PDB2PQR's `apply_pka_values` for the call, and a gate refuses a frame whose pinned residue
-    does not hold it.
-  - **`charge.protonation.variant_of`** in the manifest: the parent's protonation key, the edits, each residue
-    that differs (charges before and after, atoms added and removed, largest radius change and displacement)
-    and `Q_net` of both. The protonation artefact's payload gains `parent`, the unedited table.
-  - **FR-38** (Tier 1): a pinned state holds and changes that residue alone; a charge change moves the
-    projected charge by that residue alone; a radius scale moves stage 2's widths and the grid; every key is
-    unchanged without edits; the titratable-groups file equals PROPKA's configuration; a charge edit keeps
-    the parent's density key and a radius edit moves it; a radius edit scales stage 4's probe as it scales
-    stage 2's widths.
-- **Changed**:
-  - Stage 2 under `protonated` multiplies the CHARMM radii by the table's radius scales; under `as_loaded` its
-    key and map do not move. Stage 4's probe-radius profile scales the same atoms by the same factors, and
-    its key carries the radius edits. Stage 2 keys on the protonation key with its charge edits dropped, so a
-    charge variant reuses its parent's density, contour and mesh. A charge or radius edit reuses the parent's stored frames; a state edit
-    protonates again with the residue pinned.
-  - **Amended**: FR-38 (AG9 to AG11), PHY-16 step 3's NOTE on `charge.edits`, §5.2's stage 2 and 7 rows and the
-    stage-7 note, §5.3.1's NOTE on `charge.edits`, §5.3.3's charge group, and Appendix A's FR-38 row.
-  - **Knowledge**: `knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md`.
-  - **Fixed**: REV-184 (stage 4's probe-radius gate ignored a radius scale) and REV-185 (a charge-only edit
-    remeshed), both from the package's review ([code review 029](docs/code_reviews/CODE_REVIEW_029.md)).
-
-WP5.05: named models and study overrides in the case, Phase 5's fifth package; tag `v0.6.0-alpha.5` once merged
-(`SPECIFICATION.md` FR-39, IF-03; §8.2.18 T2, §8.2.31 AG4, AG12, AG13; REV-62). A case can name a molecular model
-and a continuum model, each kept in its own file, and so become a study; the study may override any value of
-them, and resolves to the one complete case its run writes. The [plan](docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md)
-records the work.
-
-- **Added**:
-  - **`models:`**: `{molecular: <path>, continuum: <path>}`, at least one. A model file holds `schema`
-    (`nanopnp/molecular-model/v0.6` or `nanopnp/continuum-model/v0.6`), `name` and only the keys its kind owns
-    (`nanopnp.io.models.OWNERS`; the longest dotted prefix decides, and every other key is the study's). A model
-    names no model, and a relative path is read beside the file that names it. The study is merged over the molecular
-    model and then the continuum model; the models and the study's own keys must validate alone, or the model is
-    refused naming its file, and a problem line carries `[from <file>]`.
-  - **Overrides**: a value the study sets in a model's keys that differs from the model's. `Case.overrides` maps each
-    path to the model's value and the study's, is recomputed on every edit and survives `with_` and sweeps, and
-    `Case.dumps(study=True)` writes the study as written.
-  - **A sweep over models**: an axis over `models.molecular` or `models.continuum` resolves the study again at each
-    point, under its own values and overrides. Each value is its own warm-start root, the plan lists the model files,
-    and the API sweep writes the study form as its base file.
-  - **`inputs.mesh.artefact`** (REV-62): the 64-character store hash of a stage-6 mesh artefact. The mesh stage takes
-    the store and returns the stored artefact unchanged, so a stored mesh keeps its hash. A hash the store does not
-    hold is refused naming the hash and the store's root; `format` and `groups` beside it are refused.
-  - **Manifest**: `inputs.files` gains the roles `models.molecular` and `models.continuum`, and `inputs.overrides`
-    (`{path: {model, study}}`) appears when the case names a model.
-  - **FR-39** (Tier 1 and 2): a study resolves to its case written inline and shares its keys; it reuses every stage
-    its twin built; an override moves only the stages that read it; a run records its model files and overrides; a
-    sweep over models resolves each member; every case leaf has one owner.
-- **Changed**:
-  - `models` is left out of every dump, hash and equality of a case, so a study equals and keys as its resolved case
-    and a case without `models` keeps every key. A reader that does not resolve models (`read_case`) refuses a
-    document carrying `models:`; `Case.load` and `pipeline.case.load_case` resolve them.
-  - `inputs.mesh.artefact` is a `stage` leaf of the case (VER-71).
-  - **Amended**: FR-39 (AG12, AG13) and its Appendix A row, IF-03's Appendix A row, §5.3.1's NOTEs on `models:` and
-    on `inputs:`, §5.3.2's format table, §5.3.3's inputs group, §5.3.4, §5.2's stage-6 row, the workbench design's
-    WB-16 row and *Override* entry, and the case-file reference's prose on `models:` and `inputs`.
-  - **Open items**: REV-62 is `fixed`. REV-186 is open: a stored mesh beside `structure:` stays refused.
-
-WP5.06: outputs and steric models as registries, Phase 5's sixth package; tag `v0.6.0-alpha.6` once merged
-(`SPECIFICATION.md` MOD-09, FR-23, QR-04, PHY-05, PHY-22, VER-56; §8.2.18 T4, §8.2.28 AD5, §8.2.32 AH1). A new quantity of
-interest, or a second way of modelling crowded ions, is one registration and needs no edit of the case schema, the
-extraction stage or a physics model. The [plan](docs/plans/phase-5/wp5.06-outputs-and-steric-registries.md) records the work.
-
-- **Added**:
-  - **`post/outputs.py`**: `register_output(name, *, needs, extract, parameters, export, refusal)`, `registered_outputs()`,
-    `output(name)` and `provided(declaration)`. The six shipped words register there. An output's `needs` is a subset of
-    `{"transport", "flow"}`, read from a model's declaration; a model provides every output whose need it meets, so the
-    shipped models provide what they did before. An unregistered word is refused when the case is loaded, naming the
-    registered outputs.
-  - **`physics/steric.py`**: `register_steric_model(name, form)`, `registered_steric_models()` and `steric_form(name)`.
-    `borukhov` (PHY-05) is registered; `none` stays the off value. Another registered name is a deviation, and its
-    name enters the solve key as `electrolyte.steric_model`.
-  - **`numerics/measures.py`**: `has_boundary` and `require_boundary`, one check that a named boundary exists, now used
-    by the wall distance, the indicator, the reaction flux and the force extension.
-- **Changed**:
-  - Stage 11 builds one `Extraction` and calls each selected output's `extract`; `QoIArtefact` takes
-    `output_parameters` in place of `extension_shell_nm`. The stage-11 key parameters are the same dictionary.
-  - `electrolyte.corrections.steric.model` is any registered name, not `borukhov` alone. No key, golden number or case
-    document of the shipped registries changes (VER-62).
-  - **Removed**: `ModelDeclaration.quantities` (F4), `io/case.py:OUTPUTS` and `STERIC_MODELS`.
-  - **Amended**: §5.5's registry sentence and a NOTE on the steric model, §5.4.3 and §5.3.1's NOTEs and VER-56 (AH1).
-  - **Open items**: MOD-09 is `fixed`. REV-171's seam part is done; its cost items stay in Phase 6.
-
-WP5.07: variables and the rebuild forecast, Phase 5's seventh package; tag `v0.6.0-alpha.7` once merged
-(`SPECIFICATION.md` FR-39, FR-24, FR-25, FR-27, IF-03, VER-24, VER-64, VER-72; §8.2.19 U4, §8.2.31 AG2 to AG5; REV-139). A
-case can name values with their units and write any number as an expression of them, and a sweep says before it runs which
-stages each swept value rebuilds. The [plan](docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md) records the work.
-
-- **Added**:
-  - **`variables:`** in the case (`nanopnp/case/v0.6` is unchanged): a name is `{value, unit}` or `{expression, unit}`, and
-    a string at a numeric field is an expression. `io/variables.py` parses it from Python's syntax tree against a whitelist
-    (numbers, names, `+ - * /`, `**`, six functions), so no code runs. A field's unit comes from its name's suffix; a
-    value of the same dimension is converted exactly, in fractions, and one of another dimension is refused at the field.
-  - **The dependency `pint`** (`>=0.25.3,<0.26`; BSD-3-Clause, pure Python), imported on first use (VER-72).
-  - **Keys by resolved values**: `L: 2*a` with `a` = 2 nm shares every key with `L: 4`. The variables as written stay
-    in the run's `case.yaml` and in the manifest's inputs group, which gains `variables` only for a case that has some.
-    `Case.variables` and `Case.expressions` give them.
-  - **A sweep axis over `variables.<name>`**: it moves every field the variable reaches, and the warm-start barriers and
-    wall-size warnings read it as those fields.
-  - **The forecast**: `sweep.forecast.forecast(plan, store=...)`, `Sweep.forecast()` and `Forecast`, built on
-    `pipeline.forecast.keyed_walk`, which keys each stage without running one. `core.stages.NotBuilt` and the optional
-    `Forecastable` protocol (`forecast_parameters`) let a stage be identified before its upstream exists; the mesh
-    provides it. `run_plan` logs the warnings and `nanopnp sweep plan` prints a `forecast` line, also in `--json`, with
-    `forecast_unavailable` giving the reason where it cannot be made. `Session.own_stages` gives a Session's registered
-    stages. A plan records the variables as written and refuses a base case that moved them, and resolves each member once.
-  - **The case JSON Schema** declares `variables:` and admits a string at each numeric field (VER-76).
-- **Changed**: the region and solve stages key without reading an upstream payload they discard. No key moves
-  (VER-62 unchanged at zero drift).
-- **Fixed**: REV-139, REV-198 to REV-201. **Amended**: §5.3.1's NOTE on `variables:`, §5.3.3's inputs group, §5.3.4's axis over a variable
-  and the forecast, §5.5's NOTE on the rebuild forecast, VER-72's list of deferred libraries, and the Appendix A rows of
-  FR-39 and IF-03.
-- **Open items**: REV-197, rectification does not pair a bias set through a variable (WP5.19).
+## [0.6.0-alpha.8] - 2026-11-05
 
 WP5.08: the frame and the project folder, Phase 5's eighth package; tag `v0.6.0-alpha.8` once merged
 (`SPECIFICATION.md` FR-31, FR-32, FR-34, FR-35, QR-16, VER-64, VER-78; §8.2.17 S11, S12; §8.2.18 T2, T8; §8.2.31 AG1; §8.2.33 AI1,
@@ -264,38 +96,222 @@ project, not a case**: it opens a folder, creates one in a missing or empty fold
   the frame's accessibility and layout limits (WP5.21), the settings' guards and the changed list's units (WP5.16), and the Study
   page's fixture names and the charge screen's colour bar (WP5.19).
 
-WP5.09: the physics model, Phase 5's ninth package; tag `v0.6.0-alpha.9` once merged (`SPECIFICATION.md` FR-25, FR-32,
-FR-39; §8.2.34 AJ2, AJ3, AJ5; §8.2.35 AK1 to AK3). The equations, the salt and the voltages become a model of their own,
-which a study pairs with a molecule and a pore, so one physics serves many pores and a pore many salts. No key, golden
-number or case written inline changes (VER-62). The [plan](docs/plans/phase-5/wp5.09-the-physics-model.md) records the work.
+## [0.6.0-alpha.7] - 2026-11-04
+
+WP5.07: variables and the rebuild forecast, Phase 5's seventh package; tag `v0.6.0-alpha.7` once merged
+(`SPECIFICATION.md` FR-39, FR-24, FR-25, FR-27, IF-03, VER-24, VER-64, VER-72; §8.2.19 U4, §8.2.31 AG2 to AG5; REV-139). A
+case can name values with their units and write any number as an expression of them, and a sweep says before it runs which
+stages each swept value rebuilds. The [plan](docs/plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md) records the work.
 
 - **Added**:
-  - **The physics model** (`nanopnp/physics-model/v0.6`), named by `models.physics`. It owns `physics`, `electrolyte`,
-    `boundary_conditions`, `numerics.elements`, `numerics.stabilisation` and `numerics.wall_distance`; the continuum
-    model keeps the geometry, the region and the mesh, and the study the Newton, continuation and linear-solver settings.
-    A sweep may range over `models.physics`, and the manifest's input files gain the role `models.physics`.
-  - **Exposed values**: each model lists the values a study shows first, each with its name, case path, unit, range and
-    default (`ModelFile.exposed`, `ExposedValue`). Each kind has a default list (the salt and the bias for physics, the pH
-    for a molecule, the mesh's size scale for a pore), and a file's `exposes:` list replaces it. `exposes:` keys nothing.
-  - **The project**: `models/physics/`; a case imports split into three models and a study. The frame's rail lists
-    *Physics models*, and the changed list covers them.
+  - **`variables:`** in the case (`nanopnp/case/v0.6` is unchanged): a name is `{value, unit}` or `{expression, unit}`, and
+    a string at a numeric field is an expression. `io/variables.py` parses it from Python's syntax tree against a whitelist
+    (numbers, names, `+ - * /`, `**`, six functions), so no code runs. A field's unit comes from its name's suffix; a
+    value of the same dimension is converted exactly, in fractions, and one of another dimension is refused at the field.
+  - **The dependency `pint`** (`>=0.25.3,<0.26`; BSD-3-Clause, pure Python), imported on first use (VER-72).
+  - **Keys by resolved values**: `L: 2*a` with `a` = 2 nm shares every key with `L: 4`. The variables as written stay
+    in the run's `case.yaml` and in the manifest's inputs group, which gains `variables` only for a case that has some.
+    `Case.variables` and `Case.expressions` give them.
+  - **A sweep axis over `variables.<name>`**: it moves every field the variable reaches, and the warm-start barriers and
+    wall-size warnings read it as those fields.
+  - **The forecast**: `sweep.forecast.forecast(plan, store=...)`, `Sweep.forecast()` and `Forecast`, built on
+    `pipeline.forecast.keyed_walk`, which keys each stage without running one. `core.stages.NotBuilt` and the optional
+    `Forecastable` protocol (`forecast_parameters`) let a stage be identified before its upstream exists; the mesh
+    provides it. `run_plan` logs the warnings and `nanopnp sweep plan` prints a `forecast` line, also in `--json`, with
+    `forecast_unavailable` giving the reason where it cannot be made. `Session.own_stages` gives a Session's registered
+    stages. A plan records the variables as written and refuses a base case that moved them, and resolves each member once.
+  - **The case JSON Schema** declares `variables:` and admits a string at each numeric field (VER-76).
+- **Changed**: the region and solve stages key without reading an upstream payload they discard. No key moves
+  (VER-62 unchanged at zero drift).
+- **Fixed**: REV-139, REV-198 to REV-201. **Amended**: §5.3.1's NOTE on `variables:`, §5.3.3's inputs group, §5.3.4's axis over a variable
+  and the forecast, §5.5's NOTE on the rebuild forecast, VER-72's list of deferred libraries, and the Appendix A rows of
+  FR-39 and IF-03.
+- **Open items**: REV-197, rectification does not pair a bias set through a variable (WP5.19).
+
+## [0.6.0-alpha.6] - 2026-11-04
+
+WP5.06: outputs and steric models as registries, Phase 5's sixth package; tag `v0.6.0-alpha.6` once merged
+(`SPECIFICATION.md` MOD-09, FR-23, QR-04, PHY-05, PHY-22, VER-56; §8.2.18 T4, §8.2.28 AD5, §8.2.32 AH1). A new quantity of
+interest, or a second way of modelling crowded ions, is one registration and needs no edit of the case schema, the
+extraction stage or a physics model. The [plan](docs/plans/phase-5/wp5.06-outputs-and-steric-registries.md) records the work.
+
+- **Added**:
+  - **`post/outputs.py`**: `register_output(name, *, needs, extract, parameters, export, refusal)`, `registered_outputs()`,
+    `output(name)` and `provided(declaration)`. The six shipped words register there. An output's `needs` is a subset of
+    `{"transport", "flow"}`, read from a model's declaration; a model provides every output whose need it meets, so the
+    shipped models provide what they did before. An unregistered word is refused when the case is loaded, naming the
+    registered outputs.
+  - **`physics/steric.py`**: `register_steric_model(name, form)`, `registered_steric_models()` and `steric_form(name)`.
+    `borukhov` (PHY-05) is registered; `none` stays the off value. Another registered name is a deviation, and its
+    name enters the solve key as `electrolyte.steric_model`.
+  - **`numerics/measures.py`**: `has_boundary` and `require_boundary`, one check that a named boundary exists, now used
+    by the wall distance, the indicator, the reaction flux and the force extension.
 - **Changed**:
-  - A continuum model holding a key the physics model now owns is refused, naming the key and the model it belongs
-    to. A model file written since WP5.05 with the salt or the bias in a continuum model moves those keys to a
-    physics model by hand; no release holds the format, so there is no migration.
-  - A continuum model's `wall_h_nm: auto` follows the paired physics model's concentration, so a stronger salt can build
-    a new mesh, as the sweep's forecast already warns; `numerics.mesh.wall_for_concentration_M` pins it (AK2).
-- **Amended**: §5.3.1's NOTE on `models:` and the project NOTE, §5.3.2's model row, §5.3.3's inputs group, and the
-  Appendix A rows of FR-32 and FR-39.
+  - Stage 11 builds one `Extraction` and calls each selected output's `extract`; `QoIArtefact` takes
+    `output_parameters` in place of `extension_shell_nm`. The stage-11 key parameters are the same dictionary.
+  - `electrolyte.corrections.steric.model` is any registered name, not `borukhov` alone. No key, golden number or case
+    document of the shipped registries changes (VER-62).
+  - **Removed**: `ModelDeclaration.quantities` (F4), `io/case.py:OUTPUTS` and `STERIC_MODELS`.
+  - **Amended**: §5.5's registry sentence and a NOTE on the steric model, §5.4.3 and §5.3.1's NOTEs and VER-56 (AH1).
+  - **Open items**: MOD-09 is `fixed`. REV-171's seam part is done; its cost items stay in Phase 6.
 
-Outside the package sequence: the workflow also runs on the GitHub Copilot app (§8.2.25, §8.2.26;
-[plan](docs/plans/sessions/copilot-host.md)). No `src/`, `tests/`, schema or public API changes.
+## [0.6.0-alpha.5] - 2026-11-04
 
-- **Added**: `.claude/workflow/hosts.md` and `hosts/copilot.md` (each Claude Code tool's Copilot
-  substitute), `.github/copilot-instructions.md`, `.github/hooks/nanopnp.json`, `.githooks/pre-push`
-  with `gate.sh check-push`; REV-166 to REV-168, the probes still to run.
-- **Changed**: `gate.sh` refuses with one exit-0 structured denial on both hosts and refuses a string
-  payload's push (§8.2.26 AB1); `format.sh`, `session-start.sh` and `adapter.sh` take Copilot's shapes.
+WP5.05: named models and study overrides in the case, Phase 5's fifth package; tag `v0.6.0-alpha.5` once merged
+(`SPECIFICATION.md` FR-39, IF-03; §8.2.18 T2, §8.2.31 AG4, AG12, AG13; REV-62). A case can name a molecular model
+and a continuum model, each kept in its own file, and so become a study; the study may override any value of
+them, and resolves to the one complete case its run writes. The [plan](docs/plans/phase-5/wp5.05-named-models-and-study-overrides.md)
+records the work.
+
+- **Added**:
+  - **`models:`**: `{molecular: <path>, continuum: <path>}`, at least one. A model file holds `schema`
+    (`nanopnp/molecular-model/v0.6` or `nanopnp/continuum-model/v0.6`), `name` and only the keys its kind owns
+    (`nanopnp.io.models.OWNERS`; the longest dotted prefix decides, and every other key is the study's). A model
+    names no model, and a relative path is read beside the file that names it. The study is merged over the molecular
+    model and then the continuum model; the models and the study's own keys must validate alone, or the model is
+    refused naming its file, and a problem line carries `[from <file>]`.
+  - **Overrides**: a value the study sets in a model's keys that differs from the model's. `Case.overrides` maps each
+    path to the model's value and the study's, is recomputed on every edit and survives `with_` and sweeps, and
+    `Case.dumps(study=True)` writes the study as written.
+  - **A sweep over models**: an axis over `models.molecular` or `models.continuum` resolves the study again at each
+    point, under its own values and overrides. Each value is its own warm-start root, the plan lists the model files,
+    and the API sweep writes the study form as its base file.
+  - **`inputs.mesh.artefact`** (REV-62): the 64-character store hash of a stage-6 mesh artefact. The mesh stage takes
+    the store and returns the stored artefact unchanged, so a stored mesh keeps its hash. A hash the store does not
+    hold is refused naming the hash and the store's root; `format` and `groups` beside it are refused.
+  - **Manifest**: `inputs.files` gains the roles `models.molecular` and `models.continuum`, and `inputs.overrides`
+    (`{path: {model, study}}`) appears when the case names a model.
+  - **FR-39** (Tier 1 and 2): a study resolves to its case written inline and shares its keys; it reuses every stage
+    its twin built; an override moves only the stages that read it; a run records its model files and overrides; a
+    sweep over models resolves each member; every case leaf has one owner.
+- **Changed**:
+  - `models` is left out of every dump, hash and equality of a case, so a study equals and keys as its resolved case
+    and a case without `models` keeps every key. A reader that does not resolve models (`read_case`) refuses a
+    document carrying `models:`; `Case.load` and `pipeline.case.load_case` resolve them.
+  - `inputs.mesh.artefact` is a `stage` leaf of the case (VER-71).
+  - **Amended**: FR-39 (AG12, AG13) and its Appendix A row, IF-03's Appendix A row, §5.3.1's NOTEs on `models:` and
+    on `inputs:`, §5.3.2's format table, §5.3.3's inputs group, §5.3.4, §5.2's stage-6 row, the workbench design's
+    WB-16 row and *Override* entry, and the case-file reference's prose on `models:` and `inputs`.
+  - **Open items**: REV-62 is `fixed`. REV-186 is open: a stored mesh beside `structure:` stays refused.
+
+## [0.6.0-alpha.4] - 2026-11-03
+
+WP5.04: the charge mutator's library step, Phase 5's fourth package; tag `v0.6.0-alpha.4` once merged
+(`SPECIFICATION.md` FR-38, PHY-16 step 3; §8.2.17 S4, §8.2.19 U6, §8.2.31 AG9 to AG11). A case's
+`charge.edits` pins a residue's protonation state, changes its charge by an integer on the titratable group,
+or scales its radii; the result is a variant table kept beside its parent, with a `variant_of` record and no
+deviation. The [plan](docs/plans/phase-5/wp5.04-the-charge-mutators-library-step.md) records the work.
+
+- **Added**:
+  - **`charge.edits`**: each entry is a `residue` (`ASP 21`, `HIS 292A`) and one of `state` (`charged` or
+    `neutral`; ASP, GLU and HIS under CHARMM), `charge_change_e` (a non-zero integer, spread evenly over
+    PROPKA's charge-centre atoms of the residue, `data/charge/titratable_groups.yaml`) and `radius_scale`
+    (every atom radius of the residue, hydrogens included). Each applies on every chain and frame. A state is
+    pinned by wrapping PDB2PQR's `apply_pka_values` for the call, and a gate refuses a frame whose pinned residue
+    does not hold it.
+  - **`charge.protonation.variant_of`** in the manifest: the parent's protonation key, the edits, each residue
+    that differs (charges before and after, atoms added and removed, largest radius change and displacement)
+    and `Q_net` of both. The protonation artefact's payload gains `parent`, the unedited table.
+  - **FR-38** (Tier 1): a pinned state holds and changes that residue alone; a charge change moves the
+    projected charge by that residue alone; a radius scale moves stage 2's widths and the grid; every key is
+    unchanged without edits; the titratable-groups file equals PROPKA's configuration; a charge edit keeps
+    the parent's density key and a radius edit moves it; a radius edit scales stage 4's probe as it scales
+    stage 2's widths.
+- **Changed**:
+  - Stage 2 under `protonated` multiplies the CHARMM radii by the table's radius scales; under `as_loaded` its
+    key and map do not move. Stage 4's probe-radius profile scales the same atoms by the same factors, and
+    its key carries the radius edits. Stage 2 keys on the protonation key with its charge edits dropped, so a
+    charge variant reuses its parent's density, contour and mesh. A charge or radius edit reuses the parent's stored frames; a state edit
+    protonates again with the residue pinned.
+  - **Amended**: FR-38 (AG9 to AG11), PHY-16 step 3's NOTE on `charge.edits`, §5.2's stage 2 and 7 rows and the
+    stage-7 note, §5.3.1's NOTE on `charge.edits`, §5.3.3's charge group, and Appendix A's FR-38 row.
+  - **Knowledge**: `knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md`.
+  - **Fixed**: REV-184 (stage 4's probe-radius gate ignored a radius scale) and REV-185 (a charge-only edit
+    remeshed), both from the package's review ([code review 029](docs/code_reviews/CODE_REVIEW_029.md)).
+
+## [0.6.0-alpha.3] - 2026-11-03
+
+WP5.03: protonation before the density, Phase 5's third package; tag `v0.6.0-alpha.3` once merged
+(`SPECIFICATION.md` §8.2.19 U2, §8.2.31 AG8; REV-135). Stage 7's protonation walks before stage 2, and stage 2
+smears the protonated atoms of every frame, hydrogens included, so a protonation state moves the density, the
+contour and the mesh. The [plan](docs/plans/phase-5/wp5.03-protonation-before-the-density.md) records the work.
+
+- **Added**:
+  - **`geometry.density.atoms`**: `protonated` (the default) or `as_loaded`, the reference's way. It is a switch away from
+    the validated default, so the manifest lists it. Each protonated atom takes its CHARMM radius through its
+    residue's state patch (`resolve_protonated_radii`), as PDB2PQR does; a disulfide's `1CB`, `1SG`, `2SG` and
+    `2CB` take the set's `DISU` entries. `protonated` beside a produced protonation
+    under a force field other than CHARMM is refused, naming both keys.
+  - **VER-49** (Tier 1): a changed protonation state moves the density; the protonated radii equal PDB2PQR's on the
+    2WCD fragment at pH 2 and 8; the ragged-frame deposit keeps the uniform arithmetic.
+- **Changed**:
+  - **The case schema is `nanopnp/case/v0.6`.** A `v0.5` document is refused, the message naming the migration: declare
+    `nanopnp/case/v0.6`, and a case with `structure:` that keeps v0.5's density adds `geometry.density.atoms: as_loaded`.
+  - The walk order is `structure`, `protonation`, `density`, …; a walk to stage 2 under `as_loaded` does not protonate.
+    The stage 2 key under `as_loaded` is unchanged. `ProtonationTable` lives in `structure/protonated.py`.
+  - Examples 06 and 07 take the default. Example 07's VER-62 walk is re-pinned: conductance 0.9734 nS → 0.9598 nS
+    (−1.40 %), transport number 0.5428 → 0.5421, on 6059 elements against 6223. `2wcd-charged`, `2wcd-shell`, VAL-05,
+    VAL-06 and the Tier 3 cases set `as_loaded` and do not move.
+  - **Amended**: PHY-16 and its NOTE, FR-04, §5.2's stage 2 and 7 rows, and §5.3.1's NOTEs on `inputs:` and
+    `geometry.density`.
+  - **Open items**: REV-135 is `fixed`.
+
+## [0.6.0-alpha.2] - 2026-11-03
+
+WP5.02: the framework spike and the visual-feedback workflow, Phase 5's second package; tag `v0.6.0-alpha.2`
+once merged (`SPECIFICATION.md` §8.2.30 AF1 to AF4). The hard screen was built in NiceGUI and in React over one
+server and measured; the author ruled NiceGUI, and both trial builds left the tree, their report kept in
+[docs/design/spike/report.md](docs/design/spike/report.md). The [plan](docs/plans/phase-5/wp5.02-framework-spike.md)
+records the work.
+
+- **Added**:
+  - **`nanopnp gui`**: serves the browser workbench on `127.0.0.1` with `[case]`, `--state`, `--port`,
+    `--no-browser`, `--dev` (reload on a change) and the common flags (`--json` writes the ready line as
+    `{"ready": <url>}`). It prints one `nanopnp-gui ready <url>` line, refuses a
+    foreign `Host` and a request without the launch token or its cookie, and stops when its standard input
+    closes or on SIGINT or SIGTERM (ADR-004's NOTEs). It needs the `gui` extra, which gains fastapi, uvicorn and
+    nicegui.
+  - **The first screens** under `nanopnp.gui.web`: a screen registry, the fixture states `empty`,
+    `charged-tube`, `uncharged` (a charge with no structure behind it) and `refused`, the link between a residue and its charge on the pore map in both directions,
+    and Mol* served unmodified (MIT, with its notice).
+  - **VER-78** (Tier 1): every state loads every screen with its controls and no console error, and the server
+    keeps its contract. `gate.sh run` and CI's tier-1 leg require a browser (`NANOPNP_REQUIRE_BROWSER=1`).
+  - **`/np-gui render shell`** and the non-text contrast measure of WCAG 2.2 1.4.11 in `shoot.cjs`.
+  - **Notes** on CON-08 and CON-11 for the browser shell; the renderer table in `docs/design/workbench.md`.
+
+- **Changed**:
+  - The light theme's `--control-edge` is `#7c8290`, 3.2:1 on a selected row (REV-143).
+  - `write_charged_tube` and its constants live in `nanopnp.validation.charged_tube`.
+  - The `structure` extra asks for `pdb2pqr>=3.8`, and the PQR reader accepts 3.8's `NTER` and `CTER` terminal patches. 3.8 does not pin `docutils`, so `structure` and `gui` install together with `pip` (REV-175).
+  - **Open items**: REV-137, REV-138, REV-141, REV-143, REV-174, REV-175 and REV-176 are `fixed`; the study's mockups stay as dated evidence (REV-176).
+
+WP5.01: the workbench design study, Phase 5's first package, in the second lane beside Phase 4. It
+merges before `v0.5.0` and takes no tag, so its entry waits here (`SPECIFICATION.md` §8.2.17 S15,
+S19). It critiques the Qt shell, holds a design round with the author, draws the areas as choice
+panels and two whole-workbench mockups, and writes the design document and its requirements. No
+`src/`, `tests/`, case schema or public API changes (S1). The
+[plan](docs/plans/phase-5/wp5.01-workbench-design-study.md) records the work.
+
+### Added
+
+- **`/np-gui` with five levels**: `render`, `review`, `publish`, `collect` and `grill`; the
+  `gui-reviewer` agent; and the scripts `.claude/scripts/gui/shoot.cjs` and `capture_qt.py`
+  (§8.2.17 S22).
+- **The design document** `docs/design/workbench.md`, on the documentation site. It gives the Qt
+  shell's capability list and critique, four suites in a project (Molecular, Continuum, Study,
+  Analysis), the look and feel with its tokens in `docs/design/tokens.css`, the tools, the four live
+  links, the project folder, the guided route, the later tools, and the decision log WB-01 to WB-32.
+- **The concept boards, style tile, choice panels and mockups A and B** under `docs/design/`, with
+  their generators and review records. Mockup A is chosen and revised.
+- **`SPECIFICATION.md`**: FR-31 to FR-43 and QR-16; the browser shell's restatements of P3, IF-09,
+  QR-10, CON-09, the packaging NOTE of ADR-004, RSK-13, VER-43, VER-44, VER-55 and VER-60, each a
+  NOTE that replaces its clause when Qt leaves (S17); and the rulings of §8.2.18 on the inherited
+  review rows.
+- **Open items** REV-134 to REV-139 and REV-141, ruled in §8.2.19: REV-134 carried until Qt leaves;
+  protonation to move before the density, the protonated density the validated default (REV-135, a NOTE
+  beside PHY-16); REV-136 and the sweep's design round to `/np-plan amend 5`; REV-137, REV-138 and
+  REV-141 to WP5.02. REV-140 was raised and fixed in the same package. The review raised REV-142, fixed by
+  restoring the charge and radius edits to FR-38 (U6), and REV-143, the control edge's contrast, to WP5.02 (U7).
 
 ## [0.5.0] - 2026-11-02
 
