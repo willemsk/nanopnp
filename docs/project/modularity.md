@@ -1,18 +1,19 @@
 # Modularity report
 
-This report measures nanopnp's architecture against its own claims and logs what it finds as
-numbered findings, `MOD-nn`. It changes no code: the author rules each finding before anything
-moves (§8.2.7 G1), through `/np-plan amend 4`. The findings and their status are logged in
-[the findings log](modularity-findings.md), and the live measurements are on
-[the measurements page](../_generated/project/modularity-measurements.md).
+A closed report, dated at `97f2b3d` (Phase 3's close). Every finding is terminal ([the log](modularity-findings.md), 2 November 2026). For the architecture now, read the generated *Modularity measurements* page of the site; for a finding's outcome, read the log. The numbers below are those of that commit.
+
+This report measured nanopnp's architecture against its own claims and logged what it found as
+numbered findings, `MOD-nn`. It changed no code: the author ruled each finding before anything
+moved (§8.2.7 G1), through `/np-plan amend 4`. The findings and their status are in
+[the findings log](modularity-findings.md).
 
 ## What is measured, and how
 
-Every number below comes from `nanopnp.validation.modularity`, which reads the source by its
-syntax tree and imports nothing it measures. Each finding names the function that measures it and
+Every number below came from `nanopnp.validation.modularity`, which reads the source by its
+syntax tree and imports nothing it measures. Each finding names the function that measured it and
 quotes the numbers **at `97f2b3d`**, the tree Phase 3 closed on with this phase's plan added. The
-measurements page shows the same functions run on the tree the site was built from, so a finding
-stays true as dated after a refactor has changed the live numbers.
+generated measurements page runs the same functions on the tree the site was built from, so a
+finding stays true as dated after a refactor has changed the live numbers.
 
 The claims measured are:
 
@@ -41,7 +42,7 @@ couples two layers, so moving an import into a function changes its kind and nev
 relation. The **string** relation is the fourth kind. `docs/project/modularity-layering.yaml`
 records both, one row per subpackage edge, and VER-61 asserts that the live relations equal it
 in both directions. A commit that adds or removes an edge edits that file. At `97f2b3d` there
-are 806 import edges between modules: 460 `top`, 112 `deferred`, 132 `typing` and 102
+were 806 import edges between modules: 460 `top`, 112 `deferred`, 132 `typing` and 102
 `string`. They make 101 static and 27 string subpackage edges.
 
 Strongly connected components are computed by Tarjan's algorithm (`components`). Each lists its
@@ -61,12 +62,10 @@ no two modules import each other at load time. VER-61 asserts that this stays so
 
 ### The order the findings read the layers in
 
-A layering needs an order. This report reads the subpackages lowest first as the pipeline of
-§5.2 runs, with `io`, the shells and the facade last: `core`, `structure`, `density`,
+A layering needs an order. The order at the time was: `core`, `structure`, `density`,
 `symmetry`, `geometry`, `mesh`, `charge`, `materials`, `physics`, `solve`, `post`, `io`, `sweep`,
-`validation`, `cli`, `gui`, `nanopnp`. An edge pointing up that order is annotated in the YAML with
-the finding that explains it. The order is the report's reading, not a requirement. The author
-may rule a different one, and the annotations move with it.
+`validation`, `cli`, `gui`, `nanopnp`. The order VER-61 uses now is `LAYER_ORDER` of
+`nanopnp.validation.modularity`, listed in the header of `modularity-layering.yaml`.
 
 ## Findings
 
@@ -97,6 +96,8 @@ return the hash `run` would, and the two `type: ignore` comments go.
 **User-visible.** API: `nanopnp.Stage` gains a member, so a stage written outside the package must
 define it.
 
+**Outcome:** fixed, [WP36](../plans/phase-4/wp36-stage-protocol-and-walk.md).
+
 ### MOD-02 — The walk holds what the stages should declare
 
 *Area:* stages. *Severity:* medium.
@@ -119,6 +120,8 @@ stage takes a workspace or the store, whether it has a payload, and its progress
 `selected_stages` are case logic and stay.
 
 **User-visible.** No. `registered_stages()` descriptions may gain fields, which is additive.
+
+**Outcome:** fixed, [WP36](../plans/phase-4/wp36-stage-protocol-and-walk.md).
 
 ### MOD-03 — Ten subpackages form one import cycle
 
@@ -157,6 +160,8 @@ are MOD-04's. A cut that needs more than moving a definition is reported back ra
 
 **User-visible.** No.
 
+**Outcome:** fixed, [WP38](../plans/phase-4/wp38-io-split.md).
+
 ### MOD-04 — io is both the base layer and the assembler
 
 *Area:* coupling. *Severity:* medium.
@@ -179,6 +184,8 @@ and reproduction, which imports the stages. `io/case.py` divides along the same 
 **User-visible.** No. `PUBLIC` names keep their meaning, and internal module paths are not API
 (IF-01).
 
+**Outcome:** fixed, [WP38](../plans/phase-4/wp38-io-split.md).
+
 ### MOD-05 — The exit-code table lives in the shell and the library imports it
 
 *Area:* coupling. *Severity:* low.
@@ -198,6 +205,8 @@ re-exports them for its own use.
 
 **User-visible.** No. The exit codes do not change (VER-47).
 
+**Outcome:** fixed, [WP37](../plans/phase-4/wp37-cycle-cuts-exit-codes-backend-guard.md).
+
 ### MOD-06 — The mesher is a branch, not a registry
 
 *Area:* extension. *Severity:* medium.
@@ -216,6 +225,8 @@ the shape now lets the 3D work (N4) decide whether a registry is worth its indir
 
 **User-visible.** No.
 
+**Outcome:** fixed, [WP39](../plans/phase-4/wp39-backend-registries.md).
+
 ### MOD-07 — The linear solver is a branch, and the schema reads its list
 
 *Area:* extension. *Severity:* medium.
@@ -231,6 +242,8 @@ edits the branch and the set. The schema's import is one of the edges MOD-04 cut
 **Recommendation.** Defer to Phase 6, with MOD-06, for the same reason.
 
 **User-visible.** No.
+
+**Outcome:** fixed, [WP39](../plans/phase-4/wp39-backend-registries.md).
 
 ### MOD-08 — Five registries in four shapes
 
@@ -258,6 +271,8 @@ rest moves code without changing what can be extended.
 
 **User-visible.** No.
 
+**Outcome:** post-1.0, §8.2.8 H5.
+
 ### MOD-09 — Outputs and steric models are closed enumerations in the assembler
 
 *Area:* extension. *Severity:* low.
@@ -282,6 +297,8 @@ user, and the enumeration's shape should follow that.
 **Fixed** (WP5.06, `v0.6.0-alpha.6`): `post/outputs.py` and `physics/steric.py` hold the two registries, and
 `io/case.py` holds neither list. An output states what it needs of a model's declaration (§8.2.32 AH1), so
 `ModelDeclaration.quantities` is gone; `extension_points` reads both as `registry` rows.
+
+**Outcome:** fixed, [WP5.06](../plans/phase-5/wp5.06-outputs-and-steric-registries.md).
 
 ### MOD-10 — The backend interface of section 5.4.1 does not exist
 
@@ -308,6 +325,8 @@ machinery can pin.
 
 **User-visible.** No.
 
+**Outcome:** deferred, §8.2.8 H3.
+
 ### MOD-11 — with_section and register are outside PUBLIC
 
 *Area:* surface. *Severity:* low.
@@ -329,6 +348,8 @@ with a whole block, and a stage of one's own is registered by `session.register_
 
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): both stay internal; the API page names `Case.with_` and `session.register_stage`.
 
+**Outcome:** fixed, §8.2.8 H2; §8.2.23 Y5.
+
 ### MOD-12 — PUBLIC is mirrored by hand for the type checker
 
 *Area:* surface. *Severity:* low.
@@ -343,6 +364,8 @@ importable. Nothing but review holds the two together.
 module already measures both.
 
 **User-visible.** No.
+
+**Outcome:** fixed, [WP36](../plans/phase-4/wp36-stage-protocol-and-walk.md).
 
 ### MOD-13 — Three modules and two functions are past review size
 
@@ -366,6 +389,8 @@ Phase 5: `cli/__init__.py` with the GUI's shell work, and `physics/models.py` an
 
 **Placed** (§8.2.31 AG1, 3 November 2026): WP5.02 added `nanopnp gui` without the split, so WP5.08, which opens a project with it, splits `cli/__init__.py`.
 
+**Outcome:** fixed, [WP38](../plans/phase-4/wp38-io-split.md).
+
 ### MOD-14 — Refusals name releases that have shipped
 
 *Area:* surface. *Severity:* medium.
@@ -387,6 +412,8 @@ schedules it, or names the release that does. The empty loop goes. A Tier-1 chec
 
 **User-visible.** CLI: refusal texts change. Exit codes do not.
 
+**Outcome:** fixed, [WP40](../plans/phase-4/wp40-stale-refusals.md).
+
 ### MOD-15 — core reaches upward, once by an annotation and into ten subpackages by the registry
 
 *Area:* coupling. *Severity:* low.
@@ -403,6 +430,8 @@ assembler.
 `io`, or to `core`. The string edges stay, recorded in the YAML.
 
 **User-visible.** No.
+
+**Outcome:** fixed, [WP38](../plans/phase-4/wp38-io-split.md).
 
 ### MOD-16 — The stabilisation registry is closed by a Literal in the schema
 
@@ -424,6 +453,8 @@ that already exists, as `physics.model` is.
 **User-visible.** Schema: the JSON schema of `numerics.stabilisation` loses its enumeration.
 Every document that validated still validates.
 
+**Outcome:** fixed, [WP39](../plans/phase-4/wp39-backend-registries.md).
+
 ### MOD-17 — The validated correction set is a default in eight signatures
 
 *Area:* extension. *Severity:* low.
@@ -441,6 +472,8 @@ default means nine edits.
 `io/defaults.py` once it sits in the base layer (MOD-04).
 
 **User-visible.** No.
+
+**Outcome:** post-1.0, §8.2.8 H5.
 
 ### MOD-18 — The Geometry tab has a view only for the stages it knows
 
@@ -465,15 +498,4 @@ lists them.
 
 **Ruled** `wontfix` for the Qt tab (§8.2.18 T1). The workbench lists stages from the registry, and a stage without a view of its own shows its record and verdict.
 
-## Seed findings merged or added
-
-WP35's plan listed 14 measured candidates (Design §4). All 14 are here, as MOD-01 to MOD-14 in
-the plan's order. The measurement added three:
-
-- **MOD-15**: `core`'s single upward annotation import.
-- **MOD-16**: the stabilisation `Literal`.
-- **MOD-17**: the repeated default correction set.
-
-WP36's shipping review added **MOD-18**, the Geometry tab's views, after the report was dated.
-
-None was dropped or merged.
+**Outcome:** wontfix, §8.2.18 T1.
