@@ -222,7 +222,7 @@ first component. `_body(location)` returns the mapping whole. `_problems_of` cal
   pass. **Executor:** main.
 - [x] 51a4c40 6. `.claude/hooks/gate.sh run` and the strict documentation build, since items 2 and 3 change §5.3.1 and
   docstrings: row 5. **Executor:** main.
-- [ ] 7. The records of *Implementation details*; FR-39's and FR-25's Appendix A rows name rows 1 to 4; Outcome notes;
+- [x] e60744c 7. The records of *Implementation details*; FR-39's and FR-25's Appendix A rows name rows 1 to 4; Outcome notes;
   the phase plan's heading; `current.md`. Done when the review says so. **Executor:** main.
 
 
