@@ -25,8 +25,8 @@ matters. The plan is a commit under `docs/plans/`, not a chat message.
 
 ## Grounding the plan
 
-The plan is for an implementer on Sonnet who has not seen this session. An item marked for a sub-agent
-is for the smaller model that executes it (§8.2.16 R11). When the decisions are drafted, and before you
+The plan is for an implementer on Opus who has not seen this session. An item marked for a sub-agent
+is for the Sonnet or Haiku model that executes it (§8.2.16 R11; §8.2.38 AN8). When the decisions are drafted, and before you
 commit, read yourself the code that each decision and work item changes or relies on. Settle each point
 the implementer would otherwise guess (§8.2.15 Q1). For each, ask:
 
@@ -113,11 +113,12 @@ Never omit a required check or a grounding fact to meet a count.
 ### Work items
 
 Leave the boxes unticked; `/np-implement` ticks them. **Each item names its executor** (§8.2.16 R6,
-R11): `main`, or a sub-agent type and model, for example `general-purpose` on Haiku. The plan names the
+R11): `main`, or a sub-agent type and model, for example `general-purpose` on Sonnet, high effort. The plan names the
 implementing model as `CLAUDE.md`'s *Models* sets it.
 
 - A sub-agent takes only an item that is independent and mechanical, and whose checks it can run: a
-  sweep, a slice, a rename, a fixed list of edits.
+  sweep, a slice, a rename, a fixed list of edits. It runs on Sonnet at high effort; on Haiku only when it is
+  repetitive and fully specified, and its context stays under 100k tokens.
 - An item that needs judgement on normative text, physics or numerics stays `main`.
 - *Implementation details* covers a Haiku item in full, so that the item chooses nothing.
 

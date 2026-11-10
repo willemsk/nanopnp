@@ -80,7 +80,7 @@ L2: §7.6
 L3: §7.6, §8.4.2
 L4: §8.4.2
 L5: superseded by N3
-L6: §8.4.5
+L6: §8.4.5; its models amended by AN8
 L7: §8.4.4
 L8: spent
 L9: §8.4.5
@@ -310,7 +310,7 @@ AL25: §8.1's Phase 5 row; the Phase 5 plan
 AL26: §8.1's Phase 5 row; the Phase 5 plan; spent
 AL27: 'knowledge/07-software-stack/25; open: the author''s adoption, the Phase 5 plan''s open decision 14'
 AL28: '§8.4.4, §8.4.5'
-AL29: §8.4.5
+AL29: superseded by AN8
 AM1: PHY-12, PHY-13, PHY-14, PHY-22, NUM-09, NUM-12, NUM-16, NUM-17, NUM-26, NUM-30
 AM2: 'NUM-04, NUM-28; open: Phase 6 (REV-223 to REV-225, the measurement)'
 AM3: §7.6
@@ -336,3 +336,4 @@ AN4: the Phase 5 plan
 AN5: 'open: WP5.15 (§5.3.2''s NOTE), WP5.20 (the rebuild on viewing)'
 AN6: 'open: WP5.15 (§5.3.2''s NOTE)'
 AN7: 'open: WP5.15'
+AN8: §8.4.5

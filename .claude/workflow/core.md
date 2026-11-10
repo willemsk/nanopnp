@@ -72,8 +72,8 @@ log, `CHANGELOG.md`, the plans and §8.2.
 
 ## Models and executors
 
-`CLAUDE.md` sets the models (*Models*). A survey goes to Haiku or Sonnet; read what it returns before
-you use it. Physics and numerics decisions stay in this session.
+`CLAUDE.md` sets the models (*Models*). A survey goes to Sonnet, or to Haiku where *Models* allows;
+read what it returns before you use it. Physics and numerics decisions stay in this session.
 
 ## Records
 
