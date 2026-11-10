@@ -18,8 +18,8 @@ from nanopnp.api.session import Session
 from nanopnp.core.errors import classify
 from nanopnp.core.hashing import Canonicalisable
 from nanopnp.io.artefact import SOLUTION_SCHEMA, SWEEP_SCHEMA, Artefact, StageInputs, SweepArtefact
-from nanopnp.io.case import CaseDocument, FieldValue, dumps_case
-from nanopnp.io.case_paths import field_path, input_paths
+from nanopnp.io.case import CaseDocument, CaseValidationError, FieldValue, dumps_case
+from nanopnp.io.case_paths import UnknownCasePathError, field_path, input_paths, substitute
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import MissingUpstreamError, stored_upstream
@@ -179,16 +179,12 @@ def plan_sweep(
     Raises
     ------
     SweepPlanError
-        The case names an input file by a relative path, which the store's copy of the case
-        would read against another directory.
+        The case, or a value of the axis, names an input file by a relative path, which the
+        store's copy of the case would read against another directory.
     """
     # A file case reads its relative paths beside it; the store's copy would not.
     case = case.with_()
-    relative = [
-        f"{dotted} = {value}"
-        for dotted, value in input_paths(case).items()
-        if not Path(value).is_absolute()
-    ]
+    relative = _relative_inputs(case)
     if relative:
         raise SweepPlanError(
             f"case {case.name!r} names {', '.join(relative)} by a relative path; its "
@@ -200,6 +196,20 @@ def plan_sweep(
         # Beside the study, as Case.with_ reads it; the store's copy of the study is elsewhere.
         beside = case.models_record.base
         values = [str((beside / Path(str(value))).resolve()) for value in values]
+    # The plan is built in memory, so no planning step reads a relative value against the
+    # store's directory, where every member is resolved. A model file and a variable are no input.
+    relative = [
+        entry
+        for value in values
+        if isinstance(value, str | Mapping) and not dotted.startswith(("models.", "variables."))
+        for entry in _relative_inputs(case, {dotted: _plain(value)})
+    ]
+    if relative:
+        raise SweepPlanError(
+            f"axis {dotted!r} sets {', '.join(relative)} by a relative path; each member's copy "
+            "in the store would read it against another directory. Name the input by an "
+            "absolute path"
+        )
     name = case.name
     document = {
         "schema": SWEEP_SCHEMA,
@@ -224,6 +234,21 @@ def plan_sweep(
     return Sweep(
         replace(planned, base_path=(directory / BASE_FILENAME).resolve()), directory, session
     )
+
+
+def _relative_inputs(
+    case: CaseDocument, assignments: Mapping[str, FieldValue] | None = None
+) -> list[str]:
+    if assignments:
+        try:
+            case = substitute(case, assignments)
+        except (CaseValidationError, UnknownCasePathError, ValueError):
+            return []  # build_plan refuses the value, naming its axis
+    return [
+        f"{dotted} = {value}"
+        for dotted, value in input_paths(case).items()
+        if not Path(value).is_absolute()
+    ]
 
 
 def _parent_artefact(

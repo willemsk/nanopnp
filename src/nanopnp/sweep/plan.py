@@ -581,7 +581,8 @@ def build_plan(
     Parameters
     ----------
     base
-        The base case already read, so no file is read at the sweep's base path.
+        The base case already read, so no file is read at the sweep's base path. Its members
+        are resolved beside a study's own directory, and otherwise beside the base path's.
     check_meshes
         Whether to run the mesh gate once per distinct mesh with a wall correction.
     """

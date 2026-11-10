@@ -37,7 +37,8 @@ or public name changes (VER-61, VER-62, VER-72). The
   - `stored_upstream` keys a session's own stages as the walk does and takes a case already resolved
     (FR-27, VER-64).
   - `build_plan` takes the base case in memory, so `plan_sweep` writes its files once, into the store, with no
-    staging directory (FR-39).
+    staging directory (FR-39). `plan_sweep` refuses an axis value that names an input file by a relative path, as it
+    refuses one in the case, since its members are resolved beside the store's copy (CODE_REVIEW_050).
 - **Fixed**:
   - A sweep from `plan_sweep` resolves each member once to plan it and once beside its stored files, and its
     `forecast()` and `run()` read those members; `run_point` and the parent lookup take a member the plan holds

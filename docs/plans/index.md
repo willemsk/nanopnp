@@ -9,7 +9,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 ## Phase 5
 
 - [Phase 5 plan: the record](phase-5/phase-5-record.md): in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.
-- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.13 merged (`v0.6.0-alpha.13`); the clean-up WP5.14 planned, then the shell packages WP5.15 to WP5.22.
+- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.13 merged (`v0.6.0-alpha.13`); the clean-up WP5.14 delivered, awaiting `/np-ship`, then the shell packages WP5.15 to WP5.22.
 - [WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written](phase-5/wp5.01-workbench-design-study.md): delivered, 27 October 2026.
 - [WP5.02 — The framework spike and the visual-feedback workflow](phase-5/wp5.02-framework-spike.md): delivered, 2 November 2026.
 - [WP5.03 — Protonation before the density](phase-5/wp5.03-protonation-before-the-density.md): merged, 3 November 2026 (`v0.6.0-alpha.3`).
@@ -23,7 +23,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP5.11 — The specification's text and the agent instructions](phase-5/wp5.11-the-specifications-text-and-the-agent-instructions.md): delivered, 9 November 2026.
 - [WP5.12 — The knowledge base and the guide](phase-5/wp5.12-the-knowledge-base-and-the-guide.md): delivered, 10 November 2026.
 - [WP5.13 — Case and model files](phase-5/wp5.13-case-and-model-files.md): delivered, 10 November 2026.
-- [WP5.14 — Sweep planning and the walk's keying](phase-5/wp5.14-sweep-planning-and-the-walks-keying.md): planned, not started.
+- [WP5.14 — Sweep planning and the walk's keying](phase-5/wp5.14-sweep-planning-and-the-walks-keying.md): delivered, 10 November 2026.
 
 ## Phase 4
 

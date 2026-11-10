@@ -221,9 +221,14 @@ own point and its parent."
 > 03's largest same-mesh drift 2.4·10⁻¹⁶ (`point-2.currents_A[Cl-]`). `pipeline/run.py` names no stage it did not
 > name before the package. The strict documentation build passed with `mkdocs.yml` unchanged.
 
-> **Outcome — measured cost.** One session, 0.4 agent hours and 3 touches so far: implement 0.3 + 0.1 agent hours and
-> 1 + 2 touches across its compaction. The In brief estimated five sessions, three to six agent hours and eight
-> touches.
+> **Outcome — measured cost.** One session, 0.8 agent hours and 5 touches through the review: implement 0.3 + 0.2
+> agent hours and 1 + 2 touches across its compaction, ship 0.3 agent hours and 2 touches to the review's fix commit.
+> The In brief estimated five sessions, three to six agent hours and eight touches.
+
+> **Outcome — the review (CODE_REVIEW_050).** Nine findings; five fixed. With no staging directory, `plan_sweep`
+> accepted an axis value naming an input file by a relative path, which every member then failed to find beside the
+> store's copy; it now refuses one, as `main` did and as it refuses one in the case. Row 3 gained `tally`, so an own
+> stage is keyed upstream of the target.
 
 ### Verification
 
@@ -235,7 +240,7 @@ recording each document's `name`. *Light* is `test_forecast.py:_plan`'s case, mo
 |---|---|---|---|---|
 | 1 `test_fr39_a_planned_sweep_resolves_each_member_once` in `test_forecast.py` | 1 | FR-39, FR-24 | Under *Counted*: `plan_sweep` of *Light* over `bias_V` `[0.0, 0.05, 0.1]` records each point's name once, then its `forecast()` and `run()` record each once more, and a second `forecast()` none; counting from after it is built, `_plan`'s plan from a file records none through `forecast` and `run_plan`; `run_point(read_plan(planned.directory / PLAN_FILENAME), 2, ...)` records the names of point 2 and of its parent once each, and afterwards that plan's `held_member(i) is None` for each `i`; every member is `ok` | `each_member_once` |
 | 2 `test_fr39_a_plan_moved_to_another_directory_resolves_its_members_there` in `test_sweep_plan.py` | 1 | FR-39 | `BASE` with `parameters: params.yaml`, written in `a/` and copied to `b/`, each beside a copy of the shipped `willems2020_nacl.yaml` named `params.yaml`, planned from `a/` by `_sweep` and `plan_from_document`: the first member's `correction_files["electrolyte.parameters"]` is `a/params.yaml`; after `replace(plan, base_path=b / "base.yaml")`, `held_member(0) is None`, then it is `b/params.yaml` from `resolved_members` and, after that, from `held_member(0)`; the original plan still gives `a/`; `read_plan(write_plan(...)).held_member(0) is None` | `moved_to_another` |
-| 3 `test_fr27_the_upstream_lookup_keys_own_stages_as_the_walk_does` in `test_stages.py` | 1 | FR-27, VER-64 | As `test_fr27_a_function_stage_is_keyed_by_its_code_and_its_inputs` sets it up, the quick-start with `elements(mesh)` registered, run to `elements`: `stored_upstream(case, store=session.store, feeding="elements", stages=session.own_stages, base=case.source.base)` names the run's stage records but `elements`, each hash equal to the run's artefact; the same with `resolved=resolve(case, base=case.source.base)`; `sorted(store.root.rglob("*"))` is unchanged by both | `own_stages_as_the_walk` |
+| 3 `test_fr27_the_upstream_lookup_keys_own_stages_as_the_walk_does` in `test_stages.py` | 1 | FR-27, VER-64 | As `test_fr27_a_function_stage_is_keyed_by_its_code_and_its_inputs` sets it up, the quick-start with `elements(mesh)` and `tally(elements)` registered, run to `tally`: `stored_upstream(case, store=session.store, feeding="tally", stages=session.own_stages, base=case.source.base)` names the run's stage records but `tally`, `elements` among them, each hash equal to the run's artefact (CODE_REVIEW_050 added `tally`, so that an own stage is keyed); the same with `resolved=resolve(case, base=case.source.base)`; `sorted(store.root.rglob("*"))` is unchanged by both | `own_stages_as_the_walk` |
 | 4 `test_fr39_the_forecast_equals_the_stages_the_walk_rebuilds`, `test_fr39_the_forecast_never_runs_a_stage`; `test_in_memory_sweep_matches_the_sweep_file_plan` gains `held.plan.base_case()` returning for `BASE` and for `BASE` with `variables: {v: {value: 50, unit: mV}}` and `bias_V: v` swept over `concentration_M` | 1 | FR-39, VER-64, VER-36 | Unchanged oracles; the store's copy of an in-memory base passes its hash and variables checks | `forecast or in_memory` |
 | 5 The VER-62 walks of examples 01, 02 and 03; VER-37 and VER-38 in `tests/tier2/test_sweep.py` and `test_sweep_generated_mesh.py`; `test_layering.py`, `test_stage_conformance.py` | 1, 2 | VER-62, VER-37, VER-38, VER-61, VER-72, VER-64 | Walks unmoved at 10⁻⁸, no re-pin; each warm member warm; no new edge or deferred import; no stage set in `pipeline/run.py` | `gate.sh run`; example 03 by its file |
 
