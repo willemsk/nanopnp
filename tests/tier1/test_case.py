@@ -6,16 +6,22 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 from pydantic import ValidationError
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.case import Mesh
 from nanopnp.cli import main
-from nanopnp.io.case_paths import UnknownCasePathError
+from nanopnp.io.case import SCHEMA
+from nanopnp.io.case_paths import UnknownCasePathError, input_paths, rebase_inputs
 from nanopnp.io.store import Store
 
-CASE = Path(__file__).resolve().parents[2] / "examples" / "02-charged-pore" / "epnpns.case.yaml"
+ROOT = Path(__file__).resolve().parents[2]
+CASE = ROOT / "examples" / "02-charged-pore" / "epnpns.case.yaml"
+QUICKSTART = ROOT / "examples" / "01-quickstart" / "quickstart.case.yaml"
+CHARGED = ROOT / "examples" / "07-pdb-to-charged-run" / "2wcd.case.yaml"
+PARAMETERS = ROOT / "data" / "corrections" / "willems2020_nacl.yaml"
 
 
 def test_fr27_a_block_edit_equals_its_leaf_edits() -> None:
@@ -128,3 +134,42 @@ def test_fr25_a_relative_input_path_is_read_beside_the_case_file(
     renamed.write_bytes((folder / "pore.vol").read_bytes())
     moved = session.run(loaded.with_(**{"inputs.mesh.path": "other.vol"}), upto="mesh")
     assert moved.manifest.inputs["files"]["mesh"]["path"] == str(renamed.resolve())
+
+
+def _with_params(folder: Path) -> Path:
+    # The quick-start naming a copy of the shipped parameters by a relative path, twice.
+    folder.mkdir()
+    (folder / "params.yaml").write_bytes(PARAMETERS.read_bytes())
+    raw = yaml.safe_load(QUICKSTART.read_text(encoding="utf-8"))
+    raw["electrolyte"]["parameters"] = "params.yaml"
+    raw["electrolyte"]["corrections"]["diffusivity"]["model"] = "params.yaml"
+    path = folder / "case.yaml"
+    path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    return path
+
+
+def test_fr25_a_case_and_its_mapping_name_the_same_input_files(tmp_path: Path) -> None:
+    params = _with_params(tmp_path / "params")
+    for path in (params, CHARGED):
+        mapping = yaml.safe_load(path.read_text(encoding="utf-8"))
+        named = input_paths(Case.load(path))
+        assert named == input_paths(mapping)
+        assert "willems2020_nacl" not in named.values()
+    assert input_paths(Case.load(params)) == {
+        "electrolyte.parameters": "params.yaml",
+        "electrolyte.corrections.diffusivity.model": "params.yaml",
+    }
+    assert input_paths(Case.load(CHARGED)) == {"structure.source.path": "2wcd-prepared.pdb"}
+    # A study's model files are not its inputs.
+    study = {
+        "schema": SCHEMA,
+        "models": {"continuum": "continuum.yaml", "physics": "physics.yaml"},
+        "electrolyte": {"parameters": "params.yaml"},
+    }
+    assert input_paths(study) == {"electrolyte.parameters": "params.yaml"}
+    absolute = str(PARAMETERS)
+    body = {"electrolyte": {"parameters": "params.yaml"}, "inputs": {"mesh": {"path": absolute}}}
+    rebased = rebase_inputs(body, tmp_path / "params")
+    assert rebased is body
+    assert body["electrolyte"]["parameters"] == str((tmp_path / "params" / "params.yaml").resolve())
+    assert body["inputs"]["mesh"]["path"] == absolute

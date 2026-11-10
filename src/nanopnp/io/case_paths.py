@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import difflib
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -635,28 +635,71 @@ def path_fields() -> tuple[str, ...]:
     )
 
 
-def input_paths(document: CaseDocument) -> dict[str, str]:
-    """Return every input file a case names, by dotted case path, as written."""
-    payload = document.model_dump(by_alias=True, mode="json")
-    found: dict[str, str] = {}
-    for dotted in path_fields():
-        cursor: Any = payload
-        for part in dotted.split("."):
-            cursor = cursor.get(part) if isinstance(cursor, dict) else None
-        if isinstance(cursor, str):
-            found[dotted] = cursor
-    return found
+def _cursor(body: dict[str, Any], dotted: str) -> tuple[dict[str, Any] | None, str]:
+    *parents, last = dotted.split(".")
+    cursor: Any = body
+    for part in parents:
+        cursor = cursor.get(part) if isinstance(cursor, dict) else None
+    return (cursor if isinstance(cursor, dict) else None), last
 
 
-def correction_paths(document: CaseDocument) -> dict[str, str]:
-    """Return every correction file a case names by a path, by dotted case path, as written."""
-    electrolyte = document.electrolyte
-    named = {"electrolyte.parameters": electrolyte.parameters}
-    for name in CORRECTION_PROPERTIES:
-        named[f"electrolyte.corrections.{name}.model"] = getattr(
-            electrolyte.corrections, name
-        ).model
-    return {dotted: value for dotted, value in named.items() if names_a_path(value)}
+@cache
+def _input_leaves() -> tuple[tuple[str, bool], ...]:
+    # A model path is not an input file of the case; a correction leaf is one only as a path.
+    own = tuple((path, False) for path in path_fields() if not path.startswith("models."))
+    corrections = (
+        "electrolyte.parameters",
+        *(f"electrolyte.corrections.{name}.model" for name in CORRECTION_PROPERTIES),
+    )
+    return (*own, *((path, True) for path in corrections))
+
+
+def _named_inputs(body: dict[str, Any]) -> Iterator[tuple[dict[str, Any], str, str, str]]:
+    for dotted, correction in _input_leaves():
+        parent, last = _cursor(body, dotted)
+        value = parent.get(last) if parent is not None else None
+        if not isinstance(value, str) or (correction and not names_a_path(value)):
+            continue
+        assert parent is not None
+        yield parent, last, dotted, value
+
+
+def input_paths(source: CaseDocument | Mapping[str, Any]) -> dict[str, str]:
+    """Return every input file a case or a case mapping names, by dotted case path, as written.
+
+    The model files of ``models:`` and an installed correction file named without a path are not
+    inputs.
+    """
+    body = (
+        source.model_dump(by_alias=True, mode="json")
+        if isinstance(source, CaseDocument)
+        else dict(source)
+    )
+    return {dotted: value for _, _, dotted, value in _named_inputs(body)}
+
+
+def rewrite_inputs(body: dict[str, Any], rewrite: Callable[[str, str], str | None]) -> bool:
+    """Replace each input path of ``body`` in place by what ``rewrite(dotted, value)`` returns.
+
+    A ``None`` leaves the value. The result says whether any value changed.
+    """
+    changed = False
+    for parent, last, dotted, value in list(_named_inputs(body)):
+        replacement = rewrite(dotted, value)
+        if replacement is not None and replacement != value:
+            parent[last] = replacement
+            changed = True
+    return changed
+
+
+def rebase_inputs(body: dict[str, Any], base: Path) -> dict[str, Any]:
+    """Make each relative input path of ``body`` absolute beside ``base``, in place; return it."""
+    directory = base.resolve()
+    rewrite_inputs(
+        body,
+        lambda _, value: None if Path(value).is_absolute() else str((directory / value).resolve()),
+    )
+    return body
 
 
 @cache

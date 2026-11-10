@@ -14,9 +14,7 @@ from typing import Any, Literal, TypeVar
 import yaml
 
 from nanopnp.core.hashing import file_hash
-from nanopnp.core.paths import names_a_path
 from nanopnp.io.case import (
-    CORRECTION_PROPERTIES,
     SCHEMA,
     CaseDocument,
     CaseValidationError,
@@ -26,11 +24,12 @@ from nanopnp.io.case import (
 from nanopnp.io.case_paths import (
     SEQUENCE_INDEX,
     UnknownCasePathError,
+    _cursor,
     _entry_annotation,
     _set_at,
     block_paths,
     field_at,
-    path_fields,
+    rebase_inputs,
     schema_bounds,
     schema_default,
     value_at,
@@ -673,7 +672,7 @@ def _read_model_file(kind: ModelKind, path: Path, source: str) -> tuple[ModelFil
                 f"{path}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
             )
     exposed = exposed_values(kind, raw, str(path))
-    return ModelFile(kind, name, path, file_hash(path), exposed), _rebased(body, path.parent)
+    return ModelFile(kind, name, path, file_hash(path), exposed), rebase_inputs(body, path.parent)
 
 
 def check_model_file(kind: ModelKind, path: str | Path) -> ModelFile:
@@ -693,37 +692,6 @@ def _leaves(mapping: Mapping[str, Any], path: str) -> Iterator[str]:
 @cache
 def _blocks() -> frozenset[str]:
     return frozenset(block_paths())
-
-
-@cache
-def _correction_leaves() -> tuple[str, ...]:
-    return (
-        "electrolyte.parameters",
-        *(f"electrolyte.corrections.{name}.model" for name in CORRECTION_PROPERTIES),
-    )
-
-
-def _rebased(body: dict[str, Any], directory: Path) -> dict[str, Any]:
-    corrections = _correction_leaves()
-    for dotted in (*path_fields(), *corrections):
-        parent, last = _cursor(body, dotted)
-        value = parent.get(last) if parent is not None else None
-        if not isinstance(value, str):
-            continue
-        if dotted in corrections and not names_a_path(value):
-            continue
-        if not Path(value).is_absolute():
-            assert parent is not None
-            parent[last] = str((directory / value).resolve())
-    return body
-
-
-def _cursor(body: dict[str, Any], dotted: str) -> tuple[dict[str, Any] | None, str]:
-    *parents, last = dotted.split(".")
-    cursor: Any = body
-    for part in parents:
-        cursor = cursor.get(part) if isinstance(cursor, dict) else None
-    return (cursor if isinstance(cursor, dict) else None), last
 
 
 def _merge(base: Mapping[str, Any], over: Mapping[str, Any], path: str) -> dict[str, Any]:
