@@ -22,12 +22,14 @@ from nanopnp.core.paths import recent_projects, remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.glossary import GLOSSARY
+from nanopnp.gui.web.numbers import Style, shown, symbol
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench, cap_store
 from nanopnp.io.defaults import Change
 from nanopnp.io.project import ITEM_SUITES, ItemKind, Suite, SuiteLayout, split_reference
+from nanopnp.io.variables import field_unit
 
 __all__ = ["Route", "Views", "current_suite", "frame", "heading", "listed_changes"]
 
@@ -65,9 +67,12 @@ RAIL_PX = (160, 480)
 BOTTOM_PX = (120, 560)
 
 
-def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
-    """Return each item's changed values, a study's own overrides but not its models' values."""
-    listed: list[tuple[str, tuple[Change, ...]]] = []
+def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...] | None]]:
+    """Return each item's changed values, a study's own overrides but not its models' values.
+
+    An item that does not load is listed with None: its values are not counted.
+    """
+    listed: list[tuple[str, tuple[Change, ...] | None]] = []
     for kind, _ in KINDS:
         for name in project.items(kind):
             try:
@@ -75,10 +80,60 @@ def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
                 if kind == "study" and project.study(name).models_record is not None:
                     found = tuple(c for c in found if c.kind == "override")
             except Exception:  # an item that does not load is listed as a problem
+                listed.append((f"{kind}/{name}", None))
                 continue
             if found:
                 listed.append((f"{kind}/{name}", found))
     return listed
+
+
+def _unit(path: str) -> str | None:
+    try:
+        return field_unit(path)
+    except KeyError:  # a leaf that takes no number
+        return None
+
+
+CHANGE_COLUMNS = [
+    {"name": "mark", "label": "", "field": "mark", "align": "center"},
+    {"name": "field", "label": "Field", "field": "field", "align": "left"},
+    {"name": "value", "label": "Value", "field": "value", "align": "right"},
+    {"name": "default", "label": "Default or model's", "field": "default", "align": "right"},
+    {"name": "unit", "label": "File unit", "field": "unit", "align": "left"},
+    {"name": "reset", "label": "", "field": "reset", "align": "right"},
+]
+
+# The table's body: a group row per item, a row per change, and one row for an item that does not
+# load. The buttons report to the server through the table's own events.
+CHANGE_BODY = r"""
+<q-tr v-if="props.row.group" :props="props" class="group-row">
+  <q-td colspan="100%"><span class="group-title">{{ props.row.item }}</span></q-td>
+</q-tr>
+<q-tr v-else-if="props.row.broken" :props="props">
+  <q-td colspan="100%">
+    <q-btn flat dense no-caps class="refused" :label="props.row.text"
+      @click="() => $parent.$emit('problems')" />
+  </q-td>
+</q-tr>
+<q-tr v-else :props="props">
+  <q-td key="mark" :props="props">
+    <span class="changed" aria-hidden="true">{{ props.row.mark }}</span>
+    <span class="sr-only">{{ props.row.word }}</span>
+  </q-td>
+  <q-td key="field" :props="props">
+    <q-btn flat dense no-caps :label="props.row.field" :title="'Open ' + props.row.field"
+      @click="() => $parent.$emit('open', props.row)" />
+  </q-td>
+  <q-td key="value" :props="props" class="changed">{{ props.row.value }}</q-td>
+  <q-td key="default" :props="props" class="muted">{{ props.row.default }}</q-td>
+  <q-td key="unit" :props="props" class="muted">{{ props.row.unit }}</q-td>
+  <q-td key="reset" :props="props">
+    <q-btn flat dense no-caps label="Reset" data-control="reset"
+      :aria-label="'Reset ' + props.row.field + ' of ' + props.row.item"
+      @click="() => $parent.$emit('reset', props.row)" />
+  </q-td>
+</q-tr>
+"""
 
 
 class Views(Protocol):
@@ -111,7 +166,7 @@ class _Frame:
         self.panel = panel if panel in PANELS else "queue"
         self.suite_buttons: dict[str, ui.button] = {}
         self.rail_box: ui.column
-        self.changes_box: ui.column
+        self.changes_table: ui.table
         self.changed_label: ui.label
         self.view: ui.element
         self.molecule_built = False
@@ -136,7 +191,7 @@ class _Frame:
         self.confirm_then: Callable[[], object] = lambda: None
         self.glossary_dialog: ui.dialog
         self.about_dialog: ui.dialog
-        self._listed: list[tuple[str, tuple[Change, ...]]] | None = None
+        self._listed: list[tuple[str, tuple[Change, ...] | None]] | None = None
         self._problems: tuple[Problem, ...] | None = None
         self.fold_button: ui.button
         self.dark: ui.dark_mode
@@ -166,7 +221,7 @@ class _Frame:
     # -- what the page shows of the project ---------------------------------
 
     # Loading every item is the costly part, so a page builds each list once.
-    def listed(self) -> list[tuple[str, tuple[Change, ...]]]:
+    def listed(self) -> list[tuple[str, tuple[Change, ...] | None]]:
         project = self.shell.bench.project
         if self._listed is None:
             self._listed = [] if project is None else listed_changes(project)
@@ -417,7 +472,7 @@ class _Frame:
 
     def title_bar(self) -> None:
         bench = self.shell.bench
-        changed = sum(len(found) for _, found in self.listed())
+        changed = self.changed_count()
         chords = commands.bindings(self.shell.keys)
         with ui.row().classes("titlebar items-center no-wrap"):
             for menu in commands.MENUS:
@@ -605,30 +660,71 @@ class _Frame:
                     with ui.tab_panel("problems"):
                         self.problems_list()
 
-    def changes_list(self) -> None:
-        with ui.column().classes("w-full").props("data-control=changes-list") as self.changes_box:
-            self.changes_rows()
+    def changed_count(self) -> int:
+        return sum(len(found) for _, found in self.listed() if found is not None)
 
-    def changes_rows(self) -> None:
-        groups = self.listed()
-        if not groups:
-            ui.label("No value is away from its default.")
-        for item, found in groups:
-            kind, name = item.split("/")
-            ui.label(item).classes("rail-heading")
+    def change_rows(self) -> list[dict[str, object]]:
+        figures = int(str(self.shell.settings.value("significant_figures")))
+        style: Style = (
+            "powers" if self.shell.settings.value("number_style") == "powers" else "prefixes"
+        )
+        rows: list[dict[str, object]] = []
+        for item, found in self.listed():
+            rows.append({"key": item, "group": True, "item": item})
+            if found is None:
+                text = "not counted: it does not load; open Problems"
+                rows.append({"key": f"{item}#broken", "broken": True, "item": item, "text": text})
+                continue
             for change in found:
-                mark = "◇" if change.kind == "override" else "◆"
-                other = "model" if change.kind == "override" else "default"
+                unit = _unit(change.path)
                 was = change.model if change.kind == "override" else change.default
-                with ui.row().classes("items-center no-wrap"):
-                    ui.label(f"{mark} {change.path} = {change.value}").classes("changed")
-                    ui.label(f"{other}: {'none' if was is None else was}").classes("muted")
-                    ui.button(
-                        "Reset",
-                        on_click=lambda _, k=kind, n=name, p=change.path: self.ask_reset(k, n, p),
-                    ).props(
-                        f"flat dense no-caps data-control=reset aria-label='Reset {change.path}'"
-                    )
+                rows.append(
+                    {
+                        "key": f"{item}#{change.path}",
+                        "item": item,
+                        "field": change.path,
+                        "mark": "◇" if change.kind == "override" else "◆",
+                        "word": "override" if change.kind == "override" else "changed",
+                        "value": shown(change.value, unit, figures=figures, style=style),
+                        "default": shown(was, unit, figures=figures, style=style),
+                        "unit": symbol(unit),
+                    }
+                )
+        return rows
+
+    def changes_list(self) -> None:
+        self.changes_table = (
+            ui.table(
+                columns=CHANGE_COLUMNS,
+                rows=self.change_rows(),
+                row_key="key",
+                pagination={"rowsPerPage": 0},
+            )
+            .props(
+                "dense flat hide-pagination wrap-cells data-control=changes-list "
+                'no-data-label="No value is away from its default."'
+            )
+            .classes("changes-table w-full")
+        )
+        self.changes_table.add_slot("body", CHANGE_BODY)
+        self.changes_table.on("reset", self.on_reset)
+        self.changes_table.on("open", self.on_open_field)
+        self.changes_table.on("problems", lambda: self.show_panel("problems"))
+
+    def on_reset(self, event: events.GenericEventArguments) -> None:
+        kind, name = split_reference(str(event.args["item"]))
+        self.ask_reset(kind, name, str(event.args["field"]))
+
+    def on_open_field(self, event: events.GenericEventArguments) -> None:
+        item = str(event.args["item"])
+        kind, _ = split_reference(item)
+        project = self.shell.bench.project
+        if project is not None and project.current != item:
+            project.open_item(item)
+            self.rail_box.clear()
+            with self.rail_box:
+                self.rail_items()
+        ui.navigate.to(f"/{ITEM_SUITES[kind]}?field={event.args['field']}")
 
     def ask_reset(self, kind: str, name: str, path: str) -> None:
         self.confirm(
@@ -649,10 +745,9 @@ class _Frame:
             return
         self.shell.queue.log.append(f"reset {path} of {kind}/{name}")
         self._listed = None
-        self.changed_label.text = f"{sum(len(found) for _, found in self.listed())} changed"
-        self.changes_box.clear()
-        with self.changes_box:
-            self.changes_rows()
+        self.changed_label.text = f"{self.changed_count()} changed"
+        self.changes_table.rows = self.change_rows()
+        self.changes_table.update()
 
     def problems_list(self) -> None:
         bench = self.shell.bench

@@ -267,3 +267,21 @@ body .nicegui-footer.frame-footer {
   border: 1px solid var(--line);
   border-radius: 3px;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.changes-table {
+  background: transparent;
+}
+.group-row .group-title {
+  font-weight: 600;
+}
+.changes-table .q-btn {
+  min-height: 0;
+  padding: 0 var(--gap);
+}
