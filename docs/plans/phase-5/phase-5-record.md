@@ -693,9 +693,9 @@ The supplied rows of *What the author supplies*:
 | Comments on the screens and mockups | WP5.01 | WP5.01 waits |
 | Answers in the design round on organisation and look (S21) | WP5.01 | WP5.01 waits |
 
-## Amended 10 November 2026 (§8.2.38 AN3 to AN5)
+## Amended 10 November 2026 (§8.2.38 AN3 to AN7)
 
-At WP5.15's plan the author ruled the settings list, the store's clean-up in WP5.15, the compute settings in WP5.19 and a run's rebuild after a full clean-up in WP5.20. The three entries read:
+At WP5.15's plan the author ruled the settings list, the store's clean-up in WP5.15, the compute settings in WP5.19 and a run's rebuild after a full clean-up in WP5.20; at the plan's review, the store's lock and the suite shortcuts (AN6, AN7). The three entries read:
 
 > ### WP5.15 — The frame on Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)
 >

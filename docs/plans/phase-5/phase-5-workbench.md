@@ -197,17 +197,17 @@ the push gate and example 03 passed with the VER-62 walks unmoved and no new lay
 Live constraints: AL22 continues in WP5.16 and WP5.17; a sweep planned in Python resolves each member once to plan it
 and once beside its stored files, until a package re-keys them (this plan's *Out of scope*).
 
-### WP5.15 — The frame on Quasar's components (FR-27, FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9; §8.2.38 AN2, AN3, AN5)
+### WP5.15 — The frame on Quasar's components (FR-27, FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9; §8.2.38 AN2, AN3, AN5 to AN7)
 
 The frame rebuilt from the components NiceGUI ships through Quasar (AJ1): the application layout, the activity bar and
 the project rail as drawers, the bottom panel as the footer, the rail a tree with the project's name at its head and in
 the tab's title, the icon font, suites as sub-pages that keep the 3D view, and the tokens fed into Quasar's colour
-variables. Five suites in their *Build* and *Use* groups, Physics empty until WP5.18. The palette opens as one input and
-lists matches by title and keyword, one row active and moved by the arrow keys, a command that cannot run disabled with
+variables. Five suites in their *Build* and *Use* groups, their shortcuts following the bar (AN7), Physics empty until WP5.18. The
+palette opens as one input and lists matches by title and keyword, one row active and moved by the arrow keys, a command that cannot run disabled with
 its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
 searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212). The list is
 AN3's, a registry that a later package or a plugin extends (AN2). The store gains its size cap and two clean-up
-actions, one for what no run uses and one for every result, each entry removed whole (AN5; §5.3.2's NOTE). The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
+actions, one for what no run uses and one for every result, each entry removed whole and none while a run in any program holds the store (AN5, AN6; §5.3.2's NOTE). The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
 landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
 headings, dialogs and render states. A 2WCD render state, walked once and cached (AJ8). In `np-gui`, `impeccable`'s
 critique joins the review, its quality floor is read before a screen is built, and a design file derived from
