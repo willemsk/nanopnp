@@ -20,13 +20,9 @@ electro-osmotic flow rate. It is built around three rules:
 - **The model is data and configuration.** The fitted corrections live in data files, and
   classical PNP-NS is ePNP-NS with its corrections switched off, not a second code path.
 
-!!! warning "Pre-alpha: v0.5.0 is released"
-    The solver core, the case file, the command line, parameter sweeps, provenance, the desktop
-    shell, the geometry pipeline from a PDB structure to a mesh, the charge pipeline that
-    protonates the structure and deposits its charge on the mesh, and the Python interface are
-    delivered. v0.5.0 is the last tagged release; v0.6 is in progress. Nothing here is a validated
-    release yet, and the comparison against the paper's published results gates v0.7, the Phase 6
-    release.
+!!! warning "Pre-alpha"
+    The comparison against the paper's published results gates v0.7, the Phase 6 release. What
+    each version delivered is in the [release notes](_generated/project/changelog.md).
 
 ## Where to start
 
@@ -46,6 +42,6 @@ The specification names three kinds of user (§2.4). **Method developers** scrip
 the physics, and need full introspection. **Collaborating computational scientists** drive
 reproducible, case-file runs and sweeps from the command line. **Experimental nanopore
 laboratories** want a desktop application: choose a pore, set the salt and the voltage, and get a
-prediction. The first two are served today. The third is served by the desktop shell from a
-development install. A double-clickable Windows build of the packaging probe has been confirmed on
-a real desktop; a bundled shell and installers come later.
+prediction. The first two are served today. The third is served by the Qt shell of v0.5
+(`nanopnp-gui`). v0.6 replaces it with the browser workbench, `nanopnp gui`; the package WP5.21
+removes Qt and rewrites the [Desktop shell](guide/desktop.md) page.

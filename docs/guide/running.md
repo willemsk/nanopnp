@@ -16,6 +16,9 @@
 | `nanopnp validate case case.yaml` | Checks a case as a run would, without meshing or solving it |
 | `nanopnp validate …` | The Tier-3 COMSOL comparison harness |
 | `nanopnp env` | Reports the version, the data locations and the store |
+| `nanopnp gui` | Serves the browser workbench on 127.0.0.1; needs the `gui` extra ([reference](../_generated/reference/cli.md#nanopnp-gui)) |
+| `nanopnp project new\|import\|embed\|export` | Creates, fills, copies out or packs a project folder ([reference](../_generated/reference/cli.md#nanopnp-project)) |
+| `nanopnp store prune` | Looks after the artefact store ([reference](../_generated/reference/cli.md#nanopnp-store)) |
 
 Every option is in the generated [command-line reference](../_generated/reference/cli.md).
 

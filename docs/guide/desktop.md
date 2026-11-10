@@ -11,12 +11,10 @@ It needs the `gui` extra (PySide6). It opens the case you name. A case it cannot
 standard error with the diagnostic and exit code `nanopnp run` would give, not opened into an empty
 form.
 
-!!! note "v0.2: a development install"
-    In v0.2, run the shell from a development install (`uv run nanopnp-gui case.yaml`) or a pip
-    install with the `gui` extra. A double-clickable Windows bundle of the packaging probe is built
-    and self-tested by CI on every push, and it has been confirmed to open and draw on a real
-    desktop (§8.2 criterion 4). Installers for all three platforms come
-    after v1.0.
+!!! note "The Qt shell of v0.5"
+    This page describes the Qt shell of v0.5 (`nanopnp-gui`). v0.6 replaces it with the browser
+    workbench, `nanopnp gui`; the package WP5.21 removes Qt and rewrites this page. The workbench's
+    design is on [Workbench design](../design/workbench.md).
 
 ## The seven panels
 

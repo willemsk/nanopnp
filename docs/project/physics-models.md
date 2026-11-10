@@ -1,5 +1,8 @@
 # Adding a physics model
 
+This page is about the registered model class. A physics model file (`models.physics`,
+`nanopnp/physics-model/v0.6`) names one of these classes with its switches and values.
+
 A physics model is one class and one registration (FR-20, QR-14). The geometry, mesh, charge,
 solver, post-processing, sweep, provenance and interface layers read what the model declares and
 nothing else, so a model added this way runs from a case file to the report with no other edit.
@@ -28,6 +31,9 @@ what they admit.
 | `transport` | stage 11, the ladder, the GUI | Whether it is reached as a `TransportModel` |
 | `reports_newton` | stage 10 | Whether its `solve` takes a Newton `callback` |
 | `unread` | `resolve`, `require_runnable` | The case paths the model does not read; setting any of these to a non-default value is refused (PHY-21, §5.4.3) |
+
+The declaration names no outputs: an output states what it needs of a declaration, and
+`provided` in `post/outputs.py` offers those whose needs it meets (§8.2.32 AH1).
 
 **The built model** satisfies the `PhysicsModel` protocol: its `name` (the registered name), its
 `fields`, `species` (empty for one field), `boundary_conditions`, `scales` (the NUM-09 scale set),
@@ -69,7 +75,9 @@ assign a solid differently.
 
 **The class.** `PoissonModel` is a frozen dataclass carrying the electrolyte (for `ε_r,f⁰` and the
 temperature of the scale set), the concentration, the element order, the fluid pattern and
-`solid_permittivities`. Its `residual_form` is the stiffness term less the source:
+`solid_permittivities`. Its `residual_form` is the stiffness term less the source. The snippet is
+abridged: `PoissonModel.residual_form` in `physics/models.py` also takes the surface charge and
+checks the element order.
 
 ```python
 def residual_form(
@@ -103,7 +111,8 @@ Three conventions carry over to any model:
 data. The source is then integrated by the same form as the operator, as the coupled models carry
 `ρ̃_pore` inside their residual.
 
-**The builder and the declaration.**
+**The builder and the declaration.** Abridged: the live `poisson` registration in
+`physics/models.py` passes the electrostatic models' shared switches and coefficients.
 
 ```python
 register_model(

@@ -30,7 +30,8 @@ mesh through the `inputs:` block skips them, and a run walks these:
 | 12 | report | the exported fields, if asked for |
 
 For a case carrying a `structure:` section, stage 1, `structure`, reads a PDB or mmCIF file and an optional trajectory,
-superposes the frames, finds the Cₙ axis and puts it on z at r = 0. Stage 2, `density`, deposits
+superposes the frames, finds the Cₙ axis and puts it on z at r = 0. Protonation runs next, before
+stage 2, so a pH change moves the density, the contour and the mesh. Stage 2, `density`, deposits
 each frame's atoms as a density map on a 3D grid and averages the frames. Stage 3, `symmetry`,
 reduces that map to (r, z) and reports how far it is from Cₙ-symmetric. Stage 4, `contour`, draws
 the pore wall as the map's isolevel contour, conditions it, and gates it against the radius of

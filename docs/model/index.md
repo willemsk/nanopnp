@@ -12,10 +12,12 @@ nanopnp's model is documented by its two normative records, rendered here **verb
 
 This page restates no equation, and neither does the rest of this documentation. Summaries of this
 model circulate that are wrong: the wall function's sign, the steric flux's sign and several
-printed coefficients have all been copied incorrectly. `knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md` and the specification's
-§4.6 record the errata in the original sources (six rows in §4.6, grouped as five in the knowledge file), with the arithmetic. Where the printed sources and
-the reference model report disagree, the model report governs. Read the equations in the records
-themselves.
+printed coefficients have all been copied incorrectly. [The errata
+concept](../_generated/model/knowledge/01-physics-epnpns/08-errata-in-the-source-with-the-arithmetic.md)
+and the specification's
+[§4.6](../_generated/model/specification/04-physics.md#46-errata-in-the-source-material) record the
+six errata in the original sources, numbered alike, with the arithmetic. Where the printed sources
+and the reference model report disagree, the model report governs. Read the equations there.
 
 ## Where each case-file switch is specified
 

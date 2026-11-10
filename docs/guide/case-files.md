@@ -29,7 +29,8 @@ outputs: [current, transport_numbers]
 ```
 
 That is a complete case, but it does **not** solve the validated model. Each correction's schema
-default is `none`, so a case that names no correction solves classical PNP-NS. Its manifest says so
+default, the value a case gets when it names nothing, is `none`; the validated run names
+`willems2020_nacl` for each, as the reference's *validated default* column shows. So a case that names no correction solves classical PNP-NS. Its manifest says so
 by listing every correction as a deviation. To solve ePNP-NS, name the corrections, as [example
 01](../_generated/examples/01-quickstart.md) does.
 
@@ -44,7 +45,9 @@ by listing every correction as a deviation. To solve ePNP-NS, name the correctio
 | `numerics` | Element orders, the nonlinear and linear solvers, the continuation ladder, stabilisation, the wall-distance field, and the sizes of a generated mesh (`numerics.mesh`) |
 | `outputs` | Which quantities to report: `current`, `transport_numbers`, `eof_rate`, `rectification`, `analyte_force`, `fields` |
 | `structure`, `geometry` | The geometry pipeline: the structure file and its symmetry, the density map, the contour, the membrane and the reservoir, or `geometry.pore`, an idealised pore that stage 6 meshes. A `structure:` case walks every stage. See [Structures and trajectories](structures.md) and [From a structure to a mesh](geometry.md) |
-| `charge` | Stage 7 on a structure: the pH, force field and titration of the protonation, the smearing of the deposit, and the two FR-15 switches, the ion-exclusion shell and the derived dielectric. See [From a structure to a charge](charge.md) |
+| `charge` | Stage 7 on a structure: the pH, force field and titration of the protonation, a residue's pinned state (`edits`), the smearing of the deposit, and the two FR-15 switches, the ion-exclusion shell and the derived dielectric. See [From a structure to a charge](charge.md) |
+| `models` | The molecular, continuum and physics model files a study is merged over. See the [case-file reference](../_generated/reference/case-file.md#models) |
+| `variables` | Named values and expressions that a leaf of the case may name. See [§5.3.1's `variables:` NOTE](../_generated/model/specification/05-software-design/03-1-case-file.md) |
 
 ## Validation
 

@@ -24,7 +24,8 @@ axes:
 - `base` is a case file, relative to the sweep document.
 - Each axis varies one dotted case-file path over a list of `values`. An axis may instead give
   `assignments`, a list of mappings that move several paths together. That is how an ablation
-  switches a set of corrections at once: see `docs/sweeps/phase1-reference.sweep.yaml`.
+  switches a set of corrections at once: see
+  [`docs/sweeps/phase1-reference.sweep.yaml`](https://github.com/willemsk/nanopnp/blob/main/docs/sweeps/phase1-reference.sweep.yaml).
 - The points are the product of the axes. Each one is a complete case, validated before anything is
   solved. A misspelt path is refused, naming the component that does not exist. A value of the wrong
   type is refused, naming the point. A point the solver would refuse fails when the plan is built,
@@ -62,6 +63,10 @@ processes, each pinned to one BLAS thread. It then writes the dataset: `dataset.
 members failed**. At the corners of a hard envelope, non-convergence is an expected result, and the
 dataset records each member's own exit class. Pass `--fail-fast` to stop at the first failure
 instead.
+
+Each member is a run of its own: its row in the dataset names its run directory and its manifest's
+hash, so its provenance is that run's ([Provenance and deviations](provenance.md)), and `nanopnp
+reproduce <the member's directory>` re-solves it as it does any run.
 
 ## Running a sweep on a cluster
 

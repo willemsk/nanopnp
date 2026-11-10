@@ -35,13 +35,9 @@ uv run nanopnp env
 ```
 
 The `gmsh` mesher backend remains in its optional extra (`nanopnp[gmsh]`, included by `uv sync --all-extras`)
-and is never a default end-user dependency (CON-10). `uv` manages Python dependencies but cannot install
-system packages. On Linux, the Gmsh wheel dynamically links native OpenGL and X11 libraries:
-
-- **Arch Linux:** `sudo pacman -S glu libxft libxinerama libxcursor`
-- **Debian / Ubuntu:** `sudo apt-get install -y --no-install-recommends libglu1-mesa libxft2 libxinerama1 libxcursor1`
-
-Without these system packages, importing `gmsh` fails with an `OSError` (`libGLU.so.1: cannot open shared object file`).
+and is never a default end-user dependency (CON-10). On Linux it needs system packages that `uv` cannot
+install; [Choosing the mesher of a generated mesh](guide/meshes.md#choosing-the-mesher-of-a-generated-mesh)
+lists them.
 
 In a checkout, put `uv run` in front of every command in this documentation: `uv run nanopnp run
 case.yaml`.

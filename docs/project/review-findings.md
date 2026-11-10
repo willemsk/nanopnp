@@ -3,7 +3,7 @@ findings:
   prefix: REV
   status: open
   areas: [coupling, performance, verification, documentation, physics, numerics, interface, process,
-    provenance, tooling]
+    provenance, tooling, efficiency]
 ---
 
 # Review findings
