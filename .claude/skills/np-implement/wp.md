@@ -64,7 +64,8 @@ and `completed` when its commit lands; a deferred item's task is `deleted`, its 
 remembers a pass, so you can split a gated tree into several commits.
 
 An item that changes a screen (`src/nanopnp/gui/`, the front end, `docs/design/`) runs `/np-gui render
-<target>` and reads each changed screen before its commit. A page error or a failed check stops the
+<target>` and reads each changed screen before its commit; before it builds the screen it reads the
+`impeccable:impeccable` craft floor, where the host has the plugin (`/np-gui`). A page error or a failed check stops the
 item.
 
 Write the tests of an item with the item, from the plan's *Verification* rows. The plan commits no
