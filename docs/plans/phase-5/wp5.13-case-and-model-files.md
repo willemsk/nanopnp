@@ -1,6 +1,6 @@
 # WP5.13 — Case and model files
 
-**Status: planned, not started.** Planned 10 November 2026 on `main` (`ae01061`). It inherits §8.2.36 AL22 and AL23,
+**Status: delivered, 10 November 2026.** Planned 10 November 2026 on `main` (`ae01061`). It inherits §8.2.36 AL22 and AL23,
 and CODE_REVIEW_036's candidates 1 and 5 with their corrections C0 to C1.5 and C5.1, settled with the author on 6 and
 7 November 2026.
 
@@ -220,10 +220,22 @@ first component. `_body(location)` returns the mapping whole. `_problems_of` cal
 - [x] ffa9bcc 5. `src/nanopnp/io/models.py`, `src/nanopnp/io/defaults.py`, `src/nanopnp/api/project.py`,
   `tests/tier1/test_models.py`: typed model files and the split (D4, D5); done when row 4 and FR-32's and FR-34's rows
   pass. **Executor:** main.
-- [ ] 6. `.claude/hooks/gate.sh run` and the strict documentation build, since items 2 and 3 change §5.3.1 and
+- [x] 51a4c40 6. `.claude/hooks/gate.sh run` and the strict documentation build, since items 2 and 3 change §5.3.1 and
   docstrings: row 5. **Executor:** main.
 - [ ] 7. The records of *Implementation details*; FR-39's and FR-25's Appendix A rows name rows 1 to 4; Outcome notes;
   the phase plan's heading; `current.md`. Done when the review says so. **Executor:** main.
+
+
+> **Outcome — the swap branch rebases.** Row 2 holds a study's relative override absolute after a swap-only `with_`
+> and after a swap with an edit, and `substitute(case, {})` keeps it as written (e756024).
+
+> **Outcome — the header goes to no layer.** `split_case_layers` skips `schema`, `name` and `models`, so
+> `tests/tier1/test_models.py:split_case` writes the study's header itself, and `Project._split` drops its two pops;
+> the project's import tests pass unchanged (ffa9bcc).
+
+> **Outcome — nothing moved.** The push gate passed in 227 s at 51a4c40 with the VER-62 walks of examples 01 and 02
+> unmoved, no re-pin, no new layering edge and `SPLIT_BOUND` holding; the strict documentation build passed with
+> `mkdocs.yml` unchanged.
 
 ### Verification
 

@@ -1,24 +1,24 @@
 # Current work
 
-Updated 10 November 2026 (WP5.13 planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 10 November 2026 (WP5.13 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 Phase 4 is released. Phase 5's library steps, the physics model, the frame and the three packages on the written
-knowledge are merged. The first of two tidy-ups is planned: the library reads a case and a model file in one place
-each, and nothing a user computes moves. Then the second tidy-up and the screens: about 60 sessions and 55 to 110
+knowledge are merged. The first of two tidy-ups awaits review: the library reads a case and a model file in one
+place each, and nothing a user computes moved. Then the second tidy-up and the screens: about 60 sessions and 55 to 110
 agent hours remain.
 
-**Your call.** Approve the tidy-up's plan; it asks you nothing, since you settled its designs on 6 and 7 November. Adopt two measuring tools or not (the trial recommends neither).
+**Your call.** Merge the tidy-up after its review; it asks you nothing, since you settled its designs on 6 and 7 November. Adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.12 merged
   (tags `.10` to `.12` unpushed). Then WP5.14 and the shell, WP5.15 to WP5.22 (§8.2.36).
-  **WP5.13** [planned](phase-5/wp5.13-case-and-model-files.md): one case reader, one substitution, one input-path seam
-  (REV-217), a model file carrying its body (REV-219); no key moves (AL22). Next `/np-implement wp 5.13`.
+  **WP5.13** [delivered](phase-5/wp5.13-case-and-model-files.md): one case reader, one substitution, one input-path
+  seam (REV-217), a model file carrying its body (REV-219); no key moved (AL22). Next `/np-ship wp 5.13`.
   host: claude-code.
 
 ## Not to be re-decided
