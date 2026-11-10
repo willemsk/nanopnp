@@ -198,9 +198,9 @@ AM14 REV-229.
 - [x] 89c27d9 9. `docs/` (D1, D2): AUD-230 first (AL13); done when the strict build passes and D9's SHALL count is 517.
   **Executor:** main; AUD-249's levels on `general-purpose`, Haiku
 - [x] 10. Compaction checkpoint. **Executor:** main
-- [ ] 11. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
+- [x] 3227166 11. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
   commit's gate passes. **Executor:** main
-- [ ] 12. Compaction checkpoint. **Executor:** main
+- [x] 12. Compaction checkpoint. **Executor:** main
 - [ ] 13. The source checklist (D5): REV-227 and its section, the author's round on the six (AM18), the confirmed
   edits, the two git rows; done when each row records its verdict or "not checked yet". **Executor:** main
 - [ ] 14. Compaction checkpoint. **Executor:** main
