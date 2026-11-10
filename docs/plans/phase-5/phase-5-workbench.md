@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.13 merged (`v0.6.0-alpha.13`); the clean-up WP5.14 delivered, awaiting `/np-ship`, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.14 merged (`v0.6.0-alpha.14`); WP5.15, the frame, planned, then the suites WP5.16 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -18,7 +18,7 @@ mismatch. A tidying could move a stored result; each checks every stored fingerp
 viewer may redraw slower than 200 ms; it is timed on a computer with a graphics card, and if the viewer itself is the
 cost, the line applies to the workbench's own share.
 
-**Your call.** Which settings exist beyond the four sections (appearance and accessibility; keyboard and editing guards; runs and storage; units and numbers), after the frame package's research. Whether to
+**Your call.** Whether to
 adopt either measuring tool the tools package tries, on its report. Six audit findings to check against the source
 papers, asked in one round during the knowledge package. The colleague who tries the workbench, named by the close.
 
@@ -187,8 +187,7 @@ resolves only its point and parent (D2.3); `Session._walk` and `Session._member`
 `pipeline/forecast.py` moves into `pipeline/run.py` (D6.2). The designs and corrections C2.1 to C2.4 and C6.1 bind.
 VER-62 unmoved; VER-64's forecast agrees with the walk. Tag `v0.6.0-alpha.14`.
 
-**Delivered 10 November 2026** ([the plan](wp5.14-sweep-planning-and-the-walks-keying.md)); tag `v0.6.0-alpha.14`
-once merged. REV-220 and REV-221 fixed. `_Walk.keyed` and `_Walk.stored` key a stage and read the store for the run,
+**Merged 10 November 2026** ([the plan](wp5.14-sweep-planning-and-the-walks-keying.md)); tag `v0.6.0-alpha.14`. REV-220 and REV-221 fixed. `_Walk.keyed` and `_Walk.stored` key a stage and read the store for the run,
 `stored_upstream` and the forecast, which moved into `pipeline/run.py`; `stored_upstream` keys a session's own stages
 (FR-27, VER-64). A plan holds its members keyed on their directory and resolves them again where it moves;
 `plan_sweep` plans in memory and writes its files once; a point and its parent are taken where the plan holds them
@@ -198,7 +197,7 @@ the push gate and example 03 passed with the VER-62 walks unmoved and no new lay
 Live constraints: AL22 continues in WP5.16 and WP5.17; a sweep planned in Python resolves each member once to plan it
 and once beside its stored files, until a package re-keys them (this plan's *Out of scope*).
 
-### WP5.15 — The frame on Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)
+### WP5.15 — The frame on Quasar's components (FR-27, FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9; §8.2.38 AN2, AN3, AN5)
 
 The frame rebuilt from the components NiceGUI ships through Quasar (AJ1): the application layout, the activity bar and
 the project rail as drawers, the bottom panel as the footer, the rail a tree with the project's name at its head and in
@@ -206,9 +205,9 @@ the tab's title, the icon font, suites as sub-pages that keep the 3D view, and t
 variables. Five suites in their *Build* and *Use* groups, Physics empty until WP5.18. The palette opens as one input and
 lists matches by title and keyword, one row active and moved by the arrow keys, a command that cannot run disabled with
 its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
-searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212); the plan
-surveys how COMSOL, ParaView, ChimeraX and VS Code arrange their preferences, compute and network included, and puts the
-list to the author. The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
+searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212). The list is
+AN3's, a registry that a later package or a plugin extends (AN2). The store gains its size cap and two clean-up
+actions, one for what no run uses and one for every result, each entry removed whole (AN5; §5.3.2's NOTE). The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
 landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
 headings, dialogs and render states. A 2WCD render state, walked once and cached (AJ8). In `np-gui`, `impeccable`'s
 critique joins the review, its quality floor is read before a screen is built, and a design file derived from
@@ -249,7 +248,8 @@ The prototype round on 2WCD settles the charge screen's design with its function
 models; Study setup with each model's exposed values first and *More values* (AJ5) over the overrides of WP5.05; Sweep,
 with variables and the forecast's warning of WP5.07; Charge on the mesh, a residue and the charge map linked both ways,
 with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
-record written into the project (REV-206). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
+record written into the project (REV-206), and the Compute settings, solves at once and threads per solve, each run's
+record stating its thread count (AN1, AN4). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
 machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
 `v0.6.0-alpha.19`.
 
@@ -259,7 +259,7 @@ Library step first: the difference of two runs' fields over the overlap of their
 either lacks the point (AG6). Then, after the prototype round on 2WCD (AJ8), the results explorer and its tiles: a field
 drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
 Probes and cuts are linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on
-one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
+one scale or as their difference. A run whose solution the store's clean-up removed rebuilds it when viewed (AN5). Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
 
 ### WP5.21 — The guided route, Qt's removal and documentation increment 5 (FR-36; REV-134; S13, S17)
 
@@ -282,10 +282,9 @@ and `CITATION.cff`. Its last commit takes `v0.6.0` alone (§8.4.1).
 |---|---|---|
 | 5 | The order of the tool phases against Phase 6 | **Author**, at the close (S7) |
 | 8 | Who observes QR-10 | **Author**, by the close (S24) |
-| 10 | Which settings exist beyond the four sections, compute and network among them | **Author**, at WP5.15's plan, from its survey of comparable tools (AJ9) |
 | 14 | Whether xenon or import-linter is adopted | **Author**, on WP5.10's report (AL7, AL27), [delivered](../../../knowledge/07-software-stack/25-complexity-and-import-contract-tools.md): it recommends neither |
 
-Settled rows: see §8.2.17 to §8.2.37 and [the record](phase-5-record.md).
+Settled rows: see §8.2.17 to §8.2.38 and [the record](phase-5-record.md).
 
 ## What the author supplies
 
@@ -322,7 +321,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.12, the knowledge base | 1 | VER-03's sodium cap at 10⁻³ (AM13); VER-45; `.claude/scripts/audit/markers.py` names no missing test; each `[verified]` claim names its source; 517 SHALLs unchanged |
 | WP5.13, case and model files | 1, 2 | VER-62 unmoved; VER-61 and VER-72 with no new edge; FR-39's study, model and variable tests through the one reader |
 | WP5.14, sweeps and keying | 1, 2 | VER-62 unmoved; VER-64's forecast against the walk; a planned sweep resolves each member once (REV-221) |
-| WP5.15, the frame | 1 | VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`, not a Tier 1 walk); a setting declared once reaches the page, its search, the palette and its file |
+| WP5.15, the frame | 1 | VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`, not a Tier 1 walk); a setting declared once reaches the page, its search, the palette and its file; a cleaned store rebuilds what it removed and never reads half an entry (FR-27) |
 | WP5.16, Molecular | 1, 2 | REV-121's cavity axis against a known axis (VER-48); VER-62 unmoved by REV-218; VER-78 |
 | WP5.17, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; MOD-03's edge gone (VER-61); VER-78 |
 | WP5.18, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |

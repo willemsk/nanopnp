@@ -692,3 +692,41 @@ The supplied rows of *What the author supplies*:
 | The answers to the sweep's design round and the cut line | The second `/np-plan amend 5` | **Supplied 3 November 2026** (AG1 to AG7) |
 | Comments on the screens and mockups | WP5.01 | WP5.01 waits |
 | Answers in the design round on organisation and look (S21) | WP5.01 | WP5.01 waits |
+
+## Amended 10 November 2026 (§8.2.38 AN3 to AN5)
+
+At WP5.15's plan the author ruled the settings list, the store's clean-up in WP5.15, the compute settings in WP5.19 and a run's rebuild after a full clean-up in WP5.20. The three entries read:
+
+> ### WP5.15 — The frame on Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)
+>
+> The frame rebuilt from the components NiceGUI ships through Quasar (AJ1): the application layout, the activity bar and
+> the project rail as drawers, the bottom panel as the footer, the rail a tree with the project's name at its head and in
+> the tab's title, the icon font, suites as sub-pages that keep the 3D view, and the tokens fed into Quasar's colour
+> variables. Five suites in their *Build* and *Use* groups, Physics empty until WP5.18. The palette opens as one input and
+> lists matches by title and keyword, one row active and moved by the arrow keys, a command that cannot run disabled with
+> its reason (REV-208, REV-211). The settings are one declared list with a user and a project scope, a page with a
+> searchable section list beside the panel, a *Modified only* filter, and REV-204's guards (AJ9; REV-212); the plan
+> surveys how COMSOL, ParaView, ChimeraX and VS Code arrange their preferences, compute and network included, and puts the
+> list to the author. The changed count opens the dense table grouped by model and study (AJ7; REV-214). The frame's
+> landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-207's efficiencies, and REV-210's icons,
+> headings, dialogs and render states. A 2WCD render state, walked once and cached (AJ8). In `np-gui`, `impeccable`'s
+> critique joins the review, its quality floor is read before a screen is built, and a design file derived from
+> `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
+
+> ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
+>
+> The prototype round on 2WCD settles the charge screen's design with its function (AJ8; REV-215). Overview of the three
+> models; Study setup with each model's exposed values first and *More values* (AJ5) over the overrides of WP5.05; Sweep,
+> with variables and the forecast's warning of WP5.07; Charge on the mesh, a residue and the charge map linked both ways,
+> with its colour bar, axes and dark map (FR-33; REV-205, REV-209); Runs, a run's convergence unfolded in the queue, its
+> record written into the project (REV-206). `upto` on reproduce (REV-41). The 200 ms redraw is measured on the author's
+> machine with a GPU (AG7; criterion 6). Q24 to Q26 and Q28 to Q36 move here; VER-44 and VER-60 as restated. Tag
+> `v0.6.0-alpha.19`.
+
+> ### WP5.20 — The Analysis suite (FR-32's comparisons; FR-33; REV-28, REV-30; AG6)
+>
+> Library step first: the difference of two runs' fields over the overlap of their fluid domains, in `post/`, masked where
+> either lacks the point (AG6). Then, after the prototype round on 2WCD (AJ8), the results explorer and its tiles: a field
+> drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
+> Probes and cuts are linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on
+> one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.

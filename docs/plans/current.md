@@ -1,25 +1,23 @@
 # Current work
 
-Updated 10 November 2026 (WP5.14 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 10 November 2026 (WP5.15 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5's library steps, the physics model, the frame, the three packages on the written
-knowledge and the first of two tidy-ups are merged. The second tidy-up is built and waits for its review: a
-three-point sweep planned from Python prepares its points six times where it took thirteen, and nothing a user computes
-moved. Then the screens: about 60 sessions and 55 to 110 agent hours remain.
+Phase 4 is released. Phase 5's library steps, the first frame, the written knowledge and both tidy-ups are merged.
+The frame's rebuild is planned, with the settings you ruled today and two store clean-up buttons. Then the five
+suites, the guided route and the close: about 60 sessions and 55 to 110 agent hours remain.
 
-**Your call.** None for the second tidy-up until its review puts a finding to you. Adopt two measuring tools or not (the trial recommends neither).
+**Your call.** Approve the frame's plan after its review. Adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.13 merged
-  (tag `.13` unpushed). Then the shell, WP5.15 to WP5.22 (§8.2.36).
-  **WP5.14** [delivered](phase-5/wp5.14-sweep-planning-and-the-walks-keying.md) on `ccr-7c47497f-c6db5h`: members
-  keyed on their directory and resolved where held (REV-221), one keying walk (REV-220); no key moved (AL22). Next
-  `/np-ship wp 5.14`, tag `v0.6.0-alpha.14`. host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.14 merged
+  (`v0.6.0-alpha.14`). Then the shell, WP5.15 to WP5.22 (§8.2.36).
+  **WP5.15** [planned](phase-5/wp5.15-the-frame-on-quasars-components.md) on `claude/relaxed-hypatia-2s4fyk`
+  (§8.2.38). Next `/np-plan wp 5.15 review`, then `/np-implement wp 5.15`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -36,7 +34,8 @@ moved. Then the screens: about 60 sessions and 55 to 110 agent hours remain.
   (§8.2.31 AG1 to AG5). **Example 07 is re-pinned** (AG8). **A charge edit sits on the titratable group;
   a radius edit is a scale; a variant is never a deviation** (AG9 to AG11). **A study overrides any model value** (AG12).
   **An output states its needs of a model; a model provides every output whose needs it meets** (§8.2.32 AH1).
-  **Settings select and modify colour themes; a user's theme sets its contrast** (§8.2.33 AI1).
+  **Settings select and modify colour themes; a user's theme sets its contrast** (§8.2.33 AI1). **Threads per solve alone
+  may move a result; the store cleans the unused or all** (§8.2.38 AN1, AN5).
 - **Physics is a third model with its own suite; models declare exposed values; Quasar's components build the
   frame; suites are prototyped on 2WCD first; `impeccable` serves `np-gui`** (§8.2.34 AJ1 to AJ10).
 - **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
@@ -52,7 +51,8 @@ moved. Then the screens: about 60 sessions and 55 to 110 agent hours remain.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw** on the author's GPU, WP5.19 (AF4; AG7; AJ10).
 - **Rulings on a residual cycle (H6) or drift (I4)**; **Tier 3's archived PQRs**.
-- **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-218 WP5.16's, REV-170 WP5.17's (AG1; AJ10; AL22).
+- **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-218 WP5.16's, REV-170 WP5.17's (AG1; AJ10; AL22); the
+  compute settings WP5.19's and a cleaned run's rebuild WP5.20's (AN4, AN5).
 
 ## On demand
 
