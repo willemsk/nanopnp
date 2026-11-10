@@ -46,4 +46,4 @@ isotropically graded, as the reference was; boundary layers are an optional late
 ---
 
 [^esi]: Electronic supplementary information of the paper.
-[^comsol-report]: COMSOL model report (5.4).
+[^comsol-report]: COMSOL model report (5.4), §1.1 Parameters, pp. 3–5, for the permittivity parameters, and §2.4, §2.5, §2.7, §3 and §4, pp. 66–142, for the settings settled there; pages as in [the document map](01-document-map.md), the PDF as [the overview](00-overview.md) says.

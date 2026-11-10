@@ -31,7 +31,7 @@ Condensed from the 162-page model report. Full detail is in
 | Stabilisation, Laminar Flow | Streamline and crosswind diffusion on, isotropic off |
 | Discretisation | Potential quadratic, concentrations quadratic, velocity and pressure both linear (P1+P1, not Taylor–Hood) |
 | Assembly integration orders | Crosswind terms order 6, streamline order 4, most other weak terms order 4, order 2 in the flow interface |
-| Current extraction | Variational reaction flux at integration order 4: `F*(z_cpos*tds.ntflux_cpos + z_cneg*tds.ntflux_cneg)` over an electrode boundary |
+| Current extraction | Variational reaction flux at integration order 4: `F*(z_cpos*tds.ntflux_cpos + z_cneg*tds.ntflux_cneg)` over the cis reservoir boundary, the grounded one; the paper's main text names it and the report does not print it (`04-physics-settings.md` C.10) |
 | Permittivity parameters | `epsr_ms = 30.08`, `epsr_alpha = 11.5` (Gavish NaCl) |
 | Sweep | Parameter switch over 5 physics cases × 35 bias values × 21 salt concentrations = 3,675 solves |
 | Runtime | 41 h |

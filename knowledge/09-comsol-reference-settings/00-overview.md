@@ -27,7 +27,7 @@ verified:
 
 Source: **`clya_epnp-ns_report.pdf`**, the COMSOL Multiphysics auto-generated model report for the
 2D-axisymmetric ePNP-NS model of ClyA-AS, distributed as the ESI of Willems et al., *Nanoscale*
-**12**, 16775–16795 (2020), DOI `10.1039/D0NR03114C`. Read in full from the project store.
+**12**, 16775–16795 (2020), DOI `10.1039/D0NR03114C`. Read in full; the PDF is published with the article's ESI.
 
 | Field | Value |
 |---|---|
@@ -52,4 +52,4 @@ was off.
 
 ---
 
-[^comsol-report]: COMSOL model report (5.4).
+[^comsol-report]: COMSOL model report (5.4), its table of contents and last page, p. 162; pages as in [the document map](01-document-map.md), the PDF as the Source line above says.
