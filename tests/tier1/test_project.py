@@ -11,6 +11,7 @@ from test_models import split_case
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
+from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.project import PROJECT_FILENAME
 from nanopnp.pipeline.run import read_run
 from nanopnp.validation.charged_tube import write_charged_tube
@@ -199,3 +200,28 @@ def test_fr34_the_changed_list_holds_every_value_away_from_its_default_and_every
         remaining.discard(path)
         assert {c.path for c in project.changes("study", "tube-study")} == remaining
     assert project.study("tube-study")["bias_V"] == 0.05
+
+
+def test_fr32_a_case_with_an_expression_at_a_models_value_imports_as_the_same_case(
+    tmp_path: Path,
+) -> None:
+    raw = yaml.safe_load(QUICKSTART.read_text(encoding="utf-8"))
+    raw["variables"] = {"v": {"value": 50, "unit": "mV"}, "zz": {"value": 1}}
+    raw["boundary_conditions"]["bias_V"] = "v"
+    raw["electrolyte"]["species"][0]["z"] = "zz"
+    path = tmp_path / "case.yaml"
+    path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    case = Case.load(path)
+    project = Project.create(tmp_path / "project")
+    study = project.import_case(case)
+    physics = yaml.safe_load(project.path("physics", study).read_text(encoding="utf-8"))
+    assert physics["boundary_conditions"]["bias_V"] == 0.05, "the model holds the number"
+    assert physics["electrolyte"]["species"][0]["z"] == 1
+    written = yaml.safe_load(project.path("study", study).read_text(encoding="utf-8"))
+    assert written["boundary_conditions"]["bias_V"] == "v", "the study keeps the expression"
+    assert written["electrolyte"]["species"][0]["z"] == "zz"
+    imported = project.study(study)
+    assert CaseArtefact(imported).hash == CaseArtefact(case).hash
+    edited = imported.with_({"variables.v": {"value": 80, "unit": "mV"}})
+    assert edited.boundary_conditions.bias_V == 0.08, "a variable edit still reaches the field"
+    assert project.problems() == ()

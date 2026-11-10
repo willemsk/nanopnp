@@ -303,7 +303,11 @@ class Project:
         raw = yaml.safe_load(source.text) if source.text else None
         if not isinstance(raw, dict):
             raw = case.model_dump(by_alias=True, mode="json", exclude_defaults=True)
-        layers = split_case_layers(raw, pinned=frozenset(case.expressions))
+        layers = split_case_layers(
+            raw,
+            pinned=frozenset(case.expressions),
+            resolved=case.model_dump(by_alias=True, mode="json"),
+        )
         paths: dict[str, str] = {}
         for kind in MODEL_KINDS:
             layer = layers[kind]
@@ -454,7 +458,7 @@ class Project:
             if kind == "study":
                 self.study(name)
             else:
-                read_model_file(kind, location)
+                read_model_file(kind, location, rebase=False)
         except (CaseValidationError, FileNotFoundError, ValueError, KeyError) as error:
             where_path = _error_path(error)
             refused = _owner_suite(where_path) if where_path and kind == "study" else suite

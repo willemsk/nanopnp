@@ -1,4 +1,4 @@
-"""The workbench project file and the paths an item of a project names (FR-32)."""
+"""The workbench project file, its folders and the names its items are referred to by."""
 
 from __future__ import annotations
 

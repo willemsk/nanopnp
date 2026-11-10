@@ -40,6 +40,10 @@ VER-72). The [plan](docs/plans/phase-5/wp5.13-case-and-model-files.md) records t
     for the project, and `mapping_changes` skips the header and `models:` (FR-34, FR-39).
   - Asked to swap a model or set a variable a case does not have, the refusal says to write `models:` or
     `variables:` in the case file.
+- **Fixed**:
+  - A case writing an expression at a value a model owns, such as `bias_V: v` or an ion's `z`, imports into a
+    project: the model holds the resolved number and the study the expression, where the import was refused
+    (REV-233; FR-32, §5.3.5).
 
 ## [0.6.0-alpha.12]
 

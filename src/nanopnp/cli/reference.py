@@ -138,7 +138,7 @@ _SECTION_INTRO: dict[str, list[str]] = {
         "`concentration` and `bias` for physics, `pH` for molecular and `size_scale`",
         "for continuum. A relative path is read beside the file that names it. The",
         "run writes the one complete case it resolved to, which has no `models:` and",
-        "runs as it is; a reader that does not resolve models refuses the block. A",
+        "runs as it is; every reader of a case file resolves the block. A",
         "sweep axis may range over `models.molecular`, `models.continuum` and",
         "`models.physics`.",
         "",
