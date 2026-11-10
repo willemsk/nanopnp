@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nanopnp.core.stages import describe, walk_order
-from nanopnp.pipeline.forecast import Identity, keyed_walk
+from nanopnp.pipeline.run import Identity, keyed_walk
 
 if TYPE_CHECKING:
     from nanopnp.io.store import Store

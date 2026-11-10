@@ -232,3 +232,35 @@ def test_fr27_a_function_stage_is_keyed_by_its_code_and_its_inputs(tmp_path: Pat
         session.run(case, upto="listing")
     with pytest.raises(ValueError, match="elements"):
         session.sweep(case, axis="bias_V", values=[0.0, 0.1], workers=2)
+
+
+def test_fr27_the_upstream_lookup_keys_own_stages_as_the_walk_does(tmp_path: Path) -> None:
+    from nanopnp.api.case import Case
+    from nanopnp.api.session import Session
+    from nanopnp.pipeline.run import stored_upstream
+
+    quickstart = (
+        Path(__file__).resolve().parents[2] / "examples" / "01-quickstart" / "quickstart.case.yaml"
+    )
+    case = Case.load(quickstart)
+
+    def elements(mesh: Artefact) -> dict[str, object]:
+        return {"keys": sorted(mesh.summary)}
+
+    session = Session(tmp_path / "store", write=False)
+    session.register_stage(elements)
+    run = session.run(case, upto="elements")
+    expected = {record.name: record.hash for record in run.stages if record.name != "elements"}
+    before = sorted(session.store.root.rglob("*"))
+    base = case.source.base
+    for given in (None, resolve(case, base=base)):
+        upstream = stored_upstream(
+            case,
+            store=session.store,
+            feeding="elements",
+            stages=session.own_stages,
+            base=base,
+            resolved=given,
+        )
+        assert {name: artefact.hash for name, artefact in upstream.items()} == expected
+    assert sorted(session.store.root.rglob("*")) == before

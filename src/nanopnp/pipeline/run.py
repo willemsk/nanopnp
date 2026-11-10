@@ -7,18 +7,20 @@ import logging
 import shutil
 import tempfile
 import time
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from nanopnp.core.hashing import Canonicalisable, canonical, content_hash, decode_floats
 from nanopnp.core.stages import (
     ArtefactHook,
     CancelToken,
     ContributesDeviations,
+    Forecastable,
     MissingExtraError,
+    NotBuilt,
     Progress,
     SolveHook,
     SolveReporting,
@@ -65,14 +67,17 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.resolved import ResolvedCase
 
 __all__ = [
+    "FORECAST_SCHEMA",
     "RUN_RECORD_FILENAME",
     "RUN_SCHEMA",
+    "Identity",
     "MissingUpstreamError",
     "RecordedRun",
     "RunResult",
     "StageRecord",
     "UnknownStageError",
     "input_files",
+    "keyed_walk",
     "offered",
     "open_run",
     "read_run",
@@ -85,6 +90,8 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 _RUN_KEY_SCHEMA = "nanopnp/run-key/v0.5"
+
+FORECAST_SCHEMA = "nanopnp/forecast/v0.6"
 
 WORKSPACE_DIRNAME = "tmp"
 
@@ -582,6 +589,47 @@ class _Walk:
             name, workspace=directory, overwrite_workspace=self.overwrite_workspace, **extra
         )
 
+    def keyed(self, name: str) -> Stage:
+        # Built to compute a key only: no workspace, so no scratch directory is made.
+        if name in self.own:
+            return self.own[name]
+        if self.describe(name).takes_store:
+            return create(name, store=self.store)
+        return create(name)
+
+    def stored(self, name: str, key: Artefact) -> tuple[bool, Artefact | None]:
+        if self.describe(name).key_is_artefact:
+            return self.store.contains(key), key
+        found = self.store.get(key.schema, key.hash)
+        return found is not None, found
+
+
+def _keying_walk(
+    resolved: ResolvedCase, store: Store, stages: Mapping[str, FunctionStage] | None
+) -> _Walk:
+    return _Walk(
+        document=resolved.document,
+        resolved=resolved,
+        store=store,
+        arguments={},
+        workspace=None,
+        only=True,
+        own=dict(stages or {}),
+    )
+
+
+def _given(
+    document: CaseDocument, resolved: ResolvedCase | None, base: Path | None
+) -> ResolvedCase:
+    if resolved is None:
+        return resolve(document, base=base)
+    if resolved.document is not document:
+        raise ValueError(
+            f"the resolved case {resolved.name!r} was not resolved from the document "
+            f"{document.name!r} passed with it"
+        )
+    return resolved
+
 
 def offered(
     name: str,
@@ -749,7 +797,7 @@ def _resolve_stage(  # noqa: PLR0913
         walk.store.misses += 1
         return walk.store.put(key)
     if substitute:
-        found = walk.store.get(key.schema, key.hash)
+        _, found = walk.stored(name, key)
         if found is None:
             raise MissingUpstreamError(
                 f"stage {name!r} produces {key.schema} {key.short_hash}, which is not in the "
@@ -1019,6 +1067,7 @@ def run_document(  # noqa: PLR0913
     on_solve: SolveHook | None = None,
     on_artefact: ArtefactHook | None = None,
     stages: Mapping[str, FunctionStage] | None = None,
+    resolved: ResolvedCase | None = None,
 ) -> RunResult:
     """Walk the pipeline for one validated case and return what it produced.
 
@@ -1055,6 +1104,9 @@ def run_document(  # noqa: PLR0913
         Called after each stage with its artefact's schema, hash and whether the store held it.
     stages
         Stages of one's own, by name, walked after every stage of the pipeline.
+    resolved
+        The document already resolved against ``base``, so it is not resolved again; another
+        document's is refused.
 
     Raises
     ------
@@ -1066,7 +1118,7 @@ def run_document(  # noqa: PLR0913
     target = store if store is not None else Store()
     walk = _Walk(
         document=document,
-        resolved=resolve(document, base=base),
+        resolved=_given(document, resolved, base),
         store=target,
         arguments=dict(arguments or {}),
         workspace=Path(workspace) if workspace is not None else None,
@@ -1097,7 +1149,13 @@ def run_document(  # noqa: PLR0913
 
 
 def stored_upstream(
-    document: CaseDocument, *, store: Store, feeding: str = "solve", base: Path | None = None
+    document: CaseDocument,
+    *,
+    store: Store,
+    feeding: str = "solve",
+    base: Path | None = None,
+    stages: Mapping[str, FunctionStage] | None = None,
+    resolved: ResolvedCase | None = None,
 ) -> dict[str, Artefact]:
     """Return the artefacts a walk hands feeding, read from the store without running a stage.
 
@@ -1107,24 +1165,127 @@ def stored_upstream(
         Where the payload-writing stages' artefacts are looked up.
     base
         The directory a relative path of the case is read against.
+    stages
+        Stages of one's own, keyed as the walk keys them.
+    resolved
+        The document already resolved against ``base``, so it is not resolved again; another
+        document's is refused.
     """
-    artefacts: dict[str, Artefact] = {}
-    resolved = resolve(document, base=base)
-    for name in selected_stages(resolved, feeding)[:-1]:
+    walk = _keying_walk(_given(document, resolved, base), store, stages)
+    for name in selected_stages(walk.resolved, feeding, stages=walk.own)[:-1]:
         # Built as the walk builds it: a mesh named by its store hash is keyed from the store.
-        stage = create(name, store=store) if describe(name).takes_store else create(name)
-        key = stage.key(StageInputs(resolved=resolved, upstream=offered(name, artefacts)))
-        if describe(name).key_is_artefact:
-            artefacts[name] = key
+        key = walk.keyed(name).key(walk.inputs(name))
+        if walk.describe(name).key_is_artefact:
+            walk.artefacts[name] = key
             continue
-        found = store.get(key.schema, key.hash)
+        _, found = walk.stored(name, key)
         if found is None:
             raise MissingUpstreamError(
                 f"stage {name!r} of case {document.name!r} produces {key.schema} "
                 f"{key.short_hash}, which is not in the store at {store.root}"
             )
-        artefacts[name] = found
-    return artefacts
+        walk.artefacts[name] = found
+    return walk.artefacts
+
+
+class Identity(NamedTuple):
+    """What a forecast knows of one stage: the hash it keys by, and whether a walk builds it."""
+
+    hash: str
+    built: bool
+
+
+class _NotBuiltPayload(Mapping[str, Path]):
+    # The payload of an artefact no stage has built: any read of it is a forecast's question.
+
+    def __init__(self, stage: str) -> None:
+        self._stage = stage
+
+    def _refuse(self) -> NotBuilt:
+        return NotBuilt(self._stage)
+
+    def __getitem__(self, key: str) -> Path:
+        raise self._refuse()
+
+    def __contains__(self, key: object) -> bool:
+        raise self._refuse()
+
+    def __iter__(self) -> Iterator[str]:
+        raise self._refuse()
+
+    def __len__(self) -> int:
+        raise self._refuse()
+
+
+def keyed_walk(
+    resolved: ResolvedCase,
+    *,
+    store: Store,
+    stages: Mapping[str, FunctionStage] | None = None,
+    planned: set[str],
+) -> dict[str, Identity]:
+    """Return each stage's identity for ``resolved``, running none of them.
+
+    A stage is built unless the store or an earlier point of the same forecast holds its
+    hash. ``planned`` collects the hashes the forecast builds, across points.
+    """
+    walk = _keying_walk(resolved, store, stages)
+    identities: dict[str, Identity] = {}
+    for name in selected_stages(resolved, None, stages=walk.own):
+        description = walk.describe(name)
+        stage = walk.keyed(name)
+        inputs = walk.inputs(name)
+        try:
+            key = stage.key(inputs)
+        except NotBuilt:
+            digest = _forecast_digest(name, stage, description, inputs, resolved, identities)
+            built = digest not in planned
+            planned.add(digest)
+            identities[name] = Identity(digest, built)
+            walk.artefacts[name] = Artefact(
+                schema=description.artefact_schema,
+                parameters={"forecast": digest},
+                payload=_NotBuiltPayload(name),
+            )
+            continue
+        held, stored = walk.stored(name, key)
+        walk.artefacts[name] = stored if stored is not None else _standing_in(key, name)
+        built = not held and key.hash not in planned
+        if not held:
+            planned.add(key.hash)
+        identities[name] = Identity(key.hash, built)
+    return identities
+
+
+def _forecast_digest(
+    name: str,
+    stage: Stage,
+    description: StageDescription,
+    inputs: StageInputs,
+    resolved: ResolvedCase,
+    identities: Mapping[str, Identity],
+) -> str:
+    # A stage that forecasts itself names everything its key reads; any other is
+    # taken to read its case and every input it declares.
+    if isinstance(stage, Forecastable):
+        parameters: Mapping[str, Canonicalisable] = stage.forecast_parameters(inputs)
+        read: dict[str, str] = {}
+    else:
+        case = identities.get("case")
+        parameters = {"case": case.hash if case else CaseArtefact(resolved.document).hash}
+        read = {
+            needed: identities[needed].hash for needed in description.inputs if needed in identities
+        }
+    return content_hash(FORECAST_SCHEMA, {"stage": name, "parameters": dict(parameters)}, read)
+
+
+def _standing_in(key: Artefact, name: str) -> Artefact:
+    return Artefact(
+        schema=key.schema,
+        parameters=key.parameters,
+        inputs=key.inputs,
+        payload=_NotBuiltPayload(name),
+    )
 
 
 def _walk(  # noqa: PLR0913
