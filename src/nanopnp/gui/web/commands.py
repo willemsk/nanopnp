@@ -92,6 +92,11 @@ BROWSER_KEPT: frozenset[str] = frozenset(
         "Ctrl+Shift+N",
         "Ctrl+Shift+W",
         "Ctrl+Shift+P",
+        "Ctrl+Shift+Q",
+        "Ctrl+Q",
+        "Ctrl+L",
+        "Ctrl+PageUp",
+        "Ctrl+PageDown",
         *(f"Ctrl+{digit}" for digit in range(1, 10)),
     }
 )

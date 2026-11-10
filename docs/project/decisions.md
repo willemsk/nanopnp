@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,337. By source: history ruling 338; plan decision row 675; REV row 233; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,340. By source: history ruling 338; plan decision row 675; REV row 236; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 537; open 5; session, own call 792; session, put to the author 3.
+By decider: author 537; open 5; session, own call 795; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1273,6 +1273,9 @@ By decider: author 537; open 5; session, own call 792; session, put to the autho
 | REV-231 | session, own call | `docs/project/review-findings.md` |  | WP5.12 | axis.py's comment sends the stage-1 margins to an index | WP5.12 | open |
 | REV-232 | session, own call | `docs/project/review-findings.md` |  | WP5.12 | Three statements the physics reviewer doubted at WP5.12 | WP5.12 | open |
 | REV-233 | session, own call | `docs/project/review-findings.md` |  | WP5.13 | Importing a case leaves a model without a value the study writes as an expression | WP5.13 | fixed |
+| REV-234 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The frame shows a tool's 3D view to the left of its settings | WP5.15 review | open |
+| REV-235 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | Design questions the frame's review leaves for the suites' prototype rounds | WP5.15 review | open |
+| REV-236 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice | WP5.15 review | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

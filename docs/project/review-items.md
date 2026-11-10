@@ -2689,7 +2689,7 @@ The WP5.08 review found: the settings dialog has no sticky footer and the colour
 
 **Deferred** to WP5.15, whose settings page follows one declared list (§8.2.34 AJ9) and whose changed table shows each unit (AJ7).
 
-**Fixed** by WP5.15 (1c2416e, 230af47, 7b052a8): the settings are a page with no footer to lose, its colours a section of the theme's setting; each shortcut has its own clear; Reset, *Reset layout* and *Quit* ask first while the `confirm` setting is on, and *Quit* names the running entries; the changed table shows each value in the user's figures with the file's unit, and an empty default reads "not set"; an item that does not load is a "not counted" row that leads to *Problems*. A value counts as changed only where it is away from its default (`io/defaults.py:changes`).
+**Fixed** by WP5.15 (1c2416e, 230af47, 7b052a8): the settings are a page with no footer to lose, its colours a section of the theme's setting; each shortcut has its own clear; Reset, *Reset layout* and *Quit* ask first while the `confirm` setting is on, and *Quit* names the running entries; the changed table shows each value in the user's figures with the file's unit, and an empty default reads "not set"; an item that does not load, or that the problems list refuses, is a "not counted" row that leads to *Problems*, outside the count. A value counts as changed only where it is away from its default (`io/defaults.py:changes`).
 
 ### REV-205: The Study page shows fixture names, and the charge screen lacks a colour bar and axes
 
@@ -2731,7 +2731,7 @@ The second WP5.08 screen review found: the activity bar has text only where the 
 
 **Deferred** to WP5.15, which rebuilds the frame (§8.2.34 AJ1, AJ10): the icons, headings, render states and the dialogs with a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
 
-**Fixed** by WP5.15 (5d0f934, 7b052a8, 93add84): each suite has its icon; suite and dialog titles are headings; the diamond is hidden from a screen reader beside its word; the colours show swatches; the glossary holds the design document's 26 terms and About is a dialog; the project dialogs list recent projects. `render_shell.py` renders a 2WCD project, the four project dialogs, the three menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density and tight spacing, the 3D background setting, a key being captured, a typed palette query, Glossary and About.
+**Fixed** by WP5.15 (5d0f934, 7b052a8, 93add84): each suite has its icon; suite and dialog titles are headings; the diamond is hidden from a screen reader beside its word; the colours show swatches under plain names; the glossary holds the design document's 26 terms and About is a dialog; the project dialogs list recent projects. `render_shell.py` renders a 2WCD project, the four project dialogs, the three menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density and tight spacing, the 3D background setting, a key being captured, a typed palette query, Glossary and About.
 
 ### REV-211: The palette opens as a full command list, not a bare input that suggests as you type
 
@@ -2992,3 +2992,46 @@ Probed at WP5.13's head and at `main` (`ae01061`) alike; WP5.13 moved the split 
 **Fixed** in WP5.13, as the author ruled on 10 November 2026: `split_case_layers` pins a leaf by prefix, as
 `study_layer` does, and gives the owning model the resolved number from the case it is passed as `resolved`; the
 study keeps the expression. §5.3.5 says so; `tests/tier1/test_project.py:test_fr32_a_case_with_an_expression_at_a_models_value_imports_as_the_same_case`.
+
+### REV-234: The frame shows a tool's 3D view to the left of its settings
+
+The WP5.15 `/np-gui review` (F8): the frame's view region comes before the sub-page in the main row, so on the charge
+screen the molecule is on the left and the tool's heading and settings on the right, in a fixed 560 × 420 box with
+empty space below it. WB-05 and WB-07 dock a tool's settings on the left of its live view.
+
+**Open.** The first suite with a view, WP5.16, settles the view region's place and size in its prototype round on 2WCD
+(§8.2.34 AJ8); the charge screen itself is WP5.19's (REV-209, REV-215).
+
+### REV-235: Design questions the frame's review leaves for the suites' prototype rounds
+
+The WP5.15 `/np-gui review` and `impeccable`'s critique (§8.2.34 AJ6) raised, beyond what WP5.15 fixed:
+
+- the problems list: one line per refusal that repeats the item and the file, opening the item rather than its field;
+  no ✕ on a refused item in the rail or before "failed" in the status line (F10);
+- the changed table: its headers "Default or model's" and "File unit", the unit written twice ("30 nm", then "nm"),
+  groups headed by `kind/name`, field names that do not look like links (F11);
+- the settings page: no marker of the section in view, the default not shown beside a changed value, the reset placed
+  after a long control, the theme's colours in a collapsed section, the swatches below the field's baseline (F12;
+  critique 9);
+- the project dialogs: a free path with no hint, no browse list, *Create* enabled on an empty field (refused on
+  accept), the same recent list in all four, no choice between copying and linking an import's inputs (FR-32), no
+  option to export the store (F13; doubt 4);
+- the menus show few chords and not F1 (F14); the Glossary has no search and no scroll cue (F16); the log has no times,
+  the queue's states no colour, and "to charge" is the pipeline's word (F17);
+- the title bar's count and palette button do not look like controls; the status line repeats the bottom panel's
+  tabs; the rail's items have no kind glyph or changed mark; the bottom panel has no grip or fold button (critique 7,
+  8, 10, 11).
+
+**Open**, a question for the author: each is put at the prototype round of the suite that first needs it, from WP5.16
+(§8.2.34 AJ8), with the screens in front of the author.
+
+### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
+
+The WP5.15 review's doubts: on macOS, Option+Shift+digit types a character into a focused field, and a browser may
+open its own help on F1 (the suite chords are the author's, §8.2.38 AN7); the per-key ✕ on the settings page resets a
+chord to its default, and no control unbinds a command, though `commands.bindings` accepts an empty chord; the
+glossary's 26 terms are written in `gui/web/glossary.py` and in the design document, and nothing checks that they agree.
+
+**Open.** The keyboard pass over the workbench, WP5.21 (QR-16), takes the chords and the unbinding; the glossary's
+single source is put to the author with it.
+

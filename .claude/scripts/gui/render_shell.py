@@ -70,15 +70,18 @@ EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
     ("menu-file", "/molecular", [MENU.format("file")]),
     ("menu-view", "/molecular", [MENU.format("view")]),
     ("menu-help", "/molecular", [MENU.format("help")]),
-    ("rail-folded", "/molecular", ["[data-control=rail-fold]"]),
     ("panel-queue", "/study?panel=queue", []),
     ("panel-log", "/study?panel=log", []),
-    ("settings-colours", "/settings?setting=theme", ["[data-control=theme-colours] .q-item"]),
     ("settings-background", "/settings?setting=viewer_background", []),
     ("settings-key-capture", "/settings?setting=keys", ["[data-control=key-project-new]"]),
+    ("palette-empty", "/molecular", ["[data-control=palette-open]"]),
     ("palette-query", "/molecular?palette=suite", []),
+    ("palette-keyword", "/molecular?palette=preferences", []),
     ("glossary", "/molecular?dialog=glossary", []),
     ("about", "/molecular?dialog=about", []),
+    # Last: the fold is saved in the project, so the light shot folds the rail and the dark one,
+    # after it, finds it folded (extra_entries).
+    ("rail-folded", "/molecular", ["[data-control=rail-fold]"]),
 )
 COMPACT = ("molecular", "settings", "changes")
 COMPACT_CLICKS = {"settings": ["[data-control=theme-colours] .q-item"]}
@@ -203,7 +206,13 @@ def extra_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[
     process, first = start("--state", "charged-tube")
     servers.append(process)
     return [
-        entry(f"shell-extra-{name}", first, path, scheme, click)
+        entry(
+            f"shell-extra-{name}",
+            first,
+            path,
+            scheme,
+            [] if name == "rail-folded" and scheme != SCHEMES[0] else click,
+        )
         for name, path, click in EXTRAS
         for scheme in SCHEMES
     ]
