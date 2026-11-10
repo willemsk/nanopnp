@@ -22,6 +22,29 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.14]
+
+WP5.14: sweep planning and the walk's keying, Phase 5's fourteenth package; tag `v0.6.0-alpha.14` once merged
+(§8.2.36 AL22; CODE_REVIEW_036's candidates 2 and 6; REV-220, REV-221). A sweep planned in Python resolves each
+member once, and one walk keys the run, the upstream lookup and the forecast. No artefact key, golden, layering edge
+or public name changes (VER-61, VER-62, VER-72). The
+[plan](docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md) records the work.
+
+- **Changed**:
+  - `pipeline/run.py` holds the one keying walk: `_Walk.keyed` builds a stage to compute its key without a
+    workspace and `_Walk.stored` reads the store; `stored_upstream`, the forecast's `keyed_walk` and the run's
+    substitution use them, and `pipeline/forecast.py` is gone (FR-27, FR-39).
+  - `stored_upstream` keys a session's own stages as the walk does and takes a case already resolved
+    (FR-27, VER-64).
+  - `build_plan` takes the base case in memory, so `plan_sweep` writes its files once, into the store, with no
+    staging directory (FR-39).
+- **Fixed**:
+  - A sweep from `plan_sweep` resolves each member once to plan it and once beside its stored files, and its
+    `forecast()` and `run()` read those members; `run_point` and the parent lookup take a member the plan holds
+    rather than resolving it again (REV-221; FR-39, §5.3.4).
+  - A plan moved to another directory resolves its members there, where it served members resolved beside the
+    first (REV-221; FR-39).
+
 ## [0.6.0-alpha.13]
 
 WP5.13: case and model files, Phase 5's thirteenth package; tag `v0.6.0-alpha.13` once merged (§8.2.36 AL22,
