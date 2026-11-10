@@ -274,7 +274,7 @@ before its wait.
   > `SuiteLayout`'s pixels land with the frame in item 4, which is their one reader.
 - [x] d74b9b3 3. `gui/web/commands.py`, `gui/web/screens.py` (D3, D5); done when the code and review say so. **Executor:**
   general-purpose on Sonnet
-- [ ] 4. `gui/web/frame.py`, `gui/web/theme.py`, `assets/frame.js`, `assets/frame.css`, `assets/workbench.css` (D1);
+- [x] 5d0f934 4. `gui/web/frame.py`, `gui/web/theme.py`, `assets/frame.js`, `assets/frame.css`, `assets/workbench.css` (D1);
   done when VER-78 (a) to (d) pass. **Executor:** main
 - [ ] 5. `gui/web/pages.py`, `assets/bridge.js`, VER-78's text (D2); done when VER-78 (a) to (d), (i) and (m) pass.
   **Executor:** main

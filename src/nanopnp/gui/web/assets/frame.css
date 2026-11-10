@@ -139,11 +139,13 @@ body .nicegui-footer.frame-footer {
 }
 .main-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--pad);
   align-items: flex-start;
 }
-.view-region:empty {
-  display: none;
+.sub-page {
+  flex: 1 1 20rem;
+  min-width: 0;
 }
 .later {
   color: var(--muted);

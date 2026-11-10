@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import json
 import os
 import signal
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, Protocol
+from urllib.parse import parse_qs, urlsplit
 
-from nicegui import events, ui
+from nicegui import context, events, ui
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Problem, Project
@@ -20,9 +24,24 @@ from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench
 from nanopnp.io.defaults import Change
-from nanopnp.io.project import ITEM_SUITES, ItemKind, Suite, SuiteLayout
+from nanopnp.io.project import ITEM_SUITES, ItemKind, Suite, SuiteLayout, split_reference
 
-__all__ = ["frame", "listed_changes"]
+__all__ = ["Route", "Views", "current_suite", "frame", "listed_changes"]
+
+
+@dataclass(frozen=True)
+class Route:
+    """One path of the workbench: the suite it belongs to, and the view the frame shows beside it.
+
+    Parameters
+    ----------
+    view
+        ``molecule`` for the Mol* host the frame owns, built once and never rebuilt; else None.
+    """
+
+    suite: Suite
+    view: Literal["molecule"] | None = None
+
 
 KINDS: tuple[tuple[ItemKind, str], ...] = (
     ("molecular", "Molecular models"),
@@ -66,16 +85,30 @@ def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
     return listed
 
 
+class Views(Protocol):
+    """What a sub-page asks of the frame's view region."""
+
+    async def show_molecule(self, structure_url: str | None) -> None:
+        """Show the Mol* host, building it the first time, and mark the screen ready."""
+
+
 class _Frame:
-    def __init__(self, shell: Shell, suite: Suite, panel: str | None) -> None:
+    def __init__(
+        self, shell: Shell, routes: Mapping[str, Route], path: str, panel: str | None
+    ) -> None:
         self.shell = shell
-        self.suite = suite
-        project = shell.bench.project
-        layout = project.layout.get(suite, SuiteLayout()) if project else SuiteLayout()
-        self.layout = layout.model_copy(
-            update={"bottom_folded": layout.bottom_folded and not panel}
-        )
+        self.routes = routes
+        self.suite = self.route(path).suite
+        self.layout = self.suite_layout(self.suite)
+        if panel:
+            self.layout = self.layout.model_copy(update={"bottom_folded": False})
         self.panel = panel if panel in PANELS else "queue"
+        self.suite_buttons: dict[str, ui.button] = {}
+        self.rail_box: ui.column
+        self.changes_box: ui.column
+        self.changed_label: ui.label
+        self.view: ui.element
+        self.molecule_built = False
         self.drawer: ui.left_drawer
         self.tabs: ui.tabs
         self.dialog: ui.dialog
@@ -126,6 +159,57 @@ class _Frame:
     def go(self, path: str) -> Callable[[], object]:
         return lambda: ui.navigate.to(path)
 
+    def reload_to(self, path: str) -> None:
+        # A new project rebuilds the whole frame, so the browser loads the page afresh.
+        ui.run_javascript(f"window.location.assign({json.dumps(path)})")
+
+    # -- the path -----------------------------------------------------------
+
+    def route(self, path: str) -> Route:
+        bare = urlsplit(path).path.rstrip("/") or "/"
+        found = self.routes.get(bare)
+        if found is not None:
+            return found
+        return Route(current_suite(self.shell))
+
+    def suite_layout(self, suite: Suite) -> SuiteLayout:
+        project = self.shell.bench.project
+        return project.layout.get(suite, SuiteLayout()) if project else SuiteLayout()
+
+    def on_path(self, path: str) -> None:
+        ui.run_javascript("document.body.dataset.screenReady = '0'")
+        route = self.route(path)
+        if route.suite != self.suite:
+            self.suite = route.suite
+            self.layout = self.suite_layout(route.suite).model_copy(
+                update={"bottom_folded": self.layout.bottom_folded}
+            )
+            self.apply_layout()
+        self.mark_suite()
+        if route.view != "molecule":
+            self.view.set_visibility(False)
+        query = parse_qs(urlsplit(path).query)
+        if query.get("panel", [""])[0] in PANELS:
+            self.show_panel(query["panel"][0])
+        if query.get("palette"):
+            self.open_palette()
+        if query.get("dialog", [""])[0] == "settings":
+            self.overlay.open()
+
+    def mark_suite(self) -> None:
+        for identifier, button in self.suite_buttons.items():
+            if identifier == self.suite:
+                button.props('aria-current="page"')
+            else:
+                button.props(remove="aria-current")
+
+    async def show_molecule(self, structure_url: str | None) -> None:
+        """Show the frame's Mol* host, building it the first time, and mark the screen ready."""
+        self.view.set_visibility(True)
+        argument = "null" if structure_url is None else json.dumps(structure_url)
+        # A long timeout: Mol* builds in seconds on a machine with no GPU.
+        await ui.run_javascript(f"nano.ensure({argument})", timeout=60)
+
     def run(self, identifier: str) -> None:
         action = self.actions.get(identifier)
         if action is None:
@@ -160,7 +244,7 @@ class _Frame:
     def switch(self, project: Project) -> None:
         self.shell.bench = Workbench(project.name, project=project, queue=self.shell.queue)
         remember_project(project.root)
-        ui.navigate.to("/molecular")
+        self.reload_to("/molecular")
 
     def new_project(self, folder: Path) -> None:
         self.switch(Project.create(folder))
@@ -174,7 +258,7 @@ class _Frame:
             raise ValueError("open or create a project first")
         name = project.import_case(Case.load(path))
         self.shell.queue.log.append(f"imported {path.name} as study {name}")
-        ui.navigate.to("/study")
+        self.reload_to("/study")
 
     def export(self, destination: Path) -> None:
         project = self.shell.bench.project
@@ -324,7 +408,7 @@ class _Frame:
                 "flat no-caps data-control=changed-count"
             ):
                 ui.label("◆").classes("changed")
-                ui.label(f"{changed} changed")
+                self.changed_label = ui.label(f"{changed} changed")
             ui.button(
                 f"Command palette  {chords['palette']}".rstrip(), on_click=self.open_palette
             ).props("flat no-caps data-control=palette-open")
@@ -341,13 +425,14 @@ class _Frame:
                     for suite in SUITES:
                         if suite.group != group:
                             continue
-                        current = suite.id == self.suite
-                        ui.button(
-                            suite.title, icon=suite.icon, on_click=self.go(f"/{suite.id}")
-                        ).props(
-                            f"flat no-caps stack data-control=suite-{suite.id}"
-                            + (' aria-current="page"' if current else "")
-                        ).classes("suite-button")
+                        self.suite_buttons[suite.id] = (
+                            ui.button(
+                                suite.title, icon=suite.icon, on_click=self.go(f"/{suite.id}")
+                            )
+                            .props(f"flat no-caps stack data-control=suite-{suite.id}")
+                            .classes("suite-button")
+                        )
+        self.mark_suite()
 
     def separator(self, name: str, *, vertical: bool, value: int, limits: tuple[int, int]) -> None:
         label = "Resize the project rail" if vertical else "Resize the bottom panel"
@@ -361,41 +446,45 @@ class _Frame:
         )
 
     def rail(self) -> None:
-        bench = self.shell.bench
-        project = bench.project
         with ui.column().classes("rail gap-1").props("data-control=rail"):
             self.fold_button = ui.button(on_click=self.fold_rail).props(
                 "flat dense aria-label='Fold the project rail' data-control=rail-fold"
             )
-            if project is not None and project.current:
-                ui.label(project.current.split("/")[-1][:1].upper()).props(
-                    f'title="{project.current}"'
-                ).classes("q-mini-drawer-only")
-            with ui.column().classes("q-mini-drawer-hide w-full gap-1"):
-                if project is None:
-                    ui.label("No project open.").classes("muted")
-                    for identifier in ("project-new", "project-open"):
-                        ui.button(
-                            commands.command(identifier).title, on_click=self.actions[identifier]
-                        ).props(f"flat dense no-caps data-control={identifier}").classes("w-full")
-                    return
-                ui.label(project.current or "No item open").classes("rail-open")
-                for kind, title in KINDS:
-                    ui.label(title).classes("rail-heading")
-                    suite = ITEM_SUITES[kind]
-                    for name in project.items(kind):
-                        item = f"{kind}/{name}"
-                        ui.button(
-                            name, on_click=lambda _, i=item, s=suite: self.open_item(i, s)
-                        ).props(
-                            "flat dense no-caps"
-                            + (' aria-current="true"' if item == project.current else "")
-                        ).classes("rail-item list-row w-full")
+            with ui.column().classes("w-full gap-1") as self.rail_box:
+                self.rail_items()
+
+    def rail_items(self) -> None:
+        project = self.shell.bench.project
+        if project is not None and project.current:
+            ui.label(project.current.split("/")[-1][:1].upper()).props(
+                f'title="{project.current}"'
+            ).classes("q-mini-drawer-only")
+        with ui.column().classes("q-mini-drawer-hide w-full gap-1"):
+            if project is None:
+                ui.label("No project open.").classes("muted")
+                for identifier in ("project-new", "project-open"):
+                    ui.button(
+                        commands.command(identifier).title, on_click=self.actions[identifier]
+                    ).props(f"flat dense no-caps data-control={identifier}").classes("w-full")
+                return
+            ui.label(project.current or "No item open").classes("rail-open")
+            for kind, title in KINDS:
+                ui.label(title).classes("rail-heading")
+                suite = ITEM_SUITES[kind]
+                for name in project.items(kind):
+                    item = f"{kind}/{name}"
+                    ui.button(name, on_click=lambda _, i=item, s=suite: self.open_item(i, s)).props(
+                        "flat dense no-caps"
+                        + (' aria-current="true"' if item == project.current else "")
+                    ).classes("rail-item list-row w-full")
 
     def open_item(self, item: str, suite: str) -> None:
         project = self.shell.bench.project
         if project is not None:
             project.open_item(item)
+            self.rail_box.clear()
+            with self.rail_box:
+                self.rail_items()
         ui.navigate.to(f"/{suite}")
 
     def status_bar(self) -> None:
@@ -439,27 +528,29 @@ class _Frame:
                         self.problems_list()
 
     def changes_list(self) -> None:
-        with ui.column().classes("w-full").props("data-control=changes-list"):
-            groups = self.listed()
-            if not groups:
-                ui.label("No value is away from its default.")
-            for item, found in groups:
-                kind, name = item.split("/")
-                ui.label(item).classes("rail-heading")
-                for change in found:
-                    mark = "◇" if change.kind == "override" else "◆"
-                    other = "model" if change.kind == "override" else "default"
-                    was = change.model if change.kind == "override" else change.default
-                    with ui.row().classes("items-center no-wrap"):
-                        ui.label(f"{mark} {change.path} = {change.value}").classes("changed")
-                        ui.label(f"{other}: {'none' if was is None else was}").classes("muted")
-                        ui.button(
-                            "Reset",
-                            on_click=lambda _, k=kind, n=name, p=change.path: self.reset(k, n, p),
-                        ).props(
-                            "flat dense no-caps data-control=reset "
-                            f"aria-label='Reset {change.path}'"
-                        )
+        with ui.column().classes("w-full").props("data-control=changes-list") as self.changes_box:
+            self.changes_rows()
+
+    def changes_rows(self) -> None:
+        groups = self.listed()
+        if not groups:
+            ui.label("No value is away from its default.")
+        for item, found in groups:
+            kind, name = item.split("/")
+            ui.label(item).classes("rail-heading")
+            for change in found:
+                mark = "◇" if change.kind == "override" else "◆"
+                other = "model" if change.kind == "override" else "default"
+                was = change.model if change.kind == "override" else change.default
+                with ui.row().classes("items-center no-wrap"):
+                    ui.label(f"{mark} {change.path} = {change.value}").classes("changed")
+                    ui.label(f"{other}: {'none' if was is None else was}").classes("muted")
+                    ui.button(
+                        "Reset",
+                        on_click=lambda _, k=kind, n=name, p=change.path: self.reset(k, n, p),
+                    ).props(
+                        f"flat dense no-caps data-control=reset aria-label='Reset {change.path}'"
+                    )
 
     def reset(self, kind: str, name: str, path: str) -> None:
         project = self.shell.bench.project
@@ -471,7 +562,11 @@ class _Frame:
             ui.notify(str(error), type="negative")
             return
         self.shell.queue.log.append(f"reset {path} of {kind}/{name}")
-        ui.navigate.to(f"/{self.suite}?panel=changes")
+        self._listed = None
+        self.changed_label.text = f"{sum(len(found) for _, found in self.listed())} changed"
+        self.changes_box.clear()
+        with self.changes_box:
+            self.changes_rows()
 
     def problems_list(self) -> None:
         bench = self.shell.bench
@@ -510,14 +605,19 @@ class _Frame:
 @contextmanager
 def frame(
     shell: Shell,
-    suite: Suite,
+    routes: Mapping[str, Route],
     *,
     panel: str | None = None,
     palette: bool = False,
     dialog: str | None = None,
-) -> Iterator[None]:
-    """Build the frame around a suite's page; the page's own content is the ``with`` body."""
-    built = _Frame(shell, suite, panel)
+) -> Iterator[Views]:
+    """Build the frame once for the page; the ``with`` body builds the sub-pages it routes.
+
+    The frame follows the path as the sub-pages change it: the current suite, its layout and
+    the view region beside the sub-page.
+    """
+    router = context.client.sub_pages_router
+    built = _Frame(shell, routes, router.current_path, panel)
     ui.add_head_html(
         '<script src="/frame.js"></script><link rel="stylesheet" href="/frame.css">'
         f"<script>window.frameChords = {theme.script_json(commands.chords(shell.keys))};"
@@ -542,8 +642,14 @@ def frame(
     with ui.footer(elevated=False).classes("frame-footer q-pa-none column no-wrap"):
         built.bottom_panel()
         built.status_bar()
-    with ui.element("div").classes("suite-main"):
-        yield
+    with ui.element("div").classes("main-row suite-main"):
+        # The view region: one Mol* host, outside the sub-pages, so a route change keeps it.
+        with ui.element("div").classes("view-region") as built.view:
+            ui.element("div").props("id=mol data-control=molecule")
+        built.view.set_visibility(False)
+        with ui.element("div").classes("sub-page"):
+            yield built
+    router.on_path_changed(built.on_path)
     built.palette_dialog()
     built.overlay.build()
     built.apply_layout()
@@ -551,6 +657,16 @@ def frame(
         built.open_palette()
     if dialog == "settings":
         built.overlay.open()
+
+
+def current_suite(shell: Shell) -> Suite:
+    """Return the suite of the project's current item, Molecular where none is open."""
+    current = shell.bench.project.current if shell.bench.project else None
+    try:
+        kind, _ = split_reference(current or "")
+    except ValueError:
+        return "molecular"
+    return ITEM_SUITES[kind]
 
 
 def colours() -> None:
