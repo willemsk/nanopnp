@@ -2862,6 +2862,7 @@ user refused by the 10° axis rule takes one extra hop to the rule. WP5.11 chang
 citations in those messages and comments to §5.2's NOTEs, a prose-only change `same_tree.py` confirms
 (§8.2.11 L5).
 
+**Fixed** by WP5.12 item 11 (3227166): the messages and comments in those five files cite "section 5.2 NOTE on stage 1" or "on stage 2". `same_tree.py` cannot confirm a change inside a string literal, so `git diff -U0` showed that only the citations changed. The frame-specific refusal of a patched radius in `density/radii.py` keeps §5.3.1, which still states that rule.
 
 ### REV-227: The source checklist: six findings that rest on the ESI or the COMSOL report
 
@@ -2885,3 +2886,38 @@ shallow. In a full clone, each of the twelve hashes they name (3872426, 0ea0789,
 `<hash>:<path>` source in `knowledge/` (`git cat-file -e`, 10 November 2026).
 
 **Fixed** by WP5.12 item 13: each row has its verdict and its edit.
+
+### REV-228: The site's links from the project registers to the plans and reviews lead nowhere
+
+The site excludes `docs/plans/` and `docs/code_reviews/` (`mkdocs.yml`'s `exclude_docs`), so about 150
+links of `docs/project/` (the review and modularity registers, the modularity page) lead nowhere on the
+built site, while they resolve in the repository. `docs/scripts/generate.py` repoints such links to
+GitHub only in the pages it copies. Found by CODE_REVIEW_039 (AUD-14); WP5.12 makes no edit for it.
+
+**Accepted** (the author, 9 November 2026, §8.2.37 AM15): owned by WP5.21, which rewrites the guide and
+changes the site. The link check keeps checking the relative links meanwhile.
+
+### REV-229: Three checks the knowledge base proposed without a requirement
+
+Three ideas sat in the knowledge base as proposals, which `knowledge/00-orientation/04` keeps out of a
+concept: a print at solve time of `D_i/μ_i` against `V_T` (was `knowledge/02-electrokinetics-background/03`,
+AUD-357); an axial sweep of the force `F(z)` that would resolve the several minima the measured current
+levels imply (was `knowledge/05-analyte-and-forces/09`, AUD-192); and a test that `N_eo` depends only on
+the analyte's size and shape (was `knowledge/05-analyte-and-forces/10` item 10, AUD-192). WP5.12 removed
+them from the concepts (items 5 and 7), and this item keeps them.
+
+**Post-1.0** (the author, 9 November 2026, §8.2.37 AM14): visible to the planning of v1.0; no requirement
+asks for any of them now.
+
+### REV-230: The correction file's comments cite the wrong equation, count and cause
+
+`data/corrections/willems2020_nacl.yaml`'s header says "Thesis eq. 5.11 prints a minus sign"; the wall
+function is eq. 5.23 (AUD-341), which WP5.12 corrected in §4.6 and `knowledge/01`. The header announces
+"Four transcription traps" where §4.6 counts six errata. The wall function's `rationale` (lines 146-147)
+blames the near-wall dead zone on Simakov's negative form, where Pederson's floor causes it. Lines 33-34
+say the ESI writes `P₁` as "0.62e1"; the author found that the paper's SI prints 6.2 nm⁻¹ (REV-227), so
+the notation is at most the COMSOL report's.
+
+**Open**, decided by the WP5.12 plan (D3): the file's bytes are a key of stage 8's cache (VER-62), so a
+comment edit changes every cached result's key. The fix lands with the next package that changes that
+file for another reason; none is named yet.
