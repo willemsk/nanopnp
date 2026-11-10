@@ -158,6 +158,7 @@ class Session:
         on_solve: SolveHook | None = None,
         on_artefact: ArtefactHook | None = None,
         arguments: Mapping[str, Mapping[str, StageOption]] | None = None,
+        resolved: ResolvedCase | None = None,
     ) -> RunResult:
         from nanopnp.pipeline.run import run_document
 
@@ -179,6 +180,7 @@ class Session:
             on_solve=on_solve,
             on_artefact=on_artefact,
             stages=self._own,
+            resolved=resolved,
         )
 
     def open(self, directory: str | Path) -> RunResult:
