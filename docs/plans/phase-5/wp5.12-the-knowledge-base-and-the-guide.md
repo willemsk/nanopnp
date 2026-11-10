@@ -47,11 +47,11 @@ one Tier 1 test is tightened (AM13); every other item is done when the code and 
 | D2. Meaning | An edit lands without asking when it makes the text agree with the code, a test, a clause, a ruling or the source it cites; removes history, a spent statement or a duplicate; or adds a pointer, title, description or marker. AM13 to AM15 are the meaning changes. Any other change to a SHALL, a number the code or a test reads, or a decision stops the item and goes to the author. Where a finding's edit conflicts with a ruling or offers two, Grounding D2 picks | Ruled by the author (AL21; AM13 to AM15). Decided by the plan: the test of meaning, as WP5.11's D2 |
 | D3. Paths and data | No file is deleted, renamed or moved, and no anchor a link names changes (an explicit `{#id}` stays); a concept that would go is rewritten or reduced to a pointer. Nothing under `data/` changes: AUD-341's comment in the correction file waits as REV-230 | Decided by the plan: records link to concepts by path; the correction file's bytes key stage 8 (VER-62) |
 | D4. Markers | A thesis transcription takes `[verified][^thesis]`, its `.tex` locator kept inline, only where the thesis clone supports it; otherwise it says "(unverified)". A `[tested:]` marker stays on the sentence its test asserts; a measured number the test does not assert takes `[verified]` with its record's footnote. `markers.py` skips code spans; each of AL19's fifteen gets its footnote, "by arithmetic" with its source, or plain text | Ruled by the author (AL19). Decided by the plan: `knowledge/00-orientation/03` and `04` |
-| D5. The source checklist | Six rows, the findings that rest on the ESI or the COMSOL report (AUD-136, 225, 286, 327, 343, 346): REV-227, whose section is the checklist. Item 11 asks the author all six in one round; a confirmed row's edit lands there; a row not yet checked stays in REV-227 to the phase close. AUD-226 and AUD-326 rest on git history: the session fetches it and records whether each hash resolves | Ruled by the author (AL20; AM16, six rows; AM18, one round at item 11) |
+| D5. The source checklist | Six rows, the findings that rest on the ESI or the COMSOL report (AUD-136, 225, 286, 327, 343, 346): REV-227, whose section is the checklist. Item 13 (AM18's item 11, renumbered when the checkpoints were added) asks the author all six in one round; a confirmed row's edit lands there; a row not yet checked stays in REV-227 to the phase close. AUD-226 and AUD-326 rest on git history: the session fetches it and records whether each hash resolves | Ruled by the author (AL20; AM16, six rows; AM18, one round at item 11, now 13) |
 | D6. Code and tests | REV-226: a citation changes where its rule moved to §5.2's NOTEs on stages 1 and 2. AUD-216 and AUD-351 repoint two comments. AM13's target. Nothing else under `src/` or `tests/` | Ruled by the author (REV-226's acceptance; AM13) |
 | D7. Open items | REV-226 `fixed`. New, each section at item 9's `###`: REV-227 (D5), `fixed` once each row has a verdict, else `open`; REV-228, the site links, `accepted`, WP5.21 (AM15); REV-229, the three ideas, `post-1.0` (AM14); REV-230, the correction file's comment, `open` until a package that changes that file is named | Ruled by the author (AM14, AM15). Decided by the plan: REV-230 |
-| D8. The records | One commit per item, its AUD ids in the body. Item 12 adds one `wp512-<category>` disposition per finding and one commit row per category, re-runs `register.py` and `maps.py`, sets `holds-now.yaml`, re-runs `decisions.py`. Changelog `[0.6.0-alpha.12]` | Decided by the plan: as WP5.11's D6 |
-| D9. The counts | 517 SHALLs before item 2 and after item 9. `markers.py`: no missing test, no unfootnoted claim, no `verified:` difference. `links.py --anchors`, `duplicates.py`, `decisions.py --check`, the strict build; `same_tree.py` at item 10 | Decided by the plan: a silent failure gets a count |
+| D8. The records | One commit per item, its AUD ids in the body. Item 15 adds one `wp512-<category>` disposition per finding and one commit row per category, re-runs `register.py` and `maps.py`, sets `holds-now.yaml`, re-runs `decisions.py`. Changelog `[0.6.0-alpha.12]` | Decided by the plan: as WP5.11's D6 |
+| D9. The counts | 517 SHALLs before item 2 and after item 9. `markers.py`: no missing test, no unfootnoted claim, no `verified:` difference. `links.py --anchors`, `duplicates.py`, `decisions.py --check`, the strict build; `same_tree.py` at item 11 | Decided by the plan: a silent failure gets a count |
 
 Nine decisions: three repeat WP5.11's; the markers, the checklist and the code are new.
 
@@ -68,7 +68,7 @@ Nine decisions: three repeat WP5.11's; the markers, the checklist and the code a
   Item 3: AUD-61 to 64, 94, 194 to 197, 199 to 202, 206, 210, 212 to 215, 217, 219 to 224, 227 to 229. Item 5:
   AUD-152 to 163, 166 to 193. Item 6: AUD-281, 285, 289, 290, 293, 294, 298, 300 to 303, 305 to 317, 319 to 323,
   325. Item 7: AUD-356 to 368, 370 to 372, 387. Item 9: AUD-14, 230 to 232, 234 to 236, 240 to 243, 248 to 250,
-  384 to 386. Item 10: AUD-216, 351. Item 11: AUD-225, 286, 327, 343, 346.
+  384 to 386. Item 11: AUD-216, 351. Item 13: AUD-225, 286, 327, 343, 346.
 
 **D2.**
 - AL17 over a proposal: AUD-215's table stays in `06-linear-solvers.md` §6.1, which NUM-21's NOTE cites since WP5.11;
@@ -120,7 +120,7 @@ Nine decisions: three repeat WP5.11's; the markers, the checklist and the code a
   union"; their other rules stay. Citing files: `structure/axis.py`, `structure/read.py`, `density/union.py`,
   `density/radii.py` and two `io/defaults.py` `CONFIGURATION_PATHS` reasons.
 - `same_tree.py` drops docstrings and comments only, so a changed message or reason is a code difference. REV-226's
-  acceptance expects `same_tree.py` to confirm a prose-only change, which it cannot for a string literal: item 10
+  acceptance expects `same_tree.py` to confirm a prose-only change, which it cannot for a string literal: item 11
   checks the message files by `git diff` instead, and its PR body says so. No code reads the reasons; no test matches
   the changed text.
 - `test_corrections.py::test_ver03_bulk_properties_at_the_validity_limit` asserts `8.13e-10` at `rel=3e-3`.
@@ -152,25 +152,25 @@ files, and lists `thesis` under `sources:`. It returns the claims it marked "(un
 `sed -i -E 's/^## (REV-[0-9]+:)/### \1/' docs/project/review-items.md`; done when `grep -c '^## REV-'` is 0 and
 `links.py --anchors` reports what it did before.
 
-**Item 10.** For each citation, grep the rule's sentence in §5.2 and §5.3.1 and cite the NOTE that holds it:
+**Item 11.** For each citation, grep the rule's sentence in §5.2 and §5.3.1 and cite the NOTE that holds it:
 "section 5.2 NOTE on stage 1" or "on stage 2". Then `uv run .claude/scripts/same_tree.py HEAD`: it lists the files
 whose messages or reasons changed, and no comment-only file; `git diff -U0 -- src/` shows only those citations.
 
-**Item 11.** REV-227's section is a table `| Finding | The claim | What the audit found | Source to look up | Verdict |`,
+**Item 13.** REV-227's section is a table `| Finding | The claim | What the audit found | Source to look up | Verdict |`,
 one row each for AUD-136, 225, 286, 327, 343 and 346, the source section taken from the finding and `09/01`'s page
 map. Then the round (AM18), as `.claude/workflow/author.md` says: two `AskUserQuestion` calls of three questions.
 Each question gives the claim, what the audit found, the source section and the proposed edit; its options are
 *Confirmed* (the edit lands), *Dismissed* (the text stays; for AUD-136, WP5.11's "(inactive)" marking is reverted)
 and *Not checked yet*, none marked recommended, since the source decides. AUD-343 asks instead which source ruling
 1's "running text" means: the ESI's `0.62e1`, the thesis's 6.2 nm⁻¹, or not checked yet; the finding's wording
-follows the answer. The confirmed edits land in item 11's commit; the Verdict column records each answer and its
+follows the answer. The confirmed edits land in item 13's commit; the Verdict column records each answer and its
 date. Then `git fetch --unshallow origin` and `git cat-file -e <hash>` for each hash
 AUD-226 and AUD-326 name; their disposition notes record the result.
 
-**Item 12.** A disposition: `KPH-12<TAB>fix:wp512-knowledge-01<TAB>WP5.12 item 2 (§8.2.36 AL15)<TAB>`. Categories:
+**Item 15.** A disposition: `KPH-12<TAB>fix:wp512-knowledge-01<TAB>WP5.12 item 2 (§8.2.36 AL15)<TAB>`. Categories:
 1 `wp512-markers`, 2 `wp512-knowledge-01`, 3 `wp512-knowledge-06`, 5 `wp512-knowledge-04-05`, 6
-`wp512-knowledge-07-09`, 7 `wp512-knowledge-00-03`, 9 `wp512-docs`, 10 `wp512-src`, 11 `wp512-checklist`. Item
-11's rows take `fix:wp512-checklist` or `dismissed`, the verdict in the note; a row not yet checked, and AUD-14, stay
+`wp512-knowledge-07-09`, 7 `wp512-knowledge-00-03`, 9 `wp512-docs`, 11 `wp512-src`, 13 `wp512-checklist`. Item
+13's rows take `fix:wp512-checklist` or `dismissed`, the verdict in the note; a row not yet checked, and AUD-14, stay
 `your call`, the note naming REV-227 or REV-228. Then `register.py --at HEAD` and `maps.py HEAD`. `holds-now.yaml`:
 AL13 the guide's three pages; AL15, AL18 and AL21 spent; AL16 `CLAUDE.md` and `01/00`; AL17 `00-orientation/04`,
 which item 7 gives the rule; AL19 `00-orientation/03`; AL20, AM16 and AM18 `spent`, or `open: REV-227` while a row waits; AM13 §4.6, VER-03;
@@ -197,15 +197,22 @@ AM14 REV-229.
 - [x] 8. Compaction checkpoint. **Executor:** main
 - [ ] 9. `docs/` (D1, D2): AUD-230 first (AL13); done when the strict build passes and D9's SHALL count is 517.
   **Executor:** main; AUD-249's levels on `general-purpose`, Haiku
-- [ ] 10. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
+- [ ] 10. Compaction checkpoint. **Executor:** main
+- [ ] 11. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
   commit's gate passes. **Executor:** main
-- [ ] 11. The source checklist (D5): REV-227 and its section, the author's round on the six (AM18), the confirmed
+- [ ] 12. Compaction checkpoint. **Executor:** main
+- [ ] 13. The source checklist (D5): REV-227 and its section, the author's round on the six (AM18), the confirmed
   edits, the two git rows; done when each row records its verdict or "not checked yet". **Executor:** main
-- [ ] 12. The records (D7, D8): REV-226 `fixed`, REV-227 to REV-230, the register, `holds-now.yaml`, `decisions.py`,
+- [ ] 14. Compaction checkpoint. **Executor:** main
+- [ ] 15. The records (D7, D8): REV-226 `fixed`, REV-227 to REV-230, the register, `holds-now.yaml`, `decisions.py`,
   `CHANGELOG.md`; done when each finding reads `fixed` or names its REV row and `decisions.py --check` passes.
   **Executor:** main
-- [ ] 13. The Outcome, both Status lines, `current.md`, the PR body; done when the code and review say so.
+- [ ] 16. Compaction checkpoint. **Executor:** main
+- [ ] 17. The Outcome, both Status lines, `current.md`, the PR body; done when the code and review say so.
   **Executor:** main
+
+The checkpoints 10, 12, 14 and 16 were added after item 8, at the author's request: one after each remaining item, the
+last item followed by *Finishing*'s pause. Items 9 to 13 became 9, 11, 13, 15 and 17.
 
 ### Verification
 
@@ -223,7 +230,7 @@ uv run .claude/scripts/decisions.py --check
 uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run mkdocs build --strict
 ```
 
-with D9's SHALL count and item 10's `same_tree.py`.
+with D9's SHALL count and item 11's `same_tree.py`.
 
 ### Out of scope
 
