@@ -1,25 +1,25 @@
 # Current work
 
-Updated 10 November 2026 (WP5.13 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 10 November 2026 (WP5.14 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5's library steps, the physics model, the frame and the three packages on the written
-knowledge are merged. The first of two tidy-ups awaits review: the library reads a case and a model file in one
-place each, and nothing a user computes moved. Then the second tidy-up and the screens: about 60 sessions and 55 to 110
+Phase 4 is released. Phase 5's library steps, the physics model, the frame, the three packages on the written
+knowledge and the first of two tidy-ups are merged. The second tidy-up is planned: a sweep prepares each of its points
+once, and nothing a user computes moves. Then the screens: about 60 sessions and 55 to 110
 agent hours remain.
 
-**Your call.** Merge the tidy-up after its review; it asks you nothing, since you settled its designs on 6 and 7 November. Adopt two measuring tools or not (the trial recommends neither).
+**Your call.** Approve the second tidy-up's plan after its review; it asks you nothing, since you settled its designs on 6 and 7 November. Adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.12 merged
-  (tags `.10` to `.12` unpushed). Then WP5.14 and the shell, WP5.15 to WP5.22 (§8.2.36).
-  **WP5.13** [delivered](phase-5/wp5.13-case-and-model-files.md): one case reader, one substitution, one input-path
-  seam (REV-217), a model file carrying its body (REV-219); no key moved (AL22). Next `/np-ship wp 5.13`.
-  host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.13 merged
+  (tag `.13` unpushed). Then the shell, WP5.15 to WP5.22 (§8.2.36).
+  **WP5.14** [planned](phase-5/wp5.14-sweep-planning-and-the-walks-keying.md): members keyed on their directory and
+  resolved once (REV-221), one keying walk (REV-220); no key moves (AL22). Next `/np-plan wp 5.14 review`, then
+  `/np-implement wp 5.14`. host: claude-code.
 
 ## Not to be re-decided
 
