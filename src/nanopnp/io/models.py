@@ -311,10 +311,13 @@ class ModelRecord:
                     f"file, or substitute the block's own keys one by one"
                 )
 
-    def carried(self, document: D, assignments: Mapping[str, FieldValue]) -> D:
+    def carried(
+        self, document: D, assignments: Mapping[str, FieldValue], *, base: Path | None = None
+    ) -> D:
         """Return ``document`` with the model files in ``assignments`` read again under its study.
 
-        The study's own keys and its overrides stay.
+        The study's own keys and its overrides stay; with ``base``, their relative input paths
+        are read beside it.
         """
         paths: dict[str, Path] = {file.kind: file.path for file in self.files}
         for path, value in assignments.items():
@@ -333,6 +336,8 @@ class ModelRecord:
             paths[kind] = (self.base / Path(str(value))).resolve()
         study = study_layer(document, self)
         study.pop("models")
+        if base is not None:
+            rebase_inputs(study, base)
         label = f"<{document.name} with models>"
         record = document.variables_record
         if record is None:
@@ -420,11 +425,14 @@ class VariableRecord(Resolution):
             },
         }
 
-    def carried(self, document: D, assignments: Mapping[str, FieldValue]) -> D:
+    def carried(
+        self, document: D, assignments: Mapping[str, FieldValue], *, base: Path | None = None
+    ) -> D:
         """Return ``document`` read again as written, with ``assignments`` set.
 
         A path under ``variables.`` sets a variable: a number in its declared unit, or a
-        definition. A number at a field drops the expression written there.
+        definition. A number at a field drops the expression written there. With ``base``, each
+        relative input path is read beside it.
         """
         assignments = _expanded(assignments)
         edits = {p: v for p, v in assignments.items() if not _is_variable(p)}
@@ -448,6 +456,8 @@ class VariableRecord(Resolution):
         for path, value in edits.items():
             field_at(path).validate(value)
             _set_at(mapping, path, value)
+        if base is not None:
+            rebase_inputs(mapping, base)
         listed = ", ".join(sorted(assignments)) or "nothing"
         return read_mapping(
             mapping,

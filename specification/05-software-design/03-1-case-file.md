@@ -339,8 +339,8 @@ sweep, and `Case.overrides` maps each path to the model's value and the study's.
 `models.molecular`, `models.continuum` or `models.physics` swaps a model the study names; one that names a model the
 study does not name, or drops one, SHALL be refused, since the study's document holds a value, its
 default included, for every key of a model it does not name, and each would override the new model.
-A substitution that gives `models:` to a case naming no model SHALL be refused likewise, naming the
-readers that resolve it. A substitution that drops whole (sets to null) a block a named model and
+A substitution that gives `models:` to a case naming no model SHALL be refused likewise, saying to
+write `models:` in the case file. A substitution that drops whole (sets to null) a block a named model and
 the study share, such as `charge` beside a molecular model, SHALL be refused naming the keys the model
 sets, since the study form writes overrides leaf by leaf and could not write the drop (REV-187). A study overrides
 any value of the models it names; the Study suite lists each model's exposed values first (WB-16, WB-35). `models` is left out of every dump, hash and equality of the case, `Case` and the document

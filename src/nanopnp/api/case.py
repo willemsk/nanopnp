@@ -25,7 +25,6 @@ from nanopnp.io.case_paths import (
     _entry_annotation,
     field_at,
     field_path,
-    input_paths,
     substitute,
     value_at,
 )
@@ -187,17 +186,11 @@ class Case(CaseDocument):
         assignments: dict[str, FieldValue] = {}
         for name, value in given.items():
             self._assign(field_path(name), value, assignments)
-        source = f"<{self.name} edited>"
-        edited = check_document(substitute(self, assignments), source=source)
+        edited = check_document(
+            substitute(self, assignments, base=self._base), source=f"<{self.name} edited>"
+        )
         assert isinstance(edited, Case)
         edited._base = self._base
-        # After the caller's edits, not before: a path an edit names is read beside the case
-        # the edit came from, as every path the case already named is.
-        rebased = _rebased_paths(edited, self._base)
-        if rebased:
-            edited = check_document(substitute(edited, rebased), source=source)
-            assert isinstance(edited, Case)
-            edited._base = self._base
         return edited
 
     def _absent(self, path: str) -> bool:
@@ -363,16 +356,6 @@ class Case(CaseDocument):
             "outputs": list(outputs),
         }
         return _built(cls, document, label)
-
-
-def _rebased_paths(case: CaseDocument, base: Path | None) -> dict[str, FieldValue]:
-    if base is None:
-        return {}
-    return {
-        dotted: str((base / value).resolve())
-        for dotted, value in input_paths(case).items()
-        if not Path(value).is_absolute()
-    }
 
 
 def _merged(first: FieldValue, second: FieldValue) -> FieldValue:
