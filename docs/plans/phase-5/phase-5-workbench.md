@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.13 merged (`v0.6.0-alpha.13`); the clean-up WP5.14 planned, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.13 merged (`v0.6.0-alpha.13`); the clean-up WP5.14 delivered, awaiting `/np-ship`, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -187,7 +187,16 @@ resolves only its point and parent (D2.3); `Session._walk` and `Session._member`
 `pipeline/forecast.py` moves into `pipeline/run.py` (D6.2). The designs and corrections C2.1 to C2.4 and C6.1 bind.
 VER-62 unmoved; VER-64's forecast agrees with the walk. Tag `v0.6.0-alpha.14`.
 
-**Planned 10 November 2026** ([the plan](wp5.14-sweep-planning-and-the-walks-keying.md)).
+**Delivered 10 November 2026** ([the plan](wp5.14-sweep-planning-and-the-walks-keying.md)); tag `v0.6.0-alpha.14`
+once merged. REV-220 and REV-221 fixed. `_Walk.keyed` and `_Walk.stored` key a stage and read the store for the run,
+`stored_upstream` and the forecast, which moved into `pipeline/run.py`; `stored_upstream` keys a session's own stages
+(FR-27, VER-64). A plan holds its members keyed on their directory and resolves them again where it moves;
+`plan_sweep` plans in memory and writes its files once; a point and its parent are taken where the plan holds them
+(FR-39, §5.3.4 amended). A three-point sweep resolves its members six times, where the plan counted thirteen. Three tests added and one extended;
+the push gate and example 03 passed with the VER-62 walks unmoved and no new layering edge (VER-61, VER-72).
+
+Live constraints: AL22 continues in WP5.16 and WP5.17; a sweep planned in Python resolves each member once to plan it
+and once beside its stored files, until a package re-keys them (this plan's *Out of scope*).
 
 ### WP5.15 — The frame on Quasar's components (FR-31, FR-34; WB-33, WB-36 to WB-38; REV-203, REV-204, REV-207, REV-208, REV-210 to REV-214; §8.2.34 AJ1, AJ6 to AJ9)
 

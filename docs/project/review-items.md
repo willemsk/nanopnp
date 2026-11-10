@@ -2800,6 +2800,8 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.14, sweep planning and the walk's keying, with CODE_REVIEW_036's candidate 6.
 
+**Fixed** in WP5.14 (§8.2.36 AL22): `pipeline/run.py` holds the one keying walk. `_Walk.keyed` builds a stage to compute its key without a workspace and `_Walk.stored` reads the store, and `stored_upstream`, `keyed_walk` and the run's substitution all use them; `stored_upstream` takes a session's own stages and an already resolved case, and `pipeline/forecast.py` is gone.
+
 ### REV-221: Planning a sweep from a case drops the members it resolved
 
 `sweep/plan.py:build_plan` keeps the members it resolved as `plan.__dict__["resolved_members"]`, and `api/sweep.py:plan_sweep` moves the plan out of its staging directory with `replace(staged, base_path=...)`, which builds a fresh `SweepPlan` without them. `plan_sweep(...).forecast()` therefore resolves every member again, which REV-199 set out to stop. The staged members were resolved beside the deleted staging directory, so the fix keys held members on their directory rather than carrying them. Found by CODE_REVIEW_036, candidate 2, with its corrections C2.1 to C2.3.
@@ -2807,6 +2809,8 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 **Settled** with the author in [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md) on 7 November 2026, to land after WP5.09 (the physics model); its corrections bind the package that lands it, which *Placed* names.
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.14, sweep planning and the walk's keying, with CODE_REVIEW_036's candidate 2.
+
+**Fixed** in WP5.14 (§8.2.36 AL22): a `SweepPlan` holds its resolved members keyed on the directory they were resolved beside, and a plan moved elsewhere resolves them again there (C2.2). `plan_sweep` plans in memory with `build_plan(..., base=case)`, so its plan keeps them, and `run_point` and the parent lookup take a member from `held_member` where the plan holds it; §5.3.4 says so.
 
 ### REV-222: The agentic instructions cite identifiers without their words and state two procedures in several places
 

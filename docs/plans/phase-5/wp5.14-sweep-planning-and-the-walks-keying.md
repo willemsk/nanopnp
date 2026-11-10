@@ -1,6 +1,6 @@
 # WP5.14 — Sweep planning and the walk's keying
 
-**Status: in progress, items 1 to 4 done.** Planned 10 November 2026 on `main` (`d3420d8`). It inherits §8.2.36 AL22, and
+**Status: delivered, 10 November 2026.** Planned 10 November 2026 on `main` (`d3420d8`). It inherits §8.2.36 AL22, and
 CODE_REVIEW_036's candidates 2 and 6 with their corrections C2.1 to C2.4 and C6.1, settled with the author on 6 and
 7 November 2026.
 
@@ -202,10 +202,28 @@ own point and its parent."
   `tests/tier1/test_forecast.py`, `tests/tier1/test_sweep_plan.py`: in-memory `plan_sweep` and members resolved where
   held (D1, D3, D4); done when rows 1 and 4 and FR-39's sweep tests pass. **Executor:** main.
 - [x] 4. Compaction checkpoint. **Executor:** main.
-- [ ] 5. `.claude/hooks/gate.sh run`, `uv run pytest tests/tier2/test_examples_03_iv_sweep.py` and the strict
+- [x] 42dd3d7 5. `.claude/hooks/gate.sh run`, `uv run pytest tests/tier2/test_examples_03_iv_sweep.py` and the strict
   documentation build, since items 1 to 3 change docstrings and §5.3.4: row 5. **Executor:** main.
 - [ ] 6. The records of *Implementation details*; FR-39's Appendix A row names rows 1 and 2, FR-27's row 3; Outcome
   notes; the phase plan's heading; `current.md`. Done when the review says so. **Executor:** main.
+
+> **Outcome — six preparations, not thirteen.** Row 1 counts each member of the three-point sweep resolved once by
+> `plan_sweep` and once more, beside the store's files, by its `forecast()` and `run()` together; a second forecast
+> resolves none, and a plan read back in another process resolves point 2 and its parent once each. On item 2's tree
+> without item 3, the row fails with a member resolved twice (74d5338).
+
+> **Outcome — a plan moved resolves there.** Row 2 reads a moved plan's `params.yaml` from `b/` and the original's from
+> `a/`; a plan written and read back holds no member (7948fac).
+
+> **Outcome — nothing moved.** The push gate passed in 240 s at 42dd3d7 with the VER-62 walks of examples 01 and 02
+> unmoved, no re-pin and no new layering edge; example 03 and `tests/tier2/test_sweep.py` and
+> `test_sweep_generated_mesh.py`, with the layering and stage-conformance tests, passed (57 tests in 106 s), example
+> 03's largest same-mesh drift 2.4·10⁻¹⁶ (`point-2.currents_A[Cl-]`). `pipeline/run.py` names no stage it did not
+> name before the package. The strict documentation build passed with `mkdocs.yml` unchanged.
+
+> **Outcome — measured cost.** One session, 0.4 agent hours and 3 touches so far: implement 0.3 + 0.1 agent hours and
+> 1 + 2 touches across its compaction. The In brief estimated five sessions, three to six agent hours and eight
+> touches.
 
 ### Verification
 
