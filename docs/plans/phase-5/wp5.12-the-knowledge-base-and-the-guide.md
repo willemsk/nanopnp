@@ -195,9 +195,9 @@ AM14 REV-229.
   in `00-orientation/04`, AUD-387 by its second option; done when `markers.py` is clean. **Executor:** main; AUD-365
   and 370's markers on `general-purpose`, Sonnet
 - [x] 8. Compaction checkpoint. **Executor:** main
-- [ ] 9. `docs/` (D1, D2): AUD-230 first (AL13); done when the strict build passes and D9's SHALL count is 517.
+- [x] 89c27d9 9. `docs/` (D1, D2): AUD-230 first (AL13); done when the strict build passes and D9's SHALL count is 517.
   **Executor:** main; AUD-249's levels on `general-purpose`, Haiku
-- [ ] 10. Compaction checkpoint. **Executor:** main
+- [x] 10. Compaction checkpoint. **Executor:** main
 - [ ] 11. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
   commit's gate passes. **Executor:** main
 - [ ] 12. Compaction checkpoint. **Executor:** main
