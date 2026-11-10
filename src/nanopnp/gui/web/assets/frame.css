@@ -164,9 +164,6 @@ body .nicegui-footer.frame-footer {
   justify-content: flex-start;
   text-align: left;
 }
-.project-name {
-  font-weight: 600;
-}
 .heading {
   margin: 0;
   font-weight: 600;
@@ -209,9 +206,38 @@ body .nicegui-footer.frame-footer {
   text-align: center;
   width: 100%;
 }
-/* Text on a filled button in the theme's accent: Quasar writes white, which a light accent fails. */
-.q-btn.bg-primary {
-  color: var(--accent-ink) !important;
+/* Text on a fill of the theme's accent (a button, a toggle's chosen half, a badge): Quasar writes
+   white, which a light accent fails. Quasar's `.text-white` is an !important rule in a cascade
+   layer, which only an !important rule in an earlier layer overrides: NiceGUI declares `theme`
+   first. */
+@layer theme {
+  .bg-primary {
+    color: var(--accent-ink) !important;
+  }
+}
+/* Keyboard focus on Quasar's items, buttons and tree rows: Quasar tints them faintly; the ring is
+   the token's, 3:1 on the surface (WCAG 2.2 1.4.11, 2.4.7). Inset, so a scrolling list keeps it. */
+.q-focusable:focus-visible,
+.q-tree__node-header:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+.q-tree__arrow {
+  color: var(--muted);
+}
+/* The selected tab is marked by its edge, in the accent, not Quasar's thin indicator. */
+.q-tab--active {
+  border-bottom: 2px solid var(--accent);
+}
+.q-tab__indicator {
+  display: none;
+}
+/* NiceGUI's skip link, shown on focus, in the theme. */
+.nicegui-skip-link.nicegui-skip-link:focus {
+  background-color: var(--panel);
+  color: var(--ink);
+  border: var(--focus-width) solid var(--focus);
+  box-shadow: none;
 }
 .palette {
   width: 36rem;

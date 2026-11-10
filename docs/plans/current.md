@@ -1,24 +1,23 @@
 # Current work
 
-Updated 10 November 2026 (WP5.15 planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 10 November 2026 (WP5.15 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 Phase 4 is released. Phase 5's library steps, the first frame, the written knowledge and both tidy-ups are merged.
-The frame's rebuild is planned, with the settings you ruled today and two store clean-up buttons. Then the five
-suites, the guided route and the close: about 60 sessions and 55 to 110 agent hours remain.
+The frame's rebuild is delivered for review: Quasar's components, five suites, the settings page and two store
+clean-up buttons. Then the five suites, the guided route and the close: about 60 sessions and 55 to 110 agent hours remain.
 
-**Your call.** Approve the frame's plan. Adopt two measuring tools or not (the trial recommends neither).
+**Your call.** Run `/np-ship wp 5.15`. Adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.14 merged
   (`v0.6.0-alpha.14`). Then the shell, WP5.15 to WP5.22 (§8.2.36).
-  **WP5.15** [planned](phase-5/wp5.15-the-frame-on-quasars-components.md) on `claude/relaxed-hypatia-2s4fyk`
-  (§8.2.38), reviewed ([CODE_REVIEW_051](../code_reviews/CODE_REVIEW_051.md)). Next, once you approve,
-  `/np-implement wp 5.15`. host: claude-code.
+  **WP5.15** [delivered](phase-5/wp5.15-the-frame-on-quasars-components.md) on `ccr-4b90fcd6-fjrv03`, its PR
+  open; tag `v0.6.0-alpha.15` once merged. Next, `/np-ship wp 5.15`. host: claude-code.
 
 ## Not to be re-decided
 

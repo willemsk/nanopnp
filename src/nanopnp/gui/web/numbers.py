@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from typing import Literal
 
 __all__ = ["Style", "shown", "symbol"]
@@ -48,10 +49,20 @@ def shown(value: object, unit: str | None, *, figures: int, style: Style) -> str
 
     ``unit`` is a field's unit as the case schema names it (``io.variables.field_unit``), or None
     for a value that is not a number. A whole number and a value that is not a number are shown
-    as they are; None reads "not set".
+    as they are; None reads "not set". A mapping lists each key with its value, a list its values,
+    and an empty one reads "none".
     """
     if value is None:
         return "not set"
+    if isinstance(value, Mapping):
+        named = (
+            f"{key} {shown(entry, unit, figures=figures, style=style)}"
+            for key, entry in value.items()
+        )
+        return ", ".join(named) or "none"
+    if isinstance(value, list | tuple):
+        listed = (shown(entry, unit, figures=figures, style=style) for entry in value)
+        return ", ".join(listed) or "none"
     if isinstance(value, bool) or not isinstance(value, int | float) or unit is None:
         return str(value)
     if unit in _BASE:

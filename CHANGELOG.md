@@ -22,6 +22,45 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.15]
+
+WP5.15: the frame on Quasar's components, Phase 5's fifteenth package; tag `v0.6.0-alpha.15` once merged (§8.2.34
+AJ1, AJ2, AJ6 to AJ9; §8.2.38 AN1 to AN8; REV-203's frame part, REV-204, REV-207, REV-208, REV-210 to REV-214). The
+workbench's frame is rebuilt from the components NiceGUI ships through Quasar, its settings become one declared list
+on a page of their own, and the store gains a size cap and two clean-up actions. No artefact key or golden changes
+(VER-62). The [plan](docs/plans/phase-5/wp5.15-the-frame-on-quasars-components.md) records the work.
+
+- **Added**:
+  - The settings page, `/settings`: search beside the sections, *User* or *Project*, *Modified only*, and each
+    value's mark and reset. A project's values live under `settings:` in its file and win over the user's where
+    the setting allows (FR-31; §5.3.5).
+  - The settings: theme, density, spacing, the 3D background, reduced motion, the shortcuts, the editing guard,
+    the recent projects, opening the last project, the store's size cap, significant figures and the number style
+    (FR-31).
+  - The store's clean-up: *Remove the unused results* keeps what a run record, a sweep member or the open window
+    names, with their inputs; *Remove every result* keeps nothing. The size cap removes unused results only. A walk
+    in any program holds a lock on the store, and a clean-up that finds one held removes nothing (FR-27; §5.3.2).
+  - A Physics suite in the activity bar, empty until its package; the suites show as those that build models
+    (Molecular, Continuum, Physics) and those that use them (Study, Analysis) (WB-34, WB-35).
+  - `python -m nanopnp.gui.web.server --project <folder>` opens a project and walks its first study to the charge.
+- **Changed**:
+  - **The suite shortcuts follow the bar: Alt+Shift+1 to 5 open Molecular, Continuum, Physics, Study and
+    Analysis.** Study moves from Alt+Shift+3 to 4 and Analysis from 4 to 5; a binding of your own is kept (AN7).
+  - The frame is Quasar's header, drawer and footer, and changing suite no longer reloads the page; the molecule
+    is built once per window (VER-78 (m)).
+  - The project rail is a tree headed by the project's name, which also names the browser tab and leaves the menu
+    row; with no project open it offers *New*, *Open* and the recent projects (WB-36).
+  - The command palette is one box, empty until a word is typed, that finds a command by its title or keywords;
+    a command that cannot run is shown disabled with its reason, and each setting has a command (FR-31).
+  - The changed values are one dense table grouped by item, each value in your significant figures and number
+    style with its unit (FR-34).
+  - The frame has named navigation regions, a skip link, headings, live counts and a keyboard focus ring; Reset,
+    *Reset layout* and *Quit* ask first while the editing guard is on; the Glossary holds the design document's 26
+    terms, and About is a dialog.
+- **Fixed**:
+  - A change to the 3D background reaches an open viewer at once (REV-203).
+  - Text on the theme's accent, such as a chosen toggle or a badge, is readable on the dark theme.
+
 ## [0.6.0-alpha.14]
 
 WP5.14: sweep planning and the walk's keying, Phase 5's fourteenth package; tag `v0.6.0-alpha.14` once merged

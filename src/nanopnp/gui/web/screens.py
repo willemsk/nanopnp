@@ -97,7 +97,6 @@ FRAME_CONTROLS: tuple[str, ...] = (
     "menu-file",
     "menu-view",
     "menu-help",
-    "project-name",
     "changed-count",
     "palette-open",
     *(f"suite-{suite.id}" for suite in SUITES),

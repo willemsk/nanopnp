@@ -233,7 +233,7 @@ list has a place in the workbench before Qt leaves (S13):
 
 | Rows | Today's tab | In the workbench |
 |---|---|---|
-| Q01 to Q04 | Window | `nanopnp gui [<project>]` opens the project; the title bar names it; the queue and the problems list say what runs and what was refused; closing stops the builds and their child processes |
+| Q01 to Q04 | Window | `nanopnp gui [<project>]` opens the project; the browser tab and the project rail name it (WB-36); the queue and the problems list say what runs and what was refused; closing stops the builds and their child processes |
 | Q05 to Q08 | Case | Each field in the tool that sets it, checked as it is typed and refused at the field (WB-12); the study's *Overview* shows the resolved case file; a section is added by the tool that uses it; a build or run validates and writes the case first |
 | Q09 | Geometry | *Open structure…* in Molecular, Prepare structure |
 | Q10 to Q12, Q23 | Geometry | Each Continuum tool's *Build*, queued; the tool list's status per tool; *Cancel* in the queue; a tool's record under its *Checks*, the log in the bottom panel |
