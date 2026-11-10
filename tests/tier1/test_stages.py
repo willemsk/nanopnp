@@ -247,17 +247,22 @@ def test_fr27_the_upstream_lookup_keys_own_stages_as_the_walk_does(tmp_path: Pat
     def elements(mesh: Artefact) -> dict[str, object]:
         return {"keys": sorted(mesh.summary)}
 
+    def tally(elements: Artefact) -> dict[str, object]:
+        return {"count": len(elements.summary["keys"])}
+
     session = Session(tmp_path / "store", write=False)
     session.register_stage(elements)
-    run = session.run(case, upto="elements")
-    expected = {record.name: record.hash for record in run.stages if record.name != "elements"}
+    session.register_stage(tally)
+    run = session.run(case, upto="tally")
+    expected = {record.name: record.hash for record in run.stages if record.name != "tally"}
+    assert "elements" in expected
     before = sorted(session.store.root.rglob("*"))
     base = case.source.base
     for given in (None, resolve(case, base=base)):
         upstream = stored_upstream(
             case,
             store=session.store,
-            feeding="elements",
+            feeding="tally",
             stages=session.own_stages,
             base=base,
             resolved=given,

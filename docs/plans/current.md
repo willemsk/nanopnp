@@ -6,9 +6,9 @@ branch is not shipped.
 ## In brief
 
 Phase 4 is released. Phase 5's library steps, the physics model, the frame, the three packages on the written
-knowledge and the first of two tidy-ups are merged. The second tidy-up is built and waits for its review: a sweep
-planned from Python prepares its points six times where it took thirteen, and nothing a user computes moved. Then
-the screens: about 60 sessions and 55 to 110 agent hours remain.
+knowledge and the first of two tidy-ups are merged. The second tidy-up is built and waits for its review: a
+three-point sweep planned from Python prepares its points six times where it took thirteen, and nothing a user computes
+moved. Then the screens: about 60 sessions and 55 to 110 agent hours remain.
 
 **Your call.** None for the second tidy-up until its review puts a finding to you. Adopt two measuring tools or not (the trial recommends neither).
 
