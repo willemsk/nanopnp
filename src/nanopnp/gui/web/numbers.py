@@ -24,6 +24,8 @@ _SYMBOL: dict[str, str] = {
     "coulomb / meter ** 2": "C/m²",
     "dimensionless": "",
 }
+_GAP = "\u202f"
+"""The narrow no-break space between a number and its unit (WB-21)."""
 _PREFIXES = {-15: "f", -12: "p", -9: "n", -6: "µ", -3: "m", 0: "", 3: "k", 6: "M", 9: "G", 12: "T"}
 _PLAIN = (1e-3, 1e6)
 """A number without a unit is written out between these magnitudes, else with a power of ten."""
@@ -69,11 +71,11 @@ def shown(value: object, unit: str | None, *, figures: int, style: Style) -> str
         symbol, factor = _BASE[unit]
         base = float(value) * factor
         if style == "powers":
-            return f"{_power(base, figures)} {symbol}"
+            return f"{_power(base, figures)}{_GAP}{symbol}"
         if base == 0:
-            return f"0 {symbol}"
+            return f"0{_GAP}{symbol}"
         power = min(max(3 * math.floor(math.log10(abs(base)) / 3), -15), 12)
-        return f"{_figures(base / 10**power, figures)} {_PREFIXES[power]}{symbol}"
+        return f"{_figures(base / 10**power, figures)}{_GAP}{_PREFIXES[power]}{symbol}"
     symbol = _SYMBOL.get(unit, unit)
     if isinstance(value, int):
         text = str(value)
@@ -81,7 +83,7 @@ def shown(value: object, unit: str | None, *, figures: int, style: Style) -> str
         text = _power(float(value), figures)
     else:
         text = _figures(float(value), figures)
-    return f"{text} {symbol}".rstrip()
+    return f"{text}{_GAP}{symbol}" if symbol else text
 
 
 def symbol(unit: str | None) -> str:

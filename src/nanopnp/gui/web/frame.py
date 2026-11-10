@@ -67,14 +67,20 @@ RAIL_PX = (160, 480)
 BOTTOM_PX = (120, 560)
 
 
-def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...] | None]]:
+def listed_changes(
+    project: Project, refused: frozenset[str] = frozenset()
+) -> list[tuple[str, tuple[Change, ...] | None]]:
     """Return each item's changed values, a study's own overrides but not its models' values.
 
-    An item that does not load is listed with None: its values are not counted.
+    An item that does not load, or one of ``refused`` (``<kind>/<name>``, the items the problems
+    list holds), is listed with None: its values are not counted.
     """
     listed: list[tuple[str, tuple[Change, ...] | None]] = []
     for kind, _ in KINDS:
         for name in project.items(kind):
+            if f"{kind}/{name}" in refused:
+                listed.append((f"{kind}/{name}", None))
+                continue
             try:
                 found = project.changes(kind, name)
                 if kind == "study" and project.study(name).models_record is not None:
@@ -224,7 +230,8 @@ class _Frame:
     def listed(self) -> list[tuple[str, tuple[Change, ...] | None]]:
         project = self.shell.bench.project
         if self._listed is None:
-            self._listed = [] if project is None else listed_changes(project)
+            refused = frozenset(problem.item for problem in self.problems())
+            self._listed = [] if project is None else listed_changes(project, refused)
         return self._listed
 
     def problems(self) -> tuple[Problem, ...]:
@@ -492,8 +499,10 @@ class _Frame:
             with ui.button(on_click=lambda: self.run("changes")).props(
                 "flat no-caps aria-live=polite data-control=changed-count"
             ):
-                ui.label("◆").classes("changed").props("aria-hidden=true")
-                self.changed_label = ui.label(f"{changed} changed")
+                # With no project open there is nothing to count, so no mark and no number.
+                if self.shell.bench.project is not None:
+                    ui.label("◆").classes("changed").props("aria-hidden=true")
+                self.changed_label = ui.label(self.changed_text(changed))
             ui.button(
                 f"Command palette  {chords['palette']}".rstrip(), on_click=self.open_palette
             ).props("flat no-caps data-control=palette-open")
@@ -548,11 +557,13 @@ class _Frame:
 
     def rail_items(self) -> None:
         project = self.shell.bench.project
-        if project is not None and project.current:
-            # Folded, the rail shows the open item's initial beside its unfold button.
-            ui.label(project.current.split("/")[-1][:1].upper()).props(
-                f'title="{project.current}"'
-            ).classes("rail-initial q-mini-drawer-only")
+        if project is not None:
+            # Folded, the rail shows the open item's initial, else the project's, under its unfold
+            # button.
+            named = project.current or project.name
+            ui.label(named.split("/")[-1][:1].upper()).props(f'title="{named}"').classes(
+                "rail-initial q-mini-drawer-only"
+            )
         with ui.column().classes("q-mini-drawer-hide w-full gap-1"):
             if project is None:
                 self.no_project()
@@ -633,7 +644,9 @@ class _Frame:
                 if problems
                 else "✓ No problems",
                 on_click=lambda: self.run("problems"),
-            ).props("flat dense no-caps aria-live=polite data-control=problems-count")
+            ).props("flat dense no-caps aria-live=polite data-control=problems-count").classes(
+                "state-err" if problems else "state-ok"
+            )
 
     def bottom_panel(self) -> None:
         with ui.column().classes("bottom-panel w-full gap-0") as self.panel_root:
@@ -658,6 +671,9 @@ class _Frame:
                         self.changes_list()
                     with ui.tab_panel("problems"):
                         self.problems_list()
+
+    def changed_text(self, changed: int) -> str:
+        return f"{changed} changed" if self.shell.bench.project is not None else "No project"
 
     def changed_count(self) -> int:
         return sum(len(found) for _, found in self.listed() if found is not None)
@@ -744,7 +760,7 @@ class _Frame:
             return
         self.shell.queue.log.append(f"reset {path} of {kind}/{name}")
         self._listed = None
-        self.changed_label.text = f"{self.changed_count()} changed"
+        self.changed_label.text = self.changed_text(self.changed_count())
         self.changes_table.rows = self.change_rows()
         self.changes_table.update()
 
@@ -815,7 +831,9 @@ class _Frame:
                 for term, meaning in GLOSSARY:
                     TextElement(tag="dt", text=term).classes("glossary-term")
                     TextElement(tag="dd", text=meaning).classes("glossary-meaning")
-            ui.button("Close", on_click=self.glossary_dialog.close).props("flat no-caps")
+            ui.button("Close", on_click=self.glossary_dialog.close).props("flat no-caps").classes(
+                "self-end"
+            )
         with (
             ui.dialog() as self.about_dialog,
             ui.card().classes("dialog").props("data-control=about"),
@@ -827,7 +845,9 @@ class _Frame:
                 "without COMSOL."
             )
             ui.label("Open source under the BSD 3-Clause licence.").classes("muted")
-            ui.button("Close", on_click=self.about_dialog.close).props("flat no-caps")
+            ui.button("Close", on_click=self.about_dialog.close).props("flat no-caps").classes(
+                "self-end"
+            )
 
     def palette_dialog(self) -> None:
         with ui.dialog() as self.palette, ui.card().classes("palette"):

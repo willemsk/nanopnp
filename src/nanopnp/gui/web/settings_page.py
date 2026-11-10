@@ -19,6 +19,27 @@ __all__ = ["Frame", "SettingsPage", "size_text"]
 Scope = Literal["user", "project"]
 SYSTEM = "system"
 TOGGLE_MOST = 3
+COLOUR_NAMES = {
+    "bg": "Background",
+    "panel": "Panel",
+    "sel": "Selection",
+    "line": "Divider",
+    "control-edge": "Control edge",
+    "ink": "Text",
+    "muted": "Quiet text",
+    "accent": "Accent",
+    "accent-ink": "Text on the accent",
+    "focus": "Focus ring",
+    "ok": "Done",
+    "warn": "Warning",
+    "err": "Error",
+    "changed": "Changed mark",
+    "canvas-3d": "3D view background",
+    "canvas-3d-ink": "3D view text",
+    "canvas-plot": "Plot background",
+    "canvas-plot-ink": "Plot text",
+}
+"""Each theme colour's name on the page; the token's own name is the file's."""
 """A list of at most this many choices is a toggle; a longer one is a select."""
 
 
@@ -336,7 +357,7 @@ class SettingsPage:
                 )
                 if editable:
                     ui.input(
-                        token,
+                        COLOUR_NAMES.get(token, token),
                         value=value,
                         validation={"#rrggbb": lambda v: bool(theme.HEX.match(v))},
                         on_change=lambda e, n=chosen.name, t=token: self._edit_colour(
@@ -344,7 +365,7 @@ class SettingsPage:
                         ),
                     ).props("dense outlined")
                 else:
-                    ui.label(f"{token} {value}")
+                    ui.label(f"{COLOUR_NAMES.get(token, token)} {value}")
 
     # -- the key bindings ---------------------------------------------------
 
@@ -358,14 +379,14 @@ class SettingsPage:
                 with ui.row().classes("items-center no-wrap w-full"):
                     ui.label(entry.title).classes("key-title")
                     ui.button(
-                        "Press a chord…, Escape cancels"
+                        "Press a chord, or Escape to cancel"
                         if self.capturing == entry.id
                         else chords[entry.id] or "Unbound",
                         on_click=lambda _, i=entry.id: self._capture(i),
                     ).props(
                         f'flat dense no-caps data-control=key-{entry.id} aria-label="Rebind '
                         f'{entry.title}, now {chords[entry.id] or "unbound"}"'
-                    )
+                    ).classes("" if chords[entry.id] else "key-unbound")
                     if entry.id in self.shell.keys:
                         ui.button(
                             icon="close", on_click=lambda _, i=entry.id: self._clear_key(i)

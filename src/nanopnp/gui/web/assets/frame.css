@@ -206,6 +206,14 @@ body .nicegui-footer.frame-footer {
   text-align: center;
   width: 100%;
 }
+/* Quasar's mini-drawer classes sit in its cascade layer, below NiceGUI's `.nicegui-column`, which
+   would show a folded rail's tree; an unlayered rule outranks both. */
+.q-drawer--mini .q-mini-drawer-hide {
+  display: none;
+}
+.q-drawer:not(.q-drawer--mini) .q-mini-drawer-only {
+  display: none;
+}
 /* Text on a fill of the theme's accent (a button, a toggle's chosen half, a badge): Quasar writes
    white, which a light accent fails. Quasar's `.text-white` is an !important rule in a cascade
    layer, which only an !important rule in an earlier layer overrides: NiceGUI declares `theme`
@@ -214,6 +222,47 @@ body .nicegui-footer.frame-footer {
   .bg-primary {
     color: var(--accent-ink) !important;
   }
+  /* The accent marks selection, the primary action, focus and links (WB-20); the menus, the
+     status line's buttons, the unselected suites and the settings' sections are ink. */
+  .titlebar .q-btn.text-primary,
+  .statusbar .q-btn.text-primary,
+  .suite-button:not([aria-current="page"]).text-primary,
+  .settings-nav .q-btn.text-primary {
+    color: var(--ink) !important;
+  }
+  .q-btn.key-unbound {
+    color: var(--muted) !important;
+  }
+  .statusbar .q-btn.state-ok {
+    color: var(--ok) !important;
+  }
+  .statusbar .q-btn.state-err {
+    color: var(--err) !important;
+  }
+}
+/* Quasar shrinks a floating label to 0.75 of the field's text, under the 12 px floor (WB-21). */
+.q-field--float .q-field__label {
+  transform: translateY(-40%) scale(0.9);
+  max-width: 111%;
+}
+.q-field--dense.q-field--float .q-field__label {
+  transform: translateY(-30%) scale(0.9);
+}
+/* A menu's and the palette's rows take the row token, not Quasar's 48 px (WB-18). */
+.q-menu .q-item {
+  min-height: var(--row);
+}
+.q-menu .q-item.q-manual-focusable--focused {
+  background: var(--sel);
+}
+.q-tree__node-header {
+  min-height: 24px;
+}
+.dialog .q-field {
+  width: 100%;
+}
+.q-dialog .q-card {
+  border: 1px solid var(--line);
 }
 /* Keyboard focus on Quasar's items, buttons and tree rows: Quasar tints them faintly; the ring is
    the token's, 3:1 on the surface (WCAG 2.2 1.4.11, 2.4.7). Inset, so a scrolling list keeps it. */
@@ -310,4 +359,34 @@ body .nicegui-footer.frame-footer {
 .changes-table .q-btn {
   min-height: 0;
   padding: 0 var(--gap);
+}
+/* The table's rows take the row token, so compact density reaches them (WB-18, WB-31). */
+.changes-table tbody td {
+  height: var(--row);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+/* The open item in the rail: the selection's fill and the accent's edge, as in the activity bar. */
+.q-tree__node--selected {
+  background: var(--sel);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+/* The palette's active row: the selection's fill and the accent's edge (WCAG 2.2 1.4.11). */
+.q-menu .q-item.q-manual-focusable--focused {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+/* A row's side text, such as a chord: Quasar's translucent grey fails on the selection's fill. */
+.q-item__section--side {
+  color: var(--muted);
+}
+/* A menu's edge, which the dark theme's panel colour alone does not draw. */
+.q-menu {
+  border: 1px solid var(--line);
+}
+/* Quasar fades an inactive tab's label; the muted token reads 4.5:1. */
+.q-tab {
+  opacity: 1;
+}
+.q-tab:not(.q-tab--active) {
+  color: var(--muted);
 }
