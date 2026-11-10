@@ -267,7 +267,7 @@ AI10: 'open: WP5.08'
 AI11: '§8.4.4; open: WP5.08'
 AI12: 'open: WP5.08'
 AI13: its per-user rule amended by AJ9; WP5.08 spent
-AI14: 'open: WP5.08'
+AI14: §5.3.2's NOTE on older entries; its rule that a current result is never removed amended by AN5
 AI15: §8.4.4
 AJ1: 'the design document''s WB-33; open: WP5.15'
 AJ2: 'FR-31; FR-32; §8.1''s Phase 5 row; the design document''s WB-34; §5.3.1''s NOTE on `models:`, §5.3.2, §5.3.3; open: WP5.18 (the Physics suite)'
@@ -329,3 +329,8 @@ AM15: 'open: WP5.21 (REV-228)'
 AM16: spent
 AM17: the WP5.12 plan
 AM18: spent
+AN1: 'the design document''s WB-37; open: WP5.19 (the run record''s thread count)'
+AN2: the design document's WB-37
+AN3: 'the design document''s WB-37; open: WP5.15'
+AN4: the Phase 5 plan
+AN5: 'open: WP5.15 (§5.3.2''s NOTE), WP5.20 (the rebuild on viewing)'

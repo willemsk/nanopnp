@@ -177,7 +177,16 @@ tokens fed into Quasar's colour variables; a part is written by hand only where 
 **The settings** are one declared list (WB-37): each setting has its section, its scope (the user's, or the
 project's, which overrides the user's where both are allowed), its default, its description and search words,
 and when it applies, and the settings page, its search and the palette's setting commands follow from it. A
-value that can change a result is never a setting; it belongs to a model or a study and its manifest.
+value that can change a result is never a setting; it belongs to a model or a study and its manifest. The one
+exception is threads per solve, which can move a result at rounding, so each run's record states it (§8.2.38 AN1).
+v0.6's list (AN3): appearance and accessibility holds the theme, the density, the spacing, the 3D view's
+background, the user's colours and reduced motion; keyboard and editing guards the key bindings and a guard that
+asks before a reset, *Reset layout* or *Quit*; runs and storage the recent projects, opening the last project at
+start, the store's size cap and its two clean-up actions, one for what no run uses and one for every result
+(AN5); units and numbers the significant figures and the number style, which a project may also set, as it may
+the store's cap; and a Compute section, solves at once and threads per solve (AN1). No setting reaches the
+network yet. The list is a registry that a later package or a plugin extends, and nothing in it precludes a
+remote connection (a WSL instance, a compute server) or a plugin (custom physics) (AN2).
 
 **Several items are open at once** (WB-04); a variant is derived from its parent and shown as its
 difference, and a comparison is a saved project item. **A refusal** shows at its field and in the problems
@@ -495,7 +504,7 @@ the author's verdicts on WP5.08's frame (`docs/design/reviews/2026-11-05-frame.m
 | WB-34 | Building against using, and where physics lives | The author, marking the suites: "I wonder if we need to make a further distinction in the suites between those that build components (molecular, continuum, physics), those that use components (study, analysis?)". Asked, the author chose physics as a reusable model, then five suites in two groups, and on its contents: "I think the physics suite should allow you to build/edit the actual equations, the effectively build the physics part. It should then allow for exposing certain relevant knobs and parameters to the other suites (like concentrations, bias voltage, etc). Kind of like in COMSOL, but with an extra "interface" layer to the other suites." Put back against S3 and S7: "Suite now, composer next" | §8.2.34 AJ2 to AJ4 |
 | WB-35 | The "interface layer" between the suites | "Knobs first, rest reachable" | §8.2.34 AJ5 |
 | WB-36 | Showing what changed, and the project's name | The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?", and on the name: "looks like a menu item". Shown how VS Code, JetBrains and COMSOL do it: "Mark, filter and dense table" | §8.2.34 AJ7 |
-| WB-37 | Which settings, where they are kept, when they apply | The author, marking the settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." Asked: "One declared list, two scopes", with appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers, adding: "Compute settings, network settings, ... I think we need to do some research here." | §8.2.34 AJ9 |
+| WB-37 | Which settings, where they are kept, when they apply | The author, marking the settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." Asked: "One declared list, two scopes", with appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers, adding: "Compute settings, network settings, ... I think we need to do some research here." At WP5.15's plan, after a survey of COMSOL, ParaView, ChimeraX, VS Code and JupyterLab: compute settings with threads per solve, no network settings yet, and the larger list with the store's clean-up, as two actions | §8.2.34 AJ9; §8.2.38 AN1 to AN5 |
 | WB-38 | How a suite is designed | The author, marking the charge screen: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." Asked: "Prototype on 2WCD, then build" | §8.2.34 AJ8 |
 
 ## Glossary
