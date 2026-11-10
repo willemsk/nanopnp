@@ -172,15 +172,49 @@ body .nicegui-footer.frame-footer {
 .project-name {
   font-weight: 600;
 }
-.skip-link {
-  position: absolute;
-  left: -10000px;
+.heading {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.3;
 }
-.skip-link:focus {
-  left: var(--pad);
-  top: var(--pad);
-  z-index: 100;
-  background: var(--panel);
-  color: var(--accent);
-  padding: var(--pad);
+.heading-1 {
+  font-size: var(--text-2xl);
+}
+.heading-2 {
+  font-size: var(--text-lg);
+}
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dialog {
+  min-width: 24rem;
+  max-width: 40rem;
+  gap: var(--gap);
+}
+.glossary {
+  max-height: 80vh;
+}
+.glossary-list {
+  margin: 0;
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+.glossary-term {
+  font-weight: 600;
+  margin-top: var(--gap);
+}
+.glossary-meaning {
+  margin: 0 0 0 var(--pad);
+}
+.rail-initial {
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+}
+/* Text on a filled button in the theme's accent: Quasar writes white, which a light accent fails. */
+.q-btn.bg-primary {
+  color: var(--accent-ink) !important;
 }
