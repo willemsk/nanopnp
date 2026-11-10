@@ -93,12 +93,12 @@ CONFIGURATION_PATHS: dict[str, str] = {
     ),
     "structure.symmetry.axis": (
         "how stage 1 finds the axis, not a model term: z is admitted only inside the 0.01 nm "
-        "displacement budget from the detected axis (section 5.3.1 NOTE on structure:)"
+        "displacement budget from the detected axis (section 5.2 NOTE on stage 1)"
     ),
     "geometry.density.kernel": (
         "stage 2's kernel, which names its radius set; gaussian_vdw is the one kernel and "
-        "is recorded with the density in the Geometry and mesh group (section 5.3.1 NOTE on "
-        "geometry.density), so it is geometry input rather than a model switch"
+        "is recorded with the density in the Geometry and mesh group (section 5.2 NOTE on "
+        "stage 2), so it is geometry input rather than a model switch"
     ),
     "geometry.contour.smoothing": (
         "stage 4's contour conditioning, which moves the wall by a few hundredths of a nm and "

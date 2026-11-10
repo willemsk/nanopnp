@@ -177,7 +177,7 @@ def resolve_radii(
             number = f"{int(resid[first])}{str(icode[first]).strip()}"
             raise DensityInputError(
                 f"stage 2 cannot place atom {name_!r} of residue {residue} {number} in chain "
-                f"{str(chain[first])!r}: {error.args[0]} (section 5.3.1 NOTE on geometry.density)"
+                f"{str(chain[first])!r}: {error.args[0]} (section 5.2 NOTE on stage 2)"
             ) from None
     return ResolvedRadii(
         radii_nm=radii_A[inverse.reshape(-1)] * ANGSTROM_TO_NM,
