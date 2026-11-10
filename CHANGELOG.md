@@ -49,8 +49,9 @@ guide says what v0.6 does. No case schema, public API or result changes. The
     text, and its report footnotes give section and page.
   - The guide states that protonation runs before stage 2 (AL13), and describes v0.6's commands, desktop page
     and physics models.
-- **Fixed**: refusal messages and comments in `structure/` and `density/` cite §5.2's NOTEs on stages 1 and 2,
-  where those rules moved in WP5.11 (REV-226).
+- **Fixed**: refusal messages and comments in `structure/` and `density/`, and two descriptions in
+  `io/defaults.py`, cite §5.2's NOTEs on stages 1 and 2, where those rules moved in WP5.11 (REV-226); two
+  comments in `physics/` point to the concept that holds their measurement (AUD-216, AUD-351).
 - **Amended**: §4.6, PHY-11, VER-03's row, §5.2's radius-band NOTE, VER-54 and Appendix B. The SHALLs still
   number 517.
 

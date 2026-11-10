@@ -77,16 +77,26 @@ def _prose_lines(lines: list[str]) -> list[str]:
     """Return the lines with inline code spans and fenced blocks blanked, keeping their numbers.
 
     A marker quoted in code is an example, not a claim: the knowledge base's own provenance pages
-    show the markers' syntax in code spans.
+    show the markers' syntax in code spans. A span may wrap onto the next line of its paragraph, so
+    an unclosed backtick carries over; a blank line ends the paragraph and the span with it.
     """
     prose: list[str] = []
     fenced = False
+    open_span = False
     for line in lines:
         if FENCE.match(line):
             fenced = not fenced
+            open_span = False
             prose.append("")
             continue
-        prose.append("" if fenced else CODE_SPAN.sub("", line))
+        if fenced:
+            prose.append("")
+            continue
+        if not line.strip():
+            open_span = False
+        text = CODE_SPAN.sub("", f"`{line}" if open_span else line)
+        open_span = "`" in text
+        prose.append(text.split("`", 1)[0])
     return prose
 
 

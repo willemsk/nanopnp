@@ -13,8 +13,9 @@ $ nanopnp run case.yaml --store store --run-dir run --upto charge
 ```
 
 `--upto charge` stops before the solve. Each half is cached in the store like every other stage,
-so changing the pH or a charge edit re-runs the density, the contour and the mesh as well as the
-deposition. `geometry.density.atoms: as_loaded` smears the atoms as loaded instead, which is the
+so changing the pH, a pinned `state` or a `radius_scale` re-runs the density, the contour and the
+mesh as well as the deposition. A `charge_change_e` edit moves no atom, so it shares its parent's
+density, contour and mesh. `geometry.density.atoms: as_loaded` smears the atoms as loaded instead, which is the
 published reference's way ([PHY-16's NOTE](../_generated/model/specification/04-physics.md#44-fixed-charge-and-dielectric-model)).
 
 This page says what each step does and which key steers it. The formulas, the tolerances and their

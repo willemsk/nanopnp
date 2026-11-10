@@ -228,6 +228,14 @@ AM14 REV-229.
   >   "0.62e1" attribution. The physics reviewer's three doubts that WP5.12 did not act on are REV-232.
   > - Checkpoint 16 did not pause, at the author's word; it was gated and pushed with item 17.
 
+  > **Outcome — the review found six small gaps, all fixed; the package cost twice the estimate in sessions.**
+  > [CODE_REVIEW_046](../../code_reviews/CODE_REVIEW_046.md): the charge guide's claim that every charge edit
+  > re-runs the density, `markers.py`'s wrapped code spans, WB-34's AJ4, three pointers and the changelog. Measured
+  > from the plan's commit to the review's fixes: 6 sessions, 3.2 agent hours, 14 touches, against the In brief's
+  > "about three sessions and two to four hours; you act about six times" (`usage.py --since f818e91`). The
+  > hours fell inside the estimate; the sessions and touches doubled with the four checkpoints the author added
+  > after item 8.
+
 The checkpoints 10, 12, 14 and 16 were added after item 8, at the author's request: one after each remaining item, the
 last item followed by *Finishing*'s pause. Items 9 to 13 became 9, 11, 13, 15 and 17.
 
