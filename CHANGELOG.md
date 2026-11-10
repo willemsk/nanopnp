@@ -22,6 +22,25 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.13]
+
+WP5.13: case and model files, Phase 5's thirteenth package; tag `v0.6.0-alpha.13` once merged (§8.2.36 AL22,
+AL23; CODE_REVIEW_036's candidates 1 and 5; REV-217, REV-219). Reading and editing a case each happen in one place,
+and nothing a user computes moves: no artefact key, golden, layering edge or public name changes (VER-61, VER-62,
+VER-72). The [plan](docs/plans/phase-5/wp5.13-case-and-model-files.md) records the work.
+
+- **Changed**:
+  - One case reader pair, `io/models.py:read_case` and `read_case_text`, resolves `models:` and `variables:`;
+    `io/case.py`'s readers, which refused both, are gone, and §5.3.1 says so (FR-39; AL23).
+  - `substitute(document, assignments, *, base)` rebases a relative input path beside the case in each branch, a
+    model swap's included, so `Case.with_` substitutes once (FR-25).
+  - `io/case_paths.py` holds the one input-path seam, `input_paths`, `rewrite_inputs` and `rebase_inputs`, in place
+    of four (FR-25, FR-32).
+  - `ModelFile.body` carries the checked body that `read_model_file` reads once; `split_case_layers` splits a case
+    for the project, and `mapping_changes` skips the header and `models:` (FR-34, FR-39).
+  - Asked to swap a model or set a variable a case does not have, the refusal says to write `models:` or
+    `variables:` in the case file.
+
 ## [0.6.0-alpha.12]
 
 WP5.12: the knowledge base and the guide, Phase 5's twelfth package; tag `v0.6.0-alpha.12` once merged (§8.2.36

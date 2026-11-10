@@ -2772,6 +2772,8 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.13, case and model files, with CODE_REVIEW_036's candidate 1; the case reader then resolves `models:` and `variables:` (AL23).
 
+**Fixed** in WP5.13 (§8.2.36 AL22, AL23): `io/models.py:read_case` and `read_case_text` are the one reader pair and resolve `models:` and `variables:`; `io/case_paths.py` holds the one input-path seam (`input_paths`, `rewrite_inputs`, `rebase_inputs`); `substitute(document, assignments, *, base)` rebases in each branch, so `Case.with_` substitutes once.
+
 ### REV-218: Effective atom radii and atom-to-residue indexing are split across four subpackages
 
 `density/radii.py:resolve_protonated_radii` returns CHARMM radii without the table's radius edits, so `density/stage.py` must multiply by `radius_scales(table)` itself. Atom-to-residue indexing is written twice, in `charge/edits.py:_owner` and in `resolve_protonated_radii`, and the two differ on an atom with no residue row. Found by CODE_REVIEW_036, candidate 4, with its corrections C4.1 and C4.2.
@@ -2787,6 +2789,8 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 **Settled** with the author in [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md) on 7 November 2026, to land after WP5.09 (the physics model); its corrections bind the package that lands it, which *Placed* names.
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.13, case and model files, with CODE_REVIEW_036's candidate 5.
+
+**Fixed** in WP5.13 (§8.2.36 AL22): `ModelFile.body` carries the checked body that `read_model_file` reads once, rebased unless `rebase=False`; `io/models.py:split_case_layers` serves `Project._split`; `mapping_changes` skips the header and `models:`, so `api/project.py` strips nothing by hand.
 
 ### REV-220: The upstream lookup and the forecast re-implement the walk's stage keying
 

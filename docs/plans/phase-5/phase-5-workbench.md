@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.12 merged (`v0.6.0-alpha.12`); the clean-ups WP5.13, planned, and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.12 merged (`v0.6.0-alpha.12`); the clean-up WP5.13 delivered, on review, and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -166,9 +166,16 @@ split into model layers moves into `io/models.py` and `mapping_changes` ignores 
 no model file again (D5.2). The designs and corrections C0 to C1.5 and C5.1 bind, re-read against WP5.09's code. VER-62
 unmoved; no new layering edge (VER-61, VER-72). Tag `v0.6.0-alpha.13`.
 
-**Planned 10 November 2026** ([the plan](wp5.13-case-and-model-files.md)). The plan rebases a study's relative paths
-after a model swap too, which the reviewed sketch returned unrebased (its D3). The project still reads a model file it
-copies or edits as written, since a copy keeps its `exposes:` list and relative paths (its D4).
+**Delivered 10 November 2026** ([the plan](wp5.13-case-and-model-files.md)); tag `v0.6.0-alpha.13` once merged.
+REV-217 and REV-219 fixed. One reader pair resolves `models:` and `variables:` (FR-39; AL23, §5.3.1 amended);
+`substitute` rebases relative input paths beside the case in every branch, a model swap's included, so `Case.with_`
+substitutes once (FR-25); `io/case_paths.py` holds the one input-path seam (FR-32); `ModelFile.body` carries the
+checked body, `split_case_layers` serves the project's import, and `mapping_changes` skips metadata (FR-34). The
+two substitution refusals say to write `models:` or `variables:` in the case file. Four tests added; the push gate
+passed with the VER-62 walks unmoved and no new layering edge (VER-61, VER-72).
+
+Live constraints: AL22 continues in WP5.14, WP5.16 and WP5.17; `ModelFile.body` is the suites' read of a model file
+from WP5.15 on.
 
 ### WP5.14 — Sweep planning and the walk's keying (REV-221, REV-220; CODE_REVIEW_036 candidates 2 and 6; §8.2.36 AL22)
 
