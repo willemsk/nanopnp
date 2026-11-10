@@ -13,12 +13,14 @@ from typing import Literal, Protocol
 from urllib.parse import parse_qs, urlsplit
 
 from nicegui import context, events, ui
+from nicegui.elements.mixins.text_element import TextElement
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Problem, Project
-from nanopnp.core.paths import remember_project
+from nanopnp.core.paths import recent_projects, remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
+from nanopnp.gui.web.glossary import GLOSSARY
 from nanopnp.gui.web.overlay import Overlay
 from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
@@ -26,7 +28,7 @@ from nanopnp.gui.web.states import Workbench
 from nanopnp.io.defaults import Change
 from nanopnp.io.project import ITEM_SUITES, ItemKind, Suite, SuiteLayout, split_reference
 
-__all__ = ["Route", "Views", "current_suite", "frame", "listed_changes"]
+__all__ = ["Route", "Views", "current_suite", "frame", "heading", "listed_changes"]
 
 
 @dataclass(frozen=True)
@@ -56,17 +58,6 @@ BAR_PX = 88
 FOLDED_RAIL_PX = 32
 RAIL_PX = (160, 480)
 BOTTOM_PX = (120, 560)
-GLOSSARY = (
-    ("Project", "A folder of models, studies, comparisons, inputs, runs and stored results."),
-    (
-        "Model",
-        "A molecular, a continuum or a physics model: the prepared structure, the pore and its "
-        "mesh, or the equations, the salt and the voltage.",
-    ),
-    ("Study", "Pairs one model of each kind, overrides any of their values, and is run."),
-    ("Override", "A value a study sets in place of its model's."),
-    ("Queue", "The builds and runs waiting, running and done."),
-)
 
 
 def listed_changes(project: Project) -> list[tuple[str, tuple[Change, ...]]]:
@@ -117,6 +108,19 @@ class _Frame:
         self.palette_list: ui.column
         self.panel_root: ui.column
         self.overlay = Overlay(shell)
+        self.tree: ui.tree | None = None
+        self.ask_dialog: ui.dialog
+        self.ask_title: TextElement
+        self.ask_input: ui.input
+        self.ask_button: ui.button
+        self.ask_then: Callable[[Path], object] = lambda _: None
+        self.confirm_dialog: ui.dialog
+        self.confirm_title: TextElement
+        self.confirm_message: ui.label
+        self.confirm_button: ui.button
+        self.confirm_then: Callable[[], object] = lambda: None
+        self.glossary_dialog: ui.dialog
+        self.about_dialog: ui.dialog
         self._listed: list[tuple[str, tuple[Change, ...]]] | None = None
         self._problems: tuple[Problem, ...] | None = None
         self.fold_button: ui.button
@@ -128,14 +132,19 @@ class _Frame:
             "panel-toggle": self.toggle_panel,
             "changes": lambda: self.show_panel("changes"),
             "problems": lambda: self.show_panel("problems"),
-            "layout-reset": self.reset_layout,
+            "layout-reset": lambda: self.confirm(
+                "Reset the layout?",
+                "Every suite's rail and panel go back to their first sizes.",
+                "Reset layout",
+                self.reset_layout,
+            ),
             "project-new": lambda: self.ask("New project", "Folder", self.new_project),
             "project-open": lambda: self.ask("Open project", "Folder", self.open_project),
             "project-import": lambda: self.ask("Import case", "Case file", self.import_case),
             "project-export": lambda: self.ask("Export project", "Destination", self.export),
-            "glossary": self.glossary,
-            "about": lambda: ui.notify(f"nanopnp {__version__}"),
-            "quit": lambda: os.kill(os.getpid(), signal.SIGTERM),
+            "glossary": lambda: self.glossary_dialog.open(),
+            "about": lambda: self.about_dialog.open(),
+            "quit": self.ask_quit,
             **{f"suite-{suite.id}": self.go(f"/{suite.id}") for suite in SUITES},
         }
 
@@ -223,23 +232,49 @@ class _Frame:
     # -- the project's own commands ----------------------------------------
 
     def ask(self, title: str, label: str, then: Callable[[Path], object]) -> None:
-        with ui.dialog() as dialog, ui.card().props("data-control=ask"):
-            ui.label(title).classes("text-h6")
-            field_ = ui.input(label).props("autofocus data-control=ask-input")
+        self.ask_title.text = title
+        self.ask_input.label = label
+        self.ask_input.value = ""
+        self.ask_button.text = title
+        self.ask_then = then
+        self.ask_dialog.open()
 
-            def accept() -> None:
-                try:
-                    then(Path(field_.value).expanduser())
-                except (ValueError, OSError) as error:
-                    ui.notify(str(error), type="negative")
-                    return
-                dialog.close()
+    def accept(self) -> None:
+        text = (self.ask_input.value or "").strip()
+        # An empty field would read as the server's own folder.
+        if not text:
+            ui.notify(f"Type a {self.ask_input.label.lower()} first", type="warning")
+            return
+        try:
+            self.ask_then(Path(text).expanduser())
+        except (ValueError, OSError) as error:
+            ui.notify(str(error), type="negative")
+            return
+        self.ask_dialog.close()
 
-            field_.on("keydown.enter", accept)
-            with ui.row():
-                ui.button("Cancel", on_click=dialog.close).props("flat no-caps")
-                ui.button(title, on_click=accept).props("no-caps")
-        dialog.open()
+    def confirm(self, title: str, message: str, action: str, then: Callable[[], object]) -> None:
+        if self.shell.settings.value("confirm") is False:
+            then()
+            return
+        self.confirm_title.text = title
+        self.confirm_message.text = message
+        self.confirm_button.text = action
+        self.confirm_then = then
+        self.confirm_dialog.open()
+
+    def confirmed(self) -> None:
+        self.confirm_dialog.close()
+        self.confirm_then()
+
+    def ask_quit(self) -> None:
+        running = [e.label for e in self.shell.queue.entries if e.status == "running"]
+        message = "The workbench stops, and its page with it."
+        if running:
+            message += f" Running now, and stopped with it: {', '.join(running)}."
+        self.confirm("Quit the workbench?", message, "Quit", self.quit)
+
+    def quit(self) -> None:
+        os.kill(os.getpid(), signal.SIGTERM)
 
     def switch(self, project: Project) -> None:
         self.shell.bench = Workbench(project.name, project=project, queue=self.shell.queue)
@@ -267,14 +302,6 @@ class _Frame:
         written = project.export(destination)
         self.shell.queue.log.append(f"exported the project to {written}")
         ui.notify(f"Exported to {written}")
-
-    def glossary(self) -> None:
-        with ui.dialog() as dialog, ui.card().props("data-control=glossary"):
-            ui.label("Glossary").classes("text-h6")
-            for term, meaning in GLOSSARY:
-                ui.label(f"{term}: {meaning}")
-            ui.button("Close", on_click=dialog.close).props("flat no-caps")
-        dialog.open()
 
     # -- the layout ---------------------------------------------------------
 
@@ -405,16 +432,20 @@ class _Frame:
             ).props("data-control=project-name")
             ui.space()
             with ui.button(on_click=lambda: self.run("changes")).props(
-                "flat no-caps data-control=changed-count"
+                "flat no-caps aria-live=polite data-control=changed-count"
             ):
-                ui.label("◆").classes("changed")
+                ui.label("◆").classes("changed").props("aria-hidden=true")
                 self.changed_label = ui.label(f"{changed} changed")
             ui.button(
                 f"Command palette  {chords['palette']}".rstrip(), on_click=self.open_palette
             ).props("flat no-caps data-control=palette-open")
 
     def activity_bar(self) -> None:
-        with ui.column().classes("activitybar items-center"):
+        with (
+            ui.element("nav")
+            .classes("activitybar column items-center")
+            .props('aria-label="Suites"')
+        ):
             for group, title in GROUPS.items():
                 with (
                     ui.element("div")
@@ -446,7 +477,11 @@ class _Frame:
         )
 
     def rail(self) -> None:
-        with ui.column().classes("rail gap-1").props("data-control=rail"):
+        with (
+            ui.element("nav")
+            .classes("rail column no-wrap gap-1")
+            .props('aria-label="Project" data-control=rail')
+        ):
             self.fold_button = ui.button(on_click=self.fold_rail).props(
                 "flat dense aria-label='Fold the project rail' data-control=rail-fold"
             )
@@ -456,31 +491,70 @@ class _Frame:
     def rail_items(self) -> None:
         project = self.shell.bench.project
         if project is not None and project.current:
+            # Folded, the rail shows the open item's initial beside its unfold button.
             ui.label(project.current.split("/")[-1][:1].upper()).props(
                 f'title="{project.current}"'
-            ).classes("q-mini-drawer-only")
+            ).classes("rail-initial q-mini-drawer-only")
         with ui.column().classes("q-mini-drawer-hide w-full gap-1"):
             if project is None:
-                ui.label("No project open.").classes("muted")
-                for identifier in ("project-new", "project-open"):
-                    ui.button(
-                        commands.command(identifier).title, on_click=self.actions[identifier]
-                    ).props(f"flat dense no-caps data-control={identifier}").classes("w-full")
+                self.no_project()
                 return
-            ui.label(project.current or "No item open").classes("rail-open")
-            for kind, title in KINDS:
-                ui.label(title).classes("rail-heading")
-                suite = ITEM_SUITES[kind]
-                for name in project.items(kind):
-                    item = f"{kind}/{name}"
-                    ui.button(name, on_click=lambda _, i=item, s=suite: self.open_item(i, s)).props(
-                        "flat dense no-caps"
-                        + (' aria-current="true"' if item == project.current else "")
-                    ).classes("rail-item list-row w-full")
+            nodes = [
+                {
+                    "id": "project",
+                    "label": project.name,
+                    "selectable": False,
+                    "children": [
+                        {
+                            "id": kind,
+                            "label": title,
+                            "selectable": False,
+                            "children": [
+                                {"id": f"{kind}/{name}", "label": name}
+                                for name in project.items(kind)
+                            ],
+                        }
+                        for kind, title in KINDS
+                    ],
+                }
+            ]
+            self.tree = (
+                ui.tree(nodes, on_select=self.on_tree)
+                .props("dense no-transition")
+                .props('aria-label="Project items" data-control=rail-tree')
+                .classes("rail-tree w-full")
+            )
+            self.tree.expand()
+            if project.current:
+                self.tree.select(project.current)
+
+    def no_project(self) -> None:
+        heading("No project open", 2).classes("rail-heading")
+        for identifier in ("project-new", "project-open"):
+            ui.button(commands.command(identifier).title, on_click=self.actions[identifier]).props(
+                f"flat dense no-caps data-control={identifier}"
+            ).classes("list-row w-full")
+        recent = recent_projects(int(str(self.shell.settings.value("recent_projects"))))
+        if not recent:
+            return
+        heading("Recent projects", 2).classes("rail-heading")
+        with ui.element("ul").classes("plain-list w-full").props("data-control=recent-projects"):
+            for folder in recent:
+                with ui.element("li"):
+                    ui.button(folder.name, on_click=lambda _, f=folder: self.open_project(f)).props(
+                        f'flat dense no-caps title="{folder}"'
+                    ).classes("list-row w-full")
+
+    def on_tree(self, event: events.ValueChangeEventArguments[str | None]) -> None:
+        item = event.value
+        if not item or "/" not in item:
+            return
+        kind, _ = split_reference(item)
+        self.open_item(item, ITEM_SUITES[kind])
 
     def open_item(self, item: str, suite: str) -> None:
         project = self.shell.bench.project
-        if project is not None:
+        if project is not None and project.current != item:
             project.open_item(item)
             self.rail_box.clear()
             with self.rail_box:
@@ -491,7 +565,7 @@ class _Frame:
         bench = self.shell.bench
         problems = len(self.problems()) or (1 if bench.project is None and bench.refusal else 0)
         with ui.row().classes("statusbar items-center no-wrap"):
-            ui.label(self.shell.queue.status_line()).props("data-control=queue-status")
+            ui.label(self.shell.queue.status_line()).props("role=status data-control=queue-status")
             ui.space()
             self.toggle_button = ui.button("Queue and log", on_click=self.toggle_panel).props(
                 "flat dense no-caps data-control=panel-toggle"
@@ -501,7 +575,7 @@ class _Frame:
                 if problems
                 else "✓ No problems",
                 on_click=lambda: self.run("problems"),
-            ).props("flat dense no-caps data-control=problems-count")
+            ).props("flat dense no-caps aria-live=polite data-control=problems-count")
 
     def bottom_panel(self) -> None:
         with ui.column().classes("bottom-panel w-full gap-0") as self.panel_root:
@@ -547,10 +621,18 @@ class _Frame:
                     ui.label(f"{other}: {'none' if was is None else was}").classes("muted")
                     ui.button(
                         "Reset",
-                        on_click=lambda _, k=kind, n=name, p=change.path: self.reset(k, n, p),
+                        on_click=lambda _, k=kind, n=name, p=change.path: self.ask_reset(k, n, p),
                     ).props(
                         f"flat dense no-caps data-control=reset aria-label='Reset {change.path}'"
                     )
+
+    def ask_reset(self, kind: str, name: str, path: str) -> None:
+        self.confirm(
+            f"Reset {path}?",
+            f"{kind}/{name} goes back to the default of {path}.",
+            "Reset",
+            lambda: self.reset(kind, name, path),
+        )
 
     def reset(self, kind: str, name: str, path: str) -> None:
         project = self.shell.bench.project
@@ -589,6 +671,65 @@ class _Frame:
                     ui.label(f"✕ refused: {problem.item}{where}: {problem.message}").classes(
                         "refused"
                     )
+
+    def dialogs(self) -> None:
+        recent = recent_projects(int(str(self.shell.settings.value("recent_projects"))))
+        with (
+            ui.dialog() as self.ask_dialog,
+            ui.card().classes("dialog").props("data-control=ask"),
+        ):
+            self.ask_title = heading("", 2)
+            self.ask_input = ui.input("Folder").props(
+                "autofocus outlined dense data-control=ask-input"
+            )
+            self.ask_input.on("keydown.enter", self.accept)
+            if recent:
+                ui.label("Recent projects").classes("muted")
+                with ui.element("ul").classes("plain-list w-full"):
+                    for folder in recent:
+                        with ui.element("li"):
+                            ui.button(
+                                str(folder),
+                                on_click=lambda _, f=folder: self.ask_input.set_value(str(f)),
+                            ).props("flat dense no-caps").classes("list-row w-full")
+            with ui.row().classes("justify-end w-full"):
+                ui.button("Cancel", on_click=self.ask_dialog.close).props("flat no-caps")
+                self.ask_button = ui.button("", on_click=self.accept).props("no-caps")
+        with (
+            ui.dialog() as self.confirm_dialog,
+            ui.card().classes("dialog").props("data-control=confirm"),
+        ):
+            self.confirm_title = heading("", 2)
+            self.confirm_message = ui.label("")
+            with ui.row().classes("justify-end w-full"):
+                ui.button("Cancel", on_click=self.confirm_dialog.close).props(
+                    "flat no-caps autofocus"
+                )
+                self.confirm_button = ui.button("", on_click=self.confirmed).props(
+                    "no-caps color=negative data-control=confirm-accept"
+                )
+        with (
+            ui.dialog() as self.glossary_dialog,
+            ui.card().classes("dialog glossary").props("data-control=glossary"),
+        ):
+            heading("Glossary", 2)
+            with ui.element("dl").classes("glossary-list").props('tabindex=0 aria-label="Terms"'):
+                for term, meaning in GLOSSARY:
+                    TextElement(tag="dt", text=term).classes("glossary-term")
+                    TextElement(tag="dd", text=meaning).classes("glossary-meaning")
+            ui.button("Close", on_click=self.glossary_dialog.close).props("flat no-caps")
+        with (
+            ui.dialog() as self.about_dialog,
+            ui.card().classes("dialog").props("data-control=about"),
+        ):
+            heading("About nanopnp", 2)
+            ui.label(f"Version {__version__}")
+            ui.label(
+                "The ePNP-NS model of biological nanopores, from structure to current, "
+                "without COMSOL."
+            )
+            ui.label("Open source under the BSD 3-Clause licence.").classes("muted")
+            ui.button("Close", on_click=self.about_dialog.close).props("flat no-caps")
 
     def palette_dialog(self) -> None:
         with ui.dialog() as self.palette, ui.card().classes("palette"):
@@ -642,14 +783,19 @@ def frame(
     with ui.footer(elevated=False).classes("frame-footer q-pa-none column no-wrap"):
         built.bottom_panel()
         built.status_bar()
-    with ui.element("div").classes("main-row suite-main"):
+    with ui.element("div").classes("main-row suite-main") as main:
         # The view region: one Mol* host, outside the sub-pages, so a route change keeps it.
         with ui.element("div").classes("view-region") as built.view:
             ui.element("div").props("id=mol data-control=molecule")
         built.view.set_visibility(False)
         with ui.element("div").classes("sub-page"):
             yield built
+    # A stable target outside the sub-pages, which a route change does not rebuild.
+    ui.skip_link("Skip to the suite", target=main)
+    project = shell.bench.project
+    ui.page_title(project.name if project is not None else "nanopnp workbench")
     router.on_path_changed(built.on_path)
+    built.dialogs()
     built.palette_dialog()
     built.overlay.build()
     built.apply_layout()
@@ -657,6 +803,11 @@ def frame(
         built.open_palette()
     if dialog == "settings":
         built.overlay.open()
+
+
+def heading(text: str, level: int) -> TextElement:
+    """Return a heading of this level, ``h1`` to ``h6``, in the frame's type scale."""
+    return TextElement(tag=f"h{level}", text=text).classes(f"heading heading-{level}")
 
 
 def current_suite(shell: Shell) -> Suite:

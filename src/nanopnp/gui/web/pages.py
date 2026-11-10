@@ -10,7 +10,7 @@ from nicegui import app as nicegui_app
 from nicegui import events, ui
 
 from nanopnp.gui.web.assets import ASSETS, TOKENS
-from nanopnp.gui.web.frame import Route, Views, current_suite, frame
+from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
 from nanopnp.gui.web.link import Extent, png
 from nanopnp.gui.web.screens import SUITES, Suite, screen
 from nanopnp.gui.web.shell import Shell
@@ -87,7 +87,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         def page() -> None:
             bench = shell.bench
             with ui.column().props("data-control=suite-body"):
-                ui.label(suite.title).classes("text-h5")
+                heading(f"{suite.title} suite", 1)
                 ui.label(f"This suite builds {suite.builds}.")
                 for tool in suite.tools:
                     if tool == "Charge on the mesh":
@@ -146,6 +146,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
         ui.on("mol_pick", on_mol)
         with ui.column().classes("items-start"):
+            heading("Charge on the mesh", 1)
             with ui.row().props("data-control=strip").style(f"width:{MAP_WIDTH_PX}px;gap:2px"):
                 for key, name, _ in [] if link is None else link.residues():
                     buttons[key] = (
