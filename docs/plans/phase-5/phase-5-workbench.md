@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.11 merged (`v0.6.0-alpha.11`); the written knowledge's last package WP5.12 delivered, the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.12 merged (`v0.6.0-alpha.12`); the clean-ups WP5.13, planned, and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -145,8 +145,7 @@ Live constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 a
 
 ### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.37 AM13 to AM18)
 
-**Delivered 10 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)); tag `v0.6.0-alpha.12` once
-merged. 163 of CODE_REVIEW_039's findings fixed, filed under `knowledge/`, `docs/` and four `src/` modules: the
+**Merged 10 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)); tag `v0.6.0-alpha.12`. 163 of CODE_REVIEW_039's findings fixed, filed under `knowledge/`, `docs/` and four `src/` modules: the
 knowledge base states what was measured and verified, each `[verified]` claim names its source (AL19), and each rule
 is stated once, in its clause (AL15 to AL18); `knowledge/01` backs §4, which governs (AL16); the guide states that
 protonation runs before stage 2 (AL13); the sodium cap's test is tightened (AM13); REV-226's citations follow §5.2.
@@ -166,6 +165,10 @@ import one way (D1.5). `ModelFile` carries its validated body through a public `
 split into model layers moves into `io/models.py` and `mapping_changes` ignores metadata keys, so `api/project.py` parses
 no model file again (D5.2). The designs and corrections C0 to C1.5 and C5.1 bind, re-read against WP5.09's code. VER-62
 unmoved; no new layering edge (VER-61, VER-72). Tag `v0.6.0-alpha.13`.
+
+**Planned 10 November 2026** ([the plan](wp5.13-case-and-model-files.md)). The plan rebases a study's relative paths
+after a model swap too, which the reviewed sketch returned unrebased (its D3). The project still reads a model file it
+copies or edits as written, since a copy keeps its `exposes:` list and relative paths (its D4).
 
 ### WP5.14 — Sweep planning and the walk's keying (REV-221, REV-220; CODE_REVIEW_036 candidates 2 and 6; §8.2.36 AL22)
 

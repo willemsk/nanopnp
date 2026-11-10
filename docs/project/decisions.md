@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,303. By source: history ruling 329; plan decision row 651; REV row 232; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,309. By source: history ruling 329; plan decision row 657; REV row 232; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 508; open 5; session, own call 787; session, put to the author 3.
+By decider: author 514; open 5; session, own call 787; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1007,6 +1007,12 @@ By decider: author 508; open 5; session, own call 787; session, put to the autho
 | WP5.12 D7 | author | `docs/plans/phase-5/wp5.12-the-knowledge-base-and-the-guide.md` | 2026-11-09 | WP5.12 | REV-226 `fixed`. New, each section at item 9's `###`: REV-227 (D5), `fixed` once each row has a verdict, else `open`; REV-228, the site links, `accepted`, WP5.21 (AM15); REV-229, the three ideas, `post-1.0` (AM14); REV-… | REV-226, REV-227, REV-228, REV-229, REV-230 | delivered plan |
 | WP5.12 D8 | session, own call | `docs/plans/phase-5/wp5.12-the-knowledge-base-and-the-guide.md` | 2026-11-09 | WP5.12 | One commit per item, its AUD ids in the body. Item 15 adds one `wp512-<category>` disposition per finding and one commit row per category, re-runs `register.py` and `maps.py`, sets `holds-now.yaml`, re-runs `decisions.p…` | unstated | delivered plan |
 | WP5.12 D9 | session, own call | `docs/plans/phase-5/wp5.12-the-knowledge-base-and-the-guide.md` | 2026-11-09 | WP5.12 | 517 SHALLs before item 2 and after item 9. `markers.py`: no missing test, no unfootnoted claim, no `verified:` difference. `links.py --anchors`, `duplicates.py`, `decisions.py --check`, the strict build; `same_tree.py`… | unstated | delivered plan |
+| WP5.13 D1 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `io/models.py:read_case(path, *, model)` and `read_case_text(text, *, base, source, model)` replace `read` and `reads`. `io/case.py` keeps `validate_mapping` and loses `read_case`, `read_case_text` and `_validate`. `pip…` | unstated | plan in flight |
+| WP5.13 D2 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `io/case_paths.py` holds `_cursor`, `input_paths(source)` over a document or a mapping (the path fields without `models.*`, and the correction files a case names by path), `rewrite_inputs(body, rewrite) -> bool` and `re…` | unstated | plan in flight |
+| WP5.13 D3 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `substitute(document, assignments, *, base=None)`. A `base` rebases the relative input paths after the edits in each branch: the model swap (`ModelRecord.carried` gains `base` and rebases the study layer before `_resolv…` | unstated | plan in flight |
+| WP5.13 D4 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `ModelFile.body` is the merge layer: the owned keys without `HEADER_KEYS`, rebased beside the file unless `rebase=False`. `read_model_file(kind, path, *, rebase=True, source=None)` replaces `_read_model_file` and `check…` | unstated | plan in flight |
+| WP5.13 D5 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `io/models.py:split_case_layers(raw, *, pinned)` splits a case by `owner_of`, using the module's `_put`. `Project._split` calls it, and `api/project.py:_put` goes. `mapping_changes` skips each path whose first component… | unstated | plan in flight |
+| WP5.13 D6 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | No artefact key, golden, layering edge or public name changes. `modularity-layering.yaml` and `nanopnp.PUBLIC` are untouched. Only the two substitution messages change \| AL22, ruled by the author; VER-61, VER-62, VER-72… | VER-61, VER-62, VER-72 | plan in flight |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-findings.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
