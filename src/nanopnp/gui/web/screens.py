@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from nanopnp.io.project import Suite as SuiteId
 
-__all__ = ["FRAME_CONTROLS", "SCREENS", "SUITES", "Screen", "Suite", "screen"]
+__all__ = ["FRAME_CONTROLS", "GROUPS", "SCREENS", "SUITES", "Screen", "Suite", "screen"]
 
 
 @dataclass(frozen=True)
@@ -28,12 +28,26 @@ class Screen:
 
 @dataclass(frozen=True)
 class Suite:
-    """One suite of the frame: what it builds and its tools (docs/design/workbench.md)."""
+    """One suite of the frame: what it builds and its tools (docs/design/workbench.md).
+
+    Parameters
+    ----------
+    group
+        The identifier in ``GROUPS`` of the group the suite belongs to.
+    icon
+        The Material Symbols name of the suite's icon.
+    """
 
     id: SuiteId
     title: str
     builds: str
     tools: tuple[str, ...]
+    group: str
+    icon: str
+
+
+GROUPS: dict[str, str] = {"build": "Build", "use": "Use"}
+"""The groups the suites fall into, by identifier, with the title each shows."""
 
 
 SUITES: tuple[Suite, ...] = (
@@ -42,20 +56,41 @@ SUITES: tuple[Suite, ...] = (
         "Molecular",
         "a molecular model",
         ("Prepare structure", "Ensemble", "Protonation", "Charge edit", "View"),
+        "build",
+        "sym_o_hub",
     ),
     Suite(
         "continuum",
         "Continuum",
         "a continuum model",
-        ("Protein geometry", "Contour", "Region", "Mesh: sizes, quality", "Physics defaults"),
+        ("Protein geometry", "Contour", "Region", "Mesh: sizes, quality"),
+        "build",
+        "sym_o_grid_on",
+    ),
+    Suite(
+        "physics",
+        "Physics",
+        "a physics model",
+        ("Equations", "Electrolyte", "Conditions", "Exposed values"),
+        "build",
+        "sym_o_function",
     ),
     Suite(
         "study",
         "Study",
         "a study",
         ("Overview", "Study setup", "Sweep", "Charge on the mesh", "Runs"),
+        "use",
+        "sym_o_science",
     ),
-    Suite("analysis", "Analysis", "results and comparisons", ("Results explorer", "Comparison")),
+    Suite(
+        "analysis",
+        "Analysis",
+        "results and comparisons",
+        ("Results explorer", "Comparison"),
+        "use",
+        "sym_o_monitoring",
+    ),
 )
 
 FRAME_CONTROLS: tuple[str, ...] = (
