@@ -213,10 +213,10 @@ first component. `_body(location)` returns the mapping whole. `_problems_of` cal
 - [x] e756024 2. `src/nanopnp/io/case_paths.py`, `src/nanopnp/io/models.py`, `src/nanopnp/api/case.py`,
   `specification/05-software-design/03-1-case-file.md`, `tests/tier1/test_models.py`: one substitution (D3); done when
   row 2 and FR-39's rows pass. **Executor:** main.
-- [ ] 3. `src/nanopnp/io/models.py`, `src/nanopnp/io/case.py`, `src/nanopnp/pipeline/case.py`,
+- [x] 30b055a 3. `src/nanopnp/io/models.py`, `src/nanopnp/io/case.py`, `src/nanopnp/pipeline/case.py`,
   `src/nanopnp/api/case.py`, `src/nanopnp/validation/costs.py`, the same clause, `tests/tier1/test_models.py`: one
   reader pair (D1); done when row 1 passes. **Executor:** main.
-- [ ] 4. Compaction checkpoint. **Executor:** main.
+- [x] 4. Compaction checkpoint. **Executor:** main.
 - [ ] 5. `src/nanopnp/io/models.py`, `src/nanopnp/io/defaults.py`, `src/nanopnp/api/project.py`,
   `tests/tier1/test_models.py`: typed model files and the split (D4, D5); done when row 4 and FR-32's and FR-34's rows
   pass. **Executor:** main.
