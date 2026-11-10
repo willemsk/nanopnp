@@ -1,6 +1,6 @@
 # WP5.15 — The frame on Quasar's components
 
-**Status: in progress; items 1 to 9 done.** Planned 10 November 2026 on `main` (`ce43a48`). It inherits §8.2.34 AJ1, AJ2, AJ6
+**Status: in progress; items 1 to 11 done.** Planned 10 November 2026 on `main` (`ce43a48`). It inherits §8.2.34 AJ1, AJ2, AJ6
 to AJ9 and this plan's, §8.2.38 AN1 to AN8.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to
@@ -283,8 +283,8 @@ before its wait.
 - [x] 0aa6398 8. `gui/web/palette.py`, `assets/palette.js` (D5); done when the code and review say so. **Executor:** main
 - [x] 1c2416e 9. `gui/web/settings_page.py` with the store's section, `overlay.py` removed (D6, D7); done when VER-78 (j), (k)
   and (l) pass. **Executor:** main
-- [ ] 10. `gui/web/frame.py`'s changed table (D8); done when VER-78 (a) passes on `changes`. **Executor:** main
-- [ ] 11. Compaction checkpoint. **Executor:** main
+- [x] 230af47 10. `gui/web/frame.py`'s changed table (D8); done when VER-78 (a) passes on `changes`. **Executor:** main
+- [x] 11. Compaction checkpoint. **Executor:** main
 - [ ] 12. `gui/web/server.py`, `.claude/scripts/gui/render_shell.py`, `shoot.cjs` (D10); done when `/np-gui render
   shell` renders every state, 2WCD from its cache the second time. **Executor:** general-purpose on Sonnet
 - [ ] 13. `.claude/skills/np-gui/`, `.claude/scripts/gui/design_md.py`, `DESIGN.md` (D11); done when the code and review
