@@ -218,3 +218,7 @@ body .nicegui-footer.frame-footer {
 .q-btn.bg-primary {
   color: var(--accent-ink) !important;
 }
+.palette {
+  width: 36rem;
+  max-width: 90vw;
+}

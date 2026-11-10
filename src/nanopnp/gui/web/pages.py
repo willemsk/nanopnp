@@ -80,11 +80,8 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     ):
         nicegui_app.add_static_file(local_file=local, url_path=url, max_cache_age=0)
 
-    async def ready() -> None:
-        await ui.run_javascript("document.body.dataset.screenReady = '1'", timeout=10)
-
-    def suite_page(suite: Suite) -> Callable[[], None]:
-        def page() -> None:
+    def suite_page(suite: Suite) -> Callable[[Views], None]:
+        def page(built: Views) -> None:
             bench = shell.bench
             with ui.column().props("data-control=suite-body"):
                 heading(f"{suite.title} suite", 1)
@@ -105,6 +102,11 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                         ui.label(f"✕ refused: {bench.refusal}").classes("refused")
                     if bench.notice:
                         ui.label(bench.notice)
+
+            async def ready() -> None:
+                await built.settled()
+                await ui.run_javascript("document.body.dataset.screenReady = '1'", timeout=10)
+
             ui.timer(0.1, ready, once=True)
 
         return page
@@ -198,7 +200,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             shell,
             ROUTES,
             panel=panel or None,
-            palette=bool(palette),
+            palette=palette or None,
             dialog=dialog or None,
         ) as built:
             current = f"/{current_suite(shell)}"
