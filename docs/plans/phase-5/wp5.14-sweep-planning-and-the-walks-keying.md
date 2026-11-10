@@ -33,8 +33,8 @@ choices keep today's behaviour and every refusal a sweep makes today.
 **Scope.** REV-221 and REV-220: [CODE_REVIEW_036](../../code_reviews/CODE_REVIEW_036.md)'s candidates 2 and 6, whose
 sketches the items cite, re-read against WP5.13's code. **Depends on:**
 WP5.13 (merged). WP5.15 follows in this lane. **Requirements:** FR-24, FR-27, FR-39; VER-61, VER-62, VER-64, VER-72.
-**Constrained by:** AL22 (no key and no golden moves), §5.3.4's refusals before a member is built, AC1 (a caller reads
-no private field), `.claude/rules/python.md` (imports at the top). **Implementing session:** Sonnet, high effort. Tag
+**Constrained by:** AL22 (no key and no golden moves), §5.3.4's refusals before a member is built, AC1 (a public read
+rather than a private field), `.claude/rules/python.md` (imports at the top). **Implementing session:** Sonnet, high effort. Tag
 `v0.6.0-alpha.14`.
 
 **Amended when it lands:** §5.3.4's sentence "The plan resolves each member once, and the forecast and the run read
@@ -44,11 +44,11 @@ those members." (D3; item 3). The plan's commit amends no clause.
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| D1 Planning in memory | `sweep/plan.py:build_plan(document, *, source=None, base=None, check_meshes=True)`. Given `base`, it reads no file: it checks the model files, and resolves the members, beside `base.models_record.base` for a study and beside `document.base_path(source).parent` otherwise. `api/sweep.py:plan_sweep` builds the plan in memory from the edited `case`, writes the base case and the sweep file once into `store.sweep_directory(name, plan.hash)` and moves the plan there with `replace(base_path=...)`; no `.staging-*` directory | D2.1 and C2.1, ruled by the author on 7 November 2026; decided by the plan for the directory an in-memory study is read beside |
-| D2 Members keyed on their directory | `SweepPlan` gains `_resolved_members` and `_resolved_beside`, fields with `compare=False, repr=False`. `resolved_members` returns them while `_resolved_beside == base_path.parent`, else runs `base_case()` once, resolves and caches. `held_member(index) -> ResolvedCase | None` returns a held member and never resolves. `build_plan` passes the members it resolved; `read_plan` passes none | D2.2 and C2.2, ruled by the author on 7 November 2026; decided by the plan for `held_member`, since `api/` reads no private field (AC1) |
+| D1 Planning in memory | `sweep/plan.py:build_plan(document, *, source=None, base=None, check_meshes=True)`. Given `base`, it reads no file at the base path: it checks the model files, and resolves the members, beside `base.models_record.base` for a study and beside `document.base_path(source).parent` otherwise. `api/sweep.py:plan_sweep` builds the plan in memory from the edited `case`, writes the base case and the sweep file once into `store.sweep_directory(name, plan.hash)` and moves the plan there with `replace(base_path=...)`; no `.staging-*` directory | D2.1 and C2.1, ruled by the author on 7 November 2026; decided by the plan for the directory an in-memory study is read beside |
+| D2 Members keyed on their directory | `SweepPlan` gains `_resolved_members` and `_resolved_beside`, fields with `compare=False, repr=False`. `resolved_members` returns them while `_resolved_beside == base_path.parent.resolve()`, else runs `base_case()` once, resolves and caches with `_resolved_beside` absolute. `held_member(index) -> ResolvedCase | None` returns a held member and never resolves. `build_plan` passes the members it resolved; `read_plan` passes none | D2.2 and C2.2, ruled by the author on 7 November 2026; decided by the plan for `held_member`, a public read as AC1 gave `Session` for `Case`, and for the absolute directory |
 | D3 A member resolved where it is held | `run_point` calls `plan.base_case()` before every member, as today, then takes its point and its parent from `held_member`, or resolves only those two. `run_document`, `stored_upstream` and `Session._walk` take `resolved: ResolvedCase | None = None` beside the document, and refuse one whose `document` is another object. `_parent_artefact` keys the parent's solve on that one resolved case and passes `session.own_stages` | D2.3 and C2.3, ruled by the author on 7 November 2026; decided by the plan for the keyword (D2.3's text, against candidate 6's sketch, which passes either type in one parameter) and for keeping §5.3.4's check before each member |
 | D4 The session's walk stays | `Session._walk` and `Session._member` stay; `_walk` forwards `resolved` | D2.4 and C2.4, ruled by the author on 7 November 2026 |
-| D5 One keying walk | `_Walk.keyed(name)` builds a stage to key only, with the store where it takes one and never a workspace; `_Walk.stored(name, key) -> tuple[bool, Artefact | None]` looks it up. `stored_upstream` and `keyed_walk` build a `_Walk` through `_keying_walk` and use `describe`, `inputs`, `keyed` and `stored`; `stored_upstream` gains `stages` and takes a `key_is_artefact` stage's key with no store read. The run keeps `construct`; `_resolve_stage`'s `only` branch reads through `stored` | D6.1 and C6.1, ruled by the author on 7 November 2026; decided by the plan for `_resolve_stage`, so that the payload lookup is one method |
+| D5 One keying walk | `_Walk.keyed(name)` builds a stage to key only, with the store where it takes one and never a workspace; `_Walk.stored(name, key) -> tuple[bool, Artefact | None]` looks it up. `stored_upstream` and `keyed_walk` build a `_Walk` through `_keying_walk` and use `describe`, `inputs`, `keyed` and `stored`; `stored_upstream` gains `stages` and takes a `key_is_artefact` stage's key with no store read. The run keeps `construct`; `_resolve_stage`'s `substitute` branch reads through `stored` | D6.1 and C6.1, ruled by the author on 7 November 2026; decided by the plan for `_resolve_stage`, so that the payload lookup is one method |
 | D6 One module | `FORECAST_SCHEMA`, `Identity`, `_NotBuiltPayload`, `_standing_in` and `keyed_walk` move into `pipeline/run.py`, whose `__all__` gains the three public names; `pipeline/forecast.py` goes; `sweep/forecast.py` imports from `pipeline.run` | D6.2, ruled by the author on 7 November 2026 |
 | D7 Nothing moves | No artefact key, golden, layering edge, public name or command output changes. §5.3.4 says what a run in another process resolves | AL22, ruled by the author; VER-61, VER-62, VER-72; decided by the plan for what is checked |
 
@@ -67,6 +67,8 @@ those members." (D3; item 3). The plan's commit amends no clause.
   the quick-start, the quick-start with `variables:`, its study split in three, and that study edited; and
   `_variables_as_written` agrees. So `base_case()` accepts the store's copy of an in-memory base.
 - `api/sweep.py` imports `tempfile` for the staging directory alone.
+- `plan_sweep` reads the in-memory plan only for its `hash` before `replace`. A study's members are held beside the
+  study's directory, never that plan's `base_path.parent` (`.`), so that plan serves none of them.
 
 **D2.**
 - `resolved_members` is a `cached_property`; `build_plan` seeds `plan.__dict__["resolved_members"]` after its two
@@ -76,6 +78,8 @@ those members." (D3; item 3). The plan's commit amends no clause.
 - Probed: a plan built in `a/`, moved by `replace(base_path=b/...)`, resolves `electrolyte.parameters: params.yaml`
   to `b/params.yaml` today only because the cache is dropped; carrying it would serve `a/params.yaml`.
 - `sweep/forecast.py:forecast` reads `plan.resolved_members`; nothing else in `src/` or `tests/` does.
+- `pipeline.case.resolve` reads `base` through `Path.resolve()`, against the working directory when it is relative;
+  a relative `base_path` compared as written would serve members resolved before a `chdir`.
 
 **D3.**
 - Probed at `d3420d8` on a three-point bias sweep of `test_forecast.py`'s case: `plan_sweep` resolves 3 times,
@@ -146,7 +150,7 @@ def _given(
 `_given` and `_keying_walk`, its message unchanged. `keyed_walk` is the sketch; `_forecast_digest(name, stage,
 description, inputs, resolved, identities) -> str` holds today's `NotBuilt` branch up to `content_hash`. `run_document`
 gains `resolved=None` last and builds its walk with `resolved=_given(document, resolved, base)`. `_resolve_stage`'s
-`only` branch reads `_, found = walk.stored(name, key)`. `__all__` gains `FORECAST_SCHEMA`, `Identity` and
+`substitute` branch reads `_, found = walk.stored(name, key)`. `__all__` gains `FORECAST_SCHEMA`, `Identity` and
 `keyed_walk`. Delete `pipeline/forecast.py`; `sweep/forecast.py` imports `Identity, keyed_walk` from
 `nanopnp.pipeline.run`. Each new parameter gets a line in its function's *Parameters*: `resolved`, "the document
 already resolved against `base`, so it is not resolved again; another document's is refused"; `stages`, "stages of
@@ -158,7 +162,7 @@ one's own, keyed as the walk keys them".
 ```python
 def held_member(self, index: int) -> ResolvedCase | None:
     """Return one member as the plan holds it resolved beside its base case, or None."""
-    if self._resolved_members is None or self._resolved_beside != self.base_path.parent:
+    if self._resolved_members is None or self._resolved_beside != self.base_path.parent.resolve():
         return None
     return self._resolved_members[self.point(index).index]
 ```
@@ -166,13 +170,13 @@ def held_member(self, index: int) -> ResolvedCase | None:
 `build_plan` takes `base: CaseDocument | None = None`. With none, it loads as today and `beside = base_path.parent`;
 given one, `beside = base.models_record.base if base.models_record is not None else base_path.parent`.
 `_check_model_files` and `_resolve_every_point` take `beside`, and `replace(plan, files=..., _resolved_members=resolved,
-_resolved_beside=beside)` replaces the seed, whose two lines go. `base`'s *Parameters* line: "the base case already
+_resolved_beside=beside.resolve())` replaces the seed, whose two lines go. `base`'s *Parameters* line: "the base case already
 read, so no file is read at the sweep's base path".
 
 **Item 3.** `plan_sweep` keeps its checks and its `document`, then builds
 `build_plan(loads_sweep(text), base=case, check_meshes=check_meshes)`, writes the two files into
 `store.sweep_directory(name, planned.hash)` and returns `Sweep(replace(planned, base_path=(directory /
-BASE_FILENAME).resolve()), directory, session)`; delete the staging comment and `tempfile`. `run_point` takes
+BASE_FILENAME).resolve()), directory, session)`; delete the staging comment, the `sweeps` lines and `tempfile`. `run_point` takes
 `held = plan.held_member(index)`, `document = held.document if held is not None else plan.case(index, base=base)`, and
 passes `resolved=held` to `_walk`, which gains `resolved: ResolvedCase | None = None` last and passes it to
 `run_document`. `_parent_artefact` takes the parent from `held_member`, else
@@ -211,8 +215,8 @@ recording each document's `name`. *Light* is `test_forecast.py:_plan`'s case, mo
 
 | Test | Tier | Identifiers | Oracle and tolerance | `-k` |
 |---|---|---|---|---|
-| 1 `test_fr39_a_planned_sweep_resolves_each_member_once` in `test_forecast.py` | 1 | FR-39, FR-24 | Counting from after each plan is built, under *Counted*: `plan_sweep` of *Light* over `bias_V` `[0.0, 0.05, 0.1]`, then its `forecast()` and `run()`, record each point's name exactly once, and a second `forecast()` none; `_plan`'s plan from a file records none through `forecast` and `run_plan`; `run_point(read_plan(planned.directory / PLAN_FILENAME), 2, ...)` records the names of point 2 and of its parent once each, and afterwards that plan's `held_member(i) is None` for each `i`; every member is `ok` | `each_member_once` |
-| 2 `test_fr39_a_plan_moved_to_another_directory_resolves_its_members_there` in `test_sweep_plan.py` | 1 | FR-39 | `BASE` with `parameters: params.yaml`, written in `a/` and copied to `b/`, each beside a copy of the shipped `willems2020_nacl.yaml` named `params.yaml`, planned from `a/` by `_sweep` and `plan_from_document`: the first member's `correction_files["electrolyte.parameters"]` is `a/params.yaml`; after `replace(plan, base_path=b / "base.yaml")` it is `b/params.yaml`, from both `resolved_members` and `held_member(0)`; the original plan still gives `a/`; `read_plan(write_plan(...)).held_member(0) is None` | `moved_to_another` |
+| 1 `test_fr39_a_planned_sweep_resolves_each_member_once` in `test_forecast.py` | 1 | FR-39, FR-24 | Under *Counted*: `plan_sweep` of *Light* over `bias_V` `[0.0, 0.05, 0.1]` records each point's name once, then its `forecast()` and `run()` record each once more, and a second `forecast()` none; counting from after it is built, `_plan`'s plan from a file records none through `forecast` and `run_plan`; `run_point(read_plan(planned.directory / PLAN_FILENAME), 2, ...)` records the names of point 2 and of its parent once each, and afterwards that plan's `held_member(i) is None` for each `i`; every member is `ok` | `each_member_once` |
+| 2 `test_fr39_a_plan_moved_to_another_directory_resolves_its_members_there` in `test_sweep_plan.py` | 1 | FR-39 | `BASE` with `parameters: params.yaml`, written in `a/` and copied to `b/`, each beside a copy of the shipped `willems2020_nacl.yaml` named `params.yaml`, planned from `a/` by `_sweep` and `plan_from_document`: the first member's `correction_files["electrolyte.parameters"]` is `a/params.yaml`; after `replace(plan, base_path=b / "base.yaml")`, `held_member(0) is None`, then it is `b/params.yaml` from `resolved_members` and, after that, from `held_member(0)`; the original plan still gives `a/`; `read_plan(write_plan(...)).held_member(0) is None` | `moved_to_another` |
 | 3 `test_fr27_the_upstream_lookup_keys_own_stages_as_the_walk_does` in `test_stages.py` | 1 | FR-27, VER-64 | As `test_fr27_a_function_stage_is_keyed_by_its_code_and_its_inputs` sets it up, the quick-start with `elements(mesh)` registered, run to `elements`: `stored_upstream(case, store=session.store, feeding="elements", stages=session.own_stages, base=case.source.base)` names the run's stage records but `elements`, each hash equal to the run's artefact; the same with `resolved=resolve(case, base=case.source.base)`; `sorted(store.root.rglob("*"))` is unchanged by both | `own_stages_as_the_walk` |
 | 4 `test_fr39_the_forecast_equals_the_stages_the_walk_rebuilds`, `test_fr39_the_forecast_never_runs_a_stage`; `test_in_memory_sweep_matches_the_sweep_file_plan` gains `held.plan.base_case()` returning for `BASE` and for `BASE` with `variables: {v: {value: 50, unit: mV}}` and `bias_V: v` swept over `concentration_M` | 1 | FR-39, VER-64, VER-36 | Unchanged oracles; the store's copy of an in-memory base passes its hash and variables checks | `forecast or in_memory` |
 | 5 The VER-62 walks of examples 01, 02 and 03; VER-37 and VER-38 in `tests/tier2/test_sweep.py` and `test_sweep_generated_mesh.py`; `test_layering.py`, `test_stage_conformance.py` | 1, 2 | VER-62, VER-37, VER-38, VER-61, VER-72, VER-64 | Walks unmoved at 10⁻⁸, no re-pin; each warm member warm; no new edge or deferred import; no stage set in `pipeline/run.py` | `gate.sh run`; example 03 by its file |
