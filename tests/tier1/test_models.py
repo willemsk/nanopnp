@@ -21,6 +21,7 @@ from nanopnp.sweep.plan import SweepPlanError, plan_from_document
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 QUICKSTART = EXAMPLES / "01-quickstart" / "quickstart.case.yaml"
 CHARGED = EXAMPLES / "07-pdb-to-charged-run" / "2wcd.case.yaml"
+PARAMETERS = Path(__file__).resolve().parents[2] / "data" / "corrections" / "willems2020_nacl.yaml"
 
 
 def _leaves(mapping: dict[str, Any], path: str = "") -> list[tuple[str, Any]]:
@@ -345,3 +346,54 @@ def test_fr39_a_continuum_models_wall_follows_the_physics_salt_unless_pinned(
     (tmp_path / "continuum.yaml").write_text(yaml.safe_dump(continuum), encoding="utf-8")
     pinned = Case.load(tmp_path / "study.case.yaml")
     assert meshes(pinned, 3.0, 5.0) == 1, "a pinned continuum model keeps one wall size"
+
+
+def _params(folder: Path) -> str:
+    # A copy of the shipped parameters beside the case, named by a relative path.
+    folder.mkdir(exist_ok=True)
+    (folder / "params.yaml").write_bytes(PARAMETERS.read_bytes())
+    return str((folder / "params.yaml").resolve())
+
+
+def _quickstart(folder: Path, **extra: object) -> Path:
+    raw = yaml.safe_load(QUICKSTART.read_text(encoding="utf-8"))
+    raw["electrolyte"]["parameters"] = "params.yaml"
+    raw["electrolyte"]["corrections"]["diffusivity"]["model"] = "params.yaml"
+    raw = {"schema": raw.pop("schema"), "name": raw.pop("name"), **extra, **raw}
+    path = folder / "case.yaml"
+    path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    return path
+
+
+def test_fr25_every_edit_reads_a_relative_path_beside_its_case(tmp_path: Path) -> None:
+    plain_folder = tmp_path / "plain"
+    absolute = _params(plain_folder)
+    plain = Case.load(_quickstart(plain_folder))
+    assert plain.with_().electrolyte.parameters == absolute
+    assert substitute(plain, {}).electrolyte.parameters == "params.yaml"
+
+    named_folder = tmp_path / "variables"
+    absolute = _params(named_folder)
+    path = _quickstart(named_folder, variables={"v": {"value": 50, "unit": "mV"}})
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    raw["boundary_conditions"]["bias_V"] = "v"
+    path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    named = Case.load(path).with_(outputs=["current"])
+    assert named.electrolyte.parameters == absolute
+    assert dict(named.expressions) == {"boundary_conditions.bias_V": "v"}
+
+    study_folder = tmp_path / "study"
+    study_folder.mkdir()
+    absolute = _params(study_folder)
+    study_path = split_case(QUICKSTART, study_folder)
+    written = yaml.safe_load(study_path.read_text(encoding="utf-8"))
+    written["electrolyte"] = {"corrections": {"diffusivity": {"model": "params.yaml"}}}
+    study_path.write_text(yaml.safe_dump(written, sort_keys=False), encoding="utf-8")
+    continuum = yaml.safe_load((study_folder / "continuum.yaml").read_text(encoding="utf-8"))
+    continuum["name"] = "twin"
+    (study_folder / "twin.yaml").write_text(yaml.safe_dump(continuum), encoding="utf-8")
+    study = Case.load(study_path)
+    assert study.electrolyte.corrections.diffusivity.model == "params.yaml"
+    swapped = study.with_({"models.continuum": "twin.yaml"})
+    assert swapped.electrolyte.corrections.diffusivity.model == absolute
+    assert study.with_(bias_V=0.1).electrolyte.corrections.diffusivity.model == absolute

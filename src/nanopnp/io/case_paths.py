@@ -473,13 +473,18 @@ def _sequence_entry(
         ) from None
 
 
-def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
+def substitute(
+    document: D, assignments: Mapping[str, FieldValue], *, base: Path | None = None
+) -> D:
     """Return a fresh, re-validated copy of ``document`` with each dotted path set to its value.
 
     Parameters
     ----------
     assignments
         Dotted case-file path to value; an empty mapping returns an equal document.
+    base
+        The directory each relative input path is read beside, made absolute after the edits;
+        ``None`` leaves the paths as written.
     """
     named = {
         path: value
@@ -492,14 +497,13 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
             # ``models`` is outside the dump, so set into the payload it would validate and be
             # ignored: the document would claim a model it never read.
             raise CaseValidationError(
-                f"<{document.name}>: {', '.join(sorted(named))}: the case names no model, so a "
-                "substitution cannot give it one; write models: in the case file and read it "
-                "with nanopnp.case.Case.load or nanopnp.pipeline.case.load_case"
+                f"<{document.name}>: {', '.join(sorted(named))}: the case names no model; "
+                "write models: in the case file"
             )
         moved = _model_assignments(named)
         for path, value in moved.items():
             field_at(path).validate(value)
-        document = record.carried(document, moved)
+        document = record.carried(document, moved, base=base)
         assignments = {k: v for k, v in assignments.items() if k not in named}
         if not assignments:
             return document
@@ -509,14 +513,13 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
     )
     if variables is None and named_variables:
         raise CaseValidationError(
-            f"<{document.name}>: {', '.join(named_variables)}: the case defines no variables, so a "
-            "substitution cannot set one; write variables: in the case file and read it with "
-            "nanopnp.case.Case.load or nanopnp.pipeline.case.load_case"
+            f"<{document.name}>: {', '.join(named_variables)}: the case defines no variables; "
+            "write variables: in the case file"
         )
     if variables is not None:
         # Read again as written, so an expression a substitution leaves alone still follows the
         # variables it names.
-        return variables.carried(document, assignments)
+        return variables.carried(document, assignments, base=base)
     record = document.models_record
     if record is not None:
         record.check_dropped(document.name, assignments)
@@ -527,6 +530,8 @@ def substitute(document: D, assignments: Mapping[str, FieldValue]) -> D:
         # into the plain dict would come out of ``model_dump`` as an object YAML cannot write.
         reference.validate(value)
         _set_at(payload, path, value)
+    if base is not None:
+        rebase_inputs(payload, base)
     listed = ", ".join(sorted(assignments)) or "nothing"
     return _revalidated(document, payload, f"<{document.name} with {listed} substituted>")
 
