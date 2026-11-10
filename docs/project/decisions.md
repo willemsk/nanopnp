@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,336. By source: history ruling 337; plan decision row 675; REV row 233; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,337. By source: history ruling 338; plan decision row 675; REV row 233; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 536; open 5; session, own call 792; session, put to the author 3.
+By decider: author 537; open 5; session, own call 792; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1015,6 +1015,7 @@ By decider: author 536; open 5; session, own call 792; session, put to the autho
 | §8.2.38 AN6 | author | `specification/history/38-wp515s-plan-the-settings-compute-and-the-stores-clean-up.md` | 2026-11-10 | WP5.15 | Added 10 November 2026, at WP5.15's plan's review.* **Every walk holds a lock on the store that any program sees, and a clean-up that finds one held removes nothing.** The review found that the plan checked only the wor… | open: WP5.15 (§5.3.2's NOTE) | open |
 | §8.2.38 AN7 | author | `specification/history/38-wp515s-plan-the-settings-compute-and-the-stores-clean-up.md` | 2026-11-10 | WP5.15 | Added 10 November 2026, at WP5.15's plan's review.* **The suite shortcuts follow the bar: Alt+Shift+1 to 5 open Molecular, Continuum, Physics, Study and Analysis.** Physics' place moves Study from 3 to 4 and Analysis fr… | open: WP5.15 | open |
 | §8.2.38 AN8 | author | `specification/history/38-wp515s-plan-the-settings-compute-and-the-stores-clean-up.md` | 2026-11-10 | WP5.15 | Added 10 November 2026, at WP5.15's plan's review.* **The implementing session runs on Opus at high effort, a scoped item on Sonnet at high effort, and Haiku takes only mechanical, repetitive work that is fully specifie… | §8.4.5 | in force |
+| §8.2.38 AN9 | author | `specification/history/38-wp515s-plan-the-settings-compute-and-the-stores-clean-up.md` | 2026-11-10 | WP5.15 | Added 10 November 2026, at WP5.15's plan's review.* **The GUI reviewer runs on Opus at high effort.** The author: "Would the GUI reviewer benefit to moving to Opus High? If yes, make the change." The session judged that… | §8.4.5 | in force |
 | WP5.13 D1 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `io/models.py:read_case(path, *, model)` and `read_case_text(text, *, base, source, model)` replace `read` and `reads`. `io/case.py` keeps `validate_mapping` and loses `read_case`, `read_case_text` and `_validate`. `pip…` | unstated | delivered plan |
 | WP5.13 D2 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `io/case_paths.py` holds `_cursor`, `input_paths(source)` over a document or a mapping (the path fields without `models.*`, and the correction files a case names by path), `rewrite_inputs(body, rewrite) -> bool` and `re…` | unstated | delivered plan |
 | WP5.13 D3 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `substitute(document, assignments, *, base=None)`. A `base` rebases the relative input paths after the edits in each branch: the model swap (`ModelRecord.carried` gains `base` and rebases the study layer before `_resolv…` | unstated | delivered plan |
