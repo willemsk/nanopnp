@@ -34,7 +34,8 @@ guide says what v0.6 does. No case schema, public API or result changes. The
   - **REV-227**, the source checklist: the author's verdicts on the six findings that rest on the ESI or the
     COMSOL model report, each edit landed (AM16, AM18).
   - **REV-228** (the site's links from the registers to the plans, accepted for WP5.21), **REV-229** (three
-    proposed checks, after v1.0) and **REV-230** (the correction file's comments, open).
+    proposed checks, after v1.0), **REV-230** (the correction file's comments), **REV-231** (a comment in
+    `structure/axis.py`) and **REV-232** (three statements the physics reviewer doubted), the last three open.
 - **Changed**:
   - Every `[verified]` claim of `knowledge/` names its source; a thesis claim the thesis does not support as
     worded reads "(unverified)"; `.claude/scripts/audit/markers.py` skips code spans (AL19).

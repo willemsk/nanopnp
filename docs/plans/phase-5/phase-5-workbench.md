@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.11 merged (`v0.6.0-alpha.11`); the written knowledge's last package WP5.12 planned, the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.11 merged (`v0.6.0-alpha.11`); the written knowledge's last package WP5.12 delivered, the clean-ups WP5.13 and WP5.14 next, then the shell packages WP5.15 to WP5.22.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -145,16 +145,16 @@ Live constraints: AL16 to AL18 and AL21 continue in WP5.12; REV-223 to REV-225 a
 
 ### WP5.12 — The knowledge base and the guide (§8.2.36 AL13, AL15 to AL21; §8.2.37 AM13 to AM18)
 
-**Planned 9 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)). The 164 findings WP5.11 left, most filed under
-`knowledge/` and `docs/`. The five concepts that state a method or rule wrongly are rewritten, AUD-339 first (AL15);
-`knowledge/01`'s overview says it backs §4 and §4 governs (AL16); the redundancy rows, the §6 and §4 mirrors in
-`knowledge/06` and `knowledge/01` first, each concept pointing at its clause (AL17); the sediment rows (AL18); each of
-the fifteen unsourced `[verified]` claims footnoted, marked "by arithmetic" or demoted, and the thesis transcriptions
-checked against the thesis or marked unverified (AL19); the guide says protonation runs before the density (AL13).
-The test of the sodium cap is tightened (AM13); three ideas with no requirement become one open item for after v1.0
-(AM14); the site's dead register links wait for WP5.21 (AM15); REV-226's citations in `src/` follow §5.2. The session asks
-the author the six findings that rest on the ESI or the COMSOL report in one round, and lands each confirmed edit
-(AL20; AM16; AM18); a finding not yet checked stays in REV-227. Tag `v0.6.0-alpha.12`.
+**Delivered 10 November 2026** ([the plan](wp5.12-the-knowledge-base-and-the-guide.md)); tag `v0.6.0-alpha.12` once
+merged. 163 of CODE_REVIEW_039's findings fixed, filed under `knowledge/`, `docs/` and four `src/` modules: the
+knowledge base states what was measured and verified, each `[verified]` claim names its source (AL19), and each rule
+is stated once, in its clause (AL15 to AL18); `knowledge/01` backs §4, which governs (AL16); the guide states that
+protonation runs before stage 2 (AL13); the sodium cap's test is tightened (AM13); REV-226's citations follow §5.2.
+The author answered the six findings that rest on the ESI or the COMSOL report, and each edit landed (REV-227; AL20,
+AM16, AM18). 517 SHALLs kept.
+
+Live constraints: REV-228 is WP5.21's; REV-229 is after v1.0; REV-230 waits for the next change to the correction
+file; REV-231 and REV-232 are open.
 
 ### WP5.13 — Case and model files (REV-217, REV-219; CODE_REVIEW_036 candidates 1 and 5; §8.2.36 AL22, AL23)
 
