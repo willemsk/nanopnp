@@ -2921,3 +2921,29 @@ the notation is at most the COMSOL report's.
 **Open**, decided by the WP5.12 plan (D3): the file's bytes are a key of stage 8's cache (VER-62), so a
 comment edit changes every cached result's key. The fix lands with the next package that changes that
 file for another reason; none is named yet.
+
+### REV-231: axis.py's comment sends the stage-1 margins to an index
+
+`src/nanopnp/structure/axis.py`:15-16 reads "Thresholds: SPECIFICATION.md §5.2 NOTE on stage 1; margins:
+knowledge/07-software-stack/index.md". That index only lists the concepts; §5.2's NOTE on stage 1 puts the
+margins of the four stage-1 thresholds in the WP18 plan, Design §2 to §4. Found at WP5.12's item 11, whose
+D6 allowed only REV-226's citations, AUD-216 and AUD-351 under `src/`.
+
+**Open**: a one-line comment fix, for the next package that edits `structure/axis.py`.
+
+### REV-232: Three statements the physics reviewer doubted at WP5.12
+
+The physics reviewer read WP5.12's changes to `knowledge/` and §4.6 and doubted three statements that
+WP5.12 did not change:
+
+- §6's derivation of the wall resolution (`specification/06-numerics.md`:165) states `h̃ = λ̃_D/5`,
+  citing NUM-30, whose first layer is `min(0.05 nm, λ_D/5)`. The bound NUM-30 sets still meets the
+  derivation; the two wordings differ.
+- VER-03's row asks for "four significant figures", where its tests assert a relative tolerance of 10⁻³.
+  The row predates WP5.12.
+- `knowledge/06-numerics-fem/02`'s 3.4e-2 `V_T` source error and its "The planar forms and a uniform-permittivity problem with no source are exact at the default" have no
+  source in the WP26 record.
+
+**Open**: each wants a reading against its source, by the next package that touches §6, VER-03 or
+`knowledge/06`.
+

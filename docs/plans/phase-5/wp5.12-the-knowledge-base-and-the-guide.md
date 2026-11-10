@@ -1,6 +1,6 @@
 # WP5.12 — The knowledge base and the guide
 
-**Status: planned, not started.** Planned 9 November 2026, at `f8960d1`. Inherits §8.2.36 AL13 and AL15 to AL21, §8.2.37
+**Status: delivered, 10 November 2026.** Planned 9 November 2026, at `f8960d1`. Inherits §8.2.36 AL13 and AL15 to AL21, §8.2.37
 AM13 to AM18 ruled at this plan and its review, CODE_REVIEW_039's register and its scripts in `.claude/scripts/audit/`, and
 REV-226.
 
@@ -208,8 +208,25 @@ AM14 REV-229.
   `CHANGELOG.md`; done when each finding reads `fixed` or names its REV row and `decisions.py --check` passes.
   **Executor:** main
 - [x] 16. Compaction checkpoint. **Executor:** main
-- [ ] 17. The Outcome, both Status lines, `current.md`, the PR body; done when the code and review say so.
+- [x] 17. The Outcome, both Status lines, `current.md`, the PR body; done when the code and review say so.
   **Executor:** main
+
+  > **Outcome — 163 findings fixed, the six source findings answered, REV-226 fixed, 517 SHALLs kept.** Every
+  > finding of the lists but AUD-14 (REV-228) reads `fixed <sha>` or `dismissed` in [the
+  > register](../../code_reviews/CODE_REVIEW_039/findings.md): 364 fixed, 22 dismissed, 1 your call. `markers.py`
+  > lists no missing test, no unfootnoted claim, no `verified:` difference. Decisions this session took that the
+  > plan does not hold, for `/np-ship` to check:
+  > - Item 11: `same_tree.py` cannot confirm a change inside a string literal, so `git diff -U0` showed that only the
+  >   citations changed; `density/radii.py`'s frame-specific refusal of a patched radius keeps §5.3.1, which still
+  >   states that rule. `structure/axis.py`'s margins pointer is outside D6: REV-231.
+  > - Item 13: the author answered AUD-286 with the boundary (the cis reservoir boundary, from the paper's main
+  >   text), so `knowledge/09/04` C.10 and `09/07` changed with Appendix B; AUD-343's answer was none of the three
+  >   options (all three sources give 6.2 nm⁻¹), and ruling 1 now says so; AUD-346's number is ESI §1.4.
+  >   `knowledge/09`'s report footnotes avoid "ESI" and the journal's name, so `markers.py` still counts them as
+  >   the COMSOL report's (14).
+  > - Item 15: REV-227's row and section landed with item 13; REV-230 also records `willems2020_nacl.yaml`:33-34's
+  >   "0.62e1" attribution. The physics reviewer's three doubts that WP5.12 did not act on are REV-232.
+  > - Checkpoint 16 did not pause, at the author's word; it was gated and pushed with item 17.
 
 The checkpoints 10, 12, 14 and 16 were added after item 8, at the author's request: one after each remaining item, the
 last item followed by *Finishing*'s pause. Items 9 to 13 became 9, 11, 13, 15 and 17.
