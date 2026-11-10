@@ -1247,7 +1247,7 @@ the record. A1 projects 1.15 GB of stage 1 at 1,000 frames (limit 4 GB). A8 is 0
 walk and 0.03 % on 2WCD (limit 5 %). A16 is 0.84 % and 0.70 % (limit 10 %). No share is over its
 threshold, so no cost fix follows (§8.2.12 M2).
 
-## REV-117: Tooling left without tests by the test scope
+### REV-117: Tooling left without tests by the test scope
 
 WP50 deleted the tests of the OKF checker (`validation/okf.py`), the findings-log reader, the plan
 shape, the same-tree and push-guard scripts and similar repository tooling (§8.2.13 N3). The tools
@@ -1263,7 +1263,7 @@ which CI's `docs` job runs on every push, imports `navigation` and `splice_navig
 are deleted; `validation/okf.py` keeps the navigation helpers and `REPOSITORY`, and
 `validation/findings.py` keeps `parse_log` and its types.
 
-## REV-118: Gate and mechanism tests the pruning removed
+### REV-118: Gate and mechanism tests the pruning removed
 
 WP50's review found deletions that arguably fall inside §8.2.13 N1 (doubt keeps the test) and
 restored two groups (the number-stability file tests, the solution-state integrity tests). Three
@@ -1279,7 +1279,7 @@ remain deleted:
 **Fixed** (author's ruling, WP50 review). All three groups are restored in `test_case_leaves.py`,
 `test_charge_fields.py` and `test_manifest.py`, and `test_case_json_schema.py` (VER-76) is restored whole.
 
-## REV-119: The analyte benchmark meshes skip the quality gate
+### REV-119: The analyte benchmark meshes skip the quality gate
 
 `AnalyteInBoxGeometry.generate` and `PoreWithAnalyte.generate` (`geometry/analyte.py`) return the
 netgen mesh without the element-quality gate (minimum SICN and gamma above 0.3) that every primitive
@@ -1290,7 +1290,7 @@ with analytic values, so a degraded mesh fails there and not at a gate that name
 `geometry → mesh` edge, which VER-61 refuses, and moving both classes into `mesh/` costs more than a
 low finding is worth.
 
-## REV-120: The force-traction normal needs one material on the left along the whole surface
+### REV-120: The force-traction normal needs one material on the left along the whole surface
 
 `MeshData.oriented_edges` directs every boundary edge with the adjacent triangle of the first material
 by name on its left (CODE_REVIEW_010 CR-5), and `post/forces.py` fixes only the overall sign of the
@@ -1311,7 +1311,7 @@ into the force stage.
 
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `post/forces.py:check_force_surface` names the pair of materials on the two sides of the force surface and refuses a surface of several, exit 4; `extract` calls it with the ingested mesh, and the QoI stage passes it.
 
-## REV-121: Stage 1 checks no axis for a monomeric or hetero-oligomeric pore
+### REV-121: Stage 1 checks no axis for a monomeric or hetero-oligomeric pore
 
 `symmetry.axis: auto` finds the axis by cyclic chain permutation, so it needs n ≥ 2 chains that agree
 in residue name wherever they share a residue number, each with at least half the C-alpha of the most
@@ -1331,7 +1331,7 @@ the gap is stage 1's `symmetry.axis` path. Confirmed as a gap by the author on 2
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.16, the Molecular suite.
 
-## REV-122: A case cannot load a correction file from outside the installed package
+### REV-122: A case cannot load a correction file from outside the installed package
 
 `electrolyte.parameters` and every `electrolyte.corrections.*.model` must name a file in
 `CORRECTIONS_DIR`, inside the installed package (`core/paths.py`); any other name is refused as not
@@ -1350,7 +1350,7 @@ validated default; otherwise a cached result survives an edit of the file.
 
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): A correction file named by an absolute or case-relative path is read, its content hash enters the stage-8 key and the manifest, and it is listed as a deviation.
 
-## REV-123: The library has no plotting helpers or notebook display
+### REV-123: The library has no plotting helpers or notebook display
 
 `src/nanopnp/` imports no plotting library outside `gui/`, whose plots are PySide6 widgets
 (`ConvergencePlot`, `GeometryCanvas`) and whose `gui/render.py` writes Three.js files to disk. No
@@ -1369,7 +1369,7 @@ figure in the stage registry, and every artefact and `RunResult` displays itself
 
 **Fixed** (WP51, 22 October 2026). `nanopnp.plot` draws a figure of every stage's artefact and of a sweep, the stage registry declares each figure, `Artefact` and `RunResult` display themselves in a notebook, and four marimo notebooks run nightly (FR-30; `CHANGELOG.md`, `0.5.0-alpha.17`).
 
-## REV-124: The specification's site navigation is listed by hand
+### REV-124: The specification's site navigation is listed by hand
 
 `mkdocs.yml` lists the specification bundle's 52 pages by hand (WP52 plan D5), while the knowledge
 base's navigation is generated from its index pages. `nav.omitted_files` is `warn` under `--strict`,
@@ -1382,13 +1382,13 @@ bundle's title and its opening and closing entries, and `docs/scripts/generate.p
 specification's navigation between its own markers in `mkdocs.yml`, read from `specification/index.md`
 and the directory indexes. The root index lists the top-level files and the directory indexes only.
 
-## REV-125: The workflow files exceed the plan's word caps
+### REV-125: The workflow files exceed the plan's word caps
 
 WP53's plan D2 caps one invocation at 2,200 words and the new files at 7,000 in all, and the core at 900. The delivered files hold 7,409 words in all, a core of 974, and invocations of 2,282 to 2,995 for `/np-plan` and 2,318 and 2,548 for `/np-ship` (`wc -w`, the plan's item 11 Outcome). No rule was cut to meet a count, and only the plan's Outcome and the pull request body recorded the overshoot. Found by CODE_REVIEW_014.
 
 **Fixed** in WP53 (author's direction, 23 October 2026): D2 and its Verification row now state the caps as delivered, measured after the `PR:` line was dropped and CODE_REVIEW_014's fixes were merged. The core is 985 words, one invocation 3,006 at most (`np-plan phase`), and the new files 7,518 in all. The router cap of 150 holds, as the largest router is 137. The cut the review named, from `np-plan/phase.md` and `np-plan/rulings.md`, is not made.
 
-## REV-126: Package numbers can collide between the two lanes
+### REV-126: Package numbers can collide between the two lanes
 
 Phase 4's remaining packages are numbered from WP56 when the second `/np-plan amend 4` runs (its fix packages, documentation increment 4 and the close), while Phase 5's plan already claims WP57 and WP58 (§8.2.17 S1, S14). S15's renumbering covers `REV-nn` rows, history records, code reviews and `VER-`/`VAL-` identifiers, not package numbers, so plan files, PR titles, tags and `current.md` could name two packages with one number. Found by CODE_REVIEW_015, finding 2.
 
@@ -1396,7 +1396,7 @@ Phase 4's remaining packages are numbered from WP56 when the second `/np-plan am
 
 **Fixed** (author's ruling, 24 October 2026, §8.2.17 S16): from Phase 5 a package is `WP<phase>.<nn>`, numbered from 01 within its phase, and Phase 4 keeps its flat numbers to its close, so the lanes cannot claim one number. WP57 and WP58 are WP5.01 and WP5.02 (§8.4.4).
 
-## REV-127: WP57 may restate the Qt shell's gating clauses before v0.5.0
+### REV-127: WP57 may restate the Qt shell's gating clauses before v0.5.0
 
 WP57 may merge before `v0.5.0` (S1) and restates VER-43, VER-44, VER-55, VER-60, CON-09's PySide6 clause, ADR-004's packaging NOTE, RSK-13, P3 and QR-10 for the browser shell. The lane excludes `src/`, `tests/`, the case schema and the public API, not normative clauses, and M3 keeps those clauses gating the Qt shell that `v0.5.0` ships. Found by CODE_REVIEW_015, finding 5.
 
@@ -1404,7 +1404,7 @@ WP57 may merge before `v0.5.0` (S1) and restates VER-43, VER-44, VER-55, VER-60,
 
 **Fixed** (author's ruling, 24 October 2026, §8.2.17 S17): a clause the design study restates before the current release is added beside the clause, tagged v0.6, and replaces it only at `v0.6.0`, so `v0.5.0` ships the clauses gating its Qt shell (§8.4.4; the Phase 5 plan's WP5.01).
 
-## REV-128: The renumbering list leaves out other identifier kinds and the ruling letters
+### REV-128: The renumbering list leaves out other identifier kinds and the ruling letters
 
 S15 and §8.4.4 renumber `REV-nn` rows, history records, code reviews and `VER-`/`VAL-` identifiers, but not `FR-`, `QR-`, `IF-`, `CON-`, `RSK-`, `ADR-` or `OPN-` identifiers, nor the §8.2 record number and its ruling letter series, all of which a lane can add. Found by CODE_REVIEW_015, finding 7.
 
@@ -1412,7 +1412,7 @@ S15 and §8.4.4 renumber `REV-nn` rows, history records, code reviews and `VER-`
 
 **Fixed** (author's direction, 24 October 2026, §8.2.17 S18): the pull request that merges second renumbers every new item of every numbered register, the requirement identifiers of every prefix and the history records with their §8.2 number and ruling letters included, with every reference (§8.4.4; `.claude/workflow/core.md`).
 
-## REV-129: WP58's tag and the place of a held changelog entry are undefined
+### REV-129: WP58's tag and the place of a held changelog entry are undefined
 
 If WP57 merges untagged before `v0.5.0`, nothing says whether WP58 is `v0.6.0-alpha.1` or `-alpha.2`: `CONTRIBUTING.md` counts the phase's packages. "The next release's section" is undefined in a changelog ordered newest first, where a `[0.6.0]` section above later `[0.5.0-alpha.N]` sections breaks the order. Found by CODE_REVIEW_015, finding 9.
 
@@ -1420,7 +1420,7 @@ If WP57 merges untagged before `v0.5.0`, nothing says whether WP58 is `v0.6.0-al
 
 **Fixed** (author's ruling, 24 October 2026, §8.2.17 S19): N is the package's number within its phase, so WP5.02 takes `v0.6.0-alpha.2` whether or not WP5.01 took a tag, and an untagged package's entry goes under `## [Unreleased]`, moved by the next tagged package of its phase (§8.4.1; §2.7's Versioning NOTE; `CONTRIBUTING.md`).
 
-## REV-130: Nothing checks that identifiers stay unique after both lanes merge
+### REV-130: Nothing checks that identifiers stay unique after both lanes merge
 
 Renumbering happens only when a later `/np-ship` merges `main` into a stale branch. Two lanes' PRs merged one after the other can each add the same `VER-` number or history record in different files, with no textual conflict and no test of uniqueness. Found by CODE_REVIEW_015, finding 10.
 
@@ -1428,7 +1428,7 @@ Renumbering happens only when a later `/np-ship` merges `main` into a stale bran
 
 **Fixed** (author's ruling, 24 October 2026, §8.2.17 S20): `/np-ship` runs `.claude/scripts/duplicates.py` after merging `main`, and the author merges a second-lane pull request only after `/np-ship` has run on it against the current `main`. No test, as §8.2.13 N3 withdrew the repository self-checks (§8.4.4; `np-ship/wp.md` §1 and §6).
 
-## REV-131: The charge-level mutator has no library step or tier row
+### REV-131: The charge-level mutator has no library step or tier row
 
 v0.6 ships the charge-level mutator (S3 to S5), but the Phase 5 plan gives it no library function and no Tier 1 or Tier 2 row, and the library has no residue mutation, against the library-first rule §8.1 sets for the other tools and RSK-15's mitigation. Found by CODE_REVIEW_015, finding 12.
 
@@ -1436,7 +1436,7 @@ v0.6 ships the charge-level mutator (S3 to S5), but the Phase 5 plan gives it no
 
 **Fixed** in the Phase 5 plan (24 October 2026): the shell packages land the mutator library first, a `charge/` function that sets a residue's charge state with a Tier 1 test that the projected charge changes by that residue's alone, before its shell control; the Verification table lists the test.
 
-## REV-132: The Phase 5 end-of-phase report names no source for its numbers
+### REV-132: The Phase 5 end-of-phase report names no source for its numbers
 
 The report lists click-to-redraw time, clean-machine install time and VER-77's counts with no test or command that logs them, which the phase-plan template requires and the close must re-run. Found by CODE_REVIEW_015, finding 14.
 
@@ -1444,7 +1444,7 @@ The report lists click-to-redraw time, clean-machine install time and VER-77's c
 
 **Fixed** in the Phase 5 plan (24 October 2026): VER-77's test logs its screen and state counts, and WP5.02 names the commands that log the click-to-redraw and clean-environment install times, which the close re-runs.
 
-## REV-133: The Phase 5 plan and the core exceed their word caps
+### REV-133: The Phase 5 plan and the core exceed their word caps
 
 The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at review (§8.2.13 N3); the core holds 1,111 against the 985 delivered under REV-125, and the workflow files exceed their 7,518 in all. `current.md` was cut to 695. Found by CODE_REVIEW_015, finding 11.
 
@@ -1452,7 +1452,7 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Fixed** (24 October 2026): the Phase 5 plan holds 1,500 words without its report, and the core 985. The workflow files hold 7,666 words in all against WP53's delivered 7,518: the difference is the rules S15 to S20 add to the level files, kept rather than cut, as REV-125 did.
 
-## REV-134: The Qt shell's Result tab prints the stored float wrapper, not the number
+### REV-134: The Qt shell's Result tab prints the stored float wrapper, not the number
 
 `gui/run_model.py` reads the run record's `quantities` as stored, so the Result tab shows each float as the canonical wrapper, `{'__f__': '0x1.ac1ece4e515e9p-35'}` for `current_A`, where the command line and `pipeline/reproduce.py` undo it with `core/hashing.py:decode_floats`. A user of the v0.5 shell cannot read the current, conductance or transport number. Found by WP5.01's critique of today's shell (`/np-gui review`, finding C45, on example 07).
 
@@ -1464,7 +1464,7 @@ The Phase 5 plan holds 1,671 words against `np-plan`'s 1,500 target, checked at 
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.21, which removes Qt.
 
-## REV-135: The density does not see the protonation chosen at the charge stage
+### REV-135: The density does not see the protonation chosen at the charge stage
 
 The density stage smears the atoms of the structure as loaded at stage 1 (`density/stage.py`, its record counting the
 hydrogens present), while protonation is chosen later, at stage 7's PDB2PQR and PROPKA step, and is not fed back. A
@@ -1481,7 +1481,7 @@ WP5.01 changes no `src/` (§8.2.17 S1).
 
 **Fixed** in WP5.03: `protonation` walks before `density`, stage 2 smears the protonated atoms by default (`geometry.density.atoms`), and a Tier 1 test shows that a changed protonation state moves the map (`test_ver49_a_changed_protonation_state_moves_the_density`).
 
-## REV-136: The organisation round's rulings need library capabilities v0.5 lacks
+### REV-136: The organisation round's rulings need library capabilities v0.5 lacks
 
 The design round of WP5.01 (`docs/design/workbench.md`, *Decision log*) rules a workbench whose suites rest on
 capabilities the library does not have at v0.5: structure preparation (WB-14: the axis estimated, the chains chosen,
@@ -1511,7 +1511,7 @@ capabilities.
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): the shell's packages are WP5.08 and WP5.15 to WP5.22, the difference field in WP5.20, the Analysis suite.
 
-## REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
+### REV-137: No renderer is chosen for the molecule in 3D or for the explorer's controls
 
 CON-09 lets the field viewer's renderer, npm `webgui`, ship only unmodified and as a separate file. The organisation
 round places a 3D molecule view in the Molecular suite (WB-05, WB-14) and asks the results explorer for zoom, a
@@ -1532,7 +1532,7 @@ drawn from `plot/data.py` for maps and plots. The table checks the explorer's fo
 scene), and a framed opening view not at all. The front end is NiceGUI over FastAPI (ADR-004's NOTE). No second
 renderer needs a licence ruling under CON-09.
 
-## REV-138: The render check measures text contrast but not the contrast of controls and graphics
+### REV-138: The render check measures text contrast but not the contrast of controls and graphics
 
 `.claude/scripts/gui/shoot.cjs` checks each visible text element against WCAG 2.2 1.4.3 and each native control's size
 against 2.5.8, and reports nothing else: an input's border, a focus ring, a selection fill or a colour bar's low end
@@ -1552,7 +1552,7 @@ the border, outline and fill of each control, and the ends of each colour bar, a
 2.2 1.4.11's 3:1, beside the text and target-size checks. `/np-gui render shell` and `mockups` run it. The design
 study's pages fail it in places (REV-176).
 
-## REV-139: The sweep needs a design round: any value, user-defined variables, rebuilds detected
+### REV-139: The sweep needs a design round: any value, user-defined variables, rebuilds detected
 
 The author, marking the mockups' sweep (WP5.01, `docs/design/reviews/2026-10-26-mockups.md`, `st-sweep`): "I like
 having the ability to sweep over everything. We should also be able to sweep over user-defined variables, and the need
@@ -1572,7 +1572,7 @@ The stages a value invalidates follow from the content hashes that key each stag
 
 **Fixed** (WP5.07, [the plan](../plans/phase-5/wp5.07-variables-and-the-rebuild-forecast.md)): the library step. A case defines `variables:` with units and expressions, keyed by the numbers they resolve to; a sweep axis ranges over `variables.<name>`; and `forecast` says before a sweep runs which stages each axis rebuilds and how many builds come before the solves (FR-39; §5.3.1 NOTE on `variables:`, §5.3.4). The Sweep tool that shows the warning beside the parameter is WP5.19's (FR-39's Appendix A row).
 
-## REV-140: Two of the author's marks on the mockups ask what is not yet said
+### REV-140: Two of the author's marks on the mockups ask what is not yet said
 
 Two of the author's marks on mockup A (WP5.01, `docs/design/reviews/2026-10-26-mockups.md`) could not be acted on:
 
@@ -1583,7 +1583,7 @@ Two of the author's marks on mockup A (WP5.01, `docs/design/reviews/2026-10-26-m
 
 **Fixed** (§8.2.18 T6, T7): the `g-geometry` mark was a slip, and the screen stands as `fine`. Partial protonation is a fractional charge at the pH, each titratable group carrying its charge averaged over its states from its pKa: FR-43, a later capability whose physics its library package writes, shown in v0.6 with the later-phase banner.
 
-## REV-141: CON-08 and CON-11 name a bundle and a desktop path the browser shell removes
+### REV-141: CON-08 and CON-11 name a bundle and a desktop path the browser shell removes
 
 CON-11 makes "the redistributable bundle" default to UMFPACK under GPL-2+ obligations stated in its licence notice,
 and CON-08 has "the desktop path" use UMFPACK or SuperLU. The browser shell ships no bundle (§8.2.17 S12): the
@@ -1605,7 +1605,7 @@ provides it, or scipy SuperLU; the core stays BSD-3 and depends on no UMFPACK of
 NGSolve's UMFPACK, SuperLU selectable; and `nanopnp --env` states the GPL-2+ obligation. `nanopnp --env` does not
 state it yet, so the NOTE says it SHALL.
 
-## REV-142: FR-38 drops the charge and radius edits of the charge-level mutator
+### REV-142: FR-38 drops the charge and radius edits of the charge-level mutator
 
 §8.2.17 S4 rules a charge-level mutation in which "a residue's protonation, charge or radius is edited at stage 7's
 PQR step". FR-38, as WP5.01 wrote it, and the design document's Charge edit tool offered only the protonation state,
@@ -1613,7 +1613,7 @@ and no ruling recorded the cut. Found by `/np-ship`'s review of WP5.01 (`docs/co
 
 **Fixed** (§8.2.19 U6): FR-38 and the Charge edit row restore the charge and radius edits, as S4 rules.
 
-## REV-143: The light theme's control edge is under 3:1 on a selected row
+### REV-143: The light theme's control edge is under 3:1 on a selected row
 
 `docs/design/tokens.css` gives `--control-edge` (`#868c99`) 3.4:1 on `--panel` and 3.2:1 on `--bg`, but an input in
 a selected row sits on `--sel` (`#ece7ff`), where the edge is 2.80:1, under WCAG 2.2 1.4.11's 3:1 for a control's
@@ -1627,7 +1627,7 @@ the rendered rounds did not see it. Found by `/np-ship`'s review of WP5.01 (`doc
 `docs/design/tokens.css` (3.2:1 on `--sel`), and the pages are rendered again. The study's mockups show no finding at
 the control edge; REV-176 records the rest.
 
-## REV-144: Case.cylinder takes a charge field, not a uniform wall surface charge
+### REV-144: Case.cylinder takes a charge field, not a uniform wall surface charge
 
 The author's notes for WP54 (`docs/plans/sessions/notebooks-review-for-wp54.md`, Area A) give `Case.cylinder` a
 `surface_charge_C_m2` argument. The case schema has no surface charge: a fixed charge reaches a case only as a field
@@ -1642,7 +1642,7 @@ wall charge is a boundary condition or a field form.
 
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `Case.cylinder` takes `wall_charge_C_m2`, a uniform surface charge on the lumen wall as a boundary condition (VER-77).
 
-## REV-145: No case builders by section before Phase 5
+### REV-145: No case builders by section before Phase 5
 
 The author's notes for WP54 name builders by section, `with_density` and `with_numerics`, beside the leaf edits of
 `Case.with_`. §8.2.20 V3 defers them: WP54 adds the typed factories and keeps `with_` for edits. They bear on
@@ -1658,7 +1658,7 @@ and a mapping form for a path that names more than one field. V3's deferral is s
 
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): A case is built from the typed blocks of `nanopnp.case` and edited by copy through `Case.with_`; no builder by section is added.
 
-## REV-146: The cylinder's default wall size is coarser than NUM-30's first layer
+### REV-146: The cylinder's default wall size is coarser than NUM-30's first layer
 
 `nanopnp mesh cylinder` sizes the pore wall at 0.35 nm by default, and examples 02 and 03 solve on that
 mesh. `Case.cylinder` (WP54) takes the same default, so a notebook's cylinder inherits it. NUM-30 asks for a
@@ -1673,7 +1673,7 @@ of its parity with examples 02 and 03 and their VER-62 golden?
 `Case.cylinder(wall_h_nm="debye")` sizes the wall at `λ_D/5` of the case's salt; notebook 05 offers both
 ([WP54 plan](../plans/phase-4/wp54-notebooks-and-figures-revised.md)).
 
-## REV-147: The lumen window is fixed, not read from the region
+### REV-147: The lumen window is fixed, not read from the region
 
 `plot.data.LUMEN_NM` is r ≤ 5 nm, |z| ≤ 10 nm about z = 0. The mesh figure's close-up and the u_z panel's
 streamlines use it for every pore (WP54, D3 and D5), so a pore whose lumen reaches past either bound, or is
@@ -1686,7 +1686,7 @@ radii past its ends, the lumen radius being the wall's point nearest the axis in
 found that a protein's outer face in the reservoir had widened it to 14 by 24 nm on 2WCD); the fixed window is the
 fallback for a mesh with no such boundary.
 
-## REV-148: A concentration panel's bulk is the case's salt for every species
+### REV-148: A concentration panel's bulk is the case's salt for every species
 
 `plot_field(..., relative_to_M=)` draws `log₁₀(c / c_bulk)` with one `c_bulk`, the case's concentration
 in mol/m³ for every species. That matches the solver as it stands (every species' Dirichlet value is the
@@ -1697,13 +1697,13 @@ it. Found by the physics review of WP54 items 6 and 7.
 **Ruled** (§8.2.20 V16): fixed. A concentration is drawn against `SolutionFields.bulk_mol_m3`, the value the
 solve imposed on cis and trans for that species, read from the model's scales.
 
-## REV-149: Notebook 01 prepares a structure but does not change its residues
+### REV-149: Notebook 01 prepares a structure but does not change its residues
 
 Notebook 01's preparation form chooses the chains, the cis end, the residue range and the centroid
 height, and hands them to `orient_pore`. It cannot change a residue (a point mutation, a removed loop),
 which the author would like a later stage to offer. Deferred by §8.2.20 V13, at WP54's third checkpoint.
 
-## REV-150: `wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling
+### REV-150: `wall_h_nm="debye"` is not capped at NUM-30's 0.05 nm ceiling
 
 `Case.cylinder(wall_h_nm="debye")` (§8.2.20 V9) sizes the wall at `λ_D/5` of the case's salt at `ε_r,f0`, with
 no ceiling: 0.19 nm at 0.1 M. The NOTE on NUM-30 resolves a generated mesh's first layer as
@@ -1717,7 +1717,7 @@ which is uncapped, not with stage 6's wall.
 **Ruled** (§8.2.20 V14): `"debye"` applies the same `min(0.05 nm, λ_D/5)`, by the helper stage 6 uses
 (`mesh.sizing.debye_wall_nm`). Fixed.
 
-## REV-151: `orient_pore` centres laterally on the registration residues, not on the pore axis
+### REV-151: `orient_pore` centres laterally on the registration residues, not on the pore axis
 
 `orient_pore` fits the axis through the mean of the selected C-α atoms but rotates and translates about the
 centroid of the registration residues. For a full ring these coincide. If a chain lacks some of the
@@ -1729,7 +1729,7 @@ Found by the `/np-ship wp 54` review and the `physics-reviewer` pass.
 **Ruled** (§8.2.20 V15): deferred to its own package. Meanwhile `orient_pore` logs a warning where the
 registration centroid is more than 0.1 nm off the estimated axis, and its docstring states the assumption.
 
-## REV-152: WP54 review items: cache key, restores, duplicated helpers, edge cases
+### REV-152: WP54 review items: cache key, restores, duplicated helpers, edge cases
 
 Found by the `/np-ship wp 54` review ([CODE_REVIEW_017](../code_reviews/CODE_REVIEW_017.md)) and the
 `physics-reviewer` pass.
@@ -1765,7 +1765,7 @@ its Debye length from `mesh.sizing`; the notebooks share `structure.prepared_por
 whose side of the ground is unknown is left off; `QOI_UNITS` gains `_N` in pN; `sweep()` names its directory by
 `plan.hash`; the cutline test checks the four sub-triangles' areas.
 
-## REV-153: Latent gaps the second WP54 review left: the bulk's source, the Debye length twice, two hand-kept lists
+### REV-153: Latent gaps the second WP54 review left: the bulk's source, the Debye length twice, two hand-kept lists
 
 Found by the second `/np-ship wp 54` review ([CODE_REVIEW_018](../code_reviews/CODE_REVIEW_018.md)) of `96181c2` and
 `86d5b46`. None changes a number today; each is a coupling a later change could break silently.
@@ -1793,7 +1793,7 @@ is covered by a test.
 
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): The bulk is one constant, `physics.models.DIRICHLET_BULK`, shared with `post/export.py`; the Debye length is read once (the `"debye"` wall is gone); `prepared_pore`'s digest reads `structure/read.py` as well as `orient.py`, and the mesher's list goes with `mesh/cylinder.py`; the triangulation cache holds weak references.
 
-## REV-154: NUM-34's refusal names a setting that a supplied mesh ignores
+### REV-154: NUM-34's refusal names a setting that a supplied mesh ignores
 
 Found while running user-testing session 03 (WP55, [plan](../plans/phase-4/wp55-user-testing-protocol.md)) as a dry run; it
 is the program's, so the session is not rewritten around it (§8.2.7 G7, D6).
@@ -1814,7 +1814,7 @@ and QR-12's NOTE on the remedy states the rule for every gate.
 the gate `numerics.mesh.wall_h_nm` for a generated mesh, and the supplied file with `nanopnp mesh cylinder
 --wall-h-nm` otherwise (`test_num34_refusal_names_a_setting_the_run_reads`).
 
-## REV-155: WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser
+### REV-155: WP55 review items the author rules on: the rectification claim's source, session 04's variation, a duplicated parser
 
 Left by the review of WP55 ([CODE_REVIEW_019](../code_reviews/CODE_REVIEW_019.md)); each needs the author or a
 `src/` change that WP55 rules out.
@@ -1842,7 +1842,7 @@ public call; the other two items stay open.
 
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `validation/examples.py:untagged_commands` serves the session and the example tests; the rectification sentence no longer asserts that a fixed-charge asymmetry alone rectifies; session 04's variation re-registers an edited function under the same name.
 
-## REV-156: A 16 562-element cylinder takes minutes to solve (UT-09)
+### REV-156: A 16 562-element cylinder takes minutes to solve (UT-09)
 
 Found in user-testing session 03 (UT-09). `nanopnp mesh cylinder --maxh-nm 0.175` gives 16 562 elements, and the
 run of its case had not finished after five minutes. WP49's table gives 4.4 s for one serial UMFPACK factorisation
@@ -1868,7 +1868,7 @@ coefficients per step can be measured and cut against §8.2.12 M2's thresholds w
 REV-60's factorisation reuse follows it. `/np-plan phase 6` reads this row.
 
 
-## REV-157: WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice
+### REV-157: WP56 review items left open: the last rung's time, two readers of a run directory, the manifest read twice
 
 Left by the review of WP56 ([CODE_REVIEW_020](../code_reviews/CODE_REVIEW_020.md)). Each item needs a change that WP56
 did not plan.
@@ -1894,7 +1894,7 @@ with the next change to `validation/runs.py`; take the last two items with whate
 **Fixed** (WP57, [plan](../plans/phase-4/wp57-idealised-pore-and-python-interface.md)): `SolveHook.rung_solved` gives a rung's seconds, which the progress line prints; `validation/runs.py:reopen` reads through `read_run`; `inspect` reads the manifest once and `Manifest.hash` is cached; `wall_distance_remedy` has no unreachable branch.
 
 
-## REV-158: A correction file named by path puts its absolute path in the stage-8 and stage-10 keys
+### REV-158: A correction file named by path puts its absolute path in the stage-8 and stage-10 keys
 
 Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -1927,7 +1927,7 @@ refused rather than keyed as though it named one. §5.3.1's NOTE on a correction
 package carries the rule; `tests/tier1/test_corrections.py` keys one case beside two copies of its
 files and gets one artefact. Resolved with REV-159 and REV-161.
 
-## REV-159: Three in-memory routes read a relative path against the working directory, not beside the case
+### REV-159: Three in-memory routes read a relative path against the working directory, not beside the case
 
 Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -1967,7 +1967,7 @@ path-named `parameters` as they already resolved `charge` and `source`. Only a c
 file still reads against the working directory. §5.3.1's NOTE on a relative path carries the rule
 and `CHANGELOG.md`'s statement of the old behaviour is corrected.
 
-## REV-160: StageInputs.options is unreachable, so three QoI settings and their deviation are dead
+### REV-160: StageInputs.options is unreachable, so three QoI settings and their deviation are dead
 
 Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -2010,7 +2010,7 @@ three as configurable, and the stage-contributed deviation channel itself stays,
 and 7. `tests/tier1/test_qoi_stage.py`'s deviation test is replaced by one asserting the check runs;
 the manifest's contributed-deviation channel keeps its cover in `tests/tier1/test_manifest.py`.
 
-## REV-161: The manifest records a null hash for a correction file it cannot find
+### REV-161: The manifest records a null hash for a correction file it cannot find
 
 Raised by the review of WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -2036,7 +2036,7 @@ walk takes resolves the path before the electrolyte is built, and the one route 
 public `Electrolyte` given a bare relative name — is refused by stage 8 before a manifest is
 assembled at all. §5.3.1's NOTE on a correction file outside the package carries the refusal.
 
-## REV-162: The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each
+### REV-162: The wall surface charge's sign is written at four sites; Grahame's sigma and the sigma scale twice each
 
 Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -2070,7 +2070,7 @@ share one Grahame expression, the `grahame_sigma_C_m2` fixture of `tests/tier2/c
 number moved: the Gauss balance, Grahame's zeta on the slab and the five Stern-layer assertions all
 hold unchanged.
 
-## REV-163: check_force_surface refuses a legitimate body straddling the lumen and reservoir seam
+### REV-163: check_force_surface refuses a legitimate body straddling the lumen and reservoir seam
 
 Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -2095,7 +2095,7 @@ surface meeting a fluid and a solid still refuses. NUM-29's NOTE carries the ame
 commit, and `tests/tier1/test_forces.py`'s gate test now asserts both halves: the straddling body
 passes, a body meeting `membrane` is refused.
 
-## REV-164: default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic
+### REV-164: default_ladder accepts a zeta-Dirichlet wall and a sigma_s wall together with no diagnostic
 
 Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -2118,7 +2118,7 @@ so it takes a test when it is done.
 fixed charges that is its precedent. `tests/tier1/test_continuation.py` asserts the refusal and that
 either setting alone still builds a ladder.
 
-## REV-165: The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves
+### REV-165: The Gauss-balance test's own quadrature error is not bounded against the physics bound it resolves
 
 Raised by the `physics-reviewer` pass on WP57 ([CODE_REVIEW_021](../code_reviews/CODE_REVIEW_021.md)).
 
@@ -2151,7 +2151,7 @@ headroom that was unknown; the numbers are in the test's comment. The assertion 
 to a mesh hash, and that margin is why it need not be: a platform deploying another mesh of this
 class moves the balance far inside it.
 
-## REV-166: The Copilot hook probes are incomplete
+### REV-166: The Copilot hook probes are incomplete
 
 Raised by the implementation of [the Copilot host plan](../plans/sessions/copilot-host.md), built before its
 Phase 0 probes ran (§8.2.25 AA6).
@@ -2177,7 +2177,7 @@ matcher; the full 1800 s timeout; `session-start.sh`'s JSON.
 **Procedure:** a disposable clone opened as its own WSL repository, probes installed before startup;
 record only tool names, argument types and sentinels.
 
-## REV-167: Six Copilot app behaviours the substitutes assume are unchecked
+### REV-167: Six Copilot app behaviours the substitutes assume are unchecked
 
 Raised with REV-166 (§8.2.25 AA6). `.claude/workflow/hosts/copilot.md` gives a substitute for each Claude
 Code construct the workflow names; six of them rest on app behaviour no session has checked:
@@ -2193,7 +2193,7 @@ Code construct the workflow names; six of them rest on app behaviour no session 
 Recommendation: check each in the same session as REV-166 and write the answer into `hosts/copilot.md`.
 Only the first can let an ungated tree through; the rest change how a substitute is worded.
 
-## REV-168: The Copilot host has not been verified live
+### REV-168: The Copilot host has not been verified live
 
 Raised with REV-166 (§8.2.25 AA6). The plan's *Verification* has a live part in the Copilot app (a
 refused ruff violation that runs the gate once, a passing commit, a commit typed into a running
@@ -2206,7 +2206,7 @@ session-start text and `format.sh`), the sub-agents called through `task`, and a
 Recommendation: run it after REV-166, on a WSL host, and ship the Copilot host's pull request from
 Claude Code with `/np-ship`, as the plan says, which also covers the Claude Code regression.
 
-## REV-169: The Phase-1 reference sweep's base case writes its mesh path against the working directory
+### REV-169: The Phase-1 reference sweep's base case writes its mesh path against the working directory
 
 Found by WP58 while it revised example 05's README ([plan](../plans/phase-4/wp58-documentation-increment-4.md), item 8).
 `docs/sweeps/phase1-reference.case.yaml` names `inputs.mesh.path: docs/sweeps/clya-reference.msh`, and its header
@@ -2233,7 +2233,7 @@ path and comment and the comment in `docs/scripts/capture_gui.py`, so the close 
 five frozen case identities are unchanged (`0128dd1854ff`, `4db46a9d821b`, `1b48e22b656c`, `0e263b472108`,
 `1e26bf4a0c11`).
 
-## REV-170: Five callers pick the stage-5 region's kind
+### REV-170: Five callers pick the stage-5 region's kind
 
 `geometry/region.py` `read_region` returns `RegionRecord | IdealisedRegionRecord`, and five callers outside the Qt
 shell branch on the kind: `mesh/generate.py` twice, `mesh/ingest.py`, `plot/data.py` and `cli/__init__.py`. The cylinder
@@ -2257,7 +2257,7 @@ step first; the second `/np-plan amend 5` names the package.
 
 **Design** (§8.2.36 AL22, 8 November 2026): WP5.17's library step takes CODE_REVIEW_036's candidate 3 with its corrections C3.1 and C3.2, which also remove MOD-03's edge from `modularity-layering.yaml`.
 
-## REV-171: The architecture review's unmeasured costs
+### REV-171: The architecture review's unmeasured costs
 
 The architecture review of [CODE_REVIEW_024](../code_reviews/CODE_REVIEW_024.md) names costs and checks that no one has
 measured (verdicts 14 to 18): `physics/models.py` builds a second, unassembled PB `BilinearForm` after the solve, from
@@ -2282,7 +2282,7 @@ MOD-09's outputs registry. The cost items, the coefficient expressions among the
 distance, the indicator, the reaction flux and the force extension call; stage 11 builds one `Extraction` and calls each
 selected output. The cost items remain deferred to Phase 6.
 
-## REV-172: A non-finite trial residual at minimum damping is reported before the state gates name its location
+### REV-172: A non-finite trial residual at minimum damping is reported before the state gates name its location
 
 `numerics/newton.py` raises `NewtonDivergenceError` on a non-finite trial residual at minimum damping (NUM-16's NOTE;
 WP59 D5) before the NUM-17 state gates see the trial state. Before WP59 such a step was forced and a positivity or
@@ -2300,7 +2300,7 @@ Found by the physics review of [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025
 non-finite trial before the divergence is raised, and a non-finite direction raises a divergence naming the linear
 solve; NUM-16's NOTE says so, and two Tier 1 tests check it.
 
-## REV-173: Plotting a run reads its record twice through the session
+### REV-173: Plotting a run reads its record twice through the session
 
 `nanopnp plot <run>` calls `Session.read`, then `Session.open`, which reads and checks `run.json`, `manifest.json` and
 `case.yaml` again through `open_run`. Because `Session.open` always passes the session's own store, the command line
@@ -2316,7 +2316,7 @@ Found as [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) findings 3, 7 and
 names, so `plot` reads the run once and the store rule lives in `open_run` alone; `Session.read` is a static method.
 The dump in `Session.check` is accepted. IF-01's NOTE says so.
 
-## REV-174: The command line names the workbench's server by string
+### REV-174: The command line names the workbench's server by string
 
 `nanopnp gui` starts the workbench's server, a module of `gui`. `gui` sits above `cli` in the layer order, so an
 import would be an upward edge. The command passes the module's name, `nanopnp.gui.web.server`, to
@@ -2328,7 +2328,7 @@ Found at WP5.02's item 7, 2 November 2026.
 **Fixed** (§8.2.30 AF1, 2 November 2026, in WP5.02): the edge is recorded and named for this finding. The command
 imports nothing from `gui` at module scope, so a library install without the extra runs every other command.
 
-## REV-175: pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra
+### REV-175: pdb2pqr 3.8 is not read, and 3.7.1 pins docutils against the gui extra
 
 The `structure` extra asks for `pdb2pqr>=3.7`. Resolved afresh, `uv add` took 3.8.0, which writes terminal residues
 under two names (`GLU`, `NTER`); the PQR reader refuses them, and eighteen Tier 1 tests of VER-57 and VER-60 fail.
@@ -2348,7 +2348,7 @@ the `structure` extra asks for `pdb2pqr>=3.8`, the uv override is removed, and a
 
 Found at WP5.02's item 7, 2 November 2026.
 
-## REV-176: The design mockups fail the non-text contrast measure
+### REV-176: The design mockups fail the non-text contrast measure
 
 `/np-gui render` measures non-text contrast from WP5.02 (REV-138). Rendered again, the design study's pages
 (`docs/design/{concepts,style,choices,mockups}`, 382 shots) show no text, target or page error, and 376 non-text
@@ -2367,7 +2367,7 @@ decided when the first screen that draws a focusable control over it is built.
 
 Found at WP5.02's item 9, 2 November 2026.
 
-## REV-177: The workbench's link failures end the server at startup
+### REV-177: The workbench's link failures end the server at startup
 
 `boot_case` shows a refusal (exit 3 or 4) as the `refused` state. `Link.__init__` raises `ValueError` or `KeyError`
 for a run with no charge lattice or no protonation artefact (a case with no `pqr` input), and that ends the server
@@ -2385,7 +2385,7 @@ carries a `notice` beside `refusal`, and the Charge screen shows it. The state `
 present and unreadable still ends the server.
 Found by the WP5.02 review (CODE_REVIEW_027, finding 3), 3 November 2026.
 
-## REV-178: The selected-fill measure does not read the strip's pressed item
+### REV-178: The selected-fill measure does not read the strip's pressed item
 
 `shoot.cjs`'s non-text check of a selected fill reads `[aria-selected=true]`; the workbench marks its selected
 strip item `aria-pressed=true`. A shot taken with a residue selected leaves that item's fill and edge unmeasured
@@ -2401,7 +2401,7 @@ asks for the state indicator, and the selected strip item carries a 2px `--accen
 fill of 1.2:1 alone and weight alone are flagged. An earlier recommendation here, to darken `--sel`, was withdrawn.
 Found by the WP5.02 review (CODE_REVIEW_027, finding 9), 3 November 2026.
 
-## REV-179: `nanopnp gui` has no smoke test and takes no common flags
+### REV-179: `nanopnp gui` has no smoke test and takes no common flags
 
 CLAUDE.md asks each entry point for a thin smoke test. VER-78 launches `python -m nanopnp.gui.web.server`, so
 `_gui`'s forwarding of arguments is untested, and the subparser is not built with `_common`, so
@@ -2416,7 +2416,7 @@ ready line as `{"ready": <url>}`; the plain line stays the default, so the wrapp
 state walk now launches through the command, which is the entry point's smoke test, and one test reads the JSON line.
 Found by the WP5.02 review (CODE_REVIEW_027, finding 14), 3 November 2026.
 
-## REV-180: The protonated density is refused under the SWANSON and PEOEPB force fields
+### REV-180: The protonated density is refused under the SWANSON and PEOEPB force fields
 
 Stage 2 takes each atom's radius from the CHARMM set of the §5.3.1 NOTE on `geometry.density`, by residue and atom
 name. Under `charge.forcefield: SWANSON` PDB2PQR 3.8 writes AMBER hydrogen names (`H`, `HB3`, `H1`) that the set does
@@ -2427,7 +2427,7 @@ naming both keys, and the case sets `as_loaded` or `CHARMM`.
 **Deferred**, owner unassigned: a protonated density under these force fields needs a radius set, or atom aliases,
 that holds their names, chosen as an author ruling as the CHARMM set was. Found at WP5.03's plan, 3 November 2026.
 
-## REV-181: Stage 2's header counts frame 0's atoms and reads an element from the first letter of a name
+### REV-181: Stage 2's header counts frame 0's atoms and reads an element from the first letter of a name
 
 Under `geometry.density.atoms: protonated` the frames of the protonation table differ in atoms where a tautomer or an
 acid state differs, yet `atoms.total`, `atoms.by_element` and `hydrogens` in stage 2's header count frame 0 only. The
@@ -2437,7 +2437,7 @@ table has no element column. The density is unaffected; the record understates t
 **Open**, found at WP5.03's review: the author rules whether the table carries an element column (a change to the
 artefact's schema) or the header lists every frame's counts.
 
-## REV-182: A polar hydrogen's kernel is narrower than the density grid's spacing
+### REV-182: A polar hydrogen's kernel is narrower than the density grid's spacing
 
 The CHARMM radius of a polar hydrogen is 0.2245 Å, so its width at sharpness 0.93 is 0.0209 nm against the default grid
 spacing of 0.05 nm. The nearest-node deposit of such an atom is aliased: its term at its nearest node runs from near 0
@@ -2448,7 +2448,7 @@ on a density without these hydrogens.
 **Open**, found at WP5.03's review: the author rules whether the polar hydrogens are measured against a finer grid
 before the protonated default is used outside the reference cases.
 
-## REV-183: Fractional protonation through a customised PDB2PQR
+### REV-183: Fractional protonation through a customised PDB2PQR
 
 WP5.04's charge edit changes a residue's net charge by an integer, on its titratable group (§8.2.31 AG9). A partially
 (de)protonated state, a group carrying its charge averaged over its states at the pH, is FR-43's, a later phase
@@ -2459,7 +2459,7 @@ using a custom version of PDB2PQR. This is something we can look into later, so 
 then, and writes the physics into §4 first (T6). Found at WP5.04's plan, 3 November 2026.
 
 
-## REV-184: Stage 4's probe-radius gate ignores a `charge.edits` radius scale
+### REV-184: Stage 4's probe-radius gate ignores a `charge.edits` radius scale
 
 Under `geometry.density.atoms: protonated` a `radius_scale` widens or narrows the residue's kernels in stage 2, so
 the contour moves (§5.3.1 NOTE on `charge.edits`). Stage 4's gate measures the lumen against the probe-radius
@@ -2475,7 +2475,7 @@ variant's atoms. Stage 4's key carries the radius edits only where there are som
 them; under `as_loaded` stage 2 does not scale and neither does the probe. Tier 1:
 `test_fr38_a_radius_edit_scales_the_stage_4_probe_as_it_scales_the_density`.
 
-## REV-185: A charge-only edit moves stage 2's key and rebuilds the mesh
+### REV-185: A charge-only edit moves stage 2's key and rebuilds the mesh
 
 Under `protonated`, stage 2 keys on the whole protonation artefact's hash. A `charge_change_e` edit changes no
 position, name or radius stage 2 reads, yet it moves the protonation key and with it stages 2 to 6, so each charge
@@ -2490,7 +2490,7 @@ radius edit still moves them. Stage 2's summary records that key as `atom_source
 table's digest, which a shared density would misreport. Tier 1:
 `test_fr38_a_charge_edit_keeps_the_parents_density_key_and_a_radius_edit_moves_it`.
 
-## REV-186: A stored mesh beside a `structure:` section is refused
+### REV-186: A stored mesh beside a `structure:` section is refused
 
 `inputs.mesh.artefact` (REV-62) names a stage-6 mesh in the store, and `structure:` or `geometry:` beside any
 `inputs.mesh` is refused naming both, by the upstream rule of the §5.3.1 NOTE on `inputs:`. The stored mesh's frame
@@ -2502,7 +2502,7 @@ by hash.
 Open: the author rules whether a stored mesh's frame is recorded and checked against the structure's, so that the
 pair is refused only on a mismatch, or whether the refusal stays.
 
-## REV-187: A study that drops a mixed block writes a study form it cannot read
+### REV-187: A study that drops a mixed block writes a study form it cannot read
 
 `Case.with_({"charge": None})` on a study whose molecular model holds `charge.ph` gives a valid case with no
 `charge:` section, and `io/models.py:_compare` records each model-owned leaf of the block as an override to `None`
@@ -2520,7 +2520,7 @@ setting to `None` a block the study owns that holds a key a named model sets, na
 remedies (set them in the model file, or substitute the block's keys one by one). §5.3.1's NOTE on `models:` says
 so. Verified at review (§8.2.13 N3).
 
-## REV-188: The COMSOL comparison keys a stored mesh without a store
+### REV-188: The COMSOL comparison keys a stored mesh without a store
 
 `validation/comsol.py:_upstream` builds each stage with `create(name)` when no recorded artefacts are given. Since
 WP5.05 the mesh stage takes the store, and a case naming `inputs.mesh.artefact` has no key without it, so the
@@ -2534,7 +2534,7 @@ Ruled by the author: refused. `validation/comsol.py:_upstream`, keying a case wi
 refuses one naming `inputs.mesh.artefact`, naming the hash, and points at comparing a finished run of it or
 supplying `inputs.mesh.path`. §5.2's stage table says so. Verified at review (§8.2.13 N3).
 
-## REV-189: A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep`
+### REV-189: A relative model path reads beside the study in `with_`, and against the working directory in `plan_sweep`
 
 `ModelRecord.carried` reads a relative `models.molecular` or `models.continuum` beside the study file, so
 `Case.with_(models={"continuum": "b.yaml"})` reads `b.yaml` next to the study. `api/sweep.py:plan_sweep` resolves the
@@ -2548,7 +2548,7 @@ Fixed: beside the study. `api/sweep.py:plan_sweep` reads a relative `models.*` a
 `ModelRecord.base`, as `Case.with_` does, and writes it absolute into the plan. §5.3.4 says so. Verified at review
 (§8.2.13 N3).
 
-## REV-190: `CaseDocument` equality counts `models` and the model record
+### REV-190: `CaseDocument` equality counts `models` and the model record
 
 §5.3.1's NOTE on `models:` leaves `models` out of every dump, hash and equality of a case. `Case` compares dumps, so
 a study equals its inline twin. `CaseDocument`, which `pipeline.case.load_case` returns, keeps pydantic's equality:
@@ -2562,7 +2562,7 @@ Ruled by the author: `CaseDocument` takes `Case`'s equality. `__eq__` and `__has
 `io/case.py:CaseDocument` and compare and hash the dump, which leaves out `models` and the record; `Case` inherits
 them. §5.3.1's NOTE on `models:` names both. Verified at review (§8.2.13 N3).
 
-## REV-191: A stored generated mesh skips the field-frame check
+### REV-191: A stored generated mesh skips the field-frame check
 
 `charge/stage.py` checks a supplied field's `model_frame_centre_z_nm` against the mesh's frame only when
 `resolved.generates_mesh` and a membrane is set. A case that names a generated mesh by its store hash
@@ -2581,7 +2581,7 @@ generated mesh does; a store without that region refuses the declaration, which 
 declares no frame is read as before. §5.3.1's NOTE on `inputs.charge`, `inputs.eps_r` says so. Tier 1:
 `test_fr27_a_field_beside_a_stored_generated_mesh_is_checked_against_its_region`.
 
-## REV-192: A run on a stored mesh records the generating case's Debye sizing
+### REV-192: A run on a stored mesh records the generating case's Debye sizing
 
 `pipeline/run.py:_mesh_record` lays the run's own Debye record over the mesh summary's sizing only when the case
 generates its mesh. A run on a stored mesh keeps the generating case's Debye length and ratio in its manifest's
@@ -2595,7 +2595,7 @@ Fixed: kept and marked. `pipeline/run.py:_mesh_record` keeps a stored generated 
 adds this run's own Debye lengths beside it as `run_debye` (`mesh/sizing.py:run_debye_record`: the
 uncorrected and the corrected `λ_D`). §5.3.3's Geometry-and-mesh row says so. Verified at review (§8.2.13 N3).
 
-## REV-193: An output that needs nothing and extracts is skipped for a model with no transport
+### REV-193: An output that needs nothing and extracts is skipped for a model with no transport
 
 `post/stage.py:QoIStage.run` returns before any `extract` runs when the model declares no transport. An output
 registered with `needs=∅` and an `extract` is offered by `outputs.provided` for every model, accepted by `_check_outputs`,
@@ -2605,7 +2605,7 @@ reach this: `fields` has no `extract`. Found by the WP5.06 review.
 Fixed: ruled by the author. `register_output` refuses an output with an `extract` that does not need `transport`, naming
 the reason, so no model offers an output that stage 11 would then leave out. Verified at review (§8.2.13 N3).
 
-## REV-194: A registered steric form or output enters the key by name only
+### REV-194: A registered steric form or output enters the key by name only
 
 The solve key carries a non-validated steric model's name (`electrolyte.steric_model`), and the stage-11 key an output's
 name and its parameters. Re-registering a name with a changed body returns the earlier cached artefact. §5.5's NOTE asks for the
@@ -2615,7 +2615,7 @@ name only, and `borukhov` is versioned with the package. A user's own stage is k
 Fixed: ruled by the author. The name alone keys a registered form and extractor, as §5.5's NOTE says; `borukhov` and the
 shipped outputs are versioned with the package. A changed body is a new name. No digest, no amendment. No code change.
 
-## REV-195: The manufactured source builds the Borukhov flux whatever steric model is named
+### REV-195: The manufactured source builds the Borukhov flux whatever steric model is named
 
 `validation/mms.py` switches on `model.steric`, a bool, and always manufactures the Borukhov source. A second registered
 form would fail the convergence test loudly but would not say why. Found by the WP5.06 review.
@@ -2623,7 +2623,7 @@ form would fail the convergence test loudly but would not say why. Found by the 
 Fixed: ruled by the author. `ManufacturedSolution` refuses a steric model other than `borukhov`, naming the model, so a
 second form fails with its reason; the package that ships one adds its manufactured form (§8.2.28 AD5).
 
-## REV-196: The case JSON Schema no longer lists the steric models and the outputs
+### REV-196: The case JSON Schema no longer lists the steric models and the outputs
 
 `Steric.model` and `outputs` are strings in the case model, checked by `check_document` against the registries, so
 `case_json_schema()` and the published `case.schema.json` carry no enum for them. The `io` layer cannot import the
@@ -2632,7 +2632,7 @@ registries (VER-61). Found by the WP5.06 review.
 Fixed: ruled by the author. `docs/scripts/generate.py` writes the registered steric models and outputs as enums into the
 published `case.schema.json`; `io` stays registry-free (VER-61).
 
-## REV-197: Rectification does not pair a bias set through a variable
+### REV-197: Rectification does not pair a bias set through a variable
 
 The sweep plan pairs the two points of a rectification ratio by `boundary_conditions.bias_V` in their assignments
 (`sweep/plan.py:_pairs`, §5.3.1 NOTE on `outputs:`). An axis over a variable that sets the bias (`bias_V: v` with an axis
@@ -2641,119 +2641,119 @@ on `variables.v`) assigns no `bias_V`, so the plan finds no matched pair and ref
 
 **Accepted**: WP5.19, which builds the Sweep tool (§8.2.34 AJ10), pairs points by each point's resolved bias (`plan.case(index).boundary_conditions.bias_V`) instead of its assignments.
 
-## REV-198: A sweep plan is not tied to the variables as written
+### REV-198: A sweep plan is not tied to the variables as written
 
 The plan reads barriers, warm-start parents and variable-axis reach from the variables as written, but `SweepPlan.base_case()` accepts a base case whose resolved numbers hash the same. A formula changed to a literal of equal value passes the check, and the plan's barriers are then stale. Found by the WP5.07 review (FR-39). The remedy is a plan identity that covers the variable record.
 
 **Fixed** in WP5.07: the plan records the variables and expressions as written, carries them in its digest, and `SweepPlan.base_case()` refuses a base case whose variables moved, naming both.
 
 
-## REV-199: The sweep forecast resolves every point again
+### REV-199: The sweep forecast resolves every point again
 
 `forecast()` re-reads the base case, substitutes and resolves each point, which `build_plan` already did; `run_plan` repeats it through `_announce`. The cost grows with the points and with a stored mesh ingested at each point. Found by the WP5.07 review. The remedy is for the plan to carry its resolved members.
 
 **Fixed** in WP5.07: the plan resolves each member once (`SweepPlan.resolved_members`, seeded by `build_plan`), and the forecast reads them. A plan read from disk resolves them on first use.
 
 
-## REV-200: A second type repeats the variable resolution
+### REV-200: A second type repeats the variable resolution
 
 `VariableRecord` and `Resolution` hold the same four fields, and `VariableRecord.of` only copies one into the other. They must stay in step by hand. Found by the WP5.07 review. The remedy is one type, which spans `io/variables.py`, `io/models.py` and their callers.
 
 **Fixed** in WP5.07: `VariableRecord` extends `Resolution` and takes its fields from it, so the four fields are declared once. The record stays in `io/models.py` because its operations need the case's document types, which `io/variables.py` cannot import.
 
 
-## REV-201: `sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables
+### REV-201: `sweep plan --json` drops the reason a forecast could not be made, and the case JSON Schema does not describe variables
 
 When the forecast fails, the text output gives the reason and the JSON gives `forecast: null` alone. `case_json_schema` lists neither `variables:` nor a string at a numeric field, which the workbench forms will need. Found by the WP5.07 review. Both change a public shape, so the author rules.
 
 **Fixed** in WP5.07: `sweep plan --json` carries `forecast_unavailable` with the reason, and `case_json_schema` declares `variables:` and admits a string at each numeric field (VER-76 (c)).
 
 
-## REV-202: The problems list leads to a suite, not to the field, and the suites' tools are not built
+### REV-202: The problems list leads to a suite, not to the field, and the suites' tools are not built
 
 A row of the problems list opens the suite that owns the item, and the suite lists its tools as text ("in a later package"), so no field is reachable and the job "see a refusal, fix the value, go on" cannot be finished (WB-12). Found by the WP5.08 `/np-gui review` (F4, F5). The frame is this package's scope; the tools are WP5.16 to WP5.19's.
 
 **Deferred** to WP5.16 to WP5.20 (§8.2.34 AJ10): each suite's package makes its tools real, and the problem row then opens the tool at the field. The tool lists become disabled list items or controls as the tools land.
 
-## REV-203: The frame's accessibility and layout limits
+### REV-203: The frame's accessibility and layout limits
 
 The WP5.08 `/np-gui review` found, in the frame as built: the bottom panel opens about 180 px high and clips the changed list and the problems list with no row count (F3); the frame has no landmarks, no heading and no `aria-live` region for the changed count, the problem count and the queue line (F15); the splitter has no keyboard resize beside the fold buttons (doubt 5); the activity bar has names and no icons (F14); the shortcuts `Alt+Shift+digit`, `Ctrl+K` and `Ctrl+,` may be claimed by a browser or an operating system (doubt 6); and the 3D view's background is read once when the viewer starts, so a change in the settings reaches an open viewer after a reload (doubt 4).
 
 **Deferred** to WP5.15, which rebuilds the frame on Quasar's components (§8.2.34 AJ1): the panel's height and row counts, the landmarks, heading and live regions, the splitter's keys, the icons and the reserved chords. The keyboard pass over every canvas action stays with the guided route, WP5.21 (QR-16).
 
-## REV-204: The settings and the changed list lack some guards and units
+### REV-204: The settings and the changed list lack some guards and units
 
 The WP5.08 review found: the settings dialog has no sticky footer and the colours sit in a collapsed section (F9); a shortcut has no per-row clear control (F7); Reset, Reset layout and Quit act at once with no confirmation or undo, and Quit does not warn of a running build (F12); the changed list shows a value with no unit beside it and a default of `None` (F12); an item that fails to load adds nothing to the changed count and says nothing (doubt 1); and a path set in a case counts as changed whether or not it differs from the validated default (doubt 2). A user's theme has no contrast display by the author's ruling (§8.2.33 AI1), so that part of F8 is answered and not open.
 
 **Deferred** to WP5.15, whose settings page follows one declared list (§8.2.34 AJ9) and whose changed table shows each unit (AJ7).
 
-## REV-205: The Study page shows fixture names, and the charge screen lacks a colour bar and axes
+### REV-205: The Study page shows fixture names, and the charge screen lacks a colour bar and axes
 
 The Study page prints `State: <fixture name>` and stage chips with no verdict word (F16), and the charge screen's map has no axes, no unit and no diverging colour bar, and its strip lists one residue while two charges are drawn (F17). Found by the WP5.08 review. The charge screen is WP5.02's spike screen, placed in the frame.
 
 **Deferred** to WP5.19, which builds the Charge on the mesh tool (WB-26; VER-60) after its prototype round on 2WCD (§8.2.34 AJ8, AJ10).
 
-## REV-206: An exported project can lose a result file of the same name, and keeps the run record's old paths
+### REV-206: An exported project can lose a result file of the same name, and keeps the run record's old paths
 
 The WP5.08 code review found four limits of `Project.export`. Two result files of one run that share a name, from different folders, are copied to `results/<name>` and the second replaces the first. The copied `run.json` still lists the result paths of the project it was copied from, so the copy's record points back at the original. An input file kept in a sub-folder of `inputs/` is copied flat while the item that names it is not rewritten, and an input in `inputs/` that no item names can share a name with a linked input and replace it. A failure part-way leaves a half-written destination that the next export refuses as not empty.
 
 **Deferred** to WP5.19, the package that writes run records into a project (§8.2.34 AJ10).
 
-## REV-207: The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs
+### REV-207: The frame writes the layout on every drag step, rereads the theme files, and keeps its dialogs
 
 The WP5.08 code review found: a splitter's change event writes the project file at every step of a drag; `theme.shipped()` parses `tokens.css` and `user_themes()` every theme file at each call, several times to build one page and once per colour keystroke; the New, Open, Import, Export and Glossary dialogs are created at each use and never deleted, so a long session accumulates them; an empty folder field in those dialogs reads as the server's working folder; and the palette's filter is written twice, in `fill_palette` and `first_match`.
 
 **Deferred** to WP5.15, which rebuilds the frame (§8.2.34 AJ1, AJ10).
 
-## REV-208: The palette finds commands by title only, has no active row, and lists commands that cannot run
+### REV-208: The palette finds commands by title only, has no active row, and lists commands that cannot run
 
 The second WP5.08 screen review found: the palette matches a typed word against a command's title only, so "theme", "density", "spacing", "dark" and "shortcut" find nothing and "Settings…" is the only route to them; no row is highlighted and the arrow keys do not move through the list; and "Import case…" and "Export project…" are listed with no project open, where they only refuse.
 
 **Deferred** to WP5.15, with REV-211 (§8.2.34 AJ1, AJ10). It gives each command keywords, adds the setting commands, the highlighted row and the arrow keys, and disables a command with the reason.
 
-## REV-209: The charge screen in the frame shows a link where none exists, and its map ignores the dark theme
+### REV-209: The charge screen in the frame shows a link where none exists, and its map ignores the dark theme
 
 The charge screen is WP5.02's spike screen, placed in the frame. With no case or no structure charge it still shows "Linked" with an Unlink button beside two empty canvases and no caption; it says "case", a retired term; the Study page offers its link in the empty state; the map's background is light grey on the dark theme, against WB-26. The review doubted two things it could not check from the pictures: the Mol* toolbar icons may read below 3:1 (the harness measures no viewer control), and the 3D spheres and the map's dots may colour the same charges oppositely.
 
 **Deferred** to WP5.19, which builds the Charge on the mesh tool (WB-26; VER-60) with the colour bar of REV-205, its design settled in its prototype round (§8.2.34 AJ8, AJ10).
 
-## REV-210: The frame lacks icons, headings and some states in the render set
+### REV-210: The frame lacks icons, headings and some states in the render set
 
 The second WP5.08 screen review found: the activity bar has text only where the design document says an icon with its name; suite and dialog titles are labels, not headings; the changed diamond is read aloud by a screen reader; the settings' colour inputs carry raw token names with no swatch; the Glossary holds 5 of the document's 22 terms and About is a toast that disappears; and the New, Open, Import and Export dialogs are a free text path with no browse list. The render set shows none of: those dialogs, the File, View and Help menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density, tight spacing, the 3D background settings, a key being captured, or a typed palette query.
 
 **Deferred** to WP5.15, which rebuilds the frame (§8.2.34 AJ1, AJ10): the icons, headings, render states and the dialogs with a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
 
-## REV-211: The palette opens as a full command list, not a bare input that suggests as you type
+### REV-211: The palette opens as a full command list, not a bare input that suggests as you type
 
 The author, marking the frame's palette (`docs/design/reviews/2026-11-05-frame.md`): "This should far more sleek and subtle, not just a list of commands. Default should be just a box to type in, and suggestions should pop up once you start typing." The palette opens as an input over every command with its chord.
 
 **Deferred** to WP5.15, with REV-208 (§8.2.34 AJ1, AJ10). The palette opens as one input and lists no commands until a word is typed. The matches then appear under it, found by title and keyword, one row active and moved by the arrow keys. A command that cannot run is listed disabled with its reason.
 
-## REV-212: The settings need a searchable section list beside the panel, and which settings exist is undecided
+### REV-212: The settings need a searchable section list beside the panel, and which settings exist is undecided
 
 The author, marking the frame's settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." The settings are one dialog of stacked sections: theme, density, spacing, the 3D background, the colours and the shortcuts (§8.2.33 AI1; REV-204).
 
 **Deferred** to WP5.15, ruled by the author on 5 November 2026 (§8.2.34 AJ9; WB-37): the settings are one declared list, each setting with its section, its scope (the user's, or the project's over the user's), its default, its description and search words and when it applies; the page, its search, the palette's setting commands and both files follow. The sections are appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers; which settings beyond them exist, compute and network among them, is put to the author at WP5.15's plan after a survey of comparable tools.
 
-## REV-213: The suites may need to separate those that build models from those that use them
+### REV-213: The suites may need to separate those that build models from those that use them
 
 The author, marking the Molecular suite and then the Continuum, Study and Analysis suites with "See Molecular suite comments": "I wonder if we need to make a further distinction in the suites between those that build components (molecular, continuum, physics), those that use components (study, analysis?). I think we need to discuss this further to figure out what I mean." The frame has four suites side by side in the activity bar (WB-02, WB-29). The models are built in Molecular and Continuum (WB-11), and the physics defaults sit in the continuum model (WB-16).
 
 **Deferred**, ruled by the author on 5 November 2026 (§8.2.34 AJ2 to AJ5; WB-34, WB-35): physics becomes a third reusable model, and five suites show as those that build models (Molecular, Continuum, Physics) and those that use them (Study, Analysis). The physics model is WP5.09's library step, the grouped suites WP5.15's, and the Physics suite WP5.18's.
 
-## REV-214: The changed list is loosely spaced, and the project name reads as a menu
+### REV-214: The changed list is loosely spaced, and the project name reads as a menu
 
 The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?" Each changed value is a row of about 48 px: the path, the value, its default and *Reset*. Then, on the refused state: "Not sure the "refused" marker in the top bar is the best location, looks like a menu item." The word is the fixture project's name (`--state refused` opens a project named `refused`), not a refusal marker. The name sits in the menu row, after *Help*, in the menus' weight, so it reads as a menu.
 
 **Deferred** to WP5.15, ruled by the author on 5 November 2026 (§8.2.34 AJ7; WB-36): the mark at the field with its reset, a *Modified only* filter on each pane and the settings, and one dense table grouped by model and study with value, default, unit and reset. The project's name heads the project rail and names the browser tab.
 
-## REV-215: The charge screen needs its design and its function settled together
+### REV-215: The charge screen needs its design and its function settled together
 
 The author, marking the charge screen: "Looks very poorly integrated. Maybe because we are still in early development phase for the GUI. Also hard to judge without an example molecule.", then: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." The screen is WP5.02's spike, placed in the frame (REV-205, REV-209). The render set's states are a charged and an uncharged tube, with no protein.
 
 **Deferred** to WP5.19, ruled by the author on 5 November 2026 (§8.2.34 AJ8; WB-38): the Study package opens with its tools prototyped over 2WCD's artefacts and rendered through their states, and the charge screen's design is settled with its function in that round, with REV-205's colour bar and axes and REV-209's link and dark map.
 
-## REV-216: The Phase 5 plan exceeds its word target again
+### REV-216: The Phase 5 plan exceeds its word target again
 
 The Phase 5 plan holds about 5,100 words without its report, against `np-plan`'s 1,500 target for a phase plan, checked at review (§8.2.13 N3). REV-133 brought it to 1,500 on 24 October 2026; the amendments since grew it to about 4,200 and §8.2.34 to 5,100, each rewriting its package entries to their current scope as R4 asks. The delivered entries WP5.01 to WP5.08 hold about 1,770 words, so moving them to `phase-5-record.md` would still leave about 3,400. Found by CODE_REVIEW_034, finding 9.
 
@@ -2764,47 +2764,47 @@ The Phase 5 plan holds about 5,100 words without its report, against `np-plan`'s
 **Fixed** in WP5.11 (§8.2.36 AL18; AUD-244): WP5.01 to WP5.10 keep their title, merged line and live constraints, and their narratives move verbatim to `phase-5-record.md`; the dated status chain and the settled open decisions move with them. The plan holds 4,243 words by `wc -w`, from 6,548; the rest is the live scope of the eleven packages still to run.
 
 
-## REV-217: Case reading, substitution and input-path discovery are split across five modules
+### REV-217: Case reading, substitution and input-path discovery are split across five modules
 
 Reading a case is split between `io/case.py:read_case`, which refuses `models:` and `variables:`, and `io/models.py:read`, which resolves them. `Case.with_` substitutes twice, once for the edits and once for the relative paths `_rebased_paths` finds. Input-file discovery is written four times: `io/case_paths.py:input_paths` with `correction_paths`, `io/models.py:_rebased`, `io/project.py:item_inputs`, and the merges in `api/case.py` and `api/sweep.py`. Found by CODE_REVIEW_036, candidate 1, with its corrections C1.1 to C1.5.
 
-**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+**Settled** with the author in [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md) on 7 November 2026, to land after WP5.09 (the physics model); its corrections bind the package that lands it, which *Placed* names.
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.13, case and model files, with CODE_REVIEW_036's candidate 1; the case reader then resolves `models:` and `variables:` (AL23).
 
-## REV-218: Effective atom radii and atom-to-residue indexing are split across four subpackages
+### REV-218: Effective atom radii and atom-to-residue indexing are split across four subpackages
 
 `density/radii.py:resolve_protonated_radii` returns CHARMM radii without the table's radius edits, so `density/stage.py` must multiply by `radius_scales(table)` itself. Atom-to-residue indexing is written twice, in `charge/edits.py:_owner` and in `resolve_protonated_radii`, and the two differ on an atom with no residue row. Found by CODE_REVIEW_036, candidate 4, with its corrections C4.1 and C4.2.
 
-**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+**Settled** with the author in [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md) on 7 November 2026, to land after WP5.09 (the physics model); its corrections bind the package that lands it, which *Placed* names.
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.16, the Molecular suite's library step, with CODE_REVIEW_036's candidate 4.
 
-## REV-219: A model file's validated body is discarded and parsed again by the project
+### REV-219: A model file's validated body is discarded and parsed again by the project
 
 `io/models.py:_read_model_file` validates and rebases a model file's body and then drops it from `ModelFile`. `api/project.py` reads the YAML again (`_body`), strips `schema` and `name` by hand for `mapping_changes`, and repeats `io/models.py:_put` and the layer split (`Project._split`). Found by CODE_REVIEW_036, candidate 5; its sketches are re-read against the code as WP5.09 leaves it (C5.1).
 
-**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+**Settled** with the author in [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md) on 7 November 2026, to land after WP5.09 (the physics model); its corrections bind the package that lands it, which *Placed* names.
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.13, case and model files, with CODE_REVIEW_036's candidate 5.
 
-## REV-220: The upstream lookup and the forecast re-implement the walk's stage keying
+### REV-220: The upstream lookup and the forecast re-implement the walk's stage keying
 
 `pipeline/run.py:stored_upstream` and `pipeline/forecast.py:keyed_walk` each look up the stage description, build the stage, filter `offered()` and query the store on their own, beside `_Walk.describe`, `_Walk.inputs` and `_Walk.construct`, which serve the run. `stored_upstream` ignores a session's own stages. Keying must not use `_Walk.construct`, which makes scratch workspaces. Found by CODE_REVIEW_036, candidate 6, with its correction C6.1.
 
-**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+**Settled** with the author in [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md) on 7 November 2026, to land after WP5.09 (the physics model); its corrections bind the package that lands it, which *Placed* names.
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.14, sweep planning and the walk's keying, with CODE_REVIEW_036's candidate 6.
 
-## REV-221: Planning a sweep from a case drops the members it resolved
+### REV-221: Planning a sweep from a case drops the members it resolved
 
 `sweep/plan.py:build_plan` keeps the members it resolved as `plan.__dict__["resolved_members"]`, and `api/sweep.py:plan_sweep` moves the plan out of its staging directory with `replace(staged, base_path=...)`, which builds a fresh `SweepPlan` without them. `plan_sweep(...).forecast()` therefore resolves every member again, which REV-199 set out to stop. The staged members were resolved beside the deleted staging directory, so the fix keys held members on their directory rather than carrying them. Found by CODE_REVIEW_036, candidate 2, with its corrections C2.1 to C2.3.
 
-**Open**, to land after WP5.09: the author directed on 7 November 2026 that the changes CODE_REVIEW_036 settles land after the physics model, following from a Phase 5 amendment (`/np-plan amend 5`), which names the package and its ruling.
+**Settled** with the author in [CODE_REVIEW_036](../code_reviews/CODE_REVIEW_036.md) on 7 November 2026, to land after WP5.09 (the physics model); its corrections bind the package that lands it, which *Placed* names.
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.14, sweep planning and the walk's keying, with CODE_REVIEW_036's candidate 2.
 
-## REV-222: The agentic instructions cite identifiers without their words and state two procedures in several places
+### REV-222: The agentic instructions cite identifiers without their words and state two procedures in several places
 
 CODE_REVIEW_038 audited `CLAUDE.md`, the skills, the workflow files and the hooks. Four of its findings were left for a later commit. C2: the skills cite a ruling or clause identifier about 90 times as the only cross-reference, each costing a `clause.py` call to read, against `core.md`'s own rule that an identifier only follows its words. C3: the gate-and-push procedure is stated in `CLAUDE.md`, `core.md`, `steward/SKILL.md` and `hosts/copilot.md`, and the two-lane rule in five places; none contradicts another today, and the risk is drift. E5: `core.md`'s *Putting a choice to the author* and *The In brief* are read by `/np-implement` and `/np-ship`, which do not use them, about 450 words each. E6: `AGENTS.md` imports `CLAUDE.md` with `@`, so a Copilot session loads it twice.
 
@@ -2813,7 +2813,7 @@ CODE_REVIEW_038 audited `CLAUDE.md`, the skills, the workflow files and the hook
 **Fixed** in WP5.11 (§8.2.37 AM9): C2, an identifier the skills cite alone gains its words; C3, the push gate's mechanics stay in `CLAUDE.md`'s *Commands* and `hosts/copilot.md`, the core keeps the order and points there, and the two-lane rule is §8.4.4's, with the core keeping a session's conduct; E5, *The In brief* and *Putting a choice to the author* move to `.claude/workflow/author.md`, read at the steps that write one or put one; E6, `AGENTS.md` points to `CLAUDE.md` and imports nothing.
 
 
-## REV-223: PHY-07's density continuity is not assembled
+### REV-223: PHY-07's density continuity is not assembled
 
 PHY-07 states three flow equations: density continuity `u·∇ϱ = 0`, momentum `(u·∇)(ϱu) + ∇·σ = f`, and
 velocity continuity. The reference supplies the first as the hand-added weak term
@@ -2827,7 +2827,7 @@ the program assembles, with a NOTE naming this item.
 quantities VAL-16 and VAL-17 compare, on the reference case at the envelope's corners, and add it if
 it moves one of them.
 
-## REV-224: NUM-28's fluid consistency term omits the pore charge's force
+### REV-224: NUM-28's fluid consistency term omits the pore charge's force
 
 NUM-28's consistency terms take `∇·T_M = ρ_ion E − ½|E|²∇ε` in the fluid. PHY-16 deposits `ρ_pore` on
 every material, the fluid included, so in the fluid `∇·T_M` also carries `ρ_pore E`, and the domain
@@ -2838,7 +2838,7 @@ CODE_REVIEW_039 (AUD-69). NUM-28 carries a NOTE naming this item.
 `F^em` on an analyte case with a deposited charge, and either add the term or state that the support
 of `w` excludes the deposit.
 
-## REV-225: Three numerics tolerances have no written derivation
+### REV-225: Three numerics tolerances have no written derivation
 
 Three §6 tolerances give no derivation and no pointer: the absolute residual floor 10⁻¹² of NUM-16,
 the increment cap `‖δφ‖_∞ ≤ V_T` of NUM-16 and NUM-17, and NUM-08's "deviation from the analytic value",
@@ -2849,7 +2849,7 @@ CODE_REVIEW_039 (AUD-52). §6 carries a NOTE naming this item.
 in NUM-09's scaling, the largest accepted `‖δφ‖_∞` across the gated walks, and the error NUM-08's test
 sees, and write each number's derivation beside its clause.
 
-## REV-226: Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2
+### REV-226: Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2
 
 WP5.11 moved stage 1's refusals and thresholds and stage 2's radius set and union from §5.3.1's NOTEs
 on `structure:` and `geometry.density` to §5.2's NOTEs on stages 1 and 2 (§8.2.36 AL11; AUD-113).

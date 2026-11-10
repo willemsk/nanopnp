@@ -35,7 +35,16 @@ saltier = case.with_({"electrolyte.concentration_M": 0.2})
 ```
 
 A field is named by its dotted path or by the leaf name it ends in; a mapping names a path that is
-not a Python identifier. The copy keeps no file of its own, so a run of it records the case as text.
+not a Python identifier. Switching one correction off is an edit of its model, for example the diffusivity's:
+
+```python
+no_diffusivity = case.with_({"electrolyte.corrections.diffusivity.model": "none"})
+```
+
+Its manifest lists the switch as a deviation from the validated run, which names
+`willems2020_nacl` for each correction ([Provenance and deviations](provenance.md)).
+
+The copy keeps no file of its own, so a run of it records the case as text.
 A path in a case file is read beside that file ([Case files](case-files.md)); a path that an edit
 sets is made absolute against the same directory. `case.dumps()` writes the case back as text.
 

@@ -126,7 +126,8 @@ also gets size fields that state what netgen does without being asked: grading a
 domain's boundary, refining near short edges, and holding the membrane to its own thickness. Both
 meshes then pass the same gates, including the wall-size gate. On the ClyA reference profile, Gmsh
 makes about 10 % more triangles than netgen, in about half the time. The two meshes give
-conductances 1.2e-4 apart, less than refining either mesh moves it. The backend is recorded with the
+conductances 1.25e-4 apart on WP22's frozen case at `size_scale` 2, below the 2.0e-4 that refining
+netgen once moves its own value; the Tier 2 test holds them within 1e-3 (VER-54). The backend is recorded with the
 mesh and keys it. Changing it gives a different mesh in the store, and in a sweep it stops warm
 starts across that axis. Boundary layers (`boundary_layer: true`) are refused on either backend
 (FR-11).

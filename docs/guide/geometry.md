@@ -31,7 +31,7 @@ the settings of the published ClyA model.
 
 ```yaml
 geometry:
-  density: {grid_spacing_nm: 0.05, kernel: gaussian_vdw, sharpness: 0.93}   # stage 2
+  density: {grid_spacing_nm: 0.05, kernel: gaussian_vdw, sharpness: 0.93, atoms: protonated}  # stage 2
   contour: {isolevel: 0.25, smoothing: taubin, simplify_tol_nm: 0.02}        # stage 4
   membrane: {thickness_nm: 2.8, centre_z_nm: 0.0}                             # stage 5
   reservoir: {radius_nm: 250.0}                                               # stage 5
@@ -44,7 +44,8 @@ artefact's key, so two runs that passed the same gates can be told apart from tw
 
 ## Stage 2: the density map
 
-Each atom becomes a Gaussian whose width is its van der Waals radius times `sharpness`. The radius
+Stage 2 smears the protonated atoms, hydrogens included, unless `atoms: as_loaded` asks for the
+atoms as loaded ([From a structure to a charge](charge.md)). Each atom becomes a Gaussian whose width is its van der Waals radius times `sharpness`. The radius
 comes from the CHARMM set that PDB2PQR ships, by residue and atom name, and an atom the set does not
 name is refused, naming its chain, residue and atom. There is no fallback by element, because a
 guessed radius makes a plausible wrong wall. The atoms of one frame are combined as a probability

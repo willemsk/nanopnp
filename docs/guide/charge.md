@@ -2,7 +2,8 @@
 
 Stage 7 gives the pore its fixed charge. It runs in two halves. **Protonation** assigns each atom
 of the structure a partial charge and a radius, with PDB2PQR and PROPKA. **Deposition** smears
-those charges into a fixed-charge density on the mesh, and gates it. Both halves run after stage 6,
+those charges into a fixed-charge density on the mesh, and gates it. Protonation runs after stage 1
+and before stage 2, so the density smears the protonated atoms; deposition runs after stage 6,
 because the charge is deposited on the mesh the solve uses. [From a structure to a
 mesh](geometry.md) covers stages 2 to 6, and [example 07](../_generated/examples/07-pdb-to-charged-run.md)
 runs every stage on a PDB entry, through to a charged solve.
@@ -12,7 +13,9 @@ $ nanopnp run case.yaml --store store --run-dir run --upto charge
 ```
 
 `--upto charge` stops before the solve. Each half is cached in the store like every other stage,
-so changing the pH re-runs the protonation and the deposition, and nothing upstream of them.
+so changing the pH or a charge edit re-runs the density, the contour and the mesh as well as the
+deposition. `geometry.density.atoms: as_loaded` smears the atoms as loaded instead, which is the
+published reference's way ([PHY-16's NOTE](../_generated/model/specification/04-physics.md#44-fixed-charge-and-dielectric-model)).
 
 This page says what each step does and which key steers it. The formulas, the tolerances and their
 derivations are in the [specification](../_generated/model/specification.md):

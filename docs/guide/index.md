@@ -5,6 +5,10 @@ model is documented by [the specification and the knowledge base](../model/index
 verbatim, and the guide points into them by identifier (`PHY-`, `NUM-`, `FR-`) instead of restating
 an equation.
 
+The guide describes v0.5's features and the case file; the v0.6 workbench (`nanopnp gui`), projects
+and model files are in the generated references. The documentation package WP5.21 rewrites the
+guide for the workbench.
+
 | Page | What it covers |
 |---|---|
 | [Concepts](concepts.md) | Case, stages, artefacts, the store, the manifest |
