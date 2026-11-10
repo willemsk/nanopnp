@@ -161,8 +161,9 @@ commands. A choice put to the author follows *Putting a choice to the author* in
 renders screens and mockups headless, reviews them, publishes them for the author's verdicts, and runs
 a design round (§8.4.4).
 
-**Models:** implementation runs on Haiku for an easy mechanical item and on Sonnet by default. It
-moves to Opus only after Sonnet fails on the item. The kept helpers are the `physics-reviewer`,
+**Models:** the implementing session runs on Opus at high effort, and a scoped item goes to a Sonnet
+sub-agent at high effort. Haiku takes only mechanical, repetitive work that is fully specified and
+needs under 100k tokens of context (§8.2.38 AN8). The kept helpers are the `physics-reviewer`,
 `gui-reviewer` and `ci-log-classifier` sub-agents and seven scripts in `.claude/scripts/`:
 `clause.py` prints a clause, `duplicates.py` names a number that two items of one register share,
 `same_tree.py` checks that changed Python files differ only in prose (§8.2.11 L5),

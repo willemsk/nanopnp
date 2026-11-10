@@ -151,9 +151,10 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
 
 #### 8.4.5 Agents and models
 
-* Implementation runs on Haiku for an easy mechanical item and on Sonnet by default, and moves to
-  Opus only after Sonnet has failed on the item. (§8.2.11 L6) WP5.10's main session runs on Opus at high
-  effort, its sub-agents as its plan names them (§8.2.36 AL29).
+* The implementing session runs on Opus at high effort. A scoped item, one that a sub-agent takes whole
+  with its checks, runs on Sonnet at high effort. Haiku takes only mechanical, repetitive work that is
+  fully specified and whose expected context stays under 100,000 tokens. An item a sub-agent fails goes
+  to a new worker once, then to the next model. (§8.2.11 L6; §8.2.38 AN8)
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
 * Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
@@ -170,7 +171,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   them into the plan's Outcome beside its estimate. A host without a Claude Code transcript records
   "not measured". (§8.2.37 AM11)
 * A batch of independent, mechanical items, such as a sweep over many files, a rename or a per-module
-  pass, goes item by item to a new Haiku or Sonnet sub-agent given the item and the clauses it cites.
+  pass, goes item by item to a new sub-agent, on Sonnet or, as the first bullet allows, Haiku, given the item
+  and the clauses it cites.
   The main session keeps the plan and the git log and re-runs the item's check before the next. Items
   coupled by design stay in the main session. (§8.2.16 R6, R11)
 

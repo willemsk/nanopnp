@@ -1,7 +1,7 @@
 # WP5.15 — The frame on Quasar's components
 
 **Status: planned, not started.** Planned 10 November 2026 on `main` (`ce43a48`). It inherits §8.2.34 AJ1, AJ2, AJ6
-to AJ9 and this plan's, §8.2.38 AN1 to AN7.
+to AJ9 and this plan's, §8.2.38 AN1 to AN8.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to
 a clause and never restates it.
@@ -32,7 +32,8 @@ accessibility miss is caught by rendering and reviewing every screen.
 **Scope.** The phase entry's WP5.15, AN3's settings and AN5's clean-up: REV-203's frame part, REV-204, REV-207, REV-208,
 REV-210 to REV-214. **Depends on:** WP5.14 (merged). **Requirements:** FR-27, FR-31, FR-34, FR-35; QR-16; VER-61,
 VER-62, VER-72, VER-78. **Constrained by:** AJ1 (hand-written only where no component serves), AN2, ADR-004 (no request
-leaves the origin), CON-07 (no build step). **Implementing session:** Sonnet, high effort. Tag `v0.6.0-alpha.15`.
+leaves the origin), CON-07 (no build step). **Implementing session:** Opus, high effort; sub-agents Sonnet, high.
+Tag `v0.6.0-alpha.15`.
 
 **Amended when it lands:** VER-78 (five suites, the settings page, (l), (m)); §5.3.2's NOTE on older entries; §5.3.5's
 NOTE (a project's settings); the matrix rows of FR-27, FR-31, FR-34 and FR-35.
@@ -46,13 +47,13 @@ Eleven: the phase entry's six parts, and AN5's library step.
 | D1 The layout | `gui/web/frame.py:frame` builds Quasar's layout: `ui.header`; one `ui.left_drawer` holding the activity bar and the rail, `mini` while the rail folds; `ui.footer` holding the bottom panel and the status line; a main column with `ui.sub_pages` and the view region. Hand-written separators resize the drawer and the panel, saved on release in px per suite. The tokens reach Quasar's colour variables | AJ1, ruled by the author; decided by the plan for one drawer and the separators |
 | D2 Routes and views | One page at `/` and `/{_:path}` builds the frame once; `ui.sub_pages` routes the five suites, `/study/charge` and `/settings`. The frame owns the view region: one Mol* host, built when a route first shows the molecule, hidden, never rebuilt | AJ1, ruled by the author; decided by the plan for views the frame owns |
 | D3 Five suites | `screens.SUITES` holds five, each with its group and icon; `io/project.py:Suite` gains `physics`, whose items open in Physics; Alt+Shift+1 to 5 follow the bar, and the changelog names the move | AJ2, AJ10, AN7, ruled by the author |
-| D4 Rail and title | `ui.tree` with the project's name as its root, then the kinds and their items, each opening in its suite; the page title is the name; with no project, *New*, *Open* and the recent projects (`core/paths.py`) | AJ7, REV-210, ruled by the author |
+| D4 Rail and title | `ui.tree` with the project's name as its root, then the kinds and their items, each opening its suite; the page title is the name; with no project, *New*, *Open* and the recent projects (`core/paths.py`) | AJ7, REV-210, ruled by the author |
 | D5 Palette | `gui/web/palette.py:Palette` wraps Quasar's searchable select: empty until a word is typed, matched on title and keywords, a command that cannot run disabled with its reason, a command per setting | REV-208, REV-211, AJ9, ruled by the author; decided by the plan for the component |
 | D6 Settings | One registry, `gui/web/settings.py:SETTINGS`; the user's values in `workbench.yaml`, a project's under `settings:` in its file, the project's winning where the scope allows; the page `/settings` with search and sections, *User* or *Project*, *Modified only*, each value's mark and reset | AJ9, AN2, AN3, ruled by the author; decided by the plan for keeping today's keys |
 | D7 Store clean-up | `io/store.py:Store` marks each read, measures itself and evicts the least recently read entries outside a kept set, each renamed away before it is deleted, as `remove` then does. `api/project.py:Project` keeps what a run record, a sweep member or the shown walk names, with their inputs, cleans the unused or all, and applies the cap, unused only, after its walks. A walk holds the store's lock, which a clean-up checks | AN5, AN6, ruled by the author; decided by the plan for the cap and the rename |
 | D8 Changed table | A dense `ui.table`: a group row per item, then mark, field, value, default, unit, reset; numbers in the user's figures and style; units from `io/variables.py:field_unit`; a row opens its suite at `?field=<path>` | AJ7, REV-204, REV-214, ruled by the author |
 | D9 Accessibility and guards | Landmarks, named `nav` regions, a skip link, headings, live regions for the three counts; dialogs built once; Reset, *Reset layout* and *Quit* ask while the guard is on; About and the Glossary as dialogs | REV-203, REV-204, REV-207, REV-210, ruled by the author; decided by the plan for the means |
-| D10 Render set | `server.main --project` boots through `states.boot_project`; `render_shell.py` caches a 2WCD project from example 07 and adds REV-210's states; `shoot.cjs` takes clicks | AJ8, REV-210, ruled by the author; decided by the plan for the cache outside `src/` |
+| D10 Render set | `server.main --project` boots through `states.boot_project`; `render_shell.py` caches a 2WCD project from example 07 and adds REV-210's states; `shoot.cjs` takes clicks | AJ8, REV-210, ruled by the author; decided by the plan for the cache |
 | D11 `impeccable` | `np-gui review` adds the plugin's critique; a session reads its quality floor before building a screen; `design_md.py` writes `DESIGN.md` from `tokens.css`, marked as derived; a host without the plugin skips them | AJ6, ruled by the author |
 
 ### Grounding
@@ -270,7 +271,7 @@ before its wait.
 - [ ] 2. `gui/web/settings.py`, `io/project.py`, `core/paths.py`, `docs/design/tokens.css`, §5.3.5's NOTE (D3, D4, D6);
   done when `tests/tier1/test_gui_settings.py` passes. **Executor:** main
 - [ ] 3. `gui/web/commands.py`, `gui/web/screens.py` (D3, D5); done when the code and review say so. **Executor:**
-  general-purpose on Haiku
+  general-purpose on Sonnet
 - [ ] 4. `gui/web/frame.py`, `gui/web/theme.py`, `assets/frame.js`, `assets/frame.css`, `assets/workbench.css` (D1);
   done when VER-78 (a) to (d) pass. **Executor:** main
 - [ ] 5. `gui/web/pages.py`, `assets/bridge.js`, VER-78's text (D2); done when VER-78 (a) to (d), (i) and (m) pass.
