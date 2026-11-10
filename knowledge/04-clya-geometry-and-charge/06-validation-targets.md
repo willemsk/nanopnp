@@ -7,6 +7,9 @@ tags:
 - clya
 - pipeline
 sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C
   title: Willems et al., Nanoscale 12, 16775-16795 (2020)
@@ -29,9 +32,11 @@ generated:
 | 2.000 | 0.502 (1.00) | 0.503 (1.01) | 0.503 (1.01) | 0.505 (1.02) | 0.505 (1.02) | 0.504 (1.02) |
 | 5.000 | 0.445 (0.803) | 0.445 (0.803) | 0.445 (0.803) | 0.445 (0.802) | 0.445 (0.802) | 0.445 (0.802) |
 
+Cell values (t_Na, with P_Na in brackets) are those of TA `tab:ion_selectivities`, TA L102-108 and L123-129 **[verified][^thesis]**.
+
 Derived claims: cation-selective (`t_Na > 0.5`) for all voltages up to **c_bulk ~ 2 M**; minimum
-**0.445 at 5 M**, still **~1.27x** the bulk NaCl value **0.35** (T L758-764). `t_Na ~ 0.9` requires
-0.05 M at +150 mV but only 0.125 M at -150 mV (T L766-768).
+**0.445 at 5 M**, still **~1.27x** the bulk NaCl value **0.35** (T L758-764) **[verified][^thesis]**. `t_Na ~ 0.9` requires
+0.05 M at +150 mV but only 0.125 M at -150 mV (T L766-768) **[verified][^thesis]**.
 
 ### 6.2 Peak radially averaged equilibrium potential, V_bias = 0 (TA `tab:radial_potential`) [mV]
 
@@ -43,37 +48,41 @@ Derived claims: cation-selective (`t_Na > 0.5`) for all voltages up to **c_bulk 
 | 0.5 | -9.3 | -14 | -30 |
 | 5 | -1.9 | -1.7 | -4.2 |
 
+Cell values are those of TA `tab:radial_potential`, TA L170-174 **[verified][^thesis]**.
+
+The 0.15 M row is excluded from regression targets (ruling 7, OPN-01; [G7](08-gaps-and-ambiguities-questions-for-the.md)).
+
 Thermal voltage used for kT/e conversions: **25.7 mV** (-86 mV = -3.35 kT/e, checked).
 
 ### 6.3 Conductance, rectification, ion populations
 
 | Quantity | Value | Source |
 |---|---|---|
-| Ionic conductance G | contour data only; no table. G is flat vs V for c > 1 M; log-log G(c) at +150 mV is linear, at -150 mV bi-linear with a knee near 0.15 M | T L662-679 |
-| PNP-NS vs ePNP-NS | PNP-NS overestimates G over the whole range, converging to ePNP-NS below 0.01 M | T L683-685 |
-| ICR = G(+V)/G(-V) | rises monotonically with abs(V); non-monotonic in c with a **peak at c = 0.15 M**, decaying to 1 at saturation | T L702-708 |
-| Pore-average Na+ (rel.) | 0 mV: **34 at 0.005 M -> 4.4 at 0.05 M**; **2.1 at 0.15 M**; 1.14 >= x >= 1 for c >= 1 M | T L866-871 |
-| Pore-average Cl- (rel.) | 0 mV: **0.05 at 0.005 M -> 0.31 at 0.05 M**; **0.58 at 0.15 M**; 0.89 <= x <= 1 for c >= 1 M | T L866-871 |
-| Voltage sensitivity at 0.15 M | -150 -> +150 mV: Na+ **1.6 -> 2.7** (1.7x), Cl- **0.28 -> 1.06** (3.8x) | T L876-878 |
-| Mobile charge in pore | up to ~0.15 M split evenly: **PS ~ +27 e**, **PB ~ +22 e**; at 5 M **PS = +58 e**, **PB ~ 0 e**; PT is **+10 to +15 e** higher at +150 than -150 mV across all c | T L961-969 |
-| PS/PB split | wall distance d = 0.5 nm | T L951-955, TA |
-| Debye length | ~1.4 nm at 0.05 M; < 0.2 nm at 5 M | T L721, L762 |
-| Trans energy barrier | 0.005 -> 0.15 M: **1.8 -> 0.73 kT** at +150 mV; **4.4 -> 1.5 kT** at -150 mV; falls below 1 kT for c > 0.1-0.5 M | T L1243-1245, L1236-1238 |
-| Cis anion barrier | 1.7 -> 0.5 kT for 0.005 -> 0.05 M | T L1195-1197 |
+| Ionic conductance G | contour data only; no table. G is flat vs V for c > 1 M; log-log G(c) at +150 mV is linear, at -150 mV bi-linear with a knee near 0.15 M | T L662-679 **[verified][^thesis]** |
+| PNP-NS vs ePNP-NS | PNP-NS overestimates G over the whole range, converging to ePNP-NS below 0.01 M | T L683-685 **[verified][^thesis]** |
+| ICR = G(+V)/G(-V) | rises monotonically with abs(V); non-monotonic in c with a **peak at c = 0.15 M**, decaying to 1 at saturation | T L702-708 **[verified][^thesis]** |
+| Pore-average Na+ (rel.) | 0 mV: **34 at 0.005 M -> 4.4 at 0.05 M**; **2.1 at 0.15 M**; 1.14 >= x >= 1 for c >= 1 M | T L866-871 **[verified][^thesis]** |
+| Pore-average Cl- (rel.) | 0 mV: **0.05 at 0.005 M -> 0.31 at 0.05 M**; **0.58 at 0.15 M**; 0.89 <= x <= 1 for c >= 1 M | T L866-871 **[verified][^thesis]** |
+| Voltage sensitivity at 0.15 M | -150 -> +150 mV: Na+ **1.6 -> 2.7** (1.7x), Cl- **0.28 -> 1.06** (3.8x) | T L876-878 **[verified][^thesis]** |
+| Mobile charge in pore | up to ~0.15 M split evenly: **PS ~ +27 e**, **PB ~ +22 e**; at 5 M **PS = +58 e**, **PB ~ 0 e**; PT is **+10 to +15 e** higher at +150 than -150 mV across all c | T L961-969 **[verified][^thesis]** |
+| PS/PB split | wall distance d = 0.5 nm | T L951-955, TA **[verified][^thesis]** |
+| Debye length | ~1.4 nm at 0.05 M; < 0.2 nm at 5 M | T L721, L763 **[verified][^thesis]** |
+| Trans energy barrier | 0.005 -> 0.15 M: **1.8 -> 0.73 kT** at +150 mV; **4.4 -> 1.5 kT** at -150 mV; falls below 1 kT for c > 0.1-0.5 M | T L1243-1245, L1236-1238 **[verified][^thesis]** |
+| Cis anion barrier | 1.7 -> 0.5 kT for 0.005 -> 0.05 M | T L1195-1197 **[verified][^thesis]** |
 
 ### 6.4 Electro-osmosis and pressure
 
 | Quantity | Value | Source |
 |---|---|---|
-| Water velocity | at -100 mV, 0.5 M: **~0.07 m/s** at the lumen centre, **~0.21 m/s** at the constriction centre | T L1372-1374 |
-| Profile shape | parabolic at low c; plug-like above 0.5 M; a **central dimple** in the constriction for c >= 1 M (self-induced pressure gradient at the pore exit) | T L1376-1386 |
-| EOF conductance Q/V at -150 mV | **1.85** nm^3 ns^-1 V^-1 at 0.005 M -> **11.3** at 0.5 M (peak) -> **4.00** at 5 M | T L1400-1405 |
-| EOF rectification EOR(V)=Q/V(+V) / Q/V(-V) | maximum at **c ~ 0.045 M**; crosses **unity at c ~ 0.45 M**; minimum at ~1 M; -> 1 at 5 M | T L1409-1414 |
-| Pressure | osmotic hotspots **5-30 atm** at 0.15 M, 0 mV, peaking at **z = 11 nm** (cis entry), **z = 4.5 nm** (mid-lumen), **z = -1 nm** (constriction); magnitude roughly c-independent up to ~0.5 M | T L1444-1467 |
+| Water velocity | at -100 mV, 0.5 M: **~0.07 m/s** at the lumen centre, **~0.21 m/s** at the constriction centre | T L1372-1374 **[verified][^thesis]** |
+| Profile shape | parabolic at low c; plug-like above 0.5 M; a **central dimple** in the constriction for c >= 1 M (self-induced pressure gradient at the pore exit) | T L1376-1386 **[verified][^thesis]** |
+| EOF conductance Q/V at -150 mV | **1.85** nm^3 ns^-1 V^-1 at 0.005 M -> **11.3** at 0.5 M (peak) -> **4.00** at 5 M | T L1400-1405 **[verified][^thesis]** |
+| EOF rectification EOR(V)=Q/V(+V) / Q/V(-V) | maximum at **c ~ 0.045 M**; crosses **unity at c ~ 0.45 M**; minimum at ~1 M; -> 1 at 5 M | T L1409-1414 **[verified][^thesis]** |
+| Pressure | osmotic hotspots **5-30 atm** at 0.15 M, 0 mV, peaking at **z = 11 nm** (cis entry), **z = 4.5 nm** (mid-lumen), **z = -1 nm** (constriction); magnitude roughly c-independent up to ~0.5 M | T L1444-1467 **[verified][^thesis]** |
 
 Cross-check (derived here): `Q(-100 mV, 0.5 M) ~ 1.13 nm^3/ns`; over a constriction of radius 1.65 nm
 that is a mean velocity 0.13 m/s, parabolic peak 0.26 m/s, against the stated 0.21 m/s — consistent
-to ~25 %, as expected for a partly flattened profile. Treat both as loose targets.
+to ~25 %, as expected for a partly flattened profile **[verified][^eof-arithmetic]**. Treat both as loose targets.
 
 ### 6.5 Correction-ablation targets (T `sec:transport:comparison_corrections`)
 
@@ -83,15 +92,19 @@ to ~25 %, as expected for a partly flattened profile. Treat both as loose target
 | no CDF (`eps^c = D^c = mu^c = eta^c = rho^c = 1`) | **+5 %, +13 %, +29 %, +152 %** at 0.005, 0.05, 0.5, 5 M | -9 % at 0.005 M, +2 % at 1 M, **+82 % between 1 and 5 M** |
 | no SMP (`beta = 0`) | within **+-3 %** everywhere | **-10 % at 0.5 M** |
 
+Cell values are those of T `sec:transport:comparison_corrections`, T L1534-1560 **[verified][^thesis]**.
+
 ### 6.6 Auxiliary formulas needed to compute the targets
 
-- Simulated current: `I = F * integral_S ( SUM_i z_i * n . J_i ) dS` over the **cis** boundary (`eq:currentsim`).
+- Simulated current: `I = F * integral_S ( SUM_i z_i * n . J_i ) dS` over the **cis** boundary (`eq:currentsim`, T L512-518) **[verified][^thesis]**.
 - Bulk two-resistor reference: `I = (sigma(c) * pi / 4) * (l_cis/d_cis^2 + l_trans/d_trans^2)^-1 * V_bias`
-  with `l_cis = 10 nm, d_cis = 6 nm, l_trans = 4 nm, d_trans = 3.3 nm` (`eq:bulk_nanopore_current`). No access resistance.
-- Flow rate: `Q = integral_S (n . u) dS` (`eq:flowrate`).
-- Radial average: `<phi>(z) = (1/(pi R(z)^2)) * integral_0^R(z) phi(r,z) 2 pi r dr` (`eq:epnp-ns_radpot`).
-- Pore average: `<X>_a = II beta_a X dr dz / II beta_a dr dz` (`eq:pore_surface_integral`) — see gap G6.
-- B-factor: `B_i = (8/3) pi^2 MSD_i`, last 10 ns, QCP via MDAnalysis (`eq:bfactor`).
+  with `l_cis = 10 nm, d_cis = 6 nm, l_trans = 4 nm, d_trans = 3.3 nm` (`eq:bulk_nanopore_current`, T L520-534) **[verified][^thesis]**. No access resistance.
+- Flow rate: `Q = integral_S (n . u) dS` (`eq:flowrate`, T L1395-1396) **[verified][^thesis]**.
+- Radial average: `<phi>(z) = (1/(pi R(z)^2)) * integral_0^R(z) phi(r,z) 2 pi r dr` (`eq:epnp-ns_radpot`, T L1092-1093) **[verified][^thesis]**.
+- Pore average: `<X>_a = II beta_a X dr dz / II beta_a dr dz` (`eq:pore_surface_integral` as printed, TA L187-192) **[verified][^thesis]**, with the `2πr` Jacobian (ruling 6).
+- B-factor: `B_i = (8/3) pi^2 MSD_i`, last 10 ns, QCP via MDAnalysis (`eq:bfactor`, T L287-296) **[verified][^thesis]**.
 
 ---
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. T = `chapters/transport/transport.tex`, TA = `chapters/transport_appendix/transport_appendix.tex`, E = `chapters/electrostatics/electrostatics.tex`; `Lnnn` is the line in that commit.
+[^eof-arithmetic]: By arithmetic from the table above (T L1400-1405, L1372-1374): Q/V = 11.3 nm³ ns⁻¹ V⁻¹ at 0.5 M and −150 mV, taken as the same at −100 mV, gives Q = 1.13 nm³/ns; 1.13 / (π × 1.65²) = 0.132 nm/ns = 0.132 m/s, and a parabola's peak is twice its mean.

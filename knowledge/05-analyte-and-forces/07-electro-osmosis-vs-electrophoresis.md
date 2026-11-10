@@ -20,11 +20,12 @@ The dimensionless characterisation is `N_eo` itself, and the ratio `N_eo / |N_ne
 
 | Quantity | Value |
 |---|---|
-| N_eo (fitted, all DHFR_Ntag_O2 simultaneously) | **+15.5 ± 0.9 e** |
-| N_net over the variant series | −9 … −4 e (opposite sign) |
+| N_eo (fitted, all DHFR_Ntag_O2 simultaneously) | **+15.5 ± 0.9 e** (`trapping.tex` `tab:fitting_params_complex`) **[verified][^thesis]** |
+| N_net over the variant series | −9 … −4 e (opposite sign) (`trapping.tex` "Characteristics of the trapping") **[verified][^thesis]** |
 | ⇒ EOF/EP force ratio | **1.7× … 3.9×**, EOF wins at every tag charge |
-| Context | 99 % of proteins carry |q| ≤ 10 e → EOF "quantitatively confirmed" as the dominant capture force (`conclusion.tex`) |
-| Reynolds number (background) | ρ v d/η ≈ **5 × 10⁻⁴** for d = 5 nm, v = 0.1 m/s — laminar |
+| Context | 99 % of proteins carry |q| ≤ 10 e → EOF "quantitatively confirmed" as the dominant capture force (`conclusion.tex`) **[verified][^thesis]** |
+| Reynolds number (background) | ρ v d/η ≈ **5 × 10⁻⁴** for d = 5 nm, v = 0.1 m/s — laminar (`nanopores.tex`, `eq:nanopores_drag_force` footnote) **[verified][^thesis]** |
 
 No Péclet, Dukhin or Debye-ratio number is used.
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. `trapping.tex` = `chapters/trapping/trapping.tex`, `conclusion.tex` = `chapters/conclusion/conclusion.tex`, `nanopores.tex` = `chapters/nanopores/nanopores.tex`; `Lnnn` is the line in that commit.

@@ -21,7 +21,7 @@ sources:
   title: WP20 contour and probe plan, Design §1 pqr2grid audit
 - id: wp22-plan
   resource: docs/plans/phase-2/wp22-val05-reference-geometry.md
-  title: WP22 VAL-05 reference geometry plan, Outcome — item 4
+  title: WP22 VAL-05 reference geometry plan, Outcomes
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
@@ -66,18 +66,18 @@ verified:
 
 | Stage | Detail | Source |
 |---|---|---|
-| Start structure | Dodecameric *E. coli* ClyA crystal **2WCD**; missing N-term res. 1-7 and C-term 293-303; **Glu7 added back manually** (N-term sits at the trans entry and matters electrostatically); C-term left missing | E L301-308 |
-| Variant | ClyA-AS built with `psfgen` by 27 point mutations: Q8K, N15S, Q38K, A57E, T67V, C87A, A90V, A95S, L99Q, E103G, K118R, L119I, I124V, T125K, V136T, F166Y, K172R, V185I, K212N, K214R, S217T, T224S, N227A, T244A, E276G, C285S, K290Q | E L312-315 |
-| Membrane | 200 x 200 Angstrom **DPhPC** patch, CHARMM-GUI membrane builder; lipids with headgroups inside the lumen/protein core deleted; 100 ps steered-MD push-out using ClyA mass density as a virtual repulsive force | E L315-319 |
-| Solvation / ions | **213364 TIP3P** waters (VMD `solvate`); neutralised to 0.15 M with **674 Na+ and 602 Cl-** (VMD `autoionize`) | E L320-322 |
-| Pre-equilibration | **NAMD**, **CHARMM36** (Best 2012), **NPT**, Langevin thermostat + Nose-Hoover Langevin barostat, **5 ns at 298.15 K**, C-alpha harmonic restraint k = 1 kcal/mol/A^2 | E L322-325 |
-| Production | **30 ns NVT at 298.15 K**, explicit solvent, coordinates every **5 ps**, C-alpha harmonically restrained to their *crystal* positions with **k = 695 pN/nm** | T `sec:transport:pore_geometry` L270-277 |
-| Frame set | **50 coordinate sets from the final 5 ns**, aligned by backbone-RMSD minimisation (VMD `RMSD tool`) | T L279-282 |
+| Start structure | Dodecameric *E. coli* ClyA crystal **2WCD**; missing N-term res. 1-7 and C-term 293-303; **Glu7 added back manually** (N-term sits at the trans entry and matters electrostatically); C-term left missing | E L301-308 **[verified][^thesis]** |
+| Variant | ClyA-AS built with `psfgen` by 27 point mutations: Q8K, N15S, Q38K, A57E, T67V, C87A, A90V, A95S, L99Q, E103G, K118R, L119I, I124V, T125K, V136T, F166Y, K172R, V185I, K212N, K214R, S217T, T224S, N227A, T244A, E276G, C285S, K290Q | E L312-315 **[verified][^thesis]** |
+| Membrane | 200 x 200 Angstrom **DPhPC** patch, CHARMM-GUI membrane builder; lipids with headgroups inside the lumen/protein core deleted; 100 ps steered-MD push-out using ClyA mass density as a virtual repulsive force | E L315-319 **[verified][^thesis]** |
+| Solvation / ions | **213364 TIP3P** waters (VMD `solvate`); neutralised to 0.15 M with **674 Na+ and 602 Cl-** (VMD `autoionize`) | E L320-322 **[verified][^thesis]** |
+| Pre-equilibration | **NAMD**, **CHARMM36** (Best 2012), **NPT**, Langevin thermostat + Nose-Hoover Langevin barostat, **5 ns at 298.15 K**, C-alpha harmonic restraint k = 1 kcal/mol/A^2 | E L322-325 **[verified][^thesis]** |
+| Production | **30 ns NVT at 298.15 K**, explicit solvent, coordinates every **5 ps**, C-alpha harmonically restrained to their *crystal* positions with **k = 695 pN/nm** | T `sec:transport:pore_geometry` L270-277 **[verified][^thesis]** |
+| Frame set | **50 coordinate sets from the final 5 ns**, aligned by backbone-RMSD minimisation (VMD `RMSD tool`) | T L279-282 **[verified][^thesis]** |
 
 `k = 1 kcal/mol/A^2 = 694.8 pN/nm`, so the two restraint numbers are the same constant expressed
 twice **[tested: tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel]**, not stated in the thesis.
 
-**Molecular density map** (T L373-397, eq. `eq:denspore`):
+**Molecular density map** (T L373-397, eq. `eq:denspore`; formula, σ = 0.93 and 0.5 Å grid **[verified][^thesis]**):
 
 ```
 rho_mol(x,y,z) = 1 - PROD_i [ 1 - exp( -d_i^2 / (sigma * R_i)^2 ) ]
@@ -85,24 +85,24 @@ d_i = sqrt((x-x_i)^2 + (y-y_i)^2 + (z-z_i)^2)
 sigma = 0.93        R_i = Van der Waals radius of atom i
 ```
 
-**Which radii.** The thesis says only "Van der Waals radius". The author ruled on 25 September 2026 that R_i is the CHARMM Rmin/2 of PDB2PQR's `CHARMM.DAT`, the set carried by the reference ensemble's per-frame PQR files (§1.1). For an isolated atom `ρ = g`, so the 25 % isolevel sits at `d = σR√ln 4 = 0.93 × 1.1774 R = 1.095 R`, just outside the van der Waals radius itself **[tested: tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel]**. The contour therefore moves one-for-one with the radius set **[verified][^thesis]**.
+**Which radii.** The thesis says only "Van der Waals radius" **[verified][^thesis]**. The author ruled on 25 September 2026 that R_i is the CHARMM Rmin/2 of PDB2PQR's `CHARMM.DAT`, the set carried by the reference ensemble's per-frame PQR files (§1.1). For an isolated atom `ρ = g`, so the 25 % isolevel sits at `d = σR√ln 4 = 0.93 × 1.1774 R = 1.095 R`, just outside the van der Waals radius itself, so for an isolated atom the contour scales as 1.095 R **[tested: tests/tier1/test_knowledge_arithmetic.py::test_md_restraint_and_isolated_atom_isolevel]**.
 
 A probabilistic-union ("at least one atom here") field bounded in [0,1], after Li 2013. Grid
 **0.5 Angstrom** isotropic, computed in **3D for each of the 50 frames**, then the **50 maps are
 averaged in 3D**, and only then **radially averaged about the z-axis** relative to the pore centre
-to give `rho_mol(r,z)`. Order matters: average-then-project, not project-then-average.
+to give `rho_mol(r,z)`. Order matters: average-then-project, not project-then-average **[verified][^thesis]**.
 
 **Isolevel and manual step.** The pore wall is the **25 % density contour**. The thesis gives *no*
-justification, sensitivity study or alternative isolevel for 25 % — it is asserted (T L394-395). The
+justification, sensitivity study or alternative isolevel for 25 % — it is asserted (T L394-395) **[verified][^thesis]**. The
 contour polyline was then edited by hand: "manual removal of overlapping and superfluous vertices to
-improve the quality of the final computational mesh" (T L395-396). The resulting outline is stated to
-follow a 30-degree wedge of the all-atom structure (T L396-397). The edited vertex list is not
+improve the quality of the final computational mesh" (T L395-396) **[verified][^thesis]**. The resulting outline is stated to
+follow a 30-degree wedge of the all-atom structure (T L396-397) **[verified][^thesis]**. The edited vertex list is not
 reproduced in the thesis and **the number of boundary vertices is nowhere stated**.
 
 Sanity check on the isolevel (TA `sec:transport_appendix:radius_comparision`): the MD structure does
 not deviate materially from 2WCD or the cryo-EM 6MRT; mean lumen diameter is **6.0 nm** (all
 corrugations included), whereas the frequently quoted **5.5 nm** is the largest protein that fits
-without touching the wall.
+without touching the wall **[verified][^thesis]**.
 
 ### 1.1 The author's MD archive, measured [verified][^wp18-plan] {#11-the-authors-md-archive-measured}
 
@@ -120,7 +120,7 @@ Measured on 25 September 2026. The archive is held locally by the author at
 | The deposited 2WCD | **Not the author's `2wcd.pdb`.** The wwPDB entry's asymmetric unit holds two dodecamers, chains A–L and M–X (53,832 atoms, 24 × 285 Cα), in the crystal frame. The A–L axis is 22.92° from z and the M–X axis 22.98°, nearly parallel. Signed to +z, the axis has its narrow *trans* end up (mean Cα radius 3.42 nm in the top fifth of the axial extent, 4.28 nm in the bottom fifth). Chains A–L superpose on the author's copy with an RMSD of 1.0e-4 nm, and that superposition takes the deposited +z-signed axis to −z. So the author's file is chains A–L moved rigidly and flipped, *cis* up. Stage 1 refuses the deposited frame by its 10° rule **[tested: tests/tier1/test_structure_stage.py::test_ver48_the_deposited_2wcd_frame_is_refused_by_the_orientation_gate]**. On the author's copy it measures a 29.99896° turn, a worst spacing error of 0.193°, a permutation RMSD of 0.0262 nm, a tilt of 0.047° and an `axis: z` displacement of 0.0062 nm. The Design §4 "2WCD" column of the WP18 plan is this copy **[verified][^wp18-plan]**, 25 Sep 2026 |
 | Consecutive Cα on the deposited 2WCD | Chains A–L, residues without an insertion code, 3,408 pairs of consecutive residue numbers (284 per chain): **0.374 to 0.386 nm**, the largest at chain D, residues 266–267 (0.3856 nm). The PDB and mmCIF copies agree to the last digit. Stage 1's wrap gate refuses a pair over 1.0 nm in any selected frame, so the vendored structure sits at 0.39 of the bound; a wrapped pair would be a box length (about 10 nm) apart **[tested: tests/tier1/test_structure_stage.py::test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound]**, `tests/tier1/test_structure_stage.py` (`test_ver48_the_deposited_2wcd_has_no_pair_near_the_wrap_bound`), 14 Oct 2026 |
 | Stage 1 on the archive | All 98 frames, superposed on frame 0 over every Cα (0.095–0.219 nm RMSD to it), 12 chains × 286 common Cα. On the ensemble-mean structure the cyclic turn is 29.9954°, the worst spacing error 0.679°, the permutation RMSD 0.136 nm and the tilt from the file's z 0.695°. Each frame's own permutation axis lies within 0.0163° of the ensemble-mean axis. This is a different reference from the ≤ 0.010° frame-to-frame figure of §5.2 (stage 1), which compared the frames' axes with one another **[verified][^wp18-plan]**. The DCD's interval reads 0.001 ns, so `last_ns: 5` is refused **[tested: tests/tier1/test_structure_stage.py::test_ver48_frame_selection_and_the_time_gate]**, `tests/tier3/test_structure_ensemble.py`, 25 Sep 2026 |
-| Axial placement | The Cα centroid is at z = 56.3 Å (MD; residues 7–292. Over residues 8–292 and DCD frames 48–97 it is 56.553 Å, §1.5) and 57.0 Å (2WCD), which matches G9's "(0, 0, 55 Å)". The MD all-atom extent is z = −2.28 to 12.52 nm, bracketing the model's pore extent of −1.85 to 12.25 nm by 0.43 and 0.27 nm. **Author ruling, 25 September 2026: the MD trajectory was centred on the middle of the bilayer, so in the MD frame `centre_z_nm` = 0** (G9, closed). The author's `2wcd.pdb` copy has its Cα centroid 0.07 nm from the MD one, but the vendored wwPDB 2WCD takes whatever axial position its test-time move gives it, so WP22 must register it to the MD frame |
+| Axial placement | The Cα centroid is at z = 56.3 Å (MD; residues 7–292. Over residues 8–292 and DCD frames 48–97 it is 56.553 Å, §1.5) and 57.0 Å (2WCD), which matches G9's "(0, 0, 55 Å)". The MD all-atom extent is z = −2.28 to 12.52 nm, bracketing the model's pore extent of −1.85 to 12.25 nm by 0.43 and 0.27 nm. **Author ruling, 25 September 2026: the MD trajectory was centred on the middle of the bilayer, so in the MD frame `centre_z_nm` = 0** (G9, closed). The author's `2wcd.pdb` copy has its Cα centroid 0.07 nm from the MD one, but the vendored wwPDB 2WCD takes whatever axial position its test-time move gives it, so the 2WCD leg registers it by Cα centroid (§1.4) |
 
 ### 1.2 The author's contour script, read [verified][^wp20-plan] {#12-the-authors-contour-script-read}
 
@@ -135,7 +135,7 @@ it for ClyA.
 | Density | The union of §1, `sigma=0.93`, radii from the PQR, on a Cartesian grid over `[−L, L]` at h | The model of `SPECIFICATION.md` §5.2 stage 2 |
 | Radial average | `np.histogram` of the node radii, at bin width `w = (x_max − x_min + 1)/N_x` | `w/h = (2L + 1)/(2L + h)`, not 1: the `+1` is in nm, where one spacing was meant. It is 1.0316 at L = 15 nm and 1.0701 at L = 6.75 nm **[tested: tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift]** |
 | Contour | `find_contours(D, 0.25)`, then `contours[0]` | The first contour in scan order, not the largest |
-| Coordinates | `r = col·h`, `z = row·h + z_min` | Bin j's centre is `(j + ½)w`, so a feature at true radius r is written at `r_a = (r/w − ½)h`. At L = 15, 1.65 nm reads 1.574 nm and 5.66 nm reads 5.462 nm **[tested: tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift]** |
+| Coordinates | `r = col·h`, `z = row·h + z_min` | Bin j's centre is `(j + ½)w`, so a feature at true radius r is written at `r_a = (r/w − ½)h`. At L = 15, 1.65 nm reads 1.5744 nm and 5.66 nm reads 5.4615 nm **[tested: tests/tier1/test_knowledge_arithmetic.py::test_pqr2grid_bin_width_and_coordinate_shift]** **[tested: tests/tier1/test_val05_geometry.py::test_val05_pqr2grid_radius_check_values]** (`validation/geometry.py`, `pqr2grid_radius`) |
 | Simplify | `Polygon.simplify(0.1)`, topology preserved | Douglas–Peucker, with no smoothing, no spacing step and no gate |
 | Output | A z offset (PlyAB: −0.5 nm), then `savetxt(fmt='%.2f')` | Vertices rounded to 0.01 nm |
 
@@ -144,16 +144,13 @@ from `nanopnp` stage 2 (L = 6.75 nm). The script's 0.25 contour lies 0.13–0.24
 reduction's at the lumen, and 0.21–0.40 nm inside at the outer surface. The same bins, placed at
 their centres `(j + ½)w`, agree with the exact reduction to ≤ 0.01 nm. So the error lies entirely
 in the index-to-radius map, not in the binning **[tested: tests/tier1/test_val05_geometry.py::test_val05_the_attribution_splits_the_offset_into_erratum_and_edit]** **[verified][^wp20-plan]** (WP20 plan, Design §1, 26 Sep 2026).
-At L = 15 nm a feature at 1.65 nm reads 1.5744 nm and one at 5.66 nm reads 5.4615 nm **[tested: tests/tier1/test_val05_geometry.py::test_val05_pqr2grid_radius_check_values]**
-(`validation/geometry.py`, `pqr2grid_radius`).
 
-**Answered by the author, 28 September 2026: it was.** The delivered 185-vertex polygon was made
-with `pqr2grid`'s radial binning at **L = 15 nm** (h = 0.05 nm), so `w/h = 31/30.05 = 1.03161` and
-`r_a = 0.96935 r − 0.025` nm. **The hand edit then moved vertices**, not only removed them. The
-evidence below had argued against the binning. It is kept because it measures the edit: the erratum
-moves both surfaces inward, so the edit moved them outward by more than the erratum did (§1.4). Its lumen is on average 0.08–0.14 nm *wider* than the exact contour of
-2WCD, of one MD frame, and of the 50-frame ensemble, and its outer surface is up to 0.12 nm
-narrower. The erratum would move both surfaces inward (WP20 plan, Design §7).
+**The delivered polygon.** It is `pqr2grid`'s binning at **L = 15 nm** (h = 0.05 nm), so
+`w/h = 31/30.05 = 1.03161` and `r_a = 0.96935 r − 0.025` nm, then a hand edit that **moved
+vertices**, not only removed them (ruling 14). Measured against exact contours, its lumen is on
+average 0.08–0.14 nm *wider* than the exact contour of 2WCD, of one MD frame, and of the 50-frame
+ensemble, and its outer surface is up to 0.12 nm narrower (WP20 plan, Design §7). The erratum moves
+both surfaces inward, so the edit moved them outward by more than the erratum did (§1.4).
 
 **The delivered polygon's lattice fingerprint [tested: tests/tier1/test_mesh_profile.py::test_the_delivered_table_has_the_published_properties].** Of its 185 vertices, 58 % have at least
 one coordinate on the 0.05 nm lattice, and 32 % have both. A subset of marching-squares vertices on
@@ -165,7 +162,7 @@ of overlapping and superfluous vertices", and it goes beyond it.
 **The 2023 charge map.** The same repository deposits
 `q/(π(σR)²)·exp(−((r − r_i)² + (z − z_i)²)/(σR)²)` per atom in (r, z). That is a planar Gaussian
 with no `1/(2πr)`, whose planar integral is the net charge: the `e/m²` convention of the delivered
-table (G5). It is a pointer for Phase 3's FR-13.
+table (G5). nanopnp does not use it (PHY-16, PHY-17).
 
 ### 1.3 Stage 4 on real and synthetic inputs, measured **[tested: tests/tier2/test_contour_2wcd.py::test_ver51_2wcd_contour]** **[tested: tests/tier3/test_density_ensemble.py::test_ver51_clya_as_contour]** **[tested: tests/tier1/test_contour.py::test_ver51_probe_ring_closed_form]** **[verified][^wp20-plan]** {#13-stage-4-on-real-and-synthetic-inputs-measured}
 
@@ -206,69 +203,58 @@ Source: `geometry/probe.py`, WP20 plan Design §5.
 
 ### 1.4 2WCD against the reference polygon, and the isolevel lever **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_isolevel_sweep_is_strictly_increasing]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_frozen_case_conductance]** **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_mesh_against_the_reference_figures]** **[verified][^wp22-plan]** {#14-2wcd-against-the-reference-polygon-and-the-isolevel-lever}
 
-> **Registration.** 2WCD sits at `Z_MD` = 5.6553 nm over residues 8–292 (§1.5); the bullets below
-> were computed at 5.63 nm, the centroid with residue 7 included, and are a sensitivity reference.
-> At 5.655 nm, `centre_z_nm` = 4.5477 nm and, at isolevel
-> 0.25, ε_G = −8.49 % (exact −8.54 %), Δr_c = −0.0203 nm (1.6297 nm at z = −1.425), rms 0.159 nm,
-> mean Δ −0.136 nm, max |Δ| 0.339 nm at z = 3.425, on 280 planes (−1.825 and −1.775 fall in the
-> tip band). The sweep is −12.95, −10.86, −8.49, −6.07, −3.50, −0.87 and +4.41 %, crossing zero
-> at 0.416. The frozen case at `size_scale` 2 gives −6.59 % (14,116 triangles). The default-size
-> mesh is 44,987 triangles, minimum SICN 0.6956 (mean 0.9862), minimum gamma 0.6223 (mean
-> 0.9843). The rms-optimal offset, 4.5827 nm, now lies 0.035 nm from the registration. It is a
-> diagnostic and is never used **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]** **[verified][^wp22-plan]**, `tests/tier2/test_val05_2wcd.py`, 30 Sep 2026.
-
-Measured on 28 September 2026 by the WP22 plan's prototype (Design §4), and again by the
-implementation, `nanopnp.validation.geometry` through `tests/tier2/test_val05_2wcd.py`, the same
-day; the two agree to the last printed digit except where noted. The prepared vendored 2WCD
-(chains A–L) ran through stages 1–5 at the defaults. Stage 5's model-frame polygon was compared with
-the delivered table on the 282 mid-planes `z = −1.85 + (k + ½)0.05` nm, lumen radius taken as the
-innermost crossing. `ε_G = 2Σ(Δ/r)r⁻²/Σr⁻²` is the first-order relative conductance change of a bulk
-series resistor. It is the `G ∝ r²` sensitivity weighted by where the resistance sits
-(`SPECIFICATION.md` §7.4 NOTE on VAL-05).
+Measured by the WP22 plan's prototype (Design §4) and by the implementation,
+`nanopnp.validation.geometry` through `tests/tier2/test_val05_2wcd.py`, and re-measured at the
+corrected `Z_MD` on 30 September 2026. The prepared vendored 2WCD (chains A–L) ran through stages
+1–5 at the defaults. Stage 5's model-frame polygon was compared with the delivered table on the 282
+mid-planes `z = −1.85 + (k + ½)0.05` nm, lumen radius taken as the innermost crossing.
+`ε_G = 2Σ(Δ/r)r⁻²/Σr⁻²` is the first-order relative conductance change of a bulk series resistor.
+It is the `G ∝ r²` sensitivity weighted by where the resistance sits (`SPECIFICATION.md` §7.4 NOTE
+on VAL-05).
 
 - **Registration.** The Cα centroid of residues 8–292 lies at z = 10.2027 nm in the stage-1 frame.
-  Placing it at the MD structure's 5.63 nm (§1.1) gives `centre_z_nm` = 4.5727 nm. The offset that
-  minimises the rms lumen deviation is 4.5827 nm on a 0.005 nm grid about the centroid's, and
-  4.580 nm on the prototype's grid from 4.2 nm: the minimum lies between, 0.007–0.010 nm from the
-  centroid's. The *trans* tip + 1.85 nm of WP21 gives 4.6289 nm.
-- **At isolevel 0.25:** ε_G = −8.08 % (exact series −8.19 %), lumen mean Δ −0.132 nm, rms 0.158,
-  max |Δ| 0.333 nm at z = 3.375, and r_c = 1.6295 nm at z = −1.475 against the table's 1.650 nm at
-  z = −1.225, so Δr_c = −0.0205 nm. The constriction window's mean Δ is −0.051 nm and the *cis*
-  lumen's −0.158 nm. The outer surface's mean Δ is −0.023 nm, rms 0.154. The polygon misses one
-  plane, z = −1.825, inside the 0.1 nm tip band. The largest single term of ε_G is −0.15 pp, at
-  z = −0.625. Conditioning moved the lumen by at most 0.039 nm, rms 0.010 nm (stage 4's
-  `lumen_change`).
-- **The isolevel lever (G2).** ε_G is −13.23, −10.08, −8.08, −5.81, −3.26, −0.40 and +4.87 % at
-  0.15, 0.20, 0.25, 0.30, 0.35, 0.40 and 0.50, strictly increasing, and crosses zero at 0.408. ±0.1
-  of isolevel is about ±5 % of G. That is the size of the source's unjustified choice. **The body
-  shortens at both tips as the level rises**: at 0.40 it misses four planes, all in the tip band,
-  and at 0.50 it spans z = −1.684 to 11.907 nm and misses ten, so that level is compared on the 272
-  planes both cross. Stage 4 passes at every level.
-- **The erratum at L = 15 nm, applied to our contour:** ε_G = −16.01 %, lumen mean Δ −0.242 nm
-  (constriction window −0.139, *cis* lumen −0.275), outer surface −0.191 nm. The erratum alone moves
-  our lumen by −0.110 nm and our outer surface by −0.169 nm on average. With 2WCD standing in for the
-  ensemble, the hand edit therefore widened the lumen by about 0.24 nm and moved the outer surface
-  out by about 0.19 nm. G3's ±1 % floor cannot be reached by any reproduction of the method, because
-  the reference is the method plus two opposite several-per-cent steps outside it.
+  Placing it at the ensemble's `Z_MD` = 5.6553 nm (§1.5) gives `centre_z_nm` = 4.5477 nm. The offset
+  that minimises the rms lumen deviation, 4.5827 nm on a 0.005 nm grid, lies 0.035 nm from it; it is
+  a diagnostic and is never used **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]**.
+  The *trans* tip + 1.85 nm of WP21 gives 4.6289 nm.
+- **At isolevel 0.25:** ε_G = −8.49 % (exact series −8.54 %), Δr_c = −0.0203 nm (1.6297 nm at
+  z = −1.425 against the table's 1.650 nm at z = −1.225), rms 0.159 nm, mean Δ −0.136 nm, max |Δ|
+  0.339 nm at z = 3.425, on 280 planes: −1.825 and −1.775 fall in the tip band. The leg passes the
+  2WCD tolerances **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_against_the_reference_polygon]**.
+  Conditioning moved the lumen by at most 0.039 nm, rms 0.010 nm (stage 4's `lumen_change`)
+  **[verified][^wp22-plan]**.
+- **The isolevel lever (G2).** ε_G is −12.95, −10.86, −8.49, −6.07, −3.50, −0.87 and +4.41 % at
+  0.15, 0.20, 0.25, 0.30, 0.35, 0.40 and 0.50, strictly increasing **[tested: tests/tier2/test_val05_2wcd.py::test_val05_2wcd_isolevel_sweep_is_strictly_increasing]**,
+  and crosses zero at 0.416. ±0.1 of isolevel is about ±5 % of G. That is the size of the source's
+  unjustified choice. **The body shortens at both tips as the level rises**: at 0.50 it misses
+  planes outside the tip band, so the sweep compares each level on the planes both polygons cross.
+  Stage 4 passes at every level **[verified][^wp22-plan]**.
+- **The erratum at L = 15 nm, applied to our contour** (measured at the earlier 5.63 nm
+  registration): ε_G = −16.01 %, lumen mean Δ −0.242 nm (constriction window −0.139, *cis* lumen
+  −0.275), outer surface −0.191 nm. The erratum alone moves our lumen by −0.110 nm and our outer
+  surface by −0.169 nm on average. With 2WCD standing in for the ensemble, the hand edit therefore
+  widened the lumen by about 0.24 nm and moved the outer surface out by about 0.19 nm; §1.5 measures
+  it on the ensemble. No reproduction of the method reaches ±1 % (G3), because the reference is the
+  method plus two opposite several-per-cent steps outside it **[verified][^wp22-plan]**.
 - **The conductance proxy against a solve.** One frozen case, uncharged `pnp`, flow off, every
-  correction `none`, 1 M NaCl, +50 mV, stabilisation `none`, at `size_scale` 2: 1.3786e-8 S on the
-  generated mesh (14,162 triangles) and 1.4756e-8 S on the fixture through `inputs.profile`
-  (14,511), so `G_gen/G_ref − 1` = −6.57 % against ε_G's −8.08 % and the exact series −8.19 %. Access
-  resistance and the electrolyte past the pore ends carry about a fifth of the resistance, and dilute
-  the bulk-resistor figure by that much.
-- **The mesh at the default sizes** (0.05 nm at the wall): 44,762 triangles, minimum SICN 0.6267,
-  mean 0.9862, minimum gamma 0.5222, mean 0.9843, re-measured on 29 September 2026 at `2bb1a34`
-  and on the WP23 branch alike. The 44,998 triangles (means 0.9867 and 0.9848) recorded when WP22
-  delivered predate `32fecf1`, which changed how the C-alpha centroid is computed and so the
-  registration. The minima did not move. The cause of the count's move was not isolated further. On
-  the Gmsh backend the same region meshes to 49,617 triangles, minimum SICN 0.6805 and gamma 0.5749
-  (WP23 D13). The reference COMSOL mesh has 120,917 elements,
-  minimum quality 0.6378 and mean 0.9765 by a measure its report does not state
-  (`knowledge/09-comsol-reference-settings/index.md`). WP21's 44,688 triangles and 0.7111 were at its *trans*-tip
-  registration, which places the bilayer 0.056 nm higher.
-- **The Cₙ variance (FR-06)**, from stage 3 in the stage-1 frame: the largest Cₙ variance is 0.204 at
-  (r, z) = (5.40, 12.95) nm, the *cis* rim, and the largest non-Cₙ variance 0.0095 at (1.65, 3.10) nm,
-  which is the *trans* constriction's lumen wall.
+  correction `none`, 1 M NaCl, +50 mV, stabilisation `none`, at `size_scale` 2: `G_gen/G_ref − 1` =
+  −6.59 % on the generated mesh's 14,116 triangles, against ε_G's −8.49 %. Access resistance and the
+  electrolyte past the pore ends carry about a fifth of the resistance, and dilute the bulk-resistor
+  figure by that much **[verified][^wp22-plan]**.
+- **The mesh at the default sizes** (0.05 nm at the wall): 44,987 triangles, minimum SICN 0.6956
+  (mean 0.9862), minimum gamma 0.6223 (mean 0.9843) **[verified][^wp22-plan]**. On the Gmsh backend
+  the region at the earlier registration meshed to 49,617 triangles, minimum SICN 0.6805 and gamma
+  0.5749 (WP23 D13). The reference COMSOL mesh's figures are in
+  `knowledge/09-comsol-reference-settings/02-mesh-27.md`. WP21's 44,688 triangles and 0.7111 were at
+  its *trans*-tip registration, which places the bilayer 0.056 nm higher.
+- **The Cₙ variance (FR-06)**, from stage 3 in the stage-1 frame, so independent of the
+  registration: the largest Cₙ variance is 0.204 at (r, z) = (5.40, 12.95) nm, the *cis* rim, and
+  the largest non-Cₙ variance 0.0095 at (1.65, 3.10) nm, which is the *trans* constriction's lumen
+  wall **[verified][^wp22-plan]**.
+- **Sensitivity to `Z_MD`.** At the residue-7-inclusive 5.63 nm (`centre_z_nm` = 4.5727 nm) the
+  same leg gave ε_G −8.08 % (exact −8.19 %), Δr_c −0.0205 nm, rms 0.158 nm, a sweep crossing zero at
+  0.408, the frozen case −6.57 % and a default mesh of 44,762 triangles (minimum SICN 0.6267): a
+  0.025 nm shift moves ε_G by 0.4 percentage points **[verified][^wp22-plan]**.
 
 ### 1.5 The ensemble against the reference polygon [verified][^wp22-plan] {#15-the-ensemble-against-the-reference-polygon}
 
@@ -306,12 +292,13 @@ MD frame (G9). It uses the same planes and metric as §1.4.
   constriction, nine times 2WCD's 0.0095. The raw variance peaks at 0.186 at (4.60, 0.65) nm.
 - **Timing, on the author's machine.** Stage 1 took 9.2 s. Stage 2 took 596.6 s, 11.9 s a frame on
   a 339 × 293 × 293 grid at 0.05 nm. Stages 3 to 5 took 13.7, 3.3 and 1.5 s. Stage 6 took 12.3 s
-  cold and 4.9 s warm, and Gmsh 2.2 s. The whole file ran in 12 min 54 s. `knowledge/07-software-stack/index.md`
-  §2 has the development container's 980.6 s for stage 2.
+  cold and 4.9 s warm, and Gmsh 2.2 s. The whole file ran in 12 min 54 s.
+  `knowledge/07-software-stack/02-structure-trajectory-and-density.md` has the development
+  container's 980.6 s for stage 2.
 
 ---
 
-[^thesis]: Willems, PhD thesis (LaTeX source).
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. T = `chapters/transport/transport.tex`, TA = `chapters/transport_appendix/transport_appendix.tex`, E = `chapters/electrostatics/electrostatics.tex`; `Lnnn` is the line in that commit.
 [^wp18-plan]: `git show 0ff2d619:docs/plans/wp18-structure-ingestion.md`, Design §4 and Outcomes (25 September 2026).
 [^wp20-plan]: `git show 0ff2d619:docs/plans/wp20-contour-extraction.md`, Design §1 (`pqr2grid` `create_polygon_contour`, commit `a8e2898`).
-[^wp22-plan]: `docs/plans/phase-2/wp22-val05-reference-geometry.md`, Outcome — item 4 (30 September 2026).
+[^wp22-plan]: `docs/plans/phase-2/wp22-val05-reference-geometry.md`, Outcomes, '`Z_MD` is 5.655 nm, not 5.63' (30 September 2026), and the Outcomes before it for the 5.63 nm figures.

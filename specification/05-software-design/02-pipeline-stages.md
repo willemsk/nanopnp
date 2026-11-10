@@ -244,9 +244,10 @@ criterion at 0.058 nm, and 2h passes it at 0.229 nm (WP20 plan, Design §2 and �
 NOTE (the radius band, WP20): the lower bound is geometric. Inside
 the axis-centred sphere every atom is at least its own radius away, so the 25 % contour of the
 azimuthal mean can enter that sphere by at most a fraction of an atom's width. The upper bound is a
-gross-error check on the lumen's corrugation. `r_c − R_p` measures between +0.061 and +0.908 nm
-on 2WCD (chains A–L), and between +0.173 and +0.869 nm on the ClyA-AS ensemble. The band does not
-detect a radial scale error of a few per cent; VAL-05 does (WP20 plan, Design §5).
+gross-error check on the lumen's corrugation. The margins `r_c − R_p` measured on 2WCD (chains A–L)
+and on the ClyA-AS ensemble are in
+[`knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md` §1.3](../../knowledge/04-clya-geometry-and-charge/01-geometry-pipeline-as-executed.md#13-stage-4-on-real-and-synthetic-inputs-measured).
+The band does not detect a radial scale error of a few per cent; VAL-05 does (WP20 plan, Design §5).
 
 The reference pore boundary is published in the COMSOL model report as a closed 190-vertex polygon
 (r ≈ 1.65–5.66 nm, z from −1.85 to 12.25 nm). The author's delivered tabulation of that boundary

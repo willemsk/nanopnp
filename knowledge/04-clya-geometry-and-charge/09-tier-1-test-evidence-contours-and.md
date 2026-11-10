@@ -1,8 +1,7 @@
 ---
 type: Test Evidence
-title: 'Tier-1 test evidence: contours and charge deposition (WP45 item 20)'
-description: What the Tier-1 tests of contours and charge deposition establish, recorded
-  at WP45 item 20.
+title: 'Tier-1 test evidence: contours and charge deposition'
+description: What the Tier-1 tests of contour extraction and charge deposition establish.
 tags:
 - clya
 - test-evidence
@@ -28,8 +27,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_charge_kernel.py::test_ver58_unrenormalised_axis_sum_is_short_by_the_end_correction
   at: '2026-10-14T00:00:00Z'
-- by: process:tests/tier1/test_charge_stage.py::test_ver01_the_producer_stage_deposits_keys_and_records_its_report
-  at: '2026-10-14T00:00:00Z'
+- by: process:tests/tier1/test_charge_fields.py::test_ver29_a_header_value_that_is_not_finite_is_refused
+  at: '2026-11-10T00:00:00Z'
 - by: process:tests/tier1/test_contour.py::test_ver51_closing_fills_subresolution_slot
   at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_contour.py::test_ver51_gaussian_section_subpixel
@@ -40,7 +39,7 @@ verified:
   at: '2026-10-14T00:00:00Z'
 ---
 
-## Tier-1 test evidence: contours and charge deposition (WP45 item 20)
+## Tier-1 test evidence: contours and charge deposition
 
 - **[tested: tests/tier1/test_contour.py::test_ver51_pyramid_contour_is_exact]** A square pyramid's level set is exact to round-off when `a(1 − l) = (k + ½)h`: `f` is linear along every grid edge, and the loop's area is the square's less `h²/2`, since each corner cell cuts a triangle of legs `h/2`. A transposed axis, a half-bin shift or a `w/h` scale misplaces a vertex by at least `h/2`. Source: `tests/tier1/test_contour.py` (`test_ver51_pyramid_contour_is_exact`).
 - **[tested: tests/tier1/test_contour.py::test_ver51_gaussian_section_subpixel]** On a grid line through a Gaussian's centre, linear interpolation of `f` misplaces the 0.25-level crossing by at most `h²|f″|/(8|f′|)`, 4.7 × 10⁻⁴ nm at the test's spacing. Source: `test_contour.py` (`test_ver51_gaussian_section_subpixel`).
@@ -51,9 +50,8 @@ verified:
 - **[tested: tests/tier1/test_charge_deposit.py::test_ver58_p0_misses_the_first_moment_that_p1_keeps]** A P0 deposit conserves charge but fails the Galerkin first-moment test that P1 passes (Design §5). **[tested: tests/tier1/test_charge_deposit.py::test_ver01_dropped_renormalisation_fails_the_producer_leg_only]** Dropping the renormalisation on an axis atom fails the producer leg only, at −1.67 × 10⁻³. Source: `test_charge_deposit.py`.
 - **[tested: tests/tier1/test_charge_deposit.py::test_ver02_dropped_jacobian_renormalised_globally_fails_the_planes_only]** Dropping the `2πr` Jacobian and rescaling globally to `Q_net` passes both conservation legs and fails the per-plane check (1.6 for 1.0). Source: `test_charge_deposit.py` (`test_ver02_…`).
 - **[tested: tests/tier1/test_charge_kernel.py::test_ver58_kernel_is_the_limit_of_the_3d_deposition_binned_by_annular_weights]** The kernel's limit from 3D Cartesian Gaussian deposition binned by exact annular overlaps converges at ≥ 3.5× per halving of the spacing, below 10⁻³ at the finest. Source: `test_charge_kernel.py` (`test_ver58_kernel_is_the_limit_of_the_3d_deposition…`).
-- **[tested: tests/tier1/test_charge_stage.py::test_ver01_the_producer_stage_deposits_keys_and_records_its_report]** At 1 nm elements the deployed field's per-plane error under the 0.5 nm weight is 3.2 × 10⁻³ (refused by the gate); at 0.5 nm it is 2.3 × 10⁻⁴. Source: `tests/tier1/test_charge_stage.py` (`test_ver01_the_producer_stage_deposits_keys_and_records_its_report`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed]** At the reference mesh the 0.01 nm axis guard is a fifteenth of an element, so no mesh integral sees its edge. The whole-grid conservation integral is a trapezium rule on a field that decays to zero (exact beyond all orders); the guard's partial integral carries an `O(h²)` term. What the guard leaves is about a seventh of the grid's charge, and its element-scale step costs a fixed fraction of the total. Source: `tests/tier1/test_charge_fields.py` (`test_ver29_the_axis_guard_deficit_is_reported_rather_than_assumed`).
-- `yaml.safe_dump` writes a NumPy NaN as `.nan`, and NaN passes every `> tol` gate; a NaN `q_net_e` once made three of five conservation legs NaN without any gate catching it. Source: `test_charge_fields.py` (`test_ver29_a_header_value_that_is_not_finite_is_refused`).
+- **[tested: tests/tier1/test_charge_fields.py::test_ver29_a_header_value_that_is_not_finite_is_refused]** `yaml.safe_dump` writes a NumPy NaN as `.nan`, and NaN passes every `> tol` gate; a NaN `q_net_e` once made three of five conservation legs NaN without any gate catching it. Source: `test_charge_fields.py` (`test_ver29_a_header_value_that_is_not_finite_is_refused`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_a_grid_round_trips_through_opendx_and_ccp4]** CCP4 is written through gridData's MRC writer (no `CCP4` registry entry) as `float32`, so that round trip is not bit-exact. Source: `test_charge_fields.py` (`test_ver29_a_grid_round_trips_through_opendx_and_ccp4`).
 - **[tested: tests/tier1/test_charge_fields.py::test_ver29_the_interpolant_is_zero_outside_the_grid_box]** A charge field continued by its box's edge value over a 250 nm reservoir would make a charge sheet about a thousand times the grid's own footprint, hence zero padding outside the box. Source: `test_charge_fields.py` (`test_ver29_the_interpolant_is_zero_outside_the_grid_box`).
 

@@ -1,6 +1,6 @@
 ---
 type: Test Evidence
-title: "PDB2PQR's residue and hydrogen names, and the protonated density (WP5.03)"
+title: "PDB2PQR's residue and hydrogen names, and the protonated density"
 description: Which residue name PDB2PQR writes for a protonated side chain, which radius each atom takes from the CHARMM set, and why the protonated density needs the state patch.
 tags:
 - clya
@@ -9,7 +9,7 @@ tags:
 sources:
 - id: wp5.03-plan
   resource: docs/plans/phase-5/wp5.03-protonation-before-the-density.md
-  title: WP5.03 plan, Grounding for D3
+  title: WP5.03 plan, Grounding
 generated:
   by: claude-code/0.6.0-alpha.3
   at: '2026-11-03T00:00:00Z'
@@ -18,7 +18,7 @@ verified:
   at: '2026-11-03T00:00:00Z'
 ---
 
-## PDB2PQR's residue and hydrogen names, and the protonated density (WP5.03)
+## PDB2PQR's residue and hydrogen names, and the protonated density
 
 Stage 2 smears the atoms of the protonation table when `geometry.density.atoms` is `protonated`
 (PHY-16; §5.3.1 NOTE on `geometry.density`). Each atom's radius must be the one PDB2PQR itself wrote.
@@ -35,5 +35,7 @@ Stage 2 smears the atoms of the protonation table when `geometry.density.atoms` 
   radius in the PQR to 10⁻¹² nm. **[tested: tests/tier1/test_density.py::test_ver49_protonated_radii_are_pdb2pqr_charmm_radii]**
 * **Another force field writes other hydrogen names.** PDB2PQR 3.8 under `--ff=SWANSON` writes AMBER
   hydrogen names (`H`, `HB3`, `H1`) that the CHARMM set does not hold: fourteen atoms of the fragment are
-  unresolved and every heavy radius differs from CHARMM's. `PEOEPB` failed on the fragment. The protonated
+  unresolved and every heavy radius differs from CHARMM's. `PEOEPB` failed on the fragment **[verified][^wp503-plan]**. The protonated
   density is therefore refused beside a produced protonation under a `charge.forcefield` other than `CHARMM`.
+
+[^wp503-plan]: `docs/plans/phase-5/wp5.03-protonation-before-the-density.md`, Grounding for D2 (PDB2PQR 3.8 under `--ff=SWANSON` and `PEOEPB` on `data/structures/2wcd-a-18-26.pdb`).

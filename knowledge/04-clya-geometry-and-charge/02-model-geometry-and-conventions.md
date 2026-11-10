@@ -7,6 +7,9 @@ tags:
 - clya
 - pipeline
 sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 - id: paper
   resource: https://doi.org/10.1039/D0NR03114C
   title: Willems et al., Nanoscale 12, 16775-16795 (2020)
@@ -50,21 +53,21 @@ verified:
 
 | Quantity | Value | Source |
 |---|---|---|
-| Reservoir | one sphere R = **250 nm**, split through the middle by the bilayer into cis and trans hemispheres (2D-axisym: half-disc r in [0,250], z in [-250,250] nm) | T `sec:transport:global_geometry` L240-244 |
-| Bilayer | dielectric block, thickness **h = 2.8 nm**, impermeable to ions and water | T L242 |
-| Pore axial extent | **-1.85 <= z <= 12.25 nm** (this is the definition of "the pore" for all pore-averaged quantities) | TA `eq:pore_surface_integral` beta definitions |
-| Trans constriction | **-1.85 < z < 1.6 nm**, ~3.3 nm diameter (nominal cylinder: 3.3 nm dia x 4 nm high) | T L881-883, L1076 |
-| Cis lumen | **1.6 < z < 12.25 nm**, ~6 nm diameter (nominal cylinder: 6 nm dia x 10 nm high) | T L882-883, L136-137 |
-| Pore radius field | `r_p(z)`, from the 25 % contour | TA |
-| Radial-average radius | `R(z) = r_p(z)` inside the pore; **fixed 4 nm** for z > 12.25 (cis) and **fixed 2 nm** for z < -1.85 (trans) | T `sect:esp` L1097-1099 |
-| Charge clusters | constriction: E7, E11, K14, E18, D21, D25. Mid-lumen (4 < z < 6): E53, E57, D64, K147. Cis mouth (10 < z < 12): D114, R118, D121, D122 | T L1075-1078 |
+| Reservoir | one sphere R = **250 nm**, split through the middle by the bilayer into cis and trans hemispheres (2D-axisym: half-disc r in [0,250], z in [-250,250] nm) | T `sec:transport:global_geometry` L240-244 **[verified][^thesis]** |
+| Bilayer | dielectric block, thickness **h = 2.8 nm**, impermeable to ions and water | T L242 **[verified][^thesis]** |
+| Pore axial extent | **-1.85 <= z <= 12.25 nm** (this is the definition of "the pore" for all pore-averaged quantities) | TA `eq:pore_surface_integral` beta definitions **[verified][^thesis]** |
+| Trans constriction | **-1.85 < z < 1.6 nm**, ~3.3 nm diameter (nominal cylinder: 3.3 nm dia x 4 nm high) | T L137, L881-883, L1076 **[verified][^thesis]** |
+| Cis lumen | **1.6 < z < 12.25 nm**, ~6 nm diameter (nominal cylinder: 6 nm dia x 10 nm high) | T L883, L136-137 **[verified][^thesis]** |
+| Pore radius field | `r_p(z)`, from the 25 % contour | TA (`r_p`); T L394-395 (25 % contour) **[verified][^thesis]** |
+| Radial-average radius | `R(z) = r_p(z)` inside the pore; **fixed 4 nm** for z > 12.25 (cis) and **fixed 2 nm** for z < -1.85 (trans) | T `sect:esp` L1097-1099 **[verified][^thesis]** |
+| Charge clusters | constriction: E7, E11, K14, E18, D21, D25. Mid-lumen (4 < z < 6): E53, E57, D64, K147. Cis mouth (10 < z < 12): D114, R118, D121, D122 | T L1075-1078 **[verified][^thesis]** |
 
 **Bias sign convention** (T `sec:transport:global_geometry` L249-258): **cis is grounded**
-(`phi = 0` on the cis reservoir edge), `phi = V_bias` is applied on the **trans** edge.
+(`phi = 0` on the cis reservoir edge), `phi = V_bias` is applied on the **trans** edge **[verified][^thesis]**.
 Consequences that must be reproduced: at **V_bias > 0** cations move **trans -> cis**; at
-**V_bias < 0** cations and the EOF move **cis -> trans** (T L1185, L1205, L1367). Experimentally the
-pore is added to the grounded cis reservoir (T `sec:transport:methods` L1631-1633). Current is
-integrated over the **cis** boundary (eq. `eq:currentsim`).
+**V_bias < 0** cations and the EOF move **cis -> trans** (T L1185, L1205, L1367) **[verified][^thesis]**. Experimentally the
+pore is added to the grounded cis reservoir (T `sec:transport:methods` L1631-1633) **[verified][^thesis]**. Current is
+integrated over the **cis** boundary (eq. `eq:currentsim`, T L517-518) **[verified][^thesis]**.
 
 ### 2.1 The bilayer on a structure-derived profile, measured **[tested: tests/tier1/test_region.py::test_ver52_the_fixture_s_chord_and_the_drawn_one_give_one_region]** **[tested: tests/tier2/test_region_reference.py::test_ver52_the_derived_region_has_the_reference_topology]** **[tested: tests/tier2/test_pipeline_2wcd.py::test_ver53_2wcd_meshes_at_the_default_sizes]** {#21-the-bilayer-on-a-structure-derived-profile-measured}
 
@@ -167,5 +170,6 @@ vertices, and step 6 removes none of them. No pocket closes, so no hole is fille
 
 ---
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. T = `chapters/transport/transport.tex`, TA = `chapters/transport_appendix/transport_appendix.tex`, E = `chapters/electrostatics/electrostatics.tex`; `Lnnn` is the line in that commit.
 [^wp21-plan]: `git show 0ff2d619:docs/plans/wp21-cad-assembly-and-meshing.md`, Design §1 (chord uniqueness and four-crossing topology).
 [^wp30-plan]: `git show 0ff2d619:docs/plans/wp30-dielectric-and-exclusion.md`, Design §1 and Outcomes.

@@ -23,7 +23,7 @@ verified:
 
 `trapping_appendix.tex §sec:trapping_appendix:single_barrier_system`. Both external forces are
 assumed **constant along the pore** (linear potential drop over L = 14 nm), i.e. spatially uniform
-1-D scalars, not fields:
+1-D scalars, not fields (`trapping_appendix.tex` `eq:forceep`, `eq:osmoticforce`; `trapping.tex` `eq:external-barrier`; **[verified][^thesis]**):
 
 ```
 F_ep  = e · N_net · V_b / L            (eq:forceep,     N_net = N_body + N_tag)
@@ -34,10 +34,10 @@ E_ep(x) = −F_ep·x + b_ep ,  E_osm(x) = −F_osm·x + b_osm
 
 `N_eo` = **equivalent osmotic charge number** — "*the number of charges that must be added to DHFR
 to create an equal electrophoretic force*"; asserted to be "*an invariant related solely to the size
-and shape of the molecule*". That is the entire force model: **no Maxwell stress, no
+and shape of the molecule*" (`trapping.tex`, after `eq:external-barrier`) **[verified][^thesis]**. That is the entire force model: **no Maxwell stress, no
 dielectric-gradient term, no pressure/viscous decomposition, no surface integral.**
 
-The *general* framework the author endorses (background ch. 2, `nanopores.tex`; adopted by the spec):
+The *general* framework the author endorses (background ch. 2, `nanopores.tex`; adopted by the spec; `eq:nanopores_electric_force`, `eq:nanopores_hydrodynamic_force`; **[verified][^thesis]**):
 
 ```
 F_ele = ∮_Γ (T_E · n) dΓ ,   T_E = ε E E − ½ ε (E·E) I        (eq:nanopores_electric_force)
@@ -46,11 +46,12 @@ F_hyd = ∮_Γ (T_H · n) dΓ ,   T_H = p I − η[∇u + (∇u)ᵀ]        (eq:
 
 magnetic terms of T_E set to zero. The full-tensor form captures **both EP and dielectrophoretic**
 contributions (F_DEP = (p·∇)E) with no shape assumption; Stokes' law F_d = −6πηaU is only a
-first-order stand-in valid outside the pore. `conclusion.tex` (l. 180) makes it a finding: the
+first-order stand-in valid outside the pore (`nanopores.tex`, `eq:nanopores_dep_force`, `eq:nanopores_drag_force`) **[verified][^thesis]**. `conclusion.tex` (l. 180) makes it a finding: the
 5–30 atm pressure hotspots mean the pressure term is non-negligible, "*confirming the importance of
 using the full hydrodynamic stress tensor to calculate the force, rather than just the Stokes'
-drag*". T_H is the **same** tensor as in the momentum equation (`knowledge/01-physics-epnpns/02-governing-equations.md#23-navierstokes-variable-density-and-viscosity`), so η
-is the corrected position-dependent viscosity — the integrand inherits the wall correction.
+drag*" **[verified][^thesis]**. The momentum equation (`knowledge/01-physics-epnpns/02-governing-equations.md#23-navierstokes-variable-density-and-viscosity`)
+uses the same physical stress with the opposite sign convention (below), so η is the corrected
+position-dependent viscosity — the integrand inherits the wall correction.
 
 **Sign, resolved** **[tested: tests/tier1/test_forces.py::test_num28_hydrodynamic_stress_check_values]** **[tested: tests/tier2/test_stokes_drag.py::test_ver19_the_three_routes_agree_on_the_drag]**. `T_H = p I − η[∇u + (∇u)ᵀ]` as printed above is the *negative* of the
 Cauchy stress the momentum equation is written in, which is `T_H = −p I + 2 η sym ∇u` with
@@ -61,3 +62,4 @@ physics and opposite numbers, so the rule is: whichever is chosen, the tensor in
 and the tensor in the residual must be the same one. `T_M = ε(E ⊗ E − ½|E|²I)` has no such ambiguity
 — `E` appears twice, so the sign of `E` cannot leak into it.
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. `trapping_appendix.tex` = `chapters/trapping_appendix/trapping_appendix.tex`, `trapping.tex` = `chapters/trapping/trapping.tex`, `nanopores.tex` = `chapters/nanopores/nanopores.tex`, `conclusion.tex` = `chapters/conclusion/conclusion.tex`; `Lnnn` is the line in that commit.
