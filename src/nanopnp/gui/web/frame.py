@@ -304,7 +304,10 @@ class _Frame:
     def applied(self) -> None:
         """Apply the settings now held to the page: theme, density, spacing, motion, chords."""
         chords = theme.script_json(commands.chords(self.shell.keys))
-        ui.run_javascript(f"{theme.appearance(self.shell.settings)}window.frameChords = {chords};")
+        ui.run_javascript(
+            f"{theme.appearance(self.shell.settings)}window.frameChords = {chords};"
+            "window.nano && window.nano.background();"
+        )
         self.dark.set_value(theme.dark(self.shell.settings))
 
     def listen(self, event: str, handler: Callable[[events.GenericEventArguments], object]) -> None:
@@ -471,7 +474,6 @@ class _Frame:
     # -- the pieces ---------------------------------------------------------
 
     def title_bar(self) -> None:
-        bench = self.shell.bench
         changed = self.changed_count()
         chords = commands.bindings(self.shell.keys)
         with ui.row().classes("titlebar items-center no-wrap"):
@@ -486,9 +488,6 @@ class _Frame:
                                 ui.item_section(entry.title)
                                 if chord:
                                     ui.item_section(chord).props("side")
-            ui.label(bench.project.name if bench.project else "No project").classes(
-                "project-name"
-            ).props("data-control=project-name")
             ui.space()
             with ui.button(on_click=lambda: self.run("changes")).props(
                 "flat no-caps aria-live=polite data-control=changed-count"

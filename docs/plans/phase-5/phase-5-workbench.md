@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.14 merged (`v0.6.0-alpha.14`); WP5.15, the frame, planned, then the suites WP5.16 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.14 merged (`v0.6.0-alpha.14`); WP5.15, the frame, delivered and in review, then the suites WP5.16 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -212,6 +212,20 @@ landmarks, headings, live regions and splitter keys (REV-203's frame part), REV-
 headings, dialogs and render states. A 2WCD render state, walked once and cached (AJ8). In `np-gui`, `impeccable`'s
 critique joins the review, its quality floor is read before a screen is built, and a design file derived from
 `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
+
+**Delivered 10 November 2026** ([the plan](wp5.15-the-frame-on-quasars-components.md)); tag `v0.6.0-alpha.15` once
+merged. REV-203's frame part, REV-204, REV-207, REV-208 and REV-210 to REV-214 fixed. The frame is Quasar's layout with
+sub-pages and one Mol* host (VER-78 (m)); five suites in two groups, Alt+Shift+1 to 5 following the bar (AN7); the rail
+a tree headed by the project's name; the palette Quasar's searchable select over each command and setting; the
+settings one registry with a user and a project scope and a page at `/settings` (VER-78 (j) to (l); §5.3.5's NOTE); the
+changed values one dense table with units (FR-34). The store marks reads, evicts the least recently read outside a
+kept set, caps itself and refuses a clean-up while a walk in any program holds its lock (FR-27, §5.3.2's NOTE; VER-62
+unmoved). The render set adds a cached 2WCD project and REV-210's states; `np-gui` runs `impeccable`'s critique and
+derives `DESIGN.md` (AJ6).
+
+Live constraints: the compute settings are WP5.19's (AN1, AN4); a cleaned run's solution is rebuilt on viewing in
+WP5.20 (AN5); each suite's field marks and *Modified only* filters are its own package's; the keyboard pass over the
+canvases is WP5.21's (QR-16).
 
 ### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
 

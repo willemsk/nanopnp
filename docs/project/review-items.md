@@ -2681,11 +2681,15 @@ The WP5.08 `/np-gui review` found, in the frame as built: the bottom panel opens
 
 **Deferred** to WP5.15, which rebuilds the frame on Quasar's components (§8.2.34 AJ1): the panel's height and row counts, the landmarks, heading and live regions, the splitter's keys, the icons and the reserved chords. The keyboard pass over every canvas action stays with the guided route, WP5.21 (QR-16).
 
+**Fixed** by WP5.15 (5d0f934, 7b052a8 and item 14): the bottom panel opens 220 px high, scrolls, and is resized by its separator; the changed count stands in the title bar and the problem count in the status line, each a live region; the frame has named `nav` regions, a skip link and real headings; each separator moves by the arrow keys, Home and End; the activity bar shows an icon over each suite's name; no default chord is one a browser keeps (`commands.BROWSER_KEPT`), F1 opens the palette beside Ctrl+K, and every chord can be rebound. The 3D view's background follows a change in the settings at once (`nano.background`), and a keyboard focus ring in the accent marks Quasar's items, buttons and tree rows. The keyboard pass over the canvases stays with WP5.21 (QR-16).
+
 ### REV-204: The settings and the changed list lack some guards and units
 
 The WP5.08 review found: the settings dialog has no sticky footer and the colours sit in a collapsed section (F9); a shortcut has no per-row clear control (F7); Reset, Reset layout and Quit act at once with no confirmation or undo, and Quit does not warn of a running build (F12); the changed list shows a value with no unit beside it and a default of `None` (F12); an item that fails to load adds nothing to the changed count and says nothing (doubt 1); and a path set in a case counts as changed whether or not it differs from the validated default (doubt 2). A user's theme has no contrast display by the author's ruling (§8.2.33 AI1), so that part of F8 is answered and not open.
 
 **Deferred** to WP5.15, whose settings page follows one declared list (§8.2.34 AJ9) and whose changed table shows each unit (AJ7).
+
+**Fixed** by WP5.15 (1c2416e, 230af47, 7b052a8): the settings are a page with no footer to lose, its colours a section of the theme's setting; each shortcut has its own clear; Reset, *Reset layout* and *Quit* ask first while the `confirm` setting is on, and *Quit* names the running entries; the changed table shows each value in the user's figures with the file's unit, and an empty default reads "not set"; an item that does not load is a "not counted" row that leads to *Problems*. A value counts as changed only where it is away from its default (`io/defaults.py:changes`).
 
 ### REV-205: The Study page shows fixture names, and the charge screen lacks a colour bar and axes
 
@@ -2705,11 +2709,15 @@ The WP5.08 code review found: a splitter's change event writes the project file 
 
 **Deferred** to WP5.15, which rebuilds the frame (§8.2.34 AJ1, AJ10).
 
+**Fixed** by WP5.15 (5d0f934, 7b052a8, 0aa6398): a separator saves the layout on release only; `theme.shipped` is cached and `user_themes` is cached on its folder's newest change; the dialogs are built once per page; an empty folder field is refused; the palette's filter is one function in `palette.js`.
+
 ### REV-208: The palette finds commands by title only, has no active row, and lists commands that cannot run
 
 The second WP5.08 screen review found: the palette matches a typed word against a command's title only, so "theme", "density", "spacing", "dark" and "shortcut" find nothing and "Settings…" is the only route to them; no row is highlighted and the arrow keys do not move through the list; and "Import case…" and "Export project…" are listed with no project open, where they only refuse.
 
 **Deferred** to WP5.15, with REV-211 (§8.2.34 AJ1, AJ10). It gives each command keywords, adds the setting commands, the highlighted row and the arrow keys, and disables a command with the reason.
+
+**Fixed** by WP5.15 (d74b9b3, 0aa6398): each command has keywords and each setting a command; the palette's first runnable match is active and the arrow keys move it; a command that needs a project is listed disabled with its reason.
 
 ### REV-209: The charge screen in the frame shows a link where none exists, and its map ignores the dark theme
 
@@ -2723,11 +2731,15 @@ The second WP5.08 screen review found: the activity bar has text only where the 
 
 **Deferred** to WP5.15, which rebuilds the frame (§8.2.34 AJ1, AJ10): the icons, headings, render states and the dialogs with a recent-projects list. The review also doubted that opening a project runs its first study; that holds for the `--state` fixtures only, and `nanopnp gui <project>` walks nothing, so it is answered.
 
+**Fixed** by WP5.15 (5d0f934, 7b052a8, 93add84): each suite has its icon; suite and dialog titles are headings; the diamond is hidden from a screen reader beside its word; the colours show swatches; the glossary holds the design document's 26 terms and About is a dialog; the project dialogs list recent projects. `render_shell.py` renders a 2WCD project, the four project dialogs, the three menus, a folded rail, the Queue and Log tabs, the Colours section, a user theme, compact density and tight spacing, the 3D background setting, a key being captured, a typed palette query, Glossary and About.
+
 ### REV-211: The palette opens as a full command list, not a bare input that suggests as you type
 
 The author, marking the frame's palette (`docs/design/reviews/2026-11-05-frame.md`): "This should far more sleek and subtle, not just a list of commands. Default should be just a box to type in, and suggestions should pop up once you start typing." The palette opens as an input over every command with its chord.
 
 **Deferred** to WP5.15, with REV-208 (§8.2.34 AJ1, AJ10). The palette opens as one input and lists no commands until a word is typed. The matches then appear under it, found by title and keyword, one row active and moved by the arrow keys. A command that cannot run is listed disabled with its reason.
+
+**Fixed** by WP5.15 (0aa6398): the palette is one input, empty until a word is typed, its matches under it by title and keyword, the first runnable one active.
 
 ### REV-212: The settings need a searchable section list beside the panel, and which settings exist is undecided
 
@@ -2735,17 +2747,23 @@ The author, marking the frame's settings: "The settings window should have a nav
 
 **Deferred** to WP5.15, ruled by the author on 5 November 2026 (§8.2.34 AJ9; WB-37): the settings are one declared list, each setting with its section, its scope (the user's, or the project's over the user's), its default, its description and search words and when it applies; the page, its search, the palette's setting commands and both files follow. The sections are appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers; which settings beyond them exist, compute and network among them, is put to the author at WP5.15's plan after a survey of comparable tools.
 
+**Fixed** by WP5.15 (97bf4e2, 1c2416e): the settings are one declared list (`gui/web/settings.py:SETTINGS`), and `/settings` has search and the section list beside the panel, *User* or *Project*, *Modified only*, and each value's mark and reset. The compute settings are WP5.19's (§8.2.38 AN1, AN4).
+
 ### REV-213: The suites may need to separate those that build models from those that use them
 
 The author, marking the Molecular suite and then the Continuum, Study and Analysis suites with "See Molecular suite comments": "I wonder if we need to make a further distinction in the suites between those that build components (molecular, continuum, physics), those that use components (study, analysis?). I think we need to discuss this further to figure out what I mean." The frame has four suites side by side in the activity bar (WB-02, WB-29). The models are built in Molecular and Continuum (WB-11), and the physics defaults sit in the continuum model (WB-16).
 
 **Deferred**, ruled by the author on 5 November 2026 (§8.2.34 AJ2 to AJ5; WB-34, WB-35): physics becomes a third reusable model, and five suites show as those that build models (Molecular, Continuum, Physics) and those that use them (Study, Analysis). The physics model is WP5.09's library step, the grouped suites WP5.15's, and the Physics suite WP5.18's.
 
+**Fixed** by WP5.15 (d74b9b3, 5d0f934): the activity bar shows Molecular, Continuum and Physics under *Build* and Study and Analysis under *Use*; Physics stays empty until WP5.18.
+
 ### REV-214: The changed list is loosely spaced, and the project name reads as a menu
 
 The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?" Each changed value is a row of about 48 px: the path, the value, its default and *Reset*. Then, on the refused state: "Not sure the "refused" marker in the top bar is the best location, looks like a menu item." The word is the fixture project's name (`--state refused` opens a project named `refused`), not a refusal marker. The name sits in the menu row, after *Help*, in the menus' weight, so it reads as a menu.
 
 **Deferred** to WP5.15, ruled by the author on 5 November 2026 (§8.2.34 AJ7; WB-36): the mark at the field with its reset, a *Modified only* filter on each pane and the settings, and one dense table grouped by model and study with value, default, unit and reset. The project's name heads the project rail and names the browser tab.
+
+**Fixed** by WP5.15 (230af47, 7b052a8): the changed values are one dense table grouped by item, with mark, field, value, default, unit and reset; the project's name heads the rail's tree and names the browser tab, and is gone from the menu row. The mark at each field and each pane's *Modified only* filter are the suites' (WP5.16 to WP5.19).
 
 ### REV-215: The charge screen needs its design and its function settled together
 

@@ -187,9 +187,19 @@ function checkPage() {
     if (parseFloat(style.outlineWidth) > 0 && style.outlineStyle !== "none" && outline) return outline;
     return null;
   };
+  const sideEdge = (style) => {
+    for (const side of ["Right", "Bottom", "Left"]) {
+      const colour = parse(style[`border${side}Color`]);
+      if (parseFloat(style[`border${side}Width`]) > 0 && style[`border${side}Style`] !== "none" && colour && colour.a > 0) return colour;
+    }
+    return null;
+  };
+  const SELECTED = "[aria-selected=true], [aria-pressed=true], [aria-current]:not([aria-current=false])";
   const edged = "input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea, button, [role=switch]";
   for (const element of document.body.querySelectorAll(edged)) {
     if (!visible(element)) continue;
+    // A selected control's fill marks the selection: the pass below measures its marker.
+    if (element.matches(SELECTED)) continue;
     const back = surface(element);
     const style = getComputedStyle(element);
     const line = edge(style);
@@ -201,12 +211,12 @@ function checkPage() {
   // A selected item (aria-selected, aria-pressed or aria-current) is told apart by a marker: its
   // edge or its fill, whichever reaches 3:1 against the surface behind it. A selected item with
   // neither drawn is told apart by weight or text alone, which 1.4.11 does not accept.
-  const SELECTED = "[aria-selected=true], [aria-pressed=true], [aria-current]:not([aria-current=false])";
   for (const element of document.body.querySelectorAll(SELECTED)) {
     if (!visible(element)) continue;
     const back = surface(element);
     const style = getComputedStyle(element);
-    const line = edge(style);
+    // A marker may be one edge only: a bar along any side counts.
+    const line = edge(style) || sideEdge(style);
     const fill = parse(style.backgroundColor);
     const markers = [];
     if (line) markers.push(["selected edge", over(line, back)]);
@@ -228,7 +238,9 @@ function checkPage() {
     }
   }
   // The focus ring, after the pass above: focusing changes the page, so it is last, and undone.
-  for (const element of document.body.querySelectorAll(edged + ", a[href], [tabindex]")) {
+  // An element out of the tab order (tabindex -1, a menu's own box) takes focus only from a script;
+  // its shadow is elevation, not a ring.
+  for (const element of document.body.querySelectorAll(edged + ", a[href], [tabindex]:not([tabindex='-1'])")) {
     if (!visible(element) || element.disabled) continue;
     element.focus({ preventScroll: true });
     if (document.activeElement !== element) continue;
@@ -245,6 +257,8 @@ function checkPage() {
   const controls = "a, button, input:not([type=hidden]), select, textarea, [role=button]";
   for (const element of document.body.querySelectorAll(controls)) {
     if (!visible(element)) continue;
+    // A visually hidden element (a skip link before it takes focus) is no pointer target.
+    if (getComputedStyle(element).clipPath === "inset(50%)") continue;
     let rect = element.getBoundingClientRect();
     // A checkbox or radio is hit through its label too, so the larger of the two is its target.
     if (element.type === "checkbox" || element.type === "radio") {

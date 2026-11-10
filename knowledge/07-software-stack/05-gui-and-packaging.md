@@ -397,11 +397,23 @@ refuse them, naming the holder. A key typed into a field is not a shortcut: only
 ### Quasar paints its tab panels, cards and menus white whatever the theme **[verified][^wp508-plan]** {#quasar-paints-its-tab-panels-cards-and-menus-white-whatever-the-theme}
 
 NiceGUI's Quasar components set their own background and text colour, so a dark workbench rendered with the
-design's tokens still showed white panels, cards and menus until `assets/frame.css` set `.q-tab-panels`,
-`.q-tab-panel`, `.q-card` and `.q-menu` from the tokens, and the buttons' and fields' text colour with them. A
-selector that must beat Quasar's starts at `body`. `/np-gui render shell` finds the miss as a text-contrast
-failure in the dark theme, not before. The 3D view's background is the same kind of token (`--canvas-3d`), which
-`bridge.js` reads and hands to Mol* as `renderer.backgroundColor`, so a theme changes it too.
+design's tokens still showed white panels, cards and menus at WP5.08. Since WP5.15 the frame hands the tokens to
+Quasar's own colour variables (`ui.colors(primary="var(--accent)", dark="var(--panel)", …)`) and sets
+`ui.dark_mode` from the theme's base, so Quasar's components take the theme without a rule of the frame's
+[^wp515-plan]. `/np-gui render shell` finds a miss as a text-contrast failure in the dark theme, not before. The 3D
+view's background is the same kind of token (`--canvas-3d`): `bridge.js:nano.background` reads it and hands it to
+Mol* as `renderer.backgroundColor`, when the viewer is built and again after each change to the settings, since the
+frame builds one viewer per window and never rebuilds it.
+
+### Quasar's `!important` colours yield only to a rule in an earlier cascade layer **[verified][^wp515-plan]** {#quasars-important-colours-yield-only-to-a-rule-in-an-earlier-cascade-layer}
+
+NiceGUI 3 loads Quasar's style sheets into cascade layers, declared in its page template as `theme, base, quasar,
+nicegui, components, utilities, overrides, quasar_importants`, and Quasar's `!important` rules, `.text-white`
+among them, go into `quasar_importants`. An `!important` declaration in a layer beats every unlayered one, and the
+earliest layer wins among layered ones, so the frame's unlayered `.bg-primary.text-white { color: … !important }`
+lost: a chosen toggle, a filled button and a badge kept white text on the dark theme's light accent, at 2.2:1. The
+rule that holds is `@layer theme { .bg-primary { color: var(--accent-ink) !important; } }`. A normal declaration
+behaves the other way: an unlayered rule beats every layered one, so the frame's other rules need no layer.
 
 ---
 
@@ -414,3 +426,4 @@ failure in the dark theme, not before. The 3D view's background is the same kind
 [^wp501-plan]: `docs/plans/phase-5/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).
 [^wp502-report]: `docs/design/spike/report.md` (the framework spike's six measures and what the build taught, WP5.02 items 1 to 5).
 [^wp508-plan]: `docs/plans/phase-5/wp5.08-the-frame-and-the-project-folder.md`, items 8 to 10 (the frame, its render findings and Outcome notes).
+[^wp515-plan]: `docs/plans/phase-5/wp5.15-the-frame-on-quasars-components.md`, items 4 and 14 (Quasar's colour variables, the render findings, and NiceGUI 3.18's `templates/index.html`).
