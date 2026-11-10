@@ -19,7 +19,7 @@ Given directly by the author; where they conflict with a printed source, **these
 
 | # | Question | Ruling |
 |---|---|---|
-| 1 | D/μ wall coefficient `P₁` | **6.2 nm⁻¹.** Table 5.2 is correct; the running-text value and the 0.62 correction are wrong. |
+| 1 | D/μ wall coefficient `P₁` | **6.2 nm⁻¹.** Table 5.2 is correct, and the thesis text, the paper's SI and the COMSOL report give the same value (the author, 10 November 2026; REV-227); the 62 and 0.62 readings are wrong. |
 | 2 | Permittivity fit parameters | **Gavish (30.08, 11.5) govern**, as the model file records; the printed 42.12 cap is stale, the correct cap is 42.67 (`SPECIFICATION.md` §4.6 erratum 6; `knowledge/09-comsol-reference-settings/05-contradictions-with-the-rest-of-this.md`). |
 | 3 | Meaning of `⟨c⟩` | **Configurable, default eq. 5.3**, `(1/n)Σcᵢ`; ionic strength is a named option. |
 | 4 | Analyte boundary conditions | **No-flux, no-slip, dielectric jump:** a hard dielectric body, like the pore wall. |

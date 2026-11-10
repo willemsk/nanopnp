@@ -2,13 +2,13 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,297. By source: history ruling 329; plan decision row 651; REV row 226; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,298. By source: history ruling 329; plan decision row 651; REV row 227; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 506; open 5; session, own call 783; session, put to the author 3.
+By decider: author 507; open 5; session, own call 783; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
-| KB ruling 1 | author | `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md` | 2026-08 |  | D/μ wall coefficient `P₁` / **6.2 nm⁻¹.** Table 5.2 is correct; the running-text value and the 0.62 correction are wrong. | unstated | in force |
+| KB ruling 1 | author | `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md` | 2026-08 |  | D/μ wall coefficient `P₁` / **6.2 nm⁻¹.** Table 5.2 is correct, and the thesis text, the paper's SI and the COMSOL report give the same value (the author, 10 November 2026; REV-227); the 62 and 0.62 readings are wrong. | REV-227 | in force |
 | KB ruling 2 | author | `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md` | 2026-08 |  | Permittivity fit parameters / **Gavish (30.08, 11.5) govern**, as the model file records; the printed 42.12 cap is stale, the correct cap is 42.67 (`SPECIFICATION.md` §4.6 erratum 6; `knowledge/09-comsol-reference-setti…` | §4.6 | in force |
 | KB ruling 3 | author | `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md` | 2026-08 |  | Meaning of `⟨c⟩` / **Configurable, default eq. 5.3**, `(1/n)Σcᵢ`; ionic strength is a named option. | unstated | in force |
 | KB ruling 4 | author | `knowledge/00-orientation/05-author-rulings-2026-08-these-override.md` | 2026-08 |  | Analyte boundary conditions / **No-flux, no-slip, dielectric jump:** a hard dielectric body, like the pore wall. | unstated | in force |
@@ -1233,6 +1233,7 @@ By decider: author 506; open 5; session, own call 783; session, put to the autho
 | REV-224 | session, own call | `docs/project/review-findings.md` |  |  | NUM-28's fluid consistency term omits the pore charge's force | CODE_REVIEW_039 | accepted |
 | REV-225 | session, own call | `docs/project/review-findings.md` |  |  | Three numerics tolerances have no written derivation | CODE_REVIEW_039 | accepted |
 | REV-226 | author | `docs/project/review-findings.md` |  |  | Refusal messages in src/ cite the §5.3.1 NOTEs whose stage rules moved to §5.2 | ruled by the author, 9 November 2026 (CODE_REVIEW_044) | accepted |
+| REV-227 | author | `docs/project/review-findings.md` |  | WP5.12 | The source checklist: six findings that rest on the ESI or the COMSOL report | ruled by the author, 10 November 2026 (WP5.12) | fixed |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

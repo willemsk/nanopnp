@@ -36,15 +36,12 @@ verified:
   and the cell count. PHY-02 and NUM-31 the wall-distance field, unsmoothed by default; NUM-32 and NUM-33 the
   optional goal-oriented loop, with its estimator from the linear PB surrogate.
 - **The published results carry no discretisation error bar.** The *thesis* states only "COMSOL
-  Multiphysics v5.4" and mentions "the final mesh" in passing: no element counts, no types, no
-  refinement strategy, no tolerances, no convergence study. **[verified][^esi]** by grep over
-  `thesis/chapters/`. Our mesh convergence study is therefore new work, and small disagreements
+  Multiphysics (v5.4" (`epnpns.tex`:234) and "the final (computational) mesh" (`transport.tex`:396,
+  426), by grep over `thesis/chapters/`. **[verified][^thesis]** The paper's *ESI* model report holds
+  the mesh (§2.7), the solver configurations (§3.2, §4.3) and the mesh quality (§5.4), transcribed in
+  `knowledge/09-comsol-reference-settings/index.md`; no convergence study is published.
+  **[verified][^esi]** Our mesh convergence study is therefore new work, and small disagreements
   with published numbers may be *their* discretisation error rather than ours.
-  **Correction to the above, added later:** the paper's *ESI* is a 143-page COMSOL-generated model
-  report that **does** contain a Mesh section (§2.7), Solver Configurations for both studies
-  (§3.2, §4.3) and a "Mesh quality" results section (§5.4). Those numbers exist; they have not yet
-  been extracted (`WebFetch` truncates the PDF at ~p. 66 of 143). Still no convergence study.
-  → `knowledge/09-comsol-reference-settings/index.md`.
 
 ### Measured: the reference region meshes to a third of COMSOL's element count **[tested: tests/tier2/test_reference_geometry.py::test_ver10_the_reference_mesh_is_in_the_published_quality_band]** **[tested: tests/tier2/test_region_reference.py::test_ver10_the_generated_mesh_matches_the_drawn_one_and_meets_the_band]** {#measured-the-reference-region-meshes-to-a-third-of-comsols-element-count}
 
@@ -106,4 +103,5 @@ that call site, with its reasoning, not in the floor.
 
 ---
 
-[^esi]: Electronic supplementary information of the paper.
+[^esi]: Electronic supplementary information of the paper; the author confirmed the sections, 10 November 2026 (REV-227).
+[^thesis]: Willems, PhD thesis (LaTeX source), `github.com/willemsk/phdthesis-text` at `43d0f0f`.

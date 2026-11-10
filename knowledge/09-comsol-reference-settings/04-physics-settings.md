@@ -279,11 +279,13 @@ during Newton iterations.
 `tds.ntflux_i = tds.bndFlux_i = if(r>0.001/sqrt(sqrt(mean(emetric2))), -0.5*dflux_spatial(c_i)/(pi*r), NaN)`
 — i.e. the **variational/reaction boundary flux**, not a cross-section integral of the CG flux.
 This matches the rule in `CLAUDE.md` and `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`. The evaluation boundary is
-**NOT IN REPORT**. **[verified][^comsol-report]**
+**NOT IN REPORT**. **[verified][^comsol-report]** The paper's main text names it: the cis reservoir
+boundary, which also carries the ground, `V = 0`. **[verified][^author-2026-11]**
 
 Pore averages use `is_inside_pore`, `is_inside_pore_bulk` (`wdf.wd > 0.5 nm`) and
 `is_inside_pore_surface` (`wdf.wd <= 0.5 nm`), integration order 4.
 
 ---
 
-[^comsol-report]: COMSOL model report (5.4).
+[^comsol-report]: COMSOL model report (5.4), §1.1 and §2.1 to §2.6, pp. 3–122, and §5.1, pp. 143–145, each part's heading naming its subsection; pages as in [the document map](01-document-map.md), the PDF as [the overview](00-overview.md) says.
+[^author-2026-11]: The author, 10 November 2026, at WP5.12's source checklist (REV-227, `docs/project/review-items.md`).

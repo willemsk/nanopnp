@@ -25,7 +25,7 @@ generated:
 | Linear solver internals | PARDISO ordering/pivoting defaults NOT IN REPORT; irrelevant to the converged solution, relevant only to timings |
 | Newton type and termination technique | NOT IN REPORT; only the damping bounds and rel. tol. are reproducible |
 | Scaling | NOT IN REPORT; COMSOL's automatic variable scaling affects the convergence path and the meaning of "rel. tol. 1e-6" |
-| Evaluation boundary for the current | NOT IN REPORT; choose a boundary and state it |
+| Evaluation boundary for the current | NOT IN REPORT; the paper's main text names the cis reservoir boundary, the grounded one ([C.10](04-physics-settings.md)) |
 | `rhoq_pore` interpolation grid | The gridded charge table itself is not in the report — only the function's units (1/m²) and extrapolation mode. Our charge pipeline regenerates it from structure, so the fixed-charge field will differ in detail |
 | Geometry polygon | 190 vertices printed in §2.2.2 and reproducible, but our contour pipeline generates its own |
 | P1+P1 vs P2/P1 flow | The default Taylor–Hood pair differs by construction, and only the converged velocity field can agree; the `reference` mode permits the equal-order pair (NUM-03, NUM-14) |

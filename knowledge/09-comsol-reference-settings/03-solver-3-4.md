@@ -108,4 +108,4 @@ Dependent variables solved as one block: `comp1.cneg`, `comp1.cpos`, `comp1.p`,
 
 ---
 
-[^comsol-report]: COMSOL model report (5.4).
+[^comsol-report]: COMSOL model report (5.4), §3 Study 1, pp. 132–134, and §4 Study 2, pp. 135–142; pages as in [the document map](01-document-map.md), the PDF as [the overview](00-overview.md) says.

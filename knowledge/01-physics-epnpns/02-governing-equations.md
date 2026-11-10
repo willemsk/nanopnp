@@ -25,7 +25,7 @@ PHY-03 (thesis eq. 5.1, `eq:poisson`): solved over the whole domain `Ω`, with p
 permittivity. `ε_r,p = 20` is the default protein permittivity, a calibration parameter reported as
 fitted (PHY-20, ruling 5); `ε_r,m = 3.2`; the electrolyte's `ε_r,f(⟨c⟩)` is PHY-11's.
 
-**Weak form** (SI §A.1), test function `ψ`, over `Ω = Ω_w + Ω_p + Ω_m`:
+**Weak form** (ESI §1.4; thesis App. B §B.1, `epnpns_appendix.tex`), test function `ψ`, over `Ω = Ω_w + Ω_p + Ω_m`:
 
 ```
 ∫_Ω ∇ψ · D dΩ − ∫_Γ ψ (D·n) dΓ = ∫_Ω ψ ρ_pore dΩ + ∫_Ω ψ ρ_ion dΩ ,    D = ε_0 ε_r ∇φ

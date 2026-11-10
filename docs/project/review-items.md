@@ -2862,3 +2862,26 @@ user refused by the 10° axis rule takes one extra hop to the rule. WP5.11 chang
 citations in those messages and comments to §5.2's NOTEs, a prose-only change `same_tree.py` confirms
 (§8.2.11 L5).
 
+
+### REV-227: The source checklist: six findings that rest on the ESI or the COMSOL report
+
+CODE_REVIEW_039's readers could not check six findings: each rests on the paper's ESI or the COMSOL
+model report, which the hosted session cannot read (§8.2.36 AL20; §8.2.37 AM16). The pages are those
+of `knowledge/09-comsol-reference-settings/01-document-map.md`. The author checked all six in one round
+at WP5.12's item 13 (§8.2.37 AM18), and the Verdict column records each answer.
+
+| Finding | The claim | What the audit found | Source to look up | Verdict |
+|---|---|---|---|---|
+| AUD-136 (SPD-13) | Appendix B prints the reservoir domain's max 2.8 and min 0.04 nm, the outer boundary's min 0.025 nm and growth 1.25, the axis's min 0.04 nm and the pore domain's min 0.004 nm and curvature 0.2 as settings | `09/02` A.2 prints them "(Off)", inactive overrides; WP5.11 marked them "(inactive)" | Report §2.7 Mesh, pp. 122–131: the size nodes' override checkboxes | Confirmed, 10 November 2026: the marking stays |
+| AUD-225 (KNU-32) | `06/08` says the ESI's mesh and solver numbers "have not yet been extracted", and sources a thesis grep to the ESI | `knowledge/09` holds the numbers; the footnote names the wrong source | The thesis (grepped: `epnpns.tex`:234, `transport.tex`:396, 426); report §2.7, §3.2, §4.3, §5.4 | Confirmed, 10 November 2026: the paragraph states both sources, no convergence study published |
+| AUD-286 (KST-06) | Appendix B says the current is extracted "over an electrode boundary" | `09/04` C.10 says the evaluation boundary is not in the report | Report §5.1 Derived Values, pp. 143–145; §2.4 | Confirmed with a correction, 10 November 2026: the report does not print it; the paper's main text names the cis reservoir boundary, which also carries the ground. Appendix B, `09/04` C.10 and `09/07` say so |
+| AUD-327 (KST-47) | Every `[verified]` claim of `knowledge/09` cites "COMSOL model report (5.4)" with no section or page; `09/00` says "read in full from the project store" | The page map exists in `09/01` and the footnotes do not use it; no path is named | Report, against `09/01`'s page map | Confirmed, 10 November 2026: each footnote names its sections and pages; the PDF is published with the article's ESI |
+| AUD-343 (KPH-16) | Ruling 1 says "the running-text value and the 0.62 correction are wrong" | The thesis's running text gives 6.2 nm⁻¹ (`epnpns.tex`:842); which source's text is wrong is unclear | The paper's SI and the COMSOL report | Answered, 10 November 2026: the SI, the report and the thesis all give 6.2 nm⁻¹; ruling 1 now says so, and that the 62 and 0.62 readings are wrong |
+| AUD-346 (KPH-19) | `01/02` cites the weak forms as "SI §A.1" | The thesis has them in App. B §B.1; the ESI's number was not checked | The paper's SI | Corrected, 10 November 2026: the SI numbers the section 1.4; `01/02` cites "ESI §1.4; thesis App. B §B.1" |
+
+**The git rows.** AUD-226 (KNU-33) and AUD-326 (KST-46) were dismissed because the hosted clone was
+shallow. In a full clone, each of the twelve hashes they name (3872426, 0ea0789, 6c0a249, 7597814,
+0f8b57b, 5abcf42, fb4f9ae, 3782c43, c27c35c, 1a2e383, 0ff2d619, 1761f15c) resolves, and so does each
+`<hash>:<path>` source in `knowledge/` (`git cat-file -e`, 10 November 2026).
+
+**Fixed** by WP5.12 item 13: each row has its verdict and its edit.
