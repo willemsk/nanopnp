@@ -526,23 +526,40 @@ def _redefined(path: str, value: FieldValue, record: VariableRecord) -> Variable
     return Variable(value=float(value), unit=unit)
 
 
-def read(path: str | Path, *, model: type[D] = CaseDocument) -> D:  # type: ignore[assignment]
-    """Read a case file that may name models, and resolve it to one case document."""
+def read_case(path: str | Path, *, model: type[D] = CaseDocument) -> D:  # type: ignore[assignment]
+    """Read a case file and resolve its variables and the model files it names into one document.
+
+    Parameters
+    ----------
+    model
+        The class to build: ``CaseDocument``, or a subclass that adds methods and no field.
+
+    Raises
+    ------
+    CaseValidationError
+        If the file, a model file it names or the resolved case is refused.
+    """
     source = Path(path)
     resolved = source.resolve()
-    return reads(
+    return read_case_text(
         resolved.read_text(encoding="utf-8"), base=resolved.parent, source=str(source), model=model
     )
 
 
-def reads(
+def read_case_text(
     text: str,
     *,
     base: str | Path | None = None,
     source: str = "<string>",
     model: type[D] = CaseDocument,  # type: ignore[assignment]
 ) -> D:
-    """Resolve a case held in memory, reading the model files it names beside ``base``."""
+    """Resolve a case held in memory, reading the model files it names beside ``base``.
+
+    Raises
+    ------
+    CaseValidationError
+        If the text, a model file it names or the resolved case is refused.
+    """
     return read_mapping(yaml.safe_load(text), base=base, source=source, model=model)
 
 

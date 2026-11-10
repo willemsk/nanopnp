@@ -30,7 +30,7 @@ from nanopnp.io.case import (
     Geometry,
     SuppliedArtefact,
 )
-from nanopnp.io.models import read, reads
+from nanopnp.io.models import read_case, read_case_text
 from nanopnp.io.resolved import (
     ResolvedCase,
     ResolvedEdit,
@@ -56,7 +56,7 @@ _POINT_GROUP = re.compile(r"C([1-9][0-9]*)")
 def load_case(path: str | Path) -> CaseDocument:
     """Read and validate a case file against the schema and the installed registries."""
     source = str(Path(path))
-    return check_document(read(path), source=source)
+    return check_document(read_case(path), source=source)
 
 
 def loads_case(
@@ -69,7 +69,7 @@ def loads_case(
     base
         The directory the model files it names are read beside; the working directory when ``None``.
     """
-    return check_document(reads(text, base=base, source=source), source=source)
+    return check_document(read_case_text(text, base=base, source=source), source=source)
 
 
 def _choice(spec: schema.CorrectionChoice, files: Mapping[str, Path], key: str) -> CorrectionChoice:

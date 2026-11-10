@@ -29,7 +29,7 @@ from nanopnp.io.case_paths import (
     value_at,
 )
 from nanopnp.io.defaults import VALIDATED_DEFAULT_CASE
-from nanopnp.io.models import Override, reads, study_layer
+from nanopnp.io.models import Override, read_case_text, study_layer
 from nanopnp.materials.corrections import CorrectionDocument, load_corrections
 from nanopnp.mesh.defaults import (
     DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM,
@@ -101,7 +101,9 @@ class Case(CaseDocument):
             The directory a relative path of the case is read against; the working directory
             when ``None``.
         """
-        case = check_document(reads(text, base=base, source=source, model=cls), source=source)
+        case = check_document(
+            read_case_text(text, base=base, source=source, model=cls), source=source
+        )
         assert isinstance(case, cls)
         # A study is run as the one complete case it resolves to, so it keeps no text.
         case._text = text if case.models_record is None else None

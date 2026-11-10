@@ -347,8 +347,8 @@ any value of the models it names; the Study suite lists each model's exposed val
 `pipeline.case.load_case` returns alike (REV-190), so a study equals
 and keys as the case it resolves to, written inline: the artefact keys, the stage keys and the
 cache are those of that case, and a stage a model built is reused by every study that names the
-model. A reader that does not resolve models, `read_case`, SHALL refuse a document carrying
-`models:`, naming the readers that do (`Case.load`, `pipeline.case.load_case`). The run writes the
+model. Every case reader resolves `models:`: `read_case` and
+`read_case_text`, and `Case.load` and `pipeline.case.load_case` through them. The run writes the
 one complete case it resolved to as `case.yaml`, with no `models:`, which the command line runs as
 it is (FR-25); `Case.dumps(study=True)` writes the study as written, with `models:` absolute and every
 override, and a sweep over a study writes that form as its base file (§5.3.4). A project holds a study's models and the study as files of one folder (§5.3.5).
@@ -382,8 +382,7 @@ every stage and every identity reads numbers only: `L: 2*a` with `a` = 2 nm keys
 `CaseArtefact` hash and the same stage keys, and a case without `variables:` keys as it did before.
 The variables as written are held beside the document, outside its dump, equality and every hash,
 as `models` is. The run's `case.yaml` and `Case.dumps()` write the case as written, with `variables:`
-first after `name` and each expression at its field, so a reader that does not resolve variables
-(`read_case`) never sees one; the manifest records the variables beside their numbers (§5.3.3). A
+first after `name` and each expression at its field, which every case reader resolves again; the manifest records the variables beside their numbers (§5.3.3). A
 study owns `variables:`, and a model file that holds it, or an expression at one of its leaves, SHALL
 be refused, naming the file and the key, since a model serves many studies. A substitution at
 `variables.<name>` sets the number, in the variable's declared unit, or replaces the definition; a

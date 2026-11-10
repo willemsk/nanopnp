@@ -14,8 +14,9 @@ from nanopnp.api.sweep import plan_sweep
 from nanopnp.core.hashing import file_hash
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case_paths import block_paths, case_fields, substitute
-from nanopnp.io.models import OWNERS, SCHEMAS, owner_of
+from nanopnp.io.models import OWNERS, SCHEMAS, owner_of, read_case, read_case_text
 from nanopnp.io.store import Store
+from nanopnp.pipeline.case import load_case
 from nanopnp.sweep.plan import SweepPlanError, plan_from_document
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
@@ -397,3 +398,48 @@ def test_fr25_every_edit_reads_a_relative_path_beside_its_case(tmp_path: Path) -
     swapped = study.with_({"models.continuum": "twin.yaml"})
     assert swapped.electrolyte.corrections.diffusivity.model == absolute
     assert study.with_(bias_V=0.1).electrolyte.corrections.diffusivity.model == absolute
+
+
+def test_fr39_every_case_reader_resolves_a_study_and_its_variables(tmp_path: Path) -> None:
+    study = split_case(QUICKSTART, tmp_path)
+    raw = yaml.safe_load(QUICKSTART.read_text(encoding="utf-8"))
+    raw = {"schema": raw.pop("schema"), "name": raw.pop("name"), **raw}
+    raw["variables"] = {"a": {"value": 1, "unit": "nm"}}
+    raw["geometry"]["pore"]["radius_nm"] = "2*a"
+    inline = tmp_path / "inline.case.yaml"
+    inline.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+    hashes = set()
+    for path in (study, inline):
+        text = path.read_text(encoding="utf-8")
+        documents = [
+            read_case(path),
+            read_case_text(text, base=path.parent, source=str(path)),
+            load_case(path),
+        ]
+        assert documents[1:] == documents[:-1]
+        loaded = Case.load(path)
+        assert loaded == read_case(path, model=Case)
+        hashes |= {CaseArtefact(document).hash for document in (*documents, loaded)}
+        records = [document.models_record for document in (*documents, loaded)]
+        variables = [document.variables_record for document in (*documents, loaded)]
+        if path == study:
+            assert all(
+                record is not None
+                and record.paths
+                == {
+                    "continuum": str(tmp_path / "continuum.yaml"),
+                    "physics": str(tmp_path / "physics.yaml"),
+                }
+                for record in records
+            )
+            assert all(variable is None for variable in variables)
+        else:
+            assert all(record is None for record in records)
+            assert all(
+                variable is not None
+                and dict(variable.expressions) == {"geometry.pore.radius_nm": "2*a"}
+                for variable in variables
+            )
+            assert loaded.geometry is not None and loaded.geometry.pore is not None
+            assert loaded.geometry.pore.radius_nm == 2.0
+    assert len(hashes) == 1, "a study, its variables and the case inline key alike"
