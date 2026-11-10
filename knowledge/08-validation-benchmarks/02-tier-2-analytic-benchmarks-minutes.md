@@ -30,12 +30,8 @@ verified:
 ## Tier 2 — Analytic benchmarks (minutes)
 
 ### 2.1 Gouy–Chapman, 1:1 electrolyte
-```
-φ̃(x) = 4 artanh( tanh(ζ̃/4) · e^{−x/λ_D} )          φ̃ = φF/RT
-σ_s   = √(8 ε R T c₀) · sinh(ζ̃/2)                    (Grahame)
-```
-Mutually consistent to 6 digits by numerical differentiation. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms]**
-Tests: Poisson + Boltzmann equilibrium.
+VER-12 states the closed form, Grahame's relation and the tolerance (`SPECIFICATION.md` §7.2). The
+potential and Grahame's relation are mutually consistent to 6 digits by numerical differentiation. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms]**
 
 ### 2.1.1 Gouy–Chapman–Stern through stage 5: Gauss's law across a cylindrical shell **[tested: tests/tier2/test_exclusion_stern.py::test_ver59_the_drop_across_a_generated_shell_obeys_gausss_law]** **[tested: tests/tier2/test_exclusion_stern.py::test_ver59_the_potential_is_logarithmic_across_the_shell]** **[tested: tests/tier2/test_exclusion_stern.py::test_ver59_the_shell_drop_is_a_tenth_of_the_wall_potential_or_more]** {#211-gouychapmanstern-through-stage-5-gausss-law-across-a-cylindrical-shell}
 
@@ -60,22 +56,15 @@ shell is 17.8 % of the wall potential (−36.8 mV), so a shell holding ions cann
 `tests/tier2/test_exclusion_stern.py`.
 
 ### 2.2 Debye–Hückel in a cylinder
-```
-φ(r) = ζ · I₀(r/λ_D) / I₀(a/λ_D)
-```
-Satisfies `∇²φ = φ/λ_D²` in cylindrical coordinates to 6 digits. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms]**
-**The cleanest single test of the axisymmetric Poisson weak form and the axis BC** — it exercises
+VER-13's closed form satisfies `∇²φ = φ/λ_D²` in cylindrical coordinates to 6 digits. **[tested: tests/tier1/test_knowledge_arithmetic.py::test_gouy_chapman_and_debye_huckel_closed_forms]**
+**The cleanest single test of the axisymmetric Poisson weak form and the axis BC**: it exercises
 the `r`-weighted measure and the natural condition at `r = 0` with an exact answer.
 
 ### 2.3 Electro-osmosis in a cylindrical capillary
-Rice & Whitehead, *J. Phys. Chem.* **69**, 4017 (1965) — thick and thin EDL. Burgreen & Nakache
-(1964) for slits. Tests coupled Poisson + Stokes.
+VER-14: Rice & Whitehead (1965), coupled Poisson + Stokes.
 
 ### 2.4 Helmholtz–Smoluchowski limit
-```
-u_slip = −ε ζ E_t / η          as λ_D/a → 0
-```
-Tests the asymptotic correctness of the coupled solve.
+VER-15: the asymptotic correctness of the coupled solve.
 
 ### 2.5 1D steady PNP with limiting current
 Bazant, Chu & Bayly, *SIAM J. Appl. Math.* **65**, 1463 (2005). Tests the full PNP system. At the
@@ -95,21 +84,12 @@ largest bias the current reaches the electroneutral limiting value to 3 %. **[te
   electrode concentration at all (not tested).
 
 ### 2.6 Maxwell–Hall access conductance
-```
-G = σ · [ L/(πa²) + 1/(2a) ]⁻¹        (radius form)
-  ≡ σ · [ 4L/(πd²) + 1/d ]⁻¹          (diameter form)
-```
-Uncharged pore at 1 M; **reproduce to < 2 %**.
-
-> **Factor-of-two trap.** Hall's result is `R_access = ρ/(4a)` *per side*, so both sides give
-> `ρ/(2a)`. The frequently-copied `G = σ[L/(πa²) + 1/a]⁻¹` substitutes radius for diameter in the
-> access term and is wrong by 2× there — for a ClyA-like `a = 2 nm`, `L = 13 nm` it under-predicts
-> `G` by ~16 %. Using it as the target would make a *correct* solver fail the gate, and invite
-> "fixing" the solver to hit a wrong number.
+VER-17, with its NOTE on Hall's factor of two: the frequently copied access term is wrong by 2×, so
+a correct solver would fail a gate set on it.
 
 ### 2.7 Method of manufactured solutions
-On the **full coupled axisymmetric system** with `r`-weighted forms. **The only way to verify the
-`u_r/r²` hoop term and the axis treatment.** Expect O(h³) in L² for P2.
+VER-18, on the full coupled axisymmetric system with `r`-weighted forms: **the only way to verify
+the `u_r/r²` hoop term and the axis treatment.**
 
 ### 2.8 Analyte force benchmarks
 The thesis's trapping work used equilibrium APBS on a bead model with a 1D analytic rate model,
@@ -117,11 +97,17 @@ with no stress-tensor integrals and no force profile (see `knowledge/05-analyte-
 only published force profile is Angew. Chem. 2022 (`knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md`), which gives main-text targets
 (`knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md#106-validation-targets-plyab-hb`) but no code or field data. Verify against analytics first, then those targets:
 
-- Stokes drag on a sphere: `F = 6πηaU` (and the axisymmetric-tube correction for confinement).
-- Maxwell stress on a dielectric sphere in a uniform field — closed form available.
-- Electrophoretic mobility limits: Hückel (`λ_D ≫ a`) `μ_e = 2εζ/3η`; Smoluchowski
-  (`λ_D ≪ a`) `μ_e = εζ/η`.
-- Domain-form vs surface-form force must agree (`knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`).
+- Stokes drag on a sphere in the exact Stokes far field, with no confinement correction (VER-19).
+- Maxwell stress on a dielectric sphere in a uniform field, the zero test with its `qE₀` anchor (VER-20).
+- Electrophoretic mobility against Henry's function, Hückel at small `κa` and the Smoluchowski gap
+  under 15 % (VER-21).
+- Domain-form vs surface-form force must agree (VER-22; `knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md`).
+
+### Measured values
+
+The measured values and why each tolerance is set: `knowledge/07-software-stack/21-tier-2-test-evidence-budgets-timings.md`
+and `22-tier-2-test-evidence-analytic.md` (Tier 2), `knowledge/05-analyte-and-forces/13-tier-2-test-evidence-electro-osmosis.md`
+(the force routes and electrophoresis), and `knowledge/08-validation-benchmarks/07-tier-3-test-evidence-run-times-of-the.md` (Tier 3).
 
 ---
 

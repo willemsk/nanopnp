@@ -48,20 +48,23 @@ tested_with:
 
 ## 4. Geometry, meshing and I/O
 
-| Tool | Version | Licence | Verdict |
-|---|---|---|---|
-| **Netgen OCC** (`netgen.occ`) | 6.2.2606 | LGPL-2.1 | **Default.** Same OpenCASCADE kernel, in-process, no extra binary, no GPL exposure |
-| **Gmsh** (Python API) | 4.15.2 | **GPLv2+** | Optional backend. Best-in-class: `BoundaryLayer` (works in 2D), `Distance`/`Threshold`, `Min`/`Restrict` field algebra, `Fan` points, quads-in-BL |
-| **scikit-image** | 0.26.0 | BSD-3 | `measure.find_contours` (sub-pixel marching squares), `marching_cubes` |
-| **Shapely** | 2.1.2 | BSD-3 | `LinearRing`, `is_valid`, `is_simple`, `make_valid`, `simplify`, `buffer` |
-| **meshio** | 5.3.5 | MIT | Reliable but last release 2024-01 — treat as stable-frozen |
-| CadQuery / build123d | — | Apache-2.0 | 3D-solid-centric; overkill for a 2D (r,z) region |
-| pythonocc-core | — | LGPLv3 | Raw OCCT; only for BRep edge cases |
+Versions are in `uv.lock`, and the role and licence of each dependency in `SPECIFICATION.md` §2.6.
 
-**Avoid:** MeshPy — actively maintained (2026.1) but wraps **Triangle**, whose licence states
+| Tool | Licence | Verdict |
+|---|---|---|
+| **Netgen OCC** (`netgen.occ`) | LGPL-2.1 | **Default.** Same OpenCASCADE kernel, in-process, no extra binary, no GPL exposure |
+| **Gmsh** (Python API) | **GPLv2+** | Optional backend. Best-in-class: `BoundaryLayer` (works in 2D), `Distance`/`Threshold`, `Min`/`Restrict` field algebra, `Fan` points, quads-in-BL |
+| **scikit-image** | BSD-3 | `measure.find_contours` (sub-pixel marching squares), `marching_cubes` |
+| **Shapely** | BSD-3 | `LinearRing`, `is_valid`, `is_simple`, `make_valid`, `simplify`, `buffer` |
+| **meshio** | MIT | Reliable but last release 2024-01 (PyPI) — treat as stable-frozen |
+| CadQuery / build123d, not used | Apache-2.0 (unverified) | 3D-solid-centric; overkill for a 2D (r,z) region |
+| pythonocc-core, not used | LGPLv3 (unverified) | Raw OCCT; only for BRep edge cases |
+
+**Avoid** (CON-12): MeshPy — maintained (2026.1 on PyPI) but wraps **Triangle**, whose licence states
 distribution as part of a commercial system is *"permissible ONLY BY DIRECT ARRANGEMENT WITH THE
 AUTHOR"*, and **TetGen 1.5** (AGPLv3). Also avoid **pygmsh** (last release 2022-01) and
-**pygalmesh** (2022-09), both stale — call the `gmsh` API directly instead.
+**pygalmesh** (2022-09), both stale — call the `gmsh` API directly instead. Read from the projects'
+pages (unverified).
 
 **Shapely offsetting:** `parallel_offset` is *not* removed and emits *no* DeprecationWarning in
 2.1.2 **[tested: tests/tier1/test_library_behaviour.py::test_shapely_and_skimage_contour_and_offset_facts]**, but its docstring marks it legacy in favour of `offset_curve` (different
@@ -83,8 +86,8 @@ A 90° corner moves by `δ²(1 − π/4)` in area, concave corners gaining and c
 output ring is densely sampled on its arcs, with edges of about `δπ/16`, which is why stage 4
 resamples before it measures a feature size. Measured with Shapely 2.1.2 (VER-51).
 
-**Keep MSH 4.1 as the archival interchange format** — physical groups survive round-trips there
-and get mangled in some VTU paths.
+**Keep MSH 4.1 as the archival interchange format** — physical groups survive round-trips there;
+some VTU paths are reported to lose them (unverified).
 
 **Netgen's own `.vol` round-trips boundary and material names [tested: tests/tier1/test_library_behaviour.py::test_netgen_vol_round_trip_and_read_gmsh_msh41_failure].** `mesh.ngmesh.Save(path)`
 followed by `ngsolve.Mesh(path)` returns `GetMaterials()` and `GetBoundaries()` unchanged, so a
@@ -173,14 +176,15 @@ parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
 - **The mesh netgen generates is not bit-reproducible across platforms.**
   `CylindricalPoreGeometry(2.0, 13.0, 50.0)` at `maxh = 2.0 nm`, `wall_h = 0.05 nm` meshes to
   **8141 triangles on Linux and macOS and 8147 on Windows** — same version, same options, a drift
-  of 0.07 %. The advancing front takes its decisions on floating-point comparisons, and the
+  of 0.07 % (measured on the CI matrix, not asserted: `tests/tier1/test_mesh_quality.py` pins 8141
+  within 1 %). The advancing front takes its decisions on floating-point comparisons, and the
   compiler decides those. So an element count, or a minimum element quality read to four decimals,
   is a property of the *build* and not of the geometry: assert a band on either, and keep exact
   check values for figures computed in closed form on hand-built elements. The three smaller
   phase-0 geometries (192, 811 and 124 elements) do agree exactly across all three platforms,
   which is what makes this easy to miss until a mesh is large enough to have a choice to make.
 
-**Gmsh facts, measured on 4.15.2 with netgen 6.2.2606, Linux (WSL2), 29 September 2026 [tested: tests/tier1/test_mesh_gmsh.py::test_ver54_the_same_region_passes_the_same_gates_on_both_backends]**
+**Gmsh facts, measured on 4.15.2 with netgen 6.2.2606, Linux (WSL2), 29 September 2026 [verified][^wp23-plan]**
 (WP23; the implementation is `mesh/gmsh_backend.py`, the evidence the WP23 plan's Design and
 Outcomes):
 
@@ -212,7 +216,8 @@ Outcomes):
   field the backend uses fixes that: sources `h + 0.2 d` on every sized boundary and domain
   boundary, on each vertex whose shortest curve is shorter than its curves' smallest target, and on
   the membrane at its unscaled thickness. Its minimum gamma is 0.5840, 0.5241, 0.5655 and 0.5072
-  at `size_scale` 1, 2, 4 and 8. `Mesh.MeshSizeExtendFromBoundary` 1 is the tempting shortcut. It
+  at `size_scale` 1, 2, 4 and 8, and the region passes the same gates on both backends
+  **[tested: tests/tier1/test_mesh_gmsh.py::test_ver54_the_same_region_passes_the_same_gates_on_both_backends]**. `Mesh.MeshSizeExtendFromBoundary` 1 is the tempting shortcut. It
   doubles the element count, to 95,103 at `size_scale` 1, and still gives only 0.3876 at 4.
 - **Frontal-Delaunay (`Mesh.Algorithm` 6) is the algorithm, and one thread makes the mesh
   reproducible.** With the table-only field, algorithm 5 gives 10 % more triangles at a mean gamma
@@ -252,5 +257,5 @@ Outcomes):
 ---
 
 [^meshio-541]: meshio 5.3.5, `meshio/gmsh/_gmsh41.py`: `_write_elements` writes a block under `tag_data["gmsh:geometrical"][ci][0]`, and `_write_entities` builds `$Entities` from `np.unique(point_data["gmsh:dim_tags"], axis=0)`; the cures are `src/nanopnp/mesh/adapter.py`'s `write_msh41` and `_node_entities`.
-[^wp23-plan]: `docs/plans/phase-2/wp23-gmsh-backend.md` (CI `ubuntu-latest` runtime library prerequisites for `gmsh`).
+[^wp23-plan]: `docs/plans/phase-2/wp23-gmsh-backend.md`, Design and Outcomes (the Gmsh measurements of 29 September 2026, and CI `ubuntu-latest`'s runtime library prerequisites for `gmsh`).
 

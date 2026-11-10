@@ -13,8 +13,11 @@ generated:
 # Validation and verification — the benchmark ladder
 
 Four tiers, cheapest first. Tiers 1–2 run on every push; Tier 3 nightly; Tier 4 gates releases.
-Formulas below are stated in full so an agent can implement a test without leaving this file. Each
-was checked numerically where marked `[tested: <test>]` or `[verified]`.
+`SPECIFICATION.md` §7 states each benchmark, its oracle and its tolerance; these notes point to
+those rows and keep what the specification lacks, checked where marked `[tested: <test>]` or
+`[verified]`. The measured values and why each tolerance is set are in the test-evidence notes:
+`knowledge/07-software-stack/21-…` and `22-…` (Tier 2), `knowledge/05-analyte-and-forces/13-…`
+(the force routes) and `07-tier-3-test-evidence-run-times-of-the.md` (Tier 3).
 
 ---
 

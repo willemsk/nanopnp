@@ -1,7 +1,7 @@
 ---
 type: Library Behaviour
 title: 5. GUI and packaging
-description: 'The GUI and packaging stack: PySide6, the web viewer and PyInstaller.'
+description: 'The GUI and packaging stack: NiceGUI with Mol*, the Qt shell, the web viewer and PyInstaller.'
 tags:
 - software
 - library-behaviour
@@ -9,18 +9,14 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_gui_screens.py::test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing
   at: '2026-11-08T00:00:00Z'
+- by: process:tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api
+  at: '2026-10-16T00:00:00Z'
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 sources:
 - id: wp14-plan
   resource: docs/plans/phase-1/wp14-gui-shell-packaging-probe.md
@@ -49,12 +45,19 @@ tested_with:
 
 ## 5. GUI and packaging
 
+Versions are in `uv.lock`, and the role and licence of each dependency in `SPECIFICATION.md` §2.6
+(CON-07, CON-09). Licences as the installed metadata gives them.
+
 | Tool | Licence | Note |
 |---|---|---|
-| **PySide6** 6.11.2 | LGPL-3 OR GPL-2 OR GPL-3 | **Use this.** LGPL option means no licence conflict |
-| PyQt6 | **GPL-3 only** | Avoid unless the project is GPL |
-| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[verified][^wp14-plan]**. The earlier "imports cleanly" held on a machine with the GL libraries present; see the caveat below, which is a property of the machine and not of the wheel |
+| **NiceGUI**, over **FastAPI** and **uvicorn** | MIT, MIT, BSD-3-Clause | The workbench's shell (the `gui` extra) |
+| **Mol*** | MIT | The molecule viewer, a standalone bundle loaded as separate files (`src/nanopnp/gui/web/assets/molstar/NOTICE.md`) |
+| NGSolve's `webgui` renderer | LGPL-2.1-or-later | Loaded as a separate file |
+| **PySide6** | LGPL-3 OR GPL-2 OR GPL-3 | The Qt shell; the LGPL option means no licence conflict. PySide6 leaves with the Qt shell |
+| PyQt6 | **GPL-3 only** | Avoided (CON-09) |
+| `PySide6.QtWebEngineWidgets.QWebEngineView` | — | Hosts NGSolve webgui **[verified][^wp14-plan]**, where the GL libraries are present (below) |
 | PyInstaller | — | **Chosen** for the bundle, one-dir (ADR-004, amended 20 September 2026). `collect_all` over `ngsolve`, `netgen` and `ngsolve_openblas`, plus the `netgen-occt` libraries collected by hand (below); `upx=False`, which mangles Qt WebEngine's helper executable |
+| Playwright | Apache-2.0 | The `dev` group: headless screens for the GUI tests |
 | briefcase / conda-constructor | — | The other two candidates; not used |
 
 ### PySide6 imports are a system-library question, not a wheel question **[verified][^wp14-plan]** {#pyside6-imports-are-a-system-library-question-not-a-wheel-question}
@@ -77,27 +80,11 @@ plugin works unaided and `QT_QPA_PLATFORM=offscreen` is all that is needed. Inst
 packages on a Linux gate job to work around this buys Linux coverage at the price of a portability
 promise per runner image.
 
-### A missing `libEGL.so.1` can be shimmed for local work, never for the gate **[verified][^wp14-plan]** {#a-missing-libeglso1-can-be-shimmed-for-local-work-never-for-the-gate}
-
-**Superseded on 24 October 2026.** The shim now fails at the Playwright Chromium bundle
-`/opt/pw-browsers/chromium-1243/chrome-linux64/` with `undefined symbol: eglQueryString`; see the next
-section. The text below is kept as the record of 20 September 2026.
-
-Measured 20 September 2026. The pre-installed Playwright Chromium carries a real
-`libEGL.so`, and symlinking it as `libEGL.so.1` (with `libGLESv2.so` as `libGLESv2.so.2`) into a
-scratch directory on `LD_LIBRARY_PATH` makes `from PySide6 import QtWidgets` succeed, a
-`QApplication` construct under `QT_QPA_PLATFORM=offscreen`, and the whole Qt widget suite run.
-Useful for checking widget code that would otherwise ship having never been executed.
-
-It is **not** a way to get Linux widget coverage on the push gate. It depends on a browser bundle
-that has nothing to do with this project, and CON-07's posture is that nothing on the user path
-needs a build or an install step. Widget coverage belongs on `windows-latest` and `macos-latest`,
-where Qt's platform plugin works unaided.
-
 ### Offscreen Qt runs with system libraries, and headless Playwright draws a host document **[verified][^wp501-plan]** {#offscreen-qt-runs-with-system-libraries-and-headless-playwright-draws-a-host-document}
 
-Measured 24 October 2026 in the Linux development container. Installing the system libraries makes the
-Qt imports work without a shim:
+Measured 24 October 2026 in the Linux development container. A symlinked Playwright `libEGL` and
+`libGLESv2` shim worked until then and no longer links. Installing the system libraries makes the
+Qt imports work without one:
 
 ```
 apt-get install -y --no-install-recommends libegl1 libgl1 libxkbcommon0 libnss3 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libxkbfile1 libasound2t64
@@ -231,18 +218,6 @@ shipped `webgui.js` and from the scenes the render child writes, 2 October 2026 
 fixed range has not been watched drawing in a browser here, because this container has no GPU for
 WebGL.
 
-### `QWebEngineView` can be constructed in this container with the Playwright GL shim **[verified][^wp15-plan]** {#qwebengineview-can-be-constructed-in-this-container-with-the-playwright-gl-shim}
-
-Measured 21 September 2026. With `libEGL.so.1` and `libGLESv2.so.2` symlinked from
-`/opt/pw-browsers/chromium-*/chrome-linux/` onto `LD_LIBRARY_PATH`, and
-`QT_QPA_PLATFORM=offscreen`, both `from PySide6 import QtWidgets` and
-`from PySide6.QtWebEngineWidgets import QWebEngineView` succeed and the whole Tier-1 widget suite
-runs — including a `QPainter` repaint into a `QPixmap` and a `QWebEngineView` construction.
-
-This is the §5 shim recorded above, used for the purpose that section already states: checking
-widget code that would otherwise ship having never been executed. It stays off the push gate, where
-widget coverage remains `windows-latest` and `macos-latest`.
-
 ### SIGTERM stops a child busy inside netgen in milliseconds **[verified][^cr002]** {#sigterm-stops-a-child-busy-inside-netgen-in-milliseconds}
 
 Neither netgen nor NGSolve installs a SIGTERM handler, so the signal's default action ends a
@@ -291,12 +266,11 @@ ships as package data. Static analysis collects the module but not the libraries
 `collect_all("ngsolve_openblas")` carries them. There is no macOS wheel, and `ngsolve` does not
 import it there.
 
-With both fixes, the probe bundle built here runs `--selftest` to completion on Linux under the §5
-GL shim. The unresolved-library warnings that remain in the build log are `libopenblas.so.0` and
+With both fixes, the probe bundle built here runs `--selftest` to completion on Linux (21 September 2026). The unresolved-library warnings that remain in the build log are `libopenblas.so.0` and
 the optional CUDA libraries of `_ngscuda.so`. The first is satisfied at run time by the preload;
 the second is never loaded unless a CUDA solver is asked for.
 
-### The geometry payloads bundle through `collect_all`; Gmsh's library does not **[tested: tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry]** {#the-geometry-payloads-bundle-through-collect_all-gmshs-library-does-not}
+### The geometry payloads bundle through `collect_all`; Gmsh's library does not **[verified][^wp24-plan]** {#the-geometry-payloads-bundle-through-collect_all-gmshs-library-does-not}
 
 Measured 29 September 2026 on a Linux rebuild of the probe recipe in this container (WP24 D16, D17):
 PyInstaller 6.22.3, MDAnalysis 2.10.0, gemmi 0.7.5, scikit-image 0.26.0, Shapely 2.1.2 with GEOS
@@ -324,7 +298,8 @@ and Gmsh then loads unchanged. The library is 89 MB.
 **`import gmsh` succeeds without its library.** With `libgmsh.so.4.15` removed from the built
 bundle, the import prints a warning listing the paths it searched and returns. The first call then
 raises `AttributeError: ...: undefined symbol: gmshInitialize`. A probe that only imported Gmsh
-would pass on a bundle that cannot mesh. This is why the probe exercises each payload once, and it
+would pass on a bundle that cannot mesh. This is why the probe exercises each payload once
+**[tested: tests/tier1/test_gui_probe.py::test_rsk13_the_probe_names_the_payloads_it_must_carry]**, and it
 is RSK-13's failure in its plainest form.
 
 The whole bundle is 1.3 GB, 501 MB of it PySide6, and builds in 74 s. The five exercises take
@@ -371,9 +346,8 @@ file paths, which is what lets the probe tell PROPKA's failure from PDB2PQR's.
 `--titration-state-method` removed, PDB2PQR runs cleanly and gives equal charges at pH 2 and pH 8
 (section 3). So the probe compares the two charges, and fails naming PROPKA when they are equal.
 
-In this container the frozen `--selftest` stops at Gmsh, because `libGLU.so.1` is not installed.
-The figures above come from a local build whose selftest left Gmsh out. That edit was never
-committed.
+The figures above come from a local build whose selftest left Gmsh out, because `libGLU.so.1` was
+not installed in the container.
 
 ### The geometry tab's view-models stay under the schema's cost **[verified][^wp24-plan]** {#the-geometry-tabs-view-models-stay-under-the-schemas-cost}
 
@@ -391,47 +365,7 @@ scikit-image, only inside the spawned child. A drag on the editor canvas can be 
 sending `QMouseEvent`s through `QApplication.sendEvent`: press, move, release. That is how
 `test_gui_widgets.py` asserts it.
 
-### `nanopnp.io.case` pulls in neither NGSolve nor NumPy, and costs 250–350 ms **[tested: tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing]** {#nanopnpiocase-pulls-in-neither-ngsolve-nor-numpy-and-costs-250350-ms}
-
-Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,
-`"ngsolve" in sys.modules` and `"numpy" in sys.modules` are both `False`. The cost is pydantic and
-PyYAML building the case model tree (`nanopnp/case/v1` then, `nanopnp/case/v0.6` now), paid once.
-
-So a caller can enumerate, display and validate an entire case document without the solver — which
-is what lets a schema-generated editor stay near the CLI's 56 ms stage-introspection budget in
-spirit, with NGSolve imported only in whatever process actually solves. `io/case.py` imports only
-`core` at run time: the registry checks that need `materials` and `physics` live in
-`pipeline/checks.py`. After `import nanopnp.io.case` the only `nanopnp` subpackages in
-`sys.modules` are `core` and `io` **[tested: tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing]**, 6 October 2026. `import nanopnp.pipeline.case`,
-which holds the case loader and the resolver that `Case.load` and `Session.run` call, also loads `charge`, `density`, `geometry`, `materials`,
-`mesh`, `numerics` and `physics`, and still leaves `ngsolve` and `numpy` out of `sys.modules`; that
-holds because those modules defer their own NGSolve and NumPy imports.
-
-**Re-measured 20 September 2026 on an idle container: 349 ms cold (no `__pycache__`), 253 ms warm**,
-against the 622 ms first recorded the same day. Neither cache state reproduces 622 ms here, so that
-figure was taken under load or by a different method. **Treat the absolute number as
-machine-dependent and the ratio as the fact**: importing the case schema costs roughly what one
-NGSolve import (~370 ms) costs, and the load-bearing half — neither `ngsolve` nor `numpy` in
-`sys.modules` afterwards — is re-confirmed and is not a timing claim at all.
-
-### The desktop shell's view-model layer costs what the schema costs **[tested: tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve]** {#the-desktop-shells-view-model-layer-costs-what-the-schema-costs}
-
-Measured 20 September 2026, best of three on an idle container, warm cache:
-
-| Module | Cost | What it pulls in |
-|---|---|---|
-| `nanopnp.io.case` | 253 ms | pydantic and PyYAML building the case model tree (`nanopnp/case/v1` then, `nanopnp/case/v0.6` now) |
-| `nanopnp.gui.case_model` | 251 ms | the above, and about a millisecond of its own |
-| `nanopnp.gui.run_model` | 273 ms | the above, plus `io/manifest.py` and `pipeline/run.py` |
-| `nanopnp.gui.solver` | 73 ms | `core/errors.py` and `multiprocessing`; everything else is deferred into the child |
-| `nanopnp.gui.probe` | 59 ms | `core/paths.py` only — every payload is deferred |
-| `nanopnp.cli` | 62 ms | the comparison, and the budget the deferred-import rule protects |
-
-After importing all three view-models, **none** of `PySide6`, `PyQt5`, `PyQt6`, `ngsolve`, `netgen`
-or `numpy` is in `sys.modules` — asserted in a subprocess by
-`tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve`. The
-editor therefore enumerates and validates the whole schema at the cost of the schema, and a shell
-that is only browsing a case never pays for a solver or a toolkit.
+The import costs of the case schema and the view-models are in `09-the-clis-import-budget-measured.md`.
 
 ### A NiceGUI screen is ready when Mol* has built and drawn once, and a click before then is lost **[verified][^wp502-report]** {#a-nicegui-screen-is-ready-when-mol-has-built-and-drawn-once-and-a-click-before-then-is-lost}
 
@@ -475,7 +409,7 @@ failure in the dark theme, not before. The 3D view's background is the same kind
 [^wp15-plan]: `docs/plans/phase-1/wp15-live-convergence-and-viewer.md` (`ngsolve_webgui_js` 0.2.39 npm metadata, `src/scene.ts`, and PyInstaller OCCT/OpenBLAS bundling).
 [^cr002]: `docs/code_reviews/CODE_REVIEW_002.md` (28 September 2026), F-1's refutation: SIGTERM timed on a child busy in `GenerateMesh`.
 [^wp31-probe]: `docs/plans/phase-3/wp31-gui-charge-pipeline.md`, D14 and D15 (the probe's PDB2PQR and PROPKA payloads, built 2 October 2026).
-[^wp24-plan]: `docs/plans/phase-2/wp24-gui-geometry-pipeline.md`, D16–D17 (geometry tab view-model import timings).
+[^wp24-plan]: `docs/plans/phase-2/wp24-gui-geometry-pipeline.md`, D16–D17 (the probe recipe's geometry payloads and the geometry tab view-model import timings).
 [^wp31-plan]: `git show 0ff2d619:docs/plans/wp31-gui-charge-pipeline.md`, D8 (scene colour limits and `gui_settings.autoscale`).
 [^wp501-plan]: `docs/plans/phase-5/wp5.01-workbench-design-study.md`, Grounding D1 and D4 and item 1's Outcome (offscreen Qt and headless Playwright render checks).
 [^wp502-report]: `docs/design/spike/report.md` (the framework spike's six measures and what the build taught, WP5.02 items 1 to 5).

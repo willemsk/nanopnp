@@ -186,7 +186,7 @@ AM14 REV-229.
 - [x] a6bad31 3. `knowledge/06-numerics-fem/` (D1, D2): AL17's §6 mirrors first; done when the code, review and the
   `physics-reviewer` say so. **Executor:** main
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. `knowledge/04-…`, `knowledge/05-…`, §5.2's radius-band NOTE (D1 to D4): AUD-152 first; done when the code
+- [x] b73667f 5. `knowledge/04-…`, `knowledge/05-…`, §5.2's radius-band NOTE (D1 to D4): AUD-152 first; done when the code
   and review say so and `markers.py` is clean. **Executor:** main; AUD-187 and 188's markers on `general-purpose`,
   Sonnet
 - [ ] 6. `knowledge/07-…`, `08-…`, `09-…`, VER-54 (D1 to D3): AUD-281 and 285 first; done when the code and review

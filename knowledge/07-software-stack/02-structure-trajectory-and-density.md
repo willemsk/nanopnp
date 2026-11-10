@@ -58,21 +58,23 @@ tested_with:
 
 ## 2. Structure, trajectory and density
 
-| Tool | Version | Licence | Notes |
-|---|---|---|---|
-| **MDAnalysis** | 2.10.0 | LGPLv3+ | PDB, DCD/XTC/TRR/NCDF; `analysis.align.AlignTraj`, `rotation_matrix` **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts]**. **Not mmCIF**; see below |
-| **gemmi** | 0.7.5 | MPL-2.0 | mmCIF (and PDB) reader; wheels cp311–cp314 on manylinux, musllinux, macOS and win_amd64 **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts]**, 25 Sep 2026 |
-| MDTraj | 1.11.1 | LGPLv2.1+ | Faster I/O, leaner; no density-on-grid |
-| **GridDataFormats** | 1.2.0 | LGPL | OpenDX/CCP4 I/O; `Density` subclasses `gridData.core.Grid` |
-| mdahole2 (MDAKit) | current | GPL-ish + HOLE binary academic licence | Pore-radius profile — use to *validate* the contour |
-| PDBFixer / Modeller | — | MIT / academic | Fill missing loops **before** anything else |
+Versions are in `uv.lock`, and the role and licence of each dependency in `SPECIFICATION.md` §2.6.
+
+| Tool | Licence | Notes |
+|---|---|---|
+| **MDAnalysis** | LGPLv3+ | PDB, DCD/XTC/TRR/NCDF; `analysis.align.AlignTraj`, `rotation_matrix` **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts]**. **Not mmCIF**; see below |
+| **gemmi** | MPL-2.0 | mmCIF (and PDB) reader; wheels cp311–cp314 on manylinux, musllinux, macOS and win_amd64 **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_and_gemmi_wheel_and_format_facts]**, 25 Sep 2026 |
+| MDTraj, not used | LGPLv2.1+ | Faster I/O, leaner; no density-on-grid |
+| **GridDataFormats** | LGPL-3.0-or-later | OpenDX/CCP4 I/O; `Density` subclasses `gridData.core.Grid` |
+| mdahole2 (MDAKit), not used | GPL and the HOLE binary's academic licence, from its project pages (unverified) | Pore-radius profile — use to *validate* the contour |
+| PDBFixer / Modeller, not used | MIT / academic (unverified) | Fill missing loops **before** anything else |
 
 **`DensityAnalysis` is histogram-only** (`np.histogramdd`), no kernel option **[tested: tests/tier1/test_library_behaviour.py::test_mdanalysis_density_analysis_is_histogram_only]**. The
 paper's per-atom VdW-weighted Gaussian must be written by hand. Do **not** substitute "histogram
 then `gaussian_filter`" — uniform post-smoothing rounds the constriction, whereas VdW-weighted
 smearing preserves the exclusion surface.
 
-**gridData 1.2.0, as it actually behaves [tested: tests/tier1/test_library_behaviour.py::test_griddata_exporters_mrc_float32_and_2d_refusal].** Three things a reader of the docs would not
+**gridData 1.2.0, as it actually behaves [tested: tests/tier1/test_library_behaviour.py::test_griddata_exporters_mrc_float32_and_2d_refusal].** Six things a reader of the docs would not
 predict, all found while building the `(r, z)` grid IO:
 
 - **There is no `CCP4` writer.** `file_format="ccp4"` raises `ValueError: File format CCP4 not
@@ -92,8 +94,8 @@ predict, all found while building the `(r, z)` grid IO:
 - **The reader is guessed from the extension, and `.map` has none.** `Grid("x.map")` raises
   `ValueError: File format MAP not available, choose one of dict_keys(['CCP4', 'MRC', 'DX', …])`,
   although the writer, told `file_format="MRC"`, wrote that file without complaint. Pass the
-  reader's `file_format` explicitly, from the same suffix table as the writer. `DensityMap.read`
-  exported `.map` and failed to read it back until WP25 did so **[tested: tests/tier1/test_density.py::test_ver49_map_round_trip_and_export]**, 29 September 2026.
+  reader's `file_format` explicitly, from the same suffix table as the writer, as `DensityMap.read`
+  does **[tested: tests/tier1/test_density.py::test_ver49_map_round_trip_and_export]**.
 - **It carries no length unit.** `origin` and `delta` are written as given. CCP4/MRC defines its
   cell in ångströms, and molecular viewers read OpenDX in ångströms too, so a map written in nm
   overlays its structure at a tenth of its size. The 3D density map is therefore exported in Å and
@@ -103,27 +105,8 @@ predict, all found while building the `(r, z)` grid IO:
   the box; with the axes fully transposed, 89 % of atoms read below the single-frame bound; with x
   and y alone swapped, 57 % do **[tested: tests/tier1/test_density.py::test_ver49_nm_written_map_is_refused]**, WP25, 29 September 2026.
 
-**GridDataFormats before 1.2 has no MRC writer [verified][^wp17-plan].**
-GridDataFormats 1.2.0 requires Python ≥ 3.11, so a Python 3.10 resolver takes **1.0.2**, whose
-`Grid()._exporters` registry is `DX, PKL, PICKLE, PYTHON` — no `MRC` and no `VDB`. Its `_loaders`
-registry *does* carry `CCP4, DX, MRC, PLT, PKL, PICKLE, PYTHON`, and `gridData.mrc` imports on both,
-so **reading** MRC and CCP4 works on 1.0.2 and only **writing** them does not. Measured by running
-each version: `griddataformats==1.0.2` on 3.10 exports a `(4, 3, 1)` grid to DX and refuses MRC with
-`ValueError: File format MRC not available`; 1.2.0 on 3.12 does both.
-
-Two consequences for anything that writes these formats across versions of gridData:
-
-- `hasattr(gridData, "mrc")` and the module version are both **the wrong capability test** — the
-  first is true on 1.0.2 and the second is a proxy. `Grid()._exporters` is the registry
-  `Grid.export` itself looks the format up in, so it is the only authoritative answer. It is
-  private; guard the read and fall back to translating the `ValueError`.
-- A test guarded on "is gridData importable?" passes on 3.10 and then fails inside the writer. Guard
-  on **writer availability**.
-
-**The 3.11 floor makes this moot [verified][^wp17-plan].** With `requires-python = ">=3.11"` and
-`GridDataFormats>=1.2`, every supported interpreter resolves to 1.2.0 and writes MRC, so the code has
-no writer-availability branch (§8.2.2 B4). The facts above describe 1.0.2, should an older
-environment turn up.
+**GridDataFormats ≥ 1.2, which needs Python ≥ 3.11, has the MRC writer; below 1.2 there is none
+[verified][^wp17-plan]**, so the 3.11 floor leaves the code no writer-availability branch (§8.2.2 B4).
 
 **Symmetry-axis detection:** do not use raw principal axes. Use **chain-permutation
 superposition**: superpose chain A onto chain B, and the rotation's eigenvector with eigenvalue 1
@@ -135,8 +118,7 @@ the Cα set:
 
 - **The axial eigenvalue is well separated.** The Cα covariance eigenvalues are 801, 881 and
   1432 Å² on frame 0, and 794, 809 and 1416 Å² on 2WCD. The two *perpendicular* eigenvalues are
-  near-degenerate, which does not affect the axis. The earlier wording, "near-degenerate inertia
-  axes", was wrong about the cause.
+  near-degenerate, which does not affect the axis.
 - **The principal axis still drifts.** Across the frames it moves by up to 1.54° (rms 0.66°), and
   it differs from the permutation axis by up to 1.54° (mean 0.74°). The cause is the chains'
   asymmetric fluctuation.
@@ -225,10 +207,10 @@ with scratch prototypes while planning WP19. They are not the implementation, an
   width reads 8.7e-4. Subtracting the binned mean, as an even cubic spline evaluated at each cell's
   own radius, brings those to 3.6e-6 and 2.0e-8. Linear interpolation brings the C12 figure only
   to 5.4e-6.
-- **The Cₙ average is a projection [tested: tests/tier1/test_reduction.py::test_ver50_off_axis_gaussian_closed_forms].** In the angular harmonic basis, averaging n rotated
+- **The Cₙ average is a projection.** In the angular harmonic basis, averaging n rotated
   copies multiplies `c_m` by `[n | m]`. It therefore leaves the azimuthal mean unchanged and needs
   no rotated map. Against the closed form `2E²Σ I_{kn}(β)²` for a C12 ring of Gaussians, the peak
-  variance came out −0.3 to −0.7 % by harmonic projection, −1.4 to −2.4 % from exactly rotated
+  variance came out −0.3 to −0.7 % by harmonic projection **[tested: tests/tier1/test_reduction.py::test_ver50_off_axis_gaussian_closed_forms]**, −1.4 to −2.4 % from exactly rotated
   copies binned, and −3.3 to −6.1 % from `scipy.ndimage.map_coordinates(order=1)` rotation. The
   bilinear route is biased low, and its k = 0, 3, 6 and 9 copies are exact while the other eight are
   smoothed.

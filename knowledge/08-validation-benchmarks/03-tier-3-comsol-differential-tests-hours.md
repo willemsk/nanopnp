@@ -37,7 +37,7 @@ verified:
 
 ## Tier 3 — COMSOL differential tests (hours, nightly)
 
-The oracle tier, available because the author retains a COMSOL licence.
+The field-oracle tier, optional while the author's COMSOL licence lasts (RSK-14).
 
 > **Scope** (`SPECIFICATION.md` §8.2.4 D6). The comparison that gates v0.7
 > is against the paper's *published* current–voltage relationships and in-pore averages (VAL-16,
@@ -51,9 +51,7 @@ solutions — `φ`, `c_i`, `u`, `p` sampled on a common probe grid — plus ever
 **Acceptance: < 1 % relative L² on fields, < 0.5 % on integrated QoIs.**
 
 Golden files stored as compressed arrays with the generating COMSOL model archived alongside.
-
-> **Treat the oracle as a depreciating asset.** Generate and archive the full reference set
-> *early*, in the solver-core phase, so the project stays verifiable if licence access ever lapses.
+The measured values and why each tolerance is set: `knowledge/08-validation-benchmarks/07-tier-3-test-evidence-run-times-of-the.md`.
 
 **Differential-test design.** Because the corrections are independently switchable, the most
 informative comparisons are *ablations*: classical PNP-NS, then each correction family enabled
@@ -119,8 +117,7 @@ is the axis and not the patch's point count.
 for **any** four numbers. It is worth asserting — it fails if the deltas are formed or assigned
 wrongly — but it cannot detect a rung compared against a re-exported golden or an edited probe
 grid, which telescope exactly as cleanly. Those need the hashes compared directly, and the retained
-point count per field compared between rungs. The WP13 plan's decision row claimed the identity did
-that job; it does not.
+point count per field compared between rungs.
 
 Its round-off is not absolute. An `E_k` is a relative error and exceeds 10 wherever the golden is
 small, and the round-off of the telescoped sum grows with it: over 100k random draws an absolute
