@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError, model_validator
 
 from nanopnp.io.store import atomic_write_bytes
 
@@ -63,12 +63,20 @@ class _Strict(BaseModel):
 
 
 class SuiteLayout(_Strict):
-    """How one suite's window is divided, saved with the project."""
+    """How one suite's window is divided, in pixels, saved with the project."""
 
-    rail_percent: float = Field(default=18.0, gt=0.0, lt=100.0)
-    bottom_percent: float = Field(default=25.0, gt=0.0, lt=100.0)
+    rail_px: int = Field(default=240, ge=160, le=480)
+    bottom_px: int = Field(default=220, ge=120, le=560)
     rail_folded: bool = False
     bottom_folded: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_percentages(cls, data: object) -> object:
+        # An earlier release saved the sizes in percent of the window; they restart at the defaults.
+        if isinstance(data, Mapping):
+            return {k: v for k, v in data.items() if k not in ("rail_percent", "bottom_percent")}
+        return data
 
 
 class Library(_Strict):

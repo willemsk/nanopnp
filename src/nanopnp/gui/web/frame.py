@@ -16,7 +16,7 @@ from nanopnp.core.paths import remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.overlay import Overlay
-from nanopnp.gui.web.screens import SUITES
+from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench
 from nanopnp.io.defaults import Change
@@ -32,9 +32,11 @@ KINDS: tuple[tuple[ItemKind, str], ...] = (
     ("comparison", "Comparisons"),
 )
 PANELS = ("queue", "log", "changes", "problems")
-RAIL_FOLDED_PERCENT = 4.0
-RAIL_LIMITS = (RAIL_FOLDED_PERCENT, 40.0)
-BOTTOM_LIMITS = (40.0, 100.0)
+BAR_PX = 88
+"""The activity bar's width; the drawer is the bar and the rail."""
+FOLDED_RAIL_PX = 32
+RAIL_PX = (160, 480)
+BOTTOM_PX = (120, 560)
 GLOSSARY = (
     ("Project", "A folder of models, studies, comparisons, inputs, runs and stored results."),
     (
@@ -70,12 +72,11 @@ class _Frame:
         self.suite = suite
         project = shell.bench.project
         layout = project.layout.get(suite, SuiteLayout()) if project else SuiteLayout()
-        self.layout = layout
-        self.rail_folded = layout.rail_folded
-        self.bottom_folded = layout.bottom_folded and panel is None
+        self.layout = layout.model_copy(
+            update={"bottom_folded": layout.bottom_folded and not panel}
+        )
         self.panel = panel if panel in PANELS else "queue"
-        self.outer: ui.splitter
-        self.inner: ui.splitter
+        self.drawer: ui.left_drawer
         self.tabs: ui.tabs
         self.dialog: ui.dialog
         self.palette: ui.dialog
@@ -86,6 +87,7 @@ class _Frame:
         self._listed: list[tuple[str, tuple[Change, ...]]] | None = None
         self._problems: tuple[Problem, ...] | None = None
         self.fold_button: ui.button
+        self.dark: ui.dark_mode
         self.toggle_button: ui.button
         self.actions: dict[str, Callable[[], object]] = {
             "palette": self.open_palette,
@@ -194,54 +196,66 @@ class _Frame:
 
     def save_layout(self) -> None:
         project = self.shell.bench.project
-        if project is None:
-            return
-        rail = self.layout.rail_percent
-        bottom = self.layout.bottom_percent
-        if not self.rail_folded:
-            rail = min(max(float(self.outer.value), RAIL_LIMITS[0] + 1.0), RAIL_LIMITS[1])
-        if not self.bottom_folded:
-            bottom = min(max(100.0 - float(self.inner.value), 1.0), 100.0 - BOTTOM_LIMITS[0])
-        self.layout = SuiteLayout(
-            rail_percent=rail,
-            bottom_percent=bottom,
-            rail_folded=self.rail_folded,
-            bottom_folded=self.bottom_folded,
-        )
-        project.save_layout(self.suite, self.layout)
+        if project is not None:
+            project.save_layout(self.suite, self.layout)
+
+    def drawer_width(self) -> int:
+        return BAR_PX + self.layout.rail_px
 
     def apply_layout(self) -> None:
-        self.outer.value = RAIL_FOLDED_PERCENT if self.rail_folded else self.layout.rail_percent
-        self.inner.value = 100.0 if self.bottom_folded else 100.0 - self.layout.bottom_percent
-        self.panel_root.set_visibility(not self.bottom_folded)
-        self.fold_button.props(f"aria-expanded={str(not self.rail_folded).lower()}")
-        self.toggle_button.props(f"aria-expanded={str(not self.bottom_folded).lower()}")
+        self.drawer.props(f"width={self.drawer_width()} mini-width={BAR_PX + FOLDED_RAIL_PX}")
+        if self.layout.rail_folded:
+            self.drawer.props("mini")
+        else:
+            self.drawer.props(remove="mini")
+        self.panel_root.style(f"height:{self.layout.bottom_px}px")
+        self.panel_root.set_visibility(not self.layout.bottom_folded)
+        expanded = str(not self.layout.rail_folded).lower()
+        self.fold_button.props(f"aria-expanded={expanded}")
+        self.fold_button.props(
+            f"icon={'chevron_left' if not self.layout.rail_folded else 'chevron_right'}"
+        )
+        self.toggle_button.props(f"aria-expanded={str(not self.layout.bottom_folded).lower()}")
+
+    def on_separator(self, event: events.GenericEventArguments) -> None:
+        name, value, done = str(event.args["name"]), int(event.args["value"]), event.args["done"]
+        if name == "rail":
+            low, high = RAIL_PX
+            self.layout = self.layout.model_copy(update={"rail_px": min(max(value, low), high)})
+        elif name == "panel":
+            low, high = BOTTOM_PX
+            self.layout = self.layout.model_copy(update={"bottom_px": min(max(value, low), high)})
+        else:
+            return
+        self.apply_layout()
+        # Saved on release only: a drag is many steps, and the project file is written once.
+        if done:
+            self.save_layout()
 
     def fold_rail(self) -> None:
-        self.rail_folded = not self.rail_folded
+        self.layout = self.layout.model_copy(update={"rail_folded": not self.layout.rail_folded})
         self.apply_layout()
         self.save_layout()
-        ui.navigate.reload()
 
     def toggle_panel(self) -> None:
-        self.bottom_folded = not self.bottom_folded
+        self.layout = self.layout.model_copy(
+            update={"bottom_folded": not self.layout.bottom_folded}
+        )
         self.apply_layout()
         self.save_layout()
 
     def show_panel(self, name: str) -> None:
         self.tabs.value = name
-        if self.bottom_folded:
+        if self.layout.bottom_folded:
             self.toggle_panel()
 
     def reset_layout(self) -> None:
-        self.layout = SuiteLayout()
-        self.rail_folded, self.bottom_folded = self.layout.rail_folded, self.layout.bottom_folded
+        self.layout = SuiteLayout(bottom_folded=self.layout.bottom_folded)
         self.apply_layout()
         project = self.shell.bench.project
         if project is not None:
             for suite in SUITES:
-                project.save_layout(suite.id, self.layout)
-        ui.navigate.reload()
+                project.save_layout(suite.id, SuiteLayout())
 
     # -- the palette --------------------------------------------------------
 
@@ -316,45 +330,67 @@ class _Frame:
             ).props("flat no-caps data-control=palette-open")
 
     def activity_bar(self) -> None:
-        with ui.column().classes("activitybar gap-0"):
-            for suite in SUITES:
-                current = suite.id == self.suite
-                ui.button(suite.title, on_click=self.go(f"/{suite.id}")).props(
-                    f"flat no-caps data-control=suite-{suite.id}"
-                    + (' aria-current="page"' if current else "")
-                ).classes("suite-button")
+        with ui.column().classes("activitybar items-center"):
+            for group, title in GROUPS.items():
+                with (
+                    ui.element("div")
+                    .classes("suite-group")
+                    .props(f'role=group aria-label="{title}"')
+                ):
+                    ui.label(title).classes("suite-group-title").props("aria-hidden=true")
+                    for suite in SUITES:
+                        if suite.group != group:
+                            continue
+                        current = suite.id == self.suite
+                        ui.button(
+                            suite.title, icon=suite.icon, on_click=self.go(f"/{suite.id}")
+                        ).props(
+                            f"flat no-caps stack data-control=suite-{suite.id}"
+                            + (' aria-current="page"' if current else "")
+                        ).classes("suite-button")
+
+    def separator(self, name: str, *, vertical: bool, value: int, limits: tuple[int, int]) -> None:
+        label = "Resize the project rail" if vertical else "Resize the bottom panel"
+        ui.element("div").classes(
+            f"separator separator-{'vertical' if vertical else 'horizontal'}"
+        ).props(
+            f"role=separator tabindex=0 data-separator={name} "
+            f"aria-orientation={'vertical' if vertical else 'horizontal'} "
+            f"aria-valuemin={limits[0]} aria-valuemax={limits[1]} aria-valuenow={value} "
+            f'aria-label="{label}" data-control=separator-{name}'
+        )
 
     def rail(self) -> None:
         bench = self.shell.bench
         project = bench.project
         with ui.column().classes("rail gap-1").props("data-control=rail"):
-            self.fold_button = ui.button(
-                icon="chevron_left" if not self.rail_folded else "chevron_right",
-                on_click=self.fold_rail,
-            ).props("flat dense aria-label='Fold the project rail' data-control=rail-fold")
-            if self.rail_folded:
-                if project is not None and project.current:
-                    ui.label(project.current.split("/")[-1][:1].upper()).props(
-                        f'title="{project.current}"'
-                    )
-                return
-            if project is None:
-                ui.label("No project open.").classes("muted")
-                for identifier in ("project-new", "project-open"):
-                    ui.button(
-                        commands.command(identifier).title, on_click=self.actions[identifier]
-                    ).props(f"flat dense no-caps data-control={identifier}").classes("w-full")
-                return
-            ui.label(project.current or "No item open").classes("rail-open")
-            for kind, title in KINDS:
-                ui.label(title).classes("rail-heading")
-                suite = ITEM_SUITES[kind]
-                for name in project.items(kind):
-                    item = f"{kind}/{name}"
-                    ui.button(name, on_click=lambda _, i=item, s=suite: self.open_item(i, s)).props(
-                        "flat dense no-caps"
-                        + (' aria-current="true"' if item == project.current else "")
-                    ).classes("rail-item list-row w-full")
+            self.fold_button = ui.button(on_click=self.fold_rail).props(
+                "flat dense aria-label='Fold the project rail' data-control=rail-fold"
+            )
+            if project is not None and project.current:
+                ui.label(project.current.split("/")[-1][:1].upper()).props(
+                    f'title="{project.current}"'
+                ).classes("q-mini-drawer-only")
+            with ui.column().classes("q-mini-drawer-hide w-full gap-1"):
+                if project is None:
+                    ui.label("No project open.").classes("muted")
+                    for identifier in ("project-new", "project-open"):
+                        ui.button(
+                            commands.command(identifier).title, on_click=self.actions[identifier]
+                        ).props(f"flat dense no-caps data-control={identifier}").classes("w-full")
+                    return
+                ui.label(project.current or "No item open").classes("rail-open")
+                for kind, title in KINDS:
+                    ui.label(title).classes("rail-heading")
+                    suite = ITEM_SUITES[kind]
+                    for name in project.items(kind):
+                        item = f"{kind}/{name}"
+                        ui.button(
+                            name, on_click=lambda _, i=item, s=suite: self.open_item(i, s)
+                        ).props(
+                            "flat dense no-caps"
+                            + (' aria-current="true"' if item == project.current else "")
+                        ).classes("rail-item list-row w-full")
 
     def open_item(self, item: str, suite: str) -> None:
         project = self.shell.bench.project
@@ -380,7 +416,8 @@ class _Frame:
 
     def bottom_panel(self) -> None:
         with ui.column().classes("bottom-panel w-full gap-0") as self.panel_root:
-            with ui.tabs().props("align=left").classes("w-full") as self.tabs:
+            self.separator("panel", vertical=False, value=self.layout.bottom_px, limits=BOTTOM_PX)
+            with ui.tabs().props("align=left no-caps dense").classes("w-full") as self.tabs:
                 for name in PANELS:
                     ui.tab(name, label=name.capitalize()).props(f"data-control=panel-tab-{name}")
             self.tabs.set_value(self.panel)
@@ -486,31 +523,27 @@ def frame(
         f"<script>window.frameChords = {theme.script_json(commands.chords(shell.keys))};"
         f"{theme.appearance(shell.settings)}</script>"
     )
+    colours()
+    built.dark = ui.dark_mode(theme.dark(shell.settings))
+    built.overlay.applied = lambda: built.dark.set_value(theme.dark(shell.settings))
     ui.on("command", built.on_command)
-    with ui.element("div").classes("frame"):
+    ui.on("separator", built.on_separator)
+    with ui.header(elevated=False).classes("frame-header q-pa-none"):
         built.title_bar()
-        with ui.element("div").classes("frame-main"):
+    with (
+        ui.left_drawer(value=True, fixed=True)
+        .classes("frame-drawer q-pa-none")
+        .props("behavior=desktop persistent") as built.drawer
+    ):
+        with ui.element("div").classes("drawer-row"):
             built.activity_bar()
-            with ui.splitter(
-                value=RAIL_FOLDED_PERCENT if built.rail_folded else built.layout.rail_percent,
-                limits=RAIL_LIMITS,
-                on_change=lambda: built.save_layout(),
-            ).classes("frame-split") as built.outer:
-                with built.outer.before:
-                    built.rail()
-                with built.outer.after:
-                    with ui.splitter(
-                        horizontal=True,
-                        value=100.0 if built.bottom_folded else 100.0 - built.layout.bottom_percent,
-                        limits=BOTTOM_LIMITS,
-                        on_change=lambda: built.save_layout(),
-                    ).classes("frame-split") as built.inner:
-                        with built.inner.before:
-                            with ui.element("div").classes("suite-main"):
-                                yield
-                        with built.inner.after:
-                            built.bottom_panel()
+            built.rail()
+        built.separator("rail", vertical=True, value=built.layout.rail_px, limits=RAIL_PX)
+    with ui.footer(elevated=False).classes("frame-footer q-pa-none column no-wrap"):
+        built.bottom_panel()
         built.status_bar()
+    with ui.element("div").classes("suite-main"):
+        yield
     built.palette_dialog()
     built.overlay.build()
     built.apply_layout()
@@ -518,3 +551,18 @@ def frame(
         built.open_palette()
     if dialog == "settings":
         built.overlay.open()
+
+
+def colours() -> None:
+    """Point Quasar's colour variables at the theme's tokens, so every component takes them."""
+    ui.colors(
+        primary="var(--accent)",
+        secondary="var(--muted)",
+        accent="var(--accent)",
+        dark="var(--panel)",
+        dark_page="var(--bg)",
+        positive="var(--ok)",
+        negative="var(--err)",
+        info="var(--accent)",
+        warning="var(--warn)",
+    )
