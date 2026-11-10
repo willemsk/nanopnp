@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,310. By source: history ruling 329; plan decision row 657; REV row 233; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
+Rows: 1,317. By source: history ruling 329; plan decision row 664; REV row 233; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 12.
 
-By decider: author 512; open 5; session, own call 790; session, put to the author 3.
+By decider: author 519; open 5; session, own call 790; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1013,6 +1013,13 @@ By decider: author 512; open 5; session, own call 790; session, put to the autho
 | WP5.13 D4 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `ModelFile.body` is the merge layer: the owned keys without `HEADER_KEYS`, rebased beside the file unless `rebase=False`. `read_model_file(kind, path, *, rebase=True, source=None)` replaces `_read_model_file` and `check…` | unstated | delivered plan |
 | WP5.13 D5 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | `io/models.py:split_case_layers(raw, *, pinned)` splits a case by `owner_of`, using the module's `_put`. `Project._split` calls it, and `api/project.py:_put` goes. `mapping_changes` skips each path whose first component… | unstated | delivered plan |
 | WP5.13 D6 | author | `docs/plans/phase-5/wp5.13-case-and-model-files.md` | 2026-11-10 | WP5.13 | No artefact key, golden, layering edge or public name changes. `modularity-layering.yaml` and `nanopnp.PUBLIC` are untouched. Only the two substitution messages change \| AL22, ruled by the author; VER-61, VER-62, VER-72… | VER-61, VER-62, VER-72 | delivered plan |
+| WP5.14 D1 | author | `docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md` | 2026-11-10 | WP5.14 | `sweep/plan.py:build_plan(document, *, source=None, base=None, check_meshes=True)`. Given `base`, it reads no file: it checks the model files, and resolves the members, beside `base.models_record.base` for a study and b… | unstated | plan in flight |
+| WP5.14 D2 | author | `docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md` | 2026-11-10 | WP5.14 | `SweepPlan` gains `_resolved_members` and `_resolved_beside`, fields with `compare=False, repr=False`. `resolved_members` returns them while `_resolved_beside == base_path.parent`, else runs `base_case()` once, resolves… | unstated | plan in flight |
+| WP5.14 D3 | author | `docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md` | 2026-11-10 | WP5.14 | `run_point` calls `plan.base_case()` before every member, as today, then takes its point and its parent from `held_member`, or resolves only those two. `run_document`, `stored_upstream` and `Session._walk` take `resolve…` | §5.3.4 | plan in flight |
+| WP5.14 D4 | author | `docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md` | 2026-11-10 | WP5.14 | `Session._walk` and `Session._member` stay; `_walk` forwards `resolved` \| D2.4 and C2.4, ruled by the author on 7 November 2026 \| | unstated | plan in flight |
+| WP5.14 D5 | author | `docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md` | 2026-11-10 | WP5.14 | `_Walk.keyed(name)` builds a stage to key only, with the store where it takes one and never a workspace; `_Walk.stored(name, key) -> tuple[bool, Artefact | None]` looks it up. `stored_upstream` and `keyed_walk` build a… | unstated | plan in flight |
+| WP5.14 D6 | author | `docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md` | 2026-11-10 | WP5.14 | `FORECAST_SCHEMA`, `Identity`, `_NotBuiltPayload`, `_standing_in` and `keyed_walk` move into `pipeline/run.py`, whose `__all__` gains the three public names; `pipeline/forecast.py` goes; `sweep/forecast.py` imports from… | unstated | plan in flight |
+| WP5.14 D7 | author | `docs/plans/phase-5/wp5.14-sweep-planning-and-the-walks-keying.md` | 2026-11-10 | WP5.14 | No artefact key, golden, layering edge, public name or command output changes. §5.3.4 says what a run in another process resolves \| AL22, ruled by the author; VER-61, VER-62, VER-72; decided by the plan for what is chec… | §5.3.4, VER-61, VER-62, VER-72 | plan in flight |
 | REV-01 | session, own call | `docs/project/review-findings.md` |  | WP37 | TOL_NM's home loaded pydantic and yaml | WP37 | fixed |
 | REV-02 | session, own call | `docs/project/review-findings.md` |  | WP37 | cli/errors.py was a re-export nothing imported | WP37 | fixed |
 | REV-03 | session, own call | `docs/project/review-findings.md` |  | WP38 | The solution-field names lived in two layers | WP38 | fixed |
