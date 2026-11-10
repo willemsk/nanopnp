@@ -19,6 +19,7 @@ from nanopnp.core.stages import (
     describe,
 )
 from nanopnp.io.artefact import Artefact, StageInputs
+from nanopnp.io.store import READ_MARK
 from nanopnp.pipeline.case import loads_case, resolve
 
 MINIMAL = """
@@ -256,7 +257,12 @@ def test_fr27_the_upstream_lookup_keys_own_stages_as_the_walk_does(tmp_path: Pat
     run = session.run(case, upto="tally")
     expected = {record.name: record.hash for record in run.stages if record.name != "tally"}
     assert "elements" in expected
-    before = sorted(session.store.root.rglob("*"))
+
+    # A lookup reads: it may move a read mark, and it builds nothing.
+    def held() -> list[Path]:
+        return sorted(p for p in session.store.root.rglob("*") if p.name != READ_MARK)
+
+    before = held()
     base = case.source.base
     for given in (None, resolve(case, base=base)):
         upstream = stored_upstream(
@@ -268,4 +274,4 @@ def test_fr27_the_upstream_lookup_keys_own_stages_as_the_walk_does(tmp_path: Pat
             resolved=given,
         )
         assert {name: artefact.hash for name, artefact in upstream.items()} == expected
-    assert sorted(session.store.root.rglob("*")) == before
+    assert held() == before

@@ -19,7 +19,7 @@ from nanopnp.core.hashing import (
     short,
 )
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
-from nanopnp.io.store import STALE_STAGING_SECONDS, Store, StoreError
+from nanopnp.io.store import READ_MARK, STALE_STAGING_SECONDS, Store, StoreError
 
 FIXTURE = {
     "bias_V": 0.1,
@@ -216,7 +216,9 @@ def test_ver23_store_writes_are_atomic(tmp_path: Path) -> None:
     artefact = Artefact(schema=SOLUTION_SCHEMA, parameters=FIXTURE)
     store.put(artefact)
     directory = store.location(SOLUTION_SCHEMA, artefact.hash)
-    assert sorted(path.name for path in directory.iterdir()) == ["meta.json"]
+    assert sorted(path.name for path in directory.iterdir() if path.name != READ_MARK) == [
+        "meta.json"
+    ]
     record = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
     assert record["hash"] == artefact.hash
     assert "created_at" in record
@@ -287,7 +289,8 @@ def _assert_one_consistent_entry(store: Store, *returned: Artefact) -> None:
     record = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
     for name, entry in record["payload"].items():
         assert file_hash(directory / entry["file"]) == entry["sha256"], name
-    assert sorted(path.name for path in directory.iterdir()) == ["fields.bin", "meta.json"]
+    held = sorted(path.name for path in directory.iterdir() if path.name != READ_MARK)
+    assert held == ["fields.bin", "meta.json"]
     assert not stored.hand_substituted
     for artefact in returned:
         assert artefact.payload == stored.payload
@@ -450,7 +453,7 @@ def test_ver26_two_processes_race(tmp_path: Path) -> None:
 def test_ver26_a_put_whose_entry_cannot_be_read_back_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(Store, "get", lambda self, schema, digest: None)
+    monkeypatch.setattr(Store, "get", lambda self, schema, digest, **_: None)
     with pytest.raises(StoreError, match="is not in the store after its put"):
         _put_with_payload(Store(tmp_path / "store"), tmp_path / "src", b"x")
 

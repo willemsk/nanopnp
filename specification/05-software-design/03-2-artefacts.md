@@ -136,5 +136,20 @@ removes, the entries an older release wrote (`Store.stale`, `Store.remove`, `nan
 stage writes now or one of the two auxiliary schemas, and its version is lower, compared as numbers. An
 entry of a newer version, which a newer release wrote into a shared store, and every `nanopnp/stage/`
 entry of a stage of one's own, are never stale. Listing reports each entry's schema, key, path and
-size; the command prints the count and the total size, and removes nothing without `--remove`. Current
-entries that no run uses are not removed.
+size; the command prints the count and the total size, and removes nothing without `--remove`.
+
+NOTE (the store's clean-up, FR-27; WP5.15; §8.2.38 AN5, AN6): every read of an entry (`Store.get`,
+`Store.contains`) touches its `last-read` file, whose time orders the entries; a forecast's keying
+(`keyed_walk`) reads nothing and touches none. `Store.evict` removes the entries outside a kept set, the
+least recently read first, until the store holds at most a given size, or all of them. An entry is renamed to
+a hidden name before it is deleted, so a reader finds it whole or not at all, and a hidden directory, a put's
+staging or a removal under way, is never an entry. A project (`Project.clean_store`) keeps every entry a run
+record or a sweep member names, every entry a walk the window shows names, and every entry their records name
+as inputs, transitively. It has two clean-ups: the **unused**, which removes every other entry, and
+**everything**, after which a run whose results are gone rebuilds them when it next needs them. The project's
+size cap (`store_cap_gb`) applies the unused clean-up, least recently read first, after each walk the
+workbench starts and on opening the project, so it never removes a result a run holds. **Every walk holds
+the store's lock** (`Store.using`), a file lock in `<store>/.locks/` that any program on the machine sees; a
+clean-up (`Store.cleaning`, which `Store.evict` and `Store.remove` hold) that finds one held raises
+`StoreBusy` and removes nothing, and a walk that starts during a clean-up waits for it. A lock a killed
+program left is cleared by the next clean-up. A store that cannot be written takes no lock.

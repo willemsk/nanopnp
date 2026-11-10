@@ -558,6 +558,7 @@ class _Walk:
     scratch: Path | None = None
     overwrite_workspace: bool = False
     own: Mapping[str, FunctionStage] = field(default_factory=dict)
+    mark: bool = True
 
     def describe(self, name: str) -> StageDescription:
         found = self.own.get(name)
@@ -599,8 +600,8 @@ class _Walk:
 
     def stored(self, name: str, key: Artefact) -> tuple[bool, Artefact | None]:
         if self.describe(name).key_is_artefact:
-            return self.store.contains(key), key
-        found = self.store.get(key.schema, key.hash)
+            return self.store.contains(key, mark=self.mark), key
+        found = self.store.get(key.schema, key.hash, mark=self.mark)
         return found is not None, found
 
 
@@ -1127,18 +1128,19 @@ def run_document(  # noqa: PLR0913
         own=dict(stages or {}),
     )
     try:
-        return _walk(
-            walk,
-            upto=upto,
-            case_text=case_text,
-            case_path=case_path,
-            write=write,
-            progress=progress,
-            cancel=cancel,
-            on_stage=on_stage,
-            on_solve=on_solve,
-            on_artefact=on_artefact,
-        )
+        with target.using():
+            return _walk(
+                walk,
+                upto=upto,
+                case_text=case_text,
+                case_path=case_path,
+                write=write,
+                progress=progress,
+                cancel=cancel,
+                on_stage=on_stage,
+                on_solve=on_solve,
+                on_artefact=on_artefact,
+            )
     finally:
         if walk.scratch is not None:
             # Store.put copied every payload a stage wrote here into the store,
@@ -1230,6 +1232,8 @@ def keyed_walk(
     hash. ``planned`` collects the hashes the forecast builds, across points.
     """
     walk = _keying_walk(resolved, store, stages)
+    # A forecast reads nothing, so it leaves the order a clean-up removes entries in alone.
+    walk.mark = False
     identities: dict[str, Identity] = {}
     for name in selected_stages(resolved, None, stages=walk.own):
         description = walk.describe(name)
