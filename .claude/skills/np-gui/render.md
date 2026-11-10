@@ -28,13 +28,29 @@ with four entries per page:
 A choice panel is a fragment, small enough to judge on a phone. It gets two entries, `[960, 640]`,
 light and dark. Then run `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <r>`.
 
-**`shell`**, the browser workbench: `uv run python .claude/scripts/gui/render_shell.py <r>`. It starts
-`nanopnp gui --no-browser --state <name>` for each state of `nanopnp.gui.web.states.STATES`, writes
-`<r>/manifest.json` with an entry for each screen of `nanopnp.gui.web.screens.SCREENS` in each state, light
-and dark (`[1280, 800]`; id `shell-<state>-<screen>-<scheme>`), runs `shoot.cjs` over it and stops the
-servers. Each entry waits for the screen's `data-screen-ready`, as the workbench sets it once Mol* has
-drawn. Needs Playwright through `NODE_PATH` and the `gui` extra. The first run in a container takes a few
-minutes: the states walk their cases.
+**`shell`**, the browser workbench: `uv run python .claude/scripts/gui/render_shell.py [--only <group> ...] <r>`.
+It writes `<r>/manifest.json`, runs `shoot.cjs` over it and stops its servers. Every shot is light and dark
+(`[1280, 800]`), and each waits for the screen's `data-screen-ready`, as the workbench sets it once Mol* has
+drawn. Four groups, all by default:
+
+- `states`: each screen of `nanopnp.gui.web.screens.SCREENS` in each state of `nanopnp.gui.web.states.STATES`
+  (`shell-<state>-<screen>-<scheme>`).
+- `2wcd`: each screen of a project holding example 07's 2WCD dodecamer, which `server --project` walks to its
+  charge (`shell-2wcd-<screen>-<scheme>`). The script keeps it in `cache/2wcd-<12 hex of sha256(case,
+  structure)>/` beside `<r>`: the prepared PDB, the case and the project, built in a temporary sibling and
+  renamed. It prints on stderr whether it built or reused the cache. The first walk fills the project's store,
+  so the second render reads the charge from it and the 2WCD part takes under half the time. Give every render
+  one parent folder to share it.
+- `extra`: the states of REV-210 on the charged fixture (`shell-extra-<name>-<scheme>`): the New, Open, Import
+  and Export dialogs, the File, View and Help menus, a folded rail, the Queue and Log tabs, the settings'
+  Colours section, the 3D background setting, a key being captured, a typed palette query, the Glossary and
+  About. A manifest entry's `click` lists selectors that `shoot.cjs` clicks in order once the page is ready.
+- `compact`: molecular, settings and changes under a second config folder (`NANOPNP_CONFIG`, `<r>/config`) that
+  holds `workbench.yaml` with compact density and tight spacing, and a theme of the user's own
+  (`shell-compact-<screen>-<scheme>`). The theme is dark, so its light shots are dark too.
+
+Needs Playwright through `NODE_PATH` and the `gui` extra. A first run takes about seven minutes: the states
+walk their cases and the 2WCD project walks a dodecamer.
 
 `shoot.cjs` finds Playwright through `NODE_PATH`; `node .claude/scripts/gui/shoot.cjs --self-check
 <s>/selfcheck` checks the browser renders a WebGL page.

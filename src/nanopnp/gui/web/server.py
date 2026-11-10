@@ -31,7 +31,7 @@ from nanopnp.core.public import __version__
 from nanopnp.gui.web import settings
 from nanopnp.gui.web.pages import install
 from nanopnp.gui.web.shell import Shell
-from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case, cap_store
+from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case, boot_project, cap_store
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -208,6 +208,7 @@ _DEV_ENVIRONMENT = (
     "NANOPNP_GUI_CASE",
     "NANOPNP_GUI_STATE",
     "NANOPNP_GUI_PROJECT",
+    "NANOPNP_GUI_WALK",
 )
 
 
@@ -219,9 +220,18 @@ def _watch_input(server: uvicorn.Server | None) -> None:
         os.kill(os.getpid(), signal.SIGINT)  # the reloading supervisor stops on it
 
 
-def _boot(case: str | None, state: str | None, work: Path, project: str | None = None) -> Workbench:
+def _boot(
+    case: str | None,
+    state: str | None,
+    work: Path,
+    project: str | None = None,
+    *,
+    walk: bool = False,
+) -> Workbench:
     if project:
         opened = Project.open(project)
+        if walk:
+            return boot_project(opened)
         cap_store(opened)
         return Workbench(opened.name, project=opened)
     if case:
@@ -235,9 +245,9 @@ def dev_app() -> Guard:
     The supervisor passes the launch token, the folder that keeps the store between reloads, and
     the case or state in environment variables.
     """
-    token, work, case, state, project = (os.environ.get(name) for name in _DEV_ENVIRONMENT)
+    token, work, case, state, project, walk = (os.environ.get(name) for name in _DEV_ENVIRONMENT)
     assert token is not None and work is not None
-    guard = build_app(token, _boot(case, state, Path(work), project))
+    guard = build_app(token, _boot(case, state, Path(work), project, walk=bool(walk)))
     port = int(os.environ["NANOPNP_GUI_PORT"])
     guard.hosts = frozenset({f"{HOST}:{port}", f"localhost:{port}"})
     return guard
@@ -262,9 +272,7 @@ def _announce(url: str, port: int, *, browser: bool, as_json: bool) -> None:
 
 # Serve with reload: a change to a page, a style sheet or the bridge restarts the worker.
 def _serve_dev(
-    case: Path | None,
-    state: str | None,
-    project: Path | None,
+    boot_environment: dict[str, str],
     port: int,
     token: str,
     work: Path,
@@ -280,9 +288,7 @@ def _serve_dev(
         NANOPNP_GUI_TOKEN=token,
         NANOPNP_GUI_WORK=str(work),
         NANOPNP_GUI_PORT=str(port),
-        NANOPNP_GUI_CASE=str(case or ""),
-        NANOPNP_GUI_STATE=state or "",
-        NANOPNP_GUI_PROJECT=str(project or ""),
+        **boot_environment,
     )
     url = f"http://{HOST}:{port}/?token={token}"
     threading.Thread(
@@ -309,6 +315,7 @@ def serve(
     case: Path | None = None,
     state: str | None = None,
     project: Path | None = None,
+    walk: bool = False,
     port: int = 0,
     no_browser: bool = False,
     dev: bool = False,
@@ -319,15 +326,20 @@ def serve(
     The ready line goes to standard output once the address accepts a connection, as one JSON
     object ``{"ready": url}`` where ``as_json`` is set. A desktop wrapper starts the server with
     ``no_browser`` and port 0, reads that line, loads its address, and closes the standard input
-    to stop the server.
+    to stop the server. A ``project`` opens as it is, with nothing walked, unless ``walk`` takes
+    its first study to the charge stage, as a fixture state does.
     """
     token = secrets.token_urlsafe(32)
     with tempfile.TemporaryDirectory(prefix="nanopnp-gui-") as work:
         if dev:
+            boot_environment = {
+                "NANOPNP_GUI_CASE": str(case or ""),
+                "NANOPNP_GUI_STATE": state or "",
+                "NANOPNP_GUI_PROJECT": str(project or ""),
+                "NANOPNP_GUI_WALK": "1" if walk else "",
+            }
             _serve_dev(
-                case,
-                state,
-                project,
+                boot_environment,
                 port,
                 token,
                 Path(work),
@@ -336,7 +348,7 @@ def serve(
             )
             return 0
         opened = None if project is None else str(project)
-        guard = build_app(token, _boot(str(case or ""), state, Path(work), opened))
+        guard = build_app(token, _boot(str(case or ""), state, Path(work), opened, walk=walk))
         config = uvicorn.Config(guard, host=HOST, port=port, log_level="warning")
         server = _Server(config, guard, token, browser=not no_browser, as_json=as_json)
         threading.Thread(target=_watch_input, args=(server,), daemon=True).start()
@@ -349,6 +361,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="nanopnp gui", description=serve.__doc__)
     parser.add_argument("case", nargs="?", type=Path, help="a case file, walked to its charge")
     parser.add_argument("--state", choices=STATES, help="a fixture state in place of a case")
+    parser.add_argument(
+        "--project", type=Path, help="a project folder, opened with its first study walked"
+    )
     parser.add_argument("--port", type=int, default=0, help="the port; 0 picks a free one")
     parser.add_argument("--no-browser", action="store_true", help="open no browser")
     parser.add_argument("--dev", action="store_true", help="reload on a change to the source")
@@ -356,9 +371,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.case is not None and args.state is not None:
         parser.error("give a case file or --state, not both")
+    if args.project is not None and (args.case is not None or args.state is not None):
+        parser.error("give a project folder or a case file or --state, not more than one")
     return serve(
         case=args.case,
         state=args.state,
+        project=args.project,
+        walk=args.project is not None,
         port=args.port,
         no_browser=args.no_browser,
         dev=args.dev,
