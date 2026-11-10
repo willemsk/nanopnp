@@ -157,8 +157,8 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   to a new worker once, then to the next model. (§8.2.11 L6; §8.2.38 AN8)
 * The tiers are the same Claude models on either host; `.claude/workflow/hosts/copilot.md` gives
   each tier's Copilot id and each agent's effort, passed at each sub-agent call. (§8.2.25 AA7)
-* Three agents are kept: the physics reviewer and the GUI reviewer, both read-only, and the CI-log
-  classifier. Seven scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
+* Three agents are kept: the physics reviewer and the GUI reviewer, both read-only and on Opus at high
+  effort (§8.2.38 AN9), and the CI-log classifier. Seven scripts are kept in `.claude/scripts/`: `clause.py` prints a clause by identifier,
   `duplicates.py` names a number that two items of one register share (§8.4.4), `same_tree.py`
   checks that changed Python files differ only in prose (§8.2.11 L5), `decisions.py` writes the
   decisions register and with `--check` compares it, `index_records.py` writes the indexes of the

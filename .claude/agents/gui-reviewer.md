@@ -1,7 +1,7 @@
 ---
 name: gui-reviewer
 description: Reviews rendered GUI screens and mockups against the workbench design document, the job's route, usability heuristics and WCAG 2.2 AA. Given a render directory, reports findings only and edits nothing.
-model: sonnet
+model: opus
 tools: Read, Grep, Glob
 effort: high
 ---

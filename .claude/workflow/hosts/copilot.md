@@ -49,7 +49,7 @@ from the Copilot plan, take the nearest of the same tier and say so.
 | Agent | Tier | `reasoning_effort` | Note |
 |---|---|---|---|
 | `physics-reviewer` | Opus | `high` | |
-| `gui-reviewer` | Sonnet | `high` | |
+| `gui-reviewer` | Opus | `high` | |
 | `ci-log-classifier` | Haiku | — | `omitClaudeMd` has no Copilot equivalent, so it may see `CLAUDE.md` |
 | Built-in `code-review` | Sonnet | `xhigh` | Narrower than the Claude Code review (*Code review*) |
 
