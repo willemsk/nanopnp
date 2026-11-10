@@ -217,7 +217,7 @@ first component. `_body(location)` returns the mapping whole. `_problems_of` cal
   `src/nanopnp/api/case.py`, `src/nanopnp/validation/costs.py`, the same clause, `tests/tier1/test_models.py`: one
   reader pair (D1); done when row 1 passes. **Executor:** main.
 - [x] 4. Compaction checkpoint. **Executor:** main.
-- [ ] 5. `src/nanopnp/io/models.py`, `src/nanopnp/io/defaults.py`, `src/nanopnp/api/project.py`,
+- [x] ffa9bcc 5. `src/nanopnp/io/models.py`, `src/nanopnp/io/defaults.py`, `src/nanopnp/api/project.py`,
   `tests/tier1/test_models.py`: typed model files and the split (D4, D5); done when row 4 and FR-32's and FR-34's rows
   pass. **Executor:** main.
 - [ ] 6. `.claude/hooks/gate.sh run` and the strict documentation build, since items 2 and 3 change §5.3.1 and
