@@ -130,9 +130,15 @@
   --canvas-plot-ink: #e8eaef;
 }
 
+/* Reduced motion follows the system unless the settings choose; data-motion is set by them. */
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root:not([data-motion="full"]) {
     --motion-fast: 0ms;
     --motion-base: 0ms;
   }
+}
+
+:root[data-motion="reduce"] {
+  --motion-fast: 0ms;
+  --motion-base: 0ms;
 }

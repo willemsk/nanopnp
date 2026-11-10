@@ -38,9 +38,11 @@ class Overlay:
     # -- the settings -------------------------------------------------------
 
     def _change(self, **fields: object) -> None:
-        current = self.shell.settings.model_copy(update=fields)
-        self.shell.settings = settings.Settings.model_validate(current.model_dump())
-        settings.save(self.shell.settings)
+        current = self.shell.settings
+        for identifier, value in fields.items():
+            current = current.with_user(identifier, value)
+        self.shell.settings = current
+        settings.save(current)
         ui.run_javascript(theme.appearance(self.shell.settings))
 
     def _options(self) -> dict[str, str]:

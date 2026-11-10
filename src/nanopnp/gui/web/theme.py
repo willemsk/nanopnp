@@ -149,8 +149,11 @@ _VIEWER = {
 }
 
 
+_MOTION = {"on": "reduce", "off": "full"}
+
+
 def appearance(settings: Settings) -> str:
-    """Return the script that sets the root's theme, density and spacing, and loads the colours.
+    """Return the script that sets the root's theme, density, spacing and motion, and the colours.
 
     A theme of the user's that is gone leaves the system's choice. The script runs in the head,
     before the first paint, and again when the settings change.
@@ -166,6 +169,7 @@ def appearance(settings: Settings) -> str:
         else None,
         "data-density": "compact" if settings.density == "compact" else None,
         "data-spacing": "tight" if settings.spacing == "tight" else None,
+        "data-motion": _MOTION.get(settings.reduced_motion),
     }
     return (
         "(()=>{const r=document.documentElement;"

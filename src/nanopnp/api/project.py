@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from pydantic import JsonValue
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
@@ -121,6 +122,19 @@ class Project:
     def layout(self) -> Mapping[Suite, SuiteLayout]:
         """The saved layout of each suite that has one."""
         return dict(self._file.layout)
+
+    @property
+    def settings(self) -> Mapping[str, JsonValue]:
+        """The project's own settings, by identifier, over the user's where a setting allows."""
+        return dict(self._file.settings)
+
+    def save_setting(self, identifier: str, value: JsonValue) -> None:
+        """Save one of the project's settings; ``None`` removes it, so the user's value holds."""
+        if value is None:
+            self._file.settings.pop(identifier, None)
+        else:
+            self._file.settings[identifier] = value
+        write_project(self._root, self._file)
 
     @classmethod
     def create(cls, folder: str | Path, name: str | None = None) -> Project:

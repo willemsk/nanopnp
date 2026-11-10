@@ -66,13 +66,13 @@ def _env(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-def _project_to_open(args: argparse.Namespace) -> Path | None:
+def _project_to_open(args: argparse.Namespace, *, open_last: bool = True) -> Path | None:
     from nanopnp.api.project import Project
     from nanopnp.io.project import PROJECT_FILENAME
 
     folder: Path | None = args.project
     if folder is None:
-        return last_project()
+        return last_project() if open_last else None
     if folder.is_file():
         if folder.name == PROJECT_FILENAME:
             _refuse(args, f"{folder} is a project file: give its folder, {folder.parent}")
@@ -107,7 +107,11 @@ def _gui(args: argparse.Namespace) -> int:
         _refuse(args, f"--state {args.state!r}: the states are {', '.join(server.STATES)}")
     if args.project is not None and args.state is not None:
         _refuse(args, "give a project folder or --state, not both")
-    project = None if args.state is not None else _project_to_open(args)
+    project = (
+        None
+        if args.state is not None
+        else _project_to_open(args, open_last=server.open_last_project())
+    )
     code: int = server.serve(
         project=project,
         state=args.state,
