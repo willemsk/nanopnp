@@ -22,11 +22,10 @@ from nanopnp.core.paths import recent_projects, remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.glossary import GLOSSARY
-from nanopnp.gui.web.overlay import Overlay
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
-from nanopnp.gui.web.states import Workbench
+from nanopnp.gui.web.states import Workbench, cap_store
 from nanopnp.io.defaults import Change
 from nanopnp.io.project import ITEM_SUITES, ItemKind, Suite, SuiteLayout, split_reference
 
@@ -39,11 +38,13 @@ class Route:
 
     Parameters
     ----------
+    suite
+        The suite the path belongs to, or None for a page of no suite, such as the settings.
     view
         ``molecule`` for the Mol* host the frame owns, built once and never rebuilt; else None.
     """
 
-    suite: Suite
+    suite: Suite | None
     view: Literal["molecule"] | None = None
 
 
@@ -55,6 +56,8 @@ KINDS: tuple[tuple[ItemKind, str], ...] = (
     ("comparison", "Comparisons"),
 )
 PANELS = ("queue", "log", "changes", "problems")
+DIALOGS = ("glossary", "about")
+"""The dialogs ``?dialog=`` opens, by command."""
 BAR_PX = 88
 """The activity bar's width; the drawer is the bar and the rail."""
 FOLDED_RAIL_PX = 32
@@ -87,6 +90,12 @@ class Views(Protocol):
     async def settled(self) -> None:
         """Wait until what the address opened in the frame, such as the palette, has opened."""
 
+    def applied(self) -> None:
+        """Apply the settings now held to the page: theme, density, spacing, motion, chords."""
+
+    def listen(self, event: str, handler: Callable[[events.GenericEventArguments], object]) -> None:
+        """Route a page-wide event to ``handler``, replacing the last sub-page's."""
+
 
 class _Frame:
     def __init__(
@@ -94,7 +103,8 @@ class _Frame:
     ) -> None:
         self.shell = shell
         self.routes = routes
-        self.suite = self.route(path).suite
+        self.suite = self.route(path).suite or current_suite(shell)
+        self.in_suite = self.route(path).suite is not None
         self.layout = self.suite_layout(self.suite)
         if panel:
             self.layout = self.layout.model_copy(update={"bottom_folded": False})
@@ -112,7 +122,7 @@ class _Frame:
         self.palette_select: Palette
         self.opening: asyncio.Event | None = None
         self.panel_root: ui.column
-        self.overlay = Overlay(shell)
+        self.listeners: dict[str, Callable[[events.GenericEventArguments], object]] = {}
         self.tree: ui.tree | None = None
         self.ask_dialog: ui.dialog
         self.ask_title: TextElement
@@ -133,7 +143,7 @@ class _Frame:
         self.toggle_button: ui.button
         self.actions: dict[str, Callable[[], object]] = {
             "palette": lambda: self.open_palette(),
-            "settings": self.overlay.open,
+            "settings": self.go("/settings"),
             "panel-toggle": self.toggle_panel,
             "changes": lambda: self.show_panel("changes"),
             "problems": lambda: self.show_panel("problems"),
@@ -193,7 +203,8 @@ class _Frame:
     def on_path(self, path: str) -> None:
         ui.run_javascript("document.body.dataset.screenReady = '0'")
         route = self.route(path)
-        if route.suite != self.suite:
+        self.in_suite = route.suite is not None
+        if route.suite is not None and route.suite != self.suite:
             self.suite = route.suite
             self.layout = self.suite_layout(route.suite).model_copy(
                 update={"bottom_folded": self.layout.bottom_folded}
@@ -207,12 +218,12 @@ class _Frame:
             self.show_panel(query["panel"][0])
         if query.get("palette"):
             self.open_palette(query["palette"][0])
-        if query.get("dialog", [""])[0] == "settings":
-            self.overlay.open()
+        if query.get("dialog", [""])[0] in DIALOGS:
+            self.run(query["dialog"][0])
 
     def mark_suite(self) -> None:
         for identifier, button in self.suite_buttons.items():
-            if identifier == self.suite:
+            if self.in_suite and identifier == self.suite:
                 button.props('aria-current="page"')
             else:
                 button.props(remove="aria-current")
@@ -226,13 +237,27 @@ class _Frame:
 
     def run(self, identifier: str) -> None:
         if identifier.startswith(commands.SETTING_COMMAND):
-            self.overlay.open()
+            setting = identifier.removeprefix(commands.SETTING_COMMAND)
+            ui.navigate.to(f"/settings?setting={setting}")
             return
         action = self.actions.get(identifier)
         if action is None:
             ui.notify(f"{commands.command(identifier).title} is not available yet")
             return
         action()
+
+    def applied(self) -> None:
+        """Apply the settings now held to the page: theme, density, spacing, motion, chords."""
+        chords = theme.script_json(commands.chords(self.shell.keys))
+        ui.run_javascript(f"{theme.appearance(self.shell.settings)}window.frameChords = {chords};")
+        self.dark.set_value(theme.dark(self.shell.settings))
+
+    def listen(self, event: str, handler: Callable[[events.GenericEventArguments], object]) -> None:
+        """Route a page-wide event to ``handler``, replacing the last sub-page's."""
+        # ui.on subscribes the whole page, so a sub-page's own subscription would outlive it.
+        if event not in self.listeners:
+            ui.on(event, lambda e, name=event: self.listeners[name](e))
+        self.listeners[event] = handler
 
     def on_command(self, event: events.GenericEventArguments) -> None:
         self.run(str(event.args["id"]))
@@ -287,6 +312,7 @@ class _Frame:
     def switch(self, project: Project) -> None:
         self.shell.bench = Workbench(project.name, project=project, queue=self.shell.queue)
         remember_project(project.root)
+        cap_store(project)
         self.reload_to("/molecular")
 
     def new_project(self, folder: Path) -> None:
@@ -742,6 +768,9 @@ def frame(
     the view region beside the sub-page.
     """
     router = context.client.sub_pages_router
+    project = shell.bench.project
+    # The project's values over the user's, as the project file holds them now.
+    shell.settings = shell.settings.with_project(project.settings if project else {})
     built = _Frame(shell, routes, router.current_path, panel)
     ui.add_head_html(
         '<script src="/frame.js"></script><link rel="stylesheet" href="/frame.css">'
@@ -750,7 +779,6 @@ def frame(
     )
     colours()
     built.dark = ui.dark_mode(theme.dark(shell.settings))
-    built.overlay.applied = lambda: built.dark.set_value(theme.dark(shell.settings))
     ui.on("command", built.on_command)
     ui.on("separator", built.on_separator)
     with ui.header(elevated=False).classes("frame-header q-pa-none"):
@@ -776,18 +804,16 @@ def frame(
             yield built
     # A stable target outside the sub-pages, which a route change does not rebuild.
     ui.skip_link("Skip to the suite", target=main)
-    project = shell.bench.project
     ui.page_title(project.name if project is not None else "nanopnp workbench")
     router.on_path_changed(built.on_path)
     built.dialogs()
     built.palette_dialog()
-    built.overlay.build()
     built.apply_layout()
     if palette:
         built.opening = asyncio.Event()
         built.open_palette(palette)
-    if dialog == "settings":
-        built.overlay.open()
+    if dialog in DIALOGS:
+        built.run(dialog)
 
 
 def heading(text: str, level: int) -> TextElement:

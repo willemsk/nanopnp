@@ -115,16 +115,21 @@ SCREENS: tuple[Screen, ...] = (
     Screen("problems", "/study?panel=problems", (*FRAME_CONTROLS, "problems-list")),
     Screen(
         "settings",
-        "/molecular?dialog=settings",
+        "/settings",
         (
             *FRAME_CONTROLS,
+            "settings-sections",
+            "settings-search",
+            "settings-scope",
+            "settings-modified",
             "settings-theme",
             "settings-density",
             "settings-spacing",
-            "settings-background",
+            "settings-viewer_background",
             "theme-colours",
             "theme-duplicate",
             "settings-keys",
+            "store-usage",
         ),
     ),
     Screen(

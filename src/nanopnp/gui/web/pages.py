@@ -13,6 +13,7 @@ from nanopnp.gui.web.assets import ASSETS, TOKENS
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
 from nanopnp.gui.web.link import Extent, png
 from nanopnp.gui.web.screens import SUITES, Suite, screen
+from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -30,6 +31,7 @@ STYLESHEETS = (
 ROUTES: dict[str, Route] = {
     **{f"/{suite.id}": Route(suite.id) for suite in SUITES},
     screen("st-charge").path: Route("study", "molecule"),
+    "/settings": Route(None),
 }
 """Every path the frame routes: its suite, and the view the frame shows beside it."""
 
@@ -146,7 +148,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             chip.text = "Linked" if state["linked"] else "Unlinked"
             unlink.text = "Unlink" if state["linked"] else "Link"
 
-        ui.on("mol_pick", on_mol)
+        built.listen("mol_pick", on_mol)
         with ui.column().classes("items-start"):
             heading("Charge on the mesh", 1)
             with ui.row().props("data-control=strip").style(f"width:{MAP_WIDTH_PX}px;gap:2px"):
@@ -185,9 +187,23 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
         ui.timer(0.1, start, once=True)
 
+    def settings_page(built: Views, setting: str = "") -> None:
+        SettingsPage(shell, built, setting).build()
+
+        async def ready() -> None:
+            await built.settled()
+            if setting:
+                await ui.run_javascript(
+                    f"document.getElementById('setting-{setting}')?.scrollIntoView()", timeout=10
+                )
+            await ui.run_javascript("document.body.dataset.screenReady = '1'", timeout=10)
+
+        ui.timer(0.1, ready, once=True)
+
     pages: dict[str, Callable[..., None]] = {
         **{f"/{suite.id}": suite_page(suite) for suite in SUITES},
         screen("st-charge").path: charge,
+        "/settings": settings_page,
     }
 
     def build(panel: str = "", palette: str = "", dialog: str = "") -> None:

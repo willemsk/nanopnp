@@ -31,7 +31,7 @@ from nanopnp.core.public import __version__
 from nanopnp.gui.web import settings
 from nanopnp.gui.web.pages import install
 from nanopnp.gui.web.shell import Shell
-from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case
+from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case, cap_store
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -222,6 +222,7 @@ def _watch_input(server: uvicorn.Server | None) -> None:
 def _boot(case: str | None, state: str | None, work: Path, project: str | None = None) -> Workbench:
     if project:
         opened = Project.open(project)
+        cap_store(opened)
         return Workbench(opened.name, project=opened)
     if case:
         return boot_case(Path(case), work)
