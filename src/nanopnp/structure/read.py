@@ -137,7 +137,7 @@ def _universe_from_mmcif(path: Path) -> mda.Universe:
     if not block.find_values("_atom_site.type_symbol"):
         raise StructureInputError(
             f"{path.name!r} has no _atom_site.type_symbol column; every selected atom must carry "
-            "its element in the file (SPECIFICATION.md section 5.3.1 NOTE on structure:)"
+            "its element in the file (SPECIFICATION.md section 5.2 NOTE on stage 1)"
         )
     structure = gemmi.make_structure_from_block(block)
     if len(structure) == 0:
@@ -284,12 +284,13 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
         group = group[mask]
         keys = [key for key, kept in zip(keys, mask, strict=True) if kept]
         present = tuple(chain for chain in present if chain in listed)
-    # Element and altloc refusals apply only to the chains kept (§5.3.1 NOTE).
+    # Element and altloc refusals apply only to the chains kept (§5.2 NOTE on stage 1).
     if not hasattr(group, "elements"):
         raise StructureInputError(
             f"no atom of structure.source.selection {selection!r} carries an element in the file; "
             "every selected atom must, in the PDB element columns or the mmCIF type_symbol, "
-            "because a guessed element is how a C-alpha becomes calcium (section 5.3.1 NOTE)"
+            "because a guessed element is how a C-alpha becomes calcium (section 5.2 NOTE on "
+            "stage 1)"
         )
     elements = [str(value).strip() for value in group.elements]
     for index, element in enumerate(elements):
@@ -297,7 +298,7 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
             raise StructureInputError(
                 f"atom {_describe(group[index])} carries no element in the file; every selected "
                 "atom must, in the PDB element columns or the mmCIF type_symbol, because a "
-                "guessed element is how a C-alpha becomes calcium (section 5.3.1 NOTE)"
+                "guessed element is how a C-alpha becomes calcium (section 5.2 NOTE on stage 1)"
             )
     if hasattr(group, "altLocs"):
         for index, altloc in enumerate(group.altLocs):
@@ -305,8 +306,8 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
                 raise StructureInputError(
                     f"atom {_describe(group[index])} has alternate location {str(altloc)!r}; "
                     "choosing between alternate locations is structure preparation, which the "
-                    "pipeline does not do (section 5.3.1 NOTE). Select one location, or prepare "
-                    "the file"
+                    "pipeline does not do (section 5.2 NOTE on stage 1). Select one location, or "
+                    "prepare the file"
                 )
 
     if len(present) != n:
@@ -352,7 +353,7 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
             raise StructureInputError(
                 f"chain {chain} carries {counts[chain]} C-alpha, under half the {most} of the "
                 f"most complete chain; a truncated chain would bias the axis and the density "
-                "(FR-03, section 5.3.1 NOTE)"
+                "(FR-03, section 5.2 NOTE on stage 1)"
             )
 
     reference = present[0]
@@ -442,7 +443,7 @@ def select_frames(
                 f"structure.ensemble.frames.last_ns is {last_ns:g} ns, but the file records "
                 f"{available} frames spanning {span:.6g} ns at an interval of {interval_ns:.6g} "
                 "ns. A file written without a timestep reads as 1 ps or 0 ps per frame, so this "
-                "window would be the whole trajectory in silence (section 5.3.1 NOTE)"
+                "window would be the whole trajectory in silence (section 5.2 NOTE on stage 1)"
             )
         start = times_ns[-1] - last_ns
         # Slack for float32 dt accumulated as frame * dt (a DCD stores it so); a thousandth of
@@ -453,7 +454,7 @@ def select_frames(
         if count > len(window):
             raise StructureInputError(
                 f"structure.ensemble.frames.count is {count}, and the window holds "
-                f"{len(window)} frames (section 5.3.1 NOTE)"
+                f"{len(window)} frames (section 5.2 NOTE on stage 1)"
             )
         stride = len(window) // count
         last = len(window) - 1
@@ -551,6 +552,5 @@ def check_chains_whole(selection: Selection, positions: np.ndarray, frames: Sequ
             f"chain {chain} is split across the periodic box in frame {frames[int(frame)]}: the "
             f"C-alpha of residues {residue} and {residue + 1} lie {gaps[frame, pair]:.3f} nm "
             f"apart, where a peptide bond is 0.38 nm and a wrapped pair is a box length. Make "
-            "the molecule whole before reading it (SPECIFICATION.md section 5.3.1 NOTE on "
-            "structure:)"
+            "the molecule whole before reading it (SPECIFICATION.md section 5.2 NOTE on stage 1)"
         )

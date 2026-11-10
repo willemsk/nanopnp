@@ -10,7 +10,8 @@ from nanopnp.numerics.measures import Measures, require_boundary
 
 DEFAULT_MAX_DISTANCE_NM = 3.0
 
-# Measured against a cylinder in knowledge/06-numerics-fem/index.md (screened-Poisson length).
+# Measured against a cylinder in knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md
+# section 8.3 (screened-Poisson length).
 DEFAULT_DIFFUSION_LENGTH_NM = 0.2
 
 

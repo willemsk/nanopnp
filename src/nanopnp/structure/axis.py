@@ -12,7 +12,7 @@ from nanopnp.core.hashing import Canonicalisable
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-# Thresholds: SPECIFICATION.md §5.3.1 NOTE on structure:; margins:
+# Thresholds: SPECIFICATION.md §5.2 NOTE on stage 1; margins:
 # knowledge/07-software-stack/index.md.
 SPACING_FRACTION = 0.25
 
@@ -259,7 +259,7 @@ def gate_axis(record: AxisRecord) -> AxisRecord:
             f"orientation gate: the detected axis is {record.tilt_deg:.2f} degrees from the "
             f"file's z against a limit of {ORIENTATION_LIMIT_DEG:g}; the axis is signed by the "
             "file's +z, which must point from trans to cis, and a frame this far from it does "
-            "not name an end (SPECIFICATION.md section 5.3.1 NOTE on structure:)"
+            "not name an end (SPECIFICATION.md section 5.2 NOTE on stage 1)"
         )
     return record
 

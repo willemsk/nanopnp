@@ -330,5 +330,5 @@ def gate_density(values: np.ndarray, grid: DensityGrid, *, first: int = 0) -> No
     raise DensityGateError(
         f"density gate: the map is {value!r} at voxel [z={first + k}, y={j}, x={i}], "
         f"(x, y, z) = ({x:.3f}, {y:.3f}, {z:.3f}) nm; a union density is finite and within "
-        f"[0, 1] (QR-12, section 5.3.1 NOTE on geometry.density)"
+        f"[0, 1] (QR-12, section 5.2 NOTE on stage 2)"
     )
