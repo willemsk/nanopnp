@@ -32,7 +32,7 @@ generated:
 | **translocation** | analyte passes through, cis → trans |
 | **resistive-pulse sensing** | detection by transient conductance changes |
 | **I–V curve** | current vs applied bias |
-| **ICR** | ionic current rectification, `G(+V)/G(-V)` |
+| **ICR**, α | ionic current rectification, `G(+V)/G(-V)` |
 | **EDL / EOF / EP / EO / DEP** | electrical double layer / electro-osmotic flow / electrophoretic / electro-osmotic / dielectrophoretic |
 | **GHK** | Goldman–Hodgkin–Katz equation, converts reversal potential to permeability ratio |
 | **transport number `t_i`** | fraction of current carried by species i |
@@ -50,3 +50,5 @@ generated:
 | **ClyA-AS** | stabilised ClyA variant used throughout; **not** wild type |
 | **WtFraC / ReFraC** | wild-type FraC / D10R-K159E charge-reversal variant |
 | **PlyAB-E2 / -R** | stabilised PlyAB variants; -R has a reversed-charge constriction |
+
+Project shorthands: `knowledge/00-orientation/07-glossary.md`.

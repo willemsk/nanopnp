@@ -33,5 +33,10 @@ Mark each claim `[tested: <test>]` or `[verified]` with a footnote to its source
 `verified` list equal to the tests the claims name. **Do not record** status, task lists or scope
 opinions; those belong in the specification.
 
+**State each fact once (§8.2.36 AL17).** A rule's home is its clause in `SPECIFICATION.md`; a
+measurement's home is its concept here. The other file points to it and does not restate it: a concept
+cites the clause that governs, and a NOTE cites the concept that measured. History, superseded figures
+and spent statements leave the concept; git and `knowledge/log.md` keep them.
+
 ---
 

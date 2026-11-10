@@ -74,11 +74,9 @@ generated:
 
 * **DH**. Debye-Hückel theory. It is the linearised form of the Poisson-Boltzmann equation. It is valid when electrical potential is small compared to thermal voltage.
 
-* **EDL**. Electrical double layer. It is the screening layer of ions that forms in the electrolyte adjacent to a charged surface. It consists of an excess of counter-ions and a depletion of co-ions.
 
 * **Debye length**. The characteristic screening distance of the electrical double layer. It is denoted by lambda_D. It scales inversely with the square root of ionic strength.
 
-* **EOF**. Electro-osmotic flow. It is bulk fluid motion driven by an applied electric field acting on net space charge within the electrical double layer.
 
 * **steric flux (PHY-05)**. The ion-crowding term beta_i added to the Nernst-Planck flux bracket. It is species-dependent, through the prefactor a_i^3 / a_0^3 (4.16 for the reference NaCl parameters), and sums the concentration gradients of all species. It is singular as the packing fraction Phi approaches 1, which NUM-17 asserts against at every Newton step. It is not the single-species Bikerman form. **[verified][^spec]**
 
@@ -94,13 +92,11 @@ generated:
 
 * **G**. Total ionic conductance of the nanopore. It is defined as electrical current divided by applied voltage bias.
 
-* **t_i**. Transport number of ionic species i. It represents the fraction of total electrical current carried by that species.
 
-* **RR**. Rectification ratio. It is the ratio of ionic conductance at a positive voltage bias to conductance at the opposite negative bias.
 
 * **PMF**. Potential of mean force. It represents the free-energy landscape experienced by an analyte along the pore axis. It is obtained by integrating axial electromechanical and hydrodynamic forces.
 
-* **biological nanopore terms**. For domain definitions concerning biological pores, lipid bilayers, and single-channel electrophysiology, see the dedicated glossary in knowledge/03-nanopore-biology/08-glossary.md.
+* **biological nanopore terms**. For domain definitions concerning biological pores, lipid bilayers, and single-channel electrophysiology, see the dedicated glossary in knowledge/03-nanopore-biology/08-glossary.md, which also holds EDL, EOF, the transport number `t_i` and the rectification ratio α (ICR).
 
 ## Section 4. Numerics and meshing
 

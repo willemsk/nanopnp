@@ -253,7 +253,7 @@ nav:
               - "6. Selectivity, transport number, reversal potential": _generated/model/knowledge/02-electrokinetics-background/06-selectivity-transport-number-reversal.md
               - "7. Ionic current rectification": _generated/model/knowledge/02-electrokinetics-background/07-ionic-current-rectification.md
               - "8. Access resistance and conductance decomposition": _generated/model/knowledge/02-electrokinetics-background/08-access-resistance-and-conductance.md
-              - "9. Quantities the software must compute": _generated/model/knowledge/02-electrokinetics-background/09-quantities-the-software-must-compute.md
+              - "9. Quantities the thesis computes": _generated/model/knowledge/02-electrokinetics-background/09-quantities-the-software-must-compute.md
           - "Nanopore biology and electrophysiology — what the model is a model of":
               - _generated/model/knowledge/03-nanopore-biology/index.md
               - "Nanopore biology and electrophysiology — what the model is a model of (overview)": _generated/model/knowledge/03-nanopore-biology/00-overview.md
