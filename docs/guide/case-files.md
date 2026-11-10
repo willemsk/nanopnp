@@ -30,7 +30,7 @@ outputs: [current, transport_numbers]
 
 That is a complete case, but it does **not** solve the validated model. Each correction's schema
 default, the value a case gets when it names nothing, is `none`; the validated run names
-`willems2020_nacl` for each, as the reference's *validated default* column shows. So a case that names no correction solves classical PNP-NS. Its manifest says so
+`willems2020_nacl` for each, as the [case-file reference](../_generated/reference/case-file.md)'s *Validated default* column shows. So a case that names no correction solves classical PNP-NS. Its manifest says so
 by listing every correction as a deviation. To solve ePNP-NS, name the corrections, as [example
 01](../_generated/examples/01-quickstart.md) does.
 

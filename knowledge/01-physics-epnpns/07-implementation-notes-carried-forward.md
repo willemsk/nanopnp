@@ -54,8 +54,10 @@ verified:
 - **The limiting-current benchmark's two lessons** (two errors that cancel, and the screening
   length at a depleted electrode) are under VER-16's benchmark,
   `knowledge/08-validation-benchmarks/02-tier-2-analytic-benchmarks-minutes.md` §2.5.
-- **`d` travels with the solution and is not recomputed**: why is in
-  `knowledge/06-numerics-fem/15-tier-1-test-evidence-scaling-the-wall.md`, the restore. A warm start
+- **`d` travels with the solution and is not recomputed**: the screened-Poisson solve behind it is
+  not bit-reproducible, so a re-solved field is a different operator
+  (`knowledge/06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md` §7.1.2; how the restore
+  is tested, `knowledge/06-numerics-fem/15-tier-1-test-evidence-scaling-the-wall.md`). A warm start
   that re-solves a converged rung, with `d` read off the solution, costs at most one Newton
   iteration and moves nothing. **[tested: tests/tier2/test_ladder.py::test_num18_re_solving_a_converged_rung_costs_one_iteration_and_moves_nothing]**
 - **The Langevin function switches to its `x/3` limit at `x = 3e-4`.** `coth(x) - 1/x` has relative
