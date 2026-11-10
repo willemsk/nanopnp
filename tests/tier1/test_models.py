@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
@@ -14,7 +13,17 @@ from nanopnp.api.sweep import plan_sweep
 from nanopnp.core.hashing import file_hash
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case_paths import block_paths, case_fields, substitute
-from nanopnp.io.models import OWNERS, SCHEMAS, owner_of, read_case, read_case_text
+from nanopnp.io.defaults import mapping_changes
+from nanopnp.io.models import (
+    OWNERS,
+    SCHEMAS,
+    leaves,
+    owner_of,
+    read_case,
+    read_case_text,
+    read_model_file,
+    split_case_layers,
+)
 from nanopnp.io.store import Store
 from nanopnp.pipeline.case import load_case
 from nanopnp.sweep.plan import SweepPlanError, plan_from_document
@@ -25,25 +34,6 @@ CHARGED = EXAMPLES / "07-pdb-to-charged-run" / "2wcd.case.yaml"
 PARAMETERS = Path(__file__).resolve().parents[2] / "data" / "corrections" / "willems2020_nacl.yaml"
 
 
-def _leaves(mapping: dict[str, Any], path: str = "") -> list[tuple[str, Any]]:
-    found: list[tuple[str, Any]] = []
-    blocks = set(block_paths())
-    for key, value in mapping.items():
-        here = f"{path}.{key}" if path else key
-        if isinstance(value, dict) and here in blocks:
-            found.extend(_leaves(value, here))
-        else:
-            found.append((here, value))
-    return found
-
-
-def _put(target: dict[str, Any], path: str, value: object) -> None:
-    *parents, last = path.split(".")
-    for part in parents:
-        target = target.setdefault(part, {})
-    target[last] = value
-
-
 def split_case(
     case: Path,
     directory: Path,
@@ -52,19 +42,11 @@ def split_case(
 ):
     """Write ``case`` as model files by ownership and a study; return the study's path."""
     raw = yaml.safe_load(case.read_text(encoding="utf-8"))
-    layers: dict[str, dict[str, Any]] = {
-        "molecular": {},
-        "continuum": {},
-        "physics": {},
-        "study": {},
-    }
-    for path, value in _leaves(raw):
-        kind = owner_of(path)
-        if kind not in models:
-            kind = "study"
-        if path == "structure.source.path":
-            value = str(case.parent / value)
-        _put(layers[kind], path, value)
+    source = raw.get("structure", {}).get("source", {})
+    if "path" in source:
+        source["path"] = str(case.parent / source["path"])
+    kept = {path for path, _ in leaves(raw) if owner_of(path) not in models}
+    layers = split_case_layers(raw, pinned=kept)
     for kind in models:
         if layers[kind]:
             (directory / f"{kind}.yaml").write_text(
@@ -72,6 +54,8 @@ def split_case(
                 encoding="utf-8",
             )
     study = {
+        "schema": raw["schema"],
+        "name": raw["name"],
         **layers["study"],
         "models": {kind: f"{kind}.yaml" for kind in models if layers[kind]},
     }
@@ -443,3 +427,24 @@ def test_fr39_every_case_reader_resolves_a_study_and_its_variables(tmp_path: Pat
             assert loaded.geometry is not None and loaded.geometry.pore is not None
             assert loaded.geometry.pore.radius_nm == 2.0
     assert len(hashes) == 1, "a study, its variables and the case inline key alike"
+
+
+def test_fr39_a_model_file_carries_the_body_its_study_merges(tmp_path: Path) -> None:
+    absolute = _params(tmp_path)
+    study = split_case(_quickstart(tmp_path), tmp_path)
+    location = tmp_path / "physics.yaml"
+    raw = yaml.safe_load(location.read_text(encoding="utf-8"))
+    raw["exposes"] = [{"name": "salt", "path": "electrolyte.concentration_M"}]
+    location.write_text(yaml.safe_dump(raw), encoding="utf-8")
+    found = read_model_file("physics", location)
+    assert not {"schema", "name", "exposes"} & set(found.body)
+    assert found.body["electrolyte"]["parameters"] == absolute
+    assert found.body["electrolyte"]["corrections"]["diffusivity"]["model"] == absolute
+    written = read_model_file("physics", location, rebase=False)
+    assert written.body["electrolyte"]["parameters"] == "params.yaml"
+    assert Case.load(study).electrolyte.parameters == absolute, "the study merges the body"
+    # The header and models: are metadata: the file and its body list the same changes.
+    listed = mapping_changes(raw)
+    assert listed == mapping_changes(written.body)
+    assert "electrolyte.parameters" in {change.path for change in listed}
+    assert mapping_changes({"models": {"physics": "x.yaml"}}) == ()
