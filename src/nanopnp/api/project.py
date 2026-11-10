@@ -18,13 +18,12 @@ from nanopnp.io.case import SCHEMA, CaseValidationError
 from nanopnp.io.case_paths import input_paths, rewrite_inputs
 from nanopnp.io.defaults import Change, changes, mapping_changes
 from nanopnp.io.models import (
-    HEADER_KEYS,
     MODEL_KINDS,
     SCHEMAS,
     ModelFile,
-    check_model_file,
-    leaves,
     owner_of,
+    read_model_file,
+    split_case_layers,
 )
 from nanopnp.io.project import (
     FOLDERS,
@@ -304,13 +303,7 @@ class Project:
         raw = yaml.safe_load(source.text) if source.text else None
         if not isinstance(raw, dict):
             raw = case.model_dump(by_alias=True, mode="json", exclude_defaults=True)
-        pinned = set(case.expressions)
-        layers: dict[str, dict[str, Any]] = {kind: {} for kind in (*MODEL_KINDS, "study")}
-        for path, value in leaves(raw):
-            if value is None:
-                continue
-            kind = "study" if path in pinned else owner_of(path)
-            _put(layers[kind], path, value)
+        layers = split_case_layers(raw, pinned=frozenset(case.expressions))
         paths: dict[str, str] = {}
         for kind in MODEL_KINDS:
             layer = layers[kind]
@@ -321,8 +314,6 @@ class Project:
             paths[kind] = f"../{FOLDERS[kind]}/{taken}.yaml"
         study = layers["study"]
         self._rebase(study, base, "study", link=link)
-        study.pop("schema", None)
-        study.pop("name", None)
         head: dict[str, Any] = {"schema": SCHEMA, "name": label, "models": paths}
         self._put_item("study", label, {**head, **study}, written)
         return self.path("study", label)
@@ -411,7 +402,7 @@ class Project:
                 file = next(f for f in record.files if f.kind == owner)
                 target_kind, target = owner, file.path.stem
         location = self.path(target_kind, target)
-        body = _body(location, keep=True)
+        body = _body(location)
         if not _delete(body, path):
             raise ProjectError(f"{target_kind} {target!r} sets no {path}")
         self._write_item(target_kind, target, body)
@@ -441,7 +432,7 @@ class Project:
         if kind == "comparison":
             return []
         try:
-            body = _body(location, keep=True)
+            body = _body(location)
         except (OSError, yaml.YAMLError, ValueError) as error:  # ValueError: not UTF-8, not a map
             return [Problem(item, None, f"{location} is not readable: {error}", suite)]
         found: list[Problem] = []
@@ -463,7 +454,7 @@ class Project:
             if kind == "study":
                 self.study(name)
             else:
-                check_model_file(kind, location)
+                read_model_file(kind, location)
         except (CaseValidationError, FileNotFoundError, ValueError, KeyError) as error:
             where_path = _error_path(error)
             refused = _owner_suite(where_path) if where_path and kind == "study" else suite
@@ -560,7 +551,7 @@ class Project:
                 if kind == "comparison":
                     items[relative] = None
                     continue
-                body = _body(location, keep=True)
+                body = _body(location)
 
                 collect = self._gathering(kind, name, names, inputs)
                 changed = rewrite_inputs(body, collect)
@@ -610,7 +601,7 @@ class Project:
             for name in self._file.names(kind):
                 location = self.path(kind, name)
                 if location.is_file():
-                    found.append((kind, name, _body(location, keep=True)))
+                    found.append((kind, name, _body(location)))
         return found
 
     def _put_item(
@@ -650,25 +641,15 @@ class _Plan:
     inputs: dict[Path, str]
 
 
-def _put(layer: dict[str, Any], path: str, value: object) -> None:
-    *parents, last = path.split(".")
-    cursor = layer
-    for part in parents:
-        cursor = cursor.setdefault(part, {})
-    cursor[last] = value
-
-
 def _text(body: Mapping[str, Any]) -> str:
     return str(yaml.safe_dump(dict(body), sort_keys=False))
 
 
-def _body(location: Path, *, keep: bool = False) -> dict[str, Any]:
+def _body(location: Path) -> dict[str, Any]:
     raw = yaml.safe_load(location.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise ProjectError(f"{location} is not a YAML mapping")
-    if keep:
-        return raw
-    return {key: value for key, value in raw.items() if key not in HEADER_KEYS}
+    return raw
 
 
 def _delete(body: dict[str, Any], dotted: str) -> bool:

@@ -6,7 +6,8 @@ import copy
 import math
 import re
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, fields
+from collections.abc import Set as AbstractSet
+from dataclasses import dataclass, field, fields
 from functools import cache
 from pathlib import Path
 from typing import Any, Literal, TypeVar
@@ -128,13 +129,17 @@ class ExposedValue:
 
 @dataclass(frozen=True, eq=False)
 class ModelFile:
-    """One model file a study read: its kind, its name, its location, its digest, its exposed."""
+    """One model file a study read: its kind, name, location, digest, exposed values and body.
+
+    ``body`` is the layer a study merges: the keys the kind owns, without ``HEADER_KEYS``.
+    """
 
     kind: ModelKind
     name: str
     path: Path
     sha256: str
     exposed: tuple[ExposedValue, ...] = ()
+    body: Mapping[str, Any] = field(default_factory=dict)
 
 
 def exposed_values(
@@ -632,9 +637,9 @@ def _resolve(
     for kind in MODEL_KINDS:
         if kind not in paths:
             continue
-        found, mapping = _read_model_file(kind, paths[kind], source)
+        found = read_model_file(kind, paths[kind], source=source)
         files.append(found)
-        layers.append((str(paths[kind]), mapping))
+        layers.append((str(paths[kind]), found.body))
     named = frozenset(file.kind for file in files)
     pruned = _prune(study, "", named)
     # Nearest to the study first, as the merge's precedence runs: a tie goes to the layer whose
@@ -668,48 +673,76 @@ def _resolve(
     return document
 
 
-def _read_model_file(kind: ModelKind, path: Path, source: str) -> tuple[ModelFile, dict[str, Any]]:
-    if not path.is_file():
-        raise CaseValidationError(f"{source}: models.{kind}: {path} is not a file")
-    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+def read_model_file(
+    kind: ModelKind, path: str | Path, *, rebase: bool = True, source: str | None = None
+) -> ModelFile:
+    """Read a model file as a study would, refusing it as a study does; return its record.
+
+    Parameters
+    ----------
+    rebase
+        Make each relative input path in the body absolute beside the file; else keep it as written.
+    source
+        The study that names the file, for the refusal of a missing one.
+    """
+    location = Path(path)
+    if not location.is_file():
+        raise CaseValidationError(
+            f"{source if source is not None else location}: models.{kind}: {location} is not a file"
+        )
+    raw = yaml.safe_load(location.read_text(encoding="utf-8"))
     if not isinstance(raw, Mapping):
-        raise CaseValidationError(f"{path}: a {kind} model is a YAML mapping")
+        raise CaseValidationError(f"{location}: a {kind} model is a YAML mapping")
     if raw.get("schema") != SCHEMAS[kind]:
         raise CaseValidationError(
-            f"{path}: expected schema {SCHEMAS[kind]!r}, found {raw.get('schema')!r}"
+            f"{location}: expected schema {SCHEMAS[kind]!r}, found {raw.get('schema')!r}"
         )
     name = raw.get("name")
     if not isinstance(name, str) or not name:
-        raise CaseValidationError(f"{path}: a {kind} model carries a name")
+        raise CaseValidationError(f"{location}: a {kind} model carries a name")
     if "models" in raw:
-        raise CaseValidationError(f"{path}: a model names no model, so it holds no models: key")
+        raise CaseValidationError(f"{location}: a model names no model, so it holds no models: key")
     body = {key: value for key, value in raw.items() if key not in HEADER_KEYS}
     for expression in expression_paths(body):
         entered: object = body
         for part in expression.split("."):
             entered = entered[part] if isinstance(entered, Mapping) else entered
         raise CaseValidationError(
-            f"{path}: {expression}: you entered {entered!r}, but an expression belongs to the "
+            f"{location}: {expression}: you entered {entered!r}, but an expression belongs to the "
             f"study, not to a {kind} model; a model file holds numbers. Write a number here, "
             "or give the expression as an override in the study"
         )
     for leaf in _leaves(body, ""):
         if owner_of(leaf) != kind:
             raise CaseValidationError(
-                f"{path}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
+                f"{location}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
             )
-    exposed = exposed_values(kind, raw, str(path))
-    return ModelFile(kind, name, path, file_hash(path), exposed), rebase_inputs(body, path.parent)
-
-
-def check_model_file(kind: ModelKind, path: str | Path) -> ModelFile:
-    """Read a model file as a study would, refusing it as a study does; return its record."""
-    return _read_model_file(kind, Path(path), str(path))[0]
+    exposed = exposed_values(kind, raw, str(location))
+    if rebase:
+        rebase_inputs(body, location.parent)
+    return ModelFile(kind, name, location, file_hash(location), exposed, body)
 
 
 def leaves(mapping: Mapping[str, Any]) -> Iterator[tuple[str, Any]]:
     """Yield each dotted leaf of a case or model mapping, with its value; blocks are descended."""
     return _flat(mapping)
+
+
+def split_case_layers(
+    raw: Mapping[str, Any], *, pinned: AbstractSet[str] = frozenset()
+) -> dict[Kind, dict[str, Any]]:
+    """Split a case mapping into one layer per model kind and the study's, by ``owner_of``.
+
+    The header and ``models:`` go to no layer, nor does a ``None`` leaf; a ``pinned`` path stays
+    with the study whichever model owns it.
+    """
+    kinds: tuple[Kind, ...] = (*MODEL_KINDS, "study")
+    layers: dict[Kind, dict[str, Any]] = {kind: {} for kind in kinds}
+    for path, value in leaves(raw):
+        if value is None or path.split(".", 1)[0] in ("schema", "name", "models"):
+            continue
+        _put(layers["study" if path in pinned else owner_of(path)], path, value)
+    return layers
 
 
 def _leaves(mapping: Mapping[str, Any], path: str) -> Iterator[str]:
