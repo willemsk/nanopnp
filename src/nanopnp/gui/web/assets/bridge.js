@@ -2,6 +2,27 @@
 // Selection only: no camera move, because software GL fills a zoomed cartoon at 2 fps.
 window.nano = {
   viewer: null,
+  // How many times Mol* was built in this window: the frame builds it once and keeps it (VER-78 m).
+  builds: 0,
+  // Build Mol* the first time the frame shows it; after that, show and redraw the one built.
+  async ensure(structureUrl) {
+    if (this.viewer === null) {
+      await this.init(structureUrl);
+      return;
+    }
+    await this.reveal();
+  },
+  async reveal() {
+    const canvas = this.viewer.plugin.canvas3d;
+    this.viewer.plugin.layout.events.updated.next();
+    canvas.handleResize();
+    const drawn = new Promise((done) => {
+      const sub = canvas.didDraw.subscribe(() => { done(); setTimeout(() => sub.unsubscribe(), 0); });
+    });
+    canvas.requestDraw(true);
+    await drawn;
+    document.body.dataset.screenReady = '1';
+  },
   structure() {
     const s = this.viewer.plugin.managers.structure.hierarchy.current.structures[0];
     return s && s.cell.obj && s.cell.obj.data;
@@ -20,6 +41,7 @@ window.nano = {
   async init(structureUrl) {
     const { StructureProperties, Queries, QueryContext, StructureSelection, StructureElement } = molstar.lib.structure;
     this.lib = { StructureProperties, Queries, QueryContext, StructureSelection, StructureElement };
+    this.builds += 1;
     this.viewer = await molstar.Viewer.create('mol', {
       layoutIsExpanded: false, layoutShowControls: false, layoutShowRemoteState: false,
       layoutShowSequence: false, layoutShowLog: false, layoutShowLeftPanel: false,

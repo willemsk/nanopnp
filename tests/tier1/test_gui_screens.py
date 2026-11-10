@@ -201,6 +201,34 @@ def test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing(
     page.wait_for_url(origin + "/study", timeout=READY_WAIT_MS)
 
 
+def test_ver78_m_a_suite_change_keeps_the_window_and_builds_the_molecule_once(
+    browser: Browser, tmp_path: Path
+) -> None:
+    process, found = _start("--state", "charged-tube", entry=CLI, config=tmp_path)
+    url = found.group(1)
+    origin = url.split("/?")[0]
+    page = browser.new_page(viewport={"width": 1000, "height": 640})
+    try:
+        page.goto(url)
+        _ready(page, origin + "/study/charge")
+        page.evaluate("window.marker = 'kept'")
+        page.locator("[data-control=suite-study]").click()
+        page.wait_for_url(origin + "/study", timeout=READY_WAIT_MS)
+        page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
+        assert not page.locator("[data-control=molecule]").is_visible()
+        page.locator("[data-control=open-charge]").click()
+        page.wait_for_url(origin + "/study/charge", timeout=READY_WAIT_MS)
+        page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
+        assert page.evaluate("window.marker") == "kept"
+        assert page.evaluate("window.nano.builds") == 1
+        assert page.locator("[data-control=molecule]").is_visible()
+    finally:
+        page.close()
+        assert process.stdin is not None
+        process.stdin.close()
+        process.wait(STOP_WITHIN_S)
+
+
 def _status(
     url: str, path: str, *, host: str | None = None, cookie: str | None = None
 ) -> tuple[int, str | None]:

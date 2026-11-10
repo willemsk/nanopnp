@@ -130,7 +130,7 @@ SCREENS: tuple[Screen, ...] = (
     Screen("palette", "/molecular?palette=1", (*FRAME_CONTROLS, "palette-input", "palette-list")),
     Screen(
         "st-charge",
-        "/charge",
+        "/study/charge",
         (*FRAME_CONTROLS, "molecule", "strip", "map", "link-chip", "unlink", "status"),
     ),
 )
