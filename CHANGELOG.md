@@ -22,6 +22,37 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.12]
+
+WP5.12: the knowledge base and the guide, Phase 5's twelfth package; tag `v0.6.0-alpha.12` once merged (§8.2.36
+AL13, AL15 to AL21; §8.2.37 AM13 to AM18; 163 of CODE_REVIEW_039's findings, AUD-07 among them; REV-226).
+The knowledge base states what was measured and verified and points to the specification for each rule; the
+guide says what v0.6 does. No case schema, public API or result changes. The
+[plan](docs/plans/phase-5/wp5.12-the-knowledge-base-and-the-guide.md) records the work.
+
+- **Added**:
+  - **REV-227**, the source checklist: the author's verdicts on the six findings that rest on the ESI or the
+    COMSOL model report, each edit landed (AM16, AM18).
+  - **REV-228** (the site's links from the registers to the plans, accepted for WP5.21), **REV-229** (three
+    proposed checks, after v1.0) and **REV-230** (the correction file's comments, open).
+- **Changed**:
+  - Every `[verified]` claim of `knowledge/` names its source; a thesis claim the thesis does not support as
+    worded reads "(unverified)"; `.claude/scripts/audit/markers.py` skips code spans (AL19).
+  - `knowledge/01` backs §4, which governs: its copies of §4's equations and correction forms point to §4, and
+    its errata are numbered as §4.6's six rows. The sodium diffusivity cap at 5.3 M is 8.113 × 10⁻¹⁰ m² s⁻¹ from
+    the governing coefficients (AM13).
+  - The concepts of `knowledge/` state a rule once, in its clause, and keep their measurements; their history
+    moves to the plans' records (AL15, AL17, AL18). `knowledge/06` points to §6; `knowledge/04` and `05` state
+    the rulings as current; `knowledge/07` states the software stack as it is.
+  - `knowledge/09` names the current's evaluation boundary, the cis reservoir boundary, from the paper's main
+    text, and its report footnotes give section and page.
+  - The guide states that protonation runs before stage 2 (AL13), and describes v0.6's commands, desktop page
+    and physics models.
+- **Fixed**: refusal messages and comments in `structure/` and `density/` cite §5.2's NOTEs on stages 1 and 2,
+  where those rules moved in WP5.11 (REV-226).
+- **Amended**: §4.6, PHY-11, VER-03's row, §5.2's radius-band NOTE, VER-54 and Appendix B. The SHALLs still
+  number 517.
+
 ## [0.6.0-alpha.11]
 
 WP5.11: the specification's text and the agent instructions, Phase 5's eleventh package; tag `v0.6.0-alpha.11` once
