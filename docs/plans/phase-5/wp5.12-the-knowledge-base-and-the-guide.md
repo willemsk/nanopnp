@@ -204,10 +204,10 @@ AM14 REV-229.
 - [x] dee9255 13. The source checklist (D5): REV-227 and its section, the author's round on the six (AM18), the confirmed
   edits, the two git rows; done when each row records its verdict or "not checked yet". **Executor:** main
 - [x] 14. Compaction checkpoint. **Executor:** main
-- [ ] 15. The records (D7, D8): REV-226 `fixed`, REV-227 to REV-230, the register, `holds-now.yaml`, `decisions.py`,
+- [x] 6e7ba55 15. The records (D7, D8): REV-226 `fixed`, REV-227 to REV-230, the register, `holds-now.yaml`, `decisions.py`,
   `CHANGELOG.md`; done when each finding reads `fixed` or names its REV row and `decisions.py --check` passes.
   **Executor:** main
-- [ ] 16. Compaction checkpoint. **Executor:** main
+- [x] 16. Compaction checkpoint. **Executor:** main
 - [ ] 17. The Outcome, both Status lines, `current.md`, the PR body; done when the code and review say so.
   **Executor:** main
 
