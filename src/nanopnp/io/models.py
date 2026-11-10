@@ -100,6 +100,9 @@ _EXPOSED_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 # Keys a model file holds beside the keys its kind owns; none of them enters the merge.
 HEADER_KEYS = ("schema", "name", "exposes")
 
+# A file's metadata, never one of its values: the header and a study's `models:`.
+METADATA_KEYS = frozenset({*HEADER_KEYS, "models"})
+
 D = TypeVar("D", bound=CaseDocument)
 
 Override = tuple[FieldValue, FieldValue]
@@ -704,9 +707,7 @@ def read_model_file(
         raise CaseValidationError(f"{location}: a model names no model, so it holds no models: key")
     body = {key: value for key, value in raw.items() if key not in HEADER_KEYS}
     for expression in expression_paths(body):
-        entered: object = body
-        for part in expression.split("."):
-            entered = entered[part] if isinstance(entered, Mapping) else entered
+        entered = _value_in(body, expression)
         raise CaseValidationError(
             f"{location}: {expression}: you entered {entered!r}, but an expression belongs to the "
             f"study, not to a {kind} model; a model file holds numbers. Write a number here, "
@@ -729,19 +730,37 @@ def leaves(mapping: Mapping[str, Any]) -> Iterator[tuple[str, Any]]:
 
 
 def split_case_layers(
-    raw: Mapping[str, Any], *, pinned: AbstractSet[str] = frozenset()
+    raw: Mapping[str, Any],
+    *,
+    pinned: AbstractSet[str] = frozenset(),
+    resolved: Mapping[str, Any] | None = None,
 ) -> dict[Kind, dict[str, Any]]:
     """Split a case mapping into one layer per model kind and the study's, by ``owner_of``.
 
-    The header and ``models:`` go to no layer, nor does a ``None`` leaf; a ``pinned`` path stays
-    with the study whichever model owns it.
+    The header and ``models:`` go to no layer, nor does a ``None`` leaf.
+
+    Parameters
+    ----------
+    pinned
+        Paths that stay with the study whichever model owns them; a leaf that holds one, such as
+        a list holding an entry's field, stays whole.
+    resolved
+        The case with its expressions resolved, whose value at a pinned leaf the owning model
+        takes, so that the models form a case alone.
     """
     kinds: tuple[Kind, ...] = (*MODEL_KINDS, "study")
     layers: dict[Kind, dict[str, Any]] = {kind: {} for kind in kinds}
     for path, value in leaves(raw):
-        if value is None or path.split(".", 1)[0] in ("schema", "name", "models"):
+        if value is None or path.split(".", 1)[0] in METADATA_KEYS:
             continue
-        _put(layers["study" if path in pinned else owner_of(path)], path, value)
+        owner = owner_of(path)
+        if not any(field == path or field.startswith(f"{path}.") for field in pinned):
+            _put(layers[owner], path, value)
+            continue
+        _put(layers["study"], path, value)
+        number = _value_in(resolved, path) if resolved is not None else None
+        if owner != "study" and number is not None:
+            _put(layers[owner], path, number)
     return layers
 
 

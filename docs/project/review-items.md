@@ -2951,3 +2951,22 @@ WP5.12 did not change:
 **Open**: each wants a reading against its source, by the next package that touches §6, VER-03 or
 `knowledge/06`.
 
+
+### REV-233: Importing a case leaves a model without a value the study writes as an expression
+
+`Project._split` splits a case through `io/models.py:split_case_layers(raw, pinned=frozenset(case.expressions))`,
+which sends a leaf to the study only when its path equals a pinned path, and then gives the leaf's model nothing.
+§5.3.5 says the study resolves to the case it was split from; two cases do not import:
+
+- An expression at a model-owned field the schema requires, such as `boundary_conditions.bias_V: v`: the physics
+  model lacks `bias_V`, so the models with the study's own keys do not form a case and `_verify` refuses the import.
+- An expression inside a list entry, such as `electrolyte.species.0.z` or `charge.edits.0.radius_scale`: `leaves`
+  yields the list whole, the exact match misses, and the model receives the expression, which `read_model_file`
+  refuses.
+
+`study_layer` pins a leaf by prefix and keeps the model's number, so the study form of a study has neither fault.
+Probed at WP5.13's head and at `main` (`ae01061`) alike; WP5.13 moved the split verbatim. Found by CODE_REVIEW_048.
+
+**Fixed** in WP5.13, as the author ruled on 10 November 2026: `split_case_layers` pins a leaf by prefix, as
+`study_layer` does, and gives the owning model the resolved number from the case it is passed as `resolved`; the
+study keeps the expression. §5.3.5 says so; `tests/tier1/test_project.py:test_fr32_a_case_with_an_expression_at_a_models_value_imports_as_the_same_case`.

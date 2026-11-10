@@ -237,6 +237,15 @@ first component. `_body(location)` returns the mapping whole. `_problems_of` cal
 > unmoved, no re-pin, no new layering edge and `SPLIT_BOUND` holding; the strict documentation build passed with
 > `mkdocs.yml` unchanged.
 
+> **Outcome — the review fixed an import that predated the package.** [CODE_REVIEW_048](../../code_reviews/CODE_REVIEW_048.md)
+> found nine findings; six were fixed as found, two were left with no effect today. The ninth, REV-233, was on `main`:
+> `Project.import_case` refused a case writing an expression at a model's value. The author ruled to fix it here, so
+> `split_case_layers` pins by prefix and gives the owning model the resolved number, and §5.3.5 says so.
+
+> **Outcome — measured cost.** One session, 1.0 agent hours and 6 touches so far: implement 0.3 + 0.4 agent hours
+> and 1 + 2 touches across its compaction, ship 0.3 agent hours and 3 touches. The In brief estimated five sessions,
+> three to six agent hours and eight touches.
+
 ### Verification
 
 Rows 1, 2 and 4 are in `tests/tier1/test_models.py`, row 3 in `tests/tier1/test_case.py`; each runs by

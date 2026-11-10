@@ -18,6 +18,8 @@ to it; the command line and the workbench add none.
 A case file **imports** into a project (`Project.import_case`, `nanopnp project import`) split by the
 ownership table of §5.3.1's `models:` NOTE into a molecular model, a continuum model, a physics model and a study, and the
 study resolves to the case it was split from, so every stage's key but the first is the original's.
+A value the case writes as an expression stays in the study, and the model that owns it holds its resolved
+number, so the models form a case alone.
 A case whose `models:` names files imports those files too, each under its `name:`: an identical file
 is reused, a different file of a taken name is stored as `<name>-2`, and the study names the copies. An
 input file is **copied** into `inputs/` and written relative to the item, or **linked** where it lies

@@ -12,7 +12,7 @@ from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import CaseDocument
 from nanopnp.io.case_paths import UnknownCasePathError, schema_default
 from nanopnp.io.case_paths import value_at as case_value_at
-from nanopnp.io.models import HEADER_KEYS, Kind, leaves, owner_of
+from nanopnp.io.models import METADATA_KEYS, Kind, leaves, owner_of
 
 SwitchValue: TypeAlias = Any
 
@@ -243,9 +243,6 @@ def _block_absent(document: CaseDocument, path: str) -> bool:
     )
 
 
-_METADATA_KEYS = frozenset({*HEADER_KEYS, "models"})
-
-
 @dataclass(frozen=True)
 class Change:
     """One value set away from its default, or one study override of a model's value.
@@ -309,7 +306,7 @@ def mapping_changes(body: Mapping[str, Any]) -> tuple[Change, ...]:
     found = (
         _away(path, value)
         for path, value in leaves(body)
-        if path.split(".", 1)[0] not in _METADATA_KEYS
+        if path.split(".", 1)[0] not in METADATA_KEYS
     )
     return tuple(sorted((c for c in found if c is not None), key=lambda c: c.path))
 
