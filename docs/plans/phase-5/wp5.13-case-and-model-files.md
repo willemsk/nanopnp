@@ -11,8 +11,8 @@ a clause and never restates it.
 
 **What changes.** Nothing a user computes or sees moves. Inside the library, reading a case file becomes one reader
 that understands named models and variables, in place of two readers, one of which refused them. Editing a case in
-Python takes one pass instead of two. The files a case names are found in one place instead of four, and the project
-reads a model file's contents from the reader instead of parsing the file again for its changed list. The suites that
+Python takes one pass instead of two. The files a case names are found in one place instead of four, and a model
+file's record keeps its checked contents, so the project's changed list no longer strips the file's header itself. The suites that
 follow then extend one place each. Two refusal messages get shorter: asked to give a model or a variable to a case
 that has none, they say to write it in the case file.
 
@@ -44,7 +44,7 @@ item 3 (AL23; D1.3), and its NOTE on `variables:` in item 3 (AL23). The plan's c
 
 | Decision | Choice | Why/source |
 |---|---|---|
-| D1 One reader pair | `io/models.py:read_case(path, *, model)` and `read_case_text(text, *, base, source, model)` replace `read` and `reads`. `io/case.py` keeps `validate_mapping` and loses `read_case`, `read_case_text` and `_validate`. `pipeline/case.py:load_case` and `loads_case` stay the registry-checked seams. The `io` case modules import one way, `models` → `variables` → `case_paths` → `case`, all at the top | CODE_REVIEW_036 D1.1, D1.2, D1.5 and C1.5, ruled by the author on 7 November 2026; AL23 |
+| D1 One reader pair | `io/models.py:read_case(path, *, model)` and `read_case_text(text, *, base, source, model)` replace `read` and `reads`. `io/case.py` keeps `validate_mapping` and loses `read_case`, `read_case_text` and `_validate`. `pipeline/case.py:load_case` and `loads_case` stay the registry-checked seams. The `io` case modules import one way, `models` → `variables` → `case_paths` → `case`, all at the top; `case.py`'s `TYPE_CHECKING` import of the two records stays, for annotations | CODE_REVIEW_036 D1.1, D1.2, D1.5 and C1.5, ruled by the author on 7 November 2026; AL23 |
 | D2 One input-path seam | `io/case_paths.py` holds `_cursor`, `input_paths(source)` over a document or a mapping (the path fields without `models.*`, and the correction files a case names by path), `rewrite_inputs(body, rewrite) -> bool` and `rebase_inputs(body, base)`. `correction_paths`, `io/project.py:item_inputs` and its `rewrite_inputs`, `io/models.py:_rebased` and `_correction_leaves`, and `api/case.py:_rebased_paths` go, and so does every merge of the first two | D1.4 and C1.3, ruled by the author on 7 November 2026 |
 | D3 One substitution | `substitute(document, assignments, *, base=None)`. A `base` rebases the relative input paths after the edits in each branch: the model swap (`ModelRecord.carried` gains `base` and rebases the study layer before `_resolve`), the variables branch (`VariableRecord.carried` gains `base`) and the plain one. `Case.with_` calls it once. The two refusals say "write models: in the case file" and "write variables: in the case file" | D1.3, C1.1 and C1.2, ruled by the author on 7 November 2026; decided by the plan for the swap branch, which the reviewed sketch returned unrebased |
 | D4 A model file carries its body | `ModelFile.body` is the merge layer: the owned keys without `HEADER_KEYS`, rebased beside the file unless `rebase=False`. `read_model_file(kind, path, *, rebase=True, source=None)` replaces `_read_model_file` and `check_model_file`, and `_resolve` merges `found.body`. `Project._copy_model` still reads the file as written | D5.1 and C5.1, ruled by the author on 7 November 2026; decided by the plan for `_copy_model`, since a copy keeps `exposes:` and the relative paths as written |
@@ -65,7 +65,7 @@ item 3 (AL23; D1.3), and its NOTE on `variables:` in item 3 (AL23). The plan's c
   calls `reads(text, base=..., source=..., model=cls)`.
 - `io/case.py` imports `io/models.py` only under `TYPE_CHECKING`. `models.py` imports `case`, `case_paths` and
   `variables` at the top, `variables.py` imports `case` and `case_paths`, and `case_paths.py` imports `case`.
-- `tests/tier1/test_layering.py:SPLIT_BOUND` caps `io/case.py` and `io/case_paths.py` (697 lines today) at 1,266.
+- `tests/tier1/test_layering.py:SPLIT_BOUND` caps `io/case.py` (852 lines today) and `io/case_paths.py` (697) at 1,266 each.
 
 **D2.**
 - `path_fields()` returns seven input fields and `models.molecular`, `models.continuum` and `models.physics`.
@@ -174,7 +174,7 @@ saying to write `models:` in the case file".
 **Item 3.** Rename `io/models.py:read` and `reads` to `read_case` and `read_case_text`, with the same bodies and
 `Raises` naming `CaseValidationError`. Delete `io/case.py:read_case`, `read_case_text` and `_validate`. The module's
 docstring ends "validating and writing". Update `pipeline/case.py`, `api/case.py:Case.loads` and
-`validation/costs.py`, whose import becomes `from nanopnp.io.models import read_case`. In §5.3.1, replace "A reader
+`validation/costs.py`, which imports `read_case` from `nanopnp.io.models` and keeps `dump_case` from `io/case`. In §5.3.1, replace "A reader
 that does not resolve models, `read_case`, SHALL refuse a document carrying `models:`, naming the readers that do
 (`Case.load`, `pipeline.case.load_case`)." with "Every case reader resolves `models:`: `read_case` and
 `read_case_text`, and `Case.load` and `pipeline.case.load_case` through them." In the `variables:` NOTE, "so a reader
@@ -199,7 +199,7 @@ def split_case_layers(
 
 `Project._split` takes `split_case_layers(raw, pinned=frozenset(case.expressions))` and drops its two pops.
 `io/defaults.py` adds `_METADATA_KEYS = frozenset({*HEADER_KEYS, "models"})`, and `mapping_changes` filters on the
-first component. `_body(location)` returns the mapping whole. `_problems_of` calls `read_model_file(kind, location)`.
+first component. `_body(location)` returns the mapping whole. `_problems_of` calls `read_model_file(kind, location)`. `tests/tier1/test_models.py:split_case` builds its layers with `split_case_layers`.
 
 **Item 7.** In `review-findings.md`, REV-217 and REV-219 become `fixed`, with a *Fixed* line in `review-items.md`. In
 `holds-now.yaml`, AL22 reads `open: WP5.14, WP5.16, WP5.17`, and AL23 drops `open:`. Run `decisions.py`. Add
@@ -233,10 +233,10 @@ beside the case, which names it relatively at `electrolyte.parameters` and `corr
 
 | Test | Tier | Identifiers | Oracle and tolerance | `-k` |
 |---|---|---|---|---|
-| 1 `test_fr39_every_case_reader_resolves_a_study_and_its_variables` | 1 | FR-39 | The quick-start split in three, and the quick-start with `radius_nm: 2*a`: `read_case`, `read_case_text(text, base=folder)`, `load_case` and `Case.load` give `==` documents with one `CaseArtefact` hash; the study's record names three files; each variables record holds `{"geometry.pore.radius_nm": "2*a"}` | `every_case_reader` |
-| 2 `test_fr25_every_edit_reads_a_relative_path_beside_its_case` | 1 | FR-25, FR-39 | One assertion per branch, each path `== str((folder / "params.yaml").resolve())`: a plain case's `with_()`; a case with `bias_V: v` after `with_(outputs=["current"])`, its expression kept; a study overriding `corrections.diffusivity.model` with *Params* after a swap-only `with_({"models.continuum": …})` and after `with_(bias_V=0.1)`. `substitute(case, {})` leaves `"params.yaml"` | `relative_path_beside` |
+| 1 `test_fr39_every_case_reader_resolves_a_study_and_its_variables` | 1 | FR-39 | The quick-start split by `split_case`, and the quick-start inline with `a: {value: 1, unit: nm}` and `radius_nm: 2*a`: `read_case`, `read_case_text(text, base=folder)`, `load_case` and `Case.load` give `==` documents with one `CaseArtefact` hash; the study's record names its two files, continuum and physics (the quick-start has no molecular key); each variables record holds `{"geometry.pore.radius_nm": "2*a"}` | `every_case_reader` |
+| 2 `test_fr25_every_edit_reads_a_relative_path_beside_its_case` | 1 | FR-25, FR-39 | One assertion per branch, each path `== str((folder / "params.yaml").resolve())`: a plain case's `with_()`; a case with `v: {value: 50, unit: mV}` and `bias_V: v` after `with_(outputs=["current"])`, its expression kept; a study overriding `corrections.diffusivity.model` with *Params* after a swap-only `with_({"models.continuum": …})` and after `with_(bias_V=0.1)`. `substitute(case, {})` leaves `"params.yaml"` | `relative_path_beside` |
 | 3 `test_fr25_a_case_and_its_mapping_name_the_same_input_files` | 1 | FR-25 | For the quick-start with *Params* and for 2WCD, `input_paths(document) == input_paths(mapping)` and the installed name `willems2020_nacl` is absent; a study file's mapping gives no `models.*`; `rebase_inputs` makes each relative value absolute and leaves an absolute one | `same_input_files` |
-| 4 `test_fr39_a_model_file_carries_the_body_its_study_merges` | 1 | FR-39, FR-34 | The quick-start's physics model with *Params* and an `exposes:` list: `read_model_file(...).body` holds no `schema`, `name` or `exposes`; *Params* is absolute, and as written with `rebase=False`; `mapping_changes` of the file equals that of the body; `mapping_changes({"models": {"physics": "x.yaml"}}) == ()` | `carries_the_body` |
+| 4 `test_fr39_a_model_file_carries_the_body_its_study_merges` | 1 | FR-39, FR-34 | The quick-start's physics model with *Params* and an `exposes:` list: `read_model_file(...).body` holds no `schema`, `name` or `exposes`; *Params* is absolute, and as written with `rebase=False`; `mapping_changes` of the file equals that of the body read with `rebase=False`; `mapping_changes({"models": {"physics": "x.yaml"}}) == ()` | `carries_the_body` |
 | 5 The VER-62 walks; FR-39's, FR-32's and FR-34's rows of Appendix A; `test_layering.py` | 1, 2 | VER-62, VER-61, VER-72 | Walks unmoved at 10⁻⁸, no re-pin; every existing study, model, variable and project test passes through the one reader; no new edge; `SPLIT_BOUND` holds | `gate.sh run` |
 
 ### Out of scope
