@@ -1,72 +1,256 @@
-"""Render every screen of the browser workbench in every fixture state, light and dark.
+"""Render the browser workbench: every fixture state, a 2WCD project and the shell's own states.
 
-    uv run python .claude/scripts/gui/render_shell.py <out-dir>
+    uv run python .claude/scripts/gui/render_shell.py [--only <group> ...] <out-dir>
 
-Starts one `nanopnp gui --no-browser --state <name>` per state, writes a manifest of screens
-x schemes, runs `shoot.cjs` over it, and stops the servers by closing their standard input.
-Exits with `shoot.cjs`'s status (2 if a page did not load), or 1 if a server did not start.
+Groups, each shot light and dark:
+
+- ``states``: every screen of every fixture state (``shell-<state>-<screen>-<scheme>``);
+- ``2wcd``: every screen of a project holding example 07's dodecamer, walked to its charge by
+  ``server --project`` (``shell-2wcd-<screen>-<scheme>``);
+- ``extra``: the dialogs, menus, folded rail, panel tabs, settings sections, key capture, palette
+  query, glossary and About, on the charged fixture (``shell-extra-<name>-<scheme>``);
+- ``compact``: a few screens under a user configuration of compact density, tight spacing and a
+  theme of the user's own (``shell-compact-<screen>-<scheme>``).
+
+The 2WCD project is built once into ``cache/2wcd-<key>/`` beside ``<out-dir>``, ``key`` being 12 hex
+digits of the SHA-256 of the case file and the deposited structure; its first walk fills the
+project's store, so a later render reads the charge from it. A cache is built in a temporary
+sibling and renamed, so a half-built one is never used. Starts one server per state, writes
+``manifest.json``, runs `shoot.cjs`, and stops the servers by closing their standard input. Exits
+with `shoot.cjs`'s status (2 if a page did not load), or 1 if a server did not start.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
-from nanopnp.gui.web import server
+import yaml
+
+from nanopnp.api.case import Case
+from nanopnp.api.project import Project
+from nanopnp.gui.web import server, theme
 from nanopnp.gui.web.screens import SCREENS
+from nanopnp.gui.web.settings import SETTINGS_FILENAME
 from nanopnp.gui.web.states import STATES
 
+ROOT = Path(__file__).resolve().parents[3]
 SHOOT = Path(__file__).with_name("shoot.cjs")
+EXAMPLE = ROOT / "examples" / "07-pdb-to-charged-run" / "2wcd.case.yaml"
+PREPARE = ROOT / "examples" / "06-pdb-to-mesh" / "prepare.py"
+DEPOSITED = ROOT / "tests" / "data" / "structures" / "2wcd.pdb.gz"
 VIEWPORT = [1280, 800]
 SCHEMES = ("light", "dark")
 READY = 'body[data-screen-ready="1"]'
+GROUPS = ("states", "2wcd", "extra", "compact")
+THEME_NAME = "dusk"
+START_S = 1800
+"""How long a server may take to print its ready line: the 2WCD walk comes before it."""
+
+MENU = "[data-control=menu-{}]"
+ITEM = '.q-menu .q-item:has-text("{}")'
 
 
-def start(state: str) -> tuple[subprocess.Popen[str], str]:
-    """Start the workbench in a state and return it with its first address."""
+def menu_item(menu: str, title: str) -> list[str]:
+    """Return the clicks that open a menu and choose one of its items."""
+    return [MENU.format(menu), ITEM.format(title)]
+
+
+EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
+    ("dialog-new", "/molecular", menu_item("file", "New project")),
+    ("dialog-open", "/molecular", menu_item("file", "Open project")),
+    ("dialog-import", "/molecular", menu_item("file", "Import case")),
+    ("dialog-export", "/molecular", menu_item("file", "Export project")),
+    ("menu-file", "/molecular", [MENU.format("file")]),
+    ("menu-view", "/molecular", [MENU.format("view")]),
+    ("menu-help", "/molecular", [MENU.format("help")]),
+    ("rail-folded", "/molecular", ["[data-control=rail-fold]"]),
+    ("panel-queue", "/study?panel=queue", []),
+    ("panel-log", "/study?panel=log", []),
+    ("settings-colours", "/settings?setting=theme", ["[data-control=theme-colours] .q-item"]),
+    ("settings-background", "/settings?setting=viewer_background", []),
+    ("settings-key-capture", "/settings?setting=keys", ["[data-control=key-project-new]"]),
+    ("palette-query", "/molecular?palette=suite", []),
+    ("glossary", "/molecular?dialog=glossary", []),
+    ("about", "/molecular?dialog=about", []),
+)
+COMPACT = ("molecular", "settings", "changes")
+COMPACT_CLICKS = {"settings": ["[data-control=theme-colours] .q-item"]}
+
+
+def cache_key() -> str:
+    """Return the first 12 hex digits of the SHA-256 of the 2WCD case and its raw structure."""
+    digest = hashlib.sha256()
+    for source in (EXAMPLE, DEPOSITED):
+        digest.update(source.read_bytes())
+    return digest.hexdigest()[:12]
+
+
+def build_cache(folder: Path) -> None:
+    """Prepare the dodecamer, copy the case beside it and import the case into a project."""
+    folder.mkdir(parents=True)
+    prepared = folder / "2wcd-prepared.pdb"
+    subprocess.run(
+        [sys.executable, str(PREPARE), str(DEPOSITED), str(prepared)], check=True, cwd=ROOT
+    )
+    case = folder / EXAMPLE.name
+    shutil.copy(EXAMPLE, case)
+    project = Project.create(folder / "project", name="2wcd")
+    project.import_case(Case.load(case))
+
+
+def cached_project(out: Path) -> Path:
+    """Return the 2WCD project of the cache beside ``out``, built now if it is not there."""
+    cache = out.resolve().parent / "cache" / f"2wcd-{cache_key()}"
+    if cache.is_dir():
+        print(f"2WCD project reused from {cache}", file=sys.stderr)
+    else:
+        print(f"2WCD project building in {cache}", file=sys.stderr)
+        pending = cache.with_name(f"{cache.name}.building-{os.getpid()}")
+        shutil.rmtree(pending, ignore_errors=True)
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            build_cache(pending)
+            pending.rename(cache)
+        finally:
+            shutil.rmtree(pending, ignore_errors=True)
+    return cache / "project"
+
+
+def write_config(folder: Path) -> None:
+    """Write a user configuration: compact density, tight spacing and a theme of the user's own."""
+    folder.mkdir(parents=True, exist_ok=True)
+    dusk = theme.shipped()["dark"].model_copy(update={"name": THEME_NAME})
+    dusk.colours.update({"accent": "#c77dff", "surface": "#1d1b2e"})
+    (folder / "themes").mkdir(exist_ok=True)
+    dumped = dusk.model_dump(mode="json", by_alias=True)
+    (folder / "themes" / f"{THEME_NAME}.yaml").write_text(
+        yaml.safe_dump(dumped, sort_keys=False), encoding="utf-8"
+    )
+    settings = {"density": "compact", "spacing": "tight", "theme": THEME_NAME}
+    (folder / SETTINGS_FILENAME).write_text(yaml.safe_dump(settings), encoding="utf-8")
+
+
+def start(*arguments: str, config: Path | None = None) -> tuple[subprocess.Popen[str], str]:
+    """Start the workbench with these arguments and return it with its first address."""
+    environment = dict(os.environ)
+    if config is not None:
+        environment["NANOPNP_CONFIG"] = str(config)
     process = subprocess.Popen(
-        [sys.executable, "-m", "nanopnp.gui.web.server", "--no-browser", "--state", state],
+        [sys.executable, "-m", "nanopnp.gui.web.server", "--no-browser", *arguments],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         text=True,
+        env=environment,
     )
     assert process.stdout is not None
     found = server.READY.match(process.stdout.readline().strip())
     if found is None:
         process.kill()
-        raise SystemExit(f"the {state} server printed no ready line")
+        raise SystemExit(f"the server started with {' '.join(arguments)} printed no ready line")
     return process, found.group(1)
 
 
+def entry(
+    identifier: str, first: str, path: str, scheme: str, click: list[str] | None = None
+) -> dict[str, Any]:
+    """Return one manifest entry: a path of the server at ``first``, shot in a colour scheme."""
+    shot: dict[str, Any] = {
+        "id": f"{identifier}-{scheme}",
+        "url": first.split("/?")[0] + path,
+        "via": [first],
+        "ready": READY,
+        "viewport": VIEWPORT,
+        "scheme": scheme,
+        "wait_ms": 500,
+    }
+    if click:
+        shot["click"] = click
+    return shot
+
+
+def states_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return every screen of every fixture state, starting a server for each."""
+    manifest = []
+    for state in STATES:
+        process, first = start("--state", state)
+        servers.append(process)
+        for screen in SCREENS:
+            for scheme in SCHEMES:
+                manifest.append(entry(f"shell-{state}-{screen.id}", first, screen.path, scheme))
+    return manifest
+
+
+def project_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return every screen of the cached 2WCD project, walked to its charge."""
+    process, first = start("--project", str(cached_project(out)))
+    servers.append(process)
+    return [
+        entry(f"shell-2wcd-{screen.id}", first, screen.path, scheme)
+        for screen in SCREENS
+        for scheme in SCHEMES
+    ]
+
+
+def extra_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return the shell's own states on the charged fixture."""
+    process, first = start("--state", "charged-tube")
+    servers.append(process)
+    return [
+        entry(f"shell-extra-{name}", first, path, scheme, click)
+        for name, path, click in EXTRAS
+        for scheme in SCHEMES
+    ]
+
+
+def compact_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return a few screens under a user configuration of compact density and a user theme."""
+    config = out.resolve() / "config"
+    write_config(config)
+    process, first = start("--state", "charged-tube", config=config)
+    servers.append(process)
+    return [
+        entry(
+            f"shell-compact-{screen.id}", first, screen.path, scheme, COMPACT_CLICKS.get(screen.id)
+        )
+        for screen in SCREENS
+        if screen.id in COMPACT
+        for scheme in SCHEMES
+    ]
+
+
+GROUP_ENTRIES = {
+    "states": states_entries,
+    "2wcd": project_entries,
+    "extra": extra_entries,
+    "compact": compact_entries,
+}
+
+
 def main(argv: list[str]) -> int:
-    """Shoot the shell into the directory ``argv[0]``."""
-    if len(argv) != 1:
+    """Shoot the shell into the directory named last in ``argv``."""
+    groups = list(GROUPS)
+    if argv[:1] == ["--only"]:
+        groups = []
+        argv = argv[1:]
+        while argv and argv[0] in GROUPS:
+            groups.append(argv.pop(0))
+    if len(argv) != 1 or not groups:
         print(__doc__)
         return 64
     out = Path(argv[0])
     out.mkdir(parents=True, exist_ok=True)
     servers: list[subprocess.Popen[str]] = []
-    manifest = []
+    manifest: list[dict[str, Any]] = []
     try:
-        for state in STATES:
-            process, first = start(state)
-            servers.append(process)
-            origin = first.split("/?")[0]
-            for screen in SCREENS:
-                for scheme in SCHEMES:
-                    manifest.append(
-                        {
-                            "id": f"shell-{state}-{screen.id}-{scheme}",
-                            "url": origin + screen.path,
-                            "via": [first],
-                            "ready": READY,
-                            "viewport": VIEWPORT,
-                            "scheme": scheme,
-                            "wait_ms": 500,
-                        }
-                    )
+        for group in groups:
+            manifest += GROUP_ENTRIES[group](out, servers)
         (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         return subprocess.run(["node", str(SHOOT), str(out / "manifest.json"), str(out)]).returncode
     finally:

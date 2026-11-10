@@ -4,10 +4,12 @@
 //   node .claude/scripts/gui/shoot.cjs --self-check <out-dir>
 //
 // The manifest is a JSON list of {id, url, viewport: [w, h], scheme: "light"|"dark", wait_ms,
-// expand, via, ready}. With `expand`, a CSS selector, the page is shot once per matching element's
+// expand, via, ready, click}. With `expand`, a CSS selector, the page is shot once per matching element's
 // `data-screen` value, after setting `location.hash` to it, as `<id>-<screen>`. `via` lists
 // addresses to load first, so that a server's token cookie is set; `ready` is a selector awaited
-// (90 s) after the load, as the workbench's `body[data-screen-ready="1"]`. Writes
+// (90 s) after the load, as the workbench's `body[data-screen-ready="1"]`. `click` lists selectors
+// clicked in order once the page is ready, each awaited (30 s) and followed by a short settle, so
+// that a menu, a dialog or a folded rail is open when the page is shot. Writes
 // `<out>/<id>.png` and `<out>/index.json`; a shot's `viewer` is the shell's host-document flag, or
 // null on another page, and `unmeasured` lists the text the contrast check could not measure.
 // Exits 0, or 2 if a page failed to load.
@@ -24,6 +26,7 @@ const { pathToFileURL } = require("url");
 const { chromium } = require("playwright");
 
 const SCREEN_SETTLE_MS = 150;
+const CLICK_SETTLE_MS = 400;
 
 // Run inside the page: WCAG 2.2 1.4.3 (contrast) and 2.5.8 (target size, minimum), measured.
 function checkPage() {
@@ -294,6 +297,12 @@ async function shootOne(browser, entry, out) {
     for (const address of entry.via || []) await page.goto(address, { waitUntil: "load", timeout: 60000 });
     await page.goto(entry.url, { waitUntil: "load", timeout: 60000 });
     if (entry.ready) await page.waitForSelector(entry.ready, { timeout: 90000 });
+    // After the ready wait: a click on a page whose socket has not connected is lost.
+    for (const selector of entry.click || []) {
+      await page.waitForSelector(selector, { state: "visible", timeout: 30000 });
+      await page.click(selector, { timeout: 30000 });
+      await page.waitForTimeout(CLICK_SETTLE_MS);
+    }
   } catch (error) {
     loaded = false;
     pageErrors.push(`load failed: ${error.message}`);
