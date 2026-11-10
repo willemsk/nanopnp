@@ -1,6 +1,6 @@
 # WP5.14 — Sweep planning and the walk's keying
 
-**Status: planned, not started.** Planned 10 November 2026 on `main` (`d3420d8`). It inherits §8.2.36 AL22, and
+**Status: in progress, items 1 to 4 done.** Planned 10 November 2026 on `main` (`d3420d8`). It inherits §8.2.36 AL22, and
 CODE_REVIEW_036's candidates 2 and 6 with their corrections C2.1 to C2.4 and C6.1, settled with the author on 6 and
 7 November 2026.
 
@@ -198,10 +198,10 @@ own point and its parent."
   pass. **Executor:** main.
 - [x] 7948fac 2. `src/nanopnp/sweep/plan.py`, `tests/tier1/test_sweep_plan.py`: members keyed on their directory and planning in
   memory (D1, D2); done when row 2 and VER-36's tests pass. **Executor:** main.
-- [ ] 3. `src/nanopnp/api/sweep.py`, `src/nanopnp/api/session.py`, `specification/05-software-design/03-4-sweeps.md`,
+- [x] 74d5338 3. `src/nanopnp/api/sweep.py`, `src/nanopnp/api/session.py`, `specification/05-software-design/03-4-sweeps.md`,
   `tests/tier1/test_forecast.py`, `tests/tier1/test_sweep_plan.py`: in-memory `plan_sweep` and members resolved where
   held (D1, D3, D4); done when rows 1 and 4 and FR-39's sweep tests pass. **Executor:** main.
-- [ ] 4. Compaction checkpoint. **Executor:** main.
+- [x] 4. Compaction checkpoint. **Executor:** main.
 - [ ] 5. `.claude/hooks/gate.sh run`, `uv run pytest tests/tier2/test_examples_03_iv_sweep.py` and the strict
   documentation build, since items 1 to 3 change docstrings and §5.3.4: row 5. **Executor:** main.
 - [ ] 6. The records of *Implementation details*; FR-39's Appendix A row names rows 1 and 2, FR-27's row 3; Outcome
