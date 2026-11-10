@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections import Counter
+from collections.abc import Iterator
 from pathlib import Path
 from typing import NoReturn
 
@@ -9,12 +11,15 @@ import pytest
 
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
-from nanopnp.api.sweep import run_plan
+from nanopnp.api.sweep import plan_sweep, run_plan, run_point
 from nanopnp.core.stages import create
+from nanopnp.io.case import CaseDocument
+from nanopnp.io.resolved import ResolvedCase
+from nanopnp.pipeline import case as pipeline_case
 from nanopnp.pipeline.run import open_run
 from nanopnp.sweep.document import loads_sweep
 from nanopnp.sweep.forecast import Forecast, forecast
-from nanopnp.sweep.plan import SweepPlan, build_plan, write_plan
+from nanopnp.sweep.plan import PLAN_FILENAME, SweepPlan, build_plan, read_plan, write_plan
 
 SWEEP = """\
 schema: nanopnp/sweep/v0.5
@@ -26,8 +31,8 @@ axes:
 """
 
 
-def _plan(directory: Path) -> SweepPlan:
-    case = Case.cylinder(
+def _case() -> Case:
+    return Case.cylinder(
         concentration_M=0.1, bias_V=0.0, maxh_nm=4.0, wall_h_nm=1.0, outputs=("current",)
     ).with_(
         **{
@@ -44,8 +49,11 @@ def _plan(directory: Path) -> SweepPlan:
             | {"steric": {"model": "none"}},
         }
     )
+
+
+def _plan(directory: Path) -> SweepPlan:
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / "base.case.yaml").write_text(case.dumps(), encoding="utf-8")
+    (directory / "base.case.yaml").write_text(_case().dumps(), encoding="utf-8")
     source = directory / "forecast.sweep.yaml"
     source.write_text(SWEEP, encoding="utf-8")
     return build_plan(loads_sweep(SWEEP), source=source, check_meshes=False)
@@ -53,6 +61,57 @@ def _plan(directory: Path) -> SweepPlan:
 
 def _moved(found: Forecast, axis: str) -> set[str]:
     return set(found.axes[axis])
+
+
+@pytest.fixture
+def counted(monkeypatch: pytest.MonkeyPatch) -> Iterator[Counter[str]]:
+    resolved: Counter[str] = Counter()
+    original = pipeline_case.resolve
+
+    def counting(document: CaseDocument, **kwargs: Path | None) -> ResolvedCase:
+        resolved[document.name] += 1
+        return original(document, **kwargs)
+
+    for module in ("nanopnp.sweep.plan", "nanopnp.pipeline.run", "nanopnp.api.sweep"):
+        monkeypatch.setattr(f"{module}.resolve", counting)
+    yield resolved
+
+
+def test_fr39_a_planned_sweep_resolves_each_member_once(
+    tmp_path: Path, counted: Counter[str]
+) -> None:
+    # A plan that resolves its members again for the forecast, the run and each parent pays
+    # four times for what it settled once.
+    session = Session(tmp_path / "store", write=False)
+    planned = plan_sweep(_case(), session=session, axis="bias_V", values=[0.0, 0.05, 0.1])
+    names = [point.name for point in planned.plan.points]
+    assert counted == Counter(names)
+
+    counted.clear()
+    planned.forecast()
+    result = planned.run()
+    assert counted == Counter(names)
+    assert all(row["status"] == "ok" for row in result.rows)
+    counted.clear()
+    planned.forecast()
+    assert not counted
+
+    files = _plan(tmp_path / "files")
+    counted.clear()
+    forecast(files, store=session.store)
+    directory = tmp_path / "filed"
+    write_plan(files, directory)
+    members = run_plan(files, directory, session=session)
+    assert not counted
+    assert [member.status for member in members] == ["ok"] * len(files.points)
+
+    read = read_plan(planned.directory / PLAN_FILENAME)
+    point = read.point(2)
+    assert point.parent is not None
+    member = run_point(read, 2, session=session, directory=planned.directory)
+    assert member.status == "ok"
+    assert counted == Counter([point.name, read.point(point.parent).name])
+    assert all(read.held_member(index) is None for index in range(len(read.points)))
 
 
 def test_fr39_the_forecast_equals_the_stages_the_walk_rebuilds(tmp_path: Path) -> None:

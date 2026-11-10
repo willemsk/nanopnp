@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import multiprocessing
-import tempfile
 import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -215,29 +214,16 @@ def plan_sweep(
             }
         ],
     }
-    store = session.store
     text = yaml.safe_dump(document, sort_keys=False)
     base_text = case.dumps(study=case.models_record is not None).encode("utf-8")
-    # The directory is named by the plan's hash, as the sweep command names it, so the plan is
-    # first built beside its files in a staging directory to read that hash. The hash does not
-    # depend on where the base case lies, so the plan is built once and moved.
-    sweeps = store.root / "sweeps"
-    sweeps.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(dir=sweeps, prefix=".staging-") as scratch:
-        staging = Path(scratch)
-        atomic_write_bytes(staging / BASE_FILENAME, base_text)
-        atomic_write_bytes(staging / SWEEP_FILENAME, text.encode("utf-8"))
-        staged = build_plan(
-            loads_sweep(text, source=str(staging / SWEEP_FILENAME)),
-            source=staging / SWEEP_FILENAME,
-            check_meshes=check_meshes,
-        )
-    directory = store.sweep_directory(name, staged.hash)
+    planned = build_plan(loads_sweep(text), base=case, check_meshes=check_meshes)
+    directory = session.store.sweep_directory(name, planned.hash)
     directory.mkdir(parents=True, exist_ok=True)
     atomic_write_bytes(directory / BASE_FILENAME, base_text)
     atomic_write_bytes(directory / SWEEP_FILENAME, text.encode("utf-8"))
-    plan = replace(staged, base_path=(directory / BASE_FILENAME).resolve())
-    return Sweep(plan, directory, session)
+    return Sweep(
+        replace(planned, base_path=(directory / BASE_FILENAME).resolve()), directory, session
+    )
 
 
 def _parent_artefact(
@@ -248,16 +234,22 @@ def _parent_artefact(
     from nanopnp.solve.stage import SolveStage
 
     parent = plan.point(point.parent)
-    document = plan.case(point.parent, base=base)
-    # The base the member's own walk reads against, or the parent's key would be taken from
-    # files read in another directory and no member would ever start warm.
-    beside = plan.base_path.parent
+    resolved = plan.held_member(point.parent)
+    if resolved is None:
+        # The base the member's own walk reads against, or the parent's key would be taken
+        # from files read in another directory and no member would ever start warm.
+        resolved = resolve(plan.case(point.parent, base=base), base=plan.base_path.parent)
     try:
         # Keyed on the artefacts the parent's own walk handed its solve, not on
         # the bare case: a generated mesh exists only as stage 6's stored
         # artefact, and a bare-case key raised for every such sweep, which
         # silently made every member cold.
-        upstream = stored_upstream(document, store=session.store, base=beside)
+        upstream = stored_upstream(
+            resolved.document,
+            resolved=resolved,
+            store=session.store,
+            stages=session.own_stages,
+        )
     except MissingUpstreamError as error:
         # The parent has not run, which is a fallback rather than a failure. Any
         # other error is a defect and is left to raise.
@@ -265,7 +257,7 @@ def _parent_artefact(
             f"the store holds no converged state for parent point {parent.index} "
             f"({parent.point_id}); not even its upstream artefacts are stored: {error}"
         )
-    key = SolveStage().key(StageInputs(resolved=resolve(document, base=beside), upstream=upstream))
+    key = SolveStage().key(StageInputs(resolved=resolved, upstream=upstream))
     found = session.store.get(SOLUTION_SCHEMA, key.hash)
     if found is None:
         return None, (
@@ -303,7 +295,8 @@ def run_point(
         # it is this member's to report, classified, rather than one that ends
         # the whole sweep.
         return _failed(point, error, started, directory)
-    document = plan.case(index, base=base)
+    held = plan.held_member(index)
+    document = held.document if held is not None else plan.case(index, base=base)
     # The *member's* case, not the base case it was substituted from. The
     # manifest embeds this text beside the member's own case hash and writes it
     # back out as the run directory's ``case.yaml``, which is the file QR-08's
@@ -329,6 +322,7 @@ def run_point(
             # member is the same case at one point, so it reads the same files.
             base=plan.base_path.parent,
             arguments={"solve": {"warm_start": warm, "cold_reason": reason}},
+            resolved=held,
         )
     except Cancelled as error:
         return _failed(point, error, started, directory, cancelled=True)

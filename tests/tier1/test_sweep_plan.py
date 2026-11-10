@@ -508,3 +508,20 @@ def test_in_memory_sweep_matches_the_sweep_file_plan(base: Path, tmp_path: Path)
     assert [dict(point.assignments) for point in held.plan.points] == [
         dict(point.assignments) for point in filed.points
     ]
+    held.plan.base_case()
+
+    varied = tmp_path / "varied.yaml"
+    varied.write_text(
+        base.read_text(encoding="utf-8").replace("bias_V: 0.05", "bias_V: v")
+        + "variables: {v: {value: 50, unit: mV}}\n",
+        encoding="utf-8",
+    )
+    over = plan_sweep(
+        Case.load(varied),
+        session=Session(tmp_path / "store", write=False),
+        axis="concentration_M",
+        values=[0.1, 0.3],
+        check_meshes=False,
+    )
+    assert over.plan.variables
+    over.plan.base_case()

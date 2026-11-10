@@ -196,7 +196,7 @@ own point and its parent."
 - [x] 9d29935 1. `src/nanopnp/pipeline/run.py`, `src/nanopnp/pipeline/forecast.py` (deleted), `src/nanopnp/sweep/forecast.py`,
   `tests/tier1/test_stages.py`: one keying walk in one module (D5, D6); done when row 3 and row 4's forecast tests
   pass. **Executor:** main.
-- [ ] 2. `src/nanopnp/sweep/plan.py`, `tests/tier1/test_sweep_plan.py`: members keyed on their directory and planning in
+- [x] 7948fac 2. `src/nanopnp/sweep/plan.py`, `tests/tier1/test_sweep_plan.py`: members keyed on their directory and planning in
   memory (D1, D2); done when row 2 and VER-36's tests pass. **Executor:** main.
 - [ ] 3. `src/nanopnp/api/sweep.py`, `src/nanopnp/api/session.py`, `specification/05-software-design/03-4-sweeps.md`,
   `tests/tier1/test_forecast.py`, `tests/tier1/test_sweep_plan.py`: in-memory `plan_sweep` and members resolved where
