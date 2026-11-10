@@ -163,21 +163,49 @@ def config_root() -> Path:
     return (base / "nanopnp").resolve()
 
 
+RECENT_PROJECTS_FILENAME = "recent-projects"
+
+RECENT_PROJECTS_KEPT = 30
+"""How many project folders the recent list keeps; a setting shows fewer."""
+
+
+def _recorded() -> list[Path]:
+    try:
+        text = (config_root() / RECENT_PROJECTS_FILENAME).read_text(encoding="utf-8")
+    except OSError:
+        text = ""
+    found = [Path(line) for line in text.splitlines() if line.strip()]
+    if not found:
+        # The single-entry file an earlier release wrote.
+        try:
+            older = (config_root() / LAST_PROJECT_FILENAME).read_text(encoding="utf-8").strip()
+        except OSError:
+            older = ""
+        found = [Path(older)] if older else []
+    return found
+
+
+def recent_projects(limit: int = RECENT_PROJECTS_KEPT) -> tuple[Path, ...]:
+    """Return the project folders the workbench opened, newest first, skipping any now gone."""
+    return tuple(folder for folder in _recorded() if folder.is_dir())[:limit]
+
+
 def last_project() -> Path | None:
     """Return the project folder the workbench opened last, or None if it is gone or unrecorded."""
-    try:
-        text = (config_root() / LAST_PROJECT_FILENAME).read_text(encoding="utf-8").strip()
-    except OSError:
-        return None
-    folder = Path(text) if text else None
-    return folder if folder is not None and folder.is_dir() else None
+    recent = recent_projects(1)
+    return recent[0] if recent else None
 
 
 def remember_project(folder: Path) -> None:
-    """Record ``folder`` as the project the workbench opens when given none."""
+    """Put ``folder`` first among the recent projects, the one opened when given none."""
     root = config_root()
     root.mkdir(parents=True, exist_ok=True)
-    (root / LAST_PROJECT_FILENAME).write_text(f"{folder.resolve()}\n", encoding="utf-8")
+    chosen = folder.resolve()
+    kept = [chosen, *(path for path in _recorded() if path != chosen)][:RECENT_PROJECTS_KEPT]
+    text = "".join(f"{path}\n" for path in kept)
+    temporary = root / f".{RECENT_PROJECTS_FILENAME}.{os.getpid()}.tmp"
+    temporary.write_text(text, encoding="utf-8")
+    temporary.replace(root / RECENT_PROJECTS_FILENAME)
 
 
 REFERENCE_DATA_VARIABLE = "NANOPNP_REFERENCE_DATA"

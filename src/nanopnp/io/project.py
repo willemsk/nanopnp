@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
 from nanopnp.io.store import atomic_write_bytes
 
@@ -40,15 +40,14 @@ SWEEPS_FOLDER = "sweeps"
 
 STORE_FOLDER = "store"
 
-Suite = Literal["molecular", "continuum", "study", "analysis"]
+Suite = Literal["molecular", "continuum", "physics", "study", "analysis"]
 
-SUITES: tuple[Suite, ...] = ("molecular", "continuum", "study", "analysis")
+SUITES: tuple[Suite, ...] = ("molecular", "continuum", "physics", "study", "analysis")
 
 ITEM_SUITES: dict[ItemKind, Suite] = {
     "molecular": "molecular",
     "continuum": "continuum",
-    # The Continuum suite holds the physics defaults until the frame gives physics its own suite.
-    "physics": "continuum",
+    "physics": "physics",
     "study": "study",
     "comparison": "analysis",
 }
@@ -92,7 +91,10 @@ LIBRARY_FIELDS: dict[ItemKind, str] = {
 
 
 class ProjectFile(_Strict):
-    """The project file: names and a layout, and no physics."""
+    """The project file: names, a layout and the project's settings, and no physics.
+
+    The workbench checks ``settings`` against its declared list; this file only carries them.
+    """
 
     schema_: str = Field(default=PROJECT_SCHEMA, alias="schema")
     name: str
@@ -100,6 +102,7 @@ class ProjectFile(_Strict):
     open: list[str] = Field(default_factory=list)
     current: str | None = None
     layout: dict[Suite, SuiteLayout] = Field(default_factory=dict)
+    settings: dict[str, JsonValue] = Field(default_factory=dict)
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     def names(self, kind: ItemKind) -> list[str]:

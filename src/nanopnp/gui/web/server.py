@@ -28,6 +28,7 @@ from fastapi import FastAPI
 
 from nanopnp.api.project import Project
 from nanopnp.core.public import __version__
+from nanopnp.gui.web import settings
 from nanopnp.gui.web.pages import install
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case
@@ -44,6 +45,7 @@ __all__ = [
     "Guard",
     "build_app",
     "main",
+    "open_last_project",
     "serve",
     "track",
 ]
@@ -56,6 +58,11 @@ READY = re.compile(r"^nanopnp-gui ready (http://127\.0\.0\.1:\d+/\?token=[\w-]+)
 
 COOKIE = "nanopnp_token"
 """The prefix of the launch cookie's name, which ``Guard`` completes with a digest of the token."""
+
+
+def open_last_project() -> bool:
+    """Whether the workbench opens the last project when it starts without one."""
+    return bool(settings.load().value("open_last_project"))
 
 
 def _ready_line(url: str, *, as_json: bool) -> str:

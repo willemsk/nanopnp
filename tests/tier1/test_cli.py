@@ -310,9 +310,8 @@ def test_ver78_nanopnp_gui_opens_or_creates_a_project(
     finally:
         process.stdin.close()
         process.wait(30)
-    assert (tmp_path / "config" / "last-project").read_text(encoding="utf-8").strip() == str(
-        folder.resolve()
-    )
+    recent = (tmp_path / "config" / "recent-projects").read_text(encoding="utf-8")
+    assert recent.splitlines()[0] == str(folder.resolve())
 
     case = tmp_path / "idealised.case.yaml"
     case.write_text(IDEALISED_CASE.format(maxh=2, wall=0.3), encoding="utf-8")

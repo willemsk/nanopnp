@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+
+from nanopnp.gui.web.settings import SETTINGS
 
 __all__ = [
     "BROWSER_KEPT",
@@ -14,6 +16,7 @@ __all__ = [
     "chords",
     "command",
     "refusal",
+    "setting_commands",
 ]
 
 MENUS: tuple[str, ...] = ("file", "view", "help")
@@ -31,12 +34,15 @@ class Command:
         ``file``, ``view`` or ``help``; the palette lists every command whatever its menu.
     shortcut
         The default chord, such as ``Ctrl+K``, or empty where the command has none.
+    keywords
+        Words the palette finds the command by, besides its title.
     """
 
     id: str
     title: str
     menu: str
     shortcut: str = ""
+    keywords: tuple[str, ...] = ()
 
 
 COMMANDS: tuple[Command, ...] = (
@@ -112,3 +118,18 @@ def refusal(identifier: str, chord: str, keys: Mapping[str, str] | None = None) 
     if holder is not None and holder != identifier:
         return f"{chord} is bound to {command(holder).title!r}"
     return None
+
+
+SETTING_COMMAND = "setting-"
+"""The prefix of a command that opens one setting on the settings page."""
+
+
+def setting_commands() -> Iterator[Command]:
+    """Yield one palette command per declared setting, which opens it on the settings page."""
+    for setting in SETTINGS.values():
+        yield Command(
+            f"{SETTING_COMMAND}{setting.id}",
+            f"Settings: {setting.title}",
+            "file",
+            keywords=setting.keywords,
+        )
