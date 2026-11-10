@@ -9,4 +9,4 @@
 * [6. Selectivity, transport number, reversal potential](06-selectivity-transport-number-reversal.md) - The transport number and permeability ratio, the reversal potential through Goldman-Hodgkin-Katz, and why that is not the simulated quantity.
 * [7. Ionic current rectification](07-ionic-current-rectification.md) - α(V) = G(+V)/G(−V): what makes a pore rectify, ClyA's strong rectification and its concentration dependence.
 * [8. Access resistance and conductance decomposition](08-access-resistance-and-conductance.md) - R_total = R_pore + 2 R_access, the potential and field profiles, and four decompositions of the conductance.
-* [9. Quantities the software must compute](09-quantities-the-software-must-compute.md) - The quantities the software must compute.
+* [9. Quantities the thesis computes](09-quantities-the-software-must-compute.md) - The quantities the thesis computes, and the model each needs; FR-23 and PHY-21 state what nanopnp extracts.

@@ -17,7 +17,7 @@ generated:
 ## 1. Biological vs solid-state nanopores
 
 A nanopore is a 1–100 nm aperture in an otherwise impermeable membrane, forming the only liquid connection
-between two electrolyte reservoirs (`cis` and `trans`) [§`sec:np:types`]. Two families:
+between two electrolyte reservoirs (`cis` and `trans`) [`nanopores.tex` L259-261] **[verified][^thesis]**. Two families:
 
 | | Biological (BNP) | Solid-state (SSNP) |
 |---|---|---|
@@ -34,13 +34,14 @@ codebase — and also why *predictive* modelling pays off: a mutation changes th
 else.
 
 Most BNPs are repurposed **pore-forming toxins (PFTs)** — water-soluble proteins secreted by pathogens that
-oligomerise on target membranes and punch holes in them [§`sec:np:types`]. Classes: **α-PFTs**, whose
+oligomerise on target membranes and punch holes in them [§`sec:np:types`] **[verified][^thesis]**. Classes: **α-PFTs**, whose
 transmembrane domain (TMD) is a barrel of amphipathic α-helices with tilted sidewalls (ClyA, FraC), and
-**β-PFTs**, whose TMD is an amphipathic β-barrel, usually a near-perfect cylinder (αHL, aerolysin, PlyAB).
+**β-PFTs**, whose TMD is an amphipathic β-barrel, usually a near-perfect cylinder (αHL, aerolysin, PlyAB) **[verified][^thesis]**.
 In every case the channel interior is hydrophilic and the exterior surface hydrophobic. Non-toxin channels
-(MspA, CsgG, FhuA, OmpF, OmpG), engineered motors (Φ29 packaging motor) and DNA-origami pores are also used.
+(MspA, CsgG, FhuA, OmpF, OmpG), engineered motors (Φ29 packaging motor) and DNA-origami pores are also used **[verified][^thesis]**.
 
 Terminology: **monomer** = water-soluble form; **protomer** = the same chain in the assembled pore. Pore
 formation involves large conformational changes (ClyA's αA1 helix moves ~14 nm) and takes ~5 ms (αHL) to
 minutes (ClyA).
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`; the `.tex` file and label beside each claim locate it.
