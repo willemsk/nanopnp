@@ -46,7 +46,7 @@ from nanopnp.io.project import (
     valid_name,
     write_project,
 )
-from nanopnp.io.store import Store
+from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage
 
 __all__ = ["Problem", "Project", "ProjectError"]
 
@@ -183,13 +183,62 @@ class Project:
 
     def session(self) -> Session:
         """Return a session over the project's store, runs and sweeps."""
-        return Session(
-            Store(
-                self._root / STORE_FOLDER,
-                runs=self._root / RUNS_FOLDER,
-                sweeps=self._root / SWEEPS_FOLDER,
-            )
+        return Session(self._store())
+
+    def _store(self) -> Store:
+        return Store(
+            self._root / STORE_FOLDER,
+            runs=self._root / RUNS_FOLDER,
+            sweeps=self._root / SWEEPS_FOLDER,
         )
+
+    # -- the store ------------------------------------------------------------
+
+    def kept_artefacts(self, holding: frozenset[str] = frozenset()) -> frozenset[str]:
+        """Return the store digests a run record or a sweep member names, with their inputs.
+
+        ``holding`` adds the digests of a walk no record names, such as the one a window shows.
+        """
+        named: set[str] = set(holding)
+        for folder in (self._root / RUNS_FOLDER, self._root / SWEEPS_FOLDER):
+            if not folder.is_dir():
+                continue
+            for record in folder.rglob("run.json"):
+                artefacts = _json_object(record).get("artefacts")
+                if isinstance(artefacts, dict):
+                    named.update(
+                        str(entry["hash"])
+                        for entry in artefacts.values()
+                        if isinstance(entry, dict) and "hash" in entry
+                    )
+            for member in folder.rglob("members/*.json"):
+                solution = _json_object(member).get("solution")
+                if isinstance(solution, str):
+                    named.add(solution)
+        return self._store().inputs_closure(named)
+
+    def store_usage(self, holding: frozenset[str] = frozenset()) -> StoreUsage:
+        """Return the store's size, and the part of it the project's runs and sweeps keep."""
+        return self._store().usage(self.kept_artefacts(holding))
+
+    def clean_store(
+        self,
+        *,
+        everything: bool = False,
+        cap_bytes: int | None = None,
+        holding: frozenset[str] = frozenset(),
+    ) -> tuple[StaleEntry, ...]:
+        """Remove stored results, least recently read first, and return what went.
+
+        By default every result no run record, sweep member or ``holding`` names goes; with
+        ``cap_bytes`` only as many of those as bring the store to that size; with
+        ``everything`` every result, which a run rebuilds when it next needs it. Raises
+        StoreBusy, removing nothing, while a walk in any program holds the store.
+        """
+        store = self._store()
+        if everything:
+            return store.evict(keep=frozenset())
+        return store.evict(keep=self.kept_artefacts(holding), to_bytes=cap_bytes)
 
     def open_item(self, item: str) -> None:
         """Open an item in the window and make it the current one; ``<kind>/<name>``."""
@@ -503,7 +552,11 @@ class Project:
         if sweeps.is_dir():
             shutil.copytree(sweeps, target / SWEEPS_FOLDER)
         if store and (self._root / STORE_FOLDER).is_dir():
-            shutil.copytree(self._root / STORE_FOLDER, target / STORE_FOLDER)
+            shutil.copytree(
+                self._root / STORE_FOLDER,
+                target / STORE_FOLDER,
+                ignore=shutil.ignore_patterns(LOCKS),
+            )
         return target
 
     def _pointing(
@@ -643,6 +696,15 @@ class Project:
 class _Plan:
     items: dict[str, dict[str, Any] | None]
     inputs: dict[Path, str]
+
+
+def _json_object(path: Path) -> dict[str, Any]:
+    # A record a crash cut short names nothing; the clean-up keeps what the others name.
+    try:
+        found = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return found if isinstance(found, dict) else {}
 
 
 def _text(body: Mapping[str, Any]) -> str:

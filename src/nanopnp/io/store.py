@@ -9,11 +9,17 @@ import os
 import re
 import secrets
 import shutil
+import sys
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING
+
+if sys.platform == "win32":  # pragma: no cover - the Windows runners
+    import msvcrt
+else:
+    import fcntl
 
 from nanopnp.core.paths import store_root
 from nanopnp.core.stages import registered_stages
@@ -25,6 +31,16 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 META = "meta.json"
+
+READ_MARK = "last-read"
+"""The empty file whose modification time is an entry's last read."""
+
+LOCKS = ".locks"
+"""The store's lock folder, beside ``artefacts/``."""
+
+_GATE = "gate"
+
+BUSY_MESSAGE = "A run is in progress in another program; nothing was removed."
 
 FANOUT = 2
 
@@ -42,14 +58,34 @@ class StoreError(RuntimeError):
     """A stored artefact could not be read, or a write could not be completed."""
 
 
+class StoreBusy(StoreError):  # noqa: N818 - the plan's name, read as a state
+    """A clean-up found a walk holding the store, and removed nothing."""
+
+
 @dataclass(frozen=True)
 class StaleEntry:
-    """One stored artefact written under an older version of a schema this release writes."""
+    """One stored entry: its schema, key, directory and size on disk."""
 
     schema: str
     hash: str
     path: Path
     size_bytes: int
+
+
+@dataclass(frozen=True)
+class StoreUsage:
+    """What a store holds on disk, and how much of it a kept set names."""
+
+    total_bytes: int
+    entries: int
+    kept_bytes: int
+    kept_entries: int
+
+
+@dataclass(frozen=True)
+class _Held:
+    entry: StaleEntry
+    read: float
 
 
 class Store:
@@ -102,9 +138,13 @@ class Store:
         base = self._sweeps if self._sweeps is not None else self._root / "sweeps"
         return base / f"{name}-{short(digest)}"
 
-    def contains(self, artefact: Artefact) -> bool:
-        """Whether an artefact with this key is already stored."""
-        return (self.location(artefact.schema, artefact.hash) / META).is_file()
+    def contains(self, artefact: Artefact, *, mark: bool = True) -> bool:
+        """Whether an artefact with this key is already stored; ``mark`` records the read."""
+        directory = self.location(artefact.schema, artefact.hash)
+        found = (directory / META).is_file()
+        if found and mark:
+            _mark_read(directory)
+        return found
 
     def put(self, artefact: Artefact) -> Artefact:
         """Store an artefact; return the entry held, the first writer's if the key was taken.
@@ -117,7 +157,8 @@ class Store:
                 raise StoreError(
                     f"payload {name!r} of artefact {artefact.short_hash} is not a file: {source}"
                 )
-        held = self.get(artefact.schema, artefact.hash)
+        # A put is no read: an entry's own record time stands for its last read until one comes.
+        held = self.get(artefact.schema, artefact.hash, mark=False)
         if held is not None:
             return held
         directory.parent.mkdir(parents=True, exist_ok=True)
@@ -145,18 +186,23 @@ class Store:
             _publish(staging, directory)
         finally:
             shutil.rmtree(staging, ignore_errors=True)
-        stored = self.get(artefact.schema, artefact.hash)
+        stored = self.get(artefact.schema, artefact.hash, mark=False)
         if stored is None:
             raise StoreError(f"artefact {artefact.short_hash} is not in the store after its put")
         logger.debug("stored %s %s", stored.schema, stored.short_hash)
         return stored
 
-    def get(self, schema: str, digest: str) -> Artefact | None:
-        """Return a stored artefact, or None if absent; StoreError if its record is unreadable."""
+    def get(self, schema: str, digest: str, *, mark: bool = True) -> Artefact | None:
+        """Return a stored artefact, or None if absent; StoreError if its record is unreadable.
+
+        ``mark`` records the read, which orders the entries a clean-up removes.
+        """
         directory = self.location(schema, digest)
         meta_path = directory / META
         if not meta_path.is_file():
             return None
+        if mark:
+            _mark_read(directory)
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as error:
@@ -227,7 +273,14 @@ class Store:
         return tuple(found)
 
     def remove(self, entries: Iterable[StaleEntry]) -> int:
-        """Delete the given entries, and return how many were removed."""
+        """Delete the given entries, and return how many were removed.
+
+        Raises StoreBusy, removing nothing, while a walk holds the store.
+        """
+        with self.cleaning():
+            return self._remove(entries)
+
+    def _remove(self, entries: Iterable[StaleEntry]) -> int:
         removed = 0
         root = (self._root / "artefacts").resolve()
         for entry in entries:
@@ -235,11 +288,139 @@ class Store:
             if root not in directory.parents:
                 raise StoreError(f"{directory} is not an entry of the store at {self._root}")
             if directory.is_dir():
-                shutil.rmtree(directory)
+                _discard(directory)
                 removed += 1
-                with contextlib.suppress(OSError):  # the fan-out directory still holds others
-                    directory.parent.rmdir()
         return removed
+
+    def _entries(self) -> list[_Held]:
+        # A hidden directory is a put's staging or a removal under way, never an entry.
+        held: list[_Held] = []
+        for meta_path in (self._root / "artefacts").glob("*/*/*/" + META):
+            directory = meta_path.parent
+            if directory.name.startswith("."):
+                continue
+            try:
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                schema = str(meta["schema"])
+            except (OSError, ValueError, KeyError, TypeError):
+                schema = directory.parent.parent.name
+            try:
+                size = sum(file.stat().st_size for file in directory.rglob("*") if file.is_file())
+                read = _last_read(directory)
+            except OSError:  # pragma: no cover - the entry went between the glob and the stat
+                continue
+            held.append(_Held(StaleEntry(schema, directory.name, directory, size), read))
+        held.sort(key=lambda item: (item.read, str(item.entry.path)))
+        return held
+
+    def usage(self, keep: frozenset[str] = frozenset()) -> StoreUsage:
+        """Return the store's size on disk, and the part of it the digests in ``keep`` hold."""
+        entries = [item.entry for item in self._entries()]
+        kept = [entry for entry in entries if entry.hash in keep]
+        return StoreUsage(
+            total_bytes=sum(entry.size_bytes for entry in entries),
+            entries=len(entries),
+            kept_bytes=sum(entry.size_bytes for entry in kept),
+            kept_entries=len(kept),
+        )
+
+    def evict(self, *, keep: frozenset[str], to_bytes: int | None = None) -> tuple[StaleEntry, ...]:
+        """Remove the least recently read entries outside ``keep``, and return them.
+
+        Entries go, oldest read first, until the store holds at most ``to_bytes``; every entry
+        outside ``keep`` goes when it is None. Each is renamed away before it is deleted, so a
+        reader finds it whole or not at all. Raises StoreBusy, removing nothing, while a walk
+        holds the store.
+        """
+        with self.cleaning():
+            held = self._entries()
+            total = sum(item.entry.size_bytes for item in held)
+            chosen: list[StaleEntry] = []
+            for item in held:
+                if to_bytes is not None and total <= to_bytes:
+                    break
+                if item.entry.hash in keep:
+                    continue
+                chosen.append(item.entry)
+                total -= item.entry.size_bytes
+            self._remove(chosen)
+        return tuple(chosen)
+
+    def inputs_closure(self, digests: Iterable[str]) -> frozenset[str]:
+        """Return ``digests`` with every stored entry their records name as inputs, transitively."""
+        where = {item.entry.hash: item.entry.path for item in self._entries()}
+        closed: set[str] = set()
+        pending = list(digests)
+        while pending:
+            digest = pending.pop()
+            if digest in closed:
+                continue
+            closed.add(digest)
+            directory = where.get(digest)
+            if directory is None:
+                continue
+            try:
+                meta = json.loads((directory / META).read_text(encoding="utf-8"))
+                inputs = meta.get("inputs", {})
+            except (OSError, ValueError, AttributeError):
+                continue
+            if isinstance(inputs, dict):
+                pending.extend(str(value) for value in inputs.values() if str(value) in where)
+        return frozenset(closed)
+
+    @contextlib.contextmanager
+    def using(self) -> Iterator[None]:
+        """Hold the store for a walk: a clean-up in any program removes nothing meanwhile.
+
+        A walk that starts during a clean-up waits for it.
+        """
+        folder = self._lock_folder()
+        if folder is None:
+            yield
+            return
+        name = f"walk-{os.getpid()}-{secrets.token_hex(4)}"
+        with _locked(folder / _GATE):
+            mine = (folder / name).open("a+b")
+            _lock(mine, blocking=True)
+        try:
+            yield
+        finally:
+            _unlock(mine)
+            mine.close()
+            (folder / name).unlink(missing_ok=True)
+
+    @contextlib.contextmanager
+    def cleaning(self) -> Iterator[None]:
+        """Hold the store for a clean-up; StoreBusy if any program's walk holds it."""
+        folder = self._lock_folder()
+        if folder is None:
+            yield
+            return
+        with _locked(folder / _GATE):
+            for walk in sorted(folder.glob("walk-*")):
+                try:
+                    handle = walk.open("a+b")
+                except OSError:  # pragma: no cover - its walk ended between the glob and here
+                    continue
+                try:
+                    if not _lock(handle, blocking=False):
+                        raise StoreBusy(BUSY_MESSAGE)
+                    _unlock(handle)
+                finally:
+                    handle.close()
+                # Lockable, so its walk is gone: a killed program's leftover.
+                walk.unlink(missing_ok=True)
+            yield
+
+    def _lock_folder(self) -> Path | None:
+        folder = self._root / LOCKS
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            # A store that cannot be written cannot be cleaned either.
+            logger.debug("no lock folder at %s: %s", folder, error)
+            return None
+        return folder
 
 
 def _current_schemas() -> tuple[str, ...]:
@@ -276,6 +457,64 @@ def _sweep_staging(parent: Path) -> None:
             continue
         if stale:
             shutil.rmtree(entry, ignore_errors=True)
+
+
+def _mark_read(directory: Path) -> None:
+    with contextlib.suppress(OSError):  # a read-only store keeps its order by meta.json
+        (directory / READ_MARK).touch()
+
+
+def _last_read(directory: Path) -> float:
+    mark = directory / READ_MARK
+    if mark.is_file():
+        return mark.stat().st_mtime
+    return (directory / META).stat().st_mtime
+
+
+def _discard(directory: Path) -> None:
+    # Renamed first: the entry's own path then holds nothing, never a record without its payload.
+    hidden = directory.with_name(f".{directory.name}.evict.{os.getpid()}.{secrets.token_hex(4)}")
+    directory.rename(hidden)
+    shutil.rmtree(hidden, ignore_errors=True)
+    with contextlib.suppress(OSError):  # the fan-out directory still holds others
+        directory.parent.rmdir()
+
+
+def _lock(handle: IO[bytes], *, blocking: bool) -> bool:
+    if sys.platform == "win32":  # pragma: no cover - the Windows runners
+        while True:
+            try:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            except OSError:
+                if not blocking:
+                    return False
+                time.sleep(0.05)
+            else:
+                return True
+    try:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB))
+    except BlockingIOError:
+        return False
+    return True
+
+
+def _unlock(handle: IO[bytes]) -> None:
+    if sys.platform == "win32":  # pragma: no cover - the Windows runners
+        handle.seek(0)
+        msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        return
+    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+@contextlib.contextmanager
+def _locked(path: Path) -> Iterator[None]:
+    with path.open("a+b") as handle:
+        _lock(handle, blocking=True)
+        try:
+            yield
+        finally:
+            _unlock(handle)
 
 
 def _publish(staging: Path, directory: Path) -> None:
