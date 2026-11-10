@@ -289,8 +289,14 @@ before its wait.
   shell` renders every state, 2WCD from its cache the second time. **Executor:** general-purpose on Sonnet
 - [x] a4de1ce 13. `.claude/skills/np-gui/`, `.claude/scripts/gui/design_md.py`, `DESIGN.md` (D11); done when the code and review
   say so. **Executor:** general-purpose on Sonnet
-- [ ] 14. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-203's frame part, REV-204,
+- [x] dc7a456 14. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-203's frame part, REV-204,
   REV-207, REV-208 and REV-210 to REV-214 `fixed`; the matrix rows; `current.md`. **Executor:** main
+  > **Outcome — 140 shots, every check passing.** The last full render shot 140 screens, light and dark, the 2WCD
+  > project from its cache, with no page error and no contrast, non-text or target failure; the first had 30 kinds of
+  > check failure, among them the dark theme's white text on its accent, which a rule in NiceGUI's first cascade layer
+  > fixes (8a72dbe). The GUI reviewer's 17 findings and `impeccable`'s 11 were decided: the folded rail, the open item,
+  > refused values counted, raw mappings, density, the palette's active row and the colours' names fixed (dc7a456);
+  > the view region's side, the suites' design questions and the operating system's chords left as REV-234 to REV-236.
 
 ### Verification
 
