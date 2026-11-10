@@ -1,4 +1,4 @@
-"""The ``nanopnp/case/v0.6`` case-file schema: its shape, its diagnostics, reading and writing."""
+"""The ``nanopnp/case/v0.6`` case schema: its shape, its diagnostics, validating and writing."""
 
 from __future__ import annotations
 
@@ -765,41 +765,6 @@ def render_problems(source: str, error: ValidationError) -> str:
         else:
             lines.append(f"  {dotted}: {problem['msg']}")
     return "\n".join(lines)
-
-
-def read_case(path: str | Path) -> CaseDocument:
-    """Read a case file, check its schema string first, and return the validated document.
-
-    Raises
-    ------
-    CaseValidationError
-        If the file is not a mapping, names another schema, or fails validation.
-    """
-    source = Path(path)
-    return _validate(yaml.safe_load(source.read_text(encoding="utf-8")), str(source))
-
-
-def read_case_text(
-    text: str, *, source: str = "<string>", model: type[CaseDocument] = CaseDocument
-) -> CaseDocument:
-    """Validate a case document held in memory against the schema; see :func:`read_case`.
-
-    Parameters
-    ----------
-    model
-        The class to build: ``CaseDocument``, or a subclass that adds methods and no field.
-    """
-    return _validate(yaml.safe_load(text), source, model)
-
-
-def _validate(raw: object, source: str, model: type[CaseDocument] = CaseDocument) -> CaseDocument:
-    for key in ("models", "variables"):
-        if isinstance(raw, Mapping) and key in raw:
-            raise CaseValidationError(
-                f"{source}: names {key}:; read it with nanopnp.case.Case.load or "
-                "nanopnp.pipeline.case.load_case, which resolve them"
-            )
-    return validate_mapping(raw, source, model)
 
 
 def validate_mapping(

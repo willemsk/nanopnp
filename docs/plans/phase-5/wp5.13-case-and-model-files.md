@@ -210,7 +210,7 @@ first component. `_body(location)` returns the mapping whole. `_problems_of` cal
 - [x] 62e3295 1. `src/nanopnp/io/case_paths.py`, `src/nanopnp/io/models.py`, `src/nanopnp/io/project.py`,
   `src/nanopnp/api/project.py`, `src/nanopnp/api/case.py`, `src/nanopnp/api/sweep.py`, `tests/tier1/test_case.py`:
   the input-path seam (D2); done when row 3 and FR-32's rows pass. **Executor:** main.
-- [ ] 2. `src/nanopnp/io/case_paths.py`, `src/nanopnp/io/models.py`, `src/nanopnp/api/case.py`,
+- [x] e756024 2. `src/nanopnp/io/case_paths.py`, `src/nanopnp/io/models.py`, `src/nanopnp/api/case.py`,
   `specification/05-software-design/03-1-case-file.md`, `tests/tier1/test_models.py`: one substitution (D3); done when
   row 2 and FR-39's rows pass. **Executor:** main.
 - [ ] 3. `src/nanopnp/io/models.py`, `src/nanopnp/io/case.py`, `src/nanopnp/pipeline/case.py`,

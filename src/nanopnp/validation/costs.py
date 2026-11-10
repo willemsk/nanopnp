@@ -23,8 +23,9 @@ from pathlib import Path
 from types import ModuleType
 from typing import cast
 
-from nanopnp.io.case import dump_case, read_case
+from nanopnp.io.case import CaseDocument, dump_case
 from nanopnp.io.case_paths import substitute
+from nanopnp.io.models import read_case
 
 try:
     import resource
@@ -412,7 +413,7 @@ def _prepare_2wcd(  # pragma: no cover - runs example 06's preparation; the scri
 
 
 def _a1_case(repository: Path, pdb: Path, dcd: Path, target: Path) -> Path:
-    base = read_case(repository / CHARGED_CASE)
+    base = read_case(repository / CHARGED_CASE, model=CaseDocument)
     document = substitute(
         base.model_copy(update={"charge": None}),
         {
@@ -515,7 +516,8 @@ def _charged_case(  # pragma: no cover - prepares 2WCD through example 06; the s
 ) -> Path:
     prepared = _prepare_2wcd(repository, directory)
     document = substitute(
-        read_case(repository / CHARGED_CASE), {"structure.source.path": str(prepared)}
+        read_case(repository / CHARGED_CASE, model=CaseDocument),
+        {"structure.source.path": str(prepared)},
     )
     return dump_case(document, directory / "2wcd.case.yaml")
 
