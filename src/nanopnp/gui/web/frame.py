@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import signal
@@ -22,6 +23,7 @@ from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.glossary import GLOSSARY
 from nanopnp.gui.web.overlay import Overlay
+from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench
@@ -82,6 +84,9 @@ class Views(Protocol):
     async def show_molecule(self, structure_url: str | None) -> None:
         """Show the Mol* host, building it the first time, and mark the screen ready."""
 
+    async def settled(self) -> None:
+        """Wait until what the address opened in the frame, such as the palette, has opened."""
+
 
 class _Frame:
     def __init__(
@@ -104,8 +109,8 @@ class _Frame:
         self.tabs: ui.tabs
         self.dialog: ui.dialog
         self.palette: ui.dialog
-        self.palette_input: ui.input
-        self.palette_list: ui.column
+        self.palette_select: Palette
+        self.opening: asyncio.Event | None = None
         self.panel_root: ui.column
         self.overlay = Overlay(shell)
         self.tree: ui.tree | None = None
@@ -127,7 +132,7 @@ class _Frame:
         self.dark: ui.dark_mode
         self.toggle_button: ui.button
         self.actions: dict[str, Callable[[], object]] = {
-            "palette": self.open_palette,
+            "palette": lambda: self.open_palette(),
             "settings": self.overlay.open,
             "panel-toggle": self.toggle_panel,
             "changes": lambda: self.show_panel("changes"),
@@ -201,7 +206,7 @@ class _Frame:
         if query.get("panel", [""])[0] in PANELS:
             self.show_panel(query["panel"][0])
         if query.get("palette"):
-            self.open_palette()
+            self.open_palette(query["palette"][0])
         if query.get("dialog", [""])[0] == "settings":
             self.overlay.open()
 
@@ -220,6 +225,9 @@ class _Frame:
         await ui.run_javascript(f"nano.ensure({argument})", timeout=60)
 
     def run(self, identifier: str) -> None:
+        if identifier.startswith(commands.SETTING_COMMAND):
+            self.overlay.open()
+            return
         action = self.actions.get(identifier)
         if action is None:
             ui.notify(f"{commands.command(identifier).title} is not available yet")
@@ -370,44 +378,14 @@ class _Frame:
 
     # -- the palette --------------------------------------------------------
 
-    def open_palette(self) -> None:
-        self.palette_input.value = ""
-        self.fill_palette("")
+    def open_palette(self, text: str = "") -> None:
+        has_project = self.shell.bench.project is not None
+        self.palette_select.prepare(options(self.shell.keys, has_project=has_project), text)
         self.palette.open()
-
-    def fill_palette(self, text: str) -> None:
-        wanted = text.strip().lower()
-        chords = commands.bindings(self.shell.keys)
-        self.palette_list.clear()
-        with self.palette_list:
-            matching = [
-                entry
-                for entry in commands.COMMANDS
-                if entry.id != "palette" and (not wanted or wanted in entry.title.lower())
-            ]
-            if not matching:
-                ui.label("No command matches.").classes("muted")
-            for entry in matching:
-                with (
-                    ui.button(on_click=lambda _, i=entry.id: self.choose(i))
-                    .props("flat no-caps data-control=palette-item")
-                    .classes("w-full")
-                ):
-                    ui.label(entry.title).classes("key-title")
-                    ui.label(chords[entry.id]).classes("muted")
 
     def choose(self, identifier: str) -> None:
         self.palette.close()
         self.run(identifier)
-
-    def first_match(self) -> None:
-        wanted = self.palette_input.value.strip().lower()
-        if not wanted:
-            return
-        for entry in commands.COMMANDS:
-            if entry.id != "palette" and wanted in entry.title.lower():
-                self.choose(entry.id)
-                return
 
     # -- the pieces ---------------------------------------------------------
 
@@ -733,14 +711,20 @@ class _Frame:
 
     def palette_dialog(self) -> None:
         with ui.dialog() as self.palette, ui.card().classes("palette"):
-            self.palette_input = ui.input(
-                placeholder="Type a command",
-                on_change=lambda e: self.fill_palette(e.value or ""),
-            ).props("autofocus outlined dense aria-label='Command' data-control=palette-input")
-            self.palette_input.on("keydown.enter", self.first_match)
-            with ui.column().classes("w-full gap-0").props("data-control=palette-list") as lst:
-                self.palette_list = lst
-        self.fill_palette("")
+            self.palette_select = Palette(self.choose).classes("w-full")
+        self.palette.on("show", self.palette_shown)
+
+    async def palette_shown(self) -> None:
+        await self.palette_select.run_method("type")
+        if self.opening is not None:
+            self.opening.set()
+
+    async def settled(self) -> None:
+        """Wait until what the address opened in the frame, such as the palette, has opened."""
+        if self.opening is not None:
+            # A long timeout: the page reports itself ready anyway rather than never.
+            await asyncio.wait_for(self.opening.wait(), timeout=20)
+            self.opening = None
 
 
 @contextmanager
@@ -749,7 +733,7 @@ def frame(
     routes: Mapping[str, Route],
     *,
     panel: str | None = None,
-    palette: bool = False,
+    palette: str | None = None,
     dialog: str | None = None,
 ) -> Iterator[Views]:
     """Build the frame once for the page; the ``with`` body builds the sub-pages it routes.
@@ -800,7 +784,8 @@ def frame(
     built.overlay.build()
     built.apply_layout()
     if palette:
-        built.open_palette()
+        built.opening = asyncio.Event()
+        built.open_palette(palette)
     if dialog == "settings":
         built.overlay.open()
 

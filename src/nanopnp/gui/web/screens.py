@@ -127,7 +127,9 @@ SCREENS: tuple[Screen, ...] = (
             "settings-keys",
         ),
     ),
-    Screen("palette", "/molecular?palette=1", (*FRAME_CONTROLS, "palette-input", "palette-list")),
+    Screen(
+        "palette", "/molecular?palette=suite", (*FRAME_CONTROLS, "palette-input", "palette-item")
+    ),
     Screen(
         "st-charge",
         "/study/charge",

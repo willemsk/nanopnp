@@ -1,6 +1,6 @@
 # WP5.15 — The frame on Quasar's components
 
-**Status: in progress; items 1 to 6 done.** Planned 10 November 2026 on `main` (`ce43a48`). It inherits §8.2.34 AJ1, AJ2, AJ6
+**Status: in progress; items 1 to 7 done.** Planned 10 November 2026 on `main` (`ce43a48`). It inherits §8.2.34 AJ1, AJ2, AJ6
 to AJ9 and this plan's, §8.2.38 AN1 to AN8.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to
@@ -279,7 +279,7 @@ before its wait.
 - [x] e70c885 5. `gui/web/pages.py`, `assets/bridge.js`, VER-78's text (D2); done when VER-78 (a) to (d), (i) and (m) pass.
   **Executor:** main
 - [x] 6. Compaction checkpoint. **Executor:** main
-- [ ] 7. `gui/web/frame.py`, `gui/web/glossary.py` (D4, D9); done when the code and review say so. **Executor:** main
+- [x] 7b052a8 7. `gui/web/frame.py`, `gui/web/glossary.py` (D4, D9); done when the code and review say so. **Executor:** main
 - [ ] 8. `gui/web/palette.py`, `assets/palette.js` (D5); done when the code and review say so. **Executor:** main
 - [ ] 9. `gui/web/settings_page.py` with the store's section, `overlay.py` removed (D6, D7); done when VER-78 (j), (k)
   and (l) pass. **Executor:** main
