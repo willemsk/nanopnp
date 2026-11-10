@@ -20,7 +20,7 @@ from nanopnp.core.errors import classify
 from nanopnp.core.hashing import Canonicalisable
 from nanopnp.io.artefact import SOLUTION_SCHEMA, SWEEP_SCHEMA, Artefact, StageInputs, SweepArtefact
 from nanopnp.io.case import CaseDocument, FieldValue, dumps_case
-from nanopnp.io.case_paths import correction_paths, field_path, input_paths
+from nanopnp.io.case_paths import field_path, input_paths
 from nanopnp.io.store import Store, atomic_write_bytes
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import MissingUpstreamError, stored_upstream
@@ -187,7 +187,7 @@ def plan_sweep(
     case = case.with_()
     relative = [
         f"{dotted} = {value}"
-        for dotted, value in {**input_paths(case), **correction_paths(case)}.items()
+        for dotted, value in input_paths(case).items()
         if not Path(value).is_absolute()
     ]
     if relative:

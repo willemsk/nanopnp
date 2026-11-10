@@ -23,7 +23,6 @@ from nanopnp.io.case import (
 from nanopnp.io.case_paths import (
     UnknownCasePathError,
     _entry_annotation,
-    correction_paths,
     field_at,
     field_path,
     input_paths,
@@ -371,7 +370,7 @@ def _rebased_paths(case: CaseDocument, base: Path | None) -> dict[str, FieldValu
         return {}
     return {
         dotted: str((base / value).resolve())
-        for dotted, value in {**input_paths(case), **correction_paths(case)}.items()
+        for dotted, value in input_paths(case).items()
         if not Path(value).is_absolute()
     }
 

@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from nanopnp.core.paths import names_a_path
-from nanopnp.io.case import CORRECTION_PROPERTIES
-from nanopnp.io.case_paths import path_fields
 from nanopnp.io.store import atomic_write_bytes
 
 PROJECT_SCHEMA = "nanopnp/project/v0.6"
@@ -161,54 +158,3 @@ def split_reference(reference: str) -> tuple[ItemKind, str]:
             f"{reference!r} is not <kind>/<name> with a kind of {', '.join(ITEM_KINDS)}"
         )
     return kind, name
-
-
-def _input_fields() -> tuple[str, ...]:
-    own = tuple(path for path in path_fields() if not path.startswith("models."))
-    corrections = ["electrolyte.parameters"]
-    corrections += [f"electrolyte.corrections.{name}.model" for name in CORRECTION_PROPERTIES]
-    return own + tuple(corrections)
-
-
-def item_inputs(body: Mapping[str, Any]) -> dict[str, str]:
-    """Return the input files an item's mapping names, by dotted case path, as written."""
-    found: dict[str, str] = {}
-    for dotted in _input_fields():
-        value = _at(body, dotted)
-        if not isinstance(value, str):
-            continue
-        # A correction name that is not a path is an installed file's, not an input.
-        if dotted.startswith("electrolyte.") and not names_a_path(value):
-            continue
-        found[dotted] = value
-    return found
-
-
-def rewrite_inputs(
-    body: dict[str, Any], rewrite: Callable[[str, str], str | None]
-) -> dict[str, str]:
-    """Replace each input path of ``body`` in place by what ``rewrite(dotted, value)`` returns.
-
-    A ``None`` leaves the value. The result maps each changed path to its new value.
-    """
-    changed: dict[str, str] = {}
-    for dotted, value in item_inputs(body).items():
-        replacement = rewrite(dotted, value)
-        if replacement is None or replacement == value:
-            continue
-        *parents, last = dotted.split(".")
-        cursor: Any = body
-        for part in parents:
-            cursor = cursor[part]
-        cursor[last] = replacement
-        changed[dotted] = replacement
-    return changed
-
-
-def _at(body: Mapping[str, Any], dotted: str) -> object:
-    cursor: object = body
-    for part in dotted.split("."):
-        if not isinstance(cursor, Mapping) or part not in cursor:
-            return None
-        cursor = cursor[part]
-    return cursor

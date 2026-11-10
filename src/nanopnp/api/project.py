@@ -15,6 +15,7 @@ from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.core.hashing import file_hash
 from nanopnp.io.case import SCHEMA, CaseValidationError
+from nanopnp.io.case_paths import input_paths, rewrite_inputs
 from nanopnp.io.defaults import Change, changes, mapping_changes
 from nanopnp.io.models import (
     HEADER_KEYS,
@@ -40,10 +41,8 @@ from nanopnp.io.project import (
     ProjectFormatError,
     Suite,
     SuiteLayout,
-    item_inputs,
     item_reference,
     read_project,
-    rewrite_inputs,
     split_reference,
     valid_name,
     write_project,
@@ -241,7 +240,7 @@ class Project:
         kept = (self._root / INPUTS_FOLDER).resolve()
         found: dict[Path, None] = {}
         for kind, _, body in self._bodies():
-            for value in item_inputs(body).values():
+            for value in input_paths(body).values():
                 resolved = self._resolved(kind, value)
                 if kept not in resolved.parents:
                     found[resolved] = None
@@ -455,7 +454,7 @@ class Project:
                     suite,
                 )
             )
-        for dotted, value in item_inputs(body).items():
+        for dotted, value in input_paths(body).items():
             resolved = self._resolved(kind, value)
             if not resolved.is_file():
                 where = ITEM_SUITES[kind] if kind != "study" else _owner_suite(dotted)
