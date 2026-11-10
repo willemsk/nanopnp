@@ -189,12 +189,12 @@ AM14 REV-229.
 - [x] b73667f 5. `knowledge/04-…`, `knowledge/05-…`, §5.2's radius-band NOTE (D1 to D4): AUD-152 first; done when the code
   and review say so and `markers.py` is clean. **Executor:** main; AUD-187 and 188's markers on `general-purpose`,
   Sonnet
-- [ ] 6. `knowledge/07-…`, `08-…`, `09-…`, VER-54 (D1 to D3): AUD-281 and 285 first; done when the code and review
+- [x] 3905c6d 6. `knowledge/07-…`, `08-…`, `09-…`, VER-54 (D1 to D3): AUD-281 and 285 first; done when the code and review
   say so. **Executor:** main
-- [ ] 7. `knowledge/00-…`, `02-…`, `03-…`, `knowledge/index.md` (D1, D2, D4): AUD-356 first, AM14's text, AL17's rule
+- [x] 8b36b21 7. `knowledge/00-…`, `02-…`, `03-…`, `knowledge/index.md` (D1, D2, D4): AUD-356 first, AM14's text, AL17's rule
   in `00-orientation/04`, AUD-387 by its second option; done when `markers.py` is clean. **Executor:** main; AUD-365
   and 370's markers on `general-purpose`, Sonnet
-- [ ] 8. Compaction checkpoint. **Executor:** main
+- [x] 8. Compaction checkpoint. **Executor:** main
 - [ ] 9. `docs/` (D1, D2): AUD-230 first (AL13); done when the strict build passes and D9's SHALL count is 517.
   **Executor:** main; AUD-249's levels on `general-purpose`, Haiku
 - [ ] 10. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
