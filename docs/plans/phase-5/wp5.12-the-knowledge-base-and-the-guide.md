@@ -201,9 +201,9 @@ AM14 REV-229.
 - [x] 3227166 11. `src/` (D6): REV-226, AUD-216, AUD-351; done when `same_tree.py` lists only the message files and the
   commit's gate passes. **Executor:** main
 - [x] 12. Compaction checkpoint. **Executor:** main
-- [ ] 13. The source checklist (D5): REV-227 and its section, the author's round on the six (AM18), the confirmed
+- [x] dee9255 13. The source checklist (D5): REV-227 and its section, the author's round on the six (AM18), the confirmed
   edits, the two git rows; done when each row records its verdict or "not checked yet". **Executor:** main
-- [ ] 14. Compaction checkpoint. **Executor:** main
+- [x] 14. Compaction checkpoint. **Executor:** main
 - [ ] 15. The records (D7, D8): REV-226 `fixed`, REV-227 to REV-230, the register, `holds-now.yaml`, `decisions.py`,
   `CHANGELOG.md`; done when each finding reads `fixed` or names its REV row and `decisions.py --check` passes.
   **Executor:** main
