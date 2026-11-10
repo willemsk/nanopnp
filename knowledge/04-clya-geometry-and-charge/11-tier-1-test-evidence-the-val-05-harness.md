@@ -1,8 +1,7 @@
 ---
 type: Test Evidence
-title: 'Tier-1 test evidence: the VAL-05 harness and its closed forms (WP45 item 24)'
-description: What the Tier-1 tests of the VAL-05 harness and its closed forms establish,
-  recorded at WP45 item 24.
+title: 'Tier-1 test evidence: the VAL-05 harness and its closed forms'
+description: What the Tier-1 tests of the VAL-05 harness and its closed forms establish.
 tags:
 - clya
 - test-evidence
@@ -22,7 +21,7 @@ verified:
   at: '2026-10-14T00:00:00Z'
 ---
 
-## Tier-1 test evidence: the VAL-05 harness and its closed forms (WP45 item 24)
+## Tier-1 test evidence: the VAL-05 harness and its closed forms
 
 - **[tested: tests/tier1/test_val05_geometry.py::test_val05_a_uniform_scale_gives_two_s_and_the_exact_ratio]** A uniform radial scale `r → (1 + s) r` maps each innermost crossing to `(1 + s)` times itself, so `Δ/r = s` on every plane, the first-order sum `ε_G = 2s` is exact, and the exact series ratio is `(1 + s)² − 1`. **[tested: tests/tier1/test_val05_geometry.py::test_val05_the_conductance_tolerance_fires_naming_leg_value_threshold_and_z]** A 6 % wider lumen is therefore `ε_G = 12 %`, over the 10 % of 2WCD and the 5 % of the ensemble. Source: `tests/tier1/test_val05_geometry.py`.
 - **[tested: tests/tier1/test_val05_geometry.py::test_val05_the_constriction_tolerance_fires_naming_both_minima]** A 0.2 nm notch of four planes moves `r_c` by 0.15 nm and barely moves `ε_G` or the rms: the constriction tolerance is the measure that sees a local notch. Source: `tests/tier1/test_val05_geometry.py` (`test_val05_the_constriction_tolerance_fires_naming_both_minima`).

@@ -12,66 +12,39 @@ sources:
 generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
-verified:
-- by: process:tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier2/test_maxwell_sphere.py::test_ver20_a_charged_body_in_a_uniform_field_feels_q_e_zero
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier2/test_maxwell_sphere.py::test_ver20_the_net_force_on_a_dielectric_sphere_vanishes
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier2/test_stokes_drag.py::test_ver19_a_uniform_far_field_measures_the_wall_correction_instead
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier2/test_stokes_drag.py::test_ver19_stokes_drag_converges_to_the_closed_form
-  at: '2026-10-16T00:00:00Z'
 ---
 
 ## 9. Gaps and ambiguities
 
 1. **Stress-tensor forces on an analyte are absent from the trapping chapters.** The tensor
-   expressions come from background ch. 2 and were never evaluated for an analyte *in the thesis*.
-   **See §10:** they are evaluated, for PlyAB + haemoglobin, in Angew. Chem.
-   2022; §10.6 gives regression targets. Analytic tests (isolated sphere: Maxwell integral → qE;
-   Stokes sphere → 6πηaU) remain the right first check.
-
-   **Done, and they were the right first check** **[tested: tests/tier2/test_stokes_drag.py::test_ver19_stokes_drag_converges_to_the_closed_form]** **[tested: tests/tier2/test_stokes_drag.py::test_ver19_a_uniform_far_field_measures_the_wall_correction_instead]** **[tested: tests/tier2/test_maxwell_sphere.py::test_ver20_the_net_force_on_a_dielectric_sphere_vanishes]** **[tested: tests/tier2/test_maxwell_sphere.py::test_ver20_a_charged_body_in_a_uniform_field_feels_q_e_zero]** **[tested: tests/tier2/test_electrophoretic_mobility.py::test_ver21_the_mobility_follows_henrys_function_at_every_screening_ratio]** (WP6, `tests/tier2/`). On a P2 sphere of
-   radius 1 nm in a box of radius 10 nm, `a = 1 nm` mesh units, the numbers are:
-
-   | Check | Measured | Reference |
-   |---|---|---|
-   | Stokes drag, three meshes (VER-19) | 0.430870, 0.430522, 0.430500 pN | `6πηaU` = 0.430491 pN |
-   | its relative error | 8.80 × 10⁻⁴ → 7.11 × 10⁻⁵ → 1.98 × 10⁻⁵ | rates 3.63 and 1.85 per halving |
-   | Maxwell integral on an uncharged dielectric sphere (VER-20) | −8.6 × 10⁻⁸ pN (domain), +7.0 × 10⁻⁵ pN (surface) | 0 |
-   | `F = qE₀` anchor, −4 e at 5.1 MV/m (VER-20) | −8.21704 pN (domain), −8.18903 pN (surface) | −8.23281 pN, i.e. 0.19 % and 0.53 % |
-   | Henry mobility at κa = 0.50 / 2.08 / 16.47 (VER-21) | `μ̃_e/ζ̃` = 0.661, 0.704, 0.872 | `2f(κa)/3` = 0.676, 0.711, 0.885 |
-
-   Two findings worth carrying forward. **The far field decides whether VER-19 measures anything**:
-   a uniform stream at `R = 10a` gives 1.285 × the drag, the `1 + (9/4)(a/b)` wall correction of a
-   sphere in a concentric container, so the exact Stokes field has to be imposed instead. And **the
-   zero test cannot stand alone**: a net force of zero on a polarised sphere is invariant under a
-   uniform scale factor, so the `qE₀` anchor is what pins the magnitude of the Maxwell route, which
-   has no reaction-route oracle because `φ` is not constrained on the body's surface.
+   expressions come from background ch. 2 and were never evaluated for an analyte *in the thesis*;
+   [§10](11-correction-continuum-force-computation.md) has them evaluated for PlyAB + haemoglobin, with regression targets in
+   [§10.6](11-correction-continuum-force-computation.md#106-validation-targets-plyab-hb). nanopnp's analytic checks of both routes
+   (VER-19 to VER-21) are in [the Tier-2 test evidence](13-tier-2-test-evidence-electro-osmosis.md).
 2. **"Surface charge density vs smeared volumetric charge" resolves to one pipeline, not two
-   models** (§2). If the author meant a genuine σ_s on an analyte boundary in other work, it is not
+   models** ([§2](03-charge-representation-both-forms-and.md)). If the author meant a genuine σ_s on an analyte boundary in other work, it is not
    in the thesis — ask.
-3. **ε_protein = 10 (trapping) vs 20 (ePNP-NS)**, same citation. Unresolved.
-4. **Body bead charge printed as both −1.43 e and −1.7143 e** (§2a). Resolve as N_body/7.
-5. **`eq:threshold_voltage_complex` has a typo:** it prints `log(Δx_trans / Δx_trans)` ≡ 0;
-   re-deriving dk/dV_b = 0 gives `log(Δx_trans / Δx_cis)`. Check with the fitted parameters
-   (kT/e = 25.69 mV): corrected → 87.7 mV (N_tag +4), 61.1 mV (+9) vs published 87.3 / 60.4; the
-   zero term gives 85.1 / 59.6. **The corrected form reproduces the published table.**
+3. **ε_protein = 10 (trapping) vs 20 (ePNP-NS)**, same citation (`trapping.tex` L1341; `epnpns.tex` L452) **[verified][^thesis]**. Ruled (ruling 5): a calibration
+   parameter, default 20 for ePNP-NS; APBS's 10 belongs to that workflow.
+4. **Body bead charge printed as both −1.43 e and −1.7143 e** ([§2](03-charge-representation-both-forms-and.md) (a); `trapping.tex` `fig:trapping_apbs_model`, "Energy landscape of DHFR in ClyA") **[verified][^thesis]**. Resolve as N_body/7.
+5. **`eq:threshold_voltage_complex` has a typo:** it prints `log(Δx_trans / Δx_trans)` ≡ 0 (`trapping.tex` L1431) **[verified][^thesis]**;
+   re-deriving dk/dV_b = 0 gives `log(Δx_trans / Δx_cis)`. The published table `tab:threshold_voltages_and_dwelltimes` lists 87.3 and 60.4 mV for N_tag +4 and +9 **[verified][^thesis]**.
+   With the fitted parameters of `tab:fitting_params_complex` (kT/e = 25.69 mV), the corrected form gives 87.6 and 61.1 mV and the zero term 85.1 and 59.6 mV **[verified][^threshold-arithmetic]**:
+   the corrected form is the closer to the published table, by 0.3 to 0.7 mV against 2.2 to 0.8 mV.
 6. **Sign convention is sloppy:** V_b is negative throughout, yet V_thresh is tabulated positive
-   (the leading minus makes it a magnitude). Pick one convention and assert it in tests.
+   (the leading minus makes it a magnitude) (`trapping.tex` `eq:external-barrier`, `eq:threshold_voltage_complex`, `tab:threshold_voltages_and_dwelltimes`) **[verified][^thesis]**. Pick one convention and assert it in tests.
 7. **`f(t) = k·e^{−kT}`** (`trapping_appendix.tex §single_bound_state`) is a typo for `k·e^{−kt}`;
-   the correct exponent appears two lines later.
-8. **Δx_cis is ill-defined by the author's own admission** (voltage-dependent barrier location) — a
+   the correct exponent appears two lines later **[verified][^thesis]**.
+8. **Δx_cis is ill-defined by the author's own admission** (voltage-dependent barrier location; `trapping.tex` `sec:trapping:biased_landscape`) **[verified][^thesis]** — a
    fit parameter, not a geometric constant. A v1 PMF that locates the *cis* barrier should report
    against both 2.7 nm and 5.21 nm.
 9. **Caption/text conflict:** `trapping_translocation_voltage` says the threshold voltage
    "increases" ≈5.21 mV per tag charge; the text says "decrease of ≈5 mV". Both describe |V_thresh|
-   falling 87.3 → 60.4 mV; the caption means the signed value.
-10. **N_eo "depends solely on size and shape"** — untested, and exactly what a v1 F(z) sweep can
-    falsify: check whether F_hyd/V_b is constant across salt and bias at fixed geometry. Hypothesis,
-    not result.
+   falling 87.3 → 60.4 mV; the caption means the signed value (`trapping.tex` `fig:trapping_translocation_voltage` caption, "Characteristics of the trapping") **[verified][^thesis]**.
+10. **N_eo "depends solely on size and shape"** — asserted by the source (`trapping.tex`, after `eq:external-barrier`) **[verified][^thesis]**, not tested there.
+    Hypothesis, not result.
 
 ---
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. `trapping.tex` = `chapters/trapping/trapping.tex`, `trapping_appendix.tex` = `chapters/trapping_appendix/trapping_appendix.tex`, `epnpns.tex` = `chapters/epnpns/epnpns.tex`; `Lnnn` is the line in that commit.
+[^threshold-arithmetic]: By arithmetic from `eq:threshold_voltage_complex` (`trapping.tex` L1427-1437) with `log(Δx_trans/Δx_cis)` and `tab:fitting_params_complex`: ln k_trans = −3.44, ln k_cis = 7.39, Δx_trans = 3.5 nm, Δx_cis = 5.21 nm, Ψ_tag trans 0.860 and cis 0.218, N_eo = 15.5, N_body = −13, L = 14 nm: 87.64 mV (N_tag +4) and 61.06 mV (+9); without the log term, 85.11 and 59.63 mV.

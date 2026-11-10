@@ -19,17 +19,18 @@ generated:
 The PMF is built **forward** (energy → rates), never inverted from a force profile.
 
 1. **Equilibrium landscape:** `E_elec(z) = G_pore+part − G_pore − G_part` (`electrostatics.tex
-   eq:electrostatic_energy`), one APBS triple per z.
+   eq:electrostatic_energy`), one APBS triple per z (`electrostatics.tex` `eq:electrostatic_energy`; `trapping.tex` `sec:trapping:methods`) **[verified][^thesis]**
 2. **Tilt by bias** (`trapping.tex eq:external_energy_model`), N_tot = N_body + N_tag + N_eo:
    `E_ext = N_tot·(V_b/14 nm)·(z − 11 nm)` for −3 < z < 11 nm; `0` for z ≥ 11 nm; `N_tot·V_b` for
-   z < −3 nm. Total `E_V = E_elec + E_ext`.
+   z < −3 nm. Total `E_V = E_elec + E_ext` (`trapping.tex` `eq:external_energy`, `eq:external_energy_model`) **[verified][^thesis]**.
 3. **Escape rate:** from a Boltzmann kinetic-energy distribution, energy-independent density of
-   states Z, step transmission `c(E)=c₀·θ(E−ΔG)` → `k = Z c₀ exp(−ΔG/kT) ≡ k₀ exp(−ΔG/kT)`.
+   states Z, step transmission `c(E)=c₀·θ(E−ΔG)` → `k = Z c₀ exp(−ΔG/kT) ≡ k₀ exp(−ΔG/kT)` (`trapping_appendix.tex` `eq:rate`, `sec:trapping_appendix:single_barrier_system`) **[verified][^thesis]**.
    Arrhenius, **not Kramers** — no friction or curvature prefactor anywhere.
 4. **Double barrier:** `1/τ = k = k_eff^cis·exp(−ΔG^cis/kT) + k_eff^trans·exp(−ΔG^trans/kT)`,
-   ΔG = ΔG_steric,0 + ΔG_static,0 + N_tag·e·Ψ_tag ∓ (N_net+N_eo)·e·(Δx/L)·V_b (`eq:double_barrier_complex`).
-5. **Translocation probability:** `P_trans = k^trans/(k^cis + k^trans)` (`eq:ptrans`).
+   ΔG = ΔG_steric,0 + ΔG_static,0 + N_tag·e·Ψ_tag ∓ (N_net+N_eo)·e·(Δx/L)·V_b (`eq:double_barrier_complex`) **[verified][^thesis]**.
+5. **Translocation probability:** `P_trans = k^trans/(k^cis + k^trans)` (`eq:ptrans`) **[verified][^thesis]**.
 6. **Dwell-time statistics:** single bound state → exponential, τ = 1/k, Var = τ². Multi-state →
    sum of exponentials whose expectation is the **arithmetic mean of the level lifetimes**
-   (`eq:tau_arithmetic_mean`) — hence the experimental τ is a plain mean.
+   (`eq:tau_arithmetic_mean`) — hence the experimental τ is a plain mean (`trapping_appendix.tex` `sec:trapping_appendix:single_bound_state`; `trapping.tex` "Dwell time measurements") **[verified][^thesis]**.
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. `trapping.tex` = `chapters/trapping/trapping.tex`, `trapping_appendix.tex` = `chapters/trapping_appendix/trapping_appendix.tex`, `electrostatics.tex` = `chapters/electrostatics/electrostatics.tex`; `Lnnn` is the line in that commit.

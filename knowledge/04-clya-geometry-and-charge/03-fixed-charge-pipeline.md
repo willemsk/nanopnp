@@ -27,6 +27,9 @@ verified:
 - by: process:tests/tier2/test_charge_potential_axis.py::test_ver58_deposited_potential_converges_at_the_potentials_own_rate_on_the_axis
   at: '2026-10-16T00:00:00Z'
 sources:
+- id: thesis
+  resource: https://github.com/willemsk/phdthesis-text
+  title: Willems, PhD thesis (LaTeX source)
 - id: wp28-plan
   resource: git:0ff2d619:docs/plans/wp28-charge-deposition.md
   title: WP28 charge projection plan, Design §1
@@ -35,11 +38,11 @@ sources:
 ## 3. Fixed-charge pipeline
 
 Protonation and parameters: partial charges and radii from **CHARMM36**, assigned at **pH 7.5** with
-**PROPKA** + **PDB2PQR** (printed "PBD2PQR" in the source) — T L421-423.
+**PROPKA** + **PDB2PQR** (printed "PBD2PQR" in the source) — T L421-423 **[verified][^thesis]**.
 
 Same 50 aligned frames as the geometry. Each atom's charge is spread over all azimuthal angles,
 `q_i -> q_i / (2 pi r_i)` with `r_i = sqrt(x_i^2 + y_i^2)`, and smeared as a 2D Gaussian in (r,z)
-(T L402-416, eq. `eq:scdpore`):
+(T L402-416, eq. `eq:scdpore`; formula and σ = 0.5 **[verified][^thesis]**):
 
 ```
 rhoq_pore(r,z) = SUM_i  e * q_i / (pi * (sigma * R_i)^2)
@@ -54,15 +57,15 @@ with `sigma = 0.93` in the density map.
 Discretisation and use: gridded at **0.005 nm** spacing over the domain of `rhoq_pore`, precomputed,
 loaded into COMSOL as a **2D linear interpolation function**, and converted to a pseudo-3D volumetric
 density by dividing by the **local circumference 2 pi r** of each element, **applied across all
-computational domains** (T L418-429). Axis guard, verbatim COMSOL (see `knowledge/01-physics-epnpns/05-fixed-charge-from-structure.md`):
+computational domains** (T L418-429) **[verified][^thesis]**. Axis guard, verbatim COMSOL (see `knowledge/01-physics-epnpns/05-fixed-charge-from-structure.md`):
 
 ```
 scd_pore = if(r < 0.01[nm], 0, e_const * rhoq_pore(r,z) / (2*pi*r))     [C m^-3]
 ```
 
-**Net charge check (a regression target):** integrating the resulting volumetric density over the
-final mesh gives **-72.9 e**, against **-72 e** for the atomistic model (T L425-427). Any
-reimplementation must land within ~1 % of -72 e.
+**Net charge:** the source quotes **-72.9 e** integrated over its mesh against **-72 e** atomistic
+(T L425-427) **[verified][^thesis]**. −72.9 is COMSOL's quadrature aliasing ([§3.2](#32-the-references-125-is-the-consumers-and-it-is-aliasing),
+ruling 8). The target is `Q_net` to 10⁻³ (QR-03, PHY-16 step 7).
 
 ### 3.1 The delivered table, measured [verified][^wp28-plan] {#31-the-delivered-table-measured}
 
@@ -77,7 +80,7 @@ too large to vendor, so it is named by `$NANOPNP_REFERENCE_DATA` and Tier 3 skip
 | Extent | `r` in [0, 7] nm, `z` in [-3.5, 13.5] nm |
 | Value range | -2.81e20 to +6.90e20 (in `e/m^2`; 110.5 C/m^2 after the `e` factor) |
 | Planar integral | **-71.999999999663 e**, i.e. exactly -72 e to 4.7e-12 relative |
-| Boundary ring / interior max | 8.5e-24 — not truncated, by 20 decades |
+| Boundary ring / interior max | 8.5 × 10⁻²⁴ of the interior maximum (asserted below 10⁻²⁰) |
 | Axis-guard deficit (`r < 0.01 nm`) | 1.4e-68 e — the innermost atoms sit at `r >~ 1.6 nm` |
 
 Two of the section-8 gaps close on these numbers.
@@ -125,7 +128,7 @@ and on the fixed 44,316-element mesh, raising the integration order instead (ext
 i.e. order 8 -> 37) gives -71.289538, -71.289538, -71.957178, -72.212549, -71.800760, -72.053253,
 -71.965410 e — oscillating at the 1e-3 to 1e-2 level and never settling. (The first two are
 identical because `Measures.bonus_order` takes `max(extra, 3)` on a singular form, so `extra=3` *is*
-the assembly order; see `knowledge/06-numerics-fem/index.md`.)
+the assembly order; see `knowledge/06-numerics-fem/09-ngsolve-traps-found-by-implementing.md`, trap 18.)
 
 **The cause is the field's own structure.** Along the densest `z` the table changes sign **49
 times**, with extrema a **median 0.035 nm** apart — an order below the finest element the reference
@@ -195,4 +198,5 @@ Measured implementing it (WP28, 1 October 2026) **[tested: tests/tier1/test_char
 
 ---
 
+[^thesis]: Willems, PhD thesis, LaTeX source, `github.com/willemsk/phdthesis-text` at `43d0f0f`. T = `chapters/transport/transport.tex`, TA = `chapters/transport_appendix/transport_appendix.tex`, E = `chapters/electrostatics/electrostatics.tex`; `Lnnn` is the line in that commit.
 [^wp28-plan]: `git show 0ff2d619:docs/plans/wp28-charge-deposition.md`, Design §1 (`prod5_clya_charge` table and reference-mesh quadrature audit).

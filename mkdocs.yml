@@ -276,15 +276,15 @@ nav:
               - "6. Validation targets": _generated/model/knowledge/04-clya-geometry-and-charge/06-validation-targets.md
               - "7. Stated limitations and caveats": _generated/model/knowledge/04-clya-geometry-and-charge/07-stated-limitations-and-caveats.md
               - "8. Gaps and ambiguities (questions for the author)": _generated/model/knowledge/04-clya-geometry-and-charge/08-gaps-and-ambiguities-questions-for-the.md
-              - "Tier-1 test evidence: contours and charge deposition (WP45 item 20)": _generated/model/knowledge/04-clya-geometry-and-charge/09-tier-1-test-evidence-contours-and.md
-              - "Tier-1 test evidence: the derived dielectric's transition (WP45 item 21)": _generated/model/knowledge/04-clya-geometry-and-charge/10-tier-1-test-evidence-the-derived.md
-              - "Tier-1 test evidence: the VAL-05 harness and its closed forms (WP45 item 24)": _generated/model/knowledge/04-clya-geometry-and-charge/11-tier-1-test-evidence-the-val-05-harness.md
-              - "Tier-2 test evidence: quadrature gates, the exclusion shell and the contour (WP45 item 25)": _generated/model/knowledge/04-clya-geometry-and-charge/12-tier-2-test-evidence-quadrature-gates.md
-              - "Tier-3 test evidence: the charged-tube sweep, the table's margin and the ClyA-AS prediction (WP45 item 27)": _generated/model/knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md
-              - "PDB2PQR's residue and hydrogen names, and the protonated density (WP5.03)": _generated/model/knowledge/04-clya-geometry-and-charge/14-pdb2pqrs-residue-and-hydrogen-names-and-the-protonated-density.md
-          - "Analyte bodies and forces — what the thesis actually contains":
+              - "Tier-1 test evidence: contours and charge deposition": _generated/model/knowledge/04-clya-geometry-and-charge/09-tier-1-test-evidence-contours-and.md
+              - "Tier-1 test evidence: the derived dielectric's transition": _generated/model/knowledge/04-clya-geometry-and-charge/10-tier-1-test-evidence-the-derived.md
+              - "Tier-1 test evidence: the VAL-05 harness and its closed forms": _generated/model/knowledge/04-clya-geometry-and-charge/11-tier-1-test-evidence-the-val-05-harness.md
+              - "Tier-2 test evidence: quadrature gates, the exclusion shell and the contour": _generated/model/knowledge/04-clya-geometry-and-charge/12-tier-2-test-evidence-quadrature-gates.md
+              - "Tier-3 test evidence: the charged-tube sweep and the table's margin": _generated/model/knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md
+              - "PDB2PQR's residue and hydrogen names, and the protonated density": _generated/model/knowledge/04-clya-geometry-and-charge/14-pdb2pqrs-residue-and-hydrogen-names-and-the-protonated-density.md
+          - "Analyte bodies and forces: the thesis's trapping work, the PlyAB force reference, and the tests":
               - _generated/model/knowledge/05-analyte-and-forces/index.md
-              - "Analyte bodies and forces — what the thesis actually contains (overview)": _generated/model/knowledge/05-analyte-and-forces/00-overview.md
+              - "Analyte bodies and forces: the thesis's trapping work, the PlyAB force reference, and the tests (overview)": _generated/model/knowledge/05-analyte-and-forces/00-overview.md
               - "0. Read this first — the ACS Nano 2019 work contains no continuum analyte": _generated/model/knowledge/05-analyte-and-forces/01-read-this-first-the-acs-nano-2019-work.md
               - "1. Analyte geometry (APBS bead model)": _generated/model/knowledge/05-analyte-and-forces/02-analyte-geometry-apbs-bead-model.md
               - "2. Charge representation — both forms, and where each is used": _generated/model/knowledge/05-analyte-and-forces/03-charge-representation-both-forms-and.md
@@ -295,9 +295,9 @@ nav:
               - "7. Validation targets": _generated/model/knowledge/05-analyte-and-forces/08-validation-targets.md
               - "8. Stated limitations, and off-axis behaviour": _generated/model/knowledge/05-analyte-and-forces/09-stated-limitations-and-off-axis.md
               - "9. Gaps and ambiguities": _generated/model/knowledge/05-analyte-and-forces/10-gaps-and-ambiguities.md
-              - "10. CORRECTION — continuum force computation DOES exist: PlyAB (Angew. Chem. 2022)": _generated/model/knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md
-              - "Tier-1 test evidence: analyte bodies (WP45 item 20)": _generated/model/knowledge/05-analyte-and-forces/12-tier-1-test-evidence-analyte-bodies.md
-              - "Tier-2 test evidence: electro-osmosis and electrophoresis (WP45 item 25)": _generated/model/knowledge/05-analyte-and-forces/13-tier-2-test-evidence-electro-osmosis.md
+              - "10. The continuum force computation: PlyAB (Angew. Chem. 2022)": _generated/model/knowledge/05-analyte-and-forces/11-correction-continuum-force-computation.md
+              - "Tier-1 test evidence: analyte bodies": _generated/model/knowledge/05-analyte-and-forces/12-tier-1-test-evidence-analyte-bodies.md
+              - "Tier-2 test evidence: electro-osmosis, electrophoresis and the force routes": _generated/model/knowledge/05-analyte-and-forces/13-tier-2-test-evidence-electro-osmosis.md
           - "Numerics — FEM formulation, solvers, and quantities of interest":
               - _generated/model/knowledge/06-numerics-fem/index.md
               - "Numerics — FEM formulation, solvers, and quantities of interest (overview)": _generated/model/knowledge/06-numerics-fem/00-overview.md

@@ -26,7 +26,7 @@ Willems et al., *Nanoscale* **12**, 16775 (2020). MD setup details are cross-ref
 into ch. 4 (`chapters/electrostatics/electrostatics.tex`, `sec:elec:methods:molec`) and are
 transcribed from there.
 
-**Scope.** This file covers *only* the ClyA-specific pipeline and numbers. Governing equations,
+**Scope.** This directory covers *only* the ClyA-specific pipeline and numbers. Governing equations,
 correction functions, their parameters, and the errata belong to `knowledge/01-physics-epnpns/index.md` and are not
 repeated. Citation keys below: **T** = `transport.tex`, **TA** = `transport_appendix.tex`,
 **E** = `electrostatics.tex`; `Lnnn` = line number at time of transcription.

@@ -1,7 +1,7 @@
 ---
 type: Overview
-title: Analyte bodies and forces — what the thesis actually contains (overview)
-description: 'Analyte bodies and forces: what the thesis contains and where it is silent.'
+title: "Analyte bodies and forces: the thesis's trapping work, the PlyAB force reference, and the tests (overview)"
+description: "What the thesis's trapping work contains and where it is silent, the 2022 PlyAB force computation, and nanopnp's test evidence."
 tags:
 - analyte
 - overview
@@ -14,7 +14,7 @@ generated:
   at: '2026-10-14T00:00:00Z'
 ---
 
-# Analyte bodies and forces — what the thesis actually contains
+# Analyte bodies and forces: the thesis's trapping work, the PlyAB force reference, and the tests
 
 **Status:** authoritative *for what the source says*, and explicitly negative where the source is
 silent. Transcribed from `chapters/trapping/trapping.tex` (= Willems, Ruić, Biesemans et al.,
@@ -22,7 +22,9 @@ silent. Transcribed from `chapters/trapping/trapping.tex` (= Willems, Ruić, Bie
 supporting material from `chapters/nanopores/nanopores.tex` (background theory),
 `chapters/electrostatics/electrostatics.tex` (APBS method), `chapters/transport/transport.tex`
 (ch. 6) and `chapters/conclusion/conclusion.tex`. Governing equations, corrections and symbols live
-in `knowledge/01-physics-epnpns/index.md` and are not repeated here.
+in `knowledge/01-physics-epnpns/index.md` and are not repeated here. The 2022 PlyAB force
+computation, which is not in the thesis, is [§10](11-correction-continuum-force-computation.md); nanopnp's
+own test evidence is files 12 and 13.
 
 ---
 
