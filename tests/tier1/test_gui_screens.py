@@ -194,7 +194,7 @@ def test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing(
         "document.querySelector('[data-control=key-suite-study]').innerText.includes('Ctrl+Alt+Y')"
     )
     _ready(page, origin + "/molecular")
-    page.keyboard.press("Alt+Shift+Digit3")  # the old chord of the study suite
+    page.keyboard.press("Alt+Shift+Digit4")  # the old chord of the study suite
     page.wait_for_timeout(1000)
     assert page.url == origin + "/molecular"
     page.keyboard.press("Control+Alt+KeyY")

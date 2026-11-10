@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 
+from nanopnp.gui.web.screens import SUITES
 from nanopnp.gui.web.settings import SETTINGS
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     "command",
     "refusal",
     "setting_commands",
+    "unavailable",
 ]
 
 MENUS: tuple[str, ...] = ("file", "view", "help")
@@ -36,6 +38,8 @@ class Command:
         The default chord, such as ``Ctrl+K``, or empty where the command has none.
     keywords
         Words the palette finds the command by, besides its title.
+    needs_project
+        Whether the command needs an open project to run.
     """
 
     id: str
@@ -43,24 +47,33 @@ class Command:
     menu: str
     shortcut: str = ""
     keywords: tuple[str, ...] = ()
+    needs_project: bool = False
 
+
+_SUITE_COMMANDS: tuple[Command, ...] = tuple(
+    Command(
+        f"suite-{suite.id}",
+        f"{suite.title} suite",
+        "view",
+        f"Alt+Shift+{number}",
+        tuple(tool.lower() for tool in suite.tools),
+    )
+    for number, suite in enumerate(SUITES, start=1)
+)
 
 COMMANDS: tuple[Command, ...] = (
     Command("project-new", "New project…", "file"),
     Command("project-open", "Open project…", "file"),
-    Command("project-import", "Import case…", "file"),
-    Command("project-export", "Export project…", "file"),
-    Command("settings", "Settings…", "file", "Ctrl+,"),
+    Command("project-import", "Import case…", "file", needs_project=True),
+    Command("project-export", "Export project…", "file", needs_project=True),
+    Command("settings", "Settings…", "file", "Ctrl+,", ("preferences", "options")),
     Command("quit", "Quit", "file"),
-    Command("suite-molecular", "Molecular suite", "view", "Alt+Shift+1"),
-    Command("suite-continuum", "Continuum suite", "view", "Alt+Shift+2"),
-    Command("suite-study", "Study suite", "view", "Alt+Shift+3"),
-    Command("suite-analysis", "Analysis suite", "view", "Alt+Shift+4"),
-    Command("panel-toggle", "Toggle the bottom panel", "view", "Alt+Shift+J"),
-    Command("changes", "Changed values", "view", "Alt+Shift+D"),
-    Command("problems", "Problems", "view", "Alt+Shift+P"),
-    Command("layout-reset", "Reset layout", "view"),
-    Command("glossary", "Glossary", "help"),
+    *_SUITE_COMMANDS,
+    Command("panel-toggle", "Toggle the bottom panel", "view", "Alt+Shift+J", ("queue", "log")),
+    Command("changes", "Changed values", "view", "Alt+Shift+D", ("modified", "defaults")),
+    Command("problems", "Problems", "view", "Alt+Shift+P", ("errors", "refused")),
+    Command("layout-reset", "Reset layout", "view", keywords=("panels", "sizes")),
+    Command("glossary", "Glossary", "help", keywords=("terms",)),
     Command("about", "About", "help"),
     Command("palette", "Command palette", "view", "Ctrl+K"),
 )
@@ -95,17 +108,32 @@ def command(identifier: str) -> Command:
 def bindings(keys: Mapping[str, str] | None = None) -> dict[str, str]:
     """Return each command's chord: the user's ``keys`` over the defaults.
 
-    A chord of ``""`` in ``keys`` unbinds its command.
+    A chord of ``""`` in ``keys`` unbinds its command. A default chord that a user binding took
+    goes to that binding's command, and the command that had it is reported unbound.
     """
     chosen = dict(keys or {})
-    return {entry.id: chosen.get(entry.id, entry.shortcut) for entry in COMMANDS}
+    taken = {chord for chord in chosen.values() if chord}
+    return {
+        entry.id: chosen.get(entry.id, "" if entry.shortcut in taken else entry.shortcut)
+        for entry in COMMANDS
+    }
 
 
 def chords(keys: Mapping[str, str] | None = None) -> dict[str, str]:
-    """Return the command each chord runs, which the page hands the key listener."""
+    """Return the command each chord runs, which the page hands the key listener.
+
+    A user's binding wins over a default chord, whatever the order of ``COMMANDS``.
+    """
     table = {chord: identifier for identifier, chord in bindings(keys).items() if chord}
     table.setdefault(PALETTE_ALSO, "palette")
     return table
+
+
+def unavailable(command: Command, *, has_project: bool) -> str | None:
+    """Return why ``command`` cannot run now, or None where it can."""
+    if command.needs_project and not has_project:
+        return "Open or create a project first"
+    return None
 
 
 def refusal(identifier: str, chord: str, keys: Mapping[str, str] | None = None) -> str | None:
