@@ -32,7 +32,7 @@ verified:
 | Axisymmetric | one-liner: `... * x * dx` where `x` is the radial coordinate. Natural but **undocumented** |
 | Rendering | `ngsolve.webgui` / `netgen.webgui`; `WebGLScene.GenerateHTML()` makes it embeddable **[tested: tests/tier1/test_library_behaviour.py::test_ngsolve_newton_and_webgui_api]** |
 | Meshing | Netgen built in, with OpenCASCADE geometry — no external mesher needed |
-| API stability | remarkably stable for a decade |
+| API stability | stable across the releases the project has locked; the longer history is from the project's pages (unverified) |
 
 **Alternatives and consequences:** ADR-001 (`specification/05-software-design/06-architecture-decisions.md`)
 holds the alternatives, the second-backend argument and the MPI and MUMPS consequences. Tested here:
@@ -46,7 +46,7 @@ holds the alternatives, the second-backend argument and the MPI and MUMPS conseq
 2. **2D boundary layers are immature.** Python API is
    `netgen.meshing.Mesh.BoundaryLayer2(domain, thicknesses, make_new_domain=True, boundaries=[])`
    (binding C++ `GenerateBoundaryLayer2`). The forum carries an unresolved Aug 2024 report of the
-   generator failing to fill a zone adjacent to the new advancing front. Separately, the *3D*
+   generator failing to fill a zone adjacent to the new advancing front (forum, unverified). Separately, the *3D*
    `Mesh.BoundaryLayer` now unconditionally raises *"Call syntax has changed! Pass a list of
    BoundaryLayerParameters to the GenerateMesh call instead"* — a trap when porting 2D code to 3D.
 
@@ -55,6 +55,8 @@ holds the alternatives, the second-backend argument and the MPI and MUMPS conseq
 ADR-001 holds the assessment of DOLFINx, Firedrake, scikit-fem, SfePy, PyMFEM and deal.II.
 
 ### 1.2 Prior art worth mining
+
+Status and licence as the projects' repositories showed them in August 2026 (unverified).
 
 | Project | Framework | Licence | Status | Use |
 |---|---|---|---|---|

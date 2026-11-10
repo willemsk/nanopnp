@@ -6,5 +6,5 @@
 * [Tier 3 — COMSOL differential tests (hours, nightly)](03-tier-3-comsol-differential-tests-hours.md) - Tier 3, differential tests against COMSOL, with the measured attribution ladder.
 * [Tier 4 — Experimental reproduction (release gate)](04-tier-4-experimental-reproduction.md) - Tier 4, experimental reproduction, the release gate.
 * [Continuous integration](05-continuous-integration.md) - Continuous integration.
-* [Tier-1 test evidence: APBS maps, golden archives and the density cap (WP45 item 20)](06-tier-1-test-evidence-apbs-maps-golden.md) - What the Tier-1 tests of APBS maps, golden archives and the density cap establish, recorded at WP45 item 20.
-* [Tier-3 test evidence: run times of the archive and seed fixtures (WP45 item 27)](07-tier-3-test-evidence-run-times-of-the.md) - What the Tier-3 tests of run times of the archive and seed fixtures establish, recorded at WP45 item 27.
+* [Tier-1 test evidence: APBS maps, golden archives and the density cap](06-tier-1-test-evidence-apbs-maps-golden.md) - What the Tier-1 tests of APBS maps, golden archives and the density cap establish.
+* [Tier-3 test evidence: run times of the archive and seed fixtures](07-tier-3-test-evidence-run-times-of-the.md) - What the Tier-3 tests of run times of the archive and seed fixtures establish.

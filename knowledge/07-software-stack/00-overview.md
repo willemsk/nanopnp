@@ -12,9 +12,9 @@ generated:
 
 # Software stack — libraries, versions, licences, gotchas
 
-Verified August 2026 against PyPI, project docs and, where marked `[tested: <test>]`, by installing and
-running the library. Re-verify versions before relying on them; the *facts about behaviour* age
-more slowly than the version numbers.
+Versions: `uv.lock`; each measurement carries its own date and `tested_with`. A fact marked
+`[tested: <test>]` is asserted by running the library; one taken from a project's own pages or
+forum says so and is unverified.
 
 ---
 

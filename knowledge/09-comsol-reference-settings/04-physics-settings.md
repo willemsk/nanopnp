@@ -64,8 +64,8 @@ The internal definitions of `tds.streamline`, `tds.crosswind`, `spf.streamlinens
 but unused. **[verified][^comsol-report]**
 
 **Consequence.** The published currents were computed **with** consistent stabilisation in both the
-ion transport and the flow. The open question in `knowledge/06-numerics-fem/04-stabilisation.md` is settled against our
-current policy. Note also that the flow uses **P1+P1** (equal-order) elements, which are LBB-unstable
+ion transport and the flow; nanopnp's `reference` mode reproduces those settings (NUM-14), and its
+default is unstabilised. Note also that the flow uses **P1+P1** (equal-order) elements, which are LBB-unstable
 without stabilisation — for the Navier–Stokes part the stabilisation is *load-bearing*, not cosmetic.
 
 ### C.2 Discretisation order per field

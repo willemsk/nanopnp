@@ -1,7 +1,7 @@
 ---
 type: Library Behaviour
 title: 9. The CLI's import budget, measured
-description: The command line's import budget, measured.
+description: The import costs of the command line, the case schema and the view-models, and what keeps NGSolve and NumPy out of them.
 tags:
 - software
 - library-behaviour
@@ -16,6 +16,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_cli.py::test_ver32_stage_list_imports_no_stage_module
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve
+  at: '2026-11-10T00:00:00Z'
 - by: process:tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing
   at: '2026-10-16T00:00:00Z'
 ---
@@ -45,3 +47,41 @@ Two mechanisms keep it there, and both are load-bearing rather than tidy:
 The MRO walk is not incidental: it is what makes a subclass of a classified exception inherit its
 exit code, so a narrower gate error added later is still a `4` rather than falling to `1`.
 
+### 9.1 `nanopnp.io.case` pulls in neither NGSolve nor NumPy {#nanopnpiocase-pulls-in-neither-ngsolve-nor-numpy-and-costs-250350-ms}
+
+Measured 20 September 2026 on the development interpreter (3.12). After `import nanopnp.io.case`,
+`"ngsolve" in sys.modules` and `"numpy" in sys.modules` are both `False`. The cost is pydantic and
+PyYAML building the case model tree (`nanopnp/case/v1` then, `nanopnp/case/v0.6` now), paid once.
+
+So a caller can enumerate, display and validate an entire case document without the solver — which
+is what lets a schema-generated editor stay near the CLI's 56 ms stage-introspection budget in
+spirit, with NGSolve imported only in whatever process actually solves. `io/case.py` imports only
+`core` at run time: the registry checks that need `materials` and `physics` live in
+`pipeline/checks.py`. After `import nanopnp.io.case` the only `nanopnp` subpackages in
+`sys.modules` are `core` and `io` **[tested: tests/tier1/test_library_behaviour.py::test_cli_deferred_imports_and_hashing_duck_typing]**, 6 October 2026. `import nanopnp.pipeline.case`,
+which holds the case loader and the resolver that `Case.load` and `Session.run` call, also loads `charge`, `density`, `geometry`, `materials`,
+`mesh`, `numerics` and `physics`, and still leaves `ngsolve` and `numpy` out of `sys.modules`; that
+holds because those modules defer their own NGSolve and NumPy imports.
+
+**Measured 20 September 2026 on an idle container, not asserted: 349 ms cold (no `__pycache__`), 253 ms
+warm.** **Treat the absolute number as machine-dependent and the ratio as the fact**: importing the case schema costs roughly what one
+NGSolve import (~370 ms) costs, and the load-bearing half — neither `ngsolve` nor `numpy` in
+`sys.modules` afterwards — is re-confirmed and is not a timing claim at all.
+
+### 9.2 The desktop shell's view-model layer costs what the schema costs {#the-desktop-shells-view-model-layer-costs-what-the-schema-costs}
+
+Measured 20 September 2026, best of three on an idle container, warm cache, not asserted:
+
+| Module | Cost | What it pulls in |
+|---|---|---|
+| `nanopnp.io.case` | 253 ms | pydantic and PyYAML building the case model tree (`nanopnp/case/v1` then, `nanopnp/case/v0.6` now) |
+| `nanopnp.gui.case_model` | 251 ms | the above, and about a millisecond of its own |
+| `nanopnp.gui.run_model` | 273 ms | the above, plus `io/manifest.py` and `pipeline/run.py` |
+| `nanopnp.gui.solver` | 73 ms | `core/errors.py` and `multiprocessing`; everything else is deferred into the child |
+| `nanopnp.gui.probe` | 59 ms | `core/paths.py` only — every payload is deferred |
+| `nanopnp.cli` | 62 ms | the comparison, and the budget the deferred-import rule protects |
+
+After importing all three view-models, **none** of `PySide6`, `PyQt5`, `PyQt6`, `ngsolve`, `netgen`
+or `numpy` is in `sys.modules`, asserted in a subprocess **[tested: tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve]**. The
+editor therefore enumerates and validates the whole schema at the cost of the schema, and a shell
+that is only browsing a case never pays for a solver or a toolkit.

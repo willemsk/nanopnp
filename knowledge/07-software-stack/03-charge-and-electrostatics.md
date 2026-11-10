@@ -10,8 +10,6 @@ generated:
   by: claude-code/0.5.0-alpha.13
   at: '2026-10-14T00:00:00Z'
 verified:
-- by: process:arithmetic
-  at: '2026-10-14T00:00:00Z'
 - by: process:tests/tier1/test_apbs_maps.py::test_val06_each_dielectric_map_is_staggered_half_a_spacing_along_its_axis
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_apbs_maps.py::test_val06_the_charge_map_is_in_e_per_cubic_angstrom
@@ -22,9 +20,9 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_pqr.py::test_ver57_a_patched_residue_is_named_by_its_variant
   at: '2026-10-16T00:00:00Z'
+- by: process:tests/tier1/test_pqr.py::test_ver57_pdb2pqr_38_terminal_patches_name_no_residue
+  at: '2026-11-08T00:00:00Z'
 - by: process:tests/tier1/test_protonation.py::test_ver57_a_c_terminal_acid_keeps_both_carboxyl_groups
-  at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_protonation.py::test_ver57_a_pqr_missing_a_flippable_atom_is_refused
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier1/test_protonation.py::test_ver57_charges_are_charmm_dat_and_q_net_the_hand_count
   at: '2026-10-16T00:00:00Z'
@@ -32,8 +30,8 @@ verified:
   at: '2026-10-16T00:00:00Z'
 - by: process:tests/tier2/test_protonation_2wcd.py::test_ver57_q_net_of_the_prepared_dodecamer_is_its_golden
   at: '2026-10-16T00:00:00Z'
-- by: process:tests/tier1/test_pqr.py::test_ver57_pdb2pqr_38_terminal_patches_name_no_residue
-  at: '2026-11-08T00:00:00Z'
+- by: process:arithmetic
+  at: '2026-10-14T00:00:00Z'
 sources:
 - id: wp17-plan
   resource: docs/plans/phase-2/wp17-case-schema-v2.md
@@ -54,12 +52,14 @@ tested_with:
 
 ## 3. Charge and electrostatics
 
-| Tool | Version | Licence | Notes |
-|---|---|---|---|
-| **PDB2PQR** | 3.8.0 | BSD-3 | Python API `pdb2pqr.main`. Produces protonated structure **+ per-atom partial charges + radii** |
-| PROPKA3 | 3.5.1 | LGPL-2.1 | pKa only; shipped as a PDB2PQR dependency |
-| **APBS** | 3.4.1 | BSD-3 | Poisson–Boltzmann cross-check. Driven by input files; read `.dx` with `gridData`. `apbs-binary` pip wrapper exists |
-| pKAI / pKa-ANI / PypKa | — | MIT / — / LGPL-3 + proprietary DelPhi | ML or PB pKa. Not integrated with PDB2PQR |
+Versions are in `uv.lock`, and the role and licence of each dependency in `SPECIFICATION.md` §2.6.
+
+| Tool | Licence | Notes |
+|---|---|---|
+| **PDB2PQR** | BSD-3 | Python API `pdb2pqr.main`. Produces protonated structure **+ per-atom partial charges + radii** |
+| PROPKA3 | LGPL-2.1 | pKa only; shipped as a PDB2PQR dependency |
+| **APBS** | BSD-3 | Poisson–Boltzmann cross-check. Driven by input files; read `.dx` with `gridData`. `apbs-binary` pip wrapper exists |
+| pKAI / pKa-ANI / PypKa, not used | MIT / — / LGPL-3 + proprietary DelPhi (unverified) | ML or PB pKa. Not integrated with PDB2PQR |
 
 **Verified CLI facts [tested: tests/tier1/test_library_behaviour.py::test_pdb2pqr_cli_parser_and_propka_annotations]:** `--ff`, `--ffout`, `--with-ph`, `--titration-state-method`,
 `--drop-water`, `--keep-chain` all exist; `CHARMM`, `AMBER`, `PARSE` are valid force fields.
@@ -69,10 +69,12 @@ predictors must be run separately and their states applied by hand.
 PDB2PQR ignores PROPKA's `chains` option (relevant for homo-oligomeric pores) but *does* log a
 warning — surface it rather than swallowing it.
 
-**Package facts, read from PyPI's metadata on 30 September 2026 [verified]:**[^wp17-plan] `pdb2pqr` 3.7.1 is
-BSD-3, a pure-Python wheel, and requires Python ≥ 3.11, < 4. 3.7.1 pins `docutils==0.17.1`, which NiceGUI 3 cannot take; 3.8.0 (Python ≥ 3.10) has no `docutils` requirement, and its `CHARMM.DAT` is byte-identical to 3.7.1's, so the radii of the stage-2 density map are unchanged **[verified][^rev175]**, 3 November 2026 (REV-175). `propka` 3.5.1 is **LGPL-2.1** by its
-licence field and classifier, and is a pure-Python wheel. `SPECIFICATION.md` §2.6 called it BSD
-until that day. There is no `apbs` package on PyPI. `apbs-binary` 3.4.1.1 packages the BSD-3 APBS
+**Package facts, read from PyPI's metadata.** **[verified][^wp17-plan]** `pdb2pqr` is BSD-3 and a
+pure-Python wheel. 3.7.1 pins `docutils==0.17.1`, which NiceGUI 3 cannot take; 3.8.0 has no
+`docutils` requirement, and its `CHARMM.DAT` is byte-identical to 3.7.1's, so the radii of the
+stage-2 density map are unchanged **[verified][^rev175]**, 3 November 2026 (REV-175). `propka`
+3.5.1 is **LGPL-2.1** by its licence field and classifier, and is a pure-Python wheel. There is no
+`apbs` package on PyPI. `apbs-binary` 3.4.1.1 packages the BSD-3 APBS
 under Apache-2.0 and ships wheels for manylinux_2_28 x86_64, macOS 10.15 x86_64 and macOS 12
 arm64, **none for Windows**. So VAL-06 can run on the Linux and macOS CI legs only (§8.2.4 D3).
 
@@ -81,7 +83,7 @@ least grid-sensitive); `srfm` ∈ {mol, **smol**, spl2, spl4}. Note `spl2`/`spl4
 produce unphysical results at non-zero ionic strengths" — run the cross-check at **zero** ionic
 strength, which also isolates charge-projection error from model differences.
 
-### PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver **[tested: tests/tier1/test_protonation.py::test_ver57_charges_are_charmm_dat_and_q_net_the_hand_count]**, 1 October 2026 {#pdb2pqr-371-and-propka-351-as-a-per-frame-driver-1-october-2026}
+### PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver **[verified][^wp27-plan]**, 1 October 2026 {#pdb2pqr-371-and-propka-351-as-a-per-frame-driver-1-october-2026}
 
 Measured in this container while planning WP27, with `--ff=CHARMM --ffout=CHARMM --with-ph=7.5
 --titration-state-method=propka --drop-water --keep-chain` unless stated. Inputs were cut from the
@@ -98,7 +100,7 @@ frame).
   PROPKA takes 1.6 s, so the cost of PROPKA on the assembly is superlinear in its size. A nine-residue
   fragment takes 0.1 s. Plan for about a minute per frame of a ClyA ensemble, 50 minutes for 50 frames.
 - **Q_net.** 2WCD at pH 7.5 gives −60 e, −5 e on every chain, with no residue whose charge
-  differs between chains. ClyA-AS is −72 e (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`). OPN-04 lists 27
+  differs between chains **[tested: tests/tier1/test_protonation.py::test_ver57_charges_are_charmm_dat_and_q_net_the_hand_count]**. ClyA-AS is −72 e (`knowledge/04-clya-geometry-and-charge/03-fixed-charge-pipeline.md`). OPN-04 lists 27
   mutations between the 2WCD sequence and ClyA-AS; whether they account for the −1 e per chain is
   not checked.
 - **States that CHARMM cannot hold.** `Biomolecule.apply_pka_values` logs a tuple warning and keeps
@@ -129,8 +131,7 @@ frame).
   `CE1`, `NE2`) lie 0.13–0.15 Å (amides) and 0.19–0.40 Å (the ring) from every input heavy atom, and
   no other heavy atom moves. On the prepared dodecamer of the tests it is 138, worst 0.397 Å. Match
   heavy atoms by position within a residue, never by name, and leave the flippable atoms out of any
-  tight positional criterion **[tested: tests/tier1/test_protonation.py::test_ver57_a_pqr_missing_a_flippable_atom_is_refused]**, 1 October 2026 (WP27; this bullet first said the 140
-  carried another atom's position exactly).
+  tight positional criterion **[verified][^wp27-plan]**, 1 October 2026 (WP27).
 - **Fused columns.** The PQR is written in PDB fixed columns, so a coordinate at or below −100 Å
   runs into its neighbour (`-37.705-115.041`). `pdb2pqr.io.read_pqr` splits on whitespace and
   cannot read PDB2PQR's own output in that case.
@@ -178,7 +179,7 @@ frame).
   `propka.*`. PROPKA's full report is logged at INFO, about 400 kB for the dodecamer. Importing
   `pdb2pqr` calls `logging.captureWarnings(True)`.
 
-### APBS 3.4.1 driven by maps **[tested: tests/tier1/test_apbs_maps.py::test_val06_the_charge_map_is_in_e_per_cubic_angstrom]**, 1 October 2026 {#apbs-341-driven-by-maps-1-october-2026}
+### APBS 3.4.1 driven by maps **[verified][^wp29-plan]**, 1 October 2026 {#apbs-341-driven-by-maps-1-october-2026}
 
 Measured in this container while planning WP29 (VAL-06), with `apbs-binary` 3.4.1.1 installed into
 a scratch environment. Lengths in the deck and the maps are in Å, and the potential is in `kT/e` at
@@ -191,10 +192,10 @@ the deck's `temp`.
   arguments.
 - **A molecule is mandatory.** A deck with every input supplied as a map, but no `mol`, stops with
   `PBEparm_check: MOL not set!`. A one-atom, zero-charge PQR placed outside the box satisfies it.
-- **`READ charge` is in e Å⁻³.** A unit Gaussian sampled at the nodes is reported as `Charge map
+- **`READ charge` is in e Å⁻³** **[tested: tests/tier1/test_apbs_maps.py::test_val06_the_charge_map_is_in_e_per_cubic_angstrom]**. A unit Gaussian sampled at the nodes is reported as `Charge map
   integral = 1.00e+00 e`. With `usemap charge`, `chgm` has no effect on the map.
 - **The three `READ diel` maps are staggered.** The x-map's origin is the grid's plus `h/2` in x,
-  and likewise for y and z. APBS samples each at the edge midpoints. An x-map on the node grid
+  and likewise for y and z. APBS samples each at the edge midpoints **[tested: tests/tier1/test_apbs_maps.py::test_val06_each_dielectric_map_is_staggered_half_a_spacing_along_its_axis]**. An x-map on the node grid
   aborts with `Vpmg_fillco: Off dielXMap at: (x,y,z) = …` and `VASSERT: ASSERTION FAILURE` at
   `vpmg.c:4191`.
 - **No kappa map at zero ionic strength.** A deck with no `ion` line and no `kappa` map runs.
@@ -230,11 +231,8 @@ the deck's `temp`.
 
   This is about 250 B per node.
   The maps APBS reads are about 0.6 GB of text at 193³, which `run_apbs` deletes once read **[verified][^run-apbs]**.
-- **Case identity cost**, recorded before WP45's prose strip (`validation/comsol.py`): hashing the 84 MB reference charge table took about 1.6 s;
-  hashing the 9.2 MB deposited 2WCD structure files takes 12 ms, plus 0.7 s on the first import of stage 1 and
-  MDAnalysis **[verified][^case-identity-record]**. These are historical measurements, not performance guarantees.
 - **Self-refinement on 2WCD.** The problem is `poisson` on the protonated, prepared 2WCD at the
-  default mesh (44,987 elements), with both electrodes grounded. The box is 19.2 nm, with the faces
+  default mesh (44,987 elements, the planning run), with both electrodes grounded. The box is 19.2 nm, with the faces
   from our own `P2` solution. The probes are 555,535 fluid nodes of the 0.2 nm grid, at least 0.3 nm
   from every solid. On them, max |φ| is 19.3 `V_T` (0.50 V) and the rms is 7.2 `V_T`.
 
@@ -247,7 +245,7 @@ the deck's `temp`.
   the two solvers was not formed; VAL-06's tolerance was stated first (`SPECIFICATION.md` §7.4
   NOTE on VAL-06).
 
-### APBS in the VAL-06 driver **[tested: tests/tier1/test_apbs_maps.py::test_val06_each_dielectric_map_is_staggered_half_a_spacing_along_its_axis]**, 1 October 2026 {#apbs-in-the-val-06-driver-1-october-2026}
+### APBS in the VAL-06 driver **[verified][^wp29-plan]**, 1 October 2026 {#apbs-in-the-val-06-driver-1-october-2026}
 
 Measured while implementing WP29 (`src/nanopnp/validation/apbs.py`), in this container with 24
 cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
@@ -283,7 +281,7 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
   The temperature row is half of the 3.8 % that the ratio 310/298.15 predicts, because the faces
   hold our potential and only the charge's part of the interior scales.
 - **The gated leg on 2WCD.** This is the protonated, prepared dodecamer at the default sizes
-  (44,985 elements), solved with `poisson` and both electrodes grounded. The box is 193³ at 0.1 nm
+  (44,985 elements, the implementing run), solved with `poisson` and both electrodes grounded. The box is 193³ at 0.1 nm
   from (−9.6, −9.6, −4.35) nm, with 569,541 probes and 93 on the axis. The refinement estimates
   and the agreement, against the tolerance of `SPECIFICATION.md` §7.4's NOTE on VAL-06: the budget
   is 1.20 %, 0.18 % and 0.59 % (APBS 0.95 %, 0.17 % and 0.58 %; ours 0.25 %, 0.010 % and 0.013 %),
@@ -311,7 +309,7 @@ cores, on `apbs-binary` 3.4.1.1 from the `apbs` dependency group.
 ---
 
 [^wp17-plan]: `docs/plans/phase-2/wp17-case-schema-v2.md` and `uv.lock` (PyPI metadata for `pdb2pqr` 3.7.1 and `propka` 3.5.1).
-[^wp27-plan]: `docs/plans/phase-3/wp27-protonation.md`, Design §1 (`pdb2pqr` 3.7.1 `get_common_string_rep` and `get_pqr_string`).
+[^wp27-plan]: `docs/plans/phase-3/wp27-protonation.md`, Design §1 (PDB2PQR 3.7.1 and PROPKA 3.5.1 as a per-frame driver, measured while planning WP27, and `get_common_string_rep` and `get_pqr_string` read from the 3.7.1 source).
 [^rev175]: `docs/project/review-items.md`, REV-175 (pdb2pqr 3.8.0's `CHARMM.DAT` compared byte for byte with 3.7.1's).
 [^run-apbs]: `src/nanopnp/validation/apbs.py`, `run_apbs` (each map unlinked once APBS has read it); the size measured while planning WP29, `docs/plans/phase-3/wp29-val06-apbs.md`.
-[^case-identity-record]: `git show 1761f15c:src/nanopnp/validation/comsol.py`, `case_identity` docstring (84 MB charge-table hashing and the 9.2 MB deposited-structure recipe, WP34 D6).
+[^wp29-plan]: `docs/plans/phase-3/wp29-val06-apbs.md`, Design and Outcomes (APBS 3.4.1 driven by maps, measured while planning and implementing WP29).

@@ -328,21 +328,21 @@ nav:
               - "5. GUI and packaging": _generated/model/knowledge/07-software-stack/05-gui-and-packaging.md
               - "6. Licence summary": _generated/model/knowledge/07-software-stack/06-licence-summary.md
               - "7. Local assets": _generated/model/knowledge/07-software-stack/07-local-assets.md
-              - "8. Python version floor — the 3.10 target is not free": _generated/model/knowledge/07-software-stack/08-python-version-floor-the-310-target-is.md
+              - "8. Python 3.11 floor and the 3.14 development interpreter": _generated/model/knowledge/07-software-stack/08-python-version-floor-the-310-target-is.md
               - "9. The CLI's import budget, measured": _generated/model/knowledge/07-software-stack/09-the-clis-import-budget-measured.md
               - "10. canonical() is the on-disk format, not only the hash input": _generated/model/knowledge/07-software-stack/10-canonical-is-the-on-disk-format-not.md
-              - "11. A stage's workspace falls back to the process store root, not the run's store": _generated/model/knowledge/07-software-stack/11-a-stages-workspace-falls-back-to-the.md
+              - "11. A stage never picks its own workspace": _generated/model/knowledge/07-software-stack/11-a-stages-workspace-falls-back-to-the.md
               - "12. The suite's BLAS threads buy nothing; parallelism has to come from workers": _generated/model/knowledge/07-software-stack/12-the-suites-blas-threads-buy-nothing.md
               - "13. Documentation tooling: MkDocs, Material and Zensical": _generated/model/knowledge/07-software-stack/13-documentation-tooling-mkdocs-material.md
               - "14. A Windows checkout rewrites the bytes a hash identifies": _generated/model/knowledge/07-software-stack/14-a-windows-checkout-rewrites-the-bytes-a.md
               - "15. An .npz is reproducible bytes only if nothing in it moves with the clock": _generated/model/knowledge/07-software-stack/15-an-npz-is-reproducible-bytes-only-if.md
               - "16. NGSolve's bundled stubs cannot type-check, so the aliases in core/typing.py are Any": _generated/model/knowledge/07-software-stack/16-ngsolves-bundled-stubs-cannot-type.md
-              - "Tier-1 test evidence: the viewer and the positivity gate (WP45 item 21)": _generated/model/knowledge/07-software-stack/17-tier-1-test-evidence-the-viewer-and-the.md
-              - "Tier-1 test evidence: the mesh seam and the layering ratchet (WP45 item 22)": _generated/model/knowledge/07-software-stack/18-tier-1-test-evidence-the-mesh-seam-and.md
-              - "Tier-1 test evidence: stores, paths, OCC names, NaN and reduction tolerances (WP45 item 23)": _generated/model/knowledge/07-software-stack/19-tier-1-test-evidence-stores-paths-occ.md
-              - "Tier-1 test evidence: import costs, trajectory precision and the gate's pipefail trap (WP45 item 24)": _generated/model/knowledge/07-software-stack/20-tier-1-test-evidence-import-costs.md
-              - "Tier-2 test evidence: budgets, timings and reference checks (WP45 item 25)": _generated/model/knowledge/07-software-stack/21-tier-2-test-evidence-budgets-timings.md
-              - "Tier-2 test evidence: analytic benchmarks and reference checks (WP45 item 26)": _generated/model/knowledge/07-software-stack/22-tier-2-test-evidence-analytic.md
+              - "Tier-1 test evidence: the viewer and the positivity gate": _generated/model/knowledge/07-software-stack/17-tier-1-test-evidence-the-viewer-and-the.md
+              - "Tier-1 test evidence: the mesh seam and the layering ratchet": _generated/model/knowledge/07-software-stack/18-tier-1-test-evidence-the-mesh-seam-and.md
+              - "Tier-1 test evidence: stores, paths, OCC names, NaN and reduction tolerances": _generated/model/knowledge/07-software-stack/19-tier-1-test-evidence-stores-paths-occ.md
+              - "Tier-1 test evidence: import costs, trajectory precision and the gate's pipefail trap": _generated/model/knowledge/07-software-stack/20-tier-1-test-evidence-import-costs.md
+              - "Tier-2 test evidence: budgets, timings and reference checks": _generated/model/knowledge/07-software-stack/21-tier-2-test-evidence-budgets-timings.md
+              - "Tier-2 test evidence: analytic benchmarks and reference checks": _generated/model/knowledge/07-software-stack/22-tier-2-test-evidence-analytic.md
               - "23. Pinning a protonation state through PDB2PQR's apply_pka_values (WP5.04)": _generated/model/knowledge/07-software-stack/23-pinning-a-protonation-state-through-apply-pka-values.md
               - "24. pint with a Fraction registry converts exactly, and formats nothing (WP5.07)": _generated/model/knowledge/07-software-stack/24-pint-with-a-fraction-registry-exact-units.md
               - "25. xenon and import-linter beside ruff's C901 and VER-61 (WP5.10)": _generated/model/knowledge/07-software-stack/25-complexity-and-import-contract-tools.md
@@ -354,8 +354,8 @@ nav:
               - "Tier 3 — COMSOL differential tests (hours, nightly)": _generated/model/knowledge/08-validation-benchmarks/03-tier-3-comsol-differential-tests-hours.md
               - "Tier 4 — Experimental reproduction (release gate)": _generated/model/knowledge/08-validation-benchmarks/04-tier-4-experimental-reproduction.md
               - "Continuous integration": _generated/model/knowledge/08-validation-benchmarks/05-continuous-integration.md
-              - "Tier-1 test evidence: APBS maps, golden archives and the density cap (WP45 item 20)": _generated/model/knowledge/08-validation-benchmarks/06-tier-1-test-evidence-apbs-maps-golden.md
-              - "Tier-3 test evidence: run times of the archive and seed fixtures (WP45 item 27)": _generated/model/knowledge/08-validation-benchmarks/07-tier-3-test-evidence-run-times-of-the.md
+              - "Tier-1 test evidence: APBS maps, golden archives and the density cap": _generated/model/knowledge/08-validation-benchmarks/06-tier-1-test-evidence-apbs-maps-golden.md
+              - "Tier-3 test evidence: run times of the archive and seed fixtures": _generated/model/knowledge/08-validation-benchmarks/07-tier-3-test-evidence-run-times-of-the.md
           - "COMSOL reference settings — the published model report":
               - _generated/model/knowledge/09-comsol-reference-settings/index.md
               - "COMSOL reference settings — the published model report (overview)": _generated/model/knowledge/09-comsol-reference-settings/00-overview.md
@@ -363,7 +363,7 @@ nav:
               - "A. Mesh (§2.7)": _generated/model/knowledge/09-comsol-reference-settings/02-mesh-27.md
               - "B. Solver (§3, §4)": _generated/model/knowledge/09-comsol-reference-settings/03-solver-3-4.md
               - "C. Physics settings": _generated/model/knowledge/09-comsol-reference-settings/04-physics-settings.md
-              - "D. Contradictions with the rest of this knowledge base": _generated/model/knowledge/09-comsol-reference-settings/05-contradictions-with-the-rest-of-this.md
+              - "D. Reconciliations with the model report": _generated/model/knowledge/09-comsol-reference-settings/05-contradictions-with-the-rest-of-this.md
               - "E. What we must replicate for a like-for-like comparison": _generated/model/knowledge/09-comsol-reference-settings/06-what-we-must-replicate-for-a-like-for.md
               - "F. Differences that cannot be removed": _generated/model/knowledge/09-comsol-reference-settings/07-differences-that-cannot-be-removed.md
           - Log: _generated/model/knowledge/log.md
