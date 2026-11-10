@@ -161,6 +161,10 @@ class SweepPlan:
     files: Mapping[str, str] = field(default_factory=dict)
     workers: int | None = None
     variables: Mapping[str, Canonicalisable] = field(default_factory=dict)
+    _resolved_members: tuple[ResolvedCase, ...] | None = field(
+        default=None, repr=False, compare=False
+    )
+    _resolved_beside: Path | None = field(default=None, repr=False, compare=False)
 
     @cached_property
     def hash(self) -> str:
@@ -230,10 +234,25 @@ class SweepPlan:
         self._check_files()
         return base
 
-    @cached_property
+    @property
     def resolved_members(self) -> tuple[ResolvedCase, ...]:
-        """Return every member resolved once, in plan order, for the forecast and the run."""
-        return _resolve_every_point(self.base_case(), self, beside=self.base_path.parent)
+        """Return every member resolved once beside the base case, in plan order."""
+        beside = self.base_path.parent.resolve()
+        if self._resolved_members is not None and self._resolved_beside == beside:
+            return self._resolved_members
+        built = _resolve_every_point(self.base_case(), self, beside=beside)
+        object.__setattr__(self, "_resolved_members", built)
+        object.__setattr__(self, "_resolved_beside", beside)
+        return built
+
+    def held_member(self, index: int) -> ResolvedCase | None:
+        """Return one member as the plan holds it resolved beside its base case, or None."""
+        if (
+            self._resolved_members is None
+            or self._resolved_beside != self.base_path.parent.resolve()
+        ):
+            return None
+        return self._resolved_members[self.point(index).index]
 
     def _check_files(self) -> None:
         for path, planned in self.files.items():
@@ -554,25 +573,32 @@ def build_plan(
     document: SweepDocument,
     *,
     source: Path | None = None,
+    base: CaseDocument | None = None,
     check_meshes: bool = True,
 ) -> SweepPlan:
     """Enumerate, check and order every point of a sweep.
 
     Parameters
     ----------
+    base
+        The base case already read, so no file is read at the sweep's base path.
     check_meshes
         Whether to run the mesh gate once per distinct mesh with a wall correction.
     """
     _check_axes(document)
     base_path = document.base_path(source)
-    try:
-        base = load_case(base_path)
-    except FileNotFoundError as error:
-        raise SweepPlanError(
-            f"the sweep names base case {base_path}, which is not there: {error}"
-        ) from None
+    if base is None:
+        try:
+            base = load_case(base_path)
+        except FileNotFoundError as error:
+            raise SweepPlanError(
+                f"the sweep names base case {base_path}, which is not there: {error}"
+            ) from None
+        beside = base_path.parent
+    else:
+        beside = base.models_record.base if base.models_record is not None else base_path.parent
 
-    _check_model_files(document, base_path.parent)
+    _check_model_files(document, beside)
     _check_variable_axes(document, base)
     axes = list(document.axes)
     shape = document.shape()
@@ -644,14 +670,17 @@ def build_plan(
             "of this sweep differ only in 'boundary_conditions.bias_V' at exactly opposite "
             "values. Give the bias axis a symmetric set of values, or drop the output"
         )
-    resolved = _resolve_every_point(base, plan, beside=base_path.parent)
-    plan = replace(plan, files=_planned_files(resolved))
+    resolved = _resolve_every_point(base, plan, beside=beside)
+    plan = replace(
+        plan,
+        files=_planned_files(resolved),
+        _resolved_members=resolved,
+        _resolved_beside=beside.resolve(),
+    )
     if check_meshes:
         plan = _gate_meshes(plan, resolved)
     for warning in plan.warnings:
         logger.warning("%s", warning)
-    # The members are resolved already; the forecast and the run read them from here.
-    plan.__dict__["resolved_members"] = resolved
     return plan
 
 

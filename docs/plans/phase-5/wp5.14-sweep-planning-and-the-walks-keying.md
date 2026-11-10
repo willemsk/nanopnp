@@ -193,7 +193,7 @@ own point and its parent."
 
 ### Work items
 
-- [ ] 1. `src/nanopnp/pipeline/run.py`, `src/nanopnp/pipeline/forecast.py` (deleted), `src/nanopnp/sweep/forecast.py`,
+- [x] 9d29935 1. `src/nanopnp/pipeline/run.py`, `src/nanopnp/pipeline/forecast.py` (deleted), `src/nanopnp/sweep/forecast.py`,
   `tests/tier1/test_stages.py`: one keying walk in one module (D5, D6); done when row 3 and row 4's forecast tests
   pass. **Executor:** main.
 - [ ] 2. `src/nanopnp/sweep/plan.py`, `tests/tier1/test_sweep_plan.py`: members keyed on their directory and planning in

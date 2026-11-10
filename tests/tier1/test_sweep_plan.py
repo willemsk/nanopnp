@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from itertools import product
 from pathlib import Path
 
@@ -449,6 +450,36 @@ def test_ver36_the_reference_sweep_resolves_a_sample_of_its_members(
     )
     assert corrected.electrolyte.corrections.diffusivity.wall is True
     assert corrected.physics.model == "epnp-ns"
+
+
+def test_fr39_a_plan_moved_to_another_directory_resolves_its_members_there(
+    tmp_path: Path,
+) -> None:
+    shipped = Path(__file__).resolve().parents[2] / "data" / "corrections" / "willems2020_nacl.yaml"
+    text = BASE.format(mesh=tmp_path / "pore.vol", outputs="[current]").replace(
+        "parameters: willems2020_nacl", "parameters: params.yaml"
+    )
+    first, second = tmp_path / "a", tmp_path / "b"
+    for directory in (first, second):
+        directory.mkdir()
+        (directory / "base.yaml").write_text(text, encoding="utf-8")
+        (directory / "params.yaml").write_bytes(shipped.read_bytes())
+    role = "electrolyte.parameters"
+    plan = _plan(
+        first / "base.yaml",
+        "  - name: bias\n    path: boundary_conditions.bias_V\n    values: [0.05, 0.1]\n",
+    )
+    assert plan.held_member(0) is not None
+    assert plan.resolved_members[0].correction_files[role] == (first / "params.yaml").resolve()
+
+    moved = replace(plan, base_path=second / "base.yaml")
+    assert moved.held_member(0) is None
+    assert moved.resolved_members[0].correction_files[role] == (second / "params.yaml").resolve()
+    held = moved.held_member(0)
+    assert held is not None
+    assert held.correction_files[role] == (second / "params.yaml").resolve()
+    assert plan.resolved_members[0].correction_files[role] == (first / "params.yaml").resolve()
+    assert read_plan(write_plan(plan, tmp_path / "written")).held_member(0) is None
 
 
 def test_in_memory_sweep_matches_the_sweep_file_plan(base: Path, tmp_path: Path) -> None:
