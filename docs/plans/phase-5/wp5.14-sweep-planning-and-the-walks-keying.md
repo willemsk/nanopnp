@@ -204,7 +204,7 @@ own point and its parent."
 - [x] 4. Compaction checkpoint. **Executor:** main.
 - [x] 42dd3d7 5. `.claude/hooks/gate.sh run`, `uv run pytest tests/tier2/test_examples_03_iv_sweep.py` and the strict
   documentation build, since items 1 to 3 change docstrings and §5.3.4: row 5. **Executor:** main.
-- [ ] 6. The records of *Implementation details*; FR-39's Appendix A row names rows 1 and 2, FR-27's row 3; Outcome
+- [x] 52f8d95 6. The records of *Implementation details*; FR-39's Appendix A row names rows 1 and 2, FR-27's row 3; Outcome
   notes; the phase plan's heading; `current.md`. Done when the review says so. **Executor:** main.
 
 > **Outcome — six preparations, not thirteen.** Row 1 counts each member of the three-point sweep resolved once by
