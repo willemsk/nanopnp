@@ -1,6 +1,6 @@
 # Current work
 
-Updated 10 November 2026 (WP5.15 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 10 November 2026 (WP5.15 planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -9,7 +9,7 @@ Phase 4 is released. Phase 5's library steps, the first frame, the written knowl
 The frame's rebuild is planned, with the settings you ruled today and two store clean-up buttons. Then the five
 suites, the guided route and the close: about 60 sessions and 55 to 110 agent hours remain.
 
-**Your call.** Approve the frame's plan after its review. Adopt two measuring tools or not (the trial recommends neither).
+**Your call.** Approve the frame's plan. Adopt two measuring tools or not (the trial recommends neither).
 
 ## Position
 
@@ -17,7 +17,8 @@ suites, the guided route and the close: about 60 sessions and 55 to 110 agent ho
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.14 merged
   (`v0.6.0-alpha.14`). Then the shell, WP5.15 to WP5.22 (§8.2.36).
   **WP5.15** [planned](phase-5/wp5.15-the-frame-on-quasars-components.md) on `claude/relaxed-hypatia-2s4fyk`
-  (§8.2.38). Next `/np-plan wp 5.15 review`, then `/np-implement wp 5.15`. host: claude-code.
+  (§8.2.38), reviewed ([CODE_REVIEW_051](../code_reviews/CODE_REVIEW_051.md)). Next, once you approve,
+  `/np-implement wp 5.15`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -35,7 +36,7 @@ suites, the guided route and the close: about 60 sessions and 55 to 110 agent ho
   a radius edit is a scale; a variant is never a deviation** (AG9 to AG11). **A study overrides any model value** (AG12).
   **An output states its needs of a model; a model provides every output whose needs it meets** (§8.2.32 AH1).
   **Settings select and modify colour themes; a user's theme sets its contrast** (§8.2.33 AI1). **Threads per solve alone
-  may move a result; the store cleans the unused or all** (§8.2.38 AN1, AN5).
+  may move a result; the store cleans the unused or all, never while a run holds it** (§8.2.38 AN1, AN5, AN6).
 - **Physics is a third model with its own suite; models declare exposed values; Quasar's components build the
   frame; suites are prototyped on 2WCD first; `impeccable` serves `np-gui`** (§8.2.34 AJ1 to AJ10).
 - **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
