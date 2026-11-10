@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp.api.project import Project
 from nanopnp.gui.web import server
 from nanopnp.gui.web.screens import SCREENS, Screen
 from nanopnp.gui.web.states import STATES
@@ -168,7 +169,7 @@ def test_ver78_a_theme_chosen_in_the_settings_holds_after_a_reload(
     workbench: tuple[Page, str, Path],
 ) -> None:
     page, origin, config = workbench
-    _ready(page, origin + "/molecular?dialog=settings")
+    _ready(page, origin + "/settings")
     page.locator("[data-control=settings-theme]").click()
     page.get_by_role("option", name="Dark").click()
     page.wait_for_function("document.documentElement.dataset.theme === 'dark'")
@@ -181,7 +182,7 @@ def test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing(
     workbench: tuple[Page, str, Path],
 ) -> None:
     page, origin, _ = workbench
-    _ready(page, origin + "/molecular?dialog=settings")
+    _ready(page, origin + "/settings")
     page.locator("[data-control=key-suite-molecular]").click()
     page.wait_for_function("window.frame.capturing")
     page.keyboard.press("Control+KeyW")  # a browser keeps it, so the settings refuse it
@@ -199,6 +200,44 @@ def test_ver78_a_rebound_shortcut_runs_its_command_and_the_old_chord_nothing(
     assert page.url == origin + "/molecular"
     page.keyboard.press("Control+Alt+KeyY")
     page.wait_for_url(origin + "/study", timeout=READY_WAIT_MS)
+
+
+def test_ver78_l_a_setting_found_by_its_word_sets_the_page_and_writes_its_file(
+    workbench: tuple[Page, str, Path],
+) -> None:
+    page, origin, config = workbench
+    _ready(page, origin + "/settings")
+    page.locator("[data-control=settings-search]").fill("compact")
+    page.locator("[data-control=setting-density]").wait_for()
+    assert not page.locator("[data-control=setting-theme]").is_visible()
+    page.locator("[data-control=settings-density]").get_by_text("Compact").click()
+    page.wait_for_function("document.documentElement.dataset.density === 'compact'")
+    assert "density: compact" in (config / "workbench.yaml").read_text(encoding="utf-8")
+    _ready(page, origin + "/molecular?palette=compact")
+    found = page.locator("[data-control=palette-item]", has_text="Settings: Density")
+    assert found.is_visible()
+
+
+def test_ver78_l_a_project_value_writes_the_project_file(browser: Browser, tmp_path: Path) -> None:
+    project = Project.create(tmp_path / "project")
+    process, found = _start(str(project.root), entry=CLI, config=tmp_path / "config")
+    origin = found.group(1).split("/?")[0]
+    page = browser.new_page(viewport={"width": 1000, "height": 640})
+    try:
+        page.goto(found.group(1))
+        _ready(page, origin + "/settings?setting=significant_figures")
+        page.locator("[data-control=settings-scope]").get_by_text("Project").click()
+        figures = page.locator("[data-control=settings-significant_figures]")
+        figures.fill("6")
+        figures.press("Tab")
+        page.locator("[data-control=reset-significant_figures]").wait_for()
+        assert Project.open(project.root).settings == {"significant_figures": 6}
+        assert not (tmp_path / "config" / "workbench.yaml").exists()
+    finally:
+        page.close()
+        assert process.stdin is not None
+        process.stdin.close()
+        process.wait(STOP_WITHIN_S)
 
 
 def test_ver78_m_a_suite_change_keeps_the_window_and_builds_the_molecule_once(

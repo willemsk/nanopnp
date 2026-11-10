@@ -160,11 +160,6 @@ body .nicegui-footer.frame-footer {
 .key-title {
   flex: 1;
 }
-.settings {
-  min-width: 34rem;
-  max-height: 85vh;
-  overflow: auto;
-}
 .list-row .q-btn__content {
   justify-content: flex-start;
   text-align: left;
@@ -221,4 +216,54 @@ body .nicegui-footer.frame-footer {
 .palette {
   width: 36rem;
   max-width: 90vw;
+}
+.settings-page {
+  gap: calc(var(--pad) * 2);
+  align-items: flex-start;
+}
+.settings-nav {
+  position: sticky;
+  /* below the fixed title bar */
+  top: calc(var(--row) + var(--gap) + 1px);
+  width: 15rem;
+  flex: 0 0 15rem;
+  gap: var(--gap);
+}
+.settings-panel {
+  flex: 1;
+  min-width: 0;
+  max-width: 48rem;
+}
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad);
+  margin-bottom: calc(var(--pad) * 2);
+}
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap);
+  padding: var(--gap) 0 var(--pad);
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: var(--pad);
+}
+.setting-chosen {
+  border-left: 3px solid var(--accent);
+  padding-left: var(--pad);
+}
+.heading-3 {
+  font-size: var(--text-md);
+}
+.mark {
+  width: 1em;
+  text-align: center;
+}
+.swatch {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 3px;
 }
