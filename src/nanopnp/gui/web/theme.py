@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import json
 import logging
 import re
@@ -20,6 +21,7 @@ __all__ = [
     "Theme",
     "appearance",
     "css",
+    "dark",
     "duplicate",
     "load",
     "save",
@@ -56,6 +58,11 @@ def _block(text: str, opener: str) -> str:
 
 def shipped() -> dict[str, Theme]:
     """Return the light and dark themes, read from the tokens the pages load."""
+    return dict(_shipped())
+
+
+@functools.cache
+def _shipped() -> dict[str, Theme]:
     text = TOKENS.read_text(encoding="utf-8")
     light = dict(_TOKEN.findall(_block(text, ":root {")))
     dark = {**light, **dict(_TOKEN.findall(_block(text, ':root[data-theme="dark"]')))}
@@ -70,9 +77,32 @@ def _folder() -> Path:
 
 
 def user_themes() -> dict[str, Theme]:
-    """Return the user's themes by name; a file that does not read is left out."""
+    """Return the user's themes by name; a file that does not read is left out.
+
+    Read again only when a theme file changed, by the newest modification time in its folder.
+    """
+    folder = _folder()
+    try:
+        stamp = (
+            max((path.stat().st_mtime_ns for path in folder.glob("*.yaml")), default=0),
+            folder.stat().st_mtime_ns,
+        )
+    except OSError:
+        stamp = (0, 0)
+    cached = _USER_THEMES.get(folder)
+    if cached is not None and cached[0] == stamp:
+        return {name: theme.model_copy(deep=True) for name, theme in cached[1].items()}
+    found = _read_user_themes(folder)
+    _USER_THEMES[folder] = (stamp, found)
+    return {name: theme.model_copy(deep=True) for name, theme in found.items()}
+
+
+_USER_THEMES: dict[Path, tuple[tuple[int, int], dict[str, Theme]]] = {}
+
+
+def _read_user_themes(folder: Path) -> dict[str, Theme]:
     found: dict[str, Theme] = {}
-    for path in sorted(_folder().glob("*.yaml")):
+    for path in sorted(folder.glob("*.yaml")):
         try:
             raw: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
             theme = Theme.model_validate(raw)
@@ -107,6 +137,7 @@ def save(theme: Theme) -> Path:
     path = _folder() / f"{theme.name}.yaml"
     dumped = theme.model_dump(mode="json", by_alias=True)
     write_atomically(path, yaml.safe_dump(dumped, sort_keys=False))
+    _USER_THEMES.clear()
     return path
 
 
@@ -150,6 +181,12 @@ _VIEWER = {
 
 
 _MOTION = {"on": "reduce", "off": "full"}
+
+
+def dark(settings: Settings) -> bool | None:
+    """Return whether Quasar draws dark: None follows the system, else the chosen theme's base."""
+    chosen = load(settings.theme)
+    return None if chosen is None else chosen.base == "dark"
 
 
 def appearance(settings: Settings) -> str:

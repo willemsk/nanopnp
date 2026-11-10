@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 
 from nicegui import events, ui
 
@@ -23,6 +24,7 @@ class Overlay:
 
     def __init__(self, shell: Shell) -> None:
         self.shell = shell
+        self.applied: Callable[[], object] = lambda: None
         self.capturing: str | None = None
         self.dialog: ui.dialog
         self.theme_select: ui.select
@@ -44,6 +46,7 @@ class Overlay:
         self.shell.settings = current
         settings.save(current)
         ui.run_javascript(theme.appearance(self.shell.settings))
+        self.applied()
 
     def _options(self) -> dict[str, str]:
         return {**FOLLOW, **{name: f"{name} (yours)" for name in theme.user_themes()}}

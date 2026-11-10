@@ -268,11 +268,11 @@ before its wait.
 
 - [x] 65d133d 1. `io/store.py`, `api/project.py`, `pipeline/run.py`, §5.3.2's NOTE (D7); done when `tests/tier1/test_store.py`
   passes with VER-62 unmoved. **Executor:** main
-- [ ] 2. `gui/web/settings.py`, `io/project.py`, `core/paths.py`, `docs/design/tokens.css`, §5.3.5's NOTE (D3, D4, D6);
+- [x] 97bf4e2 2. `gui/web/settings.py`, `io/project.py`, `core/paths.py`, `docs/design/tokens.css`, §5.3.5's NOTE (D3, D4, D6);
   done when `tests/tier1/test_gui_settings.py` passes. **Executor:** main
   > **Outcome — two parts move.** `Command.keywords` and `setting_commands()` land here, which the test needs;
   > `SuiteLayout`'s pixels land with the frame in item 4, which is their one reader.
-- [ ] 3. `gui/web/commands.py`, `gui/web/screens.py` (D3, D5); done when the code and review say so. **Executor:**
+- [x] d74b9b3 3. `gui/web/commands.py`, `gui/web/screens.py` (D3, D5); done when the code and review say so. **Executor:**
   general-purpose on Sonnet
 - [ ] 4. `gui/web/frame.py`, `gui/web/theme.py`, `assets/frame.js`, `assets/frame.css`, `assets/workbench.css` (D1);
   done when VER-78 (a) to (d) pass. **Executor:** main
