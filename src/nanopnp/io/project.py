@@ -62,11 +62,18 @@ class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+RAIL_PX_LIMITS = (160, 480)
+"""The narrowest and widest project rail, in pixels."""
+
+BOTTOM_PX_LIMITS = (120, 560)
+"""The lowest and highest bottom panel, in pixels."""
+
+
 class SuiteLayout(_Strict):
     """How one suite's window is divided, in pixels, saved with the project."""
 
-    rail_px: int = Field(default=240, ge=160, le=480)
-    bottom_px: int = Field(default=220, ge=120, le=560)
+    rail_px: int = Field(default=240, ge=RAIL_PX_LIMITS[0], le=RAIL_PX_LIMITS[1])
+    bottom_px: int = Field(default=220, ge=BOTTOM_PX_LIMITS[0], le=BOTTOM_PX_LIMITS[1])
     rail_folded: bool = False
     bottom_folded: bool = True
 

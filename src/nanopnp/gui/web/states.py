@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -12,13 +13,15 @@ from nanopnp.api.session import Session
 from nanopnp.core.errors import EXIT_CASE, EXIT_GATE, classify
 from nanopnp.gui.web import settings
 from nanopnp.gui.web.queue import Queue
-from nanopnp.io.store import StaleEntry, Store, StoreBusy
+from nanopnp.io.store import StaleEntry, Store, StoreError
 from nanopnp.validation.charged_tube import write_charged_tube, write_dielectric_tube
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.gui.web.link import Link
 
 __all__ = ["STATES", "Workbench", "boot", "boot_case", "boot_project", "cap_store"]
+
+logger = logging.getLogger(__name__)
 
 STATES: tuple[str, ...] = ("empty", "charged-tube", "uncharged", "refused")
 """The names ``--state`` takes: no case, a case walked to its charge, one walked to a stage 7 that
@@ -51,14 +54,16 @@ GB = 10**9
 def cap_store(project: Project, held: frozenset[str] = frozenset()) -> tuple[StaleEntry, ...]:
     """Bring the project's store under the user's or the project's cap, removing unused results.
 
-    Nothing is removed where no cap is set, or while a walk in any program holds the store.
+    Nothing is removed where no cap is set, or while a walk in any program holds the store; a
+    store that cannot be cleaned now is left as it is, and the next walk or opening tries again.
     """
     cap = settings.load().with_project(project.settings).value("store_cap_gb")
     if not isinstance(cap, float | int):
         return ()
     try:
         return project.clean_store(cap_bytes=int(cap * GB), holding=held)
-    except StoreBusy:
+    except (StoreError, OSError) as error:
+        logger.warning("the store's cap was not applied: %s", error)
         return ()
 
 

@@ -40,6 +40,10 @@ on a page of their own, and the store gains a size cap and two clean-up actions.
   - The store's clean-up: *Remove the unused results* keeps what a run record, a sweep member or the open window
     names, with their inputs; *Remove every result* keeps nothing. The size cap removes unused results only. A walk
     in any program holds a lock on the store, and a clean-up that finds one held removes nothing (FR-27; §5.3.2).
+    On a filesystem with no file locks, such as a cluster's parallel filesystem, a walk runs without the lock and
+    warns, and a clean-up refuses.
+  - The project file (`nanopnp/project/v0.6`, unchanged) gains `settings:`, the panels' sizes in pixels and the
+    Physics suite's layout; an earlier alpha cannot open a project this one has saved.
   - A Physics suite in the activity bar, empty until its package; the suites show as those that build models
     (Molecular, Continuum, Physics) and those that use them (Study, Analysis) (WB-34, WB-35).
   - `python -m nanopnp.gui.web.server --project <folder>` opens a project and walks its first study to the charge.

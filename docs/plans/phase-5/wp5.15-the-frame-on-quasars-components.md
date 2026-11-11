@@ -298,6 +298,13 @@ before its wait.
   > refused values counted, raw mappings, density, the palette's active row and the colours' names fixed (dc7a456);
   > the view region's side, the suites' design questions and the operating system's chords left as REV-234 to REV-236.
 
+> **Outcome — the review, and the package's cost.** `/code-review xhigh --fix` ([052](../../code_reviews/CODE_REVIEW_052.md))
+> found 28; the pass fixed 25, among them a walk that raised on a filesystem with no file locks, and `/np-ship` fixed
+> two more: a forecast's stages read through `Store.unmarked()`, and a sweep member holds the store from its warm
+> start's lookup to its walk's end. The author ruled the last: the project file stays `nanopnp/project/v0.6` across the
+> alphas. Measured: implement 1 session, 1.3 agent hours, 3 touches; ship so far 0.5 agent hours, 3 touches; together
+> about 1.8 agent hours and 6 touches, against the In brief's 13 to 21 hours and 14 touches.
+
 ### Verification
 
 | Test | Tier | Identifiers | Oracle and tolerance (exact) | Command |

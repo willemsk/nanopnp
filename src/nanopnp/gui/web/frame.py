@@ -7,7 +7,7 @@ import json
 import os
 import signal
 from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Protocol
@@ -27,8 +27,17 @@ from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench, cap_store
+from nanopnp.io.case_paths import SEQUENCE_INDEX
 from nanopnp.io.defaults import Change
-from nanopnp.io.project import ITEM_SUITES, ItemKind, Suite, SuiteLayout, split_reference
+from nanopnp.io.project import (
+    BOTTOM_PX_LIMITS,
+    ITEM_SUITES,
+    RAIL_PX_LIMITS,
+    ItemKind,
+    Suite,
+    SuiteLayout,
+    split_reference,
+)
 from nanopnp.io.variables import field_unit
 
 __all__ = ["Route", "Views", "current_suite", "frame", "heading", "listed_changes"]
@@ -63,8 +72,8 @@ DIALOGS = ("glossary", "about")
 BAR_PX = 88
 """The activity bar's width; the drawer is the bar and the rail."""
 FOLDED_RAIL_PX = 32
-RAIL_PX = (160, 480)
-BOTTOM_PX = (120, 560)
+RAIL_PX = RAIL_PX_LIMITS
+BOTTOM_PX = BOTTOM_PX_LIMITS
 
 
 def listed_changes(
@@ -94,8 +103,10 @@ def listed_changes(
 
 
 def _unit(path: str) -> str | None:
+    # The unit table names a sequence's fields at its first index.
+    generic = ".".join(SEQUENCE_INDEX if part.isdigit() else part for part in path.split("."))
     try:
-        return field_unit(path)
+        return field_unit(generic)
     except KeyError:  # a leaf that takes no number
         return None
 
@@ -152,7 +163,7 @@ class Views(Protocol):
         """Wait until what the address opened in the frame, such as the palette, has opened."""
 
     def applied(self) -> None:
-        """Apply the settings now held to the page: theme, density, spacing, motion, chords."""
+        """Apply the settings now held to the page: its look, its chords and its numbers."""
 
     def listen(self, event: str, handler: Callable[[events.GenericEventArguments], object]) -> None:
         """Route a page-wide event to ``handler``, replacing the last sub-page's."""
@@ -171,6 +182,7 @@ class _Frame:
             self.layout = self.layout.model_copy(update={"bottom_folded": False})
         self.panel = panel if panel in PANELS else "queue"
         self.suite_buttons: dict[str, ui.button] = {}
+        self.separators: dict[str, ui.element] = {}
         self.rail_box: ui.column
         self.changes_table: ui.table
         self.changed_label: ui.label
@@ -263,7 +275,11 @@ class _Frame:
         return project.layout.get(suite, SuiteLayout()) if project else SuiteLayout()
 
     def on_path(self, path: str) -> None:
-        ui.run_javascript("document.body.dataset.screenReady = '0'")
+        # A key capture begun on the settings page ends with it, or the next chord would be bound.
+        ui.run_javascript(
+            "document.body.dataset.screenReady = '0';"
+            "if (window.frame) window.frame.capturing = false;"
+        )
         route = self.route(path)
         self.in_suite = route.suite is not None
         if route.suite is not None and route.suite != self.suite:
@@ -272,6 +288,7 @@ class _Frame:
                 update={"bottom_folded": self.layout.bottom_folded}
             )
             self.apply_layout()
+            self.sync_separators()
         self.mark_suite()
         if route.view != "molecule":
             self.view.set_visibility(False)
@@ -309,13 +326,16 @@ class _Frame:
         action()
 
     def applied(self) -> None:
-        """Apply the settings now held to the page: theme, density, spacing, motion, chords."""
+        """Apply the settings now held to the page: its look, its chords and its numbers."""
         chords = theme.script_json(commands.chords(self.shell.keys))
         ui.run_javascript(
             f"{theme.appearance(self.shell.settings)}window.frameChords = {chords};"
             "window.nano && window.nano.background();"
         )
         self.dark.set_value(theme.dark(self.shell.settings))
+        # The changed table is built once per window, so the figures and number style reach it here.
+        self.changes_table.rows = self.change_rows()
+        self.changes_table.update()
 
     def listen(self, event: str, handler: Callable[[events.GenericEventArguments], object]) -> None:
         """Route a page-wide event to ``handler``, replacing the last sub-page's."""
@@ -427,6 +447,12 @@ class _Frame:
         )
         self.toggle_button.props(f"aria-expanded={str(not self.layout.bottom_folded).lower()}")
 
+    def sync_separators(self) -> None:
+        # A drag starts from the separator's own value, so a suite's or a reset's sizes reach it.
+        for name, value in (("rail", self.layout.rail_px), ("panel", self.layout.bottom_px)):
+            if name in self.separators:
+                self.separators[name].props(f"aria-valuenow={value}")
+
     def on_separator(self, event: events.GenericEventArguments) -> None:
         name, value, done = str(event.args["name"]), int(event.args["value"]), event.args["done"]
         if name == "rail":
@@ -462,10 +488,14 @@ class _Frame:
     def reset_layout(self) -> None:
         self.layout = SuiteLayout(bottom_folded=self.layout.bottom_folded)
         self.apply_layout()
+        self.sync_separators()
         project = self.shell.bench.project
         if project is not None:
+            # The suite shown keeps its panel open or folded, as the window shows it.
             for suite in SUITES:
-                project.save_layout(suite.id, SuiteLayout())
+                project.save_layout(
+                    suite.id, self.layout if suite.id == self.suite else SuiteLayout()
+                )
 
     # -- the palette --------------------------------------------------------
 
@@ -534,9 +564,10 @@ class _Frame:
 
     def separator(self, name: str, *, vertical: bool, value: int, limits: tuple[int, int]) -> None:
         label = "Resize the project rail" if vertical else "Resize the bottom panel"
-        ui.element("div").classes(
+        self.separators[name] = ui.element("div").classes(
             f"separator separator-{'vertical' if vertical else 'horizontal'}"
-        ).props(
+        )
+        self.separators[name].props(
             f"role=separator tabindex=0 data-separator={name} "
             f"aria-orientation={'vertical' if vertical else 'horizontal'} "
             f"aria-valuemin={limits[0]} aria-valuemax={limits[1]} aria-valuenow={value} "
@@ -610,9 +641,16 @@ class _Frame:
         with ui.element("ul").classes("plain-list w-full").props("data-control=recent-projects"):
             for folder in recent:
                 with ui.element("li"):
-                    ui.button(folder.name, on_click=lambda _, f=folder: self.open_project(f)).props(
+                    ui.button(folder.name, on_click=lambda _, f=folder: self.open_recent(f)).props(
                         f'flat dense no-caps title="{folder}"'
                     ).classes("list-row w-full")
+
+    def open_recent(self, folder: Path) -> None:
+        # A recent folder may no longer hold a project of this release.
+        try:
+            self.open_project(folder)
+        except (ValueError, OSError) as error:
+            ui.notify(str(error), type="negative")
 
     def on_tree(self, event: events.ValueChangeEventArguments[str | None]) -> None:
         item = event.value
@@ -863,7 +901,8 @@ class _Frame:
         """Wait until what the address opened in the frame, such as the palette, has opened."""
         if self.opening is not None:
             # A long timeout: the page reports itself ready anyway rather than never.
-            await asyncio.wait_for(self.opening.wait(), timeout=20)
+            with suppress(TimeoutError):
+                await asyncio.wait_for(self.opening.wait(), timeout=20)
             self.opening = None
 
 

@@ -18,6 +18,7 @@ from nanopnp.core.hashing import file_hash
 from nanopnp.io.case import SCHEMA, CaseValidationError
 from nanopnp.io.case_paths import input_paths, rewrite_inputs
 from nanopnp.io.defaults import Change, changes, mapping_changes
+from nanopnp.io.manifest import RUN_RECORD_FILENAME
 from nanopnp.io.models import (
     MODEL_KINDS,
     SCHEMAS,
@@ -48,6 +49,7 @@ from nanopnp.io.project import (
     write_project,
 )
 from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage
+from nanopnp.sweep.run import MEMBERS_DIRNAME
 
 __all__ = ["Problem", "Project", "ProjectError"]
 
@@ -217,7 +219,7 @@ class Project:
         for folder in (self._root / RUNS_FOLDER, self._root / SWEEPS_FOLDER):
             if not folder.is_dir():
                 continue
-            for record in folder.rglob("run.json"):
+            for record in folder.rglob(RUN_RECORD_FILENAME):
                 artefacts = _json_object(record).get("artefacts")
                 if isinstance(artefacts, dict):
                     named.update(
@@ -225,7 +227,7 @@ class Project:
                         for entry in artefacts.values()
                         if isinstance(entry, dict) and "hash" in entry
                     )
-            for member in folder.rglob("members/*.json"):
+            for member in folder.rglob(f"{MEMBERS_DIRNAME}/*.json"):
                 solution = _json_object(member).get("solution")
                 if isinstance(solution, str):
                     named.add(solution)

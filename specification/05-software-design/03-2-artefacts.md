@@ -152,4 +152,8 @@ workbench starts and on opening the project, so it never removes a result a run 
 the store's lock** (`Store.using`), a file lock in `<store>/.locks/` that any program on the machine sees; a
 clean-up (`Store.cleaning`, which `Store.evict` and `Store.remove` hold) that finds one held raises
 `StoreBusy` and removes nothing, and a walk that starts during a clean-up waits for it. A lock a killed
-program left is cleared by the next clean-up. A store that cannot be written takes no lock.
+program left is cleared by the next clean-up. A store that cannot be written takes no lock. Where the
+lock cannot be taken, as on a filesystem with no file locks, a walk runs without it and logs a warning,
+and a clean-up raises `StoreError` and removes nothing. An entry that cannot be renamed away (a file of it
+held open) is left whole and reported, and a renamed directory that could not be deleted is deleted by the
+next clean-up.

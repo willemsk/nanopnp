@@ -25,7 +25,7 @@ _SYMBOL: dict[str, str] = {
     "dimensionless": "",
 }
 _GAP = "\u202f"
-"""The narrow no-break space between a number and its unit (WB-21)."""
+"""The narrow no-break space between a number and its unit."""
 _PREFIXES = {-15: "f", -12: "p", -9: "n", -6: "µ", -3: "m", 0: "", 3: "k", 6: "M", 9: "G", 12: "T"}
 _PLAIN = (1e-3, 1e6)
 """A number without a unit is written out between these magnitudes, else with a power of ten."""
@@ -75,7 +75,12 @@ def shown(value: object, unit: str | None, *, figures: int, style: Style) -> str
         if base == 0:
             return f"0{_GAP}{symbol}"
         power = min(max(3 * math.floor(math.log10(abs(base)) / 3), -15), 12)
-        return f"{_figures(base / 10**power, figures)}{_GAP}{_PREFIXES[power]}{symbol}"
+        text = _figures(base / 10**power, figures)
+        # Rounding can carry the figures to 1000 (999.96 nm at four), which is the next prefix's 1.
+        if power < max(_PREFIXES) and abs(float(text)) >= 1000:
+            power += 3
+            text = _figures(base / 10**power, figures)
+        return f"{text}{_GAP}{_PREFIXES[power]}{symbol}"
     symbol = _SYMBOL.get(unit, unit)
     if isinstance(value, int):
         text = str(value)

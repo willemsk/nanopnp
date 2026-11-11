@@ -4,10 +4,15 @@ window.nano = {
   viewer: null,
   // How many times Mol* was built in this window: the frame builds it once and keeps it (VER-78 m).
   builds: 0,
+  // The build under way: a call while Mol* builds waits for it rather than building a second one.
+  building: null,
   // Build Mol* the first time the frame shows it; after that, show and redraw the one built.
   async ensure(structureUrl) {
-    if (this.viewer === null) {
-      await this.init(structureUrl);
+    if (this.viewer === null && this.building === null) {
+      this.building = this.init(structureUrl).finally(() => { this.building = null; });
+    }
+    if (this.building !== null) {
+      await this.building;
       return;
     }
     await this.reveal();

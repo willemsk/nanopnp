@@ -1231,8 +1231,9 @@ def keyed_walk(
     A stage is built unless the store or an earlier point of the same forecast holds its
     hash. ``planned`` collects the hashes the forecast builds, across points.
     """
-    walk = _keying_walk(resolved, store, stages)
-    # A forecast reads nothing, so it leaves the order a clean-up removes entries in alone.
+    # A forecast reads nothing, so it leaves the order a clean-up removes entries in alone: the
+    # stages it builds read through the same unmarked store.
+    walk = _keying_walk(resolved, store.unmarked(), stages)
     walk.mark = False
     identities: dict[str, Identity] = {}
     for name in selected_stages(resolved, None, stages=walk.own):
