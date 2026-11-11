@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import copy
+import hashlib
 import json
 import shutil
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 import yaml
 from pydantic import JsonValue
@@ -15,14 +17,24 @@ from pydantic import JsonValue
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.core.hashing import file_hash
-from nanopnp.io.case import SCHEMA, CaseValidationError
-from nanopnp.io.case_paths import input_paths, rewrite_inputs
+from nanopnp.io.case import SCHEMA, CaseValidationError, FieldValue
+from nanopnp.io.case_paths import (
+    UnknownCasePathError,
+    field_at,
+    input_paths,
+    rewrite_inputs,
+)
 from nanopnp.io.defaults import Change, changes, mapping_changes
 from nanopnp.io.manifest import RUN_RECORD_FILENAME
 from nanopnp.io.models import (
+    EXPOSED,
     MODEL_KINDS,
     SCHEMAS,
+    VARIANT_PATH,
     ModelFile,
+    ModelKind,
+    _put,
+    leaves,
     owner_of,
     read_model_file,
     split_case_layers,
@@ -49,11 +61,30 @@ from nanopnp.io.project import (
     write_project,
 )
 from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import keyed_walk, selected_stages
 from nanopnp.sweep.run import MEMBERS_DIRNAME
 
 __all__ = ["Problem", "Project", "ProjectError"]
 
+T = TypeVar("T")
+
 _RUN_FILES = ("case.yaml", "manifest.json", "run.json")
+
+# What a model lacks of a whole case, so that it validates and walks alone. No stage up to a
+# kind's ``BUILD_UPTO`` reads a value of it, so a model built alone keys as its studies do.
+BUILD_LAYER: Mapping[str, Any] = {
+    "electrolyte": {
+        "species": [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}],
+        "concentration_M": 0.15,
+    },
+    "boundary_conditions": {"bias_V": 0.0},
+}
+
+# The last stage a model of each kind builds alone; a kind without a row is built by its studies.
+BUILD_UPTO: Mapping[ModelKind, str] = {"molecular": "protonation"}
+
+_REFUSED = (CaseValidationError, FileNotFoundError, ValueError, KeyError, OSError)
 
 
 class ProjectError(ValueError):
@@ -99,6 +130,7 @@ class Project:
     def __init__(self, root: Path, document: ProjectFile) -> None:
         self._root = root
         self._file = document
+        self._built: dict[tuple[str, str], tuple[str, frozenset[str]]] = {}
 
     @property
     def root(self) -> Path:
@@ -211,11 +243,15 @@ class Project:
     # -- the store ------------------------------------------------------------
 
     def kept_artefacts(self, holding: frozenset[str] = frozenset()) -> frozenset[str]:
-        """Return the store digests a run record or a sweep member names, with their inputs.
+        """Return the store digests a run record, a sweep member or a model's build names.
 
-        ``holding`` adds the digests of a walk no record names, such as the one a window shows.
+        Each comes with its inputs. ``holding`` adds the digests of a walk no record names, such
+        as the one a window shows.
         """
         named: set[str] = set(holding)
+        for kind, upto in BUILD_UPTO.items():
+            for name in self._file.names(kind):
+                named.update(self._built_stages(kind, name, upto))
         for folder in (self._root / RUNS_FOLDER, self._root / SWEEPS_FOLDER):
             if not folder.is_dir():
                 continue
@@ -255,6 +291,33 @@ class Project:
         if everything:
             return store.evict(keep=frozenset())
         return store.evict(keep=self.kept_artefacts(holding), to_bytes=cap_bytes)
+
+    def _built_stages(self, kind: ModelKind, name: str, upto: str) -> frozenset[str]:
+        # Keying stage 1 hashes the structure, so the identities are held until the model's
+        # resolved text or one of its input files changes.
+        try:
+            case = self.build_case(kind, name)
+            stamp = hashlib.sha256(case.dumps().encode("utf-8"))
+            for value in sorted(input_paths(case).values()):
+                status = Path(value).stat()
+                stamp.update(f"{value}\0{status.st_size}\0{status.st_mtime_ns}\0".encode())
+            held = self._built.get((kind, name))
+            if held is not None and held[0] == stamp.hexdigest():
+                return held[1]
+            resolved = resolve(case, base=case.source.base)
+            identities = keyed_walk(resolved, store=self._store(), planned=set())
+            walked = [
+                identities[stage]
+                for stage in selected_stages(resolved, upto)
+                if stage in identities
+            ]
+        except _REFUSED:
+            return frozenset()
+        found = frozenset(identity.hash for identity in walked)
+        # A stage not built yet is keyed by a forecast, which its build replaces.
+        if not any(identity.built for identity in walked):
+            self._built[kind, name] = (stamp.hexdigest(), found)
+        return found
 
     def open_item(self, item: str) -> None:
         """Open an item in the window and make it the current one; ``<kind>/<name>``."""
@@ -404,6 +467,11 @@ class Project:
     def _copy_model(self, file: ModelFile, *, link: bool, written: list[Path]) -> str:
         body: dict[str, Any] = yaml.safe_load(file.path.read_text(encoding="utf-8"))
         self._rebase(body, file.path.parent, file.kind, link=link)
+        if file.parent is not None:
+            # A linked variant reads its parent beside it, so the parent comes along.
+            parent = read_model_file(file.kind, file.parent)
+            carried = self._copy_model(parent, link=link, written=written)
+            body["variant_of"] = {**body["variant_of"], "model": Path(carried).name}
         taken = self._model_name(file.kind, file.name, body)
         body["name"] = taken
         self._put_item(file.kind, taken, body, written)
@@ -445,15 +513,232 @@ class Project:
                 f"differ in {', '.join(different)}"
             )
 
+    # -- models: built alone, their values and their variants ----------------
+
+    def build_case(self, kind: ModelKind, name: str) -> Case:
+        """Return the case that builds one model alone, up to ``BUILD_UPTO`` of its kind.
+
+        The case is the model's own values over ``BUILD_LAYER``, so its stages key as they do
+        in every study that names the model.
+
+        Raises
+        ------
+        ProjectError
+            If a model of this kind is built only by its studies.
+        CaseValidationError
+            If the model's file is refused or its values form no case.
+        """
+        return self._build_case(kind, name, self.path(kind, name))
+
+    def _build_case(self, kind: ModelKind, name: str, location: Path) -> Case:
+        if kind not in BUILD_UPTO:
+            raise ProjectError(f"a {kind} model is built by the studies that name it, not alone")
+        body = read_model_file(kind, location).body
+        document = {"schema": SCHEMA, "name": name, **copy.deepcopy(dict(BUILD_LAYER)), **body}
+        return Case.loads(
+            _text(document), base=location.parent, source=f"<{kind} model {name} built alone>"
+        )
+
+    def new_model(self, kind: ModelKind, name: str) -> Path:
+        """Create a model that holds no value yet and exposes its kind's list; return its file.
+
+        Raises
+        ------
+        ProjectError
+            If the name is not an item name or the project holds a model of it.
+        """
+        self._free_name(kind, name)
+        exposes = [{"name": label, "path": path} for label, path in EXPOSED[kind]]
+        location = self._write_item(
+            kind, name, {"schema": SCHEMAS[kind], "name": name, "exposes": exposes}
+        )
+        write_project(self._root, self._file)
+        return location
+
+    def set_value(self, kind: ModelKind, name: str, path: str, value: FieldValue) -> None:
+        """Set one value of a model, or with ``None`` remove it; nothing is written if refused.
+
+        Raises
+        ------
+        ProjectError
+            If another kind of model owns the path, the model sets no such value to remove, or
+            the value is one a linked variant reads from its parent or leaves to its variants.
+        CaseValidationError
+            If the edited model is refused, or its values no longer form a case.
+        """
+        if owner_of(path) != kind:
+            raise ProjectError(
+                f"{path} belongs to {_holder(owner_of(path))}, not to {kind} model {name!r}"
+            )
+        body = _body(self.path(kind, name))
+        if _linked(body) and path != VARIANT_PATH:
+            raise ProjectError(
+                f"{kind} {name!r} is a linked variant of {body['variant_of']['model']} and reads "
+                f"{path} from it; set the value there, or save the variant as a full copy"
+            )
+        children = self._linked_variants(kind, name)
+        if children and path == VARIANT_PATH:
+            raise ProjectError(
+                f"{kind} {name!r} is the parent of the linked variant {children[0]!r}, which "
+                f"holds its own {VARIANT_PATH}; edit the variant"
+            )
+        if value is None:
+            if not _delete(body, path):
+                raise ProjectError(f"{kind} {name!r} sets no {path}")
+        else:
+            _put(body, path, value)
+        self._checked_write(kind, name, body)
+
+    def set_exposed(self, kind: ModelKind, name: str, path: str, on: bool) -> None:
+        """List a value of a model among those its studies see first, or take it off the list.
+
+        The entry is named by the last part of its path.
+
+        Raises
+        ------
+        ProjectError
+            If another exposed value already has that name.
+        CaseValidationError
+            If the path is not a numeric value of this kind of model.
+        """
+        body = _body(self.path(kind, name))
+        listed = body.get("exposes")
+        if not isinstance(listed, list):
+            listed = [{"name": label, "path": default} for label, default in EXPOSED[kind]]
+        kept = [entry for entry in listed if not _exposes(entry, path)]
+        if on and len(kept) == len(listed):
+            label = path.rsplit(".", 1)[-1]
+            if any(isinstance(entry, dict) and entry.get("name") == label for entry in kept):
+                raise ProjectError(
+                    f"{kind} {name!r} already exposes a value named {label!r}; rename it in "
+                    f"{self.path(kind, name).name} before exposing {path}"
+                )
+            kept.append({"name": label, "path": path})
+        elif on:
+            return
+        head: dict[str, Any] = {key: body[key] for key in ("schema", "name") if key in body}
+        rest = {key: item for key, item in body.items() if key not in (*head, "exposes")}
+        self._checked_write(kind, name, {**head, "exposes": kept, **rest})
+
+    def save_variant(
+        self,
+        parent: str,
+        name: str,
+        edits: list[dict[str, Any]],
+        *,
+        copy: bool = False,
+    ) -> Path:
+        """Save a molecular model with residue edits as a variant of ``parent``; return its file.
+
+        A linked variant holds only ``edits`` and reads every other value from its parent, so a
+        change to the parent reaches it. With ``copy`` the variant holds every value itself.
+
+        Parameters
+        ----------
+        edits
+            The whole ``charge.edits`` list of the variant, as a model file writes it.
+
+        Raises
+        ------
+        ProjectError
+            If the name is taken or is not an item name, or a linked variant is asked of a
+            parent that is itself a variant or holds edits.
+        CaseValidationError
+            If the variant is refused, or its values form no case; nothing is written.
+        """
+        kind: ModelKind = "molecular"
+        self._free_name(kind, name)
+        if parent not in self._file.names(kind):
+            raise ProjectError(f"the project holds no {kind} {parent!r}")
+        source = read_model_file(kind, self.path(kind, parent), rebase=False)
+        head: dict[str, Any] = {"schema": SCHEMAS[kind], "name": name}
+        link = {"model": f"{parent}.yaml", "linked": not copy}
+        body: dict[str, Any]
+        if copy:
+            exposes = _body(self.path(kind, parent)).get("exposes")
+            if exposes is not None:
+                head["exposes"] = exposes
+            body = {**head, "variant_of": link, **_copied(source.body)}
+        else:
+            if source.variant_of is not None or source.body.get("charge", {}).get("edits"):
+                raise ProjectError(
+                    f"{kind} {parent!r} is itself a variant or holds {VARIANT_PATH}, and a "
+                    "linked variant follows an unedited model; save a full copy instead"
+                )
+            body = {**head, "variant_of": link}
+        _put(body, VARIANT_PATH, _copied(edits))
+        location = self._checked_write(kind, name, body)
+        write_project(self._root, self._file)
+        return location
+
+    def _free_name(self, kind: ItemKind, name: str) -> None:
+        if not valid_name(name):
+            raise ProjectError(
+                f"{name!r} is not an item name: use letters, digits, '.', '_' or '-', and start "
+                "with a letter or a digit"
+            )
+        if name in self._file.names(kind) or self.path(kind, name).exists():
+            raise ProjectError(f"the project already holds a {kind} {name!r}")
+
+    def _linked_variants(self, kind: ModelKind, name: str) -> list[str]:
+        found: list[str] = []
+        for other in self._file.names(kind):
+            location = self.path(kind, other)
+            if other == name or not location.is_file():
+                continue
+            body = _body(location)
+            if _linked(body) and body["variant_of"].get("model") == f"{name}.yaml":
+                found.append(other)
+        return found
+
+    def _checked_write(self, kind: ModelKind, name: str, body: Mapping[str, Any]) -> Path:
+        # Staged beside the item, where a linked variant finds its parent, and moved into place
+        # only once it reads as a model and, for a kind built alone, as a case.
+        location = self.path(kind, name)
+        location.parent.mkdir(parents=True, exist_ok=True)
+        staged = location.with_name(f".{location.name}.staged")
+        staged.write_text(_text(body), encoding="utf-8")
+        try:
+            read_model_file(kind, staged, rebase=False)
+            if kind in BUILD_UPTO:
+                self._build_case(kind, name, staged)
+            else:
+                for path, value in leaves(read_model_file(kind, staged, rebase=False).body):
+                    _check_leaf(path, value, location)
+            staged.replace(location)
+        finally:
+            staged.unlink(missing_ok=True)
+        names = self._file.names(kind)
+        if name not in names:
+            names.append(name)
+        return location
+
     # -- the changed list and the problems ---------------------------------
 
     def changes(self, kind: ItemKind, name: str) -> tuple[Change, ...]:
-        """Return each value of an item away from its default, and each override of a study."""
+        """Return each value of an item away from its default, and each override of a study.
+
+        A variant's changes are its differences from its parent, each ``default`` the parent's
+        value.
+        """
         if kind == "study":
             return changes(self.study(name))
-        if kind in MODEL_KINDS:
-            return mapping_changes(_body(self.path(kind, name)))
-        return ()
+        if kind not in MODEL_KINDS:
+            return ()
+        location = self.path(kind, name)
+        body = _body(location)
+        link = body.get("variant_of")
+        if isinstance(link, dict) and (location.parent / str(link.get("model"))).is_file():
+            own = dict(leaves(read_model_file(kind, location, rebase=False).body))
+            parent = dict(
+                leaves(read_model_file(kind, location.parent / link["model"], rebase=False).body)
+            )
+            return tuple(
+                Change(path, "value", owner_of(path), own.get(path), parent.get(path))
+                for path in sorted({*own, *parent})
+                if own.get(path) != parent.get(path)
+            )
+        return mapping_changes(body)
 
     def reset(self, kind: ItemKind, name: str, path: str) -> None:
         """Remove a value from the item that sets it, so that it reads its default again.
@@ -732,6 +1017,30 @@ def _body(location: Path) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ProjectError(f"{location} is not a YAML mapping")
     return raw
+
+
+def _linked(body: Mapping[str, Any]) -> bool:
+    link = body.get("variant_of")
+    return isinstance(link, dict) and link.get("linked") is True
+
+
+def _exposes(entry: object, path: str) -> bool:
+    return isinstance(entry, dict) and entry.get("path") == path
+
+
+def _copied(value: T) -> T:
+    return copy.deepcopy(value)
+
+
+def _holder(owner: str) -> str:
+    return "the study" if owner == "study" else f"the {owner} model"
+
+
+def _check_leaf(path: str, value: FieldValue, location: Path) -> None:
+    try:
+        field_at(path).validate(value)
+    except UnknownCasePathError as error:
+        raise CaseValidationError(f"{location}: {path}: {error}") from None
 
 
 def _delete(body: dict[str, Any], dotted: str) -> bool:

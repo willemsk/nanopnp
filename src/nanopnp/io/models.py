@@ -98,7 +98,10 @@ EXPOSED: dict[ModelKind, tuple[tuple[str, str], ...]] = {
 _EXPOSED_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 
 # Keys a model file holds beside the keys its kind owns; none of them enters the merge.
-HEADER_KEYS = ("schema", "name", "exposes")
+HEADER_KEYS = ("schema", "name", "exposes", "variant_of")
+
+# The one value a linked variant holds itself; every other it reads from its parent.
+VARIANT_PATH = "charge.edits"
 
 # A file's metadata, never one of its values: the header and a study's `models:`.
 METADATA_KEYS = frozenset({*HEADER_KEYS, "models"})
@@ -130,11 +133,29 @@ class ExposedValue:
     default: FieldValue
 
 
+@dataclass(frozen=True)
+class VariantOf:
+    """The model a variant was made from, and whether it still reads that model's values.
+
+    Parameters
+    ----------
+    model
+        The parent's file name, beside the variant's own file.
+    linked
+        Whether the variant holds only its residue edits and reads every other value from its
+        parent; a copy holds every value itself.
+    """
+
+    model: str
+    linked: bool
+
+
 @dataclass(frozen=True, eq=False)
 class ModelFile:
     """One model file a study read: its kind, name, location, digest, exposed values and body.
 
-    ``body`` is the layer a study merges: the keys the kind owns, without ``HEADER_KEYS``.
+    ``body`` is the layer a study merges: the keys the kind owns, without ``HEADER_KEYS``. A linked
+    variant's body is its own over its parent's, and ``parent`` is the parent's file.
     """
 
     kind: ModelKind
@@ -143,6 +164,8 @@ class ModelFile:
     sha256: str
     exposed: tuple[ExposedValue, ...] = ()
     body: Mapping[str, Any] = field(default_factory=dict)
+    variant_of: VariantOf | None = None
+    parent: Path | None = None
 
 
 def exposed_values(
@@ -718,10 +741,55 @@ def read_model_file(
             raise CaseValidationError(
                 f"{location}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
             )
-    exposed = exposed_values(kind, raw, str(location))
-    if rebase:
-        rebase_inputs(body, location.parent)
-    return ModelFile(kind, name, location, file_hash(location), exposed, body)
+    variant = _variant_of(kind, raw.get("variant_of"), location)
+    if variant is None or not variant.linked:
+        exposed = exposed_values(kind, raw, str(location))
+        if rebase:
+            rebase_inputs(body, location.parent)
+        return ModelFile(kind, name, location, file_hash(location), exposed, body, variant)
+    own = sorted(leaf for leaf in _leaves(body, "") if leaf != VARIANT_PATH)
+    if own:
+        raise CaseValidationError(
+            f"{location}: {own[0]}: a linked variant holds only {VARIANT_PATH} and reads every "
+            f"other value from {variant.model}; set the value there, or make the variant a "
+            "full copy (variant_of.linked: false)"
+        )
+    parent = read_model_file(kind, location.parent / variant.model, rebase=rebase, source=source)
+    if parent.variant_of is not None or _value_in(parent.body, VARIANT_PATH):
+        raise CaseValidationError(
+            f"{location}: variant_of.model: {variant.model} is itself a variant or holds "
+            f"{VARIANT_PATH}; a linked variant's parent is an unedited model"
+        )
+    merged = _merge(parent.body, body, "")
+    listed = raw.get("exposes")
+    if listed is None:
+        exposed = parent.exposed
+    else:
+        exposed = exposed_values(kind, {**merged, "exposes": listed}, str(location))
+    return ModelFile(
+        kind, name, location, file_hash(location), exposed, merged, variant, parent.path
+    )
+
+
+def _variant_of(kind: ModelKind, raw: object, location: Path) -> VariantOf | None:
+    if raw is None:
+        return None
+    if kind != "molecular":
+        raise CaseValidationError(
+            f"{location}: variant_of: only a molecular model is a variant, not a {kind} model"
+        )
+    if (
+        not isinstance(raw, Mapping)
+        or set(raw) != {"model", "linked"}
+        or not isinstance(raw["model"], str)
+        or not isinstance(raw["linked"], bool)
+        or Path(raw["model"]).name != raw["model"]
+    ):
+        raise CaseValidationError(
+            f"{location}: variant_of: {raw!r} is not {{model: <file name>, linked: true or "
+            "false}, the parent's file beside this one"
+        )
+    return VariantOf(raw["model"], raw["linked"])
 
 
 def leaves(mapping: Mapping[str, Any]) -> Iterator[tuple[str, Any]]:

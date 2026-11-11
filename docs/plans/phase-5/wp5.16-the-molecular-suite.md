@@ -229,6 +229,11 @@ frame, chain, residue and atom for an atom it would edit at −1; `radius_scales
   variant compares `io/models.py:leaves` of its parent's body and of its own merged body, `Change.default` the
   parent's value.
 
+> **Outcome — item 6.** `build_case` returns a `Case`; an edit is staged beside the item, read as a study reads it and
+> as `build_case` validates it, then moved into place. A model's identities are held only once the store holds every
+> stage, since a stage not yet built is keyed by a forecast. `ModelFile` gains `variant_of` and `parent`; the manifest
+> lists a linked variant's parent, and an import brings it along. `variant_of` is refused off a molecular model.
+
 **Item 7.**
 - `screens.Tool(id, title, fields)`; molecular `prepare`, `ensemble`, `protonation`, `edit`, `view`; `on_open_field`
   opens the tool whose `fields` holds the path's prefix. `ROUTES` gains
@@ -273,7 +278,7 @@ the budget) and a build held mid-walk.
 - [x] 5446186 4. `structure/protonated.py`, `charge/edits.py`, `charge/kernel.py`, `density/radii.py`, `density/stage.py`,
   `geometry/contour.py` (D4); done when `test_protonation.py` and `test_density.py` pass, VER-62 unmoved.
   **Executor:** general-purpose on Sonnet
-- [x] 5. Compaction checkpoint. **Executor:** main
+- [x] 6b175ef 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. `io/models.py`, `api/project.py`, `gui/solver.py`, §5.3.1's NOTE on model files (D5, D6); done when
   `tests/tier1/test_project.py` and `test_models.py` pass. **Executor:** main
 - [ ] 7. `gui/web/screens.py`, `pages.py`, `frame.py`, `molecular.py`, `molview.py`, `assets/bridge.js`, VER-78's text

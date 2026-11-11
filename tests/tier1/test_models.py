@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -448,3 +449,33 @@ def test_fr39_a_model_file_carries_the_body_its_study_merges(tmp_path: Path) -> 
     assert listed == mapping_changes(written.body)
     assert "electrolyte.parameters" in {change.path for change in listed}
     assert mapping_changes({"models": {"physics": "x.yaml"}}) == ()
+
+
+def test_fr39_a_model_built_alone_keys_as_its_study_walk(protonated_2wcd, tmp_path: Path) -> None:
+    from nanopnp.api.project import BUILD_UPTO, Project
+    from nanopnp.pipeline.case import resolve
+    from nanopnp.pipeline.run import keyed_walk
+
+    project = Project.create(tmp_path / "project")
+    study = project.import_case(Case.load(protonated_2wcd.case), link=True)
+    (model,) = project.items("molecular")
+    shutil.copytree(protonated_2wcd.store / "artefacts", project.root / "store" / "artefacts")
+    store = project.session().store
+
+    def identities(case: Case) -> dict[str, str]:
+        found = keyed_walk(resolve(case, base=case.source.base), store=store, planned=set())
+        return {name: found[name].hash for name in ("structure", "protonation")}
+
+    alone = project.build_case("molecular", model)
+    assert BUILD_UPTO["molecular"] == "protonation"
+    walked = project.study(study)
+    assert alone.boundary_conditions.bias_V != walked.boundary_conditions.bias_V, (
+        "the build layer differs from the study, so equal keys are not equal cases"
+    )
+    assert identities(alone) == identities(walked)
+    assert identities(alone) == {
+        "structure": protonated_2wcd.structure,
+        "protonation": protonated_2wcd.protonation,
+    }
+    # The clean-up keeps a model's built stages though no run record names them.
+    assert set(identities(alone).values()) <= project.kept_artefacts()

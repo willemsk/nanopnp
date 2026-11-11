@@ -6,12 +6,14 @@ import filecmp
 import json
 from pathlib import Path
 
+import pytest
 import yaml
 from test_models import split_case
 
 from nanopnp.api.case import Case
-from nanopnp.api.project import Project
+from nanopnp.api.project import Project, ProjectError
 from nanopnp.io.artefact import CaseArtefact
+from nanopnp.io.case import CaseValidationError
 from nanopnp.io.project import PROJECT_FILENAME
 from nanopnp.pipeline.run import read_run
 from nanopnp.validation.charged_tube import write_charged_tube
@@ -225,3 +227,66 @@ def test_fr32_a_case_with_an_expression_at_a_models_value_imports_as_the_same_ca
     edited = imported.with_({"variables.v": {"value": 80, "unit": "mV"}})
     assert edited.boundary_conditions.bias_V == 0.08, "a variable edit still reaches the field"
     assert project.problems() == ()
+
+
+MOLECULAR = """schema: nanopnp/molecular-model/v0.6
+name: pore
+structure:
+  source: {path: pore.pdb}
+  symmetry: {point_group: C12}
+charge: {ph: 7.5}
+"""
+
+
+def test_fr38_a_linked_variant_follows_its_parent_and_a_copy_does_not(tmp_path: Path) -> None:
+    project = Project.create(tmp_path / "project")
+    (project.root / "models" / "molecular" / "pore.yaml").write_text(MOLECULAR, encoding="utf-8")
+    project = Project.open(project.root)
+    edits = [{"residue": "ASP 21", "state": "neutral"}]
+    project.save_variant("pore", "pore-d21n", edits)
+    project.save_variant("pore", "pore-copy", edits, copy=True)
+
+    def resolved(name: str) -> dict[str, object]:
+        dumped = project.build_case("molecular", name).model_dump(by_alias=True, mode="json")
+        return {"structure": dumped["structure"], "charge": dumped["charge"]}
+
+    parent, linked = resolved("pore"), resolved("pore-d21n")
+    assert linked["charge"]["edits"] != parent["charge"]["edits"] == []
+    linked["charge"]["edits"] = []
+    assert linked == parent, "a variant resolves to its parent plus its edits"
+    assert yaml.safe_load(project.path("molecular", "pore-d21n").read_text("utf-8")) == {
+        "schema": "nanopnp/molecular-model/v0.6",
+        "name": "pore-d21n",
+        "variant_of": {"model": "pore.yaml", "linked": True},
+        "charge": {"edits": edits},
+    }
+
+    project.set_value("molecular", "pore", "charge.ph", 4.5)
+    assert resolved("pore")["charge"]["ph"] == 4.5, "a set value reads back"
+    assert resolved("pore-d21n")["charge"]["ph"] == 4.5, "the parent's pH reaches a linked variant"
+    assert resolved("pore-copy")["charge"]["ph"] == 7.5, "and never a full copy"
+
+    assert [(c.path, c.value, c.default) for c in project.changes("molecular", "pore-d21n")] == [
+        ("charge.edits", edits, None)
+    ]
+    assert [(c.path, c.default) for c in project.changes("molecular", "pore-copy")] == [
+        ("charge.edits", None),
+        ("charge.ph", 4.5),
+    ]
+
+    before = project.path("molecular", "pore").read_bytes()
+    for path, value in (("charge.ph", "acid"), ("charge.ph", 99.0)):
+        with pytest.raises(CaseValidationError):
+            project.set_value("molecular", "pore", path, value)
+    with pytest.raises(ProjectError, match="electrolyte"):
+        project.set_value("molecular", "pore", "electrolyte.concentration_M", 1.0)
+    with pytest.raises(ProjectError, match="linked variant"):
+        project.set_value("molecular", "pore-d21n", "charge.ph", 3.0)
+    with pytest.raises(ProjectError, match="parent of the linked variant"):
+        project.set_value("molecular", "pore", "charge.edits", edits)
+    assert project.path("molecular", "pore").read_bytes() == before, "a refusal writes nothing"
+    assert sorted(p.name for p in project.path("molecular", "pore").parent.iterdir()) == [
+        "pore-copy.yaml",
+        "pore-d21n.yaml",
+        "pore.yaml",
+    ]
