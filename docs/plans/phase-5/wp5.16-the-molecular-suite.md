@@ -197,8 +197,17 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 - `nanopnp prepare SOURCE --cis-end {wider,narrower} --out OUT [--chains C] [--registration FIRST:LAST]
   [--centroid-z-nm Z] [--axis X,Y,Z]`; `_emit` prints the record, `--json` the record itself.
 
+> **Outcome — item 3.** `off_axis_nm` is the registration centroid's distance from the axis line used. A ring always
+> has two equal covariance eigenvalues and one apart, so the channel is reached only where other matter evens them; a
+> start across the wall never fixes a line and runs all 50 iterations, about 80 s on a 5,000-atom wall, so the fallback
+> can take minutes on a large pore (REV-239).
+
 **Item 4** (Sonnet). CODE_REVIEW_036, candidate 4, section 3, verbatim; `charge/edits.py` raises `EditError` naming
 frame, chain, residue and atom for an atom it would edit at −1; `radius_scales(table)` becomes the method.
+
+> **Outcome — item 4.** `geometry/contour.py` already converted at its own boundary and is unchanged;
+> `ProtonationTable.radius_edits()` is new; every atom without a residue row is refused, not only one an edit names.
+> The `2wcd-charged` walk reads the same drift, 2.912e-12, before and after.
 
 **Item 6.**
 - `Project.set_value(kind, name, path, value)`: `owner_of(path)` is `kind`, else `ProjectError`; the body edited by
@@ -261,10 +270,10 @@ the budget) and a build held mid-walk.
   knowledge concept (D1, D2); done when the same files pass. **Executor:** main
 - [x] 142183d 3. `structure/orient.py`, `cli/building.py` (D3); done when `test_structure_axis.py` and `test_cli.py` pass.
   **Executor:** general-purpose on Sonnet
-- [ ] 4. `structure/protonated.py`, `charge/edits.py`, `charge/kernel.py`, `density/radii.py`, `density/stage.py`,
+- [x] 5446186 4. `structure/protonated.py`, `charge/edits.py`, `charge/kernel.py`, `density/radii.py`, `density/stage.py`,
   `geometry/contour.py` (D4); done when `test_protonation.py` and `test_density.py` pass, VER-62 unmoved.
   **Executor:** general-purpose on Sonnet
-- [ ] 5. Compaction checkpoint. **Executor:** main
+- [x] 5. Compaction checkpoint. **Executor:** main
 - [ ] 6. `io/models.py`, `api/project.py`, `gui/solver.py`, §5.3.1's NOTE on model files (D5, D6); done when
   `tests/tier1/test_project.py` and `test_models.py` pass. **Executor:** main
 - [ ] 7. `gui/web/screens.py`, `pages.py`, `frame.py`, `molecular.py`, `molview.py`, `assets/bridge.js`, VER-78's text
