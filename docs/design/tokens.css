@@ -39,7 +39,7 @@
   /* Colour maps (WB-20): defaults, any map may be chosen per plot */
   --map-sequential: viridis;
   --map-sequential-cvd: cividis;
-  --map-diverging: RdBu_r;  /* centred on zero, with its unit, for charge and differences (VER-60) */
+  --map-diverging: RdBu;    /* centred on zero, positive blue, for charge and differences (VER-60; WB-39) */
 
   /* Type (WB-21): one sans shipped with the application, a monospace with tabular figures for numbers */
   --font-ui: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;

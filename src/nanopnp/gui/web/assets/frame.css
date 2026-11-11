@@ -169,9 +169,11 @@ body .nicegui-footer.frame-footer {
   gap: var(--pad);
   align-items: flex-start;
 }
+/* A page's pane stands left of the view, on every screen with one. */
 .sub-page {
   flex: 1 1 20rem;
   min-width: 0;
+  order: -1;
 }
 .later {
   color: var(--muted);
@@ -227,10 +229,77 @@ body .nicegui-footer.frame-footer {
 .glossary-meaning {
   margin: 0 0 0 var(--pad);
 }
-.rail-initial {
-  font-weight: 600;
-  text-align: center;
-  width: 100%;
+/* Folded, the drawer is a strip of the suites' icons, each with its state; the unfold button
+   stands at its foot. */
+.q-drawer--mini .activitybar {
+  width: 48px;
+  flex: 0 0 48px;
+}
+.q-drawer--mini .suite-group-title {
+  display: none;
+}
+/* The name is the button's own text, so it is shrunk away, not hidden; the button keeps it as its
+   accessible name and its tooltip. */
+.q-drawer--mini .suite-button .q-btn__content {
+  font-size: 0;
+}
+.q-drawer--mini .suite-button {
+  min-height: 40px;
+  padding: 0;
+}
+.q-drawer--mini .rail {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 48px;
+  flex: none;
+  padding: var(--gap) 0;
+  overflow: visible;
+  align-items: center;
+}
+.q-drawer--mini .separator {
+  display: none;
+}
+.drawer-row {
+  position: relative;
+}
+/* A suite's state: a dot at its icon, red for a problem and amber for a build running; the
+   button's name says which. */
+.suite-button.suite-problem .q-icon::after,
+.suite-button.suite-running .q-icon::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--panel);
+}
+.suite-button .q-icon {
+  position: relative;
+}
+.suite-button.suite-problem .q-icon::after {
+  background: var(--err);
+}
+.suite-button.suite-running .q-icon::after {
+  background: var(--warn);
+}
+.settings-window {
+  width: min(68rem, 94vw);
+  max-width: 94vw !important;
+  height: 86vh;
+  overflow-y: auto;
+  position: relative;
+}
+.settings-window .settings-nav {
+  top: 0;
+}
+.settings-close {
+  position: sticky;
+  top: 0;
+  align-self: flex-end;
+  z-index: 2;
 }
 /* Quasar's mini-drawer classes sit in its cascade layer, below NiceGUI's `.nicegui-column`, which
    would show a folded rail's tree; an unlayered rule outranks both. */
@@ -397,6 +466,12 @@ body .nicegui-footer.frame-footer {
   background: var(--sel);
   box-shadow: inset 3px 0 0 var(--accent);
 }
+/* The open item keeps the text ink: Quasar's selected colour is too pale on the selection. */
+.q-tree__node--selected,
+.q-tree__node--selected .q-tree__node-header-content {
+  color: var(--ink) !important;
+  font-weight: 600;
+}
 /* The palette's active row: the selection's fill and the accent's edge (WCAG 2.2 1.4.11). */
 .q-menu .q-item.q-manual-focusable--focused {
   box-shadow: inset 3px 0 0 var(--accent);
@@ -417,7 +492,7 @@ body .nicegui-footer.frame-footer {
   color: var(--muted);
 }
 
-/* A tool's page: its pane left of the view, which takes the rest of the row. */
+/* A tool's page: the tool list and the pane left of the view, which takes the rest of the row. */
 .main-row:has(.tool-pane) {
   flex-wrap: nowrap;
   align-self: stretch;
@@ -426,7 +501,7 @@ body .nicegui-footer.frame-footer {
 /* The pane scrolls by itself, so the view stays in place beside a long one. */
 .main-row:has(.tool-pane) .sub-page {
   order: -1;
-  flex: 0 0 21rem;
+  flex: 0 0 31rem;
   max-height: calc(100vh - 7.5rem);
   overflow-y: auto;
   padding-right: var(--gap);
@@ -437,57 +512,232 @@ body .nicegui-footer.frame-footer {
 }
 .main-row:has(.tool-pane) #mol {
   width: 100%;
-  height: min(70vh, 40rem);
+  height: min(72vh, 44rem);
+}
+.tool-page {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--pad);
+}
+.tool-list {
+  flex: 0 0 8.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  position: sticky;
+  top: 0;
+}
+.tool-link,
+.tool-link.nicegui-link:visited {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  min-height: var(--row);
+  padding: 0 var(--gap);
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--ink) !important;
+  text-decoration: none !important;
+  font-size: var(--text-sm);
+}
+.tool-link:hover {
+  background: var(--sel);
+}
+.tool-link-open {
+  background: var(--sel);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.tool-glyph {
+  flex: 0 0 1em;
+  text-align: center;
+}
+.state-ok {
+  color: var(--ok);
+}
+.state-err {
+  color: var(--err);
+}
+.state-warn,
+.state-run {
+  color: var(--warn);
+}
+.state-none {
+  color: var(--muted);
 }
 .tool-pane {
+  flex: 1 1 0;
+  min-width: 0;
+  gap: var(--gap);
+}
+.tool-subject {
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+.tool-status,
+.tool-cards {
   width: 100%;
   gap: var(--gap);
 }
-/* Every control of a pane takes its width, so a short option never narrows its field. */
+.tool-cards:empty,
+.tool-actions:empty {
+  display: none;
+}
+.tool-actions {
+  gap: var(--gap);
+}
+/* Small and quiet beside the main action, so it is not pressed for it. */
+.tool-cancel {
+  color: var(--muted);
+}
+.stage-bar {
+  display: flex;
+  gap: 2px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+.stage-block {
+  flex: 1 1 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--gap);
+  padding: 2px var(--gap);
+  border: 1px solid var(--control-edge);
+  border-top-width: 3px;
+  border-top-color: currentColor;
+  background: var(--panel);
+  font-size: var(--text-sm);
+}
+.stage-block:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+.stage-block:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.stage-name {
+  color: var(--ink);
+  font-weight: 600;
+}
+.stage-word {
+  margin-left: auto;
+}
+.stage-progress {
+  margin-top: 2px;
+}
+.note-card {
+  width: 100%;
+  padding: var(--gap) var(--pad);
+  border: 1px solid var(--control-edge);
+  border-left: 3px solid currentColor;
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-size: var(--text-sm);
+}
+.note-err {
+  color: var(--err);
+}
+.note-warn {
+  color: var(--warn);
+}
+.note-card .note-title {
+  font-weight: 600;
+}
+.note-card .note-short,
+.note-card .q-expansion-item {
+  color: var(--ink);
+}
+.note-card .q-expansion-item .q-item {
+  min-height: var(--target-min);
+  padding: 0;
+}
+.note-card .note-head {
+  gap: var(--gap);
+}
+/* A pane's fields take one row each: the mark, the name, the control, its reset. */
 .tool-pane .q-field {
   width: 100%;
 }
-.tool-pane .refused:empty {
-  display: none;
+.tool-pane .q-field--dense:not(.q-field--labeled) .q-field__control,
+.tool-pane .q-field--dense:not(.q-field--labeled) .q-field__marginal {
+  height: var(--row);
+  min-height: var(--row);
+}
+.tool-pane .q-field--dense:not(.q-field--labeled) .q-field__native,
+.tool-pane .q-field--dense:not(.q-field--labeled) .q-field__input {
+  min-height: var(--row);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.tool-pane .q-btn--dense {
+  min-height: var(--row);
+  padding: 0 var(--pad);
 }
 .field-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--gap);
+  display: grid;
+  grid-template-columns: 0.8rem 6.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--gap);
   width: 100%;
 }
-.field-row > .q-field,
-.field-row > .field-list {
-  flex: 1 1 0;
-  min-width: 0;
+.field-row > .q-checkbox {
+  grid-column: 3 / -1;
 }
 .field-row > .mark {
-  line-height: 2.5rem;
+  line-height: var(--row);
+}
+.field-row > .q-btn {
+  min-width: var(--target-min);
+  padding: 0;
 }
 .field-label {
-  color: var(--muted);
+  color: var(--ink);
   font-size: var(--text-sm);
 }
-.readout,
-.draft {
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  width: 100%;
+}
+.edit-row {
+  min-height: var(--row);
+  border-bottom: 1px solid var(--line);
+}
+.dialog-wide {
+  min-width: min(44rem, 92vw);
+}
+.listed {
+  max-height: 60vh;
+  overflow-y: auto;
+  width: 100%;
+}
+.readout {
   width: 100%;
   gap: var(--gap);
-}
-.draft {
-  border-top: 1px solid var(--line);
-  padding-top: var(--pad);
 }
 .readout-list {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 2px var(--pad);
+  align-items: center;
   margin: 0;
   width: 100%;
+  align-self: stretch;
+  font-size: var(--text-sm);
+}
+.readout-list dt {
+  color: var(--ink);
 }
 .readout-list dd {
   margin: 0;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+.readout-list dd .q-btn {
+  color: var(--accent);
+  text-decoration: underline;
 }
 .colour-bar {
   display: flex;
@@ -507,5 +757,10 @@ body .nicegui-footer.frame-footer {
 .colour-bar-scale {
   flex: 1;
   height: 0.75rem;
+}
+.colour-bar-scale.positive-blue {
+  background: linear-gradient(to right, #b40426, #dddddd, #3b4cc0);
+}
+.colour-bar-scale.positive-red {
   background: linear-gradient(to right, #3b4cc0, #dddddd, #b40426);
 }

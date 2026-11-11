@@ -296,6 +296,25 @@ the budget) and a build held mid-walk.
   holding edits and no `variant_of` edits them in place.
 - View: representation, colour, the `viewer_background` setting, clip at the axis, the residue list.
 
+> **Outcome — item 11.** Built to the verdicts of item 10. A tool's page is the tool list with each tool's state, the
+> pane and the view; the pane heads with a block per stage and a thin bar under the running one, the tool's actions
+> side by side with a small *Cancel* while a build runs, and a card per refusal or warning that unfolds its text and
+> goes to the field it names. A refusal is also among the frame's problems, and a value's change clears it. Fields
+> are one dense row each. Prepare: *Open structure…* lists the project's inputs or copies a file in; *Estimate*
+> and *Save prepared structure* run `orient_pore` and `prepared_pore` off the event loop, the choices read back from
+> the prepared file's record; the view opens side-on with the plane z = 0. Ensemble: a frame, or the first ten
+> overlaid. Protonation: the titratable groups, the unapplied states and the warnings each open a window; a row
+> selects its residue. Charge edit: edits are written in place on a variant or a model that holds some, and otherwise
+> held until *Save as variant…*, which opens the variant; a linked variant's other values are disabled and name its
+> parent. View: representation, colouring, the background setting, a cut-away through the axis (a MolViewSpec `clip`
+> node) and a residue finder; no build. Charge and potential draw positive blue, with the `charge_colours` setting;
+> the settings open as a window over the tool, `/settings` kept as an address; folded, the drawer is the suites' icons
+> with a dot for a problem or a running build; every pane stands left of its view, the charge screen's too. The
+> structure's address carries a digest of its text, since Mol* keeps what it read from an address. The channel's
+> straightness warning (`b236007`) shows as a card in Prepare and Ensemble. Not built: the frames table of an
+> ensemble beyond its per-frame net charge, the residue strip under the view (a finder stands in the pane), and the
+> colour bar as an overlay of the view.
+
 ### Work items
 
 - [x] 58f9ab6 1. `io/case.py`, `io/resolved.py`, `pipeline/case.py`, `structure/read.py`, `structure/stage.py`, `structure/axis.py`
@@ -316,7 +335,7 @@ the budget) and a build held mid-walk.
 - [x] d5995eb 8. The five tools drafted; `render_shell.py`; `/np-gui render shell`, `review` and `publish` (D9); done when the
   digest is published. **Executor:** main
 - [x] 9. Compaction checkpoint; the author's verdicts. **Executor:** main
-- [ ] 10. `/np-gui collect`; REV-234, REV-235's and REV-237's questions to the author; the design document's rows (D9);
+- [x] ee52015 10. `/np-gui collect`; REV-234, REV-235's and REV-237's questions to the author; the design document's rows (D9);
   done when each is ruled or carried. **Executor:** main
 - [ ] 11. The tools finished: Prepare (Q09, Q13; AO2), Ensemble, Protonation (Q27), Charge edit (FR-38; AO3), View;
   *Expose* and *Modified only* (D6 to D8); done when VER-78 passes. **Executor:** main

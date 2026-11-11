@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -18,13 +19,14 @@ from nanopnp.gui.web.molview import (
     COLOURINGS,
     REPRESENTATIONS,
     annotation,
+    frame_count,
     scene,
     structure_text,
 )
 from nanopnp.gui.web.screens import SUITES, Suite, Tool, screen
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
-from nanopnp.gui.web.tools import tool_page
+from nanopnp.gui.web.tools import OVERLAY_MOST, charge_colours, tool_page
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from fastapi import FastAPI
@@ -81,7 +83,10 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     def charge_map() -> Response:
         """Serve the charge map as a PNG."""
         link = shell.bench.link
-        return Response(_blank_map() if link is None else link.map_png, media_type="image/png")
+        return Response(
+            _blank_map() if link is None else link.map_png(charge_colours(shell)),
+            media_type="image/png",
+        )
 
     @app.get("/api/scene")
     def charge_scene() -> JSONResponse:
@@ -97,9 +102,9 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         return MolecularModel(project, name, shell.queue)
 
     @app.get("/api/molecular/{name}/structure")
-    def molecular_structure(name: str) -> Response:
-        """Serve what the view draws of a model: its built frame, else its source file."""
-        text, form = structure_text(molecular(name))
+    def molecular_structure(name: str, frame: int = 0) -> Response:
+        """Serve what the view draws of a model: one built frame, else its source file."""
+        text, form = structure_text(molecular(name), frame)
         return Response(text, media_type="chemical/x-pdb" if form == "pdb" else "chemical/x-cif")
 
     @app.get("/api/molecular/{name}/annotation")
@@ -107,11 +112,17 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         """Serve one colour per residue, as a MolViewSpec annotation."""
         if by not in COLOURINGS:
             raise HTTPException(422, f"by: {by!r} is not one of {', '.join(COLOURINGS)}")
-        return JSONResponse(annotation(molecular(name), by))
+        return JSONResponse(annotation(molecular(name), by, positive=charge_colours(shell)))
 
     @app.get("/api/molecular/{name}/scene")
     def molecular_scene(
-        name: str, representation: str = "cartoon", colour: str = "chain"
+        name: str,
+        representation: str = "cartoon",
+        colour: str = "chain",
+        frame: int = 0,
+        overlay: int = 0,
+        side: int = 0,
+        clip: int = 0,
     ) -> JSONResponse:
         """Serve the MolViewSpec scene of a model, or null where it has nothing to draw."""
         if representation not in REPRESENTATIONS or colour not in COLOURINGS:
@@ -120,18 +131,25 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         text, form = structure_text(model)
         if not text:
             return JSONResponse(None)
+        # The viewer keeps what it read from an address, so a rebuilt structure takes a new one.
+        stamp = f"{hashlib.sha256(text.encode()).hexdigest()[:12]}-{charge_colours(shell)}"
         return JSONResponse(
             scene(
                 model,
-                structure_url=f"/api/molecular/{name}/structure",
+                structure_url=f"/api/molecular/{name}/structure?v={stamp}",
                 # Until a stage is built there is nothing to colour by, and Mol*'s colours stand.
                 annotation_url=(
-                    f"/api/molecular/{name}/annotation?by={colour}"
+                    f"/api/molecular/{name}/annotation?by={colour}&v={stamp}"
                     if annotation(model, colour)
                     else None
                 ),
                 representation=representation,
                 form=form,
+                frames=(
+                    range(min(frame_count(model), OVERLAY_MOST)) if overlay else (max(frame, 0),)
+                ),
+                side_on=bool(side or clip),
+                clip=bool(clip),
             )
         )
 

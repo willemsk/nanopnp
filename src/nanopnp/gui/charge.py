@@ -207,7 +207,7 @@ def charge_image(
         ),
         x_label="r (nm)",
         frame=MODEL_FRAME,
-        palette="diverging",
+        palette="diverging_r",
     )
     return ChargeMap(
         image=image,

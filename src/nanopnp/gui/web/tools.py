@@ -1,28 +1,52 @@
-"""The Molecular suite's tool pages: a pane of the model's values beside the 3D view."""
+"""The Molecular suite's tool pages: the tool list, a pane of the model's values and the 3D view."""
 
 from __future__ import annotations
 
+import json
+import math
+import tempfile
+import typing
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Literal
 
-from nicegui import ui
-from nicegui.elements.mixins.disableable_element import DisableableElement
+from nicegui import events, run, ui
 from nicegui.elements.mixins.text_element import TextElement
 from nicegui.elements.mixins.validation_element import ValidationElement
 
 from nanopnp.api.project import Project
+from nanopnp.gui.web import numbers, settings
 from nanopnp.gui.web.frame import Views, heading
-from nanopnp.gui.web.molecular import STAGES, MolecularModel
-from nanopnp.gui.web.molview import COLOURINGS, REPRESENTATIONS
-from nanopnp.gui.web.screens import Tool, field_control
+from nanopnp.gui.web.molecular import STAGES, MolecularModel, refused_path
+from nanopnp.gui.web.molview import (
+    COLOURINGS,
+    REPRESENTATIONS,
+    ChargeColours,
+    frame_count,
+    residues,
+    titration_states,
+)
+from nanopnp.gui.web.screens import SUITES, Tool, field_control
+from nanopnp.gui.web.settings import SETTINGS
 from nanopnp.gui.web.shell import Shell
+from nanopnp.io.case import ChargeEdit
 from nanopnp.io.case_paths import schema_default
 from nanopnp.io.models import read_model_file
-from nanopnp.io.project import split_reference
+from nanopnp.io.project import INPUTS_FOLDER, split_reference
 from nanopnp.pipeline.checks import options_at
+from nanopnp.structure.orient import PreparationRecord, orient_pore, prepared_pore
 
-__all__ = ["FIELDS", "Field", "current_model", "tool_page"]
+__all__ = ["FIELDS", "OVERLAY_MOST", "Field", "charge_colours", "current_model", "tool_page"]
+
+OVERLAY_MOST = 10
+"""The most frames the view draws over one another."""
+
+LINKED_NOTE = ("prepare", "ensemble", "protonation")
+"""The tools whose values a linked variant reads from its parent."""
+CARD_SHORT = 90
+"""A card shows this much of a message; the rest unfolds."""
+STRUCTURE_SUFFIXES = (".pdb", ".ent", ".cif", ".mmcif", ".gz")
 
 
 @dataclass(frozen=True)
@@ -44,16 +68,12 @@ class Field:
 
 FIELDS: dict[str, Field] = {
     "structure.source.path": Field("Structure file", hint="A PDB or mmCIF file"),
-    "structure.source.chains": Field(
-        "Chains", hint="all, a list such as A,B,C, or groups such as A+B,C+D"
-    ),
+    "structure.source.chains": Field("Chains", hint="all, or A,B,C, or groups A+B,C+D"),
     "structure.symmetry.point_group": Field("Point group", hint="C1, or Cn of the ring"),
     "structure.symmetry.axis": Field("Axis", "choice"),
-    "structure.ensemble.trajectory": Field(
-        "Trajectory", hint="Without one, the models of the structure file"
-    ),
+    "structure.ensemble.trajectory": Field("Trajectory", hint="None: the file's models"),
     "structure.ensemble.frames.count": Field("Frames kept", "number"),
-    "structure.ensemble.frames.last_ns": Field("Window from the last frame", "number", unit="ns"),
+    "structure.ensemble.frames.last_ns": Field("Time window", "number", unit="ns"),
     "charge.ph": Field("pH", "number"),
     "charge.forcefield": Field("Force field", "choice"),
     "charge.titration": Field("Titration", "choice"),
@@ -61,22 +81,45 @@ FIELDS: dict[str, Field] = {
 }
 """Every value a Molecular tool sets, by case path."""
 
-# The stage each tool's build walks to, and the colouring its view opens with.
-BUILDS: dict[str, tuple[str, str, str]] = {
+# The stage each tool's build walks to, the build's name and the colouring its view opens with;
+# a tool with no stage builds nothing.
+BUILDS: dict[str, tuple[str | None, str, str]] = {
     "prepare": ("structure", "Build ensemble", "chain"),
     "ensemble": ("structure", "Build ensemble", "chain"),
     "protonation": ("protonation", "Build molecular model", "charge"),
     "edit": ("protonation", "Build molecular model", "changed"),
-    "view": ("protonation", "Build molecular model", "charge"),
+    "view": (None, "", "charge"),
 }
 
 STAGE_TITLES = {"structure": "Ensemble", "protonation": "Protonation"}
-STATE_WORDS = {
-    "empty": "not built",
-    "building": "building…",
-    "built": "built",
-    "refused": "refused",
+STAGE_RUNNING = {"structure": "Building the ensemble…", "protonation": "Protonating…"}
+# Each state's glyph and word (the glyph never stands alone), and its colour class.
+STATES = {
+    "empty": ("○", "not built", "state-none"),
+    "building": ("◔", "building", "state-run"),
+    "built": ("✓", "built", "state-ok"),
+    "refused": ("✕", "refused", "state-err"),
 }
+EDIT_STATES = typing.get_args(typing.get_args(ChargeEdit.model_fields["state"].annotation)[0])
+EDIT_KINDS = {
+    "state": "Protonation state",
+    "charge_change_e": "Charge change",
+    "radius_scale": "Radius scale",
+}
+
+STATES_COLUMNS = [
+    {"name": "group", "label": "Group", "field": "group", "align": "left", "sortable": True},
+    {"name": "kind", "label": "Kind", "field": "kind", "align": "left", "sortable": True},
+    {"name": "pka", "label": "pKa", "field": "pka", "sortable": True},
+    {"name": "applied_e", "label": "Applied, e", "field": "applied_e", "sortable": True},
+    {"name": "expected_e", "label": "Expected, e", "field": "expected_e", "sortable": True},
+    {"name": "state", "label": "State", "field": "state", "align": "left", "sortable": True},
+]
+
+
+def charge_colours(shell: Shell) -> ChargeColours:
+    """Return the colour a positive charge takes, as the user's setting has it."""
+    return "red" if shell.settings.value("charge_colours") == "red-positive" else "blue"
 
 
 def current_model(shell: Shell) -> MolecularModel | None:
@@ -112,6 +155,37 @@ def _default_of(path: str) -> Any:  # noqa: ANN401 - whatever the schema declare
     return default if has_default else None
 
 
+def _axis_of(tilt_deg: float, azimuth_deg: float) -> tuple[float, float, float]:
+    tilt, azimuth = math.radians(tilt_deg), math.radians(azimuth_deg)
+    return (
+        math.sin(tilt) * math.cos(azimuth),
+        math.sin(tilt) * math.sin(azimuth),
+        math.cos(tilt),
+    )
+
+
+def _angles_of(axis: tuple[float, float, float]) -> tuple[float, float]:
+    x, y, z = axis
+    if z < 0:
+        x, y, z = -x, -y, -z
+    tilt = math.degrees(math.acos(max(-1.0, min(1.0, z / math.sqrt(x * x + y * y + z * z)))))
+    tilt = round(tilt, 3)
+    # An axis along z has no azimuth to speak of.
+    return tilt, round(math.degrees(math.atan2(y, x)), 3) if tilt else 0.0
+
+
+def _registration(text: str) -> tuple[int, int] | None:
+    if not text.strip():
+        return None
+    first, _, last = text.partition(":")
+    try:
+        return int(first), int(last)
+    except ValueError:
+        raise ValueError(
+            f"registration residues {text!r}: give the first and the last as 164:186"
+        ) from None
+
+
 class _Pane:
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         self.shell = shell
@@ -120,17 +194,41 @@ class _Pane:
         self.focus = focus
         self.model = current_model(shell)
         self.stage, self.build_title, colouring = BUILDS[tool.id]
-        self.look = {"representation": "cartoon", "colour": colouring}
+        self.look: dict[str, Any] = {
+            "representation": "cartoon",
+            "colour": colouring,
+            "frame": 0,
+            "overlay": False,
+            "clip": False,
+        }
         self.rows: dict[str, ui.element] = {}
         self.marks: dict[str, tuple[ui.label, ui.button]] = {}
         self.controls: dict[str, ui.element] = {}
         self.writing = True
         self.modified_only = False
         self.was_building = False
-        self.status: ui.label
+        self.shown_state = ""
+        self.dismissed: set[str] = set()
+        self.busy = False
+        self.flagged: str | None = None
+        self.linked_to: str | None = None
+        # What Prepare holds between a visit and a save: no case value keeps them.
+        self.prepare: dict[str, Any] = {
+            "tilt": None,
+            "azimuth": None,
+            "cis_end": "wider",
+            "registration": "",
+            "centre": 0.0,
+        }
+        # Edits made on a model that is no variant and holds none, until they are saved as one.
+        self.staged: list[dict[str, Any]] = []
+        self.status: ui.element
+        self.cards: ui.column
+        self.actions: ui.row
         self.readout_box: ui.column
-        self.detail: ui.label
-        self.build_button: ui.button
+        self.edits_box: ui.column
+        self.bar_box: ui.element
+        self.picked: ui.select | None = None
 
     # -- what the model holds ------------------------------------------------
 
@@ -165,87 +263,143 @@ class _Pane:
         except (ValueError, OSError):
             return set()
 
-    # -- the pane -------------------------------------------------------------
+    def parent(self) -> str | None:
+        """Return the model a linked variant reads its values from, or None for any other."""
+        if self.model is None:
+            return None
+        try:
+            location = self.model.project.path("molecular", self.model.name)
+            held = read_model_file("molecular", location).variant_of
+        except (ValueError, OSError):
+            return None
+        return Path(held.model).stem if held is not None and held.linked else None
+
+    def variant(self) -> bool:
+        if self.model is None:
+            return False
+        try:
+            location = self.model.project.path("molecular", self.model.name)
+            return read_model_file("molecular", location).variant_of is not None
+        except (ValueError, OSError):
+            return False
+
+    def usable(self) -> bool:
+        return self.model is not None and self.model.has_structure()
+
+    def text(self, value: object, unit: str | None = None) -> str:
+        chosen = self.shell.settings
+        return numbers.shown(
+            value,
+            unit,
+            figures=int(str(chosen.value("significant_figures"))),
+            style="powers" if chosen.value("number_style") == "powers" else "prefixes",
+        )
+
+    # -- the page ---------------------------------------------------------------
 
     def build(self) -> None:
-        with ui.column().classes("tool-pane").props("data-control=tool-pane"):
-            heading(self.tool.title, 1)
-            ui.label(self.subject()).classes("muted")
-            with ui.row().classes("items-center"):
-                self.build_button = ui.button(self.build_title, on_click=self.on_build).props(
-                    "unelevated no-caps color=primary data-control=tool-build"
-                )
-            self.status = ui.label().props("data-control=tool-status role=status")
-            self.detail = ui.label().classes("refused")
-            ui.checkbox("Modified only", on_change=self.on_modified).props(
-                "data-control=tool-modified"
-            )
-            body, changed, exposed = self.body(), self.changed(), self.exposed()
-            for path in self.tool.fields:
-                self.field(path, body, path in changed, path in exposed)
-            if self.tool.id == "view":
-                self.view_controls()
-            self.readout_box = ui.column().classes("readout").props("data-control=tool-readout")
-            self.drafts()
+        with ui.element("div").classes("tool-page"):
+            self.tool_list()
+            with ui.column().classes("tool-pane").props("data-control=tool-pane"):
+                heading(self.tool.title, 1)
+                if self.model is not None:
+                    ui.label(self.subject()).classes("tool-subject")
+                self.status = ui.element("div").props("data-control=tool-status role=status")
+                self.status.classes("tool-status")
+                self.actions = ui.row().classes("tool-actions items-center no-wrap")
+                self.cards = ui.column().classes("tool-cards")
+                if self.tool.fields:
+                    ui.checkbox("Modified only", on_change=self.on_modified).props(
+                        "dense data-control=tool-modified"
+                    )
+                body, changed, exposed = self.body(), self.changed(), self.exposed()
+                self.linked_to = self.parent()
+                if self.linked_to is not None and self.tool.id in LINKED_NOTE:
+                    ui.label(
+                        f"A linked variant of {self.linked_to}: these values are its parent's. "
+                        "Change them there, or edit this variant's residues in Charge edit."
+                    ).classes("later").props("data-control=tool-linked")
+                if self.tool.id == "prepare":
+                    self.open_button()
+                for path in self.tool.fields:
+                    self.field(path, body, path in changed, path in exposed)
+                getattr(self, f"{self.tool.id}_section")()
+                self.readout_box = ui.column().classes("readout")
+                self.readout_box.props("data-control=tool-readout")
+        self.built.listen("mol_pick", self.on_pick)
         self.refresh()
         ui.timer(1.0, self.tick)
         ui.timer(0.1, self.start, once=True)
 
     def subject(self) -> str:
         if self.project is None:
-            return "No project is open."
+            return "No project is open. Create or open one from the File menu."
         if self.model is None:
             return "The project holds no molecular model."
         return f"Molecular model {self.model.name}"
+
+    def tool_list(self) -> None:
+        with ui.element("nav").classes("tool-list").props('aria-label="Molecular tools"'):
+            self.tool_links: dict[str, tuple[ui.link, ui.label]] = {}
+            for tool in SUITES[0].tools:
+                link = ui.link(target=f"/molecular/{tool.id}").classes("tool-link")
+                link.props(f"data-control=tool-link-{tool.id}")
+                if tool.id == self.tool.id:
+                    link.classes("tool-link-open").props("aria-current=page")
+                with link:
+                    glyph = ui.label("").classes("tool-glyph").props("aria-hidden=true")
+                    ui.label(tool.title)
+                self.tool_links[tool.id] = (link, glyph)
+
+    # -- one value ----------------------------------------------------------------
 
     def field(self, path: str, body: dict[str, Any], changed: bool, exposed: bool) -> None:
         spec = FIELDS[path]
         value = _value_of(body, path)
         shown = value if value is not None else _default_of(path)
         control_name = field_control(path)
+        named = f'data-control={control_name} aria-label="{spec.label}"'
         with ui.element("div").classes("field-row").props(f'data-field="{path}"') as row:
             mark = ui.label("◆").classes("changed mark").props("aria-hidden=true")
+            ui.label(spec.label).classes("field-label")
             control: ui.element
             if spec.kind == "list":
                 entries = shown if isinstance(shown, list) else []
-                text = "; ".join(_edit_text(entry) for entry in entries) or "None"
-                with ui.column().classes("field-list").props(f"data-control={control_name}"):
-                    ui.label(spec.label).classes("field-label")
-                    control = ui.label(text)
+                text = f"{len(entries)} edit{'' if len(entries) == 1 else 's'}"
+                control = ui.label(text).props(f"data-control={control_name}")
             elif spec.kind == "choice":
                 options = list(options_at(path) or ())
                 control = ui.select(
                     options,
-                    label=spec.label,
                     value=shown if shown in options else None,
                     on_change=lambda e, p=path: self.write(p, e.value),
-                ).props(f"dense outlined data-control={control_name}")
+                ).props(f"dense outlined options-dense {named}")
             elif spec.kind == "number":
                 control = ui.number(
-                    spec.label,
                     value=shown,
                     suffix=spec.unit or None,
                     on_change=lambda e, p=path: self.write(p, e.value),
-                ).props(f"dense outlined debounce=500 data-control={control_name}")
+                ).props(f"dense outlined debounce=500 {named}")
             else:
                 control = ui.input(
-                    spec.label,
                     value="" if shown is None else str(shown),
+                    placeholder=spec.hint,
                     on_change=lambda e, p=path: self.write(p, e.value or None),
-                ).props(
-                    f'dense outlined debounce=500 data-control={control_name} hint="{spec.hint}"'
-                )
+                ).props(f"dense outlined debounce=500 {named}")
             reset = ui.button(icon="sym_o_undo", on_click=lambda _, p=path: self.reset(p)).props(
                 f'flat dense aria-label="Reset {spec.label}" data-control=reset-{control_name}'
             )
-            if spec.kind == "number":
+            # A value is exposed to studies once the model sets it; an unset one has nothing to
+            # expose.
+            if spec.kind == "number" and (value is not None or exposed):
                 ui.checkbox(
                     "Expose",
                     value=exposed,
                     on_change=lambda e, p=path: self.expose(p, bool(e.value)),
                 ).props(f'dense aria-label="Expose {spec.label} to studies"')
-        # A model that reads a PQR has no structure for these values to act on.
-        idle = self.model is None or not self.model.has_structure()
+        # A model that reads a PQR has no structure for these values to act on, and a linked
+        # variant reads them from its parent.
+        idle = not self.usable() or self.linked_to is not None
         if idle and isinstance(control, ui.select | ui.number | ui.input):
             control.disable()
         self.rows[path] = row
@@ -253,158 +407,17 @@ class _Pane:
         self.controls[path] = control
         self.mark(path, changed)
 
-    def view_controls(self) -> None:
-        ui.select(
-            dict(REPRESENTATIONS),
-            label="Representation",
-            value=self.look["representation"],
-            on_change=lambda e: self.restyle("representation", str(e.value)),
-        ).props("dense outlined data-control=view-representation")
-        ui.select(
-            dict(COLOURINGS),
-            label="Colour by",
-            value=self.look["colour"],
-            on_change=lambda e: self.restyle("colour", str(e.value)),
-        ).props("dense outlined data-control=view-colour")
-
-    # -- what the build gave ---------------------------------------------------
-
-    def readout(self) -> list[tuple[str, str]]:
-        """Return the built stage's figures this tool shows, as (name, value)."""
-        model = self.model
-        if model is None:
-            return []
-        held = model.artefacts()
-        structure = held["structure"].summary if "structure" in held else None
-        table = held["protonation"].summary if "protonation" in held else None
-        rows: list[tuple[str, str]] = []
-        if self.tool.id == "prepare" and structure is not None:
-            axis = _mapping(structure.get("axis"))
-            rows.append(("Axis found by", str(axis.get("method", "permutation"))))
-            for name, gate in _mapping(structure.get("gates")).items():
-                rows.append((f"Gate, {name}", _gate_text(_mapping(gate))))
-            check = _mapping(structure.get("frame_check"))
-            if check:
-                rows.append(("Aligned frame, tilt", f"{_number(check.get('tilt_deg'))}°"))
-        elif self.tool.id == "ensemble" and structure is not None:
-            frames = _mapping(structure.get("frames"))
-            used = frames.get("indices")
-            rows.append(("Frames used", str(len(used) if isinstance(used, list) else "?")))
-            rows.append(("Frames available", str(frames.get("available", "?"))))
-            rows.append(("Atoms", str(structure.get("atoms", "?"))))
-            rows.append(("Chains, in ring order", _joined(structure.get("chains_cyclic_order"))))
-            drift = structure.get("drift_deg")
-            if isinstance(drift, list) and drift:
-                rows.append(("Largest axis drift", f"{_number(max(drift))}°"))
-        elif self.tool.id in {"protonation", "edit", "view"} and table is not None:
-            rows.append(("Net charge per frame", _joined(table.get("q_net_e"), " e")))
-            rows.append(("Residues", str(table.get("residues", "?"))))
-            unapplied = table.get("unapplied")
-            count = len(unapplied) if isinstance(unapplied, list) else 0
-            rows.append(("States PROPKA asked for and the force field lacks", str(count)))
-            rows.append(("PDB2PQR and PROPKA warnings", str(len(_mapping(table.get("warnings"))))))
-        return rows
-
-    def show_readout(self) -> None:
-        self.readout_box.clear()
-        rows = self.readout()
-        with self.readout_box:
-            if not rows:
-                return
-            heading("Built", 2)
-            with ui.element("dl").classes("readout-list"):
-                for name, value in rows:
-                    TextElement(tag="dt", text=name).classes("muted")
-                    TextElement(tag="dd", text=value)
-
-    # -- the controls laid out for the prototype round ----------------------------
-
-    def drafts(self) -> None:
-        if self.tool.id in {"protonation", "view"}:
-            self.colour_bar()
-        with ui.column().classes("draft w-full"):
-            ui.label("Laid out for your verdict; not wired yet.").classes("later")
-            drafted: list[ui.element] = []
-            if self.tool.id == "ensemble":
-                drafted.append(
-                    ui.select(
-                        ["A trajectory", "The structure file's models"], label="Source"
-                    ).props("dense outlined")
-                )
-                drafted.append(ui.number("Stride").props("dense outlined"))
-                heading("Frames", 2)
-                ui.label("Each frame used, with its net charge and its time.").classes("later")
-                drafted.append(ui.slider(min=1, max=2, value=1).props('aria-label="Frame shown"'))
-                drafted.append(ui.checkbox("Overlay the frames"))
-            elif self.tool.id == "prepare":
-                drafted.append(ui.button("Open structure…").props("outline no-caps"))
-                heading("Axis", 2)
-                with ui.row().classes("items-center no-wrap w-full"):
-                    drafted.append(ui.number("Tilt", suffix="°").props("dense outlined"))
-                    drafted.append(ui.number("Azimuth", suffix="°").props("dense outlined"))
-                with ui.row().classes("items-center"):
-                    drafted.append(ui.button("Estimate").props("outline no-caps"))
-                    drafted.append(ui.button("Flip").props("outline no-caps"))
-                heading("Membrane", 2)
-                drafted.append(
-                    ui.input("Registration residues").props('dense outlined hint="As 164:186"')
-                )
-                drafted.append(ui.number("Centre, z", suffix="nm").props("dense outlined"))
-                drafted.append(ui.button("Save prepared structure").props("outline no-caps"))
-            elif self.tool.id == "protonation":
-                drafted.append(ui.button("Residue states…").props("outline no-caps"))
-            elif self.tool.id == "edit":
-                heading("Edit a residue", 2)
-                drafted.append(
-                    ui.select([], label="Residue", with_input=True).props("dense outlined")
-                )
-                drafted.append(
-                    ui.select(
-                        ["Protonation state", "Charge change", "Radius scale"], label="Edit"
-                    ).props("dense outlined")
-                )
-                drafted.append(ui.input("Value").props("dense outlined"))
-                drafted.append(ui.button("Add edit").props("outline no-caps"))
-                heading("Save", 2)
-                drafted.append(ui.input("Variant name").props("dense outlined"))
-                drafted.append(
-                    ui.radio(["Linked to its parent", "Full copy"], value="Linked to its parent")
-                )
-                drafted.append(ui.button("Save as variant…").props("outline no-caps"))
-            elif self.tool.id == "view":
-                drafted.append(ui.checkbox("Clip at the axis"))
-                ui.link("3D background, in Settings", "/settings?setting=viewer_background")
-                drafted.append(ui.checkbox("Show the membrane slab"))
-                drafted.append(ui.input("Find a residue").props("dense outlined"))
-            for element in drafted:
-                if isinstance(element, DisableableElement):
-                    element.disable()
-
-    def colour_bar(self) -> None:
-        ui.label("Residue charge").classes("field-label")
-        with (
-            ui.element("div")
-            .classes("colour-bar")
-            .props('role="img" aria-label="Residue charge, from minus one e to plus one e"')
-        ):
-            ui.label("\u22121 e, negative")
-            with ui.element("span").classes("colour-bar-plate"):
-                ui.element("span").classes("colour-bar-scale").props("data-colorbar")
-            ui.label("+1 e, positive")
-
     def mark(self, path: str, changed: bool) -> None:
         mark, reset = self.marks[path]
         mark.classes(remove="invisible") if changed else mark.classes(add="invisible")
-        reset.set_visibility(changed)
+        reset.classes(remove="invisible") if changed else reset.classes(add="invisible")
         self.rows[path].set_visibility(changed or not self.modified_only)
 
-    def on_modified(self, event: Any) -> None:  # noqa: ANN401 - NiceGUI's event
+    def on_modified(self, event: events.ValueChangeEventArguments[Any]) -> None:
         self.modified_only = bool(event.value)
         changed = self.changed()
         for path in self.rows:
             self.mark(path, path in changed)
-
-    # -- writing ---------------------------------------------------------------
 
     def write(self, path: str, value: Any) -> None:  # noqa: ANN401 - a field's value
         if self.model is None or not self.writing:
@@ -449,8 +462,13 @@ class _Pane:
         self.after_write(path)
 
     def after_write(self, path: str) -> None:
-        self.mark(path, path in self.changed())
+        if path in self.marks:
+            self.mark(path, path in self.changed())
+        # A value's change answers the last refusal; the next build says whether it holds.
+        if self.model is not None:
+            self.model.dismiss()
         self.built.changes_moved()
+        self.shown_state = ""
         self.refresh()
 
     def expose(self, path: str, on: bool) -> None:
@@ -461,52 +479,811 @@ class _Pane:
         except ValueError as error:
             ui.notify(str(error), type="negative")
 
+    # -- Prepare ------------------------------------------------------------------
+
+    def open_button(self) -> None:
+        opened = ui.button("Open structure…", on_click=self.open_structure).props(
+            "outline dense no-caps data-control=open-structure"
+        )
+        if self.model is None:
+            opened.disable()
+
+    def inputs(self) -> list[str]:
+        if self.project is None:
+            return []
+        folder = self.project.root / INPUTS_FOLDER
+        if not folder.is_dir():
+            return []
+        return sorted(
+            entry.name
+            for entry in folder.iterdir()
+            if entry.is_file() and entry.name.lower().endswith(STRUCTURE_SUFFIXES)
+        )
+
+    def open_structure(self) -> None:
+        with ui.dialog() as dialog, ui.card().classes("dialog"):
+            heading("Open structure", 2)
+            names = self.inputs()
+            if names:
+                ui.label("In the project's inputs:").classes("field-label")
+                with ui.column().classes("w-full gap-0").props("data-control=input-files"):
+                    for name in names:
+                        ui.button(name, on_click=lambda _, n=name: self.use_input(dialog, n)).props(
+                            "flat dense no-caps align=left"
+                        ).classes("list-row w-full")
+            path = ui.input("A PDB or mmCIF file on this computer").props(
+                'dense outlined data-control=structure-path placeholder="/path/to/pore.pdb"'
+            )
+            ui.label("The file is copied into the project's inputs.").classes("later")
+            with ui.row().classes("w-full justify-end"):
+                ui.button("Cancel", on_click=dialog.close).props("flat no-caps")
+                ui.button("Add and use", on_click=lambda: self.add_input(dialog, path)).props(
+                    "unelevated no-caps color=primary"
+                )
+        dialog.open()
+
+    def add_input(self, dialog: ui.dialog, path: ui.input) -> None:
+        if self.project is None or not str(path.value or "").strip():
+            path.error = "Give the file's path."
+            return
+        try:
+            copied = self.project.add_input(str(path.value).strip())
+        except ValueError as error:
+            path.error = str(error)
+            return
+        self.use_input(dialog, copied.name)
+
+    def use_input(self, dialog: ui.dialog, name: str) -> None:
+        dialog.close()
+        self.set_source(f"../../{INPUTS_FOLDER}/{name}")
+
+    def set_source(self, value: str) -> None:
+        path = "structure.source.path"
+        self.write(path, value)
+        control = self.controls.get(path)
+        if isinstance(control, ui.input):
+            self.writing = False
+            try:
+                control.value = value
+            finally:
+                self.writing = True
+
+    def source(self) -> Path | None:
+        case = None if self.model is None else self.model.case()
+        if case is None or case.structure is None:
+            return None
+        return Path(case.structure.source.path)
+
+    def record(self) -> PreparationRecord | None:
+        source = self.source()
+        if source is None:
+            return None
+        beside = source.with_suffix(".prepare.json")
+        try:
+            return PreparationRecord.model_validate_json(beside.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+
+    def raw_source(self) -> Path | None:
+        """Return the file a preparation reads: the one a prepared file was made from, else it."""
+        source, record = self.source(), self.record()
+        if source is None or record is None:
+            return source
+        original = source.with_name(record.source.name)
+        return original if original.is_file() else source
+
+    def prepare_section(self) -> None:
+        record = self.record()
+        if record is not None:
+            tilt, azimuth = _angles_of(record.axis)
+            self.prepare.update(
+                tilt=tilt if record.method == "typed" else None,
+                azimuth=azimuth if record.method == "typed" else None,
+                cis_end=record.cis_end,
+                registration=(
+                    ""
+                    if record.registration_residues is None
+                    else f"{record.registration_residues[0]}:{record.registration_residues[1]}"
+                ),
+                centre=record.centroid_z_nm,
+            )
+        usable = self.usable()
+        heading("Orientation", 2)
+        ui.label(
+            "Left empty, the axis is estimated when the structure is saved."
+            if record is None
+            else f"Prepared from {record.source.name}, its axis {record.method}."
+        ).classes("later")
+        with ui.element("div").classes("field-pair"):
+            self.tilt = ui.number(
+                "Tilt",
+                value=self.prepare["tilt"],
+                suffix="°",
+                min=0,
+                max=90,
+                step=0.5,
+                on_change=lambda e: self.prepare.update(tilt=e.value),
+            ).props("dense outlined data-control=prepare-tilt")
+            self.tilt.set_enabled(usable)
+            self.azimuth = ui.number(
+                "Azimuth",
+                value=self.prepare["azimuth"],
+                suffix="°",
+                min=-180,
+                max=180,
+                step=1,
+                on_change=lambda e: self.prepare.update(azimuth=e.value),
+            ).props("dense outlined data-control=prepare-azimuth")
+            self.azimuth.set_enabled(usable)
+        with ui.row().classes("items-center no-wrap"):
+            ui.button("Estimate", on_click=self.estimate).props(
+                "outline dense no-caps data-control=prepare-estimate"
+            ).set_enabled(usable)
+            ui.button("Flip", on_click=self.flip).props(
+                "outline dense no-caps data-control=prepare-flip"
+            ).set_enabled(usable)
+            self.cis = ui.label(self.cis_text()).props("data-control=prepare-cis")
+        heading("Membrane", 2)
+        with ui.element("div").classes("field-pair"):
+            ui.input(
+                "Registration residues",
+                value=self.prepare["registration"],
+                placeholder="164:186",
+                on_change=lambda e: self.prepare.update(registration=e.value or ""),
+            ).props("dense outlined data-control=prepare-registration").set_enabled(usable)
+            ui.number(
+                "Centre, z",
+                value=self.prepare["centre"],
+                suffix="nm",
+                step=0.1,
+                on_change=lambda e: self.prepare.update(centre=e.value or 0.0),
+            ).props("dense outlined data-control=prepare-centre").set_enabled(usable)
+        ui.label(
+            "The residues' centre is placed on the axis at this height; the plane z = 0 is drawn."
+        ).classes("later")
+
+    def cis_text(self) -> str:
+        return f"cis (+z): the {self.prepare['cis_end']} end"
+
+    def flip(self) -> None:
+        self.prepare["cis_end"] = "narrower" if self.prepare["cis_end"] == "wider" else "wider"
+        self.cis.text = self.cis_text()
+
+    def choices(self, *, typed: bool) -> dict[str, Any]:
+        case = None if self.model is None else self.model.case()
+        chains = "all"
+        if case is not None and case.structure is not None:
+            chains = str(case.structure.source.chains).replace("+", ",")
+        tilt, azimuth = self.prepare["tilt"], self.prepare["azimuth"]
+        axis = None
+        if typed and tilt is not None:
+            axis = _axis_of(float(tilt), float(azimuth or 0.0))
+        return {
+            "chains": chains,
+            "cis_end": self.prepare["cis_end"],
+            "registration_residues": _registration(str(self.prepare["registration"])),
+            "centroid_z_nm": float(self.prepare["centre"] or 0.0),
+            "axis": axis,
+        }
+
+    async def estimate(self) -> None:
+        source = self.raw_source()
+        if source is None or self.busy:
+            return
+        self.busy = True
+        notice = ui.notification("Estimating the axis…", spinner=True, timeout=None)
+        try:
+            chosen = self.choices(typed=False)
+            with tempfile.TemporaryDirectory(prefix="nanopnp-estimate-") as folder:
+                out = Path(folder) / "estimate.pdb"
+                await run.io_bound(lambda: orient_pore(source, out=out, **chosen))
+                record = PreparationRecord.model_validate_json(
+                    out.with_suffix(".prepare.json").read_text(encoding="utf-8")
+                )
+        except (ValueError, OSError) as error:
+            ui.notify(str(error), type="negative", multi_line=True)
+            return
+        finally:
+            notice.dismiss()
+            self.busy = False
+        tilt, azimuth = _angles_of(record.axis)
+        self.tilt.value, self.azimuth.value = tilt, azimuth
+        ui.notify(f"Axis estimated by the {record.method}: {tilt:g}° from the file's z.")
+
+    async def save_prepared(self) -> None:
+        model, source = self.model, self.raw_source()
+        if model is None or source is None or self.busy:
+            return
+        self.busy = True
+        notice = ui.notification("Preparing the structure…", spinner=True, timeout=None)
+        try:
+            chosen = self.choices(typed=True)
+            folder = model.project.root / INPUTS_FOLDER
+            written = await run.io_bound(lambda: prepared_pore(source, directory=folder, **chosen))
+            if written is None:
+                return
+        except (ValueError, OSError) as error:
+            ui.notify(str(error), type="negative", multi_line=True)
+            return
+        finally:
+            notice.dismiss()
+            self.busy = False
+        self.set_source(f"../../{INPUTS_FOLDER}/{written.name}")
+        ui.notify(f"Saved {INPUTS_FOLDER}/{written.name}; building the ensemble.")
+        self.on_build()
+
+    # -- Ensemble -----------------------------------------------------------------
+
+    def ensemble_section(self) -> None:
+        heading("Frames shown", 2)
+        count = 1 if self.model is None else frame_count(self.model)
+        self.frame_label = ui.label(f"Frame 1 of {count}").classes("later")
+        self.frame_slider = ui.slider(
+            min=1,
+            max=max(count, 2),
+            value=1,
+            on_change=lambda e: self.restyle("frame", int(e.value) - 1),
+        ).props('label snap aria-label="Frame shown" data-control=ensemble-frame')
+        self.frame_slider.set_enabled(count > 1)
+        ui.checkbox(
+            f"Overlay the frames (the first {OVERLAY_MOST})",
+            on_change=lambda e: self.restyle("overlay", bool(e.value)),
+        ).props("dense data-control=ensemble-overlay").set_enabled(count > 1)
+
+    # -- Protonation --------------------------------------------------------------
+
+    def protonation_section(self) -> None:
+        self.find_residue()
+        self.colour_bar()
+
+    def find_residue(self) -> None:
+        listed = dict(residues(self.model)) if self.model is not None else {}
+        self.picked = ui.select(
+            listed,
+            label="Find a residue",
+            with_input=True,
+            clearable=True,
+            on_change=lambda e: self.select(e.value),
+        ).props("dense outlined options-dense data-control=find-residue")
+        self.picked.set_enabled(bool(listed))
+
+    async def select(self, key: object) -> None:
+        if key:
+            await ui.run_javascript(f"nano.show({json.dumps(str(key))})", timeout=10)
+
+    def on_pick(self, event: events.GenericEventArguments) -> None:
+        key = str(event.args.get("key", ""))
+        if self.picked is not None and key in self.picked.options:
+            self.picked.value = key
+        if self.tool.id == "edit" and key:
+            self.on_pick_edit(key)
+
+    def show_states(self) -> None:
+        if self.model is None:
+            return
+        rows = titration_states(self.model)
+        for row in rows:
+            row["state"] = "left unapplied" if row["unapplied"] else "applied"
+        with ui.dialog() as dialog, ui.card().classes("dialog dialog-wide"):
+            heading("Titratable groups, first frame", 2)
+            search = ui.input(placeholder="Filter, as GLU or unapplied").props(
+                "dense outlined clearable"
+            )
+            table = ui.table(columns=STATES_COLUMNS, rows=rows, row_key="id", pagination=12).props(
+                "dense flat data-control=states-table"
+            )
+            table.bind_filter_from(search, "value")
+            table.on("row-click", lambda e: self.select(e.args[1]["key"]))
+            ui.label("A row selects its residue in the 3D view.").classes("later")
+            with ui.row().classes("w-full justify-end"):
+                ui.button("Close", on_click=dialog.close).props("flat no-caps")
+        dialog.open()
+
+    def show_listed(self, title: str, lines: list[str]) -> None:
+        with ui.dialog() as dialog, ui.card().classes("dialog dialog-wide"):
+            heading(title, 2)
+            with ui.column().classes("listed gap-0").props("data-control=listed"):
+                for line in lines or ["None."]:
+                    ui.label(line)
+            with ui.row().classes("w-full justify-end"):
+                ui.button("Close", on_click=dialog.close).props("flat no-caps")
+        dialog.open()
+
+    # -- Charge edit --------------------------------------------------------------
+
+    def edits(self) -> list[dict[str, Any]]:
+        held = _value_of(self.body(), "charge.edits")
+        if not isinstance(held, list):
+            case = None if self.model is None else self.model.case()
+            if case is None or case.charge is None:
+                return []
+            held = [edit.model_dump(exclude_none=True) for edit in case.charge.edits]
+        return [dict(entry) for entry in held] + self.staged
+
+    def in_place(self) -> bool:
+        """Say whether an edit is written to the model itself: a variant, or one holding edits."""
+        return self.variant() or bool(_value_of(self.body(), "charge.edits"))
+
+    def edit_section(self) -> None:
+        usable = self.usable()
+        names: dict[str, str] = {}
+        if self.model is not None:
+            for key, label in residues(self.model):
+                names.setdefault(label.split(",")[0], key)
+        self.residue_keys = names
+        heading("Edit a residue", 2)
+        ui.label("An edit acts on the residue in every chain and frame.").classes("later")
+        self.edit_residue = ui.select(
+            list(names),
+            label="Residue",
+            with_input=True,
+            on_change=lambda e: self.select(names.get(str(e.value))),
+        ).props("dense outlined options-dense data-control=edit-residue")
+        self.edit_residue.set_enabled(usable and bool(names))
+        self.edit_kind = ui.select(
+            EDIT_KINDS, label="Edit", value="state", on_change=self.on_kind
+        ).props("dense outlined options-dense data-control=edit-kind")
+        self.edit_kind.set_enabled(usable)
+        self.edit_state = ui.select(list(EDIT_STATES), label="State").props(
+            "dense outlined options-dense data-control=edit-state"
+        )
+        self.edit_state.set_enabled(usable)
+        self.edit_number = ui.number("Charge change", suffix="e", step=1).props(
+            "dense outlined data-control=edit-number"
+        )
+        self.edit_number.set_visibility(False)
+        ui.button("Add edit", on_click=self.add_edit).props(
+            "outline dense no-caps data-control=edit-add"
+        ).set_enabled(usable)
+        heading("Edits", 2)
+        self.edits_box = ui.column().classes("w-full gap-0").props("data-control=edit-list")
+        self.show_edits()
+
+    def on_kind(self, event: events.ValueChangeEventArguments[Any]) -> None:
+        kind = str(event.value)
+        self.edit_state.set_visibility(kind == "state")
+        self.edit_number.set_visibility(kind != "state")
+        self.edit_number.label = EDIT_KINDS[kind]
+        self.edit_number.props(f"suffix={'e' if kind == 'charge_change_e' else 'times'}")
+        self.edit_number.props(f"step={1 if kind == 'charge_change_e' else 0.05}")
+
+    def on_pick_edit(self, key: str) -> None:
+        for label, held in self.residue_keys.items():
+            if held.split(":")[1] == key.split(":")[1]:
+                self.edit_residue.value = label
+                return
+
+    def add_edit(self) -> None:
+        residue, kind = self.edit_residue.value, str(self.edit_kind.value)
+        if not residue:
+            ui.notify("Choose a residue first, in the list or in the 3D view.", type="warning")
+            return
+        value: object = self.edit_state.value if kind == "state" else self.edit_number.value
+        if value is None or value == "":
+            ui.notify(f"Give the {EDIT_KINDS[kind].lower()}.", type="warning")
+            return
+        if kind == "charge_change_e":
+            value = int(float(str(value)))
+        self.put_edits([*self.edits(), {"residue": str(residue), kind: value}])
+
+    def remove_edit(self, index: int) -> None:
+        held = self.edits()
+        del held[index]
+        self.put_edits(held)
+
+    def put_edits(self, edits: list[dict[str, Any]]) -> None:
+        model = self.model
+        if model is None:
+            return
+        if self.in_place():
+            try:
+                model.project.set_value("molecular", model.name, "charge.edits", edits or None)
+            except ValueError as error:
+                ui.notify(
+                    str(error).replace(f"{model.project.root}/", ""),
+                    type="negative",
+                    multi_line=True,
+                )
+                return
+            self.after_write("charge.edits")
+            control = self.controls.get("charge.edits")
+            if isinstance(control, ui.label):
+                control.text = f"{len(edits)} edit{'' if len(edits) == 1 else 's'}"
+        else:
+            self.staged = edits
+            self.shown_state = ""
+            self.refresh()
+        self.show_edits()
+
+    def show_edits(self) -> None:
+        self.edits_box.clear()
+        held = self.edits()
+        with self.edits_box:
+            if not held:
+                ui.label("None.").classes("later")
+            for index, entry in enumerate(held):
+                with ui.row().classes("items-center no-wrap w-full edit-row"):
+                    ui.label(_edit_text(entry)).classes("col")
+                    ui.button(
+                        icon="sym_o_close", on_click=lambda _, i=index: self.remove_edit(i)
+                    ).props(f'flat dense aria-label="Remove the edit of {entry.get("residue")}"')
+            if self.staged:
+                ui.label("Not saved yet: save them as a variant.").classes("state-warn")
+
+    def save_variant(self) -> None:
+        model = self.model
+        if model is None:
+            return
+        if not self.staged:
+            ui.notify("Add an edit first; a variant holds its parent's values and its edits.")
+            return
+        with ui.dialog() as dialog, ui.card().classes("dialog"):
+            heading("Save as variant", 2)
+            name = ui.input("Name", value=f"{model.name}-variant").props(
+                "dense outlined data-control=variant-name"
+            )
+            kind = ui.radio(
+                {
+                    "linked": "Linked: follows its parent's values",
+                    "copy": "Full copy: holds every value itself",
+                },
+                value="linked",
+            ).props("dense data-control=variant-kind")
+            with ui.row().classes("w-full justify-end"):
+                ui.button("Cancel", on_click=dialog.close).props("flat no-caps")
+                ui.button(
+                    "Save", on_click=lambda: self.write_variant(dialog, name, kind.value == "copy")
+                ).props("unelevated no-caps color=primary data-control=variant-save")
+        dialog.open()
+
+    def write_variant(self, dialog: ui.dialog, name: ui.input, copy: bool) -> None:
+        model = self.model
+        if model is None:
+            return
+        chosen = str(name.value or "").strip()
+        try:
+            model.project.save_variant(model.name, chosen, self.staged, copy=copy)
+            model.project.open_item(f"molecular/{chosen}")
+        except ValueError as error:
+            name.error = str(error).replace(f"{model.project.root}/", "")
+            return
+        dialog.close()
+        # The frame is built again around the variant, now the open item.
+        ui.run_javascript("window.location.assign('/molecular/edit')")
+
+    # -- View -----------------------------------------------------------------------
+
+    def view_section(self) -> None:
+        ui.select(
+            dict(REPRESENTATIONS),
+            label="Representation",
+            value=self.look["representation"],
+            on_change=lambda e: self.restyle("representation", str(e.value)),
+        ).props("dense outlined options-dense data-control=view-representation")
+        ui.select(
+            dict(COLOURINGS),
+            label="Colour by",
+            value=self.look["colour"],
+            on_change=lambda e: self.restyle("colour", str(e.value)),
+        ).props("dense outlined options-dense data-control=view-colour")
+        background = SETTINGS["viewer_background"]
+        ui.select(
+            dict(background.choices or {}),
+            label=background.title,
+            value=self.shell.settings.value("viewer_background"),
+            on_change=lambda e: self.set_background(str(e.value)),
+        ).props("dense outlined options-dense data-control=view-background")
+        ui.checkbox(
+            "Cut away the front half", on_change=lambda e: self.restyle("clip", bool(e.value))
+        ).props("dense data-control=view-clip")
+        self.find_residue()
+        self.colour_bar()
+
+    def set_background(self, value: str) -> None:
+        self.shell.settings = self.shell.settings.with_user("viewer_background", value)
+        settings.save(self.shell.settings)
+        self.built.applied()
+
+    def colour_bar(self) -> None:
+        low, high = ("red", "blue") if charge_colours(self.shell) == "blue" else ("blue", "red")
+        with ui.column().classes("w-full gap-0") as self.bar_box:
+            ui.label("Residue charge").classes("field-label")
+            with (
+                ui.element("div")
+                .classes("colour-bar")
+                .props(
+                    'role="img" aria-label="Residue charge, from minus one e in '
+                    f'{low} to plus one e in {high}"'
+                )
+            ):
+                ui.label("\N{MINUS SIGN}1 e")
+                with ui.element("span").classes("colour-bar-plate"):
+                    ui.element("span").classes(f"colour-bar-scale positive-{high}").props(
+                        "data-colorbar"
+                    )
+                ui.label("+1 e")
+        self.bar_box.set_visibility(self.look["colour"] == "charge")
+
+    # -- what the build gave ---------------------------------------------------
+
+    def readout(self) -> list[tuple[str, str, Callable[[], None] | None]]:
+        """Return the built stage's figures this tool shows: a name, a value, what opens it."""
+        model = self.model
+        if model is None:
+            return []
+        held = model.artefacts()
+        structure = held["structure"].summary if "structure" in held else None
+        table = held["protonation"].summary if "protonation" in held else None
+        rows: list[tuple[str, str, Callable[[], None] | None]] = []
+        if self.tool.id == "prepare" and structure is not None:
+            axis = _mapping(structure.get("axis"))
+            rows.append(("Axis found by", str(axis.get("method", "?")), None))
+            for name, gate in _mapping(structure.get("gates")).items():
+                rows.append((f"Gate, {name}", self.gate_text(_mapping(gate)), None))
+            check = _mapping(structure.get("frame_check"))
+            if check:
+                rows.append(
+                    ("Aligned frame, tilt", self.measure(check.get("tilt_deg"), "deg"), None)
+                )
+        elif self.tool.id == "ensemble" and structure is not None:
+            frames = _mapping(structure.get("frames"))
+            used = frames.get("indices")
+            rows.append(("Frames used", str(len(used) if isinstance(used, list) else "?"), None))
+            rows.append(("Frames available", str(frames.get("available", "?")), None))
+            rows.append(("Atoms", str(structure.get("atoms", "?")), None))
+            rows.append(
+                ("Chains, in ring order", _joined(structure.get("chains_cyclic_order")), None)
+            )
+            drift = structure.get("drift_deg")
+            if isinstance(drift, list) and drift:
+                rows.append(("Largest axis drift", self.measure(max(drift), "deg"), None))
+            if table is not None:
+                rows.append(("Net charge per frame", _joined(table.get("q_net_e"), " e"), None))
+        elif self.tool.id in {"protonation", "edit", "view"} and table is not None:
+            rows.append(("Net charge per frame", _joined(table.get("q_net_e"), " e"), None))
+            rows.append(("Residues", str(table.get("residues", "?")), None))
+            rows.append(("Titratable groups", "Show…", self.show_states))
+            unapplied = table.get("unapplied")
+            listed = unapplied if isinstance(unapplied, list) else []
+            rows.append(
+                (
+                    "States the force field lacks",
+                    f"{len(listed)}…" if listed else "0",
+                    (lambda: self.show_listed("States left unapplied", _unapplied(listed)))
+                    if listed
+                    else None,
+                )
+            )
+            warned = _warnings(table.get("warnings"))
+            rows.append(
+                (
+                    "PDB2PQR and PROPKA warnings",
+                    f"{len(warned)}…" if warned else "0",
+                    (lambda: self.show_listed("PDB2PQR and PROPKA warnings", warned))
+                    if warned
+                    else None,
+                )
+            )
+        return rows
+
+    def measure(self, value: object, unit: str) -> str:
+        return f"{self.text(value, '')}°" if unit == "deg" else self.text(value, unit)
+
+    def gate_text(self, gate: dict[str, Any]) -> str:
+        measured = next((v for k, v in gate.items() if k.startswith("measured")), None)
+        limit = next((v for k, v in gate.items() if k.startswith(("limit", "budget"))), None)
+        unit = "deg" if any(key.endswith("_deg") for key in gate) else "nm"
+        return f"{self.measure(measured, unit)} of {self.measure(limit, unit)} allowed"
+
+    def show_readout(self) -> None:
+        self.readout_box.clear()
+        rows = self.readout()
+        with self.readout_box:
+            if not rows:
+                return
+            heading("Built", 2)
+            with ui.element("dl").classes("readout-list"):
+                for name, value, opens in rows:
+                    TextElement(tag="dt", text=name)
+                    with ui.element("dd"):
+                        if opens is None:
+                            ui.label(value)
+                        else:
+                            ui.button(value, on_click=opens).props(
+                                f'flat dense no-caps aria-label="{name}: {value}"'
+                            )
+
     # -- the build and its state ----------------------------------------------
+
+    def warnings(self) -> list[tuple[str, str]]:
+        """Return the built stages' warnings the tool shows: a key and the text."""
+        if self.model is None or self.tool.id not in {"prepare", "ensemble"}:
+            return []
+        held = self.model.artefacts()
+        if "structure" not in held:
+            return []
+        listed = held["structure"].summary.get("warnings")
+        if not isinstance(listed, list):
+            return []
+        return [(str(text), str(text)) for text in listed if str(text) not in self.dismissed]
 
     def refresh(self) -> None:
         model = self.model
-        self.detail.text = ""
-        if model is None:
-            self.status.text = self.subject()
-            self.build_button.disable()
-            return
-        problem = model.problem()
-        if problem is not None:
-            self.status.text = "The model's file forms no case."
-            self.detail.text = problem
-            self.build_button.disable()
-            return
-        if not model.has_structure():
-            self.status.text = (
-                "This model reads its atoms and charges from a PQR file, so it has no "
-                "structure to prepare, align or protonate."
-            )
-            self.build_button.disable()
-            return
-        states = model.states()
-        self.status.text = " · ".join(
-            f"{STAGE_TITLES[stage]}: {STATE_WORDS[states[stage]]}" for stage in STAGES
+        states = model.states() if model is not None and self.usable() else {}
+        problem = None if model is None else model.problem()
+        refusal = None if model is None else model.refusal()
+        running = None if model is None else model.running_stage()
+        signature = json.dumps(
+            [states, problem, refusal, running, len(self.staged), sorted(self.dismissed)]
         )
-        refusal = model.refusal()
-        if refusal is not None:
-            self.detail.text = f"{STAGE_TITLES.get(refusal[0], refusal[0])} refused: {refusal[1]}"
-        self.build_button.enable()
-        self.build_button.text = "Cancel build" if model.building else self.build_title
+        if signature == self.shown_state:
+            return
+        self.shown_state = signature
+        self.show_status(states, running)
+        self.show_actions(running is not None, problem is None and bool(states))
+        self.show_cards(problem, refusal)
+        for tool_id, (link, glyph) in self.tool_links.items():
+            stage = BUILDS[tool_id][0]
+            state = states.get(stage) if stage else None
+            title = next(tool.title for tool in SUITES[0].tools if tool.id == tool_id)
+            glyph.text = STATES[state][0] if state else ""
+            glyph.classes(replace=f"tool-glyph {STATES[state][2] if state else ''}")
+            link.props(f'aria-label="{title}{", " + STATES[state][1] if state else ""}"')
         self.show_readout()
         self.built.queue_moved()
+        self.built.problems_moved()
+
+    def show_status(self, states: dict[str, Any], running: str | None) -> None:
+        self.status.clear()
+        with self.status:
+            if self.model is None:
+                ui.label(self.subject())
+                return
+            if self.model.problem() is not None:
+                ui.label("Nothing can be built until the model's file forms a case.")
+                return
+            if not self.model.has_structure():
+                ui.label(
+                    "This model reads its atoms and charges from a PQR file, so it has no "
+                    "structure to prepare, align or protonate."
+                )
+                return
+            with ui.element("ol").classes("stage-bar"):
+                for stage in STAGES:
+                    glyph, word, look = STATES[states.get(stage, "empty")]
+                    with ui.element("li").classes(f"stage-block {look}"):
+                        ui.label(glyph).props("aria-hidden=true")
+                        ui.label(STAGE_TITLES[stage]).classes("stage-name")
+                        ui.label(word).classes("stage-word")
+            if running is not None:
+                ui.linear_progress(show_value=False).props(
+                    f'indeterminate size=3px aria-label="{STAGE_RUNNING.get(running, running)}"'
+                ).classes("stage-progress")
+
+    def show_actions(self, building: bool, ready: bool) -> None:
+        self.actions.clear()
+        model = self.model
+        running = None if model is None else model.running_stage()
+        with self.actions:
+            if self.tool.id == "prepare":
+                ui.button("Save prepared structure", on_click=self.save_prepared).props(
+                    "outline dense no-caps data-control=prepare-save"
+                ).set_enabled(ready and not building)
+            if self.tool.id == "edit" and not self.in_place():
+                ui.button("Save as variant…", on_click=self.save_variant).props(
+                    "outline dense no-caps data-control=variant-open"
+                ).set_enabled(ready and bool(self.staged))
+            if self.stage is None:
+                return
+            text = STAGE_RUNNING.get(running or "", self.build_title) if building else None
+            ui.button(text or self.build_title, on_click=self.on_build).props(
+                "unelevated dense no-caps color=primary data-control=tool-build"
+            ).set_enabled(ready and not building)
+            if building:
+                ui.button("Cancel", on_click=self.on_cancel).props(
+                    "flat dense no-caps size=sm data-control=tool-cancel"
+                ).classes("tool-cancel")
+
+    def show_cards(self, problem: str | None, refusal: tuple[str, str] | None) -> None:
+        self.cards.clear()
+        for path, control in self.controls.items():
+            if isinstance(control, ValidationElement) and path == self.flagged:
+                control.error = None
+        self.flagged = None
+        with self.cards:
+            if problem is not None:
+                self.card("err", "The model's file forms no case", problem, refused_path(problem))
+            if refusal is not None:
+                title = f"{STAGE_TITLES.get(refusal[0], refusal[0])} refused"
+                self.card("err", title, refusal[1], refused_path(refusal[1]))
+            for key, text in self.warnings():
+                self.card("warn", "Warning", text, None, dismiss=key)
+            if self.tool.id == "view" and self.model is not None and self.usable():
+                missing = [
+                    STAGE_TITLES[stage]
+                    for stage, state in self.model.states().items()
+                    if state != "built"
+                ]
+                if missing:
+                    ui.label(
+                        f"Not built: {', '.join(missing)}. Build it in its tool; the view shows "
+                        "what is built, else the structure file."
+                    ).classes("later")
+
+    def card(
+        self, kind: str, title: str, text: str, path: str | None, *, dismiss: str | None = None
+    ) -> None:
+        glyph = "✕" if kind == "err" else "●"
+        short = text
+        if len(text) > CARD_SHORT:
+            head = text[:CARD_SHORT]
+            cut = max(head.rfind(". "), head.rfind("; "), head.rfind(", "), head.rfind(" "))
+            short = head[:cut].rstrip(",;.")
+        whole = short == text
+        with (
+            ui.element("div")
+            .classes(f"note-card note-{kind}")
+            .props(f"role={'alert' if kind == 'err' else 'status'} data-control=tool-{kind}")
+        ):
+            with ui.row().classes("items-center no-wrap note-head"):
+                ui.label(glyph).props("aria-hidden=true")
+                ui.label(title).classes("note-title")
+            ui.label(text if whole else f"{short}…").classes("note-short")
+            if not whole:
+                with ui.expansion("Details").props("dense dense-toggle").classes("note-more"):
+                    ui.label(text)
+            with ui.row().classes("items-center"):
+                if path in self.controls:
+                    self.flag(path, text)
+                    ui.button(
+                        f"Go to {FIELDS[path].label}", on_click=lambda _, p=path: self.go_to(p)
+                    ).props("outline dense no-caps data-control=note-field")
+                elif path is not None and path in FIELDS:
+                    tool = next(t for t in SUITES[0].tools if path in t.fields)
+                    ui.button(
+                        f"Go to {FIELDS[path].label}, in {tool.title}",
+                        on_click=lambda _, t=tool, p=path: ui.navigate.to(
+                            f"/molecular/{t.id}?field={p}"
+                        ),
+                    ).props("outline dense no-caps data-control=note-field")
+                if dismiss is not None:
+                    ui.button("Dismiss", on_click=lambda _, k=dismiss: self.dismiss(k)).props(
+                        "flat dense no-caps"
+                    )
+
+    def flag(self, path: str, text: str) -> None:
+        control = self.controls[path]
+        if isinstance(control, ValidationElement):
+            control.error = "Named by the refusal above."
+            self.flagged = path
+
+    async def go_to(self, path: str) -> None:
+        name = field_control(path)
+        await ui.run_javascript(
+            f"(() => {{ const e = document.querySelector('[data-control={name}]');"
+            "const i = e?.matches('input') ? e : e?.querySelector('input');"
+            "(i || e)?.focus(); (i || e)?.scrollIntoView({block: 'center'}); })()",
+            timeout=10,
+        )
+
+    def dismiss(self, key: str) -> None:
+        self.dismissed.add(key)
+        self.refresh()
 
     def on_build(self) -> None:
         model = self.model
-        if model is None:
+        if model is None or self.stage is None or model.building:
             return
-        if model.building:
-            model.cancel()
-        else:
-            try:
-                model.build(self.stage)
-            except ValueError as error:
-                ui.notify(str(error), type="negative")
+        try:
+            model.build(self.stage)
+        except ValueError as error:
+            ui.notify(str(error), type="negative", multi_line=True)
         self.was_building = model.building
+        self.refresh()
+
+    def on_cancel(self) -> None:
+        if self.model is not None:
+            self.model.cancel()
         self.refresh()
 
     async def tick(self) -> None:
@@ -529,37 +1306,35 @@ class _Pane:
             return None, ""
         held = model.artefacts()
         form = "table" if "protonation" in held else "ensemble" if "structure" in held else "file"
+        side = int(self.tool.id == "prepare")
         url = (
             f"/api/molecular/{model.name}/scene?representation={self.look['representation']}"
-            f"&colour={self.look['colour']}"
+            f"&colour={self.look['colour']}&frame={self.look['frame']}"
+            f"&overlay={int(self.look['overlay'])}&side={side}&clip={int(self.look['clip'])}"
         )
-        return url, f"{model.name}:{form}"
+        return url, f"{model.name}:{form}:{side}:{int(self.look['clip'])}"
 
     async def show(self) -> None:
         url, key = self.scene_url()
         await self.built.show_molecule(url, key)
 
-    async def restyle(self, what: str, value: str) -> None:
+    async def restyle(self, what: str, value: object) -> None:
         self.look[what] = value
+        if what == "frame" and hasattr(self, "frame_label") and self.model is not None:
+            self.frame_label.text = f"Frame {int(str(value)) + 1} of {frame_count(self.model)}"
+        if hasattr(self, "bar_box"):
+            self.bar_box.set_visibility(self.look["colour"] == "charge")
         await self.show()
 
     async def start(self) -> None:
         await self.built.settled()
         await self.show()
         if self.focus in self.controls:
-            name = field_control(self.focus)
-            await ui.run_javascript(
-                f"document.querySelector('[data-control={name}]')?.querySelector('input')?.focus()",
-                timeout=10,
-            )
+            await self.go_to(self.focus)
 
 
 def _mapping(value: object) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
-
-
-def _number(value: object) -> str:
-    return f"{value:.3g}" if isinstance(value, int | float) else "?"
 
 
 def _joined(value: object, unit: str = "") -> str:
@@ -568,17 +1343,36 @@ def _joined(value: object, unit: str = "") -> str:
     return ", ".join(f"{item}{unit}" for item in value)
 
 
-def _gate_text(gate: dict[str, Any]) -> str:
-    measured = next((v for k, v in gate.items() if k.startswith("measured")), None)
-    limit = next((v for k, v in gate.items() if k.startswith(("limit", "budget"))), None)
-    unit = "°" if any(key.endswith("_deg") for key in gate) else " nm"
-    return f"{_number(measured)}{unit} of {_number(limit)}{unit} allowed"
+def _unapplied(listed: list[object]) -> list[str]:
+    lines = []
+    for entry in listed:
+        row = _mapping(entry)
+        lines.append(
+            f"{row.get('residue', '?')}, chain {row.get('chain', '?')}: applied "
+            f"{row.get('applied_e', '?')} e, PROPKA's state expects {row.get('expected_e', '?')} e"
+            f" ({row.get('frames', '?')} frame{'' if row.get('frames') == 1 else 's'})"
+        )
+    return lines
+
+
+def _warnings(value: object) -> list[str]:
+    if isinstance(value, dict):
+        lines: list[str] = []
+        for source, said in value.items():
+            entries = said if isinstance(said, list) else [said]
+            lines.extend(f"{source}: {entry}" for entry in entries)
+        return lines
+    return [str(entry) for entry in value] if isinstance(value, list) else []
 
 
 def _edit_text(entry: object) -> str:
     if not isinstance(entry, dict):
         return str(entry)
-    rest = ", ".join(f"{key} {value}" for key, value in entry.items() if key != "residue")
+    rest = ", ".join(
+        f"{EDIT_KINDS.get(str(key), str(key)).lower()} {value}"
+        for key, value in entry.items()
+        if key != "residue"
+    )
     return f"{entry.get('residue', '?')}: {rest}"
 
 

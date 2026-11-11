@@ -22,9 +22,11 @@ from nanopnp.core.paths import recent_projects, remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.glossary import GLOSSARY
+from nanopnp.gui.web.molecular import refusals
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES, tool_for
+from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench, cap_store
 from nanopnp.io.case_paths import SEQUENCE_INDEX
@@ -71,7 +73,8 @@ DIALOGS = ("glossary", "about")
 """The dialogs ``?dialog=`` opens, by command."""
 BAR_PX = 88
 """The activity bar's width; the drawer is the bar and the rail."""
-FOLDED_RAIL_PX = 32
+FOLDED_BAR_PX = 48
+"""The drawer's width folded: the suites' icons alone."""
 RAIL_PX = RAIL_PX_LIMITS
 BOTTOM_PX = BOTTOM_PX_LIMITS
 
@@ -166,6 +169,9 @@ class Views(Protocol):
     def queue_moved(self) -> None:
         """Show the queue's one line again, after a build started or ended."""
 
+    def problems_moved(self) -> None:
+        """Count and list the problems again, after a build was refused or its refusal answered."""
+
     async def settled(self) -> None:
         """Wait until what the address opened in the frame, such as the palette, has opened."""
 
@@ -184,6 +190,7 @@ class _Frame:
         self.routes = routes
         self.suite = self.route(path).suite or current_suite(shell)
         self.in_suite = self.route(path).suite is not None
+        self.path = path
         self.layout = self.suite_layout(self.suite)
         if panel:
             self.layout = self.layout.model_copy(update={"bottom_folded": False})
@@ -224,7 +231,7 @@ class _Frame:
         self.toggle_button: ui.button
         self.actions: dict[str, Callable[[], object]] = {
             "palette": lambda: self.open_palette(),
-            "settings": self.go("/settings"),
+            "settings": self.open_settings,
             "panel-toggle": self.toggle_panel,
             "changes": lambda: self.show_panel("changes"),
             "problems": lambda: self.show_panel("problems"),
@@ -257,7 +264,7 @@ class _Frame:
     def problems(self) -> tuple[Problem, ...]:
         project = self.shell.bench.project
         if self._problems is None:
-            self._problems = () if project is None else project.problems()
+            self._problems = () if project is None else (*project.problems(), *refusals(project))
         return self._problems
 
     # -- commands -----------------------------------------------------------
@@ -289,6 +296,7 @@ class _Frame:
             "if (window.frame) window.frame.capturing = false;"
         )
         route = self.route(path)
+        self.path = path
         self.in_suite = route.suite is not None
         if route.suite is not None and route.suite != self.suite:
             self.suite = route.suite
@@ -309,11 +317,47 @@ class _Frame:
             self.run(query["dialog"][0])
 
     def mark_suite(self) -> None:
+        # Each suite's state, which the folded bar shows beside its icon: a problem, else a build
+        # running; builds are the Molecular suite's until the other suites have their own.
+        troubled = {problem.suite for problem in self.problems()}
+        running = any(entry.status == "running" for entry in self.shell.queue.entries)
         for identifier, button in self.suite_buttons.items():
             if self.in_suite and identifier == self.suite:
                 button.props('aria-current="page"')
             else:
                 button.props(remove="aria-current")
+            title = next(suite.title for suite in SUITES if suite.id == identifier)
+            state = (
+                "problem"
+                if identifier in troubled
+                else "running"
+                if running and identifier == "molecular"
+                else ""
+            )
+            button.classes(remove="suite-problem suite-running")
+            if state:
+                button.classes(add=f"suite-{state}")
+            said = {"problem": ", a problem", "running": ", a build running", "": ""}[state]
+            button.props(f'title="{title}{said}" aria-label="{title}{said}"')
+
+    def open_settings(self, setting: str = "") -> None:
+        """Open the settings as a window over what is shown, at one setting where one is named."""
+        if self.path.startswith("/settings"):
+            return
+        with ui.dialog() as dialog, ui.card().classes("settings-window"):
+            ui.button(icon="sym_o_close", on_click=dialog.close).props(
+                'flat dense aria-label="Close the settings" data-control=settings-close'
+            ).classes("settings-close")
+            SettingsPage(self.shell, self, setting).build()
+        dialog.open()
+        if setting:
+            ui.timer(
+                0.3,
+                lambda: ui.run_javascript(
+                    f"document.getElementById('setting-{setting}')?.scrollIntoView()"
+                ),
+                once=True,
+            )
 
     async def show_molecule(self, scene_url: str | None, key: str = "") -> None:
         """Show the frame's Mol* host, built once, with a scene; mark the screen ready."""
@@ -325,6 +369,23 @@ class _Frame:
     def queue_moved(self) -> None:
         """Show the queue's one line again, after a build started or ended."""
         self.queue_label.text = self.shell.queue.status_line()
+        self.mark_suite()
+
+    def problems_moved(self) -> None:
+        """Count and list the problems again, after a build was refused or its refusal answered."""
+        self._problems = None
+        text = self.problems_text()
+        if text == self.problems_button.text:
+            return
+        self.problems_button.text = text
+        found = bool(self.problems())
+        self.problems_button.classes(
+            add="state-err" if found else "state-ok", remove="state-ok" if found else "state-err"
+        )
+        self.problems_box.clear()
+        with self.problems_box:
+            self.problem_rows()
+        self.mark_suite()
 
     def changes_moved(self) -> None:
         """Count and list the changed values again, after a tool wrote one."""
@@ -337,7 +398,7 @@ class _Frame:
     def run(self, identifier: str) -> None:
         if identifier.startswith(commands.SETTING_COMMAND):
             setting = identifier.removeprefix(commands.SETTING_COMMAND)
-            ui.navigate.to(f"/settings?setting={setting}")
+            self.open_settings(setting)
             return
         action = self.actions.get(identifier)
         if action is None:
@@ -453,7 +514,7 @@ class _Frame:
         return BAR_PX + self.layout.rail_px
 
     def apply_layout(self) -> None:
-        self.drawer.props(f"width={self.drawer_width()} mini-width={BAR_PX + FOLDED_RAIL_PX}")
+        self.drawer.props(f"width={self.drawer_width()} mini-width={FOLDED_BAR_PX}")
         if self.layout.rail_folded:
             self.drawer.props("mini")
         else:
@@ -612,13 +673,6 @@ class _Frame:
 
     def rail_items(self) -> None:
         project = self.shell.bench.project
-        if project is not None:
-            # Folded, the rail shows the open item's initial, else the project's, under its unfold
-            # button.
-            named = project.current or project.name
-            ui.label(named.split("/")[-1][:1].upper()).props(f'title="{named}"').classes(
-                "rail-initial q-mini-drawer-only"
-            )
         with ui.column().classes("q-mini-drawer-hide w-full gap-1"):
             if project is None:
                 self.no_project()
@@ -693,8 +747,7 @@ class _Frame:
         ui.navigate.to(f"/{suite}")
 
     def status_bar(self) -> None:
-        bench = self.shell.bench
-        problems = len(self.problems()) or (1 if bench.project is None and bench.refusal else 0)
+        problems = self.problems_count()
         with ui.row().classes("statusbar items-center no-wrap"):
             self.queue_label = ui.label(self.shell.queue.status_line()).props(
                 "role=status data-control=queue-status"
@@ -703,14 +756,21 @@ class _Frame:
             self.toggle_button = ui.button("Queue and log", on_click=self.toggle_panel).props(
                 "flat dense no-caps data-control=panel-toggle"
             )
-            ui.button(
-                f"✕ {problems} problem{'' if problems == 1 else 's'}"
-                if problems
-                else "✓ No problems",
-                on_click=lambda: self.run("problems"),
-            ).props("flat dense no-caps aria-live=polite data-control=problems-count").classes(
-                "state-err" if problems else "state-ok"
+            self.problems_button = (
+                ui.button(self.problems_text(), on_click=lambda: self.run("problems"))
+                .props("flat dense no-caps aria-live=polite data-control=problems-count")
+                .classes("state-err" if problems else "state-ok")
             )
+
+    def problems_count(self) -> int:
+        bench = self.shell.bench
+        return len(self.problems()) or (1 if bench.project is None and bench.refusal else 0)
+
+    def problems_text(self) -> str:
+        problems = self.problems_count()
+        if not problems:
+            return "✓ No problems"
+        return f"✕ {problems} problem{'' if problems == 1 else 's'}"
 
     def bottom_panel(self) -> None:
         with ui.column().classes("bottom-panel w-full gap-0") as self.panel_root:
@@ -830,26 +890,27 @@ class _Frame:
         self.changes_moved()
 
     def problems_list(self) -> None:
+        self.problems_box = ui.column().classes("w-full").props("data-control=problems-list")
+        with self.problems_box:
+            self.problem_rows()
+
+    def problem_rows(self) -> None:
         bench = self.shell.bench
-        project = bench.project
-        with ui.column().classes("w-full").props("data-control=problems-list"):
-            found = self.problems()
-            if project is None and bench.refusal:
-                ui.label(f"✕ refused: {bench.refusal}").classes("refused")
-            elif not found:
-                ui.label("No problem.")
-            for problem in found:
-                where = f" at {problem.path}" if problem.path else ""
-                with (
-                    ui.button(
-                        on_click=lambda _, i=problem.item, s=problem.suite: self.open_item(i, s),
-                    )
-                    .props("flat dense no-caps data-control=problem-item")
-                    .classes("w-full list-row")
-                ):
-                    ui.label(f"✕ refused: {problem.item}{where}: {problem.message}").classes(
-                        "refused"
-                    )
+        found = self.problems()
+        if bench.project is None and bench.refusal:
+            ui.label(f"✕ refused: {bench.refusal}").classes("refused")
+        elif not found:
+            ui.label("No problem.")
+        for problem in found:
+            where = f" at {problem.path}" if problem.path else ""
+            with (
+                ui.button(
+                    on_click=lambda _, i=problem.item, s=problem.suite: self.open_item(i, s),
+                )
+                .props("flat dense no-caps data-control=problem-item")
+                .classes("w-full list-row")
+            ):
+                ui.label(f"✕ refused: {problem.item}{where}: {problem.message}").classes("refused")
 
     def dialogs(self) -> None:
         recent = recent_projects(int(str(self.shell.settings.value("recent_projects"))))
