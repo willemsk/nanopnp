@@ -268,7 +268,9 @@ the budget) and a build held mid-walk.
 > slab, the residue strip and the states on the pane, View's background, slab and residue list, a refusal marked at
 > its field and listed among the problems, the warnings and unapplied states opened from their counts, the state
 > glyphs and colours (WB-20), the build's stage, numbers through `numbers.shown`, the later-phase banners, and the
-> empty states' wording. `impeccable`'s critique runs with item 12's review.
+> empty states' wording. `impeccable`'s critique runs with item 12's review. The digest, 14 cards over 154 shots of
+> the render at `d5995eb`, is published at <https://claude.ai/artifact/HRDfKwmg4WRYnowGuVB51g>, round 1; the colour
+> bar's ends measured 2.55:1 on the dark theme in that render and stand on a white plate since.
 
 **Item 11.**
 - Prepare: *Open structure…* a path field over `Project.add_input`; the chains or groups; *Estimate* runs `orient_pore`
@@ -301,9 +303,9 @@ the budget) and a build held mid-walk.
   `tests/tier1/test_project.py` and `test_models.py` pass. **Executor:** main
 - [x] e46a48b 7. `gui/web/screens.py`, `pages.py`, `frame.py`, `molecular.py`, `molview.py`, `assets/bridge.js`, VER-78's text
   (D7, D8); done when VER-78 (a) to (d) and (m) pass. **Executor:** main
-- [ ] 8. The five tools drafted; `render_shell.py`; `/np-gui render shell`, `review` and `publish` (D9); done when the
+- [x] d5995eb 8. The five tools drafted; `render_shell.py`; `/np-gui render shell`, `review` and `publish` (D9); done when the
   digest is published. **Executor:** main
-- [ ] 9. Compaction checkpoint; the author's verdicts. **Executor:** main
+- [x] 9. Compaction checkpoint; the author's verdicts. **Executor:** main
 - [ ] 10. `/np-gui collect`; REV-234, REV-235's and REV-237's questions to the author; the design document's rows (D9);
   done when each is ruled or carried. **Executor:** main
 - [ ] 11. The tools finished: Prepare (Q09, Q13; AO2), Ensemble, Protonation (Q27), Charge edit (FR-38; AO3), View;

@@ -495,10 +495,17 @@ body .nicegui-footer.frame-footer {
   gap: var(--gap);
   width: 100%;
 }
-/* Moreland's cool-to-warm, as the charge map's: its ends outlined so the low end never dissolves. */
+/* Moreland's cool-to-warm, as the charge map's, on a white plate with an edge: both ends keep 3:1
+   against what is behind them on every theme. */
+.colour-bar-plate {
+  flex: 1;
+  display: flex;
+  padding: 2px;
+  background: #ffffff;
+  border: 1px solid var(--control-edge);
+}
 .colour-bar-scale {
   flex: 1;
   height: 0.75rem;
-  border: 1px solid var(--control-edge);
   background: linear-gradient(to right, #3b4cc0, #dddddd, #b40426);
 }
