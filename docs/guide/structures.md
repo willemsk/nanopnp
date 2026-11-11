@@ -129,9 +129,13 @@ structure should:
 - have its pore axis within 10° of z, with +z pointing to *cis*.
 
 `nanopnp.structure.orient_pore` does the last step outside the pipeline: it keeps the chains you
-name, estimates the pore axis, points +z at the end you name *cis* (`"wider"` or `"narrower"`), and
-places a registration centroid on the axis where you put the membrane. Stage 1 never re-orients a
-structure itself. `examples/06-pdb-to-mesh/prepare.py` calls it with ClyA's choices.
+name, takes the pore axis (the one you give with `axis=`, else the C-alpha covariance's, else the
+channel's where no covariance axis stands apart), points +z at the end you name *cis* (`"wider"` or
+`"narrower"`), and places a registration centroid on the axis where you put the membrane. It writes
+a record beside the file, `<out>.prepare.json`: the source's digest, your choices, the axis, its
+tilt from z and how it was found. `nanopnp prepare` does the same from the command line. Stage 1
+never re-orients a structure itself. `examples/06-pdb-to-mesh/prepare.py` calls it with ClyA's
+choices.
 
 ## Reading the result
 

@@ -448,6 +448,8 @@ no later owner.
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): `prepare` in WP5.16, the Molecular suite; `upto` on reproduce in WP5.19, the Study suite.
 
+**Fixed in part** at WP5.16's item 3: `nanopnp prepare` wraps `orient_pore` and writes the preparation record; `upto` on reproduce and the region export stay as placed.
+
 ### REV-42 — pnp carries inert flow keys
 
 *Area:* interface. *Severity:* low. *Found:* PR #53 (WP26).

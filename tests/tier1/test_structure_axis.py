@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import math
 import re
@@ -340,6 +341,72 @@ def test_orient_pore_puts_a_tilted_ring_on_z_with_the_named_end_cis(
     np.testing.assert_allclose(anchor, [0.0, 0.0, 5.655], atol=1e-3)
 
 
+def test_orient_pore_takes_a_typed_axis_as_given_and_refuses_a_zero_one(tmp_path: Path) -> None:
+    # A typed axis the estimate overrode, or a zero vector normalised to nan, would orient the
+    # pore about the wrong line without a word.
+    pytest.importorskip("MDAnalysis")
+    import MDAnalysis as mda  # noqa: N813 - the alias the library documents
+
+    from nanopnp.structure import orient_pore
+
+    source = tmp_path / "ring.pdb"
+    _tilted_ring_pdb(source)
+    ring_axis = _rotation(np.array([1.0, 1.0, 0.0]), math.radians(160.0)) @ [0.0, 0.0, 1.0]
+    out = orient_pore(source, cis_end="wider", axis=tuple(3.0 * ring_axis), out=tmp_path / "o.pdb")  # type: ignore[arg-type]
+
+    record = json.loads(out.with_suffix(".prepare.json").read_text())
+    assert record["method"] == "typed"
+    np.testing.assert_allclose(np.abs(record["axis"]), np.abs(ring_axis), atol=1e-12)
+    assert np.linalg.norm(record["axis"]) == pytest.approx(1.0, abs=1e-12)
+    positions = mda.Universe(str(out)).select_atoms("name CA").positions.astype(np.float64)
+    _, vectors = np.linalg.eigh(np.cov(positions.T))
+    assert math.degrees(math.acos(min(1.0, abs(vectors[2, 2])))) < 0.5
+    with pytest.raises(ValueError, match="not all zero"):
+        orient_pore(source, cis_end="wider", axis=(0.0, 0.0, 0.0), out=tmp_path / "z.pdb")
+
+
+def test_orient_pore_takes_the_channel_where_no_covariance_axis_stands_apart(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A refusal would leave such a pore unpreparable, and a covariance axis taken from an even
+    # spread would turn the pore about a line through its wall.
+    pytest.importorskip("MDAnalysis")
+    import MDAnalysis as mda  # noqa: N813 - the alias the library documents
+
+    from nanopnp.structure import orient, orient_pore
+
+    # Two clusters far outside the wall give the covariance three evenly spaced eigenvalues.
+    rng = np.random.default_rng(516)
+    wall = _wall(8, half_nm=2.5, per_chain=150)
+    groups = [wall[150 * k : 150 * (k + 1)] for k in range(8)]
+    groups += [np.array([9.0, 0.0, 0.0]) + rng.normal(0.0, 0.2, (25, 3))]
+    groups += [np.array([0.0, 9.0, 0.0]) + rng.normal(0.0, 0.2, (12, 3))]
+    tilt = _rotation(np.array([1.0, 2.0, 0.0]), math.radians(20.0))
+    lines = []
+    for chain, group in enumerate(groups):
+        for residue, (x, y, z) in enumerate(10.0 * (group @ tilt.T + [0.3, -0.2, 1.0]), start=1):
+            serial = len(lines) + 1
+            lines.append(
+                f"ATOM  {serial:5d}  CA  ALA {chr(65 + chain)}{residue:4d}    "
+                f"{x:8.3f}{y:8.3f}{z:8.3f}  1.00  0.00           C"
+            )
+    source = tmp_path / "wall.pdb"
+    source.write_text("\n".join([*lines, "END", ""]))
+    calpha = np.array([[float(line[30 + 8 * k : 38 + 8 * k]) for k in range(3)] for line in lines])
+    assert orient._distinct_axis(*orient._covariance(calpha)) is None
+
+    # The starts along the two covariance axes across the wall never settle; three iterations
+    # show it without the fifty that take a minute.
+    monkeypatch.setattr(cavity, "MAX_ITERATIONS", 3)
+    out = orient_pore(source, cis_end="wider", out=tmp_path / "oriented.pdb")
+
+    record = json.loads(out.with_suffix(".prepare.json").read_text())
+    assert record["method"] == "channel"
+    assert abs(record["tilt_deg"] - 20.0) < 0.5
+    placed = mda.Universe(str(out)).atoms.positions.astype(np.float64)[: 8 * 150] / 10.0
+    assert cavity.channel_axis(placed).tilt_deg < 0.5
+
+
 def test_prepared_pore_is_keyed_by_the_source_and_the_choices(tmp_path: Path) -> None:
     # A stale prepared file would silently feed an old orientation to every stage after it.
     pytest.importorskip("MDAnalysis")
@@ -357,7 +424,9 @@ def test_prepared_pore_is_keyed_by_the_source_and_the_choices(tmp_path: Path) ->
     _tilted_ring_pdb(source, residues=41)
     assert prepared_pore(source, directory=tmp_path / "kept", **choices) not in (first, other)  # type: ignore[arg-type]
     assert sorted(path.name for path in (tmp_path / "kept").iterdir()) == sorted(
-        path.name for path in (tmp_path / "kept").glob("ring-*.pdb")
+        name
+        for path in (tmp_path / "kept").glob("ring-*.pdb")
+        for name in (path.name, path.with_suffix(".prepare.json").name)
     )
 
 
@@ -460,19 +529,20 @@ def test_ver48_chain_groups_superpose_as_one_ring() -> None:
     assert "lists 7 groups" in refused(GROUPED.removesuffix(",O+P"))
 
 
-def _wall(n: int, bend_nm: float = 0.0) -> np.ndarray:
+def _wall(n: int, bend_nm: float = 0.0, half_nm: float = 4.4, per_chain: int = 600) -> np.ndarray:
     # A wall dense enough to line a channel: 600 atoms a chain between 2.0 and 2.8 nm of a
     # centre line, which a bend carries aside by ``bend_nm`` at either end. A tenth of them
     # close each rim: at a ragged rim a plane's widest spaces are n equal ones off the axis.
     rng = np.random.default_rng(516 + n)
-    rho = rng.uniform(2.0, 2.8, 600)
+    rho = rng.uniform(2.0, 2.8, per_chain)
     half_wedge = 0.8 * math.pi / n
-    phi = rng.uniform(-half_wedge, half_wedge, 600)
-    z = rng.uniform(-4.4, 4.4, 600)
-    z[:60], z[60:120] = -4.4, 4.4
+    phi = rng.uniform(-half_wedge, half_wedge, per_chain)
+    z = rng.uniform(-half_nm, half_nm, per_chain)
+    rim = per_chain // 10
+    z[:rim], z[rim : 2 * rim] = -half_nm, half_nm
     chains = _assembly(n, np.column_stack([rho * np.cos(phi), rho * np.sin(phi), z]))
     atoms = chains.reshape(-1, 3).copy()
-    atoms[:, 0] += bend_nm * (atoms[:, 2] / 4.4) ** 2
+    atoms[:, 0] += bend_nm * (atoms[:, 2] / half_nm) ** 2
     return np.asarray(atoms, dtype=np.float64)
 
 
