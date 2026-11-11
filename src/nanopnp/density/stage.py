@@ -41,7 +41,7 @@ from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
 from nanopnp.structure.protonated import PAYLOAD_NAME as PROTONATION_PAYLOAD
-from nanopnp.structure.protonated import ProtonationTable, radius_scales
+from nanopnp.structure.protonated import ProtonationTable
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.artefact import StageInputs
@@ -160,7 +160,7 @@ class DensityStage:
                     f"ensemble {ensemble.frames}, so stage 2 cannot pair them"
                 )
             radii = resolve_protonated_radii(KERNEL_RADII[spec.kernel], table)
-            radii_nm = radii.radii_nm * radius_scales(table)
+            radii_nm = radii.radii_nm
             positions: Frames = [
                 table.positions_nm[table.frame_slice(f)] for f in range(table.frames)
             ]

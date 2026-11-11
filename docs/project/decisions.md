@@ -4,7 +4,7 @@ Every decision the records hold, one row each, written by `.claude/scripts/decis
 
 Rows: 1,356. By source: history ruling 341; plan decision row 684; REV row 239; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 545; open 5; session, own call 803; session, put to the author 3.
+By decider: author 544; open 5; session, own call 804; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1269,7 +1269,7 @@ By decider: author 545; open 5; session, own call 803; session, put to the autho
 | REV-215 | session, own call | `docs/project/review-findings.md` |  | WP5.08 | The charge screen needs its design and its function settled together | WP5.08 verdicts | deferred |
 | REV-216 | session, own call | `docs/project/review-findings.md` |  |  | The Phase 5 plan exceeds its word target again | CODE_REVIEW_034 | fixed |
 | REV-217 | session, own call | `docs/project/review-findings.md` |  | WP5.13 | Case reading, substitution and input-path discovery are split across five modules | WP5.13 | fixed |
-| REV-218 | author | `docs/project/review-findings.md` |  |  | Effective atom radii and atom-to-residue indexing are split across four subpackages | §8.2.36 AL22 | accepted |
+| REV-218 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | Effective atom radii and atom-to-residue indexing are split across four subpackages | WP5.16 | fixed |
 | REV-219 | session, own call | `docs/project/review-findings.md` |  | WP5.13 | A model file's validated body is discarded and parsed again by the project | WP5.13 | fixed |
 | REV-220 | session, own call | `docs/project/review-findings.md` |  | WP5.14 | The upstream lookup and the forecast re-implement the walk's stage keying | WP5.14 | fixed |
 | REV-221 | session, own call | `docs/project/review-findings.md` |  | WP5.14 | Planning a sweep from a case drops the members it resolved | WP5.14 | fixed |

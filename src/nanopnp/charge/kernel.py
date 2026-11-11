@@ -17,7 +17,7 @@ from nanopnp.density.grid import RadialGrid, trapezium_factor
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
-    from nanopnp.charge.protonation import ProtonationTable
+    from nanopnp.structure.protonated import ProtonationTable
 
 __all__ = [
     "KERNEL_ID",

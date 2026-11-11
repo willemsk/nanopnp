@@ -23,7 +23,6 @@ __all__ = [
     "ProtonationTableError",
     "RadiusEdit",
     "parent_residue",
-    "radius_scales",
     "residue_radius_scales",
 ]
 
@@ -66,21 +65,6 @@ class ProtonationTableError(ValueError):
 
 RadiusEdit = tuple[str, int, str, float]
 """A radius edit as (parent name, residue number, insertion code, factor)."""
-
-
-def radius_scales(table: ProtonationTable) -> np.ndarray:
-    """Return the factor of each atom's radius that the table's radius edits set, 1 elsewhere."""
-    edits = table.header.get("edits")
-    radius_edits: list[RadiusEdit] = []
-    for edit in edits if isinstance(edits, list) else ():
-        if not (isinstance(edit, dict) and edit.get("kind") == "radius"):
-            continue
-        parent, number = str(edit["residue"]).split(" ")
-        icode = number[-1] if number[-1].isalpha() else ""
-        radius_edits.append(
-            (parent, int(number[: len(number) - len(icode)]), icode, float(str(edit["value"])))
-        )
-    return residue_radius_scales(table.resname, table.resid, table.icode, radius_edits)
 
 
 def residue_radius_scales(
@@ -184,6 +168,49 @@ class ProtonationTable:
                 math.fsum(self.charge_e[self.frame_slice(frame)].tolist())
                 for frame in range(self.frames)
             ]
+        )
+
+    def radius_edits(self) -> list[RadiusEdit]:
+        """Return the radius edits the header records, as ``RadiusEdit`` tuples in header order."""
+        edits = self.header.get("edits")
+        radius_edits: list[RadiusEdit] = []
+        for edit in edits if isinstance(edits, list) else ():
+            if not (isinstance(edit, dict) and edit.get("kind") == "radius"):
+                continue
+            parent, number = str(edit["residue"]).split(" ")
+            icode = number[-1] if number[-1].isalpha() else ""
+            radius_edits.append(
+                (parent, int(number[: len(number) - len(icode)]), icode, float(str(edit["value"])))
+            )
+        return radius_edits
+
+    def radius_scales(self) -> np.ndarray:
+        """Return each atom's radius factor under the table's radius edits, 1 elsewhere."""
+        return residue_radius_scales(self.resname, self.resid, self.icode, self.radius_edits())
+
+    def atom_residue_index(self) -> np.ndarray:
+        """Return each atom's index into ``residue_*``, -1 for an atom with no residue row."""
+        import numpy as np
+
+        index = {
+            (str(chain), int(resid), str(icode)): number
+            for number, (chain, resid, icode) in enumerate(
+                zip(
+                    self.residue_chain.tolist(),
+                    self.residue_resid.tolist(),
+                    self.residue_icode.tolist(),
+                    strict=True,
+                )
+            )
+        }
+        return np.array(
+            [
+                index.get((str(chain), int(resid), str(icode)), -1)
+                for chain, resid, icode in zip(
+                    self.chain.tolist(), self.resid.tolist(), self.icode.tolist(), strict=True
+                )
+            ],
+            dtype=np.intp,
         )
 
     def digest(self) -> str:

@@ -259,7 +259,7 @@ the budget) and a build held mid-walk.
   **Executor:** main
 - [x] 3ffaac5 2. `structure/cavity.py`, `structure/stage.py`, §5.2's NOTE on stage 1, §5.3.1's NOTE on `structure:`, VER-48, a
   knowledge concept (D1, D2); done when the same files pass. **Executor:** main
-- [ ] 3. `structure/orient.py`, `cli/building.py` (D3); done when `test_structure_axis.py` and `test_cli.py` pass.
+- [x] 142183d 3. `structure/orient.py`, `cli/building.py` (D3); done when `test_structure_axis.py` and `test_cli.py` pass.
   **Executor:** general-purpose on Sonnet
 - [ ] 4. `structure/protonated.py`, `charge/edits.py`, `charge/kernel.py`, `density/radii.py`, `density/stage.py`,
   `geometry/contour.py` (D4); done when `test_protonation.py` and `test_density.py` pass, VER-62 unmoved.

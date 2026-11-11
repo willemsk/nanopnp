@@ -2806,6 +2806,8 @@ Reading a case is split between `io/case.py:read_case`, which refuses `models:` 
 
 **Placed** (§8.2.36 AL22, 8 November 2026): WP5.16, the Molecular suite's library step, with CODE_REVIEW_036's candidate 4.
 
+**Fixed** at WP5.16's item 4: CODE_REVIEW_036's candidate 4 as corrected (C4.1, C4.2).
+
 ### REV-219: A model file's validated body is discarded and parsed again by the project
 
 `io/models.py:_read_model_file` validates and rebases a model file's body and then drops it from `ModelFile`. `api/project.py` reads the YAML again (`_body`), strips `schema` and `name` by hand for `mapping_changes`, and repeats `io/models.py:_put` and the layer split (`Project._split`). Found by CODE_REVIEW_036, candidate 5; its sketches are re-read against the code as WP5.09 leaves it (C5.1).
