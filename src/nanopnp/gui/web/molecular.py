@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import tempfile
 from dataclasses import dataclass, field
@@ -9,7 +10,7 @@ from pathlib import Path
 from typing import Literal
 
 from nanopnp.api.case import Case
-from nanopnp.api.project import BUILD_UPTO, Project
+from nanopnp.api.project import BUILD_UPTO, Problem, Project
 from nanopnp.core.stages import describe
 from nanopnp.gui.solver import Cancelled, Failed, Finished, RunRequest, SolverProcess, Stage
 from nanopnp.gui.web.queue import Entry, Queue
@@ -45,6 +46,22 @@ class _Held:
 
 
 _MODELS: dict[tuple[Path, str], _Held] = {}
+_CASE_PATH = re.compile(r"\b(?:structure|charge)(?:\.[a-z_]+)+")
+
+
+def refused_path(message: str) -> str | None:
+    """Return the case path a refusal names, or None where it names none."""
+    found = _CASE_PATH.search(message)
+    return None if found is None else found.group(0)
+
+
+def refusals(project: Project) -> tuple[Problem, ...]:
+    """Return the last build's refusal of each molecular model of a project, as its problems."""
+    return tuple(
+        Problem(f"molecular/{name}", refused_path(held.refusal[1]), held.refusal[1], "molecular")
+        for (root, name), held in _MODELS.items()
+        if root == project.root and held.refusal is not None
+    )
 
 
 def cancel_builds() -> None:
@@ -146,6 +163,16 @@ class MolecularModel:
         """Whether a build of the model is running."""
         self.poll()
         return self._held.build is not None
+
+    def running_stage(self) -> str | None:
+        """Return the stage a running build is at, or None where none runs."""
+        self.poll()
+        build = self._held.build
+        return None if build is None else build.stage
+
+    def dismiss(self) -> None:
+        """Forget the last build's refusal, as a value's change does."""
+        self._held.refusal = None
 
     def refusal(self) -> tuple[str, str] | None:
         """Return the stage the last build was refused at and its message, or None."""

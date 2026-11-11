@@ -19,6 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 __all__ = [
     "COLOURINGS",
     "REPRESENTATIONS",
+    "ChargeColours",
     "Colouring",
     "Representation",
     "annotation",
@@ -35,6 +36,7 @@ REPRESENTATIONS: dict[Representation, str] = {
 }
 """The representations the view offers, by MolViewSpec name, with the title each shows."""
 
+ChargeColours = Literal["blue", "red"]
 Colouring = Literal["chain", "charge", "changed"]
 COLOURINGS: dict[Colouring, str] = {
     "chain": "Chain",
@@ -64,6 +66,10 @@ CHANGED = "#f2c744"
 AXIS_COLOUR = "#f2c744"
 AXIS_RADIUS_A = 0.6
 AXIS_MARGIN_A = 15.0
+PLANE_RADIUS_A = 90.0
+PLANE_OPACITY = 0.35
+# The side view's distance from the axis, in pore lengths.
+SIDE_DISTANCE = 2.5
 
 
 def _pdb(
@@ -101,31 +107,95 @@ def _ensemble(model: MolecularModel) -> AlignedEnsemble | None:
     return None if stored is None else AlignedEnsemble.read(Path(stored.payload[ENSEMBLE_PAYLOAD]))
 
 
-def structure_text(model: MolecularModel) -> tuple[str, str]:
+def frame_count(model: MolecularModel) -> int:
+    """Return how many frames the view can draw of a model: the built ones, else one."""
+    table = _table(model)
+    if table is not None:
+        return len(table.frame_offsets) - 1
+    ensemble = _ensemble(model)
+    return 1 if ensemble is None else len(ensemble.positions_nm)
+
+
+def residues(model: MolecularModel) -> list[tuple[str, str]]:
+    """Return each residue the view draws, as its pick key and the name a list shows."""
+    table = _table(model)
+    held = table if table is not None else _ensemble(model)
+    if held is None:
+        return []
+    stop = int(table.frame_offsets[1]) if table is not None else len(held.chain)
+    found = dict.fromkeys(
+        zip(
+            (str(c) for c in held.chain[:stop].tolist()),
+            (int(r) for r in held.resid[:stop].tolist()),
+            (str(i).strip() for i in held.icode[:stop].tolist()),
+            (str(n).strip() for n in held.resname[:stop].tolist()),
+            strict=True,
+        )
+    )
+    return [
+        (f"{_chain_id(chain)}:{resid}{icode}", f"{resname} {resid}{icode}, chain {chain}")
+        for chain, resid, icode, resname in found
+    ]
+
+
+def titration_states(model: MolecularModel) -> list[dict[str, object]]:
+    """Return each titratable group of a built model's first frame, as a table's rows.
+
+    A row holds the group's label, its kind, its pKa, the charge the force field applied to its
+    residue, the charge PROPKA's state expects, and whether that state was left unapplied.
+    """
+    table = _table(model)
+    if table is None:
+        return []
+    rows: list[dict[str, object]] = []
+    for index, residue in enumerate(table.group_residue.tolist()):
+        expected = float(table.expected_charge_e[0][residue])
+        rows.append(
+            {
+                "id": index,
+                "group": " ".join(str(table.group_label[index]).split()),
+                "kind": str(table.group_type[index]),
+                "pka": round(float(table.group_pka[0][index]), 2),
+                "applied_e": round(float(table.residue_charge_e[0][residue]), 3),
+                "expected_e": None if expected != expected else round(expected, 3),
+                "unapplied": bool(table.unapplied[0][residue]),
+                "key": (
+                    f"{_chain_id(str(table.residue_chain[residue]))}:"
+                    f"{int(table.residue_resid[residue])}"
+                    f"{str(table.residue_icode[residue]).strip()}"
+                ),
+            }
+        )
+    return rows
+
+
+def structure_text(model: MolecularModel, frame: int = 0) -> tuple[str, str]:
     """Return what the view draws of a model and its format: ``pdb`` or ``mmcif``.
 
-    The protonated first frame where the model is built, else stage 1's aligned first frame,
-    else the source file as it lies, else nothing.
+    One protonated frame where the model is built, else one of stage 1's aligned frames, else
+    the source file as it lies, else nothing. A frame past the last gives the last.
     """
     table = _table(model)
     if table is not None:
-        stop = int(table.frame_offsets[1])
+        frame = max(0, min(frame, len(table.frame_offsets) - 2))
+        start, stop = int(table.frame_offsets[frame]), int(table.frame_offsets[frame + 1])
         return (
             _pdb(
-                table.positions_nm[:stop],
-                table.name[:stop].tolist(),
-                table.resname[:stop].tolist(),
-                table.chain[:stop].tolist(),
-                table.resid[:stop].tolist(),
-                table.icode[:stop].tolist(),
+                table.positions_nm[start:stop],
+                table.name[start:stop].tolist(),
+                table.resname[start:stop].tolist(),
+                table.chain[start:stop].tolist(),
+                table.resid[start:stop].tolist(),
+                table.icode[start:stop].tolist(),
             ),
             "pdb",
         )
     ensemble = _ensemble(model)
     if ensemble is not None:
+        frame = max(0, min(frame, len(ensemble.positions_nm) - 1))
         return (
             _pdb(
-                ensemble.positions_nm[0],
+                ensemble.positions_nm[frame],
                 ensemble.name.tolist(),
                 ensemble.resname.tolist(),
                 ensemble.chain.tolist(),
@@ -160,12 +230,19 @@ def _row(chain: str, resid: int, icode: str, colour: str) -> dict[str, object]:
     return row
 
 
-def annotation(model: MolecularModel, by: Colouring) -> list[dict[str, object]]:
+def annotation(
+    model: MolecularModel, by: Colouring, *, positive: ChargeColours = "blue"
+) -> list[dict[str, object]]:
     """Return one colour per residue, as the rows of a MolViewSpec annotation.
 
     ``charge`` is the residue's net charge on a diverging scale about zero, saturating at one
     elementary charge; ``chain`` a hue per chain; ``changed`` marks the residues the model's
     edits name. A colouring that needs a stage not built gives no rows.
+
+    Parameters
+    ----------
+    positive
+        The colour of a positive residue; a negative one takes the scale's other end.
     """
     table = _table(model)
     if by == "charge":
@@ -190,6 +267,8 @@ def annotation(model: MolecularModel, by: Colouring) -> list[dict[str, object]]:
             )
         )
         colours = lookup_table("diverging")
+        if positive == "blue":
+            colours = colours[::-1]
         middle = (len(colours) - 1) // 2
         rows = []
         for (chain, resid, icode), total in totals.items():
@@ -241,17 +320,26 @@ def scene(
     annotation_url: str | None,
     representation: Representation = "cartoon",
     form: str = "pdb",
-    axis: bool = True,
+    clip: bool = False,
+    frames: Sequence[int] = (0,),
+    side_on: bool = False,
 ) -> dict[str, object]:
     """Return the MolViewSpec document of one view: the structure, its look and the pore's axis.
+
+    The axis is a tube along z, drawn once stage 1 has aligned the model's structure to it.
 
     Parameters
     ----------
     structure_url, annotation_url
         Where the page reads the structure and the per-residue colours, on the server's own
         origin; without an annotation the viewer's own colours stand.
-    axis
-        Draw the pore's axis as a tube along z, once stage 1 has aligned the structure to it.
+    clip
+        Cut the half in front of the plane y = 0 away, so the lumen shows from the side.
+    frames
+        The frames drawn, each over the others.
+    side_on
+        Open the view from the side, z up, as a pore is drawn in its membrane, with the plane
+        z = 0, where a prepared structure's registration residues are placed.
     """
     colours: list[dict[str, object]] = []
     if annotation_url is not None:
@@ -262,10 +350,18 @@ def scene(
                 "params": {"uri": annotation_url, "format": "json", "schema": "auth_residue"},
             }
         )
+    if clip:
+        colours.append(
+            {
+                "kind": "clip",
+                "params": {"type": "plane", "point": [0.0, 0.0, 0.0], "normal": [0.0, 1.0, 0.0]},
+            }
+        )
+    joiner = "&" if "?" in structure_url else "?"
     children: list[dict[str, object]] = [
         {
             "kind": "download",
-            "params": {"url": structure_url},
+            "params": {"url": f"{structure_url}{joiner}frame={frame}"},
             "children": [
                 {
                     "kind": "parse",
@@ -292,8 +388,9 @@ def scene(
                 }
             ],
         }
+        for frame in frames
     ]
-    extent = _extent_a(model) if axis and model is not None else None
+    extent = _extent_a(model) if model is not None else None
     if extent is not None:
         low, high = extent
         children.append(
@@ -312,6 +409,39 @@ def scene(
                         },
                     }
                 ],
+            }
+        )
+    if side_on and not clip and extent is not None:
+        children.append(
+            {
+                "kind": "primitives",
+                "params": {"tooltip": "The plane z = 0", "opacity": PLANE_OPACITY},
+                "children": [
+                    {
+                        "kind": "primitive",
+                        "params": {
+                            "kind": "ellipse",
+                            "center": [0.0, 0.0, 0.0],
+                            "major_axis": [1.0, 0.0, 0.0],
+                            "minor_axis": [0.0, 1.0, 0.0],
+                            "radius_major": PLANE_RADIUS_A,
+                            "radius_minor": PLANE_RADIUS_A,
+                            "color": AXIS_COLOUR,
+                        },
+                    }
+                ],
+            }
+        )
+    if side_on and extent is not None:
+        middle = (extent[0] + extent[1]) / 2.0
+        children.append(
+            {
+                "kind": "camera",
+                "params": {
+                    "target": [0.0, 0.0, middle],
+                    "position": [0.0, -SIDE_DISTANCE * (extent[1] - extent[0]), middle],
+                    "up": [0.0, 0.0, 1.0],
+                },
             }
         )
     return {

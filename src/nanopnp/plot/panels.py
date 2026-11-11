@@ -54,7 +54,7 @@ def _shown(key: str, values: np.ndarray, bulk_mol_m3: float | None) -> _Shown:
 
     if key in ("potential", "phi_V"):
         return _Shown(
-            values * DISPLAY["potential"].per_SI, axis_label("φ", "potential"), "RdBu_r", True
+            values * DISPLAY["potential"].per_SI, axis_label("φ", "potential"), "RdBu", True
         )
     if key in ("u_r", "u_z"):
         return _Shown(
@@ -471,7 +471,7 @@ def plot_charge(grids: Mapping[str, data.StoredGrid], *, ax: Axes | None = None)
 
     charge = grids["charge"]
     ax = _axes(ax, (4.6, 5.6))
-    shown = _Shown(np.asarray(charge.values, dtype=np.float64), "", "RdBu_r", True)
+    shown = _Shown(np.asarray(charge.values, dtype=np.float64), "", "RdBu", True)
     image = ax.pcolormesh(
         charge.r_m * _NM,
         charge.z_m * _NM,

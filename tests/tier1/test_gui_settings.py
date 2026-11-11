@@ -19,6 +19,7 @@ CHANGED: dict[str, Any] = {
     "density": "compact",
     "spacing": "tight",
     "viewer_background": "white",
+    "charge_colours": "red-positive",
     "reduced_motion": "on",
     "keys": {"palette": "Ctrl+Shift+K"},
     "confirm": False,

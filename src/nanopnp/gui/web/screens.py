@@ -175,11 +175,20 @@ FRAME_CONTROLS: tuple[str, ...] = (
 TOOL_CONTROLS: tuple[str, ...] = (
     "molecule",
     "tool-pane",
-    "tool-modified",
-    "tool-build",
     "tool-status",
+    *(f"tool-link-{tool.id}" for tool in SUITES[0].tools),
 )
-"""The controls of a tool's page, beside the frame's and one per value the tool sets."""
+"""The controls of every tool's page, beside the frame's and one per value the tool sets."""
+
+
+def tool_controls(tool: Tool) -> tuple[str, ...]:
+    """Return the controls a tool's page carries in every state.
+
+    A tool that sets values filters to the modified ones, and one that builds a stage has its
+    build; View does neither.
+    """
+    own = ("tool-modified",) if tool.fields else ()
+    return (*TOOL_CONTROLS, *own, *(field_control(path) for path in tool.fields))
 
 
 def field_control(path: str) -> str:
@@ -204,7 +213,7 @@ SCREENS: tuple[Screen, ...] = (
         Screen(
             f"m-{tool.id}",
             f"/molecular/{tool.id}",
-            (*FRAME_CONTROLS, *TOOL_CONTROLS, *(field_control(path) for path in tool.fields)),
+            (*FRAME_CONTROLS, *tool_controls(tool)),
         )
         for tool in SUITES[0].tools
     ),

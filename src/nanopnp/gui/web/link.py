@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import struct
 import zlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from nanopnp.charge.kernel import source_atoms, volume_density
 from nanopnp.charge.protonation import PAYLOAD_NAME, ProtonationTable
 from nanopnp.charge.stage import CHARGE_PAYLOAD, frame_shift_nm, stored_lattice
 from nanopnp.gui.charge import charge_image
+from nanopnp.gui.geometry import Palette
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -137,7 +138,8 @@ class Link:
         shown = charge_image(lattice)
         r_low, r_high, z_low, z_high = shown.image.extent_nm
         self.extent = Extent(r_low, r_high, z_low, z_high, shown.image.width, shown.image.height)
-        self.map_png = png(shown.image.rgba(), shown.image.width, shown.image.height)
+        self._image = shown.image
+        self._maps: dict[str, bytes] = {}
         self.structure_pdb = _pdb(table)
         self._r, self._z = atoms.r_nm, atoms.z_nm
         self._width, self._weight = atoms.width_nm, atoms.weight_e
@@ -157,6 +159,14 @@ class Link:
         self._rows: dict[str, np.ndarray] = {
             key: np.array(found, dtype=np.intp) for key, found in grouped.items()
         }
+
+    def map_png(self, positive: Literal["blue", "red"] = "blue") -> bytes:
+        """Return the charge map as a PNG, a positive charge in the named colour."""
+        if positive not in self._maps:
+            palette: Palette = "diverging_r" if positive == "blue" else "diverging"
+            image = replace(self._image, palette=palette)
+            self._maps[positive] = png(image.rgba(), image.width, image.height)
+        return self._maps[positive]
 
     def __contains__(self, key: object) -> bool:
         """Say whether a residue key names a residue that carries charge."""

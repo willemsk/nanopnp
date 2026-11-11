@@ -159,6 +159,23 @@ register(
 )
 register(
     Setting(
+        "charge_colours",
+        "appearance",
+        "Charge colours",
+        "Which colour a positive charge takes in the 3D view and on the charge map; a negative "
+        "one takes the other.",
+        ("colour map", "red", "blue", "positive", "negative", "electrostatics"),
+        "user",
+        "blue-positive",
+        TypeAdapter(Literal["blue-positive", "red-positive"]),
+        {
+            "blue-positive": "Positive blue, negative red",
+            "red-positive": "Positive red, negative blue",
+        },
+    )
+)
+register(
+    Setting(
         "viewer_background",
         "appearance",
         "3D view background",

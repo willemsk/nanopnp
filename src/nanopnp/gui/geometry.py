@@ -227,11 +227,13 @@ _DIVERGING: tuple[tuple[int, int, int], ...] = (
     (180, 4, 38),
 )
 
-Palette: TypeAlias = Literal["viridis", "diverging"]
+Palette: TypeAlias = Literal["viridis", "diverging", "diverging_r"]
+"""``diverging`` runs from blue to red; ``diverging_r`` from red to blue, positive blue."""
 
 _PALETTES: dict[str, tuple[tuple[tuple[int, int, int], ...], int]] = {
     "viridis": (_VIRIDIS, 256),
     "diverging": (_DIVERGING, 255),
+    "diverging_r": (_DIVERGING[::-1], 255),
 }
 
 
