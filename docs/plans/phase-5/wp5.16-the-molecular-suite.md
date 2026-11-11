@@ -46,7 +46,7 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 | Decision | Choice | Why/source |
 |---|---|---|
 | D1 The pore's axis | `symmetry.axis` gains `cavity`; `source.chains` takes groups, `A+B,C+D`. Under C2 and above `auto` superposes the ring of chains or groups; under C1 `auto`, and `cavity` anywhere, take the channel's axis (D2) without the chain rules; `z` is checked against the axis that applies, with its budget | AO1, ruled by the author; decided by the plan for the syntax, which moves no key |
-| D2 The channel's axis | `structure/cavity.py:channel_axis`: from the file's z, the line fitted through 0.5 nm slabs' centres, each the centroid of the enclosed Voronoi vertices tied at the slab's largest clearance among the ensemble-mean heavy atoms, iterated to a fixed line. Gated on orientation, coverage and straightness; the limit and `z`'s budget measured on 2WCD against its ring axis, into §5.2's NOTE | Z5, REV-121; decided by the plan |
+| D2 The channel's axis | `structure/cavity.py:channel_axis`: from the file's z, the line fitted through the centres of planes 0.5 nm apart, each the centroid of the enclosed points tied at the plane's largest clearance where it cuts a Voronoi edge of the ensemble-mean heavy atoms, followed plane by plane from the widest, iterated to a fixed line. Gated on convergence, orientation, coverage and straightness; the limit and `z`'s budget measured on 2WCD against its ring axis, into §5.2's NOTE | Z5, REV-121; decided by the plan, corrected at item 2 |
 | D3 `prepare` | `orient_pore(..., axis=None)` takes a typed axis; with no distinct covariance axis it takes the channel's axis instead of refusing; it writes `<out>.prepare.json` beside the file; `nanopnp prepare` wraps it | REV-41, FR-37, decided by the plan |
 | D4 Radii in one place | CODE_REVIEW_036's D4.1, D4.2, C4.1 and C4.2 as written; REV-231's comment with them | AL22 and CODE_REVIEW_036, ruled by the author |
 | D5 A model built alone | `Project.build_case(kind, name)`: the model with each required value it lacks from `BUILD_LAYER`, which no stage up to protonation reads; walked by `SolverProcess` with `write=False`; the clean-up keeps each model's built stages | WB-11, decided by the plan |
@@ -153,19 +153,30 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 - `cavity.py` holds `SLAB_NM = 0.5`, `REACH_NM = 1.0`, `GAP_DEG = 90.0`, `MIN_CLEARANCE_NM = 0.2`,
   `TIE_NM = 1e-3`, `COVERAGE_FRACTION = 0.5`, `TURN_TOL_RAD = 1e-6`, `MOVE_TOL_NM = 1e-6`, `MAX_ITERATIONS = 50`, and
   the measured `STRAIGHTNESS_NM` and `CAVITY_BUDGET_NM`, each commented with §5.2's NOTE. `ChannelRecord(axis,
-  foot_nm, centres_nm, coverage, straightness_nm, iterations)`, `summary()`; `gate_channel` raises
-  `SymmetryGateError` naming the gate and the measured value.
-- A slab's centre is the centroid of its enclosed vertices within `TIE_NM` of its largest clearance. Under C<sub>n</sub>
-  the n images of a vertex tie, so at the true axis each slab holds whole orbits whose centroid lies on it, and the
-  axis is the iteration's fixed point; one vertex picked would sit off it. `TIE_NM` is ten times the PDB format's
-  0.001 Å step, so a pore built with imposed symmetry ties as an exact one does.
-- The Delaunay tetrahedra of the heavy atoms are built once per fit, their circumcentres the vertices; the iterations
-  re-slab them (1.2 s for 27,000 atoms, measured). Under the channel, `drift_deg` carries each mean centre into a frame
-  as its tetrahedra's circumcentres from the frame's positions, refits the line, with no new tessellation, and takes
-  its angle to the mean's axis; `frame_check` measures the channel's line again on the aligned mean. `Alignment.record`
-  holds the `ChannelRecord`; the frame's turn puts the first listed chain's C-alpha centroid on +x;
-  `chains_cyclic_order` is the file order. C1 under `z` is checked against the channel's line, so the `unchecked`
-  status, `Symmetry.axis`'s description and `_resolve_structure`'s C1 message change with it.
+  foot_nm, centroid_nm, centres_nm, planes, straightness_nm, iterations, turn_rad, move_nm, carried)`, `summary()`;
+  `gate_channel` raises `SymmetryGateError` naming the gate and the measured value.
+- A plane's centre is the centroid of its enclosed candidates within `TIE_NM` of its largest clearance; a candidate
+  is a point where the plane cuts a Voronoi edge, a hull face's edge running on along its normal. Under C<sub>n</sub>
+  the n images of a candidate tie, so at the true axis each centre lies on it, and the axis is the iteration's fixed
+  line; one candidate picked would sit off it. `TIE_NM` is ten times the PDB format's 0.001 Å step, so a pore built
+  with imposed symmetry ties as an exact one does.
+- The Delaunay tetrahedra of the heavy atoms are built once per fit, their circumcentres the Voronoi vertices, a flat
+  tetrahedron taking its neighbour's; the iterations cut the edges again (1.6 s for 26,844 atoms, measured). Under the
+  channel, `drift_deg` carries each mean centre into a frame with the atoms of its edge's first tetrahedron, refits the
+  line, with no new tessellation, and takes its angle to the mean's axis; `frame_check` measures the channel's line
+  again on the aligned mean. `Alignment.record` holds the `ChannelRecord`; the frame's turn puts the first listed
+  chain's C-alpha centroid on +x; `chains_cyclic_order` is the file order. C1 under `z` is checked against the
+  channel's line, so the `unchecked` status, `Symmetry.axis`'s description and `_resolve_structure`'s C1 message change
+  with it.
+
+> **Outcome — D2's method corrected at item 2.** The Voronoi vertices alone left 12 of 2WCD's 28 slabs without one
+> near the axis, and each took a void of the wall; the centres are now the points where planes cut the Voronoi edges,
+> followed from the widest enclosed space, a candidate enclosed by the atoms within 0.25 nm of its plane. Measured on
+> the prepared 2WCD: 0.0073 nm from the ring's axis (0.042°), the farthest centre 0.0148 nm from the line, 28 of 28
+> planes, 3 iterations, 4 s for the stage. `CAVITY_BUDGET_NM = 0.015`, `STRAIGHTNESS_NM = 0.03`. A ragged rim is the
+> method's weakness: [the concept](../../../knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md),
+> REV-239.
+
 - The header's `axis` gains `method` (`permutation` or `channel`) and `groups`; a reader takes their absence as
   `permutation` and none.
 - Item 2 measures on `prepared_2wcd` under `cavity` against `auto`: the displacement over the C-alpha extent and the
@@ -243,7 +254,7 @@ the budget) and a build held mid-walk.
 
 ### Work items
 
-- [ ] 1. `io/case.py`, `io/resolved.py`, `pipeline/case.py`, `structure/read.py`, `structure/stage.py`, `structure/axis.py`
+- [x] 58f9ab6 1. `io/case.py`, `io/resolved.py`, `pipeline/case.py`, `structure/read.py`, `structure/stage.py`, `structure/axis.py`
   (D1; REV-231); done when `tests/tier1/test_structure_axis.py` and `test_structure_stage.py` pass, VER-62 unmoved.
   **Executor:** main
 - [ ] 2. `structure/cavity.py`, `structure/stage.py`, §5.2's NOTE on stage 1, §5.3.1's NOTE on `structure:`, VER-48, a
@@ -272,7 +283,7 @@ the budget) and a build held mid-walk.
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |
 |---|---|---|---|---|
-| `tests/tier1/test_structure_axis.py::test_ver48_the_channel_axis_recovers_a_known_axis` | 1 | VER-48; FR-02 | C7, C8, C12 and the C7 written as one chain, tilted 8° and offset by (3, −1.5, 40) nm: axis to 10⁻⁶ rad, line to 10⁻⁶ nm, the iteration's stop, the axis being its fixed point; at 35° before the orientation gate, the same | `uv run pytest tests/tier1/test_structure_axis.py` |
+| `tests/tier1/test_structure_axis.py::test_ver48_the_channel_axis_recovers_a_known_axis` | 1 | VER-48; FR-02 | C7, C8 and C12 walls with closed rims, tilted 8° and offset by (3, −1.5, 40) nm: axis to 10⁻⁶ rad, line to 10⁻⁶ nm, the iteration's stop, the axis being its fixed point; at 35° before the orientation gate, the same; one chain of any kind taken by `select` under the channel | `uv run pytest tests/tier1/test_structure_axis.py` |
 | the same file, `test_ver48_the_channel_axis_gates_fire` | 1 | VER-48; QR-12 | One assertion each, naming gate and value: a solid ball (coverage), a channel bent 2 nm (straightness), an axis 12° from z (orientation), `z` beyond the budget, no convergence | as above |
 | the same file, `test_ver48_chain_groups_superpose_as_one_ring` | 1 | VER-48; FR-03 | Eight A+B units of two shapes: axis to 10⁻⁹; refused, one each: a repeated chain, unequal groups, a residue name differing at one position, groups not numbering n | as above |
 | `tests/tier1/test_structure_stage.py::test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis` | 1 | VER-48 | `cavity`'s displacement from `structure_2wcd`'s `auto` axis equals §5.2's recorded value to 10⁻⁴ nm; C1 with all 12 chains under `auto` routes to the channel: equal to `cavity`, exact; `cavity` run on `prepared_2wcd.path`, `write=False` | `uv run pytest tests/tier1/test_structure_stage.py` |

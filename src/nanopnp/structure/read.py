@@ -260,7 +260,9 @@ def chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
     return keys, "chainID, segid where blank"
 
 
-def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Selection:  # noqa: C901
+def select(  # noqa: C901
+    universe: mda.Universe, *, selection: str, chains: str, n: int, channel: bool = False
+) -> Selection:
     """Select the pore's atoms and check the oligomeric state.
 
     Parameters
@@ -268,6 +270,9 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
     chains
         ``all``, a comma-separated list of chains, or of groups of chains joined by ``+``, each
         group one repeating unit of the ring.
+    channel
+        Whether the channel gives the axis: the chains are then taken whatever their number,
+        coverage or residue names, and every C-alpha is one row of ``common_index``.
 
     Raises
     ------
@@ -287,7 +292,9 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
     keys, chain_key = chain_keys(group)
     listed_groups = parse_chain_groups(chains)
     listed = None if listed_groups is None else tuple(c for group in listed_groups for c in group)
-    grouped = listed_groups is not None and any(len(group) > 1 for group in listed_groups)
+    grouped = (
+        not channel and listed_groups is not None and any(len(group) > 1 for group in listed_groups)
+    )
     present = tuple(dict.fromkeys(keys))
     if listed is not None:
         missing = [chain for chain in listed if chain not in present]
@@ -345,7 +352,7 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
             )
     else:
         units = tuple((chain,) for chain in present)
-        if len(present) != n:
+        if not channel and len(present) != n:
             raise StructureInputError(
                 f"C{n} expects {n} chains, and the selection holds {len(present)} "
                 f"({', '.join(present)}) by {chain_key}; list the chains of one assembly in "
@@ -382,7 +389,9 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
             seen[residue] = index
 
     rows: list[list[int]] = [[] for _ in units]
-    for position in range(len(units[0])):
+    if channel:
+        rows = [[int(index) for index in np.flatnonzero(is_ca)]]
+    for position in range(0 if channel else len(units[0])):
         members = [unit[position] for unit in units]
         where = f" at position {position + 1} of its group" if grouped else ""
         counts = {chain: len(per_chain.get(chain, {})) for chain in members}

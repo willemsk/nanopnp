@@ -15,3 +15,4 @@
 * [Tier-2 test evidence: quadrature gates, the exclusion shell and the contour](12-tier-2-test-evidence-quadrature-gates.md) - What the Tier-2 tests of quadrature gates, the exclusion shell and the contour establish.
 * [Tier-3 test evidence: the charged-tube sweep and the table's margin](13-tier-3-test-evidence-the-charged-tube.md) - What the Tier-3 tests of the charged-tube sweep and the reference charge table's margin establish.
 * [PDB2PQR's residue and hydrogen names, and the protonated density](14-pdb2pqrs-residue-and-hydrogen-names-and-the-protonated-density.md) - Which residue name PDB2PQR writes for a protonated side chain, which radius each atom takes from the CHARMM set, and why the protonated density needs the state patch.
+* [The channel's axis of 2WCD against its ring axis](15-the-channel-axis-of-2wcd.md) - What the channel-axis method measures on chains A–L of 2WCD, the two limits that rest on it, and where the method is known to be weak.

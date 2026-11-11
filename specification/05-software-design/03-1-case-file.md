@@ -412,14 +412,18 @@ selection applied to the file, and one MDAnalysis cannot parse SHALL be refused 
 selected atoms are those of the selection in the chains `source.chains` lists. `source.chains` is
 `all` or a comma-separated list of chain identifiers, such as `A,B,C`, which SHALL number `n`, or of
 groups of them joined by `+`, such as `A+B,C+D`, where the groups SHALL number `n`, each group one
-repeating unit of the ring with its chains listed in the same order; a repeated chain, groups of
-unequal size and a group under `C1` SHALL each be refused naming the key.
+repeating unit of the ring with its chains listed in the same order; a repeated chain, a group
+under `C1` and, where the ring gives the axis, groups of unequal size SHALL each be refused naming
+the key.
 `symmetry.point_group` is `C<n>` with `n ≥ 1`, and any other group SHALL be refused naming the
 accepted form. The ensemble is the frames of `ensemble.trajectory` when one is given, and otherwise
 the models of the source file. `frames.last_ns` keeps the frames within that many nanoseconds of the
 last one, by the times the file records. `frames.count` keeps `count` frames at the uniform stride
 `⌊N/count⌋`, ending on the last frame of the window of `N` frames. `symmetry.axis: auto` detects the
-Cₙ axis (FR-02), and `symmetry.axis: z` takes the file's z axis through its origin. The structure
+Cₙ axis from the ring of chains or groups under `C2` and above, and the channel's axis under `C1`
+(FR-02); `symmetry.axis: cavity` takes the channel's axis on any pore, and the chains then need not
+number `n`, as under `C1`; `symmetry.axis: z` takes the file's z axis through its origin, checked
+against the axis that applies. The structure
 file SHALL point +z from the *trans* side to the *cis* side, and `geometry.membrane.centre_z_nm` is
 read in the file's axial coordinate. Stage 1's behaviour, thresholds and refusals: §5.2's NOTE on
 stage 1. Stage 1 alone runs through the stage command (IF-02). A case carrying `structure:` and

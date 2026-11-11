@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,355. By source: history ruling 341; plan decision row 684; REV row 238; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,356. By source: history ruling 341; plan decision row 684; REV row 239; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 546; open 5; session, own call 801; session, put to the author 3.
+By decider: author 545; open 5; session, own call 803; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1044,7 +1044,7 @@ By decider: author 546; open 5; session, own call 801; session, put to the autho
 | §8.2.39 AO2 | author | `specification/history/39-wp516s-plan-the-pore-axis-the-prepare-view-and-variants.md` | 2026-11-11 | WP5.16 | The Prepare tool draws the pore's axis and the membrane in its 3D view from the values typed in its pane and stepped by the arrow keys; dragging them by handles comes later.** The author chose this (*the recommendation*… | the design document's Prepare row; REV-238 | in force |
 | §8.2.39 AO3 | author | `specification/history/39-wp516s-plan-the-pore-axis-the-prepare-view-and-variants.md` | 2026-11-11 | WP5.16 | A variant is linked to its parent by default: its own item, holding only its residue edits and reading every other value from its parent, so a change to the parent reaches it; a full copy, naming its parent and changed… | the design document's Charge edit row; open: WP5.16 (§5.3.1's NOTE on model files) | in force |
 | WP5.16 D1 | author | `docs/plans/phase-5/wp5.16-the-molecular-suite.md` | 2026-11-11 | WP5.16 | `symmetry.axis` gains `cavity`; `source.chains` takes groups, `A+B,C+D`. Under C2 and above `auto` superposes the ring of chains or groups; under C1 `auto`, and `cavity` anywhere, take the channel's axis (D2) without th… | unstated | plan in flight |
-| WP5.16 D2 | session, own call | `docs/plans/phase-5/wp5.16-the-molecular-suite.md` | 2026-11-11 | WP5.16 | `structure/cavity.py:channel_axis`: from the file's z, the line fitted through 0.5 nm slabs' centres, each the centroid of the enclosed Voronoi vertices tied at the slab's largest clearance among the ensemble-mean heavy… | §5.2, REV-121 | plan in flight |
+| WP5.16 D2 | session, own call | `docs/plans/phase-5/wp5.16-the-molecular-suite.md` | 2026-11-11 | WP5.16 | `structure/cavity.py:channel_axis`: from the file's z, the line fitted through the centres of planes 0.5 nm apart, each the centroid of the enclosed points tied at the plane's largest clearance where it cuts a Voronoi e… | §5.2, REV-121 | plan in flight |
 | WP5.16 D3 | session, own call | `docs/plans/phase-5/wp5.16-the-molecular-suite.md` | 2026-11-11 | WP5.16 | `orient_pore(..., axis=None)` takes a typed axis; with no distinct covariance axis it takes the channel's axis instead of refusing; it writes `<out>.prepare.json` beside the file; `nanopnp prepare` wraps it \| REV-41, FR… | REV-41, FR-37 | plan in flight |
 | WP5.16 D4 | author | `docs/plans/phase-5/wp5.16-the-molecular-suite.md` | 2026-11-11 | WP5.16 | CODE_REVIEW_036's D4.1, D4.2, C4.1 and C4.2 as written; REV-231's comment with them \| AL22 and CODE_REVIEW_036, ruled by the author \| | REV-231 | plan in flight |
 | WP5.16 D5 | session, own call | `docs/plans/phase-5/wp5.16-the-molecular-suite.md` | 2026-11-11 | WP5.16 | `Project.build_case(kind, name)`: the model with each required value it lacks from `BUILD_LAYER`, which no stage up to protonation reads; walked by `SolverProcess` with `write=False`; the clean-up keeps each model's bui… | WB-11 | plan in flight |
@@ -1172,7 +1172,7 @@ By decider: author 546; open 5; session, own call 801; session, put to the autho
 | REV-118 | author | `docs/project/review-findings.md` |  |  | Gate and mechanism tests the pruning removed | §8.2.13 N1 | fixed |
 | REV-119 | session, own call | `docs/project/review-findings.md` |  |  | The analyte benchmark meshes skip the quality gate | CODE_REVIEW_010 | declined |
 | REV-120 | author | `docs/project/review-findings.md` |  |  | The force-traction normal needs one material on the left along the whole surface | §8.2.22 X6 | fixed |
-| REV-121 | author | `docs/project/review-findings.md` |  |  | Stage 1 checks no axis for a monomeric or hetero-oligomeric pore | §8.2.24 Z5 | deferred |
+| REV-121 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | Stage 1 checks no axis for a monomeric or hetero-oligomeric pore | WP5.16 | fixed |
 | REV-122 | author | `docs/project/review-findings.md` |  |  | A case cannot load a correction file from outside the installed package | §8.2.22 X6 | fixed |
 | REV-123 | author | `docs/project/review-findings.md` |  |  | The library has no plotting helpers or notebook display | §8.2.14 P6 | fixed |
 | REV-124 | session, own call | `docs/project/review-findings.md` |  |  | The specification's site navigation is listed by hand | CODE_REVIEW_013 | fixed |
@@ -1290,6 +1290,7 @@ By decider: author 546; open 5; session, own call 801; session, put to the autho
 | REV-236 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice | WP5.15 review | open |
 | REV-237 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The author's notes on the frame's digest for the suites' prototype rounds | WP5.15 review | open |
 | REV-238 | author | `docs/project/review-findings.md` |  |  | The Prepare tool's axis and membrane are not dragged by handles | §8.2.39 AO2 | deferred |
+| REV-239 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | The channel axis's two limits rest on 2WCD alone, and a ragged pore may be refused | WP5.16 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

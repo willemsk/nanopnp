@@ -169,13 +169,16 @@ class Symmetry(_Strict):
     """The expected point group and how the axis is found."""
 
     point_group: str = Field(description="C<n> with n >= 1, e.g. C12 for ClyA (FR-03)")
-    axis: Literal["auto", "z"] = Field(
+    axis: Literal["auto", "z", "cavity"] = Field(
         default="auto",
         description=(
-            "`auto`: the Cn axis by chain-permutation superposition, gated on the chains' "
-            "spacing, the rotation angle and a 10 degree limit from the file's z (FR-02). `z`: "
-            "the file's z axis through its origin, refused where n >= 2 and it strays more than "
-            "0.01 nm from the detected axis over the C-alpha extent"
+            "`auto`: under C2 and above, the Cn axis by superposing the ring of chains, or of "
+            "chain groups, on its cyclic permutation, gated on the spacing, the rotation angle "
+            "and a 10 degree limit from the file's z (FR-02); under C1, the channel's axis. "
+            "`cavity`: the channel's axis on any pore, the line through the widest enclosed "
+            "space of each plane across it, with no rule matching the chains. `z`: the file's z "
+            "axis through its origin, refused where it strays from the axis that applies by "
+            "more than that axis's budget over the C-alpha extent"
         ),
     )
 

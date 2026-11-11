@@ -11,7 +11,6 @@ ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "src" / "nanopnp"
 
 EXEMPT = {
-    "structure/axis.py:measure_axis: n < 2",
     "mesh/adapter.py:_insert_physical_names: start < 0",
     "mesh/adapter.py:_validate: index.size and (int(index.min()) < 0 or int(index.max()) >= limit)",
     "structure/read.py:select: counts[chain] < COVERAGE_FRACTION * most",

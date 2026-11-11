@@ -70,19 +70,45 @@ superposition (FR-02). The chains are ordered by azimuth, and the whole assembly
 itself with each chain mapped to its neighbour. The axis is that rotation's eigenvector of
 eigenvalue 1, through the Cα centroid. It SHALL refuse the point group, naming the measured
 quantity, when the chains' azimuths are not spaced 360°/n to within a quarter of that spacing, or
-when the rotation angle differs from 360°/n by more than 1°. It SHALL refuse `C1`, which has no
-permutation to superpose.
+when the rotation angle differs from 360°/n by more than 1°. That is the axis under `C2` and above.
+
+Under `C1`, which has no permutation to superpose, `symmetry.axis: auto` takes the channel's axis,
+and `symmetry.axis: cavity` takes it on any pore (§8.2.39 AO1; §8.2.24 Z5). The chains are then
+taken whatever their number, their coverage or their residue names. The channel's axis is found
+among the ensemble-mean heavy atoms. Planes 0.5 nm apart, counted from the atoms' centroid, cut the
+structure across the current line, which starts as the file's z through that centroid. In a plane,
+the candidate centres are the points where it cuts an edge of the atoms' Voronoi diagram, each with
+its clearance, its distance to the nearest atom, of at least 0.2 nm. A candidate is *enclosed* when
+the atoms within 0.25 nm of the plane and within 1.0 nm of its sphere leave no gap of 90° or more
+around it. The channel starts at the widest enclosed candidate of any plane and is followed plane
+by plane in both directions: a plane's centre is the centroid of its enclosed candidates within
+0.001 nm of the widest among those no further aside from the last centre than the planes lie apart.
+The line is the least-squares line through the centres, and the search is repeated across it until
+it turns by no more than 10⁻⁶ rad and moves by no more than 10⁻⁶ nm. Under an exact Cₙ the n images
+of a candidate tie, so each centre lies on the axis and the axis is the iteration's fixed line. The
+channel's axis SHALL be refused, naming the gate and the measured value, when 50 iterations do not
+fix a line, when fewer than half the planes hold a centre, or when a centre lies more than 0.03 nm
+from the line. On chains A–L of 2WCD the channel's axis lies 0.0073 nm from the ring's over the Cα
+extent, 0.042° from it, with a centre in each of its 28 planes and the farthest centre 0.0148 nm
+from the line; the straightness limit is twice that distance and the budget below twice that
+displacement (WP5.16; `knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`). Both
+rest on one near-symmetric pore, and a pore whose rim or lumen is ragged may be refused by the
+straightness limit (REV-239).
 
 The axis carries no sign of its own. It is signed to agree with the file's +z. A detected axis more
 than 10° from the file's z SHALL be refused, naming the angle, because such a frame does not name an
-end. Under `symmetry.axis: z`, where `n ≥ 2`, the axis SHALL be refused when its lateral displacement
-from the detected axis exceeds 0.01 nm anywhere over the Cα axial extent, naming the tilt, the
-offset and the displacement. The detected axis it is measured against passes the spacing, angle and
-orientation refusals above first.
+end. Under `symmetry.axis: z` the file's axis SHALL be refused when its lateral displacement from
+the axis that applies, the ring's where `n ≥ 2` and the channel's under `C1`, exceeds that axis's
+budget anywhere over the Cα axial extent, naming the tilt, the offset and the displacement: 0.01 nm
+against the ring's axis and 0.015 nm against the channel's. The axis it is measured against passes
+its own refusals above first.
 
 The aligned frame puts the axis on z at r = 0 and keeps the file's axial coordinate, `z = â · x`, so
-stage 5 applies `geometry.membrane.centre_z_nm` in the frame it is written in. The four thresholds
-above are constants of the code and never case keys. Their derivation and the margins measured on
+stage 5 applies `geometry.membrane.centre_z_nm` in the frame it is written in. Under the channel's
+axis the first listed chain's Cα centroid is put on +x, the angle of each frame's axis to the mean's
+is that of the line through the centres moved with their tetrahedra's atoms, and the artefact's
+header names the method, `permutation` or `channel`, a header without it being a permutation's. The
+thresholds above are constants of the code and never case keys. The ring's four: their derivation and the margins measured on
 the author's aligned copy of 2WCD, on 6MRT and on the ClyA-AS ensemble are in the WP18 plan, Design
 §2–§4. The wwPDB entry 2WCD as deposited is not such a file: its asymmetric unit holds two
 dodecamers, chains A–L and M–X, in the crystal frame, with the pore axis 22.9° from z and +z towards

@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from nanopnp.core.hashing import Canonicalisable
 
@@ -200,10 +200,7 @@ def measure_axis(chains: np.ndarray, n: int) -> AxisRecord:
 
     chains = np.asarray(chains, dtype=np.float64)
     if n < 2:
-        raise SymmetryGateError(
-            "symmetry.axis: auto needs a permutation to superpose, and C1 has none; set "
-            "symmetry.axis: z, which takes the file's z axis through its origin unchecked"
-        )
+        raise ValueError("a permutation needs two units to superpose, and C1 has one")
     if chains.shape[0] != n:
         raise ValueError(f"expected {n} chains for C{n}, got {chains.shape[0]}")
 
@@ -270,7 +267,7 @@ def detect_axis(chains: np.ndarray, n: int) -> AxisRecord:
     Raises
     ------
     SymmetryGateError
-        On C1, which has no permutation to superpose, and on any gate failure.
+        On any gate failure.
     """
     return gate_axis(measure_axis(chains, n))
 
@@ -282,6 +279,7 @@ class Displacement:
     tilt_deg: float
     offset_nm: float
     displacement_nm: float
+    budget_nm: float = DISPLACEMENT_BUDGET_NM
 
     def summary(self) -> dict[str, Canonicalisable]:
         """Return the measurement as plain data."""
@@ -289,12 +287,16 @@ class Displacement:
             "tilt_deg": self.tilt_deg,
             "offset_nm": self.offset_nm,
             "displacement_nm": self.displacement_nm,
-            "budget_nm": DISPLACEMENT_BUDGET_NM,
+            "budget_nm": self.budget_nm,
         }
 
 
 def z_displacement(
-    axis: np.ndarray, point_nm: np.ndarray, z_extent_nm: tuple[float, float]
+    axis: np.ndarray,
+    point_nm: np.ndarray,
+    z_extent_nm: tuple[float, float],
+    *,
+    budget_nm: float = DISPLACEMENT_BUDGET_NM,
 ) -> Displacement:
     """Measure the file's z axis against the detected axis."""
     import numpy as np
@@ -308,6 +310,7 @@ def z_displacement(
         tilt_deg=tilt_deg(axis),
         offset_nm=float(np.linalg.norm(foot)),
         displacement_nm=worst,
+        budget_nm=budget_nm,
     )
 
 
@@ -348,7 +351,19 @@ def minimal_rotation(axis: np.ndarray) -> np.ndarray:
     return np.asarray(np.eye(3) + sine * skew + (1.0 - cosine) * (skew @ skew), dtype=np.float64)
 
 
-def frame_rotation(record: AxisRecord, first_centroid_nm: np.ndarray) -> np.ndarray:
+class Line(Protocol):
+    """An axis and the foot of the perpendicular from the origin to it."""
+
+    @property
+    def axis(self) -> np.ndarray:
+        """The unit direction."""
+
+    @property
+    def foot_nm(self) -> np.ndarray:
+        """The point of the line nearest the origin."""
+
+
+def frame_rotation(record: Line, first_centroid_nm: np.ndarray) -> np.ndarray:
     """Return ``Q``: the axis onto z, then a turn putting chain 0 on +x."""
     import numpy as np
 
