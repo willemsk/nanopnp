@@ -36,7 +36,7 @@ from nanopnp.io.resolved import (
     ResolvedEdit,
     ResolvedProtonation,
     ResolvedStructure,
-    parse_chains,
+    parse_chain_groups,
 )
 from nanopnp.materials.electrolyte import CorrectionChoice, CorrectionSwitches, Electrolyte
 from nanopnp.mesh.primitives import DEFAULT_BOUNDARIES
@@ -142,19 +142,42 @@ def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure 
             "permutation to superpose (FR-02); set structure.symmetry.axis: z, which takes the "
             "file's z axis through its origin, unchecked"
         )
-    chains = parse_chains(spec.source.chains)
-    if chains is not None:
+    groups = parse_chain_groups(spec.source.chains)
+    chains = None if groups is None else tuple(chain for group in groups for chain in group)
+    if groups is not None and chains is not None:
+        grouped = any(len(group) > 1 for group in groups)
         if any(not chain for chain in chains):
             raise CaseValidationError(
                 f"structure.source.chains {spec.source.chains!r} has an empty entry; it is `all` "
-                "or a comma-separated list of chain identifiers"
+                "or a comma-separated list of chain identifiers, or of groups of them joined by "
+                "`+`, such as A+B,C+D"
             )
         repeated = sorted({chain for chain in chains if chains.count(chain) > 1})
         if repeated:
             raise CaseValidationError(
                 f"structure.source.chains lists {', '.join(repeated)} more than once"
             )
-        if len(chains) != n:
+        if grouped and n == 1:
+            raise CaseValidationError(
+                f"structure.source.chains {spec.source.chains!r} groups chains with `+`, and "
+                "structure.symmetry.point_group C1 has no ring of repeating units to group them "
+                "into; list the chains with commas"
+            )
+        sizes = sorted({len(group) for group in groups})
+        if len(sizes) > 1:
+            odd = next(group for group in groups if len(group) != len(groups[0]))
+            raise CaseValidationError(
+                f"structure.source.chains {spec.source.chains!r} has groups of unequal size: "
+                f"{'+'.join(groups[0])} holds {len(groups[0])} chains and {'+'.join(odd)} holds "
+                f"{len(odd)}; each group is one repeating unit of the ring (FR-03)"
+            )
+        if grouped and len(groups) != n:
+            raise CaseValidationError(
+                f"structure.source.chains lists {len(groups)} groups "
+                f"({', '.join('+'.join(group) for group in groups)}), and "
+                f"structure.symmetry.point_group {group} has {n} (FR-03)"
+            )
+        if not grouped and len(chains) != n:
             raise CaseValidationError(
                 f"structure.source.chains lists {len(chains)} chains ({', '.join(chains)}), and "
                 f"structure.symmetry.point_group {group} has {n} (FR-03)"
@@ -177,7 +200,7 @@ def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure 
             ),
         }
     )
-    return ResolvedStructure(spec=spec, n=n, chains=chains)
+    return ResolvedStructure(spec=spec, n=n, chains=chains, groups=groups)
 
 
 def _resolve_density(document: CaseDocument) -> Density | None:

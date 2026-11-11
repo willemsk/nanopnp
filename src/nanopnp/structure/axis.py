@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
 
 # Thresholds: SPECIFICATION.md §5.2 NOTE on stage 1; margins:
-# knowledge/07-software-stack/index.md.
+# docs/plans/phase-2/wp18-structure-ingestion.md, Design §2 to §4.
 SPACING_FRACTION = 0.25
 
 ANGLE_TOLERANCE_DEG = 1.0

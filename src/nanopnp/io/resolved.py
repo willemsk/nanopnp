@@ -38,6 +38,7 @@ class ResolvedStructure:
     spec: Structure
     n: int
     chains: tuple[str, ...] | None
+    groups: tuple[tuple[str, ...], ...] | None = None
 
 
 @dataclass(frozen=True)
@@ -192,11 +193,19 @@ class ResolvedCase:
         return recorded
 
 
-def parse_chains(chains: str) -> tuple[str, ...] | None:
-    """Return the chain identifiers ``source.chains`` lists, or None for ``all``."""
+def parse_chain_groups(chains: str) -> tuple[tuple[str, ...], ...] | None:
+    """Return the groups ``source.chains`` lists, a lone chain a group of one; None for ``all``."""
     if chains.strip() == "all":
         return None
-    return tuple(part.strip() for part in chains.split(","))
+    return tuple(tuple(member.strip() for member in part.split("+")) for part in chains.split(","))
+
+
+def parse_chains(chains: str) -> tuple[str, ...] | None:
+    """Return the chain identifiers ``source.chains`` lists, or None for ``all``."""
+    groups = parse_chain_groups(chains)
+    if groups is None:
+        return None
+    return tuple(chain for group in groups for chain in group)
 
 
 def contour_spacing_nm(document: CaseDocument) -> float:

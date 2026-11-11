@@ -120,9 +120,10 @@ class StructureSource(_Strict):
     chains: str = Field(
         default="all",
         description=(
-            "`all`, or a comma-separated list of chain identifiers. A chain is its chain "
-            "identifier, or its segment identifier where the chain column is blank. The selected "
-            "chains SHALL number the point group's n (FR-03)"
+            "`all`, or a comma-separated list of chain identifiers, or of groups of them joined "
+            "by `+`, such as `A+B,C+D`, each group one repeating unit of the ring. A chain is its "
+            "chain identifier, or its segment identifier where the chain column is blank. The "
+            "selected chains, or groups, SHALL number the point group's n (FR-03)"
         ),
     )
     selection: str = Field(

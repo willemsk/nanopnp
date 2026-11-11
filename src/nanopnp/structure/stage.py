@@ -142,7 +142,7 @@ def align(
         times, interval, last_ns=spec.ensemble.frames.last_ns, count=spec.ensemble.frames.count
     )
     logger.info(
-        "structure: %d atoms, %d chains by %s, %d common C-alpha; frames %d of %d",
+        "structure: %d atoms, %d units by %s, %d common C-alpha; frames %d of %d",
         len(chosen.atoms),
         n,
         chosen.chain_key,
@@ -226,9 +226,9 @@ def align(
         "chain_key": chosen.chain_key,
         "chains_file_order": list(chosen.chains),
         "chains_cyclic_order": (
-            [chosen.chains[index] for index in record.order]
+            [chosen.units[index] for index in record.order]
             if record is not None
-            else list(chosen.chains)
+            else list(chosen.units)
         ),
         "atoms": len(chosen.atoms),
         "common_ca": int(chosen.common_index.shape[1]),
@@ -245,6 +245,7 @@ def align(
             "foot_nm": [float(value) for value in foot],
             "rotation": [[float(value) for value in row] for row in rotation],
             "checked": record is not None,
+            "groups": None if chosen.groups is None else [list(g) for g in chosen.groups],
         },
         "gates": _gates(record, displacement, axis_mode),
         "drift_deg": drift,

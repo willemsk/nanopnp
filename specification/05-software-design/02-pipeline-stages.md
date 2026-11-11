@@ -47,7 +47,11 @@ A chain is identified by its chain identifier, or by its segment identifier wher
 is blank. The selected chains SHALL number exactly `n`, and a listed chain that is absent SHALL be
 named (FR-03). Each chain SHALL carry at least half the Cα atoms of the most complete chain. Chains
 SHALL agree in residue name at every residue number they share, with the histidine protonation
-variants read as one name. A failure of either SHALL be refused naming the chain.
+variants read as one name. A failure of either SHALL be refused naming the chain. Where
+`source.chains` lists groups, a group is one unit of the ring: the groups SHALL number `n`, the two
+rules above hold between the chains at one position of their groups, and a unit's Cα are those its
+chains share with the chains at their positions, joined in the listed order, so a ring of unlike
+chains such as PlyAB's pairs is superposed unit on unit (§8.2.39 AO1).
 
 A `frames.last_ns` exceeding the recorded span by more than one frame interval SHALL be refused
 naming the span and the interval. A file written without a timestep reads as 1 ps or 0 ps per
