@@ -45,7 +45,7 @@ __all__ = ["DEFAULT_OUTPUTS", "Case", "CaseSource"]
 
 DEFAULT_OUTPUTS: tuple[str, ...] = ("current", "transport_numbers", "eof_rate")
 
-_ORIENT_KEYS = ("chains", "cis_end", "registration_residues", "centroid_z_nm")
+_ORIENT_KEYS = ("chains", "cis_end", "registration_residues", "centroid_z_nm", "axis")
 
 
 @dataclass(frozen=True)
@@ -308,8 +308,8 @@ class Case(CaseDocument):
             The pore's symmetry, ``C<n>``.
         orient
             Keywords of ``orient_pore`` (``chains``, ``cis_end``, ``registration_residues``,
-            ``centroid_z_nm``): the structure is oriented first, into ``structures``, and the
-            case reads the oriented file.
+            ``centroid_z_nm``, ``axis``): the structure is oriented first, into ``structures``,
+            and the case reads the oriented file.
         structures
             Where an oriented file is written; the store's ``structures`` directory when ``None``.
         parameters

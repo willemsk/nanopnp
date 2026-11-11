@@ -257,7 +257,7 @@ the budget) and a build held mid-walk.
 - [x] 58f9ab6 1. `io/case.py`, `io/resolved.py`, `pipeline/case.py`, `structure/read.py`, `structure/stage.py`, `structure/axis.py`
   (D1; REV-231); done when `tests/tier1/test_structure_axis.py` and `test_structure_stage.py` pass, VER-62 unmoved.
   **Executor:** main
-- [ ] 2. `structure/cavity.py`, `structure/stage.py`, §5.2's NOTE on stage 1, §5.3.1's NOTE on `structure:`, VER-48, a
+- [x] 3ffaac5 2. `structure/cavity.py`, `structure/stage.py`, §5.2's NOTE on stage 1, §5.3.1's NOTE on `structure:`, VER-48, a
   knowledge concept (D1, D2); done when the same files pass. **Executor:** main
 - [ ] 3. `structure/orient.py`, `cli/building.py` (D3); done when `test_structure_axis.py` and `test_cli.py` pass.
   **Executor:** general-purpose on Sonnet

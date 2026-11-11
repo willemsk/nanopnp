@@ -12,6 +12,7 @@
 | `nanopnp plot <case, run or sweep> [stage] --out <file>` | Draws a stage's figure to a PNG, SVG or PDF file; needs the `plot` extra ([Outputs and quantities](outputs.md#figures)) |
 | `nanopnp geometry cylinder` | Writes an idealised pore as a geometry file ([Meshes](meshes.md)) |
 | `nanopnp mesh <geometry file>\|reference` | Writes a gated mesh ([Meshes](meshes.md)) |
+| `nanopnp prepare <structure>` | Writes a structure with its pore axis on z and a record of the choices ([Structures](structures.md)) |
 | `nanopnp sweep plan\|run\|collect` | Plans, dispatches and collects a sweep ([Sweeps](sweeps.md)) |
 | `nanopnp validate case case.yaml` | Checks a case as a run would, without meshing or solving it |
 | `nanopnp validate …` | The Tier-3 COMSOL comparison harness |

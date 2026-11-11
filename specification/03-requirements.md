@@ -97,6 +97,18 @@ read it. Both are subject to the mesh quality gate of VER-10. A case that declar
 needs neither: stage 6 meshes it, and `nanopnp stage mesh --export` writes its mesh where a file is
 wanted.
 
+NOTE (IF-02, preparation): `nanopnp prepare SOURCE --cis-end {wider,narrower} --out OUT` wraps
+`orient_pore` (FR-37): it keeps the chains named (`--chains`), sets the flip, places the registration
+centroid (`--registration FIRST:LAST`, `--centroid-z-nm`) and writes the oriented PDB with a
+preparation record beside it, `OUT` with the suffix `.prepare.json`. The axis is the one `--axis X,Y,Z`
+gives, else the C-alpha covariance's where one eigenvalue stands apart from the other two, else the
+channel's (§5.2 NOTE on stage 1), found from each of the three covariance axes and taken from the
+straightest that converges and covers the structure; where none does, the command is refused as a
+usage error naming what was tried. The record holds the source's name and SHA-256, the choices, the
+axis in the file's frame, its tilt from z, how it was found (`covariance`, `channel` or `typed`) and the
+registration centroid's distance from it. Text output is a reading of the record, and `--json` is the
+record.
+
 NOTE (IF-02, export): `nanopnp stage <name> <case> --export
 PATH` writes the artefact that stage stored, in an interchange format chosen by the suffix of
 `PATH`: the aligned ensemble as a PDB of its first frame with a DCD of every frame beside it

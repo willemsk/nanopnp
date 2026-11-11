@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from test_structure_axis import _tilted_ring_pdb
 
 from nanopnp import Case, Session
 from nanopnp.cli import build_parser, main
@@ -243,6 +244,25 @@ def test_ver32_mesh_failing_the_quality_gate_exits_four_and_leaves_no_file(
     assert "SICN" in captured.err or "gamma" in captured.err
     assert "Traceback" not in captured.err
     assert sorted(path.name for path in tmp_path.iterdir()) == ["sliver.yaml"]
+
+
+def test_prepare_writes_the_oriented_pore_and_its_record(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A command that wrote the file but not its record would leave a preparation nobody can audit.
+    pytest.importorskip("MDAnalysis")
+    source = tmp_path / "ring.pdb"
+    _tilted_ring_pdb(source)
+    out = tmp_path / "oriented.pdb"
+    code = main(["prepare", str(source), "--cis-end", "wider", "--out", str(out), "--json"])
+    assert code == EXIT_OK
+    printed = json.loads(capsys.readouterr().out)
+    record = json.loads((tmp_path / "oriented.prepare.json").read_text())
+    assert out.is_file()
+    assert printed == record
+    assert record["method"] == "covariance"
+    # The ring is turned 160 degrees about (1, 1, 0): its axis lies 20 degrees from the file's z.
+    assert abs(record["tilt_deg"] - 20.0) < 0.5
 
 
 @pytest.mark.parametrize("command", [["geometry", "cylinder"], ["mesh"]])
