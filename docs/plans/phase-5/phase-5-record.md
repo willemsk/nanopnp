@@ -730,3 +730,19 @@ At WP5.15's plan the author ruled the settings list, the store's clean-up in WP5
 > drawn by `webgui` when its tile opens it, its scene written once (REV-28, REV-30); the I–V; the quantities; an axial cut.
 > Probes and cuts are linked to their field, and a run to its result (FR-33). Comparison shows two runs side by side on
 > one scale or as their difference. Q37 to Q41 move here. Tag `v0.6.0-alpha.20`.
+
+## Amended 11 November 2026 (§8.2.39 AO1 to AO3)
+
+At WP5.16's plan the author ruled that a pore's axis is found whatever the pore, chain groups and `axis: cavity`
+included, all in WP5.16 (AO1); that the Prepare tool draws the axis and the membrane from typed values (AO2); and that
+a variant is linked to its parent by default, with a full copy offered (AO3). The entry read:
+
+> ### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
+>
+> Library steps first: stage 1's axis estimated from the channel cavity for a single-chain or mixed-chain pore, gated like
+> the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41);
+> each atom's effective radius and residue index held by `ProtonationTable`, so the density reads scaled radii from one
+> place (REV-218; CODE_REVIEW_036 candidate 4, D4.1, D4.2, C4.1, C4.2; AL22), VER-62 unmoved.
+> Then the tools, opening with their prototype round on 2WCD (AJ8): Prepare structure, Ensemble, Protonation, Charge edit
+> (FR-38's control over WP5.04's step) and View, the molecule drawn by Mol*, the molecular model's exposed values
+> declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.

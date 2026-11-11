@@ -189,8 +189,9 @@ network yet. The list is a registry that a later package or a plugin extends, an
 remote connection (a WSL instance, a compute server) or a plugin (custom physics) (AN2).
 
 **Several items are open at once** (WB-04); a variant is derived from its parent and shown as its
-difference, and a comparison is a saved project item. **A refusal** shows at its field and in the problems
-list, naming the rule, the value, the case path and a remedy (WB-12, WB-25). **The layout** is a designed
+difference: a molecular model's variant is linked to its parent by default, holding only its residue edits, or a
+full copy on request (§8.2.39 AO3); a comparison is a saved project item. **A refusal** shows at its field and in
+the problems list, naming the rule, the value, the case path and a remedy (WB-12, WB-25). **The layout** is a designed
 default per suite, resized and folded by the user, saved in the project file, with *Reset layout* (WB-13).
 
 ## Look and feel
@@ -257,10 +258,10 @@ Each tool has its settings and its live view (S6). The mockup screen named is in
 
 | Suite | Tool | Settings | Live view | Screen |
 |---|---|---|---|---|
-| Molecular | Prepare structure | The structure file, the chains, the axis tilt (estimated or typed), the flip, the membrane's centre; the orientation gate; *Save prepared structure* | 3D: the axis and the membrane slab, dragged by their handles | `m-prepare` |
+| Molecular | Prepare structure | The structure file, the chains, the axis tilt (estimated or typed), the flip, the membrane's centre; the orientation gate; *Save prepared structure* | 3D: the axis and the membrane slab, drawn from the values typed in the pane and stepped by the arrow keys; dragging them by handles comes later (§8.2.39 AO2; REV-238) | `m-prepare` |
 | Molecular | Ensemble | The source (a trajectory or the structure alone), the stride, the frames used with their Q<sub>net</sub> | 3D, one frame or the frames overlaid | `m-ensemble` |
 | Molecular | Protonation | The pH, the force field, the titration; *Build molecular model*; the residue states | 3D and the residue strip, each residue with its sign | `m-protonation` |
-| Molecular | Charge edit | A titratable residue's protonation state, an integer change of its charge on its titratable group, or a scale on a residue's radii, on every chain, saved as a variant with its difference from its parent (§8.2.19 U6; §8.2.31 AG9 to AG11) | 3D, the residue picked or chosen from a list | `m-charge` |
+| Molecular | Charge edit | A titratable residue's protonation state, an integer change of its charge on its titratable group, or a scale on a residue's radii, on every chain, saved as a variant with its difference from its parent: linked by default, holding only its edits and following its parent, or a full copy on request (§8.2.19 U6; §8.2.31 AG9 to AG11; §8.2.39 AO3) | 3D, the residue picked or chosen from a list | `m-charge` |
 | Molecular | View | The representation, the colouring, the background, the slab, the clip; a residue list | 3D, with the charge's diverging bar | `m-view` |
 | Continuum | Protein geometry | Stages 2 to 4: the grid and kernel, the point group, the isolevel; *Build geometry* | (r, z): the density, the variance, the contour and the probe-radius profile as layers | `g-geometry` |
 | Continuum | Contour | The isolevel, the smoothing, the simplification; the vertices; the gate | (r, z) editor over the map; the radius against z | `g-contour` |
