@@ -423,9 +423,13 @@ body .nicegui-footer.frame-footer {
   align-self: stretch;
   width: 100%;
 }
+/* The pane scrolls by itself, so the view stays in place beside a long one. */
 .main-row:has(.tool-pane) .sub-page {
   order: -1;
   flex: 0 0 21rem;
+  max-height: calc(100vh - 7.5rem);
+  overflow-y: auto;
+  padding-right: var(--gap);
 }
 .main-row:has(.tool-pane) .view-region {
   flex: 1 1 0;
@@ -438,6 +442,10 @@ body .nicegui-footer.frame-footer {
 .tool-pane {
   width: 100%;
   gap: var(--gap);
+}
+/* Every control of a pane takes its width, so a short option never narrows its field. */
+.tool-pane .q-field {
+  width: 100%;
 }
 .tool-pane .refused:empty {
   display: none;

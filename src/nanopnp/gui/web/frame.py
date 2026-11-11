@@ -163,6 +163,9 @@ class Views(Protocol):
     def changes_moved(self) -> None:
         """Count and list the changed values again, after a tool wrote one."""
 
+    def queue_moved(self) -> None:
+        """Show the queue's one line again, after a build started or ended."""
+
     async def settled(self) -> None:
         """Wait until what the address opened in the frame, such as the palette, has opened."""
 
@@ -190,6 +193,7 @@ class _Frame:
         self.rail_box: ui.column
         self.changes_table: ui.table
         self.changed_label: ui.label
+        self.queue_label: ui.label
         self.view: ui.element
         self.molecule_built = False
         self.drawer: ui.left_drawer
@@ -317,6 +321,10 @@ class _Frame:
         argument = "null" if scene_url is None else json.dumps(scene_url)
         # A long timeout: Mol* builds in seconds on a machine with no GPU.
         await ui.run_javascript(f"nano.scene({argument}, {json.dumps(key)})", timeout=60)
+
+    def queue_moved(self) -> None:
+        """Show the queue's one line again, after a build started or ended."""
+        self.queue_label.text = self.shell.queue.status_line()
 
     def changes_moved(self) -> None:
         """Count and list the changed values again, after a tool wrote one."""
@@ -688,7 +696,9 @@ class _Frame:
         bench = self.shell.bench
         problems = len(self.problems()) or (1 if bench.project is None and bench.refusal else 0)
         with ui.row().classes("statusbar items-center no-wrap"):
-            ui.label(self.shell.queue.status_line()).props("role=status data-control=queue-status")
+            self.queue_label = ui.label(self.shell.queue.status_line()).props(
+                "role=status data-control=queue-status"
+            )
             ui.space()
             self.toggle_button = ui.button("Queue and log", on_click=self.toggle_panel).props(
                 "flat dense no-caps data-control=panel-toggle"

@@ -153,7 +153,10 @@ class MolecularModel:
         return self._held.refusal
 
     def states(self) -> dict[str, StageState]:
-        """Return each stage's state: built from the store, else building, refused or empty."""
+        """Return each stage's state: built from the store, else building, refused or empty.
+
+        A stage after a refused one is empty: it was not reached.
+        """
         self.poll()
         held = self._held
         stored = self.artefacts()
@@ -163,7 +166,7 @@ class MolecularModel:
                 found[stage] = "built"
             elif held.build is not None and index <= STAGES.index(held.build.upto):
                 found[stage] = "building"
-            elif held.refusal is not None and index >= STAGES.index(held.refusal[0]):
+            elif held.refusal is not None and stage == held.refusal[0]:
                 found[stage] = "refused"
             else:
                 found[stage] = "empty"
