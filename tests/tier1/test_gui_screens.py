@@ -227,6 +227,8 @@ def test_ver78_l_a_project_value_writes_the_project_file(browser: Browser, tmp_p
         page.goto(found.group(1))
         _ready(page, origin + "/settings?setting=significant_figures")
         page.locator("[data-control=settings-scope]").get_by_text("Project").click()
+        # The scope rebuilds the page's fields; a user-only setting leaving shows the rebuild done.
+        page.locator("[data-control=setting-theme]").wait_for(state="detached")
         figures = page.locator("[data-control=settings-significant_figures]")
         figures.fill("6")
         figures.press("Tab")
