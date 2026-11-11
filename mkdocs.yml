@@ -284,6 +284,7 @@ nav:
               - "Tier-2 test evidence: quadrature gates, the exclusion shell and the contour": _generated/model/knowledge/04-clya-geometry-and-charge/12-tier-2-test-evidence-quadrature-gates.md
               - "Tier-3 test evidence: the charged-tube sweep and the table's margin": _generated/model/knowledge/04-clya-geometry-and-charge/13-tier-3-test-evidence-the-charged-tube.md
               - "PDB2PQR's residue and hydrogen names, and the protonated density": _generated/model/knowledge/04-clya-geometry-and-charge/14-pdb2pqrs-residue-and-hydrogen-names-and-the-protonated-density.md
+              - "The channel's axis of 2WCD against its ring axis": _generated/model/knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md
           - "Analyte bodies and forces: the thesis's trapping work, the PlyAB force reference, and the tests":
               - _generated/model/knowledge/05-analyte-and-forces/index.md
               - "Analyte bodies and forces: the thesis's trapping work, the PlyAB force reference, and the tests (overview)": _generated/model/knowledge/05-analyte-and-forces/00-overview.md

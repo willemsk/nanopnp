@@ -3087,3 +3087,6 @@ for (§8.2.39 AO1), is likely to be less regular than 2WCD and to be refused.
 
 **Open**, a question for the author: keep the limits as planned and refuse such pores until one is measured, or set
 the straightness limit from a monomeric pore's structure the author names. Found at WP5.16's item 2.
+
+`orient_pore`'s fallback to the channel shares the weakness and adds a cost: a start across the wall runs all 50
+iterations, minutes on a large pore (WP5.16's item 3).
