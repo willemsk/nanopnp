@@ -9,7 +9,11 @@
 // addresses to load first, so that a server's token cookie is set; `ready` is a selector awaited
 // (90 s) after the load, as the workbench's `body[data-screen-ready="1"]`. `click` lists selectors
 // clicked in order once the page is ready, each awaited (30 s) and followed by a short settle, so
-// that a menu, a dialog or a folded rail is open when the page is shot. Writes
+// that a menu, a dialog or a folded rail is open when the page is shot. Entries that share a server
+// (the first address of `via`) run in order, since a server's state carries from one shot to the
+// next; the servers' entries run side by side, `NANOPNP_SHOOT_JOBS` at a time (default: one fewer
+// than the CPUs, at most 3; more starves the software-GL pages, and a menu opens after the shot's
+// wait). `index.json` keeps the manifest's order. Writes
 // `<out>/<id>.png` and `<out>/index.json`; a shot's `viewer` is the shell's host-document flag, or
 // null on another page, and `unmeasured` lists the text the contrast check could not measure.
 // Exits 0, or 2 if a page failed to load.
@@ -20,13 +24,17 @@
 "use strict";
 
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const { pathToFileURL } = require("url");
 const { chromium } = require("playwright");
 
+const DEFAULT_JOBS = Math.max(1, Math.min(3, os.cpus().length - 1));
 const SCREEN_SETTLE_MS = 150;
 const CLICK_SETTLE_MS = 400;
+const QUIET_MS = 150;
+const SETTLE_EXTRA_MS = 2000;
 
 // Run inside the page: WCAG 2.2 1.4.3 (contrast) and 2.5.8 (target size, minimum), measured.
 function checkPage() {
@@ -291,31 +299,111 @@ function viewerState() {
   return { ready: Boolean(flag.ready), error: String(flag.error || "") };
 }
 
-async function shootOne(browser, entry, out) {
+// Sleep `floor` ms, as every shot did, then wait on for a page that is still changing, at most
+// SETTLE_EXTRA_MS: an animation or transition runs, the fonts are loading, or the DOM changed less
+// than QUIET_MS ago. A server answering late, as with several pages open at once, would otherwise
+// be shot half drawn, a menu mid-fade. A page already still returns after two frames.
+async function settle(page, floor, entry) {
+  await page.waitForTimeout(floor);
+  if (!entry.ready) return;
+  await page.evaluate(
+    ([limit, quiet]) =>
+      new Promise((resolve) => {
+        const begin = performance.now();
+        let changed = begin - quiet;
+        const watch = new MutationObserver(() => {
+          changed = performance.now();
+        });
+        watch.observe(document.documentElement, {
+          subtree: true,
+          childList: true,
+          attributes: true,
+          characterData: true,
+        });
+        const tick = () => {
+          const now = performance.now();
+          const moving = document
+            .getAnimations()
+            .some((a) => a.playState === "running" || a.playState === "pending");
+          if ((now - changed >= quiet && !moving && document.fonts.status === "loaded") || now - begin >= limit) {
+            watch.disconnect();
+            resolve();
+          } else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    [SETTLE_EXTRA_MS, QUIET_MS],
+  );
+}
+
+// One worker's browser context and its page, kept from shot to shot: a page that is navigated again
+// keeps the scripts Chromium has compiled (the workbench loads Mol*, Quasar and Tailwind), where a
+// fresh context compiles them anew, about a second a shot. Each shot sets the viewport and colour
+// scheme it names, and starts with the storage of the previous page cleared and no error recorded.
+class Seat {
+  constructor(browser) {
+    this.browser = browser;
+    this.context = null;
+    this.page = null;
+    this.consoleErrors = [];
+    this.pageErrors = [];
+  }
+
+  async open(entry) {
+    const [width, height] = entry.viewport || [1280, 800];
+    const colorScheme = entry.scheme === "dark" ? "dark" : "light";
+    if (this.page === null) {
+      this.context = await this.browser.newContext({ viewport: { width, height }, colorScheme });
+      this.page = await this.context.newPage();
+      this.page.on("console", (message) => {
+        if (message.type() === "error") this.consoleErrors.push(message.text());
+      });
+      this.page.on("pageerror", (error) => this.pageErrors.push(String(error)));
+    } else {
+      await this.page
+        .evaluate(() => {
+          try {
+            localStorage.clear();
+            sessionStorage.clear();
+          } catch (error) {
+            // about:blank and a file page have none to clear.
+          }
+        })
+        .catch(() => {});
+      await this.page.setViewportSize({ width, height });
+      await this.page.emulateMedia({ colorScheme });
+    }
+    this.consoleErrors.length = 0;
+    this.pageErrors.length = 0;
+    return this;
+  }
+
+  // After a page that did not load or a shot that failed, the next shot starts afresh.
+  async discard() {
+    const context = this.context;
+    this.context = null;
+    this.page = null;
+    if (context) await context.close().catch(() => {});
+  }
+}
+
+async function shootOne(seat, entry, out) {
   const [width, height] = entry.viewport || [1280, 800];
-  const context = await browser.newContext({
-    viewport: { width, height },
-    colorScheme: entry.scheme === "dark" ? "dark" : "light",
-  });
-  const page = await context.newPage();
-  const consoleErrors = [];
-  const pageErrors = [];
-  page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text());
-  });
-  page.on("pageerror", (error) => pageErrors.push(String(error)));
+  const { context, page, consoleErrors, pageErrors } = await seat.open(entry);
 
   const records = [];
   let loaded = true;
   try {
-    for (const address of entry.via || []) await page.goto(address, { waitUntil: "load", timeout: 60000 });
+    // A request in the context's cookie jar takes the launch token's cookie as a page load would,
+    // without drawing the page.
+    for (const address of entry.via || []) await context.request.get(address, { timeout: 60000 });
     await page.goto(entry.url, { waitUntil: "load", timeout: 60000 });
     if (entry.ready) await page.waitForSelector(entry.ready, { timeout: 90000 });
     // After the ready wait: a click on a page whose socket has not connected is lost.
     for (const selector of entry.click || []) {
       await page.waitForSelector(selector, { state: "visible", timeout: 30000 });
       await page.click(selector, { timeout: 30000 });
-      await page.waitForTimeout(CLICK_SETTLE_MS);
+      await settle(page, CLICK_SETTLE_MS, entry);
     }
   } catch (error) {
     loaded = false;
@@ -346,10 +434,10 @@ async function shootOne(browser, entry, out) {
 
   if (!loaded) {
     records.push({ ...record(entry.id, entry.url), file: null });
-    await context.close();
+    await seat.discard();
     return { records, loaded };
   }
-  await page.waitForTimeout(entry.wait_ms || 0);
+  await settle(page, entry.wait_ms || 0, entry);
 
   const screens = entry.expand
     ? await page.$$eval(entry.expand, (elements) =>
@@ -370,56 +458,87 @@ async function shootOne(browser, entry, out) {
     const url = screen ? `${entry.url.split("#")[0]}#${screen}` : entry.url;
     records.push({ ...record(id, url), viewer, ...checks });
   }
-  await context.close();
   return { records, loaded };
+}
+
+// The server an entry's shots share: the first address it loads, else its own page.
+function serverOf(entry) {
+  const address = (entry.via || [])[0] || entry.url;
+  return /^https?:/.test(address) ? new URL(address).origin : address;
+}
+
+async function shootSafely(seat, entry, out) {
+  try {
+    return await shootOne(seat, entry, out);
+  } catch (error) {
+    await seat.discard();
+    // One page that cannot be shot is recorded as failed; the other pages keep their records.
+    const records = [
+      {
+        id: entry.id,
+        file: null,
+        url: entry.url,
+        viewport: entry.viewport || [1280, 800],
+        scheme: entry.scheme || "light",
+        console: [],
+        page_errors: [`shoot failed: ${error.message}`],
+        viewer: null,
+        contrast: [],
+        nontext: [],
+        targets: [],
+        unmeasured: [],
+      },
+    ];
+    return { records, loaded: false };
+  }
+}
+
+// The log line of each shot, written as its entry finishes: the order is the shooting's.
+function report(records) {
+  for (const r of records) {
+    const problems =
+      r.page_errors.length +
+      r.console.length +
+      r.contrast.length +
+      r.nontext.length +
+      r.targets.length +
+      (r.viewer && !r.viewer.ready ? 1 : 0);
+    console.log(`${r.id}: ${r.file || "not loaded"}${problems ? `, ${problems} findings` : ""}`);
+  }
 }
 
 async function shoot(manifest, out) {
   fs.mkdirSync(out, { recursive: true });
   const browser = await chromium.launch({ args: ["--enable-unsafe-swiftshader"] });
-  const index = [];
-  let failed = false;
-  try {
-    for (const entry of manifest) {
-      let records;
-      let loaded;
-      try {
-        ({ records, loaded } = await shootOne(browser, entry, out));
-      } catch (error) {
-        // One page that cannot be shot is recorded as failed; the other pages keep their records.
-        loaded = false;
-        records = [
-          {
-            id: entry.id,
-            file: null,
-            url: entry.url,
-            viewport: entry.viewport || [1280, 800],
-            scheme: entry.scheme || "light",
-            console: [],
-            page_errors: [`shoot failed: ${error.message}`],
-            viewer: null,
-            contrast: [],
-            nontext: [],
-            targets: [],
-            unmeasured: [],
-          },
-        ];
-      }
-      index.push(...records);
-      failed = failed || !loaded;
-      for (const r of records) {
-        const problems =
-          r.page_errors.length +
-          r.console.length +
-          r.contrast.length +
-          r.nontext.length +
-          r.targets.length +
-          (r.viewer && !r.viewer.ready ? 1 : 0);
-        console.log(`${r.id}: ${r.file || "not loaded"}${problems ? `, ${problems} findings` : ""}`);
+  const results = new Array(manifest.length);
+  const chains = new Map();
+  manifest.forEach((entry, position) => {
+    const key = serverOf(entry);
+    if (!chains.has(key)) chains.set(key, []);
+    chains.get(key).push(position);
+  });
+  const queue = [...chains.values()];
+  const jobs = Math.max(1, Number(process.env.NANOPNP_SHOOT_JOBS) || DEFAULT_JOBS);
+  const work = async () => {
+    const seat = new Seat(browser);
+    for (let chain = queue.shift(); chain; chain = queue.shift()) {
+      for (const position of chain) {
+        results[position] = await shootSafely(seat, manifest[position], out);
+        report(results[position].records);
       }
     }
+    await seat.discard();
+  };
+  try {
+    await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, work));
   } finally {
     await browser.close();
+  }
+  const index = [];
+  let failed = false;
+  for (const { records, loaded } of results) {
+    index.push(...records);
+    failed = failed || !loaded;
   }
   fs.writeFileSync(path.join(out, "index.json"), JSON.stringify(index, null, 2) + "\n");
   return failed ? 2 : 0;

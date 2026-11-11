@@ -51,10 +51,17 @@ drawn. Five groups, all by default:
 - `molecular`: the Molecular tools on a project holding only the cached 2WCD molecular model, its store empty
   (`shell-molecular-<name>-<scheme>`): `refused`, Prepare after a build of a structure moved off z under
   `axis: z`, and `building`, Protonation shot while its build runs. The built tools are the `2wcd` group's
-  `m-<tool>` shots and the empty ones the `states` group's.
+  `m-<tool>` shots and the empty ones the `states` group's. The `2wcd` group also opens the windows over a
+  tool (`PROJECT_EXTRAS`): *Open structure…*, the titratable groups, the warnings and the settings.
 
-Needs Playwright through `NODE_PATH` and the `gui` extra. A first run takes about seven minutes: the states
-walk their cases and the 2WCD project walks a dodecamer.
+Needs Playwright through `NODE_PATH` and the `gui` extra. All five groups, 202 shots, take about five minutes
+on four cores once the 2WCD cache exists (seventeen when each shot ran alone, each in a browser context of its
+own); the first render also builds that cache. The servers start together. `shoot.cjs` runs the shots of one server in order, since a server's
+state carries from shot to shot, and the servers side by side on `NANOPNP_SHOOT_JOBS` workers (default: the
+CPUs less one, at most 3). Each worker keeps one page, navigated again for each shot, so Chromium compiles
+Mol* and Quasar once. More workers than that starve the software-GL pages: a menu then opens after the shot's
+wait, and the shot differs. A shot waits for its `wait_ms`, then for any animation or change still going, at
+most two seconds more. The longest chain, `extra`, takes about a minute alone.
 
 `shoot.cjs` finds Playwright through `NODE_PATH`; `node .claude/scripts/gui/shoot.cjs --self-check
 <s>/selfcheck` checks the browser renders a WebGL page.
