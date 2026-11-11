@@ -68,7 +68,9 @@ The scope itself, with the tolerance rule, is the NOTE of [7.1](../07-verificati
   core and the file of its level. (§8.2.16 R5, R12; `.claude/workflow/core.md`)
 * Beside them, `/np-gui <render | review | publish | collect | grill>` renders screens and mockups
   headless, has them reviewed, publishes them for the author's verdicts, collects the verdicts and
-  runs a design round. A package that changes a screen uses it. Its `shell` target renders the browser
+  runs a design round. A render goes to the author as a digest of at most 20 picks, each standing
+  for a group of near-identical shots and saying why it was picked and what to look for; the verdict
+  on a pick holds for its group (the author, at WP5.15's collect). A package that changes a screen uses it. Its `shell` target renders the browser
   workbench in every fixture state, and `nanopnp gui --dev` is the local live loop: it serves the
   workbench and restarts on a change to its source (`CONTRIBUTING.md`). A suite's package opens with its
   tools prototyped over 2WCD's artefacts (Physics, which has no molecule, over example 01's NaCl case) and rendered in their states for the author's verdicts and a

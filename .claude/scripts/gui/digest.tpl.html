@@ -1,0 +1,187 @@
+<title>WP5.15 Frame Digest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column of wide review rows (picture left, reasons and verdict right), grouped by topic;
+   the workbench's own tokens (docs/design/tokens.css) so the page reads like the screens it judges. */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --sel: #ece7ff; --line: #d9dce3; --control-edge: #7c8290;
+  --ink: #16181d; --muted: #4f5563; --accent: #5b3fd6; --focus: #5b3fd6;
+  --ok: #1b7043; --warn: #8a5200; --err: #b4231a;
+  --font-ui: "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-num: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #14171c; --panel: #1c2027; --sel: #2e2752; --line: #2f3440; --control-edge: #6f7685;
+  --ink: #e8eaef; --muted: #a9afbd; --accent: #b4a2ff; --focus: #b4a2ff;
+  --ok: #79d6a0; --warn: #f2bd5e; --err: #ff8f86; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #14171c; --panel: #1c2027; --sel: #2e2752; --line: #2f3440; --control-edge: #6f7685;
+  --ink: #e8eaef; --muted: #a9afbd; --accent: #b4a2ff; --focus: #b4a2ff;
+  --ok: #79d6a0; --warn: #f2bd5e; --err: #ff8f86; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font-ui); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1320px; margin: 0 auto; }
+header { padding-block: 24px 12px; display: grid; gap: 6px; }
+h1 { margin: 0; font-size: 1.5rem; font-weight: 600; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 75ch; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding-block: 8px; }
+.bar a { font-size: 12.5px; color: var(--muted); text-decoration: none; padding: 4px 2px; }
+.bar a:hover { color: var(--ink); text-decoration: underline; }
+.tally { margin-left: auto; font: 12.5px var(--font-num); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tally b { color: var(--ink); font-weight: 500; }
+main { padding-block: 12px 48px; display: grid; gap: 32px; }
+section { display: grid; gap: 14px; scroll-margin-top: 56px; }
+section > h2 { font-size: 1.05rem; font-weight: 600; margin: 0; }
+section > .sub { margin: -10px 0 0; color: var(--muted); font-size: 13px; }
+.pick { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); overflow: hidden; }
+.pick[data-verdict="keep"] { border-color: var(--ok); }
+.pick[data-verdict="drop"] { border-color: var(--err); }
+.pick[data-verdict="change"] { border-color: var(--warn); }
+@media (max-width: 820px) { .pick { grid-template-columns: minmax(0, 1fr); } }
+.shot { display: block; padding: 0; border: 0; background: var(--bg); cursor: zoom-in; aspect-ratio: 1280 / 800; width: 100%; max-width: 100%; align-self: start; }
+.shot img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.body { padding: 12px 14px 14px; display: grid; gap: 10px; align-content: start; min-width: 0; border-left: 1px solid var(--line); }
+@media (max-width: 820px) { .body { border-left: 0; border-top: 1px solid var(--line); } }
+.head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.num { font: 500 12px var(--font-num); color: var(--muted); font-variant-numeric: tabular-nums; }
+h3 { margin: 0; font-size: 1rem; font-weight: 600; }
+.id { font: 12px var(--font-num); color: var(--muted); overflow-wrap: anywhere; }
+.k { font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 2px; }
+.t { margin: 0; font-size: 13.5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font: 500 11.5px var(--font-num); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--muted); }
+details { font-size: 12.5px; color: var(--muted); }
+details summary { cursor: pointer; }
+details ul { margin: 6px 0 0; padding-left: 16px; font: 11.5px/1.6 var(--font-num); overflow-wrap: anywhere; }
+.verdict { display: flex; gap: 6px; }
+.verdict button { font: 500 12.5px var(--font-ui); flex: 1; min-height: 32px; border-radius: var(--radius); border: 1px solid var(--control-edge); background: var(--panel); color: var(--ink); cursor: pointer; }
+.verdict button[aria-pressed="true"][data-v="keep"] { background: var(--ok); border-color: var(--ok); color: var(--panel); }
+.verdict button[aria-pressed="true"][data-v="drop"] { background: var(--err); border-color: var(--err); color: var(--panel); }
+.verdict button[aria-pressed="true"][data-v="change"] { background: var(--warn); border-color: var(--warn); color: var(--panel); }
+textarea { font: 13px var(--font-ui); color: var(--ink); background: var(--bg); border: 1px solid var(--control-edge); border-radius: var(--radius); padding: 6px 8px; resize: vertical; min-height: 52px; width: 100%; box-sizing: border-box; }
+.saved { font-size: 11.5px; color: var(--muted); min-height: 1em; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.notice { background: var(--sel); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: var(--radius); font-size: 13px; margin: 0; }
+dialog { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 0; max-width: min(96vw, 1400px); border-radius: var(--radius); }
+dialog img { display: block; max-width: 100%; height: auto; }
+dialog .cap { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; font: 12.5px var(--font-num); }
+dialog::backdrop { background: rgb(0 0 0 / 0.6); }
+dialog button { font: 500 12.5px var(--font-ui); border: 1px solid var(--control-edge); background: var(--panel); color: var(--ink); border-radius: var(--radius); padding: 4px 12px; cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) { .pick { transition: border-color .15s; } }
+</style>
+
+<header class="wrap">
+  <h1 id="title"></h1>
+  <p class="lede" id="lede"></p>
+  <p class="notice" id="store-note" hidden></p>
+</header>
+<nav class="bar" aria-label="Groups"><div class="wrap" id="nav"><span class="tally" id="tally"></span></div></nav>
+<main class="wrap" id="main"></main>
+<dialog id="zoom"><img id="zoom-img" alt=""><div class="cap"><span id="zoom-id"></span><button id="zoom-close" type="button">Close</button></div></dialog>
+
+<script>
+const DATA = /*DATA*/null;
+const ROUND = DATA.round || 1;
+const verdicts = {};
+let db = null;
+const $ = (s, el = document) => el.querySelector(s);
+const el = (tag, props = {}, kids = []) => { const e = document.createElement(tag); Object.assign(e, props); for (const k of kids) e.append(k); return e; };
+const block = (label, text) => el("div", {}, [el("p", { className: "k", textContent: label }), el("p", { className: "t", textContent: text })]);
+
+function pickCard(p, n) {
+  const card = el("article", { className: "pick", id: p.id });
+  const img = el("img", { src: p.file, alt: `${p.title}: ${p.id}`, loading: "lazy" });
+  const shot = el("button", { className: "shot", type: "button", title: "Open full size" }, [img]);
+  shot.addEventListener("click", () => { $("#zoom-img").src = p.file; $("#zoom-img").alt = img.alt; $("#zoom-id").textContent = p.id; $("#zoom").showModal(); });
+  const body = el("div", { className: "body" });
+  body.append(el("div", { className: "head" }, [el("span", { className: "num", textContent: String(n).padStart(2, "0") }), el("h3", { textContent: p.title })]));
+  body.append(el("div", { className: "id", textContent: p.id }));
+  body.append(block("Why this one", p.why), block("Look for", p.look));
+  body.append(el("div", { className: "chips" }, p.decisions.map(d => el("span", { className: "chip", textContent: `${d} ${DATA.decisions?.[d] ?? ""}`.trim() }))));
+  const others = p.members.filter(m => m !== p.id);
+  if (others.length) {
+    const det = el("details", {}, [el("summary", { textContent: `Your verdict also covers ${others.length} more shot${others.length > 1 ? "s" : ""}` }), el("ul", {}, others.map(m => el("li", { textContent: m })))]);
+    body.append(det);
+  }
+  const vbox = el("div", { className: "verdict", role: "group" });
+  vbox.setAttribute("aria-label", `Verdict on ${p.title}`);
+  for (const v of ["keep", "drop", "change"]) {
+    const b = el("button", { type: "button", textContent: v });
+    b.dataset.v = v; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => save(p.id, { verdict: verdicts[p.id]?.verdict === v ? "" : v }));
+    vbox.append(b);
+  }
+  const note = el("textarea", { id: `note-${p.id}`, placeholder: "Note: what to change, or why (optional)", rows: 2 });
+  note.setAttribute("aria-label", `Note on ${p.title}`);
+  let t; note.addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => save(p.id, { note: note.value }), 700); });
+  note.addEventListener("blur", () => { clearTimeout(t); if ((verdicts[p.id]?.note || "") !== note.value) save(p.id, { note: note.value }); });
+  const saved = el("div", { className: "saved" }); saved.setAttribute("aria-live", "polite");
+  body.append(vbox, note, saved);
+  card.append(shot, body);
+  return card;
+}
+
+function paint(id) {
+  const card = document.getElementById(id); if (!card) return;
+  const v = verdicts[id] || {};
+  card.dataset.verdict = v.verdict || "";
+  for (const b of card.querySelectorAll(".verdict button")) b.setAttribute("aria-pressed", String(b.dataset.v === v.verdict));
+  const note = card.querySelector("textarea");
+  if (document.activeElement !== note && typeof v.note === "string") note.value = v.note;
+}
+
+async function save(id, patch) {
+  const next = { verdict: "", note: "", ...verdicts[id], ...patch, round: ROUND };
+  verdicts[id] = next; paint(id); tally();
+  const s = document.getElementById(id).querySelector(".saved");
+  if (!db) { s.textContent = "Not saved: the verdict store is not available in this view."; return; }
+  s.textContent = "Saving…";
+  try { await db.collection("verdicts").doc(id).set({ verdict: next.verdict, note: next.note, round: ROUND }); s.textContent = "Saved"; }
+  catch (e) { s.textContent = e?.code === "not_granted" || e?.code === "permission_denied" ? "Not saved: this view cannot write verdicts." : "Not saved: try again."; }
+}
+
+function tally() {
+  const n = { keep: 0, drop: 0, change: 0 }; let shots = 0;
+  for (const p of DATA.picks) { const v = verdicts[p.id]?.verdict; if (v in n) { n[v]++; shots += p.members.length; } }
+  $("#tally").innerHTML = `<b>${n.keep + n.drop + n.change}</b>/${DATA.picks.length} marked (${shots} of ${DATA.total} shots) · keep <b>${n.keep}</b> · change <b>${n.change}</b> · drop <b>${n.drop}</b>`;
+}
+
+function build() {
+  document.title = DATA.title;
+  $("#title").textContent = DATA.title;
+  $("#lede").textContent = DATA.lede;
+  const main = $("#main"), nav = $("#nav"), tallyEl = $("#tally");
+  let n = 0;
+  for (const g of DATA.groups) {
+    const picks = DATA.picks.filter(p => p.group === g.key);
+    if (!picks.length) continue;
+    const sec = el("section", { id: `g-${g.key}` }, [el("h2", { textContent: g.title }), el("p", { className: "sub", textContent: g.sub })]);
+    for (const p of picks) sec.append(pickCard(p, ++n));
+    main.append(sec);
+    nav.insertBefore(el("a", { href: `#g-${g.key}`, textContent: `${g.title} (${picks.length})` }), tallyEl);
+  }
+  $("#zoom-close").addEventListener("click", () => $("#zoom").close());
+  $("#zoom").addEventListener("click", e => { if (e.target === $("#zoom")) $("#zoom").close(); });
+  tally();
+}
+
+build();
+(async () => {
+  const note = $("#store-note");
+  const timer = setTimeout(() => { note.hidden = false; note.textContent = "Loading saved verdicts…"; }, 1500);
+  try { db = await window.claude?.use?.("db"); } catch { db = null; }
+  clearTimeout(timer);
+  if (!db) { note.hidden = false; note.textContent = "Verdicts cannot be saved in this view. Open the page on claude.ai, signed in, to mark the shots."; return; }
+  note.hidden = true;
+  const fail = setTimeout(() => { note.hidden = false; note.textContent = "Saved verdicts are taking long to load; marking still saves."; }, 10000);
+  db.collection("verdicts").onSnapshot(snap => {
+    clearTimeout(fail); note.hidden = true;
+    for (const d of snap.docs) { const v = d.data() || {}; verdicts[d.id] = { verdict: v.verdict || "", note: v.note || "", round: v.round }; paint(d.id); }
+    tally();
+  }, () => { clearTimeout(fail); note.hidden = false; note.textContent = "Saved verdicts could not be loaded; reload the page."; });
+})();
+</script>
