@@ -5,16 +5,26 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from fastapi.responses import Response
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse, Response
 from nicegui import app as nicegui_app
 from nicegui import events, ui
 
 from nanopnp.gui.web.assets import ASSETS, TOKENS
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
 from nanopnp.gui.web.link import Extent, png
-from nanopnp.gui.web.screens import SUITES, Suite, screen
+from nanopnp.gui.web.molecular import MolecularModel
+from nanopnp.gui.web.molview import (
+    COLOURINGS,
+    REPRESENTATIONS,
+    annotation,
+    scene,
+    structure_text,
+)
+from nanopnp.gui.web.screens import SUITES, Suite, Tool, screen
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
+from nanopnp.gui.web.tools import tool_page
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from fastapi import FastAPI
@@ -28,8 +38,11 @@ STYLESHEETS = (
 )
 
 
+MOLECULAR_TOOLS: tuple[Tool, ...] = SUITES[0].tools
+
 ROUTES: dict[str, Route] = {
     **{f"/{suite.id}": Route(suite.id) for suite in SUITES},
+    **{f"/molecular/{tool.id}": Route("molecular", "molecule") for tool in MOLECULAR_TOOLS},
     screen("st-charge").path: Route("study", "molecule"),
     "/settings": Route(None),
 }
@@ -70,6 +83,53 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         link = shell.bench.link
         return Response(_blank_map() if link is None else link.map_png, media_type="image/png")
 
+    @app.get("/api/scene")
+    def charge_scene() -> JSONResponse:
+        """Serve the scene of the charge screen: the study's first frame, as Mol* styles it."""
+        if shell.bench.link is None:
+            return JSONResponse(None)
+        return JSONResponse(scene(None, structure_url="/api/structure", annotation_url=None))
+
+    def molecular(name: str) -> MolecularModel:
+        project = shell.bench.project
+        if project is None or name not in project.items("molecular"):
+            raise HTTPException(404, f"no molecular model {name!r}")
+        return MolecularModel(project, name, shell.queue)
+
+    @app.get("/api/molecular/{name}/structure")
+    def molecular_structure(name: str) -> Response:
+        """Serve what the view draws of a model: its built frame, else its source file."""
+        text, form = structure_text(molecular(name))
+        return Response(text, media_type="chemical/x-pdb" if form == "pdb" else "chemical/x-cif")
+
+    @app.get("/api/molecular/{name}/annotation")
+    def molecular_annotation(name: str, by: str = "chain") -> JSONResponse:
+        """Serve one colour per residue, as a MolViewSpec annotation."""
+        if by not in COLOURINGS:
+            raise HTTPException(422, f"by: {by!r} is not one of {', '.join(COLOURINGS)}")
+        return JSONResponse(annotation(molecular(name), by))
+
+    @app.get("/api/molecular/{name}/scene")
+    def molecular_scene(
+        name: str, representation: str = "cartoon", colour: str = "chain"
+    ) -> JSONResponse:
+        """Serve the MolViewSpec scene of a model, or null where it has nothing to draw."""
+        if representation not in REPRESENTATIONS or colour not in COLOURINGS:
+            raise HTTPException(422, "an unknown representation or colouring")
+        model = molecular(name)
+        text, form = structure_text(model)
+        if not text:
+            return JSONResponse(None)
+        return JSONResponse(
+            scene(
+                model,
+                structure_url=f"/api/molecular/{name}/structure",
+                annotation_url=f"/api/molecular/{name}/annotation?by={colour}",
+                representation=representation,
+                form=form,
+            )
+        )
+
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
     # Our own small files are not cached (max-age 0): NiceGUI's hour of caching would hide an edit
     # that `nanopnp gui --dev` restarted the server for.
@@ -89,10 +149,12 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 heading(f"{suite.title} suite", 1)
                 ui.label(f"This suite builds {suite.builds}.")
                 for tool in suite.tools:
-                    if tool == "Charge on the mesh":
-                        ui.link(tool, screen("st-charge").path).props("data-control=open-charge")
+                    if f"/{suite.id}/{tool.id}" in ROUTES:
+                        ui.link(tool.title, f"/{suite.id}/{tool.id}").props(
+                            f"data-control=open-{tool.id}"
+                        )
                     else:
-                        ui.label(f"{tool}: in a later package").classes("later")
+                        ui.label(f"{tool.title}: in a later package").classes("later")
                 if suite.id == "study":
                     ui.label(f"State: {bench.name}").props("data-control=state")
                     with ui.row().props("data-control=stages"):
@@ -181,7 +243,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 )
 
         async def start() -> None:
-            await built.show_molecule(None if link is None else "/api/structure")
+            await built.show_molecule(None if link is None else "/api/scene", "study")
             if residue:
                 await select(residue)
 
@@ -202,6 +264,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
     pages: dict[str, Callable[..., None]] = {
         **{f"/{suite.id}": suite_page(suite) for suite in SUITES},
+        **{f"/molecular/{tool.id}": tool_page(shell, tool) for tool in MOLECULAR_TOOLS},
         screen("st-charge").path: charge,
         "/settings": settings_page,
     }

@@ -59,7 +59,7 @@ _SUITE_COMMANDS: tuple[Command, ...] = tuple(
         f"{suite.title} suite",
         "view",
         f"Alt+Shift+{number}",
-        tuple(tool.lower() for tool in suite.tools),
+        tuple(tool.title.lower() for tool in suite.tools),
         section="suites",
     )
     for number, suite in enumerate(SUITES, start=1)

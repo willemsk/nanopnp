@@ -249,6 +249,12 @@ frame, chain, residue and atom for an atom it would edit at −1; `radius_scales
 - In a state with no structure each tool screen shows its empty `tool-status`; on a model from `inputs.pqr`, Prepare
   and Ensemble name the PQR there. VER-78 (m) runs in `empty`.
 
+> **Outcome — item 7.** The panes are `gui/web/tools.py`, beside `molecular.py` and `molview.py`. A colouring is one
+> colour per residue, computed by the server (the charge on VER-60's diverging scale, saturating at 1 e) and read by
+> `color_from_uri`; no palette of Mol*'s is used. A primitive is `{kind: primitive, params: {kind: tube}}` in the
+> vendored Mol*. The membrane's discs and the clip come with the Prepare and View drafts of item 8. The charge screen
+> loads through `/api/scene` too. `server._stop_children` cancels a window's builds through `molecular.cancel_builds`.
+
 **Item 8.** `render_shell.py`'s 2WCD project gains `/molecular/<tool>` shots built, a refused stage 1 (`axis: z` off
 the budget) and a build held mid-walk.
 
@@ -279,7 +285,7 @@ the budget) and a build held mid-walk.
   `geometry/contour.py` (D4); done when `test_protonation.py` and `test_density.py` pass, VER-62 unmoved.
   **Executor:** general-purpose on Sonnet
 - [x] 6b175ef 5. Compaction checkpoint. **Executor:** main
-- [ ] 6. `io/models.py`, `api/project.py`, `gui/solver.py`, §5.3.1's NOTE on model files (D5, D6); done when
+- [x] 30b7430 6. `io/models.py`, `api/project.py`, `gui/solver.py`, §5.3.1's NOTE on model files (D5, D6); done when
   `tests/tier1/test_project.py` and `test_models.py` pass. **Executor:** main
 - [ ] 7. `gui/web/screens.py`, `pages.py`, `frame.py`, `molecular.py`, `molview.py`, `assets/bridge.js`, VER-78's text
   (D7, D8); done when VER-78 (a) to (d) and (m) pass. **Executor:** main

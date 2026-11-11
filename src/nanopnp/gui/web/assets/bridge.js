@@ -6,16 +6,49 @@ window.nano = {
   builds: 0,
   // The build under way: a call while Mol* builds waits for it rather than building a second one.
   building: null,
-  // Build Mol* the first time the frame shows it; after that, show and redraw the one built.
-  async ensure(structureUrl) {
+  // The structure the scene now shown draws; the camera is kept while it stays the same.
+  sceneKey: null,
+  // Show a MolViewSpec scene the server writes, building Mol* the first time; null empties the view.
+  async scene(url, key) {
+    document.body.dataset.screenReady = '0';
     if (this.viewer === null && this.building === null) {
-      this.building = this.init(structureUrl).finally(() => { this.building = null; });
+      this.building = this.init().finally(() => { this.building = null; });
     }
-    if (this.building !== null) {
-      await this.building;
-      return;
+    if (this.building !== null) await this.building;
+    const plugin = this.viewer.plugin;
+    const text = url ? await (await fetch(url, { credentials: 'same-origin' })).text() : 'null';
+    // A scene Mol* refuses is reported and the view still settles, so the page never hangs on it.
+    try {
+      if (text.trim() === 'null') {
+        if (this.sceneKey !== null) await plugin.clear();
+        this.sceneKey = null;
+      } else {
+        await this.viewer.loadMvsData(text, 'mvsj', {
+          replaceExisting: true, keepCamera: this.sceneKey === key,
+          sourceUrl: new URL(url, window.location.href).href,
+        });
+        this.sceneKey = key;
+        await this.once(plugin.behaviors.state.isBusy, (busy) => !busy);
+      }
+    } catch (error) {
+      console.error(`the 3D scene ${url} was refused: ${error}`);
     }
+    this.tune();
     await this.reveal();
+  },
+  once(stream, test) {
+    return new Promise((done) => {
+      let sub = null, fired = false;
+      sub = stream.subscribe((v) => {
+        if (fired || !test(v)) return;
+        fired = true; done(); setTimeout(() => sub && sub.unsubscribe(), 0);
+      });
+    });
+  },
+  // A scene resets the canvas, so the settings of ours go back on after each.
+  tune() {
+    this.viewer.plugin.canvas3d.setProps({ postprocessing: { occlusion: { name: 'off', params: {} }, outline: { name: 'off', params: {} }, shadow: { name: 'off', params: {} } } });
+    this.background();
   },
   async reveal() {
     const canvas = this.viewer.plugin.canvas3d;
@@ -52,8 +85,8 @@ window.nano = {
       document.body.dataset.drawn = String((Number(document.body.dataset.drawn) || 0) + 1);
     }));
   },
-  // Ready means Mol* has built and drawn once; a click before that is lost.
-  async init(structureUrl) {
+  // Mol* is built empty; a scene loads the structure. A click before the first draw is lost.
+  async init() {
     const { StructureProperties, Queries, QueryContext, StructureSelection, StructureElement } = molstar.lib.structure;
     this.lib = { StructureProperties, Queries, QueryContext, StructureSelection, StructureElement };
     this.builds += 1;
@@ -62,27 +95,12 @@ window.nano = {
       layoutShowSequence: false, layoutShowLog: false, layoutShowLeftPanel: false,
       viewportShowExpand: false, viewportShowSelectionMode: false, viewportShowAnimation: false,
     });
-    if (structureUrl) await this.viewer.loadStructureFromUrl(structureUrl, 'pdb', false);
     this.viewer.plugin.behaviors.interaction.click.subscribe((e) => {
       const { loci } = e.current;
       if (!StructureElement.Loci.is(loci) || StructureElement.Loci.isEmpty(loci)) return;
       emitEvent('mol_pick', { key: this.key(StructureElement.Loci.getFirstLocation(loci)) });
     });
-    const plugin = this.viewer.plugin;
-    const once = (stream, test) => new Promise((done) => {
-      let sub = null, fired = false;
-      sub = stream.subscribe((v) => {
-        if (fired || !test(v)) return;
-        fired = true; done(); setTimeout(() => sub && sub.unsubscribe(), 0);
-      });
-    });
-    await once(plugin.behaviors.state.isBusy, (busy) => !busy);
-    plugin.canvas3d.setProps({ postprocessing: { occlusion: { name: 'off', params: {} }, outline: { name: 'off', params: {} }, shadow: { name: 'off', params: {} } } });
-    this.background();
-    const drawn = once(plugin.canvas3d.didDraw, () => true);
-    plugin.canvas3d.requestDraw(true);
-    await drawn;
-    document.body.dataset.screenReady = '1';
+    await this.once(this.viewer.plugin.behaviors.state.isBusy, (busy) => !busy);
   },
   show(key) {
     const { Queries, QueryContext, StructureSelection } = this.lib;
