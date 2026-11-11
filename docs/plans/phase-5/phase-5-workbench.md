@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.14 merged (`v0.6.0-alpha.14`); WP5.15, the frame, delivered and in review, then the suites WP5.16 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.15 merged (`v0.6.0-alpha.15`); WP5.16, the Molecular suite, planned, then the suites WP5.17 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -213,8 +213,8 @@ headings, dialogs and render states. A 2WCD render state, walked once and cached
 critique joins the review, its quality floor is read before a screen is built, and a design file derived from
 `tokens.css` is generated (AJ6). VER-78 over the new states. Tag `v0.6.0-alpha.15`.
 
-**Delivered 10 November 2026** ([the plan](wp5.15-the-frame-on-quasars-components.md)); tag `v0.6.0-alpha.15` once
-merged. REV-203's frame part, REV-204, REV-207, REV-208 and REV-210 to REV-214 fixed. The frame is Quasar's layout with
+**Delivered 10 November 2026** ([the plan](wp5.15-the-frame-on-quasars-components.md)); merged 11 November 2026 as
+`v0.6.0-alpha.15`. REV-203's frame part, REV-204, REV-207, REV-208 and REV-210 to REV-214 fixed. The frame is Quasar's layout with
 sub-pages and one Mol* host (VER-78 (m)); five suites in two groups, Alt+Shift+1 to 5 following the bar (AN7); the rail
 a tree headed by the project's name; the palette Quasar's searchable select over each command and setting; the
 settings one registry with a user and a project scope and a page at `/settings` (VER-78 (j) to (l); §5.3.5's NOTE); the
@@ -227,15 +227,18 @@ Live constraints: the compute settings are WP5.19's (AN1, AN4); a cleaned run's 
 WP5.20 (AN5); each suite's field marks and *Modified only* filters are its own package's; the keyboard pass over the
 canvases is WP5.21's (QR-16).
 
-### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`)
+### WP5.16 — The Molecular suite (FR-37, FR-38; REV-121; REV-41's `prepare`; REV-218; §8.2.39 AO1 to AO3)
 
-Library steps first: stage 1's axis estimated from the channel cavity for a single-chain or mixed-chain pore, gated like
-the permutation axis, with §5.3.1 and VER-48 (REV-121; §8.2.24 Z5); a `prepare` command over `orient_pore` (REV-41);
-each atom's effective radius and residue index held by `ProtonationTable`, so the density reads scaled radii from one
-place (REV-218; CODE_REVIEW_036 candidate 4, D4.1, D4.2, C4.1, C4.2; AL22), VER-62 unmoved.
-Then the tools, opening with their prototype round on 2WCD (AJ8): Prepare structure, Ensemble, Protonation, Charge edit
-(FR-38's control over WP5.04's step) and View, the molecule drawn by Mol*, the molecular model's exposed values
-declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
+Library steps first: stage 1's axis found whatever the pore, from the ring of chains or of chain groups (`A+B,C+D,…`)
+under C2 and above and from the channel's empty space under C1, `axis: cavity` asking for the channel's axis on any
+pore and `axis: z` checked against whichever axis applies, with §5.2, §5.3.1 and VER-48 (REV-121; §8.2.24 Z5; AO1); a
+`prepare` command over `orient_pore`, which also takes a typed axis (REV-41); each atom's effective radius and residue
+index held by `ProtonationTable`, so the density reads scaled radii from one place (REV-218; CODE_REVIEW_036 candidate
+4, D4.1, D4.2, C4.1, C4.2; AL22), VER-62 unmoved; a model built alone, keyed as a study's walk keys it; and a molecular
+model's variant, linked to its parent by default or a full copy (AO3). Then the tools, opening with their prototype
+round on 2WCD (AJ8): Prepare structure, the axis and the membrane drawn from typed values (AO2), Ensemble, Protonation,
+Charge edit (FR-38's control over WP5.04's step) and View, the molecule drawn by Mol*, the molecular model's exposed
+values declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
 
 ### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
 
@@ -336,7 +339,7 @@ uv sync --all-extras --group docs && uv run docs/scripts/generate.py && uv run m
 | WP5.13, case and model files | 1, 2 | VER-62 unmoved; VER-61 and VER-72 with no new edge; FR-39's study, model and variable tests through the one reader |
 | WP5.14, sweeps and keying | 1, 2 | VER-62 unmoved; VER-64's forecast against the walk; a planned sweep resolves each member once (REV-221) |
 | WP5.15, the frame | 1 | VER-78's frame states over the fixture cases (the 2WCD state is the render set's, walked and cached by `/np-gui`, not a Tier 1 walk); a setting declared once reaches the page, its search, the palette and its file; a cleaned store rebuilds what it removed and never reads half an entry (FR-27) |
-| WP5.16, Molecular | 1, 2 | REV-121's cavity axis against a known axis (VER-48); VER-62 unmoved by REV-218; VER-78 |
+| WP5.16, Molecular | 1, 2 | The channel's axis and the chain groups' ring axis against a known axis, and their gates (VER-48); a model built alone keys as a study's walk does; a linked variant follows its parent; VER-62 unmoved by REV-218; VER-78 |
 | WP5.17, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; MOD-03's edge gone (VER-61); VER-78 |
 | WP5.18, Physics | 1 | A physics model edited in the suite resolves to the case it shows; VER-78 |
 | WP5.19, Study | 1 | VER-44 and VER-60 as restated; VER-78; the 200 ms measure (criterion 6) |

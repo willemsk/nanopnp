@@ -3057,3 +3057,12 @@ for a redesign rather than a fix:
 **Open**, a question for the author: each is put at the prototype round of the suite that first needs
 it, from WP5.16 (§8.2.34 AJ8), with the screens in front of the author; the settings window and the
 folded rail at WP5.16's, the first.
+
+### REV-238: The Prepare tool's axis and membrane are not dragged by handles
+
+The design document's Prepare row drew the pore's axis and the membrane slab in the 3D view, dragged by their handles
+(WB-14). Mol* ships unmodified and offers no handle that a pointer drags (CON-09), so WP5.16 draws both from the values
+typed in the tool's pane and stepped by the arrow keys.
+
+**Deferred** (§8.2.39 AO2, 11 November 2026): dragging by handles, with its keyboard equivalent already in place, goes
+to WP5.21's pass over the canvases or a later tool package. Found at WP5.16's plan.

@@ -1,28 +1,28 @@
 # Current work
 
-Updated 10 November 2026 (WP5.15 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 11 November 2026 (WP5.16 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released. Phase 5's library steps, the first frame, the written knowledge and both tidy-ups are merged.
-The frame's rebuild is delivered for review: Quasar's components, five suites, the settings page and two store
-clean-up buttons. Then the five suites, the guided route and the close: about 60 sessions and 55 to 110 agent hours remain.
+Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups and rebuilt frame are merged. The Molecular
+suite is planned: any pore's axis found, a command that prepares a structure, and five tools drafted on 2WCD for your
+verdicts, then finished. Four suites, the route and the close follow: about 55 sessions and 50 to 100 agent hours.
 
-**Your call.** Run `/np-ship wp 5.15`. Adopt two measuring tools or not (the trial recommends neither).
+**Your call.** Approve the Molecular plan after its review. Adopt two measuring tools or not (the trial says neither).
 
 ## Position
 
-- Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0` (D7), `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.14 merged
-  (`v0.6.0-alpha.14`). Then the shell, WP5.15 to WP5.22 (§8.2.36).
-  **WP5.15** [delivered](phase-5/wp5.15-the-frame-on-quasars-components.md) on `ccr-4b90fcd6-fjrv03`, its PR
-  open; tag `v0.6.0-alpha.15` once merged. Next, `/np-ship wp 5.15`. host: claude-code.
+- Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.15 merged
+  (`v0.6.0-alpha.15`); then the suites, the route and the close.
+  **WP5.16** [planned](phase-5/wp5.16-the-molecular-suite.md) on `claude/pensive-lovelace-1cc77i`, its PR open.
+  Next, `/np-plan wp 5.16 review`. host: claude-code.
 
 ## Not to be re-decided
 
 - **Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a
-  browser workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15); **packages `WP5.01` on** (S16).
+  workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15); **packages `WP5.01` on** (S16).
 - **The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a VER-62 miss
   is reverted or re-pinned by ruling (G10, I4).
 - **An open item is a `REV-nn` row** until resolved (H12).
@@ -39,18 +39,18 @@ clean-up buttons. Then the five suites, the guided route and the close: about 60
 - **Physics is a third model with its own suite; models declare exposed values; Quasar's components build the
   frame; suites are prototyped on 2WCD first; `impeccable` serves `np-gui`** (§8.2.34 AJ1 to AJ10).
 - **Layers read a model's declaration, never its name** (VER-56). **A golden carries the stage-7 recipe** (E3).
-- **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4); a move takes the release's identifier, `nanopnp/case/v0.6` (G6).
+- **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4), a move taking `nanopnp/case/v0.6` (G6).
 - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
-- **Written knowledge, then clean-ups, then the frame; packages renumbered; plans archived by phase** (§8.2.36 AL5,
-  AL22 to AL26). **Text follows the tested program; its gaps, REV-223 to 225, are Phase 6's** (§8.2.37 AM1, AM2).
+- **Plans are archived by phase** (§8.2.36 AL5, AL22 to AL26). **Text follows the tested program; its gaps, REV-223 to 225, are Phase 6's** (§8.2.37 AM1, AM2).
+- **Any pore's axis is found; a variant follows its parent unless copied** (§8.2.39).
 
 ## Somebody else's
 
 - **The paper's figure data** for VAL-16 and VAL-17 (D6); E1's ensemble legs; **Read the Docs**;
   **`$NANOPNP_REFERENCE_DATA` on the nightly runner**.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
-- **The 200 ms redraw** on the author's GPU, WP5.19 (AF4; AG7; AJ10).
-- **Rulings on a residual cycle (H6) or drift (I4)**; **Tier 3's archived PQRs**.
+- **The 200 ms redraw** on the author's GPU, WP5.19 (AF4; AG7; AJ10); **verdicts on each suite's prototype** (AJ8).
+- **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
 - **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-218 WP5.16's, REV-170 WP5.17's (AG1; AJ10; AL22); the
   compute settings WP5.19's and a cleaned run's rebuild WP5.20's (AN4, AN5).
 
@@ -60,7 +60,7 @@ clean-up buttons. Then the five suites, the guided route and the close: about 60
 - **Amendments:** `phase-5-record.md`.
 - **The follow-ups:** CODE_REVIEW_039 with `findings.md`; CODE_REVIEW_036's designs and corrections; §8.2.36.
 - **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5.
-- **Workbench:** `docs/design/workbench.md`; `docs/design/spike/report.md`; §8.2.17, §8.2.28, §8.2.30,
+- **Workbench:** `docs/design/workbench.md`; §8.2.17, §8.2.30,
   §8.2.31, §8.2.34; `docs/design/reviews/2026-11-05-frame.md`.
 
 ## Handoff Rules
