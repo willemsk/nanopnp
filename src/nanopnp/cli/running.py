@@ -42,6 +42,12 @@ def _run(args: argparse.Namespace) -> int:
     payload = dict(result.record())
     lines = [f"run      {result.directory}", f"record   {record}"]
     lines += [stage_line(entry) for entry in result.stages]
+    structure = result.artefacts.get("structure")
+    notes = [] if structure is None else structure.summary.get("warnings", [])
+    if notes:
+        # A cached stage 1 does not log; its stored summary still carries what it went on despite.
+        payload["warnings"] = notes
+        lines += [f"warning  {line}" for line in notes]
     lines += [
         f"{name:<20} {format_value(value)}" for name, value in sorted(result.quantities.items())
     ]

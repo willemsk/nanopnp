@@ -605,10 +605,18 @@ def test_ver48_the_channel_axis_gates_fire(monkeypatch: pytest.MonkeyPatch) -> N
     message = refused(lambda: cavity.detect_channel(ball))
     assert re.search(r"channel coverage gate: 0 of the \d+ planes", message), message
 
-    message = refused(lambda: cavity.detect_channel(_wall(8, bend_nm=2.0)))
-    found = re.search(r"channel straightness gate: a plane's centre lies (\d+\.\d+) nm", message)
+    bent = cavity.detect_channel(_wall(8, bend_nm=2.0))
+    assert bent.straightness_nm > cavity.STRAIGHTNESS_NM
+    message = cavity.straightness_warning(bent)
+    assert message is not None
+    found = re.search(
+        r"channel straightness: a plane's centre lies (\d+\.\d+) nm from the axis, "
+        r"over the 0\.030 nm limit",
+        message,
+    )
     assert found is not None, message
     assert 0.3 <= float(found.group(1)) <= 2.0
+    assert cavity.straightness_warning(cavity.detect_channel(_wall(8))) is None
 
     tilted = _wall(8) @ _rotation(np.array([1.0, 0.0, 0.0]), math.radians(12.0)).T
     message = refused(lambda: cavity.detect_channel(tilted))
