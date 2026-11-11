@@ -258,6 +258,18 @@ frame, chain, residue and atom for an atom it would edit at −1; `radius_scales
 **Item 8.** `render_shell.py`'s 2WCD project gains `/molecular/<tool>` shots built, a refused stage 1 (`axis: z` off
 the budget) and a build held mid-walk.
 
+> **Outcome — item 8's review.** The reviewer's 25 findings on the render at `a6b9ae5`, decided: fixed before the
+> digest, the pane scrolling by itself, full-width controls, the charge read from the table's residue charges, a PQR
+> model's fields disabled, Ensemble's draft block, the colour bar out of the draft block with its ends named, the queue
+> line following a build, and a stage after a refused one reading not built. Put to the author on the digest: the
+> view's place and size and the charge screen's order (REV-234), the colour's direction, the point group in Prepare,
+> and which action is each tool's primary one. Item 11's, with the verdicts: the tool list on every tool's page with
+> each tool's state (WB-05, WB-07), *Open structure…* and a project-relative path, Prepare opened side-on with the
+> slab, the residue strip and the states on the pane, View's background, slab and residue list, a refusal marked at
+> its field and listed among the problems, the warnings and unapplied states opened from their counts, the state
+> glyphs and colours (WB-20), the build's stage, numbers through `numbers.shown`, the later-phase banners, and the
+> empty states' wording. `impeccable`'s critique runs with item 12's review.
+
 **Item 11.**
 - Prepare: *Open structure…* a path field over `Project.add_input`; the chains or groups; *Estimate* runs `orient_pore`
   off the event loop, or a typed tilt and azimuth in degrees; *Flip* swaps `cis_end`; the registration residues and the
@@ -287,7 +299,7 @@ the budget) and a build held mid-walk.
 - [x] 6b175ef 5. Compaction checkpoint. **Executor:** main
 - [x] 30b7430 6. `io/models.py`, `api/project.py`, `gui/solver.py`, §5.3.1's NOTE on model files (D5, D6); done when
   `tests/tier1/test_project.py` and `test_models.py` pass. **Executor:** main
-- [ ] 7. `gui/web/screens.py`, `pages.py`, `frame.py`, `molecular.py`, `molview.py`, `assets/bridge.js`, VER-78's text
+- [x] e46a48b 7. `gui/web/screens.py`, `pages.py`, `frame.py`, `molecular.py`, `molview.py`, `assets/bridge.js`, VER-78's text
   (D7, D8); done when VER-78 (a) to (d) and (m) pass. **Executor:** main
 - [ ] 8. The five tools drafted; `render_shell.py`; `/np-gui render shell`, `review` and `publish` (D9); done when the
   digest is published. **Executor:** main

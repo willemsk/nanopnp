@@ -244,7 +244,9 @@ class _Pane:
                     value=exposed,
                     on_change=lambda e, p=path: self.expose(p, bool(e.value)),
                 ).props(f'dense aria-label="Expose {spec.label} to studies"')
-        if self.model is None and isinstance(control, ui.select | ui.number | ui.input):
+        # A model that reads a PQR has no structure for these values to act on.
+        idle = self.model is None or not self.model.has_structure()
+        if idle and isinstance(control, ui.select | ui.number | ui.input):
             control.disable()
         self.rows[path] = row
         self.marks[path] = (mark, reset)
@@ -295,7 +297,7 @@ class _Pane:
             if isinstance(drift, list) and drift:
                 rows.append(("Largest axis drift", f"{_number(max(drift))}°"))
         elif self.tool.id in {"protonation", "edit", "view"} and table is not None:
-            rows.append(("Q_net per frame", _joined(table.get("q_net_e"), " e")))
+            rows.append(("Net charge per frame", _joined(table.get("q_net_e"), " e")))
             rows.append(("Residues", str(table.get("residues", "?"))))
             unapplied = table.get("unapplied")
             count = len(unapplied) if isinstance(unapplied, list) else 0
@@ -318,12 +320,24 @@ class _Pane:
     # -- the controls laid out for the prototype round ----------------------------
 
     def drafts(self) -> None:
-        if self.tool.id == "ensemble":
-            return
+        if self.tool.id in {"protonation", "view"}:
+            self.colour_bar()
         with ui.column().classes("draft w-full"):
             ui.label("Laid out for your verdict; not wired yet.").classes("later")
             drafted: list[ui.element] = []
-            if self.tool.id == "prepare":
+            if self.tool.id == "ensemble":
+                drafted.append(
+                    ui.select(
+                        ["A trajectory", "The structure file's models"], label="Source"
+                    ).props("dense outlined")
+                )
+                drafted.append(ui.number("Stride").props("dense outlined"))
+                heading("Frames", 2)
+                ui.label("Each frame used, with its net charge and its time.").classes("later")
+                drafted.append(ui.slider(min=1, max=2, value=1).props('aria-label="Frame shown"'))
+                drafted.append(ui.checkbox("Overlay the frames"))
+            elif self.tool.id == "prepare":
+                drafted.append(ui.button("Open structure…").props("outline no-caps"))
                 heading("Axis", 2)
                 with ui.row().classes("items-center no-wrap w-full"):
                     drafted.append(ui.number("Tilt", suffix="°").props("dense outlined"))
@@ -360,17 +374,22 @@ class _Pane:
             elif self.tool.id == "view":
                 drafted.append(ui.checkbox("Clip at the axis"))
                 ui.link("3D background, in Settings", "/settings?setting=viewer_background")
-                with (
-                    ui.element("div")
-                    .classes("colour-bar")
-                    .props('role="img" aria-label="Residue charge, from minus one to plus one e"')
-                ):
-                    ui.label("\u22121 e")
-                    ui.element("span").classes("colour-bar-scale")
-                    ui.label("+1 e")
+                drafted.append(ui.checkbox("Show the membrane slab"))
+                drafted.append(ui.input("Find a residue").props("dense outlined"))
             for element in drafted:
                 if isinstance(element, DisableableElement):
                     element.disable()
+
+    def colour_bar(self) -> None:
+        ui.label("Residue charge").classes("field-label")
+        with (
+            ui.element("div")
+            .classes("colour-bar")
+            .props('role="img" aria-label="Residue charge, from minus one e to plus one e"')
+        ):
+            ui.label("\u22121 e, negative")
+            ui.element("span").classes("colour-bar-scale").props("data-colorbar")
+            ui.label("+1 e, positive")
 
     def mark(self, path: str, changed: bool) -> None:
         mark, reset = self.marks[path]
@@ -473,6 +492,7 @@ class _Pane:
         self.build_button.enable()
         self.build_button.text = "Cancel build" if model.building else self.build_title
         self.show_readout()
+        self.built.queue_moved()
 
     def on_build(self) -> None:
         model = self.model

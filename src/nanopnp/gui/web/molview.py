@@ -171,18 +171,24 @@ def annotation(model: MolecularModel, by: Colouring) -> list[dict[str, object]]:
     if by == "charge":
         if table is None:
             return []
-        stop = int(table.frame_offsets[1])
-        totals: dict[tuple[str, int, str], float] = {}
-        keys = zip(
-            table.chain[:stop].tolist(),
-            table.resid[:stop].tolist(),
-            table.icode[:stop].tolist(),
-            table.charge_e[:stop].tolist(),
-            strict=True,
+        # The table's own residue charges, the mean over its frames: the shell sums nothing.
+        import numpy as np
+
+        charge = np.asarray(table.residue_charge_e, dtype=np.float64)
+        if charge.ndim == 2:
+            charge = charge.mean(axis=0)
+        totals = dict(
+            zip(
+                zip(
+                    (str(c) for c in table.residue_chain.tolist()),
+                    (int(r) for r in table.residue_resid.tolist()),
+                    (str(i) for i in table.residue_icode.tolist()),
+                    strict=True,
+                ),
+                charge.tolist(),
+                strict=True,
+            )
         )
-        for chain, resid, icode, charge in keys:
-            key = (str(chain), int(resid), str(icode))
-            totals[key] = totals.get(key, 0.0) + float(charge)
         colours = lookup_table("diverging")
         middle = (len(colours) - 1) // 2
         rows = []
