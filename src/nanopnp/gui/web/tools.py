@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from nicegui import ui
+from nicegui.elements.mixins.disableable_element import DisableableElement
+from nicegui.elements.mixins.text_element import TextElement
 from nicegui.elements.mixins.validation_element import ValidationElement
 
 from nanopnp.api.project import Project
@@ -126,6 +128,7 @@ class _Pane:
         self.modified_only = False
         self.was_building = False
         self.status: ui.label
+        self.readout_box: ui.column
         self.detail: ui.label
         self.build_button: ui.button
 
@@ -168,6 +171,12 @@ class _Pane:
         with ui.column().classes("tool-pane").props("data-control=tool-pane"):
             heading(self.tool.title, 1)
             ui.label(self.subject()).classes("muted")
+            with ui.row().classes("items-center"):
+                self.build_button = ui.button(self.build_title, on_click=self.on_build).props(
+                    "unelevated no-caps color=primary data-control=tool-build"
+                )
+            self.status = ui.label().props("data-control=tool-status role=status")
+            self.detail = ui.label().classes("refused")
             ui.checkbox("Modified only", on_change=self.on_modified).props(
                 "data-control=tool-modified"
             )
@@ -176,12 +185,8 @@ class _Pane:
                 self.field(path, body, path in changed, path in exposed)
             if self.tool.id == "view":
                 self.view_controls()
-            with ui.row().classes("items-center"):
-                self.build_button = ui.button(self.build_title, on_click=self.on_build).props(
-                    "unelevated no-caps color=primary data-control=tool-build"
-                )
-            self.status = ui.label().props("data-control=tool-status role=status")
-            self.detail = ui.label().classes("refused")
+            self.readout_box = ui.column().classes("readout").props("data-control=tool-readout")
+            self.drafts()
         self.refresh()
         ui.timer(1.0, self.tick)
         ui.timer(0.1, self.start, once=True)
@@ -259,6 +264,113 @@ class _Pane:
             value=self.look["colour"],
             on_change=lambda e: self.restyle("colour", str(e.value)),
         ).props("dense outlined data-control=view-colour")
+
+    # -- what the build gave ---------------------------------------------------
+
+    def readout(self) -> list[tuple[str, str]]:
+        """Return the built stage's figures this tool shows, as (name, value)."""
+        model = self.model
+        if model is None:
+            return []
+        held = model.artefacts()
+        structure = held["structure"].summary if "structure" in held else None
+        table = held["protonation"].summary if "protonation" in held else None
+        rows: list[tuple[str, str]] = []
+        if self.tool.id == "prepare" and structure is not None:
+            axis = _mapping(structure.get("axis"))
+            rows.append(("Axis found by", str(axis.get("method", "permutation"))))
+            for name, gate in _mapping(structure.get("gates")).items():
+                rows.append((f"Gate, {name}", _gate_text(_mapping(gate))))
+            check = _mapping(structure.get("frame_check"))
+            if check:
+                rows.append(("Aligned frame, tilt", f"{_number(check.get('tilt_deg'))}°"))
+        elif self.tool.id == "ensemble" and structure is not None:
+            frames = _mapping(structure.get("frames"))
+            used = frames.get("indices")
+            rows.append(("Frames used", str(len(used) if isinstance(used, list) else "?")))
+            rows.append(("Frames available", str(frames.get("available", "?"))))
+            rows.append(("Atoms", str(structure.get("atoms", "?"))))
+            rows.append(("Chains, in ring order", _joined(structure.get("chains_cyclic_order"))))
+            drift = structure.get("drift_deg")
+            if isinstance(drift, list) and drift:
+                rows.append(("Largest axis drift", f"{_number(max(drift))}°"))
+        elif self.tool.id in {"protonation", "edit", "view"} and table is not None:
+            rows.append(("Q_net per frame", _joined(table.get("q_net_e"), " e")))
+            rows.append(("Residues", str(table.get("residues", "?"))))
+            unapplied = table.get("unapplied")
+            count = len(unapplied) if isinstance(unapplied, list) else 0
+            rows.append(("States PROPKA asked for and the force field lacks", str(count)))
+            rows.append(("PDB2PQR and PROPKA warnings", str(len(_mapping(table.get("warnings"))))))
+        return rows
+
+    def show_readout(self) -> None:
+        self.readout_box.clear()
+        rows = self.readout()
+        with self.readout_box:
+            if not rows:
+                return
+            heading("Built", 2)
+            with ui.element("dl").classes("readout-list"):
+                for name, value in rows:
+                    TextElement(tag="dt", text=name).classes("muted")
+                    TextElement(tag="dd", text=value)
+
+    # -- the controls laid out for the prototype round ----------------------------
+
+    def drafts(self) -> None:
+        if self.tool.id == "ensemble":
+            return
+        with ui.column().classes("draft w-full"):
+            ui.label("Laid out for your verdict; not wired yet.").classes("later")
+            drafted: list[ui.element] = []
+            if self.tool.id == "prepare":
+                heading("Axis", 2)
+                with ui.row().classes("items-center no-wrap w-full"):
+                    drafted.append(ui.number("Tilt", suffix="°").props("dense outlined"))
+                    drafted.append(ui.number("Azimuth", suffix="°").props("dense outlined"))
+                with ui.row().classes("items-center"):
+                    drafted.append(ui.button("Estimate").props("outline no-caps"))
+                    drafted.append(ui.button("Flip").props("outline no-caps"))
+                heading("Membrane", 2)
+                drafted.append(
+                    ui.input("Registration residues").props('dense outlined hint="As 164:186"')
+                )
+                drafted.append(ui.number("Centre, z", suffix="nm").props("dense outlined"))
+                drafted.append(ui.button("Save prepared structure").props("outline no-caps"))
+            elif self.tool.id == "protonation":
+                drafted.append(ui.button("Residue states…").props("outline no-caps"))
+            elif self.tool.id == "edit":
+                heading("Edit a residue", 2)
+                drafted.append(
+                    ui.select([], label="Residue", with_input=True).props("dense outlined")
+                )
+                drafted.append(
+                    ui.select(
+                        ["Protonation state", "Charge change", "Radius scale"], label="Edit"
+                    ).props("dense outlined")
+                )
+                drafted.append(ui.input("Value").props("dense outlined"))
+                drafted.append(ui.button("Add edit").props("outline no-caps"))
+                heading("Save", 2)
+                drafted.append(ui.input("Variant name").props("dense outlined"))
+                drafted.append(
+                    ui.radio(["Linked to its parent", "Full copy"], value="Linked to its parent")
+                )
+                drafted.append(ui.button("Save as variant…").props("outline no-caps"))
+            elif self.tool.id == "view":
+                drafted.append(ui.checkbox("Clip at the axis"))
+                ui.link("3D background, in Settings", "/settings?setting=viewer_background")
+                with (
+                    ui.element("div")
+                    .classes("colour-bar")
+                    .props('role="img" aria-label="Residue charge, from minus one to plus one e"')
+                ):
+                    ui.label("\u22121 e")
+                    ui.element("span").classes("colour-bar-scale")
+                    ui.label("+1 e")
+            for element in drafted:
+                if isinstance(element, DisableableElement):
+                    element.disable()
 
     def mark(self, path: str, changed: bool) -> None:
         mark, reset = self.marks[path]
@@ -360,6 +472,7 @@ class _Pane:
             self.detail.text = f"{STAGE_TITLES.get(refusal[0], refusal[0])} refused: {refusal[1]}"
         self.build_button.enable()
         self.build_button.text = "Cancel build" if model.building else self.build_title
+        self.show_readout()
 
     def on_build(self) -> None:
         model = self.model
@@ -418,6 +531,27 @@ class _Pane:
                 f"document.querySelector('[data-control={name}]')?.querySelector('input')?.focus()",
                 timeout=10,
             )
+
+
+def _mapping(value: object) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
+
+
+def _number(value: object) -> str:
+    return f"{value:.3g}" if isinstance(value, int | float) else "?"
+
+
+def _joined(value: object, unit: str = "") -> str:
+    if not isinstance(value, list):
+        return "?"
+    return ", ".join(f"{item}{unit}" for item in value)
+
+
+def _gate_text(gate: dict[str, Any]) -> str:
+    measured = next((v for k, v in gate.items() if k.startswith("measured")), None)
+    limit = next((v for k, v in gate.items() if k.startswith(("limit", "budget"))), None)
+    unit = "°" if any(key.endswith("_deg") for key in gate) else " nm"
+    return f"{_number(measured)}{unit} of {_number(limit)}{unit} allowed"
 
 
 def _edit_text(entry: object) -> str:

@@ -48,7 +48,7 @@ DEPOSITED = ROOT / "tests" / "data" / "structures" / "2wcd.pdb.gz"
 VIEWPORT = [1280, 800]
 SCHEMES = ("light", "dark")
 READY = 'body[data-screen-ready="1"]'
-GROUPS = ("states", "2wcd", "extra", "compact")
+GROUPS = ("states", "2wcd", "extra", "compact", "molecular")
 THEME_NAME = "dusk"
 START_S = 1800
 """How long a server may take to print its ready line: the 2WCD walk comes before it."""
@@ -234,11 +234,66 @@ def compact_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dic
     ]
 
 
+OFF_AXIS_A = 5.0
+"""How far the refused project's structure is moved off the z axis, in Å: past the `z` budget."""
+
+BUILD = "[data-control=tool-build]"
+
+
+def molecular_project(out: Path, name: str, *, off_axis: bool) -> Path:
+    """Return a project holding only the cached 2WCD molecular model, its store empty.
+
+    With ``off_axis`` the structure is moved off z and the model asks for ``axis: z``, so its
+    stage 1 is refused at the displacement gate.
+    """
+    source = cached_project(out)
+    folder = out.resolve() / "projects" / name
+    if folder.exists():
+        shutil.rmtree(folder)
+    Project.create(folder, name=name)
+    (model,) = sorted((source / "models" / "molecular").glob("*.yaml"))
+    shutil.copy(model, folder / "models" / "molecular" / model.name)
+    shutil.copytree(source / "inputs", folder / "inputs", dirs_exist_ok=True)
+    project = Project.open(folder)
+    if off_axis:
+        (structure,) = sorted((folder / "inputs").glob("*.pdb"))
+        moved = []
+        for line in structure.read_text(encoding="utf-8").splitlines():
+            if line.startswith(("ATOM", "HETATM")):
+                line = f"{line[:30]}{float(line[30:38]) + OFF_AXIS_A:8.3f}{line[38:]}"
+            moved.append(line)
+        structure.write_text("\n".join(moved) + "\n", encoding="utf-8")
+        project.set_value("molecular", model.stem, "structure.symmetry.axis", "z")
+    return folder
+
+
+def molecular_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return the Molecular tools refused at stage 1 and held mid-build, on 2WCD.
+
+    The built and the empty tools are the ``2wcd`` and ``states`` groups' ``m-<tool>`` shots.
+    """
+    manifest = []
+    for name, path, wait_ms in (
+        ("refused", "/molecular/prepare", 45000),
+        ("building", "/molecular/protonation", 2500),
+    ):
+        # One project per shot: a second build of the same model would find the first's state.
+        for scheme in SCHEMES:
+            folder = molecular_project(out, f"{name}-{scheme}", off_axis=name == "refused")
+            process, first = start("--project", str(folder))
+            servers.append(process)
+            shot = entry(f"shell-molecular-{name}", first, path, scheme, [BUILD])
+            shot["wait_ms"] = wait_ms
+            manifest.append(shot)
+    return manifest
+
+
 GROUP_ENTRIES = {
     "states": states_entries,
     "2wcd": project_entries,
     "extra": extra_entries,
     "compact": compact_entries,
+    "molecular": molecular_entries,
 }
 
 
