@@ -856,6 +856,7 @@ STRUCTURE_RECORD_KEYS: tuple[str, ...] = (
     "chains_cyclic_order",
     "axis",
     "gates",
+    "warnings",
     "frames",
     "superposition",
     "drift_deg",

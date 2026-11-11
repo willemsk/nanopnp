@@ -149,6 +149,7 @@ def _prepare(args: argparse.Namespace) -> int:
         f"centroid  {payload['off_axis_nm']:.3f} nm from the axis, at z = "
         f"{payload['centroid_z_nm']:g} nm",
     ]
+    lines += [f"warning   {line}" for line in payload["warnings"]]
     _emit(payload, lines, as_json=args.json)
     return EXIT_OK
 

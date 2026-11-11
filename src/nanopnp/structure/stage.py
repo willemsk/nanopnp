@@ -45,6 +45,7 @@ from nanopnp.structure.cavity import (
     check_z_channel,
     detect_channel,
     refit,
+    straightness_warning,
 )
 from nanopnp.structure.ensemble import ORIENTATION_RULE, PAYLOAD_NAME, AlignedEnsemble
 from nanopnp.structure.read import (
@@ -215,6 +216,11 @@ def align(
         foot = record.foot_nm
         rotation = frame_rotation(record, first_centroid)
 
+    warnings: list[Canonicalisable] = []
+    if isinstance(record, ChannelRecord) and (bent := straightness_warning(record)) is not None:
+        logger.warning("%s", bent)
+        warnings.append(bent)
+
     drift: list[float] = []
     for frame in range(positions.shape[0]):
         frame_axis = (
@@ -289,6 +295,9 @@ def align(
         "frame_check": frame_check,
         "orientation_rule": ORIENTATION_RULE,
     }
+    if warnings:
+        # Present only when one fired, so the header of a straight channel keeps its digest.
+        header["warnings"] = warnings
     ensemble = AlignedEnsemble(
         positions_nm=np.asarray(aligned, dtype=np.float32),
         element=chosen.atoms.element,

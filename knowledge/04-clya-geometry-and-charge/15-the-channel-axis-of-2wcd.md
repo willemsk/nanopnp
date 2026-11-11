@@ -24,9 +24,10 @@ one against the other.
   ring's axis over the Cα axial extent, tilted 0.042° from it and 0.0095 nm aside at the foot. Each of the 28 planes
   holds a centre, the farthest **0.0148 nm** from the fitted line, and the line is fixed after 3 iterations.
   **[tested: tests/tier1/test_structure_stage.py::test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis]**
-- The two limits are twice these: `axis: z` is admitted within 0.015 nm of the channel's axis, and a centre more than
-  0.03 nm from the line refuses the axis. Both rest on this one pore, which is nearly C12 (the ring's permutation RMSD
-  is 0.026 nm).
+- The two limits are twice these: `axis: z` is admitted within 0.015 nm of the channel's axis, which refuses it beyond,
+  and a centre more than 0.03 nm from the line is warned of and does not refuse the axis (the author's ruling on
+  REV-239, 11 November 2026). Both rest on this one pore, which is nearly C12 (the ring's permutation RMSD is
+  0.026 nm).
 - Under an exact Cₙ the method returns the axis to rounding, from a start 8° or 35° off it.
   **[tested: tests/tier1/test_structure_axis.py::test_ver48_the_channel_axis_recovers_a_known_axis]**
 - A candidate centre is a point where a plane cuts a Voronoi edge. The Voronoi vertices alone do not serve: along a
@@ -37,6 +38,7 @@ one against the other.
 - Two weaknesses, both at a ragged rim or lumen. Where no atom lines the axis's side of a plane, its widest spaces are
   n equal ones off the axis; a line a little off the axis breaks their tie and can hold the iteration at a line about
   0.01 rad off. And one such centre, 0.26 nm aside on the test wall, exceeds the straightness limit. A pore less regular
-  than 2WCD may therefore be refused (REV-239). **[verified][^wp516]**
+  than 2WCD may therefore be warned of for its straightness, and refused by the `axis: z` budget (REV-239).
+  **[verified][^wp516]**
 
 [^wp516]: `docs/plans/phase-5/wp5.16-the-molecular-suite.md`, the Outcome under D2 (measured at item 2 on `tests/data/structures/2wcd.pdb.gz` and on synthetic walls).

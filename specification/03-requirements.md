@@ -104,7 +104,9 @@ preparation record beside it, `OUT` with the suffix `.prepare.json`. The axis is
 gives, else the C-alpha covariance's where one eigenvalue stands apart from the other two, else the
 channel's (§5.2 NOTE on stage 1), found from each of the three covariance axes and taken from the
 straightest that converges and covers the structure; where none does, the command is refused as a
-usage error naming what was tried. The record holds the source's name and SHA-256, the choices, the
+usage error naming what was tried. A straightest start whose farthest centre lies over the
+straightness limit does not refuse it: the command warns, naming the distance and the limit, in the
+record's `warnings` and in its text output (§8.2.39 AO4). The record holds the source's name and SHA-256, the choices, the
 axis in the file's frame, its tilt from z, how it was found (`covariance`, `channel` or `typed`) and the
 registration centroid's distance from it. Text output is a reading of the record, and `--json` is the
 record.

@@ -87,13 +87,15 @@ The line is the least-squares line through the centres, and the search is repeat
 it turns by no more than 10⁻⁶ rad and moves by no more than 10⁻⁶ nm. Under an exact Cₙ the n images
 of a candidate tie, so each centre lies on the axis and the axis is the iteration's fixed line. The
 channel's axis SHALL be refused, naming the gate and the measured value, when 50 iterations do not
-fix a line, when fewer than half the planes hold a centre, or when a centre lies more than 0.03 nm
-from the line. On chains A–L of 2WCD the channel's axis lies 0.0073 nm from the ring's over the Cα
+fix a line or when fewer than half the planes hold a centre. A centre that lies more than 0.03 nm
+from the line SHALL NOT refuse it: the build goes on and the channel is treated as straight, and the
+farthest centre's distance and the limit are reported as a warning, logged, kept in the artefact
+header's `warnings` where one fired, and printed by `nanopnp run` (§8.2.39 AO4; REV-239). On chains A–L of 2WCD the channel's axis lies 0.0073 nm from the ring's over the Cα
 extent, 0.042° from it, with a centre in each of its 28 planes and the farthest centre 0.0148 nm
 from the line; the straightness limit is twice that distance and the budget below twice that
 displacement (WP5.16; `knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`). Both
-rest on one near-symmetric pore, and a pore whose rim or lumen is ragged may be refused by the
-straightness limit (REV-239).
+rest on one near-symmetric pore. A pore whose rim or lumen is ragged may exceed the straightness
+limit and is warned of, and may be refused by the budget under `axis: z` (REV-239).
 
 The axis carries no sign of its own. It is signed to agree with the file's +z. A detected axis more
 than 10° from the file's z SHALL be refused, naming the angle, because such a frame does not name an

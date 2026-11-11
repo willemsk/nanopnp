@@ -77,6 +77,11 @@ class PreparationRecord(BaseModel):
         description="How far the registration centroid lies from the axis line used, in nm; the "
         "pore axis sits that far from r = 0 once the structure is placed."
     )
+    warnings: tuple[str, ...] = Field(
+        default=(),
+        description="What the preparation went on despite: the channel's straightness where "
+        "over its limit; empty when nothing was.",
+    )
 
 
 def _covariance(calpha: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -101,10 +106,11 @@ def _distinct_axis(values: np.ndarray, vectors: np.ndarray) -> np.ndarray | None
 
 def _channel_line(
     heavy: np.ndarray, vectors: np.ndarray, values: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, str | None]:
     # The channel's line, in the file's ångströms, from the start whose planes' centres lie
-    # straightest among those that converge and cover the structure; the orientation gate does
-    # not apply, since the file is not oriented yet.
+    # straightest among those that converge and cover the structure, with the straightness
+    # warning where even that start is over the limit; the orientation gate does not apply,
+    # since the file is not oriented yet.
     import numpy as np
 
     atoms_nm = heavy / _ANGSTROM_PER_NM
@@ -119,11 +125,7 @@ def _channel_line(
         except SymmetryGateError as error:
             tried.append(f"start {index}: {error}")
             continue
-        passes = (
-            record.converged
-            and record.coverage >= cavity.COVERAGE_FRACTION
-            and record.straightness_nm <= cavity.STRAIGHTNESS_NM
-        )
+        passes = record.converged and record.coverage >= cavity.COVERAGE_FRACTION
         tried.append(
             f"start {index}: converged {record.converged}, coverage {record.coverage:.2f}, "
             f"straightness {record.straightness_nm:.3f} nm"
@@ -134,10 +136,14 @@ def _channel_line(
         raise ValueError(
             f"the C-alpha covariance has eigenvalues {np.round(values / 100.0, 3).tolist()} nm²; "
             "none stands apart from the other two, and the channel's axis found from each of "
-            "the three covariance axes fails the convergence, coverage or straightness gate "
+            "the three covariance axes fails the convergence or coverage gate "
             f"({'; '.join(tried)}); give the axis"
         )
-    return np.asarray(best.axis), np.asarray(best.centroid_nm) * _ANGSTROM_PER_NM
+    return (
+        np.asarray(best.axis),
+        np.asarray(best.centroid_nm) * _ANGSTROM_PER_NM,
+        cavity.straightness_warning(best),
+    )
 
 
 def _signed(calpha: np.ndarray, axis: np.ndarray, cis_end: str) -> np.ndarray:
@@ -257,6 +263,7 @@ def orient_pore(
     calpha = calpha_atoms.positions.astype(np.float64)
     method: Literal["covariance", "channel", "typed"]
     point = calpha.mean(axis=0)
+    notes: list[str] = []
     if typed is not None:
         found, method = typed, "typed"
     else:
@@ -269,8 +276,11 @@ def orient_pore(
             heavy = protein.positions.astype(np.float64)[
                 ~np.isin(elements, sorted(cavity.HYDROGENS))
             ]
-            found, point = _channel_line(heavy, vectors, values)
+            found, point, bent = _channel_line(heavy, vectors, values)
             method = "channel"
+            if bent is not None:
+                logger.warning("%s", bent)
+                notes.append(bent)
     axis_used = _signed(calpha, found, cis_end)
     tilt = float(np.degrees(np.arccos(min(1.0, abs(float(axis_used[2]))))))
     logger.info(
@@ -312,6 +322,7 @@ def orient_pore(
         tilt_deg=tilt,
         method=method,
         off_axis_nm=off_axis,
+        warnings=tuple(notes),
     )
     destination.with_suffix(".prepare.json").write_text(
         record.model_dump_json(indent=2) + "\n", encoding="utf-8"

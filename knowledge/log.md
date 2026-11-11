@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-11
+* **Record**: The straightness limit of the channel's axis (0.03 nm) warns and does not refuse, as the author ruled on REV-239; the convergence, coverage and orientation gates and the `axis: z` budget still refuse. ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
 * **Record**: The channel's axis of 2WCD lies 0.0073 nm from its ring axis, its farthest centre 0.0148 nm from the line; the `z` budget and the straightness limit are twice these, and a ragged rim is the method's known weakness (WP5.16; REV-239). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
 
 ## 2026-11-10

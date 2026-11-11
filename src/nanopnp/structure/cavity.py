@@ -388,7 +388,9 @@ def channel_axis(
 
 
 def gate_channel(record: ChannelRecord) -> ChannelRecord:
-    """Apply the convergence, coverage, straightness and orientation gates to a channel's axis.
+    """Apply the convergence, coverage and orientation gates to a channel's axis.
+
+    The straightness limit is not a gate: :func:`straightness_warning` words its breach.
 
     Raises
     ------
@@ -409,12 +411,6 @@ def gate_channel(record: ChannelRecord) -> ChannelRecord:
             f"{record.coverage:.2f} against a limit of {COVERAGE_FRACTION:g}; the channel does "
             "not run the length of the structure"
         )
-    if not record.straightness_nm <= STRAIGHTNESS_NM:
-        raise SymmetryGateError(
-            f"channel straightness gate: a plane's centre lies {record.straightness_nm:.3f} nm "
-            f"from the line fitted through them, against a limit of {STRAIGHTNESS_NM:g} nm; the "
-            "channel is not straight enough to name an axis"
-        )
     if not record.tilt_deg <= ORIENTATION_LIMIT_DEG:
         raise SymmetryGateError(
             f"orientation gate: the channel's axis is {record.tilt_deg:.2f} degrees from the "
@@ -423,6 +419,16 @@ def gate_channel(record: ChannelRecord) -> ChannelRecord:
             "not name an end (SPECIFICATION.md section 5.2 NOTE on stage 1)"
         )
     return record
+
+
+def straightness_warning(record: ChannelRecord) -> str | None:
+    """Return the warning for a centre lying over the straightness limit, else None."""
+    if record.straightness_nm <= STRAIGHTNESS_NM:
+        return None
+    return (
+        f"channel straightness: a plane's centre lies {record.straightness_nm:.3f} nm from the "
+        f"axis, over the {STRAIGHTNESS_NM:.3f} nm limit; the channel is treated as straight"
+    )
 
 
 def detect_channel(atoms_nm: np.ndarray) -> ChannelRecord:
