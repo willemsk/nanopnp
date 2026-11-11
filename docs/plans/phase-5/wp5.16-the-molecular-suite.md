@@ -272,6 +272,16 @@ the budget) and a build held mid-walk.
 > the render at `d5995eb`, is published at <https://claude.ai/artifact/HRDfKwmg4WRYnowGuVB51g>, round 1; the colour
 > bar's ends measured 2.55:1 on the dark theme in that render and stand on a white plate since.
 
+> **Outcome — item 10.** All 14 picks marked, 6 `keep` and 8 `change`
+> (`docs/design/reviews/2026-11-11-molecular.md`). Ruled at the collect: every tool's pane on the left of its view
+> (REV-234); positive blue and negative red on every charge and potential display, the direction a setting; the
+> settings a window over the tool and the folded bar a strip of icons with state (REV-237); the channel's
+> straightness limit warns and does not refuse (REV-239; §8.2.39 AO4). Item 11 takes the tools' notes with them: both
+> actions side by side, dense controls, the stage bar with its progress and a small *Cancel*, the refusal card, the
+> counts opening their lists, no build on View, and the tool list beside every pane. REV-240 carries the ensemble's
+> variation view, maps beyond the two directions and one rule for safeguards; REV-235's and REV-237's other points
+> wait for a later suite's round. The design document's row is WB-39.
+
 **Item 11.**
 - Prepare: *Open structure…* a path field over `Project.add_input`; the chains or groups; *Estimate* runs `orient_pore`
   off the event loop, or a typed tilt and azimuth in degrees; *Flip* swaps `cis_end`; the registration residues and the
