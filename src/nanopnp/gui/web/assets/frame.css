@@ -439,6 +439,9 @@ body .nicegui-footer.frame-footer {
   width: 100%;
   gap: var(--gap);
 }
+.tool-pane .refused:empty {
+  display: none;
+}
 .field-row {
   display: flex;
   align-items: flex-start;
@@ -456,4 +459,38 @@ body .nicegui-footer.frame-footer {
 .field-label {
   color: var(--muted);
   font-size: var(--text-sm);
+}
+.readout,
+.draft {
+  width: 100%;
+  gap: var(--gap);
+}
+.draft {
+  border-top: 1px solid var(--line);
+  padding-top: var(--pad);
+}
+.readout-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--pad);
+  margin: 0;
+  width: 100%;
+}
+.readout-list dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.colour-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  width: 100%;
+}
+/* Moreland's cool-to-warm, as the charge map's: its ends outlined so the low end never dissolves. */
+.colour-bar-scale {
+  flex: 1;
+  height: 0.75rem;
+  border: 1px solid var(--control-edge);
+  background: linear-gradient(to right, #3b4cc0, #dddddd, #b40426);
 }

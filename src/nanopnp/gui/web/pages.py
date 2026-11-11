@@ -124,7 +124,12 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             scene(
                 model,
                 structure_url=f"/api/molecular/{name}/structure",
-                annotation_url=f"/api/molecular/{name}/annotation?by={colour}",
+                # Until a stage is built there is nothing to colour by, and Mol*'s colours stand.
+                annotation_url=(
+                    f"/api/molecular/{name}/annotation?by={colour}"
+                    if annotation(model, colour)
+                    else None
+                ),
                 representation=representation,
                 form=form,
             )

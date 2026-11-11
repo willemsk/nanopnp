@@ -31,7 +31,7 @@ light and dark. Then run `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <
 **`shell`**, the browser workbench: `uv run python .claude/scripts/gui/render_shell.py [--only <group> ...] <r>`.
 It writes `<r>/manifest.json`, runs `shoot.cjs` over it and stops its servers. Every shot is light and dark
 (`[1280, 800]`), and each waits for the screen's `data-screen-ready`, as the workbench sets it once Mol* has
-drawn. Four groups, all by default:
+drawn. Five groups, all by default:
 
 - `states`: each screen of `nanopnp.gui.web.screens.SCREENS` in each state of `nanopnp.gui.web.states.STATES`
   (`shell-<state>-<screen>-<scheme>`).
@@ -48,6 +48,10 @@ drawn. Four groups, all by default:
 - `compact`: molecular, settings and changes under a second config folder (`NANOPNP_CONFIG`, `<r>/config`) that
   holds `workbench.yaml` with compact density and tight spacing, and a theme of the user's own
   (`shell-compact-<screen>-<scheme>`). The theme is dark, so its light shots are dark too.
+- `molecular`: the Molecular tools on a project holding only the cached 2WCD molecular model, its store empty
+  (`shell-molecular-<name>-<scheme>`): `refused`, Prepare after a build of a structure moved off z under
+  `axis: z`, and `building`, Protonation shot while its build runs. The built tools are the `2wcd` group's
+  `m-<tool>` shots and the empty ones the `states` group's.
 
 Needs Playwright through `NODE_PATH` and the `gui` extra. A first run takes about seven minutes: the states
 walk their cases and the 2WCD project walks a dodecamer.
