@@ -351,7 +351,7 @@ the budget) and a build held mid-walk.
   done when each is ruled or carried. **Executor:** main
 - [x] def8265 11. The tools finished: Prepare (Q09, Q13; AO2), Ensemble, Protonation (Q27), Charge edit (FR-38; AO3), View;
   *Expose* and *Modified only* (D6 to D8); done when VER-78 passes. **Executor:** main
-- [ ] 12. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-121, REV-41's `prepare`,
+- [x] 41abc6c 12. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-121, REV-41's `prepare`,
   REV-218, REV-231 and REV-234 `fixed`; the matrix rows; `current.md`. **Executor:** main
 
 ### Verification
