@@ -359,3 +359,102 @@ def test_prepared_pore_is_keyed_by_the_source_and_the_choices(tmp_path: Path) ->
     assert sorted(path.name for path in (tmp_path / "kept").iterdir()) == sorted(
         path.name for path in (tmp_path / "kept").glob("ring-*.pdb")
     )
+
+
+GROUP_UNITS = 8
+
+GROUPED = "A+B,C+D,E+F,G+H,I+J,K+L,M+N,O+P"
+
+
+def _grouped_ring(*, odd_residue: bool = False) -> tuple[object, np.ndarray]:
+    # Eight units of two unlike chains: 30 ALA, then 20 GLY at the same residue numbers. The
+    # file lists the second chain of every other unit first, and the units out of ring order.
+    pytest.importorskip("MDAnalysis")
+    import MDAnalysis as mda  # noqa: N813 - the alias the library documents
+    from MDAnalysis.coordinates.memory import MemoryReader
+
+    rng = np.random.default_rng(516)
+    half_wedge = 0.4 * math.pi / GROUP_UNITS
+    shapes = []
+    for count, low, high in ((30, 2.0, 3.5), (20, 3.5, 5.0)):
+        rho = rng.uniform(low, high, count)
+        phi = rng.uniform(-half_wedge, half_wedge, count)
+        shapes.append(
+            np.column_stack([rho * np.cos(phi), rho * np.sin(phi), rng.uniform(-4.0, 4.0, count)])
+        )
+    z = np.array([0.0, 0.0, 1.0])
+    letters = "ABCDEFGHIJKLMNOP"
+    blocks: list[tuple[str, str, np.ndarray]] = []
+    for unit in rng.permutation(GROUP_UNITS):
+        turn = _rotation(z, 2 * math.pi * unit / GROUP_UNITS).T
+        pair = [
+            (letters[2 * unit], "ALA", shapes[0] @ turn),
+            (letters[2 * unit + 1], "GLY", shapes[1] @ turn),
+        ]
+        blocks.extend(pair[::-1] if unit % 2 else pair)
+    chains, resnames, resids = [], [], []
+    for chain, resname, points in blocks:
+        chains.extend([chain] * len(points))
+        resnames.extend([resname] * len(points))
+        resids.extend(range(1, len(points) + 1))
+    if odd_residue:
+        resnames[next(i for i, chain in enumerate(chains) if chain == "F") + 4] = "SER"
+    exact = _move(np.concatenate([points for _, _, points in blocks]), TILT, OFFSET_NM)
+    universe = mda.Universe.empty(
+        len(chains),
+        n_residues=len(chains),
+        n_segments=1,
+        atom_resindex=np.arange(len(chains)),
+        residue_segindex=np.zeros(len(chains), dtype=int),
+        trajectory=True,
+    )
+    universe.add_TopologyAttr("names", ["CA"] * len(chains))
+    universe.add_TopologyAttr("elements", ["C"] * len(chains))
+    universe.add_TopologyAttr("chainIDs", chains)
+    universe.add_TopologyAttr("resnames", resnames)
+    universe.add_TopologyAttr("resids", resids)
+    universe.add_TopologyAttr("segids", [""])
+    universe.load_new(np.asarray(exact[None] * 10.0, dtype=np.float32), format=MemoryReader)
+    return universe, exact
+
+
+# FR-03
+def test_ver48_chain_groups_superpose_as_one_ring() -> None:
+    # A unit joined in file order, or checked chain against chain, would refuse PlyAB's pairs
+    # or superpose an A on a B.
+    from nanopnp.io.case import CaseValidationError
+    from nanopnp.pipeline.case import loads_case, resolve
+    from nanopnp.structure.read import StructureInputError, select
+
+    universe, exact = _grouped_ring()
+    chosen = select(universe, selection="all", chains=GROUPED, n=GROUP_UNITS)
+    assert chosen.common_index.shape == (GROUP_UNITS, 50)
+    assert chosen.units[0] == "A+B"
+
+    record = measure_axis(exact[chosen.common_index], GROUP_UNITS)
+    true_axis = TILT @ np.array([0.0, 0.0, 1.0])
+    assert np.linalg.norm(np.cross(record.axis, true_axis)) <= 1e-9
+    assert _line_distance(record, true_axis, OFFSET_NM) <= 1e-9
+    assert record.spacing_error_deg <= 1e-9
+
+    odd, _ = _grouped_ring(odd_residue=True)
+    with pytest.raises(StructureInputError, match="chain F has SER at residue 5 where chain B"):
+        select(odd, selection="all", chains=GROUPED, n=GROUP_UNITS)
+
+    def refused(chains: str, point_group: str = "C8") -> str:
+        text = (
+            "schema: nanopnp/case/v0.6\nname: groups\n"
+            f"structure:\n  source: {{path: ring.pdb, chains: '{chains}'}}\n"
+            f"  symmetry: {{point_group: {point_group}}}\n"
+            "electrolyte:\n  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
+            "  concentration_M: 0.1\n  parameters: willems2020_nacl\n"
+            "boundary_conditions: {bias_V: 0.1}\n"
+            "physics: {model: epnp-ns, solid_permittivities: {membrane: 3.2}}\n"
+        )
+        with pytest.raises(CaseValidationError) as raised:
+            resolve(loads_case(text))
+        return str(raised.value)
+
+    assert "lists A more than once" in refused(GROUPED.replace("C+D", "C+A"))
+    assert "groups of unequal size" in refused(GROUPED.replace("C+D", "C"))
+    assert "lists 7 groups" in refused(GROUPED.removesuffix(",O+P"))

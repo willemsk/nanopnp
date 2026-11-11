@@ -410,7 +410,10 @@ NOTE (`structure:`, stage 1, FR-01 to FR-03, IF-04): `source.path` names a PDB o
 optionally gzipped. MDAnalysis reads PDB and gemmi reads mmCIF. `source.selection` is an MDAnalysis
 selection applied to the file, and one MDAnalysis cannot parse SHALL be refused naming the key. The
 selected atoms are those of the selection in the chains `source.chains` lists. `source.chains` is
-`all` or a comma-separated list of chain identifiers, such as `A,B,C`, which SHALL number `n`.
+`all` or a comma-separated list of chain identifiers, such as `A,B,C`, which SHALL number `n`, or of
+groups of them joined by `+`, such as `A+B,C+D`, where the groups SHALL number `n`, each group one
+repeating unit of the ring with its chains listed in the same order; a repeated chain, groups of
+unequal size and a group under `C1` SHALL each be refused naming the key.
 `symmetry.point_group` is `C<n>` with `n ≥ 1`, and any other group SHALL be refused naming the
 accepted form. The ensemble is the frames of `ensemble.trajectory` when one is given, and otherwise
 the models of the source file. `frames.last_ns` keeps the frames within that many nanoseconds of the

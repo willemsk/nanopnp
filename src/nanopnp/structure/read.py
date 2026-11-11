@@ -16,7 +16,7 @@ from MDAnalysis.coordinates.DCD import DCDReader
 from MDAnalysis.coordinates.memory import MemoryReader
 from MDAnalysis.exceptions import SelectionError
 
-from nanopnp.io.resolved import parse_chains
+from nanopnp.io.resolved import parse_chain_groups
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
@@ -234,6 +234,14 @@ class Selection:
     chains: tuple[str, ...]
     fit_index: np.ndarray
     common_index: np.ndarray
+    groups: tuple[tuple[str, ...], ...] | None = None
+
+    @property
+    def units(self) -> tuple[str, ...]:
+        """Each row of ``common_index`` named: a chain, or a group's chains joined by ``+``."""
+        if self.groups is None:
+            return self.chains
+        return tuple("+".join(group) for group in self.groups)
 
 
 def chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
@@ -255,10 +263,16 @@ def chain_keys(group: mda.AtomGroup) -> tuple[list[str], str]:
 def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Selection:  # noqa: C901
     """Select the pore's atoms and check the oligomeric state.
 
+    Parameters
+    ----------
+    chains
+        ``all``, a comma-separated list of chains, or of groups of chains joined by ``+``, each
+        group one repeating unit of the ring.
+
     Raises
     ------
     StructureInputError
-        On a refused atom, chain count, chain coverage or residue-name disagreement.
+        On a refused atom, chain or group count, chain coverage or residue-name disagreement.
     """
     import numpy as np
 
@@ -271,7 +285,9 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
     if len(group) == 0:
         raise StructureInputError(f"structure.source.selection {selection!r} selects no atom")
     keys, chain_key = chain_keys(group)
-    listed = parse_chains(chains)
+    listed_groups = parse_chain_groups(chains)
+    listed = None if listed_groups is None else tuple(c for group in listed_groups for c in group)
+    grouped = listed_groups is not None and any(len(group) > 1 for group in listed_groups)
     present = tuple(dict.fromkeys(keys))
     if listed is not None:
         missing = [chain for chain in listed if chain not in present]
@@ -310,12 +326,31 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
                     "prepare the file"
                 )
 
-    if len(present) != n:
-        raise StructureInputError(
-            f"C{n} expects {n} chains, and the selection holds {len(present)} "
-            f"({', '.join(present)}) by {chain_key}; list the chains of one assembly in "
-            "structure.source.chains, or correct symmetry.point_group (FR-03)"
-        )
+    # A unit is one row of the permutation: a chain, or under groups the chains of one group in
+    # the order listed, which names the position each chain holds in its unit.
+    if grouped:
+        assert listed_groups is not None
+        units = listed_groups
+        sizes = {len(group) for group in units}
+        if len(sizes) > 1:
+            raise StructureInputError(
+                f"structure.source.chains {chains!r} has groups of unequal size; each group is "
+                "one repeating unit of the ring (FR-03)"
+            )
+        if len(units) != n:
+            raise StructureInputError(
+                f"C{n} expects {n} groups, and structure.source.chains lists {len(units)} "
+                f"({', '.join('+'.join(group) for group in units)}); list the units of one "
+                "assembly, or correct symmetry.point_group (FR-03)"
+            )
+    else:
+        units = tuple((chain,) for chain in present)
+        if len(present) != n:
+            raise StructureInputError(
+                f"C{n} expects {n} chains, and the selection holds {len(present)} "
+                f"({', '.join(present)}) by {chain_key}; list the chains of one assembly in "
+                "structure.source.chains, or correct symmetry.point_group (FR-03)"
+            )
 
     key_array = np.asarray(keys)
     names = np.asarray([str(value) for value in group.names])
@@ -346,35 +381,39 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
                 )
             seen[residue] = index
 
-    counts = {chain: len(per_chain.get(chain, {})) for chain in present}
-    most = max(counts.values())
-    for chain in present:
-        if counts[chain] < COVERAGE_FRACTION * most:
-            raise StructureInputError(
-                f"chain {chain} carries {counts[chain]} C-alpha, under half the {most} of the "
-                f"most complete chain; a truncated chain would bias the axis and the density "
-                "(FR-03, section 5.2 NOTE on stage 1)"
-            )
-
-    reference = present[0]
-    for chain in present[1:]:
-        for residue, name in residue_names[chain].items():
-            expected = residue_names[reference].get(residue)
-            if expected is not None and expected != name:
+    rows: list[list[int]] = [[] for _ in units]
+    for position in range(len(units[0])):
+        members = [unit[position] for unit in units]
+        where = f" at position {position + 1} of its group" if grouped else ""
+        counts = {chain: len(per_chain.get(chain, {})) for chain in members}
+        most = max(counts.values())
+        for chain in members:
+            if counts[chain] < COVERAGE_FRACTION * most:
                 raise StructureInputError(
-                    f"chain {chain} has {name} at residue {residue[0]}{residue[1]} where chain "
-                    f"{reference} has {expected}; the chains of a C{n} assembly must agree in "
-                    "residue name wherever they share a residue number (FR-03)"
+                    f"chain {chain} carries {counts[chain]} C-alpha, under half the {most} of the "
+                    f"most complete chain{where}; a truncated chain would bias the axis and the "
+                    "density (FR-03, section 5.2 NOTE on stage 1)"
                 )
+        reference = members[0]
+        for chain in members[1:]:
+            for residue, name in residue_names[chain].items():
+                expected = residue_names[reference].get(residue)
+                if expected is not None and expected != name:
+                    raise StructureInputError(
+                        f"chain {chain} has {name} at residue {residue[0]}{residue[1]} where "
+                        f"chain {reference} has {expected}{where}; the chains of a C{n} assembly "
+                        "must agree in residue name wherever they share a residue number (FR-03)"
+                    )
+        shared = sorted(set.intersection(*(set(per_chain.get(chain, {})) for chain in members)))
+        for row, chain in zip(rows, members, strict=True):
+            row.extend(per_chain[chain][residue] for residue in shared)
 
-    common = sorted(set.intersection(*(set(per_chain.get(chain, {})) for chain in present)))
-    if len(common) < 3:
+    if len(rows[0]) < 3:
         raise StructureInputError(
-            f"the {n} chains share {len(common)} C-alpha, and a superposition needs at least 3"
+            f"the {n} {'groups' if grouped else 'chains'} share {len(rows[0])} C-alpha, and a "
+            "superposition needs at least 3"
         )
-    common_index = np.asarray(
-        [[per_chain[chain][residue] for residue in common] for chain in present], dtype=np.int64
-    )
+    common_index = np.asarray(rows, dtype=np.int64)
     table = AtomTable(
         element=element_array,
         name=names,
@@ -390,6 +429,7 @@ def select(universe: mda.Universe, *, selection: str, chains: str, n: int) -> Se
         chains=present,
         fit_index=np.flatnonzero(is_ca),
         common_index=common_index,
+        groups=units if grouped else None,
     )
 
 

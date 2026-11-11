@@ -147,8 +147,8 @@ Nine: three library steps, two project mechanisms the tools write through, and t
   flattened chains. `ResolvedStructure.groups` holds the groups, one chain each without `+`. Refused at resolution,
   naming the key: an empty member, a repeated chain, groups of unequal size, groups not numbering n, `+` under C1.
 - Under groups, `select` checks coverage and residue names per position in the group; `common_index` joins each group's
-  common C-alpha in position order, the positions in the listed order, not the file's. `select` gains `groups` and
-  `channel` keywords. Under the channel it skips the count, coverage and residue-name rules, and `common_index` is
+  common C-alpha in position order, the positions in the listed order, not the file's. `select` reads the groups from
+  `chains` and gains a `channel` keyword. Under the channel it skips the count, coverage and residue-name rules, and `common_index` is
   every C-alpha as one row.
 - `cavity.py` holds `SLAB_NM = 0.5`, `REACH_NM = 1.0`, `GAP_DEG = 90.0`, `MIN_CLEARANCE_NM = 0.2`,
   `TIE_NM = 1e-3`, `COVERAGE_FRACTION = 0.5`, `TURN_TOL_RAD = 1e-6`, `MOVE_TOL_NM = 1e-6`, `MAX_ITERATIONS = 50`, and
