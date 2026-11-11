@@ -1510,7 +1510,6 @@ class NanGateFindings:
 
 
 NAN_EXEMPT: dict[str, str] = {
-    "structure/axis.py:measure_axis: n < 2": "integer order",
     "mesh/adapter.py:_insert_physical_names: start < 0": "bytes.find index",
     (
         "mesh/adapter.py:_validate: index.size and (int(index.min()) < 0 or "

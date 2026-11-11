@@ -618,3 +618,50 @@ def test_ver48_structure_beside_a_supplied_mesh_is_refused(tmp_path: Path) -> No
     case.write_text(text)
     with pytest.raises(CaseValidationError, match=r"structure: section and supplies inputs.mesh"):
         resolve(load_case(case))
+
+
+CHANNEL_DISPLACEMENT_2WCD_NM = 0.00732
+"""The channel's axis of the prepared 2WCD against its ring axis (§5.2 NOTE on stage 1)."""
+
+
+def test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis(
+    prepared: Path, structure_2wcd: Path, tmp_path: Path
+) -> None:
+    # A channel's axis taken from a void of the wall, or signed or placed wrongly, leaves the
+    # ring's axis by nanometres; the recorded distance is what the budget for `z` rests on.
+    from nanopnp.structure.axis import z_displacement
+
+    ring_case = _case(tmp_path, _block(prepared), name="ring")
+    ring = Session(Store(structure_2wcd), write=False).run(Case.load(ring_case), upto="structure")
+    assert ring.stages[-1].cached
+    ring_axis = ring.artefacts["structure"].summary["axis"]
+    assert ring_axis["method"] == "permutation"
+
+    case = _case(tmp_path, _block(prepared, axis="cavity"), name="cavity")
+    cavity = _run(case, tmp_path / "store")
+    axis = cavity.header["axis"]
+    assert axis["method"] == "channel"
+    assert cavity.header["gates"]["coverage"]["measured"] == 1.0
+
+    rotation = np.asarray(ring_axis["rotation"])
+    direction = rotation @ np.asarray(axis["file_frame"]["axis"])
+    point = rotation @ (
+        np.asarray(axis["file_frame"]["centroid_nm"]) - np.asarray(ring_axis["foot_nm"])
+    )
+    aligned = AlignedEnsemble.read(ring.artefacts["structure"].payload["ensemble"])
+    heights = aligned.positions_nm.mean(axis=0)[aligned.name == "CA"][:, 2]
+    found = z_displacement(direction, point, (float(heights.min()), float(heights.max())))
+    logger.info(
+        "2WCD channel against ring: %.5f nm (tilt %.4f deg, offset %.5f nm); straightness %.5f nm",
+        found.displacement_nm,
+        found.tilt_deg,
+        found.offset_nm,
+        axis["file_frame"]["straightness_nm"],
+    )
+    assert abs(found.displacement_nm - CHANNEL_DISPLACEMENT_2WCD_NM) <= 1e-4
+
+    monomer = _case(tmp_path, _block(prepared, point_group="C1"), name="monomer")
+    routed = _run(monomer, tmp_path / "store")
+    assert routed.header["axis"]["method"] == "channel"
+    assert routed.header["axis"]["file_frame"] == axis["file_frame"]
+    assert np.array_equal(routed.positions_nm, cavity.positions_nm)

@@ -1331,6 +1331,10 @@ the gap is stage 1's `symmetry.axis` path. Confirmed as a gap by the author on 2
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.16, the Molecular suite.
 
+**Fixed** at WP5.16's items 1 and 2 (§8.2.39 AO1): chain groups superpose a ring of unlike chains unit on unit, and
+under C1, or under `symmetry.axis: cavity`, stage 1 takes and gates the channel's axis, against which `z` is checked.
+Its limits rest on 2WCD alone: REV-239.
+
 ### REV-122: A case cannot load a correction file from outside the installed package
 
 `electrolyte.parameters` and every `electrolyte.corrections.*.model` must name a file in
@@ -3066,3 +3070,16 @@ typed in the tool's pane and stepped by the arrow keys.
 
 **Deferred** (§8.2.39 AO2, 11 November 2026): dragging by handles, with its keyboard equivalent already in place, goes
 to WP5.21's pass over the canvases or a later tool package. Found at WP5.16's plan.
+
+### REV-239: The channel axis's two limits rest on 2WCD alone, and a ragged pore may be refused
+
+WP5.16's plan sets the channel axis's straightness limit at twice the farthest centre's distance from the line on 2WCD,
+and the `axis: z` budget at twice its displacement from the ring's axis: 0.03 nm and 0.015 nm (§5.2's NOTE on stage 1).
+2WCD is nearly C12, and no monomeric or mixed pore is in the repository to measure. Where a plane meets a ragged rim or
+lumen its widest space is not on the axis; on the test wall one such centre lay 0.26 nm aside, nine times the limit,
+and at an exact symmetry the tie it breaks can hold the iteration about 0.01 rad off
+(`knowledge/04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md`). A C1 pore, which the channel's axis exists
+for (§8.2.39 AO1), is likely to be less regular than 2WCD and to be refused.
+
+**Open**, a question for the author: keep the limits as planned and refuse such pores until one is measured, or set
+the straightness limit from a monomeric pore's structure the author names. Found at WP5.16's item 2.

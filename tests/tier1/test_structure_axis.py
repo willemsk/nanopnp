@@ -1,4 +1,4 @@
-"""VER-48: the Cₙ axis by permutation superposition, on synthetic assemblies (FR-01, FR-02)."""
+"""VER-48: the Cₙ axis by permutation and the channel's axis, on synthetic assemblies."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from nanopnp.structure import cavity
 from nanopnp.structure.axis import (
     DISPLACEMENT_BUDGET_NM,
     AxisRecord,
@@ -205,7 +206,6 @@ def _cn(n: int, rotation: np.ndarray | None = None, shift: np.ndarray | None = N
             29.0,
             id="unturned-ring-angle",
         ),
-        pytest.param(lambda: _cn(12)[:1], 1, r"(C1) has none", 0.0, 0.0, id="c1-auto"),
         pytest.param(
             lambda: _cn(12, _rotation(np.array([1.0, 0.0, 0.0]), math.radians(30.0))),
             12,
@@ -458,3 +458,103 @@ def test_ver48_chain_groups_superpose_as_one_ring() -> None:
     assert "lists A more than once" in refused(GROUPED.replace("C+D", "C+A"))
     assert "groups of unequal size" in refused(GROUPED.replace("C+D", "C"))
     assert "lists 7 groups" in refused(GROUPED.removesuffix(",O+P"))
+
+
+def _wall(n: int, bend_nm: float = 0.0) -> np.ndarray:
+    # A wall dense enough to line a channel: 600 atoms a chain between 2.0 and 2.8 nm of a
+    # centre line, which a bend carries aside by ``bend_nm`` at either end. A tenth of them
+    # close each rim: at a ragged rim a plane's widest spaces are n equal ones off the axis.
+    rng = np.random.default_rng(516 + n)
+    rho = rng.uniform(2.0, 2.8, 600)
+    half_wedge = 0.8 * math.pi / n
+    phi = rng.uniform(-half_wedge, half_wedge, 600)
+    z = rng.uniform(-4.4, 4.4, 600)
+    z[:60], z[60:120] = -4.4, 4.4
+    chains = _assembly(n, np.column_stack([rho * np.cos(phi), rho * np.sin(phi), z]))
+    atoms = chains.reshape(-1, 3).copy()
+    atoms[:, 0] += bend_nm * (atoms[:, 2] / 4.4) ** 2
+    return np.asarray(atoms, dtype=np.float64)
+
+
+# FR-02
+@pytest.mark.parametrize("tilt_deg", [8.0, 35.0])
+@pytest.mark.parametrize("n", [7, 8, 12])
+def test_ver48_the_channel_axis_recovers_a_known_axis(n: int, tilt_deg: float) -> None:
+    # One void picked where its n images tie, or a centre taken from the wall, puts the axis off.
+    tilt = _rotation(np.array([1.0, 2.0, 0.0]), math.radians(tilt_deg))
+    atoms = _wall(n) @ tilt.T + OFFSET_NM
+    true_axis = tilt @ np.array([0.0, 0.0, 1.0])
+
+    record = cavity.channel_axis(atoms)
+
+    assert math.asin(min(1.0, float(np.linalg.norm(np.cross(record.axis, true_axis))))) <= 1e-6
+    assert record.axis @ true_axis > 0.0
+    offset = OFFSET_NM - record.centroid_nm
+    assert np.linalg.norm(offset - (offset @ record.axis) * record.axis) <= 1e-6
+    assert record.converged
+    assert record.iterations < cavity.MAX_ITERATIONS
+    assert record.coverage >= 0.9
+    assert record.straightness_nm <= 1e-6
+    assert abs(record.tilt_deg - tilt_deg) <= 1e-4
+    again = cavity.channel_axis(atoms, start_axis=record.axis, start_point_nm=record.centroid_nm)
+    assert again.iterations == 1, "the axis is the iteration's fixed point"
+    assert np.max(np.abs(again.axis - record.axis)) <= 1e-9
+    logger.info(
+        "C%d at %g degrees: %d iterations, straightness %.1e nm",
+        n,
+        tilt_deg,
+        record.iterations,
+        record.straightness_nm,
+    )
+
+
+def test_ver48_the_channel_takes_one_chain_whatever_its_kind() -> None:
+    from nanopnp.structure.read import select
+
+    universe, _ = _grouped_ring()
+    for atom in universe.atoms:
+        atom.residue.resname = "ALA"
+    universe.add_TopologyAttr("chainIDs", ["A"] * len(universe.atoms))
+    universe.add_TopologyAttr("resids", list(range(1, len(universe.atoms) + 1)))
+    chosen = select(universe, selection="all", chains="all", n=7, channel=True)
+    assert chosen.common_index.shape == (1, len(universe.atoms))
+
+
+# QR-12
+def test_ver48_the_channel_axis_gates_fire(monkeypatch: pytest.MonkeyPatch) -> None:
+    def refused(build: object) -> str:
+        with pytest.raises(SymmetryGateError) as raised:
+            build()  # type: ignore[operator]
+        logger.info("%s", raised.value)
+        return str(raised.value)
+
+    rng = np.random.default_rng(3)
+    grid = np.stack(np.meshgrid(*[np.arange(-1.6, 1.6, 0.2)] * 3), axis=-1).reshape(-1, 3)
+    ball = grid[np.linalg.norm(grid, axis=1) <= 1.5] + rng.normal(0.0, 0.005, (1, 3))
+    ball = ball + rng.normal(0.0, 0.005, ball.shape)
+    message = refused(lambda: cavity.detect_channel(ball))
+    assert re.search(r"channel coverage gate: 0 of the \d+ planes", message), message
+
+    message = refused(lambda: cavity.detect_channel(_wall(8, bend_nm=2.0)))
+    found = re.search(r"channel straightness gate: a plane's centre lies (\d+\.\d+) nm", message)
+    assert found is not None, message
+    assert 0.3 <= float(found.group(1)) <= 2.0
+
+    tilted = _wall(8) @ _rotation(np.array([1.0, 0.0, 0.0]), math.radians(12.0)).T
+    message = refused(lambda: cavity.detect_channel(tilted))
+    found = re.search(r"orientation gate: the channel's axis is (\d+\.\d+) degrees", message)
+    assert found is not None, message
+    assert 11.995 <= float(found.group(1)) <= 12.005
+
+    upright = _wall(12)
+    extent = (float(upright[:, 2].min()), float(upright[:, 2].max()))
+    aside = cavity.detect_channel(upright + np.array([0.02, 0.0, 0.0]))
+    message = refused(lambda: cavity.check_z_channel(aside, extent))
+    assert "displacement gate" in message
+    assert "0.0200 nm" in message
+    inside = cavity.detect_channel(upright + np.array([0.0, 0.005, 0.0]))
+    assert abs(cavity.check_z_channel(inside, extent).displacement_nm - 0.005) <= 1e-9
+
+    monkeypatch.setattr(cavity, "MAX_ITERATIONS", 1)
+    message = refused(lambda: cavity.detect_channel(_wall(7) @ TILT.T))
+    assert "channel convergence gate: after 1 iterations" in message, message

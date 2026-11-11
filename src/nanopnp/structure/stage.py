@@ -20,7 +20,7 @@ from nanopnp.core.stages import (
 )
 from nanopnp.io.artefact import StructureArtefact
 from nanopnp.io.case import UnsupportedCaseSection
-from nanopnp.io.resolved import ResolvedStructure
+from nanopnp.io.resolved import ResolvedStructure, parse_chains
 from nanopnp.io.workspace import scratch_directory
 from nanopnp.structure.axis import (
     ANGLE_TOLERANCE_DEG,
@@ -35,6 +35,16 @@ from nanopnp.structure.axis import (
     gate_axis,
     kabsch,
     measure_axis,
+)
+from nanopnp.structure.cavity import (
+    COVERAGE_FRACTION,
+    HYDROGENS,
+    STRAIGHTNESS_NM,
+    ChannelRecord,
+    channel_axis,
+    check_z_channel,
+    detect_channel,
+    refit,
 )
 from nanopnp.structure.ensemble import ORIENTATION_RULE, PAYLOAD_NAME, AlignedEnsemble
 from nanopnp.structure.read import (
@@ -100,7 +110,7 @@ class Alignment:
     """What :func:`align` produced: the ensemble, and the record its header is made from."""
 
     ensemble: AlignedEnsemble
-    record: AxisRecord | None
+    record: AxisRecord | ChannelRecord
 
 
 def _angle_deg(first: np.ndarray, second: np.ndarray) -> float:
@@ -125,7 +135,7 @@ def align(
     nanopnp.structure.read.StructureInputError
         For a refused file, element, alternate location, chain set or frame window.
     nanopnp.structure.axis.SymmetryGateError
-        For a refused spacing, rotation angle, orientation or ``axis: z`` displacement.
+        For a refused spacing, rotation angle, channel, orientation or ``axis: z`` displacement.
     """
     import numpy as np
 
@@ -136,7 +146,16 @@ def align(
     check_cancelled(cancel, "reading the structure")
     report(progress, 0.0, f"reading {spec.source.path.name}")
     universe = load_universe(spec.source.path, spec.ensemble.trajectory)
-    chosen = select(universe, selection=spec.source.selection, chains=spec.source.chains, n=n)
+    axis_mode = spec.symmetry.axis
+    # The channel gives the axis where it is asked for, and under C1, which has no ring.
+    channel = axis_mode == "cavity" or n == 1
+    chosen = select(
+        universe,
+        selection=spec.source.selection,
+        chains=spec.source.chains,
+        n=n,
+        channel=channel,
+    )
     times, interval = frame_times(universe)
     window = select_frames(
         times, interval, last_ns=spec.ensemble.frames.last_ns, count=spec.ensemble.frames.count
@@ -171,25 +190,39 @@ def align(
     chains = mean[chosen.common_index]
     fit_z = mean[fit_index][:, 2]
     extent = (float(fit_z.min()), float(fit_z.max()))
-    axis_mode = spec.symmetry.axis
-    record: AxisRecord | None = None
+    record: AxisRecord | ChannelRecord
     displacement: Displacement | None = None
-    if axis_mode == "auto":
+    heavy = ~np.isin(np.char.upper(chosen.atoms.element.astype(str)), sorted(HYDROGENS))
+    if channel:
+        record = detect_channel(mean[heavy])
+        listed = parse_chains(spec.source.chains)
+        first = chosen.chains[0] if listed is None else listed[0]
+        first_centroid = mean[fit_index[chosen.atoms.chain[fit_index] == first]].mean(axis=0)
+    elif axis_mode == "auto":
         record = detect_axis(chains, n)
-        foot = record.foot_nm
-        rotation = frame_rotation(record, chains[0].mean(axis=0))
+        first_centroid = chains[0].mean(axis=0)
     else:
-        if n >= 2:
-            record = gate_axis(measure_axis(chains, n))
-            displacement = check_z_axis(record, extent)
+        record = gate_axis(measure_axis(chains, n))
+    if axis_mode == "z":
+        displacement = (
+            check_z_channel(record, extent)
+            if isinstance(record, ChannelRecord)
+            else check_z_axis(record, extent)
+        )
         foot = np.zeros(3)
         rotation = np.eye(3)
+    else:
+        foot = record.foot_nm
+        rotation = frame_rotation(record, first_centroid)
 
     drift: list[float] = []
-    if record is not None:
-        for frame in range(positions.shape[0]):
-            frame_axis = cyclic_fit(positions[frame][chosen.common_index], record.order).axis
-            drift.append(_angle_deg(frame_axis, record.axis))
+    for frame in range(positions.shape[0]):
+        frame_axis = (
+            refit(record, mean[heavy], positions[frame][heavy])
+            if isinstance(record, ChannelRecord)
+            else cyclic_fit(positions[frame][chosen.common_index], record.order).axis
+        )
+        drift.append(_angle_deg(frame_axis, record.axis))
 
     check_cancelled(cancel, "transforming to the model frame")
     report(progress, 0.9, "transforming to the model frame")
@@ -198,14 +231,17 @@ def align(
         positions[frame] = (positions[frame] - foot) @ rotation.T
     aligned = positions
 
-    # Recorded, not gated: a threshold here would be a fifth constant the specification omits.
-    frame_check: dict[str, Canonicalisable] | None = None
-    if record is not None:
-        again = measure_axis(aligned.mean(axis=0)[chosen.common_index], n)
-        frame_check = {
-            "tilt_deg": again.tilt_deg,
-            "offset_nm": float(np.hypot(*again.foot_nm[:2])),
-        }
+    # Recorded, not gated: a threshold here would be one more constant the specification omits.
+    aligned_mean = aligned.mean(axis=0)
+    again: AxisRecord | ChannelRecord = (
+        channel_axis(aligned_mean[heavy])
+        if isinstance(record, ChannelRecord)
+        else measure_axis(aligned_mean[chosen.common_index], n)
+    )
+    frame_check: dict[str, Canonicalisable] = {
+        "tilt_deg": again.tilt_deg,
+        "offset_nm": float(np.hypot(*again.foot_nm[:2])),
+    }
 
     header: dict[str, Canonicalisable] = {
         "source": {
@@ -227,7 +263,7 @@ def align(
         "chains_file_order": list(chosen.chains),
         "chains_cyclic_order": (
             [chosen.units[index] for index in record.order]
-            if record is not None
+            if isinstance(record, AxisRecord)
             else list(chosen.units)
         ),
         "atoms": len(chosen.atoms),
@@ -241,10 +277,11 @@ def align(
         },
         "axis": {
             "mode": axis_mode,
-            "file_frame": None if record is None else record.summary(),
+            "method": "channel" if isinstance(record, ChannelRecord) else "permutation",
+            "file_frame": record.summary(),
             "foot_nm": [float(value) for value in foot],
             "rotation": [[float(value) for value in row] for row in rotation],
-            "checked": record is not None,
+            "checked": True,
             "groups": None if chosen.groups is None else [list(g) for g in chosen.groups],
         },
         "gates": _gates(record, displacement, axis_mode),
@@ -262,27 +299,35 @@ def align(
         chain=chosen.atoms.chain,
         header=header,
     )
-    report(progress, 1.0, f"C{n} axis found; {ensemble.frames} frames aligned")
+    report(progress, 1.0, f"axis found; {ensemble.frames} frames aligned")
     return Alignment(ensemble=ensemble, record=record)
 
 
 def _gates(
-    record: AxisRecord | None, displacement: Displacement | None, axis_mode: str
+    record: AxisRecord | ChannelRecord, displacement: Displacement | None, axis_mode: str
 ) -> dict[str, Canonicalisable]:
-    if record is None:
-        return {"status": "unchecked: C1 under axis: z has no permutation to measure"}
-    nominal = 360.0 / record.n
-    gates: dict[str, Canonicalisable] = {
-        "spacing": {
-            "measured_deg": record.spacing_error_deg,
-            "limit_deg": SPACING_FRACTION * nominal,
-        },
-        "angle": {
-            "measured_deg": abs(record.angle_deg - nominal),
-            "limit_deg": ANGLE_TOLERANCE_DEG,
-        },
-        "orientation": {"measured_deg": record.tilt_deg, "limit_deg": ORIENTATION_LIMIT_DEG},
-    }
+    gates: dict[str, Canonicalisable]
+    if isinstance(record, ChannelRecord):
+        gates = {
+            "coverage": {"measured": record.coverage, "limit": COVERAGE_FRACTION},
+            "straightness": {
+                "measured_nm": record.straightness_nm,
+                "limit_nm": STRAIGHTNESS_NM,
+            },
+        }
+    else:
+        nominal = 360.0 / record.n
+        gates = {
+            "spacing": {
+                "measured_deg": record.spacing_error_deg,
+                "limit_deg": SPACING_FRACTION * nominal,
+            },
+            "angle": {
+                "measured_deg": abs(record.angle_deg - nominal),
+                "limit_deg": ANGLE_TOLERANCE_DEG,
+            },
+        }
+    gates["orientation"] = {"measured_deg": record.tilt_deg, "limit_deg": ORIENTATION_LIMIT_DEG}
     if axis_mode == "z" and displacement is not None:
         gates["displacement"] = displacement.summary()
     return gates

@@ -2,6 +2,9 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-11
+* **Record**: The channel's axis of 2WCD lies 0.0073 nm from its ring axis, its farthest centre 0.0148 nm from the line; the `z` budget and the straightness limit are twice these, and a ragged rim is the method's known weakness (WP5.16; REV-239). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
+
 ## 2026-11-10
 * **Record**: Quasar's `!important` colours sit in a cascade layer and yield only to an `!important` rule in an earlier one, NiceGUI's `theme`; the frame hands the tokens to Quasar's colour variables, and the 3D view's background follows a change in the settings (WP5.15). ([5. GUI and packaging](07-software-stack/05-gui-and-packaging.md))
 * **Update**: The author checked the six findings that rest on the ESI or the COMSOL report: the COMSOL report's footnotes name their sections and pages, and its PDF is published with the article's ESI; the current is evaluated on the cis reservoir boundary, the grounded one, which the paper's main text names and the report does not print; ruling 1 says the SI, the report and the thesis all give 6.2 nm⁻¹; the weak forms are ESI §1.4; the mesh note states what the thesis and the report each hold (WP5.12; §8.2.37 AM18; REV-227). ([C.10 Quantities of interest](09-comsol-reference-settings/04-physics-settings.md), [Author rulings](00-orientation/05-author-rulings-2026-08-these-override.md), [8. Mesh resolution](06-numerics-fem/08-mesh-resolution-and-adaptivity.md))

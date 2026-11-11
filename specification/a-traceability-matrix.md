@@ -22,7 +22,7 @@ needed.
 | IF-08 | VER-24, VER-35 |
 | IF-09 | VER-43, VER-44, VER-55 (the geometry pipeline built, inspected and hand-edited from the shell), VER-60 (the charge pipeline built and inspected from the shell, every number read from its stage's artefact), VER-78 (the browser workbench: every state loads every screen with its controls, and the server keeps its contract) |
 | FR-01 | VER-48 (frame window, superposition on the earliest frame's C-alpha, Kabsch against MDAnalysis) |
-| FR-02 | VER-48 (the permutation axis against a known axis, and against principal axes) |
+| FR-02 | VER-48 (the permutation axis against a known axis, and against principal axes; the channel's axis against a known axis and against 2WCD's ring axis) |
 | FR-03 | VER-48 (missing, surplus and truncated chains, residue names and the point group refused) |
 | FR-04 | VER-49 (the union density, its truncation bound, the frame average, the radius set, and the protonated atoms with their state-patch radii) |
 | FR-05 | VER-01 (shared annular-volume integration), VER-50 (exact annular weights and the harmonic Cₙ average) |
