@@ -1,23 +1,24 @@
 # Current work
 
-Updated 11 November 2026 (WP5.16 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 11 November 2026 (WP5.16 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
 Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups and rebuilt frame are merged. The Molecular
-suite is planned: any pore's axis found, a command that prepares a structure, and five tools drafted on 2WCD for your
-verdicts, then finished. Four suites, the route and the close follow: about 55 sessions and 50 to 100 agent hours.
+suite is delivered and waits for its review: any pore's axis found, a command that prepares a structure, and five
+working tools built to your verdicts on the 2WCD drafts. Four suites, the route and the close follow: about 50 sessions
+and 45 to 95 agent hours.
 
-**Your call.** Approve the Molecular plan after its review. Adopt two measuring tools or not (the trial says neither).
+**Your call.** Merge the Molecular suite after its review. Adopt two measuring tools or not (the trial says neither).
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.15 merged
   (`v0.6.0-alpha.15`); then the suites, the route and the close.
-  **WP5.16** [planned](phase-5/wp5.16-the-molecular-suite.md) on `claude/pensive-lovelace-1cc77i`, its PR open.
-  Next, `/np-implement wp 5.16`. host: claude-code.
+  **WP5.16** [delivered](phase-5/wp5.16-the-molecular-suite.md) on `ccr-9b77d38b-j3hc4f`, its PR open.
+  Next, `/np-ship wp 5.16`. host: claude-code.
 
 ## Not to be re-decided
 

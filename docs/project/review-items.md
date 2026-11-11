@@ -446,6 +446,8 @@ no later owner.
 
 **Placed** (§8.2.31 AG1, 3 November 2026): `prepare` in WP5.16, which surfaces structure preparation; `upto` on reproduce in WP5.19, the Study suite.
 
+**Fixed in part** at WP5.16: `nanopnp prepare` (item 3) and the workbench's Prepare tool (item 11). `upto` on reproduce stays deferred to WP5.19.
+
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): `prepare` in WP5.16, the Molecular suite; `upto` on reproduce in WP5.19, the Study suite.
 
 **Fixed in part** at WP5.16's item 3: `nanopnp prepare` wraps `orient_pore` and writes the preparation record; `upto` on reproduce and the region export stay as placed.
@@ -2963,7 +2965,7 @@ knowledge/07-software-stack/index.md". That index only lists the concepts; §5.2
 margins of the four stage-1 thresholds in the WP18 plan, Design §2 to §4. Found at WP5.12's item 11, whose
 D6 allowed only REV-226's citations, AUD-216 and AUD-351 under `src/`.
 
-**Open**: a one-line comment fix, for the next package that edits `structure/axis.py`.
+**Fixed** at WP5.16's item 1: the comment names the WP18 plan, Design §2 to §4.
 
 ### REV-232: Three statements the physics reviewer doubted at WP5.12
 
@@ -3014,8 +3016,9 @@ Consistency is key." Every tool's pane is on the left of its view, which fills t
 Molecular tools so and moves the charge screen's view to the right of its pane. On the charge screen the author added:
 "It just looks like a list of residues. What does clicking on one do? Let's think about a more streamlined version."
 
-**Open.** WP5.16 sets the place and the size. The streamlined charge tool, with the residues below the view, is
-WP5.19's, whose screen it is (REV-209, REV-215).
+**Fixed** at WP5.16's item 11: a pane stands left of its view on every screen, the view filling the rest of the row
+on a tool's page. The streamlined charge tool, with the residues below the view, is WP5.19's, whose screen it is, and
+is carried by REV-209 and REV-215.
 
 ### REV-235: Design questions the frame's review leaves for the suites' prototype rounds
 
@@ -3126,3 +3129,34 @@ settle:
 **Open**, a question for the author: the variation view at the round of the suite that draws ensembles' results
 (WP5.19's charge screen or Analysis); the maps with the plots' settings in Analysis; the safeguards before the
 first tool that deletes, with the project tree's actions.
+
+### REV-241: What the final review of the Molecular tools left open
+
+The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
+blocking finding) raised, beyond what the item fixed:
+
+- **Prepare's view does not follow the typed values** (major; against §8.2.39 AO2). The axis and the plane drawn are
+  those of the built, aligned structure; a typed tilt, azimuth, flip or centre takes effect at *Save prepared
+  structure*. Drawing them as typed needs the source file's frame in the view, with the typed axis through its
+  centroid. The draft is kept for the window, and lost when the window closes.
+- **A model that reads a PQR draws nothing in View** (major): its look controls are disabled; the PQR's atoms are not
+  served to the scene, though the charge screen draws them. The note on such a model is the same on every tool, and
+  *Open structure…* stays enabled there.
+- ***Open structure…* takes a path on the server's disk** and no upload, and no PQR (major; Q09; REV-235's Browse).
+- **The warnings are grouped by message, not by residue**: one line per chain, and a row selects nothing; the
+  unapplied states' rows do select their residue.
+- **The charge screen**: with its pane on the left, the (r, z) map stands below the residue chips, and the map has no
+  colour bar, axes or unit, so the switched colour direction cannot be read from it (WB-20, WB-26). WP5.19's screen
+  (REV-209, REV-215).
+- **The project tree does not mark the model a tool edits** where the project has no open item; the tree's empty
+  groups show as bare rows.
+- **The settings window covers the view** whose colours and background it changes.
+- **A cancelled build is recorded as failed** in the queue's line.
+- **The folded bar's state is a dot**, with the state in the button's name and tooltip, and names no project.
+- **A dialog's backdrop does not dim the 3D canvas**; the suite's own page is five links; the tools' terms do not link
+  to the glossary; the titratable groups' table pages 15 of 1092 rows; an empty 3D view carries no message.
+
+**Open.** The first four are WP5.17's library step or its prototype round, with the Continuum tools that share the
+pane; the charge screen's is WP5.19's; the rest wait for WP5.21's pass over the frame. The first is a deviation from
+AO2 for the author to rule on at `/np-ship`.
+

@@ -47,12 +47,24 @@ class _Held:
 
 _MODELS: dict[tuple[Path, str], _Held] = {}
 _CASE_PATH = re.compile(r"\b(?:structure|charge)(?:\.[a-z_]+)+")
+_GATE_PATHS = (
+    ("axis: z", "structure.symmetry.axis"),
+    ("displacement gate", "structure.symmetry.axis"),
+    ("channel", "structure.symmetry.axis"),
+    ("expects", "structure.symmetry.point_group"),
+)
 
 
 def refused_path(message: str) -> str | None:
     """Return the case path a refusal names, or None where it names none."""
     found = _CASE_PATH.search(message)
-    return None if found is None else found.group(0)
+    if found is not None:
+        return found.group(0)
+    # A gate of stage 1 words its rule and not its path; each belongs to one value.
+    for words, path in _GATE_PATHS:
+        if words in message:
+            return path
+    return None
 
 
 def refusals(project: Project) -> tuple[Problem, ...]:

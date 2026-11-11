@@ -22,6 +22,40 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.16]
+
+WP5.16: the Molecular suite, Phase 5's sixteenth package; tag `v0.6.0-alpha.16` once merged (§8.2.39 AO1 to AO4;
+REV-121, REV-218, REV-231, REV-234, REV-239, REV-41's `prepare`). A pore's axis is found whatever the pore, a command
+prepares a structure, and the workbench gains its five Molecular tools. No golden moves (VER-62). The
+[plan](docs/plans/phase-5/wp5.16-the-molecular-suite.md) records the work.
+
+- **Added**:
+  - The Molecular tools, each a page at `/molecular/<tool>` with the tool list, a pane of the model's values and
+    the 3D view: *Prepare structure*, *Ensemble*, *Protonation*, *Charge edit* and *View* (FR-37, FR-38). A pane
+    marks a changed value, resets it, exposes it to studies and filters to *Modified only*; it shows each stage's
+    state, builds the model alone, and shows a refusal as a card that goes to the field it names.
+  - *Prepare structure*: open a structure from the project's inputs or copy one in, estimate the pore's axis or
+    type its tilt and azimuth, flip the *cis* end, place the registration residues, and save the prepared file.
+  - *Charge edit*: pin a residue's state, change its charge or scale its radius, and save the edits as a variant
+    of the model, linked to its parent or a full copy (`variant_of:` in a molecular model's file; §5.3.1).
+  - `structure.symmetry.axis: cavity` finds a pore's axis from the channel's empty space, for a single-chain or
+    mixed pore; `structure.source.chains` takes groups of chains, as `A+B,C+D` (FR-02, FR-03; VER-48).
+  - `nanopnp prepare <structure>` writes a structure with its pore axis on z and a record of the choices;
+    `--axis` takes a typed axis (FR-37).
+  - The setting *Charge colours*, which picks the colour of a positive charge.
+- **Changed**:
+  - **A positive charge is drawn blue and a negative one red** in the 3D view, on the charge map and in the
+    charge and potential figures, as in biochemistry; before, positive was red. A figure made earlier looks
+    inverted beside a new one; no number changes.
+  - `symmetry.axis: auto` on a C1 pore, or on a pore whose chains differ, now finds the channel's axis and is no
+    longer refused; `axis: z` is checked against the axis found, within 0.015 nm (§5.2).
+  - A channel that is not straight to within 0.03 nm is built with a warning that names the measured value, and
+    is no longer refused (§8.2.39 AO4).
+  - The settings open as a window over the open tool; `/settings` stays as an address.
+  - Folded, the left bar is the suites' icons, each with a dot for a problem or a running build; every tool's
+    pane stands left of its view, the charge screen's too.
+  - A build's refusal is listed among the project's problems until a value changes.
+
 ## [0.6.0-alpha.15]
 
 WP5.15: the frame on Quasar's components, Phase 5's fifteenth package; tag `v0.6.0-alpha.15` once merged (§8.2.34

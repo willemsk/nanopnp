@@ -325,6 +325,11 @@ body .nicegui-footer.frame-footer {
   .settings-nav .q-btn.text-primary {
     color: var(--ink) !important;
   }
+  /* A pane's and a dialog's secondary buttons: the text ink, so the one filled button leads. */
+  .tool-pane .q-btn--outline.text-primary,
+  .dialog .q-btn--outline.text-primary {
+    color: var(--ink) !important;
+  }
   .q-btn.key-unbound {
     color: var(--muted) !important;
   }
@@ -512,10 +517,12 @@ body .nicegui-footer.frame-footer {
 }
 .main-row:has(.tool-pane) #mol {
   width: 100%;
-  height: min(72vh, 44rem);
+  height: calc(100vh - 8.5rem);
+  min-height: 20rem;
 }
 .tool-page {
   display: flex;
+  width: 100%;
   align-items: flex-start;
   gap: var(--pad);
 }
@@ -567,6 +574,7 @@ body .nicegui-footer.frame-footer {
 }
 .tool-pane {
   flex: 1 1 0;
+  width: 0;
   min-width: 0;
   gap: var(--gap);
 }
@@ -592,7 +600,7 @@ body .nicegui-footer.frame-footer {
 }
 .stage-bar {
   display: flex;
-  gap: 2px;
+  gap: var(--gap);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -607,14 +615,9 @@ body .nicegui-footer.frame-footer {
   border: 1px solid var(--control-edge);
   border-top-width: 3px;
   border-top-color: currentColor;
+  border-radius: var(--radius);
   background: var(--panel);
   font-size: var(--text-sm);
-}
-.stage-block:first-child {
-  border-radius: var(--radius) 0 0 var(--radius);
-}
-.stage-block:last-child {
-  border-radius: 0 var(--radius) var(--radius) 0;
 }
 .stage-name {
   color: var(--ink);
@@ -623,8 +626,15 @@ body .nicegui-footer.frame-footer {
 .stage-word {
   margin-left: auto;
 }
+.stage-block {
+  position: relative;
+}
+/* Under the running block alone. */
 .stage-progress {
-  margin-top: 2px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 .note-card {
   width: 100%;
@@ -763,4 +773,25 @@ body .nicegui-footer.frame-footer {
 }
 .colour-bar-scale.positive-red {
   background: linear-gradient(to right, #3b4cc0, #dddddd, #b40426);
+}
+/* A table's paging buttons take the text ink: Quasar's grey fails on the dark panel. */
+.q-table__bottom .q-btn {
+  color: var(--ink);
+}
+/* A pane's secondary buttons take the control's edge. */
+.tool-pane .q-btn--outline::before,
+.dialog .q-btn--outline::before {
+  border-color: var(--control-edge);
+}
+/* Numbers a build gave, and a table's, in the number face. */
+.readout-list dd,
+.q-table tbody td {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+#mol {
+  border: 1px solid var(--line);
+}
+.readout-list dd .q-btn {
+  font-family: var(--font-ui);
 }

@@ -6,7 +6,8 @@ import json
 import math
 import tempfile
 import typing
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -44,7 +45,7 @@ OVERLAY_MOST = 10
 
 LINKED_NOTE = ("prepare", "ensemble", "protonation")
 """The tools whose values a linked variant reads from its parent."""
-CARD_SHORT = 90
+CARD_SHORT = 200
 """A card shows this much of a message; the rest unfolds."""
 STRUCTURE_SUFFIXES = (".pdb", ".ent", ".cif", ".mmcif", ".gz")
 
@@ -96,7 +97,7 @@ STAGE_RUNNING = {"structure": "Building the ensemble…", "protonation": "Proton
 # Each state's glyph and word (the glyph never stands alone), and its colour class.
 STATES = {
     "empty": ("○", "not built", "state-none"),
-    "building": ("◔", "building", "state-run"),
+    "building": ("●", "building", "state-run"),
     "built": ("✓", "built", "state-ok"),
     "refused": ("✕", "refused", "state-err"),
 }
@@ -111,8 +112,8 @@ STATES_COLUMNS = [
     {"name": "group", "label": "Group", "field": "group", "align": "left", "sortable": True},
     {"name": "kind", "label": "Kind", "field": "kind", "align": "left", "sortable": True},
     {"name": "pka", "label": "pKa", "field": "pka", "sortable": True},
-    {"name": "applied_e", "label": "Applied, e", "field": "applied_e", "sortable": True},
-    {"name": "expected_e", "label": "Expected, e", "field": "expected_e", "sortable": True},
+    {"name": "applied_e", "label": "Residue's charge, e", "field": "applied_e", "sortable": True},
+    {"name": "expected_e", "label": "State expects, e", "field": "expected_e", "sortable": True},
     {"name": "state", "label": "State", "field": "state", "align": "left", "sortable": True},
 ]
 
@@ -136,6 +137,23 @@ def current_model(shell: Shell) -> MolecularModel | None:
         if kind == "molecular" and current in names:
             name = current
     return MolecularModel(project, name, shell.queue)
+
+
+_DRAFTS: dict[tuple[Path, str], dict[str, Any]] = {}
+
+
+def _draft(model: MolecularModel | None) -> dict[str, Any]:
+    fresh = {
+        "tilt": None,
+        "azimuth": None,
+        "cis_end": "wider",
+        "registration": "",
+        "centre": 0.0,
+        "typed": False,
+    }
+    if model is None:
+        return fresh
+    return _DRAFTS.setdefault((model.project.root, model.name), fresh)
 
 
 def _value_of(body: Any, path: str) -> Any:  # noqa: ANN401 - a parsed YAML body
@@ -212,14 +230,8 @@ class _Pane:
         self.busy = False
         self.flagged: str | None = None
         self.linked_to: str | None = None
-        # What Prepare holds between a visit and a save: no case value keeps them.
-        self.prepare: dict[str, Any] = {
-            "tilt": None,
-            "azimuth": None,
-            "cis_end": "wider",
-            "registration": "",
-            "centre": 0.0,
-        }
+        # What Prepare holds between a visit and a save, kept for the window: no case value does.
+        self.prepare = _draft(self.model)
         # Edits made on a model that is no variant and holds none, until they are saved as one.
         self.staged: list[dict[str, Any]] = []
         self.status: ui.element
@@ -353,6 +365,14 @@ class _Pane:
 
     # -- one value ----------------------------------------------------------------
 
+    @contextmanager
+    def named(self, label: str) -> Iterator[tuple[ui.element, ui.label]]:
+        """Open one row of the pane for a control that sets no case value: its name, then it."""
+        with ui.element("div").classes("field-row") as row:
+            ui.label("").classes("mark")
+            name = ui.label(label).classes("field-label")
+            yield row, name
+
     def field(self, path: str, body: dict[str, Any], changed: bool, exposed: bool) -> None:
         spec = FIELDS[path]
         value = _value_of(body, path)
@@ -396,7 +416,9 @@ class _Pane:
                     "Expose",
                     value=exposed,
                     on_change=lambda e, p=path: self.expose(p, bool(e.value)),
-                ).props(f'dense aria-label="Expose {spec.label} to studies"')
+                ).props(f'dense aria-label="Expose {spec.label} to studies"').set_enabled(
+                    self.usable() and self.linked_to is None
+                )
         # A model that reads a PQR has no structure for these values to act on, and a linked
         # variant reads them from its parent.
         idle = not self.usable() or self.linked_to is not None
@@ -574,7 +596,7 @@ class _Pane:
 
     def prepare_section(self) -> None:
         record = self.record()
-        if record is not None:
+        if record is not None and not self.prepare["typed"]:
             tilt, azimuth = _angles_of(record.axis)
             self.prepare.update(
                 tilt=tilt if record.method == "typed" else None,
@@ -594,26 +616,25 @@ class _Pane:
             if record is None
             else f"Prepared from {record.source.name}, its axis {record.method}."
         ).classes("later")
-        with ui.element("div").classes("field-pair"):
+        with self.named("Tilt"):
             self.tilt = ui.number(
-                "Tilt",
                 value=self.prepare["tilt"],
                 suffix="°",
                 min=0,
                 max=90,
                 step=0.5,
-                on_change=lambda e: self.prepare.update(tilt=e.value),
-            ).props("dense outlined data-control=prepare-tilt")
+                on_change=lambda e: self.prepare.update(tilt=e.value, typed=True),
+            ).props('dense outlined data-control=prepare-tilt aria-label="Tilt, in degrees"')
             self.tilt.set_enabled(usable)
+        with self.named("Azimuth"):
             self.azimuth = ui.number(
-                "Azimuth",
                 value=self.prepare["azimuth"],
                 suffix="°",
                 min=-180,
                 max=180,
                 step=1,
-                on_change=lambda e: self.prepare.update(azimuth=e.value),
-            ).props("dense outlined data-control=prepare-azimuth")
+                on_change=lambda e: self.prepare.update(azimuth=e.value, typed=True),
+            ).props('dense outlined data-control=prepare-azimuth aria-label="Azimuth, in degrees"')
             self.azimuth.set_enabled(usable)
         with ui.row().classes("items-center no-wrap"):
             ui.button("Estimate", on_click=self.estimate).props(
@@ -624,20 +645,24 @@ class _Pane:
             ).set_enabled(usable)
             self.cis = ui.label(self.cis_text()).props("data-control=prepare-cis")
         heading("Membrane", 2)
-        with ui.element("div").classes("field-pair"):
+        with self.named("Registration"):
             ui.input(
-                "Registration residues",
                 value=self.prepare["registration"],
-                placeholder="164:186",
-                on_change=lambda e: self.prepare.update(registration=e.value or ""),
-            ).props("dense outlined data-control=prepare-registration").set_enabled(usable)
+                placeholder="first:last, as 164:186",
+                on_change=lambda e: self.prepare.update(registration=e.value or "", typed=True),
+            ).props(
+                "dense outlined data-control=prepare-registration "
+                'aria-label="Registration residues, first and last"'
+            ).set_enabled(usable)
+        with self.named("Centre, z"):
             ui.number(
-                "Centre, z",
                 value=self.prepare["centre"],
                 suffix="nm",
                 step=0.1,
-                on_change=lambda e: self.prepare.update(centre=e.value or 0.0),
-            ).props("dense outlined data-control=prepare-centre").set_enabled(usable)
+                on_change=lambda e: self.prepare.update(centre=e.value or 0.0, typed=True),
+            ).props(
+                'dense outlined data-control=prepare-centre aria-label="Centre, z, in nm"'
+            ).set_enabled(usable)
         ui.label(
             "The residues' centre is placed on the axis at this height; the plane z = 0 is drawn."
         ).classes("later")
@@ -647,6 +672,7 @@ class _Pane:
 
     def flip(self) -> None:
         self.prepare["cis_end"] = "narrower" if self.prepare["cis_end"] == "wider" else "wider"
+        self.prepare["typed"] = True
         self.cis.text = self.cis_text()
 
     def choices(self, *, typed: bool) -> dict[str, Any]:
@@ -708,6 +734,7 @@ class _Pane:
         finally:
             notice.dismiss()
             self.busy = False
+        self.prepare["typed"] = False
         self.set_source(f"../../{INPUTS_FOLDER}/{written.name}")
         ui.notify(f"Saved {INPUTS_FOLDER}/{written.name}; building the ensemble.")
         self.on_build()
@@ -738,13 +765,15 @@ class _Pane:
 
     def find_residue(self) -> None:
         listed = dict(residues(self.model)) if self.model is not None else {}
-        self.picked = ui.select(
-            listed,
-            label="Find a residue",
-            with_input=True,
-            clearable=True,
-            on_change=lambda e: self.select(e.value),
-        ).props("dense outlined options-dense data-control=find-residue")
+        with self.named("Find a residue"):
+            self.picked = ui.select(
+                listed,
+                with_input=True,
+                clearable=True,
+                on_change=lambda e: self.select(e.value),
+            ).props(
+                'dense outlined options-dense data-control=find-residue aria-label="Find a residue"'
+            )
         self.picked.set_enabled(bool(listed))
 
     async def select(self, key: object) -> None:
@@ -763,13 +792,13 @@ class _Pane:
             return
         rows = titration_states(self.model)
         for row in rows:
-            row["state"] = "left unapplied" if row["unapplied"] else "applied"
+            row["state"] = "● left unapplied" if row["unapplied"] else "applied"
         with ui.dialog() as dialog, ui.card().classes("dialog dialog-wide"):
             heading("Titratable groups, first frame", 2)
             search = ui.input(placeholder="Filter, as GLU or unapplied").props(
                 "dense outlined clearable"
             )
-            table = ui.table(columns=STATES_COLUMNS, rows=rows, row_key="id", pagination=12).props(
+            table = ui.table(columns=STATES_COLUMNS, rows=rows, row_key="id", pagination=15).props(
                 "dense flat data-control=states-table"
             )
             table.bind_filter_from(search, "value")
@@ -779,12 +808,19 @@ class _Pane:
                 ui.button("Close", on_click=dialog.close).props("flat no-caps")
         dialog.open()
 
-    def show_listed(self, title: str, lines: list[str]) -> None:
+    def show_listed(self, title: str, lines: list[str], keys: list[str] | None = None) -> None:
         with ui.dialog() as dialog, ui.card().classes("dialog dialog-wide"):
             heading(title, 2)
             with ui.column().classes("listed gap-0").props("data-control=listed"):
-                for line in lines or ["None."]:
-                    ui.label(line)
+                for index, line in enumerate(lines or ["None."]):
+                    if keys is None or index >= len(keys):
+                        ui.label(line)
+                        continue
+                    ui.button(line, on_click=lambda _, k=keys[index]: self.select(k)).props(
+                        "flat dense no-caps align=left"
+                    ).classes("list-row w-full")
+            if keys:
+                ui.label("A row selects its residue in the 3D view.").classes("later")
             with ui.row().classes("w-full justify-end"):
                 ui.button("Close", on_click=dialog.close).props("flat no-caps")
         dialog.open()
@@ -813,25 +849,29 @@ class _Pane:
         self.residue_keys = names
         heading("Edit a residue", 2)
         ui.label("An edit acts on the residue in every chain and frame.").classes("later")
-        self.edit_residue = ui.select(
-            list(names),
-            label="Residue",
-            with_input=True,
-            on_change=lambda e: self.select(names.get(str(e.value))),
-        ).props("dense outlined options-dense data-control=edit-residue")
+        with self.named("Residue"):
+            self.edit_residue = ui.select(
+                list(names),
+                with_input=True,
+                on_change=lambda e: self.select(names.get(str(e.value))),
+            ).props('dense outlined options-dense data-control=edit-residue aria-label="Residue"')
         self.edit_residue.set_enabled(usable and bool(names))
-        self.edit_kind = ui.select(
-            EDIT_KINDS, label="Edit", value="state", on_change=self.on_kind
-        ).props("dense outlined options-dense data-control=edit-kind")
+        with self.named("Edit"):
+            self.edit_kind = ui.select(EDIT_KINDS, value="state", on_change=self.on_kind).props(
+                'dense outlined options-dense data-control=edit-kind aria-label="Edit"'
+            )
         self.edit_kind.set_enabled(usable)
-        self.edit_state = ui.select(list(EDIT_STATES), label="State").props(
-            "dense outlined options-dense data-control=edit-state"
-        )
+        with self.named("State") as (self.state_row, _):
+            self.edit_state = ui.select(list(EDIT_STATES)).props(
+                'dense outlined options-dense data-control=edit-state aria-label="State"'
+            )
         self.edit_state.set_enabled(usable)
-        self.edit_number = ui.number("Charge change", suffix="e", step=1).props(
-            "dense outlined data-control=edit-number"
-        )
-        self.edit_number.set_visibility(False)
+        with self.named(EDIT_KINDS["charge_change_e"]) as (self.number_row, self.number_name):
+            self.edit_number = ui.number(suffix="e", step=1).props(
+                "dense outlined data-control=edit-number "
+                f'aria-label="{EDIT_KINDS["charge_change_e"]}"'
+            )
+        self.number_row.set_visibility(False)
         ui.button("Add edit", on_click=self.add_edit).props(
             "outline dense no-caps data-control=edit-add"
         ).set_enabled(usable)
@@ -841,9 +881,10 @@ class _Pane:
 
     def on_kind(self, event: events.ValueChangeEventArguments[Any]) -> None:
         kind = str(event.value)
-        self.edit_state.set_visibility(kind == "state")
-        self.edit_number.set_visibility(kind != "state")
-        self.edit_number.label = EDIT_KINDS[kind]
+        self.state_row.set_visibility(kind == "state")
+        self.number_row.set_visibility(kind != "state")
+        self.number_name.text = EDIT_KINDS[kind]
+        self.edit_number.props(f'aria-label="{EDIT_KINDS[kind]}"')
         self.edit_number.props(f"suffix={'e' if kind == 'charge_change_e' else 'times'}")
         self.edit_number.props(f"step={1 if kind == 'charge_change_e' else 0.05}")
 
@@ -954,28 +995,37 @@ class _Pane:
     # -- View -----------------------------------------------------------------------
 
     def view_section(self) -> None:
-        ui.select(
-            dict(REPRESENTATIONS),
-            label="Representation",
-            value=self.look["representation"],
-            on_change=lambda e: self.restyle("representation", str(e.value)),
-        ).props("dense outlined options-dense data-control=view-representation")
-        ui.select(
-            dict(COLOURINGS),
-            label="Colour by",
-            value=self.look["colour"],
-            on_change=lambda e: self.restyle("colour", str(e.value)),
-        ).props("dense outlined options-dense data-control=view-colour")
+        usable = self.usable()
+        with self.named("Representation"):
+            ui.select(
+                dict(REPRESENTATIONS),
+                value=self.look["representation"],
+                on_change=lambda e: self.restyle("representation", str(e.value)),
+            ).props(
+                "dense outlined options-dense data-control=view-representation "
+                'aria-label="Representation"'
+            ).set_enabled(usable)
+        with self.named("Colour by"):
+            ui.select(
+                dict(COLOURINGS),
+                value=self.look["colour"],
+                on_change=lambda e: self.restyle("colour", str(e.value)),
+            ).props(
+                'dense outlined options-dense data-control=view-colour aria-label="Colour by"'
+            ).set_enabled(usable)
         background = SETTINGS["viewer_background"]
-        ui.select(
-            dict(background.choices or {}),
-            label=background.title,
-            value=self.shell.settings.value("viewer_background"),
-            on_change=lambda e: self.set_background(str(e.value)),
-        ).props("dense outlined options-dense data-control=view-background")
+        with self.named("Background"):
+            ui.select(
+                dict(background.choices or {}),
+                value=self.shell.settings.value("viewer_background"),
+                on_change=lambda e: self.set_background(str(e.value)),
+            ).props(
+                "dense outlined options-dense data-control=view-background "
+                f'aria-label="{background.title}"'
+            )
         ui.checkbox(
             "Cut away the front half", on_change=lambda e: self.restyle("clip", bool(e.value))
-        ).props("dense data-control=view-clip")
+        ).props("dense data-control=view-clip").set_enabled(usable)
         self.find_residue()
         self.colour_bar()
 
@@ -983,6 +1033,11 @@ class _Pane:
         self.shell.settings = self.shell.settings.with_user("viewer_background", value)
         settings.save(self.shell.settings)
         self.built.applied()
+
+    def charged(self) -> bool:
+        if self.look["colour"] != "charge" or self.model is None:
+            return False
+        return "protonation" in self.model.artefacts()
 
     def colour_bar(self) -> None:
         low, high = ("red", "blue") if charge_colours(self.shell) == "blue" else ("blue", "red")
@@ -996,13 +1051,13 @@ class _Pane:
                     f'{low} to plus one e in {high}"'
                 )
             ):
-                ui.label("\N{MINUS SIGN}1 e")
+                ui.label("\N{LESS-THAN OR EQUAL TO} \N{MINUS SIGN}1 e")
                 with ui.element("span").classes("colour-bar-plate"):
                     ui.element("span").classes(f"colour-bar-scale positive-{high}").props(
                         "data-colorbar"
                     )
-                ui.label("+1 e")
-        self.bar_box.set_visibility(self.look["colour"] == "charge")
+                ui.label("\N{GREATER-THAN OR EQUAL TO} +1 e")
+        self.bar_box.set_visibility(self.charged())
 
     # -- what the build gave ---------------------------------------------------
 
@@ -1042,14 +1097,19 @@ class _Pane:
         elif self.tool.id in {"protonation", "edit", "view"} and table is not None:
             rows.append(("Net charge per frame", _joined(table.get("q_net_e"), " e"), None))
             rows.append(("Residues", str(table.get("residues", "?")), None))
-            rows.append(("Titratable groups", "Show…", self.show_states))
+            groups = len(titration_states(model))
+            rows.append(("Titratable groups", f"{groups} groups…", self.show_states))
             unapplied = table.get("unapplied")
             listed = unapplied if isinstance(unapplied, list) else []
             rows.append(
                 (
-                    "States the force field lacks",
-                    f"{len(listed)}…" if listed else "0",
-                    (lambda: self.show_listed("States left unapplied", _unapplied(listed)))
+                    "States left unapplied",
+                    f"{len(listed)} states…" if listed else "0",
+                    (
+                        lambda: self.show_listed(
+                            "States left unapplied", _unapplied(listed), _unapplied_keys(listed)
+                        )
+                    )
                     if listed
                     else None,
                 )
@@ -1058,7 +1118,7 @@ class _Pane:
             rows.append(
                 (
                     "PDB2PQR and PROPKA warnings",
-                    f"{len(warned)}…" if warned else "0",
+                    f"{len(warned)} warnings…" if warned else "0",
                     (lambda: self.show_listed("PDB2PQR and PROPKA warnings", warned))
                     if warned
                     else None,
@@ -1128,8 +1188,11 @@ class _Pane:
             title = next(tool.title for tool in SUITES[0].tools if tool.id == tool_id)
             glyph.text = STATES[state][0] if state else ""
             glyph.classes(replace=f"tool-glyph {STATES[state][2] if state else ''}")
-            link.props(f'aria-label="{title}{", " + STATES[state][1] if state else ""}"')
+            named = f"{title}{', ' + STATES[state][1] if state else ''}"
+            link.props(f'aria-label="{named}" title="{named}"')
         self.show_readout()
+        if hasattr(self, "bar_box"):
+            self.bar_box.set_visibility(self.charged())
         self.built.queue_moved()
         self.built.problems_moved()
 
@@ -1155,10 +1218,11 @@ class _Pane:
                         ui.label(glyph).props("aria-hidden=true")
                         ui.label(STAGE_TITLES[stage]).classes("stage-name")
                         ui.label(word).classes("stage-word")
-            if running is not None:
-                ui.linear_progress(show_value=False).props(
-                    f'indeterminate size=3px aria-label="{STAGE_RUNNING.get(running, running)}"'
-                ).classes("stage-progress")
+                        if stage == running:
+                            said = STAGE_RUNNING.get(running, running)
+                            ui.linear_progress(show_value=False).props(
+                                f'indeterminate size=3px aria-label="{said}"'
+                            ).classes("stage-progress")
 
     def show_actions(self, building: bool, ready: bool) -> None:
         self.actions.clear()
@@ -1181,7 +1245,7 @@ class _Pane:
             ).set_enabled(ready and not building)
             if building:
                 ui.button("Cancel", on_click=self.on_cancel).props(
-                    "flat dense no-caps size=sm data-control=tool-cancel"
+                    "outline dense no-caps data-control=tool-cancel"
                 ).classes("tool-cancel")
 
     def show_cards(self, problem: str | None, refusal: tuple[str, str] | None) -> None:
@@ -1230,7 +1294,11 @@ class _Pane:
                 ui.label(title).classes("note-title")
             ui.label(text if whole else f"{short}…").classes("note-short")
             if not whole:
-                with ui.expansion("Details").props("dense dense-toggle").classes("note-more"):
+                with (
+                    ui.expansion("The whole message")
+                    .props("dense dense-toggle")
+                    .classes("note-more")
+                ):
                     ui.label(text)
             with ui.row().classes("items-center"):
                 if path in self.controls:
@@ -1323,7 +1391,7 @@ class _Pane:
         if what == "frame" and hasattr(self, "frame_label") and self.model is not None:
             self.frame_label.text = f"Frame {int(str(value)) + 1} of {frame_count(self.model)}"
         if hasattr(self, "bar_box"):
-            self.bar_box.set_visibility(self.look["colour"] == "charge")
+            self.bar_box.set_visibility(self.charged())
         await self.show()
 
     async def start(self) -> None:
@@ -1340,7 +1408,7 @@ def _mapping(value: object) -> dict[str, Any]:
 def _joined(value: object, unit: str = "") -> str:
     if not isinstance(value, list):
         return "?"
-    return ", ".join(f"{item}{unit}" for item in value)
+    return ", ".join(f"{item}{unit}" for item in value).replace("-", "\N{MINUS SIGN}")
 
 
 def _unapplied(listed: list[object]) -> list[str]:
@@ -1355,14 +1423,27 @@ def _unapplied(listed: list[object]) -> list[str]:
     return lines
 
 
+def _unapplied_keys(listed: list[object]) -> list[str]:
+    keys = []
+    for entry in listed:
+        row = _mapping(entry)
+        number = str(row.get("residue", "")).split(" ")[-1]
+        keys.append(f"{row.get('chain', '')}:{number}")
+    return keys
+
+
 def _warnings(value: object) -> list[str]:
-    if isinstance(value, dict):
-        lines: list[str] = []
-        for source, said in value.items():
-            entries = said if isinstance(said, list) else [said]
-            lines.extend(f"{source}: {entry}" for entry in entries)
-        return lines
-    return [str(entry) for entry in value] if isinstance(value, list) else []
+    if isinstance(value, list):
+        return [str(entry) for entry in value]
+    if not isinstance(value, dict):
+        return []
+    lines = []
+    for message, count in value.items():
+        # A message kept as a tuple's text reads as its parts.
+        said = " ".join(str(message).strip("()").replace("'", "").replace(",", "").split())
+        times = f" ({count} times)" if isinstance(count, int) and count > 1 else ""
+        lines.append(f"● {said}{times}")
+    return lines
 
 
 def _edit_text(entry: object) -> str:
