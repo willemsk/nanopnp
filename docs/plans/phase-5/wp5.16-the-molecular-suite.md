@@ -1,6 +1,6 @@
 # WP5.16 — The Molecular suite
 
-**Status: planned, not started.** Planned 11 November 2026 on `main` (`0b75c30`). It inherits §8.2.24 Z5, §8.2.34 AJ5
+**Status: delivered 11 November 2026, awaiting its merge and `/np-ship`.** Planned 11 November 2026 on `main` (`0b75c30`). It inherits §8.2.24 Z5, §8.2.34 AJ5
 and AJ8, §8.2.36 AL22 and this plan's §8.2.39 AO1 to AO3.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to
@@ -315,6 +315,18 @@ the budget) and a build held mid-walk.
 > ensemble beyond its per-frame net charge, the residue strip under the view (a finder stands in the pane), and the
 > colour bar as an overlay of the view.
 
+> **Outcome — item 12.** The render `shell-r2` at `def8265`: 202 shots, light and dark, every page loaded; one
+> measured failure, the paging icons of the titratable groups' table at 2.64:1 on the dark theme, fixed. The GUI
+> reviewer raised 21 findings and the critique 12 (24 of 40), none blocking. Fixed: one label style and one width for
+> every pane, the view the window's height, secondary buttons in the control's edge, the build's glyph and a full-size
+> *Cancel*, the progress under the running block, a refusal that finds its field from the gate's words, the card's
+> longer text, the warnings worded, the counts named, the unapplied states' rows selecting their residue, *Expose* and
+> View's controls disabled where the model cannot use them, the Prepare draft kept for the window, the colour bar
+> shown once charges are built with its ends as bounds, and the table's headings. Left open as REV-241: Prepare's
+> view does not follow the typed values (against AO2), a PQR model's View, *Open structure…* without an upload, and
+> the frame's points. The render script's cost was measured at the author's request and cut from seven minutes to two
+> for the same 140 shots (`95abcf7`).
+
 ### Work items
 
 - [x] 58f9ab6 1. `io/case.py`, `io/resolved.py`, `pipeline/case.py`, `structure/read.py`, `structure/stage.py`, `structure/axis.py`
@@ -337,7 +349,7 @@ the budget) and a build held mid-walk.
 - [x] 9. Compaction checkpoint; the author's verdicts. **Executor:** main
 - [x] ee52015 10. `/np-gui collect`; REV-234, REV-235's and REV-237's questions to the author; the design document's rows (D9);
   done when each is ruled or carried. **Executor:** main
-- [ ] 11. The tools finished: Prepare (Q09, Q13; AO2), Ensemble, Protonation (Q27), Charge edit (FR-38; AO3), View;
+- [x] def8265 11. The tools finished: Prepare (Q09, Q13; AO2), Ensemble, Protonation (Q27), Charge edit (FR-38; AO3), View;
   *Expose* and *Modified only* (D6 to D8); done when VER-78 passes. **Executor:** main
 - [ ] 12. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-121, REV-41's `prepare`,
   REV-218, REV-231 and REV-234 `fixed`; the matrix rows; `current.md`. **Executor:** main

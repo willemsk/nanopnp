@@ -93,7 +93,7 @@ PROJECT_EXTRAS: list[tuple[str, str, list[str]]] = [
     (
         "m-protonation-states",
         "/molecular/protonation",
-        ['[data-control=tool-readout] button:has-text("Show")'],
+        ['[data-control=tool-readout] button[aria-label^="Titratable groups"]'],
     ),
     (
         "m-protonation-warnings",

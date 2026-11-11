@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.15 merged (`v0.6.0-alpha.15`); WP5.16, the Molecular suite, planned, then the suites WP5.17 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.15 merged (`v0.6.0-alpha.15`); WP5.16, the Molecular suite, delivered and awaiting its merge, then the suites WP5.17 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -239,6 +239,23 @@ model's variant, linked to its parent by default or a full copy (AO3). Then the 
 round on 2WCD (AJ8): Prepare structure, the axis and the membrane drawn from typed values (AO2), Ensemble, Protonation,
 Charge edit (FR-38's control over WP5.04's step) and View, the molecule drawn by Mol*, the molecular model's exposed
 values declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
+
+**Delivered 11 November 2026** ([the plan](wp5.16-the-molecular-suite.md)), awaiting its merge. REV-121, REV-218,
+REV-231, REV-234 and REV-239 fixed; REV-41's `prepare` landed, its `upto` still WP5.19's. Stage 1 finds a pore's axis
+from its ring of chains or chain groups, or from the channel's empty space, and checks `axis: z` against it (VER-48;
+§5.2, §5.3.1); `nanopnp prepare` and `orient_pore` take a typed axis and write a record; atom radii and residue
+indices are held in one place (VER-62 unmoved). A model is built alone with a study's keys, and a molecular model's
+variant is linked to its parent or a full copy (FR-38, FR-39; §5.3.1). The five tools stand at `/molecular/<tool>`
+beside the one 3D view, drawn from MolViewSpec scenes (VER-78 (a), (m), (n)). At the prototype round the author
+ruled, and the package built: a pane left of its view on every screen, positive charge blue with a setting, the
+settings as a window over the tool, the folded bar as icons with state, and the channel's straightness limit a warning
+(§8.2.39 AO4; WB-39).
+
+Live constraints: REV-240 carries an ensemble's variation view, colour maps beyond the two directions and one rule
+for safeguards; REV-235's and REV-237's other points wait for a later suite's round; the charge screen's redesign is
+WP5.19's (REV-209, REV-215); handles dragged in the 3D view are WP5.21's or later (REV-238). A molecular tool's page
+is `gui/web/tools.py`'s pattern for the other suites: `screens.Tool`, a pane of `Field` rows, `MolecularModel`'s
+build and states.
 
 ### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
 
