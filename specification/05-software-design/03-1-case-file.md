@@ -325,6 +325,21 @@ order, or when the model's own value lies outside it. A range guides the suites 
 override. `exposes:` keys nothing: it is left out of the merge, so no artefact or stage key reads it.
 A relative path in a model file is read beside that file, and one in `models:` beside the case.
 
+A molecular model file may hold `variant_of: {model: <file name>, linked: true | false}`, which names the model it was
+made from, a file beside its own (FR-38; §8.2.39 AO3). A **linked variant** holds `charge.edits` and no other value:
+its body is its own over its parent's, read each time, so a change to the parent reaches it and its run records the
+parent as it then is. Its parent SHALL be a model that is no variant and holds no `charge.edits`, and a linked variant
+that holds another value, or names such a parent, SHALL be refused naming the file and the key. Without `exposes:` of
+its own it exposes what its parent does. A **copy** (`linked: false`) holds every value itself and only names its
+parent. `variant_of` on a continuum or physics model, or in another form, SHALL be refused. It keys nothing and enters
+no merge: a linked variant keys as the one case its merged body gives, and the manifest's input files gain the parent
+as `models.molecular.parent`. The workbench writes a model's values, its `exposes:` list and its variants through the
+project (`Project.set_value`, `set_exposed`, `new_model`, `save_variant`), which checks the edited file as a study
+would read it before replacing the old one, so a refused edit writes nothing. A molecular model is also built alone,
+with no study (`Project.build_case`): its own values over 0.15 M NaCl at zero bias, which no stage up to the protonation
+reads, so the stages it builds are the ones every study naming it reuses (FR-39 (c); WB-11), and the store's clean-up
+keeps them.
+
 The case resolves by merging the study over the molecular model, then the continuum model, then the physics model: a
 mapping merges key by key, and a list or a free mapping replaces whole. The result validates once as
 a case. The models and the study's own keys, taken without the study's values in a named model's

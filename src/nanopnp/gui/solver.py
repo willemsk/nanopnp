@@ -48,11 +48,14 @@ class RunRequest:
     ----------
     upto
         The last stage to walk, or ``None`` for the whole pipeline.
+    write
+        Whether the walk writes a run directory; a model built alone writes none.
     """
 
     case: str
     store: str | None = None
     upto: str | None = None
+    write: bool = True
 
 
 @dataclass(frozen=True)
@@ -280,7 +283,7 @@ def _worker(request: RunRequest, events: Queue[RunEvent], cancel: EventType) -> 
         # Resolved here rather than left to the Session, so the root every
         # ``Produced`` names is the one the walk wrote into.
         store = Store(Path(request.store)) if request.store is not None else Store()
-        result = Session(store).run(
+        result = Session(store, write=request.write).run(
             Case.load(request.case),
             upto=request.upto,
             progress=QueueProgress(events),

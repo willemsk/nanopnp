@@ -832,6 +832,8 @@ def input_files(resolved: ResolvedCase, case_path: Path | None) -> dict[str, Pat
     if record is not None:
         for model_file in record.files:
             files[f"models.{model_file.kind}"] = model_file.path
+            if model_file.parent is not None:
+                files[f"models.{model_file.kind}.parent"] = model_file.parent
     if resolved.structure is not None:
         files["structure"] = resolved.structure.spec.source.path
         trajectory = resolved.structure.spec.ensemble.trajectory
