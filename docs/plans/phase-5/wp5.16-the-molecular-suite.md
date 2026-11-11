@@ -9,11 +9,11 @@ a clause and never restates it.
 ## In brief
 
 **What changes.** The Molecular suite starts working: you open a structure, orient it, choose its frames, build its
-protonation, edit a residue's charge and look at the result, each beside the 3D view. First the program learns to
-find the axis of any pore: a ring of identical chains as today, a ring of repeating units such as PlyAB's pairs, or a
-one-chain pore from its channel; a file's own axis is checked rather than trusted. A command prepares a structure from
-the terminal as the tool does. An edited molecule is saved as a variant that follows its
-parent, or as a full copy. The tools are drafted on 2WCD, shown to you, then finished to your verdicts.
+protonation, edit a residue's charge and look at the result. First the program learns to find the axis of any
+pore: a ring of identical chains, a ring of repeating units such as PlyAB's pairs, or a one-chain pore from its
+channel; a file's own axis is checked, not trusted. A command prepares a structure from the terminal. An edited
+molecule is saved as a variant that follows its parent, or as a full copy. The tools are drafted on 2WCD, shown to
+you, then finished to your verdicts.
 
 **Cost.** About five sessions, five to ten agent hours and 14 of your touches, the prototype round included; the frame
 package measured about two sessions, two agent hours and six touches. No new library.
@@ -21,11 +21,12 @@ package measured about two sessions, two agent hours and six touches. No new lib
 **What could go wrong.** The channel's axis could sit off the true one; on 2WCD it is held against the ring's axis, and
 synthetic pores of known axis test both methods and each refusal. Tidying the atom radii could move a stored result;
 every recorded result is checked unmoved. A model built alone could miss what a study later reuses; a test compares
-their fingerprints. A tool could save a value no study accepts; each value is checked before it is written, and a
-refusal shows at its field.
+their fingerprints. A tool could save a value no study accepts; each is checked before it is written, a refusal
+shown at its field.
 
 **Your call.** None for the plan: you ruled the axis, the Prepare view and variants. At the prototype round: where
-the 3D view sits, a settings window or page, and the folded rail.
+should the 3D view sit, a settings window or page, and how should the rail fold? *Recommendation:* rule them on the
+drawn screens, which show each choice.
 
 ## Execution brief
 
@@ -45,12 +46,12 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 | Decision | Choice | Why/source |
 |---|---|---|
 | D1 The pore's axis | `symmetry.axis` gains `cavity`; `source.chains` takes groups, `A+B,C+D`. Under C2 and above `auto` superposes the ring of chains or groups; under C1 `auto`, and `cavity` anywhere, take the channel's axis (D2) without the chain rules; `z` is checked against the axis that applies, with its budget | AO1, ruled by the author; decided by the plan for the syntax, which moves no key |
-| D2 The channel's axis | `structure/cavity.py:channel_axis`: from the file's z, the line fitted through 0.5 nm slabs' centres, each the enclosed Voronoi vertex of largest clearance among the ensemble-mean heavy atoms, iterated to a fixed line. Gated on orientation, coverage and straightness; the limit and `z`'s budget measured on 2WCD against its ring axis, into §5.2's NOTE | Z5, REV-121; decided by the plan |
+| D2 The channel's axis | `structure/cavity.py:channel_axis`: from the file's z, the line fitted through 0.5 nm slabs' centres, each the centroid of the enclosed Voronoi vertices tied at the slab's largest clearance among the ensemble-mean heavy atoms, iterated to a fixed line. Gated on orientation, coverage and straightness; the limit and `z`'s budget measured on 2WCD against its ring axis, into §5.2's NOTE | Z5, REV-121; decided by the plan |
 | D3 `prepare` | `orient_pore(..., axis=None)` takes a typed axis; with no distinct covariance axis it takes the channel's axis instead of refusing; it writes `<out>.prepare.json` beside the file; `nanopnp prepare` wraps it | REV-41, FR-37, decided by the plan |
 | D4 Radii in one place | CODE_REVIEW_036's D4.1, D4.2, C4.1 and C4.2 as written; REV-231's comment with them | AL22 and CODE_REVIEW_036, ruled by the author |
 | D5 A model built alone | `Project.build_case(kind, name)`: the model with each required value it lacks from `BUILD_LAYER`, which no stage up to protonation reads; walked by `SolverProcess` with `write=False`; the clean-up keeps each model's built stages | WB-11, decided by the plan |
 | D6 Values and variants | `Project.set_value`, `new_model`, `set_exposed` and `save_variant(parent, name, edits, copy=False)`, each checking the edited body before writing it; `variant_of` names the parent's file; a linked variant holds only `charge.edits` over an unedited parent; its changes are its differences from its parent | AO3, AG11, WB-12, ruled by the author; decided by the plan for the path and one level |
-| D7 Tool pages | `/molecular/<tool>` per tool, the pane left of the frame's view; each field with its mark, reset, refusal and *Expose*; *Modified only*; `?field=` focuses its field; each tool's state from the store; a build queued, cancellable, its child tracked | WB-05, WB-07, WB-12, FR-27; decided by the plan; REV-234's place at the round |
+| D7 Tool pages | `/molecular/<tool>` per tool, the pane drafted left of the view, its place REV-234's ruling at the round; each field with its mark, reset, refusal and *Expose*; *Modified only*; `?field=` focuses its field; each tool's state from the store; a build queued, cancellable, its child tracked | WB-05, WB-07, WB-12, FR-27; decided by the plan |
 | D8 The 3D view | Each view a MolViewSpec document the server writes and `nano.scene` loads, keeping the camera: the structure, its representation, colour from a per-atom annotation (charge diverging about zero, chain, changed), the axis a tube, the membrane two discs, a clip | VER-60, WB-20, CON-09; decided by the plan |
 | D9 The round | After D1 to D8, the five tools drafted on 2WCD and rendered empty, building, built and refused; reviewed, published, collected; then REV-234, REV-235's and REV-237's questions to the author; then finished to the verdicts | AJ8, ruled by the author |
 
@@ -65,9 +66,9 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 - `structure/read.py:select` refuses a count other than n, a chain under `COVERAGE_FRACTION` of the most complete
   chain's C-alpha and a residue name that differs from the first chain's; `common_index` is (n, common C-alpha), matched
   by residue number and insertion code.
-- `structure/stage.py:align`: `auto` calls `detect_axis`; `z` with n ≥ 2 calls `gate_axis(measure_axis(...))` and
-  `check_z_axis`; C1 under `z` records "unchecked". `drift_deg` comes from `cyclic_fit` per frame, `frame_check` from
-  `measure_axis` on the aligned mean.
+- `structure/stage.py:align`: `auto` calls `detect_axis` and `frame_rotation(record, chains[0].mean(axis=0))`; `z`
+  with n ≥ 2 calls `gate_axis(measure_axis(...))` and `check_z_axis`; C1 under `z` records "unchecked".
+  `drift_deg` comes from `cyclic_fit` per frame, `frame_check` from `measure_axis` on the aligned mean.
 - `structure/axis.py:chain_order` and `cyclic_fit` take an (n, m, 3) array, so a group's joined C-alpha is one row.
   `measure_axis` raises below n = 2.
 - `tests/tier1/test_structure_axis.py:test_ver48_gates_fire` holds `c1-auto`, a refusal AO1 removes.
@@ -78,14 +79,17 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 - `axis.py:ORIENTATION_LIMIT_DEG` is 10, `DISPLACEMENT_BUDGET_NM` 0.01; `z_displacement` measures a line against z
   over the C-alpha extent.
 - `test_structure_axis.py:_protomer` and `_assembly` build wedges between 2 and 5 nm about a known axis;
-  `tests/conftest.py:prepared_2wcd` is the session's aligned dodecamer.
+  `tests/conftest.py:prepared_2wcd` is a PDB of chains A–L tilted 4° and shifted (0.6, −0.35, 1.2) nm;
+  `structure_2wcd` is a store holding its stage 1 under `auto`.
 
 **D3.**
 - `orient.py:orient_pore` estimates by `_pore_axis`, which refuses when no covariance eigenvalue stands apart
   (`DEGENERACY`), signs by `_signed`, places the registration centroid and returns the path. `prepared_pore` names the
   file by a digest of the source, the choices, `orient.py` and `read.py`, staged then renamed.
 - `examples/06-pdb-to-mesh/prepare.py` and two Tier 1 tests call it.
-- `cli/parser.py:build_parser` registers `building.register` (`geometry`, `mesh`); `building._emit` prints text or JSON.
+- `cli/parser.py:build_parser` registers `building.register` (`geometry`, `mesh`); `cli/common.py:_emit`, which
+  `building` imports, prints text or JSON.
+- `api/case.py:_ORIENT_KEYS` lists the keywords `Case.from_structure(orient=...)` passes to `prepared_pore`.
 
 **D4.**
 - `density/stage.py` multiplies `resolve_protonated_radii(...).radii_nm` by `radius_scales(table)`.
@@ -110,7 +114,8 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 - `api/project.py:Project` writes items through `_write_item`, `reset` and `import_case`; no method sets a value or
   creates a model. `changes` reads `io/defaults.py:mapping_changes` of the body.
 - `io/models.py:HEADER_KEYS` is `schema`, `name`, `exposes`; `read_model_file(kind, path, *, rebase, source)` refuses a
-  key `owner_of` gives another kind; `exposed_values` reads `exposes:` or `EXPOSED[kind]`, pH for molecular.
+  key `owner_of` gives another kind, a study-owned `variant_of` included, and validates no value's type;
+  `exposed_values` reads `exposes:` or `EXPOSED[kind]`, pH for molecular.
 - `charge/protonation.py:_parent_parameters` keys a variant's parent as its case without edits.
 - `io/project.py:FOLDERS["molecular"]` is `models/molecular`.
 
@@ -142,14 +147,25 @@ Nine: three library steps, two project mechanisms the tools write through, and t
   flattened chains. `ResolvedStructure.groups` holds the groups, one chain each without `+`. Refused at resolution,
   naming the key: an empty member, a repeated chain, groups of unequal size, groups not numbering n, `+` under C1.
 - Under groups, `select` checks coverage and residue names per position in the group; `common_index` joins each group's
-  common C-alpha in position order. Under the channel it skips the count, coverage and residue-name rules, and
-  `common_index` is every C-alpha as one row.
+  common C-alpha in position order, the positions in the listed order, not the file's. `select` gains `groups` and
+  `channel` keywords. Under the channel it skips the count, coverage and residue-name rules, and `common_index` is
+  every C-alpha as one row.
 - `cavity.py` holds `SLAB_NM = 0.5`, `REACH_NM = 1.0`, `GAP_DEG = 90.0`, `MIN_CLEARANCE_NM = 0.2`,
-  `COVERAGE_FRACTION = 0.5`, `TURN_TOL_RAD = 1e-6`, `MOVE_TOL_NM = 1e-6`, `MAX_ITERATIONS = 50`, and the measured
-  `STRAIGHTNESS_NM` and `CAVITY_BUDGET_NM`, each commented with §5.2's NOTE. `ChannelRecord(axis, foot_nm, centres_nm,
-  coverage, straightness_nm, iterations)`, `summary()`; `gate_channel` raises `SymmetryGateError` naming the gate and
-  the measured value. Under the channel, `drift_deg` is each frame's channel axis, started from the mean's line, as an
-  angle to the mean's axis; `frame_check` measures the channel's line again on the aligned mean.
+  `TIE_NM = 1e-3`, `COVERAGE_FRACTION = 0.5`, `TURN_TOL_RAD = 1e-6`, `MOVE_TOL_NM = 1e-6`, `MAX_ITERATIONS = 50`, and
+  the measured `STRAIGHTNESS_NM` and `CAVITY_BUDGET_NM`, each commented with §5.2's NOTE. `ChannelRecord(axis,
+  foot_nm, centres_nm, coverage, straightness_nm, iterations)`, `summary()`; `gate_channel` raises
+  `SymmetryGateError` naming the gate and the measured value.
+- A slab's centre is the centroid of its enclosed vertices within `TIE_NM` of its largest clearance. Under C<sub>n</sub>
+  the n images of a vertex tie, so at the true axis each slab holds whole orbits whose centroid lies on it, and the
+  axis is the iteration's fixed point; one vertex picked would sit off it. `TIE_NM` is ten times the PDB format's
+  0.001 Å step, so a pore built with imposed symmetry ties as an exact one does.
+- The Delaunay tetrahedra of the heavy atoms are built once per fit, their circumcentres the vertices; the iterations
+  re-slab them (1.2 s for 27,000 atoms, measured). Under the channel, `drift_deg` carries each mean centre into a frame
+  as its tetrahedra's circumcentres from the frame's positions, refits the line, with no new tessellation, and takes
+  its angle to the mean's axis; `frame_check` measures the channel's line again on the aligned mean. `Alignment.record`
+  holds the `ChannelRecord`; the frame's turn puts the first listed chain's C-alpha centroid on +x;
+  `chains_cyclic_order` is the file order. C1 under `z` is checked against the channel's line, so the `unchecked`
+  status, `Symmetry.axis`'s description and `_resolve_structure`'s C1 message change with it.
 - The header's `axis` gains `method` (`permutation` or `channel`) and `groups`; a reader takes their absence as
   `permutation` and none.
 - Item 2 measures on `prepared_2wcd` under `cavity` against `auto`: the displacement over the C-alpha extent and the
@@ -160,11 +176,13 @@ Nine: three library steps, two project mechanisms the tools write through, and t
 **Item 3** (Sonnet).
 - `orient_pore(source, *, chains="all", cis_end, registration_residues=None, centroid_z_nm=0.0, axis=None, out)`:
   `axis` a 3-tuple, normalised, signed by `cis_end`; `ValueError` on a zero vector. Where `_pore_axis` raises,
-  `cavity.channel_axis` on the kept heavy atoms in nm, started from z.
+  `cavity.channel_axis` on the kept heavy atoms in nm, started from each covariance axis, keeping the one that passes
+  coverage and straightness with the least straightness; none passing is refused.
 - `PreparationRecord`, a strict Pydantic model: `source` (`name`, `sha256`), `chains`, `cis_end`,
   `registration_residues`, `centroid_z_nm`, `axis` (file frame), `tilt_deg`, `method` (`covariance`, `channel`,
   `typed`), `off_axis_nm`. Written to `out.with_suffix(".prepare.json")`, staged with the PDB in `prepared_pore`, which
-  also digests `cavity.py`.
+  also digests `cavity.py`. `prepared_pore` and `_ORIENT_KEYS` take `axis`, a digested choice; the record is renamed
+  into place before the PDB, whose presence marks a whole pair.
 - `nanopnp prepare SOURCE --cis-end {wider,narrower} --out OUT [--chains C] [--registration FIRST:LAST]
   [--centroid-z-nm Z] [--axis X,Y,Z]`; `_emit` prints the record, `--json` the record itself.
 
@@ -173,21 +191,27 @@ frame, chain, residue and atom for an atom it would edit at −1; `radius_scales
 
 **Item 6.**
 - `Project.set_value(kind, name, path, value)`: `owner_of(path)` is `kind`, else `ProjectError`; the body edited by
-  `io/models.py:_put`, read back by `read_model_file(rebase=False)`; `CaseValidationError` propagates and nothing is
-  written. `None` deletes as `reset` does.
+  `io/models.py:_put`, read back by `read_model_file(rebase=False)`, then validated as `build_case` validates it,
+  through `loads_case`; `CaseValidationError` propagates and nothing is written. `None` deletes as `reset` does.
+  On a linked variant it refuses a path other than `charge.edits`; on a model a linked variant names, `charge.edits`.
 - `Project.new_model(kind, name)` writes `{schema, name, exposes}` with `EXPOSED[kind]`; `set_exposed(kind, name,
   path, on)` edits `exposes:`.
-- A linked variant: `{schema, name, variant_of: 2wcd.yaml, charge: {edits: [...]}}`; a copy: the parent's body, its
-  edits and `variant_of`. `read_model_file` merges a linked variant's body over its parent's.
+- `HEADER_KEYS` gains `variant_of`. A linked variant: `{schema, name, variant_of: {model: 2wcd.yaml, linked: true},
+  charge: {edits: [...]}}`; a copy: the parent's body, its edits and `variant_of` with `linked: false`.
+  `read_model_file` merges only a linked variant's body over its parent's.
 - `BUILD_LAYER`: `electrolyte: {species: [{name: Na+, z: 1}, {name: Cl-, z: -1}], concentration_M: 0.15}` and
   `boundary_conditions: {bias_V: 0.0}`, under the model; `BUILD_UPTO = {"molecular": "protonation"}`.
 - `RunRequest.write: bool = True`; `_worker` sets `Session.write`.
-- `kept_artefacts` adds, per model, the identities `keyed_walk` gives `build_case`'s stages up to `BUILD_UPTO`.
-- `set_exposed` names an entry by the path's last part. `changes` of a variant compares `io/models.py:leaves` of its
-  parent's body and of its own merged body, `Change.default` the parent's value.
+- `kept_artefacts` adds, per model, the identities `keyed_walk` gives `build_case`'s stages up to `BUILD_UPTO`. A
+  model that does not resolve adds none and stays in `problems`; the identities are held per model, keyed by its
+  file's digest and its input files' size and modification time, so `store_usage` hashes no structure twice.
+- `set_exposed` names an entry by the path's last part, refused where another entry has that name. `changes` of a
+  variant compares `io/models.py:leaves` of its parent's body and of its own merged body, `Change.default` the
+  parent's value.
 
 **Item 7.**
-- `screens.Tool(id, title)`; molecular `prepare`, `ensemble`, `protonation`, `edit`, `view`. `ROUTES` gains
+- `screens.Tool(id, title, fields)`; molecular `prepare`, `ensemble`, `protonation`, `edit`, `view`; `on_open_field`
+  opens the tool whose `fields` holds the path's prefix. `ROUTES` gains
   `/molecular/<id>` as `Route("molecular", "molecule")`; a `Screen` per tool with `tool-pane`, `tool-status` and its
   controls.
 - `gui/web/molecular.py:MolecularModel(project, name)`: `state(stage)` (`empty`, `building`, `built`, `refused`, the
@@ -196,7 +220,9 @@ frame, chain, residue and atom for an atom it would edit at −1; `radius_scales
 - Endpoints `/api/molecular/{name}/structure` (the source, the prepared file, stage 1's frames as PDB models, or the
   table's), `/annotation?by=charge|chain|changed` and `/scene?tool=…` (MolViewSpec JSON).
 - `nano.scene(url)`: the first call builds Mol*; each later one runs `loadMvsData(json, 'mvsj', {replaceExisting:
-  true, keepCamera: true})`.
+  true, keepCamera: true})`. `show_molecule` loads through it too, so `/study/charge` never keeps a tool's scene.
+- In a state with no structure each tool screen shows its empty `tool-status`; on a model from `inputs.pqr`, Prepare
+  and Ensemble name the PQR there. VER-78 (m) runs in `empty`.
 
 **Item 8.** `render_shell.py`'s 2WCD project gains `/molecular/<tool>` shots built, a refused stage 1 (`axis: z` off
 the budget) and a build held mid-walk.
@@ -211,7 +237,8 @@ the budget) and a build held mid-walk.
 - Protonation: `charge.ph`, `forcefield`, `titration`; *Build molecular model* walks to the protonation; each residue's
   state, Q<sub>net</sub> per frame and PROPKA's warnings from its summary (Q27).
 - Charge edit: a residue picked in 3D or in the list; a state, a charge change or a radius scale; on a model without
-  edits *Save as variant…* asks a name and *Linked* or *Full copy*, and on a variant it edits that variant.
+  edits *Save as variant…* asks a name and *Linked* or *Full copy*, and on a variant it edits that variant; a model
+  holding edits and no `variant_of` edits them in place.
 - View: representation, colour, the `viewer_background` setting, clip at the axis, the residue list.
 
 ### Work items
@@ -245,10 +272,10 @@ the budget) and a build held mid-walk.
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |
 |---|---|---|---|---|
-| `tests/tier1/test_structure_axis.py::test_ver48_the_channel_axis_recovers_a_known_axis` | 1 | VER-48; FR-02 | C7, C8, C12 and a one-chain ring, tilted 8° and offset by (3, −1.5, 40) nm: axis to 10⁻⁶ rad, line to 10⁻⁶ nm; at 35° before the orientation gate, the same | `uv run pytest tests/tier1/test_structure_axis.py` |
+| `tests/tier1/test_structure_axis.py::test_ver48_the_channel_axis_recovers_a_known_axis` | 1 | VER-48; FR-02 | C7, C8, C12 and the C7 written as one chain, tilted 8° and offset by (3, −1.5, 40) nm: axis to 10⁻⁶ rad, line to 10⁻⁶ nm, the iteration's stop, the axis being its fixed point; at 35° before the orientation gate, the same | `uv run pytest tests/tier1/test_structure_axis.py` |
 | the same file, `test_ver48_the_channel_axis_gates_fire` | 1 | VER-48; QR-12 | One assertion each, naming gate and value: a solid ball (coverage), a channel bent 2 nm (straightness), an axis 12° from z (orientation), `z` beyond the budget, no convergence | as above |
 | the same file, `test_ver48_chain_groups_superpose_as_one_ring` | 1 | VER-48; FR-03 | Eight A+B units of two shapes: axis to 10⁻⁹; refused, one each: a repeated chain, unequal groups, a residue name differing at one position, groups not numbering n | as above |
-| `tests/tier1/test_structure_stage.py::test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis` | 1 | VER-48 | `cavity` within the budget of `auto`; C1 with all 12 chains under `auto` equals `cavity` | `uv run pytest tests/tier1/test_structure_stage.py` |
+| `tests/tier1/test_structure_stage.py::test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis` | 1 | VER-48 | `cavity`'s displacement from `structure_2wcd`'s `auto` axis equals §5.2's recorded value to 10⁻⁴ nm; C1 with all 12 chains under `auto` routes to the channel: equal to `cavity`, exact; `cavity` run on `prepared_2wcd.path`, `write=False` | `uv run pytest tests/tier1/test_structure_stage.py` |
 | `tests/tier1/test_models.py::test_fr39_a_model_built_alone_keys_as_its_study_walk` | 1 | FR-39; WB-11 | Stage-1 and protonation identities of `build_case` equal the study's, exact | `uv run pytest tests/tier1/test_models.py` |
 | `tests/tier1/test_project.py::test_fr38_a_linked_variant_follows_its_parent_and_a_copy_does_not` | 1 | FR-38; AO3 | One each: a variant resolves to parent plus edits; the parent's pH reaches it; not a copy; a variant's changes are its edits; a set value reads back; a refused one writes nothing | `uv run pytest tests/tier1/test_project.py` |
 | Tier 2's golden walks | 2 | VER-62 | Unmoved by items 1, 2 and 4 | `.claude/hooks/gate.sh run` |
@@ -259,7 +286,8 @@ the budget) and a build held mid-walk.
 
 - Dragging the axis and the membrane: REV-238 (AO2). A trajectory's upload and alignment beyond stage 1's.
 - The Continuum, Physics, Study and Analysis tools: WP5.17 to WP5.20; the keyboard pass over the canvases: WP5.21.
-- A molecular model with no structure, from `inputs.pqr`, shows its table and no Prepare or Ensemble.
+- Preparing or aligning a model from `inputs.pqr`, which has no structure: its Prepare and Ensemble screens name
+  the PQR (item 7).
 
 ### Open questions
 

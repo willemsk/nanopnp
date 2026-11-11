@@ -17,12 +17,12 @@ verdicts, then finished. Four suites, the route and the close follow: about 55 s
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.15 merged
   (`v0.6.0-alpha.15`); then the suites, the route and the close.
   **WP5.16** [planned](phase-5/wp5.16-the-molecular-suite.md) on `claude/pensive-lovelace-1cc77i`, its PR open.
-  Next, `/np-plan wp 5.16 review`. host: claude-code.
+  Next, `/np-implement wp 5.16`. host: claude-code.
 
 ## Not to be re-decided
 
 - **Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a
-  workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15); **packages `WP5.01` on** (S16).
+  browser workbench, §8.2.17 S1 to S14; Qt stays gated until it** (M3). **Two lanes at most** (S15); **packages `WP5.01` on** (S16).
 - **The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a VER-62 miss
   is reverted or re-pinned by ruling (G10, I4).
 - **An open item is a `REV-nn` row** until resolved (H12).
