@@ -6,7 +6,7 @@ import math
 from collections.abc import Mapping
 from typing import Literal
 
-__all__ = ["Style", "shown", "symbol"]
+__all__ = ["Style", "shown"]
 
 Style = Literal["prefixes", "powers"]
 
@@ -89,13 +89,3 @@ def shown(value: object, unit: str | None, *, figures: int, style: Style) -> str
     else:
         text = _figures(float(value), figures)
     return f"{text}{_GAP}{symbol}" if symbol else text
-
-
-def symbol(unit: str | None) -> str:
-    """Return the symbol of a field's unit, as the case file's suffix names it; empty for none."""
-    if unit is None:
-        return ""
-    prefixed = {"nanometer": "nm", "nanosecond": "ns"}
-    if unit in prefixed:
-        return prefixed[unit]
-    return _BASE[unit][0] if unit in _BASE else _SYMBOL.get(unit, unit)

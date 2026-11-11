@@ -64,6 +64,11 @@ body .nicegui-footer.frame-footer {
   gap: 2px;
   width: 100%;
 }
+/* A line between the suites that build models and those that use them. */
+.suite-group + .suite-group {
+  border-top: 1px solid var(--line);
+  padding-top: var(--gap);
+}
 .suite-group-title {
   font-size: var(--text-xs);
   color: var(--muted);
@@ -85,11 +90,24 @@ body .nicegui-footer.frame-footer {
   border-left-color: var(--accent);
   font-weight: 600;
 }
+/* The icons in the muted ink, smaller than Quasar's, so the labels lead; the open suite's in the
+   accent. */
+.suite-button .q-icon {
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+.suite-button[aria-current="page"] .q-icon {
+  color: var(--accent);
+}
 .rail {
   flex: 1;
   min-width: 0;
   padding: var(--pad);
   overflow: auto;
+}
+/* The fold button sits at the rail's right edge, beside its separator; folded, it is centred. */
+.q-drawer:not(.q-drawer--mini) [data-control="rail-fold"] {
+  align-self: flex-end;
 }
 .rail-heading {
   font-size: var(--text-lg);
@@ -130,6 +148,14 @@ body .nicegui-footer.frame-footer {
   position: relative;
   width: 100%;
   overflow: auto;
+}
+/* The panel's tabs stay in view while its rows scroll under them. */
+.bottom-panel > .q-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
 }
 .panel-body {
   padding: 0 var(--pad);

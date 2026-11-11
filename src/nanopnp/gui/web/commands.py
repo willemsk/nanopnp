@@ -40,6 +40,8 @@ class Command:
         Words the palette finds the command by, besides its title.
     needs_project
         Whether the command needs an open project to run.
+    section
+        The group within its menu; a menu draws a line between two groups.
     """
 
     id: str
@@ -48,6 +50,7 @@ class Command:
     shortcut: str = ""
     keywords: tuple[str, ...] = ()
     needs_project: bool = False
+    section: str = ""
 
 
 _SUITE_COMMANDS: tuple[Command, ...] = tuple(
@@ -57,25 +60,42 @@ _SUITE_COMMANDS: tuple[Command, ...] = tuple(
         "view",
         f"Alt+Shift+{number}",
         tuple(tool.lower() for tool in suite.tools),
+        section="suites",
     )
     for number, suite in enumerate(SUITES, start=1)
 )
 
 COMMANDS: tuple[Command, ...] = (
-    Command("project-new", "New project…", "file"),
-    Command("project-open", "Open project…", "file"),
-    Command("project-import", "Import case…", "file", needs_project=True),
-    Command("project-export", "Export project…", "file", needs_project=True),
-    Command("settings", "Settings…", "file", "Ctrl+,", ("preferences", "options")),
-    Command("quit", "Quit", "file"),
+    Command("project-new", "New project…", "file", section="project"),
+    Command("project-open", "Open project…", "file", section="project"),
+    Command("project-import", "Import case…", "file", needs_project=True, section="project"),
+    Command("project-export", "Export project…", "file", needs_project=True, section="project"),
+    Command(
+        "settings", "Settings…", "file", "Ctrl+,", ("preferences", "options"), section="settings"
+    ),
+    Command("quit", "Quit", "file", section="quit"),
     *_SUITE_COMMANDS,
-    Command("panel-toggle", "Toggle the bottom panel", "view", "Alt+Shift+J", ("queue", "log")),
-    Command("changes", "Changed values", "view", "Alt+Shift+D", ("modified", "defaults")),
-    Command("problems", "Problems", "view", "Alt+Shift+P", ("errors", "refused")),
-    Command("layout-reset", "Reset layout", "view", keywords=("panels", "sizes")),
+    Command(
+        "panel-toggle",
+        "Toggle the bottom panel",
+        "view",
+        "Alt+Shift+J",
+        ("queue", "log"),
+        section="panels",
+    ),
+    Command(
+        "changes",
+        "Changed values",
+        "view",
+        "Alt+Shift+D",
+        ("modified", "defaults"),
+        section="panels",
+    ),
+    Command("problems", "Problems", "view", "Alt+Shift+P", ("errors", "refused"), section="panels"),
+    Command("layout-reset", "Reset layout", "view", keywords=("panels", "sizes"), section="window"),
     Command("glossary", "Glossary", "help", keywords=("terms",)),
     Command("about", "About", "help"),
-    Command("palette", "Command palette", "view", "Ctrl+K"),
+    Command("palette", "Command palette", "view", "Ctrl+K", section="window"),
 )
 
 PALETTE_ALSO = "F1"
