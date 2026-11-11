@@ -24,7 +24,7 @@ from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.glossary import GLOSSARY
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
-from nanopnp.gui.web.screens import GROUPS, SUITES
+from nanopnp.gui.web.screens import GROUPS, SUITES, tool_for
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench, cap_store
 from nanopnp.io.case_paths import SEQUENCE_INDEX
@@ -154,8 +154,14 @@ CHANGE_BODY = r"""
 class Views(Protocol):
     """What a sub-page asks of the frame's view region."""
 
-    async def show_molecule(self, structure_url: str | None) -> None:
-        """Show the Mol* host, building it the first time, and mark the screen ready."""
+    async def show_molecule(self, scene_url: str | None, key: str = "") -> None:
+        """Show the Mol* host, built once, with the scene at ``scene_url``; mark the screen ready.
+
+        ``key`` names the structure the scene draws: the camera is kept while it stays the same.
+        """
+
+    def changes_moved(self) -> None:
+        """Count and list the changed values again, after a tool wrote one."""
 
     async def settled(self) -> None:
         """Wait until what the address opened in the frame, such as the palette, has opened."""
@@ -305,12 +311,20 @@ class _Frame:
             else:
                 button.props(remove="aria-current")
 
-    async def show_molecule(self, structure_url: str | None) -> None:
-        """Show the frame's Mol* host, building it the first time, and mark the screen ready."""
+    async def show_molecule(self, scene_url: str | None, key: str = "") -> None:
+        """Show the frame's Mol* host, built once, with a scene; mark the screen ready."""
         self.view.set_visibility(True)
-        argument = "null" if structure_url is None else json.dumps(structure_url)
+        argument = "null" if scene_url is None else json.dumps(scene_url)
         # A long timeout: Mol* builds in seconds on a machine with no GPU.
-        await ui.run_javascript(f"nano.ensure({argument})", timeout=60)
+        await ui.run_javascript(f"nano.scene({argument}, {json.dumps(key)})", timeout=60)
+
+    def changes_moved(self) -> None:
+        """Count and list the changed values again, after a tool wrote one."""
+        self._listed = None
+        self._problems = None
+        self.changed_label.text = self.changed_text(self.changed_count())
+        self.changes_table.rows = self.change_rows()
+        self.changes_table.update()
 
     def run(self, identifier: str) -> None:
         if identifier.startswith(commands.SETTING_COMMAND):
@@ -778,7 +792,12 @@ class _Frame:
             self.rail_box.clear()
             with self.rail_box:
                 self.rail_items()
-        ui.navigate.to(f"/{ITEM_SUITES[kind]}?field={event.args['field']}")
+        suite = ITEM_SUITES[kind]
+        tool = tool_for(suite, str(event.args["field"]))
+        page = f"/{suite}/{tool.id}" if tool is not None else f"/{suite}"
+        ui.navigate.to(
+            f"{page if page in self.routes else f'/{suite}'}?field={event.args['field']}"
+        )
 
     def ask_reset(self, kind: str, name: str, path: str) -> None:
         self.confirm(
@@ -798,10 +817,7 @@ class _Frame:
             ui.notify(str(error), type="negative")
             return
         self.shell.queue.log.append(f"reset {path} of {kind}/{name}")
-        self._listed = None
-        self.changed_label.text = self.changed_text(self.changed_count())
-        self.changes_table.rows = self.change_rows()
-        self.changes_table.update()
+        self.changes_moved()
 
     def problems_list(self) -> None:
         bench = self.shell.bench

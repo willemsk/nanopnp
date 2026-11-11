@@ -29,6 +29,7 @@ from fastapi import FastAPI
 from nanopnp.api.project import Project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import settings
+from nanopnp.gui.web.molecular import cancel_builds
 from nanopnp.gui.web.pages import install
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import STATES, Workbench, boot, boot_case, boot_project, cap_store
@@ -83,6 +84,7 @@ def _stop_children() -> None:
         if process.running:
             process.cancel()
     _CHILDREN.clear()
+    cancel_builds()
 
 
 class Guard:

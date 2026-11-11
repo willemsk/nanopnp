@@ -416,3 +416,44 @@ body .nicegui-footer.frame-footer {
 .q-tab:not(.q-tab--active) {
   color: var(--muted);
 }
+
+/* A tool's page: its pane left of the view, which takes the rest of the row. */
+.main-row:has(.tool-pane) {
+  flex-wrap: nowrap;
+  align-self: stretch;
+  width: 100%;
+}
+.main-row:has(.tool-pane) .sub-page {
+  order: -1;
+  flex: 0 0 21rem;
+}
+.main-row:has(.tool-pane) .view-region {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.main-row:has(.tool-pane) #mol {
+  width: 100%;
+  height: min(70vh, 40rem);
+}
+.tool-pane {
+  width: 100%;
+  gap: var(--gap);
+}
+.field-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap);
+  width: 100%;
+}
+.field-row > .q-field,
+.field-row > .field-list {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.field-row > .mark {
+  line-height: 2.5rem;
+}
+.field-label {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}

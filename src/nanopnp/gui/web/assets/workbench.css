@@ -44,3 +44,7 @@ body .msp-plugin .msp-logo-link {
 [data-control="stages"] {
   min-height: 1.75rem;
 }
+/* A scene is one snapshot, so Mol*'s control for stepping through snapshots has nothing to step. */
+body .msp-plugin .msp-state-snapshot-viewport-controls {
+  display: none;
+}
