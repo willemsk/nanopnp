@@ -11,7 +11,7 @@ from typing import Annotated, Any, Literal
 import yaml
 from pydantic import Field, JsonValue, TypeAdapter, ValidationError
 
-from nanopnp.core.paths import config_root
+from nanopnp.core.paths import RECENT_PROJECTS_KEPT, config_root
 from nanopnp.io.store import atomic_write_bytes
 
 __all__ = [
@@ -216,7 +216,7 @@ register(
         ("recent", "history", "projects"),
         "user",
         8,
-        TypeAdapter(Annotated[int, Field(ge=1, le=30)]),
+        TypeAdapter(Annotated[int, Field(ge=1, le=RECENT_PROJECTS_KEPT)]),
     )
 )
 register(

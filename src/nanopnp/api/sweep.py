@@ -308,6 +308,13 @@ def run_point(
     index
         Which point to run.
     """
+    # Held from the parent's lookup to the member's walk, so no clean-up removes the warm start
+    # between them.
+    with session.store.using():
+        return _run_point(plan, index, session=session, directory=directory)
+
+
+def _run_point(plan: SweepPlan, index: int, *, session: Session, directory: Path) -> MemberResult:
     from nanopnp.core.stages import Cancelled
 
     point = plan.point(index)

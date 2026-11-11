@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import copy
 import json
 import logging
 import os
@@ -107,6 +108,13 @@ class Store:
         self._sweeps = Path(sweeps).expanduser().resolve() if sweeps is not None else None
         self.hits = 0
         self.misses = 0
+        self._marks = True
+
+    def unmarked(self) -> Store:
+        """Return this store as a reader that records no read mark, as a forecast reads it."""
+        view = copy.copy(self)
+        view._marks = False
+        return view
 
     @property
     def root(self) -> Path:
@@ -142,7 +150,7 @@ class Store:
         """Whether an artefact with this key is already stored; ``mark`` records the read."""
         directory = self.location(artefact.schema, artefact.hash)
         found = (directory / META).is_file()
-        if found and mark:
+        if found and mark and self._marks:
             _mark_read(directory)
         return found
 
@@ -201,10 +209,12 @@ class Store:
         meta_path = directory / META
         if not meta_path.is_file():
             return None
-        if mark:
+        if mark and self._marks:
             _mark_read(directory)
         try:
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            return None  # a clean-up renamed the entry away after the check above
         except json.JSONDecodeError as error:
             raise StoreError(f"{meta_path}: not readable as JSON: {error}") from error
         if not isinstance(meta, dict):
@@ -278,18 +288,26 @@ class Store:
         Raises StoreBusy, removing nothing, while a walk holds the store.
         """
         with self.cleaning():
-            return self._remove(entries)
+            return len(self._remove(entries))
 
-    def _remove(self, entries: Iterable[StaleEntry]) -> int:
-        removed = 0
-        root = (self._root / "artefacts").resolve()
+    def _remove(self, entries: Iterable[StaleEntry]) -> list[StaleEntry]:
+        removed: list[StaleEntry] = []
+        artefacts = self._root / "artefacts"
+        root = artefacts.resolve()
         for entry in entries:
             directory = entry.path.resolve()
             if root not in directory.parents:
                 raise StoreError(f"{directory} is not an entry of the store at {self._root}")
-            if directory.is_dir():
+            if not directory.is_dir():
+                continue
+            try:
                 _discard(directory)
-                removed += 1
+            except OSError as error:
+                # A file of the entry held open (Windows) keeps it whole; the next clean-up retries.
+                logger.warning("could not remove %s: %s", directory, error)
+                continue
+            removed.append(entry)
+        _sweep_evicted(artefacts)
         return removed
 
     def _entries(self) -> list[_Held]:
@@ -343,12 +361,16 @@ class Store:
                     continue
                 chosen.append(item.entry)
                 total -= item.entry.size_bytes
-            self._remove(chosen)
-        return tuple(chosen)
+            return tuple(self._remove(chosen))
 
     def inputs_closure(self, digests: Iterable[str]) -> frozenset[str]:
         """Return ``digests`` with every stored entry their records name as inputs, transitively."""
-        where = {item.entry.hash: item.entry.path for item in self._entries()}
+        # Each entry's directory by its key, unsized: a hidden directory is none.
+        where = {
+            meta.parent.name: meta.parent
+            for meta in (self._root / "artefacts").glob("*/*/*/" + META)
+            if not meta.parent.name.startswith(".")
+        }
         closed: set[str] = set()
         pending = list(digests)
         while pending:
@@ -372,31 +394,41 @@ class Store:
     def using(self) -> Iterator[None]:
         """Hold the store for a walk: a clean-up in any program removes nothing meanwhile.
 
-        A walk that starts during a clean-up waits for it.
+        A walk that starts during a clean-up waits for it. A store that cannot be written, or
+        whose filesystem takes no file lock, takes none, and the walk runs.
+        """
+        folder = self._lock_folder()
+        held = None if folder is None else _hold_walk(folder)
+        try:
+            yield
+        finally:
+            if held is not None:
+                handle, path = held
+                _unlock(handle)
+                handle.close()
+                # A clean-up probing it holds it open on Windows; the next clean-up clears it.
+                with contextlib.suppress(OSError):
+                    path.unlink()
+
+    @contextlib.contextmanager
+    def cleaning(self) -> Iterator[None]:
+        """Hold the store for a clean-up; StoreBusy if any program's walk holds it.
+
+        Raises StoreError, removing nothing, where the lock folder exists but its lock cannot be
+        taken, as on a filesystem with no file locks.
         """
         folder = self._lock_folder()
         if folder is None:
             yield
             return
-        name = f"walk-{os.getpid()}-{secrets.token_hex(4)}"
-        with _locked(folder / _GATE):
-            mine = (folder / name).open("a+b")
-            _lock(mine, blocking=True)
         try:
-            yield
-        finally:
-            _unlock(mine)
-            mine.close()
-            (folder / name).unlink(missing_ok=True)
-
-    @contextlib.contextmanager
-    def cleaning(self) -> Iterator[None]:
-        """Hold the store for a clean-up; StoreBusy if any program's walk holds it."""
-        folder = self._lock_folder()
-        if folder is None:
-            yield
-            return
-        with _locked(folder / _GATE):
+            gate = _open_gate(folder)
+        except OSError as error:
+            raise StoreError(
+                f"the store at {self._root} cannot take its lock ({error}), so a clean-up cannot "
+                "tell whether a walk holds it; nothing was removed"
+            ) from error
+        try:
             for walk in sorted(folder.glob("walk-*")):
                 try:
                     handle = walk.open("a+b")
@@ -408,9 +440,13 @@ class Store:
                     _unlock(handle)
                 finally:
                     handle.close()
-                # Lockable, so its walk is gone: a killed program's leftover.
-                walk.unlink(missing_ok=True)
+                # Lockable, so its walk is gone: a killed program's leftover. Windows refuses
+                # while the walk's own handle is still open; the next clean-up clears it.
+                with contextlib.suppress(OSError):
+                    walk.unlink()
             yield
+        finally:
+            _close_gate(gate)
 
     def _lock_folder(self) -> Path | None:
         folder = self._root / LOCKS
@@ -471,13 +507,25 @@ def _last_read(directory: Path) -> float:
     return (directory / META).stat().st_mtime
 
 
+_EVICTED = ".evict."
+
+
 def _discard(directory: Path) -> None:
     # Renamed first: the entry's own path then holds nothing, never a record without its payload.
-    hidden = directory.with_name(f".{directory.name}.evict.{os.getpid()}.{secrets.token_hex(4)}")
+    hidden = directory.with_name(f".{directory.name}{_EVICTED}{os.getpid()}.{secrets.token_hex(4)}")
     directory.rename(hidden)
     shutil.rmtree(hidden, ignore_errors=True)
     with contextlib.suppress(OSError):  # the fan-out directory still holds others
         directory.parent.rmdir()
+
+
+def _sweep_evicted(artefacts: Path) -> None:
+    # A removal whose deletion stopped (a file held open) left its renamed directory, which no key
+    # reaches and no listing counts; the clean-up holding the lock deletes it whatever its age.
+    for leftover in artefacts.glob(f"*/*/.*{_EVICTED}*"):
+        shutil.rmtree(leftover, ignore_errors=True)
+        with contextlib.suppress(OSError):
+            leftover.parent.rmdir()
 
 
 def _lock(handle: IO[bytes], *, blocking: bool) -> bool:
@@ -507,14 +555,40 @@ def _unlock(handle: IO[bytes]) -> None:
     fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
-@contextlib.contextmanager
-def _locked(path: Path) -> Iterator[None]:
-    with path.open("a+b") as handle:
+def _open_gate(folder: Path) -> IO[bytes]:
+    handle = (folder / _GATE).open("a+b")
+    try:
         _lock(handle, blocking=True)
+    except BaseException:
+        handle.close()
+        raise
+    return handle
+
+
+def _close_gate(handle: IO[bytes]) -> None:
+    _unlock(handle)
+    handle.close()
+
+
+def _hold_walk(folder: Path) -> tuple[IO[bytes], Path] | None:
+    try:
+        gate = _open_gate(folder)
+    except OSError as error:
+        # A store that cannot be written, or a filesystem with no file locks (a cluster's
+        # parallel filesystem mounted without them), takes no lock: the walk runs unseen.
+        logger.warning("the store at %s takes no lock, so a clean-up refuses: %s", folder, error)
+        return None
+    try:
+        path = folder / f"walk-{os.getpid()}-{secrets.token_hex(4)}"
+        handle = path.open("a+b")
         try:
-            yield
-        finally:
-            _unlock(handle)
+            _lock(handle, blocking=True)
+        except BaseException:
+            handle.close()
+            raise
+    finally:
+        _close_gate(gate)
+    return handle, path
 
 
 def _publish(staging: Path, directory: Path) -> None:

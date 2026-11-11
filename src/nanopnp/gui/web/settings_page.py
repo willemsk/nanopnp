@@ -12,13 +12,14 @@ from pydantic import JsonValue, ValidationError
 from nanopnp.gui.web import commands, settings, theme
 from nanopnp.gui.web.settings import SECTIONS, SETTINGS, Setting
 from nanopnp.gui.web.shell import Shell
-from nanopnp.io.store import StoreBusy
+from nanopnp.io.store import StoreError
 
 __all__ = ["Frame", "SettingsPage", "size_text"]
 
 Scope = Literal["user", "project"]
 SYSTEM = "system"
 TOGGLE_MOST = 3
+"""A list of at most this many choices is a toggle; a longer one is a select."""
 COLOUR_NAMES = {
     "bg": "Background",
     "panel": "Panel",
@@ -40,14 +41,13 @@ COLOUR_NAMES = {
     "canvas-plot-ink": "Plot text",
 }
 """Each theme colour's name on the page; the token's own name is the file's."""
-"""A list of at most this many choices is a toggle; a longer one is a select."""
 
 
 class Frame(Protocol):
     """What the settings page asks of the frame around it."""
 
     def applied(self) -> None:
-        """Apply the settings now held to the page: theme, density, spacing, motion, chords."""
+        """Apply the settings now held to the page: its look, its chords and its numbers."""
 
     def listen(self, event: str, handler: Callable[[events.GenericEventArguments], object]) -> None:
         """Route a page-wide event to ``handler``, replacing the last sub-page's."""
@@ -111,7 +111,7 @@ class SettingsPage:
             ui.notify(f"{setting.title}: {error.errors()[0]['msg']}", type="negative")
             return
         project = self.shell.bench.project
-        if self.scope == "project" and project is not None:
+        if self.scope == "project" and project is not None and setting.per_project:
             project.save_setting(setting.id, checked)
             self.shell.settings = self.shell.settings.with_project(project.settings)
         else:
@@ -122,7 +122,7 @@ class SettingsPage:
 
     def _reset(self, setting: Setting) -> None:
         project = self.shell.bench.project
-        if self.scope == "project" and project is not None:
+        if self.scope == "project" and project is not None and setting.per_project:
             project.save_setting(setting.id, None)
             self.shell.settings = self.shell.settings.with_project(project.settings)
         else:
@@ -201,7 +201,12 @@ class SettingsPage:
             shown = 0
             for identifier, title in SECTIONS.items():
                 found = [s for s in settings.rows(identifier) if self._listed(s)]
-                store = identifier == "runs" and self.scope == "user" and not self.text
+                store = (
+                    identifier == "runs"
+                    and self.scope == "user"
+                    and not self.text
+                    and not self.modified_only
+                )
                 if not found and not store:
                     continue
                 with (
@@ -213,7 +218,7 @@ class SettingsPage:
                     for setting in found:
                         self._row(setting)
                         shown += 1
-                    if store and not self.modified_only:
+                    if store:
                         self._store_block()
             if not shown:
                 ui.label("No setting matches.").classes("muted").props("role=status")
@@ -283,8 +288,11 @@ class SettingsPage:
                 on_change=lambda e, s=setting: self._write(s, e.value),
             ).props(f"data-control={control}")
         elif setting.id == "store_cap_gb":
+            # A project's empty value is no value of its own: the user's cap then holds.
             ui.number(
-                "Gigabytes; empty for no cap",
+                "Gigabytes; empty for no cap"
+                if self.scope == "user"
+                else "Gigabytes; empty for your own cap",
                 value=value if isinstance(value, float | int) else None,
                 on_change=lambda e, s=setting: self._write(s, e.value),
             ).props(f"outlined dense clearable debounce=600 data-control={control}")
@@ -487,7 +495,7 @@ class SettingsPage:
             removed = project.clean_store(
                 everything=self.clean_everything, holding=self.shell.bench.held
             )
-        except StoreBusy as error:
+        except (StoreError, OSError) as error:
             ui.notify(str(error), type="warning")
             return
         freed = sum(entry.size_bytes for entry in removed)

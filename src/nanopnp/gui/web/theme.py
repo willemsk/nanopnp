@@ -58,7 +58,7 @@ def _block(text: str, opener: str) -> str:
 
 def shipped() -> dict[str, Theme]:
     """Return the light and dark themes, read from the tokens the pages load."""
-    return dict(_shipped())
+    return {name: theme.model_copy(deep=True) for name, theme in _shipped().items()}
 
 
 @functools.cache
