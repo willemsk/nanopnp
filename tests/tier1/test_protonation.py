@@ -826,7 +826,7 @@ def test_fr38_a_radius_edit_scales_the_stage_4_probe_as_it_scales_the_density(
 ) -> None:
     from nanopnp.geometry.contour import gate_inputs, probe_radius_edits
     from nanopnp.geometry.probe import probe_radius_profile
-    from nanopnp.structure.protonated import radius_scales, residue_radius_scales
+    from nanopnp.structure.protonated import residue_radius_scales
 
     ensemble = _two_chains(fragment_2wcd)
     edit = _edit("ASP 25", radius_scale=1.2)
@@ -843,7 +843,7 @@ def test_fr38_a_radius_edit_scales_the_stage_4_probe_as_it_scales_the_density(
             table.chain[first],
             table.resid[first],
             table.name[first],
-            radius_scales(table)[first],
+            table.radius_scales()[first],
             strict=True,
         )
     }
@@ -866,3 +866,22 @@ def test_fr38_a_radius_edit_scales_the_stage_4_probe_as_it_scales_the_density(
     np.testing.assert_allclose(probe, expected, rtol=0, atol=1e-12)
     unscaled = probe_radius_profile(ensemble.positions_nm, radii.radii_nm, planes)
     assert np.any(probe < unscaled - 1e-6)
+
+
+def test_fr38_an_atom_with_no_residue_row_is_refused_not_edited_or_misfiled(
+    tmp_path: Path, fragment_2wcd: Fragment
+) -> None:
+    # Silent failure: an atom whose residue has no row got the last residue's index (-1) and was
+    # charged to it; the edit now refuses, naming the chain, residue and atom.
+    from nanopnp.charge.edits import EditError, TitratableGroups, apply_edits
+
+    table, _ = _run(tmp_path, _two_chains(fragment_2wcd))
+    assert (table.atom_residue_index() >= 0).all()
+    chain = table.chain.copy()
+    chain[0] = "Z"
+    orphan = dataclasses.replace(table, chain=chain)
+    assert orphan.atom_residue_index()[0] == -1
+    edit = ResolvedEdit(parent="ASP", resid=25, icode="", kind="radius", value=1.2)
+    name, resname, resid = str(table.name[0]), str(table.resname[0]), int(table.resid[0])
+    with pytest.raises(EditError, match=rf"chain 'Z'.*{resname} {resid}|{name!r}.*chain 'Z'"):
+        apply_edits(orphan, [edit], TitratableGroups.load())

@@ -193,8 +193,9 @@ _DISULFIDE_PATCH = "DISU"
 
 
 def resolve_protonated_radii(name: str, table: ProtonationTable) -> ResolvedRadii:
-    """Resolve every atom of a protonation table against the named radius set.
+    """Resolve every atom of a protonation table against the named radius set, edits applied.
 
+    The radii are the effective ones: the table's radius edits already scale them.
     A residue's state patch (the histidine tautomer, ``ASPP``, ``GLUP``) is looked up first, then
     its parent, so a hydrogen the parent lacks has a radius.
 
@@ -206,27 +207,14 @@ def resolve_protonated_radii(name: str, table: ProtonationTable) -> ResolvedRadi
     import numpy as np
 
     radius_set = RadiusSet.load(name)
-    residue_index = {
-        (str(chain), int(resid), str(icode)): index
-        for index, (chain, resid, icode) in enumerate(
-            zip(table.residue_chain, table.residue_resid, table.residue_icode, strict=True)
-        )
-    }
+    residue_of = table.atom_residue_index()
     known: dict[tuple[str, str, str], float] = {}
     radii_A = np.empty(len(table.name), dtype=np.float64)
     for frame in range(table.frames):
         atoms = table.frame_slice(frame)
         names = table.name[atoms].astype(str)
         parents = np.array([parent_residue(str(r)) for r in table.resname[atoms].tolist()])
-        residues = np.array(
-            [
-                residue_index.get((str(c), int(r), str(i)), -1)
-                for c, r, i in zip(
-                    table.chain[atoms], table.resid[atoms], table.icode[atoms], strict=True
-                )
-            ],
-            dtype=np.int64,
-        )
+        residues = residue_of[atoms]
         patches = np.full(len(names), "", dtype=object)
         histidines = (parents == "HIS") & (residues >= 0)
         patches[histidines] = table.tautomer[frame][residues[histidines]]
@@ -256,7 +244,9 @@ def resolve_protonated_radii(name: str, table: ProtonationTable) -> ResolvedRadi
             values[index] = known[key]
         radii_A[atoms] = values[inverse.reshape(-1)]
     return ResolvedRadii(
-        radii_nm=radii_A * ANGSTROM_TO_NM, name=radius_set.name, sha256=radius_set_digest(name)
+        radii_nm=radii_A * ANGSTROM_TO_NM * table.radius_scales(),
+        name=radius_set.name,
+        sha256=radius_set_digest(name),
     )
 
 

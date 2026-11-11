@@ -71,29 +71,17 @@ def edit_records(edits: Sequence[ResolvedEdit]) -> list[Canonicalisable]:
     ]
 
 
-def _owner(table: ProtonationTable) -> np.ndarray:
-    import numpy as np
-
-    index = {
-        (str(chain), int(resid), str(icode)): number
-        for number, (chain, resid, icode) in enumerate(
-            zip(
-                table.residue_chain.tolist(),
-                table.residue_resid.tolist(),
-                table.residue_icode.tolist(),
-                strict=True,
-            )
+def _refuse_unowned(table: ProtonationTable, owner: np.ndarray) -> None:
+    unowned = (owner < 0).nonzero()[0]
+    if len(unowned):
+        atom = int(unowned[0])
+        frame = int((table.frame_offsets[1:] <= atom).sum())
+        raise EditError(
+            f"frame {frame}: the table has no residue row for atom {str(table.name[atom])!r} of "
+            f"residue {table.resname[atom]!s} {int(table.resid[atom])}"
+            f"{str(table.icode[atom]).strip()} in chain {str(table.chain[atom])!r}, so a charge "
+            "edit cannot place it (FR-38)"
         )
-    }
-    return np.array(
-        [
-            index[(str(chain), int(resid), str(icode))]
-            for chain, resid, icode in zip(
-                table.chain.tolist(), table.resid.tolist(), table.icode.tolist(), strict=True
-            )
-        ],
-        dtype=np.intp,
-    )
 
 
 def _residues(table: ProtonationTable) -> list[tuple[str, int, str, str]]:
@@ -156,7 +144,8 @@ def apply_edits(
     charge = table.charge_e.copy()
     radius = table.radius_nm.copy()
     expected = table.expected_charge_e.copy()
-    owner = _owner(table)
+    owner = table.atom_residue_index()
+    _refuse_unowned(table, owner)
     residues = _residues(table)
     for edit in edits:
         targets = _targets(residues, edit)
@@ -205,7 +194,8 @@ def apply_edits(
 def _residue_atoms(
     table: ProtonationTable,
 ) -> list[dict[tuple[str, int, str], dict[str, tuple[float, float, tuple[float, ...]]]]]:
-    owner = _owner(table)
+    owner = table.atom_residue_index()
+    _refuse_unowned(table, owner)
     keys = list(
         zip(
             table.residue_chain.tolist(),
