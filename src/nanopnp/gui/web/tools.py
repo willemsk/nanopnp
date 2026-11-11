@@ -388,7 +388,8 @@ class _Pane:
             .props('role="img" aria-label="Residue charge, from minus one e to plus one e"')
         ):
             ui.label("\u22121 e, negative")
-            ui.element("span").classes("colour-bar-scale").props("data-colorbar")
+            with ui.element("span").classes("colour-bar-plate"):
+                ui.element("span").classes("colour-bar-scale").props("data-colorbar")
             ui.label("+1 e, positive")
 
     def mark(self, path: str, changed: bool) -> None:
