@@ -3009,8 +3009,13 @@ empty space below it. WB-05 and WB-07 dock a tool's settings on the left of its 
 At WP5.15's collect the author asked for the residues below the 3D view, so that the view and the
 tool's grid stay side by side (`docs/design/reviews/2026-11-11-frame.md`).
 
-**Open.** The first suite with a view, WP5.16, settles the view region's place and size in its prototype round on 2WCD
-(§8.2.34 AJ8); the charge screen itself is WP5.19's (REV-209, REV-215).
+At WP5.16's collect the author ruled the place (`docs/design/reviews/2026-11-11-molecular.md`): "Pane to the left.
+Consistency is key." Every tool's pane is on the left of its view, which fills the rest of the row; WP5.16 builds the
+Molecular tools so and moves the charge screen's view to the right of its pane. On the charge screen the author added:
+"It just looks like a list of residues. What does clicking on one do? Let's think about a more streamlined version."
+
+**Open.** WP5.16 sets the place and the size. The streamlined charge tool, with the residues below the view, is
+WP5.19's, whose screen it is (REV-209, REV-215).
 
 ### REV-235: Design questions the frame's review leaves for the suites' prototype rounds
 
@@ -3035,7 +3040,10 @@ The WP5.15 `/np-gui review` and `impeccable`'s critique (§8.2.34 AJ6) raised, b
   8, 10, 11).
 
 **Open**, a question for the author: each is put at the prototype round of the suite that first needs it, from WP5.16
-(§8.2.34 AJ8), with the screens in front of the author.
+(§8.2.34 AJ8), with the screens in front of the author. WP5.16's round needed two, and its finishing item builds them
+(`docs/design/reviews/2026-11-11-molecular.md`): a refusal opens its field and is listed among the problems, and
+*Open structure…* lists the project's input files. The project dialogs, the settings' rows, the menus, the Glossary,
+the log and the frame's chrome wait for the round of a suite that needs them.
 
 ### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
 
@@ -3063,8 +3071,14 @@ for a redesign rather than a fix:
 - the Glossary folded into a proper help page (with REV-236's single source).
 
 **Open**, a question for the author: each is put at the prototype round of the suite that first needs
-it, from WP5.16 (§8.2.34 AJ8), with the screens in front of the author; the settings window and the
-folded rail at WP5.16's, the first.
+it, from WP5.16 (§8.2.34 AJ8), with the screens in front of the author.
+
+At WP5.16's collect (`docs/design/reviews/2026-11-11-molecular.md`) the author ruled two, which WP5.16 builds: the
+settings are "Window over the tool. When working, I don't want to navigate away from the tool to change a setting",
+and the folded bar shows the suites' icons with their state. On the changed table: "Let's also try a shorter list
+version. The current table still takes up a lot of real-estate." Each Molecular tool's pane now marks its changed
+values and filters to them; a list of one line per value is set beside the table at the next suite's round. The
+palette's look and the help page stay open.
 
 ### REV-238: The Prepare tool's axis and membrane are not dragged by handles
 
@@ -3090,3 +3104,22 @@ the straightness limit from a monomeric pore's structure the author names. Found
 
 `orient_pore`'s fallback to the channel shares the weakness and adds a cost: a start across the wall runs all 50
 iterations, minutes on a large pore (WP5.16's item 3).
+
+### REV-240: The author's notes on the Molecular digest that ask for a discussion
+
+The author's notes at WP5.16's collect (`docs/design/reviews/2026-11-11-molecular.md`) that the package does not
+settle:
+
+- an ensemble's third view: beside one frame and the frames together, "a "B-factor" heatmap structure that represents
+  the variation"; in the author's words it "needs a bit more discussion and research". What is drawn (a per-residue
+  root-mean-square fluctuation over the aligned frames is the usual choice) and where it is computed, since `gui/`
+  holds no analysis;
+- colour maps beyond the two directions of the charge scale: "perhaps we can built-in support for custom colormaps"
+  (WB-20's user-chosen maps). WP5.16 adds the setting for the direction only;
+- one rule for the safeguards of actions that lose work: "it is good to think about such safeguards in general for
+  the program (kind of like the danger zone in GitHub)". A build's *Cancel* stops at once, since each finished stage
+  is already stored; deleting a model, a study or the store's entries is where a second step belongs.
+
+**Open**, a question for the author: the variation view at the round of the suite that draws ensembles' results
+(WP5.19's charge screen or Analysis); the maps with the plots' settings in Analysis; the safeguards before the
+first tool that deletes, with the project tree's actions.

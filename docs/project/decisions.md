@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,356. By source: history ruling 341; plan decision row 684; REV row 239; MOD row 18; OPN row 9; WB row 38; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,358. By source: history ruling 341; plan decision row 684; REV row 240; MOD row 18; OPN row 9; WB row 39; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 544; open 5; session, own call 804; session, put to the author 3.
+By decider: author 545; open 5; session, own call 805; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1291,6 +1291,7 @@ By decider: author 544; open 5; session, own call 804; session, put to the autho
 | REV-237 | session, own call | `docs/project/review-findings.md` |  | WP5.15 | The author's notes on the frame's digest for the suites' prototype rounds | WP5.15 review | open |
 | REV-238 | author | `docs/project/review-findings.md` |  |  | The Prepare tool's axis and membrane are not dragged by handles | §8.2.39 AO2 | deferred |
 | REV-239 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | The channel axis's two limits rest on 2WCD alone, and a ragged pore may be refused | WP5.16 | open |
+| REV-240 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | The author's notes on the Molecular digest that ask for a discussion | WP5.16 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
@@ -1351,6 +1352,7 @@ By decider: author 544; open 5; session, own call 804; session, put to the autho
 | WB-36 | author | `docs/design/workbench.md` |  | WP5.01 | Showing what changed, and the project's name / The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?", and on the name: "looks… | docs/design/workbench.md | in the design document |
 | WB-37 | author | `docs/design/workbench.md` |  | WP5.01 | Which settings, where they are kept, when they apply / The author, marking the settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this… | docs/design/workbench.md | in the design document |
 | WB-38 | author | `docs/design/workbench.md` |  | WP5.01 | How a suite is designed / The author, marking the charge screen: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." Asked: "Prototype on 2WCD, then… | docs/design/workbench.md | in the design document |
+| WB-39 | author | `docs/design/workbench.md` |  | WP5.01 | The Molecular round: where a pane stands, the charge colours, the settings, the folded bar / The author, marking the Molecular drafts on 2WCD (`reviews/2026-11-11-molecular.md`): "Pane to the left. Consistency is key.";… | docs/design/workbench.md | in the design document |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a | §8.4 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a VER-62 miss | §8.2.8, VER-61, VER-62 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | An open item is a `REV-nn` row** until resolved (H12). | unstated | in force (cache) |

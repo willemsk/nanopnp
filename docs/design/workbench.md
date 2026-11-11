@@ -465,7 +465,8 @@ the verdicts on the mockups, where a note contradicting a ruling reopened it; pl
 restated them (§8.2.18 T8): "I think many of these should fall under user settings or even a "theme"
 approach. The mouse wheel not changing a field was not a literal constraint, just an annoyance that we
 should address in one way or another." WB-33 to WB-38 come from the third `/np-plan amend 5`, on 5 November 2026, after
-the author's verdicts on WP5.08's frame (`docs/design/reviews/2026-11-05-frame.md`; §8.2.34).
+the author's verdicts on WP5.08's frame (`docs/design/reviews/2026-11-05-frame.md`; §8.2.34). WB-39 comes from the
+author's verdicts on WP5.16's Molecular drafts, collected on 11 November 2026.
 
 | # | Question | Ruling (author's words) | Consequence |
 |---|---|---|---|
@@ -507,6 +508,7 @@ the author's verdicts on WP5.08's frame (`docs/design/reviews/2026-11-05-frame.m
 | WB-36 | Showing what changed, and the project's name | The author, marking the changed list: "Spacing seems very generous. How is this kind of change tracking typically done in programs like `nanopnp`?", and on the name: "looks like a menu item". Shown how VS Code, JetBrains and COMSOL do it: "Mark, filter and dense table" | §8.2.34 AJ7 |
 | WB-37 | Which settings, where they are kept, when they apply | The author, marking the settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." Asked: "One declared list, two scopes", with appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers, adding: "Compute settings, network settings, ... I think we need to do some research here." At WP5.15's plan, after a survey of COMSOL, ParaView, ChimeraX, VS Code and JupyterLab: compute settings with threads per solve, no network settings yet, and the larger list with the store's clean-up, as two actions | §8.2.34 AJ9; §8.2.38 AN1 to AN5 |
 | WB-38 | How a suite is designed | The author, marking the charge screen: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." Asked: "Prototype on 2WCD, then build" | §8.2.34 AJ8 |
+| WB-39 | The Molecular round: where a pane stands, the charge colours, the settings, the folded bar | The author, marking the Molecular drafts on 2WCD (`reviews/2026-11-11-molecular.md`): "Pane to the left. Consistency is key."; "in biochemistry, blue is positive and red is negative", and asked how far, "Everywhere, and choosable"; on the settings, "Window over the tool. When working, I don't want to navigate away from the tool to change a setting"; on a tool's two actions, "why not both side-by-side?"; on the folded bar, icons with state | Every tool's pane is on the left of its view. Charge and potential draw positive blue and negative red in the 3D view, on the maps and in the figures, the direction a setting (amends WB-20's diverging default). The settings open as a window over the open tool (amends WB-37's page). A tool's saving action and its build stand side by side. Folded, the activity bar and rail are a strip of the suites' icons, each with its state |
 
 ## Glossary
 
