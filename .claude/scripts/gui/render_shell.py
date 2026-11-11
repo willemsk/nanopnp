@@ -15,9 +15,9 @@ Groups, each shot light and dark:
 The 2WCD project is built once into ``cache/2wcd-<key>/`` beside ``<out-dir>``, ``key`` being 12 hex
 digits of the SHA-256 of the case file and the deposited structure; its first walk fills the
 project's store, so a later render reads the charge from it. A cache is built in a temporary
-sibling and renamed, so a half-built one is never used. Starts one server per state, writes
-``manifest.json``, runs `shoot.cjs`, and stops the servers by closing their standard input. Exits
-with `shoot.cjs`'s status (2 if a page did not load), or 1 if a server did not start.
+sibling and renamed, so a half-built one is never used. Starts one server per state, all at once,
+writes ``manifest.json``, runs `shoot.cjs`, and stops the servers by closing their standard input.
+Exits with `shoot.cjs`'s status (2 if a page did not load), or 1 if a server did not start.
 """
 
 from __future__ import annotations
@@ -28,6 +28,7 @@ import os
 import shutil
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -87,6 +88,23 @@ COMPACT = ("molecular", "settings", "changes")
 COMPACT_CLICKS = {"settings": ["[data-control=theme-colours] .q-item"]}
 
 
+PROJECT_EXTRAS: list[tuple[str, str, list[str]]] = [
+    ("m-prepare-open", "/molecular/prepare", ["[data-control=open-structure]"]),
+    (
+        "m-protonation-states",
+        "/molecular/protonation",
+        ['[data-control=tool-readout] button:has-text("Show")'],
+    ),
+    (
+        "m-protonation-warnings",
+        "/molecular/protonation",
+        ['[data-control=tool-readout] button[aria-label*="warnings"]'],
+    ),
+    ("m-view-settings", "/molecular/view", menu_item("file", "Settings")),
+]
+"""Windows opened over a tool of the 2WCD project, none of which writes to it."""
+
+
 def cache_key() -> str:
     """Return the first 12 hex digits of the SHA-256 of the 2WCD case and its raw structure."""
     digest = hashlib.sha256()
@@ -140,24 +158,34 @@ def write_config(folder: Path) -> None:
     (folder / SETTINGS_FILENAME).write_text(yaml.safe_dump(settings), encoding="utf-8")
 
 
-def start(*arguments: str, config: Path | None = None) -> tuple[subprocess.Popen[str], str]:
-    """Start the workbench with these arguments and return it with its first address."""
+def launch(*arguments: str, config: Path | None = None) -> subprocess.Popen[str]:
+    """Start the workbench with these arguments, without waiting for its ready line."""
     environment = dict(os.environ)
     if config is not None:
         environment["NANOPNP_CONFIG"] = str(config)
-    process = subprocess.Popen(
+    return subprocess.Popen(
         [sys.executable, "-m", "nanopnp.gui.web.server", "--no-browser", *arguments],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         text=True,
         env=environment,
     )
+
+
+def first_address(process: subprocess.Popen[str], *arguments: str) -> str:
+    """Return the first address of a workbench launched with ``arguments``, once it is ready."""
     assert process.stdout is not None
     found = server.READY.match(process.stdout.readline().strip())
     if found is None:
         process.kill()
         raise SystemExit(f"the server started with {' '.join(arguments)} printed no ready line")
-    return process, found.group(1)
+    return found.group(1)
+
+
+def start(*arguments: str, config: Path | None = None) -> tuple[subprocess.Popen[str], str]:
+    """Start the workbench with these arguments and return it with its first address."""
+    process = launch(*arguments, config=config)
+    return process, first_address(process, *arguments)
 
 
 def entry(
@@ -181,9 +209,11 @@ def entry(
 def states_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
     """Return every screen of every fixture state, starting a server for each."""
     manifest = []
-    for state in STATES:
-        process, first = start("--state", state)
-        servers.append(process)
+    # All the servers start at once; each is then waited for in turn.
+    launched = [(state, launch("--state", state)) for state in STATES]
+    servers.extend(process for _, process in launched)
+    for state, process in launched:
+        first = first_address(process, "--state", state)
         for screen in SCREENS:
             for scheme in SCHEMES:
                 manifest.append(entry(f"shell-{state}-{screen.id}", first, screen.path, scheme))
@@ -197,6 +227,10 @@ def project_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dic
     return [
         entry(f"shell-2wcd-{screen.id}", first, screen.path, scheme)
         for screen in SCREENS
+        for scheme in SCHEMES
+    ] + [
+        entry(f"shell-2wcd-{name}", first, path, scheme, click)
+        for name, path, click in PROJECT_EXTRAS
         for scheme in SCHEMES
     ]
 
@@ -313,8 +347,15 @@ def main(argv: list[str]) -> int:
     servers: list[subprocess.Popen[str]] = []
     manifest: list[dict[str, Any]] = []
     try:
-        for group in groups:
-            manifest += GROUP_ENTRIES[group](out, servers)
+        # The groups start their servers side by side: a server's start is its imports, and the
+        # 2WCD project's is its walk.
+        # Two groups read the 2WCD cache, so it is built before they start side by side.
+        if {"2wcd", "molecular"} & set(groups):
+            cached_project(out)
+        with ThreadPoolExecutor(len(groups)) as pool:
+            pending = [pool.submit(GROUP_ENTRIES[group], out, servers) for group in groups]
+            for future in pending:
+                manifest += future.result()
         (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         return subprocess.run(["node", str(SHOOT), str(out / "manifest.json"), str(out)]).returncode
     finally:
