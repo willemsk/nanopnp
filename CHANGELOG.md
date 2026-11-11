@@ -58,6 +58,8 @@ on a page of their own, and the store gains a size cap and two clean-up actions.
     a command that cannot run is shown disabled with its reason, and each setting has a command (FR-31).
   - The changed values are one dense table grouped by item, each value in your significant figures and number
     style with its unit (FR-34).
+  - A line parts the suites that build models from those that use them, and a menu's groups; the bottom panel's
+    tabs stay in view while its rows scroll.
   - The frame has named navigation regions, a skip link, headings, live counts and a keyboard focus ring; Reset,
     *Reset layout* and *Quit* ask first while the editing guard is on; the Glossary holds the design document's 26
     terms, and About is a dialog.

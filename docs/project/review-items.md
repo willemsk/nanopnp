@@ -2998,6 +2998,8 @@ study keeps the expression. §5.3.5 says so; `tests/tier1/test_project.py:test_f
 The WP5.15 `/np-gui review` (F8): the frame's view region comes before the sub-page in the main row, so on the charge
 screen the molecule is on the left and the tool's heading and settings on the right, in a fixed 560 × 420 box with
 empty space below it. WB-05 and WB-07 dock a tool's settings on the left of its live view.
+At WP5.15's collect the author asked for the residues below the 3D view, so that the view and the
+tool's grid stay side by side (`docs/design/reviews/2026-11-11-frame.md`).
 
 **Open.** The first suite with a view, WP5.16, settles the view region's place and size in its prototype round on 2WCD
 (§8.2.34 AJ8); the charge screen itself is WP5.19's (REV-209, REV-215).
@@ -3008,14 +3010,16 @@ The WP5.15 `/np-gui review` and `impeccable`'s critique (§8.2.34 AJ6) raised, b
 
 - the problems list: one line per refusal that repeats the item and the file, opening the item rather than its field;
   no ✕ on a refused item in the rail or before "failed" in the status line (F10);
-- the changed table: its headers "Default or model's" and "File unit", the unit written twice ("30 nm", then "nm"),
-  groups headed by `kind/name`, field names that do not look like links (F11);
+- the changed table: its header "Default or model's", groups headed by `kind/name`, field names
+  that do not look like links (F11); the unit written twice was fixed at WP5.15's collect, which
+  dropped the *File unit* column;
 - the settings page: no marker of the section in view, the default not shown beside a changed value, the reset placed
   after a long control, the theme's colours in a collapsed section, the swatches below the field's baseline (F12;
   critique 9);
 - the project dialogs: a free path with no hint, no browse list, *Create* enabled on an empty field (refused on
   accept), the same recent list in all four, no choice between copying and linking an import's inputs (FR-32), no
-  option to export the store (F13; doubt 4);
+  option to export the store (F13; doubt 4); the author's note at the collect asks for a Browse
+  button;
 - the menus show few chords and not F1 (F14); the Glossary has no search and no scroll cue (F16); the log has no times,
   the queue's states no colour, and "to charge" is the pipeline's word (F17);
 - the title bar's count and palette button do not look like controls; the status line repeats the bottom panel's
@@ -3035,3 +3039,21 @@ glossary's 26 terms are written in `gui/web/glossary.py` and in the design docum
 **Open.** The keyboard pass over the workbench, WP5.21 (QR-16), takes the chords and the unbinding; the glossary's
 single source is put to the author with it.
 
+### REV-237: The author's notes on the frame's digest for the suites' prototype rounds
+
+The author's `change` verdicts at WP5.15's collect (`docs/design/reviews/2026-11-11-frame.md`) that ask
+for a redesign rather than a fix:
+
+- the changed table takes much of the screen: something more condensed, or another approach; and a
+  value that takes you to the screen where it is set (a row opens its suite at `?field=`, whose tools
+  are still text);
+- the settings as a floating window rather than a page, with less room per setting (the page is
+  REV-212's ruling, which this reopens);
+- the folded rail shows something more meaningful than the open item's initial, or nothing: a
+  brainstorm;
+- the palette, in the right direction now, designed more subtly;
+- the Glossary folded into a proper help page (with REV-236's single source).
+
+**Open**, a question for the author: each is put at the prototype round of the suite that first needs
+it, from WP5.16 (§8.2.34 AJ8), with the screens in front of the author; the settings window and the
+folded rail at WP5.16's, the first.

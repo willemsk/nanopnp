@@ -22,7 +22,7 @@ from nanopnp.core.paths import recent_projects, remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
 from nanopnp.gui.web.glossary import GLOSSARY
-from nanopnp.gui.web.numbers import Style, shown, symbol
+from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES
 from nanopnp.gui.web.shell import Shell
@@ -116,7 +116,6 @@ CHANGE_COLUMNS = [
     {"name": "field", "label": "Field", "field": "field", "align": "left"},
     {"name": "value", "label": "Value", "field": "value", "align": "right"},
     {"name": "default", "label": "Default or model's", "field": "default", "align": "right"},
-    {"name": "unit", "label": "File unit", "field": "unit", "align": "left"},
     {"name": "reset", "label": "", "field": "reset", "align": "right"},
 ]
 
@@ -143,7 +142,6 @@ CHANGE_BODY = r"""
   </q-td>
   <q-td key="value" :props="props" class="changed">{{ props.row.value }}</q-td>
   <q-td key="default" :props="props" class="muted">{{ props.row.default }}</q-td>
-  <q-td key="unit" :props="props" class="muted">{{ props.row.unit }}</q-td>
   <q-td key="reset" :props="props">
     <q-btn flat dense no-caps label="Reset" data-control="reset"
       :aria-label="'Reset ' + props.row.field + ' of ' + props.row.item"
@@ -517,9 +515,13 @@ class _Frame:
             for menu in commands.MENUS:
                 with ui.button(menu.capitalize()).props(f"flat no-caps data-control=menu-{menu}"):
                     with ui.menu():
+                        section: str | None = None
                         for entry in commands.COMMANDS:
                             if entry.menu != menu:
                                 continue
+                            if section is not None and entry.section != section:
+                                ui.separator()
+                            section = entry.section
                             chord = chords[entry.id]
                             with ui.menu_item(on_click=lambda i=entry.id: self.run(i)):
                                 ui.item_section(entry.title)
@@ -740,7 +742,6 @@ class _Frame:
                         "word": "override" if change.kind == "override" else "changed",
                         "value": shown(change.value, unit, figures=figures, style=style),
                         "default": shown(was, unit, figures=figures, style=style),
-                        "unit": symbol(unit),
                     }
                 )
         return rows
