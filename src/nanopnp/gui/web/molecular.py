@@ -148,6 +148,9 @@ class MolecularModel:
         build = held.build
         if build is None:
             return
+        # Read before the drain: a child that ended by then has posted its last word, which the
+        # drain reads, where one ending after the drain would be taken for one that said nothing.
+        ended = not build.process.running
         for event in build.process.drain():
             if isinstance(event, Stage):
                 build.stage = event.name
@@ -162,7 +165,7 @@ class MolecularModel:
                 self.queue.set(build.entry, "failed")
                 self.queue.log.append(f"cancelled {build.entry.label}")
                 held.build = None
-        if held.build is None or not build.process.running:
+        if held.build is None or ended:
             if held.build is not None:
                 # The child ended without a last word, as a killed one does.
                 held.refusal = (build.stage, "the build stopped before it finished")

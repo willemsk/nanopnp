@@ -327,6 +327,16 @@ the budget) and a build held mid-walk.
 > the frame's points. The render script's cost was measured at the author's request and cut from seven minutes to two
 > for the same 140 shots (`95abcf7`).
 
+> **Outcome — the review.** `/np-ship`'s pre-review pass: the `physics-reviewer` found no sign or unit error; a
+> first chain without a Cα gave a NaN frame and VER-48's 2WCD test asserted less than its concept tags, both fixed
+> (`39e0c27`); a re-render found the dark paging arrows still failing, since item 12's rule lost to NiceGUI's
+> cascade layers (`ac4be57`). [CODE_REVIEW_054](../../code_reviews/CODE_REVIEW_054.md) (xhigh) on `08436b9` raised 28
+> findings and fixed 21, among them a malformed model file and a cycle of variants that made every tool page raise,
+> and a Charge edit list that named residues by their protonation state; `/np-ship` fixed one more and left five as
+> REV-242. Measured: the implementing windows 3.5 agent hours and 5 touches, `/np-ship` to its review 0.9 agent hours
+> and 1 touch: 4.4 agent hours and 6 touches in one session, against the estimate of about five sessions, five to ten
+> agent hours and 14 touches.
+
 ### Work items
 
 - [x] 58f9ab6 1. `io/case.py`, `io/resolved.py`, `pipeline/case.py`, `structure/read.py`, `structure/stage.py`, `structure/axis.py`

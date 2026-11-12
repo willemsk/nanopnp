@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import struct
 import zlib
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -82,25 +83,44 @@ def png(rgba: bytes, width: int, height: int) -> bytes:
     )
 
 
-# The first frame as PDB text, which Mol* reads; the positions are in Å.
-def _pdb(table: ProtonationTable) -> str:
+# Atoms as PDB text, which Mol* reads; the positions are in Å.
+def _pdb_text(
+    positions_nm: np.ndarray,
+    name: Sequence[str],
+    resname: Sequence[str],
+    chain: Sequence[str],
+    resid: Sequence[int],
+    icode: Sequence[str],
+) -> str:
     lines = []
-    stop = int(table.frame_offsets[1])
-    for row in range(stop):
-        x, y, z = (float(v) * 10.0 for v in table.positions_nm[row])
-        name = str(table.name[row]).strip()
-        resid = int(table.resid[row])
+    for row in range(len(name)):
+        x, y, z = (float(v) * 10.0 for v in positions_nm[row])
+        atom = str(name[row]).strip()
+        number = int(resid[row])
         # The four columns hold -999 to 9999, which the protonation stage keeps to; only a number
         # past them wraps (a negative one wrapped here would be named otherwise by Mol*).
-        if not -999 <= resid <= 9999:
-            resid %= 10000
+        if not -999 <= number <= 9999:
+            number %= 10000
         lines.append(
-            f"ATOM  {(row + 1) % 100000:5d} {name:<4s} {str(table.resname[row]).strip():>3s} "
-            f"{_chain_id(str(table.chain[row]))}{resid:4d}"
-            f"{str(table.icode[row]).strip()[:1] or ' '}   {x:8.3f}{y:8.3f}{z:8.3f}"
-            f"  1.00  0.00          {name[:1]:>2s}"
+            f"ATOM  {(row + 1) % 100000:5d} {atom:<4s} {str(resname[row]).strip():>3s} "
+            f"{_chain_id(str(chain[row]))}{number:4d}"
+            f"{str(icode[row]).strip()[:1] or ' '}   {x:8.3f}{y:8.3f}{z:8.3f}"
+            f"  1.00  0.00          {atom[:1]:>2s}"
         )
     return "\n".join([*lines, "END"]) + "\n"
+
+
+# The first frame of a protonation table.
+def _pdb(table: ProtonationTable) -> str:
+    stop = int(table.frame_offsets[1])
+    return _pdb_text(
+        table.positions_nm[:stop],
+        table.name[:stop].tolist(),
+        table.resname[:stop].tolist(),
+        table.chain[:stop].tolist(),
+        table.resid[:stop].tolist(),
+        table.icode[:stop].tolist(),
+    )
 
 
 class Link:

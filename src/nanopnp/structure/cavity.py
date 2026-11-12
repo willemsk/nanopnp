@@ -1,4 +1,4 @@
-"""The channel's axis from a pore's empty space, and its gates (FR-02)."""
+"""The channel's axis from a pore's empty space, and its gates."""
 
 from __future__ import annotations
 
@@ -118,11 +118,17 @@ def circumcentres(points: np.ndarray, simplices: np.ndarray) -> tuple[np.ndarray
 
 def _voids(atoms: np.ndarray) -> _Voids:
     import numpy as np
-    from scipy.spatial import Delaunay, cKDTree
+    from scipy.spatial import Delaunay, QhullError, cKDTree
 
     centre = atoms.mean(axis=0)
     local = atoms - centre
-    mesh = Delaunay(local)
+    try:
+        mesh = Delaunay(local)
+    except QhullError:
+        raise SymmetryGateError(
+            f"channel gate: the {len(atoms)} heavy atoms span no volume to triangulate, so they "
+            "enclose no channel"
+        ) from None
     simplices = np.asarray(mesh.simplices, dtype=np.int64)
     centres, sound = circumcentres(local, simplices)
     neighbours = np.asarray(mesh.neighbors, dtype=np.int64)
@@ -347,7 +353,8 @@ def channel_axis(
     Raises
     ------
     SymmetryGateError
-        When fewer than two planes hold an enclosed space, so no line can be fitted.
+        When the atoms span no volume, or fewer than two planes hold an enclosed space, so no
+        line can be fitted.
     """
     import numpy as np
 
@@ -471,6 +478,11 @@ def refit(record: ChannelRecord, mean_nm: np.ndarray, atoms_nm: np.ndarray) -> n
         The heavy atoms the record was found among.
     atoms_nm
         The same atoms at other positions, a frame's.
+
+    Raises
+    ------
+    SymmetryGateError
+        When fewer than two centres lie in a tetrahedron that is not flat, so none can be carried.
     """
     import numpy as np
 
@@ -487,5 +499,11 @@ def refit(record: ChannelRecord, mean_nm: np.ndarray, atoms_nm: np.ndarray) -> n
             moved = atoms[corners[0]] + (atoms[corners[1:]] - atoms[corners[0]]).T @ weights
             centres.append(moved)
             break
+    if len(centres) < 2:
+        # A line through fewer than two centres is any line: an angle measured to it is none.
+        raise SymmetryGateError(
+            f"channel drift: {len(centres)} of the {len(record.centres_nm)} planes' centres lie "
+            "in a tetrahedron that is not flat, and a frame's line needs two to be carried"
+        )
     axis, _ = fit_line(np.asarray(centres))
     return axis

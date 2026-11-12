@@ -280,7 +280,10 @@ def _register_prepare(subparsers: Subparsers) -> None:
         type=_axis,
         default=None,
         metavar="X,Y,Z",
-        help="the pore axis in the file's frame, instead of an estimate",
+        help=(
+            "the pore axis in the file's frame, instead of an estimate; write --axis=-X,Y,Z "
+            "where X is negative, since a value starting with '-' reads as an option"
+        ),
     )
     prepare.set_defaults(handler=_prepare, parser=prepare)
 
