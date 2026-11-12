@@ -22,6 +22,39 @@ evidence is in the work package's plan under [docs/plans/](docs/plans), not here
 
 ## [Unreleased]
 
+## [0.6.0-alpha.17]
+
+WP5.17: the Continuum suite, Phase 5's seventeenth package; tag `v0.6.0-alpha.17` once merged (§8.2.40 AP1 to AP4;
+REV-170, REV-39, REV-56's workbench part, REV-242's keying; WB-41). Stage 5's two kinds of region share one interface, a
+supplied outline runs beside its structure's charge, a continuum model builds alone, the generated mesh's parts take
+typed sizes, and the workbench gains its Continuum tools. No golden moves (VER-62). The
+[plan](docs/plans/phase-5/wp5.17-the-continuum-suite.md) records the work.
+
+- **Added**:
+  - The Continuum tools, each a page at `/continuum/<tool>` with the tool list, a pane of the model's values and an
+    (r, z) view that pans and zooms at equal scale: *Pore geometry*, *Region* and *Mesh: sizes, quality* (FR-33,
+    FR-35, FR-39). A tool builds the continuum model alone over the molecular model chosen in its pane.
+  - *Pore geometry*: the density and the reduced (r, z) maps under the outline, each with its colour bar, and stages
+    2 to 4's values; *Edit outline* edits the outline stage 4 built or the one the model supplies, measures and
+    seeds the edit off the window's thread, and saves it as a continuum model that supplies the outline.
+  - *Region*: the protein, the membrane and the electrolyte drawn as domains, each picked on the drawing or in the
+    pane; the membrane's and the reservoir's values typed in the pane or on their labels in the view.
+  - *Mesh*: the mesh's parts as a tree of domains and boundaries, each opening its one size field with the table's
+    value as its hint and drawn in the view when picked; the quality gate's verdict; the elements coloured by
+    material, SICN or gamma, with a histogram whose bar fills its elements in the view.
+  - `numerics.mesh.sizes`: the protein's, the electrolyte's, the reservoir arc's and the pore axis's element sizes,
+    each a base that `size_scale` multiplies; a part left out takes §5.2.2's table (§5.3.1; VER-53).
+  - A case may carry `structure:` beside `inputs.profile` where it deposits a charge: the structure and its
+    protonation run for the charge, stages 2 to 4 do not, and stage 5 reads the supplied outline (§5.3.1; VER-55).
+  - The Changes tab lists the changed values a line each, beside the table; a line opens its tool at its field.
+- **Changed**:
+  - Stage 5's region of a structure and of an idealised pore share one interface, and the cylinder is described
+    once, by `CylinderPore`; the wall's mesh size is set in `mesh/` alone. No mesh moves (VER-61, VER-62).
+  - The tool list is a row per tool in both suites, its state a glyph, and the folded bar marks a suite's problem
+    with ✕ and a running build with ●.
+  - A tool page reads the model's case and its stored stages once per refresh: a page's keying on 2WCD falls from
+    up to 0.32 s to at most 0.13 s.
+
 ## [0.6.0-alpha.16]
 
 WP5.16: the Molecular suite, Phase 5's sixteenth package; tag `v0.6.0-alpha.16` once merged (§8.2.39 AO1 to AO4;

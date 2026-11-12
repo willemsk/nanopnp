@@ -174,6 +174,9 @@ class _ContinuumPane(_Pane[ContinuumModel]):
     def signature(self) -> object:
         return self.model is not None and self.model.editor() is not None
 
+    async def building_shown(self) -> None:
+        await self.show()
+
     def build_held(self) -> str | None:
         if self.model is not None and self.model.editor() is not None:
             return "Save the edited outline or discard it first: a build reads the model's file."

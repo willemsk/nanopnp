@@ -9,7 +9,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 ## Phase 5
 
 - [Phase 5 plan: the record](phase-5/phase-5-record.md): in progress; WP5.01 delivered (awaiting `/np-ship`), WP5.02 after `v0.5.0`.
-- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.16 merged (`v0.6.0-alpha.16`); WP5.17, the Continuum suite, planned, then the suites WP5.18 to WP5.20, WP5.21 and the close.
+- [Phase 5 (Graphical interface): a molecular and continuum workbench in the browser](phase-5/phase-5-workbench.md): in progress; WP5.01 to WP5.16 merged (`v0.6.0-alpha.16`); WP5.17, the Continuum suite, delivered, then the suites WP5.18 to WP5.20, WP5.21 and the close.
 - [WP5.01 — The workbench design study: GUI tools, the Qt shell critiqued, a design round, the areas drawn, the requirements written](phase-5/wp5.01-workbench-design-study.md): delivered, 27 October 2026.
 - [WP5.02 — The framework spike and the visual-feedback workflow](phase-5/wp5.02-framework-spike.md): delivered, 2 November 2026.
 - [WP5.03 — Protonation before the density](phase-5/wp5.03-protonation-before-the-density.md): merged, 3 November 2026 (`v0.6.0-alpha.3`).
@@ -26,7 +26,7 @@ Written by `.claude/scripts/index_records.py`; re-run it when a file is added or
 - [WP5.14 — Sweep planning and the walk's keying](phase-5/wp5.14-sweep-planning-and-the-walks-keying.md): delivered, 10 November 2026.
 - [WP5.15 — The frame on Quasar's components](phase-5/wp5.15-the-frame-on-quasars-components.md): delivered, 10 November 2026.
 - [WP5.16 — The Molecular suite](phase-5/wp5.16-the-molecular-suite.md): delivered 11 November 2026; merged 12 November 2026 as `v0.6.0-alpha.16`.
-- [WP5.17 — The Continuum suite](phase-5/wp5.17-the-continuum-suite.md): planned, not started.
+- [WP5.17 — The Continuum suite](phase-5/wp5.17-the-continuum-suite.md): delivered 12 November 2026.
 
 ## Phase 4
 

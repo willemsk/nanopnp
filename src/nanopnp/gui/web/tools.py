@@ -809,7 +809,7 @@ class _Pane(Generic[ModelT]):
         self.dismissed.add(key)
         self.refresh()
 
-    def on_build(self) -> None:
+    async def on_build(self) -> None:
         model = self.model
         if model is None or self.stage is None or model.building:
             return
@@ -818,7 +818,13 @@ class _Pane(Generic[ModelT]):
         except ValueError as error:
             ui.notify(str(error), type="negative", multi_line=True)
         self.was_building = model.building
+        # The view first: the refresh rebuilds the box that holds the button that asked.
+        if model.running_stage() is not None:
+            await self.building_shown()
         self.refresh()
+
+    async def building_shown(self) -> None:
+        """Show in the view that a build has started, where the view says so."""
 
     def on_cancel(self) -> None:
         if self.model is not None:
@@ -1231,7 +1237,7 @@ class _MolecularPane(_Pane[MolecularModel]):
         self.prepare["typed"] = False
         self.set_source(f"../../{INPUTS_FOLDER}/{written.name}")
         ui.notify(f"Saved {INPUTS_FOLDER}/{written.name}; building the ensemble.")
-        self.on_build()
+        await self.on_build()
 
     def ensemble_section(self) -> None:
         heading("Frames shown", 2)

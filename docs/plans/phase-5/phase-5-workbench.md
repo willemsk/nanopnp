@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.16 merged (`v0.6.0-alpha.16`); WP5.17, the Continuum suite, planned, then the suites WP5.18 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.16 merged (`v0.6.0-alpha.16`); WP5.17, the Continuum suite, delivered, then the suites WP5.18 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -271,7 +271,19 @@ asking before an edit is discarded, as T1 carries REV-56; its saved edit a conti
 and Mesh with its quality selection, each drawn in an (r, z) view; a geometry and its parameters linked both ways
 (FR-33). Q10 to Q12 and Q14 to Q23 move here; VER-55 as restated. Tag `v0.6.0-alpha.17`.
 
-**Planned 12 November 2026** ([the plan](wp5.17-the-continuum-suite.md)).
+**Delivered 12 November 2026** ([the plan](wp5.17-the-continuum-suite.md)). REV-170 and REV-39 fixed, REV-56's
+workbench part done, REV-242's keying measured and cached. Stage 5's two kinds of region share `RegionOutlines` and the
+`Stage5Region` protocol, the cylinder is `CylinderPore` alone and the wall is sized in `mesh/`, MOD-03's edge gone and
+VER-62 unmoved (VER-61). A supplied outline runs beside its structure's charge (AP1; VER-55), a continuum model builds
+alone over a chosen molecular model at 0.15 M NaCl (AP2; FR-39), and the generated mesh's parts take typed sizes (AP3,
+AP4; VER-53). After the prototype round on 2WCD the author merged Contour into *Pore geometry*, had Region draw and pick
+each domain, and chose a tree of the mesh's parts (WB-41); the three tools stand at `/continuum/<tool>` beside one (r, z)
+canvas, a geometry and its parameters linked both ways (FR-33; VER-78).
+
+Live constraints: REV-244 carries a suite between Molecular and Continuum, the CAD tooling with the sketcher and
+subdivisions of a part for meshing; handles dragged on the canvas are WP5.21's; REV-242's other points wait for the
+new-model action and a pass over the stages' errors. A Continuum tool's page is `continuum_tools.py`'s pane over
+`BuiltModel`, its drawing `plane.py`'s layers.
 
 ### WP5.18 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5)
 
