@@ -670,13 +670,6 @@ def _check_profile(document: CaseDocument) -> None:
             f"nanopnp/profile/v0.5 document, format {PROFILE_FORMAT!r} (section 5.3.1 NOTE on "
             "inputs:)"
         )
-    if document.structure is not None:
-        raise CaseValidationError(
-            f"case {document.name!r} carries a structure: section and supplies inputs.profile. "
-            "A stage whose output is supplied does not run, and neither does anything upstream "
-            "of it, so the structure would be recorded as an input to a run that never read it "
-            "(section 5.3.1 NOTE on inputs:); remove one of them"
-        )
     geometry = document.geometry
     if geometry is None:
         return

@@ -84,11 +84,18 @@ the Qt shell (§8.2.17 S13, S17).
   served to the browser as a file rather than a data URL, and with "the server's self-test fails when
   the shipped renderer does not reach its document" in place of the packaging probe's selftest.
 - **VER-55**, *Geometry pipeline surfaced in the workbench*: as the row above, for the Continuum
-  suite's tools, with three changes. The geometry view-models import no front-end framework, NGSolve,
+  suite's tools, with four changes. The geometry view-models import no front-end framework, NGSolve,
   Netgen, MDAnalysis, scikit-image, Shapely or Gmsh in a fresh process. The contour editor's
   refusals and measurements are those of the Contour tool. "The server's self-test exercises
   MDAnalysis, gemmi, scikit-image, Shapely, and Gmsh where its extra is installed, failing naming the
-  payload that does not work" replaces the packaging probe's sentence.
+  payload that does not work" replaces the packaging probe's sentence. An outline beside its
+  structure (§8.2.40 AP1) is tested as well as the derived case: a case carrying both walks stage 1,
+  the protonation, stages 5 and 6 and the charge, and none of stages 2 to 4, and is refused naming
+  both keys where it deposits no charge; the null edit run beside 2WCD's structure gives stage 5 the
+  same profile to the bit and stage 6 the same mesh content hash, deposits the same charge on each
+  material with the same conservation legs to 10⁻¹² relative, and records the structure, the
+  protonation and the profile and no stage 2 to 4 artefact, and the moved edit passes the deposit's
+  gates.
 - **VER-60**, *Charge pipeline surfaced in the workbench*: as the row above, with four changes. The
   view-models import no front-end framework, NGSolve, PDB2PQR or PROPKA in a fresh process. "Each
   bounded number's field accepts exactly its schema bounds, in both directions; an integer field

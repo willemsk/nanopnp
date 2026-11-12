@@ -1,11 +1,11 @@
-"""VER-55 (with VAL-05, VER-53): the Geometry tab's build, measure and edit on 2WCD."""
+"""VER-55 (VAL-05, VER-53): 2WCD's outline built, measured, edited and run beside its structure."""
 
 from __future__ import annotations
 
 import logging
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pytest
@@ -27,6 +27,7 @@ pytestmark = pytest.mark.nightly
 if TYPE_CHECKING:
     from conftest import Prepared2WCD
     from nanopnp.gui.solver import RunEvent
+    from nanopnp.pipeline.run import RunResult
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,8 @@ numerics: {{mesh: {{size_scale: 4.0}}}}
 TIMEOUT_S = 900.0
 
 GEOMETRY_STAGES = ("case", "structure", "density", "symmetry", "contour", "region", "mesh")
+
+WALKED_BESIDE_STRUCTURE = ("case", "structure", "protonation", "region", "mesh", "charge")
 
 
 @pytest.fixture(scope="module")
@@ -175,4 +178,89 @@ def test_ver55_2wcd_builds_measures_and_meshes_a_null_edit_to_the_same_content(
         r,
         z,
         len(profile.vertices),
+    )
+
+
+def _deposit(result: RunResult) -> dict[str, Any]:
+    record = result.artefacts["charge"].summary["charge"]
+    assert isinstance(record, dict)
+    return record
+
+
+def test_ver55_2wcd_a_null_edit_beside_its_structure_deposits_the_same_charge(
+    prepared_2wcd: Prepared2WCD, registered: tuple[Path, Path], tmp_path: Path
+) -> None:
+    case, store_root = registered
+    store = Store(store_root)
+    started = time.perf_counter()
+    original = Session(store, write=False).run(Case.load(case), upto="charge")
+    original_s = time.perf_counter() - started
+    contour = original.artefacts["contour"]
+    profile = load_profile(contour.payload["profile"])
+    geometry = load_case(case).geometry
+    assert geometry is not None
+    centre = geometry.membrane.centre_z_nm
+    editor = ProfileEditor.from_profile(profile)
+
+    def beside_structure(name: str) -> RunResult:
+        outline = editor.save(tmp_path)
+        lines = (
+            f"geometry: {{membrane: {{centre_z_nm: {centre!r}}}}}\n"
+            f"inputs:\n  profile: {{path: {outline}, format: profile1}}\n"
+        )
+        path = tmp_path / f"{name}.case.yaml"
+        path.write_text(CASE.format(pdb=prepared_2wcd.path, geometry=lines), encoding="utf-8")
+        return Session(store, write=False).run(Case.load(path), upto="charge")
+
+    started = time.perf_counter()
+    null = beside_structure("null")
+    null_s = time.perf_counter() - started
+    assert [record.name for record in null.stages] == list(WALKED_BESIDE_STRUCTURE)
+    assert null.artefacts["protonation"].hash == original.artefacts["protonation"].hash
+    region = read_region(original.artefacts["region"].payload["region"])
+    assert read_region(null.artefacts["region"].payload["region"]).profile == region.profile
+    assert (
+        null.artefacts["mesh"].summary["content_hash"]
+        == original.artefacts["mesh"].summary["content_hash"]
+    )
+    found, expected = _deposit(null), _deposit(original)
+    materials = expected["material_charge_e"]
+    assert found["material_charge_e"] == pytest.approx(materials, rel=1e-12)
+    for leg in ("producer", "consumer"):
+        assert found["conservation"][leg]["relative_error"] == pytest.approx(
+            expected["conservation"][leg]["relative_error"], rel=1e-12
+        )
+    for total in ("q_net_e", "q_grid_e", "q_mesh_e"):
+        assert found["conservation"][total] == pytest.approx(
+            expected["conservation"][total], rel=1e-12
+        )
+    artefacts = null.manifest.inputs["artefacts"]
+    assert {"structure", "protonation", "region", "mesh", "charge"} <= set(artefacts)  # type: ignore[arg-type]
+    assert not {"density", "symmetry", "contour"} & set(artefacts)  # type: ignore[arg-type]
+    files = null.manifest.inputs["files"]
+    assert {"profile", "structure"} <= set(files)  # type: ignore[arg-type]
+
+    loop = np.asarray(profile.vertices)
+    constriction = contour.summary["constriction"]
+    target = (constriction["r_nm"], constriction["z_nm"])  # type: ignore[index]
+    index = int(np.argmin(np.hypot(loop[:, 0] - target[0], loop[:, 1] - target[1])))
+    r, z = profile.vertices[index]
+    editor.move(index, r + 0.1, z)
+    started = time.perf_counter()
+    moved = beside_structure("moved")
+    moved_s = time.perf_counter() - started
+    assert (
+        moved.artefacts["mesh"].summary["content_hash"]
+        != null.artefacts["mesh"].summary["content_hash"]
+    )
+    share = _deposit(moved)["solid_share"]
+
+    logger.info(
+        "2WCD outline beside its structure: original to stage 7 %.1f s, null edit %.1f s, moved "
+        "edit %.1f s; deposit by material %s e; moved edit's solid share %s",
+        original_s,
+        null_s,
+        moved_s,
+        materials,
+        share,
     )

@@ -91,6 +91,9 @@ Ten: the rulings AP1 to AP4 added three library steps to the phase entry's seven
 - `pipeline/checks.py:_check_profile` refuses `structure:` beside `inputs.profile` on the document;
   `ResolvedCase.deposits_charge` (the case protonates and its model declares `fixed_charge`) exists only after
   `pipeline/case.py:resolve`. `pb` declares no coefficient; an `inputs.charge` case does not protonate.
+  `pb` and `pb-linear`, the two models without `fixed_charge`, carry no solids, so a case that generates its mesh
+  under either is refused before the pair is reached (PHY-21's NOTE); `inputs.charge` is the case beside a profile
+  that deposits nothing.
 - `pipeline/run.py:selected_stages` drops a stage whose `needs_section` is absent; density, symmetry and contour need
   `structure`, so beside it they would run. Charge reads `protonation` and `region`.
 - `geometry/region.py:_profile_input` takes `resolved.profile` before the contour. Stage 4's outline is in stage 1's
@@ -267,7 +270,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 |---|---|---|---|---|
 | `tests/tier1/test_idealised_pore.py::test_ver62_a_declared_cylinder_meshes_to_the_recorded_mesh`; the golden walks | 1, 2 | VER-62 | Unmoved by items 1, 2 and 6 with no part typed | `.claude/hooks/gate.sh run`; `uv run pytest tests/tier2/test_examples_0*.py tests/tier2/test_pipeline_2wcd.py tests/tier2/test_exclusion_2wcd_walk.py` |
 | `tests/tier1/test_layering.py` | 1 | VER-61 | MOD-03's row gone; the substituted import fails as a new static edge and as an upward or deferred-upward one, naming module and line | `uv run pytest tests/tier1/test_layering.py` |
-| `tests/tier1/test_region.py::test_ver55_an_outline_beside_a_structure_walks_the_charge_chain_alone` | 1 | VER-55; AP1 | One each, on `prepared_2wcd` with an outline: under `epnp-ns` `selected_stages` holds structure, protonation, region, mesh and charge, not stages 2 to 4; under `pb`, and beside `inputs.charge`, refused naming both keys | `uv run pytest tests/tier1/test_region.py` |
+| `tests/tier1/test_region.py::test_ver55_an_outline_beside_a_structure_walks_the_charge_chain_alone` | 1 | VER-55; AP1 | One each, on `prepared_2wcd` with an outline: under `epnp-ns` `selected_stages` holds structure, protonation, region, mesh and charge, not stages 2 to 4; beside `inputs.charge` refused naming both keys | `uv run pytest tests/tier1/test_region.py` |
 | `tests/tier2/test_gui_geometry_2wcd.py::test_ver55_2wcd_a_null_edit_beside_its_structure_deposits_the_same_charge` | 2 | VER-55; AP1 | Null edit, structure kept: stage 5's outline bitwise; stage 6's content hash, the deposit per material and both conservation legs equal to 10⁻¹² relative; no stage 2 to 4 artefact recorded; the moved edit passes the deposit's gates | `uv run pytest tests/tier2/test_gui_geometry_2wcd.py` |
 | `tests/tier1/test_project.py::test_fr39_a_continuum_model_built_alone_keys_as_a_study_at_its_salt` | 1 | FR-39; AP2 | One each: 2WCD's stages 1 to 6 built alone key as a study's at 0.15 M NaCl, exact; at 1 M stage 6 differs, stage 5 not; an idealised model builds with no molecular model; the charged tube's built model is in `kept_artefacts` | `uv run pytest tests/tier1/test_project.py` |
 | `tests/tier1/test_mesh_sizing.py::test_ver53_typed_part_sizes_key_as_the_table_and_follow_the_scale` | 1 | VER-53; AP3, AP4 | One each, on the charged tube: parts typed at §5.2.2's values key as untyped, exact; `protein_nm` doubled moves stage 6's key, not stage 5's, and thins the protein's elements; at `size_scale` 2 the table holds twice the typed value; `sizes` beside `geometry.pore` refused | `uv run pytest tests/tier1/test_mesh_sizing.py` |
