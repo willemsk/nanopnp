@@ -52,7 +52,7 @@ The eight are all inside `if TYPE_CHECKING:`: `core.stages` to `io.artefact` and
 `geometry.analyte` to `mesh.primitives`; `io.artefact`, `io.manifest` and `io.resolved` to
 `materials.electrolyte`; `io.resolved` to `numerics.newton` and to `physics.models`. Each pair is
 already a row of `modularity-layering.yaml` with its finding (for example `core` to `io`, MOD-15;
-`geometry` to `mesh`, MOD-03). [verified][^run]
+`geometry` to `mesh`, MOD-03; WP5.17 removed that import and its row). [verified][^run]
 
 - **It adds:** the file and line of each offending import, and a contract that can name independent
   siblings (`a | b`).

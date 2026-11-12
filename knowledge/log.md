@@ -3,6 +3,7 @@
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
 ## 2026-11-12
+* **Update**: `geometry/analyte.py` no longer imports `mesh.primitives` under `TYPE_CHECKING`, so the `geometry` to `mesh` pair the import-contract trial found is gone with MOD-03's row (WP5.17; REV-170). ([25. xenon and import-linter beside ruff's C901 and VER-61](07-software-stack/25-complexity-and-import-contract-tools.md))
 * **Update**: The flux-trap note names the analytic cylindrical pore by `CylinderPore`, which `mesh_cylinder_pore` meshes; the class `CylindricalPoreGeometry` is gone (WP5.17; REV-170). ([7. Quantities of interest — and the flux trap](06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md))
 * **Update**: The OCC-extent trap's measurement is posed on `mesh_cylinder_pore(CylinderPore(...), ...)`, which replaces `CylindricalPoreGeometry(...).generate`; no mesh moves (WP5.17; REV-170). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
 * **Update**: The vocabulary and cross-platform element-count measurements on the analytic pore name `mesh_cylinder_pore` and `CylinderPore` for the deleted `CylindricalPoreGeometry`; the numbers stand (WP5.17; REV-170). ([4. Geometry, meshing and I/O](07-software-stack/04-geometry-meshing-and-io.md))
