@@ -12,6 +12,8 @@
   // The solids a drawing fills lightly under their outline, so a slab reads as one.
   const FILLED = ['membrane', 'pore', 'exclusion'];
   const PICK_PX = 8;
+  // The key's rows: a line or a swatch, a colour bar, and the bar's width, in px.
+  const KEY_ROW = 18, KEY_BAR = 46, KEY_BAR_W = 120;
   const EDGES_FROM_PX = 7;
   const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   // What is not picked is drawn in a grey that recedes on either theme's canvas.
@@ -226,8 +228,10 @@
       ctx.restore();
       this.axes(ctx, area);
       this.boxes = [];
+      // The key is laid out first, so that a label at the top right moves below it.
+      this.key = this.keyLayout(ctx, area);
       for (const layer of layers) if (layer.kind === 'label') this.label(ctx, layer, area);
-      this.legend(ctx, area);
+      this.legend(ctx);
     },
 
     // Data in nm drawn under the view's transform: a pixel is 1 / scale nm.
@@ -432,6 +436,11 @@
       const width = ctx.measureText(text).width + 10;
       x = Math.min(Math.max(x, area.x + 2), area.x + area.w - width - 2);
       y = Math.min(Math.max(y, area.y + 12), area.y + area.h - 12);
+      const key = this.key;
+      if (key && x < key.x + key.width && x + width > key.x && y - 10.5 < key.top + key.height
+        && y + 10.5 > key.top) {
+        y = key.top + key.height + 16;
+      }
       ctx.fillStyle = token('--panel') || '#ffffff';
       ctx.strokeStyle = token('--control-edge') || '#7c8290';
       ctx.lineWidth = 1;
@@ -478,7 +487,7 @@
     },
 
     // The key: what each colour and line of the drawing stands for, on a panel at the top right.
-    legend(ctx, area) {
+    keyLayout(ctx, area) {
       const entries = [];
       const titles = new Set();
       for (const layer of this.drawing.layers) {
@@ -500,23 +509,27 @@
           entries.push({ kind: 'line', text: layer.title, role: layer.role });
         }
       }
-      if (!entries.length) return;
-      const ui = token('--font-ui') || 'sans-serif';
-      const ROW = 18, BAR = 46, BAR_W = 120;
-      ctx.font = `12px ${ui}`;
+      if (!entries.length) return null;
+      ctx.font = `12px ${token('--font-ui') || 'sans-serif'}`;
       let width = 0, height = 8;
       for (const entry of entries) {
         if (entry.kind === 'bar') {
-          width = Math.max(width, BAR_W + 8, ctx.measureText(entry.quantity).width + 8,
+          width = Math.max(width, KEY_BAR_W + 8, ctx.measureText(entry.quantity).width + 8,
             ctx.measureText(entry.unit).width + 8);
-          height += BAR;
+          height += KEY_BAR;
         } else {
           width = Math.max(width, ctx.measureText(entry.text).width + 32);
-          height += ROW;
+          height += KEY_ROW;
         }
       }
       width += 8;
-      const x = area.x + area.w - width - 6, top = area.y + 6;
+      return { entries, width, height, x: area.x + area.w - width - 6, top: area.y + 6 };
+    },
+
+    legend(ctx) {
+      if (!this.key) return;
+      const { entries, width, height, x, top } = this.key;
+      const ui = token('--font-ui') || 'sans-serif';
       // The key stands on the panel's colour, so it reads over any picture or element.
       ctx.fillStyle = token('--panel') || '#ffffff';
       ctx.strokeStyle = token('--control-edge') || '#7c8290';
@@ -538,19 +551,19 @@
           const steps = entry.palette.length;
           for (let k = 0; k < steps; k += 1) {
             ctx.fillStyle = entry.palette[k];
-            ctx.fillRect(x + 6 + (k * BAR_W) / steps, y + 15, BAR_W / steps + 0.5, 9);
+            ctx.fillRect(x + 6 + (k * KEY_BAR_W) / steps, y + 15, KEY_BAR_W / steps + 0.5, 9);
           }
           ctx.strokeStyle = edge;
-          ctx.strokeRect(x + 6.5, y + 15.5, BAR_W, 9);
+          ctx.strokeRect(x + 6.5, y + 15.5, KEY_BAR_W, 9);
           ctx.fillStyle = text;
           ctx.font = `11px ${token('--font-num') || 'monospace'}`;
           ctx.fillText(shown(entry.low), x + 6, y + 31);
           ctx.textAlign = 'right';
-          ctx.fillText(shown(entry.high), x + 6 + BAR_W, y + 31);
+          ctx.fillText(shown(entry.high), x + 6 + KEY_BAR_W, y + 31);
           ctx.textAlign = 'left';
           ctx.font = `11px ${ui}`;
           ctx.fillText(entry.unit, x + 6, y + 41);
-          y += BAR;
+          y += KEY_BAR;
           continue;
         }
         ctx.font = `12px ${ui}`;
@@ -572,7 +585,7 @@
         }
         ctx.fillStyle = text;
         ctx.fillText(entry.text, x + 28, y + 9);
-        y += ROW;
+        y += KEY_ROW;
       }
     },
 

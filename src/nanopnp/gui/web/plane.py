@@ -13,6 +13,7 @@ from nanopnp.geometry.profile import load_profile
 from nanopnp.gui.geometry import ImageModel, density_section, lookup_table, reduced_image
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.link import png
+from nanopnp.gui.web.screens import STAGE_RUNNING
 from nanopnp.io.case import Membrane, Reservoir
 from nanopnp.plot.data import (
     MeshElements,
@@ -343,8 +344,17 @@ def _outline_layers(
         layers.append(_polygon("contour", "contour", supplied, "Outline, supplied"))
         notes.append("The model supplies its outline (inputs.profile): stages 2 to 4 do not run.")
     if not layers:
-        notes.append("Nothing is built yet: build the geometry to draw it.")
+        notes.append(_unbuilt(model, "Nothing is built yet: build the geometry to draw it."))
     return layers, notes, axis
+
+
+def _unbuilt(model: ContinuumModel, note: str) -> str:
+    # While a build runs the view says what it is at; the pane draws again when it ends.
+    running = model.running_stage()
+    if running is None:
+        return note
+    words = STAGE_RUNNING.get(running, running)
+    return f"Building: {words[0].lower()}{words[1:]} The view draws it when the build ends."
 
 
 def _arc(radius_nm: float) -> list[tuple[float, float]]:
@@ -607,13 +617,15 @@ def plane(
     outlines, drawing = _region_layers(
         held, filled=tool == "region", picked=pick if tool == "region" else ""
     )
-    notes = [] if outlines else ["The region is not built yet: build it to draw it."]
+    notes = (
+        [] if outlines else [_unbuilt(model, "The region is not built yet: build it to draw it.")]
+    )
     extent = _extent(outlines, blank)
     if tool == "region":
         layers = [*outlines, *_labels(model, extent)]
         return Plane("model", ("r (nm)", "z (nm)"), extent, tuple(layers), tuple(notes))
     if "mesh" not in held:
-        notes.append("The mesh is not built yet: build it to draw it.")
+        notes.append(_unbuilt(model, "The mesh is not built yet: build it to draw it."))
         return Plane("model", ("r (nm)", "z (nm)"), extent, tuple(outlines), tuple(notes))
     over = None if drawing is None or not pick else _part_line(drawing, pick)
     return Plane(

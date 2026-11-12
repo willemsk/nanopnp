@@ -492,6 +492,29 @@ body .nicegui-footer.frame-footer {
 .changes-table {
   background: transparent;
 }
+/* The changed values a line each (REV-237): the field, its value, what it was, and its item. */
+.changes-lines {
+  padding: 2px 0;
+}
+.changes-line {
+  min-height: var(--row);
+  gap: var(--gap);
+  padding: 0 var(--gap);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-sm);
+}
+.changes-line .q-btn {
+  min-height: 0;
+  padding: 0 4px;
+}
+.changes-line .changes-field {
+  color: var(--ink);
+}
+.changes-line .changes-field,
+.changes-line .changes-value,
+.changes-line .changes-item {
+  font-family: var(--font-num);
+}
 .group-row .group-title {
   font-weight: 600;
 }
@@ -971,6 +994,7 @@ body .parts .parts-row {
   border-radius: 0;
   font-size: var(--text-sm);
   font-weight: 400;
+  color: var(--ink);
 }
 body .parts .parts-row.parts-child {
   padding-left: calc(var(--gap) * 2.5);

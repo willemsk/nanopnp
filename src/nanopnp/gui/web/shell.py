@@ -20,6 +20,8 @@ class Shell:
     settings: Settings = field(default_factory=user_settings.load)
     last_tool: dict[str, str] = field(default_factory=dict)
     """The tool last opened in each suite, by suite: the one its icon opens."""
+    changes_view: str = "list"
+    """How the Changes tab shows the changed values: ``list``, a line each, or ``table``."""
 
     @property
     def keys(self) -> dict[str, str]:

@@ -5,9 +5,11 @@ from __future__ import annotations
 import re
 import shutil
 import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Literal, Protocol
+from typing import TYPE_CHECKING, ClassVar, Literal, Protocol, TypeVar, cast
 
 from nanopnp.api.project import BUILD_UPTO, Problem, Project
 from nanopnp.core.stages import describe
@@ -18,6 +20,8 @@ from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
+    from collections.abc import Callable
+
     from nanopnp.api.case import Case
     from nanopnp.io.artefact import Artefact
     from nanopnp.io.models import ModelKind
@@ -25,6 +29,8 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 __all__ = ["BuiltModel", "StageState", "ToolModel", "cancel_builds", "refusals"]
 
 StageState = Literal["empty", "building", "built", "refused"]
+
+_T = TypeVar("_T")
 
 REFUSED = (ValueError, KeyError, OSError)
 """What a model's file or its case raises where it forms no case to build."""
@@ -115,6 +121,7 @@ class BuiltModel:
     project: Project
     name: str
     queue: Queue = field(default_factory=Queue)
+    _keyed: dict[str, object] | None = field(default=None, init=False, repr=False, compare=False)
 
     kind: ClassVar[ModelKind]
     stages: ClassVar[tuple[str, ...]]
@@ -132,20 +139,43 @@ class BuiltModel:
     def _held(self) -> _Held:
         return _MODELS.setdefault((self.project.root, self.kind, self.name), _Held())
 
-    def case(self) -> Case | None:
-        """Return the case that builds the model alone, or None where its file forms none."""
+    @contextmanager
+    def keyed_once(self) -> Iterator[None]:
+        """Read the model's case and key its walk once for what runs inside, as a refresh does.
+
+        Inside, the model's file is not written; a build's word read meanwhile drops the reads.
+        """
+        if self._keyed is not None:
+            yield
+            return
+        self._keyed = {}
+        try:
+            yield
+        finally:
+            self._keyed = None
+
+    def _once(self, what: str, read: Callable[[], _T]) -> _T:
+        if self._keyed is None:
+            return read()
+        if what not in self._keyed:
+            self._keyed[what] = read()
+        return cast("_T", self._keyed[what])
+
+    def _built_case(self) -> Case | str:
         try:
             return self.project.build_case(self.kind, self.name)
-        except REFUSED:
-            return None
+        except REFUSED as error:
+            return str(error).replace(f"{self.project.root}/", "")
+
+    def case(self) -> Case | None:
+        """Return the case that builds the model alone, or None where its file forms none."""
+        found = self._once("case", self._built_case)
+        return None if isinstance(found, str) else found
 
     def problem(self) -> str | None:
         """Return why the model's file forms no case, or None where it does."""
-        try:
-            self.project.build_case(self.kind, self.name)
-        except REFUSED as error:
-            return str(error).replace(f"{self.project.root}/", "")
-        return None
+        found = self._once("case", self._built_case)
+        return found if isinstance(found, str) else None
 
     def refused_path(self, message: str) -> str | None:
         """Return the case path a refusal names, or None where it names none."""
@@ -160,6 +190,9 @@ class BuiltModel:
 
     def walked(self) -> tuple[str, ...]:
         """Return the model's own stages its build walks: a supplied input drops some."""
+        return self._once("walked", self._walked)
+
+    def _walked(self) -> tuple[str, ...]:
         case = self.case()
         if case is None:
             return self.stages
@@ -171,6 +204,9 @@ class BuiltModel:
 
     def artefacts(self) -> dict[str, Artefact]:
         """Return the model's own stages the store holds for the model as it is now."""
+        return dict(self._once("artefacts", self._artefacts))
+
+    def _artefacts(self) -> dict[str, Artefact]:
         case = self.case()
         if case is None:
             return {}
@@ -200,6 +236,9 @@ class BuiltModel:
         # drain reads, where one ending after the drain would be taken for one that said nothing.
         ended = not build.process.running
         for event in build.process.drain():
+            if self._keyed is not None:
+                # A stage ended or the walk did: the store moved under the reads held.
+                self._keyed.clear()
             if isinstance(event, Stage):
                 build.stage = event.name
             elif isinstance(event, Finished):

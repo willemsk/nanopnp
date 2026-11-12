@@ -280,6 +280,17 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 > carries a suite between Molecular and Continuum, the CAD tooling and subdivisions for meshing. None of REV-235's
 > points was put; REV-237's `?field=` and one-line list go to item 12.
 
+**Item 12.**
+
+> **Outcome — item 12.** The tools as WB-41 rules them: *Pore geometry* (the maps with their colour bar, stages 2 to 4's
+> values, read-only where the model supplies its outline, and the editor, whose *Build* waits while an edit is held);
+> Region's domains, each drawn and picked; Mesh's tree of parts, each opening its one field, `?field=` included, the
+> quality verdict and a histogram whose bar fills its elements. The changed values list a line each beside the table
+> (REV-237). REV-242's measure on 2WCD, a page's visit on this container: the keying took 0.12 s (Region) to 0.32 s
+> (Prepare) in 3 to 12 keyed walks of 18 ms (molecular) or 35 ms (continuum), half of each reading stage 5's region
+> file. Above 0.25 s, so `BuiltModel.keyed_once` keys a pane's build, its refresh and each drawing once: 0.07 s to
+> 0.13 s in 2 to 5 walks.
+
 ### Work items
 
 - [x] 800581b 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,
