@@ -12,7 +12,6 @@ from pydantic import ValidationError
 from nanopnp.core.stages import describe, walk_order
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
-from nanopnp.geometry.pore import IdealisedRegionRecord
 from nanopnp.geometry.profile import (
     HAND_EDIT_SOURCE,
     PROFILE_SCHEMA,
@@ -615,29 +614,14 @@ def load_view(
             profile=profile,
         )
     if event.name == "region":
-        record = read_region(artefact.payload[REGION_PAYLOAD])
-        if isinstance(record, IdealisedRegionRecord):
-            radius = record.pore.radius_nm
-            half = 0.5 * record.membrane_thickness_nm
-            return OutlineView(
-                name=event.name,
-                loop=((0.0, -half), (radius, -half), (radius, half), (0.0, half)),
-                chord=((radius, -half), (radius, half)),
-                slab=(-half, half),
-                reservoir_nm=record.reservoir_radius_nm,
-                lines=_lines(summary, tuple(summary)),
-            )
-        points = record.points()
-        half = record.membrane.half_thickness_nm
+        outlines = read_region(artefact.payload[REGION_PAYLOAD]).outlines_nm()
+        half = outlines.membrane_half_thickness_nm
         return OutlineView(
             name=event.name,
-            loop=tuple((float(r), float(z)) for r, z in points),
-            chord=(
-                (record.membrane.inner_trans_nm, -half),
-                (record.membrane.inner_cis_nm, half),
-            ),
+            loop=tuple((float(r), float(z)) for r, z in outlines.pore_nm),
+            chord=outlines.chord_nm,
             slab=(-half, half),
-            reservoir_nm=record.reservoir_radius_nm,
+            reservoir_nm=outlines.reservoir_radius_nm,
             lines=_lines(summary, tuple(summary)),
         )
     if event.name == "mesh":

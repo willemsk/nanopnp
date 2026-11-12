@@ -319,10 +319,9 @@ def check_stored_frame(
             "against this store, or drop model_frame_centre_z_nm from the field"
         )
     record = read_region(Path(found.payload[REGION_PAYLOAD]))
-    centre = record.membrane.centre_z_nm if isinstance(record, RegionRecord) else 0.0
     _check_frames(
         fields,
-        centre,
+        record.membrane_centre_z_nm,
         frame=f"the stored mesh {resolved.mesh.artefact[:12]} was generated centred at",
         mesh="that mesh's",
         remedy="export the field from the case that generated the mesh, or correct the declaration",

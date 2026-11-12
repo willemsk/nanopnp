@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from nanopnp.core.hashing import Canonicalisable
+from nanopnp.geometry.outlines import RegionOutlines
 from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.io.artefact import REGION_SCHEMA
 from nanopnp.io.case import Pore
@@ -128,6 +129,38 @@ class IdealisedRegionRecord(BaseModel):
             pore_radius_nm=self.pore.radius_nm,
             membrane_thickness_nm=self.membrane_thickness_nm,
             reservoir_radius_nm=self.reservoir_radius_nm,
+        )
+
+    @property
+    def is_idealised(self) -> bool:
+        """Return True: the case declared this pore."""
+        return True
+
+    @property
+    def has_exclusion(self) -> bool:
+        """Return False: an idealised pore carries no ion-exclusion shell."""
+        return False
+
+    @property
+    def membrane_centre_z_nm(self) -> float:
+        """Return 0: a declared pore is built in the model frame."""
+        return 0.0
+
+    def outlines_nm(self) -> RegionOutlines:
+        """Return the lumen's and the membrane's rectangles in nm."""
+        import numpy as np
+
+        radius = self.pore.radius_nm
+        half = 0.5 * self.membrane_thickness_nm
+        outer = self.reservoir_radius_nm
+        return RegionOutlines(
+            pore_nm=np.array([(0.0, -half), (radius, -half), (radius, half), (0.0, half)]),
+            membrane_nm=np.array([(radius, -half), (outer, -half), (outer, half), (radius, half)]),
+            exclusion_nm=None,
+            membrane_half_thickness_nm=half,
+            membrane_centre_z_nm=0.0,
+            reservoir_radius_nm=outer,
+            z_extent_nm=(-half, half),
         )
 
     def summary(self) -> dict[str, Canonicalisable]:
