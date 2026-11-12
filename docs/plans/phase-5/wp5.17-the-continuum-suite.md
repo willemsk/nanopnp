@@ -241,7 +241,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
   **Executor:** main
 - [x] f169b56 2. The files of Implementation details' item 2, `modularity-layering.yaml` (D2); done when tiers 1 and 2
   pass and every recorded hash is equal. **Executor:** general-purpose on Sonnet, high
-- [ ] 3. VER-61's text; VER-62's walks run by their files (D1, D2); then a compaction checkpoint. **Executor:** main
+- [x] 88cbe81 3. VER-61's text; VER-62's walks run by their files (D1, D2); then a compaction checkpoint. **Executor:** main
 - [ ] 4. `pipeline/checks.py`, `case.py`, `run.py`, `api/project.py`, §5.3.1's NOTEs on `inputs:` and `inputs.profile`,
   VER-55's restated NOTE (D3); done when `test_region.py` and `test_gui_geometry_2wcd.py` pass. **Executor:** main
 - [ ] 5. `api/project.py`, `io/project.py`, `io/models.py`, §5.3.1's NOTE on model files (D4); done when
