@@ -115,12 +115,13 @@ FIELDS: dict[str, Field] = {
     "numerics.mesh.maxh_nm": Field("Global size", "number", unit="nm", hint="the table's"),
     "numerics.mesh.sizes.protein_nm": Field("Protein", "number", unit="nm", hint="the table's"),
     "numerics.mesh.sizes.electrolyte_nm": Field(
-        "Reservoir", "number", unit="nm", hint="the table's"
+        "Electrolyte", "number", unit="nm", hint="the table's"
     ),
     "numerics.mesh.sizes.arc_nm": Field("Outer boundary", "number", unit="nm", hint="the table's"),
     "numerics.mesh.sizes.axis_in_pore_nm": Field(
         "Axis in the pore", "number", unit="nm", hint="the table's"
     ),
+    "numerics.mesh.wall_h_nm": Field("Wall", "number", unit="nm", hint="auto"),
 }
 """Every value a suite's tool sets, by case path."""
 
@@ -133,7 +134,6 @@ BUILDS: dict[str, tuple[str | None, str, str]] = {
     "edit": ("protonation", "Build molecular model", "changed"),
     "view": (None, "", "charge"),
     "geometry": ("contour", "Build geometry", ""),
-    "contour": ("contour", "Build contour", ""),
     "region": ("region", "Build region", ""),
     "mesh": ("mesh", "Build mesh", ""),
 }
@@ -343,6 +343,10 @@ class _Pane(Generic[ModelT]):
     def own_cards(self) -> None:
         """Draw the tool's own notes, after the refusals and warnings."""
 
+    def unbuilt(self, tool_id: str) -> str | None:
+        """Return why a tool's stage does not run for this model, its state's word, or None."""
+        return None
+
     def after_refresh(self) -> None:
         """Bring what the tool's own sections show up to date with the model."""
 
@@ -405,7 +409,7 @@ class _Pane(Generic[ModelT]):
                 self.status.classes("tool-status")
                 self.actions = ui.row().classes("tool-actions items-center no-wrap")
                 self.cards = ui.column().classes("tool-cards")
-                if self.tool.fields:
+                if self.tool.fields or self.tool.parts:
                     ui.checkbox("Modified only", on_change=self.on_modified).props(
                         "dense data-control=tool-modified"
                     )
@@ -458,10 +462,11 @@ class _Pane(Generic[ModelT]):
                 link.props(f"data-control=tool-link-{tool.id} data-state=none")
                 if tool.id == self.tool.id:
                     link.classes("tool-link-open").props("aria-current=page")
+                # A row: the tool's name, its stage's glyph on the right, the state's word in the
+                # row's name and tooltip (WB-41).
                 with link:
-                    with ui.element("div").classes("tool-link-head"):
-                        glyph = ui.label("").classes("tool-glyph").props("aria-hidden=true")
-                        ui.label(tool.title)
+                    ui.label(tool.title).classes("tool-name")
+                    glyph = ui.label("").classes("tool-glyph").props("aria-hidden=true")
                     word = ui.label("").classes("tool-word").props("aria-hidden=true")
                     bar = ui.linear_progress(show_value=False).props("indeterminate size=3px")
                     bar.classes("tool-progress").set_visibility(False)
@@ -511,7 +516,8 @@ class _Pane(Generic[ModelT]):
                 ).props(f"dense outlined options-dense {named}")
             elif spec.kind == "number":
                 control = ui.number(
-                    value=shown,
+                    # A number that defaults to a word, such as the wall's auto, shows blank.
+                    value=shown if isinstance(shown, int | float) else None,
                     suffix=spec.unit or None,
                     placeholder=spec.hint or None,
                     on_change=lambda e, p=path: self.write(p, e.value),
@@ -667,11 +673,14 @@ class _Pane(Generic[ModelT]):
             glyph.text = STATES[state][0] if state else ""
             glyph.classes(replace=f"tool-glyph {look}")
             word.text = STATES[state][1] if state else ""
+            if (reason := self.unbuilt(tool_id)) is not None:
+                glyph.text, word.text = "\N{EN DASH}", reason
+                glyph.classes(replace="tool-glyph state-none")
             word.classes(replace=f"tool-word {look}")
             bar.set_visibility(stage is not None and stage == covering)
             if stage is not None and stage == covering:
                 bar.props(f'aria-label="{STAGE_RUNNING.get(running or "", running)}"')
-            named = f"{title}{', ' + STATES[state][1] if state else ''}"
+            named = f"{title}{', ' + word.text if word.text else ''}"
             link.props(f'data-state={state or "none"} aria-label="{named}" title="{named}"')
         self.show_readout()
         self.after_refresh()

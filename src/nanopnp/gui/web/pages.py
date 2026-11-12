@@ -122,6 +122,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         image: str = "mean",
         colour: str = "material",
         band: str = "",
+        pick: str = "",
     ) -> JSONResponse:
         """Serve what the (r, z) view draws of a model for one tool."""
         if image not in IMAGES or colour not in MESH_COLOURINGS:
@@ -129,7 +130,9 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         try:
             low, _, high = band.partition(",")
             outlined = (float(low), float(high)) if band else None
-            drawn = plane(continuum(name), tool, image=image, colour=colour, band=outlined)
+            drawn = plane(
+                continuum(name), tool, image=image, colour=colour, band=outlined, pick=pick
+            )
         except ValueError as error:
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())

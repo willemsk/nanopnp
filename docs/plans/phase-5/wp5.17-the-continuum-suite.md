@@ -300,7 +300,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 - [x] 641feae 9. The four tools drafted on 2WCD (D8, D9); `render_shell.py`; `/np-gui render shell`, `review`, `publish` (D10);
   done when the digest is published. **Executor:** main
 - [x] 10. Compaction checkpoint; the author's verdicts. **Executor:** main
-- [ ] 11. `/np-gui collect`; REV-235's and REV-237's points ruled or carried; the design document's rows (D10).
+- [x] 7dd8de6 11. `/np-gui collect`; REV-235's and REV-237's points ruled or carried; the design document's rows (D10).
   **Executor:** main
 - [ ] 12. The tools finished to the verdicts, with *Modified only*, `?field=` and REV-242's measure (D6 to D9); done when
   VER-78 passes. **Executor:** main

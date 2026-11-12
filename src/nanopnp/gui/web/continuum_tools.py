@@ -10,7 +10,6 @@ from typing import Any, ClassVar
 from urllib.parse import urlencode
 
 from nicegui import events, ui
-from nicegui.elements.mixins.text_element import TextElement
 
 from nanopnp.gui.assess import (
     Assessed,
@@ -20,15 +19,22 @@ from nanopnp.gui.assess import (
     AssessRequest,
     Seeded,
 )
-from nanopnp.gui.geometry import ProfileEditor
+from nanopnp.gui.geometry import ProfileEditor, lookup_table
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.frame import Views, heading
-from nanopnp.gui.web.plane import COLOURINGS, IMAGES, mesh_quality
+from nanopnp.gui.web.plane import (
+    COLOURINGS,
+    DOMAINS,
+    IMAGES,
+    MATERIAL_COLOURS,
+    PARTS,
+    mesh_quality,
+)
 from nanopnp.gui.web.screens import Tool
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import _Pane, current_name
 from nanopnp.io.project import STORE_FOLDER
-from nanopnp.mesh.sizing import case_sizes
+from nanopnp.mesh.sizing import SIZES, case_sizes
 
 __all__ = ["continuum_page", "current_continuum"]
 
@@ -42,16 +48,34 @@ COLOUR_TITLES = {"material": "Material", "sicn": "SICN", "gamma": "Gamma"}
 TIMES = "\N{MULTIPLICATION SIGN}"
 BINS = 10
 """The histogram's bars, each a tenth of the quality's range."""
+QUALITY_FLOOR = 0.3
+"""The quality gate's floor on SICN and gamma (section 5.2.2), marked on the histogram."""
 POINT_GROUP = "structure.symmetry.point_group"
 PORE_RADIUS = "geometry.pore.radius_nm"
-PARTS = {
-    "global_nm": "Global",
-    "protein_nm": "Protein",
-    "electrolyte_nm": "Reservoir",
-    "arc_nm": "Outer boundary",
-    "axis_in_pore_nm": "Axis in the pore",
+OUTLINE_STAGES = ("geometry.density.", "geometry.contour.")
+"""The values of stages 2 to 4, which a supplied outline leaves unread."""
+GLOBAL = "numerics.mesh.maxh_nm"
+WALL = "numerics.mesh.wall_h_nm"
+PART_ROWS: tuple[tuple[str, str, str, str | None], ...] = (
+    ("protein", "Domains", "numerics.mesh.sizes.protein_nm", "protein_nm"),
+    ("electrolyte", "Domains", "numerics.mesh.sizes.electrolyte_nm", "electrolyte_nm"),
+    ("membrane", "Domains", GLOBAL, "global_nm"),
+    ("wall", "Boundaries", WALL, None),
+    ("arc", "Boundaries", "numerics.mesh.sizes.arc_nm", "arc_nm"),
+    ("axis", "Boundaries", "numerics.mesh.sizes.axis_in_pore_nm", "axis_in_pore_nm"),
+    ("global", "", GLOBAL, "global_nm"),
+)
+"""The Mesh tool's parts (WB-41): the part, its group, the case path that sizes it, and its row
+of section 5.2.2's table, which ``SizeTable`` names; the wall's size is ``auto`` or typed."""
+IDEALISED_PARTS = frozenset({"electrolyte", "membrane", "wall", "global"})
+"""The parts an idealised pore's mesh sizes: its global size and its wall's."""
+DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
+    "protein": ("charge.exclusion_offset_nm",),
+    "exclusion": ("charge.exclusion_offset_nm",),
+    "membrane": ("geometry.membrane.thickness_nm", "geometry.membrane.centre_z_nm"),
+    "electrolyte": ("geometry.reservoir.radius_nm", PORE_RADIUS),
 }
-"""Each row of the size table the Mesh tool shows, by its field of ``SizeTable``."""
+"""The Region tool's values each domain picked shows."""
 SUPPLIED = {
     "geometry.pore": "declares an idealised pore (geometry.pore)",
     "inputs.profile": "supplies its outline (inputs.profile)",
@@ -72,7 +96,14 @@ class _ContinuumPane(_Pane[ContinuumModel]):
 
     def __init__(self, shell: Shell, tool: Tool, built: Views, focus: str) -> None:
         super().__init__(shell, tool, built, focus, current_continuum(shell))
-        self.look: dict[str, str] = {"image": "mean", "colour": "material", "band": ""}
+        self.look: dict[str, str] = {"image": "mean", "colour": "material", "band": "", "pick": ""}
+        # A part or a domain named by the address opens picked.
+        for part, _, path, _ in PART_ROWS:
+            if path == focus and tool.id == "mesh" and not self.look["pick"]:
+                self.look["pick"] = "global" if part == "membrane" else part
+        self.parts_box: ui.column
+        self.part_box: ui.column
+        self.domain_select: ui.select
         self.vertex: int | None = None
         self.assess: AssessProcess | None = None
         self.assessed: Assessment | str | None = None
@@ -91,6 +122,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
     # -- the pane's own parts --------------------------------------------------
 
     def before_fields(self) -> None:
+        if self.tool.id == "region":
+            self.domain_choice()
         model = self.model
         if model is None or self.project is None:
             return
@@ -126,14 +159,35 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         if self.model is None:
             return
         said = SUPPLIED.get(self.supplied or "", "reads no structure")
-        if self.tool.id in ("geometry", "contour") and "contour" not in self.walked:
-            ui.label(f"This model {said}: stages 2 to 4 do not run, so this tool builds nothing.")
+        if self.tool.id == "geometry" and "contour" not in self.walked:
+            ui.label(
+                f"This model {said}: stages 2 to 4 do not run, so their values are not read. "
+                "Its outline is drawn and edited here."
+            )
         elif self.supplied is not None:
             ui.label(f"This model {said}, so it reads no molecular model.")
         elif (molecular := self.model.molecular()) is not None:
             ui.label(f"Built alone over molecular model {molecular}.")
         else:
             ui.label("The project holds no molecular model for this model to be built over.")
+
+    def unbuilt(self, tool_id: str) -> str | None:
+        stage = {"geometry": "contour", "region": "region", "mesh": "mesh"}.get(tool_id)
+        if self.model is None or stage is None or stage in self.walked or not self.usable():
+            return None
+        return "outline supplied" if self.supplied == "inputs.profile" else "supplied"
+
+    def field(self, path: str, body: dict[str, Any], changed: bool, exposed: bool) -> None:
+        super().field(path, body, changed, exposed)
+        # A supplied outline: stages 2 to 4 do not run, so their values are shown, not set.
+        if (
+            self.model is not None
+            and path.startswith(OUTLINE_STAGES)
+            and "contour" not in self.walked
+        ):
+            control = self.controls[path]
+            if isinstance(control, ui.select | ui.number | ui.input):
+                control.disable()
 
     def geometry_section(self) -> None:
         case = None if self.model is None else self.model.case()
@@ -152,14 +206,16 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 on_change=lambda e: self.restyle("image", str(e.value)),
             ).props(
                 'dense outlined options-dense data-control=plane-image aria-label="Picture"'
-            ).set_enabled(self.model is not None)
-
-    # -- Contour -------------------------------------------------------------------
-
-    def contour_section(self) -> None:
-        heading("Edit the outline", 2)
+            ).set_enabled(self.model is not None and "contour" in self.walked)
+        heading("Outline", 2)
         self.edit_box = ui.column().classes("w-full gap-1").props("data-control=contour-edit")
         self.show_edit()
+        ui.label(
+            "Later: the pore's (r, z) domain drawn by hand, with lines, arcs and booleans, "
+            "comes with the sketcher in a later phase."
+        ).classes("later later-banner")
+
+    # -- the outline's editor ----------------------------------------------------------
 
     def measurable(self) -> bool:
         """Say whether an edit can be measured: the model walks stages 2 to 4 over a structure."""
@@ -412,7 +468,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             return
         dialog.close()
         model.project.open_item(f"continuum/{chosen}")
-        ui.run_javascript("window.location.assign('/continuum/contour')")
+        ui.run_javascript("window.location.assign('/continuum/geometry')")
 
     # -- the view's events ---------------------------------------------------------
 
@@ -424,21 +480,23 @@ class _ContinuumPane(_Pane[ContinuumModel]):
 
     def on_plane_pick(self, event: events.GenericEventArguments) -> None:
         layer, index = str(event.args.get("layer", "")), int(event.args.get("index", 0))
-        if layer == "contour" and self.tool.id == "contour":
+        if layer == "contour" and self.tool.id == "geometry":
             self.vertex = index
             self.show_edit()
         elif layer == "mesh" and self.tool.id == "mesh":
             self.show_element(index)
+        elif layer.startswith("domain-") and self.tool.id == "region":
+            self.domain_select.set_value(layer.removeprefix("domain-"))
 
     async def on_plane_insert(self, event: events.GenericEventArguments) -> None:
         editor = None if self.model is None else self.model.editor()
-        if editor is None or self.tool.id != "contour":
+        if editor is None or self.tool.id != "geometry":
             return
         self.vertex = editor.insert(int(event.args.get("edge", 0)))
         await self.edited()
 
     async def on_plane_delete(self, event: events.GenericEventArguments) -> None:
-        if self.tool.id == "contour":
+        if self.tool.id == "geometry":
             await self.delete_vertex(int(event.args.get("index", 0)))
 
     async def on_plane_value(self, event: events.GenericEventArguments) -> None:
@@ -463,6 +521,50 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         # An idealised pore is declared by its radius, which only such a model holds.
         if self.supplied == "geometry.pore":
             self.field(PORE_RADIUS, self.body(), PORE_RADIUS in self.changed(), False)
+            self.mark(PORE_RADIUS, PORE_RADIUS in self.changed())
+        ui.label(
+            "Later: drawing and editing the domains by hand, with CAD tools, comes with the "
+            "sketcher in a later phase."
+        ).classes("later later-banner")
+
+    # -- Region's domains ---------------------------------------------------------------
+
+    def domains(self) -> list[str]:
+        """Return the domains the model's region holds, the smallest first."""
+        case = None if self.model is None else self.model.case()
+        named = list(DOMAINS)
+        if self.supplied == "geometry.pore":
+            named.remove("protein")
+        if case is None or case.charge is None or not case.charge.exclusion_offset_nm:
+            named.remove("exclusion")
+        return named
+
+    def domain_choice(self) -> None:
+        options = {"": "All domains", **{name: DOMAINS[name] for name in self.domains()}}
+        with self.named("Domain"):
+            self.domain_select = ui.select(
+                options,
+                value=self.look["pick"] if self.look["pick"] in options else "",
+                on_change=lambda e: self.pick_domain(str(e.value or "")),
+            ).props(
+                "dense outlined options-dense data-control=region-domain "
+                'aria-label="The domain whose values the pane shows; pick one in the view too"'
+            )
+            self.domain_select.set_enabled(self.model is not None)
+
+    async def pick_domain(self, domain: str) -> None:
+        self.look["pick"] = domain
+        changed = self.changed()
+        for path in self.rows:
+            self.mark(path, path in changed)
+        await self.show()
+
+    def mark(self, path: str, changed: bool) -> None:
+        super().mark(path, changed)
+        domain = self.look.get("pick", "")
+        if self.tool.id == "region" and domain:
+            shown = path in DOMAIN_FIELDS.get(domain, ())
+            self.rows[path].set_visibility(shown and (changed or not self.modified_only))
 
     def show_element(self, index: int) -> None:
         import numpy as np
@@ -488,36 +590,51 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         with self.histogram_box:
             if quality is None:
                 ui.label(
-                    "Colour the elements by SICN or gamma to see their spread; a bar outlines "
-                    "its elements in the view."
+                    "Colour the elements by SICN or gamma to see their spread; a bar fills its "
+                    "elements in the view."
                 ).classes("later")
                 return
             counts, edges = np.histogram(quality, bins=BINS, range=(0.0, 1.0))
             most = max(int(counts.max()), 1)
-            with (
-                ui.row()
-                .classes("histogram no-wrap items-end")
-                .props(f'role=group aria-label="{COLOUR_TITLES[colour]} of the elements"')
-            ):
-                for low, high, count in zip(edges[:-1], edges[1:], counts, strict=True):
-                    band = f"{low:.1f},{high:.1f}"
-                    pressed = str(self.look.get("band") == band).lower()
-                    # The whole column answers a click, so an empty bar is still a target.
-                    with (
-                        ui.button(on_click=lambda _, b=band: self.outline(b))
-                        .props(
-                            f"flat dense aria-pressed={pressed} data-control=histogram-bar "
-                            f'aria-label="{COLOUR_TITLES[colour]} {low:.1f} to {high:.1f}: '
-                            f'{int(count)} elements"'
-                        )
-                        .classes("histogram-bar")
-                    ):
-                        ui.element("div").classes("histogram-fill").style(
-                            f"height:{4 + 60 * int(count) / most:.0f}px"
-                        )
-            ui.label(f"{COLOUR_TITLES[colour]} from 0 to 1, {len(quality)} elements").classes(
-                "later"
-            )
+            table = lookup_table("viridis")
+            title = COLOUR_TITLES[colour]
+            with ui.element("div").classes("histogram-plot"):
+                with (
+                    ui.row()
+                    .classes("histogram no-wrap items-end")
+                    .props(f'role=group aria-label="{title} of the elements"')
+                ):
+                    for low, high, count in zip(edges[:-1], edges[1:], counts, strict=True):
+                        band = f"{low:.1f},{high:.1f}"
+                        pressed = str(self.look.get("band") == band).lower()
+                        r, g, b, _ = table[round(0.5 * (low + high) * (len(table) - 1))]
+                        # The whole column answers a click, so an empty bar is still a target.
+                        with (
+                            ui.button(on_click=lambda _, b=band: self.outline(b))
+                            .props(
+                                f"flat dense aria-pressed={pressed} data-control=histogram-bar "
+                                f'aria-label="{title} {low:.1f} to {high:.1f}: '
+                                f'{int(count)} elements"'
+                            )
+                            .classes("histogram-bar")
+                        ):
+                            ui.label(f"{int(count)}").classes("histogram-count")
+                            ui.element("div").classes("histogram-fill").style(
+                                f"height:{2 + 56 * int(count) / most:.0f}px;"
+                                f"background:#{r:02x}{g:02x}{b:02x}"
+                            )
+                # The gate's floor between its bars, and the quality's axis under them.
+                ui.element("div").classes("histogram-floor").style(
+                    f"left:{100 * QUALITY_FLOOR:g}%"
+                ).props(f'title="The quality gate\'s floor, {QUALITY_FLOOR:g}"')
+                with ui.element("div").classes("histogram-axis").props("aria-hidden=true"):
+                    for tick in (0.0, QUALITY_FLOOR, 0.5, 1.0):
+                        ui.label(f"{tick:g}").style(f"left:{100 * tick:g}%")
+            below = int(np.count_nonzero(quality <= QUALITY_FLOOR))
+            ui.label(
+                f"{title} of {len(quality)} elements, least {np.min(quality):.3f}; {below} at or "
+                f"under the floor of {QUALITY_FLOOR:g}. A bar fills its elements in the view."
+            ).classes("later")
 
     async def outline(self, band: str) -> None:
         self.look["band"] = "" if self.look.get("band") == band else band
@@ -525,30 +642,199 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         await self.show()
         self.show_histogram()
 
+    def quality_verdict(self) -> None:
+        held = {} if self.model is None or not self.usable() else self.model.artefacts()
+        if "mesh" not in held:
+            ui.label(
+                f"Quality gate: SICN and gamma each above {QUALITY_FLOOR:g}; not built yet."
+            ).props("data-control=mesh-gate")
+            return
+        quality = _mapping(held["mesh"].summary.get("quality"))
+        sicn, gamma = quality.get("min_sicn"), quality.get("min_gamma")
+        passed = all(isinstance(v, int | float) and v > QUALITY_FLOOR for v in (sicn, gamma))
+        glyph, word = ("✓", "passed") if passed else ("✕", "failed")
+        ui.label(
+            f"{glyph} Quality gate {word}: least SICN {self.text(sicn, 'dimensionless')}, least "
+            f"gamma {self.text(gamma, 'dimensionless')}; each must exceed {QUALITY_FLOOR:g}."
+        ).classes("state-ok" if passed else "state-err").props("data-control=mesh-gate")
+
+    # -- the mesh's parts ---------------------------------------------------------------
+
+    def part_sizes(self) -> dict[str, tuple[float | None, str]]:
+        """Return each part's base size in nm and where it comes from: typed, table or auto."""
+        case = None if self.model is None or not self.usable() else self.model.case()
+        if case is None:
+            return {}
+        mesh = case.numerics.mesh
+        base = case_sizes(case)
+        typed: dict[str, float | None] = {GLOBAL: mesh.maxh_nm}
+        typed |= {f"numerics.mesh.sizes.{k}": v for k, v in mesh.sizes.model_dump().items()}
+        found: dict[str, tuple[float | None, str]] = {}
+        for part, _, path, row in PART_ROWS:
+            if row is None:
+                wall = mesh.wall_h_nm
+                found[part] = (None, "auto") if wall == "auto" else (float(wall), "typed")
+            elif part == "membrane":
+                found[part] = (base.global_nm, "global")
+            else:
+                source = "typed" if typed.get(path) is not None else "table"
+                found[part] = (getattr(base, row), source)
+        return found
+
+    def built_wall_nm(self) -> float | None:
+        """Return the wall size the built mesh used, scaled, or None unbuilt."""
+        held = {} if self.model is None or not self.usable() else self.model.artefacts()
+        if "mesh" not in held:
+            return None
+        sizing = _mapping(held["mesh"].parameters.get("sizing"))
+        value = _mapping(sizing.get("wall")).get("wall_h_nm")
+        return float(value) if isinstance(value, int | float) else None
+
+    def used(self) -> set[str]:
+        """Return the parts this model's mesh is sized by: none for a supplied mesh."""
+        if self.supplied == "inputs.mesh":
+            return set()
+        if self.supplied == "geometry.pore":
+            return set(IDEALISED_PARTS)
+        return {row[0] for row in PART_ROWS}
+
+    def scale(self) -> float:
+        case = None if self.model is None or not self.usable() else self.model.case()
+        return case.numerics.mesh.size_scale if case is not None else 1.0
+
+    def show_parts(self) -> None:
+        self.parts_box.clear()
+        sizes, used, changed, scale = self.part_sizes(), self.used(), self.changed(), self.scale()
+        wall_used = self.built_wall_nm()
+        with self.parts_box:
+            with ui.row().classes("parts-head no-wrap w-full"):
+                ui.label("Mesh parts")
+                ui.label(f"size used, {TIMES} {scale:g}")
+            group = None
+            for part, grouped, path, _ in PART_ROWS:
+                if grouped and grouped != group:
+                    group = grouped
+                    ui.label(grouped).classes("parts-group")
+                base, source = sizes.get(part, (None, ""))
+                if self.model is None:
+                    size, source = "—", ""
+                elif part not in used:
+                    size, source = "—", "not used"
+                elif base is None:
+                    size = self.text(wall_used, "nm") if wall_used is not None else "auto"
+                else:
+                    size = self.text(base * scale, "nm")
+                typed = path in changed and part != "membrane"
+                picked = self.look.get("pick") == part
+                button = (
+                    ui.button(on_click=lambda _, p=part: self.pick_part(p))
+                    .props(
+                        f"flat dense no-caps align=left data-control=mesh-part-{part} "
+                        f"aria-pressed={str(picked).lower()} "
+                        f'aria-label="{PARTS[part]}: {size}{", " + source if source else ""}"'
+                    )
+                    .classes("parts-row" + (" parts-child" if grouped else ""))
+                )
+                button.set_visibility(typed or not self.modified_only)
+                with button:
+                    swatch = ui.element("span").classes(
+                        "parts-swatch" if part in MATERIAL_COLOURS else "parts-line"
+                    )
+                    if part in MATERIAL_COLOURS:
+                        swatch.style(f"background:{MATERIAL_COLOURS[part]}")
+                    ui.label(PARTS[part]).classes("parts-name")
+                    ui.label("◆" if typed else "").classes("changed parts-mark")
+                    ui.label(size).classes("parts-size")
+                    ui.label(source).classes("parts-source")
+
+    def show_part(self) -> None:
+        """Open the picked part's one field, with the table's value and the size it gives."""
+        for path in [p for p in self.rows if p in self.tool.parts]:
+            self.rows.pop(path, None)
+            self.marks.pop(path, None)
+            self.controls.pop(path, None)
+        self.part_box.clear()
+        part = self.look.get("pick", "")
+        with self.part_box:
+            if not part:
+                ui.label(
+                    "Pick a part, in the list or the view, to size it: a blank size takes "
+                    "section 5.2.2's table, and the size scale multiplies every size."
+                ).classes("later")
+                return
+            path = next(row[2] for row in PART_ROWS if row[0] == part)
+            heading(PARTS[part], 3)
+            if self.model is not None and part not in self.used():
+                why = (
+                    "This model supplies its mesh (inputs.mesh), so no size is read."
+                    if self.supplied == "inputs.mesh"
+                    else "An idealised pore's mesh reads only the global and wall sizes."
+                )
+                ui.label(why).classes("later")
+                return
+            body = self.body()
+            if path == WALL and _value_of_wall(body) == "auto":
+                body = {}
+            super().field(path, body, path in self.changed(), path in self.exposed())
+            self.mark(path, path in self.changed())
+            control = self.controls[path]
+            row = next(entry[3] for entry in PART_ROWS if entry[0] == part)
+            scale = self.scale()
+            if row is None:
+                ui.label(
+                    "Blank is auto: a fifth of the Debye length at the salt the mesh is sized "
+                    f"for, at most 0.05 nm, {TIMES} the size scale {scale:g}."
+                ).classes("later")
+                return
+            table = getattr(SIZES, row)
+            control.props(f'placeholder="{table:g}"')
+            said = f"Blank takes section 5.2.2's {table:g} nm"
+            if part == "membrane":
+                said = f"The membrane takes the global size. {said}"
+            base, _ = self.part_sizes().get(part, (None, ""))
+            gives = (
+                "" if base is None else f"; {TIMES} {scale:g} gives {self.text(base * scale, 'nm')}"
+            )
+            ui.label(f"{said}{gives}.").classes("later")
+
+    async def pick_part(self, part: str) -> None:
+        self.look["pick"] = "" if self.look.get("pick") == part else part
+        # The view first: the row that asked is rebuilt with the list.
+        await self.show()
+        self.show_parts()
+        self.show_part()
+
+    def on_modified(self, event: events.ValueChangeEventArguments[Any]) -> None:
+        super().on_modified(event)
+        if self.tool.id == "mesh":
+            self.show_parts()
+
+    def after_write(self, path: str) -> None:
+        super().after_write(path)
+        if self.tool.id == "mesh" and path in self.tool.parts:
+            self.show_parts()
+
     def mesh_section(self) -> None:
         case = None if self.model is None else self.model.case()
+        self.parts_box = (
+            ui.column()
+            .classes("parts w-full gap-0")
+            .props('data-control=tool-parts role=group aria-label="Mesh parts"')
+        )
+        self.show_parts()
+        self.part_box = ui.column().classes("part-card w-full gap-1")
+        self.show_part()
         if case is not None and case.electrolyte is not None:
             salt = self.text(case.electrolyte.concentration_M, "molar")
             ui.label(
                 f"Built alone at {salt}, its wall sized for that salt; a study at another salt "
                 "builds its own mesh."
             ).classes("later").props("data-control=mesh-salt")
-        if case is not None:
-            mesh = case.numerics.mesh
-            typed = {"global_nm": mesh.maxh_nm, **mesh.sizes.model_dump()}
-            base = case_sizes(case)
-            heading("Sizes used", 2)
-            with ui.element("dl").classes("readout-list").props("data-control=mesh-sizes"):
-                for name, title in PARTS.items():
-                    used = getattr(base, name)
-                    whose = "typed" if typed.get(name) is not None else "the table's"
-                    TextElement(tag="dt", text=title)
-                    TextElement(
-                        tag="dd",
-                        text=f"{self.text(used, 'nm')}, {whose}, {TIMES} {mesh.size_scale:g} "
-                        f"= {self.text(used * mesh.size_scale, 'nm')}",
-                    )
+        ui.label(
+            "Later: refinement regions drawn by hand, and boundary layers, come in a later phase."
+        ).classes("later later-banner")
         heading("Elements", 2)
+        self.quality_verdict()
         with self.named("Coloured by"):
             ui.select(
                 {name: COLOUR_TITLES[name] for name in COLOURINGS},
@@ -567,9 +853,10 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             return []
         held = model.artefacts()
         rows: list[tuple[str, str, Callable[[], None] | None]] = []
-        if self.tool.id in ("geometry", "contour") and "contour" in held:
+        if self.tool.id == "geometry" and "contour" in held:
             summary = held["contour"].summary
             constriction = _mapping(summary.get("constriction"))
+            rows.append(("Stage 4's checks", "✓ passed", None))
             rows.append(("Vertices", str(summary.get("vertex_count", "?")), None))
             rows.append(
                 (
@@ -616,6 +903,10 @@ class _ContinuumPane(_Pane[ContinuumModel]):
 
 def _mapping(value: object) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
+
+
+def _value_of_wall(body: dict[str, Any]) -> object:
+    return _mapping(_mapping(body.get("numerics")).get("mesh")).get("wall_h_nm")
 
 
 def continuum_page(shell: Shell, tool: Tool) -> Callable[..., None]:

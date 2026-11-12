@@ -7,13 +7,19 @@
     contour: ['--accent', 2, []], pore: ['--canvas-plot-ink', 1.5, []],
     membrane: ['--muted', 1.5, []], exclusion: ['--changed', 1.5, [5, 3]],
     reservoir: ['--muted', 1, [6, 4]], probe: ['--warn', 1.5, [4, 3]], lumen: ['--ok', 1.5, []],
-    original: ['--muted', 1.5, [3, 3]],
+    original: ['--muted', 1.5, [3, 3]], picked: ['--accent', 3, []], domain: ['--canvas-plot-ink', 1, []],
   };
   // The solids a drawing fills lightly under their outline, so a slab reads as one.
   const FILLED = ['membrane', 'pore', 'exclusion'];
   const PICK_PX = 8;
   const EDGES_FROM_PX = 7;
   const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  // What is not picked is drawn in a grey that recedes on either theme's canvas.
+  const receding = () => {
+    const hex = (token('--canvas-plot') || '#ffffff').replace('#', '');
+    const light = hex.length >= 6 && parseInt(hex.slice(0, 2), 16) > 128;
+    return light ? '#d8d8d8' : '#4a4d55';
+  };
   const frames = () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
 
   const view = {
@@ -153,7 +159,9 @@
         const v = layer.vertices_nm, t = layer.triangles, byColour = new Map();
         let edges = 0;
         for (let k = 0; k < t.length; k += 3) {
-          const colour = this.colourOf(layer, layer.values[k / 3]);
+          // A picked domain keeps its colours; the rest is one key the draw greys.
+          const faded = layer.focus !== undefined && layer.material[k / 3] !== layer.focus;
+          const colour = faded ? 'dim' : this.colourOf(layer, layer.values[k / 3]);
           if (!byColour.has(colour)) byColour.set(colour, new Path2D());
           const path = byColour.get(colour);
           const [a, b, c] = [t[k] * 2, t[k + 1] * 2, t[k + 2] * 2];
@@ -162,6 +170,15 @@
           edges += Math.hypot(v[b] - v[a], v[b + 1] - v[a + 1]);
         }
         found = { byColour, edge_nm: t.length ? edges / (t.length / 3) : 0 };
+      } else if (layer.kind === 'domain') {
+        const path = new Path2D();
+        for (const ring of layer.rings) {
+          for (let k = 0; k < ring.length; k += 2) {
+            if (k === 0) path.moveTo(ring[0], ring[1]); else path.lineTo(ring[k], ring[k + 1]);
+          }
+          path.closePath();
+        }
+        found = { path };
       } else {
         const p = layer.points_nm, path = new Path2D();
         for (let k = 0; k < p.length; k += 2) {
@@ -195,7 +212,16 @@
       ctx.rect(area.x, area.y, area.w, area.h);
       ctx.clip();
       const layers = this.drawing.layers;
-      for (const layer of layers) if (layer.kind !== 'label') this.layer(ctx, layer, ratio);
+      for (const layer of layers) if (layer.kind !== 'label' && !layer.hidden) this.layer(ctx, layer, ratio);
+      for (const layer of layers) {
+        if (layer.kind !== 'domain' || !layer.picked) continue;
+        this.inData(ctx, ratio, () => {
+          ctx.strokeStyle = token('--accent') || '#5b3fd6';
+          ctx.lineWidth = 3 / this.scale;
+          ctx.setLineDash([]);
+          ctx.stroke(this.pathsOf(layer).path);
+        });
+      }
       this.highlight(ctx);
       ctx.restore();
       this.axes(ctx, area);
@@ -229,7 +255,7 @@
         const edges = drawn.edge_nm * this.scale >= EDGES_FROM_PX;
         this.inData(ctx, ratio, () => {
           for (const [colour, path] of drawn.byColour) {
-            ctx.fillStyle = colour;
+            ctx.fillStyle = colour === 'dim' ? receding() : colour;
             ctx.fill(path);
             if (edges) {
               ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
@@ -238,20 +264,54 @@
             }
           }
           if (layer.outlined && layer.outlined.length) {
+            // A histogram's bar: every other element recedes under a wash of the canvas's colour,
+            // and the bar's own are filled again in their colours and outlined.
             const v = layer.vertices_nm, t = layer.triangles, band = new Path2D();
+            const [r0, z0] = this.toData(0, this.canvas.height);
+            const [r1, z1] = this.toData(this.canvas.width, 0);
+            ctx.globalAlpha = 0.7;
+            ctx.fillStyle = token('--canvas-plot') || '#ffffff';
+            ctx.fillRect(r0, z0, r1 - r0, z1 - z0);
+            ctx.globalAlpha = 1;
             for (const index of layer.outlined) {
               const [a, b, c] = [t[3 * index] * 2, t[3 * index + 1] * 2, t[3 * index + 2] * 2];
-              band.moveTo(v[a], v[a + 1]); band.lineTo(v[b], v[b + 1]); band.lineTo(v[c], v[c + 1]);
-              band.closePath();
+              const one = new Path2D();
+              for (const target of [one, band]) {
+                target.moveTo(v[a], v[a + 1]); target.lineTo(v[b], v[b + 1]); target.lineTo(v[c], v[c + 1]);
+                target.closePath();
+              }
+              ctx.fillStyle = this.colourOf(layer, layer.values[index]);
+              ctx.fill(one);
             }
             ctx.strokeStyle = token('--accent') || '#5b3fd6';
-            ctx.lineWidth = 2 / this.scale;
+            ctx.lineWidth = 1.5 / this.scale;
             ctx.stroke(band);
           }
         });
         return;
       }
       const [colour, width, dash] = ROLES[layer.role] || ['--canvas-plot-ink', 1.5, []];
+      if (layer.kind === 'domain') {
+        this.inData(ctx, ratio, () => {
+          if (layer.filled) {
+            ctx.globalAlpha = layer.picked ? 0.9 : 0.55;
+            ctx.fillStyle = layer.fill;
+            ctx.fill(drawn.path, 'evenodd');
+            ctx.globalAlpha = 1;
+          }
+          ctx.lineJoin = 'round';
+          ctx.setLineDash([]);
+          if (!layer.filled) {
+            ctx.strokeStyle = token('--canvas-plot') || '#ffffff';
+            ctx.lineWidth = (width + 3) / this.scale;
+            ctx.stroke(drawn.path);
+          }
+          ctx.strokeStyle = token(colour) || '#16181d';
+          ctx.lineWidth = width / this.scale;
+          ctx.stroke(drawn.path);
+        });
+        return;
+      }
       this.inData(ctx, ratio, () => {
         const meshed = this.drawing.layers.some((l) => l.kind === 'mesh');
         const pictured = meshed || this.drawing.layers.some((l) => l.kind === 'image');
@@ -297,7 +357,8 @@
       const picked = this.picked;
       if (!picked) return;
       const layer = this.drawing.layers.find((l) => l.id === picked.layer);
-      if (!layer) return;
+      // A domain picked is drawn by the server's next drawing.
+      if (!layer || layer.kind === 'domain') return;
       ctx.strokeStyle = token('--accent') || '#5b3fd6';
       ctx.lineWidth = 2;
       ctx.setLineDash([]);
@@ -416,43 +477,115 @@
       field.addEventListener('blur', () => done(false));
     },
 
+    // The key: what each colour and line of the drawing stands for, on a panel at the top right.
     legend(ctx, area) {
-      const mesh = this.drawing.layers.find((l) => l.kind === 'mesh');
-      if (!mesh) return;
-      const ink = token('--canvas-plot-ink') || '#16181d';
-      ctx.font = `12px ${token('--font-ui') || 'sans-serif'}`;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      const x = area.x + area.w - 150;
-      let y = area.y + 14;
-      const rows = mesh.categorical ? mesh.legend.length : 2;
-      // The legend stands on the panel's colour, so it reads over any element.
+      const entries = [];
+      const titles = new Set();
+      for (const layer of this.drawing.layers) {
+        if (layer.hidden) continue;
+        if (layer.kind === 'image' && layer.bar) {
+          entries.push({ kind: 'bar', ...layer.bar });
+        } else if (layer.kind === 'mesh' && layer.categorical) {
+          layer.legend.forEach((name, index) => entries.push({
+            kind: 'swatch', text: name,
+            colour: layer.focus !== undefined && layer.focus !== index ? receding() : layer.palette[index],
+          }));
+        } else if (layer.kind === 'mesh') {
+          entries.push({ kind: 'bar', quantity: layer.colour.toUpperCase(), unit: 'no unit',
+            low: layer.scale[0], high: layer.scale[1], palette: layer.palette });
+        } else if (layer.kind === 'domain' && layer.filled) {
+          entries.push({ kind: 'swatch', text: layer.title, colour: layer.fill });
+        } else if (layer.title && layer.kind !== 'domain' && !titles.has(layer.title)) {
+          titles.add(layer.title);
+          entries.push({ kind: 'line', text: layer.title, role: layer.role });
+        }
+      }
+      if (!entries.length) return;
+      const ui = token('--font-ui') || 'sans-serif';
+      const ROW = 18, BAR = 46, BAR_W = 120;
+      ctx.font = `12px ${ui}`;
+      let width = 0, height = 8;
+      for (const entry of entries) {
+        if (entry.kind === 'bar') {
+          width = Math.max(width, BAR_W + 8, ctx.measureText(entry.quantity).width + 8,
+            ctx.measureText(entry.unit).width + 8);
+          height += BAR;
+        } else {
+          width = Math.max(width, ctx.measureText(entry.text).width + 32);
+          height += ROW;
+        }
+      }
+      width += 8;
+      const x = area.x + area.w - width - 6, top = area.y + 6;
+      // The key stands on the panel's colour, so it reads over any picture or element.
       ctx.fillStyle = token('--panel') || '#ffffff';
       ctx.strokeStyle = token('--control-edge') || '#7c8290';
       ctx.lineWidth = 1;
-      ctx.fillRect(x - 8, y - 12, 146, rows * 18 + 8);
-      ctx.strokeRect(x - 7.5, y - 11.5, 146, rows * 18 + 8);
-      const text = token('--ink') || ink;
-      ctx.strokeStyle = token('--colourbar-outline') || ink;
-      if (mesh.categorical) {
-        mesh.legend.forEach((name, index) => {
-          ctx.fillStyle = mesh.palette[index];
-          ctx.fillRect(x, y - 6, 12, 12);
-          ctx.strokeRect(x + 0.5, y - 5.5, 12, 12);
+      ctx.setLineDash([]);
+      ctx.fillRect(x, top, width, height);
+      ctx.strokeRect(x + 0.5, top + 0.5, width - 1, height - 1);
+      const text = token('--ink') || '#16181d';
+      const edge = token('--colourbar-outline') || token('--canvas-plot-ink') || '#16181d';
+      const shown = (value) => Number(value.toPrecision(3)).toString().replace('-', '−');
+      let y = top + 4;
+      ctx.textBaseline = 'middle';
+      for (const entry of entries) {
+        ctx.textAlign = 'left';
+        if (entry.kind === 'bar') {
           ctx.fillStyle = text;
-          ctx.fillText(name, x + 18, y);
-          y += 18;
-        });
-        return;
+          ctx.font = `12px ${ui}`;
+          ctx.fillText(entry.quantity, x + 6, y + 7);
+          const steps = entry.palette.length;
+          for (let k = 0; k < steps; k += 1) {
+            ctx.fillStyle = entry.palette[k];
+            ctx.fillRect(x + 6 + (k * BAR_W) / steps, y + 15, BAR_W / steps + 0.5, 9);
+          }
+          ctx.strokeStyle = edge;
+          ctx.strokeRect(x + 6.5, y + 15.5, BAR_W, 9);
+          ctx.fillStyle = text;
+          ctx.font = `11px ${token('--font-num') || 'monospace'}`;
+          ctx.fillText(shown(entry.low), x + 6, y + 31);
+          ctx.textAlign = 'right';
+          ctx.fillText(shown(entry.high), x + 6 + BAR_W, y + 31);
+          ctx.textAlign = 'left';
+          ctx.font = `11px ${ui}`;
+          ctx.fillText(entry.unit, x + 6, y + 41);
+          y += BAR;
+          continue;
+        }
+        ctx.font = `12px ${ui}`;
+        if (entry.kind === 'swatch') {
+          ctx.fillStyle = entry.colour;
+          ctx.fillRect(x + 6, y + 3, 12, 12);
+          ctx.strokeStyle = edge;
+          ctx.strokeRect(x + 6.5, y + 3.5, 12, 12);
+        } else {
+          const [colour, lineWidth, dash] = ROLES[entry.role] || ['--canvas-plot-ink', 1.5, []];
+          ctx.strokeStyle = token(colour) || '#16181d';
+          ctx.lineWidth = lineWidth;
+          ctx.setLineDash(dash);
+          ctx.beginPath();
+          ctx.moveTo(x + 4, y + 9);
+          ctx.lineTo(x + 22, y + 9);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        ctx.fillStyle = text;
+        ctx.fillText(entry.text, x + 28, y + 9);
+        y += ROW;
       }
-      const steps = mesh.palette.length;
-      for (let k = 0; k < steps; k += 1) {
-        ctx.fillStyle = mesh.palette[k];
-        ctx.fillRect(x + (k * 120) / steps, y - 6, 120 / steps + 0.5, 12);
+    },
+
+    // Which domain a point in nm falls in, the smallest first: the server sends them so.
+    domainAt(r, z) {
+      this.probe = this.probe || document.createElement('canvas').getContext('2d');
+      for (const layer of this.drawing.layers) {
+        if (layer.kind !== 'domain') continue;
+        if (this.probe.isPointInPath(this.pathsOf(layer).path, r, z, 'evenodd')) {
+          return { layer: layer.id, index: 0 };
+        }
       }
-      ctx.strokeRect(x + 0.5, y - 5.5, 120, 12);
-      ctx.fillStyle = text;
-      ctx.fillText(`${mesh.colour.toUpperCase()} ${mesh.scale[0]} to ${mesh.scale[1]}`, x, y + 18);
+      return null;
     },
 
     // -- picks and edits ----------------------------------------------------------
@@ -520,7 +653,8 @@
         this.typeValue(box);
         return;
       }
-      const picked = this.nearestVertex(x, y) || this.triangleAt(...this.toData(x, y));
+      const at = this.toData(x, y);
+      const picked = this.nearestVertex(x, y) || this.triangleAt(...at) || this.domainAt(...at);
       this.picked = picked ? { layer: picked.layer, index: picked.index } : null;
       this.draw();
       if (this.picked) this.emit('plane_pick', this.picked);

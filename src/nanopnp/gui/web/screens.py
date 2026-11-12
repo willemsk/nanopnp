@@ -51,11 +51,14 @@ class Tool:
         The last part of the tool's path, ``/<suite>/<id>``; empty for a tool with no page yet.
     fields
         The dotted case paths the tool's pane sets, in the order it lists them.
+    parts
+        The case paths the tool sets through a list of parts, each opened one at a time.
     """
 
     id: str
     title: str
     fields: tuple[str, ...] = ()
+    parts: tuple[str, ...] = ()
 
 
 def _later(*titles: str) -> tuple[Tool, ...]:
@@ -129,17 +132,11 @@ SUITES: tuple[Suite, ...] = (
         (
             Tool(
                 "geometry",
-                "Protein geometry",
+                "Pore geometry",
                 (
                     "geometry.density.grid_spacing_nm",
                     "geometry.density.sharpness",
                     "geometry.density.atoms",
-                ),
-            ),
-            Tool(
-                "contour",
-                "Contour",
-                (
                     "geometry.contour.isolevel",
                     "geometry.contour.smoothing",
                     "geometry.contour.simplify_tol_nm",
@@ -158,14 +155,14 @@ SUITES: tuple[Suite, ...] = (
             Tool(
                 "mesh",
                 "Mesh: sizes, quality",
+                ("numerics.mesh.backend", "numerics.mesh.size_scale"),
                 (
-                    "numerics.mesh.backend",
-                    "numerics.mesh.size_scale",
                     "numerics.mesh.maxh_nm",
                     "numerics.mesh.sizes.protein_nm",
                     "numerics.mesh.sizes.electrolyte_nm",
                     "numerics.mesh.sizes.arc_nm",
                     "numerics.mesh.sizes.axis_in_pore_nm",
+                    "numerics.mesh.wall_h_nm",
                 ),
             ),
         ),
@@ -231,9 +228,10 @@ def tool_controls(suite: Suite, tool: Tool) -> tuple[str, ...]:
     """Return the controls a tool's page carries in every state.
 
     Every tool's page has its suite's view, its pane, its status and its suite's tool list; a
-    tool that sets values filters to the modified ones and has a field per value.
+    tool that sets values filters to the modified ones and has a field per value, and a tool
+    that sets parts has their list.
     """
-    own = ("tool-modified",) if tool.fields else ()
+    own = ("tool-modified",) if tool.fields or tool.parts else ()
     return (
         VIEWS[suite.id],
         "tool-pane",
@@ -241,6 +239,7 @@ def tool_controls(suite: Suite, tool: Tool) -> tuple[str, ...]:
         *(f"tool-link-{entry.id}" for entry in suite.tools),
         *own,
         *(field_control(path) for path in tool.fields),
+        *(("tool-parts",) if tool.parts else ()),
     )
 
 
@@ -255,7 +254,9 @@ def tool_for(suite: SuiteId, path: str) -> Tool | None:
         if entry.id != suite:
             continue
         for tool in entry.tools:
-            if any(path == held or path.startswith(f"{held}.") for held in tool.fields):
+            if any(
+                path == held or path.startswith(f"{held}.") for held in (*tool.fields, *tool.parts)
+            ):
                 return tool
     return None
 
