@@ -676,6 +676,49 @@ class Project:
         write_project(self._root, self._file)
         return location
 
+    def derive_model(
+        self,
+        kind: ModelKind,
+        parent: str,
+        name: str,
+        values: Mapping[str, FieldValue | None],
+    ) -> Path:
+        """Save a copy of ``parent`` with values set or removed as a new model; return its file.
+
+        The copy holds the parent's own values and exposed list. Each entry of ``values`` sets
+        its path, or with ``None`` removes it where the parent sets it.
+
+        Raises
+        ------
+        ProjectError
+            If the name is taken or is not an item name, the project holds no such parent, or
+            another kind of model owns one of the paths.
+        CaseValidationError
+            If the derived model is refused, or its values form no case; nothing is written.
+        """
+        self._free_name(kind, name)
+        if parent not in self._file.names(kind):
+            raise ProjectError(f"the project holds no {kind} {parent!r}")
+        for path in values:
+            if owner_of(path) != kind:
+                raise ProjectError(
+                    f"{path} belongs to {_holder(owner_of(path))}, not to a {kind} model"
+                )
+        location = self.path(kind, parent)
+        body: dict[str, Any] = {"schema": SCHEMAS[kind], "name": name}
+        exposes = _body(location).get("exposes")
+        if exposes is not None:
+            body["exposes"] = exposes
+        body.update(_copied(read_model_file(kind, location, rebase=False).body))
+        for path, value in values.items():
+            if value is None:
+                _delete(body, path)
+            else:
+                _put(body, path, _copied(value))
+        written = self._checked_write(kind, name, body)
+        write_project(self._root, self._file)
+        return written
+
     def _free_name(self, kind: ItemKind, name: str) -> None:
         if not valid_name(name):
             raise ProjectError(

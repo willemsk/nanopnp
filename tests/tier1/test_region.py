@@ -1,4 +1,4 @@
-"""VER-52: stage 5, the membrane junction on any profile (FR-09, QR-12)."""
+"""VER-52, VER-55: stage 5, the membrane junction on any profile, and a supplied one (FR-09)."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -52,7 +53,10 @@ from nanopnp.pipeline.case import (
     loads_case,
     resolve,
 )
-from nanopnp.pipeline.run import selected_stages
+from nanopnp.pipeline.run import UnknownStageError, selected_stages
+
+if TYPE_CHECKING:
+    from conftest import Prepared2WCD
 
 FIXTURE = "clya_reference_profile"
 
@@ -445,12 +449,21 @@ def test_ver52_a_supplied_profile_s_refusals_name_the_key(
         resolve(loads_case(text))
 
 
-def test_ver52_structure_beside_a_supplied_profile_is_refused_naming_both(tmp_path: Path) -> None:
-    text = profile_case(
-        Path("p.yaml"),
-        "structure:\n  source: {path: s.pdb}\n  symmetry: {point_group: C12}\n",
+def test_ver55_an_outline_beside_a_structure_walks_the_charge_chain_alone(
+    prepared_2wcd: Prepared2WCD,
+) -> None:
+    structure = (
+        f"structure:\n  source: {{path: {prepared_2wcd.path}}}\n  symmetry: {{point_group: C12}}\n"
     )
-    with pytest.raises(
-        CaseValidationError, match=r"structure: section and supplies inputs\.profile"
-    ):
-        resolve(loads_case(text))
+    text = profile_case(profile_file(FIXTURE), structure).replace("pnp-ns", "epnp-ns")
+    resolved = resolve(loads_case(text))
+    assert resolved.deposits_charge and resolved.density is None
+    walked = selected_stages(resolved, "charge")
+    assert walked == ("case", "structure", "protonation", "region", "mesh", "charge")
+    for stage in ("density", "symmetry", "contour"):
+        with pytest.raises(UnknownStageError, match=r"supplies inputs\.profile"):
+            selected_stages(resolved, stage)
+
+    supplied = text.replace("inputs:\n", "inputs:\n  charge: {path: q.npz, format: field1}\n", 1)
+    with pytest.raises(CaseValidationError, match=r"structure: section beside inputs\.profile"):
+        resolve(loads_case(supplied))

@@ -693,6 +693,9 @@ def selected_stages(  # noqa: C901
         if getattr(resolved.document, section) is None:
             absent[name] = section
     dropped.update(absent)
+    # A supplied profile is stage 4's output, so stages 2 to 4 do not run beside it.
+    superseded = {"density", "symmetry", "contour"} if resolved.profile is not None else set()
+    dropped.update(superseded)
     if not resolved.generates_mesh:
         dropped.add("region")
     # A stage whose case drops one of its required inputs has nothing to read.
@@ -727,6 +730,11 @@ def selected_stages(  # noqa: C901
         raise UnknownStageError(
             f"stage {upto!r} is registered but case {resolved.name!r} carries no "
             f"{absent[upto]}: section, so there is nothing for it to read"
+        )
+    if upto in superseded:
+        raise UnknownStageError(
+            f"stage {upto!r} is registered but case {resolved.name!r} supplies inputs.profile, "
+            "stage 4's output, so stages 2 to 4 do not run"
         )
     if upto in unfed:
         raise UnknownStageError(

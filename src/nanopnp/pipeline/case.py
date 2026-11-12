@@ -200,7 +200,8 @@ def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure 
 
 
 def _resolve_density(document: CaseDocument) -> Density | None:
-    if document.structure is None:
+    # Beside a supplied profile the structure feeds the charge alone: stages 2 to 4 do not run.
+    if document.structure is None or document.inputs.profile is not None:
         return None
     spec = document.geometry.density if document.geometry is not None else Density()
     low, high = GRID_SPACING_RANGE_NM
@@ -374,7 +375,25 @@ def resolve(document: CaseDocument, *, base: Path | None = None) -> ResolvedCase
         wall_charge_C_m2=document.boundary_conditions.wall_charge_C_m2,
         correction_files=files,
     )
+    _check_structure_beside_profile(resolved)
     return resolved
+
+
+def _check_structure_beside_profile(resolved: ResolvedCase) -> None:
+    if resolved.profile is None or resolved.structure is None or resolved.deposits_charge:
+        return
+    reason = (
+        "inputs.charge supplies the charge stage 7 would deposit"
+        if resolved.charge is not None
+        else f"physics.model {resolved.model!r} declares no fixed_charge"
+    )
+    raise CaseValidationError(
+        f"case {resolved.name!r} carries a structure: section beside inputs.profile, and "
+        f"{reason}, so no charge is deposited from the structure's protonation. Stages 2 to 4 "
+        "do not run beside a supplied profile, so the structure would be recorded as an input "
+        "to a run that never read it (section 5.3.1 NOTE on inputs.profile); remove structure: "
+        "or inputs.profile"
+    )
 
 
 class CaseStage:

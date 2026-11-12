@@ -255,7 +255,9 @@ dielectric field comes from the density (FR-15). Under `geometry.density.atoms: 
 default, the chains share their first link: stage 7's protonation, or the supplied PQR, feeds the density
 as well as the charge field, so the density reads the supplied PQR's atoms, and beside `inputs.charge` the
 protonation runs for the density alone (WP5.03). Supplying an artefact together with one downstream
-of it on the same chain SHALL be refused, naming both. The upstream one would be hashed into the
+of it on the same chain SHALL be refused, naming both, unless the other chain reads the upstream one:
+`structure:` beside `inputs.profile` stands where stage 7 deposits a charge from the structure's
+protonation (the NOTE on `inputs.profile`). The upstream one would otherwise be hashed into the
 manifest as an input to a run that never read it, and the same holds of every key: each key of
 `inputs:` SHALL be read by the stage that consumes it, so that no file is hashed into the manifest
 as an input to a run that never read it (FR-25, VER-47).
@@ -271,11 +273,18 @@ a structure is unknown). `artefact:` on `inputs.charge` or `inputs.eps_r` SHALL 
 unsupported section when the case is resolved, naming the key: no release schedules the store form of
 the two fields (WP40).
 
-NOTE (`inputs.profile`): `inputs.profile` is consumed by stage 5. It is named by `path`
+NOTE (`inputs.profile`; §8.2.40 AP1): `inputs.profile` is consumed by stage 5. It is named by `path`
 with `format: profile1`, and `artefact:` or `groups` beside it is refused. The profile is
-hashed by the canonical digest of its validated payload. `structure:` beside it is refused naming
-both, by the upstream rule, and so are `geometry.density` and `geometry.contour` where either is
-set away from its default; `geometry.membrane` and `geometry.reservoir` are read. A section set to
+hashed by the canonical digest of its validated payload. Stages 2 to 4 do not run beside it.
+`structure:` beside it stands where stage 7 deposits a charge from that structure's protonation:
+stage 1 and the protonation run for the charge, and stage 5 reads the profile in stage 1's frame, the
+frame stage 4 writes, so a profile drawn in another frame is refused by the deposit's gate on the
+share of `Σ|q_i|` in solid materials (PHY-16 NOTE on the deposition). The manifest then records the structure, the protonation and the profile,
+and no stage 2 to 4 artefact. Where the case deposits no charge, beside `inputs.charge` or under a
+model that declares no `fixed_charge`, the structure is read by nothing, and `structure:` beside
+`inputs.profile` SHALL be refused naming both, by the upstream rule. `geometry.density` and
+`geometry.contour` are refused where either is set away from its default; `geometry.membrane` and
+`geometry.reservoir` are read. A section set to
 its defaults is not refused, because a case dumped from its resolved document writes every section
 out, and FR-26 requires that dump to load back.
 
