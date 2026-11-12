@@ -26,6 +26,7 @@ from nanopnp.gui.web.molecular import refusals
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES, tool_for
+from nanopnp.gui.web.screens import Suite as SuiteScreen
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.states import Workbench, cap_store
@@ -146,7 +147,7 @@ CHANGE_BODY = r"""
   <q-td key="value" :props="props" class="changed">{{ props.row.value }}</q-td>
   <q-td key="default" :props="props" class="muted">{{ props.row.default }}</q-td>
   <q-td key="reset" :props="props">
-    <q-btn flat dense no-caps label="Reset" data-control="reset"
+    <q-btn outline dense no-caps label="Reset" data-control="reset"
       :aria-label="'Reset ' + props.row.field + ' of ' + props.row.item"
       @click="() => $parent.$emit('reset', props.row)" />
   </q-td>
@@ -271,6 +272,17 @@ class _Frame:
 
     def go(self, path: str) -> Callable[[], object]:
         return lambda: ui.navigate.to(path)
+
+    def suite_path(self, suite: SuiteScreen) -> str:
+        """Return where a suite's icon goes: its last tool used, else its first, else its page.
+
+        A suite whose first tool has no page yet keeps its own page.
+        """
+        first = f"/{suite.id}/{suite.tools[0].id}" if suite.tools else ""
+        if first not in self.routes:
+            return f"/{suite.id}"
+        last = f"/{suite.id}/{self.shell.last_tool.get(suite.id, '')}"
+        return last if last in self.routes else first
 
     def reload_to(self, path: str) -> None:
         # A new project rebuilds the whole frame, so the browser loads the page afresh.
@@ -640,7 +652,9 @@ class _Frame:
                             continue
                         self.suite_buttons[suite.id] = (
                             ui.button(
-                                suite.title, icon=suite.icon, on_click=self.go(f"/{suite.id}")
+                                suite.title,
+                                icon=suite.icon,
+                                on_click=lambda _, s=suite: ui.navigate.to(self.suite_path(s)),
                             )
                             .props(f"flat no-caps stack data-control=suite-{suite.id}")
                             .classes("suite-button")
@@ -898,7 +912,7 @@ class _Frame:
         bench = self.shell.bench
         found = self.problems()
         if bench.project is None and bench.refusal:
-            ui.label(f"✕ refused: {bench.refusal}").classes("refused")
+            ui.label(f"✕ blocked: {bench.refusal}").classes("refused")
         elif not found:
             ui.label("No problem.")
         for problem in found:
@@ -910,7 +924,7 @@ class _Frame:
                 .props("flat dense no-caps data-control=problem-item")
                 .classes("w-full list-row")
             ):
-                ui.label(f"✕ refused: {problem.item}{where}: {problem.message}").classes("refused")
+                ui.label(f"✕ blocked: {problem.item}{where}: {problem.message}").classes("refused")
 
     def dialogs(self) -> None:
         recent = recent_projects(int(str(self.shell.settings.value("recent_projects"))))

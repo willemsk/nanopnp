@@ -210,8 +210,8 @@ accessibility target (WB-30, WB-31). In short, the default:
 - medium density by default, 13.5 px type and 30 px rows, and a compact setting of 12.5 px and 26 px, saved
   per user; the gaps and padding tight at both (WB-18, WB-31);
 - light and dark, following the operating system, with a switch (WB-19);
-- one accent for selection, the primary action and focus; built, stale and refused in green, amber and red,
-  each with a glyph and a word (WB-20); a changed value's own mark, a filled diamond, and a study's
+- one accent for selection, the primary action and focus; built, stale and blocked in green, amber and red,
+  each with a glyph and a word (WB-20, WB-40); a changed value's own mark, a filled diamond, and a study's
   override an outlined one (WB-28);
 - viridis (cividis for colour-vision deficiency) and a diverging map centred on zero by default, charge
   always diverging (VER-60), any Matplotlib map per plot, recorded with it (WB-20);
@@ -509,6 +509,7 @@ author's verdicts on WP5.16's Molecular drafts, collected on 11 November 2026.
 | WB-37 | Which settings, where they are kept, when they apply | The author, marking the settings: "The settings window should have a navigation menu on the left, with search, and a settings panel on the right. Much like how this is done in Claude Code and other IDE editors. Further, we should discuss and brainstorm on which settings we should include, and how they are stored and applied." Asked: "One declared list, two scopes", with appearance and accessibility, keyboard and editing guards, runs and storage, and units and numbers, adding: "Compute settings, network settings, ... I think we need to do some research here." At WP5.15's plan, after a survey of COMSOL, ParaView, ChimeraX, VS Code and JupyterLab: compute settings with threads per solve, no network settings yet, and the larger list with the store's clean-up, as two actions | §8.2.34 AJ9; §8.2.38 AN1 to AN5 |
 | WB-38 | How a suite is designed | The author, marking the charge screen: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." Asked: "Prototype on 2WCD, then build" | §8.2.34 AJ8 |
 | WB-39 | The Molecular round: where a pane stands, the charge colours, the settings, the folded bar | The author, marking the Molecular drafts on 2WCD (`reviews/2026-11-11-molecular.md`): "Pane to the left. Consistency is key."; "in biochemistry, blue is positive and red is negative", and asked how far, "Everywhere, and choosable"; on the settings, "Window over the tool. When working, I don't want to navigate away from the tool to change a setting"; on a tool's two actions, "why not both side-by-side?"; on the folded bar, icons with state | Every tool's pane is on the left of its view. Charge and potential draw positive blue and negative red in the 3D view, on the maps and in the figures, the direction a setting (amends WB-20's diverging default). The settings open as a window over the open tool (amends WB-37's page). A tool's saving action and its build stand side by side. Folded, the activity bar and rail are a strip of the suites' icons, each with its state |
+| WB-40 | The Molecular round's second marks: the stages, the word for a stopped build, a suite's icon, the membrane, a file picker | The author, marking the finished tools (`reviews/2026-11-12-molecular.md`): "the step cards should just be merged in with the tool menu items, including the progress bar"; of "refused" and "refusal", "it sounds forced", and asked for a word, "Blocked"; of the suite's page of links, asked what its icon opens, "The last tool"; "Perhaps we can put upper+lower leaflet, and make sure this is synced somehow with the continuum membrane position/thickness?", and asked how, "Draw the study's leaflets"; "I would like to add the browse button still here", and asked which, "Both" | Each tool in a suite's list is a card with the state of the stage it builds, that state's word and, while it builds, a thin moving bar along its foot; the pane has no stage bar. A build a check stops is *blocked*: the state's word, the card's title, "blocked by the axis check", and the problems list; a field it names reads "See the message above." (amends WB-20's and WB-12's word). A suite's icon opens the tool last used in it, its first the first time; a suite whose first tool has no page yet keeps its own page. Prepare draws the membrane's two leaflets, at the centre less and plus half the thickness of the first study that names the model, else the schema's defaults, names that study, and warns where the prepared registration residues sit off its centre; the continuum model stays the one place they are set. *Open structure…* takes a file from the system's own picker, copied into the project's inputs; the workbench's own browser, which returns a path, comes with the project dialogs (REV-235). A model read from a PQR file draws its atoms in View, coloured by their residues' charge |
 
 ## Glossary
 
@@ -518,6 +519,7 @@ base's and the specification's; these are the workbench's own.
 | Term | Meaning |
 |---|---|
 | Artefact | What a stage writes: typed, stored, keyed by the hash of its inputs and settings (FR-27) |
+| Blocked | A build a check stops, or a value the library declines at its field, shown with the rule, the value, the case path and a remedy (WB-12, WB-40) |
 | Case file | One complete description of a run, which the command line runs (`nanopnp/case`); the unit of reproducibility |
 | Changed mark | A filled diamond on a value set away from its default; an outlined one on a study's override (WB-28) |
 | Comparison | A saved project item pairing two runs on one colour scale, side by side or as their difference (WB-04) |
@@ -532,7 +534,6 @@ base's and the specification's; these are the workbench's own.
 | Physics model | A library item built in the Physics suite: the equations chosen from the registry, the electrolyte, the boundary conditions and their discretisation, reused across pores (WB-34) |
 | Project | The folder that holds the library, the runs, the store and the project file (S11) |
 | Queue | The builds and runs waiting, running and done, always on screen (WB-02, WB-03) |
-| Refusal | A value or a build the library declines, shown at its field with the rule, the value, the case path and a remedy (WB-12) |
 | Resolved case file | The one complete case file a study's run resolves to, written with its manifest (FR-25) |
 | Route | A guided path through the suites, a layer over them (WB-08) |
 | Rung | One step of the continuation ladder, from an easy problem to the one asked for; a run shows "rung x of N" (WB-23) |

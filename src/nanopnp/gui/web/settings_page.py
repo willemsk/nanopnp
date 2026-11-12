@@ -19,6 +19,8 @@ __all__ = ["Frame", "SettingsPage", "size_text"]
 Scope = Literal["user", "project"]
 SYSTEM = "system"
 TOGGLE_MOST = 3
+# The settings whose control is a block of its own, set under the text, not beside it.
+WIDE = frozenset({"theme", "keys"})
 """A list of at most this many choices is a toggle; a longer one is a select."""
 COLOUR_NAMES = {
     "bg": "Background",
@@ -226,29 +228,32 @@ class SettingsPage:
     def _row(self, setting: Setting) -> None:
         modified = self._modified(setting)
         chosen = " setting-chosen" if setting.id == self.chosen else ""
+        wide = " setting-wide" if setting.id in WIDE else ""
         with (
             ui.element("div")
-            .classes(f"setting-row w-full{chosen}")
+            .classes(f"setting-row w-full{chosen}{wide}")
             .props(f"id=setting-{setting.id} data-control=setting-{setting.id}")
         ):
-            with ui.row().classes("items-center no-wrap gap-1"):
-                mark = ui.label("◆").classes("changed mark").props("aria-hidden=true")
-                _heading(setting.title, 3)
-                word = ui.label("changed").classes("muted")
-            ui.label(setting.description).classes("muted")
-            if setting.applies != "at once":
-                ui.label(f"Applies at the {setting.applies}.").classes("muted")
-            if self.scope == "user" and self.shell.settings.source(setting.id) == "project":
-                ui.label(
-                    f"The open project sets this: {self.shell.settings.value(setting.id)}."
-                ).classes("muted")
-            self._control(setting)
-            reset = ui.button(
-                "Reset to default", on_click=lambda _, s=setting: self._reset(s)
-            ).props(
-                f'flat dense no-caps aria-label="Reset {setting.title}" '
-                f"data-control=reset-{setting.id}"
-            )
+            with ui.element("div").classes("setting-text"):
+                with ui.row().classes("items-center no-wrap gap-1"):
+                    _heading(setting.title, 3)
+                    mark = ui.label("◆").classes("changed mark").props("aria-hidden=true")
+                    word = ui.label("changed").classes("muted")
+                    reset = ui.button(
+                        "Reset to default", on_click=lambda _, s=setting: self._reset(s)
+                    ).props(
+                        f'flat dense no-caps aria-label="Reset {setting.title}" '
+                        f"data-control=reset-{setting.id}"
+                    )
+                ui.label(setting.description).classes("muted")
+                if setting.applies != "at once":
+                    ui.label(f"Applies at the {setting.applies}.").classes("muted")
+                if self.scope == "user" and self.shell.settings.source(setting.id) == "project":
+                    ui.label(
+                        f"The open project sets this: {self.shell.settings.value(setting.id)}."
+                    ).classes("muted")
+            with ui.element("div").classes("setting-control"):
+                self._control(setting)
         self.marks[setting.id] = (mark, word, reset)
         self._mark(setting, modified=modified)
 
@@ -278,15 +283,13 @@ class SettingsPage:
             ui.select(
                 dict(setting.choices),
                 value=value,
-                label=setting.title,
                 on_change=lambda e, s=setting: self._write(s, e.value),
-            ).props(f"outlined dense data-control={control}")
+            ).props(f'outlined dense aria-label="{setting.title}" data-control={control}')
         elif isinstance(setting.default, bool):
             ui.switch(
-                setting.title,
                 value=bool(value),
                 on_change=lambda e, s=setting: self._write(s, e.value),
-            ).props(f"data-control={control}")
+            ).props(f'aria-label="{setting.title}" data-control={control}')
         elif setting.id == "store_cap_gb":
             # A project's empty value is no value of its own: the user's cap then holds.
             ui.number(
@@ -298,13 +301,14 @@ class SettingsPage:
             ).props(f"outlined dense clearable debounce=600 data-control={control}")
         else:
             ui.number(
-                setting.title,
                 value=value if isinstance(value, float | int) else None,
                 precision=0,
                 on_change=lambda e, s=setting: self._write(
                     s, None if e.value is None else int(e.value)
                 ),
-            ).props(f"outlined dense debounce=600 data-control={control}")
+            ).props(
+                f'outlined dense debounce=600 aria-label="{setting.title}" data-control={control}'
+            )
 
     # -- the theme ----------------------------------------------------------
 
@@ -317,9 +321,8 @@ class SettingsPage:
         ui.select(
             options,
             value=value if value in options else SYSTEM,
-            label="Theme",
             on_change=lambda e: self._choose_theme(str(e.value)),
-        ).props("outlined dense data-control=settings-theme")
+        ).props('outlined dense aria-label="Theme" data-control=settings-theme')
         duplicate = ui.button("Duplicate this theme", on_click=self._duplicate).props(
             "flat dense no-caps data-control=theme-duplicate"
         )

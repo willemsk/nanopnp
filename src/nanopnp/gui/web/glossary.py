@@ -10,6 +10,11 @@ GLOSSARY: tuple[tuple[str, str], ...] = (
         "What a stage writes: typed, stored, keyed by the hash of its inputs and settings.",
     ),
     (
+        "Blocked",
+        "A build a check stops, or a value the library declines at its field, shown with the "
+        "rule, the value, the case path and a remedy.",
+    ),
+    (
         "Case file",
         "One complete description of a run, which the command line runs; the unit of "
         "reproducibility.",
@@ -65,11 +70,6 @@ GLOSSARY: tuple[tuple[str, str], ...] = (
     ),
     ("Project", "The folder that holds the library, the runs, the store and the project file."),
     ("Queue", "The builds and runs waiting, running and done, always on screen."),
-    (
-        "Refusal",
-        "A value or a build the library declines, shown at its field with the rule, the value, the "
-        "case path and a remedy.",
-    ),
     (
         "Resolved case file",
         "The one complete case file a study's run resolves to, written with its manifest.",

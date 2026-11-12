@@ -20,7 +20,7 @@ from nanopnp.api.project import Project
 from nanopnp.gui.web import numbers, settings
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.link import _chain_id
-from nanopnp.gui.web.molecular import STAGES, MolecularModel, refused_path
+from nanopnp.gui.web.molecular import MolecularModel, refused_path
 from nanopnp.gui.web.molview import (
     COLOURINGS,
     REPRESENTATIONS,
@@ -32,12 +32,17 @@ from nanopnp.gui.web.molview import (
 from nanopnp.gui.web.screens import SUITES, Tool, field_control, tool_for
 from nanopnp.gui.web.settings import SETTINGS
 from nanopnp.gui.web.shell import Shell
-from nanopnp.io.case import ChargeEdit
+from nanopnp.io.case import ChargeEdit, Membrane
 from nanopnp.io.case_paths import schema_default
 from nanopnp.io.models import read_model_file
 from nanopnp.io.project import INPUTS_FOLDER, split_reference
 from nanopnp.pipeline.checks import options_at
-from nanopnp.structure.orient import PreparationRecord, orient_pore, prepared_pore
+from nanopnp.structure.orient import (
+    PreparationRecord,
+    orient_pore,
+    prepared_pore,
+    protein_chains,
+)
 from nanopnp.structure.protonated import parent_residue
 
 __all__ = ["FIELDS", "OVERLAY_MOST", "Field", "charge_colours", "current_model", "tool_page"]
@@ -49,6 +54,8 @@ LINKED_NOTE = ("prepare", "ensemble", "protonation")
 """The tools whose values a linked variant reads from its parent."""
 CARD_SHORT = 200
 """A card shows this much of a message; the rest unfolds."""
+MEMBRANE_OFF_NM = 0.01
+"""How far the registration residues' centre may lie from the membrane's before Prepare warns."""
 STRUCTURE_SUFFIXES = (".pdb", ".ent", ".cif", ".mmcif", ".gz")
 
 
@@ -59,19 +66,20 @@ class Field:
     Parameters
     ----------
     kind
-        ``text``, ``number``, ``choice`` among the values the schema accepts at the path, or
+        ``text``, ``number``, ``choice`` among the values the schema accepts at the path,
+        ``chains``, a pick among the structure file's chains that also takes a typed group, or
         ``list``, which the pane shows and a tool of its own edits.
     """
 
     label: str
-    kind: Literal["text", "number", "choice", "list"] = "text"
+    kind: Literal["text", "number", "choice", "chains", "list"] = "text"
     unit: str = ""
     hint: str = ""
 
 
 FIELDS: dict[str, Field] = {
     "structure.source.path": Field("Structure file", hint="A PDB or mmCIF file"),
-    "structure.source.chains": Field("Chains", hint="all, or A,B,C, or groups A+B,C+D"),
+    "structure.source.chains": Field("Chains", "chains", hint="all"),
     "structure.symmetry.point_group": Field("Point group", hint="C1, or Cn of the ring"),
     "structure.symmetry.axis": Field("Axis", "choice"),
     "structure.ensemble.trajectory": Field("Trajectory", hint="None: the file's models"),
@@ -101,7 +109,7 @@ STATES = {
     "empty": ("○", "not built", "state-none"),
     "building": ("●", "building", "state-run"),
     "built": ("✓", "built", "state-ok"),
-    "refused": ("✕", "refused", "state-err"),
+    "refused": ("✕", "blocked", "state-err"),
 }
 EDIT_STATES = typing.get_args(typing.get_args(ChargeEdit.model_fields["state"].annotation)[0])
 EDIT_KINDS = {
@@ -142,6 +150,8 @@ def current_model(shell: Shell) -> MolecularModel | None:
 
 
 _DRAFTS: dict[tuple[Path, str], dict[str, Any]] = {}
+# A structure file's chains, by its path and modification time: reading them loads the file.
+_CHAINS: dict[tuple[Path, int], tuple[str, ...]] = {}
 
 
 def _draft(model: MolecularModel | None) -> dict[str, Any]:
@@ -156,6 +166,10 @@ def _draft(model: MolecularModel | None) -> dict[str, Any]:
     if model is None:
         return fresh
     return _DRAFTS.setdefault((model.project.root, model.name), fresh)
+
+
+def _listed(chains: str) -> list[str]:
+    return [entry.strip() for entry in chains.split(",") if entry.strip()]
 
 
 def _value_of(body: Any, path: str) -> Any:  # noqa: ANN401 - a parsed YAML body
@@ -214,8 +228,10 @@ class _Pane:
         self.focus = focus
         self.model = current_model(shell)
         self.stage, self.build_title, colouring = BUILDS[tool.id]
+        # A model read from a PQR file may hold no chain to draw as a cartoon: its atoms show.
+        atoms = self.model is not None and not self.model.has_structure()
         self.look: dict[str, Any] = {
-            "representation": "cartoon",
+            "representation": "spacefill" if atoms else "cartoon",
             "colour": colouring,
             "frame": 0,
             "overlay": False,
@@ -353,17 +369,22 @@ class _Pane:
         return f"Molecular model {self.model.name}"
 
     def tool_list(self) -> None:
+        """Draw the suite's tools, each with the state of the stage it builds and its progress."""
         with ui.element("nav").classes("tool-list").props('aria-label="Molecular tools"'):
-            self.tool_links: dict[str, tuple[ui.link, ui.label]] = {}
+            self.tool_links: dict[str, tuple[ui.link, ui.label, ui.label, ui.linear_progress]] = {}
             for tool in SUITES[0].tools:
                 link = ui.link(target=f"/molecular/{tool.id}").classes("tool-link")
-                link.props(f"data-control=tool-link-{tool.id}")
+                link.props(f"data-control=tool-link-{tool.id} data-state=none")
                 if tool.id == self.tool.id:
                     link.classes("tool-link-open").props("aria-current=page")
                 with link:
-                    glyph = ui.label("").classes("tool-glyph").props("aria-hidden=true")
-                    ui.label(tool.title)
-                self.tool_links[tool.id] = (link, glyph)
+                    with ui.element("div").classes("tool-link-head"):
+                        glyph = ui.label("").classes("tool-glyph").props("aria-hidden=true")
+                        ui.label(tool.title)
+                    word = ui.label("").classes("tool-word").props("aria-hidden=true")
+                    bar = ui.linear_progress(show_value=False).props("indeterminate size=3px")
+                    bar.classes("tool-progress").set_visibility(False)
+                self.tool_links[tool.id] = (link, glyph, word, bar)
 
     # -- one value ----------------------------------------------------------------
 
@@ -389,6 +410,19 @@ class _Pane:
                 entries = shown if isinstance(shown, list) else []
                 text = f"{len(entries)} edit{'' if len(entries) == 1 else 's'}"
                 control = ui.label(text).props(f"data-control={control_name}")
+            elif spec.kind == "chains":
+                listed = [] if shown in (None, "all") else _listed(str(shown))
+                control = ui.select(
+                    listed,
+                    value=listed,
+                    multiple=True,
+                    with_input=True,
+                    new_value_mode="add-unique",
+                    on_change=lambda e, p=path: self.write(p, ",".join(e.value) or None),
+                ).props(
+                    f'dense outlined use-chips options-dense placeholder="{spec.hint}" {named} '
+                    'title="Pick the chains, or type A+B and Enter for a group; none for all"'
+                )
             elif spec.kind == "choice":
                 options = list(options_at(path) or ())
                 control = ui.select(
@@ -535,9 +569,27 @@ class _Pane:
                         ui.button(name, on_click=lambda _, n=name: self.use_input(dialog, n)).props(
                             "flat dense no-caps align=left"
                         ).classes("list-row w-full")
-            path = ui.input("A PDB or mmCIF file on this computer").props(
-                'dense outlined data-control=structure-path placeholder="/path/to/pore.pdb"'
-            )
+            with ui.row().classes("w-full items-center no-wrap"):
+                path = (
+                    ui.input("A PDB or mmCIF file on this computer")
+                    .props(
+                        'dense outlined data-control=structure-path placeholder="/path/to/pore.pdb"'
+                    )
+                    .classes("col")
+                )
+                # The system's own file picker; the file it gives is uploaded, not named.
+                picker = (
+                    ui.upload(
+                        auto_upload=True,
+                        max_files=1,
+                        on_upload=lambda e: self.add_upload(dialog, path, e),
+                    )
+                    .props(f'accept="{",".join(STRUCTURE_SUFFIXES)}"')
+                    .classes("hidden")
+                )
+                ui.button("Browse…", on_click=lambda: picker.run_method("pickFiles")).props(
+                    "outline dense no-caps data-control=structure-browse"
+                )
             ui.label("The file is copied into the project's inputs.").classes("later")
             with ui.row().classes("w-full justify-end"):
                 ui.button("Cancel", on_click=dialog.close).props("flat no-caps")
@@ -555,6 +607,23 @@ class _Pane:
         except ValueError as error:
             path.error = str(error)
             return
+        self.use_input(dialog, copied.name)
+
+    async def add_upload(
+        self, dialog: ui.dialog, path: ui.input, event: events.UploadEventArguments
+    ) -> None:
+        """Copy a file the system's picker gave into the project's inputs, and use it."""
+        if self.project is None:
+            return
+        name = Path(event.file.name).name
+        with tempfile.TemporaryDirectory(prefix="nanopnp-upload-") as folder:
+            held = Path(folder) / name
+            await event.file.save(held)
+            try:
+                copied = self.project.add_input(held)
+            except ValueError as error:
+                path.error = str(error).replace(f"{folder}/", "")
+                return
         self.use_input(dialog, copied.name)
 
     def use_input(self, dialog: ui.dialog, name: str) -> None:
@@ -611,6 +680,9 @@ class _Pane:
                 ),
                 centre=record.centroid_z_nm,
             )
+        membrane, study = (Membrane(), None) if self.model is None else self.model.membrane()
+        if record is None and not self.prepare["typed"]:
+            self.prepare["centre"] = membrane.centre_z_nm
         usable = self.usable()
         heading("Orientation", 2)
         ui.label(
@@ -666,8 +738,19 @@ class _Pane:
                 'dense outlined data-control=prepare-centre aria-label="Centre, z, in nm"'
             ).set_enabled(usable)
         ui.label(
-            "The residues' centre is placed on the axis at this height; the plane z = 0 is drawn."
+            "The registration residues' centre, or every C-alpha's without them, is placed on "
+            "the axis at this height."
         ).classes("later")
+        shape = (
+            f"centred at {self.text(membrane.centre_z_nm, 'nm')}, "
+            f"{self.text(membrane.thickness_nm, 'nm')} thick"
+        )
+        ui.label(
+            f"The leaflets drawn are study {study}'s membrane, {shape}, set in its continuum model."
+            if study is not None
+            else f"No study names this model yet: the leaflets drawn are the default membrane, "
+            f"{shape}."
+        ).classes("later").props("data-control=prepare-membrane")
 
     def cis_text(self) -> str:
         return f"cis (+z): the {self.prepare['cis_end']} end"
@@ -1003,7 +1086,8 @@ class _Pane:
     # -- View -----------------------------------------------------------------------
 
     def view_section(self) -> None:
-        usable = self.usable()
+        # A model read from a PQR file has atoms and charges to draw, though no structure.
+        usable = self.usable() or (self.model is not None and self.model.pqr() is not None)
         with self.named("Representation"):
             ui.select(
                 dict(REPRESENTATIONS),
@@ -1045,7 +1129,7 @@ class _Pane:
     def charged(self) -> bool:
         if self.look["colour"] != "charge" or self.model is None:
             return False
-        return "protonation" in self.model.artefacts()
+        return "protonation" in self.model.artefacts() or self.model.pqr() is not None
 
     def colour_bar(self) -> None:
         low, high = ("red", "blue") if charge_colours(self.shell) == "blue" else ("blue", "red")
@@ -1177,16 +1261,34 @@ class _Pane:
     # -- the build and its state ----------------------------------------------
 
     def warnings(self) -> list[tuple[str, str]]:
-        """Return the built stages' warnings the tool shows: a key and the text."""
+        """Return the warnings the tool shows as a key and a text: its stage's, the membrane's."""
         if self.model is None or self.tool.id not in {"prepare", "ensemble"}:
             return []
+        found = self.membrane_warning() if self.tool.id == "prepare" else []
         held = self.model.artefacts()
-        if "structure" not in held:
+        listed = held["structure"].summary.get("warnings") if "structure" in held else None
+        if isinstance(listed, list):
+            found.extend((str(text), str(text)) for text in listed)
+        return [(key, text) for key, text in found if key not in self.dismissed]
+
+    def membrane_warning(self) -> list[tuple[str, str]]:
+        """Warn where the prepared registration residues sit off the paired study's membrane."""
+        record = self.record()
+        if self.model is None or record is None or record.registration_residues is None:
             return []
-        listed = held["structure"].summary.get("warnings")
-        if not isinstance(listed, list):
+        membrane, study = self.model.membrane()
+        off = record.centroid_z_nm - membrane.centre_z_nm
+        if abs(off) <= MEMBRANE_OFF_NM:
             return []
-        return [(str(text), str(text)) for text in listed if str(text) not in self.dismissed]
+        whose = f"study {study}'s membrane" if study is not None else "the default membrane"
+        centre = self.text(membrane.centre_z_nm, "nm")
+        text = (
+            f"The registration residues' centre is at z = {self.text(record.centroid_z_nm, 'nm')}"
+            f" and {whose} is centred at {centre}, so the pore sits {self.text(abs(off), 'nm')} "
+            f"off it. Set Centre, z to {centre} and save, or move the membrane in the continuum "
+            "model."
+        )
+        return [(f"membrane-{record.centroid_z_nm}-{membrane.centre_z_nm}", text)]
 
     def refresh(self) -> None:
         model = self.model
@@ -1200,24 +1302,31 @@ class _Pane:
         if signature == self.shown_state:
             return
         self.shown_state = signature
-        self.show_status(states, running)
+        self.show_status()
         self.show_actions(running is not None, problem is None and bool(states))
         self.show_cards(problem, refusal)
-        for tool_id, (link, glyph) in self.tool_links.items():
+        for tool_id, (link, glyph, word, bar) in self.tool_links.items():
             stage = BUILDS[tool_id][0]
             state = states.get(stage) if stage else None
             title = next(tool.title for tool in SUITES[0].tools if tool.id == tool_id)
+            look = STATES[state][2] if state else ""
             glyph.text = STATES[state][0] if state else ""
-            glyph.classes(replace=f"tool-glyph {STATES[state][2] if state else ''}")
+            glyph.classes(replace=f"tool-glyph {look}")
+            word.text = STATES[state][1] if state else ""
+            word.classes(replace=f"tool-word {look}")
+            bar.set_visibility(stage is not None and stage == running)
+            if stage is not None and stage == running:
+                bar.props(f'aria-label="{STAGE_RUNNING.get(stage, stage)}"')
             named = f"{title}{', ' + STATES[state][1] if state else ''}"
-            link.props(f'aria-label="{named}" title="{named}"')
+            link.props(f'data-state={state or "none"} aria-label="{named}" title="{named}"')
         self.show_readout()
         if hasattr(self, "bar_box"):
             self.bar_box.set_visibility(self.charged())
         self.built.queue_moved()
         self.built.problems_moved()
 
-    def show_status(self, states: dict[str, Any], running: str | None) -> None:
+    def show_status(self) -> None:
+        """Say why nothing can be built here; the tool list carries each stage's state."""
         self.status.clear()
         with self.status:
             if self.model is None:
@@ -1231,19 +1340,6 @@ class _Pane:
                     "This model reads its atoms and charges from a PQR file, so it has no "
                     "structure to prepare, align or protonate."
                 )
-                return
-            with ui.element("ol").classes("stage-bar"):
-                for stage in STAGES:
-                    glyph, word, look = STATES[states.get(stage, "empty")]
-                    with ui.element("li").classes(f"stage-block {look}"):
-                        ui.label(glyph).props("aria-hidden=true")
-                        ui.label(STAGE_TITLES[stage]).classes("stage-name")
-                        ui.label(word).classes("stage-word")
-                        if stage == running:
-                            said = STAGE_RUNNING.get(running, running)
-                            ui.linear_progress(show_value=False).props(
-                                f'indeterminate size=3px aria-label="{said}"'
-                            ).classes("stage-progress")
 
     def show_actions(self, building: bool, ready: bool) -> None:
         self.actions.clear()
@@ -1279,8 +1375,10 @@ class _Pane:
             if problem is not None:
                 self.card("err", "The model's file forms no case", problem, refused_path(problem))
             if refusal is not None:
-                title = f"{STAGE_TITLES.get(refusal[0], refusal[0])} refused"
-                self.card("err", title, refusal[1], refused_path(refusal[1]))
+                named = refused_path(refusal[1])
+                check = f"the {FIELDS[named].label.lower()} check" if named in FIELDS else "a check"
+                title = f"{STAGE_TITLES.get(refusal[0], refusal[0])} blocked by {check}"
+                self.card("err", title, refusal[1], named)
             for key, text in self.warnings():
                 self.card("warn", "Warning", text, None, dismiss=key)
             if self.tool.id == "view" and self.model is not None and self.usable():
@@ -1342,7 +1440,7 @@ class _Pane:
     def flag(self, path: str, text: str) -> None:
         control = self.controls[path]
         if isinstance(control, ValidationElement):
-            control.error = "Named by the refusal above."
+            control.error = "See the message above."
             self.flagged = path
 
     async def go_to(self, path: str) -> None:
@@ -1390,7 +1488,9 @@ class _Pane:
 
     def scene_url(self) -> tuple[str | None, str]:
         model = self.model
-        if model is None or model.case() is None or not model.has_structure():
+        if model is None or model.case() is None:
+            return None, ""
+        if not model.has_structure() and model.pqr() is None:
             return None, ""
         held = model.artefacts()
         form = "table" if "protonation" in held else "ensemble" if "structure" in held else "file"
@@ -1419,6 +1519,30 @@ class _Pane:
         await self.show()
         if self.focus in self.controls:
             await self.go_to(self.focus)
+        await self.offer_chains()
+
+    async def offer_chains(self) -> None:
+        """Offer the structure file's chains in the Chains field, once the file is read."""
+        control = self.controls.get("structure.source.chains")
+        source = self.raw_source()
+        if not isinstance(control, ui.select) or source is None or not source.is_file():
+            return
+        key = (source, source.stat().st_mtime_ns)
+        if key not in _CHAINS:
+            try:
+                found = await run.io_bound(protein_chains, source)
+            except (ValueError, OSError):
+                return
+            if found is None:
+                return
+            _CHAINS[key] = found
+        chosen = list(control.value or [])
+        self.writing = False
+        try:
+            control.set_options([*_CHAINS[key], *(c for c in chosen if c not in _CHAINS[key])])
+            control.value = chosen
+        finally:
+            self.writing = True
 
 
 def _mapping(value: object) -> dict[str, Any]:
@@ -1481,6 +1605,7 @@ def tool_page(shell: Shell, tool: Tool) -> Callable[..., None]:
     """Return the page of one Molecular tool, which the frame's sub-pages build."""
 
     def page(built: Views, field: str = "") -> None:
+        shell.last_tool["molecular"] = tool.id
         _Pane(shell, tool, built, field).build()
 
     return page
