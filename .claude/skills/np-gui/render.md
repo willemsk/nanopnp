@@ -53,10 +53,11 @@ drawn. Six groups, all by default:
   `axis: z`, and `building`, Protonation shot while its build runs. The built tools are the `2wcd` group's
   `m-<tool>` shots and the empty ones the `states` group's. The `2wcd` group also opens the windows over a
   tool (`PROJECT_EXTRAS`): *Open structure…*, the titratable groups, the warnings and the settings, the mesh
-  coloured by SICN, and last an unsaved Contour edit, which the server then holds.
+  coloured by SICN with its last bar picked, the mesh's protein part picked, Region's
+  membrane picked, and last an unsaved edit of Pore geometry's outline, which the server then holds.
 - `continuum`: the Continuum tools on a project holding the cached 2WCD molecular and continuum models, its store
-  empty (`shell-continuum-<name>-<scheme>`): `refused`, Contour blocked by stage 4 at an isolevel of 0.9, and
-  `building`, Protein geometry shot while its build runs. The built tools are the `2wcd` group's `c-<tool>`
+  empty (`shell-continuum-<name>-<scheme>`): `refused`, Pore geometry blocked by stage 4 at an isolevel of 0.9, and
+  `building`, Pore geometry shot while its build runs. The built tools are the `2wcd` group's `c-<tool>`
   shots.
 
 Needs Playwright through `NODE_PATH` and the `gui` extra. All six groups, 250 shots, take about seven minutes

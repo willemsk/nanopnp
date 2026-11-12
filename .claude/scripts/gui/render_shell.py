@@ -104,14 +104,24 @@ PROJECT_EXTRAS: list[tuple[str, str, list[str]]] = [
     (
         "c-mesh-sicn",
         "/continuum/mesh",
-        ["[data-control=plane-colour]", ".q-menu .q-item:nth-child(2)"],
+        [
+            "[data-control=plane-colour]",
+            ".q-menu .q-item:nth-child(2)",
+            "[data-control=histogram-bar]:nth-child(10)",
+        ],
+    ),
+    ("c-mesh-part", "/continuum/mesh", ["[data-control=mesh-part-protein]"]),
+    (
+        "c-region-domain",
+        "/continuum/region",
+        ["[data-control=region-domain]", ".q-menu .q-item:nth-child(3)"],
     ),
     # Last: the edit is held by the server, so every shot after it would show it.
-    ("c-contour-edit", "/continuum/contour", ["[data-control=contour-start]"]),
+    ("c-geometry-edit", "/continuum/geometry", ["[data-control=contour-start]"]),
 ]
 """Windows opened over a tool of the 2WCD project, none of which writes to it."""
 
-HELD = frozenset({"c-contour-edit"})
+HELD = frozenset({"c-geometry-edit"})
 """The extras whose click leaves a state the server holds for the shots after it."""
 
 
@@ -361,7 +371,7 @@ def continuum_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[d
     """
     manifest = []
     for name, path, wait_ms in (
-        ("refused", "/continuum/contour", 90000),
+        ("refused", "/continuum/geometry", 90000),
         ("building", "/continuum/geometry", 2500),
     ):
         for scheme in SCHEMES:

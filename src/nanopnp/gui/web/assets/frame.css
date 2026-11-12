@@ -274,25 +274,27 @@ body .nicegui-footer.frame-footer {
 }
 /* A suite's state: a dot at its icon, red for a problem and amber for a build running; the
    button's name says which. */
+/* The suite's state beside its icon as a glyph, never a colour alone (WB-20). */
 .suite-button.suite-problem .q-icon::after,
 .suite-button.suite-running .q-icon::after {
-  content: "";
   position: absolute;
-  top: -2px;
-  right: -6px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid var(--panel);
+  top: -5px;
+  right: -9px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 .suite-button .q-icon {
   position: relative;
 }
 .suite-button.suite-problem .q-icon::after {
-  background: var(--err);
+  content: "✕";
+  color: var(--err);
 }
 .suite-button.suite-running .q-icon::after {
-  background: var(--warn);
+  content: "●";
+  color: var(--warn);
 }
 .settings-window {
   width: min(68rem, 94vw);
@@ -563,13 +565,13 @@ body .nicegui-footer.frame-footer {
   align-items: flex-start;
   gap: var(--pad);
 }
-/* Each tool a card with the state of the stage it builds: the left edge in the state's colour,
-   its word under the name, and a thin moving bar along the foot while the stage builds. */
+/* Each tool a row with the state of the stage it builds (WB-41): its name, the state's glyph on
+   the right, the open tool shaded, and a thin moving bar along the foot while the stage builds. */
 .tool-list {
-  flex: 0 0 9rem;
+  flex: 0 0 9.5rem;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--gap) / 2);
+  gap: 1px;
   position: sticky;
   top: 0;
 }
@@ -578,56 +580,38 @@ body a.tool-link,
 body a.tool-link:visited {
   position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
   min-height: var(--row);
-  padding: 3px var(--gap) 4px;
+  padding: 2px var(--gap);
   text-align: left;
-  border: 1px solid var(--control-edge);
-  border-left: 3px solid var(--control-edge);
+  border: 0;
   border-radius: var(--radius);
-  background: var(--panel);
+  background: transparent;
   color: var(--ink) !important;
   text-decoration: none !important;
   font-size: var(--text-sm);
   overflow: hidden;
 }
-.tool-link[data-state="built"] {
-  border-left-color: var(--ok);
+body a.tool-link:hover {
+  background: color-mix(in srgb, var(--sel) 55%, transparent);
 }
-.tool-link[data-state="building"] {
-  border-left-color: var(--warn);
-}
-.tool-link[data-state="refused"] {
-  border-left-color: var(--err);
-}
-.tool-link:hover {
+body a.tool-link.tool-link-open {
   background: var(--sel);
-}
-.tool-link-open {
-  background: var(--sel);
-  border-top-color: var(--accent);
-  border-right-color: var(--accent);
-  border-bottom-color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
   font-weight: 600;
 }
-.tool-link-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-start;
-  gap: var(--gap);
+.tool-name {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .tool-glyph {
-  flex: 0 0 1em;
+  flex: 0 0 1.2em;
   text-align: center;
 }
 .tool-word {
-  padding-left: calc(1em + var(--gap));
-  font-size: var(--text-xs);
-  font-weight: 400;
-}
-.tool-word:empty {
   display: none;
 }
 .tool-progress {
@@ -899,9 +883,16 @@ body a.tool-link:visited {
   outline: 2px solid var(--focus);
 }
 /* The Mesh tool's quality histogram: one bar per tenth, which outlines its elements in the view. */
+/* The quality histogram: ten bars from 0 to 1 in the view's palette, each with its count, the
+   gate's floor marked between its bars and the axis under them. */
+.histogram-plot {
+  position: relative;
+  width: calc(10 * 1.75rem + 9 * 2px);
+  padding-bottom: 1.1rem;
+}
 .histogram {
   gap: 2px;
-  height: 72px;
+  height: 78px;
   border-bottom: 1px solid var(--control-edge);
 }
 .histogram .histogram-bar {
@@ -913,18 +904,123 @@ body a.tool-link:visited {
 }
 .histogram .histogram-bar .q-btn__content {
   align-self: flex-end;
+  flex-direction: column;
+  flex-wrap: nowrap;
   width: 100%;
+}
+.histogram .histogram-count {
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+  color: var(--ink);
+  line-height: 1.2;
 }
 .histogram .histogram-fill {
   width: 100%;
   border-radius: 2px 2px 0 0;
-  background: var(--changed);
-}
-.histogram .histogram-bar[aria-pressed="true"] .histogram-fill {
-  background: var(--accent);
+  border: 1px solid var(--colourbar-outline, var(--control-edge));
+  border-bottom: 0;
 }
 .histogram .histogram-bar[aria-pressed="true"] {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.histogram-floor {
+  position: absolute;
+  top: 0;
+  bottom: 1.1rem;
+  border-left: 2px dashed var(--err);
+  pointer-events: none;
+}
+.histogram-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1rem;
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.histogram-axis > * {
+  position: absolute;
+  transform: translateX(-50%);
+}
+/* The Mesh tool's parts (WB-41): a list grouped by domains and boundaries, each row with its
+   size used and where it comes from; the picked row shaded, its one field opened below. */
+.parts {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 2px 0;
+}
+.parts-head {
+  justify-content: space-between;
+  padding: 2px var(--gap);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.parts-group {
+  padding: 4px var(--gap) 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+body .parts .parts-row {
+  width: 100%;
+  min-height: var(--row);
+  padding: 0 var(--gap);
+  border-radius: 0;
+  font-size: var(--text-sm);
+  font-weight: 400;
+}
+body .parts .parts-row.parts-child {
+  padding-left: calc(var(--gap) * 2.5);
+}
+body .parts .parts-row[aria-pressed="true"] {
+  background: var(--sel);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.parts-row .q-btn__content {
+  width: 100%;
+  flex-wrap: nowrap;
+  gap: var(--gap);
+  text-align: left;
+}
+.parts-swatch,
+.parts-line {
+  flex: 0 0 12px;
+  height: 12px;
+  border: 1px solid var(--colourbar-outline, var(--ink));
+  border-radius: 2px;
+}
+.parts-line {
+  height: 0;
+  border-width: 2px 0 0;
+  border-radius: 0;
+}
+.parts-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.parts-mark {
+  flex: 0 0 0.8em;
+}
+.parts-size {
+  flex: 0 0 auto;
+  font-family: var(--font-num);
+}
+.parts-source {
+  flex: 0 0 3.6em;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+.part-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: calc(var(--gap) / 2) var(--gap);
+}
+.later-banner {
+  border-left: 3px solid var(--line);
+  padding-left: var(--gap);
 }
 /* In the corner the axes leave free, so it covers no part of the drawing. */
 .plane-fit {
