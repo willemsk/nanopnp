@@ -8,7 +8,8 @@ description: "Specifies the workbench project: a plain folder of models, studies
 
 NOTE (the project, FR-32, FR-34, FR-35, IF-02; §8.2.17 S11; §8.2.33 AI9 to AI14): a workbench
 **project** is a folder: `nanopnp-project.yaml` (`nanopnp/project/v0.6`, which holds the item index, the
-open items, the current item, each suite's layout and the project's settings, and no physics), `models/molecular/`,
+open items, the current item, each suite's layout, the project's settings and the molecular model each continuum model
+is built alone over where one was chosen (`built_with`; §5.3.1's NOTE on model files), and no physics), `models/molecular/`,
 `models/continuum/`, `models/physics/`, `studies/`, `comparisons/`, `inputs/`, `runs/<study>/<run>/`, `sweeps/` and
 `store/`. An item's name is its file's stem and its `name:`, and matches `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
 The folder is the truth: a file the index lacks is appended on opening, and an indexed name without its
