@@ -20,9 +20,9 @@ suite measured 6 agent hours and 10 touches; this one adds four library steps an
 
 **What could go wrong.** The tidying could move a mesh; every recorded and test mesh is checked unchanged. An outline
 drawn in another frame could misplace the charge; the check that most of the charge sits in the solids refuses it, and
-an unedited outline must give the original charge exactly. A mesh built alone is sized for
+an unedited outline must give the original charge to twelve digits. A mesh built alone is sized for
 0.15 M salt, so a study at another salt builds its own; the pane says so. A typed size could fail the mesh's quality
-check, which then refuses it at its field.
+check, which then refuses the build.
 
 **Your call.** None for the plan: you ruled the four points. At the prototype round: the cross-section's look, the
 editor's handles and the mesh's quality view. *Recommendation:* rule them on the drawn screens.
@@ -59,8 +59,11 @@ Ten: the rulings AP1 to AP4 added three library steps to the phase entry's seven
 
 **D1.**
 - `geometry/region.py:read_region` returns `RegionRecord | IdealisedRegionRecord`; the second lives in `geometry/pore.py`,
-  which `region.py` imports. Six sites branch on the class: `mesh/generate.py:generate` twice, `mesh/ingest.py:MeshStage._recipe`,
-  `plot/data.py:region_drawing`, `cli/building.py:_mesh`, `gui/geometry.py:load_view`.
+  which `region.py` imports. Nine sites branch on the class: `mesh/generate.py:generate` three times (the recipe, the
+  mesher, the `exclusion` flag), `mesh/ingest.py:MeshStage._recipe`, `plot/data.py:region_drawing`, `cli/building.py:_mesh`,
+  `gui/geometry.py:load_view`, `charge/stage.py:check_stored_frame` (the membrane's centre, 0.0 for a pore) and the
+  fields stage's `assert isinstance(record, RegionRecord)` before `derive_fields`, which the case's refusal of an idealised
+  transition guards. `region.py:write_region` branches on its own records.
 - `region_drawing` draws an idealised membrane to `reservoir_radius_nm` and a profile region's from its inner chord to
   `reservoir_radius_nm + half`; `load_view`'s chord is the first and last point of that membrane outline.
 - `MeshStage.forecast_parameters` picks by `resolved.pore` and `resolved.exclusion_offset_nm`, with no record; it stays.
@@ -108,6 +111,9 @@ Ten: the rulings AP1 to AP4 added three library steps to the phase entry's seven
 - `_checked_write` validates a kind in `BUILD_UPTO` as its build case; `kept_artefacts` and `_built_stages` iterate
   `BUILD_UPTO`, cached per `(kind, name)`.
 - `io/project.py:ProjectFile` is strict: `library`, `open`, `current`, `layout`, `settings`.
+- `pipeline/checks.py:_check_pore` refuses `structure:` beside `geometry.pore`. `io/models.py:_merge_all(models, study)`
+  folds `_merge` over the models, then the study.
+- `_built_stages`' stamp hashes the merged case's text and its input files, so it follows a changed pair.
 
 **D5.**
 - `pipeline/checks.py:_check_pore` refuses `maxh_nm` without `geometry.pore`. `mesh/generate.py:idealised_recipe` takes
@@ -116,6 +122,8 @@ Ten: the rulings AP1 to AP4 added three library steps to the phase entry's seven
 - `SizeTable`'s fields are §5.2.2's rows: global, pore domain (`protein_nm`), reservoir domain (`electrolyte_nm`),
   reservoir outer boundary (`arc_nm`), axis inside the pore.
 - `io/defaults.py` records mesh sizes as configuration, never as deviations.
+- `io/artefact.py:CaseArtefact` hashes the whole validated dump, so `numerics.mesh.sizes` moves the case artefact's and
+  the run's keys, never stages 1 to 6's, which key on their own parameters; the PR says so.
 
 **D6.**
 - `gui/web/screens.py`: Continuum's tools are `_later(...)`, with empty ids; `TOOL_CONTROLS` and `SCREENS` read
@@ -156,7 +164,8 @@ Ten: the rulings AP1 to AP4 added three library steps to the phase entry's seven
 **Item 1.** `RegionOutlines(pore_nm, membrane_nm, exclusion_nm, membrane_half_thickness_nm, reservoir_radius_nm,
 z_extent_nm)` carries `region_drawing`'s values today, with `chord_nm` the membrane outline's first and last points.
 `region_drawing`, `MeshStage._recipe` (`idealised=record.is_idealised, exclusion=record.has_exclusion`) and `load_view`
-read the protocol; `cli/building.py` reads `read_idealised_region(path)`, which raises `ValueError` on a profile's
+read the protocol, and `check_stored_frame` its `membrane_centre_z_nm`, a field `RegionOutlines` adds; `generate`'s one
+`match` picks the recipe and the mesher, its flag `record.has_exclusion`; the fields stage's assert stays. `cli/building.py` reads `read_idealised_region(path)`, which raises `ValueError` on a profile's
 region.
 
 **Item 2** (Sonnet), in `geometry/pore.py`, `geometry/analyte.py`, `mesh/sizing.py`, `mesh/primitives.py`,
@@ -170,14 +179,15 @@ knowledge files.
 3. `size_wall(shape, wall_h_nm: float | None) -> None`: each edge named `wall` takes `maxh`; nothing for None.
 4. `mesh_cylinder_pore(pore=CylinderPore(), *, maxh_nm, wall_h_nm=None, check_quality=True) -> Mesh`:
    `shape(name_mouths=False)`, `size_wall`, `GenerateMesh(maxh=maxh_nm, grading=0.2)`, `_gated` with today's `where`.
-   `mesh_pore_with_analyte(geometry, *, maxh_nm, wall_h_nm=None) -> Mesh`, over `geometry.shape()`, ungated as today.
+   `mesh_pore_with_analyte(geometry, *, maxh_nm, wall_h_nm=None) -> Mesh`, also in `mesh/primitives.py`: `geometry.shape()`,
+   whose `wall_h_nm` goes, then `size_wall` and `GenerateMesh(maxh=maxh_nm, grading=0.2)`, ungated as today.
    `generate_idealised` calls `shape()` and `size_wall`.
 5. `CylindricalPoreGeometry(a, b, c).generate(**kw)` becomes `mesh_cylinder_pore(CylinderPore(a, b, c), **kw)`; an
    attribute read stays on `CylinderPore`; `PoreWithAnalyte(...).generate(**kw)` becomes `mesh_pore_with_analyte(...)`.
 6. Delete the class, `geometry/analyte.py`'s `TYPE_CHECKING` block (`CylinderPore` imported at the top) and MOD-03's
    row; reword the docstrings naming the class, and the three knowledge files, each with a `knowledge/log.md` line.
 7. The two annotation tests substitute `from nanopnp.mesh.primitives import mesh_cylinder_pore` and assert the static
-   relation gains `geometry -> mesh`; VER-61's row says so.
+   relation gains `geometry -> mesh`; item 3 amends VER-61's row to say so.
 8. Re-run the script: every hash equal.
 
 **Item 4.** `resolve` raises `CaseValidationError` where `resolved.profile` and `resolved.structure` are set and the
@@ -189,9 +199,10 @@ Contour tool sets `inputs.profile` to `{path: <the outline in inputs/>, format: 
 
 **Item 5.** `ProjectFile.built_with: dict[str, str]`; `Project.molecular_for(name)`, `set_built_with(name, molecular)`.
 `_build_case` merges `[BUILD_LAYER + {physics: {solid_permittivities: {protein, membrane}}}, molecular body, continuum
-body]` with `io/models.py:merge_layers`, today's `_merge_all` made public; the permittivities from
+body]` with `io/models.py:merge_layers(layers)`, the fold `_merge_all` then calls with the study appended; the molecular
+body only where the continuum body holds neither `geometry.pore` nor `inputs.profile` (AP2). The permittivities from
 `load_corrections` of `io/case.py:Electrolyte`'s default `parameters`, its `dielectrics`. `_checked_write` builds a case for `molecular` only;
-`_built_stages`' key adds the pair.
+`_built_stages` keeps its stamp.
 
 **Item 6.** `io/case.py:MeshSizes`, four `float | None` fields, `gt=0`, finite; `Mesh.sizes` defaults to it.
 `case_sizes(document)` is `SIZES` with each typed field and `global_nm` from `maxh_nm` replaced; `idealised_recipe`,
@@ -220,9 +231,9 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 - [ ] 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,
   `cli/building.py`, `gui/geometry.py` (D1); done when `test_idealised_pore.py` and `test_region.py` pass.
   **Executor:** main
-- [ ] 2. The files of Implementation details' item 2, `modularity-layering.yaml`, VER-61 (D2); done when tiers 1 and 2
+- [ ] 2. The files of Implementation details' item 2, `modularity-layering.yaml` (D2); done when tiers 1 and 2
   pass and every recorded hash is equal. **Executor:** general-purpose on Sonnet, high
-- [ ] 3. VER-62's walks run by their files (D1, D2); then a compaction checkpoint. **Executor:** main
+- [ ] 3. VER-61's text; VER-62's walks run by their files (D1, D2); then a compaction checkpoint. **Executor:** main
 - [ ] 4. `pipeline/checks.py`, `case.py`, `run.py`, `api/project.py`, §5.3.1's NOTEs on `inputs:` and `inputs.profile`,
   VER-55's restated NOTE (D3); done when `test_region.py` and `test_gui_geometry_2wcd.py` pass. **Executor:** main
 - [ ] 5. `api/project.py`, `io/project.py`, `io/models.py`, §5.3.1's NOTE on model files (D4); done when
@@ -246,9 +257,9 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |
 |---|---|---|---|---|
-| `tests/tier1/test_idealised_pore.py::test_ver62_a_declared_cylinder_meshes_to_the_recorded_mesh`; the golden walks | 1, 2 | VER-62 | Unmoved by items 1, 2 and 6 with no part typed | `.claude/hooks/gate.sh run`; `uv run pytest tests/tier2/test_examples_0*.py tests/tier2/test_pipeline_2wcd.py` |
+| `tests/tier1/test_idealised_pore.py::test_ver62_a_declared_cylinder_meshes_to_the_recorded_mesh`; the golden walks | 1, 2 | VER-62 | Unmoved by items 1, 2 and 6 with no part typed | `.claude/hooks/gate.sh run`; `uv run pytest tests/tier2/test_examples_0*.py tests/tier2/test_pipeline_2wcd.py tests/tier2/test_exclusion_2wcd_walk.py` |
 | `tests/tier1/test_layering.py` | 1 | VER-61 | MOD-03's row gone; the substituted import fails as a new static edge and as an upward or deferred-upward one, naming module and line | `uv run pytest tests/tier1/test_layering.py` |
-| `tests/tier1/test_region.py::test_ver55_an_outline_beside_a_structure_walks_the_charge_chain_alone` | 1 | VER-55; AP1 | One each, on `prepared_2wcd` with an outline: under `epnp-ns` structure, protonation, region, mesh and charge walk and stages 2 to 4 do not; under `pb`, and beside `inputs.charge`, refused naming both keys | `uv run pytest tests/tier1/test_region.py` |
+| `tests/tier1/test_region.py::test_ver55_an_outline_beside_a_structure_walks_the_charge_chain_alone` | 1 | VER-55; AP1 | One each, on `prepared_2wcd` with an outline: under `epnp-ns` `selected_stages` holds structure, protonation, region, mesh and charge, not stages 2 to 4; under `pb`, and beside `inputs.charge`, refused naming both keys | `uv run pytest tests/tier1/test_region.py` |
 | `tests/tier2/test_gui_geometry_2wcd.py::test_ver55_2wcd_a_null_edit_beside_its_structure_deposits_the_same_charge` | 2 | VER-55; AP1 | Null edit, structure kept: stage 5's outline bitwise; stage 6's content hash, the deposit per material and both conservation legs equal to 10⁻¹² relative; no stage 2 to 4 artefact recorded; the moved edit passes the deposit's gates | `uv run pytest tests/tier2/test_gui_geometry_2wcd.py` |
 | `tests/tier1/test_project.py::test_fr39_a_continuum_model_built_alone_keys_as_a_study_at_its_salt` | 1 | FR-39; AP2 | One each: 2WCD's stages 1 to 6 built alone key as a study's at 0.15 M NaCl, exact; at 1 M stage 6 differs, stage 5 not; an idealised model builds with no molecular model; the charged tube's built model is in `kept_artefacts` | `uv run pytest tests/tier1/test_project.py` |
 | `tests/tier1/test_mesh_sizing.py::test_ver53_typed_part_sizes_key_as_the_table_and_follow_the_scale` | 1 | VER-53; AP3, AP4 | One each, on the charged tube: parts typed at §5.2.2's values key as untyped, exact; `protein_nm` doubled moves stage 6's key, not stage 5's, and thins the protein's elements; at `size_scale` 2 the table holds twice the typed value; `sizes` beside `geometry.pore` refused | `uv run pytest tests/tier1/test_mesh_sizing.py` |
