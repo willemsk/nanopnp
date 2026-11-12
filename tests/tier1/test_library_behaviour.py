@@ -38,7 +38,8 @@ from nanopnp.charge.edits import TitratableGroups
 from nanopnp.charge.protonation import restore_propka_annotations
 from nanopnp.core import errors, hashing, stages
 from nanopnp.core.paths import radii_file
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.validation import okf
 
 
@@ -241,7 +242,7 @@ def test_shapely_and_skimage_contour_and_offset_facts() -> None:
 
 
 def test_netgen_vol_round_trip_and_read_gmsh_msh41_failure(tmp_path: Path) -> None:
-    mesh = CylindricalPoreGeometry(2.0, 13.0, 25.0).generate(maxh_nm=5.0)
+    mesh = mesh_cylinder_pore(CylinderPore(2.0, 13.0, 25.0), maxh_nm=5.0)
     vol_path = tmp_path / "pore.vol"
     mesh.ngmesh.Save(str(vol_path))
     reloaded = ngsolve.Mesh(str(vol_path))

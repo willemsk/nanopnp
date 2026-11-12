@@ -228,7 +228,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 
 ### Work items
 
-- [ ] 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,
+- [x] 800581b 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,
   `cli/building.py`, `gui/geometry.py` (D1); done when `test_idealised_pore.py` and `test_region.py` pass.
   **Executor:** main
 - [ ] 2. The files of Implementation details' item 2, `modularity-layering.yaml` (D2); done when tiers 1 and 2

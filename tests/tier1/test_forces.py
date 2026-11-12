@@ -7,8 +7,9 @@ import pytest
 
 from nanopnp.core.scaling import Scales
 from nanopnp.geometry.analyte import AnalyteInBoxGeometry, PoreWithAnalyte, SphereBody
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.mesh.adapter import MeshData
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, mesh_cylinder_pore, mesh_pore_with_analyte
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.physics.models import ModelSolution
@@ -104,11 +105,9 @@ class TestAxialExtension:
 def test_num28_the_shell_may_cross_a_pore_mouth() -> None:
     import ngsolve as ngs
 
-    pore = CylindricalPoreGeometry(
-        pore_radius_nm=6.0, membrane_thickness_nm=13.0, reservoir_radius_nm=12.0
-    )
+    pore = CylinderPore(pore_radius_nm=6.0, membrane_thickness_nm=13.0, reservoir_radius_nm=12.0)
     body = SphereBody(radius_nm=BODY_RADIUS_NM, z_nm=4.5)
-    mesh = PoreWithAnalyte(pore, body, analyte_h_nm=0.3).generate(maxh_nm=2.0)
+    mesh = mesh_pore_with_analyte(PoreWithAnalyte(pore, body, analyte_h_nm=0.3), maxh_nm=2.0)
     assert "default" in mesh.GetBoundaries()
 
     extension = axial_extension(mesh, inner_nm=1.0, outer_nm=3.0)
@@ -261,9 +260,11 @@ def test_qr12_the_boundary_checks_of_the_force_routes_refuse_what_a_nan_would_pa
 
     from nanopnp.post.forces import _boundary_region, _check_fluid_side, _oriented_normal
 
-    mesh = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0, wall_h_nm=1.0)
+    mesh = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+        wall_h_nm=1.0,
+    )
     with pytest.raises(ValueError, match="no boundary matching"):
         _boundary_region(mesh, "no-such-boundary")
     region, arc = _boundary_region(mesh, "wall")

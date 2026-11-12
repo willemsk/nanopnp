@@ -12,7 +12,8 @@ import pytest
 from nanopnp import Case, Session
 from nanopnp.core.scaling import Scales
 from nanopnp.core.typing import Expression, Mesh, Numeric, Option
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, mesh_cylinder_pore
 from nanopnp.physics import models
 from nanopnp.physics.models import ModelSolution
 from nanopnp.post.export import (
@@ -29,9 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.charge.stage import ResolvedFields
     from nanopnp.io.resolved import ResolvedCase
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MAXH_NM = 4.0
 WALL_H_NM = 1.0
 
@@ -68,7 +67,7 @@ def _pressure(x: Numeric, y: Numeric) -> Numeric:
 
 @pytest.fixture(scope="module")
 def mesh() -> Mesh:
-    return PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
+    return mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
 
 
 def _populated(mesh: Mesh, **options: Option) -> ModelSolution:

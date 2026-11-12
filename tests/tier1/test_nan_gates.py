@@ -194,12 +194,15 @@ def test_ver70_a_nan_wall_ratio_fails_the_wall_size_gate(field: str, criterion: 
 def test_ver70_a_nan_indicator_fails_the_indicator_gate() -> None:
     import ngsolve as ngs
 
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.geometry.pore import CylinderPore
+    from nanopnp.mesh.primitives import mesh_cylinder_pore
     from nanopnp.post.indicator import IndicatorError, check_indicator
 
-    mesh = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0, wall_h_nm=1.0)
+    mesh = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+        wall_h_nm=1.0,
+    )
     indicator = ngs.GridFunction(ngs.H1(mesh, order=1))
     indicator.vec[:] = math.nan
     with pytest.raises(IndicatorError):

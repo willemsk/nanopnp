@@ -106,10 +106,11 @@ def test_ver61_upward_deferred_edges_equal_the_recorded_ratchet() -> None:
 def test_ver61_an_annotation_cut_deferred_into_a_function_fails_as_deferred_upward() -> None:
     text = ANALYTE.read_text(encoding="utf-8")
     line = len(text.splitlines()) + 2
-    late = "def _late():\n    from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
+    late = "def _late():\n    from nanopnp.mesh.primitives import mesh_cylinder_pore\n"
     deferred = f"{text}{late}"
     edges = import_edges(sources={"geometry/analyte.py": deferred})
-    assert compare(measured_relations(edges), accepted_relation()).equal
+    relation = compare(measured_relations(edges), accepted_relation())
+    assert [(kind, pair) for kind, pair, _ in relation.added] == [("static", ("geometry", "mesh"))]
     assert compare({UPWARD: upward_edges(edges)}, accepted_upward()).equal
     comparison = compare(
         {DEFERRED_UPWARD: upward_edges(edges, kinds=RATCHETS[DEFERRED_UPWARD])},
@@ -136,9 +137,10 @@ def test_ver61_the_layer_order_places_every_subpackage_once() -> None:
 def test_ver61_an_annotation_cut_returning_to_module_scope_fails_as_upward() -> None:
     text = ANALYTE.read_text(encoding="utf-8")
     line = len(text.splitlines()) + 1
-    restored = f"{text}from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
+    restored = f"{text}from nanopnp.mesh.primitives import mesh_cylinder_pore\n"
     edges = import_edges(sources={"geometry/analyte.py": restored})
-    assert compare(measured_relations(edges), accepted_relation()).equal
+    relation = compare(measured_relations(edges), accepted_relation())
+    assert [(kind, pair) for kind, pair, _ in relation.added] == [("static", ("geometry", "mesh"))]
     comparison = compare({UPWARD: upward_edges(edges)}, accepted_upward())
     assert [pair for _, pair, _ in comparison.added] == [("geometry", "mesh")]
     message = comparison.describe()
@@ -171,7 +173,7 @@ def test_ver61_top_level_module_imports_are_acyclic() -> None:
 
 def test_ver61_top_subpackage_cycle_is_detected_naming_components() -> None:
     text = ANALYTE.read_text(encoding="utf-8")
-    restored = f"{text}from nanopnp.mesh.primitives import CylindricalPoreGeometry\n"
+    restored = f"{text}from nanopnp.mesh.primitives import mesh_cylinder_pore\n"
     edges = import_edges(sources={"geometry/analyte.py": restored})
     sccs = components(node_graph(subpackage_relation(edges, {"top"})))
     assert sccs == (("geometry", "mesh"),)

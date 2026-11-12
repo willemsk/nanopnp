@@ -4,14 +4,13 @@ import logging
 
 import pytest
 
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.post import qoi
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0)
 
 HIGH_SALT_M = 5.4
 
@@ -21,7 +20,7 @@ MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 
 
 def _converged(concentration_M: float) -> models.ModelSolution:
-    mesh = PORE.generate(maxh_nm=6.0, wall_h_nm=0.6)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=6.0, wall_h_nm=0.6)
     model = models.create(
         "pnp",
         classical=True,

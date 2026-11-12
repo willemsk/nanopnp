@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 
 from nanopnp.core.typing import Expression, GridFunction, Mesh
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
 from nanopnp.numerics.measures import has_boundary, require_boundary
 
 __all__ = [
@@ -39,7 +40,7 @@ def smoothstep(coordinate: Expression, *, lower_nm: float, upper_nm: float) -> E
     return clamped * clamped * (3.0 - 2.0 * clamped)
 
 
-def lumen_band(geometry: CylindricalPoreGeometry, *, fraction: float = 0.8) -> tuple[float, float]:
+def lumen_band(geometry: CylinderPore, *, fraction: float = 0.8) -> tuple[float, float]:
     """Return the transition band across the middle of the pore lumen, in nm.
 
     Parameters

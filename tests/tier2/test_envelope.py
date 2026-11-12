@@ -7,8 +7,9 @@ from collections.abc import Sequence
 import pytest
 
 from nanopnp.core.scaling import debye_length_nm
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.distance import wall_distance
@@ -25,9 +26,7 @@ from nanopnp.solve.continuation import (
 
 logger = logging.getLogger(__name__)
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=20.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=20.0)
 
 # NUM-18
 CONCENTRATIONS_M = (0.05, 0.15, 0.5, 1.0, 3.0)
@@ -147,7 +146,7 @@ def _record(
 # FR-17
 @pytest.mark.slow
 def test_82_criterion_two_the_whole_envelope_converges_through_the_ladder() -> None:
-    mesh = PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
     distance = _distance(mesh)
     report = mesh_report(mesh)
     logger.info(
@@ -297,7 +296,7 @@ def test_82_criterion_two_the_whole_envelope_converges_through_the_ladder() -> N
 @pytest.mark.slow
 def test_82_criterion_two_the_hard_corner_from_cold_costs_what_it_costs() -> None:
     wall_h_nm = debye_length_nm(3.0) / 5.0
-    mesh = PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=wall_h_nm)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=wall_h_nm)
     result = run_ladder(
         default_ladder(
             mesh,
@@ -347,7 +346,7 @@ def test_82_criterion_two_the_hard_corner_from_cold_costs_what_it_costs() -> Non
 # PHY-21
 @pytest.mark.slow
 def test_num18_the_ablation_ladder_reaches_the_same_corner_without_the_corrections() -> None:
-    mesh = PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM)
     distance = _distance(mesh)
     measured: dict[str, qoi.QuantitiesOfInterest] = {}
     indicator = _indicator(mesh)

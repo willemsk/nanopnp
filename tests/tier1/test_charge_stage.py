@@ -251,15 +251,20 @@ outputs: [current, fields]
 
 @pytest.fixture(scope="module")
 def producer_files(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.geometry.pore import CylinderPore
+    from nanopnp.mesh.primitives import mesh_cylinder_pore
 
     work = tmp_path_factory.mktemp("producer")
     mesh = work / "pore.vol"
-    CylindricalPoreGeometry(
-        pore_radius_nm=2.0,
-        membrane_thickness_nm=6.0,
-        reservoir_radius_nm=10.0,
-    ).generate(maxh_nm=0.5, wall_h_nm=0.5).ngmesh.Save(str(mesh))
+    mesh_cylinder_pore(
+        CylinderPore(
+            pore_radius_nm=2.0,
+            membrane_thickness_nm=6.0,
+            reservoir_radius_nm=10.0,
+        ),
+        maxh_nm=0.5,
+        wall_h_nm=0.5,
+    ).ngmesh.Save(str(mesh))
     pqr = work / "atoms.pqr"
     pqr.write_text(_pqr_text(), encoding="utf-8")
     return mesh, pqr

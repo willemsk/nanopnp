@@ -614,7 +614,8 @@ outputs: [current, transport_numbers, eof_rate]
 
 @pytest.fixture(scope="session")
 def cylindrical_pore_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.geometry.pore import CylinderPore
+    from nanopnp.mesh.primitives import mesh_cylinder_pore
 
     shared = shared_directory(tmp_path_factory)
     pore_dir = shared / "cylindrical_pore"
@@ -627,10 +628,10 @@ def cylindrical_pore_case(tmp_path_factory: pytest.TempPathFactory) -> Path:
             pore_dir.mkdir(parents=True, exist_ok=True)
             if not mesh_path.is_file():
                 staging_mesh = mesh_path.with_suffix(f".{os.getpid()}.vol")
-                pore = CylindricalPoreGeometry(
+                pore = CylinderPore(
                     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
                 )
-                pore.generate(maxh_nm=4.0, wall_h_nm=1.0).ngmesh.Save(str(staging_mesh))
+                mesh_cylinder_pore(pore, maxh_nm=4.0, wall_h_nm=1.0).ngmesh.Save(str(staging_mesh))
                 staging_mesh.replace(mesh_path)
             staging_case = case_path.with_suffix(f".{os.getpid()}.yaml")
             staging_case.write_text(

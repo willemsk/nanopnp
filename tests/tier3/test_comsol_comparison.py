@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 
 from nanopnp.core.paths import REFERENCE_DATA_VARIABLE, reference_data_root
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.solve.continuation import default_ladder, run_ladder
 from nanopnp.validation.attribution import (
     IDENTITY_TOLERANCE,
@@ -39,9 +40,7 @@ from nanopnp.validation.runs import reopen
 
 logger = logging.getLogger(__name__)
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0)
 CONCENTRATION_M = 0.5
 BIAS_V = 0.05
 SURFACE_CHARGE_C_M2 = -0.05
@@ -68,7 +67,7 @@ def _order(element: str) -> int:
 @pytest.fixture(scope="module")
 def solved_ladder():
     # The flow stays on: rungs 2 and 3 differ only in the velocity and pressure spaces.
-    mesh = PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=5.0, wall_h_nm=0.4)
     solutions = []
     for rung in LADDER:
         stages = default_ladder(

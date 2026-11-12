@@ -135,12 +135,16 @@ def registered_stubs() -> Iterator[tuple[_StubMesher, _StubSolver, _StubStabilis
 
 @pytest.fixture(scope="module")
 def quickstart_pore_msh(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    from nanopnp.geometry.pore import CylinderPore
     from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.mesh.primitives import mesh_cylinder_pore
 
-    generated = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
+    generated = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+        wall_h_nm=0.35,
+        check_quality=False,
+    )
     return write_msh41(from_ngsolve(generated), tmp_path_factory.mktemp("pore") / "pore.msh")
 
 

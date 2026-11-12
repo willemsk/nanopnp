@@ -18,8 +18,9 @@ from netgen.geom2d import unit_square
 from ngsolve.meshes import MakeStructured2DMesh
 
 from nanopnp.api import sweep as sweep_run
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.mesh.adapter import MeshData
-from nanopnp.mesh.primitives import CylindricalPoreGeometry, SlabGeometry
+from nanopnp.mesh.primitives import SlabGeometry, mesh_cylinder_pore
 from nanopnp.numerics.gates import (
     INTERIOR_OFFSET,
     MINIMUM_WALL_DISTANCE_NM,
@@ -252,9 +253,10 @@ def test_ngsolve_traps_15_16_17_18_and_occ_extent() -> None:
     assert AXISYMMETRIC.bonus_order(singular=True, extra=3) == 3
     assert AXISYMMETRIC.bonus_order(singular=True, extra=6) == 6
 
-    pore_mesh = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0)
+    pore_mesh = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+    )
     pts = np.array([v.point for v in pore_mesh.vertices])
     assert float(np.max(pts[:, 1])) == pytest.approx(13.0, abs=1e-12)
 

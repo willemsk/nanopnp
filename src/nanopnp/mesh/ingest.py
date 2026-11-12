@@ -86,7 +86,7 @@ BOUNDARY_VOCABULARY: tuple[str, ...] = (
 ``interface`` is any interior seam nothing selects on. Fragmenting a region
 produces one wherever two domains meet without a physical boundary between
 them: the two pore-mouth interfaces of
-:class:`~nanopnp.mesh.primitives.CylindricalPoreGeometry`, which OCC leaves at
+:func:`~nanopnp.mesh.primitives.mesh_cylinder_pore`, which OCC leaves at
 NGSolve's ``default`` and which separate fluid from fluid, and the
 protein-to-membrane seam of :mod:`nanopnp.mesh.reference`, which separates one
 solid from another. It is in the vocabulary because every group must be claimed

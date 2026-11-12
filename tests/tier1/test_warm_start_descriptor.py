@@ -10,10 +10,11 @@ from typing import Any
 import pytest
 
 from nanopnp.charge.stage import ResolvedFields
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.artefact import SOLUTION_SCHEMA, Artefact
 from nanopnp.io.case import CaseDocument
 from nanopnp.mesh.ingest import ingest
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.solve.continuation import run_ladder
@@ -36,9 +37,7 @@ from nanopnp.solve.state import (
     warm_start_payload,
 )
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MAXH_NM = 4.0
 # Coarsest wall spacing admitted by SPECIFICATION.md NUM-34.
 WALL_H_NM = 0.35
@@ -100,7 +99,7 @@ def _document(mesh_path: Path, **overrides: object) -> CaseDocument:
 def neighbour(tmp_path_factory: pytest.TempPathFactory) -> Neighbour:
     work = tmp_path_factory.mktemp("warm")
     mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
+    mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
 
     document = _document(mesh_path)
     resolved = resolve(document)

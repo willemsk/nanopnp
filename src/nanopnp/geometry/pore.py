@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from nanopnp.core.hashing import Canonicalisable
+from nanopnp.geometry.defaults import DEFAULT_PORE_RADIUS_NM
 from nanopnp.geometry.outlines import RegionOutlines
 from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.io.artefact import REGION_SCHEMA
@@ -23,12 +24,13 @@ MOUTH = "interface"
 class CylinderPore:
     """A cylindrical pore through a membrane, with a reservoir on each side.
 
-    The lumen is the domain ``electrolyte`` and the reservoirs are ``cis`` and ``trans``.
+    The lumen is the domain ``electrolyte`` and the reservoirs are ``cis`` and ``trans``. It
+    names its edges and sizes none of them; the mesher sizes the ``wall`` edges.
     """
 
-    pore_radius_nm: float
-    membrane_thickness_nm: float
-    reservoir_radius_nm: float
+    pore_radius_nm: float = DEFAULT_PORE_RADIUS_NM
+    membrane_thickness_nm: float = 13.0
+    reservoir_radius_nm: float = 50.0
 
     @property
     def half_thickness_nm(self) -> float:
@@ -65,7 +67,7 @@ class CylinderPore:
             reservoirs.append(half_disc)
         return lumen, membrane, reservoirs[0], reservoirs[1]
 
-    def name_edges(self, shape: Shape, *, wall_h_nm: float | None = None) -> None:
+    def name_edges(self, shape: Shape) -> None:
         """Name every unnamed edge of ``shape`` by its centre of mass, in place."""
         half = self.half_thickness_nm
         radius = self.reservoir_radius_nm
@@ -80,8 +82,6 @@ class CylinderPore:
                 edge.name = "axis"
             elif abs(r_c - self.pore_radius_nm) < TOL_NM and inside_membrane_span:
                 edge.name = "wall"
-                if wall_h_nm is not None:
-                    edge.maxh = wall_h_nm
             elif abs(abs(z_c) - half) < TOL_NM and r_c > self.pore_radius_nm + TOL_NM:
                 edge.name = "membrane"
             elif abs(r_c - radius) < TOL_NM and inside_membrane_span:
@@ -91,7 +91,7 @@ class CylinderPore:
             elif z_c < -half:
                 edge.name = "trans"
 
-    def shape(self, *, wall_h_nm: float | None = None, name_mouths: bool = True) -> Shape:
+    def shape(self, *, name_mouths: bool = True) -> Shape:
         """Return the glued, fully named shape, unmeshed.
 
         Parameters
@@ -103,7 +103,7 @@ class CylinderPore:
         import netgen.occ as occ
 
         glued = occ.Glue(list(self.faces()))
-        self.name_edges(glued, wall_h_nm=wall_h_nm)
+        self.name_edges(glued)
         if name_mouths:
             for edge in glued.edges:
                 if edge.name is None:

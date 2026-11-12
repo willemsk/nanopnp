@@ -13,11 +13,10 @@ from nanopnp.geometry.analyte import (
     SphereBody,
     SpheroidBody,
 )
-from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS, mesh_pore_with_analyte
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=3.0, membrane_thickness_nm=8.0, reservoir_radius_nm=12.0
-)
+PORE = CylinderPore(pore_radius_nm=3.0, membrane_thickness_nm=8.0, reservoir_radius_nm=12.0)
 """A pore roomy enough to hold the test body with fluid to spare."""
 
 
@@ -111,7 +110,7 @@ class TestPoreWithAnalyte:
     @pytest.fixture(scope="class")
     @classmethod
     def mesh(cls) -> object:
-        return cls.GEOMETRY.generate(maxh_nm=2.0)
+        return mesh_pore_with_analyte(cls.GEOMETRY, maxh_nm=2.0)
 
     def test_fr21_the_pore_keeps_every_domain_and_boundary_name(self, mesh: object) -> None:
         assert set(mesh.GetMaterials()) == {

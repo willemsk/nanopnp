@@ -5,7 +5,8 @@ from itertools import pairwise
 
 import pytest
 
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.solve.continuation import (
@@ -21,9 +22,7 @@ from nanopnp.solve.continuation import (
     transfer,
 )
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 """An insulating membrane. Not a fitted parameter: the ladder's *structure* is
 what is under test here and nothing is solved, so any insulating value serves."""
@@ -31,7 +30,7 @@ what is under test here and nothing is solved, so any insulating value serves.""
 
 @pytest.fixture(scope="module")
 def mesh() -> object:
-    return PORE.generate(maxh_nm=3.0)
+    return mesh_cylinder_pore(PORE, maxh_nm=3.0)
 
 
 def test_num18_bias_ramp_steps_finely_near_onset_and_ends_on_the_target() -> None:
@@ -252,7 +251,7 @@ def test_fr25_the_mesh_report_names_what_the_run_was_solved_on(mesh: object) -> 
 
 def test_num18_transfer_refuses_to_cross_a_mesh(mesh: object) -> None:
     model = models.create("pnp", classical=True)
-    other = PORE.generate(maxh_nm=4.0)
+    other = mesh_cylinder_pore(PORE, maxh_nm=4.0)
     previous = models.ModelSolution(
         model=model, space=model.space(mesh), state=model.cold_state(mesh)
     )

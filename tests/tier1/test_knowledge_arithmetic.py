@@ -19,8 +19,9 @@ from nanopnp.core.constants import (
 )
 from nanopnp.core.hashing import SHORT_LENGTH
 from nanopnp.geometry import contour
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.materials.electrolyte import Electrolyte
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.physics import models
 from nanopnp.physics.coefficients import (
     SATURATED_WALL_DISTANCE_NM,
@@ -136,9 +137,10 @@ def test_reynolds_number_and_pspg_parameter_at_reference_scales() -> None:
 
 
 def test_concentration_rung_transfer_copies_vector_entries() -> None:
-    mesh = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0)
+    mesh = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+    )
     low = models.create("pnp", concentration_M=0.05, classical=True)
     high = models.create("pnp", concentration_M=1.0, classical=True)
     space = low.space(mesh)

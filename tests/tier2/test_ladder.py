@@ -5,21 +5,20 @@ import logging
 import ngsolve as ngs
 import pytest
 
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.vocabulary import (
     POTENTIAL,
     PRESSURE,
     VELOCITY,
 )
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.distance import wall_distance
 from nanopnp.solve.continuation import LadderResult, default_ladder, run_ladder, transfer
 
 logger = logging.getLogger(__name__)
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=12.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=12.0)
 CONCENTRATION_M = 0.5
 BIAS_V = 0.03
 SURFACE_CHARGE_C_M2 = -0.02
@@ -29,7 +28,7 @@ MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 # NUM-13
 @pytest.fixture(scope="module")
 def stabilised() -> LadderResult:
-    mesh = PORE.generate(maxh_nm=3.0, wall_h_nm=0.5)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=3.0, wall_h_nm=0.5)
     rungs = default_ladder(
         mesh,
         concentration_M=CONCENTRATION_M,
@@ -104,7 +103,7 @@ def test_num12_the_reference_ladder_measures_the_cell_peclet_it_ran_at(
 
 @pytest.fixture(scope="module")
 def ladder() -> LadderResult:
-    mesh = PORE.generate(maxh_nm=3.0, wall_h_nm=0.5)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=3.0, wall_h_nm=0.5)
     rungs = default_ladder(
         mesh,
         concentration_M=CONCENTRATION_M,

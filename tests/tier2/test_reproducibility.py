@@ -18,15 +18,14 @@ from nanopnp.api.reproduce import (
     compare,
     reproduce,
 )
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.store import Store
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.pipeline.run import RUN_RECORD_FILENAME
 
 logger = logging.getLogger(__name__)
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MAXH_NM = 4.0
 WALL_H_NM = 1.0
 CASE = """
@@ -67,7 +66,7 @@ class Archived:
 def archived(tmp_path_factory: pytest.TempPathFactory) -> Archived:
     work = tmp_path_factory.mktemp("reproduce")
     mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
+    mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
     case_path = work / "case.yaml"
     case_path.write_text(CASE.format(mesh_path=mesh_path), encoding="utf-8")
 

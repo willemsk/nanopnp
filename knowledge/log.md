@@ -2,6 +2,11 @@
 
 Entries are the dated events the notes record, newest first; git holds every earlier edit.
 
+## 2026-11-12
+* **Update**: The flux-trap note names the analytic cylindrical pore by `CylinderPore`, which `mesh_cylinder_pore` meshes; the class `CylindricalPoreGeometry` is gone (WP5.17; REV-170). ([7. Quantities of interest — and the flux trap](06-numerics-fem/07-quantities-of-interest-and-the-flux-trap.md))
+* **Update**: The OCC-extent trap's measurement is posed on `mesh_cylinder_pore(CylinderPore(...), ...)`, which replaces `CylindricalPoreGeometry(...).generate`; no mesh moves (WP5.17; REV-170). ([NGSolve traps and measured numerics facts](06-numerics-fem/09-ngsolve-traps-found-by-implementing.md))
+* **Update**: The vocabulary and cross-platform element-count measurements on the analytic pore name `mesh_cylinder_pore` and `CylinderPore` for the deleted `CylindricalPoreGeometry`; the numbers stand (WP5.17; REV-170). ([4. Geometry, meshing and I/O](07-software-stack/04-geometry-meshing-and-io.md))
+
 ## 2026-11-11
 * **Record**: The straightness limit of the channel's axis (0.03 nm) warns and does not refuse, as the author ruled on REV-239; the convergence, coverage and orientation gates and the `axis: z` budget still refuse. ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))
 * **Record**: The channel's axis of 2WCD lies 0.0073 nm from its ring axis, its farthest centre 0.0148 nm from the line; the `z` budget and the straightness limit are twice these, and a ragged rim is the method's known weakness (WP5.16; REV-239). ([The channel's axis of 2WCD against its ring axis](04-clya-geometry-and-charge/15-the-channel-axis-of-2wcd.md))

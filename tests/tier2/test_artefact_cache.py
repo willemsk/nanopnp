@@ -8,6 +8,7 @@ import pytest
 
 from nanopnp.core.hashing import file_hash
 from nanopnp.core.stages import CancelFlag, Cancelled
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io import manifest as manifest_module
 from nanopnp.io.artefact import CaseArtefact, SolutionArtefact, StageInputs
 from nanopnp.io.case import CaseDocument
@@ -15,15 +16,13 @@ from nanopnp.io.store import Store
 from nanopnp.materials.stage import MaterialsStage
 from nanopnp.mesh.adapter import read, write_msh41
 from nanopnp.mesh.ingest import MeshStage, MeshVocabularyError, ingest
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.pipeline.case import loads_case, resolve
 from nanopnp.solve.stage import SolveStage
 
 logger = logging.getLogger(__name__)
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MAXH_NM = 4.0
 WALL_H_NM = 1.0
 CONCENTRATION_M = 0.1
@@ -73,7 +72,7 @@ class Run:
 def solved(tmp_path_factory: pytest.TempPathFactory) -> Run:
     work = tmp_path_factory.mktemp("cache")
     mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
+    mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
 
     text = case_text(mesh_path)
     document = loads_case(text)
@@ -176,7 +175,7 @@ def test_ver26_the_mesh_enters_the_key_by_content_and_not_by_its_bytes(
     assert as_msh.hash == solved.key.hash
 
     finer_path = tmp_path / "finer.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM / 2).ngmesh.Save(str(finer_path))
+    mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM / 2).ngmesh.Save(str(finer_path))
     finer = SolveStage().key(StageInputs(resolved=resolve(loads_case(case_text(finer_path)))))
     assert finer.inputs["mesh"] != solved.key.inputs["mesh"]
     assert finer.hash != solved.key.hash

@@ -6,8 +6,9 @@ import ngsolve as ngs
 import pytest
 
 from nanopnp.core.scaling import REFERENCE_DIFFUSIVITY_M2_S, debye_length_nm
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.materials.electrolyte import Electrolyte, IonSpecies
-from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry, SlabGeometry
+from nanopnp.mesh.primitives import CylinderGeometry, SlabGeometry, mesh_cylinder_pore
 from nanopnp.numerics.gates import GateViolationError, maximum_packing_M
 from nanopnp.numerics.measures import PLANAR, Measures
 from nanopnp.physics import models
@@ -108,7 +109,7 @@ def test_num17_positivity_gate_aborts_an_under_resolved_pnp_solve() -> None:
 
 def test_num17_gates_sample_the_fluid_only() -> None:
     model = models.create("epnp-ns", concentration_M=0.1)
-    mesh = CylindricalPoreGeometry(reservoir_radius_nm=20.0).generate(maxh_nm=6.0)
+    mesh = mesh_cylinder_pore(CylinderPore(reservoir_radius_nm=20.0), maxh_nm=6.0)
     space = model.space(mesh)
     state = ngs.GridFunction(space)
     for index, _ in enumerate(model.species, start=1):
@@ -120,7 +121,7 @@ def test_num17_gates_sample_the_fluid_only() -> None:
 
     sampled = state_gates[0].sampler.points
     assert len(sampled) > 0
-    pore = CylindricalPoreGeometry()
+    pore = CylinderPore()
     half, lumen = pore.half_thickness_nm, pore.pore_radius_nm
     inside_membrane = [(r, z) for r, z in sampled if abs(z) < half - 1e-9 and r > lumen + 1e-9]
     assert not inside_membrane, f"the gate sampled the membrane at {inside_membrane[:3]}"

@@ -6,11 +6,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from nanopnp.core.typing import Mesh, Shape
+from nanopnp.geometry.analyte import PoreWithAnalyte
 from nanopnp.geometry.pore import CylinderPore
 from nanopnp.geometry.tolerance import TOL_NM
 from nanopnp.mesh.adapter import from_ngsolve
-from nanopnp.mesh.defaults import DEFAULT_PORE_RADIUS_NM
 from nanopnp.mesh.quality import check_quality as _check_quality
+from nanopnp.mesh.sizing import size_wall
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from collections.abc import Mapping
@@ -70,7 +71,7 @@ ELECTROLYTE_DOMAINS = "electrolyte|cis|trans"
 
 Nernst-Planck and Navier-Stokes are solved on the electrolyte only, so their
 forms select on this rather than on ``"electrolyte"``. NGSolve matches a
-material regular expression in full, and ``CylindricalPoreGeometry`` names its
+material regular expression in full, and the cylindrical pore names its
 two reservoirs ``cis`` and ``trans`` so that a reservoir can be addressed on its
 own; ``Materials("electrolyte")`` would therefore silently drop both of them and
 leave a solve with no ions and no flow outside the lumen.
@@ -205,58 +206,43 @@ class AxialSlabGeometry:
         return _gated(mesh, check=check_quality, where=f"a {self.length_nm:g} nm axial slab")
 
 
-@dataclass(frozen=True)
-class CylindricalPoreGeometry:
-    """A cylindrical pore through a membrane, with a reservoir on each side.
+_DEFAULT_PORE = CylinderPore()
 
-    The lumen is the domain ``electrolyte`` and the reservoirs are ``cis`` and ``trans``.
+
+def mesh_cylinder_pore(
+    pore: CylinderPore = _DEFAULT_PORE,
+    *,
+    maxh_nm: float,
+    wall_h_nm: float | None = None,
+    check_quality: bool = True,
+) -> Mesh:
+    """Return the meshed pore with named domains and boundaries, its mouths left unnamed.
+
+    Parameters
+    ----------
+    maxh_nm, wall_h_nm
+        Global and pore-wall element sizes, in nm.
     """
+    import netgen.occ as occ
+    import ngsolve as ngs
 
-    pore_radius_nm: float = DEFAULT_PORE_RADIUS_NM
-    membrane_thickness_nm: float = 13.0
-    reservoir_radius_nm: float = 50.0
+    shape = pore.shape(name_mouths=False)
+    size_wall(shape, wall_h_nm)
+    mesh = ngs.Mesh(occ.OCCGeometry(shape, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))
+    return _gated(
+        mesh,
+        check=check_quality,
+        where=f"a {pore.pore_radius_nm:g} nm x {pore.membrane_thickness_nm:g} nm pore",
+    )
 
-    @property
-    def half_thickness_nm(self) -> float:
-        """Half the membrane thickness, in nm."""
-        return 0.5 * self.membrane_thickness_nm
 
-    def _cylinder(self) -> CylinderPore:
-        return CylinderPore(
-            pore_radius_nm=self.pore_radius_nm,
-            membrane_thickness_nm=self.membrane_thickness_nm,
-            reservoir_radius_nm=self.reservoir_radius_nm,
-        )
+def mesh_pore_with_analyte(
+    geometry: PoreWithAnalyte, *, maxh_nm: float, wall_h_nm: float | None = None
+) -> Mesh:
+    """Return the meshed pore with its analyte, ungated, with named domains and boundaries."""
+    import netgen.occ as occ
+    import ngsolve as ngs
 
-    def faces(self) -> tuple[Shape, Shape, Shape, Shape]:
-        """Return the four named faces (lumen, membrane, cis, trans), unglued."""
-        return self._cylinder().faces()
-
-    def name_edges(self, shape: Shape, *, wall_h_nm: float | None = None) -> None:
-        """Name every unnamed edge of ``shape`` by its centre of mass, in place."""
-        self._cylinder().name_edges(shape, wall_h_nm=wall_h_nm)
-
-    def shape(self, *, wall_h_nm: float | None = None) -> Shape:
-        """Return the glued, fully named shape, unmeshed; the mouths stay unnamed."""
-        return self._cylinder().shape(wall_h_nm=wall_h_nm, name_mouths=False)
-
-    def generate(
-        self, *, maxh_nm: float, wall_h_nm: float | None = None, check_quality: bool = True
-    ) -> Mesh:
-        """Return the meshed geometry with named domains and boundaries.
-
-        Parameters
-        ----------
-        maxh_nm, wall_h_nm
-            Global and pore-wall element sizes, in nm.
-        """
-        import netgen.occ as occ
-        import ngsolve as ngs
-
-        geometry = occ.OCCGeometry(self.shape(wall_h_nm=wall_h_nm), dim=2)
-        mesh = ngs.Mesh(geometry.GenerateMesh(maxh=maxh_nm, grading=0.2))
-        return _gated(
-            mesh,
-            check=check_quality,
-            where=f"a {self.pore_radius_nm:g} nm x {self.membrane_thickness_nm:g} nm pore",
-        )
+    shape = geometry.shape()
+    size_wall(shape, wall_h_nm)
+    return ngs.Mesh(occ.OCCGeometry(shape, dim=2).GenerateMesh(maxh=maxh_nm, grading=0.2))

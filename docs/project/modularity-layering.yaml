@@ -73,7 +73,6 @@ edges:
   - {from: geometry, to: core, relation: static, finding: null}
   - {from: geometry, to: density, relation: static, finding: null}
   - {from: geometry, to: io, relation: static, finding: null}
-  - {from: geometry, to: mesh, relation: static, finding: MOD-03}
   - {from: geometry, to: structure, relation: static, finding: null}
   - {from: geometry, to: symmetry, relation: static, finding: null}
   - {from: gui, to: api, relation: static, finding: null}

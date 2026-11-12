@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
 from nanopnp.core.constants import ELEMENTARY_CHARGE
 from nanopnp.core.typing import Mesh, Shape
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.geometry.tolerance import TOL_NM
-
-if TYPE_CHECKING:  # pragma: no cover - annotations only
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
 
 __all__ = [
     "ANALYTE_BOUNDARY",
@@ -225,7 +223,7 @@ class PoreWithAnalyte:
     The pore's boundary vocabulary survives, and ``analyte`` is added.
     """
 
-    pore: CylindricalPoreGeometry
+    pore: CylinderPore
     body: AnalyteBody
     analyte_h_nm: float | None = None
 
@@ -244,8 +242,8 @@ class PoreWithAnalyte:
                 "geometry this benchmark poses"
             )
 
-    def shape(self, *, wall_h_nm: float | None = None) -> Shape:
-        """Return the glued, fully named shape, unmeshed."""
+    def shape(self) -> Shape:
+        """Return the glued, fully named shape, unmeshed; the ``wall`` edges are not sized."""
         import netgen.occ as occ
 
         lumen, membrane, cis, trans = self.pore.faces()
@@ -253,13 +251,5 @@ class PoreWithAnalyte:
         lumen = lumen - body
         lumen.name = "electrolyte"
         glued = occ.Glue([lumen, body, membrane, cis, trans])
-        self.pore.name_edges(glued, wall_h_nm=wall_h_nm)
+        self.pore.name_edges(glued)
         return glued
-
-    def generate(self, *, maxh_nm: float, wall_h_nm: float | None = None) -> Mesh:
-        """Return the meshed geometry with named domains and boundaries."""
-        import netgen.occ as occ
-        import ngsolve as ngs
-
-        geometry = occ.OCCGeometry(self.shape(wall_h_nm=wall_h_nm), dim=2)
-        return ngs.Mesh(geometry.GenerateMesh(maxh=maxh_nm, grading=0.2))

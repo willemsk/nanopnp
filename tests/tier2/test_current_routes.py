@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING
 import ngsolve as ngs
 import pytest
 
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.post import qoi
@@ -22,9 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
 logger = logging.getLogger(__name__)
 
 # VER-17
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0)
 CONCENTRATION_M = 0.5
 # FR-17
 BIAS_V = 0.05
@@ -37,7 +36,7 @@ MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 # NUM-18
 @pytest.fixture(scope="module")
 def solutions() -> dict[float, models.ModelSolution]:
-    mesh = PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=5.0, wall_h_nm=0.4)
     converged: dict[float, models.ModelSolution] = {}
     for bias in (BIAS_V, -BIAS_V):
         ladder = default_ladder(
@@ -197,7 +196,7 @@ def test_num24_the_indicator_current_does_not_depend_on_the_band(
 
 
 # NUM-34
-CORRECTED_PORE = CylindricalPoreGeometry(
+CORRECTED_PORE = CylinderPore(
     pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
 )
 
@@ -246,7 +245,7 @@ def _run_corrected(tmp_path: Path, wall_h_nm: float) -> RunResult:
     work = tmp_path / f"wall-{wall_h_nm}"
     work.mkdir(parents=True, exist_ok=True)
     path = work / "pore.vol"
-    CORRECTED_PORE.generate(maxh_nm=4.0, wall_h_nm=wall_h_nm).ngmesh.Save(str(path))
+    mesh_cylinder_pore(CORRECTED_PORE, maxh_nm=4.0, wall_h_nm=wall_h_nm).ngmesh.Save(str(path))
     text = CORRECTED_CASE.format(path=path)
     return run_document(
         loads_case(text),
@@ -285,7 +284,9 @@ def test_ver40_the_plausible_mesh_passes_num26_and_is_still_refused(tmp_path) ->
     work = tmp_path / "plausible"
     work.mkdir()
     path = work / "pore.vol"
-    CORRECTED_PORE.generate(maxh_nm=4.0, wall_h_nm=PLAUSIBLE_WALL_H_NM).ngmesh.Save(str(path))
+    mesh_cylinder_pore(CORRECTED_PORE, maxh_nm=4.0, wall_h_nm=PLAUSIBLE_WALL_H_NM).ngmesh.Save(
+        str(path)
+    )
     resolved = resolve(loads_case(CORRECTED_CASE.format(path=path)))
     ingested = ingest(resolved.mesh, resolved)
     order = int(resolved.model_options.get("order", MEASURES.element_order))
@@ -356,7 +357,7 @@ STABILISED_CONTRIBUTION = -1.906e-11
 # NUM-26
 @pytest.fixture(scope="module")
 def stabilised() -> models.ModelSolution:
-    mesh = PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=5.0, wall_h_nm=0.4)
     ladder = default_ladder(
         mesh,
         concentration_M=CONCENTRATION_M,

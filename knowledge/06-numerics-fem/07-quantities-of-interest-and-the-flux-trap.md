@@ -99,7 +99,7 @@ through the continuation ladder.
 | current across five `ψ` bands (moved ±2 nm, widths 0.3–0.98 of the lumen) | spread 9 × 10⁻⁶ |
 | spurious rectification on a pore symmetric in `z` | `RR` = 1.000021 |
 
-The last row is the one that matters for RSK-03. `CylindricalPoreGeometry` cannot rectify — it is
+The last row is the one that matters for RSK-03. `CylinderPore` cannot rectify — it is
 symmetric about `z = 0` — so any `RR ≠ 1` it reports is manufactured by the extraction. A
 cross-section integral of a non-conservative CG flux is exactly an extraction whose error depends on
 the direction of the flux, which is how a percent-level flux error becomes a fabricated

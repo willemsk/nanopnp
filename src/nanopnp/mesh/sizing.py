@@ -272,6 +272,18 @@ def edge_size(
     return None
 
 
+def size_wall(shape: Shape, wall_h_nm: float | None) -> None:
+    """Set ``maxh`` of every edge of ``shape`` named ``wall`` to ``wall_h_nm`` in nm, in place.
+
+    ``None`` leaves every edge as it is.
+    """
+    if wall_h_nm is None:
+        return
+    for edge in shape.edges:
+        if edge.name == "wall":
+            edge.maxh = wall_h_nm
+
+
 EXCLUSION_SIZE = "wall_h_nm"
 """What the ``exclusion`` domain is sized at: the resolved wall target.
 

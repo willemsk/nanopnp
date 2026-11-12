@@ -14,7 +14,8 @@ from nanopnp.geometry.analyte import (
     SphereBody,
     SpheroidBody,
 )
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_pore_with_analyte
 from nanopnp.numerics.measures import AXISYMMETRIC, FixedCharge
 from nanopnp.physics import models
 from nanopnp.physics.distance import wall_distance
@@ -189,7 +190,7 @@ def test_num29_the_reaction_route_converges_to_the_domain_route(
     )
 
 
-REFERENCE_PORE = CylindricalPoreGeometry(
+REFERENCE_PORE = CylinderPore(
     pore_radius_nm=4.5, membrane_thickness_nm=13.0, reservoir_radius_nm=20.0
 )
 
@@ -219,7 +220,7 @@ REFERENCE_SHELL_NM = (0.25, 1.1)
 @pytest.fixture(scope="module")
 def reference_case() -> tuple[CoupledModel, AnalyteForces, float]:
     geometry = PoreWithAnalyte(REFERENCE_PORE, REFERENCE_BODY, analyte_h_nm=REFERENCE_MESH[1])
-    mesh = geometry.generate(maxh_nm=REFERENCE_MESH[0], wall_h_nm=REFERENCE_MESH[1])
+    mesh = mesh_pore_with_analyte(geometry, maxh_nm=REFERENCE_MESH[0], wall_h_nm=REFERENCE_MESH[1])
     # PHY-02: the distance field is to the pore wall, and the analyte is not a
     # source. Driving the wall corrections from proximity to the body would be a
     # model change, and it goes behind a flag rather than into a benchmark.
