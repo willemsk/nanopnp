@@ -15,6 +15,7 @@ not in the render, or there are more than ``MAX_PICKS``.
 from __future__ import annotations
 
 import fnmatch
+import html
 import json
 import re
 import shutil
@@ -103,7 +104,10 @@ def build(picks_path: str, indexes: list[str], out: Path) -> int:
     spec["total"] = len(found)
     (out / "digest.json").write_text(json.dumps(spec, indent=1, ensure_ascii=False))
     data = json.dumps(spec, ensure_ascii=False).replace("</", "<\\/")
-    (out / "index.html").write_text(TEMPLATE.read_text().replace("/*DATA*/null", data))
+    page = TEMPLATE.read_text().replace("/*DATA*/null", data)
+    # The page's name is the digest's own title, which the gallery shows.
+    title = html.escape(str(spec.get("title", "GUI digest")))
+    (out / "index.html").write_text(page.replace("/*TITLE*/", title))
     for pick in picks:
         print(f"{len(pick['members']):3d}  {pick['id']}")
     print(f"{len(picks)} picks cover {len(found)} shots")

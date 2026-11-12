@@ -258,6 +258,17 @@ body only where the continuum body holds none of `geometry.pore`, `inputs.profil
 **Item 9.** `render_shell.py`'s 2WCD project builds its continuum model alone; shots of each `/continuum/<id>` built,
 building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 
+> **Outcome — item 9.** Contour's edit is held per model by the server (`ContinuumModel.start_edit`, `save_edit`
+> through `derive_model`), drawn editable over the outline it came from; Measure and Seed run `AssessProcess` on the
+> model's build case, so an edit is measured only where the model walks stages 2 to 4. Region's labels take a value
+> typed on the drawing (`plane_value`); Mesh's histogram outlines a tenth's elements. Stage 4 refuses 2WCD at isolevel
+> 0.9 (the loop splits into nine). The reviewer gave 16 major and 9 minor findings, none blocking, and the critique
+> 15; the canvas fixes (a halo over a picture or mesh, the legend on a panel, the view refit and *Fit*, r from the
+> axis, the membrane as its open outline), the salt read from the case and the isolevel named by the refusal landed
+> here, and the rest went to the author as the digest's questions. The render of 206 shots shows no page error and no
+> contrast, non-text or target failure; the digest, 14 picks for 58 shots, is
+> [published](https://claude.ai/artifact/BPJ8ojhCzRkresApCL5qht).
+
 ### Work items
 
 - [x] 800581b 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,
@@ -273,7 +284,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 - [x] 641758a 6. `io/case.py`, `pipeline/checks.py`, `mesh/sizing.py`, `generate.py`, `ingest.py`, VER-53, §5.2.2's and §5.3.1's
   NOTEs (D5); done when `test_mesh_sizing.py` passes, VER-62 unmoved. **Executor:** main
 - [x] 7. Compaction checkpoint. **Executor:** main
-- [ ] 8. `gui/web/continuum.py`, `plane.py`, `assets/plane.js`, the frame, pages and pane, `plot/data.py:mesh_elements`,
+- [x] 45d3f65 8. `gui/web/continuum.py`, `plane.py`, `assets/plane.js`, the frame, pages and pane, `plot/data.py:mesh_elements`,
   VER-78's text (D6, D7); done when VER-78 (a) to (d), (m) and the import guard pass. **Executor:** main
 - [ ] 9. The four tools drafted on 2WCD (D8, D9); `render_shell.py`; `/np-gui render shell`, `review`, `publish` (D10);
   done when the digest is published. **Executor:** main

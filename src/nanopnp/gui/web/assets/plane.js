@@ -7,6 +7,7 @@
     contour: ['--accent', 2, []], pore: ['--canvas-plot-ink', 1.5, []],
     membrane: ['--muted', 1.5, []], exclusion: ['--changed', 1.5, [5, 3]],
     reservoir: ['--muted', 1, [6, 4]], probe: ['--warn', 1.5, [4, 3]], lumen: ['--ok', 1.5, []],
+    original: ['--muted', 1.5, [3, 3]],
   };
   // The solids a drawing fills lightly under their outline, so a slab reads as one.
   const FILLED = ['membrane', 'pore', 'exclusion'];
@@ -32,7 +33,14 @@
       this.notes = document.createElement('div');
       this.notes.className = 'plane-notes';
       this.notes.setAttribute('role', 'status');
-      this.host.append(this.canvas, this.notes);
+      const fit = document.createElement('button');
+      fit.type = 'button';
+      fit.className = 'plane-fit';
+      fit.textContent = 'Fit';
+      fit.title = 'Fit the drawing to the view';
+      fit.dataset.control = 'plane-fit';
+      fit.addEventListener('click', () => { if (this.drawing) { this.fit(this.drawing.extent_nm); this.draw(); } });
+      this.host.append(this.canvas, this.notes, fit);
       new ResizeObserver(() => this.resized()).observe(this.host);
       // The theme sets the root's attributes, and the canvas draws in its tokens.
       new MutationObserver(() => this.draw()).observe(document.documentElement, {
@@ -65,7 +73,10 @@
         notes: note ? [note] : [],
       };
       await Promise.all(drawing.layers.filter((l) => l.kind === 'image').map((l) => this.image(l.url)));
-      if (drawing.frame !== this.frame) this.fitted = false;
+      // The view keeps its pan and zoom unless the frame changes, or the drawing first has
+      // something to frame.
+      const framed = Boolean(this.drawing && this.drawing.framed);
+      if (drawing.frame !== this.frame || (!framed && drawing.framed)) this.fitted = false;
       this.frame = drawing.frame;
       this.drawing = drawing;
       this.picked = null;
@@ -188,6 +199,7 @@
       this.highlight(ctx);
       ctx.restore();
       this.axes(ctx, area);
+      this.boxes = [];
       for (const layer of layers) if (layer.kind === 'label') this.label(ctx, layer, area);
       this.legend(ctx, area);
     },
@@ -225,21 +237,41 @@
               ctx.stroke(path);
             }
           }
+          if (layer.outlined && layer.outlined.length) {
+            const v = layer.vertices_nm, t = layer.triangles, band = new Path2D();
+            for (const index of layer.outlined) {
+              const [a, b, c] = [t[3 * index] * 2, t[3 * index + 1] * 2, t[3 * index + 2] * 2];
+              band.moveTo(v[a], v[a + 1]); band.lineTo(v[b], v[b + 1]); band.lineTo(v[c], v[c + 1]);
+              band.closePath();
+            }
+            ctx.strokeStyle = token('--accent') || '#5b3fd6';
+            ctx.lineWidth = 2 / this.scale;
+            ctx.stroke(band);
+          }
         });
         return;
       }
       const [colour, width, dash] = ROLES[layer.role] || ['--canvas-plot-ink', 1.5, []];
       this.inData(ctx, ratio, () => {
-        if (layer.kind === 'polygon' && FILLED.includes(layer.role)) {
+        const meshed = this.drawing.layers.some((l) => l.kind === 'mesh');
+        const pictured = meshed || this.drawing.layers.some((l) => l.kind === 'image');
+        if (layer.kind === 'polygon' && FILLED.includes(layer.role) && !meshed) {
           ctx.globalAlpha = 0.22;
           ctx.fillStyle = token(colour) || '#4f5563';
           ctx.fill(drawn.path);
           ctx.globalAlpha = 1;
         }
+        ctx.lineJoin = 'round';
+        // Over a picture or a mesh a line takes a halo in the canvas's colour, so it reads on any.
+        if (pictured) {
+          ctx.strokeStyle = token('--canvas-plot') || '#ffffff';
+          ctx.lineWidth = (width + 3) / this.scale;
+          ctx.setLineDash([]);
+          ctx.stroke(drawn.path);
+        }
         ctx.strokeStyle = token(colour) || '#16181d';
         ctx.lineWidth = width / this.scale;
         ctx.setLineDash(dash.map((d) => d / this.scale));
-        ctx.lineJoin = 'round';
         ctx.stroke(drawn.path);
       });
       if (layer.role === 'contour') this.vertices(ctx, layer);
@@ -250,11 +282,14 @@
       const p = layer.points_nm;
       if (p.length < 4) return;
       const apart = Math.hypot(p[2] - p[0], p[3] - p[1]) * this.scale;
-      if (apart < 6) return;
+      // An edit always shows its handles, smaller where they crowd; a built outline only once
+      // they stand apart.
+      if (apart < 6 && !layer.editable) return;
+      const size = apart < 6 ? 3 : 5;
       ctx.fillStyle = token('--accent') || '#5b3fd6';
       for (let k = 0; k < p.length; k += 2) {
         const [x, y] = this.toScreen(p[k], p[k + 1]);
-        ctx.fillRect(x - 2.5, y - 2.5, 5, 5);
+        ctx.fillRect(x - size / 2, y - size / 2, size, size);
       }
     },
 
@@ -347,6 +382,38 @@
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, x + 5, y);
+      this.boxes.push({ x, y: y - 10.5, w: width, h: 21, layer });
+    },
+
+    // A value typed on the drawing: its label opens a field in place, and Enter sends it.
+    typeValue(box) {
+      const field = document.createElement('input');
+      field.type = 'number';
+      field.step = 'any';
+      field.value = box.layer.value;
+      field.className = 'plane-field';
+      field.setAttribute('aria-label', `${box.layer.name}, in ${box.layer.unit}`);
+      Object.assign(field.style, { left: `${box.x}px`, top: `${box.y}px`, width: `${Math.max(box.w, 120)}px` });
+      this.host.append(field);
+      field.focus();
+      field.select();
+      let closed = false;
+      const done = (send) => {
+        // Removing the field blurs it, which would close it a second time.
+        if (closed) return;
+        closed = true;
+        const value = Number(field.value);
+        field.remove();
+        if (send && field.value !== '' && Number.isFinite(value) && value !== box.layer.value) {
+          this.emit('plane_value', { path: box.layer.path, value });
+        }
+        this.canvas.focus();
+      };
+      field.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') done(true);
+        if (e.key === 'Escape') done(false);
+      });
+      field.addEventListener('blur', () => done(false));
     },
 
     legend(ctx, area) {
@@ -358,14 +425,21 @@
       ctx.textBaseline = 'middle';
       const x = area.x + area.w - 150;
       let y = area.y + 14;
+      const rows = mesh.categorical ? mesh.legend.length : 2;
+      // The legend stands on the panel's colour, so it reads over any element.
+      ctx.fillStyle = token('--panel') || '#ffffff';
+      ctx.strokeStyle = token('--control-edge') || '#7c8290';
       ctx.lineWidth = 1;
+      ctx.fillRect(x - 8, y - 12, 146, rows * 18 + 8);
+      ctx.strokeRect(x - 7.5, y - 11.5, 146, rows * 18 + 8);
+      const text = token('--ink') || ink;
       ctx.strokeStyle = token('--colourbar-outline') || ink;
       if (mesh.categorical) {
         mesh.legend.forEach((name, index) => {
           ctx.fillStyle = mesh.palette[index];
           ctx.fillRect(x, y - 6, 12, 12);
           ctx.strokeRect(x + 0.5, y - 5.5, 12, 12);
-          ctx.fillStyle = ink;
+          ctx.fillStyle = text;
           ctx.fillText(name, x + 18, y);
           y += 18;
         });
@@ -377,7 +451,7 @@
         ctx.fillRect(x + (k * 120) / steps, y - 6, 120 / steps + 0.5, 12);
       }
       ctx.strokeRect(x + 0.5, y - 5.5, 120, 12);
-      ctx.fillStyle = ink;
+      ctx.fillStyle = text;
       ctx.fillText(`${mesh.colour.toUpperCase()} ${mesh.scale[0]} to ${mesh.scale[1]}`, x, y + 18);
     },
 
@@ -441,6 +515,11 @@
       this.drag = null;
       if (!drag || drag.moved || !this.drawing) return;
       const [x, y] = this.point(event);
+      const box = (this.boxes || []).find((b) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
+      if (box) {
+        this.typeValue(box);
+        return;
+      }
       const picked = this.nearestVertex(x, y) || this.triangleAt(...this.toData(x, y));
       this.picked = picked ? { layer: picked.layer, index: picked.index } : null;
       this.draw();

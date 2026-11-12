@@ -31,7 +31,7 @@ light and dark. Then run `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <
 **`shell`**, the browser workbench: `uv run python .claude/scripts/gui/render_shell.py [--only <group> ...] <r>`.
 It writes `<r>/manifest.json`, runs `shoot.cjs` over it and stops its servers. Every shot is light and dark
 (`[1280, 800]`), and each waits for the screen's `data-screen-ready`, as the workbench sets it once Mol* has
-drawn. Five groups, all by default:
+drawn. Six groups, all by default:
 
 - `states`: each screen of `nanopnp.gui.web.screens.SCREENS` in each state of `nanopnp.gui.web.states.STATES`
   (`shell-<state>-<screen>-<scheme>`).
@@ -52,9 +52,14 @@ drawn. Five groups, all by default:
   (`shell-molecular-<name>-<scheme>`): `refused`, Prepare after a build of a structure moved off z under
   `axis: z`, and `building`, Protonation shot while its build runs. The built tools are the `2wcd` group's
   `m-<tool>` shots and the empty ones the `states` group's. The `2wcd` group also opens the windows over a
-  tool (`PROJECT_EXTRAS`): *Open structure…*, the titratable groups, the warnings and the settings.
+  tool (`PROJECT_EXTRAS`): *Open structure…*, the titratable groups, the warnings and the settings, the mesh
+  coloured by SICN, and last an unsaved Contour edit, which the server then holds.
+- `continuum`: the Continuum tools on a project holding the cached 2WCD molecular and continuum models, its store
+  empty (`shell-continuum-<name>-<scheme>`): `refused`, Contour blocked by stage 4 at an isolevel of 0.9, and
+  `building`, Protein geometry shot while its build runs. The built tools are the `2wcd` group's `c-<tool>`
+  shots.
 
-Needs Playwright through `NODE_PATH` and the `gui` extra. All five groups, 202 shots, take about five minutes
+Needs Playwright through `NODE_PATH` and the `gui` extra. All six groups, 250 shots, take about seven minutes
 on four cores once the 2WCD cache exists (seventeen when each shot ran alone, each in a browser context of its
 own); the first render also builds that cache. The servers start together. `shoot.cjs` runs the shots of one server in order, since a server's
 state carries from shot to shot, and the servers side by side on `NANOPNP_SHOOT_JOBS` workers (default: the

@@ -887,3 +887,62 @@ body a.tool-link:visited {
   color: var(--canvas-plot-ink);
   font-size: var(--text-sm);
 }
+.plane-field {
+  position: absolute;
+  height: 21px;
+  padding: 0 0.25rem;
+  font-family: var(--font-num);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--focus);
+  outline: 2px solid var(--focus);
+}
+/* The Mesh tool's quality histogram: one bar per tenth, which outlines its elements in the view. */
+.histogram {
+  gap: 2px;
+  height: 72px;
+  border-bottom: 1px solid var(--control-edge);
+}
+.histogram .histogram-bar {
+  width: 1.75rem;
+  min-width: 1.75rem;
+  height: 100%;
+  padding: 0;
+  align-items: flex-end;
+}
+.histogram .histogram-bar .q-btn__content {
+  align-self: flex-end;
+  width: 100%;
+}
+.histogram .histogram-fill {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  background: var(--changed);
+}
+.histogram .histogram-bar[aria-pressed="true"] .histogram-fill {
+  background: var(--accent);
+}
+.histogram .histogram-bar[aria-pressed="true"] {
+  outline: 2px solid var(--focus);
+}
+/* In the corner the axes leave free, so it covers no part of the drawing. */
+.plane-fit {
+  position: absolute;
+  left: 0.375rem;
+  bottom: 0.375rem;
+  min-width: 2.5rem;
+  min-height: 1.75rem;
+  padding: 0 0.5rem;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--control-edge);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.plane-fit:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
