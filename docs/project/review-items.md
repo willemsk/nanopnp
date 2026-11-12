@@ -3050,6 +3050,8 @@ The WP5.15 `/np-gui review` and `impeccable`'s critique (§8.2.34 AJ6) raised, b
 file from the system's own picker, copied into the project's inputs, and the workbench's own browser, which returns a
 path, comes with the project dialogs. The project dialogs, the settings' rows, the menus, the Glossary, the log and
 the frame's chrome wait for the round of a suite that needs them.
+At WP5.17's collect (`docs/design/reviews/2026-11-12-continuum.md`) none was put: the Continuum screens open none
+of them, and they wait for the Physics suite's round (WP5.18).
 
 ### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
 
@@ -3091,6 +3093,10 @@ At WP5.16's second collect (`docs/design/reviews/2026-11-12-molecular.md`) the a
 look at the settings pane of Claude Code as an example." WP5.16 sets each setting's control on the right of its title
 and description, as asked; the pass over the window's spacing, with Claude Code's pane as the model, waits for
 WP5.21's pass over the frame.
+
+At WP5.17's collect (`docs/design/reviews/2026-11-12-continuum.md`): a changed Continuum value opens its tool at its
+field (`?field=`), built in WP5.17's item 12 with the list of one line per changed value beside the table, which
+its final render shows; the palette's look and the help page stay open.
 
 ### REV-238: The Prepare tool's axis and membrane are not dragged by handles
 
@@ -3203,3 +3209,26 @@ across it. The author, at WP5.16's second collect (`docs/design/reviews/2026-11-
 would indeed be a nice feature, let's mark it as a QoL to be included before the end of the phase."
 
 **Open**: built before Phase 5 closes, at the latest with WP5.21's pass over the frame.
+
+### REV-244: The author's notes on the Continuum digest that ask for a discussion
+
+The author's notes at WP5.17's collect (`docs/design/reviews/2026-11-12-continuum.md`) that the package does not
+settle:
+
+- **A suite between Molecular and Continuum.** "Now that I see the division, perhaps the charge map and contour
+  building need to go to their own suite that sits in between molecular and continuum. I would like to add this as a
+  follow-up for more in-depth discussion." WP5.17 merges Contour into *Pore geometry*, which such a suite would take
+  whole. The radius against z and the vertex list, which the design document's Contour row drew and the drafts did
+  not, wait for the same discussion.
+- **Region's CAD tooling.** "It should include some limited CAD tooling as well (ideally we import this from an
+  existing package)." Drawing the (r, z) domain by hand is the sketcher (FR-42), a phase after Phase 5; which package
+  it imports is put to the author with that phase's plan. WP5.17 draws each domain and selects it, and its values are
+  typed (WB-41).
+- **Subdivisions for meshing.** Preferring the tree of the mesh's parts: "I like this because it is also extensible.
+  We may need a way as well to create subdivisions in boundaries and domains for meshing purposes as well." These are
+  the refinement regions that the design document's Mesh builder lists as later (FR-11); in the tree each would be a
+  child of the part it divides.
+
+**Open**, a question for the author: the suite at a design round before the Study suite's prototype (WP5.19), whose
+charge screen is the other half of it; the CAD tooling with the sketcher's phase; the subdivisions with the
+refinement regions.

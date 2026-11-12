@@ -26,7 +26,9 @@ one, and most of them repeat each other (WP5.15's collect, 11 November 2026).
 
    Look at every pick yourself before you write its card.
 4. **Write `<s>/digest/<topic>/picks.json`**: `title`, `lede`, `round`, `groups` (`key`, `title`,
-   `sub`), `decisions` (each D-row's id and a two-word name), and `picks`. Each pick has:
+   `sub`), `decisions` (each D-row's id and a two-word name), and `picks`; `verdicts`, the words a card
+   is marked with, is `["keep", "drop", "change"]` unless given, and a page of layouts to choose among
+   gives `["prefer", "borrow", "reject"]`. Each pick has:
    - `id`, `group`, `title`, `decisions`;
    - `why`: one or two sentences on why this shot and not its group's others;
    - `look`: what to judge in it, naming each fixed finding and each open item it shows, and which
