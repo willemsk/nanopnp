@@ -17,7 +17,7 @@ changed values as a short list. Three suites, the route and the close follow: ab
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.16 merged
   (`v0.6.0-alpha.16`).
   **WP5.17** [implemented](phase-5/wp5.17-the-continuum-suite.md) on `claude/wp-5-17-implement-0junxj`; the author's
-  round collected ([the record](../design/reviews/2026-11-12-continuum.md)). Next, `/np-ship wp 5.17`. host: claude-code.
+  round collected ([the record](../design/reviews/2026-11-12-continuum.md)), its PR open. Next, `/np-ship wp 5.17`. host: claude-code.
 
 ## Not to be re-decided
 
