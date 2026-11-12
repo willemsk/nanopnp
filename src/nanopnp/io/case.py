@@ -509,6 +509,41 @@ class Elements(_Strict):
     p: str = "P1"
 
 
+class MeshSizes(_Strict):
+    """Section 5.2.2's sizes besides the global and the wall's, in nm; none takes the table's."""
+
+    protein_nm: float | None = Field(
+        default=None,
+        gt=0.0,
+        allow_inf_nan=False,
+        description="The pore domain's element size, in nm; none takes section 5.2.2's 0.1.",
+    )
+    electrolyte_nm: float | None = Field(
+        default=None,
+        gt=0.0,
+        allow_inf_nan=False,
+        description="The reservoir domain's element size, in nm; none takes section 5.2.2's 2.8.",
+    )
+    arc_nm: float | None = Field(
+        default=None,
+        gt=0.0,
+        allow_inf_nan=False,
+        description=(
+            "The element size on the reservoir's outer boundary, in nm; none takes section "
+            "5.2.2's 5 nm."
+        ),
+    )
+    axis_in_pore_nm: float | None = Field(
+        default=None,
+        gt=0.0,
+        allow_inf_nan=False,
+        description=(
+            "The element size on the axis inside the pore, in nm; none takes section 5.2.2's "
+            "0.075 nm."
+        ),
+    )
+
+
 class Mesh(_Strict):
     """Stage 6: the mesher and its size field."""
 
@@ -531,10 +566,10 @@ class Mesh(_Strict):
         gt=0.0,
         allow_inf_nan=False,
         description=(
-            "The global element size of an idealised pore, in nm; none takes the global size "
-            "of the size field. Read only beside geometry.pore."
+            "The global element size of a generated mesh, in nm; none takes section 5.2.2's 10 nm."
         ),
     )
+    sizes: MeshSizes = Field(default_factory=MeshSizes)
     size_scale: float = Field(default=1.0, gt=0.0, allow_inf_nan=False)
     boundary_layer: bool = False
 

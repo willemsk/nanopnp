@@ -500,8 +500,9 @@ defaults to the bilayer's 2.8 nm, so a solid-state pore sets it. Beside `geometr
 only a structure's stages read are refused naming each: `geometry.membrane.centre_z_nm` away from 0,
 which is a position in a structure's frame, and `geometry.density` or `geometry.contour` away from
 their defaults; so is `numerics.mesh.backend` other than `netgen`, since the Gmsh backend's size
-field is posed on a structure's region (WP57). `boundary_conditions.wall_charge_C_m2`
-(PHY-09) and `numerics.mesh.maxh_nm` are read only beside `geometry.pore`, and each is refused
+field is posed on a structure's region (WP57), and so is a typed `numerics.mesh.sizes` entry, which
+sizes a part an idealised pore does not have (§5.2.2's NOTE on typed sizes).
+`boundary_conditions.wall_charge_C_m2` (PHY-09) is read only beside `geometry.pore`, and is refused
 elsewhere naming the key.
 
 NOTE (`geometry.contour`, stage 4, FR-07, FR-08; WP20): `isolevel`
@@ -655,10 +656,11 @@ version is recorded beside the key (WP23 D8, D9). The key's wall entry is the re
 its source and `size_scale`, never λ_D: λ_D moves the mesh only through the wall size, so below
 the 1.4741 M at which the ceiling binds a salt sweep meshes once. λ_D stays in the manifest's
 sizing record beside the key (REV-16; WP46).
-`maxh_nm`, default none, is the global element size of an idealised pore, finite and positive
-and refused naming its value otherwise; none takes §5.2.2's global 10 nm. It is multiplied by
-`size_scale` as the wall size is, and it enters the stage-6 key (the §5.2.2 NOTE on an idealised
-pore).
+`maxh_nm`, default none, is the global element size of any generated mesh, and `sizes` holds the
+four other maxima of §5.2.2's table (§8.2.40 AP3): each is finite and positive and refused naming
+its value otherwise, and none takes the table's value. Each is multiplied by `size_scale` as the
+wall size is, and enters the stage-6 key (§5.2.2's NOTE on typed sizes); beside `geometry.pore` a
+typed `sizes` entry is refused naming it.
 `boundary_layer: true` is refused naming FR-11. `geometry.analyte` on a generated mesh is refused naming FR-21.
 Beside `inputs.mesh`, any `numerics.mesh` key away from its default is refused naming it, because
 nothing meshes and the key would change nothing.

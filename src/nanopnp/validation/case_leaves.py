@@ -295,7 +295,19 @@ LEAVES: dict[str, Leaf] = {
         "stage", "mesh", "concentration whose Debye length sizes the auto wall target in stage 6"
     ),
     "numerics.mesh.maxh_nm": Leaf(
-        "stage", "mesh", "global element size of an idealised pore's mesh in stage 6"
+        "stage", "mesh", "global element size of a generated mesh in stage 6"
+    ),
+    "numerics.mesh.sizes.protein_nm": Leaf(
+        "stage", "mesh", "pore domain element size of a structure's mesh in stage 6"
+    ),
+    "numerics.mesh.sizes.electrolyte_nm": Leaf(
+        "stage", "mesh", "reservoir domain element size of a structure's mesh in stage 6"
+    ),
+    "numerics.mesh.sizes.arc_nm": Leaf(
+        "stage", "mesh", "reservoir outer boundary element size of a structure's mesh in stage 6"
+    ),
+    "numerics.mesh.sizes.axis_in_pore_nm": Leaf(
+        "stage", "mesh", "element size on the axis inside the pore of a structure's mesh in stage 6"
     ),
     "numerics.mesh.size_scale": Leaf(
         "stage", "mesh", "global mesh resolution scaling factor applied in stage 6"

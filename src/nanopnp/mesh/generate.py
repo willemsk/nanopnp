@@ -20,11 +20,11 @@ from nanopnp.mesh.sizing import (
     EXCLUSION_SIZE,
     GATE_CONSTANTS,
     GRADING,
-    SIZES,
     WALL_MAX_BOUND,
     WALL_MEAN_BOUND,
     SizeTable,
     WallSize,
+    case_sizes,
     corrected_debye_ratio,
     debye_record,
     resolve_wall_size,
@@ -220,8 +220,7 @@ class GeneratedMesh:
 def idealised_recipe(resolved: ResolvedCase) -> tuple[WallSize, float, dict[str, Canonicalisable]]:
     """Return an idealised pore's wall size, its scaled global size and its stage-6 recipe."""
     wall = resolve_wall_size(resolved.document, permittivity_0=resolved.electrolyte.permittivity_0)
-    declared = resolved.document.numerics.mesh.maxh_nm
-    maxh_nm = (declared if declared is not None else SIZES.global_nm) * wall.size_scale
+    maxh_nm = case_sizes(resolved.document).global_nm * wall.size_scale
     return wall, maxh_nm, idealised_parameters(wall, maxh_nm)
 
 
@@ -247,6 +246,7 @@ def generate(
     """
     recipe: Mapping[str, Canonicalisable] | None = None
     backend = resolved.document.numerics.mesh.backend
+    table = case_sizes(resolved.document)
     match record:
         case IdealisedRegionRecord():
             from netgen import config
@@ -261,9 +261,9 @@ def generate(
             )
             _warn_if_coarse(wall)
             data, version = mesh_region(
-                record, wall.wall_h_nm, SIZES.scaled(wall.size_scale), backend
+                record, wall.wall_h_nm, table.scaled(wall.size_scale), backend
             )
-    sizes = SIZES.scaled(wall.size_scale)
+    sizes = table.scaled(wall.size_scale)
 
     directory.mkdir(parents=True, exist_ok=True)
     path = write_msh41(data, directory / MESH_FILENAME)
