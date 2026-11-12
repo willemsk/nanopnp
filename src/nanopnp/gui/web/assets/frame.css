@@ -339,6 +339,10 @@ body .nicegui-footer.frame-footer {
   .statusbar .q-btn.state-err {
     color: var(--err) !important;
   }
+  /* A table's paging buttons: Quasar's `.text-grey-8` fails on the dark panel. */
+  .q-table__bottom .q-btn.text-grey-8 {
+    color: var(--ink) !important;
+  }
 }
 /* Quasar shrinks a floating label to 0.75 of the field's text, under the 12 px floor (WB-21). */
 .q-field--float .q-field__label {
@@ -773,10 +777,6 @@ body .nicegui-footer.frame-footer {
 }
 .colour-bar-scale.positive-red {
   background: linear-gradient(to right, #3b4cc0, #dddddd, #b40426);
-}
-/* A table's paging buttons take the text ink: Quasar's grey fails on the dark panel. */
-.q-table__bottom .q-btn {
-  color: var(--ink);
 }
 /* A pane's secondary buttons take the control's edge. */
 .tool-pane .q-btn--outline::before,
