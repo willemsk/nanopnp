@@ -269,7 +269,8 @@
           }
           if (layer.outlined && layer.outlined.length) {
             // A histogram's bar: every other element recedes under a wash of the canvas's colour,
-            // and the bar's own are filled again in their colours and outlined.
+            // and the bar's own are filled again in their colours, edged as the mesh is: the
+            // accent is kept for what is picked, and a bar holds most of a mesh.
             const v = layer.vertices_nm, t = layer.triangles, band = new Path2D();
             const [r0, z0] = this.toData(0, this.canvas.height);
             const [r1, z1] = this.toData(this.canvas.width, 0);
@@ -287,8 +288,8 @@
               ctx.fillStyle = this.colourOf(layer, layer.values[index]);
               ctx.fill(one);
             }
-            ctx.strokeStyle = token('--accent') || '#5b3fd6';
-            ctx.lineWidth = 1.5 / this.scale;
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.lineWidth = 0.5 / this.scale;
             ctx.stroke(band);
           }
         });
@@ -397,7 +398,7 @@
       ctx.lineWidth = 1;
       ctx.setLineDash([]);
       ctx.strokeRect(area.x + 0.5, area.y + 0.5, area.w - 1, area.h - 1);
-      ctx.font = `11px ${font}`;
+      ctx.font = `12px ${font}`;
       const [r0, z0] = this.toData(area.x, area.y + area.h);
       const [r1, z1] = this.toData(area.x + area.w, area.y);
       const rStep = this.step(r1 - r0), zStep = this.step(z1 - z0);
@@ -429,11 +430,17 @@
       ctx.restore();
     },
 
+    // A value's label: its name in the interface's face and its number in the numbers' (WB-21).
     label(ctx, layer, area) {
       let [x, y] = this.toScreen(layer.anchor_nm[0], layer.anchor_nm[1]);
-      const text = `${layer.name} ${layer.value} ${layer.unit}`.replace('-', '−');
-      ctx.font = `12px ${token('--font-num') || 'monospace'}`;
-      const width = ctx.measureText(text).width + 10;
+      const name = `${layer.name} `;
+      const number = `${layer.value} ${layer.unit}`.replace('-', '−');
+      const ui = `12px ${token('--font-ui') || 'sans-serif'}`;
+      const num = `12px ${token('--font-num') || 'monospace'}`;
+      ctx.font = ui;
+      const named = ctx.measureText(name).width;
+      ctx.font = num;
+      const width = named + ctx.measureText(number).width + 10;
       x = Math.min(Math.max(x, area.x + 2), area.x + area.w - width - 2);
       y = Math.min(Math.max(y, area.y + 12), area.y + area.h - 12);
       const key = this.key;
@@ -451,7 +458,10 @@
       ctx.fillStyle = token('--ink') || '#16181d';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(text, x + 5, y);
+      ctx.font = ui;
+      ctx.fillText(name, x + 5, y);
+      ctx.font = num;
+      ctx.fillText(number, x + 5 + named, y);
       this.boxes.push({ x, y: y - 10.5, w: width, h: 21, layer });
     },
 
@@ -496,14 +506,17 @@
           entries.push({ kind: 'bar', ...layer.bar });
         } else if (layer.kind === 'mesh' && layer.categorical) {
           layer.legend.forEach((name, index) => entries.push({
-            kind: 'swatch', text: name,
+            // The material's name as the tree and Region write it.
+            kind: 'swatch', text: name.charAt(0).toUpperCase() + name.slice(1),
             colour: layer.focus !== undefined && layer.focus !== index ? receding() : layer.palette[index],
           }));
         } else if (layer.kind === 'mesh') {
           entries.push({ kind: 'bar', quantity: layer.colour.toUpperCase(), unit: 'no unit',
             low: layer.scale[0], high: layer.scale[1], palette: layer.palette });
         } else if (layer.kind === 'domain' && layer.filled) {
-          entries.push({ kind: 'swatch', text: layer.title, colour: layer.fill });
+          entries.push({
+            kind: 'swatch', text: layer.title, colour: layer.fill, alpha: layer.picked ? 0.9 : 0.55,
+          });
         } else if (layer.title && layer.kind !== 'domain' && !titles.has(layer.title)) {
           titles.add(layer.title);
           entries.push({ kind: 'line', text: layer.title, role: layer.role });
@@ -556,20 +569,27 @@
           ctx.strokeStyle = edge;
           ctx.strokeRect(x + 6.5, y + 15.5, KEY_BAR_W, 9);
           ctx.fillStyle = text;
-          ctx.font = `11px ${token('--font-num') || 'monospace'}`;
+          ctx.font = `12px ${token('--font-num') || 'monospace'}`;
           ctx.fillText(shown(entry.low), x + 6, y + 31);
           ctx.textAlign = 'right';
           ctx.fillText(shown(entry.high), x + 6 + KEY_BAR_W, y + 31);
           ctx.textAlign = 'left';
-          ctx.font = `11px ${ui}`;
+          ctx.font = `12px ${ui}`;
           ctx.fillText(entry.unit, x + 6, y + 41);
           y += KEY_BAR;
           continue;
         }
         ctx.font = `12px ${ui}`;
         if (entry.kind === 'swatch') {
+          // A domain's swatch is laid over the canvas's colour as its fill is, so they match.
+          if (entry.alpha !== undefined) {
+            ctx.fillStyle = token('--canvas-plot') || '#ffffff';
+            ctx.fillRect(x + 6, y + 3, 12, 12);
+            ctx.globalAlpha = entry.alpha;
+          }
           ctx.fillStyle = entry.colour;
           ctx.fillRect(x + 6, y + 3, 12, 12);
+          ctx.globalAlpha = 1;
           ctx.strokeStyle = edge;
           ctx.strokeRect(x + 6.5, y + 3.5, 12, 12);
         } else {

@@ -32,7 +32,7 @@ typed sizes, and the workbench gains its Continuum tools. No golden moves (VER-6
 
 - **Added**:
   - The Continuum tools, each a page at `/continuum/<tool>` with the tool list, a pane of the model's values and an
-    (r, z) view that pans and zooms at equal scale: *Pore geometry*, *Region* and *Mesh: sizes, quality* (FR-33,
+    (r, z) view that pans and zooms at equal scale: *Pore geometry*, *Region* and *Mesh* (FR-33,
     FR-35, FR-39). A tool builds the continuum model alone over the molecular model chosen in its pane.
   - *Pore geometry*: the density and the reduced (r, z) maps under the outline, each with its colour bar, and stages
     2 to 4's values; *Edit outline* edits the outline stage 4 built or the one the model supplies, measures and

@@ -3249,3 +3249,39 @@ settle:
 **Open**, a question for the author: the suite at a design round before the Study suite's prototype (WP5.19), whose
 charge screen is the other half of it; the CAD tooling with the sketcher's phase; the subdivisions with the
 refinement regions.
+
+### REV-245: What the Continuum suite's final review left open
+
+WP5.17's final render (244 shots, no page error and no contrast, non-text or target finding) was reviewed by the
+`gui-reviewer` (6 major, 17 minor, none blocking) and by `impeccable`'s critique (24/40). Item 13 fixed the gate's
+verdict and stage 4's under each tool's *Build*, the parts' sizes read from the built mesh, "default" for the table
+with a glossary entry, the tool rows blocked while a file forms no case, the refused shot, the view's note while
+building, *Seed* waiting for the map, the editor scrolled into view, the picked bar edged as the mesh is, 12 px
+canvas text, the labels' words in the interface's face, the keys' swatches as their fills, *Mesh* as the tool's
+name, and the design document's renderer and glossary rows. These stay:
+
+- **The canvas's labels and keys.** Region's values on the drawing sit at the view's right edge, not at what they
+  measure (the thickness across the membrane, the centre at its z, the reservoir's arc off view), and nothing shows
+  that a label takes a typed value; a key lists lines out of view (the reservoir's boundary, the lumen radius) and
+  covers the drawing's top; the equal scale centres the drawing, so up to 2 nm left of the axis is shown. With the
+  handles dragged in the view and its keyboard pass, WP5.21 (QR-16).
+- **The pane's layout.** In edit mode the stage 2 to 4 fields stay above the editor, its *Save* and *Discard* below;
+  *Expose* is a row under each field and *Modified only* sits under *Build*; each tool carries a "Later:" banner.
+  The critique asks for the inputs folded under the result, *Expose* as a toggle beside the field's reset, and the
+  banners moved to Help.
+- **Colour.** Pore geometry's outline is drawn in the accent, which WB-20 keeps for a selection; Region fills a
+  domain at 55% and Mesh at full strength, so one material has two colours, and the names come in three orders.
+  The critique proposes the outline in the plot's ink with a halo, and the materials as light and dark tokens drawn
+  alike. A building stage's ● takes the warning colour a stale stage takes.
+- **Words.** The changes list leads with the case path, not the field's label, and words an unset default two
+  ways; the compact list does not show that it scrolls. The part card repeats the part's name as its field's label,
+  and a domain's "size used" is its largest element. SICN, gamma, isolevel and the smoothing names link to no
+  glossary entry (WB-25).
+- **Progress.** A build says its stage, not how far it is or for how long (WB-23's "rung x of N").
+- **Computed in the shell.** Region's domains are cut from the region's outlines with `shapely` in `gui/web/plane.py`,
+  not read from the region artefact's faces; they agree with the meshed materials on 2WCD and the charged tube.
+
+**Open**, a question for the author: the layout, the colours and the words at the next suite's round (WP5.18), with
+the screens in front of the author; the canvas's labels and keys with WP5.21; the domains read from the artefact
+when the region artefact records its faces' outlines.
+

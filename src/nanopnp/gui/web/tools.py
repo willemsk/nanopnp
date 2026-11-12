@@ -683,6 +683,11 @@ class _Pane(Generic[ModelT]):
             if (reason := self.unbuilt(tool_id)) is not None:
                 glyph.text, word.text = "\N{EN DASH}", reason
                 glyph.classes(replace="tool-glyph state-none")
+            elif problem is not None and stage is not None:
+                # A file that forms no case blocks every stage the suite builds.
+                look = STATES["refused"][2]
+                glyph.text, word.text = STATES["refused"][0], "blocked: the file forms no case"
+                glyph.classes(replace=f"tool-glyph {look}")
             word.classes(replace=f"tool-word {look}")
             bar.set_visibility(stage is not None and stage == covering)
             if stage is not None and stage == covering:

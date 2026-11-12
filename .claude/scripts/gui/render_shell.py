@@ -40,6 +40,7 @@ from nanopnp.gui.web import server, theme
 from nanopnp.gui.web.screens import SCREENS
 from nanopnp.gui.web.settings import SETTINGS_FILENAME
 from nanopnp.gui.web.states import STATES
+from nanopnp.io.project import STORE_FOLDER
 
 ROOT = Path(__file__).resolve().parents[3]
 SHOOT = Path(__file__).with_name("shoot.cjs")
@@ -347,10 +348,21 @@ REFUSING_ISOLEVEL = 0.9
 """An isolevel at which 2WCD's stage 4 is refused: the loop breaks into islands."""
 
 
+UNMOVED_BY_ISOLEVEL = (
+    "nanopnp-structure-v0.5",
+    "nanopnp-protonation-v0.5",
+    "nanopnp-protonation-frame-v0.5",
+    "nanopnp-density-v0.5",
+    "nanopnp-reduced-v0.5",
+)
+"""The store's folders of stages 1 to 3, which a changed isolevel keys as before."""
+
+
 def continuum_project(out: Path, name: str, *, refused: bool) -> Path:
     """Return a project holding the cached 2WCD molecular and continuum models, its store empty.
 
-    With ``refused`` the continuum model's isolevel is one stage 4 refuses.
+    With ``refused`` the continuum model's isolevel is one stage 4 refuses, and the store holds
+    the cache's stages 1 to 3, so the build reaches stage 4's refusal in seconds.
     """
     source = cached_project(out)
     folder = molecular_project(out, name, off_axis=False)
@@ -359,6 +371,12 @@ def continuum_project(out: Path, name: str, *, refused: bool) -> Path:
     project = Project.open(folder)
     if refused:
         project.set_value("continuum", model.stem, "geometry.contour.isolevel", REFUSING_ISOLEVEL)
+        for kept in UNMOVED_BY_ISOLEVEL:
+            shutil.copytree(
+                source / STORE_FOLDER / "artefacts" / kept,
+                folder / STORE_FOLDER / "artefacts" / kept,
+                dirs_exist_ok=True,
+            )
     project.open_item(f"continuum/{model.stem}")
     return folder
 
@@ -371,7 +389,7 @@ def continuum_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[d
     """
     manifest = []
     for name, path, wait_ms in (
-        ("refused", "/continuum/geometry", 90000),
+        ("refused", "/continuum/geometry", 30000),
         ("building", "/continuum/geometry", 2500),
     ):
         for scheme in SCHEMES:
