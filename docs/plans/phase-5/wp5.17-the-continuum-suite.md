@@ -291,6 +291,18 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 > file. Above 0.25 s, so `BuiltModel.keyed_once` keys a pane's build, its refresh and each drawing once: 0.07 s to
 > 0.13 s in 2 to 5 walks.
 
+**Item 13.**
+
+> **Outcome — item 13.** The final render, four passes of 244 shots on the tree after item 12, ends with no page error
+> and no contrast, non-text or target finding; the first pass found the open tool's row, a picked part and the picked
+> bar marked by a shadow or an outline, which 1.4.11's check does not count, and each is a border now. The
+> `gui-reviewer` gave 6 major and 17 minor findings, none blocking, and the critique 24/40
+> (`<s>/gui-render/shell-ab86342-r3/`). Fixed here: the gate's and stage 4's verdicts under *Build*, the parts' sizes
+> read from the built mesh, "default" for the table with a glossary entry, the rows blocked while a file forms no
+> case, the refused shot (its store seeded with stages 1 to 3), one note while building, the editor scrolled into
+> view, the canvas's text and keys, *Mesh* as the tool's name, and the design document's renderer row. The rest is
+> REV-245: the canvas's labels and keys with WP5.21, the pane's layout, colours and words at the next round.
+
 ### Work items
 
 - [x] 800581b 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,

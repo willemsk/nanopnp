@@ -34,6 +34,7 @@ from nanopnp.gui.web.screens import Tool
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import _Pane, current_name
 from nanopnp.io.project import STORE_FOLDER
+from nanopnp.mesh.quality import QUALITY_FLOOR
 from nanopnp.mesh.sizing import SIZES, case_sizes
 
 __all__ = ["continuum_page", "current_continuum"]
@@ -48,8 +49,6 @@ COLOUR_TITLES = {"material": "Material", "sicn": "SICN", "gamma": "Gamma"}
 TIMES = "\N{MULTIPLICATION SIGN}"
 BINS = 10
 """The histogram's bars, each a tenth of the quality's range."""
-QUALITY_FLOOR = 0.3
-"""The quality gate's floor on SICN and gamma (section 5.2.2), marked on the histogram."""
 POINT_GROUP = "structure.symmetry.point_group"
 PORE_RADIUS = "geometry.pore.radius_nm"
 OUTLINE_STAGES = ("geometry.density.", "geometry.contour.")
@@ -66,7 +65,7 @@ PART_ROWS: tuple[tuple[str, str, str, str | None], ...] = (
     ("global", "", GLOBAL, "global_nm"),
 )
 """The Mesh tool's parts (WB-41): the part, its group, the case path that sizes it, and its row
-of section 5.2.2's table, which ``SizeTable`` names; the wall's size is ``auto`` or typed."""
+of the default sizes, which ``SizeTable`` names; the wall's size is ``auto`` or typed."""
 IDEALISED_PARTS = frozenset({"electrolyte", "membrane", "wall", "global"})
 """The parts an idealised pore's mesh sizes: its global size and its wall's."""
 DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
@@ -124,10 +123,14 @@ class _ContinuumPane(_Pane[ContinuumModel]):
     def before_fields(self) -> None:
         if self.tool.id == "region":
             self.domain_choice()
+        if self.tool.id == "mesh":
+            self.quality_verdict()
+        if self.tool.id == "geometry":
+            self.outline_verdict()
         model = self.model
         if model is None or self.project is None:
             return
-        if self.supplied is not None:
+        if self.supplied is not None or not self.usable():
             return
         names = list(self.project.items("molecular"))
         chosen = model.molecular()
@@ -155,6 +158,19 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         self.refresh()
         await self.show()
 
+    def outline_verdict(self) -> None:
+        held = {} if self.model is None or not self.usable() else self.model.artefacts()
+        if "contour" not in held:
+            return
+        # A stored outline passed stage 4's checks: the stage refuses one that does not.
+        summary = held["contour"].summary
+        narrowest = _mapping(summary.get("constriction"))
+        ui.label(
+            f"✓ Stage 4's checks passed: narrowest radius {self.text(narrowest.get('r_nm'), 'nm')} "
+            f"at z = {self.text(narrowest.get('z_nm'), 'nm')}, "
+            f"{summary.get('vertex_count', '?')} vertices."
+        ).classes("state-ok").props("data-control=contour-verdict")
+
     def own_status(self) -> None:
         if self.model is None:
             return
@@ -167,7 +183,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         elif self.supplied is not None:
             ui.label(f"This model {said}, so it reads no molecular model.")
         elif (molecular := self.model.molecular()) is not None:
-            ui.label(f"Built alone over molecular model {molecular}.")
+            ui.label(f"Built over molecular model {molecular}, outside any study.")
         else:
             ui.label("The project holds no molecular model for this model to be built over.")
 
@@ -252,13 +268,15 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                         "outline dense no-caps data-control=contour-start"
                     ).set_enabled(self.usable() and outlined and not self.assessing())
                     if self.measurable():
+                        mapped = model.states().get("symmetry") == "built"
                         ui.button("Seed from the map", on_click=self.seed).props(
                             "outline dense no-caps data-control=contour-seed"
-                        ).set_enabled(self.usable() and not self.assessing())
-                ui.label(
-                    "Edit the built outline, or the one the model supplies; a loop stage 4 "
-                    "refused is seeded from the stored map."
-                ).classes("later")
+                        ).set_enabled(self.usable() and mapped and not self.assessing())
+                if self.measurable():
+                    ui.label(
+                        "Edit the built outline. If stage 4 blocks the outline, Seed from the "
+                        "map traces a loop from the stored map to edit."
+                    ).classes("later")
                 self.show_assessment()
                 return
             parent = (
@@ -391,6 +409,11 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             ui.notify(str(error), type="negative", multi_line=True)
             return
         await self.edited()
+        # The editor opens at the pane's foot: bring it into view.
+        ui.run_javascript(
+            "document.querySelector('[data-control=contour-edit]')"
+            "?.scrollIntoView({block: 'start', behavior: 'smooth'})"
+        )
 
     def seed(self) -> None:
         self.start_assess(None)
@@ -571,7 +594,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 "dense outlined options-dense data-control=region-domain "
                 'aria-label="The domain whose values the pane shows; pick one in the view too"'
             )
-            self.domain_select.set_enabled(self.model is not None)
+            self.domain_select.set_enabled(self.model is not None and self.usable())
 
     async def pick_domain(self, domain: str) -> None:
         self.look["pick"] = domain
@@ -639,7 +662,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                             )
                             .classes("histogram-bar")
                         ):
-                            ui.label(f"{int(count)}").classes("histogram-count")
+                            shown = f"{count / 1000:.1f}k" if count >= 1000 else f"{int(count)}"
+                            ui.label(shown).classes("histogram-count")
                             ui.element("div").classes("histogram-fill").style(
                                 f"height:{2 + 56 * int(count) / most:.0f}px;"
                                 f"background:#{r:02x}{g:02x}{b:02x}"
@@ -653,8 +677,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                         ui.label(f"{tick:g}").style(f"left:{100 * tick:g}%")
             below = int(np.count_nonzero(quality <= QUALITY_FLOOR))
             ui.label(
-                f"{title} of {len(quality)} elements, least {np.min(quality):.3f}; {below} at or "
-                f"under the floor of {QUALITY_FLOOR:g}. A bar fills its elements in the view."
+                f"{title} of {len(quality)} elements; {below} at or under the floor of "
+                f"{QUALITY_FLOOR:g}. A bar fills its elements in the view."
             ).classes("later")
 
     async def outline(self, band: str) -> None:
@@ -670,14 +694,14 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 f"Quality gate: SICN and gamma each above {QUALITY_FLOOR:g}; not built yet."
             ).props("data-control=mesh-gate")
             return
+        # A stored mesh passed its gate: stage 6 refuses one below the floor it records.
         quality = _mapping(held["mesh"].summary.get("quality"))
         sicn, gamma = quality.get("min_sicn"), quality.get("min_gamma")
-        passed = all(isinstance(v, int | float) and v > QUALITY_FLOOR for v in (sicn, gamma))
-        glyph, word = ("✓", "passed") if passed else ("✕", "failed")
+        floor = quality.get("floor", QUALITY_FLOOR)
         ui.label(
-            f"{glyph} Quality gate {word}: least SICN {self.text(sicn, 'dimensionless')}, least "
-            f"gamma {self.text(gamma, 'dimensionless')}; each must exceed {QUALITY_FLOOR:g}."
-        ).classes("state-ok" if passed else "state-err").props("data-control=mesh-gate")
+            f"✓ Quality gate passed: least SICN {self.text(sicn, 'dimensionless')}, least "
+            f"gamma {self.text(gamma, 'dimensionless')}; each must exceed {floor}."
+        ).classes("state-ok").props("data-control=mesh-gate")
 
     # -- the mesh's parts ---------------------------------------------------------------
 
@@ -698,9 +722,31 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             elif part == "membrane":
                 found[part] = (base.global_nm, "global")
             else:
-                source = "typed" if typed.get(path) is not None else "table"
+                source = "typed" if typed.get(path) is not None else "default"
                 found[part] = (getattr(base, row), source)
         return found
+
+    def built_table(self) -> dict[str, float]:
+        """Return the scaled sizes the built mesh used, by ``SizeTable`` row, or {} unbuilt.
+
+        The store holds the mesh only while its key matches the model's values now.
+        """
+        held = {} if self.model is None or not self.usable() else self.model.artefacts()
+        if "mesh" not in held:
+            return {}
+        table = _mapping(_mapping(held["mesh"].parameters.get("sizing")).get("table"))
+        return {k: float(v) for k, v in table.items() if isinstance(v, int | float)}
+
+    def next_table(self) -> dict[str, float]:
+        """Return the scaled sizes the next build uses, from the library's table."""
+        case = None if self.model is None or not self.usable() else self.model.case()
+        if case is None:
+            return {}
+        return {
+            k: float(v)
+            for k, v in case_sizes(case).scaled(self.scale()).summary().items()
+            if isinstance(v, int | float)
+        }
 
     def built_wall_nm(self) -> float | None:
         """Return the wall size the built mesh used, scaled, or None unbuilt."""
@@ -727,12 +773,16 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         self.parts_box.clear()
         sizes, used, changed, scale = self.part_sizes(), self.used(), self.changed(), self.scale()
         wall_used = self.built_wall_nm()
+        built = self.built_table()
+        table = built or self.next_table()
         with self.parts_box:
             with ui.row().classes("parts-head no-wrap w-full"):
                 ui.label("Mesh parts")
-                ui.label(f"size used, {TIMES} {scale:g}")
+                if self.model is not None and self.usable():
+                    said = "size used" if built else "size the build uses"
+                    ui.label(f"{said}, {TIMES} {scale:g}")
             group = None
-            for part, grouped, path, _ in PART_ROWS:
+            for part, grouped, path, row in PART_ROWS:
                 if grouped and grouped != group:
                     group = grouped
                     ui.label(grouped).classes("parts-group")
@@ -744,7 +794,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 elif base is None:
                     size = self.text(wall_used, "nm") if wall_used is not None else "auto"
                 else:
-                    size = self.text(base * scale, "nm")
+                    size = self.text(table.get(row or "", base * scale), "nm")
                 typed = path in changed and part != "membrane"
                 picked = self.look.get("pick") == part
                 button = (
@@ -757,6 +807,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                     .classes("parts-row" + (" parts-child" if grouped else ""))
                 )
                 button.set_visibility(typed or not self.modified_only)
+                button.set_enabled(self.model is not None and self.usable())
                 with button:
                     swatch = ui.element("span").classes(
                         "parts-swatch" if part in MATERIAL_COLOURS else "parts-line"
@@ -779,8 +830,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         with self.part_box:
             if not part:
                 ui.label(
-                    "Pick a part, in the list or the view, to size it: a blank size takes "
-                    "section 5.2.2's table, and the size scale multiplies every size."
+                    "Pick a part, in the list or the view, to size it: a blank size uses the "
+                    "default, and the size scale multiplies every size."
                 ).classes("later")
                 return
             path = next(row[2] for row in PART_ROWS if row[0] == part)
@@ -809,13 +860,11 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 return
             table = getattr(SIZES, row)
             control.props(f'placeholder="{table:g}"')
-            said = f"Blank takes section 5.2.2's {table:g} nm"
+            said = f"Blank uses the default, {table:g} nm"
             if part == "membrane":
                 said = f"The membrane takes the global size. {said}"
-            base, _ = self.part_sizes().get(part, (None, ""))
-            gives = (
-                "" if base is None else f"; {TIMES} {scale:g} gives {self.text(base * scale, 'nm')}"
-            )
+            scaled = (self.built_table() or self.next_table()).get(row)
+            gives = "" if scaled is None else f"; {TIMES} {scale:g} gives {self.text(scaled, 'nm')}"
             ui.label(f"{said}{gives}.").classes("later")
 
     async def pick_part(self, part: str) -> None:
@@ -855,7 +904,6 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             "Later: refinement regions drawn by hand, and boundary layers, come in a later phase."
         ).classes("later later-banner")
         heading("Elements", 2)
-        self.quality_verdict()
         with self.named("Coloured by"):
             ui.select(
                 {name: COLOUR_TITLES[name] for name in COLOURINGS},
@@ -875,18 +923,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         held = model.artefacts()
         rows: list[tuple[str, str, Callable[[], None] | None]] = []
         if self.tool.id == "geometry" and "contour" in held:
+            # The vertices and the narrowest radius lead the pane, with stage 4's verdict.
             summary = held["contour"].summary
-            constriction = _mapping(summary.get("constriction"))
-            rows.append(("Stage 4's checks", "✓ passed", None))
-            rows.append(("Vertices", str(summary.get("vertex_count", "?")), None))
-            rows.append(
-                (
-                    "Narrowest radius",
-                    f"{self.text(constriction.get('r_nm'), 'nm')} at z = "
-                    f"{self.text(constriction.get('z_nm'), 'nm')}",
-                    None,
-                )
-            )
             rows.append(
                 ("Smallest feature", self.text(summary.get("min_feature_size_nm"), "nm"), None)
             )

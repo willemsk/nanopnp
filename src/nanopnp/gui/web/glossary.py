@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from nanopnp.mesh.sizing import SIZES
+
 __all__ = ["GLOSSARY"]
 
 GLOSSARY: tuple[tuple[str, str], ...] = (
@@ -31,8 +33,15 @@ GLOSSARY: tuple[tuple[str, str], ...] = (
     ),
     (
         "Continuum model",
-        "A library item built in the Continuum suite: the protein geometry, the region and the "
-        "mesh.",
+        "A library item built in the Continuum suite: the pore geometry, the region and the mesh.",
+    ),
+    (
+        "Default mesh sizes",
+        "The element size each part of a generated mesh takes when none is typed: global "
+        f"{SIZES.global_nm:g} nm, protein {SIZES.protein_nm:g} nm, electrolyte "
+        f"{SIZES.electrolyte_nm:g} nm, the reservoir's arc {SIZES.arc_nm:g} nm, the pore's axis "
+        f"{SIZES.axis_in_pore_nm:g} nm, and the wall a fifth of the Debye length, at most "
+        "0.05 nm; the size scale multiplies each.",
     ),
     (
         "Exposed value",

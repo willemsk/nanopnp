@@ -507,8 +507,12 @@ body .nicegui-footer.frame-footer {
   min-height: 0;
   padding: 0 4px;
 }
+/* The field's path opens its tool, so it reads as a link. */
 .changes-line .changes-field {
-  color: var(--ink);
+  color: var(--accent);
+}
+.changes-line .changes-field:hover {
+  text-decoration: underline;
 }
 .changes-line .changes-field,
 .changes-line .changes-value,

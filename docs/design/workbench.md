@@ -130,7 +130,7 @@ later-phase banner and no working control (S7).
 |---|---|---|---|---|
 | Molecular viewer and editor | Molecular | Prepare structure, Ensemble, Protonation, Charge edit, View | The structure, its frames, ensemble and symmetry; stage 7's protonation and PQR; structure preparation, a Phase 5 library capability (WB-14) | The structural mutator (S4) |
 | Geometry builder | Continuum | Pore geometry, Region | Stages 2 to 5: the density, the reduction to (r, z), the contour and its hand edit (`inputs.profile`), the membrane and the reservoir | The sketcher (S5) |
-| Mesh builder | Continuum | Mesh: sizes, quality | Stage 6 and its quality report; the size scale and the per-part sizes | Refinement regions drawn by hand; boundary layers |
+| Mesh builder | Continuum | Mesh | Stage 6 and its quality report; the size scale and the per-part sizes | Refinement regions drawn by hand; boundary layers |
 | Physics assigner | Physics | Equations, Electrolyte, Conditions, Exposed values | A **physics model**: a registered model and its switches, the electrolyte and its corrections, the boundary conditions and walls, the solid permittivities, the element orders and the stabilisation (WB-34) | The composer (S3), in this suite |
 | (added by the round) | Study | Overview, Study setup, Sweep, Charge on the mesh, Runs | A study pairing one molecular, one continuum and one physics model, its overrides and sweep, stage 7's charge on the mesh, and its runs | Sweeps over variables (REV-139) |
 | Results analyser | Analysis | Results explorer, Comparison | The run record, the quantities of interest, the fields, the sweeps | Figure, field and case export (FR-28, v0.7) |
@@ -399,8 +399,8 @@ third party's.
 | Picture | Renderer | Where it is | Licence |
 |---|---|---|---|
 | The molecule in 3D | Mol*, as its standalone bundle (`molstar.js`, `molstar.css`) | `src/nanopnp/gui/web/assets/molstar/` | MIT (CON-09) |
-| Meshes and fields | npm `webgui` 0.2.39 | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
-| Maps and plots in (r, z) | A canvas the page draws from the data of `plot/data.py` | `src/nanopnp/gui/web/` | BSD-3-Clause |
+| Fields on the mesh | npm `webgui` 0.2.39 | `src/nanopnp/gui/assets/webgui/` | LGPL-2.1-or-later, with three.js (MIT) and dat.gui (Apache-2.0) (CON-09) |
+| Maps, plots and the mesh in (r, z) | A canvas the page draws from the data of `plot/data.py`, the Continuum suite's mesh among them (WP5.17) | `src/nanopnp/gui/web/` | BSD-3-Clause |
 
 The results explorer asks four controls of its field view: zoom, a colour scale for each quantity, the mesh
 on or off, and a framed opening view (the author's verdicts on today's shell). Read from the shipped
@@ -524,6 +524,7 @@ base's and the specification's; these are the workbench's own.
 | Changed mark | A filled diamond on a value set away from its default; an outlined one on a study's override (WB-28) |
 | Comparison | A saved project item pairing two runs on one colour scale, side by side or as their difference (WB-04) |
 | Continuum model | A library item built in the Continuum suite: the pore geometry, the region and the mesh (WB-11, WB-34, WB-41) |
+| Default mesh sizes | The element size each part of a generated mesh takes when none is typed: global 10 nm, protein 0.1 nm, electrolyte 2.8 nm, the reservoir's arc 5 nm, the pore's axis 0.075 nm, and the wall a fifth of the Debye length, at most 0.05 nm; the size scale multiplies each (WB-41) |
 | Exposed value | A value a model declares for the other suites, with its name, unit, range and default, such as a physics model's concentration and bias; the Study suite lists it first (WB-35) |
 | Gate | A check a stage passes before its artefact is used, such as the orientation gate or the mesh's quality gate |
 | Later phase | A tool drawn with its banner and no working control: designed, not built in v0.6 (S7) |

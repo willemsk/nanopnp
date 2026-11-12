@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,379. By source: history ruling 346; plan decision row 694; REV row 244; MOD row 18; OPN row 9; WB row 41; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,380. By source: history ruling 346; plan decision row 694; REV row 245; MOD row 18; OPN row 9; WB row 41; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 558; open 5; session, own call 813; session, put to the author 3.
+By decider: author 558; open 5; session, own call 814; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1311,6 +1311,7 @@ By decider: author 558; open 5; session, own call 813; session, put to the autho
 | REV-242 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | What the code review of the Molecular suite left open | WP5.16 | open |
 | REV-243 | author | `docs/project/review-findings.md` |  | WP5.16 | Prepare's view does not follow the typed orientation | ruled by the author, 12 November 2026 (WP5.16) | open |
 | REV-244 | session, own call | `docs/project/review-findings.md` |  | WP5.17 | The author's notes on the Continuum digest that ask for a discussion | WP5.17 | open |
+| REV-245 | session, own call | `docs/project/review-findings.md` |  | WP5.17 | What the Continuum suite's final review left open | WP5.17 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |

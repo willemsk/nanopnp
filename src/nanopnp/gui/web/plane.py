@@ -13,7 +13,6 @@ from nanopnp.geometry.profile import load_profile
 from nanopnp.gui.geometry import ImageModel, density_section, lookup_table, reduced_image
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.link import png
-from nanopnp.gui.web.screens import STAGE_RUNNING
 from nanopnp.io.case import Membrane, Reservoir
 from nanopnp.plot.data import (
     MeshElements,
@@ -349,12 +348,10 @@ def _outline_layers(
 
 
 def _unbuilt(model: ContinuumModel, note: str) -> str:
-    # While a build runs the view says what it is at; the pane draws again when it ends.
-    running = model.running_stage()
-    if running is None:
+    # The view is drawn once a build starts, so it names no stage: the pane's button does.
+    if model.running_stage() is None:
         return note
-    words = STAGE_RUNNING.get(running, running)
-    return f"Building: {words[0].lower()}{words[1:]} The view draws it when the build ends."
+    return "A build is running: the view draws the model when it ends."
 
 
 def _arc(radius_nm: float) -> list[tuple[float, float]]:

@@ -166,7 +166,7 @@ SUITES: tuple[Suite, ...] = (
             ),
             Tool(
                 "mesh",
-                "Mesh: sizes, quality",
+                "Mesh",
                 ("numerics.mesh.backend", "numerics.mesh.size_scale"),
                 (
                     "numerics.mesh.maxh_nm",
