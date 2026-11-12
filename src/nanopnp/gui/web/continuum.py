@@ -7,8 +7,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar
 
+from nanopnp.geometry.profile import PAYLOAD_NAME as PROFILE_PAYLOAD
+from nanopnp.geometry.profile import PoreProfile, load_profile
+from nanopnp.gui.geometry import ProfileEditor
 from nanopnp.gui.web.builds import REFUSED, BuiltModel
+from nanopnp.io.case import PROFILE_FORMAT
 from nanopnp.io.models import ModelKind, read_model_file
+from nanopnp.io.project import INPUTS_FOLDER
 
 __all__ = ["OWN_OUTLINE", "STAGES", "ContinuumModel"]
 
@@ -17,6 +22,10 @@ STAGES: tuple[str, ...] = ("density", "symmetry", "contour", "region", "mesh")
 
 OWN_OUTLINE: tuple[str, ...] = ("geometry.pore", "inputs.profile", "inputs.mesh")
 """The values with which a continuum model draws its own pore, and reads no molecular model."""
+
+
+# A hand edit of each model's outline, kept for the server's life until it is saved or dropped.
+_EDITS: dict[tuple[Path, str], ProfileEditor] = {}
 
 
 def _holds(body: Any, path: str) -> bool:  # noqa: ANN401 - a parsed YAML body
@@ -37,6 +46,9 @@ class ContinuumModel(BuiltModel):
     paths: ClassVar[re.Pattern[str]] = re.compile(
         r"\b(?:geometry|numerics\.mesh|inputs\.profile|inputs\.mesh|charge\.exclusion_offset_nm)"
         r"(?:\.[a-z_]+)*"
+    )
+    gate_paths: ClassVar[tuple[tuple[str, str], ...]] = (
+        ("stage 4 contour gate", "geometry.contour.isolevel"),
     )
 
     def body(self) -> dict[str, Any]:
@@ -74,3 +86,72 @@ class ContinuumModel(BuiltModel):
         if case is None or case.inputs.profile is None or case.inputs.profile.path is None:
             return None
         return Path(case.inputs.profile.path)
+
+    def outline(self) -> PoreProfile | None:
+        """Return the outline an edit starts from: stage 4's as built, else the supplied one."""
+        held = self.artefacts()
+        if "contour" in held:
+            return load_profile(held["contour"].payload[PROFILE_PAYLOAD])
+        path = self.profile()
+        if path is None or not path.is_file():
+            return None
+        return load_profile(path)
+
+    def editor(self) -> ProfileEditor | None:
+        """Return the hand edit of the model's outline held now, or None."""
+        return _EDITS.get((self.project.root, self.name))
+
+    def start_edit(self) -> ProfileEditor:
+        """Start a hand edit of the model's outline, or return the one held.
+
+        Raises
+        ------
+        ValueError
+            If the model has no outline to edit: none built, none supplied.
+        """
+        key = (self.project.root, self.name)
+        if key not in _EDITS:
+            outline = self.outline()
+            if outline is None:
+                raise ValueError(
+                    f"continuum model {self.name!r} has no outline to edit: build its geometry, "
+                    "or supply one as inputs.profile"
+                )
+            _EDITS[key] = ProfileEditor.from_profile(outline)
+        return _EDITS[key]
+
+    def hold_edit(self, editor: ProfileEditor) -> None:
+        """Hold an edit started elsewhere, as from a seed of a refused loop."""
+        _EDITS[(self.project.root, self.name)] = editor
+
+    def drop_edit(self) -> None:
+        """Forget the hand edit held, unsaved."""
+        _EDITS.pop((self.project.root, self.name), None)
+
+    def save_edit(self, name: str) -> Path:
+        """Save the hand edit as a new continuum model that supplies it; return the model's file.
+
+        The outline is written to the project's inputs, named by its digest; the new model is
+        this one's values with the outline as ``inputs.profile`` and stages 2 to 4's values
+        removed, so a study runs it with its molecular model's structure and charge.
+
+        Raises
+        ------
+        ValueError
+            If no edit is held, the loop would not load, or the new model is refused.
+        """
+        editor = self.editor()
+        if editor is None:
+            raise ValueError(f"continuum model {self.name!r} holds no edit to save")
+        folder = self.project.root / INPUTS_FOLDER
+        folder.mkdir(parents=True, exist_ok=True)
+        written = editor.save(folder)
+        value = {"path": f"../../{INPUTS_FOLDER}/{written.name}", "format": PROFILE_FORMAT}
+        location = self.project.derive_model(
+            "continuum",
+            self.name,
+            name,
+            {"inputs.profile": value, "geometry.density": None, "geometry.contour": None},
+        )
+        self.drop_edit()
+        return location

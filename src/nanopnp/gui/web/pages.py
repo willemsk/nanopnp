@@ -117,13 +117,19 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
     @app.get("/api/continuum/{name}/plane")
     def continuum_plane(
-        name: str, tool: str = "geometry", image: str = "mean", colour: str = "material"
+        name: str,
+        tool: str = "geometry",
+        image: str = "mean",
+        colour: str = "material",
+        band: str = "",
     ) -> JSONResponse:
         """Serve what the (r, z) view draws of a model for one tool."""
         if image not in IMAGES or colour not in MESH_COLOURINGS:
             raise HTTPException(422, "an unknown picture or colouring")
         try:
-            drawn = plane(continuum(name), tool, image=image, colour=colour)
+            low, _, high = band.partition(",")
+            outlined = (float(low), float(high)) if band else None
+            drawn = plane(continuum(name), tool, image=image, colour=colour, band=outlined)
         except ValueError as error:
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())

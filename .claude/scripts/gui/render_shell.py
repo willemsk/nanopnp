@@ -49,7 +49,7 @@ DEPOSITED = ROOT / "tests" / "data" / "structures" / "2wcd.pdb.gz"
 VIEWPORT = [1280, 800]
 SCHEMES = ("light", "dark")
 READY = 'body[data-screen-ready="1"]'
-GROUPS = ("states", "2wcd", "extra", "compact", "molecular")
+GROUPS = ("states", "2wcd", "extra", "compact", "molecular", "continuum")
 THEME_NAME = "dusk"
 START_S = 1800
 """How long a server may take to print its ready line: the 2WCD walk comes before it."""
@@ -101,8 +101,18 @@ PROJECT_EXTRAS: list[tuple[str, str, list[str]]] = [
         ['[data-control=tool-readout] button[aria-label*="warnings"]'],
     ),
     ("m-view-settings", "/molecular/view", menu_item("file", "Settings")),
+    (
+        "c-mesh-sicn",
+        "/continuum/mesh",
+        ["[data-control=plane-colour]", ".q-menu .q-item:nth-child(2)"],
+    ),
+    # Last: the edit is held by the server, so every shot after it would show it.
+    ("c-contour-edit", "/continuum/contour", ["[data-control=contour-start]"]),
 ]
 """Windows opened over a tool of the 2WCD project, none of which writes to it."""
+
+HELD = frozenset({"c-contour-edit"})
+"""The extras whose click leaves a state the server holds for the shots after it."""
 
 
 def cache_key() -> str:
@@ -229,9 +239,10 @@ def project_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dic
         for screen in SCREENS
         for scheme in SCHEMES
     ] + [
-        entry(f"shell-2wcd-{name}", first, path, scheme, click)
+        # The server holds an edit once a shot has started it, so only the first scheme's starts it.
+        entry(f"shell-2wcd-{name}", first, path, scheme, [] if name in HELD and index else click)
         for name, path, click in PROJECT_EXTRAS
-        for scheme in SCHEMES
+        for index, scheme in enumerate(SCHEMES)
     ]
 
 
@@ -322,12 +333,54 @@ def molecular_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[d
     return manifest
 
 
+REFUSING_ISOLEVEL = 0.9
+"""An isolevel at which 2WCD's stage 4 is refused: the loop breaks into islands."""
+
+
+def continuum_project(out: Path, name: str, *, refused: bool) -> Path:
+    """Return a project holding the cached 2WCD molecular and continuum models, its store empty.
+
+    With ``refused`` the continuum model's isolevel is one stage 4 refuses.
+    """
+    source = cached_project(out)
+    folder = molecular_project(out, name, off_axis=False)
+    (model,) = sorted((source / "models" / "continuum").glob("*.yaml"))
+    shutil.copy(model, folder / "models" / "continuum" / model.name)
+    project = Project.open(folder)
+    if refused:
+        project.set_value("continuum", model.stem, "geometry.contour.isolevel", REFUSING_ISOLEVEL)
+    project.open_item(f"continuum/{model.stem}")
+    return folder
+
+
+def continuum_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return the Continuum tools refused at stage 4 and held mid-build, on 2WCD.
+
+    The built and the empty tools are the ``2wcd`` and ``states`` groups' ``c-<tool>`` shots, and
+    an unsaved edit the ``2wcd`` group's last.
+    """
+    manifest = []
+    for name, path, wait_ms in (
+        ("refused", "/continuum/contour", 90000),
+        ("building", "/continuum/geometry", 2500),
+    ):
+        for scheme in SCHEMES:
+            folder = continuum_project(out, f"c-{name}-{scheme}", refused=name == "refused")
+            process, first = start("--project", str(folder))
+            servers.append(process)
+            shot = entry(f"shell-continuum-{name}", first, path, scheme, [BUILD])
+            shot["wait_ms"] = wait_ms
+            manifest.append(shot)
+    return manifest
+
+
 GROUP_ENTRIES = {
     "states": states_entries,
     "2wcd": project_entries,
     "extra": extra_entries,
     "compact": compact_entries,
     "molecular": molecular_entries,
+    "continuum": continuum_entries,
 }
 
 
@@ -350,7 +403,7 @@ def main(argv: list[str]) -> int:
         # The groups start their servers side by side: a server's start is its imports, and the
         # 2WCD project's is its walk.
         # Two groups read the 2WCD cache, so it is built before they start side by side.
-        if {"2wcd", "molecular"} & set(groups):
+        if {"2wcd", "molecular", "continuum"} & set(groups):
             cached_project(out)
         with ThreadPoolExecutor(len(groups)) as pool:
             pending = [pool.submit(GROUP_ENTRIES[group], out, servers) for group in groups]

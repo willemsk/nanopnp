@@ -27,6 +27,7 @@ __all__ = [
     "MATERIAL_COLOURS",
     "Plane",
     "image_png",
+    "mesh_quality",
     "plane",
 ]
 
@@ -90,6 +91,8 @@ class Plane:
             "frame": self.frame,
             "axes": list(self.axes),
             "extent_nm": list(self.extent_nm),
+            # Whether the extent frames something drawn, not the empty view's stand-in.
+            "framed": _bounds(self.layers) is not None,
             "layers": list(self.layers),
             "notes": list(self.notes),
         }
@@ -144,7 +147,9 @@ def _extent(
     found = _bounds(layers) or fallback
     r0, r1, z0, z1 = found
     pad = MARGIN * max(r1 - r0, z1 - z0, 1.0)
-    return min(r0, 0.0) - pad, r1 + pad, z0 - pad, z1 + pad
+    # The axis is the drawing's edge, unless a section across it reaches below r = 0.
+    low = r0 - pad if r0 < 0.0 else 0.0
+    return low, r1 + pad, z0 - pad, z1 + pad
 
 
 def _image(
@@ -261,7 +266,8 @@ def _region_layers(model: ContinuumModel, held: dict[str, Artefact]) -> list[dic
         return []
     layers = [
         _polygon("pore", "pore", drawing.pore_m * 1e9),
-        _polygon("membrane", "membrane", drawing.membrane_m * 1e9),
+        # An open outline: closing it would draw its inner chord across the protein.
+        _line("membrane", "membrane", drawing.membrane_m * 1e9),
     ]
     if drawing.exclusion_m is not None:
         layers.append(_polygon("exclusion", "exclusion", drawing.exclusion_m * 1e9))
@@ -320,15 +326,39 @@ def _labels(
 _MESHES: dict[str, MeshElements] = {}
 
 
-def _mesh_layer(artefact: Artefact, colour: str) -> dict[str, Any]:
-    import numpy as np
-
+def _elements(artefact: Artefact) -> MeshElements:
     elements = _MESHES.get(artefact.hash)
     if elements is None:
         found = mesh_of(artefact, None)
         if found is None:
             raise ValueError(f"stage 6's artefact {artefact.hash[:12]} holds no mesh")
         elements = _MESHES.setdefault(artefact.hash, found)
+    return elements
+
+
+def mesh_quality(model: ContinuumModel, colour: str) -> np.ndarray | None:
+    """Return each element's SICN or gamma in the model's built mesh, or None unbuilt."""
+    if colour not in ("sicn", "gamma"):
+        raise ValueError(f"colour {colour!r} is not a quality: sicn or gamma")
+    held = model.artefacts()
+    if "mesh" not in held:
+        return None
+    elements = _elements(held["mesh"])
+    return elements.sicn if colour == "sicn" else elements.gamma
+
+
+def _mesh_layer(
+    artefact: Artefact, colour: str, band: tuple[float, float] | None
+) -> dict[str, Any]:
+    import numpy as np
+
+    elements = _elements(artefact)
+    outlined: list[int] = []
+    if band is not None and colour != "material":
+        quality = elements.sicn if colour == "sicn" else elements.gamma
+        low, high = band
+        inside = (quality >= low) & ((quality < high) | (high >= 1.0) & (quality <= high))
+        outlined = np.flatnonzero(inside).tolist()
     if colour == "material":
         values = elements.material.tolist()
         palette = [MATERIAL_COLOURS.get(name, "#cccccc") for name in elements.materials]
@@ -353,11 +383,32 @@ def _mesh_layer(artefact: Artefact, colour: str) -> dict[str, Any]:
         "scale": scale,
         "legend": legend,
         "categorical": colour == "material",
+        "outlined": outlined,
     }
 
 
+def _edited(model: ContinuumModel, layers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Put the hand edit held in place of the outline, over the outline it was edited from."""
+    editor = model.editor()
+    if editor is None:
+        return layers
+    kept = [layer for layer in layers if layer["id"] != "contour"]
+    original = [
+        {**layer, "id": "original", "role": "original"}
+        for layer in layers
+        if layer["id"] == "contour"
+    ]
+    edit = {**_polygon("contour", "contour", editor.vertices), "editable": True}
+    return [*kept, *original, edit]
+
+
 def plane(
-    model: ContinuumModel | None, tool: str, *, image: str = "mean", colour: str = "material"
+    model: ContinuumModel | None,
+    tool: str,
+    *,
+    image: str = "mean",
+    colour: str = "material",
+    band: tuple[float, float] | None = None,
 ) -> Plane:
     """Return what the (r, z) view draws for one Continuum tool of a model.
 
@@ -367,6 +418,8 @@ def plane(
         The picture Protein geometry draws, one of :data:`IMAGES`; Contour draws the mean.
     colour
         What the Mesh tool colours its elements by, one of :data:`COLOURINGS`.
+    band
+        The quality range whose elements the Mesh tool outlines, ``[low, high)``.
 
     Raises
     ------
@@ -391,6 +444,8 @@ def plane(
         layers, notes, axis = _outline_layers(
             model, held, image=image if tool == "geometry" else "mean"
         )
+        if tool == "contour":
+            layers = _edited(model, layers)
         membrane, _, _ = _values(model)
         extent = _extent(layers, blank)
         layers += _membrane(membrane, frame="structure", r_high=extent[1])
@@ -410,6 +465,6 @@ def plane(
         "model",
         ("r (nm)", "z (nm)"),
         extent,
-        (_mesh_layer(held["mesh"], colour), *outlines),
+        (_mesh_layer(held["mesh"], colour, band), *outlines),
         tuple(notes),
     )
