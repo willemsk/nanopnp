@@ -77,8 +77,8 @@ Ten: the rulings AP1 to AP4 added three library steps to the phase entry's seven
   `mesh_cylinder_pore` returned `GeneratedMesh` with a default wall size; tests take a `Mesh` and most pass no wall size.
 - `CylindricalPoreGeometry` has 48 constructor calls in 35 test files and `tests/conftest.py`; `post/indicator.py:lumen_band`
   types it; three knowledge files name it.
-- `PoreWithAnalyte.shape` passes `wall_h_nm` to the pore's `name_edges`; its `generate` (two callers,
-  `test_forces.py`, `test_force_convergence.py`) and `AnalyteInBoxGeometry.generate` mesh in `geometry/`; the latter
+- `PoreWithAnalyte.shape` passes `wall_h_nm` to the pore's `name_edges`; its `generate` (three callers,
+  `test_forces.py`, `test_force_convergence.py`, `test_analyte.py`) and `AnalyteInBoxGeometry.generate` mesh in `geometry/`; the latter
   sizes only its body's surface, which REV-170 does not name, and stays.
 - `mesh/defaults.py:DEFAULT_PORE_RADIUS_NM` is 2.0, and `geometry` may not import `mesh`.
 - `tests/tier1/test_layering.py`'s two annotation-cut tests assert the static relation unchanged by a substituted
@@ -174,7 +174,8 @@ knowledge files.
 1. Before any edit, a scratchpad script records `from_ngsolve(mesh).content_hash` for each distinct construction of
    `CylindricalPoreGeometry` and `PoreWithAnalyte` in `tests/`, and for `generate_idealised` at example 01's sizes.
 2. `CylinderPore(pore_radius_nm=DEFAULT_PORE_RADIUS_NM, membrane_thickness_nm=13.0, reservoir_radius_nm=50.0)`;
-   the constant moves to `geometry/pore.py` and `mesh/defaults.py` re-exports it. `name_edges(shape)` and
+   the constant moves to `geometry/defaults.py`, which `geometry/pore.py` imports and `mesh/defaults.py` re-exports,
+   so the command line loads no `pydantic` through it. `name_edges(shape)` and
    `shape(*, name_mouths=True)` lose `wall_h_nm`.
 3. `size_wall(shape, wall_h_nm: float | None) -> None`: each edge named `wall` takes `maxh`; nothing for None.
 4. `mesh_cylinder_pore(pore=CylinderPore(), *, maxh_nm, wall_h_nm=None, check_quality=True) -> Mesh`:
@@ -189,6 +190,13 @@ knowledge files.
 7. The two annotation tests substitute `from nanopnp.mesh.primitives import mesh_cylinder_pore` and assert the static
    relation gains `geometry -> mesh`; item 3 amends VER-61's row to say so.
 8. Re-run the script: every hash equal.
+
+> **Outcome — item 2.** Defined in `geometry/pore.py`, the constant made `import nanopnp.cli` load `io.case` and
+> `pydantic` through `mesh/defaults.py`, which `test_cli.py::test_ver32_classifying_imports_no_exception_module`
+> refuses; it has a module of its own. Every construction the tests build kept its content hash: 31 cylinders, 2 pores
+> with an analyte and 5 `generate_idealised` calls, 38 of 38 equal, recorded by a pytest plugin before and after; the
+> command line's default cylinder at example 01's sizes gives `546c34f4…` both times. Examples 01 and 02's ePNP-NS
+> walk held their recorded meshes (6.9e-14 and 1.1e-16 relative).
 
 **Item 4.** `resolve` raises `CaseValidationError` where `resolved.profile` and `resolved.structure` are set and the
 case deposits no charge, naming both keys; `_check_profile` drops its clause. Under `resolved.profile`,
@@ -231,7 +239,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 - [x] 800581b 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,
   `cli/building.py`, `gui/geometry.py` (D1); done when `test_idealised_pore.py` and `test_region.py` pass.
   **Executor:** main
-- [ ] 2. The files of Implementation details' item 2, `modularity-layering.yaml` (D2); done when tiers 1 and 2
+- [x] f169b56 2. The files of Implementation details' item 2, `modularity-layering.yaml` (D2); done when tiers 1 and 2
   pass and every recorded hash is equal. **Executor:** general-purpose on Sonnet, high
 - [ ] 3. VER-61's text; VER-62's walks run by their files (D1, D2); then a compaction checkpoint. **Executor:** main
 - [ ] 4. `pipeline/checks.py`, `case.py`, `run.py`, `api/project.py`, §5.3.1's NOTEs on `inputs:` and `inputs.profile`,
