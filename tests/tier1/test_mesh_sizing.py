@@ -4,17 +4,21 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+import numpy as np
 import pytest
 
+from nanopnp import Case, Session
 from nanopnp.core.paths import profile_file
 from nanopnp.io.artefact import CASE_SCHEMA
 from nanopnp.io.case import (
     CaseValidationError,
     UnsupportedCaseSection,
 )
+from nanopnp.io.store import Store
 from nanopnp.materials.corrections import load_corrections
+from nanopnp.mesh.adapter import read as read_mesh
 from nanopnp.mesh.generate import GATE_CONSTANTS, sizing_parameters
 from nanopnp.mesh.sizing import (
     SIZES,
@@ -30,6 +34,7 @@ from nanopnp.pipeline.case import (
     resolve,
 )
 from nanopnp.sweep.plan import SweepPlanError, plan_from_document
+from nanopnp.validation.charged_tube import write_charged_tube
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.io.case import CaseDocument
@@ -341,3 +346,49 @@ def test_ver53_the_mesher_and_the_sweep_plan_size_the_wall_at_one_eps_r0(path: P
     assert resolved.electrolyte.permittivity_0 == eps_r0(document)
     generated = resolve_wall_size(document, permittivity_0=resolved.electrolyte.permittivity_0)
     assert generated == wall_size(document)
+
+
+def _tube_mesh(store: Store, tube: Path, mesh: str) -> tuple[str, str, int, dict[str, Any]]:
+    text = tube.read_text(encoding="utf-8").replace("{size_scale: 5.0}", f"{{{mesh}}}")
+    result = Session(store, write=False).run(Case.loads(text, base=tube.parent), upto="mesh")
+    artefact = result.artefacts["mesh"]
+    data = read_mesh(artefact.payload["mesh"])
+    protein = int(np.count_nonzero(data.triangle_material == data.materials.index("protein")))
+    sizing = artefact.parameters["sizing"]
+    assert isinstance(sizing, dict)
+    return result.artefacts["region"].hash, artefact.hash, protein, sizing["table"]
+
+
+def test_ver53_typed_part_sizes_key_as_the_table_and_follow_the_scale(tmp_path: Path) -> None:
+    # At size_scale 2 the tube's 1 nm protein band is sized by its own size, not its width.
+    tube = write_charged_tube(tmp_path / "tube")
+    store = Store(tmp_path / "store")
+    region, mesh, protein, _ = _tube_mesh(store, tube, "size_scale: 2.0")
+    table = (
+        f"maxh_nm: {SIZES.global_nm}, sizes: {{protein_nm: {SIZES.protein_nm}, "
+        f"electrolyte_nm: {SIZES.electrolyte_nm}, arc_nm: {SIZES.arc_nm}, "
+        f"axis_in_pore_nm: {SIZES.axis_in_pore_nm}}}"
+    )
+    assert _tube_mesh(store, tube, f"size_scale: 2.0, {table}")[:2] == (region, mesh)
+
+    doubled = f"sizes: {{protein_nm: {2.0 * SIZES.protein_nm}}}"
+    moved_region, moved, thinned, scaled = _tube_mesh(store, tube, f"size_scale: 2.0, {doubled}")
+    assert moved_region == region and moved != mesh
+    assert thinned < protein
+    assert scaled["protein_nm"] == 2.0 * 2.0 * SIZES.protein_nm
+    assert _tube_mesh(store, tube, f"size_scale: 4.0, {doubled}")[3]["protein_nm"] == (
+        2.0 * scaled["protein_nm"]
+    )
+
+    pore = (
+        f"schema: {CASE_SCHEMA}\nname: cylinder\n"
+        "geometry: {pore: {shape: cylinder, radius_nm: 2.0}}\n"
+        "electrolyte:\n  species: [{name: Na+, z: +1}, {name: Cl-, z: -1}]\n"
+        "  concentration_M: 0.1\n"
+        "boundary_conditions: {bias_V: 0.05, ground: cis}\n"
+        "physics: {model: pnp-ns, solid_permittivities: {membrane: 3.2}}\n"
+        f"numerics: {{mesh: {{{doubled}}}}}\n"
+    )
+    with pytest.raises(CaseValidationError, match=r"numerics\.mesh\.sizes\.protein_nm"):
+        resolve(loads_case(pore))
+    resolve(loads_case(pore.replace(doubled, "maxh_nm: 4.0")))

@@ -387,11 +387,6 @@ def _check_pore(document: CaseDocument) -> None:
                 f"boundary_conditions.wall_charge_C_m2 is {charge} with no geometry.pore; it is "
                 f"the surface charge of an idealised pore's wall, and nothing else has one ({note})"
             )
-        if document.numerics.mesh.maxh_nm is not None:
-            raise CaseValidationError(
-                f"numerics.mesh.maxh_nm is {document.numerics.mesh.maxh_nm} with no "
-                f"geometry.pore; it is the global element size of an idealised pore ({note})"
-            )
         return
     for name, present in (
         ("structure:", document.structure is not None),
@@ -434,6 +429,13 @@ def _check_pore(document: CaseDocument) -> None:
             f"numerics.mesh.backend is {backend!r} beside geometry.pore; the idealised pore's "
             f"size field is posed for netgen only ({note})"
         )
+    for name, value in document.numerics.mesh.sizes.model_dump().items():
+        if value is not None:
+            raise CaseValidationError(
+                f"numerics.mesh.sizes.{name} is {value} beside geometry.pore; an idealised pore "
+                "is meshed at the global and wall sizes alone and has no such part, so it would "
+                f"change nothing ({note})"
+            )
 
 
 def _check_charge(document: CaseDocument) -> None:

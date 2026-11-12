@@ -34,7 +34,7 @@ from nanopnp.mesh.primitives import (
     PERMITTIVITY_EXEMPT,
 )
 from nanopnp.mesh.quality import QualityReport, check_quality, check_radii
-from nanopnp.mesh.sizing import SIZES, resolve_wall_size
+from nanopnp.mesh.sizing import case_sizes, resolve_wall_size
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
@@ -643,7 +643,7 @@ class MeshStage:
         )
         return sizing_parameters(
             wall,
-            SIZES.scaled(wall.size_scale),
+            case_sizes(resolved.document).scaled(wall.size_scale),
             resolved.document.numerics.mesh.backend,
             exclusion=exclusion,
         )

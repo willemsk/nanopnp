@@ -437,6 +437,20 @@ SICN/gamma > 0.3, the mesher's own optimisation pass (netgen's `optsteps2d` 5, G
 `Mesh.Smoothing` 5; WP23 D5), worst element and its location
 reported, run aborted on failure (QR-12).
 
+NOTE (typed sizes; FR-10, VER-53; §8.2.40 AP3, AP4): a case types any maximum of the table above for
+a generated mesh: `numerics.mesh.maxh_nm` the global maximum, and `numerics.mesh.sizes` the pore domain
+(`protein_nm`), the reservoir domain (`electrolyte_nm`), the reservoir's outer boundary (`arc_nm`) and
+the axis inside the pore (`axis_in_pore_nm`), each optional; the pore boundary's is `wall_h_nm`. An
+untyped maximum takes the table's value. A typed size is a base that `size_scale` multiplies, as the
+wall size is, so the scale stays one knob over every size and a coarse trial keeps the proportions
+typed. Stage 6's key carries the scaled table, so a case typing each maximum at the table's value
+keys and meshes as one typing none, and a typed size moves stage 6's key and no other stage's (the
+case artefact, which hashes the whole document, aside). The minimum sizes, curvature factors and
+growth rates are not typed. A size binds only where the geometry lets it: a domain thinner than its
+size is sized by its own width and the grading from its edges. An idealised pore's mesh reads the
+global and wall sizes alone (the NOTE on an idealised pore's size field), so a typed
+`numerics.mesh.sizes` entry beside `geometry.pore` is refused naming it.
+
 NOTE (SICN and gamma): these are two distinct measures and both SHALL be gated. For a straight-sided
 triangle, SICN is the signed inverse condition number of the Jacobian taken relative to the unit
 equilateral element and gamma is the normalised inradius-to-circumradius ratio `2 r_in / R_circ`;

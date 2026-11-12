@@ -209,12 +209,23 @@ copies the parent's own body, sets or removes each path by `_put` or `_delete` a
 Contour tool sets `inputs.profile` to `{path: <the outline in inputs/>, format: profile1}` and removes
 `geometry.density` and `geometry.contour`.
 
+> **Outcome — item 4.** `pb` and `pb-linear`, the models without `fixed_charge`, carry no solids and are refused on any
+> generated mesh first, so `inputs.charge` is the case beside a profile that deposits nothing. On 2WCD the null edit beside
+> its structure deposits 24.05 e on the electrolyte, 0.72 e on the membrane and −84.77 e on the protein, equal to the
+> structure's walk to 10⁻¹², and the moved edit passes the solid-share gate at 0.977. Here the structure's walk to stage 7
+> took 40.2 s, each edit's 1.9 and 1.8 s.
+
 **Item 5.** `ProjectFile.built_with: dict[str, str]`; `Project.molecular_for(name)`, `set_built_with(name, molecular)`.
 `_build_case` merges `[BUILD_LAYER + {physics: {solid_permittivities: {protein, membrane}}}, molecular body, continuum
 body]` with `io/models.py:merge_layers(layers)`, the fold `_merge_all` then calls with the study appended; the molecular
 body only where the continuum body holds none of `geometry.pore`, `inputs.profile` and `inputs.mesh` (AP2). The permittivities from
 `load_corrections` of `io/case.py:Electrolyte`'s default `parameters`, its `dielectrics`. `_checked_write` builds a case for `molecular` only;
 `_built_stages` keeps its stamp.
+
+> **Outcome — item 5.** The `auto` wall is `min(0.05 nm, λ_D/5)`, so below about 1.5 M a study keys stage 6 as the model
+> built alone does; the test pairs 0.15 M with 3 M. A continuum model that supplies `inputs.mesh` reads no molecular model
+> either. The store's clean-up keeps a build's stored stages only: a forecast of the quickstart's built mesh, never stored,
+> failed `test_store.py`'s clean-up test.
 
 **Item 6.** `io/case.py:MeshSizes`, four `float | None` fields, `gt=0`, finite; `Mesh.sizes` defaults to it.
 `case_sizes(document)` is `SIZES` with each typed field and `global_nm` from `maxh_nm` replaced; `idealised_recipe`,
@@ -246,9 +257,9 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 - [x] f169b56 2. The files of Implementation details' item 2, `modularity-layering.yaml` (D2); done when tiers 1 and 2
   pass and every recorded hash is equal. **Executor:** general-purpose on Sonnet, high
 - [x] 88cbe81 3. VER-61's text; VER-62's walks run by their files (D1, D2); then a compaction checkpoint. **Executor:** main
-- [ ] 4. `pipeline/checks.py`, `case.py`, `run.py`, `api/project.py`, §5.3.1's NOTEs on `inputs:` and `inputs.profile`,
+- [x] 4cc106a 4. `pipeline/checks.py`, `case.py`, `run.py`, `api/project.py`, §5.3.1's NOTEs on `inputs:` and `inputs.profile`,
   VER-55's restated NOTE (D3); done when `test_region.py` and `test_gui_geometry_2wcd.py` pass. **Executor:** main
-- [ ] 5. `api/project.py`, `io/project.py`, `io/models.py`, §5.3.1's NOTE on model files (D4); done when
+- [x] 682cc30 5. `api/project.py`, `io/project.py`, `io/models.py`, §5.3.1's NOTE on model files (D4); done when
   `test_project.py` passes. **Executor:** main
 - [ ] 6. `io/case.py`, `pipeline/checks.py`, `mesh/sizing.py`, `generate.py`, `ingest.py`, VER-53, §5.2.2's and §5.3.1's
   NOTEs (D5); done when `test_mesh_sizing.py` passes, VER-62 unmoved. **Executor:** main
@@ -274,7 +285,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 | `tests/tier1/test_region.py::test_ver55_an_outline_beside_a_structure_walks_the_charge_chain_alone` | 1 | VER-55; AP1 | One each, on `prepared_2wcd` with an outline: under `epnp-ns` `selected_stages` holds structure, protonation, region, mesh and charge, not stages 2 to 4; beside `inputs.charge` refused naming both keys | `uv run pytest tests/tier1/test_region.py` |
 | `tests/tier2/test_gui_geometry_2wcd.py::test_ver55_2wcd_a_null_edit_beside_its_structure_deposits_the_same_charge` | 2 | VER-55; AP1 | Null edit, structure kept: stage 5's outline bitwise; stage 6's content hash, the deposit per material and both conservation legs equal to 10⁻¹² relative; no stage 2 to 4 artefact recorded; the moved edit passes the deposit's gates | `uv run pytest tests/tier2/test_gui_geometry_2wcd.py` |
 | `tests/tier1/test_project.py::test_fr39_a_continuum_model_built_alone_keys_as_a_study_at_its_salt` | 1 | FR-39; AP2 | One each: 2WCD's stages 1 to 6 built alone key as a study's at 0.15 M NaCl, exact; at 3 M stage 6 differs, stage 5 not; an idealised model builds with no molecular model; the charged tube's built model is in `kept_artefacts` | `uv run pytest tests/tier1/test_project.py` |
-| `tests/tier1/test_mesh_sizing.py::test_ver53_typed_part_sizes_key_as_the_table_and_follow_the_scale` | 1 | VER-53; AP3, AP4 | One each, on the charged tube: parts typed at §5.2.2's values key as untyped, exact; `protein_nm` doubled moves stage 6's key, not stage 5's, and thins the protein's elements; at `size_scale` 2 the table holds twice the typed value; `sizes` beside `geometry.pore` refused | `uv run pytest tests/tier1/test_mesh_sizing.py` |
+| `tests/tier1/test_mesh_sizing.py::test_ver53_typed_part_sizes_key_as_the_table_and_follow_the_scale` | 1 | VER-53; AP3, AP4 | One each, on the charged tube: parts typed at §5.2.2's values key as untyped, exact; `protein_nm` doubled moves stage 6's key, not stage 5's, and thins the protein's elements at `size_scale` 2 (at the tube's 5 its 1 nm band is sized by its width); at `size_scale` 2 the table holds twice the typed value; `sizes` beside `geometry.pore` refused | `uv run pytest tests/tier1/test_mesh_sizing.py` |
 | `tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve` | 1 | VER-55 (restated); CON-10 | The probe adds `gui.web.continuum`, `gui.web.plane` and `nicegui` | `uv run pytest tests/tier1/test_gui_viewmodels.py` |
 | `tests/tier1/test_gui_screens.py` | 1 | VER-78 (a) to (d), (m) | The Continuum pages in each state; (m): two Continuum tools build the canvas once; Molecular, Continuum, Molecular build Mol* once | `NANOPNP_REQUIRE_BROWSER=1 uv run pytest tests/tier1/test_gui_screens.py` |
 

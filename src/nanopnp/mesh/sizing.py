@@ -103,6 +103,19 @@ SIZES = SizeTable()
 """Section 5.2.2's table, unscaled."""
 
 
+def case_sizes(document: CaseDocument) -> SizeTable:
+    """Return section 5.2.2's table with each size the case types in its place, unscaled.
+
+    ``numerics.mesh.maxh_nm`` is the global size and ``numerics.mesh.sizes`` the other four; an
+    untyped size keeps the table's.
+    """
+    mesh = document.numerics.mesh
+    typed = {name: value for name, value in mesh.sizes.model_dump().items() if value is not None}
+    if mesh.maxh_nm is not None:
+        typed["global_nm"] = mesh.maxh_nm
+    return replace(SIZES, **typed)
+
+
 @dataclass(frozen=True)
 class WallSize:
     """The resolved wall target in nm, and its provenance."""

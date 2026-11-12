@@ -71,7 +71,8 @@ numerics:
 ```
 
 `maxh_nm` is the global element size and `wall_h_nm` the size at the wall, or `auto` to size it by
-the Debye length. Both are read only beside `geometry.pore`; a supplied mesh refuses them. The lumen
+the Debye length. A supplied mesh refuses both. The pore's mesh reads these two sizes alone, so the
+part sizes of the next section are refused beside `geometry.pore`. The lumen
 is the domain `electrolyte`, the reservoirs are `cis` and `trans`, and the two pore mouths are the
 boundary `interface`. The defaults are quick to solve, but not converged.
 
@@ -96,6 +97,25 @@ hash, which the run's manifest will record, and the `inputs.mesh` block to paste
 the gate refuses leaves no file behind. These generators produce input files, so their flags do not
 change what a run solves: the run records the mesh by its content hash, like any supplied mesh (the
 IF-02 generators NOTE).
+
+## Sizing a generated mesh
+
+A mesh built from `inputs.profile` or a `structure:` section follows the size table of §5.2.2: 10 nm
+globally, 0.1 nm in the pore domain, 2.8 nm in the reservoirs, 5 nm on their outer arc and 0.075 nm on
+the axis inside the pore, with the wall at `wall_h_nm`. Each size can be typed:
+
+```yaml
+numerics:
+  mesh:
+    maxh_nm: 10
+    sizes: {protein_nm: 0.2, electrolyte_nm: 2.8, arc_nm: 5, axis_in_pore_nm: 0.075}
+    size_scale: 2
+```
+
+An untyped size keeps the table's value. `size_scale` multiplies every size, typed or not, so a
+coarse trial keeps the proportions you typed. A typed size enters the mesh's key, so a different
+size gives a different mesh in the store, and a size equal to the table's gives the same mesh. A
+size takes effect only where the part is wider than it: a thin domain is sized by its own width.
 
 ## Choosing the mesher of a generated mesh
 
