@@ -7,7 +7,7 @@ import math
 import tempfile
 import typing
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar, Generic, Literal, TypeVar
@@ -31,7 +31,7 @@ from nanopnp.gui.web.molview import (
     residues,
     titration_states,
 )
-from nanopnp.gui.web.screens import SUITES, Tool, field_control, tool_for
+from nanopnp.gui.web.screens import STAGE_RUNNING, SUITES, Tool, field_control, tool_for
 from nanopnp.gui.web.settings import SETTINGS
 from nanopnp.gui.web.shell import Shell
 from nanopnp.io.case import ChargeEdit, Membrane
@@ -146,15 +146,6 @@ STAGE_TITLES = {
     "contour": "Contour",
     "region": "Region",
     "mesh": "Mesh",
-}
-STAGE_RUNNING = {
-    "structure": "Building the ensemble…",
-    "protonation": "Protonating…",
-    "density": "Smearing the density…",
-    "symmetry": "Reducing to (r, z)…",
-    "contour": "Tracing the contour…",
-    "region": "Assembling the region…",
-    "mesh": "Meshing…",
 }
 # Each state's glyph and word (the glyph never stands alone), and its colour class.
 STATES = {
@@ -398,7 +389,17 @@ class _Pane(Generic[ModelT]):
             style="powers" if chosen.value("number_style") == "powers" else "prefixes",
         )
 
+    def keyed_once(self) -> AbstractContextManager[None]:
+        """Read the model and key its walk once while the pane is drawn (REV-242)."""
+        return nullcontext() if self.model is None else self.model.keyed_once()
+
     def build(self) -> None:
+        with self.keyed_once():
+            self.build_pane()
+        ui.timer(1.0, self.tick)
+        ui.timer(0.1, self.start, once=True)
+
+    def build_pane(self) -> None:
         with ui.element("div").classes("tool-page"):
             self.tool_list()
             with ui.column().classes("tool-pane").props("data-control=tool-pane"):
@@ -422,8 +423,6 @@ class _Pane(Generic[ModelT]):
                 self.readout_box.props("data-control=tool-readout")
         self.listen()
         self.refresh()
-        ui.timer(1.0, self.tick)
-        ui.timer(0.1, self.start, once=True)
 
     def covering(self, running: str | None) -> str | None:
         """Return the stage of the suite's tools a running stage builds toward, or None.
@@ -440,6 +439,10 @@ class _Pane(Generic[ModelT]):
 
     def signature(self) -> object:
         """Return what else of the pane a refresh redraws when it changes."""
+        return None
+
+    def build_held(self) -> str | None:
+        """Return why the tool's build waits, such as an edit not yet saved, or None."""
         return None
 
     def listen(self) -> None:
@@ -650,6 +653,10 @@ class _Pane(Generic[ModelT]):
                             )
 
     def refresh(self) -> None:
+        with self.keyed_once():
+            self.refresh_pane()
+
+    def refresh_pane(self) -> None:
         model = self.model
         states = model.states() if model is not None and self.usable() else {}
         problem = None if model is None else model.problem()
@@ -708,9 +715,13 @@ class _Pane(Generic[ModelT]):
             if self.stage is None:
                 return
             text = STAGE_RUNNING.get(running or "", self.build_title) if building else None
-            ui.button(text or self.build_title, on_click=self.on_build).props(
+            held = self.build_held()
+            build = ui.button(text or self.build_title, on_click=self.on_build).props(
                 "unelevated dense no-caps color=primary data-control=tool-build"
-            ).set_enabled(ready and not building)
+            )
+            build.set_enabled(ready and not building and held is None)
+            if held is not None:
+                build.props(f'title="{held}"')
             if building:
                 ui.button("Cancel", on_click=self.on_cancel).props(
                     "outline dense no-caps data-control=tool-cancel"

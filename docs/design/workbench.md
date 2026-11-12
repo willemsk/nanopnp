@@ -161,10 +161,10 @@ units, ranges and defaults, which the Study suite lists first (WB-35).
 - the *bottom panel*: the run queue and the log, folded to one line, unfolding to a run's convergence
   (WB-02; RE2); the Python console a later phase (WB-10).
 
-**Always on screen** (WB-03): the project rail, at least folded; the changed count, opening one dense table of
-every value changed from its default and every study override, grouped by model and study, each with its
-value, default, unit and reset and leading to its field, while every tool pane and the settings filter to
-the changed values (WB-28, WB-36; FR-34); and the queue's status line. The list stays open to additions as the design grows.
+**Always on screen** (WB-03): the project rail, at least folded; the changed count, opening a list of one line
+per value changed from its default and per study override, or at a toggle one dense table of them grouped by
+model and study, each with its value, default, unit and reset and leading to its field, while every tool pane and
+the settings filter to the changed values (WB-28, WB-36; FR-34; REV-237); and the queue's status line. The list stays open to additions as the design grows.
 
 **State is never hidden** (WB-32): every setting of a tool is on its pane, none in a sub-menu; a setting
 is guarded against being changed by accident, the means left to the shell's package; and every value away

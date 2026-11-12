@@ -11,6 +11,7 @@ __all__ = [
     "FRAME_CONTROLS",
     "GROUPS",
     "SCREENS",
+    "STAGE_RUNNING",
     "SUITES",
     "TOOL_SUITES",
     "VIEWS",
@@ -22,6 +23,17 @@ __all__ = [
     "tool_controls",
     "tool_for",
 ]
+
+STAGE_RUNNING = {
+    "structure": "Building the ensemble…",
+    "protonation": "Protonating…",
+    "density": "Smearing the density…",
+    "symmetry": "Reducing to (r, z)…",
+    "contour": "Tracing the contour…",
+    "region": "Assembling the region…",
+    "mesh": "Meshing…",
+}
+"""What a stage's build says while it runs, by stage: the Build button's and the view's words."""
 
 
 @dataclass(frozen=True)

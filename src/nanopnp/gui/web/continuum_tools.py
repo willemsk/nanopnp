@@ -171,6 +171,14 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         else:
             ui.label("The project holds no molecular model for this model to be built over.")
 
+    def signature(self) -> object:
+        return self.model is not None and self.model.editor() is not None
+
+    def build_held(self) -> str | None:
+        if self.model is not None and self.model.editor() is not None:
+            return "Save the edited outline or discard it first: a build reads the model's file."
+        return None
+
     def unbuilt(self, tool_id: str) -> str | None:
         stage = {"geometry": "contour", "region": "region", "mesh": "mesh"}.get(tool_id)
         if self.model is None or stage is None or stage in self.walked or not self.usable():
@@ -250,9 +258,17 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 ).classes("later")
                 self.show_assessment()
                 return
-            ui.label(
-                f"{len(editor.vertices)} vertices, edited from {editor.parent_name}; not saved."
-            ).props("data-control=contour-state")
+            parent = (
+                "stage 4's outline"
+                if editor.parent_name.startswith("contour-")
+                else f"the outline {editor.parent_name}"
+            )
+            state = (
+                f"Editing {parent}: {len(editor.vertices)} vertices, edited; not saved."
+                if editor.can_undo
+                else f"Editing {parent}: no change yet."
+            )
+            ui.label(state).props("data-control=contour-state")
             with ui.row().classes("items-center no-wrap"):
                 ui.button(icon="sym_o_undo", on_click=self.undo).props(
                     'flat dense aria-label="Undo the last edit" data-control=contour-undo'
@@ -360,6 +376,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             self.assess = None
             shutil.rmtree(self.folder, ignore_errors=True)
             self.show_edit()
+            self.refresh()
             await self.show()
 
     async def start_edit(self) -> None:
@@ -386,6 +403,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         # box's rebuild deletes.
         await self.show()
         self.show_edit()
+        self.refresh()
 
     async def undo(self) -> None:
         editor = None if self.model is None else self.model.editor()
@@ -727,7 +745,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                 typed = path in changed and part != "membrane"
                 picked = self.look.get("pick") == part
                 button = (
-                    ui.button(on_click=lambda _, p=part: self.pick_part(p))
+                    ui.button(on_click=lambda _, p=part: self.pick_part(p), color=None)
                     .props(
                         f"flat dense no-caps align=left data-control=mesh-part-{part} "
                         f"aria-pressed={str(picked).lower()} "

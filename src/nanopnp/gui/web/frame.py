@@ -420,8 +420,12 @@ class _Frame:
         self._listed = None
         self._problems = None
         self.changed_label.text = self.changed_text(self.changed_count())
-        self.changes_table.rows = self.change_rows()
+        rows = self.change_rows()
+        self.changes_table.rows = rows
         self.changes_table.update()
+        self.changes_lines.clear()
+        with self.changes_lines:
+            self.change_lines(rows)
 
     def run(self, identifier: str) -> None:
         if identifier.startswith(commands.SETTING_COMMAND):
@@ -861,30 +865,87 @@ class _Frame:
         return rows
 
     def changes_list(self) -> None:
-        self.changes_table = (
-            ui.table(
-                columns=CHANGE_COLUMNS,
-                rows=self.change_rows(),
-                row_key="key",
-                pagination={"rowsPerPage": 0},
+        # The changed values a line each, or as the table: the author tries the shorter list
+        # beside the table (REV-237).
+        rows = self.change_rows()
+        with ui.column().classes("w-full gap-0").props("data-control=changes-list"):
+            ui.toggle(
+                {"list": "List", "table": "Table"},
+                value=self.shell.changes_view,
+                on_change=lambda e: self.show_changes_as(str(e.value)),
+            ).props('dense no-caps aria-label="Show the changes as" data-control=changes-view')
+            self.changes_lines = (
+                ui.column()
+                .classes("changes-lines w-full gap-0")
+                .props("data-control=changes-lines")
             )
-            .props(
-                "dense flat hide-pagination wrap-cells data-control=changes-list "
-                'no-data-label="No value is away from its default."'
+            with self.changes_lines:
+                self.change_lines(rows)
+            self.changes_table = (
+                ui.table(
+                    columns=CHANGE_COLUMNS, rows=rows, row_key="key", pagination={"rowsPerPage": 0}
+                )
+                .props(
+                    "dense flat hide-pagination wrap-cells data-control=changes-table "
+                    'no-data-label="No value is away from its default."'
+                )
+                .classes("changes-table w-full")
             )
-            .classes("changes-table w-full")
-        )
         self.changes_table.add_slot("body", CHANGE_BODY)
         self.changes_table.on("reset", self.on_reset)
         self.changes_table.on("open", self.on_open_field)
         self.changes_table.on("problems", lambda: self.show_panel("problems"))
+        self.show_changes_as(self.shell.changes_view)
+
+    def show_changes_as(self, view: str) -> None:
+        self.shell.changes_view = view if view in ("list", "table") else "list"
+        self.changes_lines.set_visibility(self.shell.changes_view == "list")
+        self.changes_table.set_visibility(self.shell.changes_view == "table")
+
+    def change_lines(self, rows: list[dict[str, object]]) -> None:
+        if not any("field" in row or row.get("broken") for row in rows):
+            ui.label("No value is away from its default.").classes("muted")
+        for row in rows:
+            item = str(row["item"])
+            if row.get("broken"):
+                ui.button(
+                    f"✕ {item}: {row['text']}", on_click=lambda: self.show_panel("problems")
+                ).props("flat dense no-caps align=left").classes("changes-line refused")
+                continue
+            if row.get("group"):
+                continue
+            path = str(row["field"])
+            kind, name = split_reference(item)
+            with ui.row().classes("changes-line items-center no-wrap w-full"):
+                ui.label(str(row["mark"])).classes("changed").props("aria-hidden=true")
+                ui.button(
+                    path, on_click=lambda _, i=item, f=path: self.open_field(i, f), color=None
+                ).props(
+                    f'flat dense no-caps title="Open {path}" data-control=changes-line'
+                ).classes("changes-field")
+                ui.label(f"{row['value']}").classes("changed changes-value")
+                was = (
+                    f"the model's {row['default']}, overridden"
+                    if row["word"] == "override"
+                    else f"default {row['default']}"
+                )
+                ui.label(was).classes("muted")
+                ui.space()
+                ui.label(item).classes("muted changes-item")
+                ui.button(
+                    "Reset", on_click=lambda _, k=kind, n=name, f=path: self.ask_reset(k, n, f)
+                ).props(
+                    f'flat dense no-caps data-control=reset aria-label="Reset {path} of {item}"'
+                )
 
     def on_reset(self, event: events.GenericEventArguments) -> None:
         kind, name = split_reference(str(event.args["item"]))
         self.ask_reset(kind, name, str(event.args["field"]))
 
     def on_open_field(self, event: events.GenericEventArguments) -> None:
-        item = str(event.args["item"])
+        self.open_field(str(event.args["item"]), str(event.args["field"]))
+
+    def open_field(self, item: str, field: str) -> None:
         kind, _ = split_reference(item)
         project = self.shell.bench.project
         if project is not None and project.current != item:
@@ -893,11 +954,9 @@ class _Frame:
             with self.rail_box:
                 self.rail_items()
         suite = ITEM_SUITES[kind]
-        tool = tool_for(suite, str(event.args["field"]))
+        tool = tool_for(suite, field)
         page = f"/{suite}/{tool.id}" if tool is not None else f"/{suite}"
-        ui.navigate.to(
-            f"{page if page in self.routes else f'/{suite}'}?field={event.args['field']}"
-        )
+        ui.navigate.to(f"{page if page in self.routes else f'/{suite}'}?field={field}")
 
     def ask_reset(self, kind: str, name: str, path: str) -> None:
         self.confirm(

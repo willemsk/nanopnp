@@ -3200,6 +3200,11 @@ settled by the later suite that adds it, where the first structure is written as
 what becomes of `variant_of`. The third is measured with WP5.17's tools, which call the same reads, and cached if it shows (§8.2.12 M2).
 The fourth waits for a pass over the stages' errors.
 
+WP5.17's item 12 measured the third on 2WCD: a tool page's visit keyed the walk 3 to 12 times, 0.12 s to 0.32 s in
+all, above the 0.25 s the plan set, so a pane's build, its refresh and each drawing request now key it once
+(`BuiltModel.keyed_once`), 0.07 s to 0.13 s; a build's word read meanwhile drops what was read. The third is settled;
+the other three stay open as ruled above.
+
 ### REV-243: Prepare's view does not follow the typed orientation
 
 The axis and the membrane drawn in Prepare's view are those of the built, aligned structure: a typed tilt, azimuth,

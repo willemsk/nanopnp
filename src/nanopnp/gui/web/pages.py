@@ -130,9 +130,9 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         try:
             low, _, high = band.partition(",")
             outlined = (float(low), float(high)) if band else None
-            drawn = plane(
-                continuum(name), tool, image=image, colour=colour, band=outlined, pick=pick
-            )
+            model = continuum(name)
+            with model.keyed_once():
+                drawn = plane(model, tool, image=image, colour=colour, band=outlined, pick=pick)
         except ValueError as error:
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())
@@ -174,30 +174,33 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         if representation not in REPRESENTATIONS or colour not in COLOURINGS:
             raise HTTPException(422, "an unknown representation or colouring")
         model = molecular(name)
-        text, form = structure_text(model)
-        if not text:
-            return JSONResponse(None)
-        # The viewer keeps what it read from an address, so a rebuilt structure takes a new one.
-        stamp = f"{hashlib.sha256(text.encode()).hexdigest()[:12]}-{charge_colours(shell)}"
-        return JSONResponse(
-            scene(
-                model,
-                structure_url=f"/api/molecular/{name}/structure?v={stamp}",
-                # Until a stage is built there is nothing to colour by, and Mol*'s colours stand.
-                annotation_url=(
-                    f"/api/molecular/{name}/annotation?by={colour}&v={stamp}"
-                    if annotation(model, colour)
-                    else None
-                ),
-                representation=representation,
-                form=form,
-                frames=(
-                    range(min(frame_count(model), OVERLAY_MOST)) if overlay else (max(frame, 0),)
-                ),
-                side_on=model.membrane()[0] if side or clip else None,
-                clip=bool(clip),
+        with model.keyed_once():
+            text, form = structure_text(model)
+            if not text:
+                return JSONResponse(None)
+            # The viewer keeps what it read from an address, so a rebuilt structure takes a new one.
+            stamp = f"{hashlib.sha256(text.encode()).hexdigest()[:12]}-{charge_colours(shell)}"
+            return JSONResponse(
+                scene(
+                    model,
+                    structure_url=f"/api/molecular/{name}/structure?v={stamp}",
+                    # Until a stage is built there is nothing to colour by: Mol*'s colours stand.
+                    annotation_url=(
+                        f"/api/molecular/{name}/annotation?by={colour}&v={stamp}"
+                        if annotation(model, colour)
+                        else None
+                    ),
+                    representation=representation,
+                    form=form,
+                    frames=(
+                        range(min(frame_count(model), OVERLAY_MOST))
+                        if overlay
+                        else (max(frame, 0),)
+                    ),
+                    side_on=model.membrane()[0] if side or clip else None,
+                    clip=bool(clip),
+                )
             )
-        )
 
     nicegui_app.add_static_files("/vendor/molstar", ASSETS / "molstar")
     # Our own small files are not cached (max-age 0): NiceGUI's hour of caching would hide an edit
