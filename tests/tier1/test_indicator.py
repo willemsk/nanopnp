@@ -5,7 +5,8 @@ import math
 import ngsolve as ngs
 import pytest
 
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.post.indicator import (
     IndicatorError,
@@ -19,15 +20,13 @@ from nanopnp.post.qoi import TWO_PI
 LOWER_NM = -2.0
 UPPER_NM = 2.0
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 """A small pore; nothing here is solved on it, only interpolated."""
 
 
 @pytest.fixture(scope="module")
 def mesh() -> ngs.Mesh:
-    return PORE.generate(maxh_nm=2.0)
+    return mesh_cylinder_pore(PORE, maxh_nm=2.0)
 
 
 def _at(expression: ngs.CoefficientFunction, mesh: ngs.Mesh, r: float, z: float) -> float:

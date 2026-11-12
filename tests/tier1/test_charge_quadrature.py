@@ -8,14 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 RING = REPOSITORY / "examples" / "02-charged-pore" / "ring.field.yaml"
 MODELS = REPOSITORY / "src" / "nanopnp" / "physics" / "models.py"
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 
 
 @pytest.mark.parametrize("quantity", ["areal_charge_density", "volume_charge_density"])
@@ -35,7 +34,7 @@ def test_qr03_the_gate_measures_the_charge_the_solve_assembles(quantity: str) ->
     )
     assert field.quadrature_order == FIELD_QUADRATURE_ORDER == 8
 
-    mesh = PORE.generate(maxh_nm=1.0, wall_h_nm=0.35)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=1.0, wall_h_nm=0.35)
     space = ngs.H1(mesh, order=AXISYMMETRIC.element_order)
     source = ngs.LinearForm(space)
     source += charge_source(
@@ -86,7 +85,7 @@ def test_qr03_an_explicit_rule_below_num07_s_floor_is_refused() -> None:
 
     from nanopnp.numerics.measures import AXISYMMETRIC
 
-    mesh = PORE.generate(maxh_nm=4.0)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=4.0)
     test = ngs.H1(mesh, order=2).TestFunction()
     with pytest.raises(ValueError, match="NUM-07"):
         AXISYMMETRIC.volume(test, rule_order=2)
@@ -108,7 +107,7 @@ def test_qr03_default_ladder_threads_the_charge_s_rule_onto_every_charged_rung()
     from nanopnp.numerics.measures import FixedCharge
     from nanopnp.solve.continuation import default_ladder
 
-    mesh = PORE.generate(maxh_nm=4.0)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=4.0)
     for rule in (8, None):
         rungs = default_ladder(
             mesh, fixed_charge_field=FixedCharge(ngs.CF(1.0), rule), charge_steps=1
@@ -138,7 +137,7 @@ def test_qr03_a_supplied_and_a_deposited_charge_each_name_their_rule() -> None:
     ).scales
     assert supplied.assemble(scales).rule_order == FIELD_QUADRATURE_ORDER
 
-    mesh = PORE.generate(maxh_nm=4.0)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=4.0)
     deposited = DepositedCharge(deposit=object(), field=ngs.CF(2.0))  # type: ignore[arg-type]
     assert deposited.fixed_charge_C_m3() == FixedCharge(deposited.field, None)
     scaled = deposited.assemble(scales)
@@ -153,7 +152,7 @@ def test_qr03_a_bare_density_is_refused_by_the_model_that_takes_a_fixed_charge()
     from nanopnp.numerics.measures import AXISYMMETRIC
     from nanopnp.physics import models
 
-    mesh = PORE.generate(maxh_nm=4.0)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=4.0)
     model = models.create(
         "poisson", electrolyte=Electrolyte.from_parameter_file("willems2020_nacl")
     )

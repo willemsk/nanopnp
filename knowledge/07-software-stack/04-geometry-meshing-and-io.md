@@ -92,7 +92,7 @@ some VTU paths are reported to lose them (unverified).
 **Netgen's own `.vol` round-trips boundary and material names [tested: tests/tier1/test_library_behaviour.py::test_netgen_vol_round_trip_and_read_gmsh_msh41_failure].** `mesh.ngmesh.Save(path)`
 followed by `ngsolve.Mesh(path)` returns `GetMaterials()` and `GetBoundaries()` unchanged, so a
 mesh written by one process and solved by another keeps the vocabulary the essential conditions and
-the `definedon` restrictions are written against. Measured on a `CylindricalPoreGeometry` at
+the `definedon` restrictions are written against. Measured on a `mesh_cylinder_pore` mesh at
 `maxh = 4 nm`: materials `['electrolyte', 'membrane', 'cis', 'trans']` and boundaries `['axis',
 'cis', 'default', 'membrane', 'membrane_outer', 'trans', 'wall']` on both sides of the write. This
 is what makes an externally supplied mesh usable at all — a format that dropped the names would
@@ -174,7 +174,7 @@ parsing the IF-02 result stream would read. Pass `file_format="gmsh"`.
 - **A boolean on shapes returns a compound.** `.mass` and `.name` on the result raise
   `NgException: Cannot query properties of compound shapes`; read them off `list(shape.faces)[0]`.
 - **The mesh netgen generates is not bit-reproducible across platforms.**
-  `CylindricalPoreGeometry(2.0, 13.0, 50.0)` at `maxh = 2.0 nm`, `wall_h = 0.05 nm` meshes to
+  `mesh_cylinder_pore(CylinderPore(2.0, 13.0, 50.0), ...)` at `maxh = 2.0 nm`, `wall_h = 0.05 nm` meshes to
   **8141 triangles on Linux and macOS and 8147 on Windows** — same version, same options, a drift
   of 0.07 % (measured on the CI matrix, not asserted: `tests/tier1/test_mesh_quality.py` pins 8141
   within 1 %). The advancing front takes its decisions on floating-point comparisons, and the

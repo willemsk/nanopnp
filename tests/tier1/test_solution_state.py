@@ -11,11 +11,12 @@ from typing import Any
 import pytest
 
 from nanopnp.charge.stage import ResolvedFields
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.artefact import CASE_SCHEMA, SOLUTION_SCHEMA, Artefact, StageInputs
 from nanopnp.io.case import CaseDocument
 from nanopnp.io.resolved import ResolvedCase
 from nanopnp.mesh.ingest import ingest
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics.models import CoupledBoundaries, ModelSolution
 from nanopnp.pipeline.case import loads_case, resolve
@@ -36,9 +37,7 @@ from nanopnp.solve.state import (
     wall_distance_field,
 )
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MAXH_NM = 2.0
 # Wall element size set by SPECIFICATION.md NUM-34 (measured regime change on this pore).
 WALL_H_NM = 0.35
@@ -117,7 +116,7 @@ class _KeepingStage(SolveStage):
 @pytest.fixture(scope="module")
 def mesh_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("mesh") / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(path))
+    mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(path))
     return path
 
 

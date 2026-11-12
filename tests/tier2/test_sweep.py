@@ -11,8 +11,9 @@ import pytest
 from nanopnp.api.session import Session
 from nanopnp.api.sweep import run_plan, run_point
 from nanopnp.core.hashing import decode_floats
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.store import Store
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.post.qoi import rectification_ratio
 from nanopnp.sweep.collect import DATASET_FILENAME, collect
 from nanopnp.sweep.plan import SweepPlan, plan_from_document, write_plan
@@ -20,9 +21,7 @@ from nanopnp.sweep.run import MemberResult
 
 logger = logging.getLogger(__name__)
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MAXH_NM = 4.0
 # NUM-34
 WALL_H_NM = 0.35
@@ -87,7 +86,7 @@ class Swept:
 def swept(tmp_path_factory: pytest.TempPathFactory) -> Swept:
     work = tmp_path_factory.mktemp("sweep")
     mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
+    mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
     (work / "base.yaml").write_text(BASE.format(mesh=mesh_path), encoding="utf-8")
     (work / "sweep.yaml").write_text(SWEEP, encoding="utf-8")
 

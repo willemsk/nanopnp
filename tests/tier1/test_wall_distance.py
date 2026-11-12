@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.mesh.ingest import ingest
-from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry
+from nanopnp.mesh.primitives import CylinderGeometry, mesh_cylinder_pore
 from nanopnp.physics.distance import gradient_jump, mollify, wall_distance
 from nanopnp.pipeline.case import loads_case, resolve
 
@@ -72,9 +73,11 @@ def test_ver06_further_mollification_reduces_the_jump(cylinder) -> None:
 
 # PHY-02
 def test_ver06_membrane_is_not_a_distance_source() -> None:
-    mesh = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=30.0
-    ).generate(maxh_nm=2.0, wall_h_nm=0.15)
+    mesh = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=30.0),
+        maxh_nm=2.0,
+        wall_h_nm=0.15,
+    )
     distance = wall_distance(mesh, "wall")
 
     at_pore_wall = distance(mesh(1.9, 0.0))
@@ -108,10 +111,10 @@ numerics: {{continuation: none}}
 
 @pytest.fixture(scope="module")
 def ingested_pore(tmp_path_factory):
-    geometry = CylindricalPoreGeometry(
+    geometry = CylinderPore(
         pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=30.0
     )
-    built = geometry.generate(maxh_nm=2.0, wall_h_nm=0.15)
+    built = mesh_cylinder_pore(geometry, maxh_nm=2.0, wall_h_nm=0.15)
     path = write_msh41(from_ngsolve(built), tmp_path_factory.mktemp("mesh") / "pore.msh")
     resolved = resolve(loads_case(INGESTED_CASE.format(path=path)))
     return built, ingest(resolved.mesh, resolved)
@@ -160,9 +163,7 @@ WALL_VALUE_D = 0.06011672921353888
 
 WALL_VALUE_ETA = 2.6387280882270177
 
-CLAMPED_PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+CLAMPED_PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 
 ADMISSIBLE_WALL_H_NM = 0.35
 # Regime change of SPECIFICATION.md NUM-34; measured on
@@ -207,7 +208,7 @@ def test_ver40_the_clamp_holds_on_the_symbolic_path_too() -> None:
     from nanopnp.materials.forms import NGSOLVE_OPS
 
     diffusivity, viscosity = _corrections()
-    mesh = CLAMPED_PORE.generate(maxh_nm=4.0, wall_h_nm=ADMISSIBLE_WALL_H_NM)
+    mesh = mesh_cylinder_pore(CLAMPED_PORE, maxh_nm=4.0, wall_h_nm=ADMISSIBLE_WALL_H_NM)
     for driver in (ngs.CF(-1.2347), ngs.CF(-1e-3), ngs.CF(0.0)):
         assert diffusivity.evaluate(ngs.CF(1e-9), driver, NGSOLVE_OPS)(
             mesh(1.0, 0.0)
@@ -236,7 +237,7 @@ def _measure(wall_h_nm: float) -> WallDistanceGate:
     from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
     from nanopnp.numerics.gates import FieldSampler, WallDistanceGate
 
-    mesh = CLAMPED_PORE.generate(maxh_nm=4.0, wall_h_nm=wall_h_nm)
+    mesh = mesh_cylinder_pore(CLAMPED_PORE, maxh_nm=4.0, wall_h_nm=wall_h_nm)
     distance = wall_distance(mesh, "wall", order=2, max_distance_nm=3.0)
     return WallDistanceGate(FieldSampler(mesh, materials=ELECTROLYTE_DOMAINS), distance, REMEDY)
 
@@ -298,7 +299,7 @@ def _resolved(tmp_path: Path, wall_h_nm: float, *, corrections: bool) -> tuple[R
     from nanopnp.mesh.ingest import ingest as ingest_mesh
 
     path = tmp_path / "pore.vol"
-    CLAMPED_PORE.generate(maxh_nm=4.0, wall_h_nm=wall_h_nm).ngmesh.Save(str(path))
+    mesh_cylinder_pore(CLAMPED_PORE, maxh_nm=4.0, wall_h_nm=wall_h_nm).ngmesh.Save(str(path))
     document = loads_case(
         GATED_CASE.format(
             path=path,
@@ -348,7 +349,7 @@ def test_num34_the_gate_reads_the_mollified_field_where_smoothing_is_on() -> Non
     from nanopnp.mesh.primitives import ELECTROLYTE_DOMAINS
     from nanopnp.numerics.gates import FieldSampler, WallDistanceGate
 
-    mesh = CLAMPED_PORE.generate(maxh_nm=4.0, wall_h_nm=ADMISSIBLE_WALL_H_NM)
+    mesh = mesh_cylinder_pore(CLAMPED_PORE, maxh_nm=4.0, wall_h_nm=ADMISSIBLE_WALL_H_NM)
     plain = wall_distance(mesh, "wall", order=2, max_distance_nm=3.0)
     smoothed = mollify(plain, 0.2, sources="wall")
     sampler = FieldSampler(mesh, materials=ELECTROLYTE_DOMAINS)

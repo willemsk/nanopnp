@@ -7,8 +7,9 @@ import numpy as np
 import pytest
 from scipy.optimize import brentq
 
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.mesh.adapter import MeshData, from_ngsolve
-from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry, SlabGeometry
+from nanopnp.mesh.primitives import CylinderGeometry, SlabGeometry, mesh_cylinder_pore
 from nanopnp.mesh.quality import (
     QUALITY_FLOOR,
     MeshQualityError,
@@ -148,14 +149,14 @@ def test_qr12_a_negative_radius_aborts_naming_the_vertex() -> None:
         (SlabGeometry(3.0), {"maxh_nm": 0.5, "wall_h_nm": 0.05}, 192, 0.7860, 0.7489),
         (CylinderGeometry(2.0, 4.0), {"maxh_nm": 0.5, "wall_h_nm": 0.05}, 811, 0.6473, 0.5510),
         (
-            CylindricalPoreGeometry(2.0, 6.0, 10.0),
+            CylinderPore(2.0, 6.0, 10.0),
             {"maxh_nm": 4.0, "wall_h_nm": 1.0},
             124,
             0.7138,
             0.6860,
         ),
         (
-            CylindricalPoreGeometry(2.0, 13.0, 50.0),
+            CylinderPore(2.0, 13.0, 50.0),
             {"maxh_nm": 2.0, "wall_h_nm": 0.05},
             8141,
             0.7008,
@@ -166,7 +167,12 @@ def test_qr12_a_negative_radius_aborts_naming_the_vertex() -> None:
 def test_ver10_phase_zero_geometries_clear_the_gate(
     geometry, options, elements, min_sicn, min_gamma
 ) -> None:
-    data = from_ngsolve(geometry.generate(**options))
+    built = (
+        mesh_cylinder_pore(geometry, **options)
+        if isinstance(geometry, CylinderPore)
+        else geometry.generate(**options)
+    )
+    data = from_ngsolve(built)
     report = check_quality(data)
     assert report.element_count == pytest.approx(elements, rel=0.01)
     assert report.min_sicn > QUALITY_FLOOR

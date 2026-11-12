@@ -79,13 +79,17 @@ def meshes(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
     import netgen.occ as occ
     import ngsolve as ngs
 
+    from nanopnp.geometry.pore import CylinderPore
     from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.mesh.primitives import mesh_cylinder_pore
 
     directory = tmp_path_factory.mktemp("leaves")
-    pore = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
+    pore = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+        wall_h_nm=0.35,
+        check_quality=False,
+    )
     face = occ.Rectangle(2.0, 8.0).Face()
     face.name = "electrolyte"
     for edge in face.edges:
@@ -527,10 +531,11 @@ def test_ver71_a_wall_charge_moves_the_solve_key_and_a_zero_one_moves_nothing() 
 
 def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     from nanopnp.core.stages import create, describe
+    from nanopnp.geometry.pore import CylinderPore
     from nanopnp.io.artefact import Artefact, ProfileArtefact, StageInputs
     from nanopnp.io.case import CaseValidationError, UnsupportedCaseSection
     from nanopnp.mesh.adapter import from_ngsolve, write_msh41
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.mesh.primitives import mesh_cylinder_pore
     from nanopnp.pipeline.case import loads_case, resolve
     from nanopnp.validation.case_leaves import LEAVES
 
@@ -601,9 +606,12 @@ def test_ver71_stage_leaves_move_their_consumers_key(tmp_path: Path) -> None:
     traj = tmp_path / "test.xtc"
     traj.write_text("dummy trajectory content")
 
-    pore = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
+    pore = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+        wall_h_nm=0.35,
+        check_quality=False,
+    )
     m1 = write_msh41(from_ngsolve(pore), tmp_path / "m1.msh")
 
     pqr1 = tmp_path / "pqr1.pqr"

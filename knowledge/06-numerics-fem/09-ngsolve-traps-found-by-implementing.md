@@ -410,7 +410,7 @@ number is mesh-independent by construction and an unstructured mesh is then the 
 
 ### 8.1.3 An OCC-generated extent is one ulp off the number the geometry was given **[tested: tests/tier1/test_qoi_stage.py::test_fr23_the_generated_mesh_gives_the_same_band_to_mesh_round_off]** **[tested: tests/tier1/test_ngsolve_traps.py::test_ngsolve_traps_15_16_17_18_and_occ_extent]** {#813-an-occ-generated-extent-is-one-ulp-off-the-number-the-geometry-was-given}
 
-`CylindricalPoreGeometry(membrane_thickness_nm=6.0, ...)` produces a mesh whose `membrane` vertices
+`mesh_cylinder_pore(CylinderPore(membrane_thickness_nm=6.0, ...), ...)` produces a mesh whose `membrane` vertices
 span `z ∈ [−3.0, 3.000000000000001]`: the upper face is one unit in the last place high, and
 identically so at `maxh` 4.0 and 2.0, so it is the OCC revolve's round-off and not a meshing
 artefact. Anything derived from a material's own extent — the NUM-24 indicator band read off the

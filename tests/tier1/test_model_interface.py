@@ -19,6 +19,7 @@ from nanopnp import Case, Session
 from nanopnp.charge.stage import ResolvedFields, read_fields
 from nanopnp.core.constants import thermal_voltage
 from nanopnp.core.hashing import content_hash
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.artefact import SOLUTION_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
@@ -26,7 +27,7 @@ from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
 from nanopnp.mesh.ingest import MeshVocabularyError, deployed_mesh, ingest
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.mesh.sizing import case_debye_length_nm
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models, steric
@@ -316,7 +317,7 @@ def test_fr19_the_ladder_initialisers_state_their_own_debye_length_for_any_salt(
     assert stated.debye_length_nm == 0.5
     with pytest.raises(ValueError, match="finite and positive"):
         models.create("pb-linear", debye_length_nm=0.0)
-    mesh = CylindricalPoreGeometry().generate(maxh_nm=4.0)
+    mesh = mesh_cylinder_pore(CylinderPore(), maxh_nm=4.0)
     rungs = default_ladder(mesh, electrolyte=divalent, solid_permittivities={"membrane": 3.2})
     assert [rung.model.name for rung in rungs[:2]] == ["pb-linear", "pb"]
 
@@ -451,7 +452,7 @@ def test_ver56_the_stage_ten_key_moves_with_the_field_floor() -> None:
 @pytest.mark.parametrize("model", sorted(RUNG_HASHES))
 def test_ver56_every_ladder_rung_builds_the_model_main_built(model: str) -> None:
     resolved = resolve(loads_case(_quickstart_variants()[model]))
-    mesh = CylindricalPoreGeometry().generate(maxh_nm=4.0)
+    mesh = mesh_cylinder_pore(CylinderPore(), maxh_nm=4.0)
     empty = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
     rungs = ladder(resolved, mesh, AXISYMMETRIC, SATURATED_WALL_DISTANCE_NM, empty)
     found = tuple(
@@ -507,9 +508,12 @@ def forwarding_model() -> Iterator[str]:
 
 @pytest.fixture(scope="module")
 def pore_mesh(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    generated = CylindricalPoreGeometry(
-        pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0, wall_h_nm=0.35, check_quality=False)
+    generated = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+        wall_h_nm=0.35,
+        check_quality=False,
+    )
     return write_msh41(from_ngsolve(generated), tmp_path_factory.mktemp("pore") / "pore.msh")
 
 

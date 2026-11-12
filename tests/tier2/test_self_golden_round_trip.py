@@ -10,7 +10,8 @@ import pytest
 import yaml
 
 from nanopnp import Case, Session
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.post import qoi
 from nanopnp.post.indicator import axial_indicator, lumen_band
@@ -34,9 +35,7 @@ from nanopnp.validation.probe import PROBE_SCHEMA, ProbeGrid, loads_probe
 
 logger = logging.getLogger(__name__)
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0)
 
 CONCENTRATION_M = 0.5
 BIAS_V = 0.05
@@ -53,7 +52,7 @@ patches:
 
 @pytest.fixture(scope="module")
 def solved():
-    mesh = PORE.generate(maxh_nm=5.0, wall_h_nm=0.4)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=5.0, wall_h_nm=0.4)
     ladder = default_ladder(
         mesh,
         concentration_M=CONCENTRATION_M,
@@ -201,9 +200,7 @@ numerics:
 outputs: [current, transport_numbers, eof_rate]
 """
 
-SMALL_PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+SMALL_PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 
 RUN_PROBE_TEXT = f"""
 schema: {PROBE_SCHEMA}
@@ -220,7 +217,7 @@ def archived_run(tmp_path_factory: pytest.TempPathFactory):
 
     work = tmp_path_factory.mktemp("validate")
     mesh_path = work / "pore.vol"
-    SMALL_PORE.generate(maxh_nm=4.0, wall_h_nm=1.0).ngmesh.Save(str(mesh_path))
+    mesh_cylinder_pore(SMALL_PORE, maxh_nm=4.0, wall_h_nm=1.0).ngmesh.Save(str(mesh_path))
     case_path = work / "case.yaml"
     case_path.write_text(RUN_CASE.format(mesh_path=mesh_path), encoding="utf-8")
 

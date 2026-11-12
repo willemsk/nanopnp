@@ -12,7 +12,8 @@ import ngsolve as ngs
 import numpy as np
 import pytest
 
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.linear import to_scipy
 from nanopnp.numerics.measures import AXISYMMETRIC
 
@@ -59,7 +60,7 @@ class CoupledSystem:
 
 # NUM-01
 def build_coupled_system(maxh_nm: float) -> CoupledSystem:
-    mesh = CylindricalPoreGeometry().generate(maxh_nm=maxh_nm, wall_h_nm=maxh_nm / 8.0)
+    mesh = mesh_cylinder_pore(CylinderPore(), maxh_nm=maxh_nm, wall_h_nm=maxh_nm / 8.0)
     space = ngs.FESpace(
         [
             ngs.H1(mesh, order=2, dirichlet=RESERVOIR),  # phi, on all of Omega

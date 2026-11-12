@@ -147,15 +147,18 @@ def test_ver77_gauss_balance_in_a_long_charged_lumen(tmp_path: Path) -> None:
 
 def test_ver77_zero_wall_charge_adds_no_term() -> None:
     from nanopnp.charge.stage import ResolvedFields
-    from nanopnp.mesh.primitives import CylindricalPoreGeometry
+    from nanopnp.geometry.pore import CylinderPore
+    from nanopnp.mesh.primitives import mesh_cylinder_pore
     from nanopnp.physics.models import case_model
     from nanopnp.pipeline.case import loads_case, resolve
     from nanopnp.solve.state import residual_keywords, single_rung
 
     radius = 2.0
-    mesh = CylindricalPoreGeometry(
-        pore_radius_nm=radius, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-    ).generate(maxh_nm=4.0, wall_h_nm=0.35)
+    mesh = mesh_cylinder_pore(
+        CylinderPore(pore_radius_nm=radius, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0),
+        maxh_nm=4.0,
+        wall_h_nm=0.35,
+    )
     fields = ResolvedFields(charge=None, conservation=None, eps_r=None, material_means=())
 
     def residual_vector(wall_charge: float | None) -> list[float]:

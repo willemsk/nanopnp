@@ -6,8 +6,9 @@ import math
 import pytest
 
 from nanopnp.core.constants import FARADAY
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.materials.electrolyte import Electrolyte
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.post import qoi
@@ -46,7 +47,7 @@ def maxwell_hall_conductance_S(
 
 
 def _solve(reservoir_radius_nm: float) -> float:
-    pore = CylindricalPoreGeometry(
+    pore = CylinderPore(
         pore_radius_nm=PORE_RADIUS_NM,
         membrane_thickness_nm=MEMBRANE_THICKNESS_NM,
         reservoir_radius_nm=reservoir_radius_nm,
@@ -59,7 +60,7 @@ def _solve(reservoir_radius_nm: float) -> float:
     )
     # Uncharged, so no double layer needs wall grading; the refinement goes to the
     # mouth, where the access resistance is set.
-    mesh = pore.generate(maxh_nm=reservoir_radius_nm / 12.0, wall_h_nm=0.5)
+    mesh = mesh_cylinder_pore(pore, maxh_nm=reservoir_radius_nm / 12.0, wall_h_nm=0.5)
     bias_tilde = BIAS_V / model.scales.potential_V
     solution = model.solve(
         mesh,

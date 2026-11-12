@@ -10,7 +10,7 @@ from nanopnp.core.hashing import Canonicalisable
 from nanopnp.mesh.adapter import MeshData, from_ngsolve, read, write_msh41
 from nanopnp.mesh.ingest import apply_groups
 from nanopnp.mesh.quality import QualityReport, check_quality, check_radii
-from nanopnp.mesh.sizing import GATE_CONSTANTS, GRADING, WallSize
+from nanopnp.mesh.sizing import GATE_CONSTANTS, GRADING, WallSize, size_wall
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.core.typing import Mesh
@@ -44,7 +44,9 @@ def generate_idealised(record: IdealisedRegionRecord, *, maxh_nm: float, wall_h_
     import netgen.occ as occ
     import ngsolve as ngs
 
-    geometry = occ.OCCGeometry(record.geometry().shape(wall_h_nm=wall_h_nm), dim=2)
+    shape = record.geometry().shape()
+    size_wall(shape, wall_h_nm)
+    geometry = occ.OCCGeometry(shape, dim=2)
     return ngs.Mesh(
         geometry.GenerateMesh(
             maxh=maxh_nm, grading=GRADING, optsteps2d=IDEALISED_OPTIMISATION_STEPS

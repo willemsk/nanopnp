@@ -2,15 +2,14 @@
 
 import netgen.occ as occ
 
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.geometry.pore import CylinderPore
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=12.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=12.0)
 
 
 def test_the_shape_split_leaves_the_boundary_vocabulary_unchanged() -> None:
-    mesh = PORE.generate(maxh_nm=2.0)
+    mesh = mesh_cylinder_pore(PORE, maxh_nm=2.0)
     assert set(mesh.GetMaterials()) == {"electrolyte", "membrane", "cis", "trans"}
     assert set(mesh.GetBoundaries()) == {
         "axis",

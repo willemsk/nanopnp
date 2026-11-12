@@ -20,9 +20,10 @@ from nanopnp.charge.fields import (
     create_form,
     load_document,
 )
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.materials.fields import blend
-from nanopnp.mesh.primitives import CylindricalPoreGeometry, SlabGeometry
+from nanopnp.mesh.primitives import SlabGeometry, mesh_cylinder_pore
 from nanopnp.numerics.measures import AXISYMMETRIC
 from nanopnp.physics import models
 from nanopnp.physics.coefficients import (
@@ -32,9 +33,7 @@ from nanopnp.physics.coefficients import (
 )
 from nanopnp.physics.nernst_planck import ConcentrationVariables
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=8.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=8.0)
 
 MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 
@@ -43,7 +42,7 @@ CONCENTRATION_M = 1.0
 
 @pytest.fixture(scope="module")
 def mesh():
-    return PORE.generate(maxh_nm=1.0)
+    return mesh_cylinder_pore(PORE, maxh_nm=1.0)
 
 
 def _slab_spec(**overrides: float) -> FormSpec:

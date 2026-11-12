@@ -11,12 +11,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.vocabulary import (
     POTENTIAL,
     VELOCITY,
 )
 from nanopnp.materials.electrolyte import CorrectionSwitches, Electrolyte
-from nanopnp.mesh.primitives import CylinderGeometry, CylindricalPoreGeometry
+from nanopnp.mesh.primitives import CylinderGeometry, mesh_cylinder_pore
 from nanopnp.numerics.gates import GateViolationError
 from nanopnp.numerics.measures import AXISYMMETRIC, Measures
 from nanopnp.physics import stabilisation as stabilisation_module
@@ -317,9 +318,7 @@ def test_ver42_the_flow_pair_and_not_the_transport_term_sets_the_reference_rate(
 # -- 3: the coarse mesh, where the mode earns its place -------------------------
 
 
-COARSE_PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0
-)
+COARSE_PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=13.0, reservoir_radius_nm=25.0)
 
 # Coarse wall spacing against SPECIFICATION.md NUM-30, at 0.5 M.
 COARSE_WALL_H_NM = 1.0
@@ -335,7 +334,7 @@ MEMBRANE_PERMITTIVITY = {"membrane": 2.0}
 
 @functools.cache
 def _pore_mesh(wall_h_nm: float) -> Mesh:
-    return COARSE_PORE.generate(maxh_nm=5.0, wall_h_nm=wall_h_nm)
+    return mesh_cylinder_pore(COARSE_PORE, maxh_nm=5.0, wall_h_nm=wall_h_nm)
 
 
 # NUM-18

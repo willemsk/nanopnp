@@ -11,8 +11,9 @@ import pytest
 
 from nanopnp.api.session import Session
 from nanopnp.api.sweep import run_plan
+from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.store import Store
-from nanopnp.mesh.primitives import CylindricalPoreGeometry
+from nanopnp.mesh.primitives import mesh_cylinder_pore
 from nanopnp.sweep.plan import plan_from_document, write_plan
 from nanopnp.sweep.run import THREAD_VARIABLES
 
@@ -20,9 +21,7 @@ logger = logging.getLogger(__name__)
 
 pytestmark = pytest.mark.slow
 
-PORE = CylindricalPoreGeometry(
-    pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0
-)
+PORE = CylinderPore(pore_radius_nm=2.0, membrane_thickness_nm=6.0, reservoir_radius_nm=10.0)
 MAXH_NM = 4.0
 # NUM-34
 WALL_H_NM = 0.35
@@ -72,7 +71,7 @@ axes:
 def planned(tmp_path_factory: pytest.TempPathFactory) -> Path:
     work = tmp_path_factory.mktemp("throughput")
     mesh_path = work / "pore.vol"
-    PORE.generate(maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
+    mesh_cylinder_pore(PORE, maxh_nm=MAXH_NM, wall_h_nm=WALL_H_NM).ngmesh.Save(str(mesh_path))
     (work / "base.yaml").write_text(BASE.format(mesh=mesh_path), encoding="utf-8")
     (work / "sweep.yaml").write_text(SWEEP, encoding="utf-8")
     plan = plan_from_document(work / "sweep.yaml")

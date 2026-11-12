@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
-DEFAULT_PORE_RADIUS_NM: Final[float] = 2.0
+from nanopnp.geometry.defaults import DEFAULT_PORE_RADIUS_NM
+
 DEFAULT_CYLINDER_MEMBRANE_THICKNESS_NM: Final[float] = 6.0
 DEFAULT_CYLINDER_RESERVOIR_RADIUS_NM: Final[float] = 10.0
 DEFAULT_MAXH_NM: Final[float] = 4.0
