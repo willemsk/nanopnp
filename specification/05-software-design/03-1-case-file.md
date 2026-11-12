@@ -345,9 +345,16 @@ no merge: a linked variant keys as the one case its merged body gives, and the m
 as `models.molecular.parent`. The workbench writes a model's values, its `exposes:` list and its variants through the
 project (`Project.set_value`, `set_exposed`, `new_model`, `save_variant`), which checks the edited file as a study
 would read it before replacing the old one, so a refused edit writes nothing. A molecular model is also built alone,
-with no study (`Project.build_case`): its own values over 0.15 M NaCl at zero bias, which no stage up to the protonation
-reads, so the stages it builds are the ones every study naming it reuses (FR-39 (c); WB-11), and the store's clean-up
-keeps them.
+with no study (`Project.build_case`): its own values over 0.15 M NaCl at zero bias and the solid permittivities of that
+salt's parameter set, which no stage up to the protonation reads, so the stages it builds are the ones every study naming
+it reuses (FR-39 (c); WB-11). A continuum model is built alone to the mesh in the same way (§8.2.40 AP2), merged as a
+study merges over the values of one molecular model: the one chosen for it, held in the project file
+(`Project.set_built_with`), else the molecular model of the first study that names both, else the project's first
+(`Project.molecular_for`). A continuum model that declares `geometry.pore` or supplies `inputs.profile` or `inputs.mesh`
+reads none, and an idealised pore's layer holds the membrane's permittivity alone. Its stages 1 to 6 key as those of a
+study pairing the two at 0.15 M NaCl. A wall sized `auto` follows the study's salt only where `λ_D/5` falls below the
+0.05 nm ceiling, above about 1.5 M NaCl, so a study there builds a mesh of its own; an explicit wall size or
+`wall_for_concentration_M` is shared by every study. The store's clean-up keeps what each build stored.
 
 The case resolves by merging the study over the molecular model, then the continuum model, then the physics model: a
 mapping merges key by key, and a list or a free mapping replaces whole. The result validates once as

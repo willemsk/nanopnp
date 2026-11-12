@@ -106,7 +106,7 @@ LIBRARY_FIELDS: dict[ItemKind, str] = {
 
 
 class ProjectFile(_Strict):
-    """The project file: names, a layout and the project's settings, and no physics.
+    """The project file: names, a layout, the project's settings and build pairs, and no physics.
 
     The workbench checks ``settings`` against its declared list; this file only carries them.
     """
@@ -118,6 +118,8 @@ class ProjectFile(_Strict):
     current: str | None = None
     layout: dict[Suite, SuiteLayout] = Field(default_factory=dict)
     settings: dict[str, JsonValue] = Field(default_factory=dict)
+    built_with: dict[str, str] = Field(default_factory=dict)
+    """The molecular model each continuum model is built alone over, where one was chosen."""
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     def names(self, kind: ItemKind) -> list[str]:

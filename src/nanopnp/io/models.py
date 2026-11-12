@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import math
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass, field, fields
 from functools import cache
@@ -878,11 +878,19 @@ def _merge(base: Mapping[str, Any], over: Mapping[str, Any], path: str) -> dict[
     return merged
 
 
-def _merge_all(models: list[Mapping[str, Any]], study: Mapping[str, Any]) -> dict[str, Any]:
+def merge_layers(layers: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Merge case layers in order, each over the ones before it, as a study merges its models.
+
+    A block merges key by key; a list or a free mapping replaces whole.
+    """
     merged: dict[str, Any] = {}
-    for layer in (*models, study):
+    for layer in layers:
         merged = _merge(merged, layer, "")
     return merged
+
+
+def _merge_all(models: list[Mapping[str, Any]], study: Mapping[str, Any]) -> dict[str, Any]:
+    return merge_layers([*models, study])
 
 
 def _prune(mapping: Mapping[str, Any], path: str, named: frozenset[str]) -> dict[str, Any]:

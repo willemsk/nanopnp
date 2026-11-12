@@ -110,7 +110,8 @@ Ten: the rulings AP1 to AP4 added three library steps to the phase entry's seven
 - An idealised continuum model over `BUILD_LAYER` is refused for `physics.solid_permittivities.membrane`; one over the
   2WCD structure resolves and walks to the mesh through stage 1, the protonation and stages 2 to 6 (probed).
   `api/case.py:Case.cylinder` reads the permittivities from `load_corrections(parameters).dielectrics`.
-- `mesh/sizing.py:resolve_wall_size` sizes `auto` at the case's Debye length or at `wall_for_concentration_M`.
+- `mesh/sizing.py:resolve_wall_size` sizes `auto` at the case's Debye length or at `wall_for_concentration_M`, as
+  `min(0.05 nm, λ_D/5)`: the ceiling holds below about 1.5 M NaCl, so a 1 M study keys stage 6 as 0.15 M does.
 - `_checked_write` validates a kind in `BUILD_UPTO` as its build case; `kept_artefacts` and `_built_stages` iterate
   `BUILD_UPTO`, cached per `(kind, name)`.
 - `io/project.py:ProjectFile` is strict: `library`, `open`, `current`, `layout`, `settings`.
@@ -211,7 +212,7 @@ Contour tool sets `inputs.profile` to `{path: <the outline in inputs/>, format: 
 **Item 5.** `ProjectFile.built_with: dict[str, str]`; `Project.molecular_for(name)`, `set_built_with(name, molecular)`.
 `_build_case` merges `[BUILD_LAYER + {physics: {solid_permittivities: {protein, membrane}}}, molecular body, continuum
 body]` with `io/models.py:merge_layers(layers)`, the fold `_merge_all` then calls with the study appended; the molecular
-body only where the continuum body holds neither `geometry.pore` nor `inputs.profile` (AP2). The permittivities from
+body only where the continuum body holds none of `geometry.pore`, `inputs.profile` and `inputs.mesh` (AP2). The permittivities from
 `load_corrections` of `io/case.py:Electrolyte`'s default `parameters`, its `dielectrics`. `_checked_write` builds a case for `molecular` only;
 `_built_stages` keeps its stamp.
 
@@ -272,7 +273,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 | `tests/tier1/test_layering.py` | 1 | VER-61 | MOD-03's row gone; the substituted import fails as a new static edge and as an upward or deferred-upward one, naming module and line | `uv run pytest tests/tier1/test_layering.py` |
 | `tests/tier1/test_region.py::test_ver55_an_outline_beside_a_structure_walks_the_charge_chain_alone` | 1 | VER-55; AP1 | One each, on `prepared_2wcd` with an outline: under `epnp-ns` `selected_stages` holds structure, protonation, region, mesh and charge, not stages 2 to 4; beside `inputs.charge` refused naming both keys | `uv run pytest tests/tier1/test_region.py` |
 | `tests/tier2/test_gui_geometry_2wcd.py::test_ver55_2wcd_a_null_edit_beside_its_structure_deposits_the_same_charge` | 2 | VER-55; AP1 | Null edit, structure kept: stage 5's outline bitwise; stage 6's content hash, the deposit per material and both conservation legs equal to 10⁻¹² relative; no stage 2 to 4 artefact recorded; the moved edit passes the deposit's gates | `uv run pytest tests/tier2/test_gui_geometry_2wcd.py` |
-| `tests/tier1/test_project.py::test_fr39_a_continuum_model_built_alone_keys_as_a_study_at_its_salt` | 1 | FR-39; AP2 | One each: 2WCD's stages 1 to 6 built alone key as a study's at 0.15 M NaCl, exact; at 1 M stage 6 differs, stage 5 not; an idealised model builds with no molecular model; the charged tube's built model is in `kept_artefacts` | `uv run pytest tests/tier1/test_project.py` |
+| `tests/tier1/test_project.py::test_fr39_a_continuum_model_built_alone_keys_as_a_study_at_its_salt` | 1 | FR-39; AP2 | One each: 2WCD's stages 1 to 6 built alone key as a study's at 0.15 M NaCl, exact; at 3 M stage 6 differs, stage 5 not; an idealised model builds with no molecular model; the charged tube's built model is in `kept_artefacts` | `uv run pytest tests/tier1/test_project.py` |
 | `tests/tier1/test_mesh_sizing.py::test_ver53_typed_part_sizes_key_as_the_table_and_follow_the_scale` | 1 | VER-53; AP3, AP4 | One each, on the charged tube: parts typed at §5.2.2's values key as untyped, exact; `protein_nm` doubled moves stage 6's key, not stage 5's, and thins the protein's elements; at `size_scale` 2 the table holds twice the typed value; `sizes` beside `geometry.pore` refused | `uv run pytest tests/tier1/test_mesh_sizing.py` |
 | `tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve` | 1 | VER-55 (restated); CON-10 | The probe adds `gui.web.continuum`, `gui.web.plane` and `nicegui` | `uv run pytest tests/tier1/test_gui_viewmodels.py` |
 | `tests/tier1/test_gui_screens.py` | 1 | VER-78 (a) to (d), (m) | The Continuum pages in each state; (m): two Continuum tools build the canvas once; Molecular, Continuum, Molecular build Mol* once | `NANOPNP_REQUIRE_BROWSER=1 uv run pytest tests/tier1/test_gui_screens.py` |

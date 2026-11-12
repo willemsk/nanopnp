@@ -5,6 +5,7 @@ from __future__ import annotations
 import filecmp
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 import yaml
@@ -14,9 +15,14 @@ from nanopnp.api.case import Case
 from nanopnp.api.project import Project, ProjectError
 from nanopnp.io.artefact import CaseArtefact
 from nanopnp.io.case import CaseValidationError
-from nanopnp.io.project import PROJECT_FILENAME
-from nanopnp.pipeline.run import read_run
+from nanopnp.io.project import PROJECT_FILENAME, STORE_FOLDER
+from nanopnp.io.store import Store
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import keyed_walk, read_run, selected_stages
 from nanopnp.validation.charged_tube import write_charged_tube
+
+if TYPE_CHECKING:
+    from conftest import Prepared2WCD, Seed2WCD
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 QUICKSTART = EXAMPLES / "01-quickstart" / "quickstart.case.yaml"
@@ -290,3 +296,71 @@ def test_fr38_a_linked_variant_follows_its_parent_and_a_copy_does_not(tmp_path: 
         "pore-d21n.yaml",
         "pore.yaml",
     ]
+
+
+GEOMETRY = ("structure", "density", "symmetry", "contour", "region", "mesh")
+
+CASE_2WCD = """\
+schema: nanopnp/case/v0.6
+name: 2wcd
+structure:
+  source: {{path: {pdb}}}
+  symmetry: {{point_group: C12}}
+{geometry}electrolyte:
+  species: [{{name: Na+, z: +1}}, {{name: Cl-, z: -1}}]
+  concentration_M: 0.15
+  parameters: willems2020_nacl
+boundary_conditions: {{bias_V: 0.05, ground: cis}}
+physics: {{model: epnp-ns, solid_permittivities: {{protein: 20.0, membrane: 3.2}}}}
+"""
+
+
+def _identities(project: Project, case: Case) -> dict[str, tuple[str, bool]]:
+    resolved = resolve(case, base=case.source.base)
+    found = keyed_walk(resolved, store=Store(project.root / STORE_FOLDER), planned=set())
+    return {name: (found[name].hash, found[name].built) for name in found}
+
+
+def test_fr39_a_continuum_model_built_alone_keys_as_a_study_at_its_salt(
+    prepared_2wcd: Prepared2WCD, seeded_2wcd: Seed2WCD, tmp_path: Path
+) -> None:
+    case = tmp_path / "2wcd.case.yaml"
+    case.write_text(
+        CASE_2WCD.format(pdb=prepared_2wcd.path, geometry=seeded_2wcd.geometry), encoding="utf-8"
+    )
+    project = Project.create(tmp_path / "project")
+    seeded_2wcd(project.root / STORE_FOLDER)
+    study = project.import_case(Case.load(case), link=True)
+    (continuum,) = project.items("continuum")
+    (molecular,) = project.items("molecular")
+    assert project.molecular_for(continuum) == molecular
+
+    built = _identities(project, project.build_case("continuum", continuum))
+    at_015 = _identities(project, project.study(study))
+    for name in GEOMETRY:
+        assert built[name] == at_015[name], name
+        assert not built[name][1], f"{name} is held by the seeded store"
+
+    (physics,) = project.items("physics")
+    # The wall is min(0.05 nm, lambda_D / 5), so it follows the salt only above about 1.5 M.
+    project.set_value("physics", physics, "electrolyte.concentration_M", 3.0)
+    at_3 = _identities(project, project.study(study))
+    assert at_3["region"] == built["region"]
+    assert at_3["mesh"][0] != built["mesh"][0]
+
+    cylinder = Project.create(tmp_path / "cylinder")
+    cylinder.new_model("continuum", "cyl")
+    cylinder.set_value("continuum", "cyl", "geometry.pore", {"shape": "cylinder", "radius_nm": 2.0})
+    assert cylinder.molecular_for("cyl") is None
+    alone = cylinder.build_case("continuum", "cyl")
+    assert selected_stages(resolve(alone, base=alone.source.base), "mesh") == (
+        "case",
+        "region",
+        "mesh",
+    )
+
+    tube = Project.create(tmp_path / "tube")
+    tube.import_case(Case.load(write_charged_tube(tmp_path / "charged")))
+    result = tube.session().run(tube.build_case("continuum", "charged-tube"), upto="mesh")
+    kept = tube.kept_artefacts()
+    assert {result.artefacts[name].hash for name in ("region", "mesh")} <= kept

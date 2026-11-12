@@ -8,6 +8,7 @@ import json
 import shutil
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -17,6 +18,7 @@ from pydantic import JsonValue
 from nanopnp.api.case import Case
 from nanopnp.api.session import Session
 from nanopnp.core.hashing import file_hash
+from nanopnp.io import case as schema
 from nanopnp.io.case import SCHEMA, CaseValidationError, FieldValue
 from nanopnp.io.case_paths import (
     UnknownCasePathError,
@@ -36,6 +38,7 @@ from nanopnp.io.models import (
     _holder,
     _put,
     leaves,
+    merge_layers,
     owner_of,
     read_model_file,
     split_case_layers,
@@ -62,6 +65,7 @@ from nanopnp.io.project import (
     write_project,
 )
 from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage
+from nanopnp.materials.corrections import load_corrections
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
 from nanopnp.sweep.run import MEMBERS_DIRNAME
@@ -83,7 +87,10 @@ BUILD_LAYER: Mapping[str, Any] = {
 }
 
 # The last stage a model of each kind builds alone; a kind without a row is built by its studies.
-BUILD_UPTO: Mapping[ModelKind, str] = {"molecular": "protonation"}
+BUILD_UPTO: Mapping[ModelKind, str] = {"molecular": "protonation", "continuum": "mesh"}
+
+# A continuum model holding one of these reads no molecular model when it is built alone.
+_OWN_OUTLINE = ("geometry.pore", "inputs.profile", "inputs.mesh")
 
 _REFUSED = (ValueError, KeyError, OSError)
 
@@ -314,8 +321,9 @@ class Project:
             ]
         except _REFUSED:
             return frozenset()
-        found = frozenset(identity.hash for identity in walked)
-        # A stage not built yet is keyed by a forecast, which its build replaces.
+        # A stage not built yet is keyed by a forecast, which its build replaces; the store holds
+        # nothing of it to keep.
+        found = frozenset(identity.hash for identity in walked if not identity.built)
         if not any(identity.built for identity in walked):
             self._built[kind, name] = (stamp.hexdigest(), found)
         return found
@@ -519,8 +527,11 @@ class Project:
     def build_case(self, kind: ModelKind, name: str) -> Case:
         """Return the case that builds one model alone, up to ``BUILD_UPTO`` of its kind.
 
-        The case is the model's own values over ``BUILD_LAYER``, so its stages key as they do
-        in every study that names the model.
+        The case is the model's own values over ``BUILD_LAYER`` and its parameter set's solid
+        permittivities, merged as a study merges, so its stages key as they do in every study
+        that names the model at 0.15 M NaCl. A continuum model is built over the values of the
+        molecular model ``molecular_for`` names, unless it declares an idealised pore or
+        supplies its outline or mesh.
 
         Raises
         ------
@@ -535,10 +546,63 @@ class Project:
         if kind not in BUILD_UPTO:
             raise ProjectError(f"a {kind} model is built by the studies that name it, not alone")
         body = read_model_file(kind, location).body
-        document = {"schema": SCHEMA, "name": name, **copy.deepcopy(dict(BUILD_LAYER)), **body}
-        return Case.loads(
-            _text(document), base=location.parent, source=f"<{kind} model {name} built alone>"
-        )
+        layers: list[Mapping[str, Any]] = [_build_layer(idealised=_holds(body, "geometry.pore"))]
+        source = f"<{kind} model {name} built alone>"
+        molecular = None
+        if kind == "continuum" and not any(_holds(body, path) for path in _OWN_OUTLINE):
+            molecular = self.molecular_for(name)
+        if molecular is not None:
+            layers.append(read_model_file("molecular", self.path("molecular", molecular)).body)
+            source = f"<continuum model {name} built alone over molecular model {molecular}>"
+        document = {"schema": SCHEMA, "name": name, **merge_layers([*layers, body])}
+        return Case.loads(_text(document), base=location.parent, source=source)
+
+    def molecular_for(self, name: str) -> str | None:
+        """Return the molecular model continuum model ``name`` is built alone over, or None.
+
+        It is the one ``set_built_with`` chose; else the molecular model of the first study
+        that names the continuum model with one; else the project's first molecular model.
+        """
+        molecules = self._file.names("molecular")
+        held = self._file.built_with.get(name)
+        if held is not None and held in molecules:
+            return held
+        target = self.path("continuum", name).resolve()
+        by_file = {self.path("molecular", other).resolve(): other for other in molecules}
+        for study in self._file.names("study"):
+            location = self.path("study", study)
+            named = _body(location).get("models") if location.is_file() else None
+            if not isinstance(named, dict):
+                continue
+            continuum, molecular = named.get("continuum"), named.get("molecular")
+            if not isinstance(continuum, str) or not isinstance(molecular, str):
+                continue
+            if (location.parent / continuum).resolve() != target:
+                continue
+            found = by_file.get((location.parent / molecular).resolve())
+            if found is not None:
+                return found
+        return molecules[0] if molecules else None
+
+    def set_built_with(self, name: str, molecular: str | None) -> None:
+        """Choose the molecular model continuum model ``name`` is built alone over.
+
+        ``None`` returns the choice to ``molecular_for``'s default.
+
+        Raises
+        ------
+        ProjectError
+            If the project holds no such continuum or molecular model.
+        """
+        if name not in self._file.names("continuum"):
+            raise ProjectError(f"the project holds no continuum {name!r}")
+        if molecular is None:
+            self._file.built_with.pop(name, None)
+        elif molecular not in self._file.names("molecular"):
+            raise ProjectError(f"the project holds no molecular {molecular!r}")
+        else:
+            self._file.built_with[name] = molecular
+        write_project(self._root, self._file)
 
     def new_model(self, kind: ModelKind, name: str) -> Path:
         """Create a model that holds no value yet and exposes its kind's list; return its file.
@@ -748,7 +812,9 @@ class Project:
         staged.write_text(_text(body), encoding="utf-8")
         try:
             read_model_file(kind, staged, rebase=False)
-            if kind in BUILD_UPTO:
+            # A continuum model is checked by its values alone: its build reads a molecular
+            # model, whose own refusal is no reason to refuse this edit.
+            if kind == "molecular":
                 self._build_case(kind, name, staged)
             else:
                 for path, value in leaves(read_model_file(kind, staged, rebase=False).body):
@@ -1078,6 +1144,34 @@ def _exposes(entry: object, path: str) -> bool:
 
 def _copied(value: T) -> T:
     return copy.deepcopy(value)
+
+
+@cache
+def _permittivities() -> Mapping[str, float]:
+    parameters = schema.Electrolyte.model_fields["parameters"].default
+    dielectrics = load_corrections(parameters).dielectrics
+    return {"protein": dielectrics.protein, "membrane": dielectrics.membrane}
+
+
+def _build_layer(*, idealised: bool) -> dict[str, Any]:
+    # An idealised pore's only solid is the membrane.
+    solids = {
+        name: value
+        for name, value in _permittivities().items()
+        if name == "membrane" or not idealised
+    }
+    layer = copy.deepcopy(dict(BUILD_LAYER))
+    layer["physics"] = {"solid_permittivities": solids}
+    return layer
+
+
+def _holds(body: Mapping[str, Any], dotted: str) -> bool:
+    cursor: object = body
+    for part in dotted.split("."):
+        if not isinstance(cursor, Mapping) or part not in cursor:
+            return False
+        cursor = cursor[part]
+    return cursor is not None
 
 
 def _check_leaf(path: str, value: FieldValue, location: Path) -> None:
