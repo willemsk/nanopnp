@@ -327,7 +327,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
   **Executor:** main
 - [x] ab86342 12. The tools finished to the verdicts, with *Modified only*, `?field=` and REV-242's measure (D6 to D9); done when
   VER-78 passes. **Executor:** main
-- [ ] 13. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-170 and REV-39 `fixed`; the
+- [x] 5d6416f 13. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-170 and REV-39 `fixed`; the
   matrix rows; `current.md`. **Executor:** main
 
 ### Verification
