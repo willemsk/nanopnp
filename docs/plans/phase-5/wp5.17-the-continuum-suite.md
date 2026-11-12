@@ -269,6 +269,17 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 > contrast, non-text or target failure; the digest, 14 picks for 58 shots, is
 > [published](https://claude.ai/artifact/BPJ8ojhCzRkresApCL5qht).
 
+**Item 11.**
+
+> **Outcome — item 11.** The author marked the 14 picks: 8 `keep`, 6 `change`
+> ([the record](../../design/reviews/2026-11-12-continuum.md)). At the collect the author merged Contour into *Pore
+> geometry*, had Region draw and select each domain now, the CAD tooling left to the sketcher, and sent the mesh's
+> sizes to a brainstorm: three layouts drawn over the live 2WCD page
+> ([published](https://claude.ai/artifact/Thfn4DykmSfimP6iEG5J1W)), of which the author preferred the tree of the
+> mesh's parts. The tool list becomes rows in both suites, at the author's note. WB-41 records the rulings; REV-244
+> carries a suite between Molecular and Continuum, the CAD tooling and subdivisions for meshing. None of REV-235's
+> points was put; REV-237's `?field=` and one-line list go to item 12.
+
 ### Work items
 
 - [x] 800581b 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,

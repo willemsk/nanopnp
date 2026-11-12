@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,377. By source: history ruling 346; plan decision row 694; REV row 243; MOD row 18; OPN row 9; WB row 40; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,379. By source: history ruling 346; plan decision row 694; REV row 244; MOD row 18; OPN row 9; WB row 41; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 557; open 5; session, own call 812; session, put to the author 3.
+By decider: author 558; open 5; session, own call 813; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1310,6 +1310,7 @@ By decider: author 557; open 5; session, own call 812; session, put to the autho
 | REV-241 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | What the final review of the Molecular tools left open | WP5.16 | open |
 | REV-242 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | What the code review of the Molecular suite left open | WP5.16 | open |
 | REV-243 | author | `docs/project/review-findings.md` |  | WP5.16 | Prepare's view does not follow the typed orientation | ruled by the author, 12 November 2026 (WP5.16) | open |
+| REV-244 | session, own call | `docs/project/review-findings.md` |  | WP5.17 | The author's notes on the Continuum digest that ask for a discussion | WP5.17 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
@@ -1372,6 +1373,7 @@ By decider: author 557; open 5; session, own call 812; session, put to the autho
 | WB-38 | author | `docs/design/workbench.md` |  | WP5.01 | How a suite is designed / The author, marking the charge screen: "Looks very rudimentary still. I think we need to discuss a bit on how the design and functionality can go hand in hand." Asked: "Prototype on 2WCD, then… | docs/design/workbench.md | in the design document |
 | WB-39 | author | `docs/design/workbench.md` |  | WP5.01 | The Molecular round: where a pane stands, the charge colours, the settings, the folded bar / The author, marking the Molecular drafts on 2WCD (`reviews/2026-11-11-molecular.md`): "Pane to the left. Consistency is key.";… | docs/design/workbench.md | in the design document |
 | WB-40 | author | `docs/design/workbench.md` |  | WP5.01 | The Molecular round's second marks: the stages, the word for a stopped build, a suite's icon, the membrane, a file picker / The author, marking the finished tools (`reviews/2026-11-12-molecular.md`): "the step cards sho… | docs/design/workbench.md | in the design document |
+| WB-41 | author | `docs/design/workbench.md` |  | WP5.01 | The Continuum round: one geometry tool, Region's domains, the mesh's parts, the tool list / The author, marking the Continuum drafts (`reviews/2026-11-12-continuum.md`): of Contour, "Can this not be merged with protein… | docs/design/workbench.md | in the design document |
 | current.md bullet | author | `docs/plans/current.md` |  |  | Process rules** are §8.4. **Cost fixes follow measurement** (M2). **Phase 5 is a | §8.4 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | The `MOD-nn` rulings stand** (§8.2.8). **A moved edge edits `modularity-layering.yaml` in its commit (VER-61)**; a VER-62 miss | §8.2.8, VER-61, VER-62 | in force (cache) |
 | current.md bullet | author | `docs/plans/current.md` |  |  | An open item is a `REV-nn` row** until resolved (H12). | unstated | in force (cache) |
