@@ -261,9 +261,9 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
   VER-55's restated NOTE (D3); done when `test_region.py` and `test_gui_geometry_2wcd.py` pass. **Executor:** main
 - [x] 682cc30 5. `api/project.py`, `io/project.py`, `io/models.py`, §5.3.1's NOTE on model files (D4); done when
   `test_project.py` passes. **Executor:** main
-- [ ] 6. `io/case.py`, `pipeline/checks.py`, `mesh/sizing.py`, `generate.py`, `ingest.py`, VER-53, §5.2.2's and §5.3.1's
+- [x] 641758a 6. `io/case.py`, `pipeline/checks.py`, `mesh/sizing.py`, `generate.py`, `ingest.py`, VER-53, §5.2.2's and §5.3.1's
   NOTEs (D5); done when `test_mesh_sizing.py` passes, VER-62 unmoved. **Executor:** main
-- [ ] 7. Compaction checkpoint. **Executor:** main
+- [x] 7. Compaction checkpoint. **Executor:** main
 - [ ] 8. `gui/web/continuum.py`, `plane.py`, `assets/plane.js`, the frame, pages and pane, `plot/data.py:mesh_elements`,
   VER-78's text (D6, D7); done when VER-78 (a) to (d), (m) and the import guard pass. **Executor:** main
 - [ ] 9. The four tools drafted on 2WCD (D8, D9); `render_shell.py`; `/np-gui render shell`, `review`, `publish` (D10);
