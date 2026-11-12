@@ -198,7 +198,10 @@ def align(
         record = detect_channel(mean[heavy])
         listed = parse_chains(spec.source.chains)
         first = chosen.chains[0] if listed is None else listed[0]
-        first_centroid = mean[fit_index[chosen.atoms.chain[fit_index] == first]].mean(axis=0)
+        own = chosen.atoms.chain == first
+        calpha = fit_index[own[fit_index]]
+        # The channel takes chains of any kind: one without a C-alpha places by its own atoms.
+        first_centroid = mean[calpha if calpha.size else np.flatnonzero(own)].mean(axis=0)
     elif axis_mode == "auto":
         record = detect_axis(chains, n)
         first_centroid = chains[0].mean(axis=0)
