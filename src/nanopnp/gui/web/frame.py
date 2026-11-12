@@ -21,8 +21,8 @@ from nanopnp.api.project import Problem, Project
 from nanopnp.core.paths import recent_projects, remember_project
 from nanopnp.core.public import __version__
 from nanopnp.gui.web import commands, theme
+from nanopnp.gui.web.builds import refusals
 from nanopnp.gui.web.glossary import GLOSSARY
-from nanopnp.gui.web.molecular import refusals
 from nanopnp.gui.web.numbers import Style, shown
 from nanopnp.gui.web.palette import Palette, options
 from nanopnp.gui.web.screens import GROUPS, SUITES, tool_for
@@ -55,11 +55,12 @@ class Route:
     suite
         The suite the path belongs to, or None for a page of no suite, such as the settings.
     view
-        ``molecule`` for the Mol* host the frame owns, built once and never rebuilt; else None.
+        ``molecule`` for the Mol* host the frame owns, ``plane`` for its (r, z) canvas, each
+        built once and never rebuilt; else None.
     """
 
     suite: Suite | None
-    view: Literal["molecule"] | None = None
+    view: Literal["molecule", "plane"] | None = None
 
 
 KINDS: tuple[tuple[ItemKind, str], ...] = (
@@ -164,6 +165,13 @@ class Views(Protocol):
         ``key`` names the structure the scene draws: the camera is kept while it stays the same.
         """
 
+    async def show_plane(self, url: str | None, note: str = "") -> None:
+        """Show the (r, z) canvas, built once, with the drawing at ``url``; mark the screen ready.
+
+        With no address the canvas is empty but for ``note``; the view keeps its pan and zoom
+        while the drawing's frame stays the same.
+        """
+
     def changes_moved(self) -> None:
         """Count and list the changed values again, after a tool wrote one."""
 
@@ -203,7 +211,7 @@ class _Frame:
         self.changed_label: ui.label
         self.queue_label: ui.label
         self.view: ui.element
-        self.molecule_built = False
+        self.hosts: dict[str, ui.element] = {}
         self.drawer: ui.left_drawer
         self.tabs: ui.tabs
         self.dialog: ui.dialog
@@ -318,7 +326,7 @@ class _Frame:
             self.apply_layout()
             self.sync_separators()
         self.mark_suite()
-        if route.view != "molecule":
+        if route.view is None:
             self.view.set_visibility(False)
         query = parse_qs(urlsplit(path).query)
         if query.get("panel", [""])[0] in PANELS:
@@ -330,9 +338,9 @@ class _Frame:
 
     def mark_suite(self) -> None:
         # Each suite's state, which the folded bar shows beside its icon: a problem, else a build
-        # running; builds are the Molecular suite's until the other suites have their own.
+        # of its model running.
         troubled = {problem.suite for problem in self.problems()}
-        running = any(entry.status == "running" for entry in self.shell.queue.entries)
+        running = {entry.suite for entry in self.shell.queue.entries if entry.status == "running"}
         for identifier, button in self.suite_buttons.items():
             if self.in_suite and identifier == self.suite:
                 button.props('aria-current="page"')
@@ -340,11 +348,7 @@ class _Frame:
                 button.props(remove="aria-current")
             title = next(suite.title for suite in SUITES if suite.id == identifier)
             state = (
-                "problem"
-                if identifier in troubled
-                else "running"
-                if running and identifier == "molecular"
-                else ""
+                "problem" if identifier in troubled else "running" if identifier in running else ""
             )
             button.classes(remove="suite-problem suite-running")
             if state:
@@ -371,12 +375,24 @@ class _Frame:
                 once=True,
             )
 
+    def show_host(self, name: str) -> None:
+        """Show the view region with one host in it, the other hidden but kept."""
+        self.view.set_visibility(True)
+        for host, element in self.hosts.items():
+            element.set_visibility(host == name)
+
     async def show_molecule(self, scene_url: str | None, key: str = "") -> None:
         """Show the frame's Mol* host, built once, with a scene; mark the screen ready."""
-        self.view.set_visibility(True)
+        self.show_host("molecule")
         argument = "null" if scene_url is None else json.dumps(scene_url)
         # A long timeout: Mol* builds in seconds on a machine with no GPU.
         await ui.run_javascript(f"nano.scene({argument}, {json.dumps(key)})", timeout=60)
+
+    async def show_plane(self, url: str | None, note: str = "") -> None:
+        """Show the frame's (r, z) canvas, built once, with a drawing; mark the screen ready."""
+        self.show_host("plane")
+        argument = "null" if url is None else json.dumps(url)
+        await ui.run_javascript(f"nano.plane({argument}, {json.dumps(note)})", timeout=60)
 
     def queue_moved(self) -> None:
         """Show the queue's one line again, after a build started or ended."""
@@ -1051,9 +1067,11 @@ def frame(
         built.bottom_panel()
         built.status_bar()
     with ui.element("div").classes("main-row suite-main") as main:
-        # The view region: one Mol* host, outside the sub-pages, so a route change keeps it.
+        # The view region: one Mol* host and one (r, z) canvas, outside the sub-pages, so a route
+        # change keeps them.
         with ui.element("div").classes("view-region") as built.view:
-            ui.element("div").props("id=mol data-control=molecule")
+            built.hosts["molecule"] = ui.element("div").props("id=mol data-control=molecule")
+            built.hosts["plane"] = ui.element("div").props("id=plane data-control=plane")
         built.view.set_visibility(False)
         with ui.element("div").classes("sub-page"):
             yield built

@@ -14,11 +14,19 @@ _GLYPH = {"waiting": "○", "running": "▶", "done": "✓", "failed": "✕"}
 
 @dataclass
 class Entry:
-    """One build or run in the queue."""
+    """One build or run in the queue.
+
+    Parameters
+    ----------
+    suite
+        The suite whose model the entry builds, which the frame marks while it runs; empty for a
+        study's run.
+    """
 
     number: int
     label: str
     status: Status = "waiting"
+    suite: str = ""
 
     def line(self) -> str:
         """Return the entry as a glyph, a word and its label."""
@@ -32,9 +40,9 @@ class Queue:
     entries: list[Entry] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
 
-    def add(self, label: str, status: Status = "waiting") -> Entry:
+    def add(self, label: str, status: Status = "waiting", *, suite: str = "") -> Entry:
         """Append an entry and say so in the log."""
-        entry = Entry(len(self.entries) + 1, label, status)
+        entry = Entry(len(self.entries) + 1, label, status, suite)
         self.entries.append(entry)
         self.log.append(f"queued {label}")
         return entry

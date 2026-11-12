@@ -246,6 +246,15 @@ body only where the continuum body holds none of `geometry.pore`, `inputs.profil
   frame changes. Events: `plane_pick {layer, index}`, `plane_move {index, r, z}`, `plane_insert {edge}`,
   `plane_delete {index}`, `plane_value {path, value}`.
 
+> **Outcome — item 8.** The build machinery `MolecularModel` held moved to `gui/web/builds.py`'s `BuiltModel`, which
+> both models subclass and `ToolModel` describes; a queue entry names its suite, so a Continuum build marks Continuum. The
+> pane split the same way: `tools.py`'s generic `_Pane` and its Molecular subclass, `continuum_tools.py`'s Continuum one,
+> kept apart from `continuum.py` so the import guard reads no NiceGUI there. A tool whose stage a supplied outline drops
+> builds nothing, and every Continuum status line names what the model is built over, so (b) finds it in every state.
+> The canvas reads `plot/data.py`, a new `gui -> plot` edge recorded in `modularity-layering.yaml`. On the charged tube
+> the first Continuum page draws in 1.4 s, a tool change in 0.7 to 1.3 s (1047 elements); the 23 Continuum screen loads,
+> (i) and (m) run in 55 s.
+
 **Item 9.** `render_shell.py`'s 2WCD project builds its continuum model alone; shots of each `/continuum/<id>` built,
 building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 

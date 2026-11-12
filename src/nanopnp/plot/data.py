@@ -222,12 +222,21 @@ def region_drawing(artefact: Artefact) -> RegionDrawing | None:
 
 @dataclass(frozen=True)
 class MeshElements:
-    """A mesh's vertices in m, its triangles, and a size and a quality per element."""
+    """A mesh's vertices in m, its triangles, and per element a size, two qualities and a material.
+
+    Parameters
+    ----------
+    material
+        Each triangle's index into ``materials``.
+    """
 
     vertices_m: np.ndarray
     triangles: np.ndarray
     size_m: np.ndarray
     sicn: np.ndarray
+    gamma: np.ndarray
+    material: np.ndarray
+    materials: tuple[str, ...]
     lumen_nm: tuple[float, float] = (5.0, 10.0)
 
 
@@ -247,7 +256,7 @@ def element_sizes_m(vertices_nm: np.ndarray, triangles: np.ndarray) -> np.ndarra
 
 
 def mesh_elements(data: MeshData, quality: QualityReport | None = None) -> MeshElements:
-    """Return the per-element size and SICN of ``data``; SICN from ``quality`` if given."""
+    """Return the per-element size, quality and material of ``data``; quality from ``quality``."""
     report = element_quality(data) if quality is None else quality
     extent = None
     if "wall" in data.boundaries:
@@ -257,6 +266,9 @@ def mesh_elements(data: MeshData, quality: QualityReport | None = None) -> MeshE
         triangles=data.triangles,
         size_m=element_sizes_m(data.vertices, data.triangles),
         sicn=report.sicn,
+        gamma=report.gamma,
+        material=data.triangle_material,
+        materials=data.materials,
         lumen_nm=lumen_window_nm(extent),
     )
 

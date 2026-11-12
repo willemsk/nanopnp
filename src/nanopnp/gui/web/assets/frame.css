@@ -854,3 +854,36 @@ body a.tool-link:visited {
 .readout-list dd .q-btn {
   font-family: var(--font-ui);
 }
+
+/* The Continuum suite's (r, z) view: one canvas, beside the pane as the molecule is. */
+#plane {
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--canvas-plot);
+}
+.main-row:has(.tool-pane) #plane {
+  width: 100%;
+  height: calc(100vh - 8.5rem);
+  min-height: 20rem;
+}
+#plane canvas {
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+#plane canvas:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.plane-notes {
+  position: absolute;
+  top: 0.75rem;
+  left: 4rem;
+  max-width: 60%;
+  padding: 0.25rem 0.5rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--canvas-plot-ink);
+  font-size: var(--text-sm);
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from nanopnp.io.project import Suite as SuiteId
 
@@ -11,12 +12,14 @@ __all__ = [
     "GROUPS",
     "SCREENS",
     "SUITES",
-    "TOOL_CONTROLS",
+    "TOOL_SUITES",
+    "VIEWS",
     "Screen",
     "Suite",
     "Tool",
     "field_control",
     "screen",
+    "tool_controls",
     "tool_for",
 ]
 
@@ -123,7 +126,49 @@ SUITES: tuple[Suite, ...] = (
         "continuum",
         "Continuum",
         "a continuum model",
-        _later("Protein geometry", "Contour", "Region", "Mesh: sizes, quality"),
+        (
+            Tool(
+                "geometry",
+                "Protein geometry",
+                (
+                    "geometry.density.grid_spacing_nm",
+                    "geometry.density.sharpness",
+                    "geometry.density.atoms",
+                ),
+            ),
+            Tool(
+                "contour",
+                "Contour",
+                (
+                    "geometry.contour.isolevel",
+                    "geometry.contour.smoothing",
+                    "geometry.contour.simplify_tol_nm",
+                ),
+            ),
+            Tool(
+                "region",
+                "Region",
+                (
+                    "geometry.membrane.thickness_nm",
+                    "geometry.membrane.centre_z_nm",
+                    "geometry.reservoir.radius_nm",
+                    "charge.exclusion_offset_nm",
+                ),
+            ),
+            Tool(
+                "mesh",
+                "Mesh: sizes, quality",
+                (
+                    "numerics.mesh.backend",
+                    "numerics.mesh.size_scale",
+                    "numerics.mesh.maxh_nm",
+                    "numerics.mesh.sizes.protein_nm",
+                    "numerics.mesh.sizes.electrolyte_nm",
+                    "numerics.mesh.sizes.arc_nm",
+                    "numerics.mesh.sizes.axis_in_pore_nm",
+                ),
+            ),
+        ),
         "build",
         "sym_o_grid_on",
     ),
@@ -172,23 +217,31 @@ FRAME_CONTROLS: tuple[str, ...] = (
 )
 """The controls of the frame, which every screen carries in every state."""
 
-TOOL_CONTROLS: tuple[str, ...] = (
-    "molecule",
-    "tool-pane",
-    "tool-status",
-    *(f"tool-link-{tool.id}" for tool in SUITES[0].tools),
-)
-"""The controls of every tool's page, beside the frame's and one per value the tool sets."""
+TOOL_SUITES: tuple[Suite, ...] = tuple(suite for suite in SUITES if suite.tools[0].id)
+"""The suites whose tools have pages: each opens its last tool used, beside its view."""
+
+VIEWS: dict[SuiteId, Literal["molecule", "plane"]] = {
+    "molecular": "molecule",
+    "continuum": "plane",
+}
+"""The ``data-control`` of each tool suite's view: the 3D molecule, or the (r, z) plane."""
 
 
-def tool_controls(tool: Tool) -> tuple[str, ...]:
+def tool_controls(suite: Suite, tool: Tool) -> tuple[str, ...]:
     """Return the controls a tool's page carries in every state.
 
-    A tool that sets values filters to the modified ones, and one that builds a stage has its
-    build; View does neither.
+    Every tool's page has its suite's view, its pane, its status and its suite's tool list; a
+    tool that sets values filters to the modified ones and has a field per value.
     """
     own = ("tool-modified",) if tool.fields else ()
-    return (*TOOL_CONTROLS, *own, *(field_control(path) for path in tool.fields))
+    return (
+        VIEWS[suite.id],
+        "tool-pane",
+        "tool-status",
+        *(f"tool-link-{entry.id}" for entry in suite.tools),
+        *own,
+        *(field_control(path) for path in tool.fields),
+    )
 
 
 def field_control(path: str) -> str:
@@ -208,25 +261,30 @@ def tool_for(suite: SuiteId, path: str) -> Tool | None:
 
 
 SCREENS: tuple[Screen, ...] = (
-    # The Molecular suite's path opens its last tool, its first in a fresh window.
+    # A tool suite's path opens its last tool, its first in a fresh window.
     *(
         Screen(
             suite.id,
             f"/{suite.id}",
             (
                 *FRAME_CONTROLS,
-                *(tool_controls(suite.tools[0]) if suite.id == "molecular" else ("suite-body",)),
+                *(
+                    tool_controls(suite, suite.tools[0])
+                    if suite in TOOL_SUITES
+                    else ("suite-body",)
+                ),
             ),
         )
         for suite in SUITES
     ),
     *(
         Screen(
-            f"m-{tool.id}",
-            f"/molecular/{tool.id}",
-            (*FRAME_CONTROLS, *tool_controls(tool)),
+            f"{suite.id[0]}-{tool.id}",
+            f"/{suite.id}/{tool.id}",
+            (*FRAME_CONTROLS, *tool_controls(suite, tool)),
         )
-        for tool in SUITES[0].tools
+        for suite in TOOL_SUITES
+        for tool in suite.tools
     ),
     Screen("changes", "/study?panel=changes", (*FRAME_CONTROLS, "changes-list")),
     Screen("problems", "/study?panel=problems", (*FRAME_CONTROLS, "problems-list")),
