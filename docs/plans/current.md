@@ -1,23 +1,23 @@
 # Current work
 
-Updated 12 November 2026 (WP5.17 planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 12 November 2026 (WP5.17 implemented). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups, frame and Molecular suite are merged. The Continuum suite is planned to your four rulings on an edited outline's charge, building alone and mesh
-sizes. Four suites, the route and the close follow: about 50
-sessions and 45 to 95 agent hours.
+Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups, frame and Molecular suite are merged. The
+Continuum suite is built to your verdicts: one pore geometry tool, domains picked, the mesh's parts as a tree, the
+changed values as a short list. Three suites, the route and the close follow: about 45 sessions.
 
-**Your call.** Approve the reviewed Continuum plan. Adopt two measuring tools or not (the trial says neither).
+**Your call.** Merge the Continuum suite once its review is green? Recommendation: yes; each verdict is built or open.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.16 merged
   (`v0.6.0-alpha.16`).
-  **WP5.17** [planned](phase-5/wp5.17-the-continuum-suite.md) on `claude/nice-franklin-h4k3zg`, its PR open.
-  Reviewed (CODE_REVIEW_055). Next, `/np-implement wp 5.17`. host: claude-code.
+  **WP5.17** [implemented](phase-5/wp5.17-the-continuum-suite.md) on `claude/wp-5-17-implement-0junxj`; the author's
+  round collected ([the record](../design/reviews/2026-11-12-continuum.md)). Next, `/np-ship wp 5.17`. host: claude-code.
 
 ## Not to be re-decided
 

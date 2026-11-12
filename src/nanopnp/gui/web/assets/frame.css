@@ -611,7 +611,8 @@ body a.tool-link:visited {
   padding: 2px var(--gap);
   text-align: left;
   border: 0;
-  border-radius: var(--radius);
+  border-left: 3px solid transparent;
+  border-radius: 0 var(--radius) var(--radius) 0;
   background: transparent;
   color: var(--ink) !important;
   text-decoration: none !important;
@@ -621,9 +622,10 @@ body a.tool-link:visited {
 body a.tool-link:hover {
   background: color-mix(in srgb, var(--sel) 55%, transparent);
 }
+/* The open tool's marker is its left border in the accent, as the open suite's is. */
 body a.tool-link.tool-link-open {
   background: var(--sel);
-  box-shadow: inset 2px 0 0 var(--accent);
+  border-left-color: var(--accent);
   font-weight: 600;
 }
 .tool-name {
@@ -882,11 +884,12 @@ body a.tool-link.tool-link-open {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
 }
+/* At the plot's foot beside Fit, clear of the key at its top right. */
 .plane-notes {
   position: absolute;
-  top: 0.75rem;
+  bottom: 3.25rem;
   left: 4rem;
-  max-width: 60%;
+  max-width: calc(100% - 5rem);
   padding: 0.25rem 0.5rem;
   background: var(--panel);
   border: 1px solid var(--line);
@@ -905,7 +908,6 @@ body a.tool-link.tool-link-open {
   border: 1px solid var(--focus);
   outline: 2px solid var(--focus);
 }
-/* The Mesh tool's quality histogram: one bar per tenth, which outlines its elements in the view. */
 /* The quality histogram: ten bars from 0 to 1 in the view's palette, each with its count, the
    gate's floor marked between its bars and the axis under them. */
 .histogram-plot {
@@ -924,6 +926,8 @@ body a.tool-link.tool-link-open {
   height: 100%;
   padding: 0;
   align-items: flex-end;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
 }
 .histogram .histogram-bar .q-btn__content {
   align-self: flex-end;
@@ -943,9 +947,9 @@ body a.tool-link.tool-link-open {
   border: 1px solid var(--colourbar-outline, var(--control-edge));
   border-bottom: 0;
 }
+/* The picked bar's marker is its border, which 1.4.11 measures (an outline is not). */
 .histogram .histogram-bar[aria-pressed="true"] {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  border-color: var(--accent);
 }
 .histogram-floor {
   position: absolute;
@@ -991,6 +995,7 @@ body .parts .parts-row {
   width: 100%;
   min-height: var(--row);
   padding: 0 var(--gap);
+  border-left: 3px solid transparent;
   border-radius: 0;
   font-size: var(--text-sm);
   font-weight: 400;
@@ -1001,7 +1006,7 @@ body .parts .parts-row.parts-child {
 }
 body .parts .parts-row[aria-pressed="true"] {
   background: var(--sel);
-  box-shadow: inset 3px 0 0 var(--accent);
+  border-left-color: var(--accent);
 }
 .parts-row .q-btn__content {
   width: 100%;

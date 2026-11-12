@@ -60,7 +60,7 @@ is a rolling register, and its header stays `open`.
 | REV-36 | interface | low | fixed | [WP39](../plans/phase-4/wp39-backend-registries.md) | [The gmsh session stops a caller's logger](review-items.md#rev-36-the-gmsh-session-stops-a-callers-logger) |
 | REV-37 | interface | low | fixed | [WP39](../plans/phase-4/wp39-backend-registries.md) | [A broken gmsh wheel is not a refusal](review-items.md#rev-37-a-broken-gmsh-wheel-is-not-a-refusal) |
 | REV-38 | interface | low | fixed | [WP39](../plans/phase-4/wp39-backend-registries.md) | [gmsh.model.remove() can mask the error it follows](review-items.md#rev-38-gmshmodelremove-can-mask-the-error-it-follows) |
-| REV-39 | interface | low | deferred | §8.2.18 T2 | [A case supplying inputs.profile gets no contour editor](review-items.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor) |
+| REV-39 | interface | low | fixed | §8.2.18 T2; WP5.17 | [A case supplying inputs.profile gets no contour editor](review-items.md#rev-39-a-case-supplying-inputsprofile-gets-no-contour-editor) |
 | REV-40 | interface | low | fixed | [WP46](../plans/phase-4/wp46-small-fixes.md) | [DensityMap.read accepts a file written in nm](review-items.md#rev-40-densitymapread-accepts-a-file-written-in-nm) |
 | REV-41 | interface | low | deferred | §8.2.18 T3 | [No prepare command, upto on reproduce, or region export](review-items.md#rev-41-no-prepare-command-upto-on-reproduce-or-region-export) |
 | REV-42 | interface | low | fixed | [WP42](../plans/phase-4/wp42-verification-checks.md) | [pnp carries inert flow keys](review-items.md#rev-42-pnp-carries-inert-flow-keys) |
@@ -191,7 +191,7 @@ is a rolling register, and its header stays `open`.
 | REV-167 | process | low | accepted | §8.2.25 AA6 | [Six Copilot app behaviours the substitutes assume are unchecked](review-items.md#rev-167-six-copilot-app-behaviours-the-substitutes-assume-are-unchecked) |
 | REV-168 | process | medium | accepted | §8.2.25 AA6 | [The Copilot host has not been verified live](review-items.md#rev-168-the-copilot-host-has-not-been-verified-live) |
 | REV-169 | documentation | low | fixed | [WP59](../plans/phase-4/wp59-architecture-review-fixes.md) | [The Phase-1 reference sweep's base case writes its mesh path against the working directory](review-items.md#rev-169-the-phase-1-reference-sweeps-base-case-writes-its-mesh-path-against-the-working-directory) |
-| REV-170 | coupling | low | accepted | §8.2.28 AD4; §8.2.31 AG1; §8.2.36 AL22 | [Five callers pick the stage-5 region's kind](review-items.md#rev-170-five-callers-pick-the-stage-5-regions-kind) |
+| REV-170 | coupling | low | fixed | §8.2.28 AD4; §8.2.31 AG1; §8.2.36 AL22; WP5.17 | [Five callers pick the stage-5 region's kind](review-items.md#rev-170-five-callers-pick-the-stage-5-regions-kind) |
 | REV-171 | performance | low | deferred | §8.2.27 AC4; §8.2.28 AD5 | [The architecture review's unmeasured costs](review-items.md#rev-171-the-architecture-reviews-unmeasured-costs) |
 | REV-172 | numerics | low | fixed | [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) | [A non-finite trial residual at minimum damping is reported before the state gates name its location](review-items.md#rev-172-a-non-finite-trial-residual-at-minimum-damping-is-reported-before-the-state-gates-name-its-location) |
 | REV-173 | coupling | low | fixed | [CODE_REVIEW_025](../code_reviews/CODE_REVIEW_025.md) | [Plotting a run reads its record twice through the session](review-items.md#rev-173-plotting-a-run-reads-its-record-twice-through-the-session) |

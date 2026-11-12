@@ -422,6 +422,9 @@ repository holds a logger.
 
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.17, the Continuum suite.
 
+**Fixed** (WP5.17, items 9 and 12): *Pore geometry* edits the outline stage 4 built or the one the model supplies as
+`inputs.profile`, and saves the edit as a continuum model that supplies it.
+
 ### REV-40 — DensityMap.read accepts a file written in nm
 
 *Area:* interface. *Severity:* low. *Found:* PR #50 (WP25).
@@ -596,6 +599,9 @@ at 600 vertices. *Seed from refusal* and a rebuild drop unsaved edits without co
 **Deferred.** Phase 5, with the shell, the bundle and `MOD-13`'s CLI split (§8.2.9 I3).
 
 **Ruled** `wontfix` for the Qt code (§8.2.18 T1). The workbench's Contour tool checks its edits off the interface's thread and asks before discarding one.
+
+**Done** (WP5.17, item 9): the workbench's part. *Pore geometry* measures and seeds an edit in a child process
+(`AssessProcess`) and asks before an unsaved edit goes.
 
 ### REV-57 — frame_times decodes every frame
 
@@ -2264,6 +2270,12 @@ step first; the second `/np-plan amend 5` names the package.
 **Re-placed** (§8.2.34 AJ10, 5 November 2026): WP5.17, the Continuum suite.
 
 **Design** (§8.2.36 AL22, 8 November 2026): WP5.17's library step takes CODE_REVIEW_036's candidate 3 with its corrections C3.1 and C3.2, which also remove MOD-03's edge from `modularity-layering.yaml`.
+
+**Fixed** (WP5.17, items 1 and 2): `geometry/outlines.py` holds `RegionOutlines` and the `Stage5Region` protocol, which
+both records implement and the drawing, the mesh stage's recipe and the view read; `mesh/generate.py:generate` picks the
+recipe and the mesher in one `match` on the class; the cylinder is `CylinderPore` alone, meshed by
+`mesh/primitives.py`, and the wall's sizing lives in `mesh/`. MOD-03's row is gone, and every construction kept its
+content hash, VER-62's recorded meshes among them.
 
 ### REV-171: The architecture review's unmeasured costs
 

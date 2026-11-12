@@ -1,6 +1,6 @@
 # WP5.17 — The Continuum suite
 
-**Status: planned, not started.** Planned 12 November 2026 on `main` (`c6b85ce`). It inherits §8.2.28 AD4, §8.2.34 AJ8,
+**Status: delivered 12 November 2026.** Planned 12 November 2026 on `main` (`c6b85ce`). It inherits §8.2.28 AD4, §8.2.34 AJ8,
 §8.2.36 AL22 and this plan's §8.2.40 AP1 to AP4.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to
@@ -313,7 +313,7 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 - [x] 10. Compaction checkpoint; the author's verdicts. **Executor:** main
 - [x] 7dd8de6 11. `/np-gui collect`; REV-235's and REV-237's points ruled or carried; the design document's rows (D10).
   **Executor:** main
-- [ ] 12. The tools finished to the verdicts, with *Modified only*, `?field=` and REV-242's measure (D6 to D9); done when
+- [x] ab86342 12. The tools finished to the verdicts, with *Modified only*, `?field=` and REV-242's measure (D6 to D9); done when
   VER-78 passes. **Executor:** main
 - [ ] 13. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; REV-170 and REV-39 `fixed`; the
   matrix rows; `current.md`. **Executor:** main
