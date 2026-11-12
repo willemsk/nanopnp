@@ -71,19 +71,16 @@ def _mesh(args: argparse.Namespace) -> int:
 
         generated = ReferenceGeometry.from_fixture().generate(check_quality=False)
     else:
-        from nanopnp.geometry.pore import IdealisedRegionRecord
-        from nanopnp.geometry.region import read_region
+        from nanopnp.geometry.region import read_idealised_region
         from nanopnp.mesh.idealised import generate_idealised
 
         try:
-            record = read_region(Path(args.source))
+            record = read_idealised_region(Path(args.source))
         except (OSError, ValueError, KeyError) as error:
-            _refuse(args, f"{args.source} is not a geometry file `nanopnp geometry` wrote: {error}")
-        if not isinstance(record, IdealisedRegionRecord):
             _refuse(
                 args,
-                f"{args.source} is the region of a structure; only an idealised pore's geometry "
-                "file is meshed here, and a structure's region is meshed by running its case",
+                f"only an idealised pore's geometry file, which `nanopnp geometry` writes, is "
+                f"meshed here, and a structure's region by running its case: {error}",
             )
         generated = generate_idealised(
             record,

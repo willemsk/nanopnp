@@ -18,7 +18,6 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
-from nanopnp.geometry.pore import IdealisedRegionRecord
 from nanopnp.geometry.region import PAYLOAD_NAME, read_region
 from nanopnp.io.artefact import MESH_ARTEFACT_SCHEMA, MeshArtefact
 from nanopnp.io.case import SuppliedArtefact
@@ -620,10 +619,7 @@ class MeshStage:
         region = inputs.require("region")
         record = read_region(region.payload[PAYLOAD_NAME])
         sizing = self._sizing(
-            resolved,
-            idealised=isinstance(record, IdealisedRegionRecord),
-            exclusion=not isinstance(record, IdealisedRegionRecord)
-            and record.exclusion is not None,
+            resolved, idealised=record.is_idealised, exclusion=record.has_exclusion
         )
         return MeshArtefact(
             region=region.hash,

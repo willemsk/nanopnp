@@ -225,6 +225,16 @@ def idealised_recipe(resolved: ResolvedCase) -> tuple[WallSize, float, dict[str,
     return wall, maxh_nm, idealised_parameters(wall, maxh_nm)
 
 
+def _warn_if_coarse(wall: WallSize) -> None:
+    if wall.coarser_than_num30:
+        logger.warning(
+            "the wall size %.4f nm is coarser than NUM-30's lambda_D/5 = %.4f nm; recorded, "
+            "not refused (section 5.3.1 NOTE on numerics.mesh)",
+            wall.wall_h_nm,
+            wall.debye_target_nm,
+        )
+
+
 def generate(
     record: RegionRecord | IdealisedRegionRecord, resolved: ResolvedCase, directory: Path
 ) -> GeneratedMesh:
@@ -236,28 +246,24 @@ def generate(
         On the naming, quality and wall-size gates.
     """
     recipe: Mapping[str, Canonicalisable] | None = None
-    if isinstance(record, IdealisedRegionRecord):
-        wall, maxh_nm, recipe = idealised_recipe(resolved)
-    else:
-        wall = resolve_wall_size(
-            resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
-        )
-    sizes = SIZES.scaled(wall.size_scale)
     backend = resolved.document.numerics.mesh.backend
-    if wall.coarser_than_num30:
-        logger.warning(
-            "the wall size %.4f nm is coarser than NUM-30's lambda_D/5 = %.4f nm; recorded, "
-            "not refused (section 5.3.1 NOTE on numerics.mesh)",
-            wall.wall_h_nm,
-            wall.debye_target_nm,
-        )
-    if isinstance(record, IdealisedRegionRecord):
-        from netgen import config
+    match record:
+        case IdealisedRegionRecord():
+            from netgen import config
 
-        data = mesh_idealised(record, maxh_nm=maxh_nm, wall_h_nm=wall.wall_h_nm)
-        version = str(config.version).lstrip("v").split("-")[0]
-    else:
-        data, version = mesh_region(record, wall.wall_h_nm, sizes, backend)
+            wall, maxh_nm, recipe = idealised_recipe(resolved)
+            _warn_if_coarse(wall)
+            data = mesh_idealised(record, maxh_nm=maxh_nm, wall_h_nm=wall.wall_h_nm)
+            version = str(config.version).lstrip("v").split("-")[0]
+        case RegionRecord():
+            wall = resolve_wall_size(
+                resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
+            )
+            _warn_if_coarse(wall)
+            data, version = mesh_region(
+                record, wall.wall_h_nm, SIZES.scaled(wall.size_scale), backend
+            )
+    sizes = SIZES.scaled(wall.size_scale)
 
     directory.mkdir(parents=True, exist_ok=True)
     path = write_msh41(data, directory / MESH_FILENAME)
@@ -283,6 +289,6 @@ def generate(
         corrected_ratio=corrected_debye_ratio(resolved, wall),
         backend=backend,
         backend_version=version,
-        exclusion=isinstance(record, RegionRecord) and record.exclusion is not None,
+        exclusion=record.has_exclusion,
         recipe=recipe,
     )

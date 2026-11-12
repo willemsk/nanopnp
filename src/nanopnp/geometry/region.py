@@ -23,6 +23,7 @@ from nanopnp.core.stages import (
     describe,
     report,
 )
+from nanopnp.geometry.outlines import RegionOutlines
 from nanopnp.geometry.pore import MOUTH, IdealisedRegionRecord
 from nanopnp.geometry.profile import (
     PoreProfile,
@@ -202,6 +203,46 @@ class RegionRecord(_Strict):
 
         return np.asarray(self.profile, dtype=np.float64).reshape(-1, 2)
 
+    @property
+    def is_idealised(self) -> bool:
+        """Return False: the region is a structure's outline."""
+        return False
+
+    @property
+    def has_exclusion(self) -> bool:
+        """Return whether the region carries an ion-exclusion shell."""
+        return self.exclusion is not None
+
+    @property
+    def membrane_centre_z_nm(self) -> float:
+        """Return the membrane's centre in the structure's frame, the frame shift."""
+        return self.membrane.centre_z_nm
+
+    def outlines_nm(self) -> RegionOutlines:
+        """Return the profile, the membrane face from its inner chord out, and the shell, in nm."""
+        import numpy as np
+
+        membrane = self.membrane
+        half = membrane.half_thickness_nm
+        # The face stage 5 meshes (_membrane_face): from the inner chord out.
+        outer = self.reservoir_radius_nm + half
+        return RegionOutlines(
+            pore_nm=self.points(),
+            membrane_nm=np.array(
+                [
+                    (membrane.inner_trans_nm, -half),
+                    (outer, -half),
+                    (outer, half),
+                    (membrane.inner_cis_nm, half),
+                ]
+            ),
+            exclusion_nm=None if self.exclusion is None else self.exclusion.points(),
+            membrane_half_thickness_nm=half,
+            membrane_centre_z_nm=membrane.centre_z_nm,
+            reservoir_radius_nm=self.reservoir_radius_nm,
+            z_extent_nm=self.axis_split_nm,
+        )
+
     def summary(self) -> dict[str, Canonicalisable]:
         """Return what the manifest's Geometry group records as ``region``."""
         summary: dict[str, Canonicalisable] = {
@@ -254,6 +295,21 @@ def read_region(path: Path) -> RegionRecord | IdealisedRegionRecord:
     if "pore" in raw:
         return IdealisedRegionRecord.model_validate(raw)
     return RegionRecord.model_validate(raw)
+
+
+def read_idealised_region(path: Path) -> IdealisedRegionRecord:
+    """Read an idealised pore's ``nanopnp/region/v0.5`` record.
+
+    Raises
+    ------
+    ValueError
+        If the document declares another schema, or is the region of a structure.
+    """
+    match read_region(path):
+        case IdealisedRegionRecord() as record:
+            return record
+        case _:
+            raise ValueError(f"{path} is the region of a structure, not an idealised pore's")
 
 
 def to_model_frame(points: np.ndarray, centre_z_nm: float) -> np.ndarray:

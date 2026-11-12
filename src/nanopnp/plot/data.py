@@ -17,11 +17,11 @@ from nanopnp.core.hashing import decode_floats
 from nanopnp.density.grid import read_grid
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
-from nanopnp.geometry.pore import IdealisedRegionRecord
+from nanopnp.geometry.outlines import Stage5Region
 from nanopnp.geometry.profile import PAYLOAD_NAME as PROFILE_PAYLOAD
 from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
-from nanopnp.geometry.region import RegionRecord, read_region
+from nanopnp.geometry.region import read_region
 from nanopnp.io.artefact import SWEEP_SCHEMA, Artefact, StageInputs
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.adapter import read as read_mesh
@@ -195,7 +195,7 @@ class RegionDrawing:
     membrane_half_thickness_m: float
     reservoir_radius_m: float
     z_extent_m: tuple[float, float]
-    record: RegionRecord | IdealisedRegionRecord
+    record: Stage5Region
 
 
 def region_drawing(artefact: Artefact) -> RegionDrawing | None:
@@ -204,42 +204,15 @@ def region_drawing(artefact: Artefact) -> RegionDrawing | None:
     if path is None:
         return None
     record = read_region(path)
-    import numpy as np
-
-    if isinstance(record, IdealisedRegionRecord):
-        radius = record.pore.radius_nm
-        half = 0.5 * record.membrane_thickness_nm
-        outer = record.reservoir_radius_nm
-        return RegionDrawing(
-            pore_m=np.array([(0.0, -half), (radius, -half), (radius, half), (0.0, half)]) * _NM,
-            membrane_m=np.array([(radius, -half), (outer, -half), (outer, half), (radius, half)])
-            * _NM,
-            exclusion_m=None,
-            membrane_half_thickness_m=half * _NM,
-            reservoir_radius_m=outer * _NM,
-            z_extent_m=(-half * _NM, half * _NM),
-            record=record,
-        )
-    exclusion = None if record.exclusion is None else record.exclusion.points() * _NM
-    membrane = record.membrane
-    half = membrane.half_thickness_nm
-    # The face stage 5 meshes (geometry/region.py _membrane_face): from the inner chord out.
-    outer = record.reservoir_radius_nm + half
-    membrane_nm = np.array(
-        [
-            (membrane.inner_trans_nm, -half),
-            (outer, -half),
-            (outer, half),
-            (membrane.inner_cis_nm, half),
-        ]
-    )
+    outlines = record.outlines_nm()
+    z_low, z_high = outlines.z_extent_nm
     return RegionDrawing(
-        pore_m=record.points() * _NM,
-        membrane_m=membrane_nm * _NM,
-        exclusion_m=exclusion,
-        membrane_half_thickness_m=record.membrane.half_thickness_nm * _NM,
-        reservoir_radius_m=record.reservoir_radius_nm * _NM,
-        z_extent_m=(record.axis_split_nm[0] * _NM, record.axis_split_nm[1] * _NM),
+        pore_m=outlines.pore_nm * _NM,
+        membrane_m=outlines.membrane_nm * _NM,
+        exclusion_m=None if outlines.exclusion_nm is None else outlines.exclusion_nm * _NM,
+        membrane_half_thickness_m=outlines.membrane_half_thickness_nm * _NM,
+        reservoir_radius_m=outlines.reservoir_radius_nm * _NM,
+        z_extent_m=(z_low * _NM, z_high * _NM),
         record=record,
     )
 
