@@ -711,18 +711,34 @@ def read_model_file(
     source
         The study that names the file, for the refusal of a missing one.
     """
-    location = Path(path)
+    return _read_model_file(kind, Path(path), rebase=rebase, source=source, child=None)
+
+
+def _model_mapping(kind: ModelKind, location: Path, source: str | None) -> Mapping[str, Any]:
     if not location.is_file():
         raise CaseValidationError(
             f"{source if source is not None else location}: models.{kind}: {location} is not a file"
         )
-    raw = yaml.safe_load(location.read_text(encoding="utf-8"))
+    try:
+        raw = yaml.safe_load(location.read_text(encoding="utf-8"))
+    except yaml.YAMLError as error:
+        raise CaseValidationError(
+            f"{location}: a {kind} model is not valid YAML: {error}"
+        ) from None
     if not isinstance(raw, Mapping):
         raise CaseValidationError(f"{location}: a {kind} model is a YAML mapping")
     if raw.get("schema") != SCHEMAS[kind]:
         raise CaseValidationError(
             f"{location}: expected schema {SCHEMAS[kind]!r}, found {raw.get('schema')!r}"
         )
+    return raw
+
+
+def _read_model_file(
+    kind: ModelKind, location: Path, *, rebase: bool, source: str | None, child: Path | None
+) -> ModelFile:
+    # ``child`` is the linked variant that reads this file as its parent, which may be no variant.
+    raw = _model_mapping(kind, location, source)
     name = raw.get("name")
     if not isinstance(name, str) or not name:
         raise CaseValidationError(f"{location}: a {kind} model carries a name")
@@ -742,6 +758,12 @@ def read_model_file(
                 f"{location}: {leaf}: belongs to {_holder(owner_of(leaf))}, not to a {kind} model"
             )
     variant = _variant_of(kind, raw.get("variant_of"), location)
+    if child is not None and variant is not None:
+        # Refused before its own parent is read, so a cycle of variants ends here.
+        raise CaseValidationError(
+            f"{child}: variant_of.model: {location.name} is itself a variant or holds "
+            f"{VARIANT_PATH}; a linked variant's parent is an unedited model"
+        )
     if variant is None or not variant.linked:
         exposed = exposed_values(kind, raw, str(location))
         if rebase:
@@ -754,8 +776,10 @@ def read_model_file(
             f"other value from {variant.model}; set the value there, or make the variant a "
             "full copy (variant_of.linked: false)"
         )
-    parent = read_model_file(kind, location.parent / variant.model, rebase=rebase, source=source)
-    if parent.variant_of is not None or _value_in(parent.body, VARIANT_PATH):
+    parent = _read_model_file(
+        kind, location.parent / variant.model, rebase=rebase, source=source, child=location
+    )
+    if _value_in(parent.body, VARIANT_PATH):
         raise CaseValidationError(
             f"{location}: variant_of.model: {variant.model} is itself a variant or holds "
             f"{VARIANT_PATH}; a linked variant's parent is an unedited model"

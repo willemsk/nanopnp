@@ -3160,3 +3160,28 @@ blocking finding) raised, beyond what the item fixed:
 pane; the charge screen's is WP5.19's; the rest wait for WP5.21's pass over the frame. The first is a deviation from
 AO2 for the author to rule on at `/np-ship`.
 
+### REV-242: What the code review of the Molecular suite left open
+
+[CODE_REVIEW_054](../code_reviews/CODE_REVIEW_054.md) on WP5.16 fixed 21 of its 28 findings, and `/np-ship` one
+more (finding 16: Prepare reads the straightness as a warning, not a gate). These stay:
+
+- **A molecular model without a `structure:` block cannot gain one** (finding 5). `Project.set_value` checks each
+  value as a whole case: `structure.source.path` needs `structure.symmetry`, and the point group needs
+  `structure.source`. Only `Project.new_model` makes such a model now; the workbench creates none, since its models
+  come from an imported case. The way out is the author's: set several values in one write, or give the first
+  structure a point group.
+- **An imported full copy keeps its `variant_of.model`** (finding 15), naming a file of the project it came from,
+  which in the new project is missing or another model; `changes()` then compares the copy with that model. Keep
+  the name, drop it, or import the parent with the copy.
+- **The Molecular tools re-key the walk on every refresh** (findings 17, 18). `MolecularModel.artefacts()` resolves
+  the model and hashes its structure and trajectory files on each call, several times a refresh and once a second
+  while a build runs; a scene request repeats about five keyed walks. Not measured; a cache needs the store's state
+  in its key.
+- **A refusal finds its field by its words** (finding 25): `molecular.refused_path` and `_GATE_PATHS` map a gate's
+  message to a case path, so a message that names the channel goes to the axis. The root fix is a gate error that
+  carries its case path, across every stage's errors.
+
+**Open.** The first two are the author's to rule on, at WP5.16's `/np-ship` or with the new-model action of a later
+suite. The third is measured with WP5.17's tools, which call the same reads, and cached if it shows (§8.2.12 M2).
+The fourth waits for a pass over the stages' errors.
+

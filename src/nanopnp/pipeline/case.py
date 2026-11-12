@@ -139,8 +139,9 @@ def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure 
     # The ring's rules hold where the ring gives the axis; the channel's axis takes any chains.
     ring = n >= 2 and spec.symmetry.axis != "cavity"
     groups = parse_chain_groups(spec.source.chains)
-    chains = None if groups is None else tuple(chain for group in groups for chain in group)
-    if groups is not None and chains is not None:
+    chains: tuple[str, ...] | None = None
+    if groups is not None:
+        chains = tuple(chain for group in groups for chain in group)
         grouped = any(len(group) > 1 for group in groups)
         if any(not chain for chain in chains):
             raise CaseValidationError(
@@ -159,8 +160,7 @@ def _resolve_structure(document: CaseDocument, base: Path) -> ResolvedStructure 
                 "structure.symmetry.point_group C1 has no ring of repeating units to group them "
                 "into; list the chains with commas"
             )
-        sizes = sorted({len(group) for group in groups})
-        if ring and len(sizes) > 1:
+        if ring and len({len(group) for group in groups}) > 1:
             odd = next(group for group in groups if len(group) != len(groups[0]))
             raise CaseValidationError(
                 f"structure.source.chains {spec.source.chains!r} has groups of unequal size: "

@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from nanopnp.charge.protonation import PAYLOAD_NAME as TABLE_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.gui.geometry import lookup_table
-from nanopnp.gui.web.link import _chain_id
+from nanopnp.gui.web.link import _chain_id, _pdb_text
 from nanopnp.structure.ensemble import PAYLOAD_NAME as ENSEMBLE_PAYLOAD
 from nanopnp.structure.ensemble import AlignedEnsemble
+from nanopnp.structure.protonated import parent_residue
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.gui.web.molecular import MolecularModel
@@ -70,31 +71,6 @@ PLANE_RADIUS_A = 90.0
 PLANE_OPACITY = 0.35
 # The side view's distance from the axis, in pore lengths.
 SIDE_DISTANCE = 2.5
-
-
-def _pdb(
-    positions_nm: Any,  # noqa: ANN401 - a numpy array, imported nowhere at module scope
-    name: Sequence[str],
-    resname: Sequence[str],
-    chain: Sequence[str],
-    resid: Sequence[int],
-    icode: Sequence[str],
-) -> str:
-    lines = []
-    for row in range(len(name)):
-        x, y, z = (float(v) * 10.0 for v in positions_nm[row])
-        atom = str(name[row]).strip()
-        number = int(resid[row])
-        # The four columns hold -999 to 9999; a number past them wraps, as the charge link's does.
-        if not -999 <= number <= 9999:
-            number %= 10000
-        lines.append(
-            f"ATOM  {(row + 1) % 100000:5d} {atom:<4s} {str(resname[row]).strip():>3s} "
-            f"{_chain_id(str(chain[row]))}{number:4d}"
-            f"{str(icode[row]).strip()[:1] or ' '}   {x:8.3f}{y:8.3f}{z:8.3f}"
-            f"  1.00  0.00          {atom[:1]:>2s}"
-        )
-    return "\n".join([*lines, "END"]) + "\n"
 
 
 def _table(model: MolecularModel) -> ProtonationTable | None:
@@ -180,7 +156,7 @@ def structure_text(model: MolecularModel, frame: int = 0) -> tuple[str, str]:
         frame = max(0, min(frame, len(table.frame_offsets) - 2))
         start, stop = int(table.frame_offsets[frame]), int(table.frame_offsets[frame + 1])
         return (
-            _pdb(
+            _pdb_text(
                 table.positions_nm[start:stop],
                 table.name[start:stop].tolist(),
                 table.resname[start:stop].tolist(),
@@ -194,7 +170,7 @@ def structure_text(model: MolecularModel, frame: int = 0) -> tuple[str, str]:
     if ensemble is not None:
         frame = max(0, min(frame, len(ensemble.positions_nm) - 1))
         return (
-            _pdb(
+            _pdb_text(
                 ensemble.positions_nm[frame],
                 ensemble.name.tolist(),
                 ensemble.resname.tolist(),
@@ -298,10 +274,11 @@ def annotation(
     for edit in case.charge.edits if case is not None and case.charge is not None else ():
         parent, _, number = edit.residue.partition(" ")
         edited.add((parent.strip(), number.strip().lstrip("0") or "0"))
+    # An edit names the parent residue, and a protonated table the state it holds, as HSD.
     return [
         _row(chain, resid, icode, CHANGED)
         for chain, resid, icode, resname in residues
-        if (resname, f"{resid}{icode.strip()}") in edited
+        if (parent_residue(resname), f"{resid}{icode.strip()}") in edited
     ]
 
 

@@ -16,9 +16,10 @@ window.nano = {
     }
     if (this.building !== null) await this.building;
     const plugin = this.viewer.plugin;
-    const text = url ? await (await fetch(url, { credentials: 'same-origin' })).text() : 'null';
-    // A scene Mol* refuses is reported and the view still settles, so the page never hangs on it.
+    // A scene that cannot be fetched, or that Mol* refuses, is reported and the view still
+    // settles, so the page never hangs on it.
     try {
+      const text = url ? await (await fetch(url, { credentials: 'same-origin' })).text() : 'null';
       if (text.trim() === 'null') {
         if (this.sceneKey !== null) await plugin.clear();
         this.sceneKey = null;

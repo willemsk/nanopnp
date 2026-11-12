@@ -33,6 +33,7 @@ from nanopnp.io.models import (
     VARIANT_PATH,
     ModelFile,
     ModelKind,
+    _holder,
     _put,
     leaves,
     owner_of,
@@ -84,7 +85,7 @@ BUILD_LAYER: Mapping[str, Any] = {
 # The last stage a model of each kind builds alone; a kind without a row is built by its studies.
 BUILD_UPTO: Mapping[ModelKind, str] = {"molecular": "protonation"}
 
-_REFUSED = (CaseValidationError, FileNotFoundError, ValueError, KeyError, OSError)
+_REFUSED = (ValueError, KeyError, OSError)
 
 
 class ProjectError(ValueError):
@@ -601,8 +602,12 @@ class Project:
         CaseValidationError
             If the path is not a numeric value of this kind of model.
         """
-        body = _body(self.path(kind, name))
+        location = self.path(kind, name)
+        body = _body(location)
         listed = body.get("exposes")
+        if not isinstance(listed, list) and _linked(body):
+            # A linked variant without a list of its own exposes its parent's, as a study reads it.
+            listed = _body(location.parent / str(body["variant_of"].get("model"))).get("exposes")
         if not isinstance(listed, list):
             listed = [{"name": label, "path": default} for label, default in EXPOSED[kind]]
         kept = [entry for entry in listed if not _exposes(entry, path)]
@@ -1030,10 +1035,6 @@ def _exposes(entry: object, path: str) -> bool:
 
 def _copied(value: T) -> T:
     return copy.deepcopy(value)
-
-
-def _holder(owner: str) -> str:
-    return "the study" if owner == "study" else f"the {owner} model"
 
 
 def _check_leaf(path: str, value: FieldValue, location: Path) -> None:

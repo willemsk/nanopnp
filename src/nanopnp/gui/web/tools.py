@@ -19,6 +19,7 @@ from nicegui.elements.mixins.validation_element import ValidationElement
 from nanopnp.api.project import Project
 from nanopnp.gui.web import numbers, settings
 from nanopnp.gui.web.frame import Views, heading
+from nanopnp.gui.web.link import _chain_id
 from nanopnp.gui.web.molecular import STAGES, MolecularModel, refused_path
 from nanopnp.gui.web.molview import (
     COLOURINGS,
@@ -28,7 +29,7 @@ from nanopnp.gui.web.molview import (
     residues,
     titration_states,
 )
-from nanopnp.gui.web.screens import SUITES, Tool, field_control
+from nanopnp.gui.web.screens import SUITES, Tool, field_control, tool_for
 from nanopnp.gui.web.settings import SETTINGS
 from nanopnp.gui.web.shell import Shell
 from nanopnp.io.case import ChargeEdit
@@ -37,6 +38,7 @@ from nanopnp.io.models import read_model_file
 from nanopnp.io.project import INPUTS_FOLDER, split_reference
 from nanopnp.pipeline.checks import options_at
 from nanopnp.structure.orient import PreparationRecord, orient_pore, prepared_pore
+from nanopnp.structure.protonated import parent_residue
 
 __all__ = ["FIELDS", "OVERLAY_MOST", "Field", "charge_colours", "current_model", "tool_page"]
 
@@ -450,7 +452,7 @@ class _Pane:
         try:
             self.model.project.set_value("molecular", self.model.name, path, value)
         except ValueError as error:
-            # Refused at its field: the rule, the value entered and the case path (WB-12).
+            # Refused at its field: the rule, the value entered and the case path.
             said = str(error).replace(f"{self.model.project.root}/", "")
             if isinstance(control, ValidationElement):
                 control.error = said
@@ -845,7 +847,9 @@ class _Pane:
         names: dict[str, str] = {}
         if self.model is not None:
             for key, label in residues(self.model):
-                names.setdefault(label.split(",")[0], key)
+                # An edit names the parent residue; a protonated table names its state (HSD).
+                resname, _, number = label.split(",")[0].partition(" ")
+                names.setdefault(f"{parent_residue(resname)} {number}", key)
         self.residue_keys = names
         heading("Edit a residue", 2)
         ui.label("An edit acts on the residue in every chain and frame.").classes("later")
@@ -904,7 +908,11 @@ class _Pane:
             ui.notify(f"Give the {EDIT_KINDS[kind].lower()}.", type="warning")
             return
         if kind == "charge_change_e":
-            value = int(float(str(value)))
+            change = float(str(value))
+            if not change.is_integer():
+                ui.notify("A charge change is a whole number of e.", type="warning")
+                return
+            value = int(change)
         self.put_edits([*self.edits(), {"residue": str(residue), kind: value}])
 
     def remove_edit(self, index: int) -> None:
@@ -1072,8 +1080,21 @@ class _Pane:
         rows: list[tuple[str, str, Callable[[], None] | None]] = []
         if self.tool.id == "prepare" and structure is not None:
             axis = _mapping(structure.get("axis"))
-            rows.append(("Axis found by", str(axis.get("method", "?")), None))
+            # A header written before the channel's axis names no method: a permutation's.
+            rows.append(("Axis found by", str(axis.get("method", "permutation")), None))
             for name, gate in _mapping(structure.get("gates")).items():
+                if name == "straightness":
+                    # The straightness limit warns and does not refuse (§5.2's NOTE on stage 1).
+                    held = _mapping(gate)
+                    rows.append(
+                        (
+                            "Straightness",
+                            f"{self.measure(held.get('measured_nm'), 'nm')}, warned above "
+                            f"{self.measure(held.get('limit_nm'), 'nm')}",
+                            None,
+                        )
+                    )
+                    continue
                 rows.append((f"Gate, {name}", self.gate_text(_mapping(gate)), None))
             check = _mapping(structure.get("frame_check"))
             if check:
@@ -1306,8 +1327,7 @@ class _Pane:
                     ui.button(
                         f"Go to {FIELDS[path].label}", on_click=lambda _, p=path: self.go_to(p)
                     ).props("outline dense no-caps data-control=note-field")
-                elif path is not None and path in FIELDS:
-                    tool = next(t for t in SUITES[0].tools if path in t.fields)
+                elif path in FIELDS and (tool := tool_for("molecular", path)) is not None:
                     ui.button(
                         f"Go to {FIELDS[path].label}, in {tool.title}",
                         on_click=lambda _, t=tool, p=path: ui.navigate.to(
@@ -1428,7 +1448,7 @@ def _unapplied_keys(listed: list[object]) -> list[str]:
     for entry in listed:
         row = _mapping(entry)
         number = str(row.get("residue", "")).split(" ")[-1]
-        keys.append(f"{row.get('chain', '')}:{number}")
+        keys.append(f"{_chain_id(str(row.get('chain', '')))}:{number}")
     return keys
 
 

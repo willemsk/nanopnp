@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,360. By source: history ruling 342; plan decision row 684; REV row 241; MOD row 18; OPN row 9; WB row 39; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,361. By source: history ruling 342; plan decision row 684; REV row 242; MOD row 18; OPN row 9; WB row 39; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 547; open 5; session, own call 805; session, put to the author 3.
+By decider: author 547; open 5; session, own call 806; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1294,6 +1294,7 @@ By decider: author 547; open 5; session, own call 805; session, put to the autho
 | REV-239 | author | `docs/project/review-findings.md` |  | WP5.16 | The channel axis's two limits rest on 2WCD alone, and a ragged pore may be refused | ruled by the author, 11 November 2026 (WP5.16) | fixed |
 | REV-240 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | The author's notes on the Molecular digest that ask for a discussion | WP5.16 | open |
 | REV-241 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | What the final review of the Molecular tools left open | WP5.16 | open |
+| REV-242 | session, own call | `docs/project/review-findings.md` |  | WP5.16 | What the code review of the Molecular suite left open | WP5.16 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
