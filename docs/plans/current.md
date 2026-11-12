@@ -1,6 +1,6 @@
 # Current work
 
-Updated 12 November 2026 (WP5.17 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 12 November 2026 (WP5.17 planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -9,7 +9,7 @@ Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups, frame
 sizes. Four suites, the route and the close follow: about 50
 sessions and 45 to 95 agent hours.
 
-**Your call.** Approve the Continuum plan after its review. Adopt two measuring tools or not (the trial says neither).
+**Your call.** Approve the reviewed Continuum plan. Adopt two measuring tools or not (the trial says neither).
 
 ## Position
 
@@ -17,7 +17,7 @@ sessions and 45 to 95 agent hours.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.16 merged
   (`v0.6.0-alpha.16`).
   **WP5.17** [planned](phase-5/wp5.17-the-continuum-suite.md) on `claude/nice-franklin-h4k3zg`, its PR open.
-  Next, `/np-plan wp 5.17 review`, then `/np-implement wp 5.17`. host: claude-code.
+  Reviewed (CODE_REVIEW_055). Next, `/np-implement wp 5.17`. host: claude-code.
 
 ## Not to be re-decided
 
