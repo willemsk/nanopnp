@@ -286,9 +286,9 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 - [x] 7. Compaction checkpoint. **Executor:** main
 - [x] 45d3f65 8. `gui/web/continuum.py`, `plane.py`, `assets/plane.js`, the frame, pages and pane, `plot/data.py:mesh_elements`,
   VER-78's text (D6, D7); done when VER-78 (a) to (d), (m) and the import guard pass. **Executor:** main
-- [ ] 9. The four tools drafted on 2WCD (D8, D9); `render_shell.py`; `/np-gui render shell`, `review`, `publish` (D10);
+- [x] 641feae 9. The four tools drafted on 2WCD (D8, D9); `render_shell.py`; `/np-gui render shell`, `review`, `publish` (D10);
   done when the digest is published. **Executor:** main
-- [ ] 10. Compaction checkpoint; the author's verdicts. **Executor:** main
+- [x] 10. Compaction checkpoint; the author's verdicts. **Executor:** main
 - [ ] 11. `/np-gui collect`; REV-235's and REV-237's points ruled or carried; the design document's rows (D10).
   **Executor:** main
 - [ ] 12. The tools finished to the verdicts, with *Modified only*, `?field=` and REV-242's measure (D6 to D9); done when
