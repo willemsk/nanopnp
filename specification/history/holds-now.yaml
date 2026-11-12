@@ -342,3 +342,7 @@ AO1: 'open: WP5.16 (§5.2''s NOTE on stage 1, §5.3.1''s NOTE on structure:, VER
 AO2: the design document's Prepare row; REV-238
 AO3: the design document's Charge edit row; §5.3.1's NOTE on model files
 AO4: §5.2's NOTE on stage 1; VER-48; the IF-02 NOTE on preparation
+AP1: 'open: WP5.17 (§5.3.1''s NOTEs on inputs: and inputs.profile, VER-55''s restated NOTE)'
+AP2: 'the design document''s Continuum rows; open: WP5.17 (§5.3.1''s NOTE on model files)'
+AP3: 'the design document''s Mesh row; open: WP5.17 (§5.2.2''s size table, §5.3.1''s NOTE on numerics.mesh)'
+AP4: 'the design document''s Mesh row; open: WP5.17 (§5.2.2''s size table, §5.3.1''s NOTE on numerics.mesh)'

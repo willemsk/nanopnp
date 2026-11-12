@@ -1,6 +1,6 @@
 # WP5.16 — The Molecular suite
 
-**Status: delivered 11 November 2026, awaiting its merge and `/np-ship`.** Planned 11 November 2026 on `main` (`0b75c30`). It inherits §8.2.24 Z5, §8.2.34 AJ5
+**Status: delivered 11 November 2026; merged 12 November 2026 as `v0.6.0-alpha.16`.** Planned 11 November 2026 on `main` (`0b75c30`). It inherits §8.2.24 Z5, §8.2.34 AJ5
 and AJ8, §8.2.36 AL22 and this plan's §8.2.39 AO1 to AO3.
 
 This plan belongs to [the Phase 5 plan](phase-5-workbench.md). `SPECIFICATION.md` governs. An identifier here points to

@@ -1,24 +1,23 @@
 # Current work
 
-Updated 11 November 2026 (WP5.16 delivered). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 12 November 2026 (WP5.17 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups and rebuilt frame are merged. The Molecular
-suite is delivered and waits for its review: any pore's axis found, a command that prepares a structure, and five
-working tools built to your verdicts on the 2WCD drafts. Four suites, the route and the close follow: about 50 sessions
-and 45 to 95 agent hours.
+Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups, frame and Molecular suite are merged. The Continuum suite is planned to your four rulings on an edited outline's charge, building alone and mesh
+sizes. Four suites, the route and the close follow: about 50
+sessions and 45 to 95 agent hours.
 
-**Your call.** Merge the Molecular suite after its review. Adopt two measuring tools or not (the trial says neither).
+**Your call.** Approve the Continuum plan after its review. Adopt two measuring tools or not (the trial says neither).
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.15 merged
-  (`v0.6.0-alpha.15`); then the suites, the route and the close.
-  **WP5.16** [delivered](phase-5/wp5.16-the-molecular-suite.md) on `ccr-9b77d38b-j3hc4f`, its PR open.
-  Next, `/np-ship wp 5.16`. host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.16 merged
+  (`v0.6.0-alpha.16`).
+  **WP5.17** [planned](phase-5/wp5.17-the-continuum-suite.md) on `claude/nice-franklin-h4k3zg`, its PR open.
+  Next, `/np-plan wp 5.17 review`, then `/np-implement wp 5.17`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -43,7 +42,8 @@ and 45 to 95 agent hours.
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4), a move taking `nanopnp/case/v0.6` (G6).
 - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
 - **Plans are archived by phase** (§8.2.36 AL5, AL22 to AL26). **Text follows the tested program; its gaps, REV-223 to 225, are Phase 6's** (§8.2.37 AM1, AM2).
-- **Any pore's axis is found; a variant follows its parent unless copied** (§8.2.39).
+- **Any pore's axis is found; a variant follows its parent unless copied** (§8.2.39). **An edited outline keeps its
+  charge; a continuum model builds alone; mesh parts are typed** (§8.2.40).
 
 ## Somebody else's
 
@@ -52,8 +52,8 @@ and 45 to 95 agent hours.
 - **OPN-04**, the mutation list; **OPN-08**, v1.0's contents.
 - **The 200 ms redraw** on the author's GPU, WP5.19 (AF4; AG7; AJ10); **verdicts on each suite's prototype** (AJ8).
 - **Rulings on a cycle (H6) or drift (I4)**; **Tier 3's PQRs**.
-- **REV-156**'s speed-up is Phase 6's (Z6); REV-121 and REV-218 WP5.16's, REV-170 WP5.17's (AG1; AJ10; AL22); the
-  compute settings WP5.19's and a cleaned run's rebuild WP5.20's (AN4, AN5).
+- **REV-156**'s speed-up is Phase 6's (Z6); the compute settings WP5.19's and a cleaned run's rebuild WP5.20's (AN4,
+  AN5).
 
 ## On demand
 

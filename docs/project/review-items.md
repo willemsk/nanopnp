@@ -3165,7 +3165,7 @@ view that follows the typed values is REV-243, ruled for before Phase 5 closes; 
 rows and the empty 3D view; and a suite's icon opens its last tool, so the Molecular suite's page of five links is
 gone.
 
-**Open.** The PQR point is WP5.17's library step; the charge screen's is WP5.19's; the rest wait for WP5.21's pass
+**Open.** The PQR point goes with REV-242's new-model action: at WP5.17's plan the author ruled that an edited outline runs with its structure's charge, over the option that added a PQR opened in Prepare (§8.2.40 AP1). The charge screen's is WP5.19's; the rest wait for WP5.21's pass
 over the frame.
 
 ### REV-242: What the code review of the Molecular suite left open
