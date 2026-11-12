@@ -27,6 +27,7 @@ __all__ = [
     "SourceFile",
     "orient_pore",
     "prepared_pore",
+    "protein_chains",
 ]
 
 logger = logging.getLogger(__name__)
@@ -329,6 +330,27 @@ def orient_pore(
     )
     logger.info("wrote %s: %d atoms", destination, len(protein))
     return destination
+
+
+def protein_chains(source: str | Path) -> tuple[str, ...]:
+    """Return the chains of a structure file's protein, in file order, as ``chains`` names them.
+
+    A chain is its chain identifier, or its segment identifier where the chain column is blank.
+    """
+    try:
+        import MDAnalysis  # noqa: F401 - imported for its error only
+
+        from nanopnp.structure import read
+    except ImportError as error:
+        missing = error.name or "MDAnalysis"
+        raise MissingExtraError(
+            f"protein_chains reads a structure with MDAnalysis and needs the 'structure' extra: "
+            f"importing {missing!r} failed. Install the extras with `uv sync --all-extras`",
+            name=missing,
+        ) from error
+    protein = read.load_universe(Path(source)).select_atoms("protein")
+    keys, _ = read.chain_keys(protein)
+    return tuple(dict.fromkeys(keys))
 
 
 def prepared_pore(

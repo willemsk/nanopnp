@@ -32,10 +32,14 @@ prepares a structure, and the workbench gains its five Molecular tools. No golde
 - **Added**:
   - The Molecular tools, each a page at `/molecular/<tool>` with the tool list, a pane of the model's values and
     the 3D view: *Prepare structure*, *Ensemble*, *Protonation*, *Charge edit* and *View* (FR-37, FR-38). A pane
-    marks a changed value, resets it, exposes it to studies and filters to *Modified only*; it shows each stage's
-    state, builds the model alone, and shows a refusal as a card that goes to the field it names.
-  - *Prepare structure*: open a structure from the project's inputs or copy one in, estimate the pore's axis or
-    type its tilt and azimuth, flip the *cis* end, place the registration residues, and save the prepared file.
+    marks a changed value, resets it, exposes it to studies and filters to *Modified only*; it builds the model
+    alone, and shows a blocked build as a card that goes to the field it names. Each tool in the list shows the
+    state of the stage it builds, and a moving bar while it builds.
+  - *Prepare structure*: open a structure from the project's inputs, from a path or from the system's file
+    picker, pick its chains, estimate the pore's axis or type its tilt and azimuth, flip the *cis* end, place the
+    registration residues, and save the prepared file. The view draws the membrane's two leaflets from the study
+    that names the model, and a warning says where the registration residues sit off its centre.
+  - *View* draws a model read from a PQR file, its atoms coloured by their residues' charge.
   - *Charge edit*: pin a residue's state, change its charge or scale its radius, and save the edits as a variant
     of the model, linked to its parent or a full copy (`variant_of:` in a molecular model's file; §5.3.1).
   - `structure.symmetry.axis: cavity` finds a pore's axis from the channel's empty space, for a single-chain or
@@ -54,7 +58,10 @@ prepares a structure, and the workbench gains its five Molecular tools. No golde
   - The settings open as a window over the open tool; `/settings` stays as an address.
   - Folded, the left bar is the suites' icons, each with a dot for a problem or a running build; every tool's
     pane stands left of its view, the charge screen's too.
-  - A build's refusal is listed among the project's problems until a value changes.
+  - A build a check stops is *blocked*, the word the tools, the problems list and the glossary use, and is
+    listed among the project's problems until a value changes.
+  - A suite's icon opens the tool last used in it; the Molecular suite's page of links is gone.
+  - Each setting's control stands at the right of its title and description.
 
 ## [0.6.0-alpha.15]
 

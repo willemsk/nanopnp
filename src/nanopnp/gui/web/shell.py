@@ -18,6 +18,8 @@ class Shell:
 
     bench: Workbench
     settings: Settings = field(default_factory=user_settings.load)
+    last_tool: dict[str, str] = field(default_factory=dict)
+    """The tool last opened in each suite, by suite: the one its icon opens."""
 
     @property
     def keys(self) -> dict[str, str]:

@@ -243,9 +243,18 @@ body .nicegui-footer.frame-footer {
 .q-drawer--mini .suite-button .q-btn__content {
   font-size: 0;
 }
+/* As wide on the right as the open suite's edge on the left, so the icon centres on the strip. */
 .q-drawer--mini .suite-button {
   min-height: 40px;
-  padding: 0;
+  padding: 0 3px 0 0;
+}
+/* The shrunk name keeps its line's height unless its own is zeroed, which would lift the icon. */
+.q-drawer--mini .suite-button .q-btn__content {
+  justify-content: center;
+  gap: 0;
+}
+.q-drawer--mini .suite-button .q-btn__content > .block {
+  line-height: 0;
 }
 .q-drawer--mini .rail {
   position: absolute;
@@ -419,14 +428,38 @@ body .nicegui-footer.frame-footer {
   gap: var(--pad);
   margin-bottom: calc(var(--pad) * 2);
 }
+/* A setting's title and description on the left, its control on the right; a block control,
+   such as the theme's or the keys', under them. */
 .setting-row {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--gap);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: calc(var(--pad) * 2);
+  row-gap: var(--gap);
   padding: var(--gap) 0 var(--pad);
   border-bottom: 1px solid var(--line);
   scroll-margin-top: var(--pad);
+}
+.setting-wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.setting-control {
+  display: flex;
+  justify-content: flex-end;
+}
+.setting-control > .q-field {
+  width: 14rem;
+}
+.setting-wide .setting-control {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap);
 }
 .setting-chosen {
   border-left: 3px solid var(--accent);
@@ -530,38 +563,78 @@ body .nicegui-footer.frame-footer {
   align-items: flex-start;
   gap: var(--pad);
 }
+/* Each tool a card with the state of the stage it builds: the left edge in the state's colour,
+   its word under the name, and a thin moving bar along the foot while the stage builds. */
 .tool-list {
-  flex: 0 0 8.25rem;
+  flex: 0 0 9rem;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: calc(var(--gap) / 2);
   position: sticky;
   top: 0;
 }
-.tool-link,
-.tool-link.nicegui-link:visited {
+/* Above workbench.css's `body a.nicegui-link`, which centres a link's content in a row. */
+body a.tool-link,
+body a.tool-link:visited {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--gap);
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
   min-height: var(--row);
-  padding: 0 var(--gap);
-  border-left: 2px solid transparent;
-  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 3px var(--gap) 4px;
+  text-align: left;
+  border: 1px solid var(--control-edge);
+  border-left: 3px solid var(--control-edge);
+  border-radius: var(--radius);
+  background: var(--panel);
   color: var(--ink) !important;
   text-decoration: none !important;
   font-size: var(--text-sm);
+  overflow: hidden;
+}
+.tool-link[data-state="built"] {
+  border-left-color: var(--ok);
+}
+.tool-link[data-state="building"] {
+  border-left-color: var(--warn);
+}
+.tool-link[data-state="refused"] {
+  border-left-color: var(--err);
 }
 .tool-link:hover {
   background: var(--sel);
 }
 .tool-link-open {
   background: var(--sel);
-  border-left-color: var(--accent);
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+  border-bottom-color: var(--accent);
   font-weight: 600;
+}
+.tool-link-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: var(--gap);
 }
 .tool-glyph {
   flex: 0 0 1em;
   text-align: center;
+}
+.tool-word {
+  padding-left: calc(1em + var(--gap));
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+.tool-word:empty {
+  display: none;
+}
+.tool-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 .state-ok {
   color: var(--ok);
@@ -582,6 +655,29 @@ body .nicegui-footer.frame-footer {
   min-width: 0;
   gap: var(--gap);
 }
+/* A tool's title stays below a page's, so the pane's values lead. */
+.tool-pane .heading-1 {
+  font-size: var(--text-xl);
+}
+/* Mol*'s own controls over the view: its light skin draws them half transparent, tan on the
+   canvas; on the panel's fill and in the text ink they read on either theme. */
+#mol .msp-viewport-controls .msp-semi-transparent-background,
+#mol .msp-viewport-controls .msp-hover-box-body {
+  background: var(--panel);
+  opacity: 1;
+}
+#mol .msp-viewport-controls .msp-btn-link-toggle-on {
+  color: var(--ink);
+}
+/* Mol*'s own rules for these are !important, so only an !important one with more weight wins. */
+#mol .msp-viewport-controls .msp-btn-link-toggle-off,
+#mol .msp-viewport-controls .msp-btn-link-toggle-off:focus {
+  color: var(--muted) !important;
+}
+#mol .msp-viewport-controls .msp-btn-link-toggle-off:hover,
+#mol .msp-viewport-controls .msp-btn-link-toggle-on:hover {
+  color: var(--accent) !important;
+}
 .tool-subject {
   color: var(--ink);
   font-size: var(--text-sm);
@@ -591,6 +687,7 @@ body .nicegui-footer.frame-footer {
   width: 100%;
   gap: var(--gap);
 }
+.tool-status:empty,
 .tool-cards:empty,
 .tool-actions:empty {
   display: none;
@@ -601,44 +698,6 @@ body .nicegui-footer.frame-footer {
 /* Small and quiet beside the main action, so it is not pressed for it. */
 .tool-cancel {
   color: var(--muted);
-}
-.stage-bar {
-  display: flex;
-  gap: var(--gap);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-.stage-block {
-  flex: 1 1 0;
-  display: flex;
-  align-items: baseline;
-  gap: var(--gap);
-  padding: 2px var(--gap);
-  border: 1px solid var(--control-edge);
-  border-top-width: 3px;
-  border-top-color: currentColor;
-  border-radius: var(--radius);
-  background: var(--panel);
-  font-size: var(--text-sm);
-}
-.stage-name {
-  color: var(--ink);
-  font-weight: 600;
-}
-.stage-word {
-  margin-left: auto;
-}
-.stage-block {
-  position: relative;
-}
-/* Under the running block alone. */
-.stage-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 .note-card {
   width: 100%;

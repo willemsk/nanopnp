@@ -15,6 +15,7 @@ from nanopnp.core.stages import describe
 from nanopnp.gui.solver import Cancelled, Failed, Finished, RunRequest, SolverProcess, Stage
 from nanopnp.gui.web.queue import Entry, Queue
 from nanopnp.io.artefact import Artefact
+from nanopnp.io.case import Membrane
 from nanopnp.io.project import STORE_FOLDER
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
@@ -115,6 +116,32 @@ class MolecularModel:
         except _REFUSED as error:
             return str(error).replace(f"{self.project.root}/", "")
         return None
+
+    def membrane(self) -> tuple[Membrane, str | None]:
+        """Return the membrane of the first study that names this model, and that study.
+
+        The membrane is the continuum model's, in the prepared structure's frame; where no study
+        names this model, it is the schema's default and the study is None.
+        """
+        mine = self.project.path("molecular", self.name).resolve()
+        for study in self.project.items("study"):
+            try:
+                case = self.project.study(study)
+            except _REFUSED:
+                continue
+            record = case.models_record
+            if record is None or case.geometry is None:
+                continue
+            if any(f.kind == "molecular" and f.path.resolve() == mine for f in record.files):
+                return case.geometry.membrane, study
+        return Membrane(), None
+
+    def pqr(self) -> Path | None:
+        """Return the PQR file the model reads its atoms and charges from, or None."""
+        case = self.case()
+        if case is None or case.inputs.pqr is None or case.inputs.pqr.path is None:
+            return None
+        return Path(case.inputs.pqr.path)
 
     def has_structure(self) -> bool:
         """Say whether the model names a structure, which stage 1 reads; a PQR model names none."""

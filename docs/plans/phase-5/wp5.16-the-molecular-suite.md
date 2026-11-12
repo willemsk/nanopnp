@@ -337,6 +337,17 @@ the budget) and a build held mid-walk.
 > and 1 touch: 4.4 agent hours and 6 touches in one session, against the estimate of about five sessions, five to ten
 > agent hours and 14 touches.
 
+> **Outcome — the second collect.** Round 2 of the digest, all 19 picks marked, 12 `keep` and 7 `change`
+> ([the record](../../design/reviews/2026-11-12-molecular.md)). Built before the merge: each tool in the list is a
+> card with its stage's state and progress, and the pane's stage bar is gone; a build a check stops is *blocked*; a
+> suite's icon opens the tool last used in it; Prepare draws the membrane's two leaflets from the study that names
+> the model and warns where the registration residues sit off it; Chains is a pick among the file's chains; *Open
+> structure…* has the system's file picker; View draws a PQR model's atoms; and the title, the viewer's buttons, the
+> folded icons, the settings' rows and the changed table's *Reset* are mended (WB-40). REV-243 carries the view that
+> follows the typed orientation, ruled for before Phase 5 closes. Measured: the second collect's window to its commit 1.1 agent hours and 4 touches, so the package 5.8 agent
+> hours and 10 touches in one session, against the estimate of about five sessions, five to ten agent hours and 14
+> touches.
+
 ### Work items
 
 - [x] 58f9ab6 1. `io/case.py`, `io/resolved.py`, `pipeline/case.py`, `structure/read.py`, `structure/stage.py`, `structure/axis.py`

@@ -208,7 +208,18 @@ def tool_for(suite: SuiteId, path: str) -> Tool | None:
 
 
 SCREENS: tuple[Screen, ...] = (
-    *(Screen(suite.id, f"/{suite.id}", (*FRAME_CONTROLS, "suite-body")) for suite in SUITES),
+    # The Molecular suite's path opens its last tool, its first in a fresh window.
+    *(
+        Screen(
+            suite.id,
+            f"/{suite.id}",
+            (
+                *FRAME_CONTROLS,
+                *(tool_controls(suite.tools[0]) if suite.id == "molecular" else ("suite-body",)),
+            ),
+        )
+        for suite in SUITES
+    ),
     *(
         Screen(
             f"m-{tool.id}",

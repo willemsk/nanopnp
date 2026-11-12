@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+from nanopnp.charge.pqr import PQRFrame, read_pqr
 from nanopnp.charge.protonation import PAYLOAD_NAME as TABLE_PAYLOAD
 from nanopnp.charge.protonation import ProtonationTable
 from nanopnp.gui.geometry import lookup_table
@@ -16,6 +17,7 @@ from nanopnp.structure.protonated import parent_residue
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.gui.web.molecular import MolecularModel
+    from nanopnp.io.case import Membrane
 
 __all__ = [
     "COLOURINGS",
@@ -81,6 +83,26 @@ def _table(model: MolecularModel) -> ProtonationTable | None:
 def _ensemble(model: MolecularModel) -> AlignedEnsemble | None:
     stored = model.artefacts().get("structure")
     return None if stored is None else AlignedEnsemble.read(Path(stored.payload[ENSEMBLE_PAYLOAD]))
+
+
+# A PQR file's first frame, by its path and modification time.
+_PQR: dict[tuple[Path, int], PQRFrame] = {}
+
+
+def _pqr(model: MolecularModel) -> PQRFrame | None:
+    path = model.pqr()
+    if path is None or not path.is_file():
+        return None
+    key = (path, path.stat().st_mtime_ns)
+    if key not in _PQR:
+        try:
+            frames = read_pqr(path)
+        except (ValueError, OSError):
+            return None
+        if not frames:
+            return None
+        _PQR[key] = frames[0]
+    return _PQR[key]
 
 
 def frame_count(model: MolecularModel) -> int:
@@ -180,6 +202,19 @@ def structure_text(model: MolecularModel, frame: int = 0) -> tuple[str, str]:
             ),
             "pdb",
         )
+    pqr = _pqr(model)
+    if pqr is not None:
+        return (
+            _pdb_text(
+                pqr.positions_A / 10.0,
+                pqr.name.tolist(),
+                pqr.resname.tolist(),
+                pqr.chain.tolist(),
+                pqr.resid.tolist(),
+                pqr.icode.tolist(),
+            ),
+            "pdb",
+        )
     case = model.case()
     if case is None or case.structure is None:
         return "", "pdb"
@@ -221,27 +256,11 @@ def annotation(
         The colour of a positive residue; a negative one takes the scale's other end.
     """
     table = _table(model)
+    pqr = None if table is not None else _pqr(model)
     if by == "charge":
-        if table is None:
+        totals = _residue_charges(table, pqr)
+        if not totals:
             return []
-        # The table's own residue charges, the mean over its frames: the shell sums nothing.
-        import numpy as np
-
-        charge = np.asarray(table.residue_charge_e, dtype=np.float64)
-        if charge.ndim == 2:
-            charge = charge.mean(axis=0)
-        totals = dict(
-            zip(
-                zip(
-                    (str(c) for c in table.residue_chain.tolist()),
-                    (int(r) for r in table.residue_resid.tolist()),
-                    (str(i) for i in table.residue_icode.tolist()),
-                    strict=True,
-                ),
-                charge.tolist(),
-                strict=True,
-            )
-        )
         colours = lookup_table("diverging")
         if positive == "blue":
             colours = colours[::-1]
@@ -252,7 +271,7 @@ def annotation(
             rows.append(_row(chain, resid, icode, _hex(colours[middle + step])))
         return rows
     ensemble = None if table is not None else _ensemble(model)
-    held = table if table is not None else ensemble
+    held = table if table is not None else ensemble if ensemble is not None else pqr
     if held is None:
         return []
     stop = int(table.frame_offsets[1]) if table is not None else len(held.chain)
@@ -282,6 +301,39 @@ def annotation(
     ]
 
 
+def _residue_charges(
+    table: ProtonationTable | None, pqr: PQRFrame | None
+) -> dict[tuple[str, int, str], float]:
+    """Return each residue's net charge: the table's own, the mean over its frames, or the PQR's."""
+    import numpy as np
+
+    if table is not None:
+        charge = np.asarray(table.residue_charge_e, dtype=np.float64)
+        if charge.ndim == 2:
+            charge = charge.mean(axis=0)
+        keys = zip(
+            (str(c) for c in table.residue_chain.tolist()),
+            (int(r) for r in table.residue_resid.tolist()),
+            (str(i) for i in table.residue_icode.tolist()),
+            strict=True,
+        )
+        return dict(zip(keys, charge.tolist(), strict=True))
+    if pqr is None:
+        return {}
+    # A PQR file carries its atoms' charges: the residue's is their sum.
+    totals: dict[tuple[str, int, str], float] = {}
+    for chain, resid, icode, charge_e in zip(
+        pqr.chain.tolist(),
+        pqr.resid.tolist(),
+        pqr.icode.tolist(),
+        pqr.charge_e.tolist(),
+        strict=True,
+    ):
+        key = (str(chain), int(resid), str(icode))
+        totals[key] = totals.get(key, 0.0) + float(charge_e)
+    return totals
+
+
 def _extent_a(model: MolecularModel) -> tuple[float, float] | None:
     ensemble = _ensemble(model)
     if ensemble is None:
@@ -299,7 +351,7 @@ def scene(
     form: str = "pdb",
     clip: bool = False,
     frames: Sequence[int] = (0,),
-    side_on: bool = False,
+    side_on: Membrane | None = None,
 ) -> dict[str, object]:
     """Return the MolViewSpec document of one view: the structure, its look and the pore's axis.
 
@@ -315,8 +367,8 @@ def scene(
     frames
         The frames drawn, each over the others.
     side_on
-        Open the view from the side, z up, as a pore is drawn in its membrane, with the plane
-        z = 0, where a prepared structure's registration residues are placed.
+        Open the view from the side, z up, as a pore is drawn in its membrane, with this
+        membrane's two leaflets, at its centre less and plus half its thickness.
     """
     colours: list[dict[str, object]] = []
     if annotation_url is not None:
@@ -388,28 +440,33 @@ def scene(
                 ],
             }
         )
-    if side_on and not clip and extent is not None:
-        children.append(
-            {
-                "kind": "primitives",
-                "params": {"tooltip": "The plane z = 0", "opacity": PLANE_OPACITY},
-                "children": [
-                    {
-                        "kind": "primitive",
-                        "params": {
-                            "kind": "ellipse",
-                            "center": [0.0, 0.0, 0.0],
-                            "major_axis": [1.0, 0.0, 0.0],
-                            "minor_axis": [0.0, 1.0, 0.0],
-                            "radius_major": PLANE_RADIUS_A,
-                            "radius_minor": PLANE_RADIUS_A,
-                            "color": AXIS_COLOUR,
-                        },
-                    }
-                ],
-            }
-        )
-    if side_on and extent is not None:
+    if side_on is not None and not clip and extent is not None:
+        centre_a, half_a = side_on.centre_z_nm * 10.0, side_on.thickness_nm * 5.0
+        for side, z_a in (("cis", centre_a + half_a), ("trans", centre_a - half_a)):
+            children.append(
+                {
+                    "kind": "primitives",
+                    "params": {
+                        "tooltip": f"The membrane's {side} leaflet",
+                        "opacity": PLANE_OPACITY,
+                    },
+                    "children": [
+                        {
+                            "kind": "primitive",
+                            "params": {
+                                "kind": "ellipse",
+                                "center": [0.0, 0.0, z_a],
+                                "major_axis": [1.0, 0.0, 0.0],
+                                "minor_axis": [0.0, 1.0, 0.0],
+                                "radius_major": PLANE_RADIUS_A,
+                                "radius_minor": PLANE_RADIUS_A,
+                                "color": AXIS_COLOUR,
+                            },
+                        }
+                    ],
+                }
+            )
+    if side_on is not None and extent is not None:
         middle = (extent[0] + extent[1]) / 2.0
         children.append(
             {

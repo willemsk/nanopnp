@@ -43,7 +43,11 @@ STYLESHEETS = (
 MOLECULAR_TOOLS: tuple[Tool, ...] = SUITES[0].tools
 
 ROUTES: dict[str, Route] = {
-    **{f"/{suite.id}": Route(suite.id) for suite in SUITES},
+    # A suite with tools of its own opens the last one used, beside its view (WB-40).
+    **{
+        f"/{suite.id}": Route(suite.id, "molecule" if suite.id == "molecular" else None)
+        for suite in SUITES
+    },
     **{f"/molecular/{tool.id}": Route("molecular", "molecule") for tool in MOLECULAR_TOOLS},
     screen("st-charge").path: Route("study", "molecule"),
     "/settings": Route(None),
@@ -148,7 +152,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                 frames=(
                     range(min(frame_count(model), OVERLAY_MOST)) if overlay else (max(frame, 0),)
                 ),
-                side_on=bool(side or clip),
+                side_on=model.membrane()[0] if side or clip else None,
                 clip=bool(clip),
             )
         )
@@ -165,7 +169,16 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     ):
         nicegui_app.add_static_file(local_file=local, url_path=url, max_cache_age=0)
 
-    def suite_page(suite: Suite) -> Callable[[Views], None]:
+    def suite_page(suite: Suite) -> Callable[..., None]:
+        if suite.id == "molecular":
+
+            def last(built: Views, field: str = "") -> None:
+                chosen = shell.last_tool.get(suite.id)
+                tool = next((t for t in MOLECULAR_TOOLS if t.id == chosen), MOLECULAR_TOOLS[0])
+                tool_page(shell, tool)(built, field)
+
+            return last
+
         def page(built: Views) -> None:
             bench = shell.bench
             with ui.column().props("data-control=suite-body"):
@@ -186,7 +199,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
                         if not bench.stages:
                             ui.label("No stage has run.")
                     if bench.refusal:
-                        ui.label(f"✕ refused: {bench.refusal}").classes("refused")
+                        ui.label(f"✕ blocked: {bench.refusal}").classes("refused")
                     if bench.notice:
                         ui.label(bench.notice)
 

@@ -3045,8 +3045,11 @@ The WP5.15 `/np-gui review` and `impeccable`'s critique (§8.2.34 AJ6) raised, b
 **Open**, a question for the author: each is put at the prototype round of the suite that first needs it, from WP5.16
 (§8.2.34 AJ8), with the screens in front of the author. WP5.16's round needed two, and its finishing item builds them
 (`docs/design/reviews/2026-11-11-molecular.md`): a refusal opens its field and is listed among the problems, and
-*Open structure…* lists the project's input files. The project dialogs, the settings' rows, the menus, the Glossary,
-the log and the frame's chrome wait for the round of a suite that needs them.
+*Open structure…* lists the project's input files. At WP5.16's second collect
+(`docs/design/reviews/2026-11-12-molecular.md`) the author ruled the Browse button "Both": *Open structure…* takes a
+file from the system's own picker, copied into the project's inputs, and the workbench's own browser, which returns a
+path, comes with the project dialogs. The project dialogs, the settings' rows, the menus, the Glossary, the log and
+the frame's chrome wait for the round of a suite that needs them.
 
 ### REV-236: Chords the operating system may claim, a command that cannot be unbound, and the glossary written twice
 
@@ -3082,6 +3085,12 @@ and the folded bar shows the suites' icons with their state. On the changed tabl
 version. The current table still takes up a lot of real-estate." Each Molecular tool's pane now marks its changed
 values and filters to them; a list of one line per value is set beside the table at the next suite's round. The
 palette's look and the help page stay open.
+
+At WP5.16's second collect (`docs/design/reviews/2026-11-12-molecular.md`) the author marked the settings window
+"Looking better. This will still need polishing to improve layout and spacing tightness. I would suggest having a
+look at the settings pane of Claude Code as an example." WP5.16 sets each setting's control on the right of its title
+and description, as asked; the pass over the window's spacing, with Claude Code's pane as the model, waits for
+WP5.21's pass over the frame.
 
 ### REV-238: The Prepare tool's axis and membrane are not dragged by handles
 
@@ -3122,29 +3131,24 @@ settle:
   holds no analysis;
 - colour maps beyond the two directions of the charge scale: "perhaps we can built-in support for custom colormaps"
   (WB-20's user-chosen maps). WP5.16 adds the setting for the direction only;
+- the charge screen's views, at WP5.16's second collect (`docs/design/reviews/2026-11-12-molecular.md`): "perhaps
+  we can think of creating an "overlay" view between the 3D structure, full 3D charge map, and the 2D-axisymmetric
+  one (reduced, but then resolved again to make it pseudo-3D). To be thought about and discussed later." The (r, z)
+  map turned about the axis is a picture of the reduced charge, so it shows what the reduction keeps and drops;
 - one rule for the safeguards of actions that lose work: "it is good to think about such safeguards in general for
   the program (kind of like the danger zone in GitHub)". A build's *Cancel* stops at once, since each finished stage
   is already stored; deleting a model, a study or the store's entries is where a second step belongs.
 
 **Open**, a question for the author: the variation view at the round of the suite that draws ensembles' results
-(WP5.19's charge screen or Analysis); the maps with the plots' settings in Analysis; the safeguards before the
-first tool that deletes, with the project tree's actions.
+(WP5.19's charge screen or Analysis); the charge screen's overlay with WP5.19's charge screen; the maps with the
+plots' settings in Analysis; the safeguards before the first tool that deletes, with the project tree's actions.
 
 ### REV-241: What the final review of the Molecular tools left open
 
 The GUI review and `impeccable`'s critique of the finished tools (WP5.16 item 12, render `shell-r2` at `def8265`; no
 blocking finding) raised, beyond what the item fixed:
 
-- **Prepare's view does not follow the typed values** (major; against §8.2.39 AO2). The axis and the plane drawn are
-  those of the built, aligned structure; a typed tilt, azimuth, flip or centre takes effect at *Save prepared
-  structure*. Drawing them as typed needs the source file's frame in the view, with the typed axis through its
-  centroid. The draft is kept for the window, and lost when the window closes.
-- **A model that reads a PQR draws nothing in View** (major): its look controls are disabled; the PQR's atoms are not
-  served to the scene, though the charge screen draws them. The note on such a model is the same on every tool, and
-  *Open structure…* stays enabled there.
-- ***Open structure…* takes a path on the server's disk** and no upload, and no PQR (major; Q09; REV-235's Browse).
-- **The warnings are grouped by message, not by residue**: one line per chain, and a row selects nothing; the
-  unapplied states' rows do select their residue.
+- ***Open structure…* opens no PQR** (Q09): a model's PQR is set in its file.
 - **The charge screen**: with its pane on the left, the (r, z) map stands below the residue chips, and the map has no
   colour bar, axes or unit, so the switched colour direction cannot be read from it (WB-20, WB-26). WP5.19's screen
   (REV-209, REV-215).
@@ -3153,12 +3157,16 @@ blocking finding) raised, beyond what the item fixed:
 - **The settings window covers the view** whose colours and background it changes.
 - **A cancelled build is recorded as failed** in the queue's line.
 - **The folded bar's state is a dot**, with the state in the button's name and tooltip, and names no project.
-- **A dialog's backdrop does not dim the 3D canvas**; the suite's own page is five links; the tools' terms do not link
-  to the glossary; the titratable groups' table pages 15 of 1092 rows; an empty 3D view carries no message.
+- **A dialog's backdrop does not dim the 3D canvas**; the tools' terms do not link to the glossary.
 
-**Open.** The first four are WP5.17's library step or its prototype round, with the Continuum tools that share the
-pane; the charge screen's is WP5.19's; the rest wait for WP5.21's pass over the frame. The first is a deviation from
-AO2 for the author to rule on at `/np-ship`.
+WP5.16's second collect (`docs/design/reviews/2026-11-12-molecular.md`) settled five of the points first listed: the
+view that follows the typed values is REV-243, ruled for before Phase 5 closes; View draws a PQR model's atoms;
+*Open structure…* gains the system's file picker; the author kept the warnings grouped by message, the paging of 15
+rows and the empty 3D view; and a suite's icon opens its last tool, so the Molecular suite's page of five links is
+gone.
+
+**Open.** The PQR point is WP5.17's library step; the charge screen's is WP5.19's; the rest wait for WP5.21's pass
+over the frame.
 
 ### REV-242: What the code review of the Molecular suite left open
 
@@ -3181,7 +3189,17 @@ more (finding 16: Prepare reads the straightness as a warning, not a gate). Thes
   message to a case path, so a message that names the channel goes to the axis. The root fix is a gate error that
   carries its case path, across every stage's errors.
 
-**Open.** The first two are the author's to rule on, at WP5.16's `/np-ship` or with the new-model action of a later
-suite. The third is measured with WP5.17's tools, which call the same reads, and cached if it shows (§8.2.12 M2).
+**Open.** The first two the author ruled at WP5.16's `/np-ship` on 12 November 2026: "With the new-model action",
+settled by the later suite that adds it, where the first structure is written as one block and an import decides
+what becomes of `variant_of`. The third is measured with WP5.17's tools, which call the same reads, and cached if it shows (§8.2.12 M2).
 The fourth waits for a pass over the stages' errors.
 
+### REV-243: Prepare's view does not follow the typed orientation
+
+The axis and the membrane drawn in Prepare's view are those of the built, aligned structure: a typed tilt, azimuth,
+flip or centre shows only after *Save prepared structure* (against §8.2.39 AO2; first raised in REV-241). Drawing
+them as typed needs the source file's frame in the view, with the typed axis through its centroid and the leaflets
+across it. The author, at WP5.16's second collect (`docs/design/reviews/2026-11-12-molecular.md`): "Instant feedback
+would indeed be a nice feature, let's mark it as a QoL to be included before the end of the phase."
+
+**Open**: built before Phase 5 closes, at the latest with WP5.21's pass over the frame.
