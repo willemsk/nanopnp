@@ -746,3 +746,23 @@ a variant is linked to its parent by default, with a full copy offered (AO3). Th
 > Then the tools, opening with their prototype round on 2WCD (AJ8): Prepare structure, Ensemble, Protonation, Charge edit
 > (FR-38's control over WP5.04's step) and View, the molecule drawn by Mol*, the molecular model's exposed values
 > declared (AJ5). Q09, Q13 and Q27 move here. Tag `v0.6.0-alpha.16`.
+
+## Amended 12 November 2026 (§8.2.40 AP1 to AP4)
+
+At WP5.17's plan the author ruled that a supplied outline beside a structure runs with the structure's charge (AP1),
+that a continuum model is built alone over a molecular model chosen in its pane (AP2), and that every part of a
+generated mesh can be typed (AP3), each typed size a base the size scale multiplies (AP4). The entry read:
+
+> ### WP5.17 — The Continuum suite (REV-170, REV-39; FR-33's geometry link)
+>
+> Library step first: one stage-5 region interface with an adapter per kind, the cylinder's two classes merged and the
+> wall sizing moved into `mesh/` (REV-170; AD4; CODE_REVIEW_036 candidate 3, D3.1 to D3.4, C3.1, C3.2; AL22), MOD-03's
+> edge gone from `modularity-layering.yaml` (VER-61), VER-62's mesh hash unmoved or the move ruled and re-pinned (G10, I4).
+> Then, after the prototype round on 2WCD (AJ8), Protein geometry, Contour (on any profile, extracted or supplied, REV-39;
+> its check off the interface's thread, asking before an edit is discarded, as T1 carries REV-56), Region, and Mesh with
+> its quality selection; a geometry and its parameters linked both ways (FR-33). Q10 to Q12 and Q14 to Q23 move here;
+> VER-55 as restated. Tag `v0.6.0-alpha.17`.
+
+Its row of *Verification* read:
+
+> | WP5.17, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; MOD-03's edge gone (VER-61); VER-78 |
