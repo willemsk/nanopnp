@@ -180,7 +180,8 @@ build();
   const fail = setTimeout(() => { note.hidden = false; note.textContent = "Saved verdicts are taking long to load; marking still saves."; }, 10000);
   db.collection("verdicts").onSnapshot(snap => {
     clearTimeout(fail); note.hidden = true;
-    for (const d of snap.docs) { const v = d.data() || {}; verdicts[d.id] = { verdict: v.verdict || "", note: v.note || "", round: v.round }; paint(d.id); }
+    // An earlier round's mark stays in the store (collect recorded it) and is not shown as this round's.
+    for (const d of snap.docs) { const v = d.data() || {}; if ((v.round || 1) !== ROUND) continue; verdicts[d.id] = { verdict: v.verdict || "", note: v.note || "", round: v.round }; paint(d.id); }
     tally();
   }, () => { clearTimeout(fail); note.hidden = false; note.textContent = "Saved verdicts could not be loaded; reload the page."; });
 })();
