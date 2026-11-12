@@ -12,6 +12,8 @@ from nicegui import app as nicegui_app
 from nicegui import events, ui
 
 from nanopnp.gui.web.assets import ASSETS, TOKENS
+from nanopnp.gui.web.continuum import ContinuumModel
+from nanopnp.gui.web.continuum_tools import continuum_page
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
 from nanopnp.gui.web.link import Extent, png
 from nanopnp.gui.web.molecular import MolecularModel
@@ -23,7 +25,9 @@ from nanopnp.gui.web.molview import (
     scene,
     structure_text,
 )
-from nanopnp.gui.web.screens import SUITES, Suite, Tool, screen
+from nanopnp.gui.web.plane import COLOURINGS as MESH_COLOURINGS
+from nanopnp.gui.web.plane import IMAGES, image_png, plane
+from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, screen
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import OVERLAY_MOST, charge_colours, tool_page
@@ -40,15 +44,15 @@ STYLESHEETS = (
 )
 
 
-MOLECULAR_TOOLS: tuple[Tool, ...] = SUITES[0].tools
-
 ROUTES: dict[str, Route] = {
     # A suite with tools of its own opens the last one used, beside its view (WB-40).
+    **{f"/{suite.id}": Route(suite.id, None) for suite in SUITES},
+    **{f"/{suite.id}": Route(suite.id, VIEWS[suite.id]) for suite in TOOL_SUITES},
     **{
-        f"/{suite.id}": Route(suite.id, "molecule" if suite.id == "molecular" else None)
-        for suite in SUITES
+        f"/{suite.id}/{tool.id}": Route(suite.id, VIEWS[suite.id])
+        for suite in TOOL_SUITES
+        for tool in suite.tools
     },
-    **{f"/molecular/{tool.id}": Route("molecular", "molecule") for tool in MOLECULAR_TOOLS},
     screen("st-charge").path: Route("study", "molecule"),
     "/settings": Route(None),
 }
@@ -104,6 +108,35 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         if project is None or name not in project.items("molecular"):
             raise HTTPException(404, f"no molecular model {name!r}")
         return MolecularModel(project, name, shell.queue)
+
+    def continuum(name: str) -> ContinuumModel:
+        project = shell.bench.project
+        if project is None or name not in project.items("continuum"):
+            raise HTTPException(404, f"no continuum model {name!r}")
+        return ContinuumModel(project, name, shell.queue)
+
+    @app.get("/api/continuum/{name}/plane")
+    def continuum_plane(
+        name: str, tool: str = "geometry", image: str = "mean", colour: str = "material"
+    ) -> JSONResponse:
+        """Serve what the (r, z) view draws of a model for one tool."""
+        if image not in IMAGES or colour not in MESH_COLOURINGS:
+            raise HTTPException(422, "an unknown picture or colouring")
+        try:
+            drawn = plane(continuum(name), tool, image=image, colour=colour)
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from None
+        return JSONResponse(drawn.json())
+
+    @app.get("/api/continuum/{name}/image")
+    def continuum_image(name: str, layer: str = "mean") -> Response:
+        """Serve one picture of a model's built stages as a PNG."""
+        if layer not in IMAGES:
+            raise HTTPException(422, f"layer: {layer!r} is not one of {', '.join(IMAGES)}")
+        found = image_png(continuum(name), layer)
+        if found is None:
+            raise HTTPException(404, f"the {layer} picture of {name!r} is not built")
+        return Response(found, media_type="image/png")
 
     @app.get("/api/molecular/{name}/structure")
     def molecular_structure(name: str, frame: int = 0) -> Response:
@@ -163,19 +196,23 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
     for local, url in (
         (TOKENS, "/tokens.css"),
         (ASSETS / "bridge.js", "/bridge.js"),
+        (ASSETS / "plane.js", "/plane.js"),
         (ASSETS / "workbench.css", "/workbench.css"),
         (ASSETS / "frame.js", "/frame.js"),
         (ASSETS / "frame.css", "/frame.css"),
     ):
         nicegui_app.add_static_file(local_file=local, url_path=url, max_cache_age=0)
 
+    def page_of(suite: Suite, tool: Tool) -> Callable[..., None]:
+        return (tool_page if suite.id == "molecular" else continuum_page)(shell, tool)
+
     def suite_page(suite: Suite) -> Callable[..., None]:
-        if suite.id == "molecular":
+        if suite in TOOL_SUITES:
 
             def last(built: Views, field: str = "") -> None:
                 chosen = shell.last_tool.get(suite.id)
-                tool = next((t for t in MOLECULAR_TOOLS if t.id == chosen), MOLECULAR_TOOLS[0])
-                tool_page(shell, tool)(built, field)
+                tool = next((t for t in suite.tools if t.id == chosen), suite.tools[0])
+                page_of(suite, tool)(built, field)
 
             return last
 
@@ -300,7 +337,11 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
 
     pages: dict[str, Callable[..., None]] = {
         **{f"/{suite.id}": suite_page(suite) for suite in SUITES},
-        **{f"/molecular/{tool.id}": tool_page(shell, tool) for tool in MOLECULAR_TOOLS},
+        **{
+            f"/{suite.id}/{tool.id}": page_of(suite, tool)
+            for suite in TOOL_SUITES
+            for tool in suite.tools
+        },
         screen("st-charge").path: charge,
         "/settings": settings_page,
     }
@@ -310,6 +351,7 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             '<link rel="stylesheet" href="/vendor/molstar/molstar.css">'
             + STYLESHEETS
             + '<script src="/vendor/molstar/molstar.js"></script><script src="/bridge.js"></script>'
+            + '<script src="/plane.js"></script>'
         )
         with frame(
             shell,

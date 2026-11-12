@@ -84,6 +84,7 @@ edges:
   - {from: gui, to: mesh, relation: static, finding: null}
   - {from: gui, to: numerics, relation: static, finding: null}
   - {from: gui, to: pipeline, relation: static, finding: null}
+  - {from: gui, to: plot, relation: static, finding: null}
   - {from: gui, to: post, relation: static, finding: null}
   - {from: gui, to: solve, relation: static, finding: null}
   - {from: gui, to: structure, relation: static, finding: null}

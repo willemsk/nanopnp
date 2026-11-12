@@ -39,9 +39,11 @@ def test_if09_the_view_models_import_no_qt_and_no_ngsolve() -> None:
         "import nanopnp.gui.case_model, nanopnp.gui.run_model,"
         " nanopnp.gui.solver, nanopnp.gui.probe,"
         " nanopnp.gui.convergence, nanopnp.gui.scene, nanopnp.gui.render,"
-        " nanopnp.gui.geometry, nanopnp.gui.assess, nanopnp.gui.charge;"
+        " nanopnp.gui.geometry, nanopnp.gui.assess, nanopnp.gui.charge,"
+        " nanopnp.gui.web.continuum, nanopnp.gui.web.plane;"
         "print(sorted(m for m in ('PySide6','PyQt5','PyQt6','ngsolve','netgen',"
-        " 'MDAnalysis','skimage','shapely','gmsh','pdb2pqr','propka') if m in sys.modules))"
+        " 'MDAnalysis','skimage','shapely','gmsh','pdb2pqr','propka','nicegui')"
+        " if m in sys.modules))"
     )
     found = subprocess.run(
         [sys.executable, "-c", probe], capture_output=True, text=True, check=True

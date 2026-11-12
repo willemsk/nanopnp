@@ -301,6 +301,40 @@ def test_ver78_m_a_tool_change_keeps_the_window_and_builds_the_molecule_once(
         process.wait(STOP_WITHIN_S)
 
 
+def test_ver78_m_two_continuum_tools_build_the_canvas_once_and_keep_the_molecule(
+    browser: Browser, tmp_path: Path
+) -> None:
+    process, found = _start("--state", "charged-tube", entry=CLI, config=tmp_path)
+    url = found.group(1)
+    origin = url.split("/?")[0]
+    page = browser.new_page(viewport={"width": 1000, "height": 640})
+    try:
+        page.goto(url)
+        _ready(page, origin + "/molecular/prepare")
+        page.evaluate("window.marker = 'kept'")
+        page.locator("[data-control=suite-continuum]").click()
+        page.wait_for_url(origin + "/continuum/geometry", timeout=READY_WAIT_MS)
+        page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
+        page.locator("[data-control=tool-link-mesh]").click()
+        page.wait_for_url(origin + "/continuum/mesh", timeout=READY_WAIT_MS)
+        page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
+        assert page.locator("[data-control=plane]").is_visible()
+        assert not page.locator("[data-control=molecule]").is_visible()
+        assert page.evaluate("window.nano.canvas.builds") == 1
+        page.locator("[data-control=suite-molecular]").click()
+        page.wait_for_url(origin + "/molecular/prepare", timeout=READY_WAIT_MS)
+        page.wait_for_selector('body[data-screen-ready="1"]', timeout=READY_WAIT_MS)
+        assert page.evaluate("window.marker") == "kept"
+        assert page.evaluate("window.nano.builds") == 1
+        assert page.locator("[data-control=molecule]").is_visible()
+        assert not page.locator("[data-control=plane]").is_visible()
+    finally:
+        page.close()
+        assert process.stdin is not None
+        process.stdin.close()
+        process.wait(STOP_WITHIN_S)
+
+
 def test_ver78_n_the_settings_open_as_a_window_over_the_open_tool(
     browser: Browser, tmp_path: Path
 ) -> None:
