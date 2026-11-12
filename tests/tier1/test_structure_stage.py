@@ -623,6 +623,9 @@ def test_ver48_structure_beside_a_supplied_mesh_is_refused(tmp_path: Path) -> No
 CHANNEL_DISPLACEMENT_2WCD_NM = 0.00732
 """The channel's axis of the prepared 2WCD against its ring axis (§5.2 NOTE on stage 1)."""
 
+CHANNEL_STRAIGHTNESS_2WCD_NM = 0.01477
+"""The farthest of 2WCD's plane centres from its channel's line, half the warning's limit."""
+
 
 def test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis(
     prepared: Path, structure_2wcd: Path, tmp_path: Path
@@ -659,6 +662,12 @@ def test_ver48_2wcd_channel_axis_agrees_with_its_ring_axis(
         axis["file_frame"]["straightness_nm"],
     )
     assert abs(found.displacement_nm - CHANNEL_DISPLACEMENT_2WCD_NM) <= 1e-4
+    assert abs(found.tilt_deg - 0.0418) <= 1e-3
+    assert abs(found.offset_nm - 0.00946) <= 1e-4
+    frame = axis["file_frame"]
+    assert (frame["planes"], frame["centres"], frame["iterations"]) == (28, 28, 3)
+    assert abs(frame["straightness_nm"] - CHANNEL_STRAIGHTNESS_2WCD_NM) <= 1e-4
+    assert "warnings" not in cavity.header, "2WCD's channel is straight: no warning, no digest move"
 
     monomer = _case(tmp_path, _block(prepared, point_group="C1"), name="monomer")
     routed = _run(monomer, tmp_path / "store")
