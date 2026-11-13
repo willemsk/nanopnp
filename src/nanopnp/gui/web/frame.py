@@ -304,9 +304,13 @@ class _Frame:
     def route(self, path: str) -> Route:
         bare = urlsplit(path).path.rstrip("/") or "/"
         found = self.routes.get(bare)
-        if found is not None:
-            return found
-        return Route(current_suite(self.shell))
+        if found is None:
+            return Route(current_suite(self.shell))
+        # A suite's own path opens its last tool, so it takes that tool's view.
+        suite = next((entry for entry in SUITES if f"/{entry.id}" == bare), None)
+        if suite is not None:
+            return self.routes.get(self.suite_path(suite), found)
+        return found
 
     def suite_layout(self, suite: Suite) -> SuiteLayout:
         project = self.shell.bench.project

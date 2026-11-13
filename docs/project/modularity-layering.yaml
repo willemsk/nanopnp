@@ -82,6 +82,7 @@ edges:
   - {from: gui, to: density, relation: static, finding: null}
   - {from: gui, to: geometry, relation: static, finding: null}
   - {from: gui, to: io, relation: static, finding: null}
+  - {from: gui, to: materials, relation: static, finding: null}
   - {from: gui, to: mesh, relation: static, finding: null}
   - {from: gui, to: numerics, relation: static, finding: null}
   - {from: gui, to: physics, relation: static, finding: null}

@@ -22,6 +22,8 @@ class Shell:
     """The tool last opened in each suite, by suite: the one its icon opens."""
     changes_view: str = "list"
     """How the Changes tab shows the changed values: ``list``, a line each, or ``table``."""
+    shown_in: dict[str, str] = field(default_factory=dict)
+    """The study each physics model is shown in, by model, as its tools' *Shown in* chose."""
 
     @property
     def keys(self) -> dict[str, str]:

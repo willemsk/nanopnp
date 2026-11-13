@@ -6,7 +6,6 @@ from collections.abc import Mapping
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 
-from nanopnp.materials.electrolyte import MOLAR_PER_SI
 from nanopnp.mesh.sizing import case_debye_record
 from nanopnp.plot import data, panels
 from nanopnp.plot.data import DISPLAY, axis_label
@@ -255,17 +254,7 @@ def materials_figure(artefact: Artefact, inputs: StageInputs | None = None) -> F
 
     if inputs is None:
         return _absent(artefact, "materials", "the correction models")
-    electrolyte = inputs.resolved.electrolyte
-    # Every species sits at the case's concentration in the bulk; the driver is formed from
-    # them as the solve forms it: <c> = (1/n) sum c_i, or I, clamped to the fitted range.
-    bulk_SI = inputs.resolved.concentration_M / MOLAR_PER_SI
-    driver_M = float(electrolyte.average_concentration([bulk_SI] * len(electrolyte.species)))
-    curves = data.correction_curves(
-        electrolyte.corrections,
-        driver=electrolyte.driver,
-        concentration_M=driver_M,
-        validity_M=electrolyte.validity_M,
-    )
+    curves = data.case_correction_curves(inputs.resolved)
     if not curves:
         return text_figure("every correction is the none model: the factors are 1")
     figure = Figure(figsize=(8.0, 2.8 * len(curves)), layout="constrained")

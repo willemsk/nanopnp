@@ -31,7 +31,15 @@ from nanopnp.gui.web.molview import (
     residues,
     titration_states,
 )
-from nanopnp.gui.web.screens import STAGE_RUNNING, SUITES, Tool, field_control, tool_for
+from nanopnp.gui.web.screens import (
+    CORRECTED,
+    STAGE_RUNNING,
+    SUITES,
+    Tool,
+    field_control,
+    tool_for,
+    tool_view,
+)
 from nanopnp.gui.web.settings import SETTINGS
 from nanopnp.gui.web.shell import Shell
 from nanopnp.io.case import ChargeEdit, Membrane
@@ -77,12 +85,13 @@ class Field:
     ----------
     kind
         ``text``, ``number``, ``choice`` among the values the schema accepts at the path,
-        ``chains``, a pick among the structure file's chains that also takes a typed group, or
-        ``list``, which the pane shows and a tool of its own edits.
+        ``chains``, a pick among the structure file's chains that also takes a typed group,
+        ``list``, which the pane shows and a tool of its own edits, ``switch``, on or off, or
+        ``materials``, a number per material the pane's ``solids`` names.
     """
 
     label: str
-    kind: Literal["text", "number", "choice", "chains", "list"] = "text"
+    kind: Literal["text", "number", "choice", "chains", "list", "switch", "materials"] = "text"
     unit: str = ""
     hint: str = ""
 
@@ -122,6 +131,46 @@ FIELDS: dict[str, Field] = {
         "Axis in the pore", "number", unit="nm", hint="the table's"
     ),
     "numerics.mesh.wall_h_nm": Field("Wall", "number", unit="nm", hint="auto"),
+    "physics.model": Field("Model", "choice"),
+    "physics.flow": Field("Flow", "switch"),
+    "physics.variable_density": Field("Variable density", "switch"),
+    "physics.inertia": Field("Inertia", "switch"),
+    "physics.dielectric_gradient_forces": Field("Dielectric forces", "switch"),
+    "numerics.elements.phi": Field("Potential, φ", "choice"),
+    "numerics.elements.c": Field("Concentrations, c", "choice"),
+    "numerics.elements.u": Field("Velocity, u", "choice"),
+    "numerics.elements.p": Field("Pressure, p", "choice"),
+    "numerics.stabilisation": Field("Stabilisation", "choice"),
+    "electrolyte.parameters": Field("Parameter set", "choice"),
+    "electrolyte.species": Field("Ions", "list"),
+    "electrolyte.concentration_M": Field(
+        "Concentration", "number", unit="M", hint="No default: set the salt"
+    ),
+    "electrolyte.temperature_K": Field("Temperature", "number", unit="K"),
+    "electrolyte.driver": Field("Driver", "choice"),
+    **{
+        f"electrolyte.corrections.{name}.{part}": Field(
+            f"{name.capitalize()}{'' if part == 'model' else ', ' + part}",
+            "choice" if part == "model" else "switch",
+        )
+        for name in CORRECTED
+        for part in ("model", "concentration", "wall")
+    },
+    "electrolyte.corrections.steric.model": Field("Steric flux", "choice"),
+    "electrolyte.corrections.steric.a_ion_nm": Field(
+        "Ion diameter", "number", unit="nm", hint="the set's"
+    ),
+    "electrolyte.corrections.steric.a_water_nm": Field(
+        "Water diameter", "number", unit="nm", hint="the set's"
+    ),
+    "numerics.wall_distance.sources": Field("Wall boundaries", hint="a pattern of names"),
+    "numerics.wall_distance.max_distance_nm": Field("Distance cap", "number", unit="nm"),
+    "boundary_conditions.bias_V": Field("Bias", "number", unit="V"),
+    "boundary_conditions.ground": Field("Grounded side", "choice"),
+    "boundary_conditions.walls.ion_flux": Field("Ion flux at walls", "choice"),
+    "boundary_conditions.walls.slip": Field("Flow at walls", "choice"),
+    "boundary_conditions.wall_charge_C_m2": Field("Wall charge", "number", unit="C/m²"),
+    "physics.solid_permittivities": Field("Solid permittivities", "materials"),
 }
 """Every value a suite's tool sets, by case path."""
 
@@ -136,6 +185,10 @@ BUILDS: dict[str, tuple[str | None, str, str]] = {
     "geometry": ("contour", "Build geometry", ""),
     "region": ("region", "Build region", ""),
     "mesh": ("mesh", "Build mesh", ""),
+    "equations": (None, "", ""),
+    "electrolyte": (None, "", ""),
+    "conditions": (None, "", ""),
+    "exposed": (None, "", ""),
 }
 
 STAGE_TITLES = {
@@ -338,6 +391,14 @@ class _Pane(Generic[ModelT]):
         """Return why a tool's stage does not run for this model, its state's word, or None."""
         return None
 
+    def solids(self) -> tuple[str, ...]:
+        """Return the materials a ``materials`` field has a row for."""
+        return ()
+
+    def aside(self, path: str) -> str | None:
+        """Return what a field's outlined diamond says of a value set elsewhere, or None."""
+        return None
+
     def after_refresh(self) -> None:
         """Bring what the tool's own sections show up to date with the model."""
 
@@ -415,6 +476,12 @@ class _Pane(Generic[ModelT]):
                 getattr(self, f"{self.tool.id}_section")()
                 self.readout_box = ui.column().classes("readout")
                 self.readout_box.props("data-control=tool-readout")
+            if tool_view(self.suite, self.tool) == "page":
+                # A view the page draws itself, beside the pane, in place of the frame's.
+                self.view_box = ui.element("div").classes("tool-view")
+                self.view_box.props(
+                    f'data-control=tool-view role=region aria-label="{self.tool.title}"'
+                )
         self.listen()
         self.refresh()
 
@@ -485,9 +552,41 @@ class _Pane(Generic[ModelT]):
         named = f'data-control={control_name} aria-label="{spec.label}"'
         with ui.element("div").classes("field-row").props(f'data-field="{path}"') as row:
             mark = ui.label("◆").classes("changed mark").props("aria-hidden=true")
-            ui.label(spec.label).classes("field-label")
+            aside = self.aside(path)
+            if aside is None:
+                ui.label(spec.label).classes("field-label")
+            else:
+                # A value set elsewhere that this one stands in for: the outlined diamond.
+                with ui.element("div").classes("field-label"):
+                    ui.label(spec.label)
+                    ui.label("◇").classes("aside-mark").props(
+                        f'role=img aria-label="{aside}" title="{aside}"'
+                    )
             control: ui.element
-            if spec.kind == "list":
+            if spec.kind == "switch":
+                control = ui.switch(
+                    value=bool(shown), on_change=lambda e, p=path: self.write(p, bool(e.value))
+                ).props(f"dense {named}")
+            elif spec.kind == "materials":
+                held = shown if isinstance(shown, dict) else {}
+                control = ui.column().classes("materials w-full gap-1")
+                control.props(f'data-control={control_name} role=group aria-label="{spec.label}"')
+                with control:
+                    for solid in self.solids():
+                        with ui.row().classes("material-row items-center no-wrap w-full"):
+                            ui.label(solid).classes("material-name")
+                            ui.number(
+                                value=held.get(solid),
+                                placeholder="unset",
+                                on_change=lambda e, p=path, m=solid: self.write_material(
+                                    p, m, e.value
+                                ),
+                            ).props(
+                                f'dense outlined debounce=500 aria-label="{spec.label}, {solid}"'
+                            ).set_enabled(not self.idle())
+                    if not self.solids():
+                        ui.label("The shown pore holds no solid.").classes("later")
+            elif spec.kind == "list":
                 entries = shown if isinstance(shown, list) else []
                 text = f"{len(entries)} edit{'' if len(entries) == 1 else 's'}"
                 control = ui.label(text).props(f"data-control={control_name}")
@@ -540,7 +639,7 @@ class _Pane(Generic[ModelT]):
                 )
         # A model that reads a PQR has no structure for these values to act on, and a linked
         # variant reads them from its parent.
-        if self.idle() and isinstance(control, ui.select | ui.number | ui.input):
+        if self.idle() and isinstance(control, ui.select | ui.number | ui.input | ui.switch):
             control.disable()
         self.rows[path] = row
         self.marks[path] = (mark, reset)
@@ -579,6 +678,16 @@ class _Pane(Generic[ModelT]):
             control.error = None
         self.after_write(path)
 
+    def write_material(self, path: str, material: str, value: object) -> None:
+        """Write one material's number of a ``materials`` field; a blank removes it."""
+        held = _value_of(self.body(), path)
+        mapping = dict(held) if isinstance(held, dict) else {}
+        if isinstance(value, int | float):
+            mapping[material] = float(value)
+        else:
+            mapping.pop(material, None)
+        self.write(path, mapping or None)
+
     def reset(self, path: str) -> None:
         if self.model is None:
             return
@@ -593,6 +702,8 @@ class _Pane(Generic[ModelT]):
             default = _default_of(path)
             if isinstance(control, ui.input):
                 control.value = "" if default is None else str(default)
+            elif isinstance(control, ui.switch | ui.checkbox):
+                control.value = bool(default)
             elif isinstance(control, ui.number | ui.select):
                 control.value = default
             if isinstance(control, ValidationElement):

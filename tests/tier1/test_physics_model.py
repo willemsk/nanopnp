@@ -10,6 +10,8 @@ import yaml
 
 from nanopnp.api.case import Case
 from nanopnp.api.project import Project
+from nanopnp.gui.web.physics import PhysicsModel
+from nanopnp.gui.web.screens import SUITES
 from nanopnp.io.case import FieldValue
 from nanopnp.io.case_paths import schema_default
 from nanopnp.io.models import exposed_values, leaves, owner_of
@@ -37,6 +39,15 @@ EDITS: tuple[tuple[str, FieldValue], ...] = (
 )
 """One value of each kind of field of the four tools, each valid alone on the quick-start model."""
 
+SHOWN = tuple(
+    path
+    for suite in SUITES
+    if suite.id == "physics"
+    for tool in suite.tools
+    for path in (*tool.fields, *tool.parts, *tool.conditional)
+)
+"""Every value the four tools show."""
+
 
 @pytest.fixture
 def paired(tmp_path: Path) -> Project:
@@ -52,7 +63,7 @@ def _body(project: Project, name: str) -> dict[str, Any]:
     return loaded
 
 
-def _dumped(case: Case, path: str) -> object:
+def _dumped(case: Any, path: str) -> object:  # noqa: ANN401 - a case or a case document
     node: object = case.model_dump(mode="json", by_alias=True)
     for part in path.split("."):
         assert isinstance(node, dict), path
@@ -73,6 +84,11 @@ def test_fr39_a_physics_model_edited_in_the_suite_resolves_to_the_case_it_shows(
         own = paired.physics_case(study, study)
         assert own.dumps() == paired.study(study).dumps(), study
         assert _identities(own, store) == _identities(paired.study(study), store), study
+        shown = PhysicsModel(paired, study, shown_in=study)
+        resolved = shown.resolved()
+        assert resolved is not None, study
+        for path in SHOWN:
+            assert shown.shown(path) == _dumped(resolved.document, path), (study, path)
 
     location = paired.path("study", "quickstart")
     written = yaml.safe_load(location.read_text(encoding="utf-8"))
@@ -86,12 +102,18 @@ def test_fr39_a_physics_model_edited_in_the_suite_resolves_to_the_case_it_shows(
     assert other["boundary_conditions.bias_V"] == 0.05
     assert other.models_record is not None
     assert other.models_record.overrides == {}
+    within = PhysicsModel(paired, "charged-tube", shown_in="quickstart")
+    assert within.within() == "quickstart"
+    assert within.study_values() == {"boundary_conditions.bias_V": 0.2}
 
     for path, value in EDITS:
         paired.set_value("physics", "quickstart", path, value)
     edited = paired.physics_case("quickstart", "quickstart")
     for path, value in EDITS:
         assert _dumped(edited, path) == value, path
+    model = PhysicsModel(paired, "quickstart")
+    for path in SHOWN:
+        assert model.shown(path) == _dumped(edited, path), path
     paired.choose_physics("quickstart", "pnp")
     shown = paired.physics_case("quickstart", "quickstart")
     assert shown["physics.model"] == "pnp"
