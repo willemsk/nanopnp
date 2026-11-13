@@ -6,8 +6,10 @@ from dataclasses import dataclass
 from typing import Literal
 
 from nanopnp.io.project import Suite as SuiteId
+from nanopnp.physics.models import SWITCHES
 
 __all__ = [
+    "CORRECTED",
     "FRAME_CONTROLS",
     "GROUPS",
     "SCREENS",
@@ -22,6 +24,7 @@ __all__ = [
     "screen",
     "tool_controls",
     "tool_for",
+    "tool_view",
 ]
 
 STAGE_RUNNING = {
@@ -64,10 +67,14 @@ class Tool:
     fields
         The dotted case paths the tool's pane sets, in the order it lists them.
     parts
-        The case paths the tool sets through a list of parts, each opened one at a time.
+        The case paths the tool sets through its parts, drawn as a list of parts opened one at a
+        time or as a table with a row per part.
     conditional
         The case paths the tool's pane sets for some models alone, such as an idealised pore's
         radius, which a problem or a change naming them opens it at.
+    view
+        What the tool shows beside its pane: ``molecule``, ``plane``, or ``page``, a view the
+        page draws itself in place of the frame's; None takes its suite's ``VIEWS``.
     """
 
     id: str
@@ -75,6 +82,7 @@ class Tool:
     fields: tuple[str, ...] = ()
     parts: tuple[str, ...] = ()
     conditional: tuple[str, ...] = ()
+    view: Literal["molecule", "plane", "page"] | None = None
 
 
 def _later(*titles: str) -> tuple[Tool, ...]:
@@ -99,6 +107,10 @@ class Suite:
     tools: tuple[Tool, ...]
     group: str
     icon: str
+
+
+CORRECTED: tuple[str, ...] = ("diffusivity", "mobility", "viscosity", "permittivity", "density")
+"""The properties an electrolyte corrects, each by a model with a concentration and a wall part."""
 
 
 GROUPS: dict[str, str] = {"build": "Build", "use": "Use"}
@@ -190,7 +202,57 @@ SUITES: tuple[Suite, ...] = (
         "physics",
         "Physics",
         "a physics model",
-        _later("Equations", "Electrolyte", "Conditions", "Exposed values"),
+        (
+            Tool(
+                "equations",
+                "Equations",
+                (
+                    "physics.model",
+                    *(f"physics.{switch}" for switch in SWITCHES),
+                    *(f"numerics.elements.{name}" for name in ("phi", "c", "u", "p")),
+                    "numerics.stabilisation",
+                ),
+                view="page",
+            ),
+            Tool(
+                "electrolyte",
+                "Electrolyte",
+                (
+                    "electrolyte.parameters",
+                    "electrolyte.species",
+                    "electrolyte.concentration_M",
+                    "electrolyte.temperature_K",
+                    "electrolyte.driver",
+                ),
+                (
+                    *(
+                        f"electrolyte.corrections.{name}.{part}"
+                        for name in CORRECTED
+                        for part in ("model", "concentration", "wall")
+                    ),
+                    "electrolyte.corrections.steric.model",
+                    "electrolyte.corrections.steric.a_ion_nm",
+                    "electrolyte.corrections.steric.a_water_nm",
+                    "numerics.wall_distance.sources",
+                    "numerics.wall_distance.max_distance_nm",
+                ),
+                view="plane",
+            ),
+            Tool(
+                "conditions",
+                "Conditions",
+                (
+                    "boundary_conditions.bias_V",
+                    "boundary_conditions.ground",
+                    "boundary_conditions.walls.ion_flux",
+                    "boundary_conditions.walls.slip",
+                    "physics.solid_permittivities",
+                ),
+                conditional=("boundary_conditions.wall_charge_C_m2",),
+                view="plane",
+            ),
+            Tool("exposed", "Exposed values", view="page"),
+        ),
         "build",
         "sym_o_function",
     ),
@@ -237,20 +299,27 @@ TOOL_SUITES: tuple[Suite, ...] = tuple(suite for suite in SUITES if suite.tools[
 VIEWS: dict[SuiteId, Literal["molecule", "plane"]] = {
     "molecular": "molecule",
     "continuum": "plane",
+    "physics": "plane",
 }
 """The ``data-control`` of each tool suite's view: the 3D molecule, or the (r, z) plane."""
+
+
+def tool_view(suite: Suite, tool: Tool) -> Literal["molecule", "plane", "page"]:
+    """Return what a tool shows beside its pane: its own view, else its suite's."""
+    return tool.view or VIEWS[suite.id]
 
 
 def tool_controls(suite: Suite, tool: Tool) -> tuple[str, ...]:
     """Return the controls a tool's page carries in every state.
 
-    Every tool's page has its suite's view, its pane, its status and its suite's tool list; a
-    tool that sets values filters to the modified ones and has a field per value, and a tool
-    that sets parts has their list.
+    Every tool's page has its view, its pane, its status and its suite's tool list; a tool that
+    sets values filters to the modified ones and has a field per value, and a tool that sets
+    parts has their list. A view the page draws itself is its ``tool-view``.
     """
     own = ("tool-modified",) if tool.fields or tool.parts else ()
+    view = tool_view(suite, tool)
     return (
-        VIEWS[suite.id],
+        "tool-view" if view == "page" else view,
         "tool-pane",
         "tool-status",
         *(f"tool-link-{entry.id}" for entry in suite.tools),

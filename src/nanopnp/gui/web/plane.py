@@ -18,7 +18,8 @@ from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.link import png
 from nanopnp.io.case import Membrane, Reservoir
-from nanopnp.mesh.ingest import BOUNDARY_VOCABULARY, deployed_mesh
+from nanopnp.mesh.ingest import BOUNDARY_VOCABULARY, FLUID_MATERIALS, deployed_mesh
+from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
 from nanopnp.physics.models import case_model, role_conditions
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk
@@ -58,6 +59,7 @@ __all__ = [
     "mesh_quality",
     "physics_plane",
     "plane",
+    "shown_solids",
 ]
 
 Frame = Literal["structure", "model", "plot"]
@@ -888,6 +890,29 @@ def _conditions_plane(
     mesh = _mesh_layer(elements, mesh_hash, "material", None, mesh_held=mesh_held)
     lines = _role_lines(roles, edges, ground=resolved.ground, pick=pick)
     return Plane("model", axes, extent, (mesh, *framing, *lines))
+
+
+def shown_solids(case: Case | None, store: Store) -> tuple[str, ...] | None:
+    """Return the solids of the mesh the store holds for a shown case, or None where it holds none.
+
+    The fluids are left out, and so is the ion-exclusion shell, which takes the fluid's
+    permittivity.
+    """
+    if case is None:
+        return None
+    try:
+        resolved = resolve(case, base=case.source.base)
+    except REFUSED:
+        return None
+    held, _ = _stored_stages(resolved, store)
+    materials = held["mesh"].summary.get("materials") if "mesh" in held else None
+    if not isinstance(materials, list):
+        return None
+    return tuple(
+        name
+        for name in map(str, materials)
+        if name not in FLUID_MATERIALS and name not in PERMITTIVITY_EXEMPT
+    )
 
 
 def physics_plane(

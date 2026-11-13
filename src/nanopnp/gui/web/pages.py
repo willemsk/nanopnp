@@ -12,6 +12,7 @@ from nicegui import app as nicegui_app
 from nicegui import events, ui
 
 from nanopnp.gui.web.assets import ASSETS, TOKENS
+from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.continuum_tools import continuum_page
 from nanopnp.gui.web.frame import Route, Views, current_suite, frame, heading
@@ -25,15 +26,19 @@ from nanopnp.gui.web.molview import (
     scene,
     structure_text,
 )
+from nanopnp.gui.web.physics import PhysicsModel
+from nanopnp.gui.web.physics_tools import physics_page
 from nanopnp.gui.web.plane import COLOURINGS as MESH_COLOURINGS
-from nanopnp.gui.web.plane import IMAGES, image_png, plane
-from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, screen
+from nanopnp.gui.web.plane import IMAGES, image_png, physics_plane, plane
+from nanopnp.gui.web.screens import SUITES, TOOL_SUITES, VIEWS, Suite, Tool, screen, tool_view
 from nanopnp.gui.web.settings_page import SettingsPage
 from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import OVERLAY_MOST, charge_colours, tool_page
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from fastapi import FastAPI
+
+    from nanopnp.api.case import Case
 
 __all__ = ["ROUTES", "install"]
 
@@ -44,12 +49,19 @@ STYLESHEETS = (
 )
 
 
+def _route_of(suite: Suite, tool: Tool) -> Route:
+    view = tool_view(suite, tool)
+    # A view the page draws itself hides the frame's view region.
+    return Route(suite.id, None if view == "page" else view)
+
+
 ROUTES: dict[str, Route] = {
-    # A suite with tools of its own opens the last one used, beside its view (WB-40).
+    # A suite with tools of its own opens the last one used, beside its view (WB-40); the frame
+    # reads its path as that tool's.
     **{f"/{suite.id}": Route(suite.id, None) for suite in SUITES},
     **{f"/{suite.id}": Route(suite.id, VIEWS[suite.id]) for suite in TOOL_SUITES},
     **{
-        f"/{suite.id}/{tool.id}": Route(suite.id, VIEWS[suite.id])
+        f"/{suite.id}/{tool.id}": _route_of(suite, tool)
         for suite in TOOL_SUITES
         for tool in suite.tools
     },
@@ -146,6 +158,39 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())
 
+    @app.get("/api/physics/{name}/plane")
+    def physics_view(
+        name: str,
+        tool: str = "electrolyte",
+        within: str = "",
+        against: str = "driver",
+        pick: str = "",
+        held: str = "",
+    ) -> JSONResponse:
+        """Serve what the view draws of a physics model for one tool, inside the study shown."""
+        project = shell.bench.project
+        if project is None or name not in project.items("physics"):
+            raise HTTPException(404, f"no physics model {name!r}")
+        model = PhysicsModel(project, name, shell.queue, shown_in=within or None)
+        try:
+            # A case the study refuses still loads: the view resolves it, and says it does not.
+            case: Case | None = project.physics_case(name, model.within())
+        except REFUSED:
+            case = None
+        try:
+            with model.keyed_once():
+                drawn = physics_plane(
+                    case,
+                    project.session().store,
+                    tool,
+                    against=against,
+                    pick=pick or None,
+                    mesh_held=held,
+                )
+        except ValueError as error:
+            raise HTTPException(422, str(error)) from None
+        return JSONResponse(drawn.json())
+
     @app.get("/api/continuum/{name}/image")
     def continuum_image(name: str, layer: str = "mean") -> Response:
         """Serve one picture of a model's built stages as a PNG."""
@@ -225,7 +270,8 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         nicegui_app.add_static_file(local_file=local, url_path=url, max_cache_age=0)
 
     def page_of(suite: Suite, tool: Tool) -> Callable[..., None]:
-        return (tool_page if suite.id == "molecular" else continuum_page)(shell, tool)
+        pages = {"molecular": tool_page, "continuum": continuum_page, "physics": physics_page}
+        return pages[suite.id](shell, tool)
 
     def suite_page(suite: Suite) -> Callable[..., None]:
         if suite in TOOL_SUITES:

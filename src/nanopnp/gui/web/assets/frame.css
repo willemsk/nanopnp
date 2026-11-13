@@ -1075,3 +1075,120 @@ body .parts .parts-row[aria-pressed="true"] {
   outline: 2px solid var(--focus);
   outline-offset: 1px;
 }
+
+/* A view a tool's page draws itself (the Physics suite's Equations and Exposed values): the frame's
+   view region is hidden, so the sub-page takes the row and the view stands beside the pane. */
+.main-row:has(.tool-view) .sub-page {
+  flex: 1 1 0;
+}
+.tool-page:has(.tool-view) > .tool-pane {
+  flex: 0 0 21rem;
+  width: auto;
+}
+.tool-view {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: var(--gap) var(--pad);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.terms {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.term {
+  padding: var(--gap) 0;
+  border-bottom: 1px solid var(--line);
+}
+.term-head {
+  gap: var(--gap);
+}
+.term-name {
+  font-weight: 600;
+}
+.term-clause,
+.term-state {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.term-on .term-state {
+  color: var(--ok);
+}
+.term-equation {
+  font-family: var(--font-num);
+  overflow-wrap: anywhere;
+}
+.term-off .term-name,
+.term-off .term-equation {
+  color: var(--muted);
+}
+.view-table {
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.view-table th,
+.view-table td {
+  padding: 2px var(--gap);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+/* The Electrolyte tool's corrections: a row per property, its model and its two parts. */
+.corrections {
+  width: 100%;
+}
+.corrections-row {
+  display: grid;
+  grid-template-columns: 0.8rem 6.25rem minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  column-gap: var(--gap);
+  min-height: var(--row);
+  font-size: var(--text-sm);
+}
+.corrections-head {
+  color: var(--muted);
+}
+.corrections-row > .q-btn {
+  min-width: var(--target-min);
+  padding: 0;
+}
+.field-label:has(.aside-mark) {
+  display: flex;
+  gap: 0.25em;
+}
+.aside-mark {
+  color: var(--changed);
+}
+.material-name {
+  flex: 0 0 5.5rem;
+  font-size: var(--text-sm);
+}
+.note-ok {
+  color: var(--ok);
+}
+.role-text {
+  font-family: var(--font-num);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+/* An exposed value: the field it exposes on a line of its own, then its name, its range and its
+   removal on the next. */
+.exposed-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem auto;
+  align-items: center;
+  column-gap: var(--gap);
+  width: 100%;
+  padding-bottom: var(--gap);
+  border-bottom: 1px solid var(--line);
+}
+.exposed-path {
+  grid-column: 1 / -1;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.exposed-row > .q-btn {
+  min-width: var(--target-min);
+  padding: 0;
+}

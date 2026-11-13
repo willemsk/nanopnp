@@ -153,14 +153,14 @@ declares (its terms); FR-31's and FR-39's matrix rows.
 None)`, frozen, in `physics/terms.py` (RUF001 off there alone, for §4's symbols);
 `ModelDeclaration.terms: tuple[Term, ...] = ()`, each registration stating its own, in Unicode text from §4's and §6's
 clauses as the model assembles them, a term on where each of its `switches` is true and its `correction` leaf is not
-`none`.
+`none`. `role_conditions(model: PhysicsModel, ground: Literal["cis", "trans"]) -> dict[str, dict[str, str]]`, by
+boundary, then field: `model.boundary_conditions` inverted, the potential's `cis` and `trans` texts placed so the
+`ground` boundary reads `phi = 0` and the other `phi = V_bias`.
 
 > **Outcome — the term carries every switch it needs and a correction leaf.** One `switch` could not say that the
 > inertia needs the flow too, nor that the steric flux is left out by `steric.model: none`; the physics review also
 > moved the inertia and the continuity to NUM-04's assembled forms (REV-223) and put the decrement in a flux's units.
-> PHY-23's two departures it found are REV-250. `role_conditions(model: PhysicsModel, ground: Literal["cis", "trans"]) ->
-dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions` inverted, the potential's `cis` and
-`trans` texts placed so the `ground` boundary reads `phi = 0` and the other `phi = V_bias`.
+> PHY-23's two departures it found are REV-250.
 
 **Item 2.**
 - `physics_case(name, study=None) -> Case`. With `study`: the study file's mapping; every leaf outside
@@ -240,6 +240,13 @@ dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions`
   `frame.py:_Frame.route` reads `/<suite>` as `/<suite>/<Shell.last_tool, else the first>`'s route, so `/physics`
   opening Equations hides the view region as `/physics/equations` does.
 
+> **Outcome — the base pane draws the two new kinds; the model also resolves.** `_Pane` draws `switch` and `materials`
+> fields, its rows from a `solids()` hook (the stored mesh's, by `plane.py:shown_solids`, else the model's keys), and the
+> outlined diamond from an `aside()` hook. `PhysicsModel.resolved()` holds the shown case resolved, which the roles, the
+> ions and the Equations view read. φ's order and c's are written one after the other, each valid alone. A change of
+> model's note is held per model across the page's rebuild that shows it. `materials_figure` calls
+> `case_correction_curves`.
+
 **Item 6.** `render_shell.py` group `physics`: a project from example 01's case with the charged tube imported, served
 by `--project`; shots of each `/physics/<id>`, a model with no concentration (`new_model`, its ions written), the
 shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *Choose model*'s note.
@@ -248,7 +255,7 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 
 - [x] 2c22fa2 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when
   `test_model_interface.py` passes; then the `physics-reviewer` reads the terms against §4. **Executor:** main
-- [ ] 2. `api/project.py`, `pipeline/checks.py`, `modularity-layering.yaml`, §5.3.1's NOTE on model files (D2 to D4,
+- [x] d2c9a6a 2. `api/project.py`, `pipeline/checks.py`, `modularity-layering.yaml`, §5.3.1's NOTE on model files (D2 to D4,
   D9); done when `test_physics_model.py` and `test_layering.py` pass. **Executor:** main
 - [x] 0ef0d10 3. The files of Implementation details' item 3 (D6 to D8); done when its check passes. **Executor:**
   general-purpose on Sonnet, high

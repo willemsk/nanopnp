@@ -56,6 +56,7 @@ from nanopnp.physics.steric import registered_steric_models
 from nanopnp.post.outputs import provided, registered_outputs
 
 __all__ = [
+    "APPLIED_WALLS",
     "ELEMENT_LABELS",
     "check_document",
     "check_operating_point",
@@ -66,6 +67,12 @@ __all__ = [
     "registry_options",
     "require_runnable",
 ]
+
+
+_SLIP = "boundary_conditions.walls.slip"
+_ION_FLUX = "boundary_conditions.walls.ion_flux"
+APPLIED_WALLS: dict[str, str] = {_SLIP: "no_slip", _ION_FLUX: "no_flux"}
+"""The one value of each wall condition the release applies; require_runnable refuses the rest."""
 
 
 def registry_options(path: str) -> tuple[str, ...] | None:
@@ -357,7 +364,7 @@ def require_runnable(document: CaseDocument) -> SuppliedArtefact | None:  # noqa
             "reference records"
         )
     walls = document.boundary_conditions.walls
-    if walls.slip != "no_slip" or walls.ion_flux != "no_flux":
+    if (walls.slip, walls.ion_flux) != (APPLIED_WALLS[_SLIP], APPLIED_WALLS[_ION_FLUX]):
         # Nothing downstream reads the wall values: the forms pose no-slip and
         # no-flux unconditionally, so any other value would be recorded in the
         # manifest without being applied (section 5.3.1 NOTE on walls).
