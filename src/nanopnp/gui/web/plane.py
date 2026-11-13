@@ -513,11 +513,26 @@ def mesh_quality(model: ContinuumModel, colour: str) -> np.ndarray | None:
 
 
 def _mesh_layer(
-    artefact: Artefact, colour: str, band: tuple[float, float] | None, part: str = ""
+    artefact: Artefact,
+    colour: str,
+    band: tuple[float, float] | None,
+    part: str = "",
+    mesh_held: str = "",
 ) -> dict[str, Any]:
     import numpy as np
 
     elements = _elements(artefact)
+    # The vertices, triangles and materials go once per mesh: a canvas holding them names the
+    # mesh, and a restyle, a pick or a bar sends one value per element.
+    geometry = (
+        {}
+        if mesh_held == artefact.hash
+        else {
+            "vertices_nm": np.round(elements.vertices_m * 1e9, ROUND_NM).ravel().tolist(),
+            "triangles": elements.triangles.ravel().tolist(),
+            "material": elements.material.tolist(),
+        }
+    )
     # A domain picked keeps its colour and greys the rest; a boundary is drawn over the mesh.
     focus = elements.materials.index(part) if part in elements.materials else None
     outlined: list[int] = []
@@ -540,16 +555,16 @@ def _mesh_layer(
     return {
         "id": "mesh",
         "kind": "mesh",
+        "mesh": artefact.hash,
+        **geometry,
         "colour": colour,
-        "vertices_nm": np.round(elements.vertices_m * 1e9, ROUND_NM).ravel().tolist(),
-        "triangles": elements.triangles.ravel().tolist(),
         "values": values,
         "palette": palette,
         "scale": scale,
         "legend": legend,
         "categorical": colour == "material",
         "outlined": outlined,
-        **({} if focus is None else {"focus": focus, "material": elements.material.tolist()}),
+        **({} if focus is None else {"focus": focus}),
     }
 
 
@@ -576,6 +591,7 @@ def plane(
     colour: str = "material",
     band: tuple[float, float] | None = None,
     pick: str = "",
+    mesh_held: str = "",
 ) -> Plane:
     """Return what the (r, z) view draws for one Continuum tool of a model.
 
@@ -590,6 +606,9 @@ def plane(
     pick
         Region's domain picked, one of :data:`DOMAINS`, or the Mesh tool's part, one of
         :data:`PARTS`, drawn over the rest.
+    mesh_held
+        The content hash of the mesh whose vertices, triangles and materials the view holds,
+        which the drawing then leaves out.
 
     Raises
     ------
@@ -635,10 +654,11 @@ def plane(
         notes.append(_unbuilt(model, "The mesh is not built yet: build it to draw it."))
         return Plane("model", ("r (nm)", "z (nm)"), extent, tuple(outlines), tuple(notes))
     over = None if drawing is None or not pick else _part_line(drawing, pick)
+    mesh = _mesh_layer(held["mesh"], colour, band, pick, mesh_held)
     return Plane(
         "model",
         ("r (nm)", "z (nm)"),
         extent,
-        (_mesh_layer(held["mesh"], colour, band, pick), *outlines, *([over] if over else [])),
+        (mesh, *outlines, *([over] if over else [])),
         tuple(notes),
     )

@@ -309,7 +309,8 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 > and a click on a mesh part that keyed the walk twice. `/np-ship` reverted one fix, which offered *Built over* on a
 > refused model against the round's F12, and fixed D5's case artefact: a case typing no size keeps its stage-9 key,
 > as AP4 rules (15 of 15 loadable example cases hash as on `main`; before the fix all 15 moved). The rest is REV-246
-> to REV-248. Measured: the implementing windows 2.3 agent hours and 7 touches, `/np-ship` to its review 0.6 agent
+> to REV-248; the author ruled REV-247 for WP5.19, and REV-248 fixed here: a mesh restyled on the charged tube sends
+> 5.6 kB to 10.8 kB after its first 28.6 kB, and re-pairing builds the page again. Measured: the implementing windows 2.3 agent hours and 7 touches, `/np-ship` to its review 0.6 agent
 > hours and 1 touch: 2.9 agent hours and 8 touches in three sessions, against the estimate of about three sessions,
 > 9 to 15 agent hours and 12 touches.
 

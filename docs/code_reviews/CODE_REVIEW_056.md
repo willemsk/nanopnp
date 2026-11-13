@@ -81,7 +81,7 @@ Each applied fix was read as a diff against the specification, the plan and the 
 | 4 | Kept, with the lookahead tightened to a dotted name (`geometry(?=\.[a-z_])`), so a sentence ending "geometry." names nothing |
 | 11 | The docstring fixed: `derive_model` refuses a continuum model whose values are refused alone, not one that forms no case. The grid a supplied outline's shell takes is REV-246, a question for the author |
 | 15 | Fixed. AP3 rules that a case typing no size keys as before, and AP4 that no existing key moves; D5's grounding stated the move, which the PR did not. `CaseArtefact` leaves out a `numerics.mesh.sizes` that types nothing, and §5.2.2's NOTE says so. Every loadable example case (15 of 15) hashes as on `main` (`be772b4`); before the fix all 15 moved |
-| 12, 13, 14, 16, 17, 21, 23 | REV-248 |
+| 12, 13, 14, 16, 17, 21, 23 | REV-248, then fixed on the author's ruling of 13 November 2026 ("Fix them now") |
 | 22 | Kept: the plan's D6 names `ToolModel` for `MolecularModel` and `ContinuumModel` |
 
 The `physics-reviewer`'s pass before the review found the electrolyte row of finding 1 and three doubts. The refusal

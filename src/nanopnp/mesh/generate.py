@@ -252,6 +252,7 @@ def generate(
             from netgen import config
 
             wall, maxh_nm, recipe = idealised_recipe(resolved)
+            sizes = table.scaled(wall.size_scale)
             _warn_if_coarse(wall)
             data = mesh_idealised(record, maxh_nm=maxh_nm, wall_h_nm=wall.wall_h_nm)
             version = str(config.version).lstrip("v").split("-")[0]
@@ -259,11 +260,9 @@ def generate(
             wall = resolve_wall_size(
                 resolved.document, permittivity_0=resolved.electrolyte.permittivity_0
             )
+            sizes = table.scaled(wall.size_scale)
             _warn_if_coarse(wall)
-            data, version = mesh_region(
-                record, wall.wall_h_nm, table.scaled(wall.size_scale), backend
-            )
-    sizes = table.scaled(wall.size_scale)
+            data, version = mesh_region(record, wall.wall_h_nm, sizes, backend)
 
     directory.mkdir(parents=True, exist_ok=True)
     path = write_msh41(data, directory / MESH_FILENAME)

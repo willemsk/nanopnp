@@ -31,6 +31,9 @@
     images: new Map(), paths: new WeakMap(), picked: null,
     // The latest drawing asked for: an earlier request that answers later is dropped.
     asked: 0,
+    // The mesh the canvas holds, its hash with its vertices, triangles and materials, which a
+    // drawing of the same mesh leaves out; and its paths by colouring and focus.
+    meshHeld: null, meshPaths: new Map(),
     // The view: the point at the plot's centre, in nm, and the pixels per nm.
     centre: [0, 0], scale: 1, fitted: false, drag: null,
 
@@ -72,9 +75,12 @@
       let drawing = null;
       try {
         if (url) {
-          const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
-          if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
-          drawing = await response.json();
+          drawing = await this.fetchDrawing(url, true);
+          // A mesh left out that the canvas no longer holds is asked for whole.
+          if (drawing.layers.some((l) => l.kind === 'mesh' && !l.vertices_nm && !this.holds(l))) {
+            drawing = await this.fetchDrawing(url, false);
+          }
+          for (const layer of drawing.layers) if (layer.kind === 'mesh') this.holdMesh(layer);
         }
       } catch (error) {
         console.error(`the (r, z) drawing ${url} was refused: ${error}`);
@@ -157,10 +163,43 @@
         this.centre[1] - (y - area.y - area.h / 2) / this.scale];
     },
 
-    // A layer's outline or triangles as paths in nm, built once per layer.
+    async fetchDrawing(url, naming) {
+      const held = naming && this.meshHeld ? this.meshHeld.mesh : '';
+      const asked = held ? `${url}${url.includes('?') ? '&' : '?'}held=${encodeURIComponent(held)}` : url;
+      const response = await fetch(asked, { credentials: 'same-origin', cache: 'no-store' });
+      if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
+      return response.json();
+    },
+
+    holds(layer) {
+      return this.meshHeld !== null && this.meshHeld.mesh === layer.mesh;
+    },
+
+    // Keep a mesh sent whole, or fill one left out from the mesh held.
+    holdMesh(layer) {
+      if (layer.vertices_nm) {
+        if (!this.holds(layer)) this.meshPaths.clear();
+        const { mesh, vertices_nm, triangles, material } = layer;
+        this.meshHeld = { mesh, vertices_nm, triangles, material };
+      } else {
+        const { vertices_nm, triangles, material } = this.meshHeld;
+        Object.assign(layer, { vertices_nm, triangles, material });
+      }
+    },
+
+    // A layer's outline or triangles as paths in nm, built once per layer; a mesh's once per
+    // colouring and focus, so a pick or a histogram's bar redraws without building them again.
     pathsOf(layer) {
       let found = this.paths.get(layer);
       if (found) return found;
+      const keyed = layer.kind === 'mesh' ? `${layer.mesh} ${layer.colour} ${layer.focus ?? ''}` : '';
+      found = (keyed && this.meshPaths.get(keyed)) || this.buildPaths(layer);
+      if (keyed) this.meshPaths.set(keyed, found);
+      this.paths.set(layer, found);
+      return found;
+    },
+
+    buildPaths(layer) {
       if (layer.kind === 'mesh') {
         const v = layer.vertices_nm, t = layer.triangles, byColour = new Map();
         let edges = 0;
@@ -175,26 +214,24 @@
           path.closePath();
           edges += Math.hypot(v[b] - v[a], v[b + 1] - v[a + 1]);
         }
-        found = { byColour, edge_nm: t.length ? edges / (t.length / 3) : 0 };
-      } else if (layer.kind === 'domain') {
-        const path = new Path2D();
+        return { byColour, edge_nm: t.length ? edges / (t.length / 3) : 0 };
+      }
+      const path = new Path2D();
+      if (layer.kind === 'domain') {
         for (const ring of layer.rings) {
           for (let k = 0; k < ring.length; k += 2) {
             if (k === 0) path.moveTo(ring[0], ring[1]); else path.lineTo(ring[k], ring[k + 1]);
           }
           path.closePath();
         }
-        found = { path };
-      } else {
-        const p = layer.points_nm, path = new Path2D();
-        for (let k = 0; k < p.length; k += 2) {
-          if (k === 0) path.moveTo(p[0], p[1]); else path.lineTo(p[k], p[k + 1]);
-        }
-        if (layer.kind === 'polygon') path.closePath();
-        found = { path };
+        return { path };
       }
-      this.paths.set(layer, found);
-      return found;
+      const p = layer.points_nm;
+      for (let k = 0; k < p.length; k += 2) {
+        if (k === 0) path.moveTo(p[0], p[1]); else path.lineTo(p[k], p[k + 1]);
+      }
+      if (layer.kind === 'polygon') path.closePath();
+      return { path };
     },
 
     colourOf(layer, value) {

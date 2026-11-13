@@ -130,11 +130,18 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         self.picked_label: ui.label
         self.vertex_r: ui.number
         self.vertex_z: ui.number
-        self.walked = () if self.model is None else self.model.walked()
-        self.supplied = None if self.model is None else self.model.own_outline()
+        self.walked: tuple[str, ...] = ()
+        self.supplied: str | None = None
+
+    def build_pane(self) -> None:
+        # Read in the pane's one keyed read: what the model walks, and what it supplies itself.
+        model = self.model
+        self.walked = () if model is None else model.walked()
+        self.supplied = None if model is None else model.own_outline()
         # A tool whose stage a supplied outline drops builds nothing.
-        if self.stage is not None and self.model is not None and self.stage not in self.walked:
+        if self.stage is not None and model is not None and self.stage not in self.walked:
             self.stage = None
+        super().build_pane()
 
     # -- the pane's own parts --------------------------------------------------
 
@@ -172,9 +179,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             ui.notify(str(error), type="negative")
             return
         self.model.dismiss()
-        self.shown_state = ""
-        self.refresh()
-        await self.show()
+        # The stages it walks follow the pairing, and with them the pane's values and actions.
+        await self.built.reopen()
 
     def outline_verdict(self) -> None:
         held = {} if self.model is None or not self.usable() else self.model.artefacts()
