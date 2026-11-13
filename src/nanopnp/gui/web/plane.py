@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import threading
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
@@ -476,16 +477,27 @@ def _labels(
     return labels
 
 
+MESHES_HELD = 4
+"""How many meshes' elements the server keeps read: each size or scale tried makes another."""
+
 _MESHES: dict[str, MeshElements] = {}
+# A drawing request runs in the server's thread pool, beside the window's own reads.
+_MESHES_LOCK = threading.Lock()
 
 
 def _elements(artefact: Artefact) -> MeshElements:
-    elements = _MESHES.get(artefact.hash)
+    with _MESHES_LOCK:
+        elements = _MESHES.pop(artefact.hash, None)
     if elements is None:
         found = mesh_of(artefact, None)
         if found is None:
             raise ValueError(f"stage 6's artefact {artefact.hash[:12]} holds no mesh")
-        elements = _MESHES.setdefault(artefact.hash, found)
+        elements = found
+    with _MESHES_LOCK:
+        # The latest read last; the least recently read goes first once the cache is full.
+        _MESHES[artefact.hash] = elements
+        while len(_MESHES) > MESHES_HELD:
+            del _MESHES[next(iter(_MESHES))]
     return elements
 
 
@@ -522,9 +534,7 @@ def _mesh_layer(
     else:
         quality = elements.sicn if colour == "sicn" else elements.gamma
         values = np.round(quality, 4).tolist()
-        table = lookup_table("viridis")
-        picks = np.linspace(0, len(table) - 1, QUALITY_STOPS).round().astype(int)
-        palette = [f"#{r:02x}{g:02x}{b:02x}" for r, g, b, _ in table[picks]]
+        palette = _stops(lookup_table("viridis"))
         scale = [0.0, 1.0]
         legend = []
     return {

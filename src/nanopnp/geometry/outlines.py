@@ -1,4 +1,4 @@
-"""Stage 5's region interface: what every consumer reads of either kind of region record (FR-09)."""
+"""Stage 5's region interface: what every consumer reads of either kind of region record."""
 
 from __future__ import annotations
 

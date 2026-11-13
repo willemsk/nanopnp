@@ -866,7 +866,7 @@ class _Frame:
 
     def changes_list(self) -> None:
         # The changed values a line each, or as the table: the author tries the shorter list
-        # beside the table (REV-237).
+        # beside the table.
         rows = self.change_rows()
         with ui.column().classes("w-full gap-0").props("data-control=changes-list"):
             ui.toggle(

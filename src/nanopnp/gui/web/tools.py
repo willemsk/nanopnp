@@ -1,4 +1,4 @@
-"""The Molecular suite's tool pages: the tool list, a pane of the model's values and the 3D view."""
+"""A suite's tool pages, the tool list and a pane of the model's values; Molecular's 3D view."""
 
 from __future__ import annotations
 
@@ -351,13 +351,7 @@ class _Pane(Generic[ModelT]):
         return self.shell.bench.project
 
     def body(self) -> dict[str, Any]:
-        if self.model is None:
-            return {}
-        try:
-            location = self.model.project.path(self.model.kind, self.model.name)
-            return dict(read_model_file(self.model.kind, location, rebase=False).body)
-        except (ValueError, OSError):
-            return {}
+        return {} if self.model is None else self.model.body()
 
     def changed(self) -> set[str]:
         if self.model is None:
@@ -390,7 +384,7 @@ class _Pane(Generic[ModelT]):
         )
 
     def keyed_once(self) -> AbstractContextManager[None]:
-        """Read the model and key its walk once while the pane is drawn (REV-242)."""
+        """Read the model and key its walk once while the pane is drawn."""
         return nullcontext() if self.model is None else self.model.keyed_once()
 
     def build(self) -> None:
@@ -466,7 +460,7 @@ class _Pane(Generic[ModelT]):
                 if tool.id == self.tool.id:
                     link.classes("tool-link-open").props("aria-current=page")
                 # A row: the tool's name, its stage's glyph on the right, the state's word in the
-                # row's name and tooltip (WB-41).
+                # row's name and tooltip.
                 with link:
                     ui.label(tool.title).classes("tool-name")
                     glyph = ui.label("").classes("tool-glyph").props("aria-hidden=true")

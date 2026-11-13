@@ -9,12 +9,13 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Literal, Protocol, TypeVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, TypeVar, cast
 
 from nanopnp.api.project import BUILD_UPTO, Problem, Project
 from nanopnp.core.stages import describe
 from nanopnp.gui.solver import Cancelled, Failed, Finished, RunRequest, SolverProcess, Stage
 from nanopnp.gui.web.queue import Entry, Queue
+from nanopnp.io.models import read_model_file
 from nanopnp.io.project import ITEM_SUITES, STORE_FOLDER
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
@@ -160,6 +161,14 @@ class BuiltModel:
         if what not in self._keyed:
             self._keyed[what] = read()
         return cast("_T", self._keyed[what])
+
+    def body(self) -> dict[str, Any]:
+        """Return the model file's own values, or none where it does not load."""
+        try:
+            location = self.project.path(self.kind, self.name)
+            return dict(read_model_file(self.kind, location, rebase=False).body)
+        except REFUSED:
+            return {}
 
     def _built_case(self) -> Case | str:
         try:
@@ -328,7 +337,10 @@ class BuiltModel:
         )
         entry = self.queue.add(f"{self.name} to {upto}", "running", suite=self.kind)
         held.refusal = None
-        held.build = _Build(process, entry, folder, upto, self.stages[0])
+        # Until the walk names its first stage, the build is at the first of the model's own that
+        # it walks: a supplied outline or an idealised pore runs no density.
+        walked = self.walked()
+        held.build = _Build(process, entry, folder, upto, walked[0] if walked else self.stages[0])
         process.start()
 
     def cancel(self) -> None:

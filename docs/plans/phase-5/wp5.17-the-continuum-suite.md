@@ -303,6 +303,16 @@ building, refused (an isolevel stage 4 refuses) and with an unsaved edit.
 > view, the canvas's text and keys, *Mesh* as the tool's name, and the design document's renderer row. The rest is
 > REV-245: the canvas's labels and keys with WP5.21, the pane's layout, colours and words at the next round.
 
+> **Outcome — the review.** `/np-ship`'s pre-review pass dropped no test; the `physics-reviewer` found no sign, unit
+> or gate error in the library, and the Mesh tool's electrolyte row on an idealised pore. [CODE_REVIEW_056](../../code_reviews/CODE_REVIEW_056.md)
+> (xhigh) on `c959dfb` raised 25 findings and fixed 16, among them that row, a drawing overwritten by an earlier one,
+> and a click on a mesh part that keyed the walk twice. `/np-ship` reverted one fix, which offered *Built over* on a
+> refused model against the round's F12, and fixed D5's case artefact: a case typing no size keeps its stage-9 key,
+> as AP4 rules (15 of 15 loadable example cases hash as on `main`; before the fix all 15 moved). The rest is REV-246
+> to REV-248. Measured: the implementing windows 2.3 agent hours and 7 touches, `/np-ship` to its review 0.6 agent
+> hours and 1 touch: 2.9 agent hours and 8 touches in three sessions, against the estimate of about three sessions,
+> 9 to 15 agent hours and 12 touches.
+
 ### Work items
 
 - [x] 800581b 1. `geometry/outlines.py`, `region.py`, `pore.py`, `plot/data.py`, `mesh/ingest.py`, `mesh/generate.py`,

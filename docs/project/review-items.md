@@ -3285,3 +3285,53 @@ name, and the design document's renderer and glossary rows. These stay:
 the screens in front of the author; the canvas's labels and keys with WP5.21; the domains read from the artefact
 when the region artefact records its faces' outlines.
 
+
+### REV-246: A saved outline's exclusion shell takes the default grid
+
+[CODE_REVIEW_056](../code_reviews/CODE_REVIEW_056.md)'s finding 11 on WP5.17. Contour's *Save edit…* writes a
+continuum model that supplies `inputs.profile` and drops `geometry.density`, as `_check_profile` requires beside a
+supplied outline. The density grid's spacing `h_c` then resolves to the default 0.05 nm
+(`io/resolved.py:contour_spacing_nm`). `h_c` shapes the ion-exclusion shell (its closing radius, its resampling and
+its spacing floor, `geometry/region.py:exclusion_shell`) and bounds `charge.exclusion_offset_nm` from below at
+`2 h_c` (`pipeline/checks.py`). So a parent on another grid with the shell on gives a saved edit whose shell is
+built on another grid, or one refused at its first build: a parent at 0.025 nm with a 0.08 nm offset saves, then is
+refused. At the default grid nothing moves, as the null edit on 2WCD shows (VER-55). The specification does not say
+which `h_c` a supplied outline's shell takes. `derive_model`'s docstring now says that a continuum model is checked
+value by value, not as a case.
+
+**Open**, a question for the author: which grid a supplied outline's exclusion shell is built on.
+
+### REV-247: The solid-share gate's reach against an outline in another frame is not measured
+
+The `physics-reviewer`'s pass before CODE_REVIEW_056. AP1's consequence says the deposit's solid-share gate refuses
+an outline drawn in another frame. The gate refuses below half of Σ|q| in the solids, and the solids include the
+membrane. A tall protein's outline moved a few nm along z still holds most of its own atoms, and atoms moved into
+the slab still count, so an outline supplied in the model frame rather than stage 1's might pass with its charge
+displaced by the shift. The frames are handled consistently: stage 5 and the deposit shift by the same
+`membrane.centre_z_nm`. The Contour tool's saved edit is in stage 1's frame by construction, and the moved 2WCD
+edit passes at 0.977. Not measured: the share of a 2WCD outline shifted by its frame's offset.
+
+**Open**: measure that share. If it passes, either a supplied outline beside a structure gains a frame check, or
+AP1's consequence is restated to the reach the gate has.
+
+### REV-248: What the code review of the Continuum suite left open
+
+[CODE_REVIEW_056](../code_reviews/CODE_REVIEW_056.md) on WP5.17 fixed 16 of its 25 findings. `/np-ship` reverted
+one (finding 2, against the round's F12), fixed finding 15 and the refusal's words beside a supplied mesh, and kept
+`ToolModel` (finding 22), which the plan's D6 names. These stay, each low:
+
+- **A refused save leaves its outline file** (finding 12). `save_edit` writes the outline into `inputs/` before
+  `derive_model` checks the name; the file is named by its digest and may be another model's, so removing it needs
+  that check.
+- **A re-paired model keeps its stages until the next visit** (finding 13). `walked` and `supplied` are read when
+  the pane is built; after *Built over* pairs a molecular model that reads a PQR, *Build geometry* still targets
+  `contour` until the page is opened again.
+- **The pore's radius opens no tool** (finding 14). `geometry.pore.radius_nm` is set in Region but is in no tool's
+  fields, so a problem or change naming it opens the suite's last tool.
+- **The drawing is sent whole** (findings 16, 17). Every restyle, pick or histogram bar sends the mesh again and the
+  canvas rebuilds its paths; the pane reads its stages once before its keyed read. Not measured beside REV-242's
+  0.07 s to 0.13 s.
+- **Small duplications** (findings 21, 23). `../../inputs/` is written by hand, as the Molecular tools write it, and
+  `generate` scales the region's size table twice.
+
+**Open**: with REV-242's new-model action and the drawing's protocol, in a later suite's package.

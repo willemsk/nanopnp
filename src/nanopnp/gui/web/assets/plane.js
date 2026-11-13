@@ -29,6 +29,8 @@
     builds: 0,
     host: null, canvas: null, notes: null, drawing: null, frame: undefined,
     images: new Map(), paths: new WeakMap(), picked: null,
+    // The latest drawing asked for: an earlier request that answers later is dropped.
+    asked: 0,
     // The view: the point at the plot's centre, in nm, and the pixels per nm.
     centre: [0, 0], scale: 1, fitted: false, drag: null,
 
@@ -66,6 +68,7 @@
     async show(url, note) {
       document.body.dataset.screenReady = '0';
       if (this.canvas === null) this.build();
+      const asked = ++this.asked;
       let drawing = null;
       try {
         if (url) {
@@ -81,6 +84,7 @@
         notes: note ? [note] : [],
       };
       await Promise.all(drawing.layers.filter((l) => l.kind === 'image').map((l) => this.image(l.url)));
+      if (asked !== this.asked) return;
       // The view keeps its pan and zoom unless the frame changes, or the drawing first has
       // something to frame.
       const framed = Boolean(this.drawing && this.drawing.framed);
@@ -96,7 +100,7 @@
       await frames();
       this.resized();
       await frames();
-      document.body.dataset.screenReady = '1';
+      if (asked === this.asked) document.body.dataset.screenReady = '1';
     },
 
     async image(url) {
