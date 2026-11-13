@@ -10,7 +10,11 @@ Groups, each shot light and dark:
 - ``extra``: the dialogs, menus, folded rail, panel tabs, settings sections, key capture, palette
   query, glossary and About, on the charged fixture (``shell-extra-<name>-<scheme>``);
 - ``compact``: a few screens under a user configuration of compact density, tight spacing and a
-  theme of the user's own (``shell-compact-<screen>-<scheme>``).
+  theme of the user's own (``shell-compact-<screen>-<scheme>``);
+- ``molecular`` and ``continuum``: their tools refused and mid-build, on 2WCD;
+- ``physics``: the Physics tools on example 01's project with the charged tube beside it, its
+  study walked to its charge: each tool, a role picked, a change of model's note, a new model with
+  no salt, and the shown study refusing the model (``shell-physics-<name>-<scheme>``).
 
 The 2WCD project is built once into ``cache/2wcd-<key>/`` beside ``<out-dir>``, ``key`` being 12 hex
 digits of the SHA-256 of the case file and the deposited structure; its first walk fills the
@@ -41,16 +45,18 @@ from nanopnp.gui.web.screens import SCREENS
 from nanopnp.gui.web.settings import SETTINGS_FILENAME
 from nanopnp.gui.web.states import STATES
 from nanopnp.io.project import STORE_FOLDER
+from nanopnp.validation.charged_tube import write_charged_tube
 
 ROOT = Path(__file__).resolve().parents[3]
 SHOOT = Path(__file__).with_name("shoot.cjs")
 EXAMPLE = ROOT / "examples" / "07-pdb-to-charged-run" / "2wcd.case.yaml"
+QUICKSTART = ROOT / "examples" / "01-quickstart" / "quickstart.case.yaml"
 PREPARE = ROOT / "examples" / "06-pdb-to-mesh" / "prepare.py"
 DEPOSITED = ROOT / "tests" / "data" / "structures" / "2wcd.pdb.gz"
 VIEWPORT = [1280, 800]
 SCHEMES = ("light", "dark")
 READY = 'body[data-screen-ready="1"]'
-GROUPS = ("states", "2wcd", "extra", "compact", "molecular", "continuum")
+GROUPS = ("states", "2wcd", "extra", "compact", "molecular", "continuum", "physics")
 THEME_NAME = "dusk"
 START_S = 1800
 """How long a server may take to print its ready line: the 2WCD walk comes before it."""
@@ -402,6 +408,101 @@ def continuum_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[d
     return manifest
 
 
+PHYSICS_TOOLS = ("equations", "electrolyte", "conditions", "exposed")
+STUDY_BIAS_V = 0.2
+"""A bias the charged tube's study sets itself: shown in it, a physics model marks and leaves it."""
+IONS = [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}]
+PHYSICS_EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
+    ("conditions-picked", "/physics/conditions", ["[data-control=role-wall]"]),
+    (
+        "electrolyte-distance",
+        "/physics/electrolyte",
+        ["[data-control=physics-against]", ".q-menu .q-item:nth-child(2)"],
+    ),
+    (
+        "conditions-in-tube",
+        "/physics/conditions",
+        ["[data-control=physics-shown-in]", ".q-menu .q-item:nth-child(1)"],
+    ),
+    # Last: the change of model is written, and the server holds its note for the shots after it.
+    (
+        "equations-chosen",
+        "/physics/equations",
+        ["[data-control=field-physics-model]", ".q-menu .q-item:nth-child(5)"],
+    ),
+)
+"""The quick-start model's tools in states of their own: a role picked, the curves against the
+wall distance, the model shown in the charged tube's study, which sets its own bias, and pnp-ns
+chosen for it."""
+
+
+def physics_project(out: Path, name: str) -> Path:
+    """Return a project of example 01's case and the charged tube, whose study sets its own bias.
+
+    ``fresh`` adds a physics model with its ions and no salt, opened; ``refusing`` sets the
+    quick-start model to pnp, whose switches its study does not run with.
+    """
+    folder = out.resolve() / "projects" / f"physics-{name}"
+    if folder.exists():
+        shutil.rmtree(folder)
+    project = Project.create(folder, name=f"physics-{name}")
+    # The tube first: the server walks the first study to its charge, which example 01 has not.
+    project.import_case(Case.load(write_charged_tube(out.resolve() / "projects" / "tube")))
+    project.import_case(Case.load(QUICKSTART))
+    # Example 01's mesh stored, so Conditions draws its boundaries.
+    session = project.session()
+    session.write = False
+    session.run(project.study("quickstart"), upto="mesh")
+    study = project.path("study", "charged-tube")
+    written = yaml.safe_load(study.read_text(encoding="utf-8"))
+    written["boundary_conditions"] = {"bias_V": STUDY_BIAS_V}
+    study.write_text(yaml.safe_dump(written, sort_keys=False), encoding="utf-8")
+    if name == "fresh":
+        project.new_model("physics", "fresh")
+        project.set_value("physics", "fresh", "electrolyte.species", IONS)
+        project.open_item("physics/fresh")
+    else:
+        if name == "refusing":
+            project.set_value("physics", "quickstart", "physics.model", "pnp")
+        project.open_item("physics/quickstart")
+    return folder
+
+
+def physics_entries(out: Path, servers: list[subprocess.Popen[str]]) -> list[dict[str, Any]]:
+    """Return the Physics tools drafted on example 01's project with the charged tube beside it."""
+    manifest = []
+    launched = {
+        name: launch("--project", str(physics_project(out, name)))
+        for name in ("paired", "fresh", "refusing")
+    }
+    servers.extend(launched.values())
+    first = {name: first_address(process, name) for name, process in launched.items()}
+    for tool in PHYSICS_TOOLS:
+        for scheme in SCHEMES:
+            manifest.append(
+                entry(f"shell-physics-{tool}", first["paired"], f"/physics/{tool}", scheme)
+            )
+    for name, path, click in PHYSICS_EXTRAS:
+        for index, scheme in enumerate(SCHEMES):
+            # The change of model is written once; the dark shot finds it and its note held.
+            held = name == "equations-chosen" and index
+            shot = entry(
+                f"shell-physics-{name}", first["paired"], path, scheme, [] if held else click
+            )
+            shot["wait_ms"] = 2500
+            manifest.append(shot)
+    for name, tools in (
+        ("fresh", ("electrolyte", "equations")),
+        ("refusing", ("equations", "conditions")),
+    ):
+        for tool in tools:
+            for scheme in SCHEMES:
+                manifest.append(
+                    entry(f"shell-physics-{name}-{tool}", first[name], f"/physics/{tool}", scheme)
+                )
+    return manifest
+
+
 GROUP_ENTRIES = {
     "states": states_entries,
     "2wcd": project_entries,
@@ -409,6 +510,7 @@ GROUP_ENTRIES = {
     "compact": compact_entries,
     "molecular": molecular_entries,
     "continuum": continuum_entries,
+    "physics": physics_entries,
 }
 
 

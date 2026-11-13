@@ -143,9 +143,7 @@ FIELDS: dict[str, Field] = {
     "numerics.stabilisation": Field("Stabilisation", "choice"),
     "electrolyte.parameters": Field("Parameter set", "choice"),
     "electrolyte.species": Field("Ions", "list"),
-    "electrolyte.concentration_M": Field(
-        "Concentration", "number", unit="M", hint="No default: set the salt"
-    ),
+    "electrolyte.concentration_M": Field("Concentration", "number", unit="M"),
     "electrolyte.temperature_K": Field("Temperature", "number", unit="K"),
     "electrolyte.driver": Field("Driver", "choice"),
     **{
@@ -158,10 +156,10 @@ FIELDS: dict[str, Field] = {
     },
     "electrolyte.corrections.steric.model": Field("Steric flux", "choice"),
     "electrolyte.corrections.steric.a_ion_nm": Field(
-        "Ion diameter", "number", unit="nm", hint="the set's"
+        "Ion diameter", "number", unit="nm", hint="default"
     ),
     "electrolyte.corrections.steric.a_water_nm": Field(
-        "Water diameter", "number", unit="nm", hint="the set's"
+        "Water diameter", "number", unit="nm", hint="default"
     ),
     "numerics.wall_distance.sources": Field("Wall boundaries", hint="a pattern of names"),
     "numerics.wall_distance.max_distance_nm": Field("Distance cap", "number", unit="nm"),
@@ -577,7 +575,6 @@ class _Pane(Generic[ModelT]):
                             ui.label(solid).classes("material-name")
                             ui.number(
                                 value=held.get(solid),
-                                placeholder="unset",
                                 on_change=lambda e, p=path, m=solid: self.write_material(
                                     p, m, e.value
                                 ),

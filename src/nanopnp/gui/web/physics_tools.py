@@ -19,6 +19,8 @@ from nanopnp.gui.web.shell import Shell
 from nanopnp.gui.web.tools import FIELDS, _Pane, _value_of, current_name
 from nanopnp.io.models import exposable_paths, read_model_file
 from nanopnp.materials.corrections import load_corrections
+from nanopnp.mesh.ingest import SOLID_MATERIALS
+from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
 from nanopnp.physics.models import SWITCHES, Term, case_model, declaration, role_conditions
 from nanopnp.pipeline.checks import APPLIED_WALLS, options_at
 
@@ -113,8 +115,10 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         stored = shown_solids(self.model.case(), self.model.project.session().store)
         if stored is not None:
             return stored
+        # No mesh to read: every solid a pore may hold, so a refused one can be given its value.
         held = self.model.shown(PERMITTIVITIES)
-        return tuple(held) if isinstance(held, dict) else ()
+        named = set(held) if isinstance(held, dict) else set()
+        return tuple(sorted(named | (SOLID_MATERIALS - PERMITTIVITY_EXEMPT)))
 
     def subject(self) -> str:
         if self.project is not None and self.model is None:
@@ -204,8 +208,10 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 control.set_text(listed or "none set")
         if path == CONCENTRATION and isinstance(control, ui.number):
             fitted = self.fitted()
+            said = "" if control.value is not None else "No default: set the salt. "
             if fitted is not None:
-                control.props(f'hint="Fitted from {fitted[0]:g} to {fitted[1]:g} M"')
+                said += f"Fitted from {fitted[0]:g} to {fitted[1]:g} M"
+            control.props(f'hint="{said.strip()}"')
         if model is None:
             return
         name = str(model.shown(MODEL))
@@ -324,7 +330,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             .props("role=status data-control=physics-chosen")
         ):
             with ui.row().classes("items-center no-wrap note-head"):
-                ui.label("●").props("aria-hidden=true")
+                ui.label("✓").props("aria-hidden=true")
                 ui.label(f"Model set to {chosen}").classes("note-title")
             ui.label(
                 "Changed with it, so the model can run: " + "; ".join(lines) + "."
@@ -536,14 +542,14 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                     hint = fitted if entry.path == CONCENTRATION else None
                     low = ui.number(
                         value=entry.low,
-                        placeholder=None if hint is None else f"{hint[0]:g}",
+                        placeholder="any" if hint is None else f"{hint[0]:g}",
                         on_change=lambda e, v=entry: self.expose_as(
                             v.path, v.name, (e.value, v.high)
                         ),
                     ).props(f'dense outlined debounce=800 aria-label="Lowest {entry.name}"')
                     high = ui.number(
                         value=entry.high,
-                        placeholder=None if hint is None else f"{hint[1]:g}",
+                        placeholder="any" if hint is None else f"{hint[1]:g}",
                         on_change=lambda e, v=entry: self.expose_as(
                             v.path, v.name, (v.low, e.value)
                         ),
@@ -637,9 +643,9 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         for switch in term.switches:
             path = f"physics.{switch}"
             if not self.model.shown(path):
-                return f"{FIELDS[path].label.lower()} is off"
+                return f"needs {FIELDS[path].label.lower()}"
         if term.correction is not None and self.model.shown(term.correction) == "none":
-            return f"{FIELDS[term.correction].label.lower()} is none"
+            return f"{FIELDS[term.correction].label.lower()}: none"
         return None
 
     def draw_equations(self) -> None:
