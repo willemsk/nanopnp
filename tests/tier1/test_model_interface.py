@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import ast
 import math
+import re
 import subprocess
 import sys
 from collections.abc import Iterator, Mapping
 from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 import yaml
@@ -23,6 +24,7 @@ from nanopnp.geometry.pore import CylinderPore
 from nanopnp.io.artefact import SOLUTION_SCHEMA
 from nanopnp.io.case import CaseValidationError
 from nanopnp.io.store import Store
+from nanopnp.io.vocabulary import POTENTIAL
 from nanopnp.materials.corrections import load_corrections
 from nanopnp.materials.electrolyte import Electrolyte
 from nanopnp.mesh.adapter import from_ngsolve, write_msh41
@@ -34,6 +36,7 @@ from nanopnp.physics import models, steric
 from nanopnp.physics.coefficients import SATURATED_WALL_DISTANCE_NM
 from nanopnp.physics.models import ModelSolution, PhysicsModel
 from nanopnp.pipeline.case import loads_case, resolve
+from nanopnp.pipeline.checks import options_at
 from nanopnp.post import outputs
 from nanopnp.solve.continuation import default_ladder
 from nanopnp.solve.state import WALL_DISTANCE_ENTRY, ladder, restore
@@ -258,6 +261,43 @@ def _refusal(text: str) -> str:
     with pytest.raises(CaseValidationError) as raised:
         resolve(loads_case(text))
     return str(raised.value)
+
+
+def test_ver56_every_registered_model_states_its_terms() -> None:
+    defined: set[str] = set()
+    for chapter in ("04-physics.md", "06-numerics.md"):
+        text = (REPOSITORY / "specification" / chapter).read_text(encoding="utf-8")
+        defined |= set(re.findall(r"^\*\*((?:PHY|NUM)-\d+)\.\*\*", text, flags=re.MULTILINE))
+    assert {"PHY-03", "PHY-04", "PHY-21", "NUM-04"} <= defined
+    for name in models.registered_models():
+        declared = models.declaration(name)
+        assert declared.terms, name
+        for term in declared.terms:
+            assert term.clause in defined, (name, term)
+            assert term.equation.strip(), (name, term)
+            for switch in term.switches:
+                assert switch in models.SWITCHES, (name, term)
+                assert True in declared.switches[switch], (name, term)
+            if term.correction is not None:
+                assert term.correction not in declared.unread, (name, term)
+                assert options_at(term.correction), (name, term)
+
+
+@pytest.mark.parametrize("ground", ["cis", "trans"])
+def test_phy09_the_grounded_electrode_reads_zero_potential(ground: Literal["cis", "trans"]) -> None:
+    model = models.create("epnp-ns")
+    roles = models.role_conditions(model, ground)
+    other = "trans" if ground == "cis" else "cis"
+    assert roles[ground][POTENTIAL] == "phi = 0"
+    assert roles[other][POTENTIAL] == "phi = V_bias"
+    for field_name, conditions in model.boundary_conditions.items():
+        for boundary, text in conditions.items():
+            if field_name == POTENTIAL and boundary in {"cis", "trans"}:
+                continue
+            assert roles[boundary][field_name] == text, (field_name, boundary)
+    assert sum(len(fields) for fields in roles.values()) == sum(
+        len(conditions) for conditions in model.boundary_conditions.values()
+    )
 
 
 # PHY-21

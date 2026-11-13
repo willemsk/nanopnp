@@ -149,9 +149,16 @@ declares (its terms); FR-31's and FR-39's matrix rows.
 
 ### Implementation details
 
-**Item 1.** `Term(name: str, clause: str, equation: str, switch: str | None = None)`, frozen;
-`ModelDeclaration.terms: tuple[Term, ...] = ()`, each registration stating its own, in Unicode text from §4's clauses,
-a term with `switch` shown on or off by it. `role_conditions(model: PhysicsModel, ground: Literal["cis", "trans"]) ->
+**Item 1.** `Term(name: str, clause: str, equation: str, switches: tuple[str, ...] = (), correction: str | None =
+None)`, frozen, in `physics/terms.py` (RUF001 off there alone, for §4's symbols);
+`ModelDeclaration.terms: tuple[Term, ...] = ()`, each registration stating its own, in Unicode text from §4's and §6's
+clauses as the model assembles them, a term on where each of its `switches` is true and its `correction` leaf is not
+`none`.
+
+> **Outcome — the term carries every switch it needs and a correction leaf.** One `switch` could not say that the
+> inertia needs the flow too, nor that the steric flux is left out by `steric.model: none`; the physics review also
+> moved the inertia and the continuity to NUM-04's assembled forms (REV-223) and put the decrement in a flux's units.
+> PHY-23's two departures it found are REV-250. `role_conditions(model: PhysicsModel, ground: Literal["cis", "trans"]) ->
 dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions` inverted, the potential's `cis` and
 `trans` texts placed so the `ground` boundary reads `phi = 0` and the other `phi = V_bias`.
 
@@ -259,7 +266,7 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 | `tests/tier1/test_physics_model.py::test_fr39_a_physics_model_edited_in_the_suite_resolves_to_the_case_it_shows` | 1 | FR-39; AQ1 | On example 01's project beside the charged tube, each field of the four tools set through `set_value` or `choose_physics`; one each: every field's `shown` equals `value_at` of the resolved shown case, exact; the shown case in its own study equals the study resolved, dump and stage keys 1 to 9 exact; in the other study its physics-owned values are this model's, and a bias the study sets (written into its YAML; no API sets a study's value before WP5.19) is left out and listed | `uv run pytest tests/tier1/test_physics_model.py` |
 | `tests/tier1/test_physics_model.py::test_ver56_choosing_a_model_leaves_no_value_its_declaration_refuses` | 1 | VER-56; AQ2 | For each registered model, chosen from example 01's and the charged tube's physics models, one each: every switch honoured; no unread leaf off its default; no permittivity without solids; no wall charge without surface charge; the earlier values written back by `set_value` restore the body, mapping equal; ePNP-NS and PNP-NS chosen, the shown study resolves | as above |
 | `tests/tier1/test_physics_model.py::test_fr39_an_exposed_value_named_and_ranged_reads_back` | 1 | FR-39; AK3 | A renamed, ranged entry reads back through `exposed_values` with its unit and the model's value | as above |
-| `tests/tier1/test_model_interface.py::test_ver56_every_registered_model_states_its_terms` | 1 | VER-56 | Each registered model states a term or more, each naming a PHY clause `specification/04-physics.md` defines and a switch of `SWITCHES` it honours true, or none | `uv run pytest tests/tier1/test_model_interface.py` |
+| `tests/tier1/test_model_interface.py::test_ver56_every_registered_model_states_its_terms` | 1 | VER-56 | Each registered model states a term or more, each naming a PHY or NUM clause §4 or §6 defines, only switches of `SWITCHES` it honours true and only a correction leaf it reads | `uv run pytest tests/tier1/test_model_interface.py` |
 | `tests/tier1/test_model_interface.py::test_phy09_the_grounded_electrode_reads_zero_potential` | 1 | PHY-09 | One each for `cis` and `trans`: the ground reads `phi = 0`, the other `phi = V_bias`, the other fields' texts unmoved | as above |
 | `tests/tier1/test_gui_viewmodels.py::test_if09_the_view_models_import_no_qt_and_no_ngsolve` | 1 | CON-10 | The probe adds `gui.web.physics` | `uv run pytest tests/tier1/test_gui_viewmodels.py` |
 | `tests/tier1/test_gui_screens.py` | 1 | VER-78 (a) to (d), (m) | The Physics pages in each state; (m), in `charged-tube`: Continuum's Region, then Physics's Electrolyte and Conditions, and back, build the canvas once and Mol* once | `NANOPNP_REQUIRE_BROWSER=1 uv run pytest tests/tier1/test_gui_screens.py` |

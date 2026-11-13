@@ -96,6 +96,15 @@ from nanopnp.physics.stabilisation import (
 from nanopnp.physics.stabilisation import cell_peclet as species_cell_peclet
 from nanopnp.physics.stabilisation import create as create_stabilisation
 from nanopnp.physics.steric import steric_form
+from nanopnp.physics.terms import (
+    EPNP_NS_TERMS,
+    PB_LINEAR_TERMS,
+    PB_TERMS,
+    PNP_NS_TERMS,
+    PNP_TERMS,
+    POISSON_TERMS,
+    Term,
+)
 
 if TYPE_CHECKING:
     from nanopnp.io.resolved import ResolvedCase
@@ -115,6 +124,7 @@ __all__ = [
     "ModelSolution",
     "PhysicsModel",
     "PoissonModel",
+    "Term",
     "TransportModel",
     "create",
     "declaration",
@@ -124,6 +134,7 @@ __all__ = [
     "registered_models",
     "registered_stabilisations",
     "relative_permittivity_field",
+    "role_conditions",
     "solves_transport",
     "transport_model",
 ]
@@ -280,6 +291,7 @@ class ModelDeclaration:
     transport: bool = False
     reports_newton: bool = False
     unread: frozenset[str] = frozenset()
+    terms: tuple[Term, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -290,6 +302,18 @@ class ModelDeclaration:
                 f"a model declaration states the honoured values of every switch of "
                 f"{', '.join(SWITCHES)}; this one states {dict(self.switches)}"
             )
+        for term in self.terms:
+            if term.correction is not None and term.correction in self.unread:
+                raise ValueError(
+                    f"the term {term.name!r} is left out by {term.correction}, which this "
+                    "declaration does not read"
+                )
+            unhonoured = [name for name in term.switches if True not in self.switches.get(name, ())]
+            if unhonoured:
+                raise ValueError(
+                    f"the term {term.name!r} is solved under {', '.join(unhonoured)}, which this "
+                    "declaration never honours true; state the term without the switch, or drop it"
+                )
         unknown = sorted(set(self.coefficients) - set(COEFFICIENTS))
         if unknown:
             raise ValueError(
@@ -618,7 +642,7 @@ class CoupledModel:
                 "cis": "phi = 0",
                 "trans": "phi = V_bias",
                 "membrane": "n.D = 0, zero charge",
-                "wall": "continuity of n.D",
+                "wall": "continuity of n.D; n.(D_s - D_f) = sigma_s where a wall charge is set",
                 "axis": "natural",
             }
         }
@@ -1303,7 +1327,7 @@ class ElectrostaticModel(_SingleFieldModel):
             POTENTIAL: {
                 "cis": "phi = 0",
                 "trans": "phi = V_bias",
-                "wall": "phi = zeta, or continuity of n.D",
+                "wall": "n.grad phi = 0, natural, unless a ladder rung imposes zeta or sigma_s",
                 "membrane": "n.D = 0, zero charge",
                 "axis": "natural",
             }
@@ -1452,7 +1476,7 @@ class PoissonModel(_SingleFieldModel):
                 "cis": "phi = 0",
                 "trans": "phi = V_bias",
                 "membrane": "n.D = 0, zero charge",
-                "wall": "continuity of n.D",
+                "wall": "continuity of n.D; n.(D_s - D_f) = sigma_s where a wall charge is set",
                 "axis": "natural",
             }
         }
@@ -1666,6 +1690,24 @@ def case_model(resolved: ResolvedCase) -> PhysicsModel:
     )
 
 
+def role_conditions(
+    model: PhysicsModel, ground: Literal["cis", "trans"]
+) -> dict[str, dict[str, str]]:
+    """Return each boundary's condition per field, with the potential grounded on ``ground``.
+
+    A model's vocabulary grounds ``cis``; with ``ground`` set to ``trans`` the potential's two
+    electrode conditions change places, as the solve imposes them.
+    """
+    roles: dict[str, dict[str, str]] = {}
+    for field_name, conditions in model.boundary_conditions.items():
+        texts = dict(conditions)
+        if field_name == POTENTIAL and ground == "trans" and {"cis", "trans"} <= texts.keys():
+            texts["cis"], texts["trans"] = texts["trans"], texts["cis"]
+        for boundary, text in texts.items():
+            roles.setdefault(boundary, {})[field_name] = text
+    return roles
+
+
 def solves_transport(model: PhysicsModel) -> bool:
     """Return whether ``model`` solves ionic transport, by its declaration."""
     if model.name in _REGISTRY:
@@ -1858,6 +1900,7 @@ _COUPLED = ModelDeclaration(
     strategies=(LADDER_STRATEGY, "none"),
     transport=True,
     reports_newton=True,
+    terms=EPNP_NS_TERMS,
 )
 
 _ELECTROSTATIC_SWITCHES: dict[str, tuple[bool, ...]] = {
@@ -1879,6 +1922,7 @@ register_model(
             "dielectric_gradient_forces": (False,),
         },
         unread=CORRECTION_LEAVES | WALL_DISTANCE_LEAVES,
+        terms=PNP_NS_TERMS,
     ),
 )
 register_model(
@@ -1898,6 +1942,7 @@ register_model(
             {f"electrolyte.corrections.{p}.{k}" for p in ("viscosity", "density") for k in PARTS}
             | VELOCITY_PRESSURE
         ),
+        terms=PNP_TERMS,
     ),
 )
 register_model(
@@ -1908,6 +1953,7 @@ register_model(
         switches=_ELECTROSTATIC_SWITCHES,
         solids=False,
         unread=ELECTROSTATIC,
+        terms=PB_TERMS,
     ),
 )
 register_model(
@@ -1918,6 +1964,7 @@ register_model(
         switches=_ELECTROSTATIC_SWITCHES,
         solids=False,
         unread=ELECTROSTATIC | LINEAR,
+        terms=PB_LINEAR_TERMS,
     ),
 )
 register_model(
@@ -1929,5 +1976,6 @@ register_model(
         solids=True,
         coefficients=COEFFICIENTS,
         unread=ELECTROSTATIC | LINEAR | frozenset({"electrolyte.concentration_M"}),
+        terms=POISSON_TERMS,
     ),
 )

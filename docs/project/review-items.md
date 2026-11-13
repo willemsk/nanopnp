@@ -3360,3 +3360,20 @@ which writes its corrections; a model `Project.new_model` makes writes none.
 
 **Open**, a question for the author with the new-model action (REV-242): a new physics model written with the
 validated corrections, or the mark read from the case the model resolves to.
+
+### REV-250: PHY-23's terms under a solid fraction and without the flow
+
+Found at WP5.18 item 1, when the physics review read each model's written-out terms against the assembly. Two
+behaviours of the dielectric-gradient switch, a deviation off by default, depart from PHY-23's text:
+
+- **Under a solid fraction.** `physics/flow.py:permittivity_gradient` and `physics/coefficients.py:permittivity_sensitivity`
+  differentiate the fluid's `ε_r,f(⟨c⟩)` along `∇cᵢ` only. With a supplied or derived `χ` whose transition reaches into the
+  fluid, PHY-20's NOTE blends `ε_r = χ ε_p + (1 − χ) ε_r,f`, so the assembled force omits `(ε_p − ε_r,f) ∇χ` and the
+  factor `1 − χ`, and the decrement's `∂ε/∂cᵢ` omits `1 − χ`. PHY-23 writes `∇(ε_0 ε_r)` and predates `χ`.
+- **Without the flow.** PHY-23 enables the momentum term and the Nernst–Planck term together and SHALL NOT permit either
+  alone, yet `pnp` honours `dielectric_gradient_forces: true`, and `epnp-ns` does with `flow: false` on a single rung;
+  each assembles the Nernst–Planck decrement alone.
+
+The Equations tool shows what is assembled (`physics/terms.py`). **Open**, a question for the author: whether PHY-23 is
+amended to state both, or the code made to meet it.
+

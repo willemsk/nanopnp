@@ -46,7 +46,11 @@ together with a declaration that can be read without building it. The declaratio
 case-derived options its builder takes, which are the resolved `model_options`; the value set of each
 `physics:` switch it honours; whether it carries solid materials, and which supplied coefficients it
 accepts (the fixed charge, `χ`); whether it reads the PHY-02 distance field; the values of
-`numerics.continuation` it admits; and whether it solves ionic transport. It lists no quantities of
+`numerics.continuation` it admits; whether it solves ionic transport; and its terms, each the PHY or
+NUM clause it is written from, its equation in that clause's symbols as the model assembles it, the
+`physics:` switches it is assembled under, each a switch the model honours true, and the correction
+leaf, one the model reads, whose `none` model leaves it out, so a reader shows the equations a case
+solves without building the model (WP5.18). It lists no quantities of
 interest: a registered output states what it needs of a declaration, ionic transport or the flow
 switch's `true`, and a model provides every output whose need its declaration meets (§6.7; §8.2.32 AH1). Every built model reports its field set, boundary vocabulary, essential
 boundaries, NUM-09 scale set and provenance. A layer outside `physics/` reads these, and SHALL NOT
