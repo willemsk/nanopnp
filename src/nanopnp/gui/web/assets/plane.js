@@ -1,6 +1,7 @@
-// The Continuum suite's (r, z) view: one canvas per window, beside Mol*, built once and kept, which
-// draws the layers the server writes (gui/web/plane.py). Equal scale, r to the right and z up; a drag
-// pans, the wheel zooms about the pointer, and a pick or an edit goes back to the server by emitEvent.
+// The workbench's (r, z) view: one canvas per window, beside Mol*, built once and kept, which draws
+// the layers the server writes (gui/web/plane.py). Equal scale, r to the right and z up; a drag pans,
+// the wheel zooms about the pointer, and a pick or an edit goes back to the server by emitEvent. A
+// drawing of the plot frame is a graph instead: each axis scaled alone to its extent, not panned.
 (() => {
   const MARGIN = { left: 56, right: 12, top: 10, bottom: 40 };
   const ROLES = {
@@ -8,7 +9,12 @@
     membrane: ['--muted', 1.5, []], exclusion: ['--changed', 1.5, [5, 3]],
     reservoir: ['--muted', 1, [6, 4]], probe: ['--warn', 1.5, [4, 3]], lumen: ['--ok', 1.5, []],
     original: ['--muted', 1.5, [3, 3]], picked: ['--accent', 3, []], domain: ['--canvas-plot-ink', 1, []],
+    boundary: ['--canvas-plot-ink', 2.5, []],
   };
+  // A plot: its ticks per axis, its curves' width, its rules' dash, its bands' fill, the legend's gap.
+  const PLOT_TICKS = 5, CURVE_W = 2, RULE_DASH = [6, 4], BAND_ALPHA = 0.15, KEY_GAP = 12;
+  // The narrowest plot the legend stands beside; a narrower one takes it inside, top right.
+  const PLOT_MIN_W = 200;
   // The solids a drawing fills lightly under their outline, so a slab reads as one.
   const FILLED = ['membrane', 'pore', 'exclusion'];
   const PICK_PX = 8;
@@ -27,7 +33,7 @@
   const view = {
     // How many times the canvas was built in this window: the frame builds it once (VER-78 m).
     builds: 0,
-    host: null, canvas: null, notes: null, drawing: null, frame: undefined,
+    host: null, canvas: null, notes: null, fitButton: null, drawing: null, frame: undefined,
     images: new Map(), paths: new WeakMap(), picked: null,
     // The latest drawing asked for: an earlier request that answers later is dropped.
     asked: 0,
@@ -53,6 +59,7 @@
       fit.title = 'Fit the drawing to the view';
       fit.dataset.control = 'plane-fit';
       fit.addEventListener('click', () => { if (this.drawing) { this.fit(this.drawing.extent_nm); this.draw(); } });
+      this.fitButton = fit;
       this.host.append(this.canvas, this.notes, fit);
       new ResizeObserver(() => this.resized()).observe(this.host);
       // The theme sets the root's attributes, and the canvas draws in its tokens.
@@ -100,7 +107,12 @@
       this.picked = null;
       this.notes.textContent = drawing.notes.join(' ');
       this.notes.hidden = drawing.notes.length === 0;
-      this.canvas.setAttribute('aria-label', `(r, z) view, ${drawing.axes.join(' against ')}`
+      // A plot is always fitted to its extent: there is nothing to fit back to.
+      this.fitButton.hidden = drawing.frame === 'plot';
+      const named = drawing.frame === 'plot'
+        ? `Plot of ${drawing.axes[1]} against ${drawing.axes[0]}`
+        : `(r, z) view, ${drawing.axes.join(' against ')}`;
+      this.canvas.setAttribute('aria-label', `${named}`
         + `: ${drawing.layers.map((l) => l.id).join(', ') || 'nothing drawn'}`);
       // The host may have been shown in this same update: its size settles a frame later.
       await frames();
@@ -227,8 +239,12 @@
         return { path };
       }
       const p = layer.points_nm;
-      for (let k = 0; k < p.length; k += 2) {
-        if (k === 0) path.moveTo(p[0], p[1]); else path.lineTo(p[k], p[k + 1]);
+      // A line of segments holds each segment's two ends in turn, not one chain of points.
+      for (let k = 0; k < p.length; k += layer.segments ? 4 : 2) {
+        if (layer.segments) {
+          path.moveTo(p[k], p[k + 1]);
+          path.lineTo(p[k + 2], p[k + 3]);
+        } else if (k === 0) path.moveTo(p[0], p[1]); else path.lineTo(p[k], p[k + 1]);
       }
       if (layer.kind === 'polygon') path.closePath();
       return { path };
@@ -250,6 +266,11 @@
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.fillStyle = token('--canvas-plot') || '#ffffff';
       ctx.fillRect(0, 0, this.canvas.width / ratio, this.canvas.height / ratio);
+      this.boxes = [];
+      if (this.drawing.frame === 'plot') {
+        this.drawPlot(ctx, area);
+        return;
+      }
       ctx.save();
       ctx.beginPath();
       ctx.rect(area.x, area.y, area.w, area.h);
@@ -268,7 +289,6 @@
       this.highlight(ctx);
       ctx.restore();
       this.axes(ctx, area);
-      this.boxes = [];
       // The key is laid out first, so that a label at the top right moves below it.
       this.key = this.keyLayout(ctx, area);
       for (const layer of layers) if (layer.kind === 'label') this.label(ctx, layer, area);
@@ -336,7 +356,7 @@
         });
         return;
       }
-      const [colour, width, dash] = ROLES[layer.role] || ['--canvas-plot-ink', 1.5, []];
+      const [colour, width, dash] = this.lineStyle(layer);
       if (layer.kind === 'domain') {
         this.inData(ctx, ratio, () => {
           if (layer.filled) {
@@ -352,7 +372,7 @@
             ctx.lineWidth = (width + 3) / this.scale;
             ctx.stroke(drawn.path);
           }
-          ctx.strokeStyle = token(colour) || '#16181d';
+          ctx.strokeStyle = colour;
           ctx.lineWidth = width / this.scale;
           ctx.stroke(drawn.path);
         });
@@ -363,11 +383,13 @@
         const pictured = meshed || this.drawing.layers.some((l) => l.kind === 'image');
         if (layer.kind === 'polygon' && FILLED.includes(layer.role) && !meshed) {
           ctx.globalAlpha = 0.22;
-          ctx.fillStyle = token(colour) || '#4f5563';
+          ctx.fillStyle = colour;
           ctx.fill(drawn.path);
           ctx.globalAlpha = 1;
         }
         ctx.lineJoin = 'round';
+        // Segments drawn each alone meet as one line where their round ends overlap.
+        if (layer.segments) ctx.lineCap = 'round';
         // Over a picture or a mesh a line takes a halo in the canvas's colour, so it reads on any.
         if (pictured) {
           ctx.strokeStyle = token('--canvas-plot') || '#ffffff';
@@ -375,12 +397,81 @@
           ctx.setLineDash([]);
           ctx.stroke(drawn.path);
         }
-        ctx.strokeStyle = token(colour) || '#16181d';
+        ctx.strokeStyle = colour;
         ctx.lineWidth = width / this.scale;
         ctx.setLineDash(dash.map((d) => d / this.scale));
         ctx.stroke(drawn.path);
       });
       if (layer.role === 'contour') this.vertices(ctx, layer);
+    },
+
+    // A line's colour, width and dash: its role's, unless it names its own colour; a plot's curve
+    // is a solid line in its colour, and its rule a dashed one in the canvas's ink.
+    lineStyle(layer) {
+      const ink = token('--canvas-plot-ink') || '#16181d';
+      if (layer.kind === 'rule') return [ink, 1.5, RULE_DASH];
+      if (layer.kind === 'line' && !layer.role) return [layer.colour || ink, CURVE_W, []];
+      const [colour, width, dash] = ROLES[layer.role] || ['--canvas-plot-ink', 1.5, []];
+      return [layer.colour || token(colour) || ink, width, dash];
+    },
+
+    // A plot: its extent fills the plot area, each axis scaled alone; the bands first, then the
+    // rules, then the curves over both.
+    drawPlot(ctx, area) {
+      this.key = this.keyLayout(ctx, area);
+      if (this.key && area.w - this.key.width - KEY_GAP >= PLOT_MIN_W) {
+        // The legend stands beside the plot, where it hides no curve.
+        area.w -= this.key.width + KEY_GAP;
+        this.key.x = area.x + area.w + KEY_GAP;
+        this.key.top = area.y;
+      }
+      const [x0, x1, y0, y1] = this.drawing.extent_nm;
+      const sx = area.w / ((x1 - x0) || 1), sy = area.h / ((y1 - y0) || 1);
+      const at = (x, y) => [area.x + (x - x0) * sx, area.y + area.h - (y - y0) * sy];
+      const layers = this.drawing.layers;
+      ctx.save();
+      ctx.beginPath();
+      // A curve along the frame's top or bottom is drawn whole, not halved by the clip.
+      ctx.rect(area.x, area.y - CURVE_W, area.w, area.h + 2 * CURVE_W);
+      ctx.clip();
+      ctx.fillStyle = token('--canvas-plot-ink') || '#16181d';
+      ctx.globalAlpha = BAND_ALPHA;
+      for (const layer of layers) {
+        if (layer.kind !== 'band') continue;
+        const [left] = at(layer.x[0], y0), [right] = at(layer.x[1], y0);
+        ctx.fillRect(left, area.y, right - left, area.h);
+      }
+      ctx.globalAlpha = 1;
+      ctx.lineJoin = 'round';
+      for (const kind of ['rule', 'line']) {
+        for (const layer of layers) {
+          if (layer.kind !== kind) continue;
+          const [colour, width, dash] = this.lineStyle(layer);
+          ctx.strokeStyle = colour;
+          ctx.lineWidth = width;
+          ctx.setLineDash(dash);
+          ctx.beginPath();
+          if (kind === 'rule') {
+            const [x] = at(layer.x, y0);
+            ctx.moveTo(x, area.y);
+            ctx.lineTo(x, area.y + area.h);
+          } else {
+            const p = layer.points_nm;
+            for (let k = 0; k < p.length; k += 2) {
+              const [x, y] = at(p[k], p[k + 1]);
+              if (k === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+          }
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+      const ticks = (low, high, place) => Array.from({ length: PLOT_TICKS }, (_, k) => {
+        const value = low + (k * (high - low)) / (PLOT_TICKS - 1);
+        return [place(value), Number(value.toPrecision(6)).toString().replace('-', '−')];
+      });
+      this.frameAxes(ctx, area, ticks(x0, x1, (x) => at(x, y0)[0]), ticks(y0, y1, (y) => at(x0, y)[1]));
+      this.legend(ctx);
     },
 
     // An outline's vertices, once they stand apart on the screen.
@@ -432,32 +523,41 @@
     },
 
     axes(ctx, area) {
-      const ink = token('--canvas-plot-ink') || '#16181d';
-      const font = token('--font-num') || 'monospace';
-      ctx.strokeStyle = ink;
-      ctx.fillStyle = ink;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([]);
-      ctx.strokeRect(area.x + 0.5, area.y + 0.5, area.w - 1, area.h - 1);
-      ctx.font = `12px ${font}`;
       const [r0, z0] = this.toData(area.x, area.y + area.h);
       const [r1, z1] = this.toData(area.x + area.w, area.y);
       const rStep = this.step(r1 - r0), zStep = this.step(z1 - z0);
       const shown = (value, step) => (Math.abs(value) < step / 1e6 ? 0 : value)
         .toFixed(Math.max(0, -Math.floor(Math.log10(step)))).replace('-', '−');
+      const rTicks = [], zTicks = [];
+      for (let r = Math.ceil(r0 / rStep) * rStep; r <= r1; r += rStep) {
+        rTicks.push([this.toScreen(r, 0)[0], shown(r, rStep)]);
+      }
+      for (let z = Math.ceil(z0 / zStep) * zStep; z <= z1; z += zStep) {
+        zTicks.push([this.toScreen(0, z)[1], shown(z, zStep)]);
+      }
+      this.frameAxes(ctx, area, rTicks, zTicks);
+    },
+
+    // The plot area's frame, each axis's ticks as [pixel, text], and the axes' titles.
+    frameAxes(ctx, area, xTicks, yTicks) {
+      const ink = token('--canvas-plot-ink') || '#16181d';
+      ctx.strokeStyle = ink;
+      ctx.fillStyle = ink;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
+      ctx.strokeRect(area.x + 0.5, area.y + 0.5, area.w - 1, area.h - 1);
+      ctx.font = `12px ${token('--font-num') || 'monospace'}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      for (let r = Math.ceil(r0 / rStep) * rStep; r <= r1; r += rStep) {
-        const [x] = this.toScreen(r, 0);
+      for (const [x, text] of xTicks) {
         ctx.beginPath(); ctx.moveTo(x, area.y + area.h); ctx.lineTo(x, area.y + area.h + 4); ctx.stroke();
-        ctx.fillText(shown(r, rStep), x, area.y + area.h + 6);
+        ctx.fillText(text, x, area.y + area.h + 6);
       }
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      for (let z = Math.ceil(z0 / zStep) * zStep; z <= z1; z += zStep) {
-        const [, y] = this.toScreen(0, z);
+      for (const [y, text] of yTicks) {
         ctx.beginPath(); ctx.moveTo(area.x - 4, y); ctx.lineTo(area.x, y); ctx.stroke();
-        ctx.fillText(shown(z, zStep), area.x - 6, y);
+        ctx.fillText(text, area.x - 6, y);
       }
       ctx.font = `12px ${token('--font-ui') || 'sans-serif'}`;
       ctx.textAlign = 'center';
@@ -558,9 +658,14 @@
           entries.push({
             kind: 'swatch', text: layer.title, colour: layer.fill, alpha: layer.picked ? 0.9 : 0.55,
           });
+        } else if (layer.kind === 'band') {
+          entries.push({
+            kind: 'swatch', text: layer.title, colour: token('--canvas-plot-ink') || '#16181d',
+            alpha: BAND_ALPHA,
+          });
         } else if (layer.title && layer.kind !== 'domain' && !titles.has(layer.title)) {
           titles.add(layer.title);
-          entries.push({ kind: 'line', text: layer.title, role: layer.role });
+          entries.push({ kind: 'line', text: layer.title, style: this.lineStyle(layer) });
         }
       }
       if (!entries.length) return null;
@@ -634,8 +739,8 @@
           ctx.strokeStyle = edge;
           ctx.strokeRect(x + 6.5, y + 3.5, 12, 12);
         } else {
-          const [colour, lineWidth, dash] = ROLES[entry.role] || ['--canvas-plot-ink', 1.5, []];
-          ctx.strokeStyle = token(colour) || '#16181d';
+          const [colour, lineWidth, dash] = entry.style;
+          ctx.strokeStyle = colour;
           ctx.lineWidth = lineWidth;
           ctx.setLineDash(dash);
           ctx.beginPath();
@@ -702,7 +807,13 @@
       return [event.clientX - box.left, event.clientY - box.top];
     },
 
+    // A plot is neither panned nor zoomed, and holds nothing to pick.
+    plotted() {
+      return Boolean(this.drawing && this.drawing.frame === 'plot');
+    },
+
     down(event) {
+      if (this.plotted()) return;
       this.canvas.setPointerCapture(event.pointerId);
       this.drag = { start: this.point(event), centre: [...this.centre], moved: false };
     },
@@ -735,6 +846,8 @@
     },
 
     wheel(event) {
+      // Over a plot the wheel scrolls the page.
+      if (this.plotted()) return;
       event.preventDefault();
       const [x, y] = this.point(event);
       const [r, z] = this.toData(x, y);

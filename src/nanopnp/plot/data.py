@@ -23,6 +23,7 @@ from nanopnp.geometry.profile import load_profile
 from nanopnp.geometry.region import PAYLOAD_NAME as REGION_PAYLOAD
 from nanopnp.geometry.region import read_region
 from nanopnp.io.artefact import SWEEP_SCHEMA, Artefact, StageInputs
+from nanopnp.materials.electrolyte import MOLAR_PER_SI
 from nanopnp.mesh.adapter import MeshData
 from nanopnp.mesh.adapter import read as read_mesh
 from nanopnp.mesh.ingest import MESH_PAYLOAD, deployed_mesh
@@ -38,6 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
     from matplotlib.tri import Triangulation
 
+    from nanopnp.io.resolved import ResolvedCase
     from nanopnp.materials.models import CorrectionModel
     from nanopnp.post.export import SolutionFields
 
@@ -60,6 +62,8 @@ __all__ = [
     "axial_cutline",
     "axial_section",
     "axis_label",
+    "boundary_edges",
+    "case_correction_curves",
     "charge_grids",
     "cis_referenced_bias_V",
     "contour_polygon_m",
@@ -273,6 +277,11 @@ def mesh_elements(data: MeshData, quality: QualityReport | None = None) -> MeshE
     )
 
 
+def boundary_edges(data: MeshData) -> dict[str, np.ndarray]:
+    """Return each boundary group's ``(k, 2, 2)`` segments in nm, by name."""
+    return {name: data.vertices[data.edges_of(name)] for name in data.boundaries}
+
+
 def mesh_of(artefact: Artefact, inputs: StageInputs | None) -> MeshElements | None:
     """Return the mesh a run solves on: deployed with inputs, else the stage-6 payload."""
     if inputs is not None:
@@ -422,6 +431,21 @@ def correction_curves(
             )
         )
     return curves
+
+
+def case_correction_curves(resolved: ResolvedCase) -> list[CorrectionCurves]:
+    """Return a resolved case's correction curves, drawn at the driver its bulk forms."""
+    electrolyte = resolved.electrolyte
+    # Every species sits at the case's concentration in the bulk; the driver is formed from
+    # them as the solve forms it: <c> = (1/n) sum c_i, or I, clamped to the fitted range.
+    bulk_SI = resolved.concentration_M / MOLAR_PER_SI
+    driver_M = float(electrolyte.average_concentration([bulk_SI] * len(electrolyte.species)))
+    return correction_curves(
+        electrolyte.corrections,
+        driver=electrolyte.driver,
+        concentration_M=driver_M,
+        validity_M=electrolyte.validity_M,
+    )
 
 
 # --- stage 10 --------------------------------------------------------------------------------
