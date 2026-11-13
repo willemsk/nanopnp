@@ -200,6 +200,12 @@ dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions`
    project, walks its study to the mesh and prints both tools' layers: a `role-<name>` line per boundary of
    `role_conditions`, and a line per correction with one band and one rule.
 
+> **Outcome — a role is drawn as segments.** A boundary is separate edges, some not joined (the membrane's two faces),
+> so a role's `line` carries `segments: true`, `points_nm` holding each segment's two ends; `physics_plane` takes
+> `mesh_held` as `plane()` does, which item 5's route passes through; a plot's `json()` sets `framed` false; the
+> deployed mesh is cached by its stage-6 key and the case's digest, so `ingest`'s refusal is not hidden. Run on Opus
+> at the author's word.
+
 **Item 5.**
 - `Tool("equations", "Equations", ("physics.model", "physics.flow", "physics.variable_density", "physics.inertia",
   "physics.dielectric_gradient_forces", "numerics.elements.phi", "numerics.elements.c", "numerics.elements.u",
@@ -244,9 +250,9 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
   `test_model_interface.py` passes; then the `physics-reviewer` reads the terms against §4. **Executor:** main
 - [ ] 2. `api/project.py`, `pipeline/checks.py`, `modularity-layering.yaml`, §5.3.1's NOTE on model files (D2 to D4,
   D9); done when `test_physics_model.py` and `test_layering.py` pass. **Executor:** main
-- [ ] 3. The files of Implementation details' item 3 (D6 to D8); done when its check passes. **Executor:**
+- [x] 0ef0d10 3. The files of Implementation details' item 3 (D6 to D8); done when its check passes. **Executor:**
   general-purpose on Sonnet, high
-- [ ] 4. Compaction checkpoint. **Executor:** main
+- [x] 4. Compaction checkpoint. **Executor:** main
 - [ ] 5. `gui/web/physics.py`, `physics_tools.py`, `screens.py`, `pages.py`, `frame.py`, `tools.py`'s `Field`, `frame.css`,
   `modularity-layering.yaml`, VER-78's text (D1 to D9); done when VER-78 (a) to (d), (m) and the import guard pass. **Executor:** main
 - [ ] 6. The four tools drafted on example 01 (D10); `render_shell.py`; `/np-gui render shell`, `review`, `publish`;
