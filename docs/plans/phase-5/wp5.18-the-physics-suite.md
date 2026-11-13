@@ -271,9 +271,9 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 - [x] 4. Compaction checkpoint. **Executor:** main
 - [x] 905f826 5. `gui/web/physics.py`, `physics_tools.py`, `screens.py`, `pages.py`, `frame.py`, `tools.py`'s `Field`, `frame.css`,
   `modularity-layering.yaml`, VER-78's text (D1 to D9); done when VER-78 (a) to (d), (m) and the import guard pass. **Executor:** main
-- [ ] 6. The four tools drafted on example 01 (D10); `render_shell.py`; `/np-gui render shell`, `review`, `publish`;
+- [x] ded489e 6. The four tools drafted on example 01 (D10); `render_shell.py`; `/np-gui render shell`, `review`, `publish`;
   done when the digest is published. **Executor:** main
-- [ ] 7. Compaction checkpoint; the author's verdicts. **Executor:** main
+- [x] 7. Compaction checkpoint; the author's verdicts. **Executor:** main
 - [ ] 8. `/np-gui collect`; REV-235's and REV-245's points ruled or carried; the design document's rows (D10); done
   when the code and review say so. **Executor:** main
 - [ ] 9. The tools finished to the verdicts, with *Modified only* and `?field=`; done when VER-78 and
