@@ -1,6 +1,6 @@
 # Current work
 
-Updated 13 November 2026 (WP5.18 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 13 November 2026 (WP5.18 planned and reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
@@ -9,7 +9,7 @@ Phase 4 is released, and Phase 5 is merged through the Continuum suite. The Phys
 rulings: each tool shows the physics model inside a study you pick, and picking another set of equations sets its
 switches, with a note and Undo. Two suites, the route and the close follow, about 40 sessions.
 
-**Your call.** Approve the Physics suite's plan after its review? Recommendation: yes; its two choices are yours as
+**Your call.** Approve the Physics suite's reviewed plan? Recommendation: yes; its two choices are yours as
 ruled.
 
 ## Position
@@ -17,8 +17,8 @@ ruled.
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
 - **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.17 merged
   (`v0.6.0-alpha.17`).
-  **WP5.18** [planned](phase-5/wp5.18-the-physics-suite.md) on `claude/trusting-bell-hhyxbe` (§8.2.41; REV-249).
-  Next, `/np-plan wp 5.18 review`, then `/np-implement wp 5.18`. host: claude-code.
+  **WP5.18** [planned](phase-5/wp5.18-the-physics-suite.md) and reviewed (CODE_REVIEW_057) on
+  `claude/trusting-bell-hhyxbe` (§8.2.41; REV-249). Next, `/np-implement wp 5.18`. host: claude-code.
 
 ## Not to be re-decided
 

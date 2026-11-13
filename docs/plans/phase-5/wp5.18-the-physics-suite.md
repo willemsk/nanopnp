@@ -56,12 +56,14 @@ declares (its terms); FR-31's and FR-39's matrix rows.
 
 **D1.**
 - `gui/web/screens.py:SUITES` lists Physics's tools with empty ids (`_later`); `TOOL_SUITES` holds suites whose first
-  tool has one; `VIEWS` maps a suite to `molecule` or `plane`, read by `tool_controls` and `pages.ROUTES`.
+  tool has one; `VIEWS` maps a suite to `molecule` or `plane`, read by `tool_controls` and `pages.ROUTES`, which routes
+  `/<suite>` (its last tool) and each tool with `VIEWS[suite]`. `Tool` has no `view` field.
 - `gui/web/tools.py:_Pane` is generic over `BuiltModel`; `refresh_pane` reads `states()`, `problem()`, `refusal()`,
   `running_stage()`; `show_actions` draws *Build* only where `BUILDS[tool.id]` names a stage; `field` takes `text`,
   `number`, `choice`, `chains`, `list`, no boolean.
-- `builds.py:BuiltModel.case()` calls `Project.build_case`, which raises `ProjectError` for `physics` (no `BUILD_UPTO`
-  row); `_walked` and `_artefacts` catch `REFUSED`, which holds `KeyError`.
+- `builds.py:BuiltModel` holds `project`, `name`, `queue`, no shell; `case()` and `problem()` read `_built_case`, which
+  calls `Project.build_case`, raising `ProjectError` for `physics` (no `BUILD_UPTO` row); `_walked` and `_artefacts`
+  catch `REFUSED`, which holds `KeyError`.
 - `frame.py:Route.view` is `molecule`, `plane` or None, None hiding the view region; `frame.css` gives a tool pane's
   sub-page a fixed 31 rem. A sub-page with no view sets `data-screen-ready` itself (`pages.suite_page`'s `ready`).
 - `io/project.py:ITEM_SUITES` sends `physics` items to the `physics` suite; `Project.changes("physics", n)` is
@@ -93,7 +95,9 @@ declares (its terms); FR-31's and FR-39's matrix rows.
   `pnp-ns` reads no correction leaf, driver or wall distance; `pb` and `pb-linear` carry no solids.
 - `_check_physics_switches` reads the switches, the permittivities against `solids` and `wall_charge_C_m2` against
   `surface_charge`; `_check_unread` the `unread` leaves; `_check_strategy`, `_check_outputs` and the ladder's check the
-  study's values.
+  study's values. It also refuses `charge.dielectric_transition_nm` without `solid_fraction`, `inputs.pqr` without
+  `fixed_charge` and a generated mesh without solids: the continuum's or molecular model's values, which
+  `choose_physics` leaves, shown at the shown study's card (D3).
 - `modularity-layering.yaml` records no `api -> physics`, `gui -> physics` or `gui -> materials` edge; `pipeline/case.py` imports
   `physics.models`, whose `case_model` imports no backend.
 
@@ -117,8 +121,11 @@ declares (its terms); FR-31's and FR-39's matrix rows.
 - `boundary_conditions` of each model maps field to boundary to text, writing `cis: phi = 0`, `trans: phi = V_bias`
   whatever the ground; `solve/state.py:single_rung` and `solve/continuation.py`'s `_potential` put φ = 0 on `ground`
   and `V_bias/V_T` on the other electrode.
-- `mesh/adapter.py:MeshData` holds `edges`, `edge_group`, `boundaries`, `edges_of(name)`; `BOUNDARY_VOCABULARY` also
-  names `analyte`, `interface`, `membrane_outer`, which no model's vocabulary gives a condition; cis lies at z > 0.
+- `mesh/adapter.py:MeshData` holds `vertices` in nm, `edges`, `edge_group`, `boundaries`; `edges_of(name)` returns
+  `(k, 2)` vertex indices. `plot/data.py:MeshElements` (what `mesh_of` and `plane.py:_elements` return) holds no
+  edges; `mesh/ingest.py:deployed_mesh(resolved, artefact)` gives a supplied mesh or the stage-6 payload as
+  `MeshData`. `mesh/ingest.py:BOUNDARY_VOCABULARY` also names `analyte`, `interface`, `membrane_outer`, which no
+  model's vocabulary gives a condition; cis lies at z > 0.
 - `require_runnable` refuses walls other than `no_flux`, `no_slip`; `wall_charge_C_m2` is read beside `geometry.pore`
   alone.
 - `gui/web/plane.py:_region_layers` draws stage 5's domains; `BuiltModel._artefacts` finds stored stages by
@@ -127,6 +134,8 @@ declares (its terms); FR-31's and FR-39's matrix rows.
 **D8.**
 - `assets/plane.js` (779 lines) draws the `structure` and `model` frames at equal scale, layers `image`, `line`,
   `polygon`, `domain`, `mesh`, `label`, and marks the screen ready once a drawing's layers are drawn.
+- `gui/web/plane.py:Frame` is `Literal["structure", "model"]`; `Plane.json()` writes `extent_nm`, and `_bounds` reads
+  `extent_nm` and `points_nm`.
 
 **D9.**
 - `Project.set_exposed(kind, name, path, on)` names an entry by its path's last part and writes no range;
@@ -150,9 +159,9 @@ dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions`
 - `physics_case(name, study=None) -> Case`. With `study`: the study file's mapping; every leaf outside
   `schema`, `name`, `models` and `variables` whose `owner_of` is `physics` deleted (`_delete`); `models.physics` set to
   the model's absolute path; `Case.loads(text, base=<the study's folder>, source="<study S with physics model P>")`.
-  Without: `{schema, name: P, models: {continuum: C, physics: P, molecular: M where C reads one}}`, absolute, C the
-  current continuum model else the first, M `molecular_for(C)`; `ProjectError` where the project holds no continuum
-  model.
+  Without: `{schema, name: P, models: {continuum: C, physics: P, molecular: M}}`, absolute, C the current continuum
+  model else the first, M `molecular_for(C)` and no `molecular` where `own_outline(<C's body>)` is set, as
+  `_build_case`; `ProjectError` where the project holds no continuum model.
 - `choose_physics(name, model) -> dict[str, FieldValue | None]`: for each of `SWITCHES` whose value (set, else the
   schema's) is not honoured, the first honoured value, removed where it equals the default; removed: each set leaf in
   `declaration(model).unread` away from its schema default (one with none is kept, as `_check_unread` keeps it), `physics.solid_permittivities` where `solids` is false,
@@ -166,16 +175,19 @@ dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions`
 
 **Item 3** (Sonnet), in `plot/data.py`, `assets/plane.js`, `gui/web/plane.py`:
 1. `plot/data.py:boundary_edges(data: MeshData) -> dict[str, np.ndarray]`: per name in `data.boundaries`, its
-   `(n, 2, 2)` segments in m from `edges_of(name)`.
-2. `plane.js`: a drawing with `frame: "plot"` has `extent: [x0, x1, y0, y1]` and `axes: [x title, y title]`, each axis
-   scaled alone, five ticks each; layers `{kind: "line", id, title, points: [x0, y0, …], colour}`, `{kind: "band",
-   id, title, x: [low, high]}` filled at 15% under the lines, `{kind: "rule", id, title, x}` dashed; a legend lists each
-   titled layer. No pan or zoom on a plot; a change of frame refits.
+   `(k, 2, 2)` segments in nm, `data.vertices[data.edges_of(name)]`.
+2. `plane.py:Frame` gains `plot`; a plot's `Plane` holds its data extent `[x0, x1, y0, y1]` in `extent_nm` and its
+   layers' coordinates in `points_nm`, both in data units, and `_bounds` returns None for it. `plane.js`: a drawing
+   with `frame: "plot"` scales each axis alone, five ticks each, titled by `axes`; layers `{kind: "line", id, title,
+   points_nm: [x0, y0, …], colour}`, `{kind: "band", id, title, x: [low, high]}` filled at 15% under the lines,
+   `{kind: "rule", id, title, x}` dashed; a legend lists each titled layer. No pan or zoom on a plot; a change of frame
+   refits.
 3. `gui/web/plane.py:physics_plane(case: Case | None, store: Store, tool, *, against, pick) -> Plane`, `case` the
    shown case: Electrolyte, one `line` per curve,
    `band` the validity range, `rule` the operating driver, or the factors against the wall distance in nm with no
-   band; Conditions, the mesh the store holds under the case's keys (`keyed_walk`, as `BuiltModel._artefacts`) by
-   material and one `line` per role (`role-<name>`), the picked one drawn `picked`; else the region's domains; else a
+   band; Conditions, `deployed_mesh(resolved, <the stage-6 artefact the store holds under the case's keys, by
+   keyed_walk as BuiltModel._artefacts, or None>).data`, so a supplied mesh draws too, by material and one `line`
+   per role (`role-<name>`), the picked one drawn `picked`; where it raises `KeyError`, the region's domains; else a
    note naming Continuum › Mesh. A refused or absent case: no layer, a note.
 4. Check: `uv run pytest tests/tier1/test_figures.py`, and a scratchpad script that imports example 01 into a
    project, walks its study to the mesh and prints both tools' layers: a `role-<name>` line per boundary of
@@ -197,9 +209,10 @@ dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions`
 - `Field` gains the kinds `switch` and `materials` (a row per solid); screens `p-<id>`; a page view is
   `div.tool-view` (`data-control=tool-view`), and `frame.css` widens the sub-page that holds one.
 - `/api/physics/{name}/plane?tool=…&within=…&against=driver|distance&pick=…` returns `physics_plane(...).json()`.
-- `PhysicsModel`: `within()`, the shell's choice for the model (`Shell.shown_in`) while it names a study, else the
-  first study whose `models.physics` resolves to the model's file, else the first study, else None (the pairing);
-  `problem()`, the shown case's refusal prefixed `In study <S>: `; `paths` matches `physics`, `electrolyte`,
+- `PhysicsModel` gains `shown_in: str | None = None`, which the pane sets from `Shell.shown_in: dict[str, str]` (by
+  model); `within()`, `shown_in` while it names a study, else the first study whose `models.physics` resolves to the
+  model's file, else the first study, else None (the pairing); `_built_case` returns `physics_case(name, within())`,
+  so `case()` is the shown case; `problem()`, its refusal prefixed `In study <S>: `; `paths` matches `physics`, `electrolyte`,
   `boundary_conditions` and `numerics.(elements|stabilisation|wall_distance)`; `study_values()`, the physics-owned leaves of the
   shown study's file, each field's outlined diamond with the study's value in its title; `shown(path)`, the body's
   value, else the schema's default, which the test reads.
@@ -209,7 +222,10 @@ dict[str, dict[str, str]]`, by boundary, then field: `model.boundary_conditions`
   are the stored mesh's materials less the fluids and `exclusion`, else the keys the model sets; `walls` offers
   `no_flux` and `no_slip`, the others disabled and named as later.
 - `BUILDS` gains `(None, "", "")` for the four ids; `pages.page_of` sends Physics tools to
-  `physics_tools.physics_page`; `Tool.view` `page` routes with no view and puts `tool-view` in `tool_controls`.
+  `physics_tools.physics_page`. `Tool.view: Literal["molecule", "plane", "page"] | None = None`, None reading
+  `VIEWS[suite]`; `ROUTES` routes each tool by it, `page` as view None, which puts `tool-view` in `tool_controls`.
+  `frame.py:_Frame.route` reads `/<suite>` as `/<suite>/<Shell.last_tool, else the first>`'s route, so `/physics`
+  opening Equations hides the view region as `/physics/equations` does.
 
 **Item 6.** `render_shell.py` group `physics`: a project from example 01's case with the charged tube imported, served
 by `--project`; shots of each `/physics/<id>`, a model with no concentration (`new_model`, its ions written), the
@@ -224,23 +240,23 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 - [ ] 3. The files of Implementation details' item 3 (D6 to D8); done when its check passes. **Executor:**
   general-purpose on Sonnet, high
 - [ ] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. `gui/web/physics.py`, `physics_tools.py`, `screens.py`, `pages.py`, `tools.py`'s `Field`, `frame.css`,
+- [ ] 5. `gui/web/physics.py`, `physics_tools.py`, `screens.py`, `pages.py`, `frame.py`, `tools.py`'s `Field`, `frame.css`,
   `modularity-layering.yaml`, VER-78's text (D1 to D9); done when VER-78 (a) to (d), (m) and the import guard pass. **Executor:** main
 - [ ] 6. The four tools drafted on example 01 (D10); `render_shell.py`; `/np-gui render shell`, `review`, `publish`;
   done when the digest is published. **Executor:** main
 - [ ] 7. Compaction checkpoint; the author's verdicts. **Executor:** main
-- [ ] 8. `/np-gui collect`; REV-235's and REV-245's points ruled or carried; the design document's rows (D10).
-  **Executor:** main
+- [ ] 8. `/np-gui collect`; REV-235's and REV-245's points ruled or carried; the design document's rows (D10); done
+  when the code and review say so. **Executor:** main
 - [ ] 9. The tools finished to the verdicts, with *Modified only* and `?field=`; done when VER-78 and
   `test_physics_model.py` pass. **Executor:** main
 - [ ] 10. `/np-gui render shell` and `review`, each finding fixed or a `REV-nn` row; FR-31's and FR-39's matrix rows;
-  `current.md`. **Executor:** main
+  `current.md`; done when the code and review say so. **Executor:** main
 
 ### Verification
 
 | Test | Tier | Identifiers | Oracle and tolerance | Command |
 |---|---|---|---|---|
-| `tests/tier1/test_physics_model.py::test_fr39_a_physics_model_edited_in_the_suite_resolves_to_the_case_it_shows` | 1 | FR-39; AQ1 | On example 01's project beside the charged tube, each field of the four tools set through `set_value` or `choose_physics`; one each: every field's `shown` equals `value_at` of the resolved shown case, exact; the shown case in its own study equals the study resolved, dump and stage keys 1 to 9 exact; in the other study its physics-owned values are this model's, and a bias the study sets is left out and listed | `uv run pytest tests/tier1/test_physics_model.py` |
+| `tests/tier1/test_physics_model.py::test_fr39_a_physics_model_edited_in_the_suite_resolves_to_the_case_it_shows` | 1 | FR-39; AQ1 | On example 01's project beside the charged tube, each field of the four tools set through `set_value` or `choose_physics`; one each: every field's `shown` equals `value_at` of the resolved shown case, exact; the shown case in its own study equals the study resolved, dump and stage keys 1 to 9 exact; in the other study its physics-owned values are this model's, and a bias the study sets (written into its YAML; no API sets a study's value before WP5.19) is left out and listed | `uv run pytest tests/tier1/test_physics_model.py` |
 | `tests/tier1/test_physics_model.py::test_ver56_choosing_a_model_leaves_no_value_its_declaration_refuses` | 1 | VER-56; AQ2 | For each registered model, chosen from example 01's and the charged tube's physics models, one each: every switch honoured; no unread leaf off its default; no permittivity without solids; no wall charge without surface charge; the earlier values written back by `set_value` restore the body, mapping equal; ePNP-NS and PNP-NS chosen, the shown study resolves | as above |
 | `tests/tier1/test_physics_model.py::test_fr39_an_exposed_value_named_and_ranged_reads_back` | 1 | FR-39; AK3 | A renamed, ranged entry reads back through `exposed_values` with its unit and the model's value | as above |
 | `tests/tier1/test_model_interface.py::test_ver56_every_registered_model_states_its_terms` | 1 | VER-56 | Each registered model states a term or more, each naming a PHY clause `specification/04-physics.md` defines and a switch of `SWITCHES` it honours true, or none | `uv run pytest tests/tier1/test_model_interface.py` |
