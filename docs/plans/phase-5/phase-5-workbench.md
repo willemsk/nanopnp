@@ -1,6 +1,6 @@
 # Phase 5 (Graphical interface): a molecular and continuum workbench in the browser
 
-**Status: in progress; WP5.01 to WP5.16 merged (`v0.6.0-alpha.16`); WP5.17, the Continuum suite, delivered, then the suites WP5.18 to WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
+**Status: in progress; WP5.01 to WP5.17 merged (`v0.6.0-alpha.17`); WP5.18, the Physics suite, planned, then the suites WP5.19 and WP5.20, WP5.21 and the close.** Written 24 October 2026, during Phase 4 (§8.2.17); amended since by the rounds the [history index](../../../specification/history/index.md) lists. Release: **v0.6** (`v0.6.0`).
 
 ## In brief
 
@@ -271,7 +271,8 @@ asking before an edit is discarded, as T1 carries REV-56; its saved edit a conti
 and Mesh with its quality selection, each drawn in an (r, z) view; a geometry and its parameters linked both ways
 (FR-33). Q10 to Q12 and Q14 to Q23 move here; VER-55 as restated. Tag `v0.6.0-alpha.17`.
 
-**Delivered 12 November 2026** ([the plan](wp5.17-the-continuum-suite.md)). REV-170 and REV-39 fixed, REV-56's
+**Delivered 12 November 2026** ([the plan](wp5.17-the-continuum-suite.md)); merged 13 November 2026 as
+`v0.6.0-alpha.17`. REV-170 and REV-39 fixed, REV-56's
 workbench part done, REV-242's keying measured and cached. Stage 5's two kinds of region share `RegionOutlines` and the
 `Stage5Region` protocol, the cylinder is `CylinderPore` alone and the wall is sized in `mesh/`, MOD-03's edge gone and
 VER-62 unmoved (VER-61). A supplied outline runs beside its structure's charge (AP1; VER-55), a continuum model builds
@@ -285,14 +286,18 @@ subdivisions of a part for meshing; handles dragged on the canvas are WP5.21's; 
 new-model action and a pass over the stages' errors. A Continuum tool's page is `continuum_tools.py`'s pane over
 `BuiltModel`, its drawing `plane.py`'s layers.
 
-### WP5.18 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5)
+### WP5.18 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5; §8.2.41 AQ1, AQ2)
 
 After the prototype round on example 01's NaCl case, NaCl being the only electrolyte a shipped correction file covers (AJ8): Equations, the registered model with its switches, element orders and
-stabilisation, and the composer's place with its later-phase banner (AJ4; FR-40 stays its phase); Electrolyte, the
-ions, the concentration, the parameter set and the corrections; Conditions, each boundary role's condition, the bias,
-the ground, the walls and the solid permittivities, a role picked in the (r, z) view of the open study's geometry or in
-the list; Exposed values, the physics model's declaration (AJ5). The guided route's salt step lands here. Tag
-`v0.6.0-alpha.18`.
+stabilisation, and the composer's place with its later-phase banner (AJ4; FR-40 stays its phase), a change of model
+setting the switches it honours and removing the values it refuses, with a note and *Undo* (AQ2); Electrolyte, the ions,
+the concentration, the parameter set and the corrections; Conditions, each boundary role's condition, the bias, the
+ground, the walls and the solid permittivities, a role picked in the (r, z) view or in the list; Exposed values, the
+physics model's declaration (AJ5). Each tool shows its model inside a study picked in the pane, the study's own physics
+values left out, or over the project's continuum model where it holds no study (AQ1). The guided route's salt step
+lands here. Tag `v0.6.0-alpha.18`.
+
+**Planned 13 November 2026** ([the plan](wp5.18-the-physics-suite.md)).
 
 ### WP5.19 — The Study suite (FR-39; FR-33's residue link; REV-41's `upto`; REV-205, REV-206, REV-209, REV-215; AG7)
 

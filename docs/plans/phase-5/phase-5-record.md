@@ -766,3 +766,18 @@ generated mesh can be typed (AP3), each typed size a base the size scale multipl
 Its row of *Verification* read:
 
 > | WP5.17, Continuum | 1, 2 | VER-55 as restated; VER-62's mesh hash unmoved by REV-170; MOD-03's edge gone (VER-61); VER-78 |
+
+## Amended 13 November 2026 (§8.2.41 AQ1, AQ2)
+
+At WP5.18's plan the author ruled that each Physics tool shows its physics model inside a study picked in the pane
+(AQ1), and that choosing another registered model sets the switches it honours and removes the values it refuses
+(AQ2). The entry read:
+
+> ### WP5.18 — The Physics suite (FR-31; WB-34, WB-35; §8.2.34 AJ2 to AJ5)
+>
+> After the prototype round on example 01's NaCl case, NaCl being the only electrolyte a shipped correction file covers (AJ8): Equations, the registered model with its switches, element orders and
+> stabilisation, and the composer's place with its later-phase banner (AJ4; FR-40 stays its phase); Electrolyte, the
+> ions, the concentration, the parameter set and the corrections; Conditions, each boundary role's condition, the bias,
+> the ground, the walls and the solid permittivities, a role picked in the (r, z) view of the open study's geometry or in
+> the list; Exposed values, the physics model's declaration (AJ5). The guided route's salt step lands here. Tag
+> `v0.6.0-alpha.18`.

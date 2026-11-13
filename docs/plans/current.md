@@ -1,24 +1,24 @@
 # Current work
 
-Updated 13 November 2026 (WP5.17 reviewed). Navigation only; `SPECIFICATION.md` governs; an unmerged
+Updated 13 November 2026 (WP5.18 planned). Navigation only; `SPECIFICATION.md` governs; an unmerged
 branch is not shipped.
 
 ## In brief
 
-Phase 4 is released; Phase 5's library steps, written knowledge, tidy-ups, frame and Molecular suite are merged. The
-Continuum suite is built to your verdicts: one pore geometry tool, domains picked, the mesh's parts as a tree, the
-changed values as a short list. Three suites, the route and the close follow: about 45 sessions.
+Phase 4 is released, and Phase 5 is merged through the Continuum suite. The Physics suite is planned to your two
+rulings: each tool shows the physics model inside a study you pick, and picking another set of equations sets its
+switches, with a note and Undo. Two suites, the route and the close follow, about 40 sessions.
 
-**Your call.** Merge the Continuum suite once its review is green? Recommendation: yes; each verdict is built or open.
+**Your call.** Approve the Physics suite's plan after its review? Recommendation: yes; its two choices are yours as
+ruled.
 
 ## Position
 
 - Phases 1 to 4 **closed**: `v0.2.0`, `v0.3.0`, `v0.4.0`, `v0.5.0`.
-- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.16 merged
-  (`v0.6.0-alpha.16`).
-  **WP5.17** [implemented](phase-5/wp5.17-the-continuum-suite.md) on `claude/wp-5-17-implement-0junxj`; the author's
-  round collected ([the record](../design/reviews/2026-11-12-continuum.md)), its PR reviewed ([CODE_REVIEW_056](../code_reviews/CODE_REVIEW_056.md)),
-  REV-246 to 248 open. Next, the merge and `v0.6.0-alpha.17`. host: claude-code.
+- **Phase 5** ([the workbench](phase-5/phase-5-workbench.md)), `v0.6.0`, **in progress**: WP5.01 to WP5.17 merged
+  (`v0.6.0-alpha.17`).
+  **WP5.18** [planned](phase-5/wp5.18-the-physics-suite.md) on `claude/trusting-bell-hhyxbe` (§8.2.41; REV-249).
+  Next, `/np-plan wp 5.18 review`, then `/np-implement wp 5.18`. host: claude-code.
 
 ## Not to be re-decided
 
@@ -35,7 +35,7 @@ changed values as a short list. Three suites, the route and the close follow: ab
   (§8.2.31 AG1 to AG5). **Example 07 is re-pinned** (AG8). **A charge edit sits on the titratable group;
   a radius edit is a scale; a variant is never a deviation** (AG9 to AG11). **A study overrides any model value** (AG12).
   **An output states its needs of a model; a model provides every output whose needs it meets** (§8.2.32 AH1).
-  **Settings select and modify colour themes; a user's theme sets its contrast** (§8.2.33 AI1). **Threads per solve alone
+  **A user's theme sets its contrast** (§8.2.33 AI1). **Threads per solve alone
   may move a result; the store cleans the unused or all, never while a run holds it** (§8.2.38 AN1, AN5, AN6).
 - **Physics is a third model with its own suite; models declare exposed values; Quasar's components build the
   frame; suites are prototyped on 2WCD first; `impeccable` serves `np-gui`** (§8.2.34 AJ1 to AJ10).
@@ -43,8 +43,9 @@ changed values as a short list. Three suites, the route and the close follow: ab
 - **The schema and `nanopnp.PUBLIC` may change until v1.0** (F4), a move taking `nanopnp/case/v0.6` (G6).
 - **A callback is not an input** (VER-44). **A generated mesh is read only through `deployed_mesh`.**
 - **Plans are archived by phase** (§8.2.36 AL5, AL22 to AL26). **Text follows the tested program; its gaps, REV-223 to 225, are Phase 6's** (§8.2.37 AM1, AM2).
-- **Any pore's axis is found; a variant follows its parent unless copied** (§8.2.39). **An edited outline keeps its
-  charge; a continuum model builds alone; mesh parts are typed** (§8.2.40).
+- **A pore's axis is found; a variant follows its parent** (§8.2.39). **An edited outline keeps its charge; a
+  continuum model builds alone; mesh parts are typed** (§8.2.40). **A physics model is shown in a picked study; a
+  change of model sets its switches** (§8.2.41).
 
 ## Somebody else's
 
@@ -60,10 +61,9 @@ changed values as a short list. Three suites, the route and the close follow: ab
 
 - **Specification:** `SPECIFICATION.md` and the file it maps; `docs/project/decisions.md`.
 - **Amendments:** `phase-5-record.md`.
-- **The follow-ups:** CODE_REVIEW_039 with `findings.md`; CODE_REVIEW_036's designs and corrections; §8.2.36.
 - **Workflow:** `.claude/workflow/core.md`, `.claude/skills/np-*/`; §8.4.4, §8.4.5.
 - **Workbench:** `docs/design/workbench.md`; §8.2.17, §8.2.30,
-  §8.2.31, §8.2.34; `docs/design/reviews/2026-11-05-frame.md`.
+  §8.2.31, §8.2.34; `docs/design/reviews/`.
 
 ## Handoff Rules
 
