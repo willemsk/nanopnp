@@ -3348,3 +3348,15 @@ one (finding 2, against the round's F12), fixed finding 15 and the refusal's wor
   28.6 kB, and each restyle or bar after it 5.6 kB to 10.8 kB.
 - `Project.input_path` writes a model's path to an input for the Contour save and both Molecular sites, and
   `generate` scales the size table once.
+
+### REV-249: A correction a physics model does not set reads none, and is not marked
+
+Found at WP5.18's plan. A correction's schema default is `none` (`io/case.py:CorrectionChoice`), while the changed
+mark compares a value with the validated `willems2020_nacl` and `borukhov` (`io/defaults.py:_default_of`). A physics
+model that sets no correction therefore resolves to classical transport with every correction off, which the run's
+manifest records as deviations, while the workbench's changed list (`mapping_changes`) lists only the values the file
+sets, and the planned Electrolyte tool would show `none` with no mark. Every model of today's projects comes from an imported case,
+which writes its corrections; a model `Project.new_model` makes writes none.
+
+**Open**, a question for the author with the new-model action (REV-242): a new physics model written with the
+validated corrections, or the mark read from the case the model resolves to.
