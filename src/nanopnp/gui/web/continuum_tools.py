@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import functools
 import shutil
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Concatenate, ParamSpec, TypeVar
 from urllib.parse import urlencode
 
 from nicegui import events, ui
@@ -64,10 +65,13 @@ PART_ROWS: tuple[tuple[str, str, str, str | None], ...] = (
     ("axis", "Boundaries", "numerics.mesh.sizes.axis_in_pore_nm", "axis_in_pore_nm"),
     ("global", "", GLOBAL, "global_nm"),
 )
-"""The Mesh tool's parts (WB-41): the part, its group, the case path that sizes it, and its row
-of the default sizes, which ``SizeTable`` names; the wall's size is ``auto`` or typed."""
-IDEALISED_PARTS = frozenset({"electrolyte", "membrane", "wall", "global"})
-"""The parts an idealised pore's mesh sizes: its global size and its wall's."""
+"""The Mesh tool's parts: the part, its group, the case path that sizes it, and its row of the
+default sizes, which ``SizeTable`` names; the wall's size is ``auto`` or typed."""
+IDEALISED_PARTS = frozenset({"membrane", "wall", "global"})
+"""The parts an idealised pore's mesh sizes: its global size and its wall's. A typed
+``numerics.mesh.sizes`` entry is refused beside ``geometry.pore``, so none of those rows is one."""
+IDEALISED_FIXED = frozenset({"geometry.membrane.centre_z_nm", "numerics.mesh.backend"})
+"""The values an idealised pore refuses away from their defaults: it sits at 0, meshed by netgen."""
 DOMAIN_FIELDS: dict[str, tuple[str, ...]] = {
     "protein": ("charge.exclusion_offset_nm",),
     "exclusion": ("charge.exclusion_offset_nm",),
@@ -80,6 +84,20 @@ SUPPLIED = {
     "inputs.profile": "supplies its outline (inputs.profile)",
     "inputs.mesh": "supplies its mesh (inputs.mesh)",
 }
+
+_S = TypeVar("_S", bound="_Pane[Any]")
+_P = ParamSpec("_P")
+
+
+def _keyed(method: Callable[Concatenate[_S, _P], None]) -> Callable[Concatenate[_S, _P], None]:
+    # A section redrawn by an event reads the model's case and keys its walk once, as the
+    # pane's build and refresh do: each read alone re-keys the walk.
+    @functools.wraps(method)
+    def keyed(self: _S, /, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        with self.keyed_once():
+            method(self, *args, **kwargs)
+
+    return keyed
 
 
 def current_continuum(shell: Shell) -> ContinuumModel | None:
@@ -206,12 +224,11 @@ class _ContinuumPane(_Pane[ContinuumModel]):
 
     def field(self, path: str, body: dict[str, Any], changed: bool, exposed: bool) -> None:
         super().field(path, body, changed, exposed)
-        # A supplied outline: stages 2 to 4 do not run, so their values are shown, not set.
-        if (
-            self.model is not None
-            and path.startswith(OUTLINE_STAGES)
-            and "contour" not in self.walked
-        ):
+        # A supplied outline: stages 2 to 4 do not run, so their values are shown, not set; and an
+        # idealised pore refuses a centre or a mesher of its own.
+        unread = path.startswith(OUTLINE_STAGES) and "contour" not in self.walked
+        fixed = path in IDEALISED_FIXED and self.supplied == "geometry.pore"
+        if self.model is not None and (unread or fixed):
             control = self.controls[path]
             if isinstance(control, ui.select | ui.number | ui.input):
                 control.disable()
@@ -248,6 +265,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         """Say whether an edit can be measured: the model walks stages 2 to 4 over a structure."""
         return "contour" in self.walked
 
+    @_keyed
     def show_edit(self) -> None:
         self.edit_box.clear()
         model = self.model
@@ -363,7 +381,8 @@ class _ContinuumPane(_Pane[ContinuumModel]):
     def start_assess(self, vertices: tuple[tuple[float, float], ...] | None) -> None:
         model = self.model
         case = None if model is None else model.case()
-        if model is None or case is None or self.assessing():
+        # One that ended is still held until the next tick reads its answer and removes its folder.
+        if model is None or case is None or self.assess is not None:
             return
         self.folder = Path(tempfile.mkdtemp(prefix="nanopnp-assess-"))
         written = self.folder / f"{model.name}.case.yaml"
@@ -547,8 +566,11 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         path, value = str(event.args.get("path", "")), event.args.get("value")
         if path not in self.controls or not isinstance(value, int | float):
             return
-        self.write(path, float(value))
         control = self.controls[path]
+        # A value the pane shows but does not set is not set from its label on the drawing.
+        if not getattr(control, "enabled", True):
+            return
+        self.write(path, float(value))
         if isinstance(control, ui.number):
             self.writing = False
             try:
@@ -610,6 +632,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             shown = path in DOMAIN_FIELDS.get(domain, ())
             self.rows[path].set_visibility(shown and (changed or not self.modified_only))
 
+    @_keyed
     def show_element(self, index: int) -> None:
         import numpy as np
 
@@ -623,6 +646,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
             f"Element {index}: SICN {np.round(sicn[index], 3)}, gamma {np.round(gamma[index], 3)}"
         )
 
+    @_keyed
     def show_histogram(self) -> None:
         import numpy as np
 
@@ -769,6 +793,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
         case = None if self.model is None or not self.usable() else self.model.case()
         return case.numerics.mesh.size_scale if case is not None else 1.0
 
+    @_keyed
     def show_parts(self) -> None:
         self.parts_box.clear()
         sizes, used, changed, scale = self.part_sizes(), self.used(), self.changed(), self.scale()
@@ -819,6 +844,7 @@ class _ContinuumPane(_Pane[ContinuumModel]):
                     ui.label(size).classes("parts-size")
                     ui.label(source).classes("parts-source")
 
+    @_keyed
     def show_part(self) -> None:
         """Open the picked part's one field, with the table's value and the size it gives."""
         for path in [p for p in self.rows if p in self.tool.parts]:

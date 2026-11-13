@@ -168,11 +168,12 @@ class CaseArtefact(Artefact):
         *,
         summary: Mapping[str, Canonicalisable] | None = None,
     ) -> None:
-        super().__init__(
-            schema=CASE_SCHEMA,
-            parameters=document.model_dump(by_alias=True, mode="json"),
-            summary=summary or {},
-        )
+        parameters = document.model_dump(by_alias=True, mode="json")
+        mesh = parameters["numerics"]["mesh"]
+        # A part size typed nowhere is left out, so a case that types none keeps its key.
+        if all(size is None for size in mesh["sizes"].values()):
+            del mesh["sizes"]
+        super().__init__(schema=CASE_SCHEMA, parameters=parameters, summary=summary or {})
 
 
 class StructureArtefact(Artefact):

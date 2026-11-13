@@ -445,7 +445,8 @@ untyped maximum takes the table's value. A typed size is a base that `size_scale
 wall size is, so the scale stays one knob over every size and a coarse trial keeps the proportions
 typed. Stage 6's key carries the scaled table, so a case typing each maximum at the table's value
 keys and meshes as one typing none, and a typed size moves stage 6's key and no other stage's (the
-case artefact, which hashes the whole document, aside). The minimum sizes, curvature factors and
+case artefact, which hashes the whole document, aside). The case artefact leaves out a
+`numerics.mesh.sizes` that types nothing, so a case typing no size keeps every key. The minimum sizes, curvature factors and
 growth rates are not typed. A size binds only where the geometry lets it: a domain thinner than its
 size is sized by its own width and the grading from its edges. An idealised pore's mesh reads the
 global and wall sizes alone (the NOTE on an idealised pore's size field), so a typed

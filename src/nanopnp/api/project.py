@@ -89,8 +89,8 @@ BUILD_LAYER: Mapping[str, Any] = {
 # The last stage a model of each kind builds alone; a kind without a row is built by its studies.
 BUILD_UPTO: Mapping[ModelKind, str] = {"molecular": "protonation", "continuum": "mesh"}
 
-# A continuum model holding one of these reads no molecular model when it is built alone.
-_OWN_OUTLINE = ("geometry.pore", "inputs.profile", "inputs.mesh")
+OWN_OUTLINE: tuple[str, ...] = ("geometry.pore", "inputs.profile", "inputs.mesh")
+"""The values with which a continuum model draws its own pore, and reads no molecular model."""
 
 _REFUSED = (ValueError, KeyError, OSError)
 
@@ -549,7 +549,7 @@ class Project:
         layers: list[Mapping[str, Any]] = [_build_layer(idealised=_holds(body, "geometry.pore"))]
         source = f"<{kind} model {name} built alone>"
         molecular = None
-        if kind == "continuum" and not any(_holds(body, path) for path in _OWN_OUTLINE):
+        if kind == "continuum" and own_outline(body) is None:
             molecular = self.molecular_for(name)
         if molecular is not None:
             layers.append(read_model_file("molecular", self.path("molecular", molecular)).body)
@@ -758,7 +758,8 @@ class Project:
             If the name is taken or is not an item name, the project holds no such parent, or
             another kind of model owns one of the paths.
         CaseValidationError
-            If the derived model is refused, or its values form no case; nothing is written.
+            If the derived model is refused: a molecular model whose values form no case, or a
+            continuum model one of whose values is refused alone; nothing is written.
         """
         self._free_name(kind, name)
         if parent not in self._file.names(kind):
@@ -1163,6 +1164,11 @@ def _build_layer(*, idealised: bool) -> dict[str, Any]:
     layer = copy.deepcopy(dict(BUILD_LAYER))
     layer["physics"] = {"solid_permittivities": solids}
     return layer
+
+
+def own_outline(body: Mapping[str, Any]) -> str | None:
+    """Return the value of :data:`OWN_OUTLINE` a continuum model's body sets, or None."""
+    return next((path for path in OWN_OUTLINE if _holds(body, path)), None)
 
 
 def _holds(body: Mapping[str, Any], dotted: str) -> bool:

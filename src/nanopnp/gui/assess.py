@@ -155,6 +155,12 @@ def _context(request: AssessRequest) -> _Context:
             "structure to measure the probe radius on and no stage-3 map to take the planes "
             "from; the §5.2.1 criteria are measured against those"
         )
+    if document.inputs.profile is not None:
+        raise UnsupportedCaseSection(
+            f"case {document.name!r} supplies inputs.profile, so stages 2 to 4 do not run beside "
+            "its structure and there is no stage-3 map to take the planes from; the §5.2.1 "
+            "criteria are measured against the map of a case that builds its own outline"
+        )
     store = Store(Path(request.store)) if request.store is not None else Store()
     upstream = stored_upstream(document, store=store, feeding="contour")
     return _Context(
@@ -189,7 +195,7 @@ def measure_loop(loop: np.ndarray, context: _Context) -> Assessment:
     contour = _contour()
     resolved = resolve(context.document)
     density = resolved.density
-    assert density is not None  # a structure case always resolves one
+    assert density is not None  # a structure case that supplies no profile resolves one
     reduced = ReducedMap.read(context.symmetry.payload[REDUCED_PAYLOAD])
     ensemble = AlignedEnsemble.read(context.structure.payload[ENSEMBLE_PAYLOAD])
     points = np.asarray(loop, dtype=np.float64).reshape(-1, 2)

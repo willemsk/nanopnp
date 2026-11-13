@@ -5,36 +5,25 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import ClassVar
 
+from nanopnp.api.project import own_outline
 from nanopnp.geometry.profile import PAYLOAD_NAME as PROFILE_PAYLOAD
 from nanopnp.geometry.profile import PoreProfile, load_profile
 from nanopnp.gui.geometry import ProfileEditor
-from nanopnp.gui.web.builds import REFUSED, BuiltModel
+from nanopnp.gui.web.builds import BuiltModel
 from nanopnp.io.case import PROFILE_FORMAT
-from nanopnp.io.models import ModelKind, read_model_file
+from nanopnp.io.models import ModelKind
 from nanopnp.io.project import INPUTS_FOLDER
 
-__all__ = ["OWN_OUTLINE", "STAGES", "ContinuumModel"]
+__all__ = ["STAGES", "ContinuumModel"]
 
 STAGES: tuple[str, ...] = ("density", "symmetry", "contour", "region", "mesh")
 """The stages a continuum model is built of, in the order the walk runs them."""
 
-OWN_OUTLINE: tuple[str, ...] = ("geometry.pore", "inputs.profile", "inputs.mesh")
-"""The values with which a continuum model draws its own pore, and reads no molecular model."""
-
 
 # A hand edit of each model's outline, kept for the server's life until it is saved or dropped.
 _EDITS: dict[tuple[Path, str], ProfileEditor] = {}
-
-
-def _holds(body: Any, path: str) -> bool:  # noqa: ANN401 - a parsed YAML body
-    cursor = body
-    for part in path.split("."):
-        if not isinstance(cursor, dict) or part not in cursor:
-            return False
-        cursor = cursor[part]
-    return cursor is not None
 
 
 @dataclass
@@ -44,25 +33,17 @@ class ContinuumModel(BuiltModel):
     kind: ClassVar[ModelKind] = "continuum"
     stages: ClassVar[tuple[str, ...]] = STAGES
     paths: ClassVar[re.Pattern[str]] = re.compile(
-        r"\b(?:geometry|numerics\.mesh|inputs\.profile|inputs\.mesh|charge\.exclusion_offset_nm)"
-        r"(?:\.[a-z_]+)*"
+        # A bare "geometry", as in "a geometry: section" or "element geometry", names no value.
+        r"\b(?:geometry(?=\.[a-z_])|numerics\.mesh|inputs\.profile|inputs\.mesh|"
+        r"charge\.exclusion_offset_nm)(?:\.[a-z_]+)*"
     )
     gate_paths: ClassVar[tuple[tuple[str, str], ...]] = (
         ("stage 4 contour gate", "geometry.contour.isolevel"),
     )
 
-    def body(self) -> dict[str, Any]:
-        """Return the model file's own values, or none where it does not load."""
-        try:
-            location = self.project.path(self.kind, self.name)
-            return dict(read_model_file(self.kind, location, rebase=False).body)
-        except REFUSED:
-            return {}
-
     def own_outline(self) -> str | None:
         """Return the value with which the model draws its own pore, or None where it has none."""
-        body = self.body()
-        return next((path for path in OWN_OUTLINE if _holds(body, path)), None)
+        return own_outline(self.body())
 
     def molecular(self) -> str | None:
         """Return the molecular model the model is built over, or None where it reads none."""

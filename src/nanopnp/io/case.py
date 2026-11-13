@@ -737,10 +737,20 @@ class CaseDocument(_Strict):
                 value = getattr(self.numerics.mesh, key)
                 if value == getattr(defaults, key):
                     continue
-                problems.append(
-                    f"numerics.mesh.{key} is {value!r} beside inputs.mesh; it configures the "
-                    "mesher, and a supplied mesh is not meshed, so it would have no effect; "
-                    f"remove it or remove inputs.mesh"
+                named = (
+                    {
+                        f"numerics.mesh.sizes.{part}": size
+                        for part, size in value.model_dump().items()
+                        if size is not None
+                    }
+                    if isinstance(value, MeshSizes)
+                    else {f"numerics.mesh.{key}": value}
+                )
+                problems.extend(
+                    f"{path} is {typed!r} beside inputs.mesh; it configures the mesher, and a "
+                    "supplied mesh is not meshed, so it would have no effect; remove it or remove "
+                    "inputs.mesh"
+                    for path, typed in named.items()
                 )
         if problems:
             raise ValueError("; ".join(problems))
