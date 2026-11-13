@@ -2,9 +2,9 @@
 
 Every decision the records hold, one row each, written by `.claude/scripts/decisions.py` from the tree; `uv run .claude/scripts/decisions.py` rewrites it, and the gate refuses a page that differs from the records. A ruling's *Holds now* is read from `specification/history/holds-now.yaml`. Each row names the file that holds the decision in full.
 
-Rows: 1,397. By source: history ruling 349; plan decision row 704; REV row 249; MOD row 18; OPN row 9; WB row 41; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
+Rows: 1,398. By source: history ruling 349; plan decision row 704; REV row 250; MOD row 18; OPN row 9; WB row 41; knowledge-base ruling 14; not-to-be-re-decided bullet 13.
 
-By decider: author 567; open 5; session, own call 822; session, put to the author 3.
+By decider: author 567; open 5; session, own call 823; session, put to the author 3.
 
 | Source | Decided by | Where | Date | Package | What was decided | Holds now | Status |
 |---|---|---|---|---|---|---|---|
@@ -1329,6 +1329,7 @@ By decider: author 567; open 5; session, own call 822; session, put to the autho
 | REV-247 | author | `docs/project/review-findings.md` |  | WP5.19 | The solid-share gate's reach against an outline in another frame is not measured | ruled by the author, 13 November 2026: WP5.19 (WP5.17) | accepted |
 | REV-248 | author | `docs/project/review-findings.md` |  | WP5.17 | What the code review of the Continuum suite left open | ruled by the author, 13 November 2026 (WP5.17) | fixed |
 | REV-249 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | A correction a physics model does not set reads none, and is not marked | WP5.18 | open |
+| REV-250 | session, own call | `docs/project/review-findings.md` |  | WP5.18 | PHY-23's terms under a solid fraction and without the flow | WP5.18 | open |
 | MOD-01 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | Two stages have no key, and the protocol declares none | WP36 | fixed |
 | MOD-02 | session, own call | `docs/project/modularity-findings.md` |  | WP36 | The walk holds what the stages should declare | WP36 | fixed |
 | MOD-03 | session, own call | `docs/project/modularity-findings.md` |  | WP38 | Ten subpackages form one import cycle | WP38 | fixed |
