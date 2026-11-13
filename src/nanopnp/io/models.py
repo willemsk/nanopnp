@@ -224,6 +224,11 @@ def exposed_values(
     return tuple(found)
 
 
+def exposable_paths(kind: ModelKind) -> tuple[str, ...]:
+    """Return the generic paths of the numeric values a model of ``kind`` may expose, sorted."""
+    return tuple(sorted(path for path in _exposable_paths() if owner_of(path) == kind))
+
+
 @cache
 def _exposable_paths() -> frozenset[str]:
     # A mapping of numbers is one numeric field to a variable, but it is not one value to expose.

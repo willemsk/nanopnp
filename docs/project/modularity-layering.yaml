@@ -42,6 +42,7 @@ edges:
   - {from: api, to: io, relation: static, finding: null}
   - {from: api, to: materials, relation: static, finding: null}
   - {from: api, to: mesh, relation: static, finding: null}
+  - {from: api, to: physics, relation: static, finding: null}
   - {from: api, to: pipeline, relation: static, finding: null}
   - {from: api, to: plot, relation: static, finding: null}
   - {from: api, to: structure, relation: static, finding: null}

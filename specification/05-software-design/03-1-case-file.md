@@ -355,6 +355,18 @@ reads none, and an idealised pore's layer holds the membrane's permittivity alon
 study pairing the two at 0.15 M NaCl. A wall sized `auto` follows the study's salt only where `λ_D/5` falls below the
 0.05 nm ceiling, above about 1.5 M NaCl, so a study there builds a mesh of its own; an explicit wall size or
 `wall_for_concentration_M` is shared by every study. The store's clean-up keeps what each build stored.
+`set_exposed` writes an entry's name and range as well, replacing the path's entry in its place.
+
+A physics model is built by no stage of its own; the workbench shows it inside a study (§8.2.41 AQ1).
+`Project.physics_case(name, study)` is that study with this model in place of its own physics model and without the
+study's own values of the physics model's keys, so every value a Physics tool shows is the case's, and a value the
+study cannot run with is that study's refusal, shown at its field, which writes nothing back. With no study named it
+is the model over the project's current continuum model, else its first, and the molecular model that continuum model
+is built alone over. `Project.choose_physics(name, model)` sets the registered model, sets each switch the model does
+not honour to the first value it honours, and removes each value its declaration refuses: a leaf it does not read set
+away from its default, the solid permittivities where it carries no solid and a wall charge where it takes none
+(§8.2.41 AQ2; §5.4.3's NOTE). It writes them in one checked write and returns each changed path's earlier value, None
+where it was unset, which `set_value` writes back. A study's own value the model refuses stays the study's.
 
 The case resolves by merging the study over the molecular model, then the continuum model, then the physics model: a
 mapping merges key by key, and a list or a free mapping replaces whole. The result validates once as

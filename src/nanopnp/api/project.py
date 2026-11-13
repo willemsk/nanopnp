@@ -25,6 +25,7 @@ from nanopnp.io.case_paths import (
     field_at,
     input_paths,
     rewrite_inputs,
+    schema_default,
 )
 from nanopnp.io.defaults import Change, changes, mapping_changes
 from nanopnp.io.manifest import RUN_RECORD_FILENAME
@@ -66,6 +67,7 @@ from nanopnp.io.project import (
 )
 from nanopnp.io.store import LOCKS, StaleEntry, Store, StoreUsage
 from nanopnp.materials.corrections import load_corrections
+from nanopnp.physics.models import SWITCHES, declaration
 from nanopnp.pipeline.case import resolve
 from nanopnp.pipeline.run import keyed_walk, selected_stages
 from nanopnp.sweep.run import MEMBERS_DIRNAME
@@ -584,6 +586,118 @@ class Project:
                 return found
         return molecules[0] if molecules else None
 
+    def physics_case(self, name: str, study: str | None = None) -> Case:
+        """Return the case physics model ``name`` is shown in.
+
+        With ``study``, the study with this model in place of its own physics model and
+        without the study's own values of the physics model's keys; without, the model over the
+        project's current continuum model, else its first, and the molecular model that model
+        is built alone over.
+
+        Raises
+        ------
+        ProjectError
+            If no study is given and the project holds no continuum model.
+        CaseValidationError
+            If the case is refused.
+        """
+        model = str(self.path("physics", name).resolve())
+        if study is not None:
+            location = self.path("study", study)
+            body = _body(location)
+            for path, _ in list(leaves(body)):
+                if owner_of(path) == "physics":
+                    _delete(body, path)
+            named = body.get("models")
+            body["models"] = {**(named if isinstance(named, dict) else {}), "physics": model}
+            return Case.loads(
+                _text(body),
+                base=location.parent,
+                source=f"<study {study} with physics model {name}>",
+            )
+        continuum = self._shown_continuum()
+        models = {"continuum": str(self.path("continuum", continuum).resolve()), "physics": model}
+        if own_outline(_body(self.path("continuum", continuum))) is None:
+            molecular = self.molecular_for(continuum)
+            if molecular is not None:
+                models["molecular"] = str(self.path("molecular", molecular).resolve())
+        document = {"schema": SCHEMA, "name": name, "models": models}
+        return Case.loads(
+            _text(document),
+            base=self.path("physics", name).parent,
+            source=f"<physics model {name} over continuum model {continuum}>",
+        )
+
+    def _shown_continuum(self) -> str:
+        names = self._file.names("continuum")
+        if not names:
+            raise ProjectError(
+                "the project holds no continuum model to show a physics model over; import a "
+                "case or add a continuum model"
+            )
+        current = self.current
+        if current is not None:
+            kind, _, held = current.partition("/")
+            if kind == "continuum" and held in names:
+                return held
+        return names[0]
+
+    def choose_physics(self, name: str, model: str) -> dict[str, FieldValue | None]:
+        """Set physics model ``name``'s registered model, and every value it must change with it.
+
+        Each switch the model does not honour takes the first value it honours, and each value
+        it refuses is removed: a leaf it does not read set away from its default, the solid
+        permittivities where it carries no solid, and a wall charge where it takes none. All are
+        written at once; nothing is written if refused.
+
+        Returns
+        -------
+        dict
+            Each changed path's earlier value, None where it was unset; :meth:`set_value` with
+            each restores the model.
+
+        Raises
+        ------
+        KeyError
+            If no model is registered as ``model``.
+        CaseValidationError
+            If the edited model is refused.
+        """
+        declared = declaration(model)
+        body = _body(self.path("physics", name))
+        own = dict(leaves(body))
+        wanted: dict[str, FieldValue | None] = {"physics.model": model}
+        for switch in SWITCHES:
+            path = f"physics.{switch}"
+            honoured = declared.switches[switch]
+            value = own[path] if path in own else schema_default(path)[1]
+            if value not in honoured:
+                _, default = schema_default(path)
+                wanted[path] = None if honoured[0] == default else honoured[0]
+        for path, value in own.items():
+            if path in declared.unread:
+                has_default, default = schema_default(path)
+                if has_default and value != default:
+                    wanted[path] = None
+        if not declared.solids and "physics.solid_permittivities" in own:
+            wanted["physics.solid_permittivities"] = None
+        if "surface_charge" not in declared.coefficients and (
+            "boundary_conditions.wall_charge_C_m2" in own
+        ):
+            wanted["boundary_conditions.wall_charge_C_m2"] = None
+        earlier: dict[str, FieldValue | None] = {}
+        for path, value in wanted.items():
+            if own.get(path) == value:
+                continue
+            earlier[path] = own.get(path)
+            if value is None:
+                _delete(body, path)
+            else:
+                _put(body, path, value)
+        if earlier:
+            self._checked_write("physics", name, body)
+        return earlier
+
     def set_built_with(self, name: str, molecular: str | None) -> None:
         """Choose the molecular model continuum model ``name`` is built alone over.
 
@@ -654,17 +768,33 @@ class Project:
             _put(body, path, value)
         self._checked_write(kind, name, body)
 
-    def set_exposed(self, kind: ModelKind, name: str, path: str, on: bool) -> None:
+    def set_exposed(
+        self,
+        kind: ModelKind,
+        name: str,
+        path: str,
+        on: bool,
+        *,
+        label: str | None = None,
+        span: tuple[float, float] | None = None,
+    ) -> None:
         """List a value of a model among those its studies see first, or take it off the list.
 
-        The entry is named by the last part of its path.
+        An entry already listed for the path is replaced in its place.
+
+        Parameters
+        ----------
+        label
+            The entry's name; the last part of its path when None.
+        span
+            The entry's range, low then high; the field's schema bounds when None.
 
         Raises
         ------
         ProjectError
             If another exposed value already has that name.
         CaseValidationError
-            If the path is not a numeric value of this kind of model.
+            If the path is not a numeric value of this kind of model, or the range is refused.
         """
         location = self.path(kind, name)
         body = _body(location)
@@ -675,16 +805,19 @@ class Project:
         if not isinstance(listed, list):
             listed = [{"name": label, "path": default} for label, default in EXPOSED[kind]]
         kept = [entry for entry in listed if not _exposes(entry, path)]
-        if on and len(kept) == len(listed):
-            label = path.rsplit(".", 1)[-1]
-            if any(isinstance(entry, dict) and entry.get("name") == label for entry in kept):
+        if on:
+            entry: dict[str, Any] = {"name": label or path.rsplit(".", 1)[-1], "path": path}
+            if span is not None:
+                entry["range"] = list(span)
+            if any(
+                isinstance(other, dict) and other.get("name") == entry["name"] for other in kept
+            ):
                 raise ProjectError(
-                    f"{kind} {name!r} already exposes a value named {label!r}; rename it in "
-                    f"{self.path(kind, name).name} before exposing {path}"
+                    f"{kind} {name!r} already exposes a value named {entry['name']!r}; rename "
+                    f"it before exposing {path} under that name"
                 )
-            kept.append({"name": label, "path": path})
-        elif on:
-            return
+            at = next((k for k, other in enumerate(listed) if _exposes(other, path)), len(kept))
+            kept.insert(at, entry)
         head: dict[str, Any] = {key: body[key] for key in ("schema", "name") if key in body}
         rest = {key: item for key, item in body.items() if key not in (*head, "exposes")}
         self._checked_write(kind, name, {**head, "exposes": kept, **rest})
