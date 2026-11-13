@@ -65,12 +65,16 @@ class Tool:
         The dotted case paths the tool's pane sets, in the order it lists them.
     parts
         The case paths the tool sets through a list of parts, each opened one at a time.
+    conditional
+        The case paths the tool's pane sets for some models alone, such as an idealised pore's
+        radius, which a problem or a change naming them opens it at.
     """
 
     id: str
     title: str
     fields: tuple[str, ...] = ()
     parts: tuple[str, ...] = ()
+    conditional: tuple[str, ...] = ()
 
 
 def _later(*titles: str) -> tuple[Tool, ...]:
@@ -163,6 +167,7 @@ SUITES: tuple[Suite, ...] = (
                     "geometry.reservoir.radius_nm",
                     "charge.exclusion_offset_nm",
                 ),
+                conditional=("geometry.pore.radius_nm",),
             ),
             Tool(
                 "mesh",
@@ -267,7 +272,8 @@ def tool_for(suite: SuiteId, path: str) -> Tool | None:
             continue
         for tool in entry.tools:
             if any(
-                path == held or path.startswith(f"{held}.") for held in (*tool.fields, *tool.parts)
+                path == held or path.startswith(f"{held}.")
+                for held in (*tool.fields, *tool.parts, *tool.conditional)
             ):
                 return tool
     return None

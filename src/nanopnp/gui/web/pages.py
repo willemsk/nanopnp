@@ -123,8 +123,9 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
         colour: str = "material",
         band: str = "",
         pick: str = "",
+        held: str = "",
     ) -> JSONResponse:
-        """Serve what the (r, z) view draws of a model for one tool."""
+        """Serve what the (r, z) view draws of a model for one tool, less the mesh it holds."""
         if image not in IMAGES or colour not in MESH_COLOURINGS:
             raise HTTPException(422, "an unknown picture or colouring")
         try:
@@ -132,7 +133,15 @@ def install(app: FastAPI, shell: Shell, secret: str) -> None:  # noqa: C901
             outlined = (float(low), float(high)) if band else None
             model = continuum(name)
             with model.keyed_once():
-                drawn = plane(model, tool, image=image, colour=colour, band=outlined, pick=pick)
+                drawn = plane(
+                    model,
+                    tool,
+                    image=image,
+                    colour=colour,
+                    band=outlined,
+                    pick=pick,
+                    mesh_held=held,
+                )
         except ValueError as error:
             raise HTTPException(422, str(error)) from None
         return JSONResponse(drawn.json())

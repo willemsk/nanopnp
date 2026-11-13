@@ -3299,7 +3299,9 @@ refused. At the default grid nothing moves, as the null edit on 2WCD shows (VER-
 which `h_c` a supplied outline's shell takes. `derive_model`'s docstring now says that a continuum model is checked
 value by value, not as a case.
 
-**Open**, a question for the author: which grid a supplied outline's exclusion shell is built on.
+**Accepted**, ruled by the author on 13 November 2026 (§8.2.40 AP5, "From the outline itself"): a supplied
+outline's shell takes `h_c` from the outline's own point spacing, which its file records. WP5.19, which pairs a
+saved edit in a study, builds it and amends the NOTEs.
 
 ### REV-247: The solid-share gate's reach against an outline in another frame is not measured
 
@@ -3311,8 +3313,9 @@ displaced by the shift. The frames are handled consistently: stage 5 and the dep
 `membrane.centre_z_nm`. The Contour tool's saved edit is in stage 1's frame by construction, and the moved 2WCD
 edit passes at 0.977. Not measured: the share of a 2WCD outline shifted by its frame's offset.
 
-**Open**: measure that share. If it passes, either a supplied outline beside a structure gains a frame check, or
-AP1's consequence is restated to the reach the gate has.
+**Accepted**, ruled by the author on 13 November 2026 ("Measure it in WP5.19"): WP5.19, which pairs a saved edit in a
+study, measures that share. If the shifted outline passes, either a supplied outline beside a structure gains a frame
+check, or AP1's consequence is restated to the reach the gate has.
 
 ### REV-248: What the code review of the Continuum suite left open
 
@@ -3334,4 +3337,14 @@ one (finding 2, against the round's F12), fixed finding 15 and the refusal's wor
 - **Small duplications** (findings 21, 23). `../../inputs/` is written by hand, as the Molecular tools write it, and
   `generate` scales the region's size table twice.
 
-**Open**: with REV-242's new-model action and the drawing's protocol, in a later suite's package.
+**Fixed**, as the author ruled on 13 November 2026 ("Fix them now"), in WP5.17 after the review:
+
+- A refused save removes the outline it wrote, unless the folder held that file before.
+- Re-pairing builds the tool's page again in place (`Views.reopen`), so its stages, values and actions follow the
+  new pairing. The window and the canvas are kept, and the pane reads its stages inside its one keyed read.
+- Region claims the pore's radius (`Tool.conditional`).
+- A drawing leaves out a mesh's vertices, triangles and materials when the canvas names the mesh it holds. The
+  canvas keeps a mesh's paths by colouring and focus. On the charged tube (1047 elements), the first drawing is
+  28.6 kB, and each restyle or bar after it 5.6 kB to 10.8 kB.
+- `Project.input_path` writes a model's path to an input for the Contour save and both Molecular sites, and
+  `generate` scales the size table once.

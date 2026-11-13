@@ -503,7 +503,7 @@ class Project:
             source = Path(value)
             source = source if source.is_absolute() else base / source
             target = self.add_input(source, link=link)
-            return str(target) if link else self._relative(kind, target)
+            return str(target) if link else self.input_path(kind, target)
 
         rewrite_inputs(body, move)
 
@@ -979,7 +979,7 @@ class Project:
         self, kind: ItemKind, wanted: Path, copy: Path
     ) -> Callable[[str, str], str | None]:
         def point(_: str, value: str) -> str | None:
-            return self._relative(kind, copy) if self._resolved(kind, value) == wanted else None
+            return self.input_path(kind, copy) if self._resolved(kind, value) == wanted else None
 
         return point
 
@@ -1006,7 +1006,7 @@ class Project:
             inputs[resolved] = f"{INPUTS_FOLDER}/{resolved.name}"
             if kept in resolved.parents:
                 return None
-            return self._relative(kind, self._root / INPUTS_FOLDER / resolved.name)
+            return self.input_path(kind, self._root / INPUTS_FOLDER / resolved.name)
 
         return collect
 
@@ -1102,7 +1102,8 @@ class Project:
             path.resolve() if path.is_absolute() else (self._root / FOLDERS[kind] / path).resolve()
         )
 
-    def _relative(self, kind: ItemKind, target: Path) -> str:
+    def input_path(self, kind: ItemKind, target: Path) -> str:
+        """Return the path by which an item of ``kind`` names a file of the project's inputs."""
         depth = len(Path(FOLDERS[kind]).parts)
         inside = target.resolve().relative_to((self._root / INPUTS_FOLDER).resolve())
         return str(Path(*[".."] * depth, INPUTS_FOLDER, inside).as_posix())

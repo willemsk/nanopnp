@@ -1042,7 +1042,9 @@ class _MolecularPane(_Pane[MolecularModel]):
 
     def use_input(self, dialog: ui.dialog, name: str) -> None:
         dialog.close()
-        self.set_source(f"../../{INPUTS_FOLDER}/{name}")
+        if self.project is not None:
+            held = self.project.root / INPUTS_FOLDER / name
+            self.set_source(self.project.input_path("molecular", held))
 
     def set_source(self, value: str) -> None:
         path = "structure.source.path"
@@ -1234,7 +1236,7 @@ class _MolecularPane(_Pane[MolecularModel]):
             notice.dismiss()
             self.busy = False
         self.prepare["typed"] = False
-        self.set_source(f"../../{INPUTS_FOLDER}/{written.name}")
+        self.set_source(model.project.input_path("molecular", written))
         ui.notify(f"Saved {INPUTS_FOLDER}/{written.name}; building the ensemble.")
         await self.on_build()
 

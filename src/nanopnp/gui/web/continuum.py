@@ -126,13 +126,21 @@ class ContinuumModel(BuiltModel):
             raise ValueError(f"continuum model {self.name!r} holds no edit to save")
         folder = self.project.root / INPUTS_FOLDER
         folder.mkdir(parents=True, exist_ok=True)
+        held = {path.name for path in folder.iterdir()}
         written = editor.save(folder)
-        value = {"path": f"../../{INPUTS_FOLDER}/{written.name}", "format": PROFILE_FORMAT}
-        location = self.project.derive_model(
-            "continuum",
-            self.name,
-            name,
-            {"inputs.profile": value, "geometry.density": None, "geometry.contour": None},
-        )
+        value = {"path": self.project.input_path(self.kind, written), "format": PROFILE_FORMAT}
+        try:
+            location = self.project.derive_model(
+                "continuum",
+                self.name,
+                name,
+                {"inputs.profile": value, "geometry.density": None, "geometry.contour": None},
+            )
+        except Exception:
+            # The outline is named by its digest, so a file the folder held before is another
+            # model's and stays.
+            if written.name not in held:
+                written.unlink(missing_ok=True)
+            raise
         self.drop_edit()
         return location

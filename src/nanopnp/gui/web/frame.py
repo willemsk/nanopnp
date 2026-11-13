@@ -181,6 +181,9 @@ class Views(Protocol):
     def problems_moved(self) -> None:
         """Count and list the problems again, after a build was refused or its refusal answered."""
 
+    async def reopen(self) -> None:
+        """Build the open sub-page again, as if it were opened anew; the view region is kept."""
+
     async def settled(self) -> None:
         """Wait until what the address opened in the frame, such as the palette, has opened."""
 
@@ -398,6 +401,10 @@ class _Frame:
         """Show the queue's one line again, after a build started or ended."""
         self.queue_label.text = self.shell.queue.status_line()
         self.mark_suite()
+
+    async def reopen(self) -> None:
+        """Build the open sub-page again, as if it were opened anew; the view region is kept."""
+        await context.client.sub_pages_router.refresh()
 
     def problems_moved(self) -> None:
         """Count and list the problems again, after a build was refused or its refusal answered."""
