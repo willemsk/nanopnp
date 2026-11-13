@@ -56,6 +56,7 @@ from nanopnp.physics.steric import registered_steric_models
 from nanopnp.post.outputs import provided, registered_outputs
 
 __all__ = [
+    "ELEMENT_LABELS",
     "check_document",
     "check_operating_point",
     "check_referenced_files",
@@ -197,6 +198,8 @@ def element_orders(document: CaseDocument) -> tuple[int, int, int]:
 
 def options_at(path: str) -> tuple[str, ...] | None:
     """Return the values a case document is accepted with at path, or None if not enumerable."""
+    if path.startswith("numerics.elements."):
+        return ELEMENT_LABELS
     reference = field_at(path)
     literal = _literal_options(reference.annotation)
     registered = registry_options(path)
@@ -209,6 +212,9 @@ def options_at(path: str) -> tuple[str, ...] | None:
 
 
 _ORDERS: dict[str, int] = {"P1": 1, "P2": 2, "P3": 3}
+
+ELEMENT_LABELS: tuple[str, ...] = tuple(_ORDERS)
+"""The element labels ``numerics.elements`` accepts, lowest order first."""
 
 
 PROFILE_KEYS: tuple[str, ...] = ("exclusion_offset_nm", "dielectric_transition_nm")

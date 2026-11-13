@@ -240,7 +240,7 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 
 ### Work items
 
-- [ ] 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when
+- [x] 2c22fa2 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when
   `test_model_interface.py` passes; then the `physics-reviewer` reads the terms against §4. **Executor:** main
 - [ ] 2. `api/project.py`, `pipeline/checks.py`, `modularity-layering.yaml`, §5.3.1's NOTE on model files (D2 to D4,
   D9); done when `test_physics_model.py` and `test_layering.py` pass. **Executor:** main
