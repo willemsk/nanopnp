@@ -1,24 +1,35 @@
-"""What the Continuum suite's (r, z) view draws for each tool: its frame, extent and layers."""
+"""What the (r, z) view draws for each Continuum and Physics tool: its frame, extent and layers."""
 
 from __future__ import annotations
 
+import hashlib
 import math
 import threading
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
+from nanopnp.core.stages import describe
 from nanopnp.density.map import PAYLOAD_NAME as DENSITY_PAYLOAD
 from nanopnp.density.map import DensityMap
 from nanopnp.geometry.profile import load_profile
 from nanopnp.gui.geometry import ImageModel, density_section, lookup_table, reduced_image
+from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.link import png
 from nanopnp.io.case import Membrane, Reservoir
+from nanopnp.mesh.ingest import BOUNDARY_VOCABULARY, deployed_mesh
+from nanopnp.physics.models import case_model, role_conditions
+from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import keyed_walk
 from nanopnp.plot.data import (
     MeshElements,
     RegionDrawing,
+    axis_label,
+    boundary_edges,
+    case_correction_curves,
     contour_polygon_m,
+    mesh_elements,
     mesh_of,
     reduced_map,
     region_drawing,
@@ -28,7 +39,10 @@ if TYPE_CHECKING:  # pragma: no cover - annotations only
     import numpy as np
     from shapely.geometry.base import BaseGeometry
 
+    from nanopnp.api.case import Case
     from nanopnp.io.artefact import Artefact
+    from nanopnp.io.resolved import ResolvedCase
+    from nanopnp.io.store import Store
 
 __all__ = [
     "COLOURINGS",
@@ -36,13 +50,19 @@ __all__ = [
     "IMAGES",
     "MATERIAL_COLOURS",
     "PARTS",
+    "ROLE_COLOURS",
+    "ROLE_TITLES",
+    "SERIES",
     "Plane",
     "image_png",
     "mesh_quality",
+    "physics_plane",
     "plane",
 ]
 
-Frame = Literal["structure", "model"]
+Frame = Literal["structure", "model", "plot"]
+
+_T = TypeVar("_T")
 
 IMAGES: tuple[str, ...] = ("density", "mean", "cn_variance", "raw_variance")
 """The pictures Pore geometry draws under its outline: stage 2's section, then stage 3's maps."""
@@ -100,6 +120,45 @@ MARGIN = 0.08
 FRAMED = frozenset({"contour", "pore", "exclusion", "probe", "lumen"})
 """The outlines the first view frames, with the pictures: the pore, not the membrane."""
 
+SERIES: tuple[str, ...] = (
+    "#2a78d6",
+    "#d95926",
+    "#199e70",
+    "#c98500",
+    "#d55181",
+    "#008300",
+    "#9085e9",
+    "#e34948",
+)
+"""A plot's line colours in their fixed order, each at 3:1 or more on either theme's canvas."""
+
+ROLE_COLOURS: dict[str, str] = {
+    "cis": SERIES[0],
+    "trans": SERIES[1],
+    "wall": SERIES[2],
+    "membrane": SERIES[3],
+    "axis": SERIES[4],
+}
+"""Each boundary role's line in the Conditions view, unless it is picked: that takes the accent."""
+
+ROLE_TITLES: dict[str, str] = {
+    "cis": "Cis boundary",
+    "trans": "Trans boundary",
+    "wall": "Pore wall",
+    "membrane": "Membrane faces",
+    "axis": "Axis",
+}
+"""Each boundary role as the Conditions view's key names it."""
+
+PLOT_TICKS = 5
+"""How many ticks each axis of a plot carries, its two ends among them."""
+
+NICE_STEPS = (1.0, 2.0, 2.5, 5.0, 10.0, 20.0)
+"""The multiples of a power of ten a plot's tick step is chosen from."""
+
+UNMESHED = "The boundaries are drawn on the pore's mesh: build it in Continuum \u203a Mesh."
+"""What the Conditions view says where the shown case's mesh is not built."""
+
 
 @dataclass(frozen=True)
 class Plane:
@@ -109,10 +168,11 @@ class Plane:
     ----------
     frame
         ``structure``, stage 1's frame, where stages 2 to 4 draw; ``model``, the membrane at
-        z = 0, where the region and the mesh draw. The view keeps its pan and zoom while the
-        frame stays the same.
+        z = 0, where the region and the mesh draw; ``plot``, a graph with each axis scaled
+        alone. The view keeps its pan and zoom while the frame stays the same.
     extent_nm
-        ``(r_low, r_high, z_low, z_high)`` the view opens on: the pore, not the reservoir.
+        ``(r_low, r_high, z_low, z_high)`` the view opens on: the pore, not the reservoir. A
+        plot's ``(x_low, x_high, y_low, y_high)``, in its axes' units, as its layers' points.
     notes
         What is not drawn, and why, said beside the drawing.
     """
@@ -129,8 +189,9 @@ class Plane:
             "frame": self.frame,
             "axes": list(self.axes),
             "extent_nm": list(self.extent_nm),
-            # Whether the extent frames something drawn, not the empty view's stand-in.
-            "framed": _bounds(self.layers) is not None,
+            # Whether the extent frames something drawn, not the empty view's stand-in; a plot
+            # is fitted to its extent at every drawing.
+            "framed": self.frame != "plot" and _bounds(self.layers) is not None,
             "layers": list(self.layers),
             "notes": list(self.notes),
         }
@@ -481,24 +542,33 @@ MESHES_HELD = 4
 """How many meshes' elements the server keeps read: each size or scale tried makes another."""
 
 _MESHES: dict[str, MeshElements] = {}
+# The mesh a run deploys, by its stage-6 key and its case: its hash, elements and boundaries.
+_DEPLOYED: dict[str, tuple[str, MeshElements, dict[str, np.ndarray]]] = {}
 # A drawing request runs in the server's thread pool, beside the window's own reads.
 _MESHES_LOCK = threading.Lock()
 
 
-def _elements(artefact: Artefact) -> MeshElements:
+def _kept(cache: dict[str, _T], key: str, read: Callable[[], _T]) -> _T:
     with _MESHES_LOCK:
-        elements = _MESHES.pop(artefact.hash, None)
-    if elements is None:
+        found = cache.pop(key, None)
+    if found is None:
+        found = read()
+    with _MESHES_LOCK:
+        # The latest read last; the least recently read goes first once the cache is full.
+        cache[key] = found
+        while len(cache) > MESHES_HELD:
+            del cache[next(iter(cache))]
+    return found
+
+
+def _elements(artefact: Artefact) -> MeshElements:
+    def read() -> MeshElements:
         found = mesh_of(artefact, None)
         if found is None:
             raise ValueError(f"stage 6's artefact {artefact.hash[:12]} holds no mesh")
-        elements = found
-    with _MESHES_LOCK:
-        # The latest read last; the least recently read goes first once the cache is full.
-        _MESHES[artefact.hash] = elements
-        while len(_MESHES) > MESHES_HELD:
-            del _MESHES[next(iter(_MESHES))]
-    return elements
+        return found
+
+    return _kept(_MESHES, artefact.hash, read)
 
 
 def mesh_quality(model: ContinuumModel, colour: str) -> np.ndarray | None:
@@ -513,7 +583,8 @@ def mesh_quality(model: ContinuumModel, colour: str) -> np.ndarray | None:
 
 
 def _mesh_layer(
-    artefact: Artefact,
+    elements: MeshElements,
+    key: str,
     colour: str,
     band: tuple[float, float] | None,
     part: str = "",
@@ -521,12 +592,11 @@ def _mesh_layer(
 ) -> dict[str, Any]:
     import numpy as np
 
-    elements = _elements(artefact)
     # The vertices, triangles and materials go once per mesh: a canvas holding them names the
     # mesh, and a restyle, a pick or a bar sends one value per element.
     geometry = (
         {}
-        if mesh_held == artefact.hash
+        if mesh_held == key
         else {
             "vertices_nm": np.round(elements.vertices_m * 1e9, ROUND_NM).ravel().tolist(),
             "triangles": elements.triangles.ravel().tolist(),
@@ -555,7 +625,7 @@ def _mesh_layer(
     return {
         "id": "mesh",
         "kind": "mesh",
-        "mesh": artefact.hash,
+        "mesh": key,
         **geometry,
         "colour": colour,
         "values": values,
@@ -654,7 +724,7 @@ def plane(
         notes.append(_unbuilt(model, "The mesh is not built yet: build it to draw it."))
         return Plane("model", ("r (nm)", "z (nm)"), extent, tuple(outlines), tuple(notes))
     over = None if drawing is None or not pick else _part_line(drawing, pick)
-    mesh = _mesh_layer(held["mesh"], colour, band, pick, mesh_held)
+    mesh = _mesh_layer(_elements(held["mesh"]), held["mesh"].hash, colour, band, pick, mesh_held)
     return Plane(
         "model",
         ("r (nm)", "z (nm)"),
@@ -662,3 +732,221 @@ def plane(
         (mesh, *outlines, *([over] if over else [])),
         tuple(notes),
     )
+
+
+def _nice(low: float, high: float) -> tuple[float, float]:
+    if high - low <= 1e-12 * max(abs(low), abs(high), 1.0):
+        low, high = low - 0.5, high + 0.5
+    power = 10.0 ** math.floor(math.log10((high - low) / (PLOT_TICKS - 1)))
+    for multiple in NICE_STEPS:
+        step = multiple * power
+        start = math.floor(low / step + 1e-9) * step
+        end = start + (PLOT_TICKS - 1) * step
+        if end >= high - 1e-9 * step:
+            return round(start, 12), round(end, 12)
+    return low, high
+
+
+def _curve(
+    identifier: str, title: str, x: np.ndarray, y: np.ndarray, colour: str
+) -> dict[str, Any]:
+    import numpy as np
+
+    kept = np.isfinite(x) & np.isfinite(y)
+    return {
+        "id": identifier,
+        "kind": "line",
+        "title": title,
+        "points_nm": _flat(np.column_stack((x[kept], y[kept]))),
+        "colour": colour,
+    }
+
+
+def _electrolyte_plane(resolved: ResolvedCase, against: str) -> Plane:
+    import numpy as np
+
+    curves = case_correction_curves(resolved)
+    electrolyte = resolved.electrolyte
+    symbol = "I" if electrolyte.driver == "ionic_strength" else "⟨c⟩"
+    driver_axis = f"{curves[0].driver_label if curves else symbol} (M)"
+    if not curves:
+        notes = ("Every correction is the none model: each factor is 1.",)
+        return Plane("plot", (driver_axis, "correction factor"), (0.0, 1.0, 0.0, 2.0), (), notes)
+    at_M = curves[0].at_driver_M
+    layers: list[dict[str, Any]] = []
+    if against == "driver":
+        low, high = electrolyte.validity_M
+        layers += [
+            {
+                "id": "validity",
+                "kind": "band",
+                "title": f"Fitted range, {low:g} to {high:g} M",
+                "x": [low, high],
+            },
+            {"id": "driver", "kind": "rule", "title": f"Operating {symbol}, {at_M:g} M", "x": at_M},
+        ]
+        axes = (driver_axis, "correction factor")
+        drawn = [(curve.driver_M, curve.factor_vs_driver) for curve in curves]
+    else:
+        distance = axis_label("distance d to the pore wall", "length")
+        axes = (f"{distance}, at {symbol} = {at_M:g} M", "correction factor")
+        drawn = [(curve.distance_m * 1e9, curve.factor_vs_distance) for curve in curves]
+    # A curve keeps its colour while another correction is switched off.
+    order = list(electrolyte.corrections)
+    for curve, (x, y) in zip(curves, drawn, strict=True):
+        title = curve.name.replace(":", ", ")
+        colour = SERIES[order.index(curve.name) % len(SERIES)]
+        layers.append(_curve(f"curve-{curve.name}", title[:1].upper() + title[1:], x, y, colour))
+    xs = np.concatenate([x[np.isfinite(x)] for x, _ in drawn])
+    ys = np.concatenate([y[np.isfinite(y)] for _, y in drawn])
+    x_high = max(float(xs.max()), at_M) if against == "driver" else float(xs.max())
+    # A factor is read against 1, the uncorrected value, so the axis always holds it.
+    y_low, y_high = _nice(min(float(ys.min()), 1.0), max(float(ys.max()), 1.0))
+    return Plane("plot", axes, (*_nice(0.0, x_high), y_low, y_high), tuple(layers))
+
+
+def _stored_stages(resolved: ResolvedCase, store: Store) -> tuple[dict[str, Artefact], str | None]:
+    try:
+        identities = keyed_walk(resolved, store=store, planned=set())
+    except REFUSED:
+        return {}, None
+    found: dict[str, Artefact] = {}
+    for stage in ("region", "mesh"):
+        identity = identities.get(stage)
+        if identity is None or identity.built:
+            continue
+        stored = store.get(describe(stage).artefact_schema, identity.hash)
+        if stored is not None:
+            found[stage] = stored
+    mesh = identities.get("mesh")
+    return found, None if mesh is None else mesh.hash
+
+
+def _deployed(
+    resolved: ResolvedCase, artefact: Artefact | None, key: str | None
+) -> tuple[str, MeshElements, dict[str, np.ndarray]]:
+    def read() -> tuple[str, MeshElements, dict[str, np.ndarray]]:
+        ingested = deployed_mesh(resolved, artefact)
+        elements = mesh_elements(ingested.data, ingested.quality)
+        return ingested.content_hash, elements, boundary_edges(ingested.data)
+
+    if key is None:
+        return read()
+    # The deployment checks the mesh against the case's model and permittivities too, so a
+    # case changed deploys its mesh anew; a pick, which changes no case, reads it once.
+    case = hashlib.sha256(resolved.document.model_dump_json().encode("utf-8")).hexdigest()
+    return _kept(_DEPLOYED, f"{key}-{case}", read)
+
+
+def _role_lines(
+    roles: Iterable[str], edges: dict[str, np.ndarray], *, ground: str, pick: str
+) -> list[dict[str, Any]]:
+    import numpy as np
+
+    lines = []
+    # The picked role last, so it is drawn over the others.
+    for name in sorted((role for role in roles if role in edges), key=lambda role: role == pick):
+        title = ROLE_TITLES.get(name, name.capitalize())
+        line: dict[str, Any] = {
+            "id": f"role-{name}",
+            "kind": "line",
+            "role": "picked" if name == pick else "boundary",
+            # A boundary group's edges are drawn each alone: a group need not be one chain.
+            "segments": True,
+            "points_nm": np.round(edges[name], ROUND_NM).ravel().tolist(),
+            "title": f"{title}, grounded" if name == ground else title,
+        }
+        if name != pick:
+            line["colour"] = ROLE_COLOURS.get(name, SERIES[-1])
+        lines.append(line)
+    return lines
+
+
+def _conditions_plane(
+    resolved: ResolvedCase,
+    store: Store,
+    pick: str,
+    mesh_held: str,
+    blank: tuple[float, float, float, float],
+) -> Plane:
+    axes = ("r (nm)", "z (nm)")
+    roles = role_conditions(case_model(resolved), resolved.ground)
+    held, key = _stored_stages(resolved, store)
+    outlines, _ = _region_layers(held, filled=True)
+    try:
+        mesh_hash, elements, edges = _deployed(resolved, held.get("mesh"), key)
+    except KeyError:
+        return Plane("model", axes, _extent(outlines, blank), tuple(outlines), (UNMESHED,))
+    except (ValueError, OSError) as error:
+        unread = (f"The mesh does not read, so nothing is drawn: {error}",)
+        return Plane("model", axes, _extent(outlines, blank), tuple(outlines), unread)
+    # The pore's outline frames the view, as in the Mesh tool; a supplied mesh, which has no
+    # region, opens on its lumen.
+    framing = [layer for layer in outlines if layer["id"] == "pore"]
+    r_window, z_window = elements.lumen_nm
+    extent = _extent(framing, (0.0, r_window, -z_window, z_window))
+    mesh = _mesh_layer(elements, mesh_hash, "material", None, mesh_held=mesh_held)
+    lines = _role_lines(roles, edges, ground=resolved.ground, pick=pick)
+    return Plane("model", axes, extent, (mesh, *framing, *lines))
+
+
+def physics_plane(
+    case: Case | None,
+    store: Store,
+    tool: str,
+    *,
+    against: str = "driver",
+    pick: str | None = None,
+    mesh_held: str = "",
+) -> Plane:
+    """Return what the view draws for one Physics tool of the shown case.
+
+    Parameters
+    ----------
+    case
+        The shown case: a study's file with the model's physics, or None where it forms none.
+    store
+        The project's store, read for the stages the case's keys name.
+    tool
+        ``electrolyte``, a plot of each correction's factor; ``conditions``, the boundaries.
+    against
+        ``driver``: the factors against the concentration driver in M, with the fitted range
+        and the operating driver; ``distance``: against the distance to the wall in nm.
+    pick
+        The boundary role the Conditions tool draws picked.
+    mesh_held
+        The content hash of the mesh whose vertices, triangles and materials the view holds,
+        which the drawing then leaves out.
+
+    Raises
+    ------
+    ValueError
+        If the tool, ``against`` or the pick is not one this view draws.
+    """
+    if tool not in ("electrolyte", "conditions"):
+        raise ValueError(f"tool {tool!r} is not a Physics tool the view draws")
+    if against not in ("driver", "distance"):
+        raise ValueError(f"against {against!r} is not 'driver' or 'distance'")
+    if pick and pick not in BOUNDARY_VOCABULARY:
+        raise ValueError(f"pick {pick!r} is not one of {', '.join(BOUNDARY_VOCABULARY)}")
+    blank = (0.0, 10.0, -10.0, 10.0)
+    frame: Frame = "plot" if tool == "electrolyte" else "model"
+    if tool == "electrolyte":
+        axis = (
+            "concentration driver (M)"
+            if against == "driver"
+            else axis_label("distance d to the pore wall", "length")
+        )
+        axes, empty = (axis, "correction factor"), (0.0, 1.0, 0.0, 2.0)
+    else:
+        axes, empty = ("r (nm)", "z (nm)"), _extent([], blank)
+    if case is None:
+        return Plane(frame, axes, empty, (), ("No case is shown, so nothing is drawn.",))
+    try:
+        resolved = resolve(case, base=case.source.base)
+    except REFUSED:
+        refused = ("The shown case does not resolve, so nothing is drawn: see the pane.",)
+        return Plane(frame, axes, empty, (), refused)
+    if tool == "electrolyte":
+        return _electrolyte_plane(resolved, against)
+    return _conditions_plane(resolved, store, pick or "", mesh_held, blank)
