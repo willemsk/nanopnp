@@ -74,7 +74,7 @@ EPNP_NS_TERMS: tuple[Term, ...] = (
     Term(
         "Velocity continuity",
         "NUM-04",
-        "ϱ ∇·u = 0; PHY-07's density continuity u·∇ϱ = 0 is not assembled (REV-223)",
+        "ϱ ∇·u = 0; PHY-07's density continuity u·∇ϱ = 0 is not assembled",
         ("flow",),
     ),
     Term(

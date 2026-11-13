@@ -251,6 +251,15 @@ boundary, then field: `model.boundary_conditions` inverted, the potential's `cis
 by `--project`; shots of each `/physics/<id>`, a model with no concentration (`new_model`, its ions written), the
 shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *Choose model*'s note.
 
+> **Outcome — the tube is imported first, and the shown case is keyed.** The server walks a project's first study to
+> its charge, which example 01 has not (REV-251), so the group imports the tube first and stores example 01's mesh by
+> a walk to `mesh`; the tube's study sets a bias of its own, for the outlined diamond. Drafting found the tube's study
+> refusing the quick-start model at stage 7's key (its mesh holds a protein with no permittivity), which a resolve
+> alone did not: `PhysicsModel` keys the shown case's walk, and the solids are read from a supplied mesh, else listed
+> as every solid a pore may hold. The unmeshed note says a run of the study builds its mesh, since Continuum › Mesh
+> builds at its own salt. The review (21 findings, one blocking) and the critique (25 of 40) went to the digest's
+> cards, 13 picks for 64 shots: <https://claude.ai/artifact/SwZB5Mk91tzw3JFWvjvScp>.
+
 ### Work items
 
 - [x] 2c22fa2 1. `physics/models.py` (`Term`, the six models' terms, `role_conditions`), §5.4.3's NOTE (D5, D7); done when
@@ -260,7 +269,7 @@ shown study refusing (`physics.model: pnp` by `set_value`), a role picked, and *
 - [x] 0ef0d10 3. The files of Implementation details' item 3 (D6 to D8); done when its check passes. **Executor:**
   general-purpose on Sonnet, high
 - [x] 4. Compaction checkpoint. **Executor:** main
-- [ ] 5. `gui/web/physics.py`, `physics_tools.py`, `screens.py`, `pages.py`, `frame.py`, `tools.py`'s `Field`, `frame.css`,
+- [x] 905f826 5. `gui/web/physics.py`, `physics_tools.py`, `screens.py`, `pages.py`, `frame.py`, `tools.py`'s `Field`, `frame.css`,
   `modularity-layering.yaml`, VER-78's text (D1 to D9); done when VER-78 (a) to (d), (m) and the import guard pass. **Executor:** main
 - [ ] 6. The four tools drafted on example 01 (D10); `render_shell.py`; `/np-gui render shell`, `review`, `publish`;
   done when the digest is published. **Executor:** main

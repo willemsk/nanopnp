@@ -31,7 +31,7 @@ light and dark. Then run `node .claude/scripts/gui/shoot.cjs <r>/manifest.json <
 **`shell`**, the browser workbench: `uv run python .claude/scripts/gui/render_shell.py [--only <group> ...] <r>`.
 It writes `<r>/manifest.json`, runs `shoot.cjs` over it and stops its servers. Every shot is light and dark
 (`[1280, 800]`), and each waits for the screen's `data-screen-ready`, as the workbench sets it once Mol* has
-drawn. Six groups, all by default:
+drawn. Seven groups, all by default:
 
 - `states`: each screen of `nanopnp.gui.web.screens.SCREENS` in each state of `nanopnp.gui.web.states.STATES`
   (`shell-<state>-<screen>-<scheme>`).
@@ -59,8 +59,12 @@ drawn. Six groups, all by default:
   empty (`shell-continuum-<name>-<scheme>`): `refused`, Pore geometry blocked by stage 4 at an isolevel of 0.9, and
   `building`, Pore geometry shot while its build runs. The built tools are the `2wcd` group's `c-<tool>`
   shots.
+- `physics`: the Physics tools on projects of example 01's case with the charged tube imported beside it, the
+  tube's study setting a bias of its own (`shell-physics-<name>-<scheme>`): each tool; a role picked; the curves
+  against the wall distance; the model shown in the tube's study; another model chosen, with its note; a new
+  model with its ions and no salt; and the shown study refusing a model set to pnp.
 
-Needs Playwright through `NODE_PATH` and the `gui` extra. All six groups, 250 shots, take about seven minutes
+Needs Playwright through `NODE_PATH` and the `gui` extra. All seven groups, about 280 shots, take about seven minutes
 on four cores once the 2WCD cache exists (seventeen when each shot ran alone, each in a browser context of its
 own); the first render also builds that cache. The servers start together. `shoot.cjs` runs the shots of one server in order, since a server's
 state carries from shot to shot, and the servers side by side on `NANOPNP_SHOOT_JOBS` workers (default: the

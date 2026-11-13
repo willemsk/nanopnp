@@ -13,6 +13,7 @@ from nanopnp.gui.web.builds import REFUSED, BuiltModel, StageState
 from nanopnp.io.case_paths import schema_default
 from nanopnp.io.models import ModelKind, leaves, owner_of
 from nanopnp.pipeline.case import resolve
+from nanopnp.pipeline.run import keyed_walk
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from nanopnp.api.case import Case
@@ -68,10 +69,14 @@ class PhysicsModel(BuiltModel):
         root = f"{self.project.root}/"
         try:
             case = self.project.physics_case(self.name, study)
-            # A study refuses a model its own values cannot run with only once it resolves.
-            resolve(case, base=case.source.base)
+            # A study refuses a model its own values cannot run with once it resolves, and its
+            # stages' checks, such as a mesh's solids against the permittivities, once it keys.
+            resolved = resolve(case, base=case.source.base)
+            keyed_walk(resolved, store=self.project.session().store, planned=set())
         except REFUSED as error:
-            said = str(error).replace(root, "")
+            # The case's own label, such as "<study S with physics model P>", names what the
+            # prefix says.
+            said = re.sub(r"^<[^<>]*>:\s*", "", str(error).replace(root, ""))
             return said if study is None else f"In study {study}: {said}"
         return case
 
@@ -87,6 +92,15 @@ class PhysicsModel(BuiltModel):
             return resolve(case, base=case.source.base)
         except REFUSED:
             return None
+
+    def refused_path(self, message: str) -> str | None:
+        """Return the case path a refusal names: a value the model's choice refuses, else any."""
+        found = [match.group(0) for match in self.paths.finditer(message)]
+        # A refusal of the model's switch names the model and the switch: the switch is the
+        # field to change, as Undo or another model is the other way out.
+        return next((path for path in found if path != "physics.model"), None) or (
+            found[0] if found else None
+        )
 
     def study_values(self) -> dict[str, Any]:
         """Return the shown study's own values of the model's keys, which the shown case leaves out.

@@ -7,6 +7,7 @@ import math
 import threading
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 from nanopnp.core.stages import describe
@@ -18,7 +19,8 @@ from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.continuum import ContinuumModel
 from nanopnp.gui.web.link import png
 from nanopnp.io.case import Membrane, Reservoir
-from nanopnp.mesh.ingest import BOUNDARY_VOCABULARY, FLUID_MATERIALS, deployed_mesh
+from nanopnp.mesh.adapter import detect_format, read
+from nanopnp.mesh.ingest import BOUNDARY_VOCABULARY, FLUID_MATERIALS, apply_groups, deployed_mesh
 from nanopnp.mesh.primitives import PERMITTIVITY_EXEMPT
 from nanopnp.physics.models import case_model, role_conditions
 from nanopnp.pipeline.case import resolve
@@ -158,7 +160,11 @@ PLOT_TICKS = 5
 NICE_STEPS = (1.0, 2.0, 2.5, 5.0, 10.0, 20.0)
 """The multiples of a power of ten a plot's tick step is chosen from."""
 
-UNMESHED = "The boundaries are drawn on the pore's mesh: build it in Continuum \u203a Mesh."
+UNMESHED = (
+    "The boundaries are drawn on the mesh the shown study runs on, which is not built yet: a run "
+    "of the study builds it, as Continuum \u203a Mesh does for a study at the salt it is built at."
+)
+REFUSED_SHOWN = "The shown study does not run with the model, so nothing is drawn: see the pane."
 """What the Conditions view says where the shown case's mesh is not built."""
 
 
@@ -808,10 +814,7 @@ def _electrolyte_plane(resolved: ResolvedCase, against: str) -> Plane:
 
 
 def _stored_stages(resolved: ResolvedCase, store: Store) -> tuple[dict[str, Artefact], str | None]:
-    try:
-        identities = keyed_walk(resolved, store=store, planned=set())
-    except REFUSED:
-        return {}, None
+    identities = keyed_walk(resolved, store=store, planned=set())
     found: dict[str, Artefact] = {}
     for stage in ("region", "mesh"):
         identity = identities.get(stage)
@@ -873,7 +876,10 @@ def _conditions_plane(
 ) -> Plane:
     axes = ("r (nm)", "z (nm)")
     roles = role_conditions(case_model(resolved), resolved.ground)
-    held, key = _stored_stages(resolved, store)
+    try:
+        held, key = _stored_stages(resolved, store)
+    except REFUSED:
+        return Plane("model", axes, _extent([], blank), (), (REFUSED_SHOWN,))
     outlines, _ = _region_layers(held, filled=True)
     try:
         mesh_hash, elements, edges = _deployed(resolved, held.get("mesh"), key)
@@ -902,10 +908,17 @@ def shown_solids(case: Case | None, store: Store) -> tuple[str, ...] | None:
         return None
     try:
         resolved = resolve(case, base=case.source.base)
+        supplied = resolved.mesh
+        if supplied is not None and supplied.path is not None:
+            # A supplied mesh is read for its names alone, mapped as a run maps them.
+            path = Path(supplied.path)
+            read_in = read(path, format=detect_format(path, supplied.format))
+            materials: object = list(apply_groups(read_in, dict(supplied.groups))[0].materials)
+        else:
+            held, _ = _stored_stages(resolved, store)
+            materials = held["mesh"].summary.get("materials") if "mesh" in held else None
     except REFUSED:
         return None
-    held, _ = _stored_stages(resolved, store)
-    materials = held["mesh"].summary.get("materials") if "mesh" in held else None
     if not isinstance(materials, list):
         return None
     return tuple(

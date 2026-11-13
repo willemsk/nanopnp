@@ -3377,3 +3377,13 @@ behaviours of the dielectric-gradient switch, a deviation off by default, depart
 The Equations tool shows what is assembled (`physics/terms.py`). **Open**, a question for the author: whether PHY-23 is
 amended to state both, or the code made to meet it.
 
+### REV-251: A project whose first study deposits no charge opens with a failed walk
+
+Found at WP5.18 item 6, drafting the Physics tools on example 01's project. `gui/web/states.py:boot_project` walks a
+project's first study to `charge`; example 01's study supplies no charge and deposits none, so `selected_stages` drops
+the stage and the walk is refused (`UnknownStageError`). The workbench opens with *Queue: 1 failed* and no problem
+listed, and stores none of the study's stages, so the Conditions tool has no mesh to draw. The round's projects import
+the charged tube first.
+
+**Open**: the walk a project opens with is the Study suite's, WP5.19, which runs a study to the last stage it selects.
+
