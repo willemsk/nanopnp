@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 from nicegui import ui
 from nicegui.elements.mixins.text_element import TextElement
 
+from nanopnp.core.paths import correction_source, names_a_path
 from nanopnp.gui.web.builds import REFUSED
 from nanopnp.gui.web.frame import Views, heading
 from nanopnp.gui.web.physics import PhysicsModel
@@ -112,11 +113,17 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         if not held:
             return None
         unit = FIELDS[path].unit if path in FIELDS else ""
+        # A value per material is one leaf: each material is said with its own number.
+        flat = {
+            f"{key}.{name}" if isinstance(value, dict) else key: number
+            for key, value in held.items()
+            for name, number in (value.items() if isinstance(value, dict) else [(None, value)])
+        }
         said = ", ".join(
             f"{value} {unit or ''}".strip()
             if key == path
             else f"{key.removeprefix(path + '.')} {value}"
-            for key, value in held.items()
+            for key, value in flat.items()
         )
         study = self.model.within()
         return f"Study {study} sets its own value, {said}. This field shows the model's value."
@@ -124,7 +131,8 @@ class _PhysicsPane(_Pane[PhysicsModel]):
     def solids(self) -> tuple[str, ...]:
         if self.model is None:
             return ()
-        stored = shown_solids(self.model.case(), self.model.project.session().store)
+        # The case as shown, though the study refuses it: its stored mesh names its solids.
+        stored = shown_solids(self.shown_case(), self.model.project.session().store)
         if stored is not None:
             return stored
         # No mesh to read: every solid a pore may hold, so a refused one can be given its value.
@@ -194,8 +202,12 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                 own = study is not None and self.model.names_this(study)
                 path = self.problem_path(problem)
                 kind = "err" if own or study is None else "warn"
-                if path is not None and owner_of(path) == "continuum":
-                    title = f"Study {study} cannot run. Its continuum model has a problem."
+                # A value the physics model does not hold is named where it is held.
+                owner = None if path is None else owner_of(path)
+                if study is not None and owner in ("molecular", "continuum"):
+                    title = f"Study {study} cannot run. Its {owner} model has a problem."
+                elif study is not None and owner == "study":
+                    title = f"Study {study} cannot run. One of its own values has a problem."
                 elif study is None:
                     title = "No case forms"
                 elif own:
@@ -332,7 +344,8 @@ class _PhysicsPane(_Pane[PhysicsModel]):
                     for state in (True, False)
                     if any(on is state for _, on in wrong)
                 ]
-                return f"Turn {' and '.join(turns)}. {name} cannot run otherwise."
+                if turns:
+                    return f"Turn {' and '.join(turns)}. {name} cannot run otherwise."
         if path is not None and path.startswith(f"{PERMITTIVITIES}."):
             solid = path.rpartition(".")[2]
             return f"Type the relative permittivity of the {solid}. It has no default."
@@ -356,7 +369,7 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         if self.model is None:
             return {}
         try:
-            document = load_corrections(str(self.model.shown("electrolyte.parameters")))
+            document = load_corrections(self.parameter_set())
         except (ValueError, OSError, KeyError):
             return {}
         ions = sorted({f"{ion.steric_diameter_nm:g}" for ion in document.species.values()})
@@ -369,11 +382,17 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         if self.model is None:
             return None
         try:
-            return load_corrections(
-                str(self.model.shown("electrolyte.parameters"))
-            ).concentration_validity_M
+            return load_corrections(self.parameter_set()).concentration_validity_M
         except (ValueError, OSError, KeyError):
             return None
+
+    def parameter_set(self) -> str:
+        """Return the model's parameter set: a shipped name, or a file found as a case finds it."""
+        named = str(self.model.shown("electrolyte.parameters")) if self.model else ""
+        if self.model is None or not names_a_path(named):
+            return named
+        base = self.model.project.path("physics", self.model.name).parent
+        return str(correction_source(named, base=base))
 
     def mark(self, path: str, changed: bool) -> None:
         # A table's row holds several values: its mark shows while any of them is changed.
@@ -411,8 +430,25 @@ class _PhysicsPane(_Pane[PhysicsModel]):
 
     def after_write(self, path: str) -> None:
         super().after_write(path)
+        if path.startswith("electrolyte.corrections.") and path.endswith(".model"):
+            self.correction_parts(path)
         if self.tool.view == "plane":
             self.soon(self.show)
+
+    def correction_parts(self, path: str) -> None:
+        """Enable a correction's bulk and wall parts while its model is not none, and name it."""
+        if self.model is None:
+            return
+        chosen = self.model.shown(path)
+        select = self.controls.get(path)
+        if isinstance(select, ui.select):
+            select.props(f'title="{chosen}"')
+        idle = self.idle() or path in self.declared_unread()
+        base = path.removesuffix(".model")
+        for part in ("concentration", "wall"):
+            box = self.controls.get(f"{base}.{part}")
+            if isinstance(box, ui.checkbox):
+                box.set_enabled(not idle and chosen != "none")
 
     def choose(self, chosen: str) -> None:
         model = self.model
@@ -474,11 +510,14 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         if held is None:
             return
         for path, value in held[1].items():
+            # A value unset since the change is already as it was; each other is written back,
+            # so one refused leaves the rest restored.
+            if value is None and _value_of(self.body(), path) is None:
+                continue
             try:
                 model.project.set_value("physics", model.name, path, value)
             except ValueError as error:
                 ui.notify(str(error).replace(f"{model.project.root}/", ""), type="negative")
-                break
         self.built.changes_moved()
         self.soon(self.built.reopen)
 
@@ -730,20 +769,32 @@ class _PhysicsPane(_Pane[PhysicsModel]):
         ):
             # The value first, on a line of its own; then its name, range and removal.
             ui.label(f"{label}, {unit}" if unit else label).classes("exposed-path")
-            ui.input(
-                value=entry.name,
-                on_change=lambda e, v=entry: self.expose_as(v.path, str(e.value), (v.low, v.high)),
-            ).props(f'dense outlined debounce=800 aria-label="Name of {label}"')
-            low = ui.number(
-                value=entry.low,
-                placeholder="any",
-                on_change=lambda e, v=entry: self.expose_as(v.path, v.name, (e.value, v.high)),
-            ).props(f'dense outlined debounce=800 aria-label="Lowest {label}"')
-            high = ui.number(
-                value=entry.high,
-                placeholder="any",
-                on_change=lambda e, v=entry: self.expose_as(v.path, v.name, (v.low, e.value)),
-            ).props(f'dense outlined debounce=800 aria-label="Highest {label}"')
+            name = ui.input(value=entry.name).props(
+                f'dense outlined debounce=800 aria-label="Name of {label}"'
+            )
+            low = ui.number(value=entry.low, placeholder="any").props(
+                f'dense outlined debounce=800 aria-label="Lowest {label}"'
+            )
+            high = ui.number(value=entry.high, placeholder="any").props(
+                f'dense outlined debounce=800 aria-label="Highest {label}"'
+            )
+
+            # A range is written from both ends as they now read, so an end typed first waits
+            # for the other; a new name keeps the stored range while the typed one is partial.
+            def typed() -> tuple[object, object]:
+                return low.value, high.value
+
+            def named(v: Any = entry) -> tuple[object, object]:  # noqa: ANN401 - an exposed value
+                ends = typed()
+                return ends if (ends[0] is None) == (ends[1] is None) else (v.low, v.high)
+
+            name.on_value_change(
+                lambda _, v=entry: self.expose_as(v.path, str(name.value or ""), named(v))
+            )
+            for control in (low, high):
+                control.on_value_change(
+                    lambda _, v=entry: self.expose_as(v.path, str(name.value or ""), typed())
+                )
             for control in (low, high):
                 control.set_enabled(self.usable())
             ui.button(icon="sym_o_close", on_click=lambda _, v=entry: self.unexpose(v.path)).props(
@@ -785,10 +836,12 @@ class _PhysicsPane(_Pane[PhysicsModel]):
             if isinstance(low, int | float) and isinstance(high, int | float)
             else None
         )
+        partial = ranged is None and (low is not None or high is not None)
+        if span is not None and (partial or label == ""):
+            # A range is written whole and a name is never blank: wait for the rest.
+            return
         try:
-            model.project.set_exposed(
-                "physics", model.name, path, True, label=label or None, span=ranged
-            )
+            model.project.set_exposed("physics", model.name, path, True, label=label, span=ranged)
         except ValueError as error:
             ui.notify(str(error).replace(f"{model.project.root}/", ""), type="negative")
             return
@@ -946,7 +999,7 @@ ELEMENTS = {"h1": "Lagrange, scalar", "vector_h1": "Lagrange, vector"}
 
 
 def _field_tex(name: str) -> str:
-    """Return a field's symbol in LaTeX: an ion's concentration with its charge raised."""
+    # An ion's concentration takes its charge raised.
     if name.startswith("c_"):
         ion = name.removeprefix("c_")
         base = ion.rstrip("+-")
@@ -976,7 +1029,6 @@ def _corrections_in_force(resolved: ResolvedCase) -> None:
 
 
 def _tex(latex: str, *, display: bool = False, classes: str = "") -> ui.element:
-    """Return an element KaTeX draws ``latex`` in, as a block where ``display``."""
     element = ui.element("div" if display else "span").classes(f"tex {classes}".strip())
     element.props["data-tex"] = latex
     if display:
@@ -985,7 +1037,7 @@ def _tex(latex: str, *, display: bool = False, classes: str = "") -> ui.element:
 
 
 def _mtext(text: str, classes: str = "") -> ui.element:
-    """Return a sentence whose mathematics, between ``$`` signs, KaTeX draws."""
+    # The sentence's mathematics stands between `$` signs.
     element = ui.element("div").classes(f"mtext {classes}".strip())
     element.props["data-mtext"] = text
     return element
@@ -1051,5 +1103,4 @@ def physics_page(shell: Shell, tool: Tool) -> Callable[..., None]:
 
 
 def _listed(items: list[str]) -> str:
-    """Return items as a sentence lists them: "a", "a and b", "a, b and c"."""
     return items[0] if len(items) == 1 else f"{', '.join(items[:-1])} and {items[-1]}"

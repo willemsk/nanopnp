@@ -3436,6 +3436,12 @@ WP5.18's final review added the frame's own words: the Problems list and the Stu
 text, the Study page twice, with its case path written twice and no *Go to*, where a tool's card leads with the
 refusal's words less its file and path; and the Study page still says "refused" where WB-40 says *blocked*.
 
+[CODE_REVIEW_058](../code_reviews/CODE_REVIEW_058.md) found the cause under the words: a refusal is a sentence, and
+three places read its place back out of it. The cards strip leading `X: ` prefixes (`gui/web/tools.py:_plain`), the
+problems list takes the first dotted name that is a field (`api/project.py:_error_path`), and the Physics pane scans
+the message for a field's path (`gui/web/physics_tools.py:problem_path`). A refusal that carried its case path and
+its file as fields would end all three, with the pass over the diagnostics.
+
 **Open**: WP5.21's pass over the workbench's words and keyboard, or a package of its own if the diagnostics need one.
 The Study page's, WP5.19's.
 
@@ -3495,5 +3501,15 @@ These stay:
 - **Words.** The pane writes "C/m²" where the symbols table writes "C m⁻²". The plots' ⟨c⟩ draws as "(c)" in the
   interface's face, so "average concentration ⟨c⟩ (M)" reads as two brackets. The momentum and continuity notes ("equals
   PHY-07's … only where …") are the register the author called pedantic; they state what the model assembles.
+
+[CODE_REVIEW_058](../code_reviews/CODE_REVIEW_058.md) left two more, for the view's package:
+
+- **The shown case, resolved once.** A build of Conditions forms and resolves the shown case three or four times
+  outside the model's cache (the pane's sections, the mesh's check, the solids, the view's request) and keys the walk
+  each time; a supplied mesh is read from its file at each refresh, though the drawing caches it. One resolved case
+  and one walk to the mesh, held per refresh, would serve all of them.
+- **A plot's units in its keys.** The plot frame sends a graph's extent and points as `extent_nm` and `points_nm`,
+  though they hold concentrations in M, distances and factors. The (r, z) frame's keys name nm; a plot's should name
+  its axes' units, or none.
 
 **Open**, a question for the author: the layout and the words at WP5.19's round; the view and the region with WP5.21.
