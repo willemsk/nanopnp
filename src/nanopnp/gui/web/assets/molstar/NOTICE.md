@@ -22,5 +22,5 @@ two files with any build of your own; the screens load whatever is at these path
 
 1. Download the new tarball and check its SHA-512 against the registry's `dist.integrity`.
 2. Copy the two files and `package/LICENSE` (as `LICENSE.molstar`) here.
-3. Update the table above. The Tier-1 test `test_con09_the_vendored_molstar_is_unmodified` fails until
+3. Update the table above. The Tier-1 test `test_con09_the_vendored_libraries_are_unmodified` fails until
    the recorded sha256 values match the files.

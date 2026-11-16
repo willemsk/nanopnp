@@ -414,11 +414,7 @@ STUDY_BIAS_V = 0.2
 IONS = [{"name": "Na+", "z": 1}, {"name": "Cl-", "z": -1}]
 PHYSICS_EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
     ("conditions-picked", "/physics/conditions", ["[data-control=role-wall]"]),
-    (
-        "electrolyte-distance",
-        "/physics/electrolyte",
-        ["[data-control=physics-against]", ".q-menu .q-item:nth-child(2)"],
-    ),
+    ("conditions-mesh", "/physics/conditions", ["[data-control=physics-show-mesh]"]),
     (
         "conditions-in-tube",
         "/physics/conditions",
@@ -431,8 +427,8 @@ PHYSICS_EXTRAS: tuple[tuple[str, str, list[str]], ...] = (
         ["[data-control=field-physics-model]", ".q-menu .q-item:nth-child(5)"],
     ),
 )
-"""The quick-start model's tools in states of their own: a role picked, the curves against the
-wall distance, the model shown in the charged tube's study, which sets its own bias, and pnp-ns
+"""The quick-start model's tools in states of their own: a role picked, the mesh shown under the
+boundaries, the model shown in the charged tube's study, which sets its own bias, and pnp-ns
 chosen for it."""
 
 

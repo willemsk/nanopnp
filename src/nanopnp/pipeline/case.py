@@ -77,8 +77,8 @@ def _choice(spec: schema.CorrectionChoice, files: Mapping[str, Path], key: str) 
     return CorrectionChoice(model=model, concentration=spec.concentration, wall=spec.wall)
 
 
-def _switches(document: CaseDocument, files: Mapping[str, Path]) -> CorrectionSwitches:
-    corrections = document.electrolyte.corrections
+def _switches(block: schema.Electrolyte, files: Mapping[str, Path]) -> CorrectionSwitches:
+    corrections = block.corrections
 
     def choice(name: str) -> CorrectionChoice:
         return _choice(getattr(corrections, name), files, f"electrolyte.corrections.{name}.model")
@@ -93,6 +93,32 @@ def _switches(document: CaseDocument, files: Mapping[str, Path]) -> CorrectionSw
     )
 
 
+def block_electrolyte(
+    block: schema.Electrolyte, base: Path, files: Mapping[str, Path] | None = None
+) -> Electrolyte:
+    """Return the electrolyte one ``electrolyte:`` block resolves to, as a case resolves it.
+
+    Parameters
+    ----------
+    base
+        The directory a correction named by a path is found against.
+    files
+        Those paths already found, as a case's resolution finds them first.
+
+    Raises
+    ------
+    CaseValidationError
+        If the block names a correction file that is not there.
+    """
+    found = _correction_files(block, base) if files is None else files
+    return Electrolyte.from_parameter_file(
+        str(found.get("electrolyte.parameters", block.parameters)),
+        switches=_switches(block, found),
+        species=[species.name for species in block.species],
+        driver=block.driver,
+    )
+
+
 def _absolute(path: Path, base: Path) -> Path:
     return (base / path).resolve()
 
@@ -103,10 +129,9 @@ def _rebased(supplied: SuppliedArtefact | None, base: Path) -> SuppliedArtefact 
     return supplied.model_copy(update={"path": _absolute(supplied.path, base)})
 
 
-def _correction_files(document: CaseDocument, base: Path) -> dict[str, Path]:
+def _correction_files(electrolyte: schema.Electrolyte, base: Path) -> dict[str, Path]:
     # Every correction named by a path, found against the case's directory; resolution refuses
     # a file that is not there, naming the key.
-    electrolyte = document.electrolyte
     named = {"electrolyte.parameters": electrolyte.parameters}
     for name in CORRECTION_PROPERTIES:
         named[f"electrolyte.corrections.{name}.model"] = getattr(
@@ -303,19 +328,14 @@ def resolve(document: CaseDocument, *, base: Path | None = None) -> ResolvedCase
     """
     check_document(document)
     where = (base if base is not None else Path.cwd()).resolve()
-    files = _correction_files(document, where)
+    files = _correction_files(document.electrolyte, where)
     mesh = _rebased(require_runnable(document), where)
     structure = _resolve_structure(document, where)
     density = _resolve_density(document)
     contour = _resolve_contour(document, density)
     geometry = document.geometry if document.geometry is not None else Geometry()
 
-    electrolyte = Electrolyte.from_parameter_file(
-        str(files.get("electrolyte.parameters", document.electrolyte.parameters)),
-        switches=_switches(document, files),
-        species=[species.name for species in document.electrolyte.species],
-        driver=document.electrolyte.driver,
-    )
+    electrolyte = block_electrolyte(document.electrolyte, where, files)
     check_species(document, electrolyte)
     check_operating_point(document)
 

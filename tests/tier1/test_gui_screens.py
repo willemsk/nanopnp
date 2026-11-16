@@ -523,9 +523,16 @@ def test_ver78_the_server_cancels_the_solves_it_started() -> None:
     assert solve.cancelled
 
 
-def test_con09_the_vendored_molstar_is_unmodified() -> None:
-    folder = Path(server.__file__).parent / "assets" / "molstar"
+@pytest.mark.parametrize("library", ["molstar", "katex"])
+def test_con09_the_vendored_libraries_are_unmodified(library: str) -> None:
+    folder = Path(server.__file__).parent / "assets" / library
     notice = (folder / "NOTICE.md").read_text(encoding="utf-8")
-    for name in ("molstar.js", "molstar.css"):
-        digest = hashlib.sha256((folder / name).read_bytes()).hexdigest()
-        assert digest in notice, f"{name} differs from the build NOTICE.md names"
+    shipped = [
+        path
+        for path in sorted(folder.rglob("*"))
+        if path.is_file() and path.name != "NOTICE.md" and not path.name.startswith("LICENSE")
+    ]
+    assert shipped
+    for path in shipped:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert digest in notice, f"{path.name} differs from the build NOTICE.md names"

@@ -271,12 +271,17 @@
         this.drawPlot(ctx, area);
         return;
       }
+      // Nothing drawn: no axes either, whose numbers no artefact gives; the note says why.
+      if (!this.drawing.layers.length) return;
       ctx.save();
       ctx.beginPath();
       ctx.rect(area.x, area.y, area.w, area.h);
       ctx.clip();
       const layers = this.drawing.layers;
-      for (const layer of layers) if (layer.kind !== 'label' && !layer.hidden) this.layer(ctx, layer, ratio);
+      // A picked line is drawn over the rest, which keep the key's order.
+      const drawn = layers.filter((l) => l.kind !== 'label' && !l.hidden);
+      for (const layer of drawn) if (layer.role !== 'picked') this.layer(ctx, layer, ratio);
+      for (const layer of drawn) if (layer.role === 'picked') this.layer(ctx, layer, ratio);
       for (const layer of layers) {
         if (layer.kind !== 'domain' || !layer.picked) continue;
         this.inData(ctx, ratio, () => {
@@ -410,25 +415,53 @@
     lineStyle(layer) {
       const ink = token('--canvas-plot-ink') || '#16181d';
       if (layer.kind === 'rule') return [ink, 1.5, RULE_DASH];
-      if (layer.kind === 'line' && !layer.role) return [layer.colour || ink, CURVE_W, []];
+      if (layer.kind === 'line' && !layer.role) return [layer.colour || ink, CURVE_W, layer.dash || []];
       const [colour, width, dash] = ROLES[layer.role] || ['--canvas-plot-ink', 1.5, []];
       return [layer.colour || token(colour) || ink, width, dash];
     },
 
-    // A plot: its extent fills the plot area, each axis scaled alone; the bands first, then the
-    // rules, then the curves over both.
+    // A plot: its graphs one above the other, sharing one key beside them; each graph's extent
+    // fills its area, each axis scaled alone.
     drawPlot(ctx, area) {
+      if (!this.drawing.layers.length) return;
       this.key = this.keyLayout(ctx, area);
       if (this.key && area.w - this.key.width - KEY_GAP >= PLOT_MIN_W) {
         // The legend stands beside the plot, where it hides no curve.
         area.w -= this.key.width + KEY_GAP;
         this.key.x = area.x + area.w + KEY_GAP;
         this.key.top = area.y;
+      } else if (this.key) {
+        // Too narrow beside it: the key stands below the plot, its rows in columns.
+        const across = this.key.width;
+        const columns = Math.max(1, Math.floor((area.w + MARGIN.left) / across));
+        const rows = Math.ceil(this.key.entries.length / columns);
+        Object.assign(this.key, {
+          columns, columnWidth: across, width: Math.min(columns * across, area.w + MARGIN.left),
+          height: rows * KEY_ROW + 8,
+        });
+        area.h -= this.key.height + KEY_GAP;
+        this.key.x = area.x - MARGIN.left + 4;
+        this.key.top = area.y + area.h + MARGIN.bottom + KEY_GAP / 2;
       }
-      const [x0, x1, y0, y1] = this.drawing.extent_nm;
-      const sx = area.w / ((x1 - x0) || 1), sy = area.h / ((y1 - y0) || 1);
-      const at = (x, y) => [area.x + (x - x0) * sx, area.y + area.h - (y - y0) * sy];
-      const layers = this.drawing.layers;
+      const panels = this.drawing.panels
+        || [{ axes: this.drawing.axes, extent_nm: this.drawing.extent_nm, scale: 'linear' }];
+      // Each graph below the first leaves room for the one above's ticks and title.
+      const gap = MARGIN.bottom + MARGIN.top;
+      const height = (area.h - gap * (panels.length - 1)) / panels.length;
+      panels.forEach((panel, index) => {
+        const box = { x: area.x, y: area.y + index * (height + gap), w: area.w, h: height };
+        this.drawPanel(ctx, box, panel, index);
+      });
+      this.legend(ctx);
+    },
+
+    // One graph: the bands first, then the rules, then the curves over both.
+    drawPanel(ctx, area, panel, index) {
+      const scaled = panel.scale === 'sqrt' ? (v) => Math.sqrt(Math.max(v, 0)) : (v) => v;
+      const [x0, x1, y0, y1] = panel.extent_nm;
+      const sx = area.w / ((scaled(x1) - scaled(x0)) || 1), sy = area.h / ((y1 - y0) || 1);
+      const at = (x, y) => [area.x + (scaled(x) - scaled(x0)) * sx, area.y + area.h - (y - y0) * sy];
+      const layers = this.drawing.layers.filter((l) => (l.panel || 0) === index);
       ctx.save();
       ctx.beginPath();
       // A curve along the frame's top or bottom is drawn whole, not halved by the clip.
@@ -466,12 +499,15 @@
         }
       }
       ctx.restore();
+      const text = (value) => Number(value.toPrecision(6)).toString().replace('-', '−');
       const ticks = (low, high, place) => Array.from({ length: PLOT_TICKS }, (_, k) => {
         const value = low + (k * (high - low)) / (PLOT_TICKS - 1);
-        return [place(value), Number(value.toPrecision(6)).toString().replace('-', '−')];
+        return [place(value), text(value)];
       });
-      this.frameAxes(ctx, area, ticks(x0, x1, (x) => at(x, y0)[0]), ticks(y0, y1, (y) => at(x0, y)[1]));
-      this.legend(ctx);
+      const xTicks = panel.ticks
+        ? panel.ticks.map((value) => [at(value, y0)[0], text(value)])
+        : ticks(x0, x1, (x) => at(x, y0)[0]);
+      this.frameAxes(ctx, area, xTicks, ticks(y0, y1, (y) => at(x0, y)[1]), panel.axes);
     },
 
     // An outline's vertices, once they stand apart on the screen.
@@ -539,7 +575,7 @@
     },
 
     // The plot area's frame, each axis's ticks as [pixel, text], and the axes' titles.
-    frameAxes(ctx, area, xTicks, yTicks) {
+    frameAxes(ctx, area, xTicks, yTicks, axes = this.drawing.axes) {
       const ink = token('--canvas-plot-ink') || '#16181d';
       ctx.strokeStyle = ink;
       ctx.fillStyle = ink;
@@ -562,12 +598,12 @@
       ctx.font = `12px ${token('--font-ui') || 'sans-serif'}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(this.drawing.axes[0], area.x + area.w / 2, area.y + area.h + MARGIN.bottom - 2);
+      ctx.fillText(axes[0], area.x + area.w / 2, area.y + area.h + MARGIN.bottom - 2);
       ctx.save();
       ctx.translate(14, area.y + area.h / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textBaseline = 'middle';
-      ctx.fillText(this.drawing.axes[1], 0, 0);
+      ctx.fillText(axes[1], 0, 0);
       ctx.restore();
     },
 
@@ -699,9 +735,12 @@
       const text = token('--ink') || '#16181d';
       const edge = token('--colourbar-outline') || token('--canvas-plot-ink') || '#16181d';
       const shown = (value) => Number(value.toPrecision(3)).toString().replace('-', '−');
-      let y = top + 4;
+      // A key below a narrow plot lays its rows out in columns.
+      const columns = this.key.columns || 1, across = this.key.columnWidth || width;
+      let y = top + 4, column = 0;
       ctx.textBaseline = 'middle';
       for (const entry of entries) {
+        const left = x + column * across;
         ctx.textAlign = 'left';
         if (entry.kind === 'bar') {
           ctx.fillStyle = text;
@@ -730,28 +769,32 @@
           // A domain's swatch is laid over the canvas's colour as its fill is, so they match.
           if (entry.alpha !== undefined) {
             ctx.fillStyle = token('--canvas-plot') || '#ffffff';
-            ctx.fillRect(x + 6, y + 3, 12, 12);
+            ctx.fillRect(left + 6, y + 3, 12, 12);
             ctx.globalAlpha = entry.alpha;
           }
           ctx.fillStyle = entry.colour;
-          ctx.fillRect(x + 6, y + 3, 12, 12);
+          ctx.fillRect(left + 6, y + 3, 12, 12);
           ctx.globalAlpha = 1;
           ctx.strokeStyle = edge;
-          ctx.strokeRect(x + 6.5, y + 3.5, 12, 12);
+          ctx.strokeRect(left + 6.5, y + 3.5, 12, 12);
         } else {
           const [colour, lineWidth, dash] = entry.style;
           ctx.strokeStyle = colour;
           ctx.lineWidth = lineWidth;
           ctx.setLineDash(dash);
           ctx.beginPath();
-          ctx.moveTo(x + 4, y + 9);
-          ctx.lineTo(x + 22, y + 9);
+          ctx.moveTo(left + 4, y + 9);
+          ctx.lineTo(left + 22, y + 9);
           ctx.stroke();
           ctx.setLineDash([]);
         }
         ctx.fillStyle = text;
-        ctx.fillText(entry.text, x + 28, y + 9);
-        y += KEY_ROW;
+        ctx.fillText(entry.text, left + 28, y + 9);
+        column += 1;
+        if (column === columns) {
+          column = 0;
+          y += KEY_ROW;
+        }
       }
     },
 

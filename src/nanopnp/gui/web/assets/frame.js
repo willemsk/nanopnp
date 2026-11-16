@@ -115,3 +115,32 @@ window.frameSeparators = {
 new MutationObserver(() => window.frameSeparators.install(document)).observe(
   document.documentElement, { childList: true, subtree: true },
 );
+
+// Mathematics, drawn by KaTeX: an element's data-tex is LaTeX; a data-mtext sentence holds its
+// mathematics between $ signs. Each is drawn once, after the element is mounted.
+window.frameMath = {
+  draw(root) {
+    if (!window.katex) return;
+    const options = (display) => ({
+      displayMode: display, throwOnError: false, output: 'htmlAndMathml',
+    });
+    root.querySelectorAll('[data-tex]:not([data-tex-drawn])').forEach((el) => {
+      el.dataset.texDrawn = '1';
+      window.katex.render(el.dataset.tex, el, options(el.dataset.display === '1'));
+    });
+    root.querySelectorAll('[data-mtext]:not([data-tex-drawn])').forEach((el) => {
+      el.dataset.texDrawn = '1';
+      el.textContent = '';
+      el.dataset.mtext.split('$').forEach((part, k) => {
+        if (!part) return;
+        const span = document.createElement('span');
+        if (k % 2) window.katex.render(part, span, options(false));
+        else span.textContent = part;
+        el.appendChild(span);
+      });
+    });
+  },
+};
+new MutationObserver(() => window.frameMath.draw(document)).observe(
+  document.documentElement, { childList: true, subtree: true },
+);
