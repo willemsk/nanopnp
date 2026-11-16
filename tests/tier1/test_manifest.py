@@ -450,7 +450,7 @@ def test_qr08_a_manifest_read_back_keeps_its_hash(tmp_path: Path) -> None:
     solver = edited["solver"]
     assert isinstance(solver, dict)
     solver["model"] = "pnp"
-    with pytest.raises(ManifestHashError, match="edited after the run wrote it"):
+    with pytest.raises(ManifestHashError, match="edited it after the run wrote it"):
         Manifest.from_document(edited)
 
 

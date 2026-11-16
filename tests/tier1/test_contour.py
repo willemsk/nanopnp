@@ -495,15 +495,15 @@ def test_ver51_artefact_and_key(
 @pytest.mark.parametrize(
     ("contour_block", "message"),
     [
-        ("{isolevel: 0.0}", r"isolevel is 0\.0; .* lies in \(0, 1\)"),
-        ("{isolevel: 1.0}", r"isolevel is 1\.0; .* lies in \(0, 1\)"),
+        ("{isolevel: 0.0}", r"isolevel is 0\.0\. .* lie in \(0, 1\)"),
+        ("{isolevel: 1.0}", r"isolevel is 1\.0\. .* lie in \(0, 1\)"),
         ("{isolevel: .nan}", r"isolevel is nan"),
         (
             "{simplify_tol_nm: 0.0}",
-            r"simplify_tol_nm is 0\.0 nm; .* below the density grid "
+            r"simplify_tol_nm is 0\.0 nm\. .* below the density grid "
             r"spacing h = 0\.05 nm",
         ),
-        ("{simplify_tol_nm: 0.05}", r"simplify_tol_nm is 0\.05 nm; .* h = 0\.05 nm"),
+        ("{simplify_tol_nm: 0.05}", r"simplify_tol_nm is 0\.05 nm\. .* h = 0\.05 nm"),
         ("{simplify_tol_nm: .inf}", r"simplify_tol_nm is inf nm"),
     ],
 )

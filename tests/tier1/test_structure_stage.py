@@ -439,7 +439,7 @@ def test_ver48_walk_rules(prepared: Path, tmp_path: Path) -> None:
     assert set(ran.manifest.inputs["files"]) >= {"structure"}  # type: ignore[arg-type]
 
     plain = Path(__file__).parents[2] / "examples" / "01-quickstart" / "quickstart.case.yaml"
-    with pytest.raises(UnknownStageError, match=r"carries no structure: section"):
+    with pytest.raises(UnknownStageError, match=r"has no structure: section"):
         Session(store, write=False).run(Case.load(plain), upto="structure")
 
 

@@ -367,11 +367,11 @@ def test_ver49_the_key_moves_with_every_input(synthetic_c12: Path, tmp_path: Pat
 @pytest.mark.parametrize(
     ("geometry", "message"),
     [
-        ("{grid_spacing_nm: 0.02}", r"grid_spacing_nm is 0\.02 nm; FR-04 requires 0\.025-0\.05"),
-        ("{grid_spacing_nm: 0.06}", r"grid_spacing_nm is 0\.06 nm; FR-04 requires 0\.025-0\.05"),
-        ("{sharpness: 0.0}", r"sharpness is 0\.0; it scales each atom's radius"),
+        ("{grid_spacing_nm: 0.02}", r"grid_spacing_nm is 0\.02 nm\. FR-04 requires 0\.025-0\.05"),
+        ("{grid_spacing_nm: 0.06}", r"grid_spacing_nm is 0\.06 nm\. FR-04 requires 0\.025-0\.05"),
+        ("{sharpness: 0.0}", r"sharpness is 0\.0\. It scales the radius of each atom"),
         ("{sharpness: -0.93}", r"sharpness is -0\.93"),
-        ("{sharpness: .inf}", r"sharpness is inf; .* a positive number"),
+        ("{sharpness: .inf}", r"sharpness is inf\. .* a positive number"),
     ],
 )
 def test_ver49_resolution_refusals(

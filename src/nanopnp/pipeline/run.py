@@ -180,7 +180,7 @@ class RunResult:
             artefact = self.artefacts[stage]
         except KeyError:
             held = ", ".join(self.artefacts) or "none"
-            raise KeyError(f"this run holds no {stage!r} artefact; it holds {held}") from None
+            raise KeyError(f"This run holds no {stage!r} artefact. It holds {held}.") from None
         inputs = None
         if self.resolved is not None and stage in walk_order():
             inputs = StageInputs(
@@ -334,8 +334,8 @@ class RunResult:
         if qoi is None:
             held = ", ".join(self.artefacts) or "none"
             raise KeyError(
-                f"{wanted} is read from stage 11, 'qoi', which this run did not reach; "
-                f"it holds {held}"
+                f"{wanted} is read from stage 11, 'qoi'. This run did not reach that stage. "
+                f"It holds {held}."
             )
         return qoi.summary
 
@@ -352,11 +352,11 @@ class RunResult:
         if solution is None:
             held = ", ".join(self.artefacts) or "none"
             raise KeyError(
-                f"the fields are read from stage 10, 'solve', which this run did not reach; "
-                f"it holds {held}"
+                "The fields are read from stage 10, 'solve'. This run did not reach that "
+                f"stage. It holds {held}."
             )
         if self.resolved is None:
-            raise KeyError("the fields are restored with the resolved case, which this run lacks")
+            raise KeyError("The fields are restored with the resolved case. This run has none.")
         inputs = StageInputs(
             resolved=self.resolved, upstream=offered("solve", self.artefacts, own=False)
         )
@@ -428,15 +428,15 @@ class RecordedRun:
 def _json_file(path: Path, what: str) -> dict[str, Canonicalisable]:
     if not path.is_file():
         raise FileNotFoundError(
-            f"{path.parent} is not a run directory as nanopnp run writes it: it holds no "
-            f"{path.name}, the {what}"
+            f"{path.parent} is not a run directory as nanopnp run writes it. It holds no "
+            f"{path.name}, the {what}."
         )
     try:
         parsed = decode_floats(json.loads(path.read_text(encoding="utf-8")))
     except json.JSONDecodeError as error:
-        raise ManifestHashError(f"{path} is not JSON, so it is not the {what}: {error}") from None
+        raise ManifestHashError(f"{path} is not JSON, so it is not the {what}. {error}") from None
     if not isinstance(parsed, dict):
-        raise ManifestHashError(f"{path} holds a {type(parsed).__name__}, not the {what}")
+        raise ManifestHashError(f"{path} holds a {type(parsed).__name__}. It must hold the {what}.")
     return parsed
 
 
@@ -479,21 +479,22 @@ def read_run(
     if record.get("manifest") != manifest.hash:
         raise ManifestHashError(
             f"{source / RUN_RECORD_FILENAME} names manifest {str(record.get('manifest'))[:12]}, "
-            f"but the manifest beside it is {manifest.hash[:12]}: the two files are of "
-            "different runs"
+            f"but the manifest beside it is {manifest.hash[:12]}. The two files are of "
+            "different runs. Use the files of one run."
         )
     case_path = source / CASE_FILENAME
     if not case_path.is_file():
         raise FileNotFoundError(
-            f"{source} is not a run directory as nanopnp run writes it: it holds no "
-            f"{CASE_FILENAME}, the case the manifest records"
+            f"{source} is not a run directory as nanopnp run writes it. It holds no "
+            f"{CASE_FILENAME}, the case that the manifest records."
         )
     # The manifest's hash does not cover its case text, so the two copies are compared instead.
     text = case_path.read_bytes().decode("utf-8")
     if text != manifest.case_text:
         raise ManifestHashError(
-            f"{case_path} differs from the case text embedded in {source / MANIFEST_FILENAME}. "
-            "They are written from one string, so one of them was edited after the run"
+            f"{case_path} differs from the case text in {source / MANIFEST_FILENAME}. The "
+            "run writes both from one string, so someone edited one of them after the run. "
+            "Restore the edited file."
         )
     return RecordedRun(
         directory=source,
@@ -728,41 +729,48 @@ def selected_stages(  # noqa: C901
         return tuple(name for name in walked if name in closure)
     if upto in absent:
         raise UnknownStageError(
-            f"stage {upto!r} is registered but case {resolved.name!r} carries no "
-            f"{absent[upto]}: section, so there is nothing for it to read"
+            f"Stage {upto!r} is registered, but case {resolved.name!r} has no "
+            f"{absent[upto]}: section. There is nothing for the stage to read. Add the "
+            "section, or choose another stage."
         )
     if upto in superseded:
         raise UnknownStageError(
-            f"stage {upto!r} is registered but case {resolved.name!r} supplies inputs.profile, "
-            "stage 4's output, so stages 2 to 4 do not run"
+            f"Stage {upto!r} is registered, but case {resolved.name!r} supplies "
+            "inputs.profile, the output of stage 4. Stages 2 to 4 do not run. Remove "
+            "inputs.profile, or choose another stage."
         )
     if upto in unfed:
         raise UnknownStageError(
-            f"stage {upto!r} is registered but case {resolved.name!r} does not walk "
-            f"{unfed[upto]!r}, an input it requires, so there is nothing for it to read"
+            f"Stage {upto!r} is registered, but case {resolved.name!r} does not walk "
+            f"{unfed[upto]!r}. The stage requires it as an input, so there is nothing for "
+            "the stage to read. Choose another stage."
         )
     if upto == "protonation":
         raise UnknownStageError(
-            f"stage 'protonation' is registered but case {resolved.name!r} "
+            f"Stage 'protonation' is registered, but case {resolved.name!r} "
             + (
-                "supplies inputs.charge, which replaces what stage 7 makes of the protonation"
+                "supplies inputs.charge. That input replaces what stage 7 makes of the "
+                "protonation. Remove inputs.charge, or choose another stage."
                 if resolved.charge is not None
-                else "carries no structure: section and supplies no inputs.pqr, so there is "
-                "nothing for it to protonate"
+                else "has no structure: section and supplies no inputs.pqr. There is nothing "
+                "to protonate. Add one of them, or choose another stage."
             )
         )
     if upto == "region":
         raise UnknownStageError(
-            f"stage 'region' is registered but case {resolved.name!r} supplies inputs.mesh, so "
-            "there is no region to assemble"
+            f"Stage 'region' is registered, but case {resolved.name!r} supplies inputs.mesh. "
+            "There is no region to assemble. Remove inputs.mesh, or choose another stage."
         )
     if upto in order:
         raise UnknownStageError(
-            f"stage {upto!r} is registered but case {resolved.name!r} supplies neither "
-            "inputs.charge nor inputs.eps_r and deposits no charge, so there is nothing for it "
-            "to read"
+            f"Stage {upto!r} is registered, but case {resolved.name!r} supplies neither "
+            "inputs.charge nor inputs.eps_r, and it deposits no charge. There is nothing for "
+            "the stage to read. Choose another stage."
         )
-    raise UnknownStageError(f"no stage {upto!r} in the pipeline; it walks {', '.join(walked)}")
+    raise UnknownStageError(
+        f"The pipeline has no stage {upto!r}. It walks {', '.join(walked)}. "
+        "Choose one of these stages."
+    )
 
 
 def _contributed(stage: Stage, inputs: StageInputs) -> tuple[ContributedDeviation, ...]:
@@ -809,9 +817,9 @@ def _resolve_stage(  # noqa: PLR0913
         _, found = walk.stored(name, key)
         if found is None:
             raise MissingUpstreamError(
-                f"stage {name!r} produces {key.schema} {key.short_hash}, which is not in the "
+                f"Stage {name!r} produces {key.schema} {key.short_hash}. It is not in the "
                 f"store at {walk.store.root}, and 'only' refuses to compute it. Run the "
-                f"pipeline through {name!r} first, or drop 'only'"
+                f"pipeline through {name!r} first, or remove 'only'."
             )
         walk.store.hits += 1
         return found
@@ -1194,8 +1202,9 @@ def stored_upstream(
         _, found = walk.stored(name, key)
         if found is None:
             raise MissingUpstreamError(
-                f"stage {name!r} of case {document.name!r} produces {key.schema} "
-                f"{key.short_hash}, which is not in the store at {store.root}"
+                f"Stage {name!r} of case {document.name!r} produces {key.schema} "
+                f"{key.short_hash}. It is not in the store at {store.root}. Run the pipeline "
+                f"through {name!r} first."
             )
         walk.artefacts[name] = found
     return walk.artefacts

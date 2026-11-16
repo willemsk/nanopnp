@@ -66,8 +66,8 @@ class SuppliedArtefact(_Strict):
     def _exactly_one_source(self) -> SuppliedArtefact:
         if (self.path is None) == (self.artefact is None):
             raise ValueError(
-                "a supplied artefact names exactly one of path: (a file on disk) and artefact: "
-                "(a content hash already in the store)"
+                "A supplied artefact must name exactly one of path: (a file on disk) and "
+                "artefact: (a content hash that is in the store)."
             )
         return self
 
@@ -84,9 +84,9 @@ def stored_artefact_refused(key: str) -> UnsupportedCaseSection:
     A mesh is the exception: ``inputs.mesh.artefact`` names a stage-6 artefact in the store.
     """
     return UnsupportedCaseSection(
-        f"inputs.{key}: artefact: names {SUPPLIED_FIELDS[key]} by its store hash. FR-27's "
-        "substitution reads a supplied field by path only, and no release of SPECIFICATION.md "
-        f"schedules the store form; supply inputs.{key}: path: instead"
+        f"inputs.{key}: artefact: names {SUPPLIED_FIELDS[key]} by its store hash. The "
+        "substitution of FR-27 reads a supplied field by path only. No release of "
+        f"SPECIFICATION.md schedules the store form. Set inputs.{key}: path: instead."
     )
 
 
@@ -349,11 +349,12 @@ class ChargeEdit(_Strict):
         if len(given) != 1:
             raise ValueError(
                 f"charge edit of {self.residue!r} sets {', '.join(given) or 'none'} of state, "
-                "charge_change_e and radius_scale; it sets exactly one"
+                "charge_change_e and radius_scale. It must set exactly one."
             )
         if self.charge_change_e == 0:
             raise ValueError(
-                f"charge edit of {self.residue!r} sets charge_change_e 0, which changes nothing"
+                f"charge edit of {self.residue!r} sets charge_change_e 0, which changes nothing. "
+                "Set a value other than 0."
             )
         return self
 
@@ -651,7 +652,7 @@ class Models(_Strict):
     def _names_one(self) -> Models:
         if self.molecular is None and self.continuum is None and self.physics is None:
             raise ValueError(
-                "models: names at least one of a molecular:, a continuum: and a physics: file"
+                "models: must name at least one of a molecular:, a continuum: and a physics: file."
             )
         return self
 
@@ -707,16 +708,16 @@ class CaseDocument(_Strict):
             choice: CorrectionChoice = getattr(self.electrolyte.corrections, name)
             if choice.model != "none" and not _installed(choice.model, installed):
                 problems.append(
-                    f"electrolyte.corrections.{name}.model {choice.model!r} is not installed; the "
-                    f"correction files are {', '.join(installed) or 'none'}"
+                    f"electrolyte.corrections.{name}.model {choice.model!r} is not installed. "
+                    f"The correction files are {', '.join(installed) or 'none'}."
                 )
         if not _installed(self.electrolyte.parameters, installed):
             problems.append(
-                f"electrolyte.parameters {self.electrolyte.parameters!r} is not installed; the "
-                f"correction files are {', '.join(installed) or 'none'}"
+                f"electrolyte.parameters {self.electrolyte.parameters!r} is not installed. The "
+                f"correction files are {', '.join(installed) or 'none'}."
             )
         if problems:
-            raise ValueError("; ".join(problems))
+            raise ValueError(" ".join(problems))
         return self
 
     @model_validator(mode="after")
@@ -728,8 +729,8 @@ class CaseDocument(_Strict):
                 problems.append(
                     f"inputs.{upstream} and inputs.{downstream} are both supplied, but "
                     f"{downstream} is downstream of {upstream} on one chain "
-                    f"({' -> '.join(chain)}), so inputs.{upstream} would be recorded as an input "
-                    "to a run that never read it; supply one of them"
+                    f"({' -> '.join(chain)}). inputs.{upstream} is recorded as an input "
+                    "to a run that never read it. Supply one of them."
                 )
         if self.inputs.mesh is not None:
             defaults = Mesh()
@@ -747,13 +748,13 @@ class CaseDocument(_Strict):
                     else {f"numerics.mesh.{key}": value}
                 )
                 problems.extend(
-                    f"{path} is {typed!r} beside inputs.mesh; it configures the mesher, and a "
-                    "supplied mesh is not meshed, so it would have no effect; remove it or remove "
-                    "inputs.mesh"
+                    f"{path} is {typed!r} beside inputs.mesh. It configures the mesher, and a "
+                    "supplied mesh is not meshed, so it has no effect. Remove it or remove "
+                    "inputs.mesh."
                     for path, typed in named.items()
                 )
         if problems:
-            raise ValueError("; ".join(problems))
+            raise ValueError(" ".join(problems))
         return self
 
 
@@ -798,7 +799,8 @@ def _keys_of(model: type[BaseModel]) -> list[str]:
 def render_problems(source: str, error: ValidationError) -> str:
     """Render a pydantic error as one ``<dotted.path>: <what>`` line per problem."""
     problems = error.errors()
-    lines = [f"{source}: {len(problems)} problem(s) in the case document"]
+    count = len(problems)
+    lines = [f"{source}: {count} problem{'' if count == 1 else 's'} in the case document"]
     for problem in problems:
         loc = problem["loc"]
         dotted = ".".join(str(part) for part in loc) if loc else "<document>"
@@ -806,11 +808,11 @@ def render_problems(source: str, error: ValidationError) -> str:
             accepted = _keys_of(_owner_of(loc))
             close = difflib.get_close_matches(str(loc[-1]), accepted, n=1)
             hint = (
-                f"did you mean {close[0]!r}?"
+                f"A close name is {close[0]!r}."
                 if close
-                else f"this block accepts {', '.join(accepted)}"
+                else f"This block accepts {', '.join(accepted)}."
             )
-            lines.append(f"  {dotted}: unknown key; {hint}")
+            lines.append(f"  {dotted}: unknown key. {hint}")
         else:
             lines.append(f"  {dotted}: {problem['msg']}")
     return "\n".join(lines)
@@ -822,16 +824,16 @@ def validate_mapping(
     """Validate a parsed case mapping against the schema, the `models:` key included."""
     if not isinstance(raw, Mapping):
         raise CaseValidationError(
-            f"{source}: a case file is a YAML mapping, found {type(raw).__name__}"
+            f"{source}: a case file must be a YAML mapping. It is a {type(raw).__name__}."
         )
     declared = raw.get("schema")
     if declared in RETIRED_SCHEMAS:
         raise CaseValidationError(
-            f"{source}: schema {declared!r} is retired: declare {SCHEMA!r}; a case with "
-            "structure: that keeps its geometry adds geometry.density.atoms: as_loaded"
+            f"{source}: schema {declared!r} is retired. Declare {SCHEMA!r}. A case with "
+            "structure: that keeps its geometry must add geometry.density.atoms: as_loaded."
         )
     if declared != SCHEMA:
-        raise CaseValidationError(f"{source}: expected schema {SCHEMA!r}, found {declared!r}")
+        raise CaseValidationError(f"{source}: the schema must be {SCHEMA!r}. It is {declared!r}.")
     try:
         return model.model_validate(dict(raw))
     except ValidationError as error:

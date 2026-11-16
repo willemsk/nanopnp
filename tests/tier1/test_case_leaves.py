@@ -486,10 +486,10 @@ def test_ver71_the_ionic_strength_driver_of_a_one_one_salt_is_refused(
     model: str, meshes: dict[str, Path]
 ) -> None:
     assert _refused(put(base(model, meshes), "electrolyte.driver", "ionic_strength")) == (
-        "electrolyte.driver: ionic_strength drives the corrections with I = 1/2 sum z_i^2 c_i, "
-        "which equals the average concentration (c_1 + c_2)/2 for two species of unit "
-        "valence, so it would be recorded in the manifest as a deviation and never change a "
-        "number (PHY-13); leave it at its default, average"
+        "electrolyte.driver: ionic_strength drives the corrections with I = 1/2 sum z_i^2 c_i. "
+        "For two species of unit valence, this equals the average concentration "
+        "(c_1 + c_2)/2. The manifest records the setting as a deviation and it changes no "
+        "number (PHY-13). Set it to its default, average."
     )
 
 

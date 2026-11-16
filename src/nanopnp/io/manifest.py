@@ -179,9 +179,9 @@ def materials_group(
             # A null hash here, or another file of that name's, is a manifest that cannot
             # reconstruct the run it records, which is what FR-25 asks of it.
             raise FileNotFoundError(
-                f"the manifest cannot record a hash for correction file {each!r}: {error}. "
-                "Name it by an absolute path, or by a path beside the case file, so the run and "
-                "its record read one file (FR-25)"
+                f"The manifest cannot record a hash for correction file {each!r}: {error}. "
+                "Name it by an absolute path, or by a path beside the case file. Then the run "
+                "and its record read one file (FR-25)."
             ) from None
         files[each] = file_hash(path)
     provenance["parameter_file_hashes"] = files
@@ -340,8 +340,8 @@ class Manifest:
         if decoded.get("schema") != MANIFEST_SCHEMA:
             found = decoded.get("schema")
             raise ManifestHashError(
-                f"the document declares schema {found!r}; this build reads {MANIFEST_SCHEMA!r}, "
-                "and recomputes the hash only under it"
+                f"The document declares schema {found!r}. This build reads {MANIFEST_SCHEMA!r}. "
+                "It recomputes the hash under that schema only."
             )
         try:
             case = decoded["case"]
@@ -375,19 +375,20 @@ class Manifest:
             computed = manifest.hash
         except KeyError as error:
             raise ManifestHashError(
-                f"the document lacks the manifest field {error}, so its hash cannot be recomputed"
+                f"The document lacks the manifest field {error}, so the program cannot "
+                "recompute its hash."
             ) from None
         except (TypeError, ValueError) as error:
             raise ManifestHashError(
-                f"the document holds a manifest field of the wrong shape ({error}), so its hash "
-                "cannot be recomputed"
+                f"The document holds a manifest field of the wrong shape ({error}). The "
+                "program cannot recompute its hash."
             ) from None
         recorded = decoded.get("hash")
         if recorded != computed:
             raise ManifestHashError(
-                f"the document records hash {str(recorded)[:12]} but its case and groups hash to "
-                f"{computed[:12]}: it was edited after the run wrote it, and is not that "
-                "run's record"
+                f"The document records hash {str(recorded)[:12]}, but its case and groups hash "
+                f"to {computed[:12]}. Someone edited it after the run wrote it, so it is not "
+                "the record of that run. Use the manifest that the run wrote."
             )
         return manifest
 

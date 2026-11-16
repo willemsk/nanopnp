@@ -193,7 +193,9 @@ def test_ver64_a_stage_whose_case_drops_a_required_input_is_not_walked(
     register(_description(inputs=("case", "contour")), "nanopnp.external:ExternalStage")
     profile = _shipped_cases()["profile"]
     assert "external" not in selected_stages(profile, None)
-    with pytest.raises(UnknownStageError, match=r"does not walk 'contour', an input it requires"):
+    with pytest.raises(
+        UnknownStageError, match=r"does not walk 'contour'\. The stage requires it as an input"
+    ):
         selected_stages(profile, "external")
     assert selected_stages(_shipped_cases()["structure"], None) == (*WALK, "external")
 

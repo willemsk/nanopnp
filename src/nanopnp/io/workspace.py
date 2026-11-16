@@ -21,9 +21,9 @@ def require_workspace(workspace: Path | None, stage: str) -> Path:
     """Return ``workspace``; MissingWorkspaceError if the stage was given none."""
     if workspace is None:
         raise MissingWorkspaceError(
-            f"the {stage} stage writes a payload and was given no workspace: construct it with "
-            "workspace=<directory>, the scratch folder it writes into. The store root is not a "
-            "scratch folder a stage may pick for itself"
+            f"The {stage} stage writes a payload and has no workspace. Construct it with "
+            "workspace=<directory>, the scratch folder that it writes into. The store root is "
+            "not a scratch folder that a stage can pick for itself."
         )
     return workspace
 
@@ -40,10 +40,10 @@ def scratch_directory(workspace: Path | None, stage: str, *, overwrite: bool = F
         if held:
             named = ", ".join(held[:_MAX_NAMED]) + (", ..." if len(held) > _MAX_NAMED else "")
             raise WorkspaceInUseError(
-                f"the {stage} stage would write into {directory}, which already holds {named}: "
-                "a second run would overwrite a payload an earlier artefact still points at. Give "
-                "the stage an empty workspace, or construct it with overwrite_workspace=True to "
-                "replace those files"
+                f"The {stage} stage writes into {directory}, and that folder holds {named}. A "
+                "second run overwrites a payload that an earlier artefact points at. Give the "
+                "stage an empty workspace. Or construct it with overwrite_workspace=True to "
+                "replace those files."
             )
     directory.mkdir(parents=True, exist_ok=True)
     return directory

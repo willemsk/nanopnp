@@ -25,7 +25,7 @@ def test_phy03_solid_permittivity_on_a_fluid_domain_is_refused_naming_it() -> No
 
 
 def test_phy03_misspelt_solid_permittivity_key_is_refused_with_a_suggestion() -> None:
-    with pytest.raises(CaseValidationError, match=r"'protien'.*did you mean 'protein'"):
+    with pytest.raises(CaseValidationError, match=r"'protien'.*A close name is 'protein'"):
         require_runnable(loads_case(CASE.format(solids="protien: 20.0")))
 
 

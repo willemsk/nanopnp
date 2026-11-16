@@ -267,6 +267,13 @@ generates, and for a supplied mesh the file it reads and its generator (`nanopnp
 twice, a refusal of their disagreement SHALL name both keys. The rule for a field document's own
 charge is the §5.3.1 NOTE on `inputs.charge`.
 
+NOTE (FR-35, QR-12, the words; WB-42): a refusal's text, a gate's diagnostic and the workbench's own
+messages SHALL follow the writing rules of ASD-STE100, Issue 9: an instruction in the imperative of at
+most 20 words, a description of at most 25, one topic to a sentence, the active voice and the simple
+tenses, *must* for an obligation and *can* for an ability, and no noun cluster of more than three
+words. The rule, the value, the case path and the remedy that FR-35 and QR-12 ask for stay in the text,
+each case path and value as the case writes it. REV-254 lists the texts that do not yet follow it.
+
 NOTE (QR-10; lands with WP5.21, Qt's removal). When it lands, QR-10 reads: "A
 nanopore experimentalist without Python knowledge SHALL be able to install the workbench, load a
 structure, accept defaults and obtain a conductance prediction and a field visualisation in it
